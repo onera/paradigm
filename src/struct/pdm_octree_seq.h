@@ -384,6 +384,13 @@ int         *closest_octree_pt_id,
 double      *closest_octree_pt_dist2
 );
 
+
+void PDM_octree_seq_write_octants
+(
+ const int   id,
+ const char *filename
+ );
+
 #ifdef	__cplusplus
 }
 #endif

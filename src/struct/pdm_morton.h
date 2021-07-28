@@ -230,9 +230,26 @@ PDM_morton_local_sort(int                n_codes,
  *  true or false
  *----------------------------------------------------------------------------*/
 
+#ifndef __cplusplus
 _Bool
 PDM_morton_a_gt_b(PDM_morton_code_t  a,
                   PDM_morton_code_t  b);
+
+/*----------------------------------------------------------------------------
+ * Test if Morton code "a" is greater than Morton code "b" (compare anchors)
+ *
+ * parameters:
+ *   code_a <-- first Morton code to compare
+ *   code_b <-- second Morton code to compare
+ *
+ * returns:
+ *  true or false
+ *----------------------------------------------------------------------------*/
+
+_Bool
+PDM_morton_a_gtmin_b(PDM_morton_code_t  a,
+                     PDM_morton_code_t  b);
+#endif
 
 /*----------------------------------------------------------------------------
  * Copy the code a into the code b
@@ -273,6 +290,7 @@ PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
  *
  *----------------------------------------------------------------------------*/
 
+#ifndef __cplusplus
 _Bool
 PDM_morton_ancestor_is (PDM_morton_code_t  a,
                         PDM_morton_code_t  b);
@@ -308,6 +326,7 @@ PDM_morton_a_ge_b(PDM_morton_code_t  a,
 _Bool
 PDM_morton_a_eq_b(PDM_morton_code_t  a,
                   PDM_morton_code_t  b);
+#endif
 
 /*----------------------------------------------------------------------------
  * Assigne a level to Morton code
@@ -485,10 +504,26 @@ PDM_morton_intersect_box
  const PDM_morton_code_t  box_min,
  const PDM_morton_code_t  box_max,
  const PDM_morton_code_t  nodes[],
+ int                     *n_points,
  const size_t             start,
  const size_t             end,
  size_t                  *n_intersect,
  int                     *intersect
+ );
+
+
+void
+PDM_morton_closest_node
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  nodes[],
+ const double             point[],
+ const double             d[],
+ const size_t             start,
+ const size_t             end,
+ int                     *closest_node,
+ double                  *closest_dist2
  );
 /*----------------------------------------------------------------------------*/
 

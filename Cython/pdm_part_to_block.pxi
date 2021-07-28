@@ -1,3 +1,4 @@
+from mpi4py.libmpi cimport MPI_Allreduce, MPI_MAX, MPI_INT
 
 cdef extern from "pdm_part_to_block.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -71,6 +72,7 @@ cdef class PartToBlock:
     cdef int                  partN
     cdef int                  Size
     cdef int                  Rank
+    cdef MPI.MPI_Comm         c_comm
 
     cdef int                 *NbElmts
     cdef PDM_g_num_t        **LNToGN
@@ -117,6 +119,7 @@ cdef class PartToBlock:
         self.t_post    = t_post
         self.t_stride  = t_stride
 
+        self.c_comm = comm.ob_mpi
         self.Rank = comm.Get_rank()
         self.Size = comm.Get_size()
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -200,13 +203,15 @@ cdef class PartToBlock:
 
         # > For PDM
         cdef size_t   s_data
+        cdef int      dtype_data
+        cdef int      dtype_data_max
         cdef int      strideOne
         cdef int    **part_stride
         cdef int     *block_stride
         cdef void    *block_data
         cdef void   **part_data
         cdef int      ndim
-        cdef int      npyflags=-1;
+        cdef int      npyflags=-1
         cdef NPY.ndarray tmpData
         # ************************************************************************
 
@@ -239,6 +244,7 @@ cdef class PartToBlock:
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
           # > Prepare part_data
+          dtype_data = -1
           for idx, pArray in enumerate(partList):
             # ------------------------------------------------
             # > Get flow solution
@@ -262,6 +268,14 @@ cdef class PartToBlock:
             dtypep     = pArray.dtype
             # ------------------------------------------------
 
+          MPI_Allreduce(&dtype_data, &dtype_data_max, 1, MPI_INT, MPI_MAX, self.c_comm)
+          if dtype_data == -1:
+            dtype_data = dtype_data_max
+            #Dont know how to get dtype_size from dtype_id, create a fake array ;)
+            zero       = <NPY.npy_intp> 0
+            tpm_array = NPY.PyArray_EMPTY(1, &zero, dtype_data, 0)
+            s_data    = tpm_array.dtype.itemsize
+          assert (dtype_data == dtype_data_max)
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
           # > Prepare block_data
           block_stride  = NULL
@@ -291,7 +305,8 @@ cdef class PartToBlock:
           dim           = <NPY.npy_intp> c_size
           if(c_size == 0):
             # dField[field] = None # Attention faire une caspule vide serait mieux non ?
-            dField[field] = NPY.empty((0), dtype=dtypep)
+            #dField[field] = NPY.empty((0), dtype=dtypep)
+            dField[field] = NPY.PyArray_EMPTY(1, &dim, dtype_data, 0)
             # print 'Attention in PDM_part_to_block'
           else:
             if(ndim == 2):
@@ -335,7 +350,7 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):
       """
-         Return a copy of the global numbers, of element in the current process, 
+         Return a copy of the global numbers, of element in the current process,
          array compute in library
          Copy because remove of PTB object can made a core ...
       """

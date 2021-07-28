@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_surf_mesh.h"
+#include "pdm_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -22,6 +23,8 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
+
+typedef struct _pdm_dist_cloud_surf_t PDM_dist_cloud_surf_t;
 
 /*============================================================================
  * Public function definitions
@@ -40,21 +43,24 @@ extern "C" {
  *
  */
 
-int
+
+PDM_dist_cloud_surf_t*
 PDM_dist_cloud_surf_create
 (
  const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Comm comm
+ const int               n_point_cloud,
+ const PDM_MPI_Comm      comm,
+ const PDM_ownership_t   owner
 );
 
-void
+
+PDM_dist_cloud_surf_t*
 PDM_dist_cloud_surf_create_cf
 (
- const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Fint comm,
- int *id
+ const PDM_mesh_nature_t  mesh_nature,
+ const int                n_point_cloud,
+ const PDM_MPI_Fint       comm,
+ const PDM_ownership_t    owner
 );
 
 
@@ -71,10 +77,10 @@ PDM_dist_cloud_surf_create_cf
 void
 PDM_dist_cloud_surf_n_part_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          n_part
- );
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    n_part
+);
 
 
 /**
@@ -93,13 +99,13 @@ PDM_dist_cloud_surf_n_part_cloud_set
 void
 PDM_dist_cloud_surf_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
- const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
- );
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    i_part,
+ const int                    n_points,
+       double                *coords,
+       PDM_g_num_t           *gnum
+);
 
 
 
@@ -115,9 +121,9 @@ PDM_dist_cloud_surf_cloud_set
 void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
- const int  id,
- const int  mesh_nodal_id
- );
+ PDM_dist_cloud_surf_t *dist,
+ PDM_Mesh_nodal_t      *mesh_nodal
+);
 
 /**
  *
@@ -131,8 +137,8 @@ PDM_dist_cloud_surf_nodal_mesh_set
 void
 PDM_dist_cloud_surf_surf_mesh_map
 (
- const int  id,
- PDM_surf_mesh_t *surf_mesh
+ PDM_dist_cloud_surf_t *dist,
+ PDM_surf_mesh_t       *surf_mesh
 );
 
 
@@ -150,10 +156,10 @@ PDM_dist_cloud_surf_surf_mesh_map
 void
 PDM_dist_cloud_surf_surf_mesh_global_data_set
 (
- const int         id,
- const PDM_g_num_t n_g_face,
- const PDM_g_num_t n_g_vtx,
- const int         n_part
+       PDM_dist_cloud_surf_t *dist,
+ const PDM_g_num_t            n_g_face,
+ const PDM_g_num_t            n_g_vtx,
+ const int                    n_part
 );
 
 
@@ -176,15 +182,15 @@ PDM_dist_cloud_surf_surf_mesh_global_data_set
 void
 PDM_dist_cloud_surf_surf_mesh_part_set
 (
- const int          id,
- const int          i_part,
- const int          n_face,
- const int         *face_vtx_idx,
- const int         *face_vtx,
- const PDM_g_num_t *face_ln_to_gn,
- const int          n_vtx,
- const double      *coords,
- const PDM_g_num_t *vtx_ln_to_gn
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_part,
+ const int                    n_face,
+ const int                   *face_vtx_idx,
+ const int                   *face_vtx,
+ const PDM_g_num_t           *face_ln_to_gn,
+ const int                    n_vtx,
+ const double                *coords,
+ const PDM_g_num_t           *vtx_ln_to_gn
 );
 
 
@@ -199,9 +205,8 @@ PDM_dist_cloud_surf_surf_mesh_part_set
 void
 PDM_dist_cloud_surf_compute
 (
- const int id
+ PDM_dist_cloud_surf_t *dist
 );
-
 
 /**
  *
@@ -219,13 +224,13 @@ PDM_dist_cloud_surf_compute
 void
 PDM_dist_cloud_surf_get
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
-       double      **closest_elt_distance,
-       double      **closest_elt_projected,
-       PDM_g_num_t **closest_elt_gnum
- );
+       PDM_dist_cloud_surf_t  *dist,
+ const int                     i_point_cloud,
+ const int                     i_part,
+       double                **distance,
+       double                **projected,
+       PDM_g_num_t           **closest_elt_gnum
+);
 
 
 /**
@@ -241,9 +246,8 @@ PDM_dist_cloud_surf_get
 void
 PDM_dist_cloud_surf_free
 (
- const int id,
- const int partial
- );
+ PDM_dist_cloud_surf_t  *dist
+);
 
 
 /**
@@ -257,8 +261,8 @@ PDM_dist_cloud_surf_free
 void
 PDM_dist_cloud_surf_dump_times
 (
- const int id
- );
+ PDM_dist_cloud_surf_t  *dist
+);
 
 #ifdef	__cplusplus
 }

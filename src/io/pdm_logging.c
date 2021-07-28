@@ -236,8 +236,8 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 void
 PDM_log_trace_array_int
 (
- int* array,
- int  larray,
+ const int* array,
+ const int  larray,
  const char* header
 )
 {
@@ -251,9 +251,9 @@ PDM_log_trace_array_int
 void
 PDM_log_trace_array_long
 (
- PDM_g_num_t* array,
- int          larray,
- const char*  header
+ const PDM_g_num_t* array,
+ const int          larray,
+ const char*        header
 )
 {
   log_trace(header);
@@ -264,11 +264,27 @@ PDM_log_trace_array_long
 }
 
 void
+PDM_log_trace_array_double
+(
+ const double*      array,
+ const int          larray,
+ const char*        header
+)
+{
+  log_trace(header);
+  for(int i = 0; i < larray; ++i){
+    log_trace("%12.5e ", array[i]);
+    // log_trace("%20.16e ", array[i]);
+  }
+  log_trace("\n");
+}
+
+void
 PDM_log_trace_array_size_t
 (
- size_t      *array,
- int          larray,
- const char  *header
+ const size_t *array,
+ const int     larray,
+ const char   *header
 )
 {
   log_trace(header);

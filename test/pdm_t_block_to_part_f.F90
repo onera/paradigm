@@ -17,15 +17,23 @@
 ! License along with this library. If not, see <http://www.gnu.org/licenses/>.
 !-----------------------------------------------------------------------------
 
+#include "pdm_configf.h"
+
 program testf
 
   use pdm
+#ifdef PDM_HAVE_FORTRAN_MPI_MODULE  
   use mpi
+#endif  
   use pdm_block_to_part
   use iso_c_binding
   use pdm_fortran
 
   implicit none
+
+#ifndef PDM_HAVE_FORTRAN_MPI_MODULE  
+  include "mpif.h"
+#endif  
 
   integer :: code
   integer :: i_rank
@@ -80,7 +88,7 @@ program testf
   call mpi_comm_size(mpi_comm_world, n_rank, code)
 
   if (n_rank .ne. 1) then
-    print *,'Error : 2 MPI processes are mandatory'
+    print *,'Error : 1 MPI processes are mandatory'
     call mpi_finalize(code)
     stop
   end if

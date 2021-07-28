@@ -24,6 +24,7 @@
 #include "pdm_box.h"
 #include "pdm_box_tree.h"
 #include "pdm_box_priv.h"
+#include "pdm_array.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -33,6 +34,7 @@
 #include "pdm_octree_seq.h"
 #include "pdm_block_to_part.h"
 #include "pdm_part_to_block.h"
+#include "pdm_timer.h"//
 
 /*----------------------------------------------------------------------------*/
 
@@ -868,6 +870,23 @@ double      *closest_octree_pt_dist2
   int n_rank;
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
+//-->>
+  int VISU = 0;
+  char *env_visu = getenv ("VISU_OCTREE");
+  if (env_visu != NULL) {
+    VISU = atoi(env_visu);
+  }
+
+  if (VISU) {
+    if (i_rank == 0) printf("visu octree\n");
+    char filename[999];
+
+    sprintf(filename, "octants_seq_%3.3d.vtk", i_rank);
+    PDM_octree_seq_write_octants (octree->octree_seq_id,
+                                  filename);
+  }
+//<<--
+
   for (int i = 0; i < n_pts; i++) {
     closest_octree_pt_g_num[i] = -1;
     closest_octree_pt_dist2[i] = HUGE_VAL;
@@ -913,11 +932,7 @@ double      *closest_octree_pt_dist2
    *
    ***********************************/
 
-  int *n_send_pts = (int *) malloc (sizeof(int) * n_rank);
-
-  for (int i = 0; i < n_rank; i++) {
-    n_send_pts[i] = 0;
-  }
+  int *n_send_pts = PDM_array_zeros_int(n_rank);
 
   for (int i = 0; i < n_pts; i++) {
     n_send_pts[rank_id[i]]++;
@@ -980,12 +995,13 @@ double      *closest_octree_pt_dist2
    *  Look for the closest point in closest processes
    *
    ***************************************************/
+  printf ("[%4d] phase 1: n_recv_pts = %8d\n", i_rank, i_recv_pts[n_rank]);
 
   int *closest_pt = (int *) malloc(sizeof(int) * 2 * i_recv_pts[n_rank]);
   double *closest_dist = (double *) malloc(sizeof(double) * i_recv_pts[n_rank]);
-
   PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[n_rank],
                                 recv_pts, closest_pt, closest_dist);
+
 
   if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 2 :"
@@ -1019,9 +1035,8 @@ double      *closest_octree_pt_dist2
 
   double *upper_bound_dist = (double *) malloc (sizeof(double) * n_pts);
 
-  for (int i = 0; i < n_rank; i++) {
-    n_send_pts[i] = 0;
-  }
+  PDM_array_reset_int(n_send_pts, n_rank, 0);
+
 
   for (int i = 0; i < n_pts; i++) {
     int id_rank = rank_id[i];
@@ -1158,10 +1173,7 @@ double      *closest_octree_pt_dist2
     i_send_pts1 = i_send_pts;
   }
   else {
-    n_send_pts1 = (int *) malloc (sizeof(int) * n_rank);
-    for (int i = 0; i < n_rank; i++) {
-      n_send_pts1[i] = 0;
-    }
+    n_send_pts1 = PDM_array_zeros_int(n_rank);
     i_send_pts1 = (int *) malloc (sizeof(int) * (n_rank + 1));
     i_send_pts1[0] = 0;
   }
@@ -1376,8 +1388,8 @@ double      *closest_octree_pt_dist2
 
   int         *send_bounds_next     = NULL;
 
-  PDM_MPI_Request Request_coord[2];
-  PDM_MPI_Request Request_gnum[2];
+  PDM_MPI_Request Request_coord[2] = {-100, -100};
+  PDM_MPI_Request Request_gnum[2] = {-100, -100};
 
   /* printf ("n_send_pts : "); */
   /* for (int i = 0; i < n_rank; i++) { */
@@ -1447,9 +1459,13 @@ double      *closest_octree_pt_dist2
                       data_recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
                       octree->comm, &(Request_coord[0]));
 
+  printf("request : %d %d\n", Request_coord[0], Request_gnum[0]);
+
   PDM_MPI_Ialltoallv (data_send_gnum, n_send_gnum, i_send_gnum, PDM__PDM_MPI_G_NUM,
                       data_recv_gnum, n_recv_gnum, i_recv_gnum, PDM__PDM_MPI_G_NUM,
                       octree->comm, &(Request_gnum[0]));
+
+  printf("request1 : %d %d\n", Request_coord[0], Request_gnum[0]);
 
   int *_closest_octree_pt_id         = NULL;
   double *_closest_octree_pt_dist2   = NULL;
@@ -1671,7 +1687,9 @@ double      *closest_octree_pt_dist2
     }
 
     PDM_MPI_Wait (&(Request_coord[icurr]));
+  printf("request3 : %d %d\n", Request_coord[0], Request_gnum[0]);
     PDM_MPI_Wait (&(Request_gnum[icurr]));
+  printf("request4 : %d %d\n", Request_coord[0], Request_gnum[0]);
 
     // Attente reception buffer courant
 
@@ -1703,12 +1721,13 @@ double      *closest_octree_pt_dist2
     /*     } */
     /* /\*   } *\/ */
     /* /\* } *\/ */
+    printf ("[%4d] phase 2: n_recv_pts = %8d\n", i_rank, i_recv_gnum[n_rank]);
 
     PDM_octree_seq_closest_point (octree->octree_seq_id,
                                   i_recv_gnum[n_rank],
                                   data_recv_pts,
-                                 _closest_octree_pt_id,
-                                 _closest_octree_pt_dist2);
+                                  _closest_octree_pt_id,
+                                  _closest_octree_pt_dist2);
 
     for (int j = 0; j < i_recv_gnum[n_rank]; j++) {
       _closest_octree_pt_g_num[j] = -1;
@@ -1829,7 +1848,6 @@ double      *closest_octree_pt_dist2
   free (_closest_octree_pt_id);
   free (_closest_octree_pt_dist2);
   free (_closest_octree_pt_g_num);
-
 }
 
 

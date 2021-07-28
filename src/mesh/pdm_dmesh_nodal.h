@@ -29,7 +29,8 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
-typedef struct _PDM_DMesh_nodal_t PDM_DMesh_nodal_t;
+typedef struct _pdm_dmesh_nodal_t      PDM_dmesh_nodal_t;
+typedef struct _pdm_dmesh_nodal_elts_t PDM_dmesh_nodal_elmts_t;
 
 /*=============================================================================
  * Global variables
@@ -52,19 +53,23 @@ typedef struct _PDM_DMesh_nodal_t PDM_DMesh_nodal_t;
  *
  */
 
-int
+PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
+      int          mesh_dimension,
       PDM_g_num_t  n_vtx,
-      PDM_g_num_t  n_cell
+      PDM_g_num_t  n_cell,
+      PDM_g_num_t  n_face,
+      PDM_g_num_t  n_edge
 );
 
 
 void
 PDM_DMesh_nodal_free
 (
-const int hdl
+      PDM_dmesh_nodal_t* dmesh_nodal,
+const int                partial
 );
 
 /**
@@ -79,9 +84,21 @@ const int hdl
 void
 PDM_DMesh_nodal_coord_set
 (
- const int          hdl,
- const int          n_vtx,
- const PDM_real_t  *coords
+       PDM_dmesh_nodal_t *dmesh_nodal,
+ const int                n_vtx,
+       PDM_real_t        *coords,
+       PDM_ownership_t    owner
+);
+
+
+void
+PDM_DMesh_nodal_section_g_dims_get
+(
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  PDM_g_num_t       *n_cell_abs,
+  PDM_g_num_t       *n_face_abs,
+  PDM_g_num_t       *n_edge_abs,
+  PDM_g_num_t       *n_vtx_abs
 );
 
 
@@ -97,7 +114,7 @@ PDM_DMesh_nodal_coord_set
 const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_vtx_get
 (
- const int          hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -114,8 +131,8 @@ PDM_DMesh_nodal_distrib_vtx_get
 const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_section_get
 (
- const int   hdl,
- const int   id_section
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
 );
 
 
@@ -131,7 +148,7 @@ PDM_DMesh_nodal_distrib_section_get
 int
 PDM_DMesh_nodal_n_vtx_get
 (
- const int          hdl
+  PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -144,10 +161,10 @@ PDM_DMesh_nodal_n_vtx_get
  *
  */
 
-const double *
+double *
 PDM_DMesh_nodal_vtx_get
 (
- const int          hdl
+  PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -161,9 +178,9 @@ PDM_DMesh_nodal_vtx_get
  */
 
 int
-PDM_DMesh_nodal_n_sections_get
+PDM_DMesh_nodal_n_section_get
 (
-const int   hdl
+  PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -179,7 +196,24 @@ const int   hdl
 int *
 PDM_DMesh_nodal_sections_id_get
 (
-const int   hdl
+PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+
+/**
+ * \brief  Return type of element of section
+ *
+ * \param [in]  hdl        Distributed nodal mesh handle
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  Type of section
+ *
+ */
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_section_elt_type_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
 );
 
 
@@ -192,12 +226,43 @@ const int   hdl
  * \return  Type of section
  *
  */
-
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_type_get
 (
-const int   hdl,
-const int   id_section
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
+);
+
+/**
+ * \brief  Return distri of section
+ *
+ * \param [in] dmesh_nodal
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
+);
+
+/**
+ * \brief  Return distri of section (by copy)
+ *
+ * \param [in] dmesh_nodal
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_copy_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
 );
 
 
@@ -216,8 +281,8 @@ const int   id_section
 int
 PDM_DMesh_nodal_section_add
 (
-const int                    hdl,
-const PDM_Mesh_nodal_elt_t   t_elt
+      PDM_dmesh_nodal_t    *dmesh_nodal,
+const PDM_Mesh_nodal_elt_t  t_elt
 );
 
 
@@ -302,10 +367,30 @@ const PDM_Mesh_nodal_elt_t   t_elt
 void
 PDM_DMesh_nodal_section_std_set
 (
-const int          hdl,
-const int          id_section,
-const int          n_elt,
-      PDM_g_num_t *connec
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section,
+const int                n_elt,
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
+);
+
+void
+PDM_DMesh_nodal_section_group_elmt_set
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+const int              n_group_elmt,
+      int             *dgroup_elmt_idx,
+      PDM_g_num_t     *dgroup_elmt,
+      PDM_ownership_t  owner
+);
+
+void
+PDM_DMesh_nodal_section_group_elmt_get
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+      int             *n_group_elmt,
+      int             **dgroup_elmt_idx,
+      PDM_g_num_t     **dgroup_elmt
 );
 
 
@@ -358,7 +443,7 @@ const int          n_elt,
  *      //    | /
  *   1 x-------x 2
  *
- *  - PDM_MESH_NODAL_PRSIM6 :
+ *  - PDM_MESH_NODAL_PRISM6 :
  *
  *   4 x-------x 6
  *     |\     /|
@@ -390,8 +475,8 @@ const int          n_elt,
 PDM_g_num_t *
 PDM_DMesh_nodal_section_std_get
 (
-const int            hdl,
-const int            id_section
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
 );
 
 
@@ -408,8 +493,8 @@ const int            id_section
 int
 PDM_DMesh_nodal_section_n_elt_get
 (
-const int            hdl,
-const int            id_section
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
 );
 
 
@@ -427,11 +512,12 @@ const int            id_section
 void
 PDM_DMesh_nodal_section_poly2d_set
 (
-const int            hdl,
-const int            id_section,
-const PDM_l_num_t    n_elt,
-      PDM_l_num_t   *connec_idx,
-      PDM_g_num_t   *connec
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section,
+const PDM_l_num_t        n_elt,
+      PDM_l_num_t       *connec_idx,
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
 );
 
 
@@ -448,10 +534,10 @@ const PDM_l_num_t    n_elt,
 void
 PDM_DMesh_nodal_section_poly2d_get
 (
- const int          hdl,
- const int          id_section,
-       PDM_l_num_t  **connec_idx,
-       PDM_g_num_t  **connec
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section,
+      PDM_l_num_t      **connec_idx,
+      PDM_g_num_t      **connec
 );
 
 
@@ -472,14 +558,15 @@ PDM_DMesh_nodal_section_poly2d_get
 void
 PDM_DMesh_nodal_section_poly3d_set
 (
-const int            hdl,
-const int            id_section,
-const PDM_l_num_t    n_elt,
-const PDM_l_num_t    n_face,
-      PDM_l_num_t   *facvtx_idx,
-      PDM_g_num_t   *facvtx,
-      PDM_l_num_t   *cellfac_idx,
-      PDM_g_num_t   *cellfac
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section,
+const PDM_l_num_t        n_elt,
+const PDM_l_num_t        n_face,
+      PDM_l_num_t       *facvtx_idx,
+      PDM_g_num_t       *facvtx,
+      PDM_l_num_t       *cellfac_idx,
+      PDM_g_num_t       *cellfac,
+      PDM_ownership_t    owner
 );
 
 
@@ -499,13 +586,13 @@ const PDM_l_num_t    n_face,
 void
 PDM_DMesh_nodal_section_poly3d_get
 (
-const int            hdl,
-const int            id_section,
-      PDM_l_num_t   *n_face,
-      PDM_l_num_t  **facvtx_idx,
-      PDM_g_num_t  **facvtx,
-      PDM_l_num_t  **cellfac_idx,
-      PDM_g_num_t  **cellfac
+      PDM_dmesh_nodal_t  *dmesh_nodal,
+const int                 id_section,
+      PDM_l_num_t        *n_face,
+      PDM_l_num_t       **facvtx_idx,
+      PDM_g_num_t       **facvtx,
+      PDM_l_num_t       **cellfac_idx,
+      PDM_g_num_t       **cellfac
 );
 
 
@@ -519,9 +606,9 @@ const int            id_section,
  */
 
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_cell_get
+PDM_dmesh_nodal_total_n_cell_get
 (
-const int  hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -535,25 +622,45 @@ const int  hdl
  */
 
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_face_get
+PDM_dmesh_nodal_total_n_face_get
 (
-const int  hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
 /**
+ * \brief  Return vtx distribution of a distributed mesh
+ *
+ * \param [in]  dmesh_nodal
+ *
+ * \return  Return vtx distribution
+ *
+ */
+PDM_g_num_t*
+PDM_dmesh_nodal_vtx_distrib_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+
+PDM_g_num_t*
+PDM_dmesh_nodal_vtx_distrib_copy_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+/**
  * \brief  Return total number of vertices of a distributed mesh
  *
- * \param [in]  hdl       Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal
  *
  * \return  Return total number of vertices
  *
  */
-
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_vtx_get
+PDM_dmesh_nodal_total_n_vtx_get
 (
-const int  hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -569,8 +676,24 @@ const int  hdl
 void
 PDM_dmesh_nodal_generate_distribution
 (
-  const int   hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
+
+/**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+void
+PDM_dmesh_nodal_generate_distribution2
+(
+PDM_dmesh_nodal_t *dmesh_nodal
+);
+
 
 /**
 *
@@ -584,9 +707,9 @@ PDM_dmesh_nodal_generate_distribution
 void
 PDM_dmesh_nodal_decompose_faces_get_size
 (
-  const int   hdl,
-        int  *n_face_elt_tot,
-        int  *n_sum_vtx_face_tot
+PDM_dmesh_nodal_t *dmesh_nodal,
+int               *n_face_elt_tot,
+int               *n_sum_vtx_face_tot
 );
 
 /**
@@ -601,54 +724,11 @@ PDM_dmesh_nodal_decompose_faces_get_size
 void
 PDM_dmesh_nodal_decompose_edges_get_size
 (
-  const int   hdl,
-        int  *n_edge_elt_tot,
-        int  *n_sum_vtx_edge_tot
+PDM_dmesh_nodal_t *dmesh_nodal,
+int               *n_edge_elt_tot,
+int               *n_sum_vtx_edge_tot
 );
 
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
-* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
-* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_faces
-(
-  const int                hdl,
-        int               *elmt_face_vtx_idx,
-        PDM_g_num_t       *elmt_face_vtx,
-        PDM_g_num_t       *elmt_face_cell,
-        int               *elmt_cell_face_idx,
-        PDM_g_num_t       *elmt_cell_face
-);
-
-/**
-*
-* \brief PDM_sections_decompose_edges
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_edge_vtx_idx   Index of element edges connectivity (preallocated)
-* \param [inout]  elt_edge_vtx       Element edges connectivity (preallocated)
-* \param [inout]  elmt_edge_cell     Element edges connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_edge     Element edges connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_edges
-(
-  const int                hdl,
-        int               *elmt_edge_vtx_idx,
-        PDM_g_num_t       *elmt_edge_vtx,
-        PDM_g_num_t       *elmt_edge_cell,
-        int               *elmt_cell_edge_idx,
-        PDM_g_num_t       *elmt_cell_edge
-);
 
 /**
  * \brief  Compute cell->face connectivity
@@ -660,7 +740,64 @@ PDM_dmesh_nodal_decompose_edges
 void
 PDM_DMesh_nodal_cell_face_compute
 (
-const int   hdl
+PDM_dmesh_nodal_t *dmesh_nodal
+);
+
+
+/**
+*
+* \brief Concatenates all element sections blocks
+*
+* \param [in]   dmesh_nodal
+* \param [out]  section_idx        index of element section
+* \param [out]  cat_delt_vtx_idx   index of element
+* \param [out]  cat_delt_vtx       element vtx
+*
+ * \return     Number sections
+*/
+int PDM_concat_elt_sections
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  int               **section_idx,
+  int               **cat_delt_vtx_idx,
+  PDM_g_num_t       **cat_dcell_vtx
+);
+
+/**ss
+*
+* \brief Concatenates 3D element sections blocks
+*
+* \param [in]   dmesh_nodal
+* \param [out]  section_idx        index of element section
+* \param [out]  cat_delt_vtx_idx   index of element
+* \param [out]  cat_delt_vtx       element vtx
+*
+ * \return     Number sections
+*/
+int PDM_concat_cell_sections
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  int               **section_idx,
+  int               **cat_delt_vtx_idx,
+  PDM_g_num_t       **cat_delt_vtx
+);
+
+/**
+ * \brief  Compute cell->cell connectivity
+ *
+ * \param [in]   hdl              Distributed nodal mesh handle
+ *
+ */
+void
+PDM_dmesh_nodal_dual_graph
+(
+  PDM_g_num_t*   vtx_dist,
+  PDM_g_num_t*   elt_dist,
+  int           *delt_vtx_idx,
+  PDM_g_num_t   *delt_vtx,
+  PDM_g_num_t  **dual_graph_idx,
+  PDM_g_num_t  **dual_graph,
+  PDM_MPI_Comm   comm
 );
 
 /**
@@ -673,7 +810,7 @@ const int   hdl
 void
 PDM_DMesh_nodal_cell_face_compute2
 (
-const int   hdl
+PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -691,9 +828,9 @@ const int   hdl
 int
 PDM_DMesh_nodal_cell_face_get
 (
-const int     hdl,
-int         **dcell_faceIdx,
-PDM_g_num_t **dcell_face
+PDM_dmesh_nodal_t  *dmesh_nodal,
+int               **dcell_faceIdx,
+PDM_g_num_t       **dcell_face
 );
 
 /**
@@ -709,8 +846,8 @@ PDM_g_num_t **dcell_face
 int
 PDM_DMesh_nodal_face_cell_get
 (
-const int   hdl,
-PDM_g_num_t **dface_cell
+PDM_dmesh_nodal_t  *dmesh_nodal,
+PDM_g_num_t       **dface_cell
 );
 
 
@@ -728,9 +865,9 @@ PDM_g_num_t **dface_cell
 int
 PDM_DMesh_nodal_face_vtx_get
 (
-const int   hdl,
-      int   **dface_vtx_idx,
-PDM_g_num_t **dface_vtx
+PDM_dmesh_nodal_t  *dmesh_nodal,
+      int         **dface_vtx_idx,
+PDM_g_num_t       **dface_vtx
 );
 
 
@@ -743,10 +880,10 @@ PDM_g_num_t **dface_vtx
  *
  */
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_DMesh_nodal_distrib_cell_get
 (
- const int  hdl
+PDM_dmesh_nodal_t  *dmesh_nodal
 );
 
 
@@ -759,12 +896,103 @@ PDM_DMesh_nodal_distrib_cell_get
  *
  */
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_DMesh_nodal_distrib_face_get
 (
- const int hdl
+PDM_dmesh_nodal_t  *dmesh_nodal
 );
 
+
+PDM_dmesh_nodal_elmts_t*
+PDM_DMesh_nodal_elmts_create
+(
+const PDM_MPI_Comm comm,
+      int          mesh_dimension,
+      PDM_g_num_t  n_elmts
+);
+
+int
+PDM_DMesh_nodal_elmts_section_add
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const PDM_Mesh_nodal_elt_t     t_elt
+);
+
+void
+PDM_DMesh_nodal_elmts_section_std_set
+(
+PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                id_section,
+const int                n_elt,
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
+);
+
+void
+PDM_DMesh_nodal_elmts_group_set
+(
+PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                n_group_elmt,
+      int               *dgroup_elmt_idx,
+      PDM_g_num_t       *dgroup_elmt,
+      PDM_ownership_t    owner
+);
+
+void
+PDM_DMesh_nodal_elmts_free
+(
+PDM_dmesh_nodal_elmts_t* dmn_elts
+);
+
+void
+PDM_Mesh_nodal_add_dmesh_nodal_elmts
+(
+ PDM_dmesh_nodal_t       *dmesh_nodal,
+ PDM_dmesh_nodal_elmts_t *dmn_elts
+);
+
+const PDM_g_num_t *
+PDM_DMesh_nodal_elmts_distrib_section_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+void
+PDM_dmesh_nodal_elmts_generate_distribution
+(
+ PDM_dmesh_nodal_elmts_t *dmn_elts
+);
+
+
+void
+PDM_dmesh_nodal_decompose_edges_get_size2
+(
+PDM_dmesh_nodal_elmts_t *dmn_elts,
+int                     *n_edge_elt_tot,
+int                     *n_sum_vtx_edge_tot
+);
+
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_elmts_section_type_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+PDM_g_num_t *
+PDM_DMesh_nodal_elmts_section_std_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+int
+PDM_DMesh_nodal_elmts_section_n_elt_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
 
 #ifdef __cplusplus
 }

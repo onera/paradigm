@@ -39,19 +39,19 @@ extern "C" {
 /**
  * \brief Computes barycenter
  *
- * \param [in]   numPts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  bary    Barycenter
+ * \param [in]   num_pts  Number of polygon vertices
+ * \param [in]   pts      Polygon vertices coordinates
+ * \param [out]  bary     Barycenter
  *
  */
 
 static
 void
-_computeBary
+_compute_barycenter
 (
- const int numPts,
+ const int     num_pts,
  const double *pts,
- double bary[3]
+ double        bary[3]
 )
 {
 
@@ -60,10 +60,10 @@ _computeBary
   bary[2] = 0.;
 
   for (int i = 0; i < 3; i++) {
-    for (int ipt = 0; ipt < numPts; ipt++) {
+    for (int ipt = 0; ipt < num_pts; ipt++) {
       bary[i] += pts[3*ipt+i];
     }
-    bary[i] /= numPts;
+    bary[i] /= num_pts;
   }
 
 }
@@ -77,38 +77,38 @@ _computeBary
 /**
  * \brief Computes barycenter
  *
- * \param [in]   numPts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  bary    Barycenter
+ * \param [in]   num_pts  Number of polygon vertices
+ * \param [in]   pts      Polygon vertices coordinates
+ * \param [out]  bary     Barycenter
  *
  */
 
 void
 PDM_plane_barycenter
 (
- const int     numPts,
+ const int     num_pts,
  const double *pts,
  double        n[3]
 )
 {
-  _computeBary (numPts, pts, n);
+  _compute_barycenter (num_pts, pts, n);
 }
 
 /**
  * \brief Computes normal
  *
- * \param [in]   numPts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  n       Normal
+ * \param [in]   num_pts  Number of polygon vertices
+ * \param [in]   pts      Polygon vertices coordinates
+ * \param [out]  n        Normal
  *
  */
 
 void
 PDM_plane_normal
 (
- const int     numPts,
+ const int     num_pts,
  const double *pts,
- double        n[3]
+       double  n[3]
 )
 {
   double length = 0.;
@@ -118,12 +118,12 @@ PDM_plane_normal
   n[1] = 0.;
   n[2] = 0.;
 
-  _computeBary (numPts, pts, bary);
+  _compute_barycenter (num_pts, pts, bary);
 
-  for (int ipt = 0; ipt < numPts; ipt++) {
+  for (int ipt = 0; ipt < num_pts; ipt++) {
 
     const double *pt1 = pts + 3 * ipt;
-    const double *pt2 = pts + 3 * ((ipt+1)%numPts);
+    const double *pt2 = pts + 3 * ((ipt+1)%num_pts);
     double vect1[3];
     double vect2[3];
 

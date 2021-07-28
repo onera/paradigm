@@ -43,7 +43,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
- const PDM_g_num_t    *part_distribution,
+       PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
        int           **pn_entity,
@@ -76,7 +76,9 @@ PDM_part_reorient_bound_faces
   const int       **pcell_face_idx,
         int       **pcell_face,
   const int       **pface_vtx_idx,
-        int       **pface_vtx
+        int       **pface_vtx,
+        int       **pface_edge_idx,
+        int       **pface_edge
 );
 
 /**
@@ -126,6 +128,32 @@ PDM_part_dconnectivity_to_pconnectivity_sort
  *   to the given distributed connectivity, using element distribution and element local
  *   to global numbering. In addition, return the partitioned number of unique child_element
  *   and the corresponding local to global numbering for the child elements.
+ *
+ *   -- multi-section version
+ */
+void
+PDM_part_multi_dconnectivity_to_pconnectivity_sort
+(
+ const PDM_MPI_Comm    comm,
+ const int             n_part,
+ const int             n_section,
+ const int            *section_idx,
+       PDM_g_num_t   **entity_distribution,
+       int            *dconnectivity_idx,
+       PDM_g_num_t    *dconnectivity,
+       int           **pn_entity,
+       PDM_g_num_t  ***pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int         ****pconnectivity_idx,
+       int         ****pconnectivity
+);
+
+/**
+ *  \brief Generated the partitioned connectivity (entity->child_elements) associated
+ *   to the given distributed connectivity, using element distribution and element local
+ *   to global numbering. In addition, return the partitioned number of unique child_element
+ *   and the corresponding local to global numbering for the child elements.
  */
 void
 PDM_part_dconnectivity_to_pconnectivity_hash
@@ -163,7 +191,8 @@ PDM_part_generate_entity_graph_comm
  const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound
+       int         ***pentity_bound,
+       int         ***pentity_priority
 );
 
 /**
@@ -193,7 +222,7 @@ PDM_extend_mesh
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
  const int             n_part,
- const int            *dual_graph_idx,
+ const PDM_g_num_t    *dual_graph_idx,
  const PDM_g_num_t    *dual_graph,
  const int            *pn_entity,
        PDM_g_num_t   **pentity_ln_to_gn,

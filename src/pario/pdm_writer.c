@@ -113,7 +113,7 @@ const PDM_MPI_Comm comm
   geom->st_decoup_poly2d = PDM_WRITER_OFF;
   geom->st_decoup_poly3d = PDM_WRITER_OFF;
 
-  geom->idx_mesh = PDM_Mesh_nodal_create (n_part, comm);
+  geom->mesh_nodal = PDM_Mesh_nodal_create (n_part, comm);
 
   geom->geom_fmt       = NULL;
   geom->_cs            = NULL;
@@ -135,12 +135,12 @@ _var_init
 PDM_writer_var_t *var
 )
 {
-   var->nom_var    = NULL;          /* Nom de la geometrie */
-  var->st_dep_tps = PDM_WRITER_OFF;        /* Variable en temps */
-  var->dim        = PDM_WRITER_VAR_CSTE;   /* Dimension de la variable */
-  var->loc        = PDM_WRITER_VAR_SOMMETS;/* Dimension de la variable */
-  var->_val       = NULL;          /* Valeurs de la variable */
-  var->var_fmt    = NULL;          /* Description propre au format fmt */
+  var->nom_var    = NULL;                    /* Nom de la geometrie */
+  var->st_dep_tps = PDM_WRITER_OFF;          /* Variable en temps */
+  var->dim        = PDM_WRITER_VAR_CSTE;     /* Dimension de la variable */
+  var->loc        = PDM_WRITER_VAR_SOMMETS;  /* Dimension de la variable */
+  var->_val       = NULL;                    /* Valeurs de la variable */
+  var->var_fmt    = NULL;                    /* Description propre au format fmt */
   var->_cs        = NULL;
 }
 
@@ -760,6 +760,71 @@ const int               n_part
   return id_geom;
 }
 
+//-->>
+int
+PDM_writer_geom_create_from_mesh_nodal
+(
+const int                  id_cs,
+const char                *nom_geom,
+const PDM_writer_statut_t  st_decoup_poly2d,
+const PDM_writer_statut_t  st_decoup_poly3d,
+PDM_Mesh_nodal_t          *mesh
+)
+{
+  /* Erreur si le d�coupage des polygones ou polyedres est choisi */
+
+  if ((st_decoup_poly2d == 1) || (st_decoup_poly3d == 1)) {
+    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_geom_create : Les fonctions de decoupage ne sont pas operationnelles\n");
+    abort();
+  }
+
+  /* Recherche de l'objet cs courant */
+
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
+
+  /* Mise a jour du tableau de stockage */
+
+  if (cs->geom_tab == NULL) {
+    cs->geom_tab = PDM_Handles_create (4);
+  }
+
+  /* Allocation de la structure PDM_writer_geom_t */
+
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) malloc(sizeof(PDM_writer_geom_t));
+
+  int id_geom = PDM_Handles_store (cs->geom_tab, geom);
+
+  /* Initialisation de la structure PDM_writer_geom_t */
+
+  //_geom_init(geom, n_part, cs->pdm_mpi_comm);
+  geom->nom_geom = NULL;
+  geom->st_decoup_poly2d = PDM_WRITER_OFF;
+  geom->st_decoup_poly3d = PDM_WRITER_OFF;
+  geom->mesh_nodal = mesh;
+  geom->geom_fmt       = NULL;
+
+  geom->_cs = cs;
+  geom->pdm_mpi_comm = cs->pdm_mpi_comm;
+  size_t l_nom_geom = strlen(nom_geom);
+  geom->nom_geom = (char *) malloc(sizeof(char) * (l_nom_geom + 1));
+  strcpy(geom->nom_geom, nom_geom);  /* Nom de la geometrie */
+
+  /* Appel de la fonction complementaire propre au format */
+
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+  if (fmt_ptr->geom_create_fct != NULL) {
+    (fmt_ptr->geom_create_fct) (geom);
+  }
+
+  return id_geom;
+}
+//<<--
+
+
 /*----------------------------------------------------------------------------
  * Definition des coordonnees de la partition courante
  *
@@ -818,7 +883,7 @@ const PDM_g_num_t *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_coord_set (geom->idx_mesh, id_part, n_som, coords, numabs);
+  PDM_Mesh_nodal_coord_set (geom->mesh_nodal, id_part, n_som, coords, numabs);
 
   if (0 == 1) {
     printf("n_vtx : %d\n", n_som);
@@ -901,7 +966,7 @@ const PDM_g_num_t *numabs_parent
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
   }
 
-  PDM_Mesh_nodal_coord_from_parent_set (geom->idx_mesh,
+  PDM_Mesh_nodal_coord_from_parent_set (geom->mesh_nodal,
                                         id_part,
                                         n_som,
                                         n_som_parent,
@@ -963,7 +1028,7 @@ const PDM_writer_elt_geom_t  t_elt
     abort();
   }
 
-  int id_block = PDM_Mesh_nodal_block_add (geom->idx_mesh, (PDM_bool_t) st_free_data,
+  int id_block = PDM_Mesh_nodal_block_add (geom->mesh_nodal, (PDM_bool_t) st_free_data,
                                            (PDM_Mesh_nodal_elt_t) t_elt);
 
 
@@ -1101,7 +1166,7 @@ const int            n_elt,
     abort();
   }
 
-  PDM_Mesh_nodal_block_std_set (geom->idx_mesh, id_bloc, id_part,
+  PDM_Mesh_nodal_block_std_set (geom->mesh_nodal, id_bloc, id_part,
                                 n_elt, connec, numabs, NULL);
 
 }
@@ -1171,7 +1236,7 @@ const PDM_l_num_t       n_elt,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly2d_set (geom->idx_mesh, id_bloc, id_part,
+  PDM_Mesh_nodal_block_poly2d_set (geom->mesh_nodal, id_bloc, id_part,
                                 n_elt, connec_idx, connec, numabs, NULL);
 
 }
@@ -1254,7 +1319,7 @@ const PDM_l_num_t   n_face,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly3d_set (geom->idx_mesh,
+  PDM_Mesh_nodal_block_poly3d_set (geom->mesh_nodal,
                                    id_bloc,
                                    id_part,
                                    n_elt,
@@ -1350,7 +1415,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add (geom->idx_mesh,
+  PDM_Mesh_nodal_cell3d_cellface_add (geom->mesh_nodal,
                                       id_part,
                                       n_cell,
                                       n_face,
@@ -1466,7 +1531,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_cell2d_celledge_add (geom->idx_mesh,
+  PDM_Mesh_nodal_cell2d_celledge_add (geom->mesh_nodal,
                                       id_part, n_cell,
                                       n_face,
                                       face_som_idx,
@@ -1548,7 +1613,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_faces_facevtx_add (geom->idx_mesh,
+  PDM_Mesh_nodal_faces_facevtx_add (geom->mesh_nodal,
                                     id_part,
                                     n_face,
                                     face_som_idx,
@@ -1607,11 +1672,11 @@ const int            id_geom
   /* D�termination de la num�rotation absolue interne des elements
      Independante du parallelisme */
 
-  const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->idx_mesh);
-  const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->idx_mesh);
+  const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->mesh_nodal);
+  const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->mesh_nodal);
 
   for (int i = 0; i < n_blocks; i++) {
-    PDM_Mesh_nodal_g_num_in_block_compute (geom->idx_mesh, blocks_id[i]);
+    PDM_Mesh_nodal_g_num_in_block_compute (geom->mesh_nodal, blocks_id[i]);
   }
 
   /* Ecriture au format */
@@ -1669,7 +1734,7 @@ const int      id_geom
 
   if (geom != NULL) {
 
-    PDM_Mesh_nodal_free (geom->idx_mesh);
+    PDM_Mesh_nodal_free (geom->mesh_nodal);
 
     free(geom->nom_geom);
 
@@ -1735,7 +1800,7 @@ const int      id_geom
 
   if (geom != NULL) {
 
-    PDM_Mesh_nodal_partial_free (geom->idx_mesh);
+    PDM_Mesh_nodal_partial_free (geom->mesh_nodal);
 
   }
 }
@@ -2057,7 +2122,7 @@ const PDM_real_t *val
     abort();
   }
 
-  int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
+  int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 
   if (var->_val[id_geom] == NULL) {
     var->_val[id_geom] = (double **) malloc(sizeof(double *) * n_part);
@@ -2072,9 +2137,9 @@ const PDM_real_t *val
     abort();
   }
 
-  int n_cell = PDM_Mesh_nodal_n_cell_get (geom->idx_mesh, id_part);
-  int *num_cell_parent_to_local = PDM_Mesh_nodal_num_cell_parent_to_local_get (geom->idx_mesh, id_part);
-  int n_som = PDM_Mesh_nodal_n_vertices_get(geom->idx_mesh, id_part);
+  int n_cell = PDM_Mesh_nodal_n_cell_get (geom->mesh_nodal, id_part);
+  int *num_cell_parent_to_local = PDM_Mesh_nodal_num_cell_parent_to_local_get (geom->mesh_nodal, id_part);
+  int n_som = PDM_Mesh_nodal_n_vertices_get(geom->mesh_nodal, id_part);
 
   if (var->loc == PDM_WRITER_VAR_ELEMENTS) {
     val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * n_cell);
@@ -2154,7 +2219,7 @@ const int    id_var
           abort();
         }
 
-        int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
+        int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 
         if ((geom != NULL) && (var->_val[idx] != NULL)) {
           for (int j = 0; j < n_part; j++) {
@@ -2384,7 +2449,7 @@ const int      id_geom
 
   if (geom != NULL) {
 
-    PDM_Mesh_nodal_reset (geom->idx_mesh);
+    PDM_Mesh_nodal_reset (geom->mesh_nodal);
 
   }
 }

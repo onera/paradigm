@@ -115,7 +115,7 @@ void
 PDM_para_graph_dual_from_arc2node
 (
 const PDM_MPI_Comm     comm,
-const PDM_g_num_t     *graph_node_distrib,
+      PDM_g_num_t     *graph_node_distrib,
 const PDM_g_num_t     *graph_arc_distrib,
 const PDM_g_num_t     *darc_to_node,
       PDM_g_num_t    **dual_graph_idx,
@@ -147,7 +147,7 @@ void
 PDM_para_graph_dual_from_node2arc
 (
 const PDM_MPI_Comm     comm,
-const PDM_g_num_t     *graph_node_distrib,
+      PDM_g_num_t     *graph_node_distrib,
 const PDM_g_num_t     *graph_arc_distrib,
 const int             *dnode_arc_idx,
 const PDM_g_num_t     *dnode_arc,
@@ -192,7 +192,7 @@ PDM_para_graph_dual_from_combine_connectivity
 const PDM_MPI_Comm     comm,
 const PDM_g_num_t     *cell_distrib,
 const PDM_g_num_t     *face_distrib,
-const PDM_g_num_t     *vtx_distrib,
+      PDM_g_num_t     *vtx_distrib,
 const int             *dcell_face_idx,
 const PDM_g_num_t     *dcell_face,
 const int             *dface_vtx_idx,
