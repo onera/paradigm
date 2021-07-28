@@ -8,7 +8,10 @@
 - PDM_part1_to_selected_part2: Exchange protocol between two partitioned numbering
 - PDM_interpolate_from_mesh_location:
 - PDM_dmesh_nodal:
-- PDM-dmesh_nodal_to_dmesh:
+- PDM_dmesh_nodal_to_dmesh:
+- PDM_poly_vol_gen: Polyhedral mesh generation (PDM_poly_surf extruded)
+- PDM_array: Generic functions for arrays
+- PDM_partitioning_nodal_algorithm:
 ### Changed
 - ParaDiGMA is an extension of ParaDiGM and becomes a git submodule of ParaDiGM
 - PDM_closest_points: Greatly improves robustness and efficiency
@@ -18,9 +21,9 @@
 - PDM_overlay: Greatly improves robustness and efficiency
 - PDM_dist_cloud_surf: Greatly improves robustness and efficiency
 - CMake 3.0 -> CMake 3.19
-- Removes handles in some functionalities
 - Adds functionalities in Fortran API
 - Adds functionalities in Python API
+- Removes handles in some functionalities
 ### Deprecated
 ### Removed
 ### Fixed
