@@ -47,7 +47,6 @@ bugfix : pdm_hilbert 2D
 ### Removed
 ### Fixed
 bugfix : renum cacheblocking
->>>>>>> release
 ## [1.12.2] - 2021-02-05
 ### Added
 ### Changed
