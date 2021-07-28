@@ -6,18 +6,6 @@ cdef extern from "pdm_part.h":
         PDM_PART_SPLIT_PTSCOTCH = 2
         PDM_PART_SPLIT_HILBERT  = 3
 
-    ctypedef enum PDM_part_renum_face_t:
-        PDM_PART_RENUM_FACE_RANDOM        = 1
-        PDM_PART_RENUM_FACE_NONE          = 2
-        PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
-
-    ctypedef enum PDM_part_renum_cell_t:
-        PDM_PART_RENUM_CELL_HILBERT       = 1
-        PDM_PART_RENUM_CELL_RANDOM        = 2
-        PDM_PART_RENUM_CELL_NONE          = 3
-        PDM_PART_RENUM_CELL_CUTHILL       = 4
-        PDM_PART_RENUM_CELL_CACHEBLOCKING = 5
-
     # -> PPART bases functions
     # ------------------------------------------------------------------
     # MPI_Comm      comm,

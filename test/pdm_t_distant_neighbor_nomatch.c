@@ -191,11 +191,11 @@ char *argv[]
   /*
    *  Setup exchange protocol
    */
-  int pdn_id = PDM_distant_neighbor_create(PDM_MPI_COMM_WORLD,
-                                           n_cloud,
-                                           n_entity,
-                                           candidates_idx,
-                                           candidates_desc);
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(PDM_MPI_COMM_WORLD,
+                                                           n_cloud,
+                                                           n_entity,
+                                                           candidates_idx,
+                                                           candidates_desc);
 
   /*
    *  SetUp exchange
@@ -216,15 +216,14 @@ char *argv[]
    * Constant stride test
    */
   int** recv_entity_data = NULL;
-  // PDM_distant_neighbor_exch(pdn_id,
-  PDM_distant_neighbor_exch_int(pdn_id,
-                            sizeof(int),
-                            PDM_STRIDE_CST,
-                            stride,
-                            NULL,
-                            send_entity_data,
-                            NULL,
-                           &recv_entity_data);
+  PDM_distant_neighbor_exch_int(dn,
+                                sizeof(int),
+                                PDM_STRIDE_CST,
+                                stride,
+                                NULL,
+                                send_entity_data,
+                                NULL,
+                                &recv_entity_data);
 
   if(1 == 1){
     log_trace(" Constant strid exchange results ---- \n");
@@ -262,15 +261,15 @@ char *argv[]
 
   int** recv_entity_var_stri = NULL;
   int** recv_entity_var_data = NULL;
-  // PDM_distant_neighbor_exch(pdn_id,
-  PDM_distant_neighbor_exch_int(pdn_id,
-                            sizeof(int),
-                            PDM_STRIDE_VAR,
-                            -1,
-                            send_entity_var_stri,
-                           send_entity_var_data,
-                 (int***) &recv_entity_var_stri,
-                          &recv_entity_var_data);
+  // PDM_distant_neighbor_exch(dn,
+  PDM_distant_neighbor_exch_int(dn,
+                                sizeof(int),
+                                PDM_STRIDE_VAR,
+                                -1,
+                                send_entity_var_stri,
+                                send_entity_var_data,
+                       (int***) &recv_entity_var_stri,
+                                &recv_entity_var_data);
 
   log_trace(" Variable strid exchange results ---- \n");
   if(1 == 1){
@@ -291,7 +290,7 @@ char *argv[]
   /*
    * Free
    */
-  PDM_distant_neighbor_free(pdn_id);
+  PDM_distant_neighbor_free(dn);
   free(candidates_idx);
   free(candidates_desc);
   free(n_entity);

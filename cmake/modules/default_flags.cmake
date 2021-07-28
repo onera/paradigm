@@ -1,10 +1,16 @@
-#------------------------------------------------------------------------------
-#
-# Default flags for several compiler
-#
-#------------------------------------------------------------------------------
 
 cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+
+# For GCC, C math functions are not linked by default
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  link_libraries ("m")
+endif()
+
+#------------------------------------------------------------------------------
+#
+# Default flags for several compilers
+#
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # Fortran default flags
@@ -14,7 +20,7 @@ if (NOT PASS_DEFAULT_FLAGS)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
-  set (CMAKE_Fortran_FLAGS "-fPIC -Wall -pedantic -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
+  set (CMAKE_Fortran_FLAGS "-fPIC -cpp -Wall -pedantic -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
 
   set (CMAKE_Fortran_FLAGS_RELEASE         "-O3")
   set (CMAKE_Fortran_FLAGS_DEBUG           "-O0 -g -fcheck=bounds -fbacktrace")
@@ -112,7 +118,9 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PathScale")
 
 else ()
 
-  message (WARNING "Default flags are not defined for ${CMAKE_Fortran_COMPILER_ID}")
+  if (PDM_ENABLE_Fortran)
+    message (WARNING "Default flags are not defined for ${CMAKE_Fortran_COMPILER_ID}")
+  endif()
 
   set (CMAKE_Fortran_FLAGS "")
   set (CMAKE_Fortran_FLAGS_RELEASE "-O")
@@ -140,16 +148,22 @@ set (FORTRAN_LIBRARIES_FLAG "${FORTRAN_LIBRARIES_FLAG}" CACHE STRING "Fortran li
 
 mark_as_advanced (CMAKE_Fortran_FLAGS_PROFILING CMAKE_Fortran_FLAGS_SANITIZE FORTRAN_LIBRARIES FORTRAN_LIBRARIES_FLAG)
 
+#------------------------------------------------------------------------------
+# CUDA Default Flags
+#------------------------------------------------------------------------------
+
+#set(CUDA_SEPARABLE_COMPILATION ON)
+#set(CUDA_NVCC_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-gencode=arch=compute_20,code=sm_20")
 
 #------------------------------------------------------------------------------
 # C Default Flags
 #------------------------------------------------------------------------------
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-
-  link_libraries ("m")
-
-  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal ")
+  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal  -Wno-unknown-pragmas")
+  set (CMAKE_CUDA_FLAGS "--compiler-options -fPIC")
 
   set (CMAKE_C_FLAGS_RELEASE         "-O3")
   set (CMAKE_C_FLAGS_DEBUG           "-O0 -g")
@@ -162,6 +176,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd3656")
   # set (CMAKE_C_FLAGS "-std=gnu99 -restrict -xHost -qopt-report=5 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd869,3656")
+  set (CMAKE_CUDA_FLAGS "--compiler-options -fpic")
 
   set (CMAKE_C_FLAGS_RELEASE "-O3")
 
@@ -181,6 +196,29 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
 
+elseif (CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM")
+
+  set (CMAKE_C_FLAGS "-fPIC -std=c99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
+
+  set (CMAKE_C_FLAGS_RELEASE         "-O3")
+  set (CMAKE_C_FLAGS_DEBUG           "-g -O0")
+  set (CMAKE_C_FLAGS_PROFILING       "${CMAKE_C_FLAGS_RELEASE} -p")
+  set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
+  set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
+  set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+
+  #SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+
+  # set (CMAKE_C_FLAGS "")
+  #set (CMAKE_C_FLAGS_RELEASE "-O")
+  #set (CMAKE_C_FLAGS_DEBUG   "-g")
+  #set (CMAKE_C_FLAGS_PROFILING       "${CMAKE_C_FLAGS_RELEASE}")
+  #set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE}")
+  #set (CMAKE_C_FLAGS_MINSIZEREL      "-O")
+  #set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  # set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+
+
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
   # set (CMAKE_C_FLAGS "-std=c99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
   set (CMAKE_C_FLAGS "-std=c99 -fPIC -funsigned-char -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
@@ -191,6 +229,8 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lm")
+
 
 elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
 
@@ -272,8 +312,8 @@ mark_as_advanced (CMAKE_C_FLAGS_PROFILING CMAKE_C_FLAGS_SANITIZE)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  # set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal ")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal ")
+  # set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
+  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
@@ -301,7 +341,19 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS_RELEASE "-O3")
+  set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+  set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")
+  set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
+  set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
+  set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer")
+
+  set (CXX_LIBRARIES             )
+  set (CXX_LIBRARIES_FLAG        )
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
+  set (CMAKE_CXX_FLAGS " -fPIC -fuse-ld=lld -std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")
@@ -313,7 +365,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS                "-std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS                "-std=c++11 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
   set (CMAKE_CXX_FLAGS_RELEASE        "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG          "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING      "${CMAKE_CXX_FLAGS_RELEASE} -p")
@@ -421,4 +473,3 @@ endif()
 # leak:librxm-fi.so
 # leak:*MPI*
 # leak:*mpi*
-

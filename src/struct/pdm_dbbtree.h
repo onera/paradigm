@@ -14,6 +14,13 @@
 #include "pdm.h"
 #include "pdm_box.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -154,19 +161,6 @@ PDM_dbbtree_intersect_boxes_set
  */
 
 void
-PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
-(
- PDM_dbbtree_t    *dbbt,
- const int        n_pts,
- double           pts[],
- PDM_g_num_t      pts_g_num[],
- double           upper_bound_dist2[],
- int             *box_index[],
- PDM_g_num_t     *box_g_num[]
- );
-
-
-void
 PDM_dbbtree_closest_upper_bound_dist_boxes_get
 (
  PDM_dbbtree_t    *dbbt,
@@ -176,8 +170,34 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  double           upper_bound_dist2[],
  int             *box_index[],
  PDM_g_num_t     *box_g_num[]
- );
+);
 
+
+/**
+ *
+ * Get the boxes closer than the upper bound distance (Asynchrone)
+ *
+ *   \param [in] bt               Pointer to box tree structure
+ *   \param [in] n_pts            Number of points
+ *   \param [in] pts              Point coordinates (size = 3 * n_pts)
+ *   \param [in] pts_g_num        Point global numbers
+ *   \param [in] upper_bound_dist2 Upper bound of the squer of the distance (size = n_pts)
+ *   \param [out] box_index       Index of boxes (size = n_pts + 1)
+ *   \param [out] box_g_num       Global num of boxes (size = i_boxes[n_pts])
+ *
+ */
+
+void
+PDM_dbbtree_closest_upper_bound_dist_boxes_get_async
+(
+ PDM_dbbtree_t    *dbbt,
+ const int        n_pts,
+ double           pts[],
+ PDM_g_num_t      pts_g_num[],
+ double           upper_bound_dist2[],
+ int             *box_index[],
+ PDM_g_num_t     *box_g_num[]
+);
 
 /**
  *
@@ -208,6 +228,20 @@ void PDM_dbbtree_points_inside_boxes
  double            **pts_in_box_coord
  );
 
+
+void
+PDM_dbbtree_points_inside_boxes_with_copies
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ const int           n_boxes,
+ const PDM_g_num_t   box_g_num[],
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord
+ );
 
 #ifdef __cplusplus
 }

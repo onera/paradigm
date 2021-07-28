@@ -51,17 +51,15 @@ extern "C" {
  *
  */
 int
-PDM_inplace_unique_long
+PDM_inplace_unique
 (
- PDM_g_num_t a[],
+ int a[],
  int l,
  int r
 )
 {
-  // PDM_quick_sort_long(a, l, r); /* Less optimal than PDM_sort_long */
   int array_size = r - l + 1;
-  // printf("PDM_inplace_unique_long::array_size::%d\n", array_size);
-  PDM_sort_long(&a[l], NULL, array_size);
+  PDM_sort_int(&a[l], NULL, array_size);
 
   int new_size  = 1;
   int idx_write = l;
@@ -69,6 +67,50 @@ PDM_inplace_unique_long
   a[idx_write++] = last_value;
   for (int idx = l+1; idx <= r; idx++) {
     if(last_value != a[idx]){
+      last_value = a[idx];
+      a[idx_write++] = a[idx];
+      new_size++;
+    }
+  }
+
+  return new_size;
+}
+
+/**
+ *
+ * \brief Unique
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+int
+PDM_inplace_unique_long
+(
+ PDM_g_num_t a[],
+ int         order[],
+ int l,
+ int r
+)
+{
+  // PDM_quick_sort_long(a, l, r); /* Less optimal than PDM_sort_long */
+  int array_size = r - l + 1;
+  // printf("PDM_inplace_unique_long::array_size::%d\n", array_size);
+  PDM_sort_long(&a[l], order, array_size);
+
+  int new_size  = 1;
+  int idx_write = l;
+  PDM_g_num_t last_value = a[l];
+  // if(order != NULL) {
+  //   order[idx_write] = order[l];
+  // }
+  a[idx_write++] = last_value;
+  for (int idx = l+1; idx <= r; idx++) {
+    if(last_value != a[idx]){
+      // if(order != NULL) {
+      //   order[idx_write] = order[idx];
+      // }
       last_value = a[idx];
       a[idx_write++] = a[idx];
       new_size++;

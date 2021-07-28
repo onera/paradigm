@@ -35,7 +35,7 @@ extern "C" {
  *
  */
 
-typedef struct {
+struct _pdm_part_to_block_t {
 
   /*
    * Block distribution properties
@@ -62,7 +62,7 @@ typedef struct {
   PDM_g_num_t               **gnum_elt;             /*!< Global numbering of elements for any part */
   int                        *dest_proc;            /*!< Destination process for any element (size = n_elt_proc) */
 
-  PDM_g_num_t                 *data_distrib_index;  /*!< Data distribution on ranks
+  PDM_g_num_t                *data_distrib_index;  /*!< Data distribution on ranks
                                                          (size = s_comm + 1) */
   int                         s_block_min;          /*!< Minimum block size */
   int                         s_block_max;          /*!< Maximum block size */
@@ -86,6 +86,8 @@ typedef struct {
   PDM_g_num_t                *block_gnum;           /*!< Sorted Global number of
                                                          reveived data (size = block_n_elt) */
 
+  double                    **weight_g;             /*!< Global weights of elements for any part */
+
 
   /* Asynchrone */
   int              max_exch_request;
@@ -103,7 +105,7 @@ typedef struct {
   int**            n_recv_buffer;
   int**            i_recv_buffer;
 
-} _pdm_part_to_block_t;
+} ;
 
 /*=============================================================================
  * Static global variables

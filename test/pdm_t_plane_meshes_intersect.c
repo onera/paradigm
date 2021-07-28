@@ -587,6 +587,36 @@ _create_split_mesh
     int nPropertyFace = 0;
     int *renum_properties_face = NULL;
 
+    // PDM_part_create (&ppartId,
+    //                  pdm_mpi_comm,
+    //                  method,
+    //                  "PDM_PART_RENUM_CELL_NONE",
+    //                  "PDM_PART_RENUM_FACE_NONE",
+    //                  nPropertyCell,
+    //                  renum_properties_cell,
+    //                  nPropertyFace,
+    //                  renum_properties_face,
+    //                  n_part,
+    //                  dNFace,
+    //                  dNEdge,
+    //                  dNVtx,
+    //                  nEdgeGroup,
+    //                  NULL,
+    //                  NULL,
+    //                  NULL,
+    //                  NULL,
+    //                  have_dCellPart,
+    //                  dCellPart,
+    //                  dEdgeFace,
+    //                  dEdgeVtxIdx,
+    //                  dEdgeVtx,
+    //                  NULL,
+    //                  dVtxCoord,
+    //                  NULL,
+    //                  dEdgeGroupIdx,
+    //                  dEdgeGroup);
+
+    printf("dNFace = %i | dNEdge = %i | dNVtx = %i \n", dNFace, dNEdge, dNVtx);
     PDM_part_create (&ppartId,
                      pdm_mpi_comm,
                      method,
@@ -601,13 +631,13 @@ _create_split_mesh
                      dNEdge,
                      dNVtx,
                      nEdgeGroup,
-                     NULL,
-                     NULL,
+                     dFaceVtxIdx,
+                     dFaceEdge,
                      NULL,
                      NULL,
                      have_dCellPart,
                      dCellPart,
-                     dEdgeFace,
+                     NULL,
                      dEdgeVtxIdx,
                      dEdgeVtx,
                      NULL,
@@ -615,7 +645,6 @@ _create_split_mesh
                      NULL,
                      dEdgeGroupIdx,
                      dEdgeGroup);
-
     free (dCellPart);
 
     double  *elapsed = NULL;

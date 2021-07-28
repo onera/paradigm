@@ -1,3 +1,53 @@
+## [1.13.0] - 2021-07-28
+### Added
+- PDM_part_extension: Generate extension of a existing partition for graph, usefull to setup ghost cell
+- PDM_distant_neighbor: Exchange protocol in order to communicate by triplet (i_proc, i_part, i_entity)
+- PDM_mesh_adapt: First API of mesh adaptation
+- PDM_dcube_nodal_gen: Cube generator with element connectivity (3D : Hexa/Pyra/Tetra and 2D : Quad/Tri )
+- PDM_part1_to_selected_part2: Exchange protocol between two partitioned numbering
+- PDM_interpolate_from_mesh_location: Simple inplementation of exhange after a localisation (can be replace by PDM_part1_to_selected_part2)
+- PDM_dmesh_nodal: Low level structure to describe a mesh by elemt in distributed maner
+- PDM_dmesh_nodal_to_dmesh: Algorithm to deduce from mesh_nodal connectivity a descending connectivity (ex: cell_vtx ---> face_cell)
+- PDM_poly_vol_gen: Polyhedral mesh generation (PDM_poly_surf extruded)
+- PDM_array: Generic functions for arrays
+- PDM_partitioning_nodal_algorithm: A collection of algorithm to help partitionning of dmesh_nodal (Beta)
+### Changed
+- ParaDiGMA is an extension of ParaDiGM and becomes a git submodule of ParaDiGM
+- PDM_closest_points: Greatly improves robustness and efficiency
+- PDM_mesh_location: Greatly improves robustness and efficiency
+- PDM_para_octree: Greatly improves robustness and efficiency
+- PDM_dbbtree: Greatly improves robustness and efficiency
+- PDM_overlay: Greatly improves robustness and efficiency
+- PDM_dist_cloud_surf: Greatly improves robustness and efficiency
+- CMake 3.0 -> CMake 3.19
+- Adds functionalities in Fortran API
+- Adds functionalities in Python API
+- Removes handles in some functionalities
+### Deprecated
+### Removed
+### Fixed
+## [1.12.5] - 2021-07-01
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : pdm_writer_ensight
+## [1.12.4] - 2021-03-23
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : pdm_hilbert 2D
+## [1.12.3] - 2021-03-10
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : renum cacheblocking
+>>>>>>> release
 ## [1.12.2] - 2021-02-05
 ### Added
 ### Changed

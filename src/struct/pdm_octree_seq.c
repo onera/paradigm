@@ -1070,7 +1070,7 @@ double          *closest_octree_pt_dist2
   int dim = 3;
   /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
   /* double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01}; */
-
+  //int count = 0;
   for (int i = 0; i < n_pts; i++) {
 
     int pos_stack = 0;
@@ -1103,7 +1103,7 @@ double          *closest_octree_pt_dist2
     pos_stack++;
 
     while (pos_stack > 0) {
-
+      //count++;
       int id_curr_node = stack[--pos_stack];
       _octant_t *curr_node = &(octree->nodes[id_curr_node]);
 
@@ -1210,11 +1210,73 @@ double          *closest_octree_pt_dist2
 
   }
 
+  //if (n_pts != 0) printf("n nodes per point = %d\n", count / n_pts);
+
   free (inbox_stack);
   free (min_dist2_stack);
   free (stack);
 
 }
+
+
+void PDM_octree_seq_write_octants
+(
+ const int   id,
+ const char *filename
+ )
+{
+  _octree_seq_t *octree = _get_from_id (id);
+
+  // count leaves
+  int n_leaves = 0;
+  for (int i = 0; i < octree->n_nodes; i++) {
+    if (octree->nodes[i].is_leaf) n_leaves++;
+  }
+
+  // write VTK
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "octree_seq\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*octree->n_nodes);//n_leaves);
+  for (int inode = 0; inode < octree->n_nodes; inode++) {
+    if (1) {//octree->nodes[inode].is_leaf) {
+      double *ext = octree->nodes[inode].extents;
+      for (int k = 0; k < 2; k++) {
+        for (int j = 0; j < 2; j++) {
+          for (int i = 0; i < 2; i++) {
+            int ii = (1-j)*i + j*(1-i);
+            fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
+          }
+        }
+      }
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", octree->n_nodes, 9*octree->n_nodes);//n_leaves, 9*n_leaves);
+  int ileaf = 0;
+  for (int inode = 0; inode < octree->n_nodes; inode++) {
+    if (1) {//octree->nodes[inode].is_leaf) {
+      fprintf(f, "8 ");
+      for (int j = 0; j < 8; j++) {
+        fprintf(f, "%d ", 8*ileaf+j);
+      }
+      fprintf(f, "\n");
+      ileaf++;
+    }
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", octree->n_nodes);//octree->n_nodesn_leaves);
+  for (int i = 0; i < octree->n_nodes; i++) {//n_leaves; i++) {
+    fprintf(f, "%d\n", 12);
+  }
+
+  fclose(f);
+}
+
 
 #ifdef	__cplusplus
 }

@@ -13,6 +13,7 @@ file(GLOB_RECURSE SOURCES
      ppart/*.[ch]
      ppart/*.cxx
      struct/*.[ch]
+     struct/*.cxx
      util/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
@@ -24,10 +25,37 @@ file(GLOB_RECURSE SOURCESF
      *.[fF]
      *.[fF]90)
 
+file(GLOB_RECURSE SOURCESGPU
+     gpu/*.cu
+     gpu/*.cuh)
+
 add_library(pdm OBJECT ${SOURCES})
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   add_library(pdmf OBJECT ${SOURCESF})
+endif()
+
+if (PDM_ENABLE_CUDA)
+  add_library(pdm_gpu STATIC ${SOURCESGPU})
+  set_target_properties(pdm_gpu PROPERTIES
+                            CUDA_SEPARABLE_COMPILATION ON)
+  target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  -maxrregcount=32;--fmad=false;#-G;-g;
+  # -gencode=arch=compute_35,code=sm_35;
+  # -gencode=arch=compute_37,code=sm_37;
+  # -gencode=arch=compute_50,code=sm_50;
+  # -gencode=arch=compute_52,code=sm_52;
+  # -gencode=arch=compute_60,code=sm_60;
+  -gencode=arch=compute_61,code=sm_61;
+  # -gencode=arch=compute_70,code=sm_70;
+  # -gencode=arch=compute_75,code=sm_75;
+  # -gencode=arch=compute_75,code=compute_75;
+  >)
+  #set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  #list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_51;)
+  #set(CUDA_NVCC_FLAGS "-gencode arch=compute_60,code=sm_60")
+  #set(CUDA_LAUNCH_BLOCKING 1)
+  #set(CMAKE_C_FLAGS "-std=c17 -pedantic-errors ${CMAKE_C_FLAGS}")
 endif()
 
 target_include_directories(pdm
@@ -45,14 +73,16 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mesh>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/meshgen>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/struct>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gpu>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/adapt>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
   PUBLIC    $<INSTALL_INTERFACE:include/>
 )
 
-if (PDM_IN_PDMA)
+if (PDM_ENABLE_EXTENSION_PDMA)
   target_include_directories(pdm
-                             PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/plugins/renum>
-                             PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/overlay>)
+                             PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extensions/paradigma/src/plugins/renum>
+                             )
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
@@ -74,10 +104,10 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
     PUBLIC    $<INSTALL_INTERFACE:include/>
   )
-    if (PDM_IN_PDMA)
+    if (PDM_ENABLE_EXTENSION_PDMA)
       target_include_directories(pdmf
-                                 PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/plugins/renum>
-                                 PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/overlay>)
+                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extensions/paradigma/src/plugins/renum>
+                                 )
     endif()
 endif()
 
@@ -88,8 +118,32 @@ endif (PTSCOTCH_FOUND)
 
 if (PARMETIS_FOUND)
     target_include_directories(pdm
-                              PRIVATE $<BUILD_INTERFACE:${PARMETIS_INCLUDE_DIRS}>)
+                               PRIVATE $<BUILD_INTERFACE:${PARMETIS_INCLUDE_DIRS}>)
+    target_include_directories(pdm
+                               PRIVATE $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
 endif (PARMETIS_FOUND)
+
+if (PDM_ENABLE_CUDA)
+    target_include_directories(pdm_gpu
+                              INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
+                              PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
+                              PRIVATE  ${CMAKE_BINARY_DIR}
+                              PRIVATE  ${PDM_BINARY_DIR}
+                              PUBLIC  ${CMAKE_SOURCE_DIR}
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+                              #PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
+                              PUBLIC  ${MPI_INCLUDE_PATH}
+                              PUBLIC  ${CUDA_INCLUDE_DIRS}
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
+endif ()
 
 # Liste des header
 # ----------------
@@ -100,6 +154,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pdm_priv.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_coarse_mesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_renum.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_nodal.h")
@@ -108,10 +163,14 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mpi_node_first_ran
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_fortran_to_c_string.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_gen.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_nodal_gen.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_distrib.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum_from_hash_values.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_multi_block_to_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_interpolate_from_mesh_location.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_hash_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_handles.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_sort.h")
@@ -120,16 +179,14 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_radix_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_cellface_orient.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dmesh_nodal.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dmesh_nodal_to_dmesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dconnectivity_transform.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_part_connectivity_transform.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlay.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_edges_intersect.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlayf.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_poly_clipp.h")
-if (PDM_IN_PDMA)
-  list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")
-else()
-  list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
-endif()
+list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 
@@ -140,11 +197,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/mod_pdm_part.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partf.h")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pdmf.h")
-  if (PDM_IN_PDMA)
-    list(APPEND LIST_HEADERF "${CMAKE_BINARY_DIR}/pdm_configf.h")
-  else()
-    list(APPEND LIST_HEADERF "${PDM_BINARY_DIR}/pdm_configf.h")
-  endif()
+  list(APPEND LIST_HEADERF "${PDM_BINARY_DIR}/pdm_configf.h")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_io.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_fortran.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_writer.mod")
@@ -155,10 +208,16 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_dist_cloud_surf.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_part_to_block.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_gnum.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_block_to_part.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_global_mean.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_mesh_location.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_location.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_dcube_gen.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_gen.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_closest_points.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_closest_points.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_overlay.mod")
@@ -241,6 +300,21 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE)
   get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)
   target_include_directories(pdmf_static PUBLIC ${PDM_INC})
 
+endif()
+
+if (PDM_ENABLE_CUDA)
+  set_property(TARGET ${pdm_gpu} PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+  if (PDM_ENABLE_STATIC)
+    target_link_libraries(pdm_gpu pdm_static)
+  elseif (PDM_ENABLE_SHARED)
+    target_link_libraries(pdm_gpu pdm_shared)
+  endif()
+  set_target_properties(pdm_gpu PROPERTIES
+                             PUBLIC_HEADER "${LIST_HEADER}")
+
+  get_target_property(PDM_INC pdm_gpu INCLUDE_DIRECTORIES)
+  target_include_directories(pdm_gpu PUBLIC ${PDM_INC})
 endif()
 
 # Spécification de l'installation

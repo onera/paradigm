@@ -23,6 +23,7 @@
 #include "pdm_sort.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,7 +128,7 @@ _evaluate_distribution(int          n_ranges,
  */
 
 static void
-_define_rank_distrib( _pdm_part_to_block_t *ptb,
+_define_rank_distrib( PDM_part_to_block_t *ptb,
                       int                 dim,
                       int                 n_ranks,
                       double              gsum_weight,
@@ -149,9 +150,6 @@ _define_rank_distrib( _pdm_part_to_block_t *ptb,
     l_distrib[id] = 0;
     g_distrib[id] = 0;
   }
-
-  /* gnum are supposed to be ordered */
-  /* TODO: Refaire cette partie : les nombres ne sont pas tries */
 
   for (int i = 0; i < ptb->n_part; i++) {
 
@@ -341,7 +339,7 @@ _update_sampling(int            dim,
 static void
 _active_ranks
 (
- _pdm_part_to_block_t  *ptb
+ PDM_part_to_block_t  *ptb
 )
 {
 
@@ -458,7 +456,7 @@ _active_ranks
 static void
 _distrib_data
 (
- _pdm_part_to_block_t *ptb,
+ PDM_part_to_block_t *ptb,
  int                  user_distrib
 )
 {
@@ -472,8 +470,8 @@ _distrib_data
   //    _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
   //  }
   //}
+  // fflush(stdout);
 
-  fflush(stdout);
   for (int i = 0; i < ptb->n_part; i++) {
 
     ptb->n_elt_proc+= ptb->n_elt[i];
@@ -785,9 +783,9 @@ _distrib_data
   if( ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM)
   {
     ptb->n_elt_block = ptb->data_distrib_index[ptb->i_rank+1] - ptb->data_distrib_index[ptb->i_rank];
-    printf("ptb->n_elt_block::%d \n", ptb->n_elt_block);
-    printf(" ptb->data_distrib_index[ptb->i_rank+1]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank+1]);
-    printf(" ptb->data_distrib_index[ptb->i_rank]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank]);
+    // printf("ptb->n_elt_block::%d \n", ptb->n_elt_block);
+    // printf(" ptb->data_distrib_index[ptb->i_rank+1]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank+1]);
+    // printf(" ptb->data_distrib_index[ptb->i_rank]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank]);
   }
 
   /*
@@ -822,6 +820,87 @@ _distrib_data
   }
 }
 
+
+
+static void
+_compute_global_weights
+(
+ PDM_part_to_block_t *ptb
+ )
+{
+  /* Send local weights */
+  int *send_count = PDM_array_zeros_int (ptb->s_comm);
+  double *part_weight = malloc (sizeof(double) * ptb->tn_send_data);
+  int idx = 0;
+  for (int i = 0; i < ptb->n_part; i++) {
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int rank = ptb->dest_proc[idx++];
+      part_weight[ptb->i_send_data[rank] + send_count[rank]++] = ptb->weight[i][j];
+    }
+  }
+
+  double *recv_weight = malloc (sizeof(double) * ptb->tn_recv_data);
+  PDM_MPI_Alltoallv (part_weight,
+                     ptb->n_send_data,
+                     ptb->i_send_data,
+                     PDM_MPI_DOUBLE,
+                     recv_weight,
+                     ptb->n_recv_data,
+                     ptb->i_recv_data,
+                     PDM_MPI_DOUBLE,
+                     ptb->comm);
+
+  /* Sum received weights */
+  double *block_weight = malloc (sizeof(double) * ptb->n_elt_block);
+  for (int i = 0; i < ptb->n_elt_block; i++) {
+    block_weight[i] = 0.;
+  }
+
+  idx = 0;
+  for (int i = 0; i < ptb->tn_recv_data; i++) {
+    int j = ptb->order[i];
+    while (ptb->block_gnum[idx] < ptb->sorted_recv_gnum[i]) {
+      idx++;
+    }
+    block_weight[idx] += recv_weight[j];
+  }
+
+  idx = 0;
+  for (int i = 0; i < ptb->tn_recv_data; i++) {
+    int j = ptb->order[i];
+    while (ptb->block_gnum[idx] < ptb->sorted_recv_gnum[i]) {
+      idx++;
+    }
+    recv_weight[j] = block_weight[idx];
+  }
+  free (block_weight);
+
+  /* Send back global weights */
+  PDM_MPI_Alltoallv (recv_weight,
+                     ptb->n_recv_data,
+                     ptb->i_recv_data,
+                     PDM_MPI_DOUBLE,
+                     part_weight,
+                     ptb->n_send_data,
+                     ptb->i_send_data,
+                     PDM_MPI_DOUBLE,
+                     ptb->comm);
+  free (recv_weight);
+
+  /* Store global weights */
+  ptb->weight_g = malloc (sizeof(double *) * ptb->n_part);
+  PDM_array_reset_int (send_count, ptb->s_comm, 0);
+  idx = 0;
+  for (int i = 0; i < ptb->n_part; i++) {
+    ptb->weight_g[i] = malloc (sizeof(double) * ptb->n_elt[i]);
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int rank = ptb->dest_proc[idx++];
+      ptb->weight_g[i][j] = part_weight[ptb->i_send_data[rank] + send_count[rank]++];
+    }
+  }
+  free (send_count);
+  free (part_weight);
+}
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -876,8 +955,8 @@ PDM_part_to_block_create
 )
 {
 
-  _pdm_part_to_block_t *ptb =
-    (_pdm_part_to_block_t *) malloc (sizeof(_pdm_part_to_block_t));
+  PDM_part_to_block_t *ptb =
+    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
   if ((t_post != PDM_PART_TO_BLOCK_POST_MERGE) && (weight != NULL)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_create : weights are available only if PDM_PART_TO_BLOCK_POST_MERGE is selected\n");
@@ -917,6 +996,8 @@ PDM_part_to_block_create
   ptb->n_elt_block       = 0;
   ptb->block_gnum        = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
 
+  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
+
   /* Asynchone */
   ptb->max_exch_request = 10;
   ptb->next_request     = 0;
@@ -954,6 +1035,14 @@ PDM_part_to_block_create
    */
 
   _distrib_data (ptb, 0);
+
+
+  /*
+   * Compute global weight for each element
+   */
+  if (ptb->weight != NULL && ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
+    _compute_global_weights (ptb);
+  }
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -1002,15 +1091,15 @@ PDM_part_to_block_create2
  PDM_part_to_block_post_t      t_post,
  double                         part_active_node,
  PDM_g_num_t                 **gnum_elt,
- PDM_g_num_t                  *data_distrib_index,
+ const PDM_g_num_t            *data_distrib_index,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
 )
 {
 
-  _pdm_part_to_block_t *ptb =
-    (_pdm_part_to_block_t *) malloc (sizeof(_pdm_part_to_block_t));
+  PDM_part_to_block_t *ptb =
+    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
   ptb->t_distrib         = t_distrib;    /*!< Distribution type */
   ptb->t_post            = t_post;       /*!< Post processing type */
@@ -1049,6 +1138,8 @@ PDM_part_to_block_create2
   ptb->order            = NULL;  /*!< Order */
   ptb->n_elt_block      = 0;
   ptb->block_gnum       = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
+
+  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
 
   /* Asynchone */
   ptb->max_exch_request = 10;
@@ -1108,8 +1199,7 @@ PDM_part_to_block_n_active_ranks_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->n_active_ranks;
+  return ptb->n_active_ranks;
 }
 
 
@@ -1129,8 +1219,7 @@ PDM_part_to_block_is_active_rank
  PDM_part_to_block_t *ptb
  )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->is_my_rank_active;
+  return ptb->is_my_rank_active;
 }
 
 
@@ -1150,8 +1239,7 @@ PDM_part_to_block_active_ranks_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->active_ranks;
+  return ptb->active_ranks;
 }
 
 
@@ -1171,8 +1259,7 @@ PDM_part_to_block_n_elt_block_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->n_elt_block;
+  return ptb->n_elt_block;
 }
 
 
@@ -1192,8 +1279,7 @@ PDM_part_to_block_block_gnum_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->block_gnum;
+  return ptb->block_gnum;
 }
 
 
@@ -1224,19 +1310,18 @@ PDM_part_to_block_exch
  void               **block_data
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
 
-  //if ( _ptb->i_rank==0 ){
+  //if ( ptb->i_rank==0 ){
   //  printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
   //  fflush(stdout);
   //  printf("line %d PDM_part_to_block_exch t_stride=%d\n",__LINE__,t_stride);
   //  fflush(stdout);
   //  printf("line %d PDM_part_to_block_exch cst_stride=%d\n",__LINE__,cst_stride);
   //  fflush(stdout);
-  //  printf("line %d PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",__LINE__,_ptb->n_elt[0]);
+  //  printf("line %d PDM_part_to_block_exch ptb->n_elt[0]=%d\n",__LINE__,ptb->n_elt[0]);
   //  fflush(stdout);
-  //  //for (int i = 0; i < _ptb->n_part; i++) {
-  //  //for (int j = 0; j < _ptb->n_elt[0]; j++) {
+  //  //for (int i = 0; i < ptb->n_part; i++) {
+  //  //for (int j = 0; j < ptb->n_elt[0]; j++) {
   //  //  printf("line %d PDM_part_to_block_exch part_data[%d]==%d\n",__LINE__,j,(( int **) part_data)[0][j]);
   //  //  fflush(stdout);
   //  //}
@@ -1247,17 +1332,17 @@ PDM_part_to_block_exch
   //*/
 
 
-  if ((_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
+  if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
 
 
-  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
-  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
-  int *n_send_buffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  int *n_recv_buffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
+  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+  int *n_send_buffer = (int *) malloc (sizeof(int) * ptb->s_comm);
+  int *n_recv_buffer = (int *) malloc (sizeof(int) * ptb->s_comm);
 
   /*
    * Exchange Stride and build buffer properties
@@ -1266,43 +1351,43 @@ PDM_part_to_block_exch
   int *recv_stride = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
+    for (int i = 0; i < ptb->s_comm; i++) {
       n_send_buffer[i] = 0;
       n_recv_buffer[i] = 0;
     }
 
-    int *send_stride = (int *) malloc (sizeof(int) * _ptb->tn_send_data);
+    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_send_data);
 
     int idx = -1;
-    for (int i = 0; i < _ptb->n_part; i++) {
-      for (int j = 0; j < _ptb->n_elt[i]; j++) {
-        int iproc = _ptb->dest_proc[++idx];
-        send_stride[_ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
+    for (int i = 0; i < ptb->n_part; i++) {
+      for (int j = 0; j < ptb->n_elt[i]; j++) {
+        int iproc = ptb->dest_proc[++idx];
+        send_stride[ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
         n_send_buffer[iproc] += 1;
       }
     }
 
-    recv_stride = (int *) malloc (sizeof(int) * _ptb->tn_recv_data);
+    recv_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
     assert (send_stride != NULL);
     assert (recv_stride != NULL);
 
     PDM_MPI_Alltoallv (send_stride,
-                       _ptb->n_send_data,
-                       _ptb->i_send_data,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
                        PDM_MPI_INT,
                        recv_stride,
-                       _ptb->n_recv_data,
-                       _ptb->i_recv_data,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
                        PDM_MPI_INT,
-                       _ptb->comm);
+                       ptb->comm);
 
     /*
      * Build buffers
      */
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
-      int ibeg = _ptb->i_send_data[i];
-      int iend = _ptb->i_send_data[i] + _ptb->n_send_data[i];
+    for (int i = 0; i < ptb->s_comm; i++) {
+      int ibeg = ptb->i_send_data[i];
+      int iend = ptb->i_send_data[i] + ptb->n_send_data[i];
 
       n_send_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++)
@@ -1317,8 +1402,8 @@ PDM_part_to_block_exch
         i_send_buffer[i] = 0;
       }
 
-      ibeg = _ptb->i_recv_data[i];
-      iend = _ptb->i_recv_data[i] + _ptb->n_recv_data[i];
+      ibeg = ptb->i_recv_data[i];
+      iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
 
       n_recv_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++)
@@ -1339,19 +1424,19 @@ PDM_part_to_block_exch
 
   else if (t_stride == PDM_STRIDE_CST) {
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
+    for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = _ptb->i_send_data[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = _ptb->i_recv_data[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
+      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
 
-      n_send_buffer[i] = _ptb->n_send_data[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = _ptb->n_recv_data[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
+      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
 
     }
   }
 
-  size_t s_send_buffer = i_send_buffer[_ptb->s_comm - 1] + n_send_buffer[_ptb->s_comm -1];
-  size_t s_recv_buffer = i_recv_buffer[_ptb->s_comm - 1] + n_recv_buffer[_ptb->s_comm -1];
+  size_t s_send_buffer = i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
+  size_t s_recv_buffer = i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
 
   /*
    * Data exchange
@@ -1366,33 +1451,33 @@ PDM_part_to_block_exch
 
   unsigned char **_part_data = (unsigned char **) part_data;
 
-  for (int i = 0; i <  _ptb->s_comm; i++) {
+  for (int i = 0; i <  ptb->s_comm; i++) {
     n_send_buffer[i] = 0;
   }
 
   int idx = -1;
-  for (int i = 0; i < _ptb->n_part; i++) {
+  for (int i = 0; i < ptb->n_part; i++) {
 
     size_t *i_part = NULL;
     if (t_stride == PDM_STRIDE_VAR) {
-      i_part = (size_t *) malloc (sizeof(size_t) * (_ptb->n_elt[i] + 1));
+      i_part = (size_t *) malloc (sizeof(size_t) * (ptb->n_elt[i] + 1));
       assert (i_part != NULL);
 
     i_part[0] = 0;
-      for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
+      for (int j = 1; j < ptb->n_elt[i] + 1; j++)
         i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
     }
 
-    //if ( _ptb->i_rank==0 ){
-    //  printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
+    //if ( ptb->i_rank==0 ){
+    //  printf("line %d PDM_part_to_block_exch  ptb->dest_proc[%d]=%d\n",__LINE__,idx,ptb->dest_proc[idx]);
     //  fflush(stdout);
     //  //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
     //  //fflush(stdout);
     //}
 
 
-    for (int j = 0; j < _ptb->n_elt[i]; j++) {
-      int iproc = _ptb->dest_proc[++idx];
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int iproc = ptb->dest_proc[++idx];
       size_t s_octet_elt = 0;
       size_t i_part_elt = 0;
 
@@ -1429,7 +1514,7 @@ PDM_part_to_block_exch
                       n_recv_buffer,
                       i_recv_buffer,
                       PDM_MPI_BYTE,
-                      _ptb->comm);
+                      ptb->comm);
 
   free(send_buffer);
   free(n_send_buffer);
@@ -1448,29 +1533,29 @@ PDM_part_to_block_exch
 
   if (t_stride == PDM_STRIDE_VAR) {
     int* _block_stride = NULL;
-    if(_ptb->tn_recv_data > 0){
-      _block_stride = malloc(sizeof(int) * _ptb->tn_recv_data);
+    if(ptb->tn_recv_data > 0){
+      _block_stride = malloc(sizeof(int) * ptb->tn_recv_data);
     }
     *block_stride = _block_stride;
-    for (int i = 0; i < _ptb->tn_recv_data; i++) {
-      _block_stride[i] = recv_stride[_ptb->order[i]];
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      _block_stride[i] = recv_stride[ptb->order[i]];
     }
 
     /*
      * Compute index in data
      */
 
-    i_recv_stride = malloc (sizeof(int) * (_ptb->tn_recv_data + 1));
-    i_block_stride = malloc (sizeof(int) * (_ptb->tn_recv_data + 1));
+    i_recv_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
+    i_block_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
 
     i_recv_stride[0] = 0;
     i_block_stride[0] = 0;
-    for (int i = 0; i < _ptb->tn_recv_data; i++) {
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
       i_recv_stride[i+1]  = i_recv_stride[i] + recv_stride[i];
       i_block_stride[i+1] = i_block_stride[i] + _block_stride[i];
     }
 
-    for (int i = 0; i < _ptb->tn_recv_data; i++) {
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
       i_recv_stride[i+1]  *= (int) s_data;
       i_block_stride[i+1] *= (int) s_data;
     }
@@ -1479,8 +1564,8 @@ PDM_part_to_block_exch
      * Sort Buffer
      */
 
-    for (int i = 0; i < _ptb->tn_recv_data; i++) {
-      int old = _ptb->order[i];
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      int old = ptb->order[i];
       int idOld = i_recv_stride[old];
       for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
         _block_data[k] = recv_buffer[idOld++];
@@ -1495,30 +1580,30 @@ PDM_part_to_block_exch
      * post processing
      */
 
-    if (_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
 
       int idx1 = 0;
       int idx2 = 0;
 
-      if (_ptb->tn_recv_data == 1) {
+      if (ptb->tn_recv_data == 1) {
         idx2 = i_block_stride[1];
       }
 
-      for (int i = 1; i < _ptb->tn_recv_data; i++) {
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
         if (i == 1) {
           idx2 = i_block_stride[1];
         }
-        if (_ptb->block_gnum[idx1] != _ptb->sorted_recv_gnum[i]) {
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
           idx1 += 1;
           _block_stride[idx1] = _block_stride[i];
-          if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
             for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
               _block_data[idx2++] = _block_data[k];
             }
           }
         }
         else {
-          if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
             _block_stride[idx1] += _block_stride[i];
           }
         }
@@ -1526,11 +1611,11 @@ PDM_part_to_block_exch
 
       /* Cleanup */
 
-      if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
 
-        _block_stride = realloc (_block_stride, sizeof(int) * _ptb->n_elt_block);
+        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
 
         *block_stride = _block_stride;
         s_block_data = idx2 / (int) s_data;
@@ -1549,9 +1634,9 @@ PDM_part_to_block_exch
      * Sort Buffer
      */
 
-    for (int i = 0; i < _ptb->tn_recv_data; i++) {
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
       int n_octet = cst_stride * (int) s_data;
-      int old = _ptb->order[i];
+      int old = ptb->order[i];
       int idOld = old * n_octet;
 
       for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
@@ -1563,24 +1648,24 @@ PDM_part_to_block_exch
      * Post processing
      */
 
-    if (_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
       int idx2 = 0;
       int idx1 = 0;
 
-      assert (_ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE);
+      assert (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE);
 
-      if (_ptb->tn_recv_data == 1) {
+      if (ptb->tn_recv_data == 1) {
         idx2 =  cst_stride * (int) s_data;
       }
 
-      for (int i = 1; i < _ptb->tn_recv_data; i++) {
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
         int n_octet = cst_stride * (int) s_data;
         if (i == 1) {
           idx2 = n_octet;
         }
-        if (_ptb->block_gnum[idx1] != _ptb->sorted_recv_gnum[i]) {
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
           idx1 += 1;
-          if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
             int idx3 = i * cst_stride * (int) s_data;
             for (int k = 0; k < n_octet; k++) {
               _block_data[idx2++] = _block_data[idx3++];
@@ -1589,7 +1674,7 @@ PDM_part_to_block_exch
         }
       }
 
-      if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
         s_block_data = idx2 / (int) s_data;
@@ -1627,9 +1712,8 @@ PDM_part_to_block_async_exch
  void               **part_data
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
 
-  if ((_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
+  if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
@@ -1638,23 +1722,23 @@ PDM_part_to_block_async_exch
   /*
    * Take next id for message and buffer
    */
-  int request_id = _ptb->next_request++;
+  int request_id = ptb->next_request++;
 
-  _ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  _ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  _ptb->n_send_buffer[request_id] = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  _ptb->n_recv_buffer[request_id] = (int *) malloc (sizeof(int) * _ptb->s_comm);
+  ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->n_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->n_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
 
   /* Store additionnal information necessary for post-process */
-  _ptb->s_data    [request_id] = s_data;
-  _ptb->t_stride  [request_id] = t_stride;
-  _ptb->cst_stride[request_id] = cst_stride;
+  ptb->s_data    [request_id] = s_data;
+  ptb->t_stride  [request_id] = t_stride;
+  ptb->cst_stride[request_id] = cst_stride;
 
   /* Short cut */
-  int* i_send_buffer = _ptb->i_send_buffer[request_id];
-  int* i_recv_buffer = _ptb->i_recv_buffer[request_id];
-  int* n_send_buffer = _ptb->n_send_buffer[request_id];
-  int* n_recv_buffer = _ptb->n_recv_buffer[request_id];
+  int* i_send_buffer = ptb->i_send_buffer[request_id];
+  int* i_recv_buffer = ptb->i_recv_buffer[request_id];
+  int* n_send_buffer = ptb->n_send_buffer[request_id];
+  int* n_recv_buffer = ptb->n_recv_buffer[request_id];
 
   /*
    * Exchange Stride and build buffer properties
@@ -1662,43 +1746,43 @@ PDM_part_to_block_async_exch
 
   if (t_stride == PDM_STRIDE_VAR) {
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
+    for (int i = 0; i < ptb->s_comm; i++) {
       n_send_buffer[i] = 0;
       n_recv_buffer[i] = 0;
     }
 
-    int *send_stride = (int *) malloc (sizeof(int) * _ptb->tn_send_data);
+    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_send_data);
 
     int idx = -1;
-    for (int i = 0; i < _ptb->n_part; i++) {
-      for (int j = 0; j < _ptb->n_elt[i]; j++) {
-        int iproc = _ptb->dest_proc[++idx];
-        send_stride[_ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
+    for (int i = 0; i < ptb->n_part; i++) {
+      for (int j = 0; j < ptb->n_elt[i]; j++) {
+        int iproc = ptb->dest_proc[++idx];
+        send_stride[ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
         n_send_buffer[iproc] += 1;
       }
     }
 
-    _ptb->recv_stride[request_id] = (int *) malloc (sizeof(int) * _ptb->tn_recv_data);
+    ptb->recv_stride[request_id] = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
 
-    int* recv_stride = _ptb->recv_stride[request_id];
+    int* recv_stride = ptb->recv_stride[request_id];
 
     PDM_MPI_Alltoallv (send_stride,
-                       _ptb->n_send_data,
-                       _ptb->i_send_data,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
                        PDM_MPI_INT,
                        recv_stride,
-                       _ptb->n_recv_data,
-                       _ptb->i_recv_data,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
                        PDM_MPI_INT,
-                       _ptb->comm);
+                       ptb->comm);
 
     /*
      * Build buffers
      */
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
-      int ibeg = _ptb->i_send_data[i];
-      int iend = _ptb->i_send_data[i] + _ptb->n_send_data[i];
+    for (int i = 0; i < ptb->s_comm; i++) {
+      int ibeg = ptb->i_send_data[i];
+      int iend = ptb->i_send_data[i] + ptb->n_send_data[i];
 
       n_send_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++)
@@ -1713,8 +1797,8 @@ PDM_part_to_block_async_exch
         i_send_buffer[i] = 0;
       }
 
-      ibeg = _ptb->i_recv_data[i];
-      iend = _ptb->i_recv_data[i] + _ptb->n_recv_data[i];
+      ibeg = ptb->i_recv_data[i];
+      iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
 
       n_recv_buffer[i] = 0;
       for (int k = ibeg; k < iend; k++)
@@ -1735,51 +1819,51 @@ PDM_part_to_block_async_exch
 
   else if (t_stride == PDM_STRIDE_CST) {
 
-    for (int i = 0; i < _ptb->s_comm; i++) {
+    for (int i = 0; i < ptb->s_comm; i++) {
 
-      i_send_buffer[i] = _ptb->i_send_data[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = _ptb->i_recv_data[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
+      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
 
-      n_send_buffer[i] = _ptb->n_send_data[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = _ptb->n_recv_data[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
+      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
 
     }
 
   }
 
-  int s_send_buffer = i_send_buffer[_ptb->s_comm - 1] + n_send_buffer[_ptb->s_comm -1];
-  int s_recv_buffer = i_recv_buffer[_ptb->s_comm - 1] + n_recv_buffer[_ptb->s_comm -1];
+  int s_send_buffer = i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
+  int s_recv_buffer = i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
 
   /*
    * Data exchange
    */
-  _ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
-  _ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+  ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
+  ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
   /* Shortcut */
-  unsigned char *send_buffer = _ptb->send_buffer[request_id];
-  unsigned char *recv_buffer = _ptb->recv_buffer[request_id];
+  unsigned char *send_buffer = ptb->send_buffer[request_id];
+  unsigned char *recv_buffer = ptb->recv_buffer[request_id];
 
   unsigned char **_part_data = (unsigned char **) part_data;
 
-  for (int i = 0; i <  _ptb->s_comm; i++) {
+  for (int i = 0; i <  ptb->s_comm; i++) {
     n_send_buffer[i] = 0;
   }
 
   int idx = -1;
-  for (int i = 0; i < _ptb->n_part; i++) {
+  for (int i = 0; i < ptb->n_part; i++) {
 
     int *i_part = NULL;
     if (t_stride == PDM_STRIDE_VAR) {
-      i_part = (int *) malloc (sizeof(int) * (_ptb->n_elt[i] + 1));
+      i_part = (int *) malloc (sizeof(int) * (ptb->n_elt[i] + 1));
 
       i_part[0] = 0;
-      for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
+      for (int j = 1; j < ptb->n_elt[i] + 1; j++)
         i_part[j] = i_part[j-1] + (part_stride[i][j-1] * (int) s_data);
     }
 
-    for (int j = 0; j < _ptb->n_elt[i]; j++) {
-      int iproc = _ptb->dest_proc[++idx];
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int iproc = ptb->dest_proc[++idx];
       int s_octet_elt = 0;
       int i_part_elt = 0;
 
@@ -1813,10 +1897,10 @@ PDM_part_to_block_async_exch
                      n_recv_buffer,
                      i_recv_buffer,
                      PDM_MPI_BYTE,
-                     _ptb->comm,
-                     &_ptb->request_mpi[request_id]);
+                     ptb->comm,
+                     &ptb->request_mpi[request_id]);
 
-  _ptb->wait_status[request_id] = 0;
+  ptb->wait_status[request_id] = 0;
 
   return request_id;
 }
@@ -1837,15 +1921,14 @@ PDM_part_to_block_async_wait
  int                  request_id
 )
 {
-  printf("PDM_part_to_block_async_wait::request_id::%d \n", request_id);
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
+  // printf("PDM_part_to_block_async_wait::request_id::%d \n", request_id);
 
-  assert(_ptb->wait_status[request_id] == 0);
+  assert(ptb->wait_status[request_id] == 0);
 
-  int code = PDM_MPI_Wait(&_ptb->request_mpi[request_id]);
+  int code = PDM_MPI_Wait(&ptb->request_mpi[request_id]);
   assert(code == PDM_MPI_SUCCESS);
 
-  _ptb->wait_status[request_id] = 1;
+  ptb->wait_status[request_id] = 1;
 
 }
 
@@ -1868,34 +1951,33 @@ PDM_part_to_block_asyn_get_raw
  void               **block_data
 )
 {
-  printf("PDM_part_to_block_asyn_get_raw::request_id::%d \n", request_id);
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
+  // printf("PDM_part_to_block_asyn_get_raw::request_id::%d \n", request_id);
 
-  assert(_ptb->wait_status[request_id] == 1);
+  assert(ptb->wait_status[request_id] == 1);
 
-  free(_ptb->send_buffer  [request_id]);
-  free(_ptb->n_send_buffer[request_id]);
-  free(_ptb->i_send_buffer[request_id]);
-  free(_ptb->n_recv_buffer[request_id]);
-  free(_ptb->i_recv_buffer[request_id]);
+  free(ptb->send_buffer  [request_id]);
+  free(ptb->n_send_buffer[request_id]);
+  free(ptb->i_send_buffer[request_id]);
+  free(ptb->n_recv_buffer[request_id]);
+  free(ptb->i_recv_buffer[request_id]);
 
-  _ptb->send_buffer  [request_id] = NULL;
-  _ptb->n_send_buffer[request_id] = NULL;
-  _ptb->i_send_buffer[request_id] = NULL;
-  _ptb->n_recv_buffer[request_id] = NULL;
-  _ptb->i_recv_buffer[request_id] = NULL;
+  ptb->send_buffer  [request_id] = NULL;
+  ptb->n_send_buffer[request_id] = NULL;
+  ptb->i_send_buffer[request_id] = NULL;
+  ptb->n_recv_buffer[request_id] = NULL;
+  ptb->i_recv_buffer[request_id] = NULL;
 
   /* Mv pointer */
-  *block_stride = _ptb->recv_stride[request_id];
-  *block_data   = _ptb->recv_buffer[request_id];
+  *block_stride = ptb->recv_stride[request_id];
+  *block_data   = ptb->recv_buffer[request_id];
 
   /* Nulliffy - User is now owner of the excahnge data */
-  _ptb->recv_stride[request_id] = NULL;
-  _ptb->recv_buffer[request_id] = NULL;
+  ptb->recv_stride[request_id] = NULL;
+  ptb->recv_buffer[request_id] = NULL;
 
-  _ptb->wait_status[request_id] = 2;
+  ptb->wait_status[request_id] = 2;
 
-  return _ptb->tn_recv_data;
+  return ptb->tn_recv_data;
 
 }
 
@@ -1922,34 +2004,203 @@ PDM_part_to_block_asyn_post_treatment
   PDM_UNUSED(block_stride);
   PDM_UNUSED(block_data);
 
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  assert(_ptb->wait_status[request_id] == 1);
+  assert(ptb->wait_status[request_id] == 1);
 
-  free(_ptb->send_buffer  [request_id]);
-  free(_ptb->n_send_buffer[request_id]);
-  free(_ptb->i_send_buffer[request_id]);
-  free(_ptb->n_recv_buffer[request_id]);
-  free(_ptb->i_recv_buffer[request_id]);
+  // size_t s_send_buffer = ptb->i_send_buffer[request_id][ptb->s_comm - 1] + ptb->n_send_buffer[request_id][ptb->s_comm -1];
+  size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
 
-  _ptb->send_buffer  [request_id] = NULL;
-  _ptb->n_send_buffer[request_id] = NULL;
-  _ptb->i_send_buffer[request_id] = NULL;
-  _ptb->n_recv_buffer[request_id] = NULL;
-  _ptb->i_recv_buffer[request_id] = NULL;
+  free(ptb->send_buffer  [request_id]);
+  free(ptb->n_send_buffer[request_id]);
+  free(ptb->i_send_buffer[request_id]);
+  free(ptb->n_recv_buffer[request_id]);
+  free(ptb->i_recv_buffer[request_id]);
+
+  ptb->send_buffer  [request_id] = NULL;
+  ptb->n_send_buffer[request_id] = NULL;
+  ptb->i_send_buffer[request_id] = NULL;
+  ptb->n_recv_buffer[request_id] = NULL;
+  ptb->i_recv_buffer[request_id] = NULL;
+
+  size_t s_data         = ptb->s_data    [request_id];
+  PDM_stride_t t_stride = ptb->t_stride  [request_id];
+  int cst_stride        = ptb->cst_stride[request_id];
 
   /* Classic post-treatment */
+  unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recv_buffer);
+  assert(_block_data != NULL);
 
+  int* recv_stride = ptb->recv_stride[request_id];
+  unsigned char* recv_buffer = ptb->recv_buffer[request_id];
 
+  *block_data = _block_data;
+  *block_stride = NULL;
+  int *i_recv_stride = NULL;
+  int *i_block_stride = NULL;
+  int s_block_data = ((int) sizeof(unsigned char) * s_recv_buffer) / (int) s_data;
+
+  if (t_stride == PDM_STRIDE_VAR) {
+    int* _block_stride = NULL;
+    if(ptb->tn_recv_data > 0){
+      _block_stride = malloc(sizeof(int) * ptb->tn_recv_data);
+    }
+    *block_stride = _block_stride;
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      _block_stride[i] = recv_stride[ptb->order[i]];
+    }
+
+    /*
+     * Compute index in data
+     */
+
+    i_recv_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
+    i_block_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
+
+    i_recv_stride[0] = 0;
+    i_block_stride[0] = 0;
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      i_recv_stride[i+1]  = i_recv_stride[i] + recv_stride[i];
+      i_block_stride[i+1] = i_block_stride[i] + _block_stride[i];
+    }
+
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      i_recv_stride[i+1]  *= (int) s_data;
+      i_block_stride[i+1] *= (int) s_data;
+    }
+
+    /*
+     * Sort Buffer
+     */
+
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      int old = ptb->order[i];
+      int idOld = i_recv_stride[old];
+      for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
+        _block_data[k] = recv_buffer[idOld++];
+      }
+    }
+
+//    free (recv_buffer);
+    // free (recv_stride);
+    free (i_recv_stride);
+
+    /*
+     * post processing
+     */
+
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+
+      int idx1 = 0;
+      int idx2 = 0;
+
+      if (ptb->tn_recv_data == 1) {
+        idx2 = i_block_stride[1];
+      }
+
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
+        if (i == 1) {
+          idx2 = i_block_stride[1];
+        }
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
+          idx1 += 1;
+          _block_stride[idx1] = _block_stride[i];
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+            for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
+              _block_data[idx2++] = _block_data[k];
+            }
+          }
+        }
+        else {
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
+            _block_stride[idx1] += _block_stride[i];
+          }
+        }
+      }
+
+      /* Cleanup */
+
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        *block_data = _block_data;
+
+        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
+
+        *block_stride = _block_stride;
+        s_block_data = idx2 / (int) s_data;
+
+      }
+
+    }
+
+    free (i_block_stride);
+
+  }
+
+  else {
+
+    /*
+     * Sort Buffer
+     */
+
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      int n_octet = cst_stride * (int) s_data;
+      int old = ptb->order[i];
+      int idOld = old * n_octet;
+
+      for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
+        _block_data[k] = recv_buffer[idOld++];
+      }
+    }
+
+    /*
+     * Post processing
+     */
+
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+      int idx2 = 0;
+      int idx1 = 0;
+
+      assert (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE);
+
+      if (ptb->tn_recv_data == 1) {
+        idx2 =  cst_stride * (int) s_data;
+      }
+
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
+        int n_octet = cst_stride * (int) s_data;
+        if (i == 1) {
+          idx2 = n_octet;
+        }
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
+          idx1 += 1;
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+            int idx3 = i * cst_stride * (int) s_data;
+            for (int k = 0; k < n_octet; k++) {
+              _block_data[idx2++] = _block_data[idx3++];
+            }
+          }
+        }
+      }
+
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        *block_data = _block_data;
+        s_block_data = idx2 / (int) s_data;
+      }
+
+    }
+  }
 
   /*
    * Free
    */
-  free(_ptb->recv_stride  [request_id]);
-  free(_ptb->recv_buffer  [request_id]);
-  _ptb->recv_stride[request_id] = NULL;
-  _ptb->recv_buffer[request_id] = NULL;
+  free(ptb->recv_stride  [request_id]);
+  free(ptb->recv_buffer  [request_id]);
+  ptb->recv_stride[request_id] = NULL;
+  ptb->recv_buffer[request_id] = NULL;
 
-  _ptb->wait_status[request_id] = 2;
+  ptb->wait_status[request_id] = 2;
+
+  PDM_UNUSED(s_block_data);
 
 }
 
@@ -1969,80 +2220,86 @@ PDM_part_to_block_free
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
 
-  if (_ptb->active_ranks != NULL) {
-    free (_ptb->active_ranks);
-    _ptb->active_ranks = NULL;
+  if (ptb->active_ranks != NULL) {
+    free (ptb->active_ranks);
+    ptb->active_ranks = NULL;
   }
-  if (_ptb->dest_proc != NULL) {
-    free (_ptb->dest_proc);
-    _ptb->dest_proc = NULL;
+  if (ptb->dest_proc != NULL) {
+    free (ptb->dest_proc);
+    ptb->dest_proc = NULL;
   }
-  if (_ptb->data_distrib_index != NULL) {
-    free (_ptb->data_distrib_index);
-    _ptb->data_distrib_index = NULL;
+  if (ptb->data_distrib_index != NULL) {
+    free (ptb->data_distrib_index);
+    ptb->data_distrib_index = NULL;
   }
-  if (_ptb->i_send_data != NULL) {
-    free (_ptb->i_send_data);
-    _ptb->i_send_data = NULL;
+  if (ptb->i_send_data != NULL) {
+    free (ptb->i_send_data);
+    ptb->i_send_data = NULL;
   }
-  if (_ptb->i_recv_data != NULL) {
-    free (_ptb->i_recv_data);
-    _ptb->i_recv_data = NULL;
+  if (ptb->i_recv_data != NULL) {
+    free (ptb->i_recv_data);
+    ptb->i_recv_data = NULL;
   }
-  if (_ptb->n_send_data != NULL) {
-    free (_ptb->n_send_data);
-    _ptb->n_send_data = NULL;
+  if (ptb->n_send_data != NULL) {
+    free (ptb->n_send_data);
+    ptb->n_send_data = NULL;
   }
-  if (_ptb->n_recv_data != NULL) {
-    free (_ptb->n_recv_data);
-    _ptb->n_recv_data = NULL;
+  if (ptb->n_recv_data != NULL) {
+    free (ptb->n_recv_data);
+    ptb->n_recv_data = NULL;
   }
-  if (_ptb->sorted_recv_gnum != NULL) {
-    free (_ptb->sorted_recv_gnum);
-    _ptb->sorted_recv_gnum = NULL;
+  if (ptb->sorted_recv_gnum != NULL) {
+    free (ptb->sorted_recv_gnum);
+    ptb->sorted_recv_gnum = NULL;
   }
-  if (_ptb->order != NULL) {
-    free (_ptb->order);
-    _ptb->order = NULL;
+  if (ptb->order != NULL) {
+    free (ptb->order);
+    ptb->order = NULL;
   }
 
-  // if ((_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) && (_ptb->block_gnum != NULL)) {
-  //   free (_ptb->block_gnum);
-  //   _ptb->block_gnum = NULL;
+  // if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) && (ptb->block_gnum != NULL)) {
+  //   free (ptb->block_gnum);
+  //   ptb->block_gnum = NULL;
   // }
-  if ((_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING      ) &&
-      (_ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) && (_ptb->block_gnum != NULL)) {
-    free (_ptb->block_gnum);
-    _ptb->block_gnum = NULL;
+  if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING      ) &&
+      (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) && (ptb->block_gnum != NULL)) {
+    free (ptb->block_gnum);
+    ptb->block_gnum = NULL;
+  }
+
+  if (ptb->weight_g != NULL) {
+    for (int i = 0; i < ptb->n_part; i++) {
+      free (ptb->weight_g[i]);
+    }
+    free (ptb->weight_g);
   }
 
   /* This one check if all buffer has been correctly move or delete */
-  for(int i_req = 0; i_req < _ptb->max_exch_request; ++i_req) {
-    assert(_ptb->send_buffer  [i_req] == NULL);
-    assert(_ptb->recv_buffer  [i_req] == NULL);
-    assert(_ptb->recv_stride  [i_req] == NULL);
-    assert(_ptb->n_send_buffer[i_req] == NULL);
-    assert(_ptb->i_send_buffer[i_req] == NULL);
-    assert(_ptb->n_recv_buffer[i_req] == NULL);
-    assert(_ptb->i_recv_buffer[i_req] == NULL);
+  for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
+    assert(ptb->send_buffer  [i_req] == NULL);
+    assert(ptb->recv_buffer  [i_req] == NULL);
+    assert(ptb->recv_stride  [i_req] == NULL);
+    assert(ptb->n_send_buffer[i_req] == NULL);
+    assert(ptb->i_send_buffer[i_req] == NULL);
+    assert(ptb->n_recv_buffer[i_req] == NULL);
+    assert(ptb->i_recv_buffer[i_req] == NULL);
   }
 
-  free(_ptb->s_data       );
-  free(_ptb->t_stride     );
-  free(_ptb->cst_stride   );
-  free(_ptb->wait_status  );
-  free(_ptb->request_mpi  );
-  free(_ptb->send_buffer  );
-  free(_ptb->recv_buffer  );
-  free(_ptb->recv_stride  );
-  free(_ptb->n_send_buffer);
-  free(_ptb->i_send_buffer);
-  free(_ptb->n_recv_buffer);
-  free(_ptb->i_recv_buffer);
+  free(ptb->s_data       );
+  free(ptb->t_stride     );
+  free(ptb->cst_stride   );
+  free(ptb->wait_status  );
+  free(ptb->request_mpi  );
+  free(ptb->send_buffer  );
+  free(ptb->recv_buffer  );
+  free(ptb->recv_stride  );
+  free(ptb->n_send_buffer);
+  free(ptb->i_send_buffer);
+  free(ptb->n_recv_buffer);
+  free(ptb->i_recv_buffer);
 
-  free (_ptb);
+  free (ptb);
   return NULL;
 }
 
@@ -2062,8 +2319,7 @@ PDM_part_to_block_distrib_index_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->data_distrib_index;
+  return ptb->data_distrib_index;
 }
 
 
@@ -2082,8 +2338,85 @@ PDM_part_to_block_destination_get
  PDM_part_to_block_t *ptb
 )
 {
-  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  return _ptb->dest_proc;
+  return ptb->dest_proc;
+}
+
+PDM_g_num_t*
+PDM_part_to_block_adapt_partial_block_to_block
+(
+ PDM_part_to_block_t  *ptb,
+ int                 **block_n,
+ PDM_g_num_t           n_g_block
+)
+{
+  PDM_g_num_t *_block_distrib_idx = malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));
+
+  for (int i = 0; i < ptb->s_comm + 1; i++) {
+    _block_distrib_idx[i] = ptb->data_distrib_index[i];
+  }
+  int block_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
+
+  int block_n_elt_tot = _block_distrib_idx[ptb->i_rank+1] - _block_distrib_idx[ptb->i_rank];
+  int* block_n_tmp = (int *) malloc( block_n_elt_tot * sizeof(int));
+
+  for (int i1 = 0; i1 < block_n_elt_tot; i1++) {
+    block_n_tmp[i1] = 0;
+  }
+
+  int* _block_n = *block_n;
+  for (int i1 = 0; i1 < block_n_elt; i1++) {
+    int i = (int) (ptb->block_gnum[i1] - _block_distrib_idx[ptb->i_rank] - 1);
+    // printf(" ptb->block_gnum[%i] = %i --> %i (%i)\n", i1, ptb->block_gnum[i1], _block_distrib_idx[ptb->i_rank], i);
+    block_n_tmp[i] = _block_n[i1];
+  }
+
+  *block_n = realloc(*block_n, sizeof(int) * block_n_elt_tot);
+  _block_n = *block_n;
+  for (int i1 = 0; i1 < block_n_elt_tot; i1++) {
+    _block_n[i1] = block_n_tmp[i1];
+  }
+
+  free(block_n_tmp);
+
+  PDM_g_num_t old_max = _block_distrib_idx[ptb->s_comm];
+  PDM_g_num_t new_max = n_g_block;
+  int diff_last = (int) (new_max - old_max);
+
+  _block_distrib_idx[ptb->s_comm] = new_max;
+
+  if (ptb->i_rank == (ptb->s_comm - 1)) {
+    int new_size = block_n_elt_tot + diff_last;
+    *block_n = realloc(*block_n, sizeof(int) * new_size);
+    _block_n = *block_n;
+    for (int i = block_n_elt_tot; i < new_size; i++) {
+      _block_n[i] = 0;
+    }
+  }
+
+  return _block_distrib_idx;
+}
+
+
+
+
+
+/**
+ *
+ * \brief Return global weights of element in the current process
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return  Global weights
+ *
+ */
+
+double **
+PDM_part_to_block_global_weight_get
+(
+ PDM_part_to_block_t *ptb
+)
+{
+  return ptb->weight_g;
 }
 
 #undef _MIN

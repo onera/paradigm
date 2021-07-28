@@ -1817,7 +1817,7 @@ PDM_geom_elem_polyhedra_properties
   int *keyPoly = NULL;
 
   double volume_t = 0;
-  int maxNPolyFace = -1;
+  int maxNPolyFace = 0;
 
   int *stack = NULL;
   int *tagFace = NULL;

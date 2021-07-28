@@ -138,7 +138,7 @@ typedef enum {
 
 typedef enum {
 
-  PDM_FALSE = 0,   /*!< False */
+  PDM_FALSE = 0, /*!< False */
   PDM_TRUE  = 1  /*!< True  */
 
 } PDM_bool_t;
@@ -169,9 +169,69 @@ typedef enum {
 typedef enum {
 
   PDM_MESH_NATURE_NODAL_SHARED   = 0,  /*!< Shared PDM_mesh_nodal  */
-  PDM_MESH_NATURE_MESH_SETTED    = 1,  /*!< PDm_surface_mesh  */
+  PDM_MESH_NATURE_MESH_SETTED    = 1   /*!< PDm_surface_mesh  */
 
 } PDM_mesh_nature_t;
+
+
+/**
+ * \enum PDM_ownership_t
+ * \brief Bool type
+ *
+ */
+
+typedef enum {
+
+  PDM_OWNERSHIP_KEEP                 = 0, /*!< paradigm will free results */
+  PDM_OWNERSHIP_USER                 = 1, /*!< Ownership is gives         */
+  PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2, /*!< Free all memory that not be getted by user */
+  PDM_OWNERSHIP_BAD_VALUE            = 3  /*!< Wrong  */
+
+} PDM_ownership_t;
+
+typedef enum {
+  PDM_CONNECTIVITY_TYPE_CELL_ELMT   = 0,
+  PDM_CONNECTIVITY_TYPE_CELL_CELL   = 1,
+  PDM_CONNECTIVITY_TYPE_CELL_FACE   = 2,
+  PDM_CONNECTIVITY_TYPE_CELL_EDGE   = 3,
+  PDM_CONNECTIVITY_TYPE_CELL_VTX    = 4,
+  PDM_CONNECTIVITY_TYPE_FACE_ELMT   = 5,
+  PDM_CONNECTIVITY_TYPE_FACE_CELL   = 6,
+  PDM_CONNECTIVITY_TYPE_FACE_FACE   = 7,
+  PDM_CONNECTIVITY_TYPE_FACE_EDGE   = 8,
+  PDM_CONNECTIVITY_TYPE_FACE_VTX    = 9,
+  PDM_CONNECTIVITY_TYPE_EDGE_ELMT   = 10,
+  PDM_CONNECTIVITY_TYPE_EDGE_CELL   = 11,
+  PDM_CONNECTIVITY_TYPE_EDGE_FACE   = 12,
+  PDM_CONNECTIVITY_TYPE_EDGE_EDGE   = 13,
+  PDM_CONNECTIVITY_TYPE_EDGE_VTX    = 14,
+  PDM_CONNECTIVITY_TYPE_VTX_ELMT    = 15,
+  PDM_CONNECTIVITY_TYPE_VTX_CELL    = 16,
+  PDM_CONNECTIVITY_TYPE_VTX_FACE    = 17,
+  PDM_CONNECTIVITY_TYPE_VTX_EDGE    = 18,
+  PDM_CONNECTIVITY_TYPE_VTX_VTX     = 19,
+  PDM_CONNECTIVITY_TYPE_ELMT_CELL   = 20,
+  PDM_CONNECTIVITY_TYPE_ELMT_FACE   = 21,
+  PDM_CONNECTIVITY_TYPE_ELMT_EDGE   = 22,
+  PDM_CONNECTIVITY_TYPE_ELMT_VTX    = 23,
+  PDM_CONNECTIVITY_TYPE_MAX         = 24
+} PDM_connectivity_type_t;
+
+typedef enum {
+  PDM_BOUND_TYPE_ELMT   = 0,
+  PDM_BOUND_TYPE_CELL   = 1,
+  PDM_BOUND_TYPE_FACE   = 2,
+  PDM_BOUND_TYPE_EDGE   = 3,
+  PDM_BOUND_TYPE_VTX    = 4,
+  PDM_BOUND_TYPE_MAX    = 5,
+} PDM_bound_type_t;
+
+typedef enum {
+
+  PDM_MESH_LOCATION_OCTREE,
+  PDM_MESH_LOCATION_DBBTREE,
+
+} PDM_mesh_location_method_t;
 
 
 /*=============================================================================

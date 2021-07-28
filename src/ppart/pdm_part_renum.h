@@ -15,7 +15,6 @@
 
 #include "pdm.h"
 #include "pdm_part.h"
-#include "pdm_part_priv.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -32,7 +31,7 @@ extern "C" {
  *
  */
 
-typedef void (*PDM_part_renum_fct_t) (_part_t  **ppart, int n_part, void* specific_data);
+typedef void (*PDM_part_renum_fct_t) (part_t  **ppart, int n_part, void* specific_data);
 
 /*============================================================================
  * Public function definitions
@@ -70,6 +69,22 @@ PDM_part_renum_method_face_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
+
+/**
+ *
+ * \brief Add a new method for face renumbering
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+int
+PDM_part_renum_method_vtx_add
+(
+ const char                 *name,     /*!< Name          */
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+);
 
 /**
  *
@@ -280,7 +295,7 @@ void
 void
 PDM_part_renum_cell
 (
- _part_t **part,
+ part_t **part,
  int       n_part,
  int       renum_cell_method,
  void     *specific_data
@@ -298,11 +313,47 @@ PDM_part_renum_cell
 void
 PDM_part_renum_face
 (
- _part_t **part,
+ part_t **part,
  int       n_part,
  int       renum_face_method,
  void     *specific_data
 );
+
+
+/**
+ *
+ * \brief Perform vtx renumbering
+ *
+ * \param [in,out]  part       part structure
+ *
+ */
+
+void
+PDM_part_renum_edge
+(
+ part_t **part,
+ int       n_part,
+ int       renum_vtx_method,
+ void     *specific_data
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering
+ *
+ * \param [in,out]  part       part structure
+ *
+ */
+
+void
+PDM_part_renum_vtx
+(
+ part_t **part,
+ int       n_part,
+ int       renum_vtx_method,
+ void     *specific_data
+);
+
 
 /**
  *
@@ -311,15 +362,15 @@ PDM_part_renum_face
  *        Connectivities/cell_tag/cell_color/cell_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
 void
 PDM_part_reorder_cell
 (
- _part_t *part,
- int     *newToOldOrder
+ part_t *part,
+ int     *new_to_old_order
 );
 
 
@@ -330,15 +381,51 @@ PDM_part_reorder_cell
  *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
 void
 PDM_part_reorder_face
 (
- _part_t *part,
- int     *newToOldOrder
+ part_t *part,
+ int     *new_to_old_order
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering from a new order
+ *        Actualise all faces array according to the new numbering
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+
+void
+PDM_part_reorder_edge
+(
+ part_t *part,
+ int     *new_to_old_order
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering from a new order
+ *        Actualise all faces array according to the new numbering
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+
+void
+PDM_part_reorder_vtx
+(
+ part_t *part,
+ int     *new_to_old_order
 );
 
 
@@ -349,7 +436,7 @@ PDM_part_reorder_face
  *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
@@ -357,8 +444,8 @@ void
 PDM_part_renum_connectivities
 (
   const int nElt,
-  const int *newToOldOrder,
-  int       *connectivityIdx,
+  const int *new_to_old_order,
+  int       *connectivity_idx,
   int       *connectivities
 );
 
@@ -366,7 +453,7 @@ PDM_part_renum_connectivities
  * \brief Order an array
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */
@@ -375,7 +462,7 @@ void
 PDM_part_renum_array
 (
 const int  sizeArray,
-const int *olToNewOrder,
+const int *old_to_new_order,
 int       *array
 );
 
@@ -383,7 +470,7 @@ int       *array
  * \brief Order an array for face_cell
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */
@@ -392,7 +479,7 @@ void
 PDM_part_renum_array_face_cell
 (
 const int  sizeArray,
-const int *olToNewOrder,
+const int *old_to_new_order,
 int       *array
 );
 

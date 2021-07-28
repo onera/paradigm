@@ -46,9 +46,27 @@ extern "C" {
  *
  */
 int
+PDM_inplace_unique
+(
+ int a[],
+ int l,
+ int r
+);
+
+/**
+ *
+ * \brief Unique in place
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+int
 PDM_inplace_unique_long
 (
  PDM_g_num_t a[],
+ int         order[],
  int l,
  int r
 );
