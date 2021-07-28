@@ -40,8 +40,9 @@ file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "
 file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
 
 if (PDM_ENABLE_EXTENSION_PDMA)
-  file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.pxi")
-  file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
+  file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython/ DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.pxi")
+  file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython/ DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
+  message("toto: ${PDM_SOURCE_DIR}/extensions/paradigma/Cython")
 endif()
 
 set (include_dirs "")
@@ -52,7 +53,7 @@ list (APPEND include_dirs ${CMAKE_BINARY_DIR})
 if (PDM_ENABLE_EXTENSION_PDMA)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/mesh)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins)
-  list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/coarse_mesh)   
+  list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/coarse_mesh)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/multicoloring)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/renum)
 else ()
@@ -69,9 +70,7 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX FALSE)
 if (PDM_ENABLE_EXTENSION_PDMA)
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
-                     INCLUDE_DIRECTORIES ${include_dirs}
-                     LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
+                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>)
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
@@ -79,6 +78,8 @@ else ()
                      INCLUDE_DIRECTORIES ${include_dirs}
                      LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 endif()
+
+set_target_properties(Pypdm PROPERTIES PREFIX "") # do not prefix by lib
 
 set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Pypdm/")
 
@@ -97,7 +98,8 @@ if (PDM_ENABLE_EXTENSION_PDMA)
   list(APPEND LINK_LIBRARIES pdma_shared)
 endif()
 
-#target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
+message("link_librairies = ${LINK_LIBRARIES}")
+target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
