@@ -125,9 +125,6 @@ cdef extern from "pdm_dmesh_nodal.h":
       PDM_MESH_NODAL_HEXA8    = 8
       PDM_MESH_NODAL_POLY_3D  = 9
 
-
-
-
 def Finalize ():
     PDM_Finalize
 
@@ -135,6 +132,7 @@ cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
 # -----------------------------------------------------------------
+
 
 _PDM_MESH_ENTITY_CELL   = PDM_MESH_ENTITY_CELL
 _PDM_MESH_ENTITY_FACE   = PDM_MESH_ENTITY_FACE
@@ -369,7 +367,6 @@ include "pdm_partitioning_algorithm.pxi"
 # PDM_poly_mesh_surf :
 # --------------------
 include "pdm_part_extension.pxi"
-
 
 
 

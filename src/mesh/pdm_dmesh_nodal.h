@@ -450,6 +450,16 @@ PDM_dmesh_nodal_t     *dmesh_nodal,
       PDM_g_num_t     **dgroup_elmt
 );
 
+void
+PDM_DMesh_nodal_section_group_elmt_get_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
+      int             *n_group_elmt,
+      int             **dgroup_elmt_idx,
+      PDM_g_num_t     **dgroup_elmt
+);
+
 int
 PDM_DMesh_nodal_n_section_get_from_geometry_kind
 (

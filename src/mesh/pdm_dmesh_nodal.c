@@ -1270,6 +1270,22 @@ PDM_dmesh_nodal_t     *dmesh_nodal,
   *dgroup_elmt     = dmesh_nodal->dgroup_elmt;
 }
 
+void
+PDM_DMesh_nodal_section_group_elmt_get_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
+      int             *n_group_elmt,
+      int             **dgroup_elmt_idx,
+      PDM_g_num_t     **dgroup_elmt
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  assert(dmne != NULL);
+  *n_group_elmt    = dmne->n_group_elmt;
+  *dgroup_elmt_idx = dmne->dgroup_elmt_idx;
+  *dgroup_elmt     = dmne->dgroup_elmt;
+}
 
 /**
  * \brief Return standard section description

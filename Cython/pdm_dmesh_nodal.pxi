@@ -79,6 +79,11 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                 int                *n_group_elmt,
                                                 int               **dgroup_elmt_idx,
                                                 PDM_g_num_t       **dgroup_elmt)
+    void PDM_DMesh_nodal_section_group_elmt_get_from_geometry_kind(PDM_dmesh_nodal_t    *dmesh_nodal,
+                                                                   PDM_geometry_kind_t   geom_kind,
+                                                                   int                  *n_group_elmt,
+                                                                   int                 **dgroup_elmt_idx,
+                                                                   PDM_g_num_t         **dgroup_elmt)
 
     PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
@@ -442,16 +447,28 @@ cdef class DistributedMeshNodalCaspule:
     return dmesh_nodal_get_sections(self, comm)
 
   # ------------------------------------------------------------------------
-  def dmesh_nodal_get_sections_from_geometry_kind(self, MPI.Comm    comm):
+  def dmesh_nodal_get_sections_from_geometry_kind(self, PDM_geometry_kind_t geom_kind, MPI.Comm    comm):
     """
     """
-    return dmesh_nodal_get_sections_from_geometry_kind(self, comm)
+    return dmesh_nodal_get_sections_from_geometry_kind(self, geom_kind, comm)
+
+  # ------------------------------------------------------------------------
+  def dmesh_nodal_get_vtx(self, MPI.Comm    comm):
+    """
+    """
+    return dmesh_nodal_get_vtx(self, comm)
 
   # ------------------------------------------------------------------------
   def dmesh_nodal_get_group(self):
     """
     """
     return dmesh_nodal_get_group(self)
+
+  # ------------------------------------------------------------------------
+  def dmesh_nodal_get_group_from_geometry_kind(self, PDM_geometry_kind_t geom_kind):
+    """
+    """
+    return dmesh_nodal_get_group_from_geometry_kind(self, geom_kind)
 
   # ------------------------------------------------------------------------
   def dmesh_nodal_get_g_dims(self):
@@ -569,6 +586,37 @@ def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
   return {"vtx"      : {"np_vtx" : np_vtx, "np_vtx_distrib" : np_vtx_distrib},
           "sections" : sections}
 
+
+def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef double               *vtx_coord
+  cdef NPY.npy_intp          dim
+  # ************************************************************************
+
+  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
+  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
+  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
+
+  dim = <NPY.npy_intp> 3 * n_vtx
+  np_vtx = NPY.PyArray_SimpleNewFromData(1,
+                                         &dim,
+                                         NPY.NPY_DOUBLE,
+                                         <void *> vtx_coord)
+  PyArray_ENABLEFLAGS(np_vtx, NPY.NPY_OWNDATA);
+
+  dim = <NPY.npy_intp> comm.Get_size() + 1
+  np_vtx_distrib = NPY.PyArray_SimpleNewFromData(1,
+                                             &dim,
+                                             PDM_G_NUM_NPY_INT,
+                                             <void *> vtx_distrib)
+  PyArray_ENABLEFLAGS(np_vtx_distrib, NPY.NPY_OWNDATA);
+
+  return {"np_vtx"         : np_vtx,
+          "np_vtx_distrib" : np_vtx_distrib}
+
 def dmesh_nodal_get_sections_from_geometry_kind(DMeshNodal          pydmn,
                                                 PDM_geometry_kind_t geom_kind,
                                                 MPI.Comm            comm):
@@ -629,27 +677,8 @@ def dmesh_nodal_get_sections_from_geometry_kind(DMeshNodal          pydmn,
     # print("np_distrib : ", np_distrib )
     # print("np_connec : ", np_connec )
 
-  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
-  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
-  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
-
-  dim = <NPY.npy_intp> 3 * n_vtx
-  np_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                         &dim,
-                                         NPY.NPY_DOUBLE,
-                                         <void *> vtx_coord)
-  PyArray_ENABLEFLAGS(np_vtx, NPY.NPY_OWNDATA);
-
-  dim = <NPY.npy_intp> comm.Get_size() + 1
-  np_vtx_distrib = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             PDM_G_NUM_NPY_INT,
-                                             <void *> vtx_distrib)
-  PyArray_ENABLEFLAGS(np_vtx_distrib, NPY.NPY_OWNDATA);
-
   # print("Return dmesh_nodal_get_sections")
-  return {"vtx"      : {"np_vtx" : np_vtx, "np_vtx_distrib" : np_vtx_distrib},
-          "sections" : sections}
+  return {"sections" : sections}
 
 def dmesh_nodal_get_group(DMeshNodal pydmn):
   """
@@ -663,6 +692,36 @@ def dmesh_nodal_get_group(DMeshNodal pydmn):
   # ************************************************************************
 
   PDM_DMesh_nodal_section_group_elmt_get(pydmn.dmn, &n_group, &dgroup_elmt_idx, &dgroup_elmt);
+
+  dim = <NPY.npy_intp> n_group + 1
+  np_dgroup_elmt_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_INT32,
+                                                     <void *> dgroup_elmt_idx)
+  PyArray_ENABLEFLAGS(np_dgroup_elmt_idx, NPY.NPY_OWNDATA);
+
+  dim = <NPY.npy_intp> np_dgroup_elmt_idx[n_group]
+  np_dgroup_elmt = NPY.PyArray_SimpleNewFromData(1,
+                                                 &dim,
+                                                 PDM_G_NUM_NPY_INT,
+                                                 <void *> dgroup_elmt)
+  PyArray_ENABLEFLAGS(np_dgroup_elmt, NPY.NPY_OWNDATA);
+
+  return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
+          "dgroup_elmt"     : np_dgroup_elmt}
+
+def dmesh_nodal_get_group_from_geometry_kind(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                   n_group
+  cdef int                  *dgroup_elmt_idx
+  cdef PDM_g_num_t          *dgroup_elmt
+  cdef NPY.npy_intp          dim
+  # ************************************************************************
+
+  PDM_DMesh_nodal_section_group_elmt_get_from_geometry_kind(pydmn.dmn, geom_kind, &n_group, &dgroup_elmt_idx, &dgroup_elmt);
 
   dim = <NPY.npy_intp> n_group + 1
   np_dgroup_elmt_idx = NPY.PyArray_SimpleNewFromData(1,
