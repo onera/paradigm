@@ -294,7 +294,7 @@ else ()
     find_package(MPI REQUIRED COMPONENTS C)
   endif()
 
-  if (PDM_ENABLE_Fortran_MPI_MODULE)  
+  if (PDM_ENABLE_Fortran_MPI_MODULE)
     set(CMAKE_Fortran_PREPROCESS ON)
     set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
   endif()
@@ -344,6 +344,7 @@ else ()
     find_package(MPI REQUIRED COMPONENTS CXX)
 
     find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
+    find_package(Mpi4Py REQUIRED)
 
     include(UseCython)
 
