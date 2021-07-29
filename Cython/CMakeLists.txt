@@ -42,7 +42,6 @@ file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "
 if (PDM_ENABLE_EXTENSION_PDMA)
   file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython/ DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.pxi")
   file ( COPY ${PDM_SOURCE_DIR}/extensions/paradigma/Cython/ DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
-  message("toto: ${PDM_SOURCE_DIR}/extensions/paradigma/Cython")
 endif()
 
 set (include_dirs "")
@@ -70,7 +69,9 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX FALSE)
 if (PDM_ENABLE_EXTENSION_PDMA)
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>)
+                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
+                     INCLUDE_DIRECTORIES ${include_dirs}
+                     LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
@@ -98,7 +99,6 @@ if (PDM_ENABLE_EXTENSION_PDMA)
   list(APPEND LINK_LIBRARIES pdma_shared)
 endif()
 
-message("link_librairies = ${LINK_LIBRARIES}")
 target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
