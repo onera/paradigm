@@ -74,9 +74,7 @@ if (PDM_ENABLE_EXTENSION_PDMA)
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-                     OTHER_SOURCES $<TARGET_OBJECTS:pdm>
-                     INCLUDE_DIRECTORIES ${include_dirs}
-                     LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
+                     OTHER_SOURCES $<TARGET_OBJECTS:pdm>)
 endif()
 
 set_target_properties(Pypdm PROPERTIES PREFIX "") # do not prefix by lib
