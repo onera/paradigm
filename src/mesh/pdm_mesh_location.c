@@ -2841,17 +2841,6 @@ PDM_mesh_location_t        *ml
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
         box_g_num[ibox] = _gnum[ielt];
-        if (_gnum[ielt] == 1) {
-          printf("cell "PDM_FMT_G_NUM": %20.12e %20.12e %20.12e %20.12e %20.12e %20.12e\n",
-                 _gnum[ielt],
-                 box_extents[6*ibox]  , box_extents[6*ibox+1], box_extents[6*ibox+2],
-                 box_extents[6*ibox+3], box_extents[6*ibox+4], box_extents[6*ibox+5]);
-          printf("cell "PDM_FMT_G_NUM": %20.12e %20.12e %20.12e\n",
-                 _gnum[ielt],
-                 box_extents[6*ibox+3] - box_extents[6*ibox],
-                 box_extents[6*ibox+4] - box_extents[6*ibox+1],
-                 box_extents[6*ibox+5] - box_extents[6*ibox+2]);
-        }
         ibox++;
       }
     }
@@ -2914,7 +2903,6 @@ PDM_mesh_location_t        *ml
         select_pts_l_num[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
 
         for (int i = 0; i < pcloud->n_points[ipart]; i++) {
-int DBG = pcloud->gnum[ipart][i] == 13;
           int inside = 1;
           for (int j = 0; j < 3; j++) {
             if (pcloud->coords[ipart][3*i+j] < g_mesh_extents[j] ||
@@ -2923,12 +2911,6 @@ int DBG = pcloud->gnum[ipart][i] == 13;
               break;
             }
           }
-
-if (DBG) printf("[%d] pt "PDM_FMT_G_NUM" (%f %f %f) inside (%f %f %f / %f %f %f)? %d\n", my_rank, pcloud->gnum[ipart][i], 
-pcloud->coords[ipart][3*i], pcloud->coords[ipart][3*i+1], pcloud->coords[ipart][3*i+2], 
-g_mesh_extents[0], g_mesh_extents[1], g_mesh_extents[2],
-g_mesh_extents[3], g_mesh_extents[4], g_mesh_extents[5], 
-inside);
 
           if (inside) {
             select_pts_l_num[ipart][n_select_pts[icloud][ipart]++] = i;// +1?
@@ -2959,15 +2941,6 @@ inside);
                                         &(select_pts_parent_g_num[icloud]),
                                         &(select_pts_g_num[icloud]),
                                         &(select_pts_coord[icloud]));
-//-->>
-for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-for (int i = 0; i < n_select_pts[icloud][ipart]; i++) {
-  if (1) {//select_pts_parent_g_num[icloud][ipart][i] == 13) {
-    printf("[%d] select_pt #%d parent gnum = "PDM_FMT_G_NUM", new gnum = "PDM_FMT_G_NUM"\n", my_rank, i, select_pts_parent_g_num[icloud][ipart][i], select_pts_g_num[icloud][ipart][i]);
-  }
-}
-}
-//<<--
       } else {
         free (n_select_pts[icloud]);
         n_select_pts[icloud] = pcloud->n_points;
@@ -3772,8 +3745,7 @@ for (int i = 0; i < n_select_pts[icloud][ipart]; i++) {
     }
     free (pcloud_coord);
 
-if (my_rank == 1) sleep(1);
-    if (1) {//DEBUG) {
+    if (DEBUG) {
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
@@ -3792,7 +3764,6 @@ if (my_rank == 1) sleep(1);
       }
       printf("[%d] ------------------\n\n\n", my_rank);
     }
-PDM_MPI_Barrier(ml->comm);
 
     if (0) {
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
@@ -3991,7 +3962,7 @@ PDM_MPI_Barrier(ml->comm);
     int n_pts = redistrib_pts_idx[redistrib_n_elt];
 
     if (use_extracted_pts) {
-      if (1) {
+      if (0) {
         printf("[%d] redistrib_pts_g_num = ", my_rank);
         for (int i = 0; i < n_pts; i++) {
           printf(PDM_FMT_G_NUM" ", redistrib_pts_g_num[i]);
@@ -4029,7 +4000,7 @@ PDM_MPI_Barrier(ml->comm);
                               (void **) &block_pcloud_parent_gnum);
       free (pcloud_parent_g_num);
 
-      if (1) {
+      if (0) {
         int n_pts_a = PDM_part_to_block_n_elt_block_get (ptb_parent);
         PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb_parent);
         printf("[%d] block_pcloud_parent_gnum :\n", my_rank);
@@ -4055,7 +4026,7 @@ PDM_MPI_Barrier(ml->comm);
                               NULL,
                               (void **) &redistrib_pts_parent_g_num);
       free (block_pcloud_parent_gnum);
-      if (1) {
+      if (0) {
         printf("[%d] redistrib_pts_parent_g_num = ", my_rank);
         for (int i = 0; i < n_pts; i++) {
           printf(PDM_FMT_G_NUM" ", redistrib_pts_parent_g_num[i]);
