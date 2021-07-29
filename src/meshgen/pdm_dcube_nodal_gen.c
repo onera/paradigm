@@ -218,7 +218,6 @@ _decompose_into_quad_j
   }
 
   int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
-
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_quad,
                                         dcube->dn_quad_seq_lim,

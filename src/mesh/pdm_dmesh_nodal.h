@@ -199,6 +199,22 @@ PDM_DMesh_nodal_sections_id_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 );
 
+/**
+ * \brief  Return sections identifier
+ *
+ * \param [in]  hdl            Distributed nodal mesh handle
+ *
+ * \return  Blocks identifier
+ *
+ */
+
+int *
+PDM_DMesh_nodal_sections_id_get_from_geometry_kind
+(
+PDM_dmesh_nodal_t   *dmesh_nodal,
+PDM_geometry_kind_t  geom_kind
+);
+
 
 /**
  * \brief  Return type of element of section
@@ -247,6 +263,15 @@ PDM_DMesh_nodal_section_distri_std_get
 (
   PDM_dmesh_nodal_t  *dmesh_nodal,
   const int   id_section
+);
+
+
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get_from_geometry_kind
+(
+  PDM_dmesh_nodal_t   *dmesh_nodal,
+  PDM_geometry_kind_t  geom_kind,
+  const int            id_section
 );
 
 /**
@@ -374,10 +399,42 @@ const int                n_elt,
       PDM_ownership_t    owner
 );
 
+
+int
+PDM_DMesh_nodal_section_add_from_geometry_kind
+(
+      PDM_dmesh_nodal_t    *dmesh_nodal,
+      PDM_geometry_kind_t   geom_kind,
+const PDM_Mesh_nodal_elt_t  t_elt
+);
+
+
+void
+PDM_DMesh_nodal_section_std_set_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
+const int              id_section,
+const int              n_elt,
+      PDM_g_num_t     *connec,
+      PDM_ownership_t  owner
+);
+
 void
 PDM_DMesh_nodal_section_group_elmt_set
 (
 PDM_dmesh_nodal_t     *dmesh_nodal,
+const int              n_group_elmt,
+      int             *dgroup_elmt_idx,
+      PDM_g_num_t     *dgroup_elmt,
+      PDM_ownership_t  owner
+);
+
+void
+PDM_DMesh_nodal_section_group_elmt_set_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
 const int              n_group_elmt,
       int             *dgroup_elmt_idx,
       PDM_g_num_t     *dgroup_elmt,
@@ -393,6 +450,21 @@ PDM_dmesh_nodal_t     *dmesh_nodal,
       PDM_g_num_t     **dgroup_elmt
 );
 
+int
+PDM_DMesh_nodal_n_section_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind
+);
+
+
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_section_type_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind,
+const int                  id_section
+);
 
 /**
  * \brief Return standard section description
@@ -978,6 +1050,14 @@ PDM_DMesh_nodal_elmts_section_type_get
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
 const int                      id_section
+);
+
+PDM_g_num_t *
+PDM_DMesh_nodal_section_std_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind,
+const int                  id_section
 );
 
 PDM_g_num_t *

@@ -407,6 +407,30 @@ _sections_poly3d_free
   }
 }
 
+static
+PDM_dmesh_nodal_elmts_t*
+_get_from_geometry_kind
+(
+ PDM_dmesh_nodal_t   *dmesh_nodal,
+ PDM_geometry_kind_t  geom_kind
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = NULL;
+  if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC){
+    dmne = dmesh_nodal->volumic;
+  } else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC){
+    dmne = dmesh_nodal->surfacic;
+  } else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE){
+    dmne = dmesh_nodal->ridge;
+  } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER){
+    dmne = dmesh_nodal->corner;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom_kind in _get_from_geometry_kind \n");
+  }
+  assert(dmne != NULL);
+  return dmne;
+}
+
 /**
  *
  * \brief Initialize a mesh
@@ -752,6 +776,17 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   return dmesh_nodal->n_section;
 }
 
+int
+PDM_DMesh_nodal_n_section_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  return dmne->n_section;
+}
+
 
 /**
  * \brief  Return sections identifier
@@ -772,6 +807,26 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   }
 
   return dmesh_nodal->sections_id;
+}
+
+
+/**
+ * \brief  Return sections identifier
+ *
+ * \param [in]  hdl            Distributed nodal mesh handle
+ *
+ * \return  Blocks identifier
+ *
+ */
+int *
+PDM_DMesh_nodal_sections_id_get_from_geometry_kind
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+PDM_geometry_kind_t  geom_kind
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  return dmne->sections_id;
 }
 
 /**
@@ -881,6 +936,19 @@ const int                      id_section
   return t_elt;
 }
 
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_section_type_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind,
+const int                  id_section
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  return PDM_DMesh_nodal_elmts_section_type_get(dmne, id_section);
+}
+
+
 /**
  * \brief  Return distri of section
  *
@@ -901,6 +969,31 @@ PDM_DMesh_nodal_section_distri_std_get
   if (id_section <= PDM_BLOCK_ID_BLOCK_POLY2D) { // std
     int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
     return mesh->sections_std[_id_section]->distrib;
+  }
+  assert(0); // only useful for std elements
+}
+
+/**
+ * \brief  Return distri of section
+ *
+ * \param [in] dmesh_nodal
+ * \param [in] id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get_from_geometry_kind
+(
+  PDM_dmesh_nodal_t   *dmesh_nodal,
+  PDM_geometry_kind_t  geom_kind,
+  const int            id_section
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  if (id_section <= PDM_BLOCK_ID_BLOCK_POLY2D) { // std
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+    return dmne->sections_std[_id_section]->distrib;
   }
   assert(0); // only useful for std elements
 }
@@ -1098,7 +1191,36 @@ const int              n_elt,
   for (int i = 1; i < dmesh_nodal->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
+}
 
+int
+PDM_DMesh_nodal_section_add_from_geometry_kind
+(
+      PDM_dmesh_nodal_t    *dmesh_nodal,
+      PDM_geometry_kind_t   geom_kind,
+const PDM_Mesh_nodal_elt_t  t_elt
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  assert(dmne != NULL);
+  return PDM_DMesh_nodal_elmts_section_add(dmne, t_elt);
+}
+
+
+void
+PDM_DMesh_nodal_section_std_set_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
+const int              id_section,
+const int              n_elt,
+      PDM_g_num_t     *connec,
+      PDM_ownership_t  owner
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  assert(dmne != NULL);
+  PDM_DMesh_nodal_elmts_section_std_set(dmne, id_section, n_elt, connec, owner);
 }
 
 void
@@ -1115,6 +1237,22 @@ const int              n_group_elmt,
   dmesh_nodal->dgroup_elmt_idx   = dgroup_elmt_idx;
   dmesh_nodal->dgroup_elmt       = dgroup_elmt;
   dmesh_nodal->dgroup_elmt_owner = owner;
+}
+
+void
+PDM_DMesh_nodal_section_group_elmt_set_from_geometry_kind
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+PDM_geometry_kind_t    geom_kind,
+const int              n_group_elmt,
+      int             *dgroup_elmt_idx,
+      PDM_g_num_t     *dgroup_elmt,
+      PDM_ownership_t  owner
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  assert(dmne != NULL);
+  PDM_DMesh_nodal_elmts_group_set(dmne, n_group_elmt, dgroup_elmt_idx, dgroup_elmt, owner);
 }
 
 
@@ -1164,6 +1302,27 @@ const int                id_section
   return section->_connec;
 }
 
+/**
+ * \brief Return standard section description
+ * \param [in]  hdl            Distributed nodal mesh handle
+ * \param [in]  id_section       Block identifier
+ *
+ * \return  connect           Connectivity
+ *
+ */
+
+PDM_g_num_t *
+PDM_DMesh_nodal_section_std_get_from_geometry_kind
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind,
+const int                  id_section
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
+  assert(dmne != NULL);
+  return PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+}
 /**
  * \brief Return standard section description
  * \param [in]  hdl            Distributed nodal mesh handle

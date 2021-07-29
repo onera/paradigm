@@ -227,6 +227,14 @@ typedef enum {
 } PDM_bound_type_t;
 
 typedef enum {
+  PDM_GEOMETRY_KIND_VOLUMIC  = 0,
+  PDM_GEOMETRY_KIND_SURFACIC = 1,
+  PDM_GEOMETRY_KIND_RIDGE    = 2,
+  PDM_GEOMETRY_KIND_CORNER   = 3,
+  PDM_GEOMETRY_KIND_MAX      = 4,
+} PDM_geometry_kind_t;
+
+typedef enum {
 
   PDM_MESH_LOCATION_OCTREE,
   PDM_MESH_LOCATION_DBBTREE,
