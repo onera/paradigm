@@ -7,6 +7,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -2913,6 +2914,7 @@ PDM_mesh_location_t        *ml
         select_pts_l_num[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
 
         for (int i = 0; i < pcloud->n_points[ipart]; i++) {
+int DBG = pcloud->gnum[ipart][i] == 13;
           int inside = 1;
           for (int j = 0; j < 3; j++) {
             if (pcloud->coords[ipart][3*i+j] < g_mesh_extents[j] ||
@@ -2921,6 +2923,12 @@ PDM_mesh_location_t        *ml
               break;
             }
           }
+
+if (DBG) printf("[%d] pt "PDM_FMT_G_NUM" (%f %f %f) inside (%f %f %f / %f %f %f)? %d\n", my_rank, pcloud->gnum[ipart][i], 
+pcloud->coords[ipart][3*i], pcloud->coords[ipart][3*i+1], pcloud->coords[ipart][3*i+2], 
+g_mesh_extents[0], g_mesh_extents[1], g_mesh_extents[2],
+g_mesh_extents[3], g_mesh_extents[4], g_mesh_extents[5], 
+inside);
 
           if (inside) {
             select_pts_l_num[ipart][n_select_pts[icloud][ipart]++] = i;// +1?
@@ -2951,6 +2959,15 @@ PDM_mesh_location_t        *ml
                                         &(select_pts_parent_g_num[icloud]),
                                         &(select_pts_g_num[icloud]),
                                         &(select_pts_coord[icloud]));
+//-->>
+for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+for (int i = 0; i < n_select_pts[icloud][ipart]; i++) {
+  if (1) {//select_pts_parent_g_num[icloud][ipart][i] == 13) {
+    printf("[%d] select_pt #%d parent gnum = "PDM_FMT_G_NUM", new gnum = "PDM_FMT_G_NUM"\n", my_rank, i, select_pts_parent_g_num[icloud][ipart][i], select_pts_g_num[icloud][ipart][i]);
+  }
+}
+}
+//<<--
       } else {
         free (n_select_pts[icloud]);
         n_select_pts[icloud] = pcloud->n_points;
@@ -3755,8 +3772,8 @@ PDM_mesh_location_t        *ml
     }
     free (pcloud_coord);
 
-
-    if (DEBUG) {
+if (my_rank == 1) sleep(1);
+    if (1) {//DEBUG) {
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
@@ -3775,8 +3792,9 @@ PDM_mesh_location_t        *ml
       }
       printf("[%d] ------------------\n\n\n", my_rank);
     }
+PDM_MPI_Barrier(ml->comm);
 
-    if (1) {
+    if (0) {
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
         if (select_box_g_num[ibox] == 2793384) {
           printf("[%d] box "PDM_FMT_G_NUM", %d point(s) inside:", my_rank, select_box_g_num[ibox], pts_idx[ibox+1] - pts_idx[ibox]);
@@ -3973,8 +3991,8 @@ PDM_mesh_location_t        *ml
     int n_pts = redistrib_pts_idx[redistrib_n_elt];
 
     if (use_extracted_pts) {
-      if (0) {
-        printf("redistrib_pts_g_num = ");
+      if (1) {
+        printf("[%d] redistrib_pts_g_num = ", my_rank);
         for (int i = 0; i < n_pts; i++) {
           printf(PDM_FMT_G_NUM" ", redistrib_pts_g_num[i]);
         }
@@ -3990,7 +4008,7 @@ PDM_mesh_location_t        *ml
       // substitute redistrib_pts_g_num with redistrib_pts_parent_g_num
       PDM_part_to_block_t *ptb_parent =
         PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                  PDM_PART_TO_BLOCK_POST_NOTHING,
+                                  PDM_PART_TO_BLOCK_POST_CLEANUP,
                                   1.,
                                   &pcloud_g_num,
                                   NULL,
@@ -4011,10 +4029,10 @@ PDM_mesh_location_t        *ml
                               (void **) &block_pcloud_parent_gnum);
       free (pcloud_parent_g_num);
 
-      if (0) {
+      if (1) {
         int n_pts_a = PDM_part_to_block_n_elt_block_get (ptb_parent);
         PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb_parent);
-        printf("block_pcloud_parent_gnum :\n");
+        printf("[%d] block_pcloud_parent_gnum :\n", my_rank);
         for (int i = 0; i < n_pts_a; i++) {
           printf("  "PDM_FMT_G_NUM" --> "PDM_FMT_G_NUM"\n", block_g_num_a[i], block_pcloud_parent_gnum[i]);
         }
@@ -4037,6 +4055,13 @@ PDM_mesh_location_t        *ml
                               NULL,
                               (void **) &redistrib_pts_parent_g_num);
       free (block_pcloud_parent_gnum);
+      if (1) {
+        printf("[%d] redistrib_pts_parent_g_num = ", my_rank);
+        for (int i = 0; i < n_pts; i++) {
+          printf(PDM_FMT_G_NUM" ", redistrib_pts_parent_g_num[i]);
+        }
+        printf("\n");
+      }
 
       ptb_parent = PDM_part_to_block_free (ptb_parent);
       btp_parent = PDM_block_to_part_free (btp_parent);

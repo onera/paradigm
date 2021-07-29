@@ -11389,6 +11389,59 @@ PDM_para_octree_points_inside_boxes_with_copies
     free (part_stride);
     free (block_stride);
 
+    //-->>
+    /* Remove doubles */
+    int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
+    if (1) {
+      int max_n = 0;
+      for (int i = 0; i < n_elt_block; i++) {
+        max_n = PDM_MAX (max_n, block_pts_in_box_n[i]);
+      }
+
+      int *order = malloc (sizeof(int) * max_n);
+      double *tmp_coord = malloc (sizeof(double) * max_n * 3);
+      int idx1 = 0, idx2 = 0;
+      for (int i = 0; i < n_elt_block; i++) {
+        if (block_pts_in_box_n[i] == 0) continue;
+
+        PDM_g_num_t *_g_num1 = block_pts_in_box_g_num + idx1;
+        double      *_coord1 = block_pts_in_box_coord + idx1*3;
+        PDM_g_num_t *_g_num2 = block_pts_in_box_g_num + idx2;
+        double      *_coord2 = block_pts_in_box_coord + idx2*3;
+
+        memcpy (tmp_coord, _coord1, sizeof(double) * block_pts_in_box_n[i] * 3);
+
+        for (int j = 0; j < block_pts_in_box_n[i]; j++) {
+          order[j] = j;
+        }
+        PDM_sort_long (_g_num1,
+                       order,
+                       block_pts_in_box_n[i]);
+
+        _g_num2[0] = _g_num1[0];
+        for (int k = 0; k < 3; k++) {
+          _coord2[k] = tmp_coord[3*order[0] + k];
+        }
+        int tmp_n = 1;
+        for (int j = 1; j < block_pts_in_box_n[i]; j++) {
+          if (_g_num1[j] != _g_num2[tmp_n-1]) {
+            _g_num2[tmp_n] = _g_num1[j];
+            for (int k = 0; k < 3; k++) {
+              _coord2[3*tmp_n + k] = tmp_coord[3*order[j] + k];
+            }
+            tmp_n++;
+          }
+        }
+
+        idx1 += block_pts_in_box_n[i];
+        idx2 += tmp_n;
+        block_pts_in_box_n[i] = tmp_n;
+      }
+      free (order);
+      free (tmp_coord);
+    }
+    //<<--
+
     PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
     PDM_g_num_t *_block_distrib_idx = block_distrib_idx;
     if (block_distrib_idx[n_rank] < g_max_box_g_num) {
@@ -11399,7 +11452,7 @@ PDM_para_octree_points_inside_boxes_with_copies
       _block_distrib_idx[n_rank] = g_max_box_g_num;
     }
 
-    int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
+    //int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
     int n_elt_block_full = (int) (_block_distrib_idx[i_rank+1] - _block_distrib_idx[i_rank]);
 
     if (n_elt_block < n_elt_block_full) {
