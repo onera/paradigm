@@ -3796,6 +3796,45 @@ PDM_dbbtree_boxes_containing_points
   free (part_weight);
   free (pts_box_g_num);
 
+
+  /* Remove doubles */
+  int idx1 = 0, idx2 = 0;
+  int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
+  int max_n = 0;
+  for (int i = 0; i < n_pts_block; i++) {
+    max_n = PDM_MAX (max_n, block_box_n[i]);
+  }
+
+  int *order = malloc (sizeof(int) * max_n);
+  idx1 = 0;
+  idx2 = 0;
+  for (int i = 0; i < n_pts_block; i++) {
+    if (block_box_n[i] == 0) continue;
+
+    PDM_g_num_t *_g_num1 = block_box_g_num + idx1;
+    PDM_g_num_t *_g_num2 = block_box_g_num + idx2;
+
+    for (int j = 0; j < block_box_n[i]; j++) {
+      order[j] = j;
+    }
+    PDM_sort_long (_g_num1,
+                   order,
+                   block_box_n[i]);
+
+    _g_num2[0] = _g_num1[0];
+    int tmp_n = 1;
+    for (int j = 1; j < block_box_n[i]; j++) {
+      if (_g_num1[j] != _g_num2[tmp_n-1]) {
+        _g_num2[tmp_n++] = _g_num1[j];
+      }
+    }
+
+    idx1 += block_box_n[i];
+    idx2 += tmp_n;
+    block_box_n[i] = tmp_n;
+  }
+  free (order);
+
   /* Fix partial block stride */
   PDM_g_num_t l_max_g_num = 0;
   for (int i = 0; i < n_pts; i++) {
