@@ -17,6 +17,7 @@
 #include "pdm_mpi.h"
 #include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_printf.h"
 #include "pdm_logging.h"
 #include "pdm_error.h"
@@ -51,6 +52,203 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+/**
+ *
+ * \brief Free a standard section
+ *
+ * \param [inout]  _bloc_std    Standard section
+ *
+ * \return         Null
+ *
+ */
+
+static
+void
+_section_std_free
+(
+PDM_DMesh_nodal_section_std_t *_section_std
+)
+{
+  if (_section_std == NULL) {
+    return;
+  }
+
+  if (_section_std->distrib != NULL) {
+    free (_section_std->distrib);
+    _section_std->distrib = NULL;
+  }
+
+  if(_section_std->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_std->_connec != NULL) {
+      free(_section_std->_connec);
+      _section_std->_connec = NULL;
+    }
+  }
+
+  free(_section_std);
+}
+
+
+/**
+ *
+ * \brief Free a polygon section
+ *
+ * \param [inout]  _bloc_poly2d    Polygon section
+ *
+ * \return         Null
+ *
+ */
+
+static
+void
+_section_poly2d_free
+(
+PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
+)
+{
+
+  if (_section_poly2d == NULL) {
+    return;
+  }
+
+  if (_section_poly2d->distrib != NULL) {
+    free (_section_poly2d->distrib);
+    _section_poly2d->distrib = NULL;
+  }
+
+  if(_section_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_poly2d->_connec != NULL) {
+      free(_section_poly2d->_connec);
+      _section_poly2d->_connec = NULL;
+    }
+    if(_section_poly2d->_connec_idx != NULL) {
+      free(_section_poly2d->_connec_idx);
+      _section_poly2d->_connec_idx = NULL;
+    }
+  }
+
+  free(_section_poly2d);
+}
+
+/**
+ *
+ * \brief Free a polyhedron section
+ *
+ * \param [inout]  _section_poly3d    Polyhedron section
+ *
+ * \return         Null
+ *
+ */
+static
+void
+_section_poly3d_free
+(
+PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
+)
+{
+  if (_section_poly3d == NULL) {
+    return;
+  }
+
+  if (_section_poly3d->distrib != NULL) {
+    free (_section_poly3d->distrib);
+    _section_poly3d->distrib = NULL;
+  }
+
+  if(_section_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_poly3d->_face_vtx_idx != NULL) {
+      free(_section_poly3d->_face_vtx_idx);
+      _section_poly3d->_face_vtx_idx = NULL;
+    }
+    if(_section_poly3d->_face_vtx != NULL) {
+      free(_section_poly3d->_face_vtx);
+      _section_poly3d->_face_vtx = NULL;
+    }
+    if(_section_poly3d->_cell_face_idx != NULL) {
+      free(_section_poly3d->_cell_face_idx);
+      _section_poly3d->_cell_face_idx = NULL;
+    }
+    if(_section_poly3d->_cell_face != NULL) {
+      free(_section_poly3d->_cell_face);
+      _section_poly3d->_cell_face = NULL;
+    }
+  }
+  free(_section_poly3d);
+}
+
+
+/**
+ *
+ * \brief Free a list of standard section
+ *
+ * \param [inout]  sections    standard sections
+ * \param [inout]  n_sections  Number of standard sections
+ */
+static
+void
+_sections_std_free
+(
+ PDM_DMesh_nodal_section_std_t **sections,
+ int                             n_sections
+)
+{
+  for(int i_section = 0; i_section < n_sections; ++i_section) {
+    _section_std_free(sections[i_section]);
+  }
+  if(sections != NULL){
+    free(sections);
+    sections = NULL;
+  }
+}
+
+/**
+ *
+ * \brief Free a list of polygon section
+ *
+ * \param [inout]  sections     Polygon sections
+ * \param [inout]  n_sections   Number of polygon sections
+ */
+static
+void
+_sections_poly2d_free
+(
+ PDM_DMesh_nodal_section_poly2d_t **sections,
+ int                                n_sections
+)
+{
+  for(int i_section = 0; i_section < n_sections; ++i_section) {
+    _section_poly2d_free(sections[i_section]);
+  }
+  if(sections != NULL){
+    free(sections);
+    sections = NULL;
+  }
+}
+
+
+/**
+ *
+ * \brief Free a list of polyhedron section
+ *
+ * \param [inout]  sections    Polyhedron sections
+ * \param [inout]  n_sections  Number of polyhedron sections
+ */
+static
+void
+_sections_poly3d_free
+(
+ PDM_DMesh_nodal_section_poly3d_t **sections,
+ int                                n_sections
+)
+{
+  for(int i_section = 0; i_section < n_sections; ++i_section) {
+    _section_poly3d_free(sections[i_section]);
+  }
+  if(sections != NULL){
+    free(sections);
+    sections = NULL;
+  }
+}
 
 static void
 _update_elmt_sections_id
@@ -423,7 +621,7 @@ const PDM_l_num_t              n_elt,
                     (void *) (&section->distrib[1]),
                     1,
                     PDM__PDM_MPI_G_NUM,
-                    dmn_elts->pdm_mpi_comm);
+                    dmn_elts->comm);
 
   section->distrib[0] = 0;
   for (int i = 1; i < dmn_elts->n_rank + 1; i++) {
@@ -585,7 +783,7 @@ const PDM_l_num_t               n_face,
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-  PDM_DMesh_nodal_section_poly3d_t *section = dmesh_nodal->sections_poly3d[_id_section];
+  PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
@@ -599,7 +797,7 @@ const PDM_l_num_t               n_face,
   section->_cell_face     = cellfac;
   section->owner          = owner;
 
-  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
+  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmn_elts->n_rank + 1));
 
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
@@ -610,10 +808,10 @@ const PDM_l_num_t               n_face,
                     (void *) (&section->distrib[1]),
                     1,
                     PDM__PDM_MPI_G_NUM,
-                    dmesh_nodal->pdm_mpi_comm);
+                    dmn_elts->comm);
 
   section->distrib[0] = 0;
-  for (int i = 1; i < dmesh_nodal->n_rank + 1; i++) {
+  for (int i = 1; i < dmn_elts->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
 }
@@ -656,16 +854,16 @@ PDM_DMesh_nodal_elmts_total_n_elmt_get
 )
 {
   PDM_g_num_t total_n_elmt = 0;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_std; ++i_section){
-    total_n_elmt += dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->n_rank];
+  for(int i_section = 0; i_section < dmn_elts->n_section_std; ++i_section){
+    total_n_elmt += dmn_elts->sections_std[i_section]->distrib[dmn_elts->n_rank];
   }
 
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_poly2d; ++i_section){
-    total_n_elmt += dmesh_nodal->sections_poly2d[i_section]->distrib[dmesh_nodal->n_rank];
+  for(int i_section = 0; i_section < dmn_elts->n_section_poly2d; ++i_section){
+    total_n_elmt += dmn_elts->sections_poly2d[i_section]->distrib[dmn_elts->n_rank];
   }
 
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
-    total_n_elmt += dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
+  for(int i_section = 0; i_section < dmn_elts->n_section_poly3d; ++i_section){
+    total_n_elmt += dmn_elts->sections_poly3d[i_section]->distrib[dmn_elts->n_rank];
   }
 
   return total_n_elmt;
@@ -721,34 +919,6 @@ int                     *n_sum_vtx_face_tot
   // printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
 
-void
-PDM_dmesh_nodal_elmts_generate_distribution
-(
- PDM_dmesh_nodal_elmts_t *dmn_elts
-)
-{
-  /* Creation of element distribution among all sections */
-  printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
-  dmn_elts->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmn_elts->n_section + 1));
-  dmn_elts->section_distribution[0] = 0;
-
-  for(int i_section = 0; i_section < dmn_elts->n_section; ++i_section) {
-
-    int id_section = dmn_elts->sections_id[i_section];
-    const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
-
-    dmn_elts->section_distribution[i_section+1] = dmn_elts->section_distribution[i_section] + distrib[dmn_elts->n_rank];
-  }
-
-  /* Verbose */
-  if(1 == 1)
-  {
-    PDM_printf(" ------------------------------ \n ");
-    for(int i_section=0; i_section < dmn_elts->n_section+1; i_section++){
-      PDM_printf("%i ", dmn_elts->section_distribution[i_section]);
-    }
-  }
-}
 
 /**
 *
@@ -793,6 +963,34 @@ int                     *n_sum_vtx_edge_tot
 
 }
 
+void
+PDM_dmesh_nodal_elmts_generate_distribution
+(
+ PDM_dmesh_nodal_elmts_t *dmn_elts
+)
+{
+  /* Creation of element distribution among all sections */
+  printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
+  dmn_elts->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmn_elts->n_section + 1));
+  dmn_elts->section_distribution[0] = 0;
+
+  for(int i_section = 0; i_section < dmn_elts->n_section; ++i_section) {
+
+    int id_section = dmn_elts->sections_id[i_section];
+    const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
+
+    dmn_elts->section_distribution[i_section+1] = dmn_elts->section_distribution[i_section] + distrib[dmn_elts->n_rank];
+  }
+
+  /* Verbose */
+  if(1 == 1)
+  {
+    PDM_printf(" ------------------------------ \n ");
+    for(int i_section=0; i_section < dmn_elts->n_section+1; i_section++){
+      PDM_printf("%i ", dmn_elts->section_distribution[i_section]);
+    }
+  }
+}
 
 
 #ifdef __cplusplus

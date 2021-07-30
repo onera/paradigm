@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_mpi.h"
 #include "pdm_io.h"
 
@@ -837,6 +838,13 @@ PDM_g_num_t *
 PDM_DMesh_nodal_distrib_face_get
 (
 PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+void
+PDM_Mesh_nodal_add_dmesh_nodal_elmts
+(
+ PDM_dmesh_nodal_t       *dmesh_nodal,
+ PDM_dmesh_nodal_elmts_t *dmn_elts
 );
 
 #ifdef __cplusplus
