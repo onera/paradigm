@@ -12,6 +12,7 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
 
 #ifdef __cplusplus
@@ -66,26 +67,10 @@ struct _pdm_dmesh_nodal_t {
 
   PDM_DMesh_nodal_vtx_t *vtx;                      /*!< Description des sommmets de chaque partition */
 
-  _pdm_dmesh_nodal_elts_t* volumic;
-  _pdm_dmesh_nodal_elts_t* surfacic;
-  _pdm_dmesh_nodal_elts_t* ridge;
-  _pdm_dmesh_nodal_elts_t* corner;
-
-  // To move in pdm_dmesh
-  PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */
-  PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref dn_cell) */
-  PDM_g_num_t           *dcell_face;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
-  PDM_g_num_t           *_dface_cell;              /*!< Face to cell connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
-  PDM_g_num_t           *cell_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
-  PDM_l_num_t            dn_face;                  /*!< Local number of faces in the local block */
-  PDM_l_num_t           *_dface_vtx_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref dn_cell) */
-  PDM_g_num_t           *_dface_vtx;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
-  PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
+  PDM_dmesh_nodal_elmts_t* volumic;
+  PDM_dmesh_nodal_elmts_t* surfacic;
+  PDM_dmesh_nodal_elmts_t* ridge;
+  PDM_dmesh_nodal_elmts_t* corner;
 
 };
 

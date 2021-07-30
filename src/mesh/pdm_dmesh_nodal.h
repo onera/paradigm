@@ -763,13 +763,13 @@ PDM_dmesh_nodal_dual_graph
  *
  */
 
-int
-PDM_DMesh_nodal_cell_face_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-int               **dcell_faceIdx,
-PDM_g_num_t       **dcell_face
-);
+// int
+// PDM_DMesh_nodal_cell_face_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+// int               **dcell_faceIdx,
+// PDM_g_num_t       **dcell_face
+// );
 
 /**
  * \brief  Return face->cell connectivity
@@ -781,12 +781,12 @@ PDM_g_num_t       **dcell_face
  *
  */
 
-int
-PDM_DMesh_nodal_face_cell_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-PDM_g_num_t       **dface_cell
-);
+// int
+// PDM_DMesh_nodal_face_cell_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+// PDM_g_num_t       **dface_cell
+// );
 
 
 /**
@@ -800,13 +800,13 @@ PDM_g_num_t       **dface_cell
  *
  */
 
-int
-PDM_DMesh_nodal_face_vtx_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-      int         **dface_vtx_idx,
-PDM_g_num_t       **dface_vtx
-);
+// int
+// PDM_DMesh_nodal_face_vtx_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+//       int         **dface_vtx_idx,
+// PDM_g_num_t       **dface_vtx
+// );
 
 
 /**
@@ -818,11 +818,11 @@ PDM_g_num_t       **dface_vtx
  *
  */
 
-PDM_g_num_t *
-PDM_DMesh_nodal_distrib_cell_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal
-);
+// PDM_g_num_t *
+// PDM_DMesh_nodal_distrib_cell_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal
+// );
 
 
 /**
@@ -834,11 +834,11 @@ PDM_dmesh_nodal_t  *dmesh_nodal
  *
  */
 
-PDM_g_num_t *
-PDM_DMesh_nodal_distrib_face_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal
-);
+// PDM_g_num_t *
+// PDM_DMesh_nodal_distrib_face_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal
+// );
 
 void
 PDM_Mesh_nodal_add_dmesh_nodal_elmts

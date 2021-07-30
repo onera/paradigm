@@ -177,21 +177,21 @@ const PDM_MPI_Comm        comm,
   // dmesh_nodal->sections_poly2d          = NULL;
   // dmesh_nodal->section_distribution     = NULL;
 
-  dmesh_nodal->dn_cell                  = -1;
-  dmesh_nodal->dcell_face               = NULL;
-  dmesh_nodal->dcell_face_idx           = NULL;
-  dmesh_nodal->cell_distrib             = NULL;
+  // dmesh_nodal->dn_cell                  = -1;
+  // dmesh_nodal->dcell_face               = NULL;
+  // dmesh_nodal->dcell_face_idx           = NULL;
+  // dmesh_nodal->cell_distrib             = NULL;
 
   dmesh_nodal->volumic                  = NULL;
   dmesh_nodal->surfacic                 = NULL;
   dmesh_nodal->ridge                    = NULL;
   dmesh_nodal->corner                   = NULL;
 
-  dmesh_nodal->dn_face                  = -1;
-  dmesh_nodal->_dface_vtx               = NULL;
-  dmesh_nodal->_dface_vtx_idx           = NULL;
-  dmesh_nodal->_dface_cell              = NULL;
-  dmesh_nodal->face_distrib             = NULL;
+  // dmesh_nodal->dn_face                  = -1;
+  // dmesh_nodal->_dface_vtx               = NULL;
+  // dmesh_nodal->_dface_vtx_idx           = NULL;
+  // dmesh_nodal->_dface_cell              = NULL;
+  // dmesh_nodal->face_distrib             = NULL;
 
 }
 
@@ -251,32 +251,31 @@ const int                partial
 
     _vtx_free(dmesh_nodal->vtx);
 
-    if(partial == 0){
-      if (dmesh_nodal->dcell_face_idx != NULL) {
-        free (dmesh_nodal->dcell_face_idx);
-      }
+    // if(partial == 0){
+    //   if (dmesh_nodal->dcell_face_idx != NULL) {
+    //     free (dmesh_nodal->dcell_face_idx);
+    //   }
 
-      if (dmesh_nodal->dcell_face != NULL) {
-        free (dmesh_nodal->dcell_face);
-      }
+    //   if (dmesh_nodal->dcell_face != NULL) {
+    //     free (dmesh_nodal->dcell_face);
+    //   }
 
-      if (dmesh_nodal->cell_distrib != NULL) {
-        free (dmesh_nodal->cell_distrib);
-      }
+    //   if (dmesh_nodal->cell_distrib != NULL) {
+    //     free (dmesh_nodal->cell_distrib);
+    //   }
 
-      if (dmesh_nodal->_dface_vtx_idx != NULL) {
-        free (dmesh_nodal->_dface_vtx_idx);
-      }
+    //   if (dmesh_nodal->_dface_vtx_idx != NULL) {
+    //     free (dmesh_nodal->_dface_vtx_idx);
+    //   }
 
-      if (dmesh_nodal->_dface_vtx != NULL) {
-        free (dmesh_nodal->_dface_vtx);
-      }
+    //   if (dmesh_nodal->_dface_vtx != NULL) {
+    //     free (dmesh_nodal->_dface_vtx);
+    //   }
 
-      if (dmesh_nodal->face_distrib != NULL) {
-        free (dmesh_nodal->face_distrib);
-      }
-
-    }
+    //   if (dmesh_nodal->face_distrib != NULL) {
+    //     free (dmesh_nodal->face_distrib);
+    //   }
+    // }
 
     if(dmesh_nodal->volumic != NULL){
       PDM_DMesh_nodal_elmts_free(dmesh_nodal->volumic);
@@ -1235,24 +1234,23 @@ PDM_dmesh_nodal_dual_graph
  * \return     Number of cells on the current process
  *
  */
+// int
+// PDM_DMesh_nodal_cell_face_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+// int               **dcell_face_idx,
+// PDM_g_num_t       **dcell_face
+// )
+// {
+//   if (dmesh_nodal == NULL) {
+//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//   }
 
-int
-PDM_DMesh_nodal_cell_face_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-int               **dcell_face_idx,
-PDM_g_num_t       **dcell_face
-)
-{
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+//   *dcell_face_idx = dmesh_nodal->dcell_face_idx;
+//   *dcell_face     = dmesh_nodal->dcell_face;
 
-  *dcell_face_idx = dmesh_nodal->dcell_face_idx;
-  *dcell_face     = dmesh_nodal->dcell_face;
-
-  return dmesh_nodal->dn_cell;
-}
+//   return dmesh_nodal->dn_cell;
+// }
 
 /**
  * \brief  Return face->cell connectivity
@@ -1263,21 +1261,21 @@ PDM_g_num_t       **dcell_face
  * \return     Number of cells on the current process
  *
  */
-int
-PDM_DMesh_nodal_face_cell_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-PDM_g_num_t       **dface_cell
-)
-{
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+// int
+// PDM_DMesh_nodal_face_cell_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+// PDM_g_num_t       **dface_cell
+// )
+// {
+//   if (dmesh_nodal == NULL) {
+//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//   }
 
-  *dface_cell = dmesh_nodal->_dface_cell;
+//   *dface_cell = dmesh_nodal->_dface_cell;
 
-  return dmesh_nodal->dn_face;
-}
+//   return dmesh_nodal->dn_face;
+// }
 
 
 
@@ -1292,23 +1290,23 @@ PDM_g_num_t       **dface_cell
  *
  */
 
-int
-PDM_DMesh_nodal_face_vtx_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal,
-int               **_dface_vtx_idx,
-PDM_g_num_t       **_dface_vtx
-)
-{
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+// int
+// PDM_DMesh_nodal_face_vtx_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal,
+// int               **_dface_vtx_idx,
+// PDM_g_num_t       **_dface_vtx
+// )
+// {
+//   if (dmesh_nodal == NULL) {
+//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//   }
 
-  *_dface_vtx_idx = dmesh_nodal->_dface_vtx_idx;
-  *_dface_vtx     = dmesh_nodal->_dface_vtx;
+//   *_dface_vtx_idx = dmesh_nodal->_dface_vtx_idx;
+//   *_dface_vtx     = dmesh_nodal->_dface_vtx;
 
-  return dmesh_nodal->dn_face;
-}
+//   return dmesh_nodal->dn_face;
+// }
 
 /**
  * \brief  Return vertices distribution
@@ -1369,18 +1367,18 @@ const int                  id_section
  *
  */
 
-PDM_g_num_t *
-PDM_DMesh_nodal_distrib_cell_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal
-)
-{
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+// PDM_g_num_t *
+// PDM_DMesh_nodal_distrib_cell_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal
+// )
+// {
+//   if (dmesh_nodal == NULL) {
+//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//   }
 
-  return dmesh_nodal->cell_distrib;
-}
+//   return dmesh_nodal->cell_distrib;
+// }
 
 
 /**
@@ -1392,18 +1390,18 @@ PDM_dmesh_nodal_t  *dmesh_nodal
  *
  */
 
-PDM_g_num_t *
-PDM_DMesh_nodal_distrib_face_get
-(
-PDM_dmesh_nodal_t  *dmesh_nodal
-)
-{
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+// PDM_g_num_t *
+// PDM_DMesh_nodal_distrib_face_get
+// (
+// PDM_dmesh_nodal_t  *dmesh_nodal
+// )
+// {
+//   if (dmesh_nodal == NULL) {
+//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//   }
 
-  return dmesh_nodal->face_distrib;
-}
+//   return dmesh_nodal->face_distrib;
+// }
 
 
 void
