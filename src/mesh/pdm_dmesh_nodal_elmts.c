@@ -545,8 +545,8 @@ const int                n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
   }
 
-  PDM_printf(" PDM_DMesh_nodal_elmts_section_std_set - _id_section : %i  \n ", _id_section);
-  PDM_printf(" PDM_DMesh_nodal_elmts_section_std_set - n_elt       : %i  \n ", n_elt);
+  PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - _id_section : %i  \n", _id_section);
+  PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - n_elt       : %i  \n", n_elt);
 
   /* Mapping */
   section->n_elt   = n_elt;
@@ -896,8 +896,8 @@ int                     *n_sum_vtx_face_tot
     int n_face_elt     = PDM_n_face_elt_per_elmt    (dmn_elts->sections_std[i_section]->t_elt);
     int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmn_elts->sections_std[i_section]->t_elt);
 
-    *n_face_elt_tot     += dmn_elts->sections_std[i_section]->n_elt*n_face_elt;
-    *n_sum_vtx_face_tot += dmn_elts->sections_std[i_section]->n_elt*n_sum_vtx_face;
+    *n_face_elt_tot     += dmn_elts->sections_std[i_section]->n_elt * n_face_elt;
+    *n_sum_vtx_face_tot += dmn_elts->sections_std[i_section]->n_elt * n_sum_vtx_face;
 
   }
 
@@ -985,7 +985,7 @@ PDM_dmesh_nodal_elmts_generate_distribution
   /* Verbose */
   if(1 == 1)
   {
-    PDM_printf(" ------------------------------ \n ");
+    PDM_printf(" ------------------------------ \n");
     for(int i_section=0; i_section < dmn_elts->n_section+1; i_section++){
       PDM_printf("%i ", dmn_elts->section_distribution[i_section]);
     }

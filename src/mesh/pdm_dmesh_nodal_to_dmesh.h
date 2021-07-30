@@ -59,7 +59,7 @@ typedef enum {
  *
  */
 void
-PDM_generate_entitiy_connectivity
+PDM_generate_entitiy_connectivity_raw
 (
 PDM_MPI_Comm   comm,
 PDM_g_num_t    n_vtx_abs,
@@ -82,7 +82,7 @@ PDM_g_num_t  **dentity_elmt
  *
  */
 void
-PDM_generate_entitiy_connectivity2
+PDM_generate_entitiy_connectivity
 (
 PDM_MPI_Comm   comm,
 PDM_g_num_t    n_vtx_abs,
