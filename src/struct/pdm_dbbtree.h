@@ -243,6 +243,21 @@ PDM_dbbtree_points_inside_boxes_with_copies
  double            **pts_in_box_coord
  );
 
+
+
+
+void
+PDM_dbbtree_boxes_containing_points
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ int               **box_idx,
+ PDM_g_num_t       **box_g_num,
+ const int           ellipsoids
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
