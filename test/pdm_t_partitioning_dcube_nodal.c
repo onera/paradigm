@@ -195,16 +195,10 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmn);
 
-  // PDM_dmesh_nodal_generate_distribution(dmn);
-  // PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
-  //                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-  //                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
-  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmn_to_dm, 2);
-
-  PDM_dmesh_nodal_generate_distribution2(dmn);
-  PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
-                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+  PDM_dmesh_nodal_generate_distribution(dmn);
+  PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
 
   PDM_dmesh_t* dm = NULL;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm);

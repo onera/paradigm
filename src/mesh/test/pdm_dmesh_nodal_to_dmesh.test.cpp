@@ -17,6 +17,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   const PDM_g_num_t n_vtx            = 18;
   const PDM_g_num_t n_cell           = 4;
+  const PDM_g_num_t n_face           = 16;
   const int         n_hexa_section_1 = 4;
   const int         n_quad_section_1 = 16;
   PDM_g_num_t connec_hexa_1[32] = {1,2,3,4,5,6,7,8,
@@ -48,33 +49,39 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                             12,          // Right_1
                             14,          // Inlet_1
                             16};         // Outlet_1
-  PDM_g_num_t dgroup_elmt[16] = {5, 6, 7, 8,      // Bottom_1
-                                 9, 10,           // Left_1
-                                 11, 12, 13, 14,  // Top_1
-                                 15, 16,          // Right_1
-                                 17, 18,          // Inlet_1
-                                 19, 20};         // Outlet_1
+  PDM_g_num_t dgroup_elmt[16] = {1, 2, 3, 4,      // Bottom_1
+                                 5, 6,           // Left_1
+                                 7, 8, 9, 10,  // Top_1
+                                 11, 12,          // Right_1
+                                 13, 14,          // Inlet_1
+                                 15, 16};         // Outlet_1
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, -1, -1);
+  PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, n_face, -1);
 
   // The order of call is important for global numbering
-  int hexa_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_HEXA8);
-  int quad_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_QUAD4);
+  int hexa_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_VOLUMIC , PDM_MESH_NODAL_HEXA8);
+  int quad_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_SURFACIC, PDM_MESH_NODAL_QUAD4);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_VOLUMIC,
                                   hexa_section_1,
                                   n_hexa_section_1,
                                   connec_hexa_1,
                                   PDM_OWNERSHIP_USER);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_SURFACIC,
                                   quad_section_1,
                                   n_quad_section_1,
                                   connec_quad_1,
                                   PDM_OWNERSHIP_USER);
 
-  PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt,
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         n_group_elmt,
+                                         dgroup_elmt_idx,
+                                         dgroup_elmt,
                                          PDM_OWNERSHIP_USER);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
@@ -88,7 +95,6 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
     PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-    PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 3);
 
     PDM_dmesh_t* dm;
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
@@ -180,28 +186,35 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
 
   int n_group_elmt = 1;
   int dgroup_elmt_idx[2] = {0, 8};
-  PDM_g_num_t dgroup_elmt[8] = {9, 10, 11, 12, 13, 14, 15, 16};
+  PDM_g_num_t dgroup_elmt[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
 
   // The order of call is important for global numbering
-  int tri_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_TRIA3);
-  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_BAR2);
+  int tri_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_SURFACIC, PDM_MESH_NODAL_TRIA3);
+  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_RIDGE   , PDM_MESH_NODAL_BAR2);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_SURFACIC,
                                   tri_section_1,
                                   n_tri_section_1,
                                   connec_tri_1,
                                   PDM_OWNERSHIP_USER);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_RIDGE,
                                   bar_section_1,
                                   n_bar_section_1,
                                   connec_bar_1,
                                   PDM_OWNERSHIP_USER);
 
-  PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt, PDM_OWNERSHIP_USER);
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_RIDGE,
+                                         n_group_elmt,
+                                         dgroup_elmt_idx,
+                                         dgroup_elmt,
+                                         PDM_OWNERSHIP_USER);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 
@@ -213,7 +226,6 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
 
-  PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
 
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
@@ -280,28 +292,30 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
 
   // int n_group_elmt = 1;
   // int dgroup_elmt_idx[2] = {0, 8};
-  // PDM_g_num_t dgroup_elmt[8] = {9, 10, 11, 12, 13, 14, 15, 16};
+  // PDM_g_num_t dgroup_elmt[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
 
   // The order of call is important for global numbering
-  int tri_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_TRIA3);
-  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_BAR2);
+  int tri_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_SURFACIC, PDM_MESH_NODAL_TRIA3);
+  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_RIDGE   , PDM_MESH_NODAL_BAR2);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_SURFACIC,
                                   tri_section_1,
                                   n_tri_section_1[test_rank],
                                   connec_tri_1[test_rank],
                                   PDM_OWNERSHIP_USER);
 
   PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_RIDGE,
                                   bar_section_1,
                                   n_bar_section_1[test_rank],
                                   connec_bar_1[test_rank],
                                   PDM_OWNERSHIP_USER);
 
-  // // PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
+  // // PDM_DMesh_nodal_section_group_elmt_set(dmn, PDM_GEOMETRY_KIND_RIDGE, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 
@@ -313,7 +327,6 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
 
-  PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
 
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
