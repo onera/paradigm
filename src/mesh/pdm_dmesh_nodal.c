@@ -116,7 +116,6 @@ _get_from_geometry_kind
   } else {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom_kind in _get_from_geometry_kind \n");
   }
-  assert(dmne != NULL);
   return dmne;
 }
 
@@ -146,7 +145,7 @@ const PDM_MPI_Comm        comm,
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
-  dmesh_nodal->pdm_mpi_comm             = comm;
+  dmesh_nodal->comm                     = comm;
   dmesh_nodal->n_rank                   = n_rank;
   dmesh_nodal->i_rank                   = i_rank;
 
@@ -342,7 +341,7 @@ PDM_DMesh_nodal_coord_set
                     (void *) (&vtx->distrib[1]),
                     1,
                     PDM__PDM_MPI_G_NUM,
-                    dmesh_nodal->pdm_mpi_comm);
+                    dmesh_nodal->comm);
 
   vtx->distrib[0] = 0;
   for (int i = 1; i < dmesh_nodal->n_rank + 1; i++) {
@@ -565,6 +564,18 @@ PDM_DMesh_nodal_section_add
 const PDM_Mesh_nodal_elt_t  t_elt
 )
 {
+  if( _get_from_geometry_kind(dmesh_nodal, geom_kind) == NULL) {
+    if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
+      dmesh_nodal->volumic = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 3, dmesh_nodal->n_cell_abs);
+    } else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+      dmesh_nodal->surfacic = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 2, dmesh_nodal->n_face_abs);
+    } else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+      dmesh_nodal->ridge = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_edge_abs);
+    } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+      dmesh_nodal->corner = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_vtx_abs);
+    }
+  }
+
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
   return PDM_DMesh_nodal_elmts_section_add(dmne, t_elt);

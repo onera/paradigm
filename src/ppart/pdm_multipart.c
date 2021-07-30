@@ -706,8 +706,8 @@ _compute_part_mesh_nodal_3d
 {
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(dmn->pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size(dmn->pdm_mpi_comm, &n_rank);
+  PDM_MPI_Comm_rank(dmn->comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
   /*
    * Rebuild the volumic part from cell
@@ -740,7 +740,7 @@ _compute_part_mesh_nodal_3d
                            pface_ln_to_gn,
                           &pn_surf,
                           &psurf_gnum,
-                           dmn->pdm_mpi_comm);
+                           dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
                                                                                          n_part,
@@ -755,7 +755,7 @@ _compute_part_mesh_nodal_3d
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
                                                           n_part,
-                                                          dmn->pdm_mpi_comm);
+                                                          dmn->comm);
 
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , PDM_OWNERSHIP_KEEP);
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, PDM_OWNERSHIP_KEEP);
@@ -778,7 +778,7 @@ _compute_part_mesh_nodal_3d
 //                                                     NULL,
 //                                                     &dn_surf_elmt,
 //                                                     1,
-//                                                     dmn->pdm_mpi_comm);
+//                                                     dmn->comm);
 
 // int         *pblk_surf_n    = (int         *) malloc( dn_surf_elmt * sizeof(int        ));
 // PDM_g_num_t *pblk_surf_gnum = (PDM_g_num_t *) malloc( dn_surf_elmt * sizeof(PDM_g_num_t));
@@ -809,7 +809,7 @@ _compute_part_mesh_nodal_3d
 //                             (const PDM_g_num_t **)  pface_ln_to_gn,
 //                                                     pn_face,
 //                                                     n_part,
-//                                                     dmn->pdm_mpi_comm);
+//                                                     dmn->comm);
 
 // int         **psurf_n    = NULL;
 // PDM_g_num_t **psurf_gnum = NULL;
@@ -852,8 +852,8 @@ _compute_part_mesh_nodal_2d
 {
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(dmn->pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size(dmn->pdm_mpi_comm, &n_rank);
+  PDM_MPI_Comm_rank(dmn->comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
   /*
    * Rebuild the volumic part from cell
@@ -886,7 +886,7 @@ _compute_part_mesh_nodal_2d
                            pedge_ln_to_gn,
                           &pn_surf,
                           &psurf_gnum,
-                           dmn->pdm_mpi_comm);
+                           dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
                                                                                           n_part,
@@ -901,7 +901,7 @@ _compute_part_mesh_nodal_2d
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
                                                           n_part,
-                                                          dmn->pdm_mpi_comm);
+                                                          dmn->comm);
 
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_KEEP);
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
@@ -1434,7 +1434,7 @@ PDM_MPI_Comm       comm
    */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmesh_nodal->mesh_dimension,
                                                           n_part,
-                                                          dmesh_nodal->pdm_mpi_comm);
+                                                          dmesh_nodal->comm);
 
   // for(int i_part = 0; i_part < n_part; ++i_part) {
   //   PDM_part_mesh_nodal_coord_set(pmn,

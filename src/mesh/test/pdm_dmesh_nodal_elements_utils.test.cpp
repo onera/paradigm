@@ -339,7 +339,7 @@ MPI_TEST_CASE("decomposes quad ",1) {
                                    5, 6, 9, 8,};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_dmesh_nodal_elmts_t* dmn = PDM_DMesh_nodal_elmts_create(pdm_comm, 3, n_face);
+  PDM_dmesh_nodal_elmts_t* dmn = PDM_DMesh_nodal_elmts_create(pdm_comm, 2, n_face);
 
   int quad_section_1 = PDM_DMesh_nodal_elmts_section_add(dmn, PDM_MESH_NODAL_QUAD4);
 

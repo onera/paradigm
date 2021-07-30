@@ -54,47 +54,22 @@ struct PDM_DMesh_nodal_vtx_t {
  */
 struct _pdm_dmesh_nodal_t {
 
-  int mesh_dimension;                               /*! Principal dimension of meshes */
+  PDM_MPI_Comm           comm;                     /*!< MPI Communicator */
+  int                    n_rank;                   /*!< Number of processes */
+  int                    i_rank;                   /*!< Number of processes */
+  int mesh_dimension;                              /*! Principal dimension of meshes */
 
   PDM_g_num_t            n_cell_abs;               /*!< Global number of elements */
   PDM_g_num_t            n_face_abs;               /*!< Global number of faces    */
   PDM_g_num_t            n_edge_abs;               /*!< Global number of edges    */
   PDM_g_num_t            n_vtx_abs;                /*!< Global number of vertices */
 
-  // int              n_group_elmt;
-  // int             *dgroup_elmt_idx;
-  // PDM_g_num_t     *dgroup_elmt;
-  // PDM_ownership_t  dgroup_elmt_owner;
-
-  // A gere dans la function chapeau - Lien a faire au dessus - Optionel
-  // int         *delmt_join_idx;
-  // PDM_g_num_t *delmt_join;
-
-  PDM_DMesh_nodal_vtx_t *vtx;                   /*!< Description des sommmets de chaque partition */
-
-  // int                   *sections_id;
-  // int                    n_section_tot;                       /*!< Total number of sections */
-
-  // int                    n_section;                           /*!< Total number of sections           */
-
-  // int                    n_section_std;                       /*!< Total number of standard sections  */
-  // int                    n_section_poly3d;                    /*!< Total number of olyhedron sections */
-  // int                    n_section_poly2d;                    /*!< Total number of olyhedron sections */
-
-  // PDM_g_num_t                       *section_distribution;     /*!< Element distribution               */
-
-  // PDM_DMesh_nodal_section_std_t    **sections_std;             /*!< Standard sections                  */
-  // PDM_DMesh_nodal_section_poly3d_t **sections_poly3d;          /*!< Polyhedron sections                */
-  // PDM_DMesh_nodal_section_poly2d_t **sections_poly2d;          /*!< Polygon sections                   */
+  PDM_DMesh_nodal_vtx_t *vtx;                      /*!< Description des sommmets de chaque partition */
 
   _pdm_dmesh_nodal_elts_t* volumic;
   _pdm_dmesh_nodal_elts_t* surfacic;
   _pdm_dmesh_nodal_elts_t* ridge;
   _pdm_dmesh_nodal_elts_t* corner;
-
-  PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
-  int                    n_rank;                   /*!< Number of processes */
-  int                    i_rank;                   /*!< Number of processes */
 
   // To move in pdm_dmesh
   PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */

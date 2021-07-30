@@ -1156,11 +1156,11 @@ _generate_faces_from_dmesh_nodal
   // /*
   //  *  Create empty dmesh
   //  */
-  // PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->pdm_mpi_comm);
+  // PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->comm);
   // assert(link->dmesh == NULL);
   // link->dmesh = dm;
 
-  // PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+  // PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
   //                                   dmesh_nodal->n_vtx_abs,
   //                                   n_face_elt_tot,
   //                                   delmt_face,
@@ -1181,7 +1181,7 @@ _generate_faces_from_dmesh_nodal
   // assert(link->elmt_distrib == NULL);
   // link->elmt_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
   // link->elmt_distrib[0] = -1;
-  // PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
+  // PDM_dconnectivity_transpose(dmesh_nodal->comm,
   //                             dm->face_distrib,
   //                             link->elmt_distrib,
   //                             link->_dface_elmt_idx,
@@ -1235,7 +1235,7 @@ _generate_faces_from_dmesh_nodal
   //     PDM_log_trace_array_long(dface_edge        , n_edge_elt_tot                , "dface_edge:: ");
   //   }
 
-  //   PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+  //   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
   //                                     dmesh_nodal->n_vtx_abs,
   //                                     n_edge_elt_tot,
   //                                     dface_edge,
@@ -1340,7 +1340,7 @@ _generate_edges_from_dmesh_nodal
                                      dmesh_nodal->vtx->n_vtx,
                                      -1,
                                      -1,
-                                     dmesh_nodal->pdm_mpi_comm);
+                                     dmesh_nodal->comm);
 
   /* Juste a view */
   dm->_dvtx_coord = dmesh_nodal->vtx->_coords;
@@ -1376,7 +1376,7 @@ _generate_edges_from_dmesh_nodal
   /* Memory is deallocated inside */
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-  PDM_generate_entitiy_connectivity2(dmesh_nodal->pdm_mpi_comm,
+  PDM_generate_entitiy_connectivity2(dmesh_nodal->comm,
                                      dmesh_nodal->n_vtx_abs,
                                      n_part,
                                      n_edge_elt_tot,
@@ -1405,7 +1405,7 @@ _generate_edges_from_dmesh_nodal
   dm->face_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
   dm->face_distrib[0] = -1;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
-  PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
+  PDM_dconnectivity_transpose(dmesh_nodal->comm,
                               dm->edge_distrib,
                               dm->face_distrib,
                               dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
@@ -1543,7 +1543,7 @@ _translate_element_group_to_faces
   PDM_g_num_t *dface_bound;
   int         *dface_bound_idx;
 
-  _translate_element_group_to_entity(dmesh_nodal->pdm_mpi_comm,
+  _translate_element_group_to_entity(dmesh_nodal->comm,
                                      dmesh_nodal->surfacic->delmt_child_distrib,
                                      dmesh_nodal->surfacic->dgroup_elmt,
                                      dmesh_nodal->surfacic->dgroup_elmt_idx,
@@ -1575,7 +1575,7 @@ _translate_element_group_to_edges
   PDM_g_num_t *dedge_bound;
   int         *dedge_bound_idx;
 
-  _translate_element_group_to_entity(dmesh_nodal->pdm_mpi_comm,
+  _translate_element_group_to_entity(dmesh_nodal->comm,
                                      dmesh_nodal->ridge->delmt_child_distrib,
                                      dmesh_nodal->ridge->dgroup_elmt,
                                      dmesh_nodal->ridge->dgroup_elmt_idx,
@@ -1964,11 +1964,11 @@ PDM_dmesh_nodal_to_dmesh_compute
 //   /*
 //    *  Create empty dmesh
 //    */
-//   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->pdm_mpi_comm);
+//   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->comm);
 //   assert(link->dmesh == NULL);
 //   link->dmesh = dm;
 
-//   PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+//   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
 //                                     dmesh_nodal->n_vtx_abs,
 //                                     n_edge_elt_tot,
 //                                     delmt_edge,
@@ -1989,7 +1989,7 @@ PDM_dmesh_nodal_to_dmesh_compute
 //   assert(link->elmt_distrib == NULL);
 //   link->elmt_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
 //   link->elmt_distrib[0] = -1;
-//   PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
+//   PDM_dconnectivity_transpose(dmesh_nodal->comm,
 //                               dm->edge_distrib,
 //                               link->elmt_distrib,
 //                               link->_dedge_elmt_idx,
