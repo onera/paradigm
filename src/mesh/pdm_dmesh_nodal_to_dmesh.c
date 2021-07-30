@@ -1441,8 +1441,8 @@ _generate_edges_from_dmesh_nodal2
   int n_edge_elt_ridge_tot     = 0;
   int n_sum_vtx_ridge_edge_tot = 0;
 
-  PDM_dmesh_nodal_decompose_edges_get_size2(dmesh_nodal->surfacic, &n_edge_elt_surf_tot , &n_sum_vtx_surf_edge_tot );
-  PDM_dmesh_nodal_decompose_edges_get_size2(dmesh_nodal->ridge   , &n_edge_elt_ridge_tot, &n_sum_vtx_ridge_edge_tot);
+  PDM_dmesh_nodal_elmts_decompose_edges_get_size(dmesh_nodal->surfacic, &n_edge_elt_surf_tot , &n_sum_vtx_surf_edge_tot );
+  PDM_dmesh_nodal_elmts_decompose_edges_get_size(dmesh_nodal->ridge   , &n_edge_elt_ridge_tot, &n_sum_vtx_ridge_edge_tot);
 
   printf("_generate_edges_from_dmesh_nodal2 -> n_edge_elt_surf_tot      = %i\n", n_edge_elt_surf_tot);
   printf("_generate_edges_from_dmesh_nodal2 -> n_sum_vtx_surf_edge_tot  = %i\n", n_sum_vtx_surf_edge_tot);

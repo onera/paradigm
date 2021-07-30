@@ -233,6 +233,9 @@ int main(int argc, char *argv[])
   PDM_multipart_free(mpart_id);
 
 
+  // A faire : Extraction d'un maillage surfacique à partir du volumique (en dmesh et dmesh_nodal )
+  //           Et également en part_mesh et part_mesh_nodal
+
 
   // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_dcube_nodal_gen_free(dcube);
