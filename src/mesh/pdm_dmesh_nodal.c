@@ -160,38 +160,10 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->distrib             = NULL;
   dmesh_nodal->vtx->n_vtx               = 0;
 
-  // dmesh_nodal->n_group_elmt             = 0;
-  // dmesh_nodal->dgroup_elmt_idx          = NULL;
-  // dmesh_nodal->dgroup_elmt              = NULL;
-  // dmesh_nodal->dgroup_elmt_owner        = PDM_OWNERSHIP_BAD_VALUE;
-
-  // dmesh_nodal->n_section_tot            = 0;
-  // dmesh_nodal->n_section                = 0;
-  // dmesh_nodal->n_section_std            = 0;
-  // dmesh_nodal->n_section_poly2d         = 0;
-  // dmesh_nodal->n_section_poly3d         = 0;
-
-  // dmesh_nodal->sections_id              = NULL;
-  // dmesh_nodal->sections_std             = NULL;
-  // dmesh_nodal->sections_poly3d          = NULL;
-  // dmesh_nodal->sections_poly2d          = NULL;
-  // dmesh_nodal->section_distribution     = NULL;
-
-  // dmesh_nodal->dn_cell                  = -1;
-  // dmesh_nodal->dcell_face               = NULL;
-  // dmesh_nodal->dcell_face_idx           = NULL;
-  // dmesh_nodal->cell_distrib             = NULL;
-
   dmesh_nodal->volumic                  = NULL;
   dmesh_nodal->surfacic                 = NULL;
   dmesh_nodal->ridge                    = NULL;
   dmesh_nodal->corner                   = NULL;
-
-  // dmesh_nodal->dn_face                  = -1;
-  // dmesh_nodal->_dface_vtx               = NULL;
-  // dmesh_nodal->_dface_vtx_idx           = NULL;
-  // dmesh_nodal->_dface_cell              = NULL;
-  // dmesh_nodal->face_distrib             = NULL;
 
 }
 
