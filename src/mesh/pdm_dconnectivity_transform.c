@@ -127,29 +127,29 @@ _deduce_combine_connectivity_impl
   /*
    * Exchange
    */
-  int**         pentity2_vtx_n;
-  PDM_g_num_t** pentity2_vtx;
+  int**         pentity1_entity3_n;
+  PDM_g_num_t** pentity1_entity3;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           dentity2_entity3_n,
              (void *  )   dentity2_entity3,
-             (int  ***)  &pentity2_vtx_n,
-             (void ***)  &pentity2_vtx);
+             (int  ***)  &pentity1_entity3_n,
+             (void ***)  &pentity1_entity3);
   free(dentity2_entity3_n);
 
   /*
    * Panic Verbose
    */
-  // int* pentity2_vtx_idx = (int*) malloc( (dentity1_entity2_idx[dn_entity1] + 1) * sizeof(int));
-  // pentity2_vtx_idx[0] = 0;
+  // int* pentity1_entity3_idx = (int*) malloc( (dentity1_entity2_idx[dn_entity1] + 1) * sizeof(int));
+  // pentity1_entity3_idx[0] = 0;
   // for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
-  //   pentity2_vtx_idx[i+1] = pentity2_vtx_idx[i] + pentity2_vtx_n[0][i];
+  //   pentity1_entity3_idx[i+1] = pentity1_entity3_idx[i] + pentity1_entity3_n[0][i];
   // }
 
-  // PDM_log_trace_array_int(pentity2_vtx_n[0], dentity1_entity2_idx[dn_entity1], "pentity2_vtx_n::");
-  // PDM_log_trace_array_int(pentity2_vtx_idx, dentity1_entity2_idx[dn_entity1]+1, "pentity2_vtx_idx::");
-  // PDM_log_trace_array_long(pentity2_vtx[0], pentity2_vtx_idx[dentity1_entity2_idx[dn_entity1]], "pentity2_vtx::");
+  // PDM_log_trace_array_int(pentity1_entity3_n[0], dentity1_entity2_idx[dn_entity1], "pentity1_entity3_n::");
+  // PDM_log_trace_array_int(pentity1_entity3_idx, dentity1_entity2_idx[dn_entity1]+1, "pentity1_entity3_idx::");
+  // PDM_log_trace_array_long(pentity1_entity3[0], pentity1_entity3_idx[dentity1_entity2_idx[dn_entity1]], "pentity1_entity3::");
 
   /*
    * Free
@@ -159,14 +159,14 @@ _deduce_combine_connectivity_impl
   /*
    * Assign pointer
    */
-  *dentity1_entity3   = pentity2_vtx[0];
-  *dentity1_entity3_n = pentity2_vtx_n[0];
+  *dentity1_entity3   = pentity1_entity3[0];
+  *dentity1_entity3_n = pentity1_entity3_n[0];
 
   /*
    * Free first level of pointer - the second level is hold by dentity1_entity3/dentity1_entity3_n
    */
-  free(pentity2_vtx  );
-  free(pentity2_vtx_n);
+  free(pentity1_entity3  );
+  free(pentity1_entity3_n);
 
 }
 
