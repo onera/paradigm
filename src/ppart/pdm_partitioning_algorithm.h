@@ -123,6 +123,21 @@ PDM_part_dconnectivity_to_pconnectivity_sort
        int          ***pconnectivity
 );
 
+void
+PDM_part_dconnectivity_to_pconnectivity_sort_single_part
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             pn_entity,
+ const PDM_g_num_t    *pentity_ln_to_gn,
+       int            *pn_child_entity,
+       PDM_g_num_t   **pchild_ln_to_gn,
+       int           **pconnectivity_idx,
+       int           **pconnectivity
+);
+
 /**
  *  \brief Generated the partitioned connectivity (entity->child_elements) associated
  *   to the given distributed connectivity, using element distribution and element local

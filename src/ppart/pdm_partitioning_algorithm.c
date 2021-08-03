@@ -1148,6 +1148,50 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   free(pn_child);
 }
 
+
+void
+PDM_part_dconnectivity_to_pconnectivity_sort_single_part
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             pn_entity,
+ const PDM_g_num_t    *pentity_ln_to_gn,
+       int            *pn_child_entity,
+       PDM_g_num_t   **pchild_ln_to_gn,
+       int           **pconnectivity_idx,
+       int           **pconnectivity
+)
+{
+  int          *tmp_pn_child_entity   = NULL;
+  PDM_g_num_t **tmp_pchild_ln_to_gn   = NULL;
+  int         **tmp_pconnectivity_idx = NULL;
+  int         **tmp_pconnectivity     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+                                               entity_distribution,
+                                               dconnectivity_idx,
+                                               dconnectivity,
+                                               1,
+                                               &pn_entity,
+                                               &pentity_ln_to_gn,
+                                               &tmp_pn_child_entity,
+                                               &tmp_pchild_ln_to_gn,
+                                               &tmp_pconnectivity_idx,
+                                               &tmp_pconnectivity);
+
+
+  *pn_child_entity   = tmp_pn_child_entity[0];
+  *pchild_ln_to_gn   = tmp_pchild_ln_to_gn[0];
+  *pconnectivity_idx = tmp_pconnectivity_idx[0];
+  *pconnectivity     = tmp_pconnectivity[0];
+
+  free(tmp_pn_child_entity);
+  free(tmp_pchild_ln_to_gn);
+  free(tmp_pconnectivity_idx);
+  free(tmp_pconnectivity);
+}
+
 /**
  *  \brief Generated the partitioned connectivity (entity->child_elements) associated
  *   to the given distributed connectivity, using element distribution and element local
