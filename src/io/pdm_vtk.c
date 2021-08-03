@@ -97,7 +97,7 @@ PDM_vtk_write_boxes
   }
 
   fclose(f);
-};
+}
 
 void
 PDM_vtk_write_circles

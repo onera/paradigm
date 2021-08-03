@@ -491,7 +491,7 @@ PDM_dconnectivity_transpose
 
   int dn_entity2_recv = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if(entity2_distrib != NULL) {
+  if(entity2_distrib != NULL && save_entity_distrib != 1) {
     PDM_g_num_t *distrib2_idx_full =
       PDM_part_to_block_adapt_partial_block_to_block (ptb,
                                                       &dentity2_entity1_n,
