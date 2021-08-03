@@ -18,6 +18,7 @@ file(GLOB_RECURSE SOURCES
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
      io/pdm_logging.[hc]
+     io/pdm_vtk.[hc]
      pdm.h
      pdm_priv.h)
 

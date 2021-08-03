@@ -61,6 +61,32 @@ PDM_vtk_write_circles
  const int          resolution
 );
 
+
+void
+PDM_vtk_write_polydata
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          n_face,
+ const int          face_vtx_idx[],
+ const int          face_vtx[],
+ const PDM_g_num_t  face_g_num[],
+ const int          face_color[]
+ );
+
+
+void
+PDM_vtk_write_point_cloud
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          color[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

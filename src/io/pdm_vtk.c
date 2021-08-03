@@ -164,3 +164,131 @@ PDM_vtk_write_circles
 
   fclose(f);
 }
+
+
+
+
+void
+PDM_vtk_write_polydata
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          n_face,
+ const int          face_vtx_idx[],
+ const int          face_vtx[],
+ const PDM_g_num_t  face_g_num[],
+ const int          face_color[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET POLYDATA\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
+  for (int i = 0; i < n_face; i++) {
+    fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
+    for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
+      fprintf(f, " %d", face_vtx[j] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS vtx_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  }
+
+  if (face_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_face);
+    fprintf(f, "SCALARS face_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_face; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
+    }
+  } else if (face_color != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_face);
+    fprintf(f, "SCALARS face_color int 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_face; i++) {
+      fprintf(f, "%d\n", face_color[i]);
+    }
+  }
+
+
+  fclose(f);
+}
+
+
+
+
+void
+PDM_vtk_write_point_cloud
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          color[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "point cloud\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_vtx, 2*n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "1 %d\n", i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "1\n");
+  }
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  } else if (color != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS color int 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%d\n", color[i]);
+    }
+  }
+
+  fclose(f);
+}
