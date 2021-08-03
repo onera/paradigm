@@ -491,6 +491,15 @@ PDM_dconnectivity_transpose
 
   int dn_entity2_recv = PDM_part_to_block_n_elt_block_get(ptb);
 
+  if(entity2_distrib != NULL) {
+    PDM_g_num_t *distrib2_idx_full =
+      PDM_part_to_block_adapt_partial_block_to_block (ptb,
+                                                      &dentity2_entity1_n,
+                                                      entity2_distrib[n_rank]);
+    dn_entity2_recv = distrib2_idx_full[i_rank+1] - distrib2_idx_full[i_rank];
+    free(distrib2_idx_full);
+  }
+
   if(save_entity_distrib == 1) {
     // Update distrib
     PDM_g_num_t* ptb_distrib = PDM_part_to_block_distrib_index_get(ptb);

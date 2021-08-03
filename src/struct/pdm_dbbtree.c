@@ -2808,7 +2808,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
   }
 
   /*
-   *  Redistribute target points
+   *  For each point, find all ranks that might have boxes containing that point
    */
   int *send_count = NULL;
   int *send_shift = NULL;
@@ -3104,6 +3104,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
   }
 
 
+
   /*
    *  Get boxes containing points
    */
@@ -3349,15 +3350,17 @@ PDM_dbbtree_boxes_containing_points
                 _pts_coord + 3*i);
   }
 
-
   /*
    *  For each point, find all ranks that might have boxes containing that point
    */
   int *send_count = NULL;
   int *send_shift = NULL;
-
   int *recv_count = NULL;
   int *recv_shift = NULL;
+  PDM_g_num_t *send_g_num = NULL;
+  PDM_g_num_t *recv_g_num = NULL;
+  double      *send_coord = NULL;
+  double      *recv_coord = NULL;
 
   int n_copied_ranks = 0;
   int *copied_ranks = NULL;
@@ -3367,11 +3370,6 @@ PDM_dbbtree_boxes_containing_points
   int n_pts1;
 
   int *copied_shift = NULL;
-
-  PDM_g_num_t *send_g_num = NULL;
-  PDM_g_num_t *recv_g_num = NULL;
-  double      *send_coord = NULL;
-  double      *recv_coord = NULL;
 
   PDM_g_num_t *pts_g_num1 = NULL;
   double      *pts_coord1 = NULL;
@@ -3545,7 +3543,8 @@ PDM_dbbtree_boxes_containing_points
     pts_g_num1 = malloc (sizeof(PDM_g_num_t) * n_pts1);
     pts_coord1 = malloc (sizeof(double)      * n_pts1 * 3);
 
-        /* Fill send buffers */
+
+    /* Fill send buffers */
     send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
     send_coord = malloc (sizeof(double)      * send_shift[n_rank] * 3);
 
@@ -3609,6 +3608,7 @@ PDM_dbbtree_boxes_containing_points
     free (pts_rank);
     free (pts_rank_idx);
 
+
     /* Exchange points */
     recv_g_num = pts_g_num1 + n_pts_local;
     PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
@@ -3627,6 +3627,7 @@ PDM_dbbtree_boxes_containing_points
     PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
                        recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
                        _dbbt->comm);
+
     free (send_coord);
     free (send_count);
     free (send_shift);
@@ -3648,7 +3649,7 @@ PDM_dbbtree_boxes_containing_points
 
 
   /*
-   *  Find all local boxes that contain each point
+   *  Get boxes containing points
    */
   int n_part = 1 + n_copied_ranks;
   int *part_n_pts = malloc (sizeof(int) * n_part);
@@ -3657,25 +3658,27 @@ PDM_dbbtree_boxes_containing_points
   int **pts_box_idx   = malloc (sizeof(int *) * n_part);
   int **pts_box_l_num = malloc (sizeof(int *) * n_part);
 
+  void (*_points_inside_volumes) (PDM_box_tree_t *bt,
+                                  const int,
+                                  const int,
+                                  const double *,
+                                  int **,
+                                  int **);
+  if (ellipsoids) {
+    _points_inside_volumes = &PDM_box_tree_points_inside_ellipsoids;
+  } else {
+    _points_inside_volumes = &PDM_box_tree_points_inside_boxes2;
+  }
+
   /*
    *  Search in local tree
    */
-  if (ellipsoids) {
-    PDM_box_tree_points_inside_ellipsoids (_dbbt->btLoc,
-                                           -1,
-                                           part_n_pts[0],
-                                           pts_coord1,
-                                           &(pts_box_idx[0]),
-                                           &(pts_box_l_num[0]));
-  }
-  else {
-    PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
-                                       -1,
-                                       part_n_pts[0],
-                                       pts_coord1,
-                                       &(pts_box_idx[0]),
-                                       &(pts_box_l_num[0]));
-  }
+  _points_inside_volumes (_dbbt->btLoc,
+                          -1,
+                          part_n_pts[0],
+                          pts_coord1,
+                          &(pts_box_idx[0]),
+                          &(pts_box_l_num[0]));
 
   /*
    *  Search in copied trees
@@ -3688,22 +3691,12 @@ PDM_dbbtree_boxes_containing_points
     for (int i = 0; i < n_copied_ranks; i++) {
       part_n_pts[i+1] = copied_shift[i+1] - copied_shift[i];
 
-      if (ellipsoids) {
-        PDM_box_tree_points_inside_ellipsoids (_dbbt->btLoc,
-                                               i,
-                                               part_n_pts[i+1],
-                                               pts_coord_copied + copied_shift[i] * 3,
-                                               &(pts_box_idx[i+1]),
-                                               &(pts_box_l_num[i+1]));
-      }
-      else {
-        PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
-                                           i,
-                                           part_n_pts[i+1],
-                                           pts_coord_copied + copied_shift[i] * 3,
-                                           &(pts_box_idx[i+1]),
-                                           &(pts_box_l_num[i+1]));
-      }
+      _points_inside_volumes (_dbbt->btLoc,
+                              i,
+                              part_n_pts[i+1],
+                              pts_coord_copied + copied_shift[i] * 3,
+                              &(pts_box_idx[i+1]),
+                              &(pts_box_l_num[i+1]));
     }
   }
   if (copied_shift != NULL) free (copied_shift);
