@@ -203,23 +203,6 @@ PDM_DMesh_nodal_sections_id_get
 );
 
 /**
- * \brief  Return sections identifier
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- *
- * \return  Blocks identifier
- *
- */
-
-int *
-PDM_DMesh_nodal_sections_id_get_from_geometry_kind
-(
-PDM_dmesh_nodal_t   *dmesh_nodal,
-PDM_geometry_kind_t  geom_kind
-);
-
-
-/**
  * \brief  Return type of element of section
  *
  * \param [in]  hdl        Distributed nodal mesh handle
