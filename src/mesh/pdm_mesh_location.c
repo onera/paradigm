@@ -3724,7 +3724,8 @@ PDM_mesh_location_t        *ml
                                                      select_box_g_num,
                                                      &pts_idx,
                                                      &pts_g_num,
-                                                     &pts_coord);
+                                                     &pts_coord,
+                                                     0);
       } else {
         PDM_dbbtree_points_inside_boxes (dbbt,
                                          n_pts_pcloud,

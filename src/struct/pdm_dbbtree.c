@@ -2784,7 +2784,8 @@ PDM_dbbtree_points_inside_boxes_with_copies
  const PDM_g_num_t   box_g_num[],
  int               **pts_in_box_idx,
  PDM_g_num_t       **pts_in_box_g_num,
- double            **pts_in_box_coord
+ double            **pts_in_box_coord,
+ const int           ellipsoids
  )
 {
   const float f_threshold = 1.1;  // factor of the mean nb of requests
@@ -3117,15 +3118,33 @@ PDM_dbbtree_points_inside_boxes_with_copies
 
   int size_pts_box = 0;
 
+  void (*_points_inside_volumes) (PDM_box_tree_t *bt,
+                                  const int,
+                                  const int,
+                                  const double *,
+                                  int **,
+                                  int **);
+  if (ellipsoids) {
+    _points_inside_volumes = &PDM_box_tree_points_inside_ellipsoids;
+  } else {
+    _points_inside_volumes = &PDM_box_tree_points_inside_boxes2;
+  }
+
   /*
    *  Search in local tree
    */
-  PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
+  /*PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
                                      -1,
                                      part_n_pts[0],
                                      pts_coord1,
                                      &(pts_box_idx[0]),
-                                     &(pts_box_l_num[0]));
+                                     &(pts_box_l_num[0]));*/
+  _points_inside_volumes (_dbbt->btLoc,
+                          -1,
+                          part_n_pts[0],
+                          pts_coord1,
+                          &(pts_box_idx[0]),
+                          &(pts_box_l_num[0]));
   size_pts_box += pts_box_idx[0][part_n_pts[0]];
 
 
@@ -3140,12 +3159,18 @@ PDM_dbbtree_points_inside_boxes_with_copies
     for (int i = 0; i < n_copied_ranks; i++) {
       part_n_pts[i+1] = copied_shift[i+1] - copied_shift[i];
 
-      PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
+      /*PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
                                          i,
                                          part_n_pts[i+1],
                                          pts_coord_copied + copied_shift[i] * 3,
                                          &(pts_box_idx[i+1]),
-                                         &(pts_box_l_num[i+1]));
+                                         &(pts_box_l_num[i+1]));*/
+      _points_inside_volumes (_dbbt->btLoc,
+                              i,
+                              part_n_pts[i+1],
+                              pts_coord_copied + copied_shift[i] * 3,
+                              &(pts_box_idx[i+1]),
+                              &(pts_box_l_num[i+1]));
 
       size_pts_box += pts_box_idx[i+1][part_n_pts[i+1]];
     }
