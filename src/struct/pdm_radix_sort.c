@@ -491,7 +491,9 @@ PDM_radix_sort_long
  int          lArray
 )
 {
-
+  if(lArray == 0) {
+    return;
+  }
   PDM_g_num_t max = _get_max_value_in_array_long(array, lArray);
 
   // int n_step = -1;
