@@ -87,7 +87,7 @@ PDM_part_geom
 
 
 void
-PDM_dreorder_vtx
+PDM_dreorder_from_coords
 (
  PDM_part_geom_t  method,
  int              dim,

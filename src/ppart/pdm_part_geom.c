@@ -503,13 +503,13 @@ PDM_part_geom
 
 
 void
-PDM_dreorder_vtx
+PDM_dreorder_from_coords
 (
  PDM_part_geom_t  method,
  int              dim,
  PDM_g_num_t     *distrib_vtx,
- double          *dvtx_coord,
- PDM_g_num_t     *vtx_ln_to_gn,
+ double          *dcoords,
+ PDM_g_num_t     *ln_to_gn,
  PDM_MPI_Comm     comm
 )
 {
@@ -529,10 +529,10 @@ PDM_dreorder_vtx
   double extents[2*dim]; /** DIM x 2**/
 
   /** Get EXTENTS **/
-  PDM_hilbert_get_coord_extents_par(dim, dn_vtx, dvtx_coord, extents, comm);
+  PDM_hilbert_get_coord_extents_par(dim, dn_vtx, dcoords, extents, comm);
 
   /** Hilbert Coordinates Computation **/
-  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_vtx, dvtx_coord, hilbert_codes);
+  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_vtx, dcoords, hilbert_codes);
 
   for (int i = 0; i < dn_vtx; ++i) {
     tmp_hilbert_codes [i] = hilbert_codes [i];
@@ -549,7 +549,6 @@ PDM_dreorder_vtx
   PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_vtx);
 
   free(tmp_hilbert_codes);
-
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
@@ -575,7 +574,7 @@ PDM_dreorder_vtx
     size_t quantile = PDM_hilbert_quantile_search(n_rank,
                                                   hilbert_codes[i],
                                                   hilbert_codes_idx);
-    vtx_ln_to_gn [i] = (int) (quantile + 1); // Because ln_to_gn of part_to_block begin at 1
+    ln_to_gn [i] = (int) (quantile + 1); // Because ln_to_gn of part_to_block begin at 1
   }
 
   // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
@@ -586,8 +585,6 @@ PDM_dreorder_vtx
     distrib_rank[i] = i;
   }
 
-  PDM_log_trace_array_long(vtx_ln_to_gn, dn_vtx, "vtx_ln_to_gn (FAKE) : ");
-
   /*
    * Each proc get all the entities affected to its partitions
    */
@@ -595,7 +592,7 @@ PDM_dreorder_vtx
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_NOTHING,
                              1.,
-                             &vtx_ln_to_gn,
+                             &ln_to_gn,
                              distrib_rank,
                              &dn_vtx,
                              1,
@@ -616,18 +613,18 @@ PDM_dreorder_vtx
 
   /* Resend */
   for(int i = 0; i < dn_vtx; ++i) {
-    vtx_ln_to_gn [i] = distrib_vtx[i_rank] + i + 1; // Donc correspond a la numeration absolu initiale
+    ln_to_gn [i] = distrib_vtx[i_rank] + i + 1; // Donc correspond a la numeration absolu initiale
   }
 
-  PDM_g_num_t* blk_vtx_ln_to_gn;
+  PDM_g_num_t* blk_ln_to_gn;
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST,
                           1,
                           NULL,
-                (void **) &vtx_ln_to_gn,
+                (void **) &ln_to_gn,
                           NULL,
-                (void **) &blk_vtx_ln_to_gn);
+                (void **) &blk_ln_to_gn);
 
   free(hilbert_codes_idx);
   free(hilbert_codes);
@@ -642,17 +639,17 @@ PDM_dreorder_vtx
   free(blk_hilbert_codes);
 
 
-  /* Apply order to blk_vtx_ln_to_gn */
-  PDM_g_num_t* sorted_blk_vtx_ln_to_gn = malloc( dn_vtx * sizeof(PDM_g_num_t));
+  /* Apply order to blk_ln_to_gn */
+  PDM_g_num_t* sorted_blk_ln_to_gn = malloc( dn_vtx * sizeof(PDM_g_num_t));
   for(int i = 0; i < dn_vtx; ++i) {
-    sorted_blk_vtx_ln_to_gn[i] = blk_vtx_ln_to_gn[hilbert_order[i]];
+    sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
-  free(blk_vtx_ln_to_gn);
+  free(blk_ln_to_gn);
   free(hilbert_order);
 
 
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_vtx,
-                              (const PDM_g_num_t **)  &vtx_ln_to_gn,
+                              (const PDM_g_num_t **)  &ln_to_gn,
                                                       &dn_vtx,
                                                       1,
                                                       comm);
@@ -662,9 +659,9 @@ PDM_dreorder_vtx
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST,
                          &stride_one,
-              (void *)   sorted_blk_vtx_ln_to_gn,
+              (void *)   sorted_blk_ln_to_gn,
                          NULL,
-              (void **) &vtx_ln_to_gn);
+              (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
 
 }
