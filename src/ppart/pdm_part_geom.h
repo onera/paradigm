@@ -86,6 +86,17 @@ PDM_part_geom
 );
 
 
+void
+PDM_dreorder_vtx
+(
+ PDM_part_geom_t  method,
+ int              dim,
+ PDM_g_num_t     *distrib_vtx,
+ double          *dvtx_coord,
+ PDM_g_num_t     *vtx_ln_to_gn,
+ PDM_MPI_Comm     comm
+);
+
 
 #ifdef __cplusplus
 }
