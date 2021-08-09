@@ -663,7 +663,7 @@ PDM_dreorder_from_coords
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
-
+  free(sorted_blk_ln_to_gn);
 }
 
 
