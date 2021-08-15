@@ -89,6 +89,16 @@ PDM_deduce_combine_connectivity_dual
        PDM_g_num_t    **dentity1_entity3
 );
 
+
+void
+PDM_dorder_reverse
+(
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num_t     *entity_distrib,
+ const PDM_g_num_t     *dentity1_entity2,
+       PDM_g_num_t    **dentity2_entity1
+);
+
 #ifdef  __cplusplus
 }
 #endif

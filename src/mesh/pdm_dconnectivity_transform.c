@@ -548,6 +548,99 @@ PDM_dconnectivity_transpose
   free(dentity2_entity1_n);
 }
 
+
+/**
+ *
+ * \brief Compute the dual connectivty of entity1
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx
+ * \param [in]   dentity1_entity2
+ * \param [in]   dentity1_entity2      is array is signed
+ * \param [in]   dentity2_entity1_idx
+ * \param [in]   dentity2_entity1
+ */
+void
+PDM_dorder_reverse
+(
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num_t     *entity_distrib,
+ const PDM_g_num_t     *dentity1_entity2,
+       PDM_g_num_t    **dentity2_entity1
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int dn_entity1  = entity_distrib[i_rank+1] - entity_distrib[i_rank];
+  PDM_g_num_t* gnum = (PDM_g_num_t * ) malloc( dn_entity1 * sizeof(PDM_g_num_t));
+
+  for(int i_entity = 0; i_entity < dn_entity1; ++i_entity) {
+    gnum[i_entity] = entity_distrib[i_rank] + i_entity + 1;
+  }
+
+  /*
+   * In order to revert the conncectivty we use the global numbering property
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                       1.,
+                                                       &dentity1_entity2,
+                                                       entity_distrib,
+                                            (int *)    &dn_entity1,
+                                                       1,
+                                                       comm);
+
+  PDM_g_num_t *recv_data          = NULL;
+
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST,
+                          1,
+                          NULL,
+                (void **) &gnum,
+                           NULL,
+                 (void **) &recv_data);
+  free(gnum);
+
+  *dentity2_entity1 = recv_data;
+}
+
+// void
+// PDM_dconnectivity_update_child_connectivity
+// (
+//  const PDM_MPI_Comm     comm,
+//  const PDM_g_num_t     *entity1_distrib,
+//        PDM_g_num_t     *entity2_distrib,
+//        int             *dentity1_entity2_idx,
+//        PDM_g_num_t     *dentity1_entity2,
+//        int              is_signed,
+//  const PDM_g_num_t     *dold_to_new_entity2
+// )
+// {
+
+//   // On peut également updater sans echanger les doublons je pense :
+//   //  PDM_unique (avec unique order ) Puis on replace aprés l'échange !!!
+//   //  Maybe il faut order + unique order ?
+// }
+
+// void
+// PDM_dconnectivity_reorder
+// (
+//  const PDM_MPI_Comm     comm,
+//  const PDM_g_num_t     *entity1_distrib,
+//        int             *dentity1_entity2_idx,
+//        PDM_g_num_t     *dentity1_entity2,
+//        int              is_signed,
+//  const PDM_g_num_t     *dold_to_new_entity1
+// )
+// {
+
+// }
+
+
 #ifdef  __cplusplus
 }
 #endif
