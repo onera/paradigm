@@ -587,7 +587,7 @@ PDM_dorder_reverse
   PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                        1.,
-                                                       &dentity1_entity2,
+                                      (PDM_g_num_t **) &dentity1_entity2,
                                                        entity_distrib,
                                             (int *)    &dn_entity1,
                                                        1,
@@ -606,6 +606,7 @@ PDM_dorder_reverse
   free(gnum);
 
   *dentity2_entity1 = recv_data;
+  PDM_part_to_block_free(ptb);
 }
 
 // void
