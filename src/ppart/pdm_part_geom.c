@@ -21,6 +21,8 @@
 #include "pdm_block_to_part.h"
 #include "pdm_part_to_block.h"
 #include "pdm_printf.h"
+#include "pdm_distrib.h"
+#include "pdm_logging.h"
 
 
 #ifdef __cplusplus
@@ -599,7 +601,9 @@ PDM_dreorder_from_coords
                              comm);
   free(distrib_rank);
 
-  // const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
+  const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
+
+  // log_trace("n_vtx_block = %i | dn_vtx = %i \n", n_vtx_block, dn_vtx);
 
   double *blk_hilbert_codes = NULL;
   PDM_part_to_block_exch (ptb,
@@ -628,27 +632,28 @@ PDM_dreorder_from_coords
 
   free(hilbert_codes_idx);
   free(hilbert_codes);
-  PDM_part_to_block_free (ptb);
+  PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  for (int i = 0; i < dn_vtx; ++i) {
+  hilbert_order = (int * ) realloc(hilbert_order,  n_vtx_block * sizeof(int));
+  for (int i = 0; i < n_vtx_block; ++i) {
     hilbert_order [i] = i;
   }
-  PDM_sort_double (blk_hilbert_codes, hilbert_order, dn_vtx);
+  PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
   free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t* sorted_blk_ln_to_gn = malloc( dn_vtx * sizeof(PDM_g_num_t));
-  for(int i = 0; i < dn_vtx; ++i) {
+  PDM_g_num_t* sorted_blk_ln_to_gn = malloc( n_vtx_block * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
   free(blk_ln_to_gn);
   free(hilbert_order);
 
-
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_vtx,
+  PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
                               (const PDM_g_num_t **)  &ln_to_gn,
                                                       &dn_vtx,
                                                       1,
@@ -664,6 +669,7 @@ PDM_dreorder_from_coords
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
   free(sorted_blk_ln_to_gn);
+  free(distrib_blk_vtx);
 }
 
 
