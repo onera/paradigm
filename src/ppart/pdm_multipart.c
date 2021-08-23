@@ -712,8 +712,8 @@ _compute_part_mesh_nodal_3d
   /*
    * Rebuild the volumic part from cell
    */
-  PDM_g_num_t  **pcell_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  int           *pn_cell        = (int *  ) malloc( n_part * sizeof(int          ));
+  PDM_g_num_t  **pcell_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_cell        = (int *  )         malloc( n_part * sizeof(int          ));
   for(int i_part = 0; i_part < n_part; ++i_part){
     pcell_ln_to_gn[i_part] = pm->parts[i_part]->cell_ln_to_gn;
     pn_cell       [i_part] = pm->parts[i_part]->n_cell;
@@ -724,8 +724,8 @@ _compute_part_mesh_nodal_3d
                                                                                         pn_cell,
                                                                                         pcell_ln_to_gn);
 
-  PDM_g_num_t  **pface_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  int           *pn_face        = (int *  ) malloc( n_part * sizeof(int          ));
+  PDM_g_num_t  **pface_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_face        = (int *  )         malloc( n_part * sizeof(int          ));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
     pn_face       [i_part] = pm->parts[i_part]->n_face;
@@ -858,8 +858,8 @@ _compute_part_mesh_nodal_2d
   /*
    * Rebuild the volumic part from cell
    */
-  PDM_g_num_t  **pface_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  int           *pn_face        = (int *  ) malloc( n_part * sizeof(int          ));
+  PDM_g_num_t  **pface_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_face        = (int *  )         malloc( n_part * sizeof(int          ));
   for(int i_part = 0; i_part < n_part; ++i_part){
     pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
     pn_face       [i_part] = pm->parts[i_part]->n_face;
@@ -870,8 +870,8 @@ _compute_part_mesh_nodal_2d
                                                                                         pn_face,
                                                                                         pface_ln_to_gn);
 
-  PDM_g_num_t  **pedge_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  int           *pn_edge        = (int *  ) malloc( n_part * sizeof(int          ));
+  PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_edge        = (int *  )         malloc( n_part * sizeof(int          ));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
     pn_edge       [i_part] = pm->parts[i_part]->n_edge;

@@ -259,6 +259,18 @@ PDM_dbbtree_boxes_containing_points
  const int           ellipsoids
  );
 
+
+void
+PDM_dbbtree_lines_intersect_boxes
+(
+ PDM_dbbtree_t  *dbbt,
+ const int       n_line,
+ PDM_g_num_t    *line_g_num,
+ double         *line_coord,
+ int           **box_index,
+ PDM_g_num_t   **box_g_num
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

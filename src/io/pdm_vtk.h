@@ -87,6 +87,17 @@ PDM_vtk_write_point_cloud
  const int          color[]
  );
 
+
+void
+PDM_vtk_write_lines
+(
+ const char        *filename,
+ const int          n_line,
+ const double      *coord,
+ const PDM_g_num_t *g_num,
+ const int         *color
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

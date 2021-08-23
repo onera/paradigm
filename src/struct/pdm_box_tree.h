@@ -412,6 +412,19 @@ PDM_box_tree_points_inside_ellipsoids
  int           **box_l_num
  );
 
+
+
+void
+PDM_box_tree_intersect_lines_boxes
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_idx,
+ int           **box_l_num
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
