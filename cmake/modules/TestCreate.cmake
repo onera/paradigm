@@ -106,6 +106,3 @@ function(test_cpp_create name n_proc)
              ${CMAKE_CURRENT_BINARY_DIR}/${name}
              ${MPIEXEC_POSTFLAGS})
 endfunction()
-
-
-
