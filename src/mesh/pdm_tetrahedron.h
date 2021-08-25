@@ -27,6 +27,20 @@ extern "C" {
  * Type
  *============================================================================*/
 
+/**
+ * \enum PDM_tetrahedron_status_t
+ * \brief Tetrahedron status type
+ *
+ */
+
+typedef enum {
+
+  PDM_TETRAHEDRON_INSIDE      = 0,  /*!< Inside  */
+  PDM_TETRAHEDRON_OUTSIDE     = 1,  /*!< Outside */
+  PDM_TETRAHEDRON_DEGENERATED = 2,  /*!< Degenerated */
+
+} PDM_tetrahedron_status_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -49,7 +63,8 @@ extern "C" {
  *
  */
 
-int PDM_tetrahedron_evaluate_position
+PDM_tetrahedron_status_t
+PDM_tetrahedron_evaluate_position
 (
  const double  x[3],
  const double  vtx_coord[12],

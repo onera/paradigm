@@ -100,11 +100,15 @@ extern "C" {
  *
  */
 
-int  PDM_tetrahedron_evaluate_position (const double  x[3],
-                                        const double  vtx_coord[12],
-                                        double        closest_point[3],
-                                        double       *closest_point_dist2,
-                                        double        closest_point_weights[4])
+PDM_tetrahedron_status_t
+PDM_tetrahedron_evaluate_position
+(
+ const double  x[3],
+ const double  vtx_coord[12],
+ double        closest_point[3],
+ double       *closest_point_dist2,
+ double        closest_point_weights[4]
+ )
 {
   double vtx_tria[9];
   double p0p1[3], p0p2[3], p0p3[3], p1p2[3], p1p3[3], p2p3[3];
@@ -149,7 +153,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
       norm2_p1p2 == 0.0 ||
       norm2_p1p3 == 0.0 ||
       norm2_p2p3 == 0.0) {
-    return -1;
+    return PDM_TETRAHEDRON_DEGENERATED;
   }
 
   vol6 = p0p1[0] * (p0p2[1]*p0p3[2] - p0p2[2]*p0p3[1])
@@ -157,7 +161,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     +    p0p1[2] * (p0p2[0]*p0p3[1] - p0p2[1]*p0p3[0]);
 
   if (vol6 == 0) {
-    return -1;
+    return PDM_TETRAHEDRON_DEGENERATED;
   }
 PDM_GCC_SUPPRESS_WARNING_POP
 
@@ -188,6 +192,8 @@ PDM_GCC_SUPPRESS_WARNING_POP
     closest_point_weights[1] = u;
     closest_point_weights[2] = v;
     closest_point_weights[3] = w;
+
+    return PDM_TETRAHEDRON_INSIDE;
   }
 
   else if (u + v + w > 1) {// la face la plus proche est [P1,P2,P3]
@@ -378,7 +384,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
     closest_point_weights[3] = w;
   }
 
-  return 0;
+  return PDM_TETRAHEDRON_OUTSIDE;
 }
 
 #ifdef __cplusplus
