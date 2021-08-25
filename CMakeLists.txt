@@ -325,6 +325,7 @@ else ()
         set(PDM_HAVE_PTSCOTCH 1)
      endif()
   endif()
+  find_package(mmg CONFIG)
 
   # Check OpenMP (TODO : check MPI wrapper function check )
   # -------------------------------------------------------

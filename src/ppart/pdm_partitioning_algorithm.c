@@ -1921,23 +1921,6 @@ PDM_part_dcoordinates_to_pcoordinates
         double       ***pvtx_coord
 )
 {
-  int i_rank;
-  int n_rank;
-
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  //printf("n_part=%i\n",n_part);
-  //printf("pn_vtx=%i\n",pn_vtx[0]);
-  //printf("vertex_distribution:");
-  //for (int i = 0; i < n_rank+1; ++i)
-  //  printf(" %d ", vertex_distribution[i]);
-  //printf("\n");
-  //printf("pvtx_ln_to_gn:");
-  //for (int i = 0; i < pn_vtx[0]; ++i)
-  //  printf(" %d ", pvtx_ln_to_gn[0][i]);
-  //printf("\n");
-
   PDM_block_to_part_t* btp = PDM_block_to_part_create(vertex_distribution,
                                (const PDM_g_num_t **) pvtx_ln_to_gn,
                                                       pn_vtx,
@@ -1953,6 +1936,53 @@ PDM_part_dcoordinates_to_pcoordinates
              (void *  )   dvtx_coord,
              (int  ***)  &pvtx_stride,
              (void ***)   pvtx_coord);
+
+  PDM_block_to_part_free(btp);
+}
+
+/**
+ *  \brief Recover partitioned coordinates from distributed coordinates and
+ *   vertex ln_to_gn indirection.
+ *   This function basically calls PDM_block_to_part on to exchange vertex coordinates.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   vertex_distribution Distribution of vertices over the processes (size=n_rank+1)
+ * \param [in]   dvtx_coord          Coordinates of distributed vertices (size=3*dn_vtx)
+ * \param [in]   pn_vtx              Number of vertices in each partition (size=n_part)
+ * \param [in]   pvtx_ln_to_gn       For each part, position of vertices in the global numbering
+ *                                   (size = n_part, each component size = pn_vtx[i_part])
+ * \param [out]  pvtx_coord          Coordinates of partitioned vertices for each partition
+ *                                   (size = n_part, each component size = 3*pn_vtx[i_part])
+ */
+void
+PDM_part_dfield_to_pfield
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part,
+  size_t                s_data,
+  const PDM_g_num_t    *field_distribution,
+  const unsigned char  *dfield,
+  const int            *pn_field,
+  const PDM_g_num_t   **pfield_ln_to_gn,
+        unsigned char ***pfield
+)
+{
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(field_distribution,
+                               (const PDM_g_num_t **) pfield_ln_to_gn,
+                                                      pn_field,
+                                                      n_part,
+                                                      comm);
+
+  int cst_stride = 1;
+  int **pfield_stride = NULL;
+  PDM_block_to_part_exch2(btp,
+                          s_data,
+                          PDM_STRIDE_CST,
+                          &cst_stride,
+             (void *  )   dfield,
+             (int  ***)  &pfield_stride,
+             (void ***)   pfield);
 
   PDM_block_to_part_free(btp);
 }

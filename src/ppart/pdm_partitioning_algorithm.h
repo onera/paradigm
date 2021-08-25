@@ -228,6 +228,18 @@ PDM_part_dcoordinates_to_pcoordinates
         double       ***pvtx_coord
 );
 
+void
+PDM_part_dfield_to_pfield
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part,
+  size_t                s_data,
+  const PDM_g_num_t    *field_distribution,
+  const unsigned char  *dfield,
+  const int            *pn_field,
+  const PDM_g_num_t   **pfield_ln_to_gn,
+        unsigned char ***pfield
+);
 
 void
 PDM_extend_mesh

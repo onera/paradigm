@@ -409,7 +409,11 @@ PDM_DMesh_nodal_n_section_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
-  return dmne->n_section;
+  if(dmne){
+    return dmne->n_section;
+  } else {
+    return 0;
+  }
 }
 
 /**

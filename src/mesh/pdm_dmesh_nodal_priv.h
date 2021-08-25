@@ -43,7 +43,7 @@ struct PDM_DMesh_nodal_vtx_t {
   PDM_real_t       *_coords;        /*!< Coordinates
                                        * (Memory mapping) (size = 3 * \ref n_vtx) */
   PDM_g_num_t      *distrib;        /*!< Distribution on the processes
-                               * (size = \ref n_rank + 1) */
+                                       * (size = \ref n_rank + 1) */
   PDM_ownership_t   owner;
 };
 
