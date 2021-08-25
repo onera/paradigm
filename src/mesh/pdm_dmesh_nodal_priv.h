@@ -44,6 +44,10 @@ struct PDM_DMesh_nodal_vtx_t {
                                        * (Memory mapping) (size = 3 * \ref n_vtx) */
   PDM_g_num_t      *distrib;        /*!< Distribution on the processes
                                        * (size = \ref n_rank + 1) */
+
+  int              *dvtx_tag;
+  PDM_g_num_t      *dvtx_parent_g_num;
+
   PDM_ownership_t   owner;
 };
 

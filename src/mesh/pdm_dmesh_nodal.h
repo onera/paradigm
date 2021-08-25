@@ -90,6 +90,33 @@ PDM_DMesh_nodal_coord_set
        PDM_ownership_t    owner
 );
 
+void
+PDM_DMesh_nodal_vtx_tag_set
+(
+ PDM_dmesh_nodal_t *dmesh_nodal,
+ int               *dvtx_tag
+);
+
+void
+PDM_DMesh_nodal_vtx_parent_gnum_set
+(
+ PDM_dmesh_nodal_t *dmesh_nodal,
+ PDM_g_num_t       *dvtx_parent_g_num
+);
+
+int*
+PDM_DMesh_nodal_tag_get
+(
+PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+
+PDM_g_num_t *
+PDM_DMesh_nodal_vtx_parent_gnum_get
+(
+PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
 
 void
 PDM_DMesh_nodal_section_g_dims_get

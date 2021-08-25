@@ -87,6 +87,16 @@ _vtx_free
         free(vtx->_coords);
         vtx->_coords = NULL;
       }
+
+      if(vtx->dvtx_tag != NULL) {
+        free(vtx->dvtx_tag);
+        vtx->dvtx_tag = NULL;
+      }
+
+      if(vtx->dvtx_parent_g_num != NULL) {
+        free(vtx->dvtx_parent_g_num);
+        vtx->dvtx_parent_g_num = NULL;
+      }
     }
     free (vtx);
   }
@@ -159,6 +169,8 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->_coords             = NULL;
   dmesh_nodal->vtx->distrib             = NULL;
   dmesh_nodal->vtx->n_vtx               = 0;
+  dmesh_nodal->vtx->dvtx_tag            = NULL;
+  dmesh_nodal->vtx->dvtx_parent_g_num   = NULL;
 
   dmesh_nodal->volumic                  = NULL;
   dmesh_nodal->surfacic                 = NULL;
@@ -322,6 +334,48 @@ PDM_DMesh_nodal_coord_set
 
 
 void
+PDM_DMesh_nodal_vtx_tag_set
+(
+ PDM_dmesh_nodal_t *dmesh_nodal,
+ int               *dvtx_tag
+)
+{
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  if (vtx->dvtx_tag != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
+  }
+
+  vtx->dvtx_tag = dvtx_tag;
+}
+
+void
+PDM_DMesh_nodal_vtx_parent_gnum_set
+(
+ PDM_dmesh_nodal_t *dmesh_nodal,
+ PDM_g_num_t       *dvtx_parent_g_num
+)
+{
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  if (vtx->dvtx_parent_g_num != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
+  }
+
+  vtx->dvtx_parent_g_num = dvtx_parent_g_num;
+}
+
+
+
+void
 PDM_DMesh_nodal_section_g_dims_get
 (
   PDM_dmesh_nodal_t *dmesh_nodal,
@@ -388,6 +442,56 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   return vtx->_coords;
 }
 
+/**
+ * \brief  Return coordinates of vertices
+ *
+ * \param [in]  hdl       Distributed nodal mesh handle
+ *
+ * \return  Coordinates of vertices
+ *
+ */
+
+int*
+PDM_DMesh_nodal_tag_get
+(
+PDM_dmesh_nodal_t  *dmesh_nodal
+)
+{
+
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  return vtx->dvtx_tag;
+}
+
+
+/**
+ * \brief  Return coordinates of vertices
+ *
+ * \param [in]  hdl       Distributed nodal mesh handle
+ *
+ * \return  Coordinates of vertices
+ *
+ */
+
+PDM_g_num_t *
+PDM_DMesh_nodal_vtx_parent_gnum_get
+(
+PDM_dmesh_nodal_t  *dmesh_nodal
+)
+{
+
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  return vtx->dvtx_parent_g_num;
+}
 
 /**
  * \brief  Return number of sections
