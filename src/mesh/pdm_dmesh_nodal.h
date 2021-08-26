@@ -105,7 +105,7 @@ PDM_DMesh_nodal_vtx_parent_gnum_set
 );
 
 int*
-PDM_DMesh_nodal_tag_get
+PDM_DMesh_nodal_vtx_tag_get
 (
 PDM_dmesh_nodal_t  *dmesh_nodal
 );
