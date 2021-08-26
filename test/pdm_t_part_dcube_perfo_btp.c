@@ -16,6 +16,9 @@
 #include "pdm_distrib.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_part_geom.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_logging.h"
 
 /*============================================================================
  * Type definitions
@@ -198,20 +201,103 @@ int main(int argc, char *argv[])
                                           PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_gen_dim_get(dcube,
-                         &n_face_group,
-                         &dn_cell,
-                         &dn_face,
-                         &dn_vtx,
-                         &dface_vtxL,
-                         &dFaceGroupL);
+                        &n_face_group,
+                        &dn_cell,
+                        &dn_face,
+                        &dn_vtx,
+                        &dface_vtxL,
+                        &dFaceGroupL);
 
   PDM_dcube_gen_data_get(dcube,
-                          &dface_cell,
-                          &dface_vtx_idx,
-                          &dface_vtx,
-                          &dvtx_coord,
-                          &dface_group_idx,
-                          &dface_group);
+                         &dface_cell,
+                         &dface_vtx_idx,
+                         &dface_vtx,
+                         &dvtx_coord,
+                         &dface_group_idx,
+                         &dface_group);
+
+  PDM_g_num_t* dcell_distrib = PDM_compute_entity_distribution(comm, dn_cell);
+  PDM_g_num_t* dface_distrib = PDM_compute_entity_distribution(comm, dn_face);
+  PDM_g_num_t* dvtx_distrib  = PDM_compute_entity_distribution(comm, dn_vtx );
+
+  /*
+   *  Parallel reordering
+   */
+  int         *reorder_cell_part = malloc(dn_cell         * sizeof(int        ));
+  int         *dface_cell_idx    = malloc((dn_face+1)     * sizeof(int        ));
+  PDM_g_num_t *tmp_dface_cell    = malloc((2 * dn_face+1) * sizeof(PDM_g_num_t));
+
+  /*
+   *  Compute cell center ...
+   */
+  dface_cell_idx[0] = 0;
+  for(int i = 0; i < dn_face; ++i) {
+    dface_cell_idx[i+1] = dface_cell_idx[i];
+    if(dface_cell[2*i] != 0) {
+      tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i];
+    }
+    if(dface_cell[2*i+1] != 0) {
+      tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i+1];
+    }
+  }
+
+  // PDM_log_trace_array_long(tmp_dface_cell, dface_cell_idx[dn_face], "tmp_dface_cell :: ");
+  // PDM_log_trace_array_int (dface_cell_idx, dn_face+1, "dface_cell_idx :: ");
+
+  int* dcell_face_idx;
+  PDM_g_num_t* dcell_face;
+  PDM_dconnectivity_transpose(comm,
+                              dface_distrib,
+                              dcell_distrib,
+                              dface_cell_idx,
+                              tmp_dface_cell,
+                              0,
+                              &dcell_face_idx,
+                              &dcell_face);
+  free(dface_cell_idx);
+  free(tmp_dface_cell);
+
+  for(int i = 0; i < n_rank+1; ++i) {
+    dface_distrib[i] += 1;
+    dvtx_distrib [i] += 1;
+  }
+
+  PDM_part_geom(PDM_PART_GEOM_HILBERT,
+                1, // n_part = 1 for each proc
+                comm,
+                dn_cell,
+                dcell_face_idx,
+                dcell_face,
+                NULL,
+                dface_vtx_idx,
+                dface_vtx,
+                dface_distrib,
+                dvtx_coord,
+                dvtx_distrib,
+                reorder_cell_part);
+
+  for(int i = 0; i < n_rank+1; ++i) {
+    dface_distrib[i] -= 1;
+    dvtx_distrib [i] -= 1;
+  }
+  free(dcell_face_idx);
+  free(dcell_face);
+
+
+  PDM_log_trace_array_int(reorder_cell_part, dn_cell, "reorder_cell_part :");
+
+  /*
+   *  Apply ordering
+   */
+
+
+  /*
+   * Update connectivity
+   */
+
+
+  free(reorder_cell_part);
+
 
   if (0 == 1) {
 
@@ -456,9 +542,6 @@ int main(int argc, char *argv[])
    * btp to bench
    */
   int n_field = 5;
-  PDM_g_num_t* dcell_distrib = PDM_compute_entity_distribution(comm, dn_cell);
-  PDM_g_num_t* dface_distrib = PDM_compute_entity_distribution(comm, dn_face);
-  PDM_g_num_t* dvtx_distrib  = PDM_compute_entity_distribution(comm, dn_vtx );
 
   PDM_block_to_part_t *btp_cell = PDM_block_to_part_create (dcell_distrib,
                                      (const PDM_g_num_t **) cell_ln_to_gn,

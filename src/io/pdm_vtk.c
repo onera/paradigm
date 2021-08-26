@@ -247,7 +247,7 @@ PDM_vtk_write_point_cloud
  const double       vtx_coord[],
  const PDM_g_num_t  vtx_g_num[],
  const int          color[]
- )
+)
 {
   FILE *f = fopen(filename, "w");
 

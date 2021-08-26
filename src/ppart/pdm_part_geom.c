@@ -23,6 +23,7 @@
 #include "pdm_printf.h"
 #include "pdm_distrib.h"
 #include "pdm_logging.h"
+#include "pdm_vtk.h"
 
 
 #ifdef __cplusplus
@@ -88,8 +89,8 @@ const double         *dvtx_coord,
     for (int i = 0; i < dn_cell; i++) {
       int nFac = dcell_face_idx[i+1] - dcell_face_idx[i];
       printf("nFac[%i] :  %i \n ", i, nFac);
-      for (int iVtx = dcell_face_idx[i]; iVtx < dcell_face_idx[i+1]; iVtx++) {
-        printf("dcell_face[%i] :  "PDM_FMT_G_NUM" \n ", iVtx, dcell_face[iVtx]);
+      for (int i_vtx = dcell_face_idx[i]; i_vtx < dcell_face_idx[i+1]; i_vtx++) {
+        printf("dcell_face[%i] :  "PDM_FMT_G_NUM" \n ", i_vtx, dcell_face[i_vtx]);
       }
     }
   }
@@ -106,12 +107,10 @@ const double         *dvtx_coord,
   int dn_face = dface_proc[i_rank+1] - dface_proc[i_rank];
 
   int* n_vtx_face_loc = (int *) malloc (sizeof(int) * dn_face              );
-  int* n_vtx_face    = (int *) malloc (sizeof(int) * dcell_face_idx[dn_cell]);
+  int* n_vtx_face     = (int *) malloc (sizeof(int) * dcell_face_idx[dn_cell]);
 
   for (int i = 0; i < dn_face; i++) {
     n_vtx_face_loc[i] = dface_vtx_idx[i+1] - dface_vtx_idx[i];
-    for (int iVtx = dface_vtx_idx[i]; iVtx < dface_vtx_idx[i+1]; iVtx++) {
-    }
   }
 
   int stride_one = 1;
@@ -120,9 +119,9 @@ const double         *dvtx_coord,
                           sizeof(PDM_l_num_t),
                           PDM_STRIDE_CST,
                           &stride_one,
-                          (void *) n_vtx_face_loc,
+                 (void *) n_vtx_face_loc,
                           NULL,
-                          (void **) &n_vtx_face);
+                (void **) &n_vtx_face);
 
   /* Verbose */
   if(0 == 1){
@@ -234,7 +233,7 @@ const double         *dvtx_coord,
  * \param [in]  dvtx_coord    coordinates of vertices
  * \param [in]  dvtx_proc     Vertex distribution
  *
- * \param [out] cellCenter   Cell centers
+ * \param [out] cell_center   Cell centers
  *
  */
 
@@ -250,7 +249,7 @@ _compute_cell_center
   const PDM_g_num_t  *dface_proc,
   const double       *dvtx_coord,
   const PDM_g_num_t  *dvtx_proc,
-  double             *cellCenter
+  double             *cell_center
 )
 {
 
@@ -301,52 +300,40 @@ _compute_cell_center
   /*
    * Compute cell centers
    */
-  int iFace = 0;
-  for (int iCell = 0; iCell < dn_cell; iCell++) {
+  for (int i_cell = 0; i_cell < dn_cell; i_cell++) {
 
-    int iBeg = dcell_face_idx[iCell  ];
-    int iEnd = dcell_face_idx[iCell+1];
+    cell_center[3*i_cell    ] = 0.;
+    cell_center[3*i_cell + 1] = 0.;
+    cell_center[3*i_cell + 2] = 0.;
 
-    cellCenter[3*iCell    ] = 0.;
-    cellCenter[3*iCell + 1] = 0.;
-    cellCenter[3*iCell + 2] = 0.;
-
-    int n_vtxOn_cell = 0;
+    int n_vtx_on_cell = 0;
 
     /* Loop on all faces */
-    for (int iFaceG = iBeg; iFaceG < iEnd; iFaceG++) {
-
-      int iBegVtx = face_vtx_idx[iFace  ];
-      int iEndVtx = face_vtx_idx[iFace+1];
-      n_vtxOn_cell += iEndVtx - iBegVtx;
-
+    for (int i_face = dcell_face_idx[i_cell  ]; i_face < dcell_face_idx[i_cell+1]; i_face++) {
+      n_vtx_on_cell += face_vtx_idx[i_face+1] - face_vtx_idx[i_face  ];
       /* Loop on all Vtx of current faces */
-      for (int iVtx = iBegVtx; iVtx < iEndVtx; iVtx++){
+      for (int i_vtx = face_vtx_idx[i_face  ]; i_vtx < face_vtx_idx[i_face+1]; i_vtx++){
 
-        cellCenter[3*iCell    ] += lvtx_coord[3*iVtx    ];
-        cellCenter[3*iCell + 1] += lvtx_coord[3*iVtx + 1];
-        cellCenter[3*iCell + 2] += lvtx_coord[3*iVtx + 2];
+        cell_center[3*i_cell    ] += lvtx_coord[3*i_vtx    ];
+        cell_center[3*i_cell + 1] += lvtx_coord[3*i_vtx + 1];
+        cell_center[3*i_cell + 2] += lvtx_coord[3*i_vtx + 2];
 
       }
-
-      /* Go to next face in local numerotation */
-      iFace++;
-
     }
 
     /* Ponderate */
-    cellCenter[3*iCell    ] = cellCenter[3*iCell    ]/n_vtxOn_cell;
-    cellCenter[3*iCell + 1] = cellCenter[3*iCell + 1]/n_vtxOn_cell;
-    cellCenter[3*iCell + 2] = cellCenter[3*iCell + 2]/n_vtxOn_cell;
+    cell_center[3*i_cell    ] = cell_center[3*i_cell    ]/n_vtx_on_cell;
+    cell_center[3*i_cell + 1] = cell_center[3*i_cell + 1]/n_vtx_on_cell;
+    cell_center[3*i_cell + 2] = cell_center[3*i_cell + 2]/n_vtx_on_cell;
   }
   free (lvtx_coord);
   free (face_vtx_idx);
 
   /* Verbose */
   if(0 == 1){
-    for (int iCell = 0; iCell < dn_cell; iCell++) {
-      PDM_printf(" --------- %i / %i \n ", iCell);
-      PDM_printf(" %12.5e %12.5e %12.5e \n", cellCenter[3*iCell    ], cellCenter[3*iCell + 1], cellCenter[3*iCell + 2]);
+    for (int i_cell = 0; i_cell < dn_cell; i_cell++) {
+      PDM_printf(" --------- %i / %i \n ", i_cell);
+      PDM_printf(" %12.5e %12.5e %12.5e \n", cell_center[3*i_cell    ], cell_center[3*i_cell + 1], cell_center[3*i_cell + 2]);
     }
   }
 
@@ -434,6 +421,18 @@ PDM_part_geom
 
 	/** Get EXTENTS **/
   PDM_hilbert_get_coord_extents_par(dim, dn_cell, barycenter_coords, extents, comm);
+
+  // int i_rank;
+  // PDM_MPI_Comm_rank  (comm, &i_rank);
+  // char filename[999];
+  // sprintf(filename, "barycenter_coords_%2.2d.vtk", i_rank);
+  // PDM_vtk_write_point_cloud(filename,
+  //                           dn_cell,
+  //                           barycenter_coords,
+  //                           NULL,
+  //                           NULL);
+  // PDM_log_trace_array_double(extents, 6, "extents :: ");
+  // PDM_log_trace_array_double(barycenter_coords, 3*dn_cell, "barycenter_coords :: ");
 
 	/** Hilbert Coordinates Computation **/
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_cell, barycenter_coords, hilbert_codes);
