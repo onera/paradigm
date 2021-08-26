@@ -1279,19 +1279,21 @@ _translate_element_group_to_faces
   PDM_g_num_t *dface_bound;
   int         *dface_bound_idx;
 
-  _translate_element_group_to_entity(dmesh_nodal->comm,
-                                     dmesh_nodal->surfacic->delmt_child_distrib,
-                                     dmesh_nodal->surfacic->dgroup_elmt,
-                                     dmesh_nodal->surfacic->dgroup_elmt_idx,
-                                     dmesh_nodal->surfacic->n_group_elmt,
-                                     dmesh_nodal->surfacic->dparent_gnum,
-                                     &dface_bound,
-                                     &dface_bound_idx);
+  if(dmesh_nodal->ridge->n_group_elmt > 0) {
+    _translate_element_group_to_entity(dmesh_nodal->comm,
+                                       dmesh_nodal->surfacic->delmt_child_distrib,
+                                       dmesh_nodal->surfacic->dgroup_elmt,
+                                       dmesh_nodal->surfacic->dgroup_elmt_idx,
+                                       dmesh_nodal->surfacic->n_group_elmt,
+                                       dmesh_nodal->surfacic->dparent_gnum,
+                                       &dface_bound,
+                                       &dface_bound_idx);
 
-  dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
-  dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
-  dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
-  dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt;
+    dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
+    dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
+    dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
+    dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt;
+  }
 
   // Par recursion on peut avoir les group de vertex ou de edge
 
@@ -1311,19 +1313,20 @@ _translate_element_group_to_edges
   PDM_g_num_t *dedge_bound;
   int         *dedge_bound_idx;
 
-  _translate_element_group_to_entity(dmesh_nodal->comm,
-                                     dmesh_nodal->ridge->delmt_child_distrib,
-                                     dmesh_nodal->ridge->dgroup_elmt,
-                                     dmesh_nodal->ridge->dgroup_elmt_idx,
-                                     dmesh_nodal->ridge->n_group_elmt,
-                                     dmesh_nodal->ridge->dparent_gnum,
-                                     &dedge_bound,
-                                     &dedge_bound_idx);
-
-  dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
-  dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
-  dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
-  dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt;
+  if(dmesh_nodal->ridge->n_group_elmt > 0) {
+    _translate_element_group_to_entity(dmesh_nodal->comm,
+                                       dmesh_nodal->ridge->delmt_child_distrib,
+                                       dmesh_nodal->ridge->dgroup_elmt,
+                                       dmesh_nodal->ridge->dgroup_elmt_idx,
+                                       dmesh_nodal->ridge->n_group_elmt,
+                                       dmesh_nodal->ridge->dparent_gnum,
+                                       &dedge_bound,
+                                       &dedge_bound_idx);
+    dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
+    dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
+    dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
+    dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt;
+  }
 
 }
 
