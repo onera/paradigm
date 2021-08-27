@@ -15,6 +15,7 @@
 #include "pdm_triangle.h"
 #include "pdm_line.h"
 #include "pdm_plane.h"
+#include "pdm_logging.h"
 
 /*=============================================================================
  * Macro definitions
@@ -587,6 +588,8 @@ static REAL resulterrbound;
 static REAL ccwerrboundA, ccwerrboundB, ccwerrboundC;
 static REAL iccerrboundA, iccerrboundB, iccerrboundC;
 static REAL o3derrboundA, o3derrboundB, o3derrboundC;
+
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
 
 void exactinit(void)
 {
@@ -1546,6 +1549,41 @@ REAL incircleadapt(vertex pa, vertex pb, vertex pc, vertex pd, REAL permanent)
   return finnow[finlength - 1];
 }
 
+PDM_GCC_SUPPRESS_WARNING_POP
+
+
+
+static inline double
+_determinant_3x3
+(
+ const double a[3],
+ const double b[3],
+ const double c[3]
+ )
+{
+  return a[0] * (b[1]*c[2] - b[2]*c[1])
+    +    a[1] * (b[2]*c[0] - b[0]*c[2])
+    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
+}
+
+#if 0
+REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd)
+{
+  double u[3] = {pa[0] - pd[0],
+                 pb[0] - pd[0],
+                 pc[0] - pd[0]};
+
+  double v[3] = {pa[1] - pd[1],
+                 pb[1] - pd[1],
+                 pc[1] - pd[1]};
+
+  double w[3] = {u[0]*u[0] + v[0]*v[0],
+                 u[1]*u[1] + v[1]*v[1],
+                 u[2]*u[2] + v[2]*v[2]};
+
+  return _determinant_3x3 (u, v, w);
+}
+#else
 REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd)
 {
   REAL adx, bdx, cdx, ady, bdy, cdy;
@@ -1586,13 +1624,13 @@ REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd)
             + (Absolute(cdxady) + Absolute(adxcdy)) * blift
             + (Absolute(adxbdy) + Absolute(bdxady)) * clift;
   errbound = iccerrboundA * permanent;
-  if ((det > errbound) || (-det > errbound)) {
+    if ((det > errbound) || (-det > errbound)) {
     return det;
   }
 
   return incircleadapt(pa, pb, pc, pd, permanent);
 }
-
+#endif
 
 
 
