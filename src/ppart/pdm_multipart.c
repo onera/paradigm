@@ -1252,6 +1252,7 @@ PDM_MPI_Comm       comm
                                        &dual_graph_idx,
                                        &dual_graph);
   free(dface_cell_idx);
+  free(dface_cell);
 
   PDM_log_trace_array_long(dual_graph_idx, dn_face+1, "dual_graph_idx :: ");
   PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_face], "dual_graph :: ");
