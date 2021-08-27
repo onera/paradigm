@@ -1136,6 +1136,8 @@ PDM_MPI_Comm       comm
   const PDM_g_num_t  *dface_vtx;
   PDM_g_num_t        *dface_cell;
   int                *dface_cell_idx;
+  PDM_g_num_t        *dface_cell_tmp;
+
   PDM_g_num_t        *dual_graph_idx;
   int                *dcell_face_idx;
   PDM_g_num_t        *dual_graph, *dcell_face;
@@ -1149,7 +1151,7 @@ PDM_MPI_Comm       comm
   if(dmesh->dn_cell == -1){
 
     PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                               &dface_cell,
+                               &dface_cell_tmp,
                                &dface_cell_idx,
                                PDM_OWNERSHIP_KEEP);
 
@@ -1204,23 +1206,35 @@ PDM_MPI_Comm       comm
   if(dmesh->dn_cell != -1) {
     cell_distri = PDM_compute_entity_distribution(comm, dn_cell);
     face_distri = PDM_compute_entity_distribution(comm, dn_face);
-    if(dface_cell_idx == NULL) {
-      dface_cell_idx = (int *) malloc( sizeof(int) * (dn_edge+1));
-      dface_cell_idx[0] = 0;
-      for(int i = 0; i < dn_edge; ++i){
-        dface_cell_idx[i+1] = dface_cell_idx[i] + 2;
-      }
-    }
+    assert(dface_cell_idx == NULL);
+    PDM_setup_connectivity_idx(dn_face,
+                               2,
+                               dface_cell_tmp,
+                               &dface_cell_idx,
+                               &dface_cell);
+    // if(dface_cell_idx == NULL) {
+    //   dface_cell_idx = (int *) malloc( sizeof(int) * (dn_edge+1));
+    //   dface_cell_idx[0] = 0;
+    //   for(int i = 0; i < dn_edge; ++i){
+    //     dface_cell_idx[i+1] = dface_cell_idx[i] + 2;
+    //   }
+    // }
   } else {
     cell_distri = PDM_compute_entity_distribution(comm, dn_face);
     face_distri = PDM_compute_entity_distribution(comm, dn_edge);
-    if(dface_cell_idx == NULL) {
-      dface_cell_idx = (int *) malloc( sizeof(int) * (dn_edge+1));
-      dface_cell_idx[0] = 0;
-      for(int i = 0; i < dn_edge; ++i){
-        dface_cell_idx[i+1] = dface_cell_idx[i] + 2;
-      }
-    }
+    assert(dface_cell_idx == NULL);
+    PDM_setup_connectivity_idx(dn_face,
+                               2,
+                               dface_cell_tmp,
+                               &dface_cell_idx,
+                               &dface_cell);
+    // if(dface_cell_idx == NULL) {
+    //   dface_cell_idx = (int *) malloc( sizeof(int) * (dn_edge+1));
+    //   dface_cell_idx[0] = 0;
+    //   for(int i = 0; i < dn_edge; ++i){
+    //     dface_cell_idx[i+1] = dface_cell_idx[i] + 2;
+    //   }
+    // }
   }
   vtx_distri = PDM_compute_entity_distribution(comm, dn_vtx );
   part_distri = PDM_compute_entity_distribution(comm, n_part );
