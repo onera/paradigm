@@ -47,6 +47,8 @@ _usage(int exit_code)
      "  -post            Ensight outputs (only if n_part == 1). \n\n"
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scocth       Call PT-Scotch.\n\n"
+     "  -reorder_cell    Call cell ordering \n\n"
+     "  -reorder_vtx     Call vtx ordering \n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -68,13 +70,18 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length,
-           int           *n_part,
-	   int           *post,
-	   int           *method)
+_read_args
+(
+ int            argc,
+ char         **argv,
+ PDM_g_num_t  *n_vtx_seg,
+ double        *length,
+ int           *n_part,
+ int           *post,
+ int           *method,
+ int           *reorder_cell,
+ int           *reorder_vtx
+)
 {
   int i = 1;
 
@@ -118,6 +125,12 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp(argv[i], "-reorder_cell") == 0) {
+      *reorder_cell = 1;
+    }
+    else if (strcmp(argv[i], "-reorder_vtx") == 0) {
+      *reorder_vtx = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -149,6 +162,8 @@ int main(int argc, char *argv[])
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #endif
 #endif
+  int                reorder_cell   = 0;
+  int                reorder_vtx    = 0;
 
   /*
    *  Read args
@@ -160,7 +175,9 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+             (int *) &method,
+             &reorder_cell,
+             &reorder_vtx);
   /*
    *  Init
    */
@@ -221,155 +238,228 @@ int main(int argc, char *argv[])
   PDM_g_num_t* dface_distrib = PDM_compute_entity_distribution(comm, dn_face);
   PDM_g_num_t* dvtx_distrib  = PDM_compute_entity_distribution(comm, dn_vtx );
 
-  /*
-   *  Parallel reordering
-   */
-  PDM_g_num_t *dcell_ln_to_gn = malloc(dn_cell         * sizeof(PDM_g_num_t        ));
-  int         *dface_cell_idx = malloc((dn_face+1)     * sizeof(int        ));
-  PDM_g_num_t *tmp_dface_cell = malloc((2 * dn_face+1) * sizeof(PDM_g_num_t));
+  if(reorder_cell == 1) {
+    /*
+     *  Parallel reordering
+     */
+    PDM_g_num_t *dcell_ln_to_gn = malloc(dn_cell         * sizeof(PDM_g_num_t        ));
+    int         *dface_cell_idx = malloc((dn_face+1)     * sizeof(int        ));
+    PDM_g_num_t *tmp_dface_cell = malloc((2 * dn_face+1) * sizeof(PDM_g_num_t));
 
-  /*
-   *  Compute cell center ...
-   */
-  dface_cell_idx[0] = 0;
-  for(int i = 0; i < dn_face; ++i) {
-    dface_cell_idx[i+1] = dface_cell_idx[i];
-    if(dface_cell[2*i] != 0) {
-      tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i];
+    /*
+     *  Compute cell center ...
+     */
+    dface_cell_idx[0] = 0;
+    for(int i = 0; i < dn_face; ++i) {
+      dface_cell_idx[i+1] = dface_cell_idx[i];
+      if(dface_cell[2*i] != 0) {
+        tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i];
+      }
+      if(dface_cell[2*i+1] != 0) {
+        tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i+1];
+      }
     }
-    if(dface_cell[2*i+1] != 0) {
-      tmp_dface_cell[dface_cell_idx[i+1]++] = dface_cell[2*i+1];
+
+    // PDM_log_trace_array_long(tmp_dface_cell, dface_cell_idx[dn_face], "tmp_dface_cell :: ");
+    // PDM_log_trace_array_int (dface_cell_idx, dn_face+1, "dface_cell_idx :: ");
+
+    int* dcell_face_idx;
+    PDM_g_num_t* dcell_face;
+    PDM_dconnectivity_transpose(comm,
+                                dface_distrib,
+                                dcell_distrib,
+                                dface_cell_idx,
+                                tmp_dface_cell,
+                                0,
+                                &dcell_face_idx,
+                                &dcell_face);
+
+    for(int i = 0; i < n_rank+1; ++i) {
+      dface_distrib[i] += 1;
+      dvtx_distrib [i] += 1;
     }
+    double *center_cell_coord = (double * ) malloc( 3 * dn_cell * sizeof(double));
+    PDM_dcompute_cell_center(comm,
+                             dn_cell,
+                             dcell_face_idx,
+                             dcell_face,
+                             dface_vtx_idx,
+                             dface_vtx,
+                             dface_distrib,
+                             dvtx_coord,
+                             dvtx_distrib,
+                             center_cell_coord);
+
+    for(int i = 0; i < n_rank+1; ++i) {
+      dface_distrib[i] -= 1;
+      dvtx_distrib [i] -= 1;
+    }
+
+    PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
+                             3,
+                             dcell_distrib,
+                             center_cell_coord,
+                             dcell_ln_to_gn,
+                             comm);
+
+    free(center_cell_coord);
+
+    PDM_g_num_t *dcell_old_to_new = NULL;
+    PDM_dorder_reverse(comm,
+                       dcell_distrib,
+                       dcell_ln_to_gn,
+                       &dcell_old_to_new);
+
+    // PDM_log_trace_array_long(dcell_ln_to_gn, dn_cell, "dcell_ln_to_gn :");
+
+    /*
+     *  Apply ordering
+     */
+    int          pn_face_in;
+    PDM_g_num_t *pface_ln_to_gn_in;
+    int         *pcell_face_idx_in;
+    int         *pcell_face_in;
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                             dcell_distrib,
+                                                             dcell_face_idx,
+                                                             dcell_face,
+                                                             dn_cell,
+                                      (const PDM_g_num_t *)  dcell_ln_to_gn,
+                                                             &pn_face_in,
+                                                             &pface_ln_to_gn_in,
+                                                             &pcell_face_idx_in,
+                                                             &pcell_face_in);
+
+    free(dcell_ln_to_gn);
+    // PDM_g_num_t* pcell_face = (PDM_g_num_t * ) malloc( pcell_face_idx_in[dn_cell] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < dn_cell; ++i) {
+      dcell_face_idx[i+1] = pcell_face_idx_in[i+1];
+      for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j ) {
+        dcell_face[j] = pface_ln_to_gn_in[pcell_face_in[j]-1];
+      }
+    }
+    free(dcell_face_idx);
+    free(dcell_face);
+    free(pface_ln_to_gn_in);
+    free(pcell_face_idx_in);
+    free(pcell_face_in);
+
+    /*
+     * Update connectivity
+     */
+    PDM_block_to_part_t *btp_update_face_cell = PDM_block_to_part_create (dcell_distrib,
+                                                   (const PDM_g_num_t **) &tmp_dface_cell,
+                                                                          &dface_cell_idx[dn_face],
+                                                                          1,
+                                                                          comm);
+
+    PDM_g_num_t **tmp_pface_cell;
+    int stride_one = 1;
+    PDM_block_to_part_exch2 (btp_update_face_cell,
+                             sizeof(PDM_g_num_t),
+                             PDM_STRIDE_CST,
+                             &stride_one,
+                    (void *) dcell_old_to_new,
+                             NULL,
+                  (void ***) &tmp_pface_cell);
+    PDM_g_num_t *pface_cell = tmp_pface_cell[0];
+    free(tmp_pface_cell);
+
+    free(tmp_dface_cell);
+
+    for(int i = 0; i < dn_face; ++i) {
+      int beg = dface_cell_idx[i];
+      int end = dface_cell_idx[i+1];
+      if(end-beg == 1) {
+        dface_cell[2*i  ] = pface_cell[beg  ];
+        dface_cell[2*i+1] = 0;
+      } else {
+        dface_cell[2*i  ] = pface_cell[beg  ];
+        dface_cell[2*i+1] = pface_cell[beg+1];
+      }
+    }
+    free(pface_cell);
+
+
+    PDM_block_to_part_free(btp_update_face_cell);
+
+    free(dcell_old_to_new);
+    free(dface_cell_idx);
   }
-
-  // PDM_log_trace_array_long(tmp_dface_cell, dface_cell_idx[dn_face], "tmp_dface_cell :: ");
-  // PDM_log_trace_array_int (dface_cell_idx, dn_face+1, "dface_cell_idx :: ");
-
-  int* dcell_face_idx;
-  PDM_g_num_t* dcell_face;
-  PDM_dconnectivity_transpose(comm,
-                              dface_distrib,
-                              dcell_distrib,
-                              dface_cell_idx,
-                              tmp_dface_cell,
-                              0,
-                              &dcell_face_idx,
-                              &dcell_face);
-
-  for(int i = 0; i < n_rank+1; ++i) {
-    dface_distrib[i] += 1;
-    dvtx_distrib [i] += 1;
-  }
-  double *center_cell_coord = (double * ) malloc( 3 * dn_cell * sizeof(double));
-  PDM_dcompute_cell_center(comm,
-                           dn_cell,
-                           dcell_face_idx,
-                           dcell_face,
-                           dface_vtx_idx,
-                           dface_vtx,
-                           dface_distrib,
-                           dvtx_coord,
-                           dvtx_distrib,
-                           center_cell_coord);
-
-  for(int i = 0; i < n_rank+1; ++i) {
-    dface_distrib[i] -= 1;
-    dvtx_distrib [i] -= 1;
-  }
-
-  PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
-                           3,
-                           dcell_distrib,
-                           center_cell_coord,
-                           dcell_ln_to_gn,
-                           comm);
-
-  free(center_cell_coord);
-
-  PDM_g_num_t *dcell_old_to_new = NULL;
-  PDM_dorder_reverse(comm,
-                     dcell_distrib,
-                     dcell_ln_to_gn,
-                     &dcell_old_to_new);
-
-  // PDM_log_trace_array_long(dcell_ln_to_gn, dn_cell, "dcell_ln_to_gn :");
 
   /*
-   *  Apply ordering
+   * Reorder vtx
    */
-  int          pn_face_in;
-  PDM_g_num_t *pface_ln_to_gn_in;
-  int         *pcell_face_idx_in;
-  int         *pcell_face_in;
-  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           dcell_distrib,
-                                                           dcell_face_idx,
-                                                           dcell_face,
-                                                           dn_cell,
-                                    (const PDM_g_num_t *)  dcell_ln_to_gn,
-                                                           &pn_face_in,
-                                                           &pface_ln_to_gn_in,
-                                                           &pcell_face_idx_in,
-                                                           &pcell_face_in);
+  if(reorder_vtx == 1){
+    PDM_g_num_t *dvtx_ln_to_gn = malloc(dn_vtx         * sizeof(PDM_g_num_t        ));
+    PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
+                             3,
+                             dvtx_distrib,
+                             dvtx_coord,
+                             dvtx_ln_to_gn,
+                             comm);
 
-  free(dcell_ln_to_gn);
-  // PDM_g_num_t* pcell_face = (PDM_g_num_t * ) malloc( pcell_face_idx_in[dn_cell] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *dvtx_old_to_new = NULL;
+    PDM_dorder_reverse(comm,
+                       dvtx_distrib,
+                       dvtx_ln_to_gn,
+                       &dvtx_old_to_new);
 
-  for(int i = 0; i < dn_cell; ++i) {
-    dcell_face_idx[i+1] = pcell_face_idx_in[i+1];
-    for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j ) {
-      dcell_face[j] = pface_ln_to_gn_in[pcell_face_in[j]-1];
+    /*
+     * Face vtx update
+     */
+    PDM_block_to_part_t *btp_update_face_vtx = PDM_block_to_part_create (dvtx_distrib,
+                                                  (const PDM_g_num_t **) &dface_vtx,
+                                                                         &dface_vtx_idx[dn_face],
+                                                                         1,
+                                                                         comm);
+    PDM_g_num_t **tmp_pface_vtx;
+    int stride_one = 1;
+    PDM_block_to_part_exch2 (btp_update_face_vtx,
+                             sizeof(PDM_g_num_t),
+                             PDM_STRIDE_CST,
+                             &stride_one,
+                    (void *) dvtx_old_to_new,
+                             NULL,
+                  (void ***) &tmp_pface_vtx);
+    PDM_g_num_t *pface_vtx = tmp_pface_vtx[0];
+    free(tmp_pface_vtx);
+
+    for(int i = 0; i < dface_vtx_idx[dn_face]; ++i) {
+      dface_vtx[i] = pface_vtx[i];
     }
-  }
-  free(dcell_face_idx);
-  free(dcell_face);
-  free(pface_ln_to_gn_in);
-  free(pcell_face_idx_in);
-  free(pcell_face_in);
+    free(pface_vtx);
+    PDM_block_to_part_free(btp_update_face_vtx);
 
-  /*
-   * Update connectivity
-   */
-  PDM_block_to_part_t *btp_update_face_cell = PDM_block_to_part_create (dcell_distrib,
-                                                 (const PDM_g_num_t **) &tmp_dface_cell,
-                                                                        &dface_cell_idx[dn_face],
-                                                                        1,
-                                                                        comm);
-
-  PDM_g_num_t **tmp_pface_cell;
-  int stride_one = 1;
-  PDM_block_to_part_exch2 (btp_update_face_cell,
-                           sizeof(PDM_g_num_t),
-                           PDM_STRIDE_CST,
-                           &stride_one,
-                  (void *) dcell_old_to_new,
-                           NULL,
-                (void ***) &tmp_pface_cell);
-  PDM_g_num_t *pface_cell = tmp_pface_cell[0];
-  free(tmp_pface_cell);
-
-  free(tmp_dface_cell);
-
-  for(int i = 0; i < dn_face; ++i) {
-    int beg = dface_cell_idx[i];
-    int end = dface_cell_idx[i+1];
-    if(end-beg == 1) {
-      dface_cell[2*i  ] = pface_cell[beg  ];
-      dface_cell[2*i+1] = 0;
-    } else {
-      dface_cell[2*i  ] = pface_cell[beg  ];
-      dface_cell[2*i+1] = pface_cell[beg+1];
+    /*
+     * Update coordinates
+     */
+    PDM_block_to_part_t *btp_update_vtx = PDM_block_to_part_create (dvtx_distrib,
+                                                  (const PDM_g_num_t **) &dvtx_old_to_new,
+                                                                         &dn_vtx,
+                                                                         1,
+                                                                         comm);
+    double **tmp_pvtx_coord;
+    PDM_block_to_part_exch2 (btp_update_vtx,
+                             3 * sizeof(double),
+                             PDM_STRIDE_CST,
+                             &stride_one,
+                    (void *) dvtx_coord,
+                             NULL,
+                  (void ***) &tmp_pvtx_coord);
+    double *pvtx_coord = tmp_pvtx_coord[0];
+    free(tmp_pvtx_coord);
+    for(int i = 0; i < 3 * dn_vtx; ++i) {
+      dvtx_coord[i] = pvtx_coord[i];
     }
+    free(pvtx_coord);
+
+    PDM_block_to_part_free(btp_update_vtx);
+
+    free(dvtx_old_to_new);
+    free(dvtx_ln_to_gn);
   }
-  free(pface_cell);
-
-
-  PDM_block_to_part_free(btp_update_face_cell);
-
-  free(dcell_old_to_new);
-
-  free(dface_cell_idx);
-
 
   if (0 == 1) {
 
