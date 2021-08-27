@@ -2151,6 +2151,37 @@ PDM_extend_mesh
   free(part_dual_graph);
 }
 
+void
+PDM_setup_connectivity_idx
+(
+ int           dn_entity1,
+ int           stride,
+ PDM_g_num_t  *dentity1_dentity2,
+ int         **dentity1_dentity2_idx,
+ PDM_g_num_t **dentity1_dentity2_new
+)
+{
+  int         *_dentity1_dentity2_idx = (int         *) malloc( (dn_entity1 + 1     ) * sizeof(int        ));
+  PDM_g_num_t *_dentity1_dentity2_new = (PDM_g_num_t *) malloc( (stride * dn_entity1) * sizeof(PDM_g_num_t));
+
+  _dentity1_dentity2_idx[0] = 0;
+  for(int i = 0; i < dn_entity1; ++i) {
+    _dentity1_dentity2_idx[i+1] = _dentity1_dentity2_idx[i];
+    for(int is = 0; is < stride; ++is) {
+      if(dentity1_dentity2[stride*i+is] != 0) {
+        _dentity1_dentity2_new[_dentity1_dentity2_idx[i+1]++] = dentity1_dentity2[stride*i+is];
+      }
+    }
+  }
+
+  _dentity1_dentity2_new = realloc(_dentity1_dentity2_new, _dentity1_dentity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
+
+  *dentity1_dentity2_idx = _dentity1_dentity2_idx;
+  *dentity1_dentity2_new = _dentity1_dentity2_new;
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

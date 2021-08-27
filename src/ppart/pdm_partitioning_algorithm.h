@@ -257,6 +257,17 @@ PDM_extend_mesh
        PDM_g_num_t  ***pentity_ln_to_gn_extended
 );
 
+
+void
+PDM_setup_connectivity_idx
+(
+  int           dn_entity1,
+  int           stride,
+  PDM_g_num_t  *dentity1_dentity2,
+  int         **dentity1_dentity2_idx,
+  PDM_g_num_t **dentity1_dentity2_new
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

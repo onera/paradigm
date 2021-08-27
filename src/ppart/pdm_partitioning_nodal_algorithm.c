@@ -345,7 +345,7 @@ PDM_reverse_dparent_gnum
   PDM_g_num_t *pblk_child_gnum = (PDM_g_num_t *) malloc( dn_child_elmt * sizeof(PDM_g_num_t));
   for(int i = 0; i < dn_child_elmt; ++i) {
     pblk_child_n   [i] = 1;
-    pblk_child_gnum[i] = delmt_child_distrib[i_rank] + 1; // Donc le gnum de child ...
+    pblk_child_gnum[i] = delmt_child_distrib[i_rank] + i + 1; // Donc le gnum de child ...
   }
 
   int         *blk_child_n = NULL;
@@ -387,6 +387,9 @@ PDM_reverse_dparent_gnum
               (void ***) &_pchild_gnum);
 
   PDM_block_to_part_free(btp);
+  free(blk_child_n);
+  free(blk_child_gnum);
+  free(block_distrib_tmp_idx);
 
   /*
    * At this stage we have for each partition the number AND the gnum of childs inside
@@ -399,9 +402,13 @@ PDM_reverse_dparent_gnum
 
     int pn_child_tmp = 0;
     for(int i = 0; i < pn_parent[i_part]; ++i) {
+      // printf("_pchild_n[i_part][%i] = %i \n",i, _pchild_n[i_part][i] );
       pn_child_tmp += _pchild_n[i_part][i];
       assert(_pchild_n[i_part][i] <= 1); // DOnc soit 0 soit 1
     }
+
+    // PDM_log_trace_array_long(_pchild_gnum[i_part], pn_child_tmp, "_pchild_gnum :: ");
+
     _pn_child   [i_part] = PDM_inplace_unique_long(_pchild_gnum[i_part], NULL, 0, pn_child_tmp-1);
     _pchild_gnum[i_part] = realloc(_pchild_gnum[i_part], _pn_child[i_part] * sizeof(PDM_g_num_t));
 

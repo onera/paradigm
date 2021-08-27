@@ -527,7 +527,7 @@ PDM_g_num_t  **delmt_child_distrib
 
   PDM_g_num_t* _dparent_gnum = *dparent_gnum;
 
-  if( 0 == 1 ){
+  if( 1 == 1 ){
     printf("i_abs_entity::%i | i_abs_child:: %i \n", i_abs_entity+1, i_abs_child+1);
     PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
     PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
