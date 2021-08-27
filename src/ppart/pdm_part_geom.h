@@ -41,6 +41,21 @@ typedef enum {
  * Public function definitions
  *============================================================================*/
 
+void
+PDM_dcompute_cell_center
+(
+  const PDM_MPI_Comm  comm,
+  const int           dn_cell,
+  const int          *dcell_face_idx,
+  const PDM_g_num_t  *dcell_face,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const PDM_g_num_t  *dface_proc,
+  const double       *dvtx_coord,
+  const PDM_g_num_t  *dvtx_proc,
+  double             *cell_center
+);
+
 /**
  *
  * \brief Perform geometric partitioning

@@ -18,6 +18,7 @@
 #include "pdm_error.h"
 #include "pdm_part_geom.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_logging.h"
 
 /*============================================================================
@@ -223,9 +224,9 @@ int main(int argc, char *argv[])
   /*
    *  Parallel reordering
    */
-  int         *reorder_cell_part = malloc(dn_cell         * sizeof(int        ));
-  int         *dface_cell_idx    = malloc((dn_face+1)     * sizeof(int        ));
-  PDM_g_num_t *tmp_dface_cell    = malloc((2 * dn_face+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dcell_ln_to_gn = malloc(dn_cell         * sizeof(PDM_g_num_t        ));
+  int         *dface_cell_idx = malloc((dn_face+1)     * sizeof(int        ));
+  PDM_g_num_t *tmp_dface_cell = malloc((2 * dn_face+1) * sizeof(PDM_g_num_t));
 
   /*
    *  Compute cell center ...
@@ -254,49 +255,120 @@ int main(int argc, char *argv[])
                               0,
                               &dcell_face_idx,
                               &dcell_face);
-  free(dface_cell_idx);
-  free(tmp_dface_cell);
 
   for(int i = 0; i < n_rank+1; ++i) {
     dface_distrib[i] += 1;
     dvtx_distrib [i] += 1;
   }
-
-  PDM_part_geom(PDM_PART_GEOM_HILBERT,
-                1, // n_part = 1 for each proc
-                comm,
-                dn_cell,
-                dcell_face_idx,
-                dcell_face,
-                NULL,
-                dface_vtx_idx,
-                dface_vtx,
-                dface_distrib,
-                dvtx_coord,
-                dvtx_distrib,
-                reorder_cell_part);
+  double *center_cell_coord = (double * ) malloc( 3 * dn_cell * sizeof(double));
+  PDM_dcompute_cell_center(comm,
+                           dn_cell,
+                           dcell_face_idx,
+                           dcell_face,
+                           dface_vtx_idx,
+                           dface_vtx,
+                           dface_distrib,
+                           dvtx_coord,
+                           dvtx_distrib,
+                           center_cell_coord);
 
   for(int i = 0; i < n_rank+1; ++i) {
     dface_distrib[i] -= 1;
     dvtx_distrib [i] -= 1;
   }
-  free(dcell_face_idx);
-  free(dcell_face);
 
+  PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
+                           3,
+                           dcell_distrib,
+                           center_cell_coord,
+                           dcell_ln_to_gn,
+                           comm);
 
-  PDM_log_trace_array_int(reorder_cell_part, dn_cell, "reorder_cell_part :");
+  free(center_cell_coord);
+
+  PDM_g_num_t *dcell_old_to_new = NULL;
+  PDM_dorder_reverse(comm,
+                     dcell_distrib,
+                     dcell_ln_to_gn,
+                     &dcell_old_to_new);
+
+  // PDM_log_trace_array_long(dcell_ln_to_gn, dn_cell, "dcell_ln_to_gn :");
 
   /*
    *  Apply ordering
    */
+  int          pn_face_in;
+  PDM_g_num_t *pface_ln_to_gn_in;
+  int         *pcell_face_idx_in;
+  int         *pcell_face_in;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           dcell_distrib,
+                                                           dcell_face_idx,
+                                                           dcell_face,
+                                                           dn_cell,
+                                    (const PDM_g_num_t *)  dcell_ln_to_gn,
+                                                           &pn_face_in,
+                                                           &pface_ln_to_gn_in,
+                                                           &pcell_face_idx_in,
+                                                           &pcell_face_in);
 
+  free(dcell_ln_to_gn);
+  // PDM_g_num_t* pcell_face = (PDM_g_num_t * ) malloc( pcell_face_idx_in[dn_cell] * sizeof(PDM_g_num_t));
+
+  for(int i = 0; i < dn_cell; ++i) {
+    dcell_face_idx[i+1] = pcell_face_idx_in[i+1];
+    for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j ) {
+      dcell_face[j] = pface_ln_to_gn_in[pcell_face_in[j]-1];
+    }
+  }
+  free(dcell_face_idx);
+  free(dcell_face);
+  free(pface_ln_to_gn_in);
+  free(pcell_face_idx_in);
+  free(pcell_face_in);
 
   /*
    * Update connectivity
    */
+  PDM_block_to_part_t *btp_update_face_cell = PDM_block_to_part_create (dcell_distrib,
+                                                 (const PDM_g_num_t **) &tmp_dface_cell,
+                                                                        &dface_cell_idx[dn_face],
+                                                                        1,
+                                                                        comm);
+
+  PDM_g_num_t **tmp_pface_cell;
+  int stride_one = 1;
+  PDM_block_to_part_exch2 (btp_update_face_cell,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST,
+                           &stride_one,
+                  (void *) dcell_old_to_new,
+                           NULL,
+                (void ***) &tmp_pface_cell);
+  PDM_g_num_t *pface_cell = tmp_pface_cell[0];
+  free(tmp_pface_cell);
+
+  free(tmp_dface_cell);
+
+  for(int i = 0; i < dn_face; ++i) {
+    int beg = dface_cell_idx[i];
+    int end = dface_cell_idx[i+1];
+    if(end-beg == 1) {
+      dface_cell[2*i  ] = pface_cell[beg  ];
+      dface_cell[2*i+1] = 0;
+    } else {
+      dface_cell[2*i  ] = pface_cell[beg  ];
+      dface_cell[2*i+1] = pface_cell[beg+1];
+    }
+  }
+  free(pface_cell);
 
 
-  free(reorder_cell_part);
+  PDM_block_to_part_free(btp_update_face_cell);
+
+  free(dcell_old_to_new);
+
+  free(dface_cell_idx);
 
 
   if (0 == 1) {
@@ -557,11 +629,11 @@ int main(int argc, char *argv[])
   }
 
   double **pcell_field;
-  int stride_one = n_field;
+  // int stride_one = n_field;
   PDM_block_to_part_exch2 (btp_cell,
                            sizeof(double),
                            PDM_STRIDE_CST,
-                           &stride_one,
+                           &n_field,
                   (void *) dcell_field,
                            NULL,
                 (void ***) &pcell_field);

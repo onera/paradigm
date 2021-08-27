@@ -237,8 +237,8 @@ const double         *dvtx_coord,
  *
  */
 
-static void
-_compute_cell_center
+void
+PDM_dcompute_cell_center
 (
   const PDM_MPI_Comm  comm,
   const int           dn_cell,
@@ -401,16 +401,16 @@ PDM_part_geom
   /*
    * cell center computation
    */
-  _compute_cell_center (comm,
-                        dn_cell,
-                        dcell_face_idx,
-                        dcell_face,
-                        dface_vtx_idx,
-                        dface_vtx,
-                        dface_proc,
-                        dvtx_coord,
-                        dvtx_proc,
-                        barycenter_coords);
+  PDM_dcompute_cell_center (comm,
+                            dn_cell,
+                            dcell_face_idx,
+                            dcell_face,
+                            dface_vtx_idx,
+                            dface_vtx,
+                            dface_proc,
+                            dvtx_coord,
+                            dvtx_proc,
+                            barycenter_coords);
 
 
   /** TRAITEMENT HILBERT FVM **/
