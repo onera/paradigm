@@ -73,17 +73,7 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                                    int                 **dgroup_elmt_idx,
                                                                    PDM_g_num_t         **dgroup_elmt)
 
-    # PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
-    # PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
-    # PDM_g_num_t PDM_dmesh_nodal_total_n_vtx_get(PDM_dmesh_nodal_t* dmn)
-
     void PDM_dmesh_nodal_generate_distribution(PDM_dmesh_nodal_t* dmn)
-    # void PDM_DMesh_nodal_cell_face_compute(PDM_dmesh_nodal_t* dmn)
-    # int PDM_DMesh_nodal_cell_face_get(PDM_dmesh_nodal_t* dmn, PDM_l_num_t** cell_face_idx, PDM_g_num_t **cell_face)
-    # int PDM_DMesh_nodal_face_cell_get(PDM_dmesh_nodal_t* dmn, PDM_g_num_t** face_cell)
-    # int PDM_DMesh_nodal_face_vtx_get(PDM_dmesh_nodal_t* dmn, int** dface_vtx_idx, PDM_g_num_t **dface_vtx)
-
-    # PDM_g_num_t* PDM_DMesh_nodal_distrib_face_get(PDM_dmesh_nodal_t* dmn)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":

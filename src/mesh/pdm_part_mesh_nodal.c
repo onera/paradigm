@@ -168,7 +168,7 @@ PDM_part_mesh_nodal_coord_set
        PDM_part_mesh_nodal_t *pmn,
  const int                    id_part,
  const int                    n_vtx,
- const PDM_real_t            *coords,
+ const double                *coords,
  const PDM_g_num_t           *numabs,
        PDM_ownership_t        owner
 )
@@ -461,7 +461,7 @@ const int                     id_block
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_block);
+  return PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_block);
 }
 
 void

@@ -62,7 +62,7 @@ PDM_part_mesh_nodal_coord_set
        PDM_part_mesh_nodal_t *pmn,
  const int                    id_part,
  const int                    n_vtx,
- const PDM_real_t            *coords,
+ const double                *coords,
  const PDM_g_num_t           *numabs,
        PDM_ownership_t        owner
 );

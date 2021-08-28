@@ -277,6 +277,10 @@ include "pdm_dmesh_nodal.pxi"
 
 # PDM_dmesh_nodal :
 # ----------------
+include "pdm_part_mesh_nodal.pxi"
+
+# PDM_dmesh_nodal :
+# ----------------
 include "pdm_dmesh_nodal_to_dmesh.pxi"
 
 # PDM_part :
@@ -366,7 +370,6 @@ include "pdm_partitioning_algorithm.pxi"
 # PDM_poly_mesh_surf :
 # --------------------
 include "pdm_part_extension.pxi"
-
 # TODO: PDM_writer, ...
 
 
