@@ -132,7 +132,7 @@ PDM_triangle_circumcircle
 
 #define INEXACT /* Nothing */
 /* #define INEXACT volatile */
-void exactinit(void);
+void PDM_triangle_exactinit(void);
 REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd);
 
 #ifdef __cplusplus

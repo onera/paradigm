@@ -591,7 +591,7 @@ static REAL o3derrboundA, o3derrboundB, o3derrboundC;
 
 PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
 
-void exactinit(void)
+void PDM_triangle_exactinit(void)
 {
   REAL half;
   REAL check, lastcheck;
