@@ -326,52 +326,6 @@ PDM_part_mesh_nodal_section_elt_type_get
   assert(0); // only useful for std elements
 }
 
-
-
-PDM_Mesh_nodal_elt_t
-PDM_part_mesh_nodal_section_type_get
-(
-      PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section
-)
-{
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-
-  PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
-
-  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
-
-    t_elt = PDM_MESH_NODAL_POLY_3D;
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
-    PDM_Mesh_nodal_block_std_t *section = pmne->sections_std[_id_section];
-
-    if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
-    }
-
-    t_elt = section->t_elt;
-  }
-
-  else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
-
-    t_elt = PDM_MESH_NODAL_POLY_2D;
-
-  }
-
-  else {
-
-    t_elt = PDM_MESH_NODAL_POLY_3D;
-
-  }
-
-  return t_elt;
-}
-
-
 int
 PDM_part_mesh_nodal_section_add
 (

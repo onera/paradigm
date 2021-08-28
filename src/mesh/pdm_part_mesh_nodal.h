@@ -119,17 +119,6 @@ PDM_part_mesh_nodal_section_elt_type_get
   const int                    id_section
 );
 
-
-
-PDM_Mesh_nodal_elt_t
-PDM_part_mesh_nodal_section_type_get
-(
-      PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section
-);
-
-
 int
 PDM_part_mesh_nodal_section_add
 (
