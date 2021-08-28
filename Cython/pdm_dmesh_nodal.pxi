@@ -18,7 +18,7 @@ cdef extern from "pdm_dmesh_nodal.h":
                                               PDM_g_num_t  n_cell,
                                               PDM_g_num_t  n_face,
                                               PDM_g_num_t  n_edge)
-    void PDM_DMesh_nodal_free(PDM_dmesh_nodal_t* dmn, int partial)
+    void PDM_DMesh_nodal_free(PDM_dmesh_nodal_t* dmn)
 
     void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords, PDM_ownership_t    owner)
     void PDM_DMesh_nodal_section_g_dims_get(PDM_dmesh_nodal_t* dmn,
@@ -386,7 +386,7 @@ cdef class DistributedMeshNodal:
       # ************************************************************************
       # > Free Ppart Structure
       # print('PDM_DMesh_nodal_free')
-      PDM_DMesh_nodal_free(self.dmn, 1)
+      PDM_DMesh_nodal_free(self.dmn)
 
 # ------------------------------------------------------------------
 cdef class DistributedMeshNodalCaspule:
@@ -435,7 +435,7 @@ cdef class DistributedMeshNodalCaspule:
        Use the free method of PDM Lib
     """
     # print("DistributedMeshNodalCaspule::__dealloc__")
-    PDM_DMesh_nodal_free(self.dmn, 1)
+    PDM_DMesh_nodal_free(self.dmn)
     # print("DistributedMeshNodalCaspule::__dealloc__ end z")
 
 ctypedef fused DMeshNodal:

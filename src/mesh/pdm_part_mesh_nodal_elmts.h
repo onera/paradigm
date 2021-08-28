@@ -88,7 +88,9 @@ PDM_part_mesh_nodal_elmts_block_std_get
       PDM_part_mesh_nodal_elmts_t  *pmne,
 const int                           id_block,
 const int                           id_part,
-      int                         **connec
+      int                         **connec,
+      PDM_g_num_t                 **numabs,
+      int                         **parent_num
 );
 
 int

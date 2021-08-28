@@ -1390,7 +1390,7 @@ PDM_dcube_nodal_t        *dcube
 
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     /* Si l'utilisateur fait le get il doit liberer le dmesh_nodal */
-    PDM_DMesh_nodal_free(dcube->dmesh_nodal, 0);
+    PDM_DMesh_nodal_free(dcube->dmesh_nodal);
   }
 
   free(dcube);

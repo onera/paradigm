@@ -148,7 +148,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
   // }
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  PDM_DMesh_nodal_free(dmn, 0);
+  PDM_DMesh_nodal_free(dmn);
 
 }
 
@@ -254,7 +254,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
   // MPI_CHECK_EQ_C_ARRAY(0, edge_face, edge_face_expected_p0, 2 * dn_edge);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  PDM_DMesh_nodal_free(dmn, 0);
+  PDM_DMesh_nodal_free(dmn);
 
 }
 
@@ -366,6 +366,6 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   MPI_CHECK_EQ_C_ARRAY(1, edge_face, edge_face_expected_p1, 2 * dn_edge);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  PDM_DMesh_nodal_free(dmn, 0);
+  PDM_DMesh_nodal_free(dmn);
 
 }

@@ -494,7 +494,9 @@ PDM_part_mesh_nodal_elmts_block_std_get
       PDM_part_mesh_nodal_elmts_t  *pmne,
 const int                           id_block,
 const int                           id_part,
-      int                         **connec
+      int                         **connec,
+      PDM_g_num_t                 **numabs,
+      int                         **parent_num
 )
 {
   if (pmne == NULL) {
@@ -513,7 +515,9 @@ const int                           id_part,
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *connec = block->_connec[id_part];
+  *connec     = block->_connec[id_part];
+  *numabs     = block->_numabs[id_part];
+  *parent_num = block->_parent_num[id_part];
 }
 
 PDM_Mesh_nodal_elt_t

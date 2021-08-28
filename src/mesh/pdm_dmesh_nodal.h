@@ -68,8 +68,7 @@ const PDM_MPI_Comm comm,
 void
 PDM_DMesh_nodal_free
 (
-      PDM_dmesh_nodal_t* dmesh_nodal,
-const int                partial
+ PDM_dmesh_nodal_t* dmesh_nodal
 );
 
 /**

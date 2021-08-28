@@ -226,40 +226,13 @@ const PDM_MPI_Comm comm,
 void
 PDM_DMesh_nodal_free
 (
-      PDM_dmesh_nodal_t *dmesh_nodal,
-const int                partial
+ PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
 
   if (dmesh_nodal != NULL) {
 
     _vtx_free(dmesh_nodal->vtx);
-
-    // if(partial == 0){
-    //   if (dmesh_nodal->dcell_face_idx != NULL) {
-    //     free (dmesh_nodal->dcell_face_idx);
-    //   }
-
-    //   if (dmesh_nodal->dcell_face != NULL) {
-    //     free (dmesh_nodal->dcell_face);
-    //   }
-
-    //   if (dmesh_nodal->cell_distrib != NULL) {
-    //     free (dmesh_nodal->cell_distrib);
-    //   }
-
-    //   if (dmesh_nodal->_dface_vtx_idx != NULL) {
-    //     free (dmesh_nodal->_dface_vtx_idx);
-    //   }
-
-    //   if (dmesh_nodal->_dface_vtx != NULL) {
-    //     free (dmesh_nodal->_dface_vtx);
-    //   }
-
-    //   if (dmesh_nodal->face_distrib != NULL) {
-    //     free (dmesh_nodal->face_distrib);
-    //   }
-    // }
 
     if(dmesh_nodal->volumic != NULL){
       PDM_DMesh_nodal_elmts_free(dmesh_nodal->volumic);
@@ -275,7 +248,6 @@ const int                partial
     }
 
     free(dmesh_nodal);
-
   }
 }
 

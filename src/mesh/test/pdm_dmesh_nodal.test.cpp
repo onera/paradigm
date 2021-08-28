@@ -143,5 +143,5 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
   // PDM_DMesh_nodal_elmts_free(dmn_elmts_surf);
   // PDM_DMesh_nodal_elmts_free(dmn_elmts_ridge);
 
-  PDM_DMesh_nodal_free(dmn, 0);
+  PDM_DMesh_nodal_free(dmn);
 }
