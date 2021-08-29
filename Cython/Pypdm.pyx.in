@@ -319,6 +319,10 @@ include "pdm_dist_cloud_surf.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_dist_cellcenter_surf.pxi"
 
+# PDM_delaunay :
+# --------------------
+@COMMENT_NOT_PDMA@include "pdm_delaunay.pxi"
+
 # PDM_points_merge :
 # --------------------
 include "pdm_points_merge.pxi"
@@ -372,5 +376,3 @@ include "pdm_partitioning_algorithm.pxi"
 include "pdm_part_extension.pxi"
 
 # TODO: PDM_writer, ...
-
-
