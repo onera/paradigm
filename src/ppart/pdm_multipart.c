@@ -732,6 +732,7 @@ _compute_part_mesh_nodal_3d
   }
   int          *pn_surf;
   PDM_g_num_t **psurf_gnum;
+  PDM_g_num_t **psurf_to_face_g_num;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
                            dmesh->face_distrib,
                            dmn->surfacic->delmt_child_distrib,
@@ -740,6 +741,7 @@ _compute_part_mesh_nodal_3d
                            pface_ln_to_gn,
                           &pn_surf,
                           &psurf_gnum,
+                          &psurf_to_face_g_num,
                            dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
@@ -749,8 +751,10 @@ _compute_part_mesh_nodal_3d
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(psurf_gnum);
+    free(psurf_to_face_g_num);
   }
   free(pn_surf);
+  free(psurf_to_face_g_num);
 
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
@@ -878,6 +882,7 @@ _compute_part_mesh_nodal_2d
   }
   int          *pn_surf;
   PDM_g_num_t **psurf_gnum;
+  PDM_g_num_t **psurf_to_face_g_num;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
                            dmesh->edge_distrib,
                            dmn->surfacic->delmt_child_distrib,
@@ -886,6 +891,7 @@ _compute_part_mesh_nodal_2d
                            pedge_ln_to_gn,
                           &pn_surf,
                           &psurf_gnum,
+                          &psurf_to_face_g_num,
                            dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
@@ -894,9 +900,11 @@ _compute_part_mesh_nodal_2d
                                                                                           psurf_gnum);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
-    free(psurf_gnum);
+    free(psurf_gnum[i_part]);
+    free(psurf_to_face_g_num[i_part]);
   }
   free(pn_surf);
+  free(psurf_to_face_g_num);
 
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,

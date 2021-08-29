@@ -322,9 +322,12 @@ PDM_reverse_dparent_gnum
        PDM_g_num_t   **pparent_gnum,
        int           **pn_child,
        PDM_g_num_t  ***pchild_gnum,
+       PDM_g_num_t  ***pchild_parent_gnum,
  const PDM_MPI_Comm    comm
 )
 {
+  // TODO : pchild_parent_gnum Keep or remove ?
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -361,8 +364,8 @@ PDM_reverse_dparent_gnum
 
   PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
   PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_child_n, n_g_parent);
+  PDM_g_num_t* blk_dparent_gnum      = PDM_part_to_block_block_gnum_get(ptb);
 
-  PDM_part_to_block_free(ptb);
   free(pblk_child_n   );
   free(pblk_child_gnum);
 
@@ -386,7 +389,18 @@ PDM_reverse_dparent_gnum
                          &_pchild_n,
               (void ***) &_pchild_gnum);
 
+  int         **_tmp_pchild_n    = NULL;
+  PDM_g_num_t **_tmp_pchild_parent_gnum = NULL;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          blk_child_n,
+                          blk_dparent_gnum,
+                         &_tmp_pchild_n,
+              (void ***) &_tmp_pchild_parent_gnum);
+
   PDM_block_to_part_free(btp);
+  PDM_part_to_block_free(ptb);
   free(blk_child_n);
   free(blk_child_gnum);
   free(block_distrib_tmp_idx);
@@ -398,6 +412,7 @@ PDM_reverse_dparent_gnum
    */
   *pn_child = (int *) malloc(n_part * sizeof(int));
   int* _pn_child = *pn_child;
+  PDM_g_num_t **_pchild_parent_gnum = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int pn_child_tmp = 0;
@@ -409,12 +424,28 @@ PDM_reverse_dparent_gnum
 
     // PDM_log_trace_array_long(_pchild_gnum[i_part], pn_child_tmp, "_pchild_gnum :: ");
 
-    _pn_child   [i_part] = PDM_inplace_unique_long(_pchild_gnum[i_part], NULL, 0, pn_child_tmp-1);
+    int* unique_order = (int *) malloc( pn_child_tmp * sizeof(int));
+
+    _pn_child   [i_part] = PDM_inplace_unique_long2(_pchild_gnum[i_part], unique_order, 0, pn_child_tmp-1);
     _pchild_gnum[i_part] = realloc(_pchild_gnum[i_part], _pn_child[i_part] * sizeof(PDM_g_num_t));
 
+    _pchild_parent_gnum[i_part] = (int *) malloc( pn_child_tmp * sizeof(PDM_g_num_t));
+    for(int i = 0; i < _pn_child[i_part]; ++i) {
+      int idx_order = unique_order[i];
+      PDM_g_num_t gnum = _tmp_pchild_parent_gnum[i_part][idx_order];
+      _pchild_parent_gnum[i_part][i] = gnum;
+
+    }
+    free(_tmp_pchild_parent_gnum[i_part]);
+
+    free(unique_order);
     free(_pchild_n[i_part]);
+    free(_tmp_pchild_n[i_part]);
   }
   free(_pchild_n);
+  free(_tmp_pchild_n);
+  free(_tmp_pchild_parent_gnum);
 
-  *pchild_gnum = _pchild_gnum;
+  *pchild_gnum        = _pchild_gnum;
+  *pchild_parent_gnum = _pchild_parent_gnum;
 }

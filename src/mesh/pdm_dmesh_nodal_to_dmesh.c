@@ -689,7 +689,7 @@ PDM_g_num_t  **delmt_child_distrib
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if( 1 == 1 ) {
+  if( 0 == 1 ) {
     PDM_log_trace_array_int(blk_tot_entity_vtx_n, blk_size             , "blk_tot_entity_vtx_n:: ");
     PDM_log_trace_array_long(blk_tot_entity_vtx , blk_tot_entity_vtx_size, "blk_tot_entity_vtx:: "  );
 
@@ -1933,7 +1933,7 @@ PDM_g_num_t  **dentity_elmt
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if( 1 == 1 ) {
+  if( 0 == 1 ) {
     PDM_log_trace_array_int(blk_tot_entity_vtx_n, blk_size             , "blk_tot_entity_vtx_n:: ");
     PDM_log_trace_array_long(blk_tot_entity_vtx , blk_tot_entity_vtx_size, "blk_tot_entity_vtx:: "  );
 

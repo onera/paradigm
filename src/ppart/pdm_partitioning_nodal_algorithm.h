@@ -52,6 +52,7 @@ PDM_reverse_dparent_gnum
        PDM_g_num_t   **pparent_gnum,
        int           **pn_child,
        PDM_g_num_t  ***pchild_gnum,
+       PDM_g_num_t  ***pchild_parent_gnum,
  const PDM_MPI_Comm    comm
 );
 
