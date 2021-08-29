@@ -251,7 +251,9 @@ PDM_block_to_part_create
     btp->pttopt_comm = 1;
   }
 
-  _comm_graph_statistics(btp);
+  if(0 == 1) {
+    _comm_graph_statistics(btp);
+  }
 
   //PDM_log_trace_array_long(btp->distributed_data_idx, btp->n_rank+1, "block_distrib");
 

@@ -26,6 +26,7 @@
 #include "pdm_geom_elem.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_block_to_part.h"
 #include "pdm_dconnectivity_transform.h"
 
 #ifdef __cplusplus
@@ -1344,6 +1345,65 @@ PDM_Mesh_nodal_add_dmesh_nodal_elmts
     PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
   }
 }
+
+
+void
+PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
+(
+ PDM_dmesh_nodal_t   *dmn_in,
+ PDM_dmesh_nodal_t   *dmn_out,
+ PDM_geometry_kind_t  geom_kind,
+ PDM_g_num_t         *dparent_vtx_distrib,
+ PDM_g_num_t         *blk_parent_to_new_vtx_gnum
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne_in = _get_from_geometry_kind(dmn_in, geom_kind);
+
+  /* For all section we update connectivity */
+  int n_section = dmne_in->n_section;
+  for(int i = 0; i < n_section; ++i) {
+
+    int id_section = dmne_in->sections_id[i];
+    int                   n_elt     = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne_in, id_section);
+    PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section);
+    PDM_Mesh_nodal_elt_t  t_elt     = PDM_DMesh_nodal_elmts_section_type_get (dmne_in, id_section);
+    int n_vtx_per_elmt              = PDM_Mesh_nodal_n_vtx_elt_get           (t_elt    , 1);
+
+    int n_connect = n_vtx_per_elmt * n_elt;
+
+    PDM_block_to_part_t *btp_update_elmts_vtx = PDM_block_to_part_create (dparent_vtx_distrib,
+                                                   (const PDM_g_num_t **) &delmt_vtx,
+                                                                          &n_connect,
+                                                                          1,
+                                                                          dmn_in->comm);
+
+    int stride_one = 1;
+    PDM_g_num_t **tmp_delmt_vtx_new = NULL;
+    PDM_block_to_part_exch2 (btp_update_elmts_vtx,
+                             sizeof(PDM_g_num_t),
+                             PDM_STRIDE_CST,
+                             &stride_one,
+                    (void *) blk_parent_to_new_vtx_gnum,
+                             NULL,
+                  (void ***) &tmp_delmt_vtx_new);
+    PDM_g_num_t *delmt_vtx_new = tmp_delmt_vtx_new[0];
+    free(tmp_delmt_vtx_new);
+
+    int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
+                                                      geom_kind,
+                                                      PDM_MESH_NODAL_BAR2);
+
+    PDM_DMesh_nodal_section_std_set(dmn_out,
+                                    geom_kind,
+                                    id_section_post,
+                                    n_elt,
+                                    delmt_vtx_new,
+                                    PDM_OWNERSHIP_KEEP);
+
+    PDM_block_to_part_free(btp_update_elmts_vtx);
+  }
+}
+
 
 #ifdef __cplusplus
 }

@@ -760,100 +760,22 @@ PDM_dmesh_nodal_dual_graph
   PDM_MPI_Comm   comm
 );
 
-
-/**
- * \brief  Return cell->face connectivity
- *
- * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  dcell_faceIdx    Index of distributed cell->face connectivity
- * \param [out]  dcell_face       Distributed cell->face connectivity
- *
- * \return     Number of cells on the current process
- *
- */
-
-// int
-// PDM_DMesh_nodal_cell_face_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal,
-// int               **dcell_faceIdx,
-// PDM_g_num_t       **dcell_face
-// );
-
-/**
- * \brief  Return face->cell connectivity
- *
- * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  face_cell       Distributed face->cell connectivity
- *
- * \return     Number of cells on the current process
- *
- */
-
-// int
-// PDM_DMesh_nodal_face_cell_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal,
-// PDM_g_num_t       **dface_cell
-// );
-
-
-/**
- * \brief  Return face \rightarrow vertex connectivity
- *
- * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  ddcell_faceIdx   Index of distributed cell->face connectivity
- * \param [out]  dcell_face       Distributed cell->face connectivity
- *
- * \return     Number of faces on the current process
- *
- */
-
-// int
-// PDM_DMesh_nodal_face_vtx_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal,
-//       int         **dface_vtx_idx,
-// PDM_g_num_t       **dface_vtx
-// );
-
-
-/**
- * \brief  Return cell distribution
- *
- * \param [in]  hdl  Distributed nodal mesh handle
- *
- * \return  A array of size \ref n_procs + 1
- *
- */
-
-// PDM_g_num_t *
-// PDM_DMesh_nodal_distrib_cell_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal
-// );
-
-
-/**
- * \brief  Return face distribution
- *
- * \param [in]  hdl  Distributed nodal mesh handle
- *
- * \return  A array of size \ref n_procs + 1
- *
- */
-
-// PDM_g_num_t *
-// PDM_DMesh_nodal_distrib_face_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal
-// );
-
 void
 PDM_Mesh_nodal_add_dmesh_nodal_elmts
 (
  PDM_dmesh_nodal_t       *dmesh_nodal,
  PDM_dmesh_nodal_elmts_t *dmn_elts
+);
+
+
+void
+PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
+(
+ PDM_dmesh_nodal_t   *dmn_in,
+ PDM_dmesh_nodal_t   *dmn_out,
+ PDM_geometry_kind_t  geom_kind,
+ PDM_g_num_t         *dparent_vtx_distrib,
+ PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
 #ifdef __cplusplus
