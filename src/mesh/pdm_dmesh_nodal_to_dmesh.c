@@ -541,7 +541,7 @@ PDM_g_num_t  **delmt_child_distrib
   free(_tmp_parent_gnum);
 
   PDM_g_num_t* _dparent_gnum = *dparent_gnum;
-  PDM_g_num_t* _dparent_sign = *dparent_sign;
+  int*         _dparent_sign = *dparent_sign;
 
   if( 0 == 1 ){
     printf("i_abs_entity::%i | i_abs_child:: %i \n", i_abs_entity+1, i_abs_child+1);

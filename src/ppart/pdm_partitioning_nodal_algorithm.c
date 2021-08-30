@@ -445,7 +445,7 @@ PDM_reverse_dparent_gnum
   *pn_child = (int *) malloc(n_part * sizeof(int));
   int* _pn_child = *pn_child;
   PDM_g_num_t **_pchild_parent_gnum = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **_pchild_parent_sign = NULL;
+  int **_pchild_parent_sign = NULL;
   if(blk_dparent_sign != NULL) {
     _pchild_parent_sign = (int **) malloc(n_part * sizeof(int *));
   }

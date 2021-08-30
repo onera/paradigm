@@ -216,22 +216,34 @@ PDM_vtk_write_polydata
     }
   }
 
-  // if (face_g_num != NULL) {
-  //   fprintf(f, "CELL_DATA %d\n", n_face);
-  //   fprintf(f, "SCALARS face_gnum long 1\n");
-  //   fprintf(f, "LOOKUP_TABLE default\n");
-  //   for (int i = 0; i < n_face; i++) {
-  //     fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
-  //   }
-  // }
-  if (face_color != NULL) {
+  if (face_g_num != NULL && face_color == NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_face);
+    fprintf(f, "SCALARS face_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_face; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
+     }
+  } else if (face_color != NULL && face_g_num == NULL) {
     fprintf(f, "CELL_DATA %d\n", n_face);
     fprintf(f, "SCALARS face_color int 1\n");
     fprintf(f, "LOOKUP_TABLE default\n");
     for (int i = 0; i < n_face; i++) {
       fprintf(f, "%d\n", face_color[i]);
     }
+  } else if (face_g_num != NULL && face_color != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_face);
+    fprintf(f, "FIELD field 2\n");
+    fprintf(f, "face_gnum 1 %d long\n", n_face);
+    for (int i = 0; i < n_face; i++) {
+      fprintf(f, PDM_FMT_G_NUM" ", face_g_num[i]);
+    }
+    fprintf(f, "\nface_color 1 %d int\n", n_face);
+    for (int i = 0; i < n_face; i++) {
+      fprintf(f, "%d ", face_color[i]);
+    }
   }
+
+
 
 
   fclose(f);
