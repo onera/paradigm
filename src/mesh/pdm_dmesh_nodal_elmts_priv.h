@@ -110,6 +110,7 @@ typedef struct _pdm_dmesh_nodal_elts_t {
   PDM_ownership_t  dgroup_elmt_owner;
 
   PDM_g_num_t     *dparent_gnum;
+  int             *dparent_sign;
   PDM_g_num_t     *delmt_child_distrib;
 
 

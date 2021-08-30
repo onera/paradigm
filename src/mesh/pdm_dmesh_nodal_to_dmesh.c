@@ -185,6 +185,7 @@ int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt,
 int          **dentity_parent_element_position,
 PDM_g_num_t  **dparent_gnum,
+int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib
 )
 {
@@ -250,8 +251,9 @@ PDM_g_num_t  **delmt_child_distrib
   // printf("n_tot_entity_per_key::%i\n", n_tot_entity_per_key);
   // printf("n_child_approx::%i\n", n_child_approx);
 
-  PDM_g_num_t* _tmp_parent_gnum     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
-  PDM_g_num_t* _tmp_parent_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
+  PDM_g_num_t *_tmp_parent_gnum     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
+  PDM_g_num_t *_tmp_parent_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
+  int         *_tmp_parent_sign     = (int         *) malloc( sizeof(int        ) *  n_child_approx           );
 
   /*
    * Init global numbering
@@ -413,6 +415,8 @@ PDM_g_num_t  **delmt_child_distrib
             // _dentity_parent_element_position_child[next_child_idx] = blk_parent_elmt_position[idx+i_same_entity];
             // printf(" _dparent_gnum[%i] = %i \n", i_abs_child, i_abs_entity );
             _tmp_parent_ln_to_gn[i_abs_child] = blk_elmt_entity_elmt[idx+i_same_entity];
+            _tmp_parent_sign    [i_abs_child] = sign;
+            // printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
             _tmp_parent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
             find_child = 1;
           }
@@ -519,21 +523,34 @@ PDM_g_num_t  **delmt_child_distrib
                (void **) &_tmp_parent_gnum,
                          &blk_strid,
                (void **) dparent_gnum);
+
+  free(blk_strid);
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_VAR,
+                         -1,
+                         &stride_one,
+               (void **) &_tmp_parent_sign,
+                         &blk_strid,
+               (void **) dparent_sign);
   PDM_part_to_block_free(ptb);
   free(stride_one);
   free(blk_strid);
   free(_tmp_parent_ln_to_gn);
+  free(_tmp_parent_sign);
   free(_tmp_parent_gnum);
 
   PDM_g_num_t* _dparent_gnum = *dparent_gnum;
+  PDM_g_num_t* _dparent_sign = *dparent_sign;
 
   if( 0 == 1 ){
     printf("i_abs_entity::%i | i_abs_child:: %i \n", i_abs_entity+1, i_abs_child+1);
-    PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
-    PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
-    PDM_log_trace_array_int(_dentity_elmt_idx, i_abs_entity+1                  , "_dentity_elmt_idx:: ");
-    PDM_log_trace_array_long(_dentity_elmt    , _dentity_elmt_idx[i_abs_entity], "_dentity_elmt:: "    );
-    PDM_log_trace_array_long(_dparent_gnum    , i_abs_child, "_dparent_gnum:: "    );
+    PDM_log_trace_array_int(_dentity_vtx_idx , i_abs_entity+1                 , "_dentity_vtx_idx:: " );
+    PDM_log_trace_array_long(_dentity_vtx    , _dentity_vtx_idx[i_abs_entity] , "_dentity_vtx:: "     );
+    PDM_log_trace_array_int(_dentity_elmt_idx, i_abs_entity+1                 , "_dentity_elmt_idx:: ");
+    PDM_log_trace_array_long(_dentity_elmt   , _dentity_elmt_idx[i_abs_entity], "_dentity_elmt:: "    );
+    PDM_log_trace_array_long(_dparent_gnum   , i_abs_child                    , "_dparent_gnum:: "    );
+    PDM_log_trace_array_int (_dparent_sign   , i_abs_child                    , "_dparent_sign:: "    );
   }
 
   // end_timer_and_print("PDM_generate_entitiy_connectivity", comm, t1);
@@ -559,6 +576,7 @@ int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt,
 int          **dentity_parent_element_position,
 PDM_g_num_t  **dparent_gnum,
+int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib
 )
 {
@@ -725,6 +743,7 @@ PDM_g_num_t  **delmt_child_distrib
                                  dentity_elmt,
                                  dentity_parent_element_position,
                                  dparent_gnum,
+                                 dparent_sign,
                                  delmt_child_distrib);
 }
 static
@@ -847,6 +866,7 @@ _generate_faces_from_dmesh_nodal
                                     &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL],
                                     &link->_dface_parent_element_position,
                                     &dmesh_nodal->surfacic->dparent_gnum,
+                                    &dmesh_nodal->surfacic->dparent_sign,
                                     &dmesh_nodal->surfacic->delmt_child_distrib);
   free(n_face_elt_tot    );
   free(delmt_face        );
@@ -987,6 +1007,7 @@ _generate_faces_from_dmesh_nodal
                                       &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                       &link->_dedge_parent_element_position,
                                       &dmesh_nodal->surfacic->dparent_gnum,
+                                      &dmesh_nodal->surfacic->dparent_sign,
                                       &dmesh_nodal->surfacic->delmt_child_distrib);
 
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
@@ -1128,6 +1149,7 @@ _generate_edges_from_dmesh_nodal
                                     &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                     &link->_dedge_parent_element_position,
                                     &dmesh_nodal->ridge->dparent_gnum,
+                                    &dmesh_nodal->ridge->dparent_sign,
                                     &dmesh_nodal->ridge->delmt_child_distrib);
   free(n_edge_elt_tot    );
   free(delmt_edge        );

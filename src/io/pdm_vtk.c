@@ -216,14 +216,15 @@ PDM_vtk_write_polydata
     }
   }
 
-  if (face_g_num != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_face);
-    fprintf(f, "SCALARS face_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_face; i++) {
-      fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
-    }
-  } else if (face_color != NULL) {
+  // if (face_g_num != NULL) {
+  //   fprintf(f, "CELL_DATA %d\n", n_face);
+  //   fprintf(f, "SCALARS face_gnum long 1\n");
+  //   fprintf(f, "LOOKUP_TABLE default\n");
+  //   for (int i = 0; i < n_face; i++) {
+  //     fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
+  //   }
+  // }
+  if (face_color != NULL) {
     fprintf(f, "CELL_DATA %d\n", n_face);
     fprintf(f, "SCALARS face_color int 1\n");
     fprintf(f, "LOOKUP_TABLE default\n");
