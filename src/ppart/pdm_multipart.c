@@ -734,6 +734,7 @@ _compute_part_mesh_nodal_3d
   PDM_g_num_t **psurf_gnum;
   PDM_g_num_t **psurf_to_face_g_num;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+                           NULL, // dparent_sign
                            dmesh->face_distrib,
                            dmn->surfacic->delmt_child_distrib,
                            n_part,
@@ -742,6 +743,7 @@ _compute_part_mesh_nodal_3d
                           &pn_surf,
                           &psurf_gnum,
                           &psurf_to_face_g_num,
+                           NULL, // pchild_parent_sign
                            dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
@@ -884,6 +886,7 @@ _compute_part_mesh_nodal_2d
   PDM_g_num_t **psurf_gnum;
   PDM_g_num_t **psurf_to_face_g_num;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+                           NULL, // dparent_sign
                            dmesh->edge_distrib,
                            dmn->surfacic->delmt_child_distrib,
                            n_part,
@@ -892,6 +895,7 @@ _compute_part_mesh_nodal_2d
                           &pn_surf,
                           &psurf_gnum,
                           &psurf_to_face_g_num,
+                           NULL, // pchild_parent_sign
                            dmn->comm);
 
   PDM_part_mesh_nodal_elmts_t* pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
