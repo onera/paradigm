@@ -1391,7 +1391,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
 
     int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
                                                       geom_kind,
-                                                      PDM_MESH_NODAL_BAR2);
+                                                      t_elt);
 
     PDM_DMesh_nodal_section_std_set(dmn_out,
                                     geom_kind,
