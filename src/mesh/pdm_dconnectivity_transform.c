@@ -138,6 +138,18 @@ _deduce_combine_connectivity_impl
              (void ***)  &pentity1_entity3);
   free(dentity2_entity3_n);
 
+  if(is_signed) {
+    int idx_read = 0;
+    for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
+      int sign = PDM_SIGN(dentity1_entity2[i]);
+      for(int j = 0; j < pentity1_entity3_n[0][i]; ++j){
+        pentity1_entity3[0][idx_read] = sign * pentity1_entity3[0][idx_read];
+        idx_read++;
+      }
+    }
+  }
+
+
   /*
    * Panic Verbose
    */
@@ -244,7 +256,14 @@ PDM_deduce_combine_connectivity
 
     for(int i_entity2 = 0; i_entity2 < n_entity2_per_entity1; ++i_entity2) {
       _dentity1_entity3_idx[i_entity1+1] += pentity1_entity3_n[idx];
-      dentity1_entity3_n[i_entity1]      += pentity1_entity3_n[idx++];
+      // if(is_signed) {
+      //   int beg = dentity1_entity2_idx[i_entity1];
+      //   int sgn = PDM_SIGN(dentity1_entity2[beg+i_entity2]);
+      //   _dentity1_entity3[idx] = _dentity1_entity3[idx] * sgn;
+      //   dentity1_entity3_n[i_entity1]      += pentity1_entity3_n[idx++];
+      // } else {
+        dentity1_entity3_n[i_entity1]      += pentity1_entity3_n[idx++];
+      // }
     }
   }
   // printf("idx::%i\n", idx);

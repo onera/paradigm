@@ -407,7 +407,7 @@ PDM_g_num_t  **delmt_child_distrib
           if(blk_part_id[idx+i_same_entity] == 0) {
             int next_idx = _dentity_elmt_idx[i_abs_entity+1]++;
             _dentity_elmt[next_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
-            // printf("[%i] _dentity_elmt[%i] = %i \n ", i_abs_entity, next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+            // printf("[%i] _dentity_elmt[%i] = %i \n", i_abs_entity, next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
             _dentity_parent_element_position[next_idx] = blk_parent_elmt_position[idx+i_same_entity];
           } else {
             // printf(" Not treated yet : %i \n", sign*blk_elmt_entity_elmt[idx+i_same_entity]);
@@ -893,7 +893,7 @@ _generate_faces_from_dmesh_nodal
   int dn_cell = dm->cell_distrib[dmesh_nodal->i_rank+1] - dm->cell_distrib[dmesh_nodal->i_rank];
   dm->dn_cell = dn_cell;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE][dn_cell], "dcell_face :: ");
     PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dn_face+1, "dface_cell_idx :: ");
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL][dm->dn_face], "dface_cell :: ");
@@ -907,8 +907,10 @@ _generate_faces_from_dmesh_nodal
   int        * _dface_cell_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL];
 
   // Post_treat
-  PDM_g_num_t *dface_cell = (PDM_g_num_t *) malloc( 2 * dm->dn_face * sizeof(PDM_g_num_t));;
+  PDM_g_num_t *dface_cell = (PDM_g_num_t *) malloc( 2 * dm->dn_face * sizeof(PDM_g_num_t));
+  int         *dflip_face = (int        *) malloc(     dm->dn_face * sizeof(int        ));
   for(int i_face = 0; i_face < dm->dn_face; ++i_face) {
+    dflip_face[i_face] = 1;
 
     int beg = _dface_cell_idx_tmp[i_face];
     int n_connect_cell = _dface_cell_idx_tmp[i_face+1] - beg;
@@ -923,6 +925,7 @@ _generate_faces_from_dmesh_nodal
 
     // Flip if the face is in the other sens
     if( PDM_SIGN(_dface_cell_tmp[beg]) == -1 ) {
+      dflip_face[i_face] = -1;
       int beg_face_vtx = _dface_vtx_idx[i_face  ];
       int end_face_vtx = _dface_vtx_idx[i_face+1];
 
@@ -935,11 +938,40 @@ _generate_faces_from_dmesh_nodal
         _dface_vtx[offset+end_index] = _dface_vtx[offset+i_vtx];
         _dface_vtx[offset+i_vtx] = tmp_swap;
         end_index--;
-
       }
-
     }
   }
+
+
+  /*
+   * Actualize parent_g_num
+   */
+  int dn_surfacic = dmesh_nodal->surfacic->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->surfacic->delmt_child_distrib[dmesh_nodal->i_rank];
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
+                               (const PDM_g_num_t **) &dmesh_nodal->surfacic->dparent_gnum,
+                                                      &dn_surfacic,
+                                                      1,
+                                                      dmesh_nodal->comm);
+
+  PDM_g_num_t** tmp_pedge_flip;
+  int stride_one = 1;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          &stride_one,
+             (void *  )   dflip_face,
+                          NULL,
+             (void ***)  &tmp_pedge_flip);
+  int *pedge_flip = tmp_pedge_flip[0];
+
+  // PDM_log_trace_array_int(pedge_flip, dn_surfacic, "pedge_flip::");
+  for(int i = 0; i < dn_surfacic; ++i) {
+    dmesh_nodal->surfacic->dparent_sign[i] *= pedge_flip[i];
+  }
+  free(pedge_flip);
+  free(tmp_pedge_flip);
+  free(dflip_face);
+  PDM_block_to_part_free(btp);
 
   free(_dface_cell_tmp);
   free(_dface_cell_idx_tmp);
@@ -947,7 +979,7 @@ _generate_faces_from_dmesh_nodal
   dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL] = dface_cell;
   dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL] = NULL;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(dface_cell, 2 * dm->dn_face, "face_cell::");
     PDM_log_trace_array_long(_dface_vtx, _dface_vtx_idx[dm->dn_face], "_dface_vtx::");
   }
@@ -1175,10 +1207,13 @@ _generate_edges_from_dmesh_nodal
   int dn_face = dm->face_distrib[dmesh_nodal->i_rank+1] - dm->face_distrib[dmesh_nodal->i_rank];
   dm->dn_face = dn_face;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][dn_face], "dface_edge :: ");
     PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1, "dedge_face_idx :: ");
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE][dm->dn_edge], "dedge_face :: ");
+    PDM_log_trace_connectivity_long(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                    dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                    dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
   PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
@@ -1188,9 +1223,10 @@ _generate_edges_from_dmesh_nodal
   int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
 
   // Post_treat
-  PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));;
+  PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
+  int         *dflip_edge  = (int        *) malloc(     dm->dn_edge * sizeof(int        ));
   for(int i_edge = 0; i_edge < dm->dn_edge; ++i_edge) {
-
+    dflip_edge[i_edge] = 1;
     int beg = _dedge_face_idx_tmp[i_edge];
     int n_connect_face = _dedge_face_idx_tmp[i_edge+1] - beg;
     if(n_connect_face == 1) {
@@ -1204,6 +1240,7 @@ _generate_edges_from_dmesh_nodal
 
     // Flip if the edge is in the other sens
     if( PDM_SIGN(_dedge_face_tmp[beg]) == -1 ) {
+      dflip_edge[i_edge] = -1;
       int beg_edge_vtx = _dedge_vtx_idx[i_edge  ];
       int end_edge_vtx = _dedge_vtx_idx[i_edge+1];
 
@@ -1211,16 +1248,49 @@ _generate_edges_from_dmesh_nodal
       tmp_swap = _dedge_vtx[beg_edge_vtx];
       _dedge_vtx[beg_edge_vtx  ] = _dedge_vtx[end_edge_vtx-1];
       _dedge_vtx[end_edge_vtx-1] = tmp_swap;
-
     }
   }
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(dflip_edge,  dm->dn_edge, "dflip_edge::");
+  }
+
+  /*
+   * Actualize parent_g_num
+   */
+  int dn_ridge = dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank];
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
+                               (const PDM_g_num_t **) &dmesh_nodal->ridge->dparent_gnum,
+                                                      &dn_ridge,
+                                                      1,
+                                                      dmesh_nodal->comm);
+
+  PDM_g_num_t** tmp_pedge_flip;
+  int stride_one = 1;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          &stride_one,
+             (void *  )   dflip_edge,
+                          NULL,
+             (void ***)  &tmp_pedge_flip);
+  int *pedge_flip = tmp_pedge_flip[0];
+
+  for(int i = 0; i < dn_ridge; ++i) {
+    dmesh_nodal->ridge->dparent_sign[i] *= pedge_flip[i];
+  }
+
+  free(pedge_flip);
+  free(tmp_pedge_flip);
+  free(dflip_edge);
+  PDM_block_to_part_free(btp);
 
   free(_dedge_face_tmp);
   free(_dedge_face_idx_tmp);
   dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = dedge_face;
   dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = NULL;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(dedge_face, 2 * dm->dn_edge, "edge_face::");
     PDM_log_trace_array_long(_dedge_vtx, _dedge_vtx_idx[dm->dn_edge], "_dedge_vtx::");
   }

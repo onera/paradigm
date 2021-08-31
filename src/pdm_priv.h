@@ -97,7 +97,7 @@ enum {X, Y, Z};
  * Sign of value
  */
 
-#define PDM_SIGN(a)  ((a) > 0) ? 1 : (((a) < 0) ? -1 : 0)
+#define PDM_SIGN(a)  (((a) > 0) ? 1 : (((a) < 0) ? -1 : 0))
 
 /**
  * Dot product

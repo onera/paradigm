@@ -295,6 +295,47 @@ PDM_log_trace_array_size_t
 }
 
 
+
+void
+PDM_log_trace_connectivity_long
+(
+ const int         *array_idx,
+ const PDM_g_num_t *array,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s[%i] -> ", header, i);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace(PDM_FMT_G_NUM" ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
+
+
+void
+PDM_log_trace_connectivity_int
+(
+ const int         *array_idx,
+ const int         *array,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s[%i] -> ", header, i);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace("%i ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
