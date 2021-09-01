@@ -73,6 +73,31 @@ PDM_tetrahedron_evaluate_position
  double        closest_point_weights[4]
  );
 
+
+/**
+ * \brief Computes tetrahedron barycenter
+ *
+ * \param [in]   pts     Tetrahedron vertices coordinates
+ * \param [out]  bary    Barycenter
+ *
+ */
+
+void
+PDM_tetrahedron_compute_barycenter
+(
+ const double pts[12],
+       double bary[3]
+ );
+
+
+void
+PDM_tetrahedron_circumsphere
+(
+ const double  vtx_coord[12],
+ double        center[3],
+ double       *radius
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

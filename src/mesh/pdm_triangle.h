@@ -135,6 +135,15 @@ PDM_triangle_circumcircle
 void PDM_triangle_exactinit(void);
 REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd);
 
+REAL PDM_tetrahedron_insphere
+(
+ REAL *pa,
+ REAL *pb,
+ REAL *pc,
+ REAL *pd,
+ REAL *pe
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
