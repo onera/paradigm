@@ -538,6 +538,7 @@ PDM_DMesh_nodal_section_elt_type_get
     return dmne->sections_std[_id_section]->t_elt;
   }
   assert(0); // only useful for std elements
+  return -1;
 }
 
 PDM_Mesh_nodal_elt_t
@@ -606,6 +607,7 @@ PDM_DMesh_nodal_section_distri_std_get
     return dmne->sections_std[_id_section]->distrib;
   }
   assert(0); // only useful for std elements
+  return NULL;
 }
 
 int
