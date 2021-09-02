@@ -28,6 +28,7 @@
 #include "pdm_distrib.h"
 #include "pdm_quick_sort.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -184,6 +185,7 @@ PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt,
 int          **dentity_parent_element_position,
+int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib
@@ -497,17 +499,19 @@ PDM_g_num_t  **delmt_child_distrib
                                                       &i_abs_child,
                                                       1,
                                                       comm);
-  PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
-  printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c ");
+  //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
+  //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
+
+
 
   int n_rank = -1;
   PDM_MPI_Comm_size(comm, &n_rank);
-  *delmt_child_distrib = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t) );
+  /**delmt_child_distrib = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t) );
   PDM_g_num_t* _delmt_child_distrib = *delmt_child_distrib;
 
   for(int i = 0; i < n_rank+1; ++i) {
     _delmt_child_distrib[i] = distrib[i];
-  }
+    }*/
 
   int* stride_one = (int *) malloc( i_abs_child * sizeof(int));
   for(int i = 0; i < i_abs_child; ++i) {
@@ -533,6 +537,17 @@ PDM_g_num_t  **delmt_child_distrib
                (void **) &_tmp_parent_sign,
                          &blk_strid,
                (void **) dparent_sign);
+
+  PDM_g_num_t gn_ridge = -1; // TO DO
+  *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
+                                                                         &blk_strid,
+                                                                         gn_ridge);
+
+  int dn_elmt_child = (int) (delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank]);
+  *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
+                                                   dn_elmt_child);
+
+
   PDM_part_to_block_free(ptb);
   free(stride_one);
   free(blk_strid);
@@ -575,6 +590,7 @@ PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt,
 int          **dentity_parent_element_position,
+int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib
@@ -742,6 +758,7 @@ PDM_g_num_t  **delmt_child_distrib
                                  dentity_elmt_idx,
                                  dentity_elmt,
                                  dentity_parent_element_position,
+                                 dparent_idx,
                                  dparent_gnum,
                                  dparent_sign,
                                  delmt_child_distrib);
@@ -865,6 +882,7 @@ _generate_faces_from_dmesh_nodal
                                     &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL],
                                     &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL],
                                     &link->_dface_parent_element_position,
+                                    &dmesh_nodal->surfacic->dparent_idx,
                                     &dmesh_nodal->surfacic->dparent_gnum,
                                     &dmesh_nodal->surfacic->dparent_sign,
                                     &dmesh_nodal->surfacic->delmt_child_distrib);
@@ -1038,6 +1056,7 @@ _generate_faces_from_dmesh_nodal
                                       &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                       &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                       &link->_dedge_parent_element_position,
+                                      &dmesh_nodal->surfacic->dparent_idx,
                                       &dmesh_nodal->surfacic->dparent_gnum,
                                       &dmesh_nodal->surfacic->dparent_sign,
                                       &dmesh_nodal->surfacic->delmt_child_distrib);
@@ -1180,6 +1199,7 @@ _generate_edges_from_dmesh_nodal
                                     &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                     &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
                                     &link->_dedge_parent_element_position,
+                                    &dmesh_nodal->ridge->dparent_idx,
                                     &dmesh_nodal->ridge->dparent_gnum,
                                     &dmesh_nodal->ridge->dparent_sign,
                                     &dmesh_nodal->ridge->delmt_child_distrib);

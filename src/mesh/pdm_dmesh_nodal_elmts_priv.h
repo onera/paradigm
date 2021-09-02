@@ -111,6 +111,7 @@ typedef struct _pdm_dmesh_nodal_elts_t {
 
   PDM_g_num_t     *dparent_gnum;
   int             *dparent_sign;
+  int             *dparent_idx;
   PDM_g_num_t     *delmt_child_distrib;
 
 

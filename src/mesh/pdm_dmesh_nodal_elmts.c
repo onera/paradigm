@@ -340,6 +340,7 @@ const PDM_MPI_Comm comm,
   dmn_elts->dgroup_elmt          = NULL;
   dmn_elts->dgroup_elmt_owner    = PDM_OWNERSHIP_KEEP;
 
+  dmn_elts->dparent_idx          = NULL;
   dmn_elts->dparent_gnum         = NULL;
   dmn_elts->dparent_sign         = NULL;
   dmn_elts->delmt_child_distrib  = NULL;
@@ -395,6 +396,9 @@ PDM_dmesh_nodal_elmts_t* dmn_elts
     }
   }
 
+  if(dmn_elts->dparent_idx != NULL) {
+    free(dmn_elts->dparent_idx);
+  }
   if(dmn_elts->dparent_gnum != NULL) {
     free(dmn_elts->dparent_gnum);
   }
