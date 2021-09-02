@@ -41,6 +41,7 @@ typedef struct _pdm_link_dmesh_nodal_to_dmesh_t {
   PDM_bool_t         results_is_getted;       /*!< Flags to indicate if result is getted      */
 
   /* We keep the link between the dmesh_nodal and dmesh */
+  /* TO DO clean obsolete arguments */
   int           dn_elmt;
   PDM_g_num_t  *elmt_distrib;
   PDM_g_num_t  *_delmt_face;
@@ -56,6 +57,13 @@ typedef struct _pdm_link_dmesh_nodal_to_dmesh_t {
 
   PDM_g_num_t  *_dedge_elmt;
   int          *_dedge_elmt_idx;
+
+
+  int           dn_missing_ridge;
+  PDM_g_num_t  *dmissing_ridge_parent_g_num;
+
+  int           dn_missing_surface;
+  PDM_g_num_t  *dmissing_surface_parent_g_num;
 
 } _pdm_link_dmesh_nodal_to_dmesh_t;
 

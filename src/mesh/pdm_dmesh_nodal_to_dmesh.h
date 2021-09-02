@@ -86,6 +86,7 @@ PDM_generate_entitiy_connectivity
 (
 PDM_MPI_Comm   comm,
 PDM_g_num_t    n_vtx_abs,
+PDM_g_num_t    n_g_child,
 int            n_part,
 int           *n_entity_elt_tot,
 PDM_g_num_t  **delmt_entity,
@@ -102,7 +103,9 @@ int          **dentity_parent_element_position,
 int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
-PDM_g_num_t  **delmt_child_distrib
+PDM_g_num_t  **delmt_child_distrib,
+int           *dn_missing_child,
+PDM_g_num_t  **dmissing_child_parent_g_num
 );
 
 /**

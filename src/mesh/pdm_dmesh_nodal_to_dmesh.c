@@ -174,6 +174,7 @@ int           *blk_part_id,
 int           *blk_parent_elmt_position,
 int           *blk_n_entity_per_key,
 PDM_g_num_t    n_vtx_abs,
+PDM_g_num_t    n_g_child,
 int            blk_size,
 int            blk_entity_elmt_size,
 int            blk_tot_entity_vtx_size,
@@ -188,7 +189,9 @@ int          **dentity_parent_element_position,
 int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
-PDM_g_num_t  **delmt_child_distrib
+PDM_g_num_t  **delmt_child_distrib,
+int           *dn_missing_child,
+PDM_g_num_t  **dmissing_child_parent_g_num
 )
 {
 
@@ -256,10 +259,13 @@ PDM_g_num_t  **delmt_child_distrib
   PDM_g_num_t *_tmp_parent_gnum     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
   PDM_g_num_t *_tmp_parent_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
   int         *_tmp_parent_sign     = (int         *) malloc( sizeof(int        ) *  n_child_approx           );
+  PDM_g_num_t *_tmp_missing_parent_gnum = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
+  PDM_g_num_t *_tmp_missing_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
 
   /*
    * Init global numbering
    */
+  int i_abs_missing = 0;
   int i_abs_child = 0;
   int i_abs_entity = 0;
   _dentity_vtx_idx[0] = 0;
@@ -416,10 +422,20 @@ PDM_g_num_t  **delmt_child_distrib
             // _dentity_elmt_child[next_child_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
             // _dentity_parent_element_position_child[next_child_idx] = blk_parent_elmt_position[idx+i_same_entity];
             // printf(" _dparent_gnum[%i] = %i \n", i_abs_child, i_abs_entity );
-            _tmp_parent_ln_to_gn[i_abs_child] = blk_elmt_entity_elmt[idx+i_same_entity];
-            _tmp_parent_sign    [i_abs_child] = sign;
-            // printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
-            _tmp_parent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
+            if (idx_next_same_entity == 1) {
+              /* Dans le cas où on a un elt enfant qui n'est pas retrouvé dans la numérotation
+                 parente, on garde l'info qu'il est manquant (utile pour le forçage des bords en génération de maillage */
+              _tmp_missing_ln_to_gn[i_abs_missing]    = blk_elmt_entity_elmt[idx+i_same_entity];
+              _tmp_missing_parent_gnum[i_abs_missing] = i_abs_entity;
+              i_abs_missing++;
+            }
+            else {
+              /* On a trouvé un correspondance entre l'elt enfant et un elt parent, et on garde la correspondance + l'orientation relative */
+              _tmp_parent_ln_to_gn[i_abs_child] = blk_elmt_entity_elmt[idx+i_same_entity];
+              _tmp_parent_sign    [i_abs_child] = sign;
+              // printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
+              _tmp_parent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
+            }
             find_child = 1;
           }
           already_treat[i_same_entity] = 1;
@@ -538,12 +554,12 @@ PDM_g_num_t  **delmt_child_distrib
                          &blk_strid,
                (void **) dparent_sign);
 
-  PDM_g_num_t gn_ridge = -1; // TO DO
+  log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
   *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
                                                                          &blk_strid,
-                                                                         gn_ridge);
+                                                                         n_g_child);
 
-  int dn_elmt_child = (int) (delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank]);
+  int dn_elmt_child = (int) ((*delmt_child_distrib)[i_rank+1] - (*delmt_child_distrib)[i_rank]);
   *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
                                                    dn_elmt_child);
 
@@ -554,6 +570,46 @@ PDM_g_num_t  **delmt_child_distrib
   free(_tmp_parent_ln_to_gn);
   free(_tmp_parent_sign);
   free(_tmp_parent_gnum);
+
+
+
+
+  /*
+   * Exchange in origin absolute numbering
+   */
+  ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                 PDM_PART_TO_BLOCK_POST_MERGE,
+                                 1.,
+                                 &_tmp_missing_ln_to_gn,
+                                 NULL,
+                                 &i_abs_missing,
+                                 1,
+                                 comm);
+
+  stride_one = (int *) malloc( i_abs_missing * sizeof(int));
+  for(int i = 0; i < i_abs_missing; ++i) {
+    stride_one[i] = 1;
+  }
+
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR,
+                         -1,
+                         &stride_one,
+               (void **) &_tmp_missing_parent_gnum,
+                         &blk_strid,
+               (void **) dmissing_child_parent_g_num);
+
+  *dn_missing_child = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_part_to_block_free(ptb);
+  free(stride_one);
+  free(blk_strid);
+  free(_tmp_missing_ln_to_gn);
+  free(_tmp_missing_parent_gnum);
+
+
+
 
   PDM_g_num_t* _dparent_gnum = *dparent_gnum;
   int*         _dparent_sign = *dparent_sign;
@@ -577,6 +633,7 @@ PDM_generate_entitiy_connectivity
 (
 PDM_MPI_Comm   comm,
 PDM_g_num_t    n_vtx_abs,
+PDM_g_num_t    n_g_child,
 int            n_part,
 int           *n_entity_elt_tot,
 PDM_g_num_t  **delmt_entity,
@@ -593,7 +650,9 @@ int          **dentity_parent_element_position,
 int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
-PDM_g_num_t  **delmt_child_distrib
+PDM_g_num_t  **delmt_child_distrib,
+int           *dn_missing_child,
+PDM_g_num_t  **dmissing_child_parent_g_num
 )
 {
   assert(n_part == 2); // On peux généraliser, et on aura le lien entre tous les niveaux
@@ -747,6 +806,7 @@ PDM_g_num_t  **delmt_child_distrib
                                  blk_parent_elmt_position,
                                  blk_n_entity_per_key,
                                  n_vtx_abs,
+                                 n_g_child,
                                  blk_size,
                                  blk_entity_elmt_size,
                                  blk_tot_entity_vtx_size,
@@ -761,7 +821,9 @@ PDM_g_num_t  **delmt_child_distrib
                                  dparent_idx,
                                  dparent_gnum,
                                  dparent_sign,
-                                 delmt_child_distrib);
+                                 delmt_child_distrib,
+                                 dn_missing_child,
+                                 dmissing_child_parent_g_num);
 }
 static
 void
@@ -864,11 +926,13 @@ _generate_faces_from_dmesh_nodal
   delmt_face_vtx_idx[1] = delmt_surf_face_vtx_idx;
   delmt_face_vtx    [1] = delmt_surf_face_vtx    ;
 
+
   /* Memory is deallocated inside */
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
+                                    dmesh_nodal->surfacic->section_distribution[dmesh_nodal->n_rank],
                                     n_part,
                                     n_face_elt_tot,
                                     delmt_face,
@@ -885,7 +949,9 @@ _generate_faces_from_dmesh_nodal
                                     &dmesh_nodal->surfacic->dparent_idx,
                                     &dmesh_nodal->surfacic->dparent_gnum,
                                     &dmesh_nodal->surfacic->dparent_sign,
-                                    &dmesh_nodal->surfacic->delmt_child_distrib);
+                                    &dmesh_nodal->surfacic->delmt_child_distrib,
+                                    &link->dn_missing_surface,
+                                    &link->dmissing_surface_parent_g_num);
   free(n_face_elt_tot    );
   free(delmt_face        );
   free(dparent_elmt_pos  );
@@ -1043,6 +1109,7 @@ _generate_faces_from_dmesh_nodal
     abort(); // Pas sure du tout !!!
     PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                       dmesh_nodal->n_vtx_abs,
+                                      dmesh_nodal->ridge->section_distribution[dmesh_nodal->n_rank],
                                       n_part_tmp,
                                       &n_edge_elt_tot,
                                       &dface_edge,
@@ -1059,7 +1126,9 @@ _generate_faces_from_dmesh_nodal
                                       &dmesh_nodal->surfacic->dparent_idx,
                                       &dmesh_nodal->surfacic->dparent_gnum,
                                       &dmesh_nodal->surfacic->dparent_sign,
-                                      &dmesh_nodal->surfacic->delmt_child_distrib);
+                                      &dmesh_nodal->surfacic->delmt_child_distrib,
+                                      &link->dn_missing_ridge,
+                                      &link->dmissing_ridge_parent_g_num);
 
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
@@ -1182,10 +1251,13 @@ _generate_edges_from_dmesh_nodal
   delmt_edge_vtx    [1] = delmt_ridge_edge_vtx    ;
 
   /* Memory is deallocated inside */
+  int n_section_child = dmesh_nodal->ridge->n_section;
+  PDM_g_num_t n_g_child = dmesh_nodal->ridge->section_distribution[n_section_child];
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
+                                    n_g_child,
                                     n_part,
                                     n_edge_elt_tot,
                                     delmt_edge,
@@ -1202,7 +1274,16 @@ _generate_edges_from_dmesh_nodal
                                     &dmesh_nodal->ridge->dparent_idx,
                                     &dmesh_nodal->ridge->dparent_gnum,
                                     &dmesh_nodal->ridge->dparent_sign,
-                                    &dmesh_nodal->ridge->delmt_child_distrib);
+                                    &dmesh_nodal->ridge->delmt_child_distrib,
+                                    &link->dn_missing_ridge,
+                                    &link->dmissing_ridge_parent_g_num);
+
+  int dn_ridge = (int) (dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] -
+                        dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank]);
+  PDM_log_trace_connectivity_long (dmesh_nodal->ridge->dparent_idx,
+                                   dmesh_nodal->ridge->dparent_gnum,
+                                   dn_ridge,
+                                   "dmesh_nodal->ridge->dparent_gnum :");
   free(n_edge_elt_tot    );
   free(delmt_edge        );
   free(dparent_elmt_pos  );
@@ -1241,6 +1322,10 @@ _generate_edges_from_dmesh_nodal
 
   PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
   int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+  PDM_log_trace_connectivity_long (_dedge_face_idx_tmp,
+                                   _dedge_face_tmp,
+                                   dm->dn_edge,
+                                   "_dedge_face_tmp :");
 
   // Post_treat
   PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
@@ -1278,7 +1363,7 @@ _generate_edges_from_dmesh_nodal
   /*
    * Actualize parent_g_num
    */
-  int dn_ridge = dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank];
+  //int dn_ridge = dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank];
   PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
                                (const PDM_g_num_t **) &dmesh_nodal->ridge->dparent_gnum,
                                                       &dn_ridge,
@@ -1474,6 +1559,12 @@ _link_dmesh_nodal_to_dmesh_init
   link->_dedge_elmt_idx   = NULL;
   link->_dedge_parent_element_position = NULL;
 
+  link->dn_missing_ridge = 0;
+  link->dmissing_ridge_parent_g_num = NULL;
+
+  link->dn_missing_surface = 0;
+  link->dmissing_surface_parent_g_num = NULL;
+
   return link;
 }
 
@@ -1537,6 +1628,16 @@ _link_dmesh_nodal_to_dmesh_free
   if(link->_dedge_parent_element_position != NULL) {
     free(link->_dedge_parent_element_position);
     link->_dedge_parent_element_position = NULL;
+  }
+
+  if (link->dmissing_ridge_parent_g_num != NULL) {
+    free (link->dmissing_ridge_parent_g_num);
+    link->dmissing_ridge_parent_g_num = NULL;
+  }
+
+  if (link->dmissing_surface_parent_g_num != NULL) {
+    free (link->dmissing_surface_parent_g_num);
+    link->dmissing_surface_parent_g_num = NULL;
   }
 
   free(link);
