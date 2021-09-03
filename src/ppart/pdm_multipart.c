@@ -296,7 +296,6 @@ _search_matching_joins
   PDM_printf("\n");
   */
 
-  int         *block_stride;
   int         *block_data;
   PDM_part_to_block_exch(ptb,
                          sizeof(int),
@@ -304,7 +303,7 @@ _search_matching_joins
                          3,
                          NULL,
                          (void **) part_data,
-                         &block_stride,
+                         NULL,
                          (void **) &block_data);
 
   /*
@@ -348,7 +347,6 @@ _search_matching_joins
                          (void **) new_part_data);
 
   free(block_data);
-  free(block_stride);
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
 

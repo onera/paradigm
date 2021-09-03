@@ -125,6 +125,9 @@ _read_args
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp(argv[i], "-hilbert") == 0) {
+      *method = 3;
+    }
     else if (strcmp(argv[i], "-reorder_cell") == 0) {
       *reorder_cell = 1;
     }
@@ -210,6 +213,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
 
+  double t1 = PDM_MPI_Wtime();
   PDM_dcube_t* dcube = PDM_dcube_gen_init(comm,
                                           n_vtx_seg,
                                           length,
@@ -233,6 +237,10 @@ int main(int argc, char *argv[])
                          &dvtx_coord,
                          &dface_group_idx,
                          &dface_group);
+  double t2 = PDM_MPI_Wtime() - t1;
+  if(i_rank == 0) {
+    printf("PDM_dcube_gen -> %12.5e \n", t2);
+  }
 
   PDM_g_num_t* dcell_distrib = PDM_compute_entity_distribution(comm, dn_cell);
   PDM_g_num_t* dface_distrib = PDM_compute_entity_distribution(comm, dn_face);
@@ -515,6 +523,10 @@ int main(int argc, char *argv[])
   int n_property_cell = 0;
   int n_property_face = 0;
 
+  t1 = PDM_MPI_Wtime();
+  if(i_rank == 0) {
+    printf("PDM_part_create begin ...");
+  }
   PDM_part_create(&ppart_id,
                   comm,
                   method,
@@ -543,6 +555,10 @@ int main(int argc, char *argv[])
                   NULL,
                   dface_group_idx,
                   dface_group);
+  t2 = t1 - PDM_MPI_Wtime();
+  if(i_rank == 0) {
+    printf("PDM_part_create -> %12.5e \n", t2);
+  }
 
   double  *elapsed  = NULL;
   double  *cpu      = NULL;

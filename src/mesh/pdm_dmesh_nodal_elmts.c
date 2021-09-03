@@ -296,10 +296,10 @@ _update_elmt_sections_id
 
   dmn_elts->n_section = n_section;
 
-  printf("_update_elmt_sections_id | n_section                   = %i \n", n_section);
-  printf("_update_elmt_sections_id | dmn_elts->n_section_std     = %i \n", dmn_elts->n_section_std);
-  printf("_update_elmt_sections_id | dmn_elts->n_section_poly2d  = %i \n", dmn_elts->n_section_poly2d);
-  printf("_update_elmt_sections_id | dmn_elts->n_section_poly3d  = %i \n", dmn_elts->n_section_poly3d);
+  // printf("_update_elmt_sections_id | n_section                   = %i \n", n_section);
+  // printf("_update_elmt_sections_id | dmn_elts->n_section_std     = %i \n", dmn_elts->n_section_std);
+  // printf("_update_elmt_sections_id | dmn_elts->n_section_poly2d  = %i \n", dmn_elts->n_section_poly2d);
+  // printf("_update_elmt_sections_id | dmn_elts->n_section_poly3d  = %i \n", dmn_elts->n_section_poly3d);
 
 }
 
@@ -553,8 +553,8 @@ const int                n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
   }
 
-  PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - _id_section : %i  \n", _id_section);
-  PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - n_elt       : %i  \n", n_elt);
+  // PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - _id_section : %i  \n", _id_section);
+  // PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - n_elt       : %i  \n", n_elt);
 
   /* Mapping */
   section->n_elt   = n_elt;
@@ -978,7 +978,7 @@ PDM_dmesh_nodal_elmts_generate_distribution
 )
 {
   /* Creation of element distribution among all sections */
-  printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
+  // printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
   dmn_elts->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmn_elts->n_section + 1));
   dmn_elts->section_distribution[0] = 0;
 
@@ -991,7 +991,7 @@ PDM_dmesh_nodal_elmts_generate_distribution
   }
 
   /* Verbose */
-  if(1 == 1)
+  if(0 == 1)
   {
     PDM_printf(" ------------------------------ \n");
     for(int i_section=0; i_section < dmn_elts->n_section+1; i_section++){
