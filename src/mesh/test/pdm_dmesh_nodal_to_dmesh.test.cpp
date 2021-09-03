@@ -5,6 +5,7 @@
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_logging.h"
+#include "pdm_dmesh_nodal_to_dmesh_priv.h"
 
 // n_vtx = 18
 // double coord_x[n_vtx] = {0.000499536, 0.000499536, -1.65387e-06, -1.65387e-06, 0.000499536, 0.000499536, -1.65387e-06, -1.65387e-06, 0.00100073, 0.00100073, 0.00100073, 0.00100073, 0.000499536, -1.65387e-06, 0.000499536, -1.65387e-06, 0.00100073, 0.00100073};
@@ -386,12 +387,12 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
                                       2, 3,
                                       8, 7,
                                       9, 8,
-                                      4, 1},
+                                      5,3},
                                      {3, 6,
                                       7, 4,
                                       6, 9,
                                       1, 5,
-                                      5, 3}};
+                                      4, 1}};
 
   int n_group_elmt = 1;
   int dgroup_elmt_idx[2][2] = {{0, 2}, {0, 2}};
@@ -447,8 +448,33 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
   MPI_CHECK(0, dn_face == 2);
   MPI_CHECK(1, dn_face == 2);
 
-  MPI_CHECK(0, dn_edge == 6);//?
-  MPI_CHECK(1, dn_edge == 6);//?
+  /*MPI_CHECK(0, dn_edge == 7);
+    MPI_CHECK(1, dn_edge == 7);*/
+
+  int         *dedge_vtx_idx;
+  PDM_g_num_t *dedge_vtx;
+  PDM_dmesh_connectivity_get(dm,
+                             PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                             &dedge_vtx,
+                             &dedge_vtx_idx,
+                             PDM_OWNERSHIP_KEEP);
+
+  PDM_log_trace_connectivity_long (dedge_vtx_idx,
+                                   dedge_vtx,
+                                   dn_edge,
+                                   "dedge_vtx :");
+
+  PDM_g_num_t *distrib_missing_ridge = dmntodm->link[0]->distrib_missing_ridge;
+  int dn_missing_ridge = (int) (distrib_missing_ridge[test_rank+1] -
+                                distrib_missing_ridge[test_rank  ]);
+  PDM_log_trace_array_long (distrib_missing_ridge,
+                            3,
+                            "distrib_missing_ridge : ");
+
+  PDM_g_num_t *dmissing_ridge_parent_g_num = dmntodm->link[0]->dmissing_ridge_parent_g_num;
+  PDM_log_trace_array_long (dmissing_ridge_parent_g_num,
+                            dn_missing_ridge,
+                            "dmissing_ridge_parent_g_num : ");
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_DMesh_nodal_free(dmn);

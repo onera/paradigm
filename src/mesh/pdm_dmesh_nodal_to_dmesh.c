@@ -578,6 +578,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange in origin absolute numbering
    */
+  PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
   ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                  PDM_PART_TO_BLOCK_POST_MERGE,
                                  1.,
@@ -593,7 +594,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   }
 
 
-  PDM_part_to_block_exch(ptb,
+  int s_block_data = PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR,
                          -1,
@@ -602,9 +603,14 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                          &blk_strid,
                (void **) dmissing_child_parent_g_num);
 
-  PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
+  int dn_missing_ridge = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
+  PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
+
+  /*PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
   *distrib_missing_child = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
-  memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));
+  memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));*/
+  *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
 
   PDM_part_to_block_free(ptb);
   free(stride_one);
@@ -1041,7 +1047,7 @@ _generate_faces_from_dmesh_nodal
                                                       1,
                                                       dmesh_nodal->comm);
 
-  PDM_g_num_t** tmp_pface_flip;
+  int** tmp_pface_flip;
   int stride_one = 1;
   PDM_block_to_part_exch2(btp,
                           sizeof(int),
@@ -1321,24 +1327,24 @@ _generate_edges_from_dmesh_nodal
                                     dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
-  PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
-  int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
+// Post_treat
 
-  PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
-  int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
-  PDM_log_trace_connectivity_long (_dedge_face_idx_tmp,
-                                   _dedge_face_tmp,
-                                   dm->dn_edge,
-                                   "_dedge_face_tmp :");
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0) {
 
-  // Post_treat
-  PDM_g_num_t *dedge_face = NULL;
-  int         *dflip_edge = NULL;
+    PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
+    int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
 
-  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] > 0) {
+    PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+    int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+    PDM_log_trace_connectivity_long (_dedge_face_idx_tmp,
+                                     _dedge_face_tmp,
+                                     dm->dn_edge,
+                                     "_dedge_face_tmp :");
 
-    dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
-    dflip_edge  = (int        *) malloc(     dm->dn_edge * sizeof(int        ));
+
+    /* All children have a parent */
+    PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
+    int         *dflip_edge = (int         *) malloc(     dm->dn_edge * sizeof(int        ));
     for(int i_edge = 0; i_edge < dm->dn_edge; ++i_edge) {
       dflip_edge[i_edge] = 1;
       int beg = _dedge_face_idx_tmp[i_edge];
@@ -1368,46 +1374,47 @@ _generate_edges_from_dmesh_nodal
     if(0 == 1) {
       PDM_log_trace_array_int(dflip_edge,  dm->dn_edge, "dflip_edge::");
     }
-  }
 
-  /*
-   * Actualize parent_g_num
-   */
-  //int dn_ridge = dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank];
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
-                               (const PDM_g_num_t **) &dmesh_nodal->ridge->dparent_gnum,
-                                                      &dn_ridge,
-                                                      1,
-                                                      dmesh_nodal->comm);
+    /*
+     * Actualize parent sign
+     */
+    //int dn_ridge = dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank];
+    PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
+                                                        (const PDM_g_num_t **) &dmesh_nodal->ridge->dparent_gnum,
+                                                        &dn_ridge,
+                                                        1,
+                                                        dmesh_nodal->comm);
 
-  PDM_g_num_t** tmp_pedge_flip;
-  int stride_one = 1;
-  PDM_block_to_part_exch2(btp,
-                          sizeof(int),
-                          PDM_STRIDE_CST,
-                          &stride_one,
-             (void *  )   dflip_edge,
-                          NULL,
-             (void ***)  &tmp_pedge_flip);
-  int *pedge_flip = tmp_pedge_flip[0];
+    int** tmp_pedge_flip;
+    int stride_one = 1;
+    PDM_block_to_part_exch2(btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &stride_one,
+                            (void *  )   dflip_edge,
+                            NULL,
+                            (void ***)  &tmp_pedge_flip);
+    int *pedge_flip = tmp_pedge_flip[0];
 
-  for(int i = 0; i < dn_ridge; ++i) {
-    dmesh_nodal->ridge->dparent_sign[i] *= pedge_flip[i];
-  }
+    for(int i = 0; i < dn_ridge; ++i) {
+      dmesh_nodal->ridge->dparent_sign[i] *= pedge_flip[i];
+    }
 
-  free(pedge_flip);
-  free(tmp_pedge_flip);
-  free(dflip_edge);
-  PDM_block_to_part_free(btp);
+    free(pedge_flip);
+    free(tmp_pedge_flip);
+    free(dflip_edge);
+    PDM_block_to_part_free(btp);
 
-  free(_dedge_face_tmp);
-  free(_dedge_face_idx_tmp);
-  dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = dedge_face;
-  dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = NULL;
 
-  if(0 == 1) {
-    PDM_log_trace_array_long(dedge_face, 2 * dm->dn_edge, "edge_face::");
-    PDM_log_trace_array_long(_dedge_vtx, _dedge_vtx_idx[dm->dn_edge], "_dedge_vtx::");
+    free(_dedge_face_tmp);
+    free(_dedge_face_idx_tmp);
+    dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = dedge_face;
+    dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = NULL;
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(dedge_face, 2 * dm->dn_edge, "edge_face::");
+      PDM_log_trace_array_long(_dedge_vtx, _dedge_vtx_idx[dm->dn_edge], "_dedge_vtx::");
+    }
   }
 
 }
