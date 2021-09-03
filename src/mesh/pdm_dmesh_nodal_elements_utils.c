@@ -1977,6 +1977,10 @@ PDM_sections_decompose_edges
   int n_elt_current  = 0;
   int n_dedge_current = 0;
 
+  if(dmn_elts == NULL) {
+    return;
+  }
+
   /* We need to loop over all sections in the good order */
   int n_section = dmn_elts->n_section;
 

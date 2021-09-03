@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
-  int                n_zone    = 3;
+  int                n_zone    = 1;
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;

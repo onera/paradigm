@@ -1031,13 +1031,13 @@ _generate_faces_from_dmesh_nodal
    * Actualize parent_g_num
    */
   int dn_surfacic = dmesh_nodal->surfacic->delmt_child_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->surfacic->delmt_child_distrib[dmesh_nodal->i_rank];
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->edge_distrib,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(dm->face_distrib,
                                (const PDM_g_num_t **) &dmesh_nodal->surfacic->dparent_gnum,
                                                       &dn_surfacic,
                                                       1,
                                                       dmesh_nodal->comm);
 
-  PDM_g_num_t** tmp_pedge_flip;
+  PDM_g_num_t** tmp_pface_flip;
   int stride_one = 1;
   PDM_block_to_part_exch2(btp,
                           sizeof(int),
@@ -1045,15 +1045,15 @@ _generate_faces_from_dmesh_nodal
                           &stride_one,
              (void *  )   dflip_face,
                           NULL,
-             (void ***)  &tmp_pedge_flip);
-  int *pedge_flip = tmp_pedge_flip[0];
+             (void ***)  &tmp_pface_flip);
+  int *pface_flip = tmp_pface_flip[0];
 
-  // PDM_log_trace_array_int(pedge_flip, dn_surfacic, "pedge_flip::");
+  // PDM_log_trace_array_int(pface_flip, dn_surfacic, "pface_flip::");
   for(int i = 0; i < dn_surfacic; ++i) {
-    dmesh_nodal->surfacic->dparent_sign[i] *= pedge_flip[i];
+    dmesh_nodal->surfacic->dparent_sign[i] *= pface_flip[i];
   }
-  free(pedge_flip);
-  free(tmp_pedge_flip);
+  free(pface_flip);
+  free(tmp_pface_flip);
   free(dflip_face);
   PDM_block_to_part_free(btp);
 
@@ -1170,10 +1170,10 @@ _generate_edges_from_dmesh_nodal
   PDM_dmesh_nodal_elmts_decompose_edges_get_size(dmesh_nodal->surfacic, &n_edge_elt_surf_tot , &n_sum_vtx_surf_edge_tot );
   PDM_dmesh_nodal_elmts_decompose_edges_get_size(dmesh_nodal->ridge   , &n_edge_elt_ridge_tot, &n_sum_vtx_ridge_edge_tot);
 
-  printf("_generate_edges_from_dmesh_nodal -> n_edge_elt_surf_tot      = %i\n", n_edge_elt_surf_tot);
-  printf("_generate_edges_from_dmesh_nodal -> n_sum_vtx_surf_edge_tot  = %i\n", n_sum_vtx_surf_edge_tot);
-  printf("_generate_edges_from_dmesh_nodal -> n_edge_elt_ridge_tot     = %i\n", n_edge_elt_ridge_tot);
-  printf("_generate_edges_from_dmesh_nodal -> n_sum_vtx_ridge_edge_tot = %i\n", n_sum_vtx_ridge_edge_tot);
+  // printf("_generate_edges_from_dmesh_nodal -> n_edge_elt_surf_tot      = %i\n", n_edge_elt_surf_tot);
+  // printf("_generate_edges_from_dmesh_nodal -> n_sum_vtx_surf_edge_tot  = %i\n", n_sum_vtx_surf_edge_tot);
+  // printf("_generate_edges_from_dmesh_nodal -> n_edge_elt_ridge_tot     = %i\n", n_edge_elt_ridge_tot);
+  // printf("_generate_edges_from_dmesh_nodal -> n_sum_vtx_ridge_edge_tot = %i\n", n_sum_vtx_ridge_edge_tot);
 
   /*
    * Decompose surface
@@ -1476,7 +1476,7 @@ _translate_element_group_to_faces
   PDM_g_num_t *dface_bound;
   int         *dface_bound_idx;
 
-  if(dmesh_nodal->ridge->n_group_elmt > 0) {
+  if(dmesh_nodal->surfacic->n_group_elmt > 0) {
     _translate_element_group_to_entity(dmesh_nodal->comm,
                                        dmesh_nodal->surfacic->delmt_child_distrib,
                                        dmesh_nodal->surfacic->dgroup_elmt,

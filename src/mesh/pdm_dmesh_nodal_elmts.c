@@ -948,6 +948,10 @@ int                     *n_sum_vtx_edge_tot
   *n_edge_elt_tot     = 0;
   *n_sum_vtx_edge_tot = 0;
 
+  if(dmn_elts == NULL) {
+    return;
+  }
+
   for (int i_section = 0; i_section < dmn_elts->n_section_std; i_section++) {
 
     int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmn_elts->sections_std[i_section]->t_elt);

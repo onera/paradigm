@@ -706,7 +706,7 @@ _distrib_data
                                               ptb->s_comm + 1);
 
       ptb->dest_proc[++idx] = iproc;
-      assert (ptb->dest_proc[idx] >= 0);
+      // assert (ptb->dest_proc[idx] >= 0);
       ptb->n_send_data[iproc] += 1;
     }
   }
