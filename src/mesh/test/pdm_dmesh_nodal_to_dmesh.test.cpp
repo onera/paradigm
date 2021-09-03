@@ -474,7 +474,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
 
   PDM_g_num_t *distrib_missing_ridge;
   PDM_g_num_t *dmissing_ridge_parent_g_num;
-  PDM_dmesh_nodal_to_dmesh_get_missing (dmn_to_dm,
+  PDM_dmesh_nodal_to_dmesh_get_missing (dmntodm,
                                         0,
                                         PDM_GEOMETRY_KIND_RIDGE,
                                         &distrib_missing_ridge,
@@ -490,7 +490,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
                             dn_missing_ridge,
                             "dmissing_ridge_parent_g_num : ");
 
-  PDM_dmesh_nodal_to_dmesh_get_missing (dmn_to_dm,
+  PDM_dmesh_nodal_to_dmesh_get_missing (dmntodm,
                                         0,
                                         PDM_GEOMETRY_KIND_RIDGE,
                                         &distrib_missing_ridge,
