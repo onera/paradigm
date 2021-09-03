@@ -504,6 +504,9 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   for(int i = 0; i < i_abs_child; ++i) {
     _tmp_parent_gnum[i] = _tmp_parent_gnum[i] + _entity_distrib[i_rank] + 1;
   }
+  for(int i = 0; i < i_abs_missing; ++i) {
+    _tmp_missing_parent_gnum[i] = _tmp_missing_parent_gnum[i] + _entity_distrib[i_rank] + 1;
+  }
 
   /*
    * Exchange in origin absolute numbering
@@ -582,6 +585,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
    * Exchange in origin absolute numbering
    */
   PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
+  PDM_log_trace_array_long(_tmp_missing_parent_gnum, i_abs_missing, "_tmp_missing_parent_gnum : ");
+
   ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                  PDM_PART_TO_BLOCK_POST_MERGE,
                                  1.,
@@ -1431,7 +1436,7 @@ _translate_element_group_to_entity
  PDM_g_num_t  *dgroup_elmt,
  int          *dgroup_elmt_idx,
  int           n_group_elmt,
- // int          *dchild_elt_parent_idx,
+ int          *dchild_elt_parent_idx,
  PDM_g_num_t  *dchild_elt_parent,
  PDM_g_num_t **dentity_bound,
  int         **dentity_bound_idx
@@ -1456,22 +1461,23 @@ _translate_element_group_to_entity
    * Exchange
    */
   PDM_g_num_t** part_group_data;
-  int stride_one = 1;
-  /*
-    int dn_entity = (int) (entity_distrib[i_rank+1] - entity_distrib[i_rank]);
-    int *block_stride = malloc (sizeof(int) * dn_entity);
-    for (int i = 0; i < dn_entity; i++) {
+
+  int dn_entity = (int) (entity_distrib[i_rank+1] - entity_distrib[i_rank]);
+  int *block_stride = malloc (sizeof(int) * dn_entity);
+  for (int i = 0; i < dn_entity; i++) {
     block_stride[i] = dchild_elt_parent_idx[i+1] - dchild_elt_parent_idx[i];
-    }
-    int *part_stride = NULL;
-  */
+  }
+  int **part_stride = NULL;
+
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,//PDM_STRIDE_VAR,
-                          &stride_one,//block_stride
+                          PDM_STRIDE_VAR,
+                          block_stride,
              (void *  )   dchild_elt_parent,
-                          NULL,//&part_stride,
+                          &part_stride,
              (void ***)  &part_group_data);
+  free (part_stride[0]);
+  free (part_stride);
 
   PDM_g_num_t* _part_group_data = part_group_data[0];
 
@@ -1511,6 +1517,7 @@ _translate_element_group_to_faces
                                        dmesh_nodal->surfacic->dgroup_elmt,
                                        dmesh_nodal->surfacic->dgroup_elmt_idx,
                                        dmesh_nodal->surfacic->n_group_elmt,
+                                       dmesh_nodal->ridge->dparent_idx,
                                        dmesh_nodal->surfacic->dparent_gnum,
                                        &dface_bound,
                                        &dface_bound_idx);
@@ -1545,7 +1552,7 @@ _translate_element_group_to_edges
                                        dmesh_nodal->ridge->dgroup_elmt,
                                        dmesh_nodal->ridge->dgroup_elmt_idx,
                                        dmesh_nodal->ridge->n_group_elmt,
-                                       //dmesh_nodal->ridge->dparent_idx,
+                                       dmesh_nodal->ridge->dparent_idx,
                                        dmesh_nodal->ridge->dparent_gnum,
                                        &dedge_bound,
                                        &dedge_bound_idx);
