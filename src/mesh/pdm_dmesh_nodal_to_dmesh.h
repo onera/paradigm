@@ -104,7 +104,7 @@ int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib,
-int           *dn_missing_child,
+PDM_g_num_t  **distrib_missing_child,
 PDM_g_num_t  **dmissing_child_parent_g_num
 );
 

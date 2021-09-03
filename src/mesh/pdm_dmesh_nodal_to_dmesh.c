@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -601,7 +602,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                          &blk_strid,
                (void **) dmissing_child_parent_g_num);
 
-  *dn_missing_child = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
+  *distrib_missing_child = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));
+
   PDM_part_to_block_free(ptb);
   free(stride_one);
   free(blk_strid);
@@ -991,10 +995,6 @@ _generate_faces_from_dmesh_nodal
   int        * _dface_cell_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL];
 
   // Post_treat
-  PDM_g_num_t *dface_cell = NULL;
-  int         *dflip_face = NULL;
-
-
   PDM_g_num_t *dface_cell = (PDM_g_num_t *) malloc( 2 * dm->dn_face * sizeof(PDM_g_num_t));
   int         *dflip_face = (int         *) malloc(     dm->dn_face * sizeof(int        ));
   for(int i_face = 0; i_face < dm->dn_face; ++i_face) {
@@ -1332,36 +1332,42 @@ _generate_edges_from_dmesh_nodal
                                    "_dedge_face_tmp :");
 
   // Post_treat
-  PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
-  int         *dflip_edge  = (int        *) malloc(     dm->dn_edge * sizeof(int        ));
-  for(int i_edge = 0; i_edge < dm->dn_edge; ++i_edge) {
-    dflip_edge[i_edge] = 1;
-    int beg = _dedge_face_idx_tmp[i_edge];
-    int n_connect_face = _dedge_face_idx_tmp[i_edge+1] - beg;
-    if(n_connect_face == 1) {
-      dedge_face[2*i_edge  ] = PDM_ABS(_dedge_face_tmp[beg]); // Attention on peut être retourner !!!!
-      dedge_face[2*i_edge+1] = 0;
-    } else {
-      assert(n_connect_face == 2);
-      dedge_face[2*i_edge  ] = PDM_ABS(_dedge_face_tmp[beg  ]);
-      dedge_face[2*i_edge+1] = PDM_ABS(_dedge_face_tmp[beg+1]);
+  PDM_g_num_t *dedge_face = NULL;
+  int         *dflip_edge = NULL;
+
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] > 0) {
+
+    dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
+    dflip_edge  = (int        *) malloc(     dm->dn_edge * sizeof(int        ));
+    for(int i_edge = 0; i_edge < dm->dn_edge; ++i_edge) {
+      dflip_edge[i_edge] = 1;
+      int beg = _dedge_face_idx_tmp[i_edge];
+      int n_connect_face = _dedge_face_idx_tmp[i_edge+1] - beg;
+      if(n_connect_face == 1) {
+        dedge_face[2*i_edge  ] = PDM_ABS(_dedge_face_tmp[beg]); // Attention on peut être retourner !!!!
+        dedge_face[2*i_edge+1] = 0;
+      } else {
+        assert(n_connect_face == 2);
+        dedge_face[2*i_edge  ] = PDM_ABS(_dedge_face_tmp[beg  ]);
+        dedge_face[2*i_edge+1] = PDM_ABS(_dedge_face_tmp[beg+1]);
+      }
+
+      // Flip if the edge is in the other sens
+      if( PDM_SIGN(_dedge_face_tmp[beg]) == -1 ) {
+        dflip_edge[i_edge] = -1;
+        int beg_edge_vtx = _dedge_vtx_idx[i_edge  ];
+        int end_edge_vtx = _dedge_vtx_idx[i_edge+1];
+
+        PDM_g_num_t tmp_swap;
+        tmp_swap = _dedge_vtx[beg_edge_vtx];
+        _dedge_vtx[beg_edge_vtx  ] = _dedge_vtx[end_edge_vtx-1];
+        _dedge_vtx[end_edge_vtx-1] = tmp_swap;
+      }
     }
 
-    // Flip if the edge is in the other sens
-    if( PDM_SIGN(_dedge_face_tmp[beg]) == -1 ) {
-      dflip_edge[i_edge] = -1;
-      int beg_edge_vtx = _dedge_vtx_idx[i_edge  ];
-      int end_edge_vtx = _dedge_vtx_idx[i_edge+1];
-
-      PDM_g_num_t tmp_swap;
-      tmp_swap = _dedge_vtx[beg_edge_vtx];
-      _dedge_vtx[beg_edge_vtx  ] = _dedge_vtx[end_edge_vtx-1];
-      _dedge_vtx[end_edge_vtx-1] = tmp_swap;
+    if(0 == 1) {
+      PDM_log_trace_array_int(dflip_edge,  dm->dn_edge, "dflip_edge::");
     }
-  }
-
-  if(0 == 1) {
-    PDM_log_trace_array_int(dflip_edge,  dm->dn_edge, "dflip_edge::");
   }
 
   /*
@@ -1563,10 +1569,10 @@ _link_dmesh_nodal_to_dmesh_init
   link->_dedge_elmt_idx   = NULL;
   link->_dedge_parent_element_position = NULL;
 
-  link->dn_missing_ridge = 0;
+  link->distrib_missing_ridge       = NULL;
   link->dmissing_ridge_parent_g_num = NULL;
 
-  link->dn_missing_surface = 0;
+  link->distrib_missing_surface       = NULL;
   link->dmissing_surface_parent_g_num = NULL;
 
   return link;
@@ -1634,9 +1640,19 @@ _link_dmesh_nodal_to_dmesh_free
     link->_dedge_parent_element_position = NULL;
   }
 
+  if (link->distrib_missing_ridge != NULL) {
+    free (link->distrib_missing_ridge);
+    link->distrib_missing_ridge = NULL;
+  }
+
   if (link->dmissing_ridge_parent_g_num != NULL) {
     free (link->dmissing_ridge_parent_g_num);
     link->dmissing_ridge_parent_g_num = NULL;
+  }
+
+  if (link->distrib_missing_surface != NULL) {
+    free (link->distrib_missing_surface);
+    link->distrib_missing_surface = NULL;
   }
 
   if (link->dmissing_surface_parent_g_num != NULL) {
