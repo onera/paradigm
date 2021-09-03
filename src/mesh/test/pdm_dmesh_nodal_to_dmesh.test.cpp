@@ -369,3 +369,87 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   PDM_DMesh_nodal_free(dmn);
 
 }
+
+
+MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] find missing ridges ",2) {
+  const PDM_g_num_t n_vtx  = 9;
+  const PDM_g_num_t n_face = 4;
+  const int         n_qua_section_1[2] = {2, 2};
+  const int         n_bar_section_1[2] = {5, 5};
+
+  PDM_g_num_t connec_qua_1[2][8] = {{1, 2, 5, 4,
+                                     2, 3, 6, 5},
+                                    {4, 5, 8, 7,
+                                     5, 6, 9, 8}};
+
+  PDM_g_num_t connec_bar_1[2][10] = {{1, 2,
+                                      2, 3,
+                                      8, 7,
+                                      9, 8,
+                                      4, 1},
+                                     {3, 6,
+                                      7, 4,
+                                      6, 9,
+                                      1, 5,
+                                      5, 3}};
+
+  int n_group_elmt = 1;
+  int dgroup_elmt_idx[2][2] = {{0, 2}, {0, 2}};
+  PDM_g_num_t dgroup_elmt[2][2] = {{1, 2}, {3, 4}};
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
+
+  // The order of call is important for global numbering
+  int qua_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_SURFACIC, PDM_MESH_NODAL_QUAD4);
+  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_GEOMETRY_KIND_RIDGE   , PDM_MESH_NODAL_BAR2);
+
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_SURFACIC,
+                                  qua_section_1,
+                                  n_qua_section_1[test_rank],
+                                  connec_qua_1[test_rank],
+                                  PDM_OWNERSHIP_USER);
+
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  PDM_GEOMETRY_KIND_RIDGE,
+                                  bar_section_1,
+                                  n_bar_section_1[test_rank],
+                                  connec_bar_1[test_rank],
+                                  PDM_OWNERSHIP_USER);
+
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_RIDGE,
+                                         n_group_elmt,
+                                         dgroup_elmt_idx[test_rank],
+                                         dgroup_elmt[test_rank],
+                                         PDM_OWNERSHIP_USER);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  PDM_dmesh_nodal_to_dmesh_t* dmntodm = PDM_dmesh_nodal_to_dmesh_create(1, pdm_comm, PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
+
+  PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+
+  //PDM_g_num_t edge_face_expected_p0[
+
+
+  PDM_dmesh_t* dm;
+  PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
+
+  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
+  PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+
+  MPI_CHECK(0, dn_face == 2);
+  MPI_CHECK(1, dn_face == 2);
+
+  MPI_CHECK(0, dn_edge == 6);//?
+  MPI_CHECK(1, dn_edge == 6);//?
+
+  PDM_dmesh_nodal_to_dmesh_free(dmntodm);
+  PDM_DMesh_nodal_free(dmn);
+}

@@ -190,7 +190,7 @@ int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib,
-int           *dn_missing_child,
+PDM_g_num_t  **distrib_missing_child,
 PDM_g_num_t  **dmissing_child_parent_g_num
 )
 {
@@ -435,8 +435,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
               _tmp_parent_sign    [i_abs_child] = sign;
               // printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
               _tmp_parent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
+              find_child = 1;
             }
-            find_child = 1;
           }
           already_treat[i_same_entity] = 1;
         }
@@ -651,7 +651,7 @@ int          **dparent_idx,
 PDM_g_num_t  **dparent_gnum,
 int          **dparent_sign,
 PDM_g_num_t  **delmt_child_distrib,
-int           *dn_missing_child,
+PDM_g_num_t  **distrib_missing_child,
 PDM_g_num_t  **dmissing_child_parent_g_num
 )
 {
@@ -822,7 +822,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                  dparent_gnum,
                                  dparent_sign,
                                  delmt_child_distrib,
-                                 dn_missing_child,
+                                 distrib_missing_child,
                                  dmissing_child_parent_g_num);
 }
 static
@@ -950,7 +950,7 @@ _generate_faces_from_dmesh_nodal
                                     &dmesh_nodal->surfacic->dparent_gnum,
                                     &dmesh_nodal->surfacic->dparent_sign,
                                     &dmesh_nodal->surfacic->delmt_child_distrib,
-                                    &link->dn_missing_surface,
+                                    &link->distrib_missing_surface,
                                     &link->dmissing_surface_parent_g_num);
   free(n_face_elt_tot    );
   free(delmt_face        );
@@ -991,8 +991,12 @@ _generate_faces_from_dmesh_nodal
   int        * _dface_cell_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL];
 
   // Post_treat
+  PDM_g_num_t *dface_cell = NULL;
+  int         *dflip_face = NULL;
+
+
   PDM_g_num_t *dface_cell = (PDM_g_num_t *) malloc( 2 * dm->dn_face * sizeof(PDM_g_num_t));
-  int         *dflip_face = (int        *) malloc(     dm->dn_face * sizeof(int        ));
+  int         *dflip_face = (int         *) malloc(     dm->dn_face * sizeof(int        ));
   for(int i_face = 0; i_face < dm->dn_face; ++i_face) {
     dflip_face[i_face] = 1;
 
@@ -1127,7 +1131,7 @@ _generate_faces_from_dmesh_nodal
                                       &dmesh_nodal->surfacic->dparent_gnum,
                                       &dmesh_nodal->surfacic->dparent_sign,
                                       &dmesh_nodal->surfacic->delmt_child_distrib,
-                                      &link->dn_missing_ridge,
+                                      &link->distrib_missing_ridge,
                                       &link->dmissing_ridge_parent_g_num);
 
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
@@ -1275,7 +1279,7 @@ _generate_edges_from_dmesh_nodal
                                     &dmesh_nodal->ridge->dparent_gnum,
                                     &dmesh_nodal->ridge->dparent_sign,
                                     &dmesh_nodal->ridge->delmt_child_distrib,
-                                    &link->dn_missing_ridge,
+                                    &link->distrib_missing_ridge,
                                     &link->dmissing_ridge_parent_g_num);
 
   int dn_ridge = (int) (dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] -

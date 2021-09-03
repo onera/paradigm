@@ -59,10 +59,10 @@ typedef struct _pdm_link_dmesh_nodal_to_dmesh_t {
   int          *_dedge_elmt_idx;
 
 
-  int           dn_missing_ridge;
+  PDM_g_num_t  *distrib_missing_ridge;
   PDM_g_num_t  *dmissing_ridge_parent_g_num;
 
-  int           dn_missing_surface;
+  PDM_g_num_t  *distrib_missing_surface;
   PDM_g_num_t  *dmissing_surface_parent_g_num;
 
 } _pdm_link_dmesh_nodal_to_dmesh_t;
