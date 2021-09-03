@@ -155,6 +155,18 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
 );
 
+
+void
+PDM_dmesh_nodal_to_dmesh_get_missing
+(
+ PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+ const int                   i_mesh,
+ PDM_geometry_kind_t         geom_kind,
+ PDM_g_num_t               **distrib_missing,
+ PDM_g_num_t               **dmissing_parent_g_num
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

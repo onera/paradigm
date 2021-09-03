@@ -536,7 +536,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   }
 
   int* blk_strid = NULL;
-  PDM_part_to_block_exch(ptb,
+  int s_block_data = PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR,
                          -1,
@@ -544,9 +544,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                (void **) &_tmp_parent_gnum,
                          &blk_strid,
                (void **) dparent_gnum);
+  PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
 
   free(blk_strid);
-  PDM_part_to_block_exch(ptb,
+  s_block_data = PDM_part_to_block_exch(ptb,
                          sizeof(int),
                          PDM_STRIDE_VAR,
                          -1,
@@ -554,6 +555,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                (void **) &_tmp_parent_sign,
                          &blk_strid,
                (void **) dparent_sign);
+  PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
 
   log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
   *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
@@ -563,6 +565,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int dn_elmt_child = (int) ((*delmt_child_distrib)[i_rank+1] - (*delmt_child_distrib)[i_rank]);
   *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
                                                    dn_elmt_child);
+  PDM_log_trace_array_int(*dparent_idx, dn_elmt_child+1, "dparent_idx : ");
 
 
   PDM_part_to_block_free(ptb);
@@ -594,7 +597,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   }
 
 
-  int s_block_data = PDM_part_to_block_exch(ptb,
+  s_block_data = PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR,
                          -1,
@@ -1428,6 +1431,7 @@ _translate_element_group_to_entity
  PDM_g_num_t  *dgroup_elmt,
  int          *dgroup_elmt_idx,
  int           n_group_elmt,
+ // int          *dchild_elt_parent_idx,
  PDM_g_num_t  *dchild_elt_parent,
  PDM_g_num_t **dentity_bound,
  int         **dentity_bound_idx
@@ -1453,12 +1457,20 @@ _translate_element_group_to_entity
    */
   PDM_g_num_t** part_group_data;
   int stride_one = 1;
+  /*
+    int dn_entity = (int) (entity_distrib[i_rank+1] - entity_distrib[i_rank]);
+    int *block_stride = malloc (sizeof(int) * dn_entity);
+    for (int i = 0; i < dn_entity; i++) {
+    block_stride[i] = dchild_elt_parent_idx[i+1] - dchild_elt_parent_idx[i];
+    }
+    int *part_stride = NULL;
+  */
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
-                          &stride_one,
+                          PDM_STRIDE_CST,//PDM_STRIDE_VAR,
+                          &stride_one,//block_stride
              (void *  )   dchild_elt_parent,
-                          NULL,
+                          NULL,//&part_stride,
              (void ***)  &part_group_data);
 
   PDM_g_num_t* _part_group_data = part_group_data[0];
@@ -1533,6 +1545,7 @@ _translate_element_group_to_edges
                                        dmesh_nodal->ridge->dgroup_elmt,
                                        dmesh_nodal->ridge->dgroup_elmt_idx,
                                        dmesh_nodal->ridge->n_group_elmt,
+                                       //dmesh_nodal->ridge->dparent_idx,
                                        dmesh_nodal->ridge->dparent_gnum,
                                        &dedge_bound,
                                        &dedge_bound_idx);
@@ -2449,4 +2462,30 @@ PDM_g_num_t  **dentity_elmt
   *entity_distrib = _make_absolute_entity_numbering(_dn_entity, comm);
 
   end_timer_and_print("PDM_generate_entitiy_connectivity", comm, t1);
+}
+
+
+
+
+void
+PDM_dmesh_nodal_to_dmesh_get_missing
+(
+ PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+ const int                   i_mesh,
+ PDM_geometry_kind_t         geom_kind,
+ PDM_g_num_t               **distrib_missing,
+ PDM_g_num_t               **dmissing_parent_g_num
+ )
+{
+  if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    *distrib_missing       = dmn_to_dm->link[i_mesh]->distrib_missing_ridge;
+    *dmissing_parent_g_num = dmn_to_dm->link[i_mesh]->dmissing_ridge_parent_g_num;
+  }
+  else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+    *distrib_missing       = dmn_to_dm->link[i_mesh]->distrib_missing_surface;
+    *dmissing_parent_g_num = dmn_to_dm->link[i_mesh]->dmissing_surface_parent_g_num;
+  }
+  else {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh_get_missing : invalid geom_kind %d\n", geom_kind);
+  }
 }
