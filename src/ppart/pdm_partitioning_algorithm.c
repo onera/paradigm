@@ -37,6 +37,7 @@
 #include "pdm_distrib.h"
 #include "pdm_order.h"
 // #include "pdm_para_graph_dual.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------
  *  Optional headers
@@ -1498,6 +1499,9 @@ PDM_part_generate_entity_graph_comm
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 1 END\n");
+  // PDM_MPI_Barrier(comm);
+
   int setup_priority = 0; // False
   if(pentity_priority == NULL){
     // printf(" pentity_priority not defined \n");
@@ -1552,6 +1556,8 @@ PDM_part_generate_entity_graph_comm
     }
   }
 
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 2 \n");
+  // PDM_MPI_Barrier(comm);
   /*
    * Setup protocol exchange
    */
@@ -1601,6 +1607,13 @@ PDM_part_generate_entity_graph_comm
                           &proc_blk_stri,
                 (void **) &proc_blk_data);
 
+  PDM_g_num_t* new_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_stri, entity_distribution[n_rank]);
+  free(new_distrib);
+  new_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &proc_blk_stri, entity_distribution[n_rank]);
+  int dn_check = new_distrib[i_rank+1] - new_distrib[i_rank];
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
+  free(new_distrib);
+
   /*
    * Free
    */
@@ -1631,6 +1644,8 @@ PDM_part_generate_entity_graph_comm
 
   }
 
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 3 \n");
+  // PDM_MPI_Barrier(comm);
   /*
    * Post-treatment : For all non shared data we have blk_stri == 3
    *                  And for others we have n_shared * 3 data
@@ -1694,6 +1709,19 @@ PDM_part_generate_entity_graph_comm
     }
   }
 
+  // int n_stride = 0;
+  // for(int i_block = 0; i_block < n_entity_block; ++i_block){
+  //   n_stride += blk_stri[i_block];
+  // }
+
+
+  // log_trace("n_stride = %i | n_entity_block = %i | dn_check = %i \n", n_stride, n_entity_block, dn_check);
+  // if(dn_check != n_entity_block) {
+  //   log_trace("STRANGE : n_stride = %i | n_entity_block = %i | dn_check = %i | dn_entity = %i \n", n_stride, n_entity_block, dn_check, dn_entity);
+  // }
+
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 \n");
+  // PDM_MPI_Barrier(comm);
   /*
    * All data is now sort we cen resend to partition
    */
@@ -1703,6 +1731,8 @@ PDM_part_generate_entity_graph_comm
                                                       n_part,
                                                       comm);
 
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 1 \n");
+  // PDM_MPI_Barrier(comm);
   PDM_block_to_part_exch2(btp,
                           sizeof(int),
                           PDM_STRIDE_VAR,
@@ -1710,6 +1740,8 @@ PDM_part_generate_entity_graph_comm
              (void *  )   blk_data,
              (int  ***)  &part_stri,
              (void ***)  &part_data);
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 2 \n");
+  // PDM_MPI_Barrier(comm);
 
   if(setup_priority == 1 ){
     int stride_one = 1;
@@ -1722,6 +1754,8 @@ PDM_part_generate_entity_graph_comm
                (void ***)   pentity_priority);
     free(blk_priority_data);
   }
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 3 \n");
+  // PDM_MPI_Barrier(comm);
 
   /*
    * Free
@@ -1739,6 +1773,9 @@ PDM_part_generate_entity_graph_comm
    *    - Connected face local number in the connected partition
    */
 
+
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 5 \n");
+  // PDM_MPI_Barrier(comm);
   /* Allocate */
   *pproc_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
   *ppart_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
@@ -1861,6 +1898,8 @@ PDM_part_generate_entity_graph_comm
 
   }
 
+  // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 6 \n");
+  // PDM_MPI_Barrier(comm);
   /*
    * Panic Verbose
    */

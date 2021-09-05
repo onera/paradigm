@@ -1305,7 +1305,7 @@ PDM_MPI_Comm       comm
                         cell_part,
                         comm);
 
-  PDM_log_trace_array_int (cell_part, dn_face, "cell_part :: ");
+  // PDM_log_trace_array_int (cell_part, dn_face, "cell_part :: ");
 
 
   // free(dual_graph_idx);
@@ -1523,11 +1523,11 @@ PDM_MPI_Comm      comm
   PDM_dmesh_data_get(dmesh, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                      &dface_bound_idx, &dface_bound, &joins_ids, &dface_join_idx, &dface_join);
 
-  printf(" dn_cell = %i \n", dn_cell);
-  printf(" dn_face = %i \n", dn_face);
-  printf(" dn_edge = %i \n", dn_edge);
-  printf(" dn_vtx  = %i \n", dn_vtx );
-  printf(" n_bnd   = %i \n", n_bnd  );
+  // printf(" dn_cell = %i \n", dn_cell);
+  // printf(" dn_face = %i \n", dn_face);
+  // printf(" dn_edge = %i \n", dn_edge);
+  // printf(" dn_vtx  = %i \n", dn_vtx );
+  // printf(" n_bnd   = %i \n", n_bnd  );
 
   // This will store all the partitions created by this proc on this zone
   // Copy number of bounds and joins (global data) in the part structure

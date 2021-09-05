@@ -986,6 +986,7 @@ const PDM_MPI_Comm      comm
                                  &edgecut,
                                   node_part_id,
                                   comm);
+        // printf("PDM_ParMETIS_dpart %d | %d  END\n", n_part, dn_elmt);
 
         free(ubvec);
         free(tpwgts);

@@ -219,14 +219,17 @@ int main(int argc, char *argv[])
     }
 
     // Join numbering (left to right, increasing i_zone)
-    djoins_ids[i_zone] = (int *) malloc(n_jn * sizeof(int));
-    if (i_zone == 0)
-      djoins_ids[i_zone][0] = 0;
-    else if (i_zone == n_zone-1)
-      djoins_ids[i_zone][0] = 2*i_zone - 1;
-    else {
-      djoins_ids[i_zone][0] = 2*i_zone - 1;
-      djoins_ids[i_zone][1] = 2*i_zone;
+    printf("n_jn = %i \n", n_jn);
+    if(n_jn > 0 ) {
+      djoins_ids[i_zone] = (int *) malloc(n_jn * sizeof(int));
+      if (i_zone == 0)
+        djoins_ids[i_zone][0] = 0;
+      else if (i_zone == n_zone-1)
+        djoins_ids[i_zone][0] = 2*i_zone - 1;
+      else {
+        djoins_ids[i_zone][0] = 2*i_zone - 1;
+        djoins_ids[i_zone][1] = 2*i_zone;
+      }
     }
 
     dface_bnd_idx[i_zone]  = (int *) malloc((n_bnd+1) * sizeof(int));
@@ -531,7 +534,9 @@ int main(int argc, char *argv[])
     free(dface_bnd[i_zone]);
     free(dface_join_idx[i_zone]);
     free(dface_join[i_zone]);
-    free(djoins_ids[i_zone]);
+    if(n_zone > 1) {
+      free(djoins_ids[i_zone]);
+    }
     PDM_dmesh_free(dmesh[i_zone]);
     PDM_dcube_gen_free(dcube[i_zone]);
   }
