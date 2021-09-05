@@ -1670,10 +1670,10 @@ REAL PDM_predicate_insphere
             * dlift;
   errbound = isperrboundA * permanent;
   if ((det > errbound) || (-det > errbound)) {
-    return det;
+    return -det;
   }
 
-  return insphereadapt(pa, pb, pc, pd, pe, permanent);
+  return -insphereadapt(pa, pb, pc, pd, pe, permanent);
 }
 
 
@@ -2287,10 +2287,10 @@ REAL PDM_predicate_orient3d
             + (Absolute(adxbdy) + Absolute(bdxady)) * Absolute(cdz);
   errbound = o3derrboundA * permanent;
   if ((det > errbound) || (-det > errbound)) {
-    return det;
+    return -det;
   }
 
-  return orient3dadapt(pa, pb, pc, pd, permanent);
+  return -orient3dadapt(pa, pb, pc, pd, permanent);
 }
 
 PDM_GCC_SUPPRESS_WARNING_POP
