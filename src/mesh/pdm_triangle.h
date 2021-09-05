@@ -119,31 +119,6 @@ PDM_triangle_circumcircle
  );
 
 
-
-
-
-/*
- *  from Triangle (https://github.com/libigl/triangle)
- */
-
-
-#define REAL double
-#define vertex double *
-
-#define INEXACT /* Nothing */
-/* #define INEXACT volatile */
-void PDM_triangle_exactinit(void);
-REAL PDM_triangle_incircle(vertex pa, vertex pb, vertex pc, vertex pd);
-
-REAL PDM_tetrahedron_insphere
-(
- REAL *pa,
- REAL *pb,
- REAL *pc,
- REAL *pd,
- REAL *pe
- );
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
