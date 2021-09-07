@@ -6292,7 +6292,7 @@ PDM_para_octree_build
     /*
      * Dilate extents
      */
-    double max_range = 0.;
+    double max_range = 0.;//1e-3;//
     for (int i = 0; i < dim; i++) {
       max_range = PDM_MAX (max_range,
                            octree->global_extents[i+dim] - octree->global_extents[i]);
@@ -6305,7 +6305,13 @@ PDM_para_octree_build
       octree->global_extents[i+dim] +=       epsilon;
     }
   }
-
+  log_trace("octree->global_extents = %f %f %f   %f %f %f\n",
+            octree->global_extents[0],
+            octree->global_extents[1],
+            octree->global_extents[2],
+            octree->global_extents[3],
+            octree->global_extents[4],
+            octree->global_extents[5]);
   /*
    * Encode coords
    */
@@ -6318,6 +6324,9 @@ PDM_para_octree_build
                            octree->points_code,
                            octree->d,
                            octree->s);
+  log_trace("octree->s = %f %f %f\noctree->d = %f %f %f\n",
+            octree->s[0], octree->s[1], octree->s[2],
+            octree->d[0], octree->d[1], octree->d[2]);
 
   int *order = malloc (sizeof(int) * octree->n_points);
 
