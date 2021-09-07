@@ -2386,6 +2386,70 @@ static void _export_point_cloud
   fclose(f);
 }
 
+void
+PDM_dbbtree_points_debug
+(
+ char*               filename_pattern,
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ double             *pts_coord,
+ PDM_g_num_t        *pts_g_num
+)
+{
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  int my_rank;
+  PDM_MPI_Comm_rank (_dbbt->comm, &my_rank);
+  char filename[999];
+  //-->>
+  double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
+  for (int i = 0; i < n_pts; i++) {
+    _normalize (_dbbt,
+                pts_coord + 3*i,
+                _pts_coord + 3*i);
+  }
+
+  sprintf(filename, "%s_dbbt_pts_n_%3.3d.vtk", filename_pattern, my_rank);
+  _export_point_cloud (filename,
+                       1,
+                       &n_pts,
+                       &_pts_coord,
+                       &pts_g_num,
+                       NULL);
+
+  sprintf(filename, "%s_dbbt_boxes_n_%3.3d.vtk", filename_pattern, my_rank);
+  _export_boxes (filename,
+                 _dbbt->boxes->local_boxes->n_boxes,
+                 _dbbt->boxes->local_boxes->extents,
+                 _dbbt->boxes->local_boxes->g_num);
+
+
+  double *_extents = malloc (sizeof(double) * _dbbt->boxes->local_boxes->n_boxes * 6);
+  for (int i = 0; i < 2*_dbbt->boxes->local_boxes->n_boxes; i++) {
+    for (int j = 0; j < 3; j++) {
+      _extents[3*i+j] = _dbbt->s[j] + _dbbt->d[j] * _dbbt->boxes->local_boxes->extents[3*i+j];
+    }
+  }
+
+  sprintf(filename, "%s_dbbt_pts_%3.3d.vtk", filename_pattern, my_rank);
+  _export_point_cloud (filename,
+                       1,
+                       &n_pts,
+                       &pts_coord,
+                       &pts_g_num,
+                       NULL);
+
+  sprintf(filename, "%s_dbbt_boxes_%3.3d.vtk", filename_pattern, my_rank);
+  _export_boxes (filename,
+                 _dbbt->boxes->local_boxes->n_boxes,
+                 _extents,
+                 _dbbt->boxes->local_boxes->g_num);
+
+  free(_extents);
+  free(_pts_coord);
+}
+
 
 void
 PDM_dbbtree_points_inside_boxes

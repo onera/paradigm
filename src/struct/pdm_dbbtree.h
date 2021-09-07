@@ -269,7 +269,17 @@ PDM_dbbtree_lines_intersect_boxes
  double         *line_coord,
  int           **box_index,
  PDM_g_num_t   **box_g_num
- );
+);
+
+void
+PDM_dbbtree_points_debug
+(
+ char*               filename_pattern,
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ double             *pts_coord,
+ PDM_g_num_t        *pts_g_num
+);
 
 #ifdef __cplusplus
 }
