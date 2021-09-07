@@ -4063,10 +4063,25 @@ PDM_box_tree_min_dist_max_box
   double *_pts = pts;
   /* if (normalized) { */
     _pts = malloc (sizeof(double) * 3 * n_pts);
-    for (int i = 0; i < n_pts; i++) {
+    /*for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin =  pts + 3 * i;
       double *_pt        = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
+      log_trace("pt = %f %f %f >> %f %f %f\n",
+                _pt_origin[0],
+                _pt_origin[1],
+                _pt_origin[2],
+                _pt[0],
+                _pt[1],
+                _pt[2]);
+                }*/
+    PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                  n_pts,
+                                  pts,
+                                  _pts);
+    for (int i = 0; i < n_pts; i++) {
+      const double *_pt_origin =  pts + 3 * i;
+      double *_pt              = _pts + 3 * i;
       log_trace("pt = %f %f %f >> %f %f %f\n",
                 _pt_origin[0],
                 _pt_origin[1],
@@ -4210,11 +4225,15 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   double *_pts = pts;
   /* if (normalized) { */
   _pts = malloc (sizeof(double) * 3 * n_pts);
-  for (int i = 0; i < n_pts; i++) {
+  /*for (int i = 0; i < n_pts; i++) {
     const double *_pt_origin = pts + 3 * i;
     double *_pt        = _pts + 3 * i;
     PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
-  }
+    }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *)bt->boxes,
+                                n_pts,
+                                pts,
+                                _pts);
   /* } */
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
@@ -4401,12 +4420,16 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
   double *_pts = pts;
   /* if (normalized) { */
-    _pts = malloc (sizeof(double) * 3 * n_pts);
+  /*  _pts = malloc (sizeof(double) * 3 * n_pts);
     for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin = pts + 3 * i;
       double *_pt              = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-    }
+      }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_pts,
+                                pts,
+                                _pts);
   /* } */
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
@@ -4753,11 +4776,15 @@ PDM_box_tree_points_inside_boxes
   double *_pts_coord = NULL;
   if (bt->boxes->normalized) {
     _pts_coord = malloc (sizeof(double) * 3 * n_pts);
-    for (int i = 0; i < n_pts; i++) {
+    /*for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin = pts_coord + 3 * i;
       double *_pt = _pts_coord + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
-    }
+      }*/
+    PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                  n_pts,
+                                  (double *) pts_coord,
+                                  _pts_coord);
   } else {
     _pts_coord = (double *) pts_coord;
   }
@@ -4919,11 +4946,15 @@ PDM_box_tree_points_inside_boxes2
 
   /* if (normalized) { */
   double *_pts_coord = malloc (sizeof(double) * dim * n_pts);
-  for (int i = 0; i < n_pts; i++) {
+  /*for (int i = 0; i < n_pts; i++) {
     const double *_pt_origin = pts_coord + dim * i;
     double *_pt              = _pts_coord + dim * i;
     PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-  }
+    }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_pts,
+                                (double *) pts_coord,
+                                _pts_coord);
   /* } */
 
   PDM_boxes_t *boxes;
@@ -5079,11 +5110,15 @@ PDM_box_tree_min_dist_max_box_disjoint
 
   double *_pts = pts;
   _pts = malloc (sizeof(double) * 3 * n_pts);
-  for (int i = 0; i < n_pts; i++) {
+  /*for (int i = 0; i < n_pts; i++) {
     const double *_pt_origin =  pts + 3 * i;
     double *_pt        = _pts + 3 * i;
     PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-  }
+    }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_pts,
+                                pts,
+                                _pts);
 
   double extents2[2*dim];
 
@@ -5207,11 +5242,15 @@ PDM_box_tree_points_inside_ellipsoids
 
   /* if (normalized) { */
   double *_pts_coord = malloc (sizeof(double) * dim * n_pts);
-  for (int i = 0; i < n_pts; i++) {
+  /*for (int i = 0; i < n_pts; i++) {
     const double *_pt_origin = pts_coord + dim * i;
     double *_pt              = _pts_coord + dim * i;
     PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-  }
+    }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_pts,
+                                (double *) pts_coord,
+                                _pts_coord);
   /* } */
 
   PDM_boxes_t *boxes;
@@ -5361,11 +5400,15 @@ PDM_box_tree_intersect_lines_boxes
 
   /* if (normalized) { */
   double *_line_coord = malloc (sizeof(double) * two_dim * n_line);
-  for (int i = 0; i < 2*n_line; i++) {
+  /*for (int i = 0; i < 2*n_line; i++) {
     const double *_pt_origin =  line_coord + dim * i;
     double *_pt              = _line_coord + dim * i;
     PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-  }
+    }*/
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_line*2,
+                                (double *) line_coord,
+                                _line_coord);
   /* } */
 
   PDM_boxes_t *boxes;

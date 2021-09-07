@@ -2727,7 +2727,7 @@ PDM_mesh_location_t        *ml
   const int DEBUG = 0;
   const int dim = 3;
 
-  const int octree_depth_max = 15;//?
+  const int octree_depth_max = 31;
   const int octree_points_in_leaf_max = 1;
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
@@ -2740,7 +2740,7 @@ PDM_mesh_location_t        *ml
   if (env_var != NULL) {
     allow_extraction = atoi(env_var);
   }
-  int use_extracted_pts = allow_extraction;
+  int use_extracted_pts  = allow_extraction;
   int use_extracted_mesh = allow_extraction;
 
   int          **n_select_pts = NULL;

@@ -33,6 +33,7 @@
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_binary_search.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -6426,6 +6427,16 @@ PDM_para_octree_build
     free (order);
   }
 
+  if (1) {
+    char filename[999];
+    sprintf(filename, "debug_octree_pts_%3.3d.vtk", rank);
+    PDM_vtk_write_point_cloud(filename,
+                              octree->n_points,
+                              octree->points,
+                              octree->points_gnum,
+                              NULL);
+  }
+
 
   PDM_timer_hang_on(octree->timer);
   e_t_elapsed = PDM_timer_elapsed(octree->timer);
@@ -6910,6 +6921,55 @@ PDM_para_octree_build
                                     range + range_children[i],
                                     n_points_children[i]);
         if (!is_pushed) {
+
+          for (int j = heap->top-1; j >= 0; j--) {
+            log_trace("heap[%d] : {L = %zu, X = %zu %zu %zu}, range = %d, n_points = %d\n",
+                      j,
+                      heap->codes[j].L,
+                      heap->codes[j].X[0],
+                      heap->codes[j].X[1],
+                      heap->codes[j].X[2],
+                      heap->range[j],
+                      heap->n_points[j]);
+          }
+          _export_nodes ("debug_heap.vtk",
+                         heap->top,
+                         heap->codes,
+                         octree->s,
+                         octree->d);
+
+          double extents[6];
+          int l = 1 << children[i].L;
+          double side = 1.0 / (double) l;
+          for (int j = 0; j < 3; j++) {
+            extents[j]   = octree->s[j] + side * octree->d[j] * children[i].X[j];
+            extents[j+3] = extents[j]   + side * octree->d[j];
+          }
+
+          PDM_g_num_t gnum[1] = {1};
+
+          PDM_vtk_write_boxes("debug_child.vtk",
+                              1,
+                              extents,
+                              gnum);
+
+          log_trace("children[%d] = {L = %zu, X = %zu %zu %zu}, range = %d, n_points = %d\n",
+                    i,
+                    children[i].L,
+                    children[i].X[0],
+                    children[i].X[1],
+                    children[i].X[2],
+                    range + range_children[i],
+                    n_points_children[i]);
+
+          char filename[999];
+          sprintf(filename, "debug_octree_%3.3d.vtk", rank);
+          _export_nodes (filename,
+                         octree->octants->n_nodes,
+                         octree->octants->codes,
+                         octree->s,
+                         octree->d);
+
           printf ("Internal error PDM_para_octree 4 : heap is full\n");
           exit(1);
         }
@@ -7155,7 +7215,7 @@ PDM_para_octree_build
     }
     printf("\n");
   }
-  if (0) {//octree->shared_rank_idx != NULL) {
+  if (1) {//octree->shared_rank_idx != NULL) {
     //const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     const char *pref = "";
     char filename[999];
@@ -7171,7 +7231,7 @@ PDM_para_octree_build
                            octree,
                            0);
 
-    if (rank == 0) {
+    if (octree->shared_rank_idx != NULL && rank == 0) {
       for (int i = 0; i < n_ranks; i++) {
         sprintf(filename, "%soctree_shared_%4.4d.vtk", pref, i);
         _export_nodes (filename,
@@ -7238,7 +7298,7 @@ PDM_para_octree_build
       }
     }
 
-    if (0) {
+    if (1) {
       const char *pref = "";
       char filename[999];
       sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
