@@ -139,6 +139,20 @@ _closest_points_reverse_results
   PDM_MPI_Allreduce (&n_g_src, &_n_g_src, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, cls->comm);
   n_g_src = _n_g_src;
 
+  if (1) {
+    for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+      PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part],
+                               n_points[i_part],
+                               "closest_src_gnum : ");
+    }
+
+    for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+      PDM_log_trace_array_double(cls->tgt_cloud->closest_src_dist[i_part],
+                               n_points[i_part],
+                               "closest_src_dist : ");
+    }
+  }
+
   /*
    *  First part to block to map in global numbering of src all target associate
    */
@@ -727,7 +741,7 @@ PDM_closest_point_t  *cls
  * their original parent number.
  *
  * This function allow parent/child numbering to have a different partitionning than
- * gnum_to_transform. For both arrays, number of part and number of elt per part must 
+ * gnum_to_transform. For both arrays, number of part and number of elt per part must
  * be provided.
  *
  * gnum_to_transform is modified inplace

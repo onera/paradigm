@@ -6561,6 +6561,8 @@ PDM_para_octree_build
                          &send_n_pts,
                          &send_extents);
 
+      log_trace("_compress_octants >> n_local_nodes = %d\n", n_local_nodes);
+
       /*// expand extents
       const double eps = 1e-3;
       const double min_delta = 1e-6;
@@ -6579,8 +6581,11 @@ PDM_para_octree_build
       PDM_MPI_Allgather (&n_local_nodes, 1, PDM_MPI_INT,
                          recv_count,     1, PDM_MPI_INT,
                          octree->comm);
+      PDM_log_trace_array_int(recv_count, n_ranks, "recv_count : ");
 
       octree->shared_rank_idx = PDM_array_new_idx_from_sizes_int (recv_count, n_ranks);
+      PDM_log_trace_array_int(octree->shared_rank_idx, n_ranks+1, "octree->shared_rank_idx : ");
+
       int n_shared_nodes = octree->shared_rank_idx[n_ranks];
       int *recv_shift = PDM_array_new_idx_from_sizes_int (recv_count, n_ranks);
 
@@ -8588,8 +8593,13 @@ PDM_para_octree_single_closest_point
  double      *closest_octree_pt_dist2
  )
 {
+  int DEBUG = 1;
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
+
+  if (DEBUG) {
+    log_trace("octree->n_points = %d\n", octree->n_points);
+  }
 
   float f_copy_threshold = 1.1;
   float f_max_copy = 0.1;
@@ -8709,6 +8719,17 @@ PDM_para_octree_single_closest_point
                                   &n_boxes,
                                   init_location_proc,
                                   bt_comm);
+    for (int i = 0; i < n_boxes; i++) {
+      log_trace("shared_box[%d], n_pts = %d, extents = %f %f %f   %f %f %f\n",
+                i,
+                octree->shared_pts_n[i],
+                octree->shared_pts_extents[6*i],
+                octree->shared_pts_extents[6*i+1],
+                octree->shared_pts_extents[6*i+2],
+                octree->shared_pts_extents[6*i+3],
+                octree->shared_pts_extents[6*i+4],
+                octree->shared_pts_extents[6*i+5]);
+    }
 
     bt_shared = PDM_box_tree_create (max_tree_depth_shared,
                                      max_boxes_leaf_shared,
@@ -8809,6 +8830,12 @@ PDM_para_octree_single_closest_point
             l = m;
         }
         int rank = l;
+        log_trace("pt coord = %f %f %f, inode = %d, rank = %d\n",
+                  pts_coord[3*i],
+                  pts_coord[3*i+1],
+                  pts_coord[3*i+2],
+                  inode, rank);
+
         rank_pt[i] = rank;
         send_count[rank]++;
       }
@@ -8834,6 +8861,10 @@ PDM_para_octree_single_closest_point
         send_count[rank_pt[i]]++;
       }
       free (pts_code);
+    }
+
+    if (DEBUG) {
+      PDM_log_trace_array_int(rank_pt, n_pts, "rank_pt : ");
     }
 
     /*   3) Exchange send/recv counts */
@@ -9297,6 +9328,10 @@ PDM_para_octree_single_closest_point
     }
   }
 
+  if (DEBUG) {
+    PDM_log_trace_array_long(_closest_pt_g_num, n_pts1, "_closest_pt_g_num 1 : ");
+  }
+
   if (n_rank == 1) {
     if (DETAIL_TIMER)
       PDM_timer_free (timer);
@@ -9489,6 +9524,14 @@ PDM_para_octree_single_closest_point
         close_ranks[i] = octree->used_rank[j];
       }
     }
+  }
+
+  if (DEBUG) {
+    PDM_log_trace_connectivity_int(close_ranks_idx,
+                                   close_ranks,
+
+                                   n_pts1,
+                                   "close_ranks : ");
   }
 
   if (DETAIL_TIMER) {
@@ -9981,6 +10024,10 @@ PDM_para_octree_single_closest_point
     }
   }
   free (pts_coord2);
+
+  if (DEBUG) {
+    PDM_log_trace_array_long(_closest_pt_g_num, n_pts2, "_closest_pt_g_num 2 : ");
+  }
 
   if (copied_ranks2 != NULL) {
     free (copied_ranks2);

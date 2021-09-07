@@ -47,6 +47,7 @@
 #include "pdm_error.h"
 #include "pdm_sort.h"
 #include "pdm_array.h"
+#include "pdm_logging.h"
 
 #include "pdm_morton.h"
 
@@ -4066,6 +4067,13 @@ PDM_box_tree_min_dist_max_box
       const double *_pt_origin =  pts + 3 * i;
       double *_pt        = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
+      log_trace("pt = %f %f %f >> %f %f %f\n",
+                _pt_origin[0],
+                _pt_origin[1],
+                _pt_origin[2],
+                _pt[0],
+                _pt[1],
+                _pt[2]);
     }
   /* } */
 
