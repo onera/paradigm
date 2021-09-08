@@ -2276,6 +2276,19 @@ _block_partition
 
   assert (PDM_ABS(total_vol - 1.) < 1e-15);
 
+  /*for (int i = 0; i < G->n_nodes; i++) {
+    log_trace("G->codes[i] : L = %zu, X = %zu %zu %zu\n",
+              G->codes[i].L,
+              G->codes[i].X[0],
+              G->codes[i].X[1],
+              G->codes[i].X[2]);
+    if (i > 0) {
+      if (!PDM_morton_a_ge_b(G->codes[i], G->codes[i-1])) {
+        log_trace("  !!! not ge previous code\n");
+      }
+    }
+    }*/
+
 
   /* printf("\n_block_partition : after complete_octree %d %d : d\n", comm_rank, C->n_nodes); */
   /* for (int i = 0; i < G->n_nodes; i++) { */
@@ -2492,14 +2505,14 @@ _block_partition
                                        weight,
                                        _G_morton_index,
                                        comm);
-  for (int i = 0; i <= n_ranks; i++) {
+  /*for (int i = 0; i <= n_ranks; i++) {
     log_trace("_G_morton_index :: rank %d : L = %zu, X = %zu %zu %zu\n",
               i,
               _G_morton_index[i].L,
               _G_morton_index[i].X[0],
               _G_morton_index[i].X[1],
               _G_morton_index[i].X[2]);
-  }
+              }*/
 
   free (order);
   free (weight);
@@ -6314,13 +6327,13 @@ PDM_para_octree_build
       octree->global_extents[i+dim] +=       epsilon;
     }
   }
-  log_trace("octree->global_extents = %f %f %f   %f %f %f\n",
+  /*log_trace("octree->global_extents = %f %f %f   %f %f %f\n",
             octree->global_extents[0],
             octree->global_extents[1],
             octree->global_extents[2],
             octree->global_extents[3],
             octree->global_extents[4],
-            octree->global_extents[5]);
+            octree->global_extents[5]);*/
   /*
    * Encode coords
    */
@@ -6335,7 +6348,25 @@ PDM_para_octree_build
                            octree->s);
   /*log_trace("octree->s = %f %f %f\noctree->d = %f %f %f\n",
             octree->s[0], octree->s[1], octree->s[2],
-            octree->d[0], octree->d[1], octree->d[2]);*/
+            octree->d[0], octree->d[1], octree->d[2]);
+
+  for (int i = 0; i < octree->n_points; i++) {
+    log_trace("octree->points[%d] : %f %f %f\n",
+              i,
+              octree->points[3*i],
+              octree->points[3*i+1],
+              octree->points[3*i+2]);
+  }
+
+  for (int i = 0; i < octree->n_points; i++) {
+    //PDM_morton_dump(dim, octree->points_code[i]);
+    log_trace("octree->points_code[%d] : L = %zu, X = %zu %zu %zu\n",
+              i,
+              octree->points_code[i].L,
+              octree->points_code[i].X[0],
+              octree->points_code[i].X[1],
+              octree->points_code[i].X[2]);
+  }*/
 
   int *order = malloc (sizeof(int) * octree->n_points);
 
@@ -6435,7 +6466,7 @@ PDM_para_octree_build
     free (order);
   }
 
-  if (1) {
+  if (0) {
     char filename[999];
     sprintf(filename, "debug_octree_pts_%3.3d.vtk", rank);
     PDM_vtk_write_point_cloud(filename,
@@ -6520,18 +6551,29 @@ PDM_para_octree_build
      *
      *************************************************************************/
 
-    log_trace("point_octants->n_nodes = %d\n", point_octants->n_nodes);
-    char filename[999];
+    //log_trace("point_octants->n_nodes = %d\n", point_octants->n_nodes);
+    /*char filename[999];
     sprintf(filename, "dbg_point_octants_%4.4d.vtk", rank);
     _export_nodes (filename,
                    point_octants->n_nodes,
                    point_octants->codes,
                    octree->s,
-                   octree->d);
+                   octree->d);*/
 
+    /*for (int i = 0; i < point_octants->n_nodes; i++) {
+      log_trace("point_octants->codes[%d] : L = %zu, X = %zu %zu %zu\n",
+                i,
+                point_octants->codes[i].L,
+                point_octants->codes[i].X[0],
+                point_octants->codes[i].X[1],
+                point_octants->codes[i].X[2]);
+                }
+
+    log_trace("\n\n\n>> _block_partition\n");*/
     octree->octants = _block_partition (point_octants,
                                         octree->comm,
                                         &octree->rank_octants_index);
+    /*log_trace("<< _block_partition\n");
 
     for (int i = 0; i <= n_ranks; i++) {
       log_trace("rank %d : L = %zu, X = %zu %zu %zu\n",
@@ -6540,16 +6582,16 @@ PDM_para_octree_build
                 octree->rank_octants_index[i].X[0],
                 octree->rank_octants_index[i].X[1],
                 octree->rank_octants_index[i].X[2]);
-    }
+                }*/
 
-    if (rank == 0) {
+    /*if (rank == 0) {
       sprintf(filename, "dbg_rank_octants_index.vtk");
       _export_nodes (filename,
                      n_ranks + 1,
                      octree->rank_octants_index,
                      octree->s,
                      octree->d);
-    }
+                     }*/
 
     _octants_free (point_octants);
 
@@ -6570,21 +6612,21 @@ PDM_para_octree_build
                         max_level,
                         octree->global_extents);
 
-    log_trace("octree->n_points = %d\n", octree->n_points);
+    //log_trace("octree->n_points = %d\n", octree->n_points);
 
-    sprintf(filename, "dbg_octree_local_%4.4d.vtk", rank);
+    /*sprintf(filename, "dbg_octree_local_%4.4d.vtk", rank);
     _export_nodes (filename,
                    octree->octants->n_nodes,
                    octree->octants->codes,
                    octree->s,
-                   octree->d);
+                   octree->d);*/
 
-    sprintf(filename, "dbg_octree_pts_%4.4d.vtk", rank);
+    /*sprintf(filename, "dbg_octree_pts_%4.4d.vtk", rank);
     PDM_vtk_write_point_cloud(filename,
                               octree->n_points,
                               octree->points,
                               octree->points_gnum,
-                              NULL);
+                              NULL);*/
 
     int iblock = 0;
     for (int i = 0; i < octree->n_points; i++) {
@@ -6654,7 +6696,7 @@ PDM_para_octree_build
                          &send_n_pts,
                          &send_extents);
 
-      log_trace("_compress_octants >> n_local_nodes = %d\n", n_local_nodes);
+      //log_trace("_compress_octants >> n_local_nodes = %d\n", n_local_nodes);
 
       /*// expand extents
       const double eps = 1e-3;
@@ -6674,10 +6716,10 @@ PDM_para_octree_build
       PDM_MPI_Allgather (&n_local_nodes, 1, PDM_MPI_INT,
                          recv_count,     1, PDM_MPI_INT,
                          octree->comm);
-      PDM_log_trace_array_int(recv_count, n_ranks, "recv_count : ");
+      //PDM_log_trace_array_int(recv_count, n_ranks, "recv_count : ");
 
       octree->shared_rank_idx = PDM_array_new_idx_from_sizes_int (recv_count, n_ranks);
-      PDM_log_trace_array_int(octree->shared_rank_idx, n_ranks+1, "octree->shared_rank_idx : ");
+      //PDM_log_trace_array_int(octree->shared_rank_idx, n_ranks+1, "octree->shared_rank_idx : ");
 
       int n_shared_nodes = octree->shared_rank_idx[n_ranks];
       int *recv_shift = PDM_array_new_idx_from_sizes_int (recv_count, n_ranks);
@@ -6994,55 +7036,6 @@ PDM_para_octree_build
                                     range + range_children[i],
                                     n_points_children[i]);
         if (!is_pushed) {
-
-          for (int j = heap->top-1; j >= 0; j--) {
-            log_trace("heap[%d] : {L = %zu, X = %zu %zu %zu}, range = %d, n_points = %d\n",
-                      j,
-                      heap->codes[j].L,
-                      heap->codes[j].X[0],
-                      heap->codes[j].X[1],
-                      heap->codes[j].X[2],
-                      heap->range[j],
-                      heap->n_points[j]);
-          }
-          _export_nodes ("debug_heap.vtk",
-                         heap->top,
-                         heap->codes,
-                         octree->s,
-                         octree->d);
-
-          double extents[6];
-          int l = 1 << children[i].L;
-          double side = 1.0 / (double) l;
-          for (int j = 0; j < 3; j++) {
-            extents[j]   = octree->s[j] + side * octree->d[j] * children[i].X[j];
-            extents[j+3] = extents[j]   + side * octree->d[j];
-          }
-
-          PDM_g_num_t gnum[1] = {1};
-
-          PDM_vtk_write_boxes("debug_child.vtk",
-                              1,
-                              extents,
-                              gnum);
-
-          log_trace("children[%d] = {L = %zu, X = %zu %zu %zu}, range = %d, n_points = %d\n",
-                    i,
-                    children[i].L,
-                    children[i].X[0],
-                    children[i].X[1],
-                    children[i].X[2],
-                    range + range_children[i],
-                    n_points_children[i]);
-
-          char filename[999];
-          sprintf(filename, "debug_octree_%3.3d.vtk", rank);
-          _export_nodes (filename,
-                         octree->octants->n_nodes,
-                         octree->octants->codes,
-                         octree->s,
-                         octree->d);
-
           printf ("Internal error PDM_para_octree 4 : heap is full\n");
           exit(1);
         }
@@ -7288,7 +7281,7 @@ PDM_para_octree_build
     }
     printf("\n");
   }
-  if (1) {
+  if (0) {
     //const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     const char *pref = "";
     char filename[999];
