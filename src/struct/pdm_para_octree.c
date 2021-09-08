@@ -2492,6 +2492,14 @@ _block_partition
                                        weight,
                                        _G_morton_index,
                                        comm);
+  for (int i = 0; i <= n_ranks; i++) {
+    log_trace("_G_morton_index :: rank %d : L = %zu, X = %zu %zu %zu\n",
+              i,
+              _G_morton_index[i].L,
+              _G_morton_index[i].X[0],
+              _G_morton_index[i].X[1],
+              _G_morton_index[i].X[2]);
+  }
 
   free (order);
   free (weight);
@@ -6325,9 +6333,9 @@ PDM_para_octree_build
                            octree->points_code,
                            octree->d,
                            octree->s);
-  log_trace("octree->s = %f %f %f\noctree->d = %f %f %f\n",
+  /*log_trace("octree->s = %f %f %f\noctree->d = %f %f %f\n",
             octree->s[0], octree->s[1], octree->s[2],
-            octree->d[0], octree->d[1], octree->d[2]);
+            octree->d[0], octree->d[1], octree->d[2]);*/
 
   int *order = malloc (sizeof(int) * octree->n_points);
 
@@ -6512,9 +6520,36 @@ PDM_para_octree_build
      *
      *************************************************************************/
 
+    log_trace("point_octants->n_nodes = %d\n", point_octants->n_nodes);
+    char filename[999];
+    sprintf(filename, "dbg_point_octants_%4.4d.vtk", rank);
+    _export_nodes (filename,
+                   point_octants->n_nodes,
+                   point_octants->codes,
+                   octree->s,
+                   octree->d);
+
     octree->octants = _block_partition (point_octants,
                                         octree->comm,
                                         &octree->rank_octants_index);
+
+    for (int i = 0; i <= n_ranks; i++) {
+      log_trace("rank %d : L = %zu, X = %zu %zu %zu\n",
+                i,
+                octree->rank_octants_index[i].L,
+                octree->rank_octants_index[i].X[0],
+                octree->rank_octants_index[i].X[1],
+                octree->rank_octants_index[i].X[2]);
+    }
+
+    if (rank == 0) {
+      sprintf(filename, "dbg_rank_octants_index.vtk");
+      _export_nodes (filename,
+                     n_ranks + 1,
+                     octree->rank_octants_index,
+                     octree->s,
+                     octree->d);
+    }
 
     _octants_free (point_octants);
 
@@ -6535,11 +6570,49 @@ PDM_para_octree_build
                         max_level,
                         octree->global_extents);
 
+    log_trace("octree->n_points = %d\n", octree->n_points);
+
+    sprintf(filename, "dbg_octree_local_%4.4d.vtk", rank);
+    _export_nodes (filename,
+                   octree->octants->n_nodes,
+                   octree->octants->codes,
+                   octree->s,
+                   octree->d);
+
+    sprintf(filename, "dbg_octree_pts_%4.4d.vtk", rank);
+    PDM_vtk_write_point_cloud(filename,
+                              octree->n_points,
+                              octree->points,
+                              octree->points_gnum,
+                              NULL);
+
     int iblock = 0;
     for (int i = 0; i < octree->n_points; i++) {
       while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
                                       octree->points_code[i])) {
         iblock++;
+        if (iblock >= octree->octants->n_nodes) break;
+      }
+      if (iblock >= octree->octants->n_nodes) {
+        log_trace("i = %d, coord = %f %f %f, code = {L=%zu, X = %zu %zu %zu}, iblock = %d / %d\n",
+                  i,
+                  octree->points[3*i],
+                  octree->points[3*i+1],
+                  octree->points[3*i+2],
+                  octree->points_code[i].L,
+                  octree->points_code[i].X[0],
+                  octree->points_code[i].X[1],
+                  octree->points_code[i].X[2],
+                  iblock,
+                  octree->octants->n_nodes);
+
+        /*char filename[999];
+        sprintf(filename, "debug_octree_build_%3.3d.vtk", rank);
+        _export_nodes (filename,
+                       octree->octants->n_nodes,
+                       octree->octants->codes,
+                       octree->s,
+                       octree->d);*/
       }
       assert (iblock < octree->octants->n_nodes);
       octree->octants->n_points[iblock] += 1;
@@ -7215,7 +7288,7 @@ PDM_para_octree_build
     }
     printf("\n");
   }
-  if (1) {//octree->shared_rank_idx != NULL) {
+  if (1) {
     //const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     const char *pref = "";
     char filename[999];
@@ -7298,7 +7371,7 @@ PDM_para_octree_build
       }
     }
 
-    if (1) {
+    if (0) {
       const char *pref = "";
       char filename[999];
       sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
@@ -8662,7 +8735,7 @@ PDM_para_octree_single_closest_point
  double      *closest_octree_pt_dist2
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 
@@ -8788,16 +8861,19 @@ PDM_para_octree_single_closest_point
                                   &n_boxes,
                                   init_location_proc,
                                   bt_comm);
-    for (int i = 0; i < n_boxes; i++) {
-      log_trace("shared_box[%d], n_pts = %d, extents = %f %f %f   %f %f %f\n",
-                i,
-                octree->shared_pts_n[i],
-                octree->shared_pts_extents[6*i],
-                octree->shared_pts_extents[6*i+1],
-                octree->shared_pts_extents[6*i+2],
-                octree->shared_pts_extents[6*i+3],
-                octree->shared_pts_extents[6*i+4],
-                octree->shared_pts_extents[6*i+5]);
+
+    if (DEBUG) {
+      for (int i = 0; i < n_boxes; i++) {
+        log_trace("shared_box[%d], n_pts = %d, extents = %f %f %f   %f %f %f\n",
+                  i,
+                  octree->shared_pts_n[i],
+                  octree->shared_pts_extents[6*i],
+                  octree->shared_pts_extents[6*i+1],
+                  octree->shared_pts_extents[6*i+2],
+                  octree->shared_pts_extents[6*i+3],
+                  octree->shared_pts_extents[6*i+4],
+                  octree->shared_pts_extents[6*i+5]);
+      }
     }
 
     bt_shared = PDM_box_tree_create (max_tree_depth_shared,
@@ -8899,11 +8975,14 @@ PDM_para_octree_single_closest_point
             l = m;
         }
         int rank = l;
-        log_trace("pt coord = %f %f %f, inode = %d, rank = %d\n",
+
+        if (DEBUG) {
+          log_trace("pt coord = %f %f %f, inode = %d, rank = %d\n",
                   pts_coord[3*i],
                   pts_coord[3*i+1],
                   pts_coord[3*i+2],
                   inode, rank);
+        }
 
         rank_pt[i] = rank;
         send_count[rank]++;
