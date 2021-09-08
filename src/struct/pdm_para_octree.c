@@ -8662,7 +8662,7 @@ PDM_para_octree_single_closest_point
  double      *closest_octree_pt_dist2
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 

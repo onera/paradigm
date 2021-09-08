@@ -139,7 +139,7 @@ _closest_points_reverse_results
   PDM_MPI_Allreduce (&n_g_src, &_n_g_src, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, cls->comm);
   n_g_src = _n_g_src;
 
-  if (1) {
+  if (0) {
     for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
       PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part],
                                n_points[i_part],
