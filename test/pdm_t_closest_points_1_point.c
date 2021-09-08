@@ -223,9 +223,9 @@ main (int argc, char *argv[])
     for (int i = 0; i < n_tgt; i++) {
       log_trace("tgt "PDM_FMT_G_NUM" coord = %f %f %f\n",
                 tgt_g_num[i],
-                tgt_coord[6*i + 0],
-                tgt_coord[6*i + 1],
-                tgt_coord[6*i + 2]);
+                tgt_coord[3*i + 0],
+                tgt_coord[3*i + 1],
+                tgt_coord[3*i + 2]);
     }
   }
 
@@ -291,12 +291,17 @@ main (int argc, char *argv[])
                                    n_tgt,
                                    "closest_src_gnum : ");
 
+  for (int i = 0; i < closest_src_idx[n_tgt]; i++) {
+    //assert(closest_src_gnum[i] == 1);
+  }
+
   PDM_closest_points_free (clsp);
 
   free (tgt_coord);
   free (tgt_g_num);
 
   if (i_rank == 0) {
+    printf("-- End\n");
     free (src_coord);
     free (src_g_num);
   }

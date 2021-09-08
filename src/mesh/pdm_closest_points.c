@@ -421,6 +421,23 @@ PDM_closest_point_t *cls
 
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
+  int n_rank;
+  PDM_MPI_Comm_rank (cls->comm, &n_rank);
+
+  /*
+   *  Make sure we have at least as many source points as requested closest points
+   */
+  PDM_g_num_t ln_src_pts = 0;
+  for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
+    ln_src_pts += cls->src_cloud->n_points[i_part];
+  }
+
+  PDM_g_num_t gn_src_pts;
+  PDM_MPI_Allreduce (&ln_src_pts, &gn_src_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cls->comm);
+
+  assert (gn_src_pts >= cls->n_closest);
+
+
 
   const int depth_max = 31;
   const int points_in_leaf_max = cls->n_closest;

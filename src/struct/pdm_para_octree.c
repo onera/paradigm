@@ -7520,8 +7520,13 @@ PDM_para_octree_closest_points
  double      *closest_octree_pts_dist2
  )
 {
+  int DEBUG = 0;
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
+
+  if (DEBUG) {
+    log_trace("octree->n_points = %d\n", octree->n_points);
+  }
 
   float f_copy_threshold = 1.15;
   float f_max_copy = 0.1;
@@ -7591,6 +7596,20 @@ PDM_para_octree_closest_points
                                   &n_boxes,
                                   init_location_proc,
                                   bt_comm);
+
+    if (DEBUG) {
+      for (int i = 0; i < n_boxes; i++) {
+        log_trace("shared_box[%d], n_pts = %d, extents = %f %f %f   %f %f %f\n",
+                  i,
+                  octree->shared_pts_n[i],
+                  octree->shared_pts_extents[6*i],
+                  octree->shared_pts_extents[6*i+1],
+                  octree->shared_pts_extents[6*i+2],
+                  octree->shared_pts_extents[6*i+3],
+                  octree->shared_pts_extents[6*i+4],
+                  octree->shared_pts_extents[6*i+5]);
+      }
+    }
 
     bt_shared = PDM_box_tree_create (max_tree_depth_shared,
                                      max_boxes_leaf_shared,
@@ -7669,6 +7688,15 @@ PDM_para_octree_closest_points
             l = m;
         }
         int rank = l;
+
+        if (DEBUG) {
+          log_trace("pt coord = %f %f %f, inode = %d, rank = %d\n",
+                  pts_coord[3*i],
+                  pts_coord[3*i+1],
+                  pts_coord[3*i+2],
+                  inode, rank);
+        }
+
         rank_pt[i] = rank;
         send_count[rank]++;
       }
@@ -7694,6 +7722,10 @@ PDM_para_octree_closest_points
         send_count[rank_pt[i]]++;
       }
       free (pts_code);
+    }
+
+    if (DEBUG) {
+      PDM_log_trace_array_int(rank_pt, n_pts, "rank_pt : ");
     }
 
     /*   3) Exchange send/recv counts */
@@ -8041,6 +8073,9 @@ PDM_para_octree_closest_points
     }
   }
 
+  if (DEBUG) {
+    PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts1, "_closests_pt_g_num 1 : ");
+  }
 
   if (n_rank == 1) {
     return;
@@ -8207,6 +8242,13 @@ PDM_para_octree_closest_points
         close_ranks[i] = octree->used_rank[j];
       }
     }
+  }
+
+  if (DEBUG) {
+    PDM_log_trace_connectivity_int(close_ranks_idx,
+                                   close_ranks,
+                                   n_pts1,
+                                   "close_ranks : ");
   }
 
   PDM_array_reset_int(send_count, n_rank, 0);
@@ -8590,6 +8632,10 @@ PDM_para_octree_closest_points
     }
   }
   free (pts_coord2);
+
+  if (DEBUG) {
+    PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts2, "_closest_pts_g_num 2 : ");
+  }
 
   if (copied_ranks2 != NULL) {
     free (copied_ranks2);
@@ -9670,7 +9716,6 @@ PDM_para_octree_single_closest_point
   if (DEBUG) {
     PDM_log_trace_connectivity_int(close_ranks_idx,
                                    close_ranks,
-
                                    n_pts1,
                                    "close_ranks : ");
   }
