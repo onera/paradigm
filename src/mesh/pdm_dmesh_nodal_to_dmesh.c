@@ -1172,7 +1172,8 @@ static
 void
 _generate_edges_from_dmesh_nodal
 (
-  _pdm_link_dmesh_nodal_to_dmesh_t *link
+  _pdm_link_dmesh_nodal_to_dmesh_t *link,
+  int                               post_treat_result
 )
 {
   PDM_dmesh_nodal_t* dmesh_nodal = link->dmesh_nodal;
@@ -1337,7 +1338,7 @@ _generate_edges_from_dmesh_nodal
 
 // Post_treat
 
-  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0) {
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
 
     PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
     int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
@@ -1713,8 +1714,20 @@ const PDM_ownership_t owner
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     dmesh_nodal_to_dm->link[i_mesh] = _link_dmesh_nodal_to_dmesh_init(owner);
   }
+  dmesh_nodal_to_dm->post_treat_result = 1;
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmesh_nodal_to_dm;
+}
+
+void
+PDM_dmesh_nodal_to_dmesh_set_post_treat_result
+(
+ PDM_dmesh_nodal_to_dmesh_t *dmesh_nodal_to_dm,
+ int                         post_treat_result
+)
+{
+  dmesh_nodal_to_dm->post_treat_result = post_treat_result;
+
 }
 
 /**
@@ -1805,7 +1818,7 @@ PDM_dmesh_nodal_to_dmesh_compute
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
         {
-          _generate_edges_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh]);
+          _generate_edges_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh], dmesh_nodal_to_dm->post_treat_result );
         }
         break;
     }

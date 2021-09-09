@@ -77,6 +77,7 @@ struct _pdm_dmesh_nodal_to_dmesh_t {
   int                  n_mesh;                  /*!< Number of meshes to manages                */
 
   _pdm_link_dmesh_nodal_to_dmesh_t **link;
+  int                                post_treat_result;
 
 };
 

@@ -124,6 +124,12 @@ const PDM_MPI_Comm    comm,
 const PDM_ownership_t owner
 );
 
+void
+PDM_dmesh_nodal_to_dmesh_set_post_treat_result
+(
+ PDM_dmesh_nodal_to_dmesh_t *dmesh_nodal_to_dm,
+ int                         post_treat_result
+);
 
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
