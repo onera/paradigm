@@ -26,6 +26,7 @@
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_line.h"
 #include "pdm_triangle.h"
 #include "pdm_polygon.h"
 #include "pdm_timer.h"
@@ -926,8 +927,20 @@ PDM_dist_cloud_surf_compute
 
       int elt_vtx_n = block_elt_vtx_n[i1];// / 3;
 
+      /* Line */
+      if (elt_vtx_n == 2) {
+        for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
+          double t;
+          _dist2[i] = PDM_line_distance (_pts_coord + 3*i,
+                                         _vtx_coord,
+                                         _vtx_coord + 3,
+                                         &t,
+                                         _proj + 3*i);
+        } // End of loop on points
+      }
+
       /* Triangle */
-      if (elt_vtx_n == 3) {
+      else if (elt_vtx_n == 3) {
         for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
           PDM_triangle_status_t status =
             PDM_triangle_evaluate_position (_pts_coord + 3*i,
