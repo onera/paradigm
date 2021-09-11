@@ -1479,6 +1479,7 @@ _translate_element_group_to_entity
              (void ***)  &part_group_data);
   free (part_stride[0]);
   free (part_stride);
+  free(block_stride);
 
   PDM_g_num_t* _part_group_data = part_group_data[0];
 
