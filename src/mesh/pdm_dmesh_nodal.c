@@ -28,6 +28,8 @@
 #include "pdm_para_graph_dual.h"
 #include "pdm_block_to_part.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1407,6 +1409,101 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
 }
 
 
+void
+PDM_dmesh_nodal_dump_vtk
+(
+       PDM_dmesh_nodal_t   *dmn,
+       PDM_geometry_kind_t  geom_kind,
+ const char                *filename_patter
+)
+{
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmn->comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->comm, &n_rank);
+
+  int* sections_id = PDM_DMesh_nodal_sections_id_get(dmn, geom_kind);
+  int n_section    = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
+
+  for(int i_section = 0; i_section < n_section; ++i_section) {
+
+    int id_section = sections_id[i_section];
+    const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
+    int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
+    PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
+    PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
+
+    int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
+    PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
+
+    int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt    , 1);
+    dconnec_idx[0] = 0;
+    for(int i = 0; i < n_elt; ++i) {
+      dconnec_idx[i+1] = dconnec_idx[i] + strid;
+      delmt_ln_to_gn[i] = delmt_distribution[i_rank] + i + 1;
+    }
+
+    PDM_g_num_t *pvtx_ln_to_gn;
+    int         *pcell_vtx_idx;
+    int         *pcell_vtx;
+    int          pn_vtx;
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(dmn->comm,
+                                                             delmt_distribution,
+                                                             dconnec_idx,
+                                                             dconnec,
+                                                             n_elt,
+                                    (const PDM_g_num_t *)    delmt_ln_to_gn,
+                                                            &pn_vtx,
+                                                            &pvtx_ln_to_gn,
+                                                            &pcell_vtx_idx,
+                                                            &pcell_vtx);
+
+    /*
+     * Coordinates
+     */
+    PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    // int          dn_vtx   = PDM_DMesh_nodal_n_vtx_get(dln->dmesh_nodal_in);
+    // assert(dn_vtx == (vtx_distrib[i_rank+1]-vtx_distrib[i_rank]));
+    double** tmp_pvtx_coord = NULL;
+    PDM_part_dcoordinates_to_pcoordinates(dmn->comm,
+                                          1,
+                                          vtx_distrib,
+                                          dvtx_coord,
+                                          &pn_vtx,
+                   (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                          &tmp_pvtx_coord);
+
+    double* pvtx_coord_out = tmp_pvtx_coord[0];
+    /*
+     *  Dump
+     */
+    char filename[999];
+    sprintf(filename, "%s_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               pn_vtx,
+                               pvtx_coord_out,
+                               pvtx_ln_to_gn,
+                               t_elt,
+                               n_elt,
+                               pcell_vtx,
+                               delmt_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
+
+    free(tmp_pvtx_coord);
+    free(pvtx_ln_to_gn);
+    free(pcell_vtx_idx);
+    free(pcell_vtx);
+
+    free(dconnec_idx);
+    free(delmt_ln_to_gn);
+
+    free(pvtx_coord_out);
+  }
+}
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

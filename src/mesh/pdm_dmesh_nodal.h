@@ -778,6 +778,15 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
  PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
+
+void
+PDM_dmesh_nodal_dump_vtk
+(
+       PDM_dmesh_nodal_t   *dmn,
+       PDM_geometry_kind_t  geom_kind,
+ const char                *filename_patter
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

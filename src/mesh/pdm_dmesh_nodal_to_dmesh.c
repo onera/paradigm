@@ -948,9 +948,12 @@ _generate_faces_from_dmesh_nodal
   /* Memory is deallocated inside */
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
+
+  int n_section_child = dmesh_nodal->surfacic->n_section;
+  PDM_g_num_t n_g_child = dmesh_nodal->surfacic->section_distribution[n_section_child];
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
-                                    dmesh_nodal->surfacic->section_distribution[dmesh_nodal->n_rank],
+                                    n_g_child,
                                     n_part,
                                     n_face_elt_tot,
                                     delmt_face,
@@ -1125,9 +1128,12 @@ _generate_faces_from_dmesh_nodal
 
     int n_part_tmp = 1;
     abort(); // Pas sure du tout !!!
+
+    int n_section_child_ridge = dmesh_nodal->ridge->n_section;
+    PDM_g_num_t n_g_child_ridge = dmesh_nodal->ridge->section_distribution[n_section_child_ridge];
     PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                       dmesh_nodal->n_vtx_abs,
-                                      dmesh_nodal->ridge->section_distribution[dmesh_nodal->n_rank],
+                                      n_g_child_ridge,
                                       n_part_tmp,
                                       &n_edge_elt_tot,
                                       &dface_edge,
@@ -1336,8 +1342,7 @@ _generate_edges_from_dmesh_nodal
                                     dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
-// Post_treat
-
+  // Post_treat
   if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
 
     PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
@@ -1519,7 +1524,7 @@ _translate_element_group_to_faces
                                        dmesh_nodal->surfacic->dgroup_elmt,
                                        dmesh_nodal->surfacic->dgroup_elmt_idx,
                                        dmesh_nodal->surfacic->n_group_elmt,
-                                       dmesh_nodal->ridge->dparent_idx,
+                                       dmesh_nodal->surfacic->dparent_idx,
                                        dmesh_nodal->surfacic->dparent_gnum,
                                        &dface_bound,
                                        &dface_bound_idx);
