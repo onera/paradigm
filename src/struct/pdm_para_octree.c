@@ -5158,7 +5158,7 @@ _points_inside_boxes_explicit
   int intersect;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
-    int DEBUG = (box_g_num[ibox] == 2793384);//
+    int DEBUG = 0; //(box_g_num[ibox] == 2793384);//
     _pts_idx[ibox+1] = _pts_idx[ibox];
 
     const double *_box_extents = box_extents + 6*ibox;
@@ -5190,16 +5190,17 @@ _points_inside_boxes_explicit
       if (DEBUG) {
         printf("    add pts with lnum %d through %d\n", nodes[0].range, nodes[0].range + nodes[0].n_points);
       }
-      int new_size = tmp_size + nodes[0].n_points;
+      int new_size = _pts_idx[ibox+1] + nodes[0].n_points;
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
         *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
         _pts_l_num = *pts_l_num;
 
-        for (int j = 0; j < nodes[0].n_points; j++) {
-          _pts_l_num[_pts_idx[ibox+1]++] = nodes[0].range + j;
-        }
+      }
+
+      for (int j = 0; j < nodes[0].n_points; j++) {
+        _pts_l_num[_pts_idx[ibox+1]++] = nodes[0].range + j;
       }
 
       continue;
@@ -5293,16 +5294,16 @@ _points_inside_boxes_explicit
                 printf("    add pts with lnum %d through %d\n", _child->range, _child->range + _child->n_points);
               }
 
-              int new_size = tmp_size + _child->n_points;
+              int new_size = _pts_idx[ibox+1] + _child->n_points;
 
               if (tmp_size <= new_size) {
                 tmp_size = PDM_MAX (2*tmp_size, new_size);
                 *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
                 _pts_l_num = *pts_l_num;
+              }
 
-                for (int j = 0; j < _child->n_points; j++) {
-                  _pts_l_num[_pts_idx[ibox+1]++] = _child->range + j;
-                }
+              for (int j = 0; j < _child->n_points; j++) {
+                _pts_l_num[_pts_idx[ibox+1]++] = _child->range + j;
               }
             }
 
