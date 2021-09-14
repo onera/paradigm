@@ -18,6 +18,7 @@
 #include "pdm_error.h"
 #include "pdm_geom_elem.h"
 #include "pdm_priv.h"
+#include "pdm_predicate.h"
 
 /*============================================================================
  * Type definitions
@@ -123,6 +124,56 @@ _read_args(int            argc,
 }
 
 
+
+
+
+
+
+
+static void
+_robust_surface_vector
+(
+ int    *face_vtx,
+ double *vtx_coord,
+ double *surf_vector
+ )
+{
+  double a[2], b[2], c[2];
+
+  int v1 = face_vtx[0] - 1;
+  int v2 = face_vtx[1] - 1;
+  int v3 = face_vtx[2] - 1;
+
+  a[0] = vtx_coord[3*v1 + 1];
+  a[1] = vtx_coord[3*v1 + 2];
+  b[0] = vtx_coord[3*v2 + 1];
+  b[1] = vtx_coord[3*v2 + 2];
+  c[0] = vtx_coord[3*v3 + 1];
+  c[1] = vtx_coord[3*v3 + 2];
+  surf_vector[0] = PDM_predicate_orient2d (a, b, c);
+
+
+  a[0] = vtx_coord[3*v1 + 2];
+  a[1] = vtx_coord[3*v1 + 0];
+  b[0] = vtx_coord[3*v2 + 2];
+  b[1] = vtx_coord[3*v2 + 0];
+  c[0] = vtx_coord[3*v3 + 2];
+  c[1] = vtx_coord[3*v3 + 0];
+  surf_vector[1] = PDM_predicate_orient2d (a, b, c);
+
+
+  a[0] = vtx_coord[3*v1 + 0];
+  a[1] = vtx_coord[3*v1 + 1];
+  b[0] = vtx_coord[3*v2 + 0];
+  b[1] = vtx_coord[3*v2 + 1];
+  c[0] = vtx_coord[3*v3 + 0];
+  c[1] = vtx_coord[3*v3 + 1];
+  surf_vector[2] = PDM_predicate_orient2d (a, b, c);
+}
+
+
+
+
 /**
  *
  * \brief  Main
@@ -147,6 +198,8 @@ int main(int argc, char *argv[])
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #endif
 #endif
+
+  PDM_predicate_exactinit();
 
   /*
    *  Read args
@@ -215,17 +268,26 @@ int main(int argc, char *argv[])
   /*
    *
    */
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
     // dvtx_coord[3*i_vtx  ] *= 1.;
-    dvtx_coord[3*i_vtx+1] *= 40000.;
-    dvtx_coord[3*i_vtx+2] *= 1840000.;
+    dvtx_coord[3*i_vtx+1] *= 40.;
+    dvtx_coord[3*i_vtx+2] *= 1840.;
 
     double x = dvtx_coord[3*i_vtx];
-    dvtx_coord[3*i_vtx+2] += 0.3 * cos(x * PDM_PI);
+    double y = dvtx_coord[3*i_vtx+1];
+    double z = dvtx_coord[3*i_vtx+2];
+    //dvtx_coord[3*i_vtx+2] += 0.3 * cos(x * PDM_PI);
+    for (int j = 0; j < 3; j++) {
+      dvtx_coord[3*i_vtx+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
   }
 
   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
@@ -293,12 +355,18 @@ int main(int argc, char *argv[])
     int n_vtx_per_face = dface_vtx_idx[i_face+1] - dface_vtx_idx[i_face];
     assert(n_vtx_per_face == 3);
 
+    #if 1
+    _robust_surface_vector (&pface_vtx[dface_vtx_idx[i_face]],
+                            dvtx_coord,
+                            &surface_vector[3*i_face]);
+    #else
     PDM_geom_elem_tria_surface_vector(1,
                                       &pface_vtx[dface_vtx_idx[i_face]],
                                       dvtx_coord,
                                       &surface_vector[3*i_face],
                                       NULL,
                                       NULL);
+    #endif
 
     int i_cell_l = pface_cell[2*i_face  ] - 1;
     int i_cell_r = pface_cell[2*i_face+1] - 1;
@@ -329,6 +397,40 @@ int main(int argc, char *argv[])
                                                                 check_closed_volume[3*i_cell+2]);
 
   }
+
+
+  /*printf("\n\n\n\n\n");
+
+
+  for(int i_cell = 0; i_cell < dn_cell; ++i_cell ){
+    printf("cell[%i] :\n", i_cell);
+    int faces[4], sign[4], idx = 0;
+    for (int j = dcell_face_idx[i_cell]; j < dcell_face_idx[i_cell+1]; j++) {
+      int iface = (int) (dcell_face[j] - 1);
+      printf("    (%20.16e,  %20.16e,  %20.16e) \n", i_cell,
+                                                                norm2, check_closed_volume[3*i_cell  ],
+                                                                check_closed_volume[3*i_cell+1],
+                                                                check_closed_volume[3*i_cell+2]);
+    }
+
+    for (int j = 0; j < 3; j++) {
+      check_closed_volume[3*i_cell+j] =
+        surface_vector[3*faces[0]+j] +
+        surface_vector[3*faces[1]+j] +
+        surface_vector[3*faces[2]+j] +
+        surface_vector[3*faces[3]+j];
+    }
+
+    double norm2 = sqrt(  check_closed_volume[3*i_cell  ]*check_closed_volume[3*i_cell  ]
+                        + check_closed_volume[3*i_cell+1]*check_closed_volume[3*i_cell+1]
+                        + check_closed_volume[3*i_cell+2]*check_closed_volume[3*i_cell+2]);
+
+    printf("norm[%i] =  %20.16e ( %20.16e,  %20.16e,  %20.16e) \n", i_cell,
+                                                                norm2, check_closed_volume[3*i_cell  ],
+                                                                check_closed_volume[3*i_cell+1],
+                                                                check_closed_volume[3*i_cell+2]);
+                                                                }*/
+
 
   free(pface_cell);
   free(pface_vtx);
