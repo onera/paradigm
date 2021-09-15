@@ -1864,10 +1864,14 @@ PDM_mesh_location_mesh_global_data_set
 )
 {
 
-  if ((ml->shared_nodal == 0) && (ml->mesh_nodal != NULL)) {
-    PDM_Mesh_nodal_free (ml->mesh_nodal);
+  if (ml->shared_nodal == 0) {
+    if(ml->mesh_nodal != NULL) {
+      PDM_Mesh_nodal_free (ml->mesh_nodal);
+    }
     ml->mesh_nodal = PDM_Mesh_nodal_create (n_part, ml->comm);
   }
+
+
 
   if(ml->shared_nodal == 0) {
     ml->face_vtx_n   = malloc(sizeof(PDM_l_num_t *) * n_part);

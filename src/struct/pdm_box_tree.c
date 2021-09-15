@@ -4079,17 +4079,17 @@ PDM_box_tree_min_dist_max_box
                                   n_pts,
                                   pts,
                                   _pts);
-    for (int i = 0; i < n_pts; i++) {
-      const double *_pt_origin =  pts + 3 * i;
-      double *_pt              = _pts + 3 * i;
-      log_trace("pt = %f %f %f >> %f %f %f\n",
-                _pt_origin[0],
-                _pt_origin[1],
-                _pt_origin[2],
-                _pt[0],
-                _pt[1],
-                _pt[2]);
-    }
+    // for (int i = 0; i < n_pts; i++) {
+    //   const double *_pt_origin =  pts + 3 * i;
+    //   double *_pt              = _pts + 3 * i;
+    //   log_trace("pt = %f %f %f >> %f %f %f\n",
+    //             _pt_origin[0],
+    //             _pt_origin[1],
+    //             _pt_origin[2],
+    //             _pt[0],
+    //             _pt[1],
+    //             _pt[2]);
+    // }
   /* } */
 
   double extents2[2*dim];
