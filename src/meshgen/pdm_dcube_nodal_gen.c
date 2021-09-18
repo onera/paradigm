@@ -72,7 +72,7 @@ _decompose_into_bar_i
                                         id_bar,
                                         dcube->dn_quad_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 static
@@ -119,7 +119,7 @@ _decompose_into_bar_j
                                         id_bar,
                                         dcube->dn_quad_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
 }
 
@@ -172,7 +172,7 @@ _decompose_into_quad_i
                                         id_quad,
                                         dcube->dn_quad_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 /*
@@ -222,7 +222,7 @@ _decompose_into_quad_j
                                         id_quad,
                                         dcube->dn_quad_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 /*
@@ -271,7 +271,7 @@ _decompose_into_quad_k
                                         id_quad,
                                         dcube->dn_quad_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 /*
@@ -341,7 +341,7 @@ _decompose_into_tri_i
                                         id_tri,
                                         dn_tri_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 /*
@@ -412,7 +412,7 @@ _decompose_into_tri_j
                                         id_tri,
                                         dn_tri_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -483,7 +483,7 @@ _decompose_into_tri_k
                                         id_tri,
                                         dn_tri_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -541,7 +541,7 @@ _decompose_into_tri2_k
                                         id_tri,
                                         dn_tri_seq_lim,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -640,7 +640,7 @@ _generate_tri_from_hexa
                                         id_tri,
                                         dn_tri_cell,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
   int         *delmt_group_idx = (int         *) malloc( (4 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -670,12 +670,12 @@ _generate_tri_from_hexa
   //                                        4,
   //                                        delmt_group_idx,
   //                                        delmt_group,
-  //                                        dcube->owner_for_dmesh_nodal);
+  //                                        PDM_OWNERSHIP_KEEP);
   PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
                                   4,
                                   delmt_group_idx,
                                   delmt_group,
-                                  dcube->owner_for_dmesh_nodal);
+                                  PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -723,7 +723,7 @@ _generate_quad_from_hexa
                                         id_quad,
                                         dn_quad_cell,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
   int         *delmt_group_idx = (int         *) malloc( (4 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -753,7 +753,7 @@ _generate_quad_from_hexa
                                   4,
                                   delmt_group_idx,
                                   delmt_group,
-                                  dcube->owner_for_dmesh_nodal);
+                                  PDM_OWNERSHIP_KEEP);
 }
 
 static
@@ -862,7 +862,7 @@ _generate_tetra_from_hexa
                                         id_tetra,
                                         dn_tetra_cell,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -901,7 +901,7 @@ _generate_tetra_from_hexa
                                   6,
                                   delmt_group_idx,
                                   delmt_group,
-                                  dcube->owner_for_dmesh_nodal);
+                                  PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -959,7 +959,7 @@ _generate_prism_from_hexa
                                         id_prism,
                                         dn_prism_cell,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
   // Prism = 4 * quad + 2 * tri
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
@@ -998,7 +998,7 @@ _generate_prism_from_hexa
                                   6,
                                   delmt_group_idx,
                                   delmt_group,
-                                  dcube->owner_for_dmesh_nodal);
+                                  PDM_OWNERSHIP_KEEP);
 
 }
 
@@ -1047,7 +1047,7 @@ _generate_hexa_from_hexa
                                         id_hexa,
                                         dcube->dn_hexa_cell,
                                         delmt_vtx,
-                                        dcube->owner_for_dmesh_nodal);
+                                        PDM_OWNERSHIP_KEEP);
 
   // Hexa = que des quad aux bords
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
@@ -1085,7 +1085,7 @@ _generate_hexa_from_hexa
                                   6,
                                   delmt_group_idx,
                                   delmt_group,
-                                  dcube->owner_for_dmesh_nodal);
+                                  PDM_OWNERSHIP_KEEP);
 
 }
 
@@ -1144,7 +1144,7 @@ const double                zero_z,
   dcube->owner     = owner;
 
   // Si l'utilisateur prends les résulats, c'est à travers dmesh_nodal
-  dcube->owner_for_dmesh_nodal = owner;
+  // PDM_OWNERSHIP_KEEP = owner;
 
   int dim = 3;
   if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 ) {
@@ -1186,7 +1186,7 @@ const double                zero_z,
   PDM_DMesh_nodal_coord_set(dcube->dmesh_nodal,
                             dcube->dn_vtx,
                             dvtx_coord,
-                            dcube->owner_for_dmesh_nodal); /* Le responsable de la mémoire est le dmesh_nodal */
+                            PDM_OWNERSHIP_KEEP); /* Le responsable de la mémoire est le dmesh_nodal */
 
   PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dcube->dmesh_nodal);
 

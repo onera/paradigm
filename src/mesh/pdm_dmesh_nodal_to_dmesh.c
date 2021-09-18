@@ -547,7 +547,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                (void **) &_tmp_parent_gnum,
                          &blk_strid,
                (void **) dparent_gnum);
-  PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
+  // PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
 
   free(blk_strid);
   s_block_data = PDM_part_to_block_exch(ptb,
@@ -558,9 +558,9 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                (void **) &_tmp_parent_sign,
                          &blk_strid,
                (void **) dparent_sign);
-  PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
+  // PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
 
-  log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
+  // log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
   *delmt_child_distrib = PDM_part_to_block_adapt_partial_block_to_block (ptb,
                                                                          &blk_strid,
                                                                          n_g_child);
@@ -568,7 +568,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int dn_elmt_child = (int) ((*delmt_child_distrib)[i_rank+1] - (*delmt_child_distrib)[i_rank]);
   *dparent_idx = PDM_array_new_idx_from_sizes_int (blk_strid,
                                                    dn_elmt_child);
-  PDM_log_trace_array_int(*dparent_idx, dn_elmt_child+1, "dparent_idx : ");
+  // PDM_log_trace_array_int(*dparent_idx, dn_elmt_child+1, "dparent_idx : ");
 
 
   PDM_part_to_block_free(ptb);
@@ -1305,10 +1305,10 @@ _generate_edges_from_dmesh_nodal
 
   int dn_ridge = (int) (dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank+1] -
                         dmesh_nodal->ridge->delmt_child_distrib[dmesh_nodal->i_rank]);
-  PDM_log_trace_connectivity_long (dmesh_nodal->ridge->dparent_idx,
-                                   dmesh_nodal->ridge->dparent_gnum,
-                                   dn_ridge,
-                                   "dmesh_nodal->ridge->dparent_gnum :");
+  // PDM_log_trace_connectivity_long (dmesh_nodal->ridge->dparent_idx,
+  //                                  dmesh_nodal->ridge->dparent_gnum,
+  //                                  dn_ridge,
+  //                                  "dmesh_nodal->ridge->dparent_gnum :");
   free(n_edge_elt_tot    );
   free(delmt_edge        );
   free(dparent_elmt_pos  );

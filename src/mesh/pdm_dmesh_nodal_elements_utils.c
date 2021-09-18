@@ -1990,7 +1990,7 @@ PDM_sections_decompose_edges
 
     const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
 
-    if(1 == 1) {
+    if(0 == 1) {
       printf("i_section = %i [%i] \n", i_section, n_section);
       printf("id_section = %i \n", id_section);
       printf("distrib[%i] = "PDM_FMT_G_NUM" \n", dmn_elts->i_rank, distrib[dmn_elts->i_rank]);
