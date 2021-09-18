@@ -778,6 +778,16 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
  PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
+void
+PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
+(
+ PDM_dmesh_nodal_t   *dmn_in,
+ PDM_dmesh_nodal_t   *dmn_out,
+ PDM_geometry_kind_t  geom_kind,
+ PDM_g_num_t         *dparent_vtx_distrib,
+ int                 *blk_parent_to_new_vtx_gnum_idx,
+ PDM_g_num_t         *blk_parent_to_new_vtx_gnum
+);
 
 void
 PDM_dmesh_nodal_dump_vtk

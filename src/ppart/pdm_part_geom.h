@@ -112,6 +112,15 @@ PDM_dreorder_from_coords
  PDM_MPI_Comm     comm
 );
 
+void
+PDM_dreorder_from_lenght
+(
+ int              dim,
+ PDM_g_num_t     *distrib_in,
+ double          *lenght,
+ PDM_g_num_t     *ln_to_gn,
+ PDM_MPI_Comm     comm
+);
 
 #ifdef __cplusplus
 }
