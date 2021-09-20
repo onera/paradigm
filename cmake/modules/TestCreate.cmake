@@ -20,6 +20,7 @@ function(test_c_create name n_proc)
    target_link_libraries(${name} ${LINK_LIBRARIES})
    #if(mmg_FOUND)
    #  target_link_libraries(${name} Mmg::libmmg2d_so)
+   target_link_libraries(${name} LAPACK::LAPACK)
    #endif()
    install(TARGETS ${name} RUNTIME DESTINATION bin)
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}

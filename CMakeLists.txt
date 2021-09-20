@@ -262,6 +262,7 @@ endif ()
 # Check dependecies
 #------------------------------------------------------------------------------
 
+find_package(LAPACK)
 if (PDM_IN_CWP)
 
   # Checck SCOTCH an ParMETIS
