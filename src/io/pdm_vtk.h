@@ -118,6 +118,21 @@ PDM_vtk_write_std_elements
  const int                  *elt_ifield[]
  );
 
+
+
+void
+PDM_vtk_write_ellipses
+(
+ const char        *filename,
+ const int          n_ellipse,
+ const double      *center,
+ const double      *axes,
+ const double      *radii,
+ const PDM_g_num_t *g_num,
+ const int         *color,
+ const int          resolution
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -486,3 +486,76 @@ PDM_vtk_write_std_elements
 
   fclose(f);
 }
+
+
+
+
+
+void
+PDM_vtk_write_ellipses
+(
+ const char        *filename,
+ const int          n_ellipse,
+ const double      *center,
+ const double      *axes,
+ const double      *radii,
+ const PDM_g_num_t *g_num,
+ const int         *color,
+ const int          resolution
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "ellipses\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  double step = 2. * PDM_PI / (double) (resolution - 1);
+
+  fprintf(f, "POINTS %d double\n", n_ellipse * resolution);
+  for (int i = 0; i < n_ellipse; i++) {
+    for (int j = 0; j < resolution; j++) {
+      double x = radii[2*i  ] * cos(j*step);
+      double y = radii[2*i+1] * sin(j*step);
+      fprintf(f, "%f %f %f\n",
+              center[3*i    ] + x*axes[6*i  ] + y*axes[6*i+3],
+              center[3*i + 1] + x*axes[6*i+1] + y*axes[6*i+4],
+              center[3*i + 2] + x*axes[6*i+2] + y*axes[6*i+5]);
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_ellipse, n_ellipse * (resolution + 1));
+  for (int i = 0; i < n_ellipse; i++) {
+    fprintf(f, "%d \n", resolution);
+    for (int j = 0; j < resolution-1; j++) {
+      fprintf(f, "%d ", resolution*i + j);
+    }
+    fprintf(f, "%d\n", resolution*i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_ellipse);
+  for (int i = 0; i < n_ellipse; i++) {
+    fprintf(f, "4\n");
+  }
+
+  if (g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_ellipse);
+    fprintf(f, "SCALARS gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_ellipse; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", g_num[i]);
+    }
+  }
+
+  else if (color != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_ellipse);
+    fprintf(f, "SCALARS color long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_ellipse; i++) {
+      fprintf(f, "%d\n", color[i]);
+    }
+  }
+
+  fclose(f);
+}
