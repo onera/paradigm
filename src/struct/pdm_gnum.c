@@ -1313,11 +1313,19 @@ PDM_gnum_compute
  PDM_gen_gnum_t  *gen_gnum
 )
 {
-  if (gen_gnum->coords != NULL) {
+  //Detect if geometric or topologic -- works if a procs holds no partitions
+  int from_coords = (gen_gnum->coords != NULL);
+  int from_parent = (gen_gnum->parent != NULL);
+  int from_coords_g, from_parent_g;
+  PDM_MPI_Allreduce(&from_coords, &from_coords_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_parent, &from_parent_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+
+  assert (from_coords_g * from_parent_g == 0);
+
+  if (from_coords_g != 0) {
     _gnum_from_coords_compute (gen_gnum);
   }
-
-  else if (gen_gnum->parent != NULL) {
+  else if (from_parent_g != 0) {
     _gnum_from_parent_compute (gen_gnum);
   }
 
