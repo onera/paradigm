@@ -1429,9 +1429,9 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
 
   /* For all section we update connectivity */
   int n_section = dmne_in->n_section;
-  for(int i = 0; i < n_section; ++i) {
+  for(int i_section = 0; i_section < n_section; ++i_section) {
 
-    int id_section = dmne_in->sections_id[i];
+    int id_section = dmne_in->sections_id[i_section];
     int                   n_elt     = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne_in, id_section);
     PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section);
     PDM_Mesh_nodal_elt_t  t_elt     = PDM_DMesh_nodal_elmts_section_type_get (dmne_in, id_section);
@@ -1451,7 +1451,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
       dvtx_old_to_n[i] = blk_parent_to_new_vtx_gnum_idx[i+1] - blk_parent_to_new_vtx_gnum_idx[i];
     }
 
-    int stride_one = 1;
+    // int stride_one = 1;
     int         **tmp_delmt_vtx_new_n = NULL;
     PDM_g_num_t **tmp_delmt_vtx_new = NULL;
     PDM_block_to_part_exch2 (btp_update_elmts_vtx,

@@ -584,8 +584,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange in origin absolute numbering
    */
-  PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
-  PDM_log_trace_array_long(_tmp_missing_parent_gnum, i_abs_missing, "_tmp_missing_parent_gnum : ");
+  // PDM_log_trace_array_long(_tmp_missing_ln_to_gn, i_abs_missing, "_tmp_missing_ln_to_gn : ");
+  // PDM_log_trace_array_long(_tmp_missing_parent_gnum, i_abs_missing, "_tmp_missing_parent_gnum : ");
 
   ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                  PDM_PART_TO_BLOCK_POST_MERGE,
@@ -612,8 +612,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                (void **) dmissing_child_parent_g_num);
 
   int dn_missing_ridge = PDM_part_to_block_n_elt_block_get(ptb);
-  PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
-  PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
+  // PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
+  // PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
 
   /*PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
   *distrib_missing_child = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
