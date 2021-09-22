@@ -113,11 +113,11 @@ PDM_dreorder_from_coords
 );
 
 void
-PDM_dreorder_from_lenght
+PDM_dreorder_from_length
 (
  int              dim,
  PDM_g_num_t     *distrib_in,
- double          *lenght,
+ double          *length,
  PDM_g_num_t     *ln_to_gn,
  PDM_MPI_Comm     comm
 );

@@ -673,11 +673,11 @@ PDM_dreorder_from_coords
 
 
 void
-PDM_dreorder_from_lenght
+PDM_dreorder_from_length
 (
  int              dim,
  PDM_g_num_t     *distrib_in,
- double          *lenght,
+ double          *length,
  PDM_g_num_t     *ln_to_gn,
  PDM_MPI_Comm     comm
 )
@@ -687,38 +687,38 @@ PDM_dreorder_from_lenght
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_lenght = distrib_in[i_rank+1] - distrib_in[i_rank];
+  int dn_length = distrib_in[i_rank+1] - distrib_in[i_rank];
 
-  // PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_lenght * sizeof(PDM_hilbert_code_t));
-  PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (dn_lenght * sizeof(PDM_hilbert_code_t));
+  // PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_length * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (dn_length * sizeof(PDM_hilbert_code_t));
 
-  for (int i = 0; i < dn_lenght; ++i) {
-    tmp_hilbert_codes [i] = lenght [i];
+  for (int i = 0; i < dn_length; ++i) {
+    tmp_hilbert_codes [i] = length [i];
   }
 
   ///** Calcul des index des codes Hilbert **/
-  int * hilbert_order = (int * ) malloc (dn_lenght * sizeof(int));
+  int * hilbert_order = (int * ) malloc (dn_length * sizeof(int));
 
-  for (int i = 0; i < dn_lenght; ++i) {
+  for (int i = 0; i < dn_length; ++i) {
     hilbert_order [i] = i;
   }
 
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_lenght);
+  PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_length);
 
   free(tmp_hilbert_codes);
 
   PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
 
-  int *weight = (int *) malloc (dn_lenght * sizeof(int));
-  for(int i = 0; i < dn_lenght; ++i) {
+  int *weight = (int *) malloc (dn_length * sizeof(int));
+  for(int i = 0; i < dn_length; ++i) {
     weight [i] = 1;
   }
 
   PDM_hilbert_build_rank_index (dim,
                                 n_rank,
-                                dn_lenght,
-                                lenght,
+                                dn_length,
+                                length,
                                 weight,
                                 hilbert_order,
                                 hilbert_codes_idx,
@@ -728,9 +728,9 @@ PDM_dreorder_from_lenght
   free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
-  for(int i = 0; i < dn_lenght; ++i) {
+  for(int i = 0; i < dn_length; ++i) {
     size_t quantile = PDM_hilbert_quantile_search(n_rank,
-                                                  lenght[i],
+                                                  length[i],
                                                   hilbert_codes_idx);
     ln_to_gn [i] = (int) (quantile + 1); // Because ln_to_gn of part_to_block begin at 1
   }
@@ -752,14 +752,14 @@ PDM_dreorder_from_lenght
                              1.,
                              &ln_to_gn,
                              distrib_rank,
-                             &dn_lenght,
+                             &dn_length,
                              1,
                              comm);
   free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
-  // log_trace("n_vtx_block = %i | dn_lenght = %i \n", n_vtx_block, dn_lenght);
+  // log_trace("n_vtx_block = %i | dn_length = %i \n", n_vtx_block, dn_length);
 
   double *blk_hilbert_codes = NULL;
   PDM_part_to_block_exch (ptb,
@@ -767,12 +767,12 @@ PDM_dreorder_from_lenght
                           PDM_STRIDE_CST,
                           1,
                           NULL,
-                (void **) &lenght,
+                (void **) &length,
                           NULL,
                 (void **) &blk_hilbert_codes);
 
   /* Resend */
-  for(int i = 0; i < dn_lenght; ++i) {
+  for(int i = 0; i < dn_length; ++i) {
     ln_to_gn [i] = distrib_in[i_rank] + i + 1; // Donc correspond a la numeration absolu initiale
   }
 
@@ -810,7 +810,7 @@ PDM_dreorder_from_lenght
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
                               (const PDM_g_num_t **)  &ln_to_gn,
-                                                      &dn_lenght,
+                                                      &dn_length,
                                                       1,
                                                       comm);
 
@@ -831,4 +831,3 @@ PDM_dreorder_from_lenght
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
