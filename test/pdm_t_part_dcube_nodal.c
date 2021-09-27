@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
     int n_vtx_per_face = dface_vtx_idx[i_face+1] - dface_vtx_idx[i_face];
     assert(n_vtx_per_face == 3);
 
-    #if 1
+    #if 0
     _robust_surface_vector (&pface_vtx[dface_vtx_idx[i_face]],
                             dvtx_coord,
                             &surface_vector[3*i_face]);
