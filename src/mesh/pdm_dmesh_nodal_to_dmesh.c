@@ -982,30 +982,6 @@ _generate_faces_from_dmesh_nodal
   free(delmt_face_vtx    );
 
 
-  // Not necessary because the algorithim keep the parent to find out boundary condition
-  int is_signed = 1;
-  assert(dm->cell_distrib == NULL);
-  dm->cell_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
-  dm->cell_distrib[0] = -1;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
-  PDM_dconnectivity_transpose(dmesh_nodal->comm,
-                              dm->face_distrib,
-                              dm->cell_distrib,
-                              dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL],
-                              dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL],
-                              is_signed,
-                              &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE],
-                              &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE]);
-
-  int dn_cell = dm->cell_distrib[dmesh_nodal->i_rank+1] - dm->cell_distrib[dmesh_nodal->i_rank];
-  dm->dn_cell = dn_cell;
-
-  if(0 == 1) {
-    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE][dn_cell], "dcell_face :: ");
-    PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dn_face+1, "dface_cell_idx :: ");
-    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL][dm->dn_face], "dface_cell :: ");
-  }
-
   PDM_g_num_t *_dface_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX];
   int         *_dface_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX];
 
@@ -1084,6 +1060,8 @@ _generate_faces_from_dmesh_nodal
 
     free(_dface_cell_tmp);
     free(_dface_cell_idx_tmp);
+    _dface_cell_tmp     = NULL;
+    _dface_cell_idx_tmp = NULL;
 
     dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL] = dface_cell;
     dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL] = NULL;
@@ -1094,6 +1072,53 @@ _generate_faces_from_dmesh_nodal
     }
   }
 
+  // After flip because the orientation of faces changes
+  // Not necessary because the algorithim keep the parent to find out boundary condition
+  if (link->distrib_missing_surface[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
+    PDM_setup_connectivity_idx(dm->dn_face,
+                               2,
+                               dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL],
+                               &_dface_cell_idx_tmp,
+                               &_dface_cell_tmp);
+    for(int i = 0; i < dm->dn_face; ++i) {
+      int sgn = 1;
+      for(int j = _dface_cell_idx_tmp[i]; j < _dface_cell_idx_tmp[i+1]; ++j){
+        _dface_cell_tmp[j] = _dface_cell_tmp[j] * sgn;
+        sgn *= -1;
+      }
+    }
+  } else {
+    assert(_dface_cell_tmp != NULL);
+    assert(_dface_cell_idx_tmp != NULL);
+  }
+
+  int is_signed = 1;
+  assert(dm->cell_distrib == NULL);
+  dm->cell_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
+  dm->cell_distrib[0] = -1;
+  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  PDM_dconnectivity_transpose(dmesh_nodal->comm,
+                              dm->face_distrib,
+                              dm->cell_distrib,
+                              _dface_cell_idx_tmp,
+                              _dface_cell_tmp,
+                              is_signed,
+                              &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                              &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE]);
+
+  int dn_cell = dm->cell_distrib[dmesh_nodal->i_rank+1] - dm->cell_distrib[dmesh_nodal->i_rank];
+  dm->dn_cell = dn_cell;
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE][dn_cell], "dcell_face :: ");
+    PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dn_face+1, "dface_cell_idx :: ");
+    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL][dm->dn_face], "dface_cell :: ");
+  }
+
+  if (link->distrib_missing_surface[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
+    free(_dface_cell_idx_tmp);
+    free(_dface_cell_tmp);
+  }
 
   int compute_edge_from_faces = 1;
   if( compute_edge_from_faces == 1){

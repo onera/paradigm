@@ -125,8 +125,102 @@ _read_args(int            argc,
 
 
 
+static double
+cross(double a, double b, double c, double d)
+{
+  double w = d * c;
+  double e = fma(-d, c,  w);
+  double f = fma( a, b, -w);
+  return f + e;
+}
 
 
+static long double
+cross_ld(long double a, long double b, long double c, long double d)
+{
+  long double w = d * c;
+  long double e = fma(-d, c,  w);
+  long double f = fma( a, b, -w);
+  return f + e;
+}
+
+
+static double
+two_diff(double a, double b)
+{
+  double x      = (a - b);
+  double bvirt  = (a - x);
+  double avirt  = x + bvirt;
+  double bround = bvirt - b;
+  double around = a     - avirt;
+  return around+bround;
+}
+
+static void
+_robust_surface_vector2
+(
+ int    *face_vtx,
+ double *vtx_coord,
+ double *surf_vector
+)
+{
+  int v1 = face_vtx[0] - 1;
+  int v2 = face_vtx[1] - 1;
+  int v3 = face_vtx[2] - 1;
+
+  double u1[3], u2[3]; // b - a | c - a
+
+  u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
+  u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
+  u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
+  u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
+  u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
+  u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
+
+  // double err1 = two_diff(vtx_coord[3*v2    ], vtx_coord[3*v1    ]);
+  // double err2 = two_diff(vtx_coord[3*v2 + 1], vtx_coord[3*v1 + 1]);
+  // double err3 = two_diff(vtx_coord[3*v2 + 2], vtx_coord[3*v1 + 2]);
+  // double err4 = two_diff(vtx_coord[3*v3    ], vtx_coord[3*v1    ]);
+  // double err5 = two_diff(vtx_coord[3*v3 + 1], vtx_coord[3*v1 + 1]);
+  // double err6 = two_diff(vtx_coord[3*v3 + 2], vtx_coord[3*v1 + 2]);
+
+  // printf("err1 = %20.16e | err2 = %20.16e | err3 = %20.16e | err4 = %20.16e | err5 = %20.16e | err6 = %20.16e \n", err1,
+  //        err2,
+  //        err3,
+  //        err4,
+  //        err5,
+  //        err6);
+
+  surf_vector[0] = cross(u1[1], u2[2], u1[2], u2[1] );
+  surf_vector[1] = cross(u1[2], u2[0], u1[0], u2[2] );
+  surf_vector[2] = cross(u1[0], u2[1], u1[1], u2[0] );
+}
+
+static void
+_robust_surface_vector2_ld
+(
+ int         *face_vtx,
+ long double *vtx_coord,
+ long double *surf_vector
+)
+{
+  int v1 = face_vtx[0] - 1;
+  int v2 = face_vtx[1] - 1;
+  int v3 = face_vtx[2] - 1;
+
+  long double u1[3], u2[3]; // b - a | c - a
+
+  u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
+  u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
+  u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
+  u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
+  u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
+  u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
+
+  surf_vector[0] = cross_ld(u1[1], u2[2], u1[2], u2[1] );
+  surf_vector[1] = cross_ld(u1[2], u2[0], u1[0], u2[2] );
+  surf_vector[2] = cross_ld(u1[0], u2[1], u1[1], u2[0] );
+}
 
 
 
@@ -150,7 +244,10 @@ _robust_surface_vector
   b[1] = vtx_coord[3*v2 + 2];
   c[0] = vtx_coord[3*v3 + 1];
   c[1] = vtx_coord[3*v3 + 2];
-  surf_vector[0] = PDM_predicate_orient2d (a, b, c);
+  surf_vector[0]  = PDM_predicate_orient2d (a, b, c);
+  // surf_vector[0] += PDM_predicate_orient2d (b, c, a);
+  // surf_vector[0] += PDM_predicate_orient2d (c, a, b);
+  // surf_vector[0] /= 3;
 
 
   a[0] = vtx_coord[3*v1 + 2];
@@ -160,6 +257,9 @@ _robust_surface_vector
   c[0] = vtx_coord[3*v3 + 2];
   c[1] = vtx_coord[3*v3 + 0];
   surf_vector[1] = PDM_predicate_orient2d (a, b, c);
+  // surf_vector[1] += PDM_predicate_orient2d (b, c, a);
+  // surf_vector[1] += PDM_predicate_orient2d (c, a, b);
+  // surf_vector[1] /= 3;
 
 
   a[0] = vtx_coord[3*v1 + 0];
@@ -169,6 +269,9 @@ _robust_surface_vector
   c[0] = vtx_coord[3*v3 + 0];
   c[1] = vtx_coord[3*v3 + 1];
   surf_vector[2] = PDM_predicate_orient2d (a, b, c);
+  // surf_vector[2] += PDM_predicate_orient2d (b, c, a);
+  // surf_vector[2] += PDM_predicate_orient2d (c, a, b);
+  // surf_vector[2] /= 3;
 }
 
 
@@ -276,18 +379,37 @@ int main(int argc, char *argv[])
   double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
+  long double *dvtx_coord_prec = malloc(3 * dn_vtx * sizeof(long double));
+
   for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+    dvtx_coord_prec[3*i_vtx  ] = dvtx_coord[3*i_vtx  ];
+    dvtx_coord_prec[3*i_vtx+1] = dvtx_coord[3*i_vtx+1];
+    dvtx_coord_prec[3*i_vtx+2] = dvtx_coord[3*i_vtx+2];
+
     // dvtx_coord[3*i_vtx  ] *= 1.;
     dvtx_coord[3*i_vtx+1] *= 40.;
-    dvtx_coord[3*i_vtx+2] *= 1840.;
+    dvtx_coord[3*i_vtx+2] *= 18400.;
 
-    double x = dvtx_coord[3*i_vtx];
+    double x = dvtx_coord[3*i_vtx  ];
     double y = dvtx_coord[3*i_vtx+1];
     double z = dvtx_coord[3*i_vtx+2];
     //dvtx_coord[3*i_vtx+2] += 0.3 * cos(x * PDM_PI);
     for (int j = 0; j < 3; j++) {
       dvtx_coord[3*i_vtx+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
     }
+
+    // dvtx_coord_prec[3*i_vtx  ] *= 1.;
+    dvtx_coord_prec[3*i_vtx+1] *= 40.;
+    dvtx_coord_prec[3*i_vtx+2] *= 18400.;
+
+    long double xp = dvtx_coord_prec[3*i_vtx  ];
+    long double yp = dvtx_coord_prec[3*i_vtx+1];
+    long double zp = dvtx_coord_prec[3*i_vtx+2];
+    //dvtx_coord_prec[3*i_vtx+2] += 0.3 * cos(x * PDM_PI);
+    for (int j = 0; j < 3; j++) {
+      dvtx_coord_prec[3*i_vtx+j] = R[j][0]*xp + R[j][1]*yp + R[j][2]*zp;
+    }
+
   }
 
   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
@@ -346,10 +468,17 @@ int main(int argc, char *argv[])
 
   double* check_closed_volume = malloc(3 * dn_cell * sizeof(double));
   double* surface_vector      = malloc(3 * dn_face * sizeof(double));
+
+  long double* check_closed_volume_prec = malloc(3 * dn_cell * sizeof(long double));
+  long double* surface_vector_prec      = malloc(3 * dn_face * sizeof(long double));
   for(int i_cell = 0; i_cell < dn_cell; ++i_cell ){
     check_closed_volume[3*i_cell  ] = 0.;
     check_closed_volume[3*i_cell+1] = 0.;
     check_closed_volume[3*i_cell+2] = 0.;
+
+    check_closed_volume_prec[3*i_cell  ] = 0.;
+    check_closed_volume_prec[3*i_cell+1] = 0.;
+    check_closed_volume_prec[3*i_cell+2] = 0.;
   }
 
   for(int i_face = 0; i_face < dn_face; ++i_face) {
@@ -357,10 +486,13 @@ int main(int argc, char *argv[])
     int n_vtx_per_face = dface_vtx_idx[i_face+1] - dface_vtx_idx[i_face];
     assert(n_vtx_per_face == 3);
 
-    #if 0
-    _robust_surface_vector (&pface_vtx[dface_vtx_idx[i_face]],
+    #if 1
+    _robust_surface_vector2 (&pface_vtx[dface_vtx_idx[i_face]],
                             dvtx_coord,
                             &surface_vector[3*i_face]);
+    _robust_surface_vector2_ld (&pface_vtx[dface_vtx_idx[i_face]],
+                                dvtx_coord_prec,
+                                &surface_vector_prec[3*i_face]);
     #else
     PDM_geom_elem_tria_surface_vector(1,
                                       &pface_vtx[dface_vtx_idx[i_face]],
@@ -373,17 +505,28 @@ int main(int argc, char *argv[])
     int i_cell_l = pface_cell[2*i_face  ] - 1;
     int i_cell_r = pface_cell[2*i_face+1] - 1;
 
-    check_closed_volume[3*i_cell_l  ] += (surface_vector[3*i_face  ]);
-    check_closed_volume[3*i_cell_l+1] += (surface_vector[3*i_face+1]);
-    check_closed_volume[3*i_cell_l+2] += (surface_vector[3*i_face+2]);
+    check_closed_volume[3*i_cell_l  ] = (check_closed_volume[3*i_cell_l  ] + surface_vector[3*i_face  ]);
+    check_closed_volume[3*i_cell_l+1] = (check_closed_volume[3*i_cell_l+1] + surface_vector[3*i_face+1]);
+    check_closed_volume[3*i_cell_l+2] = (check_closed_volume[3*i_cell_l+2] + surface_vector[3*i_face+2]);
 
     if(i_cell_r >= 0) {
-      check_closed_volume[3*i_cell_r  ] -= (surface_vector[3*i_face  ]);
-      check_closed_volume[3*i_cell_r+1] -= (surface_vector[3*i_face+1]);
-      check_closed_volume[3*i_cell_r+2] -= (surface_vector[3*i_face+2]);
+      check_closed_volume[3*i_cell_r  ] = (check_closed_volume[3*i_cell_r  ] - surface_vector[3*i_face  ]);
+      check_closed_volume[3*i_cell_r+1] = (check_closed_volume[3*i_cell_r+1] - surface_vector[3*i_face+1]);
+      check_closed_volume[3*i_cell_r+2] = (check_closed_volume[3*i_cell_r+2] - surface_vector[3*i_face+2]);
     }
 
-    printf(" surface_vector[%i] = %20.16e,  %20.16e,  %20.16e\n", i_face, surface_vector[3*i_face  ], surface_vector[3*i_face+1], surface_vector[3*i_face+2] );
+    check_closed_volume_prec[3*i_cell_l  ] = (check_closed_volume_prec[3*i_cell_l  ] + surface_vector_prec[3*i_face  ]);
+    check_closed_volume_prec[3*i_cell_l+1] = (check_closed_volume_prec[3*i_cell_l+1] + surface_vector_prec[3*i_face+1]);
+    check_closed_volume_prec[3*i_cell_l+2] = (check_closed_volume_prec[3*i_cell_l+2] + surface_vector_prec[3*i_face+2]);
+
+    if(i_cell_r >= 0) {
+      check_closed_volume_prec[3*i_cell_r  ] = (check_closed_volume_prec[3*i_cell_r  ] - surface_vector_prec[3*i_face  ]);
+      check_closed_volume_prec[3*i_cell_r+1] = (check_closed_volume_prec[3*i_cell_r+1] - surface_vector_prec[3*i_face+1]);
+      check_closed_volume_prec[3*i_cell_r+2] = (check_closed_volume_prec[3*i_cell_r+2] - surface_vector_prec[3*i_face+2]);
+    }
+
+    printf(" surface_vector     [%i] = %20.16e,  %20.16e,  %20.16e\n", i_face, surface_vector[3*i_face  ], surface_vector[3*i_face+1], surface_vector[3*i_face+2] );
+    printf(" surface_vector_prec[%i] = %20.16Le,  %20.16Le,  %20.16Le\n", i_face, surface_vector_prec[3*i_face  ], surface_vector_prec[3*i_face+1], surface_vector_prec[3*i_face+2] );
 
   }
 
@@ -398,9 +541,56 @@ int main(int argc, char *argv[])
                                                                 check_closed_volume[3*i_cell+1],
                                                                 check_closed_volume[3*i_cell+2]);
 
+    long double norm2_prec = sqrt(  check_closed_volume_prec[3*i_cell  ]*check_closed_volume_prec[3*i_cell  ]
+                             + check_closed_volume_prec[3*i_cell+1]*check_closed_volume_prec[3*i_cell+1]
+                             + check_closed_volume_prec[3*i_cell+2]*check_closed_volume_prec[3*i_cell+2]);
+
+    printf("norm2_prec[%i] =  %20.16Le ( %20.16Le,  %20.16Le,  %20.16Le) \n", i_cell,
+                                                                norm2_prec, check_closed_volume_prec[3*i_cell  ],
+                                                                check_closed_volume_prec[3*i_cell+1],
+                                                                check_closed_volume_prec[3*i_cell+2]);
+
   }
 
 
+  for(int i_cell = 0; i_cell < dn_cell; ++i_cell ){
+    int faces[4];
+    faces[0] = dcell_face[dcell_face_idx[i_cell]  ];
+    faces[1] = dcell_face[dcell_face_idx[i_cell]+1];
+    faces[2] = dcell_face[dcell_face_idx[i_cell]+2];
+    faces[3] = dcell_face[dcell_face_idx[i_cell]+3];
+
+    printf(" -------- %i %i %i %i \n", faces[0], faces[1], faces[2], faces[3]);
+
+    long double sx[4];
+    long double sy[4];
+    long double sz[4];
+
+    sx[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)  ];
+    sx[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)  ];
+    sx[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)  ];
+    sx[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)  ];
+
+    sy[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+1];
+    sy[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+1];
+    sy[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+1];
+    sy[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+1];
+
+    sz[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+2];
+    sz[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+2];
+    sz[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+2];
+    sz[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+2];
+
+    long double tmp_x = (sx[0] + sx[1] + sx[2] + sx[3]);
+    long double tmp_y = (sy[0] + sy[1] + sy[2] + sy[3]);
+    long double tmp_z = (sz[0] + sz[1] + sz[2] + sz[3]);
+
+    long double check = sqrt( tmp_x*tmp_x + tmp_y*tmp_y + tmp_z*tmp_z );
+
+    printf(" %i - (%20.16Le) - (%20.16Le,  %20.16Le,  %20.16Le) \n", i_cell, check, tmp_x, tmp_y, tmp_z);
+
+
+  }
   /*printf("\n\n\n\n\n");
 
 
