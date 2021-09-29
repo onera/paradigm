@@ -297,6 +297,8 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
 
+  PDM_dmesh_nodal_to_dmesh_set_post_treat_result(dmntodm, 1);
+
   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
