@@ -30,6 +30,7 @@
 #include "pdm_quick_sort.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_array.h"
+#include "pdm_partitioning_algorithm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1423,46 +1424,19 @@ _generate_edges_from_dmesh_nodal
   free(delmt_edge_vtx_idx);
   free(delmt_edge_vtx    );
 
-  // Not necessary because the algorithim keep the parent to find out boundary condition
-  int is_signed = 1;
-  assert(dm->face_distrib == NULL);
-  dm->face_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
-  dm->face_distrib[0] = -1;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
-  PDM_dconnectivity_transpose(dmesh_nodal->comm,
-                              dm->edge_distrib,
-                              dm->face_distrib,
-                              dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
-                              dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
-                              is_signed,
-                              &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                              &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE]);
+  PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
+  int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
 
-  int dn_face = dm->face_distrib[dmesh_nodal->i_rank+1] - dm->face_distrib[dmesh_nodal->i_rank];
-  dm->dn_face = dn_face;
-
-  if(0 == 1) {
-    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][dn_face], "dface_edge :: ");
-    PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1, "dedge_face_idx :: ");
-    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE][dm->dn_edge], "dedge_face :: ");
-    PDM_log_trace_connectivity_long(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
-                                    dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
-                                    dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
-  }
+  PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+  int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
 
   // Post_treat
   if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
 
-    PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
-    int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
-
-    PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
-    int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
-    PDM_log_trace_connectivity_long (_dedge_face_idx_tmp,
-                                     _dedge_face_tmp,
-                                     dm->dn_edge,
-                                     "_dedge_face_tmp :");
-
+    // PDM_log_trace_connectivity_long (_dedge_face_idx_tmp,
+    //                                  _dedge_face_tmp,
+    //                                  dm->dn_edge,
+    //                                  "_dedge_face_tmp :");
 
     /* All children have a parent */
     PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));
@@ -1530,6 +1504,8 @@ _generate_edges_from_dmesh_nodal
 
     free(_dedge_face_tmp);
     free(_dedge_face_idx_tmp);
+    _dedge_face_tmp     = NULL;
+    _dedge_face_idx_tmp = NULL;
     dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = dedge_face;
     dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = NULL;
 
@@ -1537,6 +1513,53 @@ _generate_edges_from_dmesh_nodal
       PDM_log_trace_array_long(dedge_face, 2 * dm->dn_edge, "edge_face::");
       PDM_log_trace_array_long(_dedge_vtx, _dedge_vtx_idx[dm->dn_edge], "_dedge_vtx::");
     }
+  }
+
+  // Not necessary because the algorithim keep the parent to find out boundary condition
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
+    assert(_dedge_face_tmp     == NULL);
+    assert(_dedge_face_idx_tmp == NULL);
+    PDM_setup_connectivity_idx(dm->dn_edge,
+                               2,
+                               dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                               &_dedge_face_idx_tmp,
+                               &_dedge_face_tmp);
+    for(int i = 0; i < dm->dn_edge; ++i) {
+      int sgn = 1;
+      for(int j = _dedge_face_idx_tmp[i]; j < _dedge_face_idx_tmp[i+1]; ++j){
+        _dedge_face_tmp[j] = _dedge_face_tmp[j] * sgn;
+        sgn *= -1;
+      }
+    }
+  } else {
+    assert(_dedge_face_tmp     != NULL);
+    assert(_dedge_face_idx_tmp != NULL);
+  }
+
+  int is_signed = 1;
+  assert(dm->face_distrib == NULL);
+  dm->face_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
+  dm->face_distrib[0] = -1;
+  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+  PDM_dconnectivity_transpose(dmesh_nodal->comm,
+                              dm->edge_distrib,
+                              dm->face_distrib,
+                              _dedge_face_idx_tmp,
+                              _dedge_face_tmp,
+                              is_signed,
+                              &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                              &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE]);
+
+  int dn_face = dm->face_distrib[dmesh_nodal->i_rank+1] - dm->face_distrib[dmesh_nodal->i_rank];
+  dm->dn_face = dn_face;
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][dn_face], "dface_edge :: ");
+    PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1, "dedge_face_idx :: ");
+    PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE][dm->dn_edge], "dedge_face :: ");
+    PDM_log_trace_connectivity_long(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                    dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                    dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
 }
