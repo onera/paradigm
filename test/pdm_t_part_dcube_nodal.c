@@ -168,32 +168,49 @@ _robust_surface_vector2
   int v2 = face_vtx[1] - 1;
   int v3 = face_vtx[2] - 1;
 
-  double u1[3], u2[3]; // b - a | c - a
+  // double u1[3], u2[3]; // b - a | c - a
 
-  u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
-  u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
-  u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
-  u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
-  u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
-  u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
+  // u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
+  // u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
+  // u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
+  // u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
+  // u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
+  // u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
 
-  // double err1 = two_diff(vtx_coord[3*v2    ], vtx_coord[3*v1    ]);
-  // double err2 = two_diff(vtx_coord[3*v2 + 1], vtx_coord[3*v1 + 1]);
-  // double err3 = two_diff(vtx_coord[3*v2 + 2], vtx_coord[3*v1 + 2]);
-  // double err4 = two_diff(vtx_coord[3*v3    ], vtx_coord[3*v1    ]);
-  // double err5 = two_diff(vtx_coord[3*v3 + 1], vtx_coord[3*v1 + 1]);
-  // double err6 = two_diff(vtx_coord[3*v3 + 2], vtx_coord[3*v1 + 2]);
+  // // double err1 = two_diff(vtx_coord[3*v2    ], vtx_coord[3*v1    ]);
+  // // double err2 = two_diff(vtx_coord[3*v2 + 1], vtx_coord[3*v1 + 1]);
+  // // double err3 = two_diff(vtx_coord[3*v2 + 2], vtx_coord[3*v1 + 2]);
+  // // double err4 = two_diff(vtx_coord[3*v3    ], vtx_coord[3*v1    ]);
+  // // double err5 = two_diff(vtx_coord[3*v3 + 1], vtx_coord[3*v1 + 1]);
+  // // double err6 = two_diff(vtx_coord[3*v3 + 2], vtx_coord[3*v1 + 2]);
 
-  // printf("err1 = %20.16e | err2 = %20.16e | err3 = %20.16e | err4 = %20.16e | err5 = %20.16e | err6 = %20.16e \n", err1,
-  //        err2,
-  //        err3,
-  //        err4,
-  //        err5,
-  //        err6);
+  // // printf("err1 = %20.16e | err2 = %20.16e | err3 = %20.16e | err4 = %20.16e | err5 = %20.16e | err6 = %20.16e \n", err1,
+  // //        err2,
+  // //        err3,
+  // //        err4,
+  // //        err5,
+  // //        err6);
 
-  surf_vector[0] = cross(u1[1], u2[2], u1[2], u2[1] );
-  surf_vector[1] = cross(u1[2], u2[0], u1[0], u2[2] );
-  surf_vector[2] = cross(u1[0], u2[1], u1[1], u2[0] );
+  // surf_vector[0] = cross(u1[1], u2[2], u1[2], u2[1] );
+  // surf_vector[1] = cross(u1[2], u2[0], u1[0], u2[2] );
+  // surf_vector[2] = cross(u1[0], u2[1], u1[1], u2[0] );
+
+
+
+  long double u1[3], u2[3]; // b - a | c - a
+
+  u1[0] = (vtx_coord[3*v2    ] - vtx_coord[3*v1    ]);
+  u1[1] = (vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1]);
+  u1[2] = (vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2]);
+  u2[0] = (vtx_coord[3*v3    ] - vtx_coord[3*v1    ]);
+  u2[1] = (vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1]);
+  u2[2] = (vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2]);
+  surf_vector[0] = cross_ld(u1[1], u2[2], u1[2], u2[1] );
+  surf_vector[1] = cross_ld(u1[2], u2[0], u1[0], u2[2] );
+  surf_vector[2] = cross_ld(u1[0], u2[1], u1[1], u2[0] );
+
+
+
 }
 
 static void
