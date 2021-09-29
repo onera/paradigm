@@ -139,8 +139,8 @@ static long double
 cross_ld(long double a, long double b, long double c, long double d)
 {
   long double w = d * c;
-  long double e = fma(-d, c,  w);
-  long double f = fma( a, b, -w);
+  long double e = fmal(-d, c,  w);
+  long double f = fmal( a, b, -w);
   return f + e;
 }
 
@@ -541,9 +541,9 @@ int main(int argc, char *argv[])
                                                                 check_closed_volume[3*i_cell+1],
                                                                 check_closed_volume[3*i_cell+2]);
 
-    long double norm2_prec = sqrt(  check_closed_volume_prec[3*i_cell  ]*check_closed_volume_prec[3*i_cell  ]
-                             + check_closed_volume_prec[3*i_cell+1]*check_closed_volume_prec[3*i_cell+1]
-                             + check_closed_volume_prec[3*i_cell+2]*check_closed_volume_prec[3*i_cell+2]);
+    long double norm2_prec = sqrtl(  check_closed_volume_prec[3*i_cell  ]*check_closed_volume_prec[3*i_cell  ]
+                                   + check_closed_volume_prec[3*i_cell+1]*check_closed_volume_prec[3*i_cell+1]
+                                   + check_closed_volume_prec[3*i_cell+2]*check_closed_volume_prec[3*i_cell+2]);
 
     printf("norm2_prec[%i] =  %20.16Le ( %20.16Le,  %20.16Le,  %20.16Le) \n", i_cell,
                                                                 norm2_prec, check_closed_volume_prec[3*i_cell  ],
@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
     long double tmp_y = (sy[0] + sy[1] + sy[2] + sy[3]);
     long double tmp_z = (sz[0] + sz[1] + sz[2] + sz[3]);
 
-    long double check = sqrt( tmp_x*tmp_x + tmp_y*tmp_y + tmp_z*tmp_z );
+    long double check = sqrtl( tmp_x*tmp_x + tmp_y*tmp_y + tmp_z*tmp_z );
 
     printf(" %i - (%20.16Le) - (%20.16Le,  %20.16Le,  %20.16Le) \n", i_cell, check, tmp_x, tmp_y, tmp_z);
 
