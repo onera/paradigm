@@ -908,12 +908,12 @@ _generate_faces_from_dmesh_nodal
    *  Create empty dmesh
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
-                                     -1,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
+                                     0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */
@@ -1345,12 +1345,12 @@ _generate_edges_from_dmesh_nodal
    *  Create empty dmesh
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
-                                     -1,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
+                                     0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */
@@ -1562,6 +1562,10 @@ _generate_edges_from_dmesh_nodal
                                     dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
+    free(_dedge_face_tmp);
+    free(_dedge_face_idx_tmp);
+  }
 }
 
 static
