@@ -753,12 +753,11 @@ PDM_dgroup_entity_transpose
   free(tmp_dentity_group_n);
   free(tmp_dentity_group);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_connectivity_int(_dentity_group_idx, _dentity_group, dn_entity, "_dentity_group ::");
   }
 
   *dentity_group = realloc(*dentity_group, _dentity_group_idx[dn_entity] * sizeof(int));
-
 }
 
 
