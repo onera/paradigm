@@ -168,14 +168,18 @@ _robust_surface_vector2
   int v2 = face_vtx[1] - 1;
   int v3 = face_vtx[2] - 1;
 
-  // double u1[3], u2[3]; // b - a | c - a
+  double u1[3], u2[3]; // b - a | c - a
 
-  // u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
-  // u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
-  // u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
-  // u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
-  // u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
-  // u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
+  u1[0] = vtx_coord[3*v2    ] - vtx_coord[3*v1    ];
+  u1[1] = vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1];
+  u1[2] = vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2];
+  u2[0] = vtx_coord[3*v3    ] - vtx_coord[3*v1    ];
+  u2[1] = vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1];
+  u2[2] = vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2];
+
+  surf_vector[0] = cross(u1[1], u2[2], u1[2], u2[1] );
+  surf_vector[1] = cross(u1[2], u2[0], u1[0], u2[2] );
+  surf_vector[2] = cross(u1[0], u2[1], u1[1], u2[0] );
 
   // // double err1 = two_diff(vtx_coord[3*v2    ], vtx_coord[3*v1    ]);
   // // double err2 = two_diff(vtx_coord[3*v2 + 1], vtx_coord[3*v1 + 1]);
@@ -191,23 +195,19 @@ _robust_surface_vector2
   // //        err5,
   // //        err6);
 
-  // surf_vector[0] = cross(u1[1], u2[2], u1[2], u2[1] );
-  // surf_vector[1] = cross(u1[2], u2[0], u1[0], u2[2] );
-  // surf_vector[2] = cross(u1[0], u2[1], u1[1], u2[0] );
 
 
+  // long double u1[3], u2[3]; // b - a | c - a
 
-  long double u1[3], u2[3]; // b - a | c - a
-
-  u1[0] = (vtx_coord[3*v2    ] - vtx_coord[3*v1    ]);
-  u1[1] = (vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1]);
-  u1[2] = (vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2]);
-  u2[0] = (vtx_coord[3*v3    ] - vtx_coord[3*v1    ]);
-  u2[1] = (vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1]);
-  u2[2] = (vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2]);
-  surf_vector[0] = cross_ld(u1[1], u2[2], u1[2], u2[1] );
-  surf_vector[1] = cross_ld(u1[2], u2[0], u1[0], u2[2] );
-  surf_vector[2] = cross_ld(u1[0], u2[1], u1[1], u2[0] );
+  // u1[0] = (vtx_coord[3*v2    ] - vtx_coord[3*v1    ]);
+  // u1[1] = (vtx_coord[3*v2 + 1] - vtx_coord[3*v1 + 1]);
+  // u1[2] = (vtx_coord[3*v2 + 2] - vtx_coord[3*v1 + 2]);
+  // u2[0] = (vtx_coord[3*v3    ] - vtx_coord[3*v1    ]);
+  // u2[1] = (vtx_coord[3*v3 + 1] - vtx_coord[3*v1 + 1]);
+  // u2[2] = (vtx_coord[3*v3 + 2] - vtx_coord[3*v1 + 2]);
+  // surf_vector[0] = cross_ld(u1[1], u2[2], u1[2], u2[1] );
+  // surf_vector[1] = cross_ld(u1[2], u2[0], u1[0], u2[2] );
+  // surf_vector[2] = cross_ld(u1[0], u2[1], u1[1], u2[0] );
 
 
 
@@ -583,28 +583,54 @@ int main(int argc, char *argv[])
     long double sy[4];
     long double sz[4];
 
-    sx[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)  ];
-    sx[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)  ];
-    sx[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)  ];
-    sx[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)  ];
+    sx[0] = PDM_SIGN(faces[0]) * surface_vector[3*(PDM_ABS(faces[0])-1)  ];
+    sx[1] = PDM_SIGN(faces[1]) * surface_vector[3*(PDM_ABS(faces[1])-1)  ];
+    sx[2] = PDM_SIGN(faces[2]) * surface_vector[3*(PDM_ABS(faces[2])-1)  ];
+    sx[3] = PDM_SIGN(faces[3]) * surface_vector[3*(PDM_ABS(faces[3])-1)  ];
 
-    sy[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+1];
-    sy[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+1];
-    sy[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+1];
-    sy[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+1];
+    sy[0] = PDM_SIGN(faces[0]) * surface_vector[3*(PDM_ABS(faces[0])-1)+1];
+    sy[1] = PDM_SIGN(faces[1]) * surface_vector[3*(PDM_ABS(faces[1])-1)+1];
+    sy[2] = PDM_SIGN(faces[2]) * surface_vector[3*(PDM_ABS(faces[2])-1)+1];
+    sy[3] = PDM_SIGN(faces[3]) * surface_vector[3*(PDM_ABS(faces[3])-1)+1];
 
-    sz[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+2];
-    sz[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+2];
-    sz[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+2];
-    sz[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+2];
+    sz[0] = PDM_SIGN(faces[0]) * surface_vector[3*(PDM_ABS(faces[0])-1)+2];
+    sz[1] = PDM_SIGN(faces[1]) * surface_vector[3*(PDM_ABS(faces[1])-1)+2];
+    sz[2] = PDM_SIGN(faces[2]) * surface_vector[3*(PDM_ABS(faces[2])-1)+2];
+    sz[3] = PDM_SIGN(faces[3]) * surface_vector[3*(PDM_ABS(faces[3])-1)+2];
 
-    long double tmp_x = (sx[0] + sx[1] + sx[2] + sx[3]);
-    long double tmp_y = (sy[0] + sy[1] + sy[2] + sy[3]);
-    long double tmp_z = (sz[0] + sz[1] + sz[2] + sz[3]);
+    long double sx_prec[4];
+    long double sy_prec[4];
+    long double sz_prec[4];
 
-    long double check = sqrtl( tmp_x*tmp_x + tmp_y*tmp_y + tmp_z*tmp_z );
+    sx_prec[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)  ];
+    sx_prec[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)  ];
+    sx_prec[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)  ];
+    sx_prec[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)  ];
 
-    printf(" %i - (%20.16Le) - (%20.16Le,  %20.16Le,  %20.16Le) \n", i_cell, check, tmp_x, tmp_y, tmp_z);
+    sy_prec[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+1];
+    sy_prec[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+1];
+    sy_prec[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+1];
+    sy_prec[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+1];
+
+    sz_prec[0] = PDM_SIGN(faces[0]) * surface_vector_prec[3*(PDM_ABS(faces[0])-1)+2];
+    sz_prec[1] = PDM_SIGN(faces[1]) * surface_vector_prec[3*(PDM_ABS(faces[1])-1)+2];
+    sz_prec[2] = PDM_SIGN(faces[2]) * surface_vector_prec[3*(PDM_ABS(faces[2])-1)+2];
+    sz_prec[3] = PDM_SIGN(faces[3]) * surface_vector_prec[3*(PDM_ABS(faces[3])-1)+2];
+
+    double tmp_x = (sx[0] + sx[1] + sx[2] + sx[3]);
+    double tmp_y = (sy[0] + sy[1] + sy[2] + sy[3]);
+    double tmp_z = (sz[0] + sz[1] + sz[2] + sz[3]);
+
+    long double tmp_x_prec = (sx_prec[0] + sx_prec[1] + sx_prec[2] + sx_prec[3]);
+    long double tmp_y_prec = (sy_prec[0] + sy_prec[1] + sy_prec[2] + sy_prec[3]);
+    long double tmp_z_prec = (sz_prec[0] + sz_prec[1] + sz_prec[2] + sz_prec[3]);
+
+    long double check_prec = sqrtl( tmp_x_prec*tmp_x_prec + tmp_y_prec*tmp_y_prec + tmp_z_prec*tmp_z_prec );
+    double      check      = sqrt( tmp_x*tmp_x + tmp_y*tmp_y + tmp_z*tmp_z );
+
+
+    printf(" %i      - (%20.16e) - (%20.16e,  %20.16e,  %20.16e) \n", i_cell, check, tmp_x, tmp_y, tmp_z);
+    printf(" %i prec - (%20.16Le) - (%20.16Le,  %20.16Le,  %20.16Le) \n", i_cell, check_prec, tmp_x_prec, tmp_y_prec, tmp_z_prec);
 
 
   }
