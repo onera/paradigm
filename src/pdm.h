@@ -242,6 +242,16 @@ typedef enum {
 } PDM_mesh_location_method_t;
 
 
+typedef enum {
+  PDM_VTX_KIND_NONE               = 0x0000000, /*=* empty flag, all values set to false */
+  PDM_VTX_KIND_NULL               = 0xFFFFFFF, /*=* unsignificant flags value           */
+  PDM_VTX_KIND_ON_VOLUME          = 0x0000001, /*=*  0                                  */
+  PDM_VTX_KIND_ON_SURFACE         = 0x0000002, /*=*  1                                  */
+  PDM_VTX_KIND_ON_RIDGE           = 0x0000004, /*=*  2                                  */
+  PDM_VTX_KIND_ON_CORNER          = 0x0000008, /*=*  3                                  */
+} PDM_vtx_kind;
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/

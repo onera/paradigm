@@ -101,6 +101,17 @@ const int                          id_block,
 const int                          id_part
 );
 
+int
+PDM_part_mesh_nodal_elmts_n_section_get
+(
+ PDM_part_mesh_nodal_elmts_t *pmne
+);
+
+int *
+PDM_part_mesh_nodal_elmts_sections_id_get
+(
+  PDM_part_mesh_nodal_elmts_t *pmne
+);
 
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_block_type_get

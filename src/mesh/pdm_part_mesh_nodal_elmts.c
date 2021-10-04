@@ -630,6 +630,27 @@ const int                          id_part
 
 }
 
+
+int
+PDM_part_mesh_nodal_elmts_n_section_get
+(
+  PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  return pmne->n_section;
+}
+
+
+int *
+PDM_part_mesh_nodal_elmts_sections_id_get
+(
+  PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  return pmne->sections_id;
+}
+
+
 void
 PDM_part_mesh_nodal_elmts_free
 (

@@ -37,6 +37,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
  int                           n_part,
+ int                          *pn_vtx,
+ PDM_g_num_t                 **vtx_ln_to_gn,
  int                          *pn_elmt,
  PDM_g_num_t                 **elmt_ln_to_gn
 );

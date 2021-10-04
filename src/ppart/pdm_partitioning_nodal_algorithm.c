@@ -84,6 +84,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
  int                           n_part,
+ int                          *pn_vtx,
+ PDM_g_num_t                 **vtx_ln_to_gn,
  int                          *pn_elmt,
  PDM_g_num_t                 **elmt_ln_to_gn
 )
@@ -260,7 +262,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       int idx_read_connec = pelmts_stride_idx[i_part][i_cell];
       for(int i_vtx = 0; i_vtx < n_vtx_per_elmt; ++i_vtx){
-        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = pelmts_connec[i_part][idx_read_connec+i_vtx];
+        int vtx_g_num = pelmts_connec[i_part][idx_read_connec+i_vtx];
+        int vtx_l_num = PDM_binary_search_long(vtx_g_num, vtx_ln_to_gn[i_part], pn_vtx[i_part]);
+        assert(vtx_l_num != -1);
+        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = vtx_l_num+1;
       }
 
       numabs    [i_section][idx_write] = g_num+1;

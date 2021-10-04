@@ -2026,6 +2026,22 @@ PDM_part_dfield_to_pfield
   PDM_block_to_part_free(btp);
 }
 
+// void
+// PDM_part_multi_dfield_to_pfield
+// (
+//   const PDM_MPI_Comm      comm,
+//   const int               n_part,
+//   const int               n_field,
+//   size_t                 *s_data,
+//   const PDM_g_num_t      *field_distribution,
+//   const unsigned char   **dfield,
+//   const int              *pn_field,
+//   const PDM_g_num_t     **pfield_ln_to_gn,
+//         unsigned char ****pfield
+// )
+// {
+// TO PDM_STRI_VAR
+// }
 
 /**
  *  \brief Extend an existing ln_to_gn from a connectivity
