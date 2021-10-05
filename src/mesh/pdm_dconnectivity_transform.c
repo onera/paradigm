@@ -21,6 +21,7 @@
 #include "pdm_para_graph_dual.h"
 #include "pdm_error.h"
 #include "pdm_timer.h"
+#include "pdm_unique.h"
 #include "pdm_logging.h"
 #include "pdm_array.h"
 
@@ -659,6 +660,105 @@ PDM_dorder_reverse
 // {
 
 // }
+
+
+void
+PDM_dgroup_entity_transpose
+(
+ int            n_group,
+ int           *dgroup_entity_idx,
+ PDM_g_num_t   *dgroup_entity,
+ PDM_g_num_t   *distrib_entity,
+ int          **dentity_group_idx,
+ int          **dentity_group,
+ PDM_MPI_Comm   comm
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  printf(" dgroup_entity_idx[%i] = %i \n", n_group, dgroup_entity_idx[n_group]);
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        &dgroup_entity,
+                                                        distrib_entity,
+                                                        &dgroup_entity_idx[n_group],
+                                                        1,
+                                                        comm);
+
+
+  int* pgroup_id_n = (int *) malloc(dgroup_entity_idx[n_group] * sizeof(int));
+  int* pgroup_id   = (int *) malloc(dgroup_entity_idx[n_group] * sizeof(int));
+
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    for(int i = dgroup_entity_idx[i_group]; i < dgroup_entity_idx[i_group+1]; ++i){
+      pgroup_id_n[i] = 1;
+      pgroup_id  [i] = i_group;
+    }
+  }
+
+  /*
+   *  Exchange group id
+   */
+
+  int         *tmp_dentity_group_n = NULL;
+  PDM_g_num_t *tmp_dentity_group   = NULL;
+  int s_block = PDM_part_to_block_exch (ptb,
+                                        sizeof(int),
+                                        PDM_STRIDE_VAR,
+                                        1,
+                                        &pgroup_id_n,
+                              (void **) &pgroup_id,
+                                        &tmp_dentity_group_n,
+                              (void **) &tmp_dentity_group);
+  free(pgroup_id_n);
+  free(pgroup_id);
+
+  int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
+
+  PDM_g_num_t* tmp_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &tmp_dentity_group_n, distrib_entity[n_rank]);
+  free(tmp_distrib);
+  PDM_part_to_block_free (ptb);
+
+  /*
+   * Post-treatment
+   */
+  *dentity_group     = malloc(s_block       * sizeof(int));
+  *dentity_group_idx = malloc((dn_entity+1) * sizeof(int));
+  int *_dentity_group     = *dentity_group;
+  int *_dentity_group_idx = *dentity_group_idx;
+
+  int idx_read  = 0;
+  int idx_write = 0;
+  _dentity_group_idx[0] = 0;
+  for(int i = 0; i < dn_entity; ++i) {
+    int n_id = tmp_dentity_group_n[i];
+    int n_unique_id = 0;
+    if(n_id > 0) {
+      n_unique_id = PDM_inplace_unique(&tmp_dentity_group[idx_read], 0, n_id-1);
+    }
+
+    for(int j = 0; j < n_unique_id; ++j) {
+      _dentity_group[idx_write++] = tmp_dentity_group[idx_read+j];
+    }
+    _dentity_group_idx[i+1] = _dentity_group_idx[i] + n_unique_id;
+
+    idx_read += n_id;
+  }
+
+  free(tmp_dentity_group_n);
+  free(tmp_dentity_group);
+
+  if(0 == 1) {
+    PDM_log_trace_connectivity_int(_dentity_group_idx, _dentity_group, dn_entity, "_dentity_group ::");
+  }
+
+  *dentity_group = realloc(*dentity_group, _dentity_group_idx[dn_entity] * sizeof(int));
+}
 
 
 #ifdef  __cplusplus

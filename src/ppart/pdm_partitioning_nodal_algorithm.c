@@ -84,6 +84,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
  int                           n_part,
+ int                          *pn_vtx,
+ PDM_g_num_t                 **vtx_ln_to_gn,
  int                          *pn_elmt,
  PDM_g_num_t                 **elmt_ln_to_gn
 )
@@ -91,6 +93,19 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_UNUSED(dmne);
   // PDM_UNUSED(pmne);
   PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_elmts_create(dmne->mesh_dimension, n_part, dmne->comm);
+
+  /*
+   * A priori le vtx_ln_to_gn n'est pas trié
+   */
+  PDM_g_num_t **sorted_vtx_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    sorted_vtx_ln_to_gn[i_part] = malloc(pn_vtx[i_part] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < pn_vtx[i_part]; ++i) {
+      sorted_vtx_ln_to_gn[i_part][i] = vtx_ln_to_gn[i_part][i];
+    }
+    PDM_sort_long(sorted_vtx_ln_to_gn[i_part], NULL, pn_vtx[i_part]);
+  }
 
   int n_section = dmne->n_section;
   PDM_g_num_t          **block_elmts_disbrib_idx = (PDM_g_num_t          ** ) malloc( n_section * sizeof(PDM_g_num_t          *));
@@ -260,7 +275,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       int idx_read_connec = pelmts_stride_idx[i_part][i_cell];
       for(int i_vtx = 0; i_vtx < n_vtx_per_elmt; ++i_vtx){
-        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = pelmts_connec[i_part][idx_read_connec+i_vtx];
+        int vtx_g_num = pelmts_connec[i_part][idx_read_connec+i_vtx];
+        int vtx_l_num = PDM_binary_search_long(vtx_g_num, sorted_vtx_ln_to_gn[i_part], pn_vtx[i_part]);
+        assert(vtx_l_num != -1);
+        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = vtx_l_num+1;
       }
 
       numabs    [i_section][idx_write] = g_num+1;
@@ -294,12 +312,14 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(numabs          );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_connec    [i_part]);
-    free(pelmts_stride    [i_part]);
-    free(pelmts_types     [i_part]);
-    free(pid_section      [i_part]);
-    free(pelmts_stride_idx[i_part]);
+    free(pelmts_connec      [i_part]);
+    free(pelmts_stride      [i_part]);
+    free(pelmts_types       [i_part]);
+    free(pid_section        [i_part]);
+    free(pelmts_stride_idx  [i_part]);
+    free(sorted_vtx_ln_to_gn[i_part]);
   }
+  free(sorted_vtx_ln_to_gn);
   free(pelmts_connec);
   free(pelmts_stride);
   free(pelmts_types );

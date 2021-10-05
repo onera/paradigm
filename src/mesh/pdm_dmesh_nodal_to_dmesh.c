@@ -523,16 +523,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
   //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
 
-
-
   int n_rank = -1;
   PDM_MPI_Comm_size(comm, &n_rank);
-  /**delmt_child_distrib = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t) );
-  PDM_g_num_t* _delmt_child_distrib = *delmt_child_distrib;
-
-  for(int i = 0; i < n_rank+1; ++i) {
-    _delmt_child_distrib[i] = distrib[i];
-    }*/
 
   int* stride_one = (int *) malloc( i_abs_child * sizeof(int));
   for(int i = 0; i < i_abs_child; ++i) {
@@ -541,25 +533,25 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
   int* blk_strid = NULL;
   int s_block_data = PDM_part_to_block_exch(ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         -1,
-                         &stride_one,
-               (void **) &_tmp_parent_gnum,
-                         &blk_strid,
-               (void **) dparent_gnum);
+                                            sizeof(PDM_g_num_t),
+                                            PDM_STRIDE_VAR,
+                                            -1,
+                                            &stride_one,
+                                  (void **) &_tmp_parent_gnum,
+                                            &blk_strid,
+                                  (void **) dparent_gnum);
   PDM_UNUSED(s_block_data);
   // PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
 
   free(blk_strid);
   s_block_data = PDM_part_to_block_exch(ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR,
-                         -1,
-                         &stride_one,
-               (void **) &_tmp_parent_sign,
-                         &blk_strid,
-               (void **) dparent_sign);
+                                        sizeof(int),
+                                        PDM_STRIDE_VAR,
+                                        -1,
+                                        &stride_one,
+                              (void **) &_tmp_parent_sign,
+                                        &blk_strid,
+                              (void **) dparent_sign);
   // PDM_log_trace_array_int(*dparent_sign, s_block_data, "dparent_sign : ");
 
   // log_trace("n_g_child = "PDM_FMT_G_NUM"\n", n_g_child);
@@ -579,9 +571,6 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   free(_tmp_parent_ln_to_gn);
   free(_tmp_parent_sign);
   free(_tmp_parent_gnum);
-
-
-
 
   /*
    * Exchange in origin absolute numbering
@@ -605,13 +594,13 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
 
   s_block_data = PDM_part_to_block_exch(ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         -1,
-                         &stride_one,
-               (void **) &_tmp_missing_parent_gnum,
-                         &blk_strid,
-               (void **) dmissing_child_parent_g_num);
+                                        sizeof(PDM_g_num_t),
+                                        PDM_STRIDE_VAR,
+                                        -1,
+                                        &stride_one,
+                              (void **) &_tmp_missing_parent_gnum,
+                                        &blk_strid,
+                              (void **) dmissing_child_parent_g_num);
 
   int dn_missing_ridge = PDM_part_to_block_n_elt_block_get(ptb);
   // PDM_log_trace_array_int(blk_strid, dn_missing_ridge, "blk_strid : ");
@@ -627,9 +616,6 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   free(blk_strid);
   free(_tmp_missing_ln_to_gn);
   free(_tmp_missing_parent_gnum);
-
-
-
 
   PDM_g_num_t* _dparent_gnum = *dparent_gnum;
   int*         _dparent_sign = *dparent_sign;
@@ -908,12 +894,12 @@ _generate_faces_from_dmesh_nodal
    *  Create empty dmesh
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
-                                     -1,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
+                                     0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */
@@ -1345,12 +1331,12 @@ _generate_edges_from_dmesh_nodal
    *  Create empty dmesh
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(link->owner,
-                                     -1,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
+                                     0,
                                      dmesh_nodal->vtx->n_vtx,
-                                     -1,
-                                     -1,
+                                     0,
+                                     0,
                                      dmesh_nodal->comm);
 
   /* Juste a view */
@@ -1562,6 +1548,10 @@ _generate_edges_from_dmesh_nodal
                                     dm->dn_edge, "PDM_CONNECTIVITY_TYPE_EDGE_FACE :: ");
   }
 
+  if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
+    free(_dedge_face_tmp);
+    free(_dedge_face_idx_tmp);
+  }
 }
 
 static
@@ -1663,7 +1653,8 @@ _translate_element_group_to_faces
     dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
     dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
-    dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt;
+    dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt; // TODO : TO REMOVE
+    dm->n_group_bnd   [PDM_BOUND_TYPE_FACE] = dmesh_nodal->surfacic->n_group_elmt;
   }
 
   // Par recursion on peut avoir les group de vertex ou de edge
@@ -1697,10 +1688,46 @@ _translate_element_group_to_edges
     dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
     dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
-    dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt;
+    dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt; // TODO : TO REMOVE
+    dm->n_group_bnd   [PDM_BOUND_TYPE_EDGE] = dmesh_nodal->ridge->n_group_elmt;
   }
-
 }
+
+
+// static
+// void
+// _translate_element_group_to_vtx
+// (
+//  _pdm_link_dmesh_nodal_to_dmesh_t* link
+// )
+// {
+//   PDM_dmesh_nodal_t *dmesh_nodal = link->dmesh_nodal;
+//   PDM_dmesh_t       *dm          = link->dmesh;
+
+//   PDM_g_num_t *dvtx_bound;
+//   int         *dvtx_bound_idx;
+
+//   abort();
+//   // Normalement rien a faire, car les vtx n'ont pas changé !!!!!
+//   // On a juste à faire une copie !!!
+//   // if(dmesh_nodal->corner->n_group_elmt > 0) {
+//   //   _translate_element_group_to_entity(dmesh_nodal->comm,
+//   //                                      dmesh_nodal->corner->delmt_child_distrib,
+//   //                                      dmesh_nodal->corner->dgroup_elmt,
+//   //                                      dmesh_nodal->corner->dgroup_elmt_idx,
+//   //                                      dmesh_nodal->corner->n_group_elmt,
+//   //                                      dmesh_nodal->corner->dparent_idx,
+//   //                                      dmesh_nodal->corner->dparent_gnum,
+//   //                                      &dvtx_bound,
+//   //                                      &dvtx_bound_idx);
+//   //   dm->is_owner_bound[PDM_BOUND_TYPE_VTX] = PDM_TRUE;
+//   //   dm->dbound_idx    [PDM_BOUND_TYPE_VTX] = dvtx_bound_idx;
+//   //   dm->dbound        [PDM_BOUND_TYPE_VTX] = dvtx_bound;
+//   //   dm->n_bnd                              = dmesh_nodal->corner->n_group_elmt; // TODO : TO REMOVE
+//   //   dm->n_group_bnd   [PDM_BOUND_TYPE_VTX] = dmesh_nodal->corner->n_group_elmt;
+//   // }
+// }
+
 
 static
 _pdm_link_dmesh_nodal_to_dmesh_t*
@@ -1933,11 +1960,6 @@ PDM_dmesh_nodal_to_dmesh_compute
   const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
 )
 {
-  PDM_UNUSED(dmesh_nodal_to_dm);
-  PDM_UNUSED(transform_kind);
-  PDM_UNUSED(transform_group_kind);
-
-  printf("PDM_dmesh_nodal_to_dmesh_compute2 A coder ... \n");
 
   for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
 
