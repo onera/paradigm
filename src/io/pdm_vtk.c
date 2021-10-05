@@ -47,6 +47,202 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+static int _vtk_elt_type
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  order
+ )
+{
+  int vtk_elt_type;
+  switch (elt_type) {
+  case PDM_MESH_NODAL_POINT:
+    vtk_elt_type = 1;
+    break;
+  case PDM_MESH_NODAL_BAR2:
+    if (order == 1) {
+      vtk_elt_type = 3;
+    } else if (order == 2) {
+      vtk_elt_type = 21;
+    }
+    break;
+  case PDM_MESH_NODAL_TRIA3:
+    if (order == 1) {
+      vtk_elt_type = 5;
+    } else if (order == 2) {
+      vtk_elt_type = 22;
+    }
+    break;
+  case PDM_MESH_NODAL_QUAD4:
+    if (order == 1) {
+      vtk_elt_type = 9;
+    } else if (order == 2) {
+      vtk_elt_type = 23;
+    }
+    break;
+  case PDM_MESH_NODAL_TETRA4:
+    if (order == 1) {
+      vtk_elt_type = 10;
+    } else if (order == 2) {
+      vtk_elt_type = 24;
+    }
+    break;
+  case PDM_MESH_NODAL_PYRAMID5:
+    if (order == 1) {
+      vtk_elt_type = 14;
+    } else if (order == 2) {
+      vtk_elt_type = 27;
+    }
+    break;
+  case PDM_MESH_NODAL_PRISM6:
+    if (order == 1) {
+      vtk_elt_type = 13;
+    } else if (order == 2) {
+      vtk_elt_type = 26;
+    }
+    break;
+  case PDM_MESH_NODAL_HEXA8:
+    if (order == 1) {
+      vtk_elt_type = 12;
+    } else if (order == 2) {
+      vtk_elt_type = 25;
+    }
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "type %d is not a valid std elt type\n", elt_type);
+  }
+
+  return vtk_elt_type;
+}
+
+
+
+static void
+_ijk_to_vtk
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  order,
+ int                        idx[]
+ )
+{
+  switch (elt_type) {
+
+  case PDM_MESH_NODAL_POINT:
+    idx[0] = 0;
+    break;
+
+  case PDM_MESH_NODAL_BAR2:
+    idx[0] = 0;
+    idx[1] = order;
+    for (int i = 1; i < order; i++) {
+      idx[i] = i+1;
+    }
+    break;
+
+  case PDM_MESH_NODAL_TRIA3:
+    if (order == 1) {
+      idx[2] = 2;
+      idx[0] = 0; idx[1] = 1;
+    } else if (order == 2) {
+      idx[2] = 5;
+      idx[5] = 3; idx[4] = 4;
+      idx[0] = 0; idx[3] = 1; idx[1] = 2;
+    } else if (order == 3) {
+      idx[2] = 9;
+      idx[7] = 7; idx[6] = 8;
+      idx[5] = 6; idx[9] = 5; idx[8] = 4;
+      idx[0] = 0; idx[3] = 1; idx[4] = 2; idx[1] = 3;
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "TRIA VTK ordering not implemented for order %d\n", order);
+    }
+    break;
+
+  case PDM_MESH_NODAL_QUAD4:
+    if (order == 1) {
+      idx[3] = 2; idx[2] = 3;
+      idx[0] = 0; idx[1] = 1;
+    } else if (order == 2) {
+      idx[3] = 6; idx[6] = 7; idx[2] = 8;
+      idx[7] = 3; idx[8] = 4; idx[5] = 5;
+      idx[0] = 0; idx[4] = 1; idx[1] = 2;
+    } else if (order == 3) {
+      idx[ 3] = 12; idx[ 9] = 13; idx[ 8] = 14; idx[ 2] = 15;
+      idx[10] =  8; idx[15] =  9; idx[14] = 10; idx[ 7] = 11;
+      idx[11] =  4; idx[12] =  5; idx[13] =  6; idx[ 6] =  7;
+      idx[ 0] =  0; idx[ 4] =  1; idx[ 5] =  2; idx[ 1] =  3;
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "QUAD VTK ordering not implemented for order %d\n", order);
+    }
+    break;
+
+  case PDM_MESH_NODAL_TETRA4:
+    if (order == 1) {
+      idx[3] = 3;
+
+      idx[2] = 2;
+      idx[0] = 0; idx[1] = 1;
+    } else if (order == 2) {
+      idx[3] = 9;
+
+      idx[9] = 8;
+      idx[7] = 6; idx[8] = 7;
+
+      idx[2] = 5;
+      idx[6] = 3; idx[5] = 4;
+      idx[0] = 0; idx[4] = 1; idx[1] = 2;
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "TETRA VTK ordering not implemented for order %d\n", order);
+    }
+    break;
+
+  case PDM_MESH_NODAL_PRISM6:
+    if (order == 1) {
+      idx[5] = 4;
+      idx[3] = 3; idx[4] = 5;
+
+      idx[2] = 1;
+      idx[0] = 0; idx[1] = 2;
+    } else if (order == 2) {
+      idx[ 5] = 14;
+      idx[11] = 13; idx[10] = 16;
+      idx[ 3] = 12; idx[ 9] = 15; idx[ 4] = 17;
+
+      idx[14] =  8;
+      idx[17] =  7; idx[16] = 10;
+      idx[12] =  6; idx[15] =  9; idx[13] = 11;
+
+      idx[ 2] =  2;
+      idx[ 8] =  1; idx[ 7] =  4;
+      idx[ 0] =  0; idx[ 6] =  3; idx[ 1] =  5;
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "PRISM VTK ordering not implemented for order %d\n", order);
+    }
+    break;
+
+  case PDM_MESH_NODAL_HEXA8:
+    if (order == 1) {
+      idx[7] = 6; idx[6] = 7;
+      idx[4] = 4; idx[5] = 5;
+
+      idx[3] = 2; idx[2] = 3;
+      idx[0] = 0; idx[1] = 1;
+    } else if (order == 2) {
+      idx[ 7] = 24; idx[14] = 25; idx[ 6] = 26;
+      idx[15] = 21; idx[21] = 22; idx[13] = 23;
+      idx[ 4] = 18; idx[12] = 19; idx[ 5] = 20;
+
+      idx[19] = 15; idx[24] = 16; idx[18] = 17;
+      idx[25] = 12; idx[26] = 13; idx[23] = 14;
+      idx[16] =  9; idx[22] = 10; idx[17] = 11;
+
+      idx[ 3] =  6; idx[10] =  7; idx[ 2] =  8;
+      idx[11] =  3; idx[20] =  4; idx[ 9] =  5;
+      idx[ 0] =  0; idx[ 8] =  1; idx[ 1] =  2;
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "HEXA VTK ordering not implemented for order %d\n", order);
+    }
+    break;
+  }
+}
 
 /*=============================================================================
  * Public function definitions
@@ -410,36 +606,7 @@ PDM_vtk_write_std_elements
   }
 
 
-  int vtk_elt_type;
-  switch (elt_type) {
-  case PDM_MESH_NODAL_POINT:
-    vtk_elt_type = 1;
-    break;
-  case PDM_MESH_NODAL_BAR2:
-    vtk_elt_type = 3;
-    break;
-  case PDM_MESH_NODAL_TRIA3:
-    vtk_elt_type = 5;
-    break;
-  case PDM_MESH_NODAL_QUAD4:
-    vtk_elt_type = 9;
-    break;
-  case PDM_MESH_NODAL_TETRA4:
-    vtk_elt_type = 10;
-    break;
-  case PDM_MESH_NODAL_PYRAMID5:
-    vtk_elt_type = 14;
-    break;
-  case PDM_MESH_NODAL_PRISM6:
-    vtk_elt_type = 13;
-    break;
-  case PDM_MESH_NODAL_HEXA8:
-    vtk_elt_type = 12;
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "PDM_vtk_write_std_elements : type %d is not a valid std elt type\n", elt_type);
-  }
-
+  int vtk_elt_type = _vtk_elt_type (elt_type, 1);
   fprintf(f, "CELL_TYPES %d\n", n_elt);
   for (int i = 0; i < n_elt; i++) {
     fprintf(f, "%d\n", vtk_elt_type);
@@ -531,36 +698,7 @@ PDM_vtk_write_std_elements_double
   }
 
 
-  int vtk_elt_type;
-  switch (elt_type) {
-  case PDM_MESH_NODAL_POINT:
-    vtk_elt_type = 1;
-    break;
-  case PDM_MESH_NODAL_BAR2:
-    vtk_elt_type = 3;
-    break;
-  case PDM_MESH_NODAL_TRIA3:
-    vtk_elt_type = 5;
-    break;
-  case PDM_MESH_NODAL_QUAD4:
-    vtk_elt_type = 9;
-    break;
-  case PDM_MESH_NODAL_TETRA4:
-    vtk_elt_type = 10;
-    break;
-  case PDM_MESH_NODAL_PYRAMID5:
-    vtk_elt_type = 14;
-    break;
-  case PDM_MESH_NODAL_PRISM6:
-    vtk_elt_type = 13;
-    break;
-  case PDM_MESH_NODAL_HEXA8:
-    vtk_elt_type = 12;
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "PDM_vtk_write_std_elements : type %d is not a valid std elt type\n", elt_type);
-  }
-
+  int vtk_elt_type = _vtk_elt_type (elt_type, 1);
   fprintf(f, "CELL_TYPES %d\n", n_elt);
   for (int i = 0; i < n_elt; i++) {
     fprintf(f, "%d\n", vtk_elt_type);
@@ -607,6 +745,119 @@ PDM_vtk_write_std_elements_double
 
   fclose(f);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void
+PDM_vtk_write_std_elements_ho
+(
+ const char                 *filename,
+ const int                   order,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const int                   n_elt,
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[]
+ )
+{
+  assert (order < 3);
+
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
+  int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
+  _ijk_to_vtk (elt_type,
+                order,
+                vtk_idx);
+
+  fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
+  for (int i = 0; i < n_elt; i++) {
+    fprintf(f, "%d", n_vtx_elt);
+    for (int j = 0; j < n_vtx_elt; j++) {
+      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+
+  int vtk_elt_type = _vtk_elt_type (elt_type, order);
+  fprintf(f, "CELL_TYPES %d\n", n_elt);
+  for (int i = 0; i < n_elt; i++) {
+    fprintf(f, "%d\n", vtk_elt_type);
+  }
+
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS vtx_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  }
+
+  if (elt_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_elt);
+    fprintf(f, "SCALARS elt_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", elt_g_num[i]);
+     }
+  }
+
+  if (n_elt_field > 0) {
+    assert (elt_field != NULL);
+
+    if (elt_g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_elt);
+    }
+
+    fprintf(f, "FIELD elt_field %d\n", n_elt_field);
+    for (int i = 0; i < n_elt_field; i++) {
+      assert (elt_field[i] != NULL);
+      assert (elt_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
+      for (int j = 0; j < n_elt; j++) {
+        fprintf(f, "%lf ", elt_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fclose(f);
+}
+
 
 
 

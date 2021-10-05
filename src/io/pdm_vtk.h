@@ -135,6 +135,22 @@ PDM_vtk_write_std_elements_double
  const double               *elt_field[]
  );
 
+void
+PDM_vtk_write_std_elements_ho
+(
+ const char                 *filename,
+ const int                   order,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const int                   n_elt,
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[]
+ );
 
 void
 PDM_vtk_write_ellipses
