@@ -1610,8 +1610,8 @@ PDM_part_generate_entity_graph_comm
   PDM_g_num_t* new_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_stri, entity_distribution[n_rank]);
   free(new_distrib);
   new_distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb, &proc_blk_stri, entity_distribution[n_rank]);
-  int dn_check = new_distrib[i_rank+1] - new_distrib[i_rank];
-  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
+  // int dn_check = new_distrib[i_rank+1] - new_distrib[i_rank];
+  // int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
   free(new_distrib);
 
   /*
@@ -2025,6 +2025,114 @@ PDM_part_dfield_to_pfield
 
   PDM_block_to_part_free(btp);
 }
+
+/**
+ *  \brief Recover partitioned coordinates from distributed coordinates and
+ *   vertex ln_to_gn indirection.
+ *   This function basically calls PDM_block_to_part on to exchange vertex coordinates.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   vertex_distribution Distribution of vertices over the processes (size=n_rank+1)
+ * \param [in]   dvtx_coord          Coordinates of distributed vertices (size=3*dn_vtx)
+ * \param [in]   pn_vtx              Number of vertices in each partition (size=n_part)
+ * \param [in]   pvtx_ln_to_gn       For each part, position of vertices in the global numbering
+ *                                   (size = n_part, each component size = pn_vtx[i_part])
+ * \param [out]  pvtx_coord          Coordinates of partitioned vertices for each partition
+ *                                   (size = n_part, each component size = 3*pn_vtx[i_part])
+ */
+void
+PDM_part_dfield_to_pfield2
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  size_t                 s_data,
+  PDM_stride_t           t_stride,
+  const PDM_g_num_t     *field_distribution,
+  const int             *dfield_stri,
+  const unsigned char   *dfield,
+  const int             *pn_field,
+  const PDM_g_num_t    **pfield_ln_to_gn,
+        int           ***pfield_stride,
+        unsigned char ***pfield
+)
+{
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(field_distribution,
+                               (const PDM_g_num_t **) pfield_ln_to_gn,
+                                                      pn_field,
+                                                      n_part,
+                                                      comm);
+
+  PDM_block_to_part_exch2(btp,
+                          s_data,
+                          t_stride,
+             (int  *  )   dfield_stri,
+             (void *  )   dfield,
+             (int  ***)   pfield_stride,
+             (void ***)   pfield);
+
+  PDM_block_to_part_free(btp);
+}
+
+
+
+void
+PDM_part_dentity_group_to_pentity_group
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  const PDM_g_num_t     *entity_distribution,
+  const int             *dentity_group_idx,
+  const int             *dentity_group,
+  const int             *pn_entity,
+  const PDM_g_num_t    **pentity_ln_to_gn,
+  int                 ***pentity_group_idx,
+  int                 ***pentity_group
+)
+{
+  int i_rank;
+  // int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  // PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
+
+  int* dentity_group_n = (int * ) malloc( dn_entity * sizeof(int));
+  for(int i = 0; i < dn_entity; ++i) {
+    dentity_group_n[i] = dentity_group_idx[i+1] - dentity_group_idx[i];
+  }
+  int **pentity_group_n = NULL;
+  PDM_part_dfield_to_pfield2(comm,
+                             n_part,
+                             sizeof(int),
+                             PDM_STRIDE_VAR,
+                             entity_distribution,
+                             dentity_group_n,
+         (unsigned char *  ) dentity_group,
+                             pn_entity,
+                             pentity_ln_to_gn,
+                             &pentity_group_n,
+         (unsigned char ***) pentity_group);
+
+
+  int **_pentity_group_idx = malloc( (n_part) * sizeof(int *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    _pentity_group_idx[i_part] = malloc( (pn_entity[i_part]+1) * sizeof(int));
+    _pentity_group_idx[i_part][0] = 0;
+    printf("pn_entity[i_part] = %i \n", pn_entity[i_part]);
+    for(int i = 0; i < pn_entity[i_part]; ++i) {
+      printf(" [%i] --> %i \n", i, pentity_group_n[i_part][i]);
+      _pentity_group_idx[i_part][i+1] = _pentity_group_idx[i_part][i] + pentity_group_n[i_part][i];
+    }
+    free(pentity_group_n[i_part]);
+  }
+  free(pentity_group_n);
+  free(dentity_group_n);
+
+  *pentity_group_idx = _pentity_group_idx;
+}
+
 
 // void
 // PDM_part_multi_dfield_to_pfield

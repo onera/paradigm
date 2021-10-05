@@ -241,6 +241,23 @@ PDM_part_dfield_to_pfield
         unsigned char ***pfield
 );
 
+
+void
+PDM_part_dfield_to_pfield2
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  size_t                 s_data,
+  PDM_stride_t           t_stride,
+  const PDM_g_num_t     *field_distribution,
+  const int             *dfield_stri,
+  const unsigned char   *dfield,
+  const int             *pn_field,
+  const PDM_g_num_t    **pfield_ln_to_gn,
+  int                 ***pfield_stride,
+        unsigned char ***pfield
+);
+
 void
 PDM_extend_mesh
 (
@@ -257,6 +274,20 @@ PDM_extend_mesh
        PDM_g_num_t  ***pentity_ln_to_gn_extended
 );
 
+
+void
+PDM_part_dentity_group_to_pentity_group
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  const PDM_g_num_t     *entity_distribution,
+  const int             *dentity_group_idx,
+  const int             *dentity_group,
+  const int             *pn_entity,
+  const PDM_g_num_t    **pentity_ln_to_gn,
+  int                 ***pentity_group_idx,
+  int                 ***pentity_group
+);
 
 void
 PDM_setup_connectivity_idx
