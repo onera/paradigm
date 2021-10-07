@@ -705,8 +705,8 @@ PDM_dgroup_entity_transpose
    *  Exchange group id
    */
 
-  int         *tmp_dentity_group_n = NULL;
-  PDM_g_num_t *tmp_dentity_group   = NULL;
+  int *tmp_dentity_group_n = NULL;
+  int *tmp_dentity_group   = NULL;
   int s_block = PDM_part_to_block_exch (ptb,
                                         sizeof(int),
                                         PDM_STRIDE_VAR,
@@ -717,6 +717,7 @@ PDM_dgroup_entity_transpose
                               (void **) &tmp_dentity_group);
   free(pgroup_id_n);
   free(pgroup_id);
+
 
   int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
 

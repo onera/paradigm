@@ -53,6 +53,8 @@ static int _vtk_elt_type
  const int                  order
  )
 {
+  //assert (order <= 2);
+
   int vtk_elt_type;
   switch (elt_type) {
   case PDM_MESH_NODAL_POINT:
@@ -63,6 +65,8 @@ static int _vtk_elt_type
       vtk_elt_type = 3;
     } else if (order == 2) {
       vtk_elt_type = 21;
+    } else {
+      vtk_elt_type = 68;
     }
     break;
   case PDM_MESH_NODAL_TRIA3:
@@ -70,6 +74,8 @@ static int _vtk_elt_type
       vtk_elt_type = 5;
     } else if (order == 2) {
       vtk_elt_type = 22;
+    } else {
+      vtk_elt_type = 69;
     }
     break;
   case PDM_MESH_NODAL_QUAD4:
@@ -77,6 +83,8 @@ static int _vtk_elt_type
       vtk_elt_type = 9;
     } else if (order == 2) {
       vtk_elt_type = 23;
+    } else {
+      vtk_elt_type = 70;
     }
     break;
   case PDM_MESH_NODAL_TETRA4:
@@ -84,6 +92,8 @@ static int _vtk_elt_type
       vtk_elt_type = 10;
     } else if (order == 2) {
       vtk_elt_type = 24;
+    } else {
+      vtk_elt_type = 64;
     }
     break;
   case PDM_MESH_NODAL_PYRAMID5:
@@ -91,6 +101,8 @@ static int _vtk_elt_type
       vtk_elt_type = 14;
     } else if (order == 2) {
       vtk_elt_type = 27;
+    } else {
+      vtk_elt_type = 66;
     }
     break;
   case PDM_MESH_NODAL_PRISM6:
@@ -98,6 +110,8 @@ static int _vtk_elt_type
       vtk_elt_type = 13;
     } else if (order == 2) {
       vtk_elt_type = 26;
+    } else {
+      vtk_elt_type = 65;
     }
     break;
   case PDM_MESH_NODAL_HEXA8:
@@ -105,6 +119,8 @@ static int _vtk_elt_type
       vtk_elt_type = 12;
     } else if (order == 2) {
       vtk_elt_type = 25;
+    } else {
+      vtk_elt_type = 67;
     }
     break;
   default:
@@ -134,7 +150,7 @@ _ijk_to_vtk
     idx[0] = 0;
     idx[1] = order;
     for (int i = 1; i < order; i++) {
-      idx[i] = i+1;
+      idx[i+1] = i;
     }
     break;
 
@@ -149,8 +165,14 @@ _ijk_to_vtk
     } else if (order == 3) {
       idx[2] = 9;
       idx[7] = 7; idx[6] = 8;
-      idx[5] = 6; idx[9] = 5; idx[8] = 4;
+      idx[8] = 4; idx[9] = 5; idx[5] = 6;
       idx[0] = 0; idx[3] = 1; idx[4] = 2; idx[1] = 3;
+    } else if (order == 4) {
+      idx[ 2] = 14;
+      idx[ 9] = 12; idx[ 8] = 13;
+      idx[10] =  9; idx[14] = 10; idx[ 7] = 11;
+      idx[11] =  5; idx[12] =  6; idx[13] =  7; idx[ 6] =  8;
+      idx[ 0] =  0; idx[ 3] =  1; idx[ 4] =  2; idx[ 5] =  3; idx[ 1] =  4;
     } else {
       PDM_error(__FILE__, __LINE__, 0, "TRIA VTK ordering not implemented for order %d\n", order);
     }
@@ -165,9 +187,9 @@ _ijk_to_vtk
       idx[7] = 3; idx[8] = 4; idx[5] = 5;
       idx[0] = 0; idx[4] = 1; idx[1] = 2;
     } else if (order == 3) {
-      idx[ 3] = 12; idx[ 9] = 13; idx[ 8] = 14; idx[ 2] = 15;
-      idx[10] =  8; idx[15] =  9; idx[14] = 10; idx[ 7] = 11;
-      idx[11] =  4; idx[12] =  5; idx[13] =  6; idx[ 6] =  7;
+      idx[ 3] = 12; idx[ 8] = 13; idx[ 9] = 14; idx[ 2] = 15;
+      idx[11] =  8; idx[14] =  9; idx[15] = 10; idx[ 7] = 11;
+      idx[10] =  4; idx[12] =  5; idx[13] =  6; idx[ 6] =  7;
       idx[ 0] =  0; idx[ 4] =  1; idx[ 5] =  2; idx[ 1] =  3;
     } else {
       PDM_error(__FILE__, __LINE__, 0, "QUAD VTK ordering not implemented for order %d\n", order);
@@ -777,7 +799,7 @@ PDM_vtk_write_std_elements_ho
  const double               *elt_field[]
  )
 {
-  assert (order < 3);
+  //assert (order < 3);
 
   FILE *f = fopen(filename, "w");
 

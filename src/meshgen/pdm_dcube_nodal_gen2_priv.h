@@ -67,13 +67,16 @@ struct _pdm_dcube_nodal2_t {
   int                   dn_quad;
   int                   dn_bar;
 
+  int                   n_group_corner;//?
+  int                   n_group_ridge;
+  int                   n_group_surf;
+  int                   n_group_vol;//?
 
-
-  PDM_g_num_t          *delmt_vtx;              /*!< Faces from vertices connectivity          */
-  PDM_g_num_t          *delmt_lim_vtx;          /*!< Faces from vertices connectivity          */
+  //PDM_g_num_t          *delmt_vtx;              /*!< Faces from vertices connectivity          */
+  //PDM_g_num_t          *delmt_lim_vtx;          /*!< Faces from vertices connectivity          */
   double               *dvtx_coord;             /*!< Vertices coordinates                      */
-  int                  *dface_group_idx;        /*!< Faces groups index                        */
-  PDM_g_num_t          *dface_group;            /*!< Faces groups                              */
+  //int                  *dface_group_idx;        /*!< Faces groups index                        */
+  //PDM_g_num_t          *dface_group;            /*!< Faces groups                              */
   PDM_Mesh_nodal_elt_t  t_elt;                  /*!< Type of elements to generate              */
 
   PDM_dmesh_nodal_t    *dmesh_nodal;            /*!< Results                                   */

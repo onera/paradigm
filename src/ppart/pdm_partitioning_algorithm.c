@@ -2120,9 +2120,9 @@ PDM_part_dentity_group_to_pentity_group
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _pentity_group_idx[i_part] = malloc( (pn_entity[i_part]+1) * sizeof(int));
     _pentity_group_idx[i_part][0] = 0;
-    printf("pn_entity[i_part] = %i \n", pn_entity[i_part]);
+    log_trace("pn_entity[i_part] = %i \n", pn_entity[i_part]);
     for(int i = 0; i < pn_entity[i_part]; ++i) {
-      printf(" [%i] --> %i \n", i, pentity_group_n[i_part][i]);
+      log_trace(" [%i] --> %i \n", i, pentity_group_n[i_part][i]);
       _pentity_group_idx[i_part][i+1] = _pentity_group_idx[i_part][i] + pentity_group_n[i_part][i];
     }
     free(pentity_group_n[i_part]);

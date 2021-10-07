@@ -1182,7 +1182,7 @@ const double                zero_z,
 
   dcube->dn_vtx = PDM_compute_uniform_dn_entity(dcube->comm, n_vtx);
 
-  double* dvtx_coord = (double *) malloc( 3 * (dcube->dn_vtx ) * sizeof(double *));
+  double* dvtx_coord = (double *) malloc( 3 * (dcube->dn_vtx ) * sizeof(double));
   PDM_DMesh_nodal_coord_set(dcube->dmesh_nodal,
                             dcube->dn_vtx,
                             dvtx_coord,
@@ -1396,7 +1396,3 @@ PDM_dcube_nodal_t        *dcube
   free(dcube);
 
 }
-
-
-
-
