@@ -209,9 +209,12 @@ _dmesh_nodal_dump_vtk
     dmne = dmn->surfacic;
   }
 
-  PDM_g_num_t *distrib_elt = PDM_compute_uniform_entity_distribution(dmn->comm,
-                                                                     dmne->n_g_elmts);
+  PDM_g_num_t *distrib_elt = NULL;
   if (dmne != NULL) {
+    distrib_elt = PDM_compute_uniform_entity_distribution(dmn->comm,
+                                                          dmne->n_g_elmts);
+    PDM_log_trace_array_long(distrib_elt, n_rank+1, "distrib_elt : ");
+
     PDM_dgroup_entity_transpose(dmne->n_group_elmt,
                                 dmne->dgroup_elmt_idx,
                                 dmne->dgroup_elmt,
@@ -280,6 +283,10 @@ _dmesh_nodal_dump_vtk
      * Groups
      */
     if (dmne != NULL) {
+      for(int i = 0; i < n_elt; ++i) {
+        delmt_ln_to_gn[i] += shift;
+      }
+
       int **tmp_elt_group_idx = NULL;
       int **tmp_elt_group     = NULL;
       PDM_part_dentity_group_to_pentity_group(dmn->comm,
@@ -348,8 +355,8 @@ _dmesh_nodal_dump_vtk
   if (dmne != NULL) {
     free (delt_group_idx);
     free (delt_group);
+    free (distrib_elt);
   }
-  free (distrib_elt);
 }
 
 
@@ -431,17 +438,22 @@ int main(int argc, char *argv[])
   /*
    *  Create distributed cube
    */
-  PDM_dcube_nodal2_t *dcube = PDM_dcube_nodal_gen2_init(comm,
-                                                        nx,
-                                                        ny,
-                                                        nz,
-                                                        length,
-                                                        0.,
-                                                        0.,
-                                                        0.,
-                                                        t_elt,
-                                                        order,
-                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal2_t *dcube = PDM_dcube_nodal_gen2_create(comm,
+                                                          nx,
+                                                          ny,
+                                                          nz,
+                                                          length,
+                                                          0.,
+                                                          0.,
+                                                          0.,
+                                                          t_elt,
+                                                          order,
+                                                          PDM_OWNERSHIP_KEEP);
+
+  PDM_dcube_nodal_gen2_ordering_set (dcube,
+                                     "PDM_HO_ORDERING_VTK");
+
+  PDM_dcube_nodal_gen2_build (dcube);
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen2_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
@@ -457,10 +469,11 @@ int main(int argc, char *argv[])
     double y = (dvtx_coord[3*i + 1] - 0.5) / length;
     double z = (dvtx_coord[3*i + 2] - 0.5) / length;
 
-    double scale = length * pow(2, order-1);
+    //double scale = length * pow(2, order-1);
 
     if (dim == 2) {
-      dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
+      //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
+      dvtx_coord[3*i + 2] = length * (x*x + y*y);
     } else {
       dvtx_coord[3*i    ] += 0.1*length*cos(3*y);
       dvtx_coord[3*i + 1] += 0.1*length*cos(3*z);
@@ -469,13 +482,13 @@ int main(int argc, char *argv[])
   }
 
   if (dim == 3) {
-    //_dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic");
+    _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic");
   }
   //PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
   //PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
-  //_dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
-  //_dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_CORNER,   "out_corner");
+  _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
+  _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_CORNER,   "out_corner");
 
 
   //PDM_dmesh_nodal_to_dmesh_free(dmntodm);

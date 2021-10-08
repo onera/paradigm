@@ -6,6 +6,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_ho_ordering.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_dmesh_nodal_priv.h"
 
@@ -81,6 +82,7 @@ struct _pdm_dcube_nodal2_t {
 
   PDM_dmesh_nodal_t    *dmesh_nodal;            /*!< Results                                   */
 
+  char                 *ordering;
 } ;
 
 

@@ -5,8 +5,10 @@
 #include <assert.h>
 
 #include "pdm_part.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dcube_nodal_gen2.h"
 #include "pdm_dcube_nodal_gen2_priv.h"
+#include "pdm_ho_ordering.h"
 #include "pdm_mpi.h"
 #include "pdm_distrib.h"
 #include "pdm_printf.h"
@@ -1131,6 +1133,72 @@ _generate_prism_surf
 }
 
 
+
+static void
+_reorder
+(
+ PDM_dcube_nodal2_t *dcube,
+ PDM_dmesh_nodal_t  *dmesh_nodal
+ )
+{
+  int n_nodes_max = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, dcube->order);
+  PDM_g_num_t *delt_vtx_ijk = malloc (sizeof(PDM_g_num_t) * n_nodes_max);
+
+  PDM_geometry_kind_t start = PDM_GEOMETRY_KIND_MAX;
+  if (dmesh_nodal->mesh_dimension == 2) {
+    start = PDM_GEOMETRY_KIND_SURFACIC;
+  } else if (dmesh_nodal->mesh_dimension == 3) {
+    start = PDM_GEOMETRY_KIND_VOLUMIC;
+  }
+
+  for (PDM_geometry_kind_t geom_kind = start; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+
+    int *sections_id = PDM_DMesh_nodal_sections_id_get(dmesh_nodal, geom_kind);
+    int n_section    = PDM_DMesh_nodal_n_section_get  (dmesh_nodal, geom_kind);
+
+    for(int isection = 0; isection < n_section; isection++) {
+
+      int id_section = sections_id[isection];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_section_type_get(dmesh_nodal,
+                                                                    geom_kind,
+                                                                    id_section);
+      if (t_elt == PDM_MESH_NODAL_POINT) continue;
+
+      int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get(dcube->ordering,
+                                                         t_elt,
+                                                         dcube->order);
+
+      if (ijk_to_user == NULL) continue;
+
+      int n_elt = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,
+                                                    geom_kind,
+                                                    id_section);
+
+      PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_section_std_get(dmesh_nodal,
+                                                              geom_kind,
+                                                              id_section);
+
+      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, dcube->order);
+
+      for (int ielt = 0; ielt < n_elt; ielt++) {
+        PDM_g_num_t *_delt_vtx = delt_vtx + n_vtx_elt*ielt;
+        memcpy (delt_vtx_ijk, _delt_vtx, sizeof(PDM_g_num_t) * n_vtx_elt);
+
+        for (int i = 0; i < n_vtx_elt; i++) {
+          _delt_vtx[ijk_to_user[i]] = delt_vtx_ijk[i];
+        }
+      }
+    }
+
+  }
+
+  free (delt_vtx_ijk);
+}
+
+
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1150,8 +1218,24 @@ _generate_prism_surf
  *
  */
 
-PDM_dcube_nodal2_t*
-PDM_dcube_nodal_gen2_init
+
+PDM_dmesh_nodal_t*
+PDM_dcube_nodal_gen2_dmesh_nodal_get
+(
+ PDM_dcube_nodal2_t  *dcube
+)
+{
+  return dcube->dmesh_nodal;
+}
+
+
+
+
+
+
+
+PDM_dcube_nodal2_t *
+PDM_dcube_nodal_gen2_create
 (
  PDM_MPI_Comm          comm,
  const PDM_g_num_t     nx,
@@ -1174,12 +1258,6 @@ PDM_dcube_nodal_gen2_init
 
   PDM_dcube_nodal2_t *dcube = (PDM_dcube_nodal2_t *) malloc(sizeof(PDM_dcube_nodal2_t));
 
-  double t1 = PDM_MPI_Wtime();
-
-
-  /*
-   * Build dcube structure
-   */
   dcube->comm   = comm;
   dcube->nx     = nx;
   dcube->ny     = ny;
@@ -1192,17 +1270,61 @@ PDM_dcube_nodal_gen2_init
   dcube->order  = order;
   dcube->owner  = owner;
 
+  dcube->ordering = NULL;
+
+  return dcube;
+}
+
+
+void
+PDM_dcube_nodal_gen2_free
+(
+ PDM_dcube_nodal2_t *dcube
+ )
+{
+  if (dcube == NULL) {
+    return;
+  }
+
+  free (dcube);
+}
+
+
+void PDM_dcube_nodal_gen2_ordering_set
+(
+ PDM_dcube_nodal2_t *dcube,
+ char               *ordering
+ )
+{
+  dcube->ordering = ordering;
+}
+
+
+PDM_dmesh_nodal_t *
+PDM_dcube_nodal_gen2_build
+(
+ PDM_dcube_nodal2_t *dcube
+ )
+{
+  double t1 = PDM_MPI_Wtime();
+
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size(dcube->comm, &n_rank);
+  PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+
   int dim = 3;
-  if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 ) {
+  if(dcube->t_elt == PDM_MESH_NODAL_TRIA3 || dcube->t_elt == PDM_MESH_NODAL_QUAD4 ) {
     dim = 2;
   }
-  if(t_elt == PDM_MESH_NODAL_POINT || t_elt == PDM_MESH_NODAL_BAR2){
+  if(dcube->t_elt == PDM_MESH_NODAL_POINT || dcube->t_elt == PDM_MESH_NODAL_BAR2){
     PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt for PDM_dcube_nodal_gen_init\n");
   }
 
-  PDM_g_num_t n_vtx_x = order*nx + 1;
-  PDM_g_num_t n_vtx_y = order*ny + 1;
-  PDM_g_num_t n_vtx_z = order*nz + 1;
+  PDM_g_num_t n_vtx_x = dcube->order*dcube->nx + 1;
+  PDM_g_num_t n_vtx_y = dcube->order*dcube->ny + 1;
+  PDM_g_num_t n_vtx_z = dcube->order*dcube->nz + 1;
 
 
   PDM_g_num_t gn_vtx  = 0;
@@ -1213,14 +1335,14 @@ PDM_dcube_nodal_gen2_init
 
   if (dim == 2) {
     gn_vtx  = n_vtx_x * n_vtx_y;
-    gn_bar  = 2*(nx + ny);
-    gn_quad = nx * ny;
+    gn_bar  = 2*(dcube->nx + dcube->ny);
+    gn_quad = dcube->nx * dcube->ny;
     gn_elt  = gn_quad;
   } else {
     gn_vtx  = n_vtx_x * n_vtx_y * n_vtx_z;
-    gn_bar  = 4*(nx + ny + nz);
-    gn_quad = 2*(nx*ny + ny*nz + nz*nx);
-    gn_hexa = nx * ny * nz;
+    gn_bar  = 4*(dcube->nx + dcube->ny + dcube->nz);
+    gn_quad = 2*(dcube->nx*dcube->ny + dcube->ny*dcube->nz + dcube->nz*dcube->nx);
+    gn_hexa = dcube->nx * dcube->ny * dcube->nz;
     gn_elt  = gn_hexa;
   }
 
@@ -1230,7 +1352,7 @@ PDM_dcube_nodal_gen2_init
   /*
    * Create the dmesh_nodal that hold the resulting mesh
    */
-  PDM_g_num_t gn_cell_abs = _get_n_cell_abs(gn_elt, t_elt);
+  PDM_g_num_t gn_cell_abs = _get_n_cell_abs(gn_elt, dcube->t_elt);
   dcube->dmesh_nodal = PDM_DMesh_nodal_create(dcube->comm,
                                               dim,
                                               gn_vtx,
@@ -1253,9 +1375,9 @@ PDM_dcube_nodal_gen2_init
   /*
    * Generate vertices
    */
-  double step_x = length / (double) (order*nx);
-  double step_y = length / (double) (order*ny);
-  double step_z = length / (double) (order*nz);
+  double step_x = dcube->length / (double) (n_vtx_x - 1);
+  double step_y = dcube->length / (double) (n_vtx_y - 1);
+  double step_z = dcube->length / (double) (n_vtx_z - 1);
 
   if (dim == 2) {
     for (int i_vtx = 0; i_vtx < dcube->dn_vtx; ++i_vtx) {
@@ -1265,9 +1387,9 @@ PDM_dcube_nodal_gen2_init
       PDM_g_num_t indi = g_vtx % n_vtx_x;
       PDM_g_num_t indj = g_vtx / n_vtx_x;
 
-      dvtx_coord[3 * i_vtx    ] = indi * step_x + zero_x;
-      dvtx_coord[3 * i_vtx + 1] = indj * step_y + zero_y;
-      dvtx_coord[3 * i_vtx + 2] = zero_z;
+      dvtx_coord[3 * i_vtx    ] = indi * step_x + dcube->zero_x;
+      dvtx_coord[3 * i_vtx + 1] = indj * step_y + dcube->zero_y;
+      dvtx_coord[3 * i_vtx + 2] = dcube->zero_z;
     }
   }
   else {
@@ -1279,9 +1401,9 @@ PDM_dcube_nodal_gen2_init
       PDM_g_num_t indj = ((g_vtx - indi) / n_vtx_x) % n_vtx_y;
       PDM_g_num_t indk = g_vtx / (n_vtx_x * n_vtx_y);
 
-      dvtx_coord[3 * i_vtx    ] = indi * step_x + zero_x;
-      dvtx_coord[3 * i_vtx + 1] = indj * step_y + zero_y;
-      dvtx_coord[3 * i_vtx + 2] = indk * step_z + zero_z;
+      dvtx_coord[3 * i_vtx    ] = indi * step_x + dcube->zero_x;
+      dvtx_coord[3 * i_vtx + 1] = indj * step_y + dcube->zero_y;
+      dvtx_coord[3 * i_vtx + 2] = indk * step_z + dcube->zero_z;
     }
   }
 
@@ -1323,34 +1445,34 @@ PDM_dcube_nodal_gen2_init
     PDM_Mesh_nodal_add_dmesh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_corner);
   }
 
-  switch (t_elt) {
-    case PDM_MESH_NODAL_TRIA3:
+  switch (dcube->t_elt) {
+  case PDM_MESH_NODAL_TRIA3:
     {
       _generate_tria_surf (dcube, dcube->dmesh_nodal);
     }
     break;
 
-    case PDM_MESH_NODAL_QUAD4:
+  case PDM_MESH_NODAL_QUAD4:
     {
       _generate_quad_surf (dcube, dcube->dmesh_nodal);
     }
     break;
 
-    case PDM_MESH_NODAL_TETRA4:
+  case PDM_MESH_NODAL_TETRA4:
     {
       _generate_tetra_vol (dcube, dcube->dmesh_nodal);
       _generate_tetra_surf(dcube, dcube->dmesh_nodal);
     }
     break;
 
-    case PDM_MESH_NODAL_PRISM6:
+  case PDM_MESH_NODAL_PRISM6:
     {
       _generate_prism_vol (dcube, dcube->dmesh_nodal);
       _generate_prism_surf(dcube, dcube->dmesh_nodal);
     }
     break;
 
-    case PDM_MESH_NODAL_HEXA8:
+  case PDM_MESH_NODAL_HEXA8:
     {
       _generate_hexa_vol (dcube, dcube->dmesh_nodal);
       _generate_hexa_surf(dcube, dcube->dmesh_nodal);
@@ -1358,9 +1480,9 @@ PDM_dcube_nodal_gen2_init
     }
     break;
 
-    default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
-      break;
+  default :
+    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    break;
 
   }
 
@@ -1369,6 +1491,13 @@ PDM_dcube_nodal_gen2_init
 
   _generate_ridges (dcube, dcube->dmesh_nodal);
   PDM_dmesh_nodal_elmts_generate_distribution (dcube->dmesh_nodal->ridge);
+
+
+
+  if (dcube->ordering != NULL) {
+    _reorder (dcube, dcube->dmesh_nodal);
+  }
+
 
 
   double t2 = PDM_MPI_Wtime();
@@ -1395,15 +1524,6 @@ PDM_dcube_nodal_gen2_init
     printf("[%i] PDM_dcube_nodal : duration min/max -> %12.5e %12.5e \n", n_rank, delta_min, delta_max);
   }
 
-  return dcube;
-}
 
-
-PDM_dmesh_nodal_t*
-PDM_dcube_nodal_gen2_dmesh_nodal_get
-(
- PDM_dcube_nodal2_t  *dcube
-)
-{
   return dcube->dmesh_nodal;
 }

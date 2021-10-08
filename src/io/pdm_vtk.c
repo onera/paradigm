@@ -63,8 +63,8 @@ static int _vtk_elt_type
   case PDM_MESH_NODAL_BAR2:
     if (order == 1) {
       vtk_elt_type = 3;
-    } else if (order == 2) {
-      vtk_elt_type = 21;
+      //} else if (order == 2) {
+      // vtk_elt_type = 21;
     } else {
       vtk_elt_type = 68;
     }
@@ -72,8 +72,8 @@ static int _vtk_elt_type
   case PDM_MESH_NODAL_TRIA3:
     if (order == 1) {
       vtk_elt_type = 5;
-    } else if (order == 2) {
-      vtk_elt_type = 22;
+      //} else if (order == 2) {
+      //vtk_elt_type = 22;
     } else {
       vtk_elt_type = 69;
     }
@@ -81,8 +81,8 @@ static int _vtk_elt_type
   case PDM_MESH_NODAL_QUAD4:
     if (order == 1) {
       vtk_elt_type = 9;
-    } else if (order == 2) {
-      vtk_elt_type = 23;
+      //} else if (order == 2) {
+      //  vtk_elt_type = 23;
     } else {
       vtk_elt_type = 70;
     }
@@ -90,10 +90,10 @@ static int _vtk_elt_type
   case PDM_MESH_NODAL_TETRA4:
     if (order == 1) {
       vtk_elt_type = 10;
-    } else if (order == 2) {
-      vtk_elt_type = 24;
+      //} else if (order == 2) {
+      //vtk_elt_type = 24;
     } else {
-      vtk_elt_type = 64;
+      vtk_elt_type = 71;
     }
     break;
   case PDM_MESH_NODAL_PYRAMID5:
@@ -108,19 +108,19 @@ static int _vtk_elt_type
   case PDM_MESH_NODAL_PRISM6:
     if (order == 1) {
       vtk_elt_type = 13;
-    } else if (order == 2) {
-      vtk_elt_type = 26;
+      //} else if (order == 2) {
+      //vtk_elt_type = 26;
     } else {
-      vtk_elt_type = 65;
+      vtk_elt_type = 73;
     }
     break;
   case PDM_MESH_NODAL_HEXA8:
     if (order == 1) {
       vtk_elt_type = 12;
-    } else if (order == 2) {
-      vtk_elt_type = 25;
+      //} else if (order == 2) {
+      //vtk_elt_type = 25;
     } else {
-      vtk_elt_type = 67;
+      vtk_elt_type = 72;
     }
     break;
   default:
@@ -817,16 +817,17 @@ PDM_vtk_write_std_elements_ho
   }
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
-  int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
+  /*int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
   _ijk_to_vtk (elt_type,
                 order,
-                vtk_idx);
+                vtk_idx);*/
 
   fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
   for (int i = 0; i < n_elt; i++) {
     fprintf(f, "%d", n_vtx_elt);
     for (int j = 0; j < n_vtx_elt; j++) {
-      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
+      //fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
+      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
     }
     fprintf(f, "\n");
   }

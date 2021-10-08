@@ -4,6 +4,7 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_ho_ordering.h"
 
 /*=============================================================================
  * Macro definitions
@@ -30,22 +31,8 @@ typedef struct _pdm_dcube_nodal2_t PDM_dcube_nodal2_t;
  * Public function prototypes
  *============================================================================*/
 
-/**
- *
- * \brief Create a distributed cube
- *
- * \param [out]  id             dcube_nodal identifier
- * \param [in]   comm           Communicator
- * \param [in]   n_vtx_seg        Number of vertices in segments
- * \param [in]   length         Segment length
- * \param [in]   zero_x         Coordinates of the origin
- * \param [in]   zero_y         Coordinates of the origin
- * \param [in]   zero_z         Coordinates of the origin
- *
- */
-
-PDM_dcube_nodal2_t*
-PDM_dcube_nodal_gen2_init
+PDM_dcube_nodal2_t *
+PDM_dcube_nodal_gen2_create
 (
  PDM_MPI_Comm          comm,
  const PDM_g_num_t     nx,
@@ -60,11 +47,53 @@ PDM_dcube_nodal_gen2_init
  PDM_ownership_t       owner
  );
 
-PDM_dmesh_nodal_t*
+
+void
+PDM_dcube_nodal_gen2_free
+(
+ PDM_dcube_nodal2_t *dcube
+ );
+
+void PDM_dcube_nodal_gen2_ordering_set
+(
+ PDM_dcube_nodal2_t *dcube,
+ char               *ordering
+ );
+
+
+PDM_dmesh_nodal_t *
+PDM_dcube_nodal_gen2_build
+(
+ PDM_dcube_nodal2_t *dcube
+ );
+
+/**
+ *
+ * \brief Create a distributed cube
+ *
+ * \param [out]  id             dcube_nodal identifier
+ * \param [in]   comm           Communicator
+ * \param [in]   n_vtx_seg        Number of vertices in segments
+ * \param [in]   length         Segment length
+ * \param [in]   zero_x         Coordinates of the origin
+ * \param [in]   zero_y         Coordinates of the origin
+ * \param [in]   zero_z         Coordinates of the origin
+ *
+ */
+
+PDM_dmesh_nodal_t *
 PDM_dcube_nodal_gen2_dmesh_nodal_get
 (
- PDM_dcube_nodal2_t  *dcube
+ PDM_dcube_nodal2_t *dcube
  );
+
+
+
+
+
+
+
+
 
 #ifdef __cplusplus
 }
