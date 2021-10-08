@@ -63,7 +63,7 @@ static const int _bar_o2_def_to_ijk[n_default_orderings][3] = {
 };
 
 static const int _bar_o3_def_to_ijk[n_default_orderings][4] = {
-  {0, 2, 3, 1}, // VTK LAGRANGE_CURVE 68
+  {0, 3, 1, 2}, // VTK LAGRANGE_CURVE 68
   {0, 2, 3, 1}  // CGNS BAR_4
 };
 

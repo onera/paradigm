@@ -1171,6 +1171,9 @@ _reorder
 
       if (ijk_to_user == NULL) continue;
 
+      log_trace("reorder section %d of kind %d (t_elt %d, order %d) with '%s'\n",
+                isection, (int) geom_kind, (int) t_elt, dcube->order, dcube->ordering);
+
       int n_elt = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,
                                                     geom_kind,
                                                     id_section);
@@ -1179,15 +1182,19 @@ _reorder
                                                               geom_kind,
                                                               id_section);
 
-      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, dcube->order);
+      int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, dcube->order);
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
-        PDM_g_num_t *_delt_vtx = delt_vtx + n_vtx_elt*ielt;
-        memcpy (delt_vtx_ijk, _delt_vtx, sizeof(PDM_g_num_t) * n_vtx_elt);
-
-        for (int i = 0; i < n_vtx_elt; i++) {
+        PDM_g_num_t *_delt_vtx = delt_vtx + n_nodes*ielt;
+        memcpy (delt_vtx_ijk, _delt_vtx, sizeof(PDM_g_num_t) * n_nodes);
+        for (int i = 0; i < n_nodes; i++) {
           _delt_vtx[ijk_to_user[i]] = delt_vtx_ijk[i];
         }
+        /*if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+          PDM_log_trace_array_long(delt_vtx_ijk, n_nodes, "delt_vtx_ijk  : ");
+          PDM_log_trace_array_long(_delt_vtx,    n_nodes, "delt_vtx_user : ");
+          }*/
+
       }
     }
 
