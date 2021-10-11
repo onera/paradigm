@@ -468,6 +468,7 @@ _generate_corners
                                 i*dcube->nx, j*dcube->ny, k*dcube->nz,
                                 0, 0, 0);
   }
+  free (distrib_corner);
 
   dmesh_nodal->corner->n_g_elmts = gn_corner;
 
@@ -518,7 +519,6 @@ _generate_ridges
       group_idx[i] = group_idx[i-1] + dcube->nz;
     }
   }
-  PDM_log_trace_array_long(group_idx, n_group + 1, "group_idx : ");
 
 
   /* Set up ridge part */
@@ -622,8 +622,6 @@ _generate_ridges
 
 
   /* Groups */
-  dcube->n_group_ridge = n_group;
-
   PDM_g_num_t *distrib[3];
   distrib[0] = PDM_compute_uniform_entity_distribution(dcube->comm, dcube->nx);
   distrib[1] = PDM_compute_uniform_entity_distribution(dcube->comm, dcube->ny);
@@ -654,7 +652,6 @@ _generate_ridges
     }
   }
 
-  PDM_log_trace_array_int(dgroup_elt_idx, n_group + 1, "dgroup_elt_idx : ");
 
   PDM_g_num_t *dgroup_elt = malloc (sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
 
@@ -678,7 +675,9 @@ _generate_ridges
     }
   }
 
-  PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+  if (0) {
+    PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+  }
 
   PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
                                   n_group,
@@ -773,8 +772,6 @@ _set_surf_groups
     n_elt_quad[i] = _get_n_sub_elt(t_elt[i]);
   }
 
-  dcube->n_group_surf = n_group;
-
   PDM_g_num_t *distrib[3];
   distrib[0] = PDM_compute_uniform_entity_distribution(dcube->comm,
                                                        n_elt_quad[0]*dcube->nx*dcube->ny);
@@ -810,8 +807,10 @@ _set_surf_groups
     }
   }
 
-  PDM_log_trace_array_int(dgroup_elt_idx, n_group + 1, "dgroup_elt_idx : ");
-  PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+  if (0) {
+    PDM_log_trace_array_int(dgroup_elt_idx, n_group + 1, "dgroup_elt_idx : ");
+    PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+  }
 
   PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->surfacic,
                                   n_group,
@@ -1210,6 +1209,14 @@ PDM_dcube_nodal_gen2_create
 }
 
 
+/**
+ *
+ * \brief Free a distributed cube
+ *
+ * \param [in]  id            dcube identifier
+ *
+ */
+
 void
 PDM_dcube_nodal_gen2_free
 (
@@ -1218,6 +1225,15 @@ PDM_dcube_nodal_gen2_free
 {
   if (dcube == NULL) {
     return;
+  }
+
+  if (dcube->distrib_bar  != NULL) free(dcube->distrib_bar);
+  if (dcube->distrib_quad != NULL) free(dcube->distrib_quad);
+  if (dcube->distrib_hexa != NULL) free(dcube->distrib_hexa);
+
+  if (dcube->owner == PDM_OWNERSHIP_KEEP) {
+    /* Si l'utilisateur fait le get il doit liberer le dmesh_nodal */
+    PDM_DMesh_nodal_free(dcube->dmesh_nodal);
   }
 
   free (dcube);
@@ -1294,17 +1310,14 @@ PDM_dcube_nodal_gen2_build
                                               -1,           /* n_face */
                                               -1);          /* n_edge */
 
+  PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution (dcube->comm, gn_vtx);
+  int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
 
-  dcube->dn_vtx = PDM_compute_uniform_dn_entity(dcube->comm, gn_vtx);
-
-  double *dvtx_coord = malloc(sizeof(double) * dcube->dn_vtx * 3);
+  double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
   PDM_DMesh_nodal_coord_set(dcube->dmesh_nodal,
-                            dcube->dn_vtx,
+                            dn_vtx,
                             dvtx_coord,
                             PDM_OWNERSHIP_KEEP); /* Le responsable de la mémoire est le dmesh_nodal */
-
-  PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dcube->dmesh_nodal);
-  dcube->dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
 
   /*
    * Generate vertices
@@ -1314,7 +1327,7 @@ PDM_dcube_nodal_gen2_build
   double step_z = dcube->length / (double) (n_vtx_z - 1);
 
   if (dim == 2) {
-    for (int i_vtx = 0; i_vtx < dcube->dn_vtx; ++i_vtx) {
+    for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
 
       PDM_g_num_t g_vtx = distrib_vtx[i_rank] + i_vtx;
 
@@ -1327,7 +1340,7 @@ PDM_dcube_nodal_gen2_build
     }
   }
   else {
-    for (int i_vtx = 0; i_vtx < dcube->dn_vtx; ++i_vtx) {
+    for (int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
 
       PDM_g_num_t g_vtx = distrib_vtx[i_rank] + i_vtx;
 
@@ -1340,6 +1353,7 @@ PDM_dcube_nodal_gen2_build
       dvtx_coord[3 * i_vtx + 2] = indk * step_z + dcube->zero_z;
     }
   }
+  free (distrib_vtx);
 
 
   dcube->distrib_bar = PDM_compute_uniform_entity_distribution(dcube->comm, gn_bar);
@@ -1410,7 +1424,6 @@ PDM_dcube_nodal_gen2_build
     {
       _generate_hexa_vol (dcube, dcube->dmesh_nodal);
       _generate_hexa_surf(dcube, dcube->dmesh_nodal);
-      PDM_dmesh_nodal_elmts_generate_distribution (dcube->dmesh_nodal->surfacic);
     }
     break;
 
@@ -1421,11 +1434,8 @@ PDM_dcube_nodal_gen2_build
   }
 
   _generate_corners(dcube, dcube->dmesh_nodal);
-  PDM_dmesh_nodal_elmts_generate_distribution (dcube->dmesh_nodal->corner);
 
   _generate_ridges (dcube, dcube->dmesh_nodal);
-  PDM_dmesh_nodal_elmts_generate_distribution (dcube->dmesh_nodal->ridge);
-
 
 
   if (dcube->ordering != NULL) {

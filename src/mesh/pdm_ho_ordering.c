@@ -503,7 +503,10 @@ _ho_ordering_free
     if (hoo->elt_ordering[type] != NULL) {
 
       int n_key = PDM_hash_tab_n_used_keys_get (hoo->elt_ordering[type]);
-      for (int key = 0; key < n_key; key++) {
+      PDM_g_num_t *keys = PDM_hash_tab_used_keys_get(hoo->elt_ordering[type]);
+      for (int k = 0; k < n_key; k++) {
+        int key = (int) keys[k];
+
         const int n_data = PDM_hash_tab_n_data_get (hoo->elt_ordering[type],
                                                     (void *) &key);
 
@@ -512,9 +515,6 @@ _ho_ordering_free
         for (int i = 0; i < n_data; i++) {
           _ordering_free (data[i]);
         }
-
-        /*PDM_hash_tab_data_free (hoo->elt_ordering[type],
-          (void *) &key);*/
       }
 
       PDM_hash_tab_free (hoo->elt_ordering[type]);
@@ -537,6 +537,7 @@ PDM_ho_ordering_init
 void
  )
 {
+  printf(">> PDM_ho_ordering_init\n");
   if (ho_orderings == NULL) {
 
     s_ho_orderings = 2*n_default_orderings;

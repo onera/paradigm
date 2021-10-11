@@ -29,6 +29,10 @@
  * Type definitions
  *============================================================================*/
 
+#define _MIN(a,b) ((a) < (b) ? (a) : (b))
+#define _MAX(a,b) ((a) > (b) ? (a) : (b))
+
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -360,6 +364,270 @@ _dmesh_nodal_dump_vtk
 }
 
 
+static void
+_lagrange_to_bezier_tria
+(
+ const int     order,
+ const double *lag,
+ double       *bez
+ )
+{
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIA3, order);
+  //double *bez = malloc (sizeof(double) * n_nodes * 3);
+
+  if (order == 1) {
+    memcpy (bez, lag, sizeof(double) * n_nodes * 3);
+  }
+
+  else if (order == 2) {
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = lag[6+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = -0.5*lag[j] + 2*lag[9+j] - 0.5*lag[15+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = -0.5*lag[6+j] + 2*lag[12+j] - 0.5*lag[15+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = lag[15+j];
+    }
+  }
+
+  else if (order == 3) {
+    double f5_6 = 5. / 6.;
+    double f1_3 = 1. / 3.;
+
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -f5_6*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f1_3*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = f1_3*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f5_6*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = -f5_6*lag[j] + 3*lag[12+j] - 1.5*lag[21+j] + f1_3*lag[27+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = f1_3*lag[j] - 0.75*lag[3+j] - 0.75*lag[6+j] + f1_3*lag[9+j] - 0.75*lag[12+j] + 4.5*lag[15+j] - 0.75*lag[18+j] - 0.75*lag[21+j] - 0.75*lag[24+j] + f1_3*lag[27+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[18+j] = -f5_6*lag[9+j] + 3*lag[18+j] - 1.5*lag[24+j] + f1_3*lag[27+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[21+j] = f1_3*lag[j] - 1.5*lag[12+j] + 3*lag[21+j] - f5_6*lag[27+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[24+j] = f1_3*lag[9+j] - 1.5*lag[18+j] + 3*lag[24+j] - f5_6*lag[27+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[27+j] = lag[27+j];
+    }
+  }
+  /*int *M = malloc (sizeof(double) * n_nodes * n_nodes);
+
+  int idx = 0;
+  if (order == 1) {
+    M[idx++] = 1; M[idx++] = 0; M[idx++] = 0;
+    M[idx++] = 0; M[idx++] = 1; M[idx++] = 0;
+    M[idx++] = 0; M[idx++] = 0; M[idx++] = 1;
+  }
+  else if (order == 2) {
+    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
+    M[idx++] = -0.5; M[idx++] = 2; M[idx++] = -0.5; M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
+    M[idx++] =  0.;  M[idx++] = 0; M[idx++] =  1;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
+    M[idx++] = -0.5; M[idx++] = 0; M[idx++] =  0;   M[idx++] = 2; M[idx++] = 0; M[idx++] = -0.5;
+    M[idx++] =  0;   M[idx++] = 0; M[idx++] = -0.5; M[idx++] = 0; M[idx++] = 2; M[idx++] = -0.5;
+    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  1;
+  }
+  else if (order == 3) {
+    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
+  }*/
+}
+
+
+static void
+_bezier_bounding_boxes
+(
+ PDM_dmesh_nodal_t   *dmn,
+ int                  order,
+ PDM_geometry_kind_t  geom_kind
+ )
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmn->comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->comm, &n_rank);
+
+  int *sections_id = PDM_DMesh_nodal_sections_id_get(dmn, geom_kind);
+  int  n_section   = PDM_DMesh_nodal_n_section_get  (dmn, geom_kind);
+
+  PDM_g_num_t shift = 0;
+  for (int i_section = 0; i_section < n_section; ++i_section) {
+
+    int id_section = sections_id[i_section];
+    const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
+    int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
+    PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
+    PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
+
+    if (t_elt != PDM_MESH_NODAL_TRIA3 || order > 3) continue;
+
+    int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
+    PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
+
+    int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+    dconnec_idx[0] = 0;
+    for(int i = 0; i < n_elt; ++i) {
+      dconnec_idx[i+1] = dconnec_idx[i] + strid;
+      delmt_ln_to_gn[i] = delmt_distribution[i_rank] + i + 1;
+    }
+
+    int *ijk_to_vtk = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
+                                                      t_elt,
+                                                      order);
+
+
+    PDM_g_num_t *pvtx_ln_to_gn;
+    int         *pcell_vtx_idx;
+    int         *pcell_vtx;
+    int          pn_vtx;
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(dmn->comm,
+                                                             delmt_distribution,
+                                                             dconnec_idx,
+                                                             dconnec,
+                                                             n_elt,
+                                    (const PDM_g_num_t *)    delmt_ln_to_gn,
+                                                            &pn_vtx,
+                                                            &pvtx_ln_to_gn,
+                                                            &pcell_vtx_idx,
+                                                            &pcell_vtx);
+
+    /*
+     * Coordinates
+     */
+    PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    // int          dn_vtx   = PDM_DMesh_nodal_n_vtx_get(dln->dmesh_nodal_in);
+    // assert(dn_vtx == (vtx_distrib[i_rank+1]-vtx_distrib[i_rank]));
+    double** tmp_pvtx_coord = NULL;
+    PDM_part_dcoordinates_to_pcoordinates(dmn->comm,
+                                          1,
+                                          vtx_distrib,
+                                          dvtx_coord,
+                                          &pn_vtx,
+                   (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                          &tmp_pvtx_coord);
+
+    double* pvtx_coord_out = tmp_pvtx_coord[0];
+
+    //double *bezier_coord = _lagrange_to_bezier_tria (order, pvtx_coord_out);
+    int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+    double *lagrange_coord = malloc (sizeof(double) * n_nodes * 3);
+    double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
+    double *elt_coord      = malloc (sizeof(double) * n_elt * n_nodes * 3);
+    int    *elt_vtx        = malloc (sizeof(int)    * n_elt * n_nodes);
+
+    double *extents = malloc (sizeof(double) * n_elt * 6);
+    int idx2 = 0;
+    for (int i = 0; i < n_elt; i++) {
+      double *_min = extents + 6*i;
+      double *_max = _min + 3;
+
+      for (int j = 0; j < 3; j++) {
+        _min[j] =  1e30;
+        _max[j] = -1e30;
+      }
+
+      int idx = 0;
+      for (int k = pcell_vtx_idx[i]; k < pcell_vtx_idx[i+1]; k++) {
+        int ivtx = pcell_vtx[k] - 1;
+        for (int j = 0; j < 3; j++) {
+          lagrange_coord[idx++] = pvtx_coord_out[3*ivtx + j];
+        }
+      }
+
+      _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
+
+      for (int k = 0; k < n_nodes; k++) {
+        for (int j = 0; j < 3; j++) {
+          elt_coord[3*idx2 + j] = bezier_coord[3*k + j];//lagrange_coord[3*k + j];//
+          _min[j] = _MIN(_min[j], bezier_coord[3*k + j]);
+          _max[j] = _MAX(_max[j], bezier_coord[3*k + j]);
+        }
+        elt_vtx[n_nodes*i + ijk_to_vtk[k]] = ++idx2;
+      }
+    }
+
+    /*
+     *  Dump
+     */
+    char filename[999];
+    sprintf(filename, "bezier_section_%2.2d_%2.2d.vtk", i_section, i_rank);
+    PDM_vtk_write_std_elements_ho(filename,
+                                  order,
+                                  n_elt * n_nodes,
+                                  elt_coord,
+                                  NULL,
+                                  t_elt,
+                                  n_elt,
+                                  elt_vtx,
+                                  delmt_ln_to_gn,
+                                  0,
+                                  NULL,
+                                  NULL);
+    free(elt_vtx);
+    free(elt_coord);
+
+    sprintf(filename, "boxes_section_%2.2d_%2.2d.vtk", i_section, i_rank);
+    PDM_vtk_write_boxes(filename,
+                        n_elt,
+                        extents,
+                        delmt_ln_to_gn);
+    free (extents);
+    free (bezier_coord);
+    free (lagrange_coord);
+
+    free(tmp_pvtx_coord);
+    free(pvtx_ln_to_gn);
+    free(pcell_vtx_idx);
+    free(pcell_vtx);
+
+    free(dconnec_idx);
+    free(delmt_ln_to_gn);
+
+    free(pvtx_coord_out);
+
+    shift += delmt_distribution[n_rank];
+  }
+}
+
+
 
 /**
  *
@@ -465,12 +733,13 @@ int main(int argc, char *argv[])
                                                           order,
                                                           PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_nodal_gen2_ordering_set (dcube,
-                                     "PDM_HO_ORDERING_VTK");
+  /*PDM_dcube_nodal_gen2_ordering_set (dcube,
+    "PDM_HO_ORDERING_VTK");*/
 
   PDM_dcube_nodal_gen2_build (dcube);
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen2_dmesh_nodal_get(dcube);
+
   PDM_dmesh_nodal_generate_distribution(dmn);
 
 
@@ -478,6 +747,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double amplitude = 0.2;
+  double frequence = 3.;
 
   for (int i = 0; i < dn_vtx; i++) {
     double x = (dvtx_coord[3*i    ] - 0.5) / length;
@@ -490,11 +761,20 @@ int main(int argc, char *argv[])
       //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
       dvtx_coord[3*i + 2] = length * (x*x + y*y);
     } else {
-      dvtx_coord[3*i    ] += 0.1*length*cos(3*y);
-      dvtx_coord[3*i + 1] += 0.1*length*cos(3*z);
-      dvtx_coord[3*i + 2] += 0.1*length*cos(3*x);
+      dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
+      dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
+      dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
     }
   }
+
+  /* Bounding boxes */
+  //_bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC);
+
+
+  /* Reorder */
+  PDM_dmesh_nodal_reorder (dmn,
+                           "PDM_HO_ORDERING_VTK",
+                           order);
 
   if (dim == 3) {
     _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic");
@@ -508,7 +788,7 @@ int main(int argc, char *argv[])
 
   //PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   gettimeofday(&t_elaps_debut, NULL);
-  //PDM_dcube_nodal_gen2_free(dcube);
+  PDM_dcube_nodal_gen2_free(dcube);
 
 
   PDM_MPI_Finalize();

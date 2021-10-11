@@ -89,12 +89,6 @@ PDM_dcube_nodal_gen2_dmesh_nodal_get
 
 
 
-
-
-
-
-
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
