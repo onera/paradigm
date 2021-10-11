@@ -266,6 +266,495 @@ _ijk_to_vtk
   }
 }
 
+
+
+static int *_vtk_lagrange_bar_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_BAR2, order);
+  int *ijk = malloc (sizeof(int) * n_nodes);
+
+  int idx = 0;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = order;
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = i;
+  }
+
+
+  return ijk;
+}
+
+
+static int *_vtk_lagrange_tria_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order);
+  int *ijk = malloc (sizeof(int) * n_nodes * 2);
+
+  int idx = 0;
+
+  // vertices
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = order;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = 0;
+  ijk[idx++] = order;
+
+  // edges
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = i;
+    ijk[idx++] = 0;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = order-i;
+    ijk[idx++] = i;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = order-i;
+  }
+
+  // face
+  if (order == 3) {
+    ijk[idx++] = 1;
+    ijk[idx++] = 1;
+  }
+  else if (order > 3) {
+    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order-3);
+    int *ijk_sub = _vtk_lagrange_tria_to_ijk (order-3);
+    for (int i = 0; i < n_sub; i++) {
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
+      ijk[idx++] = ijk_sub[2*i+1] + 1;
+    }
+    free (ijk_sub);
+  }
+
+  return ijk;
+}
+
+
+static int *_vtk_lagrange_quad_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_QUAD4, order);
+  int *ijk = malloc (sizeof(int) * n_nodes * 2);
+
+  int idx = 0;
+
+  // vertices
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = order;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = order;
+  ijk[idx++] = order;
+
+  ijk[idx++] = 0;
+  ijk[idx++] = order;
+
+  // edges
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = i;
+    ijk[idx++] = 0;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = order;
+    ijk[idx++] = i;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = i;
+    ijk[idx++] = order;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = i;
+  }
+
+  // face
+  for (int j = 1; j < order; j++) {
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = i;
+      ijk[idx++] = j;
+    }
+  }
+
+  return ijk;
+}
+
+
+static int *_vtk_lagrange_tetra_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRA4, order);
+  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+
+  int idx = 0;
+
+  // vertices
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = order;
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = 0;
+  ijk[idx++] = order;
+  ijk[idx++] = 0;
+
+  ijk[idx++] = 0;
+  ijk[idx++] = 0;
+  ijk[idx++] = order;
+
+  // edges
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = i;
+    ijk[idx++] = 0;
+    ijk[idx++] = 0;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = order-i;
+    ijk[idx++] = i;
+    ijk[idx++] = 0;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = order-i;
+    ijk[idx++] = 0;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = 0;
+    ijk[idx++] = i;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = order-i;
+    ijk[idx++] = 0;
+    ijk[idx++] = i;
+  }
+
+  for (int i = 1; i < order; i++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = order-i;
+    ijk[idx++] = i;
+  }
+
+
+  if (order == 3) {
+    // face v=0
+    ijk[idx++] = 1;
+    ijk[idx++] = 0;
+    ijk[idx++] = 1;
+
+    // face u+v+w=order
+    ijk[idx++] = 1;
+    ijk[idx++] = 1;
+    ijk[idx++] = 1;
+
+    // face u=0
+    ijk[idx++] = 0;
+    ijk[idx++] = 1;
+    ijk[idx++] = 1;
+
+    // face w=0
+    ijk[idx++] = 1;
+    ijk[idx++] = 1;
+    ijk[idx++] = 0;
+  }
+  else if (order > 3) {
+    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order-3);
+    int *ijk_sub = _vtk_lagrange_tria_to_ijk (order-3);
+
+    // face v=0
+    for (int i = 0; i < n_sub; i++) {
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
+      ijk[idx++] = 0;
+      ijk[idx++] = ijk_sub[2*i+1] + 1;
+    }
+
+    // face u+v+w=order
+    for (int i = 0; i < n_sub; i++) {
+      ijk[idx++] = ijk_sub[2*i+1] + 1;
+      ijk[idx++] = order - (ijk_sub[2*i] + ijk_sub[2*i+1] + 2);
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
+    }
+
+    // face u=0
+    for (int i = 0; i < n_sub; i++) {
+      ijk[idx++] = 0;
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
+      ijk[idx++] = ijk_sub[2*i+1] + 1;
+    }
+
+    // face w=0
+    for (int i = 0; i < n_sub; i++) {
+      ijk[idx++] = ijk_sub[2*i+1] + 1;
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
+      ijk[idx++] = 0;
+    }
+    free (ijk_sub);
+
+    // volume
+    if (order == 4) {
+      ijk[idx++] = 1;
+      ijk[idx++] = 1;
+      ijk[idx++] = 1;
+    }
+    else {
+      n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRA4, order-4);
+      ijk_sub = _vtk_lagrange_tetra_to_ijk (order-4);
+      for (int i = 0; i < 3*n_sub; i++) {
+        ijk[idx++] = ijk_sub[i] + 1;
+      }
+      free (ijk_sub);
+    }
+  }
+
+  return ijk;
+}
+
+
+static int *_vtk_lagrange_prism_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_PRISM6, order);
+  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+
+  int idx = 0;
+
+  // vertices
+  for (int k = 0; k < 2; k++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = 0;
+    ijk[idx++] = order*k;
+
+    ijk[idx++] = order;
+    ijk[idx++] = 0;
+    ijk[idx++] = order*k;
+
+    ijk[idx++] = 0;
+    ijk[idx++] = order;
+    ijk[idx++] = order*k;
+  }
+
+  // edges
+  for (int k = 0; k < 2; k++) {
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = i;
+      ijk[idx++] = 0;
+      ijk[idx++] = order*k;
+    }
+
+    for (int i = 1; i < order; i++) {
+      //ijk[idx++] = order-i;
+      //ijk[idx++] = i;
+      ijk[idx++] = i;
+      ijk[idx++] = order-i;
+      ijk[idx++] = order*k;
+    }
+
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = 0;
+      ijk[idx++] = order-i;
+      ijk[idx++] = order*k;
+    }
+  }
+
+  for (int k = 1; k < order; k++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = 0;
+    ijk[idx++] = k;
+  }
+
+  for (int k = 1; k < order; k++) {
+    ijk[idx++] = order;
+    ijk[idx++] = 0;
+    ijk[idx++] = k;
+  }
+
+  for (int k = 1; k < order; k++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = order;
+    ijk[idx++] = k;
+  }
+
+  // triangular faces
+  for (int k = 0; k < 2; k++) {
+    for (int j = 1; j < order; j++) {
+      for (int i = 1; i < order-j; i++) {
+        ijk[idx++] = i;
+        ijk[idx++] = j;
+        ijk[idx++] = order*k;
+      }
+    }
+  }
+
+  // quadrilateral faces
+  for (int k = 1; k < order; k++) {
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = i;
+      ijk[idx++] = 0;
+      ijk[idx++] = k;
+    }
+  }
+
+  for (int k = 1; k < order; k++) {
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = order-i;
+      ijk[idx++] = i;
+      ijk[idx++] = k;
+    }
+  }
+
+  for (int k = 1; k < order; k++) {
+    for (int j = 1; j < order; j++) {
+      ijk[idx++] = 0;
+      ijk[idx++] = order-j;
+      ijk[idx++] = k;
+    }
+  }
+
+  // volume
+  for (int k = 1; k < order; k++) {
+    for (int j = 1; j < order; j++) {
+      for (int i = 1; i < order-j; i++) {
+        ijk[idx++] = i;
+        ijk[idx++] = j;
+        ijk[idx++] = k;
+      }
+    }
+  }
+
+  return ijk;
+}
+
+
+static int *_vtk_lagrange_hexa_to_ijk (const int order) {
+
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, order);
+  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+
+  int idx = 0;
+
+  // vertices
+  for (int k = 0; k < 2; k++) {
+    ijk[idx++] = 0;
+    ijk[idx++] = 0;
+    ijk[idx++] = order*k;
+
+    ijk[idx++] = order;
+    ijk[idx++] = 0;
+    ijk[idx++] = order*k;
+
+    ijk[idx++] = order;
+    ijk[idx++] = order;
+    ijk[idx++] = order*k;
+
+    ijk[idx++] = 0;
+    ijk[idx++] = order;
+    ijk[idx++] = order*k;
+  }
+
+  // horizontal edges
+  for (int k = 0; k < 2; k++) {
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = i;
+      ijk[idx++] = 0;
+      ijk[idx++] = order*k;
+    }
+
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = order;
+      ijk[idx++] = i;
+      ijk[idx++] = order*k;
+    }
+
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = i;
+      ijk[idx++] = order;
+      ijk[idx++] = order*k;
+    }
+
+    for (int i = 1; i < order; i++) {
+      ijk[idx++] = 0;
+      ijk[idx++] = i;
+      ijk[idx++] = order*k;
+    }
+  }
+
+  // vertical edges
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      for (int k = 1; k < order; k++) {
+        ijk[idx++] = order*i;
+        ijk[idx++] = order*j;
+        ijk[idx++] = k;
+      }
+    }
+  }
+
+  // faces normal to X
+  for (int i = 0; i < 2; i++) {
+    for (int k = 1; k < order; k++) {
+      for (int j = 1; j < order; j++) {
+        ijk[idx++] = order*i;
+        ijk[idx++] = j;
+        ijk[idx++] = k;
+      }
+    }
+  }
+
+  // faces normal to Y
+  for (int j = 0; j < 2; j++) {
+    for (int k = 1; k < order; k++) {
+      for (int i = 1; i < order; i++) {
+        ijk[idx++] = i;
+        ijk[idx++] = order*j;
+        ijk[idx++] = k;
+      }
+    }
+  }
+
+  // faces normal to Z
+  for (int k = 0; k < 2; k++) {
+    for (int j = 1; j < order; j++) {
+      for (int i = 1; i < order; i++) {
+        ijk[idx++] = i;
+        ijk[idx++] = j;
+        ijk[idx++] = order*k;
+      }
+    }
+  }
+
+  // volume
+  for (int k = 1; k < order; k++) {
+    for (int j = 1; j < order; j++) {
+      for (int i = 1; i < order; i++) {
+        ijk[idx++] = i;
+        ijk[idx++] = j;
+        ijk[idx++] = k;
+      }
+    }
+  }
+
+  return ijk;
+}
+
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -951,4 +1440,46 @@ PDM_vtk_write_ellipses
   }
 
   fclose(f);
+}
+
+
+
+
+int *
+PDM_vtk_lagrange_to_ijk
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  order
+ )
+{
+  switch (elt_type) {
+  case PDM_MESH_NODAL_POINT: {
+    int *_ijk = malloc (sizeof(int));
+    _ijk[0] = 0;
+    return _ijk;
+  }
+
+  case PDM_MESH_NODAL_BAR2:
+    return _vtk_lagrange_bar_to_ijk(order);
+
+  case PDM_MESH_NODAL_TRIA3:
+    return _vtk_lagrange_tria_to_ijk(order);
+
+  case PDM_MESH_NODAL_QUAD4:
+    return _vtk_lagrange_quad_to_ijk(order);
+
+  case PDM_MESH_NODAL_TETRA4:
+    return _vtk_lagrange_tetra_to_ijk(order);
+
+  case PDM_MESH_NODAL_PRISM6:
+    return _vtk_lagrange_prism_to_ijk(order);
+
+  case PDM_MESH_NODAL_HEXA8:
+    return _vtk_lagrange_hexa_to_ijk(order);
+
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "VTK lagrange ordering not implemented for elt type %d\n", (int) elt_type);
+  }
+
+  return NULL;
 }

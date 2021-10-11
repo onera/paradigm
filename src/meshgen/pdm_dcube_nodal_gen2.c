@@ -1133,79 +1133,6 @@ _generate_prism_surf
 }
 
 
-
-static void
-_reorder
-(
- PDM_dcube_nodal2_t *dcube,
- PDM_dmesh_nodal_t  *dmesh_nodal
- )
-{
-  int n_nodes_max = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, dcube->order);
-  PDM_g_num_t *delt_vtx_ijk = malloc (sizeof(PDM_g_num_t) * n_nodes_max);
-
-  PDM_geometry_kind_t start = PDM_GEOMETRY_KIND_MAX;
-  if (dmesh_nodal->mesh_dimension == 2) {
-    start = PDM_GEOMETRY_KIND_SURFACIC;
-  } else if (dmesh_nodal->mesh_dimension == 3) {
-    start = PDM_GEOMETRY_KIND_VOLUMIC;
-  }
-
-  for (PDM_geometry_kind_t geom_kind = start; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
-
-    int *sections_id = PDM_DMesh_nodal_sections_id_get(dmesh_nodal, geom_kind);
-    int n_section    = PDM_DMesh_nodal_n_section_get  (dmesh_nodal, geom_kind);
-
-    for(int isection = 0; isection < n_section; isection++) {
-
-      int id_section = sections_id[isection];
-
-      PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_section_type_get(dmesh_nodal,
-                                                                    geom_kind,
-                                                                    id_section);
-      if (t_elt == PDM_MESH_NODAL_POINT) continue;
-
-      int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get(dcube->ordering,
-                                                         t_elt,
-                                                         dcube->order);
-
-      if (ijk_to_user == NULL) continue;
-
-      log_trace("reorder section %d of kind %d (t_elt %d, order %d) with '%s'\n",
-                isection, (int) geom_kind, (int) t_elt, dcube->order, dcube->ordering);
-
-      int n_elt = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,
-                                                    geom_kind,
-                                                    id_section);
-
-      PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_section_std_get(dmesh_nodal,
-                                                              geom_kind,
-                                                              id_section);
-
-      int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, dcube->order);
-
-      for (int ielt = 0; ielt < n_elt; ielt++) {
-        PDM_g_num_t *_delt_vtx = delt_vtx + n_nodes*ielt;
-        memcpy (delt_vtx_ijk, _delt_vtx, sizeof(PDM_g_num_t) * n_nodes);
-        for (int i = 0; i < n_nodes; i++) {
-          _delt_vtx[ijk_to_user[i]] = delt_vtx_ijk[i];
-        }
-        /*if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-          PDM_log_trace_array_long(delt_vtx_ijk, n_nodes, "delt_vtx_ijk  : ");
-          PDM_log_trace_array_long(_delt_vtx,    n_nodes, "delt_vtx_user : ");
-          }*/
-
-      }
-    }
-
-  }
-
-  free (delt_vtx_ijk);
-}
-
-
-
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1502,7 +1429,9 @@ PDM_dcube_nodal_gen2_build
 
 
   if (dcube->ordering != NULL) {
-    _reorder (dcube, dcube->dmesh_nodal);
+    PDM_dmesh_nodal_reorder (dcube->dmesh_nodal,
+                             dcube->ordering,
+                             dcube->order);
   }
 
 

@@ -165,6 +165,14 @@ PDM_vtk_write_ellipses
  const int          resolution
  );
 
+
+int *
+PDM_vtk_lagrange_to_ijk
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  order
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

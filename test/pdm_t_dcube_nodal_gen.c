@@ -361,11 +361,6 @@ _dmesh_nodal_dump_vtk
 
 
 
-
-
-
-
-
 /**
  *
  * \brief  Main
@@ -433,6 +428,26 @@ int main(int argc, char *argv[])
   int dim = 3;
   if (t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 ) {
     dim = 2;
+  }
+
+  if (order > 3) {
+    int *ijk = NULL;
+
+    for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_BAR2;
+         type <= PDM_MESH_NODAL_HEXA8;
+         type++) {
+
+      if (type == PDM_MESH_NODAL_POLY_2D ||
+          type == PDM_MESH_NODAL_PYRAMID5) continue;
+
+      ijk = PDM_vtk_lagrange_to_ijk(type, order);
+      PDM_ho_ordering_user_to_ijk_add ("PDM_HO_ORDERING_VTK",
+                                       type,
+                                       order,
+                                       PDM_Mesh_nodal_n_vtx_elt_get(type, order),
+                                       ijk);
+      free (ijk);
+    }
   }
 
   /*

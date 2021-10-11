@@ -797,6 +797,14 @@ PDM_dmesh_nodal_dump_vtk
  const char                *filename_patter
 );
 
+void
+PDM_dmesh_nodal_reorder
+(
+ PDM_dmesh_nodal_t *dmesh_nodal,
+ const char        *ordering_name,
+ const int          order
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
