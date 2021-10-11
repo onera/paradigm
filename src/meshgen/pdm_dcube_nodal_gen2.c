@@ -331,6 +331,157 @@ _generate_tetra_vol
                                         PDM_OWNERSHIP_KEEP);
 }
 
+
+static
+void
+_generate_pyramid_vol
+(
+ PDM_dcube_nodal2_t* dcube,
+ PDM_dmesh_nodal_t*  dmesh_nodal
+)
+{
+  int n_rank, i_rank;
+  PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+  PDM_MPI_Comm_size(dcube->comm, &n_rank);
+
+  int order = dcube->order;
+
+  int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMID5, order);
+
+  int dn_elt = 3 * dcube->dn_hexa;
+
+  /* Set up volume part */
+  PDM_g_num_t *delt_vtx = (PDM_g_num_t *) malloc((n_vtx_elt * dn_elt) * sizeof(PDM_g_num_t));
+  int idx = 0;
+  for (int ihexa = 0; ihexa < dcube->dn_hexa; ihexa++) {
+    PDM_g_num_t g = dcube->distrib_hexa[i_rank] + ihexa;
+
+    PDM_g_num_t indi = g % dcube->nx;
+    PDM_g_num_t indj = ((g - indi) / dcube->nx) % dcube->ny;
+    PDM_g_num_t indk = g / (dcube->nx * dcube->ny);
+
+    int ind[3] = {indi, indj, indk};
+    int u[3], v[3], w[3];
+
+    if (indk%2 == 0) {
+      if (indj%2 == 0) {
+        if (indi%2 == 0) {
+          u[0] =  1; u[1] =  0; u[2] =  0;
+          v[0] =  0; v[1] =  1; v[2] =  0;
+          w[0] =  0; w[1] =  0; w[2] =  1;
+        } else {
+          ind[2]++;
+          u[0] =  0; u[1] =  0; u[2] = -1;
+          v[0] =  0; v[1] =  1; v[2] =  0;
+          w[0] =  1; w[1] =  0; w[2] =  0;
+        }
+      } else {
+        if (indi%2 == 0) {
+          ind[2]++;
+          u[0] =  1; u[1] =  0; u[2] =  0;
+          v[0] =  0; v[1] =  0; v[2] = -1;
+          w[0] =  0; w[1] =  1; w[2] =  0;
+        } else {
+          ind[1]++;
+          ind[2]++;
+          u[0] =  0; u[1] = -1; u[2] =  0;
+          v[0] =  0; v[1] =  0; v[2] = -1;
+          w[0] =  1; w[1] =  0; w[2] =  0;
+        }
+      }
+    } else {
+      ind[0]++;
+      if (indj%2 == 0) {
+        if (indi%2 == 0) {
+          u[0] =  0; u[1] =  0; u[2] =  1;
+          v[0] =  0; v[1] =  1; v[2] =  0;
+          w[0] = -1; w[1] =  0; w[2] =  0;
+        } else {
+          ind[2]++;
+          u[0] = -1; u[1] =  0; u[2] =  0;
+          v[0] =  0; v[1] =  1; v[2] =  0;
+          w[0] =  0; w[1] =  0; w[2] = -1;
+        }
+      } else {
+        if (indi%2 == 0) {
+          ind[1]++;
+          u[0] =  0; u[1] = -1; u[2] =  0;
+          v[0] =  0; v[1] =  0; v[2] =  1;
+          w[0] = -1; w[1] =  0; w[2] =  0;
+        } else {
+          u[0] = -1; u[1] =  0; u[2] =  0;
+          v[0] =  0; v[1] =  0; v[2] =  1;
+          w[0] =  0; w[1] =  1; w[2] =  0;
+        }
+      }
+    }
+
+    log_trace("indi,j,k = "PDM_FMT_G_NUM", "PDM_FMT_G_NUM", "PDM_FMT_G_NUM"\n", indi, indj, indk);
+    log_trace(" u = (%d %d %d),  v = (%d %d %d),  w = (%d %d %d)\n",
+              u[0], u[1], u[2],
+              v[0], v[1], v[2],
+              w[0], w[1], w[2]);
+
+    // 1st sub-pyramid
+    for (int k = 0; k <= dcube->order; k++) {
+      for (int j = 0; j <= dcube->order - k; j++) {
+        for (int i = 0; i <= dcube->order - k; i++) {
+          delt_vtx[idx++] = sub2ind(dcube,
+                                    ind[0] + u[0] + w[0],
+                                    ind[1] + u[1] + w[1],
+                                    ind[2] + u[2] + w[2],
+                                    i*v[0] - j*w[0] - k*u[0],
+                                    i*v[1] - j*w[1] - k*u[1],
+                                    i*v[2] - j*w[2] - k*u[2]);
+        }
+      }
+    }
+    PDM_log_trace_array_long(delt_vtx + idx - n_vtx_elt, n_vtx_elt, "  1st pyra: ");
+
+    // 2nd sub-pyramid
+    for (int k = 0; k <= dcube->order; k++) {
+      for (int j = 0; j <= dcube->order - k; j++) {
+        for (int i = 0; i <= dcube->order - k; i++) {
+          delt_vtx[idx++] = sub2ind(dcube,
+                                    ind[0],
+                                    ind[1],
+                                    ind[2],
+                                    i*u[0] + j*v[0] + k*w[0],
+                                    i*u[1] + j*v[1] + k*w[1],
+                                    i*u[2] + j*v[2] + k*w[2]);
+        }
+      }
+    }
+    PDM_log_trace_array_long(delt_vtx + idx - n_vtx_elt, n_vtx_elt, "  2nd pyra: ");
+
+    // 3rd sub-pyramid
+    for (int k = 0; k <= dcube->order; k++) {
+      for (int j = 0; j <= dcube->order - k; j++) {
+        for (int i = 0; i <= dcube->order - k; i++) {
+          delt_vtx[idx++] = sub2ind(dcube,
+                                    ind[0] + v[0] + w[0],
+                                    ind[1] + v[1] + w[1],
+                                    ind[2] + v[2] + w[2],
+                                    -i*w[0] + j*u[0] - k*v[0],
+                                    -i*w[1] + j*u[1] - k*v[1],
+                                    -i*w[2] + j*u[2] - k*v[2]);
+        }
+      }
+    }
+    PDM_log_trace_array_long(delt_vtx + idx - n_vtx_elt, n_vtx_elt, "  3rd pyra: ");
+  }
+
+  dmesh_nodal->volumic->n_g_elmts = 3*dcube->distrib_hexa[n_rank];
+
+  int id_section = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->volumic, PDM_MESH_NODAL_PYRAMID5);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
+                                        id_section,
+                                        dn_elt,
+                                        delt_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+}
+
+
 static
 void
 _generate_prism_vol
@@ -1410,6 +1561,13 @@ PDM_dcube_nodal_gen2_build
     {
       _generate_tetra_vol (dcube, dcube->dmesh_nodal);
       _generate_tetra_surf(dcube, dcube->dmesh_nodal);
+    }
+    break;
+
+  case PDM_MESH_NODAL_PYRAMID5:
+    {
+      _generate_pyramid_vol (dcube, dcube->dmesh_nodal);
+      //_generate_pyramid_surf(dcube, dcube->dmesh_nodal);
     }
     break;
 

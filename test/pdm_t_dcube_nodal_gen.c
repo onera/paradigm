@@ -932,40 +932,42 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
-  double amplitude = 0.2;
+  double amplitude = 0.1;
   double frequence = 3.;
-
-  for (int i = 0; i < dn_vtx; i++) {
-    double x = (dvtx_coord[3*i    ] - 0.5) / length;
-    double y = (dvtx_coord[3*i + 1] - 0.5) / length;
-    double z = (dvtx_coord[3*i + 2] - 0.5) / length;
-
-    //double scale = length * pow(2, order-1);
-
-    if (dim == 2) {
-      //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
-      dvtx_coord[3*i + 2] = length * (x*x + y*y);
-    } else {
-      dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
-      dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
-      dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
-    }
-  }
 
   if (1) {
     for (int i = 0; i < dn_vtx; i++) {
-      double x = dvtx_coord[3*i  ];
-      double y = dvtx_coord[3*i+1];
-      double z = dvtx_coord[3*i+2];
+      double x = (dvtx_coord[3*i    ] - 0.5) / length;
+      double y = (dvtx_coord[3*i + 1] - 0.5) / length;
+      double z = (dvtx_coord[3*i + 2] - 0.5) / length;
 
-      for (int j = 0; j < 3; j++) {
-        dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+      //double scale = length * pow(2, order-1);
+
+      if (dim == 2) {
+        //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
+        dvtx_coord[3*i + 2] = length * (x*x + y*y);
+      } else {
+        dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
+        dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
+        dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
+      }
+    }
+
+    if (1) {
+      for (int i = 0; i < dn_vtx; i++) {
+        double x = dvtx_coord[3*i  ];
+        double y = dvtx_coord[3*i+1];
+        double z = dvtx_coord[3*i+2];
+
+        for (int j = 0; j < 3; j++) {
+          dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+        }
       }
     }
   }
 
   /* Bounding boxes */
-  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  //_bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
 
 
@@ -979,7 +981,7 @@ int main(int argc, char *argv[])
   }
   //PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
   //PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
-  _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  //_dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
   _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_CORNER,   "out_corner");
 

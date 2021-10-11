@@ -1289,10 +1289,11 @@ PDM_Mesh_nodal_n_vtx_elt_get
     return (order + 1) * (order + 2) * (order + 3) / 6;
     break;
   case PDM_MESH_NODAL_PYRAMID5 :
-    if (order != 1) {
+    /*if (order != 1) {
       PDM_error (__FILE__, __LINE__, 0, "Pyramid not implemented yet for order > 1\n");
     }
-    return 5;
+    return 5;*/
+    return (order + 1) * (order + 2) * (2*order + 3) / 6;
     break;
   case PDM_MESH_NODAL_PRISM6 :
     return (order + 1) * (order + 1) * (order + 2) / 2;

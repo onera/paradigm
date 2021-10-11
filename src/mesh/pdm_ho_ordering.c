@@ -125,6 +125,57 @@ static const int _tetra_o3_def_to_ijk[n_default_orderings][60] = {
   {0, 0, 0,  3, 0, 0,  0, 3, 0,  0, 0, 3,  1, 0, 0,  2, 0, 0,  2, 1, 0,  1, 2, 0,  0, 2, 0,  0, 1, 0,  0, 0, 1,  0, 0, 2,  2, 0, 1,  1, 0, 2,  0, 2, 1,  0, 1, 2,  1, 1, 0,  1, 0, 1,  1, 1, 1,  0, 1, 1} // CGNS TETRA_20
 };
 
+
+static const int _pyramid_o1_def_to_ijk[n_default_orderings][15] = {
+  {0, 0, 0,  1, 0, 0,  1, 1, 0,  0,  1,  0,
+   0, 0, 1}, // VTK PYRAMID 14
+
+  {0, 0, 0,  1, 0, 0,  1, 1, 0,  0, 1, 0,  0, 0, 1}  // CGNS PYRA_5
+};
+
+static const int _pyramid_o2_def_to_ijk[n_default_orderings][42] = {
+  {0, 0, 0,  2, 0, 0,  2, 2, 0,  0, 2, 0,  0, 0, 2,
+   1, 0, 0,  2, 1, 0,  1, 2, 0,  0, 1, 0,
+   0, 0, 1,  1, 0, 1,  1, 1, 1,  0, 1, 1,
+   1, 1, 0}, // VTK LAGRANGE_PYRAMID 74
+
+  {0, 0, 0,  2, 0, 0,  2, 2, 0,  0, 2, 0,  0, 0, 2,
+   1, 0, 0,  2, 1, 0,  1, 2, 0,  0, 1, 0,
+   0, 0, 1,  1, 0, 1,  1, 1, 1,  0, 1, 1,
+   1, 1, 0}  // CGNS PYRA_14
+};
+
+static const int _pyramid_o3_def_to_ijk[n_default_orderings][90] = {
+  {0, 0, 0,  3, 0, 0,  3, 3, 0,  0, 3, 0,  0, 0, 3,
+   1, 0, 0,  2, 0, 0,
+   3, 1, 0,  3, 2, 0,
+   2, 3, 0,  1, 3, 0,
+   0, 2, 0,  0, 1, 0,
+   0, 0, 1,  0, 0, 2,
+   2, 0, 1,  1, 0, 2,
+   2, 2, 1,  1, 1, 2,
+   0, 2, 1,  0, 1, 2,
+   1, 1, 0,  2, 1, 0,
+   2, 2, 0,  1, 2, 0,
+   1, 0, 1,  2, 1, 1,  1, 2, 1,  0, 1, 1,
+   1, 1, 1}, // VTK LAGRANGE_PYRAMID 74
+
+  {0, 0, 0,  3, 0, 0,  3, 3, 0,  0, 3, 0,  0, 0, 3,
+   1, 0, 0,  2, 0, 0,
+   3, 1, 0,  3, 2, 0,
+   2, 3, 0,  1, 3, 0,
+   0, 2, 0,  0, 1, 0,
+   0, 0, 1,  0, 0, 2,
+   2, 0, 1,  1, 0, 2,
+   2, 2, 1,  1, 1, 2,
+   0, 2, 1,  0, 1, 2,
+   1, 1, 0,  2, 1, 0,
+   2, 2, 0,  1, 2, 0,
+   1, 0, 1,  2, 1, 1,  1, 2, 1,  0, 1, 1,
+   1, 1, 1}  // CGNS PYRA_30
+};
+
+
 static const int _prism_o1_def_to_ijk[n_default_orderings][18] = {
   {0, 0, 0,  1, 0, 0,  0, 1, 0,
    0, 0, 1,  1, 0, 1,  0, 1, 1}, // VTK WEDGE 13
@@ -659,6 +710,33 @@ void
                                        order,
                                        n_nodes,
                                        _tetra_o3_def_to_ijk[idef]);
+
+
+      t_elt = PDM_MESH_NODAL_PYRAMID5;
+
+      order = 1;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _pyramid_o1_def_to_ijk[idef]);
+
+      order = 2;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _pyramid_o2_def_to_ijk[idef]);
+
+      order = 3;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _pyramid_o3_def_to_ijk[idef]);
 
 
       t_elt = PDM_MESH_NODAL_PRISM6;
