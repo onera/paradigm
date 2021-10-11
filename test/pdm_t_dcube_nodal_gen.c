@@ -365,6 +365,58 @@ _dmesh_nodal_dump_vtk
 
 
 static void
+_lagrange_to_bezier_bar
+(
+ const int     order,
+ const double *lag,
+ double       *bez
+ )
+{
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BAR2, order);
+
+  if (order == 1) {
+    memcpy (bez, lag, sizeof(double) * n_nodes * 3);
+  }
+
+  else if (order == 2) {
+
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = lag[6+j];
+    }
+  }
+
+  else if (order == 3) {
+
+    double f833 = 5. / 6.;
+    double f333 = 1. / 3.;
+
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -f833*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f333*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = f333*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f833*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = lag[9+j];
+    }
+  }
+}
+
+static void
 _lagrange_to_bezier_tria
 (
  const int     order,
@@ -373,7 +425,6 @@ _lagrange_to_bezier_tria
  )
 {
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIA3, order);
-  //double *bez = malloc (sizeof(double) * n_nodes * 3);
 
   if (order == 1) {
     memcpy (bez, lag, sizeof(double) * n_nodes * 3);
@@ -449,26 +500,139 @@ _lagrange_to_bezier_tria
       bez[27+j] = lag[27+j];
     }
   }
-  /*int *M = malloc (sizeof(double) * n_nodes * n_nodes);
 
-  int idx = 0;
-  if (order == 1) {
-    M[idx++] = 1; M[idx++] = 0; M[idx++] = 0;
-    M[idx++] = 0; M[idx++] = 1; M[idx++] = 0;
-    M[idx++] = 0; M[idx++] = 0; M[idx++] = 1;
-  }
-  else if (order == 2) {
-    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
-    M[idx++] = -0.5; M[idx++] = 2; M[idx++] = -0.5; M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
-    M[idx++] =  0.;  M[idx++] = 0; M[idx++] =  1;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
-    M[idx++] = -0.5; M[idx++] = 0; M[idx++] =  0;   M[idx++] = 2; M[idx++] = 0; M[idx++] = -0.5;
-    M[idx++] =  0;   M[idx++] = 0; M[idx++] = -0.5; M[idx++] = 0; M[idx++] = 2; M[idx++] = -0.5;
-    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  1;
-  }
-  else if (order == 3) {
-    M[idx++] =  1;   M[idx++] = 0; M[idx++] =  0;   M[idx++] = 0; M[idx++] = 0; M[idx++] =  0;
-  }*/
+  //...
 }
+
+
+static void
+_lagrange_to_bezier_quad
+(
+ const int     order,
+ const double *lag,
+ double       *bez
+ )
+{
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUAD4, order);
+
+  if (order == 1) {
+    memcpy (bez, lag, sizeof(double) * n_nodes * 3);
+  }
+
+  else if (order == 2) {
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = lag[6+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = -0.5*lag[j] + 2*lag[9+j] - 0.5*lag[18+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = 0.25*lag[j] - lag[3+j] + 0.25*lag[6+j] - lag[9+j] + 4*lag[12+j] - lag[15+j] + 0.25*lag[18+j] - lag[21+j] + 0.25*lag[24+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = -0.5*lag[6+j] + 2*lag[15+j] - 0.5*lag[24+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[18+j] = lag[18+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[21+j] = -0.5*lag[18+j] + 2*lag[21+j] - 0.5*lag[24+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[24+j] = lag[24+j];
+    }
+  }
+
+  else if (order == 3) {
+
+    double f833 = 5. / 6.;
+    double f333 = 1. / 3.;
+    double f694 = 25./ 36.;
+    double f278 = 5. / 18.;
+    double f111 = 1. / 9.;
+
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -f833*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f333*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = f333*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f833*lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = lag[9+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = -f833*lag[j] + 3*lag[12+j] - 1.5*lag[24+j] + f333*lag[36+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = f694*lag[j] - 2.5*lag[3+j] + 1.25*lag[6+j] - f278*lag[9+j] - 2.5*lag[12+j] + 9*lag[15+j] - 4.5*lag[18+j] + lag[21+j] + 1.25*lag[24+j] - 4.5*lag[27+j] + 2.25*lag[30+j] - 0.5*lag[33+j] - f278*lag[36+j] + lag[39+j] - 0.5*lag[42+j] + f111*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[18+j] = -f278*lag[j] + 1.25*lag[3+j] - 2.5*lag[6+j] + f694*lag[9+j] + lag[12+j] - 4.5*lag[15+j] + 9*lag[18+j] - 2.5*lag[21+j] - 0.5*lag[24+j] + 2.25*lag[27+j] - 4.5*lag[30+j] + 1.25*lag[33+j] + f111*lag[36+j] - 0.5*lag[39+j] + lag[42+j] - f278*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[21+j] = -f833*lag[9+j] + 3*lag[21+j] - 1.5*lag[33+j] + f333*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[24+j] = f333*lag[j] -1.5*lag[12+j] + 3*lag[24+j] - f833*lag[36+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[27+j] = -f278*lag[j] + lag[3+j] - 0.5*lag[6+j] + f111*lag[9+j] + 1.25*lag[12+j] - 4.5*lag[15+j] + 2.25*lag[18+j] - 0.5*lag[21+j] - 2.5*lag[24+j] + 9*lag[27+j] - 4.5*lag[30+j] + lag[33+j] + f694*lag[36+j] - 2.5*lag[39+j] + 1.25*lag[42+j] - f278*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[30+j] = f111*lag[j] - 0.5*lag[3+j] + lag[6+j] - f278*lag[9+j] - 0.5*lag[12+j] + 2.25*lag[15+j] - 4.5*lag[18+j] + 1.25*lag[21+j] + lag[24+j] - 4.5*lag[27+j] + 9*lag[30+j] - 2.5*lag[33+j] - f278*lag[36+j] + 1.25*lag[39+j] - 2.5*lag[42+j] + f694*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[33+j] = f333*lag[9+j] - 1.5*lag[21+j] + 3*lag[33+j] - f833*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[36+j] = lag[36+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[39+j] = -f833*lag[36+j] + 3*lag[39+j] - 1.5*lag[42+j] + f333*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[42+j] = f333*lag[36+j] - 1.5*lag[39+j] + 3*lag[42+j] - f833*lag[45+j];
+    }
+
+    for (int j = 0; j < 3; j++) {
+      bez[45+j] = lag[45+j];
+    }
+  }
+
+  //...
+}
+
 
 
 static void
@@ -476,7 +640,8 @@ _bezier_bounding_boxes
 (
  PDM_dmesh_nodal_t   *dmn,
  int                  order,
- PDM_geometry_kind_t  geom_kind
+ PDM_geometry_kind_t  geom_kind,
+ const char          *filename_patter
  )
 {
   int i_rank;
@@ -496,7 +661,13 @@ _bezier_bounding_boxes
     PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
-    if (t_elt != PDM_MESH_NODAL_TRIA3 || order > 3) continue;
+    //if (t_elt != PDM_MESH_NODAL_TRIA3 || order > 3) continue;
+    if (t_elt != PDM_MESH_NODAL_BAR2  &&
+        t_elt != PDM_MESH_NODAL_TRIA3 &&
+        t_elt != PDM_MESH_NODAL_QUAD4) continue;
+    if (order > 3) continue;
+
+    printf("t_elt = %d\n", (int) t_elt);
 
     int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
     PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
@@ -546,7 +717,6 @@ _bezier_bounding_boxes
 
     double* pvtx_coord_out = tmp_pvtx_coord[0];
 
-    //double *bezier_coord = _lagrange_to_bezier_tria (order, pvtx_coord_out);
     int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     double *lagrange_coord = malloc (sizeof(double) * n_nodes * 3);
     double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
@@ -572,7 +742,14 @@ _bezier_bounding_boxes
         }
       }
 
-      _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
+      if (t_elt == PDM_MESH_NODAL_BAR2) {
+        _lagrange_to_bezier_bar (order, lagrange_coord, bezier_coord);
+      }
+      else if (t_elt == PDM_MESH_NODAL_TRIA3) {
+        _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
+      } else if (t_elt == PDM_MESH_NODAL_QUAD4) {
+        _lagrange_to_bezier_quad (order, lagrange_coord, bezier_coord);
+      }
 
       for (int k = 0; k < n_nodes; k++) {
         for (int j = 0; j < 3; j++) {
@@ -587,8 +764,12 @@ _bezier_bounding_boxes
     /*
      *  Dump
      */
+    for(int i = 0; i < n_elt; ++i) {
+      delmt_ln_to_gn[i] += shift;
+    }
+
     char filename[999];
-    sprintf(filename, "bezier_section_%2.2d_%2.2d.vtk", i_section, i_rank);
+    sprintf(filename, "%s_bezier_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
     PDM_vtk_write_std_elements_ho(filename,
                                   order,
                                   n_elt * n_nodes,
@@ -604,7 +785,7 @@ _bezier_bounding_boxes
     free(elt_vtx);
     free(elt_coord);
 
-    sprintf(filename, "boxes_section_%2.2d_%2.2d.vtk", i_section, i_rank);
+    sprintf(filename, "%s_boxes_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
     PDM_vtk_write_boxes(filename,
                         n_elt,
                         extents,
@@ -744,6 +925,10 @@ int main(int argc, char *argv[])
 
 
   /* Deform */
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
@@ -767,8 +952,21 @@ int main(int argc, char *argv[])
     }
   }
 
+  if (1) {
+    for (int i = 0; i < dn_vtx; i++) {
+      double x = dvtx_coord[3*i  ];
+      double y = dvtx_coord[3*i+1];
+      double z = dvtx_coord[3*i+2];
+
+      for (int j = 0; j < 3; j++) {
+        dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+      }
+    }
+  }
+
   /* Bounding boxes */
-  //_bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC);
+  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
 
 
   /* Reorder */
