@@ -177,14 +177,19 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(comm,
-                                                      n_vtx_seg,
-                                                      length,
-                                                      0.,
-                                                      0.,
-                                                      0.,
-                                                      PDM_MESH_NODAL_QUAD4,
-                                                      PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        length,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_QUAD4,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
@@ -264,6 +269,7 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_dcube_nodal_gen_free(dcube);
+
   PDM_MPI_Finalize();
 
   return 0;

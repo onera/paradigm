@@ -47,14 +47,27 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen HEXA ",1) {
 
   int n_vtx_seg = 3;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
+  /*PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
                                                       n_vtx_seg,
                                                       1.,
                                                       0.,
                                                       0.,
                                                       0.,
                                                       PDM_MESH_NODAL_HEXA8,
-                                                      PDM_OWNERSHIP_KEEP);
+                                                      PDM_OWNERSHIP_KEEP);*/
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        1.,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_HEXA8,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 
@@ -167,14 +180,27 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen PRISM ",1) {
 
   int n_vtx_seg = 3;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
+  /*PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
                                                       n_vtx_seg,
                                                       1.,
                                                       0.,
                                                       0.,
                                                       0.,
                                                       PDM_MESH_NODAL_PRISM6,
-                                                      PDM_OWNERSHIP_KEEP);
+                                                      PDM_OWNERSHIP_KEEP);*/
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        1.,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_PRISM6,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 
@@ -290,14 +316,27 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen TETRA ",1) {
 
   int n_vtx_seg = 3;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
+  /*PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
                                                       n_vtx_seg,
                                                       1.,
                                                       0.,
                                                       0.,
                                                       0.,
                                                       PDM_MESH_NODAL_TETRA4,
-                                                      PDM_OWNERSHIP_KEEP);
+                                                      PDM_OWNERSHIP_KEEP);*/
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        1.,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_TETRA4,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 
@@ -409,14 +448,27 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen QUAD ",1) {
 
   int n_vtx_seg = 3;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
+  /*PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
                                                       n_vtx_seg,
                                                       1.,
                                                       0.,
                                                       0.,
                                                       0.,
                                                       PDM_MESH_NODAL_QUAD4,
-                                                      PDM_OWNERSHIP_KEEP);
+                                                      PDM_OWNERSHIP_KEEP);*/
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        1.,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_QUAD4,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 
@@ -526,14 +578,27 @@ MPI_TEST_CASE("[1p] dcube_nodal_gen TRI ",1) {
 
   int n_vtx_seg = 3;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
+  /*PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(pdm_comm,
                                                       n_vtx_seg,
                                                       1.,
                                                       0.,
                                                       0.,
                                                       0.,
                                                       PDM_MESH_NODAL_TRIA3,
-                                                      PDM_OWNERSHIP_KEEP);
+                                                      PDM_OWNERSHIP_KEEP);*/
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        1.,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_TRIA3,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 

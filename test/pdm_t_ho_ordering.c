@@ -17,7 +17,7 @@
 #include "pdm_logging.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_ho_ordering.h"
-
+#include "pdm_sort.h"
 
 /**
  *
@@ -157,7 +157,127 @@ int main(int argc, char *argv[])
     PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
   }
 
-  int *user_to_ijk = PDM_ho_ordering_user_to_ijk_get ("PDM_HO_ORDERING_VTK",
+  int *ijk_to_ijk  = malloc (sizeof(int) * n_nodes * elt_dim);
+  int *user_to_ijk = malloc (sizeof(int) * n_nodes * elt_dim);
+  int idx = 0;
+
+  switch(t_elt) {
+  case PDM_MESH_NODAL_BAR2:
+    for (int i = 0; i <= order; i++) {
+      ijk_to_ijk[idx++] = i;
+    }
+    break;
+
+  case PDM_MESH_NODAL_TRIA3:
+    for (int j = 0; j <= order; j++) {
+      for (int i = 0; i <= order-j; i++) {
+        ijk_to_ijk[idx++] = i;
+        ijk_to_ijk[idx++] = j;
+      }
+    }
+    break;
+
+  case PDM_MESH_NODAL_QUAD4:
+    for (int j = 0; j <= order; j++) {
+      for (int i = 0; i <= order; i++) {
+        ijk_to_ijk[idx++] = i;
+        ijk_to_ijk[idx++] = j;
+      }
+    }
+    break;
+
+  case PDM_MESH_NODAL_TETRA4:
+    for (int k = 0; k <= order; k++) {
+      for (int j = 0; j <= order-k; j++) {
+        for (int i = 0; i <= order-j-k; i++) {
+          ijk_to_ijk[idx++] = i;
+          ijk_to_ijk[idx++] = j;
+          ijk_to_ijk[idx++] = k;
+        }
+      }
+    }
+    break;
+
+  case PDM_MESH_NODAL_PYRAMID5:
+    for (int k = 0; k <= order; k++) {
+      for (int j = 0; j <= order-k; j++) {
+        for (int i = 0; i <= order-k; i++) {
+          ijk_to_ijk[idx++] = i;
+          ijk_to_ijk[idx++] = j;
+          ijk_to_ijk[idx++] = k;
+        }
+      }
+    }
+    break;
+
+  case PDM_MESH_NODAL_PRISM6:
+    for (int k = 0; k <= order; k++) {
+      for (int j = 0; j <= order; j++) {
+        for (int i = 0; i <= order-j; i++) {
+          ijk_to_ijk[idx++] = i;
+          ijk_to_ijk[idx++] = j;
+          ijk_to_ijk[idx++] = k;
+        }
+      }
+    }
+    break;
+
+  case PDM_MESH_NODAL_HEXA8:
+    for (int k = 0; k <= order; k++) {
+      for (int j = 0; j <= order; j++) {
+        for (int i = 0; i <= order; i++) {
+          ijk_to_ijk[idx++] = i;
+          ijk_to_ijk[idx++] = j;
+          ijk_to_ijk[idx++] = k;
+        }
+      }
+    }
+    break;
+
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
+  }
+
+  int n_rep = 5;
+  char name[999];
+
+
+  double *rnd  = malloc (sizeof(double) * n_nodes);
+  int    *perm = malloc (sizeof(int   ) * n_nodes);
+
+  for (int irep = 0; irep < n_rep; irep++) {
+
+    for (int i = 0; i < n_nodes; i++) {
+      perm[i] = i;
+      rnd[i] = rand();
+    }
+
+    PDM_sort_double (rnd, perm, n_nodes);
+
+    for (int i = 0; i < n_nodes; i++) {
+      int inode = perm[i];
+
+      for (int j = 0; j < elt_dim; j++) {
+        user_to_ijk[elt_dim*i + j] = ijk_to_ijk[elt_dim*inode + j];
+      }
+    }
+
+    sprintf(name, "MY_ORDERING_%d", irep);
+
+    PDM_ho_ordering_user_to_ijk_add (name,
+                                     t_elt,
+                                     order,
+                                     n_nodes,
+                                     user_to_ijk);
+  }
+
+  free (perm);
+  free (rnd);
+  free (ijk_to_ijk);
+  free (user_to_ijk);
+
+
+  /*int *user_to_ijk = PDM_ho_ordering_user_to_ijk_get ("PDM_HO_ORDERING_VTK",
                                                       t_elt,
                                                       order);
   int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get ("PDM_HO_ORDERING_VTK",
@@ -178,7 +298,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n_nodes; i++) {
       printf("ijk node %3d --> user node %3d\n", i, ijk_to_user[i]);
     }
-  }
+    }*/
 
   /*int n_nodes_max = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, order);
 

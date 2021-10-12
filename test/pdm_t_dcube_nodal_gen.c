@@ -12,7 +12,7 @@
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
-#include "pdm_dcube_nodal_gen2.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_printf.h"
@@ -902,24 +902,24 @@ int main(int argc, char *argv[])
   /*
    *  Create distributed cube
    */
-  PDM_dcube_nodal2_t *dcube = PDM_dcube_nodal_gen2_create(comm,
-                                                          nx,
-                                                          ny,
-                                                          nz,
-                                                          length,
-                                                          0.,
-                                                          0.,
-                                                          0.,
-                                                          t_elt,
-                                                          order,
-                                                          PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        nx,
+                                                        ny,
+                                                        nz,
+                                                        length,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        t_elt,
+                                                        order,
+                                                        PDM_OWNERSHIP_KEEP);
 
-  /*PDM_dcube_nodal_gen2_ordering_set (dcube,
+  /*PDM_dcube_nodal_gen_ordering_set (dcube,
     "PDM_HO_ORDERING_VTK");*/
 
-  PDM_dcube_nodal_gen2_build (dcube);
+  PDM_dcube_nodal_gen_build (dcube);
 
-  PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen2_dmesh_nodal_get(dcube);
+  PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 
@@ -967,7 +967,7 @@ int main(int argc, char *argv[])
   }
 
   /* Bounding boxes */
-  //_bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
 
 
@@ -988,7 +988,7 @@ int main(int argc, char *argv[])
 
   //PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   gettimeofday(&t_elaps_debut, NULL);
-  PDM_dcube_nodal_gen2_free(dcube);
+  PDM_dcube_nodal_gen_free(dcube);
 
 
   PDM_MPI_Finalize();

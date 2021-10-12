@@ -361,25 +361,21 @@ int main(int argc, char *argv[])
    *  Create distributed cube
    */
 
-  PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
-  // PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(comm,
-  //                                                     n_vtx_seg,
-  //                                                     length,
-  //                                                     0.,
-  //                                                     0.,
-  //                                                     0.,
-  //                                                     PDM_MESH_NODAL_HEXA8,
-  //                                                     PDM_OWNERSHIP_KEEP);
-
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(comm,
-                                                      n_vtx_seg,
-                                                      length,
-                                                      0.,
-                                                      0.,
-                                                      0.,
-                                                      PDM_MESH_NODAL_TETRA4,
-                                                      PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           length,
+                                                           0.,
+                                                           0.,
+                                                           0.,
+                                                           PDM_MESH_NODAL_TETRA4,
+                                                           1,
+                                                           PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_ordering_set (dcube, "PDM_HO_ORDERING_CGNS");
+  PDM_dcube_nodal_gen_build (dcube);
 
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
@@ -546,7 +542,7 @@ int main(int argc, char *argv[])
     printf(" surface_vector_prec[%i] = %20.16Le,  %20.16Le,  %20.16Le\n", i_face, surface_vector_prec[3*i_face  ], surface_vector_prec[3*i_face+1], surface_vector_prec[3*i_face+2] );
 
   }
-
+  free (dvtx_coord_prec);
 
   for(int i_cell = 0; i_cell < dn_cell; ++i_cell ){
     double norm2 = sqrt(  check_closed_volume[3*i_cell  ]*check_closed_volume[3*i_cell  ]
@@ -568,6 +564,7 @@ int main(int argc, char *argv[])
                                                                 check_closed_volume_prec[3*i_cell+2]);
 
   }
+  free (check_closed_volume_prec);
 
 
   for(int i_cell = 0; i_cell < dn_cell; ++i_cell ){
@@ -634,6 +631,7 @@ int main(int argc, char *argv[])
 
 
   }
+  free (surface_vector_prec);
   /*printf("\n\n\n\n\n");
 
 
@@ -676,7 +674,6 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   gettimeofday(&t_elaps_debut, NULL);
   PDM_dcube_nodal_gen_free(dcube);
-
 
   PDM_MPI_Finalize();
 
