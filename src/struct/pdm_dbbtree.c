@@ -1110,7 +1110,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     free(n_requests);
 
     //------------->>>
-    if ( myRank == 0 ) {
+    if ( idebug && myRank == 0 ) {
       if ( n_copied_ranks == 0 ) {
         printf("n_copied_ranks = 0\n");
       } else {

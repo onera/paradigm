@@ -364,12 +364,203 @@ _dmesh_nodal_dump_vtk
 }
 
 
+
+
+
+static inline void _swap_rows
+(
+ const int   row1,
+ const int   row2,
+ double    **A,
+ double     *b,
+ const int   n,
+ const int   stride
+ )
+{
+  if (row1 != row2) {
+    for (int j = 0; j < n; j++) {
+      double tmp = A[row1][j];
+      A[row1][j] = A[row2][j];
+      A[row2][j] = tmp;
+    }
+
+    for (int j = 0; j < stride; j++) {
+      double tmp = b[stride*row1 + j];
+      b[stride*row1 + j] = b[stride*row2 + j];
+      b[stride*row1 + j] = tmp;
+    }
+  }
+}
+
+/**
+ * Solve the linear system Ax = b using Gaussian elimination,
+ * where A is an n*n matrix and b, x are n*stride matrices (stored linearly)
+ *
+ */
+
+static int
+_gauss_elim
+(
+ double    **A,
+ double     *b,
+ double     *x,
+ const int   n,
+ const int   stride,
+ const int   inplace
+ )
+{
+  double **_A = A;
+  double  *_b = b;
+
+  if (!inplace) {
+    _A = malloc (sizeof(double *) * n);
+    for (int i = 0; i < n; i++) {
+      _A[i] = malloc (sizeof(double) * n);
+      memcpy(_A[i], A[i], sizeof(double) * n);
+    }
+
+    _b = malloc (sizeof(double) * n * stride);
+    memcpy(_b, b, sizeof(double) * n * stride);
+  }
+
+
+  for (int i = 0; i < n; i++) {
+
+    /* Find pivot */
+    double amax = PDM_ABS(_A[i][i]);
+    int imax = i;
+    for (int k = i+1; k < n; k++) {
+      double aki = PDM_ABS(_A[k][i]);
+      if (aki > amax) {
+        amax = aki;
+        imax = k;
+      }
+    }
+
+    if (amax < 1.e-15) {
+      /* matrix A is singular */
+      return 0;
+    }
+
+    /* Swap rows i and imax */
+    _swap_rows (i, imax, _A, _b, n, stride);
+
+    /* Eliminate */
+    double iamax = 1. / _A[i][i];
+
+    for (int k = i+1; k < n; k++) {
+      double r = _A[k][i] * iamax;
+      for (int j = i+1; j < n; j++) {
+        _A[k][j] -= r * _A[i][j];
+      }
+      _A[k][i] = 0.;
+
+      for (int j = 0; j < stride; j++) {
+        _b[stride*k + j] -= r * _b[stride*i + j];
+      }
+    }
+
+  }
+
+
+  /* Solve triangular system */
+  memcpy(x, _b, sizeof(double) * n * stride);
+
+  for (int i = n-1; i >= 0; i--) {
+
+    for (int j = i+1; j < n; j++) {
+      for (int k = 0; k < stride; k++) {
+        x[stride*i + k] -= x[stride*j + k] * _A[i][j];
+      }
+    }
+
+    double iai = 1. / _A[i][i];
+    for (int k = 0; k < stride; k++) {
+      x[stride*i + k] *= iai;
+    }
+  }
+
+
+  /* Free memory */
+  if (!inplace) {
+    for (int i = 0; i < n; i++) {
+      free (_A[i]);
+    }
+    free (_A);
+    free (_b);
+  }
+
+  return 1;
+}
+
+
+static inline double _pow(const double x, const int p) {
+  if (p == 0) return 1.;
+
+  double y = x;
+  for (int i = 1; i < p; i++) {
+    y *= x;
+  }
+  return y;
+}
+
+static double **
+_bezier_matrix_bar
+(
+ const int order
+ )
+{
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BAR2, order);
+
+  double **b = malloc (sizeof(double *) * n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    b[i] = malloc (sizeof(double) * n_nodes);
+  }
+
+  int nchoosek[order/2+1];
+  nchoosek[0] = 1;
+  for (int n = 2; n <= order; n++) {
+
+    if (n%2 == 0) nchoosek[n/2] = nchoosek[n/2-1];
+
+    for (int k = n/2; k > 0; k--) {
+      nchoosek[k] += nchoosek[k-1];
+    }
+  }
+
+  double in = 1. / (double) order;
+
+  b[0][0] = 1.;
+  for (int j = 1; j <= order; j++) {
+    b[0][j] = 0.;
+  }
+
+  for (int j = 0; j <= order; j++) {
+    for (int i = 1; i <= order/2; i++) {
+      double u = i * in;
+      b[i][j] = nchoosek[PDM_MIN(j,order-j)] * _pow(u,j) * _pow(1. - u, order-j);
+    }
+  }
+
+  for (int i = order/2+1; i <= order; i++) {
+    for (int j = 0; j <= order; j++) {
+      b[i][j] = b[order-i][order-j];
+    }
+  }
+
+  return b;
+}
+
+
+
+
+
 static void
 _lagrange_to_bezier_bar
 (
- const int     order,
- const double *lag,
- double       *bez
+ const int  order,
+ double    *lag,
+ double    *bez
  )
 {
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BAR2, order);
@@ -414,14 +605,48 @@ _lagrange_to_bezier_bar
       bez[9+j] = lag[9+j];
     }
   }
+
+  else {
+    double **B = _bezier_matrix_bar(order);
+
+    _gauss_elim (B, lag, bez, n_nodes, 3, 0);
+
+    if (0) {
+      printf("B = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < n_nodes; j++) {
+          printf("%3.3f ", B[i][j]);
+        }
+        printf("\n");
+      }
+
+      printf("lag = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < 3; j++) {
+          printf("%3.3f ", lag[3*i+j]);
+        }
+        printf("\n");
+      }
+
+      printf("bez = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < 3; j++) {
+          printf("%3.3f ", bez[3*i+j]);
+        }
+        printf("\n");
+      }
+    }
+
+    free (B);
+  }
 }
 
 static void
 _lagrange_to_bezier_tria
 (
- const int     order,
- const double *lag,
- double       *bez
+ const int  order,
+ double    *lag,
+ double    *bez
  )
 {
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIA3, order);
@@ -508,9 +733,9 @@ _lagrange_to_bezier_tria
 static void
 _lagrange_to_bezier_quad
 (
- const int     order,
- const double *lag,
- double       *bez
+ const int  order,
+ double    *lag,
+ double    *bez
  )
 {
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUAD4, order);
@@ -630,7 +855,31 @@ _lagrange_to_bezier_quad
     }
   }
 
-  //...
+  else {
+    double **A = _bezier_matrix_bar(order);
+
+    double **B = malloc (sizeof(double *) * n_nodes);
+    for (int i = 0; i < n_nodes; i++) {
+      B[i] = malloc (sizeof(double) * n_nodes);
+    }
+
+    for (int i = 0; i <= order; i++) {
+      for (int j = 0; j <= order; j++) {
+        int k = i + (order+1)*j;
+        for (int ii = 0; ii <= order; ii++) {
+          for (int jj = 0; jj <= order; jj++) {
+            int l = ii + (order+1)*jj;
+            B[k][l] = A[i][ii] * A[j][jj];
+          }
+        }
+      }
+    }
+    free (A);
+
+    _gauss_elim (B, lag, bez, n_nodes, 3, 0);
+
+    free (B);
+  }
 }
 
 
@@ -665,9 +914,7 @@ _bezier_bounding_boxes
     if (t_elt != PDM_MESH_NODAL_BAR2  &&
         t_elt != PDM_MESH_NODAL_TRIA3 &&
         t_elt != PDM_MESH_NODAL_QUAD4) continue;
-    if (order > 3) continue;
-
-    printf("t_elt = %d\n", (int) t_elt);
+    if (t_elt == PDM_MESH_NODAL_TRIA3 && order > 3) continue;
 
     int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
     PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));

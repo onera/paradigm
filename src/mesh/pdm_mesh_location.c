@@ -773,8 +773,10 @@ _redistribute_elementary_location
   *r_pts_coord = malloc (sizeof(double) * (*r_pts_idx)[*r_n_elt] * 3);
   *r_pts_g_num = malloc (sizeof(PDM_g_num_t) * (*r_pts_idx)[*r_n_elt]);
 
-  printf("r_pts_idx[%d] = %d\n", *r_n_elt, (*r_pts_idx)[*r_n_elt]);
-  printf("r_vtx_idx[%d] = %d\n", *r_n_elt, (*r_vtx_idx)[*r_n_elt]);
+  if (0) {
+    printf("r_pts_idx[%d] = %d\n", *r_n_elt, (*r_pts_idx)[*r_n_elt]);
+    printf("r_vtx_idx[%d] = %d\n", *r_n_elt, (*r_vtx_idx)[*r_n_elt]);
+  }
 
   int idx_vtx = 0;
   int idx_pts = 0;
@@ -1468,8 +1470,10 @@ _extract_selected_mesh_elements
   *r_pts_coord = malloc (sizeof(double) * (*r_pts_idx)[*r_n_elt] * 3);
   *r_pts_g_num = malloc (sizeof(PDM_g_num_t) * (*r_pts_idx)[*r_n_elt]);
 
-  printf("r_pts_idx[%d] = %d\n", *r_n_elt, (*r_pts_idx)[*r_n_elt]);
-  printf("r_vtx_idx[%d] = %d\n", *r_n_elt, (*r_vtx_idx)[*r_n_elt]);
+  if (0) {
+    printf("r_pts_idx[%d] = %d\n", *r_n_elt, (*r_pts_idx)[*r_n_elt]);
+    printf("r_vtx_idx[%d] = %d\n", *r_n_elt, (*r_vtx_idx)[*r_n_elt]);
+  }
 
   int idx_vtx = 0;
   int idx_pts = 0;
@@ -2767,7 +2771,7 @@ PDM_mesh_location_t        *ml
   if (env_var != NULL) {
     USE_OCTREE_BTSHARED = atoi(env_var);
   }
-  if (my_rank == 0 && ml->method == PDM_MESH_LOCATION_OCTREE)
+  if (DEBUG && my_rank == 0 && ml->method == PDM_MESH_LOCATION_OCTREE)
     printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
 
   int USE_OCTREE_COPIES = 1;
@@ -2775,7 +2779,7 @@ PDM_mesh_location_t        *ml
   if (env_var != NULL) {
     USE_OCTREE_COPIES = atoi(env_var);
   }
-  if (my_rank == 0) // && ml->method == PDM_MESH_LOCATION_OCTREE)
+  if (DEBUG && my_rank == 0) // && ml->method == PDM_MESH_LOCATION_OCTREE)
     printf("USE_OCTREE_COPIES = %d\n", USE_OCTREE_COPIES);
 
   double b_t_elapsed;
@@ -2986,7 +2990,7 @@ PDM_mesh_location_t        *ml
 
 
 
-      if (my_rank == 0 && use_extracted_pts) {
+      if (DEBUG && my_rank == 0 && use_extracted_pts) {
         printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" pts from cloud #%d ("PDM_FMT_G_NUM"%%)\n",
                g_n_pts[1], g_n_pts[0], icloud, (100 * g_n_pts[1]) / g_n_pts[0]);
       }
@@ -3097,7 +3101,7 @@ PDM_mesh_location_t        *ml
     use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
 
 
-    if (my_rank == 0 && use_extracted_mesh) {
+    if (DEBUG && my_rank == 0 && use_extracted_mesh) {
       printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" mesh elts ("PDM_FMT_G_NUM"%%)\n",
              g_n_elt[1], g_n_elt[0], (100 * g_n_elt[1]) / g_n_elt[0]);
     }
@@ -3722,7 +3726,7 @@ PDM_mesh_location_t        *ml
       break;
      }
     case PDM_MESH_LOCATION_DBBTREE:
-      printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
+      if (DEBUG) printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
       if (USE_OCTREE_COPIES) {
         PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
                                                      n_pts_pcloud,
@@ -3829,7 +3833,7 @@ PDM_mesh_location_t        *ml
 
         } // End of loop on parts
       } // End of loop on nodal blocks
-      printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
+      if (DEBUG) printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
     }
 
     else if (allow_extraction) {
@@ -3862,7 +3866,7 @@ PDM_mesh_location_t        *ml
         } // End of loop on parts
       } // End of loop on nodal blocks
 
-      printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
+      if (DEBUG) printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
       n_select_boxes = idx1;
 
       /*

@@ -345,7 +345,6 @@ PDM_dist_cloud_surf_compute
  PDM_dist_cloud_surf_t *dist
 )
 {
-
   const int n_point_cloud      = dist->n_point_cloud;
   PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
   PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
@@ -367,7 +366,7 @@ PDM_dist_cloud_surf_compute
       octree_type = PDM_OCTREE_PARALLEL;
     }
   }
-  if (rank == 0) printf("octree_type = %d\n", octree_type);
+  if (idebug && rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
 
   double b_t_elapsed;
