@@ -24,7 +24,7 @@
 #include "pdm_distrib.h"
 #include "pdm_logging.h"
 #include "pdm_vtk.h"
-
+#include "pdm_partitioning_algorithm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -148,7 +148,7 @@ const double         *dvtx_coord,
                           (void **) &lface_vtx);
 
   /* Verbose */
-  if(0 == 1){
+  if(1 == 1){
     for (int i = 0; i < dcell_face_idx[dn_cell]; i++) {
       printf("n_vtx_face :  %i \n ", n_vtx_face[i]);
     }
@@ -217,6 +217,80 @@ const double         *dvtx_coord,
   free(lface_vtx);
 
 }
+
+
+
+
+
+static
+void
+_compute_center_from_descending_connectivity
+(
+  const int            *dentity1_entity2_idx,
+  const PDM_g_num_t    *dentity1_entity2,
+  const int             dn_entity1,
+  const PDM_g_num_t    *dentity2_distrib,
+  double               *dentity1_coord,
+  double               *dentity2_coord,
+  PDM_MPI_Comm          comm
+)
+{
+  int *dentity1_entity2_sgn = malloc(dentity1_entity2_idx[dn_entity1] * sizeof(int));
+  PDM_g_num_t *dentity1_entity2_abs = malloc(dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
+    dentity1_entity2_sgn[i] = PDM_SIGN(dentity1_entity2[i]);
+    dentity1_entity2_abs[i] = PDM_ABS (dentity1_entity2[i]);
+  }
+  PDM_block_to_part_t *btp_entity1_coord = PDM_block_to_part_create (dentity2_distrib,
+                                              (const PDM_g_num_t **) &dentity1_entity2_abs,
+                                                                     &dentity1_entity2_idx[dn_entity1],
+                                                                     1,
+                                                                     comm);
+  /*for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
+    dentity1_entity2[i]     = dentity1_entity2[i]*dentity1_entity2_sgn[i];
+    }*/
+  free(dentity1_entity2_sgn);
+  free(dentity1_entity2_abs);
+
+  int strid_one = 1;
+  double **tmp_entity1_entity2_coord;
+  PDM_block_to_part_exch2 (btp_entity1_coord,
+                           3 * sizeof(double),
+                           PDM_STRIDE_CST,
+                           &strid_one,
+                  (void *) dentity2_coord,
+                           NULL,
+                (void ***) &tmp_entity1_entity2_coord);
+  double *dentity1_entity2_coord = tmp_entity1_entity2_coord[0];
+  free(tmp_entity1_entity2_coord);
+  PDM_block_to_part_free(btp_entity1_coord);
+
+  for(int i_entity1 = 0; i_entity1 < dn_entity1; ++i_entity1) {
+    dentity1_coord[3*i_entity1  ] = 0.;
+    dentity1_coord[3*i_entity1+1] = 0.;
+    dentity1_coord[3*i_entity1+2] = 0.;
+    int n_entity2_per_entity1 = dentity1_entity2_idx[i_entity1+1] - dentity1_entity2_idx[i_entity1];
+    double inv = 1./n_entity2_per_entity1;
+    for(int idx_entity2 = dentity1_entity2_idx[i_entity1]; idx_entity2 < dentity1_entity2_idx[i_entity1+1]; ++idx_entity2) {
+      dentity1_coord[3*i_entity1  ] += dentity1_entity2_coord[3*idx_entity2  ];
+      dentity1_coord[3*i_entity1+1] += dentity1_entity2_coord[3*idx_entity2+1];
+      dentity1_coord[3*i_entity1+2] += dentity1_entity2_coord[3*idx_entity2+2];
+    }
+    dentity1_coord[3*i_entity1  ] = dentity1_coord[3*i_entity1  ]*inv;
+    dentity1_coord[3*i_entity1+1] = dentity1_coord[3*i_entity1+1]*inv;
+    dentity1_coord[3*i_entity1+2] = dentity1_coord[3*i_entity1+2]*inv;
+
+  }
+  free(dentity1_entity2_coord);
+
+
+}
+
+
+
+
+
+
 /**
  *
  * \brief Compute cell center of elements
@@ -238,7 +312,7 @@ const double         *dvtx_coord,
  */
 
 void
-PDM_dcompute_cell_center
+PDM_dcompute_cell_center_old
 (
   const PDM_MPI_Comm  comm,
   const int           dn_cell,
@@ -337,6 +411,115 @@ PDM_dcompute_cell_center
     }
   }
 
+}
+
+
+void
+PDM_dcompute_cell_center
+(
+  const PDM_MPI_Comm  comm,
+  const int           dn_cell,
+  const int          *dcell_face_idx,
+  const PDM_g_num_t  *dcell_face,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const PDM_g_num_t  *dface_proc,
+  const double       *dvtx_coord,
+  const PDM_g_num_t  *dvtx_proc,
+  double             *cell_center
+)
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  PDM_g_num_t *distrib_face = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t *distrib_vtx  = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  for (int i = 0; i <= n_rank; i++) {
+    distrib_face[i] = dface_proc[i] - 1;
+    distrib_vtx[i]  = dvtx_proc[i]  - 1;
+  }
+
+  /*PDM_log_trace_array_long (distrib_face, n_rank+1, "distrib_face : ");
+    PDM_log_trace_array_long (distrib_vtx,  n_rank+1, "distrib_vtx  : ");*/
+
+  int dn_face = (int) (dface_proc[i_rank+1] - dface_proc[i_rank]);
+
+  PDM_g_num_t *dface_ln_to_gn = malloc (sizeof(PDM_g_num_t) * dn_face);
+  for (int i = 0; i < dn_face; i++) {
+    dface_ln_to_gn[i] = dface_proc[i_rank] + i;
+  }
+
+  PDM_g_num_t *pvtx_ln_to_gn;
+  int         *pface_vtx_idx;
+  int         *pface_vtx;
+  int          pn_vtx;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face,
+                                                           dface_vtx_idx,
+                                                           dface_vtx,
+                                                           dn_face,
+                                                           dface_ln_to_gn,
+                                                           &pn_vtx,
+                                                           &pvtx_ln_to_gn,
+                                                           &pface_vtx_idx,
+                                                           &pface_vtx);
+  free (dface_ln_to_gn);
+
+  /*PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx : ");
+  PDM_log_trace_connectivity_int (pface_vtx_idx, pface_vtx, dn_face, "pface_vtx : ");
+  for (int i = 0; i < pn_vtx; i++) {
+    log_trace("vtx %d -> "PDM_FMT_G_NUM"\n", i+1, pvtx_ln_to_gn[i]);
+  }*/
+
+  double** tmp_pvtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        distrib_vtx,
+                                        dvtx_coord,
+                                        &pn_vtx,
+                                        (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                        &tmp_pvtx_coord);
+  double *pvtx_coord = tmp_pvtx_coord[0];
+  free(tmp_pvtx_coord);
+  free (pvtx_ln_to_gn);
+  free (distrib_vtx);
+
+
+  /* Compute face centers */
+  double *dface_center = malloc (sizeof(double) * dn_face * 3);
+  for (int i = 0; i < dn_face; i++) {
+    for (int k = 0; k < 3; k++) {
+      dface_center[3*i + k] = 0.;
+    }
+
+    double normalization = 1. / (double) (pface_vtx_idx[i+1] - pface_vtx_idx[i]);
+    for (int j = pface_vtx_idx[i]; j < pface_vtx_idx[i+1]; j++) {
+      int ivtx = pface_vtx[j] - 1;
+
+      for (int k = 0; k < 3; k++) {
+        dface_center[3*i + k] += pvtx_coord[3*ivtx + k];
+      }
+    }
+
+    for (int k = 0; k < 3; k++) {
+      dface_center[3*i + k] *= normalization;
+    }
+  }
+  free (pvtx_coord);
+  free (pface_vtx_idx);
+  free (pface_vtx);
+
+  /* Compute cell centers */
+  _compute_center_from_descending_connectivity (dcell_face_idx,
+                                                dcell_face,
+                                                dn_cell,
+                                                distrib_face,
+                                                cell_center,
+                                                dface_center,
+                                                comm);
+  free (dface_center);
+  free (distrib_face);
 }
 
 /*=============================================================================

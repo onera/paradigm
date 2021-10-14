@@ -179,6 +179,13 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
+  if (i_rank == 0) {
+    PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_vtx_seg : "PDM_FMT_G_NUM"\n", n_vtx_seg);
+    PDM_printf ("  - length    : %f\n", length);
+    PDM_printf ("  - method    : %d\n", method);
+  }
+
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
