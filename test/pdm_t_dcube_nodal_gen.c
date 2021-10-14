@@ -708,6 +708,9 @@ _lagrange_to_bezier_bar
       }
     }
 
+    for (int i = 0; i < n_nodes; i++) {
+      free (B[i]);
+    }
     free (B);
   }
 }
@@ -828,6 +831,9 @@ _lagrange_to_bezier_tria
       }
     }
 
+    for (int i = 0; i < n_nodes; i++) {
+      free (B[i]);
+    }
     free (B);
   }
 }
@@ -977,10 +983,16 @@ _lagrange_to_bezier_quad
         }
       }
     }
+    for (int i = 0; i <= order; i++) {
+      free (A[i]);
+    }
     free (A);
 
     _gauss_elim (B, lag, bez, n_nodes, 3, 0);
 
+    for (int i = 0; i < n_nodes; i++) {
+      free (B[i]);
+    }
     free (B);
   }
 }
@@ -1280,8 +1292,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
-  double amplitude = 0.1;
-  double frequence = 3.;
+  double amplitude = 0.2;
+  double frequence = 4.;
 
   if (1) {
     for (int i = 0; i < dn_vtx; i++) {
