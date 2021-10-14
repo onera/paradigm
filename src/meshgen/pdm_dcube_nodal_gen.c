@@ -1714,7 +1714,7 @@ PDM_dcube_nodal_gen_build
     gn_elt  = gn_hexa;
   }
 
-  log_trace("gn_vtx = "PDM_FMT_G_NUM"\n", gn_vtx);
+  //log_trace("gn_vtx = "PDM_FMT_G_NUM"\n", gn_vtx);
 
 
   /*
