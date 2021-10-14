@@ -517,14 +517,15 @@ _bezier_matrix_bar
     b[i] = malloc (sizeof(double) * n_nodes);
   }
 
-  int nchoosek[order/2+1];
-  nchoosek[0] = 1;
+  // compute binomial coefficients
+  int coef[order/2+1];
+  coef[0] = 1;
   for (int n = 2; n <= order; n++) {
 
-    if (n%2 == 0) nchoosek[n/2] = nchoosek[n/2-1];
+    if (n%2 == 0) coef[n/2] = coef[n/2-1];
 
     for (int k = n/2; k > 0; k--) {
-      nchoosek[k] += nchoosek[k-1];
+      coef[k] += coef[k-1];
     }
   }
 
@@ -536,9 +537,10 @@ _bezier_matrix_bar
   }
 
   for (int j = 0; j <= order; j++) {
+    int c = coef[PDM_MIN(j,order-j)];
     for (int i = 1; i <= order/2; i++) {
       double u = i * in;
-      b[i][j] = nchoosek[PDM_MIN(j,order-j)] * _pow(u,j) * _pow(1. - u, order-j);
+      b[i][j] = c * _pow(u,j) * _pow(1. - u, order-j);
     }
   }
 
@@ -551,6 +553,75 @@ _bezier_matrix_bar
   return b;
 }
 
+
+
+static double **
+_bezier_matrix_tria
+(
+ const int order
+ )
+{
+#define ij2idx(i, j) ((i) + (j)*(order + 1 - (j)))
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIA3, order);
+
+  double **b = malloc (sizeof(double *) * n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    b[i] = malloc (sizeof(double) * n_nodes);
+  }
+
+  // compute trinomial coefficients
+  const int n_coef = (order/2 + 1)*(order + 1 - order/2);
+  int coef[n_coef];
+  coef[0] = 1;
+  for (int i = 1; i < n_coef; i++) {
+    coef[i] = 0;
+  }
+
+  for (int n = 1; n <= order; n++) {
+    for (int j = n/2; j >=0; j--) {
+      int idx = ij2idx(n-j,j);
+      for (int i = n-j; i >= j; i--) {
+        if (i > 0) {
+          if (i > j) {
+            coef[idx] += coef[ij2idx(i-1,j)];
+          } else {
+            coef[idx] += coef[ij2idx(i,j-1)];
+          }
+        }
+
+        if (j > 0) {
+          coef[idx] += coef[ij2idx(i,j-1)];
+        }
+        idx--;
+      }
+    }
+  }
+
+  double in = 1. / (double) order;
+
+  int icol = 0;
+  for (int j = 0; j <= order; j++) {
+    for (int i = 0; i <= order-j; i++) {
+
+      int c = coef[ij2idx(PDM_MAX(i,j), PDM_MIN(i,j))];
+
+      int irow = 0;
+      for (int l = 0; l <= order; l++) {
+        double v = l*in;
+        for (int k = 0; k <= order-l; k++) {
+          double u = k*in;
+          b[irow][icol] = c * _pow(u,i) * _pow(v,j) * _pow(1 - u - v, order - i - j);
+          irow++;
+        }
+      }
+      icol++;
+    }
+  }
+
+#undef ij2idx
+
+  return b;
+}
 
 
 
@@ -726,7 +797,39 @@ _lagrange_to_bezier_tria
     }
   }
 
-  //...
+  else {
+    double **B = _bezier_matrix_tria(order);
+
+    _gauss_elim (B, lag, bez, n_nodes, 3, 0);
+
+    if (0) {
+      printf("B = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < n_nodes; j++) {
+          printf("%3.3f ", B[i][j]);
+        }
+        printf("\n");
+      }
+
+      printf("lag = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < 3; j++) {
+          printf("%3.3f ", lag[3*i+j]);
+        }
+        printf("\n");
+      }
+
+      printf("bez = \n");
+      for (int i = 0; i < n_nodes; i++) {
+        for (int j = 0; j < 3; j++) {
+          printf("%3.3f ", bez[3*i+j]);
+        }
+        printf("\n");
+      }
+    }
+
+    free (B);
+  }
 }
 
 
@@ -910,11 +1013,9 @@ _bezier_bounding_boxes
     PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
-    //if (t_elt != PDM_MESH_NODAL_TRIA3 || order > 3) continue;
     if (t_elt != PDM_MESH_NODAL_BAR2  &&
         t_elt != PDM_MESH_NODAL_TRIA3 &&
         t_elt != PDM_MESH_NODAL_QUAD4) continue;
-    if (t_elt == PDM_MESH_NODAL_TRIA3 && order > 3) continue;
 
     int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
     PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
