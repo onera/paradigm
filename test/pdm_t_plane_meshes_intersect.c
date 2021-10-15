@@ -231,6 +231,9 @@ _read_args
     else if (strcmp (argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp (argv[i], "-hilbert") == 0) {
+      *method = 3;
+    }
     else if (strcmp (argv[i], "-n_proc_data") == 0) {
       i++;
       if (i >= argc)
@@ -1457,7 +1460,15 @@ char *argv[]
   int              n_partB   = 1;
 
   int              post    = 0;
+#ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH
+  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+#endif
+#endif
   int              haveRandom = 1;
   int              randomTimeInit = 0;
 
