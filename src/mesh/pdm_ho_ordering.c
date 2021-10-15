@@ -588,7 +588,7 @@ PDM_ho_ordering_init
 void
  )
 {
-  printf(">> PDM_ho_ordering_init\n");
+  //printf(">> PDM_ho_ordering_init\n");
   if (ho_orderings == NULL) {
 
     s_ho_orderings = 2*n_default_orderings;
@@ -828,7 +828,7 @@ PDM_ho_ordering_free
 void
  )
 {
-  printf(">> PDM_ho_ordering_free\n");
+  //printf(">> PDM_ho_ordering_free\n");
   if (ho_orderings == NULL) return;
 
   for (int i = 0; i < n_ho_orderings; i++) {
