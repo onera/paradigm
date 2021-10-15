@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
 #else
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 #endif
 #endif
 

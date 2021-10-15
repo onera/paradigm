@@ -680,7 +680,7 @@ PDM_dgroup_entity_transpose
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  printf(" dgroup_entity_idx[%i] = %i \n", n_group, dgroup_entity_idx[n_group]);
+  //printf(" dgroup_entity_idx[%i] = %i \n", n_group, dgroup_entity_idx[n_group]);
   PDM_part_to_block_t *ptb = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                         PDM_PART_TO_BLOCK_POST_MERGE,
                                                         1.,

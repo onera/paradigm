@@ -1003,7 +1003,8 @@ _generate_tetra_surf
   int dn_elt = 2 * dcube->dn_quad;
 
   const int n_group = 6;
-  PDM_g_num_t group_idx[n_group+1] = {0};
+  PDM_g_num_t group_idx[n_group+1];
+  group_idx[0] = 0;
   group_idx[1] = group_idx[0] + dcube->nx*dcube->ny;
   group_idx[2] = group_idx[1] + dcube->nx*dcube->ny;
   group_idx[3] = group_idx[2] + dcube->ny*dcube->nz;
@@ -1134,7 +1135,8 @@ _generate_pyramid_surf
   int dn_quad = (int) (distrib_quad[i_rank+1] - distrib_quad[i_rank]);
 
   const int n_group = 6;
-  PDM_g_num_t group_idx[n_group+1] = {0};
+  PDM_g_num_t group_idx[n_group+1];
+  group_idx[0] = 0;
   group_idx[1] = group_idx[0] + dcube->nx*dcube->ny;
   group_idx[2] = group_idx[1] + dcube->nx*dcube->ny;
   group_idx[3] = group_idx[2] + dcube->ny*dcube->nz;
@@ -1142,9 +1144,12 @@ _generate_pyramid_surf
   group_idx[5] = group_idx[4] + dcube->nz*dcube->nx;
   group_idx[6] = group_idx[5] + dcube->nz*dcube->nx;
 
-  int group_type[n_group] = {0};
+  int group_type[n_group];
+  group_type[0] = 0;
   group_type[1] = (dcube->nz%2 == 1);
+  group_type[2] = 0;
   group_type[3] = (dcube->nx%2 == 1);
+  group_type[4] = 0;
   group_type[5] = (dcube->ny%2 == 1);
 
   /* Triangles */
@@ -1370,7 +1375,8 @@ _generate_prism_surf
   int dn_quad = (int) (distrib_quad[i_rank+1] - distrib_quad[i_rank]);
 
   const int n_group = 6;
-  PDM_g_num_t group_idx[n_group+1] = {0};
+  PDM_g_num_t group_idx[n_group+1];
+  group_idx[0] = 0;
   group_idx[1] = group_idx[0] + dcube->nx*dcube->ny;
   group_idx[2] = group_idx[1] + dcube->nx*dcube->ny;
   group_idx[3] = group_idx[2] + dcube->ny*dcube->nz;
@@ -1501,7 +1507,8 @@ _generate_hexa_surf
   int dn_elt = dcube->dn_quad;
 
   const int n_group = 6;
-  PDM_g_num_t group_idx[n_group+1] = {0};
+  PDM_g_num_t group_idx[n_group+1];
+  group_idx[0] = 0;
   group_idx[1] = group_idx[0] + dcube->nx*dcube->ny;
   group_idx[2] = group_idx[1] + dcube->nx*dcube->ny;
   group_idx[3] = group_idx[2] + dcube->ny*dcube->nz;

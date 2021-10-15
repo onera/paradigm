@@ -645,7 +645,7 @@ int main(int argc, char *argv[])
       val_coo_x[i_part]     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx);
       val_coo_xyz[i_part]   = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx * 3);
       for (int i = 0; i < n_vtx; i++) {
-        val_vtx_g_num[i_part][i]   = vtx_ln_to_gn[i];
+        val_vtx_g_num[i_part][i]   = (PDM_real_t) vtx_ln_to_gn[i];
         val_coo_x[i_part][i]       = vtx[3*i];
         val_coo_xyz[i_part][3*i  ] = vtx[3*i  ];
         val_coo_xyz[i_part][3*i+1] = vtx[3*i+1];
