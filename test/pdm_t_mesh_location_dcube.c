@@ -294,12 +294,22 @@ int main(int argc, char *argv[])
 
   struct timeval t_elaps_debut;
 
-  int my_rank;
-  int n_procs;
+  int i_rank;
+  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &my_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_procs);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
+
+  if (i_rank == 0) {
+    PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_vtx_seg   : "PDM_FMT_G_NUM"\n", n_vtx_seg);
+    PDM_printf ("  - n_pts       : "PDM_FMT_G_NUM"\n", n_pts);
+    PDM_printf ("  - length      : %f\n", length);
+    PDM_printf ("  - tolerance   : %f\n", tolerance);
+    PDM_printf ("  - part_method : %d\n", (int) part_method);
+    PDM_printf ("  - loc_method  : %d\n", (int) loc_method);
+  }
 
   int          dn_cell;
   int          dn_face;
@@ -326,7 +336,7 @@ int main(int argc, char *argv[])
     const double ymax = ymin + length;
     const double zmax = zmin + length;*/
 
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Build cube\n");
     fflush(stdout);
   }
@@ -376,7 +386,7 @@ int main(int argc, char *argv[])
   int n_property_cell = 0;
   int n_property_face = 0;
 
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Part\n");
     fflush(stdout);
   }
@@ -419,7 +429,7 @@ int main(int argc, char *argv[])
    * Point cloud definition
    *
    ************************/
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Point cloud\n");
     fflush(stdout);
   }
@@ -433,8 +443,8 @@ int main(int argc, char *argv[])
   _random_cloud (n_pts,
                  xyz_min,
                  xyz_max,
-                 n_procs,
-                 my_rank,
+                 n_rank,
+                 i_rank,
                  &pts_coords,
                  &n_pts_l);
 
@@ -577,7 +587,7 @@ int main(int argc, char *argv[])
 
 
   /* Compute location */
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Locate\n");
     fflush(stdout);
   }
@@ -774,7 +784,7 @@ int main(int argc, char *argv[])
 
   /* Check results */
   if (!rotation) {
-    if (my_rank == 0) {
+    if (i_rank == 0) {
       printf("-- Check\n");
       fflush(stdout);
     }
@@ -851,7 +861,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

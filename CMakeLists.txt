@@ -262,6 +262,7 @@ endif ()
 # Check dependecies
 #------------------------------------------------------------------------------
 
+find_package(LAPACK)
 if (PDM_IN_CWP)
 
   # Checck SCOTCH an ParMETIS
@@ -325,6 +326,7 @@ else ()
         set(PDM_HAVE_PTSCOTCH 1)
      endif()
   endif()
+  #find_package(mmg CONFIG)
 
   # Check OpenMP (TODO : check MPI wrapper function check )
   # -------------------------------------------------------

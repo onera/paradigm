@@ -616,7 +616,7 @@ _create_split_mesh
     //                  dEdgeGroupIdx,
     //                  dEdgeGroup);
 
-    printf("dNFace = %i | dNEdge = %i | dNVtx = %i \n", dNFace, dNEdge, dNVtx);
+    //printf("dNFace = %i | dNEdge = %i | dNVtx = %i \n", dNFace, dNEdge, dNVtx);
     PDM_part_create (&ppartId,
                      pdm_mpi_comm,
                      method,
