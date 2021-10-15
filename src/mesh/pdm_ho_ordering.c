@@ -45,7 +45,7 @@ extern "C" {
  * Global variable
  *============================================================================*/
 
-static const int n_default_orderings = 2;
+#define n_default_orderings 2
 
 static const char *default_orderings_names[n_default_orderings] = {
   "PDM_HO_ORDERING_VTK",
