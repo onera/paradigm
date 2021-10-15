@@ -182,6 +182,11 @@ else ()
 
   option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module" OFF)
 
+  # BLAS/LAPACK 
+  # -----------
+
+  option(PDM_ENABLE_BLASLAPACK "Build with BLAS/LAPACK" OFF)
+
   # Fortran interface
   # -----------------
 
@@ -262,7 +267,6 @@ endif ()
 # Check dependecies
 #------------------------------------------------------------------------------
 
-find_package(LAPACK)
 if (PDM_IN_CWP)
 
   # Checck SCOTCH an ParMETIS
@@ -326,6 +330,38 @@ else ()
         set(PDM_HAVE_PTSCOTCH 1)
      endif()
   endif()
+
+
+  if (PDM_ENABLE_BLASLAPACK)
+
+    if (CMAKE_C_COMPILER_ID STREQUAL "Intel")
+      set (BLA_VENDOR "Intel10_64lp")
+      find_package(BLAS)
+      find_package(LAPACK)
+      if (BLAS_FOUND AND LAPACK_FOUND)
+        set(PDM_HAVE_MKL 1)
+      endif()
+      unset (BLA_VENDOR)
+    endif()
+
+    if (NOT BLAS_FOUND)
+      find_package(BLAS)
+    endif()
+
+    if (NOT LAPACK_FOUND)
+      find_package(LAPACK)
+    endif()
+
+    if (BLAS_FOUND)
+      set(PDM_HAVE_BLAS 1)
+    endif()
+
+    if (LAPACK_FOUND)
+      set(PDM_HAVE_LAPACK 1)
+    endif()
+
+  endif()
+
   #find_package(mmg CONFIG)
 
   # Check OpenMP (TODO : check MPI wrapper function check )
