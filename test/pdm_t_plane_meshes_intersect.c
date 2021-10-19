@@ -1510,7 +1510,7 @@ char *argv[]
 
   if (i_rank == 0) {
     PDM_printf ("%Parametres : \n");
-    PDM_printf ("  - n_rank         : %d\n", n_rank);
+    PDM_printf ("  - n_rank         : %d\n", numProcs);
     PDM_printf ("  - n_vtx_segA     : %d\n", n_vtx_segA);
     PDM_printf ("  - lengthA        : %f\n", lengthA);
     PDM_printf ("  - xminA          : %d\n", xminA);
