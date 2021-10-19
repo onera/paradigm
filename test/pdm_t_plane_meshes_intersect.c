@@ -1510,19 +1510,20 @@ char *argv[]
 
   if (i_rank == 0) {
     PDM_printf ("%Parametres : \n");
-    PDM_printf ("  - n_vtx_segA : %d\n", n_vtx_segA);
-    PDM_printf ("  - lengthA : %f\n", lengthA);
-    PDM_printf ("  - xminA : %d\n", xminA);
-    PDM_printf ("  - yminA : %d\n", yminA);
-    PDM_printf ("  - n_partA : %d\n", n_partA);
-    PDM_printf ("  - n_vtx_segB : %d\n", n_vtx_segB);
-    PDM_printf ("  - lengthB : %f\n", lengthB);
-    PDM_printf ("  - xminB : %d\n", xminB);
-    PDM_printf ("  - yminB : %d\n", yminB);
-    PDM_printf ("  - n_partB : %d\n", n_partB);
-    PDM_printf ("  - post : %d\n", post);
-    PDM_printf ("  - method : %d\n", method);
-    PDM_printf ("  - haveRandom : %d\n", haveRandom);
+    PDM_printf ("  - n_rank         : %d\n", n_rank);
+    PDM_printf ("  - n_vtx_segA     : %d\n", n_vtx_segA);
+    PDM_printf ("  - lengthA        : %f\n", lengthA);
+    PDM_printf ("  - xminA          : %d\n", xminA);
+    PDM_printf ("  - yminA          : %d\n", yminA);
+    PDM_printf ("  - n_partA        : %d\n", n_partA);
+    PDM_printf ("  - n_vtx_segB     : %d\n", n_vtx_segB);
+    PDM_printf ("  - lengthB        : %f\n", lengthB);
+    PDM_printf ("  - xminB          : %d\n", xminB);
+    PDM_printf ("  - yminB          : %d\n", yminB);
+    PDM_printf ("  - n_partB        : %d\n", n_partB);
+    PDM_printf ("  - post           : %d\n", post);
+    PDM_printf ("  - method         : %d\n", method);
+    PDM_printf ("  - haveRandom     : %d\n", haveRandom);
     PDM_printf ("  - randomTimeInit : %d\n", randomTimeInit);
   }
 

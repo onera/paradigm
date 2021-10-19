@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
 
   if (i_rank == 0) {
     PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_rank    : %d\n", n_rank);
     PDM_printf ("  - n_vtx_seg : "PDM_FMT_G_NUM"\n", n_vtx_seg);
     PDM_printf ("  - length    : %f\n", length);
     PDM_printf ("  - method    : %d\n", method);
