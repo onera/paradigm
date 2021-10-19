@@ -45,7 +45,7 @@ PDM_dcube_nodal_gen_create
  PDM_Mesh_nodal_elt_t  t_elt,
  const int             order,
  PDM_ownership_t       owner
- );
+);
 
 
 void
