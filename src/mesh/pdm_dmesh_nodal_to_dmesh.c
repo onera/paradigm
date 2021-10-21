@@ -31,6 +31,7 @@
 #include "pdm_para_graph_dual.h"
 #include "pdm_array.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -238,6 +239,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int*         already_treat    = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
   int*         same_entity_idx  = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
   int*         sens_entity      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  PDM_g_num_t *tmp_parent       = malloc (sizeof(PDM_g_num_t) * n_max_entity_per_key);
+  int         *order            = malloc (sizeof(int)         * n_max_entity_per_key);
 
   /*
    * Allocate Memory - entity_vtx - entity_elmt
@@ -280,14 +283,24 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
     int n_conflict_entitys = blk_n_entity_per_key[i_key];
 
+    for (int i = 0; i < n_conflict_entitys; i++) {
+      tmp_parent[i] = blk_elmt_entity_elmt[idx+i];
+      order[i] = i;
+    }
+    PDM_sort_long(tmp_parent, order, n_conflict_entitys);
+
     /* Reset */
     for(int j = 0; j < n_conflict_entitys; ++j) {
       already_treat[j] = -1;
     }
 
     /* Loop over all entitys in conflict */
-    for(int i_entity = 0; i_entity < n_conflict_entitys; ++i_entity) {
-      // printf("Number of vtx on entitys %i :: %i with index [%i] \n", i_entity, blk_entity_vtx_n[idx+i_entity], idx+i_entity);
+    //for(int i_entity = 0; i_entity < n_conflict_entitys; ++i_entity) {
+    //printf("\nkey %d ------------\n", i_key);
+    for (int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
+      int i_entity = order[idx_entity];
+      //printf("Number of vtx on entitys %i :: %i with index [%i] \n", i_entity, blk_entity_vtx_n[idx+i_entity], idx+i_entity);
+      //printf("blk_elmt_entity_elmt[idx+%d] = "PDM_FMT_G_NUM"\n", i_entity, blk_elmt_entity_elmt[idx+i_entity]);
 
       int n_vtx_entity_1 = blk_entity_vtx_n  [idx+i_entity];
       int beg_1          = blk_entity_vtx_idx[idx+i_entity];
@@ -310,7 +323,18 @@ PDM_g_num_t  **dmissing_child_parent_g_num
         }
         PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_entity_1-1);
 
-        for(int i_entity_next = i_entity+1; i_entity_next < n_conflict_entitys; ++i_entity_next) {
+        //for(int i_entity_next = i_entity+1; i_entity_next < n_conflict_entitys; ++i_entity_next) {
+        for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
+          int i_entity_next = order[idx_entity2];
+
+          if (i_entity_next == i_entity) {
+            continue;
+          }
+          //printf("conflict : i_entity = %d, i_entity_next = %d...\n", i_entity, i_entity_next);
+          if(already_treat[i_entity_next] == 1) {
+            continue;
+          }
+          //printf("...not already treated\n");
 
           int n_vtx_entity_2 = blk_entity_vtx_n[idx+i_entity_next];
 
@@ -341,17 +365,17 @@ PDM_g_num_t  **dmissing_child_parent_g_num
             }
 
             if(is_same_entity == 1 ){
-              // printf("idx_min_1 = %i | idx_min_2 = %i \n", idx_min_1, idx_min_2);
-              // printf(" test1 :: ");
-              // for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
-              //   printf(" %i", (int)blk_tot_entity_vtx[beg_1+i_vtx]);
-              // }
-              // printf(" \n");
-              // printf(" test2 :: ");
-              // for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
-              //   printf(" %i", (int)blk_tot_entity_vtx[beg_2+i_vtx]);
-              // }
-              // printf(" \n");
+              /*printf("idx_min_1 = %i | idx_min_2 = %i \n", idx_min_1, idx_min_2);
+               printf(" test1 :: ");
+               for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
+                 printf(" %i", (int)blk_tot_entity_vtx[beg_1+i_vtx]);
+               }
+               printf(" \n");
+               printf(" test2 :: ");
+               for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
+                 printf(" %i", (int)blk_tot_entity_vtx[beg_2+i_vtx]);
+               }
+               printf(" \n");*/
 
               if(n_vtx_entity_1 == 2) {
                 PDM_g_num_t i1 = blk_tot_entity_vtx[beg_1  ];
@@ -394,11 +418,12 @@ PDM_g_num_t  **dmissing_child_parent_g_num
           } /* End if same number of vertex */
         } /* End loop next entity */
 
-         // printf("[%i] - same_entity_idx::", idx_next_same_entity);
-         // for(int ii = 0; ii < idx_next_same_entity; ++ii) {
-         //   printf(" %i", same_entity_idx[ii]);
-         // }
-         // printf("\n");
+        /*printf("[%i] - same_entity_idx::", idx_next_same_entity);
+          for(int ii = 0; ii < idx_next_same_entity; ++ii) {
+            printf(" %i", same_entity_idx[ii]);
+          }
+          printf("\n");*/
+        //PDM_log_trace_array_int(same_entity_idx, idx_next_same_entity, "same_entity_idx : ");
 
         _dentity_vtx_idx[i_abs_entity+1] = _dentity_vtx_idx[i_abs_entity] + n_vtx_entity_1;
         for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
@@ -417,10 +442,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
           if(blk_part_id[idx+i_same_entity] == 0) {
             int next_idx = _dentity_elmt_idx[i_abs_entity+1]++;
             _dentity_elmt[next_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
-            // printf("[%i] _dentity_elmt[%i] = %i \n", i_abs_entity, next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+            //printf("[%i] _dentity_elmt[%i] = "PDM_FMT_G_NUM" \n", i_abs_entity, next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
             _dentity_parent_element_position[next_idx] = blk_parent_elmt_position[idx+i_same_entity];
           } else {
-            // printf(" Not treated yet : %i \n", sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+            //printf(" Not treated yet : "PDM_FMT_G_NUM"\n", sign*blk_elmt_entity_elmt[idx+i_same_entity]);
             // _dentity_elmt_child[next_child_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
             // _dentity_parent_element_position_child[next_child_idx] = blk_parent_elmt_position[idx+i_same_entity];
             // printf(" _dparent_gnum[%i] = %i \n", i_abs_child, i_abs_entity );
@@ -435,7 +460,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
               /* On a trouvé un correspondance entre l'elt enfant et un elt parent, et on garde la correspondance + l'orientation relative */
               _tmp_parent_ln_to_gn[i_abs_child] = blk_elmt_entity_elmt[idx+i_same_entity];
               _tmp_parent_sign    [i_abs_child] = sign;
-              // printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
+              //printf(" i_abs_child = %i --> sgn = %i \n", i_abs_child, sign);
               _tmp_parent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
               find_child = 1;
             }
@@ -475,6 +500,9 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   free(blk_elmt_entity_elmt);
   free(blk_parent_elmt_position);
   free(blk_part_id);
+
+  free (tmp_parent);
+  free (order);
 
   /*
    * Fill up structure
@@ -1303,6 +1331,7 @@ _generate_edges_from_dmesh_nodal
   int*         delmt_surf_edge_vtx_idx = (int         *) malloc( (n_edge_elt_surf_tot +1) * sizeof(int        ));
   PDM_g_num_t* delmt_surf_edge_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_surf_edge_tot * sizeof(PDM_g_num_t));
 
+
   delmt_surf_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges(dmesh_nodal->surfacic,
                                delmt_surf_edge_vtx_idx,
@@ -1310,6 +1339,10 @@ _generate_edges_from_dmesh_nodal
                                delmt_surf_edge,
                                NULL, NULL,
                                dparent_elmt_surf_pos);
+
+  if (0) {
+    PDM_log_trace_connectivity_long(delmt_surf_edge_vtx_idx, delmt_surf_edge_vtx, n_edge_elt_surf_tot, "delmt_surf_edge_vtx : ");
+  }
 
   /*
    * Decompose ridge
@@ -1415,6 +1448,10 @@ _generate_edges_from_dmesh_nodal
 
   PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
   int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+
+   if (1) {
+    PDM_log_trace_connectivity_long(_dedge_face_idx_tmp, _dedge_face_tmp, dm->dn_edge, "dedge_face_tmp : ");
+  }
 
   // Post_treat
   if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {

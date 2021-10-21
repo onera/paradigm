@@ -702,6 +702,7 @@ PDM_dreorder_from_length
     hilbert_order [i] = i;
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
+  //PDM_log_trace_array_double(blk_hilbert_codes, n_vtx_block, "tmp_edge_length : ");
   free(blk_hilbert_codes);
 
 
