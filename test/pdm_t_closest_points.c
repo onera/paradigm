@@ -336,14 +336,15 @@ main
   int i_rank;
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
-  int numProcs;
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
+  if (i_rank == 0) {
+    char *version = PDM_version_get();
 
-  char *version = PDM_version_get();
-
-  printf("Version de ParaDiGM : %s\n", version);
-  free(version);
+    printf("Version de ParaDiGM : %s\n", version);
+    free(version);
+  }
 
   int n_closest_points = 10;
   PDM_g_num_t nSrc = 10;
@@ -363,6 +364,16 @@ main
              &rand,
              &clumps);
 
+  if (i_rank == 0) {
+    PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_rank           : %d\n", n_rank);
+    PDM_printf ("  - n_closest_points : %d\n", n_closest_points);
+    PDM_printf ("  - n_src            : "PDM_FMT_G_NUM"\n", nSrc);
+    PDM_printf ("  - n_tgt            : "PDM_FMT_G_NUM"\n", nTgt);
+    PDM_printf ("  - radius           : %f\n", radius);
+    PDM_printf ("  - rand             : %d\n", rand);
+  }
+
   /* Initialize random */
 
   if (rand) {
@@ -381,12 +392,12 @@ main
     _n_tgt_l = (int) nTgt;
   }
   else {
-    _n_src_l = (int) (nSrc/numProcs);
-    _n_tgt_l = (int) (nTgt/numProcs);
-    if (i_rank < nSrc%numProcs) {
+    _n_src_l = (int) (nSrc/n_rank);
+    _n_tgt_l = (int) (nTgt/n_rank);
+    if (i_rank < nSrc%n_rank) {
       _n_src_l += 1;
     }
-    if (i_rank < nTgt%numProcs) {
+    if (i_rank < nTgt%n_rank) {
       _n_tgt_l += 1;
     }
   }
@@ -401,7 +412,7 @@ main
     _gen_clouds_clumps (n_closest_points,
                         nTgt,
                         radius,
-                        numProcs,
+                        n_rank,
                         i_rank,
                         clump_scale,
                         &src_coords,
@@ -417,7 +428,7 @@ main
     _gen_clouds_random2 (nSrc,
                          _n_tgt_l,
                          radius,
-                         numProcs,
+                         n_rank,
                          i_rank,
                          &src_coords,
                          &tgt_coords,
@@ -535,7 +546,7 @@ main
 
   if (i_rank == 0) {
 
-    PDM_printf ("\nfin Test\n");
+    PDM_printf ("-- End\n");
 
   }
 

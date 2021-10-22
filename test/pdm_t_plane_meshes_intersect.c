@@ -1525,6 +1525,7 @@ char *argv[]
     PDM_printf ("  - method         : %d\n", method);
     PDM_printf ("  - haveRandom     : %d\n", haveRandom);
     PDM_printf ("  - randomTimeInit : %d\n", randomTimeInit);
+    PDM_printf ("  - nProcData      : %d\n", nProcData);
   }
 
   /*
