@@ -689,16 +689,16 @@ _generate_ridges
       dx = 1; dy = 0; dz = 0;
     }
     else if (g < group_idx[2]) {
-      indi = g - group_idx[1];
+      indi = g - group_idx[1] + 1;
       indj = dcube->ny;
       indk = 0;
-      dx = 1; dy = 0; dz = 0;
+      dx = -1; dy = 0; dz = 0;
     }
     else if (g < group_idx[3]) {
       indi = 0;
-      indj = g - group_idx[2];
+      indj = g - group_idx[2] + 1;
       indk = 0;
-      dx = 0; dy = 1; dz = 0;
+      dx = 0; dy = -1; dz = 0;
     }
     else if (g < group_idx[4]) {
       indi = dcube->nx;
