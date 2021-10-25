@@ -3120,7 +3120,6 @@ PDM_mesh_location_t        *ml
       ibox = 0;
       int idx_elt = 0;
       for (int iblock = 0; iblock < n_blocks; iblock++) {
-
         int id_block = blocks_id[iblock];
 
         for (int ipart = 0; ipart < n_parts; ipart++) {
