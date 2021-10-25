@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <unistd.h>
+#include <assert.h>
+#include <sys/syscall.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -20,6 +23,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_priv.h"
+#include "pdm_mpi_priv.h"
 
 #include <mpi.h>
 
@@ -2107,6 +2111,124 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
   *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
   return _mpi_2_pdm_mpi_err(code);
 }
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_split_type_numa
+ *
+ *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Comm_split_type_numa
+(
+ PDM_MPI_Comm comm,
+ PDM_MPI_Comm *comm_numa
+)
+{
+  PDM_MPI_Comm comm_node;
+  PDM_MPI_Comm_split_type(comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+
+  int i_rank_node;
+  PDM_MPI_Comm_rank(comm_node, &i_rank_node);
+
+  int i_cpu, i_numa;
+  syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+
+  /* Sur le shared on split par numa */
+  int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
+
+  PDM_MPI_Comm_free(&comm_node);
+  // int code = 0;
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_split_type
+ *
+ *-------------------s---------------------------------------------------------*/
+int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *newcomm)
+{
+  int i_rank;
+  MPI_Comm_rank(_pdm_mpi_2_mpi_comm(comm), &i_rank);
+
+  MPI_Comm _newcomm;
+  int code = 0;
+  if(split_type == PDM_MPI_SPLIT_SHARED) {
+    code = MPI_Comm_split_type(_pdm_mpi_2_mpi_comm(comm), MPI_COMM_TYPE_SHARED, i_rank /* Key */,
+                               MPI_INFO_NULL, &_newcomm);
+  } else if(split_type == PDM_MPI_SPLIT_NUMA) {
+    PDM_MPI_Comm_split_type_numa(comm, &_newcomm);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Comm_split_type :"
+            " split_type '%d' non valide\n", split_type);
+    abort();
+  }
+  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_allocate_shared_get
+ *
+ *----------------------------------------------------------------------------*/
+PDM_mpi_win_shared_t*
+PDM_mpi_win_shared_create(PDM_MPI_Aint size,
+                          int          disp_unit,
+                          MPI_Comm     comm)
+{
+  PDM_mpi_win_shared_t* wins = (PDM_mpi_win_shared_t*) malloc(sizeof(PDM_mpi_win_shared_t));
+
+  int i_rank;
+  MPI_Comm_rank(comm, &i_rank);
+
+  wins->win = MPI_WIN_NULL;
+  wins->ptr = NULL;
+  int res = 0;
+  if(i_rank == 0) {
+    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, MPI_INFO_NULL, comm, &wins->ptr , &wins->win);
+  } else {
+    res = MPI_Win_allocate_shared(0, disp_unit, MPI_INFO_NULL , comm, &wins->ptr , &wins->win );
+    MPI_Aint size_0;
+    int disp_0;
+    MPI_Win_shared_query(wins->win, 0, &size_0, &disp_0, &wins->ptr);
+  }
+  assert(res == PDM_MPI_SUCCESS);
+  return wins;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_shared_get
+ *
+ *----------------------------------------------------------------------------*/
+void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
+  return wins->ptr;
+}
+
+void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
+  MPI_Win_free(&wins->win);
+  wins->ptr = NULL;
+  free(wins);
+}
+
+// ------------------------------------------------------------------
+PDM_MPI_Comm PDM_MPI_get_group_of_master(PDM_MPI_Comm comm, PDM_MPI_Comm sub_comm)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int i_rank_sub;
+  PDM_MPI_Comm_rank(sub_comm, &i_rank_sub);
+
+  PDM_MPI_Comm master_of_sub_comm;
+  int res = 0;
+  if(i_rank_sub == 0){
+    res = PDM_MPI_Comm_split(comm, 0, i_rank, &master_of_sub_comm);
+  } else {
+    res = PDM_MPI_Comm_split(comm, PDM_MPI_UNDEFINED, i_rank, &master_of_sub_comm);
+    assert(master_of_sub_comm == PDM_MPI_COMM_NULL);
+  }
+  assert(res == PDM_MPI_SUCCESS);
+  return master_of_sub_comm;
+}
+
 
 #ifdef __cplusplus
 }
