@@ -2135,7 +2135,7 @@ PDM_MPI_Comm_split_type_numa
   /* Sur le shared on split par numa */
   int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
 
-  PDM_MPI_Comm_free(&comm_node);
+  // PDM_MPI_Comm_free(&comm_node);
   // int code = 0;
   return _mpi_2_pdm_mpi_err(code);
 }
@@ -2149,19 +2149,21 @@ int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *new
   int i_rank;
   MPI_Comm_rank(_pdm_mpi_2_mpi_comm(comm), &i_rank);
 
-  MPI_Comm _newcomm;
+  // PDM_MPI_Comm _newcomm;
   int code = 0;
   if(split_type == PDM_MPI_SPLIT_SHARED) {
+    MPI_Comm comm_shared;
     code = MPI_Comm_split_type(_pdm_mpi_2_mpi_comm(comm), MPI_COMM_TYPE_SHARED, i_rank /* Key */,
-                               MPI_INFO_NULL, &_newcomm);
+                               MPI_INFO_NULL, &comm_shared);
+    *newcomm = _mpi_2_pdm_mpi_comm(comm_shared);
   } else if(split_type == PDM_MPI_SPLIT_NUMA) {
-    PDM_MPI_Comm_split_type_numa(comm, &_newcomm);
+    PDM_MPI_Comm_split_type_numa(comm, newcomm);
   } else {
     PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Comm_split_type :"
             " split_type '%d' non valide\n", split_type);
     abort();
   }
-  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  // *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -2172,20 +2174,20 @@ int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *new
 PDM_mpi_win_shared_t*
 PDM_mpi_win_shared_create(PDM_MPI_Aint size,
                           int          disp_unit,
-                          MPI_Comm     comm)
+                          PDM_MPI_Comm comm)
 {
   PDM_mpi_win_shared_t* wins = (PDM_mpi_win_shared_t*) malloc(sizeof(PDM_mpi_win_shared_t));
 
   int i_rank;
-  MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   wins->win = MPI_WIN_NULL;
   wins->ptr = NULL;
   int res = 0;
   if(i_rank == 0) {
-    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, MPI_INFO_NULL, comm, &wins->ptr , &wins->win);
+    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, MPI_INFO_NULL, _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win);
   } else {
-    res = MPI_Win_allocate_shared(0, disp_unit, MPI_INFO_NULL , comm, &wins->ptr , &wins->win );
+    res = MPI_Win_allocate_shared(0, disp_unit, MPI_INFO_NULL , _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win );
     MPI_Aint size_0;
     int disp_0;
     MPI_Win_shared_query(wins->win, 0, &size_0, &disp_0, &wins->ptr);
@@ -2202,10 +2204,46 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
   return wins->ptr;
 }
 
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_shared_free
+ *
+ *----------------------------------------------------------------------------*/
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
   MPI_Win_free(&wins->win);
   wins->ptr = NULL;
   free(wins);
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_shared_lock_all
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win)
+{
+  int code = MPI_Win_lock_all(assert, win->win);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_shared_unlock_all
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_mpi_win_shared_unlock_all(PDM_mpi_win_shared_t* win)
+{
+  int code = MPI_Win_unlock_all(win->win);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_win_shared_sync
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win)
+{
+  int code = MPI_Win_sync(win->win);
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 // ------------------------------------------------------------------

@@ -640,6 +640,9 @@ void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins);
 
 PDM_MPI_Comm PDM_MPI_get_group_of_master(PDM_MPI_Comm comm, PDM_MPI_Comm sub_comm);
 
+int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win);
+int PDM_mpi_win_shared_unlock_all(PDM_mpi_win_shared_t* win);
+int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win);
 
 #ifdef __cplusplus
 }
