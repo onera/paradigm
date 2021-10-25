@@ -50,8 +50,8 @@ char *argv[]
   PDM_MPI_Comm_size (comm_numa, &n_rank_in_numa);
 
   int n_rank_in_node, i_rank_in_node;
-  PDM_MPI_Comm_rank (comm_numa, &i_rank_in_node);
-  PDM_MPI_Comm_size (comm_numa, &n_rank_in_node);
+  PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
+  PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
 
   log_trace(" i_rank_in_numa = %d/%d - i_rank_in_node = %d/%d  - i_rank = %d/%d \n", i_rank_in_numa, n_rank_in_numa,
                                                                                      i_rank_in_node, n_rank_in_node,

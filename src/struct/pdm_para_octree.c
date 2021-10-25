@@ -35,6 +35,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_vtk.h"
 
+
 #ifdef __cplusplus
 extern "C"
 #if 0
@@ -12702,6 +12703,171 @@ PDM_para_octree_free_copies
 }
 
 
+
+
+
+
+void
+PDM_para_octree_copy_ranks_win_shared
+(
+ const int  id,
+ const int  n_copied_ranks,
+ const int *copied_ranks
+ )
+{
+  int DEBUG = 0;
+
+  _octree_t *octree = _get_from_id (id);
+  int dim = octree->dim;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  PDM_MPI_Comm comm_node;
+  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+
+  int n_rank_in_node, i_rank_in_node;
+  PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
+  PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
+
+  PDM_MPI_Comm comm_master_of_node = PDM_MPI_get_group_of_master(octree->comm, comm_node);
+  int n_node = -1;
+  if (comm_master_of_node != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_size (comm_master_of_node, &n_node);
+  }
+
+  PDM_timer_hang_on (octree->timer);
+  double b_t_elapsed = PDM_timer_elapsed (octree->timer);
+  PDM_timer_resume (octree->timer);
+
+  octree->n_copied_ranks = n_copied_ranks;
+
+  octree->copied_ranks = malloc (sizeof(int) * n_copied_ranks);
+  memcpy (octree->copied_ranks, copied_ranks, sizeof(int) * n_copied_ranks);
+
+  octree->copied_octants     = malloc (sizeof(_l_octant_t *)       * n_copied_ranks);
+  octree->n_copied_points    = malloc (sizeof(int)                 * n_copied_ranks);
+  octree->copied_points      = malloc (sizeof(double *)            * n_copied_ranks);
+  octree->copied_points_gnum = malloc (sizeof(PDM_g_num_t *)       * n_copied_ranks);
+  octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
+
+  if (octree->explicit_nodes_to_build) {
+    octree->copied_explicit_nodes = malloc (sizeof(_explicit_node_t *) * n_copied_ranks);
+    octree->n_copied_explicit_nodes = malloc (sizeof(int) * n_copied_ranks);
+  }
+
+
+
+
+  int n[3];
+  int idx;
+
+  int *s_copied_data_in_node = NULL;
+  if (i_rank_in_node == 0) {
+    s_copied_data_in_node = malloc (sizeof(int) * n_rank_in_node * 3);
+  }
+
+  const int s_explicit_data = 16;
+
+  for (int i = 0; i < n_copied_ranks; i++) {
+
+    int rank = copied_ranks[i];
+
+    if (rank == i_rank) {
+      n[0] = octree->octants->n_nodes;
+      n[1] = octree->n_points;
+      n[2] = octree->n_explicit_nodes;
+      break;
+    }
+  }
+
+  PDM_MPI_Gather (n, 3, PDM_MPI_INT, s_copied_data_in_node, 3, PDM_MPI_INT, 0, comm_node);
+
+
+
+  int n_copied_ranks_in_node = 0;
+
+  PDM_mpi_win_shared_t *w_n_copied_ranks = PDM_mpi_win_shared_create (3*n_node, sizeof(int), comm_node);
+  int *n_copied_ranks_in_all_nodes = PDM_mpi_win_shared_get(w_n_copied_ranks);
+
+  if (i_rank_in_node == 0) {
+
+    idx = 0;
+    for (int i = 0; i < n_rank_in_node; i++) {
+      if (s_copied_data_in_node[3*i] > 0) {
+        n_copied_ranks_in_node++;
+        for (int j = 0; j < 3; j++) {
+          s_copied_data_in_node[idx++] = s_copied_data_in_node[3*i+j];
+        }
+      }
+    }
+
+    n_copied_ranks_in_all_nodes = malloc (sizeof(int) * n_node);
+    PDM_MPI_Allgather (&n_copied_ranks_in_node,     1, PDM_MPI_INT,
+                       n_copied_ranks_in_all_nodes, 1, PDM_MPI_INT,
+                       comm_master_of_node);
+  }
+
+  PDM_mpi_win_shared_t *w_s_copied_data = PDM_mpi_win_shared_create (3*n_copied_ranks, sizeof(int), comm_node);
+  int *s_copied_data_in_all_nodes = PDM_mpi_win_shared_get(w_s_copied_data);
+
+
+  int *idx_copied_ranks_in_all_nodes = malloc (sizeof(int) * (n_node + 1));
+  idx_copied_ranks_in_all_nodes[0] = 0;
+  for (int i = 0; i < n_node; i++) {
+    idx_copied_ranks_in_all_nodes[i+1] = idx_copied_ranks_in_all_nodes[i] + 3*n_copied_ranks_in_all_nodes[i];
+  }
+
+  if (i_rank_in_node == 0) {
+    PDM_MPI_Allgatherv (s_copied_data_in_node,
+                        3*n_copied_ranks_in_node,
+                        PDM_MPI_INT,
+                        s_copied_data_in_all_nodes,
+                        n_copied_ranks_in_all_nodes,
+                        idx_copied_ranks_in_all_nodes,
+                        PDM_MPI_INT,
+                        comm_master_of_node);
+  }
+  free (idx_copied_ranks_in_all_nodes);
+
+
+  int *copied_octants_idx  = malloc (sizeof(int) * (n_copied_ranks + 1));
+  int *copied_points_idx   = malloc (sizeof(int) * (n_copied_ranks + 1));
+  int *copied_explicit_idx = malloc (sizeof(int) * (n_copied_ranks + 1));
+  copied_octants_idx[0]  = 0;
+  copied_points_idx[0]   = 0;
+  copied_explicit_idx[0] = 0;
+
+  for (int i = 0; i < n_copied_ranks; i++) {
+    copied_octants_idx[i+1]  = copied_octants_idx[i]  + s_copied_data_in_all_nodes[3*i  ];
+    copied_points_idx[i+1]   = copied_points_idx[i]   + s_copied_data_in_all_nodes[3*i+1];
+    copied_explicit_idx[i+1] = copied_explicit_idx[i] + s_copied_data_in_all_nodes[3*i+2];
+  }
+
+  PDM_g_num_t gn_copied_octants  = copied_octants_idx[n_copied_ranks];
+  PDM_g_num_t gn_copied_points   = copied_points_idx[n_copied_ranks];
+  PDM_g_num_t gn_copied_explicit = copied_explicit_idx[n_copied_ranks];
+
+  PDM_mpi_win_shared_t *w_copied_octants     = PDM_mpi_win_shared_create (gn_copied_octants,  sizeof(_l_octant_t),       comm_node);
+  PDM_mpi_win_shared_t *w_copied_points      = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(double),            comm_node);
+  PDM_mpi_win_shared_t *w_copied_points_gnum = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(PDM_g_num_t),       comm_node);
+  PDM_mpi_win_shared_t *w_copied_points_code = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(PDM_morton_code_t), comm_node);
+  PDM_mpi_win_shared_t *w_copied_explicit    = PDM_mpi_win_shared_create (gn_copied_explicit, sizeof(_l_octant_t),       comm_node);
+
+
+  // (...)
+
+
+  PDM_mpi_win_shared_free (w_copied_octants);
+  PDM_mpi_win_shared_free (w_copied_points);
+  PDM_mpi_win_shared_free (w_copied_points_gnum);
+  PDM_mpi_win_shared_free (w_copied_points_code);
+  PDM_mpi_win_shared_free (w_copied_explicit);
+
+  PDM_mpi_win_shared_free (w_n_copied_ranks);
+  PDM_mpi_win_shared_free (w_s_copied_data);
+}
 
 #ifdef __cplusplus
 }
