@@ -790,7 +790,7 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    const double location_tolerance = 1.e-6;
+    const double location_tolerance = 1.e-6 * length;
 
     const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
     const double cell_side = length / ((double) n_cell_seg);
@@ -822,12 +822,12 @@ int main(int argc, char *argv[])
       //printf("%d: ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM")\n", ipt, p_location[ipt], box_gnum);
       if (p_location[ipt] != box_gnum) {
         double *cp = p_proj_coord + 3*ipt;
-        printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
+        /*printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
                ipt, pts_gnum[ipt],
                p[0], p[1], p[2],
                p_location[ipt], box_gnum,
                cp[0], cp[1], cp[2]);
-        printf("\n");
+               printf("\n");*/
 
         //-->>
         double cell_min[3] = {cell_side * i,     cell_side * j,     cell_side * k};
@@ -843,7 +843,7 @@ int main(int argc, char *argv[])
           double _dist = PDM_MIN (_dist1, _dist2);
           dist = PDM_MIN (dist, _dist);
         }
-        printf("distance = %e\n\n", dist);
+        //printf("distance = %e\n\n", dist);
         assert (dist < location_tolerance);
         //<<--
       }

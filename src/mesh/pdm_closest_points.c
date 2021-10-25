@@ -424,6 +424,11 @@ PDM_closest_point_t *cls
   int n_rank;
   PDM_MPI_Comm_rank (cls->comm, &n_rank);
 
+  /*if (i_rank == 0) {
+    printf(">> PDM_closest_points_compute\n");
+    fflush(stdout);
+    }*/
+
   /*
    *  Make sure we have at least as many source points as requested closest points
    */
@@ -463,6 +468,12 @@ PDM_closest_point_t *cls
 
   /* Build parallel octree */
   PDM_para_octree_build (octree_id, NULL);
+
+  /*if (i_rank == 0) {
+    printf("PDM_para_octree_build OK\n");
+    fflush(stdout);
+    }*/
+
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
   //<--

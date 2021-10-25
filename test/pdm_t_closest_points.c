@@ -175,7 +175,9 @@ _random01
   int sign;
   int rsigna = rand();
   int rsignb = rand();
-  sign = (rsigna - rsignb) / PDM_ABS (rsigna - rsignb);
+  if (rsigna == rsignb) {printf("!!!! rsigna = rsignb\n"); fflush(stdout);};
+  //sign = (rsigna - rsignb) / PDM_ABS (rsigna - rsignb);
+  sign = PDM_SIGN(rsigna - rsignb);
   double resultat = sign*((double)rand())/((double)RAND_MAX);
   return resultat;
 }
