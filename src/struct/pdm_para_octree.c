@@ -122,27 +122,6 @@ typedef struct  {
 
 
 typedef struct {
-
-  int                   n_nodes;
-  PDM_mpi_win_shared_t *w_codes;
-  PDM_mpi_win_shared_t *w_n_points;
-  PDM_mpi_win_shared_t *w_range;
-
-  PDM_morton_code_t *pt_w_codes;
-  int               *pt_w_n_points;
-  int               *pt_w_range;
-
-  /*PDM_mpi_win_shared_t *w_neighbour_idx;
-    PDM_mpi_win_shared_t *w_neighbours;
-    int   *pt_w_neighbour_idx;
-    int   *pt_w_neighbours;
-  */
-
-} _w_l_octant_t;
-
-
-
-typedef struct {
   PDM_morton_code_t code;
   int               n_points;
   int               range;
@@ -161,12 +140,11 @@ typedef struct {
   int               *children_id;
   int               *leaf_id; //-1 if internal, >=0 if leaf
   double            *pts_extents;
-} _explicit_nodes2_t;
+} _l_explicit_node_t;
 
 
 typedef struct {
 
-  int                   n_nodes;
   PDM_mpi_win_shared_t *w_codes;
   PDM_mpi_win_shared_t *w_n_points;
   PDM_mpi_win_shared_t *w_range;
@@ -175,6 +153,7 @@ typedef struct {
   PDM_mpi_win_shared_t *w_leaf_id;
   PDM_mpi_win_shared_t *w_pts_extents;
 
+  int                n_nodes;
   PDM_morton_code_t *pt_w_codes;
   int               *pt_w_n_points;
   int               *pt_w_range;
@@ -183,7 +162,43 @@ typedef struct {
   int               *pt_w_leaf_id; //-1 if internal, >=0 if leaf
   double            *pt_w_pts_extents;
 
-} _w_explicit_nodes2_t;
+} _w_l_explicit_node_t;
+
+typedef struct {
+
+  PDM_mpi_win_shared_t *w_codes;
+  PDM_mpi_win_shared_t *w_n_points;
+  PDM_mpi_win_shared_t *w_range;
+
+  int                n_nodes;
+  PDM_morton_code_t *pt_w_codes;
+  int               *pt_w_n_points;
+  int               *pt_w_range;
+
+  /*PDM_mpi_win_shared_t *w_neighbour_idx;
+    PDM_mpi_win_shared_t *w_neighbours;
+    int   *pt_w_neighbour_idx;
+    int   *pt_w_neighbours;
+  */
+
+} _w_l_octant_t;
+
+
+typedef struct  {
+
+  PDM_mpi_win_shared_t *w_points;
+  //PDM_mpi_win_shared_t *w_points_icloud;
+  PDM_mpi_win_shared_t *w_points_gnum;
+  PDM_mpi_win_shared_t *w_points_code;
+
+  int                n_points;
+  double            *pt_w_points;
+  int               *pt_w_points_icloud;
+  PDM_g_num_t       *pt_w_points_gnum;
+  PDM_morton_code_t *pt_w_points_code;
+
+} _w_points_t;
+
 
 /**
  * \struct _octree_t
@@ -269,11 +284,12 @@ typedef struct  {
   _explicit_node_t **copied_explicit_nodes;
   int               *n_copied_explicit_nodes;
 
-  _explicit_nodes2_t   *explicit_nodes2;
-  _explicit_nodes2_t  **copied_explicit_nodes2;
+  _l_explicit_node_t   *explicit_nodes2;
+  _l_explicit_node_t  **copied_explicit_nodes2;
 
   _w_l_octant_t        **w_copied_octants;
-  _w_explicit_nodes2_t **w_copied_explicit_nodes;
+  _w_points_t          **w_copied_points;
+  _w_l_explicit_node_t **w_copied_explicit_nodes;
 
 } _octree_t;
 
@@ -4834,7 +4850,7 @@ _closest_points_explicit2
   }
 
   int n_points;
-  const _explicit_nodes2_t *nodes;
+  const _l_explicit_node_t *nodes;
   const _l_octant_t *leaves;
   const PDM_g_num_t *src_g_num;
   const double      *src_coord;
@@ -5007,7 +5023,7 @@ _single_closest_point_explicit2
   }
 
   int n_points;
-  const _explicit_nodes2_t *nodes;
+  const _l_explicit_node_t *nodes;
   const _l_octant_t *leaves;
   const PDM_g_num_t *src_g_num;
   const double      *src_coord;
@@ -5960,9 +5976,9 @@ _build_explicit_nodes2
 
   int tmp_size = 2*octants->n_nodes;
 
-  octree->explicit_nodes2 = malloc (sizeof(_explicit_nodes2_t));
+  octree->explicit_nodes2 = malloc (sizeof(_l_explicit_node_t));
 
-  _explicit_nodes2_t *exp = octree->explicit_nodes2;
+  _l_explicit_node_t *exp = octree->explicit_nodes2;
   exp->n_nodes = 0;
   exp->codes       = malloc (sizeof(PDM_morton_code_t) * tmp_size);
   exp->n_points    = malloc (sizeof(int              ) * tmp_size);
@@ -6174,7 +6190,7 @@ for (int i = 0; i < n_child; i++) {
 static void
 _free_explicit_nodes2
 (
- _explicit_nodes2_t *exp
+ _l_explicit_node_t *exp
  )
 {
   if (exp == NULL) return;
@@ -6636,6 +6652,7 @@ PDM_para_octree_create
   octree->copied_explicit_nodes2 = NULL;
 
   octree->w_copied_octants        = NULL;
+  octree->w_copied_points         = NULL;
   octree->w_copied_explicit_nodes = NULL;
 
 
@@ -13078,6 +13095,18 @@ PDM_para_octree_copy_ranks
   int DEBUG = 0;
 
   _octree_t *octree = _get_from_id (id);
+
+  if (1) {
+    PDM_para_octree_copy_ranks_win_shared (id, n_copied_ranks, copied_ranks);
+
+    PDM_MPI_Barrier (octree->comm);
+    PDM_para_octree_free_copies (id);
+    PDM_MPI_Barrier (octree->comm);
+
+    log_trace("End\n");
+    abort();
+  }
+
   int dim = octree->dim;
 
   int i_rank, n_rank;
@@ -13327,14 +13356,16 @@ PDM_para_octree_free_copies
     octree->copied_ranks = NULL;
   }
 
-  if (octree->copied_octants != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_octants[i] != NULL) {
-        _octants_free (octree->copied_octants[i]);
+  if (octree->w_copied_octants == NULL) {
+    if (octree->copied_octants != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->copied_octants[i] != NULL) {
+          _octants_free (octree->copied_octants[i]);
+        }
       }
+      free (octree->copied_octants);
+      octree->copied_octants = NULL;
     }
-    free (octree->copied_octants);
-    octree->copied_octants = NULL;
   }
 
   if (octree->n_copied_points != NULL) {
@@ -13342,53 +13373,57 @@ PDM_para_octree_free_copies
     octree->n_copied_points = NULL;
   }
 
-  if (octree->copied_points != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_points[i] != NULL) {
-        free (octree->copied_points[i]);
-        octree->copied_points[i] = NULL;
+  if (octree->w_copied_points == NULL) {
+    if (octree->copied_points != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->copied_points[i] != NULL) {
+          free (octree->copied_points[i]);
+          octree->copied_points[i] = NULL;
+        }
       }
+      free (octree->copied_points);
+      octree->copied_points = NULL;
     }
-    free (octree->copied_points);
-    octree->copied_points = NULL;
+
+    if (octree->copied_points_gnum != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->copied_points_gnum[i] != NULL) {
+          free (octree->copied_points_gnum[i]);
+          octree->copied_points_gnum[i] = NULL;
+        }
+      }
+      free (octree->copied_points_gnum);
+      octree->copied_points_gnum = NULL;
+    }
+
+    if (octree->copied_points_code != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->copied_points_code[i] != NULL) {
+          free (octree->copied_points_code[i]);
+          octree->copied_points_code[i] = NULL;
+        }
+      }
+      free (octree->copied_points_code);
+      octree->copied_points_code = NULL;
+    }
   }
 
-  if (octree->copied_points_gnum != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_points_gnum[i] != NULL) {
-        free (octree->copied_points_gnum[i]);
-        octree->copied_points_gnum[i] = NULL;
+  if (octree->w_copied_explicit_nodes == NULL) {
+    if (octree->copied_explicit_nodes != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->copied_explicit_nodes[i] != NULL) {
+          free (octree->copied_explicit_nodes[i]);
+          octree->copied_explicit_nodes[i] = NULL;
+        }
       }
+      free (octree->copied_explicit_nodes);
+      octree->copied_explicit_nodes = NULL;
     }
-    free (octree->copied_points_gnum);
-    octree->copied_points_gnum = NULL;
-  }
 
-  if (octree->copied_points_code != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_points_code[i] != NULL) {
-        free (octree->copied_points_code[i]);
-        octree->copied_points_code[i] = NULL;
-      }
+    if (octree->n_copied_explicit_nodes != NULL) {
+      free (octree->n_copied_explicit_nodes);
+      octree->n_copied_explicit_nodes = NULL;
     }
-    free (octree->copied_points_code);
-    octree->copied_points_code = NULL;
-  }
-
-  if (octree->copied_explicit_nodes != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_explicit_nodes[i] != NULL) {
-        free (octree->copied_explicit_nodes[i]);
-        octree->copied_explicit_nodes[i] = NULL;
-      }
-    }
-    free (octree->copied_explicit_nodes);
-    octree->copied_explicit_nodes = NULL;
-  }
-
-  if (octree->n_copied_explicit_nodes != NULL) {
-    free (octree->n_copied_explicit_nodes);
-    octree->n_copied_explicit_nodes = NULL;
   }
 
 
@@ -13399,9 +13434,28 @@ PDM_para_octree_free_copies
         PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_n_points);
         PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_range);
         free (octree->w_copied_octants[i]);
+        if (octree->copied_octants[i] != NULL) {
+          free (octree->copied_octants[i]);
+        }
+        log_trace("free copied octants %d OK\n", i);
       }
     }
     free (octree->w_copied_octants);
+    if (octree->copied_octants != NULL) {
+      free (octree->copied_octants);
+    }
+  }
+
+  if (octree->w_copied_points != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points);
+      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_gnum);
+      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_code);
+    }
+    free (octree->w_copied_points);
+    free (octree->copied_points);
+    free (octree->copied_points_gnum);
+    free (octree->copied_points_code);
   }
 
   if (octree->w_copied_explicit_nodes != NULL) {
@@ -13415,9 +13469,16 @@ PDM_para_octree_free_copies
         PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_leaf_id);
         PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_pts_extents);
         free (octree->w_copied_explicit_nodes[i]);
+        if (octree->copied_explicit_nodes2[i] != NULL) {
+          free (octree->copied_explicit_nodes2[i]);
+        }
+        log_trace("free copied explicit nodes %d OK\n", i);
       }
     }
     free (octree->w_copied_explicit_nodes);
+    if (octree->copied_explicit_nodes2 != NULL) {
+      free (octree->copied_explicit_nodes2);
+    }
   }
 
   octree->n_copied_ranks = 0;
@@ -13436,17 +13497,19 @@ PDM_para_octree_copy_ranks_win_shared
  const int *copied_ranks
  )
 {
-  int DEBUG = 0;
+  int DEBUG = 1;
 
   _octree_t *octree = _get_from_id (id);
   int dim = octree->dim;
+  const int n_child = 1 << dim;
 
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
   PDM_MPI_Comm comm_node;
-  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+  //PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);//debug
 
   int n_rank_in_node, i_rank_in_node;
   PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
@@ -13461,44 +13524,28 @@ PDM_para_octree_copy_ranks_win_shared
   }
   PDM_MPI_Bcast (&n_node, 1, PDM_MPI_INT, 0, comm_node);
 
-  PDM_timer_hang_on (octree->timer);
-  double b_t_elapsed = PDM_timer_elapsed (octree->timer);
-  PDM_timer_resume (octree->timer);
+
+  if (DEBUG) {
+    log_trace("n_node = %d\n", n_node);
+    PDM_log_trace_array_int (copied_ranks, n_copied_ranks, "copied_ranks : ");
+  }
 
   octree->n_copied_ranks = n_copied_ranks;
-
   octree->copied_ranks = malloc (sizeof(int) * n_copied_ranks);
   memcpy (octree->copied_ranks, copied_ranks, sizeof(int) * n_copied_ranks);
 
-  octree->copied_octants     = malloc (sizeof(_l_octant_t *)       * n_copied_ranks);
-  octree->n_copied_points    = malloc (sizeof(int)                 * n_copied_ranks);
-  octree->copied_points      = malloc (sizeof(double *)            * n_copied_ranks);
-  octree->copied_points_gnum = malloc (sizeof(PDM_g_num_t *)       * n_copied_ranks);
-  octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
-
-  if (octree->explicit_nodes_to_build) {
-    octree->copied_explicit_nodes = malloc (sizeof(_explicit_node_t *) * n_copied_ranks);
-    octree->n_copied_explicit_nodes = malloc (sizeof(int) * n_copied_ranks);
-  }
+  PDM_sort_int (octree->copied_ranks, NULL, n_copied_ranks);
 
 
 
 
-  int s_copied_data_in_rank[3];
-  int idx;
-
-  int *s_copied_data_in_node = NULL;
-  if (i_rank_in_node == 0) {
-    s_copied_data_in_node = malloc (sizeof(int) * n_rank_in_node * 3);
-  }
-
-  const int s_explicit_data = 16;
+  /* Each rank sends to its node's master the size of its data that needs to be copied */
+  int i_copied_rank = -1;
+  int s_copied_data_in_rank[3] = {0};
 
   for (int i = 0; i < n_copied_ranks; i++) {
-
-    int rank = copied_ranks[i];
-
-    if (rank == i_rank) {
+    if (copied_ranks[i] == i_rank) {
+      i_copied_rank = i;
       s_copied_data_in_rank[0] = octree->octants->n_nodes;
       s_copied_data_in_rank[1] = octree->n_points;
       s_copied_data_in_rank[2] = octree->n_explicit_nodes;
@@ -13506,43 +13553,83 @@ PDM_para_octree_copy_ranks_win_shared
     }
   }
 
-  PDM_MPI_Gather (s_copied_data_in_rank, 3, PDM_MPI_INT, s_copied_data_in_node, 3, PDM_MPI_INT, 0, comm_node);
+  if (DEBUG) {
+    log_trace("i_copied_rank = %d\n", i_copied_rank);
+    PDM_log_trace_array_int (s_copied_data_in_rank, 3, "s_copied_data_in_rank : ");
+  }
 
-
-
-  int n_copied_ranks_in_node = 0;
-
-  PDM_mpi_win_shared_t *w_n_copied_ranks = PDM_mpi_win_shared_create (3*n_node, sizeof(int), comm_node);
-  int *n_copied_ranks_in_all_nodes = PDM_mpi_win_shared_get(w_n_copied_ranks);
-
+  int *s_copied_data_in_node = NULL;
   if (i_rank_in_node == 0) {
+    s_copied_data_in_node = malloc (sizeof(int) * n_rank_in_node * 3);
+  }
 
-    idx = 0;
+  PDM_MPI_Gather (s_copied_data_in_rank, 3, PDM_MPI_INT,
+                  s_copied_data_in_node, 3, PDM_MPI_INT, 0, comm_node);
+
+  if (DEBUG && i_rank_in_node == 0) {
+    PDM_log_trace_array_int (s_copied_data_in_node, 3*n_rank_in_node, "s_copied_data_in_node : ");
+  }
+
+  /* Compress */
+  int n_copied_ranks_in_node = 0;
+  int *copied_ranks_in_node = NULL;
+  if (i_rank_in_node == 0) {
+    copied_ranks_in_node = malloc (sizeof(int) * PDM_MIN(n_rank_in_node, n_copied_ranks));
+    int idx = 0;
     for (int i = 0; i < n_rank_in_node; i++) {
       if (s_copied_data_in_node[3*i] > 0) {
-        n_copied_ranks_in_node++;
+        copied_ranks_in_node[n_copied_ranks_in_node++] = i;
         for (int j = 0; j < 3; j++) {
           s_copied_data_in_node[idx++] = s_copied_data_in_node[3*i+j];
         }
       }
     }
+    copied_ranks_in_node = realloc (copied_ranks_in_node, sizeof(int) * n_copied_ranks_in_node);
+  }
 
-    n_copied_ranks_in_all_nodes = malloc (sizeof(int) * n_node);
+  if (DEBUG && i_rank_in_node == 0) {
+    log_trace("n_copied_ranks_in_node = %d\n", n_copied_ranks_in_node);
+    PDM_log_trace_array_int (copied_ranks_in_node,    n_copied_ranks_in_node, "copied_ranks_in_node : ");
+    PDM_log_trace_array_int (s_copied_data_in_node, 3*n_copied_ranks_in_node, "compressed s_copied_data_in_node : ");
+  }
+
+  PDM_mpi_win_shared_t *w_n_copied_ranks = PDM_mpi_win_shared_create (n_node, sizeof(int), comm_node);
+  int *n_copied_ranks_in_all_nodes = PDM_mpi_win_shared_get(w_n_copied_ranks);
+  PDM_mpi_win_shared_lock_all (0, w_n_copied_ranks);
+  if (i_rank_in_node == 0) {
     PDM_MPI_Allgather (&n_copied_ranks_in_node,     1, PDM_MPI_INT,
                        n_copied_ranks_in_all_nodes, 1, PDM_MPI_INT,
                        comm_master_of_node);
+    for (int i = 0; i < n_node; i++) {
+      n_copied_ranks_in_all_nodes[i] *= 3;
+    }
   }
+  PDM_mpi_win_shared_unlock_all (w_n_copied_ranks);
+  PDM_MPI_Barrier (comm_node);//
 
-  PDM_mpi_win_shared_t *w_s_copied_data = PDM_mpi_win_shared_create (3*n_copied_ranks, sizeof(int), comm_node);
-  int *s_copied_data_in_all_nodes = PDM_mpi_win_shared_get(w_s_copied_data);
+  if (DEBUG) {
+    PDM_log_trace_array_int (n_copied_ranks_in_all_nodes, n_node, "n_copied_ranks_in_all_nodes : ");
+  }
 
 
   int *idx_copied_ranks_in_all_nodes = malloc (sizeof(int) * (n_node + 1));
   idx_copied_ranks_in_all_nodes[0] = 0;
+  PDM_mpi_win_shared_lock_all (0, w_n_copied_ranks);
   for (int i = 0; i < n_node; i++) {
-    idx_copied_ranks_in_all_nodes[i+1] = idx_copied_ranks_in_all_nodes[i] + 3*n_copied_ranks_in_all_nodes[i];
+    idx_copied_ranks_in_all_nodes[i+1] = idx_copied_ranks_in_all_nodes[i] + n_copied_ranks_in_all_nodes[i];
+  }
+  PDM_mpi_win_shared_unlock_all (w_n_copied_ranks);
+
+  if (DEBUG) {
+    PDM_log_trace_array_int (idx_copied_ranks_in_all_nodes, n_node + 1, "idx_copied_ranks_in_all_nodes : ");
   }
 
+  PDM_MPI_Barrier (comm_node);//
+
+  /* The masters exchange the size of copied data from their nodes */
+  PDM_mpi_win_shared_t *w_s_copied_data = PDM_mpi_win_shared_create (idx_copied_ranks_in_all_nodes[n_node], sizeof(int), comm_node);
+  int *s_copied_data_in_all_nodes = PDM_mpi_win_shared_get(w_s_copied_data);
+  PDM_mpi_win_shared_lock_all (0, w_s_copied_data);
   if (i_rank_in_node == 0) {
     PDM_MPI_Allgatherv (s_copied_data_in_node,
                         3*n_copied_ranks_in_node,
@@ -13552,65 +13639,117 @@ PDM_para_octree_copy_ranks_win_shared
                         idx_copied_ranks_in_all_nodes,
                         PDM_MPI_INT,
                         comm_master_of_node);
+
+    for (int i = 0; i < n_node; i++) {
+      n_copied_ranks_in_all_nodes[i] /= 3;
+    }
   }
-  free (idx_copied_ranks_in_all_nodes);
+  PDM_mpi_win_shared_unlock_all (w_s_copied_data);
+  PDM_MPI_Barrier (comm_node);//
 
 
-  // !! copied_*_idx et w_copied_* sont utilisés pour la sollicitation de l'octree
-  int *copied_octants_idx  = NULL;
-  int *copied_points_idx   = NULL;
-  int *copied_explicit_idx = NULL;
-  PDM_mpi_win_shared_t *w_copied_octants     = NULL;
-  PDM_mpi_win_shared_t *w_copied_points      = NULL;
-  PDM_mpi_win_shared_t *w_copied_points_gnum = NULL;
-  PDM_mpi_win_shared_t *w_copied_points_code = NULL;
-  PDM_mpi_win_shared_t *w_copied_explicit    = NULL;
+  if (DEBUG) {
+    PDM_log_trace_connectivity_int (idx_copied_ranks_in_all_nodes,
+                                    s_copied_data_in_all_nodes,
+                                    n_node,
+                                    "s_copied_data_in_all_nodes : ");
+  }
 
-  copied_octants_idx  = malloc (sizeof(int) * (n_copied_ranks + 1));
-  copied_points_idx   = malloc (sizeof(int) * (n_copied_ranks + 1));
-  copied_explicit_idx = malloc (sizeof(int) * (n_copied_ranks + 1));
-  copied_octants_idx[0]  = 0;
-  copied_points_idx[0]   = 0;
-  copied_explicit_idx[0] = 0;
+
+
+
+
+  /* Create shared windows */
+  octree->w_copied_octants = malloc (sizeof(_w_l_octant_t *) * n_copied_ranks);
+  octree->copied_octants   = malloc (sizeof(_l_octant_t   *) * n_copied_ranks);
+
+  octree->w_copied_points    = malloc (sizeof(_w_points_t *)       * n_copied_ranks);
+  octree->n_copied_points    = malloc (sizeof(int)                 * n_copied_ranks);
+  octree->copied_points      = malloc (sizeof(double *)            * n_copied_ranks);
+  octree->copied_points_gnum = malloc (sizeof(PDM_g_num_t *)       * n_copied_ranks);
+  octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
+
+  if (octree->explicit_nodes_to_build) {
+    octree->w_copied_explicit_nodes = malloc (sizeof(_w_l_explicit_node_t *) * n_copied_ranks);
+    octree->copied_explicit_nodes2  = malloc (sizeof(_l_explicit_node_t   *) * n_copied_ranks);
+  }
+
 
   for (int i = 0; i < n_copied_ranks; i++) {
-    copied_octants_idx[i+1]  = copied_octants_idx[i]  + s_copied_data_in_all_nodes[3*i  ];
-    copied_points_idx[i+1]   = copied_points_idx[i]   + s_copied_data_in_all_nodes[3*i+1];
-    copied_explicit_idx[i+1] = copied_explicit_idx[i] + s_copied_data_in_all_nodes[3*i+2];
+
+    /* Octants */
+    octree->w_copied_octants[i] = malloc (sizeof(_w_l_octant_t));
+
+    _w_l_octant_t *w_coct = octree->w_copied_octants[i];
+    w_coct->n_nodes    = s_copied_data_in_all_nodes[3*i];
+    w_coct->w_codes    = PDM_mpi_win_shared_create (w_coct->n_nodes, sizeof(PDM_morton_code_t), comm_node);
+    w_coct->w_n_points = PDM_mpi_win_shared_create (w_coct->n_nodes, sizeof(int), comm_node);
+    w_coct->w_range    = PDM_mpi_win_shared_create (w_coct->n_nodes, sizeof(int), comm_node);
+
+    octree->copied_octants[i] = malloc (sizeof(_l_octant_t));
+    _l_octant_t *coct = octree->copied_octants[i];
+    coct->n_nodes  = w_coct->n_nodes;
+    coct->codes    = PDM_mpi_win_shared_get (w_coct->w_codes);
+    coct->n_points = PDM_mpi_win_shared_get (w_coct->w_n_points);
+    coct->range    = PDM_mpi_win_shared_get (w_coct->w_range);
+
+    log_trace("alloc copied octants %d OK\n", i);
+
+
+    /* Points */
+    octree->w_copied_points[i] = malloc (sizeof(_w_points_t));
+
+    _w_points_t *w_cpts = octree->w_copied_points[i];
+    w_cpts->n_points    = s_copied_data_in_all_nodes[3*i+1];
+    w_cpts->w_points      = PDM_mpi_win_shared_create (w_cpts->n_points, sizeof(double)*3, comm_node);
+    w_cpts->w_points_gnum = PDM_mpi_win_shared_create (w_cpts->n_points, sizeof(PDM_g_num_t), comm_node);
+    w_cpts->w_points_code = PDM_mpi_win_shared_create (w_cpts->n_points, sizeof(PDM_morton_code_t), comm_node);
+
+    octree->n_copied_points[i]    = w_cpts->n_points;
+    octree->copied_points[i]      = PDM_mpi_win_shared_get (w_cpts->w_points);
+    octree->copied_points_gnum[i] = PDM_mpi_win_shared_get (w_cpts->w_points_gnum);
+    octree->copied_points_code[i] = PDM_mpi_win_shared_get (w_cpts->w_points_code);
+
+    log_trace("alloc copied points %d OK\n", i);
+
+
+    /* Explicit nodes */
+    if (octree->explicit_nodes_to_build) {
+      octree->w_copied_explicit_nodes[i] = malloc (sizeof(_w_l_explicit_node_t));
+
+      _w_l_explicit_node_t *w_cexp = octree->w_copied_explicit_nodes[i];
+      w_cexp->n_nodes       = s_copied_data_in_all_nodes[3*i+2];
+      w_cexp->w_codes       = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(PDM_morton_code_t), comm_node);
+      w_cexp->w_n_points    = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(int), comm_node);
+      w_cexp->w_range       = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(int), comm_node);
+      w_cexp->w_ancestor_id = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(int), comm_node);
+      w_cexp->w_children_id = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(int)*n_child, comm_node);
+      w_cexp->w_leaf_id     = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(int), comm_node);
+      w_cexp->w_pts_extents = PDM_mpi_win_shared_create (w_cexp->n_nodes, sizeof(double)*6, comm_node);
+
+      octree->copied_explicit_nodes2[i] = malloc (sizeof(_l_explicit_node_t));
+      _l_explicit_node_t *cexp = octree->copied_explicit_nodes2[i];
+      cexp->n_nodes     = w_cexp->n_nodes;
+      cexp->codes       = PDM_mpi_win_shared_get (w_cexp->w_codes);
+      cexp->n_points    = PDM_mpi_win_shared_get (w_cexp->w_n_points);
+      cexp->range       = PDM_mpi_win_shared_get (w_cexp->w_range);
+      cexp->ancestor_id = PDM_mpi_win_shared_get (w_cexp->w_ancestor_id);
+      cexp->children_id = PDM_mpi_win_shared_get (w_cexp->w_children_id);
+      cexp->leaf_id     = PDM_mpi_win_shared_get (w_cexp->w_leaf_id);
+      cexp->pts_extents = PDM_mpi_win_shared_get (w_cexp->w_pts_extents);
+
+      log_trace("alloc copied explicit nodes %d OK\n", i);
+    }
   }
 
-  PDM_g_num_t gn_copied_octants  = copied_octants_idx[n_copied_ranks];
-  PDM_g_num_t gn_copied_points   = copied_points_idx[n_copied_ranks];
-  PDM_g_num_t gn_copied_explicit = copied_explicit_idx[n_copied_ranks];
 
-
-  w_copied_octants     = PDM_mpi_win_shared_create (gn_copied_octants,  sizeof(_l_octant_t),       comm_node);
-  w_copied_points      = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(double),            comm_node);
-  w_copied_points_gnum = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(PDM_g_num_t),       comm_node);
-  w_copied_points_code = PDM_mpi_win_shared_create (gn_copied_points,   sizeof(PDM_morton_code_t), comm_node);
-  w_copied_explicit    = PDM_mpi_win_shared_create (gn_copied_explicit, sizeof(_explicit_node_t),  comm_node);
-
-
-  // (...)
+  /* Exchange copied data */
+  //...
 
 
 
 
-
-
-
-
-  /*
-  // !! Free APRES sollicitation de l'octree
-  PDM_mpi_win_shared_free (w_copied_octants);
-  PDM_mpi_win_shared_free (w_copied_points);
-  PDM_mpi_win_shared_free (w_copied_points_gnum);
-  PDM_mpi_win_shared_free (w_copied_points_code);
-  PDM_mpi_win_shared_free (w_copied_explicit);
-  free (copied_octants_idx);
-  free (copied_points_idx);
-  free (copied_explicit_idx);
-  */
+  free (idx_copied_ranks_in_all_nodes);
 
 
   PDM_mpi_win_shared_free (w_n_copied_ranks);

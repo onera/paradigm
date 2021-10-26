@@ -346,7 +346,13 @@ PDM_para_octree_free_copies
 
 
 
-
+void
+PDM_para_octree_copy_ranks_win_shared
+(
+ const int  id,
+ const int  n_copied_ranks,
+ const int *copied_ranks
+ );
 
 
 #ifdef	__cplusplus
