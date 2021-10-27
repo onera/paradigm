@@ -1628,7 +1628,11 @@ PDM_dcube_nodal_gen_create
   dcube->order  = order;
   dcube->owner  = owner;
 
+  dcube->dmesh_nodal = NULL;
   dcube->ordering = NULL;
+  dcube->distrib_bar  = NULL;
+  dcube->distrib_quad = NULL;
+  dcube->distrib_hexa = NULL;
 
   return dcube;
 }
