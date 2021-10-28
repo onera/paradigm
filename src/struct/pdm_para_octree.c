@@ -5964,7 +5964,7 @@ _build_explicit_nodes2
  _octree_t *octree
  )
 {
-  int DEBUG = 0;
+  int DEBUG = 1;
 
   int i_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
@@ -6062,7 +6062,7 @@ _build_explicit_nodes2
 
     int new_start, new_end;
     int prev_end = node_start;
-for (int i = 0; i < n_child; i++) {
+    for (int i = 0; i < n_child; i++) {
       /* get start and end of range in list of nodes covered by current child */
       /* new_start <-- first descendant of child in list */
       new_start = prev_end;
@@ -6968,7 +6968,7 @@ PDM_para_octree_build
  double    *global_extents
  )
 {
-  int DEBUG = 0;
+  int DEBUG = 1;
 
   _octree_t *octree = _get_from_id (id);
 
@@ -7489,6 +7489,11 @@ PDM_para_octree_build
         }
       }
       free (recv_codes);
+
+      if (DEBUG && rank == 0) {
+        printf("build shared octree OK\n");
+        fflush(stdout);
+      }
     }
     //<<--
 
@@ -7536,6 +7541,12 @@ PDM_para_octree_build
   b_t_cpu_s   = e_t_cpu_s;
 
   PDM_timer_resume(octree->timer);
+
+  PDM_MPI_Barrier (octree->comm);
+  if (DEBUG && rank == 0) {
+    printf("BUILD_BLOCK_PARTITION OK\n");
+    fflush(stdout);
+  }
 
   /*************************************************************************
    *
@@ -7659,6 +7670,12 @@ PDM_para_octree_build
         }
       }
     }
+  }
+
+  PDM_MPI_Barrier (octree->comm);
+  if (DEBUG && rank == 0) {
+    printf("heap push OK\n");
+    fflush(stdout);
   }
 
 
@@ -8254,7 +8271,7 @@ PDM_para_octree_closest_points
  double      *closest_octree_pts_dist2
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 
@@ -8493,7 +8510,7 @@ PDM_para_octree_closest_points
     }
 
     if (n_copied_ranks1 > 0) {
-      if (DEBUG && i_rank == 0) {
+      if (1 && i_rank == 0) {
         if (n_copied_ranks1 == 1) {
           printf("phase 1: 1 copied rank: %d\n", copied_ranks1[0]);
         }
@@ -8510,7 +8527,7 @@ PDM_para_octree_closest_points
                                   n_copied_ranks1,
                                   copied_ranks1);
     } else {
-      if (DEBUG && i_rank == 0) printf("phase 1: 0 copied ranks\n");
+      if (1 && i_rank == 0) printf("phase 1: 0 copied ranks\n");
     }
 
     int *i_copied_rank1 = PDM_array_const_int(n_rank, -1);
@@ -9876,7 +9893,7 @@ PDM_para_octree_single_closest_point
     }
 
     if (n_copied_ranks1 > 0) {
-      if (DEBUG && i_rank == 0) {
+      if (1 && i_rank == 0) {
         if (n_copied_ranks1 == 1) {
           printf("phase 1: 1 copied rank: %d\n", copied_ranks1[0]);
           fflush(stdout);
@@ -9894,12 +9911,12 @@ PDM_para_octree_single_closest_point
       PDM_para_octree_copy_ranks (id,
                                   n_copied_ranks1,
                                   copied_ranks1);
-      if (DEBUG && i_rank == 0) {
+      if (1 && i_rank == 0) {
         printf("PDM_para_octree_copy_ranks OK\n");
         fflush(stdout);
       }
     } else {
-      if (DEBUG && i_rank == 0) {
+      if (1 && i_rank == 0) {
         printf("phase 1: 0 copied ranks\n");
         fflush(stdout);
       }
@@ -13168,7 +13185,7 @@ PDM_para_octree_copy_ranks
     /*PDM_MPI_Barrier (octree->comm);
     PDM_para_octree_free_copies (id);
     PDM_MPI_Barrier (octree->comm);*/
-    log_trace("End copies\n");
+    if (DEBUG) log_trace("End copies\n");
     //abort();
     return;
   }
@@ -13503,7 +13520,7 @@ PDM_para_octree_free_copies
         if (octree->copied_octants[i] != NULL) {
           free (octree->copied_octants[i]);
         }
-        log_trace("free copied octants %d OK\n", i);
+        //log_trace("free copied octants %d OK\n", i);
       }
     }
     free (octree->w_copied_octants);
@@ -13538,7 +13555,7 @@ PDM_para_octree_free_copies
         if (octree->copied_explicit_nodes2[i] != NULL) {
           free (octree->copied_explicit_nodes2[i]);
         }
-        log_trace("free copied explicit nodes %d OK\n", i);
+        //log_trace("free copied explicit nodes %d OK\n", i);
       }
     }
     free (octree->w_copied_explicit_nodes);
@@ -13563,7 +13580,7 @@ PDM_para_octree_copy_ranks_win_shared
  const int *copied_ranks
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
 
   _octree_t *octree = _get_from_id (id);
   int dim = octree->dim;
@@ -13574,8 +13591,8 @@ PDM_para_octree_copy_ranks_win_shared
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
   PDM_MPI_Comm comm_node;
-  //PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
-  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);//debug
+  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+  //PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);//debug
 
   int n_rank_in_node, i_rank_in_node;
   PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
