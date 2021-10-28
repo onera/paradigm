@@ -35,7 +35,6 @@ extern "C" {
  * \brief Build a hash from n int components
  *
  * \param [in]  n_key          Number of keys
- * \param [in]  n_component    Number of components
  * \param [in]  components_idx Index of components in components (size = n_component)
  * \param [in]  components     List of components
  * \param [in]  max_key        Max authorized key 
@@ -47,7 +46,6 @@ void
 PDM_hkey_int 
 (
   const int  n_key, 
-  const int  n_component,
   const int *components_idx,  
   const int *components,
   const int  max_key,
@@ -60,7 +58,6 @@ PDM_hkey_int
  * \brief Build a hash from n gnum components
  *
  * \param [in]  n_key          Number of keys
- * \param [in]  n_component    Number of components
  * \param [in]  components_idx Index of components in components (size = n_component)
  * \param [in]  components     List of components
  * \param [in]  max_key        Max authorized key
@@ -72,7 +69,6 @@ void
 PDM_hkey_gnum 
 (
   const int          n_key, 
-  const int          n_component,
   const int         *components_idx,  
   const PDM_g_num_t *components,
   const PDM_g_num_t  max_key,

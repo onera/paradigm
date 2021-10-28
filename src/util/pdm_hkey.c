@@ -153,7 +153,6 @@ _prime_numbers[N_PRIME_NUMBERS] =
  * \brief Build hash keys from n int components
  *
  * \param [in]  n_key          Number of keys
- * \param [in]  n_component    Number of components
  * \param [in]  components_idx Index of components in components (size = n_component)
  * \param [in]  components     List of components
  * \param [in]  max_key        Max authorized key 
@@ -165,19 +164,18 @@ void
 PDM_hkey_int 
 (
   const int  n_key,
-  const int  n_component,
   const int *components_idx,  
   const int *components,
   const int  max_key,
         int *hkeys
 )
 {
-  assert (n_component <= N_PRIME_NUMBERS);
 
   for (int i = 0; i < n_key; i++) {
     PDM_g_num_t _hkey = 0;
     int k = 0;
     for (int j = components_idx[i]; j < components_idx[i+1]; j++) {
+      assert (components_idx[i+1] - components_idx[i]  <= N_PRIME_NUMBERS);
       _hkey += (PDM_g_num_t) _prime_numbers[k++] * (PDM_g_num_t) components[j];    
     }
     hkeys[i] = (int) (_hkey % (PDM_g_num_t) max_key);
@@ -190,7 +188,6 @@ PDM_hkey_int
  * \brief Build a hash from n gnum components
  *
  * \param [in]  n_key          Number of keys
- * \param [in]  n_component    Number of components
  * \param [in]  components_idx Index of components in components (size = n_component)
  * \param [in]  components     List of components
  * \param [in]  max_key        Max authorized key
@@ -202,19 +199,18 @@ void
 PDM_hkey_gnum 
 (
   const int          n_key, 
-  const int          n_component,
   const int         *components_idx,  
   const PDM_g_num_t *components,
   const PDM_g_num_t  max_key,
         PDM_g_num_t *hkeys
 )
 {
-  assert (n_component <= N_PRIME_NUMBERS);
 
   for (int i = 0; i < n_key; i++) {
     hkeys[i] = 0;
     int k = 0;
     for (int j = components_idx[i]; j < components_idx[i+1]; j++) {
+      assert (components_idx[i+1] - components_idx[i]  <= N_PRIME_NUMBERS);
       hkeys[i] += (PDM_g_num_t) _prime_numbers[k++] * (PDM_g_num_t) components[j];    
     }
     hkeys[i] = hkeys[i] % (PDM_g_num_t) max_key;
