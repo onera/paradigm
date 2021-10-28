@@ -13586,6 +13586,10 @@ PDM_para_octree_copy_ranks_win_shared
   int dim = octree->dim;
   const int n_child = 1 << dim;
 
+  PDM_timer_hang_on (octree->timer);
+  double b_t_elapsed = PDM_timer_elapsed (octree->timer);
+  PDM_timer_resume (octree->timer);
+
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
@@ -14082,6 +14086,13 @@ PDM_para_octree_copy_ranks_win_shared
 
   PDM_mpi_win_shared_free (w_n_copied_ranks);
   PDM_mpi_win_shared_free (w_s_copied_data);
+
+  PDM_timer_hang_on (octree->timer);
+  double e_t_elapsed = PDM_timer_elapsed (octree->timer);
+  if (1 && i_rank == 0) {
+    printf("PDM_para_octree_copy_ranks: elapsed = %12.5es\n", e_t_elapsed - b_t_elapsed);
+  }
+  PDM_timer_resume (octree->timer);
 }
 
 #ifdef __cplusplus
