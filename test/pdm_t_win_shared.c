@@ -17,6 +17,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_distrib.h"
 
 /**
  *
@@ -87,5 +88,6 @@ char *argv[]
 
   PDM_mpi_win_shared_free(win);
   PDM_MPI_Finalize ();
+
   return 0;
 }

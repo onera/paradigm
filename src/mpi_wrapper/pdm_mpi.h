@@ -10,7 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-
+#include <mpi.h>
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
@@ -40,6 +40,8 @@ typedef long PDM_MPI_Aint;
 typedef int PDM_MPI_Fint;
 
 #define PDM_MPI_UNDEFINED MPI_UNDEFINED
+#define PDM_MPI_IN_PLACE  MPI_IN_PLACE
+
 
 enum  {
 

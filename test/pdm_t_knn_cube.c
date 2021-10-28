@@ -20,7 +20,8 @@
 #include "pdm_closest_points.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_geom_elem.h"
-
+#include "pdm_version.h"
+#include "pdm_logging.h"
 
 
 /*============================================================================
@@ -256,6 +257,11 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
+  char *version = PDM_version_get();
+
+  log_trace("Version de ParaDiGM : %s\n", version);
+  free(version);
+
   /*
    *  Set default values
    */
@@ -281,6 +287,7 @@ int main(int argc, char *argv[])
 
 
   /* Define the target point cloud */
+  srand(0);
   double *tgt_coords = NULL;
   int _n_tgt_l;
   _gen_clouds_random (nTgt,
