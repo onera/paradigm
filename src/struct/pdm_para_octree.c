@@ -5964,7 +5964,7 @@ _build_explicit_nodes2
  _octree_t *octree
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
 
   int i_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
@@ -6968,7 +6968,7 @@ PDM_para_octree_build
  double    *global_extents
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
 
   _octree_t *octree = _get_from_id (id);
 
