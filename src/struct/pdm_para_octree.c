@@ -200,6 +200,15 @@ typedef struct  {
 } _w_points_t;
 
 
+typedef struct {
+
+  PDM_MPI_Request *req_oct;
+  PDM_MPI_Request *req_pts;
+  PDM_MPI_Request *req_exp;
+
+} _copy_requests_t;
+
+
 /**
  * \struct _octree_t
  * \brief  Define an octree
@@ -290,6 +299,8 @@ typedef struct  {
   _w_l_octant_t        **w_copied_octants;
   _w_points_t          **w_copied_points;
   _w_l_explicit_node_t **w_copied_explicit_nodes;
+
+  _copy_requests_t       copy_requests;
 
 } _octree_t;
 
@@ -6433,6 +6444,126 @@ _prepare_copies
 }
 
 
+static void
+_finalize_copies_win_shared
+(
+ _octree_t *octree
+ )
+{
+  int DEBUG = 0;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  PDM_MPI_Comm comm_node;
+  PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_SHARED, &comm_node);
+
+  int n_rank_in_node, i_rank_in_node;
+  PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
+  PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
+
+
+  if (i_rank_in_node == 0) {
+    PDM_MPI_Request *req_oct = octree->copy_requests.req_oct;
+    PDM_MPI_Request *req_pts = octree->copy_requests.req_pts;
+    PDM_MPI_Request *req_exp = octree->copy_requests.req_exp;
+
+
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      PDM_MPI_Wait(&req_oct[3*i  ]);
+      PDM_MPI_Wait(&req_oct[3*i+1]);
+      PDM_MPI_Wait(&req_oct[3*i+2]);
+
+      PDM_MPI_Wait(&req_pts[3*i  ]);
+      PDM_MPI_Wait(&req_pts[3*i+1]);
+      PDM_MPI_Wait(&req_pts[3*i+2]);
+
+      PDM_MPI_Wait(&req_exp[7*i  ]);
+      PDM_MPI_Wait(&req_exp[7*i+1]);
+      PDM_MPI_Wait(&req_exp[7*i+2]);
+      PDM_MPI_Wait(&req_exp[7*i+3]);
+      PDM_MPI_Wait(&req_exp[7*i+4]);
+      PDM_MPI_Wait(&req_exp[7*i+5]);
+      PDM_MPI_Wait(&req_exp[7*i+6]);
+    }
+
+    free (req_oct);
+    free (req_pts);
+    free (req_exp);
+  }
+
+
+  if (DEBUG) log_trace("After broadcasts\n");
+
+  /* Synchronize shared windows */
+
+  for (int i = 0; i < octree->n_copied_ranks; i++) {
+
+    /* Octants */
+    _w_l_octant_t *w_coct = octree->w_copied_octants[i];
+    PDM_mpi_win_shared_sync (w_coct->w_codes);
+    PDM_mpi_win_shared_sync (w_coct->w_n_points);
+    PDM_mpi_win_shared_sync (w_coct->w_range);
+
+    _l_octant_t *coct = octree->copied_octants[i];
+    if (0 && DEBUG) {
+      log_trace("copied_octants[%d]->codes :\n", i);
+      for (int j = 0; j < coct->n_nodes; j++) {
+        log_trace(" [%d] : L=%u, X=(%u, %u, %u)\n",
+                  j, coct->codes[j].L,
+                  coct->codes[j].X[0], coct->codes[j].X[1], coct->codes[j].X[2]);
+      }
+
+      PDM_log_trace_array_int(coct->n_points, coct->n_nodes, "coct->n_points : ");
+    }
+
+    PDM_mpi_win_shared_unlock_all (w_coct->w_codes);
+    PDM_mpi_win_shared_unlock_all (w_coct->w_n_points);
+    PDM_mpi_win_shared_unlock_all (w_coct->w_range);
+
+
+    /* Points */
+    _w_points_t *w_cpts = octree->w_copied_points[i];
+    PDM_mpi_win_shared_sync (w_cpts->w_points);
+    PDM_mpi_win_shared_sync (w_cpts->w_points_gnum);
+    PDM_mpi_win_shared_sync (w_cpts->w_points_code);
+
+    if (0 && DEBUG) {
+      log_trace("copied_points[%d] :\n", i);
+      for (int j = 0; j < octree->n_copied_points[i]; j++) {
+        log_trace(" [%d] : %.3f %.3f %.3f\n", j,
+                  octree->copied_points[i][3*j  ],
+                  octree->copied_points[i][3*j+1],
+                  octree->copied_points[i][3*j+2]);
+      }
+    }
+
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points);
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points_gnum);
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points_code);
+
+    /* Explicit nodes */
+    if (octree->explicit_nodes_to_build) {
+      _w_l_explicit_node_t *w_cexp = octree->w_copied_explicit_nodes[i];
+      PDM_mpi_win_shared_sync (w_cexp->w_codes);
+      PDM_mpi_win_shared_sync (w_cexp->w_n_points);
+      PDM_mpi_win_shared_sync (w_cexp->w_range);
+      PDM_mpi_win_shared_sync (w_cexp->w_ancestor_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_children_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_leaf_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_pts_extents);
+
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_codes);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_n_points);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_range);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_ancestor_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_children_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_leaf_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_pts_extents);
+    }
+  }
+}
 
 
 
@@ -6657,6 +6788,9 @@ PDM_para_octree_create
   octree->w_copied_points         = NULL;
   octree->w_copied_explicit_nodes = NULL;
 
+  octree->copy_requests.req_oct = NULL;
+  octree->copy_requests.req_pts = NULL;
+  octree->copy_requests.req_exp = NULL;
 
   octree->timer = PDM_timer_create ();
 
@@ -8731,6 +8865,12 @@ PDM_para_octree_closest_points
     }
   }
 
+
+  //PDM_MPI_Barrier(octree->comm);
+  if (i_rank == 0) printf("_finalize_copies_win_shared 1\n");
+  //WAIT Ibcast copies + win sync
+  _finalize_copies_win_shared (octree);
+
   /* First guess in copied ranks octree */
   double *_pts_coord1 = pts_coord1 + idx_pts1[2] * dim;
   PDM_morton_code_t *_pts_code = pts_code + idx_pts1[2];
@@ -9393,6 +9533,10 @@ PDM_para_octree_closest_points
 
   /*log_trace("2nd local search OK\n");
     PDM_MPI_Barrier (octree->comm);*/
+  //PDM_MPI_Barrier(octree->comm);
+  if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
+  //WAIT Ibcast copies + win sync
+  _finalize_copies_win_shared (octree);
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pts_dist2 = _closest_pts_dist22 + idx_pts2[2] * n_closest_points;
@@ -10191,7 +10335,10 @@ PDM_para_octree_single_closest_point
     }
   }
 
-
+  //PDM_MPI_Barrier(octree->comm);
+  if (i_rank == 0) printf("_finalize_copies_win_shared 1\n");
+  //WAIT Ibcast copies + win sync
+  _finalize_copies_win_shared (octree);
 
   double *_pts_coord1 = pts_coord1 + idx_pts1[2] * dim;
   PDM_morton_code_t *_pts_code = pts_code + idx_pts1[2];
@@ -11052,6 +11199,12 @@ PDM_para_octree_single_closest_point
 
     PDM_timer_resume(timer);
   }
+
+
+  //PDM_MPI_Barrier(octree->comm);
+  if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
+  //WAIT Ibcast copies + win sync
+  _finalize_copies_win_shared (octree);
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[2];
@@ -14014,6 +14167,7 @@ PDM_para_octree_copy_ranks_win_shared
     if (DEBUG) log_trace("sync windows %d OK\n", i);
   }
 
+
   PDM_MPI_Barrier (octree->comm);
   if (DEBUG) log_trace("Before broadcasts\n");
 
@@ -14021,11 +14175,15 @@ PDM_para_octree_copy_ranks_win_shared
   PDM_MPI_Request *req_oct = NULL;
   PDM_MPI_Request *req_pts = NULL;
   PDM_MPI_Request *req_exp = NULL;
+
   if (i_rank_in_node == 0) {
 
-    req_oct = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 3);
-    req_pts = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 3);
-    req_exp = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 7);
+    octree->copy_requests.req_oct = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 3);
+    octree->copy_requests.req_pts = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 3);
+    octree->copy_requests.req_exp = malloc (sizeof(PDM_MPI_Request) * n_copied_ranks * 7);
+    req_oct = octree->copy_requests.req_oct;
+    req_pts = octree->copy_requests.req_pts;
+    req_exp = octree->copy_requests.req_exp;
 
     for (int i = 0; i < n_copied_ranks; i++) {
       int root_node = PDM_binary_search_gap_int (3*i,
@@ -14036,20 +14194,14 @@ PDM_para_octree_copy_ranks_win_shared
 
       /* Octants */
       _l_octant_t *coct = octree->copied_octants[i];
-      PDM_MPI_Ibcast (coct->codes, coct->n_nodes*sizeof(PDM_morton_code_t), PDM_MPI_BYTE, root_node, comm_master_of_node, &req_oct[3*i]);
-      PDM_MPI_Ibcast (coct->n_points, coct->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_oct[3*i+1]);
-      PDM_MPI_Ibcast (coct->range, coct->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_oct[3*i+2]);
+      PDM_MPI_Ibcast (coct->codes,    coct->n_nodes*sizeof(PDM_morton_code_t), PDM_MPI_BYTE, root_node, comm_master_of_node, &req_oct[3*i]);
+      PDM_MPI_Ibcast (coct->n_points, coct->n_nodes,                           PDM_MPI_INT,  root_node, comm_master_of_node, &req_oct[3*i+1]);
+      PDM_MPI_Ibcast (coct->range,    coct->n_nodes,                           PDM_MPI_INT,  root_node, comm_master_of_node, &req_oct[3*i+2]);
 
       /* Points */
-      PDM_MPI_Ibcast (octree->copied_points[i],
-                      octree->n_copied_points[i]*3,
-                      PDM_MPI_DOUBLE, root_node, comm_master_of_node, &req_pts[3*i]);
-      PDM_MPI_Ibcast (octree->copied_points_gnum[i],
-                      octree->n_copied_points[i],
-                      PDM__PDM_MPI_G_NUM, root_node, comm_master_of_node, &req_pts[3*i+1]);
-      PDM_MPI_Ibcast (octree->copied_points_code[i],
-                      octree->n_copied_points[i]*sizeof(PDM_morton_code_t),
-                      PDM_MPI_BYTE, root_node, comm_master_of_node, &req_pts[3*i+2]);
+      PDM_MPI_Ibcast (octree->copied_points[i],      octree->n_copied_points[i]*3,                         PDM_MPI_DOUBLE,     root_node, comm_master_of_node, &req_pts[3*i]);
+      PDM_MPI_Ibcast (octree->copied_points_gnum[i], octree->n_copied_points[i],                           PDM__PDM_MPI_G_NUM, root_node, comm_master_of_node, &req_pts[3*i+1]);
+      PDM_MPI_Ibcast (octree->copied_points_code[i], octree->n_copied_points[i]*sizeof(PDM_morton_code_t), PDM_MPI_BYTE,       root_node, comm_master_of_node, &req_pts[3*i+2]);
 
       /* Explicit nodes */
       if (octree->explicit_nodes_to_build) {
@@ -14057,16 +14209,25 @@ PDM_para_octree_copy_ranks_win_shared
         PDM_MPI_Ibcast (cexp->codes,
                        cexp->n_nodes*sizeof(PDM_morton_code_t),
                         PDM_MPI_BYTE, root_node, comm_master_of_node, &req_exp[7*i]);
-        PDM_MPI_Ibcast (cexp->n_points, cexp->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_exp[7*i+1]);
-        PDM_MPI_Ibcast (cexp->range, cexp->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_exp[7*i+2]);
-        PDM_MPI_Ibcast (cexp->ancestor_id, cexp->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_exp[7*i+3]);
-        PDM_MPI_Ibcast (cexp->children_id, cexp->n_nodes*n_child, PDM_MPI_INT, root_node, comm_master_of_node, &req_exp[7*i+4]);
-        PDM_MPI_Ibcast (cexp->leaf_id, cexp->n_nodes, PDM_MPI_INT, root_node, comm_master_of_node, &req_exp[7*i+5]);
-        PDM_MPI_Ibcast (cexp->pts_extents, cexp->n_nodes*6, PDM_MPI_DOUBLE, root_node, comm_master_of_node, &req_exp[7*i+6]);
+        PDM_MPI_Ibcast (cexp->n_points,    cexp->n_nodes,         PDM_MPI_INT,    root_node, comm_master_of_node, &req_exp[7*i+1]);
+        PDM_MPI_Ibcast (cexp->range,       cexp->n_nodes,         PDM_MPI_INT,    root_node, comm_master_of_node, &req_exp[7*i+2]);
+        PDM_MPI_Ibcast (cexp->ancestor_id, cexp->n_nodes,         PDM_MPI_INT,    root_node, comm_master_of_node, &req_exp[7*i+3]);
+        PDM_MPI_Ibcast (cexp->children_id, cexp->n_nodes*n_child, PDM_MPI_INT,    root_node, comm_master_of_node, &req_exp[7*i+4]);
+        PDM_MPI_Ibcast (cexp->leaf_id,     cexp->n_nodes,         PDM_MPI_INT,    root_node, comm_master_of_node, &req_exp[7*i+5]);
+        PDM_MPI_Ibcast (cexp->pts_extents, cexp->n_nodes*6,       PDM_MPI_DOUBLE, root_node, comm_master_of_node, &req_exp[7*i+6]);
       }
     }
   }
 
+  free (idx_copied_ranks_in_all_nodes);
+  PDM_mpi_win_shared_free (w_n_copied_ranks);
+  PDM_mpi_win_shared_free (w_s_copied_data);
+
+  if (DEBUG) log_trace("<< PDM_para_octree_copy_ranks_win_shared\n");
+  return;
+
+
+  // -->> Finalize copies
   if (i_rank_in_node == 0) {
     for (int i = 0; i < n_copied_ranks; i++) {
       PDM_MPI_Wait(&req_oct[3*i  ]);
@@ -14166,10 +14327,6 @@ PDM_para_octree_copy_ranks_win_shared
     }
   }
 
-  free (idx_copied_ranks_in_all_nodes);
-
-  PDM_mpi_win_shared_free (w_n_copied_ranks);
-  PDM_mpi_win_shared_free (w_s_copied_data);
 
   PDM_timer_hang_on (octree->timer);
   e_t_elapsed = PDM_timer_elapsed (octree->timer);
@@ -14198,6 +14355,13 @@ PDM_para_octree_copy_ranks_win_shared
   }
   PDM_timer_resume (octree->timer);*/
 }
+
+
+
+
+
+
+
 
 #ifdef __cplusplus
 }
