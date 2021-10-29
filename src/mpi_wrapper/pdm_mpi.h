@@ -479,6 +479,14 @@ int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
               int root, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_IBcast (wrapping de la fonction MPI_IBcast)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
+                   int root, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
  *
  *----------------------------------------------------------------------------*/

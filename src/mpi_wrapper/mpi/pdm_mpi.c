@@ -1741,6 +1741,25 @@ int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_IBcast (wrapping de la fonction MPI_IBcast)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
+              int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+{
+  MPI_Request _mpi_request = MPI_REQUEST_NULL;
+
+  int code = MPI_Ibcast(buffer,
+                        count,
+                        _pdm_mpi_2_mpi_datatype(datatype),
+                        root,
+                        _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
  *
  *----------------------------------------------------------------------------*/
