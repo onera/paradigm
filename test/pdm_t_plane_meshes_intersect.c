@@ -1791,6 +1791,21 @@ char *argv[]
     }
   }
 
+
+  if (post) {
+    _export_ini_mesh (PDM_MPI_COMM_WORLD,
+                      n_part,
+                      nFace,
+                      faceVtxIdx,
+                      faceVtx,
+                      faceLNToGN,
+                      nVtx,
+                      vtxCoord,
+                      vtxLNToGN,
+                      sFieldA,
+                      rFieldB);
+  }
+
   /*
    *  Calcul
    */
@@ -2115,7 +2130,7 @@ char *argv[]
 
   if (post) {
 
-    _export_ini_mesh (PDM_MPI_COMM_WORLD,
+    /*_export_ini_mesh (PDM_MPI_COMM_WORLD,
                       n_part,
                       nFace,
                       faceVtxIdx,
@@ -2125,7 +2140,7 @@ char *argv[]
                       vtxCoord,
                       vtxLNToGN,
                       sFieldA,
-                      rFieldB);
+                      rFieldB);*/
 
     _export_ol_mesh (PDM_MPI_COMM_WORLD,
                      pdm_id,
@@ -2209,6 +2224,8 @@ char *argv[]
    */
 
   PDM_ol_del (pdm_id);
+
+  if (i_rank == 0) printf("-- End\n");
 
   PDM_MPI_Finalize ();
 

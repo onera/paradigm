@@ -1221,7 +1221,7 @@ _compute_overlay_planes
       PDM_g_num_t *polyClippConnecB = NULL;
       double     *polyClippCoordsB = NULL;
 
-      if (0 && (gnum_boxA == 19189330) && (gnum_boxB == 3206132)) {
+      if (0 && (gnum_boxA == 1) && (gnum_boxB == 504101)) {
 
         FILE *f = fopen("poly_unit.case", "w");
 
@@ -1335,10 +1335,12 @@ _compute_overlay_planes
                       &polyClippConnecB,
                       &polyClippCoordsB);
 
-      if (vb) {
+      if (0) {//vb) {
         printf(" ---> poly_clipp gnumEltA gnumEltB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" fin\n", gnum_boxA, gnum_boxB);
       }
-
+      if (nPolyClippA != nPolyClippB) {
+         printf("error poly_clipp gnumEltA gnumEltB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", gnum_boxA, gnum_boxB);
+      }
       assert (nPolyClippA == nPolyClippB);
 
       facesToSubFacesAIdx[i+1] += nPolyClippA;
@@ -3283,168 +3285,195 @@ _compute_overlay_planes
       }
     }
 
-    PDM_g_num_t *tag = malloc(sizeof(PDM_g_num_t) * nOneRef);
-    int nAddSubFace = 0;
-    int *addSubFaceIdx = malloc(sizeof(int) * (nOneRef + 1));
-    PDM_g_num_t *addSubFace = malloc(sizeof(PDM_g_num_t) * nOneRef);
-    double *addSubFaceCoords = malloc(sizeof(double) * 3 * nOneRef);
-    for (int k11 = 0; k11 < nOneRef; k11++) {
-      tag[k11] = 0;
-      addSubFaceIdx[k11] = 0;
+
+    if (nOneRef < 2) {
+      if (nOneRef == 1) {
+        printf("[%6d] Warning : nOneRef = 1\n", i_rank);
+      }
+      facesToSubFacesBIdx[i+1] = facesToSubFacesBIdx[i]
+        + n_SubFaceFace;
+      free(oneRef);
+      free(coordsOneRef);
     }
+    else {
 
-    /* Add additional sub-faces */
-
-    PDM_g_num_t iniVal = -1;
-    PDM_g_num_t nextVal = -1;
-    int idx_addSubFace1 = 0;
-    int idx_addSubFace = 0;
-    for (int k11 = 0; k11 < nOneRef; k11++) {
-      if (tag[k11] == 1) continue;
-
-      iniVal = oneRef[2*k11];
-      nextVal = oneRef[2*k11 + 1];
-
-      addSubFace[idx_addSubFace1++] = iniVal;
-      addSubFace[idx_addSubFace1++] = oneRef[2*k11 + 1];
-
-      for (int k3 = 0; k3 < 3; k3++) {
-        addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k11+k3];
-      }
-      for (int k3 = 0; k3 < 3; k3++) {
-        addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k11+3+k3];
+      PDM_g_num_t *tag = malloc(sizeof(PDM_g_num_t) * nOneRef);
+      int nAddSubFace = 0;
+      int *addSubFaceIdx = malloc(sizeof(int) * (nOneRef + 1));
+      PDM_g_num_t *addSubFace = malloc(sizeof(PDM_g_num_t) * nOneRef);
+      double *addSubFaceCoords = malloc(sizeof(double) * 3 * nOneRef);
+      for (int k11 = 0; k11 < nOneRef; k11++) {
+        tag[k11] = 0;
+        addSubFaceIdx[k11] = 0;
       }
 
-      nAddSubFace += 1;
-      addSubFaceIdx[nAddSubFace] += 2;
+      /* Add additional sub-faces */
 
-      int k_prev = k11;
-      while (iniVal != nextVal) {
-        for (int k2 = 0; k2 < nOneRef; k2++) {
-          if ((tag[k2] == 1) || (k_prev == k2)) continue;
-          if (nextVal == oneRef[2*k2]) {
-            nextVal = oneRef[2*k2 + 1];
-            if (nextVal != iniVal) {
-              addSubFace[idx_addSubFace1++] = nextVal;
-              for (int k3 = 0; k3 < 3; k3++) {
-                addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k2+3+k3];
-              }
-              addSubFaceIdx[nAddSubFace]++;
-            }
-            tag[k2] = 1;
-            k_prev = k2;
-            break;
+      PDM_g_num_t iniVal = -1;
+      PDM_g_num_t nextVal = -1;
+      int idx_addSubFace1 = 0;
+      int idx_addSubFace = 0;
+      for (int k11 = 0; k11 < nOneRef; k11++) {
+        if (tag[k11] == 1) continue;
+
+        iniVal = oneRef[2*k11];
+        nextVal = oneRef[2*k11 + 1];
+
+        addSubFace[idx_addSubFace1++] = iniVal;
+        addSubFace[idx_addSubFace1++] = oneRef[2*k11 + 1];
+
+        for (int k3 = 0; k3 < 3; k3++) {
+          addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k11+k3];
+        }
+        for (int k3 = 0; k3 < 3; k3++) {
+          addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k11+3+k3];
+        }
+
+        nAddSubFace += 1;
+        addSubFaceIdx[nAddSubFace] += 2;
+
+        int k_prev = k11;
+        int count = 0;
+        while (iniVal != nextVal) {
+          count++;
+          if (count > 1000) {
+            printf("[%6d] error nOneRef = %d, gnumB = "PDM_FMT_G_NUM", k11 = %d, iniVal = "PDM_FMT_G_NUM", nextVal = "PDM_FMT_G_NUM", oneRef[2*k11 + 1] = "PDM_FMT_G_NUM"\n", i_rank, nOneRef, block_gnumB[i], k11, iniVal, nextVal, oneRef[2*k11 + 1]);
+            abort();
           }
-          else if (nextVal == oneRef[2*k2 + 1]) {
-            nextVal = oneRef[2*k2];
-            if (nextVal != iniVal) {
-              addSubFace[idx_addSubFace1++] = nextVal;
-              for (int k3 = 0; k3 < 3; k3++) {
-                addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k2+k3];
+          int found = 0;
+          for (int k2 = 0; k2 < nOneRef; k2++) {
+            if ((tag[k2] == 1) || (k_prev == k2)) continue;
+            if (nextVal == oneRef[2*k2]) {
+              nextVal = oneRef[2*k2 + 1];
+              if (nextVal != iniVal) {
+                addSubFace[idx_addSubFace1++] = nextVal;
+                for (int k3 = 0; k3 < 3; k3++) {
+                  addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k2+3+k3];
+                }
+                addSubFaceIdx[nAddSubFace]++;
               }
-              addSubFaceIdx[nAddSubFace]++;
+              tag[k2] = 1;
+              k_prev = k2;
+              found = 1;
+              break;
             }
-            tag[k2] = 1;
-            k_prev = k2;
-            break;
+            else if (nextVal == oneRef[2*k2 + 1]) {
+              nextVal = oneRef[2*k2];
+              if (nextVal != iniVal) {
+                addSubFace[idx_addSubFace1++] = nextVal;
+                for (int k3 = 0; k3 < 3; k3++) {
+                  addSubFaceCoords[idx_addSubFace++] = coordsOneRef[6*k2+k3];
+                }
+                addSubFaceIdx[nAddSubFace]++;
+              }
+              tag[k2] = 1;
+              k_prev = k2;
+              found = 1;
+              break;
+            }
+          }
+          if (!found) {
+            printf("[%6d] !found nOneRef = %d, gnumB = "PDM_FMT_G_NUM", k11 = %d, iniVal = "PDM_FMT_G_NUM", nextVal = "PDM_FMT_G_NUM", oneRef[2*k11 + 1] = "PDM_FMT_G_NUM"\n", i_rank, nOneRef, block_gnumB[i], k11, iniVal, nextVal, oneRef[2*k11 + 1]);
+            abort();
           }
         }
       }
-    }
 
-    free (tag);
+      free (tag);
 
-    for (int k11 = 0; k11 < nAddSubFace; k11++) {
-      addSubFaceIdx[k11+1] += addSubFaceIdx[k11];
-    }
-
-    newSize = nSubFacesB + nAddSubFace + 1;
-    if (newSize > s_subFacesConnecIdxB) {
-      while (newSize > s_subFacesConnecIdxB) {
-        s_subFacesConnecIdxB += PDM_MAX (1, s_subFacesConnecIdxB/3);
+      for (int k11 = 0; k11 < nAddSubFace; k11++) {
+        addSubFaceIdx[k11+1] += addSubFaceIdx[k11];
       }
-      subFacesConnecIdxB = realloc(subFacesConnecIdxB,
-                                   sizeof(int) * s_subFacesConnecIdxB);
-    }
 
-    newSize =  nSubFacesB + nAddSubFace;
-    if (newSize > s_subFacesToFaceB) {
-      while (newSize > s_subFacesToFaceB) {
-        s_subFacesToFaceB += PDM_MAX (1, s_subFacesToFaceB/3);
+      newSize = nSubFacesB + nAddSubFace + 1;
+      if (newSize > s_subFacesConnecIdxB) {
+        while (newSize > s_subFacesConnecIdxB) {
+          s_subFacesConnecIdxB += PDM_MAX (1, s_subFacesConnecIdxB/3);
+        }
+        subFacesConnecIdxB = realloc(subFacesConnecIdxB,
+                                     sizeof(int) * s_subFacesConnecIdxB);
       }
-      subFacesToFaceB = realloc(subFacesToFaceB,
+
+      newSize =  nSubFacesB + nAddSubFace;
+      if (newSize > s_subFacesToFaceB) {
+        while (newSize > s_subFacesToFaceB) {
+          s_subFacesToFaceB += PDM_MAX (1, s_subFacesToFaceB/3);
+        }
+        subFacesToFaceB = realloc(subFacesToFaceB,
+                                  sizeof(PDM_g_num_t) * s_subFacesToFaceB);
+        gNumSubFacesB = realloc(gNumSubFacesB,
                                 sizeof(PDM_g_num_t) * s_subFacesToFaceB);
-      gNumSubFacesB = realloc(gNumSubFacesB,
-                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
-    }
-
-    newSize =  3 * (nSubFacesB + nAddSubFace);
-    if (newSize > s_subFacesToLinkA) {
-      while (newSize > s_subFacesToLinkA) {
-        s_subFacesToLinkA += PDM_MAX (1, s_subFacesToLinkA/3) ;
       }
-      subFacesToLinkA = realloc(subFacesToLinkA,
-                                sizeof(PDM_g_num_t) * s_subFacesToLinkA);
-    }
 
-    n_t_nAddSubFace += nAddSubFace;
-
-    for (int j = 0; j < nAddSubFace; j++) {
-
-      int _n_vtx = addSubFaceIdx[j+1] - addSubFaceIdx[j];
-      subFacesToFaceB[nSubFacesB] = gnum_boxB;
-      gNumSubFacesB[nSubFacesB] = -1;
-
-      subFacesToLinkA[3*nSubFacesB] = -1;
-      subFacesToLinkA[3*nSubFacesB+1] = -1;
-      subFacesToLinkA[3*nSubFacesB+2] = -1;
-
-      subFacesConnecIdxB[nSubFacesB+1] =
-        subFacesConnecIdxB[nSubFacesB] + _n_vtx;
-
-      nSubFacesB += 1;
-
-      newSize = subFacesConnecIdxB[nSubFacesB];
-      if (newSize > s_subFacesConnecB) {
-        while (newSize > s_subFacesConnecB) {
-          s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3) ;
+      newSize =  3 * (nSubFacesB + nAddSubFace);
+      if (newSize > s_subFacesToLinkA) {
+        while (newSize > s_subFacesToLinkA) {
+          s_subFacesToLinkA += PDM_MAX (1, s_subFacesToLinkA/3) ;
         }
-        subFacesConnecB = realloc(subFacesConnecB,
-                                  sizeof(PDM_g_num_t) * s_subFacesConnecB);
+        subFacesToLinkA = realloc(subFacesToLinkA,
+                                  sizeof(PDM_g_num_t) * s_subFacesToLinkA);
       }
 
-      newSize = 3 * subFacesConnecIdxB[nSubFacesB];
-      if (newSize > s_subFacesCoordsB) {
-        while (newSize > s_subFacesCoordsB) {
-          s_subFacesCoordsB += PDM_MAX(1, s_subFacesCoordsB/3);
+      n_t_nAddSubFace += nAddSubFace;
+
+      for (int j = 0; j < nAddSubFace; j++) {
+
+        int _n_vtx = addSubFaceIdx[j+1] - addSubFaceIdx[j];
+        subFacesToFaceB[nSubFacesB] = gnum_boxB;
+        gNumSubFacesB[nSubFacesB] = -1;
+
+        subFacesToLinkA[3*nSubFacesB] = -1;
+        subFacesToLinkA[3*nSubFacesB+1] = -1;
+        subFacesToLinkA[3*nSubFacesB+2] = -1;
+
+        subFacesConnecIdxB[nSubFacesB+1] =
+          subFacesConnecIdxB[nSubFacesB] + _n_vtx;
+
+        nSubFacesB += 1;
+
+        newSize = subFacesConnecIdxB[nSubFacesB];
+        if (newSize > s_subFacesConnecB) {
+          while (newSize > s_subFacesConnecB) {
+            s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3) ;
+          }
+          subFacesConnecB = realloc(subFacesConnecB,
+                                    sizeof(PDM_g_num_t) * s_subFacesConnecB);
         }
-        subFacesCoordsB = realloc(subFacesCoordsB,
-                                     sizeof(double) * s_subFacesCoordsB);
-      }
 
-      int _ideb2 =     subFacesConnecIdxB[nSubFacesB-1];
-      int ideb3 = 3 * subFacesConnecIdxB[nSubFacesB-1];
+        newSize = 3 * subFacesConnecIdxB[nSubFacesB];
+        if (newSize > s_subFacesCoordsB) {
+          while (newSize > s_subFacesCoordsB) {
+            s_subFacesCoordsB += PDM_MAX(1, s_subFacesCoordsB/3);
+          }
+          subFacesCoordsB = realloc(subFacesCoordsB,
+                                    sizeof(double) * s_subFacesCoordsB);
+        }
 
-      for (int k = addSubFaceIdx[j]; k < addSubFaceIdx[j+1]; k++) {
-        subFacesConnecB[_ideb2++] = addSubFace[k];
-        for (int k11 = 0; k11 < 3; k11++) {
-          subFacesCoordsB[ideb3++] = addSubFaceCoords[3*k+k11];
+        int _ideb2 =     subFacesConnecIdxB[nSubFacesB-1];
+        int ideb3 = 3 * subFacesConnecIdxB[nSubFacesB-1];
+
+        for (int k = addSubFaceIdx[j]; k < addSubFaceIdx[j+1]; k++) {
+          subFacesConnecB[_ideb2++] = addSubFace[k];
+          for (int k11 = 0; k11 < 3; k11++) {
+            subFacesCoordsB[ideb3++] = addSubFaceCoords[3*k+k11];
+          }
         }
       }
+
+      facesToSubFacesBIdx[i+1] = facesToSubFacesBIdx[i]
+        + n_SubFaceFace
+        + nAddSubFace;
+      /* Cleanup */
+
+      free (oneRef);
+      free (coordsOneRef);
+      free (addSubFaceIdx);
+      free (addSubFace);
+      free (addSubFaceCoords);
     }
-
-    facesToSubFacesBIdx[i+1] = facesToSubFacesBIdx[i]
-                             + n_SubFaceFace
-                             + nAddSubFace;
-    /* Cleanup */
-
-    free (oneRef);
-    free (coordsOneRef);
-    free (addSubFaceIdx);
-    free (addSubFace);
-    free (addSubFaceCoords);
 
   }
+  if (vb) printf("[%6d] >> hash_tab purge, free\n", i_rank); fflush(stdout);
 
   if (sum_vtx != NULL) {
     free (sum_vtx);
@@ -3473,7 +3502,7 @@ _compute_overlay_planes
   /*
    * Update memory
    */
-
+  if (vb) printf("[%6d] >> Realloc\n", i_rank); fflush(stdout);
   subFacesConnecB = realloc (subFacesConnecB, sizeof(PDM_g_num_t) * subFacesConnecIdxB[nSubFacesB]);
   subFacesCoordsB = realloc (subFacesCoordsB, sizeof(double) * 3 * subFacesConnecIdxB[nSubFacesB]);
   subFacesConnecIdxB = realloc (subFacesConnecIdxB, sizeof(int) * (nSubFacesB + 1));
@@ -3516,6 +3545,7 @@ _compute_overlay_planes
     }
   }
 
+  if (vb) printf("[%6d] >> Scan n_t_nAddSubFace\n", i_rank); fflush(stdout);
   PDM_MPI_Scan (&n_t_nAddSubFace, &beg_nAddSubFaces,
             1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
@@ -3536,6 +3566,7 @@ _compute_overlay_planes
   /*   _max_gnum_loc = gNumSubFacesA[nSharedSubFaces-1]; */
   /* } */
 
+  if (vb) printf("[%6d] >> Allreduce _max_gnum_loc\n", i_rank); fflush(stdout);
   PDM_MPI_Allreduce(&_max_gnum_loc, &nTSubFacesB, 1,
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
