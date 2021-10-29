@@ -3124,7 +3124,7 @@ PDM_mesh_location_t        *ml
 
         for (int ipart = 0; ipart < n_parts; ipart++) {
           int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
-                                                           iblock,
+                                                           id_block,
                                                            ipart);
 
           for (int i = 0; i < n_select_elt[iblock][ipart]; i++) {
