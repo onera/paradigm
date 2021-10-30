@@ -950,9 +950,11 @@ int main(int argc, char *argv[])
     PDM_printf ("  - n_vtx_seg   : "PDM_FMT_G_NUM"\n", n_vtx_seg);
     PDM_printf ("  - n_pts       : "PDM_FMT_G_NUM"\n", n_pts);
     PDM_printf ("  - length      : %f\n", length);
+    PDM_printf ("  - depth       : %f\n", depth);
     PDM_printf ("  - tolerance   : %f\n", tolerance);
     PDM_printf ("  - part_method : %d\n", (int) part_method);
     PDM_printf ("  - loc_method  : %d\n", (int) loc_method);
+    PDM_printf ("  - n_proc_data : %d\n", n_proc_data);
   }
 
   /*
