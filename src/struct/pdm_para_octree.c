@@ -6590,6 +6590,7 @@ _prepare_copies
  PDM_MPI_Comm   comm,
  const float    f_threshold,
  const float    f_max_copy,
+ const int      a_max_copy,
  int            n_request,
  int           *n_copied_ranks,
  int          **copied_ranks,
@@ -6604,7 +6605,7 @@ _prepare_copies
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  int n_max_copy = (int) (f_max_copy * n_rank);
+  int n_max_copy = PDM_MAX (a_max_copy, (int) (f_max_copy * n_rank));
   if (n_max_copy < 1) {
     return;
   }
@@ -8645,6 +8646,7 @@ PDM_para_octree_closest_points
 
   float f_copy_threshold = 1.15;
   float f_max_copy = 0.1;
+  int   a_max_copy = 5;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -8655,6 +8657,11 @@ PDM_para_octree_closest_points
   env_var = getenv ("OCTREE_MAX_COPY");
   if (env_var != NULL) {
     f_max_copy = (float) atof(env_var);
+  }
+
+  env_var = getenv ("OCTREE_MAX_COPY_ABS");
+  if (env_var != NULL) {
+    a_max_copy = atoi(env_var);
   }
 
   int USE_SHARED_OCTREE = 1;
@@ -8864,6 +8871,7 @@ PDM_para_octree_closest_points
     _prepare_copies (octree->comm,
                      f_copy_threshold,
                      f_max_copy,
+                     a_max_copy,
                      n_recv_pts,
                      &n_copied_ranks1,
                      &copied_ranks1,
@@ -9446,6 +9454,7 @@ PDM_para_octree_closest_points
   _prepare_copies (octree->comm,
                    f_copy_threshold,
                    f_max_copy,
+                   a_max_copy,
                    n_recv_pts,
                    &n_copied_ranks2,
                    &copied_ranks2,
@@ -9961,6 +9970,7 @@ PDM_para_octree_single_closest_point
 
   float f_copy_threshold = 1.1;
   float f_max_copy = 0.1;
+  int   a_max_copy = 5;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -9971,6 +9981,11 @@ PDM_para_octree_single_closest_point
   env_var = getenv ("OCTREE_MAX_COPY");
   if (env_var != NULL) {
     f_max_copy = (float) atof(env_var);
+  }
+
+  env_var = getenv ("OCTREE_MAX_COPY_ABS");
+  if (env_var != NULL) {
+    a_max_copy = atoi(env_var);
   }
 
   int USE_SHARED_OCTREE = 1;
@@ -10257,6 +10272,7 @@ PDM_para_octree_single_closest_point
     _prepare_copies (octree->comm,
                      f_copy_threshold,
                      f_max_copy,
+                     a_max_copy,
                      n_recv_pts,
                      &n_copied_ranks1,
                      &copied_ranks1,
@@ -11018,6 +11034,7 @@ PDM_para_octree_single_closest_point
   _prepare_copies (octree->comm,
                    f_copy_threshold,
                    f_max_copy,
+                   a_max_copy,
                    n_recv_pts,
                    &n_copied_ranks2,
                    &copied_ranks2,
@@ -12227,6 +12244,7 @@ PDM_para_octree_points_inside_boxes_with_copies
   int DEBUG = 0;
   float f_copy_threshold = 1.05;
   float f_max_copy = 0.05;
+  int   a_max_copy = 5;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -12239,6 +12257,10 @@ PDM_para_octree_points_inside_boxes_with_copies
     f_max_copy = (float) atof(env_var);
   }
 
+  env_var = getenv ("OCTREE_MAX_COPY_ABS");
+  if (env_var != NULL) {
+    a_max_copy = atoi(env_var);
+  }
 
   int USE_SHARED_OCTREE = 1;
   env_var = getenv ("USE_SHARED_OCTREE");
@@ -12478,6 +12500,7 @@ PDM_para_octree_points_inside_boxes_with_copies
     _prepare_copies (octree->comm,
                      f_copy_threshold,
                      f_max_copy,
+                     a_max_copy,
                      n_recv_box,
                      &n_copied_ranks,
                      &copied_ranks,
