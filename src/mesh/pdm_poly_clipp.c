@@ -1596,12 +1596,12 @@ double                **polyClippCoordsB
               printf("Poly clipp erreur : point exterieur dans un sous-poly\n");
               printf("polyA : "PDM_FMT_G_NUM" %d\n", gnum_boxA, n_vtxA);
               for (int i = 0; i < n_vtxA; i++) {
-                printf("%15.8e %15.8e %15.8e\n", _face_vtxCooA[3*i], _face_vtxCooA[3*i+1], _face_vtxCooA[3*i+2]);
+                printf("%20.16e %20.16e %20.16e\n", _face_vtxCooA[3*i], _face_vtxCooA[3*i+1], _face_vtxCooA[3*i+2]);
               }
 
               printf("polyB : "PDM_FMT_G_NUM" %d\n", gnum_boxB, n_vtxB);
               for (int i = 0; i < n_vtxB; i++) {
-                printf("%15.5e %15.8e %15.8e\n", _face_vtxCooB[3*i], _face_vtxCooB[3*i+1], _face_vtxCooB[3*i+2]);
+                printf("%20.16e %20.16e %20.16e\n", _face_vtxCooB[3*i], _face_vtxCooB[3*i+1], _face_vtxCooB[3*i+2]);
               }
 
               fflush(stdout);

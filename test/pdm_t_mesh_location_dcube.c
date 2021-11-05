@@ -146,7 +146,8 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *n_pts = atoi(argv[i]);
+        long _n_pts = atol(argv[i]);
+        *n_pts = (PDM_g_num_t) _n_pts;
       }
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
@@ -459,7 +460,7 @@ int main(int argc, char *argv[])
   double *char_length = malloc(sizeof(double) * n_pts_l);
 
   for (int i = 0; i < n_pts_l; i++) {
-    char_length[i] = length * 1.e-6;
+    char_length[i] = length * 1.e-9;
   }
 
   PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);

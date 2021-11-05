@@ -122,3 +122,6 @@ test_c_create (pdm_t_ho_ordering 1)
 test_c_create (pdm_t_win_shared 1)
 
 #test_c_create (test_mpi_morton 2)
+
+test_c_create (pdm_t_point_in_polygon 1)
+test_c_create (pdm_t_line_intersection 1)

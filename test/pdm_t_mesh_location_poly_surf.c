@@ -155,7 +155,8 @@ _read_args(int                         argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *n_pts = atoi(argv[i]);
+        long _n_pts = atol(argv[i]);
+        *n_pts = (PDM_g_num_t) _n_pts;
       }
     }
 
@@ -1064,17 +1065,29 @@ int main(int argc, char *argv[])
 
 
   /* Point cloud global numbering */
+  if (i_rank == 0) {
+    printf("-- Point cloud g_num\n");
+    fflush(stdout);
+  }
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *char_length = malloc(sizeof(double) * n_pts_l);
 
   for (int i = 0; i < n_pts_l; i++) {
-    char_length[i] = length * 1.e-6;
+    char_length[i] = length * 1.e-9;
   }
 
   PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
 
+  if (i_rank == 0) {
+    printf(">> PDM_gnum_compute\n");
+    fflush(stdout);
+  }
   PDM_gnum_compute (gen_gnum);
+  if (i_rank == 0) {
+    printf("<< PDM_gnum_compute\n");
+    fflush(stdout);
+  }
 
   PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum, 0);
 
@@ -1086,6 +1099,10 @@ int main(int argc, char *argv[])
    * Mesh location struct initializaiton
    *
    ************************/
+  if (i_rank == 0) {
+    printf("-- Create mesh loc\n");
+    fflush(stdout);
+  }
 
   PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
                                          1,//const int n_point_cloud,
@@ -1107,6 +1124,10 @@ int main(int argc, char *argv[])
                                           n_part);
 
   /* Set mesh */
+  if (i_rank == 0) {
+    printf("-- Set mesh\n");
+    fflush(stdout);
+  }
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_mesh_location_part_set_2d (mesh_loc,
                                    ipart,

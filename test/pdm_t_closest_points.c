@@ -183,7 +183,7 @@ _gen_point_cloud
   PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
   double *char_length = malloc (sizeof(double) * (*n_pts));
   for (int i = 0; i < *n_pts; i++) {
-    char_length[i] = radius * 1e-6;
+    char_length[i] = radius * 1e-9;
   }
 
   PDM_gnum_set_from_coords (gen_gnum, 0, *n_pts, *pts_coord, char_length);

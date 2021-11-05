@@ -1513,13 +1513,13 @@ char *argv[]
     PDM_printf ("  - n_rank         : %d\n", numProcs);
     PDM_printf ("  - n_vtx_segA     : %d\n", n_vtx_segA);
     PDM_printf ("  - lengthA        : %f\n", lengthA);
-    PDM_printf ("  - xminA          : %d\n", xminA);
-    PDM_printf ("  - yminA          : %d\n", yminA);
+    PDM_printf ("  - xminA          : %f\n", xminA);
+    PDM_printf ("  - yminA          : %f\n", yminA);
     PDM_printf ("  - n_partA        : %d\n", n_partA);
     PDM_printf ("  - n_vtx_segB     : %d\n", n_vtx_segB);
     PDM_printf ("  - lengthB        : %f\n", lengthB);
-    PDM_printf ("  - xminB          : %d\n", xminB);
-    PDM_printf ("  - yminB          : %d\n", yminB);
+    PDM_printf ("  - xminB          : %f\n", xminB);
+    PDM_printf ("  - yminB          : %f\n", yminB);
     PDM_printf ("  - n_partB        : %d\n", n_partB);
     PDM_printf ("  - post           : %d\n", post);
     PDM_printf ("  - method         : %d\n", method);
