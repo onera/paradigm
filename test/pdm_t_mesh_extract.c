@@ -44,6 +44,7 @@ dconnectivity_to_extract_dconnectivity
        PDM_g_num_t   **extract_entity2_distribution,
        int           **dextract_entity1_entity2_idx,
        PDM_g_num_t   **dextract_entity1_entity2,
+       PDM_g_num_t   **dparent_entity1_g_num,
        PDM_g_num_t   **dparent_entity2_g_num
 )
 {
@@ -125,7 +126,7 @@ dconnectivity_to_extract_dconnectivity
    *  Remap inside true block to ensure parallelism independant
    */
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
                                                       &extract_entity1_ln_to_gn,
                                                       NULL,
@@ -144,6 +145,16 @@ dconnectivity_to_extract_dconnectivity
                 (void **) &pextract_entity1_entity2,
                           &_dextract_entity1_entity2_n,
                 (void **) &_dextract_entity1_entity2);
+
+  PDM_g_num_t* _dparent_entity1_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST,
+                          1,
+                          NULL,
+                (void **) &select_entity1,
+                          NULL,
+                (void **) &_dparent_entity1_g_num);
 
   free(pextract_entity1_entity2_n);
   free(pextract_entity1_entity2  );
@@ -226,6 +237,7 @@ dconnectivity_to_extract_dconnectivity
   free(extract_entity2_ln_to_gn);
   *dextract_entity1_entity2_idx = _dextract_entity1_entity2_idx;
   *dextract_entity1_entity2     = _dextract_entity1_entity2;
+  *dparent_entity1_g_num        = _dparent_entity1_g_num;
   *dparent_entity2_g_num        = _dparent_entity2_g_num;
 
   *extract_entity1_distribution = malloc((n_rank + 1) * sizeof(PDM_g_num_t));
@@ -390,6 +402,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t   *extract_vtx_distribution  = NULL;
   int           *dextract_face_vtx_idx     = NULL;
   PDM_g_num_t   *dextract_face_vtx         = NULL;
+  PDM_g_num_t   *dparent_face_g_num        = NULL;
   PDM_g_num_t   *dparent_vtx_g_num         = NULL;
 
   dconnectivity_to_extract_dconnectivity(comm,
@@ -402,14 +415,32 @@ int main(int argc, char *argv[])
                                          &extract_vtx_distribution,
                                          &dextract_face_vtx_idx,
                                          &dextract_face_vtx,
+                                         &dparent_face_g_num,
                                          &dparent_vtx_g_num);
 
 
-  free(extract_face_distribution );
-  free(extract_vtx_distribution  );
-  free(dextract_face_vtx_idx     );
-  free(dextract_face_vtx         );
-  free(dparent_vtx_g_num         );
+  if(1 == 1) {
+    PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");
+    PDM_log_trace_array_long(extract_vtx_distribution , n_rank+1, "extract_vtx_distribution::  ");
+    int dn_extract_face = extract_face_distribution[i_rank+1] - extract_face_distribution[i_rank];
+    int dn_extract_vtx  = extract_vtx_distribution [i_rank+1] - extract_vtx_distribution [i_rank];
+
+    PDM_log_trace_array_int(dextract_face_vtx_idx, dn_extract_face+1                     , "dextract_face_vtx_idx:: ");
+    PDM_log_trace_array_long(dextract_face_vtx   , dextract_face_vtx_idx[dn_extract_face], "dextract_face_vtx:: "    );
+    PDM_log_trace_array_long(dparent_face_g_num  , dn_extract_face                       , "dparent_face_g_num:: "   );
+    PDM_log_trace_array_long(dparent_vtx_g_num   , dn_extract_vtx                        , "dparent_vtx_g_num:: "    );
+
+  }
+
+
+
+
+  free(extract_face_distribution);
+  free(extract_vtx_distribution );
+  free(dextract_face_vtx_idx    );
+  free(dextract_face_vtx        );
+  free(dparent_face_g_num       );
+  free(dparent_vtx_g_num        );
 
   free(face_distribution);
 
