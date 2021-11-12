@@ -13,11 +13,13 @@
 #include "pdm_mpi.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
+#include "pdm_logging.h"
 #include "pdm_printf.h"
+#include "pdm_gnum.h"
 #include "pdm_error.h"
-#include "pdm_geom_elem.h"
 #include "pdm_priv.h"
-#include "pdm_predicate.h"
+#include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 
 /*============================================================================
  * Type definitions
@@ -26,6 +28,108 @@
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
+static
+void
+dconnectivity_to_extract_dconnectivity
+(
+ const PDM_MPI_Comm    comm,
+       int             n_selected_entity1,
+       PDM_g_num_t    *select_entity1,
+       PDM_g_num_t    *entity1_distribution,
+       int            *dentity1_entity2_idx,
+       PDM_g_num_t    *dentity1_entity2
+)
+{
+
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /*
+   * Create implcite global numbering
+   */
+  int dn_entity1 = entity1_distribution[i_rank+1] - entity1_distribution[i_rank];
+  // PDM_g_num_t* entity1_ln_to_gn = malloc(dn_entity1 * sizeof(PDM_g_num_t));
+  // for(int i = 0; i < dn_entity1; ++i) {
+  //   entity1_ln_to_gn[i] = entity1_distribution[i_rank] + i + 1;
+  // }
+
+  /*
+   *  Create global numbering from parent
+   */
+  PDM_gen_gnum_t* gen_gnum_entity1 = PDM_gnum_create(3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
+
+
+  PDM_gnum_set_from_parents (gen_gnum_entity1,
+                             0,
+                             n_selected_entity1,
+                             select_entity1);
+
+  PDM_gnum_compute (gen_gnum_entity1);
+
+
+  PDM_g_num_t* extract_entity1_ln_to_gn = PDM_gnum_get (gen_gnum_entity1, 0);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(select_entity1          , n_selected_entity1, "select_entity1:: ");
+    PDM_log_trace_array_long(extract_entity1_ln_to_gn, n_selected_entity1, "extract_entity1_ln_to_gn:: ");
+  }
+
+
+  PDM_gnum_free(gen_gnum_entity1);
+  // free(entity1_ln_to_gn);
+
+  /*
+   * Caution we need a result independant of parallelism
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity1_distribution,
+                               (const PDM_g_num_t **) &select_entity1,
+                                                      &n_selected_entity1,
+                                                      1,
+                                                      comm);
+
+  /*
+   * Prepare data
+   */
+  int* dentity1_entity2_n = (int *) malloc( sizeof(int) * dn_entity1);
+  for(int i_elmt = 0; i_elmt < dn_entity1; ++i_elmt){
+    dentity1_entity2_n[i_elmt] = dentity1_entity2_idx[i_elmt+1] - dentity1_entity2_idx[i_elmt];
+  }
+
+  /*
+   * Exchange
+   */
+  int**         tmp_dextract_entity1_entity2_n;
+  PDM_g_num_t** tmp_dextract_entity1_entity2;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          dentity1_entity2_n,
+             (void *  )   dentity1_entity2,
+             (int  ***)  &tmp_dextract_entity1_entity2_n,
+             (void ***)  &tmp_dextract_entity1_entity2);
+
+  int**         dextract_entity1_entity2_n = tmp_dextract_entity1_entity2_n[0];
+  PDM_g_num_t** dextract_entity1_entity2   = tmp_dextract_entity1_entity2[0];
+  free(tmp_dextract_entity1_entity2_n);
+  free(tmp_dextract_entity1_entity2);
+  free(dentity1_entity2_n);
+
+
+  PDM_block_to_part_free(btp);
+
+  free(dextract_entity1_entity2_n);
+  free(dextract_entity1_entity2  );
+
+  free(extract_entity1_ln_to_gn);
+}
+
+
+
+
 
 /**
  *
@@ -161,9 +265,19 @@ int main(int argc, char *argv[])
                           &dface_group_idx,
                           &dface_group);
 
+  PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
+  /*
+   *  Choice of extraction
+   */
+  dconnectivity_to_extract_dconnectivity(comm,
+                                         dface_group_idx[n_face_group],
+                                         dface_group,
+                                         face_distribution,
+                                         dface_vtx_idx,
+                                         dface_vtx);
 
 
-
+  free(face_distribution);
 
   PDM_dcube_gen_free(dcube);
 
