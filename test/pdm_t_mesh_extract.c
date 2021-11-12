@@ -22,6 +22,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_dconnectivity_transform.h"
 
 /*============================================================================
  * Type definitions
@@ -177,6 +178,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t   *dextract_face_vtx         = NULL;
   PDM_g_num_t   *dparent_face_g_num        = NULL;
   PDM_g_num_t   *dparent_vtx_g_num         = NULL;
+  PDM_g_num_t   *pextract_old_to_new       = NULL;
 
   PDM_dconnectivity_to_extract_dconnectivity(comm,
                                              dface_group_idx[n_face_group],
@@ -189,7 +191,8 @@ int main(int argc, char *argv[])
                                              &dextract_face_vtx_idx,
                                              &dextract_face_vtx,
                                              &dparent_face_g_num,
-                                             &dparent_vtx_g_num);
+                                             &dparent_vtx_g_num,
+                                             &pextract_old_to_new);
 
 
   int dn_extract_face = extract_face_distribution[i_rank+1] - extract_face_distribution[i_rank];
@@ -207,6 +210,20 @@ int main(int argc, char *argv[])
   double* dextract_vtx_coord = tmp_dextract_vtx_coord[0];
   free(tmp_dextract_vtx_coord);
 
+  /*
+   *  Echange de champs
+   */
+  int* dface_group_tag = malloc(dface_group_idx[n_face_group] * sizeof(int));
+
+  PDM_g_num_t* dface_group_init_distrib = PDM_compute_entity_distribution(comm, dface_group_idx[n_face_group]);
+  for(int i_group = 0; i_group < n_face_group; ++i_group) {
+    for(int i_face = dface_group_idx[i_group]; i_face < dface_group_idx[i_group+1]; ++i_face) {
+      dface_group_tag[i_face] = i_group;
+    }
+  }
+
+
+
   if(1 == 1) {
     PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");
     PDM_log_trace_array_long(extract_vtx_distribution , n_rank+1, "extract_vtx_distribution::  ");
@@ -215,7 +232,6 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(dextract_face_vtx   , dextract_face_vtx_idx[dn_extract_face], "dextract_face_vtx:: "    );
     PDM_log_trace_array_long(dparent_face_g_num  , dn_extract_face                       , "dparent_face_g_num:: "   );
     PDM_log_trace_array_long(dparent_vtx_g_num   , dn_extract_vtx                        , "dparent_vtx_g_num:: "    );
-
   }
 
   /*
@@ -242,6 +258,33 @@ int main(int argc, char *argv[])
                                                            &pextract_face_vtx_idx,
                                                            &pextract_face_vtx);
 
+  int** tmp_dextract_face_tag = NULL;
+  PDM_part_dfield_to_pfield(comm,
+                            1,
+                            sizeof(int),
+                            dface_group_init_distrib,
+    (unsigned char    *)    dface_group_tag,
+                            &dn_extract_face,
+    (const PDM_g_num_t **)  &pextract_old_to_new,
+    (unsigned char ***)     &tmp_dextract_face_tag);
+  int* dextract_face_tag = tmp_dextract_face_tag[0];
+  free(tmp_dextract_face_tag);
+
+  /*
+   * To true partition for visu
+   */
+  int** tmp_pextract_face_tag = NULL;
+  PDM_part_dfield_to_pfield(comm,
+                            1,
+                            sizeof(int),
+                            extract_face_distribution,
+      (unsigned char    *)  dextract_face_tag,
+                            &dn_extract_face,
+     (const PDM_g_num_t **) &extract_face_ln_to_gn,
+     (unsigned char    ***) &tmp_pextract_face_tag);
+  int *pextract_face_tag = tmp_pextract_face_tag[0];
+  free(tmp_pextract_face_tag);
+
   double** tmp_pextract_vtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         1,
@@ -263,10 +306,14 @@ int main(int argc, char *argv[])
                          pextract_face_vtx_idx,
                          pextract_face_vtx,
                          extract_face_ln_to_gn,
-                         NULL);
+                         pextract_face_tag);
 
+
+  free(dface_group_tag);
+  free(dextract_face_tag);
   free(dextract_vtx_coord);
   free(extract_face_ln_to_gn);
+  free(pextract_face_tag);
 
   free(extract_face_distribution);
   free(extract_vtx_distribution );
@@ -274,6 +321,8 @@ int main(int argc, char *argv[])
   free(dextract_face_vtx        );
   free(dparent_face_g_num       );
   free(dparent_vtx_g_num        );
+  free(pextract_old_to_new      );
+  free(dface_group_init_distrib );
 
   free(pextract_vtx_ln_to_gn);
   free(pextract_face_vtx_idx);

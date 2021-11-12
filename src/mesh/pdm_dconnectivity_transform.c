@@ -25,6 +25,7 @@
 #include "pdm_logging.h"
 #include "pdm_array.h"
 #include "pdm_gnum.h"
+#include "pdm_distrib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -777,7 +778,8 @@ PDM_dconnectivity_to_extract_dconnectivity
        int           **dextract_entity1_entity2_idx,
        PDM_g_num_t   **dextract_entity1_entity2,
        PDM_g_num_t   **dparent_entity1_g_num,
-       PDM_g_num_t   **dparent_entity2_g_num
+       PDM_g_num_t   **dparent_entity2_g_num,
+       PDM_g_num_t   **entity1_old_to_new
 )
 {
   int i_rank;
@@ -864,7 +866,6 @@ PDM_dconnectivity_to_extract_dconnectivity
                                                       1,
                                                       comm);
 
-
   int*         _dextract_entity1_entity2_n = NULL;
   PDM_g_num_t* _dextract_entity1_entity2   = NULL;
   PDM_part_to_block_exch (ptb,
@@ -901,6 +902,24 @@ PDM_dconnectivity_to_extract_dconnectivity
     _dextract_entity1_entity2_idx[i+1] = _dextract_entity1_entity2_idx[i] + _dextract_entity1_entity2_n[i];
   }
   free(_dextract_entity1_entity2_n);
+
+  /*
+   * Revert information
+   */
+  PDM_g_num_t* entity1_init_distrib = PDM_compute_entity_distribution(comm, n_selected_entity1);
+
+  PDM_dorder_reverse(comm,
+                     entity1_init_distrib,
+                     extract_entity1_ln_to_gn,
+                     entity1_old_to_new);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(extract_entity1_ln_to_gn  , n_selected_entity1, "extract_entity1_ln_to_gn:: ");
+    PDM_log_trace_array_long(*entity1_old_to_new, n_selected_entity1, "entity1_old_to_new:: ");
+  }
+  // free(old_to_new_entity_ln_to_gn);
+  free(entity1_init_distrib);
+
 
   /*
    *  Create global numbering from parent entity2
