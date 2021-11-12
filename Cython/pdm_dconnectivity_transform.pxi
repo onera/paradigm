@@ -16,6 +16,32 @@ cdef extern from "pdm_dconnectivity_transform.h":
                                                     PDM_g_num_t   **entity1_old_to_new)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+cdef extern from "pdm_distrib.h":
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_g_num_t* PDM_compute_entity_distribution(PDM_MPI_Comm    comm, int dn_entity)
+
+
+# ===================================================================================
+def compute_entity_distribution(MPI.Comm comm,
+                                int      dn_entity):
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    n_rank = comm.Get_size()
+
+    cdef PDM_g_num_t* distrib = PDM_compute_entity_distribution(PDMC, dn_entity)
+    dim = <NPY.npy_intp> (n_rank + 1)
+    np_distrib = NPY.PyArray_SimpleNewFromData(1,
+                                               &dim,
+                                               PDM_G_NUM_NPY_INT,
+                                      <void *> distrib)
+    PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
+    return np_distrib
+
+
 # ===================================================================================
 def dconnectivity_to_extract_dconnectivity(MPI.Comm                                      comm,
                                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] select_entity1,
