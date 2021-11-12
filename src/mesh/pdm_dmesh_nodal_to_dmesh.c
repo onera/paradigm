@@ -1081,7 +1081,7 @@ _generate_faces_from_dmesh_nodal
     dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_CELL] = dface_cell;
     dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_CELL] = NULL;
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(dface_cell, 2 * dm->dn_face, "face_cell::");
       PDM_log_trace_array_long(_dface_vtx, _dface_vtx_idx[dm->dn_face], "_dface_vtx::");
     }
@@ -1997,7 +1997,7 @@ PDM_dmesh_nodal_to_dmesh_compute
   const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
 )
 {
-
+  double t1 = PDM_MPI_Wtime();
   for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
 
     if(dmesh_nodal_to_dm->link[i_mesh]->dmesh_nodal->mesh_dimension == 2) {
@@ -2048,7 +2048,7 @@ PDM_dmesh_nodal_to_dmesh_compute
       }
     // }
   }
-
+  end_timer_and_print("PDM_dmesh_nodal_to_dmesh_compute", dmesh_nodal_to_dm->comm, t1);
 }
 
 // static
