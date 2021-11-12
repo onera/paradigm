@@ -21,6 +21,8 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_distrib.h"
+#include "pdm_vtk.h"
+#include "pdm_partitioning_algorithm.h"
 
 /*============================================================================
  * Type definitions
@@ -75,14 +77,12 @@ dconnectivity_to_extract_dconnectivity
 
   PDM_g_num_t* extract_entity1_ln_to_gn = PDM_gnum_get (gen_gnum_entity1, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(select_entity1          , n_selected_entity1, "select_entity1:: ");
     PDM_log_trace_array_long(extract_entity1_ln_to_gn, n_selected_entity1, "extract_entity1_ln_to_gn:: ");
   }
 
-
   PDM_gnum_free(gen_gnum_entity1);
-  // free(entity1_ln_to_gn);
 
   /*
    * Caution we need a result independant of parallelism
@@ -159,7 +159,6 @@ dconnectivity_to_extract_dconnectivity
   free(pextract_entity1_entity2_n);
   free(pextract_entity1_entity2  );
 
-
   /*
    * Post-Treatment
    */
@@ -189,7 +188,7 @@ dconnectivity_to_extract_dconnectivity
 
   PDM_g_num_t* extract_entity2_ln_to_gn = PDM_gnum_get (gen_gnum_entity2, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(_dextract_entity1_entity2, _dextract_entity1_entity2_idx[dn_extract_entity1], "select_entity2:: ");
     PDM_log_trace_array_long(extract_entity2_ln_to_gn, _dextract_entity1_entity2_idx[dn_extract_entity1], "extract_entity2_ln_to_gn:: ");
   }
@@ -222,7 +221,7 @@ dconnectivity_to_extract_dconnectivity
   PDM_g_num_t* distrib_extract_entity2 = PDM_part_to_block_distrib_index_get(ptb_entity2);
   int dn_extract_entity2 = distrib_extract_entity2[i_rank+1] - distrib_extract_entity2[i_rank];
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(_dparent_entity2_g_num, dn_extract_entity2, "_dparent_entity2_g_num:: ");
   }
 
@@ -254,10 +253,6 @@ dconnectivity_to_extract_dconnectivity
   PDM_part_to_block_free(ptb);
   PDM_part_to_block_free(ptb_entity2);
 }
-
-
-
-
 
 /**
  *
@@ -394,6 +389,7 @@ int main(int argc, char *argv[])
                           &dface_group);
 
   PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
+  PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx );
   /*
    *  Choice of extraction
    */
@@ -419,11 +415,11 @@ int main(int argc, char *argv[])
                                          &dparent_vtx_g_num);
 
 
+  int dn_extract_face = extract_face_distribution[i_rank+1] - extract_face_distribution[i_rank];
+  int dn_extract_vtx  = extract_vtx_distribution [i_rank+1] - extract_vtx_distribution [i_rank];
   if(1 == 1) {
     PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");
     PDM_log_trace_array_long(extract_vtx_distribution , n_rank+1, "extract_vtx_distribution::  ");
-    int dn_extract_face = extract_face_distribution[i_rank+1] - extract_face_distribution[i_rank];
-    int dn_extract_vtx  = extract_vtx_distribution [i_rank+1] - extract_vtx_distribution [i_rank];
 
     PDM_log_trace_array_int(dextract_face_vtx_idx, dn_extract_face+1                     , "dextract_face_vtx_idx:: ");
     PDM_log_trace_array_long(dextract_face_vtx   , dextract_face_vtx_idx[dn_extract_face], "dextract_face_vtx:: "    );
@@ -432,8 +428,73 @@ int main(int argc, char *argv[])
 
   }
 
+  double** tmp_dextract_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        vtx_distribution,
+                                        dvtx_coord,
+                                        &dn_extract_vtx,
+                 (const PDM_g_num_t **) &dparent_vtx_g_num,
+                                        &tmp_dextract_vtx_coord);
 
+  double* dextract_vtx_coord = tmp_dextract_vtx_coord[0];
+  free(tmp_dextract_vtx_coord);
 
+  /*
+   *  Visulisation
+   */
+  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  // PDM_g_num_t* extract_vtx_ln_to_gn  = malloc(dn_extract_vtx  * sizeof(PDM_g_num_t));
+
+  for(int i = 0; i < dn_extract_face; ++i) {
+    extract_face_ln_to_gn[i] = extract_face_distribution[i_rank] + i + 1;
+  }
+
+  // for(int i = 0; i < dn_extract_vtx; ++i) {
+  //   extract_vtx_ln_to_gn[i] = extract_vtx_distribution[i_rank] + i + 1;
+  // }
+
+  int pn_extract_vtx = -1;
+  PDM_g_num_t *pextract_vtx_ln_to_gn = NULL;
+  int         *pextract_face_vtx_idx = NULL;
+  int         *pextract_face_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           extract_face_distribution,
+                                                           dextract_face_vtx_idx,
+                                                           dextract_face_vtx,
+                                                           dn_extract_face,
+                                                           extract_face_ln_to_gn,
+                                                           &pn_extract_vtx,
+                                                           &pextract_vtx_ln_to_gn,
+                                                           &pextract_face_vtx_idx,
+                                                           &pextract_face_vtx);
+
+  double** tmp_pextract_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        extract_vtx_distribution,
+                                        dextract_vtx_coord,
+                                        &pn_extract_vtx,
+                 (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
+                                        &tmp_pextract_vtx_coord);
+  double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
+  free(tmp_pextract_vtx_coord);
+
+  char filename[999];
+  sprintf(filename, "export_face_%i.vtk", i_rank);
+  PDM_vtk_write_polydata(filename,
+                         pn_extract_vtx,
+                         pextract_vtx_coord,
+                         pextract_vtx_ln_to_gn,
+                         dn_extract_face,
+                         pextract_face_vtx_idx,
+                         pextract_face_vtx,
+                         extract_face_ln_to_gn,
+                         NULL);
+
+  free(dextract_vtx_coord);
+  free(extract_face_ln_to_gn);
+  // free(extract_vtx_ln_to_gn );
 
   free(extract_face_distribution);
   free(extract_vtx_distribution );
@@ -442,7 +503,13 @@ int main(int argc, char *argv[])
   free(dparent_face_g_num       );
   free(dparent_vtx_g_num        );
 
+  free(pextract_vtx_ln_to_gn);
+  free(pextract_face_vtx_idx);
+  free(pextract_face_vtx    );
+  free(pextract_vtx_coord   );
+
   free(face_distribution);
+  free(vtx_distribution );
 
   PDM_dcube_gen_free(dcube);
 
