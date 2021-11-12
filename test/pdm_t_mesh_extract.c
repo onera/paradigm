@@ -20,6 +20,7 @@
 #include "pdm_priv.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_distrib.h"
 
 /*============================================================================
  * Type definitions
@@ -38,10 +39,14 @@ dconnectivity_to_extract_dconnectivity
        PDM_g_num_t    *select_entity1,
        PDM_g_num_t    *entity1_distribution,
        int            *dentity1_entity2_idx,
-       PDM_g_num_t    *dentity1_entity2
+       PDM_g_num_t    *dentity1_entity2,
+       PDM_g_num_t   **extract_entity1_distribution,
+       PDM_g_num_t   **extract_entity2_distribution,
+       int           **dextract_entity1_entity2_idx,
+       PDM_g_num_t   **dextract_entity1_entity2,
+       PDM_g_num_t   **dparent_entity2_g_num
 )
 {
-
   int i_rank;
   int n_rank;
 
@@ -52,10 +57,6 @@ dconnectivity_to_extract_dconnectivity
    * Create implcite global numbering
    */
   int dn_entity1 = entity1_distribution[i_rank+1] - entity1_distribution[i_rank];
-  // PDM_g_num_t* entity1_ln_to_gn = malloc(dn_entity1 * sizeof(PDM_g_num_t));
-  // for(int i = 0; i < dn_entity1; ++i) {
-  //   entity1_ln_to_gn[i] = entity1_distribution[i_rank] + i + 1;
-  // }
 
   /*
    *  Create global numbering from parent
@@ -133,16 +134,16 @@ dconnectivity_to_extract_dconnectivity
                                                       comm);
 
 
-  int*         dextract_entity1_entity2_n = NULL;
-  PDM_g_num_t* dextract_entity1_entity2   = NULL;
+  int*         _dextract_entity1_entity2_n = NULL;
+  PDM_g_num_t* _dextract_entity1_entity2   = NULL;
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           1,
                           &pextract_entity1_entity2_n,
                 (void **) &pextract_entity1_entity2,
-                          &dextract_entity1_entity2_n,
-                (void **) &dextract_entity1_entity2);
+                          &_dextract_entity1_entity2_n,
+                (void **) &_dextract_entity1_entity2);
 
   free(pextract_entity1_entity2_n);
   free(pextract_entity1_entity2  );
@@ -154,12 +155,12 @@ dconnectivity_to_extract_dconnectivity
   PDM_g_num_t* distrib_extract_entity1 = PDM_part_to_block_distrib_index_get(ptb);
   int dn_extract_entity1 = distrib_extract_entity1[i_rank+1] - distrib_extract_entity1[i_rank];
 
-  int* dextract_entity1_entity2_idx = malloc( (dn_extract_entity1 + 1) * sizeof(int));
-  dextract_entity1_entity2_idx[0] = 0;
+  int* _dextract_entity1_entity2_idx = malloc( (dn_extract_entity1 + 1) * sizeof(int));
+  _dextract_entity1_entity2_idx[0] = 0;
   for(int i = 0; i < dn_extract_entity1; ++i) {
-    dextract_entity1_entity2_idx[i+1] = dextract_entity1_entity2_idx[i] + dextract_entity1_entity2_n[i];
+    _dextract_entity1_entity2_idx[i+1] = _dextract_entity1_entity2_idx[i] + _dextract_entity1_entity2_n[i];
   }
-
+  free(_dextract_entity1_entity2_n);
 
   /*
    *  Create global numbering from parent entity2
@@ -169,8 +170,8 @@ dconnectivity_to_extract_dconnectivity
 
   PDM_gnum_set_from_parents (gen_gnum_entity2,
                              0,
-                             dextract_entity1_entity2_idx[dn_extract_entity1],
-                             dextract_entity1_entity2);
+                             _dextract_entity1_entity2_idx[dn_extract_entity1],
+                             _dextract_entity1_entity2);
 
   PDM_gnum_compute (gen_gnum_entity2);
 
@@ -178,18 +179,68 @@ dconnectivity_to_extract_dconnectivity
   PDM_g_num_t* extract_entity2_ln_to_gn = PDM_gnum_get (gen_gnum_entity2, 0);
 
   if(1 == 1) {
-    PDM_log_trace_array_long(dextract_entity1_entity2, dextract_entity1_entity2_idx[dn_extract_entity1], "select_entity2:: ");
-    PDM_log_trace_array_long(extract_entity2_ln_to_gn, dextract_entity1_entity2_idx[dn_extract_entity1], "extract_entity2_ln_to_gn:: ");
+    PDM_log_trace_array_long(_dextract_entity1_entity2, _dextract_entity1_entity2_idx[dn_extract_entity1], "select_entity2:: ");
+    PDM_log_trace_array_long(extract_entity2_ln_to_gn, _dextract_entity1_entity2_idx[dn_extract_entity1], "extract_entity2_ln_to_gn:: ");
   }
 
 
   PDM_gnum_free(gen_gnum_entity2);
 
 
+  PDM_part_to_block_t *ptb_entity2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                              PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                              1.,
+                                                              &extract_entity2_ln_to_gn,
+                                                              NULL,
+                                                              &_dextract_entity1_entity2_idx[dn_extract_entity1],
+                                                              1,
+                                                              comm);
+
+
+  PDM_g_num_t* _dparent_entity2_g_num = NULL;
+  PDM_part_to_block_exch (ptb_entity2,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST,
+                          1,
+                          NULL,
+                (void **) &_dextract_entity1_entity2,
+                          NULL,
+                (void **) &_dparent_entity2_g_num);
+
+
+  PDM_g_num_t* distrib_extract_entity2 = PDM_part_to_block_distrib_index_get(ptb_entity2);
+  int dn_extract_entity2 = distrib_extract_entity2[i_rank+1] - distrib_extract_entity2[i_rank];
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(_dparent_entity2_g_num, dn_extract_entity2, "_dparent_entity2_g_num:: ");
+  }
+
+  /*
+   * Update connectivity with the new ones
+   */
+  for(int i = 0; i < _dextract_entity1_entity2_idx[dn_extract_entity1]; ++i) {
+    _dextract_entity1_entity2[i] = extract_entity2_ln_to_gn[i];
+  }
+
   free(extract_entity1_ln_to_gn);
   free(extract_entity2_ln_to_gn);
-  free(dextract_entity1_entity2_idx);
+  *dextract_entity1_entity2_idx = _dextract_entity1_entity2_idx;
+  *dextract_entity1_entity2     = _dextract_entity1_entity2;
+  *dparent_entity2_g_num        = _dparent_entity2_g_num;
+
+  *extract_entity1_distribution = malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  *extract_entity2_distribution = malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t *_extract_entity1_distribution = *extract_entity1_distribution;
+  PDM_g_num_t *_extract_entity2_distribution = *extract_entity2_distribution;
+
+  for(int i = 0; i < n_rank+1; ++i) {
+    _extract_entity1_distribution[i] = distrib_extract_entity1[i];
+    _extract_entity2_distribution[i] = distrib_extract_entity2[i];
+  }
+
   PDM_part_to_block_free(ptb);
+  PDM_part_to_block_free(ptb_entity2);
 }
 
 
@@ -334,13 +385,31 @@ int main(int argc, char *argv[])
   /*
    *  Choice of extraction
    */
+
+  PDM_g_num_t   *extract_face_distribution = NULL;
+  PDM_g_num_t   *extract_vtx_distribution  = NULL;
+  int           *dextract_face_vtx_idx     = NULL;
+  PDM_g_num_t   *dextract_face_vtx         = NULL;
+  PDM_g_num_t   *dparent_vtx_g_num         = NULL;
+
   dconnectivity_to_extract_dconnectivity(comm,
                                          dface_group_idx[n_face_group],
                                          dface_group,
                                          face_distribution,
                                          dface_vtx_idx,
-                                         dface_vtx);
+                                         dface_vtx,
+                                         &extract_face_distribution,
+                                         &extract_vtx_distribution,
+                                         &dextract_face_vtx_idx,
+                                         &dextract_face_vtx,
+                                         &dparent_vtx_g_num);
 
+
+  free(extract_face_distribution );
+  free(extract_vtx_distribution  );
+  free(dextract_face_vtx_idx     );
+  free(dextract_face_vtx         );
+  free(dparent_vtx_g_num         );
 
   free(face_distribution);
 
