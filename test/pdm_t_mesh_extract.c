@@ -102,29 +102,94 @@ dconnectivity_to_extract_dconnectivity
   /*
    * Exchange
    */
-  int**         tmp_dextract_entity1_entity2_n;
-  PDM_g_num_t** tmp_dextract_entity1_entity2;
+  int**         tmp_pextract_entity1_entity2_n;
+  PDM_g_num_t** tmp_pextract_entity1_entity2;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           dentity1_entity2_n,
              (void *  )   dentity1_entity2,
-             (int  ***)  &tmp_dextract_entity1_entity2_n,
-             (void ***)  &tmp_dextract_entity1_entity2);
+             (int  ***)  &tmp_pextract_entity1_entity2_n,
+             (void ***)  &tmp_pextract_entity1_entity2);
 
-  int**         dextract_entity1_entity2_n = tmp_dextract_entity1_entity2_n[0];
-  PDM_g_num_t** dextract_entity1_entity2   = tmp_dextract_entity1_entity2[0];
-  free(tmp_dextract_entity1_entity2_n);
-  free(tmp_dextract_entity1_entity2);
+  int*         pextract_entity1_entity2_n = tmp_pextract_entity1_entity2_n[0];
+  PDM_g_num_t* pextract_entity1_entity2   = tmp_pextract_entity1_entity2[0];
+  free(tmp_pextract_entity1_entity2_n);
+  free(tmp_pextract_entity1_entity2);
   free(dentity1_entity2_n);
-
 
   PDM_block_to_part_free(btp);
 
-  free(dextract_entity1_entity2_n);
-  free(dextract_entity1_entity2  );
+  /*
+   *  Remap inside true block to ensure parallelism independant
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &extract_entity1_ln_to_gn,
+                                                      NULL,
+                                                      &n_selected_entity1,
+                                                      1,
+                                                      comm);
+
+
+  int*         dextract_entity1_entity2_n = NULL;
+  PDM_g_num_t* dextract_entity1_entity2   = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &pextract_entity1_entity2_n,
+                (void **) &pextract_entity1_entity2,
+                          &dextract_entity1_entity2_n,
+                (void **) &dextract_entity1_entity2);
+
+  free(pextract_entity1_entity2_n);
+  free(pextract_entity1_entity2  );
+
+
+  /*
+   * Post-Treatment
+   */
+  PDM_g_num_t* distrib_extract_entity1 = PDM_part_to_block_distrib_index_get(ptb);
+  int dn_extract_entity1 = distrib_extract_entity1[i_rank+1] - distrib_extract_entity1[i_rank];
+
+  int* dextract_entity1_entity2_idx = malloc( (dn_extract_entity1 + 1) * sizeof(int));
+  dextract_entity1_entity2_idx[0] = 0;
+  for(int i = 0; i < dn_extract_entity1; ++i) {
+    dextract_entity1_entity2_idx[i+1] = dextract_entity1_entity2_idx[i] + dextract_entity1_entity2_n[i];
+  }
+
+
+  /*
+   *  Create global numbering from parent entity2
+   */
+  PDM_gen_gnum_t* gen_gnum_entity2 = PDM_gnum_create(3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
+
+
+  PDM_gnum_set_from_parents (gen_gnum_entity2,
+                             0,
+                             dextract_entity1_entity2_idx[dn_extract_entity1],
+                             dextract_entity1_entity2);
+
+  PDM_gnum_compute (gen_gnum_entity2);
+
+
+  PDM_g_num_t* extract_entity2_ln_to_gn = PDM_gnum_get (gen_gnum_entity2, 0);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(dextract_entity1_entity2, dextract_entity1_entity2_idx[dn_extract_entity1], "select_entity2:: ");
+    PDM_log_trace_array_long(extract_entity2_ln_to_gn, dextract_entity1_entity2_idx[dn_extract_entity1], "extract_entity2_ln_to_gn:: ");
+  }
+
+
+  PDM_gnum_free(gen_gnum_entity2);
+
 
   free(extract_entity1_ln_to_gn);
+  free(extract_entity2_ln_to_gn);
+  free(dextract_entity1_entity2_idx);
+  PDM_part_to_block_free(ptb);
 }
 
 
