@@ -23,6 +23,8 @@
 #include "pdm_vtk.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
 
 /*============================================================================
  * Type definitions
@@ -49,7 +51,8 @@ _deduce_descending_join
  PDM_g_num_t  **dparent_face_g_num,
  PDM_g_num_t  **dparent_vtx_g_num,
  PDM_g_num_t  **pextract_old_to_new,
- double       **dextract_vtx_coord
+ double       **dextract_vtx_coord,
+ PDM_MPI_Comm   comm
 )
 {
   PDM_UNUSED(n_zone);
@@ -67,12 +70,76 @@ _deduce_descending_join
   PDM_UNUSED(pextract_old_to_new);
   PDM_UNUSED(dextract_vtx_coord);
 
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
+    /*
+     * Generate edge numbering
+     */
+    int dn_face = extract_face_distribution[i_zone][i_rank+1] - extract_face_distribution[i_zone][i_rank];
+    int n_edge_elt_tot = dextract_face_vtx_idx[i_zone][dn_face];
+
+    PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+    int*         tmp_parent_elmt_pos    = (int         *) malloc(     n_edge_elt_tot    * sizeof(int        ) );
+    int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
+    PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+
+    int n_elmt_current = 0;
+    int n_edge_current = 0;
+    tmp_dface_edge_vtx_idx[0] = 0;
+    PDM_poly2d_decomposes_edges(dn_face,
+                                &n_elmt_current,
+                                &n_edge_current,
+                                extract_face_distribution[i_zone][i_rank],
+                                -1,
+                                dextract_face_vtx[i_zone],
+                                dextract_face_vtx_idx[i_zone],
+                                tmp_dface_edge_vtx_idx,
+                                tmp_dface_edge_vtx,
+                                tmp_dface_edge,
+                                NULL,
+                                NULL,
+                                tmp_parent_elmt_pos);
+    assert(n_edge_current == n_edge_elt_tot);
+
+    /*
+     *  Compute edges connectivity
+     */
+    int  dn_edge = -1;
+    PDM_g_num_t  *dedge_distrib;
+    int          *dedge_vtx_idx;
+    PDM_g_num_t  *dedge_vtx;
+    int          *dedge_face_idx;
+    PDM_g_num_t  *dedge_face;
+
+    PDM_generate_entitiy_connectivity_raw(comm,
+                                          extract_vtx_distribution[i_zone][n_rank],
+                                          n_edge_elt_tot,
+                                          tmp_dface_edge,
+                                          tmp_dface_edge_vtx_idx,
+                                          tmp_dface_edge_vtx,
+                                          &dn_edge,
+                                          &dedge_distrib,
+                                          &dedge_vtx_idx,
+                                          &dedge_vtx,
+                                          &dedge_face_idx,
+                                          &dedge_face);
+
+
+    free(dedge_distrib);
+    free(dedge_vtx_idx);
+    free(dedge_vtx);
+    free(dedge_face_idx);
+    free(dedge_face);
+    free(tmp_parent_elmt_pos    );
 
 
 
 
-
-
+  }
 
 }
 
@@ -357,7 +424,8 @@ int main(int argc, char *argv[])
                           dparent_face_g_num,
                           dparent_vtx_g_num,
                           pextract_old_to_new,
-                          dextract_vtx_coord);
+                          dextract_vtx_coord,
+                          comm);
 
   /* Free memory */
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
