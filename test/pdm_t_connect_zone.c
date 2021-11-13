@@ -32,6 +32,52 @@
  * Private function definitions
  *============================================================================*/
 
+static
+void
+_deduce_descending_join
+(
+ int            n_zone,
+ int            n_join,
+ int          **dface_join_idx,
+ PDM_g_num_t  **dface_join,
+ int          **dface_vtx_idx,
+ PDM_g_num_t  **dface_vtx,
+ PDM_g_num_t  **extract_face_distribution,
+ PDM_g_num_t  **extract_vtx_distribution,
+ int          **dextract_face_vtx_idx,
+ PDM_g_num_t  **dextract_face_vtx,
+ PDM_g_num_t  **dparent_face_g_num,
+ PDM_g_num_t  **dparent_vtx_g_num,
+ PDM_g_num_t  **pextract_old_to_new,
+ double       **dextract_vtx_coord
+)
+{
+  PDM_UNUSED(n_zone);
+  PDM_UNUSED(n_join);
+  PDM_UNUSED(dface_join_idx);
+  PDM_UNUSED(dface_join);
+  PDM_UNUSED(dface_vtx_idx);
+  PDM_UNUSED(dface_vtx);
+  PDM_UNUSED(extract_face_distribution);
+  PDM_UNUSED(extract_vtx_distribution);
+  PDM_UNUSED(dextract_face_vtx_idx);
+  PDM_UNUSED(dextract_face_vtx);
+  PDM_UNUSED(dparent_face_g_num);
+  PDM_UNUSED(dparent_vtx_g_num);
+  PDM_UNUSED(pextract_old_to_new);
+  PDM_UNUSED(dextract_vtx_coord);
+
+
+
+
+
+
+
+
+}
+
+
+
 /**
  *
  * \brief  Usage
@@ -149,6 +195,15 @@ int main(int argc, char *argv[])
   PDM_g_num_t  **dface_join      = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
   int          **djoins_ids      = (int         **) malloc(n_zone * sizeof(int         *));
 
+  PDM_g_num_t  **extract_face_distribution = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **extract_vtx_distribution  = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  int          **dextract_face_vtx_idx     = (int         **) malloc( n_zone * sizeof(int         *));
+  PDM_g_num_t  **dextract_face_vtx         = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **dparent_face_g_num        = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **dparent_vtx_g_num         = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  PDM_g_num_t  **pextract_old_to_new       = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
+  double       **dextract_vtx_coord        = (double      **) malloc( n_zone * sizeof(double      *));
+
 
   PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_zone * sizeof(PDM_dcube_t *));
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
@@ -240,6 +295,43 @@ int main(int argc, char *argv[])
         }
       }
     }
+
+    /*
+     *  Now we have all joins create we need to extract them
+     */
+
+    PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face[i_zone]);
+    PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx [i_zone]);
+    PDM_dconnectivity_to_extract_dconnectivity(comm,
+                                               dface_join_idx[i_zone][n_jn],
+                                               dface_join[i_zone],
+                                               face_distribution,
+                                               dface_vtx_idx[i_zone],
+                                               dface_vtx[i_zone],
+                                               &extract_face_distribution[i_zone],
+                                               &extract_vtx_distribution[i_zone],
+                                               &dextract_face_vtx_idx[i_zone],
+                                               &dextract_face_vtx[i_zone],
+                                               &dparent_face_g_num[i_zone],
+                                               &dparent_vtx_g_num[i_zone],
+                                               &pextract_old_to_new[i_zone]);
+
+    int dn_extract_vtx  = extract_vtx_distribution[i_zone][i_rank+1] - extract_vtx_distribution[i_zone][i_rank];
+
+    double** tmp_dextract_vtx_coord = NULL;
+    PDM_part_dcoordinates_to_pcoordinates(comm,
+                                          1,
+                                          vtx_distribution,
+                                          dvtx_coord[i_zone],
+                                          &dn_extract_vtx,
+                   (const PDM_g_num_t **) &dparent_vtx_g_num[i_zone],
+                                          &tmp_dextract_vtx_coord);
+
+    dextract_vtx_coord[i_zone] = tmp_dextract_vtx_coord[0];
+    free(tmp_dextract_vtx_coord);
+
+    free(face_distribution);
+    free(vtx_distribution);
   }
 
   int n_total_joins = 2*(n_zone-1);
@@ -252,16 +344,39 @@ int main(int argc, char *argv[])
     }
   }
 
+  _deduce_descending_join(n_zone,
+                          n_total_joins,
+                          dface_join_idx,
+                          dface_join,
+                          dface_vtx_idx,
+                          dface_vtx,
+                          extract_face_distribution,
+                          extract_vtx_distribution,
+                          dextract_face_vtx_idx,
+                          dextract_face_vtx,
+                          dparent_face_g_num,
+                          dparent_vtx_g_num,
+                          pextract_old_to_new,
+                          dextract_vtx_coord);
 
   /* Free memory */
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
-    free(dface_bnd_idx[i_zone]);
-    free(dface_bnd[i_zone]);
+    free(dface_bnd_idx [i_zone]);
+    free(dface_bnd     [i_zone]);
     free(dface_join_idx[i_zone]);
-    free(dface_join[i_zone]);
+    free(dface_join    [i_zone]);
     if(n_zone > 1) {
       free(djoins_ids[i_zone]);
     }
+
+    free(extract_face_distribution[i_zone]);
+    free(extract_vtx_distribution [i_zone]);
+    free(dextract_face_vtx_idx    [i_zone]);
+    free(dextract_face_vtx        [i_zone]);
+    free(dparent_face_g_num       [i_zone]);
+    free(dparent_vtx_g_num        [i_zone]);
+    free(pextract_old_to_new      [i_zone]);
+    free(dextract_vtx_coord       [i_zone]);
     PDM_dcube_gen_free(dcube[i_zone]);
   }
   free(dcube);
@@ -283,6 +398,15 @@ int main(int argc, char *argv[])
   free(dface_join);
   free(djoins_ids);
   free(join_to_opposite);
+
+  free(extract_face_distribution);
+  free(extract_vtx_distribution );
+  free(dextract_face_vtx_idx    );
+  free(dextract_face_vtx        );
+  free(dparent_face_g_num       );
+  free(dparent_vtx_g_num        );
+  free(pextract_old_to_new      );
+  free(dextract_vtx_coord       );
 
   PDM_MPI_Finalize();
 
