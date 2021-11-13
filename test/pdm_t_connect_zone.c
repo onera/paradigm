@@ -75,6 +75,12 @@ _deduce_descending_join
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+  PDM_g_num_t **dedge_distrib  = malloc(n_zone * sizeof(PDM_g_num_t *));
+  int         **dedge_vtx_idx  = malloc(n_zone * sizeof(int         *));
+  PDM_g_num_t **dedge_vtx      = malloc(n_zone * sizeof(PDM_g_num_t *));
+  int         **dedge_face_idx = malloc(n_zone * sizeof(int         *));
+  PDM_g_num_t **dedge_face     = malloc(n_zone * sizeof(PDM_g_num_t *));
+
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
     /*
      * Generate edge numbering
@@ -109,12 +115,6 @@ _deduce_descending_join
      *  Compute edges connectivity
      */
     int  dn_edge = -1;
-    PDM_g_num_t  *dedge_distrib;
-    int          *dedge_vtx_idx;
-    PDM_g_num_t  *dedge_vtx;
-    int          *dedge_face_idx;
-    PDM_g_num_t  *dedge_face;
-
     PDM_generate_entitiy_connectivity_raw(comm,
                                           extract_vtx_distribution[i_zone][n_rank],
                                           n_edge_elt_tot,
@@ -122,28 +122,33 @@ _deduce_descending_join
                                           tmp_dface_edge_vtx_idx,
                                           tmp_dface_edge_vtx,
                                           &dn_edge,
-                                          &dedge_distrib,
-                                          &dedge_vtx_idx,
-                                          &dedge_vtx,
-                                          &dedge_face_idx,
-                                          &dedge_face);
+                                          &dedge_distrib[i_zone],
+                                          &dedge_vtx_idx[i_zone],
+                                          &dedge_vtx[i_zone],
+                                          &dedge_face_idx[i_zone],
+                                          &dedge_face[i_zone]);
 
-
-    free(dedge_distrib);
-    free(dedge_vtx_idx);
-    free(dedge_vtx);
-    free(dedge_face_idx);
-    free(dedge_face);
     free(tmp_parent_elmt_pos    );
-
-
-
 
   }
 
+
+
+
+  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
+    free(dedge_distrib [i_zone]);
+    free(dedge_vtx_idx [i_zone]);
+    free(dedge_vtx     [i_zone]);
+    free(dedge_face_idx[i_zone]);
+    free(dedge_face    [i_zone]);
+  }
+
+  free(dedge_distrib);
+  free(dedge_vtx_idx);
+  free(dedge_vtx);
+  free(dedge_face_idx);
+  free(dedge_face);
 }
-
-
 
 /**
  *
