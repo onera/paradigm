@@ -182,8 +182,10 @@ _deduce_descending_join
   PDM_g_num_t **data_send_edge_g_num = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
   PDM_g_num_t **data_send_group      = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
   PDM_g_num_t **data_send_sens       = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_face_g_num = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
 
   int         **stride_one      = (int         **) malloc( n_zone * sizeof(int        *));
+  int         **zone_id         = (int         **) malloc( n_zone * sizeof(int        *));
 
   double      **weight        = (double      **) malloc( n_zone * sizeof(double     *));
   int          *dn_edge       = (int          *) malloc( n_zone * sizeof(int         ));
@@ -318,22 +320,26 @@ _deduce_descending_join
     weight      [i_zone] = malloc(dn_edge[i_zone] * sizeof(double     )); // Toutes les edges ont une clé car tout vient de l'extraction
 
     stride_one          [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
+    zone_id             [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
     data_send_connect_n [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
     data_send_connect   [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
     data_send_edge_g_num[i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(PDM_g_num_t));
     data_send_group     [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
     data_send_sens      [i_zone] = malloc( (    dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    data_send_face_g_num[i_zone] = malloc( (    dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
 
     /*
      *  Let's build key
      */
     // int idx_write     = 0;
-    int idx_write_connect = 0;
-    int idx_write_group   = 0;
-    int idx_write_sens    = 0;
+    int idx_write_connect    = 0;
+    int idx_write_group      = 0;
+    int idx_write_sens       = 0;
+    int idx_write_face_g_num = 0;
     for(int i_edge = 0; i_edge < dn_edge[i_zone]; ++i_edge) {
 
       stride_one         [i_zone][i_edge] = 1;
+      zone_id            [i_zone][i_edge] = i_zone;
       data_send_connect_n[i_zone][i_edge] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
 
       PDM_g_num_t key = 0;
@@ -352,10 +358,17 @@ _deduce_descending_join
         data_send_group[i_zone][idx_write_group++] = group_join_opp;
       }
 
+      /* Send face_g_num */
+      for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
+        data_send_face_g_num[i_zone][idx_write_face_g_num++] = dedge_face[j];
+      }
+
       /* Send group sens - Caution / 2 */
       for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
         data_send_sens[i_zone][idx_write_sens++] = dedge_face_group_sens[j];
       }
+
+
 
       // key_ln_to_gn[i_zone][i_edge] = key % key_mod + 1; // TODO
       key_ln_to_gn[i_zone][i_edge] = key;
@@ -455,6 +468,8 @@ _deduce_descending_join
     free(data_send_edge_g_num[i_zone]);
     free(data_send_sens      [i_zone]);
     free(stride_one          [i_zone]);
+    free(data_send_face_g_num[i_zone]);
+    free(zone_id             [i_zone]);
     free(weight              [i_zone]);
   }
   free(key_ln_to_gn        );
@@ -463,7 +478,9 @@ _deduce_descending_join
   free(data_send_group     );
   free(data_send_edge_g_num);
   free(data_send_sens      );
+  free(data_send_face_g_num);
   free(stride_one          );
+  free(zone_id             );
   free(weight              );
 
 
@@ -531,8 +548,10 @@ _deduce_descending_join
       PDM_sort_long(&blk_data_connect[beg], NULL, l_size);
       PDM_sort_int (&blk_data_group  [beg], NULL, l_size);
 
-      PDM_log_trace_array_long(&blk_data_connect[beg], l_size, "blk_data_connect (sort) :: ");
-      PDM_log_trace_array_int (&blk_data_group  [beg], l_size, "blk_data_group   (sort) :: ");
+      if(0 == 1) {
+        PDM_log_trace_array_long(&blk_data_connect[beg], l_size, "blk_data_connect (sort) :: ");
+        PDM_log_trace_array_int (&blk_data_group  [beg], l_size, "blk_data_group   (sort) :: ");
+      }
     }
 
     /*
@@ -586,9 +605,8 @@ _deduce_descending_join
             continue;
           }
 
-          printf(" Hit that Jack !!!! \n");
           already_treat[i_entity2] = 1;
-          n_same++;
+          same_entity_idx[n_same++] = i_entity2;
           i_entity2_same = i_entity2;
 
           if(n_same > 1) {
@@ -600,18 +618,27 @@ _deduce_descending_join
 
       log_trace("i_entity = %i | i_entity2_same = %i | n_same = %i \n", i_entity, i_entity2_same, n_same);
 
+      /*
+       * Renvoie des resultats :
+       *    - Par edge --> Il faut donc également le numero de zones
+       */
 
 
 
+      // Renvoi de tout les edges candidats à travers les faces ???
       already_treat[i_entity] = 1;
     }
-
-
-
 
     idx += n_conflict_entitys;
 
   }
+
+  /*
+   * A verifier que les edges qui sont indeterminé pointe sur une seule face !!!
+   *   Quand on decompose il faut également envoyer le numero de la face (de l'extraction)
+   */
+
+
 
   // free(loc_entity_1    );
   // free(loc_entity_2    );
