@@ -177,10 +177,11 @@ _deduce_descending_join
   PDM_g_num_t **key_ln_to_gn    = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
 
   /* Connectivity */
-  int         **data_send_connect_n = (int         **) malloc( n_zone * sizeof(int        *));
-  PDM_g_num_t **data_send_connect   = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **data_send_group     = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **data_send_sens      = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  int         **data_send_connect_n  = (int         **) malloc( n_zone * sizeof(int        *));
+  PDM_g_num_t **data_send_connect    = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_edge_g_num = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_group      = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_sens       = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
 
   int         **stride_one      = (int         **) malloc( n_zone * sizeof(int        *));
 
@@ -316,11 +317,12 @@ _deduce_descending_join
     key_ln_to_gn[i_zone] = malloc(dn_edge[i_zone] * sizeof(PDM_g_num_t)); // Toutes les edges ont une clé car tout vient de l'extraction
     weight      [i_zone] = malloc(dn_edge[i_zone] * sizeof(double     )); // Toutes les edges ont une clé car tout vient de l'extraction
 
-    stride_one         [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
-    data_send_connect_n[i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
-    data_send_connect  [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
-    data_send_group    [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
-    data_send_sens     [i_zone] = malloc( (    dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    stride_one          [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
+    data_send_connect_n [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
+    data_send_connect   [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    data_send_edge_g_num[i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(PDM_g_num_t));
+    data_send_group     [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    data_send_sens      [i_zone] = malloc( (    dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
 
     /*
      *  Let's build key
@@ -340,6 +342,8 @@ _deduce_descending_join
         data_send_connect[i_zone][idx_write_connect++] = dedge_face_join    [j];
         data_send_connect[i_zone][idx_write_connect++] = dedge_face_join_opp[j];
       }
+
+      data_send_edge_g_num[i_zone][i_edge] = dedge_distrib [i_zone][i_rank] + i_edge + 1;
 
       /* Send group id */
       for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
@@ -384,8 +388,8 @@ _deduce_descending_join
                                                       comm);
 
 
-  int*         blk_n_entity_per_key = NULL;
-  PDM_g_num_t* blk_entity_n         = NULL;
+  int *blk_n_entity_per_key = NULL;
+  int *blk_entity_n         = NULL;
   int blk_entity_n_size = PDM_part_to_block_exch(ptb,
                                                  sizeof(int),
                                                  PDM_STRIDE_VAR,
@@ -394,6 +398,18 @@ _deduce_descending_join
                                        (void **) data_send_connect_n,
                                                  &blk_n_entity_per_key,
                                        (void **) &blk_entity_n);
+
+  int*         tmp_blk_n_entity_per_key = NULL;
+  PDM_g_num_t* blk_edge_g_num           = NULL;
+  int blk_entity_n_edge_g_num = PDM_part_to_block_exch(ptb,
+                                                       sizeof(PDM_g_num_t),
+                                                       PDM_STRIDE_VAR,
+                                                       -1,
+                                                       stride_one,
+                                             (void **) data_send_edge_g_num,
+                                                       &tmp_blk_n_entity_per_key,
+                                             (void **) &blk_edge_g_num);
+  free(tmp_blk_n_entity_per_key); // Same as blk_n_entity_per_key
 
   int*         blk_data_connect_n = NULL;
   PDM_g_num_t* blk_data_connect   = NULL;
@@ -432,27 +448,31 @@ _deduce_descending_join
    * Free
    */
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-    free(key_ln_to_gn       [i_zone]);
-    free(data_send_connect_n[i_zone]);
-    free(data_send_connect  [i_zone]);
-    free(data_send_group    [i_zone]);
-    free(data_send_sens     [i_zone]);
-    free(stride_one         [i_zone]);
-    free(weight             [i_zone]);
+    free(key_ln_to_gn        [i_zone]);
+    free(data_send_connect_n [i_zone]);
+    free(data_send_connect   [i_zone]);
+    free(data_send_group     [i_zone]);
+    free(data_send_edge_g_num[i_zone]);
+    free(data_send_sens      [i_zone]);
+    free(stride_one          [i_zone]);
+    free(weight              [i_zone]);
   }
-  free(key_ln_to_gn       );
-  free(data_send_connect_n);
-  free(data_send_connect  );
-  free(data_send_group    );
-  free(data_send_sens     );
-  free(stride_one         );
-  free(weight             );
+  free(key_ln_to_gn        );
+  free(data_send_connect_n );
+  free(data_send_connect   );
+  free(data_send_group     );
+  free(data_send_edge_g_num);
+  free(data_send_sens      );
+  free(stride_one          );
+  free(weight              );
 
 
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
   if(1 == 1) {
-    PDM_log_trace_array_int (blk_n_entity_per_key, blk_size             , "blk_n_entity_per_key:: ");
-    PDM_log_trace_array_long(blk_entity_n        , blk_entity_n_size    , "blk_entity_n        :: ");
+    PDM_log_trace_array_int(blk_n_entity_per_key, blk_size             , "blk_n_entity_per_key:: ");
+    PDM_log_trace_array_int(blk_entity_n        , blk_entity_n_size    , "blk_entity_n        :: ");
+
+    PDM_log_trace_array_long(blk_edge_g_num     , blk_entity_n_size    , "blk_edge_g_num      :: ");
 
     PDM_log_trace_array_int (blk_data_connect_n  , blk_size             , "blk_data_connect_n  :: ");
     PDM_log_trace_array_long(blk_data_connect    , blk_data_connect_size, "blk_data_connect    :: ");
@@ -507,12 +527,20 @@ _deduce_descending_join
       int end    = blk_entity_idx[idx+i_entity+1];
       int l_size = end - beg;
 
-      // Caution implace sort !!!!
+      // Caution inplace sort !!!!
       PDM_sort_long(&blk_data_connect[beg], NULL, l_size);
+      PDM_sort_int (&blk_data_group  [beg], NULL, l_size);
 
       PDM_log_trace_array_long(&blk_data_connect[beg], l_size, "blk_data_connect (sort) :: ");
-
+      PDM_log_trace_array_int (&blk_data_group  [beg], l_size, "blk_data_group   (sort) :: ");
     }
+
+    /*
+     *  Identify pair or invilid other
+     */
+
+
+
 
     idx += n_conflict_entitys;
 
@@ -535,9 +563,24 @@ _deduce_descending_join
   free(blk_data_group  );
   free(blk_data_sens_n);
   free(blk_data_sens);
+  free(blk_edge_g_num);
 
 
   PDM_part_to_block_free(ptb);
+
+  /*
+   * Renvoie des resultats
+   *   btp avec les key_ln_to_gn
+   *   Attention aux block partiels !!!
+   */
+
+  /*
+   * Pour les edges recalitrant
+   *   --> On extract les faces dont les edges_opp ne sont pas referencé
+   *   --> Normalement il y au moins un edge par face qui est connecté
+   *   --> On échange le dface_edge + l'information du sens devrait permmettre de tout reorienté
+   *       ==> On trouve le edge commun puis on tourne dans le sens de l'orientation respective
+   */
 
 
   /*
