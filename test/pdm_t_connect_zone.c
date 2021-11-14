@@ -538,6 +538,73 @@ _deduce_descending_join
     /*
      *  Identify pair or invilid other
      */
+    for(int i_entity = 0; i_entity < n_conflict_entitys; ++i_entity) {
+      int beg1    = blk_entity_idx[idx+i_entity  ];
+      int end1    = blk_entity_idx[idx+i_entity+1];
+      int l_size1 = end1 - beg1;
+
+      int n_same         = 0;
+      int i_entity2_same = -1;
+
+      if(already_treat[i_entity] == 1) {
+        continue;
+      }
+
+      for(int i_entity2 = i_entity+1; i_entity2 < n_conflict_entitys; ++i_entity2) {
+
+        if(already_treat[i_entity2] == -1) {
+          int beg2    = blk_entity_idx[idx+i_entity2  ];
+          int end2    = blk_entity_idx[idx+i_entity2+1];
+          int l_size2 = end2 - beg2;
+
+          if(l_size1 != l_size2) {
+            continue;
+          }
+
+          // Compare
+          int have_same_group_pair = 1;
+          for(int k = 0; k < l_size1; ++k) {
+            if(blk_data_group[beg1+k] != blk_data_group[beg2+k]){
+              have_same_group_pair = 0;
+              break;
+            }
+          }
+
+          if(!have_same_group_pair) {
+            continue;
+          }
+
+          int have_same_entity_list = 1;
+          for(int k = 0; k < l_size1; ++k) {
+            if(blk_data_connect[beg1+k] != blk_data_connect[beg2+k]){
+              have_same_entity_list = 0;
+              break;
+            }
+          }
+
+          if(!have_same_entity_list) {
+            continue;
+          }
+
+          printf(" Hit that Jack !!!! \n");
+          already_treat[i_entity2] = 1;
+          n_same++;
+          i_entity2_same = i_entity2;
+
+          if(n_same > 1) {
+            i_entity2_same = -1;
+          }
+
+        }
+      } /* End for i_entity2 */
+
+      log_trace("i_entity = %i | i_entity2_same = %i | n_same = %i \n", i_entity, i_entity2_same, n_same);
+
+
+
+
+      already_treat[i_entity] = 1;
+    }
 
 
 
