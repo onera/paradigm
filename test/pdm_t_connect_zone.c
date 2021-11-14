@@ -683,11 +683,97 @@ int main(int argc, char *argv[])
                    (const PDM_g_num_t **) &dparent_vtx_g_num[i_zone],
                                           &tmp_dextract_vtx_coord);
 
+    /*
+     *  Pour chaque face extraite :
+     *     - Echange du numero de face/face_opposé (Attention on est obligé de le faire car PDM_dconnectivity_to_extract_dconnectivity reordonne tout)
+     *     - Exchange i_group also
+     */
+    PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_l_face_join * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < dn_l_face_join; ++i) {
+      extract_face_ln_to_gn[i] = extract_face_distribution[i_zone][i_rank] + i + 1;
+    }
+
+    int* dface_group_tag = malloc(dn_l_face_join * sizeof(int));
+    PDM_g_num_t* dface_group_init_distrib = PDM_compute_entity_distribution(comm, dn_l_face_join);
+    int k = 0;
+    for(int i_group = tmp_i_group_join; i_group < tmp_i_group_join+n_jn; ++i_group) {
+      for(int i_face = dface_join_idx[i_group]; i_face < dface_join_idx[i_group+1]; ++i_face) {
+        dface_group_tag[k++] = i_group;
+      }
+    }
+
+    /*
+     * Exchange tag
+     */
+    int** tmp_dextract_face_tag = NULL;
+    PDM_part_dfield_to_pfield(comm,
+                              1,
+                              sizeof(int),
+                              dface_group_init_distrib,
+      (unsigned char    *)    dface_group_tag,
+                              &dn_l_face_join,
+      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+      (unsigned char ***)     &tmp_dextract_face_tag);
+    int* dextract_face_tag = tmp_dextract_face_tag[0];
+    free(tmp_dextract_face_tag);
+
+    /*
+     *  Exchange dface_join
+     */
+    PDM_g_num_t* sub_dface_join = &dface_join[dface_join_idx[tmp_i_group_join]];
+    int** tmp_dextract_face_join = NULL;
+    PDM_part_dfield_to_pfield(comm,
+                              1,
+                              sizeof(PDM_g_num_t),
+                              dface_group_init_distrib,
+      (unsigned char    *)    sub_dface_join,
+                              &dn_l_face_join,
+      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+      (unsigned char ***)     &tmp_dextract_face_join);
+    int* dextract_face_join = tmp_dextract_face_join[0];
+    free(tmp_dextract_face_join);
+
+    /*
+     *  Exchange dface_join_opp
+     */
+    PDM_g_num_t* sub_dface_join_opp = &dface_join_opp[dface_join_idx[tmp_i_group_join]];
+    int** tmp_dextract_face_join_opp = NULL;
+    PDM_part_dfield_to_pfield(comm,
+                              1,
+                              sizeof(PDM_g_num_t),
+                              dface_group_init_distrib,
+      (unsigned char    *)    sub_dface_join_opp,
+                              &dn_l_face_join,
+      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+      (unsigned char ***)     &tmp_dextract_face_join_opp);
+    int* dextract_face_join_opp = tmp_dextract_face_join_opp[0];
+    free(tmp_dextract_face_join_opp);
+
+
+    free(extract_face_ln_to_gn);
+
     dextract_vtx_coord[i_zone] = tmp_dextract_vtx_coord[0];
     free(tmp_dextract_vtx_coord);
 
     free(face_distribution);
     free(vtx_distribution);
+    free(dface_group_init_distrib);
+    free(dface_group_tag);
+
+    /*
+     * To keep
+     */
+    if(1 == 1) {
+      PDM_log_trace_array_long(dextract_face_tag     , dn_l_face_join, "dextract_face_tag      :: ");
+      PDM_log_trace_array_long(dextract_face_join    , dn_l_face_join, "dextract_face_join     :: ");
+      PDM_log_trace_array_long(dextract_face_join_opp, dn_l_face_join, "dextract_face_join_opp :: ");
+    }
+
+
+    free(dextract_face_tag);
+    free(dextract_face_join);
+    free(dextract_face_join_opp);
 
     /*
      *  Go to nexts join
