@@ -39,8 +39,6 @@ void
 _exchange_point_list
 (
  int            n_group_join,
- int           *group_join_to_zone_cur,
- int           *group_join_to_zone_opp,
  int           *group_join_to_join_opp,
  int           *dface_join_idx,
  PDM_g_num_t   *dface_join,
@@ -52,9 +50,6 @@ _exchange_point_list
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
-
-  PDM_UNUSED(group_join_to_zone_cur);
-  PDM_UNUSED(group_join_to_zone_opp);
 
   /*
    * We have for all extraction zone, we need to exchange id
@@ -71,17 +66,7 @@ _exchange_point_list
 
   for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
 
-    /*
-     * Each id in dface_join can be seen as a glabal numbering, in the same order of the opposite window
-     * The current part is the implicit numbering
-     * The block is a ptr of the opposite part
-     */
-    // int i_group_zone_opp = group_join_to_zone_opp[i_group_join];
     int i_group_join_opp = group_join_to_join_opp[i_group_join];
-    // printf(" i_zone           = %i \n", i_zone);
-    // printf(" i_group_join     = %i \n", i_group_join);
-    // printf(" i_group_zone_opp = %i \n", i_group_zone_opp);
-    // printf(" i_group_join_opp = %i \n", i_group_join_opp);
     int dn_face_join = dface_join_idx[i_group_join+1] - dface_join_idx[i_group_join];
     PDM_g_num_t* distrib_join_cur = distrib_join[i_group_join    ];
     PDM_g_num_t* distrib_join_opp = distrib_join[i_group_join_opp];
@@ -104,7 +89,7 @@ _exchange_point_list
                                                         comm);
 
     int cst_stride = 1;
-    PDM_g_num_t* sub_dface_join_opp = _dface_join_opp[dface_join_idx[i_group_join]];
+    PDM_g_num_t* sub_dface_join_opp = &_dface_join_opp[dface_join_idx[i_group_join]];
     PDM_block_to_part_exch(btp,
                            sizeof(PDM_g_num_t),
                            PDM_STRIDE_CST,
@@ -112,8 +97,6 @@ _exchange_point_list
                   (void *) blk_dface_join_opp,
                            NULL,
                (void ** ) &sub_dface_join_opp);
-    // dface_join_opp[i_group_join] = tmp_dface_join_opp[0];
-    // free(tmp_dface_join_opp);
 
     if(1 == 1) {
       PDM_log_trace_array_long(blk_dface_join_cur, dn_face_join, "dface_join_cur :: ");
@@ -123,6 +106,11 @@ _exchange_point_list
     PDM_block_to_part_free(btp);
     free(join_ln_to_gn);
   }
+
+  for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+    free(distrib_join[i_group_join]);
+  }
+  free(distrib_join);
 }
 
 
@@ -639,6 +627,13 @@ int main(int argc, char *argv[])
   /*
    * Setup dface_join_opp + group_id in current layout
    */
+  PDM_g_num_t *dface_join_opp = NULL;
+  _exchange_point_list(n_group_join,
+                       group_join_to_join_opp,
+                       dface_join_idx,
+                       dface_join,
+                       &dface_join_opp,
+                       comm);
 
 
 
@@ -757,6 +752,7 @@ int main(int argc, char *argv[])
   free(group_join_to_zone_cur);
   free(group_join_to_zone_opp);
   free(group_join_to_join_opp);
+  free(dface_join_opp);
 
   free(extract_face_distribution);
   free(extract_vtx_distribution );
