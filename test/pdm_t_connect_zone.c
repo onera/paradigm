@@ -40,10 +40,11 @@ _deduce_descending_join
 (
  int            n_zone,
  int            n_group_join,
+ int           *group_join_to_zone_cur,
  int           *group_join_to_zone_opp,
  int           *group_join_to_join_opp,
- int          **dface_join_idx,
- PDM_g_num_t  **dface_join,
+ int           *dface_join_idx,
+ PDM_g_num_t   *dface_join,
  int          **dface_vtx_idx,
  PDM_g_num_t  **dface_vtx,
  PDM_g_num_t  **extract_face_distribution,
@@ -79,104 +80,70 @@ _deduce_descending_join
   /*
    * We have for all extraction zone, we need to exchange id
    */
-  // int n_unique_joins = n_group_join/2;
-  // int *join_to_ref_join    = (int *) malloc( n_group_join     * sizeof(int));
-  // int *face_in_join_distri = (int *) malloc((n_unique_joins+1) * sizeof(int));
-
-  // //Build join_to_ref_join : we want the join and opposite join to have the same shift index,
-  // // so we take the smaller join global id as the reference
-  // int ref_join_gid = 0;
-  // for (int i_join = 0; i_join < n_group_join; i_join++) {
-  //   int opp_join = group_join_to_join_opp[i_join];
-  //   if (i_join < opp_join) {
-  //     join_to_ref_join[i_join  ] = ref_join_gid;
-  //     join_to_ref_join[opp_join] = ref_join_gid;
-  //     ref_join_gid ++;
-  //   }
-  // }
-
-  // free(join_to_ref_join);
-  // free(face_in_join_distri);
-
-  // PDM_log_trace_array_int(join_to_ref_join, n_group_join, "join_to_ref_join :: ");
-
-  // int* face_in_join_n = malloc()
-  PDM_g_num_t ***distrib_join   = malloc(n_zone * sizeof(PDM_g_num_t **));
-  PDM_g_num_t ***dface_join_opp = malloc(n_zone * sizeof(PDM_g_num_t **));
-  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-    distrib_join  [i_zone] = malloc(n_group_join * sizeof(PDM_g_num_t *));
-    dface_join_opp[i_zone] = malloc(n_group_join * sizeof(PDM_g_num_t *));
-    for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
-      int dn_face_join = dface_join_idx[i_zone][i_group_join+1] - dface_join_idx[i_zone][i_group_join];
-      distrib_join[i_zone][i_group_join] = PDM_compute_entity_distribution(comm, dn_face_join);
-    }
+  PDM_g_num_t **distrib_join   = malloc(n_group_join * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **dface_join_opp = malloc(n_group_join * sizeof(PDM_g_num_t *));
+  for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+    int dn_face_join = dface_join_idx[i_group_join+1] - dface_join_idx[i_group_join];
+    distrib_join[i_group_join] = PDM_compute_entity_distribution(comm, dn_face_join);
   }
 
-  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-    for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+  for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
 
-      /*
-       * Each id in dface_join can be seen as a glabal numbering, in the same order of the opposite window
-       * The current part is the implicit numbering
-       * The block is a ptr of the opposite part
-       */
-      int i_group_zone_opp = group_join_to_zone_opp[i_group_join];
-      int i_group_join_opp = group_join_to_join_opp[i_group_join];
-      // printf(" i_zone           = %i \n", i_zone);
-      // printf(" i_group_join     = %i \n", i_group_join);
-      // printf(" i_group_zone_opp = %i \n", i_group_zone_opp);
-      // printf(" i_group_join_opp = %i \n", i_group_join_opp);
-      int dn_face_join = dface_join_idx[i_zone][i_group_join+1] - dface_join_idx[i_zone][i_group_join];
-      PDM_g_num_t* distrib_join_cur = distrib_join[i_zone          ][i_group_join    ];
-      PDM_g_num_t* distrib_join_opp = distrib_join[i_group_zone_opp][i_group_join_opp];
+    /*
+     * Each id in dface_join can be seen as a glabal numbering, in the same order of the opposite window
+     * The current part is the implicit numbering
+     * The block is a ptr of the opposite part
+     */
+    int i_group_zone_opp = group_join_to_zone_opp[i_group_join];
+    int i_group_join_opp = group_join_to_join_opp[i_group_join];
+    // printf(" i_zone           = %i \n", i_zone);
+    // printf(" i_group_join     = %i \n", i_group_join);
+    // printf(" i_group_zone_opp = %i \n", i_group_zone_opp);
+    // printf(" i_group_join_opp = %i \n", i_group_join_opp);
+    int dn_face_join = dface_join_idx[i_group_join+1] - dface_join_idx[i_group_join];
+    PDM_g_num_t* distrib_join_cur = distrib_join[i_group_join    ];
+    PDM_g_num_t* distrib_join_opp = distrib_join[i_group_join_opp];
 
-      PDM_g_num_t *join_ln_to_gn = malloc(dn_face_join * sizeof(PDM_g_num_t));
-      for(int i = 0; i < dn_face_join; ++i) {
-        join_ln_to_gn[i] = distrib_join_cur[i_rank] + i + 1;
-      }
-
-      /*
-       * Exchange
-       */
-      PDM_g_num_t *blk_dface_join_opp = &dface_join[i_group_zone_opp][dface_join_idx[i_group_zone_opp][i_group_join_opp]];
-
-      PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_join_opp,
-                                   (const PDM_g_num_t **) &join_ln_to_gn,
-                                                          &dn_face_join,
-                                                          1,
-                                                          comm);
-
-      int cst_stride = 1;
-      PDM_g_num_t** tmp_dface_join_opp = NULL;
-      PDM_block_to_part_exch2(btp,
-                              sizeof(PDM_g_num_t),
-                              PDM_STRIDE_CST,
-                              &cst_stride,
-                     (void *) blk_dface_join_opp,
-                              NULL,
-                   (void ***) &tmp_dface_join_opp);
-      dface_join_opp[i_zone][i_group_join] = tmp_dface_join_opp[0];
-      free(tmp_dface_join_opp);
-
-      PDM_block_to_part_free(btp);
-
-      free(join_ln_to_gn);
-
+    PDM_g_num_t *join_ln_to_gn = malloc(dn_face_join * sizeof(PDM_g_num_t));
+    for(int i = 0; i < dn_face_join; ++i) {
+      join_ln_to_gn[i] = distrib_join_cur[i_rank] + i + 1;
     }
-  }
 
+    /*
+     * Exchange
+     */
+    PDM_g_num_t *blk_dface_join_cur = &dface_join[dface_join_idx[i_group_join    ]];
+    PDM_g_num_t *blk_dface_join_opp = &dface_join[dface_join_idx[i_group_join_opp]];
 
-  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-    for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
-      free(distrib_join  [i_zone][i_group_join]);
-      free(dface_join_opp[i_zone][i_group_join]);
+    PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_join_opp,
+                                 (const PDM_g_num_t **) &join_ln_to_gn,
+                                                        &dn_face_join,
+                                                        1,
+                                                        comm);
+
+    int cst_stride = 1;
+    PDM_g_num_t** tmp_dface_join_opp = NULL;
+    PDM_block_to_part_exch2(btp,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            &cst_stride,
+                   (void *) blk_dface_join_opp,
+                            NULL,
+                 (void ***) &tmp_dface_join_opp);
+    dface_join_opp[i_group_join] = tmp_dface_join_opp[0];
+    free(tmp_dface_join_opp);
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(blk_dface_join_cur          , dn_face_join, "dface_join_cur :: ");
+      PDM_log_trace_array_long(dface_join_opp[i_group_join], dn_face_join, "dface_join_opp :: ");
     }
-    free(distrib_join  [i_zone]);
-    free(dface_join_opp[i_zone]);
-  }
-  free(distrib_join);
-  free(dface_join_opp);
 
+
+    PDM_block_to_part_free(btp);
+
+    free(join_ln_to_gn);
+
+  }
 
   PDM_g_num_t **dedge_distrib  = malloc(n_zone * sizeof(PDM_g_num_t *));
   int         **dedge_vtx_idx  = malloc(n_zone * sizeof(int         *));
@@ -184,8 +151,11 @@ _deduce_descending_join
   int         **dedge_face_idx = malloc(n_zone * sizeof(int         *));
   PDM_g_num_t **dedge_face     = malloc(n_zone * sizeof(PDM_g_num_t *));
 
+  PDM_g_num_t **key_ln_to_gn = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send    = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+
+  // PDM_g_num_t key_mod = ; // Comment definir un bon key_mod ?
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-      printf(" i_zone           = %i \n", i_zone);
     /*
      * Generate edge numbering
      */
@@ -226,21 +196,81 @@ _deduce_descending_join
                                           tmp_dface_edge_vtx_idx,
                                           tmp_dface_edge_vtx,
                                           &dn_edge,
-                                          &dedge_distrib[i_zone],
-                                          &dedge_vtx_idx[i_zone],
-                                          &dedge_vtx[i_zone],
+                                          &dedge_distrib [i_zone],
+                                          &dedge_vtx_idx [i_zone],
+                                          &dedge_vtx     [i_zone],
                                           &dedge_face_idx[i_zone],
-                                          &dedge_face[i_zone]);
-
+                                          &dedge_face    [i_zone]);
     free(tmp_parent_elmt_pos    );
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(dedge_vtx   [i_zone], dedge_vtx_idx [i_zone][dn_edge], "dedge_vtx :: ");
+      PDM_log_trace_array_long(dedge_face  [i_zone], dedge_face_idx[i_zone][dn_edge], "dedge_face :: ");
+      // PDM_log_trace_array_long(key_ln_to_gn[i_zone], dn_face, "key_ln_to_gn :: ");
+    }
+
+
+    /*
+     * Remplissage des clés + préparation buffer d'envoi
+     *    - Une clé par edge pour unifier !!
+     *    - Maybe besoin de signé le dgroup_face pour identifié les vtx aprés !!!
+     *  Attnetion les l'ordre des faces dans le dfaces_group n'est pas le même que dans l'extraction !!!!!
+     *  Il faut appliqué le pextract_old_to_new
+     *
+     *   -> Le mieux est peut-être de prétraité pour ne plus avoir le pb aprés ...
+     */
+    key_ln_to_gn[i_zone] = malloc(dn_edge * sizeof(PDM_g_num_t)); // Toutes les edges ont une clé car tout vient de l'extraction
+    int idx_write = 0;
+
+
+    // abort();
+
+    // PDM_g_num_t *_dface_join_cur = dface_join    [i_zone];
+    // for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+
+    //   PDM_g_num_t *_dface_join_opp = dface_join_opp[i_zone][i_group_join];
+    //   int k = 0;
+    //   for(int j = dface_join_idx[i_group_join]; j < dface_join_idx[i_group_join+1]; ++j) {
+    //     // key_ln_to_gn[i_zone][idx_write++] = (_dface_join_cur[j] + _dface_join_opp[k++]) % key_mod + 1;
+    //     // key_ln_to_gn[i_zone][idx_write++] = shift_group + (_dface_join_cur[j] + _dface_join_opp[k++]) % key_mod + 1;
+    //     key_ln_to_gn[i_zone][idx_write++] = (_dface_join_cur[j] + _dface_join_opp[k++]);
+    //   }
+    // }
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(key_ln_to_gn[i_zone], dn_edge, "key_ln_to_gn :: ");
+    }
+
 
   }
 
+  for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+    free(distrib_join  [i_group_join]);
+    free(dface_join_opp[i_group_join]);
+  }
+  free(distrib_join);
+  free(dface_join_opp);
+  free(data_send);
+
+  // for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
+
+  // }
+
+  // for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
+
+  //   int i_group_zone_opp = group_join_to_zone_opp[i_group_join];
+  //   int i_group_join_opp = group_join_to_join_opp[i_group_join];
+
+  // }
 
 
-  PDM_g_num_t** key_ln_to_gn = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-
-
+  /*
+   * Pour les coins coins il faut probablement un echange en plus entre les graph 2 à 2 puis unifier
+   * Maybe utiliser le PDM_part_dentity_group_to_pentity_group
+   * A la fin de l'algo un vtx est potentiellement lié à plusieurs groupes.
+   * On peut merger avec un part_to_block tout les tags d'un vertex en appliquant sur les PL et PLD
+   * --> Ca gère le coin
+   */
 
 
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
@@ -249,6 +279,7 @@ _deduce_descending_join
     free(dedge_vtx     [i_zone]);
     free(dedge_face_idx[i_zone]);
     free(dedge_face    [i_zone]);
+    free(key_ln_to_gn  [i_zone]);
   }
 
   free(dedge_distrib);
@@ -372,8 +403,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t  **dface_group     = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
   int          **dface_bnd_idx   = (int         **) malloc(n_zone * sizeof(int         *));
   PDM_g_num_t  **dface_bnd       = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
-  int          **dface_join_idx  = (int         **) malloc(n_zone * sizeof(int         *));
-  PDM_g_num_t  **dface_join      = (PDM_g_num_t **) malloc(n_zone * sizeof(PDM_g_num_t *));
 
   PDM_g_num_t  **extract_face_distribution = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
   PDM_g_num_t  **extract_vtx_distribution  = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t *));
@@ -385,8 +414,12 @@ int main(int argc, char *argv[])
   double       **dextract_vtx_coord        = (double      **) malloc( n_zone * sizeof(double      *));
 
   int n_group_join = 2*(n_zone-1);
+  int *group_join_to_zone_cur = (int *) malloc( n_group_join * sizeof(int));
   int *group_join_to_zone_opp = (int *) malloc( n_group_join * sizeof(int));
   int *group_join_to_join_opp = (int *) malloc( n_group_join * sizeof(int));
+
+  int          *dface_join_idx  = (int         *) malloc((n_group_join + 1) * sizeof(int        ));
+  PDM_g_num_t  *dface_join      = NULL; // A allouer propremet
 
   int tmp_i_zone = 0;
   for (int i_join = 0; i_join < n_group_join; i_join++) {
@@ -402,6 +435,9 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_int(group_join_to_join_opp, n_group_join, "group_join_to_join_opp :: ");
   PDM_log_trace_array_int(group_join_to_zone_opp, n_group_join, "group_join_to_zone_opp :: ");
 
+  for(int i_group_join = 0; i_group_join < n_group_join+1; ++i_group_join) {
+    dface_join_idx[i_group_join] = 0;
+  }
 
   PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_zone * sizeof(PDM_dcube_t *));
   int tmp_i_group_join = 0;
@@ -445,38 +481,44 @@ int main(int argc, char *argv[])
     printf("tmp_i_group_join = %i \n", tmp_i_group_join);
 
     dface_bnd_idx [i_zone] = (int *) malloc((n_bnd        + 1) * sizeof(int));
-    dface_join_idx[i_zone] = (int *) malloc((n_group_join + 1) * sizeof(int));  // C'est global
+    // dface_join_idx = (int *) malloc((n_group_join + 1) * sizeof(int));  // C'est global
 
-    for(int i_group_join = 0; i_group_join < n_group_join+1; ++i_group_join) {
-      dface_join_idx[i_zone][i_group_join] = 0;
-    }
+    // for(int i_group_join = 0; i_group_join < n_group_join+1; ++i_group_join) {
+    //   dface_join_idx[i_group_join] = 0;
+    // }
 
     // First pass to count and allocate
     int i_bnd = 1;
     int i_jn  = tmp_i_group_join+1;
     dface_bnd_idx[i_zone][0]  = 0;
-    dface_join_idx[i_zone][0] = 0;
+    // dface_join_idx[0] = 0;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
       int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
       int group_size = dface_group_idx[i_zone][igroup+1] - dface_group_idx[i_zone][igroup];
       if (copy_to_bnd) { //Its a boundary
         dface_bnd_idx[i_zone][i_bnd++] = group_size;
       } else { //Its a join
-        dface_join_idx[i_zone][i_jn++] = group_size;
+        group_join_to_zone_cur[i_jn-1] = i_zone;
+        dface_join_idx[i_jn++] = group_size;
       }
     }
     for (int i = 0; i < n_bnd; i++) {
       dface_bnd_idx[i_zone][i+1] = dface_bnd_idx[i_zone][i+1] + dface_bnd_idx[i_zone][i];
     }
-    for (int i = 0; i < n_group_join; i++) {
-      dface_join_idx[i_zone][i+1] = dface_join_idx[i_zone][i+1] + dface_join_idx[i_zone][i];
+
+    printf("i_jn = %i \n", i_jn);
+
+    for (int i = tmp_i_group_join; i < i_jn-1; i++) {
+      dface_join_idx[i+1] = dface_join_idx[i+1] + dface_join_idx[i];
     }
 
-    PDM_log_trace_array_int(dface_join_idx[i_zone], n_group_join+1, "dface_join_idx[i_zone] :: ");
+    PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "dface_join_idx :: ");
+
+    /* A bit stupid but complicated to made it in ohter way for a clear test */
+    dface_join = realloc(dface_join, dface_join_idx[i_jn-1] * sizeof(PDM_g_num_t));
 
     // Second pass to copy
     dface_bnd [i_zone] = (PDM_g_num_t *) malloc(dface_bnd_idx [i_zone][n_bnd        ] * sizeof(PDM_g_num_t));
-    dface_join[i_zone] = (PDM_g_num_t *) malloc(dface_join_idx[i_zone][n_group_join ] * sizeof(PDM_g_num_t));
     i_bnd = 0;
     i_jn  = tmp_i_group_join;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
@@ -488,27 +530,29 @@ int main(int argc, char *argv[])
       } else { //Its a join
         int k = 0;
         for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++) {
-          dface_join[i_zone][dface_join_idx[i_zone][i_jn]+k++] = dface_group[i_zone][i];
+          dface_join[dface_join_idx[i_jn]+k++] = dface_group[i_zone][i];
         }
         i_jn++;
       }
     }
 
-    /*
-     *  Go to nexts join
-     */
-    tmp_i_group_join += n_jn;
-
 
     /*
      *  Now we have all joins create we need to extract them
      */
-
     PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face[i_zone]);
     PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx [i_zone]);
+
+
+    /*
+     *  By construction of actual join, each join of same zone are concatenate
+     */
+    int dn_l_face_join = dface_join_idx[i_jn] - dface_join_idx[tmp_i_group_join];
+    PDM_g_num_t* l_dface_join = &dface_join[dface_join_idx[tmp_i_group_join]];
+
     PDM_dconnectivity_to_extract_dconnectivity(comm,
-                                               dface_join_idx[i_zone][n_group_join],
-                                               dface_join[i_zone],
+                                               dn_l_face_join,
+                                               l_dface_join,
                                                face_distribution,
                                                dface_vtx_idx[i_zone],
                                                dface_vtx[i_zone],
@@ -536,10 +580,20 @@ int main(int argc, char *argv[])
 
     free(face_distribution);
     free(vtx_distribution);
+
+    /*
+     *  Go to nexts join
+     */
+    tmp_i_group_join += n_jn;
   }
+
+  PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "dface_join_idx (END) :: ");
+  PDM_log_trace_array_int(group_join_to_zone_cur, n_group_join, "group_join_to_zone_cur :: ");
+
 
   _deduce_descending_join(n_zone,
                           n_group_join,
+                          group_join_to_zone_cur,
                           group_join_to_zone_opp,
                           group_join_to_join_opp,
                           dface_join_idx,
@@ -560,8 +614,6 @@ int main(int argc, char *argv[])
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
     free(dface_bnd_idx [i_zone]);
     free(dface_bnd     [i_zone]);
-    free(dface_join_idx[i_zone]);
-    free(dface_join    [i_zone]);
     free(extract_face_distribution[i_zone]);
     free(extract_vtx_distribution [i_zone]);
     free(dextract_face_vtx_idx    [i_zone]);
@@ -589,6 +641,7 @@ int main(int argc, char *argv[])
   free(dface_bnd);
   free(dface_join_idx);
   free(dface_join);
+  free(group_join_to_zone_cur);
   free(group_join_to_zone_opp);
   free(group_join_to_join_opp);
 
