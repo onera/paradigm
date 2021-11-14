@@ -173,9 +173,12 @@ _deduce_descending_join
   int         **dedge_face_idx = malloc(n_zone * sizeof(int         *));
   PDM_g_num_t **dedge_face     = malloc(n_zone * sizeof(PDM_g_num_t *));
 
-  PDM_g_num_t **key_ln_to_gn  = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **data_send_key = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **data_send     = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **key_ln_to_gn    = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_key   = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  int         **data_send_key_n = (int         **) malloc( n_zone * sizeof(int        *));
+
+  double      **weight        = (double      **) malloc( n_zone * sizeof(double     *));
+  int          *dn_edge       = (int          *) malloc( n_zone * sizeof(int         ));
 
   // PDM_g_num_t key_mod = ; // Comment definir un bon key_mod ?
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
@@ -211,14 +214,13 @@ _deduce_descending_join
     /*
      *  Compute edges connectivity
      */
-    int  dn_edge = -1;
     PDM_generate_entitiy_connectivity_raw(comm,
                                           extract_vtx_distribution[i_zone][n_rank],
                                           n_edge_elt_tot,
                                           tmp_dface_edge,
                                           tmp_dface_edge_vtx_idx,
                                           tmp_dface_edge_vtx,
-                                          &dn_edge,
+                                          &dn_edge[i_zone],
                                           &dedge_distrib [i_zone],
                                           &dedge_vtx_idx [i_zone],
                                           &dedge_vtx     [i_zone],
@@ -227,8 +229,8 @@ _deduce_descending_join
     free(tmp_parent_elmt_pos    );
 
     if(1 == 1) {
-      PDM_log_trace_array_long(dedge_vtx   [i_zone], dedge_vtx_idx [i_zone][dn_edge], "dedge_vtx :: ");
-      PDM_log_trace_array_long(dedge_face  [i_zone], dedge_face_idx[i_zone][dn_edge], "dedge_face :: ");
+      PDM_log_trace_array_long(dedge_vtx   [i_zone], dedge_vtx_idx [i_zone][dn_edge[i_zone]], "dedge_vtx :: ");
+      PDM_log_trace_array_long(dedge_face  [i_zone], dedge_face_idx[i_zone][dn_edge[i_zone]], "dedge_face :: ");
       // PDM_log_trace_array_long(key_ln_to_gn[i_zone], dn_face, "key_ln_to_gn :: ");
     }
 
@@ -236,26 +238,26 @@ _deduce_descending_join
      * Echange des données pour construire la clé
      *   - exchange throw dedge_face
      */
-    PDM_g_num_t *dedge_face_abs = (PDM_g_num_t *) malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(PDM_g_num_t));
-    int         *dedge_face_sgn = (int         *) malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(int        ));
-    for(int i = 0; i < dedge_face_idx[i_zone][dn_edge]; ++i) {
+    PDM_g_num_t *dedge_face_abs = (PDM_g_num_t *) malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(PDM_g_num_t));
+    int         *dedge_face_sgn = (int         *) malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(int        ));
+    for(int i = 0; i < dedge_face_idx[i_zone][dn_edge[i_zone]]; ++i) {
       dedge_face_abs[i] = PDM_ABS (dedge_face[i_zone][i]);
       dedge_face_sgn[i] = PDM_SIGN(dedge_face[i_zone][i]);
     }
 
     PDM_block_to_part_t *btp = PDM_block_to_part_create(extract_face_distribution[i_zone],
                                  (const PDM_g_num_t **) &dedge_face_abs,
-                                                        &dedge_face_idx[i_zone][dn_edge],
+                                                        &dedge_face_idx[i_zone][dn_edge[i_zone]],
                                                         1,
                                                         comm);
 
     /*
      * Exchange
      */
-    int* dedge_face_group_id   = malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(int        ));
-    int* dedge_face_group_sens = malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(int        ));
-    int* dedge_face_join       = malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(PDM_g_num_t));
-    int* dedge_face_join_opp   = malloc(dedge_face_idx[i_zone][dn_edge] * sizeof(PDM_g_num_t));
+    int* dedge_face_group_id   = malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(int        ));
+    int* dedge_face_group_sens = malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(int        ));
+    int* dedge_face_join       = malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(PDM_g_num_t));
+    int* dedge_face_join_opp   = malloc(dedge_face_idx[i_zone][dn_edge[i_zone]] * sizeof(PDM_g_num_t));
 
     int cst_stride = 1;
     PDM_block_to_part_exch(btp,
@@ -270,7 +272,7 @@ _deduce_descending_join
                            sizeof(int),
                            PDM_STRIDE_CST,
                            &cst_stride,
-                  (void *) dedge_face_group_sens[i_zone],
+                  (void *) dextract_face_group_sens[i_zone],
                            NULL,
                (void ** ) &dedge_face_group_sens);
 
@@ -304,17 +306,21 @@ _deduce_descending_join
      *
      *   -> Le mieux est peut-être de prétraité pour ne plus avoir le pb aprés ...
      */
-    key_ln_to_gn[i_zone] = malloc(dn_edge * sizeof(PDM_g_num_t)); // Toutes les edges ont une clé car tout vient de l'extraction
+    key_ln_to_gn[i_zone] = malloc(dn_edge[i_zone] * sizeof(PDM_g_num_t)); // Toutes les edges ont une clé car tout vient de l'extraction
+    weight      [i_zone] = malloc(dn_edge[i_zone] * sizeof(double     )); // Toutes les edges ont une clé car tout vient de l'extraction
 
-    data_send_key[i_zone] = malloc( (dn_edge + 5 * dedge_face_idx[i_zone][dn_edge]) * sizeof(PDM_g_num_t)); // n + connectivity (cur + opp)
-    data_send    [i_zone] = malloc( (2 * dn_edge                                  ) * sizeof(PDM_g_num_t)); // i_group + sens
+    data_send_key  [i_zone] = malloc( (dn_edge[i_zone] + 5 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t)); // n + connectivity (cur + opp)
+    data_send_key_n[i_zone] = malloc( (dn_edge[i_zone]                                              ) * sizeof(int        ));
+    // data_send    [i_zone] = malloc( (2 * dn_edge[i_zone]                                  ) * sizeof(PDM_g_num_t)); // i_group + sens
 
     /*
      *  Let's build key
      */
     int idx_write     = 0;
     int idx_write_key = 0;
-    for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
+    for(int i_edge = 0; i_edge < dn_edge[i_zone]; ++i_edge) {
+
+      int n_data = idx_write_key;
 
       PDM_g_num_t key = 0;
       data_send_key[i_zone][idx_write_key++] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
@@ -339,12 +345,9 @@ _deduce_descending_join
       // key_ln_to_gn[i_zone][i_edge] = key % key_mod + 1; // TODO
       key_ln_to_gn[i_zone][i_edge] = key;
 
-      /*
-       * Prepare data to unified candidates :
-       *    To unified condition is : (i_group, i_group_opp) is the same AND (all pl_cur and pl_opp are the same)
-       */
+      weight[i_zone][i_edge] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
 
-
+      data_send_key_n[i_zone][i_edge] = idx_write_key - n_data;
 
     }
 
@@ -354,11 +357,44 @@ _deduce_descending_join
     free(dedge_face_group_sens);
 
     if(1 == 1) {
-      PDM_log_trace_array_long(key_ln_to_gn[i_zone], dn_edge, "key_ln_to_gn :: ");
+      PDM_log_trace_array_long(key_ln_to_gn[i_zone], dn_edge[i_zone], "key_ln_to_gn :: ");
     }
-
-
   }
+
+
+  /*
+   * Distributed hash table
+   */
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                                    1.,
+                                                    key_ln_to_gn,
+                                                    weight,
+                                                    dn_edge,
+                                                    n_zone,
+                                                    comm);
+
+
+  int*         blk_data_send_key_n = NULL;
+  PDM_g_num_t* blk_data_send_key   = NULL;
+
+  int blk_tot_entity_vtx_size = PDM_part_to_block_exch(ptb,
+                                                       sizeof(PDM_g_num_t),
+                                                       PDM_STRIDE_VAR,
+                                                       -1,
+                                                       data_send_key_n,
+                                             (void **) data_send_key,
+                                                       &blk_data_send_key_n,
+                                             (void **) &blk_data_send_key);
+
+
+  free(blk_data_send_key_n);
+  free(blk_data_send_key);
+
+
+
+  PDM_part_to_block_free(ptb);
+
 
   /*
    * Pour les coins coins il faut probablement un echange en plus entre les graph 2 à 2 puis unifier
@@ -368,14 +404,15 @@ _deduce_descending_join
    * --> Ca gère le coin
    */
   for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
-    free(dedge_distrib [i_zone]);
-    free(dedge_vtx_idx [i_zone]);
-    free(dedge_vtx     [i_zone]);
-    free(dedge_face_idx[i_zone]);
-    free(dedge_face    [i_zone]);
-    free(key_ln_to_gn  [i_zone]);
-    free(data_send_key [i_zone]);
-    free(data_send     [i_zone]);
+    free(dedge_distrib  [i_zone]);
+    free(dedge_vtx_idx  [i_zone]);
+    free(dedge_vtx      [i_zone]);
+    free(dedge_face_idx [i_zone]);
+    free(dedge_face     [i_zone]);
+    free(key_ln_to_gn   [i_zone]);
+    free(data_send_key  [i_zone]);
+    free(data_send_key_n[i_zone]);
+    free(weight         [i_zone]);
   }
 
   free(dedge_distrib);
@@ -385,7 +422,9 @@ _deduce_descending_join
   free(dedge_face);
   free(key_ln_to_gn);
   free(data_send_key);
-  free(data_send);
+  free(data_send_key_n);
+  free(weight);
+  free(dn_edge);
 }
 
 /**
@@ -691,6 +730,28 @@ int main(int argc, char *argv[])
                                                &dparent_vtx_g_num[i_zone],
                                                &pextract_old_to_new[i_zone]);
 
+    /*
+     * Equilibrate the pextract_old_to_new
+     */
+    PDM_g_num_t* dface_group_init_distrib = PDM_compute_entity_distribution(comm, dn_l_face_join);
+    int dn_extract_face = extract_face_distribution[i_zone][i_rank+1] - extract_face_distribution[i_zone][i_rank];
+    PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+    for(int i = 0; i < dn_extract_face; ++i) {
+      extract_face_ln_to_gn[i] = extract_face_distribution[i_zone][i_rank] + i + 1;
+    }
+
+    PDM_g_num_t** tmp_dextract_old_to_new = NULL;
+    PDM_part_dfield_to_pfield(comm,
+                              1,
+                              sizeof(PDM_g_num_t),
+                              dface_group_init_distrib,
+      (unsigned char    *)    pextract_old_to_new[i_zone],
+                              &dn_extract_face,
+      (const PDM_g_num_t **)  &extract_face_ln_to_gn,
+      (unsigned char ***)     &tmp_dextract_old_to_new);
+    PDM_g_num_t *dextract_old_to_new = tmp_dextract_old_to_new[0];
+    free(tmp_dextract_old_to_new);
+
     int dn_extract_vtx  = extract_vtx_distribution[i_zone][i_rank+1] - extract_vtx_distribution[i_zone][i_rank];
 
     double** tmp_dextract_vtx_coord = NULL;
@@ -707,21 +768,19 @@ int main(int argc, char *argv[])
      *     - Echange du numero de face/face_opposé (Attention on est obligé de le faire car PDM_dconnectivity_to_extract_dconnectivity reordonne tout)
      *     - Exchange i_group also
      */
-    PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_l_face_join * sizeof(PDM_g_num_t));
-
-    for(int i = 0; i < dn_l_face_join; ++i) {
-      extract_face_ln_to_gn[i] = extract_face_distribution[i_zone][i_rank] + i + 1;
-    }
-
     int* dface_group_tag  = malloc(dn_l_face_join * sizeof(int));
     int* dface_group_sens = malloc(dn_l_face_join * sizeof(int)); // 1 = Exterior / -1 = Interior
-    PDM_g_num_t* dface_group_init_distrib = PDM_compute_entity_distribution(comm, dn_l_face_join);
     int k = 0;
     for(int i_group = tmp_i_group_join; i_group < tmp_i_group_join+n_jn; ++i_group) {
       for(int i_face = dface_join_idx[i_group]; i_face < dface_join_idx[i_group+1]; ++i_face) {
         dface_group_tag [k  ] = i_group;
         dface_group_sens[k++] = 1;
       }
+    }
+
+    if(0 == 1) {
+      log_trace("dn_extract_face = %i \n", dn_extract_face);
+      log_trace("dn_l_face_join  = %i \n", dn_l_face_join);
     }
 
     /*
@@ -733,8 +792,8 @@ int main(int argc, char *argv[])
                               sizeof(int),
                               dface_group_init_distrib,
       (unsigned char    *)    dface_group_tag,
-                              &dn_l_face_join,
-      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+                              &dn_extract_face,
+      (const PDM_g_num_t **)  &dextract_old_to_new,
       (unsigned char ***)     &tmp_dextract_face_group_id);
     dextract_face_group_id[i_zone] = tmp_dextract_face_group_id[0];
     free(tmp_dextract_face_group_id);
@@ -748,8 +807,8 @@ int main(int argc, char *argv[])
                               sizeof(int),
                               dface_group_init_distrib,
       (unsigned char    *)    dface_group_tag,
-                              &dn_l_face_join,
-      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+                              &dn_extract_face,
+      (const PDM_g_num_t **)  &dextract_old_to_new,
       (unsigned char ***)     &tmp_dextract_face_group_sens);
     dextract_face_group_sens[i_zone] = tmp_dextract_face_group_sens[0];
     free(tmp_dextract_face_group_sens);
@@ -764,8 +823,8 @@ int main(int argc, char *argv[])
                               sizeof(PDM_g_num_t),
                               dface_group_init_distrib,
       (unsigned char    *)    sub_dface_join,
-                              &dn_l_face_join,
-      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+                              &dn_extract_face,
+      (const PDM_g_num_t **)  &dextract_old_to_new,
       (unsigned char ***)     &tmp_dextract_face_join);
     dextract_face_join[i_zone] = tmp_dextract_face_join[0];
     free(tmp_dextract_face_join);
@@ -780,8 +839,8 @@ int main(int argc, char *argv[])
                               sizeof(PDM_g_num_t),
                               dface_group_init_distrib,
       (unsigned char    *)    sub_dface_join_opp,
-                              &dn_l_face_join,
-      (const PDM_g_num_t **)  &pextract_old_to_new[i_zone],
+                              &dn_extract_face,
+      (const PDM_g_num_t **)  &dextract_old_to_new,
       (unsigned char ***)     &tmp_dextract_face_join_opp);
     dextract_face_join_opp[i_zone] = tmp_dextract_face_join_opp[0];
     free(tmp_dextract_face_join_opp);
@@ -796,15 +855,17 @@ int main(int argc, char *argv[])
     free(vtx_distribution);
     free(dface_group_init_distrib);
     free(dface_group_tag);
+    free(dface_group_sens);
+    free(dextract_old_to_new); // Maybe to keep ??
 
     /*
      * To keep
      */
     if(1 == 1) {
-      PDM_log_trace_array_long(dextract_face_group_id  [i_zone], dn_l_face_join, "dextract_face_group_id :: ");
-      PDM_log_trace_array_long(dextract_face_group_sens[i_zone], dn_l_face_join, "dextract_face_group_id :: ");
-      PDM_log_trace_array_long(dextract_face_join      [i_zone], dn_l_face_join, "dextract_face_join     :: ");
-      PDM_log_trace_array_long(dextract_face_join_opp  [i_zone], dn_l_face_join, "dextract_face_join_opp :: ");
+      PDM_log_trace_array_long(dextract_face_group_id  [i_zone], dn_extract_face, "dextract_face_group_id :: ");
+      PDM_log_trace_array_long(dextract_face_group_sens[i_zone], dn_extract_face, "dextract_face_group_id :: ");
+      PDM_log_trace_array_long(dextract_face_join      [i_zone], dn_extract_face, "dextract_face_join     :: ");
+      PDM_log_trace_array_long(dextract_face_join_opp  [i_zone], dn_extract_face, "dextract_face_join_opp :: ");
     }
 
     /*
