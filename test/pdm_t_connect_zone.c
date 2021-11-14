@@ -21,6 +21,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
+#include "pdm_sort.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
@@ -174,8 +175,14 @@ _deduce_descending_join
   PDM_g_num_t **dedge_face     = malloc(n_zone * sizeof(PDM_g_num_t *));
 
   PDM_g_num_t **key_ln_to_gn    = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **data_send_key   = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
-  int         **data_send_key_n = (int         **) malloc( n_zone * sizeof(int        *));
+
+  /* Connectivity */
+  int         **data_send_connect_n = (int         **) malloc( n_zone * sizeof(int        *));
+  PDM_g_num_t **data_send_connect   = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_group     = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **data_send_sens      = (PDM_g_num_t **) malloc( n_zone * sizeof(PDM_g_num_t*));
+
+  int         **stride_one      = (int         **) malloc( n_zone * sizeof(int        *));
 
   double      **weight        = (double      **) malloc( n_zone * sizeof(double     *));
   int          *dn_edge       = (int          *) malloc( n_zone * sizeof(int         ));
@@ -309,45 +316,47 @@ _deduce_descending_join
     key_ln_to_gn[i_zone] = malloc(dn_edge[i_zone] * sizeof(PDM_g_num_t)); // Toutes les edges ont une clé car tout vient de l'extraction
     weight      [i_zone] = malloc(dn_edge[i_zone] * sizeof(double     )); // Toutes les edges ont une clé car tout vient de l'extraction
 
-    data_send_key  [i_zone] = malloc( (dn_edge[i_zone] + 5 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t)); // n + connectivity (cur + opp)
-    data_send_key_n[i_zone] = malloc( (dn_edge[i_zone]                                              ) * sizeof(int        ));
-    // data_send    [i_zone] = malloc( (2 * dn_edge[i_zone]                                  ) * sizeof(PDM_g_num_t)); // i_group + sens
+    stride_one         [i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
+    data_send_connect_n[i_zone] = malloc( (    dn_edge[i_zone]                        ) * sizeof(int        ));
+    data_send_connect  [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    data_send_group    [i_zone] = malloc( (2 * dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
+    data_send_sens     [i_zone] = malloc( (    dedge_face_idx[i_zone][dn_edge[i_zone]]) * sizeof(PDM_g_num_t));
 
     /*
      *  Let's build key
      */
-    int idx_write     = 0;
-    int idx_write_key = 0;
+    // int idx_write     = 0;
+    int idx_write_connect = 0;
+    int idx_write_group   = 0;
+    int idx_write_sens    = 0;
     for(int i_edge = 0; i_edge < dn_edge[i_zone]; ++i_edge) {
 
-      int n_data = idx_write_key;
+      stride_one         [i_zone][i_edge] = 1;
+      data_send_connect_n[i_zone][i_edge] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
 
       PDM_g_num_t key = 0;
-      data_send_key[i_zone][idx_write_key++] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
       for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
         key += (dedge_face_join[j] + dedge_face_join_opp[j]);
-        data_send_key[i_zone][idx_write_key++] = dedge_face_join    [j];
-        data_send_key[i_zone][idx_write_key++] = dedge_face_join_opp[j];
+        data_send_connect[i_zone][idx_write_connect++] = dedge_face_join    [j];
+        data_send_connect[i_zone][idx_write_connect++] = dedge_face_join_opp[j];
       }
 
       /* Send group id */
       for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
-        data_send_key[i_zone][idx_write_key++] = dedge_face_group_id[j];
+        data_send_group[i_zone][idx_write_group++] = dedge_face_group_id[j];
         int group_join_opp = group_join_to_join_opp[dedge_face_group_id[j]];
-        data_send_key[i_zone][idx_write_key++] = group_join_opp;
+        data_send_group[i_zone][idx_write_group++] = group_join_opp;
       }
 
       /* Send group sens - Caution / 2 */
       for(int j = dedge_face_idx[i_zone][i_edge]; j < dedge_face_idx[i_zone][i_edge+1]; ++j) {
-        data_send_key[i_zone][idx_write_key++] = dedge_face_group_sens[j];
+        data_send_sens[i_zone][idx_write_sens++] = dedge_face_group_sens[j];
       }
 
       // key_ln_to_gn[i_zone][i_edge] = key % key_mod + 1; // TODO
       key_ln_to_gn[i_zone][i_edge] = key;
 
       weight[i_zone][i_edge] = 2 * (dedge_face_idx[i_zone][i_edge+1] - dedge_face_idx[i_zone][i_edge]);
-
-      data_send_key_n[i_zone][i_edge] = idx_write_key - n_data;
 
     }
 
@@ -366,31 +375,166 @@ _deduce_descending_join
    * Distributed hash table
    */
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                    PDM_PART_TO_BLOCK_POST_MERGE,
-                                                    1.,
-                                                    key_ln_to_gn,
-                                                    weight,
-                                                    dn_edge,
-                                                    n_zone,
-                                                    comm);
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      key_ln_to_gn,
+                                                      weight,
+                                                      dn_edge,
+                                                      n_zone,
+                                                      comm);
 
 
-  int*         blk_data_send_key_n = NULL;
-  PDM_g_num_t* blk_data_send_key   = NULL;
+  int*         blk_n_entity_per_key = NULL;
+  PDM_g_num_t* blk_entity_n         = NULL;
+  int blk_entity_n_size = PDM_part_to_block_exch(ptb,
+                                                 sizeof(int),
+                                                 PDM_STRIDE_VAR,
+                                                 -1,
+                                                 stride_one,
+                                       (void **) data_send_connect_n,
+                                                 &blk_n_entity_per_key,
+                                       (void **) &blk_entity_n);
 
-  int blk_tot_entity_vtx_size = PDM_part_to_block_exch(ptb,
-                                                       sizeof(PDM_g_num_t),
-                                                       PDM_STRIDE_VAR,
-                                                       -1,
-                                                       data_send_key_n,
-                                             (void **) data_send_key,
-                                                       &blk_data_send_key_n,
-                                             (void **) &blk_data_send_key);
+  int*         blk_data_connect_n = NULL;
+  PDM_g_num_t* blk_data_connect   = NULL;
+  int blk_data_connect_size = PDM_part_to_block_exch(ptb,
+                                                     sizeof(PDM_g_num_t),
+                                                     PDM_STRIDE_VAR,
+                                                     -1,
+                                                     data_send_connect_n,
+                                           (void **) data_send_connect,
+                                                     &blk_data_connect_n,
+                                           (void **) &blk_data_connect);
+
+  int*         blk_data_group_n = NULL;
+  PDM_g_num_t* blk_data_group   = NULL;
+  int blk_data_group_size = PDM_part_to_block_exch(ptb,
+                                                   sizeof(int),
+                                                   PDM_STRIDE_VAR,
+                                                   -1,
+                                                   data_send_connect_n,
+                                         (void **) data_send_group,
+                                                   &blk_data_group_n,
+                                         (void **) &blk_data_group);
+
+  int*         blk_data_sens_n = NULL;
+  PDM_g_num_t* blk_data_sens   = NULL;
+  int blk_data_sens_size = PDM_part_to_block_exch(ptb,
+                                                  sizeof(int)/2,
+                                                  PDM_STRIDE_VAR,
+                                                  -1,
+                                                  data_send_connect_n,
+                                        (void **) data_send_sens,
+                                                  &blk_data_sens_n,
+                                        (void **) &blk_data_sens);
+
+  /*
+   * Free
+   */
+  for(int i_zone = 0; i_zone < n_zone; ++i_zone) {
+    free(key_ln_to_gn       [i_zone]);
+    free(data_send_connect_n[i_zone]);
+    free(data_send_connect  [i_zone]);
+    free(data_send_group    [i_zone]);
+    free(data_send_sens     [i_zone]);
+    free(stride_one         [i_zone]);
+    free(weight             [i_zone]);
+  }
+  free(key_ln_to_gn       );
+  free(data_send_connect_n);
+  free(data_send_connect  );
+  free(data_send_group    );
+  free(data_send_sens     );
+  free(stride_one         );
+  free(weight             );
 
 
-  free(blk_data_send_key_n);
-  free(blk_data_send_key);
+  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
+  if(1 == 1) {
+    PDM_log_trace_array_int (blk_n_entity_per_key, blk_size             , "blk_n_entity_per_key:: ");
+    PDM_log_trace_array_long(blk_entity_n        , blk_entity_n_size    , "blk_entity_n        :: ");
 
+    PDM_log_trace_array_int (blk_data_connect_n  , blk_size             , "blk_data_connect_n  :: ");
+    PDM_log_trace_array_long(blk_data_connect    , blk_data_connect_size, "blk_data_connect    :: ");
+
+    PDM_log_trace_array_long(blk_data_group_n    , blk_size             , "blk_data_group_n    :: ");
+    PDM_log_trace_array_long(blk_data_group      , blk_data_group_size  , "blk_data_group      :: ");
+
+    PDM_log_trace_array_long(blk_data_sens_n     , blk_size             , "blk_data_sens_n     :: ");
+    PDM_log_trace_array_long(blk_data_sens       , blk_data_sens_size/2 , "blk_data_sens       :: ");
+  }
+
+  /*
+   * Post-treatment
+   */
+  int n_max_entity_per_key = 0;
+  int n_max_connec         = 0;
+  for(int i = 0; i < blk_size; ++i) {
+    n_max_entity_per_key = PDM_MAX(blk_n_entity_per_key[i], n_max_entity_per_key);
+    n_max_connec         = PDM_MAX(blk_data_connect_n  [i], n_max_connec);
+  }
+
+  int* blk_entity_idx = malloc((blk_entity_n_size + 1) * sizeof(int));
+  blk_entity_idx[0] = 0;
+  for(int i = 0; i < blk_entity_n_size; ++i) {
+    blk_entity_idx[i+1] = blk_entity_idx[i] + blk_entity_n[i];
+  }
+
+  printf("n_max_entity_per_key = %i \n", n_max_entity_per_key);
+  printf("n_max_connec         = %i \n", n_max_connec);
+
+  // PDM_g_num_t** loc_connec       = (PDM_g_num_t *) malloc(  n_max_entity_per_key * sizeof(PDM_g_num_t *) );
+  int*          already_treat    = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
+  int*          same_entity_idx  = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
+  int*          sens_entity      = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
+
+  int idx = 0;
+  for(int i_key = 0; i_key < blk_size; ++i_key) {
+
+    int n_conflict_entitys = blk_n_entity_per_key[i_key];
+
+    log_trace(" i_key = %i | n_conflict_entitys = %i \n", i_key, n_conflict_entitys);
+
+    /* Reset */
+    for(int j = 0; j < n_conflict_entitys; ++j) {
+      already_treat[j] = -1;
+    }
+
+    /* Loop over all entitys in conflict and sort all */
+    for(int i_entity = 0; i_entity < n_conflict_entitys; ++i_entity) {
+
+      int beg    = blk_entity_idx[idx+i_entity  ];
+      int end    = blk_entity_idx[idx+i_entity+1];
+      int l_size = end - beg;
+
+      // Caution implace sort !!!!
+      PDM_sort_long(&blk_data_connect[beg], NULL, l_size);
+
+      PDM_log_trace_array_long(&blk_data_connect[beg], l_size, "blk_data_connect (sort) :: ");
+
+    }
+
+    idx += n_conflict_entitys;
+
+  }
+
+  // free(loc_entity_1    );
+  // free(loc_entity_2    );
+  free(already_treat   );
+  free(same_entity_idx );
+  free(sens_entity     );
+
+  free(blk_n_entity_per_key);
+  free(blk_entity_n        );
+
+  free(blk_data_connect_n);
+  free(blk_data_connect  );
+  free(blk_entity_idx);
+
+  free(blk_data_group_n);
+  free(blk_data_group  );
+  free(blk_data_sens_n);
+  free(blk_data_sens);
 
 
   PDM_part_to_block_free(ptb);
@@ -409,10 +553,6 @@ _deduce_descending_join
     free(dedge_vtx      [i_zone]);
     free(dedge_face_idx [i_zone]);
     free(dedge_face     [i_zone]);
-    free(key_ln_to_gn   [i_zone]);
-    free(data_send_key  [i_zone]);
-    free(data_send_key_n[i_zone]);
-    free(weight         [i_zone]);
   }
 
   free(dedge_distrib);
@@ -420,10 +560,6 @@ _deduce_descending_join
   free(dedge_vtx);
   free(dedge_face_idx);
   free(dedge_face);
-  free(key_ln_to_gn);
-  free(data_send_key);
-  free(data_send_key_n);
-  free(weight);
   free(dn_edge);
 }
 
@@ -508,7 +644,7 @@ int main(int argc, char *argv[])
 {
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
-  int                n_zone    = 3;
+  int                n_zone    = 2;
 
 
   _read_args(argc,
@@ -806,7 +942,7 @@ int main(int argc, char *argv[])
                               1,
                               sizeof(int),
                               dface_group_init_distrib,
-      (unsigned char    *)    dface_group_tag,
+      (unsigned char    *)    dface_group_sens,
                               &dn_extract_face,
       (const PDM_g_num_t **)  &dextract_old_to_new,
       (unsigned char ***)     &tmp_dextract_face_group_sens);
