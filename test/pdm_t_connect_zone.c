@@ -572,9 +572,11 @@ _deduce_descending_join
     blk_data_face_idx[i+1] = blk_data_face_idx[i] + blk_data_face_n[i];
   }
 
-  PDM_log_trace_array_int(zone_id_n, n_zone, "zone_id_n :: ");
-  PDM_log_trace_array_int(blk_entity_idx, blk_entity_n_size+1, "blk_entity_idx :: ");
-  PDM_log_trace_array_int(blk_data_face_idx, blk_data_face_n_size+1, "blk_data_face_idx :: ");
+  if(1 == 1) {
+    PDM_log_trace_array_int(zone_id_n        , n_zone                , "zone_id_n         :: ");
+    PDM_log_trace_array_int(blk_entity_idx   , blk_entity_n_size+1   , "blk_entity_idx    :: ");
+    PDM_log_trace_array_int(blk_data_face_idx, blk_data_face_n_size+1, "blk_data_face_idx :: ");
+  }
 
   printf("n_max_entity_per_key = %i \n", n_max_entity_per_key);
   printf("n_max_connec         = %i \n", n_max_connec);
@@ -700,10 +702,11 @@ _deduce_descending_join
        * Renvoie des resultats :
        *    - Par edge --> Il faut donc également le numero de zones
        */
-      int beg_face_1 = blk_data_face_idx[idx2+i_entity  ];
-      int end_face_1 = blk_data_face_idx[idx2+i_entity+1];
+      int beg_face_1 = blk_data_face_idx[idx+i_entity  ];
+      int end_face_1 = blk_data_face_idx[idx+i_entity+1];
       int n_face_1   = end_face_1 - beg_face_1;
 
+      log_trace("beg_face_1 = %i | end_face_1 = %i | n_face_1 = %i \n", beg_face_1, end_face_1, n_face_1);
       for(int k = 0; k < n_face_1; ++k) {
         PDM_g_num_t face_cur   = blk_data_face_g_num[beg_face_1+k];
         PDM_g_num_t edge_cur   = blk_edge_g_num     [idx+i_entity];
@@ -717,9 +720,10 @@ _deduce_descending_join
         for(int i_same = 0; i_same < n_same; ++i_same) {
 
           int i_entity2  = same_entity_idx[i_same];
-          int beg_face_2 = blk_data_face_idx[idx2+i_entity2  ];
-          int end_face_2 = blk_data_face_idx[idx2+i_entity2+1];
+          int beg_face_2 = blk_data_face_idx[idx+i_entity2  ];
+          int end_face_2 = blk_data_face_idx[idx+i_entity2+1];
           int n_face_2   = end_face_2 - beg_face_2;
+          log_trace("beg_face_2 = %i | end_face_2 = %i | n_face_2 = %i \n", beg_face_2, end_face_2, n_face_2);
 
           for(int l = 0; l < n_face_2; ++l) {
             PDM_g_num_t face_opp   = blk_data_face_g_num[beg_face_2+l];
@@ -750,6 +754,7 @@ _deduce_descending_join
     idx2 += n_conflict_entitys;
     // idx2 += (blk_data_face_idx[idx2+n_conflict_entitys] - blk_data_face_idx[idx2]);
     // idx2 = blk_data_face_idx[idx2+n_conflict_entitys];
+    // break;
 
   }
 
