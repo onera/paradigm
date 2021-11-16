@@ -118,7 +118,7 @@ cdef class DistCloudSurf:
         return self._n_part_surf
 
     def set_n_part_surf(self, value):
-        if value >= 1:
+        if value >= 0:
             self._n_part_surf = <int> value
         else:
             raise ValueError("n_part_surf must be >= 1, but {} given here.".format(value))
