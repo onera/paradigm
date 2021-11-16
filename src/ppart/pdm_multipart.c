@@ -37,6 +37,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_distrib.h"
+#include "pdm_timer.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_part_renum.h"
@@ -2477,6 +2478,8 @@ PDM_multipart_run_ppart
     // 1. Generate global numerotation using all blocks
     // 2. Call the partitionner once on the global numbering
   } else {
+    PDM_timer_t *timer = PDM_timer_create();
+    double cum_elapsed_time = 0;
     int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(_multipart->n_part, _multipart->n_zone);
 
     int is_by_elt = 0;
@@ -2512,9 +2515,18 @@ PDM_multipart_run_ppart
 
         int n_part = _multipart->n_part[i_zone];
 
+
+        if (i_rank == 0)
+          PDM_printf("Running partitioning for block %i...\n", i_zone+1);
+        PDM_timer_resume(timer);
         _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        PDM_timer_hang_on(timer);
+        if (i_rank == 0)
+          PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
+        cum_elapsed_time = PDM_timer_elapsed(timer);
       }
     }
+    PDM_timer_free(timer);
 
     free(starting_part_idx);
     // Now rebuild joins over the zones
