@@ -53,17 +53,14 @@ typedef struct _pdm_multi_block_merge_t      PDM_multi_block_merge_t;
 PDM_multi_block_merge_t*
 PDM_multi_block_merge_create
 (
- PDM_g_num_t  *distrib_block_init,
- PDM_g_num_t  *distri_block_add,
- int           n_update,
- int           n_remove,
- int           n_add,
- PDM_g_num_t  *ln_to_gn_update,
- PDM_g_num_t  *ln_to_gn_remove,
- PDM_g_num_t  *ln_to_gn_add_in,
- PDM_MPI_Comm  comm
+ const PDM_g_num_t   *multi_distrib_idx,
+ const int            n_block,
+ const PDM_g_num_t  **block_distrib_idx,
+       int            n_part,
+       int           *n_to_merge,
+       PDM_g_num_t  **ln_to_gn_to_merge,
+       PDM_MPI_Comm   comm
 );
-
 
 
 void
