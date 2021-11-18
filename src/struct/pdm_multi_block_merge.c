@@ -62,15 +62,24 @@ extern "C" {
 PDM_multi_block_merge_t*
 PDM_multi_block_merge_create
 (
- const PDM_g_num_t   *multi_distrib_idx,
- const int            n_block,
  const PDM_g_num_t  **block_distrib_idx,
-       int            n_part,
-       int           *n_to_merge,
-       PDM_g_num_t  **ln_to_gn_to_merge,
+ const int            n_block,
+       int           *n_selected,
+       PDM_g_num_t  **selected_g_num,
+       int          **dmerge_idx,
+       PDM_g_num_t  **dmerge_block_id,
+       PDM_g_num_t  **dmerge_g_num,
        PDM_MPI_Comm   comm
 )
 {
+
+  /*
+   *  Le merge courant est doublement implicite :
+   *     --> Pour chaque bloc on connait un voisins potentiel, can be NULL prt ?
+   */
+
+
+
   PDM_multi_block_merge_t *mbm =
     (PDM_multi_block_merge_t *) malloc (sizeof(PDM_multi_block_merge_t));
 
@@ -81,16 +90,19 @@ PDM_multi_block_merge_create
 
   // Ecrire l'algo dans distrib qui fait le multi_block from block
 
+  // A/ Shift des blocs (selected_g_num)
+  //    Shift des neighbor
+
   /*
    * Use ptb to equilibrate AND to reforms a block and keep link with the concatenate global numbering
    */
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
-                                                      ln_to_gn_to_merge,
+                                                      selected_g_num,
                                                       NULL,
-                                                      n_to_merge,
-                                                      n_part,
+                                                      n_selected,
+                                                      n_block,
                                                       comm);
 
   int dn_merge  = PDM_part_to_block_n_elt_block_get(ptb);
@@ -162,16 +174,16 @@ PDM_multi_block_merge_create
                                              mbm->comm);
   PDM_part_to_block_free(ptb);
 
-  PDM_UNUSED(multi_distrib_idx);
+  // PDM_UNUSED(multi_distrib_idx);
   PDM_UNUSED(n_block);
   PDM_UNUSED(block_distrib_idx);
-  PDM_UNUSED(n_part);
-  PDM_UNUSED(ln_to_gn_to_merge);
+  // PDM_UNUSED(n_part);
+  PDM_UNUSED(selected_g_num);
 
   return mbm;
 }
 
-
+// PDM_multi_block_merge_renum_from
 
 
 #ifdef __cplusplus
