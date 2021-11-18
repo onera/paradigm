@@ -459,7 +459,6 @@ _part_free
  PDM_ownership_t  owner
 )
 {
-  printf("OOOOO \n");
   if(owner == PDM_OWNERSHIP_KEEP){
     if (part->vtx != NULL)
       free(part->vtx);
