@@ -239,6 +239,14 @@ int main(int argc, char *argv[])
   free(dedge_to_group);
   free(dedge_to_group_idx);
 
+
+  /*
+   *  Pour le 3D, il faut calculer les edge + les faces (suffit de branché dans dmesh_nodal to dmesh)
+   *   --> Appel du partitionnement et rebuild de toutes les connectivités disponibles
+   *   --> Transort de tout les elements à la fin
+   */
+
+
   /*
    * Partitionnement
    */

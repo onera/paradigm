@@ -637,39 +637,39 @@ _part_free
 }
 
 
-static inline
-int
-_vtx_is_in_connectivity
-(
-  PDM_g_num_t  vtx,
-  PDM_g_num_t *first_vtx,
-  int          n_vtx
-)
-{
-  for (int i=0; i<n_vtx; ++i) {
-    if (first_vtx[i]==vtx) return 1;
-  }
-  return 0;
-}
+// static inline
+// int
+// _vtx_is_in_connectivity
+// (
+//   PDM_g_num_t  vtx,
+//   PDM_g_num_t *first_vtx,
+//   int          n_vtx
+// )
+// {
+//   for (int i=0; i<n_vtx; ++i) {
+//     if (first_vtx[i]==vtx) return 1;
+//   }
+//   return 0;
+// }
 
-static
-int
-_is_parent
-(
-  PDM_g_num_t *first_vtx,
-  int          n_vtx,
-  PDM_g_num_t *first_face_vtx,
-  int          n_face_vtx
-)
-{
-  // WARNING: quadratic but n_face_vtx should be 3 or 4
-  for (int i=0; i<n_face_vtx; ++i) {
-    if (!(_vtx_is_in_connectivity(first_face_vtx[i],first_vtx,n_vtx))) {
-      return 0;
-    }
-  }
-  return 1;
-}
+// static
+// int
+// _is_parent
+// (
+//   PDM_g_num_t *first_vtx,
+//   int          n_vtx,
+//   PDM_g_num_t *first_face_vtx,
+//   int          n_face_vtx
+// )
+// {
+//   // WARNING: quadratic but n_face_vtx should be 3 or 4
+//   for (int i=0; i<n_face_vtx; ++i) {
+//     if (!(_vtx_is_in_connectivity(first_face_vtx[i],first_vtx,n_vtx))) {
+//       return 0;
+//     }
+//   }
+//   return 1;
+// }
 
 static void
 _setup_ghost_information
@@ -1156,6 +1156,7 @@ const double*      part_fraction,
 PDM_MPI_Comm       comm
 )
 {
+  PDM_UNUSED(dmesh_nodal);
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -1340,9 +1341,9 @@ PDM_MPI_Comm       comm
   // _part_t struture stores n_part * 1d arrays so we have to use tmp pointers
   // int          *pn_vtx                        = NULL;
   int          *pn_cell                       = NULL;
-  int          *pn_face                       = NULL;
+  // int          *pn_face                       = NULL;
   PDM_g_num_t **pcell_ln_to_gn                = NULL;
-  PDM_g_num_t **pface_ln_to_gn                = NULL;
+  // PDM_g_num_t **pface_ln_to_gn                = NULL;
 
   PDM_part_assemble_partitions(comm,
                                part_distri,
@@ -1766,88 +1767,88 @@ PDM_MPI_Comm      comm
  * \param [in]  elt_part partition number for each element
  * \param [out] elt2d_part partition number for face of the section
  */
-static
-void
-face_part_from_parent
-(
-  int           n_elt,
-  int           dn_elt,
-  int           section_idx,
-  PDM_g_num_t  *elt_dist,
-  int          *elt_part,
-  int          *delt_vtx_idx,
-  PDM_g_num_t  *delt_vtx,
-  PDM_g_num_t  *elt_elt_idx,
-  PDM_g_num_t  *elt_elt,
-  int          *elt2d_part,
-  PDM_MPI_Comm  comm
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
+// static
+// void
+// face_part_from_parent
+// (
+//   int           n_elt,
+//   int           dn_elt,
+//   int           section_idx,
+//   PDM_g_num_t  *elt_dist,
+//   int          *elt_part,
+//   int          *delt_vtx_idx,
+//   PDM_g_num_t  *delt_vtx,
+//   PDM_g_num_t  *elt_elt_idx,
+//   PDM_g_num_t  *elt_elt,
+//   int          *elt2d_part,
+//   PDM_MPI_Comm  comm
+// )
+// {
+//   int i_rank;
+//   int n_rank;
+//   PDM_MPI_Comm_rank(comm, &i_rank);
+//   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t* face_neighbors_idx = (PDM_g_num_t*) malloc ((n_elt+1) * sizeof(PDM_g_num_t));
-  int pos = 0;
-  for (int i=0; i<n_elt; ++i) {
-    int elt_idx = section_idx + i;
-    int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
-    face_neighbors_idx[i] = pos;
-    pos += n_neighbor;
-  }
-  face_neighbors_idx[n_elt] = pos;
+//   PDM_g_num_t* face_neighbors_idx = (PDM_g_num_t*) malloc ((n_elt+1) * sizeof(PDM_g_num_t));
+//   int pos = 0;
+//   for (int i=0; i<n_elt; ++i) {
+//     int elt_idx = section_idx + i;
+//     int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
+//     face_neighbors_idx[i] = pos;
+//     pos += n_neighbor;
+//   }
+//   face_neighbors_idx[n_elt] = pos;
 
-  int n_face_neighbor = face_neighbors_idx[n_elt];
-  PDM_g_num_t* face_neighbors = (PDM_g_num_t*) malloc (n_face_neighbor * sizeof(PDM_g_num_t));
-  for (int i=0; i<n_elt; ++i) {
-    int elt_idx = section_idx + i;
-    int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
-    for (int j=0; j<n_neighbor; ++j) {
-      face_neighbors[face_neighbors_idx[i]+j] = elt_elt[elt_elt_idx[elt_idx]+j]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
-    }
-  }
+//   int n_face_neighbor = face_neighbors_idx[n_elt];
+//   PDM_g_num_t* face_neighbors = (PDM_g_num_t*) malloc (n_face_neighbor * sizeof(PDM_g_num_t));
+//   for (int i=0; i<n_elt; ++i) {
+//     int elt_idx = section_idx + i;
+//     int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
+//     for (int j=0; j<n_neighbor; ++j) {
+//       face_neighbors[face_neighbors_idx[i]+j] = elt_elt[elt_elt_idx[elt_idx]+j]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
+//     }
+//   }
 
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist,(const PDM_g_num_t**)&face_neighbors,&n_face_neighbor,1,comm);
+//   PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist,(const PDM_g_num_t**)&face_neighbors,&n_face_neighbor,1,comm);
 
-  int stride_one = 1;
-  int* block_data1 = elt_part;
-  int** neighbor_part;
-  PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data1,NULL,(void***)&neighbor_part);
+//   int stride_one = 1;
+//   int* block_data1 = elt_part;
+//   int** neighbor_part;
+//   PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data1,NULL,(void***)&neighbor_part);
 
-  int* block_idx2 = malloc(dn_elt * sizeof(int));
-  for (int i=0; i<dn_elt; ++i) {
-    block_idx2[i] = delt_vtx_idx[i+1] - delt_vtx_idx[i];
-  }
-  PDM_g_num_t* block_data2 = delt_vtx;
-  int** neighbor_vtx_stri;
-  PDM_g_num_t** neighbor_vtx;
-  PDM_block_to_part_exch2(btp,sizeof(PDM_g_num_t),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
+//   int* block_idx2 = malloc(dn_elt * sizeof(int));
+//   for (int i=0; i<dn_elt; ++i) {
+//     block_idx2[i] = delt_vtx_idx[i+1] - delt_vtx_idx[i];
+//   }
+//   PDM_g_num_t* block_data2 = delt_vtx;
+//   int** neighbor_vtx_stri;
+//   PDM_g_num_t** neighbor_vtx;
+//   PDM_block_to_part_exch2(btp,sizeof(PDM_g_num_t),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
 
-  int pos2 = 0;
-  int neighbor_vtx_cur_idx = 0;
-  for (int i=0; i<n_elt; ++i) {
-    int face_vtx_idx = delt_vtx_idx[section_idx+i];
-    int n_face_vtx = delt_vtx_idx[section_idx+i+1] - delt_vtx_idx[section_idx+i];
-    PDM_g_num_t* first_face_vtx = delt_vtx+face_vtx_idx;
+//   int pos2 = 0;
+//   int neighbor_vtx_cur_idx = 0;
+//   for (int i=0; i<n_elt; ++i) {
+//     int face_vtx_idx = delt_vtx_idx[section_idx+i];
+//     int n_face_vtx = delt_vtx_idx[section_idx+i+1] - delt_vtx_idx[section_idx+i];
+//     PDM_g_num_t* first_face_vtx = delt_vtx+face_vtx_idx;
 
-    int n_neighbor = face_neighbors_idx[i+1] - face_neighbors_idx[i];
-    int parent_found = 0;
-    for (int j=0; j<n_neighbor; ++j) {
-      int n_vtx = neighbor_vtx_stri[0][pos2];
-      PDM_g_num_t* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
-      neighbor_vtx_cur_idx += n_vtx;
-      if (_is_parent(first_vtx,n_vtx,first_face_vtx,n_face_vtx)) {
-        elt2d_part[i] = neighbor_part[0][pos2];
-        parent_found = 1;
-      }
-      ++pos2;
-    }
-    assert(parent_found);
-  }
+//     int n_neighbor = face_neighbors_idx[i+1] - face_neighbors_idx[i];
+//     int parent_found = 0;
+//     for (int j=0; j<n_neighbor; ++j) {
+//       int n_vtx = neighbor_vtx_stri[0][pos2];
+//       PDM_g_num_t* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
+//       neighbor_vtx_cur_idx += n_vtx;
+//       if (_is_parent(first_vtx,n_vtx,first_face_vtx,n_face_vtx)) {
+//         elt2d_part[i] = neighbor_part[0][pos2];
+//         parent_found = 1;
+//       }
+//       ++pos2;
+//     }
+//     assert(parent_found);
+//   }
 
-  free(face_neighbors);
-}
+//   free(face_neighbors);
+// }
 
 // void
 // _run_ppart_zone_nodal
@@ -2270,44 +2271,44 @@ face_part_from_parent
 //   free(pelt_ln_to_gn);
 // }
 
-static
-void
-_run_ppart_zone_nodal2
-(
-  PDM_dmesh_nodal_t *dmesh_nodal,
-  _part_mesh_t      *pmesh,
-  PDM_split_dual_t   split_method,
-  int                dn_part,
-  PDM_MPI_Comm       comm
-)
-{
-  PDM_UNUSED(dmesh_nodal);
-  PDM_UNUSED(pmesh);
-  PDM_UNUSED(split_method);
-  PDM_UNUSED(dn_part);
-  PDM_UNUSED(comm);
-  // printf("_run_ppart_zone_nodal2\n");
-  // TODO: joins
-  // int i_rank;
-  // int n_rank;
-  // PDM_MPI_Comm_rank(comm, &i_rank);
-  // PDM_MPI_Comm_size(comm, &n_rank);
+// static
+// void
+// _run_ppart_zone_nodal2
+// (
+//   PDM_dmesh_nodal_t *dmesh_nodal,
+//   _part_mesh_t      *pmesh,
+//   PDM_split_dual_t   split_method,
+//   int                dn_part,
+//   PDM_MPI_Comm       comm
+// )
+// {
+//   PDM_UNUSED(dmesh_nodal);
+//   PDM_UNUSED(pmesh);
+//   PDM_UNUSED(split_method);
+//   PDM_UNUSED(dn_part);
+//   PDM_UNUSED(comm);
+//   // printf("_run_ppart_zone_nodal2\n");
+//   // TODO: joins
+//   // int i_rank;
+//   // int n_rank;
+//   // PDM_MPI_Comm_rank(comm, &i_rank);
+//   // PDM_MPI_Comm_size(comm, &n_rank);
 
-  // PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
-  // PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmn);
+//   // PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
+//   // PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmn);
 
-  // if(dmn->mesh_dimension == 2){
-  //   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
-  //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-  //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-  // } else if(dmn->mesh_dimension == 2 ) {
-  //   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
-  //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-  //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
-  // } else {
-  //   PDM_error(__FILE__, __LINE__, 0, "PDM_multipart error : Bad dmesh_nodal mesh_dimension \n");
-  // }
-}
+//   // if(dmn->mesh_dimension == 2){
+//   //   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
+//   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+//   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+//   // } else if(dmn->mesh_dimension == 2 ) {
+//   //   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
+//   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+//   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+//   // } else {
+//   //   PDM_error(__FILE__, __LINE__, 0, "PDM_multipart error : Bad dmesh_nodal mesh_dimension \n");
+//   // }
+// }
 
 /**
 
