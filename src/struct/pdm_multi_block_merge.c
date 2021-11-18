@@ -72,14 +72,14 @@ PDM_multi_block_merge_create
        PDM_MPI_Comm   comm
 )
 {
+  PDM_UNUSED(dmerge_idx);
+  PDM_UNUSED(dmerge_block_id);
+  PDM_UNUSED(dmerge_g_num);
 
   /*
    *  Le merge courant est doublement implicite :
    *     --> Pour chaque bloc on connait un voisins potentiel, can be NULL prt ?
    */
-
-
-
   PDM_multi_block_merge_t *mbm =
     (PDM_multi_block_merge_t *) malloc (sizeof(PDM_multi_block_merge_t));
 

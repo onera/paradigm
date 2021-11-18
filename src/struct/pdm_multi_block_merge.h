@@ -50,6 +50,7 @@ typedef struct _pdm_multi_block_merge_t      PDM_multi_block_merge_t;
  * \return       New mesh nodal handle
  *
  */
+
 PDM_multi_block_merge_t*
 PDM_multi_block_merge_create
 (
@@ -58,6 +59,7 @@ PDM_multi_block_merge_create
        int           *n_selected,
        PDM_g_num_t  **selected_g_num,
        int          **dmerge_idx,
+       PDM_g_num_t  **dmerge_block_id,
        PDM_g_num_t  **dmerge_g_num,
        PDM_MPI_Comm   comm
 );
