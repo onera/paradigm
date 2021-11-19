@@ -38,24 +38,18 @@ struct _pdm_multi_block_merge_t {
 
   PDM_g_num_t            *distrib_merge;
 
-  int                     n_remove;
-  PDM_g_num_t            *ln_to_gn_remove;
-
-  PDM_g_num_t            *distri_block_add;
-  int                     n_add;
-  PDM_g_num_t            *ln_to_gn_add_in;
 
   /*
    *  Remove protocol
-   */
-  int                     n_blk_remove;
-  int                    *blk_remove_idx;
-  PDM_part_to_block_t    *ptb_remove;
+  //  */
+  // int                     n_blk_remove;
+  // int                    *blk_remove_idx;
+  // PDM_part_to_block_t    *ptb_remove;
 
 
-  int                     pn_redistrib;
-  PDM_g_num_t            *redistrib_elmt_distrib;
-  PDM_g_num_t            *redb_block_parent_gnum;
+  // int                     pn_redistrib;
+  // PDM_g_num_t            *redistrib_elmt_distrib;
+  // PDM_g_num_t            *redb_block_parent_gnum;
 
   int                    *dold_to_new_idx;
   PDM_g_num_t            *dold_to_new;
