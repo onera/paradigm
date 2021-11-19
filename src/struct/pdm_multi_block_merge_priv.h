@@ -64,8 +64,7 @@ struct _pdm_multi_block_merge_t {
    *  Final protocal attributes
    */
   int             n_block;
-  PDM_g_num_t    *multi_distrib_idx;
-  PDM_g_num_t   **block_distrib_idx;
+  PDM_g_num_t    *multi_block_distrib;
 
   PDM_multi_block_to_part_t* mbtp;
 

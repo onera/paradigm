@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
   /*
    * Setup graph
    */
-  int         **dmerge_idx      = malloc(n_block * sizeof(PDM_g_num_t *));
+  int         **dmerge_idx      = malloc(n_block * sizeof(int         *));
   int         **dmerge_block_id = malloc(n_block * sizeof(int         *));
   PDM_g_num_t **dmerge_g_num    = malloc(n_block * sizeof(PDM_g_num_t *));
   for(int i_block = 0; i_block < n_block ; ++i_block) {
@@ -256,12 +256,21 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int (dmerge_block_id[i_block], idx_write, "dmerge_block_id :: ");
     PDM_log_trace_array_long(dmerge_g_num   [i_block], idx_write, "dmerge_g_num    :: ");
 
-
   }
 
 
+  PDM_multi_block_merge_t* mbm = PDM_multi_block_merge_create(block_distrib_idx,
+                                                              n_block,
+                                                              n_selected,
+                                                              selected_g_num,
+                                                              dmerge_idx,
+                                                              dmerge_block_id,
+                                                              dmerge_g_num,
+                                                              comm);
 
-  // PDM_multi_block_merge_t* mbm = PDM_multi_block_merge_create(comm);
+
+
+  PDM_multi_block_merge_free(mbm);
 
   for(int i_block = 0; i_block < n_block ; ++i_block) {
     free(selected_g_num[i_block]);

@@ -62,12 +62,12 @@ extern "C" {
 PDM_multi_block_merge_t*
 PDM_multi_block_merge_create
 (
- const PDM_g_num_t  **block_distrib_idx,
+       PDM_g_num_t  **block_distrib_idx,
  const int            n_block,
        int           *n_selected,
        PDM_g_num_t  **selected_g_num,
        int          **dmerge_idx,
-       PDM_g_num_t  **dmerge_block_id,
+       int          **dmerge_block_id,
        PDM_g_num_t  **dmerge_g_num,
        PDM_MPI_Comm   comm
 )
@@ -76,22 +76,57 @@ PDM_multi_block_merge_create
   PDM_UNUSED(dmerge_block_id);
   PDM_UNUSED(dmerge_g_num);
 
-  /*
-   *  Le merge courant est doublement implicite :
-   *     --> Pour chaque bloc on connait un voisins potentiel, can be NULL prt ?
-   */
-  PDM_multi_block_merge_t *mbm =
-    (PDM_multi_block_merge_t *) malloc (sizeof(PDM_multi_block_merge_t));
+  PDM_multi_block_merge_t *mbm = (PDM_multi_block_merge_t *) malloc (sizeof(PDM_multi_block_merge_t));
 
   PDM_MPI_Comm_size (comm, &mbm->n_rank);
   PDM_MPI_Comm_rank (comm, &mbm->i_rank);
+
   mbm->comm        = comm;
   mbm->n_block     = n_block;
 
-  // Ecrire l'algo dans distrib qui fait le multi_block from block
+  mbm->multi_block_distrib = malloc( (n_block + 1) * sizeof(PDM_g_num_t));
+  mbm->multi_block_distrib[0] = 0;
+  for(int i_block = 0; i_block < n_block; ++i_block) {
+    mbm->multi_block_distrib[i_block+1] = mbm->multi_block_distrib[i_block] + block_distrib_idx[i_block][mbm->n_rank];
+  }
 
-  // A/ Shift des blocs (selected_g_num)
-  //    Shift des neighbor
+  /*
+   * Shift des données d'entrés
+   */
+  PDM_g_num_t **_selected_g_num = malloc( (n_block * 2) * sizeof(PDM_g_num_t *));
+  int         **_select_kind    = malloc( (n_block * 2) * sizeof(int         *));
+  int         **_stride_one     = malloc( (n_block * 2) * sizeof(int         *));
+  PDM_g_num_t  *_n_selected     = malloc( (n_block * 2) * sizeof(PDM_g_num_t  ));
+  for(int i_block = 0; i_block < n_block; ++i_block) {
+
+    _n_selected    [i_block] = n_selected[i_block];
+    _selected_g_num[i_block] = malloc(n_selected[i_block] * sizeof(PDM_g_num_t));
+    _select_kind   [i_block] = malloc(n_selected[i_block] * sizeof(int        ));
+    _stride_one    [i_block] = malloc(n_selected[i_block] * sizeof(int        ));
+
+    for(int i = 0; i < n_selected[i_block]; ++i) {
+      _selected_g_num[i_block][i] = mbm->multi_block_distrib[i_block] + selected_g_num[i_block][i];
+      _select_kind   [i_block][i] = 1;
+      _stride_one    [i_block][i] = 1;
+    }
+  }
+
+
+  for(int i_block = 0; i_block < n_block; ++i_block) {
+    int dn_size = block_distrib_idx[i_block][mbm->i_rank+1] - block_distrib_idx[i_block][mbm->i_rank];
+    _n_selected    [n_block+i_block] = dmerge_idx[i_block][dn_size];
+    _selected_g_num[n_block+i_block] = malloc(dmerge_idx[i_block][dn_size] * sizeof(PDM_g_num_t));
+    _select_kind   [n_block+i_block] = malloc(dmerge_idx[i_block][dn_size] * sizeof(int        ));
+    _stride_one    [n_block+i_block] = malloc(dmerge_idx[i_block][dn_size] * sizeof(int        ));
+    for(int i = 0; i < dn_size; ++i) {
+      for(int j = dmerge_idx[i_block][i]; j < dmerge_idx[i_block][i+1]; ++j) {
+        int i_block_opp = dmerge_block_id[i_block][j];
+        _selected_g_num[n_block+i_block][j] = mbm->multi_block_distrib[i_block_opp] + dmerge_g_num[i_block][j];
+        _select_kind   [n_block+i_block][j] = 2;
+        _stride_one    [n_block+i_block][j] = 1;
+      }
+    }
+  }
 
   /*
    * Use ptb to equilibrate AND to reforms a block and keep link with the concatenate global numbering
@@ -99,16 +134,53 @@ PDM_multi_block_merge_create
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
-                                                      selected_g_num,
+                                                      _selected_g_num,
                                                       NULL,
-                                                      n_selected,
-                                                      n_block,
+                                                      _n_selected,
+                                                      2 * n_block,
                                                       comm);
+
+
+  int *blk_select_kind_n = NULL;
+  int *blk_select_kind   = NULL;
+  int dn_debug = PDM_part_to_block_exch(ptb,
+                                        sizeof(int),
+                                        PDM_STRIDE_VAR,
+                                        1,
+                                        _stride_one,
+                              (void **) _select_kind,
+                                        &blk_select_kind_n,
+                              (void **) &blk_select_kind);
+
+  // Attention si block partiel
+  PDM_log_trace_array_int(blk_select_kind, dn_debug, "blk_select_kind :: ");
+
+  // ::abort();// block partiel
+
+
+  for(int i_block = 0; i_block < 2 * n_block; ++i_block) {
+    free(_selected_g_num[i_block]);
+  }
+  free(_selected_g_num);
+  free(_n_selected);
+  free(blk_select_kind_n);
+  free(blk_select_kind);
+
 
   int dn_merge  = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get (ptb);
 
+  PDM_log_trace_array_long(blk_gnum, dn_merge, "blk_gnum :: ");
+
   mbm->distrib_merge = PDM_compute_entity_distribution(comm, dn_merge);
+
+
+  for(int i_block = 0; i_block < 2 * n_block; ++i_block) {
+    free(_select_kind[i_block]);
+    free(_stride_one[i_block]);
+  }
+  free(_select_kind);
+  free(_stride_one);
 
   /*
    *  blk_gnum is partial because we implicitly remove all elements not refered
@@ -121,22 +193,10 @@ PDM_multi_block_merge_create
     dnew_to_old_idx[i+1] = dnew_to_old_idx[i] + 1;
   }
 
-  /*
-   *
-   */
-  PDM_g_num_t** multi_block_distrib_idx = (PDM_g_num_t **) malloc (mbm->n_block * sizeof(PDM_g_num_t *));
-  PDM_g_num_t shift = 0;
-  for(int i_block = 0; i_block < mbm->n_block; ++i_block) {
-    multi_block_distrib_idx[i_block] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mbm->n_rank + 1));
-    for(int i = 0; i < mbm->n_rank + 1; ++i) {
-      multi_block_distrib_idx[i_block][i] = shift + block_distrib_idx[i_block][i];
-    }
-    shift += block_distrib_idx[i_block][mbm->n_rank];
-    // PDM_log_trace_array_long(multi_block_distrib_idx[i_block], mbm->n_rank + 1, "multi_block_distrib_idx:: ");
-  }
+  PDM_log_trace_array_long(mbm->multi_block_distrib, n_block+1, "mbm->multi_block_distrib_idx");
 
   // Compute the old global distribution
-  PDM_g_num_t n_g_old = block_distrib_idx[n_block][mbm->n_rank];
+  PDM_g_num_t n_g_old      = mbm->multi_block_distrib[n_block];
   PDM_g_num_t* old_distrib = PDM_compute_uniform_entity_distribution(mbm->comm, n_g_old);
 
   PDM_dconnectivity_transpose(comm,
@@ -150,11 +210,6 @@ PDM_multi_block_merge_create
 
   free(dnew_to_old_idx);
   free(old_distrib);
-  for(int i_block = 0; i_block < mbm->n_block; ++i_block) {
-    free(multi_block_distrib_idx[i_block]);
-  }
-  free(multi_block_distrib_idx);
-
 
   /*
    * If Hilbert we done it here to find a permutation to reorder the block
@@ -165,26 +220,37 @@ PDM_multi_block_merge_create
 
   PDM_g_num_t* new_to_old_g_num = blk_gnum;
 
-  mbm->mbtp = PDM_multi_block_to_part_create(mbm->multi_distrib_idx,
+  mbm->mbtp = PDM_multi_block_to_part_create(mbm->multi_block_distrib,
                                              mbm->n_block,
-                       (const PDM_g_num_t**) mbm->block_distrib_idx,
+                       (const PDM_g_num_t**) block_distrib_idx,
                        (const PDM_g_num_t**)&new_to_old_g_num,
                                             &dn_merge,
                                              1,
                                              mbm->comm);
   PDM_part_to_block_free(ptb);
 
-  // PDM_UNUSED(multi_distrib_idx);
-  PDM_UNUSED(n_block);
-  PDM_UNUSED(block_distrib_idx);
-  // PDM_UNUSED(n_part);
-  PDM_UNUSED(selected_g_num);
-
   return mbm;
 }
 
-// PDM_multi_block_merge_renum_from
 
+void
+PDM_multi_block_merge_free
+(
+ PDM_multi_block_merge_t* mbm
+)
+{
+
+  free(mbm->multi_block_distrib);
+  free(mbm->dold_to_new_idx);
+  free(mbm->dold_to_new);
+  free(mbm->distrib_merge);
+
+  PDM_multi_block_to_part_free(mbm->mbtp);
+  free(mbm);
+}
+
+
+// PDM_multi_block_merge_renum_from
 
 #ifdef __cplusplus
 }

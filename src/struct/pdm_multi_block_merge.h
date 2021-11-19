@@ -54,12 +54,12 @@ typedef struct _pdm_multi_block_merge_t      PDM_multi_block_merge_t;
 PDM_multi_block_merge_t*
 PDM_multi_block_merge_create
 (
- const PDM_g_num_t  **block_distrib_idx,
+       PDM_g_num_t  **block_distrib_idx,
  const int            n_block,
        int           *n_selected,
        PDM_g_num_t  **selected_g_num,
        int          **dmerge_idx,
-       PDM_g_num_t  **dmerge_block_id,
+       int          **dmerge_block_id,
        PDM_g_num_t  **dmerge_g_num,
        PDM_MPI_Comm   comm
 );
@@ -126,7 +126,7 @@ PDM_multi_block_merge_get_parent_blk_g_num
 void
 PDM_multi_block_merge_free
 (
-PDM_multi_block_merge_t   *mbm
+ PDM_multi_block_merge_t* mbm
 );
 
 void
