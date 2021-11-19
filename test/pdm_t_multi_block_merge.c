@@ -258,7 +258,6 @@ int main(int argc, char *argv[])
 
   }
 
-
   PDM_multi_block_merge_t* mbm = PDM_multi_block_merge_create(block_distrib_idx,
                                                               n_block,
                                                               n_selected,
@@ -269,6 +268,52 @@ int main(int argc, char *argv[])
                                                               comm);
 
 
+  // Exchange
+
+  double** dvtx_coord = malloc(n_block * sizeof(double *));
+  dvtx_coord[0] = PDM_DMesh_nodal_vtx_get(dmn1);
+  dvtx_coord[1] = PDM_DMesh_nodal_vtx_get(dmn2);
+
+  int** stride_one = malloc(n_block * sizeof(int *));
+  for(int i_block = 0; i_block < n_block ; ++i_block) {
+    stride_one[i_block] = PDM_array_const_int(1, 1);
+  }
+
+  double *dmerge_vtx_coord = NULL;
+  PDM_multi_block_merge_exch(mbm,
+                             3 * sizeof(double),
+                             PDM_STRIDE_CST,
+                             stride_one,
+                 (void * )   dvtx_coord,
+                             NULL,
+                 (void **)   &dmerge_vtx_coord);
+
+  free(dvtx_coord);
+
+  for(int i_block = 0; i_block < n_block ; ++i_block) {
+    free(stride_one[i_block]);
+  }
+  free(stride_one);
+
+  int dn_merge_vtx               = PDM_multi_block_merge_get_n_block(mbm);
+  PDM_g_num_t* distrib_merge_vtx = PDM_multi_block_merge_get_distrib(mbm);
+
+  assert(dn_merge_vtx == distrib_merge_vtx[i_rank+1] - distrib_merge_vtx[i_rank]);
+
+  PDM_g_num_t* merge_vtx_ln_to_gn = malloc(dn_merge_vtx * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_merge_vtx; ++i) {
+    merge_vtx_ln_to_gn[i] = distrib_merge_vtx[i_rank] + i + 1;
+  }
+  char filename[999];
+  sprintf(filename, "debug_dvtx_coord_merge_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            dn_merge_vtx,
+                            dmerge_vtx_coord,
+                            merge_vtx_ln_to_gn,
+                            NULL);
+
+  free(dmerge_vtx_coord);
+  free(merge_vtx_ln_to_gn);
 
   PDM_multi_block_merge_free(mbm);
 

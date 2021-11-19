@@ -36,16 +36,17 @@ struct _pdm_multi_block_merge_t {
   int                     n_rank;
   int                     i_rank;
 
+  int                     n_block;
+  PDM_g_num_t            *multi_block_distrib;
   PDM_g_num_t            *distrib_merge;
 
+  /*
+   * Results
+   */
   int                    *dold_to_new_idx;
   PDM_g_num_t            *dold_to_new;
 
-  /*
-   *  Final protocal attributes
-   */
-  int             n_block;
-  PDM_g_num_t    *multi_block_distrib;
+  int                     dn_new_block;
 
   PDM_multi_block_to_part_t* mbtp;
 

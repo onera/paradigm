@@ -185,12 +185,11 @@ PDM_multi_block_merge_create
     blk_select_kind_idx[i+1] = blk_select_kind_idx[i] + blk_select_kind_n[i];
   }
 
-
   int* dnew_to_old_idx = (int *) malloc( (dn_merge+1) * sizeof(int));
   PDM_g_num_t* final_g_num  = malloc(dn_blk_size * sizeof(PDM_g_num_t));
   PDM_g_num_t* filter_g_num = malloc(dn_blk_size * sizeof(PDM_g_num_t));
   dnew_to_old_idx[0] = 0;
-  int dn_new_block = 0;
+  mbm->dn_new_block = 0;
   for(int i = 0; i < dn_merge; ++i ) {
 
     int dn_loc = blk_select_kind_idx[i+1] - blk_select_kind_idx[i];
@@ -206,7 +205,7 @@ PDM_multi_block_merge_create
     int is_normal = 1;
     int is_merge  = 0;
     int is_remove = 0;
-    dnew_to_old_idx[dn_new_block+1] = dnew_to_old_idx[dn_new_block];
+    dnew_to_old_idx[mbm->dn_new_block+1] = dnew_to_old_idx[mbm->dn_new_block];
     PDM_g_num_t min_g_num = mbm->multi_block_distrib[n_block]+1;
     for(int j = blk_select_kind_idx[i]; j < blk_select_kind_idx[i+1]; ++j) {
       if(blk_select_kind[j] == 2) {
@@ -228,18 +227,17 @@ PDM_multi_block_merge_create
     }
 
     if(!is_remove) {
-
       for(int j = blk_select_kind_idx[i]; j < blk_select_kind_idx[i+1]; ++j) {
-        filter_g_num[dnew_to_old_idx[dn_new_block+1]++] = blk_send_orig_g_num[j];
+        filter_g_num[dnew_to_old_idx[mbm->dn_new_block+1]++] = blk_send_orig_g_num[j];
       }
-      final_g_num[dn_new_block++] = min_g_num;
+      final_g_num[mbm->dn_new_block++] = min_g_num;
     }
 
     // log_trace("is_normal = %i | is_merge = %i | is_remove = %i \n", is_normal, is_merge, is_remove);
 
   }
   // assert(dn_blk_size == idx_read);
-  final_g_num = realloc(final_g_num, dn_new_block * sizeof(PDM_g_num_t));
+  final_g_num = realloc(final_g_num, mbm->dn_new_block * sizeof(PDM_g_num_t));
 
   for(int i_block = 0; i_block < 2 * n_block; ++i_block) {
     free(_selected_g_num[i_block]);
@@ -257,11 +255,11 @@ PDM_multi_block_merge_create
 
   if(0 == 1) {
     PDM_log_trace_array_long(blk_gnum   , dn_merge    , "blk_gnum :: ");
-    PDM_log_trace_array_long(final_g_num, dn_new_block, "final_g_num :: ");
+    PDM_log_trace_array_long(final_g_num, mbm->dn_new_block, "final_g_num :: ");
   }
 
   // mbm->distrib_merge = PDM_compute_entity_distribution(comm, dn_merge);
-  mbm->distrib_merge = PDM_compute_entity_distribution(comm, dn_new_block);
+  mbm->distrib_merge = PDM_compute_entity_distribution(comm, mbm->dn_new_block);
 
   for(int i_block = 0; i_block < 2 * n_block; ++i_block) {
     free(_select_kind[i_block]);
@@ -298,12 +296,15 @@ PDM_multi_block_merge_create
   // if(reorder_block == PDM_HILBERT) {
   // }
 
-  int dn_orig = old_distrib[mbm->i_rank+1] - old_distrib[mbm->i_rank];
-  PDM_log_trace_array_int (dnew_to_old_idx, dn_new_block+1               , "dnew_to_old_idx :: ");
-  PDM_log_trace_array_long(filter_g_num   , mbm->dold_to_new_idx[dn_orig], "dold_to_new     :: ");
+  if(1 == 1) {
+    int dn_orig = old_distrib[mbm->i_rank+1] - old_distrib[mbm->i_rank];
+    PDM_log_trace_array_int (dnew_to_old_idx, mbm->dn_new_block+1               , "dnew_to_old_idx :: ");
+    PDM_log_trace_array_long(filter_g_num   , mbm->dold_to_new_idx[dn_orig], "dold_to_new     :: ");
 
-  PDM_log_trace_array_int (mbm->dold_to_new_idx, dn_orig+1                    , "dold_to_new_idx :: ");
-  PDM_log_trace_array_long(mbm->dold_to_new    , mbm->dold_to_new_idx[dn_orig], "dold_to_new     :: ");
+    PDM_log_trace_array_int (mbm->dold_to_new_idx, dn_orig+1                    , "dold_to_new_idx :: ");
+    PDM_log_trace_array_long(mbm->dold_to_new    , mbm->dold_to_new_idx[dn_orig], "dold_to_new     :: ");
+  }
+
   free(dnew_to_old_idx);
   free(filter_g_num);
 
@@ -312,7 +313,7 @@ PDM_multi_block_merge_create
                                              mbm->n_block,
                        (const PDM_g_num_t**) block_distrib_idx,
                        (const PDM_g_num_t**)&final_g_num,
-                                            &dn_new_block,
+                                            &mbm->dn_new_block,
                                              1,
                                              mbm->comm);
   PDM_part_to_block_free(ptb);
@@ -322,7 +323,70 @@ PDM_multi_block_merge_create
   return mbm;
 }
 
+/*
+ *
+ */
+void
+PDM_multi_block_merge_exch
+(
+ PDM_multi_block_merge_t     *mbm,
+ size_t                       s_data,
+ PDM_stride_t                 t_stride,
+ int                        **block_stride,
+ void                       **block_data,
+ int                        **merge_block_stride,
+ void                       **merge_block_data
+)
+{
+  int           **tmp_block_strid_out = NULL;
+  unsigned char **tmp_block_data_out  = NULL;
+  PDM_multi_block_to_part_exch2(mbm->mbtp,
+                                s_data,
+                                t_stride,
+                                block_stride,
+                      (void **) block_data,
+                                &tmp_block_strid_out,
+                    (void ***)  &tmp_block_data_out);
 
+  if(t_stride == PDM_STRIDE_VAR) {
+    *merge_block_stride = tmp_block_strid_out[0];
+    free(tmp_block_strid_out);
+  }
+
+  *merge_block_data = tmp_block_data_out[0];
+  free(tmp_block_data_out);
+
+}
+
+
+/*
+ *
+ */
+int
+PDM_multi_block_merge_get_n_block
+(
+ PDM_multi_block_merge_t* mbm
+)
+{
+  return mbm->dn_new_block;
+}
+
+
+/*
+ *
+ */
+PDM_g_num_t*
+PDM_multi_block_merge_get_distrib
+(
+ PDM_multi_block_merge_t* mbm
+)
+{
+  return mbm->distrib_merge;
+}
+
+/*
+ *
+ */
 void
 PDM_multi_block_merge_free
 (

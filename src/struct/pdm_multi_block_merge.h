@@ -65,55 +65,64 @@ PDM_multi_block_merge_create
 );
 
 
-void
-PDM_multi_block_merge_reorder_block_hilbert
+int
+PDM_multi_block_merge_get_n_block
 (
- PDM_multi_block_merge_t  *mbm,
- double                   *block_coord,
- double                   *padd_coord
+ PDM_multi_block_merge_t* mbm
+);
+
+
+PDM_g_num_t*
+PDM_multi_block_merge_get_distrib
+(
+ PDM_multi_block_merge_t* mbm
 );
 
 void
 PDM_multi_block_merge_exch
 (
- PDM_multi_block_merge_t  *mbm,
- size_t                    s_data,
- PDM_stride_t              t_stride,
- int                       cst_stride,
- int                      *blk_merge_stride,
- void                     *blk_merge_data,
- int                      *padd_stride,
- void                     *padd_data,
- int                     **block_strid_out,
- void                    **block_data_out
+ PDM_multi_block_merge_t     *mbm,
+ size_t                       s_data,
+ PDM_stride_t                 t_stride,
+ int                        **block_stride,
+ void                       **block_data,
+ int                        **merge_block_stride,
+ void                       **merge_block_data
 );
 
+// void
+// PDM_multi_block_merge_reorder_block_hilbert
+// (
+//  PDM_multi_block_merge_t  *mbm,
+//  double                   *block_coord,
+//  double                   *padd_coord
+// );
 
-PDM_g_num_t*
-PDM_multi_block_merge_compute_old_to_new
-(
- PDM_multi_block_merge_t  *mbm
-);
+// PDM_g_num_t*
+// PDM_multi_block_merge_compute_old_to_new
+// (
+//  PDM_multi_block_merge_t  *mbm
+// );
 
-void
-PDM_multi_block_merge_get_old_to_new
-(
- PDM_multi_block_merge_t  *mbm,
- int                **dold_to_new_idx,
- PDM_g_num_t        **dold_to_new
-);
+// void
+// PDM_multi_block_merge_get_old_to_new
+// (
+//  PDM_multi_block_merge_t  *mbm,
+//  int                **dold_to_new_idx,
+//  PDM_g_num_t        **dold_to_new
+// );
 
-int
-PDM_multi_block_merge_get_n_block
-(
- PDM_multi_block_merge_t  *mbm
-);
+// int
+// PDM_multi_block_merge_get_n_block
+// (
+//  PDM_multi_block_merge_t  *mbm
+// );
 
-PDM_g_num_t*
-PDM_multi_block_merge_get_parent_blk_g_num
-(
- PDM_multi_block_merge_t  *mbm
-);
+// PDM_g_num_t*
+// PDM_multi_block_merge_get_parent_blk_g_num
+// (
+//  PDM_multi_block_merge_t  *mbm
+// );
 
 /**
  * \brief Create a redistribute structure
@@ -129,22 +138,22 @@ PDM_multi_block_merge_free
  PDM_multi_block_merge_t* mbm
 );
 
-void
-PDM_multi_block_merge_exch_and_update_child_g_num
-(
- PDM_multi_block_merge_t  *mbm,
- PDM_g_num_t              *child_old_distrib,
- int                      *dchild_old_to_new_idx,
- PDM_g_num_t              *dchild_old_to_new,
- PDM_stride_t              t_stride,
- int                       cst_stride,
- int                      *blk_merge_stride,
- void                     *blk_merge_data,
- int                      *padd_stride,
- void                     *padd_data,
- int                     **block_strid_out,
- void                    **block_data_out
-);
+// void
+// PDM_multi_block_merge_exch_and_update_child_g_num
+// (
+//  PDM_multi_block_merge_t  *mbm,
+//  PDM_g_num_t              *child_old_distrib,
+//  int                      *dchild_old_to_new_idx,
+//  PDM_g_num_t              *dchild_old_to_new,
+//  PDM_stride_t              t_stride,
+//  int                       cst_stride,
+//  int                      *blk_merge_stride,
+//  void                     *blk_merge_data,
+//  int                      *padd_stride,
+//  void                     *padd_data,
+//  int                     **block_strid_out,
+//  void                    **block_data_out
+// );
 
 #ifdef __cplusplus
 }
