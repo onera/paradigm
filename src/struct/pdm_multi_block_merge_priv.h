@@ -43,6 +43,7 @@ struct _pdm_multi_block_merge_t {
   /*
    * Results
    */
+  PDM_g_num_t            *old_distrib;
   int                    *dold_to_new_idx;
   PDM_g_num_t            *dold_to_new;
 

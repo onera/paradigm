@@ -78,6 +78,13 @@ PDM_multi_block_merge_get_distrib
  PDM_multi_block_merge_t* mbm
 );
 
+PDM_g_num_t*
+PDM_multi_block_merge_get_multi_distrib
+(
+ PDM_multi_block_merge_t* mbm
+);
+
+
 void
 PDM_multi_block_merge_exch
 (
@@ -88,6 +95,31 @@ PDM_multi_block_merge_exch
  void                       **block_data,
  int                        **merge_block_stride,
  void                       **merge_block_data
+);
+
+
+void
+PDM_multi_block_merge_get_old_to_new
+(
+ PDM_multi_block_merge_t  *mbm,
+ PDM_g_num_t             **old_distrib,
+ int                     **dold_to_new_idx,
+ PDM_g_num_t             **dold_to_new
+);
+
+void
+PDM_multi_block_merge_exch_and_update_child_g_num
+(
+ PDM_multi_block_merge_t  *mbm,
+ PDM_g_num_t              *child_old_distrib,
+ int                      *dchild_old_to_new_idx,
+ PDM_g_num_t              *dchild_old_to_new,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **block_stride,
+ void                    **block_data,
+ int                     **merge_block_stride,
+ void                    **merge_block_data
 );
 
 // void

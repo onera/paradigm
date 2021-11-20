@@ -278,11 +278,11 @@ PDM_multi_block_merge_create
 
   // Compute the old global distribution
   PDM_g_num_t n_g_old      = mbm->multi_block_distrib[n_block];
-  PDM_g_num_t* old_distrib = PDM_compute_uniform_entity_distribution(mbm->comm, n_g_old);
+  mbm->old_distrib = PDM_compute_uniform_entity_distribution(mbm->comm, n_g_old);
 
   PDM_dconnectivity_transpose(comm,
                               mbm->distrib_merge,
-                              old_distrib,
+                              mbm->old_distrib,
                               dnew_to_old_idx,
                               filter_g_num,
                               0,
@@ -297,7 +297,7 @@ PDM_multi_block_merge_create
   // }
 
   if(1 == 1) {
-    int dn_orig = old_distrib[mbm->i_rank+1] - old_distrib[mbm->i_rank];
+    int dn_orig = mbm->old_distrib[mbm->i_rank+1] - mbm->old_distrib[mbm->i_rank];
     PDM_log_trace_array_int (dnew_to_old_idx, mbm->dn_new_block+1               , "dnew_to_old_idx :: ");
     PDM_log_trace_array_long(filter_g_num   , mbm->dold_to_new_idx[dn_orig], "dold_to_new     :: ");
 
@@ -308,7 +308,6 @@ PDM_multi_block_merge_create
   free(dnew_to_old_idx);
   free(filter_g_num);
 
-  free(old_distrib);
   mbm->mbtp = PDM_multi_block_to_part_create(mbm->multi_block_distrib,
                                              mbm->n_block,
                        (const PDM_g_num_t**) block_distrib_idx,
@@ -359,6 +358,142 @@ PDM_multi_block_merge_exch
 }
 
 
+void
+PDM_multi_block_merge_get_old_to_new
+(
+ PDM_multi_block_merge_t  *mbm,
+ PDM_g_num_t             **old_distrib,
+ int                     **dold_to_new_idx,
+ PDM_g_num_t             **dold_to_new
+)
+{
+  *old_distrib     = mbm->old_distrib;
+  *dold_to_new_idx = mbm->dold_to_new_idx;
+  *dold_to_new     = mbm->dold_to_new;
+}
+
+
+void
+PDM_multi_block_merge_exch_and_update_child_g_num
+(
+ PDM_multi_block_merge_t  *mbm,
+ PDM_g_num_t              *child_old_distrib,
+ int                      *dchild_old_to_new_idx,
+ PDM_g_num_t              *dchild_old_to_new,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **block_stride,
+ void                    **block_data,
+ int                     **merge_block_stride,
+ void                    **merge_block_data
+)
+{
+  int         *dparent_child_strid = NULL;
+  PDM_g_num_t *dparent_child_mbm = NULL;
+  //assert(t_stride == PDM_STRIDE_CST); // Other not implemented
+
+  PDM_multi_block_merge_exch(mbm,
+                             sizeof(PDM_g_num_t),
+                             t_stride,
+                             block_stride,
+                             block_data,
+                             &dparent_child_strid,
+                 (void **)   &dparent_child_mbm);
+
+  /*
+   * Mise à jour
+   */
+
+  int pn_merge_parent = PDM_multi_block_merge_get_n_block(mbm);
+  int n_parent;
+  if (t_stride == PDM_STRIDE_CST) {
+    n_parent = cst_stride * pn_merge_parent;
+  } else {
+    n_parent = 0;
+    for (int i = 0; i < pn_merge_parent; i++) {
+      n_parent += dparent_child_strid[i];
+    }
+  }
+  int *dparent_child_mbm_sgn = malloc (sizeof(int) * n_parent);
+  for (int i = 0; i < n_parent; i++) {
+    dparent_child_mbm_sgn[i] = PDM_SIGN(dparent_child_mbm[i]);
+    dparent_child_mbm[i]     = PDM_ABS (dparent_child_mbm[i]);
+  }
+
+  PDM_block_to_part_t *btp_update_parent = PDM_block_to_part_create (child_old_distrib,
+                                              (const PDM_g_num_t **) &dparent_child_mbm,
+                                                                     &n_parent,
+                                                                      1,
+                                                                      mbm->comm);
+  int dn_child = child_old_distrib[mbm->i_rank+1] - child_old_distrib[mbm->i_rank];
+  int *dchild_old_to_n = (int * ) malloc( dn_child * sizeof(int));
+  for(int i = 0; i < dn_child; ++i) {
+    dchild_old_to_n[i] = dchild_old_to_new_idx[i+1] - dchild_old_to_new_idx[i];
+  }
+
+  int         **parent_tmp_tmp_n;
+  PDM_g_num_t **tmp_dparent_child_final;
+  PDM_block_to_part_exch2 (btp_update_parent,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           dchild_old_to_n,
+                  (void *) dchild_old_to_new,
+                           &parent_tmp_tmp_n,
+                (void ***) &tmp_dparent_child_final);
+  int         *parent_tmp_n        = parent_tmp_tmp_n[0];
+  PDM_g_num_t *dparent_child_final = tmp_dparent_child_final[0];
+
+  int n_parent_old = n_parent;
+  int *dparent_child_stride_final = NULL;
+  if (t_stride == PDM_STRIDE_VAR) {
+    int n_parent_new = 0;
+    for (int i = 0; i < n_parent; i++) {
+      n_parent_new += parent_tmp_n[i];
+    }
+    n_parent = n_parent_new;
+
+
+    dparent_child_stride_final = PDM_array_zeros_int(pn_merge_parent);
+    int idx = 0;
+    for (int i = 0; i < pn_merge_parent; i++) {
+      for (int j = 0; j < dparent_child_strid[i]; j++) {
+        dparent_child_stride_final[i] += parent_tmp_n[idx++];
+      }
+    }
+    free(dparent_child_strid);
+  }
+
+
+  if(0 == 1 && t_stride == PDM_STRIDE_VAR) {
+    log_trace("n_parent_old = %d, pn_merge_parent = %d, n_parent_new = %d\n",
+              n_parent_old, pn_merge_parent, n_parent);
+    PDM_log_trace_array_int(parent_tmp_n       , n_parent, "parent_tmp_n : ");
+    PDM_log_trace_array_long(dparent_child_final, n_parent, "dparent_child_final : ");
+  }
+  //free(parent_tmp_tmp_n[0]);
+  free(parent_tmp_tmp_n);
+  free(tmp_dparent_child_final);
+
+  for (int i = 0; i < n_parent; i++) {
+    dparent_child_final[i] *= dparent_child_mbm_sgn[i];
+  }
+
+  PDM_block_to_part_free(btp_update_parent);
+
+  //PDM_UNUSED(merge_block_stride);
+  if (t_stride == PDM_STRIDE_VAR) {
+    *merge_block_stride = dparent_child_stride_final;//dparent_child_strid;
+    free (parent_tmp_n);
+  } else {
+    free (parent_tmp_n);
+  }
+  *merge_block_data  = dparent_child_final;
+  free(dparent_child_mbm);
+  free(dparent_child_mbm_sgn);
+  free(dchild_old_to_n);
+}
+
+
 /*
  *
  */
@@ -384,6 +519,16 @@ PDM_multi_block_merge_get_distrib
   return mbm->distrib_merge;
 }
 
+PDM_g_num_t*
+PDM_multi_block_merge_get_multi_distrib
+(
+ PDM_multi_block_merge_t* mbm
+)
+{
+  return mbm->multi_block_distrib;
+}
+
+
 /*
  *
  */
@@ -398,6 +543,7 @@ PDM_multi_block_merge_free
   free(mbm->dold_to_new_idx);
   free(mbm->dold_to_new);
   free(mbm->distrib_merge);
+  free(mbm->old_distrib);
 
   PDM_multi_block_to_part_free(mbm->mbtp);
   free(mbm);
