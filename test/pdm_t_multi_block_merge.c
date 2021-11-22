@@ -290,12 +290,44 @@ int main(int argc, char *argv[])
                              NULL,
                  (void **)   &dmerge_vtx_coord);
 
-  free(dvtx_coord);
 
+  //
+  //
+  //
+  // PDM_multi_block_merge_exch(mbm_elt,
+  //                            3 * sizeof(double),
+  //                            PDM_STRIDE_CST,
+  //                            stride_one,
+  //                (void * )   dcell_vtx,
+  //                            NULL,
+  //                (void **)   &dmerge_dcell_vtx);
+
+
+  // origin_cell get_orgin_block (size= n_dmerge_cell)
+
+  // orgin_vtx = 4 * s_orgini_cell
+
+  // origin = 
+
+  // Creer dans PDM_multi_block_merge une fonction qui applique la nouvelle numerotation
+  // à un tableau contenant des références à l'ancienne numerotation  
+  //
+  // Transformer indication numerotation en doublon / numabs origin
+  //
+  // PDM_multi_block_merge_apply_array(mbm,
+  //                            size_dmerge_dcell_vtx,
+  //                            dmerge_vtx_origi_block,
+  //                            dmerge_dcell_vtx,
+  //                            dmerge_dcell_new_vtx);
+
+
+
+  free(dvtx_coord);
 
   /*
    * Same protocol for cells
    */
+
   PDM_g_num_t** block_elmt_distrib_idx = malloc(n_block * sizeof(PDM_g_num_t *));
   block_elmt_distrib_idx[0] = (PDM_g_num_t *) PDM_DMesh_nodal_distrib_section_get(dmn1, PDM_GEOMETRY_KIND_SURFACIC, 0);
   block_elmt_distrib_idx[1] = (PDM_g_num_t *) PDM_DMesh_nodal_distrib_section_get(dmn2, PDM_GEOMETRY_KIND_SURFACIC, 0);

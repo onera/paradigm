@@ -107,7 +107,7 @@ def dconnectivity_to_extract_dconnectivity(MPI.Comm                             
                                                n_selected_entity1,
                           <PDM_g_num_t *>      select_entity1.data,
                           <PDM_g_num_t *>      entity1_distribution.data,
-                          <PDM_g_num_t *>      dentity1_entity2_idx.data,
+                          <int *>              dentity1_entity2_idx.data,
                           <PDM_g_num_t *>      dentity1_entity2.data,
                                                &extract_entity1_distribution,
                                                &extract_entity2_distribution,
