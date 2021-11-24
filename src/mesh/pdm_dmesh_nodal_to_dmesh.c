@@ -2549,7 +2549,7 @@ PDM_g_num_t  **dentity_elmt
             }
             PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_entity_2-1);
 
-            assert(key_1 == key_2);
+            assert(key_1 % key_mod == key_2 % key_mod);
 
             int is_same_entity = 1;
             for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
