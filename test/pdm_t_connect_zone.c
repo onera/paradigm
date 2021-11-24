@@ -1115,6 +1115,7 @@ int main(int argc, char *argv[])
   double       **dextract_vtx_coord        = (double      **) malloc( n_zone * sizeof(double      *));
 
   int n_group_join = 2*(n_zone-1);
+  //int n_group_join = 2*2*(n_zone-1); // Try 2*2 jns
   int *group_join_to_zone_cur = (int *) malloc( n_group_join * sizeof(int));
   int *group_join_to_zone_opp = (int *) malloc( n_group_join * sizeof(int));
   int *group_join_to_join_opp = (int *) malloc( n_group_join * sizeof(int));
@@ -1132,6 +1133,15 @@ int main(int argc, char *argv[])
       group_join_to_zone_opp[i_join] = tmp_i_zone++;
     }
   }
+  // Test 2*2 jns
+  /*group_join_to_join_opp[0] = 2;*/
+  /*group_join_to_join_opp[1] = 3;*/
+  /*group_join_to_join_opp[2] = 0;*/
+  /*group_join_to_join_opp[3] = 1;*/
+  /*group_join_to_zone_opp[0] = 1;*/
+  /*group_join_to_zone_opp[1] = 1;*/
+  /*group_join_to_zone_opp[2] = 0;*/
+  /*group_join_to_zone_opp[3] = 0;*/
 
 
   for(int i_group_join = 0; i_group_join < n_group_join+1; ++i_group_join) {
@@ -1174,6 +1184,35 @@ int main(int argc, char *argv[])
       n_bnd++;
       n_jn-- ;
     }
+    //Try different setup with 2*2 jns
+    /*
+    n_jn = 2;
+    n_face_group[i_zone] += 1;
+    int *dface_group_idx_new = malloc((n_face_group[i_zone]+2) * sizeof(int));
+    //For zone0, jn is 3 ; for zone1, jn is 2
+    int jn_group = -1;
+    if (i_zone == 0) jn_group = 3;
+    else if (i_zone == 1) jn_group = 2;
+    for (int i = 0; i < n_face_group[i_zone]+1; i++) {
+      if (i <= jn_group) {
+        dface_group_idx_new[i] = dface_group_idx[i_zone][i];
+      }
+      else if (i==jn_group+1) {
+        int nface_this_group = dface_group_idx[i_zone][i] - dface_group_idx[i_zone][i-1];
+        dface_group_idx_new[i] = dface_group_idx[i_zone][i-1] + (nface_this_group / 2);
+        dface_group_idx_new[i+1] = dface_group_idx[i_zone][i-1] + nface_this_group;
+      }
+      else {
+        dface_group_idx_new[i] = dface_group_idx[i_zone][i-1];
+      }
+    }
+    PDM_log_trace_array_int(dface_group_idx[i_zone], 6+1, "dfacegroupidx :");
+    PDM_log_trace_array_int(dface_group_idx_new, 7+1, "dfacegroupidxnew :");
+    PDM_log_trace_array_long(dface_group[i_zone], dface_group_idx[i_zone][6], "dfacegroup :");
+    free(dface_group_idx[i_zone]);
+    dface_group_idx[i_zone] = dface_group_idx_new;
+    */
+    //
 
     // Join numbering (left to right, increasing i_zone)
 
@@ -1186,6 +1225,9 @@ int main(int argc, char *argv[])
     // dface_join_idx[0] = 0;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
       int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
+      /*int copy_to_bnd = -1; //Try 2*2 jns*/
+      /*if (i_zone == 0) copy_to_bnd = (igroup != 3) && (igroup !=4);*/
+      /*if (i_zone == 1) copy_to_bnd = (igroup != 2) && (igroup !=3);*/
       int group_size = dface_group_idx[i_zone][igroup+1] - dface_group_idx[i_zone][igroup];
       if (copy_to_bnd) { //Its a boundary
         dface_bnd_idx[i_zone][i_bnd++] = group_size;
@@ -1212,6 +1254,9 @@ int main(int argc, char *argv[])
     i_jn  = tmp_i_group_join;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
       int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
+      /*int copy_to_bnd = -1; //Try 2*2 jns*/
+      /*if (i_zone == 0) copy_to_bnd = (igroup != 3) && (igroup !=4);*/
+      /*if (i_zone == 1) copy_to_bnd = (igroup != 2) && (igroup !=3);*/
       if (copy_to_bnd){ //Its a boundary
         for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++) {
           dface_bnd[i_zone][i_bnd++] = dface_group[i_zone][i];
