@@ -125,6 +125,34 @@ _exchange_point_list
   free(distrib_join);
 }
 
+
+static void _split_paired_connectivity(int n_item, int *in_array_idx, PDM_g_num_t *in_array,
+    int **out_array_idx, PDM_g_num_t **out_array1, PDM_g_num_t **out_array2)
+{
+
+  assert (n_item % 2 == 0);
+  assert (in_array_idx[n_item] % 2 == 0);
+
+  *out_array_idx = malloc(((n_item / 2 )+1)               * sizeof(int));
+  *out_array1    = malloc((in_array_idx[n_item] / 2) * sizeof(PDM_g_num_t));
+  *out_array2    = malloc((in_array_idx[n_item] / 2) * sizeof(PDM_g_num_t));
+
+  int         *_out_array_idx = *out_array_idx;
+  PDM_g_num_t *_out_array1    = *out_array1;
+  PDM_g_num_t *_out_array2    = *out_array2;
+
+  _out_array_idx[0] = 0;
+  int recv_data_idx = 0;
+  for (int i_item = 0; i_item < n_item/2; i_item++) {
+    int n_elt = in_array_idx[2*i_item+1] - in_array_idx[2*i_item];
+    _out_array_idx[i_item+1] = _out_array_idx[i_item] + n_elt;
+    memcpy(&_out_array1[_out_array_idx[i_item]], &in_array[recv_data_idx]      , n_elt * sizeof(PDM_g_num_t));
+    memcpy(&_out_array2[_out_array_idx[i_item]], &in_array[recv_data_idx+n_elt], n_elt * sizeof(PDM_g_num_t));
+    recv_data_idx += 2*n_elt;
+  }
+  assert (recv_data_idx == in_array_idx[n_item]);
+}
+
 static int _extract_and_shift_jn_faces
 (
  int           n_zone,
@@ -632,92 +660,22 @@ int main(int argc, char *argv[])
 
 
 
-  int n_recv = face_vtx_both_idx[n_face_join];
 
   log_trace("Face vtx received after MBTP\n");
   PDM_log_trace_array_int (face_vtx_both_idx, n_face_join+1, "face_vtx_idx :: ");
-  PDM_log_trace_array_long(face_vtx_both, n_recv, "face_vtx :: ");
+  PDM_log_trace_array_long(face_vtx_both, face_vtx_both_idx[n_face_join], "face_vtx :: ");
 
 
-  int *face_vtx_idx = malloc(((n_face_join / 2 )+1) * sizeof(int));
-  PDM_g_num_t *face_vtx = malloc((n_recv / 2) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *face_vtx_opp = malloc((n_recv / 2 ) * sizeof(PDM_g_num_t));
-  face_vtx_idx[0] = 0;
-
-  int idx = 0;
-  int recv_idx = 0;
-  int data_idx = 0;
-  int recv_data_idx = 0;
-  for (int i_join = 0; i_join < n_group_join; i_join++) {
-    int i_join_opp = group_join_to_join_opp[i_join];
-    int n_face_this_jn = dface_join_idx[i_join+1] - dface_join_idx[i_join];
-    if (i_join <= i_join_opp) {
-      for (int k = dface_join_idx[i_join]; k < dface_join_idx[i_join+1]; k++) {
-        int n_edge = face_vtx_both_idx[2*recv_idx+1] - face_vtx_both_idx[2*recv_idx]; //Jump opposite face stride
-        // Update idx array
-        face_vtx_idx[idx+1] = face_vtx_idx[idx] + n_edge;
-        recv_idx++;
-        idx++;
-        // Updata data
-        memcpy(&face_vtx    [data_idx], &face_vtx_both[recv_data_idx], n_edge * sizeof(PDM_g_num_t));
-        memcpy(&face_vtx_opp[data_idx], &face_vtx_both[recv_data_idx+n_edge], n_edge * sizeof(PDM_g_num_t));
-        recv_data_idx += 2*n_edge;
-        data_idx += n_edge;
-      }
-    }
-  }
-
-  //Old version, when jn were not interlaced
-  
-  /*
-  //We have jn_idx, prepare jn_data_idx to allow easier access
-  int *jn_data_idx = malloc(n_group_join * sizeof(int));
-  jn_data_idx[0] = 0;
-  for (int i_join = 0; i_join < n_group_join; i_join++) {
-    jn_data_idx[i_join+1] = 0;
-    for (int k = dface_join_idx[i_join]; k < dface_join_idx[i_join+1]; k++) {
-      jn_data_idx[i_join+1] += part_stride[0][k];
-    }
-    jn_data_idx[i_join+1] += jn_data_idx[i_join];
-  }
-  PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "jn_idx :: ");
-  PDM_log_trace_array_int(jn_data_idx, n_group_join+1, "jn_data_idx :: ");
-
-  //Reorder all received face->edge connectivity to have pairs of faces
-  int *face_edge_idx = malloc(((n_face_join / 2 )+1) * sizeof(int));
-  PDM_g_num_t *face_edge = malloc((n_recv / 2) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *face_edge_opp = malloc((n_recv / 2 ) * sizeof(PDM_g_num_t));
-  face_edge_idx[0] = 0;
-  idx = 0;
-  int data_idx = 0;
-  for (int i_join = 0; i_join < n_group_join; i_join++) {
-    int i_join_opp = group_join_to_join_opp[i_join];
-    int n_face_this_jn = dface_join_idx[i_join+1] - dface_join_idx[i_join];
-
-    log_trace("Post treat jn %i\n", i_join);
-    if (i_join <= i_join_opp) {
-      //Copy idx
-      for (int k = dface_join_idx[i_join]; k < dface_join_idx[i_join+1]; k++) {
-        face_edge_idx[idx+1] = face_edge_idx[idx] + part_stride[0][k];
-        idx++;
-      }
-      //Copy data
-      int data_size = jn_data_idx[i_join+1] - jn_data_idx[i_join];
-      log_trace("data size is %d\n", data_size);
-      assert (jn_data_idx[i_join_opp+1] - jn_data_idx[i_join_opp] == data_size);
-      memcpy(&face_edge[data_idx], &part_data[0][jn_data_idx[i_join]], data_size * sizeof(PDM_g_num_t));
-      memcpy(&face_edge_opp[data_idx], &part_data[0][jn_data_idx[i_join_opp]], data_size * sizeof(PDM_g_num_t));
-      data_idx += data_size;
-    }
-  }
-  */
-  assert (idx == n_face_join / 2 );
-  assert (data_idx == n_recv / 2);
+  //This is probably useless
+  int         *face_vtx_idx = NULL;
+  PDM_g_num_t *face_vtx     = NULL;
+  PDM_g_num_t *face_vtx_opp = NULL;
+  _split_paired_connectivity(n_face_join, face_vtx_both_idx, face_vtx_both, &face_vtx_idx, &face_vtx, &face_vtx_opp);
 
   log_trace("Split face_vtx & face_vtx donor \n");
-  PDM_log_trace_array_int(face_vtx_idx, idx+1, "face_vtx_idx :: ");
-  PDM_log_trace_array_long(face_vtx, n_recv/2, "face_vtx :: ");
-  PDM_log_trace_array_long(face_vtx_opp, n_recv/2, "face_vtx_opp :: ");
+  PDM_log_trace_array_int(face_vtx_idx, (n_face_join / 2)+1,            "face_vtx_idx :: ");
+  PDM_log_trace_array_long(face_vtx,     face_vtx_idx[n_face_join / 2], "face_vtx :: ");
+  PDM_log_trace_array_long(face_vtx_opp, face_vtx_idx[n_face_join / 2], "face_vtx_opp :: ");
 
   //Now we have some pairs of faces (each pair appears only one) + face_vtx for this pairs
   
@@ -818,7 +776,7 @@ int main(int argc, char *argv[])
   int *dextract_face_group_idNEW = malloc(ext_dn_face*sizeof(int));
   PDM_g_num_t *dextract_face_joinNEW     = malloc(ext_dn_face*sizeof(PDM_g_num_t));
   PDM_g_num_t *dextract_face_join_oppNEW = malloc(ext_dn_face*sizeof(PDM_g_num_t));
-  idx = 0;
+  int idx = 0;
   for (int i_join = 0; i_join < n_group_join; i_join++) {
     int i_join_opp = group_join_to_join_opp[i_join];
     int i_zone_cur = group_join_to_zone_cur[i_join];
