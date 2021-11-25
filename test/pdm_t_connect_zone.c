@@ -351,6 +351,334 @@ int _generate_edge_face
   return dn_edge;
 }
 
+static int _match_internal_edges
+(
+ int            dn_edge,
+ int           *dedge_distrib,
+ int           *dedge_face_idx,
+ PDM_g_num_t   *dedge_face,
+ int           *dedge_face_group_id,
+ int           *dedge_face_group_id_opp,
+ PDM_g_num_t   *dedge_face_join,
+ PDM_g_num_t   *dedge_face_join_opp,
+ PDM_g_num_t  **dedge_gnum,
+ PDM_g_num_t  **dedge_gnum_opp,
+ PDM_MPI_Comm  comm
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  
+  // 0. Count the number of internal edges
+  int dn_internal_edge = 0;
+  for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
+    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
+    dn_internal_edge += (int) (n_face_this_edge > 1);
+  }
+  log_trace("dn internal edges is %i \n", dn_internal_edge);
+  log_trace("dn external edges is %i \n", dn_edge - dn_internal_edge);
+
+  // 1. Build hash keys
+  PDM_g_num_t *key_ln_to_gn = malloc(dn_internal_edge * sizeof(PDM_g_num_t)); 
+  int         *stride_one   = malloc(dn_internal_edge * sizeof(int        ));
+  int         *stride_two   = malloc(dn_internal_edge * sizeof(int        ));
+  int         *stride_four  = malloc(dn_internal_edge * sizeof(int        ));
+
+  PDM_g_num_t *data_send_connect    = malloc(4*dn_internal_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *data_send_edge_g_num = malloc(  dn_internal_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *data_send_group      = malloc(4*dn_internal_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *data_send_sens       = malloc(2*dn_internal_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *data_send_face_g_num = malloc(2*dn_internal_edge * sizeof(PDM_g_num_t));
+
+  int i_int_edge = 0;
+  int idx_write2 = 0;
+  int idx_write4 = 0;
+  for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
+
+    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
+    if (n_face_this_edge == 1) {
+      continue;
+    }
+    assert (n_face_this_edge == 2);
+
+    stride_one [i_int_edge] = 1;
+    stride_two [i_int_edge] = 2;
+    stride_four[i_int_edge] = 4;
+    //Retrive zone id using group id of any of two faces
+    data_send_edge_g_num[i_int_edge] = dedge_distrib[i_rank] + i_edge + 1;
+
+    int key = 0;
+    for(int j = dedge_face_idx[i_edge]; j < dedge_face_idx[i_edge+1]; ++j) { //Do it for the two faces data
+      key += (dedge_face_join[j] + dedge_face_join_opp[j]);
+
+      //data_send_face_g_num[idx_write2]   = dedge_face[j];
+      //data_send_sens      [idx_write2++] = dedge_face_group_sens[j];
+      idx_write2++;
+
+      data_send_connect[idx_write4] = dedge_face_join    [j];
+      data_send_group[idx_write4++] = dedge_face_group_id[j];
+
+      data_send_connect[idx_write4] = dedge_face_join_opp[j];
+      data_send_group[idx_write4++] = dedge_face_group_id_opp[j];
+    }
+    key_ln_to_gn[i_int_edge] = key;
+
+    i_int_edge++;
+  }
+  assert(idx_write2 == 2*dn_internal_edge);
+  assert(idx_write4 == 4*dn_internal_edge);
+
+  PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
+
+  // 2. Exchange data over hash key
+  //Attention, pb d'équilibrage car les clés sont réparties vers la fin ... Un proc risque
+  // de se retrouver avec tt les clés
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                    (PDM_g_num_t **) &key_ln_to_gn,
+                                                      NULL,
+                                                     &dn_internal_edge,
+                                                      1,
+                                                      comm);
+  // Get protocol data
+  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
+  // This one will contain 2 for non conflicting hash key, more otherwise
+  int *gnum_n_occurences = PDM_part_to_block_block_gnum_count_get(ptb);
+
+  int gnum_n_occurences_tot = 0;
+  for (int k = 0; k < blk_size; k++) {
+    gnum_n_occurences_tot += gnum_n_occurences[k];
+  }
+  
+  int         *unused_recv_stride = NULL;
+  PDM_g_num_t *blk_edge_g_num     = NULL;
+  int exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(PDM_g_num_t),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int **)  &stride_one,
+                           (void **) &data_send_edge_g_num,
+                                     &unused_recv_stride,
+                           (void **) &blk_edge_g_num);
+  free(unused_recv_stride); // Same as gnum_n_occurences 
+  assert (exch_size == gnum_n_occurences_tot);
+
+  /*
+  PDM_g_num_t* blk_data_sens   = NULL;
+  exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(int),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int **)  &stride_two,
+                           (void **) &data_send_sens,
+                                     &unused_recv_stride,
+                           (void **) &blk_data_sens);
+  free(unused_recv_stride); // Same as 2*gnum_n_occurences 
+  assert (exch_size == 2*gnum_n_occurences_tot);
+  */
+
+  /*
+  PDM_g_num_t* blk_data_face_g_num   = NULL;
+  exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(PDM_g_num_t),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int **)  &stride_two,
+                           (void **) &data_send_face_g_num,
+                                     &unused_recv_stride,
+                           (void **) &blk_data_face_g_num);
+  free(unused_recv_stride); // Same as 2*gnum_n_occurences
+  assert (exch_size == 2*gnum_n_occurences_tot);
+  */
+
+  PDM_g_num_t *blk_data_connect = NULL;
+  exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(PDM_g_num_t),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                          (int **)  &stride_four,
+                          (void **) &data_send_connect,
+                                    &unused_recv_stride,
+                          (void **) &blk_data_connect);
+  free(unused_recv_stride); // Same as 4*gnum_n_occurences 
+  assert (exch_size == 4*gnum_n_occurences_tot);
+
+  PDM_g_num_t *blk_data_group = NULL;
+  exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(int),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int **)  &stride_four,
+                           (void **) &data_send_group,
+                                     &unused_recv_stride,
+                           (void **) &blk_data_group);
+  free(unused_recv_stride); // Same as 4*gnum_n_occurences 
+  assert (exch_size == 4*gnum_n_occurences_tot);
+
+
+  PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
+  PDM_log_trace_array_long(blk_edge_g_num     , gnum_n_occurences_tot  , "blk_edge_g_num      :: ");
+  //PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
+  //PDM_log_trace_array_long(blk_data_sens      , 2*gnum_n_occurences_tot, "blk_data_sens       :: ");
+  PDM_log_trace_array_long(blk_data_connect   , 4*gnum_n_occurences_tot, "blk_data_connect    :: ");
+  PDM_log_trace_array_long(blk_data_group     , 4*gnum_n_occurences_tot, "blk_data_group      :: ");
+
+
+  free(key_ln_to_gn        );
+  free(data_send_connect   );
+  free(data_send_group     );
+  free(data_send_sens      );
+  free(data_send_face_g_num);
+  free(data_send_edge_g_num);
+  free(stride_one          );
+  free(stride_two          );
+  free(stride_four         );
+
+
+
+  // 3. Post treatemement : resolve conflicting keys
+  PDM_g_num_t *results_edge     = malloc(gnum_n_occurences_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t *results_edge_opp = malloc(gnum_n_occurences_tot * sizeof(PDM_g_num_t));
+
+  int n_max_entity_per_key = 0;
+  for(int i = 0; i < blk_size; ++i) {
+    n_max_entity_per_key = PDM_MAX(gnum_n_occurences   [i], n_max_entity_per_key);
+  }
+  int n_max_connec = 4*n_max_entity_per_key; //todo clean me
+
+
+  log_trace("n_max_entity_per_key = %i \n", n_max_entity_per_key);
+  log_trace("n_max_connec         = %i \n", n_max_connec);
+  int *already_treat   = (int *) malloc(n_max_entity_per_key * sizeof(int));
+  int *same_entity_idx = (int *) malloc(n_max_entity_per_key * sizeof(int));
+  // int *sens_entity     = (int *) malloc(n_max_entity_per_key * sizeof(int));
+
+
+  int idx  = 0;
+  int idx_w = 0;
+  for(int i_key = 0; i_key < blk_size; ++i_key) {
+
+    int n_matching_edge = gnum_n_occurences[i_key];
+
+    log_trace(" i_key = %i | n_matching_edge = %i \n", i_key, n_matching_edge);
+
+    /* Reset */
+    PDM_array_reset_int(already_treat, n_matching_edge, -1);
+
+    /* Loop over all entitys in conflict and sort all */
+    for(int i_entity = 0; i_entity < n_matching_edge; ++i_entity) {
+
+      //Each internal edge comes with 2 faces -> 4 data
+      int beg    = 4*(idx+i_entity);
+
+      // Caution inplace sort !!!!
+      PDM_sort_long(&blk_data_connect[beg], NULL, 4);
+      PDM_sort_int (&blk_data_group  [beg], NULL, 4);
+
+      if(0 == 1) {
+        PDM_log_trace_array_long(&blk_data_connect[beg], 4, "blk_data_connect (sort) :: ");
+        PDM_log_trace_array_int (&blk_data_group  [beg], 4, "blk_data_group   (sort) :: ");
+      }
+    }
+
+    /*
+     *  Identify pair or invalid other //todo : shortcut only 2 occurences
+     */
+    for(int i_entity = 0; i_entity < n_matching_edge; ++i_entity) {
+      int beg1    = 4*(idx+i_entity);
+
+      int n_same         = 0;
+      int i_entity2_same = -1;
+
+      if(already_treat[i_entity] == 1) {
+        continue;
+      }
+
+      for(int i_entity2 = i_entity+1; i_entity2 < n_matching_edge; ++i_entity2) {
+
+        if(already_treat[i_entity2] == -1) {
+          int beg2    = 4*(idx+i_entity2);
+
+          if(!PDM_array_are_equal_int(&blk_data_group[beg1], &blk_data_group[beg2], 4)) {
+            continue;
+          }
+
+          if(!PDM_array_are_equal_int(&blk_data_connect[beg1], &blk_data_connect[beg2], 4)) {
+            continue;
+          }
+
+          already_treat[i_entity2] = 1;
+          same_entity_idx[n_same++] = i_entity2;
+          i_entity2_same = i_entity2;
+
+        }
+      } /* End for i_entity2 */
+      assert(n_same == 1);
+
+
+      int edge_idx     = (idx+i_entity);
+      int edge_idx_opp = (idx+i_entity2_same);
+
+      // Set data for edge
+      results_edge    [idx_w] = blk_edge_g_num[edge_idx];
+      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx_opp];
+
+      // Set data for opposite edge
+      results_edge    [idx_w] = blk_edge_g_num[edge_idx_opp];
+      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx];
+
+      already_treat[i_entity] = 1;
+    }
+    idx  += n_matching_edge;
+  }
+  assert (idx_w == gnum_n_occurences_tot);
+  free(already_treat);
+  free(same_entity_idx);
+
+  free(blk_edge_g_num);
+  free(blk_data_connect);
+  free(blk_data_group);
+  PDM_part_to_block_free(ptb); // Needed until here for gnum_n_occurences
+
+  log_trace("Conflict resolved, gnum are\n");
+  PDM_log_trace_array_long(results_edge, gnum_n_occurences_tot, "edge gnum ::");
+  PDM_log_trace_array_long(results_edge_opp, gnum_n_occurences_tot, "edge gnum opp::");
+
+
+
+  // 4. Send back result on edge distribution
+                       ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
+                                                       1.,
+                                                      &results_edge,
+                                                       dedge_distrib,
+                                                      &gnum_n_occurences_tot,
+                                                       1,
+                                                       comm);
+
+  assert (PDM_part_to_block_n_elt_block_get(ptb) == dn_internal_edge);
+  *dedge_gnum = malloc(dn_internal_edge * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t *dedge_gnum_tmp = PDM_part_to_block_block_gnum_get(ptb);
+  memcpy(*dedge_gnum, dedge_gnum_tmp, dn_internal_edge*sizeof(PDM_g_num_t));
+
+  PDM_part_to_block_exch(ptb,
+                        sizeof(PDM_g_num_t),
+                        PDM_STRIDE_CST,
+                        1,
+                        NULL,
+             (void **) &(results_edge_opp),
+                        NULL,
+              (void **) dedge_gnum_opp);
+  PDM_part_to_block_free(ptb);
+
+  free(results_edge);
+  free(results_edge_opp);
+
+  return dn_internal_edge;
+}
+
 
 static void
 merge_zone
@@ -805,18 +1133,6 @@ int main(int argc, char *argv[])
   //PDM_log_trace_array_long(dedge_vtx, 2*dn_edge, "dedge_vtx ::");
   //PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
 
-  // Count the number of internal & external edges
-  int dn_internal_edge = 0;
-  for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
-    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    dn_internal_edge += (int) (n_face_this_edge > 1);
-  }
-  int dn_external_edge = dn_edge - dn_internal_edge;
-  log_trace("dn internal edges is %i \n", dn_internal_edge);
-  log_trace("dn external edges is %i \n", dn_external_edge);
-
-
-
   // Transport face data to edges
 
   //Prepare numbering
@@ -828,9 +1144,10 @@ int main(int argc, char *argv[])
   }
 
 
-  PDM_g_num_t *dedge_face_join     = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *dedge_face_join_opp = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
-  int         *dedge_face_group_id = malloc(dedge_face_idx[dn_edge] * sizeof(int        ));
+  PDM_g_num_t *dedge_face_join         = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dedge_face_join_opp     = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
+  int         *dedge_face_group_id     = malloc(dedge_face_idx[dn_edge] * sizeof(int        ));
+  int         *dedge_face_group_id_opp = malloc(dedge_face_idx[dn_edge] * sizeof(int        ));
   PDM_block_to_part_t *btp = PDM_block_to_part_create(extracted_face_distri,
                                (const PDM_g_num_t **) &dedge_face_abs,
                                                       &dedge_face_idx[dn_edge],
@@ -844,6 +1161,11 @@ int main(int argc, char *argv[])
                 (void *) dextract_face_group_id,
                          NULL,
              (void ** ) &dedge_face_group_id);
+
+  //Group id can be recomputed instead of exchanged
+  for (int i = 0; i < dedge_face_idx[dn_edge]; i++) {
+    dedge_face_group_id_opp[i] = group_join_to_join_opp[dedge_face_group_id[i]];
+  }
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST,
@@ -871,341 +1193,21 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_long(dedge_face_join    , dedge_face_idx[dn_edge], "dedge_face_join     ::");
   PDM_log_trace_array_long(dedge_face_join_opp, dedge_face_idx[dn_edge], "dedge_face_join_opp ::");
 
-  // Begin hash table
-  PDM_g_num_t *key_ln_to_gn = malloc(dn_internal_edge * sizeof(PDM_g_num_t)); 
-  int         *stride_one   = malloc(dn_internal_edge * sizeof(int        ));
-  int         *stride_two   = malloc(dn_internal_edge * sizeof(int        ));
-  int         *stride_four  = malloc(dn_internal_edge * sizeof(int        ));
-
-  int         *zone_id              = malloc(  dn_internal_edge * sizeof(int        ));
-  PDM_g_num_t *data_send_connect    = malloc(4*dn_internal_edge * sizeof(PDM_g_num_t));
-  PDM_g_num_t *data_send_edge_g_num = malloc(  dn_internal_edge * sizeof(PDM_g_num_t));
-  PDM_g_num_t *data_send_group      = malloc(4*dn_internal_edge * sizeof(PDM_g_num_t));
-  PDM_g_num_t *data_send_sens       = malloc(2*dn_internal_edge * sizeof(PDM_g_num_t));
-  PDM_g_num_t *data_send_face_g_num = malloc(2*dn_internal_edge * sizeof(PDM_g_num_t));
-
-  int i_int_edge = 0;
-  int idx_write2 = 0;
-  int idx_write4 = 0;
-  for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
-
-    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    if (n_face_this_edge == 1) {
-      continue;
-    }
-    assert (n_face_this_edge == 2);
-
-    stride_one [i_int_edge] = 1;
-    stride_two [i_int_edge] = 2;
-    stride_four[i_int_edge] = 4;
-    //Retrive zone id using group id of any of two faces
-    data_send_edge_g_num[i_int_edge] = dedge_distrib[i_rank] + i_edge + 1;
-    int group_id = dedge_face_group_id[dedge_face_idx[i_edge]];
-    zone_id[i_int_edge] = group_join_to_zone_cur[group_id];
-
-    int key = 0;
-    for(int j = dedge_face_idx[i_edge]; j < dedge_face_idx[i_edge+1]; ++j) { //Do it for the two faces data
-      key += (dedge_face_join[j] + dedge_face_join_opp[j]);
-
-      data_send_face_g_num[idx_write2]   = dedge_face[j];
-      idx_write2++;
-      //data_send_sens      [idx_write2++] = dedge_face_group_sens[j];
-
-      data_send_connect[idx_write4] = dedge_face_join    [j];
-      data_send_group[idx_write4++] = dedge_face_group_id[j];
-
-      data_send_connect[idx_write4] = dedge_face_join_opp[j];
-      data_send_group[idx_write4++] = group_join_to_join_opp[dedge_face_group_id[j]]; // This is group join opp
-    }
-    key_ln_to_gn[i_int_edge] = key;
-
-    i_int_edge++;
-  }
-  assert(idx_write2 == 2*dn_internal_edge);
-  assert(idx_write4 == 4*dn_internal_edge);
-
-  PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
-
-  //Attention, pb d'équilibrage car les clés sont réparties vers la fin ... Un proc risque
-  // de se retrouver avec tt les clés
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
-                                                      1.,
-                                    (PDM_g_num_t **) &key_ln_to_gn,
-                                                      NULL,
-                                                     &dn_internal_edge,
-                                                      1,
-                                                      comm);
-  // Get protocol data
-  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
-  // This one will contain 2 for non conflicting hash key, more otherwise
-  int *gnum_n_occurences = PDM_part_to_block_block_gnum_count_get(ptb);
-
-  int gnum_n_occurences_tot = 0;
-  for (int k = 0; k < blk_size; k++) {
-    gnum_n_occurences_tot += gnum_n_occurences[k];
-  }
-  int *blk_entity_idx    = (int *) malloc((gnum_n_occurences_tot + 1)*sizeof(int));
-  int *blk_data_face_idx = (int *) malloc((gnum_n_occurences_tot + 1)*sizeof(int));
-  for (int k = 0; k < gnum_n_occurences_tot + 1; k++) {
-    blk_entity_idx[k]    = 4*k;
-    blk_data_face_idx[k] = 2*k;
-  }
-  
-  // Exch data : zone_id, edge gnum, face & facedonor id, face & facedonor group id, face_sens and faces_gnum
-
-  int *unused_recv_stride = NULL;
-  int *blk_zone_id   = NULL;
-  int exch_size = PDM_part_to_block_exch(ptb,
-                                         sizeof(int),
-                                         PDM_STRIDE_VAR,
-                                         -1,
-                               (int **)  &stride_one,
-                               (void **) &zone_id,
-                                         &unused_recv_stride,
-                               (void **) &blk_zone_id);
-  free(unused_recv_stride); // Same as gnum_n_occurences 
-  assert (exch_size == gnum_n_occurences_tot);
-
-  PDM_g_num_t* blk_edge_g_num           = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int **)  &stride_one,
-                           (void **) &data_send_edge_g_num,
-                                     &unused_recv_stride,
-                           (void **) &blk_edge_g_num);
-  free(unused_recv_stride); // Same as gnum_n_occurences 
-  assert (exch_size == gnum_n_occurences_tot);
-
-  /*
-  PDM_g_num_t* blk_data_sens   = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(int),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int **)  &stride_two,
-                           (void **) &data_send_sens,
-                                     &unused_recv_stride,
-                           (void **) &blk_data_sens);
-  free(unused_recv_stride); // Same as 2*gnum_n_occurences 
-  assert (exch_size == 2*gnum_n_occurences_tot);
-  */
-
-  PDM_g_num_t* blk_data_face_g_num   = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int **)  &stride_two,
-                           (void **) &data_send_face_g_num,
-                                     &unused_recv_stride,
-                           (void **) &blk_data_face_g_num);
-  free(unused_recv_stride); // Same as 2*gnum_n_occurences
-  assert (exch_size == 2*gnum_n_occurences_tot);
-
-  PDM_g_num_t* blk_data_connect   = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                          (int **)  &stride_four,
-                          (void **) &data_send_connect,
-                                    &unused_recv_stride,
-                          (void **) &blk_data_connect);
-  free(unused_recv_stride); // Same as 4*gnum_n_occurences 
-  assert (exch_size == 4*gnum_n_occurences_tot);
-
-  PDM_g_num_t* blk_data_group   = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(int),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int **)  &stride_four,
-                           (void **) &data_send_group,
-                                     &unused_recv_stride,
-                           (void **) &blk_data_group);
-  free(unused_recv_stride); // Same as 4*gnum_n_occurences 
-  assert (exch_size == 4*gnum_n_occurences_tot);
-
-
-  PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
-  PDM_log_trace_array_int(blk_zone_id         , gnum_n_occurences_tot  , "blk_zone_id         :: ");
-  PDM_log_trace_array_long(blk_edge_g_num     , gnum_n_occurences_tot  , "blk_edge_g_num      :: ");
-  PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
-  //PDM_log_trace_array_long(blk_data_sens      , 2*gnum_n_occurences_tot, "blk_data_sens       :: ");
-  PDM_log_trace_array_long(blk_data_connect   , 4*gnum_n_occurences_tot, "blk_data_connect    :: ");
-  PDM_log_trace_array_long(blk_data_group     , 4*gnum_n_occurences_tot, "blk_data_group      :: ");
-
-
-  free(key_ln_to_gn        );
-  free(data_send_connect   );
-  free(data_send_group     );
-  free(data_send_edge_g_num);
-  free(data_send_sens      );
-  free(stride_one          );
-  free(stride_two          );
-  free(stride_four         );
-  free(data_send_face_g_num);
-  free(zone_id             );
-
-  // Post treatemement : resolve conflicting keys
-  int n_max_entity_per_key = 0;
-  for(int i = 0; i < blk_size; ++i) {
-    n_max_entity_per_key = PDM_MAX(gnum_n_occurences   [i], n_max_entity_per_key);
-  }
-  int n_max_connec = 4*n_max_entity_per_key;
-
-
-  //Number of edge to treat on each zone (Usefull ?)
-  int* zone_id_n = PDM_array_zeros_int(n_zone);
-  for (int i_edge = 0; i_edge < gnum_n_occurences_tot; i_edge++) {
-    zone_id_n[blk_zone_id[i_edge]]++;
-  }
-
-  PDM_log_trace_array_int(zone_id_n        , n_zone                , "zone_id_n         :: ");
-  log_trace("n_max_entity_per_key = %i \n", n_max_entity_per_key);
-  log_trace("n_max_connec         = %i \n", n_max_connec);
-  int*          already_treat    = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
-  int*          same_entity_idx  = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
-  //int*          sens_entity      = (int         *) malloc(  n_max_entity_per_key * sizeof(int          ) );
-  PDM_g_num_t *results_edge     = malloc(gnum_n_occurences_tot * sizeof(PDM_g_num_t));
-  PDM_g_num_t *results_edge_opp = malloc(gnum_n_occurences_tot * sizeof(PDM_g_num_t));
-
-  /* Reset to fill */
-  PDM_array_reset_int(zone_id_n, n_zone, 0);
-
-  idx  = 0;
-  int idx_w = 0;
-  for(int i_key = 0; i_key < blk_size; ++i_key) {
-
-    int n_matching_edge = gnum_n_occurences[i_key];
-
-    log_trace(" i_key = %i | n_matching_edge = %i \n", i_key, n_matching_edge);
-
-    /* Reset */
-    PDM_array_reset_int(already_treat, n_matching_edge, -1);
-
-    /* Loop over all entitys in conflict and sort all */
-    for(int i_entity = 0; i_entity < n_matching_edge; ++i_entity) {
-
-      //Each internal edge comes with 2 faces -> 4 data
-      int beg    = 4*(idx+i_entity);
-
-      // Caution inplace sort !!!!
-      PDM_sort_long(&blk_data_connect[beg], NULL, 4);
-      PDM_sort_int (&blk_data_group  [beg], NULL, 4);
-
-      if(0 == 1) {
-        PDM_log_trace_array_long(&blk_data_connect[beg], 4, "blk_data_connect (sort) :: ");
-        PDM_log_trace_array_int (&blk_data_group  [beg], 4, "blk_data_group   (sort) :: ");
-      }
-    }
-
-    /*
-     *  Identify pair or invalid other
-     */
-    for(int i_entity = 0; i_entity < n_matching_edge; ++i_entity) {
-      int beg1    = 4*(idx+i_entity);
-
-      int n_same         = 0;
-      int i_entity2_same = -1;
-
-      if(already_treat[i_entity] == 1) {
-        continue;
-      }
-
-      for(int i_entity2 = i_entity+1; i_entity2 < n_matching_edge; ++i_entity2) {
-
-        if(already_treat[i_entity2] == -1) {
-          int beg2    = 4*(idx+i_entity2);
-
-          if(!PDM_array_are_equal_int(&blk_data_group[beg1], &blk_data_group[beg2], 4)) {
-            continue;
-          }
-
-          if(!PDM_array_are_equal_int(&blk_data_connect[beg1], &blk_data_connect[beg2], 4)) {
-            continue;
-          }
-
-          already_treat[i_entity2] = 1;
-          same_entity_idx[n_same++] = i_entity2;
-          i_entity2_same = i_entity2;
-
-        }
-      } /* End for i_entity2 */
-      assert(n_same == 1);
-
-      //log_trace("i_entity = %i | i_entity2_same = %i | n_same = %i \n", i_entity, i_entity2_same, n_same);
-
-      /*
-       * Renvoie des resultats :
-       *    - Par edge --> Il faut donc également le numero de zones
-       */
-      int edge_idx     = (idx+i_entity);
-      int edge_idx_opp = (idx+i_entity2_same);
-
-      int i_zone_cur = blk_zone_id[edge_idx];
-      int i_zone_opp = blk_zone_id[edge_idx_opp];
-
-      // Set data for edge
-      results_edge    [idx_w] = blk_edge_g_num[edge_idx];
-      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx_opp];
-      //results_edge    [i_zone_cur][zone_id_n[i_zone_cur]  ] = blk_edge_g_num[edge_idx];
-      //results_edge_opp[i_zone_cur][zone_id_n[i_zone_cur]  ] = blk_edge_g_num[edge_idx_opp];
-      //results_zone_opp[i_zone_cur][zone_id_n[i_zone_cur]++] = blk_zone_id[edge_idx_opp];
-
-      // Set data for opposite edge
-      results_edge    [idx_w] = blk_edge_g_num[edge_idx_opp];
-      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx];
-      //results_edge    [i_zone_opp][zone_id_n[i_zone_opp]  ] = blk_edge_g_num[edge_idx_opp];
-      //results_edge_opp[i_zone_opp][zone_id_n[i_zone_opp]  ] = blk_edge_g_num[edge_idx];
-      //results_zone_opp[i_zone_opp][zone_id_n[i_zone_opp]++] = blk_zone_id[edge_idx];
-
-      // Renvoi de tout les edges candidats à travers les faces ???
-      already_treat[i_entity] = 1;
-    }
-
-    idx  += n_matching_edge;
-  }
-  assert (idx_w == gnum_n_occurences_tot);
-
-  PDM_part_to_block_free(ptb); // Needed for gnum_n_occurences
-
-  log_trace("Conflict resolved, gnum are\n");
-  PDM_log_trace_array_long(results_edge, gnum_n_occurences_tot, "edge gnum ::");
-  PDM_log_trace_array_long(results_edge_opp, gnum_n_occurences_tot, "edge gnum opp::");
-
-  free(zone_id_n);
-
-
-  // Send back result on edge distribution (we were on key distribution)
-                       ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
-                                                       1.,
-                                                      &results_edge,
-                                                       dedge_distrib,
-                                                      &gnum_n_occurences_tot,
-                                                       1,
-                                                       comm);
-
-  assert (PDM_part_to_block_n_elt_block_get(ptb) == dn_internal_edge);
-  PDM_g_num_t *dedge_gnum     = malloc(PDM_part_to_block_n_elt_block_get(ptb) * sizeof(PDM_g_num_t));
+  // Match internal edges
+  PDM_g_num_t *dedge_gnum     = NULL;
   PDM_g_num_t *dedge_gnum_opp = NULL;
+  int dn_internal_edge = _match_internal_edges(dn_edge,
+                                               dedge_distrib,
+                                               dedge_face_idx,
+                                               dedge_face,
+                                               dedge_face_group_id,
+                                               dedge_face_group_id_opp,
+                                               dedge_face_join,
+                                               dedge_face_join_opp,
+                                              &dedge_gnum,
+                                              &dedge_gnum_opp,
+                                               comm);
 
-  PDM_g_num_t *dedge_gnum_tmp = PDM_part_to_block_block_gnum_get(ptb);
-  memcpy(dedge_gnum, dedge_gnum_tmp, PDM_part_to_block_n_elt_block_get(ptb) * sizeof(PDM_g_num_t));
-
-  PDM_part_to_block_exch(ptb,
-                        sizeof(PDM_g_num_t),
-                        PDM_STRIDE_CST,
-                        1,
-                        NULL,
-             (void **) &(results_edge_opp),
-                        NULL,
-              (void **) &dedge_gnum_opp);
-  PDM_part_to_block_free(ptb);
   
   // Rebuild idx array (no data on external edges)
   /*int *dedge_gnum_idx = (int *) malloc ((dn_edge + 1) * sizeof(int)); //This one will be useless probably*/
@@ -1452,8 +1454,8 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_long(p_all_vtx_opp, dface_edge_idx[ext_dn_face], "p_all_vtx_opp ::");
 
   //Finally, send this back to edge distribution
-  stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
-                       ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  int *stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                        1.,
                                                       &p_all_edge_gnum,
@@ -1461,10 +1463,10 @@ int main(int argc, char *argv[])
                                                       &(dface_edge_idx[ext_dn_face]),
                                                        1,
                                                        comm);
-  unused_recv_stride = NULL;
+  int *unused_recv_stride = NULL;
   PDM_g_num_t *dall_edge_gnum_opp = NULL;
 
-  exch_size = PDM_part_to_block_exch(ptb,
+  int exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
                                      PDM_STRIDE_VAR,
                                      -1,
@@ -1558,7 +1560,7 @@ int main(int argc, char *argv[])
                                                       comm);
 
   PDM_g_num_t *vtx_distriF = PDM_part_to_block_distrib_index_get(ptb);
-  blk_size = PDM_part_to_block_n_elt_block_get(ptb);
+  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *dall_vtx   = PDM_part_to_block_block_gnum_get(ptb);
 
   int *recv_stride = NULL;
@@ -1681,6 +1683,7 @@ int main(int argc, char *argv[])
   free(dedge_face_join);
   free(dedge_face_join_opp);
   free(dedge_face_group_id);
+  free(dedge_face_group_id_opp);
 
 
   free(extracted_face_distri);
@@ -1700,6 +1703,8 @@ int main(int argc, char *argv[])
   free(dedge_face_idx);
   free(dedge_face);
 
+  free(dedge_gnum);
+  free(dedge_gnum_opp);
 
   free(face_per_block_offset);
   free(vtx_per_block_offset);
