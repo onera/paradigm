@@ -24,6 +24,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_sort.h"
+#include "pdm_unique.h"
 #include "pdm_array.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
@@ -962,74 +963,45 @@ PDM_MPI_Comm   comm
     PDM_log_trace_array_long(dall_vtx_group, exch_size, "recv dall_vtx_group :");
   }
 
-  //Post treat vertex data
-  int *all_order    = malloc(exch_size*sizeof(int));
-  int *group_id_tmp = malloc(exch_size * sizeof(int));
-  memcpy(group_id_tmp, dall_vtx_group, exch_size*sizeof(int));
-
+  int *unique_per_vtx = (int *) malloc(blk_size * sizeof(int));
+  // First pass to count
+  int *_dvtx_group_n   = PDM_array_zeros_int(n_group_join);
   int start_vtx = 0;
   for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
     int n_recv = recv_stride[i_vtx];
-    //order array must be initialized
-    for (int j = 0; j < n_recv; j++)
-      all_order[start_vtx + j] = j;
-    PDM_sort_int(&group_id_tmp[start_vtx], &all_order[start_vtx], n_recv);
-    start_vtx += n_recv;
-  }
-  free(group_id_tmp);
-  
-  //First pass to count
-  int *_dvtx_group_n   = PDM_array_zeros_int(n_group_join);
-  start_vtx = 0;
-  for (int i_vtx = 0; i_vtx < blk_size; i_vtx++) {
-    int n_recv = recv_stride[i_vtx];
-    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
-    int *loc_order       = &all_order     [start_vtx];
-
-    _dvtx_group_n[_dall_vtx_group[loc_order[0]]]++; //Vtx should be related to at least one face, so its ok
-    for (int i = 1; i < n_recv; i++) {
-      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]])
-        _dvtx_group_n[_dall_vtx_group[loc_order[i]]]++;
+    int n_unique = PDM_inplace_unique(dall_vtx_group, start_vtx, start_vtx + n_recv - 1);
+    for (int i = 0; i < n_unique; i++) {
+      _dvtx_group_n[dall_vtx_group[start_vtx + i]]++;
     }
+    unique_per_vtx[i_vtx] = n_unique;
     start_vtx += n_recv;
   }
-
-  //Second pass to fill
+  
+  // Second pass to fill
   int         *_dvtx_group_idx = PDM_array_new_idx_from_sizes_int(_dvtx_group_n, n_group_join);
   PDM_g_num_t *_dvtx_group     = malloc(_dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
   PDM_g_num_t *_dvtx_group_opp = malloc(_dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
   PDM_array_reset_int(_dvtx_group_n, n_group_join, 0); // reset to count
-
   start_vtx = 0;
-  for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
+  for (int i_vtx = 0; i_vtx < blk_size; i_vtx++) {
     int n_recv = recv_stride[i_vtx];
-    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
-    int *loc_order       = &all_order     [start_vtx];
-
     PDM_g_num_t vtx_gnum     = dall_vtx[i_vtx];  //These one will be the same even if vertex appears more than once
     PDM_g_num_t opp_vtx_gnum = dall_vtx_opp[start_vtx];
-
-    int i_group = _dall_vtx_group[loc_order[0]];
-    _dvtx_group    [_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = vtx_gnum;
-    _dvtx_group_opp[_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = opp_vtx_gnum;
-    _dvtx_group_n[i_group]++;
-    for (int i = 1; i < n_recv; i++) {
-      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]]) {
-        i_group = _dall_vtx_group[loc_order[i]];
-        _dvtx_group    [_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = vtx_gnum;
-        _dvtx_group_opp[_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = opp_vtx_gnum;
-        _dvtx_group_n[i_group]++;
-      }
+    for (int i = 0; i < unique_per_vtx[i_vtx]; i++) {
+      int i_group = dall_vtx_group[start_vtx + i];
+      _dvtx_group    [_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = vtx_gnum;
+      _dvtx_group_opp[_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = opp_vtx_gnum;
+      _dvtx_group_n[i_group]++;
     }
     start_vtx += n_recv;
   }
 
+  PDM_part_to_block_free(ptb);
   free(_dvtx_group_n);
-  free(all_order);
   free(recv_stride);
   free(dall_vtx_opp);
   free(dall_vtx_group);
-  PDM_part_to_block_free(ptb);
+  free(unique_per_vtx);
 
   *dvtx_group_idx = _dvtx_group_idx;
   *dvtx_group     = _dvtx_group;
