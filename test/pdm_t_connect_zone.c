@@ -831,6 +831,141 @@ void _match_all_edges_from_faces
   free(ordered_vtx_opp);
 }
 
+static void
+_create_vtx_join
+(
+int            n_group_join,
+int            p_all_vtx_n,
+int           *p_all_vtx,
+int           *p_all_vtx_opp,
+int           *p_all_vtx_group,
+int          **dvtx_group_idx,
+PDM_g_num_t  **dvtx_group,
+PDM_g_num_t  **dvtx_group_opp,
+PDM_MPI_Comm   comm
+)
+{
+  //Todo : we could shift back to position of vtx in extraction to have a better
+  //balance of edge distribution
+  int *stride_one = PDM_array_const_int(p_all_vtx_n, 1);
+  //Merge vertices using gnum -- exchange opp_gnum & group id
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                     &p_all_vtx,
+                                                      NULL,
+                                                     &p_all_vtx_n,
+                                                      1,
+                                                      comm);
+
+  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t *dall_vtx   = PDM_part_to_block_block_gnum_get(ptb);
+
+  int         *recv_stride    = NULL;
+  PDM_g_num_t *dall_vtx_opp   = NULL;
+  PDM_g_num_t *dall_vtx_group = NULL;
+  int exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(PDM_g_num_t),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int  **) &stride_one,
+                           (void **) &p_all_vtx_opp,
+                                     &recv_stride,
+                           (void **) &dall_vtx_opp);
+
+  int *unused_recv_stride = NULL;
+  exch_size = PDM_part_to_block_exch(ptb,
+                                     sizeof(PDM_g_num_t),
+                                     PDM_STRIDE_VAR,
+                                     -1,
+                           (int  **) &stride_one,
+                           (void **) &p_all_vtx_group,
+                                     &unused_recv_stride, //Same  than recv stride
+                           (void **) &dall_vtx_group);
+  free(unused_recv_stride);
+
+  PDM_log_trace_array_long(dall_vtx,       blk_size,  "dall_vtx            :");
+  PDM_log_trace_array_long(recv_stride,    blk_size,  "recv stride         :");
+  PDM_log_trace_array_long(dall_vtx_opp,   exch_size, "recv dall_vtx_opp   :");
+  PDM_log_trace_array_long(dall_vtx_group, exch_size, "recv dall_vtx_group :");
+  free(stride_one);
+
+  //Post treat vertex data
+  int *all_order    = malloc(exch_size*sizeof(int));
+  int *group_id_tmp = malloc(exch_size * sizeof(int));
+  memcpy(group_id_tmp, dall_vtx_group, exch_size*sizeof(int));
+
+  int start_vtx = 0;
+  for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
+    int n_recv = recv_stride[i_vtx];
+    //order array must be initialized
+    for (int j = 0; j < n_recv; j++)
+      all_order[start_vtx + j] = j;
+    PDM_sort_int(&group_id_tmp[start_vtx], &all_order[start_vtx], n_recv);
+    start_vtx += n_recv;
+  }
+  free(group_id_tmp);
+  PDM_log_trace_array_int(all_order, exch_size, "all order ");
+  
+  //First pass to count
+  int *_dvtx_group_n   = PDM_array_zeros_int(n_group_join);
+  start_vtx = 0;
+  for (int i_vtx = 0; i_vtx < blk_size; i_vtx++) {
+    int n_recv = recv_stride[i_vtx];
+    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
+    int *loc_order       = &all_order     [start_vtx];
+
+    _dvtx_group_n[_dall_vtx_group[loc_order[0]]]++; //Vtx should be related to at least one face, so its ok
+    for (int i = 1; i < n_recv; i++) {
+      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]])
+        _dvtx_group_n[_dall_vtx_group[loc_order[i]]]++;
+    }
+    start_vtx += n_recv;
+  }
+
+  //Second pass to fill
+  int         *_dvtx_group_idx = PDM_array_new_idx_from_sizes_int(_dvtx_group_n, n_group_join);
+  PDM_g_num_t *_dvtx_group     = malloc(_dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *_dvtx_group_opp = malloc(_dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
+  PDM_array_reset_int(_dvtx_group_n, n_group_join, 0); // reset to count
+
+  start_vtx = 0;
+  for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
+    int n_recv = recv_stride[i_vtx];
+    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
+    int *loc_order       = &all_order     [start_vtx];
+
+    PDM_g_num_t vtx_gnum     = dall_vtx[i_vtx];  //These one will be the same even if vertex appears more than once
+    PDM_g_num_t opp_vtx_gnum = dall_vtx_opp[start_vtx];
+
+    int i_group = _dall_vtx_group[loc_order[0]];
+    _dvtx_group    [_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = vtx_gnum;
+    _dvtx_group_opp[_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = opp_vtx_gnum;
+    _dvtx_group_n[i_group]++;
+    for (int i = 1; i < n_recv; i++) {
+      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]]) {
+        i_group = _dall_vtx_group[loc_order[i]];
+        _dvtx_group    [_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = vtx_gnum;
+        _dvtx_group_opp[_dvtx_group_idx[i_group] + _dvtx_group_n[i_group]] = opp_vtx_gnum;
+        _dvtx_group_n[i_group]++;
+      }
+    }
+    start_vtx += n_recv;
+  }
+
+  free(_dvtx_group_n);
+  free(all_order);
+  free(recv_stride);
+  free(dall_vtx_opp);
+  free(dall_vtx_group);
+  PDM_part_to_block_free(ptb);
+
+  *dvtx_group_idx = _dvtx_group_idx;
+  *dvtx_group     = _dvtx_group;
+  *dvtx_group_opp = _dvtx_group_opp;
+}
+
+
 
 static void
 merge_zone
@@ -1485,211 +1620,20 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_long(p_all_vtx,     dface_edge_idx[ext_dn_face], "p_all_vtx     ::");
   PDM_log_trace_array_long(p_all_vtx_opp, dface_edge_idx[ext_dn_face], "p_all_vtx_opp ::");
 
-  /*
-  //Finally, send this back to edge distribution
-  int *stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                       1.,
-                                                      &p_all_edge_gnum,
-                                                       dedge_distrib,
-                                                      &(dface_edge_idx[ext_dn_face]),
-                                                       1,
-                                                       comm);
-  int *unused_recv_stride = NULL;
-  PDM_g_num_t *dall_edge_gnum_opp = NULL;
+  int p_all_vtx_n = dface_edge_idx[ext_dn_face];
+  int         *dvtx_group_idx = NULL;
+  PDM_g_num_t *dvtx_group     = NULL;
+  PDM_g_num_t *dvtx_group_opp = NULL;
+  _create_vtx_join(n_group_join,
+                   p_all_vtx_n,
+                   p_all_vtx,
+                   p_all_vtx_opp,
+                   p_all_vtx_group,
+                  &dvtx_group_idx,
+                  &dvtx_group,
+                  &dvtx_group_opp,
+                   comm);
 
-  int exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int  **) &stride_one,
-                           (void **) &p_all_edge_gnum_opp,
-                                     &unused_recv_stride,
-                           (void **) &dall_edge_gnum_opp);
-  assert (exch_size == dn_edge);
-  free(unused_recv_stride);
-
-
-  PDM_log_trace_array_long(dall_edge_gnum_opp, exch_size, "recv dall_edge_gnum_opp");
-  PDM_part_to_block_free(ptb);
-  free(stride_one);
-
-
-  //We have everything on edges. We can build edge - edgeopp array
-  int *all_order    = (int *) malloc(dedge_face_idx[dn_edge]*sizeof(int));
-  int *group_id_tmp = (int *) malloc(dedge_face_idx[dn_edge]*sizeof(int));
-  memcpy(group_id_tmp, dedge_face_group_id, dedge_face_idx[dn_edge]*sizeof(int));
-
-  for (int i_edge =  0; i_edge < dn_edge; i_edge++) {
-    int n_connected_faces = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    int start_idx = dedge_face_idx[i_edge];
-    //order array must be initialized
-    for (int j = 0; j < n_connected_faces; j++)
-      all_order[start_idx + j] = j;
-    PDM_sort_int(&group_id_tmp[start_idx], &all_order[start_idx], n_connected_faces);
-  }
-  free(group_id_tmp);
-
-  //First pass to count
-  int *dedge_group_n   = PDM_array_zeros_int(n_group_join);
-  for (int i_edge =  0; i_edge < dn_edge; i_edge++) {
-    int n_connected_faces = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    int start_idx = dedge_face_idx[i_edge];
-    int *_dedge_face_group_id = &dedge_face_group_id[start_idx];
-    int *loc_order = &all_order[start_idx];
-
-    dedge_group_n[_dedge_face_group_id[loc_order[0]]]++; //Edge should be related to at least one face, so its ok
-    for (int i = 1; i < n_connected_faces; i++) {
-      if (_dedge_face_group_id[loc_order[i]] != _dedge_face_group_id[loc_order[i-1]])
-        dedge_group_n[_dedge_face_group_id[loc_order[i]]]++;
-    }
-  }
-
-  //Second pass to fill
-  int *dedge_group_idx =  PDM_array_new_idx_from_sizes_int(dedge_group_n, n_group_join);
-  PDM_g_num_t *dedge_group     = malloc(dedge_group_idx[n_group_join]*sizeof(PDM_g_num_t));
-  PDM_g_num_t *dedge_group_opp = malloc(dedge_group_idx[n_group_join]*sizeof(PDM_g_num_t));
-  PDM_array_reset_int(dedge_group_n, n_group_join, 0); // reset to count
-
-  for (int i_edge =  0; i_edge < dn_edge; i_edge++) {
-    int n_connected_faces = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    int start_idx = dedge_face_idx[i_edge];
-    int *_dedge_face_group_id = &dedge_face_group_id[start_idx];
-    int *loc_order = &all_order[start_idx];
-
-    int i_group = _dedge_face_group_id[loc_order[0]]; //Edge should be related to at least one face, so its ok
-    dedge_group[dedge_group_idx[i_group] + dedge_group_n[i_group]] = dedge_distrib[i_rank] + i_edge + 1;
-    dedge_group_opp[dedge_group_idx[i_group] + dedge_group_n[i_group]] = dall_edge_gnum_opp[i_edge];
-    dedge_group_n[i_group]++;
-    for (int i = 1; i < n_connected_faces; i++) {
-      if (_dedge_face_group_id[loc_order[i]] != _dedge_face_group_id[loc_order[i-1]]) {
-        i_group = _dedge_face_group_id[loc_order[i]];
-        dedge_group[dedge_group_idx[i_group] + dedge_group_n[i_group]] = dedge_distrib[i_rank] + i_edge + 1;
-        dedge_group_opp[dedge_group_idx[i_group] + dedge_group_n[i_group]] = dall_edge_gnum_opp[i_edge];//
-        dedge_group_n[i_group]++;
-      }
-    }
-  }
-  free(dedge_group_n);
-  free(all_order);
-
-  log_trace("Edge & Edge opp per group in edge global numbering\n");
-  PDM_log_trace_array_int(dedge_group_idx, n_group_join+1, "dedge_group_idx ::");
-  PDM_log_trace_array_long(dedge_group, dedge_group_idx[n_group_join], "dedge_group     ::");
-  PDM_log_trace_array_long(dedge_group_opp, dedge_group_idx[n_group_join], "dedge_group_opp ::");
-  */
-
-
-  //Todo : we could shift back to position of vtx in extraction to have a better
-  //balance of edge distribution
-  int *stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
-                                                      1.,
-                                                     &p_all_vtx,
-                                                      NULL,
-                                                     &(dface_edge_idx[ext_dn_face]),
-                                                      1,
-                                                      comm);
-
-  PDM_g_num_t *vtx_distriF = PDM_part_to_block_distrib_index_get(ptb);
-  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
-  PDM_g_num_t *dall_vtx   = PDM_part_to_block_block_gnum_get(ptb);
-
-  int *recv_stride = NULL;
-  PDM_g_num_t *dall_vtx_opp   = NULL;
-  PDM_g_num_t *dall_vtx_group = NULL;
-  //For vertex we can do the send directly to a (new) vertex distribution
-  int exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int  **) &stride_one,
-                           (void **) &p_all_vtx_opp,
-                                     &recv_stride,
-                           (void **) &dall_vtx_opp);
-
-  int *unused_recv_stride = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int  **) &stride_one,
-                           (void **) &p_all_vtx_group,
-                                     &unused_recv_stride, //Same 
-                           (void **) &dall_vtx_group);
-  free(unused_recv_stride);
-
-  PDM_log_trace_array_long(vtx_distriF     , n_rank+1, "vtx_distri F     ");
-  PDM_log_trace_array_long(dall_vtx     , blk_size, "dall_vtx     ");
-  PDM_log_trace_array_long(recv_stride     , blk_size, "recv stride     ");
-  PDM_log_trace_array_long(dall_vtx_opp , exch_size, "recv dall_vtx_opp ");
-  PDM_log_trace_array_long(dall_vtx_group , exch_size, "recv dall_vtx_group ");
-  free(stride_one);
-
-  //Post treat vertex data
-  int *all_order    = malloc(exch_size*sizeof(int));
-  int *group_id_tmp = malloc(exch_size * sizeof(int));
-  memcpy(group_id_tmp, dall_vtx_group, exch_size*sizeof(int));
-
-  int start_vtx = 0;
-  for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
-    int n_recv = recv_stride[i_vtx];
-    //order array must be initialized
-    for (int j = 0; j < n_recv; j++)
-      all_order[start_vtx + j] = j;
-    PDM_sort_int(&group_id_tmp[start_vtx], &all_order[start_vtx], n_recv);
-    start_vtx += n_recv;
-  }
-  free(group_id_tmp);
-  PDM_log_trace_array_int(all_order, exch_size, "all order ");
-  
-  //First pass to count
-  int *dvtx_group_n   = PDM_array_zeros_int(n_group_join);
-  start_vtx = 0;
-  for (int i_vtx = 0; i_vtx < blk_size; i_vtx++) {
-    int n_recv = recv_stride[i_vtx];
-    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
-    int *loc_order = &all_order[start_vtx];
-
-    dvtx_group_n[_dall_vtx_group[loc_order[0]]]++; //Vtx should be related to at least one face, so its ok
-    for (int i = 1; i < n_recv; i++) {
-      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]])
-        dvtx_group_n[_dall_vtx_group[loc_order[i]]]++;
-    }
-    start_vtx += n_recv;
-  }
-  //Second pass to fill
-  int *dvtx_group_idx =  PDM_array_new_idx_from_sizes_int(dvtx_group_n, n_group_join);
-  PDM_g_num_t *dvtx_group     = malloc(dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
-  PDM_g_num_t *dvtx_group_opp = malloc(dvtx_group_idx[n_group_join]*sizeof(PDM_g_num_t));
-  PDM_array_reset_int(dvtx_group_n, n_group_join, 0); // reset to count
-
-  start_vtx = 0;
-  for (int i_vtx =  0; i_vtx < blk_size; i_vtx++) {
-    int n_recv = recv_stride[i_vtx];
-    int *_dall_vtx_group = &dall_vtx_group[start_vtx];
-    PDM_g_num_t opp_vtx_gnum = dall_vtx_opp[start_vtx]; //Will be the same even if vertex appears more than once
-    int *loc_order = &all_order[start_vtx];
-
-    int i_group = _dall_vtx_group[loc_order[0]];
-    dvtx_group[dvtx_group_idx[i_group] + dvtx_group_n[i_group]]     = dall_vtx[i_vtx];
-    dvtx_group_opp[dvtx_group_idx[i_group] + dvtx_group_n[i_group]] = opp_vtx_gnum;
-    dvtx_group_n[i_group]++;
-    for (int i = 1; i < n_recv; i++) {
-      if (_dall_vtx_group[loc_order[i]] != _dall_vtx_group[loc_order[i-1]]) {
-        i_group = _dall_vtx_group[loc_order[i]];
-        dvtx_group[dvtx_group_idx[i_group] + dvtx_group_n[i_group]] = dall_vtx[i_vtx];
-        dvtx_group_opp[dvtx_group_idx[i_group] + dvtx_group_n[i_group]] = opp_vtx_gnum;
-        dvtx_group_n[i_group]++;
-      }
-    }
-    start_vtx += n_recv;
-  }
-  free(dvtx_group_n);
-  free(all_order);
-  PDM_part_to_block_free(ptb);
 
   //Ultimate step : go back to original vtx numbering. All we have to do is retrieve zone
   // and substract zone offset  for (int i_vtx = 0; i_vtx < dvtx_group_idx[n_group_join]; i_vtx++) {
@@ -1741,6 +1685,9 @@ int main(int argc, char *argv[])
   free(dedge_gnum);
   free(dedge_gnum_opp);
 
+  free(p_all_vtx);
+  free(p_all_vtx_opp);
+  free(p_all_vtx_group);
   free(face_per_block_offset);
   free(vtx_per_block_offset);
 
