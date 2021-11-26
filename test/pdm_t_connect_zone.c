@@ -679,6 +679,158 @@ static int _match_internal_edges
   return dn_internal_edge;
 }
 
+void _match_all_edges_from_faces
+(
+  int          dn_face,
+  int         *face_edge_idx,
+  PDM_g_num_t *face_edge,
+  PDM_g_num_t *face_edge_wopp,
+  PDM_g_num_t *pedge_vtx,
+  PDM_g_num_t *p_all_vtx,
+  PDM_g_num_t *p_all_vtx_opp
+)
+{
+  // Avoid multiple malloc using max size
+  int max_face_len = 0;
+  for (int i_face = 0; i_face < dn_face/2; i_face++) {
+    max_face_len = PDM_MAX(max_face_len, face_edge_idx[2*i_face+1] - face_edge_idx[2*i_face]);
+  }
+  PDM_g_num_t *ordered_edge     = malloc(max_face_len * sizeof(PDM_g_num_t));
+  PDM_g_num_t *ordered_edge_opp = malloc(max_face_len * sizeof(PDM_g_num_t));
+  PDM_g_num_t *ordered_vtx      = malloc(max_face_len * sizeof(PDM_g_num_t));
+  PDM_g_num_t *ordered_vtx_opp  = malloc(max_face_len * sizeof(PDM_g_num_t));
+
+  // Avec la construction des faces de bord, on a des paires faces / face opp
+  assert (dn_face%2 == 0);
+  assert (face_edge_idx[dn_face]%2 == 0);
+  int glob_idx     = 0;
+  int glob_idx_opp = face_edge_idx[dn_face]/2;
+  for (int i_face = 0; i_face < dn_face/2; i_face++) {
+    int start_idx     = face_edge_idx[2*i_face];
+    int start_idx_opp = face_edge_idx[2*i_face+1];
+    int face_len = face_edge_idx[2*i_face+1] - face_edge_idx[2*i_face];
+    if (0 == 1) {
+      log_trace("iface %d :\n", i_face);
+      log_trace("face data\n");
+      // PDM_log_trace_array_long(&face_vtx[face_edge_idx[i_face]], face_len, "face_vtx");
+      PDM_log_trace_array_long(&face_edge[start_idx], face_len, "face_edge");
+      PDM_log_trace_array_long(&pedge_vtx[2*start_idx], 2*face_len, "edge vertices");
+      PDM_log_trace_array_long(&face_edge_wopp[start_idx], face_len, "face_edge_wopp");
+      log_trace("face opp data\n");
+      // PDM_log_trace_array_long(&face_vtx_opp[face_edge_idx[i_face]], face_len, "face_vtx");
+      PDM_log_trace_array_long(&face_edge[start_idx_opp], face_len, "face_opp_edge_opp");
+      PDM_log_trace_array_long(&pedge_vtx[2*start_idx_opp], 2*face_len, "edge vertices opp");
+    }
+
+    // Search any received edge (we should have at least one)
+    PDM_g_num_t opp_edge_key = 0;
+    int idx = -1;
+    while (opp_edge_key == 0)
+      opp_edge_key = face_edge_wopp[start_idx + 1 + idx++];
+    assert (idx < face_len);
+
+    //Search idx of opposite edge in opposite 
+    PDM_g_num_t candidate = 0;
+    int opp_idx = -1;
+    while (candidate != opp_edge_key) {
+      candidate = face_edge[start_idx_opp + 1 + opp_idx++];
+      candidate = PDM_ABS(candidate);
+    }
+    assert (opp_idx < face_len);
+
+    // Find starting point using the two edge indices and signs
+    int sign     = PDM_SIGN(face_edge[start_idx + idx]);
+    int opp_sign = PDM_SIGN(face_edge[start_idx_opp + opp_idx]);
+
+    int next_vtx, next_vtx_opp, cur_vtx, cur_vtx_opp;
+    if (sign == 1) {
+      cur_vtx  = pedge_vtx[2*(start_idx + idx)];
+      next_vtx = pedge_vtx[2*(start_idx + idx)+1];
+    }
+    else {
+      cur_vtx  = pedge_vtx[2*(start_idx + idx)+1];
+      next_vtx = pedge_vtx[2*(start_idx + idx)];
+    }
+    if (opp_sign == 1) {//Invert looping order for opposite face
+      cur_vtx_opp  = pedge_vtx[2*(start_idx_opp + opp_idx)+1];
+      next_vtx_opp = pedge_vtx[2*(start_idx_opp + opp_idx)];
+    }
+    else {
+      cur_vtx_opp  = pedge_vtx[2*(start_idx_opp + opp_idx)];
+      next_vtx_opp = pedge_vtx[2*(start_idx_opp + opp_idx)+1];
+    }
+
+    for (int i = 0; i < face_len; i++) {
+      //Fill
+      // log_trace("Cur vtx %d and opp %d \n", cur_vtx, cur_vtx_opp);
+      ordered_edge[i]     = PDM_ABS(face_edge[start_idx+idx]);
+      ordered_edge_opp[i] = PDM_ABS(face_edge[start_idx_opp+opp_idx]);
+      ordered_vtx[i]      = cur_vtx;
+      ordered_vtx_opp[i]  = cur_vtx_opp;
+      //This is for face
+      for (int j = 0; j < face_len; j++) {
+        if (j != idx) {
+          int vtx1 = pedge_vtx[2*(start_idx + j)];
+          int vtx2 = pedge_vtx[2*(start_idx + j)+1];
+          if (vtx1 == next_vtx) {
+            idx = j;
+            cur_vtx  = vtx1;
+            next_vtx = vtx2;
+            break;
+          }
+          else if (vtx2 == next_vtx) {
+            idx = j;
+            cur_vtx  = vtx2;
+            next_vtx = vtx1;
+            break;
+          }
+        }
+      }
+      //This is for opposite face
+      for (int j = 0; j < face_len; j++) {
+        if (j != opp_idx) {
+          int vtx1 = pedge_vtx[2*(start_idx_opp+j)];
+          int vtx2 = pedge_vtx[2*(start_idx_opp+j)+1];
+          if (vtx1 == next_vtx_opp) {
+            opp_idx = j;
+            cur_vtx_opp  = vtx1;
+            next_vtx_opp = vtx2;
+            break;
+          }
+          else if (vtx2 == next_vtx_opp) {
+            opp_idx = j;
+            cur_vtx_opp  = vtx2;
+            next_vtx_opp = vtx1;
+            break;
+          }
+        }
+      }
+    }
+    if (0 == 1) {
+      PDM_log_trace_array_long(ordered_edge,     face_len, "ordered edges");
+      PDM_log_trace_array_long(ordered_edge_opp, face_len, "ordered edges_opp");
+      PDM_log_trace_array_long(ordered_vtx,     face_len, "ordered vtx");
+      PDM_log_trace_array_long(ordered_vtx_opp, face_len, "ordered vtx_opp");
+    }
+    //Copy results for this face
+    memcpy(&p_all_vtx[glob_idx],      ordered_vtx,      face_len*sizeof(PDM_g_num_t));
+    memcpy(&p_all_vtx_opp[glob_idx],  ordered_vtx_opp,  face_len*sizeof(PDM_g_num_t));
+    //memcpy(&p_all_edge[glob_idx],     ordered_edge      face_len*sizeof(PDM_g_num_t));
+    //memcpy(&p_all_edge_opp[glob_idx], ordered_edge_opp, face_len*sizeof(PDM_g_num_t));
+    //Copy results for opposite face
+    memcpy(&p_all_vtx[glob_idx_opp],       ordered_vtx_opp,  face_len*sizeof(PDM_g_num_t));
+    memcpy(&p_all_vtx_opp[glob_idx_opp],   ordered_vtx,      face_len*sizeof(PDM_g_num_t));
+    //memcpy(&p_all_edge[glob_idx_opp],      ordered_edge_opp, face_len*sizeof(PDM_g_num_t));
+    //memcpy(&p_all_edge_opp[glob_idx_opp],  ordered_edge_,    face_len*sizeof(PDM_g_num_t));
+    glob_idx     += face_len;
+    glob_idx_opp += face_len;
+  }
+  free(ordered_edge);
+  free(ordered_edge_opp);
+  free(ordered_vtx);
+  free(ordered_vtx_opp);
+}
+
 
 static void
 merge_zone
@@ -1208,20 +1360,11 @@ int main(int argc, char *argv[])
                                               &dedge_gnum_opp,
                                                comm);
 
-  
-  // Rebuild idx array (no data on external edges)
-  /*int *dedge_gnum_idx = (int *) malloc ((dn_edge + 1) * sizeof(int)); //This one will be useless probably*/
-  /*int count = 0;*/
-  /*dedge_gnum_idx[0] = 0;*/
-  /*for (int i = 0; i < dn_edge[i_zone]; i++) {*/
-    /*if (i + dedge_distrib[i_zone][i_rank] + 1 == dedge_gnum[count]) {*/
-      /*count++;*/
-    /*}*/
-    /*dedge_gnum_idx[i+1] = count;*/
-  /*}*/
   log_trace("Internal edge matches after conflict resolution \n");
   PDM_log_trace_array_long(dedge_gnum, dn_internal_edge, "dedge gnum :: ");
   PDM_log_trace_array_long(dedge_gnum_opp, dn_internal_edge, "dedge gnum_opp :: ");
+
+  // To match external edges, we will work on face distribution. We need face->edge connectivity
 
   log_trace("Generate dface->edge from dedge->face\n");
   int         *dface_edge_idx = NULL;
@@ -1237,19 +1380,13 @@ int main(int argc, char *argv[])
 
   PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, ext_dn_face, "dface_edge :: ");
 
+  //Transfert some data from the edges to the edges know by the faces
 
-
-  //BlockToPart avec lngn == dface_edge pour aller chercher des infos des edges (dedge opp)
+  //Prepare gnum and stride
   PDM_g_num_t *dface_edge_abs = (PDM_g_num_t *) malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
-  for (int i = 0; i < dface_edge_idx[ext_dn_face]; i++)
+  for (int i = 0; i < dface_edge_idx[ext_dn_face]; i++) {
     dface_edge_abs[i] = PDM_ABS(dface_edge[i]);
-                       btp = PDM_block_to_part_create(dedge_distrib,
-                               (const PDM_g_num_t **) &dface_edge_abs,
-                                                      &dface_edge_idx[ext_dn_face],
-                                                      1,
-                                                      comm);
-
-  //Prepare data to send on edge block
+  }
   idx = 0;
   int *dedge_gnum_n = malloc(dn_edge*sizeof(int));
   for (int i = 0; i < dn_edge; i++) {
@@ -1262,6 +1399,12 @@ int main(int argc, char *argv[])
     }
   }
   //PDM_log_trace_array_int(dedge_gnum_n, dn_edge, "dedge_gnum_n");
+
+                       btp = PDM_block_to_part_create(dedge_distrib,
+                               (const PDM_g_num_t **) &dface_edge_abs,
+                                                      &dface_edge_idx[ext_dn_face],
+                                                      1,
+                                                      comm);
 
 
   int         **recv_stride_tmp = NULL;
@@ -1309,150 +1452,40 @@ int main(int argc, char *argv[])
   free(pedge_gnum_opp);
   PDM_block_to_part_free(btp);
 
-  PDM_g_num_t *p_all_edge_gnum     = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *p_all_edge_gnum_opp = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
+  //Match external edges
   PDM_g_num_t *p_all_vtx      = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
   PDM_g_num_t *p_all_vtx_opp  = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *p_all_vtx_group  = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));
-  // Avec la construction des faces de bord, on a des paires faces / face opp
+  int *p_all_vtx_group  = malloc(dface_edge_idx[ext_dn_face] * sizeof(int));
+  /*PDM_g_num_t *p_all_edge_gnum     = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));*/
+  /*PDM_g_num_t *p_all_edge_gnum_opp = malloc(dface_edge_idx[ext_dn_face] * sizeof(PDM_g_num_t));*/
+  _match_all_edges_from_faces(ext_dn_face,
+                              dface_edge_idx,
+                              dface_edge,
+                              face_edge_wopp,
+                              pedge_vtx,
+                              p_all_vtx,
+                              p_all_vtx_opp);
+
+  //Copy group from face to vertices
   int glob_idx = 0;
   for (int i_face = 0; i_face < ext_dn_face/2; i_face++) {
-    log_trace("\niface %d :\n", i_face);
     int face_len = dface_edge_idx[2*i_face+1] - dface_edge_idx[2*i_face];
-    log_trace("face data\n");
-    PDM_log_trace_array_long(&face_vtx[face_vtx_idx[i_face]], face_len, "face_vtx");
-    PDM_log_trace_array_long(&dface_edge[dface_edge_idx[2*i_face]], face_len, "face_edge");
-    PDM_log_trace_array_long(&pedge_vtx[2*dface_edge_idx[2*i_face]], 2*face_len, "edge vertices");
-    PDM_log_trace_array_long(&face_edge_wopp[dface_edge_idx[2*i_face]], face_len, "face_edge_wopp");
-    log_trace("face opp data\n");
-    PDM_log_trace_array_long(&face_vtx_opp[face_vtx_idx[i_face]], face_len, "face_vtx");
-    PDM_log_trace_array_long(&dface_edge[dface_edge_idx[2*i_face+1]], face_len, "face_opp_edge_opp");
-    PDM_log_trace_array_long(&pedge_vtx[2*dface_edge_idx[2*i_face+1]], 2*face_len, "edge vertices opp");
-    // Search any received edge (we should have at least one)
-    PDM_g_num_t opp_edge_key = 0;
-    int idx;
-    int sign;
-    for (idx = 0; idx < face_len; idx++) {
-      opp_edge_key = face_edge_wopp[dface_edge_idx[2*i_face] + idx];
-      sign = PDM_SIGN(dface_edge[dface_edge_idx[2*i_face]+idx]);
-      if (opp_edge_key != 0)
-        break;
-    }
-    PDM_g_num_t edge_key = PDM_ABS(dface_edge[dface_edge_idx[2*i_face]+idx]);
-    //Search idx of opposite edge in opposite 
-    int opp_idx;
-    int opp_sign;
-    for (opp_idx = 0; opp_idx < face_len; opp_idx++) {
-      int candidate = dface_edge[dface_edge_idx[2*i_face+1]+opp_idx];
-      opp_sign = PDM_SIGN(candidate);
-      candidate = PDM_ABS(candidate);
-      if (candidate == opp_edge_key)
-        break;
-    }
-
-    log_trace("Reference edge will be %d (at position %d) with sign is %d -- Opp edge is %d (at position %d) with sign %d\n", edge_key, idx, sign, opp_edge_key, opp_idx, opp_sign);
-    
-    // Reorder edges & opp_edges
-    PDM_g_num_t *ordered_edge     = malloc(face_len * sizeof(PDM_g_num_t));
-    PDM_g_num_t *ordered_edge_opp = malloc(face_len * sizeof(PDM_g_num_t));
-    PDM_g_num_t *ordered_vtx      = malloc(face_len * sizeof(PDM_g_num_t));
-    PDM_g_num_t *ordered_vtx_opp  = malloc(face_len * sizeof(PDM_g_num_t));
-
-    int next_vtx, next_vtx_opp, cur_vtx, cur_vtx_opp;
-    if (sign == 1) {
-      cur_vtx = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*idx];
-      next_vtx = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*idx+1];
-    }
-    else {
-      cur_vtx = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*idx+1];
-      next_vtx = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*idx];
-    }
-    if (sign == 1) {
-      cur_vtx_opp  = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*opp_idx+1];
-      next_vtx_opp = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*opp_idx];
-    }
-    else {
-      cur_vtx_opp  = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*opp_idx];
-      next_vtx_opp = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*opp_idx+1]; //Invert looping order for opposite face
-    }
     for (int i = 0; i < face_len; i++) {
-      //Fill
-      log_trace("Cur vtx %d and opp %d \n", cur_vtx, cur_vtx_opp);
-      ordered_edge[i] = PDM_ABS(dface_edge[dface_edge_idx[2*i_face]+idx]);
-      ordered_edge_opp[i] = PDM_ABS(dface_edge[dface_edge_idx[2*i_face+1]+opp_idx]);
-      ordered_vtx[i]     = cur_vtx;
-      ordered_vtx_opp[i] = cur_vtx_opp;
-      //This is for face
-      for (int j = 0; j < face_len; j++) {
-        if (j != idx) {
-          int vtx1 = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*j];
-          int vtx2 = pedge_vtx[2*dface_edge_idx[2*i_face] + 2*j+1];
-          if (vtx1 == next_vtx) {
-            idx = j;
-            cur_vtx  = vtx1;
-            next_vtx = vtx2;
-            break;
-          }
-          else if (vtx2 == next_vtx) {
-            idx = j;
-            cur_vtx  = vtx2;
-            next_vtx = vtx1;
-            break;
-          }
-        }
-      }
-      //This is for opposite face
-      for (int j = 0; j < face_len; j++) {
-        if (j != opp_idx) {
-          int vtx1 = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*j];
-          int vtx2 = pedge_vtx[2*dface_edge_idx[2*i_face+1] + 2*j+1];
-          if (vtx1 == next_vtx_opp) {
-            opp_idx = j;
-            cur_vtx_opp  = vtx1;
-            next_vtx_opp = vtx2;
-            break;
-          }
-          else if (vtx2 == next_vtx_opp) {
-            opp_idx = j;
-            cur_vtx_opp  = vtx2;
-            next_vtx_opp = vtx1;
-            break;
-          }
-        }
-      }
-      //ordered_edge_opp[i] = PDM_ABS(dface_edge[dface_edge_idx[2*i_face+1]+opp_idx]);
-      //Search next edge indices
-    }
-    PDM_log_trace_array_long(ordered_edge,     face_len, "ordered edges");
-    PDM_log_trace_array_long(ordered_edge_opp, face_len, "ordered edges_opp");
-    PDM_log_trace_array_long(ordered_vtx,     face_len, "ordered vtx");
-    PDM_log_trace_array_long(ordered_vtx_opp, face_len, "ordered vtx_opp");
-    for (int i = 0; i < face_len; i++) {
-      p_all_edge_gnum[glob_idx]     = ordered_edge[i];
-      p_all_edge_gnum_opp[glob_idx] = ordered_edge_opp[i];
-      p_all_vtx[glob_idx]     = ordered_vtx[i];
-      p_all_vtx_opp[glob_idx] = ordered_vtx_opp[i];
       p_all_vtx_group[glob_idx] = dextract_face_group_id[2*i_face];
-
-
-      p_all_edge_gnum[glob_idx + (dface_edge_idx[ext_dn_face]/2)]     = ordered_edge_opp[i];
-      p_all_edge_gnum_opp[glob_idx + (dface_edge_idx[ext_dn_face]/2)] = ordered_edge[i];
-      p_all_vtx[glob_idx + (dface_edge_idx[ext_dn_face]/2)]     = ordered_vtx_opp[i];
-      p_all_vtx_opp[glob_idx + (dface_edge_idx[ext_dn_face]/2)] = ordered_vtx[i];
       p_all_vtx_group[glob_idx + (dface_edge_idx[ext_dn_face]/2)] = dextract_face_group_id[2*i_face+1];
-      glob_idx++;
+      glob_idx ++;
     }
-    free(ordered_edge);
-    free(ordered_edge_opp);
-    free(ordered_vtx);
-    free(ordered_vtx_opp);
   }
+
+
+  free(face_edge_wopp);
   log_trace("edge matching on face distribution\n");
-  PDM_log_trace_array_long(p_all_edge_gnum,     dface_edge_idx[ext_dn_face], "p_all_edge_gnum     ::");
-  PDM_log_trace_array_long(p_all_edge_gnum_opp, dface_edge_idx[ext_dn_face], "p_all_edge_gnum_opp ::");
+  /*PDM_log_trace_array_long(p_all_edge_gnum,     dface_edge_idx[ext_dn_face], "p_all_edge_gnum     ::");*/
+  /*PDM_log_trace_array_long(p_all_edge_gnum_opp, dface_edge_idx[ext_dn_face], "p_all_edge_gnum_opp ::");*/
   PDM_log_trace_array_long(p_all_vtx,     dface_edge_idx[ext_dn_face], "p_all_vtx     ::");
   PDM_log_trace_array_long(p_all_vtx_opp, dface_edge_idx[ext_dn_face], "p_all_vtx_opp ::");
 
+  /*
   //Finally, send this back to edge distribution
   int *stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
   PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -1545,12 +1578,13 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_int(dedge_group_idx, n_group_join+1, "dedge_group_idx ::");
   PDM_log_trace_array_long(dedge_group, dedge_group_idx[n_group_join], "dedge_group     ::");
   PDM_log_trace_array_long(dedge_group_opp, dedge_group_idx[n_group_join], "dedge_group_opp ::");
+  */
 
 
   //Todo : we could shift back to position of vtx in extraction to have a better
   //balance of edge distribution
-  stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
-                       ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  int *stride_one = PDM_array_const_int(dface_edge_idx[ext_dn_face], 1);
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                      &p_all_vtx,
@@ -1567,7 +1601,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *dall_vtx_opp   = NULL;
   PDM_g_num_t *dall_vtx_group = NULL;
   //For vertex we can do the send directly to a (new) vertex distribution
-  exch_size = PDM_part_to_block_exch(ptb,
+  int exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
                                      PDM_STRIDE_VAR,
                                      -1,
@@ -1576,6 +1610,7 @@ int main(int argc, char *argv[])
                                      &recv_stride,
                            (void **) &dall_vtx_opp);
 
+  int *unused_recv_stride = NULL;
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
                                      PDM_STRIDE_VAR,
@@ -1594,8 +1629,8 @@ int main(int argc, char *argv[])
   free(stride_one);
 
   //Post treat vertex data
-  all_order    = malloc(exch_size*sizeof(int));
-  group_id_tmp = malloc(exch_size * sizeof(int));
+  int *all_order    = malloc(exch_size*sizeof(int));
+  int *group_id_tmp = malloc(exch_size * sizeof(int));
   memcpy(group_id_tmp, dall_vtx_group, exch_size*sizeof(int));
 
   int start_vtx = 0;
