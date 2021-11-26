@@ -251,6 +251,7 @@ static int _extract_and_shift_jn_faces
   *face_vtx_both     = part_data[0];
 
   free(part_data);
+  free(part_stride[0]);
   free(part_stride);
 
   PDM_multi_block_to_part_free(mptb);
@@ -271,7 +272,7 @@ static int _extract_and_shift_jn_faces
   return n_face_join;
 }
 
-int _generate_edge_face
+static int _generate_edge_face
 (
  int            n_face,
  int           *face_vtx_idx,
@@ -366,6 +367,7 @@ static int _match_internal_edges
  PDM_MPI_Comm  comm
 )
 {
+  PDM_UNUSED(dedge_face);
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
   
@@ -679,7 +681,7 @@ static int _match_internal_edges
   return dn_internal_edge;
 }
 
-void _match_all_edges_from_faces
+static void _match_all_edges_from_faces
 (
   int          dn_face,
   int         *face_edge_idx,
@@ -964,69 +966,6 @@ PDM_MPI_Comm   comm
   *dvtx_group     = _dvtx_group;
   *dvtx_group_opp = _dvtx_group_opp;
 }
-
-
-
-static void
-merge_zone
-(
- int            n_zone,
- int            n_group_join,
- int           *group_join_to_zone_cur,
- int           *group_join_to_zone_opp,
- int           *group_join_to_join_opp,
- int           *dface_join_idx,
- PDM_g_num_t   *dface_join,
- PDM_g_num_t   *dface_join_opp,
- int          **dface_vtx_idx,
- PDM_g_num_t  **dface_vtx,
- PDM_g_num_t  **dface_cell,
- PDM_MPI_Comm   comm
-)
-{
-
-  /*
-   * On a plusieurs connectivités distribué  :
-   *   -> On veut unifier ce qui est commun
-   *   -> Et actualiser les connectivités
-   *
-   *  PDM_multi_block_to_part
-   *    -> Avec face_ln_to_gn = implicite face_ln_to_gn - face à supprimer
-   *          --> PDM_redistribute
-   *
-   */
-
-
-  /*
-   * Par connectivité ascendante ou descendane ?
-   *    --> face_cell
-   *    --> Par ascendance --> Trop dure je pense
-   *   Dans pdm_mesh_adpation c'est en ascendant mais on part des vertex .
-   *   Subtile on reconstruit dans ce sens --> vtx -> edge -> face -> cell
-   *   Mais on construit les connectivités descendantes --> edge_vtx -> face_edge...
-   */
-
-
-  /*
-   * Par descendance :
-   *   --> Calcul du dcell_face --> Attention au signe !!!!!!!
-   *   --> Quand on transpose la connectvity il faut d'aborder transformé le dface_cell en orienté
-   *   --> This one : PDM_setup_connectivity_idx
-   *
-   *   PMD_multiblock_to_part avec dcell_face + cell_ln_to_gn concateante
-   *     --> Donc un dcell_face re-repartie mais faux en face
-   *     --> Si on est des ouf --> Reorder_block_hilbert
-   *   --> Pour update le dcell_face
-   *         --> mbtp avec ln_to_gn = face_to_keep
-   *   --> On utilise le dface_jon + dface_join_opp
-   *   Attention au desequilibre de charge possibleeeeeeeee
-   *   Pour l'update des numero de face --> block_to_part avec un block variable de numero de faces old_to_new
-   *     --> Si la face est supprimé strid = 0
-   *
-   */
-
-}
-
 
 
 /**
@@ -1361,8 +1300,6 @@ int main(int argc, char *argv[])
   int idx = 0;
   for (int i_join = 0; i_join < n_group_join; i_join++) {
     int i_join_opp = group_join_to_join_opp[i_join];
-    int i_zone_cur = group_join_to_zone_cur[i_join];
-    int i_zone_opp = group_join_to_zone_opp[i_join];
 
     if (i_join <= i_join_opp) {
       for (int i_face_jn = dface_join_idx[i_join]; i_face_jn < dface_join_idx[i_join+1]; i_face_jn++) {
@@ -1650,6 +1587,10 @@ int main(int argc, char *argv[])
   PDM_log_trace_array_long(dvtx_group, dvtx_group_idx[n_group_join], "dvtx_group     ::");
   PDM_log_trace_array_long(dvtx_group_opp, dvtx_group_idx[n_group_join], "dvtx_group_opp ::");
 
+  free(dvtx_group_idx );
+  free(dvtx_group     );
+  free(dvtx_group_opp );
+
 
 
   free(dface_edge_idx);
@@ -1688,6 +1629,7 @@ int main(int argc, char *argv[])
   free(p_all_vtx);
   free(p_all_vtx_opp);
   free(p_all_vtx_group);
+  free(pedge_vtx);
   free(face_per_block_offset);
   free(vtx_per_block_offset);
 
