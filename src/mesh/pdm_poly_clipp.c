@@ -430,7 +430,7 @@ double nB[3]
   _vertex_poly_t *vtx_currB = vtxpB;
   for (int i = 0; i < n_vtxB; i++) {
     const double *_coo = face_vtxCooB + 3*i;
-    PDM_polygon_status_t stat = PDM_polygon_point_in (_coo,
+    PDM_polygon_status_t stat = PDM_polygon_point_in_new (_coo,
                                                       n_vtxA,
                                                       face_vtxCooA,
                                                       boundsA,
@@ -451,7 +451,7 @@ double nB[3]
   _vertex_poly_t *vtx_currA = vtxpA;
   for (int i = 0; i < n_vtxA; i++) {
     const double *_coo = face_vtxCooA + 3*i;
-    PDM_polygon_status_t stat = PDM_polygon_point_in (_coo,
+    PDM_polygon_status_t stat = PDM_polygon_point_in_new (_coo,
                                                       n_vtxB,
                                                       face_vtxCooB,
                                                       boundsB,

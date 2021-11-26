@@ -58,7 +58,7 @@ _read_args (int            argc,
 
 
 static void
-_compute_bounds_and_normal 
+_compute_bounds_and_normal
 (
 const int     n_vtx,
 const double *vtx_coord,
@@ -90,23 +90,25 @@ int main (int argc, char *argv[])
 {
   PDM_predicate_exactinit();
 
-  #define n_vtxA 4
+#define n_vtxA 4
   double vtx_coordA[3*n_vtxA] = {
-8.97127790e+00,  9.03787915e+00,  0.00000000e+00,
-8.96783146e+00,  9.04104976e+00,  0.00000000e+00,
-8.97045526e+00,  9.04344279e+00,  0.00000000e+00,
-8.97487487e+00,  9.04019175e+00,  0.00000000e+00};
+    8.1920101893728137e-01, 7.0968846510974135e+00, 0.0000000000000000e+00,
+    8.1712314771007744e-01, 7.1019806986722704e+00, 0.0000000000000000e+00,
+    8.2146062462465042e-01, 7.1060225245761872e+00, 0.0000000000000000e+00,
+    8.2338427073498321e-01, 7.1013943740684908e+00, 0.0000000000000000e+00
+  };
 
-  #define n_vtxB 4
+#define n_vtxB 4
   double vtx_coordB[3*n_vtxB] = {
-8.96972e+00,  9.03665051e+00,  0.00000000e+00,
-8.96456e+00,  9.04059081e+00,  0.00000000e+00,
-8.96974e+00,  9.04397358e+00,  0.00000000e+00,
-8.97600e+00,  9.03935956e+00,  0.00000000e+00};
+    8.1931528289403344e-01, 7.1040244031210982e+00, 0.0000000000000000e+00,
+    8.1475025663075329e-01, 7.1081505329857357e+00, 0.0000000000000000e+00,
+    8.1735258751997653e-01, 7.1111549673130892e+00, 0.0000000000000000e+00,
+    8.2260018775535770e-01, 7.1070798622647633e+00, 0.0000000000000000e+00
+  };
 
   PDM_polygon_status_t statusA[n_vtxA] = {
-PDM_POLYGON_INSIDE,
-PDM_POLYGON_INSIDE,
+PDM_POLYGON_OUTSIDE,
+PDM_POLYGON_OUTSIDE,
 PDM_POLYGON_INSIDE,
 PDM_POLYGON_OUTSIDE};
 
@@ -189,8 +191,8 @@ int main (int argc, char *argv[])
   }
 
 
-  double bounds[6] = {DBL_MAX, -DBL_MAX, 
-                      DBL_MAX, -DBL_MAX, 
+  double bounds[6] = {DBL_MAX, -DBL_MAX,
+                      DBL_MAX, -DBL_MAX,
                       DBL_MAX, -DBL_MAX};
   for (int i = 0; i < n_vtx; i++) {
     for (int j = 0; j < 3; j++) {
@@ -198,7 +200,7 @@ int main (int argc, char *argv[])
       bounds[2*j+1] = PDM_MAX (bounds[2*j+1], vtx_coord[3*i + j]);
     }
   }
-  /*printf("bounds = %f %f %f %f %f %f\n", 
+  /*printf("bounds = %f %f %f %f %f %f\n",
          bounds[0], bounds[1], bounds[2],
          bounds[3], bounds[4], bounds[5]);*/
 
@@ -220,7 +222,7 @@ int main (int argc, char *argv[])
                                                              bounds,
                                                              normal);
 
-    printf("vtx %d : %d  -  %d\n", 
+    printf("vtx %d : %d  -  %d\n",
            i, status1 == PDM_POLYGON_INSIDE, status2 == PDM_POLYGON_INSIDE);
   }
 

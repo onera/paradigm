@@ -16,6 +16,8 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
+#include "pdm_predicate.h"
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -591,6 +593,62 @@ int PDM_line_evaluate_position
 
   return 0;
 }
+
+
+
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2drobust
+(
+ const double  a[3],
+ const double  b[3],
+ const double  c[3],
+ const double  d[3],
+ double       *u,
+ double       *v
+ )
+{
+  double ha = PDM_predicate_orient2d (c, d, a);
+  double hb = PDM_predicate_orient2d (c, d, b);
+
+  if ((ha < 0 && hb < 0) || (ha > 0 && hb > 0)) {
+    return PDM_LINE_INTERSECT_NO;
+  }
+
+  double hc = PDM_predicate_orient2d (a, b, c);
+  double hd = PDM_predicate_orient2d (a, b, d);
+
+  //printf("ha = %g, hb = %g, hc = %g, hf = %g\n", ha, hb, hc, hd);
+
+  if ((hc < 0 && hd < 0) || (hc > 0 && hd > 0)) {
+    return PDM_LINE_INTERSECT_NO;
+  }
+
+  if (ha == hb) {
+    // ===> ha = hb = 0
+    // =?=> hc = hd = 0
+    //printf("ha = hb = %g, hc = %g, hd = %g\n", ha, hc, hd);
+    return PDM_LINE_INTERSECT_ON_LINE;
+  }
+
+
+  *u = ha / (ha - hb);
+  *v = hc / (hc - hd);
+  //printf("  u = %g, v = %g\n", *u, *v);
+
+  /*
+   * Check parametric coordinates for intersection.
+   */
+
+  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+    return PDM_LINE_INTERSECT_YES;
+  }
+  else {
+    return PDM_LINE_INTERSECT_NO;
+  }
+}
+
 
 #ifdef __cplusplus
 }

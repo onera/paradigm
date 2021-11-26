@@ -395,7 +395,7 @@ _gnum_from_coords_compute
   /* Build Morton encoding and order it */
 
   PDM_morton_get_coord_extents(gen_gnum->dim, n_entities, coords, extents, comm);
-  if (iproc == 0) {
+  if (0 && iproc == 0) {
     printf("  _gnum_from_coords_compute : PDM_morton_get_coord_extents OK\n");
     fflush(stdout);
   }
@@ -406,13 +406,13 @@ _gnum_from_coords_compute
   double d[3];
   double s[3];
   PDM_morton_encode_coords(gen_gnum->dim, level, extents, n_entities, coords, m_code, d, s);
-  if (iproc == 0) {
+  if (0 && iproc == 0) {
     printf("  _gnum_from_coords_compute : PDM_morton_encode_coords OK\n");
     fflush(stdout);
   }
 
   PDM_morton_local_order(n_entities, m_code, order);
-  if (iproc == 0) {
+  if (0 && iproc == 0) {
     printf("  _gnum_from_coords_compute : PDM_morton_local_order OK\n");
     fflush(stdout);
   }
@@ -449,7 +449,7 @@ _gnum_from_coords_compute
                                 order,
                                 morton_index,
                                 comm);
-    if (iproc == 0) {
+    if (0 && iproc == 0) {
       printf("  _gnum_from_coords_compute : PDM_morton_build_rank_index OK\n");
       fflush(stdout);
     }
@@ -485,7 +485,7 @@ _gnum_from_coords_compute
     /* Exchange number of coords to send to each process */
 
     PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT, recv_count, 1, PDM_MPI_INT, comm);
-    if (iproc == 0) {
+    if (0 && iproc == 0) {
       printf("  _gnum_from_coords_compute : Alltoall OK\n");
       fflush(stdout);
     }
@@ -519,7 +519,7 @@ _gnum_from_coords_compute
     PDM_MPI_Alltoallv(send_coords, send_count, send_shift, PDM_MPI_DOUBLE,
                       recv_coords, recv_count, recv_shift, PDM_MPI_DOUBLE,
                       comm);
-    if (iproc == 0) {
+    if (0 && iproc == 0) {
       printf("  _gnum_from_coords_compute : Alltoallv OK\n");
       fflush(stdout);
     }

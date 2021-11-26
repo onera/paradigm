@@ -24,6 +24,8 @@
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm_priv.h"
 
+#include "pdm_predicate.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1441,6 +1443,8 @@ int argc,
 char *argv[]
 )
 {
+  PDM_predicate_exactinit();
+
   PDM_MPI_Init (&argc, &argv);
 
   /*
@@ -1792,7 +1796,7 @@ char *argv[]
   }
 
 
-  if (post) {
+  /*if (post) {
     _export_ini_mesh (PDM_MPI_COMM_WORLD,
                       n_part,
                       nFace,
@@ -1804,7 +1808,7 @@ char *argv[]
                       vtxLNToGN,
                       sFieldA,
                       rFieldB);
-  }
+		      }*/
 
   /*
    *  Calcul
@@ -2130,7 +2134,7 @@ char *argv[]
 
   if (post) {
 
-    /*_export_ini_mesh (PDM_MPI_COMM_WORLD,
+    _export_ini_mesh (PDM_MPI_COMM_WORLD,
                       n_part,
                       nFace,
                       faceVtxIdx,
@@ -2140,7 +2144,7 @@ char *argv[]
                       vtxCoord,
                       vtxLNToGN,
                       sFieldA,
-                      rFieldB);*/
+                      rFieldB);
 
     _export_ol_mesh (PDM_MPI_COMM_WORLD,
                      pdm_id,

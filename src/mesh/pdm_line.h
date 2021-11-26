@@ -182,6 +182,19 @@ int PDM_line_evaluate_position
  );
 
 
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2drobust
+(
+ const double  a[3],
+ const double  b[3],
+ const double  c[3],
+ const double  d[3],
+ double       *u,
+ double       *v
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

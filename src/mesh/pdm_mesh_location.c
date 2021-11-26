@@ -3670,7 +3670,8 @@ PDM_mesh_location_t        *ml
     }
 
     if (1) {
-      PDM_g_num_t ln_pts = n_pts_pcloud;
+      PDM_g_num_t ln_pts = (PDM_g_num_t) n_pts_pcloud;
+      if (0) printf("[%6d] n_pts_pcloud = %d, ln_pts = "PDM_FMT_G_NUM"\n", my_rank, n_pts_pcloud, ln_pts);
       PDM_g_num_t gn_pts;
       PDM_MPI_Allreduce (&ln_pts, &gn_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
       if (my_rank == 0) {
