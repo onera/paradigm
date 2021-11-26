@@ -202,7 +202,6 @@ static int _extract_and_shift_jn_faces
     int i_zone_cur = group_join_to_zone_cur[i_join];
     int i_zone_opp = group_join_to_zone_opp[i_join];
 
-    log_trace("Treat jn %i\n", i_join);
     if (i_join <= i_join_opp) {
       for (int i_face_jn = dface_join_idx[i_join]; i_face_jn < dface_join_idx[i_join+1]; i_face_jn++) {
         multi_gnum_tmp[idx] = dface_join[i_face_jn] + face_per_block_offset[i_zone_cur];
@@ -271,9 +270,11 @@ static int _extract_and_shift_jn_faces
   free(_dextract_face_join_opp_tmp);
   free(_dextract_face_group_id_tmp);
 
-  PDM_log_trace_array_long(face_per_block_offset, n_zone+1, "face_per_block_offset :: ");
-  PDM_log_trace_array_long(vtx_per_block_offset,  n_zone+1, "vtx_per_block_offset :: ");
-  PDM_log_trace_array_long(multi_gnum, n_face_join, "multi_gnum :: ");
+  if (0 == 1) {
+    PDM_log_trace_array_long(face_per_block_offset, n_zone+1, "face_per_block_offset :: ");
+    PDM_log_trace_array_long(vtx_per_block_offset,  n_zone+1, "vtx_per_block_offset :: ");
+    PDM_log_trace_array_long(multi_gnum, n_face_join, "multi_gnum :: ");
+  }
 
   PDM_g_num_t **all_face_distribution = malloc(n_zone * sizeof(PDM_g_num_t*));
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
@@ -300,11 +301,7 @@ static int _extract_and_shift_jn_faces
         face_vtx_shifted[i_zone][j] = dface_vtx[i_zone][j] + vtx_per_block_offset[i_zone];
       }
     }
-    //PDM_log_trace_array_long(face_vtx_shifted[i_zone], dface_vtx_idx[i_zone][dn_face[i_zone]], "face_vtx_shifted :: ");
   }
-  //int **face_vtx = malloc(n_zone * sizeof(int*));
-
-
 
   int         **part_stride = NULL;
   PDM_g_num_t **part_data   = NULL;
@@ -446,8 +443,10 @@ static int _match_internal_edges
     int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
     dn_internal_edge += (int) (n_face_this_edge > 1);
   }
-  log_trace("dn internal edges is %i \n", dn_internal_edge);
-  log_trace("dn external edges is %i \n", dn_edge - dn_internal_edge);
+  if (0 == 1) {
+    log_trace("dn internal edges is %i \n", dn_internal_edge);
+    log_trace("dn external edges is %i \n", dn_edge - dn_internal_edge);
+  }
 
   // 1. Build hash keys
   PDM_g_num_t *key_ln_to_gn = malloc(dn_internal_edge * sizeof(PDM_g_num_t)); 
@@ -500,8 +499,6 @@ static int _match_internal_edges
   }
   assert(idx_write2 == 2*dn_internal_edge);
   assert(idx_write4 == 4*dn_internal_edge);
-
-  PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
 
   // 2. Exchange data over hash key
   //Attention, pb d'équilibrage car les clés sont réparties vers la fin ... Un proc risque
@@ -590,12 +587,15 @@ static int _match_internal_edges
   assert (exch_size == 4*gnum_n_occurences_tot);
 
 
-  PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
-  PDM_log_trace_array_long(blk_edge_g_num     , gnum_n_occurences_tot  , "blk_edge_g_num      :: ");
-  //PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
-  //PDM_log_trace_array_long(blk_data_sens      , 2*gnum_n_occurences_tot, "blk_data_sens       :: ");
-  PDM_log_trace_array_long(blk_data_connect   , 4*gnum_n_occurences_tot, "blk_data_connect    :: ");
-  PDM_log_trace_array_long(blk_data_group     , 4*gnum_n_occurences_tot, "blk_data_group      :: ");
+  if (0 == 1) {
+    PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
+    PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
+    PDM_log_trace_array_long(blk_edge_g_num     , gnum_n_occurences_tot  , "blk_edge_g_num      :: ");
+    //PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
+    //PDM_log_trace_array_long(blk_data_sens      , 2*gnum_n_occurences_tot, "blk_data_sens       :: ");
+    PDM_log_trace_array_long(blk_data_connect   , 4*gnum_n_occurences_tot, "blk_data_connect    :: ");
+    PDM_log_trace_array_long(blk_data_group     , 4*gnum_n_occurences_tot, "blk_data_group      :: ");
+  }
 
 
   free(key_ln_to_gn        );
@@ -619,11 +619,7 @@ static int _match_internal_edges
   for(int i = 0; i < blk_size; ++i) {
     n_max_entity_per_key = PDM_MAX(gnum_n_occurences   [i], n_max_entity_per_key);
   }
-  int n_max_connec = 4*n_max_entity_per_key; //todo clean me
 
-
-  log_trace("n_max_entity_per_key = %i \n", n_max_entity_per_key);
-  log_trace("n_max_connec         = %i \n", n_max_connec);
   int *already_treat   = (int *) malloc(n_max_entity_per_key * sizeof(int));
   int *same_entity_idx = (int *) malloc(n_max_entity_per_key * sizeof(int));
   // int *sens_entity     = (int *) malloc(n_max_entity_per_key * sizeof(int));
@@ -634,8 +630,6 @@ static int _match_internal_edges
   for(int i_key = 0; i_key < blk_size; ++i_key) {
 
     int n_matching_edge = gnum_n_occurences[i_key];
-
-    log_trace(" i_key = %i | n_matching_edge = %i \n", i_key, n_matching_edge);
 
     /* Reset */
     PDM_array_reset_int(already_treat, n_matching_edge, -1);
@@ -715,9 +709,11 @@ static int _match_internal_edges
   free(blk_data_group);
   PDM_part_to_block_free(ptb); // Needed until here for gnum_n_occurences
 
-  log_trace("Conflict resolved, gnum are\n");
-  PDM_log_trace_array_long(results_edge, gnum_n_occurences_tot, "edge gnum ::");
-  PDM_log_trace_array_long(results_edge_opp, gnum_n_occurences_tot, "edge gnum opp::");
+  if (0 == 1) {
+    log_trace("Conflict resolved, gnum are\n");
+    PDM_log_trace_array_long(results_edge, gnum_n_occurences_tot, "edge gnum ::");
+    PDM_log_trace_array_long(results_edge_opp, gnum_n_occurences_tot, "edge gnum opp::");
+  }
 
 
 
@@ -957,12 +953,14 @@ PDM_MPI_Comm   comm
                                      &unused_recv_stride, //Same  than recv stride
                            (void **) &dall_vtx_group);
   free(unused_recv_stride);
-
-  PDM_log_trace_array_long(dall_vtx,       blk_size,  "dall_vtx            :");
-  PDM_log_trace_array_long(recv_stride,    blk_size,  "recv stride         :");
-  PDM_log_trace_array_long(dall_vtx_opp,   exch_size, "recv dall_vtx_opp   :");
-  PDM_log_trace_array_long(dall_vtx_group, exch_size, "recv dall_vtx_group :");
   free(stride_one);
+
+  if (0 == 1) {
+    PDM_log_trace_array_long(dall_vtx,       blk_size,  "dall_vtx            :");
+    PDM_log_trace_array_long(recv_stride,    blk_size,  "recv stride         :");
+    PDM_log_trace_array_long(dall_vtx_opp,   exch_size, "recv dall_vtx_opp   :");
+    PDM_log_trace_array_long(dall_vtx_group, exch_size, "recv dall_vtx_group :");
+  }
 
   //Post treat vertex data
   int *all_order    = malloc(exch_size*sizeof(int));
@@ -979,7 +977,6 @@ PDM_MPI_Comm   comm
     start_vtx += n_recv;
   }
   free(group_id_tmp);
-  PDM_log_trace_array_int(all_order, exch_size, "all order ");
   
   //First pass to count
   int *_dvtx_group_n   = PDM_array_zeros_int(n_group_join);
@@ -1372,21 +1369,12 @@ int main(int argc, char *argv[])
   PDM_g_num_t *extracted_face_distri = PDM_compute_entity_distribution(comm, n_face_join);
   
 
-  log_trace("Face vtx received after MBTP\n");
-  PDM_log_trace_array_int (face_vtx_both_idx, n_face_join+1, "face_vtx_idx :: ");
-  PDM_log_trace_array_long(face_vtx_both, face_vtx_both_idx[n_face_join], "face_vtx :: ");
+  if (0 == 1) {
+    log_trace("Face vtx received after MBTP\n");
+    PDM_log_trace_array_int (face_vtx_both_idx, n_face_join+1, "face_vtx_idx :: ");
+    PDM_log_trace_array_long(face_vtx_both, face_vtx_both_idx[n_face_join], "face_vtx :: ");
+  }
 
-
-  //This is probably useless
-  int         *face_vtx_idx = NULL;
-  PDM_g_num_t *face_vtx     = NULL;
-  PDM_g_num_t *face_vtx_opp = NULL;
-  _split_paired_connectivity(n_face_join, face_vtx_both_idx, face_vtx_both, &face_vtx_idx, &face_vtx, &face_vtx_opp);
-
-  log_trace("Split face_vtx & face_vtx donor \n");
-  PDM_log_trace_array_int(face_vtx_idx, (n_face_join / 2)+1,            "face_vtx_idx :: ");
-  PDM_log_trace_array_long(face_vtx,     face_vtx_idx[n_face_join / 2], "face_vtx :: ");
-  PDM_log_trace_array_long(face_vtx_opp, face_vtx_idx[n_face_join / 2], "face_vtx_opp :: ");
 
   //Now we have some pairs of faces (each pair appears only one) + face_vtx for this pairs
 
@@ -1408,10 +1396,12 @@ int main(int argc, char *argv[])
                                     comm);
   
   int ext_dn_face = n_face_join;
-  log_trace("Edges rebuild\n");
-  PDM_log_trace_array_long(dedge_distrib, n_rank+1, "dedge_distri ::");
-  //PDM_log_trace_array_long(dedge_vtx, 2*dn_edge, "dedge_vtx ::");
-  //PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+  if (0 == 1) {
+    log_trace("Edges rebuild\n");
+    PDM_log_trace_array_long(dedge_distrib, n_rank+1, "dedge_distri ::");
+    //PDM_log_trace_array_long(dedge_vtx, 2*dn_edge, "dedge_vtx ::");
+    //PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+  }
 
   // Transport face data to edges
 
@@ -1467,11 +1457,13 @@ int main(int argc, char *argv[])
   free(dedge_face_sgn);
 
 
-  log_trace("Transport data on edges\n");
-  PDM_log_trace_array_int (dedge_face_idx,      dn_edge+1,               "dedge_face_idx      ::");
-  PDM_log_trace_array_int (dedge_face_group_id, dedge_face_idx[dn_edge], "dedge_face_group_id ::");
-  PDM_log_trace_array_long(dedge_face_join    , dedge_face_idx[dn_edge], "dedge_face_join     ::");
-  PDM_log_trace_array_long(dedge_face_join_opp, dedge_face_idx[dn_edge], "dedge_face_join_opp ::");
+  if (0 == 1) {
+    log_trace("Transport data on edges\n");
+    PDM_log_trace_array_int (dedge_face_idx,      dn_edge+1,               "dedge_face_idx      ::");
+    PDM_log_trace_array_int (dedge_face_group_id, dedge_face_idx[dn_edge], "dedge_face_group_id ::");
+    PDM_log_trace_array_long(dedge_face_join    , dedge_face_idx[dn_edge], "dedge_face_join     ::");
+    PDM_log_trace_array_long(dedge_face_join_opp, dedge_face_idx[dn_edge], "dedge_face_join_opp ::");
+  }
 
   // Match internal edges
   PDM_g_num_t *dedge_gnum     = NULL;
@@ -1488,13 +1480,14 @@ int main(int argc, char *argv[])
                                               &dedge_gnum_opp,
                                                comm);
 
-  log_trace("Internal edge matches after conflict resolution \n");
-  PDM_log_trace_array_long(dedge_gnum, dn_internal_edge, "dedge gnum :: ");
-  PDM_log_trace_array_long(dedge_gnum_opp, dn_internal_edge, "dedge gnum_opp :: ");
+  if (0 == 1) {
+    log_trace("Internal edge matches after conflict resolution \n");
+    PDM_log_trace_array_long(dedge_gnum, dn_internal_edge, "dedge gnum :: ");
+    PDM_log_trace_array_long(dedge_gnum_opp, dn_internal_edge, "dedge gnum_opp :: ");
+  }
 
   // To match external edges, we will work on face distribution. We need face->edge connectivity
 
-  log_trace("Generate dface->edge from dedge->face\n");
   int         *dface_edge_idx = NULL;
   PDM_g_num_t *dface_edge     = NULL;
   PDM_dconnectivity_transpose(comm,
@@ -1506,7 +1499,10 @@ int main(int argc, char *argv[])
                              &dface_edge_idx,
                              &dface_edge);
 
-  PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, ext_dn_face, "dface_edge :: ");
+  if (0 == 1) {
+    log_trace("Generate dface->edge from dedge->face\n");
+    PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, ext_dn_face, "dface_edge :: ");
+  }
 
   //Transfert some data from the edges to the edges know by the faces
 
@@ -1526,7 +1522,6 @@ int main(int argc, char *argv[])
       dedge_gnum_n[i] = 0;
     }
   }
-  //PDM_log_trace_array_int(dedge_gnum_n, dn_edge, "dedge_gnum_n");
 
                        btp = PDM_block_to_part_create(dedge_distrib,
                                (const PDM_g_num_t **) &dface_edge_abs,
@@ -1559,7 +1554,7 @@ int main(int argc, char *argv[])
               (void ***) &recv_data_tmp);
   PDM_g_num_t *pedge_vtx = recv_data_tmp[0];
   free(recv_data_tmp);
-  PDM_log_trace_array_long(pedge_vtx, 2*dface_edge_idx[ext_dn_face], "pedge_vtx");
+  //PDM_log_trace_array_long(pedge_vtx, 2*dface_edge_idx[ext_dn_face], "pedge_vtx");
 
 
 
@@ -1572,7 +1567,7 @@ int main(int argc, char *argv[])
       face_edge_wopp[i] = 0;
   }
 
-  PDM_log_trace_connectivity_long(dface_edge_idx, face_edge_wopp, ext_dn_face, "dface_edge :: ");
+  //PDM_log_trace_connectivity_long(dface_edge_idx, face_edge_wopp, ext_dn_face, "dface_edge :: ");
 
   free(dface_edge_abs);
   free(dedge_gnum_n);
@@ -1607,11 +1602,13 @@ int main(int argc, char *argv[])
 
 
   free(face_edge_wopp);
-  log_trace("edge matching on face distribution\n");
-  /*PDM_log_trace_array_long(p_all_edge_gnum,     dface_edge_idx[ext_dn_face], "p_all_edge_gnum     ::");*/
-  /*PDM_log_trace_array_long(p_all_edge_gnum_opp, dface_edge_idx[ext_dn_face], "p_all_edge_gnum_opp ::");*/
-  PDM_log_trace_array_long(p_all_vtx,     dface_edge_idx[ext_dn_face], "p_all_vtx     ::");
-  PDM_log_trace_array_long(p_all_vtx_opp, dface_edge_idx[ext_dn_face], "p_all_vtx_opp ::");
+  if (0 == 1) {
+    log_trace("edge matching on face distribution\n");
+    /*PDM_log_trace_array_long(p_all_edge_gnum,     dface_edge_idx[ext_dn_face], "p_all_edge_gnum     ::");*/
+    /*PDM_log_trace_array_long(p_all_edge_gnum_opp, dface_edge_idx[ext_dn_face], "p_all_edge_gnum_opp ::");*/
+    PDM_log_trace_array_long(p_all_vtx,     dface_edge_idx[ext_dn_face], "p_all_vtx     ::");
+    PDM_log_trace_array_long(p_all_vtx_opp, dface_edge_idx[ext_dn_face], "p_all_vtx_opp ::");
+  }
 
   int p_all_vtx_n = dface_edge_idx[ext_dn_face];
   int         *dvtx_group_idx = NULL;
@@ -1638,10 +1635,12 @@ int main(int argc, char *argv[])
       dvtx_group_opp[i_vtx] -= zone_opp_offset;
     }
   }
-  log_trace("Vtx & vtx opp per group in vtx global numbering\n");
-  PDM_log_trace_array_int(dvtx_group_idx, n_group_join+1, "dvtx_group_idx ::");
-  PDM_log_trace_array_long(dvtx_group, dvtx_group_idx[n_group_join], "dvtx_group     ::");
-  PDM_log_trace_array_long(dvtx_group_opp, dvtx_group_idx[n_group_join], "dvtx_group_opp ::");
+  if (0 == 1) {
+    log_trace("Vtx & vtx opp per group in vtx global numbering\n");
+    PDM_log_trace_array_int(dvtx_group_idx, n_group_join+1, "dvtx_group_idx ::");
+    PDM_log_trace_array_long(dvtx_group, dvtx_group_idx[n_group_join], "dvtx_group     ::");
+    PDM_log_trace_array_long(dvtx_group_opp, dvtx_group_idx[n_group_join], "dvtx_group_opp ::");
+  }
 
   free(dvtx_group_idx );
   free(dvtx_group     );
@@ -1666,12 +1665,6 @@ int main(int argc, char *argv[])
 
   free(face_vtx_both_idx);
   free(face_vtx_both);
-
-
-
-  free(face_vtx_idx);
-  free(face_vtx);
-  free(face_vtx_opp);
 
   free(dedge_distrib);
   free(dedge_vtx_idx);
