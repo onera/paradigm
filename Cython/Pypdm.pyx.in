@@ -380,4 +380,8 @@ include "pdm_part_extension.pxi"
 # PDM_dconnectivity_transform :
 # --------------------
 include "pdm_dconnectivity_transform.pxi"
+
+# PDM_domain_interface:
+# --------------------
+include "pdm_domain_interface.pxi"
 # TODO: PDM_writer, ...
