@@ -395,22 +395,14 @@ int main(int argc, char *argv[])
   } 
   
   // New version begins
-  int          *interface_dn_v   = (int          *) malloc(n_interface*sizeof(int));
-  PDM_g_num_t **interface_ids_v  = (PDM_g_num_t **) malloc(n_interface*sizeof(PDM_g_num_t *));
-  int         **interface_dom_v  = (int         **) malloc(n_interface*sizeof(int *));
-  PDM_domain_interface_face_to_vertex (n_interface,
-                                       interface_dn_f,
-                                       interface_ids_f,
-                                       interface_dom_f,
-                                       n_zone,
-                                       dn_vtx,
-                                       dn_face,
-                                       dface_vtx_idx,
-                                       dface_vtx,
-                                       interface_dn_v,
-                                       interface_ids_v,
-                                       interface_dom_v,
-                                       comm);
+  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface, n_zone, PDM_OWNERSHIP_KEEP, comm);
+  PDM_domain_interface_set(dom_intrf, PDM_BOUND_TYPE_FACE, interface_dn_f, interface_ids_f, interface_dom_f);
+
+  int          *interface_dn_v  = NULL;
+  PDM_g_num_t **interface_ids_v = NULL;
+  int         **interface_dom_v = NULL;
+  PDM_domain_interface_translate_face2vtx(dom_intrf, dn_vtx, dn_face, dface_vtx_idx, dface_vtx);
+  PDM_domain_interface_get(dom_intrf, PDM_BOUND_TYPE_VTX, &interface_dn_v, &interface_ids_v, &interface_dom_v);
 
   PDM_log_trace_array_int(interface_dn_v, n_interface, "interface_dn_v ::");
   for (i_interface = 0; i_interface < n_interface; i_interface ++) {
@@ -420,14 +412,7 @@ int main(int argc, char *argv[])
   } 
 
 
-  for (i_interface = 0; i_interface < n_interface; i_interface++)
-  {
-    free(interface_ids_v[i_interface]);
-    free(interface_dom_v[i_interface]);
-  }
-  free(interface_dn_v );
-  free(interface_ids_v);
-  free(interface_dom_v);
+  PDM_domain_interface_free(dom_intrf);
 
   /* Free memory */
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {

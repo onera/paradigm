@@ -1,16 +1,16 @@
-#ifndef __PDM_DOMAIN_INTERFACE_H__
-#define __PDM_DOMAIN_INTERFACE_H__
+#ifndef __PDM_DOMAIN_INTERFACE_PRIV_H__
+#define __PDM_DOMAIN_INTERFACE_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_domain_interface_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -27,7 +27,30 @@ extern "C" {
  * Type
  *============================================================================*/
 
-typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
+/**
+ * \struct pdm_domain_interface_t
+ * \brief  Connnectivity between domains
+ *
+ * \ref pdm_domain_interface_t defines an interface structure
+ *
+ */
+
+struct _pdm_domain_interface_t{
+
+  int             n_interface;
+  int             n_zone;
+  int            *interface_dn_f;
+  PDM_g_num_t   **interface_ids_f;
+  int           **interface_dom_f;
+  int            *interface_dn_v;
+  PDM_g_num_t   **interface_ids_v;
+  int           **interface_dom_v;
+  
+  PDM_ownership_t ownership;
+  int is_result[PDM_BOUND_TYPE_MAX];
+
+  PDM_MPI_Comm    comm;
+};
 
 /*=============================================================================
  * Static global variables
@@ -36,49 +59,8 @@ typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
-PDM_domain_interface_t* PDM_domain_interface_create
-(
- const int             n_interface,
- const int             n_zone,
- PDM_ownership_t       ownership,
- PDM_MPI_Comm          comm
-);
-
-void PDM_domain_interface_set
-(
- PDM_domain_interface_t *dom_intrf,
- PDM_bound_type_t        interface_kind,
- int                    *interface_dn,
- PDM_g_num_t           **interface_ids,
- int                   **interface_dom
-);
-
-void PDM_domain_interface_get
-(
- PDM_domain_interface_t *dom_intrf,
- PDM_bound_type_t        interface_kind,
- int                   **interface_dn,
- PDM_g_num_t          ***interface_ids,
- int                  ***interface_dom
-);
-
-void PDM_domain_interface_translate_face2vtx
-(
- PDM_domain_interface_t  *dom_intrf,
- PDM_g_num_t             *dn_vtx,
- PDM_g_num_t             *dn_face,
- int                    **dface_vtx_idx,
- PDM_g_num_t            **dface_vtx
-);
-
-void PDM_domain_interface_free
-(
- PDM_domain_interface_t *dom_intrf
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_DOMAIN_INTERFACE_H__ */
+#endif /* __PDM_DOMAIN_INTERFACE_PRIV_H__ */
