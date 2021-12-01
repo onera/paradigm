@@ -349,40 +349,85 @@ int main(int argc, char *argv[])
                        &dface_join_opp,
                        comm);
 
-  log_trace("Global join data (%d)\n", n_group_join);
-  PDM_log_trace_array_int(group_join_to_zone_cur, n_group_join, "group_join_to_zone_cur :: ");
-  PDM_log_trace_array_int(group_join_to_join_opp, n_group_join, "group_join_to_join_opp :: ");
-  PDM_log_trace_array_int(group_join_to_zone_opp, n_group_join, "group_join_to_zone_opp :: ");
+  /*log_trace("Global join data (%d)\n", n_group_join);*/
+  /*PDM_log_trace_array_int(group_join_to_zone_cur, n_group_join, "group_join_to_zone_cur :: ");*/
+  /*PDM_log_trace_array_int(group_join_to_join_opp, n_group_join, "group_join_to_join_opp :: ");*/
+  /*PDM_log_trace_array_int(group_join_to_zone_opp, n_group_join, "group_join_to_zone_opp :: ");*/
 
-  PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "dface_join_idx :: ");
-  PDM_log_trace_array_long(dface_join    , dface_join_idx[n_group_join], "dface_join     :: ");
-  PDM_log_trace_array_long(dface_join_opp, dface_join_idx[n_group_join], "dface_join_opp :: ");
+  /*PDM_log_trace_array_int(dface_join_idx, n_group_join+1, "dface_join_idx :: ");*/
+  /*PDM_log_trace_array_long(dface_join    , dface_join_idx[n_group_join], "dface_join     :: ");*/
+  /*PDM_log_trace_array_long(dface_join_opp, dface_join_idx[n_group_join], "dface_join_opp :: ");*/
 
+  // Convert for new version
+  int n_interface = n_group_join / 2;
+  int          *interface_dn_f  = malloc(n_interface * sizeof(int));
+  PDM_g_num_t **interface_ids_f = malloc(n_interface * sizeof(PDM_g_num_t*));
+  int         **interface_dom_f = malloc(n_interface * sizeof(int*));
+
+  int i_interface = 0;
+  for (int i_join = 0; i_join < n_group_join; i_join++) {
+    int i_join_opp = group_join_to_join_opp[i_join];
+    if (i_join <= i_join_opp) {
+      int n_face = dface_join_idx[i_join+1] - dface_join_idx[i_join];
+      interface_dn_f [i_interface] = n_face;
+      interface_ids_f[i_interface] = malloc(2*n_face*sizeof(PDM_g_num_t));
+      interface_dom_f[i_interface] = malloc(2*n_face*sizeof(int));
+      int idx = 0;
+      for (int i_face = dface_join_idx[i_join]; i_face < dface_join_idx[i_join+1]; i_face++) {
+        interface_ids_f[i_interface][idx] = dface_join[i_face];
+        interface_dom_f[i_interface][idx++] = group_join_to_zone_cur[i_join];
+
+        interface_ids_f[i_interface][idx] = dface_join_opp[i_face];
+        interface_dom_f[i_interface][idx++] = group_join_to_zone_opp[i_join];
+      }
+      assert (idx == 2*n_face);
+      i_interface++;
+    }
+  }
+  assert (i_interface == n_interface);
+
+  log_trace("Number of interfaces : %d\n", n_interface);
+  PDM_log_trace_array_int(interface_dn_f, n_interface, "interface_dn_f ::");
+  for (i_interface = 0; i_interface < n_interface; i_interface ++) {
+    log_trace("Interface %d\n", i_interface);
+    PDM_log_trace_array_long(interface_ids_f[i_interface], 2*interface_dn_f[i_interface], "  face ids ::");
+    PDM_log_trace_array_int (interface_dom_f[i_interface], 2*interface_dn_f[i_interface], "  face dom ::");
+  } 
+  
   // New version begins
-
-  int         *dvtx_group_idx = NULL;
-  PDM_g_num_t *dvtx_group     = NULL;
-  PDM_g_num_t *dvtx_group_opp = NULL;
-  PDM_domain_interface_face_to_vertex (n_group_join,
-                                       group_join_to_join_opp,
-                                       group_join_to_zone_cur,
-                                       group_join_to_zone_opp,
-                                       dface_join_idx,
-                                       dface_join,
-                                       dface_join_opp,
+  int          *interface_dn_v   = (int          *) malloc(n_interface*sizeof(int));
+  PDM_g_num_t **interface_ids_v  = (PDM_g_num_t **) malloc(n_interface*sizeof(PDM_g_num_t *));
+  int         **interface_dom_v  = (int         **) malloc(n_interface*sizeof(int *));
+  PDM_domain_interface_face_to_vertex (n_interface,
+                                       interface_dn_f,
+                                       interface_ids_f,
+                                       interface_dom_f,
                                        n_zone,
                                        dn_vtx,
                                        dn_face,
                                        dface_vtx_idx,
                                        dface_vtx,
-                                      &dvtx_group_idx,
-                                      &dvtx_group,
-                                      &dvtx_group_opp,
+                                       interface_dn_v,
+                                       interface_ids_v,
+                                       interface_dom_v,
                                        comm);
 
-  free(dvtx_group_idx );
-  free(dvtx_group     );
-  free(dvtx_group_opp );
+  PDM_log_trace_array_int(interface_dn_v, n_interface, "interface_dn_v ::");
+  for (i_interface = 0; i_interface < n_interface; i_interface ++) {
+    log_trace("Interface %d\n", i_interface);
+    PDM_log_trace_array_long(interface_ids_v[i_interface], 2*interface_dn_v[i_interface], "  vtx ids ::");
+    PDM_log_trace_array_int (interface_dom_v[i_interface], 2*interface_dn_v[i_interface], "  vtx dom ::");
+  } 
+
+
+  for (i_interface = 0; i_interface < n_interface; i_interface++)
+  {
+    free(interface_ids_v[i_interface]);
+    free(interface_dom_v[i_interface]);
+  }
+  free(interface_dn_v );
+  free(interface_ids_v);
+  free(interface_dom_v);
 
   /* Free memory */
   for (int i_zone = 0; i_zone < n_zone; i_zone++) {
@@ -412,6 +457,15 @@ int main(int argc, char *argv[])
   free(group_join_to_zone_cur);
   free(group_join_to_zone_opp);
   free(group_join_to_join_opp);
+
+  for (i_interface = 0; i_interface < n_interface; i_interface++)
+  {
+    free(interface_ids_f[i_interface]);
+    free(interface_dom_f[i_interface]);
+  }
+  free(interface_dn_f );
+  free(interface_ids_f);
+  free(interface_dom_f);
 
   PDM_MPI_Finalize();
 

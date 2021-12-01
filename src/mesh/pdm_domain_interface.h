@@ -39,36 +39,31 @@ extern "C" {
  * vertices from the connectivity information of the faces.
  *
  * The input face-based interface connectivity should be specified through :
- *  - Some global data about interfaces : n_interface is the number of interfaces, (each
- *    interface is counted twice), group_join_to_join_opp is an array indicating the number
- *    of the opposite interface, group_join_to_zone_cur and group_join_to_zone_opp gives the
- *    id of domain and opposite domain for each interface
- *  - The faces belonging to interfaces in a distributed flat jagged array : dface_join_idx is the number of
- *    faces in each interface, dface_join is the global id of theese faces in the domain numbering and
- *    dface_join_opp is the id of the matching faces in the opposite domain numbering
+ *  - Some global data about interfaces : n_interface is the number of interfaces
+ *  - Interface description : for each interface I, interfaces_size[I] is the number of face pairs
+ *    in the interface; interface_face_ids[I] is the list of (face, opposite face) in the corresponding
+ *    domains numbering (size = 2*interfaces_size[I]); interface_domains_ids is the list of (domain, opposite
+ *    domain) of the faces (size = 2*interfaces_size[I])
  *  - Some mesh data : n_zone is the number of domain, dn_vtx, dn_face and dface_vtx_idx are standard
  *    topological data for each domain
- * Ouput are the array dvtx_group_idx, dvtx_group, dvtx_group_opp who have the same meaning than
- * dface_join_idx, dface_join and dface_join_opp but for vertices.
- * Output arrays are allocated.
+ * Ouput are the array vtx_interface_size, interface_vtx_ids, interface_vtx_dom_ids who have the same meaning than
+ * interface_size, interface_face_ids, interface_domains_ids.
+ * Output arrays must be allocated at size n_interface ; inner level will be allocated within the function
 */
 void PDM_domain_interface_face_to_vertex
 (
  int            n_interface,             /* Total number of interfaces */
- int           *group_join_to_join_opp,  /* Link between interfaces (size=n_interface) */
- int           *group_join_to_zone_cur,  /* Id of domain for each interface (size=n_interface) */
- int           *group_join_to_zone_opp,  /* Id of opposite domain for each interface (size=n_interface) */
- int           *dface_join_idx,          /* Idx array of all faces belong to interfaces (size=n_interface) */
- PDM_g_num_t   *dface_join,              /* Faces belong to interfaces (size=dface_join_idx[n_interface]) */
- PDM_g_num_t   *dface_join_opp,          /* Opposite face id of the faces belonging to interface (same size) */
+ int           *interfaces_size,         /* Number of face pairs in each interface */
+ PDM_g_num_t  **interface_face_ids,      /* For each interface, list of pairs face,face_opp */
+ int          **interface_domains_ids,   /* For each interface, list of domains dom,dom_opp */
  int            n_zone,                  /* Number of zones */
  PDM_g_num_t   *dn_vtx,                  /* Number of vertex in each zone (distributed) */
  PDM_g_num_t   *dn_face,                 /* Number of face in each zone (distributed) */
  int          **dface_vtx_idx,           /* Face->vertex connectivity for each domain */
  PDM_g_num_t  **dface_vtx,
- int          **dvtx_group_idx,          /* [OUT] Idx array of all vertex belonging to interfaces */
- PDM_g_num_t  **dvtx_group,              /* [OUT] Vertices belong to interfaces (size=dvtx_group_idx[n_interface]) */
- PDM_g_num_t  **dvtx_group_opp,          /* [OUT] Opposite vertex id for theses vertices (same size) */
+ int           *vtx_interface_size,      /* [OUT] Number of vtx pairs in each interface */
+ PDM_g_num_t  **interface_vtx_ids,       /* [OUT] For each interface, list of pairs vtx,vtx_opp */
+ int          **interface_vtx_dom_ids,   /* [OUT] For each interface, list of domains dom,dom_opp */
  PDM_MPI_Comm   comm                     /* Mpi comunicator */
 );
 
