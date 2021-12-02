@@ -37,7 +37,8 @@ typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
  * Public function prototypes
  *============================================================================*/
 
-PDM_domain_interface_t* PDM_domain_interface_create
+PDM_domain_interface_t *
+PDM_domain_interface_create
 (
  const int             n_interface,
  const int             n_zone,
@@ -45,7 +46,8 @@ PDM_domain_interface_t* PDM_domain_interface_create
  PDM_MPI_Comm          comm
 );
 
-void PDM_domain_interface_set
+void
+PDM_domain_interface_set
 (
  PDM_domain_interface_t *dom_intrf,
  PDM_bound_type_t        interface_kind,
@@ -54,7 +56,8 @@ void PDM_domain_interface_set
  int                   **interface_dom
 );
 
-void PDM_domain_interface_get
+void
+PDM_domain_interface_get
 (
  PDM_domain_interface_t *dom_intrf,
  PDM_bound_type_t        interface_kind,
@@ -63,7 +66,8 @@ void PDM_domain_interface_get
  int                  ***interface_dom
 );
 
-void PDM_domain_interface_translate_face2vtx
+void
+PDM_domain_interface_translate_face2vtx
 (
  PDM_domain_interface_t  *dom_intrf,
  PDM_g_num_t             *dn_vtx,
@@ -72,7 +76,8 @@ void PDM_domain_interface_translate_face2vtx
  PDM_g_num_t            **dface_vtx
 );
 
-void PDM_domain_interface_free
+void
+PDM_domain_interface_free
 (
  PDM_domain_interface_t *dom_intrf
 );

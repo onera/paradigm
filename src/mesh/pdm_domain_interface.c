@@ -990,7 +990,7 @@ PDM_MPI_Comm   comm
   free(dall_vtx_group);
 }
 
-static void pdm_domain_interface_face_to_vertex
+static void _domain_interface_face_to_vertex
 (
  int            n_interface,             /* Total number of interfaces */
  int           *interfaces_size,         /* Number of face pairs in each interface */
@@ -1390,12 +1390,12 @@ PDM_MPI_Comm          comm
   dom_intrf->ownership   = ownership;
   dom_intrf->comm        = comm;
 
-  dom_intrf->interface_dn_f   = NULL;
-  dom_intrf->interface_ids_f  = NULL;
-  dom_intrf->interface_dom_f  = NULL;
-  dom_intrf->interface_dn_v   = NULL;
-  dom_intrf->interface_ids_v  = NULL;
-  dom_intrf->interface_dom_v  = NULL;
+  dom_intrf->interface_dn_face   = NULL;
+  dom_intrf->interface_ids_face  = NULL;
+  dom_intrf->interface_dom_face  = NULL;
+  dom_intrf->interface_dn_vtx    = NULL;
+  dom_intrf->interface_ids_vtx   = NULL;
+  dom_intrf->interface_dom_vtx   = NULL;
 
   for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++)
     dom_intrf->is_result[i] = 0;
@@ -1417,9 +1417,9 @@ void PDM_domain_interface_set
     PDM_error(__FILE__, __LINE__, 0, "Only face domain connectivity is currently supported\n");
   }
   else {
-    dom_intrf->interface_dn_f   = interface_dn;
-    dom_intrf->interface_ids_f  = interface_ids;
-    dom_intrf->interface_dom_f = interface_dom;
+    dom_intrf->interface_dn_face  = interface_dn;
+    dom_intrf->interface_ids_face = interface_ids;
+    dom_intrf->interface_dom_face = interface_dom;
   }
 
 }
@@ -1434,24 +1434,24 @@ void PDM_domain_interface_translate_face2vtx
 )
 {
   assert (dom_intrf != NULL);
-  assert (dom_intrf->interface_dn_f != NULL);
-  assert (dom_intrf->interface_dn_v == NULL);
-  dom_intrf->interface_dn_v  = (int *)          malloc(dom_intrf->n_interface * sizeof(int));
-  dom_intrf->interface_ids_v = (PDM_g_num_t **) malloc(dom_intrf->n_interface * sizeof(PDM_g_num_t*));
-  dom_intrf->interface_dom_v = (int         **) malloc(dom_intrf->n_interface * sizeof(int*));
-  pdm_domain_interface_face_to_vertex(dom_intrf->n_interface,
-                                      dom_intrf->interface_dn_f,
-                                      dom_intrf->interface_ids_f,
-                                      dom_intrf->interface_dom_f,
-                                      dom_intrf->n_zone,
-                                      dn_vtx,
-                                      dn_face,
-                                      dface_vtx_idx,
-                                      dface_vtx,
-                                      dom_intrf->interface_dn_v,
-                                      dom_intrf->interface_ids_v,
-                                      dom_intrf->interface_dom_v,
-                                      dom_intrf->comm);
+  assert (dom_intrf->interface_dn_face != NULL);
+  assert (dom_intrf->interface_dn_vtx  == NULL);
+  dom_intrf->interface_dn_vtx  = (int *)          malloc(dom_intrf->n_interface * sizeof(int));
+  dom_intrf->interface_ids_vtx = (PDM_g_num_t **) malloc(dom_intrf->n_interface * sizeof(PDM_g_num_t*));
+  dom_intrf->interface_dom_vtx = (int         **) malloc(dom_intrf->n_interface * sizeof(int*));
+  _domain_interface_face_to_vertex(dom_intrf->n_interface,
+                                   dom_intrf->interface_dn_face,
+                                   dom_intrf->interface_ids_face,
+                                   dom_intrf->interface_dom_face,
+                                   dom_intrf->n_zone,
+                                   dn_vtx,
+                                   dn_face,
+                                   dface_vtx_idx,
+                                   dface_vtx,
+                                   dom_intrf->interface_dn_vtx,
+                                   dom_intrf->interface_ids_vtx,
+                                   dom_intrf->interface_dom_vtx,
+                                   dom_intrf->comm);
 
   dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
 }
@@ -1467,16 +1467,16 @@ void PDM_domain_interface_get
 {
   assert (dom_intrf != NULL);
   if (interface_kind == PDM_BOUND_TYPE_FACE) {
-    assert (dom_intrf->interface_dn_f != NULL);
-    *interface_dn  = dom_intrf->interface_dn_f;
-    *interface_ids = dom_intrf->interface_ids_f;
-    *interface_dom = dom_intrf->interface_dom_f;
+    assert (dom_intrf->interface_dn_face != NULL);
+    *interface_dn  = dom_intrf->interface_dn_face;
+    *interface_ids = dom_intrf->interface_ids_face;
+    *interface_dom = dom_intrf->interface_dom_face;
   }
   else if (interface_kind == PDM_BOUND_TYPE_VTX) {
-    assert (dom_intrf->interface_dn_v != NULL);
-    *interface_dn  = dom_intrf->interface_dn_v;
-    *interface_ids = dom_intrf->interface_ids_v;
-    *interface_dom = dom_intrf->interface_dom_v;
+    assert (dom_intrf->interface_dn_vtx != NULL);
+    *interface_dn  = dom_intrf->interface_dn_vtx;
+    *interface_ids = dom_intrf->interface_ids_vtx;
+    *interface_dom = dom_intrf->interface_dom_vtx;
   }
   else  {
     PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
@@ -1492,21 +1492,21 @@ void PDM_domain_interface_free
   if (dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
     if (dom_intrf->is_result[PDM_BOUND_TYPE_VTX]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
-        free(dom_intrf->interface_ids_v[i_interface]);
-        free(dom_intrf->interface_dom_v[i_interface]);
+        free(dom_intrf->interface_ids_vtx[i_interface]);
+        free(dom_intrf->interface_dom_vtx[i_interface]);
       }
-      free(dom_intrf->interface_dn_v);
-      free(dom_intrf->interface_ids_v);
-      free(dom_intrf->interface_dom_v);
+      free(dom_intrf->interface_dn_vtx);
+      free(dom_intrf->interface_ids_vtx);
+      free(dom_intrf->interface_dom_vtx);
     }
     if (dom_intrf->is_result[PDM_BOUND_TYPE_FACE]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
-        free(dom_intrf->interface_ids_f[i_interface]);
-        free(dom_intrf->interface_dom_f[i_interface]);
+        free(dom_intrf->interface_ids_face[i_interface]);
+        free(dom_intrf->interface_dom_face[i_interface]);
       }
-      free(dom_intrf->interface_dn_f);
-      free(dom_intrf->interface_ids_f);
-      free(dom_intrf->interface_dom_f);
+      free(dom_intrf->interface_dn_face);
+      free(dom_intrf->interface_ids_face);
+      free(dom_intrf->interface_dom_face);
     }
   }
 
