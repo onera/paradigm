@@ -169,12 +169,12 @@ static int _extract_and_shift_jn_faces
       int i_zone_opp = _interface_dom[2*i_pair+1];
 
       multi_gnum_tmp[idx] = _interface_ids[2*i_pair] + face_per_block_offset[i_zone_cur];
-      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair]; //Here unshifted
+      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair] + face_per_block_offset[i_zone_cur];
       _dextract_face_dom_id_tmp  [idx] = i_zone_cur;
       _dextract_face_group_id_tmp[idx++] = i_interface;
 
       multi_gnum_tmp[idx] = _interface_ids[2*i_pair+1] + face_per_block_offset[i_zone_opp];
-      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair+1];
+      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair+1] + face_per_block_offset[i_zone_opp];
       _dextract_face_dom_id_tmp  [idx] = i_zone_opp;
       _dextract_face_group_id_tmp[idx++] = i_interface;
     }
@@ -385,8 +385,6 @@ static int _match_internal_edges
  int           *dedge_distrib,
  int           *dedge_face_idx,
  PDM_g_num_t   *dedge_face,
- int           *dedge_face_dom_id,
- int           *dedge_face_dom_id_opp,
  PDM_g_num_t   *dedge_face_join,
  PDM_g_num_t   *dedge_face_join_opp,
  PDM_g_num_t  **dedge_gnum,
@@ -448,11 +446,9 @@ static int _match_internal_edges
       //data_send_sens      [idx_write2++] = dedge_face_group_sens[j];
       idx_write2++;
 
-      data_send_connect[idx_write4] = dedge_face_join    [j];
-      data_send_group[idx_write4++] = dedge_face_dom_id[j];
+      data_send_connect[idx_write4++] = dedge_face_join    [j];
 
-      data_send_connect[idx_write4] = dedge_face_join_opp[j];
-      data_send_group[idx_write4++] = dedge_face_dom_id_opp[j];
+      data_send_connect[idx_write4++] = dedge_face_join_opp[j];
     }
     key_ln_to_gn[i_int_edge] = key;
 
@@ -535,19 +531,6 @@ static int _match_internal_edges
   free(unused_recv_stride); // Same as 4*gnum_n_occurences 
   assert (exch_size == 4*gnum_n_occurences_tot);
 
-  PDM_g_num_t *blk_data_group = NULL;
-  exch_size = PDM_part_to_block_exch(ptb,
-                                     sizeof(int),
-                                     PDM_STRIDE_VAR,
-                                     -1,
-                           (int **)  &stride_four,
-                           (void **) &data_send_group,
-                                     &unused_recv_stride,
-                           (void **) &blk_data_group);
-  free(unused_recv_stride); // Same as 4*gnum_n_occurences 
-  assert (exch_size == 4*gnum_n_occurences_tot);
-
-
   if (0 == 1) {
     PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
     PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
@@ -555,7 +538,6 @@ static int _match_internal_edges
     //PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
     //PDM_log_trace_array_long(blk_data_sens      , 2*gnum_n_occurences_tot, "blk_data_sens       :: ");
     PDM_log_trace_array_long(blk_data_connect   , 4*gnum_n_occurences_tot, "blk_data_connect    :: ");
-    PDM_log_trace_array_long(blk_data_group     , 4*gnum_n_occurences_tot, "blk_data_group      :: ");
   }
 
 
@@ -603,11 +585,9 @@ static int _match_internal_edges
 
       // Caution inplace sort !!!!
       PDM_sort_long(&blk_data_connect[beg], NULL, 4);
-      PDM_sort_int (&blk_data_group  [beg], NULL, 4);
 
       if(0 == 1) {
         PDM_log_trace_array_long(&blk_data_connect[beg], 4, "blk_data_connect (sort) :: ");
-        PDM_log_trace_array_int (&blk_data_group  [beg], 4, "blk_data_group   (sort) :: ");
       }
     }
 
@@ -628,10 +608,6 @@ static int _match_internal_edges
 
         if(already_treat[i_entity2] == -1) {
           int beg2    = 4*(idx+i_entity2);
-
-          if(!PDM_array_are_equal_int(&blk_data_group[beg1], &blk_data_group[beg2], 4)) {
-            continue;
-          }
 
           if(!PDM_array_are_equal_int(&blk_data_connect[beg1], &blk_data_connect[beg2], 4)) {
             continue;
@@ -674,7 +650,6 @@ static int _match_internal_edges
 
   free(blk_edge_g_num);
   free(blk_data_connect);
-  free(blk_data_group);
   PDM_part_to_block_free(ptb); // Needed until here for gnum_n_occurences
 
   if (0 == 1) {
@@ -1048,12 +1023,9 @@ static void _domain_interface_face_to_vertex
 
   //Duplicate this data for easier send to edges
   PDM_g_num_t *dextract_face_join_opp   = malloc(n_extr_face*sizeof(PDM_g_num_t));
-  int         *dextract_face_dom_id_opp = malloc(n_extr_face*sizeof(int));
   for (int i = 0; i < n_extr_face/2; i++) {
     dextract_face_join_opp[2*i]     = dextract_face_join[2*i+1];
     dextract_face_join_opp[2*i+1]   = dextract_face_join[2*i];
-    dextract_face_dom_id_opp[2*i]   = dextract_face_dom_id[2*i+1];
-    dextract_face_dom_id_opp[2*i+1] = dextract_face_dom_id[2*i];
   }
 
   if (0 == 1) {
@@ -1102,29 +1074,12 @@ static void _domain_interface_face_to_vertex
 
   PDM_g_num_t *dedge_face_join         = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
   PDM_g_num_t *dedge_face_join_opp     = malloc(dedge_face_idx[dn_edge] * sizeof(PDM_g_num_t));
-  int         *dedge_face_dom_id       = malloc(dedge_face_idx[dn_edge] * sizeof(int        ));
-  int         *dedge_face_dom_id_opp   = malloc(dedge_face_idx[dn_edge] * sizeof(int        ));
   PDM_block_to_part_t *btp = PDM_block_to_part_create(extracted_face_distri,
                                (const PDM_g_num_t **) &dedge_face_abs,
                                                       &dedge_face_idx[dn_edge],
                                                       1,
                                                       comm);
   int cst_stride = 1;
-  PDM_block_to_part_exch(btp,
-                         sizeof(int),
-                         PDM_STRIDE_CST,
-                         &cst_stride,
-                (void *) dextract_face_dom_id,
-                         NULL,
-             (void ** ) &dedge_face_dom_id);
-  PDM_block_to_part_exch(btp,
-                         sizeof(int),
-                         PDM_STRIDE_CST,
-                         &cst_stride,
-                (void *) dextract_face_dom_id_opp,
-                         NULL,
-             (void ** ) &dedge_face_dom_id_opp);
-
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST,
@@ -1145,14 +1100,11 @@ static void _domain_interface_face_to_vertex
   free(dedge_face_abs);
   free(dedge_face_sgn);
   free(dextract_face_join_opp);
-  free(dextract_face_dom_id_opp);
 
 
   if (0 == 1) {
     log_trace("Transport data on edges\n");
     PDM_log_trace_array_int (dedge_face_idx,        dn_edge+1,               "dedge_face_idx        ::");
-    PDM_log_trace_array_int (dedge_face_dom_id,     dedge_face_idx[dn_edge], "dedge_face_dom_id     ::");
-    PDM_log_trace_array_int (dedge_face_dom_id_opp, dedge_face_idx[dn_edge], "dedge_face_dom_id_opp ::");
     PDM_log_trace_array_long(dedge_face_join    ,   dedge_face_idx[dn_edge], "dedge_face_join       ::");
     PDM_log_trace_array_long(dedge_face_join_opp,   dedge_face_idx[dn_edge], "dedge_face_join_opp   ::");
   }
@@ -1164,8 +1116,6 @@ static void _domain_interface_face_to_vertex
                                                dedge_distrib,
                                                dedge_face_idx,
                                                dedge_face,
-                                               dedge_face_dom_id,
-                                               dedge_face_dom_id_opp,
                                                dedge_face_join,
                                                dedge_face_join_opp,
                                               &dedge_gnum,
@@ -1351,8 +1301,6 @@ static void _domain_interface_face_to_vertex
 
   free(dedge_face_join);
   free(dedge_face_join_opp);
-  free(dedge_face_dom_id);
-  free(dedge_face_dom_id_opp);
 
 
   free(extracted_face_distri);
