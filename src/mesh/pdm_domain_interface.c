@@ -153,11 +153,10 @@ static int _extract_and_shift_jn_faces
     n_face_join += 2*interfaces_size[i_interface];
   }
 
-  PDM_g_num_t *multi_gnum_tmp = malloc(n_face_join * sizeof(PDM_g_num_t));
+  PDM_g_num_t *_dextract_face_id_tmp       = malloc(n_face_join * sizeof(PDM_g_num_t));
   // Also transport some data to the extracted faces
   int         *_dextract_face_group_id_tmp = malloc(n_face_join*sizeof(int));
   int         *_dextract_face_dom_id_tmp   = malloc(n_face_join*sizeof(int));
-  PDM_g_num_t *_dextract_face_id_tmp       = malloc(n_face_join*sizeof(PDM_g_num_t));
 
   int idx = 0;
   for (int i_interface = 0; i_interface < n_interface; i_interface++) {
@@ -168,14 +167,12 @@ static int _extract_and_shift_jn_faces
       int i_zone_cur = _interface_dom[2*i_pair];
       int i_zone_opp = _interface_dom[2*i_pair+1];
 
-      multi_gnum_tmp[idx] = _interface_ids[2*i_pair] + face_per_block_offset[i_zone_cur];
-      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair] + face_per_block_offset[i_zone_cur];
-      _dextract_face_dom_id_tmp  [idx] = i_zone_cur;
+      _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair] + face_per_block_offset[i_zone_cur];
+      _dextract_face_dom_id_tmp  [idx]   = i_zone_cur;
       _dextract_face_group_id_tmp[idx++] = i_interface;
 
-      multi_gnum_tmp[idx] = _interface_ids[2*i_pair+1] + face_per_block_offset[i_zone_opp];
-      _dextract_face_id_tmp      [idx] = _interface_ids[2*i_pair+1] + face_per_block_offset[i_zone_opp];
-      _dextract_face_dom_id_tmp  [idx] = i_zone_opp;
+      _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair+1] + face_per_block_offset[i_zone_opp];
+      _dextract_face_dom_id_tmp  [idx]   = i_zone_opp;
       _dextract_face_group_id_tmp[idx++] = i_interface;
     }
   }
@@ -186,15 +183,8 @@ static int _extract_and_shift_jn_faces
   PDM_g_num_t *ideal_distri = PDM_compute_uniform_entity_distribution(comm, cur_distri[n_rank]);
   PDM_block_to_block_t *btb = PDM_block_to_block_create(cur_distri, ideal_distri, comm);
 
-  PDM_g_num_t *multi_gnum = NULL;
-  PDM_block_to_block_exch(btb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
-                          2,
-                          NULL,
-                          multi_gnum_tmp,
-                          NULL,
-              (void **)  &multi_gnum);
+  //dextract_face_id will be used to get the face->vtx of extracted faces, and also
+  //to build the hash table later so return it
   PDM_block_to_block_exch(btb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST,
@@ -226,8 +216,6 @@ static int _extract_and_shift_jn_faces
   n_face_join = 2*(ideal_distri[i_rank+1]-ideal_distri[i_rank]);
   free(ideal_distri);
   free(cur_distri);
-  //Update
-  free(multi_gnum_tmp);
   free(_dextract_face_id_tmp);
   free(_dextract_face_group_id_tmp);
   free(_dextract_face_dom_id_tmp);
@@ -235,7 +223,7 @@ static int _extract_and_shift_jn_faces
   if (0 == 1) {
     PDM_log_trace_array_long(face_per_block_offset, n_zone+1, "face_per_block_offset :: ");
     PDM_log_trace_array_long(vtx_per_block_offset,  n_zone+1, "vtx_per_block_offset :: ");
-    PDM_log_trace_array_long(multi_gnum, n_face_join, "multi_gnum :: ");
+    PDM_log_trace_array_long(*dextract_face_id, n_face_join, "dextract_face_id :: ");
   }
 
   PDM_g_num_t **all_face_distribution = malloc(n_zone * sizeof(PDM_g_num_t*));
@@ -246,7 +234,7 @@ static int _extract_and_shift_jn_faces
   PDM_multi_block_to_part_t *mptb = PDM_multi_block_to_part_create(face_per_block_offset,
                                                                    n_zone,
                                             (const PDM_g_num_t **) all_face_distribution,
-                                            (const PDM_g_num_t **)&multi_gnum,
+                                            (const PDM_g_num_t **) dextract_face_id,
                                                                   &n_face_join,
                                                                    1,
                                                                    comm);
@@ -292,7 +280,6 @@ static int _extract_and_shift_jn_faces
   free(all_face_distribution);
   free(face_vtx_n);
   free(face_vtx_shifted);
-  free(multi_gnum);
 
   free(face_per_block_offset);
   free(vtx_per_block_offset);
