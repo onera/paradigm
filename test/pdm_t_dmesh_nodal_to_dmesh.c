@@ -11,14 +11,12 @@
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
-#include "pdm_part.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_geom_elem.h"
 #include "pdm_priv.h"
-#include "pdm_predicate.h"
+#include "pdm_logging.h"
 
 /*============================================================================
  * Type definitions
@@ -42,10 +40,6 @@ _usage(int exit_code)
      "  Usage: \n\n"
      "  -n      <level>  Number of vertices on the cube side.\n\n"
      "  -l      <level>  Cube length.\n\n"
-     "  -n_part <level>  Number of partitions par process.\n\n"
-     "  -post            Ensight outputs (only if n_part == 1). \n\n"
-     "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -70,10 +64,7 @@ static void
 _read_args(int            argc,
            char         **argv,
            PDM_g_num_t  *n_vtx_seg,
-           double        *length,
-           int           *n_part,
-	   int           *post,
-	   int           *method)
+           double        *length)
 {
   int i = 1;
 
@@ -100,23 +91,6 @@ _read_args(int            argc,
       else
         *length = atof(argv[i]);
     }
-    else if (strcmp(argv[i], "-n_part") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        *n_part = atoi(argv[i]);
-      }
-    }
-    else if (strcmp(argv[i], "-post") == 0) {
-      *post = 1;
-    }
-    else if (strcmp(argv[i], "-pt-scotch") == 0) {
-      *method = 2;
-    }
-    else if (strcmp(argv[i], "-parmetis") == 0) {
-      *method = 1;
-    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -138,16 +112,7 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#endif
-#endif
+  double             length    = 1.;
 
   /*
    *  Read args
@@ -156,16 +121,11 @@ int main(int argc, char *argv[])
   _read_args(argc,
              argv,
              &n_vtx_seg,
-             &length,
-             &n_part,
-             &post,
-             (int *) &method);
+             &length);
 
   /*
    *  Init
    */
-
-  struct timeval t_elaps_debut;
 
   int i_rank;
   int n_rank;
@@ -216,10 +176,6 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-  // PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
-  //                                  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-  //                                  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
-  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
 
   PDM_dmesh_t* dmesh = NULL;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
@@ -246,6 +202,26 @@ int main(int argc, char *argv[])
                                            &dcell_face_idx,
                                            PDM_OWNERSHIP_KEEP);
 
+  int         *dedge_face_idx;
+  PDM_g_num_t *dedge_face;
+  int dn_edge = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
+                                           &dedge_face,
+                                           &dedge_face_idx,
+                                           PDM_OWNERSHIP_KEEP);
+
+  int         *dedge_vtx_idx;
+  PDM_g_num_t *dedge_vtx;
+  int dn_edge2 = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                           &dedge_vtx,
+                                           &dedge_vtx_idx,
+                                           PDM_OWNERSHIP_KEEP);
+  assert(dn_edge == dn_edge2);
+
+  if(0 == 1) {
+    PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx ::");
+    PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face, dn_edge, "dedge_face ::");
+  }
+
   PDM_UNUSED(dn_face);
   PDM_UNUSED(dn_cell);
   PDM_UNUSED(dn_vtx);
@@ -253,7 +229,6 @@ int main(int argc, char *argv[])
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  gettimeofday(&t_elaps_debut, NULL);
   PDM_dcube_nodal_gen_free(dcube);
 
   PDM_MPI_Finalize();
