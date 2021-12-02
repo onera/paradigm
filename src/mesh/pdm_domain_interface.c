@@ -596,7 +596,7 @@ static int _match_internal_edges
         if(already_treat[i_entity2] == -1) {
           int beg2    = 4*(idx+i_entity2);
 
-          if(!PDM_array_are_equal_int(&blk_data_connect[beg1], &blk_data_connect[beg2], 4)) {
+          if(!PDM_array_are_equal_gnum(&blk_data_connect[beg1], &blk_data_connect[beg2], 4)) {
             continue;
           }
 
