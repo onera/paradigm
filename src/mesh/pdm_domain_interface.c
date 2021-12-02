@@ -52,7 +52,7 @@ extern "C" {
 /*=============================================================================
  * Private function definition
  *============================================================================*/
-static int _unique_pairs(int n_pairs, int *ids, int *dom_ids) {
+static int _unique_pairs(int n_pairs, PDM_g_num_t *ids, int *dom_ids) {
   //Rebuild n_occurences
   int n_read = 0;
   PDM_g_num_t last = -1;
@@ -113,19 +113,23 @@ static int _unique_pairs(int n_pairs, int *ids, int *dom_ids) {
   return rewrite_start;
 }
 
-static PDM_g_num_t* _per_block_offset(int n_block, PDM_g_num_t *sizes, PDM_MPI_Comm comm) {
+static PDM_g_num_t* _per_block_offset(int n_block, int *sizes, PDM_MPI_Comm comm) {
+  PDM_g_num_t *sizes_as_gn = (PDM_g_num_t *) malloc(n_block*sizeof(PDM_g_num_t));
+  for (int i = 0; i < n_block; i ++)
+    sizes_as_gn[i] = sizes[i];
   PDM_g_num_t *per_block_offset = (PDM_g_num_t *) malloc((n_block+1) * sizeof(PDM_g_num_t));
   per_block_offset[0] = 0;
-  PDM_MPI_Allreduce(sizes, &per_block_offset[1], n_block, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  PDM_MPI_Allreduce(sizes_as_gn, &per_block_offset[1], n_block, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
   PDM_array_accumulate_gnum(per_block_offset, n_block+1);
+  free(sizes_as_gn);
   return per_block_offset;
 }
 
 static int _extract_and_shift_jn_faces
 (
  int           n_zone,
- PDM_g_num_t  *dn_face,
- PDM_g_num_t  *dn_vtx,
+ int          *dn_face,
+ int          *dn_vtx,
  int           n_interface,
  int          *interfaces_size,
  PDM_g_num_t **interface_face_ids,
@@ -348,7 +352,7 @@ static int _generate_edge_face
   /*PDM_log_trace_connectivity_long(tmp_dface_edge_vtx_idx, tmp_dface_edge_vtx, n_edge_unmerged, "dface_edge :: ");*/
 
   // 3. Merge shared edges
-  PDM_g_num_t dn_edge;
+  int dn_edge;
   PDM_generate_entitiy_connectivity_raw(comm,
                                         n_vtx,
                                         n_edge_unmerged,
@@ -369,7 +373,7 @@ static int _generate_edge_face
 static int _match_internal_edges
 (
  int            dn_edge,
- int           *dedge_distrib,
+ PDM_g_num_t   *dedge_distrib,
  int           *dedge_face_idx,
  PDM_g_num_t   *dedge_face,
  PDM_g_num_t   *dedge_face_join,
@@ -829,8 +833,8 @@ _create_vtx_join
 (
 int            n_interface,
 int            p_all_vtx_n,
-int           *p_all_vtx,
-int           *p_all_vtx_opp,
+PDM_g_num_t   *p_all_vtx,
+PDM_g_num_t   *p_all_vtx_opp,
 int           *p_all_vtx_group,
 int           *p_all_vtx_dom_id,
 int           *p_all_vtx_domopp_id,
@@ -904,9 +908,9 @@ PDM_MPI_Comm   comm
 
   if (0 == 1) {
     PDM_log_trace_array_long(dall_vtx,       blk_size,  "dall_vtx            :");
-    PDM_log_trace_array_long(recv_stride,    blk_size,  "recv stride         :");
+    PDM_log_trace_array_int (recv_stride,    blk_size,  "recv stride         :");
     PDM_log_trace_array_long(dall_vtx_opp,   exch_size, "recv dall_vtx_opp   :");
-    PDM_log_trace_array_long(dall_vtx_group, exch_size, "recv dall_vtx_group :");
+    PDM_log_trace_array_int (dall_vtx_group, exch_size, "recv dall_vtx_group :");
   }
 
   //First, dispatch vertices depending of the original interface
@@ -967,8 +971,8 @@ static void _domain_interface_face_to_vertex
  PDM_g_num_t  **interface_face_ids,      /* For each interface, list of pairs face,face_opp */
  int          **interface_domains_ids,   /* For each interface, list of domains dom,dom_opp */
  int            n_zone,                  /* Number of zones */
- PDM_g_num_t   *dn_vtx,                  /* Number of vertex in each zone (distributed) */
- PDM_g_num_t   *dn_face,                 /* Number of face in each zone (distributed) */
+ int           *dn_vtx,                  /* Number of vertex in each zone (distributed) */
+ int           *dn_face,                 /* Number of face in each zone (distributed) */
  int          **dface_vtx_idx,           /* Face->vertex connectivity for each domain */
  PDM_g_num_t  **dface_vtx,
  int           *vtx_interface_size,      /* [OUT] Number of vtx pairs in each interface */
@@ -1141,14 +1145,14 @@ static void _domain_interface_face_to_vertex
     dface_edge_abs[i] = PDM_ABS(dface_edge[i]);
   }
   int idx = 0;
-  int *dedge_gnum_n = malloc(dn_edge*sizeof(int));
+  int *dedge_gnum_n = PDM_array_zeros_int(dn_edge);
   for (int i = 0; i < dn_edge; i++) {
     if (i + dedge_distrib[i_rank] + 1 == dedge_gnum[idx]) {
       dedge_gnum_n[i] = 1;
       idx++;
     }
-    else {
-      dedge_gnum_n[i] = 0;
+    if (idx == dn_internal_edge) { //End of internal edge reached, no more comparaison is needed
+      break;
     }
   }
 
@@ -1243,9 +1247,9 @@ static void _domain_interface_face_to_vertex
     /*PDM_log_trace_array_long(p_all_edge_gnum_opp, dface_edge_idx[n_extr_face], "p_all_edge_gnum_opp ::");*/
     PDM_log_trace_array_long(p_all_vtx,     n_vtx_interface_tot, "p_all_vtx     ::");
     PDM_log_trace_array_long(p_all_vtx_opp, n_vtx_interface_tot, "p_all_vtx_opp ::");
-    PDM_log_trace_array_long(p_all_vtx_group, n_vtx_interface_tot, "p_all_vtx_group ::");
-    PDM_log_trace_array_long(p_all_vtx_dom_id, n_vtx_interface_tot, "p_all_vtx_dom_id ::");
-    PDM_log_trace_array_long(p_all_vtx_domopp_id, n_vtx_interface_tot, "p_all_vtx_domopp_id ::");
+    PDM_log_trace_array_int (p_all_vtx_group, n_vtx_interface_tot, "p_all_vtx_group ::");
+    PDM_log_trace_array_int (p_all_vtx_dom_id, n_vtx_interface_tot, "p_all_vtx_dom_id ::");
+    PDM_log_trace_array_int (p_all_vtx_domopp_id, n_vtx_interface_tot, "p_all_vtx_domopp_id ::");
   }
 
   _create_vtx_join(n_interface,
@@ -1370,8 +1374,8 @@ void PDM_domain_interface_set
 void PDM_domain_interface_translate_face2vtx
 (
  PDM_domain_interface_t  *dom_intrf,
- PDM_g_num_t             *dn_vtx,
- PDM_g_num_t             *dn_face,
+ int                     *dn_vtx,
+ int                     *dn_face,
  int                    **dface_vtx_idx,
  PDM_g_num_t            **dface_vtx
 )

@@ -20,8 +20,8 @@ cdef extern from "pdm_domain_interface.h":
                                 int                  ***interface_dom)
 
   void PDM_domain_interface_translate_face2vtx(PDM_domain_interface_t  *dom_intrf,
-                                               PDM_g_num_t             *dn_vtx,
-                                               PDM_g_num_t             *dn_face,
+                                               int                     *dn_vtx,
+                                               int                     *dn_face,
                                                int                    **dface_vtx_idx,
                                                PDM_g_num_t            **dface_vtx)
 
@@ -72,13 +72,13 @@ def interface_face_to_vertex(int       n_interface,
       numpy_int = interface_dom_face[i]
       _interface_dom_face[i] = <int *> numpy_int.data
 
-    cdef PDM_g_num_t *_dn_vtx         = <PDM_g_num_t  *> malloc(n_zone * sizeof(PDM_g_num_t));
-    cdef PDM_g_num_t *_dn_face        = <PDM_g_num_t  *> malloc(n_zone * sizeof(PDM_g_num_t));
+    cdef int          *_dn_vtx        = <int         *>  malloc(n_zone * sizeof(int));
+    cdef int          *_dn_face       = <int         *>  malloc(n_zone * sizeof(int));
     cdef int         **_dface_vtx_idx = <int         **> malloc(n_zone * sizeof(int*));
     cdef PDM_g_num_t **_dface_vtx     = <PDM_g_num_t **> malloc(n_zone * sizeof(PDM_g_num_t*));
     for i in range(n_zone):
-      _dn_vtx[i] = <PDM_g_num_t> dn_vtx[i]
-      _dn_face[i] = <PDM_g_num_t> dn_face[i]
+      _dn_vtx[i] = <int> dn_vtx[i]
+      _dn_face[i] = <int> dn_face[i]
       numpy_int = dface_vtx_idx[i]
       _dface_vtx_idx[i] =  <int *> numpy_int.data
       numpy_gnum = dface_vtx[i]

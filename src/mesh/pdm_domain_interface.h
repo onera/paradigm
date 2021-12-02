@@ -70,8 +70,8 @@ void
 PDM_domain_interface_translate_face2vtx
 (
  PDM_domain_interface_t  *dom_intrf,
- PDM_g_num_t             *dn_vtx,
- PDM_g_num_t             *dn_face,
+ int                     *dn_vtx,
+ int                     *dn_face,
  int                    **dface_vtx_idx,
  PDM_g_num_t            **dface_vtx
 );
