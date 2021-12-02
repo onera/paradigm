@@ -1288,8 +1288,14 @@ PDM_MPI_Comm       comm
   free(dface_cell_idx);
   free(dface_cell);
 
-  PDM_log_trace_array_long(dual_graph_idx, dn_face+1, "dual_graph_idx :: ");
-  PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_face], "dual_graph :: ");
+  /* Shift to 0 dual */
+  for(int i = 0; i < dual_graph_idx[dn_face]; ++i) {
+    dual_graph[i] = dual_graph[i] - 1;
+  }
+
+  // PDM_log_trace_array_long(dual_graph_idx, dn_face+1, "dual_graph_idx :: ");
+  // PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_face], "dual_graph :: ");
+  // PDM_log_trace_connectivity_long(dual_graph_idx, dual_graph, dn_face, "dual_graph :: ");
 
   double *part_fractions = NULL;
   if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
