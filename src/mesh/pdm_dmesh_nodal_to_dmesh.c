@@ -1278,6 +1278,11 @@ _generate_faces_from_dmesh_nodal
       free(dparent_sign);
       free(delmt_child_distrib);
     }
+    free(n_edge_elt_tot    );
+    free(delmt_edge        );
+    free(dparent_face_pos  );
+    free(delmt_edge_vtx_idx);
+    free(delmt_edge_vtx    );
 
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
