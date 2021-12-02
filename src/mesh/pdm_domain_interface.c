@@ -64,6 +64,7 @@ static int _unique_pairs(int n_pairs, int *ids, int *dom_ids) {
   }
   int *n_occurences = PDM_array_const_int(n_read, 1);
   n_read = -1;
+  last   = -1;
   for (int i = 0; i < n_pairs; i++) {
     if (ids[2*i] != last) {
       n_read++;
@@ -642,27 +643,34 @@ static int _match_internal_edges
 
         }
       } /* End for i_entity2 */
-      assert(n_same == 1);
+      assert(n_same <= 1);
 
 
-      int edge_idx     = (idx+i_entity);
-      int edge_idx_opp = (idx+i_entity2_same);
+      if (n_same == 1) {
+        int edge_idx     = (idx+i_entity);
+        int edge_idx_opp = (idx+i_entity2_same);
 
-      // Set data for edge
-      results_edge    [idx_w] = blk_edge_g_num[edge_idx];
-      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx_opp];
+        // Set data for edge
+        results_edge    [idx_w] = blk_edge_g_num[edge_idx];
+        results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx_opp];
 
-      // Set data for opposite edge
-      results_edge    [idx_w] = blk_edge_g_num[edge_idx_opp];
-      results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx];
+        // Set data for opposite edge
+        results_edge    [idx_w] = blk_edge_g_num[edge_idx_opp];
+        results_edge_opp[idx_w++] = blk_edge_g_num[edge_idx];
+      }
 
       already_treat[i_entity] = 1;
     }
     idx  += n_matching_edge;
   }
-  assert (idx_w == gnum_n_occurences_tot);
   free(already_treat);
   free(same_entity_idx);
+  // Some pairs can be still unresolved, eg if a edge is internal from one interface point of view but
+  // external for the other
+  int rsvd_gnum_n_occurences_tot = idx_w;
+  results_edge     = realloc(results_edge,     rsvd_gnum_n_occurences_tot*sizeof(PDM_g_num_t));
+  results_edge_opp = realloc(results_edge_opp, rsvd_gnum_n_occurences_tot*sizeof(PDM_g_num_t));
+
 
   free(blk_edge_g_num);
   free(blk_data_connect);
@@ -671,8 +679,8 @@ static int _match_internal_edges
 
   if (0 == 1) {
     log_trace("Conflict resolved, gnum are\n");
-    PDM_log_trace_array_long(results_edge, gnum_n_occurences_tot, "edge gnum ::");
-    PDM_log_trace_array_long(results_edge_opp, gnum_n_occurences_tot, "edge gnum opp::");
+    PDM_log_trace_array_long(results_edge, rsvd_gnum_n_occurences_tot, "edge gnum ::");
+    PDM_log_trace_array_long(results_edge_opp, rsvd_gnum_n_occurences_tot, "edge gnum opp::");
   }
 
 
@@ -683,15 +691,15 @@ static int _match_internal_edges
                                                        1.,
                                                       &results_edge,
                                                        dedge_distrib,
-                                                      &gnum_n_occurences_tot,
+                                                      &rsvd_gnum_n_occurences_tot,
                                                        1,
                                                        comm);
 
-  assert (PDM_part_to_block_n_elt_block_get(ptb) == dn_internal_edge);
-  *dedge_gnum = malloc(dn_internal_edge * sizeof(PDM_g_num_t));
+  int resolved_dn_internal_edge = PDM_part_to_block_n_elt_block_get(ptb);
+  *dedge_gnum = malloc(resolved_dn_internal_edge * sizeof(PDM_g_num_t));
 
   PDM_g_num_t *dedge_gnum_tmp = PDM_part_to_block_block_gnum_get(ptb);
-  memcpy(*dedge_gnum, dedge_gnum_tmp, dn_internal_edge*sizeof(PDM_g_num_t));
+  memcpy(*dedge_gnum, dedge_gnum_tmp, resolved_dn_internal_edge*sizeof(PDM_g_num_t));
 
   PDM_part_to_block_exch(ptb,
                         sizeof(PDM_g_num_t),
@@ -706,7 +714,7 @@ static int _match_internal_edges
   free(results_edge);
   free(results_edge_opp);
 
-  return dn_internal_edge;
+  return resolved_dn_internal_edge;
 }
 
 static void _match_all_edges_from_faces
