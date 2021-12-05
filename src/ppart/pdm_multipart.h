@@ -270,6 +270,22 @@ const int            i_part,
       PDM_g_num_t  **face_join_ln_to_gn
 );
 
+/**
+ *
+ * \brief Returns the data arrays of a given partition
+ */
+int
+PDM_multipart_part_connectivity_get
+(
+const int                       mpart_id,
+const int                       i_zone,
+const int                       i_part,
+      PDM_connectivity_type_t   connectivity_type,
+      int                     **connect,
+      int                     **connect_idx,
+      PDM_ownership_t           ownership
+);
+
 void
 PDM_multipart_part_graph_comm_vtx_data_get
 (

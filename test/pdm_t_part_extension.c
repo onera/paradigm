@@ -402,6 +402,9 @@ int main(int argc, char *argv[])
                                 face_part_bound_proc_idx,
                                 face_part_bound_part_idx,
                                 face_part_bound,
+                                NULL, // vtx_part_bound_proc_idx
+                                NULL, // vtx_part_bound_part_idx
+                                NULL, // vtx_part_bound
                                 cell_ln_to_gn,
                                 face_ln_to_gn,
                                 NULL, // edge_ln_to_gn

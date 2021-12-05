@@ -1297,8 +1297,22 @@ _generate_faces_from_dmesh_nodal
 
       PDM_log_trace_array_int (dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1                   , "dm->_dedge_face_idx:: ");
       PDM_log_trace_array_long(dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE][dm->dn_edge], "dm->_dedge_face:: ");
-
     }
+
+    assert(dm->edge_distrib != NULL);
+    assert(dm->face_distrib != NULL);
+    dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    PDM_dconnectivity_transpose(dmesh_nodal->comm,
+                                dm->edge_distrib,
+                                dm->face_distrib,
+                                dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE],
+                                1, // is_signed
+                                &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE]);
+
+
+
   }
 }
 

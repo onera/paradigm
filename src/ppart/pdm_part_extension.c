@@ -2171,6 +2171,9 @@ PDM_part_extension_set_part
   int                  *face_part_bound_proc_idx,
   int                  *face_part_bound_part_idx,
   int                  *face_part_bound,
+  int                  *vtx_part_bound_proc_idx,
+  int                  *vtx_part_bound_part_idx,
+  int                  *vtx_part_bound,
   PDM_g_num_t          *cell_ln_to_gn,
   PDM_g_num_t          *face_ln_to_gn,
   PDM_g_num_t          *edge_ln_to_gn,
@@ -2206,6 +2209,10 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = face_part_bound_proc_idx;
   part_ext->parts[i_domain][i_part].face_part_bound_part_idx = face_part_bound_part_idx;
   part_ext->parts[i_domain][i_part].face_part_bound          = face_part_bound;
+
+  part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx = vtx_part_bound_proc_idx;
+  part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx = vtx_part_bound_part_idx;
+  part_ext->parts[i_domain][i_part].vtx_part_bound          = vtx_part_bound;
 
   part_ext->parts[i_domain][i_part].face_bound_idx      = face_bound_idx;
   part_ext->parts[i_domain][i_part].face_bound          = face_bound;

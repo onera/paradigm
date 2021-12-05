@@ -69,6 +69,22 @@ PDM_part_renum_method_face_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
+/**
+ *
+ * \brief Add a new method for edge renumbering
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+int
+PDM_part_renum_method_edge_add
+(
+ const char                 *name,     /*!< Name          */
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+);
+
 
 /**
  *
@@ -132,6 +148,53 @@ PDM_part_renum_method_face_idx_get
 (
 const char *name
 );
+
+/**
+ *
+ * \brief Get index of a renumbering edge method
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+void
+PROCF (pdm_part_renum_method_edge_idx_get_cf, PDM_PART_RENUM_METHOD_edge_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
+int
+PDM_part_renum_method_edge_idx_get
+(
+const char *name
+);
+
+/**
+ *
+ * \brief Get index of a renumbering vtx method
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+void
+PROCF (pdm_part_renum_method_vtx_idx_get_cf, PDM_PART_RENUM_METHOD_vtx_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
+int
+PDM_part_renum_method_vtx_idx_get
+(
+const char *name
+);
+
 
 
 /**
