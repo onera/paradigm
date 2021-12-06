@@ -2,10 +2,15 @@
 cdef extern from "pdm_domain_interface.h":
   ctypedef struct PDM_domain_interface_t:
       pass
-  PDM_domain_interface_t* PDM_domain_interface_create(const int             n_interface,
-                                                      const int             n_zone,
-                                                      PDM_ownership_t       ownership,
-                                                      PDM_MPI_Comm          comm)
+  ctypedef enum PDM_domain_interface_mult_t:
+      PDM_DOMAIN_INTERFACE_MULT_NO  = 0
+      PDM_DOMAIN_INTERFACE_MULT_YES = 1
+
+  PDM_domain_interface_t* PDM_domain_interface_create(const int                   n_interface,
+                                                      const int                   n_zone,
+                                                      PDM_domain_interface_mult_t multizone_interface,
+                                                      PDM_ownership_t             ownership,
+                                                      PDM_MPI_Comm                comm)
 
   void PDM_domain_interface_set(PDM_domain_interface_t *dom_intrf,
                                 PDM_bound_type_t        interface_kind,
@@ -88,6 +93,7 @@ def interface_face_to_vertex(int       n_interface,
     cdef PDM_domain_interface_t *dom_intrf;
     dom_intrf = PDM_domain_interface_create(n_interface,
                                             n_zone,
+                                            PDM_DOMAIN_INTERFACE_MULT_YES,
                                             PDM_OWNERSHIP_USER,
                                             PDMC)
     PDM_domain_interface_set(dom_intrf,

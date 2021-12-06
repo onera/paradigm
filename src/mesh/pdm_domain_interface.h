@@ -10,7 +10,6 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_domain_interface_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -27,6 +26,13 @@ extern "C" {
  * Type
  *============================================================================*/
 
+typedef enum {
+
+  PDM_DOMAIN_INTERFACE_MULT_NO  = 0,  /*!< Each interface involves only 2 zones */
+  PDM_DOMAIN_INTERFACE_MULT_YES = 1,  /*!< Each interface involves several zones */
+
+} PDM_domain_interface_mult_t;
+
 typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
 
 /*=============================================================================
@@ -40,10 +46,11 @@ typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
 PDM_domain_interface_t *
 PDM_domain_interface_create
 (
- const int             n_interface,
- const int             n_zone,
- PDM_ownership_t       ownership,
- PDM_MPI_Comm          comm
+ const int                   n_interface,
+ const int                   n_zone,
+ PDM_domain_interface_mult_t multizone_interface,
+ PDM_ownership_t             ownership,
+ PDM_MPI_Comm                comm
 );
 
 void

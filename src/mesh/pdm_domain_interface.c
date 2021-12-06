@@ -29,6 +29,7 @@
 #include "pdm_dmesh_nodal_elements_utils.h"
 
 #include "pdm_domain_interface.h"
+#include "pdm_domain_interface_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -1325,17 +1326,19 @@ static void _domain_interface_face_to_vertex
 
 PDM_domain_interface_t* PDM_domain_interface_create
 (
-const int             n_interface,
-const int             n_zone,
-PDM_ownership_t       ownership,
-PDM_MPI_Comm          comm
+const int                   n_interface,
+const int                   n_zone,
+PDM_domain_interface_mult_t multizone_interface,
+PDM_ownership_t             ownership,
+PDM_MPI_Comm                comm
 )
 {
   PDM_domain_interface_t *dom_intrf = malloc (sizeof(PDM_domain_interface_t));
-  dom_intrf->n_interface = n_interface;
-  dom_intrf->n_zone      = n_zone;
-  dom_intrf->ownership   = ownership;
-  dom_intrf->comm        = comm;
+  dom_intrf->n_interface       = n_interface;
+  dom_intrf->n_zone            = n_zone;
+  dom_intrf->multizone_intrf   = multizone_interface;
+  dom_intrf->ownership         = ownership;
+  dom_intrf->comm              = comm;
 
   dom_intrf->interface_dn_face   = NULL;
   dom_intrf->interface_ids_face  = NULL;
@@ -1386,10 +1389,27 @@ void PDM_domain_interface_translate_face2vtx
   dom_intrf->interface_dn_vtx  = (int *)          malloc(dom_intrf->n_interface * sizeof(int));
   dom_intrf->interface_ids_vtx = (PDM_g_num_t **) malloc(dom_intrf->n_interface * sizeof(PDM_g_num_t*));
   dom_intrf->interface_dom_vtx = (int         **) malloc(dom_intrf->n_interface * sizeof(int*));
+
+  // Simple case is not yet managed, copy to go back to full case
+  int **_interface_dom_face = NULL;
+  if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    _interface_dom_face = (int **) malloc(dom_intrf->n_interface*sizeof(int*));
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+      _interface_dom_face[i_intrf] = (int *) malloc(2*dom_intrf->interface_dn_face[i_intrf]*sizeof(int));
+      for (int j = 0; j < dom_intrf->interface_dn_face[i_intrf]; j++) {
+        _interface_dom_face[i_intrf][2*j]   = dom_intrf->interface_dom_face[i_intrf][0];
+        _interface_dom_face[i_intrf][2*j+1] = dom_intrf->interface_dom_face[i_intrf][1];
+      }
+    }
+  }
+  else {
+    _interface_dom_face = dom_intrf->interface_dom_face;
+  }
+
   _domain_interface_face_to_vertex(dom_intrf->n_interface,
                                    dom_intrf->interface_dn_face,
                                    dom_intrf->interface_ids_face,
-                                   dom_intrf->interface_dom_face,
+                                   _interface_dom_face,
                                    dom_intrf->n_zone,
                                    dn_vtx,
                                    dn_face,
@@ -1401,6 +1421,21 @@ void PDM_domain_interface_translate_face2vtx
                                    dom_intrf->comm);
 
   dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
+
+  // Simple case is not yet managed, free working arrays
+  if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+      for (int j = 0; j < dom_intrf->interface_dn_vtx[i_intrf]; j++) {
+        assert(dom_intrf->interface_dom_vtx[i_intrf][2*j]   == dom_intrf->interface_dom_face[i_intrf][0]);
+        assert(dom_intrf->interface_dom_vtx[i_intrf][2*j+1] == dom_intrf->interface_dom_face[i_intrf][1]);
+      }
+      free(dom_intrf->interface_dom_vtx[i_intrf]);
+      free(_interface_dom_face[i_intrf]);
+    }
+    free(_interface_dom_face);
+    free(dom_intrf->interface_dom_vtx);
+    dom_intrf->interface_dom_vtx = dom_intrf->interface_dom_face;
+  }
 }
 
 void PDM_domain_interface_get
@@ -1440,20 +1475,24 @@ void PDM_domain_interface_free
     if (dom_intrf->is_result[PDM_BOUND_TYPE_VTX]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
         free(dom_intrf->interface_ids_vtx[i_interface]);
-        free(dom_intrf->interface_dom_vtx[i_interface]);
+        if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+          free(dom_intrf->interface_dom_vtx[i_interface]);
       }
       free(dom_intrf->interface_dn_vtx);
       free(dom_intrf->interface_ids_vtx);
-      free(dom_intrf->interface_dom_vtx);
+      if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+        free(dom_intrf->interface_dom_vtx);
     }
     if (dom_intrf->is_result[PDM_BOUND_TYPE_FACE]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
         free(dom_intrf->interface_ids_face[i_interface]);
-        free(dom_intrf->interface_dom_face[i_interface]);
+        if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+          free(dom_intrf->interface_dom_face[i_interface]);
       }
       free(dom_intrf->interface_dn_face);
       free(dom_intrf->interface_ids_face);
-      free(dom_intrf->interface_dom_face);
+      if (dom_intrf->multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+        free(dom_intrf->interface_dom_face);
     }
   }
 

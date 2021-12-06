@@ -395,7 +395,8 @@ int main(int argc, char *argv[])
   } 
   
   // New version begins
-  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface, n_zone, PDM_OWNERSHIP_KEEP, comm);
+  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface, n_zone,
+      PDM_DOMAIN_INTERFACE_MULT_YES, PDM_OWNERSHIP_KEEP, comm);
   PDM_domain_interface_set(dom_intrf, PDM_BOUND_TYPE_FACE, interface_dn_f, interface_ids_f, interface_dom_f);
 
   int          *interface_dn_v  = NULL;

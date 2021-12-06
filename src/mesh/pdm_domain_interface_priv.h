@@ -37,14 +37,15 @@ extern "C" {
 
 struct _pdm_domain_interface_t{
 
-  int             n_interface;
-  int             n_zone;
-  int            *interface_dn_face;
-  PDM_g_num_t   **interface_ids_face;
-  int           **interface_dom_face;
-  int            *interface_dn_vtx;
-  PDM_g_num_t   **interface_ids_vtx;
-  int           **interface_dom_vtx;
+  int                           n_interface;
+  int                           n_zone;
+  PDM_domain_interface_mult_t   multizone_intrf;
+  int                          *interface_dn_face;
+  PDM_g_num_t                 **interface_ids_face;
+  int                         **interface_dom_face;
+  int                          *interface_dn_vtx;
+  PDM_g_num_t                 **interface_ids_vtx;
+  int                         **interface_dom_vtx;
   
   PDM_ownership_t ownership;
   int is_result[PDM_BOUND_TYPE_MAX];
