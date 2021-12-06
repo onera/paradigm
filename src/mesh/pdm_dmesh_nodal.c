@@ -1672,6 +1672,23 @@ PDM_dmesh_nodal_reorder
 }
 
 
+
+PDM_part_mesh_nodal_elmts_t*
+PDM_dmesh_nodal_to_part_mesh_nodal_elmts
+(
+ PDM_dmesh_nodal_t            *dmn,
+ PDM_geometry_kind_t           geom_kind,
+ int                           n_part,
+ int                          *pn_vtx,
+ PDM_g_num_t                 **vtx_ln_to_gn,
+ int                          *pn_elmt,
+ PDM_g_num_t                 **elmt_ln_to_gn
+)
+{
+  PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmn, geom_kind);
+  return PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmne, n_part, pn_vtx, vtx_ln_to_gn, pn_elmt, elmt_ln_to_gn);
+}
+
 // TODO : remove
 // void
 // PDM_dmesh_nodal_combine_group_information_on_vtx

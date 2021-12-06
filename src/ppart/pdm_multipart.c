@@ -1438,7 +1438,7 @@ PDM_MPI_Comm       comm
 
   free(node_part);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pnode_ln_to_gn[i_part], pn_node[i_part], "pnode_ln_to_gn :: ");
     }
