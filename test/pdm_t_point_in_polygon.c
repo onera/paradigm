@@ -18,43 +18,6 @@
 
 
 
-static void
-_read_args (int            argc,
-            char         **argv,
-            int           *n_vtx,
-            int           *n_test,
-            double        *offset)
-{
-  int i = 1;
-
-  /* Parse and check command line */
-
-  while (i < argc) {
-    if (strcmp(argv[i], "-n") == 0) {
-      i++;
-      if (i >= argc)
-        exit(EXIT_FAILURE);
-      else
-        *n_vtx = atoi(argv[i]);
-    }
-    else if (strcmp(argv[i], "-t") == 0) {
-      i++;
-      if (i >= argc)
-        exit(EXIT_FAILURE);
-      else
-        *n_test = atoi(argv[i]);
-    }
-    else if (strcmp(argv[i], "-o") == 0) {
-      i++;
-      if (i >= argc)
-        exit(EXIT_FAILURE);
-      else
-        *offset = atof(argv[i]);
-    }
-    i++;
-  }
-}
-
 
 
 static void
@@ -88,6 +51,9 @@ double        normal[3]
 #if 1
 int main (int argc, char *argv[])
 {
+  PDM_UNUSED (argc);
+  PDM_UNUSED (argv);
+
   PDM_predicate_exactinit();
 
 #define n_vtxA 4
@@ -159,6 +125,43 @@ PDM_POLYGON_OUTSIDE};
 }
 
 #else
+
+static void
+_read_args (int            argc,
+            char         **argv,
+            int           *n_vtx,
+            int           *n_test,
+            double        *offset)
+{
+  int i = 1;
+
+  /* Parse and check command line */
+
+  while (i < argc) {
+    if (strcmp(argv[i], "-n") == 0) {
+      i++;
+      if (i >= argc)
+        exit(EXIT_FAILURE);
+      else
+        *n_vtx = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        exit(EXIT_FAILURE);
+      else
+        *n_test = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-o") == 0) {
+      i++;
+      if (i >= argc)
+        exit(EXIT_FAILURE);
+      else
+        *offset = atof(argv[i]);
+    }
+    i++;
+  }
+}
 
 int main (int argc, char *argv[])
 {

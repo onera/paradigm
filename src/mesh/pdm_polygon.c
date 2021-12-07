@@ -929,7 +929,7 @@ int PDM_polygon_3d_to_2d
 
 
 
-
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
 inline static int _a_eq_b (const double a,
                            const double b) {
   return a == b;
@@ -956,6 +956,7 @@ inline static void _modify_w (const double  piy,
                               int          *w) {
   *w += 2*(pipy > piy) - 1;
 }
+PDM_GCC_SUPPRESS_WARNING_POP
 
 /**
  *  Algorithm 7 from

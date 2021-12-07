@@ -3473,7 +3473,10 @@ _compute_overlay_planes
     }
 
   }
-  if (vb) printf("[%6d] >> hash_tab purge, free\n", i_rank); fflush(stdout);
+  if (vb) {
+    printf("[%6d] >> hash_tab purge, free\n", i_rank);
+    fflush(stdout);
+  }
 
   if (sum_vtx != NULL) {
     free (sum_vtx);
@@ -3502,7 +3505,10 @@ _compute_overlay_planes
   /*
    * Update memory
    */
-  if (vb) printf("[%6d] >> Realloc\n", i_rank); fflush(stdout);
+  if (vb) {
+    printf("[%6d] >> Realloc\n", i_rank);
+    fflush(stdout);
+  }
   subFacesConnecB = realloc (subFacesConnecB, sizeof(PDM_g_num_t) * subFacesConnecIdxB[nSubFacesB]);
   subFacesCoordsB = realloc (subFacesCoordsB, sizeof(double) * 3 * subFacesConnecIdxB[nSubFacesB]);
   subFacesConnecIdxB = realloc (subFacesConnecIdxB, sizeof(int) * (nSubFacesB + 1));
@@ -3545,7 +3551,10 @@ _compute_overlay_planes
     }
   }
 
-  if (vb) printf("[%6d] >> Scan n_t_nAddSubFace\n", i_rank); fflush(stdout);
+  if (vb) {
+    printf("[%6d] >> Scan n_t_nAddSubFace\n", i_rank);
+    fflush(stdout);
+  }
   PDM_MPI_Scan (&n_t_nAddSubFace, &beg_nAddSubFaces,
             1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
@@ -3566,7 +3575,10 @@ _compute_overlay_planes
   /*   _max_gnum_loc = gNumSubFacesA[nSharedSubFaces-1]; */
   /* } */
 
-  if (vb) printf("[%6d] >> Allreduce _max_gnum_loc\n", i_rank); fflush(stdout);
+  if (vb) {
+    printf("[%6d] >> Allreduce _max_gnum_loc\n", i_rank);
+    fflush(stdout);
+  }
   PDM_MPI_Allreduce(&_max_gnum_loc, &nTSubFacesB, 1,
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 

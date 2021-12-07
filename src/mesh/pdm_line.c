@@ -625,12 +625,14 @@ PDM_line_intersection_2drobust
     return PDM_LINE_INTERSECT_NO;
   }
 
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (ha == hb) {
     // ===> ha = hb = 0
     // =?=> hc = hd = 0
     //printf("ha = hb = %g, hc = %g, hd = %g\n", ha, hc, hd);
     return PDM_LINE_INTERSECT_ON_LINE;
   }
+  PDM_GCC_SUPPRESS_WARNING_POP
 
 
   *u = ha / (ha - hb);

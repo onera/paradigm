@@ -13155,6 +13155,7 @@ PDM_para_octree_free_copies
         }
       }
       free (octree->copied_explicit_nodes);
+      octree->copied_explicit_nodes = NULL;
     }
   }
 
