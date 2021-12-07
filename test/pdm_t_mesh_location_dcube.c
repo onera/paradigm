@@ -15,6 +15,7 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
+#include "pdm_point_cloud_gen.h"
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
@@ -24,6 +25,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -91,8 +93,6 @@ _read_args(int            argc,
            PDM_mesh_location_method_t *loc_method)
 {
   int i = 1;
-
-  PDM_UNUSED (post);
 
   /* Parse and check command line */
 
@@ -167,6 +167,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -201,99 +204,6 @@ static void _rotate (const int  n_pts,
 }
 
 
-
-
-static void
-_random_cloud
-(
- PDM_MPI_Comm       comm,
- const PDM_g_num_t  gn_pts,
- const double       xyz_min[3],
- const double       xyz_max[3],
- double           **coord,
- int               *n_pts
- )
-{
-  double length[3] = {xyz_max[0] - xyz_min[0],
-                      xyz_max[1] - xyz_min[1],
-                      xyz_max[2] - xyz_min[2]};
-
-
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank (comm, &i_rank);
-  PDM_MPI_Comm_size (comm, &n_rank);
-
-
-
-  PDM_g_num_t *distrib_pts = PDM_compute_uniform_entity_distribution(comm, gn_pts);
-
-  *n_pts = (int) (distrib_pts[i_rank+1] - distrib_pts[i_rank]);
-
-  double i_rand_max = 1. / ((double) RAND_MAX);
-  *coord = malloc (sizeof(double) * (*n_pts) * 3);
-
-  if (*coord == NULL) {
-    printf("[%d] failed to allocate coord\n", i_rank);
-    abort();
-  }
-
-
-  int srand_by_gnum = 0;
-  char *env_var = getenv ("SRAND_BY_GNUM");
-  if (env_var != NULL) {
-    srand_by_gnum = atoi(env_var);
-  }
-
-  double t1 = PDM_MPI_Wtime();
-
-  if (srand_by_gnum) {
-    for (int i = 0; i < *n_pts; i++) {
-
-      unsigned int seed = (unsigned int) (distrib_pts[i_rank] + i);
-      srand(seed);//3*seed
-
-      for (int j = 0; j < 3; j++) {
-        (*coord)[3*i + j] = xyz_min[j] + length[j] * (double) rand() * i_rand_max;
-      }
-    }
-  }
-
-  else {
-    for(int i = 0; i < 3 * distrib_pts[i_rank]; ++i) {
-      rand();
-    }
-
-    for (int i = 0; i < *n_pts; i++) {
-      for (int j = 0; j < 3; j++) {
-        (*coord)[3*i + j] = xyz_min[j] + length[j] * (double) rand() * i_rand_max;
-      }
-    }
-  }
-
-  double t2 = PDM_MPI_Wtime();
-
-  double delta_t = t2 - t1;
-  double delta_max;
-  double delta_min;
-
-  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  if (i_rank == 0) {
-    printf("srand_by_gnum = %d, point cloud coord gen time  min/max = %12.5e / %12.5e\n", srand_by_gnum, delta_min, delta_max);
-  }
-
-
-
-  if (0) {
-    log_trace ("point_cloud :\n");
-    for (int i = 0; i < *n_pts; i++) {
-      char line[30];
-      sprintf(line, "[%d] :", i);
-      PDM_log_trace_array_double (*coord + 3*i, 3, line);
-    }
-  }
-}
 
 
 /**
@@ -495,66 +405,37 @@ int main(int argc, char *argv[])
   }
 
   int n_pts_l;
-  double *pts_coords = NULL;
+  double *pts_coords    = NULL;
+  PDM_g_num_t *pts_gnum = NULL;
 
   marge *= length;
-  double xyz_min[3] = {-marge, -marge, -marge};
-  double xyz_max[3] = {length + marge, length + marge, length + marge};
-  _random_cloud (PDM_MPI_COMM_WORLD,
-                 n_pts,
-                 xyz_min,
-                 xyz_max,
-                 &pts_coords,
-                 &n_pts_l);
+  PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
+                              n_pts,
+                              -marge,
+                              -marge,
+                              -marge,
+                              length + marge,
+                              length + marge,
+                              length + marge,
+                              &n_pts_l,
+                              &pts_coords,
+                              &pts_gnum);
 
   if (rotation) {
     _rotate (n_pts_l,
              pts_coords);
   }
 
-  PDM_MPI_Finalize();
-  return 0;
+  if (post) {
+    char filename[999];
+    sprintf(filename, "point_cloud_%3.3d.vtk", i_rank);
 
-  if (i_rank == 0) {
-    printf("-- Point cloud gnum\n");
-    fflush(stdout);
+    PDM_vtk_write_point_cloud (filename,
+                               n_pts_l,
+                               pts_coords,
+                               pts_gnum,
+                               NULL);
   }
-
-  #if 1
-  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
-
-  double *char_length = malloc(sizeof(double) * n_pts_l);
-
-  for (int i = 0; i < n_pts_l; i++) {
-    char_length[i] = length * 1.e-9;
-  }
-
-  PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
-
-  if (i_rank == 0) {
-    printf("-- PDM_gnum_compute\n");
-    fflush(stdout);
-  }
-
-  PDM_gnum_compute (gen_gnum);
-
-  if (i_rank == 0) {
-    printf("-- PDM_gnum_compute OK\n");
-    fflush(stdout);
-  }
-
-  PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum, 0);
-
-  PDM_gnum_free (gen_gnum);
-  free (char_length);
-  #else
-  PDM_g_num_t *distrib = PDM_compute_entity_distribution (PDM_MPI_COMM_WORLD,
-                                                          n_pts_l);
-  PDM_g_num_t *pts_gnum = malloc (sizeof(PDM_g_num_t) * n_pts_l);
-  for (int i = 0; i < n_pts_l; i++) {
-    pts_gnum[i] = distrib[i_rank] + i + 1;
-  }
-  #endif
 
 
   /************************
@@ -919,8 +800,8 @@ int main(int argc, char *argv[])
 
       //printf("%d: ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM")\n", ipt, p_location[ipt], box_gnum);
       if (p_location[ipt] != box_gnum) {
-        double *cp = p_proj_coord + 3*ipt;
-        /*printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
+        /*double *cp = p_proj_coord + 3*ipt;
+        printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
                ipt, pts_gnum[ipt],
                p[0], p[1], p[2],
                p_location[ipt], box_gnum,

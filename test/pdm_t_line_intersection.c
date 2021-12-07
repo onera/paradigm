@@ -16,7 +16,7 @@
 
 
 static PDM_line_intersect_t
-PDM_line_intersection_2drobust
+_PDM_line_intersection_2drobust
 (
  const double  a[3],
  const double  b[3],

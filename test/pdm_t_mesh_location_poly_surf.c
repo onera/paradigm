@@ -15,6 +15,7 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_poly_surf_gen.h"
+#include "pdm_point_cloud_gen.h"
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
@@ -22,6 +23,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_distrib.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -94,7 +96,7 @@ _read_args(int                         argc,
            int                        *use_mesh_vtx)
 {
   int i = 1;
-  PDM_UNUSED (post);
+
   /* Parse and check command line */
 
   while (i < argc) {
@@ -203,6 +205,9 @@ _read_args(int                         argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -210,72 +215,6 @@ _read_args(int                         argc,
 }
 
 
-static void
-_random_cloud
-(
- PDM_MPI_Comm       comm,
- const PDM_g_num_t  gn_pts,
- const double       xyz_min[3],
- const double       xyz_max[3],
- double           **coord,
- int               *n_pts
- )
-{
-  double length[3] = {xyz_max[0] - xyz_min[0],
-                      xyz_max[1] - xyz_min[1],
-                      xyz_max[2] - xyz_min[2]};
-
-
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank (comm, &i_rank);
-  PDM_MPI_Comm_size (comm, &n_rank);
-
-
-
-  PDM_g_num_t *distrib_pts = PDM_compute_uniform_entity_distribution(comm, gn_pts);
-
-  *n_pts = (int) (distrib_pts[i_rank+1] - distrib_pts[i_rank]);
-
-  for(int i = 0; i < 3 * distrib_pts[i_rank]; ++i) {
-    rand();
-  }
-
-  double i_rand_max = 1. / ((double) RAND_MAX);
-  *coord = malloc (sizeof(double) * (*n_pts) * 3);
-
-  if (*coord == NULL) {
-    printf("[%d] failed to allocate coord\n", i_rank);
-    abort();
-  }
-
-  for (int i = 0; i < *n_pts; i++) {
-    for (int j = 0; j < 3; j++) {
-      (*coord)[3*i + j] = xyz_min[j] + length[j] * (double) rand() * i_rand_max;
-    }
-  }
-
-  /*
-
-  *n_pts_l = (int) (n_pts/n_procs);
-  if (my_rank < n_pts%n_procs) {
-    *n_pts_l += 1;
-  }
-
-  *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
-  if (*coord != NULL);
-
-  double *_coord = *coord;
-  double x;
-  int idx = 0;
-  for (PDM_g_num_t i = 0; i < n_procs*(*n_pts_l); i++) {
-    for (int idim = 0; idim < 3; idim++) {
-      x = xyz_min[idim] + length[idim] * (double) rand() / ((double) RAND_MAX);
-      if (i%n_procs == my_rank) {
-        _coord[idx++] = x;
-      }
-    }
-    }*/
-}
 
 
 static void
@@ -1061,13 +1000,12 @@ int main(int argc, char *argv[])
   }
 
   int n_pts_l;
-  double *pts_coords = NULL;
+  double *pts_coords    = NULL;
+  PDM_g_num_t *pts_gnum = NULL;
 
   marge *= length;
   double _min = -0.5*length - marge;
   double _max = -_min;
-  double xyz_min[3] = {_min, _min, _min};
-  double xyz_max[3] = {_max, _max, _max};
 
   if (use_vtx) {
     _point_cloud_from_mesh_vtx (PDM_MPI_COMM_WORLD,
@@ -1081,12 +1019,17 @@ int main(int argc, char *argv[])
                                 &n_pts_l);
   }
   else {
-    _random_cloud (PDM_MPI_COMM_WORLD,
-                   n_pts,
-                   xyz_min,
-                   xyz_max,
-                   &pts_coords,
-                   &n_pts_l);
+    PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
+                                n_pts,
+                                _min,
+                                _min,
+                                0.,
+                                _max,
+                                _max,
+                                0.,
+                                &n_pts_l,
+                                &pts_coords,
+                                &pts_gnum);
   }
 
   _add_depth (n_pts_l,
@@ -1096,35 +1039,36 @@ int main(int argc, char *argv[])
 
 
   /* Point cloud global numbering */
-  if (i_rank == 0) {
-    printf("-- Point cloud g_num\n");
-    fflush(stdout);
-  }
+  if (use_vtx) {
+    if (i_rank == 0) {
+      printf("-- Point cloud g_num\n");
+      fflush(stdout);
+    }
   #if 1
-  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+    PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
-  double *char_length = malloc(sizeof(double) * n_pts_l);
+    double *char_length = malloc(sizeof(double) * n_pts_l);
 
-  for (int i = 0; i < n_pts_l; i++) {
-    char_length[i] = length * 1.e-9;
-  }
+    for (int i = 0; i < n_pts_l; i++) {
+      char_length[i] = length * 1.e-9;
+    }
 
-  PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
+    PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
 
-  if (i_rank == 0) {
-    printf(">> PDM_gnum_compute\n");
-    fflush(stdout);
-  }
-  PDM_gnum_compute (gen_gnum);
-  if (i_rank == 0) {
-    printf("<< PDM_gnum_compute\n");
-    fflush(stdout);
-  }
+    if (i_rank == 0) {
+      printf(">> PDM_gnum_compute\n");
+      fflush(stdout);
+    }
+    PDM_gnum_compute (gen_gnum);
+    if (i_rank == 0) {
+      printf("<< PDM_gnum_compute\n");
+      fflush(stdout);
+    }
 
-  PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum, 0);
+    pts_gnum = PDM_gnum_get(gen_gnum, 0);
 
-  PDM_gnum_free (gen_gnum);
-  free (char_length);
+    PDM_gnum_free (gen_gnum);
+    free (char_length);
   #else
   PDM_g_num_t *distrib = PDM_compute_entity_distribution (PDM_MPI_COMM_WORLD,
                                                           n_pts_l);
@@ -1135,6 +1079,20 @@ int main(int argc, char *argv[])
 
   free (distrib);
   #endif
+  }
+
+
+  if (post) {
+    char filename[999];
+    sprintf(filename, "point_cloud_%3.3d.vtk", i_rank);
+
+    PDM_vtk_write_point_cloud (filename,
+                               n_pts_l,
+                               pts_coords,
+                               pts_gnum,
+                               NULL);
+  }
+
 
   /************************
    *

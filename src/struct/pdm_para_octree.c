@@ -287,11 +287,12 @@ typedef struct  {
 
 
   int explicit_nodes_to_build;
-  _explicit_node_t  *explicit_nodes;
-  int                n_explicit_nodes;
+  int use_win_shared;
+  // _explicit_node_t  *explicit_nodes;
+  // int                n_explicit_nodes;
 
-  _explicit_node_t **copied_explicit_nodes;
-  int               *n_copied_explicit_nodes;
+  // _explicit_node_t **copied_explicit_nodes;
+  // int               *n_copied_explicit_nodes;
 
   _l_explicit_node_t   *explicit_nodes2;
   _l_explicit_node_t  **copied_explicit_nodes2;
@@ -4316,176 +4317,176 @@ _closest_points
 
 
 
-static void
-_closest_points_explicit
-(
- const int     n_closest_points,
- _octree_t    *octree,
- const int     i_copied_rank,
- const int     n_tgt,
- const double *tgt_coord,
- PDM_g_num_t  *closest_points_g_num,
- double       *closest_points_dist2
- )
-{
-  if (n_tgt < 1) {
-    return;
-  }
+// static void
+// _closest_points_explicit
+// (
+//  const int     n_closest_points,
+//  _octree_t    *octree,
+//  const int     i_copied_rank,
+//  const int     n_tgt,
+//  const double *tgt_coord,
+//  PDM_g_num_t  *closest_points_g_num,
+//  double       *closest_points_dist2
+//  )
+// {
+//   if (n_tgt < 1) {
+//     return;
+//   }
 
-  int n_points;
-  const _explicit_node_t *nodes;
-  const _l_octant_t *leaves;
-  const PDM_g_num_t *src_g_num;
-  const double      *src_coord;
-  if (i_copied_rank < 0) {
-    n_points  = octree->n_points;
-    nodes     = octree->explicit_nodes;
-    leaves    = octree->octants;
-    src_g_num = octree->points_gnum;
-    src_coord = octree->points;
-  } else {
-    assert (i_copied_rank < octree->n_copied_ranks);
-    n_points  = octree->n_copied_points[i_copied_rank];
-    nodes     = octree->copied_explicit_nodes[i_copied_rank];
-    leaves    = octree->copied_octants[i_copied_rank];
-    src_g_num = octree->copied_points_gnum[i_copied_rank];
-    src_coord = octree->copied_points[i_copied_rank];
-  }
+//   int n_points;
+//   const _explicit_node_t *nodes;
+//   const _l_octant_t *leaves;
+//   const PDM_g_num_t *src_g_num;
+//   const double      *src_coord;
+//   if (i_copied_rank < 0) {
+//     n_points  = octree->n_points;
+//     nodes     = octree->explicit_nodes;
+//     leaves    = octree->octants;
+//     src_g_num = octree->points_gnum;
+//     src_coord = octree->points;
+//   } else {
+//     assert (i_copied_rank < octree->n_copied_ranks);
+//     n_points  = octree->n_copied_points[i_copied_rank];
+//     nodes     = octree->copied_explicit_nodes[i_copied_rank];
+//     leaves    = octree->copied_octants[i_copied_rank];
+//     src_g_num = octree->copied_points_gnum[i_copied_rank];
+//     src_coord = octree->copied_points[i_copied_rank];
+//   }
 
-  if (n_points == 0) {
-    return;
-  }
+//   if (n_points == 0) {
+//     return;
+//   }
 
-  const int dim = octree->dim;
-  const int n_child = 1 << dim;
-  const int depth_max = 31;
-  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-  int    *stack_id     = malloc (sizeof(int)    * s_stack);
-  double *stack_dist   = malloc (sizeof(double) * s_stack);
-  int    *stack_inside = malloc (sizeof(int)    * s_stack);
+//   const int dim = octree->dim;
+//   const int n_child = 1 << dim;
+//   const int depth_max = 31;
+//   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+//   int    *stack_id     = malloc (sizeof(int)    * s_stack);
+//   double *stack_dist   = malloc (sizeof(double) * s_stack);
+//   int    *stack_inside = malloc (sizeof(int)    * s_stack);
 
-  int    node_id;
-  double node_dist;
-  int    node_inside;
-  double child_dist[n_child];
-  int    child_inside[n_child];
+//   int    node_id;
+//   double node_dist;
+//   int    node_inside;
+//   double child_dist[n_child];
+//   int    child_inside[n_child];
 
-  /* Loop on target points */
-  for (int itgt = 0; itgt < n_tgt; itgt++) {
+//   /* Loop on target points */
+//   for (int itgt = 0; itgt < n_tgt; itgt++) {
 
-    const double *point = tgt_coord + 3*itgt;
-    PDM_g_num_t *_closest_pt_g_num = closest_points_g_num + n_closest_points*itgt;
-    double      *_closest_pt_dist2 = closest_points_dist2 + n_closest_points*itgt;
-    double *last_closest_pt_dist2 = _closest_pt_dist2 + n_closest_points - 1;
+//     const double *point = tgt_coord + 3*itgt;
+//     PDM_g_num_t *_closest_pt_g_num = closest_points_g_num + n_closest_points*itgt;
+//     double      *_closest_pt_dist2 = closest_points_dist2 + n_closest_points*itgt;
+//     double *last_closest_pt_dist2 = _closest_pt_dist2 + n_closest_points - 1;
 
-    node_inside = _box_min_dist2 (dim,
-                                  nodes[0].pts_extents,
-                                  point,
-                                  &node_dist);
+//     node_inside = _box_min_dist2 (dim,
+//                                   nodes[0].pts_extents,
+//                                   point,
+//                                   &node_dist);
 
-    if (node_dist >= *last_closest_pt_dist2 && !node_inside) continue;
+//     if (node_dist >= *last_closest_pt_dist2 && !node_inside) continue;
 
-    /* Push root in stack */
-    int pos_stack = 0;
-    stack_id[pos_stack]     = 0;
-    stack_dist[pos_stack]   = node_dist;
-    stack_inside[pos_stack] = node_inside;
-    pos_stack++;
+//     /* Push root in stack */
+//     int pos_stack = 0;
+//     stack_id[pos_stack]     = 0;
+//     stack_dist[pos_stack]   = node_dist;
+//     stack_inside[pos_stack] = node_inside;
+//     pos_stack++;
 
-    while (pos_stack > 0) {
+//     while (pos_stack > 0) {
 
-      pos_stack--;
-      node_dist   = stack_dist[pos_stack];
-      node_inside = stack_inside[pos_stack];
+//       pos_stack--;
+//       node_dist   = stack_dist[pos_stack];
+//       node_inside = stack_inside[pos_stack];
 
-      if (node_dist < *last_closest_pt_dist2 || node_inside) {
-        node_id = stack_id[pos_stack];
-        const _explicit_node_t *_node = nodes + node_id;
+//       if (node_dist < *last_closest_pt_dist2 || node_inside) {
+//         node_id = stack_id[pos_stack];
+//         const _explicit_node_t *_node = nodes + node_id;
 
-        /* Leaf node */
-        if (_node->leaf_id >= 0) {
-          int ileaf = _node->leaf_id;
-          /*
-           * optimization: if n_points == 1, distance has already been computed
-           */
-          if (leaves->n_points[ileaf] == 0) {
-            _insertion_sort (node_dist,
-                             src_g_num[leaves->range[ileaf]],
-                             n_closest_points,
-                             _closest_pt_dist2,
-                             _closest_pt_g_num);
-          }
+//         /* Leaf node */
+//         if (_node->leaf_id >= 0) {
+//           int ileaf = _node->leaf_id;
+//           /*
+//            * optimization: if n_points == 1, distance has already been computed
+//            */
+//           if (leaves->n_points[ileaf] == 0) {
+//             _insertion_sort (node_dist,
+//                              src_g_num[leaves->range[ileaf]],
+//                              n_closest_points,
+//                              _closest_pt_dist2,
+//                              _closest_pt_g_num);
+//           }
 
-          else {
-            for (int i = 0; i < leaves->n_points[ileaf]; i++) {
-              int j = leaves->range[ileaf] + i;
-              double dist2 = _pt_to_pt_dist2 (dim,
-                                              point,
-                                              src_coord + dim*j);
-              if (dist2 < *last_closest_pt_dist2) {
-                _insertion_sort (dist2,
-                                 src_g_num[j],
-                                 n_closest_points,
-                                 _closest_pt_dist2,
-                                 _closest_pt_g_num);
-              }
-            }
-          }
-        }
+//           else {
+//             for (int i = 0; i < leaves->n_points[ileaf]; i++) {
+//               int j = leaves->range[ileaf] + i;
+//               double dist2 = _pt_to_pt_dist2 (dim,
+//                                               point,
+//                                               src_coord + dim*j);
+//               if (dist2 < *last_closest_pt_dist2) {
+//                 _insertion_sort (dist2,
+//                                  src_g_num[j],
+//                                  n_closest_points,
+//                                  _closest_pt_dist2,
+//                                  _closest_pt_g_num);
+//               }
+//             }
+//           }
+//         }
 
 
-        /* Internal node */
-        else {
+//         /* Internal node */
+//         else {
 
-          int n_select = 0;
-          for (int i = 0; i < 8; i++) {
-            child_dist[i] = HUGE_VAL;
-          }
-          int selected_id[8];
-          for (int i = 0; i < n_child; i++) {
-            if (_node->children_id[i] >= 0) {
-              const _explicit_node_t *_child = nodes + _node->children_id[i];
+//           int n_select = 0;
+//           for (int i = 0; i < 8; i++) {
+//             child_dist[i] = HUGE_VAL;
+//           }
+//           int selected_id[8];
+//           for (int i = 0; i < n_child; i++) {
+//             if (_node->children_id[i] >= 0) {
+//               const _explicit_node_t *_child = nodes + _node->children_id[i];
 
-              double dist;
-              int inside = _box_min_dist2 (dim,
-                                           _child->pts_extents,
-                                           point,
-                                           &dist);
+//               double dist;
+//               int inside = _box_min_dist2 (dim,
+//                                            _child->pts_extents,
+//                                            point,
+//                                            &dist);
 
-              if (dist < *last_closest_pt_dist2 || inside) {
-                int j;
-                for (j = n_select; (j > 0) && (child_dist[j-1] > dist); j--) {
-                  selected_id[j]  = selected_id[j-1];
-                  child_dist[j]   = child_dist[j-1];
-                  child_inside[j] = child_inside[j-1];
-                }
+//               if (dist < *last_closest_pt_dist2 || inside) {
+//                 int j;
+//                 for (j = n_select; (j > 0) && (child_dist[j-1] > dist); j--) {
+//                   selected_id[j]  = selected_id[j-1];
+//                   child_dist[j]   = child_dist[j-1];
+//                   child_inside[j] = child_inside[j-1];
+//                 }
 
-                selected_id[j]  = _node->children_id[i];
-                child_dist[j]   = dist;
-                child_inside[j] = inside;
+//                 selected_id[j]  = _node->children_id[i];
+//                 child_dist[j]   = dist;
+//                 child_inside[j] = inside;
 
-                n_select++;
-              }
-            }
-          }
+//                 n_select++;
+//               }
+//             }
+//           }
 
-          for (int i = n_select-1; i >= 0; i--) {
-            stack_id[pos_stack]     = selected_id[i];
-            stack_dist[pos_stack]   = child_dist[i];
-            stack_inside[pos_stack] = child_inside[i];
-            pos_stack++;
-          }
-        }
-      }
+//           for (int i = n_select-1; i >= 0; i--) {
+//             stack_id[pos_stack]     = selected_id[i];
+//             stack_dist[pos_stack]   = child_dist[i];
+//             stack_inside[pos_stack] = child_inside[i];
+//             pos_stack++;
+//           }
+//         }
+//       }
 
-    } // End of while loop
+//     } // End of while loop
 
-  } // End of loop on target points
+//   } // End of loop on target points
 
-  free (stack_id);
-  free (stack_dist);
-  free (stack_inside);
-}
+//   free (stack_id);
+//   free (stack_dist);
+//   free (stack_inside);
+// }
 
 
 
@@ -4679,166 +4680,166 @@ continue;
 
 
 
-static void
-_single_closest_point_explicit
-(
- _octree_t    *octree,
- const int     i_copied_rank,
- const int     n_tgt,
- const double *tgt_coord,
- PDM_g_num_t  *closest_point_g_num,
- double       *closest_point_dist2
- )
-{
-  if (n_tgt < 1) {
-    return;
-  }
+// static void
+// _single_closest_point_explicit
+// (
+//  _octree_t    *octree,
+//  const int     i_copied_rank,
+//  const int     n_tgt,
+//  const double *tgt_coord,
+//  PDM_g_num_t  *closest_point_g_num,
+//  double       *closest_point_dist2
+//  )
+// {
+//   if (n_tgt < 1) {
+//     return;
+//   }
 
-  int n_points;
-  const _explicit_node_t *nodes;
-  const _l_octant_t *leaves;
-  const PDM_g_num_t *src_g_num;
-  const double      *src_coord;
-  if (i_copied_rank < 0) {
-    n_points  = octree->n_points;
-    nodes     = octree->explicit_nodes;
-    leaves    = octree->octants;
-    src_g_num = octree->points_gnum;
-    src_coord = octree->points;
-  } else {
-    assert (i_copied_rank < octree->n_copied_ranks);
-    n_points  = octree->n_copied_points[i_copied_rank];
-    nodes     = octree->copied_explicit_nodes[i_copied_rank];
-    leaves    = octree->copied_octants[i_copied_rank];
-    src_g_num = octree->copied_points_gnum[i_copied_rank];
-    src_coord = octree->copied_points[i_copied_rank];
-  }
+//   int n_points;
+//   const _explicit_node_t *nodes;
+//   const _l_octant_t *leaves;
+//   const PDM_g_num_t *src_g_num;
+//   const double      *src_coord;
+//   if (i_copied_rank < 0) {
+//     n_points  = octree->n_points;
+//     nodes     = octree->explicit_nodes;
+//     leaves    = octree->octants;
+//     src_g_num = octree->points_gnum;
+//     src_coord = octree->points;
+//   } else {
+//     assert (i_copied_rank < octree->n_copied_ranks);
+//     n_points  = octree->n_copied_points[i_copied_rank];
+//     nodes     = octree->copied_explicit_nodes[i_copied_rank];
+//     leaves    = octree->copied_octants[i_copied_rank];
+//     src_g_num = octree->copied_points_gnum[i_copied_rank];
+//     src_coord = octree->copied_points[i_copied_rank];
+//   }
 
-  if (n_points == 0) {
-    return;
-  }
+//   if (n_points == 0) {
+//     return;
+//   }
 
-  const int dim = octree->dim;
-  const int n_child = 1 << dim;
-  const int depth_max = 31;
-  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-  int    *stack_id     = malloc (sizeof(int)    * s_stack);
-  double *stack_dist   = malloc (sizeof(double) * s_stack);
-  int    *stack_inside = malloc (sizeof(int)    * s_stack);
+//   const int dim = octree->dim;
+//   const int n_child = 1 << dim;
+//   const int depth_max = 31;
+//   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+//   int    *stack_id     = malloc (sizeof(int)    * s_stack);
+//   double *stack_dist   = malloc (sizeof(double) * s_stack);
+//   int    *stack_inside = malloc (sizeof(int)    * s_stack);
 
-  int    node_id;
-  double node_dist;
-  int    node_inside;
-  double child_dist[n_child];
-  int    child_inside[n_child];
-  //int count = 0;
-  /* Loop on target points */
-  for (int itgt = 0; itgt < n_tgt; itgt++) {
-    const double *point = tgt_coord + 3*itgt;
+//   int    node_id;
+//   double node_dist;
+//   int    node_inside;
+//   double child_dist[n_child];
+//   int    child_inside[n_child];
+//   //int count = 0;
+//   /* Loop on target points */
+//   for (int itgt = 0; itgt < n_tgt; itgt++) {
+//     const double *point = tgt_coord + 3*itgt;
 
-    node_inside = _box_min_dist2 (dim,
-                                  nodes[0].pts_extents,
-                                  point,
-                                  &node_dist);
+//     node_inside = _box_min_dist2 (dim,
+//                                   nodes[0].pts_extents,
+//                                   point,
+//                                   &node_dist);
 
-    if (node_dist >= closest_point_dist2[itgt] && !node_inside) continue;
+//     if (node_dist >= closest_point_dist2[itgt] && !node_inside) continue;
 
-    /* Push root in stack */
-    int pos_stack = 0;
-    stack_id[pos_stack]     = 0;
-    stack_dist[pos_stack]   = node_dist;
-    stack_inside[pos_stack] = node_inside;
-    pos_stack++;
+//     /* Push root in stack */
+//     int pos_stack = 0;
+//     stack_id[pos_stack]     = 0;
+//     stack_dist[pos_stack]   = node_dist;
+//     stack_inside[pos_stack] = node_inside;
+//     pos_stack++;
 
-    while (pos_stack > 0) {
-      //count++;
-      pos_stack--;
-      node_dist   = stack_dist[pos_stack];
-      node_inside = stack_inside[pos_stack];
+//     while (pos_stack > 0) {
+//       //count++;
+//       pos_stack--;
+//       node_dist   = stack_dist[pos_stack];
+//       node_inside = stack_inside[pos_stack];
 
-      if (node_dist < closest_point_dist2[itgt] || node_inside) {
-        node_id = stack_id[pos_stack];
-        const _explicit_node_t *_node = nodes + node_id;
+//       if (node_dist < closest_point_dist2[itgt] || node_inside) {
+//         node_id = stack_id[pos_stack];
+//         const _explicit_node_t *_node = nodes + node_id;
 
-        /* Leaf node */
-        if (_node->leaf_id >= 0) {
-          int ileaf = _node->leaf_id;
-          /*
-           * optimization: if n_points == 1, distance has already been computed
-           */
-          if (leaves->n_points[ileaf] == 0) {
-            closest_point_dist2[itgt] = node_dist;
-            closest_point_g_num[itgt] = src_g_num[leaves->range[ileaf]];
-          }
+//         /* Leaf node */
+//         if (_node->leaf_id >= 0) {
+//           int ileaf = _node->leaf_id;
+//           /*
+//            * optimization: if n_points == 1, distance has already been computed
+//            */
+//           if (leaves->n_points[ileaf] == 0) {
+//             closest_point_dist2[itgt] = node_dist;
+//             closest_point_g_num[itgt] = src_g_num[leaves->range[ileaf]];
+//           }
 
-          else {
-            for (int i = 0; i < leaves->n_points[ileaf]; i++) {
-              int j = leaves->range[ileaf] + i;
-              double dist2 = _pt_to_pt_dist2 (dim,
-                                              point,
-                                              src_coord + dim*j);
-              if (dist2 < closest_point_dist2[itgt]) {
-                closest_point_dist2[itgt] = dist2;
-                closest_point_g_num[itgt] = src_g_num[j];
-              }
-            }
-          }
-        }
+//           else {
+//             for (int i = 0; i < leaves->n_points[ileaf]; i++) {
+//               int j = leaves->range[ileaf] + i;
+//               double dist2 = _pt_to_pt_dist2 (dim,
+//                                               point,
+//                                               src_coord + dim*j);
+//               if (dist2 < closest_point_dist2[itgt]) {
+//                 closest_point_dist2[itgt] = dist2;
+//                 closest_point_g_num[itgt] = src_g_num[j];
+//               }
+//             }
+//           }
+//         }
 
-        /* Internal node */
-        else {
+//         /* Internal node */
+//         else {
 
-          int n_select = 0;
-          for (int i = 0; i < 8; i++) {
-            child_dist[i] = HUGE_VAL;
-          }
-          int selected_id[8];
-          for (int i = 0; i < n_child; i++) {
-            if (_node->children_id[i] >= 0) {
-              const _explicit_node_t *_child = nodes + _node->children_id[i];
+//           int n_select = 0;
+//           for (int i = 0; i < 8; i++) {
+//             child_dist[i] = HUGE_VAL;
+//           }
+//           int selected_id[8];
+//           for (int i = 0; i < n_child; i++) {
+//             if (_node->children_id[i] >= 0) {
+//               const _explicit_node_t *_child = nodes + _node->children_id[i];
 
-              double dist;
-              int inside = _box_min_dist2 (dim,
-                                           _child->pts_extents,
-                                           point,
-                                           &dist);
+//               double dist;
+//               int inside = _box_min_dist2 (dim,
+//                                            _child->pts_extents,
+//                                            point,
+//                                            &dist);
 
-              if (dist < closest_point_dist2[itgt] || inside) {
-                int j;
-                for (j = n_select; (j > 0) && (child_dist[j-1] > dist); j--) {
-                  selected_id[j]  = selected_id[j-1];
-                  child_dist[j]   = child_dist[j-1];
-                  child_inside[j] = child_inside[j-1];
-                }
+//               if (dist < closest_point_dist2[itgt] || inside) {
+//                 int j;
+//                 for (j = n_select; (j > 0) && (child_dist[j-1] > dist); j--) {
+//                   selected_id[j]  = selected_id[j-1];
+//                   child_dist[j]   = child_dist[j-1];
+//                   child_inside[j] = child_inside[j-1];
+//                 }
 
-                selected_id[j]  = _node->children_id[i];
-                child_dist[j]   = dist;
-                child_inside[j] = inside;
+//                 selected_id[j]  = _node->children_id[i];
+//                 child_dist[j]   = dist;
+//                 child_inside[j] = inside;
 
-                n_select++;
-              }
-            }
-          }
+//                 n_select++;
+//               }
+//             }
+//           }
 
-          for (int i = n_select-1; i >= 0; i--) {
-            stack_id[pos_stack]     = selected_id[i];
-            stack_dist[pos_stack]   = child_dist[i];
-            stack_inside[pos_stack] = child_inside[i];
-            pos_stack++;
-          }
-        }
-      }
+//           for (int i = n_select-1; i >= 0; i--) {
+//             stack_id[pos_stack]     = selected_id[i];
+//             stack_dist[pos_stack]   = child_dist[i];
+//             stack_inside[pos_stack] = child_inside[i];
+//             pos_stack++;
+//           }
+//         }
+//       }
 
-    } // End of while loop
+//     } // End of while loop
 
-  } // End of loop on target points
+//   } // End of loop on target points
 
-  //if (n_tgt != 0) printf("n nodes per point = %d\n", count / n_tgt);
+//   //if (n_tgt != 0) printf("n nodes per point = %d\n", count / n_tgt);
 
-  free (stack_id);
-  free (stack_dist);
-  free (stack_inside);
-}
+//   free (stack_id);
+//   free (stack_dist);
+//   free (stack_inside);
+// }
 
 
 
@@ -5525,230 +5526,230 @@ _intersect_node_box_explicit
 
 
 
-static void
-_points_inside_boxes_explicit
-(
- const _octree_t          *octree,
- const int                 i_copied_rank,
- const int                 n_box,
- const double              box_extents[],
- // const PDM_morton_code_t   box_codes[],
- const PDM_g_num_t         box_g_num[],
- int                     **pts_idx,
- int                     **pts_l_num
- )
-{
-  *pts_idx = malloc (sizeof(int) * (n_box + 1));
-  int *_pts_idx = *pts_idx;
-  _pts_idx[0] = 0;
+// static void
+// _points_inside_boxes_explicit
+// (
+//  const _octree_t          *octree,
+//  const int                 i_copied_rank,
+//  const int                 n_box,
+//  const double              box_extents[],
+//  // const PDM_morton_code_t   box_codes[],
+//  const PDM_g_num_t         box_g_num[],
+//  int                     **pts_idx,
+//  int                     **pts_l_num
+//  )
+// {
+//   *pts_idx = malloc (sizeof(int) * (n_box + 1));
+//   int *_pts_idx = *pts_idx;
+//   _pts_idx[0] = 0;
 
-  if (n_box < 1) {
-    *pts_l_num = malloc (sizeof(int) * _pts_idx[n_box]);
-    return;
-  }
+//   if (n_box < 1) {
+//     *pts_l_num = malloc (sizeof(int) * _pts_idx[n_box]);
+//     return;
+//   }
 
-  int n_nodes;
-  const _explicit_node_t *nodes;
-  const double *points;
-  const PDM_g_num_t *pts_g_num;
-  if (i_copied_rank < 0) {
-    n_nodes = octree->n_explicit_nodes;
-    nodes   = octree->explicit_nodes;
-    points  = octree->points;
-    pts_g_num = octree->points_gnum;
-  } else {
-    assert (i_copied_rank < octree->n_copied_ranks);
-    n_nodes = octree->n_copied_explicit_nodes[i_copied_rank];
-    nodes   = octree->copied_explicit_nodes[i_copied_rank];
-    points  = octree->copied_points[i_copied_rank];
-    pts_g_num = octree->copied_points_gnum[i_copied_rank];
-  }
+//   int n_nodes;
+//   const _explicit_node_t *nodes;
+//   const double *points;
+//   const PDM_g_num_t *pts_g_num;
+//   if (i_copied_rank < 0) {
+//     n_nodes = octree->n_explicit_nodes;
+//     nodes   = octree->explicit_nodes;
+//     points  = octree->points;
+//     pts_g_num = octree->points_gnum;
+//   } else {
+//     assert (i_copied_rank < octree->n_copied_ranks);
+//     n_nodes = octree->n_copied_explicit_nodes[i_copied_rank];
+//     nodes   = octree->copied_explicit_nodes[i_copied_rank];
+//     points  = octree->copied_points[i_copied_rank];
+//     pts_g_num = octree->copied_points_gnum[i_copied_rank];
+//   }
 
-  if (n_nodes == 0 || (n_nodes > 0 && nodes[0].n_points == 0)) {
-    PDM_array_reset_int (_pts_idx+1, n_box, 0);
-    *pts_l_num = malloc (sizeof(int) * _pts_idx[n_box]);
-    return;
-  }
-
-
-  int tmp_size = 4 * n_box;
-  *pts_l_num = malloc (sizeof(int) * tmp_size);
-  int *_pts_l_num = *pts_l_num;
+//   if (n_nodes == 0 || (n_nodes > 0 && nodes[0].n_points == 0)) {
+//     PDM_array_reset_int (_pts_idx+1, n_box, 0);
+//     *pts_l_num = malloc (sizeof(int) * _pts_idx[n_box]);
+//     return;
+//   }
 
 
-  const int dim = octree->dim;
-  const int n_child = 1 << dim;
-  const int depth_max = 31;
-  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-  int *stack_id = malloc (sizeof(int)    * s_stack);
-  int node_inside_box;
-  int intersect;
+//   int tmp_size = 4 * n_box;
+//   *pts_l_num = malloc (sizeof(int) * tmp_size);
+//   int *_pts_l_num = *pts_l_num;
 
-  for (int ibox = 0; ibox < n_box; ibox++) {
-    int DEBUG = 0; //(box_g_num[ibox] == 2793384);//
-    _pts_idx[ibox+1] = _pts_idx[ibox];
 
-    const double *_box_extents = box_extents + 6*ibox;
-    const double *box_min = box_extents + 6*ibox;
-    const double *box_max = box_min + 3;
-    //const PDM_morton_code_t *box_code_min = box_codes + 2*ibox;
-    //const PDM_morton_code_t *box_code_max = box_code_min + 1;
-    if (DEBUG) {
-      printf("box "PDM_FMT_G_NUM": min = %f %f %f, max = %f %f %f\n",
-             box_g_num[ibox],
-             box_min[0], box_min[1], box_min[2],
-             box_max[0], box_max[1], box_max[2]);
-    }
+//   const int dim = octree->dim;
+//   const int n_child = 1 << dim;
+//   const int depth_max = 31;
+//   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+//   int *stack_id = malloc (sizeof(int)    * s_stack);
+//   int node_inside_box;
+//   int intersect;
 
-    intersect = _intersect_node_box_explicit (3,
-                                              nodes[0].pts_extents,
-                                              _box_extents,
-                                              &node_inside_box);
+//   for (int ibox = 0; ibox < n_box; ibox++) {
+//     int DEBUG = 0; //(box_g_num[ibox] == 2793384);//
+//     _pts_idx[ibox+1] = _pts_idx[ibox];
 
-    if (!intersect) {
-      if (DEBUG) {
-        printf("box "PDM_FMT_G_NUM" does not intersect root node\n", box_g_num[ibox]);
-      }
-      continue;
-    }
+//     const double *_box_extents = box_extents + 6*ibox;
+//     const double *box_min = box_extents + 6*ibox;
+//     const double *box_max = box_min + 3;
+//     //const PDM_morton_code_t *box_code_min = box_codes + 2*ibox;
+//     //const PDM_morton_code_t *box_code_max = box_code_min + 1;
+//     if (DEBUG) {
+//       printf("box "PDM_FMT_G_NUM": min = %f %f %f, max = %f %f %f\n",
+//              box_g_num[ibox],
+//              box_min[0], box_min[1], box_min[2],
+//              box_max[0], box_max[1], box_max[2]);
+//     }
 
-    if (node_inside_box) {
-      /* The box must contain all points */
-      if (DEBUG) {
-        printf("    add pts with lnum %d through %d\n", nodes[0].range, nodes[0].range + nodes[0].n_points);
-      }
-      int new_size = _pts_idx[ibox+1] + nodes[0].n_points;
+//     intersect = _intersect_node_box_explicit (3,
+//                                               nodes[0].pts_extents,
+//                                               _box_extents,
+//                                               &node_inside_box);
 
-      if (tmp_size <= new_size) {
-        tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
-        _pts_l_num = *pts_l_num;
+//     if (!intersect) {
+//       if (DEBUG) {
+//         printf("box "PDM_FMT_G_NUM" does not intersect root node\n", box_g_num[ibox]);
+//       }
+//       continue;
+//     }
 
-      }
+//     if (node_inside_box) {
+//       /* The box must contain all points */
+//       if (DEBUG) {
+//         printf("    add pts with lnum %d through %d\n", nodes[0].range, nodes[0].range + nodes[0].n_points);
+//       }
+//       int new_size = _pts_idx[ibox+1] + nodes[0].n_points;
 
-      for (int j = 0; j < nodes[0].n_points; j++) {
-        _pts_l_num[_pts_idx[ibox+1]++] = nodes[0].range + j;
-      }
+//       if (tmp_size <= new_size) {
+//         tmp_size = PDM_MAX (2*tmp_size, new_size);
+//         *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+//         _pts_l_num = *pts_l_num;
 
-      continue;
-    }
+//       }
 
-    /* Push root in stack */
-    int pos_stack = 0;
-    stack_id[pos_stack++] = 0;
+//       for (int j = 0; j < nodes[0].n_points; j++) {
+//         _pts_l_num[_pts_idx[ibox+1]++] = nodes[0].range + j;
+//       }
 
-    while (pos_stack > 0) {
-      int node_id = stack_id[--pos_stack];
-      const _explicit_node_t *_node = nodes + node_id;
-      if (DEBUG) {
-        printf("  node %d : L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
-               node_id,
-               _node->code.L,
-               _node->code.X[0],
-               _node->code.X[1],
-               _node->code.X[2],
-               _node->range,
-               _node->n_points,
-               _node->leaf_id);
-      }
+//       continue;
+//     }
 
-      /* Leaf node */
-      if (_node->leaf_id >= 0) {
-        for (int i = 0; i < _node->n_points; i++) {
-          int ipt = _node->range + i;
-          const double *_pt = points + ipt * 3;
+//     /* Push root in stack */
+//     int pos_stack = 0;
+//     stack_id[pos_stack++] = 0;
 
-          int pt_inside_box = 1;
-          for (int idim = 0; idim < 3; idim++) {
-            if (_pt[idim] < box_min[idim] || _pt[idim] > box_max[idim]) {
-              pt_inside_box = 0;
-              break;
-            }
-          }
+//     while (pos_stack > 0) {
+//       int node_id = stack_id[--pos_stack];
+//       const _explicit_node_t *_node = nodes + node_id;
+//       if (DEBUG) {
+//         printf("  node %d : L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
+//                node_id,
+//                _node->code.L,
+//                _node->code.X[0],
+//                _node->code.X[1],
+//                _node->code.X[2],
+//                _node->range,
+//                _node->n_points,
+//                _node->leaf_id);
+//       }
 
-          if (pt_inside_box) {
-            if (_pts_idx[ibox+1] >= tmp_size) {
-              tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
-              *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
-              _pts_l_num = *pts_l_num;
-            }
+//       /* Leaf node */
+//       if (_node->leaf_id >= 0) {
+//         for (int i = 0; i < _node->n_points; i++) {
+//           int ipt = _node->range + i;
+//           const double *_pt = points + ipt * 3;
 
-            _pts_l_num[_pts_idx[ibox+1]++] = ipt;
-            if (DEBUG) {
-              printf("    add point %d ("PDM_FMT_G_NUM")\n", ipt, pts_g_num[ipt]);
-            }
-          }
-        } // End of loop on points inside leaf
-      }
+//           int pt_inside_box = 1;
+//           for (int idim = 0; idim < 3; idim++) {
+//             if (_pt[idim] < box_min[idim] || _pt[idim] > box_max[idim]) {
+//               pt_inside_box = 0;
+//               break;
+//             }
+//           }
 
-      /* Internal node */
-      else {
-        for (int i = 0; i < n_child; i++) {
-          if (_node->children_id[i] < 0) {
-            continue;
-          }
-          const _explicit_node_t *_child = nodes + _node->children_id[i];
+//           if (pt_inside_box) {
+//             if (_pts_idx[ibox+1] >= tmp_size) {
+//               tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
+//               *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+//               _pts_l_num = *pts_l_num;
+//             }
 
-          if (DEBUG) {
-            printf("    child %d: id=%d, L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
-                   i,
-                   _node->children_id[i],
-                   _child->code.L,
-                   _child->code.X[0],
-                   _child->code.X[1],
-                   _child->code.X[2],
-                   _child->range,
-                   _child->n_points,
-                   _child->leaf_id);
-            printf("    pts_extents = %f %f %f %f %f %f\n",
-                   _child->pts_extents[0], _child->pts_extents[1], _child->pts_extents[2],
-                   _child->pts_extents[3], _child->pts_extents[4], _child->pts_extents[5]);
-          }
+//             _pts_l_num[_pts_idx[ibox+1]++] = ipt;
+//             if (DEBUG) {
+//               printf("    add point %d ("PDM_FMT_G_NUM")\n", ipt, pts_g_num[ipt]);
+//             }
+//           }
+//         } // End of loop on points inside leaf
+//       }
 
-          intersect = _intersect_node_box_explicit (3,
-                                                    _child->pts_extents,
-                                                    _box_extents,
-                                                    &node_inside_box);
+//       /* Internal node */
+//       else {
+//         for (int i = 0; i < n_child; i++) {
+//           if (_node->children_id[i] < 0) {
+//             continue;
+//           }
+//           const _explicit_node_t *_child = nodes + _node->children_id[i];
 
-          if (DEBUG) {
-            printf("    intersect = %d\n", intersect);
-          }
+//           if (DEBUG) {
+//             printf("    child %d: id=%d, L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
+//                    i,
+//                    _node->children_id[i],
+//                    _child->code.L,
+//                    _child->code.X[0],
+//                    _child->code.X[1],
+//                    _child->code.X[2],
+//                    _child->range,
+//                    _child->n_points,
+//                    _child->leaf_id);
+//             printf("    pts_extents = %f %f %f %f %f %f\n",
+//                    _child->pts_extents[0], _child->pts_extents[1], _child->pts_extents[2],
+//                    _child->pts_extents[3], _child->pts_extents[4], _child->pts_extents[5]);
+//           }
 
-          if (intersect) {
-            if (node_inside_box) {
-              /* The box must contain all points */
-              if (DEBUG) {
-                printf("    add pts with lnum %d through %d\n", _child->range, _child->range + _child->n_points);
-              }
+//           intersect = _intersect_node_box_explicit (3,
+//                                                     _child->pts_extents,
+//                                                     _box_extents,
+//                                                     &node_inside_box);
 
-              int new_size = _pts_idx[ibox+1] + _child->n_points;
+//           if (DEBUG) {
+//             printf("    intersect = %d\n", intersect);
+//           }
 
-              if (tmp_size <= new_size) {
-                tmp_size = PDM_MAX (2*tmp_size, new_size);
-                *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
-                _pts_l_num = *pts_l_num;
-              }
+//           if (intersect) {
+//             if (node_inside_box) {
+//               /* The box must contain all points */
+//               if (DEBUG) {
+//                 printf("    add pts with lnum %d through %d\n", _child->range, _child->range + _child->n_points);
+//               }
 
-              for (int j = 0; j < _child->n_points; j++) {
-                _pts_l_num[_pts_idx[ibox+1]++] = _child->range + j;
-              }
-            }
+//               int new_size = _pts_idx[ibox+1] + _child->n_points;
 
-            else {
-              /* Push child in stack */
-              stack_id[pos_stack++] = _node->children_id[i];
-            }
-          }
-        } // End of loop on children
-      }
-    } // End of while loop
+//               if (tmp_size <= new_size) {
+//                 tmp_size = PDM_MAX (2*tmp_size, new_size);
+//                 *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+//                 _pts_l_num = *pts_l_num;
+//               }
 
-  } // End of loop on boxes
+//               for (int j = 0; j < _child->n_points; j++) {
+//                 _pts_l_num[_pts_idx[ibox+1]++] = _child->range + j;
+//               }
+//             }
 
-  free (stack_id);
+//             else {
+//               /* Push child in stack */
+//               stack_id[pos_stack++] = _node->children_id[i];
+//             }
+//           }
+//         } // End of loop on children
+//       }
+//     } // End of while loop
 
-  *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
-}
+//   } // End of loop on boxes
+
+//   free (stack_id);
+
+//   *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
+// }
 
 
 
@@ -5985,218 +5986,218 @@ _points_inside_boxes_explicit2
 
 
 
-static void
-_build_explicit_nodes
-(
- _octree_t *octree
- )
-{
-  int DEBUG = 0;
+// static void
+// _build_explicit_nodes
+// (
+//  _octree_t *octree
+//  )
+// {
+//   int DEBUG = 0;
 
-  int i_rank;
-  PDM_MPI_Comm_rank (octree->comm, &i_rank);
-  if (i_rank == 0 && DEBUG) printf("BUILD OCTREE EXPLICIT NODES\n");
+//   int i_rank;
+//   PDM_MPI_Comm_rank (octree->comm, &i_rank);
+//   if (i_rank == 0 && DEBUG) printf("BUILD OCTREE EXPLICIT NODES\n");
 
-  _l_octant_t *octants = octree->octants;
-  const int dim = octants->dim;
-
-
-
-  int tmp_size = 2*octants->n_nodes;
-  octree->explicit_nodes = malloc (sizeof(_explicit_node_t) * tmp_size);
-  octree->n_explicit_nodes = 0;
-
-  if (octants->n_nodes == 0 || octree->n_points == 0) return;
-
-  _explicit_node_t *node = octree->explicit_nodes;
-
-  PDM_morton_nearest_common_ancestor (octants->codes[0],
-                                      octants->codes[octants->n_nodes-1],
-                                      &(node->code));
-  node->ancestor_id = -1;
-  node->range = octants->range[0];
-  node->n_points = octree->n_points;
-  for (int j = 0; j < 3; j++) {
-    node->pts_extents[j]   =  HUGE_VAL;
-    node->pts_extents[j+3] = -HUGE_VAL;
-  }
-  if (octants->n_nodes == 1) {
-    node->leaf_id = 0;
-    octree->n_explicit_nodes = 1;
-    for (int i = 0; i < octree->n_points; i++) {
-      for (int j = 0; j < 3; j++) {
-        node->pts_extents[j]   = PDM_MIN (node->pts_extents[j],   octree->points[3*i+j]);
-        node->pts_extents[j+3] = PDM_MAX (node->pts_extents[j+3], octree->points[3*i+j]);
-      }
-    }
-    return;
-  } else {
-    node->leaf_id = -1;
-  }
-  octree->n_explicit_nodes++;
-
-  const int n_child = 1 << dim;
-  const int depth_max = 31;
-  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-
-  int *stack_start = malloc (sizeof(int) * s_stack);
-  int *stack_end   = malloc (sizeof(int) * s_stack);
-  int *stack_id    = malloc (sizeof(int) * s_stack);
-
-  /* Push ancestor in stack */
-  int pos_stack = 0;
-  if (octants->n_nodes > 1) {
-    stack_id[pos_stack]    = 0;
-    stack_start[pos_stack] = 0;
-    stack_end[pos_stack]   = octants->n_nodes;
-    pos_stack++;
-  }
+//   _l_octant_t *octants = octree->octants;
+//   const int dim = octants->dim;
 
 
-  int node_start;
-  int node_end;
-  int node_id;
-  int child_id;
-  PDM_morton_code_t child_code[n_child];
 
-  while (pos_stack > 0) {
-    pos_stack--;
-    node_id    = stack_id[pos_stack];
-    node_start = stack_start[pos_stack];
-    node_end   = stack_end[pos_stack];
+//   int tmp_size = 2*octants->n_nodes;
+//   octree->explicit_nodes = malloc (sizeof(_explicit_node_t) * tmp_size);
+//   octree->n_explicit_nodes = 0;
 
-    if (octree->n_explicit_nodes + n_child >= tmp_size) {
-      tmp_size = PDM_MAX (2*tmp_size, octree->n_explicit_nodes + n_child + 1);
-      octree->explicit_nodes = realloc (octree->explicit_nodes,
-                                        sizeof(_explicit_node_t) * tmp_size);
-    }
-    node = octree->explicit_nodes + node_id;
+//   if (octants->n_nodes == 0 || octree->n_points == 0) return;
 
-    node = octree->explicit_nodes + node_id;
-    PDM_morton_get_children (dim,
-                             node->code,
-                             child_code);
-    int new_start, new_end;
-    int prev_end = node_start;
-    for (int i = 0; i < n_child; i++) {
-      /* get start and end of range in list of nodes covered by current child */
-      /* new_start <-- first descendant of child in list */
-      new_start = prev_end;
-      while (new_start < node_end) {
-        if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
-          break;
-        } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
-          /* all the following nodes are clearly not descendants of current child */
-          new_start = node_end+1;
-          break;
-        }
-        new_start++;
-      }
+//   _explicit_node_t *node = octree->explicit_nodes;
 
-      if (new_start >= node_end) {
-        // no need to go further for that child
-        //   because it has no descendants in the node list
-        // (descendant leaves are in another rank)
-        node->children_id[i] = -1;
-        continue;
-      }
+//   PDM_morton_nearest_common_ancestor (octants->codes[0],
+//                                       octants->codes[octants->n_nodes-1],
+//                                       &(node->code));
+//   node->ancestor_id = -1;
+//   node->range = octants->range[0];
+//   node->n_points = octree->n_points;
+//   for (int j = 0; j < 3; j++) {
+//     node->pts_extents[j]   =  HUGE_VAL;
+//     node->pts_extents[j+3] = -HUGE_VAL;
+//   }
+//   if (octants->n_nodes == 1) {
+//     node->leaf_id = 0;
+//     octree->n_explicit_nodes = 1;
+//     for (int i = 0; i < octree->n_points; i++) {
+//       for (int j = 0; j < 3; j++) {
+//         node->pts_extents[j]   = PDM_MIN (node->pts_extents[j],   octree->points[3*i+j]);
+//         node->pts_extents[j+3] = PDM_MAX (node->pts_extents[j+3], octree->points[3*i+j]);
+//       }
+//     }
+//     return;
+//   } else {
+//     node->leaf_id = -1;
+//   }
+//   octree->n_explicit_nodes++;
 
-      /* new_end <-- next of last descendant of child in list */
-      int l = new_start;
-      new_end = node_end;
-      while (new_end > l + 1) {
-        int m = l + (new_end - l) / 2;
-        if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
-          l = m;
-        } else {
-          new_end = m;
-        }
-      }
-      prev_end = new_end;
+//   const int n_child = 1 << dim;
+//   const int depth_max = 31;
+//   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
 
-      int n_points = octants->range[new_end-1]
-        + octants->n_points[new_end-1]
-        - octants->range[new_start];
+//   int *stack_start = malloc (sizeof(int) * s_stack);
+//   int *stack_end   = malloc (sizeof(int) * s_stack);
+//   int *stack_id    = malloc (sizeof(int) * s_stack);
 
-      if (n_points == 0) {
-        node->children_id[i] = -1;
-        continue;
-      }
+//   /* Push ancestor in stack */
+//   int pos_stack = 0;
+//   if (octants->n_nodes > 1) {
+//     stack_id[pos_stack]    = 0;
+//     stack_start[pos_stack] = 0;
+//     stack_end[pos_stack]   = octants->n_nodes;
+//     pos_stack++;
+//   }
 
-      child_id = octree->n_explicit_nodes++;
-      _explicit_node_t *child = octree->explicit_nodes + child_id;
-      node->children_id[i] = child_id;
-      PDM_morton_copy (child_code[i], &(child->code));
-      child->ancestor_id = node_id;
-      child->range       = octants->range[new_start];
-      child->n_points    = n_points;
 
-      for (int j = 0; j < 3; j++) {
-        child->pts_extents[j]   =  HUGE_VAL;
-        child->pts_extents[j+3] = -HUGE_VAL;
-      }
+//   int node_start;
+//   int node_end;
+//   int node_id;
+//   int child_id;
+//   PDM_morton_code_t child_code[n_child];
 
-      /* Leaf node */
-      if (new_start == new_end-1) {
-        child->leaf_id = new_start;
+//   while (pos_stack > 0) {
+//     pos_stack--;
+//     node_id    = stack_id[pos_stack];
+//     node_start = stack_start[pos_stack];
+//     node_end   = stack_end[pos_stack];
 
-        /* Compute leaf extents */
-        for (int k = 0; k < n_points; k++) {
-          double *point = octree->points + 3*(octants->range[new_start] + k);
-          for (int j = 0; j < 3; j++) {
-            child->pts_extents[j]   = PDM_MIN (child->pts_extents[j],   point[j]);
-            child->pts_extents[j+3] = PDM_MAX (child->pts_extents[j+3], point[j]);
-          }
-        }
+//     if (octree->n_explicit_nodes + n_child >= tmp_size) {
+//       tmp_size = PDM_MAX (2*tmp_size, octree->n_explicit_nodes + n_child + 1);
+//       octree->explicit_nodes = realloc (octree->explicit_nodes,
+//                                         sizeof(_explicit_node_t) * tmp_size);
+//     }
+//     node = octree->explicit_nodes + node_id;
 
-        /* Propagate extents to ancestors */
-        int ancestor_id = node_id;
-        while (ancestor_id >= 0) {
-          _explicit_node_t *ancestor = octree->explicit_nodes + ancestor_id;
-          for (int j = 0; j < 3; j++) {
-            ancestor->pts_extents[j]   = PDM_MIN (child->pts_extents[j],
-                                                  ancestor->pts_extents[j]);
-            ancestor->pts_extents[j+3] = PDM_MAX (child->pts_extents[j+3],
-                                                  ancestor->pts_extents[j+3]);
-          }
-          ancestor_id = ancestor->ancestor_id;
-        }
-      }
+//     node = octree->explicit_nodes + node_id;
+//     PDM_morton_get_children (dim,
+//                              node->code,
+//                              child_code);
+//     int new_start, new_end;
+//     int prev_end = node_start;
+//     for (int i = 0; i < n_child; i++) {
+//       /* get start and end of range in list of nodes covered by current child */
+//       /* new_start <-- first descendant of child in list */
+//       new_start = prev_end;
+//       while (new_start < node_end) {
+//         if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+//           break;
+//         } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+//           /* all the following nodes are clearly not descendants of current child */
+//           new_start = node_end+1;
+//           break;
+//         }
+//         new_start++;
+//       }
 
-      /* Internal node */
-      else {
-        child->leaf_id = -1;
+//       if (new_start >= node_end) {
+//         // no need to go further for that child
+//         //   because it has no descendants in the node list
+//         // (descendant leaves are in another rank)
+//         node->children_id[i] = -1;
+//         continue;
+//       }
 
-        /* Push child in stack */
-        stack_id[pos_stack]    = child_id;
-        stack_start[pos_stack] = new_start;
-        stack_end[pos_stack]   = new_end;
-        pos_stack++;
-      }
-      if (DEBUG) {
-        printf("node %d : L=%d, X=%d %d %d, start=%d, end=%d, ancestor=%d, range=%d, n_points=%d, leaf_id=%d\n",
-               child_id,
-               child->code.L,
-               child->code.X[0],
-               child->code.X[1],
-               child->code.X[2],
-               new_start,
-               new_end,
-               child->ancestor_id,
-               child->range,
-               child->n_points,
-               child->leaf_id);
-      }
+//       /* new_end <-- next of last descendant of child in list */
+//       int l = new_start;
+//       new_end = node_end;
+//       while (new_end > l + 1) {
+//         int m = l + (new_end - l) / 2;
+//         if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+//           l = m;
+//         } else {
+//           new_end = m;
+//         }
+//       }
+//       prev_end = new_end;
 
-    } // End of loop on children
-  }
-  free (stack_start);
-  free (stack_end);
-  free (stack_id);
+//       int n_points = octants->range[new_end-1]
+//         + octants->n_points[new_end-1]
+//         - octants->range[new_start];
 
-  octree->explicit_nodes = realloc (octree->explicit_nodes,
-                                    sizeof(_explicit_node_t) * octree->n_explicit_nodes);
-}
+//       if (n_points == 0) {
+//         node->children_id[i] = -1;
+//         continue;
+//       }
+
+//       child_id = octree->n_explicit_nodes++;
+//       _explicit_node_t *child = octree->explicit_nodes + child_id;
+//       node->children_id[i] = child_id;
+//       PDM_morton_copy (child_code[i], &(child->code));
+//       child->ancestor_id = node_id;
+//       child->range       = octants->range[new_start];
+//       child->n_points    = n_points;
+
+//       for (int j = 0; j < 3; j++) {
+//         child->pts_extents[j]   =  HUGE_VAL;
+//         child->pts_extents[j+3] = -HUGE_VAL;
+//       }
+
+//       /* Leaf node */
+//       if (new_start == new_end-1) {
+//         child->leaf_id = new_start;
+
+//         /* Compute leaf extents */
+//         for (int k = 0; k < n_points; k++) {
+//           double *point = octree->points + 3*(octants->range[new_start] + k);
+//           for (int j = 0; j < 3; j++) {
+//             child->pts_extents[j]   = PDM_MIN (child->pts_extents[j],   point[j]);
+//             child->pts_extents[j+3] = PDM_MAX (child->pts_extents[j+3], point[j]);
+//           }
+//         }
+
+//         /* Propagate extents to ancestors */
+//         int ancestor_id = node_id;
+//         while (ancestor_id >= 0) {
+//           _explicit_node_t *ancestor = octree->explicit_nodes + ancestor_id;
+//           for (int j = 0; j < 3; j++) {
+//             ancestor->pts_extents[j]   = PDM_MIN (child->pts_extents[j],
+//                                                   ancestor->pts_extents[j]);
+//             ancestor->pts_extents[j+3] = PDM_MAX (child->pts_extents[j+3],
+//                                                   ancestor->pts_extents[j+3]);
+//           }
+//           ancestor_id = ancestor->ancestor_id;
+//         }
+//       }
+
+//       /* Internal node */
+//       else {
+//         child->leaf_id = -1;
+
+//         /* Push child in stack */
+//         stack_id[pos_stack]    = child_id;
+//         stack_start[pos_stack] = new_start;
+//         stack_end[pos_stack]   = new_end;
+//         pos_stack++;
+//       }
+//       if (DEBUG) {
+//         printf("node %d : L=%d, X=%d %d %d, start=%d, end=%d, ancestor=%d, range=%d, n_points=%d, leaf_id=%d\n",
+//                child_id,
+//                child->code.L,
+//                child->code.X[0],
+//                child->code.X[1],
+//                child->code.X[2],
+//                new_start,
+//                new_end,
+//                child->ancestor_id,
+//                child->range,
+//                child->n_points,
+//                child->leaf_id);
+//       }
+
+//     } // End of loop on children
+//   }
+//   free (stack_start);
+//   free (stack_end);
+//   free (stack_id);
+
+//   octree->explicit_nodes = realloc (octree->explicit_nodes,
+//                                     sizeof(_explicit_node_t) * octree->n_explicit_nodes);
+// }
 
 
 static void
@@ -7006,11 +7007,17 @@ PDM_para_octree_create
   if (env_var != NULL) {
     octree->explicit_nodes_to_build = atoi(env_var);
   }
-  octree->explicit_nodes     = NULL;
-  octree->n_explicit_nodes   = 0;
 
-  octree->copied_explicit_nodes   = NULL;
-  octree->n_copied_explicit_nodes = NULL;
+  octree->use_win_shared = 1;
+  env_var = getenv ("OCTREE_WIN_SHARED");
+  if (env_var != NULL) {
+    octree->use_win_shared = atoi(env_var);
+  }
+  // octree->explicit_nodes     = NULL;
+  // octree->n_explicit_nodes   = 0;
+
+  // octree->copied_explicit_nodes   = NULL;
+  // octree->n_copied_explicit_nodes = NULL;
 
   octree->explicit_nodes2 = NULL;
   octree->copied_explicit_nodes2 = NULL;
@@ -7141,9 +7148,9 @@ PDM_para_octree_free
     free (octree->shared_pts_extents);
   }
 
-  if (octree->explicit_nodes != NULL) {
-    free (octree->explicit_nodes);
-  }
+  // if (octree->explicit_nodes != NULL) {
+  //   free (octree->explicit_nodes);
+  // }
 
 
   _free_explicit_nodes2 (octree->explicit_nodes2);
@@ -7278,44 +7285,44 @@ _export_nodes
 }
 
 
-static void
-_export_explicit_nodes
-(
- const char             *filename,
- const int               n_nodes,
- const _explicit_node_t *nodes
- )
-{
-  FILE *f = fopen(filename, "w");
+// static void
+// _export_explicit_nodes
+// (
+//  const char             *filename,
+//  const int               n_nodes,
+//  const _explicit_node_t *nodes
+//  )
+// {
+//   FILE *f = fopen(filename, "w");
 
-  fprintf(f, "# vtk DataFile Version 2.0\nexplicit nodes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+//   fprintf(f, "# vtk DataFile Version 2.0\nexplicit nodes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
 
-  fprintf(f, "POINTS %d double\n", 8*n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    const double *e = nodes[i].pts_extents;
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
-  }
+//   fprintf(f, "POINTS %d double\n", 8*n_nodes);
+//   for (int i = 0; i < n_nodes; i++) {
+//     const double *e = nodes[i].pts_extents;
+//     fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+//     fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+//     fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+//     fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+//     fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+//     fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+//     fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+//     fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+//   }
 
-  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    int j = 8*i;
-    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
-  }
+//   fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
+//   for (int i = 0; i < n_nodes; i++) {
+//     int j = 8*i;
+//     fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+//   }
 
-  fprintf(f, "CELL_TYPES %d\n", n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    fprintf(f, "12\n");
-  }
+//   fprintf(f, "CELL_TYPES %d\n", n_nodes);
+//   for (int i = 0; i < n_nodes; i++) {
+//     fprintf(f, "12\n");
+//   }
 
-  fclose(f);
-}
+//   fclose(f);
+// }
 
 
 /**
@@ -7907,11 +7914,11 @@ PDM_para_octree_build
 
   PDM_timer_resume(octree->timer);
 
-  PDM_MPI_Barrier (octree->comm);
-  if (DEBUG && rank == 0) {
-    printf("BUILD_BLOCK_PARTITION OK\n");
-    fflush(stdout);
-  }
+  // PDM_MPI_Barrier (octree->comm);
+  // if (DEBUG && rank == 0) {
+  //   printf("BUILD_BLOCK_PARTITION OK\n");
+  //   fflush(stdout);
+  // }
 
   /*************************************************************************
    *
@@ -8037,11 +8044,11 @@ PDM_para_octree_build
     }
   }
 
-  PDM_MPI_Barrier (octree->comm);
-  if (DEBUG && rank == 0) {
-    printf("heap push OK\n");
-    fflush(stdout);
-  }
+  // PDM_MPI_Barrier (octree->comm);
+  // if (DEBUG && rank == 0) {
+  //   printf("heap push OK\n");
+  //   fflush(stdout);
+  // }
 
 
   PDM_morton_code_t code;
@@ -8452,42 +8459,42 @@ PDM_para_octree_build
 
   //-->>
   if (octree->explicit_nodes_to_build) {
-    _build_explicit_nodes (octree);
-    if (DEBUG && rank == 0) printf("_build_explicit_nodes OK\n");
-    //_build_explicit_nodes2 (octree);
-    //if (1 && rank == 0) printf("_build_explicit_nodes2 OK\n");
+    //_build_explicit_nodes (octree);
+    //if (DEBUG && rank == 0) printf("_build_explicit_nodes OK\n");
+    _build_explicit_nodes2 (octree);
+    if (1 && rank == 0) printf("_build_explicit_nodes2 OK\n");
 
-    if (0) {
-      printf("[%d] %d explicit nodes\n", rank, octree->n_explicit_nodes);
-      for (int i = 0; i < octree->n_explicit_nodes; i++) {
-        if (octree->explicit_nodes[i].leaf_id < 0) {
-          for (int j = 0; j < 8; j++) {
-            int k = octree->explicit_nodes[i].children_id[j];
-            if (k < 0) continue;
-            /*printf("node %d, n_pts = %d, extents = %f %f %f %f %f %f\n",
-                   k,
-                   octree->explicit_nodes[k].n_points,
-                   octree->explicit_nodes[k].pts_extents[0],
-                   octree->explicit_nodes[k].pts_extents[1],
-                   octree->explicit_nodes[k].pts_extents[2],
-                   octree->explicit_nodes[k].pts_extents[3],
-                   octree->explicit_nodes[k].pts_extents[4],
-                   octree->explicit_nodes[k].pts_extents[5]);*/
-            assert (octree->explicit_nodes[k].ancestor_id == i);
-            assert (octree->explicit_nodes[k].n_points > 0);
-          }
-        }
-      }
-    }
+    // if (0) {
+    //   printf("[%d] %d explicit nodes\n", rank, octree->n_explicit_nodes);
+    //   for (int i = 0; i < octree->n_explicit_nodes; i++) {
+    //     if (octree->explicit_nodes[i].leaf_id < 0) {
+    //       for (int j = 0; j < 8; j++) {
+    //         int k = octree->explicit_nodes[i].children_id[j];
+    //         if (k < 0) continue;
+    //         printf("node %d, n_pts = %d, extents = %f %f %f %f %f %f\n",
+    //                k,
+    //                octree->explicit_nodes[k].n_points,
+    //                octree->explicit_nodes[k].pts_extents[0],
+    //                octree->explicit_nodes[k].pts_extents[1],
+    //                octree->explicit_nodes[k].pts_extents[2],
+    //                octree->explicit_nodes[k].pts_extents[3],
+    //                octree->explicit_nodes[k].pts_extents[4],
+    //                octree->explicit_nodes[k].pts_extents[5]);
+    //         assert (octree->explicit_nodes[k].ancestor_id == i);
+    //         assert (octree->explicit_nodes[k].n_points > 0);
+    //       }
+    //     }
+    //   }
+    // }
 
-    if (0) {
-      const char *pref = "";
-      char filename[999];
-      sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
-      _export_explicit_nodes (filename,
-                              octree->n_explicit_nodes,
-                              octree->explicit_nodes);
-    }
+    // if (0) {
+    //   const char *pref = "";
+    //   char filename[999];
+    //   sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
+    //   _export_explicit_nodes (filename,
+    //                           octree->n_explicit_nodes,
+    //                           octree->explicit_nodes);
+    // }
   }
   //<<--
   PDM_timer_hang_on(octree->timer);
@@ -9104,9 +9111,10 @@ PDM_para_octree_closest_points
   }
 
 
-  //PDM_MPI_Barrier(octree->comm);
+if (octree->use_win_shared) {
   //if (i_rank == 0) printf("_finalize_copies_win_shared 1\n");
-  //_finalize_copies_win_shared (octree);
+  _finalize_copies_win_shared (octree);
+}
 
   /* First guess in copied ranks octree */
   double *_pts_coord1 = pts_coord1 + idx_pts1[2] * dim;
@@ -9156,20 +9164,20 @@ PDM_para_octree_closest_points
    *  Search closest points
    */
   if (octree->explicit_nodes_to_build) {
-    _closest_points_explicit (n_closest_points,
-                              octree,
-                              -1,
-                              idx_pts1[2],
-                              pts_coord1,
-                              _closest_pts_g_num,
-                              _closest_pts_dist2);
-      /*_closest_points_explicit2 (n_closest_points,
-                              octree,
-                              -1,
-                              idx_pts1[2],
-                              pts_coord1,
-                              _closest_pts_g_num,
-                              _closest_pts_dist2);*/
+    // _closest_points_explicit (n_closest_points,
+    //                           octree,
+    //                           -1,
+    //                           idx_pts1[2],
+    //                           pts_coord1,
+    //                           _closest_pts_g_num,
+    //                           _closest_pts_dist2);
+    _closest_points_explicit2 (n_closest_points,
+                               octree,
+                               -1,
+                               idx_pts1[2],
+                               pts_coord1,
+                               _closest_pts_g_num,
+                               _closest_pts_dist2);
   }
   else {
   _closest_points (n_closest_points,
@@ -9192,20 +9200,20 @@ PDM_para_octree_closest_points
   for (int i = 0; i < octree->n_copied_ranks; i++) {
     if (octree->explicit_nodes_to_build) {
       //log_trace(">> 1st search in copied rank %d\n", i);
-      _closest_points_explicit (n_closest_points,
-                                octree,
-                                i,
-                                copied_shift1[i+1] - copied_shift1[i],
-                                _pts_coord1 + copied_shift1[i]*dim,
-                                __closest_pts_g_num + n_closest_points*copied_shift1[i],
-                                __closest_pts_dist2 + n_closest_points*copied_shift1[i]);
-      /*_closest_points_explicit2 (n_closest_points,
+      // _closest_points_explicit (n_closest_points,
+      //                           octree,
+      //                           i,
+      //                           copied_shift1[i+1] - copied_shift1[i],
+      //                           _pts_coord1 + copied_shift1[i]*dim,
+      //                           __closest_pts_g_num + n_closest_points*copied_shift1[i],
+      //                           __closest_pts_dist2 + n_closest_points*copied_shift1[i]);
+      _closest_points_explicit2 (n_closest_points,
                                  octree,
                                  i,
                                  copied_shift1[i+1] - copied_shift1[i],
                                  _pts_coord1 + copied_shift1[i]*dim,
                                  __closest_pts_g_num + n_closest_points*copied_shift1[i],
-                                 __closest_pts_dist2 + n_closest_points*copied_shift1[i]);*/
+                                 __closest_pts_dist2 + n_closest_points*copied_shift1[i]);
       //log_trace("<< 1st search in copied rank %d\n", i);
     }
     else {
@@ -9223,9 +9231,6 @@ PDM_para_octree_closest_points
     }
   }
 
-  /*PDM_MPI_Barrier (octree->comm);
-  log_trace("ABORT\n");
-  abort();*/
 
   if (DEBUG) {
     PDM_log_trace_array_long(_closest_pts_g_num, n_closest_points*n_pts1, "_closests_pt_g_num 1 : ");
@@ -9313,9 +9318,6 @@ PDM_para_octree_closest_points
   ptb1 = PDM_part_to_block_free (ptb1);
 
 
-  /*PDM_MPI_Barrier (octree->comm);
-  log_trace("ABORT\n");
-  abort();*/
 
   /*
    *  Find ranks that may contain closer points
@@ -9740,20 +9742,20 @@ PDM_para_octree_closest_points
   PDM_array_reset_gnum(_closest_pts_g_num, n_pts2 * n_closest_points, -1);
 
   if (octree->explicit_nodes_to_build) {
-    _closest_points_explicit (n_closest_points,
-                              octree,
-                              -1,
-                              idx_pts2[2],
-                              pts_coord2,
-                              _closest_pts_g_num,
-                              _closest_pts_dist22);
-    /*_closest_points_explicit2 (n_closest_points,
+    // _closest_points_explicit (n_closest_points,
+    //                           octree,
+    //                           -1,
+    //                           idx_pts2[2],
+    //                           pts_coord2,
+    //                           _closest_pts_g_num,
+    //                           _closest_pts_dist22);
+    _closest_points_explicit2 (n_closest_points,
                                octree,
                                -1,
                                idx_pts2[2],
                                pts_coord2,
                                _closest_pts_g_num,
-                               _closest_pts_dist22);*/
+                               _closest_pts_dist22);
   }
   else {
       _closest_points (n_closest_points,
@@ -9769,11 +9771,12 @@ PDM_para_octree_closest_points
                        _closest_pts_dist22);
   }
 
-  /*log_trace("2nd local search OK\n");
-    PDM_MPI_Barrier (octree->comm);*/
-  //PDM_MPI_Barrier(octree->comm);
+  //log_trace("2nd local search OK\n");
+
+if (octree->use_win_shared) {
   //if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
-  //_finalize_copies_win_shared (octree);
+  _finalize_copies_win_shared (octree);
+}
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pts_dist2 = _closest_pts_dist22 + idx_pts2[2] * n_closest_points;
@@ -9781,20 +9784,20 @@ PDM_para_octree_closest_points
   for (int i = 0; i < octree->n_copied_ranks; i++) {
     if (octree->explicit_nodes_to_build) {
       //log_trace(">> 2nd search in copied rank %d\n", i);
-      _closest_points_explicit (n_closest_points,
-                                octree,
-                                i,
-                                copied_shift2[i+1] - copied_shift2[i],
-                                _pts_coord2 + copied_shift2[i]*dim,
-                                __closest_pts_g_num + copied_shift2[i] * n_closest_points,
-                                __closest_pts_dist2 + copied_shift2[i] * n_closest_points);
-      /*_closest_points_explicit2 (n_closest_points,
+      // _closest_points_explicit (n_closest_points,
+      //                           octree,
+      //                           i,
+      //                           copied_shift2[i+1] - copied_shift2[i],
+      //                           _pts_coord2 + copied_shift2[i]*dim,
+      //                           __closest_pts_g_num + copied_shift2[i] * n_closest_points,
+      //                           __closest_pts_dist2 + copied_shift2[i] * n_closest_points);
+      _closest_points_explicit2 (n_closest_points,
                                  octree,
                                  i,
                                  copied_shift2[i+1] - copied_shift2[i],
                                  _pts_coord2 + copied_shift2[i]*dim,
                                  __closest_pts_g_num + copied_shift2[i] * n_closest_points,
-                                 __closest_pts_dist2 + copied_shift2[i] * n_closest_points);*/
+                                 __closest_pts_dist2 + copied_shift2[i] * n_closest_points);
       //log_trace("<< 2nd search in copied rank %d\n", i);
     }
     else {
@@ -9822,9 +9825,6 @@ PDM_para_octree_closest_points
   }
   free (copied_shift2);
 
-  /*PDM_MPI_Barrier (octree->comm);
-  log_trace("ABORT\n");
-  abort();*/
 
 
   /*
@@ -10579,9 +10579,10 @@ PDM_para_octree_single_closest_point
     }
   }
 
-  //PDM_MPI_Barrier(octree->comm);
-  //if (i_rank == 0) printf("_finalize_copies_win_shared 1\n")
-  //_finalize_copies_win_shared (octree);
+if (octree->use_win_shared) {
+  //if (i_rank == 0) printf("_finalize_copies_win_shared 1\n");
+  _finalize_copies_win_shared (octree);
+}
 
   double *_pts_coord1 = pts_coord1 + idx_pts1[2] * dim;
   PDM_morton_code_t *_pts_code = pts_code + idx_pts1[2];
@@ -10678,18 +10679,18 @@ PDM_para_octree_single_closest_point
    *  Search closest point
    */
   if (octree->explicit_nodes_to_build) {
-    _single_closest_point_explicit (octree,
-                                    -1,
-                                    idx_pts1[2],
-                                    pts_coord1,
-                                    _closest_pt_g_num,
-                                    _closest_pt_dist2);
-    /*_single_closest_point_explicit2 (octree,
-                                    -1,
-                                    idx_pts1[2],
-                                    pts_coord1,
-                                    _closest_pt_g_num,
-                                    _closest_pt_dist2);*/
+    // _single_closest_point_explicit (octree,
+    //                                 -1,
+    //                                 idx_pts1[2],
+    //                                 pts_coord1,
+    //                                 _closest_pt_g_num,
+    //                                 _closest_pt_dist2);
+    _single_closest_point_explicit2 (octree,
+                                     -1,
+                                     idx_pts1[2],
+                                     pts_coord1,
+                                     _closest_pt_g_num,
+                                     _closest_pt_dist2);
   }
   else {
     _single_closest_point (dim,
@@ -10728,18 +10729,18 @@ PDM_para_octree_single_closest_point
 
   for (int i = 0; i < octree->n_copied_ranks; i++) {
     if (octree->explicit_nodes_to_build) {
-      _single_closest_point_explicit (octree,
-                                      i,
-                                      copied_shift1[i+1] - copied_shift1[i],
-                                      _pts_coord1 + copied_shift1[i]*dim,
-                                      __closest_pt_g_num + copied_shift1[i],
-                                      __closest_pt_dist2 + copied_shift1[i]);
-      /*_single_closest_point_explicit2 (octree,
+      // _single_closest_point_explicit (octree,
+      //                                 i,
+      //                                 copied_shift1[i+1] - copied_shift1[i],
+      //                                 _pts_coord1 + copied_shift1[i]*dim,
+      //                                 __closest_pt_g_num + copied_shift1[i],
+      //                                 __closest_pt_dist2 + copied_shift1[i]);
+      _single_closest_point_explicit2 (octree,
                                        i,
                                        copied_shift1[i+1] - copied_shift1[i],
                                        _pts_coord1 + copied_shift1[i]*dim,
                                        __closest_pt_g_num + copied_shift1[i],
-                                       __closest_pt_dist2 + copied_shift1[i]);*/
+                                       __closest_pt_dist2 + copied_shift1[i]);
     }
     else {
       _single_closest_point (dim,
@@ -11397,18 +11398,18 @@ PDM_para_octree_single_closest_point
   PDM_array_reset_gnum(_closest_pt_g_num, n_pts2, -1);
 
   if (octree->explicit_nodes_to_build) {
-    _single_closest_point_explicit (octree,
-                                    -1,
-                                    idx_pts2[2],
-                                    pts_coord2,
-                                    _closest_pt_g_num,
-                                    _closest_pt_dist22);
-    /*_single_closest_point_explicit2 (octree,
+    // _single_closest_point_explicit (octree,
+    //                                 -1,
+    //                                 idx_pts2[2],
+    //                                 pts_coord2,
+    //                                 _closest_pt_g_num,
+    //                                 _closest_pt_dist22);
+    _single_closest_point_explicit2 (octree,
                                      -1,
                                      idx_pts2[2],
                                      pts_coord2,
                                      _closest_pt_g_num,
-                                     _closest_pt_dist22);*/
+                                     _closest_pt_dist22);
   }
   else {
     _single_closest_point (dim,
@@ -11445,27 +11446,28 @@ PDM_para_octree_single_closest_point
   }
 
 
-  //PDM_MPI_Barrier(octree->comm);
+if (octree->use_win_shared) {
   //if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
-  //_finalize_copies_win_shared (octree);
+  _finalize_copies_win_shared (octree);
+}
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[2];
   __closest_pt_g_num = _closest_pt_g_num + idx_pts2[2];
   for (int i = 0; i < octree->n_copied_ranks; i++) {
     if (octree->explicit_nodes_to_build) {
-      _single_closest_point_explicit (octree,
-                                      i,
-                                      copied_shift2[i+1] - copied_shift2[i],
-                                      _pts_coord2 + copied_shift2[i]*dim,
-                                      __closest_pt_g_num + copied_shift2[i],
-                                      __closest_pt_dist2 + copied_shift2[i]);
-      /*_single_closest_point_explicit2 (octree,
+      // _single_closest_point_explicit (octree,
+      //                                 i,
+      //                                 copied_shift2[i+1] - copied_shift2[i],
+      //                                 _pts_coord2 + copied_shift2[i]*dim,
+      //                                 __closest_pt_g_num + copied_shift2[i],
+      //                                 __closest_pt_dist2 + copied_shift2[i]);
+      _single_closest_point_explicit2 (octree,
                                        i,
                                        copied_shift2[i+1] - copied_shift2[i],
                                        _pts_coord2 + copied_shift2[i]*dim,
                                        __closest_pt_g_num + copied_shift2[i],
-                                       __closest_pt_dist2 + copied_shift2[i]);*/
+                                       __closest_pt_dist2 + copied_shift2[i]);
     }
     else {
       _single_closest_point (dim,
@@ -12095,7 +12097,6 @@ PDM_para_octree_points_inside_boxes
     free (box_pts_idx);
 
     /* Part#2 to Block */
-    // PDM_MPI_Barrier(octree->comm);
     double t1 = PDM_MPI_Wtime();
     PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                           PDM_PART_TO_BLOCK_POST_MERGE,
@@ -12735,22 +12736,22 @@ PDM_para_octree_points_inside_boxes_with_copies
    *  Search in local tree
    */
   if (octree->explicit_nodes_to_build) {
-    _points_inside_boxes_explicit (octree,
-                                   -1,
-                                   part_n_box[0],
-                                   box_extents1,
-                                   //box_corners,
-                                   box_g_num1,
-                                   &(box_pts_idx[0]),
-                                   &(box_pts_l_num[0]));
-    /*_points_inside_boxes_explicit2 (octree,
+    // _points_inside_boxes_explicit (octree,
+    //                                -1,
+    //                                part_n_box[0],
+    //                                box_extents1,
+    //                                //box_corners,
+    //                                box_g_num1,
+    //                                &(box_pts_idx[0]),
+    //                                &(box_pts_l_num[0]));
+    _points_inside_boxes_explicit2 (octree,
                                     -1,
                                     part_n_box[0],
                                     box_extents1,
                                     //box_corners,
                                     box_g_num1,
                                     &(box_pts_idx[0]),
-                                    &(box_pts_l_num[0]));*/
+                                    &(box_pts_l_num[0]));
   }
   else {
     _points_inside_boxes (octree,
@@ -12766,7 +12767,9 @@ PDM_para_octree_points_inside_boxes_with_copies
   /*
    *  Search in copied trees
    */
-  //_finalize_copies_win_shared (octree);
+  if (octree->use_win_shared) {
+    _finalize_copies_win_shared (octree);
+  }
 
   if (octree->n_copied_ranks > 0) {
     double            *box_extents_copied = box_extents1 + part_n_box[0] * two_dim;
@@ -12776,22 +12779,22 @@ PDM_para_octree_points_inside_boxes_with_copies
       part_n_box[i+1] = copied_shift[i+1] - copied_shift[i];
 
       if (octree->explicit_nodes_to_build) {
-        _points_inside_boxes_explicit (octree,
-                                       i,
-                                       part_n_box[i+1],
-                                       box_extents_copied + copied_shift[i] * two_dim,
-                                       //box_corners_copied + copied_shift[i] * 2,
-                                       box_g_num_copied,
-                                       &(box_pts_idx[i+1]),
-                                       &(box_pts_l_num[i+1]));
-        /*_points_inside_boxes_explicit2 (octree,
+        // _points_inside_boxes_explicit (octree,
+        //                                i,
+        //                                part_n_box[i+1],
+        //                                box_extents_copied + copied_shift[i] * two_dim,
+        //                                //box_corners_copied + copied_shift[i] * 2,
+        //                                box_g_num_copied,
+        //                                &(box_pts_idx[i+1]),
+        //                                &(box_pts_l_num[i+1]));
+        _points_inside_boxes_explicit2 (octree,
                                         i,
                                         part_n_box[i+1],
                                         box_extents_copied + copied_shift[i] * two_dim,
                                         //box_corners_copied + copied_shift[i] * 2,
                                         box_g_num_copied,
                                         &(box_pts_idx[i+1]),
-                                        &(box_pts_l_num[i+1]));*/
+                                        &(box_pts_l_num[i+1]));
       }
       else {
         _points_inside_boxes (octree,
@@ -13601,14 +13604,9 @@ PDM_para_octree_copy_ranks
 
   _octree_t *octree = _get_from_id (id);
 
-  if (0) {
+  if (octree->use_win_shared) {
     PDM_para_octree_copy_ranks_win_shared (id, n_copied_ranks, copied_ranks);
-
-    /*PDM_MPI_Barrier (octree->comm);
-    PDM_para_octree_free_copies (id);
-    PDM_MPI_Barrier (octree->comm);*/
     if (DEBUG) log_trace("End copies\n");
-    //abort();
     return;
   }
 
@@ -13634,8 +13632,9 @@ PDM_para_octree_copy_ranks
   octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
 
   if (octree->explicit_nodes_to_build) {
-    octree->copied_explicit_nodes = malloc (sizeof(_explicit_node_t *) * n_copied_ranks);
-    octree->n_copied_explicit_nodes = malloc (sizeof(int) * n_copied_ranks);
+    // octree->copied_explicit_nodes = malloc (sizeof(_explicit_node_t *) * n_copied_ranks);
+    // octree->n_copied_explicit_nodes = malloc (sizeof(int) * n_copied_ranks);
+    octree->copied_explicit_nodes2  = malloc (sizeof(_l_explicit_node_t *) * n_copied_ranks);
   }
 
   int n[3];
@@ -13646,7 +13645,8 @@ PDM_para_octree_copy_ranks
   int         *ibuf      = NULL;
   double      *dbuf      = NULL;
 
-  const int s_explicit_data = 16;
+  const int n_child         = 1 << dim;
+  const int s_explicit_data = 8 + n_child;
 
   for (int i = 0; i < n_copied_ranks; i++) {
 
@@ -13660,7 +13660,8 @@ PDM_para_octree_copy_ranks
     if (rank == i_rank) {
       n[0] = octree->octants->n_nodes;
       n[1] = octree->n_points;
-      n[2] = octree->n_explicit_nodes;
+      // n[2] = octree->n_explicit_nodes;
+      n[2] = octree->explicit_nodes2->n_nodes;
     }
 
     PDM_MPI_Bcast (n, 3, PDM_MPI_INT, rank, octree->comm);
@@ -13705,23 +13706,32 @@ PDM_para_octree_copy_ranks
       pts_g_num = octree->points_gnum;
 
       if (octree->explicit_nodes_to_build) {
-        octree->copied_explicit_nodes[i] = NULL;
+        //octree->copied_explicit_nodes[i] = NULL;
+        octree->copied_explicit_nodes2[i] = NULL;
 
         for (int j = 0; j < n_copied_explicit; j++) {
-          ibuf[s_explicit_data*j] = (int) octree->explicit_nodes[j].code.L;
+          //ibuf[s_explicit_data*j] = (int) octree->explicit_nodes[j].code.L;
+          ibuf[s_explicit_data*j] = (int) octree->explicit_nodes2->codes[j].L;
           for (int k = 0; k < 3; k++) {
-            ibuf[s_explicit_data*j + 1 + k] = (int) octree->explicit_nodes[j].code.X[k];
+            //ibuf[s_explicit_data*j + 1 + k] = (int) octree->explicit_nodes[j].code.X[k];
+            ibuf[s_explicit_data*j + 1 + k] = (int) octree->explicit_nodes2->codes[j].X[k];
           }
-          ibuf[s_explicit_data*j + 4] = octree->explicit_nodes[j].n_points;
-          ibuf[s_explicit_data*j + 5] = octree->explicit_nodes[j].range;
-          ibuf[s_explicit_data*j + 6] = octree->explicit_nodes[j].ancestor_id;
-          for (int k = 0; k < 8; k++) {
-            ibuf[s_explicit_data*j + 7 + k] = octree->explicit_nodes[j].children_id[k];
+          // ibuf[s_explicit_data*j + 4] = octree->explicit_nodes[j].n_points;
+          // ibuf[s_explicit_data*j + 5] = octree->explicit_nodes[j].range;
+          // ibuf[s_explicit_data*j + 6] = octree->explicit_nodes[j].ancestor_id;
+          ibuf[s_explicit_data*j + 4] = octree->explicit_nodes2->n_points[j];
+          ibuf[s_explicit_data*j + 5] = octree->explicit_nodes2->range[j];
+          ibuf[s_explicit_data*j + 6] = octree->explicit_nodes2->ancestor_id[j];
+          for (int k = 0; k < n_child; k++) {
+            // ibuf[s_explicit_data*j + 7 + k] = octree->explicit_nodes2[j].hildren_id[n];
+            ibuf[s_explicit_data*j + 7 + k] = octree->explicit_nodes2->children_id[n_child*j + k];
           }
-          ibuf[s_explicit_data*j + 15] = octree->explicit_nodes[j].leaf_id;
+          // ibuf[s_explicit_data*j + 15] = octree->explicit_nodes[j].leaf_id;
+          ibuf[s_explicit_data*(j+1) - 1] = octree->explicit_nodes2->leaf_id[j];
 
           for (int k = 0; k < 6; k++) {
-            dbuf[6*j + k] = octree->explicit_nodes[j].pts_extents[k];
+            // dbuf[6*j + k] = octree->explicit_nodes[j].pts_extents[k];
+            dbuf[6*j + k] = octree->explicit_nodes2->pts_extents[6*j + k];
           }
         }
       }
@@ -13799,24 +13809,50 @@ PDM_para_octree_copy_ranks
 
       /* Copy explicit nodes */
       if (octree->explicit_nodes_to_build) {
-        octree->n_copied_explicit_nodes[i] = n_copied_explicit;
-        octree->copied_explicit_nodes[i] = malloc (sizeof(_explicit_node_t) * n_copied_explicit);
-        _explicit_node_t *cen = octree->copied_explicit_nodes[i];
+        // octree->n_copied_explicit_nodes[i] = n_copied_explicit;
+        // octree->copied_explicit_nodes[i] = malloc (sizeof(_explicit_node_t) * n_copied_explicit);
+        // _explicit_node_t *cen = octree->copied_explicit_nodes[i];
+        octree->copied_explicit_nodes2[i] = malloc (sizeof(_l_explicit_node_t));
+        _l_explicit_node_t *cen = octree->copied_explicit_nodes2[i];
+        cen->n_nodes = n_copied_explicit;
+        cen->codes       = malloc (sizeof(PDM_morton_code_t) * n_copied_explicit);
+        cen->n_points    = malloc (sizeof(int              ) * n_copied_explicit);
+        cen->range       = malloc (sizeof(int              ) * n_copied_explicit);
+        cen->ancestor_id = malloc (sizeof(int              ) * n_copied_explicit);
+        cen->children_id = malloc (sizeof(int              ) * n_copied_explicit * n_child);
+        cen->leaf_id     = malloc (sizeof(int              ) * n_copied_explicit);
+        cen->pts_extents = malloc (sizeof(double           ) * n_copied_explicit * 6);
+
         for (int j = 0; j < n_copied_explicit; j++) {
-          cen[j].code.L = (PDM_morton_int_t) ibuf[s_explicit_data*j];
+          // cen[j].code.L = (PDM_morton_int_t) ibuf[s_explicit_data*j];
+          // for (int k = 0; k < 3; k++) {
+          //   cen[j].code.X[k] = (PDM_morton_int_t) ibuf[s_explicit_data*j + 1 + k];
+          // }
+          // cen[j].n_points    = ibuf[s_explicit_data*j + 4];
+          // cen[j].range       = ibuf[s_explicit_data*j + 5];
+          // cen[j].ancestor_id = ibuf[s_explicit_data*j + 6];
+          // for (int k = 0; k < 8; k++) {
+          //   cen[j].children_id[k] = ibuf[s_explicit_data*j + 7 + k];
+          // }
+          // cen[j].leaf_id = ibuf[s_explicit_data*j + 15];
+
+          // for (int k = 0; k < 6; k++) {
+          //   cen[j].pts_extents[k] = dbuf[6*j + k];
+          // }
+          cen->codes[j].L = (PDM_morton_int_t) ibuf[s_explicit_data*j];
           for (int k = 0; k < 3; k++) {
-            cen[j].code.X[k] = (PDM_morton_int_t) ibuf[s_explicit_data*j + 1 + k];
+            cen->codes[j].X[k] = (PDM_morton_int_t) ibuf[s_explicit_data*j + 1 + k];
           }
-          cen[j].n_points    = ibuf[s_explicit_data*j + 4];
-          cen[j].range       = ibuf[s_explicit_data*j + 5];
-          cen[j].ancestor_id = ibuf[s_explicit_data*j + 6];
-          for (int k = 0; k < 8; k++) {
-            cen[j].children_id[k] = ibuf[s_explicit_data*j + 7 + k];
+          cen->n_points[j]    = ibuf[s_explicit_data*j + 4];
+          cen->range[j]       = ibuf[s_explicit_data*j + 5];
+          cen->ancestor_id[j] = ibuf[s_explicit_data*j + 6];
+          for (int k = 0; k < n_child; k++) {
+            cen->children_id[n_child*j + k] = ibuf[s_explicit_data*j + 7 + k];
           }
-          cen[j].leaf_id = ibuf[s_explicit_data*j + 15];
+          cen->leaf_id[j] = ibuf[s_explicit_data*(j+1) - 1];
 
           for (int k = 0; k < 6; k++) {
-            cen[j].pts_extents[k] = dbuf[6*j + k];
+            cen->pts_extents[6*j + k] = dbuf[6*j + k];
           }
         }
       }
@@ -13861,7 +13897,150 @@ PDM_para_octree_free_copies
     octree->copied_ranks = NULL;
   }
 
-  if (octree->w_copied_octants == NULL) {
+  // if (!octree->use_win_shared) {
+  //   if (octree->copied_octants != NULL) {
+  //     for (int i = 0; i < octree->n_copied_ranks; i++) {
+  //       if (octree->copied_octants[i] != NULL) {
+  //         _octants_free (octree->copied_octants[i]);
+  //       }
+  //     }
+  //     free (octree->copied_octants);
+  //     octree->copied_octants = NULL;
+  //   }
+  // }
+
+  if (octree->n_copied_points != NULL) {
+    free (octree->n_copied_points);
+    octree->n_copied_points = NULL;
+  }
+
+  // if (!octree->use_win_shared) {
+  //   if (octree->copied_points != NULL) {
+  //     for (int i = 0; i < octree->n_copied_ranks; i++) {
+  //       if (octree->copied_points[i] != NULL) {
+  //         free (octree->copied_points[i]);
+  //         octree->copied_points[i] = NULL;
+  //       }
+  //     }
+  //     free (octree->copied_points);
+  //     octree->copied_points = NULL;
+  //   }
+
+  //   if (octree->copied_points_gnum != NULL) {
+  //     for (int i = 0; i < octree->n_copied_ranks; i++) {
+  //       if (octree->copied_points_gnum[i] != NULL) {
+  //         free (octree->copied_points_gnum[i]);
+  //         octree->copied_points_gnum[i] = NULL;
+  //       }
+  //     }
+  //     free (octree->copied_points_gnum);
+  //     octree->copied_points_gnum = NULL;
+  //   }
+
+  //   if (octree->copied_points_code != NULL) {
+  //     for (int i = 0; i < octree->n_copied_ranks; i++) {
+  //       if (octree->copied_points_code[i] != NULL) {
+  //         free (octree->copied_points_code[i]);
+  //         octree->copied_points_code[i] = NULL;
+  //       }
+  //     }
+  //     free (octree->copied_points_code);
+  //     octree->copied_points_code = NULL;
+  //   }
+  // }
+
+  // if (octree->w_copied_explicit_nodes == NULL) {
+  //   if (octree->copied_explicit_nodes != NULL) {
+  //     for (int i = 0; i < octree->n_copied_ranks; i++) {
+  //       if (octree->copied_explicit_nodes[i] != NULL) {
+  //         free (octree->copied_explicit_nodes[i]);
+  //         octree->copied_explicit_nodes[i] = NULL;
+  //       }
+  //     }
+  //     free (octree->copied_explicit_nodes);
+  //     octree->copied_explicit_nodes = NULL;
+  //   }
+
+  //   if (octree->n_copied_explicit_nodes != NULL) {
+  //     free (octree->n_copied_explicit_nodes);
+  //     octree->n_copied_explicit_nodes = NULL;
+  //   }
+  // }
+
+  if (octree->use_win_shared) {
+    if (octree->w_copied_octants != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->w_copied_octants[i] != NULL) {
+          PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_codes);
+          PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_n_points);
+          PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_range);
+          free (octree->w_copied_octants[i]);
+          octree->w_copied_octants[i] = NULL;
+
+          if (octree->copied_octants[i] != NULL) {
+            free (octree->copied_octants[i]);
+            octree->copied_octants[i] = NULL;
+          }
+        //log_trace("free copied octants %d OK\n", i);
+        }
+      }
+      free (octree->w_copied_octants);
+      octree->w_copied_octants = NULL;
+      if (octree->copied_octants != NULL) {
+        free (octree->copied_octants);
+        octree->copied_octants = NULL;
+      }
+    }
+
+    if (octree->w_copied_points != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points);
+        PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_gnum);
+        PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_code);
+        free (octree->w_copied_points[i]);
+        octree->w_copied_points[i] = NULL;
+      }
+      free (octree->w_copied_points);
+      octree->w_copied_points = NULL;
+      free (octree->copied_points);
+      free (octree->copied_points_gnum);
+      free (octree->copied_points_code);
+      octree->copied_points      = NULL;
+      octree->copied_points_gnum = NULL;
+      octree->copied_points_code = NULL;
+    //log_trace("free copied points OK\n");
+    }
+
+    if (octree->w_copied_explicit_nodes != NULL) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        if (octree->w_copied_explicit_nodes[i] != NULL) {
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_codes);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_n_points);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_range);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_ancestor_id);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_children_id);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_leaf_id);
+          PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_pts_extents);
+          free (octree->w_copied_explicit_nodes[i]);
+          octree->w_copied_explicit_nodes[i] = NULL;
+
+          if (octree->copied_explicit_nodes2[i] != NULL) {
+            free (octree->copied_explicit_nodes2[i]);
+            octree->copied_explicit_nodes2[i] = NULL;
+          }
+        //log_trace("free copied explicit nodes %d OK\n", i);
+        }
+      }
+      free (octree->w_copied_explicit_nodes);
+      octree->w_copied_explicit_nodes = NULL;
+      if (octree->copied_explicit_nodes2 != NULL) {
+        free (octree->copied_explicit_nodes2);
+        octree->copied_explicit_nodes2 = NULL;
+      }
+    }
+  }
+
+  else {
     if (octree->copied_octants != NULL) {
       for (int i = 0; i < octree->n_copied_ranks; i++) {
         if (octree->copied_octants[i] != NULL) {
@@ -13871,14 +14050,8 @@ PDM_para_octree_free_copies
       free (octree->copied_octants);
       octree->copied_octants = NULL;
     }
-  }
 
-  if (octree->n_copied_points != NULL) {
-    free (octree->n_copied_points);
-    octree->n_copied_points = NULL;
-  }
 
-  if (octree->w_copied_points == NULL) {
     if (octree->copied_points != NULL) {
       for (int i = 0; i < octree->n_copied_ranks; i++) {
         if (octree->copied_points[i] != NULL) {
@@ -13911,89 +14084,23 @@ PDM_para_octree_free_copies
       free (octree->copied_points_code);
       octree->copied_points_code = NULL;
     }
-  }
 
-  if (octree->w_copied_explicit_nodes == NULL) {
-    if (octree->copied_explicit_nodes != NULL) {
+
+    if (octree->copied_explicit_nodes2 != NULL) {
       for (int i = 0; i < octree->n_copied_ranks; i++) {
-        if (octree->copied_explicit_nodes[i] != NULL) {
-          free (octree->copied_explicit_nodes[i]);
-          octree->copied_explicit_nodes[i] = NULL;
-        }
-      }
-      free (octree->copied_explicit_nodes);
-      octree->copied_explicit_nodes = NULL;
-    }
-
-    if (octree->n_copied_explicit_nodes != NULL) {
-      free (octree->n_copied_explicit_nodes);
-      octree->n_copied_explicit_nodes = NULL;
-    }
-  }
-
-
-  if (octree->w_copied_octants != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->w_copied_octants[i] != NULL) {
-        PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_codes);
-        PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_n_points);
-        PDM_mpi_win_shared_free (octree->w_copied_octants[i]->w_range);
-        free (octree->w_copied_octants[i]);
-        if (octree->copied_octants[i] != NULL) {
-          free (octree->copied_octants[i]);
-          octree->copied_octants[i] = NULL;
-        }
-        //log_trace("free copied octants %d OK\n", i);
-      }
-    }
-    free (octree->w_copied_octants);
-    octree->w_copied_octants = NULL;
-    if (octree->copied_octants != NULL) {
-      free (octree->copied_octants);
-      octree->copied_octants = NULL;
-    }
-  }
-
-  if (octree->w_copied_points != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points);
-      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_gnum);
-      PDM_mpi_win_shared_free (octree->w_copied_points[i]->w_points_code);
-    }
-    free (octree->w_copied_points);
-    octree->w_copied_points = NULL;
-    free (octree->copied_points);
-    free (octree->copied_points_gnum);
-    free (octree->copied_points_code);
-    octree->copied_points      = NULL;
-    octree->copied_points_gnum = NULL;
-    octree->copied_points_code = NULL;
-    //log_trace("free copied points OK\n");
-  }
-
-  if (octree->w_copied_explicit_nodes != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->w_copied_explicit_nodes[i] != NULL) {
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_codes);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_n_points);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_range);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_ancestor_id);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_children_id);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_leaf_id);
-        PDM_mpi_win_shared_free (octree->w_copied_explicit_nodes[i]->w_pts_extents);
-        free (octree->w_copied_explicit_nodes[i]);
         if (octree->copied_explicit_nodes2[i] != NULL) {
+          free (octree->copied_explicit_nodes2[i]->codes);
+          free (octree->copied_explicit_nodes2[i]->n_points);
+          free (octree->copied_explicit_nodes2[i]->range);
+          free (octree->copied_explicit_nodes2[i]->ancestor_id);
+          free (octree->copied_explicit_nodes2[i]->children_id);
+          free (octree->copied_explicit_nodes2[i]->leaf_id);
+          free (octree->copied_explicit_nodes2[i]->pts_extents);
           free (octree->copied_explicit_nodes2[i]);
           octree->copied_explicit_nodes2[i] = NULL;
         }
-        //log_trace("free copied explicit nodes %d OK\n", i);
       }
-    }
-    free (octree->w_copied_explicit_nodes);
-    octree->w_copied_explicit_nodes = NULL;
-    if (octree->copied_explicit_nodes2 != NULL) {
       free (octree->copied_explicit_nodes2);
-      octree->copied_explicit_nodes2 = NULL;
     }
   }
 
@@ -14132,6 +14239,7 @@ PDM_para_octree_copy_ranks_win_shared
     PDM_log_trace_array_int (copied_ranks_in_node,    n_copied_ranks_in_node, "copied_ranks_in_node : ");
     PDM_log_trace_array_int (s_copied_data_in_node, 3*n_copied_ranks_in_node, "compressed s_copied_data_in_node : ");
   }
+  free (copied_ranks_in_node);
 
   PDM_mpi_win_shared_t *w_n_copied_ranks = PDM_mpi_win_shared_create (n_node, sizeof(int), comm_node);
   int *n_copied_ranks_in_all_nodes = PDM_mpi_win_shared_get(w_n_copied_ranks);
@@ -14187,6 +14295,7 @@ PDM_para_octree_copy_ranks_win_shared
                         idx_copied_ranks_in_all_nodes,
                         PDM_MPI_INT,
                         comm_master_of_node);
+    free (s_copied_data_in_node);
 
     for (int i = 0; i < n_node; i++) {
       n_copied_ranks_in_all_nodes[i] /= 3;
@@ -14506,6 +14615,7 @@ PDM_para_octree_copy_ranks_win_shared
   if (DEBUG) log_trace("<< PDM_para_octree_copy_ranks_win_shared\n");
   return;
 
+  //\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
   // -->> Finalize copies
   if (i_rank_in_node == 0) {
@@ -14537,7 +14647,6 @@ PDM_para_octree_copy_ranks_win_shared
   time[COPY_BCAST_COPIES] = e_t_elapsed - b_t_elapsed;
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (octree->timer);
-  //PDM_MPI_Barrier (octree->comm);
 
   if (DEBUG) log_trace("After broadcasts\n");
 
