@@ -1449,7 +1449,7 @@ _generate_edges_from_dmesh_nodal
   PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
   int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
 
-   if (1) {
+   if (0) {
     PDM_log_trace_connectivity_long(_dedge_face_idx_tmp, _dedge_face_tmp, dm->dn_edge, "dedge_face_tmp : ");
   }
 

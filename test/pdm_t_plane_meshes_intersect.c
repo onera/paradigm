@@ -24,6 +24,8 @@
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm_priv.h"
 
+#include "pdm_predicate.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1441,6 +1443,8 @@ int argc,
 char *argv[]
 )
 {
+  PDM_predicate_exactinit();
+
   PDM_MPI_Init (&argc, &argv);
 
   /*
@@ -1513,13 +1517,13 @@ char *argv[]
     PDM_printf ("  - n_rank         : %d\n", numProcs);
     PDM_printf ("  - n_vtx_segA     : %d\n", n_vtx_segA);
     PDM_printf ("  - lengthA        : %f\n", lengthA);
-    PDM_printf ("  - xminA          : %d\n", xminA);
-    PDM_printf ("  - yminA          : %d\n", yminA);
+    PDM_printf ("  - xminA          : %f\n", xminA);
+    PDM_printf ("  - yminA          : %f\n", yminA);
     PDM_printf ("  - n_partA        : %d\n", n_partA);
     PDM_printf ("  - n_vtx_segB     : %d\n", n_vtx_segB);
     PDM_printf ("  - lengthB        : %f\n", lengthB);
-    PDM_printf ("  - xminB          : %d\n", xminB);
-    PDM_printf ("  - yminB          : %d\n", yminB);
+    PDM_printf ("  - xminB          : %f\n", xminB);
+    PDM_printf ("  - yminB          : %f\n", yminB);
     PDM_printf ("  - n_partB        : %d\n", n_partB);
     PDM_printf ("  - post           : %d\n", post);
     PDM_printf ("  - method         : %d\n", method);
@@ -1790,6 +1794,21 @@ char *argv[]
       }
     }
   }
+
+
+  /*if (post) {
+    _export_ini_mesh (PDM_MPI_COMM_WORLD,
+                      n_part,
+                      nFace,
+                      faceVtxIdx,
+                      faceVtx,
+                      faceLNToGN,
+                      nVtx,
+                      vtxCoord,
+                      vtxLNToGN,
+                      sFieldA,
+                      rFieldB);
+		      }*/
 
   /*
    *  Calcul
@@ -2209,6 +2228,8 @@ char *argv[]
    */
 
   PDM_ol_del (pdm_id);
+
+  if (i_rank == 0) printf("-- End\n");
 
   PDM_MPI_Finalize ();
 
