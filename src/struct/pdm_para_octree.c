@@ -5936,9 +5936,20 @@ _finalize_copies_win_shared
       PDM_MPI_Wait(&req_exp[7*i+6]);
     }
 
-    free (req_oct);
-    free (req_pts);
-    free (req_exp);
+    if (octree->copy_requests.req_oct != NULL) {
+      free (octree->copy_requests.req_oct);
+      octree->copy_requests.req_oct = NULL;
+    }
+
+    if (octree->copy_requests.req_pts != NULL) {
+      free (octree->copy_requests.req_pts);
+      octree->copy_requests.req_pts = NULL;
+    }
+
+    if (octree->copy_requests.req_exp != NULL) {
+      free (octree->copy_requests.req_exp);
+      octree->copy_requests.req_exp = NULL;
+    }
   }
 
 
