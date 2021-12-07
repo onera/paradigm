@@ -132,23 +132,33 @@ PDM_point_cloud_gen_random
   /**
    * Global numbers
    */
-  double _char_length = 1e-6 * PDM_MAX(length[0], PDM_MAX(length[1], length[2]));
+  if (1) {
+    double _char_length = 1e-6 * PDM_MAX(length[0], PDM_MAX(length[1], length[2]));
 
-  double *char_length = malloc(sizeof(double) * (*ln_pts));
+    double *char_length = malloc(sizeof(double) * (*ln_pts));
 
-  for (int i = 0; i < *ln_pts; i++) {
-    char_length[i] = _char_length;
+    for (int i = 0; i < *ln_pts; i++) {
+      char_length[i] = _char_length;
+    }
+
+    PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
+
+    PDM_gnum_set_from_coords (gen_gnum, 0, *ln_pts, *coord, char_length);
+
+    PDM_gnum_compute (gen_gnum);
+
+    *g_num = PDM_gnum_get (gen_gnum, 0);
+
+    PDM_gnum_free (gen_gnum);
+    free (char_length);
   }
 
-  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
+  else {
+    for (int i = 0; i < *ln_pts; i++) {
+      (*g_num)[i] = distrib_pts[i_rank] + i;
+    }
+  }
 
-  PDM_gnum_set_from_coords (gen_gnum, 0, *ln_pts, *coord, char_length);
-
-  PDM_gnum_compute (gen_gnum);
-
-  *g_num = PDM_gnum_get (gen_gnum, 0);
-
-  PDM_gnum_free (gen_gnum);
-  free (char_length);
+  free (distrib_pts);
 }
 
