@@ -882,8 +882,8 @@ _compute_dual_graph
 
       int *_unique_prev_cell_cell_extended = part_ext->unique_order_cell_cell_extended[i_depth-1][i_part+shift_part];
 
-      printf("n_unique_dist_neighbor_cell = %i \n", n_unique_dist_neighbor_cell);
-      printf("n_unique_cell_cell_extended = %i \n", n_unique_cell_cell_extended);
+      // printf("n_unique_dist_neighbor_cell = %i \n", n_unique_dist_neighbor_cell);
+      // printf("n_unique_cell_cell_extended = %i \n", n_unique_cell_cell_extended);
 
       int *tag_border_cell_cell_extended = malloc( n_unique_border             * sizeof(int));
       int *tag_dist_neighbor_cell        = malloc( n_unique_dist_neighbor_cell * sizeof(int));
@@ -1206,7 +1206,7 @@ _compute_dual_graph
 
         PDM_order_lnum_s(&_cell_cell_extended[3*beg], 3, order, n_connect);
 
-        log_trace("i_cell = %i | n_cell = %i | n_connect = %i \n", i_cell, n_cell, n_connect);
+        // log_trace("i_cell = %i | n_cell = %i | n_connect = %i \n", i_cell, n_cell, n_connect);
         // PDM_log_trace_array_int(order, )
         // printf(" order[%i] = ", i_cell);
         // for(int i = 0; i < n_connect; ++i) {
