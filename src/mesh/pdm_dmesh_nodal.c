@@ -178,10 +178,10 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->dvtx_tag            = NULL;
   dmesh_nodal->vtx->dvtx_parent_g_num   = NULL;
 
-  dmesh_nodal->volumic                  = NULL;
-  dmesh_nodal->surfacic                 = NULL;
-  dmesh_nodal->ridge                    = NULL;
-  dmesh_nodal->corner                   = NULL;
+  dmesh_nodal->volumic  = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 3, dmesh_nodal->n_cell_abs);
+  dmesh_nodal->surfacic = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 2, dmesh_nodal->n_face_abs);
+  dmesh_nodal->ridge    = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_edge_abs);
+  dmesh_nodal->corner   = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_vtx_abs );
 
 }
 
