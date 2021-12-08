@@ -191,21 +191,21 @@ char *argv[]
   const int points_in_leaf_max = 1;
 
   const int build_leaf_neighbours = 1;
-  int id2 = PDM_para_octree_create (n_point_cloud,
-                                    depth_max,
-                                    points_in_leaf_max,
-                                    build_leaf_neighbours,
-                                    PDM_MPI_COMM_WORLD);
+  PDM_para_octree_t *octree = PDM_para_octree_create (n_point_cloud,
+                                                      depth_max,
+                                                      points_in_leaf_max,
+                                                      build_leaf_neighbours,
+                                                      PDM_MPI_COMM_WORLD);
 
-  PDM_para_octree_point_cloud_set (id2, 0, _n_pts_l, coords, gnum);
+  PDM_para_octree_point_cloud_set (octree, 0, _n_pts_l, coords, gnum);
 
-  PDM_para_octree_build (id2, NULL);
+  PDM_para_octree_build (octree, NULL);
 
-  //PDM_para_octree_dump (id2);
+  //PDM_para_octree_dump (octree);
 
-  PDM_para_octree_dump_times (id2);
+  PDM_para_octree_dump_times (octree);
 
-  PDM_para_octree_free (id2);
+  PDM_para_octree_free (octree);
 
   /* Free */
 
