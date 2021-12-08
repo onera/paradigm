@@ -680,6 +680,11 @@ _part_free
     free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
 
+  if (part->new_to_old_order_edge != NULL)
+    free(part->new_to_old_order_edge);
+  part->new_to_old_order_edge = NULL;
+
+
   if (part->new_to_old_order_vtx != NULL)
     free(part->new_to_old_order_vtx);
   part->new_to_old_order_vtx = NULL;

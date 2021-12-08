@@ -1867,10 +1867,12 @@ int     *new_to_old_order
 {
 
   /** Renum face_vtx / face_vtx_idx **/
-  PDM_part_renum_connectivities (part->n_face,
-                                 new_to_old_order,
-                                 part->face_vtx_idx,
-                                 part->face_vtx);
+  if(part->face_vtx != NULL) {
+    PDM_part_renum_connectivities (part->n_face,
+                                   new_to_old_order,
+                                   part->face_vtx_idx,
+                                   part->face_vtx);
+  }
 
   /** Renum face_edge / face_edge_idx **/
   if(part->face_edge != NULL) {
@@ -2040,9 +2042,11 @@ int     *new_to_old_order
   }
 
   if (part->n_face!=0) {
-    PDM_part_renum_array (part->face_vtx_idx[part->n_face],
-                          old_to_new_order,
-                          part->face_vtx);
+    if(part->face_vtx != NULL) {
+      PDM_part_renum_array (part->face_vtx_idx[part->n_face],
+                            old_to_new_order,
+                            part->face_vtx);
+    }
   } else { // the mesh is supposed to be described by elements
     int n_section = part->n_section;
     assert(n_section!=0);
@@ -2084,12 +2088,12 @@ int     *new_to_old_order
   }
 
   /** vtx_color **/
-  // if (part->vtx_color != NULL) {
-  //   PDM_order_array (part->n_vtx,
-  //                    sizeof(int),
-  //                    new_to_old_order,
-  //                    part->vtx_color);
-  // }
+  if (part->vtx_color != NULL) {
+    PDM_order_array (part->n_vtx,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->vtx_color);
+  }
 
   /** vtx_color **/
   if (part->new_to_old_order_vtx != NULL) {
