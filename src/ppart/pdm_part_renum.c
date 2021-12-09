@@ -178,8 +178,8 @@ const int  n_face,
  *
  */
 
-static void
-_order_face_cell
+void
+PDM_order_face_cell
 (
 int          n_face,
 int         *new_to_old_order,
@@ -1984,9 +1984,9 @@ int     *new_to_old_order
   }
 
   /** face_cell Face **/
-  _order_face_cell (part->n_face,
-                    new_to_old_order,
-                    part->face_cell);
+  PDM_order_face_cell (part->n_face,
+                       new_to_old_order,
+                       part->face_cell);
 
   /* Free */
   free (old_to_new_order);
@@ -2028,9 +2028,9 @@ int     *new_to_old_order
   }
 
   if( part->edge_vtx != NULL) {
-    _order_face_cell(part->n_edge,
-                     new_to_old_order,
-                     part->edge_vtx);
+    PDM_order_face_cell(part->n_edge,
+                        new_to_old_order,
+                        part->edge_vtx);
   }
 
   /** edge_tag **/

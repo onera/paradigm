@@ -513,6 +513,22 @@ PDM_part_renum_connectivities
 );
 
 /**
+ * \brief Order face_cell or edge_vtx array
+ *
+ * \param [in]      n_face              Number of elements
+ * \param [in]      new_to_old_order    New order (size = \ref nElt
+ * \param [in, out] face_cell           Connectivity ( size = 2 * n_face)
+ *
+ */
+void
+PDM_order_face_cell
+(
+int          n_face,
+int         *new_to_old_order,
+int         *face_cell
+);
+
+/**
  * \brief Order an array
  *
  * \param [in]      sizeArray       Number of elements
