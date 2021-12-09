@@ -149,20 +149,6 @@ PDM_ol_create_cf
  const PDM_MPI_Fint fcomm
 );
 
-// void
-// PROCF (pdm_ol_create, PDM_OL_CREATE)
-// (
-//  int          *n_partMeshA,
-//  PDM_g_num_t  *nGFaceMeshA,
-//  PDM_g_num_t  *nGVtxMeshA,
-//  int          *n_partMeshB,
-//  PDM_g_num_t  *nGFaceMeshB,
-//  PDM_g_num_t  *nGVtxMeshB,
-//  double       *projectCoeff,
-//  PDM_MPI_Fint *comm,
-//  int          *id
-// );
-
 
 /**
  * \brief Set an overlay parameter
@@ -183,13 +169,6 @@ PDM_ol_parameter_set
  const double              value
 );
 
-// void
-// PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
-// (
-//  int                *id,
-//  PDM_ol_parameter_t *parameter,
-//  double             *value
-// );
 
 /**
  * \brief Define input meshes properties
@@ -225,20 +204,6 @@ PDM_ol_input_mesh_set
  const PDM_g_num_t   *vtx_ln_to_gn
 );
 
-// void
-// PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  int           *i_part,
-//  int           *n_face,
-//  int           *face_vtx_idx,
-//  int           *face_vtx,
-//  PDM_g_num_t   *face_ln_to_gn,
-//  int           *n_vtx,
-//  double        *coords,
-//  PDM_g_num_t   *vtx_ln_to_gn
-// );
 
 
 /**
@@ -262,15 +227,6 @@ PDM_ol_moving_type_set
 );
 
 
-// void
-// PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  PDM_ol_mv_t   *mv
-// );
-
-
 /**
  * \brief Define a translation
  *
@@ -290,14 +246,6 @@ PDM_ol_translation_set
  const double       *center
 );
 
-
-// void
-// PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
-// (
-//  int          *id,
-//  double       *vect,
-//  double       *center
-// );
 
 
 /**
@@ -322,15 +270,6 @@ PDM_ol_rotation_set
 );
 
 
-// void
-// PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
-// (
-//  int     *id,
-//  double  *direction,
-//  double  *center,
-//  double  *angle
-// );
-
 /**
  * \brief Overlaying the input surface meshes
  *
@@ -345,13 +284,6 @@ PDM_ol_compute
 (
  PDM_ol_t *ol
 );
-
-
-// void
-// PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
-// (
-//  int         *id
-// );
 
 
 /**
@@ -377,16 +309,6 @@ PDM_ol_mesh_dim_get
        PDM_g_num_t   *nGOlFace,
        PDM_g_num_t   *nGOlVtx
 );
-
-
-// void
-// PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  PDM_g_num_t   *nGOlFace,
-//  PDM_g_num_t   *nGOlVtx
-// );
 
 
 /**
@@ -420,21 +342,6 @@ PDM_ol_part_mesh_dim_get
        int           *sOlface_vtx,
        int           *sInitToOlFace
 );
-
-
-// void
-// PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  int           *i_part,
-//  int           *nOlFace,
-//  int           *nOlLinkedFace,
-//  int           *nOlVtx,
-//  int           *sOlFaceIniVtx,
-//  int           *sOlface_vtx,
-//  int           *sInitToOlFace
-// );
 
 
 /**
@@ -491,24 +398,6 @@ PDM_ol_mesh_entities_get
  int                  **initToOlFace
 );
 
-// void
-// PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
-// (
-//  int            *id,
-//  PDM_ol_mesh_t  *mesh,
-//  int            *i_part,
-//  int            *olFaceIniVtxIdx,
-//  int            *olFaceIniVtx,
-//  int            *olface_vtx_idx,
-//  int            *olface_vtx,
-//  int            *olLinkedface_procIdx,
-//  int            *olLinkedFace,
-//  PDM_g_num_t    *olface_ln_to_gn,
-//  double         *olCoords,
-//  PDM_g_num_t    *olvtx_ln_to_gn,
-//  int            *initToOlFaceIdx,
-//  int            *initToOlFace
-// );
 
 /**
  * \brief Delete an overlay object
@@ -525,12 +414,6 @@ PDM_ol_del
  PDM_ol_t *ol
 );
 
-// void
-// PROCF (pdm_ol_del, PDM_OL_DEL)
-// (
-//  int     *id
-// );
-
 
 /**
  * \brief Dump elapsed an CPU time
@@ -546,11 +429,6 @@ PDM_ol_dump_times
  PDM_ol_t *ol
 );
 
-// void
-// PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
-// (
-//  int     *id
-// );
 
 #ifdef __cplusplus
 }
