@@ -530,6 +530,25 @@ int       *array
 );
 
 /**
+ * \brief Order an array
+ *
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      new_to_old_order        New order (size = \ref n_elmt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void
+PDM_part_renum_graph
+(
+const int   n_entity1,
+      int  *entity1_entity1_idx,
+      int  *entity1_entity1,
+const int  *new_to_old_order,
+int         start
+);
+
+/**
  * \brief Order an array for face_cell
  *
  * \param [in]      sizeArray       Number of elements

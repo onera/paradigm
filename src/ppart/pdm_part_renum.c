@@ -232,6 +232,53 @@ int       *array
   free(old_array);
 }
 
+/**
+ * \brief Order an array
+ *
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      new_to_old_order        New order (size = \ref n_elmt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void
+PDM_part_renum_graph
+(
+const int   n_entity1,
+      int  *entity1_entity1_idx,
+      int  *entity1_entity1,
+const int  *new_to_old_order,
+int         start
+)
+{
+
+  PDM_part_renum_connectivities (n_entity1,
+                                 new_to_old_order,
+                                 entity1_entity1_idx,
+                                 entity1_entity1);
+
+
+  int *old_to_new_order = (int *) malloc (n_entity1 * sizeof(int));
+  for(int i = 0; i < n_entity1; i++) {
+    old_to_new_order[new_to_old_order[i]] = i;
+  }
+
+  int *old_array = (int *) malloc (sizeof(int) * entity1_entity1_idx[n_entity1]);
+
+  for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
+    old_array[i] = entity1_entity1[i];
+  }
+
+  for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
+    int old_idx        = PDM_ABS (old_array[i]);
+    int sign           = PDM_SIGN(old_array[i]);
+    entity1_entity1[i] = sign * (old_to_new_order[old_idx-start] + start);
+  }
+
+  free(old_array);
+  free(old_to_new_order);
+}
+
 
 /**
  * \brief Order an array
