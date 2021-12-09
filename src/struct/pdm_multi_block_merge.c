@@ -97,7 +97,7 @@ PDM_multi_block_merge_create
   PDM_g_num_t **_send_orig_g_num = malloc( (n_block * 2) * sizeof(PDM_g_num_t *));
   int         **_select_kind     = malloc( (n_block * 2) * sizeof(int         *));
   int         **_stride_one      = malloc( (n_block * 2) * sizeof(int         *));
-  PDM_g_num_t  *_n_selected      = malloc( (n_block * 2) * sizeof(PDM_g_num_t  ));
+  int          *_n_selected      = malloc( (n_block * 2) * sizeof(int          ));
   for(int i_block = 0; i_block < n_block; ++i_block) {
 
     _n_selected     [i_block] = n_selected[i_block];
