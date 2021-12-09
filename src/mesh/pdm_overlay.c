@@ -5530,20 +5530,10 @@ PDM_ol_create
 )
 {
   /*
-   * Update olArray size
-   */
-
-  // if (olArray == NULL) {
-  //   olArray = PDM_Handles_create (4);
-  // }
-
-  /*
    * Allocate structure
    */
 
-  _PDM_ol_t *ol = (_PDM_ol_t *) malloc(sizeof(_PDM_ol_t));
-
-  // int id = PDM_Handles_store (olArray, ol);
+  PDM_ol_t *ol = (PDM_ol_t *) malloc(sizeof(PDM_ol_t));
 
   /*
    * Initialization
@@ -5573,8 +5563,7 @@ PDM_ol_create
 
   PDM_timer_hang_on(ol->timer);
 
-  // return id;
-  return (PDM_ol_t *) ol;
+  return ol;
 }
 
 
@@ -5603,36 +5592,6 @@ PDM_ol_create_cf
                         _comm);
 }
 
-// void
-// PROCF (pdm_ol_create, PDM_OL_CREATE)
-// (
-//  int        *n_partMeshA,
-//  PDM_g_num_t *nGFaceMeshA,
-//  PDM_g_num_t *nGVtxMeshA,
-//  int        *n_partMeshB,
-//  PDM_g_num_t *nGFaceMeshB,
-//  PDM_g_num_t *nGVtxMeshB,
-//  double     *projectCoeff,
-//  PDM_MPI_Fint   *comm,
-//  int        *id
-// )
-// {
-
-//   // printf("tototo :%d %ld %ld %d %ld %ld %12.5e %d\n", *n_partMeshA,  *nGFaceMeshA,
-//   //        *nGVtxMeshA, *n_partMeshB, *nGFaceMeshB, *nGVtxMeshB, *projectCoeff, *comm);
-
-//   PDM_MPI_Comm comm_c = PDM_MPI_Comm_f2c(*comm);
-
-//   *id = PDM_ol_create (*n_partMeshA,
-//                        *nGFaceMeshA,
-//                        *nGVtxMeshA,
-//                        *n_partMeshB,
-//                        *nGFaceMeshB,
-//                        *nGVtxMeshB,
-//                        *projectCoeff,
-//                        comm_c);
-// }
-
 
 /**
  * \brief Set an overlay parameter
@@ -5653,7 +5612,6 @@ PDM_ol_parameter_set
  const double              value
 )
 {
-  // _PDM_ol_t *ol = (_PDM_ol_t *) ol;
   PDM_timer_resume(ol->timer);
 
   switch (parameter) {
@@ -5678,21 +5636,6 @@ PDM_ol_parameter_set
   }
   PDM_timer_hang_on(ol->timer);
 }
-
-
-// void
-// PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
-// (
-//  int                *id,
-//  PDM_ol_parameter_t *parameter,
-//  double             *value
-// )
-// {
-//   PDM_ol_parameter_set (*id,
-//                         *parameter,
-//                         *value);
-// }
-
 
 /**
  * \brief Define input meshes properties
@@ -5728,11 +5671,6 @@ PDM_ol_input_mesh_set
  const PDM_g_num_t    *vtx_ln_to_gn
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
   PDM_timer_resume(ol->timer);
 
   PDM_surf_mesh_t *_mesh = NULL;
@@ -5780,33 +5718,6 @@ PDM_ol_input_mesh_set
   PDM_timer_hang_on(ol->timer);
 }
 
-// void
-// PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  int           *i_part,
-//  int           *n_face,
-//  int           *face_vtx_idx,
-//  int           *face_vtx,
-//  PDM_g_num_t    *face_ln_to_gn,
-//  int           *n_vtx,
-//  double        *coords,
-//  PDM_g_num_t    *vtx_ln_to_gn
-// )
-// {
-//   PDM_ol_input_mesh_set (*id,
-//                          *mesh,
-//                          *i_part,
-//                          *n_face,
-//                          face_vtx_idx,
-//                          face_vtx,
-//                          face_ln_to_gn,
-//                          *n_vtx,
-//                          coords,
-//                          vtx_ln_to_gn);
-// }
-
 
 /**
  * \brief Overlaying the input surface meshes
@@ -5823,12 +5734,6 @@ PDM_ol_compute
  PDM_ol_t *ol
 )
 {
-
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
 
   PDM_timer_resume(ol->timer);
 
@@ -5919,15 +5824,6 @@ PDM_ol_compute
 }
 
 
-// void
-// PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
-// (
-//  int         *id
-// )
-// {
-//   PDM_ol_compute (*id);
-// }
-
 
 /**
  * \brief Define the type of a mesh moving
@@ -5949,11 +5845,7 @@ PDM_ol_moving_type_set
  const PDM_ol_mv_t    mv
 )
 {
-  /*
-   * Get overlay object
-   */
 
-  // PDM_ol_t *ol = _ol_get(id);
   PDM_timer_resume(ol->timer);
   PDM_UNUSED(mesh);
   PDM_UNUSED(mv);
@@ -5962,19 +5854,6 @@ PDM_ol_moving_type_set
   PDM_timer_hang_on(ol->timer);
 }
 
-
-// void
-// PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  PDM_ol_mv_t   *mv
-// )
-// {
-//   PDM_ol_moving_type_set (*id,
-//                           *mesh,
-//                           *mv);
-// }
 
 /**
  * \brief Define a translation
@@ -5995,11 +5874,7 @@ PDM_ol_translation_set
  const double   *center
  )
 {
-  /*
-   * Get overlay object
-   */
 
-  // PDM_ol_t *ol = _ol_get(id);
   PDM_timer_resume(ol->timer);
 
   PDM_UNUSED(vect);
@@ -6009,20 +5884,6 @@ PDM_ol_translation_set
 
   PDM_timer_hang_on(ol->timer);
 }
-
-
-// void
-// PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
-// (
-//  int          *id,
-//  double       *vect,
-//  double       *center
-// )
-// {
-//   PDM_ol_translation_set (*id,
-//                           vect,
-//                           center);
-// }
 
 
 
@@ -6047,11 +5908,6 @@ PDM_ol_rotation_set
  const double    angle
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
 
   PDM_timer_resume(ol->timer);
 
@@ -6062,22 +5918,6 @@ PDM_ol_rotation_set
   exit(EXIT_FAILURE);
   PDM_timer_hang_on(ol->timer);
 }
-
-
-// void
-// PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
-// (
-//  int     *id,
-//  double  *direction,
-//  double  *center,
-//  double  *angle
-// )
-// {
-//   PDM_ol_rotation_set (*id,
-//                        direction,
-//                        center,
-//                        *angle);
-// }
 
 
 /**
@@ -6103,11 +5943,6 @@ PDM_ol_mesh_dim_get
        PDM_g_num_t   *nGOlVtx
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
   PDM_timer_resume(ol->timer);
 
   switch(mesh) {
@@ -6129,23 +5964,6 @@ PDM_ol_mesh_dim_get
 
   PDM_timer_hang_on(ol->timer);
 }
-
-// void
-// PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  PDM_g_num_t   *nGOlFace,
-//  PDM_g_num_t   *nGOlVtx
-// )
-// {
-//   PDM_ol_mesh_dim_get (*id,
-//                        *mesh,
-//                        nGOlFace,
-//                        nGOlVtx);
-// }
-
-
 
 
 /**
@@ -6180,11 +5998,6 @@ PDM_ol_part_mesh_dim_get
        int           *sInitToOlFace
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
 
   PDM_timer_resume(ol->timer);
 
@@ -6217,32 +6030,6 @@ PDM_ol_part_mesh_dim_get
   PDM_timer_hang_on(ol->timer);
 
 }
-
-
-// void
-// PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
-// (
-//  int           *id,
-//  PDM_ol_mesh_t *mesh,
-//  int           *i_part,
-//  int           *nOlFace,
-//  int           *nOlLinkedFace,
-//  int           *nOlVtx,
-//  int           *sOlFaceIniVtx,
-//  int           *sOlface_vtx,
-//  int           *sInitToOlFace
-// )
-// {
-//   PDM_ol_part_mesh_dim_get (*id,
-//                             *mesh,
-//                             *i_part,
-//                             nOlFace,
-//                             nOlLinkedFace,
-//                             nOlVtx,
-//                             sOlFaceIniVtx,
-//                             sOlface_vtx,
-//                             sInitToOlFace);
-// }
 
 
 /**
@@ -6299,11 +6086,6 @@ const int              i_part,
       int            **initToOlFace
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
 
   PDM_timer_resume(ol->timer);
 
@@ -6342,140 +6124,6 @@ const int              i_part,
 }
 
 
-// void
-// PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
-// (
-//  int            *id,
-//  PDM_ol_mesh_t  *mesh,
-//  int            *i_part,
-//  int            *olFaceIniVtxIdx,
-//  int            *olFaceIniVtx,
-//  int            *olface_vtx_idx,
-//  int            *olface_vtx,
-//  int            *olLinkedface_procIdx,
-//  int            *olLinkedFace,
-//  PDM_g_num_t    *olface_ln_to_gn,
-//  double         *olCoords,
-//  PDM_g_num_t    *olvtx_ln_to_gn,
-//  int            *initToOlFaceIdx,
-//  int            *initToOlFace
-// )
-// {
-//   int          *_olFaceIniVtxIdx;
-//   int          *_olFaceIniVtx;
-//   int          *_olface_vtx_idx;
-//   int          *_olface_vtx;
-//   int          *_olFaceLinkFaceProcIdx;
-//   int          *_olFaceLinkFace;
-//   PDM_g_num_t  *_olface_ln_to_gn;
-//   double       *_olCoords;
-//   PDM_g_num_t  *_olvtx_ln_to_gn;
-//   int          *_initToOlFaceIdx;
-//   int          *_initToOlFace;
-
-//   int           nOlFace;
-//   int           nOlLinkedFace;
-//   int           nOlVtx;
-//   int           sOlFaceIniVtx;
-//   int           sOlface_vtx;
-//   int           sInitToOlFace;
-
-//   PDM_ol_t *ol = _ol_get(*id);
-
-//   int lComm;
-//   PDM_MPI_Comm_size (ol->comm, &lComm);
-
-//   PDM_surf_mesh_t *_mesh;
-
-//   switch (*mesh) {
-
-//   case PDM_OL_MESH_A:
-//     _mesh = ol->meshA;
-//     break;
-
-//   case PDM_OL_MESH_B:
-//     _mesh = ol->meshB;
-//     break;
-
-//   default:
-//     PDM_error(__FILE__, __LINE__, 0, "Error PDM_ol_mesh_dim_get : unknown PDM_ol_mesh_t mesh\n");
-//     abort();
-//   }
-
-//   int n_face_ini = PDM_surf_mesh_part_n_face_get (_mesh, *i_part);
-
-//   PDM_ol_part_mesh_dim_get (*id,
-//                             *mesh,
-//                             *i_part,
-//                             &nOlFace,
-//                             &nOlLinkedFace,
-//                             &nOlVtx,
-//                             &sOlFaceIniVtx,
-//                             &sOlface_vtx,
-//                             &sInitToOlFace);
-
-
-//   PDM_ol_mesh_entities_get (*id,
-//                             *mesh,
-//                             *i_part,
-//                             &_olFaceIniVtxIdx,
-//                             &_olFaceIniVtx,
-//                             &_olface_vtx_idx,
-//                             &_olface_vtx,
-//                             &_olFaceLinkFaceProcIdx,
-//                             &_olFaceLinkFace,
-//                             &_olface_ln_to_gn,
-//                             &_olCoords,
-//                             &_olvtx_ln_to_gn,
-//                             &_initToOlFaceIdx,
-//                             &_initToOlFace);
-
-//   for (int i = 0; i < nOlFace + 1; i++) {
-//     olface_vtx_idx[i] = _olface_vtx_idx[i];
-//   }
-
-//   for (int i = 0; i < _olface_vtx_idx[nOlFace]; i++) {
-//     olface_vtx[i] = _olface_vtx[i];
-//   }
-
-//   for (int i = 0; i < n_face_ini + 1; i++) {
-//     olFaceIniVtxIdx[i] = _olFaceIniVtxIdx[i];
-//   }
-
-//   for (int i = 0; i < _olFaceIniVtxIdx[n_face_ini]; i++) {
-//     olFaceIniVtx[i] = _olFaceIniVtx[i];
-//   }
-
-//   for (int i = 0; i < lComm + 1; i++) {
-//     olLinkedface_procIdx[i] = _olFaceLinkFaceProcIdx[i];
-//   }
-
-//   for (int i = 0; i < 4 * olLinkedface_procIdx[lComm]; i++) {
-//     olLinkedFace[i] = _olFaceLinkFace[i];
-//   }
-
-//   for (int i = 0; i < nOlFace; i++) {
-//     olface_ln_to_gn[i] = _olface_ln_to_gn[i];
-//   }
-
-//   for (int i = 0; i < 3 * nOlVtx; i++) {
-//     olCoords[i] = _olCoords[i];
-//   }
-
-//   for (int i = 0; i < nOlVtx; i++) {
-//     olvtx_ln_to_gn[i] = _olvtx_ln_to_gn[i];
-//   }
-
-//   for (int i = 0; i < n_face_ini + 1; i++) {
-//     initToOlFaceIdx[i] = _initToOlFaceIdx[i];
-//   }
-
-//   for (int i = 0; i < _initToOlFaceIdx[n_face_ini]; i++) {
-//     initToOlFace[i] = _initToOlFace[i];
-//   }
-
-// }
-
 
 /**
  * \brief Delete an overlay object
@@ -6492,12 +6140,6 @@ PDM_ol_del
  PDM_ol_t *ol
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
-
   /*
    * Delete
    */
@@ -6519,14 +6161,6 @@ PDM_ol_del
      */
 
     free(ol);
-
-    // PDM_Handles_handle_free (olArray, id, PDM_FALSE);
-
-    // const int n_ol = PDM_Handles_n_get (olArray);
-
-    // if (n_ol == 0) {
-    //   olArray = PDM_Handles_free (olArray);
-    // }
   }
 }
 
@@ -6643,26 +6277,8 @@ PDM_ol_dump_times
  PDM_ol_t *ol
 )
 {
-  /*
-   * Get overlay object
-   */
-
-  // PDM_ol_t *ol = _ol_get(id);
-
   _ol_dump_times (ol);
-
 }
-
-
-
-// void
-// PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
-// (
-//  int     *id
-// )
-// {
-//   PDM_ol_dump_times (*id);
-// }
 
 
 #undef _DOT_PRODUCT
