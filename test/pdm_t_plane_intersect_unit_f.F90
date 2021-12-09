@@ -62,13 +62,13 @@ program testf
 
   integer (kind = pdm_g_num_s) :: nGOlFaceA
   integer (kind = pdm_g_num_s) :: nGOlVtxA
-  ! #ifdef PDM_LONG_G_NUM
-  ! integer (c_long)             :: c_nGOlFaceA
-  ! integer (c_long)             :: c_nGOlVtxA
-  ! #else
+#ifdef PDM_LONG_G_NUM
+  integer (c_long)             :: c_nGOlFaceA
+  integer (c_long)             :: c_nGOlVtxA
+#else
   integer (c_int)              :: c_nGOlFaceA
   integer (c_int)              :: c_nGOlVtxA
-  ! #endif
+#endif
 
   integer (c_int) :: nOlFaceA
   integer (c_int) :: nOlLinkedFaceA
@@ -101,13 +101,13 @@ program testf
 
   integer (kind = pdm_g_num_s) :: nGOlFaceB
   integer (kind = pdm_g_num_s) :: nGOlVtxB
-  ! #ifdef PDM_LONG_G_NUM
-  ! integer (c_long)             :: c_nGOlFaceB
-  ! integer (c_long)             :: c_nGOlVtxB
-  ! #else
+#ifdef PDM_LONG_G_NUM
+  integer (c_long)             :: c_nGOlFaceB
+  integer (c_long)             :: c_nGOlVtxB
+#else
   integer (c_int)              :: c_nGOlFaceB
   integer (c_int)              :: c_nGOlVtxB
-  ! #endif
+#endif
 
   integer (c_int) :: nOlFaceB
   integer (c_int) :: nOlLinkedFaceB

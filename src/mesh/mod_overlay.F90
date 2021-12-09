@@ -331,13 +331,13 @@ implicit none
 
 type(c_ptr),    value :: ol
 integer(c_int), value :: mesh
-! #ifdef PDM_LONG_G_NUM
-! integer(c_long)       :: nGOlFace
-! integer(c_long)       :: nGOlVtx
-! #else
+#ifdef PDM_LONG_G_NUM
+integer(c_long)       :: nGOlFace
+integer(c_long)       :: nGOlVtx
+#else
 integer(c_int)        :: nGOlFace
 integer(c_int)        :: nGOlVtx
-! #endif
+#endif
 
 end subroutine PDM_ol_mesh_dim_get
 
