@@ -1070,7 +1070,7 @@ _export_ini_mesh
  *
  * \brief  Export overlay mesh
  *
- * \param [in]    pdm_id    PDM identifier
+ * \param [in]    ol    Pointer to overlay structure
  *
  */
 
@@ -1078,7 +1078,7 @@ static void
 _export_ol_mesh
 (
  const PDM_MPI_Comm pdm_mpi_comm,
- const int pdm_id,
+ const PDM_ol_t *ol,
  int**     nFace,
  double**  sFieldOlA,
  double**  rFieldOlB,
@@ -1216,7 +1216,7 @@ _export_ol_mesh
     PDM_g_num_t    nGOlFace;
     PDM_g_num_t    nGOlVtx;
 
-    PDM_ol_mesh_dim_get (pdm_id,
+    PDM_ol_mesh_dim_get (ol,
                          mesht,
                          &nGOlFace,
                          &nGOlVtx);
@@ -1238,7 +1238,7 @@ _export_ol_mesh
       int           sOlface_vtx;
       int           sInitToOlFace;
 
-      PDM_ol_part_mesh_dim_get (pdm_id,
+      PDM_ol_part_mesh_dim_get (ol,
                                 mesht,
                                 ipart,
                                 &nOlFace,
@@ -1260,7 +1260,7 @@ _export_ol_mesh
       int            *initToOlFaceIdx;
       int            *initToOlFace;
 
-      PDM_ol_mesh_entities_get (pdm_id,
+      PDM_ol_mesh_entities_get (ol,
                                 mesht,
                                 ipart,
                                 &olFaceIniVtxIdx,
@@ -1693,14 +1693,14 @@ char *argv[]
    *  Creation de l'objet PDM
    */
 
-  int pdm_id = PDM_ol_create (n_part,
-                              nGFace[0],
-                              nGVtx[0],
-                              n_part,
-                              nGFace[1],
-                              nGVtx[1],
-                              projectCoeff,
-                              PDM_MPI_COMM_WORLD);
+  PDM_ol_t *ol = PDM_ol_create (n_part,
+                                nGFace[0],
+                                nGVtx[0],
+                                n_part,
+                                nGFace[1],
+                                nGVtx[1],
+                                projectCoeff,
+                                PDM_MPI_COMM_WORLD);
   if (i_rank == 0){
     PDM_printf ("- n_part MeshA : %d \n", n_part);
     PDM_printf ("- nGFaceMeshA : %d \n", nGFace[0]);
@@ -1711,11 +1711,11 @@ char *argv[]
     PDM_printf ("- projectCoeff : %d \n", projectCoeff);
   }
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_CAR_LENGTH_TOL,
                         1e-4);
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_EXTENTS_TOL,
                         1e-4);
 
@@ -1752,7 +1752,7 @@ char *argv[]
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
-      PDM_ol_input_mesh_set (pdm_id,
+      PDM_ol_input_mesh_set (ol,
                              mesh,
                              ipart,
                              nFace[imesh][ipart],
@@ -1814,10 +1814,10 @@ char *argv[]
    *  Calcul
    */
 
-  PDM_ol_compute (pdm_id);
+  PDM_ol_compute (ol);
 
   if (i_rank == 0){
-    PDM_ol_dump_times (pdm_id);
+    PDM_ol_dump_times (ol);
   }
 
   /*
@@ -1879,7 +1879,7 @@ char *argv[]
     PDM_g_num_t nGOlFace;
     PDM_g_num_t nGOlVtx;
 
-    PDM_ol_mesh_dim_get (pdm_id,
+    PDM_ol_mesh_dim_get (ol,
                          mesht,
                          &nGOlFace,
                          &nGOlVtx);
@@ -1898,7 +1898,7 @@ char *argv[]
       int           sOlface_vtx;
       int           sInitToOlFace;
 
-      PDM_ol_part_mesh_dim_get (pdm_id,
+      PDM_ol_part_mesh_dim_get (ol,
                                 mesht,
                                 ipart,
                                 &nOlFace,
@@ -1926,7 +1926,7 @@ char *argv[]
       int            *initToOlFaceIdx;
       int            *initToOlFace;
 
-      PDM_ol_mesh_entities_get (pdm_id,
+      PDM_ol_mesh_entities_get (ol,
                                 mesht,
                                 ipart,
                                 &olFaceIniVtxIdx,
@@ -2147,7 +2147,7 @@ char *argv[]
                       rFieldB);
 
     _export_ol_mesh (PDM_MPI_COMM_WORLD,
-                     pdm_id,
+                     ol,
                      nFace,
                      sFieldOlA,
                      rFieldOlB,
@@ -2227,7 +2227,7 @@ char *argv[]
    *  Free Pdm
    */
 
-  PDM_ol_del (pdm_id);
+  PDM_ol_del (ol);
 
   if (i_rank == 0) printf("-- End\n");
 

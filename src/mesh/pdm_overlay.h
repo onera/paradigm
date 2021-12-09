@@ -50,6 +50,8 @@ extern "C" {
  * Type
  *============================================================================*/
 
+typedef struct _PDM_ol_t PDM_ol_t;
+
 /**
  * \enum PDM_ol_mesh_t
  * \brief 3 Meshes
@@ -121,7 +123,7 @@ typedef enum {
  *
  */
 
-int
+PDM_ol_t *
 PDM_ol_create
 (
  const int          n_partMeshA,
@@ -134,19 +136,32 @@ PDM_ol_create
  const PDM_MPI_Comm comm
 );
 
-void
-PROCF (pdm_ol_create, PDM_OL_CREATE)
+PDM_ol_t *
+PDM_ol_create_cf
 (
- int          *n_partMeshA,
- PDM_g_num_t  *nGFaceMeshA,
- PDM_g_num_t  *nGVtxMeshA,
- int          *n_partMeshB,
- PDM_g_num_t  *nGFaceMeshB,
- PDM_g_num_t  *nGVtxMeshB,
- double       *projectCoeff,
- PDM_MPI_Fint *comm,
- int          *id
+ const int          n_partMeshA,
+ const PDM_g_num_t  nGFaceMeshA,
+ const PDM_g_num_t  nGVtxMeshA,
+ const int          n_partMeshB,
+ const PDM_g_num_t  nGFaceMeshB,
+ const PDM_g_num_t  nGVtxMeshB,
+ const double       projectCoeff,
+ const PDM_MPI_Fint fcomm
 );
+
+// void
+// PROCF (pdm_ol_create, PDM_OL_CREATE)
+// (
+//  int          *n_partMeshA,
+//  PDM_g_num_t  *nGFaceMeshA,
+//  PDM_g_num_t  *nGVtxMeshA,
+//  int          *n_partMeshB,
+//  PDM_g_num_t  *nGFaceMeshB,
+//  PDM_g_num_t  *nGVtxMeshB,
+//  double       *projectCoeff,
+//  PDM_MPI_Fint *comm,
+//  int          *id
+// );
 
 
 /**
@@ -163,18 +178,18 @@ PROCF (pdm_ol_create, PDM_OL_CREATE)
 void
 PDM_ol_parameter_set
 (
- const int                id,
- const PDM_ol_parameter_t parameter,
- const double             value
+       PDM_ol_t           *ol,
+ const PDM_ol_parameter_t  parameter,
+ const double              value
 );
 
-void
-PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
-(
- int                *id,
- PDM_ol_parameter_t *parameter,
- double             *value
-);
+// void
+// PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
+// (
+//  int                *id,
+//  PDM_ol_parameter_t *parameter,
+//  double             *value
+// );
 
 /**
  * \brief Define input meshes properties
@@ -198,7 +213,7 @@ PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
 void
 PDM_ol_input_mesh_set
 (
- const int            id,
+       PDM_ol_t      *ol,
  const PDM_ol_mesh_t  mesh,
  const int            i_part,
  const int            n_face,
@@ -210,20 +225,20 @@ PDM_ol_input_mesh_set
  const PDM_g_num_t   *vtx_ln_to_gn
 );
 
-void
-PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- int           *i_part,
- int           *n_face,
- int           *face_vtx_idx,
- int           *face_vtx,
- PDM_g_num_t   *face_ln_to_gn,
- int           *n_vtx,
- double        *coords,
- PDM_g_num_t   *vtx_ln_to_gn
-);
+// void
+// PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
+// (
+//  int           *id,
+//  PDM_ol_mesh_t *mesh,
+//  int           *i_part,
+//  int           *n_face,
+//  int           *face_vtx_idx,
+//  int           *face_vtx,
+//  PDM_g_num_t   *face_ln_to_gn,
+//  int           *n_vtx,
+//  double        *coords,
+//  PDM_g_num_t   *vtx_ln_to_gn
+// );
 
 
 /**
@@ -241,19 +256,19 @@ PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
 void
 PDM_ol_moving_type_set
 (
- const int           id,
- const PDM_ol_mesh_t mesh,
- const PDM_ol_mv_t   mv
+       PDM_ol_t      *ol,
+ const PDM_ol_mesh_t  mesh,
+ const PDM_ol_mv_t    mv
 );
 
 
-void
-PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- PDM_ol_mv_t   *mv
-);
+// void
+// PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
+// (
+//  int           *id,
+//  PDM_ol_mesh_t *mesh,
+//  PDM_ol_mv_t   *mv
+// );
 
 
 /**
@@ -270,19 +285,19 @@ PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
 void
 PDM_ol_translation_set
 (
- const int           id,
+       PDM_ol_t     *ol,
  const double       *vect,
  const double       *center
 );
 
 
-void
-PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
-(
- int          *id,
- double       *vect,
- double       *center
-);
+// void
+// PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
+// (
+//  int          *id,
+//  double       *vect,
+//  double       *center
+// );
 
 
 /**
@@ -300,21 +315,21 @@ PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
 void
 PDM_ol_rotation_set
 (
- const int      id,
- const double  *direction,
- const double  *center,
- const double   angle
+       PDM_ol_t *ol,
+ const double   *direction,
+ const double   *center,
+ const double    angle
 );
 
 
-void
-PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
-(
- int     *id,
- double  *direction,
- double  *center,
- double  *angle
-);
+// void
+// PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
+// (
+//  int     *id,
+//  double  *direction,
+//  double  *center,
+//  double  *angle
+// );
 
 /**
  * \brief Overlaying the input surface meshes
@@ -328,15 +343,15 @@ PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
 void
 PDM_ol_compute
 (
- const int          id
+ PDM_ol_t *ol
 );
 
 
-void
-PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
-(
- int         *id
-);
+// void
+// PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
+// (
+//  int         *id
+// );
 
 
 /**
@@ -357,21 +372,21 @@ PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
 void
 PDM_ol_mesh_dim_get
 (
- const int            id,
+ const PDM_ol_t      *ol,
  const PDM_ol_mesh_t  mesh,
        PDM_g_num_t   *nGOlFace,
        PDM_g_num_t   *nGOlVtx
 );
 
 
-void
-PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- PDM_g_num_t   *nGOlFace,
- PDM_g_num_t   *nGOlVtx
-);
+// void
+// PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
+// (
+//  int           *id,
+//  PDM_ol_mesh_t *mesh,
+//  PDM_g_num_t   *nGOlFace,
+//  PDM_g_num_t   *nGOlVtx
+// );
 
 
 /**
@@ -395,7 +410,7 @@ PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
 void
 PDM_ol_part_mesh_dim_get
 (
- const int            id,
+ const PDM_ol_t      *ol,
  const PDM_ol_mesh_t  mesh,
  const int            i_part,
        int           *nOlFace,
@@ -407,19 +422,19 @@ PDM_ol_part_mesh_dim_get
 );
 
 
-void
-PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- int           *i_part,
- int           *nOlFace,
- int           *nOlLinkedFace,
- int           *nOlVtx,
- int           *sOlFaceIniVtx,
- int           *sOlface_vtx,
- int           *sInitToOlFace
-);
+// void
+// PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
+// (
+//  int           *id,
+//  PDM_ol_mesh_t *mesh,
+//  int           *i_part,
+//  int           *nOlFace,
+//  int           *nOlLinkedFace,
+//  int           *nOlVtx,
+//  int           *sOlFaceIniVtx,
+//  int           *sOlface_vtx,
+//  int           *sInitToOlFace
+// );
 
 
 /**
@@ -460,7 +475,7 @@ PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
 void
 PDM_ol_mesh_entities_get
 (
- const int              id,
+ const PDM_ol_t        *ol,
  const PDM_ol_mesh_t    mesh,
  const int              i_part,
  int                  **olFaceIniVtxIdx,
@@ -476,24 +491,24 @@ PDM_ol_mesh_entities_get
  int                  **initToOlFace
 );
 
-void
-PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
-(
- int            *id,
- PDM_ol_mesh_t  *mesh,
- int            *i_part,
- int            *olFaceIniVtxIdx,
- int            *olFaceIniVtx,
- int            *olface_vtx_idx,
- int            *olface_vtx,
- int            *olLinkedface_procIdx,
- int            *olLinkedFace,
- PDM_g_num_t    *olface_ln_to_gn,
- double         *olCoords,
- PDM_g_num_t    *olvtx_ln_to_gn,
- int            *initToOlFaceIdx,
- int            *initToOlFace
-);
+// void
+// PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
+// (
+//  int            *id,
+//  PDM_ol_mesh_t  *mesh,
+//  int            *i_part,
+//  int            *olFaceIniVtxIdx,
+//  int            *olFaceIniVtx,
+//  int            *olface_vtx_idx,
+//  int            *olface_vtx,
+//  int            *olLinkedface_procIdx,
+//  int            *olLinkedFace,
+//  PDM_g_num_t    *olface_ln_to_gn,
+//  double         *olCoords,
+//  PDM_g_num_t    *olvtx_ln_to_gn,
+//  int            *initToOlFaceIdx,
+//  int            *initToOlFace
+// );
 
 /**
  * \brief Delete an overlay object
@@ -507,14 +522,14 @@ PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
 void
 PDM_ol_del
 (
- const int     id
+ PDM_ol_t *ol
 );
 
-void
-PROCF (pdm_ol_del, PDM_OL_DEL)
-(
- int     *id
-);
+// void
+// PROCF (pdm_ol_del, PDM_OL_DEL)
+// (
+//  int     *id
+// );
 
 
 /**
@@ -528,14 +543,14 @@ PROCF (pdm_ol_del, PDM_OL_DEL)
 void
 PDM_ol_dump_times
 (
- const int     id
+ PDM_ol_t *ol
 );
 
-void
-PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
-(
- int     *id
-);
+// void
+// PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
+// (
+//  int     *id
+// );
 
 #ifdef __cplusplus
 }
