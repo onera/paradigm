@@ -181,7 +181,7 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->volumic  = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 3, dmesh_nodal->n_cell_abs);
   dmesh_nodal->surfacic = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 2, dmesh_nodal->n_face_abs);
   dmesh_nodal->ridge    = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_edge_abs);
-  dmesh_nodal->corner   = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_vtx_abs );
+  dmesh_nodal->corner   = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 0, dmesh_nodal->n_vtx_abs );
 
 }
 
@@ -1350,27 +1350,6 @@ const int                  id_section
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   return PDM_DMesh_nodal_elmts_distrib_section_get(dmne, id_section);
 }
-
-void
-PDM_Mesh_nodal_add_dmesh_nodal_elmts
-(
- PDM_dmesh_nodal_t       *dmesh_nodal,
- PDM_dmesh_nodal_elmts_t *dmn_elts
-)
-{
-  if(dmn_elts->mesh_dimension == 3) {
-    dmesh_nodal->volumic = dmn_elts;
-  } else if(dmn_elts->mesh_dimension == 2){
-    dmesh_nodal->surfacic = dmn_elts;
-  } else if(dmn_elts->mesh_dimension == 1){
-    dmesh_nodal->ridge = dmn_elts;
-  } else if(dmn_elts->mesh_dimension == 0){
-    dmesh_nodal->corner = dmn_elts;
-  } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
-  }
-}
-
 
 void
 PDM_dmesh_nodal_transfer_to_new_dmesh_nodal

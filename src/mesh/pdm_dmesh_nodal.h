@@ -769,14 +769,6 @@ PDM_dmesh_nodal_dual_graph
 );
 
 void
-PDM_Mesh_nodal_add_dmesh_nodal_elmts
-(
- PDM_dmesh_nodal_t       *dmesh_nodal,
- PDM_dmesh_nodal_elmts_t *dmn_elts
-);
-
-
-void
 PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
 (
  PDM_dmesh_nodal_t   *dmn_in,
