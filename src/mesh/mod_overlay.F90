@@ -95,21 +95,21 @@ module pdm_overlay
   implicit none
 
   integer(c_int), value :: n_partMeshA
-  ! #ifdef PDM_LONG_G_NUM
+#ifdef PDM_LONG_G_NUM
   integer(c_long), value :: nGFaceMeshA
   integer(c_long), value :: nGVtxMeshA
-  ! #else
-  ! integer(c_int), value :: nGFaceMeshA
-  ! integer(c_int), value :: nGVtxMeshA
-  ! #endif
+#else
+  integer(c_int), value :: nGFaceMeshA
+  integer(c_int), value :: nGVtxMeshA
+#endif
   integer(c_int), value :: n_partMeshB
-  ! #ifdef PDM_LONG_G_NUM
+#ifdef PDM_LONG_G_NUM
   integer(c_long), value :: nGFaceMeshB
   integer(c_long), value :: nGVtxMeshB
-  ! #else
-  ! integer(c_int), value :: nGFaceMeshB
-  ! integer(c_int), value :: nGVtxMeshB
-  ! #endif
+#else
+  integer(c_int), value :: nGFaceMeshB
+  integer(c_int), value :: nGVtxMeshB
+#endif
   real(c_double), value :: projectCoeff
   integer(c_int), value :: fComm
 
