@@ -1432,7 +1432,7 @@ PDM_MPI_Comm       comm
    * Deduce node_ln_to_gn
    */
   int  *pn_node;
-  int **pnode_ln_to_gn;
+  PDM_g_num_t **pnode_ln_to_gn;
   PDM_part_assemble_partitions(comm,
                                distrib_partition,
                                distrib_node,
