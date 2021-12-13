@@ -143,10 +143,10 @@ PDM_part_mesh_nodal_create
     pmn->vtx[i]->owner      = PDM_OWNERSHIP_USER;
   }
 
-  pmn->n_vol    = (int *) malloc( n_part * sizeof(int));
-  pmn->n_surf   = (int *) malloc( n_part * sizeof(int));
-  pmn->n_ridge  = (int *) malloc( n_part * sizeof(int));
-  pmn->n_corner = (int *) malloc( n_part * sizeof(int));
+  pmn->n_vol    = PDM_array_zeros_int(n_part);
+  pmn->n_surf   = PDM_array_zeros_int(n_part);
+  pmn->n_ridge  = PDM_array_zeros_int(n_part);
+  pmn->n_corner = PDM_array_zeros_int(n_part);
 
   pmn->volumic  = NULL;
   pmn->surfacic = NULL;

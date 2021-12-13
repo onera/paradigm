@@ -245,7 +245,7 @@ PDM_part_mesh_nodal_elmts_create
   pmne->mesh_dimension   = mesh_dimension;
   pmne->n_part           = n_part;
 
-  pmne->n_elmts          = (int * ) malloc( n_part * sizeof(int));
+  pmne->n_elmts          = PDM_array_zeros_int(n_part);
 
   pmne->n_section        = 0;
   pmne->n_section_std    = 0;

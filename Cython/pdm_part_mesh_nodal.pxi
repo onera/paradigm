@@ -142,7 +142,7 @@ cdef class PartMeshNodalCaspule:
   def part_mesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
     """
     """
-    return part_mesh_nodal_get_sections(self, geom_kind)
+    return part_mesh_nodal_get_sections(self, geom_kind, i_part)
 
 
 
@@ -218,4 +218,4 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
                      "np_parent_num" : np_parent_num,
                      "np_numabs"     : np_numabs})
 
-  return {"sections" : sections}
+  return sections
