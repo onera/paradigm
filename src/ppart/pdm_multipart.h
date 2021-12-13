@@ -29,6 +29,7 @@
 #include "pdm_mpi.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -179,9 +180,11 @@ PDM_multipart_run_ppart
 );
 
 void
-PDM_multipart_compute_part_mesh_nodal
+PDM_multipart_get_part_mesh_nodal
 (
-const int   id
+const int   mpart_id,
+const int   i_zone,
+PDM_part_mesh_nodal_t **pmesh_nodal
 );
 /**
  *

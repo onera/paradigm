@@ -93,6 +93,11 @@ cdef extern from "pdm_multipart.h":
                                     PDM_g_num_t  **face_join_ln_to_gn)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_get_part_mesh_nodal(const int   mpart_id,
+                                           const int   i_zone,
+                                           PDM_part_mesh_nodal_t **pmesh_nodal)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_part_graph_comm_vtx_dim_get(int   mpart_id,
                                                    int   i_zone,
                                                    int   i_part,
@@ -655,6 +660,16 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
+    def multipart_part_mesh_nodal_get(self, int zone_gid):
+        cdef PDM_part_mesh_nodal_t *pmesh_nodal
+        PDM_multipart_get_part_mesh_nodal(self._mpart_id, zone_gid, &pmesh_nodal)
+        if pmesh_nodal == NULL:
+          return None
+        else:
+          #See pdm_part_mesh_nodal.pxi
+          py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
+          return PartMeshNodalCaspule(py_caps)
+
     def multipart_graph_comm_vtx_dim_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions
