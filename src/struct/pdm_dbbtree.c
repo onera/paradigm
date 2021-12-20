@@ -2899,7 +2899,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
   if (_dbbt->btShared != NULL) {
     int *pts_rank_idx = NULL;
     int *pts_rank = NULL;
-    PDM_box_tree_points_inside_boxes2 (_dbbt->btShared,
+    PDM_box_tree_boxes_containing_points (_dbbt->btShared,
                                        -1,
                                        n_pts,
                                        pts_coord,
@@ -3189,20 +3189,14 @@ PDM_dbbtree_points_inside_boxes_with_copies
                                   int **,
                                   int **);
   if (ellipsoids) {
-    _points_inside_volumes = &PDM_box_tree_points_inside_ellipsoids;
+    _points_inside_volumes = &PDM_box_tree_ellipsoids_containing_points;
   } else {
-    _points_inside_volumes = &PDM_box_tree_points_inside_boxes2;
+    _points_inside_volumes = &PDM_box_tree_boxes_containing_points;
   }
 
   /*
    *  Search in local tree
    */
-  /*PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
-                                     -1,
-                                     part_n_pts[0],
-                                     pts_coord1,
-                                     &(pts_box_idx[0]),
-                                     &(pts_box_l_num[0]));*/
   _points_inside_volumes (_dbbt->btLoc,
                           -1,
                           part_n_pts[0],
@@ -3223,12 +3217,6 @@ PDM_dbbtree_points_inside_boxes_with_copies
     for (int i = 0; i < n_copied_ranks; i++) {
       part_n_pts[i+1] = copied_shift[i+1] - copied_shift[i];
 
-      /*PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
-                                         i,
-                                         part_n_pts[i+1],
-                                         pts_coord_copied + copied_shift[i] * 3,
-                                         &(pts_box_idx[i+1]),
-                                         &(pts_box_l_num[i+1]));*/
       _points_inside_volumes (_dbbt->btLoc,
                               i,
                               part_n_pts[i+1],
@@ -3466,7 +3454,7 @@ PDM_dbbtree_boxes_containing_points
   if (_dbbt->btShared != NULL) {
     int *pts_rank_idx = NULL;
     int *pts_rank = NULL;
-    PDM_box_tree_points_inside_boxes2 (_dbbt->btShared,
+    PDM_box_tree_boxes_containing_points (_dbbt->btShared,
                                        -1,
                                        n_pts,
                                        pts_coord,
@@ -3754,9 +3742,9 @@ PDM_dbbtree_boxes_containing_points
                                   int **,
                                   int **);
   if (ellipsoids) {
-    _points_inside_volumes = &PDM_box_tree_points_inside_ellipsoids;
+    _points_inside_volumes = &PDM_box_tree_ellipsoids_containing_points;
   } else {
-    _points_inside_volumes = &PDM_box_tree_points_inside_boxes2;
+    _points_inside_volumes = &PDM_box_tree_boxes_containing_points;
   }
 
   /*
