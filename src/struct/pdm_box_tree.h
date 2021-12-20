@@ -74,18 +74,19 @@ typedef enum {
 
 /**
  *
- * \brief Create a PDM_box_tree_data_t structure and initialize it
+ * \brief Create a \ref PDM_box_tree_data_t structure and initialize it
  *
- * \return Pointer to an empty PDM_box_tree_data_t structure
+ * \return Pointer to an empty \ref PDM_box_tree_data_t structure
  *
  */
+
 PDM_box_tree_data_t *
 PDM_box_tree_data_create(void);
 
 
 /**
  *
- * \brief Create a PDM_box_tree_t structure and initialize it
+ * \brief Create a \ref PDM_box_tree_t structure and initialize it
  *
  * \param [in]   max_level      Max possible level
  * \param [in]   threshold      Max number of boxes linked to an octant if \ref max_level is not reached
@@ -103,7 +104,7 @@ PDM_box_tree_create(int    max_level,
 
 /**
  *
- * \brief Destroy a PDM_box_tree_data_t structure
+ * \brief Destroy a \ref PDM_box_tree_data_t structure
  *
  * \param [in]   btd  Pointer to pointer to PDM_box_tree_data_t structure to destroy
  *
@@ -115,7 +116,7 @@ PDM_box_tree_data_destroy(PDM_box_tree_data_t  *btd);
 
 /**
  *
- * \brief Destroy a PDM_box_tree_t structure
+ * \brief Destroy a \ref PDM_box_tree_t structure
  *
  * \param [in]   bt   Pointer to pointer to PDM_box_tree_t structure to destroy
  *
@@ -129,7 +130,7 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt);
  *
  * \brief Get the deepest level allowed by the tree structure
  *
- * \param [in]   bt   Pointer to pointer to PDM_box_tree_t structure to destroy
+ * \param [in]   bt   Pointer to pointer to \ref PDM_box_tree_t structure to destroy
  *
  * \return  Deepest allowed level of the tree
  *
@@ -141,7 +142,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt);
 
 /**
  *
- * \brief Assign a set of boxes to an empty PDM_box_tree_t structure
+ * \brief Assign a set of boxes to an empty \ref PDM_box_tree_t structure
  *
  * The box tree structure must have been created using to PDM_tree_create().
  *
@@ -152,7 +153,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt);
  * If max_level = -1, the highest level reachable is PDM_TREE_MAX_LEVEL but
  * there is no defined target level.
  *
- * \param [in]   bt           Pointer to PDM_box_tree_t structure
+ * \param [in]   bt           Pointer to \ref PDM_box_tree_t structure
  * \param [in]   boxes        Pointer to the associated box set structure
  * \param [in]   build_type   Layout variant for building the tree structure
  *
@@ -169,10 +170,10 @@ PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
  * \brief Compute an index based on Morton encoding to ensure a good distribution
  * of boxes among the participating ranks
  *
- * \param [in]   bt           Pointer to PDM_box_tree_t structure
+ * \param [in]   bt           Pointer to \ref PDM_box_tree_t structure
  * \param [in]   boxes        Pointer to the associated box set structure
  *
- * \return   Pointer to newly created PDM_box_distrib_t structure
+ * \return   Pointer to newly created \ref PDM_box_distrib_t structure
  *
  */
 
@@ -226,7 +227,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 void
 PDM_box_tree_get_intern_intersects(PDM_box_tree_t       *bt,
                                    int                  *box_index[],
-                                   PDM_g_num_t           *box_g_num[]);
+                                   PDM_g_num_t          *box_g_num[]);
 
 
 /**
@@ -272,7 +273,7 @@ PDM_box_tree_get_stats(const PDM_box_tree_t *bt,
 
 /**
  *
- * \brief Display local statistics about a PDM_box_tree_t structure
+ * \brief Display local statistics about a \ref PDM_box_tree_t structure
  *
  * \param [in]  bt   Pointer to box tree structure
  *
@@ -284,7 +285,7 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt);
 
 /**
  *
- * \brief Dump an PDM_box_tree_t structure
+ * \brief Dump a \ref PDM_box_tree_t structure
  *
  * \param [in]  bt   Pointer to box tree structure
  *
@@ -381,7 +382,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
  * \param [in]   bt                 Pointer to box tree structure
  * \param [in]   n_copied_ranks     Number of copied ranks
  * \param [in]   copied_ranks       List of copied ranks
- * \param [out]  rank_copy_num      Transpose of list of copied ranks (-1 for non-copied ranks)
+ * \param [out]  rank_copy_num      Transpose of list of copied ranks (-1 for non-copied ranks) (size = n_rank)
  *
  */
 
