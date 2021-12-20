@@ -459,7 +459,7 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t *distrib,
 
 
 /**
- * \brief ?
+ * \brief Dump a \ref PDM_box_distrib_t structure
  *
  * \param [in] distrib  Pointer to the \ref PDM_box_distrib_t structure
  */
