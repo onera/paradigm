@@ -479,20 +479,21 @@ PDM_part1_to_selected_part2_create
                            &location_selected_part2);
   
     for (int j = 0; j < n_elt1[i]; j++) {
-
-      for (int k = location_selected_part2_idx[selected_part2_idx[i][j]]/3; 
-               k < location_selected_part2_idx[selected_part2_idx[i][j+1]]/3; k++) {
-        int i_rank2 = location_selected_part2[3*k];
-        n_selected_part2_rank[i_rank2]++;
-        merge_selected_part2_rank2[n_total_elt] = i_rank2;
-        merge_selected_part2_part2[n_total_elt] = location_selected_part2[3*k+1];
-        merge_selected_part2_lnum2[n_total_elt] = location_selected_part2[3*k+2]-1;
-        merge_selected_part2_rank1[n_total_elt] = my_rank;
-        merge_selected_part2_part1[n_total_elt] = i;
-        merge_selected_part2_lnum1[n_total_elt] = j; 
-        merge_selected_part2_addr1[n_total_elt] = k;
-        order[n_total_elt]                      = n_total_elt;
-        n_total_elt++;
+      for (int k1 = selected_part2_idx[i][j]; k1 < selected_part2_idx[i][j+1]; k1++) { 
+        for (int k = location_selected_part2_idx[k1]/3; 
+                 k < location_selected_part2_idx[k1+1]/3; k++) {
+          int i_rank2 = location_selected_part2[3*k];
+          n_selected_part2_rank[i_rank2]++;
+          merge_selected_part2_rank2[n_total_elt] = i_rank2;
+          merge_selected_part2_part2[n_total_elt] = location_selected_part2[3*k+1];
+          merge_selected_part2_lnum2[n_total_elt] = location_selected_part2[3*k+2]-1;
+          merge_selected_part2_rank1[n_total_elt] = my_rank;
+          merge_selected_part2_part1[n_total_elt] = i;
+          merge_selected_part2_lnum1[n_total_elt] = j; 
+          merge_selected_part2_addr1[n_total_elt] = k1;
+          order[n_total_elt]                      = n_total_elt;
+          n_total_elt++;
+        }
       }
     }
   }
@@ -689,6 +690,7 @@ PDM_part1_to_selected_part2_create
   for (int i = 0; i < n_total_elt; i++) {
     int ipart1 = merge_selected_part2_part1[i];
     int addr1  = merge_selected_part2_addr1[i];
+//    int lnum1  = merge_selected_part2_lnum1[i];
     ptp->gnum1_to_send_buffer_idx[ipart1][addr1+1]++;
   }
 
@@ -720,6 +722,7 @@ PDM_part1_to_selected_part2_create
   for (int i = 0; i < n_total_elt; i++) {
     int ipart1 = merge_selected_part2_part1[i];
     int addr1  = merge_selected_part2_addr1[i];
+//    int lnum1  = merge_selected_part2_lnum1[i];
     int idx    = i_send_buffer[i];
     int idx2   = ptp->gnum1_to_send_buffer_idx[ipart1][addr1] + 
                  gnum1_to_send_buffer_n[ipart1][addr1]++; 
