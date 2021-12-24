@@ -3278,6 +3278,52 @@ const int                   i_part,
   return pn_entity;
 }
 
+/**
+ *
+ * \brief Returns the data arrays of a given partition
+ */
+int
+PDM_multipart_partition_color_get
+(
+const int                   mpart_id,
+const int                   i_zone,
+const int                   i_part,
+      PDM_mesh_entities_t   entity_type,
+      PDM_g_num_t         **entity_color,
+      PDM_ownership_t       ownership
+)
+{
+  PDM_UNUSED(ownership);
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  int pn_entity = 0;
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_CELL:
+       pn_entity = _pmeshes.parts[i_part]->n_cell;
+      *entity_color     = _pmeshes.parts[i_part]->cell_color;
+      break;
+    case PDM_MESH_ENTITY_FACE:
+       pn_entity = _pmeshes.parts[i_part]->n_face;
+      *entity_color     = _pmeshes.parts[i_part]->face_color;
+      break;
+    case PDM_MESH_ENTITY_EDGE:
+       pn_entity = _pmeshes.parts[i_part]->n_edge;
+      *entity_color     = _pmeshes.parts[i_part]->edge_color;
+      break;
+    case PDM_MESH_ENTITY_VERTEX:
+       pn_entity = _pmeshes.parts[i_part]->n_vtx;
+      *entity_color     = _pmeshes.parts[i_part]->vtx_color;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_partition_color_get error : Wrong entity_type \n");
+      break;
+  }
+  return pn_entity;
+}
+
 // void PDM_multipart_part_get
 // (
 //  const int            mpart_id,

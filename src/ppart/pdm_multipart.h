@@ -300,6 +300,17 @@ const int                   i_part,
       PDM_ownership_t       ownership
 );
 
+int
+PDM_multipart_partition_color_get
+(
+const int                   mpart_id,
+const int                   i_zone,
+const int                   i_part,
+      PDM_mesh_entities_t   entity_type,
+      int                 **entity_ln_to_gn,
+      PDM_ownership_t       ownership
+);
+
 void
 PDM_multipart_part_graph_comm_vtx_data_get
 (
