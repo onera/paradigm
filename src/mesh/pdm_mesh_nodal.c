@@ -304,6 +304,18 @@ _block_std_free
     _block_std->_parent_num = NULL;
   }
 
+  if (_block_std->_parent_entity_g_num != NULL) {
+    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_std->n_part; i++) {
+        if (_block_std->_parent_entity_g_num[i] != NULL)
+          free(_block_std->_parent_entity_g_num[i]);
+        _block_std->_parent_entity_g_num[i] = NULL;
+      }
+    }
+    free(_block_std->_parent_entity_g_num);
+    _block_std->_parent_entity_g_num = NULL;
+  }
+
   free(_block_std);
   return NULL;
 }

@@ -806,7 +806,8 @@ _compute_part_mesh_nodal_3d
                                                                                         pn_vtx,
                                                                                         pvtx_ln_to_gn,
                                                                                         pn_cell,
-                                                                                        pcell_ln_to_gn);
+                                                                                        pcell_ln_to_gn,
+                                                                                        NULL);
 
   PDM_g_num_t  **pface_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
   int           *pn_face        = (int *  )         malloc( n_part * sizeof(int          ));
@@ -814,9 +815,9 @@ _compute_part_mesh_nodal_3d
     pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
     pn_face       [i_part] = pm->parts[i_part]->n_face;
   }
-  int          *pn_surf;
-  PDM_g_num_t **psurf_gnum;
-  PDM_g_num_t **psurf_to_face_g_num;
+  int          *pn_surf             = NULL;
+  PDM_g_num_t **psurf_gnum          = NULL;
+  PDM_g_num_t **psurf_to_face_g_num = NULL;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
                            NULL, // dparent_sign
                            dmesh->face_distrib,
@@ -835,7 +836,8 @@ _compute_part_mesh_nodal_3d
                                                                                          pn_vtx,
                                                                                          pvtx_ln_to_gn,
                                                                                          pn_surf,
-                                                                                         psurf_gnum);
+                                                                                         psurf_gnum,
+                                                                                         psurf_to_face_g_num);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(psurf_gnum[i_part]);
@@ -971,7 +973,8 @@ _compute_part_mesh_nodal_2d
                                                                                          pn_vtx,
                                                                                          pvtx_ln_to_gn,
                                                                                          pn_face,
-                                                                                         pface_ln_to_gn);
+                                                                                         pface_ln_to_gn,
+                                                                                         NULL);
 
   PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
   int           *pn_edge        = (int *  )         malloc( n_part * sizeof(int          ));
@@ -1000,7 +1003,8 @@ _compute_part_mesh_nodal_2d
                                                                                           pn_vtx,
                                                                                           pvtx_ln_to_gn,
                                                                                           pn_surf,
-                                                                                          psurf_gnum);
+                                                                                          psurf_gnum,
+                                                                                          psurf_to_face_g_num);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     free(psurf_gnum[i_part]);
