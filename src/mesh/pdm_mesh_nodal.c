@@ -2032,13 +2032,14 @@ const PDM_Mesh_nodal_elt_t  t_elt
       mesh->blocks_std[id_block]->st_free_data = st_free_data;
       mesh->blocks_std[id_block]->n_part       = mesh->n_part;
 
-      mesh->blocks_std[id_block]->n_elt        = (PDM_l_num_t  *) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_std[id_block]->n_part);
-      mesh->blocks_std[id_block]->_connec      = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
-      mesh->blocks_std[id_block]->_num_part    = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
-      mesh->blocks_std[id_block]->_numabs      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * mesh->blocks_std[id_block]->n_part);
-      mesh->blocks_std[id_block]->numabs_int   = NULL;
-      mesh->blocks_std[id_block]->_parent_num  = NULL;
-      mesh->blocks_std[id_block]->cell_centers = NULL;
+      mesh->blocks_std[id_block]->n_elt                = (PDM_l_num_t  *) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_std[id_block]->n_part);
+      mesh->blocks_std[id_block]->_connec              = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
+      mesh->blocks_std[id_block]->_num_part            = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
+      mesh->blocks_std[id_block]->_numabs              = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * mesh->blocks_std[id_block]->n_part);
+      mesh->blocks_std[id_block]->numabs_int           = NULL;
+      mesh->blocks_std[id_block]->_parent_num          = NULL;
+      mesh->blocks_std[id_block]->_parent_entity_g_num = NULL;
+      mesh->blocks_std[id_block]->cell_centers         = NULL;
 
       for (int i = 0; i < mesh->blocks_std[id_block]->n_part; i++) {
         mesh->blocks_std[id_block]->n_elt[i]     = 0;
