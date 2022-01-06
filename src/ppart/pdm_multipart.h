@@ -307,7 +307,7 @@ const int                   mpart_id,
 const int                   i_zone,
 const int                   i_part,
       PDM_mesh_entities_t   entity_type,
-      int                 **entity_ln_to_gn,
+      int                 **entity_color,
       PDM_ownership_t       ownership
 );
 

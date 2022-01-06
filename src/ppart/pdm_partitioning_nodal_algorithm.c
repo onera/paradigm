@@ -239,7 +239,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int         **connec                    = (int         **) malloc( (n_section+1) * sizeof(int         *));
   PDM_g_num_t **numabs                    = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
   int         **parent_num                = (int         **) malloc( (n_section+1) * sizeof(int         *));
-  int         **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
 
   for(int i_section = 0; i_section < n_section; ++i_section){
     sparent_entitity_ln_to_gn[i_section] = NULL;
