@@ -119,10 +119,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int                  **block_elmts_n_vtx       = (int                  ** ) malloc( n_section * sizeof(int                  *));
   PDM_Mesh_nodal_elt_t **block_elmts_types       = (PDM_Mesh_nodal_elt_t ** ) malloc( n_section * sizeof(PDM_Mesh_nodal_elt_t *));
   int                  **stride_one              = (int                  ** ) malloc( n_section * sizeof(int                  *));
-  int                  **pid_section             = (int                  ** ) malloc( n_part    * sizeof(int                  *));
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    pid_section[i_part] = malloc(n_section * sizeof(int) );
-  }
+  int                  *pid_section              = (int                  * )  malloc( n_section * sizeof(int                   ));
   int order = 1;
   for (int i_section = 0; i_section < n_section; i_section++) {
     int id_section = dmne->sections_id[i_section];
@@ -133,9 +130,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     stride_one[i_section] = (int * ) malloc( 1 * sizeof(int));
     stride_one[i_section][0] = 1;
 
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      pid_section[i_part][i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-    }
+    pid_section[i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
 
     switch (t_elt) {
       case PDM_MESH_NODAL_POINT:
@@ -262,7 +257,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     /* We allocate here and ownership if tranfert to PDM_part_mesh_nodal_elmts_t*/
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
-      int id_section = pid_section[i_part][i_section];
+      int id_section = pid_section[i_section];
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
       connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
@@ -281,7 +276,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       PDM_g_num_t g_num = elmt_ln_to_gn[i_part][i_elmt]-1;
       int i_section = PDM_binary_search_gap_long(g_num, dmne->section_distribution, n_section+1);
-      int id_section = pid_section[i_part][i_section];
+      int id_section = pid_section[i_section];
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
@@ -306,7 +301,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     /* Fill up structure */
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
-      int id_section = pid_section[i_part][i_section];
+      int id_section = pid_section[i_section];
       PDM_part_mesh_nodal_elmts_std_set(pmne,
                                         id_section,
                                         i_part,
@@ -334,7 +329,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     free(pelmts_connec      [i_part]);
     free(pelmts_stride      [i_part]);
     free(pelmts_types       [i_part]);
-    free(pid_section        [i_part]);
     free(pelmts_stride_idx  [i_part]);
     free(sorted_vtx_ln_to_gn[i_part]);
     free(vtx_order          [i_part]);
