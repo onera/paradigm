@@ -39,6 +39,7 @@
 #include "pdm_error.h"
 #include "pdm_order.h"
 #include "pdm_array.h"
+// #include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -615,8 +616,9 @@ _dual_graph_firstrank
   for (int i = 0; i < part_ini->n_face; i++) {
     int i_cell1 = PDM_ABS (part_ini->face_cell[2*i    ]) - 1;
     int i_cell2 = PDM_ABS (part_ini->face_cell[2*i + 1]) - 1;
-    //Only the non-boundary faces are stored
-    if (i_cell2 > 0) {
+
+    if(i_cell1 > -1 && i_cell2 > -1) {
+
       int idx1 = cell_cell_idx[i_cell1] + cell_cell_n[i_cell1];
       cell_cell[idx1] = i_cell2 + 1;
       cell_cell_n[i_cell1] += 1;

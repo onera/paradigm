@@ -1288,7 +1288,7 @@ _generate_faces_from_dmesh_nodal
     if( 0 == 1 ){
       printf("dmesh_nodal->dn_edge ::%i\n", dm->dn_edge );
       PDM_log_trace_array_int (dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX], dm->dn_edge+1                  , "dm->_dedge_vtx_idx:: ");
-      PDM_log_trace_array_long(dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX], dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX][dm->dn_edge], "dm->_dedge_vtx:: ");
+      PDM_log_trace_array_long(dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX][dm->dn_edge], "dm->_dedge_vtx:: ");
 
       // PDM_log_trace_array_int (dm->dface_edge_idx, dm->dn_face+1                           , "dm->dface_edge_idx:: ");
       // PDM_log_trace_array_long(dm->dface_edge    , dm->dface_edge_idx[dm->dn_face], "dm->dface_edge:: ");
@@ -1309,7 +1309,8 @@ _generate_faces_from_dmesh_nodal
                                 &dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE],
                                 &dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE]);
 
-
+    // PDM_log_trace_array_int (dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dn_face+1                   , "dm->_dface_edge_idx:: ");
+    // PDM_log_trace_array_long(dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][dm->dn_face], "dm->_dface_edge:: ");
 
   }
 }
@@ -1991,7 +1992,7 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmesh_nodal_to_dm
 )
 {
-  // printf("PDM_dmesh_nodal_to_dmesh_free\n");
+  printf("PDM_dmesh_nodal_to_dmesh_free\n");
 
   if(( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
      ( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dmesh_nodal_to_dm->results_is_getted)){
@@ -2009,7 +2010,6 @@ PDM_dmesh_nodal_to_dmesh_free
 
   free(dmesh_nodal_to_dm);
 
-  // printf("PDM_dmesh_nodal_to_dmesh_free end \n");
 }
 
 void

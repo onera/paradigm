@@ -1517,6 +1517,9 @@ PDM_MPI_Comm       comm
       pmeshes->parts[ipart]->cell_ln_to_gn = pcell_ln_to_gn[ipart];
       pmeshes->parts[ipart]->cell_face_idx = pcell_face_idx[ipart];
       pmeshes->parts[ipart]->cell_face     = pcell_face    [ipart];
+      // PDM_log_trace_array_long(pcell_ln_to_gn[ipart], pn_cell       [ipart]             , "(in part ) cell_ln_to_gn ::");
+      // PDM_log_trace_array_int (pcell_face_idx[ipart], pn_cell[ipart]+1             , "(in part ) cell_face_idx ::");
+      // PDM_log_trace_array_int (pcell_face    [ipart], pcell_face_idx[ipart][pn_cell[ipart]], "(in part ) cell_face ::");
     } else {
       pmeshes->parts[ipart]->n_cell        = 0;
       pmeshes->parts[ipart]->cell_ln_to_gn = NULL;
@@ -1557,6 +1560,9 @@ PDM_MPI_Comm       comm
 
     pmeshes->parts[ipart]->face_edge_idx = pface_edge_idx[ipart];
     pmeshes->parts[ipart]->face_edge     = pface_edge    [ipart];
+    // PDM_log_trace_array_long(pface_ln_to_gn[ipart], pn_face       [ipart]             , "(in part ) face_ln_to_gn ::");
+    // PDM_log_trace_array_int (pface_edge_idx[ipart], pn_face[ipart]+1             , "(in part ) face_edge_idx ::");
+    // PDM_log_trace_array_int (pface_edge    [ipart], pface_edge_idx[ipart][pn_face[ipart]], "(in part ) face_edge ::");
   }
 
   // edge_vtx
@@ -1630,15 +1636,15 @@ PDM_MPI_Comm       comm
                 (const int **) pcell_face_idx,
                 (const int **) pcell_face,
                               &pface_cell);
-    PDM_part_reorient_bound_faces(n_part,
-                                  pn_face,
-                                  pface_cell,
-                   (const int **) pcell_face_idx,
-                                  pcell_face,
-                                  NULL, // pface_vtx_idx
-                                  NULL, // pface_vtx
-                                  pface_edge_idx,  //
-                                  pface_edge); //
+    // PDM_part_reorient_bound_faces(n_part,
+    //                               pn_face,
+    //                               pface_cell,
+    //                (const int **) pcell_face_idx,
+    //                               pcell_face,
+    //                               NULL, // pface_vtx_idx
+    //                               NULL, // pface_vtx
+    //                               pface_edge_idx,  //
+    //                               pface_edge); //
     for (int ipart = 0; ipart < n_part; ipart++) {
       pmeshes->parts[ipart]->face_cell    = pface_cell   [ipart];
     }
@@ -1651,15 +1657,15 @@ PDM_MPI_Comm       comm
                 (const int **) pface_edge_idx,
                 (const int **) pface_edge,
                               &pedge_face);
-    PDM_part_reorient_bound_faces(n_part,
-                                  pn_edge,
-                                  pedge_face,
-                   (const int **) pface_edge_idx,
-                                  pface_edge,
-                   (const int **) pedge_vtx_idx,
-                                  pedge_vtx,
-                                  NULL,  //pedge_edge_idx
-                                  NULL); //pedge_edge
+    // PDM_part_reorient_bound_faces(n_part,
+    //                               pn_edge,
+    //                               pedge_face,
+    //                (const int **) pface_edge_idx,
+    //                               pface_edge,
+    //                (const int **) pedge_vtx_idx,
+    //                               pedge_vtx,
+    //                               NULL,  //pedge_edge_idx
+    //                               NULL); //pedge_edge
     for (int ipart = 0; ipart < n_part; ipart++) {
       pmeshes->parts[ipart]->edge_face    = pedge_face   [ipart];
     }
@@ -2110,15 +2116,15 @@ PDM_MPI_Comm      comm
                              (const int **) pcell_face_idx, (const int **) pcell_face,
                             &pface_cell);
 
-  PDM_part_reorient_bound_faces(n_part,
-                                pn_face,
-                                pface_cell,
-                 (const int **) pcell_face_idx,
-                                pcell_face,
-                 (const int **) pface_vtx_idx,
-                                pface_vtx,
-                                NULL,  // pface_edge_idx
-                                NULL); // pface_edge
+  // PDM_part_reorient_bound_faces(n_part,
+  //                               pn_face,
+  //                               pface_cell,
+  //                (const int **) pcell_face_idx,
+  //                               pcell_face,
+  //                (const int **) pface_vtx_idx,
+  //                               pface_vtx,
+  //                               NULL,  // pface_edge_idx
+  //                               NULL); // pface_edge
 
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         n_part,
@@ -2907,14 +2913,24 @@ PDM_multipart_run_ppart
         PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
         PDM_dmesh_nodal_generate_distribution(dmesh_nodal);
         PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmesh_nodal);
-        PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
-                                         PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                         PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+
+        printf("dmesh_nodal->n_cell_abs = %i \n", dmesh_nodal->n_cell_abs );
+        if(dmesh_nodal->n_cell_abs != 0) {
+          PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+        } else {
+          PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                           PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+
+        }
 
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
         _run_ppart_zone2(_dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
         _multipart->dmeshes[i_zone] = _dmesh;
+        PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
       } else { // face representation
         // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, _multipart->n_zone);
