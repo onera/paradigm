@@ -1992,8 +1992,6 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmesh_nodal_to_dm
 )
 {
-  printf("PDM_dmesh_nodal_to_dmesh_free\n");
-
   if(( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
      ( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dmesh_nodal_to_dm->results_is_getted)){
 
