@@ -1,5 +1,5 @@
-#ifndef __PDM_PART1_TO_SELECTED_PART2_H__
-#define	__PDM_PART1_TO_SELECTED_PART2_H__
+#ifndef __PDM_PART_TO_PART_H__
+#define	__PDM_PART_TO_PART_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -26,12 +26,12 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct PDM_part1_to_selected_part2_t
+ * \struct PDM_part_to_part_t
  * \brief  Block to partition redistribution
  *
  */
 
-typedef struct _pdm_part1_to_selected_part2_t PDM_part1_to_selected_part2_t;
+typedef struct _pdm_part_to_part_t PDM_part_to_part_t;
 
 
 /*=============================================================================
@@ -57,12 +57,12 @@ typedef struct _pdm_part1_to_selected_part2_t PDM_part1_to_selected_part2_t;
  * \param [in]   selected_part2      Data to send to gnum2 from gnum1 
  * \param [in]   comm               MPI communicator
  *
- * \return   Initialized \ref PDM_part1_to_selected_part2 instance
+ * \return   Initialized \ref PDM_part_to_part instance
  *
  */
 
-PDM_part1_to_selected_part2_t *
-PDM_part1_to_selected_part2_create
+PDM_part_to_part_t *
+PDM_part_to_part_create
 (
  const PDM_g_num_t   **gnum_elt1,
  const int            *n_elt1,
@@ -76,8 +76,8 @@ PDM_part1_to_selected_part2_create
 );
 
 
-PDM_part1_to_selected_part2_t *
-PDM_part1_to_selected_part2_create_cf
+PDM_part_to_part_t *
+PDM_part_to_part_create_cf
 (
  const PDM_g_num_t    **gnum_elt1,
  const int            *n_elt1,
@@ -105,9 +105,9 @@ PDM_part1_to_selected_part2_create_cf
  */
 
 void
-PDM_part1_to_selected_part2_ialltoall
+PDM_part_to_part_ialltoall
 (
-PDM_part1_to_selected_part2_t *ptp,
+PDM_part_to_part_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
  void                        **selected_part2_data,
@@ -126,9 +126,9 @@ PDM_part1_to_selected_part2_t *ptp,
  */
 
 void
-PDM_part1_to_selected_part2_ialltoall_wait
+PDM_part_to_part_ialltoall_wait
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                           request
 );
 
@@ -148,9 +148,9 @@ PDM_part1_to_selected_part2_ialltoall_wait
  */
 
 void
-PDM_part1_to_selected_part2_ineighbor_alltoall
+PDM_part_to_part_ineighbor_alltoall
 (
-PDM_part1_to_selected_part2_t *ptp,
+PDM_part_to_part_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
  void                        **selected_part2_data,
@@ -169,9 +169,9 @@ PDM_part1_to_selected_part2_t *ptp,
  */
 
 void
-PDM_part1_to_selected_part2_ineighbor_alltoall_wait
+PDM_part_to_part_ineighbor_alltoall_wait
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                           request
 );
 
@@ -189,9 +189,9 @@ PDM_part1_to_selected_part2_ineighbor_alltoall_wait
  */
 
 void
-PDM_part1_to_selected_part2_selected_part2_get
+PDM_part_to_part_selected_part2_get
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                          **n_elt1,
  int                         ***selected_part2_idx,
  PDM_g_num_t                 ***selected_part2
@@ -210,9 +210,9 @@ PDM_part1_to_selected_part2_selected_part2_get
  */
 
 void
-PDM_part1_to_selected_part2_ref_gnum2_get
+PDM_part_to_part_ref_gnum2_get
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                         **n_ref_gnum2,
  int                        ***ref_gnum2
 );
@@ -229,9 +229,9 @@ PDM_part1_to_selected_part2_ref_gnum2_get
  */
 
 void
-PDM_part1_to_selected_part2_unref_gnum2_get
+PDM_part_to_part_unref_gnum2_get
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                         **n_unref_gnum2,
  int                        ***unref_gnum2
 );
@@ -248,9 +248,9 @@ PDM_part1_to_selected_part2_unref_gnum2_get
  */
 
 void
-PDM_part1_to_selected_part2_gnum1_come_from_get
+PDM_part_to_part_gnum1_come_from_get
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                        ***gnum1_come_from_idx,
  PDM_g_num_t                ***gnum1_come_from
 );
@@ -270,9 +270,9 @@ PDM_part1_to_selected_part2_gnum1_come_from_get
  */
 
 void
-PDM_part1_to_selected_part2_issend
+PDM_part_to_part_issend
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
  void                        **selected_part2_data,
@@ -292,9 +292,9 @@ PDM_part1_to_selected_part2_issend
  */
 
 void
-PDM_part1_to_selected_part2_issend_wait
+PDM_part_to_part_issend_wait
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                           request
 );
 
@@ -313,9 +313,9 @@ PDM_part1_to_selected_part2_issend_wait
  */
 
 void
-PDM_part1_to_selected_part2_irecv
+PDM_part_to_part_irecv
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
  void                        **part2_data,
@@ -335,9 +335,9 @@ PDM_part1_to_selected_part2_irecv
  */
 
 void
-PDM_part1_to_selected_part2_irecv_wait
+PDM_part_to_part_irecv_wait
 (
- PDM_part1_to_selected_part2_t *ptp,
+ PDM_part_to_part_t *ptp,
  int                           request
 );
 
@@ -351,10 +351,10 @@ PDM_part1_to_selected_part2_irecv_wait
  * \return       NULL
  */
 
-PDM_part1_to_selected_part2_t *
-PDM_part1_to_selected_part2_free
+PDM_part_to_part_t *
+PDM_part_to_part_free
 (
- PDM_part1_to_selected_part2_t *ptp
+ PDM_part_to_part_t *ptp
 );
 
 #ifdef	__cplusplus
