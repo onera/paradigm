@@ -52,9 +52,9 @@ typedef struct _pdm_part_to_part_t PDM_part_to_part_t;
  * \param [in]   gnum_elt2          Element global number (size : \ref n_part2)
  * \param [in]   n_elt2             Local number of elements (size : \ref n_part2)
  * \param [in]   n_part2            Number of partition
- * \param [in]   selected_part2_idx  Index of data to send to gnum2 from gnum1 
+ * \param [in]   part1_to_part2_idx Index of data to send to gnum2 from gnum1 
  *                                  (for each part size : \ref n_elt1+1) 
- * \param [in]   selected_part2      Data to send to gnum2 from gnum1 
+ * \param [in]   part1_to_part2     Data to send to gnum2 from gnum1 
  * \param [in]   comm               MPI communicator
  *
  * \return   Initialized \ref PDM_part_to_part instance
@@ -70,8 +70,8 @@ PDM_part_to_part_create
  const PDM_g_num_t   **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
- const int           **selected_part2_idx,
- const PDM_g_num_t   **selected_part2,
+ const int           **part1_to_part2_idx,
+ const PDM_g_num_t   **part1_to_part2,
  const PDM_MPI_Comm    comm
 );
 
@@ -85,8 +85,8 @@ PDM_part_to_part_create_cf
  const PDM_g_num_t    **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
- const int           **selected_part2_idx,
- const PDM_g_num_t   **selected_part2,
+ const int           **part1_to_part2_idx,
+ const PDM_g_num_t   **part1_to_part2,
  const PDM_MPI_Fint    fcomm
 );
 
@@ -98,7 +98,7 @@ PDM_part_to_part_create_cf
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   selected_part2_data Data in same order than selected_part2 array
+ * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
  * \param [out]  ref_part2_data      Data to referenced part2 elements
  * \param [out]  request             Request
  *
@@ -110,7 +110,7 @@ PDM_part_to_part_ialltoall
 PDM_part_to_part_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
- void                        **selected_part2_data,
+ void                        **part1_to_part2_data,
  void                        **ref_part2_data,
  int                          *request
 );
@@ -129,7 +129,7 @@ void
 PDM_part_to_part_ialltoall_wait
 (
  PDM_part_to_part_t *ptp,
- int                           request
+ int                 request
 );
 
 
@@ -141,7 +141,7 @@ PDM_part_to_part_ialltoall_wait
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   selected_part2_data Data in same order than selected_part2 array
+ * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
  * \param [out]  ref_part2_data      Data to referenced part2 elements
  * \param [out]  request             Request
  *
@@ -150,12 +150,12 @@ PDM_part_to_part_ialltoall_wait
 void
 PDM_part_to_part_ineighbor_alltoall
 (
-PDM_part_to_part_t *ptp,
- const size_t                  s_data,
- const int                     cst_stride,
- void                        **selected_part2_data,
- void                        **ref_part2_data,
- int                          *request
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part1_to_part2_data,
+ void              **ref_part2_data,
+ int                *request
 );
 
 
@@ -172,7 +172,7 @@ void
 PDM_part_to_part_ineighbor_alltoall_wait
 (
  PDM_part_to_part_t *ptp,
- int                           request
+ int                 request
 );
 
 
@@ -182,19 +182,19 @@ PDM_part_to_part_ineighbor_alltoall_wait
  *
  * \param [in]   ptp                 Block to part structure
  * \param [out]  n_elt1              Number of gnum1 element  
- * \param [out]  selected_part2_idx  Index of data to send to gnum2 from gnum1 
+ * \param [out]  part1_to_part2_idx  Index of data to send to gnum2 from gnum1 
  *                                  (for each part size : \ref n_elt1+1) 
- * \param [out]  selected_part2      Data to send to gnum2 from gnum1 for each part
+ * \param [out]  part1_to_part2      Data to send to gnum2 from gnum1 for each part
  *
  */
 
 void
-PDM_part_to_part_selected_part2_get
+PDM_part_to_part_part1_to_part2_get
 (
  PDM_part_to_part_t *ptp,
- int                          **n_elt1,
- int                         ***selected_part2_idx,
- PDM_g_num_t                 ***selected_part2
+ int               **n_elt1,
+ int              ***part1_to_part2_idx,
+ PDM_g_num_t      ***part1_to_part2
 );
 
 
@@ -213,8 +213,8 @@ void
 PDM_part_to_part_ref_gnum2_get
 (
  PDM_part_to_part_t *ptp,
- int                         **n_ref_gnum2,
- int                        ***ref_gnum2
+ int               **n_ref_gnum2,
+ int              ***ref_gnum2
 );
 
 
@@ -232,8 +232,8 @@ void
 PDM_part_to_part_unref_gnum2_get
 (
  PDM_part_to_part_t *ptp,
- int                         **n_unref_gnum2,
- int                        ***unref_gnum2
+ int               **n_unref_gnum2,
+ int               ***unref_gnum2
 );
 
 
@@ -251,8 +251,8 @@ void
 PDM_part_to_part_gnum1_come_from_get
 (
  PDM_part_to_part_t *ptp,
- int                        ***gnum1_come_from_idx,
- PDM_g_num_t                ***gnum1_come_from
+ int              ***gnum1_come_from_idx,
+ PDM_g_num_t      ***gnum1_come_from
 );
 
 
@@ -263,7 +263,7 @@ PDM_part_to_part_gnum1_come_from_get
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   selected_part2_data Data in same order than selected_part2 array
+ * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
  * \param [in]   tag                 Tag of the exchange 
  * \param [out]  request             Request
  *
@@ -273,11 +273,11 @@ void
 PDM_part_to_part_issend
 (
  PDM_part_to_part_t *ptp,
- const size_t                  s_data,
- const int                     cst_stride,
- void                        **selected_part2_data,
- int                           tag,
- int                          *request
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part1_to_part2_data,
+ int                 tag,
+ int                *request
 );
 
 
@@ -295,7 +295,7 @@ void
 PDM_part_to_part_issend_wait
 (
  PDM_part_to_part_t *ptp,
- int                           request
+ int                 request
 );
 
 
@@ -316,11 +316,11 @@ void
 PDM_part_to_part_irecv
 (
  PDM_part_to_part_t *ptp,
- const size_t                  s_data,
- const int                     cst_stride,
- void                        **part2_data,
- int                           tag,
- int                          *request
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part2_data,
+ int                 tag,
+ int                *request
 );
 
 
@@ -338,7 +338,7 @@ void
 PDM_part_to_part_irecv_wait
 (
  PDM_part_to_part_t *ptp,
- int                           request
+ int                 request
 );
 
 
