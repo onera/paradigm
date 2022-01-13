@@ -19,7 +19,7 @@
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
-#include "pdm_part1_to_selected_part2.h"
+#include "pdm_part_to_part.h"
 
 #include "pdm_writer.h"
 #include "pdm_printf.h"
@@ -1029,7 +1029,7 @@ int main(int argc, char *argv[])
   }
 
 
-  PDM_part1_to_selected_part2_t *ptp = PDM_part1_to_selected_part2_create ((const PDM_g_num_t**) gnum_elt1,
+  PDM_part_to_part_t *ptp = PDM_part_to_part_create ((const PDM_g_num_t**) gnum_elt1,
                                                                          n_elt1,
                                                                          n_part,
                                                                          (const PDM_g_num_t**) gnum_elt2,
@@ -1040,7 +1040,7 @@ int main(int argc, char *argv[])
                                                                          PDM_MPI_COMM_WORLD);
 
 
-  PDM_part1_to_selected_part2_t *ptp2 = PDM_part1_to_selected_part2_create ((const PDM_g_num_t**) gnum_elt2,
+  PDM_part_to_part_t *ptp2 = PDM_part_to_part_create ((const PDM_g_num_t**) gnum_elt2,
                                                                          n_elt2,
                                                                          n_part,
                                                                          (const PDM_g_num_t**) gnum_elt1,
@@ -1052,41 +1052,41 @@ int main(int argc, char *argv[])
 
   int  *n_ref_gnum2;
   int **ref_gnum2;
-  PDM_part1_to_selected_part2_ref_gnum2_get (ptp,
+  PDM_part_to_part_ref_gnum2_get (ptp,
                                             &n_ref_gnum2,
                                             &ref_gnum2);
 
 
   int  *n_unref_gnum2;
   int **unref_gnum2;
-  PDM_part1_to_selected_part2_unref_gnum2_get (ptp,
+  PDM_part_to_part_unref_gnum2_get (ptp,
                                             &n_unref_gnum2,
                                             &unref_gnum2);
 
 
   int         **gnum1_come_from_idx;
   PDM_g_num_t **gnum1_come_from;
-  PDM_part1_to_selected_part2_gnum1_come_from_get (ptp,
+  PDM_part_to_part_gnum1_come_from_get (ptp,
                                                   &gnum1_come_from_idx,
                                                   &gnum1_come_from);
 
 
   int  *ptp2_n_ref_gnum2;
   int **ptp2_ref_gnum2;
-  PDM_part1_to_selected_part2_ref_gnum2_get (ptp2,
+  PDM_part_to_part_ref_gnum2_get (ptp2,
                                             &ptp2_n_ref_gnum2,
                                             &ptp2_ref_gnum2);
 
   int  *ptp2_n_unref_gnum2;
   int **ptp2_unref_gnum2;
-  PDM_part1_to_selected_part2_unref_gnum2_get (ptp2,
+  PDM_part_to_part_unref_gnum2_get (ptp2,
                                             &ptp2_n_unref_gnum2,
                                             &ptp2_unref_gnum2);
 
 
   int         **ptp2_gnum1_come_from_idx;
   PDM_g_num_t **ptp2_gnum1_come_from;
-  PDM_part1_to_selected_part2_gnum1_come_from_get (ptp2,
+  PDM_part_to_part_gnum1_come_from_get (ptp2,
                                                   &ptp2_gnum1_come_from_idx,
                                                   &ptp2_gnum1_come_from);
 
@@ -1103,7 +1103,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_part1_to_selected_part2_issend (ptp,
+  PDM_part_to_part_issend (ptp,
                                      sizeof (PDM_g_num_t),
                                      1,
                                      (void **)  gnum1_gnum2_data,
@@ -1118,7 +1118,7 @@ int main(int argc, char *argv[])
     gnum_elt1_recv[i] = malloc (sizeof(PDM_g_num_t)  * gnum1_come_from_idx[i][n_ref_gnum2[i]]);
   }
 
-  PDM_part1_to_selected_part2_irecv (ptp,
+  PDM_part_to_part_irecv (ptp,
                                     sizeof (PDM_g_num_t),
                                     1,
                                     (void **) gnum_elt1_recv,
@@ -1127,9 +1127,9 @@ int main(int argc, char *argv[])
 
 
 
-  PDM_part1_to_selected_part2_issend_wait (ptp, send_request);
+  PDM_part_to_part_issend_wait (ptp, send_request);
 
-  PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request);
+  PDM_part_to_part_irecv_wait (ptp, recv_request);
 
   for (int i = 0; i < n_part; i++) {
     free (gnum1_gnum2_data[i]);
@@ -1148,7 +1148,7 @@ int main(int argc, char *argv[])
   }
 
   send_request = -1;
-  PDM_part1_to_selected_part2_issend (ptp2,
+  PDM_part_to_part_issend (ptp2,
                                      sizeof (PDM_g_num_t),
                                      1,
                                      (void **) ptp2_s_data,
@@ -1161,7 +1161,7 @@ int main(int argc, char *argv[])
     gnum_elt2_recv[i] = malloc (sizeof(PDM_g_num_t)  * ptp2_gnum1_come_from_idx[i][ptp2_n_ref_gnum2[i]]);
   }
 
-  PDM_part1_to_selected_part2_irecv (ptp2,
+  PDM_part_to_part_irecv (ptp2,
                                     sizeof (PDM_g_num_t),
                                     1,
                                     (void **) gnum_elt2_recv,
@@ -1170,9 +1170,9 @@ int main(int argc, char *argv[])
 
 
 
-  PDM_part1_to_selected_part2_issend_wait (ptp2, send_request);
+  PDM_part_to_part_issend_wait (ptp2, send_request);
 
-  PDM_part1_to_selected_part2_irecv_wait (ptp2, recv_request);
+  PDM_part_to_part_irecv_wait (ptp2, recv_request);
 
   for (int i = 0; i < n_part; i++) {
     free (ptp2_s_data[i]);
@@ -1383,8 +1383,8 @@ int main(int argc, char *argv[])
                           0);
 
 
-  PDM_part1_to_selected_part2_free (ptp);
-  PDM_part1_to_selected_part2_free (ptp2);
+  PDM_part_to_part_free (ptp);
+  PDM_part_to_part_free (ptp2);
 
   PDM_part_free (ppart_src);
   PDM_part_free (ppart_tgt);
