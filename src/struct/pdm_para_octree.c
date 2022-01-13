@@ -12711,6 +12711,45 @@ PDM_para_octree_free_copies
 
 
 
+
+void
+PDM_para_octree_export_vtk
+(
+ const PDM_para_octree_t *octree,
+ const char              *prefix
+ )
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+
+
+  int i_rank;
+  PDM_MPI_Comm_rank (_octree->comm, &i_rank);
+
+  char filename[999];
+
+
+  sprintf(filename, "%s_pts_%2.2d.vtk", prefix, i_rank);
+  _export_octree_points (filename,
+                         _octree,
+                         0);
+
+  sprintf(filename, "%s_octants_%2.2d.vtk", prefix, i_rank);
+  _export_nodes (filename,
+                 _octree->octants->n_nodes,
+                 _octree->octants->codes,
+                 _octree->s,
+                 _octree->d);
+
+  // if (_octree->shared_rank_idx != NULL && i_rank == 0) {
+  // }
+
+  // if (_octree->explicit_nodes_to_build) {
+  //   assert(_octree->explicit_nodes != NULL);
+  //   sprintf(filename, "%s_explicit_%2.2d.vtk", prefix, i_rank);
+  // }
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
