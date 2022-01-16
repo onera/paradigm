@@ -265,7 +265,8 @@ int main(int argc, char *argv[])
    */
   int i_zone = 0;
 
-
+  double      **cell_center    = (double      **) malloc( n_part_zones * sizeof(double      *));
+  PDM_g_num_t **selected_g_num = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   for (int i_part = 0; i_part < n_part_zones; i_part++){
 
     int n_proc, tn_part;
@@ -294,9 +295,104 @@ int main(int argc, char *argv[])
                                &face_part_bound_proc_idx, &face_part_bound_part_idx, &face_part_bound,
                                &vtx_tag, &vtx, &vtx_ln_to_gn, &face_bound_idx, &face_bound,
                                &face_bound_ln_to_gn, &face_join_idx, &face_join, &face_join_ln_to_gn);
-  }
 
+    /*
+     * Compute center-cell and extract cells corresponding to criteria
+     */
+    double *face_center         = (double *) malloc( 3 * n_face * sizeof(double));
+
+    for(int i_face = 0; i_face < n_face; ++i_face) {
+      face_center[3*i_face  ] = 0.;
+      face_center[3*i_face+1] = 0.;
+      face_center[3*i_face+2] = 0.;
+      int n_vtx_on_face = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+      for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = PDM_ABS(face_vtx[idx_vtx])-1;
+        face_center[3*i_face  ] += vtx[3*i_vtx  ];
+        face_center[3*i_face+1] += vtx[3*i_vtx+1];
+        face_center[3*i_face+2] += vtx[3*i_vtx+2];
+      }
+      face_center[3*i_face  ] = face_center[3*i_face  ] / n_vtx_on_face;
+      face_center[3*i_face+1] = face_center[3*i_face+1] / n_vtx_on_face;
+      face_center[3*i_face+2] = face_center[3*i_face+2] / n_vtx_on_face;
+    }
+
+    cell_center[i_part] = (double *) malloc( 3 * n_cell * sizeof(double));
+
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+
+      cell_center[i_part][3*i_cell  ] = 0.;
+      cell_center[i_part][3*i_cell+1] = 0.;
+      cell_center[i_part][3*i_cell+2] = 0.;
+
+      int n_face_on_cell = cell_face_idx[i_cell+1] - cell_face_idx[i_cell];
+
+      for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
+
+        int i_face = PDM_ABS(cell_face[idx_face])-1;
+        cell_center[i_part][3*i_cell  ] += face_center[3*i_face  ];
+        cell_center[i_part][3*i_cell+1] += face_center[3*i_face+1];
+        cell_center[i_part][3*i_cell+2] += face_center[3*i_face+2];
+      }
+      cell_center[i_part][3*i_cell  ] = cell_center[i_part][3*i_cell  ] / n_face_on_cell;
+      cell_center[i_part][3*i_cell+1] = cell_center[i_part][3*i_cell+1] / n_face_on_cell;
+      cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
+    }
+
+    free(face_center);
+
+    selected_g_num[i_part] = (PDM_g_num_t *) malloc(n_cell * sizeof(PDM_g_num_t));
+
+    /*
+     * Sub-part
+     */
+    double bbox[6];
+    bbox[0] = 0.2;
+    bbox[1] = 0.2;
+    bbox[2] = 0.2;
+    bbox[3] = 0.8;
+    bbox[4] = 0.8;
+    bbox[5] = 0.8;
+    int n_select_cell = 0;
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+
+      int inside = 1;
+      for(int i = 0; i < 3; ++i) {
+        if (cell_center[i_part][3*i_cell+i] > bbox[i+3] || cell_center[i_part][3*i_cell+i] < bbox[i]) {
+          inside = 0;
+        }
+      }
+      if(inside == 1) {
+        selected_g_num[i_part][n_select_cell++] = cell_ln_to_gn[i_cell];
+      }
+    }
+
+    selected_g_num[i_part] = realloc(selected_g_num[i_part], n_select_cell * sizeof(PDM_g_num_t));
+
+    PDM_log_trace_array_long(selected_g_num[i_part], n_select_cell, "selected_g_num : ");
+    PDM_log_trace_array_long(cell_ln_to_gn         , n_cell       , "cell_ln_to_gn : ");
+  }
   free(dface_join_idx);
+
+  /*
+   *  We know the extraction of cells required : now we use part_to_part to resetup a coherent part :
+   *           - Redistribute over all process ( And order with scoth or something else)
+   *           - Keep parent_cell_g_num
+   *           - Rebuild by descending connectivity a coherent partition (cell -> face -> vtx + face_group)
+   */
+
+
+
+
+
+
+
+  for (int i_part = 0; i_part < n_part_zones; i_part++){
+    free(cell_center[i_part]);
+    free(selected_g_num[i_part]);
+  }
+  free(cell_center);
+  free(selected_g_num);
 
   PDM_multipart_free(mpart_id);
   PDM_dcube_gen_free(dcube);
