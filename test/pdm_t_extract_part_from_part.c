@@ -29,6 +29,7 @@
 #include "pdm_error.h"
 #include "pdm_vtk.h"
 #include "pdm_dmesh.h"
+#include "pdm_unique.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
@@ -563,7 +564,67 @@ int main(int argc, char *argv[])
                             equi_extract_cell_center,
                             NULL, NULL);
 
+  /*
+   * Prepare next step by descending connectivtity -> See / factorize _pconnectivity_with_local_num
+   */
+  int n_cell_face = cst_stride * dn_cell_equi;
+  PDM_g_num_t *equi_parent_face_ln_to_gn = (PDM_g_num_t * ) malloc(n_cell_face * sizeof(PDM_g_num_t));
+  int         *unique_order_face         = (int         * ) malloc(n_cell_face * sizeof(int        ));
+  for(int i = 0; i < n_cell_face; ++i) {
+    equi_parent_face_ln_to_gn[i] = PDM_ABS(equi_extract_cell_face[i]);
+  }
+  int n_extract_face = PDM_inplace_unique_long2(equi_parent_face_ln_to_gn, unique_order_face, 0, n_cell_face-1);
 
+  int *equi_cell_face = (int *) malloc( n_cell_face * sizeof(int));
+  for(int idx = 0; idx < n_cell_face; ++idx) {
+    int g_sgn  = PDM_SIGN(equi_extract_cell_face[idx]);
+    int l_elmt = unique_order_face[idx];
+    equi_cell_face[idx] = (l_elmt + 1) * g_sgn;
+  }
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(equi_parent_face_ln_to_gn, n_extract_face, "equi_parent_face_ln_to_gn : ");
+    PDM_log_trace_array_int (equi_cell_face           , n_cell_face   , "equi_cell_face : ");
+  }
+
+  /*
+   * At this stage we have the face_ln_to_gn (parent) and we need to create the child
+   */
+  PDM_gen_gnum_t* gnum_extract_face = PDM_gnum_create(3,
+                                                      1, // n_part
+                                                      PDM_FALSE,
+                                                      1.e-6,
+                                                      comm,
+                                                      PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_parents(gnum_extract_face, 0, n_extract_face, equi_parent_face_ln_to_gn);
+  PDM_gnum_compute(gnum_extract_face);
+
+  PDM_g_num_t* extract_face_ln_to_gn = PDM_gnum_get(gnum_extract_face, 0);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(extract_face_ln_to_gn, n_extract_face, "extract_face_ln_to_gn : ");
+  }
+
+  PDM_gnum_free(gnum_extract_face);
+
+  /*
+   * Redo the same but with face_vtx
+   *   No pb for orientation if face is not flip during partitionning process
+   *   Todo it : part_to_part with :
+   *       - part1 = original partition
+   *       - part2 = extract partition
+   *       - part1_to_part2 = equi_parent_face_ln_to_gn
+   *  And exchange will be done by reverse in ptp in order to have in part1 the face_vtx connectivity
+   */
+
+
+
+
+
+  free(equi_parent_face_ln_to_gn);
+  free(extract_face_ln_to_gn);
+  free(unique_order_face);
+  free(equi_cell_face);
 
 
   free(equi_extract_cell_face);
