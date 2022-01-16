@@ -462,15 +462,21 @@ int main(int argc, char *argv[])
    */
   int         **pextract_cell_face_idx = (int         **) malloc( n_part_zones * sizeof(int         *));
   PDM_g_num_t **pextract_cell_face     = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  double      **pextract_cell_center   = (double      **) malloc( n_part_zones * sizeof(double      *));
   for (int i_part = 0; i_part < n_part_zones; i_part++){
 
-    pextract_cell_face_idx[i_part] = malloc( (pn_select_cell[i_part]+1) * sizeof(int));
+    pextract_cell_face_idx[i_part] = malloc( (    pn_select_cell[i_part]+1) * sizeof(int   ));
+    pextract_cell_center  [i_part] = malloc( (3 * pn_select_cell[i_part]  ) * sizeof(double));
 
     int i_extract_cell = 0;
     pextract_cell_face_idx[i_part][0] = 0;
     for(int i_cell = 0; i_cell < pn_cell[i_part]; ++i_cell) {
       for(int s_cell = selected_g_num_idx[i_part][i_cell]; s_cell < selected_g_num_idx[i_part][i_cell+1]; ++s_cell) {
         pextract_cell_face_idx[i_part][i_extract_cell+1] = pextract_cell_face_idx[i_part][i_extract_cell] + (pcell_face_idx[i_part][i_cell+1] - pcell_face_idx[i_part][i_cell]);
+
+        pextract_cell_center[i_part][3*i_extract_cell  ] = cell_center[i_part][3*i_cell  ];
+        pextract_cell_center[i_part][3*i_extract_cell+1] = cell_center[i_part][3*i_cell+1];
+        pextract_cell_center[i_part][3*i_extract_cell+2] = cell_center[i_part][3*i_cell+2];
         i_extract_cell++;
       }
     }
@@ -498,15 +504,70 @@ int main(int argc, char *argv[])
 
   }
 
-
-
   /*
    *  Exchange cell_face in global numebering = cell_face + face_ln_to_gn
    */
+  int send_request = -1;
+  int cst_stride = 6;
+  PDM_part1_to_selected_part2_issend(ptp,
+                                     sizeof(PDM_g_num_t),
+                                     cst_stride, // Hack here because HEXA
+                          (void **)  pextract_cell_face,
+                                     100,
+                                     &send_request);
+
+  PDM_g_num_t* equi_extract_cell_face = (PDM_g_num_t * ) malloc(cst_stride * dn_cell_equi * sizeof(PDM_g_num_t));
+
+  int recv_request = -1;
+  PDM_part1_to_selected_part2_irecv(ptp,
+                                    sizeof(PDM_g_num_t),
+                                    cst_stride, // Hack here because HEXA
+                          (void **) &equi_extract_cell_face,
+                                    100,
+                                    &recv_request);
+
+  PDM_part1_to_selected_part2_issend_wait(ptp, send_request);
+  PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request);
+
+  PDM_log_trace_array_long(equi_extract_cell_face, cst_stride * dn_cell_equi, "equi_extract_cell_face : ");
+
+  /*
+   * Exchange cell_center to post-treated
+   */
+  PDM_part1_to_selected_part2_issend(ptp,
+                                     3 * sizeof(double),
+                                     1,
+                          (void **)  pextract_cell_center,
+                                     100,
+                                     &send_request);
+
+  double* equi_extract_cell_center = (double * ) malloc(3 * dn_cell_equi * sizeof(double));
+
+  PDM_part1_to_selected_part2_irecv(ptp,
+                                    3 * sizeof(double),
+                                    1, // Hack here because HEXA
+                          (void **) &equi_extract_cell_center,
+                                    100,
+                                    &recv_request);
+
+  PDM_part1_to_selected_part2_issend_wait(ptp, send_request);
+  PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request);
+
+  /*
+   * Cell center post with vtk
+   */
+  char filename[999];
+  sprintf(filename, "extract_cell_center_%3.3d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            dn_cell_equi,
+                            equi_extract_cell_center,
+                            NULL, NULL);
 
 
 
 
+  free(equi_extract_cell_face);
+  free(equi_extract_cell_center);
 
   PDM_part1_to_selected_part2_free(ptp);
 
@@ -521,6 +582,7 @@ int main(int argc, char *argv[])
     free(weight[i_part]);
     free(pextract_cell_face[i_part]);
     free(pextract_cell_face_idx[i_part]);
+    free(pextract_cell_center[i_part]);
   }
   free(cell_center);
   free(selected_g_num);
@@ -535,6 +597,7 @@ int main(int argc, char *argv[])
   free(pface_ln_to_gn);
   free(pextract_cell_face);
   free(pextract_cell_face_idx);
+  free(pextract_cell_center);
 
   PDM_multipart_free(mpart_id);
   PDM_dcube_gen_free(dcube);
