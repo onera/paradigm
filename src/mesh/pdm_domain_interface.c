@@ -20,6 +20,7 @@
 #include "pdm_sort.h"
 #include "pdm_unique.h"
 #include "pdm_distrib.h"
+#include "pdm_binary_search.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_block.h"
 #include "pdm_block_to_part.h"
@@ -124,6 +125,317 @@ static PDM_g_num_t* _per_block_offset(int n_block, int *sizes, PDM_MPI_Comm comm
   PDM_array_accumulate_gnum(per_block_offset, n_block+1);
   free(sizes_as_gn);
   return per_block_offset;
+}
+
+// Translate interfaces list to a graph representation
+static int _interface_to_graph
+(
+  const int      n_interface,
+  int           *interface_dn,
+  PDM_g_num_t  **interface_ids,
+  int          **interface_dom,
+  int          **graph_idx,
+  PDM_g_num_t  **graph_ids,
+  int          **graph_dom,
+  PDM_MPI_Comm   comm
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  // Step 0 : retrieve some data. We need (to offset gnums)
+  //   - the number of involved blocks
+  //   - the max id occuring in each block
+  int n_zone = -1;
+  int max_zone_loc = 0;
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    for (int k = 0; k < 2*interface_dn[itrf]; k++) {
+      max_zone_loc = PDM_MAX(max_zone_loc, interface_dom[itrf][k]);
+    }
+  }
+  PDM_MPI_Allreduce(&max_zone_loc, &n_zone, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+  n_zone++; //Because zone numbering start at 0
+  log_trace("max zone loc %d\n", n_zone);
+
+  PDM_g_num_t *max_per_zone_loc = PDM_array_const_gnum(n_zone, 0);
+  PDM_g_num_t *max_per_zone     = malloc((n_zone+1) * sizeof(PDM_g_num_t));
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    for (int k = 0; k < interface_dn[itrf]; k++) {
+      int dom    = interface_dom[itrf][2*k];
+      int domopp = interface_dom[itrf][2*k+1];
+      max_per_zone_loc[dom] = PDM_MAX(max_per_zone_loc[dom], interface_ids[itrf][2*k]);
+      max_per_zone_loc[domopp] = PDM_MAX(max_per_zone_loc[domopp], interface_ids[itrf][2*k+1]);
+    }
+  }
+  PDM_log_trace_array_long(max_per_zone_loc, n_zone, "max per zone loc");
+  max_per_zone[0] = 0;
+  PDM_MPI_Allreduce(max_per_zone_loc, &max_per_zone[1], n_zone, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  PDM_log_trace_array_long(max_per_zone, n_zone+1, "max per itrf");
+  PDM_array_accumulate_gnum(max_per_zone, n_zone+1);
+  PDM_log_trace_array_long(max_per_zone, n_zone+1, "max per zone");
+  free(max_per_zone_loc);
+  
+  // Prepare first PtB with multiple partitions.
+  // Use (shifted) ids as gnum and send tuple (shited) id, opp_id
+  PDM_g_num_t **interface_ids_shifted = malloc(n_interface * sizeof(PDM_g_num_t*));
+  PDM_g_num_t **send_data             = malloc(n_interface * sizeof(PDM_g_num_t*));
+  double      **weight                = malloc(n_interface * sizeof(double*     ));
+  int         **stride_one            = malloc(n_interface * sizeof(int*        ));
+  PDM_g_num_t  *interface_dn_twice    = malloc(n_interface * sizeof(PDM_g_num_t));
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    stride_one[itrf]            = malloc(2*interface_dn[itrf]*sizeof(int        ));
+    interface_ids_shifted[itrf] = malloc(2*interface_dn[itrf]*sizeof(PDM_g_num_t));
+    send_data[itrf]             = malloc(2*interface_dn[itrf]*sizeof(PDM_g_num_t));
+    weight[itrf]                = malloc(2*interface_dn[itrf]*sizeof(double     ));
+    interface_dn_twice[itrf]    = 2*interface_dn[itrf];
+    for (int k = 0; k < interface_dn[itrf]; k++) {
+      interface_ids_shifted[itrf][2*k]   = interface_ids[itrf][2*k] + max_per_zone[interface_dom[itrf][2*k]];
+      interface_ids_shifted[itrf][2*k+1] = interface_ids[itrf][2*k+1] + max_per_zone[interface_dom[itrf][2*k+1]];
+      send_data[itrf][2*k]   = interface_ids[itrf][2*k+1] + max_per_zone[interface_dom[itrf][2*k+1]];
+      send_data[itrf][2*k+1] = interface_ids[itrf][2*k] + max_per_zone[interface_dom[itrf][2*k]];
+      weight[itrf][2*k]   = 1.;
+      weight[itrf][2*k+1] = 1.;
+      stride_one[itrf][2*k]   = 1;
+      stride_one[itrf][2*k+1] = 1;
+    }
+    PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*interface_dn[itrf], "shifted");
+    PDM_log_trace_array_long(send_data[itrf], 2*interface_dn[itrf], "send");
+  }
+  
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      interface_ids_shifted,
+                                                      weight,
+                                                      interface_dn_twice,
+                                                      n_interface,
+                                                      comm);
+  // Save distribution & gnum from first PtB. We will use it for following PtBs
+  int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t *distri = malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *gnum   = malloc(n_gnum    * sizeof(PDM_g_num_t));
+  memcpy(gnum,   PDM_part_to_block_block_gnum_get(ptb),        n_gnum*sizeof(PDM_g_num_t));
+  memcpy(distri, PDM_part_to_block_distrib_index_get(ptb), (n_rank+1)*sizeof(PDM_g_num_t));
+
+  int         *recv_stride = NULL;
+  PDM_g_num_t *recv_data   = NULL;
+  int n_connected_l = PDM_part_to_block_exch(ptb,
+                                             sizeof(PDM_g_num_t),
+                                             PDM_STRIDE_VAR,
+                                             -1,
+                                             stride_one,
+                                   (void **) send_data,
+                                             &recv_stride,
+                                   (void **) &recv_data);
+  log_trace("n recv %d\n", n_connected_l);
+  PDM_log_trace_array_int(recv_stride, n_gnum, "recv stride");
+  PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
+  PDM_log_trace_array_long(recv_data, n_connected_l, "recv data");
+
+  PDM_part_to_block_free(ptb);
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    free(stride_one           [itrf]);
+    free(send_data            [itrf]);
+    free(weight               [itrf]);
+    free(interface_ids_shifted[itrf]);
+  }
+  free(stride_one);
+  free(weight);
+  free(send_data);
+  free(interface_dn_twice);
+  free(interface_ids_shifted);
+
+  int n_connected;
+  PDM_MPI_Allreduce(&n_connected_l, &n_connected, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+  log_trace("Total size of graph : %d \n", n_connected);
+
+
+  /* After first exchange, we received for each gnum a list (usually of size one) of connected
+   * gnum. The idea is to consider this received list as a partition, and to send to each
+   * entity of this partition : the neighbors in the received list (if stride was > 1) + the original gnum.
+   *
+   * After some iterations this will group the related ids together
+  */
+
+  int n_connected_prev = 0;
+  while(n_connected_prev != n_connected) {
+    log_trace("\nStart it\n");
+    n_connected_prev = n_connected;
+
+    ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                    1.,
+                                   &recv_data,
+                                    distri,
+                                   &n_connected_l,
+                                    1,
+                                    comm);
+
+    
+    int *send_stride = malloc(n_connected_l*sizeof(int));
+    int w_idx = 0;
+    int n_data = 0;
+    for (int k = 0; k < n_gnum; k++) {
+      for (int j = 0; j < recv_stride[k]; j++) {
+        send_stride[w_idx++] = recv_stride[k];
+        n_data += recv_stride[k];
+      }
+    }
+    assert (w_idx == n_connected_l);
+    PDM_g_num_t *send_data = malloc(n_data*sizeof(PDM_g_num_t));
+    w_idx = 0;
+    int r_idx = 0;
+    for (int k = 0; k < n_gnum; k++) {
+      for (int j = 0; j < recv_stride[k]; j++) {
+        //Add gnum
+        send_data[w_idx++] = gnum[k];
+        //Add others
+        for (int i = 0; i < j; i++)
+          send_data[w_idx++] = recv_data[r_idx + i];
+        for (int i = j+1; i < recv_stride[k]; i++)
+          send_data[w_idx++] = recv_data[r_idx + i];
+      }
+      r_idx += recv_stride[k];
+    }
+    assert (r_idx == n_connected_l);
+    assert (w_idx == n_data);
+    PDM_log_trace_array_int(send_stride, n_connected_l, "send stride");
+    PDM_log_trace_array_long(send_data, n_data, "send_data");
+
+    int         *recv_stride_next = NULL;
+    PDM_g_num_t *recv_data_next   = NULL;
+    PDM_part_to_block_exch(ptb,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           -1,
+                           &send_stride,
+                 (void **) &send_data,
+                           &recv_stride_next,
+                 (void **) &recv_data_next);
+
+    free(send_stride);
+    free(send_data);
+    PDM_part_to_block_free(ptb);
+    
+    // Post treat recv data to remove duplicated per gnum and count size of graph
+    int start = 0;
+    n_connected_l = 0;
+    for (int i = 0; i < n_gnum; i ++) {
+      int n_unique = PDM_inplace_unique_long(recv_data_next, NULL, start, start+recv_stride_next[i]-1);
+      //Compress array at the same time (let meanless data at the end of array)
+      memcpy(&recv_data_next[n_connected_l], &recv_data_next[start], n_unique*sizeof(PDM_g_num_t));
+      start += recv_stride_next[i];
+      recv_stride_next[i] = n_unique;
+      n_connected_l += n_unique;
+    }
+
+    PDM_log_trace_array_long(gnum, n_gnum, "gnum");
+    PDM_log_trace_array_int(recv_stride_next, n_gnum, "recv stride");
+    PDM_log_trace_array_long(recv_data_next, n_connected_l, "recv data");
+    PDM_MPI_Allreduce(&n_connected_l, &n_connected, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+    log_trace("Total size of graph : %d \n", n_connected);
+
+    free(recv_stride);
+    free(recv_data); // To free after PTB because it was used as lngn
+    recv_data = recv_data_next;
+    recv_stride = recv_stride_next;
+  }
+  
+  // When iteration are completed, all the connections are known by every id.
+  // Last step is to compress the graph and to redistribute it
+  // To do that we take for each group of related id the min of it as lngn
+  int n_keys = 0;
+  n_connected_l = 0;
+  int r_idx = 0;
+  int *is_key_gr = PDM_array_const_int(n_gnum, 1);
+  for (int k = 0; k < n_gnum; k++) {
+    for (int j = 0; j < recv_stride[k]; j++) {
+      if (recv_data[r_idx+j] < gnum[k]) {
+        is_key_gr[k] = 0;
+        break;
+      }
+    }
+    if (is_key_gr[k])
+      n_connected_l += recv_stride[k] + 1;
+    r_idx  += recv_stride[k];
+    n_keys += is_key_gr[k];
+  }
+
+  PDM_g_num_t *lngn_gr        = malloc(n_keys*sizeof(PDM_g_num_t));
+  int         *send_stride_gr = malloc(n_keys*sizeof(int        ));
+  double      *weight_gr      = malloc(n_keys*sizeof(double     ));
+  PDM_g_num_t *send_data_gr   = malloc(n_connected_l *sizeof(PDM_g_num_t));
+  int w_idx = 0;
+  int w_idx2 = 0;
+  r_idx = 0;
+  for (int k = 0; k < n_gnum; k++) {
+    if (is_key_gr[k]) {
+      lngn_gr[w_idx]        = gnum[k];
+      send_stride_gr[w_idx] = recv_stride[k] + 1; //Include gnum in send data so we have directly graph
+      weight_gr[w_idx]      = (double) (recv_stride[k] + 1);
+      w_idx++;
+      send_data_gr[w_idx2++] = gnum[k];
+      memcpy(&send_data_gr[w_idx2], &recv_data[r_idx], recv_stride[k]*sizeof(PDM_g_num_t));
+      w_idx2 += recv_stride[k];
+    }
+    r_idx += recv_stride[k];
+  }
+  log_trace("\n");
+  PDM_log_trace_array_long(lngn_gr, n_keys, "keys");
+  PDM_log_trace_array_int(send_stride_gr, n_keys, "send stride last");
+  PDM_log_trace_array_long(send_data_gr, n_connected_l, "send data last");
+  
+  // Data of previous iteration is not usefull anymore
+  free(gnum);
+  free(distri);
+  free(recv_stride);
+  free(recv_data);
+  
+  //TODO In fact we just want to do a block to block, but PTB + weights compute distribution for us
+  //and we are lazy
+  ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                 PDM_PART_TO_BLOCK_POST_MERGE,
+                                 1.,
+                                &lngn_gr,
+                                &weight_gr,
+                                &n_keys,
+                                 1,
+                                 comm);
+  int graph_dn = PDM_part_to_block_n_elt_block_get(ptb);
+
+  int         *graph_size = NULL;
+  PDM_g_num_t *graph_gnum = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR,
+                         -1,
+                         &send_stride_gr,
+               (void **) &send_data_gr,
+                         &graph_size,
+               (void **) &graph_gnum);
+
+  PDM_part_to_block_free(ptb);
+  free(send_stride_gr);
+  free(send_data_gr);
+  free(weight_gr);
+  free(lngn_gr);
+  free(is_key_gr);
+
+  int* _graph_idx = PDM_array_new_idx_from_sizes_int(graph_size, graph_dn);
+  int *_graph_dom = malloc(_graph_idx[graph_dn]*sizeof(int));
+
+  // Retrieve domain and local gnum in domain
+  for (int i = 0; i < _graph_idx[graph_dn]; i++) {
+    _graph_dom[i] = PDM_binary_search_gap_long(graph_gnum[i]-1, max_per_zone, n_zone+1);
+    graph_gnum[i] -= max_per_zone[_graph_dom[i]];
+  }
+  free(graph_size);
+  free(max_per_zone);
+
+  *graph_idx = _graph_idx;
+  *graph_ids =  graph_gnum;
+  *graph_dom = _graph_dom;
+  return graph_dn;
 }
 
 static int _extract_and_shift_jn_faces
@@ -1727,13 +2039,18 @@ void PDM_domain_interface_set
 )
 {
   assert (dom_intrf != NULL);
-  if (interface_kind != PDM_BOUND_TYPE_FACE) {
-    PDM_error(__FILE__, __LINE__, 0, "Only face domain connectivity is currently supported\n");
+  if (interface_kind == PDM_BOUND_TYPE_VTX) {
+    dom_intrf->interface_dn_vtx  = interface_dn;
+    dom_intrf->interface_ids_vtx = interface_ids;
+    dom_intrf->interface_dom_vtx = interface_dom;
   }
-  else {
+  else if (interface_kind == PDM_BOUND_TYPE_FACE) {
     dom_intrf->interface_dn_face  = interface_dn;
     dom_intrf->interface_ids_face = interface_ids;
     dom_intrf->interface_dom_face = interface_dom;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
   }
 
 }
@@ -1827,6 +2144,49 @@ void PDM_domain_interface_get
   else  {
     PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
   }
+}
+
+int PDM_domain_interface_get_as_graph
+(
+ PDM_domain_interface_t *dom_intrf,
+ PDM_bound_type_t        interface_kind,
+ int                   **interface_graph_idx,
+ PDM_g_num_t           **interface_graph_ids,
+ int                   **interface_graph_dom
+)
+{
+  assert (dom_intrf != NULL);
+  int          *interface_dn = NULL;
+  PDM_g_num_t **interface_ids = NULL;
+  int         **interface_dom = NULL;
+  if (interface_kind == PDM_BOUND_TYPE_FACE) {
+    assert (dom_intrf->interface_dn_face != NULL);
+    interface_dn  = dom_intrf->interface_dn_face;
+    interface_ids = dom_intrf->interface_ids_face;
+    interface_dom = dom_intrf->interface_dom_face;
+  }
+  else if (interface_kind == PDM_BOUND_TYPE_VTX) {
+    assert (dom_intrf->interface_dn_vtx != NULL);
+    interface_dn  = dom_intrf->interface_dn_vtx;
+    interface_ids = dom_intrf->interface_ids_vtx;
+    interface_dom = dom_intrf->interface_dom_vtx;
+  }
+  else  {
+    PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
+  }
+  if (dom_intrf->multizone_intrf != PDM_DOMAIN_INTERFACE_MULT_YES) {
+    PDM_error(__FILE__, __LINE__, 0, "Simplified interface are not yet supported\n");
+  }
+
+  int graph_dn = _interface_to_graph(dom_intrf->n_interface,
+                                     interface_dn,
+                                     interface_ids,
+                                     interface_dom,
+                                     interface_graph_idx,
+                                     interface_graph_ids,
+                                     interface_graph_dom,
+                                     dom_intrf->comm);
+  return graph_dn;
 }
 
 void PDM_domain_interface_free
