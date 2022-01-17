@@ -1524,12 +1524,6 @@ PDM_part_to_part_irecv
   ptp->async_recv_cst_stride[_request]  = cst_stride;      
   ptp->async_recv_tag[_request]         = tag;
 
-  // TODO : Copy ptr
-  // ptp->async_recv_part2_data[_request] = malloc(ptp->n_part2 * sizeof(void *))
-  // for(int i = 0; i < ptp->n_part2; i++) {
-  //   ptp->async_recv_part2_data[_request] = part2_data[i_part];
-  // }
-
   ptp->async_recv_part2_data[_request]  = part2_data;      
   ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
@@ -1622,38 +1616,32 @@ PDM_part_to_part_reverse_irecv
 )
 {
 
-  // *request = _find_open_async_recv_exch (ptp);
-  // int _request = *request;
+  *request = _find_open_async_recv_exch (ptp);
+  int _request = *request;
 
-  // ptp->async_recv_s_data[_request]      = s_data;      
-  // ptp->async_recv_cst_stride[_request]  = cst_stride;      
-  // ptp->async_recv_tag[_request]         = tag;
+  ptp->async_recv_s_data[_request]      = s_data;      
+  ptp->async_recv_cst_stride[_request]  = cst_stride;      
+  ptp->async_recv_tag[_request]         = tag;
 
-  // // TODO : Copy ptr
-  // // ptp->async_recv_part2_data[_request] = malloc(ptp->n_part2 * sizeof(void *))
-  // // for(int i = 0; i < ptp->n_part2; i++) {
-  // //   ptp->async_recv_part2_data[_request] = part2_data[i_part];
-  // // }
+  ptp->async_recv_part2_data[_request]  = part1_data;      
+  ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
+  ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
+  ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
+  ptp->async_i_recv_buffer[_request][0] = 0;
 
-  // ptp->async_recv_part2_data[_request]  = part2_data;      
-  // ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
-  // ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
-  // ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
-  // ptp->async_i_recv_buffer[_request][0] = 0;
-  // for (int i = 0; i < ptp->n_rank; i++) {
-  //   ptp->async_n_recv_buffer[_request][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
-  //   ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
-  // }
-  // ptp->async_recv_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
+  for (int i = 0; i < ptp->n_rank; i++) {
+    ptp->async_n_recv_buffer[_request][i]   = cst_stride * ptp->default_n_send_buffer[i]   * (int) s_data; 
+    ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_i_send_buffer[i+1] * (int) s_data; 
+  }
+  ptp->async_recv_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
 
-  // for (int i = 0; i < ptp->n_active_rank_recv; i++) {
-  //   int source = ptp->active_rank_recv[i];
-  //   unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][source];
-  //   int count = ptp->async_n_recv_buffer[_request][source];
-  //   PDM_MPI_Irecv (buf, count, PDM_MPI_UNSIGNED_CHAR, source, 
-  //                   tag, ptp->comm, &(ptp->async_recv_request[_request][i])); 
-  // }
-
+  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+    int source = ptp->active_rank_send[i];
+    unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][source];
+    int count = ptp->async_n_recv_buffer[_request][source];
+    PDM_MPI_Irecv (buf, count, PDM_MPI_UNSIGNED_CHAR, source, 
+                    tag, ptp->comm, &(ptp->async_recv_request[_request][i])); 
+  }
 }
 
 
@@ -1674,6 +1662,38 @@ PDM_part_to_part_reverse_irecv_wait
  int                 request
 )
 {
+
+  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+    PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
+  }
+
+  size_t s_data  = ptp->async_recv_s_data[request];      
+  int cst_stride = ptp->async_recv_cst_stride[request];      
+
+  unsigned char ** _part1_data = (unsigned char **) ptp->async_recv_part2_data[request];
+
+  int delta = (int) s_data * cst_stride;
+
+  for (int i = 0; i < ptp->n_part1; i++) {
+    for (int i1 = 0; i1 < ptp->n_elt1[i]; i1++) {
+      for (int j = ptp->part1_to_part2_idx[i][i1]; j < ptp->part1_to_part2_idx[i][i1+1]; j++) {
+        for (int k = ptp->gnum1_to_send_buffer_idx[i][j]; 
+                 k < ptp->gnum1_to_send_buffer_idx[i][j+1]; 
+                 k++) {
+
+          if (ptp->gnum1_to_send_buffer[i][k] >= 0) {
+            int idx  = ptp->gnum1_to_send_buffer[i][k] * delta;
+            int idx1 = j * delta;
+            for (int k1 = 0; k1 < delta; k1++) {
+              _part1_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1]; 
+            }
+          }
+        } 
+      }
+    }
+  }
+
+  _free_async_recv_exch (ptp, request);
 
 }
 
