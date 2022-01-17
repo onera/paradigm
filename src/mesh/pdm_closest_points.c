@@ -172,7 +172,7 @@ _closest_points_reverse_results
   PDM_g_num_t *block_tgt_in_src_g_num = NULL;
   int blk_size = PDM_part_to_block_exch (ptb,
                                          sizeof(PDM_g_num_t),
-                                         PDM_STRIDE_VAR,
+                                         PDM_STRIDE_VAR_INTERLACED,
                                         1,
                                         tgt_g_num_n,
                               (void **) tgt_g_num,
@@ -214,7 +214,7 @@ _closest_points_reverse_results
   int** tgt_in_src_n;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_tgt_in_src_n,
                           block_tgt_in_src_g_num,
                          &tgt_in_src_n,
@@ -801,7 +801,7 @@ PDM_transform_to_parent_gnum
   PDM_g_num_t *block_parent = NULL;
   int s_block_data = PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
                (void **)  parent_ln_to_gn,
@@ -823,7 +823,7 @@ PDM_transform_to_parent_gnum
   int stride_one = 1;
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                         &stride_one,
                          block_parent,
                          NULL,

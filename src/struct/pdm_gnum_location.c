@@ -217,7 +217,7 @@ PDM_gnum_location_compute
   PDM_g_num_t *block_distrib_index = PDM_part_to_block_distrib_index_get (ptb);
 
   const int s_data = sizeof(int);
-  const PDM_stride_t t_stride = PDM_STRIDE_VAR;
+  const PDM_stride_t t_stride = PDM_STRIDE_VAR_INTERLACED;
   const int cst_stride = 3;
 
   int  **part_stride = (int **) malloc (sizeof(int *) * gnum_loc->n_part_in);
@@ -266,7 +266,7 @@ PDM_gnum_location_compute
 
   PDM_block_to_part_exch2 (btp,
                           s_data,
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_stride,
                           block_data,
                           &part_stride,

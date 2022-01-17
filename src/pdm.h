@@ -125,8 +125,9 @@ typedef enum {
 
 typedef enum {
 
-  PDM_STRIDE_CST = 0,  /*!< Constant stride element */
-  PDM_STRIDE_VAR = 1   /*!< Variable stride element */
+  PDM_STRIDE_CST_INTERLACED = 0, /*!< Constant stride interlaced */
+  PDM_STRIDE_CST_BLOCK      = 1, /*!< Constant stride block      */
+  PDM_STRIDE_VAR_INTERLACED = 2  /*!< Variable stride interlaced */
 
 } PDM_stride_t;
 

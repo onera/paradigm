@@ -300,7 +300,7 @@ PDM_global_reduce_field_compute
 
   PDM_part_to_block_exch (gre->ptb,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           gre->strides,
                           (void **) gre->local_field,
@@ -352,7 +352,7 @@ PDM_global_reduce_field_compute
 
   PDM_block_to_part_exch (gre->btp,
                           sizeof(double),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &gre->stride,
                           block_field,
                           NULL,

@@ -687,7 +687,7 @@ _create_split_mesh
 
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
                           (void **) &_numabs2,
@@ -696,7 +696,7 @@ _create_split_mesh
 
   PDM_part_to_block_exch (ptb2,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
                           (void **) _numabs,

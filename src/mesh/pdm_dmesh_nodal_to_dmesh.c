@@ -562,7 +562,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int* blk_strid = NULL;
   int s_block_data = PDM_part_to_block_exch(ptb,
                                             sizeof(PDM_g_num_t),
-                                            PDM_STRIDE_VAR,
+                                            PDM_STRIDE_VAR_INTERLACED,
                                             -1,
                                             &stride_one,
                                   (void **) &_tmp_parent_gnum,
@@ -574,7 +574,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   free(blk_strid);
   s_block_data = PDM_part_to_block_exch(ptb,
                                         sizeof(int),
-                                        PDM_STRIDE_VAR,
+                                        PDM_STRIDE_VAR_INTERLACED,
                                         -1,
                                         &stride_one,
                               (void **) &_tmp_parent_sign,
@@ -623,7 +623,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
   s_block_data = PDM_part_to_block_exch(ptb,
                                         sizeof(PDM_g_num_t),
-                                        PDM_STRIDE_VAR,
+                                        PDM_STRIDE_VAR_INTERLACED,
                                         -1,
                                         &stride_one,
                               (void **) &_tmp_missing_parent_gnum,
@@ -745,7 +745,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
   int blk_tot_entity_vtx_size = PDM_part_to_block_exch(       ptb,
                                                               sizeof(PDM_g_num_t),
-                                                              PDM_STRIDE_VAR,
+                                                              PDM_STRIDE_VAR_INTERLACED,
                                                               -1,
                                                               delmt_entity_vtx_n,
                                                     (void **) delmt_entity_vtx,
@@ -756,7 +756,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int* blk_entity_vtx_n     = NULL;
   int blk_entity_vtx_n_size = PDM_part_to_block_exch(         ptb,
                                                             sizeof(int),
-                                                            PDM_STRIDE_VAR,
+                                                            PDM_STRIDE_VAR_INTERLACED,
                                                             -1,
                                                              stride_one,
                                                   (void **)  delmt_entity_vtx_n,
@@ -773,7 +773,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   PDM_g_num_t* blk_elmt_entity_elmt      = NULL;
   int blk_entity_elmt_size = PDM_part_to_block_exch(         ptb,
                                                            sizeof(PDM_g_num_t),
-                                                           PDM_STRIDE_VAR,
+                                                           PDM_STRIDE_VAR_INTERLACED,
                                                            -1,
                                                             stride_one,
                                                  (void **)  delmt_entity,
@@ -784,7 +784,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int* blk_parent_elmt_position      = NULL;
   PDM_part_to_block_exch(        ptb,
                          sizeof(int),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          -1,
                          stride_one,
               (void **)  dparent_elmt_position,
@@ -795,7 +795,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   int* blk_part_id      = NULL;
   PDM_part_to_block_exch(        ptb,
                          sizeof(int),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          -1,
                          stride_one,
               (void **)  part_id,
@@ -1057,7 +1057,7 @@ _generate_faces_from_dmesh_nodal
     int stride_one = 1;
     PDM_block_to_part_exch2(btp,
                             sizeof(int),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &stride_one,
                (void *  )   dflip_face,
                             NULL,
@@ -1526,7 +1526,7 @@ _generate_edges_from_dmesh_nodal
     int stride_one = 1;
     PDM_block_to_part_exch2(btp,
                             sizeof(int),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &stride_one,
                             (void *  )   dflip_edge,
                             NULL,
@@ -1653,7 +1653,7 @@ _translate_element_group_to_entity
 
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_stride,
              (void *  )   dchild_elt_parent,
                           &part_stride,
@@ -2388,7 +2388,7 @@ PDM_g_num_t  **dentity_elmt
 
   int blk_tot_entity_vtx_size = PDM_part_to_block_exch(         ptb,
                                                               sizeof(PDM_g_num_t),
-                                                              PDM_STRIDE_VAR,
+                                                              PDM_STRIDE_VAR_INTERLACED,
                                                               -1,
                                                               &delmt_entity_vtx_n,
                                                     (void **) &delmt_entity_vtx,
@@ -2399,7 +2399,7 @@ PDM_g_num_t  **dentity_elmt
   int* blk_entity_vtx_n     = NULL;
   int blk_entity_vtx_n_size = PDM_part_to_block_exch(         ptb,
                                                             sizeof(int),
-                                                            PDM_STRIDE_VAR,
+                                                            PDM_STRIDE_VAR_INTERLACED,
                                                             -1,
                                                             &stride_one,
                                                   (void **) &delmt_entity_vtx_n,
@@ -2411,7 +2411,7 @@ PDM_g_num_t  **dentity_elmt
   PDM_g_num_t* blk_elmt_entity_elmt      = NULL;
   int blk_entity_elmt_size = PDM_part_to_block_exch(         ptb,
                                                            sizeof(PDM_g_num_t),
-                                                           PDM_STRIDE_VAR,
+                                                           PDM_STRIDE_VAR_INTERLACED,
                                                            -1,
                                                            &stride_one,
                                                  (void **) &delmt_entity,

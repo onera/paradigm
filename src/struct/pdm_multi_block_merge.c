@@ -157,7 +157,7 @@ PDM_multi_block_merge_create
   int *blk_select_kind   = NULL;
   int dn_blk_size = PDM_part_to_block_exch(ptb,
                                         sizeof(int),
-                                        PDM_STRIDE_VAR,
+                                        PDM_STRIDE_VAR_INTERLACED,
                                         1,
                                         _stride_one,
                               (void **) _select_kind,
@@ -167,7 +167,7 @@ PDM_multi_block_merge_create
   PDM_g_num_t *blk_send_orig_g_num = NULL;
   PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          1,
                          _stride_one,
                (void **) _send_orig_g_num,
@@ -351,7 +351,7 @@ PDM_multi_block_merge_exch
                                 &tmp_block_strid_out,
                     (void ***)  &tmp_block_data_out);
 
-  if(t_stride == PDM_STRIDE_VAR) {
+  if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
     *merge_block_stride = tmp_block_strid_out[0];
     free(tmp_block_strid_out);
   }
@@ -410,7 +410,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
 
   int pn_merge_parent = PDM_multi_block_merge_get_n_block(mbm);
   int n_parent = 0;
-  if (t_stride == PDM_STRIDE_CST) {
+  if (t_stride == PDM_STRIDE_CST_INTERLACED) {
     n_parent = cst_stride * pn_merge_parent;
   } else {
     n_parent = 0;
@@ -439,7 +439,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
   PDM_g_num_t **tmp_dparent_child_final;
   PDM_block_to_part_exch2 (btp_update_parent,
                            sizeof(PDM_g_num_t),
-                           PDM_STRIDE_VAR,
+                           PDM_STRIDE_VAR_INTERLACED,
                            dchild_old_to_n,
                   (void *) dchild_old_to_new,
                            &parent_tmp_tmp_n,
@@ -449,7 +449,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
 
   int n_parent_old = n_parent;
   int *dparent_child_stride_final = NULL;
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
     int n_parent_new = 0;
     for (int i = 0; i < n_parent; i++) {
       n_parent_new += parent_tmp_n[i];
@@ -468,7 +468,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
   }
 
 
-  if(0 == 1 && t_stride == PDM_STRIDE_VAR) {
+  if(0 == 1 && t_stride == PDM_STRIDE_VAR_INTERLACED) {
     log_trace("n_parent_old = %d, pn_merge_parent = %d, n_parent_new = %d\n",
               n_parent_old, pn_merge_parent, n_parent);
     PDM_log_trace_array_int(parent_tmp_n       , n_parent, "parent_tmp_n : ");
@@ -485,7 +485,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
   PDM_block_to_part_free(btp_update_parent);
 
   //PDM_UNUSED(merge_block_stride);
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
     *merge_block_stride = dparent_child_stride_final;//dparent_child_strid;
     free (parent_tmp_n);
   } else {

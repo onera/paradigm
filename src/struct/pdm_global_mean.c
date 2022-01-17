@@ -276,7 +276,7 @@ PDM_global_mean_field_compute
 
   PDM_part_to_block_exch (gmean->ptb,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                          gmean->strides,
                          (void **) gmean->local_field,
@@ -293,7 +293,7 @@ PDM_global_mean_field_compute
 
     PDM_part_to_block_exch (gmean->ptb,
                             sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             _stride_w,
                            (void **) gmean->local_weight,
@@ -349,7 +349,7 @@ PDM_global_mean_field_compute
 
   PDM_block_to_part_exch (gmean->btp,
                           sizeof(double),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &gmean->stride,
                           block_field,
                           NULL,
