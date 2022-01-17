@@ -258,12 +258,12 @@ PDM_part_to_part_gnum1_come_from_get
 
 /**
  *
- * \brief Initialize a asynchronus issend
+ * \brief Initialize an asynchronus issend
  *
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
+ * \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
  * \param [in]   tag                 Tag of the exchange 
  * \param [out]  request             Request
  *
@@ -283,7 +283,7 @@ PDM_part_to_part_issend
 
 /**
  *
- * \brief Wait a asynchronus issend
+ * \brief Wait an asynchronus issend (part1 to part2)
  *
  * \param [in]  ptp           part to part structure
  * \param [in]  tag           Tag of the exchange 
@@ -301,12 +301,55 @@ PDM_part_to_part_issend_wait
 
 /**
  *
- * \brief Initialize a asynchronus irecv from reference gnum2
+ * \brief Initialize an asynchronus reverse issend (part2 to part1)
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   part2_to_part1_data Data (order given by gnum1_come_from and ref_gnum2 arrays)  
+ * \param [in]   tag                 Tag of the exchange 
+ * \param [out]  request             Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_issend
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part2_to_part1_data,
+ int                 tag,
+ int                *request
+);
+
+
+/**
+ *
+ * \brief Wait an asynchronus reverse issend (part2 to part1)
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  tag           Tag of the exchange 
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_issend_wait
+(
+ PDM_part_to_part_t *ptp,
+ int                 request
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus irecv (from part1)
  *
  * \param [in]  ptp           Part to part structure
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
- * \param [in]  part2_data    Partition 2 data
+ * \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays) 
  * \param [in]  tag           Tag of the exchange 
  * \param [out] request       Request
  *
@@ -326,7 +369,7 @@ PDM_part_to_part_irecv
 
 /**
  *
- * \brief Initialize a asynchronus irecv
+ * \brief Initialize a asynchronus irecv (from part1)
  *
  * \param [in]  ptp           Part to part structure
  * \param [in]  tag           Tag of the exchange 
@@ -336,6 +379,49 @@ PDM_part_to_part_irecv
 
 void
 PDM_part_to_part_irecv_wait
+(
+ PDM_part_to_part_t *ptp,
+ int                 request
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus reverse irecv (from part2)
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  s_data        Data size
+ * \param [in]  cst_stride    Constant stride
+ * \param [in]  part1_data    Partition 1 data (order given by part1_to_part2 array)
+ * \param [in]  tag           Tag of the exchange 
+ * \param [out] request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_irecv
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part2_data,
+ int                 tag,
+ int                *request
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus reverse irecv (from part2)
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  tag           Tag of the exchange 
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_irecv_wait
 (
  PDM_part_to_part_t *ptp,
  int                 request

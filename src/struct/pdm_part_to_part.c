@@ -1310,7 +1310,7 @@ PDM_part_to_part_gnum1_come_from_get
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part1_to_part2_data Data in same order than part1_to_part2 array
+ * \param [in]   part1_to_part2_data Data (order given by part1_to_part2 array)
  * \param [in]   tag                 Tag of the exchange 
  * \param [out]  request             Request
  *
@@ -1401,12 +1401,105 @@ PDM_part_to_part_issend_wait
 
 /**
  *
+ * \brief Initialize an asynchronus reverse issend (part2 to part1)
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   part2_to_part1_data Data (order given by gnum1_come_from and ref_gnum2 arrays)  
+ * \param [in]   tag                 Tag of the exchange 
+ * \param [out]  request             Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_issend
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part2_to_part1_data,
+ int                 tag,
+ int                *request
+)
+{
+  unsigned char ** _part2_data = (unsigned char **) part2_to_part1_data;
+
+  *request = _find_open_async_send_exch (ptp);
+  int _request = *request;
+
+  ptp->async_send_s_data[_request]      = s_data;      
+  ptp->async_send_cst_stride[_request]  = cst_stride;      
+  ptp->async_send_tag[_request]         = tag;      
+  ptp->async_send_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
+  ptp->async_n_send_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
+  ptp->async_i_send_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
+  ptp->async_i_send_buffer[_request][0] = 0;
+  for (int i = 0; i < ptp->n_rank; i++) {
+    ptp->async_n_send_buffer[_request][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
+    ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
+  }
+  ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);      
+
+  int delta = (int) s_data * cst_stride;
+  for (int i = 0; i < ptp->n_part2; i++) {
+    for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
+      for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
+        int idx = ptp->recv_buffer_to_ref_gnum2[i][k] * delta;
+        int idx1 = k* delta;
+        for (int k1 = 0; k1 < delta; k1++) {
+          ptp->async_recv_buffer[_request][idx+k1] = _part2_data[i][idx1+k1]; 
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < ptp->n_active_rank_recv; i++) {
+    int dest = ptp->active_rank_recv[i];
+    unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][dest];
+    int count = ptp->async_n_recv_buffer[_request][dest];
+    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest, 
+                    tag, ptp->comm, &(ptp->async_send_request[_request][i])); 
+  }
+}
+
+
+/**
+ *
+ * \brief Wait an asynchronus reverse issend (part2 to part1)
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  tag           Tag of the exchange 
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_issend_wait
+(
+ PDM_part_to_part_t *ptp,
+ int                 request
+)
+{
+
+  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+    PDM_MPI_Wait (&(ptp->async_send_request[request][i]));
+  }
+
+  _free_async_send_exch (ptp, request);
+  
+}
+
+
+
+/**
+ *
  * \brief Initialize a asynchronus irecv
  *
  * \param [in]  ptp           Part to part structure
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
- * \param [in]  part1_data    Partition 2 data
+ * \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays) 
  * \param [in]  tag           Tag of the exchange 
  * \param [out] request       Request
  *
@@ -1506,11 +1599,92 @@ PDM_part_to_part_irecv_wait
 
 /**
  *
+ * \brief Initialize a asynchronus reverse irecv (from part2)
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  s_data        Data size
+ * \param [in]  cst_stride    Constant stride
+ * \param [in]  part1_data    Partition 1 data (order given by part1_to_part2 array)
+ * \param [in]  tag           Tag of the exchange 
+ * \param [out] request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_irecv
+(
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part1_data,
+ int                 tag,
+ int                *request
+)
+{
+
+  // *request = _find_open_async_recv_exch (ptp);
+  // int _request = *request;
+
+  // ptp->async_recv_s_data[_request]      = s_data;      
+  // ptp->async_recv_cst_stride[_request]  = cst_stride;      
+  // ptp->async_recv_tag[_request]         = tag;
+
+  // // TODO : Copy ptr
+  // // ptp->async_recv_part2_data[_request] = malloc(ptp->n_part2 * sizeof(void *))
+  // // for(int i = 0; i < ptp->n_part2; i++) {
+  // //   ptp->async_recv_part2_data[_request] = part2_data[i_part];
+  // // }
+
+  // ptp->async_recv_part2_data[_request]  = part2_data;      
+  // ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
+  // ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
+  // ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
+  // ptp->async_i_recv_buffer[_request][0] = 0;
+  // for (int i = 0; i < ptp->n_rank; i++) {
+  //   ptp->async_n_recv_buffer[_request][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
+  //   ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
+  // }
+  // ptp->async_recv_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
+
+  // for (int i = 0; i < ptp->n_active_rank_recv; i++) {
+  //   int source = ptp->active_rank_recv[i];
+  //   unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][source];
+  //   int count = ptp->async_n_recv_buffer[_request][source];
+  //   PDM_MPI_Irecv (buf, count, PDM_MPI_UNSIGNED_CHAR, source, 
+  //                   tag, ptp->comm, &(ptp->async_recv_request[_request][i])); 
+  // }
+
+}
+
+
+/**
+ *
+ * \brief Initialize a asynchronus reverse irecv (from part2)
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  tag           Tag of the exchange 
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_irecv_wait
+(
+ PDM_part_to_part_t *ptp,
+ int                 request
+)
+{
+
+}
+
+/**
+ *
  * \brief Free a block to part structure
  *
  * \param [inout] ptp  Block to part structure
  *
  * \return       NULL
+ *
  */
 
 PDM_part_to_part_t *
@@ -1631,4 +1805,5 @@ PDM_part_to_part_free
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif 
+
