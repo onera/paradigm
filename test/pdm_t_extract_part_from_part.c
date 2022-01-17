@@ -23,7 +23,7 @@
 #include "pdm_printf.h"
 #include "pdm_sort.h"
 #include "pdm_gnum.h"
-#include "pdm_part1_to_selected_part2.h"
+#include "pdm_part_to_part.h"
 #include "pdm_part_to_block.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *dextract_gnum = PDM_part_to_block_block_gnum_get(ptb_equi);
 
 
-  PDM_part1_to_selected_part2_t* ptp = PDM_part1_to_selected_part2_create((const PDM_g_num_t **) pcell_ln_to_gn,
+  PDM_part_to_part_t* ptp = PDM_part_to_part_create((const PDM_g_num_t **) pcell_ln_to_gn,
                                                                           pn_cell,
                                                                           n_part_zones,
                                                                           (const PDM_g_num_t **) &dextract_gnum,
@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
    */
   int send_request = -1;
   int cst_stride = 6;
-  PDM_part1_to_selected_part2_issend(ptp,
+  PDM_part_to_part_issend(ptp,
                                      sizeof(PDM_g_num_t),
                                      cst_stride, // Hack here because HEXA
                           (void **)  pextract_cell_face,
@@ -520,22 +520,22 @@ int main(int argc, char *argv[])
   PDM_g_num_t* equi_extract_cell_face = (PDM_g_num_t * ) malloc(cst_stride * dn_cell_equi * sizeof(PDM_g_num_t));
 
   int recv_request = -1;
-  PDM_part1_to_selected_part2_irecv(ptp,
+  PDM_part_to_part_irecv(ptp,
                                     sizeof(PDM_g_num_t),
                                     cst_stride, // Hack here because HEXA
                           (void **) &equi_extract_cell_face,
                                     100,
                                     &recv_request);
 
-  PDM_part1_to_selected_part2_issend_wait(ptp, send_request);
-  PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request);
+  PDM_part_to_part_issend_wait(ptp, send_request);
+  PDM_part_to_part_irecv_wait (ptp, recv_request);
 
   PDM_log_trace_array_long(equi_extract_cell_face, cst_stride * dn_cell_equi, "equi_extract_cell_face : ");
 
   /*
    * Exchange cell_center to post-treated
    */
-  PDM_part1_to_selected_part2_issend(ptp,
+  PDM_part_to_part_issend(ptp,
                                      3 * sizeof(double),
                                      1,
                           (void **)  pextract_cell_center,
@@ -544,15 +544,15 @@ int main(int argc, char *argv[])
 
   double* equi_extract_cell_center = (double * ) malloc(3 * dn_cell_equi * sizeof(double));
 
-  PDM_part1_to_selected_part2_irecv(ptp,
+  PDM_part_to_part_irecv(ptp,
                                     3 * sizeof(double),
                                     1, // Hack here because HEXA
                           (void **) &equi_extract_cell_center,
                                     100,
                                     &recv_request);
 
-  PDM_part1_to_selected_part2_issend_wait(ptp, send_request);
-  PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request);
+  PDM_part_to_part_issend_wait(ptp, send_request);
+  PDM_part_to_part_irecv_wait (ptp, recv_request);
 
   /*
    * Cell center post with vtk
@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
   free(equi_extract_cell_face);
   free(equi_extract_cell_center);
 
-  PDM_part1_to_selected_part2_free(ptp);
+  PDM_part_to_part_free(ptp);
 
   PDM_part_to_block_free(ptb_equi);
   PDM_gnum_free(gnum_extract);
