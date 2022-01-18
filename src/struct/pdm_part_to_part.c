@@ -1717,6 +1717,266 @@ PDM_part_to_part_reverse_irecv_wait
 
 }
 
+
+/**
+ *
+ * \brief Initialize a partial asynchronus exchange
+ *
+ * \param [in]   ptp              Part to part structure
+ * \param [in]   k_commm          Kind of MPI communication
+ * \param [in]   t_stride         Kind of stride
+ * \param [in]   t_part1_data_def Kind of part1 data definition
+ * \param [in]   cst_stride       Constant stride
+ * \param [in]   s_data           Data size
+ * \param [in]   part1_stride     Stride of partition 1 data 
+ * \param [in]   part1_data       Partition 1 data 
+ * \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+ * \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+ * \param [out]  request          Request
+ *
+ */
+
+void
+PDM_part_to_part_iexch
+(
+ PDM_part_to_part_t                *ptp,
+ const PDM_mpi_comm_kind_t          k_comm, 
+ const PDM_stride_t                 t_stride,
+ const PDM_part_to_part_data_def_t  t_part1_data_def,
+ const int                          cst_stride,
+ const size_t                       s_data,
+ const int                        **part1_stride,
+ const void                       **part1_data,
+ int                             ***part2_stride,
+ void                            ***part2_data,
+ int                               *request
+)
+{
+  // assert(k_comm == PDM_MPI_COMM_KIND_P2P);
+
+  // if (t_stride == PDM_STRIDE_CST_BLOCK) {
+
+  //   fprintf ("Error PDM_part_to_part_iexch : PDM_STRIDE_CST_BLOCK stride is not implemented yet\n");
+  //   abort();
+
+  // } 
+
+  // else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+
+  //   void
+  //   PDM_part_to_part_reverse_irecv
+  //   (
+  //    PDM_part_to_part_t *ptp,
+  //    const size_t        s_data,
+  //    const int           cst_stride,
+  //    void              **part2_data,
+  //    int                 tag,
+  //    int                *request
+  //   );
+
+
+  //   fprintf ("Error PDM_part_to_part_iexch : PDM_STRIDE_CST_INTERLACED stride is not implemented yet\n");
+  //   abort();
+    
+  // } 
+
+  // else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+
+  // /*
+  //  *  Echange de la stride
+  //  */
+  // int send_request_stri = -1;
+  // PDM_part1_to_selected_part2_issend(ptp,
+  //                                    sizeof (int),
+  //                                    1, // Stride = 1
+  //                                    (void **)  selected_part2_stride,
+  //                                    100,
+  //                                    &send_request_stri);
+
+  // int* send_n = malloc(ptp->n_rank * sizeof(int));
+  // for (int i = 0; i < ptp->n_rank; i++) {
+  //   send_n[i] = 0;
+  // }
+
+  // int n_blk_send = ptp->async_i_send_buffer[send_request_stri][ptp->n_rank]/sizeof(int);
+  // int* blk_send_stride = (int*) ptp->async_send_buffer[send_request_stri];
+  // int* blk_send_idx    = malloc( (n_blk_send + 1) * sizeof(int) );
+  // for (int i = 0; i < ptp->n_active_rank_send; i++) {
+  //   int dest = ptp->active_rank_send[i];
+  //   int beg =       ptp->async_i_send_buffer[send_request_stri][dest]/sizeof(int);
+  //   int end = beg + ptp->async_n_send_buffer[send_request_stri][dest]/sizeof(int);
+  //   for(int j = beg; j < end; ++j) {
+  //     send_n[dest] += blk_send_stride[j];
+  //   }
+  // }
+  // blk_send_idx[0] = 0;
+  // for(int i = 0; i < n_blk_send; ++i) {
+  //   blk_send_idx[i+1] = blk_send_idx[i] + blk_send_stride[i];
+  // }
+
+  // PDM_log_trace_array_int(send_n , ptp->n_rank, "send_n :: ");
+  // PDM_log_trace_array_int(blk_send_idx, n_blk_send, "blk_send_idx :: ");
+
+  // int** _part2_stride = malloc( ptp->n_part2 * sizeof(int*));
+  // for(int i = 0; i < ptp->n_part2; ++i) {
+  //   _part2_stride[i] = malloc( ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]] * sizeof(int));
+  // }
+
+  // int recv_request_stri = -1;
+  // PDM_part1_to_selected_part2_irecv (ptp,
+  //                                    sizeof (int),
+  //                                    1,
+  //                                    (void **) _part2_stride,
+  //                                    100,
+  //                                    &recv_request_stri);
+
+  // /*
+  //  * Calcul des strides d'arrivés
+  //  */
+
+
+  // PDM_part1_to_selected_part2_issend_wait(ptp, send_request_stri);
+  // // PDM_part1_to_selected_part2_irecv_wait (ptp, recv_request_stri);
+
+  // int *recv_n       = NULL;
+  // int *blk_recv_idx = NULL;
+  // PDM_part1_to_selected_part2_irecv_wait2(ptp, &recv_n, &blk_recv_idx, recv_request_stri);
+
+  // PDM_log_trace_array_int(recv_n , ptp->n_rank, "recv_n :: ");
+
+
+  // int send_request_data = -1;
+  // PDM_part1_to_selected_part2_issend_var(ptp,
+  //                                        s_data,
+  //                                        -1,
+  //                                        send_n,
+  //                                        blk_send_idx,
+  //                                        selected_part2_stride,
+  //                                        selected_part2_data,
+  //                                        1000,
+  //                                        &send_request_data);
+
+  // free(send_n);
+  // free(blk_send_idx);
+  // /*
+  //  * Strid recv ol
+  //  */
+
+  // unsigned char** _part2_data = malloc( ptp->n_part2 * sizeof(unsigned char *));
+  // for(int i = 0; i < ptp->n_part2; ++i) {
+  //   int size = 0;
+  //   for(int j = 0; j < ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]]; ++j) {
+  //     size += _part2_stride[i][j];
+  //   }
+  //   _part2_data[i] = malloc( size * s_data * sizeof(unsigned char));
+  // }
+
+
+  // int recv_request_data = -1;
+  // PDM_part1_to_selected_part2_irecv_var(ptp,
+  //                                       s_data,
+  //                                       -1,
+  //                                       recv_n,
+  //                             (void **) _part2_data,
+  //                                       1000,
+  //                                       &recv_request_data);
+
+  // PDM_MPI_Barrier(ptp->comm);
+  // printf("wait send_request_data = %i \n", send_request_data);
+  // PDM_part1_to_selected_part2_issend_wait(ptp, send_request_data);
+  // PDM_part1_to_selected_part2_irecv_wait_var (ptp,
+  //                                             blk_recv_idx,
+  //                                             _part2_stride,
+  //                                             recv_request_data);
+
+
+  // free(recv_n);
+  // free(blk_recv_idx);
+
+  // *part2_stride =          _part2_stride;
+  // *part2_data   = (void *) _part2_data;
+
+}
+
+
+/**
+ *
+ * \brief Wait a partial asynchronus exchange
+ *
+ * \param [in]  ptp      Part to part structure
+ * \param [in]  request  Request
+ *
+ */
+
+void
+PDM_part_to_part_iexch_wait
+(
+ PDM_part_to_part_t                *ptp,
+ int                                request
+)
+{
+  
+}
+
+
+/**
+ *
+ * \brief Initialize a partial reverse asynchronus exchange
+ *
+ * \param [in]   ptp              Part to part structure
+ * \param [in]   k_commm          Kind of MPI communication
+ * \param [in]   t_stride         Kind of stride
+ * \param [in]   t_part2_data_def Kind of part2 data definition
+ * \param [in]   cst_stride       Constant stride
+ * \param [in]   s_data           Data size
+ * \param [in]   part2_stride     Stride of partition 1 data (Accordding to t_part2_data_def) 
+ * \param [in]   part2_data       Partition 1 data (Accordding to t_part2_data_def)
+ * \param [out]  part1_stride     Stride of partition 2 data (order given by part1_to_part2)
+ * \param [out]  part1_data       Partition 2 data (order given by part1_to_part2)
+ * \param [out]  request          Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_iexch
+(
+ PDM_part_to_part_t                *ptp,
+ const PDM_mpi_comm_kind_t          k_comm, 
+ const PDM_stride_t                 t_stride,
+ const PDM_part_to_part_data_def_t  t_part2_data_def,
+ const int                          cst_stride,
+ const size_t                       s_data,
+ const int                        **part2_stride,
+ const void                       **part2_data,
+ int                             ***part1_stride,
+ void                            ***part1_data,
+ int                               *request
+)
+{
+  
+}
+
+
+/**
+ *
+ * \brief Wait a partial asynchronus exchange
+ *
+ * \param [in]  ptp      Part to part structure
+ * \param [in]  request  Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_iexch_wait
+(
+ PDM_part_to_part_t                *ptp,
+ int                                request
+)
+{
+  
+}
+
+
 /**
  *
  * \brief Free a block to part structure

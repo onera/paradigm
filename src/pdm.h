@@ -133,7 +133,7 @@ typedef enum {
 
 
 /**
- * \enum PDM_mpi_framework_t
+ * \enum PDM_mpi_comm_t
  * \brief Framework used for MPI communications
  *
  */

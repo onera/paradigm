@@ -34,6 +34,25 @@ extern "C" {
 typedef struct _pdm_part_to_part_t PDM_part_to_part_t;
 
 
+/**
+ * \enum PDM_part_to_part_data_def_t
+ * \brief Kind of data definition
+ *
+ */
+
+typedef enum {
+
+  PDM_PART_TO_PART_DATA_DEF_ORDER_PART1           = 0, /*!< Data defined according 
+                                                         to the part1 arrays order*/
+  PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2  = 1, /*!< Data defined according 
+                                                         to the part1_to_part2 arrays order */
+  PDM_PART_TO_PART_DATA_DEF_ORDER_PART2           = 2, /*!< Data defined according 
+                                                         to the part2 arrays order*/
+  PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = 3, /*!< Data defined according 
+                                                         to the gnum1_come_from arrays order */
+
+} PDM_part_to_part_data_def_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -425,6 +444,110 @@ PDM_part_to_part_reverse_irecv_wait
 (
  PDM_part_to_part_t *ptp,
  int                 request
+);
+
+
+/**
+ *
+ * \brief Initialize a partial asynchronus exchange
+ *
+ * \param [in]   ptp              Part to part structure
+ * \param [in]   k_commm          Kind of MPI communication
+ * \param [in]   t_stride         Kind of stride
+ * \param [in]   t_part1_data_def Kind of part1 data definition
+ * \param [in]   cst_stride       Constant stride
+ * \param [in]   s_data           Data size
+ * \param [in]   part1_stride     Stride of partition 1 data 
+ * \param [in]   part1_data       Partition 1 data 
+ * \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+ * \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+ * \param [out]  request          Request
+ *
+ */
+
+void
+PDM_part_to_part_iexch
+(
+ PDM_part_to_part_t                *ptp,
+ const PDM_mpi_comm_kind_t          k_comm, 
+ const PDM_stride_t                 t_stride,
+ const PDM_part_to_part_data_def_t  t_part1_data_def,
+ const int                          cst_stride,
+ const size_t                       s_data,
+ const int                        **part1_stride,
+ const void                       **part1_data,
+ int                             ***part2_stride,
+ void                            ***part2_data,
+ int                               *request
+);
+
+
+/**
+ *
+ * \brief Wait a partial asynchronus exchange
+ *
+ * \param [in]  ptp      Part to part structure
+ * \param [in]  request  Request
+ *
+ */
+
+void
+PDM_part_to_part_iexch_wait
+(
+ PDM_part_to_part_t                *ptp,
+ int                                request
+);
+
+
+/**
+ *
+ * \brief Initialize a partial reverse asynchronus exchange
+ *
+ * \param [in]   ptp              Part to part structure
+ * \param [in]   k_commm          Kind of MPI communication
+ * \param [in]   t_stride         Kind of stride
+ * \param [in]   t_part2_data_def Kind of part2 data definition
+ * \param [in]   cst_stride       Constant stride
+ * \param [in]   s_data           Data size
+ * \param [in]   part2_stride     Stride of partition 1 data (Accordding to t_part2_data_def) 
+ * \param [in]   part2_data       Partition 1 data (Accordding to t_part2_data_def)
+ * \param [out]  part1_stride     Stride of partition 2 data (order given by part1_to_part2)
+ * \param [out]  part1_data       Partition 2 data (order given by part1_to_part2)
+ * \param [out]  request          Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_iexch
+(
+ PDM_part_to_part_t                *ptp,
+ const PDM_mpi_comm_kind_t          k_comm, 
+ const PDM_stride_t                 t_stride,
+ const PDM_part_to_part_data_def_t  t_part2_data_def,
+ const int                          cst_stride,
+ const size_t                       s_data,
+ const int                        **part2_stride,
+ const void                       **part2_data,
+ int                             ***part1_stride,
+ void                            ***part1_data,
+ int                               *request
+);
+
+
+/**
+ *
+ * \brief Wait a partial asynchronus exchange
+ *
+ * \param [in]  ptp      Part to part structure
+ * \param [in]  request  Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_iexch_wait
+(
+ PDM_part_to_part_t                *ptp,
+ int                                request
 );
 
 
