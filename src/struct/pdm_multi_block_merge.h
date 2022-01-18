@@ -64,6 +64,20 @@ PDM_multi_block_merge_create
        PDM_MPI_Comm   comm
 );
 
+PDM_multi_block_merge_t*
+PDM_multi_block_merge_create2
+(
+       PDM_g_num_t  **block_distrib_idx,
+ const int            n_block,
+       int           *n_selected,
+       PDM_g_num_t  **selected_g_num,
+       int            graph_size,
+       int           *dmerge_idx,
+       int           *dmerge_block_id,
+       PDM_g_num_t   *dmerge_g_num,
+       PDM_MPI_Comm   comm
+);
+
 
 int
 PDM_multi_block_merge_get_n_block
