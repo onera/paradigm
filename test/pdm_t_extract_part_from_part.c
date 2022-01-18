@@ -659,7 +659,8 @@ int main(int argc, char *argv[])
   /*   */
   PDM_g_num_t **send_face_vtx = malloc(n_part_zones * sizeof(PDM_g_num_t *));
   for(int i_part = 0; i_part < n_part_zones; ++i_part) {
-    send_face_vtx[i_part] = malloc(4 * n_extract_face * sizeof(PDM_g_num_t));
+    send_face_vtx[i_part] = malloc(4 * gnum1_come_from_idx[i_part][n_ref_face[i_part]] * sizeof(PDM_g_num_t));
+
 
     int idx_write = 0;
     for(int j = 0; j < n_ref_face[i_part]; ++j) {
@@ -672,7 +673,7 @@ int main(int argc, char *argv[])
     }
 
     printf("idx_write = %i | 4 * n_extract_face = %i \n", idx_write, 4 * n_extract_face);
-    PDM_log_trace_array_long(send_face_vtx[i_part], 4 * n_extract_face, "send_face_vtx      : ");
+    PDM_log_trace_array_long(send_face_vtx[i_part], 4 * gnum1_come_from_idx[i_part][n_ref_face[i_part]], "send_face_vtx      : ");
   }
 
 
