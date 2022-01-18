@@ -1448,7 +1448,7 @@ PDM_part_to_part_reverse_issend
         int idx = ptp->recv_buffer_to_ref_gnum2[i][k] * delta;
         int idx1 = k* delta;
         for (int k1 = 0; k1 < delta; k1++) {
-          ptp->async_recv_buffer[_request][idx+k1] = _part2_data[i][idx1+k1]; 
+          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx1+k1];
         }
       }
     }
@@ -1456,8 +1456,8 @@ PDM_part_to_part_reverse_issend
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     int dest = ptp->active_rank_recv[i];
-    unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][dest];
-    int count = ptp->async_n_recv_buffer[_request][dest];
+    unsigned char *buf =  ptp->async_send_buffer[_request] + ptp->async_i_send_buffer[_request][dest];
+    int count = ptp->async_n_send_buffer[_request][dest];
     PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest, 
                     tag, ptp->comm, &(ptp->async_send_request[_request][i])); 
   }

@@ -275,10 +275,13 @@ int main(int argc, char *argv[])
   PDM_g_num_t **pface_ln_to_gn     = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   int         **selected_g_num_idx = (int         **) malloc( n_part_zones * sizeof(int         *));
   int          *pn_cell            = (int          *) malloc( n_part_zones * sizeof(int          ));
+  int          *pn_face            = (int          *) malloc( n_part_zones * sizeof(int          ));
   int          *pn_select_cell     = (int          *) malloc( n_part_zones * sizeof(int          ));
   double      **weight             = (double      **) malloc( n_part_zones * sizeof(double      *));
   int         **pcell_face         = (int         **) malloc( n_part_zones * sizeof(int         *));
   int         **pcell_face_idx     = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int         **pface_vtx          = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int         **pface_vtx_idx      = (int         **) malloc( n_part_zones * sizeof(int         *));
 
   PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3,
                                                  n_part_zones,
@@ -322,6 +325,10 @@ int main(int argc, char *argv[])
     pface_ln_to_gn[i_part] = face_ln_to_gn;
     pcell_face    [i_part] = cell_face;
     pcell_face_idx[i_part] = cell_face_idx;
+    pn_face       [i_part] = n_face;
+
+    pface_vtx    [i_part] = face_vtx;
+    pface_vtx_idx[i_part] = face_vtx_idx;
 
 
     /*
@@ -498,10 +505,8 @@ int main(int argc, char *argv[])
       }
     }
 
-
     PDM_log_trace_array_long(pextract_cell_face    [i_part], pextract_cell_face_idx[i_part][pn_select_cell[i_part]], "pextract_cell_face     : ");
     PDM_log_trace_array_int (pextract_cell_face_idx[i_part], pn_select_cell[i_part]+1                              , "pextract_cell_face_idx : ");
-
 
   }
 
@@ -607,24 +612,99 @@ int main(int argc, char *argv[])
 
   PDM_gnum_free(gnum_extract_face);
 
+  int *equi_parent_face_idx = malloc( (n_extract_face + 1) * sizeof(int));
+  equi_parent_face_idx[0] = 0;
+  for(int i = 0; i < n_extract_face; ++i) {
+    equi_parent_face_idx[i+1] = equi_parent_face_idx[i] + 1;
+  }
+
+
   /*
    * Redo the same but with face_vtx
    *   No pb for orientation if face is not flip during partitionning process
    *   Todo it : part_to_part with :
-   *       - part1 = original partition
-   *       - part2 = extract partition
+   *       - part1 = extract partition
+   *       - part2 = original partition
    *       - part1_to_part2 = equi_parent_face_ln_to_gn
    *  And exchange will be done by reverse in ptp in order to have in part1 the face_vtx connectivity
    */
+  PDM_part_to_part_t* ptp_face = PDM_part_to_part_create((const PDM_g_num_t **) &extract_face_ln_to_gn,
+                                                         &n_extract_face,
+                                                         1,
+                                                         (const PDM_g_num_t **) pface_ln_to_gn,
+                                                         pn_face,
+                                                         n_part_zones,
+                                                         (const int         **) &equi_parent_face_idx,
+                                                         (const PDM_g_num_t **) &equi_parent_face_ln_to_gn,
+                                                         comm);
+
+  int          *n_ref_face     = NULL;
+  int         **ref_l_num_face = NULL;
+  PDM_part_to_part_ref_gnum2_get(ptp_face, &n_ref_face, &ref_l_num_face);
+
+  int         **gnum1_come_from_idx = NULL;
+  PDM_g_num_t **gnum1_come_from     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp_face, &gnum1_come_from_idx, &gnum1_come_from);
+
+  for (int i_part = 0; i_part < n_part_zones; i_part++) {
+    PDM_log_trace_array_int(ref_l_num_face[i_part], n_ref_face[i_part]                             , "ref_l_num_face      : ");
+    PDM_log_trace_array_int (gnum1_come_from_idx[i_part], n_ref_face[i_part]                             , "gnum1_come_from_idx : ");
+    PDM_log_trace_array_long(gnum1_come_from    [i_part], gnum1_come_from_idx[i_part][n_ref_face[i_part]], "gnum1_come_from     : ");
+  }
 
 
+  // Creation buffer partition 2 : face_vtx + face_vtx_idx ( n_face )
 
 
+  /*   */
+  PDM_g_num_t **send_face_vtx = malloc(n_part_zones * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+    send_face_vtx[i_part] = malloc(4 * n_extract_face * sizeof(PDM_g_num_t));
+
+    int idx_write = 0;
+    for(int j = 0; j < n_ref_face[i_part]; ++j) {
+      for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
+        int l_face = ref_l_num_face[i_part][k];
+        for(int l = pface_vtx_idx[i_part][l_face]; l < pface_vtx_idx[i_part][l_face+1]; ++l) {
+          send_face_vtx[i_part][idx_write++] = pface_vtx[i_part][l];
+        }
+      }
+    }
+
+    printf("idx_write = %i | 4 * n_extract_face = %i \n", idx_write, 4 * n_extract_face);
+    PDM_log_trace_array_long(send_face_vtx[i_part], 4 * n_extract_face, "send_face_vtx      : ");
+  }
+
+
+  PDM_part_to_part_reverse_issend(ptp_face,
+                                  sizeof(PDM_g_num_t),
+                                  4,
+                       (void **)  send_face_vtx, // Donc in same order of part2_to_part1_data
+                                  100,
+                                  &send_request);
+
+  PDM_g_num_t *recv_face_vtx = malloc( 4 * n_extract_face * sizeof(PDM_g_num_t));
+  PDM_part_to_part_reverse_irecv(ptp_face,
+                                  sizeof(PDM_g_num_t),
+                                  4, // Hack here because HEXA
+                        (void **) &recv_face_vtx,  // order given by gnum1_come_from and ref_gnum2 arrays
+                                  100,
+                                  &recv_request);
+
+  PDM_part_to_part_reverse_issend_wait(ptp_face, send_request);
+  PDM_part_to_part_reverse_irecv_wait (ptp_face, recv_request);
+
+
+  PDM_log_trace_array_long(recv_face_vtx, 4 * n_extract_face, "recv_face_vtx : ");
+
+  PDM_part_to_part_free(ptp_face);
 
   free(equi_parent_face_ln_to_gn);
   free(extract_face_ln_to_gn);
   free(unique_order_face);
   free(equi_cell_face);
+  free(equi_parent_face_idx);
+  free(recv_face_vtx);
 
 
   free(equi_extract_cell_face);
@@ -644,13 +724,18 @@ int main(int argc, char *argv[])
     free(pextract_cell_face[i_part]);
     free(pextract_cell_face_idx[i_part]);
     free(pextract_cell_center[i_part]);
+    free(send_face_vtx[i_part]);
   }
   free(cell_center);
   free(selected_g_num);
   free(selected_g_num_idx);
   free(pn_cell);
+  free(pn_face);
+  free(send_face_vtx);
   free(pcell_face);
   free(pcell_face_idx);
+  free(pface_vtx);
+  free(pface_vtx_idx);
   free(child_selected_g_num);
   free(pn_select_cell);
   free(weight);
