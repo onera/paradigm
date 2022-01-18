@@ -2916,7 +2916,7 @@ PDM_multipart_run_ppart
         PDM_dmesh_nodal_generate_distribution(dmesh_nodal);
         PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmesh_nodal);
 
-        printf("dmesh_nodal->n_cell_abs = %i \n", dmesh_nodal->n_cell_abs );
+        printf("dmesh_nodal->n_cell_abs = "PDM_FMT_G_NUM" \n", dmesh_nodal->n_cell_abs );
         if(dmesh_nodal->n_cell_abs != 0) {
           PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,

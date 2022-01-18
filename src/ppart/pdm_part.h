@@ -101,10 +101,9 @@ typedef struct _part_t     part_t;
  *
  */
 
-void
+PDM_part_t *
 PDM_part_create
 (
- int                         *ppart_id,
  const PDM_MPI_Comm           comm,
  const PDM_part_split_t       split_method,
  const char                  *renum_cell_method,
@@ -137,42 +136,34 @@ PDM_part_create
 void
 PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
 (
- int                *ppart_id,
- const PDM_MPI_Fint *fcomm,
- const int          *split_method,
- const char         *renum_cell_method,
- const int          *l_renum_cell_method,
- const char         *renum_face_method,
- const int          *l_renum_face_method,
- const int          *n_property_cell,
- const int          *renum_properties_cell,
- const int          *n_property_face,
- const int          *renum_properties_face,
- const int          *n_part,
- const int          *dn_cell,
- const int          *dn_face,
- const int          *dn_vtx,
- const int          *n_face_group,
- const int          *have_dcell_face,
- const int          *dcell_faceIdx,
- const PDM_g_num_t  *dcell_face,
- const int          *have_dcell_tag,
- const int          *dcell_tag,
- const int          *have_dcell_weight,
- const int          *dcell_weight,
- const int          *have_dcell_part,
-       int          *dcell_part,
- const int          *have_dface_cell,
- const PDM_g_num_t  *dface_cell,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const int          *have_dface_tag,
- const int          *dface_tag,
- const double       *dvtx_coord,
- const int          *have_dvtx_tag,
- const int          *dvtx_tag,
- const int          *dface_group_idx,
- const PDM_g_num_t  *dface_group
+ PDM_part_t                 **ppart,
+ const PDM_MPI_Fint           f_comm,
+ const PDM_part_split_t       split_method,
+ const char                  *renum_cell_method,
+ const char                  *renum_face_method,
+ const int                    n_property_cell,
+ const int                   *renum_properties_cell,
+ const int                    n_property_face,
+ const int                   *renum_properties_face,
+ const int                    n_part,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const int                   *dcell_tag,
+ const int                   *dcell_weight,
+ const int                    have_dcell_part,
+       int                   *dcell_part,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const int                   *dface_tag,
+ const double                *dvtx_coord,
+ const int                   *dvtx_tag,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
 );
 
 /**
@@ -197,7 +188,7 @@ PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
 void
 PDM_part_part_dim_get
 (
-const  int    ppart_id,
+PDM_part_t   *ppart,
 const  int    i_part,
        int   *n_cell,
        int   *n_face,
@@ -214,7 +205,7 @@ const  int    i_part,
 void
 PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
 (
- int           *ppart_id,
+ PDM_part_t  *ppart_id,
  int           *i_part,
  int           *n_cell,
  int           *n_face,
@@ -268,7 +259,7 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
 
 void PDM_part_part_val_get
 (
-const int            ppart_id,
+PDM_part_t          *ppart,
 const int            i_part,
       int          **cell_tag,
       int          **cell_face_idx,
@@ -293,7 +284,7 @@ const int            i_part,
 void
 PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
 (
- int           *ppart_id,
+ PDM_part_t  *ppart_id,
  int           *i_part,
  int           *cell_tag,
  int           *cell_face_idx,
@@ -327,7 +318,7 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
 
 void PDM_part_part_color_get
 (
-const int            ppart_id,
+PDM_part_t          *ppart,
 const int            i_part,
       int          **cell_color,
       int          **face_color,
@@ -338,7 +329,7 @@ const int            i_part,
 void
 PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
 (
- int           *ppart_id,
+ PDM_part_t  *ppart_id,
  int           *i_part,
  int           *cell_color,
  int           *face_color,
@@ -357,13 +348,13 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
 void
 PDM_part_free
 (
-const  int                ppart_id
+PDM_part_t  *ppart
 );
 
 void
 PROCF (pdm_part_free, PDM_PART_FREE)
 (
- int                *ppart_id
+ PDM_part_t  *ppart_id
 );
 
 /**
@@ -381,18 +372,18 @@ PROCF (pdm_part_free, PDM_PART_FREE)
 void
 PDM_part_time_get
 (
-const int       ppart_id,
-      double  **elapsed,
-      double  **cpu,
-      double  **cpu_user,
-      double  **cpu_sys
-);
+ PDM_part_t  *ppart,
+ double     **elapsed,
+ double     **cpu,
+ double     **cpu_user,
+ double     **cpu_sys
+ );
 
 
 void
 PROCF (pdm_part_time_get, PDM_PART_TIME_GET)
 (
- int      *ppart_id,
+ PDM_part_t  *ppart_id,
  double   *elapsed,
  double   *cpu,
  double   *cpu_user,
@@ -421,24 +412,24 @@ PROCF (pdm_part_time_get, PDM_PART_TIME_GET)
 void
 PDM_part_stat_get
 (
-const int       ppart_id,
-      int      *cells_average,
-      int      *cells_median,
-      double   *cells_std_deviation,
-      int      *cells_min,
-      int      *cells_max,
-      int      *bound_part_faces_average,
-      int      *bound_part_faces_median,
-      double   *bound_part_faces_std_deviation,
-      int      *bound_part_faces_min,
-      int      *bound_part_faces_max,
-      int      *bound_part_faces_sum
+PDM_part_t  *ppart,
+int         *cells_average,
+int         *cells_median,
+double      *cells_std_deviation,
+int         *cells_min,
+int         *cells_max,
+int         *bound_part_faces_average,
+int         *bound_part_faces_median,
+double      *bound_part_faces_std_deviation,
+int         *bound_part_faces_min,
+int         *bound_part_faces_max,
+int         *bound_part_faces_sum
 );
 
 void
 PROCF (pdm_part_stat_get, PDM_PART_STAT_GET)
 (
-const int      *ppart_id,
+PDM_part_t  *ppart_id,
       int      *cells_average,
       int      *cells_median,
       double   *cells_std_deviation,
@@ -464,7 +455,7 @@ const int      *ppart_id,
 void
 PDM_part_partial_free
 (
-const  int                ppart_id
+PDM_part_t  *ppart
 );
 
 /**
@@ -478,7 +469,7 @@ const  int                ppart_id
 PDM_part_t*
 PDM_get_mesh_part_from_id
 (
- int  ppart_id
+ PDM_part_t  *ppart_id
 );
 
 #ifdef __cplusplus

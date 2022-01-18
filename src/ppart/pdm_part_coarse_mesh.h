@@ -14,7 +14,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_part.h"
-
+#include "pdm_part_coarse_mesh_priv.h"
 
 #if !defined (__hpux) && !defined (_AIX)
 #define PROCF(x, y) x##_
@@ -28,6 +28,8 @@ extern "C" {
 #endif
 
 
+typedef struct _coarse_mesh_t PDM_coarse_mesh_t;
+
 /**
  *
  * \brief Return an initialized coarse mesh object
@@ -37,7 +39,7 @@ extern "C" {
  * \param [in]   pt_comm           Communicator
  * \param [in]   method            Choice between (1 for ParMETIS or 2 for PT-Scotch)
  * \param [in]   n_part             Number of partitions
- * \param [in]   n_total_part            Total number of partitions
+ * \param [in]   n_total_part       Total number of partitions
  * \param [in]   have_cell_tag      Presence d'un tableau de tags pour les cellules
  * \param [in]   have_face_tag      Presence d'un tableau de tags pour les faces
  * \param [in]   have_vtx_tag       Presence d'un tableau de tags pour les sommets
@@ -46,10 +48,9 @@ extern "C" {
  * \param [in]   have_face_group    Presence des tableaux de groupes de faces
  */
 
-void
+PDM_coarse_mesh_t *
 PDM_part_coarse_mesh_create
 (
- int                *cmId,
  PDM_MPI_Comm        comm,
  const char*         method,
  const char         *renum_cell_method,
@@ -69,10 +70,9 @@ PDM_part_coarse_mesh_create
  const int           have_face_group
 );
 
-void
+PDM_coarse_mesh_t *
 PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 (
- int                *cmId,
  PDM_MPI_Fint       *fcomm,
  const char         *method,
  const int          *l_method,
@@ -144,7 +144,7 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 void
 PDM_part_coarse_mesh_input
 (
- int                 cmId,
+ PDM_coarse_mesh_t  *cm,
  int                 i_part,
  const int           n_coarse_cell,
  const int           n_cell,
@@ -177,7 +177,7 @@ PDM_part_coarse_mesh_input
 void
 PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 (
- int                *cmId,
+ PDM_coarse_mesh_t  *cmId,
  int                *i_part,
  const int          *n_coarse_cell,
  const int          *n_cell,
@@ -223,13 +223,13 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 void
 PDM_part_coarse_mesh_compute
 (
-  int cmId
+  PDM_coarse_mesh_t *cm
 );
 
 void
 PROCF (pdm_part_coarse_mesh_compute, PDM_PART_COARSE_MESH_COMPUTE)
 (
-  int *cmId
+  PDM_coarse_mesh_t *cmId
 );
 
 /**
@@ -256,25 +256,25 @@ PROCF (pdm_part_coarse_mesh_compute, PDM_PART_COARSE_MESH_COMPUTE)
 void
 PDM_part_coarse_mesh_part_dim_get
 (
- const int      cmId,
- int            i_part,
- int           *n_cell,
- int           *n_face,
- int           *n_face_part_bound,
- int           *n_vtx,
- int           *n_proc,
- int           *n_total_part,
- int           *n_face_group,
- int           *scell_face,
- int           *sface_vtx,
- int           *sface_group,
- int           *sCoarseCellToFineCell
+ PDM_coarse_mesh_t *cm,
+ int                i_part,
+ int               *n_cell,
+ int               *n_face,
+ int               *n_face_part_bound,
+ int               *n_vtx,
+ int               *n_proc,
+ int               *n_total_part,
+ int               *n_face_group,
+ int               *scell_face,
+ int               *sface_vtx,
+ int               *sface_group,
+ int               *sCoarseCellToFineCell
 );
 
 void
 PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
 (
- const int     *cmId,
+ PDM_coarse_mesh_t     *cmId,
  int           *i_part,
  int           *n_cell,
  int           *n_face,
@@ -339,37 +339,37 @@ PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
 void
 PDM_part_coarse_mesh_part_get
 (
- const int    cmId,
- const int    i_part,
- int          **cell_face_idx,
- int          **cell_face,
- int          **cell_tag,
- PDM_g_num_t **cell_ln_to_gn,
- int          **cellInitCellIdx,
- int          **cellInitCell,
- int          **face_cell,
- int          **face_vtx_idx,
- int          **face_vtx,
- int          **face_tag,
- PDM_g_num_t **face_ln_to_gn,
- int          **faceGroupInitFaceGroup,
- int          **faceInitFace,
- double       **vtxCoord,
- int          **vtx_tag,
- PDM_g_num_t **vtx_ln_to_gn,
- int          **vtxInitVtx,
- int          **face_group_idx,
- int          **face_group,
- PDM_g_num_t **face_group_ln_to_gn,
- int          **face_part_bound_proc_idx,
- int          **face_part_bound_part_idx,
- int          **face_part_bound
+ PDM_coarse_mesh_t  *cm,
+ const int           i_part,
+ int               **cell_face_idx,
+ int               **cell_face,
+ int               **cell_tag,
+ PDM_g_num_t       **cell_ln_to_gn,
+ int               **cellInitCellIdx,
+ int               **cellInitCell,
+ int               **face_cell,
+ int               **face_vtx_idx,
+ int               **face_vtx,
+ int               **face_tag,
+ PDM_g_num_t       **face_ln_to_gn,
+ int               **faceGroupInitFaceGroup,
+ int               **faceInitFace,
+ double            **vtxCoord,
+ int               **vtx_tag,
+ PDM_g_num_t       **vtx_ln_to_gn,
+ int               **vtxInitVtx,
+ int               **face_group_idx,
+ int               **face_group,
+ PDM_g_num_t       **face_group_ln_to_gn,
+ int               **face_part_bound_proc_idx,
+ int               **face_part_bound_part_idx,
+ int               **face_part_bound
 );
 
 void
 PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
 (
- int          *cmId,
+ PDM_coarse_mesh_t *cm,
  int          *i_part,
  int          *cell_face_idx,
  int          *cell_face,
@@ -408,12 +408,12 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
 
 void PDM_part_coarse_color_get
 (
- const int   cmId,
- const int   i_part,
-       int **cell_color,
-       int **face_color,
-       int **thread_color,
-       int **hyperplane_color
+ PDM_coarse_mesh_t  *cm,
+ const int           i_part,
+       int         **cell_color,
+       int         **face_color,
+       int         **thread_color,
+       int         **hyperplane_color
 );
 
 /**
@@ -427,13 +427,13 @@ void PDM_part_coarse_color_get
 void
 PDM_part_coarse_mesh_free
 (
- const int    cmId
+ PDM_coarse_mesh_t  *cm
 );
 
 void
 PROCF (pdm_part_coarse_mesh_free, PDM_PART_COARSE_MESH_FREE)
 (
-  int *cmId
+  PDM_coarse_mesh_t *cmId
 );
 
 /**
@@ -450,17 +450,17 @@ PROCF (pdm_part_coarse_mesh_free, PDM_PART_COARSE_MESH_FREE)
 
 void PDM_part_coarse_mesh_time_get
 (
- int       cmId,
- double  **elapsed,
- double  **cpu,
- double  **cpu_user,
- double  **cpu_sys
+ PDM_coarse_mesh_t  *cm,
+ double            **elapsed,
+ double            **cpu,
+ double            **cpu_user,
+ double            **cpu_sys
 );
 
 void
 PROCF (pdm_part_coarse_mesh_time_get, PDM_PART_COARSE_MESH_TIME_GET)
 (
- int      *cmId,
+ PDM_coarse_mesh_t      *cm,
  double   *elapsed,
  double   *cpu,
  double   *cpu_user,
@@ -478,13 +478,13 @@ PROCF (pdm_part_coarse_mesh_time_get, PDM_PART_COARSE_MESH_TIME_GET)
 void
 PDM_part_coarse_mesh_display
 (
- const int    cmId
+ PDM_coarse_mesh_t  *cm
 );
 
 void
 PROCF (pdm_part_coarse_mesh_display, PDM_PART_COARSE_MESH_DISPLAY)
 (
-  int *cmId
+  PDM_coarse_mesh_t *cmId
 );
 
 

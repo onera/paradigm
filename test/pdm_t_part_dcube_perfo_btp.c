@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
     PDM_printf("\n");
 
   }
-  int ppart_id = 0;
+  // int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
 
@@ -528,34 +528,33 @@ int main(int argc, char *argv[])
   if(i_rank == 0) {
     printf("PDM_part_create begin ...");
   }
-  PDM_part_create(&ppart_id,
-                  comm,
-                  method,
-                  "PDM_PART_RENUM_CELL_NONE",
-                  "PDM_PART_RENUM_FACE_NONE",
-                  n_property_cell,
-                  renum_properties_cell,
-                  n_property_face,
-                  renum_properties_face,
-                  n_part,
-                  dn_cell,
-                  dn_face,
-                  dn_vtx,
-                  n_face_group,
-                  NULL,
-                  NULL,
-                  NULL,
-                  NULL,
-                  have_dcell_part,
-                  dcell_part,
-                  dface_cell,
-                  dface_vtx_idx,
-                  dface_vtx,
-                  NULL,
-                  dvtx_coord,
-                  NULL,
-                  dface_group_idx,
-                  dface_group);
+  PDM_part_t *ppart = PDM_part_create(comm,
+                                      method,
+                                      "PDM_PART_RENUM_CELL_NONE",
+                                      "PDM_PART_RENUM_FACE_NONE",
+                                      n_property_cell,
+                                      renum_properties_cell,
+                                      n_property_face,
+                                      renum_properties_face,
+                                      n_part,
+                                      dn_cell,
+                                      dn_face,
+                                      dn_vtx,
+                                      n_face_group,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      have_dcell_part,
+                                      dcell_part,
+                                      dface_cell,
+                                      dface_vtx_idx,
+                                      dface_vtx,
+                                      NULL,
+                                      dvtx_coord,
+                                      NULL,
+                                      dface_group_idx,
+                                      dface_group);
   t2 = t1 - PDM_MPI_Wtime();
   if(i_rank == 0) {
     printf("PDM_part_create -> %12.5e \n", t2);
@@ -566,7 +565,7 @@ int main(int argc, char *argv[])
   double  *cpu_user = NULL;
   double  *cpu_sys  = NULL;
 
-  PDM_part_time_get(ppart_id,
+  PDM_part_time_get(ppart,
                     &elapsed,
                     &cpu,
                     &cpu_user,
@@ -636,7 +635,7 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
 
 
-    PDM_part_part_dim_get(ppart_id,
+    PDM_part_part_dim_get(ppart,
                           i_part,
                           &n_cell[i_part],
                           &n_face[i_part],
@@ -650,7 +649,7 @@ int main(int argc, char *argv[])
                           &n_face_group2[i_part]);
 
 
-    PDM_part_part_val_get(ppart_id,
+    PDM_part_part_val_get(ppart,
                           i_part,
                           &cell_tag[i_part],
                           &cell_face_idx[i_part],
@@ -687,7 +686,7 @@ int main(int argc, char *argv[])
   int    bound_part_faces_max;
   int    bound_part_faces_sum;
 
-  PDM_part_stat_get(ppart_id,
+  PDM_part_stat_get(ppart,
                     &cells_average,
                     &cells_median,
                     &cells_std_deviation,
@@ -805,7 +804,7 @@ int main(int argc, char *argv[])
   free(face_group              );
   free(face_group_ln_to_gn     );
   free(dcell_part);
-  PDM_part_free(ppart_id);
+  PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);
 

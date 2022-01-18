@@ -50,22 +50,6 @@ extern "C" {
  *============================================================================*/
 
 
-/**
- * \def _PDM_part_MIN(a,b)
- * Computes the minimum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MIN(a,b) ((a) > (b) ? (b) : (a))
-
-/**
- * \def _PDM_part_MAX(a,b)
- * Computes the maximum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MAX(a,b) ((a) < (b) ? (b) : (a))
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -74,7 +58,7 @@ extern "C" {
  * Global variables
  *============================================================================*/
 
-static PDM_Handles_t *_cm  = NULL;
+// static PDM_Handles_t *_cm  = NULL;
 
 /*============================================================================
  * Global variable
@@ -373,21 +357,21 @@ int            *cell_part
  *
  */
 
-static _coarse_mesh_t *
-_get_from_id
-(
- int  cmId
-)
-{
-  _coarse_mesh_t *cm = (_coarse_mesh_t *) PDM_Handles_get (_cm, cmId);
+// static _coarse_mesh_t *
+// _get_from_id
+// (
+//  int  cmId
+// )
+// {
+//   _coarse_mesh_t *cm = (_coarse_mesh_t *) PDM_Handles_get (_cm, cmId);
 
-  if (cm == NULL) {
-    PDM_printf("PPART error : Bad cm identifier\n");
-    exit(1);
-  }
+//   if (cm == NULL) {
+//     PDM_printf("PPART error : Bad cm identifier\n");
+//     exit(1);
+//   }
 
-  return cm;
-}
+//   return cm;
+// }
 
 
 /**
@@ -618,22 +602,22 @@ _quickSort_int
 static void
 _split
 (
-_coarse_mesh_t *cm,
-const int       i_part,
-int            *n_coarse_cell_computed,
-int            *cell_cell_idx,
-int            *cell_cell,
+_coarse_mesh_t  *cm,
+const int        i_part,
+int             *n_coarse_cell_computed,
+int             *cell_cell_idx,
+int             *cell_cell,
 int            **cell_part)
 {
 
-  _part_t * part_ini       = cm->part_ini[i_part];
+  _part_t *part_ini = cm->part_ini[i_part];
 
   int method = cm->method;
 
   *cell_part = PDM_array_zeros_int(part_ini->n_cell);
 
   const _coarse_mesh_method_t *method_ptr = (const _coarse_mesh_method_t *)
-                                      PDM_Handles_get (_coarse_mesh_methods, method);
+  PDM_Handles_get (_coarse_mesh_methods, method);
 
   PDM_coarse_mesh_fct_t fct = method_ptr->fct;
 
@@ -3595,10 +3579,9 @@ _coarse_part_free
  * \param [in]   have_face_group    Presence des tableaux de groupes de faces
  */
 
-void
+PDM_coarse_mesh_t *
 PDM_part_coarse_mesh_create
 (
- int                *cmId,
  PDM_MPI_Comm        comm,
  const char*         method,
  const char         *renum_cell_method,
@@ -3618,9 +3601,9 @@ PDM_part_coarse_mesh_create
  const int           have_face_group
 )
 {
-  if (_cm == NULL) {
-    _cm = PDM_Handles_create (4);
-  }
+  // if (_cm == NULL) {
+  //   _cm = PDM_Handles_create (4);
+  // }
 
   _coarse_mesh_t *cm  = _coarse_mesh_create (comm,
                                              method,
@@ -3640,13 +3623,13 @@ PDM_part_coarse_mesh_create
                                              have_face_weight,
                                              have_face_group);
 
-  *cmId = PDM_Handles_store (_cm, cm);
+  // *cmId = PDM_Handles_store (_cm, cm);
+  return (PDM_coarse_mesh_t *) cm;
 }
 
-void
+PDM_coarse_mesh_t *
 PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 (
- int                *cmId,
  PDM_MPI_Fint       *fcomm,
  const char         *method,
  const int          *l_method,
@@ -3675,32 +3658,32 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
   char *_method = PDM_fortran_to_c_string (method, *l_method);
 
   char *_renum_cell_method =
-      PDM_fortran_to_c_string(renum_cell_method, *l_renum_cell_method);
+  PDM_fortran_to_c_string(renum_cell_method, *l_renum_cell_method);
 
   char *_renum_face_method =
-      PDM_fortran_to_c_string(renum_face_method, *l_renum_face_method);
+  PDM_fortran_to_c_string(renum_face_method, *l_renum_face_method);
 
-  PDM_part_coarse_mesh_create (cmId,
-                               comm,
-                               _method,
-                               _renum_cell_method,
-                               _renum_face_method,
-                               *n_property_cell,
-                               renum_properties_cell,
-                               *n_property_face,
-                               renum_properties_face,
-                               *n_part,
-                               *n_total_part,
-                               *n_face_group,
-                               *have_cell_tag,
-                               *have_face_tag,
-                               *have_vtx_tag,
-                               *have_cell_weight,
-                               *have_face_weight,
-                               *have_face_group);
+  PDM_coarse_mesh_t  *cmId = PDM_part_coarse_mesh_create (comm,
+                                      _method,
+                                      _renum_cell_method,
+                                      _renum_face_method,
+                                      *n_property_cell,
+                                      renum_properties_cell,
+                                      *n_property_face,
+                                      renum_properties_face,
+                                      *n_part,
+                                      *n_total_part,
+                                      *n_face_group,
+                                      *have_cell_tag,
+                                      *have_face_tag,
+                                      *have_vtx_tag,
+                                      *have_cell_weight,
+                                      *have_face_weight,
+                                      *have_face_group);
 
   free (_method);
 
+  return cmId;
 }
 
 /**
@@ -3737,7 +3720,7 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 void
 PDM_part_coarse_mesh_input
 (
- int                 cmId,
+ PDM_coarse_mesh_t  *cm,
  int                 i_part,
  const int           n_coarse_cell_wanted,
  const int           n_cell,
@@ -3767,9 +3750,10 @@ PDM_part_coarse_mesh_input
  const int          *face_part_bound
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
-  _coarse_grid_mesh_input (cm,
+  _coarse_grid_mesh_input (_cm,
                            i_part,
                            n_coarse_cell_wanted,
                            n_cell,
@@ -3802,7 +3786,7 @@ PDM_part_coarse_mesh_input
 void
 PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 (
- int                *cmId,
+ PDM_coarse_mesh_t  *cmId,
  int                *i_part,
  const int          *n_coarse_cell_wanted,
  const int          *n_cell,
@@ -3874,7 +3858,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
     _faceGroupLNToGN = NULL;
   }
 
-  PDM_part_coarse_mesh_input(*cmId,
+  PDM_part_coarse_mesh_input(cmId,
                              *i_part,
                              *n_coarse_cell_wanted,
                              *n_cell,
@@ -3914,66 +3898,67 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 void
 PDM_part_coarse_mesh_compute
 (
-                                int cmId
-)
+ PDM_coarse_mesh_t *cm
+ )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   /* First step : Manage independently coarse grid generation */
 
-  for (int i_part = 0; i_part < cm->n_part; i_part++) {
-    _coarse_grid_compute(cm, i_part);
+  for (int i_part = 0; i_part < _cm->n_part; i_part++) {
+    _coarse_grid_compute(_cm, i_part);
   }
 
   /* Second step : Manage MPI */
   int itime = 13;
 
   //    PDM_part_coarse_mesh_display(cmId);
-  PDM_timer_resume(cm->timer);
+  PDM_timer_resume(_cm->timer);
 
-  _build_coarsecell_ln_to_gn(cm);
+  _build_coarsecell_ln_to_gn(_cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_hang_on(_cm->timer);
+  _cm->times_elapsed[itime] = PDM_timer_elapsed(_cm->timer);
+  _cm->times_cpu[itime]     = PDM_timer_cpu(_cm->timer);
+  _cm->times_cpu_u[itime]   = PDM_timer_cpu_user(_cm->timer);
+  _cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(_cm->timer);
   itime += 1;
 
-  PDM_timer_resume(cm->timer);
+  PDM_timer_resume(_cm->timer);
 
-  _build_face_ln_to_gn(cm);
+  _build_face_ln_to_gn(_cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_hang_on(_cm->timer);
+  _cm->times_elapsed[itime] = PDM_timer_elapsed(_cm->timer);
+  _cm->times_cpu[itime]     = PDM_timer_cpu(_cm->timer);
+  _cm->times_cpu_u[itime]   = PDM_timer_cpu_user(_cm->timer);
+  _cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(_cm->timer);
   itime += 1;
 
-  PDM_timer_resume(cm->timer);
+  PDM_timer_resume(_cm->timer);
 
-  _build_vtx_ln_to_gn(cm);
+  _build_vtx_ln_to_gn(_cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_hang_on(_cm->timer);
+  _cm->times_elapsed[itime] = PDM_timer_elapsed(_cm->timer);
+  _cm->times_cpu[itime]     = PDM_timer_cpu(_cm->timer);
+  _cm->times_cpu_u[itime]   = PDM_timer_cpu_user(_cm->timer);
+  _cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(_cm->timer);
   itime += 1;
 
-  PDM_timer_resume(cm->timer);
+  PDM_timer_resume(_cm->timer);
 
-  _build_faceGroupLNToGN(cm);
+  _build_faceGroupLNToGN(_cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_hang_on(_cm->timer);
+  _cm->times_elapsed[itime] = PDM_timer_elapsed(_cm->timer);
+  _cm->times_cpu[itime]     = PDM_timer_cpu(_cm->timer);
+  _cm->times_cpu_u[itime]   = PDM_timer_cpu_user(_cm->timer);
+  _cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(_cm->timer);
   itime += 1;
 
-  PDM_timer_resume(cm->timer);
+  PDM_timer_resume(_cm->timer);
 
   // PDM_printf(" ------------------------------------------- \n");
   // for (int i = 0; i < part->face_group_idx[part->n_face_group]; i++) {
@@ -3989,30 +3974,30 @@ PDM_part_coarse_mesh_compute
   // coarse_cell_cell, coarse_vtx_to_fine_vtx
   printf("Renumbering Coarse mesh \n");
 
-  for (int i_part = 0; i_part < cm->n_part; i_part++) {
+  for (int i_part = 0; i_part < _cm->n_part; i_part++) {
 
     /* Cell renumbering */
-    PDM_part_renum_cell (        &cm->part_res[i_part]->part,
+    PDM_part_renum_cell (        &_cm->part_res[i_part]->part,
                                  1,
-                                 cm->renum_cell_method,
-                         (void*) cm->renum_properties_cell);
+                                 _cm->renum_cell_method,
+                         (void*) _cm->renum_properties_cell);
 
     printf("PDM_part_renum_connectivities \n");
-    if(cm->part_res[i_part]->part->new_to_old_order_cell != NULL)
+    if(_cm->part_res[i_part]->part->new_to_old_order_cell != NULL)
     {
       /* Verbose */
       if( 0 == 1){
-        printf("PDM_part_renum_connectivities end %i \n", cm->part_res[i_part]->part->n_cell);
-        for (int i = 0; i < cm->part_res[i_part]->part->n_cell; i++){
-          printf("part->new_to_old_order_cell[%i] = %i\n ", i,cm->part_res[i_part]->part->new_to_old_order_cell[i] );
+        printf("PDM_part_renum_connectivities end %i \n", _cm->part_res[i_part]->part->n_cell);
+        for (int i = 0; i < _cm->part_res[i_part]->part->n_cell; i++){
+          printf("part->new_to_old_order_cell[%i] = %i\n ", i,_cm->part_res[i_part]->part->new_to_old_order_cell[i] );
         }
       }
 
       /* Renum CoarseGrid connectivity */
-      PDM_part_renum_connectivities(cm->part_res[i_part]->part->n_cell,
-                                    cm->part_res[i_part]->part->new_to_old_order_cell,
-                                    cm->part_res[i_part]->coarse_cell_cell_idx,
-                                    cm->part_res[i_part]->coarse_cell_cell);
+      PDM_part_renum_connectivities(_cm->part_res[i_part]->part->n_cell,
+                                    _cm->part_res[i_part]->part->new_to_old_order_cell,
+                                    _cm->part_res[i_part]->coarse_cell_cell_idx,
+                                    _cm->part_res[i_part]->coarse_cell_cell);
 
       /* Si agglomeration method = 3 il faut changer les tableaux */
       // _coarse_part_t *part_res = cm->part_res[i_part];
@@ -4023,35 +4008,35 @@ PDM_part_coarse_mesh_compute
     }
 
     /* Face renumbering */
-    PDM_part_renum_face (        &cm->part_res[i_part]->part,
+    PDM_part_renum_face (        &_cm->part_res[i_part]->part,
                                  1,
-                                 cm->renum_face_method,
-                         (void*) cm->renum_properties_face);
+                                 _cm->renum_face_method,
+                         (void*) _cm->renum_properties_face);
 
-    if(cm->part_res[i_part]->part->new_to_old_order_face != NULL)
+    if(_cm->part_res[i_part]->part->new_to_old_order_face != NULL)
     {
       /* Verbose */
       if( 0 == 1){
-        printf("PDM_part_renum_connectivities end %i \n", cm->part_res[i_part]->part->n_face);
-        for (int i = 0; i < cm->part_res[i_part]->part->n_face; i++){
-          printf("part->new_to_old_order_face[%i] = %i\n ", i,cm->part_res[i_part]->part->new_to_old_order_face[i] );
+        printf("PDM_part_renum_connectivities end %i \n", _cm->part_res[i_part]->part->n_face);
+        for (int i = 0; i < _cm->part_res[i_part]->part->n_face; i++){
+          printf("part->new_to_old_order_face[%i] = %i\n ", i,_cm->part_res[i_part]->part->new_to_old_order_face[i] );
         }
       }
 
       // printf("PDM_order_array \n");
 
       /* Renum CoarseGrid connectivity */
-      PDM_order_array(cm->part_res[i_part]->part->n_face,
+      PDM_order_array(_cm->part_res[i_part]->part->n_face,
                       sizeof(PDM_l_num_t),
-                      cm->part_res[i_part]->part->new_to_old_order_face,
-                      cm->part_res[i_part]->coarse_face_to_fine_face);
+                      _cm->part_res[i_part]->part->new_to_old_order_face,
+                      _cm->part_res[i_part]->coarse_face_to_fine_face);
       // printf("PDM_order_array end\n");
 
     }
 
     /* Compute renumbering to specific agglomeration method */
-    if(cm->specific_func != NULL){
-      (*cm->specific_func)(cm->part_res[i_part]);
+    if(_cm->specific_func != NULL){
+      (*_cm->specific_func)(_cm->part_res[i_part]);
     }
 
 
@@ -4059,34 +4044,34 @@ PDM_part_coarse_mesh_compute
 
   printf("Renumbering Coarse mesh end ... \n");
 
-  _build_facePartBound(cm);
+  _build_facePartBound(_cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_hang_on(_cm->timer);
+  _cm->times_elapsed[itime] = PDM_timer_elapsed(_cm->timer);
+  _cm->times_cpu[itime]     = PDM_timer_cpu(_cm->timer);
+  _cm->times_cpu_u[itime]   = PDM_timer_cpu_user(_cm->timer);
+  _cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(_cm->timer);
 
-  cm->times_elapsed[0]     = cm->times_elapsed[itime];
-  cm->times_cpu[0]         = cm->times_cpu[itime];
-  cm->times_cpu_u[0]       = cm->times_cpu_u[itime];
-  cm->times_cpu_s[0]       = cm->times_cpu_s[itime];
+  _cm->times_elapsed[0]     = _cm->times_elapsed[itime];
+  _cm->times_cpu[0]         = _cm->times_cpu[itime];
+  _cm->times_cpu_u[0]       = _cm->times_cpu_u[itime];
+  _cm->times_cpu_s[0]       = _cm->times_cpu_s[itime];
 
   for (int i = itime; i > 1; i--) {
-    cm->times_elapsed[i] -= cm->times_elapsed[i-1];
-    cm->times_cpu[i]     -= cm->times_cpu[i-1];
-    cm->times_cpu_u[i]   -= cm->times_cpu_u[i-1];
-    cm->times_cpu_s[i]   -= cm->times_cpu_s[i-1];
+    _cm->times_elapsed[i] -= _cm->times_elapsed[i-1];
+    _cm->times_cpu[i]     -= _cm->times_cpu[i-1];
+    _cm->times_cpu_u[i]   -= _cm->times_cpu_u[i-1];
+    _cm->times_cpu_s[i]   -= _cm->times_cpu_s[i-1];
   }
 }
 
 void
 PROCF (pdm_part_coarse_mesh_compute, PDM_PART_COARSE_MESH_COMPUTE)
 (
- int *cmId
+ PDM_coarse_mesh_t *cmId
 )
 {
-  PDM_part_coarse_mesh_compute(*cmId);
+  PDM_part_coarse_mesh_compute(cmId);
 }
 
 /**
@@ -4113,30 +4098,31 @@ PROCF (pdm_part_coarse_mesh_compute, PDM_PART_COARSE_MESH_COMPUTE)
 void
 PDM_part_coarse_mesh_part_dim_get
 (
- const int      cmId,
- int            i_part,
- int           *n_cell,
- int           *n_face,
- int           *n_face_part_bound,
- int           *n_vtx,
- int           *n_proc,
- int           *n_total_part,
- int           *n_face_group,
- int           *scell_face,
- int           *sface_vtx,
- int           *sface_group,
- int           *sCoarseCellToFineCell
+ PDM_coarse_mesh_t *cm,
+ int                i_part,
+ int               *n_cell,
+ int               *n_face,
+ int               *n_face_part_bound,
+ int               *n_vtx,
+ int               *n_proc,
+ int               *n_total_part,
+ int               *n_face_group,
+ int               *scell_face,
+ int               *sface_vtx,
+ int               *sface_group,
+ int               *sCoarseCellToFineCell
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   _coarse_part_t *part_res = NULL;
 
   int numProcs;
-  PDM_MPI_Comm_size(cm->comm, &numProcs);
+  PDM_MPI_Comm_size(_cm->comm, &numProcs);
 
-  if (i_part < cm->n_part) {
-    part_res = cm->part_res[i_part];
+  if (i_part < _cm->n_part) {
+    part_res = _cm->part_res[i_part];
   }
 
   if (part_res == NULL) {
@@ -4144,7 +4130,7 @@ PDM_part_coarse_mesh_part_dim_get
     exit(1);
   }
 
-  *n_face_group = cm->n_face_group;
+  *n_face_group = _cm->n_face_group;
 
   *n_cell = part_res->part->n_cell;
   *n_face = part_res->part->n_face;
@@ -4152,20 +4138,20 @@ PDM_part_coarse_mesh_part_dim_get
 
   *n_face_part_bound  = part_res->part->n_face_part_bound;
   *n_proc           = numProcs;
-  *n_total_part          = cm->n_total_part;
+  *n_total_part          = _cm->n_total_part;
   *scell_face       = part_res->part->cell_face_idx[*n_cell];
   *sface_vtx        = part_res->part->face_vtx_idx[*n_face];
   *sCoarseCellToFineCell = part_res->coarse_cell_cell_idx[*n_cell];
   *sface_group      = 0;
-  if (cm->n_face_group > 0 && part_res->part->face_group_idx != NULL) {
-    *sface_group    = part_res->part->face_group_idx[cm->n_face_group];
+  if (_cm->n_face_group > 0 && part_res->part->face_group_idx != NULL) {
+    *sface_group    = part_res->part->face_group_idx[_cm->n_face_group];
   }
 }
 
 void
 PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
 (
- const int     *cmId,
+ PDM_coarse_mesh_t     *cmId,
  int           *i_part,
  int           *n_cell,
  int           *n_face,
@@ -4180,7 +4166,7 @@ PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
  int           *sCoarseCellToFineCell
 )
 {
-  PDM_part_coarse_mesh_part_dim_get(*cmId,
+  PDM_part_coarse_mesh_part_dim_get(cmId,
                                     *i_part,
                                     n_cell,
                                     n_face,
@@ -4245,39 +4231,40 @@ PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
 void
 PDM_part_coarse_mesh_part_get
 (
- const int    cmId,
- const int    i_part,
- int          **cell_face_idx,
- int          **cell_face,
- int          **cell_tag,
- PDM_g_num_t **cell_ln_to_gn,
- int          **cellInitCellIdx,
- int          **cellInitCell,
- int          **face_cell,
- int          **face_vtx_idx,
- int          **face_vtx,
- int          **face_tag,
- PDM_g_num_t **face_ln_to_gn,
- int          **faceGroupInitFaceGroup,
- int          **faceInitFace,
- double       **vtxCoord,
- int          **vtx_tag,
- PDM_g_num_t **vtx_ln_to_gn,
- int          **vtxInitVtx,
- int          **face_group_idx,
- int          **face_group,
- PDM_g_num_t **face_group_ln_to_gn,
- int          **face_part_bound_proc_idx,
- int          **face_part_bound_part_idx,
- int          **face_part_bound
+ PDM_coarse_mesh_t  *cm,
+ const int           i_part,
+ int               **cell_face_idx,
+ int               **cell_face,
+ int               **cell_tag,
+ PDM_g_num_t       **cell_ln_to_gn,
+ int               **cellInitCellIdx,
+ int               **cellInitCell,
+ int               **face_cell,
+ int               **face_vtx_idx,
+ int               **face_vtx,
+ int               **face_tag,
+ PDM_g_num_t       **face_ln_to_gn,
+ int               **faceGroupInitFaceGroup,
+ int               **faceInitFace,
+ double            **vtxCoord,
+ int               **vtx_tag,
+ PDM_g_num_t       **vtx_ln_to_gn,
+ int               **vtxInitVtx,
+ int               **face_group_idx,
+ int               **face_group,
+ PDM_g_num_t       **face_group_ln_to_gn,
+ int               **face_part_bound_proc_idx,
+ int               **face_part_bound_part_idx,
+ int               **face_part_bound
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   _coarse_part_t *part_res = NULL;
 
-  if (i_part < cm->n_part) {
-    part_res = cm->part_res[i_part];
+  if (i_part < _cm->n_part) {
+    part_res = _cm->part_res[i_part];
   }
 
   if (part_res == NULL) {
@@ -4285,30 +4272,30 @@ PDM_part_coarse_mesh_part_get
     exit(1);
   }
 
-  *cellInitCellIdx        = part_res->coarse_cell_cell_idx;
-  *cellInitCell           = part_res->coarse_cell_cell;
-  *faceGroupInitFaceGroup = part_res->coarse_face_group_to_fine_face_group;
-  *faceInitFace           = part_res->coarse_face_to_fine_face;
-  *vtxInitVtx             = part_res->coarse_vtx_to_fine_vtx;
+  *cellInitCellIdx          = part_res->coarse_cell_cell_idx;
+  *cellInitCell             = part_res->coarse_cell_cell;
+  *faceGroupInitFaceGroup   = part_res->coarse_face_group_to_fine_face_group;
+  *faceInitFace             = part_res->coarse_face_to_fine_face;
+  *vtxInitVtx               = part_res->coarse_vtx_to_fine_vtx;
 
-  *cell_face_idx          = part_res->part->cell_face_idx;
-  *cell_face             = part_res->part->cell_face;
-  *cell_tag              = part_res->part->cell_tag;
-  *cell_ln_to_gn           = part_res->part->cell_ln_to_gn;
-  *face_cell             = part_res->part->face_cell;
-  *face_vtx_idx           = part_res->part->face_vtx_idx;
-  *face_vtx              = part_res->part->face_vtx;
-  *face_tag              = part_res->part->face_tag;
-  *face_ln_to_gn           = part_res->part->face_ln_to_gn;
-  *vtxCoord             = part_res->part->vtx;
-  *vtx_tag               = part_res->part->vtx_tag;
-  *vtx_ln_to_gn            = part_res->part->vtx_ln_to_gn;
-  *face_group_idx         = part_res->part->face_group_idx;
-  *face_group            = part_res->part->face_group;
+  *cell_face_idx            = part_res->part->cell_face_idx;
+  *cell_face                = part_res->part->cell_face;
+  *cell_tag                 = part_res->part->cell_tag;
+  *cell_ln_to_gn            = part_res->part->cell_ln_to_gn;
+  *face_cell                = part_res->part->face_cell;
+  *face_vtx_idx             = part_res->part->face_vtx_idx;
+  *face_vtx                 = part_res->part->face_vtx;
+  *face_tag                 = part_res->part->face_tag;
+  *face_ln_to_gn            = part_res->part->face_ln_to_gn;
+  *vtxCoord                 = part_res->part->vtx;
+  *vtx_tag                  = part_res->part->vtx_tag;
+  *vtx_ln_to_gn             = part_res->part->vtx_ln_to_gn;
+  *face_group_idx           = part_res->part->face_group_idx;
+  *face_group               = part_res->part->face_group;
   *face_group_ln_to_gn      = part_res->part->face_group_ln_to_gn;
   *face_part_bound_proc_idx = part_res->part->face_part_bound_proc_idx;
   *face_part_bound_part_idx = part_res->part->face_part_bound_part_idx;
-  *face_part_bound        = part_res->part->face_part_bound;
+  *face_part_bound          = part_res->part->face_part_bound;
 
 }
 
@@ -4316,7 +4303,7 @@ PDM_part_coarse_mesh_part_get
 void
 PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
 (
- int          *cmId,
+ PDM_coarse_mesh_t *cm,
  int          *i_part,
  int          *cell_face_idx,
  int          *cell_face,
@@ -4343,15 +4330,16 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  int          *face_part_bound
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (*cmId);
+  // _coarse_mesh_t * cm = _get_from_id (*cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   int numProcs;
-  PDM_MPI_Comm_size(cm->comm, &numProcs);
+  PDM_MPI_Comm_size(_cm->comm, &numProcs);
 
   _coarse_part_t *part_res = NULL;
 
-  if (*i_part < cm->n_part) {
-    part_res = cm->part_res[*i_part];
+  if (*i_part < _cm->n_part) {
+    part_res = _cm->part_res[*i_part];
   }
 
   if (part_res == NULL) {
@@ -4396,7 +4384,7 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
   }
 
   if (part_res->part->face_group_idx != NULL) {
-    for (int i = 0; i < part_res->part->face_group_idx[cm->n_face_group]; i++) {
+    for (int i = 0; i < part_res->part->face_group_idx[_cm->n_face_group]; i++) {
       faceGroupInitFaceGroup[i] = part_res->coarse_face_group_to_fine_face_group[i];
     }
   }
@@ -4420,11 +4408,11 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
     vtxInitVtx[i] = part_res->coarse_vtx_to_fine_vtx[i];
 
   if (part_res->part->face_group_idx != NULL) {
-    for (int i = 0; i < cm->n_face_group + 1; i++) {
+    for (int i = 0; i < _cm->n_face_group + 1; i++) {
       face_group_idx[i] = part_res->part->face_group_idx[i];
     }
 
-    for (int i = 0; i < part_res->part->face_group_idx[cm->n_face_group]; i++) {
+    for (int i = 0; i < part_res->part->face_group_idx[_cm->n_face_group]; i++) {
       face_group[i]       = part_res->part->face_group[i];
       face_group_ln_to_gn[i] = part_res->part->face_group_ln_to_gn[i];
     }
@@ -4436,7 +4424,7 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
   for (int i = 0; i < numProcs + 1; i++)
     face_part_bound_proc_idx[i] = part_res->part->face_part_bound_proc_idx[i];
 
-  for (int i = 0; i < cm->n_total_part + 1; i++)
+  for (int i = 0; i < _cm->n_total_part + 1; i++)
     face_part_bound_part_idx[i] = part_res->part->face_part_bound_part_idx[i];
 
 }
@@ -4454,20 +4442,21 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
 
 void PDM_part_coarse_color_get
 (
- const int   cmId,
- const int   i_part,
-       int **cell_color,
-       int **face_color,
-       int **thread_color,
-       int **hyperplane_color
+ PDM_coarse_mesh_t  *cm,
+ const int           i_part,
+       int         **cell_color,
+       int         **face_color,
+       int         **thread_color,
+       int         **hyperplane_color
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   _coarse_part_t *part_res = NULL;
 
-  if (i_part < cm->n_part) {
-    part_res = cm->part_res[i_part];
+  if (i_part < _cm->n_part) {
+    part_res = _cm->part_res[i_part];
   }
 
   if (part_res == NULL) {
@@ -4492,50 +4481,51 @@ void PDM_part_coarse_color_get
 void
 PDM_part_coarse_mesh_free
 (
- const int    cmId
+ PDM_coarse_mesh_t *cm
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
-  for (int i = 0; i < cm->n_part; i++) {
-    free(cm->part_ini[i]);
-    _coarse_part_free(cm->part_res[i]);
-    cm->part_ini[i] = NULL;
-    cm->part_res[i] = NULL;
+  for (int i = 0; i < _cm->n_part; i++) {
+    free(_cm->part_ini[i]);
+    _coarse_part_free(_cm->part_res[i]);
+    _cm->part_ini[i] = NULL;
+    _cm->part_res[i] = NULL;
   }
 
-  if (cm->specific_data != NULL) {
-    free (cm->specific_data);
+  if (_cm->specific_data != NULL) {
+    free (_cm->specific_data);
   }
 
-  free(cm->part_ini);
-  free(cm->part_res);
+  free(_cm->part_ini);
+  free(_cm->part_res);
 
-  cm->part_ini = NULL;
-  cm->part_res = NULL;
+  _cm->part_ini = NULL;
+  _cm->part_res = NULL;
 
-  PDM_timer_free(cm->timer);
-  cm->timer = NULL;
+  PDM_timer_free(_cm->timer);
+  _cm->timer = NULL;
 
-  free(cm);
+  free(_cm);
 
-  PDM_Handles_handle_free (_cm, cmId, PDM_FALSE);
+  // PDM_Handles_handle_free (cm, cmId, PDM_FALSE);
 
-  const int n_cm = PDM_Handles_n_get (_cm);
+  // const int n_cm = PDM_Handles_n_get (cm);
 
-  if (n_cm == 0) {
-    _cm = PDM_Handles_free (_cm);
-  }
+  // if (n_cm == 0) {
+  //   _cm = PDM_Handles_free (_cm);
+  // }
 
 }
 
 void
 PROCF (pdm_part_coarse_mesh_free, PDM_PART_COARSE_MESH_FREE)
 (
-  int *cmId
+  PDM_coarse_mesh_t *cmId
 )
 {
-  PDM_part_coarse_mesh_free(*cmId);
+  PDM_part_coarse_mesh_free(cmId);
 }
 
 /**
@@ -4552,38 +4542,40 @@ PROCF (pdm_part_coarse_mesh_free, PDM_PART_COARSE_MESH_FREE)
 
 void PDM_part_coarse_mesh_time_get
 (
- int       cmId,
- double  **elapsed,
- double  **cpu,
- double  **cpu_user,
- double  **cpu_sys
+ PDM_coarse_mesh_t  *cm,
+ double            **elapsed,
+ double            **cpu,
+ double            **cpu_user,
+ double            **cpu_sys
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
-  *elapsed  = cm->times_elapsed;
-  *cpu      = cm->times_cpu;
-  *cpu_user = cm->times_cpu_u;
-  *cpu_sys  = cm->times_cpu_s;
+  *elapsed  = _cm->times_elapsed;
+  *cpu      = _cm->times_cpu;
+  *cpu_user = _cm->times_cpu_u;
+  *cpu_sys  = _cm->times_cpu_s;
 }
 
 void
 PROCF (pdm_part_coarse_mesh_time_get, PDM_PART_COARSE_MESH_TIME_GET)
 (
- int      *cmId,
+ PDM_coarse_mesh_t      *cm,
  double   *elapsed,
  double   *cpu,
  double   *cpu_user,
  double   *cpu_sys
  )
 {
-  _coarse_mesh_t * cm = _get_from_id (*cmId);
+  // _coarse_mesh_t * cm = _get_from_id (*cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   for (int i = 0; i < 18; i++) {
-    elapsed[i]  = cm->times_elapsed[i];
-    cpu[i]      = cm->times_cpu[i];
-    cpu_user[i] = cm->times_cpu_u[i];
-    cpu_sys[i]  = cm->times_cpu_s[i];
+    elapsed[i]  = _cm->times_elapsed[i];
+    cpu[i]      = _cm->times_cpu[i];
+    cpu_user[i] = _cm->times_cpu_u[i];
+    cpu_sys[i]  = _cm->times_cpu_s[i];
   }
 }
 
@@ -4599,30 +4591,31 @@ PROCF (pdm_part_coarse_mesh_time_get, PDM_PART_COARSE_MESH_TIME_GET)
 void
 PDM_part_coarse_mesh_display
 (
- const int    cmId
+ PDM_coarse_mesh_t *cm
 )
 {
-  _coarse_mesh_t * cm = _get_from_id (cmId);
+  // _coarse_mesh_t * cm = _get_from_id (cmId);
+  _coarse_mesh_t *_cm = (_coarse_mesh_t *) cm;
 
   //Display all the elements of the structure (not part of the other structures)
 
   PDM_printf("\n");
-  PDM_printf("Value of n_part : %d \n", cm->n_part);
-  PDM_printf("Value of comm : %d \n", cm->comm);
-  PDM_printf("Value of method : %d \n", cm->method);
-  PDM_printf("Value of n_total_part : %d \n", cm->n_total_part);
-  PDM_printf("Value of n_face_group : %d \n", cm->n_face_group);
+  PDM_printf("Value of n_part : %d \n", _cm->n_part);
+  PDM_printf("Value of comm : %d \n", _cm->comm);
+  PDM_printf("Value of method : %d \n", _cm->method);
+  PDM_printf("Value of n_total_part : %d \n", _cm->n_total_part);
+  PDM_printf("Value of n_face_group : %d \n", _cm->n_face_group);
 
-  for (int i = 0; i < cm->n_part; i++) {
+  for (int i = 0; i < _cm->n_part; i++) {
     PDM_printf("\n=============================================\n");
     PDM_printf("Valeur de i : %d \n", i);
     PDM_printf("\n=============================================\n");
 
     PDM_printf("\n----------Affichage de part_ini-----------------\n");
-    _part_display(cm->part_ini[i],cm->n_part,cm->n_total_part,cm->n_face_group);
+    _part_display(_cm->part_ini[i],_cm->n_part,_cm->n_total_part,_cm->n_face_group);
 
     PDM_printf("\n----------Affichage de part_res-----------------\n");
-    _coarse_part_display(cm->part_res[i], cm->n_part,cm->n_total_part,cm->n_face_group);
+    _coarse_part_display(_cm->part_res[i], _cm->n_part,_cm->n_total_part,_cm->n_face_group);
     PDM_printf("\n-----------------------------------------\n");
   }
 }
@@ -4630,10 +4623,10 @@ PDM_part_coarse_mesh_display
 void
 PROCF (pdm_part_coarse_mesh_display, PDM_PART_COARSE_MESH_DISPLAY)
 (
-  int *cmId
+  PDM_coarse_mesh_t *cmId
 )
 {
-  PDM_part_coarse_mesh_display (*cmId);
+  PDM_part_coarse_mesh_display (cmId);
 }
 
 
@@ -4872,14 +4865,14 @@ void
  *
  */
 
-_coarse_mesh_t *
-PDM_part_coarse_mesh_get_from_id
-(
- int  cmId
- )
-{
-  return _get_from_id (cmId);
-}
+// _coarse_mesh_t *
+// PDM_part_coarse_mesh_get_from_id
+// (
+//  int  cmId
+//  )
+// {
+//   return _get_from_id (cmId);
+// }
 
 #ifdef __cplusplus
 }

@@ -324,6 +324,7 @@ int main(int argc, char *argv[])
    *  Create mesh partitions
    */
   int id_part;
+  PDM_part_t *ppart = NULL;
   int n_join = 0;
   PDM_dmesh_t *dmesh;
 
@@ -383,36 +384,35 @@ int main(int argc, char *argv[])
     int n_property_cell = 0;
     int n_property_face = 0;
 
-    id_part = 0;
+    // id_part = 0;
 
-    PDM_part_create(&id_part,
-                    PDM_MPI_COMM_WORLD,
-                    (PDM_part_split_t) method,
-                    "PDM_PART_RENUM_CELL_NONE",
-                    "PDM_PART_RENUM_FACE_NONE",
-                    n_property_cell,
-                    renum_properties_cell,
-                    n_property_face,
-                    renum_properties_face,
-                    n_part,
-                    dn_cell,
-                    dn_face,
-                    dn_vtx,
-                    n_face_group,
-                    NULL,
-                    NULL,
-                    NULL,
-                    NULL,
-                    have_dcell_part,
-                    dcell_part,
-                    dface_cell,
-                    dface_vtx_idx,
-                    dface_vtx,
-                    NULL,
-                    dvtx_coord,
-                    NULL,
-                    dface_group_idx,
-                    dface_group);
+    ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
+                            (PDM_part_split_t) method,
+                            "PDM_PART_RENUM_CELL_NONE",
+                            "PDM_PART_RENUM_FACE_NONE",
+                            n_property_cell,
+                            renum_properties_cell,
+                            n_property_face,
+                            renum_properties_face,
+                            n_part,
+                            dn_cell,
+                            dn_face,
+                            dn_vtx,
+                            n_face_group,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            have_dcell_part,
+                            dcell_part,
+                            dface_cell,
+                            dface_vtx_idx,
+                            dface_vtx,
+                            NULL,
+                            dvtx_coord,
+                            NULL,
+                            dface_group_idx,
+                            dface_group);
     free(dcell_part);
   }
 
@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
       }
 
       else {
-        PDM_part_part_dim_get (id_part,
+        PDM_part_part_dim_get (ppart,
                                i_part,
                                &n_cell,
                                &n_face,
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
                                &s_face_group,
                                &n_edge_group2);
 
-        PDM_part_part_val_get (id_part,
+        PDM_part_part_val_get (ppart,
                                i_part,
                                &cell_tag,
                                &cell_face_idx,
@@ -770,7 +770,7 @@ int main(int argc, char *argv[])
     PDM_dmesh_free (dmesh);
   }
   else {
-    PDM_part_free (id_part);
+    PDM_part_free (ppart);
   }
 
   PDM_MPI_Finalize();

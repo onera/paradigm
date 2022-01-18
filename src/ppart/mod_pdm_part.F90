@@ -4,15 +4,15 @@ module pdm_part
 
   integer, parameter :: PDM_part_SPLIT_PARMETIS = 1
   integer, parameter :: PDM_part_SPLIT_PTSCOTCH = 2
-  integer, parameter :: PDM_part_SPLIT_HILBERT = 3
+  integer, parameter :: PDM_part_SPLIT_HILBERT  = 3
 
   integer, parameter :: PDM_PART_RENUM_FACE_RANDOM        = 1
   integer, parameter :: PDM_PART_RENUM_FACE_NONE          = 2
   integer, parameter :: PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 
   integer, parameter :: PDM_part_RENUM_CELL_HILBERT = 1
-  integer, parameter :: PDM_part_RENUM_CELL_RANDOM = 2
-  integer, parameter :: PDM_part_RENUM_CELL_NONE = 3
+  integer, parameter :: PDM_part_RENUM_CELL_RANDOM  = 2
+  integer, parameter :: PDM_part_RENUM_CELL_NONE    = 3
   integer, parameter :: PDM_part_RENUM_CELL_CUTHILL = 4
 
   interface pdm_part_create     ; module procedure  &
@@ -463,42 +463,42 @@ contains
     l_renum_cell_method = len(renum_cell_method)
     l_renum_face_method = len(renum_face_method)
 
-    call pdm_part_create_cf (ppartId, &
-                             pt_comm, &
-                             split_method, &
-                             renum_cell_method, &
-                             l_renum_cell_method, &
-                             renum_face_method, &
-                             l_renum_face_method, &
-                             nPropertyCell, &
-                             renum_properties_cell, &
-                             nPropertyFace, &
-                             renum_properties_face, &
-                             nPart, &
-                             dNCell, &
-                             dNFace, &
-                             dNVtx, &
-                             nFaceGroup, &
-                             have_dCellFace, &
-                             dCellFaceIdx, &
-                             dCellFace, &
-                             have_dCellTag, &
-                             dCellTag, &
-                             have_dCellWeight, &
-                             dCellWeight, &
-                             have_dCellPart, &
-                             dCellPart, &
-                             have_dFaceCell, &
-                             dFaceCell, &
-                             dFaceVtxIdx, &
-                             dFaceVtx, &
-                             have_dFaceTag, &
-                             dFaceTag, &
-                             dVtxCoord, &
-                             have_dVtxTag, &
-                             dVtxTag, &
-                             dFaceGroupIdx, &
-                             dFaceGroup)
+    ! call pdm_part_create_cf (ppartId, &
+    !                          pt_comm, &
+    !                          split_method, &
+    !                          renum_cell_method, &
+    !                          l_renum_cell_method, &
+    !                          renum_face_method, &
+    !                          l_renum_face_method, &
+    !                          nPropertyCell, &
+    !                          renum_properties_cell, &
+    !                          nPropertyFace, &
+    !                          renum_properties_face, &
+    !                          nPart, &
+    !                          dNCell, &
+    !                          dNFace, &
+    !                          dNVtx, &
+    !                          nFaceGroup, &
+    !                          have_dCellFace, &
+    !                          dCellFaceIdx, &
+    !                          dCellFace, &
+    !                          have_dCellTag, &
+    !                          dCellTag, &
+    !                          have_dCellWeight, &
+    !                          dCellWeight, &
+    !                          have_dCellPart, &
+    !                          dCellPart, &
+    !                          have_dFaceCell, &
+    !                          dFaceCell, &
+    !                          dFaceVtxIdx, &
+    !                          dFaceVtx, &
+    !                          have_dFaceTag, &
+    !                          dFaceTag, &
+    !                          dVtxCoord, &
+    !                          have_dVtxTag, &
+    !                          dVtxTag, &
+    !                          dFaceGroupIdx, &
+    !                          dFaceGroup)
 
   end subroutine pdm_part_create_
 
@@ -572,27 +572,27 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
     l_renum_cell_method = len(renum_cell_method)
     l_renum_face_method = len(renum_face_method)
 
-    call pdm_part_coarse_mesh_create_cf (cmId, &
-                                         comm, &
-                                         method, &
-                                         l_method, &
-                                         renum_cell_method, &
-                                         l_renum_cell_method, &
-                                         renum_face_method, &
-                                         l_renum_face_method, &
-                                         nPropertyCell, &
-                                         renum_properties_cell, &
-                                         nPropertyFace, &
-                                         renum_properties_face, &
-                                         nPart, &
-                                         nTPart, &
-                                         nFaceGroup,&
-                                         have_cellTag,&
-                                         have_faceTag,&
-                                         have_vtxTag,&
-                                         have_cellWeight, &
-                                         have_faceWeight, &
-                                         have_faceGroup)
+    ! call pdm_part_coarse_mesh_create_cf (cmId, &
+    !                                      comm, &
+    !                                      method, &
+    !                                      l_method, &
+    !                                      renum_cell_method, &
+    !                                      l_renum_cell_method, &
+    !                                      renum_face_method, &
+    !                                      l_renum_face_method, &
+    !                                      nPropertyCell, &
+    !                                      renum_properties_cell, &
+    !                                      nPropertyFace, &
+    !                                      renum_properties_face, &
+    !                                      nPart, &
+    !                                      nTPart, &
+    !                                      nFaceGroup,&
+    !                                      have_cellTag,&
+    !                                      have_faceTag,&
+    !                                      have_vtxTag,&
+    !                                      have_cellWeight, &
+    !                                      have_faceWeight, &
+    !                                      have_faceGroup)
 
  end subroutine pdm_part_coarse_mesh_create_
 
@@ -620,7 +620,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
 
     l_name = len(name)
 
-    call pdm_part_renum_method_face_idx_get_cf (name, l_name, idx)
+    ! call pdm_part_renum_method_face_idx_get_cf (name, l_name, idx)
 
   end subroutine pdm_part_renum_method_face_idx_get_
 
@@ -648,7 +648,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
 
    l_name = len(name)
 
-   call pdm_part_renum_method_cell_idx_get_cf (name, l_name, idx)
+   ! call pdm_part_renum_method_cell_idx_get_cf (name, l_name, idx)
 
  end subroutine pdm_part_renum_method_cell_idx_get_
 
@@ -674,7 +674,7 @@ subroutine pdm_part_renum_method_face_name_get_ (idx, &
    integer  :: l_name
    l_name = len(name)
 
-   call pdm_part_renum_method_face_name_get_cf (name, l_name, idx)
+   ! call pdm_part_renum_method_face_name_get_cf (name, l_name, idx)
 
 
 end subroutine pdm_part_renum_method_face_name_get_
@@ -702,7 +702,7 @@ subroutine pdm_part_renum_method_cell_name_get_ (idx, &
    integer  :: l_name
    l_name = len(name)
 
-   call pdm_part_renum_method_cell_name_get_cf (name, l_name, idx)
+   ! call pdm_part_renum_method_cell_name_get_cf (name, l_name, idx)
 
 
 end subroutine pdm_part_renum_method_cell_name_get_

@@ -138,7 +138,7 @@ _read_args
  *
  */
 
-static int
+static PDM_part_t *
 _create_split_mesh
 (
  int               imesh,
@@ -363,7 +363,7 @@ _create_split_mesh
    *  Split mesh i
    */
 
-  int ppart_id;
+  // int ppart_id;
 
   int n_property_cell = 0;
   int *renum_properties_cell = NULL;
@@ -389,34 +389,33 @@ _create_split_mesh
   }
 
 
-  PDM_part_create (&ppart_id,
-                   pdm_mpi_comm,
-                   method,
-                   "PDM_PART_RENUM_CELL_NONE",
-                   "PDM_PART_RENUM_FACE_NONE",
-                   n_property_cell,
-                   renum_properties_cell,
-                   n_property_face,
-                   renum_properties_face,
-                   n_part,
-                   dn_face,
-                   dn_edge,
-                   dn_vtx,
-                   *n_edge_group,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   have_dcell_part,
-                   dcell_part,
-                   dedge_face,
-                   dedge_vtx_idx,
-                   dedge_vtx,
-                   NULL,
-                   dvtx_coord,
-                   NULL,
-                   dedge_group_idx,
-                   dedge_group);
+  PDM_part_t *ppart = PDM_part_create (pdm_mpi_comm,
+                                       method,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       "PDM_PART_RENUM_FACE_NONE",
+                                       n_property_cell,
+                                       renum_properties_cell,
+                                       n_property_face,
+                                       renum_properties_face,
+                                       n_part,
+                                       dn_face,
+                                       dn_edge,
+                                       dn_vtx,
+                                       *n_edge_group,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       have_dcell_part,
+                                       dcell_part,
+                                       dedge_face,
+                                       dedge_vtx_idx,
+                                       dedge_vtx,
+                                       NULL,
+                                       dvtx_coord,
+                                       NULL,
+                                       dedge_group_idx,
+                                       dedge_group);
 
   free (dcell_part);
 
@@ -425,11 +424,11 @@ _create_split_mesh
   double  *cpu_user = NULL;
   double  *cpu_sys = NULL;
 
-  PDM_part_time_get (ppart_id,
-                  &elapsed,
-                  &cpu,
-                  &cpu_user,
-                  &cpu_sys);
+  PDM_part_time_get (ppart,
+                     &elapsed,
+                     &cpu,
+                     &cpu_user,
+                     &cpu_sys);
 
   /* Statistiques */
 
@@ -445,18 +444,18 @@ _create_split_mesh
   int    bound_part_faces_max;
   int    bound_part_faces_sum;
 
-  PDM_part_stat_get (ppart_id,
-                  &cells_average,
-                  &cells_median,
-                  &cells_std_deviation,
-                  &cells_min,
-                  &cells_max,
-                  &bound_part_faces_average,
-                  &bound_part_faces_median,
-                  &bound_part_faces_std_deviation,
-                  &bound_part_faces_min,
-                  &bound_part_faces_max,
-                  &bound_part_faces_sum);
+  PDM_part_stat_get (ppart,
+                     &cells_average,
+                     &cells_median,
+                     &cells_std_deviation,
+                     &cells_min,
+                     &cells_max,
+                     &bound_part_faces_average,
+                     &bound_part_faces_median,
+                     &bound_part_faces_std_deviation,
+                     &bound_part_faces_min,
+                     &bound_part_faces_max,
+                     &bound_part_faces_sum);
 
 
 
@@ -489,7 +488,7 @@ _create_split_mesh
     int sEdgeGroup;
     int n_edge_group2;
 
-    PDM_part_part_dim_get (ppart_id,
+    PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_face,
                            &nEdge,
@@ -529,26 +528,26 @@ _create_split_mesh
     int          *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get(ppart_id,
-                       i_part,
-                       &cell_tag,
-                       &cell_face_idx,
-                       &cell_face,
-                       &cell_ln_to_gn,
-                       &face_tag,
-                       &face_cell,
-                       &face_vtx_idx,
-                       &face_vtx,
-                       &face_ln_to_gn,
-                       &face_part_bound_proc_idx,
-                       &face_part_bound_part_idx,
-                       &face_part_bound,
-                       &vtx_tag,
-                       &vtx,
-                       &vtx_ln_to_gn,
-                       &face_group_idx,
-                       &face_group,
-                       &face_group_ln_to_gn);
+    PDM_part_part_val_get(ppart,
+                          i_part,
+                          &cell_tag,
+                          &cell_face_idx,
+                          &cell_face,
+                          &cell_ln_to_gn,
+                          &face_tag,
+                          &face_cell,
+                          &face_vtx_idx,
+                          &face_vtx,
+                          &face_ln_to_gn,
+                          &face_part_bound_proc_idx,
+                          &face_part_bound_part_idx,
+                          &face_part_bound,
+                          &vtx_tag,
+                          &vtx,
+                          &vtx_ln_to_gn,
+                          &face_group_idx,
+                          &face_group,
+                          &face_group_ln_to_gn);
 
     vtx_ln_to_gns[i_part] = vtx_ln_to_gn;
 
@@ -620,7 +619,7 @@ _create_split_mesh
     int sEdgeGroup;
     int n_edge_group2;
 
-    PDM_part_part_dim_get (ppart_id,
+    PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_face,
                            &nEdge,
@@ -652,26 +651,26 @@ _create_split_mesh
     int          *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get(ppart_id,
-                       i_part,
-                       &cell_tag,
-                       &cell_face_idx,
-                       &cell_face,
-                       &cell_ln_to_gn,
-                       &face_tag,
-                       &face_cell,
-                       &face_vtx_idx,
-                       &face_vtx,
-                       &face_ln_to_gn,
-                       &face_part_bound_proc_idx,
-                       &face_part_bound_part_idx,
-                       &face_part_bound,
-                       &vtx_tag,
-                       &vtx,
-                       &vtx_ln_to_gn,
-                       &face_group_idx,
-                       &face_group,
-                       &face_group_ln_to_gn);
+    PDM_part_part_val_get(ppart,
+                          i_part,
+                          &cell_tag,
+                          &cell_face_idx,
+                          &cell_face,
+                          &cell_ln_to_gn,
+                          &face_tag,
+                          &face_cell,
+                          &face_vtx_idx,
+                          &face_vtx,
+                          &face_ln_to_gn,
+                          &face_part_bound_proc_idx,
+                          &face_part_bound_part_idx,
+                          &face_part_bound,
+                          &vtx_tag,
+                          &vtx,
+                          &vtx_ln_to_gn,
+                          &face_group_idx,
+                          &face_group,
+                          &face_group_ln_to_gn);
 
   }
 
@@ -735,7 +734,7 @@ _create_split_mesh
   PDM_part_to_block_free (ptb1);
   PDM_part_to_block_free (ptb2);
 
-  return ppart_id;
+  return ppart;
 
 }
 
