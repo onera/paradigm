@@ -5567,31 +5567,6 @@ PDM_ol_create
 }
 
 
-PDM_ol_t *
-PDM_ol_create_cf
-(
- const int          n_partMeshA,
- const PDM_g_num_t  nGFaceMeshA,
- const PDM_g_num_t  nGVtxMeshA,
- const int          n_partMeshB,
- const PDM_g_num_t  nGFaceMeshB,
- const PDM_g_num_t  nGVtxMeshB,
- const double       projectCoeff,
- const PDM_MPI_Fint fcomm
-)
-{
-  const PDM_MPI_Comm _comm = PDM_MPI_Comm_f2c(fcomm);
-
-  return PDM_ol_create (n_partMeshA,
-                        nGFaceMeshA,
-                        nGVtxMeshA,
-                        n_partMeshB,
-                        nGFaceMeshB,
-                        nGVtxMeshB,
-                        projectCoeff,
-                        _comm);
-}
-
 
 /**
  * \brief Set an overlay parameter

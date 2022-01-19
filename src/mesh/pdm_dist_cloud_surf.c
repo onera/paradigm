@@ -72,7 +72,7 @@ static int idebug = 0;
  * \param [in]   n_point_cloud  Number of point cloud
  * \param [in]   comm           MPI communicator
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_dist_cloud_surf object
  */
 
 PDM_dist_cloud_surf_t*
@@ -119,26 +119,13 @@ PDM_dist_cloud_surf_create
   return dist;
 }
 
-PDM_dist_cloud_surf_t*
-PDM_dist_cloud_surf_create_cf
-(
- const PDM_mesh_nature_t  mesh_nature,
- const int                n_point_cloud,
- const PDM_MPI_Fint       comm,
- const PDM_ownership_t    owner
-)
-{
-  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
-
-  return PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm, owner);
-}
 
 
 /**
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   n_part          Number of partitions
  *
@@ -185,7 +172,7 @@ PDM_dist_cloud_surf_n_part_cloud_set
  *
  * \brief Set a point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
@@ -216,8 +203,8 @@ PDM_dist_cloud_surf_cloud_set
  *
  * \brief Set the mesh nodal
  *
- * \param [in]   id             Identifier
- * \param [in]   mesh_nodal_id  Mesh nodal identifier
+ * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_dist_cloud_surf object
  *
  */
 
@@ -238,7 +225,7 @@ PDM_dist_cloud_surf_nodal_mesh_set
  *
  * \brief Map a surface mesh
  *
- * \param [in]   id         Identifier
+ * \param [in]   dist       Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   surf_mesh  Surface mesh pointer
  *
  */
@@ -258,7 +245,7 @@ PDM_dist_cloud_surf_surf_mesh_map
  *
  * \brief Set global data of a surface mesh
  *
- * \param [in]   id             Identifier
+ * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   n_g_face       Global number of faces
  * \param [in]   n_g_vtx        Global number of vertices
  * \param [in]   n_part         Number of partition
@@ -285,7 +272,7 @@ PDM_dist_cloud_surf_surf_mesh_global_data_set
  *
  * \brief Set a part of a surface mesh
  *
- * \param [in]   id            Identifier
+ * \param [in]   dist          Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   i_part        Partition to define
  * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
@@ -335,7 +322,7 @@ typedef enum {
  *
  * \brief Compute distance
  *
- * \param [in]   id  Identifier
+ * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
  *
  */
 
@@ -1235,7 +1222,7 @@ PDM_dist_cloud_surf_compute
  *
  * \brief Get mesh distance
  *
- * \param [in]   id                Identifier
+ * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]   i_point_cloud     Current cloud
  * \param [in]   i_part            Index of partition of the cloud
  * \param [out]  distance          Distance
@@ -1268,7 +1255,7 @@ PDM_dist_cloud_surf_get
  *
  * \brief Free a distance mesh structure
  *
- * \param [in]  id       Identifier
+ * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf object
  * \param [in]  partial  if partial is equal to 0, all data are removed.
  *                       Otherwise, results are kept.
  *
@@ -1325,7 +1312,7 @@ PDM_dist_cloud_surf_free
  *
  * \brief  Dump elapsed an CPU time
  *
- * \param [in]  id       Identifier
+ * \param [in]  dist     Pointer to \ref PDM_dist_cloud_surf object
  *
  */
 

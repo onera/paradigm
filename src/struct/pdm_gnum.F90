@@ -46,12 +46,12 @@ module pdm_gnum
   !! \return     Pointer to \ref PDM_gen_gnum object
   !!
 
-  function PDM_gnum_create_cf (dim,         &
-                               n_part,      &
-                               merge,       &
-                               tolerance,   &
-                               fcomm,       &
-                               owner)       &
+  function PDM_gnum_create_cf (dim,        &
+                               n_part,     &
+                               merge,      &
+                               tolerance,  &
+                               comm,       &
+                               owner)      &
   result (gen_gnum) &
 
   bind (c, name = 'PDM_gnum_create')
@@ -63,7 +63,7 @@ module pdm_gnum
   integer(c_int), value :: n_part
   integer(c_int), value :: merge
   real(c_double), value :: tolerance
-  integer(c_int), value :: fComm
+  integer(c_int), value :: comm
   integer(c_int), value :: owner
 
   type (c_ptr) :: gen_gnum
@@ -207,12 +207,12 @@ module pdm_gnum
   !!
   !! \brief Build a global numbering structure
   !!
+  !! \param [out]  gen_gnum     Pointer to \ref PDM_gen_gnum object
   !! \param [in]   dim          Spatial dimension
   !! \param [in]   n_part       Number of local partitions
   !! \param [in]   merge        Merge double points or not
   !! \param [in]   tolerance    Geometric tolerance (if merge double points is activated)
   !! \param [in]   comm         PDM_MPI communicator
-  !! \param [out]  gen_gnum     Pointer to \ref PDM_gen_gnum object
   !!
 
   subroutine PDM_gnum_create_ (gen_gnum,  &

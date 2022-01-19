@@ -338,7 +338,8 @@ program testf
   !   The MPI communicator and the number of point cloud are setted
   !
 
-  ml = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED, &
+  call PDM_mesh_location_create (ml, &
+                                 PDM_MESH_NATURE_MESH_SETTED, &
                                  n_point_cloud, &
                                  MPI_COMM_WORLD)
 

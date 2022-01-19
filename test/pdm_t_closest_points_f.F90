@@ -134,9 +134,10 @@ program testf
   !
 
 
-  cls = PDM_closest_points_create (MPI_COMM_WORLD, &
-                                   n_closest, &
-                                   PDM_OWNERSHIP_KEEP)
+  call PDM_closest_points_create (cls,                &
+                                  MPI_COMM_WORLD,     &
+                                  n_closest,          &
+                                  PDM_OWNERSHIP_KEEP)
 
 
   !

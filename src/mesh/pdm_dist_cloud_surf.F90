@@ -25,6 +25,12 @@ module pdm_dist_cloud_surf
 
   implicit none
 
+  interface PDM_dist_cloud_surf_create ; module procedure &
+  pdm_dist_cloud_surf_create_
+  end interface
+
+  private :: pdm_dist_cloud_surf_create_
+
 
   interface
 
@@ -33,12 +39,16 @@ module pdm_dist_cloud_surf
     !! \param [in]    mesh_nature    Nature of the mesh
     !! \param [in]    n_point_cloud  Number of point cloud
     !! \param [in]    comm           MPI communicator
-    !! \param [inout] id             Identifier
+    !!
+    !! \return    Pointer to \ref PDM_dist_cloud_surf object
     !!
 
-    function pdm_dist_cloud_surf_create (mesh_nature, n_point_cloud, fComm, owner) &
-                                       result(ptrC) &
-         bind (c, name = 'PDM_dist_cloud_surf_create_cf')
+    function pdm_dist_cloud_surf_create_cf (mesh_nature,   &
+                                            n_point_cloud, &
+                                            comm,          &
+                                            owner) &
+                                       result(dcs) &
+         bind (c, name = 'PDM_dist_cloud_surf_create')
 
       use iso_c_binding
 
@@ -46,28 +56,28 @@ module pdm_dist_cloud_surf
 
       integer(c_int), value :: mesh_nature
       integer(c_int), value :: n_point_cloud
-      integer(c_int), value :: fComm
+      integer(c_int), value :: comm
       integer(c_int), value :: owner
 
-      type (c_ptr) :: ptrC
+      type (c_ptr) :: dcs
 
-    end function pdm_dist_cloud_surf_create
+    end function pdm_dist_cloud_surf_create_cf
 
     !> \brief Set the number of partitions of a point cloud
     !!
-    !! \param [in]   id              Identifier
+    !! \param [in]   dcs             Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]   i_point_cloud   Index of point cloud
     !! \param [in]   n_part          Number of partitions
     !!
 
-    subroutine pdm_dist_cloud_surf_n_part_cloud_set (ptrC, i_point_cloud, n_part) &
+    subroutine pdm_dist_cloud_surf_n_part_cloud_set (dcs, i_point_cloud, n_part) &
          bind (c, name = 'PDM_dist_cloud_surf_n_part_cloud_set')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value          :: ptrC
+      type (c_ptr), value          :: dcs
       integer(c_int), value        :: i_point_cloud
       integer(c_int), value        :: n_part
 
@@ -75,7 +85,7 @@ module pdm_dist_cloud_surf
 
     !> \brief Set a point cloud
     !!
-    !! \param [in]   id              Identifier
+    !! \param [in]   dcs             Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]   i_point_cloud   Index of point cloud
     !! \param [in]   i_part          Index of partition
     !! \param [in]   n_points        Number of points
@@ -83,14 +93,14 @@ module pdm_dist_cloud_surf
     !! \param [in]   gnum            Point global number
     !!
 
-    subroutine pdm_dist_cloud_surf_cloud_set (ptrC, i_point_cloud, i_part, n_points, coords, gnum ) &
+    subroutine pdm_dist_cloud_surf_cloud_set (dcs, i_point_cloud, i_part, n_points, coords, gnum ) &
          bind (c, name = 'PDM_dist_cloud_surf_cloud_set')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value          :: ptrC
+      type (c_ptr), value          :: dcs
       integer(c_int), value        :: i_point_cloud
       integer(c_int), value        :: i_part
       integer(c_int), value        :: n_points
@@ -102,39 +112,39 @@ module pdm_dist_cloud_surf
 
     !> \brief Set the mesh nodal
     !!
-    !! \param [in]   id             Identifier
-    !! \param [in]   mesh_nodal_id  Mesh nodal identifier
+    !! \param [in]   dcs            Pointer to \ref PDM_dist_cloud_surf object
+    !! \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_dist_cloud_surf object
     !!
     !!
 
-    subroutine pdm_dist_cloud_surf_nodal_mesh_set (ptrC, mesh_nodal_id) &
+    subroutine pdm_dist_cloud_surf_nodal_mesh_set (dcs, mesh_nodal_id) &
          bind (c, name = 'pdm_dist_cloud_surf_nodal_mesh_set')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value          :: ptrC
+      type (c_ptr), value          :: dcs
       integer(c_int), value        :: mesh_nodal_id
 
     end subroutine pdm_dist_cloud_surf_nodal_mesh_set
 
     !> \brief Set global data of a surface mesh
     !!
-    !! \param [in]   id             Identifier
+    !! \param [in]   dcs            Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]   n_g_face       Global number of faces
     !! \param [in]   n_g_vtx        Global number of vertices
     !! \param [in]   n_part         Number of partition
     !!
 
-    subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set (ptrC, n_g_face, n_g_vtx, n_part) &
+    subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set (dcs, n_g_face, n_g_vtx, n_part) &
          bind (c, name = 'PDM_dist_cloud_surf_surf_mesh_global_data_set')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value          :: ptrC
+      type (c_ptr), value          :: dcs
 #ifdef PDM_LONG_G_NUM
       integer(c_long), value       :: n_g_face
       integer(c_long), value       :: n_g_vtx
@@ -147,7 +157,7 @@ module pdm_dist_cloud_surf
 
     !> \brief Set a part of a surface mesh
     !!
-    !! \param [in]   id            Identifier
+    !! \param [in]   dcs           Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]   i_part        Partition to define
     !! \param [in]   n_face        Number of faces
     !! \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
@@ -158,7 +168,7 @@ module pdm_dist_cloud_surf
     !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
     !!
 
-    subroutine pdm_dist_cloud_surf_surf_mesh_part_set (ptrC, i_part, n_face, face_vtx_idx, &
+    subroutine pdm_dist_cloud_surf_surf_mesh_part_set (dcs, i_part, n_face, face_vtx_idx, &
                                                  face_vtx, face_ln_to_gn, n_vtx, coords, &
                                                  vtx_ln_to_gn) &
       bind (c, name = 'PDM_dist_cloud_surf_surf_mesh_part_set')
@@ -166,7 +176,7 @@ module pdm_dist_cloud_surf
 
       implicit none
 
-      type (c_ptr), value       :: ptrC
+      type (c_ptr), value       :: dcs
       integer(c_int), value     :: i_part
       integer(c_int), value     :: n_face
       type(c_ptr), value        :: face_vtx_idx
@@ -180,21 +190,21 @@ module pdm_dist_cloud_surf
 
     !> \brief Compute distance
     !!
-    !! \param [in]   id  Identifier
+    !! \param [in]   dcs Pointer to \ref PDM_dist_cloud_surf object
     !!
 
-    subroutine pdm_dist_cloud_surf_compute (ptrC) &
+    subroutine pdm_dist_cloud_surf_compute (dcs) &
          bind (c, name = 'PDM_dist_cloud_surf_compute')
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value       :: ptrC
+      type (c_ptr), value       :: dcs
     end subroutine pdm_dist_cloud_surf_compute
 
     !> \brief Get mesh distance
     !!
-    !! \param [in]   id                    Identifier
+    !! \param [in]   dcs                   Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]   i_point_cloud         Current cloud
     !! \param [in]   i_part                Index of partition of the cloud
     !! \param [out]  closest_elt_distance  Distance
@@ -202,7 +212,7 @@ module pdm_dist_cloud_surf
     !! \param [out]  closest_elt_g_num     Global number of the closest element
     !!
 
-    subroutine pdm_dist_cloud_surf_get (ptrC, i_point_cloud, i_part, &
+    subroutine pdm_dist_cloud_surf_get (dcs, i_point_cloud, i_part, &
                                   closest_elt_distance, &
                                   closest_elt_projected, &
                                   closest_elt_gnum) &
@@ -212,7 +222,7 @@ module pdm_dist_cloud_surf
 
       implicit none
 
-      type (c_ptr), value       :: ptrC
+      type (c_ptr), value       :: dcs
       integer(c_int), value     :: i_point_cloud
       integer(c_int), value     :: i_part
       type(c_ptr)               :: closest_elt_distance
@@ -223,38 +233,85 @@ module pdm_dist_cloud_surf
 
     !> \brief Free a distance mesh structure
     !!
-    !! \param [in]  id       Identifier
+    !! \param [in]  dcs      Pointer to \ref PDM_dist_cloud_surf object
     !! \param [in]  partial  if partial is equal to 0, all data are removed.
     !!                       Otherwise, results are kept.
     !!
 
-    subroutine pdm_dist_cloud_surf_free (ptrC, partial) &
+    subroutine pdm_dist_cloud_surf_free (dcs, partial) &
        bind (c, name = 'PDM_dist_cloud_surf_free')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value       :: ptrC
+      type (c_ptr), value       :: dcs
       integer(c_int), value     :: partial
 
     end subroutine pdm_dist_cloud_surf_free
 
     !> \brief  Dump elapsed an CPU time
     !!
-    !! \param [in]  id       Identifier
+    !! \param [in]  dcs      Pointer to \ref PDM_dist_cloud_surf object
     !!
 
-    subroutine pdm_dist_cloud_surf_dump_times (ptrC) &
+    subroutine pdm_dist_cloud_surf_dump_times (dcs) &
          bind (c, name = 'PDM_dist_cloud_surf_dump_times')
 
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value       :: ptrC
+      type (c_ptr), value       :: dcs
     end subroutine pdm_dist_cloud_surf_dump_times
 
   end interface
+
+
+  contains
+
+
+  !> \brief Create a structure to compute distance to a mesh nodal
+  !!
+  !! \param [out] dcs            Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]  mesh_nature    Nature of the mesh
+  !! \param [in]  n_point_cloud  Number of point cloud
+  !! \param [in]  comm           MPI communicator
+  !!
+
+    subroutine pdm_dist_cloud_surf_create_ (dcs,           &
+                                            mesh_nature,   &
+                                            n_point_cloud, &
+                                            f_comm,        &
+                                            owner)
+
+      use iso_c_binding
+
+      implicit none
+
+      integer :: mesh_nature
+      integer :: n_point_cloud
+      integer :: f_comm
+      integer :: owner
+
+      type (c_ptr) :: dcs
+
+      integer(c_int) :: c_mesh_nature
+      integer(c_int) :: c_n_point_cloud
+      integer(c_int) :: c_comm
+      integer(c_int) :: c_owner
+
+      c_comm = PDM_MPI_Comm_f2c(f_comm)
+
+      c_mesh_nature   = mesh_nature
+      c_n_point_cloud = n_point_cloud
+      c_owner         = owner
+
+      dcs = pdm_dist_cloud_surf_create_cf(c_mesh_nature,   &
+                                          c_n_point_cloud, &
+                                          c_comm,          &
+                                          c_owner)
+
+      end subroutine pdm_dist_cloud_surf_create_
 
 end module pdm_dist_cloud_surf
