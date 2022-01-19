@@ -25,9 +25,30 @@ module pdm_dcube_gen
 
   implicit none
 
+  interface PDM_dcube_gen_init ; module procedure &
+  pdm_dcube_gen_init_
+  end interface
+
+  private :: pdm_dcube_gen_init_
+
   interface
 
-    function PDM_dcube_gen_init (fcomm,          &
+
+ !>
+ !!
+ !! \brief Create a distributed cube
+ !!
+ !! \param [in]   comm           Communicator
+ !! \param [in]   n_vtx_seg        Number of vertices in segments
+ !! \param [in]   length         Segment length
+ !! \param [in]   zero_x         Coordinates of the origin
+ !! \param [in]   zero_y         Coordinates of the origin
+ !! \param [in]   zero_z         Coordinates of the origin
+ !!
+ !! \return      Pointer to \ref PDM_dcube_t object
+ !!
+ !!
+    function PDM_dcube_gen_init_cf (comm,       &
                                   n_vtx_seg,     &
                                   length,        &
                                   zero_x,        &
@@ -35,12 +56,12 @@ module pdm_dcube_gen
                                   zero_z,        &
                                   owner)         &
                                   result (dcube) &
-      bind (c, name = 'PDM_dcube_gen_init_cf')
+      bind (c, name = 'PDM_dcube_gen_init')
 
       use iso_c_binding
       implicit none
 
-      integer(c_int), value :: fComm
+      integer(c_int), value :: comm
       integer(c_int), value :: owner
 
 #ifdef PDM_LONG_G_NUM
@@ -53,7 +74,22 @@ module pdm_dcube_gen
 
       type (c_ptr) :: dcube
 
-    end function PDM_dcube_gen_init
+    end function PDM_dcube_gen_init_cf
+
+
+!>
+!!
+!! \brief Return distributed cube size
+!!
+!! \param [in]   dcube         Pointer to \ref PDM_dcube_t object
+!! \param [out]  n_face_group  Number of faces groups
+!! \param [out]  dn_cell       Number of cells stored in this process
+!! \param [out]  dn_face       Number of faces stored in this process
+!! \param [out]  dn_vtx        Number of vertices stored in this process
+!! \param [out]  sface_vtx     Length of dface_vtx array
+!! \param [out]  sface_group   Length of dface_group array
+!!
+!!
 
     subroutine PDM_dcube_gen_dim_get (dcube,           &
                                       n_face_group,    &
@@ -78,6 +114,21 @@ module pdm_dcube_gen
 
     end subroutine PDM_dcube_gen_dim_get
 
+
+ !>
+ !!
+ !! \brief Return distributed cube data
+ !!
+ !! \param [in]  dcube           Pointer to \ref PDM_dcube_t object
+ !! \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
+ !! \param [out] dface_vtx_idx   Faces from vertices connectivity index (size = dn_face + 1)
+ !! \param [out] dface_vtx       Faces from vertices connectivity (size = dface_vtxL)
+ !! \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
+ !! \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
+ !! \param [out] dface_group     Faces groups (size = dFacegroupL)
+ !!
+ !!
+
     subroutine PDM_dcube_gen_data_get (dcube,          &
                                        dface_cell,      &
                                        dface_vtx_idx,   &
@@ -100,6 +151,15 @@ module pdm_dcube_gen
 
     end subroutine PDM_dcube_gen_data_get
 
+
+ !>
+ !!
+ !! \brief Free a distributed cube
+ !!
+ !! \param [in]  dcube     Pointer to \ref PDM_dcube_t object
+ !!
+ !!
+
     subroutine PDM_dcube_gen_free (dcube)     &
       bind (c, name = 'PDM_dcube_gen_free')
       use iso_c_binding
@@ -110,5 +170,76 @@ module pdm_dcube_gen
     end subroutine PDM_dcube_gen_free
 
   end interface
+
+
+  contains
+
+
+ !>
+ !!
+ !! \brief Create a distributed cube
+ !!
+ !! \param [out]  dcube       Pointer to \ref PDM_dcube_t object
+ !! \param [in]   comm        Communicator
+ !! \param [in]   n_vtx_seg   Number of vertices in segments
+ !! \param [in]   length      Segment length
+ !! \param [in]   zero_x      Coordinates of the origin
+ !! \param [in]   zero_y      Coordinates of the origin
+ !! \param [in]   zero_z      Coordinates of the origin
+ !!
+
+  subroutine PDM_dcube_gen_init_ (dcube,         &
+                                  f_comm,        &
+                                  n_vtx_seg,     &
+                                  length,        &
+                                  zero_x,        &
+                                  zero_y,        &
+                                  zero_z,        &
+                                  owner)
+
+      use iso_c_binding
+      implicit none
+
+
+      integer :: f_comm
+      integer :: owner
+
+
+      integer (kind = pdm_g_num_s) :: n_vtx_seg
+      double precision             :: length
+      double precision             :: zero_x, zero_y, zero_z
+
+      type (c_ptr) :: dcube
+
+
+      integer(c_int) :: c_comm
+      integer(c_int) :: c_owner
+
+#ifdef PDM_LONG_G_NUM
+      integer (c_long) :: c_n_vtx_seg
+#else
+      integer (c_int) :: c_n_vtx_seg
+#endif
+      real(c_double) :: c_length
+      real(c_double) :: c_zero_x, c_zero_y, c_zero_z
+
+      c_comm = PDM_MPI_Comm_f2c(f_comm)
+
+      c_owner     = owner
+      c_n_vtx_seg = n_vtx_seg
+      c_length    = length
+      c_zero_x    = zero_x
+      c_zero_y    = zero_y
+      c_zero_z    = zero_z
+
+      dcube = PDM_dcube_gen_init_cf(c_comm,       &
+                                    c_n_vtx_seg,  &
+                                    c_length,     &
+                                    c_zero_x,     &
+                                    c_zero_y,     &
+                                    c_zero_z,     &
+                                    c_owner)
+
+    end subroutine PDM_dcube_gen_init_
 
 end module pdm_dcube_gen

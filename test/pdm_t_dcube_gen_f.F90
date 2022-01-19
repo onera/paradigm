@@ -84,7 +84,7 @@ program testf
   call mpi_comm_rank(mpi_comm_world, i_rank, code)
   call mpi_comm_size(mpi_comm_world, n_rank, code)
 
-  dcube = pdm_dcube_gen_init(fComm, n_vtx_seg, length, zero_x, zero_y, zero_z, PDM_OWNERSHIP_KEEP)
+  call pdm_dcube_gen_init(dcube, fComm, n_vtx_seg, length, zero_x, zero_y, zero_z, PDM_OWNERSHIP_KEEP)
 
   call PDM_dcube_gen_dim_get (dcube,           &
                               n_face_group,    &
