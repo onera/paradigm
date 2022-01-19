@@ -130,14 +130,15 @@ static PDM_g_num_t* _per_block_offset(int n_block, int *sizes, PDM_MPI_Comm comm
 // Translate interfaces list to a graph representation
 static int _interface_to_graph
 (
-  const int      n_interface,
-  int           *interface_dn,
-  PDM_g_num_t  **interface_ids,
-  int          **interface_dom,
-  int          **graph_idx,
-  PDM_g_num_t  **graph_ids,
-  int          **graph_dom,
-  PDM_MPI_Comm   comm
+  const int                    n_interface,
+  PDM_domain_interface_mult_t  multizone_intrf,
+  int                         *interface_dn,
+  PDM_g_num_t                **interface_ids,
+  int                        **interface_dom,
+  int                        **graph_idx,
+  PDM_g_num_t                **graph_ids,
+  int                        **graph_dom,
+  PDM_MPI_Comm                 comm
 )
 {
   int n_rank;
@@ -147,21 +148,36 @@ static int _interface_to_graph
   //   - the number of involved blocks
   //   - the max id occuring in each block
   int n_zone = -1;
-  int max_zone_loc = 0;
-  for (int itrf = 0; itrf < n_interface; itrf++) {
-    for (int k = 0; k < 2*interface_dn[itrf]; k++) {
-      max_zone_loc = PDM_MAX(max_zone_loc, interface_dom[itrf][k]);
+  if (multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+    int max_zone_loc = 0;
+    for (int itrf = 0; itrf < n_interface; itrf++) {
+      for (int k = 0; k < 2*interface_dn[itrf]; k++) {
+        max_zone_loc = PDM_MAX(max_zone_loc, interface_dom[itrf][k]);
+      }
+    }
+    PDM_MPI_Allreduce(&max_zone_loc, &n_zone, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+  }
+  else {
+    for (int itrf = 0; itrf < n_interface; itrf++) {
+      n_zone = PDM_MAX(n_zone, interface_dom[itrf][0]);
+      n_zone = PDM_MAX(n_zone, interface_dom[itrf][1]);
     }
   }
-  PDM_MPI_Allreduce(&max_zone_loc, &n_zone, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
   n_zone++; //Because zone numbering start at 0
 
   PDM_g_num_t *max_per_zone_loc = PDM_array_const_gnum(n_zone, 0);
   PDM_g_num_t *max_per_zone     = (PDM_g_num_t *) malloc((n_zone+1) * sizeof(PDM_g_num_t));
   for (int itrf = 0; itrf < n_interface; itrf++) {
+    int dom, domopp;
+    if (multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
     for (int k = 0; k < interface_dn[itrf]; k++) {
-      int dom    = interface_dom[itrf][2*k];
-      int domopp = interface_dom[itrf][2*k+1];
+      if (multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k];
+        domopp = interface_dom[itrf][2*k+1];
+      }
       max_per_zone_loc[dom] = PDM_MAX(max_per_zone_loc[dom], interface_ids[itrf][2*k]);
       max_per_zone_loc[domopp] = PDM_MAX(max_per_zone_loc[domopp], interface_ids[itrf][2*k+1]);
     }
@@ -186,11 +202,20 @@ static int _interface_to_graph
     send_data[itrf]             = (PDM_g_num_t *) malloc(2*interface_dn[itrf]*sizeof(PDM_g_num_t));
     weight[itrf]                = (double      *) malloc(2*interface_dn[itrf]*sizeof(double     ));
     interface_dn_twice[itrf]    = 2*interface_dn[itrf];
+    int dom, domopp;
+    if (multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
     for (int k = 0; k < interface_dn[itrf]; k++) {
-      interface_ids_shifted[itrf][2*k]   = interface_ids[itrf][2*k] + max_per_zone[interface_dom[itrf][2*k]];
-      interface_ids_shifted[itrf][2*k+1] = interface_ids[itrf][2*k+1] + max_per_zone[interface_dom[itrf][2*k+1]];
-      send_data[itrf][2*k]   = interface_ids[itrf][2*k+1] + max_per_zone[interface_dom[itrf][2*k+1]];
-      send_data[itrf][2*k+1] = interface_ids[itrf][2*k] + max_per_zone[interface_dom[itrf][2*k]];
+      if (multizone_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k];
+        domopp = interface_dom[itrf][2*k+1];
+      }
+      interface_ids_shifted[itrf][2*k]   = interface_ids[itrf][2*k] + max_per_zone[dom];
+      interface_ids_shifted[itrf][2*k+1] = interface_ids[itrf][2*k+1] + max_per_zone[domopp];
+      send_data[itrf][2*k]   = interface_ids[itrf][2*k+1] + max_per_zone[domopp];
+      send_data[itrf][2*k+1] = interface_ids[itrf][2*k] + max_per_zone[dom];
       weight[itrf][2*k]   = 1.;
       weight[itrf][2*k+1] = 1.;
       stride_one[itrf][2*k]   = 1;
@@ -2187,11 +2212,9 @@ int PDM_domain_interface_get_as_graph
   else  {
     PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
   }
-  if (dom_intrf->multizone_intrf != PDM_DOMAIN_INTERFACE_MULT_YES) {
-    PDM_error(__FILE__, __LINE__, 0, "Simplified interface are not yet supported\n");
-  }
 
   int graph_dn = _interface_to_graph(dom_intrf->n_interface,
+                                     dom_intrf->multizone_intrf,
                                      interface_dn,
                                      interface_ids,
                                      interface_dom,
