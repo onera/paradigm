@@ -952,6 +952,11 @@ PDM_part_to_part_create
       }
     }
   }
+
+  for (int i = 0; i < n_part2; i++) {
+    PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 (First):: ");
+  }
+
   order = (int *) malloc (sizeof(int) * max_n_gnum1);
 
   for (int i = 0; i < n_part2; i++) {
@@ -1439,20 +1444,31 @@ PDM_part_to_part_reverse_issend
     ptp->async_n_send_buffer[_request][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
     ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
   }
-  ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);      
+  ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);
+  PDM_g_num_t *_send = ptp->async_send_buffer[_request];
+
+  for(int j = 0; j < ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t); ++j) {
+    _send[j] = -1000000;
+  }
 
   int delta = (int) s_data * cst_stride;
   for (int i = 0; i < ptp->n_part2; i++) {
+
+    PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 :: ");
     for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
       for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
         int idx = ptp->recv_buffer_to_ref_gnum2[i][k] * delta;
         int idx1 = k* delta;
         for (int k1 = 0; k1 < delta; k1++) {
-          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx1+k1];
+          ptp->async_send_buffer[_request][idx+k1] = -1; // _part2_data[i][idx1+k1];
         }
       }
     }
   }
+
+
+  PDM_log_trace_array_long(_send, ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_send_buffer :: ");
+
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     int dest = ptp->active_rank_recv[i];
@@ -1482,7 +1498,7 @@ PDM_part_to_part_reverse_issend_wait
 )
 {
 
-  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+  for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     PDM_MPI_Wait (&(ptp->async_send_request[request][i]));
   }
 
@@ -1624,7 +1640,7 @@ PDM_part_to_part_reverse_irecv
   ptp->async_recv_tag[_request]         = tag;
 
   ptp->async_recv_part2_data[_request]  = part1_data;      
-  ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
+  ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
   ptp->async_i_recv_buffer[_request][0] = 0;
@@ -1667,6 +1683,10 @@ PDM_part_to_part_reverse_irecv_wait
     PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
   }
 
+
+  PDM_g_num_t *_recv = ptp->async_recv_buffer[request];
+  PDM_log_trace_array_long(_recv, ptp->async_i_recv_buffer[request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_recv_buffer :: ");
+
   size_t s_data  = ptp->async_recv_s_data[request];      
   int cst_stride = ptp->async_recv_cst_stride[request];      
 
@@ -1685,7 +1705,7 @@ PDM_part_to_part_reverse_irecv_wait
             int idx  = ptp->gnum1_to_send_buffer[i][k] * delta;
             int idx1 = j * delta;
             for (int k1 = 0; k1 < delta; k1++) {
-              _part1_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1]; 
+              _part1_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
             }
           }
         } 
