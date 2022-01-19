@@ -71,7 +71,7 @@ typedef void (*PDM_coarse_mesh_renum_fct_t) (_coarse_part_t  *part);
  *
  */
 
-typedef struct  {
+struct _coarse_mesh_t {
 
   /* Partitions */
 
@@ -140,7 +140,7 @@ typedef struct  {
 
 
 
-} _coarse_mesh_t;
+} ;
 
 
 /**
@@ -149,8 +149,7 @@ typedef struct  {
  * \brief  Function pointer used to define a coarse mesh method
  *
  */
-
-typedef void (*PDM_coarse_mesh_fct_t) (_coarse_mesh_t  *cm,
+typedef void (*PDM_coarse_mesh_fct_t) (struct _coarse_mesh_t  *cm,
                                        const int       i_part,
                                        int             *n_coarse_cell_computed,
                                        int             *cell_cell_idx,
@@ -334,11 +333,11 @@ void
  *
  */
 
-_coarse_mesh_t *
-PDM_part_coarse_mesh_get_from_id
-(
- int  cmId
- );
+// _coarse_mesh_t *
+// PDM_part_coarse_mesh_get_from_id
+// (
+//  int  cmId
+//  );
 
 
 #ifdef	__cplusplus
