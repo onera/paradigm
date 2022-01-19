@@ -1485,6 +1485,8 @@ char *argv[]
 /*
  *  Free meshes
  */
+  PDM_part_free(ppart);
+  PDM_part_coarse_mesh_free(cm);
 
  /* for (int imesh = 0; imesh < 2; imesh++) { */
  /*   for (int i_part = 0; i_part < n_part; i_part++) { */
