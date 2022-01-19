@@ -385,6 +385,9 @@ PDM_part_to_part_create
   ptp->gnum1_to_send_buffer       = NULL;  
   ptp->recv_buffer_to_ref_gnum2   = NULL;  
 
+  ptp->recv_buffer_to_duplicate_idx = NULL;
+  ptp->recv_buffer_to_duplicate     = NULL;
+
   ptp->default_n_send_buffer      = malloc (sizeof(int) * n_rank);
   ptp->default_i_send_buffer      = malloc (sizeof(int) * (n_rank + 1));
   ptp->default_i_send_buffer[0]   = 0;
@@ -832,13 +835,15 @@ PDM_part_to_part_create
 
   /* 6 - Build the arrays for the reveived view */
 
-  ptp->n_ref_gnum2              = malloc (sizeof (int) * n_part2);         
-  ptp->ref_gnum2                = malloc (sizeof (int *) * n_part2);          
-  ptp->n_unref_gnum2            = malloc (sizeof (int) * n_part2);      
-  ptp->unref_gnum2              = malloc (sizeof (int *) * n_part2);        
-  ptp->gnum1_come_from_idx      = malloc (sizeof (int *) * n_part2);
-  ptp->gnum1_come_from          = malloc (sizeof (PDM_g_num_t *) * n_part2);
-  ptp->recv_buffer_to_ref_gnum2 = malloc (sizeof (int *) * n_part2);   
+  ptp->n_ref_gnum2                  = malloc (sizeof (int) * n_part2);         
+  ptp->ref_gnum2                    = malloc (sizeof (int *) * n_part2);          
+  ptp->n_unref_gnum2                = malloc (sizeof (int) * n_part2);      
+  ptp->unref_gnum2                  = malloc (sizeof (int *) * n_part2);        
+  ptp->gnum1_come_from_idx          = malloc (sizeof (int *) * n_part2);
+  ptp->gnum1_come_from              = malloc (sizeof (PDM_g_num_t *) * n_part2);
+  ptp->recv_buffer_to_ref_gnum2     = malloc (sizeof (int *) * n_part2);   
+  ptp->recv_buffer_to_duplicate_idx = malloc (sizeof (int *) * n_part2);
+  ptp->recv_buffer_to_duplicate     = malloc (sizeof (int *) * n_part2);
 
   //ptp->gnum1_to_send_buffer     = NULL;  
   //ptp->recv_buffer_to_ref_gnum2 = NULL;  
@@ -991,8 +996,15 @@ PDM_part_to_part_create
       ptp->gnum1_come_from_idx[i][j] = 0;
     }
 
+    ptp->recv_buffer_to_duplicate_idx[i] = malloc (sizeof (int) * (ptp->n_ref_gnum2[i]+1));
+    ptp->recv_buffer_to_duplicate_idx[i][0] = 0;
+    ptp->recv_buffer_to_duplicate[i] = malloc(sizeof(int) * 2 * _old_gnum1_come_from_idx[ptp->n_ref_gnum2[i]]);
+
     int cpt = 0; 
+    int cpt1 = 0; 
+
     for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
+
       int current_val = -1;
       for (int k = _old_gnum1_come_from_idx[j]; k < _old_gnum1_come_from_idx[j+1]; k++) { 
         if (ptp->gnum1_come_from[i][k] != current_val) {
@@ -1001,12 +1013,19 @@ PDM_part_to_part_create
           ptp->recv_buffer_to_ref_gnum2[i][cpt] = ptp->recv_buffer_to_ref_gnum2[i][k]; 
           cpt++; 
         }
+        else {
+          ptp->recv_buffer_to_duplicate[i][2*cpt1] = ptp->recv_buffer_to_ref_gnum2[i][k]; 
+          ptp->recv_buffer_to_duplicate[i][2*cpt1+1] = k; 
+          cpt1++;           
+        }
       }
       ptp->gnum1_come_from_idx[i][j+1] = cpt;
+      ptp->recv_buffer_to_duplicate_idx[i][j+1] = cpt1;
     }
 
-
-    // realloc
+    ptp->gnum1_come_from[i]          = realloc (ptp->gnum1_come_from[i], cpt * sizeof(PDM_g_num_t));
+    ptp->recv_buffer_to_ref_gnum2[i] = realloc (ptp->recv_buffer_to_ref_gnum2[i], cpt * sizeof(int));
+    ptp->recv_buffer_to_duplicate[i] = realloc (ptp->recv_buffer_to_duplicate[i], sizeof(int) * 2 * cpt1);
 
     free (_old_gnum1_come_from_idx);
 
@@ -1463,6 +1482,15 @@ PDM_part_to_part_reverse_issend
           ptp->async_send_buffer[_request][idx+k1] = -1; // _part2_data[i][idx1+k1];
         }
       }
+      for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
+        int idx      = ptp->recv_buffer_to_duplicate[i][2*k] * delta;
+        int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1] * delta;
+        int idx1 = idx_data * delta;
+        for (int k1 = 0; k1 < delta; k1++) {
+          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx1+k1];
+        }
+      }
+
     }
   }
 
@@ -1640,7 +1668,7 @@ PDM_part_to_part_reverse_irecv
   ptp->async_recv_tag[_request]         = tag;
 
   ptp->async_recv_part2_data[_request]  = part1_data;      
-  ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);
+  ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);      
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
   ptp->async_i_recv_buffer[_request][0] = 0;
@@ -1649,7 +1677,7 @@ PDM_part_to_part_reverse_irecv
     ptp->async_n_recv_buffer[_request][i]   = cst_stride * ptp->default_n_send_buffer[i]   * (int) s_data; 
     ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_i_send_buffer[i+1] * (int) s_data; 
   }
-  ptp->async_recv_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
+  ptp->async_recv_buffer[_request] = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
 
   for (int i = 0; i < ptp->n_active_rank_send; i++) {
     int source = ptp->active_rank_send[i];
@@ -2022,6 +2050,8 @@ PDM_part_to_part_free
       free (ptp->gnum1_come_from_idx[i]);    
       free (ptp->gnum1_come_from[i]);    
       free (ptp->recv_buffer_to_ref_gnum2[i]);
+      free (ptp->recv_buffer_to_duplicate_idx[i]);
+      free (ptp->recv_buffer_to_duplicate[i]);
     }
     free (ptp->recv_buffer_to_ref_gnum2);
     free (ptp->ref_gnum2);    
@@ -2029,7 +2059,9 @@ PDM_part_to_part_free
     free (ptp->n_ref_gnum2);    
     free (ptp->n_unref_gnum2);    
     free (ptp->gnum1_come_from_idx);    
-    free (ptp->gnum1_come_from);    
+    free (ptp->gnum1_come_from);
+    free (ptp->recv_buffer_to_duplicate_idx);
+    free (ptp->recv_buffer_to_duplicate);    
   }  
   
   free (ptp->active_rank_send);
