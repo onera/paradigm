@@ -1015,7 +1015,7 @@ PDM_part_to_part_create
         }
         else {
           ptp->recv_buffer_to_duplicate[i][2*cpt1] = ptp->recv_buffer_to_ref_gnum2[i][k]; 
-          ptp->recv_buffer_to_duplicate[i][2*cpt1+1] = k; 
+          ptp->recv_buffer_to_duplicate[i][2*cpt1+1] = cpt-1;
           cpt1++;           
         }
       }
@@ -1464,38 +1464,38 @@ PDM_part_to_part_reverse_issend
     ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
   }
   ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);
-  PDM_g_num_t *_send = ptp->async_send_buffer[_request];
 
-  for(int j = 0; j < ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t); ++j) {
-    _send[j] = -1000000;
-  }
+  // PDM_g_num_t *_send = ptp->async_send_buffer[_request];
+  // for(int j = 0; j < ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t); ++j) {
+  //   _send[j] = -1000000;
+  // }
 
   int delta = (int) s_data * cst_stride;
   for (int i = 0; i < ptp->n_part2; i++) {
 
-    PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 :: ");
+    // PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 :: ");
+    // PDM_log_trace_array_int(ptp->recv_buffer_to_duplicate[i], ptp->recv_buffer_to_duplicate_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_duplicate :: ");
+
     for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
       for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
         int idx = ptp->recv_buffer_to_ref_gnum2[i][k] * delta;
         int idx1 = k* delta;
         for (int k1 = 0; k1 < delta; k1++) {
-          ptp->async_send_buffer[_request][idx+k1] = -1; // _part2_data[i][idx1+k1];
+          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx1+k1];
         }
       }
       for (int k = ptp->recv_buffer_to_duplicate_idx[i][j]; k < ptp->recv_buffer_to_duplicate_idx[i][j+1]; k++) {
-        int idx      = ptp->recv_buffer_to_duplicate[i][2*k] * delta;
+        int idx      = ptp->recv_buffer_to_duplicate[i][2*k  ] * delta;
         int idx_data = ptp->recv_buffer_to_duplicate[i][2*k+1] * delta;
-        int idx1 = idx_data * delta;
         for (int k1 = 0; k1 < delta; k1++) {
-          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx1+k1];
+          ptp->async_send_buffer[_request][idx+k1] = _part2_data[i][idx_data+k1];
         }
       }
 
     }
   }
 
-
-  PDM_log_trace_array_long(_send, ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_send_buffer :: ");
+  // PDM_log_trace_array_long(_send, ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_send_buffer :: ");
 
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
