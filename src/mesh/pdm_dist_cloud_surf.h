@@ -254,6 +254,28 @@ PDM_dist_cloud_surf_dump_times
  PDM_dist_cloud_surf_t  *dist
 );
 
+
+
+/**
+ *
+ * \brief Get the dimension of a point cloud
+ *
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [out]  n_points        Number of points
+ *
+ */
+
+void
+PDM_dist_cloud_surf_cloud_dim_get
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    i_part,
+       int                   *n_points
+);
+
 #ifdef	__cplusplus
 }
 #endif

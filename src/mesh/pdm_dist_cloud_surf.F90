@@ -29,8 +29,12 @@ module pdm_dist_cloud_surf
   pdm_dist_cloud_surf_create_
   end interface
 
-  private :: pdm_dist_cloud_surf_create_
+  interface PDM_dist_cloud_surf_get ; module procedure &
+  pdm_dist_cloud_surf_get_
+  end interface
 
+  private :: pdm_dist_cloud_surf_create_
+  private :: pdm_dist_cloud_surf_get_
 
   interface
 
@@ -46,8 +50,8 @@ module pdm_dist_cloud_surf
     function pdm_dist_cloud_surf_create_cf (mesh_nature,   &
                                             n_point_cloud, &
                                             comm,          &
-                                            owner) &
-                                       result(dcs) &
+                                            owner)         &
+                                       result(dcs)         &
          bind (c, name = 'PDM_dist_cloud_surf_create')
 
       use iso_c_binding
@@ -212,10 +216,12 @@ module pdm_dist_cloud_surf
     !! \param [out]  closest_elt_g_num     Global number of the closest element
     !!
 
-    subroutine pdm_dist_cloud_surf_get (dcs, i_point_cloud, i_part, &
-                                  closest_elt_distance, &
-                                  closest_elt_projected, &
-                                  closest_elt_gnum) &
+    subroutine pdm_dist_cloud_surf_get_cf (dcs,                   &
+                                           i_point_cloud,         &
+                                           i_part,                &
+                                           closest_elt_distance,  &
+                                           closest_elt_projected, &
+                                           closest_elt_gnum)      &
       bind (c, name = 'PDM_dist_cloud_surf_get')
 
       use iso_c_binding
@@ -229,7 +235,7 @@ module pdm_dist_cloud_surf
       type(c_ptr)               :: closest_elt_projected
       type(c_ptr)               :: closest_elt_gnum
 
-    end subroutine pdm_dist_cloud_surf_get
+    end subroutine pdm_dist_cloud_surf_get_cf
 
     !> \brief Free a distance mesh structure
     !!
@@ -263,7 +269,38 @@ module pdm_dist_cloud_surf
       implicit none
 
       type (c_ptr), value       :: dcs
+
     end subroutine pdm_dist_cloud_surf_dump_times
+
+
+  !>
+  !!
+  !! \brief Get the dimension of a point cloud
+  !!
+  !! \param [in]   dcs             Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]   i_point_cloud   Index of point cloud
+  !! \param [in]   i_part          Index of partition
+  !! \param [out]  n_points        Number of points
+  !!
+  !!
+
+  subroutine PDM_dist_cloud_surf_cloud_dim_get (dcs,           &
+                                                i_point_cloud, &
+                                                i_part,        &
+                                                n_points)      &
+
+    bind (c, name = 'PDM_dist_cloud_surf_cloud_dim_get')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value    :: dcs
+    integer(c_int), value :: i_point_cloud
+    integer(c_int), value :: i_part
+    integer(c_int)        :: n_points
+
+  end subroutine PDM_dist_cloud_surf_cloud_dim_get
+
 
   end interface
 
@@ -279,39 +316,105 @@ module pdm_dist_cloud_surf
   !! \param [in]  comm           MPI communicator
   !!
 
-    subroutine pdm_dist_cloud_surf_create_ (dcs,           &
-                                            mesh_nature,   &
-                                            n_point_cloud, &
-                                            f_comm,        &
-                                            owner)
+  subroutine pdm_dist_cloud_surf_create_ (dcs,           &
+                                          mesh_nature,   &
+                                          n_point_cloud, &
+                                          f_comm,        &
+                                          owner)
 
-      use iso_c_binding
+    use iso_c_binding
 
-      implicit none
+    implicit none
 
-      integer :: mesh_nature
-      integer :: n_point_cloud
-      integer :: f_comm
-      integer :: owner
+    integer :: mesh_nature
+    integer :: n_point_cloud
+    integer :: f_comm
+    integer :: owner
 
-      type (c_ptr) :: dcs
+    type (c_ptr) :: dcs
 
-      integer(c_int) :: c_mesh_nature
-      integer(c_int) :: c_n_point_cloud
-      integer(c_int) :: c_comm
-      integer(c_int) :: c_owner
+    integer(c_int) :: c_mesh_nature
+    integer(c_int) :: c_n_point_cloud
+    integer(c_int) :: c_comm
+    integer(c_int) :: c_owner
 
-      c_comm = PDM_MPI_Comm_f2c(f_comm)
+    c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-      c_mesh_nature   = mesh_nature
-      c_n_point_cloud = n_point_cloud
-      c_owner         = owner
+    c_mesh_nature   = mesh_nature
+    c_n_point_cloud = n_point_cloud
+    c_owner         = owner
 
-      dcs = pdm_dist_cloud_surf_create_cf(c_mesh_nature,   &
-                                          c_n_point_cloud, &
-                                          c_comm,          &
-                                          c_owner)
+    dcs = pdm_dist_cloud_surf_create_cf(c_mesh_nature,   &
+                                        c_n_point_cloud, &
+                                        c_comm,          &
+                                        c_owner)
 
-      end subroutine pdm_dist_cloud_surf_create_
+  end subroutine pdm_dist_cloud_surf_create_
+
+
+
+  !> \brief Get mesh distance
+  !!
+  !! \param [in]   dcs                   Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]   i_point_cloud         Current cloud
+  !! \param [in]   i_part                Index of partition of the cloud
+  !! \param [out]  closest_elt_distance  Distance
+  !! \param [out]  closest_elt_projected Projected point coordinates
+  !! \param [out]  closest_elt_g_num     Global number of the closest element
+  !!
+
+  subroutine pdm_dist_cloud_surf_get_ (dcs,                   &
+                                       i_point_cloud,         &
+                                       i_part,                &
+                                       closest_elt_distance,  &
+                                       closest_elt_projected, &
+                                       closest_elt_gnum)
+
+    use iso_c_binding
+
+    implicit none
+
+    type (c_ptr), value                  :: dcs
+    integer                              :: i_point_cloud
+    integer                              :: i_part
+    double precision,            pointer :: closest_elt_distance(:)
+    double precision,            pointer :: closest_elt_projected(:,:)
+    integer(kind = pdm_g_num_s), pointer :: closest_elt_gnum(:)
+
+    integer(c_int)                       :: c_i_point_cloud
+    integer(c_int)                       :: c_i_part
+    type(c_ptr)                          :: c_closest_elt_distance
+    type(c_ptr)                          :: c_closest_elt_projected
+    type(c_ptr)                          :: c_closest_elt_gnum
+    integer                              :: n_points
+
+    c_i_point_cloud = i_point_cloud
+    c_i_part        = i_part
+
+    call PDM_dist_cloud_surf_cloud_dim_get (dcs,             &
+                                            c_i_point_cloud, &
+                                            c_i_part,        &
+                                            n_points)
+
+    call pdm_dist_cloud_surf_get_cf (dcs,                     &
+                                     c_i_point_cloud,         &
+                                     c_i_part,                &
+                                     c_closest_elt_distance,  &
+                                     c_closest_elt_projected, &
+                                     c_closest_elt_gnum)
+
+    call c_f_pointer(c_closest_elt_distance, &
+                     closest_elt_distance,   &
+                     [n_points])
+
+    call c_f_pointer(c_closest_elt_projected, &
+                     closest_elt_projected,   &
+                     [3,n_points])
+
+    call c_f_pointer(c_closest_elt_gnum, &
+                     closest_elt_gnum,   &
+                     [n_points])
+
+  end subroutine pdm_dist_cloud_surf_get_
 
 end module pdm_dist_cloud_surf
