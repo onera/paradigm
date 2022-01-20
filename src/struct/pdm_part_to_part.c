@@ -958,10 +958,6 @@ PDM_part_to_part_create
     }
   }
 
-  for (int i = 0; i < n_part2; i++) {
-    PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 (First):: ");
-  }
-
   order = (int *) malloc (sizeof(int) * max_n_gnum1);
 
   for (int i = 0; i < n_part2; i++) {
@@ -1465,16 +1461,8 @@ PDM_part_to_part_reverse_issend
   }
   ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);
 
-  // PDM_g_num_t *_send = ptp->async_send_buffer[_request];
-  // for(int j = 0; j < ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t); ++j) {
-  //   _send[j] = -1000000;
-  // }
-
   int delta = (int) s_data * cst_stride;
   for (int i = 0; i < ptp->n_part2; i++) {
-
-    // PDM_log_trace_array_int(ptp->recv_buffer_to_ref_gnum2[i], ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_ref_gnum2 :: ");
-    // PDM_log_trace_array_int(ptp->recv_buffer_to_duplicate[i], ptp->recv_buffer_to_duplicate_idx[i][ptp->n_ref_gnum2[i]], "recv_buffer_to_duplicate :: ");
 
     for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
       for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
@@ -1494,9 +1482,6 @@ PDM_part_to_part_reverse_issend
 
     }
   }
-
-  // PDM_log_trace_array_long(_send, ptp->async_i_send_buffer[_request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_send_buffer :: ");
-
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     int dest = ptp->active_rank_recv[i];
@@ -1711,10 +1696,6 @@ PDM_part_to_part_reverse_irecv_wait
     PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
   }
 
-
-  PDM_g_num_t *_recv = ptp->async_recv_buffer[request];
-  PDM_log_trace_array_long(_recv, ptp->async_i_recv_buffer[request][ptp->n_rank]/sizeof(PDM_g_num_t), "async_recv_buffer :: ");
-
   size_t s_data  = ptp->async_recv_s_data[request];      
   int cst_stride = ptp->async_recv_cst_stride[request];      
 
@@ -1780,6 +1761,21 @@ PDM_part_to_part_iexch
  int                               *request
 )
 {
+  PDM_UNUSED(ptp);
+  PDM_UNUSED(ptp);
+  PDM_UNUSED(k_comm);
+  PDM_UNUSED(t_stride);
+  PDM_UNUSED(t_part1_data_def);
+  PDM_UNUSED(cst_stride);
+  PDM_UNUSED(s_data);
+  PDM_UNUSED(part1_stride);
+  PDM_UNUSED(part1_data);
+  PDM_UNUSED(part2_stride);
+  PDM_UNUSED(part2_data);
+  PDM_UNUSED(request);
+
+
+
   // assert(k_comm == PDM_MPI_COMM_KIND_P2P);
 
   // if (t_stride == PDM_STRIDE_CST_BLOCK) {
@@ -1943,6 +1939,8 @@ PDM_part_to_part_iexch_wait
  int                                request
 )
 {
+  PDM_UNUSED(ptp);
+  PDM_UNUSED(request);
   
 }
 
@@ -1982,6 +1980,17 @@ PDM_part_to_part_reverse_iexch
 )
 {
   
+  PDM_UNUSED(ptp);
+  PDM_UNUSED(k_comm);
+  PDM_UNUSED(t_stride);
+  PDM_UNUSED(t_part2_data_def);
+  PDM_UNUSED(cst_stride);
+  PDM_UNUSED(s_data);
+  PDM_UNUSED(part2_stride);
+  PDM_UNUSED(part2_data);
+  PDM_UNUSED(part1_stride);
+  PDM_UNUSED(part1_data);
+  PDM_UNUSED(request);
 }
 
 
@@ -2001,6 +2010,8 @@ PDM_part_to_part_reverse_iexch_wait
  int                                request
 )
 {
+  PDM_UNUSED(ptp);
+  PDM_UNUSED(request);
   
 }
 

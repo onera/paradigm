@@ -30,6 +30,7 @@
 #include "pdm_vtk.h"
 #include "pdm_dmesh.h"
 #include "pdm_unique.h"
+#include "pdm_part_geom.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
@@ -269,21 +270,23 @@ int main(int argc, char *argv[])
    */
   int i_zone = 0;
 
-  double      **cell_center        = (double      **) malloc( n_part_zones * sizeof(double      *));
-  PDM_g_num_t **selected_g_num     = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pcell_ln_to_gn     = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pface_ln_to_gn     = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pvtx_ln_to_gn      = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  int         **selected_g_num_idx = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int          *pn_cell            = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_face            = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_vtx             = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_select_cell     = (int          *) malloc( n_part_zones * sizeof(int          ));
-  double      **weight             = (double      **) malloc( n_part_zones * sizeof(double      *));
-  int         **pcell_face         = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pcell_face_idx     = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pface_vtx          = (int         **) malloc( n_part_zones * sizeof(int         *));
-  int         **pface_vtx_idx      = (int         **) malloc( n_part_zones * sizeof(int         *));
+  double      **cell_center             = (double      **) malloc( n_part_zones * sizeof(double      *));
+  PDM_g_num_t **selected_g_num          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pcell_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pface_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pvtx_ln_to_gn           = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  int         **selected_g_num_idx      = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int          *pn_cell                 = (int          *) malloc( n_part_zones * sizeof(int          ));
+  int          *pn_face                 = (int          *) malloc( n_part_zones * sizeof(int          ));
+  int          *pn_vtx                  = (int          *) malloc( n_part_zones * sizeof(int          ));
+  int          *pn_select_cell          = (int          *) malloc( n_part_zones * sizeof(int          ));
+  double      **weight                  = (double      **) malloc( n_part_zones * sizeof(double      *));
+  int         **pcell_face              = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int         **pcell_face_idx          = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int         **pface_vtx               = (int         **) malloc( n_part_zones * sizeof(int         *));
+  int         **pface_vtx_idx           = (int         **) malloc( n_part_zones * sizeof(int         *));
+  double      **pvtx_coord              = (double      **) malloc( n_part_zones * sizeof(double      *));
+  double      **tmp_extract_cell_center = (double      **) malloc( n_part_zones * sizeof(double      *));
 
   PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3,
                                                  n_part_zones,
@@ -333,6 +336,7 @@ int main(int argc, char *argv[])
 
     pface_vtx    [i_part] = face_vtx;
     pface_vtx_idx[i_part] = face_vtx_idx;
+    pvtx_coord   [i_part] = vtx;
 
 
     /*
@@ -380,8 +384,9 @@ int main(int argc, char *argv[])
 
     free(face_center);
 
-    selected_g_num    [i_part] = (PDM_g_num_t *) malloc(  n_cell      * sizeof(PDM_g_num_t));
-    selected_g_num_idx[i_part] = (int         *) malloc( (n_cell + 1) * sizeof(int        ));
+    selected_g_num         [i_part] = (PDM_g_num_t *) malloc(  n_cell          * sizeof(PDM_g_num_t));
+    selected_g_num_idx     [i_part] = (int         *) malloc( (n_cell + 1)     * sizeof(int        ));
+    tmp_extract_cell_center[i_part] = (double      *) malloc(  3 * n_cell      * sizeof(double     ));
 
     /*
      * Sub-part
@@ -404,22 +409,28 @@ int main(int argc, char *argv[])
         }
       }
       if(inside == 1) {
-        selected_g_num[i_part][n_select_cell++] = cell_ln_to_gn[i_cell];
+        selected_g_num         [i_part][n_select_cell]     = cell_ln_to_gn[i_cell];
+        tmp_extract_cell_center[i_part][3*n_select_cell  ] = cell_center[i_part][3*i_cell  ];
+        tmp_extract_cell_center[i_part][3*n_select_cell+1] = cell_center[i_part][3*i_cell+1];
+        tmp_extract_cell_center[i_part][3*n_select_cell+2] = cell_center[i_part][3*i_cell+2];
+        n_select_cell++;
+
       }
       selected_g_num_idx[i_part][i_cell+1] = selected_g_num_idx[i_part][i_cell] + inside;
     }
 
-    selected_g_num[i_part] = realloc(selected_g_num[i_part], n_select_cell * sizeof(PDM_g_num_t));
-    pn_select_cell[i_part] = n_select_cell;
+    selected_g_num         [i_part] = realloc(selected_g_num[i_part], n_select_cell * sizeof(PDM_g_num_t));
+    pn_select_cell         [i_part] = n_select_cell;
+    tmp_extract_cell_center[i_part] = realloc(tmp_extract_cell_center[i_part], 3 * n_select_cell * sizeof(double));
 
     weight        [i_part] = malloc(n_select_cell * sizeof(double));
     for(int i = 0; i < n_select_cell; ++i) {
       weight        [i_part][i] = 1.;
     }
 
-    PDM_log_trace_array_long(selected_g_num    [i_part], n_select_cell, "selected_g_num     : ");
-    PDM_log_trace_array_int (selected_g_num_idx[i_part], n_cell+1     , "selected_g_num_idx : ");
-    PDM_log_trace_array_long(cell_ln_to_gn             , n_cell       , "cell_ln_to_gn      : ");
+    // PDM_log_trace_array_long(selected_g_num    [i_part], n_select_cell, "selected_g_num     : ");
+    // PDM_log_trace_array_int (selected_g_num_idx[i_part], n_cell+1     , "selected_g_num_idx : ");
+    // PDM_log_trace_array_long(cell_ln_to_gn             , n_cell       , "cell_ln_to_gn      : ");
 
 
   }
@@ -434,14 +445,19 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   for (int i_part = 0; i_part < n_part_zones; i_part++){
-    PDM_gnum_set_from_coords(gnum_extract, i_part, pn_cell[i_part], cell_center[i_part], NULL);
+    PDM_gnum_set_from_coords(gnum_extract, i_part, pn_select_cell[i_part], tmp_extract_cell_center[i_part], NULL);
   }
 
   PDM_gnum_compute(gnum_extract);
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
     child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+    // PDM_log_trace_array_long(child_selected_g_num[i_part], pn_select_cell[i_part], "child_selected_g_num : ");
   }
+
+  // Ameliorer par himbert ordering
+  // Sinon on doit calculer un graphe distribué
+  // Donc cell_cell + part_to_part + on enleve les cellules hors de la numérotation ?
 
   /*
    *  Remake equilibrate block -> Block is not partial
@@ -458,16 +474,64 @@ int main(int argc, char *argv[])
   int dn_cell_equi = PDM_part_to_block_n_elt_block_get (ptb_equi);
   PDM_g_num_t *dextract_gnum = PDM_part_to_block_block_gnum_get(ptb_equi);
 
+  // /*
+  //  * Exchange cell center to reorder by hilbert
+  //  */
+  // int    *blk_center_n    = NULL;
+  // double *blk_cell_center = NULL;
+
+  // int** cell_center_n = malloc(n_part_zones * sizeof(int * ));
+  // for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+  //   cell_center_n[i_part] = malloc( pn_cell[i_part] * sizeof(int));
+  //   for(int i = 0; i < pn_cell[i_part]; ++i) {
+  //     cell_center_n[i_part][i] = 1;
+  //   }
+  // }
+
+  // PDM_part_to_block_exch(ptb_equi,
+  //                        3 * sizeof(double),
+  //                        PDM_STRIDE_VAR_INTERLACED,
+  //                        1,
+  //                        cell_center_n,
+  //             (void **)  cell_center,
+  //                        &blk_center_n,
+  //              (void **) &blk_cell_center);
+
+  // free(blk_center_n);
+  // for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+  //   free(cell_center_n[i_part]);
+  // }
+  // free(cell_center_n);
+
+  // PDM_log_trace_array_long(dextract_gnum, dn_cell_equi, "dextract_gnum : ");
+
+  // PDM_log_trace_array_double(blk_cell_center, 3 * dn_cell_equi, "blk_cell_center : ");
+
+  // PDM_g_num_t* distrib_extract_cell_equi = (PDM_g_num_t *) PDM_part_to_block_distrib_index_get(ptb_equi);
+  // PDM_log_trace_array_long(distrib_extract_cell_equi, n_rank+1, "distrib_extract_cell_equi : ");
+
+  // PDM_g_num_t* dequi_cell_ln_to_gn = malloc( dn_cell_equi * sizeof(PDM_g_num_t));
+  // PDM_dreorder_from_coords(PDM_PART_GEOM_HILBERT,
+  //                          3,
+  //                          distrib_extract_cell_equi,
+  //                          blk_cell_center,
+  //                          dequi_cell_ln_to_gn,
+  //                          comm);
+
+  // PDM_log_trace_array_long(dequi_cell_ln_to_gn, dn_cell_equi, "dequi_cell_ln_to_gn : ");
+  // free(dequi_cell_ln_to_gn);
+  // free(blk_cell_center);
+
 
   PDM_part_to_part_t* ptp = PDM_part_to_part_create((const PDM_g_num_t **) pcell_ln_to_gn,
-                                                                          pn_cell,
-                                                                          n_part_zones,
-                                                                          (const PDM_g_num_t **) &dextract_gnum,
-                                                                          &dn_cell_equi,
-                                                                          1,
-                                                                          (const int         **) selected_g_num_idx,
-                                                                          (const PDM_g_num_t **) child_selected_g_num,
-                                                                          comm);
+                                                    pn_cell,
+                                                    n_part_zones,
+                                                    (const PDM_g_num_t **) &dextract_gnum,
+                                                    &dn_cell_equi,
+                                                    1,
+                                                    (const int         **) selected_g_num_idx,
+                                                    (const PDM_g_num_t **) child_selected_g_num,
+                                                    comm);
 
   /*
    * Extract cell_face
@@ -509,8 +573,10 @@ int main(int argc, char *argv[])
       }
     }
 
-    PDM_log_trace_array_long(pextract_cell_face    [i_part], pextract_cell_face_idx[i_part][pn_select_cell[i_part]], "pextract_cell_face     : ");
-    PDM_log_trace_array_int (pextract_cell_face_idx[i_part], pn_select_cell[i_part]+1                              , "pextract_cell_face_idx : ");
+    if(0 == 1) {
+      PDM_log_trace_array_long(pextract_cell_face    [i_part], pextract_cell_face_idx[i_part][pn_select_cell[i_part]], "pextract_cell_face     : ");
+      PDM_log_trace_array_int (pextract_cell_face_idx[i_part], pn_select_cell[i_part]+1                              , "pextract_cell_face_idx : ");
+    }
 
   }
 
@@ -593,7 +659,7 @@ int main(int argc, char *argv[])
     equi_cell_face[idx] = (l_elmt + 1) * g_sgn;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(equi_parent_face_ln_to_gn, n_extract_face, "equi_parent_face_ln_to_gn : ");
     PDM_log_trace_array_int (equi_cell_face           , n_cell_face   , "equi_cell_face : ");
   }
@@ -612,7 +678,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t* extract_face_ln_to_gn = PDM_gnum_get(gnum_extract_face, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(extract_face_ln_to_gn, n_extract_face, "extract_face_ln_to_gn : ");
   }
 
@@ -652,10 +718,12 @@ int main(int argc, char *argv[])
   PDM_g_num_t **gnum1_come_from     = NULL;
   PDM_part_to_part_gnum1_come_from_get(ptp_face, &gnum1_come_from_idx, &gnum1_come_from);
 
-  for (int i_part = 0; i_part < n_part_zones; i_part++) {
-    PDM_log_trace_array_int (ref_l_num_face[i_part], n_ref_face[i_part]                             , "ref_l_num_face      : ");
-    PDM_log_trace_array_int (gnum1_come_from_idx[i_part], n_ref_face[i_part]                             , "gnum1_come_from_idx : ");
-    PDM_log_trace_array_long(gnum1_come_from    [i_part], gnum1_come_from_idx[i_part][n_ref_face[i_part]], "gnum1_come_from     : ");
+  if(0 == 1) {
+    for (int i_part = 0; i_part < n_part_zones; i_part++) {
+      PDM_log_trace_array_int (ref_l_num_face[i_part], n_ref_face[i_part]                             , "ref_l_num_face      : ");
+      PDM_log_trace_array_int (gnum1_come_from_idx[i_part], n_ref_face[i_part]                             , "gnum1_come_from_idx : ");
+      PDM_log_trace_array_long(gnum1_come_from    [i_part], gnum1_come_from_idx[i_part][n_ref_face[i_part]], "gnum1_come_from     : ");
+    }
   }
 
   // Creation buffer partition 2 : face_vtx + face_vtx_idx ( n_face )
@@ -672,8 +740,8 @@ int main(int argc, char *argv[])
       }
     }
 
-    printf("idx_write = %i | 4 * n_extract_face = %i \n", idx_write, 4 * n_extract_face);
-    PDM_log_trace_array_long(send_face_vtx[i_part], 4 * gnum1_come_from_idx[i_part][n_ref_face[i_part]], "send_face_vtx      : ");
+    // printf("idx_write = %i | 4 * n_extract_face = %i \n", idx_write, 4 * n_extract_face);
+    // PDM_log_trace_array_long(send_face_vtx[i_part], 4 * gnum1_come_from_idx[i_part][n_ref_face[i_part]], "send_face_vtx      : ");
   }
 
   PDM_part_to_part_reverse_issend(ptp_face,
@@ -699,7 +767,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_issend_wait(ptp_face, send_request);
   PDM_part_to_part_reverse_irecv_wait (ptp_face, recv_request);
 
-  PDM_log_trace_array_long(equi_extract_face_vtx, 4 * n_extract_face, "equi_extract_face_vtx : ");
+  // PDM_log_trace_array_long(equi_extract_face_vtx, 4 * n_extract_face, "equi_extract_face_vtx : ");
 
   // DEBUG PART_TO_PART ONLY
   // PDM_g_num_t **send_face_vtx = malloc(n_part_zones * sizeof(PDM_g_num_t *));
@@ -765,7 +833,7 @@ int main(int argc, char *argv[])
   }
   free(unique_order_vtx);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(equi_parent_vtx_ln_to_gn, n_extract_vtx, "equi_parent_vtx_ln_to_gn : ");
     PDM_log_trace_array_int (equi_face_vtx           , n_face_vtx   , "equi_face_vtx            : ");
   }
@@ -784,7 +852,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t* extract_vtx_ln_to_gn = PDM_gnum_get(gnum_extract_vtx, 0);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(extract_vtx_ln_to_gn, n_extract_vtx, "extract_vtx_ln_to_gn : ");
   }
 
@@ -795,9 +863,6 @@ int main(int argc, char *argv[])
   for(int i = 0; i < n_extract_vtx; ++i) {
     equi_parent_vtx_idx[i+1] = equi_parent_vtx_idx[i] + 1;
   }
-
-
-
 
   PDM_part_to_part_t* ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) &extract_vtx_ln_to_gn,
                                                          &n_extract_vtx,
@@ -817,14 +882,87 @@ int main(int argc, char *argv[])
   PDM_g_num_t **gnum1_come_from_vtx     = NULL;
   PDM_part_to_part_gnum1_come_from_get(ptp_vtx, &gnum1_come_from_vtx_idx, &gnum1_come_from_vtx);
 
-  for (int i_part = 0; i_part < n_part_zones; i_part++) {
-    PDM_log_trace_array_int (ref_l_num_vtx      [i_part], n_ref_vtx[i_part]                                     , "ref_l_num_vtx           : ");
-    PDM_log_trace_array_int (gnum1_come_from_vtx_idx[i_part], n_ref_vtx[i_part]                                 , "gnum1_come_from_vtx_idx : ");
-    PDM_log_trace_array_long(gnum1_come_from_vtx    [i_part], gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]], "gnum1_come_from_vtx     : ");
+  if(0 == 1) {
+    for (int i_part = 0; i_part < n_part_zones; i_part++) {
+      PDM_log_trace_array_int (ref_l_num_vtx      [i_part], n_ref_vtx[i_part]                                     , "ref_l_num_vtx           : ");
+      PDM_log_trace_array_int (gnum1_come_from_vtx_idx[i_part], n_ref_vtx[i_part]                                 , "gnum1_come_from_vtx_idx : ");
+      PDM_log_trace_array_long(gnum1_come_from_vtx    [i_part], gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]], "gnum1_come_from_vtx     : ");
+    }
   }
 
+  // Creation buffer partition 2 : vtx_coord ( n_face )
+  double **send_vtx_coord = malloc(n_part_zones * sizeof(double *));
+  for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+    send_vtx_coord[i_part] = malloc(3 * gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]] * sizeof(double));
+    int idx_write = 0;
+    for(int j = 0; j < n_ref_vtx[i_part]; ++j) {
+      for(int k = gnum1_come_from_vtx_idx[i_part][j]; k < gnum1_come_from_vtx_idx[i_part][j+1]; ++k) {
+        int l_vtx = ref_l_num_vtx[i_part][k]-1;
+        send_vtx_coord[i_part][3*idx_write  ] = pvtx_coord[i_part][3*l_vtx  ];
+        send_vtx_coord[i_part][3*idx_write+1] = pvtx_coord[i_part][3*l_vtx+1];
+        send_vtx_coord[i_part][3*idx_write+2] = pvtx_coord[i_part][3*l_vtx+2];
+        idx_write++;
+      }
+    }
+
+    // PDM_log_trace_array_double(send_vtx_coord[i_part], 3 * gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]], "send_vtx_coord      : ");
+  }
+
+  PDM_part_to_part_reverse_issend(ptp_vtx,
+                                  sizeof(double),
+                                  3,
+                       (void **)  send_vtx_coord, // Donc in same order of part2_to_part1_data
+                                  100,
+                                  &send_request);
+
+  double *equi_extract_vtx_coord = malloc( 3 * n_extract_vtx * sizeof(double));
+
+  for(int i = 0; i < 3 * n_extract_vtx; ++i) {
+    equi_extract_vtx_coord[i] = -1;
+  }
+
+  PDM_part_to_part_reverse_irecv(ptp_vtx,
+                                 sizeof(double),
+                                 3,
+                      (void **)  &equi_extract_vtx_coord,  // order given by gnum1_come_from and ref_gnum2 arrays
+                                 100,
+                                 &recv_request);
+
+  PDM_part_to_part_reverse_issend_wait(ptp_vtx, send_request);
+  PDM_part_to_part_reverse_irecv_wait (ptp_vtx, recv_request);
 
   PDM_part_to_part_free(ptp_vtx);
+
+
+  // PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
+
+  sprintf(filename, "extract_vtx_coord_%3.3d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_extract_vtx,
+                            equi_extract_vtx_coord,
+                            NULL, NULL);
+
+  int* equi_face_vtx_idx = malloc( (n_extract_face + 1) * sizeof(int));
+  equi_face_vtx_idx[0] = 0;
+  for(int i = 0; i < n_extract_face; ++i) {
+    equi_face_vtx_idx[i+1] = equi_face_vtx_idx[i] + 4;
+  }
+
+  sprintf(filename, "face_vtx_coord_%3.3d.vtk", i_rank);
+  PDM_vtk_write_polydata(filename,
+                         n_extract_vtx,
+                         equi_extract_vtx_coord,
+                         extract_vtx_ln_to_gn,
+                         n_extract_face,
+                         equi_face_vtx_idx,
+                         equi_face_vtx,
+                         extract_face_ln_to_gn,
+                         NULL);
+
+  free(equi_face_vtx_idx);
+
+
+  free(equi_extract_vtx_coord);
 
   free(equi_parent_face_ln_to_gn);
   free(equi_parent_vtx_ln_to_gn);
@@ -852,10 +990,12 @@ int main(int argc, char *argv[])
     free(selected_g_num    [i_part]);
     free(selected_g_num_idx[i_part]);
     free(weight[i_part]);
+    free(tmp_extract_cell_center[i_part]);
     free(pextract_cell_face[i_part]);
     free(pextract_cell_face_idx[i_part]);
     free(pextract_cell_center[i_part]);
     free(send_face_vtx[i_part]);
+    free(send_vtx_coord[i_part]);
   }
   free(cell_center);
   free(selected_g_num);
@@ -864,13 +1004,16 @@ int main(int argc, char *argv[])
   free(pn_face);
   free(pn_vtx);
   free(send_face_vtx);
+  free(send_vtx_coord);
   free(pcell_face);
   free(pcell_face_idx);
+  free(pvtx_coord);
   free(pface_vtx);
   free(pface_vtx_idx);
   free(child_selected_g_num);
   free(pn_select_cell);
   free(weight);
+  free(tmp_extract_cell_center);
   free(pcell_ln_to_gn);
   free(pface_ln_to_gn);
   free(pvtx_ln_to_gn);
