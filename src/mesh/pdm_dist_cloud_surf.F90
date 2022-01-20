@@ -33,8 +33,18 @@ module pdm_dist_cloud_surf
   pdm_dist_cloud_surf_get_
   end interface
 
+  interface PDM_dist_cloud_surf_cloud_set ; module procedure &
+  pdm_dist_cloud_surf_cloud_set_
+  end interface
+
+  interface PDM_dist_cloud_surf_surf_mesh_part_set ; module procedure &
+  pdm_dist_cloud_surf_surf_mesh_part_set_
+  end interface
+
   private :: pdm_dist_cloud_surf_create_
   private :: pdm_dist_cloud_surf_get_
+  private :: pdm_dist_cloud_surf_cloud_set_
+  private :: pdm_dist_cloud_surf_surf_mesh_part_set_
 
   interface
 
@@ -97,7 +107,12 @@ module pdm_dist_cloud_surf
     !! \param [in]   gnum            Point global number
     !!
 
-    subroutine pdm_dist_cloud_surf_cloud_set (dcs, i_point_cloud, i_part, n_points, coords, gnum ) &
+    subroutine pdm_dist_cloud_surf_cloud_set_cf (dcs,           &
+                                                 i_point_cloud, &
+                                                 i_part,        &
+                                                 n_points,      &
+                                                 coords,        &
+                                                 gnum)          &
          bind (c, name = 'PDM_dist_cloud_surf_cloud_set')
 
       use iso_c_binding
@@ -112,7 +127,7 @@ module pdm_dist_cloud_surf
       type(c_ptr), value        :: coords
       type(c_ptr), value        :: gnum
 
-    end subroutine pdm_dist_cloud_surf_cloud_set
+    end subroutine pdm_dist_cloud_surf_cloud_set_cf
 
     !> \brief Set the mesh nodal
     !!
@@ -172,25 +187,31 @@ module pdm_dist_cloud_surf
     !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
     !!
 
-    subroutine pdm_dist_cloud_surf_surf_mesh_part_set (dcs, i_part, n_face, face_vtx_idx, &
-                                                 face_vtx, face_ln_to_gn, n_vtx, coords, &
-                                                 vtx_ln_to_gn) &
+    subroutine pdm_dist_cloud_surf_surf_mesh_part_set_cf (dcs,           &
+                                                          i_part,        &
+                                                          n_face,        &
+                                                          face_vtx_idx,  &
+                                                          face_vtx,      &
+                                                          face_ln_to_gn, &
+                                                          n_vtx,         &
+                                                          coords,        &
+                                                          vtx_ln_to_gn)  &
       bind (c, name = 'PDM_dist_cloud_surf_surf_mesh_part_set')
       use iso_c_binding
 
       implicit none
 
-      type (c_ptr), value       :: dcs
-      integer(c_int), value     :: i_part
-      integer(c_int), value     :: n_face
-      type(c_ptr), value        :: face_vtx_idx
-      type(c_ptr), value        :: face_vtx
-      type(c_ptr), value        :: face_ln_to_gn
-      integer(c_int), value     :: n_vtx
-      type(c_ptr), value        :: coords
-      type(c_ptr), value        :: vtx_ln_to_gn
+      type (c_ptr),   value  :: dcs
+      integer(c_int), value  :: i_part
+      integer(c_int), value  :: n_face
+      type(c_ptr),    value  :: face_vtx_idx
+      type(c_ptr),    value  :: face_vtx
+      type(c_ptr),    value  :: face_ln_to_gn
+      integer(c_int), value  :: n_vtx
+      type(c_ptr),    value  :: coords
+      type(c_ptr),    value  :: vtx_ln_to_gn
 
-    end subroutine pdm_dist_cloud_surf_surf_mesh_part_set
+    end subroutine pdm_dist_cloud_surf_surf_mesh_part_set_cf
 
     !> \brief Compute distance
     !!
@@ -416,5 +437,130 @@ module pdm_dist_cloud_surf
                      [n_points])
 
   end subroutine pdm_dist_cloud_surf_get_
+
+
+
+
+  !> \brief Set a point cloud
+  !!
+  !! \param [in]   dcs             Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]   i_point_cloud   Index of point cloud
+  !! \param [in]   i_part          Index of partition
+  !! \param [in]   n_points        Number of points
+  !! \param [in]   coords          Point coordinates
+  !! \param [in]   gnum            Point global number
+  !!
+
+  subroutine pdm_dist_cloud_surf_cloud_set_ (dcs,           &
+                                             i_point_cloud, &
+                                             i_part,        &
+                                             n_points,      &
+                                             coords,        &
+                                             gnum)
+
+    use iso_c_binding
+
+    implicit none
+
+    type (c_ptr), value                :: dcs
+    integer                            :: i_point_cloud
+    integer                            :: i_part
+    integer                            :: n_points
+    double precision,          pointer :: coords(:)
+    integer(kind=pdm_g_num_s), pointer :: gnum(:)
+
+    integer(c_int) :: c_i_point_cloud
+    integer(c_int) :: c_i_part
+    integer(c_int) :: c_n_points
+
+    type(c_ptr)    :: c_coords
+    type(c_ptr)    :: c_gnum
+
+
+    c_i_point_cloud = i_point_cloud
+    c_i_part        = i_part
+    c_n_points      = n_points
+
+    c_coords = c_loc(coords)
+    c_gnum   = c_loc(gnum)
+
+    call pdm_dist_cloud_surf_cloud_set_cf(dcs,             &
+                                          c_i_point_cloud, &
+                                          c_i_part,        &
+                                          c_n_points,      &
+                                          c_coords,        &
+                                          c_gnum)
+
+  end subroutine pdm_dist_cloud_surf_cloud_set_
+
+
+
+  !> \brief Set a part of a surface mesh
+  !!
+  !! \param [in]   dcs           Pointer to \ref PDM_dist_cloud_surf object
+  !! \param [in]   i_part        Partition to define
+  !! \param [in]   n_face        Number of faces
+  !! \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
+  !! \param [in]   face_vtx      face -> vertex connectivity
+  !! \param [in]   face_ln_to_gn Local face numbering to global face numbering
+  !! \param [in]   n_vtx         Number of vertices
+  !! \param [in]   coords        Coordinates
+  !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+  !!
+
+  subroutine pdm_dist_cloud_surf_surf_mesh_part_set_ (dcs,           &
+                                                      i_part,        &
+                                                      n_face,        &
+                                                      face_vtx_idx,  &
+                                                      face_vtx,      &
+                                                      face_ln_to_gn, &
+                                                      n_vtx,         &
+                                                      coords,        &
+                                                      vtx_ln_to_gn)
+    use iso_c_binding
+
+    implicit none
+
+    type (c_ptr)                       :: dcs
+    integer                            :: i_part
+    integer                            :: n_face
+    integer,                   pointer :: face_vtx_idx(:)
+    integer,                   pointer :: face_vtx(:)
+    integer(kind=pdm_g_num_s), pointer :: face_ln_to_gn(:)
+    integer                            :: n_vtx
+    double precision,          pointer :: coords(:)
+    integer(kind=pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
+
+    integer(c_int)     :: c_i_part
+    integer(c_int)     :: c_n_face
+    type(c_ptr)        :: c_face_vtx_idx
+    type(c_ptr)        :: c_face_vtx
+    type(c_ptr)        :: c_face_ln_to_gn
+    integer(c_int)     :: c_n_vtx
+    type(c_ptr)        :: c_coords
+    type(c_ptr)        :: c_vtx_ln_to_gn
+
+
+    c_i_part = i_part
+    c_n_face = n_face
+    c_n_vtx  = n_vtx
+
+    c_face_vtx_idx  = c_loc(face_vtx_idx)
+    c_face_vtx      = c_loc(face_vtx)
+    c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    c_coords        = c_loc(coords)
+    c_vtx_ln_to_gn  = c_loc(vtx_ln_to_gn)
+
+    call pdm_dist_cloud_surf_surf_mesh_part_set_cf(dcs,             &
+                                                   c_i_part,        &
+                                                   c_n_face,        &
+                                                   c_face_vtx_idx,  &
+                                                   c_face_vtx,      &
+                                                   c_face_ln_to_gn, &
+                                                   c_n_vtx,         &
+                                                   c_coords,        &
+                                                   c_vtx_ln_to_gn)
+
+  end subroutine pdm_dist_cloud_surf_surf_mesh_part_set_
 
 end module pdm_dist_cloud_surf
