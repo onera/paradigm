@@ -1410,6 +1410,32 @@ PDM_gen_gnum_t *gen_gnum
 
 }
 
+
+
+/**
+ *
+ * \brief Get number of elements in a partition
+ *
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   i_part       Current partition
+ *
+ * \return     Number of elements
+ *
+ */
+
+int
+PDM_gnum_n_elt_get
+(
+       PDM_gen_gnum_t *gen_gnum,
+ const int             i_part
+)
+{
+  assert(gen_gnum         != NULL);
+  assert(gen_gnum->n_elts != NULL);
+
+  return gen_gnum->n_elts[i_part];
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

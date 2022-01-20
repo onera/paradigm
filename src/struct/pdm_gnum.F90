@@ -29,7 +29,22 @@ module pdm_gnum
   pdm_gnum_create_
   end interface
 
+  interface PDM_gnum_set_from_coords ; module procedure &
+  pdm_gnum_set_from_coords_
+  end interface
+
+  interface PDM_gnum_set_from_parents ; module procedure &
+  pdm_gnum_set_from_parents_
+  end interface
+
+  interface PDM_gnum_get ; module procedure &
+  pdm_gnum_get_
+  end interface
+
   private :: pdm_gnum_create_
+  private :: pdm_gnum_set_from_coords_
+  private :: pdm_gnum_set_from_parents_
+  private :: pdm_gnum_get_
 
   interface
 
@@ -52,21 +67,21 @@ module pdm_gnum
                                tolerance,  &
                                comm,       &
                                owner)      &
-  result (gen_gnum) &
+    result (gen_gnum) &
 
-  bind (c, name = 'PDM_gnum_create')
+    bind (c, name = 'PDM_gnum_create')
 
-  use iso_c_binding
-  implicit none
+    use iso_c_binding
+    implicit none
 
-  integer(c_int), value :: dim
-  integer(c_int), value :: n_part
-  integer(c_int), value :: merge
-  real(c_double), value :: tolerance
-  integer(c_int), value :: comm
-  integer(c_int), value :: owner
+    integer(c_int), value :: dim
+    integer(c_int), value :: n_part
+    integer(c_int), value :: merge
+    real(c_double), value :: tolerance
+    integer(c_int), value :: comm
+    integer(c_int), value :: owner
 
-  type (c_ptr) :: gen_gnum
+    type (c_ptr) :: gen_gnum
 
   end function PDM_gnum_create_cf
 
@@ -84,24 +99,24 @@ module pdm_gnum
   !!
   !!
 
-  subroutine PDM_gnum_set_from_coords (gen_gnum,   &
-                                       i_part,     &
-                                       n_elts,     &
-                                       coords,     &
-                                       char_length)&
-  bind (c, name = 'PDM_gnum_set_from_coords')
+  subroutine PDM_gnum_set_from_coords_cf (gen_gnum,    &
+                                          i_part,      &
+                                          n_elts,      &
+                                          coords,      &
+                                          char_length) &
+    bind (c, name = 'PDM_gnum_set_from_coords')
 
-  use iso_c_binding
-  implicit none
+    use iso_c_binding
+    implicit none
 
-  type(c_ptr), value :: gen_gnum
+    type(c_ptr),    value :: gen_gnum
 
-  integer(c_int), value :: i_part
-  integer(c_int), value :: n_elts
-  type(c_ptr), value :: coords
-  type(c_ptr), value :: char_length
+    integer(c_int), value :: i_part
+    integer(c_int), value :: n_elts
+    type(c_ptr),    value :: coords
+    type(c_ptr),    value :: char_length
 
-  end subroutine PDM_gnum_set_from_coords
+  end subroutine PDM_gnum_set_from_coords_cf
 
 
   !>
@@ -115,22 +130,22 @@ module pdm_gnum
   !!
   !!
 
-  subroutine PDM_gnum_set_from_parents (gen_gnum,   &
-                                        i_part,     &
-                                        n_elts,     &
-                                        parent_gnum)&
-  bind (c, name = 'PDM_gnum_set_from_parents')
+  subroutine PDM_gnum_set_from_parents_cf (gen_gnum,    &
+                                           i_part,      &
+                                           n_elts,      &
+                                           parent_gnum) &
+    bind (c, name = 'PDM_gnum_set_from_parents')
 
-  use iso_c_binding
-  implicit none
+    use iso_c_binding
+    implicit none
 
-  type(c_ptr), value :: gen_gnum
+    type(c_ptr),    value :: gen_gnum
 
-  integer(c_int), value :: i_part
-  integer(c_int), value :: n_elts
-  type(c_ptr), value :: parent_gnum
+    integer(c_int), value :: i_part
+    integer(c_int), value :: n_elts
+    type(c_ptr),    value :: parent_gnum
 
-  end subroutine PDM_gnum_set_from_parents
+  end subroutine PDM_gnum_set_from_parents_cf
 
 
   !>
@@ -142,12 +157,12 @@ module pdm_gnum
   !!
 
   subroutine PDM_gnum_compute (gen_gnum) &
-  bind (c, name = 'PDM_gnum_compute')
+    bind (c, name = 'PDM_gnum_compute')
 
-  use iso_c_binding
-  implicit none
+    use iso_c_binding
+    implicit none
 
-  type(c_ptr), value :: gen_gnum
+    type(c_ptr), value :: gen_gnum
 
   end subroutine PDM_gnum_compute
 
@@ -163,18 +178,19 @@ module pdm_gnum
   !!
   !!
 
-  function PDM_gnum_get (gen_gnum, i_part) &
-  result (g_nums) &
-  bind (c, name = 'PDM_gnum_get')
+  function PDM_gnum_get_cf (gen_gnum, &
+                            i_part)   &
+    result (g_nums) &
+    bind (c, name = 'PDM_gnum_get')
 
-  use iso_c_binding
-  implicit none
+    use iso_c_binding
+    implicit none
 
-  type(c_ptr) :: g_nums
-  type(c_ptr), value :: gen_gnum
-  integer(c_int), value :: i_part
+    type(c_ptr),    value :: gen_gnum
+    integer(c_int), value :: i_part
+    type(c_ptr)           :: g_nums
 
-  end function PDM_gnum_get
+  end function PDM_gnum_get_cf
 
 
   !>
@@ -186,17 +202,41 @@ module pdm_gnum
   !!
 
   subroutine PDM_gnum_free (gen_gnum)     &
-  bind (c, name = 'PDM_gnum_free')
-  use iso_c_binding
-  implicit none
+    bind (c, name = 'PDM_gnum_free')
+    use iso_c_binding
+    implicit none
 
-  type (c_ptr)  , value :: gen_gnum
+    type (c_ptr), value :: gen_gnum
 
-  end subroutine PDM_gnum_free
+    end subroutine PDM_gnum_free
+
+
+  !>
+  !!
+  !! \brief Get number of elements in a partition
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+  !! \param [in]   i_part       Current partition
+  !! \return     Number of elements
+  !!
+  !!
+
+  function PDM_gnum_n_elt_get (gen_gnum, &
+                               i_part)   &
+    result (n_elts)                      &
+    bind (c, name='PDM_gnum_n_elt_get')
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr),   value :: gen_gnum
+    integer(c_int), value :: i_part
+    integer(c_int)        :: n_elts
+
+  end function PDM_gnum_n_elt_get
+
 
   end interface
-
-
 
 
   contains
@@ -259,5 +299,141 @@ module pdm_gnum
                                  c_owner)
 
   end subroutine PDM_gnum_create_
+
+
+
+
+  !>
+  !!
+  !! \brief Set from coordinates
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+  !! \param [in]   i_part       Current partition
+  !! \param [in]   n_elts       Number of elements
+  !! \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
+  !! \param [in]   char_length  Characteristic length (or NULL)
+  !!                            (used if merge double points is activated)
+  !!
+  !!
+
+  subroutine PDM_gnum_set_from_coords_ (gen_gnum,    &
+                                        i_part,      &
+                                        n_elts,      &
+                                        coords,      &
+                                        char_length)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: gen_gnum
+
+    integer                   :: i_part
+    integer                   :: n_elts
+    double precision, pointer :: coords(:)
+    double precision, pointer :: char_length(:)
+
+    integer(c_int)            :: c_i_part
+    integer(c_int)            :: c_n_elts
+    type(c_ptr)               :: c_coords
+    type(c_ptr)               :: c_char_length
+
+    c_i_part = i_part
+    c_n_elts = n_elts
+
+    c_coords      = c_loc(coords)
+    c_char_length = c_loc(char_length)
+
+
+    call PDM_gnum_set_from_coords_cf (gen_gnum,      &
+                                      c_i_part,      &
+                                      c_n_elts,      &
+                                      c_coords,      &
+                                      c_char_length)
+
+  end subroutine PDM_gnum_set_from_coords_
+
+
+  !>
+  !!
+  !! \brief Set Parent global numbering
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+  !! \param [in]   i_part       Current partition
+  !! \param [in]   n_elts       Number of elements
+  !! \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
+  !!
+  !!
+
+  subroutine PDM_gnum_set_from_parents_ (gen_gnum,    &
+                                         i_part,      &
+                                         n_elts,      &
+                                         parent_gnum)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: gen_gnum
+
+    integer                            :: i_part
+    integer                            :: n_elts
+    integer(kind=pdm_g_num_s), pointer :: parent_gnum(:)
+
+    integer(c_int)                     :: c_i_part
+    integer(c_int)                     :: c_n_elts
+    type(c_ptr)                        :: c_parent_gnum
+
+    c_i_part = i_part
+    c_n_elts = n_elts
+
+    c_parent_gnum = c_loc(parent_gnum)
+
+
+    call PDM_gnum_set_from_parents_cf (gen_gnum,      &
+                                       c_i_part,      &
+                                       c_n_elts,      &
+                                       c_parent_gnum)
+
+    end subroutine PDM_gnum_set_from_parents_
+
+
+  !>
+  !!
+  !! \brief Get global ids for a given partition
+  !!
+  !! \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+  !! \param [in]   i_part       Current partition
+  !! \param [out]  g_nums       Array of global ids
+  !!
+  !!
+
+  subroutine PDM_gnum_get_ (gen_gnum, &
+                            i_part,   &
+                            g_nums)
+
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                 :: gen_gnum
+    integer                            :: i_part
+    integer(kind=pdm_g_num_s), pointer :: g_nums(:)
+
+    integer(c_int)                     :: c_i_part
+    type(c_ptr)                        :: c_g_nums = C_NULL_PTR
+    integer                            :: n_elts
+
+    c_i_part = i_part
+
+    c_g_nums = PDM_gnum_get_cf(gen_gnum, &
+                               c_i_part)
+
+    n_elts = PDM_gnum_n_elt_get(gen_gnum, &
+                                c_i_part)
+
+    call c_f_pointer(c_g_nums, &
+                     g_nums,   &
+                     [n_elts])
+
+  end subroutine PDM_gnum_get_
 
   end module pdm_gnum
