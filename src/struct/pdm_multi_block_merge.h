@@ -120,7 +120,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
  int                     **block_stride,
  void                    **block_data,
  int                     **merge_block_stride,
- void                    **merge_block_data
+ PDM_g_num_t             **merge_block_data
 );
 
 // void

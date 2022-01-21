@@ -305,6 +305,83 @@ PDM_multi_block_merge_get_old_to_new
 }
 
 
+// Update a distributed field using a distributed ordering
+static void _dist_data_update
+(
+ const PDM_g_num_t   *old_to_new_distri,
+ const int           *dold_to_new_idx,
+ const PDM_g_num_t   *dold_to_new,
+ const int            dn_data,
+ int                 *stride,
+ PDM_g_num_t        **data,
+ PDM_MPI_Comm         comm
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+  PDM_g_num_t *_data = *data;
+  int n_to_update = 0; //This is the number of ids to update
+  for (int i = 0; i < dn_data; i++)
+    n_to_update += stride[i];
+
+  int *data_sign = (int *) malloc (n_to_update * sizeof(int));
+  for (int i = 0; i < n_to_update; i++) {
+    data_sign[i] = PDM_SIGN(_data[i]);
+    _data[i]      = PDM_ABS (_data[i]);
+  }
+
+  // Prepare stride for old_to_new to send. Should be 0 or 1 !
+  int dn_old_to_new = old_to_new_distri[i_rank+1] - old_to_new_distri[i_rank];
+  int *dold_to_new_n = (int * ) malloc( dn_old_to_new * sizeof(int));
+  for(int i = 0; i < dn_old_to_new; ++i) {
+    dold_to_new_n[i] = dold_to_new_idx[i+1] - dold_to_new_idx[i];
+    assert(dold_to_new_n[i] <= 1);
+  }
+
+  PDM_block_to_part_t *btp_update = PDM_block_to_part_create (old_to_new_distri,
+                                              (const PDM_g_num_t **) &_data,
+                                                                     &n_to_update,
+                                                                      1,
+                                                                      comm);
+
+  int *recv_stride = (int *) malloc(n_to_update*sizeof(int));
+  PDM_block_to_part_exch (btp_update,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          dold_to_new_n,
+                 (void *) dold_to_new,
+                          &recv_stride,
+               (void **)  &_data); //Recycle memory
+
+  free(dold_to_new_n);
+  PDM_block_to_part_free(btp_update);
+
+  //Some ids may have been removed, so we have to update stride and to be carefull
+  //when applying sign
+  int r_idx = 0;
+  int w_idx = 0;
+  for (int i = 0; i < dn_data; i++) {
+    int new_stride = 0;
+    for (int j = 0; j < stride[i]; j++) {
+      if (recv_stride[r_idx] > 0) {
+        _data[w_idx++] *= data_sign[r_idx];
+        new_stride ++;
+      }
+      r_idx++;
+    }
+    stride[i] = new_stride; //Update stride
+  }
+  assert (r_idx == n_to_update);
+
+  //Should we realloc ?
+  PDM_g_num_t *_data_realloc = realloc(_data, w_idx*sizeof(PDM_g_num_t));
+  *data = _data_realloc;
+
+  free(recv_stride);
+  free(data_sign);
+}
+
 void
 PDM_multi_block_merge_exch_and_update_child_g_num
 (
@@ -317,7 +394,7 @@ PDM_multi_block_merge_exch_and_update_child_g_num
  int                     **block_stride,
  void                    **block_data,
  int                     **merge_block_stride,
- void                    **merge_block_data
+ PDM_g_num_t             **merge_block_data
 )
 {
   int         *dparent_child_strid = NULL;
@@ -337,92 +414,21 @@ PDM_multi_block_merge_exch_and_update_child_g_num
    */
 
   int pn_merge_parent = PDM_multi_block_merge_get_n_block(mbm);
-  int n_parent = 0;
-  if (t_stride == PDM_STRIDE_CST) {
-    n_parent = cst_stride * pn_merge_parent;
-  } else {
-    n_parent = 0;
-    for (int i = 0; i < pn_merge_parent; i++) {
-      n_parent += dparent_child_strid[i];
-    }
-  }
-  int *dparent_child_mbm_sgn = malloc (sizeof(int) * n_parent);
-  for (int i = 0; i < n_parent; i++) {
-    dparent_child_mbm_sgn[i] = PDM_SIGN(dparent_child_mbm[i]);
-    dparent_child_mbm[i]     = PDM_ABS (dparent_child_mbm[i]);
+  if (t_stride == PDM_STRIDE_CST) { //Next function does not allow cst stride
+    dparent_child_strid = PDM_array_const_int(pn_merge_parent, cst_stride);
   }
 
-  PDM_block_to_part_t *btp_update_parent = PDM_block_to_part_create (child_old_distrib,
-                                              (const PDM_g_num_t **) &dparent_child_mbm,
-                                                                     &n_parent,
-                                                                      1,
-                                                                      mbm->comm);
-  int dn_child = child_old_distrib[mbm->i_rank+1] - child_old_distrib[mbm->i_rank];
-  int *dchild_old_to_n = (int * ) malloc( dn_child * sizeof(int));
-  for(int i = 0; i < dn_child; ++i) {
-    dchild_old_to_n[i] = dchild_old_to_new_idx[i+1] - dchild_old_to_new_idx[i];
-  }
+  _dist_data_update(child_old_distrib,
+                    dchild_old_to_new_idx,
+                    dchild_old_to_new,
+                    pn_merge_parent,
+                    dparent_child_strid,
+                   &dparent_child_mbm,
+                    mbm->comm);
 
-  int         **parent_tmp_tmp_n;
-  PDM_g_num_t **tmp_dparent_child_final;
-  PDM_block_to_part_exch2 (btp_update_parent,
-                           sizeof(PDM_g_num_t),
-                           PDM_STRIDE_VAR,
-                           dchild_old_to_n,
-                  (void *) dchild_old_to_new,
-                           &parent_tmp_tmp_n,
-                (void ***) &tmp_dparent_child_final);
-  int         *parent_tmp_n        = parent_tmp_tmp_n[0];
-  PDM_g_num_t *dparent_child_final = tmp_dparent_child_final[0];
+  *merge_block_stride  = dparent_child_strid;
+  *merge_block_data    = dparent_child_mbm;
 
-  int n_parent_old = n_parent;
-  int *dparent_child_stride_final = NULL;
-  if (t_stride == PDM_STRIDE_VAR) {
-    int n_parent_new = 0;
-    for (int i = 0; i < n_parent; i++) {
-      n_parent_new += parent_tmp_n[i];
-    }
-    n_parent = n_parent_new;
-
-
-    dparent_child_stride_final = PDM_array_zeros_int(pn_merge_parent);
-    int idx = 0;
-    for (int i = 0; i < pn_merge_parent; i++) {
-      for (int j = 0; j < dparent_child_strid[i]; j++) {
-        dparent_child_stride_final[i] += parent_tmp_n[idx++];
-      }
-    }
-    free(dparent_child_strid);
-  }
-
-
-  if(0 == 1 && t_stride == PDM_STRIDE_VAR) {
-    log_trace("n_parent_old = %d, pn_merge_parent = %d, n_parent_new = %d\n",
-              n_parent_old, pn_merge_parent, n_parent);
-    PDM_log_trace_array_int(parent_tmp_n       , n_parent, "parent_tmp_n : ");
-    PDM_log_trace_array_long(dparent_child_final, n_parent, "dparent_child_final : ");
-  }
-  //free(parent_tmp_tmp_n[0]);
-  free(parent_tmp_tmp_n);
-  free(tmp_dparent_child_final);
-
-  for (int i = 0; i < n_parent; i++) {
-    dparent_child_final[i] *= dparent_child_mbm_sgn[i];
-  }
-
-  PDM_block_to_part_free(btp_update_parent);
-
-  //PDM_UNUSED(merge_block_stride);
-  if (t_stride == PDM_STRIDE_VAR) {
-    *merge_block_stride = dparent_child_stride_final;//dparent_child_strid;
-    free (parent_tmp_n);
-  } else {
-    free (parent_tmp_n);
-  }
-  *merge_block_data  = dparent_child_final;
-  free(dparent_child_mbm);
-  free(dparent_child_mbm_sgn);
-  free(dchild_old_to_n);
 }
 
 

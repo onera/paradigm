@@ -409,6 +409,7 @@ int main(int argc, char *argv[])
 
   }
 
+  int         *dmerge_elmt_vtx_stride = NULL;
   PDM_g_num_t *dmerge_elmt_vtx = NULL;
   PDM_multi_block_merge_exch_and_update_child_g_num(mbm_elmt,
                                                     old_vtx_distrib,
@@ -418,8 +419,9 @@ int main(int argc, char *argv[])
                                                     strid_cst,
                                                     stride_one,
                                      (void *)       block_elmt_shift_distrib_idx,
-                                                    NULL,
-                                     (void **)      &dmerge_elmt_vtx);
+                                                    &dmerge_elmt_vtx_stride,
+                                                    &dmerge_elmt_vtx);
+  free(dmerge_elmt_vtx_stride);
 
   /*
    * Visualisation
