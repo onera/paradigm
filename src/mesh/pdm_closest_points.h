@@ -152,7 +152,7 @@ PDM_closest_points_compute
 
 /**
  *
- * \brief Get mesh distance
+ * \brief Get Get closest source points global ids and (squared) distance
  *
  * \param [in]   cls                   Pointer to \ref PDM_closest_points object
  * \param [in]   i_part_tgt            Index of partition of the cloud
@@ -246,6 +246,42 @@ PDM_transform_to_parent_gnum
 
 PDM_closest_point_t*
 PDM_closest_points_closest_transfert
+(
+  PDM_closest_point_t  *cls
+);
+
+
+/**
+ *
+ * \brief  Get the number of target points in a partition
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  i_part  Index of partition of the target cloud
+ *
+ * \return   Number of target point in the partition \ref i_part
+ *
+ */
+
+int
+PDM_closest_points_n_tgt_get
+(
+  PDM_closest_point_t  *cls,
+  const int             i_part
+);
+
+
+/**
+ *
+ * \brief  Get the number of closest points
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ *
+ * \return   Number of closest points
+ *
+ */
+
+int
+PDM_closest_points_n_closest_get
 (
   PDM_closest_point_t  *cls
 );

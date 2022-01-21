@@ -410,7 +410,6 @@ module pdm_gnum
                             i_part,   &
                             g_nums)
 
-
     use iso_c_binding
     implicit none
 
@@ -429,6 +428,7 @@ module pdm_gnum
 
     n_elts = PDM_gnum_n_elt_get(gen_gnum, &
                                 c_i_part)
+
 
     call c_f_pointer(c_g_nums, &
                      g_nums,   &

@@ -67,13 +67,13 @@ program testf
 
 
   !  Create PDM_gen_gnum object
-  call pdm_gnum_create(gen_gnum, &
-                       3,        & ! dimension
-                       1,        & ! n_part
-                       0,        & ! merge
-                       1.d-6,    & ! tolerance
-                       f_comm,   &
-                       1)          ! ownership
+  call pdm_gnum_create(gen_gnum,           &
+                       3,                  & ! dimension
+                       1,                  & ! n_part
+                       0,                  & ! merge
+                       1.d-6,              & ! tolerance
+                       f_comm,             &
+                       PDM_OWNERSHIP_USER)   ! ownership
 
   !  Set coordinates
   call pdm_gnum_set_from_coords(gen_gnum,    &
@@ -92,17 +92,42 @@ program testf
                     0,            & ! i_part
                     pts_ln_to_gn)
 
-  write (*, *) i_rank, ':', pts_ln_to_gn
+  ! write (*, *) i_rank, ':', pts_ln_to_gn
 
 
   !  Free memory
   deallocate(pts_coord)
   deallocate(char_length)
-  deallocate(pts_ln_to_gn) ! ??
 
 
   call pdm_gnum_free(gen_gnum)
 
+  ! Free C-allocated memory
+  ! call free_c_allocated_pointer(pts_ln_to_gn)
+  call pdm_fortran_free_c(c_loc(pts_ln_to_gn))
+
+
+
+  if (i_rank .eq. 0) then
+    write(*, *) "-- End"
+  end if
+
   call mpi_finalize(code)
+
+
+contains
+
+  subroutine free_c_allocated_pointer (f)
+  use iso_c_binding
+  implicit none
+
+  integer(kind=pdm_g_num_s), pointer :: f(:)
+  type(c_ptr)                        :: c
+
+  c = c_loc(f)
+  ! print *, c
+  call pdm_fortran_free_c(c)
+
+  end subroutine free_c_allocated_pointer
 
 end program testf

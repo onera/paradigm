@@ -562,7 +562,7 @@ PDM_closest_point_t *cls
 
 /**
  *
- * \brief Get mesh distance
+ * \brief Get closest source points global ids and (squared) distance
  *
  * \param [in]   cls                   Pointer to \ref PDM_closest_points object
  * \param [in]   i_part_tgt            Index of partition of the cloud
@@ -629,7 +629,7 @@ PDM_closest_points_tgt_in_src_get
 
 /**
  *
- * \brief Free a distance mesh structure
+ * \brief Free a closest points structure
  *
  * \param [in]  cls      Pointer to \ref PDM_closest_points object
  * \param [in]  partial  if partial is equal to 0, all data are removed.
@@ -837,6 +837,51 @@ PDM_closest_points_closest_transfert
 )
 {
   return cls;
+}
+
+
+
+/**
+ *
+ * \brief  Get the number of target points in a partition
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  i_part  Index of partition of the target cloud
+ *
+ * \return   Number of target point in the partition \ref i_part
+ *
+ */
+
+int
+PDM_closest_points_n_tgt_get
+(
+  PDM_closest_point_t  *cls,
+  const int             i_part
+)
+{
+  assert(cls->tgt_cloud != NULL);
+  return cls->tgt_cloud->n_points[i_part];
+}
+
+
+
+/**
+ *
+ * \brief  Get the number of closest points
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ *
+ * \return   Number of closest points
+ *
+ */
+
+int
+PDM_closest_points_n_closest_get
+(
+  PDM_closest_point_t  *cls
+)
+{
+  return cls->n_closest;
 }
 
 #ifdef	__cplusplus
