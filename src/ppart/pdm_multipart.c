@@ -831,6 +831,14 @@ _compute_part_mesh_nodal_3d
                            NULL, // pchild_parent_sign
                            dmn->comm);
 
+  if(0 == 1) {
+    PDM_log_trace_array_long(dmn->surfacic->dparent_gnum, dmn->surfacic->delmt_child_distrib[i_rank+1] - dmn->surfacic->delmt_child_distrib[i_rank], "dmn->surfacic->dparent_gnum : ");
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      PDM_log_trace_array_long(pface_ln_to_gn[i_part], pn_face[i_part], "pface_ln_to_gn : ");
+      PDM_log_trace_array_long(psurf_to_face_g_num[i_part], pn_surf[i_part], "psurf_to_face_g_num : ");
+    }
+  }
+
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
                                                                                          n_part,
                                                                                          pn_vtx,

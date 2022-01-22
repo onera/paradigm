@@ -504,8 +504,8 @@ PDM_reverse_dparent_gnum
     _pchild_parent_gnum[i_part] = (PDM_g_num_t *) malloc( pn_child_tmp * sizeof(PDM_g_num_t));
     for(int i = 0; i < _pn_child[i_part]; ++i) {
       int idx_order = unique_order[i];
-      PDM_g_num_t gnum = _tmp_pchild_parent_gnum[i_part][idx_order];
-      _pchild_parent_gnum[i_part][i] = gnum;
+      PDM_g_num_t gnum = _tmp_pchild_parent_gnum[i_part][i];
+      _pchild_parent_gnum[i_part][idx_order] = gnum;
     }
 
     if(blk_dparent_sign != NULL) {
