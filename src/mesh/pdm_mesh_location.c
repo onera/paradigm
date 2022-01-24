@@ -1787,9 +1787,9 @@ PDM_mesh_location_cloud_set
  * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
- * \param [out]   n_points        Number of points
- * \param [out]   coords          Point coordinates
- * \param [out]   gnum            Point global number
+ * \param [out]  n_points        Number of points
+ * \param [out]  coords          Point coordinates
+ * \param [out]  gnum            Point global number
  *
  */
 void
@@ -2217,7 +2217,7 @@ PDM_mesh_location_points_in_elt_get
 
 /**
  *
- * \brief Free a locationd mesh structure
+ * \brief Free a mesh location structure
  *
  * \param [in]  id       Pointer to \ref PDM_mesh_location object
  * \param [in]  partial  if partial is equal to 0, all data are removed.
