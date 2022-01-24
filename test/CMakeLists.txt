@@ -126,6 +126,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_mpi_comm_f2c 2)
   test_fortran_create (pdm_t_dist_f 2)
   test_fortran_create (pdm_t_gnum_f 2)
+  test_fortran_create (pdm_t_part_f 2)
 endif()
 
 test_c_create (pdm_t_closest_points_1_point 1)
