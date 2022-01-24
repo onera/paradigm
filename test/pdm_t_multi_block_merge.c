@@ -384,44 +384,28 @@ int main(int argc, char *argv[])
   /*
    * Exchange + Update
    */
-
-  PDM_g_num_t *old_vtx_distrib;
-  int         *dold_vtx_to_new_idx;
-  PDM_g_num_t *dold_vtx_to_new;
-  PDM_multi_block_merge_get_old_to_new(mbm, &old_vtx_distrib, &dold_vtx_to_new_idx, &dold_vtx_to_new);
-
-  PDM_g_num_t* multi_block_vtx_distrib = PDM_multi_block_merge_get_multi_distrib(mbm);
-
-
   PDM_g_num_t** block_elmt_vtx = malloc(n_block * sizeof(PDM_g_num_t *));
   block_elmt_vtx[0] = PDM_DMesh_nodal_section_std_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0);
   block_elmt_vtx[1] = PDM_DMesh_nodal_section_std_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0);
-  PDM_g_num_t** block_elmt_shift_distrib_idx = malloc(n_block * sizeof(PDM_g_num_t *));
-  int strid_cst = 8;
-  for(int i_block = 0; i_block < n_block ; ++i_block) {
-    stride_one[i_block][0] = strid_cst; // Because HEXA
-    block_elmt_shift_distrib_idx[i_block] = malloc( strid_cst * n_elmt_selected[i_block] * sizeof(PDM_g_num_t));
-
-
-    for(int i = 0; i < strid_cst * n_elmt_selected[i_block]; ++i) {
-      block_elmt_shift_distrib_idx[i_block][i] = multi_block_vtx_distrib[i_block] + block_elmt_vtx[i_block][i];
-    }
-
-  }
+  int strid_cst = 8; // Because HEXA
 
   int         *dmerge_elmt_vtx_stride = NULL;
   PDM_g_num_t *dmerge_elmt_vtx = NULL;
-  PDM_multi_block_merge_exch_and_update_child_g_num(mbm_elmt,
-                                                    old_vtx_distrib,
-                                                    dold_vtx_to_new_idx,
-                                                    dold_vtx_to_new,
-                                                    PDM_STRIDE_CST,
-                                                    strid_cst,
-                                                    stride_one,
-                                     (void *)       block_elmt_shift_distrib_idx,
-                                                    &dmerge_elmt_vtx_stride,
-                                                    &dmerge_elmt_vtx);
+  int **stride_cst_ptr = (int **) malloc(n_block*sizeof(int*));
+  for (int ib = 0; ib < n_block; ib++) {
+    stride_cst_ptr[ib] = &strid_cst;
+  }
+
+  PDM_multi_block_merge_exch_and_update(mbm_elmt,
+                                        mbm,
+                                        PDM_STRIDE_CST,
+                                        stride_cst_ptr,
+                                        block_elmt_vtx,
+                               (int **) NULL,
+                                       &dmerge_elmt_vtx_stride,
+                                       &dmerge_elmt_vtx); 
   free(dmerge_elmt_vtx_stride);
+  free(stride_cst_ptr);
 
   /*
    * Visualisation
@@ -521,11 +505,9 @@ int main(int argc, char *argv[])
   }
   for(int i_block = 0; i_block < n_block ; ++i_block) {
     free(stride_one[i_block]);
-    free(block_elmt_shift_distrib_idx[i_block]);
   }
   free(stride_one);
   free(block_elmt_vtx);
-  free(block_elmt_shift_distrib_idx);
   free(selected_g_num);
   free(selected_elmt_g_num);
   free(dmerge_elmt_idx     );

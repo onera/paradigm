@@ -80,10 +80,12 @@ PDM_multi_block_merge_create
   mbm->comm        = comm;
   mbm->n_block     = n_block;
 
+  mbm->blocks_ini_dn = (int *) malloc(n_block*sizeof(int));
   mbm->multi_block_distrib = malloc( (n_block + 1) * sizeof(PDM_g_num_t));
   mbm->multi_block_distrib[0] = 0;
   for(int i_block = 0; i_block < n_block; ++i_block) {
     mbm->multi_block_distrib[i_block+1] = mbm->multi_block_distrib[i_block] + block_distrib_idx[i_block][mbm->n_rank];
+    mbm->blocks_ini_dn[i_block] = block_distrib_idx[i_block][mbm->i_rank+1] - block_distrib_idx[i_block][mbm->i_rank];
   }
 
   /*
@@ -383,52 +385,89 @@ static void _dist_data_update
 }
 
 void
-PDM_multi_block_merge_exch_and_update_child_g_num
+PDM_multi_block_merge_exch_and_update
 (
- PDM_multi_block_merge_t  *mbm,
- PDM_g_num_t              *child_old_distrib,
- int                      *dchild_old_to_new_idx,
- PDM_g_num_t              *dchild_old_to_new,
+ PDM_multi_block_merge_t  *mbm_cur,
+ PDM_multi_block_merge_t  *mbm_for_update,
  PDM_stride_t              t_stride,
- int                       cst_stride,
  int                     **block_stride,
- void                    **block_data,
+ PDM_g_num_t             **block_data,
+ int                     **update_domain,
  int                     **merge_block_stride,
  PDM_g_num_t             **merge_block_data
 )
 {
+  
+  // 1. Shift the connectivity to exchange to make it related to its domain
+  int n_block = mbm_cur->n_block;
+  PDM_g_num_t **shifted_block_data = (PDM_g_num_t **) malloc(n_block*sizeof(PDM_g_num_t*));
+  for (int i_block = 0; i_block < n_block; i_block++) {
+    int n_data_block = 0;
+    if (t_stride == PDM_STRIDE_CST) {
+      n_data_block = mbm_cur->blocks_ini_dn[i_block] * block_stride[0][0];
+    }
+    else {
+      for (int i = 0; i < mbm_cur->blocks_ini_dn[i_block]; i++) {
+        n_data_block += block_stride[i_block][i];
+      }
+    }
+    shifted_block_data[i_block] = (PDM_g_num_t *) malloc(n_data_block*sizeof(PDM_g_num_t));
+    if (update_domain == NULL) {
+      PDM_g_num_t shift = mbm_for_update->multi_block_distrib[i_block];
+      for (int i = 0; i < n_data_block; i++) {
+        shifted_block_data[i_block][i] = block_data[i_block][i] + shift;
+      }
+    }
+    else {
+      for (int i = 0; i < n_data_block; i++) {
+        PDM_g_num_t shift = mbm_for_update->multi_block_distrib[update_domain[i_block][i]];
+        shifted_block_data[i_block][i] = block_data[i_block][i] + shift;
+      }
+    }
+  }
+   
+
+  // 2. Merge data using main mbm; 
   int         *dparent_child_strid = NULL;
   PDM_g_num_t *dparent_child_mbm = NULL;
-  //assert(t_stride == PDM_STRIDE_CST); // Other not implemented
 
-  PDM_multi_block_merge_exch(mbm,
+  PDM_multi_block_merge_exch(mbm_cur,
                              sizeof(PDM_g_num_t),
                              t_stride,
                              block_stride,
-                             block_data,
+                 (void **)   shifted_block_data,
                              &dparent_child_strid,
                  (void **)   &dparent_child_mbm);
 
-  /*
-   * Mise à jour
-   */
 
-  int pn_merge_parent = PDM_multi_block_merge_get_n_block(mbm);
+  // 3. Update received (dist) connectivity to have ids in the new numbering
+  int dn_merge = PDM_multi_block_merge_get_n_block(mbm_cur);
   if (t_stride == PDM_STRIDE_CST) { //Next function does not allow cst stride
-    dparent_child_strid = PDM_array_const_int(pn_merge_parent, cst_stride);
+    int cst_stride = block_stride[0][0];
+    dparent_child_strid = PDM_array_const_int(dn_merge, cst_stride);
   }
 
-  _dist_data_update(child_old_distrib,
-                    dchild_old_to_new_idx,
-                    dchild_old_to_new,
-                    pn_merge_parent,
+  // Get old to new ordering for entity to update
+  PDM_g_num_t *old_distrib;
+  int         *dold_to_new_idx;
+  PDM_g_num_t *dold_to_new;
+  PDM_multi_block_merge_get_old_to_new(mbm_for_update, &old_distrib, &dold_to_new_idx, &dold_to_new);
+
+  _dist_data_update(old_distrib,
+                    dold_to_new_idx,
+                    dold_to_new,
+                    dn_merge,
                     dparent_child_strid,
                    &dparent_child_mbm,
-                    mbm->comm);
+                    mbm_cur->comm);
 
   *merge_block_stride  = dparent_child_strid;
   *merge_block_data    = dparent_child_mbm;
 
+  for (int i_block = 0; i_block < n_block; i_block++) {
+    free(shifted_block_data[i_block]);
+  }
+  free(shifted_block_data);
 }
 
 
@@ -478,6 +517,7 @@ PDM_multi_block_merge_free
 {
 
   free(mbm->multi_block_distrib);
+  free(mbm->blocks_ini_dn);
   free(mbm->dold_to_new_idx);
   free(mbm->dold_to_new);
   free(mbm->distrib_merge);
