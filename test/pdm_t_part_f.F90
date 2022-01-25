@@ -74,6 +74,7 @@ program testf
   integer(kind=PDM_l_num_s), pointer    :: dcell_part(:)            => null()
   integer(kind=PDM_l_num_s), pointer    :: dface_tag(:)             => null()
   integer(kind=PDM_l_num_s), pointer    :: dvtx_tag(:)              => null()
+  logical                               :: have_dcell_part
 
   integer                               :: i_part
   integer                               :: n_cell
@@ -193,6 +194,8 @@ program testf
   dface_tag      => null()
   dvtx_tag       => null()
 
+  have_dcell_part = .false.
+
   call pdm_part_create(ppart,                      &
                        comm,                       &
                        method,                     &
@@ -207,23 +210,17 @@ program testf
                        dn_face,                    &
                        dn_vtx,                     &
                        n_face_group,               &
-                       .false.,                    &
                        dcell_face_idx,             &
                        dcell_face,                 &
-                       .false.,                    &
                        dcell_tag,                  &
-                       .false.,                    &
                        dcell_weight,               &
-                       .false.,                    &
+                       have_dcell_part,            &
                        dcell_part,                 &
-                       .true.,                     &
                        dface_cell,                 &
                        dface_vtx_idx,              &
                        dface_vtx,                  &
-                       .false.,                    &
                        dface_tag,                  &
                        dvtx_coord,                 &
-                       .false.,                    &
                        dvtx_tag,                   &
                        dface_group_idx,            &
                        dface_group)
@@ -235,7 +232,11 @@ program testf
                          cpu,      &
                          cpu_user, &
                          cpu_sys)
-  write (*,*) "elapsed:", elapsed
+
+  write (*,*) "elapsed  :", elapsed(1:4)
+  write (*,*) "cpu      :", cpu(1:4)
+  write (*,*) "cpu_user :", cpu_user(1:4)
+  write (*,*) "cpu_sys  :", cpu_sys(1:4)
 
   call pdm_part_stat_get (ppart,                          &
                           cells_average,                  &
@@ -251,11 +252,11 @@ program testf
                           bound_part_faces_sum)
 
   write (*,*) "cells avg, med, std, min, max :", &
-  cells_average,                  &
-  cells_median,                   &
-  cells_std_deviation,            &
-  cells_min,                      &
-  cells_max
+                cells_average,                   &
+                cells_median,                    &
+                cells_std_deviation,             &
+                cells_min,                       &
+                cells_max
 
   !  Get split mesh
   do i_part = 1, n_part

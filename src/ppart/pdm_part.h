@@ -63,21 +63,23 @@ typedef struct _part_t     part_t;
  * \param [in]   comm                   MPI Comminicator
  * \param [in]   split_method           Split method
  * \param [in]   renum_cell_method      Cell renumbering method
- * \param [in]   renum_face_method      Cell renumbering method
- * \param [in]   renum_properties_cell  For cache blocking [ n_cell_per_cache_wanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
  * \param [in]   renum_face_method      Face renumbering method
+ * \param [in]   n_property_cell        Number of cell properties
+ * \param [in]   renum_properties_cell  For cache blocking [ n_cell_per_cache_wanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
+ * \param [in]   n_property_face        Number of face properties
  * \param [in]   renum_properties_face  NOT USED
  * \param [in]   n_part                 Number of partition to build on this process
  * \param [in]   dn_cell                Number of distributed cells
  * \param [in]   dn_face                Number of distributed faces
  * \param [in]   dn_vtx                 Number of distributed vertices
  * \param [in]   n_face_group           Number of face groups
- * \param [in]   dcell_faceIdx          Distributed cell face connectivity index or NULL
+ * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
  *                                      (size : dn_cell + 1, numbering : 0 to n-1)
  * \param [in]   dcell_face             Distributed cell face connectivity or NULL
  *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
  * \param [in]   dcell_tag              Cell tag (size : n_cell) or NULL
  * \param [in]   dcell_weight           Cell weight (size : n_cell) or NULL
+ * \param [in]   have_dcell_part        Presence of an array of cell part id
  * \param [in]   dcell_part             Distributed cell partitioning
  *                                      (size = dn_cell) or NULL (No partitioning if != NULL)
  * \param [in]   dface_cell             Distributed face cell connectivity or NULL
@@ -96,6 +98,7 @@ typedef struct _part_t     part_t;
  * \param [in]   dface_group            Distributed faces list of each group
  *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
  *                                      or NULL
+ *
  * \return    Pointer to \ref PDM_part object
  *
  */
@@ -116,7 +119,7 @@ PDM_part_create
  const int                    dn_face,
  const int                    dn_vtx,
  const int                    n_face_group,
- const int                   *dcell_faceIdx,
+ const int                   *dcell_face_idx,
  const PDM_g_num_t           *dcell_face,
  const int                   *dcell_tag,
  const int                   *dcell_weight,
@@ -236,14 +239,14 @@ const int            i_part,
 
 /**
  *
- * \brief Return a mesh partition??
+ * \brief Return the coloring of a mesh partition
  *
  * \param [in]   ppart               Pointer to \ref PDM_part object
  * \param [in]   i_part              Current partition
  * \param [out]  cell_color          Cell color (size = n_cell)
  * \param [out]  face_color          Face color (size = n_face)
- * \param [out]  thread_color        Thread color
- * \param [out]  hyperplane_color    Hyperplane color
+ * \param [out]  thread_color        Thread color (size = n_cell)
+ * \param [out]  hyperplane_color    Hyperplane color (size = n_cell)
  *
  */
 
@@ -278,10 +281,10 @@ PDM_part_t  *ppart
  * \brief Return times
  *
  * \param [in]   ppart       Pointer to \ref PDM_part object
- * \param [out]  elapsed     elapsed times (size = 4)
- * \param [out]  cpu         cpu times (size = 4)
- * \param [out]  cpu_user    user cpu times (size = 4)
- * \param [out]  cpu_sys     system cpu times (size = 4)
+ * \param [out]  elapsed     Elapsed times (size = 4)
+ * \param [out]  cpu         Cpu times (size = 4)
+ * \param [out]  cpu_user    User cpu times (size = 4)
+ * \param [out]  cpu_sys     System cpu times (size = 4)
  *
  */
 
@@ -298,7 +301,7 @@ PDM_part_time_get
 
 /**
  *
- * \brief Return statistic
+ * \brief Return statistics
  *
  * \param [in]   ppart                          Pointer to \ref PDM_part object
  * \param [out]  cells_average                  average of cells number
