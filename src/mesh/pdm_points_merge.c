@@ -112,7 +112,6 @@ const int  point_idx,
 const double *point_coords,
 const double *point_box,
 const int search_cloud,
-// const int associated_octree_id,
 PDM_octree_seq_t *octree,
 const int associated_octree_node_id,
 const double *associated_coords,
@@ -121,7 +120,6 @@ const double tolerance
 )
 {
   int node_id = associated_octree_node_id;
-  // int octree_id = associated_octree_id;
   const double *coords = associated_coords;
   const double *char_length = associated_char_length;
 
@@ -249,7 +247,6 @@ const int      point_cloud,
 const int      point_idx,
 const double  *point_coords,
 const double  *point_box,
-// const int      associated_octree_id,
 PDM_octree_t *octree,
 const int      associated_octree_node_id,
 const double **associated_coords,
@@ -259,7 +256,6 @@ const double   tolerance
 {
 
   int node_id = associated_octree_node_id;
-  // int octree_id = associated_octree_id;
 
   assert(node_id != -1);
 
@@ -412,11 +408,12 @@ const double   tolerance
  * \param [in]   n_point_cloud      Number of point cloud
  * \param [in]   tolerance          Relative geometric tolerance
  * \param [in]   comm               MPI communicator
+ * \param [in]   owner              Ownership
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_points_merge object
  */
 
-PDM_points_merge_t*
+PDM_points_merge_t *
 PDM_points_merge_create
 (
  const int             n_point_cloud,
@@ -459,9 +456,9 @@ PDM_points_merge_create
 
 /**
  *
- * \brief Free an octree structure   _search_local_couple
+ * \brief Free a \ref PDM_points_merge object
  *
- * \param [in]   id                 Identifier
+ * \param [in]   pm             Pointer to \ref PDM_points_merge object
  *
  */
 
@@ -498,7 +495,7 @@ PDM_points_merge_free
  *
  * \brief Set a point cloud
  *
- * \param [in]   id             Identifier
+ * \param [in]   pm             Pointer to \ref PDM_points_merge object
  * \param [in]   i_point_cloud  Index of point cloud
  * \param [in]   n_points       Number of points
  * \param [in]   coords         Point coordinates
@@ -530,7 +527,7 @@ PDM_points_merge_cloud_set
  *
  * \brief Process merge points
  *
- * \param [in]   id                 Identifier
+ * \param [in]   pm             Pointer to \ref PDM_points_merge object
  *
  */
 
@@ -966,10 +963,10 @@ PDM_points_merge_process
  *
  * \brief Get candidates to merge for each point
  *
- * \param [in]   id             Identifier
- * \param [in]   i_point_cloud  Current cloud
- * \param [out]  candidates_idx Indexes of candidate for each current cloud point
- *                              (size = number of points in the current cloud + 1)
+ * \param [in]   pm              Pointer to \ref PDM_points_merge object
+ * \param [in]   i_point_cloud   Current cloud
+ * \param [out]  candidates_idx  Indexes of candidate for each current cloud point
+ *                               (size = number of points in the current cloud + 1)
  * \param [out]  candidates_desc Candidates description (process,
  *                                                       cloud in the process,
  *                                                       point in the cloud)
@@ -1016,7 +1013,7 @@ PDM_points_merge_candidates_get
  *
  * \brief Get size of the resulting array
  *
- * \param [in]   id                Identifier
+ * \param [in]   pm                Pointer to \ref PDM_points_merge object
  * \param [in]   i_point_cloud     Current cloud
  * \param [out]  n_point_cloud     Number of points in the current cloud
  * \param [out]  n_candidates_desc Size of candidates_desc = candidates_idx[n_point_cloud+1]
