@@ -32,6 +32,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _pdm_octree_seq_t PDM_octree_seq_t;
+
 /**
  * \enum PDM_octree_seq_child_t
  * \brief Names of 8 children of a node
@@ -76,17 +78,16 @@ typedef enum {
  * \param [in]   depth_max          Maximum depth
  * \param [in]   points_in_leaf_max Maximum points in a leaf
  * \param [in]   tolerance          Relative geometric tolerance
- * \param [in]   comm               MPI communicator
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_octree_seq object
  */
 
-int
+PDM_octree_seq_t *
 PDM_octree_seq_create
 (
- const int n_point_cloud,
- const int depth_max,
- const int points_in_leaf_max,
+ const int    n_point_cloud,
+ const int    depth_max,
+ const int    points_in_leaf_max,
  const double tolerance
 );
 
@@ -105,14 +106,14 @@ PDM_octree_seq_create
  *
  * \brief Free an octree structure
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  *
  */
 
 void
 PDM_octree_seq_free
 (
- const int          id
+ PDM_octree_seq_t *octree
 );
 
 //void
@@ -136,10 +137,10 @@ PDM_octree_seq_free
 void
 PDM_octree_seq_point_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          n_points,
- const double      *coords
+ PDM_octree_seq_t *octree,
+ const int         i_point_cloud,
+ const int         n_points,
+ const double     *coords
 );
 
 //void
@@ -156,14 +157,14 @@ PDM_octree_seq_point_cloud_set
  *
  * \brief Build octree
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  *
  */
 
 void
 PDM_octree_seq_build
 (
- const int          id
+ PDM_octree_seq_t *octree
 );
 
 //void
@@ -176,16 +177,16 @@ PDM_octree_seq_build
  *
  * \brief Get root node id
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  *
- * \return     Root node identifier
+ * \return     Root node identifier (-1 if octree is not built)
  *
  */
 
 int
 PDM_octree_seq_root_node_id_get
 (
- const int          id
+ PDM_octree_seq_t *octree
 );
 
 
@@ -193,7 +194,7 @@ PDM_octree_seq_root_node_id_get
  *
  * \brief Get extents
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  *
  * \return     Extents
  *
@@ -202,7 +203,7 @@ PDM_octree_seq_root_node_id_get
 double *
 PDM_octree_seq_extents_get
 (
- const int          id
+ PDM_octree_seq_t *octree
 );
 
 //void
@@ -217,7 +218,7 @@ PDM_octree_seq_extents_get
  *
  * \brief Get ancestor node id
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  *
  * \return     Ancestor node identifier
@@ -227,8 +228,8 @@ PDM_octree_seq_extents_get
 int
 PDM_octree_seq_ancestor_node_id_get
 (
- const int          id,
- const int          node_id
+ PDM_octree_seq_t *octree,
+ const int         node_id
 );
 
 //void
@@ -244,7 +245,7 @@ PDM_octree_seq_ancestor_node_id_get
  *
  * \brief Get node extents
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  *
  * \return     Extents
@@ -254,8 +255,8 @@ PDM_octree_seq_ancestor_node_id_get
 const double *
 PDM_octree_seq_node_extents_get
 (
- const int          id,
- const int          node_id
+ PDM_octree_seq_t *octree,
+ const int         node_id
 );
 
 
@@ -263,7 +264,7 @@ PDM_octree_seq_node_extents_get
  *
  * \brief Get children of a node
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  * \param [in]   child              Children
  *
@@ -274,9 +275,9 @@ PDM_octree_seq_node_extents_get
 int
 PDM_octree_seq_children_get
 (
- const int                id,
- const int                node_id,
- const PDM_octree_seq_child_t child
+ PDM_octree_seq_t             *octree,
+ const int                     node_id,
+ const PDM_octree_seq_child_t  child
 );
 
 
@@ -284,27 +285,27 @@ PDM_octree_seq_children_get
  *
  * \brief Get Neighbor of node
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  * \param [in]   direction          Neighbor direction
  *
- * \return     Neighbor node id
+ * \return     Neighbor node id (-1 if no neighbor)
  *
  */
 
 int
 PDM_octree_seq_neighbor_get
 (
- const int                    id,
- const int                    node_id,
- const PDM_octree_seq_direction_t direction
+ PDM_octree_seq_t                 *octree,
+ const int                         node_id,
+ const PDM_octree_seq_direction_t  direction
 );
 
 /**
  *
  * \brief Get the number of point inside a node
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  *
  * \return   Number of points
@@ -314,7 +315,7 @@ PDM_octree_seq_neighbor_get
 int
 PDM_octree_seq_n_points_get
 (
- const int                id,
+ PDM_octree_seq_t        *octree,
  const int                node_id
 );
 
@@ -323,7 +324,7 @@ PDM_octree_seq_n_points_get
  *
  * \brief Get indexes of points inside a node
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  * \param [out]  point_clouds_id    Point clouds number
  *                                  (size = Number of points inside the node)
@@ -335,7 +336,7 @@ PDM_octree_seq_n_points_get
 void
 PDM_octree_seq_points_get
 (
- const int                id,
+ PDM_octree_seq_t        *octree,
  const int                node_id,
  int                    **point_clouds_id,
  int                    **point_indexes
@@ -346,7 +347,7 @@ PDM_octree_seq_points_get
  *
  * \brief Is it a leaf
  *
- * \param [in]   id                 Identifier
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
  * \param [in]   node_id            Node identifier
  *
  * \return   1 or 0
@@ -356,20 +357,19 @@ PDM_octree_seq_points_get
 int
 PDM_octree_seq_leaf_is
 (
- const int                id,
+ PDM_octree_seq_t        *octree,
  const int                node_id
 );
 
 
 /**
  *
- * Look for closest points stored inside an octree
+ * \brief Look for closest points stored inside an octree
  *
- * parameters:
- * \param [in]   id                     Identifier
+ * \param [in]   octree                 Pointer to \ref PDM_octree_seq object
  * \param [in]   n_pts                  Number of points
  * \param [in]   pts                    Point Coordinates
- * \param [out]  closest_octree_pt_id   Closest point in octree index (couple icloud, index)
+ * \param [out]  closest_octree_pt_id   Closest point in octree index
  * \param [out]  closest_octree_pt_dist Closest point in octree distance
  *
  */
@@ -377,18 +377,27 @@ PDM_octree_seq_leaf_is
 void
 PDM_octree_seq_closest_point
 (
-const int    id,
-const int    n_pts,
-double      *pts,
-int         *closest_octree_pt_id,
-double      *closest_octree_pt_dist2
+PDM_octree_seq_t *octree,
+const int         n_pts,
+double           *pts,
+int              *closest_octree_pt_id,
+double           *closest_octree_pt_dist2
 );
 
 
+/**
+ *
+ * \brief Write octants in a VTK file
+ *
+ * \param [in]   octree                 Pointer to \ref PDM_octree_seq object
+ * \param [in]   filename               Output file name
+ *
+ */
+
 void PDM_octree_seq_write_octants
 (
- const int   id,
- const char *filename
+ PDM_octree_seq_t *octree,
+ const char       *filename
  );
 
 #ifdef	__cplusplus

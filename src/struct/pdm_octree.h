@@ -14,6 +14,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_octree_seq.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -98,7 +99,7 @@ PDM_octree_create
  *
  * \brief Create an octree structure from a sequential octree
  *
- * \param [in]   octree_seq_id      Sequential octree identifier
+ * \param [in]   octree_seq         Pointer to sequential octree
  * \param [in]   comm               MPI communicator
  *
  * \return     Pointer to \ref PDM_octree object
@@ -107,8 +108,8 @@ PDM_octree_create
 PDM_octree_t *
 PDM_octree_from_octree_seq_create
 (
-const int octree_seq_id,
-const PDM_MPI_Comm comm
+ PDM_octree_seq_t   *octree_seq,
+ const PDM_MPI_Comm  comm
 );
 
 
