@@ -2603,7 +2603,7 @@ contains
   !!
   !!
 
-  subroutine pdm_part_coarse_mesh_time_get_ (cm,    &
+  subroutine pdm_part_coarse_mesh_time_get_ (cm,       &
                                              elapsed,  &
                                              cpu,      &
                                              cpu_user, &
@@ -2625,7 +2625,7 @@ contains
     double precision, pointer :: ptr(:)     => null()
 
 
-    call pdm_part_coarse_mesh_time_get_cf (cm,      &
+    call pdm_part_coarse_mesh_time_get_cf (cm,         &
                                            c_elapsed,  &
                                            c_cpu,      &
                                            c_cpu_user, &

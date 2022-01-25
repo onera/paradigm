@@ -419,20 +419,20 @@ PDM_dist_cloud_surf_compute
                 " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
 
-    int octree_id;
-    PDM_para_octree_t *octree = NULL;
+    PDM_octree_t      *octree      = NULL;
+    PDM_para_octree_t *para_octree = NULL;
     if (octree_type == PDM_OCTREE_SERIAL) {
-      octree_id = PDM_octree_create (n_part_mesh,
-                                     depth_max,
-                                     points_in_leaf_max,
-                                     tolerance,
-                                     comm);
+      octree = PDM_octree_create (n_part_mesh,
+                                  depth_max,
+                                  points_in_leaf_max,
+                                  tolerance,
+                                  comm);
     } else {
-      octree = PDM_para_octree_create (n_part_mesh,
-                                       depth_max,
-                                       points_in_leaf_max,
-                                       0,
-                                       comm);
+      para_octree = PDM_para_octree_create (n_part_mesh,
+                                            depth_max,
+                                            points_in_leaf_max,
+                                            0,
+                                            comm);
     }
 
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
@@ -460,10 +460,10 @@ PDM_dist_cloud_surf_compute
       }
 
       if (octree_type == PDM_OCTREE_SERIAL) {
-        PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
+        PDM_octree_point_cloud_set (octree, i_part, n_vertices,
                                     vertices_coords, vertices_gnum);
       } else {
-        PDM_para_octree_point_cloud_set (octree, i_part, n_vertices,
+        PDM_para_octree_point_cloud_set (para_octree, i_part, n_vertices,
                                          vertices_coords, vertices_gnum);
       }
     }
@@ -519,10 +519,10 @@ PDM_dist_cloud_surf_compute
     }
 
     if (octree_type == PDM_OCTREE_SERIAL) {
-      PDM_octree_build (octree_id);
+      PDM_octree_build (octree);
     } else {
-      PDM_para_octree_build (octree, NULL);//global_extents);
-      PDM_para_octree_dump_times (octree);
+      PDM_para_octree_build (para_octree, NULL);//global_extents);
+      PDM_para_octree_dump_times (para_octree);
     }
 
     /*
@@ -559,7 +559,7 @@ PDM_dist_cloud_surf_compute
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       // log_trace("PDM_OCTREE_SERIAL \n");
-      PDM_octree_closest_point (octree_id,
+      PDM_octree_closest_point (octree,
                                 n_pts_rank,
                                 pts_rank,
                                 pts_g_num_rank,
@@ -567,7 +567,7 @@ PDM_dist_cloud_surf_compute
                                 closest_vertices_dist2);
     } else {
       // log_trace("PDM_OCTREE_PARALLEL \n");
-      PDM_para_octree_single_closest_point (octree,
+      PDM_para_octree_single_closest_point (para_octree,
                                             n_pts_rank,
                                             pts_rank,
                                             pts_g_num_rank,
@@ -579,9 +579,9 @@ PDM_dist_cloud_surf_compute
     free (closest_vertices_gnum);
 
     if (octree_type == PDM_OCTREE_SERIAL) {
-      PDM_octree_free (octree_id);
+      PDM_octree_free (octree);
     } else {
-      PDM_para_octree_free (octree);
+      PDM_para_octree_free (para_octree);
     }
 
 

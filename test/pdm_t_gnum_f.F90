@@ -103,9 +103,7 @@ program testf
   call pdm_gnum_free(gen_gnum)
 
   ! Free C-allocated memory
-  ! call free_c_allocated_pointer(pts_ln_to_gn)
   call pdm_fortran_free_c(c_loc(pts_ln_to_gn))
-
 
 
   if (i_rank .eq. 0) then
@@ -114,20 +112,5 @@ program testf
 
   call mpi_finalize(code)
 
-
-contains
-
-  subroutine free_c_allocated_pointer (f)
-  use iso_c_binding
-  implicit none
-
-  integer(kind=pdm_g_num_s), pointer :: f(:)
-  type(c_ptr)                        :: c
-
-  c = c_loc(f)
-  ! print *, c
-  call pdm_fortran_free_c(c)
-
-  end subroutine free_c_allocated_pointer
 
 end program testf
