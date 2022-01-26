@@ -17,7 +17,6 @@
 #include "pdm_part_coarse_mesh.h"
 #include "pdm_gnum.h"
 
-#include "pdm_writer.h"
 #include "pdm_part_to_block.h"
 #include "pdm_poly_surf_gen.h"
 #include "pdm_printf.h"

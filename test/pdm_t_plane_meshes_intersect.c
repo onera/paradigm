@@ -801,7 +801,7 @@ _export_ini_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
@@ -1095,7 +1095,7 @@ _export_ol_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,

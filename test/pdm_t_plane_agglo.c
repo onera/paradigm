@@ -488,18 +488,16 @@ _export_ini_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs;
-
-  id_cs = PDM_writer_create ("Ensight",
-                              PDM_WRITER_FMT_ASCII,
-                              PDM_WRITER_TOPO_CONSTANTE,
-                              PDM_WRITER_OFF,
-                              "pdm_t_plane_agglo_ens",
-                              "fine_mesh",
-                              pdm_mpi_comm,
-                              PDM_IO_ACCES_MPI_SIMPLE,
-                              1.,
-                              NULL );
+  PDM_writer_t *id_cs = PDM_writer_create ("Ensight",
+                                           PDM_WRITER_FMT_ASCII,
+                                           PDM_WRITER_TOPO_CONSTANTE,
+                                           PDM_WRITER_OFF,
+                                           "pdm_t_plane_agglo_ens",
+                                           "fine_mesh",
+                                           pdm_mpi_comm,
+                                           PDM_IO_ACCES_MPI_SIMPLE,
+                                           1.,
+                                           NULL );
 
   /*
    * Creation des variables
