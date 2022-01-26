@@ -66,7 +66,7 @@ _export_ol_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
@@ -1299,16 +1299,16 @@ main
   // Export meshes to ensight
   //
 
-  int ens_meshA = PDM_writer_create ("Ensight",
-                                     PDM_WRITER_FMT_ASCII,
-                                     PDM_WRITER_TOPO_CONSTANTE,
-                                     PDM_WRITER_OFF,
-                                     "test_2d_unit_ens",
-                                     "meshA",
-                                     PDM_MPI_COMM_WORLD,
-                                     PDM_IO_ACCES_MPI_SIMPLE,
-                                     1.,
-                                     NULL);
+  PDM_writer_t *ens_meshA = PDM_writer_create ("Ensight",
+                                               PDM_WRITER_FMT_ASCII,
+                                               PDM_WRITER_TOPO_CONSTANTE,
+                                               PDM_WRITER_OFF,
+                                               "test_2d_unit_ens",
+                                               "meshA",
+                                               PDM_MPI_COMM_WORLD,
+                                               PDM_IO_ACCES_MPI_SIMPLE,
+                                               1.,
+                                               NULL);
 
   int id_var_fieldA = PDM_writer_var_create (ens_meshA,
                                              PDM_WRITER_OFF,
@@ -1415,16 +1415,16 @@ main
   free (faceVtxNA_merge);
 
 
-  int ens_meshB = PDM_writer_create ("Ensight",
-                                     PDM_WRITER_FMT_ASCII,
-                                     PDM_WRITER_TOPO_CONSTANTE,
-                                     PDM_WRITER_OFF,
-                                     "test_2d_unit_ens",
-                                     "meshB",
-                                     PDM_MPI_COMM_WORLD,
-                                     PDM_IO_ACCES_MPI_SIMPLE,
-                                     1.,
-                                     NULL);
+  PDM_writer_t *ens_meshB = PDM_writer_create ("Ensight",
+                                               PDM_WRITER_FMT_ASCII,
+                                               PDM_WRITER_TOPO_CONSTANTE,
+                                               PDM_WRITER_OFF,
+                                               "test_2d_unit_ens",
+                                               "meshB",
+                                               PDM_MPI_COMM_WORLD,
+                                               PDM_IO_ACCES_MPI_SIMPLE,
+                                               1.,
+                                               NULL);
 
   int id_var_fieldB = PDM_writer_var_create (ens_meshB,
                                              PDM_WRITER_OFF,

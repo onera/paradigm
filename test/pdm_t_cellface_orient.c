@@ -309,16 +309,16 @@ int main(int argc, char *argv[])
   double t_elapsed = (double) tranche_elapsed_max/1000000.;
   PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
 
-  int id_cs = PDM_writer_create("Ensight",
-                                PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
-                                PDM_WRITER_OFF,
-                                "test_3d_ens",
-                                "chrd3d",
-                                PDM_MPI_COMM_WORLD,
-                                PDM_IO_ACCES_MPI_SIMPLE,
-                                1.,
-                                NULL);
+  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_ASCII,
+                                          PDM_WRITER_TOPO_CONSTANTE,
+                                          PDM_WRITER_OFF,
+                                          "test_3d_ens",
+                                          "chrd3d",
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_ACCES_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
 
   /* Creation de la geometrie */
 

@@ -802,16 +802,16 @@ int main(int argc, char *argv[])
 
   if (post) {
     /* Prepare writer */
-    int id_cs = PDM_writer_create ("Ensight",
-                                   PDM_WRITER_FMT_ASCII,
-                                   PDM_WRITER_TOPO_CONSTANTE,
-                                   PDM_WRITER_OFF,
-                                   "test_dist",
-                                   "dist",
-                                   PDM_MPI_COMM_WORLD,
-                                   PDM_IO_ACCES_MPI_SIMPLE,
-                                   1.,
-                                   NULL);
+    PDM_writer_t *id_cs = PDM_writer_create ("Ensight",
+                                             PDM_WRITER_FMT_ASCII,
+                                             PDM_WRITER_TOPO_CONSTANTE,
+                                             PDM_WRITER_OFF,
+                                             "test_dist",
+                                             "dist",
+                                             PDM_MPI_COMM_WORLD,
+                                             PDM_IO_ACCES_MPI_SIMPLE,
+                                             1.,
+                                             NULL);
 
     int id_geom = PDM_writer_geom_create (id_cs,
                                           "mesh",
