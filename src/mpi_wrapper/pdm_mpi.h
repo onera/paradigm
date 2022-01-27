@@ -655,6 +655,13 @@ int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win);
 int PDM_mpi_win_shared_unlock_all(PDM_mpi_win_shared_t* win);
 int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win);
 
+/*----------------------------------------------------------------------------
+ * PDM_MPI_rand_tag_get
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Rand_tag (PDM_MPI_Comm comm);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

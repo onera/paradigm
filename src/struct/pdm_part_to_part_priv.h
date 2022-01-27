@@ -78,28 +78,38 @@ struct _pdm_part_to_part_t {
   int               **recv_buffer_to_duplicate_idx; /*!< Index for store duplicate gnum1 for a part2 element (size = \ref n_part2) */
   int               **recv_buffer_to_duplicate;     /*!< Index in receiv buffer of the duplicate gnum1 (Used for revers irecv) */
 
-  int                 async_send_n_open;            /*!< Number of open asynchronous exchange */ 
-  int                *async_send_open;              /*!< Open asynchronous exchanges */ 
-  int                 async_send_l_array;           /*!< Size of arrays to store asynchonous exchanges */ 
-  size_t             *async_send_s_data;            /*!< Size of datas of asynchonous exchanges */
-  int                *async_send_cst_stride;        /*!< Constant strides of asynchonous exchanges */
-  int                *async_send_tag;               /*!< Tag of asynchonous exchanges */
-  PDM_MPI_Request   **async_send_request;           /*!< Send requests of asynchonous exchanges */
-  unsigned char     **async_send_buffer;            /*!< Send buffers of asynchonous exchanges */
-  int               **async_n_send_buffer;          /*!< Number of data in the buffer to send to each rank of asynchonous exchanges */
-  int               **async_i_send_buffer;          /*!< Index in the send buffer of each rank of asynchonous exchanges */
+  int                 async_send_n_free;            /*!< Number of free asynchronous sendings */ 
+  int                *async_send_free;              /*!< Free asynchronous sendings */ 
+  int                 async_send_l_array;           /*!< Size of arrays to store asynchonous sendings */ 
+  size_t             *async_send_s_data;            /*!< Size of datas of asynchonous sendings */
+  int                *async_send_cst_stride;        /*!< Constant strides of asynchonous sendings */
+  int                *async_send_tag;               /*!< Tag of asynchonous sendings */
+  PDM_MPI_Request   **async_send_request;           /*!< Send requests of asynchonous sendings */
+  unsigned char     **async_send_buffer;            /*!< Send buffers of asynchonous sendings */
+  int               **async_n_send_buffer;          /*!< Number of data in the buffer to send to each rank of asynchonous sendings */
+  int               **async_i_send_buffer;          /*!< Index in the send buffer of each rank of asynchonous sendings */
 
-  int                 async_recv_n_open;            /*!< Number of open asynchronous exchange */ 
-  int                *async_recv_open;              /*!< Open asynchronous exchanges */ 
-  int                 async_recv_l_array;           /*!< Size of arrays to store asynchonous exchanges */ 
-  size_t             *async_recv_s_data;            /*!< Size of datas of asynchonous exchanges */
-  int                *async_recv_cst_stride;        /*!< Constant strides of asynchonous exchanges */
-  int                *async_recv_tag;               /*!< Tag of asynchonous exchanges */
-  PDM_MPI_Request   **async_recv_request;           /*!< Receive requests of asynchonous exchanges */
-  unsigned char     **async_recv_buffer;            /*!< Receive buffers of asynchonous exchanges */
-  int               **async_n_recv_buffer;          /*!< Number of data in the buffer received from each rank of asynchonous exchanges */
-  int               **async_i_recv_buffer;          /*!< Index in the receive buffer of each rank of asynchonous exchanges */
-  void              **async_recv_part2_data;        /*!< Store adress to store data after the receipt of data*/
+  int                 async_recv_n_free;            /*!< Number of free asynchronous reception */ 
+  int                *async_recv_free;              /*!< Free asynchronous receptions */ 
+  int                 async_recv_l_array;           /*!< Size of arrays to store asynchonous receptions */ 
+  size_t             *async_recv_s_data;            /*!< Size of datas of asynchonous receptions */
+  int                *async_recv_cst_stride;        /*!< Constant strides of asynchonous receptions */
+  int                *async_recv_tag;               /*!< Tag of asynchonous receptions */
+  PDM_MPI_Request   **async_recv_request;           /*!< Receive requests of asynchonous receptions */
+  unsigned char     **async_recv_buffer;            /*!< Receive buffers of asynchonous receptions */
+  int               **async_n_recv_buffer;          /*!< Number of data in the buffer received from each rank of asynchonous receptions */
+  int               **async_i_recv_buffer;          /*!< Index in the receive buffer of each rank of asynchonous receptions */
+  void              **async_recv_part2_data;        /*!< Store adress to store data after the data reception*/
+
+  int                 async_exch_n_free;            /*!< Number of open asynchronous exchange */ 
+  int                *async_exch_free;              /*!< Free asynchronous exchanges */ 
+  int                 async_exch_l_array;           /*!< Size of arrays to store asynchonous exchange properties */ 
+  int                *async_exch_t_stride;          /*!< Type of stride used for the exchange */ 
+  int                *async_exch_k_comm;            /*!< Communication kind used for the exchange */ 
+  int                *async_exch_subrequest;        /*!< send/recv request associated to the exchange */ 
+  int               **async_exch_recv_n;            /*!< Number of received data (stride is taking into acount) */
+  int               **async_exch_recv_idx;          /*!< Index to find received data */ 
+  int              ***async_exch_part2_stride;      /*!< Stride of part2 data */ 
 
 };
 
