@@ -349,8 +349,8 @@ _check_async_exch_alloc
     ptp->async_exch_subrequest    = realloc (ptp->async_exch_subrequest , sizeof(int) * 2 * ptp->async_exch_l_array);
     ptp->async_exch_t_stride      = realloc (ptp->async_exch_t_stride,    sizeof(int) * ptp->async_exch_l_array);
     ptp->async_exch_k_comm        = realloc (ptp->async_exch_k_comm,      sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_recv_n        = realloc (ptp->async_exch_recv_n     , sizeof(int) * ptp->async_exch_l_array);
-    ptp->async_exch_recv_idx      = realloc (ptp->async_exch_recv_idx   , sizeof(int) * ptp->async_exch_l_array);
+    ptp->async_exch_recv_n        = realloc (ptp->async_exch_recv_n     , sizeof(int *) * ptp->async_exch_l_array);
+    ptp->async_exch_recv_idx      = realloc (ptp->async_exch_recv_idx   , sizeof(int *) * ptp->async_exch_l_array);
     ptp->async_exch_part2_stride  = realloc (ptp->async_exch_part2_stride, sizeof(int **) * ptp->async_exch_l_array);
 
     for (int i = pre_val; i < ptp->async_exch_l_array; i++) {
@@ -690,7 +690,6 @@ _p2p_stride_var_iexch
   int   **__part1_to_part2_stride = NULL; 
   void  **__part1_to_part2_data   = NULL;
 
-
   /*
    *  Create __part1_to_part2_stride and __part1_to_part2_data if necessary  
    */
@@ -738,7 +737,7 @@ _p2p_stride_var_iexch
   PDM_part_to_part_issend(ptp,
                           sizeof (int),
                           1, // Stride = 1
-                          (void **)  _part1_to_part2_stride,
+                          (const void **)  _part1_to_part2_stride,
                           tag,
                           &send_request_stri);
 
@@ -832,8 +831,7 @@ _p2p_stride_var_iexch
                               tag,
                               &recv_request_data);
 
-  ptp->async_exch_subrequest[2*request] = recv_request_data;
-
+  ptp->async_exch_subrequest[2*request + 1] = recv_request_data;
 
   if (__part1_to_part2_stride != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
@@ -880,7 +878,7 @@ _p2p_stride_var_iexch_wait
   
   //int cst_stride = ptp->async_recv_cst_stride[request];
 
-  unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request];
+  unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request_irecv];
 
   int **part2_idx = malloc(ptp->n_part2 * sizeof(int * ));
   for (int i = 0; i < ptp->n_part2; i++) {
@@ -914,7 +912,7 @@ _p2p_stride_var_iexch_wait
         // log_trace(" write at : (i=%i, j=%i / k=%i ) - idx_elmt = %i | idx = %i | idx1 = %i | delta = %i \n", i, j, k, idx_elmt, idx, idx1, delta);
 
         for (int k1 = 0; k1 < delta; k1++) {
-          _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
+          _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request_irecv][idx+k1];
         }
       }
     }
@@ -1964,8 +1962,8 @@ PDM_part_to_part_issend
  PDM_part_to_part_t *ptp,
  const size_t        s_data,
  const int           cst_stride,
- void              **part1_to_part2_data,
- int                 tag,
+ const void        **part1_to_part2_data,
+ const int           tag,
  int                *request
 )
 {
@@ -2028,7 +2026,7 @@ void
 PDM_part_to_part_issend_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 )
 {
 
@@ -2060,8 +2058,8 @@ PDM_part_to_part_reverse_issend
  PDM_part_to_part_t *ptp,
  const size_t        s_data,
  const int           cst_stride,
- void              **part2_to_part1_data,
- int                 tag,
+ const void        **part2_to_part1_data,
+ const int           tag,
  int                *request
 )
 {
@@ -2129,7 +2127,7 @@ void
 PDM_part_to_part_reverse_issend_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 )
 {
 
@@ -2163,7 +2161,7 @@ PDM_part_to_part_irecv
  const size_t        s_data,
  const int           cst_stride,
  void              **part2_data,
- int                 tag,
+ const int           tag,
  int                *request
 )
 {
@@ -2210,7 +2208,7 @@ void
 PDM_part_to_part_irecv_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 )
 {
 
@@ -2262,7 +2260,7 @@ PDM_part_to_part_reverse_irecv
  const size_t        s_data,
  const int           cst_stride,
  void              **part1_data,
- int                 tag,
+ const int           tag,
  int                *request
 )
 {
@@ -2310,7 +2308,7 @@ void
 PDM_part_to_part_reverse_irecv_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 )
 {
 
@@ -2627,7 +2625,7 @@ void
 PDM_part_to_part_iexch_wait
 (
  PDM_part_to_part_t                *ptp,
- int                                request
+ const int                          request
 )
 {
 
@@ -2909,7 +2907,7 @@ void
 PDM_part_to_part_reverse_iexch_wait
 (
  PDM_part_to_part_t                *ptp,
- int                                request
+ const int                          request
 )
 {
   _free_async_exch (ptp, request);

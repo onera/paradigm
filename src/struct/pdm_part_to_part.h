@@ -294,8 +294,8 @@ PDM_part_to_part_issend
  PDM_part_to_part_t *ptp,
  const size_t        s_data,
  const int           cst_stride,
- void              **part1_to_part2_data,
- int                 tag,
+ const void        **part1_to_part2_data,
+ const int           tag,
  int                *request
 );
 
@@ -314,7 +314,7 @@ void
 PDM_part_to_part_issend_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 );
 
 
@@ -337,8 +337,8 @@ PDM_part_to_part_reverse_issend
  PDM_part_to_part_t *ptp,
  const size_t        s_data,
  const int           cst_stride,
- void              **part2_to_part1_data,
- int                 tag,
+ const void        **part2_to_part1_data,
+ const int           tag,
  int                *request
 );
 
@@ -357,7 +357,7 @@ void
 PDM_part_to_part_reverse_issend_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 );
 
 
@@ -400,7 +400,7 @@ void
 PDM_part_to_part_irecv_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 );
 
 
@@ -424,7 +424,7 @@ PDM_part_to_part_reverse_irecv
  const size_t        s_data,
  const int           cst_stride,
  void              **part2_data,
- int                 tag,
+ const int           tag,
  int                *request
 );
 
@@ -443,7 +443,7 @@ void
 PDM_part_to_part_reverse_irecv_wait
 (
  PDM_part_to_part_t *ptp,
- int                 request
+ const int           request
 );
 
 
@@ -495,7 +495,7 @@ void
 PDM_part_to_part_iexch_wait
 (
  PDM_part_to_part_t                *ptp,
- int                                request
+ const int                          request
 );
 
 
@@ -547,7 +547,7 @@ void
 PDM_part_to_part_reverse_iexch_wait
 (
  PDM_part_to_part_t                *ptp,
- int                                request
+ const int                          request
 );
 
 

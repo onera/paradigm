@@ -536,6 +536,7 @@ int main(int argc, char *argv[])
     /*
      * Sub-part
      */
+
     double bbox[6];
     bbox[0] = 0.3;
     bbox[1] = 0.3;
@@ -543,6 +544,7 @@ int main(int argc, char *argv[])
     bbox[3] = 0.7;
     bbox[4] = 0.7;
     bbox[5] = 0.65;
+
     int n_select_cell = 0;
     selected_g_num_idx[i_part][0] = 0;
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
@@ -728,43 +730,101 @@ int main(int argc, char *argv[])
   /*
    *  Exchange cell_face in global numebering = cell_face + face_ln_to_gn
    */
-  int send_request = -1;
+
+  PDM_g_num_t* equi_extract_cell_face = NULL;
+
   int cst_stride = 6;
-  PDM_part_to_part_issend(ptp,
-                                     sizeof(PDM_g_num_t),
-                                     cst_stride, // Hack here because HEXA
-                          (void **)  pextract_cell_face,
-                                     100,
-                                     &send_request);
-
-  PDM_g_num_t* equi_extract_cell_face = (PDM_g_num_t * ) malloc(cst_stride * dn_cell_equi * sizeof(PDM_g_num_t));
-
+  int send_request = -1;
   int recv_request = -1;
-  PDM_part_to_part_irecv(ptp,
-                                    sizeof(PDM_g_num_t),
-                                    cst_stride, // Hack here because HEXA
-                          (void **) &equi_extract_cell_face,
-                                    100,
-                                    &recv_request);
 
-  PDM_part_to_part_issend_wait(ptp, send_request);
-  PDM_part_to_part_irecv_wait (ptp, recv_request);
+  if (1 == 0) {
 
-  if(0 == 1) {
+
+    PDM_part_to_part_issend(ptp,
+                            sizeof(PDM_g_num_t),
+                            cst_stride, // Hack here because HEXA
+           (const void **)  pextract_cell_face,
+                            100,
+                            &send_request);
+
+    equi_extract_cell_face = (PDM_g_num_t * ) malloc(cst_stride * dn_cell_equi * sizeof(PDM_g_num_t));
+
+    PDM_part_to_part_irecv(ptp,
+                           sizeof(PDM_g_num_t),
+                           cst_stride, // Hack here because HEXA
+                 (void **) &equi_extract_cell_face,
+                           100,
+                           &recv_request);
+
+    PDM_part_to_part_issend_wait(ptp, send_request);
+    PDM_part_to_part_irecv_wait (ptp, recv_request);
+  }
+
+  else {
+    int  **part1_stride = malloc (sizeof(int *) * n_part_zones);
+    void **part1_data = (void **) pextract_cell_face;
+    int    request_exch;
+    int  **part2_stride;
+
+    for (int i = 0; i < n_part_zones; i++) {
+      part1_stride[i] = malloc (sizeof(int) * pn_cell[i]);
+      for (int j = 0; j < pn_cell[i]; j++) {
+        part1_stride[i][j] = 6;
+      }
+    }
+
+    PDM_g_num_t **_equi_extract_cell_face = NULL;
+
+    PDM_part_to_part_iexch (ptp,
+                            PDM_MPI_COMM_KIND_P2P, 
+                            PDM_STRIDE_VAR_INTERLACED,
+                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, // PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
+                            - 1,
+                            sizeof(PDM_g_num_t),
+                            (const int **) part1_stride,
+                            (const void **)part1_data,
+                            &part2_stride,
+                            (void ***) &_equi_extract_cell_face,
+                            &request_exch);
+
+    equi_extract_cell_face = _equi_extract_cell_face[0];
+
+    PDM_part_to_part_iexch_wait (ptp, request_exch);
+
+    for (int i = 0; i < n_part_zones; i++) {
+      free (part1_stride[i]);
+    }
+    free (part1_stride);
+
+    free (part2_stride[0]);
+    free (part2_stride);
+
+  }
+
+  if(1 == 1) {
+    printf("cst_stride * dn_cell_equi : %d %d \n", cst_stride, dn_cell_equi);
     PDM_log_trace_array_long(equi_extract_cell_face, cst_stride * dn_cell_equi, "equi_extract_cell_face : ");
   }
+
+  PDM_MPI_Barrier(PDM_MPI_COMM_WORLD);
+  printf("arret provisoire\n");
+  fflush(stdout);
+  abort();
 
   /*
    * Exchange cell_center to post-treated
    */
+
+  double* equi_extract_cell_center = (double * ) malloc(3 * dn_cell_equi * sizeof(double));
+
+
   PDM_part_to_part_issend(ptp,
                                      3 * sizeof(double),
                                      1,
-                          (void **)  pextract_cell_center,
+                          (const void **)  pextract_cell_center,
                                      100,
                                      &send_request);
 
-  double* equi_extract_cell_center = (double * ) malloc(3 * dn_cell_equi * sizeof(double));
 
   PDM_part_to_part_irecv(ptp,
                                     3 * sizeof(double),
@@ -785,6 +845,7 @@ int main(int argc, char *argv[])
                             dn_cell_equi,
                             equi_extract_cell_center,
                             NULL, NULL);
+
 
   /*
    * Prepare next step by descending connectivtity -> See / factorize _pconnectivity_with_local_num
@@ -834,7 +895,6 @@ int main(int argc, char *argv[])
   for(int i = 0; i < n_extract_face; ++i) {
     equi_parent_face_idx[i+1] = equi_parent_face_idx[i] + 1;
   }
-
 
   /*
    * Redo the same but with face_vtx
@@ -892,7 +952,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_issend(ptp_face,
                                   sizeof(PDM_g_num_t),
                                   4,
-                       (void **)  send_face_vtx, // Donc in same order of part2_to_part1_data
+                 (const void **)  send_face_vtx, // Donc in same order of part2_to_part1_data
                                   100,
                                   &send_request);
 
@@ -1056,7 +1116,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_issend(ptp_vtx,
                                   sizeof(double),
                                   3,
-                       (void **)  send_vtx_coord, // Donc in same order of part2_to_part1_data
+                 (const void **)  send_vtx_coord, // Donc in same order of part2_to_part1_data
                                   100,
                                   &send_request);
 
