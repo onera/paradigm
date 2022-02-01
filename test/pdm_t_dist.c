@@ -995,8 +995,8 @@ int main(int argc, char *argv[])
     free (cell_face_n);
     free (face_vtx_n);
 
-    PDM_writer_geom_data_free (id_cs, id_geom);
-    PDM_writer_geom_free (id_cs, id_geom);
+    // PDM_writer_geom_data_free (id_cs, id_geom);
+    // PDM_writer_geom_free (id_cs, id_geom);
     PDM_writer_free (id_cs);
   }
 

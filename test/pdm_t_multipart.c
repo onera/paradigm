@@ -509,10 +509,10 @@ int main(int argc, char *argv[])
 
     PDM_writer_step_end(id_cs);
 
-    for (int i_zone = 0; i_zone < n_zone; i_zone++){
-      PDM_writer_geom_data_free(id_cs, geom_ids[i_zone]);
-      PDM_writer_geom_free(id_cs, geom_ids[i_zone]);
-    }
+    // for (int i_zone = 0; i_zone < n_zone; i_zone++){
+    //   PDM_writer_geom_data_free(id_cs, geom_ids[i_zone]);
+    //   PDM_writer_geom_free(id_cs, geom_ids[i_zone]);
+    // }
     free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){

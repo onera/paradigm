@@ -930,11 +930,11 @@ _export_ini_mesh
     free (nsom_part);
 
     PDM_writer_step_end (id_cs);
-    PDM_writer_geom_data_free (id_cs,
-                               id_geom);
+    // PDM_writer_geom_data_free (id_cs,
+    //                            id_geom);
 
-    PDM_writer_geom_free (id_cs,
-                          id_geom);
+    // PDM_writer_geom_free (id_cs,
+    //                       id_geom);
     PDM_writer_free (id_cs);
 
     free (debPartProcs);

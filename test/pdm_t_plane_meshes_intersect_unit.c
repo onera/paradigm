@@ -387,11 +387,11 @@ _export_ol_mesh
     free (val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
-    PDM_writer_geom_data_free (id_cs[imesh],
-                               id_geom[imesh]);
+    // PDM_writer_geom_data_free (id_cs[imesh],
+    //                            id_geom[imesh]);
 
-    PDM_writer_geom_free (id_cs[imesh],
-                          id_geom[imesh]);
+    // PDM_writer_geom_free (id_cs[imesh],
+    //                       id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
     free (_olface_nb);
@@ -1398,17 +1398,17 @@ main
 
 
   PDM_writer_step_end (ens_meshA);
-  PDM_writer_geom_data_free (ens_meshA,
-                             ens_geoA);
+  // PDM_writer_geom_data_free (ens_meshA,
+  //                            ens_geoA);
 
-  PDM_writer_geom_free (ens_meshA,
-                        ens_geoA);
+  // PDM_writer_geom_free (ens_meshA,
+  //                       ens_geoA);
 
-  PDM_writer_geom_data_free (ens_meshA,
-                             ens_geoA_merge);
+  // PDM_writer_geom_data_free (ens_meshA,
+  //                            ens_geoA_merge);
 
-  PDM_writer_geom_free (ens_meshA,
-                        ens_geoA_merge);
+  // PDM_writer_geom_free (ens_meshA,
+  //                       ens_geoA_merge);
 
   PDM_writer_free (ens_meshA);
   free (faceVtxNA);
@@ -1478,11 +1478,11 @@ main
                        id_var_fieldB);
 
   PDM_writer_step_end (ens_meshB);
-  PDM_writer_geom_data_free (ens_meshB,
-                             ens_geoB);
+  // PDM_writer_geom_data_free (ens_meshB,
+  //                            ens_geoB);
 
-  PDM_writer_geom_free (ens_meshB,
-                        ens_geoB);
+  // PDM_writer_geom_free (ens_meshB,
+  //                       ens_geoB);
 
   PDM_writer_free (ens_meshB);
   free (faceVtxNB);

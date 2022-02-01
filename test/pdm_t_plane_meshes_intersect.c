@@ -1052,11 +1052,11 @@ _export_ini_mesh
     free (nsom_part);
 
     PDM_writer_step_end (id_cs[imesh]);
-    PDM_writer_geom_data_free (id_cs[imesh],
-                      id_geom[imesh]);
+    // PDM_writer_geom_data_free (id_cs[imesh],
+    //                   id_geom[imesh]);
 
-    PDM_writer_geom_free (id_cs[imesh],
-                 id_geom[imesh]);
+    // PDM_writer_geom_free (id_cs[imesh],
+    //              id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
     free (debPartProcs);
@@ -1415,11 +1415,11 @@ _export_ol_mesh
     free (val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
-    PDM_writer_geom_data_free (id_cs[imesh],
-                               id_geom[imesh]);
+    // PDM_writer_geom_data_free (id_cs[imesh],
+    //                            id_geom[imesh]);
 
-    PDM_writer_geom_free (id_cs[imesh],
-                          id_geom[imesh]);
+    // PDM_writer_geom_free (id_cs[imesh],
+    //                       id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
     free (_olface_nb);

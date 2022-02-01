@@ -46,6 +46,14 @@ struct _PDM_writer_geom_t {
 
 };
 
+typedef struct _PDM_writer_geom_tab_t {
+
+  int                 n_geom;
+  int                 s_geom;
+  PDM_writer_geom_t **geom;
+
+} _PDM_writer_geom_tab_t;
+
 /*----------------------------------------------------------------------------
  * Mapping des noms de variable
  *----------------------------------------------------------------------------*/
@@ -103,7 +111,8 @@ struct _PDM_writer_t {
   PDM_MPI_Comm           pdm_mpi_comm;       /* Communicateur MPI */
   void                  *sortie_fmt;         /* Description propre au format */
   PDM_Handles_t         *var_tab;            /* Tableau des variables */
-  PDM_Handles_t         *geom_tab;           /* Tableau des geometries */
+  // PDM_Handles_t         *geom_tab;           /* Tableau des geometries */
+  _PDM_writer_geom_tab_t *geom_tab;           /* Tableau des geometries */
   double                 physical_time;      /* Temps physique de la simulation */
   PDM_io_acces_t         acces;              /* Type d'acces au fichier (MPIIIO,...) */
   double                 prop_noeuds_actifs; /* Proportion des noeuds actifs */

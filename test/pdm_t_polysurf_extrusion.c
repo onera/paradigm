@@ -748,8 +748,8 @@ int main(int argc, char *argv[])
     PDM_writer_var_free (id_cs,
                          id_var_coo_xyz);
 
-    PDM_writer_geom_data_free (id_cs, id_geom);
-    PDM_writer_geom_free (id_cs, id_geom);
+    // PDM_writer_geom_data_free (id_cs, id_geom);
+    // PDM_writer_geom_free (id_cs, id_geom);
     PDM_writer_free (id_cs);
   }
 
