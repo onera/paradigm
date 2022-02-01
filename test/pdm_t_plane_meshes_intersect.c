@@ -833,7 +833,7 @@ _export_ini_mesh
   int id_var_field[2];
   int id_var_coo_x[2];
   int id_var_coo_xyz[2];
-  int id_geom[2];
+  PDM_writer_geom_t *id_geom[2] = {NULL, NULL};
 
   for (int imesh = 0; imesh < 2; imesh++) {
 
@@ -1052,11 +1052,9 @@ _export_ini_mesh
     free (nsom_part);
 
     PDM_writer_step_end (id_cs[imesh]);
-    PDM_writer_geom_data_free (id_cs[imesh],
-                      id_geom[imesh]);
+    PDM_writer_geom_data_free (id_geom[imesh]);
 
-    PDM_writer_geom_free (id_cs[imesh],
-                 id_geom[imesh]);
+    PDM_writer_geom_free (id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
     free (debPartProcs);
@@ -1128,7 +1126,7 @@ _export_ol_mesh
   int id_var_match[2];
   int id_var_cell_match[2];
   int id_var_origin[2];
-  int id_geom[2];
+  PDM_writer_geom_t *id_geom[2] = {NULL, NULL};
 
   for (int imesh = 0; imesh < 2; imesh++) {
     if (imesh == 0) {
@@ -1415,11 +1413,9 @@ _export_ol_mesh
     free (val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
-    PDM_writer_geom_data_free (id_cs[imesh],
-                               id_geom[imesh]);
+    PDM_writer_geom_data_free (id_geom[imesh]);
 
-    PDM_writer_geom_free (id_cs[imesh],
-                          id_geom[imesh]);
+    PDM_writer_geom_free (id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
     free (_olface_nb);

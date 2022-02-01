@@ -884,7 +884,8 @@ PDM_writer_geom_t *geom
 {
   geom->geom_fmt = malloc(sizeof(PDM_writer_geom_ensight_t));
   PDM_writer_geom_ensight_t *_geom_ensight = (PDM_writer_geom_ensight_t *) geom->geom_fmt;
-  _geom_ensight->num_part = PDM_Handles_n_get (geom->_cs->geom_tab);
+  // _geom_ensight->num_part = PDM_Handles_n_get (geom->_cs->geom_tab);
+  _geom_ensight->num_part = -1;
 }
 
 
@@ -1604,13 +1605,16 @@ PDM_writer_ensight_var_write
 
   /* Boucle sur les géométries */
 
-  const int *ind = PDM_Handles_idx_get (cs->geom_tab);
-  const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+  // const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+  // const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+  const int n_ind = cs->geom_tab->n_geom;
 
   for (int i1 = 0; i1 < n_ind; i1++) {
-    int igeom = ind[i1];
+    // int igeom = ind[i1];
+    int igeom = i1 + 1; // ??????
 
-    PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, igeom);
+    // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, igeom);
+    PDM_writer_geom_t *geom = cs->geom_tab->geom[i1];
 
     const int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 

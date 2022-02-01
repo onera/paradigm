@@ -322,11 +322,11 @@ int main(int argc, char *argv[])
 
   /* Creation de la geometrie */
 
-  int id_geom = PDM_writer_geom_create(id_cs,
-                                       "test3d_geom",
-                                       PDM_WRITER_OFF,
-                                       PDM_WRITER_OFF,
-                                       n_part);
+  PDM_writer_geom_t *id_geom = PDM_writer_geom_create(id_cs,
+                                                      "test3d_geom",
+                                                      PDM_WRITER_OFF,
+                                                      PDM_WRITER_OFF,
+                                                      n_part);
 
   /* Creation des variables */
 
@@ -621,11 +621,9 @@ int main(int argc, char *argv[])
 
   /* Liberation memoire */
 
-  PDM_writer_geom_data_free(id_cs,
-                            id_geom);
+  PDM_writer_geom_data_free(id_geom);
 
-  PDM_writer_geom_free(id_cs,
-                       id_geom);
+  PDM_writer_geom_free(id_geom);
 
   PDM_writer_free(id_cs);
 

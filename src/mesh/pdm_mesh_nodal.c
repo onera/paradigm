@@ -5641,11 +5641,11 @@ PDM_Mesh_nodal_write
                                        NULL);
 
   /* Creation de la geometrie */
-  int id_geom = PDM_writer_geom_create_from_mesh_nodal (cs,
-                                                        "test3d_geom",
-                                                        PDM_WRITER_OFF,
-                                                        PDM_WRITER_OFF,
-                                                        mesh);
+  PDM_writer_geom_t *id_geom = PDM_writer_geom_create_from_mesh_nodal (cs,
+                                                                       "test3d_geom",
+                                                                       PDM_WRITER_OFF,
+                                                                       PDM_WRITER_OFF,
+                                                                       mesh);
 
   /* Creation des variables */
   int id_var_elt_part = PDM_writer_var_create(cs,

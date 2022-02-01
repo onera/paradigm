@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
   if (post == 1)
   {
     /* Prepare writer */
-    int *geom_ids = (int *) malloc(n_zone * sizeof(int));
+    PDM_writer_geom_t *geom_ids = (PDM_writer_geom_t *) malloc(n_zone * sizeof(PDM_writer_geom_t));
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_ASCII,
                                             PDM_WRITER_TOPO_CONSTANTE,
@@ -510,8 +510,8 @@ int main(int argc, char *argv[])
     PDM_writer_step_end(id_cs);
 
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
-      PDM_writer_geom_data_free(id_cs, geom_ids[i_zone]);
-      PDM_writer_geom_free(id_cs, geom_ids[i_zone]);
+      PDM_writer_geom_data_free(geom_ids[i_zone]);
+      PDM_writer_geom_free(geom_ids[i_zone]);
     }
     free(geom_ids);
     PDM_writer_free(id_cs);

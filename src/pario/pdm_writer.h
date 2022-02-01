@@ -190,26 +190,26 @@ typedef enum {
  *
  */
 
-void
-PROCF (pdm_writer_create_cf, PDM_WRITER_CREATE_CF)
-(
-const char          *fmt,
-const int           *l_fmt,
-const int           *fmt_fic,
-const int           *topologie,
-const int           *st_reprise,
-const char          *rep_sortie,
-const char          *nom_sortie,
-const int           *l_rep_sortie,
-const int           *l_nom_sortie,
-const PDM_MPI_Fint  *pdm_mpi_comm,
-const int           *acces,
-const double        *prop_noeuds_actifs,
-const char          *options,
-const int           *l_options,
-int                 *id_cs
-ARGF_SUPP_CHAINE
-);
+// void
+// PROCF (pdm_writer_create_cf, PDM_WRITER_CREATE_CF)
+// (
+// const char          *fmt,
+// const int           *l_fmt,
+// const int           *fmt_fic,
+// const int           *topologie,
+// const int           *st_reprise,
+// const char          *rep_sortie,
+// const char          *nom_sortie,
+// const int           *l_rep_sortie,
+// const int           *l_nom_sortie,
+// const PDM_MPI_Fint  *pdm_mpi_comm,
+// const int           *acces,
+// const double        *prop_noeuds_actifs,
+// const char          *options,
+// const int           *l_options,
+// int                 *id_cs
+// ARGF_SUPP_CHAINE
+// );
 
 PDM_writer_t *
 PDM_writer_create
@@ -232,11 +232,11 @@ const char                   *options
  * \param [in] cs    Pointer to \ref PDM_writer object
  *
  */
-void
-PROCF (pdm_writer_free, PDM_WRITER_FREE)
-(
-int        *id_cs
-);
+// void
+// PROCF (pdm_writer_free, PDM_WRITER_FREE)
+// (
+// int        *id_cs
+// );
 
 void
 PDM_writer_free
@@ -250,12 +250,12 @@ PDM_writer_free
  * \param [in] cs             Pointer to \ref PDM_writer object
  * \param [in] physical_time  Temps
  */
-void
-PROCF (pdm_writer_step_beg, PDM_WRITER_STEP_BEG)
-(
-int           *id_cs,
-double        *physical_time
-);
+// void
+// PROCF (pdm_writer_step_beg, PDM_WRITER_STEP_BEG)
+// (
+// int           *id_cs,
+// double        *physical_time
+// );
 
 void
 PDM_writer_step_beg
@@ -271,11 +271,11 @@ const double   physical_time
  *
  */
 
-void
-PROCF (pdm_writer_step_end, PDM_WRITER_STEP_END)
-(
-int          *id_cs
-);
+// void
+// PROCF (pdm_writer_step_end, PDM_WRITER_STEP_END)
+// (
+// int          *id_cs
+// );
 
 void
 PDM_writer_step_end
@@ -291,7 +291,7 @@ PDM_writer_step_end
  * \param [in]  st_decoup_poly2d  Active le decoupage des polygones
  * \param [in]  st_decoup_poly3d  Active le decoupage des polyedres
  *
- * \return   Identificateur de l'objet geom dans cs
+ * \return   Pointer to \ref PDM_writer_geom object
  *
  */
 
@@ -308,7 +308,7 @@ int           *id_geom
 ARGF_SUPP_CHAINE
 );
 
-int
+PDM_writer_geom_t *
 PDM_writer_geom_create
 (
 PDM_writer_t               *cs,
@@ -318,7 +318,7 @@ const PDM_writer_statut_t   st_decoup_poly3d,
 const int                   n_part
 );
 
-int
+PDM_writer_geom_t *
 PDM_writer_geom_create_from_mesh_nodal
 (
 PDM_writer_t              *cs,
@@ -331,7 +331,7 @@ PDM_Mesh_nodal_t          *mesh
  * \brief Definition des coordonnees de la partition courante
  *
  * \param [in] cs        Pointer to \ref PDM_writer object
- * \param [in] id_geom   Identificateur de l'objet geometrique
+ * \param [in] geom      Pointer to \ref PDM_writer_geom object
  * \param [in] id_part   Indice de partition
  * \param [in] n_som     Nombre de sommets de la partition
  * \param [in] coords    Coordonnes des sommets
@@ -354,7 +354,7 @@ void
 PDM_writer_geom_coord_set
 (
 PDM_writer_t      *cs,
-const int          id_geom,
+PDM_writer_geom_t *geom,
 const int          id_part,
 const int          n_som,
 const PDM_real_t  *coords,
@@ -366,7 +366,7 @@ const PDM_g_num_t *numabs
  *
  *
  * \param [in] cs               Pointer to \ref PDM_writer object
- * \param [in] id_geom          Identificateur de l'objet geometrique
+ * \param [in] geom             Pointer to \ref PDM_writer_geom object
  * \param [in] id_part          Indice de partition
  * \param [in] n_som            Nombre de sommets de la partition
  * \param [in] n_som_parent     Nombre de sommets parent
@@ -395,7 +395,7 @@ void
 PDM_writer_geom_coord_from_parent_set
 (
 PDM_writer_t      *cs,
-const int          id_geom,
+PDM_writer_geom_t *geom,
 const int          id_part,
 const int          n_som,
 const int          n_som_parent,
@@ -410,7 +410,7 @@ const PDM_g_num_t *numabs_parent
  * \brief Ajout d'un bloc d'elements d'un type donne
  *
  * \param [in] cs             Pointer to \ref PDM_writer object
- * \param [in] id_geom        Identificateur de l'objet geometrique
+ * \param [in] geom           Pointer to \ref PDM_writer_geom object
  * \param [in] t_elt          Type d'element
  *
  * \return   Identificateur du bloc
@@ -431,7 +431,7 @@ int
 PDM_writer_geom_bloc_add
 (
 PDM_writer_t                *cs,
-const int                    id_geom,
+PDM_writer_geom_t           *geom,
 PDM_writer_statut_t          st_free_data,
 const PDM_writer_elt_geom_t  t_elt
 );
@@ -509,7 +509,7 @@ const PDM_writer_elt_geom_t  t_elt
  *   1 x-------x 2
  *
  * \param [in] cs                  Pointer to \ref PDM_writer object
- * \param [in] id_geom             Identificateur de l'objet geometrique
+ * \param [in] geom                Pointer to \ref PDM_writer_geom object
  * \param [in] id_bloc             Identificateur du bloc
  * \param [in] id_part             Indice de partition
  * \param [in] t_elt               Type d'element
@@ -535,7 +535,7 @@ void
 PDM_writer_geom_bloc_std_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const int            n_elt,
@@ -547,7 +547,7 @@ const int            n_elt,
  * \brief Ajout d'un bloc de polygones dans la partition courante
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Indice de partition
  * \param [in] n_elt           Nombre d'elements dans le bloc
  * \param [in] connec_idx      Index dans la table de connectivite (dim = n_elt+1)
@@ -573,7 +573,7 @@ void
 PDM_writer_geom_bloc_poly2d_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const PDM_l_num_t    n_elt,
@@ -587,7 +587,7 @@ const PDM_l_num_t    n_elt,
  * \brief Ajout d'un bloc de polyedres dans la partition courante
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Indice de partition
  * \param [in] n_elt           Nombre d'elements dans le bloc
  * \param [in] n_face          Nombre de faces de chaque element (dim = n_elt)
@@ -619,7 +619,7 @@ void
 PDM_writer_geom_bloc_poly3d_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const PDM_l_num_t    n_elt,
@@ -641,7 +641,7 @@ const PDM_l_num_t    n_face,
  * des cellules.
  *
  * \param [in]  cs              Pointer to \ref PDM_writer object
- * \param [in]  id_geom         Identificateur de l'objet geometrique
+ * \param [in]  geom            Pointer to \ref PDM_writer_geom object
  * \param [in]  id_part         Identificateur de partition
  * \param [in]  n_cell          Nombre de cellules 3D ajoutées
  * \param [in]  n_face          Nombre de faces décrites
@@ -673,18 +673,18 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_cell3d_cellface_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_cell,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_l_num_t  *cell_face_idx,
-PDM_l_num_t  *cell_face_nb,
-PDM_l_num_t  *cell_face,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_cell,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_l_num_t       *cell_face_idx,
+PDM_l_num_t       *cell_face_nb,
+PDM_l_num_t       *cell_face,
+PDM_g_num_t       *numabs
 );
 
 
@@ -697,7 +697,7 @@ PDM_g_num_t  *numabs
  * des cellules.
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] n_cell          Nombre de cellules 3D ajoutées
  * \param [in] n_face          Nombre de faces décrites
  * \param [in] face_som_idx    Index de connectivite faces -> sommets
@@ -728,18 +728,18 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_cell2d_cellface_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_elt,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_l_num_t  *cell_face_idx,
-PDM_l_num_t  *cell_face_nb,
-PDM_l_num_t  *cell_face,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_cell,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_l_num_t       *cell_face_idx,
+PDM_l_num_t       *cell_face_nb,
+PDM_l_num_t       *cell_face,
+PDM_g_num_t       *numabs
 );
 
 
@@ -752,7 +752,7 @@ PDM_g_num_t  *numabs
  * des cellules.
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] n_elt           Nombre de cellules 3D ajoutées
  * \param [in] n_face          Nombre de faces décrites
  * \param [in] face_som_idx    Index de connectivite faces -> sommets
@@ -777,14 +777,14 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_faces_facesom_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_g_num_t       *numabs
 );
 
 
@@ -792,7 +792,7 @@ PDM_g_num_t  *numabs
  * \brief Ecriture du maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 
@@ -806,8 +806,8 @@ int           *id_geom
 void
 PDM_writer_geom_write
 (
- PDM_writer_t *cs,
- const int     id_geom
+ PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
  );
 
 /**
@@ -815,7 +815,7 @@ PDM_writer_geom_write
  * les indirections sur les numérotation absolues sont conservées
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 
@@ -829,8 +829,8 @@ int           *id_geom
 void
 PDM_writer_geom_data_free
 (
- PDM_writer_t *cs,
- const int     id_geom
+ // PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
  );
 
 
@@ -838,7 +838,7 @@ PDM_writer_geom_data_free
  * \brief Liberation des donnees decrivant le maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 
@@ -852,8 +852,8 @@ int           *id_geom
 void
 PDM_writer_geom_free
 (
- PDM_writer_t *cs,
- const int     id_geom
+ // PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
 );
 
 /**
@@ -861,7 +861,6 @@ PDM_writer_geom_free
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
  * \param [in] st_dep_temps    Indique si la variable est dependante du temps
- * \param [in] id_geom         Identificateur de l'objet geometrique
  * \param [in] dim             Dimension de la variable
  * \param [in] loc             Localisation de la variable
  * \param [in] nom_var         Nom de la variable
@@ -951,7 +950,7 @@ const int     id_var
  * elements doivent être définies suivant l'ordre de définition des blocs !
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Identificateur de la partition dans l'objet geometrique
  * \param [in] id_var          Identificateur de la variable mise à jour
  * \param [in] val             Valeurs
@@ -971,11 +970,11 @@ PDM_real_t   *val
 void
 PDM_writer_var_set
 (
-PDM_writer_t     *cs,
-const int         id_var,
-const int         id_geom,
-const int         id_part,
-const PDM_real_t *val
+ PDM_writer_t      *cs,
+ const int          id_var,
+ PDM_writer_geom_t *geom,
+ const int          id_part,
+ const PDM_real_t  *val
 );
 
 /**
@@ -1076,7 +1075,7 @@ PDM_writer_fmt_free
  * \brief Réinitialisation des donnees decrivant le maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 
@@ -1091,8 +1090,8 @@ int           *id_geom
 void
 PDM_writer_geom_data_reset
 (
- PDM_writer_t *cs,
- const int     id_geom
+ PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
  );
 
 #ifdef __cplusplus

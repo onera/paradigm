@@ -250,6 +250,101 @@ _load_intern_fmt (void)
   PDM_Handles_store (fmt_tab, fmt);
 }
 
+
+/**
+ *
+ * \brief Create a \ref _PDM_writer_geom_tab_t object
+ *
+ * \param [in]  size   Initial size of the array of geometries
+ *
+ * \return    Pointer to a new \ref _PDM_writer_geom_tab_t object
+ *
+ */
+
+static _PDM_writer_geom_tab_t *
+_pdm_writer_geom_tab_create
+(
+ const int size
+ )
+{
+  _PDM_writer_geom_tab_t *geom_tab = (_PDM_writer_geom_tab_t *) malloc(sizeof(_PDM_writer_geom_tab_t));
+
+  geom_tab->n_geom = 0;
+  geom_tab->s_geom = size;
+
+  geom_tab->geom = (PDM_writer_geom_t **) malloc(sizeof(PDM_writer_geom_t *) * geom_tab->s_geom);
+  for (int i = 0; i < geom_tab->s_geom; i++) {
+    geom_tab->geom[i] = NULL;
+  }
+
+  return geom_tab;
+}
+
+
+/**
+ *
+ * \brief Add a geometry
+ *
+ * \param [in] geom_tab   Pointer to \ref _PDM_writer_geom_tab_t object
+ * \param [in] geom       Pointer to \ref PDM_writer_geom_t object
+ *
+ */
+
+static void
+_pdm_writer_geom_tab_add
+(
+ _PDM_writer_geom_tab_t *geom_tab,
+ PDM_writer_geom_t      *geom
+ )
+{
+  assert (geom_tab != NULL);
+
+  if (geom_tab->n_geom >= geom_tab->s_geom) {
+    geom_tab->s_geom = PDM_MAX(2*geom_tab->s_geom, geom_tab->n_geom+1);
+    geom_tab->geom = (PDM_writer_geom_t **) realloc(geom_tab->geom, sizeof(PDM_writer_geom_t *) * geom_tab->s_geom);
+
+    for (int i = geom_tab->n_geom+1; i < geom_tab->s_geom; i++) {
+      geom_tab->geom[i] = NULL;
+    }
+  }
+
+  geom_tab->geom[geom_tab->n_geom++] = geom;
+}
+
+
+/**
+ *
+ * \brief Free a \ref _PDM_writer_geom_tab_t object
+ *
+ * \param [in] geom_tab    Pointer to \ref _PDM_writer_geom_tab_t object
+ *
+ */
+
+static void
+_pdm_writer_geom_tab_free
+(
+ _PDM_writer_geom_tab_t *geom_tab
+ )
+{
+  if (geom_tab != NULL) {
+    if (geom_tab->geom != NULL) {
+      for (int i = 0; i < geom_tab->n_geom; i++) {
+        if (geom_tab->geom[i] != NULL) {
+          PDM_writer_geom_free(geom_tab->geom[i]);
+          geom_tab->geom[i] = NULL;
+        }
+      }
+      free (geom_tab->geom);
+      geom_tab->geom = NULL;
+    }
+    geom_tab->n_geom = 0;
+    geom_tab->s_geom = 0;
+
+    free (geom_tab);
+    geom_tab = NULL;
+  }
+}
+
 /*============================================================================
  * Definition des fonctions publiques
  *============================================================================*/
@@ -276,63 +371,63 @@ _load_intern_fmt (void)
  * \return   Pointer to \ref PDM_writer object
  *
  */
-void
-PROCF (pdm_writer_create_cf, PDM_WRITER_CREATE_CF)
-(
-const char          *fmt,
-const int           *l_fmt,
-const int           *fmt_fic,
-const int           *topologie,
-const int           *st_reprise,
-const char          *rep_sortie,
-const char          *nom_sortie,
-const int           *l_rep_sortie,
-const int           *l_nom_sortie,
-const PDM_MPI_Fint  *pdm_mpi_comm,
-const int           *acces,
-const double        *prop_noeuds_actifs,
-const char          *options,
-const int           *l_options,
-int                 *id_cs
-ARGF_SUPP_CHAINE
-)
-{
-  char *rep_sortie_c        = PDM_fortran_to_c_string(rep_sortie, *l_rep_sortie);
-  char *nom_sortie_c        = PDM_fortran_to_c_string(nom_sortie, *l_nom_sortie);
-  char *fmt_c        = PDM_fortran_to_c_string(fmt, *l_fmt);
-  char *options_c           = NULL;
-  if (*l_options > 0)
-    options_c = PDM_fortran_to_c_string(options, *l_options);
+// void
+// PROCF (pdm_writer_create_cf, PDM_WRITER_CREATE_CF)
+// (
+// const char          *fmt,
+// const int           *l_fmt,
+// const int           *fmt_fic,
+// const int           *topologie,
+// const int           *st_reprise,
+// const char          *rep_sortie,
+// const char          *nom_sortie,
+// const int           *l_rep_sortie,
+// const int           *l_nom_sortie,
+// const PDM_MPI_Fint  *pdm_mpi_comm,
+// const int           *acces,
+// const double        *prop_noeuds_actifs,
+// const char          *options,
+// const int           *l_options,
+// int                 *id_cs
+// ARGF_SUPP_CHAINE
+// )
+// {
+//   char *rep_sortie_c        = PDM_fortran_to_c_string(rep_sortie, *l_rep_sortie);
+//   char *nom_sortie_c        = PDM_fortran_to_c_string(nom_sortie, *l_nom_sortie);
+//   char *fmt_c        = PDM_fortran_to_c_string(fmt, *l_fmt);
+//   char *options_c           = NULL;
+//   if (*l_options > 0)
+//     options_c = PDM_fortran_to_c_string(options, *l_options);
 
-  const PDM_MPI_Comm pdm_mpi_comm_c = PDM_MPI_Comm_f2c(*pdm_mpi_comm);
+//   const PDM_MPI_Comm pdm_mpi_comm_c = PDM_MPI_Comm_f2c(*pdm_mpi_comm);
 
-  // *id_cs = PDM_writer_create(fmt_c,
-  //                            (PDM_writer_fmt_fic_t)   *fmt_fic,
-  //                            (PDM_writer_topologie_t) *topologie,
-  //                            (PDM_writer_statut_t)    *st_reprise,
-  //                            rep_sortie_c,
-  //                            nom_sortie_c,
-  //                            pdm_mpi_comm_c,
-  //                            (PDM_io_acces_t) *acces,
-  //                            *prop_noeuds_actifs,
-  //                             options_c);
+//   // *id_cs = PDM_writer_create(fmt_c,
+//   //                            (PDM_writer_fmt_fic_t)   *fmt_fic,
+//   //                            (PDM_writer_topologie_t) *topologie,
+//   //                            (PDM_writer_statut_t)    *st_reprise,
+//   //                            rep_sortie_c,
+//   //                            nom_sortie_c,
+//   //                            pdm_mpi_comm_c,
+//   //                            (PDM_io_acces_t) *acces,
+//   //                            *prop_noeuds_actifs,
+//   //                             options_c);
 
-  if (rep_sortie_c != NULL) {
-    free(rep_sortie_c);
-  }
+//   if (rep_sortie_c != NULL) {
+//     free(rep_sortie_c);
+//   }
 
-  if (nom_sortie_c != NULL) {
-    free(nom_sortie_c);
-  }
+//   if (nom_sortie_c != NULL) {
+//     free(nom_sortie_c);
+//   }
 
-  if (options_c != NULL) {
-    free(options_c);
-  }
+//   if (options_c != NULL) {
+//     free(options_c);
+//   }
 
-  if (fmt_c != NULL) {
-    free(fmt_c);
-  }
-}
+//   if (fmt_c != NULL) {
+//     free(fmt_c);
+//   }
+// }
 
 PDM_writer_t *
 PDM_writer_create
@@ -445,14 +540,14 @@ const char                   *options
  * \param [in] cs    Pointer to \ref PDM_writer object
  *
  */
-void
-PROCF (pdm_writer_free, PDM_WRITER_FREE)
-(
-int        *id_cs
-)
-{
-  // PDM_writer_free(*id_cs);
-}
+// void
+// PROCF (pdm_writer_free, PDM_WRITER_FREE)
+// (
+// int        *id_cs
+// )
+// {
+//   // PDM_writer_free(*id_cs);
+// }
 
 void
 PDM_writer_free
@@ -512,16 +607,17 @@ PDM_writer_free
   /* Liberation de la geometrie */
 
   if (cs->geom_tab != NULL) {
-    int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
-    const int *geom_index = PDM_Handles_idx_get(cs->geom_tab);
+    // int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
+    // const int *geom_index = PDM_Handles_idx_get(cs->geom_tab);
 
-    while (n_geom_tab > 0) {
-      PDM_writer_geom_free(cs, geom_index[0]);
-      if (cs->geom_tab == NULL) break;
-      n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
-    }
+    // while (n_geom_tab > 0) {
+    //   PDM_writer_geom_free(cs, geom_index[0]);
+    //   if (cs->geom_tab == NULL) break;
+    //   n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
+    // }
 
-    cs->geom_tab = PDM_Handles_free (cs->geom_tab);
+    // cs->geom_tab = PDM_Handles_free (cs->geom_tab);
+    _pdm_writer_geom_tab_free(cs->geom_tab);
   }
 
   if (cs->name_map != NULL) {
@@ -572,16 +668,16 @@ PDM_writer_free
  * \param [in] physical_time  Temps
  *
  */
-void
-PROCF (pdm_writer_step_beg, PDM_WRITER_STEP_BEG)
-(
-int           *id_cs,
-double        *physical_time
-)
-{
-  // PDM_writer_step_beg(*id_cs,
-  //             *physical_time);
-}
+// void
+// PROCF (pdm_writer_step_beg, PDM_WRITER_STEP_BEG)
+// (
+// int           *id_cs,
+// double        *physical_time
+// )
+// {
+//   // PDM_writer_step_beg(*id_cs,
+//   //             *physical_time);
+// }
 
 void
 PDM_writer_step_beg
@@ -615,14 +711,14 @@ const double   physical_time
  * \param [in] cs             Pointer to \ref PDM_writer object
  *
  */
-void
-PROCF (pdm_writer_step_end, PDM_WRITER_STEP_END)
-(
-int          *id_cs
-)
-{
-  // PDM_writer_step_end(*id_cs);
-}
+// void
+// PROCF (pdm_writer_step_end, PDM_WRITER_STEP_END)
+// (
+// int          *id_cs
+// )
+// {
+//   // PDM_writer_step_end(*id_cs);
+// }
 
 void
 PDM_writer_step_end
@@ -649,13 +745,12 @@ PDM_writer_step_end
 /**
  * \brief Cree une nouvelle geometrie dans l'objet CS (Cedre Sortie)
  *
- * parameters :
  * \param [in]  cs                Pointer to \ref PDM_writer object
  * \param [in]  nom_geom          Nom de l'objet geometrique
  * \param [in]  st_decoup_poly2d  Active le decoupage des polygones
  * \param [in]  st_decoup_poly3d  Active le decoupage des polyedres
  *
- * \return   Identificateur de l'objet geom dans cs
+ * \return   Pointer to \ref PDM_writer_geom object
  *
  */
 void
@@ -684,7 +779,7 @@ ARGF_SUPP_CHAINE
   }
 }
 
-int
+PDM_writer_geom_t *
 PDM_writer_geom_create
 (
 PDM_writer_t               *cs,
@@ -717,14 +812,16 @@ const int                   n_part
   /* Mise a jour du tableau de stockage */
 
   if (cs->geom_tab == NULL) {
-    cs->geom_tab = PDM_Handles_create (4);
+    // cs->geom_tab = PDM_Handles_create (4);
+    cs->geom_tab = _pdm_writer_geom_tab_create(4);
   }
 
   /* Allocation de la structure PDM_writer_geom_t */
 
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) malloc(sizeof(PDM_writer_geom_t));
 
-  int id_geom = PDM_Handles_store (cs->geom_tab, geom);
+  // int id_geom = PDM_Handles_store (cs->geom_tab, geom);
+  _pdm_writer_geom_tab_add(cs->geom_tab, geom);
 
   /* Initialisation de la structure PDM_writer_geom_t */
 
@@ -744,11 +841,11 @@ const int                   n_part
     (fmt_ptr->geom_create_fct) (geom);
   }
 
-  return id_geom;
+  return geom;
 }
 
 //-->>
-int
+PDM_writer_geom_t *
 PDM_writer_geom_create_from_mesh_nodal
 (
 PDM_writer_t              *cs,
@@ -774,14 +871,16 @@ PDM_Mesh_nodal_t          *mesh
   /* Mise a jour du tableau de stockage */
 
   if (cs->geom_tab == NULL) {
-    cs->geom_tab = PDM_Handles_create (4);
+    // cs->geom_tab = PDM_Handles_create (4);
+    cs->geom_tab = _pdm_writer_geom_tab_create(4);
   }
 
   /* Allocation de la structure PDM_writer_geom_t */
 
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) malloc(sizeof(PDM_writer_geom_t));
 
-  int id_geom = PDM_Handles_store (cs->geom_tab, geom);
+  // int id_geom = PDM_Handles_store (cs->geom_tab, geom);
+  _pdm_writer_geom_tab_add(cs->geom_tab, geom);
 
   /* Initialisation de la structure PDM_writer_geom_t */
 
@@ -806,7 +905,7 @@ PDM_Mesh_nodal_t          *mesh
     (fmt_ptr->geom_create_fct) (geom);
   }
 
-  return id_geom;
+  return geom;
 }
 //<<--
 
@@ -815,7 +914,7 @@ PDM_Mesh_nodal_t          *mesh
  * \brief Definition des coordonnees de la partition courante
  *
  * \param [in] cs        Pointer to \ref PDM_writer object
- * \param [in] id_geom   Identificateur de l'objet geometrique
+ * \param [in] geom      Pointer to \ref PDM_writer_geom object
  * \param [in] id_part   Indice de partition
  * \param [in] n_som     Nombre de sommets de la partition
  * \param [in] coords    Coordonnes des sommets
@@ -845,7 +944,7 @@ void
 PDM_writer_geom_coord_set
 (
 PDM_writer_t      *cs,
-const int          id_geom,
+PDM_writer_geom_t *geom,
 const int          id_part,
 const int          n_som,
 const PDM_real_t  *coords,
@@ -860,7 +959,7 @@ const PDM_g_num_t *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -885,7 +984,7 @@ const PDM_g_num_t *numabs
  *
  *
  * \param [in] cs               Pointer to \ref PDM_writer object
- * \param [in] id_geom          Identificateur de l'objet geometrique
+ * \param [in] geom             Pointer to \ref PDM_writer_geom object
  * \param [in] id_part          Indice de partition
  * \param [in] n_som            Nombre de sommets de la partition
  * \param [in] n_som_parent     Nombre de sommets parent
@@ -924,7 +1023,7 @@ void
 PDM_writer_geom_coord_from_parent_set
 (
 PDM_writer_t      *cs,
-const int          id_geom,
+PDM_writer_geom_t *geom,
 const int          id_part,
 const int          n_som,
 const int          n_som_parent,
@@ -942,7 +1041,7 @@ const PDM_g_num_t *numabs_parent
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *)  PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *)  PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -962,7 +1061,7 @@ const PDM_g_num_t *numabs_parent
  * \brief Ajout d'un bloc d'elements d'un type donne
  *
  * \param [in] cs             Pointer to \ref PDM_writer object
- * \param [in] id_geom        Identificateur de l'objet geometrique
+ * \param [in] geom           Pointer to \ref PDM_writer_geom object
  * \param [in] t_elt          Type d'element
  *
  * \return   Identificateur du bloc
@@ -988,7 +1087,7 @@ int
 PDM_writer_geom_bloc_add
 (
 PDM_writer_t                *cs,
-const int                    id_geom,
+PDM_writer_geom_t           *geom,
 PDM_writer_statut_t          st_free_data,
 const PDM_writer_elt_geom_t  t_elt
 )
@@ -1000,7 +1099,7 @@ const PDM_writer_elt_geom_t  t_elt
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1088,7 +1187,7 @@ const PDM_writer_elt_geom_t  t_elt
  *   1 x-------x 2
  *
  * \param [in] cs                  Pointer to \ref PDM_writer object
- * \param [in] id_geom             Identificateur de l'objet geometrique
+ * \param [in] geom                Pointer to \ref PDM_writer_geom object
  * \param [in] id_bloc             Identificateur du bloc
  * \param [in] id_part             Indice de partition
  * \param [in] t_elt               Type d'element
@@ -1122,7 +1221,7 @@ void
 PDM_writer_geom_bloc_std_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const int            n_elt,
@@ -1137,7 +1236,7 @@ const int            n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1154,7 +1253,7 @@ const int            n_elt,
  * \brief Ajout d'un bloc de polygones dans la partition courante
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Indice de partition
  * \param [in] n_elt           Nombre d'elements dans le bloc
  * \param [in] connec_idx      Index dans la table de connectivite (dim = n_elt+1)
@@ -1189,7 +1288,7 @@ void
 PDM_writer_geom_bloc_poly2d_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const PDM_l_num_t    n_elt,
@@ -1205,7 +1304,7 @@ const PDM_l_num_t    n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1222,7 +1321,7 @@ const PDM_l_num_t    n_elt,
  * \brief Ajout d'un bloc de polyedres dans la partition courante
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Indice de partition
  * \param [in] n_elt           Nombre d'elements dans le bloc
  * \param [in] n_face          Nombre de faces de chaque element (dim = n_elt)
@@ -1266,7 +1365,7 @@ void
 PDM_writer_geom_bloc_poly3d_set
 (
 PDM_writer_t        *cs,
-const int            id_geom,
+PDM_writer_geom_t   *geom,
 const int            id_bloc,
 const int            id_part,
 const PDM_l_num_t    n_elt,
@@ -1285,7 +1384,7 @@ const PDM_l_num_t    n_face,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1314,7 +1413,7 @@ const PDM_l_num_t    n_face,
  * des cellules.
  *
  * \param [in]  cs              Pointer to \ref PDM_writer object
- * \param [in]  id_geom         Identificateur de l'objet geometrique
+ * \param [in]  geom            Pointer to \ref PDM_writer_geom object
  * \param [in]  id_part         Identificateur de partition
  * \param [in]  n_cell          Nombre de cellules 3D ajoutées
  * \param [in]  n_face          Nombre de faces décrites
@@ -1359,18 +1458,18 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_cell3d_cellface_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_cell,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_l_num_t  *cell_face_idx,
-PDM_l_num_t  *cell_face_nb,
-PDM_l_num_t  *cell_face,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_cell,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_l_num_t       *cell_face_idx,
+PDM_l_num_t       *cell_face_nb,
+PDM_l_num_t       *cell_face,
+PDM_g_num_t       *numabs
 )
 {
   /* Acces a l'objet de geometrie courant */
@@ -1380,7 +1479,7 @@ PDM_g_num_t  *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1430,8 +1529,8 @@ PDM_g_num_t  *numabs
  * des cellules.
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
- * \param [in] n_cekk          Nombre de cellules 3D ajoutées
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
+ * \param [in] n_cell          Nombre de cellules 3D ajoutées
  * \param [in] n_face          Nombre de faces décrites
  * \param [in] face_som_idx    Index de connectivite faces -> sommets
  * \param [in] face_som        Connectivite faces -> sommets
@@ -1474,18 +1573,18 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_cell2d_cellface_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_cell,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_l_num_t  *cell_face_idx,
-PDM_l_num_t  *cell_face_nb,
-PDM_l_num_t  *cell_face,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_cell,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_l_num_t       *cell_face_idx,
+PDM_l_num_t       *cell_face_nb,
+PDM_l_num_t       *cell_face,
+PDM_g_num_t       *numabs
 )
 {
   /* Acces a l'objet de geometrie courant */
@@ -1495,7 +1594,7 @@ PDM_g_num_t  *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1503,7 +1602,8 @@ PDM_g_num_t  *numabs
   }
 
   PDM_Mesh_nodal_cell2d_celledge_add (geom->mesh_nodal,
-                                      id_part, n_cell,
+                                      id_part,
+                                      n_cell,
                                       n_face,
                                       face_som_idx,
                                       face_som_nb,
@@ -1524,7 +1624,7 @@ PDM_g_num_t  *numabs
  * des cellules.
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] n_elt           Nombre de cellules 3D ajoutées
  * \param [in] n_face          Nombre de faces décrites
  * \param [in] face_som_idx    Index de connectivite faces -> sommets
@@ -1559,14 +1659,14 @@ PDM_g_num_t   *numabs
 void
 PDM_writer_geom_faces_facesom_add
 (
-PDM_writer_t *cs,
-const int     id_geom,
-const int     id_part,
-const int     n_face,
-PDM_l_num_t  *face_som_idx,
-PDM_l_num_t  *face_som_nb,
-PDM_l_num_t  *face_som,
-PDM_g_num_t  *numabs
+PDM_writer_t      *cs,
+PDM_writer_geom_t *geom,
+const int          id_part,
+const int          n_face,
+PDM_l_num_t       *face_som_idx,
+PDM_l_num_t       *face_som_nb,
+PDM_l_num_t       *face_som,
+PDM_g_num_t       *numabs
 )
 {
   /* Acces a l'objet de geometrie courant */
@@ -1576,7 +1676,7 @@ PDM_g_num_t  *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1596,7 +1696,7 @@ PDM_g_num_t  *numabs
  * \brief Ecriture du maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 void
@@ -1613,9 +1713,9 @@ int           *id_geom
 void
 PDM_writer_geom_write
 (
-PDM_writer_t *cs,
-const int     id_geom
-)
+ PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
+ )
 {
 
     /* Acces a l'objet de geometrie courant */
@@ -1625,7 +1725,7 @@ const int     id_geom
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
@@ -1664,7 +1764,7 @@ const int     id_geom
  * \brief Liberation des donnees decrivant le maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 void
@@ -1682,19 +1782,20 @@ int           *id_geom
 void
 PDM_writer_geom_free
 (
- PDM_writer_t *cs,
- const int     id_geom
+ // PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
 )
 {
-  PDM_writer_geom_data_free(cs,
-                            id_geom);
+  // PDM_writer_geom_data_free(cs,
+  //                           geom);
+  PDM_writer_geom_data_free(geom);
 
   // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  // if (cs == NULL) {
+  //   PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  // }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom != NULL) {
 
@@ -1706,7 +1807,7 @@ PDM_writer_geom_free
 
     /* Appel de la fonction complementaire propre au format */
 
-    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, geom->_cs->fmt_id);
 
     if (fmt_ptr->geom_free_fct != NULL) {
       (fmt_ptr->geom_free_fct) (geom);
@@ -1714,13 +1815,15 @@ PDM_writer_geom_free
 
     free(geom);
 
-    PDM_Handles_handle_free (cs->geom_tab, id_geom, PDM_FALSE);
+    // PDM_Handles_handle_free (cs->geom_tab, id_geom, PDM_FALSE);
 
-    int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
+    // int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
+    // int n_geom_tab = cs->geom_tab->n_geom;
 
-    if (n_geom_tab == 0) {
-      cs->geom_tab = PDM_Handles_free (cs->geom_tab);
-    }
+    // if (n_geom_tab == 0) {
+    //   // cs->geom_tab = PDM_Handles_free (cs->geom_tab);
+    //   _pdm_writer_geom_tab_free(cs->geom_tab);
+    // }
   }
 }
 
@@ -1730,7 +1833,7 @@ PDM_writer_geom_free
  * les indirections sur les numérotation absolues sont conservées
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 void
@@ -1747,18 +1850,18 @@ int           *id_geom
 void
 PDM_writer_geom_data_free
 (
- PDM_writer_t *cs,
- const int     id_geom
+ // PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
 )
 {
   /* Acces a l'objet de geometrie courant */
 
   // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  // if (cs == NULL) {
+  //   PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  // }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom != NULL) {
 
@@ -1842,7 +1945,6 @@ const char   *private_name
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
  * \param [in] st_dep_temps    Indique si la variable est dependante du temps
- * \param [in] id_geom         Identificateur de l'objet geometrique
  * \param [in] dim             Dimension de la variable
  * \param [in] loc             Localisation de la variable
  * \param [in] nom_var         Nom de la variable
@@ -1999,7 +2101,7 @@ const int     id_var
  * elements doivent être définies suivant l'ordre de définition des blocs !
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  * \param [in] id_part         Identificateur de la partition dans l'objet geometrique
  * \param [in] id_var          Identificateur de la variable mise à jour
  * \param [in] val             Valeurs
@@ -2025,12 +2127,12 @@ PDM_real_t   *val
 void
 PDM_writer_var_set
 (
-PDM_writer_t     *cs,
-const int         id_var,
-const int         id_geom,
-const int         id_part,
-const PDM_real_t *val
-)
+ PDM_writer_t      *cs,
+ const int          id_var,
+ PDM_writer_geom_t *geom,
+ const int          id_part,
+ const PDM_real_t  *val
+ )
 {
 
   /* Acces a l'objet de geometrie courant */
@@ -2046,19 +2148,20 @@ const PDM_real_t *val
     PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
     abort();
   }
 
-  const int *ind = PDM_Handles_idx_get (cs->geom_tab);
-  const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+  // const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+  // const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+  const int n_ind = cs->geom_tab->n_geom;
 
   int ind_max = 0;
   for (int i = 0; i < n_ind; i++) {
-    ind_max = PDM_MAX (ind_max, ind[i]);
+    // ind_max = PDM_MAX (ind_max, ind[i]);
   }
 
   if (var->_val == NULL) {
@@ -2361,7 +2464,7 @@ PDM_writer_fmt_free
  * \brief Réinitialisation des donnees decrivant le maillage courant
  *
  * \param [in] cs              Pointer to \ref PDM_writer object
- * \param [in] id_geom         Identificateur de l'objet geometrique
+ * \param [in] geom            Pointer to \ref PDM_writer_geom object
  *
  */
 void
@@ -2378,8 +2481,8 @@ int           *id_geom
 void
 PDM_writer_geom_data_reset
 (
- PDM_writer_t *cs,
- const int     id_geom
+ PDM_writer_t      *cs,
+ PDM_writer_geom_t *geom
  )
 {
   /* Acces a l'objet de geometrie courant */
@@ -2389,7 +2492,7 @@ PDM_writer_geom_data_reset
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+  // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
   if (geom != NULL) {
 

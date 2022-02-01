@@ -506,7 +506,7 @@ _export_ini_mesh
   int id_var_num_part;
   int id_var_coo_x;
   int id_var_coo_xyz;
-  int id_geom;
+  PDM_writer_geom_t *id_geom = NULL;
 
 
   id_var_num_part = PDM_writer_var_create (id_cs,
@@ -830,11 +830,9 @@ _export_ini_mesh
   free (nsom_part);
 
   PDM_writer_step_end (id_cs);
-  PDM_writer_geom_data_free (id_cs,
-                             id_geom);
+  PDM_writer_geom_data_free (id_geom);
 
-  PDM_writer_geom_free (id_cs,
-                        id_geom);
+  PDM_writer_geom_free (id_geom);
   PDM_writer_free (id_cs);
 
   free (debPartProcs);
