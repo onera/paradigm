@@ -495,17 +495,17 @@ int main(int argc, char *argv[])
 
     if (i_rank==0) PDM_printf("Write variables\n");
     PDM_writer_var_write(id_cs, id_var_cell_id    );
-    PDM_writer_var_free (id_cs, id_var_cell_id    );
+    // PDM_writer_var_free (id_cs, id_var_cell_id    );
     PDM_writer_var_write(id_cs, id_var_gpart_id   );
-    PDM_writer_var_free (id_cs, id_var_gpart_id   );
+    // PDM_writer_var_free (id_cs, id_var_gpart_id   );
     PDM_writer_var_write(id_cs, id_var_lpart_id   );
-    PDM_writer_var_free (id_cs, id_var_lpart_id   );
+    // PDM_writer_var_free (id_cs, id_var_lpart_id   );
     PDM_writer_var_write(id_cs, id_var_proc_id    );
-    PDM_writer_var_free (id_cs, id_var_proc_id    );
+    // PDM_writer_var_free (id_cs, id_var_proc_id    );
     PDM_writer_var_write(id_cs, id_var_opp_proc_id);
-    PDM_writer_var_free (id_cs, id_var_opp_proc_id);
+    // PDM_writer_var_free (id_cs, id_var_opp_proc_id);
     PDM_writer_var_write(id_cs, id_var_opp_part_id);
-    PDM_writer_var_free (id_cs, id_var_opp_part_id);
+    // PDM_writer_var_free (id_cs, id_var_opp_part_id);
 
     PDM_writer_step_end(id_cs);
 

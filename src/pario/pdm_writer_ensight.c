@@ -754,11 +754,13 @@ _vars_close(PDM_writer_t *cs)
   PDM_MPI_Comm_rank(cs->pdm_mpi_comm, &rank);
 
   if (cs->var_tab != NULL) {
-    const int n_ind = PDM_Handles_n_get (cs->var_tab);
-    const int *ind  = PDM_Handles_idx_get (cs->var_tab);
+    // const int n_ind = PDM_Handles_n_get (cs->var_tab);
+    // const int *ind  = PDM_Handles_idx_get (cs->var_tab);
+    const int n_ind = cs->var_tab->n_var;
 
     for (int i = 0; i < n_ind; i++) {
-      PDM_writer_var_t *var = (PDM_writer_var_t * ) PDM_Handles_get (cs->var_tab, ind[i]);
+      // PDM_writer_var_t *var = (PDM_writer_var_t * ) PDM_Handles_get (cs->var_tab, ind[i]);
+      PDM_writer_var_t *var = cs->var_tab->var[i];
       if (var != NULL) {
         PDM_writer_var_ensight_t *_var_ensight = (PDM_writer_var_ensight_t *) var->var_fmt;
         _var_close(_var_ensight, rank);
@@ -1605,14 +1607,11 @@ PDM_writer_ensight_var_write
 
   /* Boucle sur les géométries */
 
-  // const int *ind = PDM_Handles_idx_get (cs->geom_tab);
-  // const int n_ind = PDM_Handles_n_get (cs->geom_tab);
   const int n_ind = cs->geom_tab->n_geom;
 
   for (int i1 = 0; i1 < n_ind; i1++) {
-    int igeom = i1;//ind[i1];
+    int igeom = i1;
 
-    // PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, igeom);
     PDM_writer_geom_t *geom = cs->geom_tab->geom[igeom];
 
     const int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);

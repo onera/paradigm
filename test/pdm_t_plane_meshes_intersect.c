@@ -1019,26 +1019,26 @@ _export_ini_mesh
     PDM_writer_var_write (id_cs[imesh],
                           id_var_field[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_field[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_field[imesh]);
 
     PDM_writer_var_write (id_cs[imesh],
                           id_var_num_part[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_num_part[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_num_part[imesh]);
 
     PDM_writer_var_write (id_cs[imesh],
                           id_var_coo_x[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_coo_x[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_coo_x[imesh]);
 
     PDM_writer_var_write (id_cs[imesh],
                           id_var_coo_xyz[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_coo_xyz[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_coo_xyz[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       free (val_num_part[ipart]);
@@ -1387,20 +1387,20 @@ _export_ol_mesh
     PDM_writer_var_write (id_cs[imesh],
                           id_var_field[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_num_part[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_num_part[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_match[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_match[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_cell_match[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_cell_match[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_origin[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_origin[imesh]);
 
-    PDM_writer_var_free (id_cs[imesh],
-                         id_var_field[imesh]);
+    // PDM_writer_var_free (id_cs[imesh],
+    //                      id_var_field[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       free (val_num_part[ipart]);

@@ -977,10 +977,10 @@ int main(int argc, char *argv[])
     PDM_writer_var_write (id_cs,
                           id_var_closest);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_dist);
-    PDM_writer_var_free (id_cs,
-                         id_var_closest);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_dist);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_closest);
 
     PDM_writer_step_end (id_cs);
 

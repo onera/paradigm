@@ -903,20 +903,20 @@ _export_ini_mesh
     PDM_writer_var_write (id_cs,
                           id_var_num_part);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_num_part);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_num_part);
 
     PDM_writer_var_write (id_cs,
                           id_var_coo_x);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_coo_x);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_coo_x);
 
     PDM_writer_var_write (id_cs,
                           id_var_coo_xyz);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_coo_xyz);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_coo_xyz);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       free (val_num_part[ipart]);
