@@ -77,14 +77,16 @@ static PDM_Handles_t *cs_tab = NULL;
  * Stockage des objets cs
  *----------------------------------------------------------------------------*/
 
-static PDM_Handles_t *fmt_tab = NULL;
+// static PDM_Handles_t *fmt_tab = NULL;
+static PDM_writer_fmt_t **fmt_tab = NULL;
 
 /*----------------------------------------------------------------------------
  * Nombre d'objets cs stockes dans cs_tab
  *----------------------------------------------------------------------------*/
 
 static const int n_intern_fmt = 1;
-
+static       int s_fmt_tab    = 0;
+static       int n_fmt_tab    = 0;
 
 /*============================================================================
  * Definition des fonctions privees
@@ -229,7 +231,10 @@ _load_intern_fmt (void)
     return;
   }
 
-  fmt_tab = PDM_Handles_create (2 * n_intern_fmt);
+  // fmt_tab = PDM_Handles_create (2 * n_intern_fmt);
+  s_fmt_tab = 2 * n_intern_fmt;
+  n_fmt_tab = 0;
+  fmt_tab = (PDM_writer_fmt_t **) malloc (sizeof(PDM_writer_fmt_t *) * s_fmt_tab);
 
   /* Ensight */
 
@@ -247,7 +252,8 @@ _load_intern_fmt (void)
   fmt->var_write_fct    = PDM_writer_ensight_var_write;
   fmt->var_free_fct     = PDM_writer_ensight_var_free;
 
-  PDM_Handles_store (fmt_tab, fmt);
+  // PDM_Handles_store (fmt_tab, fmt);
+  fmt_tab[n_fmt_tab++] = fmt;
 }
 
 /*============================================================================
@@ -360,10 +366,11 @@ const char          *options
 
   int fmt_id = -1;
 
-  int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
+  // int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
 
   for (int i = 0; i < n_fmt_tab; i++) {
-    PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, i);
+    // PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, i);
+    PDM_writer_fmt_t *fmt_ptr = fmt_tab[i];
     if (!strcmp(fmt, fmt_ptr->name)) {
       fmt_id = i;
       break;
@@ -431,7 +438,8 @@ const char          *options
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->create_fct != NULL) {
     (fmt_ptr->create_fct) (cs);
@@ -476,7 +484,8 @@ const int   id_cs
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->free_fct != NULL) {
     (fmt_ptr->free_fct) (cs);
@@ -562,7 +571,7 @@ const int   id_cs
   if (n_cs == 0) {
 
     cs_tab = PDM_Handles_free (cs_tab);
-    int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
+    // int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
     if (n_intern_fmt == n_fmt_tab) {
       PDM_writer_fmt_free();
     }
@@ -609,7 +618,8 @@ const double   physical_time
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->beg_step_fct != NULL) {
     (fmt_ptr->beg_step_fct) (cs);
@@ -649,7 +659,8 @@ const int     id_cs
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->end_step_fct != NULL) {
     (fmt_ptr->end_step_fct) (cs);
@@ -751,7 +762,8 @@ const int               n_part
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->geom_create_fct != NULL) {
     (fmt_ptr->geom_create_fct) (geom);
@@ -814,7 +826,8 @@ PDM_Mesh_nodal_t          *mesh
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->geom_create_fct != NULL) {
     (fmt_ptr->geom_create_fct) (geom);
@@ -1683,7 +1696,8 @@ const int            id_geom
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->geom_write_fct != NULL) {
     (fmt_ptr->geom_write_fct) (geom);
@@ -1742,7 +1756,8 @@ const int      id_geom
 
     /* Appel de la fonction complementaire propre au format */
 
-    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+    // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+    PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
     if (fmt_ptr->geom_free_fct != NULL) {
       (fmt_ptr->geom_free_fct) (geom);
@@ -1976,7 +1991,8 @@ const char        *nom_var
 
   /* Appel de la fonction complementaire propre au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->var_create_fct != NULL) {
     (fmt_ptr->var_create_fct) (var);
@@ -2032,7 +2048,8 @@ const int        id_var
 
   /* Ecriture au format */
 
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
   if (fmt_ptr->var_write_fct != NULL) {
     (fmt_ptr->var_write_fct) (var);
@@ -2297,7 +2314,8 @@ const int    id_var
 
       /* Lib�ration sp�cifique au format */
 
-      PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+      // PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+      PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
 
       if (fmt_ptr->var_free_fct != NULL) {
         (fmt_ptr->var_free_fct) (var);
@@ -2361,9 +2379,14 @@ PDM_writer_fmt_add
     abort ();
   }
 
-  PDM_writer_fmt_t *fmt_ptr = malloc (sizeof(PDM_writer_fmt_t));
+  if (n_fmt_tab >= s_fmt_tab) {
+    s_fmt_tab = PDM_MAX (2*s_fmt_tab, n_fmt_tab+1);
+    fmt_tab = realloc(fmt_tab, sizeof(PDM_writer_fmt_t *) * s_fmt_tab);
+  }
 
-  PDM_Handles_store  (fmt_tab, fmt_ptr);
+  PDM_writer_fmt_t *fmt_ptr = malloc (sizeof(PDM_writer_fmt_t));
+  fmt_tab[n_fmt_tab++] = fmt_ptr;
+  // PDM_Handles_store  (fmt_tab, fmt_ptr);
 
   fmt_ptr->name            = malloc(sizeof(char) * (strlen(name) + 1));
   strcpy (fmt_ptr->name, name);
@@ -2395,18 +2418,29 @@ PDM_writer_fmt_free
 {
   if (fmt_tab != NULL) {
 
-    const int *index =  PDM_Handles_idx_get (fmt_tab);
-    int n_fmt = PDM_Handles_n_get (fmt_tab);
+    // const int *index =  PDM_Handles_idx_get (fmt_tab);
+    // int n_fmt = PDM_Handles_n_get (fmt_tab);
 
-    while (n_fmt > 0) {
-      int idx = index[0];
-      PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, idx);
-      free (fmt_ptr->name);
-      PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
-      n_fmt = PDM_Handles_n_get (fmt_tab);
+    // while (n_fmt > 0) {
+    //   int idx = index[0];
+    //   PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, idx);
+    //   free (fmt_ptr->name);
+    //   PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
+    //   n_fmt = PDM_Handles_n_get (fmt_tab);
+    // }
+    for (int i = 0; i < n_fmt_tab; i++) {
+      if (fmt_tab[i] != NULL) {
+        free(fmt_tab[i]->name);
+        free(fmt_tab[i]);
+        fmt_tab[i] = NULL;
+      }
     }
 
-    fmt_tab = PDM_Handles_free (fmt_tab);
+    n_fmt_tab = 0;
+
+    // fmt_tab = PDM_Handles_free (fmt_tab);
+    free(fmt_tab);
+    fmt_tab = NULL;
 
   }
 }
