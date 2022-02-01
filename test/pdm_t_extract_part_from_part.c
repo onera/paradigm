@@ -791,6 +791,9 @@ int main(int argc, char *argv[])
 
     PDM_part_to_part_iexch_wait (ptp, request_exch);
 
+    free (_equi_extract_cell_face);
+    _equi_extract_cell_face = NULL;
+
     for (int i = 0; i < n_part_zones; i++) {
       free (part1_stride[i]);
     }
@@ -806,10 +809,10 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(equi_extract_cell_face, cst_stride * dn_cell_equi, "equi_extract_cell_face : ");
   }
 
-  PDM_MPI_Barrier(PDM_MPI_COMM_WORLD);
-  printf("arret provisoire\n");
+  // PDM_MPI_Barrier(PDM_MPI_COMM_WORLD);
+  printf("-- 1\n");
   fflush(stdout);
-  abort();
+  // abort();
 
   /*
    * Exchange cell_center to post-treated
@@ -836,6 +839,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_issend_wait(ptp, send_request);
   PDM_part_to_part_irecv_wait (ptp, recv_request);
 
+  printf("-- 2\n");
+  fflush(stdout);
+
   /*
    * Cell center post with vtk
    */
@@ -846,6 +852,8 @@ int main(int argc, char *argv[])
                             equi_extract_cell_center,
                             NULL, NULL);
 
+  printf("-- 3\n");
+  fflush(stdout);
 
   /*
    * Prepare next step by descending connectivtity -> See / factorize _pconnectivity_with_local_num
@@ -873,6 +881,10 @@ int main(int argc, char *argv[])
   /*
    * At this stage we have the face_ln_to_gn (parent) and we need to create the child
    */
+
+  printf("-- 4\n");
+  fflush(stdout);
+
   PDM_gen_gnum_t* gnum_extract_face = PDM_gnum_create(3,
                                                       1, // n_part
                                                       PDM_FALSE,
@@ -895,6 +907,9 @@ int main(int argc, char *argv[])
   for(int i = 0; i < n_extract_face; ++i) {
     equi_parent_face_idx[i+1] = equi_parent_face_idx[i] + 1;
   }
+
+  printf("-- 5\n");
+  fflush(stdout);
 
   /*
    * Redo the same but with face_vtx
@@ -949,6 +964,9 @@ int main(int argc, char *argv[])
     // PDM_log_trace_array_long(send_face_vtx[i_part], 4 * gnum1_come_from_idx[i_part][n_ref_face[i_part]], "send_face_vtx      : ");
   }
 
+  printf("-- 6\n");
+  fflush(stdout);
+
   PDM_part_to_part_reverse_issend(ptp_face,
                                   sizeof(PDM_g_num_t),
                                   4,
@@ -971,6 +989,9 @@ int main(int argc, char *argv[])
 
   PDM_part_to_part_reverse_issend_wait(ptp_face, send_request);
   PDM_part_to_part_reverse_irecv_wait (ptp_face, recv_request);
+
+  printf("-- 7\n");
+  fflush(stdout);
 
   // PDM_log_trace_array_long(equi_extract_face_vtx, 4 * n_extract_face, "equi_extract_face_vtx : ");
 
@@ -1069,6 +1090,9 @@ int main(int argc, char *argv[])
     equi_parent_vtx_idx[i+1] = equi_parent_vtx_idx[i] + 1;
   }
 
+  printf("-- 8\n");
+  fflush(stdout);
+
   PDM_part_to_part_t* ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) &extract_vtx_ln_to_gn,
                                                          &n_extract_vtx,
                                                          1,
@@ -1137,6 +1161,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_reverse_irecv_wait (ptp_vtx, recv_request);
 
   PDM_part_to_part_free(ptp_vtx);
+
+  printf("-- 9\n");
+  fflush(stdout);
 
 
   // PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
@@ -1231,5 +1258,9 @@ int main(int argc, char *argv[])
   PDM_dmesh_free(dm);
 
   PDM_MPI_Finalize();
+
+  printf("-- Fin test\n");
+  fflush(stdout);
+
   return 0;
 }
