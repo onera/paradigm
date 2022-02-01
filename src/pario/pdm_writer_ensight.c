@@ -754,12 +754,9 @@ _vars_close(PDM_writer_t *cs)
   PDM_MPI_Comm_rank(cs->pdm_mpi_comm, &rank);
 
   if (cs->var_tab != NULL) {
-    // const int n_ind = PDM_Handles_n_get (cs->var_tab);
-    // const int *ind  = PDM_Handles_idx_get (cs->var_tab);
     const int n_ind = cs->var_tab->n_var;
 
     for (int i = 0; i < n_ind; i++) {
-      // PDM_writer_var_t *var = (PDM_writer_var_t * ) PDM_Handles_get (cs->var_tab, ind[i]);
       PDM_writer_var_t *var = cs->var_tab->var[i];
       if (var != NULL) {
         PDM_writer_var_ensight_t *_var_ensight = (PDM_writer_var_ensight_t *) var->var_fmt;

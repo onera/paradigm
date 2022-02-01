@@ -625,16 +625,6 @@ const int   id_cs
   /* Liberation des variables */
 
   if (cs->var_tab != NULL) {
-    // int n_var_tab = PDM_Handles_n_get (cs->var_tab);
-    // const int *var_index = PDM_Handles_idx_get(cs->var_tab);
-
-    // while (n_var_tab > 0) {
-    //   PDM_writer_var_free (id_cs, var_index[0]);
-    //   if (cs->var_tab == NULL) break;
-    //   n_var_tab = PDM_Handles_n_get (cs->var_tab);
-    // }
-
-    // cs->var_tab = PDM_Handles_free (cs->var_tab);
     if (cs->var_tab->var != NULL) {
       for (int i = 0; i < cs->var_tab->n_var; i++) {
         if (cs->var_tab->var[i] != NULL) {
@@ -2150,14 +2140,12 @@ const char        *nom_var
   /* Mise a jour du tableau de stockage */
 
   if (cs->var_tab == NULL) {
-    // cs->var_tab = PDM_Handles_create(4);
     cs->var_tab = _pdm_writer_var_tab_create(4);
   }
 
   /* Allocation de la structure PDM_writer_var_t */
 
   PDM_writer_var_t *var = (PDM_writer_var_t *) malloc(sizeof(PDM_writer_var_t));
-  // int id_var = PDM_Handles_store (cs->var_tab, var);
   int id_var = _pdm_writer_var_tab_add(cs->var_tab, var);
 
   /* Initialisation de la structure PDM_writer_var_t */
@@ -2242,7 +2230,6 @@ const int        id_var
     abort();
   }
 
-  // PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
   if (var == NULL) {
@@ -2313,7 +2300,6 @@ const PDM_real_t *val
     abort();
   }
 
-  // PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
   if (var == NULL) {
@@ -2429,7 +2415,6 @@ const int    id_var
     abort();
   }
 
-  // PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
   if (var != NULL) {
@@ -2507,7 +2492,6 @@ const int    id_var
     abort();
   }
 
-  // PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
     if (var != NULL) {
@@ -2538,12 +2522,6 @@ const int    id_var
 
       free (var);
       var = NULL;
-      // PDM_Handles_handle_free (cs->var_tab, id_var, PDM_FALSE);
-
-      // int n_var = PDM_Handles_n_get (cs->var_tab);
-      // if (n_var == 0) {
-      //   cs->var_tab = PDM_Handles_free (cs->var_tab);
-      // }
     }
   }
 }
