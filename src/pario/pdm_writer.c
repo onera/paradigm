@@ -68,13 +68,7 @@ typedef enum {
  *============================================================================*/
 
 /*----------------------------------------------------------------------------
- * Stockage des objets cs
- *----------------------------------------------------------------------------*/
-
-// static PDM_Handles_t *cs_tab = NULL;
-
-/*----------------------------------------------------------------------------
- * Stockage des objets cs
+ * Stockage des formats
  *----------------------------------------------------------------------------*/
 
 static PDM_writer_fmt_t **fmt_tab = NULL;
@@ -506,9 +500,6 @@ const char                   *options
 
   PDM_io_mkdir(rep_sortie);
 
-  // if (cs_tab == NULL) {
-  //   cs_tab = PDM_Handles_create (4);
-  // }
 
   /* Creation du repertoire de sortie si non cree */
 
@@ -522,7 +513,6 @@ const char                   *options
 
   PDM_writer_t *cs = (PDM_writer_t *) malloc(sizeof(PDM_writer_t));
 
-  // int id_cs = PDM_Handles_store (cs_tab, (void *) cs);
 
   /* Initialisation de la structure PDM_writer_t */
 
@@ -589,11 +579,6 @@ PDM_writer_free
  PDM_writer_t *cs
 )
 {
-
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get(cs_tab, id_cs);
-
   if (cs == NULL) {
     return;
   }
@@ -685,19 +670,6 @@ PDM_writer_free
 
   free(cs);
   cs = NULL;
-
-  // PDM_Handles_handle_free (cs_tab, id_cs, PDM_FALSE);
-  //
-  // int n_cs = PDM_Handles_n_get (cs_tab);
-  //
-  // if (n_cs == 0) {
-  //
-  //   cs_tab = PDM_Handles_free (cs_tab);
-  //   if (n_intern_fmt == n_fmt_tab) {
-  //     PDM_writer_fmt_free();
-  //   }
-  // }
-
 }
 
 
@@ -725,9 +697,6 @@ PDM_writer_step_beg
  const double   physical_time
 )
 {
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -765,9 +734,6 @@ PDM_writer_step_end
  PDM_writer_t  *cs
 )
 {
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -842,9 +808,6 @@ PDM_writer_geom_create
     abort();
   }
 
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -901,9 +864,6 @@ PDM_writer_geom_create_from_mesh_nodal
     abort();
   }
 
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -989,10 +949,6 @@ PDM_writer_geom_coord_set
  const PDM_g_num_t *numabs
 )
 {
-
-  /* Acces aux sommets de la partition */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1075,10 +1031,6 @@ PDM_writer_geom_coord_from_parent_set
  const PDM_g_num_t *numabs_parent
 )
 {
-
-  /* Acces aux sommets de la partition */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1138,9 +1090,6 @@ PDM_writer_geom_bloc_add
  const PDM_writer_elt_geom_t  t_elt
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1279,9 +1228,6 @@ PDM_writer_geom_bloc_std_set
  PDM_g_num_t   *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1351,9 +1297,6 @@ const PDM_l_num_t    n_elt,
       PDM_g_num_t   *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1435,9 +1378,6 @@ const PDM_l_num_t    n_face,
       PDM_g_num_t   *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1534,9 +1474,6 @@ PDM_writer_geom_cell3d_cellface_add
  PDM_g_num_t  *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1653,9 +1590,6 @@ PDM_writer_geom_cell2d_cellface_add
  PDM_g_num_t  *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1738,9 +1672,6 @@ PDM_writer_geom_faces_facesom_add
  PDM_g_num_t  *numabs
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1790,10 +1721,6 @@ PDM_writer_geom_write
  const int     id_geom
  )
 {
-
-    /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1866,7 +1793,6 @@ PDM_writer_geom_free
   PDM_writer_geom_data_free(cs,
                             id_geom);
 
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -1935,9 +1861,6 @@ PDM_writer_geom_data_free
  const int     id_geom
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2009,9 +1932,6 @@ PDM_writer_name_map_add
  const char   *private_name
 )
 {
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2083,9 +2003,6 @@ PDM_writer_var_create
  const char                 *nom_var
 )
 {
-  /* Recherche de l'objet cs courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2165,10 +2082,6 @@ PDM_writer_var_write
  const int     id_var
 )
 {
-
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2235,10 +2148,6 @@ PDM_writer_var_set
  const PDM_real_t *val
 )
 {
-
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2348,9 +2257,6 @@ PDM_writer_var_data_free
  const int     id_var
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2417,8 +2323,6 @@ PDM_writer_var_free
  const int     id_var
  )
 {
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
@@ -2594,9 +2498,6 @@ PDM_writer_geom_data_reset
  const int     id_geom
 )
 {
-  /* Acces a l'objet de geometrie courant */
-
-  // PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
