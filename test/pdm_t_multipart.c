@@ -65,7 +65,7 @@ _read_args(int            argc,
            PDM_g_num_t  *n_vtx_seg,
            int           *n_part,
            int           *post,
-	         int           *method
+           int           *method
            )
 {
   int i = 1;
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
   if (post == 1)
   {
     /* Prepare writer */
-    PDM_writer_geom_t *geom_ids = (PDM_writer_geom_t *) malloc(n_zone * sizeof(PDM_writer_geom_t));
+    int *geom_ids = (int *) malloc(n_zone * sizeof(int));
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_ASCII,
                                             PDM_WRITER_TOPO_CONSTANTE,
@@ -495,24 +495,24 @@ int main(int argc, char *argv[])
 
     if (i_rank==0) PDM_printf("Write variables\n");
     PDM_writer_var_write(id_cs, id_var_cell_id    );
-    PDM_writer_var_free (id_cs, id_var_cell_id    );
+    // PDM_writer_var_free (id_cs, id_var_cell_id    );
     PDM_writer_var_write(id_cs, id_var_gpart_id   );
-    PDM_writer_var_free (id_cs, id_var_gpart_id   );
+    // PDM_writer_var_free (id_cs, id_var_gpart_id   );
     PDM_writer_var_write(id_cs, id_var_lpart_id   );
-    PDM_writer_var_free (id_cs, id_var_lpart_id   );
+    // PDM_writer_var_free (id_cs, id_var_lpart_id   );
     PDM_writer_var_write(id_cs, id_var_proc_id    );
-    PDM_writer_var_free (id_cs, id_var_proc_id    );
+    // PDM_writer_var_free (id_cs, id_var_proc_id    );
     PDM_writer_var_write(id_cs, id_var_opp_proc_id);
-    PDM_writer_var_free (id_cs, id_var_opp_proc_id);
+    // PDM_writer_var_free (id_cs, id_var_opp_proc_id);
     PDM_writer_var_write(id_cs, id_var_opp_part_id);
-    PDM_writer_var_free (id_cs, id_var_opp_part_id);
+    // PDM_writer_var_free (id_cs, id_var_opp_part_id);
 
     PDM_writer_step_end(id_cs);
 
-    for (int i_zone = 0; i_zone < n_zone; i_zone++){
-      PDM_writer_geom_data_free(geom_ids[i_zone]);
-      PDM_writer_geom_free(geom_ids[i_zone]);
-    }
+    // for (int i_zone = 0; i_zone < n_zone; i_zone++){
+    //   PDM_writer_geom_data_free(id_cs, geom_ids[i_zone]);
+    //   PDM_writer_geom_free(id_cs, geom_ids[i_zone]);
+    // }
     free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){

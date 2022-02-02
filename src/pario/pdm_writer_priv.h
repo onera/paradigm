@@ -96,10 +96,18 @@ struct _PDM_writer_var_t{
 } ;
 
 
+typedef struct _PDM_writer_var_tab_t {
+
+  int                 n_var;
+  int                 s_var;
+  PDM_writer_var_t **var;
+
+} _PDM_writer_var_tab_t;
+
+
 /*----------------------------------------------------------------------------
  * Type Cedre sortie
  *----------------------------------------------------------------------------*/
-
 
 struct _PDM_writer_t {
 
@@ -111,8 +119,7 @@ struct _PDM_writer_t {
   char                   *nom_sortie;         /* Nom de la sortie */
   PDM_MPI_Comm            pdm_mpi_comm;       /* Communicateur MPI */
   void                   *sortie_fmt;         /* Description propre au format */
-  PDM_Handles_t          *var_tab;            /* Tableau des variables */
-  // PDM_Handles_t          *geom_tab;           /* Tableau des geometries */
+  _PDM_writer_var_tab_t  *var_tab;            /* Tableau des variables */
   _PDM_writer_geom_tab_t *geom_tab;           /* Tableau des geometries */
   double                  physical_time;      /* Temps physique de la simulation */
   PDM_io_acces_t          acces;              /* Type d'acces au fichier (MPIIIO,...) */

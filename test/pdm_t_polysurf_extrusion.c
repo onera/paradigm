@@ -430,11 +430,11 @@ int main(int argc, char *argv[])
                                    1.,
                                    NULL);
 
-    PDM_writer_geom_t *id_geom = PDM_writer_geom_create (id_cs,
-                                                         "mesh",
-                                                         PDM_WRITER_OFF,
-                                                         PDM_WRITER_OFF,
-                                                         n_part);
+    int id_geom = PDM_writer_geom_create (id_cs,
+                                          "mesh",
+                                          PDM_WRITER_OFF,
+                                          PDM_WRITER_OFF,
+                                          n_part);
 
     // Cell local id
     int id_var_cell_g_num = PDM_writer_var_create (id_cs,
@@ -684,12 +684,12 @@ int main(int argc, char *argv[])
     PDM_writer_var_write (id_cs,
                           id_var_vtx_g_num);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_cell_g_num);
-    PDM_writer_var_free (id_cs,
-                         id_var_num_part);
-    PDM_writer_var_free (id_cs,
-                         id_var_vtx_g_num);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_cell_g_num);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_num_part);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_vtx_g_num);
 
     for (int nstep = 0; nstep < 10; nstep++) {
 
@@ -743,13 +743,13 @@ int main(int argc, char *argv[])
     free (cell_face_n);
     free (face_vtx_n);
 
-    PDM_writer_var_free (id_cs,
-                         id_var_coo_x);
-    PDM_writer_var_free (id_cs,
-                         id_var_coo_xyz);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_coo_x);
+    // PDM_writer_var_free (id_cs,
+    //                      id_var_coo_xyz);
 
-    PDM_writer_geom_data_free (id_geom);
-    PDM_writer_geom_free (id_geom);
+    // PDM_writer_geom_data_free (id_cs, id_geom);
+    // PDM_writer_geom_free (id_cs, id_geom);
     PDM_writer_free (id_cs);
   }
 
