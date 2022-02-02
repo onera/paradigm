@@ -78,26 +78,181 @@ module pdm_io
   integer(kind = pdm_l_num_s), parameter :: pdm_io_backup_on  = 0
   integer(kind = pdm_l_num_s), parameter :: pdm_io_backup_off = 1
 
-  !
-  ! Interfaces publiques
-  ! --------------------
-
-  interface pdm_io_open ; module procedure &
-    pdm_io_open_
+  interface
   end interface
-
-  interface pdm_io_fmt_donnee_set ; module procedure &
-    pdm_io_fmt_donnee_set_
-  end interface
-
-  !
-  ! Fonctions Privees
-  ! -----------------
-
-  private :: pdm_io_open_
-  private :: pdm_io_fmt_donnee_set_
 
 contains
+
+
+!>
+!! \brief Ouverture d'un fichier pour acces parallele
+!!
+!! \param [in]  nom             Nom du fichier
+!! \param [in]  fmt             Fichier text ou binaire
+!! \param [in]  suff_t          Type de suffixe (manuel ou automatique)
+!! \param [in]  suff_u          Suffixe (si suffixe manuel)
+!! \param [in]  s_backup        Active le backup d'un fichier preexistant en mode ecriture
+!! \param [in]  accesio         Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
+!! \param [in]  mode            Mode d'acces (lecture, ecriture, lecture/ecriture)
+!! \param [in]  pdm_mpi_comm    Communicateur lie au fichier
+!! \param [out] unite           Unite du fichier
+!! \param [out] ierr            Indique si le fichier est de type PDM_io ou non (uniquement pour une ouverture en lecture)
+!!
+!!
+
+subroutine PDM_io_open (nom,                &
+                        fmt,                &
+                        suff_t,             &
+                        suff_u,             &
+                        s_backup,           &
+                        acces,              &
+                        mode,               &
+                        endian,             &
+                        comm,               &
+                        prop_noeuds_actifs, &
+                        unite,              &
+                        ierr)
+  use iso_c_binding
+  implicit none
+
+  character (len=*) :: nom
+  integer           :: fmt
+  integer           :: suff_t
+  character (len=*) :: suff_u
+  integer           :: s_backup
+  integer           :: acces
+  integer           :: mode
+  integer           :: endian
+  integer           :: comm
+  double precision  :: prop_noeuds_actifs
+  type(c_ptr)       :: unite
+  integer           :: ierr
+
+  integer(c_int)    :: c_fmt
+  integer(c_int)    :: c_suff_t
+  integer(c_int)    :: c_s_backup
+  integer(c_int)    :: c_acces
+  integer(c_int)    :: c_mode
+  integer(c_int)    :: c_endian
+  integer(c_int)    :: c_comm
+  real(c_double)    :: c_prop_noeuds_actifs
+  integer(c_int)    :: c_ierr
+
+  interface
+    subroutine PDM_io_open_c (nom,                &
+                              fmt,                &
+                              suff_t,             &
+                              suff_u,             &
+                              s_backup,           &
+                              acces,              &
+                              mode,               &
+                              endian,             &
+                              comm,               &
+                              prop_noeuds_actifs, &
+                              unite,              &
+                              ierr)               &
+    bind (c, name='PDM_io_open')
+      use iso_c_binding
+      implicit none
+
+      character(c_char)     :: nom(*)
+      integer(c_int), value :: fmt
+      integer(c_int), value :: suff_t
+      character(c_char)     :: suff_u(*)
+      integer(c_int), value :: s_backup
+      integer(c_int), value :: acces
+      integer(c_int), value :: mode
+      integer(c_int), value :: endian
+      integer(c_int), value :: comm
+      real(c_double), value :: prop_noeuds_actifs
+      type(c_ptr)           :: unite
+      integer(c_int)        :: ierr
+
+    end subroutine PDM_io_open_c
+  end interface
+
+  c_fmt      = fmt
+  c_suff_t   = suff_t
+  c_s_backup = s_backup
+  c_acces    = acces
+  c_mode     = mode
+  c_endian   = endian
+
+  c_comm = PDM_MPI_Comm_f2c(comm)
+
+  c_prop_noeuds_actifs = prop_noeuds_actifs
+
+  call PDM_io_open_c (nom//C_NULL_CHAR,      &
+                      c_fmt,                 &
+                      c_suff_t,              &
+                      suff_u//C_NULL_CHAR,   &
+                      c_s_backup,            &
+                      c_acces,               &
+                      c_mode,                &
+                      c_endian,              &
+                      c_comm,                &
+                      c_prop_noeuds_actifs,  &
+                      unite,                 &
+                      c_ierr)
+
+  ierr = c_ierr
+
+end subroutine PDM_io_open
+
+
+
+!>
+!! \brief Définit le format de la donnée indviduelle pour la sortie text
+!!
+!! \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [in]  n_char_fmt        Nombre de caractères du format
+!! \param [in]  data_type         Type de donnees
+!! \param [in]  fmt               Format
+!!
+!!
+
+subroutine PDM_io_fmt_donnee_set (fichier,    &
+                                  n_char_fmt, &
+                                  data_type,  &
+                                  fmt)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value :: fichier
+  integer            :: n_char_fmt
+  integer            :: data_type
+  character(len=*)   :: fmt
+
+  integer(c_int)     :: c_n_char_fmt
+  integer(c_int)     :: c_data_type
+
+  interface
+    subroutine PDM_io_fmt_donnee_set_c (fichier,    &
+                                        n_char_fmt, &
+                                        data_type,  &
+                                        fmt)        &
+    bind (c, name='PDM_io_fmt_donnee_set')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: fichier
+      integer(c_int), value :: n_char_fmt
+      integer(c_int), value :: data_type
+      character(c_char)     :: fmt(*)
+
+    end subroutine PDM_io_fmt_donnee_set_c
+  end interface
+
+  c_n_char_fmt = n_char_fmt
+  c_data_type  = data_type
+
+  call PDM_io_fmt_donnee_set_c (fichier,          &
+                                c_n_char_fmt,     &
+                                c_data_type,      &
+                                fmt//C_NULL_CHAR)
+
+end subroutine PDM_io_fmt_donnee_set
+
 
 !----------------------------------------------------------------------------
 ! Ouverture d'un fichier pour acces parallele
@@ -119,67 +274,67 @@ contains
 !
 !----------------------------------------------------------------------------
 
-  subroutine pdm_io_open_(nom, &
-                          fmt, &
-                          suff_t, &
-                          suff_u, &
-                          s_backup, &
-                          type_io, &
-                          mode, &
-                          endian, &
-                          msg_comm, &
-                          prop_noeuds_actifs,  &
-                          unite, &
-                          ierr)
-    implicit none
+  ! subroutine pdm_io_open_(nom, &
+  !                         fmt, &
+  !                         suff_t, &
+  !                         suff_u, &
+  !                         s_backup, &
+  !                         type_io, &
+  !                         mode, &
+  !                         endian, &
+  !                         msg_comm, &
+  !                         prop_noeuds_actifs,  &
+  !                         unite, &
+  !                         ierr)
+  !   implicit none
 
-    !
-    ! Arguments
+  !   !
+  !   ! Arguments
 
-    character (len = *),          intent(in)  :: nom
-    integer (kind = pdm_l_num_s), intent(in)  :: fmt
-    integer (kind = pdm_l_num_s), intent(in)  :: suff_t
-    character (len = *),          intent(in)  :: suff_u
-    integer (kind = pdm_l_num_s), intent(in)  :: s_backup
-    integer (kind = pdm_l_num_s), intent(in)  :: type_io
-    integer (kind = pdm_l_num_s), intent(in)  :: mode
-    integer (kind = pdm_l_num_s), intent(in)  :: endian
-    integer (kind = pdm_l_num_s), intent(in)  :: msg_comm
-    real                        , intent(in)  :: prop_noeuds_actifs
-    integer (kind = pdm_l_num_s), intent(out) :: unite
-    integer (kind = pdm_l_num_s), intent(out) :: ierr
+  !   character (len = *),          intent(in)  :: nom
+  !   integer (kind = pdm_l_num_s), intent(in)  :: fmt
+  !   integer (kind = pdm_l_num_s), intent(in)  :: suff_t
+  !   character (len = *),          intent(in)  :: suff_u
+  !   integer (kind = pdm_l_num_s), intent(in)  :: s_backup
+  !   integer (kind = pdm_l_num_s), intent(in)  :: type_io
+  !   integer (kind = pdm_l_num_s), intent(in)  :: mode
+  !   integer (kind = pdm_l_num_s), intent(in)  :: endian
+  !   integer (kind = pdm_l_num_s), intent(in)  :: msg_comm
+  !   real                        , intent(in)  :: prop_noeuds_actifs
+  !   integer (kind = pdm_l_num_s), intent(out) :: unite
+  !   integer (kind = pdm_l_num_s), intent(out) :: ierr
 
-    !
-    ! Variables locales
+  !   !
+  !   ! Variables locales
 
-    integer            :: l_nom ! Longueur de la chaine nom
-    integer            :: l_suff_u ! Longueur de la chaine nom
+  !   integer            :: l_nom ! Longueur de la chaine nom
+  !   integer            :: l_suff_u ! Longueur de la chaine nom
 
-    !
-    ! Calcul de la longueur des chaines pour la conversion en string C
+  !   !
+  !   ! Calcul de la longueur des chaines pour la conversion en string C
 
-    l_nom = len(nom)
-    l_suff_u = len(suff_u)
+  !   l_nom = len(nom)
+  !   l_suff_u = len(suff_u)
 
-    !
-    ! Appel de la fonction C
+  !   !
+  !   ! Appel de la fonction C
 
-    call pdm_io_open_cf(nom, &
-                        l_nom, &
-                        fmt, &
-                        suff_t, &
-                        suff_u, &
-                        l_suff_u, &
-                        s_backup, &
-                        type_io, &
-                        mode, &
-                        endian, &
-                        msg_comm, &
-                        prop_noeuds_actifs, &
-                        unite, &
-                        ierr)
+  !   call pdm_io_open_cf(nom, &
+  !                       l_nom, &
+  !                       fmt, &
+  !                       suff_t, &
+  !                       suff_u, &
+  !                       l_suff_u, &
+  !                       s_backup, &
+  !                       type_io, &
+  !                       mode, &
+  !                       endian, &
+  !                       msg_comm, &
+  !                       prop_noeuds_actifs, &
+  !                       unite, &
+  !                       ierr)
 
-  end subroutine pdm_io_open_
+  ! end subroutine pdm_io_open_
 
 !----------------------------------------------------------------------------
 ! Ouverture d'un fichier pour acces parallele
@@ -204,33 +359,33 @@ contains
 !
 !----------------------------------------------------------------------------
 
-  subroutine pdm_io_fmt_donnee_set_(unite, n_char_fmt, data_type, fmt)
-    implicit none
+  ! subroutine pdm_io_fmt_donnee_set_(unite, n_char_fmt, data_type, fmt)
+  !   implicit none
 
-    !
-    ! Arguments
+  !   !
+  !   ! Arguments
 
-    integer (kind = pdm_l_num_s), intent(in)  :: unite
-    integer (kind = pdm_l_num_s), intent(in)  :: n_char_fmt
-    integer (kind = pdm_l_num_s), intent(in)  :: data_type
-    character (len = *),          intent(in)  :: fmt
+  !   integer (kind = pdm_l_num_s), intent(in)  :: unite
+  !   integer (kind = pdm_l_num_s), intent(in)  :: n_char_fmt
+  !   integer (kind = pdm_l_num_s), intent(in)  :: data_type
+  !   character (len = *),          intent(in)  :: fmt
 
-    !
-    ! Variables locales
+  !   !
+  !   ! Variables locales
 
-    integer (kind = pdm_l_num_s) :: l_fmt ! Longueur de la chaine nom
+  !   integer (kind = pdm_l_num_s) :: l_fmt ! Longueur de la chaine nom
 
-    !
-    ! Calcul de la longueur des chaines pour la conversion en string C
+  !   !
+  !   ! Calcul de la longueur des chaines pour la conversion en string C
 
-    l_fmt = len(fmt)
+  !   l_fmt = len(fmt)
 
-    !
-    ! Appel de la fonction C
+  !   !
+  !   ! Appel de la fonction C
 
-    call pdm_io_fmt_donnee_set_cf(unite, n_char_fmt, data_type, fmt, l_fmt)
+  !   call pdm_io_fmt_donnee_set_cf(unite, n_char_fmt, data_type, fmt, l_fmt)
 
-  end subroutine pdm_io_fmt_donnee_set_
+  ! end subroutine pdm_io_fmt_donnee_set_
 
 !----------------------------------------------------------------------------
 ! Lecture globale : Le processus maitre accede seul au fichier et redistribue

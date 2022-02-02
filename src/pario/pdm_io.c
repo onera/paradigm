@@ -33,7 +33,6 @@
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -613,55 +612,55 @@ const char* PDM_io_get_nom_fichier
  *
  */
 
-void PROCF (pdm_io_open_cf, PDM_IO_OPEN_CF)
-(const char            *nom,
- const PDM_l_num_t  *l_nom,
- const int             *fmt,
- const int             *suff_t,
- const char            *suff_u,
- const PDM_l_num_t  *l_suff_u,
- const int             *s_backup,
- const int             *acces,
- const int             *mode,
- const int          *endian,
- PDM_MPI_Fint              *comm,
- double                *prop_noeuds_actifs,
- PDM_l_num_t        *unite,
- PDM_l_num_t        *ierr
- ARGF_SUPP_CHAINE
- )
-{
-  char *nom_c    = PDM_fortran_to_c_string(nom, *l_nom);
+// void PROCF (pdm_io_open_cf, PDM_IO_OPEN_CF)
+// (const char            *nom,
+//  const PDM_l_num_t  *l_nom,
+//  const int             *fmt,
+//  const int             *suff_t,
+//  const char            *suff_u,
+//  const PDM_l_num_t  *l_suff_u,
+//  const int             *s_backup,
+//  const int             *acces,
+//  const int             *mode,
+//  const int          *endian,
+//  PDM_MPI_Fint              *comm,
+//  double                *prop_noeuds_actifs,
+//  PDM_l_num_t        *unite,
+//  PDM_l_num_t        *ierr
+//  ARGF_SUPP_CHAINE
+//  )
+// {
+//   char *nom_c    = PDM_fortran_to_c_string(nom, *l_nom);
 
-  char *suff_u_c = NULL;
-  if (*suff_t == PDM_IO_SUFF_MAN)
-    suff_u_c  = PDM_fortran_to_c_string(suff_u, *l_suff_u);
+//   char *suff_u_c = NULL;
+//   if (*suff_t == PDM_IO_SUFF_MAN)
+//     suff_u_c  = PDM_fortran_to_c_string(suff_u, *l_suff_u);
 
-  const PDM_io_acces_t _acces     = (PDM_io_acces_t) *acces;
-  const PDM_io_mode_t _mode       = (PDM_io_mode_t) *mode;
-  const PDM_io_suff_t _suff_t     = (PDM_io_suff_t) *suff_t;
-  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(*comm);
-  const PDM_io_fmt_t _fmt         = (PDM_io_fmt_t) *fmt;
-  const PDM_io_backup_t _s_backup = (PDM_io_backup_t) *s_backup;
-  const PDM_io_endian_t _endian   = (PDM_io_endian_t) *endian;
+//   const PDM_io_acces_t _acces     = (PDM_io_acces_t) *acces;
+//   const PDM_io_mode_t _mode       = (PDM_io_mode_t) *mode;
+//   const PDM_io_suff_t _suff_t     = (PDM_io_suff_t) *suff_t;
+//   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(*comm);
+//   const PDM_io_fmt_t _fmt         = (PDM_io_fmt_t) *fmt;
+//   const PDM_io_backup_t _s_backup = (PDM_io_backup_t) *s_backup;
+//   const PDM_io_endian_t _endian   = (PDM_io_endian_t) *endian;
 
-  // PDM_io_open(nom_c,
-  //             _fmt,
-  //             _suff_t,
-  //             suff_u_c,
-  //             _s_backup,
-  //             _acces,
-  //             _mode,
-  //             _endian,
-  //             _comm,
-  //             *prop_noeuds_actifs,
-  //             unite,
-  //             ierr);
+//   // PDM_io_open(nom_c,
+//   //             _fmt,
+//   //             _suff_t,
+//   //             suff_u_c,
+//   //             _s_backup,
+//   //             _acces,
+//   //             _mode,
+//   //             _endian,
+//   //             _comm,
+//   //             *prop_noeuds_actifs,
+//   //             unite,
+//   //             ierr);
 
-  free(nom_c);
-  if (suff_u_c != NULL)
-    free(suff_u_c);
-}
+//   free(nom_c);
+//   if (suff_u_c != NULL)
+//     free(suff_u_c);
+// }
 
 void PDM_io_open
 (
@@ -914,15 +913,15 @@ void PDM_io_open
  *
  */
 
-void PROCF (pdm_io_seek, PDM_IO_SEEK)
-(
-const PDM_l_num_t   *unite,
-const PDM_g_num_t   *offset,
-const PDM_io_seek_t *seek
-)
-{
-  // PDM_io_seek (*unite, *offset, *seek);
-}
+// void PROCF (pdm_io_seek, PDM_IO_SEEK)
+// (
+// const PDM_l_num_t   *unite,
+// const PDM_g_num_t   *offset,
+// const PDM_io_seek_t *seek
+// )
+// {
+//   // PDM_io_seek (*unite, *offset, *seek);
+// }
 
 void PDM_io_seek
 (
@@ -969,15 +968,15 @@ void PDM_io_seek
  *
  */
 
-void PROCF (pdm_io_tell, PDM_IO_TELL)
-(
-const PDM_l_num_t    *unite,
-      PDM_g_num_t    *offset
-)
-{
-  // PDM_g_num_t  _offset = PDM_io_tell (*unite);
-  // *offset = _offset;
-}
+// void PROCF (pdm_io_tell, PDM_IO_TELL)
+// (
+// const PDM_l_num_t    *unite,
+//       PDM_g_num_t    *offset
+// )
+// {
+//   // PDM_g_num_t  _offset = PDM_io_tell (*unite);
+//   // *offset = _offset;
+// }
 
 PDM_g_num_t
 PDM_io_tell
@@ -1024,18 +1023,18 @@ PDM_io_tell
  *
  */
 
-void PROCF (pdm_io_lecture_globale, PDM_IO_LECTURE_GLOBALE)
-(const PDM_l_num_t *unite,
- const PDM_l_num_t *taille_donnee,
- const PDM_g_num_t *n_donnees,
- void                 *donnees
-)
-{
-  // PDM_io_lecture_globale(*unite,
-  //                          *taille_donnee,
-  //                          *n_donnees,
-  //                          donnees);
-}
+// void PROCF (pdm_io_lecture_globale, PDM_IO_LECTURE_GLOBALE)
+// (const PDM_l_num_t *unite,
+//  const PDM_l_num_t *taille_donnee,
+//  const PDM_g_num_t *n_donnees,
+//  void                 *donnees
+// )
+// {
+//   // PDM_io_lecture_globale(*unite,
+//   //                          *taille_donnee,
+//   //                          *n_donnees,
+//   //                          donnees);
+// }
 
 void PDM_io_lecture_globale
 (
@@ -1161,18 +1160,18 @@ void PDM_io_lecture_globale
  *
  */
 
-void PROCF (pdm_io_ecriture_globale, PDM_IO_ECRITURE_GLOBALE)
-(const PDM_l_num_t *unite,
- const PDM_l_num_t *taille_donnee,
- const PDM_g_num_t *n_donnees,
- const void           *donnees
-)
-{
-  // PDM_io_ecriture_globale(*unite,
-  //                           *taille_donnee,
-  //                           *n_donnees,
-  //                           donnees);
-}
+// void PROCF (pdm_io_ecriture_globale, PDM_IO_ECRITURE_GLOBALE)
+// (const PDM_l_num_t *unite,
+//  const PDM_l_num_t *taille_donnee,
+//  const PDM_g_num_t *n_donnees,
+//  const void           *donnees
+// )
+// {
+//   // PDM_io_ecriture_globale(*unite,
+//   //                           *taille_donnee,
+//   //                           *n_donnees,
+//   //                           donnees);
+// }
 
 void PDM_io_ecriture_globale
 (
@@ -1369,31 +1368,31 @@ void PDM_io_ecriture_globale
  *
  */
 
-void PROCF (pdm_io_lec_par_entrelacee, PDM_IO_LEC_PAR_ENTRELACEE)
-(const PDM_l_num_t  *unite,
- const int             *t_n_composantes,
- const PDM_l_num_t  *n_composantes,
- const PDM_l_num_t  *taille_donnee,
- const PDM_l_num_t  *n_donnees,
- const PDM_g_num_t *indirection,
- void                  *donnees
-)
-{
-  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+// void PROCF (pdm_io_lec_par_entrelacee, PDM_IO_LEC_PAR_ENTRELACEE)
+// (const PDM_l_num_t  *unite,
+//  const int             *t_n_composantes,
+//  const PDM_l_num_t  *n_composantes,
+//  const PDM_l_num_t  *taille_donnee,
+//  const PDM_l_num_t  *n_donnees,
+//  const PDM_g_num_t *indirection,
+//  void                  *donnees
+// )
+// {
+//   PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
-  if (*t_n_composantes == 0)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
-  else if (*t_n_composantes == 1)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
+//   if (*t_n_composantes == 0)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+//   else if (*t_n_composantes == 1)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  // PDM_io_lec_par_entrelacee(*unite,
-  //                             _t_n_composantes,
-  //                             n_composantes,
-  //                             *taille_donnee,
-  //                             *n_donnees,
-  //                             indirection,
-  //                             donnees);
-}
+//   // PDM_io_lec_par_entrelacee(*unite,
+//   //                             _t_n_composantes,
+//   //                             n_composantes,
+//   //                             *taille_donnee,
+//   //                             *n_donnees,
+//   //                             indirection,
+//   //                             donnees);
+// }
 
 void PDM_io_lec_par_entrelacee
 (
@@ -2144,31 +2143,31 @@ void PDM_io_lec_par_entrelacee
  *
  */
 
-void PROCF (pdm_io_lec_par_bloc, PDM_IO_LEC_PAR_BLOC)
-(const PDM_l_num_t  *unite,
- const int             *t_n_composantes,
- const PDM_l_num_t  *n_composantes,
- const PDM_l_num_t  *taille_donnee,
- const PDM_l_num_t  *n_donnees,
- const PDM_g_num_t *debut_bloc,
- void                  *donnees
-)
-{
-  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+// void PROCF (pdm_io_lec_par_bloc, PDM_IO_LEC_PAR_BLOC)
+// (const PDM_l_num_t  *unite,
+//  const int             *t_n_composantes,
+//  const PDM_l_num_t  *n_composantes,
+//  const PDM_l_num_t  *taille_donnee,
+//  const PDM_l_num_t  *n_donnees,
+//  const PDM_g_num_t *debut_bloc,
+//  void                  *donnees
+// )
+// {
+//   PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
-  if (*t_n_composantes == 0)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
-  else if (*t_n_composantes == 1)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
+//   if (*t_n_composantes == 0)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+//   else if (*t_n_composantes == 1)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  // PDM_io_lec_par_bloc(*unite,
-  //                       _t_n_composantes,
-  //                       n_composantes,
-  //                       *taille_donnee,
-  //                       *n_donnees,
-  //                       *debut_bloc,
-  //                       donnees);
-}
+//   // PDM_io_lec_par_bloc(*unite,
+//   //                       _t_n_composantes,
+//   //                       n_composantes,
+//   //                       *taille_donnee,
+//   //                       *n_donnees,
+//   //                       *debut_bloc,
+//   //                       donnees);
+// }
 
 void PDM_io_lec_par_bloc
 (
@@ -2608,31 +2607,31 @@ void PDM_io_lec_par_bloc
  *
  */
 
-void PROCF (pdm_io_ecr_par_entrelacee, PDM_IO_ECR_PAR_ENTRELACEE)
-(const PDM_l_num_t  *unite,
- const int             *t_n_composantes,
- const PDM_l_num_t  *n_composantes,
- const PDM_l_num_t  *taille_donnee,
- const PDM_l_num_t  *n_donnees,
- const PDM_g_num_t *indirection,
- const void            *donnees
-)
-{
-  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+// void PROCF (pdm_io_ecr_par_entrelacee, PDM_IO_ECR_PAR_ENTRELACEE)
+// (const PDM_l_num_t  *unite,
+//  const int             *t_n_composantes,
+//  const PDM_l_num_t  *n_composantes,
+//  const PDM_l_num_t  *taille_donnee,
+//  const PDM_l_num_t  *n_donnees,
+//  const PDM_g_num_t *indirection,
+//  const void            *donnees
+// )
+// {
+//   PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
-  if (*t_n_composantes == 0)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
-  else if (*t_n_composantes == 1)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
+//   if (*t_n_composantes == 0)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+//   else if (*t_n_composantes == 1)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  // PDM_io_ecr_par_entrelacee(*unite,
-  //                             _t_n_composantes,
-  //                             n_composantes,
-  //                             *taille_donnee,
-  //                             *n_donnees,
-  //                             indirection,
-  //                             donnees);
-}
+//   // PDM_io_ecr_par_entrelacee(*unite,
+//   //                             _t_n_composantes,
+//   //                             n_composantes,
+//   //                             *taille_donnee,
+//   //                             *n_donnees,
+//   //                             indirection,
+//   //                             donnees);
+// }
 
 void PDM_io_ecr_par_entrelacee
 (
@@ -3548,31 +3547,31 @@ void PDM_io_ecr_par_entrelacee
  *
  */
 
-void PROCF (pdm_io_ecr_par_bloc, PDM_IO_ECR_PAR_BLOC)
-(const PDM_l_num_t  *unite,
- const int             *t_n_composantes,
- const PDM_l_num_t  *n_composantes,
- const PDM_l_num_t  *taille_donnee,
- const PDM_l_num_t  *n_donnees,
- const PDM_g_num_t *debut_bloc,
- const void            *donnees
-)
-{
-  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+// void PROCF (pdm_io_ecr_par_bloc, PDM_IO_ECR_PAR_BLOC)
+// (const PDM_l_num_t  *unite,
+//  const int             *t_n_composantes,
+//  const PDM_l_num_t  *n_composantes,
+//  const PDM_l_num_t  *taille_donnee,
+//  const PDM_l_num_t  *n_donnees,
+//  const PDM_g_num_t *debut_bloc,
+//  const void            *donnees
+// )
+// {
+//   PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
-  if (*t_n_composantes == 0)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
-  else if (*t_n_composantes == 1)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
+//   if (*t_n_composantes == 0)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+//   else if (*t_n_composantes == 1)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  // PDM_io_ecr_par_bloc(*unite,
-  //                       _t_n_composantes,
-  //                       n_composantes,
-  //                       *taille_donnee,
-  //                       *n_donnees,
-  //                       *debut_bloc,
-  //                       donnees);
-}
+//   // PDM_io_ecr_par_bloc(*unite,
+//   //                       _t_n_composantes,
+//   //                       n_composantes,
+//   //                       *taille_donnee,
+//   //                       *n_donnees,
+//   //                       *debut_bloc,
+//   //                       donnees);
+// }
 
 void PDM_io_ecr_par_bloc
 (
@@ -3959,12 +3958,12 @@ void PDM_io_ecr_par_bloc
  *
  */
 
-void PROCF (pdm_io_close, PDM_IO_CLOSE)
-(const PDM_l_num_t *unite
-)
-{
-  // PDM_io_close(*unite);
-}
+// void PROCF (pdm_io_close, PDM_IO_CLOSE)
+// (const PDM_l_num_t *unite
+// )
+// {
+//   // PDM_io_close(*unite);
+// }
 
 void PDM_io_close
 (
@@ -4052,12 +4051,12 @@ void PDM_io_close
  *
  */
 
-void PROCF (pdm_io_detruit, PDM_IO_DETRUIT)
-(const PDM_l_num_t *unite
-)
-{
-  // PDM_io_detruit(*unite);
-}
+// void PROCF (pdm_io_detruit, PDM_IO_DETRUIT)
+// (const PDM_l_num_t *unite
+// )
+// {
+//   // PDM_io_detruit(*unite);
+// }
 
 void PDM_io_detruit
 (
@@ -4121,14 +4120,14 @@ void PDM_io_detruit
  *
  */
 
-void PROCF (pdm_io_get_timer_fichier, PDM_IO_GET_TIMER_FICHIER)
-(const PDM_l_num_t *unite,
- double               *t_cpu,
- double               *t_elapsed
-)
-{
-  // PDM_io_get_timer_fichier(*unite, t_cpu, t_elapsed);
-}
+// void PROCF (pdm_io_get_timer_fichier, PDM_IO_GET_TIMER_FICHIER)
+// (const PDM_l_num_t *unite,
+//  double               *t_cpu,
+//  double               *t_elapsed
+// )
+// {
+//   // PDM_io_get_timer_fichier(*unite, t_cpu, t_elapsed);
+// }
 
 void PDM_io_get_timer_fichier
 (
@@ -4165,14 +4164,14 @@ void PDM_io_get_timer_fichier
  *
  */
 
-void PROCF (pdm_io_get_timer_distrib, PDM_IO_GET_TIMER_DISTRIB)
-(const PDM_l_num_t *unite,
- double               *t_cpu,
- double               *t_elapsed
-)
-{
-  // PDM_io_get_timer_distrib(*unite, t_cpu, t_elapsed);
-}
+// void PROCF (pdm_io_get_timer_distrib, PDM_IO_GET_TIMER_DISTRIB)
+// (const PDM_l_num_t *unite,
+//  double               *t_cpu,
+//  double               *t_elapsed
+// )
+// {
+//   // PDM_io_get_timer_distrib(*unite, t_cpu, t_elapsed);
+// }
 
 void PDM_io_get_timer_distrib
 (
@@ -4210,14 +4209,14 @@ void PDM_io_get_timer_distrib
  *
  */
 
-void PROCF (pdm_io_get_timer_swap_endian, PDM_IO_GET_TIMER_SWAP_ENDIAN)
-(const PDM_l_num_t *unite,
- double               *t_cpu,
- double               *t_elapsed
-)
-{
-  // PDM_io_get_timer_swap_endian(*unite, t_cpu, t_elapsed);
-}
+// void PROCF (pdm_io_get_timer_swap_endian, PDM_IO_GET_TIMER_SWAP_ENDIAN)
+// (const PDM_l_num_t *unite,
+//  double               *t_cpu,
+//  double               *t_elapsed
+// )
+// {
+//   // PDM_io_get_timer_swap_endian(*unite, t_cpu, t_elapsed);
+// }
 
 void PDM_io_get_timer_swap_endian
 (
@@ -4255,14 +4254,14 @@ void PDM_io_get_timer_swap_endian
  *
  */
 
-void PROCF (pdm_io_get_timer_total, PDM_IO_GET_TIMER_TOTAL)
-(const PDM_l_num_t *unite,
- double               *t_cpu,
- double               *t_elapsed
-)
-{
-  // PDM_io_get_timer_total(*unite, t_cpu, t_elapsed);
-}
+// void PROCF (pdm_io_get_timer_total, PDM_IO_GET_TIMER_TOTAL)
+// (const PDM_l_num_t *unite,
+//  double               *t_cpu,
+//  double               *t_elapsed
+// )
+// {
+//   // PDM_io_get_timer_total(*unite, t_cpu, t_elapsed);
+// }
 
 void PDM_io_get_timer_total
 (
@@ -4298,12 +4297,12 @@ void PDM_io_get_timer_total
  *
  */
 
-void PROCF (pdm_io_dump, PDM_IO_DUMP)
-(const PDM_l_num_t *unite
-)
-{
-  // PDM_io_dump(*unite);
-}
+// void PROCF (pdm_io_dump, PDM_IO_DUMP)
+// (const PDM_l_num_t *unite
+// )
+// {
+//   // PDM_io_dump(*unite);
+// }
 
 void PDM_io_dump
 (
@@ -4357,16 +4356,16 @@ void PDM_io_dump
  *
  */
 
-void PROCF (pdm_io_get_comm, PDM_IO_GET_COMM)
-(PDM_l_num_t *unite,
- PDM_MPI_Fint       *pdm_mpi_comm
-)
-{
-  PDM_MPI_Comm              comm;
+// void PROCF (pdm_io_get_comm, PDM_IO_GET_COMM)
+// (PDM_l_num_t *unite,
+//  PDM_MPI_Fint       *pdm_mpi_comm
+// )
+// {
+//   PDM_MPI_Comm              comm;
 
-  // PDM_io_get_comm(*unite, &comm);
-  // *pdm_mpi_comm = PDM_MPI_Comm_c2f(comm);
-}
+//   // PDM_io_get_comm(*unite, &comm);
+//   // *pdm_mpi_comm = PDM_MPI_Comm_c2f(comm);
+// }
 
 void PDM_io_get_comm
 (
@@ -4396,13 +4395,13 @@ void PDM_io_get_comm
  *
  */
 
-void PROCF (pdm_io_swap_endian_on, PDM_IO_SWAP_ENDIAN_ON)
-(
-PDM_l_num_t *unite
-)
-{
-  // PDM_io_swap_endian_on(*unite);
-}
+// void PROCF (pdm_io_swap_endian_on, PDM_IO_SWAP_ENDIAN_ON)
+// (
+// PDM_l_num_t *unite
+// )
+// {
+//   // PDM_io_swap_endian_on(*unite);
+// }
 
 void PDM_io_swap_endian_on
 (
@@ -4431,13 +4430,13 @@ void PDM_io_swap_endian_on
  *
  */
 
-void PROCF (pdm_io_swap_endian_off, PDM_IO_SWAP_ENDIAN_OFF)
-(
-PDM_l_num_t *unite
-)
-{
-  // PDM_io_swap_endian_off(*unite);
-}
+// void PROCF (pdm_io_swap_endian_off, PDM_IO_SWAP_ENDIAN_OFF)
+// (
+// PDM_l_num_t *unite
+// )
+// {
+//   // PDM_io_swap_endian_off(*unite);
+// }
 
 void PDM_io_swap_endian_off
 (
@@ -4469,22 +4468,22 @@ void PDM_io_swap_endian_off
  *
  */
 
- void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN)
- (
-  const int          *taille_donnee,
-  const PDM_g_num_t  *n_donnees,
-  const void         *donnees,
-  void               *resultats
-)
-{
-  size_t _taille_donnee = (size_t) *taille_donnee;
-  size_t _n_donnees = (size_t) *n_donnees;
+//  void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN)
+//  (
+//   const int          *taille_donnee,
+//   const PDM_g_num_t  *n_donnees,
+//   const void         *donnees,
+//   void               *resultats
+// )
+// {
+//   size_t _taille_donnee = (size_t) *taille_donnee;
+//   size_t _n_donnees = (size_t) *n_donnees;
 
-  PDM_io_swap_endian (_taille_donnee,
-                      _n_donnees,
-                      donnees,
-                      resultats);
-}
+//   PDM_io_swap_endian (_taille_donnee,
+//                       _n_donnees,
+//                       donnees,
+//                       resultats);
+// }
 
 void PDM_io_swap_endian
 (
@@ -4571,25 +4570,28 @@ void PDM_io_swap_endian
  * \brief Définit le format de la donnée indviduelle pour la sortie text
  *
  * \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+ * \param [in]  n_char_fmt        Nombre de caractères du format
+ * \param [in]  data_type         Type de donnees
+ * \param [in]  fmt               Format
  *
  */
 
-void PROCF (pdm_io_fmt_donnee_set_cf, PDM_IO_FMT_DONNEE_SET_CF)
-(
- const PDM_l_num_t *unite,
- const PDM_l_num_t *n_char_fmt,
- const PDM_l_num_t *data_type,
- const char           *fmt,
- const PDM_l_num_t *l_fmt
- ARGF_SUPP_CHAINE
-)
-{
-  char *fmt_c    = PDM_fortran_to_c_string(fmt, *l_fmt);
+// void PROCF (pdm_io_fmt_donnee_set_cf, PDM_IO_FMT_DONNEE_SET_CF)
+// (
+//  const PDM_l_num_t *unite,
+//  const PDM_l_num_t *n_char_fmt,
+//  const PDM_l_num_t *data_type,
+//  const char           *fmt,
+//  const PDM_l_num_t *l_fmt
+//  ARGF_SUPP_CHAINE
+// )
+// {
+//   char *fmt_c    = PDM_fortran_to_c_string(fmt, *l_fmt);
 
-  // PDM_io_fmt_donnee_set(*unite, *n_char_fmt, (PDM_io_type_t) *data_type, fmt_c);
+//   // PDM_io_fmt_donnee_set(*unite, *n_char_fmt, (PDM_io_type_t) *data_type, fmt_c);
 
-  free(fmt_c);
-}
+//   free(fmt_c);
+// }
 
 void PDM_io_fmt_donnee_set
 (
@@ -4683,29 +4685,29 @@ int PDM_io_mkdir
  *
  */
 
-void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
+// void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
 
-(const PDM_l_num_t  *unite,
- const int             *t_n_composantes,
- const PDM_l_num_t  *n_composantes,
- const PDM_l_num_t  *n_donnees,
- const PDM_g_num_t *indirection,
-       PDM_g_num_t *t_n_donnees
-)
-{
-  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+// (const PDM_l_num_t  *unite,
+//  const int             *t_n_composantes,
+//  const PDM_l_num_t  *n_composantes,
+//  const PDM_l_num_t  *n_donnees,
+//  const PDM_g_num_t *indirection,
+//        PDM_g_num_t *t_n_donnees
+// )
+// {
+//   PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
-  if (*t_n_composantes == 0)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
-  else if (*t_n_composantes == 1)
-    _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
+//   if (*t_n_composantes == 0)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
+//   else if (*t_n_composantes == 1)
+//     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  // *t_n_donnees = PDM_io_n_donnees_get (*unite,
-  //                                        _t_n_composantes,
-  //                                        n_composantes,
-  //                                        *n_donnees,
-  //                                        indirection);
-}
+//   // *t_n_donnees = PDM_io_n_donnees_get (*unite,
+//   //                                        _t_n_composantes,
+//   //                                        n_composantes,
+//   //                                        *n_donnees,
+//   //                                        indirection);
+// }
 
 PDM_g_num_t
 PDM_io_n_donnees_get
