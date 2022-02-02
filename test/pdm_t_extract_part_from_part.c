@@ -737,7 +737,7 @@ int main(int argc, char *argv[])
   int send_request = -1;
   int recv_request = -1;
 
-  if (1 == 0) {
+  if (1 == 1) {
 
 
     PDM_part_to_part_issend(ptp,
@@ -759,7 +759,7 @@ int main(int argc, char *argv[])
     PDM_part_to_part_issend_wait(ptp, send_request);
     PDM_part_to_part_irecv_wait (ptp, recv_request);
   }
-
+ 
   else {
     int  **part1_stride = malloc (sizeof(int *) * n_part_zones);
     void **part1_data = (void **) pextract_cell_face;
@@ -1034,7 +1034,7 @@ int main(int argc, char *argv[])
   //                                100,
   //                                &recv_request);
 
-  // PDM_part_to_part_reverse_issend_wait(ptp_face, send_request);
+  // PDM_part_to_part_reverse_issend_wait(ptp_face, send_request); 
   // PDM_part_to_part_reverse_irecv_wait (ptp_face, recv_request);
   // PDM_log_trace_array_long(equi_extract_face_vtx, 1 * n_extract_face, "equi_extract_face_vtx : ");
 
@@ -1137,28 +1137,75 @@ int main(int argc, char *argv[])
     // PDM_log_trace_array_double(send_vtx_coord[i_part], 3 * gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]], "send_vtx_coord      : ");
   }
 
-  PDM_part_to_part_reverse_issend(ptp_vtx,
-                                  sizeof(double),
-                                  3,
-                 (const void **)  send_vtx_coord, // Donc in same order of part2_to_part1_data
-                                  100,
-                                  &send_request);
+  double *equi_extract_vtx_coord = NULL;
 
-  double *equi_extract_vtx_coord = malloc( 3 * n_extract_vtx * sizeof(double));
+  if (1 == 1) {
 
-  for(int i = 0; i < 3 * n_extract_vtx; ++i) {
-    equi_extract_vtx_coord[i] = -1;
+    PDM_part_to_part_reverse_issend(ptp_vtx,
+                                    sizeof(double),
+                                    3,
+                   (const void **)  send_vtx_coord, // Donc in same order of part2_to_part1_data
+                                    100,
+                                    &send_request);
+
+
+    equi_extract_vtx_coord = malloc( 3 * n_extract_vtx * sizeof(double));
+
+    for(int i = 0; i < 3 * n_extract_vtx; ++i) {
+      equi_extract_vtx_coord[i] = -1;
+    }
+
+    PDM_part_to_part_reverse_irecv(ptp_vtx,
+                                   sizeof(double),
+                                   3,
+                        (void **)  &equi_extract_vtx_coord,  // order given by gnum1_come_from and ref_gnum2 arrays
+                                   100,
+                                   &recv_request);
+
+    PDM_part_to_part_reverse_issend_wait(ptp_vtx, send_request);
+    PDM_part_to_part_reverse_irecv_wait (ptp_vtx, recv_request);
+
   }
+  
+  else {
 
-  PDM_part_to_part_reverse_irecv(ptp_vtx,
-                                 sizeof(double),
-                                 3,
-                      (void **)  &equi_extract_vtx_coord,  // order given by gnum1_come_from and ref_gnum2 arrays
-                                 100,
-                                 &recv_request);
+    int      request_exch;
 
-  PDM_part_to_part_reverse_issend_wait(ptp_vtx, send_request);
-  PDM_part_to_part_reverse_irecv_wait (ptp_vtx, recv_request);
+    int    **part2_stride = malloc (sizeof(int*) * n_part_zones);
+
+    for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+      part2_stride[i_part] = malloc(gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]] * sizeof(int));
+      for (int j = 0; j < gnum1_come_from_vtx_idx[i_part][n_ref_vtx[i_part]]; j++) {
+        part2_stride[i_part][j] = 3;
+      }
+    }
+
+    int    **part1_stride;
+    double **part1_data;
+
+    PDM_part_to_part_reverse_iexch (ptp_vtx,
+                                    PDM_MPI_COMM_KIND_P2P, 
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                    -1,
+                                    sizeof(double),
+                   (const int **)   part2_stride,
+                   (const void **)  send_vtx_coord,
+                                   &part1_stride,
+                   (void ***)      &part1_data, 
+                                   &request_exch);
+
+    PDM_part_to_part_reverse_iexch_wait (ptp_vtx, request_exch);
+
+    equi_extract_vtx_coord = part1_data[0];
+    free (part1_data);
+    free (part1_stride[0]);
+    free (part1_stride);
+    for(int i_part = 0; i_part < n_part_zones; ++i_part) {
+      free (part2_stride[i_part]);
+    }
+    free (part2_stride);
+  }  
 
   PDM_part_to_part_free(ptp_vtx);
 
@@ -1166,7 +1213,7 @@ int main(int argc, char *argv[])
   fflush(stdout);
 
 
-  // PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
+  PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
 
   sprintf(filename, "extract_vtx_coord_%3.3d.vtk", i_rank);
   PDM_vtk_write_point_cloud(filename,
