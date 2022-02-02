@@ -240,7 +240,6 @@ program testf
                                PDM_WRITER_OFF, &
                                PDM_WRITER_OFF, &
                                n_part)
-  print *, "id_geom =", id_geom
 
   call PDM_writer_var_create (cs,                      &
                               id_var_cell,             &

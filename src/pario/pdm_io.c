@@ -61,40 +61,40 @@ extern "C" {
 
 struct _PDM_io_fichier_t {
 
-  char               *nom;                /* Nom du fichier */
-  PDM_io_mode_t     mode;               /* Mode du fichier */
-  PDM_io_acces_t    acces;              /* Type d'entrees/sorties */
+  char            *nom;                /* Nom du fichier */
+  PDM_io_mode_t    mode;               /* Mode du fichier */
+  PDM_io_acces_t   acces;              /* Type d'entrees/sorties */
 
-  int                 swap_endian;        /* Active le swap little/big endian */
+  int              swap_endian;        /* Active le swap little/big endian */
 
-  PDM_MPI_Comm            comm;               /* Communicateur lie
-                                             a cette structure */
-  PDM_MPI_Comm            scomm;           /* Sub-communicator reduced to active ranks */
-  int                 rang;               /* Rang MSG */
-  int                 n_rangs;            /* Nombre de rangs MSG  */
+  PDM_MPI_Comm     comm;               /* Communicateur lie
+                                          a cette structure */
+  PDM_MPI_Comm     scomm;              /* Sub-communicator reduced to active ranks */
+  int              rang;               /* Rang MSG */
+  int              n_rangs;            /* Nombre de rangs MSG  */
 
-  PDM_timer_t      *timer_fichier;      /* Mesure des temps d'acces
-                                             aux fichiers  */
-  PDM_timer_t      *timer_swap_endian;  /* Mesure des temps de swap */
-  PDM_timer_t      *timer_total;        /* Mesure des temps de swap */
-  PDM_timer_t      *timer_distribution; /* Mesure des temps de distribution
+  PDM_timer_t     *timer_fichier;      /* Mesure des temps d'acces
+                                            aux fichiers  */
+  PDM_timer_t     *timer_swap_endian;  /* Mesure des temps de swap */
+  PDM_timer_t     *timer_total;        /* Mesure des temps de swap */
+  PDM_timer_t     *timer_distribution; /* Mesure des temps de distribution
                                              des donnees */
-  PDM_file_seq_t      *PDM_file_seq;        /* Fichier sequentiel */
-  PDM_file_par_t      *PDM_file_par;        /* Fichier parallele */
+  PDM_file_seq_t  *PDM_file_seq;       /* Fichier sequentiel */
+  PDM_file_par_t  *PDM_file_par;       /* Fichier parallele */
 
-  PDM_io_fmt_t      fmt_t;              /* Type de format */
-  char               *fmt;                /* Format */
+  PDM_io_fmt_t     fmt_t;              /* Type de format */
+  char            *fmt;                /* Format */
   PDM_l_num_t      n_char_fmt;         /* Nb de caractères du format */
-  PDM_io_type_t     data_type;          /* Type de données  du format */
-  PDM_io_backup_t   backup;             /* Backup du fichier en cas de reecriture */
+  PDM_io_type_t    data_type;          /* Type de données  du format */
+  PDM_io_backup_t  backup;             /* Backup du fichier en cas de reecriture */
 
-  double      prop_noeuds_actifs;         /* Proportion de noeuds actifs */
-  int                 n_rangs_actifs;     /* Nombre de rangs actifs */
-  int                 n_rangs_inactifs;     /* Number of inactive ranks */
-  int                *rangs_actifs;       /* Active ranks */
-  int                *rangs_inactifs;       /* Inactive ranks */
-  int                *tag_rangs_actifs;   /* Tag des rangs actifs */
-  int                 rang_actif;         /* Indique si rang courant est actif */
+  double           prop_noeuds_actifs; /* Proportion de noeuds actifs */
+  int              n_rangs_actifs;     /* Nombre de rangs actifs */
+  int              n_rangs_inactifs;   /* Number of inactive ranks */
+  int             *rangs_actifs;       /* Active ranks */
+  int             *rangs_inactifs;     /* Inactive ranks */
+  int             *tag_rangs_actifs;   /* Tag des rangs actifs */
+  int              rang_actif;         /* Indique si rang courant est actif */
 
 };
 
@@ -106,7 +106,7 @@ struct _PDM_io_fichier_t {
  * Stockage des objets PDM_io_fichiers
  *----------------------------------------------------------------------------*/
 
-static PDM_Handles_t *PDM_io_fichiers = NULL;
+// static PDM_Handles_t *PDM_io_fichiers = NULL;
 
 /*----------------------------------------------------------------------------
  * tag pour Echanges MPI
@@ -118,16 +118,14 @@ static const int PDM_io_tag = 'p'+'a'+'r'+'i'+'o'+'t'+'a'+'g';
  * Definition des fonctions privees
  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Partitionnement pour le tri quick sort
+/**
+ * \brief Create a new directory
  *
- * parameters :
- *   tableau          <-> tableau a trier
- *   p                <-- Indice de debut
- *   r                <-- Indice de fin
- * return
- *   PDM_io_version      Description version CEDRE
- *----------------------------------------------------------------------------*/
+ * \param [in] path  Path to new directory
+ *
+ * \return 0 if the directory has been created, -1 else
+ *
+ */
 
 static int
 _mkdir
@@ -171,18 +169,13 @@ const char* path
 
 }
 
-/*----------------------------------------------------------------------------
- * Detemination de liste des rangs actifs qui accedent reellement aux fichiers
+/**
+ * \brief Detemination de liste des rangs actifs qui accedent reellement aux fichiers
  * et le nombre de donnees traitees par chaque rang (0 pour les rangs inactifs)
  *
- * parameters :
- *   fichier         <-- fichier traite
- *   n_donnnees      <-- nombre de donnees a traiter pour ce rang
- *   rang_actif      --> 1 si le rang courant est actif, 0 sinon
- *   n_rang_actif    --> Nombre de rangs actifs
- *   rangs_actifs    --> Liste des rangs actifs (Alloue dans la fonction)
+ * \param [in] fichier         Fichier traite
  *
- *----------------------------------------------------------------------------*/
+ */
 
 static void _rangs_actifs
 (
@@ -310,36 +303,33 @@ PDM_io_fichier_t  *fichier
       }
 
       PDM_MPI_Comm_split (fichier->comm,
-                         fichier->rang_actif,
-                         fichier->rang,
-                         &(fichier->scomm));
+                          fichier->rang_actif,
+                          fichier->rang,
+                          &(fichier->scomm));
 
     }
   }
 }
 
 
-/*----------------------------------------------------------------------------
- * Detemination de liste des rangs actifs qui accedent reellement aux fichiers
+/**
+ * \brief Detemination de liste des rangs actifs qui accedent reellement aux fichiers
  * et le nombre de donnees traitees par chaque rang (0 pour les rangs inactifs)
  *
- * parameters :
- *   fichier         <-- fichier traite
- *   n_donnnees_total<-- nombre de donnees a traiter pour ce rang
- *   n_donnees_rangs --> Nombre de donnees traitees par chaque rang
- *                       (Taille en n_rangs, valeur nulle pour les rangs
- *                        inactifs)
- *   n_donnees_rang_min --> nombre de donnees min pour l'ensemble des rangs
- *   n_donnees_rang_max --> nombre de donnees max pour l'ensemble des rangs
+ * \param [in]  fichier             Fichier traite
+ * \param [in]  n_donnnees_total    Nombre de donnees a traiter pour ce rang
+ * \param [out] n_donnees_rangs     Nombre de donnees traitees par chaque rang (Taille en n_rangs, valeur nulle pour les rangs inactifs)
+ * \param [out] n_donnees_rang_min  Nombre de donnees min pour l'ensemble des rangs
+ * \param [out] n_donnees_rang_max  Nombre de donnees max pour l'ensemble des rangs
  *
- *----------------------------------------------------------------------------*/
+ */
 
 static void _n_donnees_rang
 (PDM_io_fichier_t  *fichier,
- const PDM_g_num_t n_donnees_total,
- PDM_g_num_t     *n_donnees_rangs,
- int                 *n_donnees_rang_min,
- int                 *n_donnees_rang_max
+ const PDM_g_num_t  n_donnees_total,
+ PDM_g_num_t       *n_donnees_rangs,
+ int               *n_donnees_rang_min,
+ int               *n_donnees_rang_max
 )
 {
 
@@ -383,43 +373,38 @@ static void _n_donnees_rang
 }
 
 
-/*----------------------------------------------------------------------------
- * Dertermine les parametres de distributions des donnees pour les ecritures
+/**
+ * \brief Dertermine les parametres de distributions des donnees pour les ecritures
  * et lectures par blocs
  *
- * parameters :
- *   fichier             <-- fichier traite
- *   t_n_composantes     <-- Type de tailles composantes
- *                             (PDM_IO_N_COMPOSANTE_CONSTANT
- *                           ou PDM_IO_N_COMPOSANTE_VARIABLE)
- *   n_composantes       <-- Nombre de composantes pour chaque donnee
- *   debut_bloc          <-- Adresse de debut de bloc dans la numerotation
- *                           absolue
- *   n_donnnees          <-- nombre de donnees a traiter pour ce rang
- *   rang_actif          <-- 1 si le rang courant est actif, 0 sinon
- *   n_donnees_rangs     <-- Nombre de donnees traitees par chaque rang
- *                          (Taille en n_rangs, valeur nulle pour les rangs
- *                           inactifs)
- *   n_donnees_a_envoyer  --> Nombre de donnees a envoyer a chaque processus
- *   i_donnees_a_envoyer  --> Index correspondant
- *   n_donnees_a_recevoir --> Nombre de donnees recues de chaque processus
- *   i_donnees_a_recevoir --> Index correspondant
+ * \param [in]  fichier                Fichier traite
+ * \param [in]  t_n_composantes        Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+ * \param [in]  n_composantes          Nombre de composantes pour chaque donnee
+ * \param [in]  debut_bloc             Adresse de debut de bloc dans la numerotation absolue
+ * \param [in]  n_donnnees             Nombre de donnees a traiter pour ce rang
+ * \param [in]  rang_actif             1 si le rang courant est actif, 0 sinon
+ * \param [in]  n_donnees_rangs        Nombre de donnees traitees par chaque rang (Taille en n_rangs, valeur nulle pour les rangs inactifs)
+ * \param [out] n_donnees_a_envoyer    Nombre de donnees a envoyer a chaque processus
+ * \param [out] i_donnees_a_envoyer    Index correspondant
+ * \param [out] n_donnees_a_recevoir   Nombre de donnees recues de chaque processus
+ * \param [out] i_donnees_a_recevoir   Index correspondant
  *
- *----------------------------------------------------------------------------*/
+ */
 
 static void _calcul_parametres_distribution_bloc
-(PDM_io_fichier_t             *fichier,
+(
+ PDM_io_fichier_t             *fichier,
  const PDM_io_n_composantes_t  t_n_composantes,
- const PDM_l_num_t           *n_composantes,
- const PDM_g_num_t           debut_bloc,
- const PDM_l_num_t            n_donnees,
- const int                       rang_actif,
- const PDM_g_num_t          *n_donnees_traitees_rangs,
- int                            *n_donnees_a_envoyer,
- int                            *i_donnees_a_envoyer,
- int                            *n_donnees_a_recevoir,
- int                            *i_donnees_a_recevoir)
-
+ const PDM_l_num_t            *n_composantes,
+ const PDM_g_num_t             debut_bloc,
+ const PDM_l_num_t             n_donnees,
+ const int                     rang_actif,
+ const PDM_g_num_t            *n_donnees_traitees_rangs,
+ int                          *n_donnees_a_envoyer,
+ int                          *i_donnees_a_envoyer,
+ int                          *n_donnees_a_recevoir,
+ int                          *i_donnees_a_recevoir
+ )
 {
   /*------------------------------------------------------------
    * Repartition des donnees sur les processus actifs
@@ -603,11 +588,11 @@ static void _calcul_parametres_distribution_bloc
  *
  *----------------------------------------------------------------------------*/
 
-PDM_io_fichier_t *PDM_io_get_fichier
-(const PDM_l_num_t  unite)
-{
-  return (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);
-}
+// PDM_io_fichier_t *PDM_io_get_fichier
+// (const PDM_l_num_t  unite)
+// {
+//   return (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);
+// }
 
 
 /*----------------------------------------------------------------------------
@@ -622,11 +607,13 @@ PDM_io_fichier_t *PDM_io_get_fichier
  *----------------------------------------------------------------------------*/
 
 const char* PDM_io_get_nom_fichier
-(const PDM_l_num_t unite)
+(
+ PDM_io_fichier_t *fichier
+ )
 {
   char *nom = NULL;
-  PDM_io_fichier_t *fichier =
-          (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);
+  // PDM_io_fichier_t *fichier =
+  //         (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);
   if (fichier != NULL)
     nom = fichier->nom;
   return nom;
@@ -683,18 +670,18 @@ void PROCF (pdm_io_open_cf, PDM_IO_OPEN_CF)
   const PDM_io_backup_t _s_backup = (PDM_io_backup_t) *s_backup;
   const PDM_io_endian_t _endian   = (PDM_io_endian_t) *endian;
 
-  PDM_io_open(nom_c,
-              _fmt,
-              _suff_t,
-              suff_u_c,
-              _s_backup,
-              _acces,
-              _mode,
-              _endian,
-              _comm,
-              *prop_noeuds_actifs,
-              unite,
-              ierr);
+  // PDM_io_open(nom_c,
+  //             _fmt,
+  //             _suff_t,
+  //             suff_u_c,
+  //             _s_backup,
+  //             _acces,
+  //             _mode,
+  //             _endian,
+  //             _comm,
+  //             *prop_noeuds_actifs,
+  //             unite,
+  //             ierr);
 
   free(nom_c);
   if (suff_u_c != NULL)
@@ -703,17 +690,18 @@ void PROCF (pdm_io_open_cf, PDM_IO_OPEN_CF)
 
 void PDM_io_open
 (const char             *nom,
- const PDM_io_fmt_t    fmt,
- const PDM_io_suff_t   suff_t,
+ const PDM_io_fmt_t      fmt,
+ const PDM_io_suff_t     suff_t,
  const char             *suff_u,
- const PDM_io_backup_t s_backup,
- const PDM_io_acces_t  acces,
- const PDM_io_mode_t   mode,
- const PDM_io_endian_t  endian,
- PDM_MPI_Comm                comm,
+ const PDM_io_backup_t   s_backup,
+ const PDM_io_acces_t    acces,
+ const PDM_io_mode_t     mode,
+ const PDM_io_endian_t   endian,
+ PDM_MPI_Comm            comm,
  double                  prop_noeuds_actifs,
- PDM_l_num_t         *unite,
- PDM_l_num_t         *ierr
+ // PDM_l_num_t           *unite,
+ PDM_io_fichier_t      **unite,
+ PDM_l_num_t            *ierr
 )
 {
 
@@ -721,14 +709,15 @@ void PDM_io_open
 
   *ierr = 0;
 
-  if (PDM_io_fichiers == NULL) {
-    PDM_io_fichiers = PDM_Handles_create (4);
-  }
+  // if (PDM_io_fichiers == NULL) {
+  //   PDM_io_fichiers = PDM_Handles_create (4);
+  // }
 
   /* Initialisation de la structure PDM_io_fichier_t */
-
-  PDM_io_fichier_t *nouveau_fichier =
-    (PDM_io_fichier_t*) malloc(sizeof(PDM_io_fichier_t));
+  // PDM_io_fichier_t *nouveau_fichier =
+  //   (PDM_io_fichier_t*) malloc(sizeof(PDM_io_fichier_t));
+  *unite = (PDM_io_fichier_t*) malloc(sizeof(PDM_io_fichier_t));
+  PDM_io_fichier_t *nouveau_fichier = *unite;
 
   /* Initialisation des timer */
 
@@ -948,7 +937,7 @@ void PDM_io_open
   /* Stockage du fichier cree */
 
 
-  *unite = PDM_Handles_store (PDM_io_fichiers, nouveau_fichier);
+  // *unite = PDM_Handles_store (PDM_io_fichiers, nouveau_fichier);
 
   PDM_timer_hang_on(nouveau_fichier->timer_total);
 
@@ -972,18 +961,19 @@ const PDM_g_num_t   *offset,
 const PDM_io_seek_t *seek
 )
 {
-  PDM_io_seek (*unite, *offset, *seek);
+  // PDM_io_seek (*unite, *offset, *seek);
 }
 
 void PDM_io_seek
 (
-const PDM_l_num_t   unite,
-const PDM_g_num_t   offset,
-const PDM_io_seek_t seek
+// const PDM_l_num_t   unite,
+ PDM_io_fichier_t   *fichier,
+ const PDM_g_num_t   offset,
+ const PDM_io_seek_t seek
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
     if (fichier->PDM_file_seq != NULL) {
@@ -1006,8 +996,8 @@ const PDM_io_seek_t seek
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -1028,19 +1018,20 @@ const PDM_l_num_t    *unite,
       PDM_g_num_t    *offset
 )
 {
-  PDM_g_num_t  _offset = PDM_io_tell (*unite);
-  *offset = _offset;
+  // PDM_g_num_t  _offset = PDM_io_tell (*unite);
+  // *offset = _offset;
 }
 
 PDM_g_num_t
 PDM_io_tell
 (
-const PDM_l_num_t     unite
+// const PDM_l_num_t     unite
+ PDM_io_fichier_t   *fichier
 )
 {
   PDM_g_num_t offset = 0;
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
     if (fichier->PDM_file_seq != NULL) {
@@ -1057,8 +1048,8 @@ const PDM_l_num_t     unite
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 
@@ -1085,21 +1076,21 @@ void PROCF (pdm_io_lecture_globale, PDM_IO_LECTURE_GLOBALE)
  void                 *donnees
 )
 {
-  PDM_io_lecture_globale(*unite,
-                           *taille_donnee,
-                           *n_donnees,
-                           donnees);
+  // PDM_io_lecture_globale(*unite,
+  //                          *taille_donnee,
+  //                          *n_donnees,
+  //                          donnees);
 }
 
 void PDM_io_lecture_globale
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_l_num_t  taille_donnee,
  const PDM_g_num_t  n_donnees,
  void                 *donnees
  )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -1198,8 +1189,8 @@ void PDM_io_lecture_globale
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lecture_globale :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lecture_globale :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -1222,14 +1213,14 @@ void PROCF (pdm_io_ecriture_globale, PDM_IO_ECRITURE_GLOBALE)
  const void           *donnees
 )
 {
-  PDM_io_ecriture_globale(*unite,
-                            *taille_donnee,
-                            *n_donnees,
-                            donnees);
+  // PDM_io_ecriture_globale(*unite,
+  //                           *taille_donnee,
+  //                           *n_donnees,
+  //                           donnees);
 }
 
 void PDM_io_ecriture_globale
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_l_num_t  taille_donnee,
  const PDM_g_num_t  n_donnees,
  const void           *donnees
@@ -1237,7 +1228,7 @@ void PDM_io_ecriture_globale
 {
   int n_donnees_ecrites = 0;
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -1402,8 +1393,8 @@ void PDM_io_ecriture_globale
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecriture_globale :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecriture_globale :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -1442,17 +1433,17 @@ void PROCF (pdm_io_lec_par_entrelacee, PDM_IO_LEC_PAR_ENTRELACEE)
   else if (*t_n_composantes == 1)
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  PDM_io_lec_par_entrelacee(*unite,
-                              _t_n_composantes,
-                              n_composantes,
-                              *taille_donnee,
-                              *n_donnees,
-                              indirection,
-                              donnees);
+  // PDM_io_lec_par_entrelacee(*unite,
+  //                             _t_n_composantes,
+  //                             n_composantes,
+  //                             *taille_donnee,
+  //                             *n_donnees,
+  //                             indirection,
+  //                             donnees);
 }
 
 void PDM_io_lec_par_entrelacee
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -1462,7 +1453,7 @@ void PDM_io_lec_par_entrelacee
  )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   unsigned char* buffer = NULL;
   PDM_g_num_t *index = NULL;
@@ -1546,7 +1537,7 @@ void PDM_io_lec_par_entrelacee
       PDM_timer_hang_on(timer_distribution);
       PDM_timer_hang_on(timer_total);
 
-      PDM_io_lecture_globale(unite,
+      PDM_io_lecture_globale(fichier,
                                taille_donnee,
                                _n_donnees_buff,
                                buffer);
@@ -2178,8 +2169,8 @@ void PDM_io_lec_par_entrelacee
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lec_par_entrelacee :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lec_par_entrelacee :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -2219,17 +2210,17 @@ void PROCF (pdm_io_lec_par_bloc, PDM_IO_LEC_PAR_BLOC)
   else if (*t_n_composantes == 1)
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  PDM_io_lec_par_bloc(*unite,
-                        _t_n_composantes,
-                        n_composantes,
-                        *taille_donnee,
-                        *n_donnees,
-                        *debut_bloc,
-                        donnees);
+  // PDM_io_lec_par_bloc(*unite,
+  //                       _t_n_composantes,
+  //                       n_composantes,
+  //                       *taille_donnee,
+  //                       *n_donnees,
+  //                       *debut_bloc,
+  //                       donnees);
 }
 
 void PDM_io_lec_par_bloc
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -2239,7 +2230,7 @@ void PDM_io_lec_par_bloc
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   unsigned char* buffer = NULL;
 
@@ -2283,7 +2274,7 @@ void PDM_io_lec_par_bloc
 
       PDM_timer_hang_on(timer_total);
 
-      PDM_io_lecture_globale(unite,
+      PDM_io_lecture_globale(fichier,
                                taille_donnee,
                                l_donnees,
                                donnees);
@@ -2645,8 +2636,8 @@ void PDM_io_lec_par_bloc
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lec_par_bloc :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_lec_par_bloc :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -2686,17 +2677,17 @@ void PROCF (pdm_io_ecr_par_entrelacee, PDM_IO_ECR_PAR_ENTRELACEE)
   else if (*t_n_composantes == 1)
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  PDM_io_ecr_par_entrelacee(*unite,
-                              _t_n_composantes,
-                              n_composantes,
-                              *taille_donnee,
-                              *n_donnees,
-                              indirection,
-                              donnees);
+  // PDM_io_ecr_par_entrelacee(*unite,
+  //                             _t_n_composantes,
+  //                             n_composantes,
+  //                             *taille_donnee,
+  //                             *n_donnees,
+  //                             indirection,
+  //                             donnees);
 }
 
 void PDM_io_ecr_par_entrelacee
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -2706,7 +2697,7 @@ void PDM_io_ecr_par_entrelacee
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   unsigned char* buffer = NULL;
   char* s_buffer = NULL;
@@ -2911,7 +2902,7 @@ void PDM_io_ecr_par_entrelacee
       /* Ecriture binaire */
 
       else {
-        PDM_io_ecriture_globale(unite,
+        PDM_io_ecriture_globale(fichier,
                                 taille_donnee,
                                 _n_donnees,
                                 buffer);
@@ -3587,8 +3578,8 @@ void PDM_io_ecr_par_entrelacee
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecr_par_entrelacee :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecr_par_entrelacee :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -3628,17 +3619,17 @@ void PROCF (pdm_io_ecr_par_bloc, PDM_IO_ECR_PAR_BLOC)
   else if (*t_n_composantes == 1)
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  PDM_io_ecr_par_bloc(*unite,
-                        _t_n_composantes,
-                        n_composantes,
-                        *taille_donnee,
-                        *n_donnees,
-                        *debut_bloc,
-                        donnees);
+  // PDM_io_ecr_par_bloc(*unite,
+  //                       _t_n_composantes,
+  //                       n_composantes,
+  //                       *taille_donnee,
+  //                       *n_donnees,
+  //                       *debut_bloc,
+  //                       donnees);
 }
 
 void PDM_io_ecr_par_bloc
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -3648,7 +3639,7 @@ void PDM_io_ecr_par_bloc
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   unsigned char* buffer = NULL;
 
@@ -3681,7 +3672,7 @@ void PDM_io_ecr_par_bloc
 
       PDM_timer_hang_on(timer_total);
 
-      PDM_io_ecriture_globale(unite,
+      PDM_io_ecriture_globale(fichier,
                                 taille_donnee,
                                 l_donnees,
                                 donnees);
@@ -4008,8 +3999,8 @@ void PDM_io_ecr_par_bloc
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecr_par_bloc :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_ecr_par_bloc :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4027,15 +4018,15 @@ void PROCF (pdm_io_close, PDM_IO_CLOSE)
 (const PDM_l_num_t *unite
 )
 {
-  PDM_io_close(*unite);
+  // PDM_io_close(*unite);
 }
 
 void PDM_io_close
-(const PDM_l_num_t unite
+(PDM_io_fichier_t   *fichier
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -4104,7 +4095,7 @@ void PDM_io_close
   PDM_MPI_Barrier (fichier->comm);
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_close : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_close : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4121,21 +4112,21 @@ void PROCF (pdm_io_detruit, PDM_IO_DETRUIT)
 (const PDM_l_num_t *unite
 )
 {
-  PDM_io_detruit(*unite);
+  // PDM_io_detruit(*unite);
 }
 
 void PDM_io_detruit
-(const PDM_l_num_t unite
+(PDM_io_fichier_t   *fichier
 )
 {
   /* Fermeture du fichier */
 
-  PDM_io_close(unite);
+  PDM_io_close(fichier);
 
   /* Liberation de la structure */
 
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -4169,17 +4160,17 @@ void PDM_io_detruit
     }
     free(fichier);
 
-    PDM_Handles_handle_free (PDM_io_fichiers, unite, PDM_FALSE);
+    // PDM_Handles_handle_free (PDM_io_fichiers, unite, PDM_FALSE);
 
-    int n_file = PDM_Handles_n_get (PDM_io_fichiers);
+    // int n_file = PDM_Handles_n_get (PDM_io_fichiers);
 
-    if (n_file == 0) {
-      PDM_io_fichiers = PDM_Handles_free (PDM_io_fichiers);
-    }
+    // if (n_file == 0) {
+    //   PDM_io_fichiers = PDM_Handles_free (PDM_io_fichiers);
+    // }
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_detruit : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_detruit : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4200,17 +4191,17 @@ void PROCF (pdm_io_get_timer_fichier, PDM_IO_GET_TIMER_FICHIER)
  double               *t_elapsed
 )
 {
-  PDM_io_get_timer_fichier(*unite, t_cpu, t_elapsed);
+  // PDM_io_get_timer_fichier(*unite, t_cpu, t_elapsed);
 }
 
 void PDM_io_get_timer_fichier
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
     PDM_timer_t *timer = fichier->timer_fichier;
@@ -4222,8 +4213,8 @@ void PDM_io_get_timer_fichier
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_fichier"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_fichier"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4244,17 +4235,17 @@ void PROCF (pdm_io_get_timer_distrib, PDM_IO_GET_TIMER_DISTRIB)
  double               *t_elapsed
 )
 {
-  PDM_io_get_timer_distrib(*unite, t_cpu, t_elapsed);
+  // PDM_io_get_timer_distrib(*unite, t_cpu, t_elapsed);
 }
 
 void PDM_io_get_timer_distrib
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -4267,8 +4258,8 @@ void PDM_io_get_timer_distrib
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_distribution"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_distribution"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4289,17 +4280,17 @@ void PROCF (pdm_io_get_timer_swap_endian, PDM_IO_GET_TIMER_SWAP_ENDIAN)
  double               *t_elapsed
 )
 {
-  PDM_io_get_timer_swap_endian(*unite, t_cpu, t_elapsed);
+  // PDM_io_get_timer_swap_endian(*unite, t_cpu, t_elapsed);
 }
 
 void PDM_io_get_timer_swap_endian
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -4312,8 +4303,8 @@ void PDM_io_get_timer_swap_endian
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_distribution"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_distribution"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4334,17 +4325,17 @@ void PROCF (pdm_io_get_timer_total, PDM_IO_GET_TIMER_TOTAL)
  double               *t_elapsed
 )
 {
-  PDM_io_get_timer_total(*unite, t_cpu, t_elapsed);
+  // PDM_io_get_timer_total(*unite, t_cpu, t_elapsed);
 }
 
 void PDM_io_get_timer_total
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -4357,8 +4348,8 @@ void PDM_io_get_timer_total
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_total"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_timer_total"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4375,18 +4366,18 @@ void PROCF (pdm_io_dump, PDM_IO_DUMP)
 (const PDM_l_num_t *unite
 )
 {
-  PDM_io_dump(*unite);
+  // PDM_io_dump(*unite);
 }
 
 void PDM_io_dump
-(const PDM_l_num_t unite
+(PDM_io_fichier_t   *fichier
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
-    PDM_printf("Propriete du fichier d'unite '%i'\n", unite);
+    // PDM_printf("Propriete du fichier d'unite '%i'\n", unite);
     PDM_printf("   - nom                           : %s\n", fichier->nom);
     PDM_printf("   - mode                          : ");
     if (fichier->mode == PDM_IO_MODE_LECTURE)
@@ -4415,8 +4406,8 @@ void PDM_io_dump
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_dump :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_dump :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4437,17 +4428,17 @@ void PROCF (pdm_io_get_comm, PDM_IO_GET_COMM)
 {
   PDM_MPI_Comm              comm;
 
-  PDM_io_get_comm(*unite, &comm);
-  *pdm_mpi_comm = PDM_MPI_Comm_c2f(comm);
+  // PDM_io_get_comm(*unite, &comm);
+  // *pdm_mpi_comm = PDM_MPI_Comm_c2f(comm);
 }
 
 void PDM_io_get_comm
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  PDM_MPI_Comm             *pdm_mpi_comm
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL)
     *pdm_mpi_comm   = fichier->comm;
@@ -4455,8 +4446,8 @@ void PDM_io_get_comm
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_comm"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_comm"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4475,16 +4466,16 @@ void PROCF (pdm_io_swap_endian_on, PDM_IO_SWAP_ENDIAN_ON)
 PDM_l_num_t *unite
 )
 {
-  PDM_io_swap_endian_on(*unite);
+  // PDM_io_swap_endian_on(*unite);
 }
 
 void PDM_io_swap_endian_on
 (
-const PDM_l_num_t unite
+PDM_io_fichier_t   *fichier
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL)
     fichier->swap_endian = 1;
@@ -4492,8 +4483,8 @@ const PDM_l_num_t unite
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_comm"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_get_comm"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4512,16 +4503,16 @@ void PROCF (pdm_io_swap_endian_off, PDM_IO_SWAP_ENDIAN_OFF)
 PDM_l_num_t *unite
 )
 {
-  PDM_io_swap_endian_off(*unite);
+  // PDM_io_swap_endian_off(*unite);
 }
 
 void PDM_io_swap_endian_off
 (
-const PDM_l_num_t unite
+PDM_io_fichier_t   *fichier
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL)
     fichier->swap_endian = 0;
@@ -4529,8 +4520,8 @@ const PDM_l_num_t unite
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_swap_endian_off"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_swap_endian_off"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4666,21 +4657,21 @@ void PROCF (pdm_io_fmt_donnee_set_cf, PDM_IO_FMT_DONNEE_SET_CF)
 {
   char *fmt_c    = PDM_fortran_to_c_string(fmt, *l_fmt);
 
-  PDM_io_fmt_donnee_set(*unite, *n_char_fmt, (PDM_io_type_t) *data_type, fmt_c);
+  // PDM_io_fmt_donnee_set(*unite, *n_char_fmt, (PDM_io_type_t) *data_type, fmt_c);
 
   free(fmt_c);
 }
 
 void PDM_io_fmt_donnee_set
 (
- const PDM_l_num_t unite,
+ PDM_io_fichier_t   *fichier,
  const PDM_l_num_t n_char_fmt,
  const PDM_io_type_t data_type,
  const char           *fmt
 )
 {
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
     fichier->swap_endian = 0;
@@ -4695,8 +4686,8 @@ void PDM_io_fmt_donnee_set
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_fmt_donnee_set"
-            " : unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_fmt_donnee_set"
+    //         " : unite '%d' non valide\n", unite);
     abort();
   }
 }
@@ -4781,16 +4772,16 @@ void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
   else if (*t_n_composantes == 1)
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  *t_n_donnees = PDM_io_n_donnees_get (*unite,
-                                         _t_n_composantes,
-                                         n_composantes,
-                                         *n_donnees,
-                                         indirection);
+  // *t_n_donnees = PDM_io_n_donnees_get (*unite,
+  //                                        _t_n_composantes,
+  //                                        n_composantes,
+  //                                        *n_donnees,
+  //                                        indirection);
 }
 
 PDM_g_num_t
 PDM_io_n_donnees_get
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           n_donnees,
@@ -4801,7 +4792,7 @@ PDM_io_n_donnees_get
   PDM_g_num_t t_n_donnees = 0;
 
   int err_code = 0;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  // PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
 
@@ -5067,8 +5058,8 @@ PDM_io_n_donnees_get
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_n_donnees_get :"
-            " unite '%d' non valide\n", unite);
+    // PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_n_donnees_get :"
+    //         " unite '%d' non valide\n", unite);
     abort();
   }
 

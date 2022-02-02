@@ -175,7 +175,7 @@ typedef struct _PDM_io_fichier_t PDM_io_fichier_t;
  *----------------------------------------------------------------------------*/
 
 PDM_io_fichier_t *PDM_io_get_fichier
-(const PDM_l_num_t unite);
+(PDM_io_fichier_t             *fichier);
 
 /*----------------------------------------------------------------------------
  * Retourne le nomn du fichier ou NULL si pas de fichier
@@ -189,7 +189,7 @@ PDM_io_fichier_t *PDM_io_get_fichier
  *----------------------------------------------------------------------------*/
 
 const char* PDM_io_get_nom_fichier
-(const PDM_l_num_t unite);
+(PDM_io_fichier_t             *fichier);
 
 /*----------------------------------------------------------------------------
  * Ouverture d'un fichier pour acces parallele
@@ -239,7 +239,7 @@ void PDM_io_open
  const PDM_io_endian_t endian,
  PDM_MPI_Comm          comm,
  double                prop_noeuds_actifs,
- PDM_l_num_t          *unite,
+ PDM_io_fichier_t     **fichier,
  PDM_l_num_t          *ierr
  );
 
@@ -263,7 +263,7 @@ const PDM_io_seek_t *seek
 
 void PDM_io_seek
 (
-const PDM_l_num_t   unite,
+PDM_io_fichier_t   *fichier,
 const PDM_g_num_t   offset,
 const PDM_io_seek_t seek
 );
@@ -287,7 +287,7 @@ const PDM_l_num_t    *unite,
 PDM_g_num_t
 PDM_io_tell
 (
-const PDM_l_num_t     unite
+PDM_io_fichier_t   *fichier
 );
 
 
@@ -310,7 +310,7 @@ void PROCF (pdm_io_lecture_globale, PDM_IO_LECTURE_GLOBALE)
 );
 
 void PDM_io_lecture_globale
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_l_num_t  taille_donnee,
  const PDM_g_num_t  n_donnees,
  void                 *donnees
@@ -335,7 +335,7 @@ void PROCF (pdm_io_ecriture_globale, PDM_IO_ECRITURE_GLOBALE)
 );
 
 void PDM_io_ecriture_globale
-(const PDM_l_num_t  unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_l_num_t  taille_donnee,
  const PDM_g_num_t  n_donnees,
  const void           *donnees
@@ -366,7 +366,7 @@ void PROCF (pdm_io_lec_par_entrelacee, PDM_IO_LEC_PAR_ENTRELACEE)
  );
 
 void PDM_io_lec_par_entrelacee
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -402,7 +402,7 @@ void PROCF (pdm_io_lec_par_bloc, PDM_IO_LEC_PAR_BLOC)
 );
 
 void PDM_io_lec_par_bloc
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -440,7 +440,7 @@ void PROCF (pdm_io_ecr_par_entrelacee, PDM_IO_ECR_PAR_ENTRELACEE)
 );
 
 void PDM_io_ecr_par_entrelacee
-(const PDM_l_num_t            unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t  t_n_composantes,
  const PDM_l_num_t           *n_composantes,
  const PDM_l_num_t            taille_donnee,
@@ -476,7 +476,7 @@ void PROCF (pdm_io_ecr_par_bloc, PDM_IO_ECR_PAR_BLOC)
 );
 
 void PDM_io_ecr_par_bloc
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           taille_donnee,
@@ -499,7 +499,7 @@ void PROCF (pdm_io_close, PDM_IO_CLOSE)
 );
 
 void PDM_io_close
-(const PDM_l_num_t unite
+(PDM_io_fichier_t   *fichier
 );
 
 /*----------------------------------------------------------------------------
@@ -514,7 +514,7 @@ void PROCF (pdm_io_detruit, PDM_IO_DETRUIT)
 (const PDM_l_num_t *unite);
 
 void PDM_io_detruit
-(const PDM_l_num_t unite);
+(PDM_io_fichier_t   *fichier);
 
 /*----------------------------------------------------------------------------
  * Retourne le temps cumule d'acces aux fichiers
@@ -533,7 +533,7 @@ void PROCF (pdm_io_get_timer_fichier, PDM_IO_GET_TIMER_FICHIER)
 );
 
 void PDM_io_get_timer_fichier
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double *t_cpu,
  double *t_elapsed
 );
@@ -555,7 +555,7 @@ void PROCF (pdm_io_get_timer_swap_endian, PDM_IO_GET_TIMER_SWAP_ENDIAN)
 );
 
 void PDM_io_get_timer_swap_endian
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 );
@@ -577,7 +577,7 @@ void PROCF (pdm_io_get_timer_distrib, PDM_IO_GET_TIMER_DISTRIB)
 );
 
 void PDM_io_get_timer_distrib
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 );
@@ -599,7 +599,7 @@ void PROCF (pdm_io_get_timer_total, PDM_IO_GET_TIMER_TOTAL)
 );
 
 void PDM_io_get_timer_total
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  double               *t_cpu,
  double               *t_elapsed
 );
@@ -617,7 +617,7 @@ void PROCF (pdm_io_dump, PDM_IO_DUMP)
 );
 
 void PDM_io_dump
-(const PDM_l_num_t unite
+(PDM_io_fichier_t   *fichier
 );
 
 
@@ -636,7 +636,7 @@ void PROCF (pdm_io_get_comm, PDM_IO_GET_COMM)
 );
 
 void PDM_io_get_comm
-(const PDM_l_num_t unite,
+(PDM_io_fichier_t   *fichier,
  PDM_MPI_Comm             *pdm_mpi_comm
 );
 
@@ -656,7 +656,7 @@ PDM_l_num_t *unite
 
 void PDM_io_swap_endian_on
 (
-const PDM_l_num_t unite
+PDM_io_fichier_t   *fichier
 );
 
 
@@ -675,7 +675,7 @@ PDM_l_num_t *unite
 
 void PDM_io_swap_endian_off
 (
-const PDM_l_num_t unite
+PDM_io_fichier_t   *fichier
 );
 
 
@@ -731,7 +731,7 @@ void PROCF (pdm_io_fmt_donnee_set_cf, PDM_IO_FMT_DONNEE_SET_CF)
 
 void PDM_io_fmt_donnee_set
 (
- const PDM_l_num_t unite,
+PDM_io_fichier_t   *fichier,
  const PDM_l_num_t n_char_fmt,
  const PDM_io_type_t data_type,
  const char           *fmt
@@ -778,7 +778,7 @@ void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
  );
 
 PDM_g_num_t PDM_io_n_donnees_get
-(const PDM_l_num_t           unite,
+(PDM_io_fichier_t   *fichier,
  const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           n_donnees,

@@ -83,7 +83,8 @@ static int _num_var_cedre_max = -1;
  * Unité du fichier
  *----------------------------------------------------------------------------*/
 
-static PDM_l_num_t  _unite = -1;
+// static PDM_l_num_t  _unite = -1;
+static PDM_io_fichier_t *_unite = NULL;
 
 /*----------------------------------------------------------------------------
  * Type de rangement
@@ -260,14 +261,15 @@ void PROCF (pdm_io_tab_ecr_debut, PDM_IO_TAB_ECR_DEBUT)
   else if (*t_rangement == 1)
     __t_rangement = PDM_IO_RANGEMENT_ENTRELACE;
 
-  PDM_io_tab_ecr_debut(*unite,
-                         __t_rangement,
-                         *num_var_cedre_max,
-                         *n_partition_local);
+  // PDM_io_tab_ecr_debut(*unite,
+  //                        __t_rangement,
+  //                        *num_var_cedre_max,
+  //                        *n_partition_local);
 }
 
 void  PDM_io_tab_ecr_debut
-(const PDM_l_num_t       unite,
+ // (const PDM_l_num_t *unite,
+(PDM_io_fichier_t *unite,
  const PDM_io_rangement_t t_rangement,
  const PDM_l_num_t       num_var_cedre_max,
  const PDM_l_num_t       n_partition_local
@@ -719,14 +721,15 @@ void PROCF (pdm_io_tab_lec_debut, PDM_IO_TAB_LEC_DEBUT)
   else if (*t_rangement == 1)
     __t_rangement = PDM_IO_RANGEMENT_ENTRELACE;
 
-  PDM_io_tab_lec_debut(*unite,
-                         __t_rangement,
-                         *num_var_cedre_max,
-                         *n_partition_local);
+  // PDM_io_tab_lec_debut(*unite,
+  //                        __t_rangement,
+  //                        *num_var_cedre_max,
+  //                        *n_partition_local);
 }
 
 void PDM_io_tab_lec_debut
-(const PDM_l_num_t       unite,
+// (const PDM_l_num_t       unite,
+(PDM_io_fichier_t *unite,
  const PDM_io_rangement_t t_rangement,
  const PDM_l_num_t       num_var_cedre_max,
  const PDM_l_num_t       n_partition_local

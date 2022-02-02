@@ -67,7 +67,8 @@ void PROCF (pdm_io_tab_ecr_debut, PDM_IO_TAB_ECR_DEBUT)
 );
 
 void PDM_io_tab_ecr_debut
-(const PDM_l_num_t       unite,
+ // (const PDM_l_num_t *unite,
+(PDM_io_fichier_t *unite,
  const PDM_io_rangement_t t_rangement,
  const PDM_l_num_t       num_var_cedre_max,
  const PDM_l_num_t       n_partition_local
@@ -174,7 +175,8 @@ void PROCF (pdm_io_tab_lec_debut, PDM_IO_TAB_LEC_DEBUT)
 );
 
 void PDM_io_tab_lec_debut
-(const PDM_l_num_t       unite,
+// (const PDM_l_num_t       unite,
+(PDM_io_fichier_t *unite,
  const PDM_io_rangement_t t_rangement,
  const PDM_l_num_t       num_var_cedre_max,
  const PDM_l_num_t       n_partition_local

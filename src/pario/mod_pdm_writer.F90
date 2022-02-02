@@ -1568,8 +1568,6 @@ module pdm_writer
     c_id_geom = id_geom
     c_id_part = id_part
 
-    print *, "val =", val(1:3), "..."
-
     c_val = c_loc(val)
 
     call PDM_writer_var_set_c (cs,        &
