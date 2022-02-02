@@ -190,27 +190,6 @@ typedef enum {
  *
  */
 
-// void
-// PROCF (pdm_writer_create_cf, PDM_WRITER_CREATE_CF)
-// (
-// const char          *fmt,
-// const int           *l_fmt,
-// const int           *fmt_fic,
-// const int           *topologie,
-// const int           *st_reprise,
-// const char          *rep_sortie,
-// const char          *nom_sortie,
-// const int           *l_rep_sortie,
-// const int           *l_nom_sortie,
-// const PDM_MPI_Fint  *pdm_mpi_comm,
-// const int           *acces,
-// const double        *prop_noeuds_actifs,
-// const char          *options,
-// const int           *l_options,
-// int                 *id_cs
-// ARGF_SUPP_CHAINE
-// );
-
 PDM_writer_t *
 PDM_writer_create
 (
@@ -226,17 +205,13 @@ const double                  prop_noeuds_actifs,
 const char                   *options
 );
 
+
 /**
  * \brief Libere un objet CS (Cedre Sortie) et retourne un pointeur NULL si pas d'erreur
  *
  * \param [in] cs    Pointer to \ref PDM_writer object
  *
  */
-// void
-// PROCF (pdm_writer_free, PDM_WRITER_FREE)
-// (
-// int        *id_cs
-// );
 
 void
 PDM_writer_free
@@ -244,18 +219,13 @@ PDM_writer_free
  PDM_writer_t *cs
 );
 
+
 /**
  * \brief Debut d'increment
  *
  * \param [in] cs             Pointer to \ref PDM_writer object
  * \param [in] physical_time  Temps
  */
-// void
-// PROCF (pdm_writer_step_beg, PDM_WRITER_STEP_BEG)
-// (
-// int           *id_cs,
-// double        *physical_time
-// );
 
 void
 PDM_writer_step_beg
@@ -264,6 +234,7 @@ PDM_writer_step_beg
  const double   physical_time
 );
 
+
 /**
  * \brief Fin d'increment
  *
@@ -271,17 +242,12 @@ PDM_writer_step_beg
  *
  */
 
-// void
-// PROCF (pdm_writer_step_end, PDM_WRITER_STEP_END)
-// (
-// int          *id_cs
-// );
-
 void
 PDM_writer_step_end
 (
  PDM_writer_t  *cs
 );
+
 
 /**
  * \brief Cree une nouvelle geometrie dans l'objet CS (Cedre Sortie)
@@ -294,19 +260,6 @@ PDM_writer_step_end
  * \return   Identificateur de l'objet geom dans cs
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_create_cf, PDM_WRITER_GEOM_CREATE_CF)
-// (
-// int           *id_cs,
-// char          *nom_geom,
-// int           *st_decoup_poly2d,
-// int           *st_decoup_poly3d,
-// int           *l_nom_geom,
-// int           *n_part,
-// int           *id_geom
-// ARGF_SUPP_CHAINE
-// );
 
 int
 PDM_writer_geom_create
@@ -328,6 +281,7 @@ PDM_writer_geom_create_from_mesh_nodal
  PDM_Mesh_nodal_t          *mesh
  );
 
+
 /**
  * \brief Definition des coordonnees de la partition courante
  *
@@ -340,17 +294,6 @@ PDM_writer_geom_create_from_mesh_nodal
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_coord_set, PDM_WRITER_GEOM_COORD_SET)
-// (
-// int             *id_cs,
-// int             *id_geom,
-// int             *id_part,
-// int             *n_som,
-// PDM_real_t       *coords,
-// PDM_g_num_t       *numabs
-// );
-
 void
 PDM_writer_geom_coord_set
 (
@@ -361,6 +304,7 @@ PDM_writer_geom_coord_set
  const PDM_real_t  *coords,
  const PDM_g_num_t *numabs
 );
+
 
 /**
  * \brief Definition des coordonnees des sommets de la partition courante
@@ -378,20 +322,6 @@ PDM_writer_geom_coord_set
  * \param [in] numabs_parent    Numerotation absolue des sommets parents (size = n_som_parent)
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_coord_from_parent_set, PDM_WRITER_GEOM_COORD_FROM_PARENT_SET)
-// (
-// int             *id_cs,
-// int             *id_geom,
-// int             *id_part,
-// int             *n_som,
-// int             *n_som_parent,
-// PDM_g_num_t       *numabs,
-// int             *num_parent,
-// PDM_real_t       *coords_parent,
-// PDM_g_num_t       *numabs_parent
-// );
 
 void
 PDM_writer_geom_coord_from_parent_set
@@ -418,16 +348,6 @@ PDM_writer_geom_coord_from_parent_set
  * \return   Identificateur du bloc
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_bloc_add, PDM_WRITER_GEOM_BLOC_ADD)
-// (
-// int   *id_cs,
-// int   *id_geom,
-// PDM_writer_statut_t  *st_free_data,
-// int   *t_elt,
-// int   *id_bloc
-// );
 
 int
 PDM_writer_geom_bloc_add
@@ -521,18 +441,6 @@ PDM_writer_geom_bloc_add
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_bloc_std_set, PDM_WRITER_GEOM_BLOC_STD_SET)
-// (
-// int           *id_cs,
-// int           *id_geom,
-// int           *id_bloc,
-// int           *id_part,
-// int           *n_elt,
-// PDM_l_num_t      *connec,
-// PDM_g_num_t     *numabs
-// );
-
 void
 PDM_writer_geom_bloc_std_set
 (
@@ -544,6 +452,7 @@ PDM_writer_geom_bloc_std_set
  PDM_l_num_t   *connec,
  PDM_g_num_t   *numabs
 );
+
 
 /**
  * \brief Ajout d'un bloc de polygones dans la partition courante
@@ -557,19 +466,6 @@ PDM_writer_geom_bloc_std_set
  * \param [in] numabs          Numerotation absolue des elements
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_bloc_poly2d_set, PDM_WRITER_GEOM_BLOC_POLY2D_SET)
-// (
-// int           *id_cs,
-// int           *id_geom,
-// int           *id_bloc,
-// int           *id_part,
-// PDM_l_num_t      *n_elt,
-// PDM_l_num_t      *connec_idx,
-// PDM_l_num_t      *connec,
-// PDM_g_num_t     *numabs
-// );
 
 void
 PDM_writer_geom_bloc_poly2d_set
@@ -600,22 +496,6 @@ const PDM_l_num_t    n_elt,
  * \param [in] numabs          Numerotation absolue des elements
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_bloc_poly3d_set, PDM_WRITER_GEOM_BLOC_POLY3D_SET)
-// (
-// int           *id_cs,
-// int           *id_geom,
-// int           *id_bloc,
-// int           *id_part,
-// PDM_l_num_t      *n_elt,
-// PDM_l_num_t      *n_face,
-// PDM_l_num_t      *facsom_idx,
-// PDM_l_num_t      *facsom,
-// PDM_l_num_t      *cellfac_idx,
-// PDM_l_num_t      *cellfac,
-// PDM_g_num_t     *numabs
-// );
 
 void
 PDM_writer_geom_bloc_poly3d_set
@@ -655,23 +535,6 @@ const PDM_l_num_t    n_face,
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_cell3d_cellface_add, PDM_WRITER_GEOM_CELL3D_CELLFACE_ADD)
-// (
-// int         *id_cs,
-// int         *id_geom,
-// int         *id_part,
-// int         *n_cell,
-// int         *n_face,
-// PDM_l_num_t    *face_som_idx,
-// PDM_l_num_t    *face_som_nb,
-// PDM_l_num_t    *face_som,
-// PDM_l_num_t    *cell_face_idx,
-// PDM_l_num_t    *cell_face_nb,
-// PDM_l_num_t    *cell_face,
-// PDM_g_num_t   *numabs
-// );
-
 void
 PDM_writer_geom_cell3d_cellface_add
 (
@@ -710,23 +573,6 @@ PDM_writer_geom_cell3d_cellface_add
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_cell2d_cellface_add, PDM_WRITER_GEOM_CELL2D_CELLFACE_ADD)
-// (
-// int         *id_cs,
-// int         *id_geom,
-// int         *id_part,
-// int         *n_cell,
-// int         *n_face,
-// PDM_l_num_t    *face_som_idx,
-// PDM_l_num_t    *face_som_nb,
-// PDM_l_num_t    *face_som,
-// PDM_l_num_t    *cell_face_idx,
-// PDM_l_num_t    *cell_face_nb,
-// PDM_l_num_t    *cell_face,
-// PDM_g_num_t   *numabs
-// );
-
 void
 PDM_writer_geom_cell2d_cellface_add
 (
@@ -763,19 +609,6 @@ PDM_writer_geom_cell2d_cellface_add
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_faces_facesom_add, PDM_WRITER_GEOM_FACES_FACESOM_ADD)
-// (
-// int         *id_cs,
-// int         *id_geom,
-// int         *id_part,
-// int         *n_face,
-// PDM_l_num_t    *face_som_idx,
-// PDM_l_num_t    *face_som_nb,
-// PDM_l_num_t    *face_som,
-// PDM_g_num_t   *numabs
-// );
-
 void
 PDM_writer_geom_faces_facesom_add
 (
@@ -798,19 +631,13 @@ PDM_writer_geom_faces_facesom_add
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_write, PDM_WRITER_GEOM_WRITE)
-// (
-// int           *id_cs,
-// int           *id_geom
-// );
-
 void
 PDM_writer_geom_write
 (
  PDM_writer_t *cs,
  const int     id_geom
  );
+
 
 /**
  * \brief Liberation des donnees decrivant le maillage courant
@@ -820,13 +647,6 @@ PDM_writer_geom_write
  * \param [in] id_geom         Identificateur de l'objet geometrique
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_data_free, PDM_WRITER_GEOM_DATA_FREE)
-// (
-// int           *id_cs,
-// int           *id_geom
-// );
 
 void
 PDM_writer_geom_data_free
@@ -844,19 +664,13 @@ PDM_writer_geom_data_free
  *
  */
 
-// void
-// PROCF (pdm_writer_geom_free, PDM_WRITER_GEOM_FREE)
-// (
-// int           *id_cs,
-// int           *id_geom
-// );
-
 void
 PDM_writer_geom_free
 (
  PDM_writer_t *cs,
  const int     id_geom
 );
+
 
 /**
  * \brief Creation d'une variable
@@ -872,19 +686,6 @@ PDM_writer_geom_free
  *
  */
 
-// void
-// PROCF (pdm_writer_var_create_cf, PDM_WRITER_VAR_CREATE_CF)
-// (
-// int         *id_cs,
-// int         *st_dep_tps,
-// int         *dim,
-// int         *loc,
-// char        *nom_var,
-// int         *l_nom_var,
-// int         *id_var
-// ARGF_SUPP_CHAINE
-// );
-
 int
 PDM_writer_var_create
 (
@@ -895,6 +696,7 @@ PDM_writer_var_create
  const char                 *nom_var
 );
 
+
 /**
  * \brief Mapping des noms de variable
  *
@@ -904,17 +706,6 @@ PDM_writer_var_create
  *
  */
 
-// void
-// PROCF (pdm_writer_name_map_add_cf, PDM_WRITER_NAME_MAP_ADD_CF)
-// (
-// int         *id_cs,
-// char        *public_name,
-// int         *l_public_name,
-// char        *private_name,
-// int         *l_private_name
-// ARGF_SUPP_CHAINE
-// );
-
 void
 PDM_writer_name_map_add
 (
@@ -923,6 +714,7 @@ PDM_writer_name_map_add
  const char   *private_name
 );
 
+
 /**
  * \brief Ecriture des valeurs de la variable
  *
@@ -930,13 +722,6 @@ PDM_writer_name_map_add
  * \param [in] id_var          Identificateur de la variable a ecrire
  *
  */
-
-// void
-// PROCF (pdm_writer_var_write, PDM_WRITER_VAR_WRITE)
-// (
-// int         *id_cs,
-// int         *id_var
-// );
 
 void
 PDM_writer_var_write
@@ -959,16 +744,6 @@ PDM_writer_var_write
  *
  */
 
-// void
-// PROCF (pdm_writer_var_set, PDM_WRITER_VAR_SET)
-// (
-// int         *id_cs,
-// int         *id_var,
-// int         *id_geom,
-// int         *id_part,
-// PDM_real_t   *val
-// );
-
 void
 PDM_writer_var_set
 (
@@ -979,6 +754,7 @@ PDM_writer_var_set
  const PDM_real_t *val
 );
 
+
 /**
  * \brief Liberation du tableau de donnees des variables
  *
@@ -986,13 +762,6 @@ PDM_writer_var_set
  * \param [in] id_var          Identificateur de la variable
  *
  */
-
-// void
-// PROCF (pdm_writer_var_data_free, PDM_WRITER_VAR_DATA_FREE)
-// (
-// int         *id_cs,
-// int         *id_var
-// );
 
 void
 PDM_writer_var_data_free
@@ -1009,13 +778,6 @@ PDM_writer_var_data_free
  * \param [in] id_var          Identificateur de la variable
  *
  */
-
-// void
-// PROCF (pdm_writer_var_free, PDM_WRITER_VAR_FREE)
-// (
-// int         *id_cs,
-// int         *id_var
-// );
 
 void
 PDM_writer_var_free
@@ -1080,14 +842,6 @@ PDM_writer_fmt_free
  * \param [in] id_geom         Identificateur de l'objet geometrique
  *
  */
-
-// void
-// PROCF (pdm_writer_geom_data_reset, PDM_WRITER_GEOM_DATA_RESET)
-// (
-// int           *id_cs,
-// int           *id_geom
-//  );
-
 
 void
 PDM_writer_geom_data_reset
