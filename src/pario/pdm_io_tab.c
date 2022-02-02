@@ -83,7 +83,6 @@ static int _num_var_cedre_max = -1;
  * Unité du fichier
  *----------------------------------------------------------------------------*/
 
-// static PDM_l_num_t  _unite = -1;
 static PDM_io_fichier_t *_unite = NULL;
 
 /*----------------------------------------------------------------------------
@@ -128,8 +127,8 @@ static void _ajout_donnees
  const PDM_l_num_t           i_part,
  const PDM_l_num_t          *n_composantes,
  const PDM_l_num_t           n_donnees,
- const PDM_g_num_t         *indirection,
- void                          *donnees
+ const PDM_g_num_t          *indirection,
+ void                       *donnees
  )
 {
   if (PDM_io_tabs == NULL) {
@@ -193,11 +192,11 @@ static void _ajout_donnees
  *----------------------------------------------------------------------------*/
 
 static void _def_var
-(const PDM_l_num_t           num_var_cedre,
- const PDM_l_num_t           num_indirection_cedre,
+(const PDM_l_num_t            num_var_cedre,
+ const PDM_l_num_t            num_indirection_cedre,
  const PDM_io_n_composantes_t t_n_composantes,
- const PDM_l_num_t           n_composantes,
- const PDM_l_num_t           taille_donnee
+ const PDM_l_num_t            n_composantes,
+ const PDM_l_num_t            taille_donnee
  )
 {
   if (PDM_io_tabs == NULL) {
@@ -268,17 +267,16 @@ void PROCF (pdm_io_tab_ecr_debut, PDM_IO_TAB_ECR_DEBUT)
 }
 
 void  PDM_io_tab_ecr_debut
- // (const PDM_l_num_t *unite,
-(PDM_io_fichier_t *unite,
- const PDM_io_rangement_t t_rangement,
- const PDM_l_num_t       num_var_cedre_max,
- const PDM_l_num_t       n_partition_local
+(
+ PDM_io_fichier_t         *unite,
+ const PDM_io_rangement_t  t_rangement,
+ const PDM_l_num_t         num_var_cedre_max,
+ const PDM_l_num_t         n_partition_local
 )
 {
   if (PDM_io_tabs == NULL) {
     _num_var_cedre_max = num_var_cedre_max;
-    PDM_io_tabs = (PDM_io_tab_t **) malloc(_num_var_cedre_max *
-                                              sizeof(PDM_io_tab_t *));
+    PDM_io_tabs = (PDM_io_tab_t **) malloc(_num_var_cedre_max * sizeof(PDM_io_tab_t *));
 
     for (int i = 0; i < _num_var_cedre_max; i++)
       PDM_io_tabs[i] = NULL;
@@ -319,20 +317,21 @@ void PROCF (pdm_io_tab_ecr_ajout_donnees, PDM_IO_TAB_ECR_AJOUT_DONNEES)
  )
 {
   PDM_io_tab_ecr_ajout_donnees(*num_var_cedre,
-                                 *i_part,
-                                 n_composantes,
-                                 *n_donnees,
-                                 indirection,
-                                 donnees);
+                               *i_part,
+                               n_composantes,
+                               *n_donnees,
+                               indirection,
+                               donnees);
 }
 
 void PDM_io_tab_ecr_ajout_donnees
-(const PDM_l_num_t            num_var_cedre,
+(
+ const PDM_l_num_t            num_var_cedre,
  const PDM_l_num_t            i_part,
  const PDM_l_num_t           *n_composantes,
  const PDM_l_num_t            n_donnees,
- const PDM_g_num_t          *indirection,
- void                           *donnees
+ const PDM_g_num_t           *indirection,
+ void                        *donnees
  )
 {
   _ajout_donnees(num_var_cedre,
@@ -382,7 +381,7 @@ void PROCF (pdm_io_tab_ecr_def_var, PDM_IO_TAB_ECR_DEF_VAR)
 void PDM_io_tab_ecr_def_var
 (const PDM_l_num_t            num_var_cedre,
  const PDM_l_num_t            num_indirection_cedre,
- const PDM_io_n_composantes_t  t_n_composantes,
+ const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t            n_composantes,
  const PDM_l_num_t            taille_donnee
  )
@@ -409,7 +408,9 @@ void PROCF (pdm_io_tab_ecr_fin, PDM_IO_TAB_ECR_FIN)
 }
 
 void PDM_io_tab_ecr_fin
-(void)
+(
+ void
+ )
 {
   if (PDM_io_tabs == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_tab_ecr_fin :"
@@ -728,11 +729,11 @@ void PROCF (pdm_io_tab_lec_debut, PDM_IO_TAB_LEC_DEBUT)
 }
 
 void PDM_io_tab_lec_debut
-// (const PDM_l_num_t       unite,
-(PDM_io_fichier_t *unite,
- const PDM_io_rangement_t t_rangement,
- const PDM_l_num_t       num_var_cedre_max,
- const PDM_l_num_t       n_partition_local
+(
+ PDM_io_fichier_t         *unite,
+ const PDM_io_rangement_t  t_rangement,
+ const PDM_l_num_t         num_var_cedre_max,
+ const PDM_l_num_t         n_partition_local
 )
 {
   if (PDM_io_tabs == NULL) {
@@ -785,20 +786,21 @@ void PROCF (pdm_io_tab_lec_ajout_donnees, PDM_IO_TAB_LEC_AJOUT_DONNEES)
 {
 
   PDM_io_tab_lec_ajout_donnees(*num_var_cedre,
-                                 *i_part,
-                                 n_composantes,
-                                 *n_donnees,
-                                 indirection,
-                                 donnees);
+                               *i_part,
+                               n_composantes,
+                               *n_donnees,
+                               indirection,
+                               donnees);
 }
 
 void PDM_io_tab_lec_ajout_donnees
-(const PDM_l_num_t            num_var_cedre,
+(
+ const PDM_l_num_t            num_var_cedre,
  const PDM_l_num_t            i_part,
  const PDM_l_num_t           *n_composantes,
  const PDM_l_num_t            n_donnees,
- const PDM_g_num_t          *indirection,
- void                           *donnees
+ const PDM_g_num_t           *indirection,
+ void                         *donnees
  )
 {
   _ajout_donnees(num_var_cedre,
@@ -846,9 +848,10 @@ void PROCF (pdm_io_tab_lec_def_var, PDM_IO_TAB_LEC_DEF_VAR)
 }
 
 void PDM_io_tab_lec_def_var
-(const PDM_l_num_t            num_var_cedre,
+(
+ const PDM_l_num_t            num_var_cedre,
  const PDM_l_num_t            num_indirection_cedre,
- const PDM_io_n_composantes_t  t_n_composantes,
+ const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t            n_composantes,
  const PDM_l_num_t            taille_donnee
  )
@@ -874,7 +877,9 @@ void PROCF (pdm_io_tab_lec_fin, PDM_IO_TAB_LEC_FIN)
 }
 
 void PDM_io_tab_lec_fin
-(void)
+(
+ void
+ )
 {
   if (PDM_io_tabs == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_tab_lec_fin :"
