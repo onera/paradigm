@@ -65,6 +65,205 @@ module pdm_writer
   integer, parameter ::  PDM_WRITER_VAR_PARTICULES   = 2
 
 
+
+  interface
+
+  !>
+  !! \brief Libere un objet CS (Cedre Sortie) et retourne un pointeur NULL si pas d'erreur
+  !!
+  !! \param [in] cs    Pointer to \ref PDM_writer object
+  !!
+  !!
+
+  subroutine PDM_writer_free (cs) &
+  bind (c, name='PDM_writer_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: cs
+
+  end subroutine PDM_writer_free
+
+
+  !>
+  !! \brief Fin d'increment
+  !!
+  !! \param [in] cs             Pointer to \ref PDM_writer object
+  !!
+  !!
+
+  subroutine PDM_writer_step_end (cs) &
+  bind (c, name="PDM_writer_step_end")
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: cs
+
+  end subroutine PDM_writer_step_end
+
+
+  !>
+  !! \brief Ecriture du maillage courant
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_geom         Identificateur de l'objet geometrique
+  !!
+  !!
+
+  subroutine PDM_writer_geom_write (cs,      &
+                                    id_geom) &
+  bind (c, name='PDM_writer_geom_write')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_geom
+
+  end subroutine PDM_writer_geom_write
+
+
+  !>
+  !! \brief Liberation des donnees decrivant le maillage courant
+  !! les indirections sur les numérotation absolues sont conservées
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_geom         Identificateur de l'objet geometrique
+  !!
+  !!
+
+  subroutine PDM_writer_geom_data_free (cs,      &
+                                        id_geom) &
+  bind (c, name='PDM_writer_geom_data_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_geom
+
+  end subroutine PDM_writer_geom_data_free
+
+
+  !>
+  !! \brief Liberation des donnees decrivant le maillage courant
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_geom         Identificateur de l'objet geometrique
+  !!
+  !!
+
+  subroutine PDM_writer_geom_free (cs,      &
+                                   id_geom) &
+  bind (c, name='PDM_writer_geom_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_geom
+  end subroutine PDM_writer_geom_free
+
+
+  !>
+  !! \brief Ecriture des valeurs de la variable
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_var          Identificateur de la variable a ecrire
+  !!
+  !!
+
+  subroutine PDM_writer_var_write (cs,     &
+                                   id_var) &
+  bind (c, name='PDM_writer_var_write')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_var
+
+  end subroutine PDM_writer_var_write
+
+
+  !>
+  !! \brief Liberation du tableau de donnees des variables
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_var          Identificateur de la variable
+  !!
+  !!
+
+  subroutine PDM_writer_var_data_free (cs,     &
+                                       id_var) &
+  bind (c, name='PDM_writer_var_data_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_var
+
+  end subroutine PDM_writer_var_data_free
+
+
+  !>
+  !! \brief Liberation d'une variable
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_var          Identificateur de la variable
+  !!
+  !!
+
+  subroutine PDM_writer_var_free (cs,     &
+                                  id_var) &
+  bind (c, name='PDM_writer_var_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_var
+
+  end subroutine PDM_writer_var_free
+
+
+  !>
+  !! \brief Free format
+  !!
+  !!
+
+  subroutine PDM_writer_fmt_free () &
+  bind (c, name='PDM_writer_fmt_free')
+  end subroutine PDM_writer_fmt_free
+
+
+
+  !>
+  !! \brief Réinitialisation des donnees decrivant le maillage courant
+  !!
+  !! \param [in] cs              Pointer to \ref PDM_writer object
+  !! \param [in] id_geom         Identificateur de l'objet geometrique
+  !!
+  !!
+
+  subroutine PDM_writer_geom_data_reset (cs,      &
+                                         id_geom) &
+  bind (c, name='PDM_writer_geom_data_reset')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: cs
+    integer(c_int), value :: id_geom
+
+  end subroutine PDM_writer_geom_data_reset
+
+
+  end interface
+
   contains
 
   !>
@@ -176,25 +375,6 @@ module pdm_writer
 
 
   !>
-  !! \brief Libere un objet CS (Cedre Sortie) et retourne un pointeur NULL si pas d'erreur
-  !!
-  !! \param [in] cs    Pointer to \ref PDM_writer object
-  !!
-  !!
-
-  subroutine PDM_writer_free (cs) &
-  bind (c, name='PDM_writer_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value :: cs
-
-  end subroutine PDM_writer_free
-
-
-
-  !>
   !! \brief Debut d'increment
   !!
   !! \param [in] cs             Pointer to \ref PDM_writer object
@@ -231,25 +411,6 @@ module pdm_writer
                                 c_physical_time)
 
   end subroutine PDM_writer_step_beg
-
-
-
-  !>
-  !! \brief Fin d'increment
-  !!
-  !! \param [in] cs             Pointer to \ref PDM_writer object
-  !!
-  !!
-
-  subroutine PDM_writer_step_end (cs) &
-  bind (c, name="PDM_writer_step_end")
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value :: cs
-
-  end subroutine PDM_writer_step_end
 
 
 
@@ -1243,72 +1404,6 @@ module pdm_writer
 
 
   !>
-  !! \brief Ecriture du maillage courant
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_geom         Identificateur de l'objet geometrique
-  !!
-  !!
-
-  subroutine PDM_writer_geom_write (cs,      &
-                                    id_geom) &
-  bind (c, name='PDM_writer_geom_write')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_geom
-
-  end subroutine PDM_writer_geom_write
-
-
-
-  !>
-  !! \brief Liberation des donnees decrivant le maillage courant
-  !! les indirections sur les numérotation absolues sont conservées
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_geom         Identificateur de l'objet geometrique
-  !!
-  !!
-
-  subroutine PDM_writer_geom_data_free (cs,      &
-                                        id_geom) &
-  bind (c, name='PDM_writer_geom_data_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_geom
-
-  end subroutine PDM_writer_geom_data_free
-
-
-
-  !>
-  !! \brief Liberation des donnees decrivant le maillage courant
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_geom         Identificateur de l'objet geometrique
-  !!
-  !!
-
-  subroutine PDM_writer_geom_free (cs,      &
-                                   id_geom) &
-  bind (c, name='PDM_writer_geom_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_geom
-  end subroutine PDM_writer_geom_free
-
-
-
-  !>
   !! \brief Creation d'une variable
   !!
   !! \param [in]  cs              Pointer to \ref PDM_writer object
@@ -1419,28 +1514,6 @@ module pdm_writer
 
 
   !>
-  !! \brief Ecriture des valeurs de la variable
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_var          Identificateur de la variable a ecrire
-  !!
-  !!
-
-  subroutine PDM_writer_var_write (cs,     &
-                                   id_var) &
-  bind (c, name='PDM_writer_var_write')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_var
-
-  end subroutine PDM_writer_var_write
-
-
-
-  !>
   !! \brief Mise a jour des valeurs de la variable.
   !!
   !! Attention, les valeurs définies aux elements doivent être définies suivant l'ordre de définition des blocs !
@@ -1495,6 +1568,8 @@ module pdm_writer
     c_id_geom = id_geom
     c_id_part = id_part
 
+    print *, "val =", val(1:3), "..."
+
     c_val = c_loc(val)
 
     call PDM_writer_var_set_c (cs,        &
@@ -1504,50 +1579,6 @@ module pdm_writer
                                c_val)
 
   end subroutine PDM_writer_var_set
-
-
-
-  !>
-  !! \brief Liberation du tableau de donnees des variables
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_var          Identificateur de la variable
-  !!
-  !!
-
-  subroutine PDM_writer_var_data_free (cs,     &
-                                       id_var) &
-  bind (c, name='PDM_writer_var_data_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_var
-
-  end subroutine PDM_writer_var_data_free
-
-
-
-  !>
-  !! \brief Liberation d'une variable
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_var          Identificateur de la variable
-  !!
-  !!
-
-  subroutine PDM_writer_var_free (cs,     &
-                                  id_var) &
-  bind (c, name='PDM_writer_var_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_var
-
-  end subroutine PDM_writer_var_free
 
 
 
@@ -1662,38 +1693,5 @@ module pdm_writer
                                c_var_free_fct)
 
   end subroutine PDM_writer_fmt_add
-
-
-
-  !>
-  !! \brief Free format
-  !!
-  !!
-
-  subroutine PDM_writer_fmt_free () &
-  bind (c, name='PDM_writer_fmt_free')
-  end subroutine PDM_writer_fmt_free
-
-
-
-  !>
-  !! \brief Réinitialisation des donnees decrivant le maillage courant
-  !!
-  !! \param [in] cs              Pointer to \ref PDM_writer object
-  !! \param [in] id_geom         Identificateur de l'objet geometrique
-  !!
-  !!
-
-  subroutine PDM_writer_geom_data_reset (cs,      &
-                                         id_geom) &
-  bind (c, name='PDM_writer_geom_data_reset')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value :: cs
-    integer(c_int), value :: id_geom
-
-  end subroutine PDM_writer_geom_data_reset
 
 end module pdm_writer
