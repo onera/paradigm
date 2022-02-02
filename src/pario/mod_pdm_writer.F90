@@ -1586,6 +1586,7 @@ module pdm_writer
   !! \brief Add a writer format
   !!
   !! Define a new format writer
+  !! WARNING: has not been tested, not sure about procedure pointer interoperability
   !!
   !! \param [in] name            Name
   !! \param [in] create_fct      Customize \ref PDM_writer_create function for the new format  (or NULL)
@@ -1615,28 +1616,28 @@ module pdm_writer
     use iso_c_binding
     implicit none
 
-    character (len=*) :: name
-    integer           :: create_fct
-    integer           :: free_fct
-    integer           :: beg_step_fct
-    integer           :: end_step_fct
-    integer           :: geom_create_fct
-    integer           :: geom_write_fct
-    integer           :: geom_free_fct
-    integer           :: var_create_fct
-    integer           :: var_write_fct
-    integer           :: var_free_fct
+    character (len=*)    :: name
+    procedure(), pointer :: create_fct
+    procedure(), pointer :: free_fct
+    procedure(), pointer :: beg_step_fct
+    procedure(), pointer :: end_step_fct
+    procedure(), pointer :: geom_create_fct
+    procedure(), pointer :: geom_write_fct
+    procedure(), pointer :: geom_free_fct
+    procedure(), pointer :: var_create_fct
+    procedure(), pointer :: var_write_fct
+    procedure(), pointer :: var_free_fct
 
-    integer(c_int)    :: c_create_fct
-    integer(c_int)    :: c_free_fct
-    integer(c_int)    :: c_beg_step_fct
-    integer(c_int)    :: c_end_step_fct
-    integer(c_int)    :: c_geom_create_fct
-    integer(c_int)    :: c_geom_write_fct
-    integer(c_int)    :: c_geom_free_fct
-    integer(c_int)    :: c_var_create_fct
-    integer(c_int)    :: c_var_write_fct
-    integer(c_int)    :: c_var_free_fct
+    type(c_funptr)       :: c_create_fct      = C_NULL_FUNPTR
+    type(c_funptr)       :: c_free_fct        = C_NULL_FUNPTR
+    type(c_funptr)       :: c_beg_step_fct    = C_NULL_FUNPTR
+    type(c_funptr)       :: c_end_step_fct    = C_NULL_FUNPTR
+    type(c_funptr)       :: c_geom_create_fct = C_NULL_FUNPTR
+    type(c_funptr)       :: c_geom_write_fct  = C_NULL_FUNPTR
+    type(c_funptr)       :: c_geom_free_fct   = C_NULL_FUNPTR
+    type(c_funptr)       :: c_var_create_fct  = C_NULL_FUNPTR
+    type(c_funptr)       :: c_var_write_fct   = C_NULL_FUNPTR
+    type(c_funptr)       :: c_var_free_fct    = C_NULL_FUNPTR
 
     interface
       subroutine PDM_writer_fmt_add_c (name,            &
@@ -1655,30 +1656,30 @@ module pdm_writer
         implicit none
 
         character(c_char) :: name(*)
-        integer(c_int)    :: create_fct
-        integer(c_int)    :: free_fct
-        integer(c_int)    :: beg_step_fct
-        integer(c_int)    :: end_step_fct
-        integer(c_int)    :: geom_create_fct
-        integer(c_int)    :: geom_write_fct
-        integer(c_int)    :: geom_free_fct
-        integer(c_int)    :: var_create_fct
-        integer(c_int)    :: var_write_fct
-        integer(c_int)    :: var_free_fct
+        type(c_funptr)    :: create_fct
+        type(c_funptr)    :: free_fct
+        type(c_funptr)    :: beg_step_fct
+        type(c_funptr)    :: end_step_fct
+        type(c_funptr)    :: geom_create_fct
+        type(c_funptr)    :: geom_write_fct
+        type(c_funptr)    :: geom_free_fct
+        type(c_funptr)    :: var_create_fct
+        type(c_funptr)    :: var_write_fct
+        type(c_funptr)    :: var_free_fct
 
       end subroutine PDM_writer_fmt_add_c
     end interface
 
-    create_fct      = create_fct
-    free_fct        = free_fct
-    beg_step_fct    = beg_step_fct
-    end_step_fct    = end_step_fct
-    geom_create_fct = geom_create_fct
-    geom_write_fct  = geom_write_fct
-    geom_free_fct   = geom_free_fct
-    var_create_fct  = var_create_fct
-    var_write_fct   = var_write_fct
-    var_free_fct    = var_free_fct
+    c_create_fct      = c_funloc(create_fct)
+    c_free_fct        = c_funloc(free_fct)
+    c_beg_step_fct    = c_funloc(beg_step_fct)
+    c_end_step_fct    = c_funloc(end_step_fct)
+    c_geom_create_fct = c_funloc(geom_create_fct)
+    c_geom_write_fct  = c_funloc(geom_write_fct)
+    c_geom_free_fct   = c_funloc(geom_free_fct)
+    c_var_create_fct  = c_funloc(var_create_fct)
+    c_var_write_fct   = c_funloc(var_write_fct)
+    c_var_free_fct    = c_funloc(var_free_fct)
 
     call PDM_writer_fmt_add_c (name//C_NULL_CHAR, &
                                c_create_fct,      &
