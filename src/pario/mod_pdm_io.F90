@@ -1,3 +1,23 @@
+!-----------------------------------------------------------------------------
+! This file is part of the ParaDiGM library.
+!
+! Copyright (C) 2022  ONERA
+!
+! This library is free software; you can redistribute it and/or
+! modify it under the terms of the GNU Lesser General Public
+! License as published by the Free Software Foundation; either
+! version 3 of the License, or (at your option) any later version.
+!
+! This library is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+! Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public
+! License along with this library. If not, see <http://www.gnu.org/licenses/>.
+!-----------------------------------------------------------------------------
+
+#include "pdm_configf.h"
 
 module pdm_io
 
@@ -54,7 +74,7 @@ module pdm_io
   integer (kind = pdm_l_num_s), parameter :: pdm_io_n_composante_variable = 1
 
   !
-  ! Indique si les donnees lues ou écrites sont rangÃ©es par blocs contigus en mÃ©moire
+  ! Indique si les donnees lues ou écrites sont rangees par blocs contigus en memoire
   ! ou respectent une indirection (donnees entrelacees)
 
   integer(kind = pdm_l_num_s), parameter :: pdm_io_donnees_bloc = 0
@@ -79,6 +99,200 @@ module pdm_io
   integer(kind = pdm_l_num_s), parameter :: pdm_io_backup_off = 1
 
   interface
+
+  !>
+  !! \brief Set the file position indicator
+  !!
+  !! \param [in] fichier         Pointer to \ref PDM_io_fichier_t object
+  !! \param [in] offset          Adress
+  !! \param [in] seek            Origin type
+  !!
+  !!
+
+  subroutine PDM_io_seek (fichier, &
+                          offset,  &
+                          seek)    &
+  bind (c, name='PDM_io_seek')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),     value :: fichier
+#ifdef PDM_LONG_G_NUM
+    integer(c_long), value :: offset
+#else
+    integer(c_int),  value :: offset
+#endif
+    integer(c_int),  value :: seek
+
+  end subroutine PDM_io_seek
+
+
+  !>
+  !! \brief Lecture globale : Le processus maitre accede seul au fichier et redistribue
+  !! l'information a l'ensemble des processus du communicateur
+  !!
+  !! \param [in]  fichier         Pointer to \ref PDM_io_fichier_t object
+  !! \param [in]  taille_donnee   Taille unitaire de la donnee
+  !! \param [in]  n_donnees       Nombre de donnees a lire
+  !! \param [out] donnees         Donnees lues
+  !!
+  !!
+
+  subroutine PDM_io_lecture_globale (fichier,       &
+                                     taille_donnee, &
+                                     n_donnees,     &
+                                     donnees)       &
+  bind (c, name='PDM_io_lecture_globale')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value          :: fichier
+    integer(c_int),  intent(in) :: taille_donnee
+#ifdef PDM_LONG_G_NUM
+    integer(c_long), intent(in) :: n_donnees
+#else
+    integer(c_int),  intent(in) :: n_donnees
+#endif
+    type(c_ptr)                 :: donnees
+
+  end subroutine PDM_io_lecture_globale
+
+
+  !>
+  !! \brief Ecriture globale : Le processus maitre accede seul au fichier
+  !!
+  !! \param [in]  fichier         Pointer to \ref PDM_io_fichier_t object
+  !! \param [in]  taille_donnee   Taille unitaire de la donnee
+  !! \param [in]  n_donnees       Nombre de donnees a ecrire
+  !! \param [in]  donnees         Donnees ecrites
+  !!
+  !!
+
+  subroutine PDM_io_ecriture_globale (fichier,       &
+                                      taille_donnee, &
+                                      n_donnees,     &
+                                      donnees)       &
+  bind (c, name='PDM_io_ecriture_globale')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value          :: fichier
+    integer(c_int),  intent(in) :: taille_donnee
+#ifdef PDM_LONG_G_NUM
+    integer(c_long), intent(in) :: n_donnees
+#else
+    integer(c_int),  intent(in) :: n_donnees
+#endif
+    type(c_ptr)                 :: donnees
+
+  end subroutine PDM_io_ecriture_globale
+
+
+  !>
+  !! \brief Fermeture du fichier sans destruction de la structure PDM_io associee a
+  !! l'unite
+  !!
+  !! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+  !!
+  !!
+
+  subroutine PDM_io_close (fichier) &
+  bind (c, name='PDM_io_close')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+
+  end subroutine PDM_io_close
+
+
+  !>
+  !! \brief Destruction de la structure PDM_io associee a l'unite
+  !!
+  !! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+  !!
+  !!
+
+  subroutine PDM_io_detruit (fichier) &
+  bind (c, name='PDM_io_detruit')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+
+  end subroutine PDM_io_detruit
+
+
+  !>
+  !! \brief Affiche les informations sur le fichier
+  !!
+  !! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+  !!
+  !!
+
+  subroutine PDM_io_dump (fichier) &
+  bind (c, name='PDM_io_dump')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+
+  end subroutine PDM_io_dump
+
+
+  !>
+  !! \brief Retourne le communicateur du fichier
+  !!
+  !! \param [in]  fichier     Pointer to \ref PDM_io_fichier_t object
+  !! \param [out] f_comm      Communicateur MPI
+  !!
+  !!
+
+  subroutine PDM_io_get_comm (fichier, &
+                              f_comm)  &
+  bind (c, name='PDM_io_get_comm')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+    integer(c_int)     :: f_comm
+
+  end subroutine PDM_io_get_comm
+
+
+  !>
+  !! \brief Active le swap endian
+  !!
+  !! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+  !!
+  !!
+
+  subroutine PDM_io_swap_endian_on (fichier) &
+  bind (c, name='PDM_io_swap_endian_on')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+
+  end subroutine PDM_io_swap_endian_on
+
+
+  !>
+  !! \brief Désactive le swap endian
+  !!
+  !! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+  !!
+  !!
+
+  subroutine PDM_io_swap_endian_off (fichier) &
+  bind (c, name='PDM_io_swap_endian_off')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: fichier
+
+  end subroutine PDM_io_swap_endian_off
+
   end interface
 
 contains
@@ -200,6 +414,629 @@ subroutine PDM_io_open (nom,                &
 end subroutine PDM_io_open
 
 
+!>
+!! \brief Return the current file position
+!!
+!! \param [in]  fichier         Pointer to \ref PDM_io_fichier_t object
+!! \param [out] offset          Current position in file
+!!
+!!
+
+subroutine PDM_io_tell (fichier, &
+                        offset)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value                :: fichier
+  integer(pdm_g_num_s), intent(out) :: offset
+
+  interface
+    function PDM_io_tell_c (fichier) &
+    result (offset)                  &
+    bind (c, name='PDM_io_tell')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+#ifdef PDM_LONG_G_NUM
+      integer(c_long)    :: offset
+#else
+      integer(c_int)     :: offset
+#endif
+
+    end function PDM_io_tell_c
+  end interface
+
+  offset = PDM_io_tell_c (fichier)
+
+end subroutine PDM_io_tell
+
+
+!>
+!! \brief Lecture parallele de blocs de donnees suivie d'une redistribution des
+!! des donnees suivant l'indirection
+!!
+!! \param [in]  fichier          Pointer to \ref PDM_io_fichier_t object
+!! \param [in]  t_n_composantes  Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+!! \param [in]  n_composantes    Nombre de composantes pour chaque donnee
+!! \param [in]  taille_donnee    Taille unitaire de la donnee
+!! \param [in]  n_donnees        Nombre de donnees a lire
+!! \param [in]  indirection      Indirection de redistribition des donnees
+!! \param [out] donnees          Donnees lues
+!!
+!!
+
+subroutine PDM_io_lec_par_entrelacee (fichier,         &
+                                      t_n_composantes, &
+                                      n_composantes,   &
+                                      taille_donnee,   &
+                                      n_donnees,       &
+                                      indirection,     &
+                                      donnees)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  integer(pdm_l_num_s)          :: t_n_composantes
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: taille_donnee
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s), pointer :: indirection(:)
+  type(c_ptr)                   :: donnees
+
+  integer(c_int)                :: c_t_n_composantes
+  integer(c_int)                :: c_taille_donnee
+  integer(c_int)                :: c_n_donnees
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                   :: c_indirection   = C_NULL_PTR
+
+  interface
+    subroutine PDM_io_lec_par_entrelacee_c (fichier,         &
+                                            t_n_composantes, &
+                                            n_composantes,   &
+                                            taille_donnee,   &
+                                            n_donnees,       &
+                                            indirection,     &
+                                            donnees)         &
+    bind (c, name='PDM_io_lec_par_entrelacee')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      integer(c_int)     :: t_n_composantes
+      type(c_ptr), value :: n_composantes
+      integer(c_int)     :: taille_donnee
+      integer(c_int)     :: n_donnees
+      type(c_ptr), value :: indirection
+      type(c_ptr)        :: donnees
+
+    end subroutine PDM_io_lec_par_entrelacee_c
+  end interface
+
+  c_t_n_composantes = t_n_composantes
+  c_taille_donnee   = taille_donnee
+  c_n_donnees       = n_donnees
+
+  c_n_composantes = c_loc(n_composantes)
+  c_indirection   = c_loc(indirection  )
+
+  call PDM_io_lec_par_entrelacee_c (fichier,           &
+                                    c_t_n_composantes, &
+                                    c_n_composantes,   &
+                                    c_taille_donnee,   &
+                                    c_n_donnees,       &
+                                    c_indirection,     &
+                                    donnees)
+
+end subroutine PDM_io_lec_par_entrelacee
+
+
+!>
+!! \brief Lecture parallele de blocs de donnees
+!! Les blocs doivent etre ranges par ordre croissant suivant la numerotation
+!! des processus
+!!
+!! \param [in]  fichier          Pointer to \ref PDM_io_fichier_t object
+!! \param [in]  t_n_composantes  Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+!! \param [in]  n_composantes    Nombre de composantes pour chaque donnee
+!! \param [in]  taille_donnee    Taille unitaire de la donnee
+!! \param [in]  n_donnees        Nombre de donnees a lire
+!! \param [in]  debut_bloc       Adresse relative du debut de bloc
+!! \param [out] donnees          Donnees lues
+!!
+!!
+
+subroutine PDM_io_lec_par_bloc (fichier,         &
+                                t_n_composantes, &
+                                n_composantes,   &
+                                taille_donnee,   &
+                                n_donnees,       &
+                                debut_bloc,      &
+                                donnees)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  integer(pdm_l_num_s)          :: t_n_composantes
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: taille_donnee
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s)          :: debut_bloc
+  type(c_ptr)                   :: donnees
+
+  integer(c_int)                :: c_t_n_composantes
+  integer(c_int)                :: c_taille_donnee
+  integer(c_int)                :: c_n_donnees
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+#ifdef PDM_LONG_G_NUM
+  integer(c_long)               :: c_debut_bloc
+#else
+  integer(c_int)                :: c_debut_bloc
+#endif
+
+  interface
+    subroutine PDM_io_lec_par_bloc_c (fichier,         &
+                                      t_n_composantes, &
+                                      n_composantes,   &
+                                      taille_donnee,   &
+                                      n_donnees,       &
+                                      debut_bloc,      &
+                                      donnees)         &
+    bind (c, name='PDM_io_lec_par_bloc')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),     value :: fichier
+      integer(c_int)         :: t_n_composantes
+      type(c_ptr),     value :: n_composantes
+      integer(c_int)         :: taille_donnee
+      integer(c_int)         :: n_donnees
+#ifdef PDM_LONG_G_NUM
+      integer(c_long), value :: debut_bloc
+#else
+      integer(c_int),  value :: debut_bloc
+#endif
+      type(c_ptr)            :: donnees
+
+    end subroutine PDM_io_lec_par_bloc_c
+  end interface
+
+  c_t_n_composantes = t_n_composantes
+  c_taille_donnee   = taille_donnee
+  c_n_donnees       = n_donnees
+  c_debut_bloc      = debut_bloc
+
+  c_n_composantes = c_loc(n_composantes)
+
+  call PDM_io_lec_par_bloc_c (fichier,           &
+                              c_t_n_composantes, &
+                              c_n_composantes,   &
+                              c_taille_donnee,   &
+                              c_n_donnees,       &
+                              c_debut_bloc,      &
+                              donnees)
+
+end subroutine PDM_io_lec_par_bloc
+
+
+!>
+!! \brief Tri des donnees suivant l'indirection puis ecriture parallele des blocs de
+!! donnees
+!!
+!! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [in] t_n_composantes   Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+!! \param [in] n_composantes     Nombre de composantes pour chaque donnee
+!! \param [in] taille_donnee     Taille unitaire de la donnee
+!! \param [in] n_donnees         Nombre de donnees a ecrire
+!! \param [in] indirection       Indirection de redistribition des donnees
+!! \param [in] donnees           Donnees a ecrire
+!!
+!!
+
+subroutine PDM_io_ecr_par_entrelacee (fichier,         &
+                                      t_n_composantes, &
+                                      n_composantes,   &
+                                      taille_donnee,   &
+                                      n_donnees,       &
+                                      indirection,     &
+                                      donnees)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  integer(pdm_l_num_s)          :: t_n_composantes
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: taille_donnee
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s), pointer :: indirection(:)
+  type(c_ptr)                   :: donnees
+
+  integer(c_int)                :: c_t_n_composantes
+  integer(c_int)                :: c_taille_donnee
+  integer(c_int)                :: c_n_donnees
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                   :: c_indirection   = C_NULL_PTR
+
+  interface
+    subroutine PDM_io_ecr_par_entrelacee_c (fichier,         &
+                                            t_n_composantes, &
+                                            n_composantes,   &
+                                            taille_donnee,   &
+                                            n_donnees,       &
+                                            indirection,     &
+                                            donnees)         &
+    bind (c, name='PDM_io_ecr_par_entrelacee')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      integer(c_int)     :: t_n_composantes
+      type(c_ptr), value :: n_composantes
+      integer(c_int)     :: taille_donnee
+      integer(c_int)     :: n_donnees
+      type(c_ptr), value :: indirection
+      type(c_ptr)        :: donnees
+
+    end subroutine PDM_io_ecr_par_entrelacee_c
+  end interface
+
+  c_t_n_composantes = t_n_composantes
+  c_taille_donnee   = taille_donnee
+  c_n_donnees       = n_donnees
+
+  c_n_composantes = c_loc(n_composantes)
+  c_indirection   = c_loc(indirection  )
+
+  call PDM_io_ecr_par_entrelacee_c (fichier,           &
+                                    c_t_n_composantes, &
+                                    c_n_composantes,   &
+                                    c_taille_donnee,   &
+                                    c_n_donnees,       &
+                                    c_indirection,     &
+                                    donnees)
+
+end subroutine PDM_io_ecr_par_entrelacee
+
+
+!>
+!! \brief Ecriture parallele de blocs de donnees
+!! Les blocs doivent etre rangés par ordre croissant suivant la numérotation
+!! des processus
+!!
+!! \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [in] t_n_composantes   Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+!! \param [in] n_composantes     Nombre de composantes pour chaque donnee
+!! \param [in] taille_donnee     Taille unitaire de la donnee
+!! \param [in] debut_bloc        Adresse relative du debut de bloc
+!! \param [in] n_donnees         Nombre de donnees a lire
+!! \param [in] donnees           Donnees a ecrire
+!!
+!!
+
+subroutine PDM_io_ecr_par_bloc (fichier,         &
+                                t_n_composantes, &
+                                n_composantes,   &
+                                taille_donnee,   &
+                                n_donnees,       &
+                                debut_bloc,      &
+                                donnees)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  integer(pdm_l_num_s)          :: t_n_composantes
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: taille_donnee
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s)          :: debut_bloc
+  type(c_ptr)                   :: donnees
+
+  integer(c_int)                :: c_t_n_composantes
+  integer(c_int)                :: c_taille_donnee
+  integer(c_int)                :: c_n_donnees
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+#ifdef PDM_LONG_G_NUM
+  integer(c_long)               :: c_debut_bloc
+#else
+  integer(c_int)                :: c_debut_bloc
+#endif
+
+  interface
+    subroutine PDM_io_ecr_par_bloc_c (fichier,         &
+                                      t_n_composantes, &
+                                      n_composantes,   &
+                                      taille_donnee,   &
+                                      n_donnees,       &
+                                      debut_bloc,      &
+                                      donnees)         &
+    bind (c, name='PDM_io_ecr_par_bloc')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),     value :: fichier
+      integer(c_int)         :: t_n_composantes
+      type(c_ptr),     value :: n_composantes
+      integer(c_int)         :: taille_donnee
+      integer(c_int)         :: n_donnees
+#ifdef PDM_LONG_G_NUM
+      integer(c_long), value :: debut_bloc
+#else
+      integer(c_int),  value :: debut_bloc
+#endif
+      type(c_ptr)            :: donnees
+
+    end subroutine PDM_io_ecr_par_bloc_c
+  end interface
+
+  c_t_n_composantes = t_n_composantes
+  c_taille_donnee   = taille_donnee
+  c_n_donnees       = n_donnees
+  c_debut_bloc      = debut_bloc
+
+  c_n_composantes = c_loc(n_composantes)
+
+  call PDM_io_ecr_par_bloc_c (fichier,           &
+                              c_t_n_composantes, &
+                              c_n_composantes,   &
+                              c_taille_donnee,   &
+                              c_n_donnees,       &
+                              c_debut_bloc,      &
+                              donnees)
+
+end subroutine PDM_io_ecr_par_bloc
+
+
+!>
+!! \brief Retourne le temps cumule d'acces aux fichiers
+!!
+!! \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [out] t_cpu             Temps CPU
+!! \param [out] t_elapsed         Temps elapsed
+!!
+!!
+
+subroutine PDM_io_get_timer_fichier (fichier,   &
+                                     t_cpu,     &
+                                     t_elapsed)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  double precision, intent(out) :: t_cpu
+  double precision, intent(out) :: t_elapsed
+
+  real(c_double)                :: c_t_cpu
+  real(c_double)                :: c_t_elapsed
+
+  interface
+
+    subroutine PDM_io_get_timer_fichier_c (fichier,   &
+                                           t_cpu,     &
+                                           t_elapsed) &
+    bind (c, name='PDM_io_get_timer_fichier')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      real(c_double)     :: t_cpu
+      real(c_double)     :: t_elapsed
+
+    end subroutine PDM_io_get_timer_fichier_c
+
+  end interface
+
+    call PDM_io_get_timer_fichier_c (fichier,     &
+                                     c_t_cpu,     &
+                                     c_t_elapsed)
+
+    t_cpu     = c_t_cpu
+    t_elapsed = c_t_elapsed
+
+end subroutine PDM_io_get_timer_fichier
+
+
+
+!>
+!! \brief Retourne le temps cumule pour le swap des donnees
+!!
+!! \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [out] t_cpu             Temps CPU
+!! \param [out] t_elapsed         Temps elapsed
+!!
+!!
+
+subroutine PDM_io_get_timer_swap_endian (fichier,   &
+                                         t_cpu,     &
+                                         t_elapsed)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  double precision, intent(out) :: t_cpu
+  double precision, intent(out) :: t_elapsed
+
+  real(c_double)                :: c_t_cpu
+  real(c_double)                :: c_t_elapsed
+
+  interface
+
+    subroutine PDM_io_get_timer_swap_endian_c (fichier,   &
+                                               t_cpu,     &
+                                               t_elapsed) &
+    bind (c, name='PDM_io_get_timer_swap_endian')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      real(c_double)     :: t_cpu
+      real(c_double)     :: t_elapsed
+
+    end subroutine PDM_io_get_timer_swap_endian_c
+
+  end interface
+
+    call PDM_io_get_timer_swap_endian_c (fichier,     &
+                                         c_t_cpu,     &
+                                         c_t_elapsed)
+
+    t_cpu     = c_t_cpu
+    t_elapsed = c_t_elapsed
+
+end subroutine PDM_io_get_timer_swap_endian
+
+
+
+!>
+!! \brief Retourne le temps cumule pour la distribution des donnees
+!!
+!! \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [out] t_cpu             Temps CPU
+!! \param [out] t_elapsed         Temps elapsed
+!!
+!!
+
+subroutine PDM_io_get_timer_distrib (fichier,   &
+                                     t_cpu,     &
+                                     t_elapsed)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  double precision, intent(out) :: t_cpu
+  double precision, intent(out) :: t_elapsed
+
+  real(c_double)                :: c_t_cpu
+  real(c_double)                :: c_t_elapsed
+
+  interface
+
+    subroutine PDM_io_get_timer_distrib_c (fichier,   &
+                                           t_cpu,     &
+                                           t_elapsed) &
+    bind (c, name='PDM_io_get_timer_distrib')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      real(c_double)     :: t_cpu
+      real(c_double)     :: t_elapsed
+
+    end subroutine PDM_io_get_timer_distrib_c
+
+  end interface
+
+    call PDM_io_get_timer_distrib_c (fichier,     &
+                                     c_t_cpu,     &
+                                     c_t_elapsed)
+
+    t_cpu     = c_t_cpu
+    t_elapsed = c_t_elapsed
+
+end subroutine PDM_io_get_timer_distrib
+
+
+
+!>
+!! \brief Retourne le temps cumule total
+!!
+!! \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
+!! \param [out] t_cpu             Temps CPU
+!! \param [out] t_elapsed         Temps elapsed
+!!
+!!
+
+subroutine PDM_io_get_timer_total (fichier,   &
+                                   t_cpu,     &
+                                   t_elapsed)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  double precision, intent(out) :: t_cpu
+  double precision, intent(out) :: t_elapsed
+
+  real(c_double)                :: c_t_cpu
+  real(c_double)                :: c_t_elapsed
+
+  interface
+
+    subroutine PDM_io_get_timer_total_c (fichier,   &
+                                         t_cpu,     &
+                                         t_elapsed) &
+    bind (c, name='PDM_io_get_timer_total')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value :: fichier
+      real(c_double)     :: t_cpu
+      real(c_double)     :: t_elapsed
+
+    end subroutine PDM_io_get_timer_total_c
+
+  end interface
+
+    call PDM_io_get_timer_total_c (fichier,     &
+                                   c_t_cpu,     &
+                                   c_t_elapsed)
+
+    t_cpu     = c_t_cpu
+    t_elapsed = c_t_elapsed
+
+end subroutine PDM_io_get_timer_total
+
+
+!>
+!! \brief Swap endian pour conversion little endian <-> big endian
+!!
+!! \param [in]  taille_donnee   Taille unitaire de la donnee
+!! \param [in]  n_donnees       Nombre de donnees
+!! \param [in]  donnees         Donnees
+!! \param [out] resultats       Resultat
+!!
+!!
+
+subroutine PDM_io_swap_endian (taille_donnee, &
+                               n_donnees,     &
+                               donnees,       &
+                               resultats)
+  use iso_c_binding
+  implicit none
+
+  integer, intent(in) :: taille_donnee
+  integer, intent(in) :: n_donnees
+  type(c_ptr), value  :: donnees
+  type(c_ptr)         :: resultats
+
+  integer(c_size_t)   :: c_taille_donnee
+  integer(c_size_t)   :: c_n_donnees
+
+  interface
+    subroutine PDM_io_swap_endian_c (taille_donnee, &
+                                     n_donnees,     &
+                                     donnees,       &
+                                     resultats)     &
+    bind (c, name='PDM_io_swap_endian')
+      use iso_c_binding
+      implicit none
+
+      integer(c_size_t), value :: taille_donnee
+      integer(c_size_t), value :: n_donnees
+      type(c_ptr),       value :: donnees
+      type(c_ptr)              :: resultats
+
+    end subroutine PDM_io_swap_endian_c
+  end interface
+
+  c_taille_donnee = taille_donnee
+  c_n_donnees     = n_donnees
+
+  call PDM_io_swap_endian_c (c_taille_donnee, &
+                             c_n_donnees,     &
+                             donnees,         &
+                             resultats)
+
+end subroutine PDM_io_swap_endian
+
 
 !>
 !! \brief Définit le format de la donnée indviduelle pour la sortie text
@@ -254,761 +1091,119 @@ subroutine PDM_io_fmt_donnee_set (fichier,    &
 end subroutine PDM_io_fmt_donnee_set
 
 
-!----------------------------------------------------------------------------
-! Ouverture d'un fichier pour acces parallele
-!
-! parameters :
-!    nom             <-- Nom du fichier
-!    fmt             <-- Fichier text ou binaire
-!    s_entete        <-- Fichier avec ou sans entete
-!    suff_t          <-- Type de suffixe (manuel ou automatique)
-!    suff_u          <-- Suffixe (si suffixe manuel)
-!    s_backup        <-- Active le backup d'un fichier preexistant en mode ecriture
-!    accesio         <-- Type (parallele avec mpiio, parallele sans mpiio,
-!                              sequentiel)
-!    mode            <-- Mode d'acces (lecture, ecriture, lecture/ecriture)
-!    msg_comm        <-- Communicateur lie au fichier
-!    unite           --> Unite du fichier
-!    ierr            --> Indique si le fichier est de type pdm_io ou non
-!                        Utiliser uniquement pour une ouverture en lecture
-!
-!----------------------------------------------------------------------------
 
-  ! subroutine pdm_io_open_(nom, &
-  !                         fmt, &
-  !                         suff_t, &
-  !                         suff_u, &
-  !                         s_backup, &
-  !                         type_io, &
-  !                         mode, &
-  !                         endian, &
-  !                         msg_comm, &
-  !                         prop_noeuds_actifs,  &
-  !                         unite, &
-  !                         ierr)
-  !   implicit none
+!>
+!! \brief Create a directory
+!!
+!! \param [in]  path   Path to new directory
+!! \param [out] code   0 if successful, -1 else
+!!
+!!
+
+subroutine PDM_io_mkdir (path, &
+                         code)
+  use iso_c_binding
+  implicit none
+
+  character(len=*), intent(in)  :: path
+  integer,          intent(out) :: code
+
+  interface
+    function PDM_io_mkdir_c (path) &
+    result (code)                  &
+    bind (c, name='PDM_io_mkdir')
+      use iso_c_binding
+      implicit none
+
+      character(c_char) :: path(*)
+      integer(c_int)    :: code
+
+    end function PDM_io_mkdir_c
+  end interface
+
+  code = PDM_io_mkdir_c (path//C_NULL_CHAR)
+
+end subroutine PDM_io_mkdir
+
+
+
+!>
+!! \brief Calcul de la taille totale d'un champ de donnees
+!!
+!! \param [in]  fichier          Pointer to \ref PDM_io_fichier_t object
+!! \param [in]  t_n_composantes  Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+!! \param [in]  n_composantes    Nombre de composantes pour chaque donnee
+!! \param [in]  n_donnees        Nombre de donnees
+!! \param [in]  indirection      Indirection de redistribition des donnees
+!! \param [out] taille           Taille totale d'un champ de donnees
+!!
+!!
+
+subroutine PDM_io_n_donnees_get (fichier,         &
+                                 t_n_composantes, &
+                                 n_composantes,   &
+                                 n_donnees,       &
+                                 indirection,     &
+                                 taille)
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: fichier
+  integer                       :: t_n_composantes
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s), pointer :: indirection(:)
+  integer(pdm_g_num_s)          :: taille
+
+  integer(c_int)                :: c_t_n_composantes
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+  integer(c_int)                :: c_n_donnees
+  type(c_ptr)                   :: c_indirection   = C_NULL_PTR
+#ifdef PDM_LONG_G_NUM
+  integer(c_long)               :: c_taille
+#else
+  integer(c_int)                :: c_taille
+#endif
+
+  interface
+    function PDM_io_n_donnees_get_c (fichier,         &
+                                     t_n_composantes, &
+                                     n_composantes,   &
+                                     n_donnees,       &
+                                     indirection)     &
+    result (taille)                                   &
+    bind (c, name='PDM_io_n_donnees_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: fichier
+      integer(c_int), value :: t_n_composantes
+      type(c_ptr),    value :: n_composantes
+      integer(c_int), value :: n_donnees
+      type(c_ptr),    value :: indirection
+#ifdef PDM_LONG_G_NUM
+      integer(c_long)       :: taille
+#else
+      integer(c_int)        :: taille
+#endif
+
+    end function PDM_io_n_donnees_get_c
+  end interface
+
+  c_t_n_composantes = t_n_composantes
+  c_n_donnees       = n_donnees
 
-  !   !
-  !   ! Arguments
+  c_n_composantes = c_loc(n_composantes)
+  c_indirection   = c_loc(indirection)
 
-  !   character (len = *),          intent(in)  :: nom
-  !   integer (kind = pdm_l_num_s), intent(in)  :: fmt
-  !   integer (kind = pdm_l_num_s), intent(in)  :: suff_t
-  !   character (len = *),          intent(in)  :: suff_u
-  !   integer (kind = pdm_l_num_s), intent(in)  :: s_backup
-  !   integer (kind = pdm_l_num_s), intent(in)  :: type_io
-  !   integer (kind = pdm_l_num_s), intent(in)  :: mode
-  !   integer (kind = pdm_l_num_s), intent(in)  :: endian
-  !   integer (kind = pdm_l_num_s), intent(in)  :: msg_comm
-  !   real                        , intent(in)  :: prop_noeuds_actifs
-  !   integer (kind = pdm_l_num_s), intent(out) :: unite
-  !   integer (kind = pdm_l_num_s), intent(out) :: ierr
+  c_taille = PDM_io_n_donnees_get_c (fichier,           &
+                                     c_t_n_composantes, &
+                                     c_n_composantes,   &
+                                     c_n_donnees,       &
+                                     c_indirection)
 
-  !   !
-  !   ! Variables locales
+  taille = c_taille
 
-  !   integer            :: l_nom ! Longueur de la chaine nom
-  !   integer            :: l_suff_u ! Longueur de la chaine nom
-
-  !   !
-  !   ! Calcul de la longueur des chaines pour la conversion en string C
-
-  !   l_nom = len(nom)
-  !   l_suff_u = len(suff_u)
-
-  !   !
-  !   ! Appel de la fonction C
-
-  !   call pdm_io_open_cf(nom, &
-  !                       l_nom, &
-  !                       fmt, &
-  !                       suff_t, &
-  !                       suff_u, &
-  !                       l_suff_u, &
-  !                       s_backup, &
-  !                       type_io, &
-  !                       mode, &
-  !                       endian, &
-  !                       msg_comm, &
-  !                       prop_noeuds_actifs, &
-  !                       unite, &
-  !                       ierr)
-
-  ! end subroutine pdm_io_open_
-
-!----------------------------------------------------------------------------
-! Ouverture d'un fichier pour acces parallele
-!
-! parameters :
-!   nom             <-- Nom du fichier
-!   suff_t          <-- Type de suffixe :
-!                           - pdm_io_suff_auto
-!                           - pdm_io_suff_man
-!   type_io         <-- Type d'acces a choisir entre :
-!                           - pdm_io_acces_mpiio_eo
-!                           - pdm_io_acces_mpiio_ip
-!                           - pdm_io_acces_mpi_simple
-!                           - pdm_io_acces_seq
-!   mode            <-- Mode d'acces a choisir entre :
-!                           - pdm_io_mode_lecture
-!                           - pdm_io_mode_ecriture
-!                           - pdm_io_mode_ajout
-!   msg_comm        <-- Communicateur lie au fichier
-!   unite           --> Unite du fichier
-!   ierr            --> Indicateur d'erreur
-!
-!----------------------------------------------------------------------------
-
-  ! subroutine pdm_io_fmt_donnee_set_(unite, n_char_fmt, data_type, fmt)
-  !   implicit none
-
-  !   !
-  !   ! Arguments
-
-  !   integer (kind = pdm_l_num_s), intent(in)  :: unite
-  !   integer (kind = pdm_l_num_s), intent(in)  :: n_char_fmt
-  !   integer (kind = pdm_l_num_s), intent(in)  :: data_type
-  !   character (len = *),          intent(in)  :: fmt
-
-  !   !
-  !   ! Variables locales
-
-  !   integer (kind = pdm_l_num_s) :: l_fmt ! Longueur de la chaine nom
-
-  !   !
-  !   ! Calcul de la longueur des chaines pour la conversion en string C
-
-  !   l_fmt = len(fmt)
-
-  !   !
-  !   ! Appel de la fonction C
-
-  !   call pdm_io_fmt_donnee_set_cf(unite, n_char_fmt, data_type, fmt, l_fmt)
-
-  ! end subroutine pdm_io_fmt_donnee_set_
-
-!----------------------------------------------------------------------------
-! Lecture globale : Le processus maitre accede seul au fichier et redistribue
-! l'information a l'ensemble des processus du communicateur
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   taille_donnee   <-- Taille unitaire de la donnnee en octet
-!   n_donnees       <-- Nombre de donnees a lire
-!   donnees         --> Donnees lues
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_lecture_globale(unite, &
-!                                       taille_donnee, &
-!                                       n_donnees, &
-!                                       donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),          intent(in)  :: unite
-!     integer (kind = pdm_l_num_s),          intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),          intent(in)  :: n_donnees
-!     "Pas de type : void* en C", dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Ecriture globale : Le processus maitre ecrit seul sur le fichier
-!
-! arguments :
-!   unite             <-- Unite du fichier
-!   taille_donnee     <-- Taille unitaire de la donnnee en octet
-!   n_donnees         <-- Nombre de donnees a ecrire
-!   donnees           <-- Donnees a ecrire
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_ecriture_global(unite, &
-!                                       taille_donnee, &
-!                                       n_donnees, &
-!                                       donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),          intent(in)  :: unite
-!     integer (kind = pdm_l_num_s),          intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),          intent(in)  :: n_donnees
-!     "Pas de type : void* en C", dimension(*), intent(int) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Initialise une phase d'Ã©criture parallÃ¨le de tableaux de donnÃ©es associÃ©es
-! aux numÃ©ros de variables CEDRE
-! Chaque tableau a ses propres caractÃ©ristiques :
-!         - taille de donnÃ©es
-!         - nombre de donnÃ©e
-!         - indirection (numÃ©rotation absolue)
-!
-!  arguments :
-!    unite             <-- Unite du fichier
-!    rangement         <-- Type de rangement A choisir entre :
-!                              - pdm_io_donnees_bloc
-!                              - pdm_io_donnees_entrelacee
-!    num_var_pdm_max <-- NumÃ©ro max de variable CEDRE
-!    n_partition_local <-- Nombre de partitions locales
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!   subroutine pdm_io_tab_ecr_debut(unite, &
-!                                     t_rangement, &
-!                                     num_var_pdm_max, &
-!                                     n_partition_local)
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),      intent(in)  :: unite
-!     integer,                              intent(in)  :: t_rangement
-!     integer (kind = pdm_l_num_s),      intent(in)  :: num_var_pdm_max
-!     integer (kind = pdm_l_num_s),      intent(in)  :: n_partition_local
-
-
-!----------------------------------------------------------------------------
-! Ajoute une partie des donnees dans un tableau associÃ©s Ã  une variable
-! CEDRE
-!
-! arguments :
-!   num_var_cedre         <-- NumÃ©ro de variable CEDRE
-!   num_indirection_cedre <-- NumÃ©ro d'indirection CEDRE
-!   i_part                <-- indice de partition
-!   t_n_composantes       <-- Type de tailles composantes A choisir entre :
-!                               - pdm_io_n_composante_constant
-!                               - pdm_io_n_composante_variable
-!   n_composantes         <-- Nombre de composantes pour chaque donnee
-!   taille_donnee         <-- Taille unitaire de la donnnee
-!   n_donnees             <-- Nombre de donnees a lire
-!   indirection           <-- Indirection de redistribition des donnees si
-!                             les donnÃ©es sonr entrelacÃ©es et adresse de dÃ©but
-!                             de bloc pour des donnÃ©es dÃ©finies par bloc
-!   donnees               <-- Donnees a Ã©crire
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!  subroutine pdm_io_tab_ecr_ajout_donnees(num_var_cedre, &
-!                                            num_indirection_cedre, &
-!                                            i_part, &
-!                                            t_n_composantes, &
-!                                            n_composantes, &
-!                                            taille_donnee, &
-!                                            n_donnees, &
-!                                            indirection, &
-!                                            donnees)
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: num_var_cedre
-!     integer (kind = pdm_l_num_s),           intent(in)  :: num_indirection_cedre
-!     integer,                                   intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     integer (kind = pdm_g_num_s), dimension(*), intent(in)  :: indirection
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Finalise une phase d'Ã©criture parallÃ¨le de tableaux de donnÃ©es associÃ©es
-! aux numÃ©ros de variables CEDRE. Cette fonction dÃ©clenche rÃ©ellement
-! les Ã©critures
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!
-!  subroutine pdm_io_tab_ecr_fin
-
-
-!----------------------------------------------------------------------------
-! Initialise une phase d'Ã©criture parallÃ¨le de tableaux de donnÃ©es associÃ©es
-! aux numÃ©ros de variables CEDRE
-! Chaque tableau a ses propres caractÃ©ristiques :
-!         - taille de donnÃ©es
-!         - nombre de donnÃ©e
-!         - indirection (numÃ©rotation absolue)
-!
-!  arguments :
-!    unite             <-- Unite du fichier
-!    rangement         <-- Type de rangement A choisir entre :
-!                              - pdm_io_donnees_bloc
-!                              - pdm_io_donnees_entrelacee
-!    num_var_pdm_max <-- NumÃ©ro max de variable CEDRE
-!    n_partition_local <-- Nombre de partitions locales
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!   subroutine pdm_io_tab_ecr_debut(unite, &
-!                                     t_rangement, &
-!                                     num_var_pdm_max, &
-!                                     n_partition_local)
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),      intent(in)  :: unite
-!     integer,                              intent(in)  :: t_rangement
-!     integer (kind = pdm_l_num_s),      intent(in)  :: num_var_pdm_max
-!     integer (kind = pdm_l_num_s),      intent(in)  :: n_partition_local
-
-
-!----------------------------------------------------------------------------
-! Ajoute une partie des donnees dans un tableau associÃ©s Ã  une variable
-! CEDRE
-!
-! arguments :
-!   num_var_cedre         <-- NumÃ©ro de variable CEDRE
-!   num_indirection_cedre <-- NumÃ©ro d'indirection CEDRE
-!   i_part                <-- indice de partition
-!   t_n_composantes       <-- Type de tailles composantes A choisir entre :
-!                               - pdm_io_n_composante_constant
-!                               - pdm_io_n_composante_variable
-!   n_composantes         <-- Nombre de composantes pour chaque donnee
-!   taille_donnee         <-- Taille unitaire de la donnnee
-!   n_donnees             <-- Nombre de donnees a lire
-!   indirection           <-- Indirection de redistribition des donnees si
-!                             les donnÃ©es sonr entrelacÃ©es et adresse de dÃ©but
-!                             de bloc pour des donnÃ©es dÃ©finies par bloc
-!   donnees               <-- Tableau de stockage des donnÃ©e lues
-!                             (les donnÃ©es sont accessibles aprÃ¨s appel
-!                              de la fonction  pdm_io_tab_lec_fin)
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!  subroutine pdm_io_tab_lec_ajout_donnees(num_var_cedre, &
-!                                            num_indirection_cedre, &
-!                                            i_part, &
-!                                            t_n_composantes, &
-!                                            n_composantes, &
-!                                            taille_donnee, &
-!                                            n_donnees, &
-!                                            indirection, &
-!                                            donnees)
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: num_var_cedre
-!     integer (kind = pdm_l_num_s),           intent(in)  :: num_indirection_cedre
-!     integer,                                   intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     integer (kind = pdm_g_num_s), dimension(*), intent(in)  :: indirection
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Finalise une phase delecture parallÃ¨le de tableaux de donnÃ©es associÃ©es
-! aux numÃ©ros de variables CEDRE. Cette fonction dÃ©clenche rÃ©ellement
-! les Ã©critures
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io_tab.c
-!
-!
-!  subroutine pdm_io_tab_lec_fin
-
-
-!----------------------------------------------------------------------------
-! Lecture parallele de donnees entrelacees
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_n_composantes <-- Indique si le nombre de composantes est constant
-!                       A choisir entre :
-!                             - pdm_io_n_composante_constant
-!                             - pdm_io_n_composante_variable
-!   n_composantes   <-- Nombre de composantes (tableau ou scalaire suivant
-!                                              la valeur de t_n_composantes)
-!   taille_donnee   <-- Taille unitaire de la donnnee en octet
-!   n_donnees       <-- Nombre de donnees a lire
-!   indirection     <-- Indirection (Numerotation absolue)
-!   donnees         --> Donnees lues
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_lec_par_entrelacee(unite, &
-!                                          t_n_composantes, &
-!                                          n_composantes, &
-!                                          taille_donnee, &
-!                                          n_donnees, &
-!                                          indirection, &
-!                                          donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-!     integer,                                   intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     integer (kind = pdm_g_num_s), dimension(*), intent(in)  :: indirection
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Lecture parallele de blocs continus de donnees
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_n_composantes <-- Indique si le nombre de composantes est constant
-!                       A choisir entre :
-!                             - pdm_io_n_composante_constant
-!                             - pdm_io_n_composante_variable
-!   n_composantes   <-- Nombre de composantes (tableau ou scalaire suivant
-!                                              la valeur de t_n_composantes)
-!   taille_donnee   <-- Taille unitaire de la donnnee en octet
-!   n_donnees       <-- Nombre de donnees a ecrire
-!   debut_bloc      <-- Index du debut du bloc
-!   donnees         --> Donnees lues
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_lec_par_bloc(unite, &
-!                                    t_n_composantes, &
-!                                    n_composantes, &
-!                                    taille_donnee, &
-!                                    n_donnees, &
-!                                    debut_bloc, &
-!                                    donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-!     integer                                    intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_g_num_s),          intent(in)  :: debut_bloc
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Ecriture parallele de donnees entrelacees
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_n_composantes <-- Indique si le nombre de composantes est constant
-!                       A choisir entre :
-!                             - pdm_io_n_composante_constant
-!                             - pdm_io_n_composante_variable
-!   n_composantes   <-- Nombre de composantes (tableau ou scalaire suivant
-!                                              la valeur de t_n_composantes)
-!   taille_donnee   <-- Taille unitaire de la donnnee en octet
-!   n_donnees       <-- Nombre de donnees a lire
-!   indirection     <-- Indirection (Numerotation absolue)
-!   donnees         <-- Donnees a ecrire
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_ecr_par_entrelacee(unite, &
-!                                          t_n_composantes, &
-!                                          n_composantes, &
-!                                          taille_donnee, &
-!                                          n_donnees, &
-!                                          indirection, &
-!                                          donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-!     integer,                                   intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     integer (kind = pdm_g_num_s), dimension(*), intent(in)  :: indirection
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Ecriture parallele de blocs continus de donnees
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_n_composantes <-- Indique si le nombre de composantes est constant
-!                       A choisir entre :
-!                             - pdm_io_n_composante_constant
-!                             - pdm_io_n_composante_variable
-!   n_composantes   <-- Nombre de composantes (tableau ou scalaire suivant
-!                                              la valeur de t_n_composantes)
-!   taille_donnee   <-- Taille unitaire de la donnnee en octet
-!   debut_bloc      <-- Index du debut du bloc
-!   n_donnees       <-- Nombre de donnees a ecrire
-!   donnees         <-- Donnees a ecrire
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_ecr_par_bloc(unite, &
-!                                    t_n_composantes, &
-!                                    n_composantes, &
-!                                    taille_donnee, &
-!                                    n_donnees, &
-!                                    debut_bloc, &
-!                                    donnees)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-!     integer                                    intent(in)  :: t_n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_composantes
-!     integer (kind = pdm_l_num_s),           intent(in)  :: taille_donnee
-!     integer (kind = pdm_g_num_s),          intent(in)  :: debut_bloc
-!     integer (kind = pdm_l_num_s),           intent(in)  :: n_donnees
-!     "Pas de type : void* en C" , dimension(*), intent(out) :: donnees
-
-
-!----------------------------------------------------------------------------
-! Fermeture du fichier
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_close(unite)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-
-
-!----------------------------------------------------------------------------
-! Destruction de la structure fichier liee a l'unite
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_detruit(unite)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-
-
-!----------------------------------------------------------------------------
-! Affiche des informations sur le fichier
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!
-!----------------------------------------------------------------------------*/
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_dump(unite)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s),           intent(in)  :: unite
-
-
-!----------------------------------------------------------------------------
-! Retourne le temps cumule d'acces aux fichiers
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_cpu           --> Temps CPU
-!   t_elapsed       --> Temps elapsed
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_timer_fichier (unite, &
-!                                          t_cpu, &
-!                                          t_elapsed)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s), intent(in)  :: unite
-!     double precision,                intent(out) :: t_cpu
-!     double precision,                intent(out) :: t_elapsed
-
-
-!----------------------------------------------------------------------------
-! Retourne le temps cumule de distribution des donnees
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_cpu           --> Temps CPU
-!   t_elapsed       --> Temps elapsed
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_timer_ditrib (unite, &
-!                                         t_cpu, &
-!                                         t_elapsed)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s), intent(in)  :: unite
-!     double precision,                intent(out) :: t_cpu
-!     double precision,                intent(out) :: t_elapsed
-
-
-!----------------------------------------------------------------------------
-! Retourne le temps cumule total
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_cpu           --> Temps CPU
-!   t_elapsed       --> Temps elapsed
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_timer_total (unite, &
-!                                        t_cpu, &
-!                                        t_elapsed)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s), intent(in)  :: unite
-!     double precision,                intent(out) :: t_cpu
-!     double precision,                intent(out) :: t_elapsed
-
-
-!----------------------------------------------------------------------------
-! Retourne le temps cumule consacrÃ© au swap endian
-!
-! arguments :
-!   unite           <-- Unite du fichier
-!   t_cpu           --> Temps CPU
-!   t_elapsed       --> Temps elapsed
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_timer_swap_endian(unite, &
-!                                             t_cpu, &
-!                                             t_elapsed)
-!
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s), intent(in)  :: unite
-!     double precision,                intent(out) :: t_cpu
-!     double precision,                intent(out) :: t_elapsed
-
-
-!----------------------------------------------------------------------------
-! Retourne le numero de version de pdm_io ayant permis
-! de generer le fichier
-!
-! arguments :
-!   unite  <-- Unite du fichier
-!   majeur  --> Numero de version majeur
-!   mineur  --> Numero de version mineur
-!   release --> Numero de version release
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_version(unite, &
-!                                   majeur, &
-!                                   mineur, &
-!                                   release)
-!     !
-!     ! Arguments
-!
-!     integer (kind = pdm_l_num_s), intent(in)  :: unite
-!     integer                        , intent(out) :: majeur
-!     integer                        , intent(out) :: mineur
-!     integer                        , intent(out) :: release
-
-
-!----------------------------------------------------------------------------
-! Retourne le numero de version courant de pdm_io
-!
-! arguments :
-!   majeur  --> Numero de version majeur
-!   mineur  --> Numero de version mineur
-!   release --> Numero de version release
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_version_courante(majeur, &
-!                                            mineur, &
-!                                            release)
-!     !
-!     ! Arguments
-!
-!     integer                        , intent(out) :: majeur
-!     integer                        , intent(out) :: mineur
-!     integer                        , intent(out) :: release
-
-
-!----------------------------------------------------------------------------
-! Retourne le numero de version de pdm_io ayant permis
-! de generer le fichier
-!
-! arguments :
-!   unite  <-- Unite du fichier
-!   annee   --> Annee
-!   mois    --> mois
-!   jour    --> jour
-!   heure   --> heure
-!   minute  --> minute
-!   seconde --> seconde
-!
-!----------------------------------------------------------------------------
-!
-! Fonction definie en C dans pdm_io.c
-!
-!   subroutine pdm_io_get_date(unite, &
-!                                annee, &
-!                                mois, &
-!                                jour, &
-!                                heure, &
-!                                minute, &
-!                                seconde)
+end subroutine PDM_io_n_donnees_get
 
 end module pdm_io

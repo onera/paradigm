@@ -191,23 +191,6 @@ const char* PDM_io_get_nom_fichier
  * \param [out] ierr            Indique si le fichier est de type PDM_io ou non (uniquement pour une ouverture en lecture)
  *
  */
-// void PROCF (pdm_io_open_cf, PDM_IO_OPEN_CF)
-// (const char            *nom,
-//  const PDM_l_num_t  *l_nom,
-//  const int             *fmt,
-//  const int             *suff_t,
-//  const char            *suff_u,
-//  const PDM_l_num_t  *l_suff_u,
-//  const int             *s_backup,
-//  const int             *acces,
-//  const int             *mode,
-//  const int             *endian,
-//  PDM_MPI_Fint              *comm,
-//  double                *prop_noeuds_actifs,
-//  PDM_l_num_t        *unite,
-//  PDM_l_num_t        *ierr
-//  ARGF_SUPP_CHAINE
-//  );
 
 void PDM_io_open
 (
@@ -234,12 +217,6 @@ void PDM_io_open
  * \param [in] seek            Origin type
  *
  */
-// void PROCF (pdm_io_seek, PDM_IO_SEEK)
-// (
-// const PDM_l_num_t   *unite,
-// const PDM_g_num_t   *offset,
-// const PDM_io_seek_t *seek
-// );
 
 void PDM_io_seek
 (
@@ -253,14 +230,10 @@ void PDM_io_seek
  * \brief Return the current file position
  *
  * \param [in] fichier         Pointer to \ref PDM_io_fichier_t object
- * \param [in] offset          Adress
+ *
+ * \return   Current position in file
  *
  */
-// void PROCF (pdm_io_tell, PDM_IO_TELL)
-// (
-// const PDM_l_num_t    *unite,
-//       PDM_g_num_t    *offset
-// );
 
 PDM_g_num_t
 PDM_io_tell
@@ -279,12 +252,6 @@ PDM_io_tell
  * \param [out] donnees         Donnees lues
  *
  */
-// void PROCF (pdm_io_lecture_globale, PDM_IO_LECTURE_GLOBALE)
-// (const PDM_l_num_t *unite,
-//  const PDM_l_num_t *taille_donnee,
-//  const PDM_g_num_t *n_donnees,
-//  void                 *donnees
-// );
 
 void PDM_io_lecture_globale
 (
@@ -304,12 +271,6 @@ void PDM_io_lecture_globale
  * \param [in]  donnees         Donnees ecrites
  *
  */
-// void PROCF (pdm_io_ecriture_globale, PDM_IO_ECRITURE_GLOBALE)
-// (const PDM_l_num_t *unite,
-//  const PDM_l_num_t *taille_donnee,
-//  const PDM_g_num_t *n_donnees,
-//  const void           *donnees
-// );
 
 void PDM_io_ecriture_globale
 (
@@ -333,50 +294,33 @@ void PDM_io_ecriture_globale
  * \param [out] donnees          Donnees lues
  *
  */
-// void PROCF (pdm_io_lec_par_entrelacee, PDM_IO_LEC_PAR_ENTRELACEE)
-// (const PDM_l_num_t  *unite,
-//  const int             *t_n_composantes,
-//  const PDM_l_num_t  *n_composantes,
-//  const PDM_l_num_t  *taille_donnee,
-//  const PDM_l_num_t  *n_donnees,
-//  const PDM_g_num_t *indirection,
-//  void                  *donnees
-//  );
 
 void PDM_io_lec_par_entrelacee
-(PDM_io_fichier_t   *fichier,
- const PDM_io_n_composantes_t t_n_composantes,
- const PDM_l_num_t          *n_composantes,
- const PDM_l_num_t           taille_donnee,
- const PDM_l_num_t           n_donnees,
- const PDM_g_num_t         *indirection,
- void                          *donnees
+(
+ PDM_io_fichier_t             *fichier,
+ const PDM_io_n_composantes_t  t_n_composantes,
+ const PDM_l_num_t            *n_composantes,
+ const PDM_l_num_t             taille_donnee,
+ const PDM_l_num_t             n_donnees,
+ const PDM_g_num_t            *indirection,
+ void                         *donnees
  );
 
 
 /**
  * \brief Lecture parallele de blocs de donnees
- * Les blocs doivent etre rangÃ©s par ordre croissant suivant la numÃ©rotation
+ * Les blocs doivent etre ranges par ordre croissant suivant la numerotation
  * des processus
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_fichier_t object
  * \param [in]  t_n_composantes  Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
  * \param [in]  n_composantes    Nombre de composantes pour chaque donnee
  * \param [in]  taille_donnee    Taille unitaire de la donnee
- * \param [in]  debut_bloc       Adresse relative du debut de bloc
  * \param [in]  n_donnees        Nombre de donnees a lire
+ * \param [in]  debut_bloc       Adresse relative du debut de bloc
  * \param [out] donnees          Donnees lues
  *
  */
-// void PROCF (pdm_io_lec_par_bloc, PDM_IO_LEC_PAR_BLOC)
-// (const PDM_l_num_t  *unite,
-//  const int             *t_n_composantes,
-//  const PDM_l_num_t  *n_composantes,
-//  const PDM_l_num_t  *taille_donnee,
-//  const PDM_l_num_t  *n_donnees,
-//  const PDM_g_num_t *debut_bloc,
-//  void                  *donnees
-// );
 
 void PDM_io_lec_par_bloc
 (
@@ -403,15 +347,6 @@ void PDM_io_lec_par_bloc
  * \param [in] donnees           Donnees a ecrire
  *
  */
-// void PROCF (pdm_io_ecr_par_entrelacee, PDM_IO_ECR_PAR_ENTRELACEE)
-// (const PDM_l_num_t  *unite,
-//  const int             *t_n_composantes,
-//  const PDM_l_num_t  *n_composantes,
-//  const PDM_l_num_t  *taille_donnee,
-//  const PDM_l_num_t  *n_donnees,
-//  const PDM_g_num_t *indirection,
-//  const void            *donnees
-// );
 
 void PDM_io_ecr_par_entrelacee
 (
@@ -439,15 +374,6 @@ void PDM_io_ecr_par_entrelacee
  * \param [in] donnees           Donnees a ecrire
  *
  */
-// void PROCF (pdm_io_ecr_par_bloc, PDM_IO_ECR_PAR_BLOC)
-// (const PDM_l_num_t  *unite,
-//  const int             *t_n_composantes,
-//  const PDM_l_num_t  *n_composantes,
-//  const PDM_l_num_t  *taille_donnee,
-//  const PDM_l_num_t  *n_donnees,
-//  const PDM_g_num_t *debut_bloc,
-//  const void            *donnees
-// );
 
 void PDM_io_ecr_par_bloc
 (
@@ -468,9 +394,6 @@ void PDM_io_ecr_par_bloc
  * \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
  *
  */
-// void PROCF (pdm_io_close, PDM_IO_CLOSE)
-// (const PDM_l_num_t *unite
-// );
 
 void PDM_io_close
 (
@@ -484,8 +407,6 @@ void PDM_io_close
  * \param [in] fichier           Pointer to \ref PDM_io_fichier_t object
  *
  */
-// void PROCF (pdm_io_detruit, PDM_IO_DETRUIT)
-// (const PDM_l_num_t *unite);
 
 void PDM_io_detruit
 (
@@ -501,11 +422,6 @@ void PDM_io_detruit
  * \param [out] t_elapsed         Temps elapsed
  *
  */
-// void PROCF (pdm_io_get_timer_fichier, PDM_IO_GET_TIMER_FICHIER)
-// (const PDM_l_num_t *unite,
-//  double *t_cpu,
-//  double *t_elapsed
-// );
 
 void PDM_io_get_timer_fichier
 (
@@ -523,11 +439,6 @@ void PDM_io_get_timer_fichier
  * \param [out] t_elapsed         Temps elapsed
  *
  */
-// void PROCF (pdm_io_get_timer_swap_endian, PDM_IO_GET_TIMER_SWAP_ENDIAN)
-// (const PDM_l_num_t *unite,
-//  double               *t_cpu,
-//  double               *t_elapsed
-// );
 
 void PDM_io_get_timer_swap_endian
 (
@@ -545,11 +456,6 @@ void PDM_io_get_timer_swap_endian
  * \param [out] t_elapsed         Temps elapsed
  *
  */
-// void PROCF (pdm_io_get_timer_distrib, PDM_IO_GET_TIMER_DISTRIB)
-// (const PDM_l_num_t *unite,
-//  double               *t_cpu,
-//  double               *t_elapsed
-// );
 
 void PDM_io_get_timer_distrib
 (
@@ -567,11 +473,6 @@ void PDM_io_get_timer_distrib
  * \param [out] t_elapsed         Temps elapsed
  *
  */
-// void PROCF (pdm_io_get_timer_total, PDM_IO_GET_TIMER_TOTAL)
-// (const PDM_l_num_t *unite,
-//  double               *t_cpu,
-//  double               *t_elapsed
-// );
 
 void PDM_io_get_timer_total
 (
@@ -587,9 +488,6 @@ void PDM_io_get_timer_total
  * \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
  *
  */
-// void PROCF (pdm_io_dump, PDM_IO_DUMP)
-// (const PDM_l_num_t *unite
-// );
 
 void PDM_io_dump
 (
@@ -604,10 +502,6 @@ void PDM_io_dump
  * \param [out] pdm_mpi_comm      Communicateur MPI
  *
  */
-// void PROCF (pdm_io_get_comm, PDM_IO_GET_COMM)
-// (PDM_l_num_t *unite,
-//  PDM_MPI_Fint       *pdm_mpi_comm
-// );
 
 void PDM_io_get_comm
 (
@@ -622,10 +516,6 @@ void PDM_io_get_comm
  * \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
  *
  */
-// void PROCF (pdm_io_swap_endian_on, PDM_IO_SWAP_ENDIAN_ON)
-// (
-// PDM_l_num_t *unite
-// );
 
 void PDM_io_swap_endian_on
 (
@@ -639,10 +529,6 @@ void PDM_io_swap_endian_on
  * \param [in]  fichier           Pointer to \ref PDM_io_fichier_t object
  *
  */
-// void PROCF (pdm_io_swap_endian_off, PDM_IO_SWAP_ENDIAN_OFF)
-// (
-// PDM_l_num_t *unite
-// );
 
 void PDM_io_swap_endian_off
 (
@@ -659,13 +545,6 @@ void PDM_io_swap_endian_off
  * \param [out] resultats       Resultat
  *
  */
-//  void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN)
-//  (
-//   const int         *taille_donnee,
-//   const PDM_g_num_t *n_donnees,
-//   const void        *donnees,
-//   void              *resultats
-// );
 
 void PDM_io_swap_endian
 (
@@ -685,15 +564,6 @@ void PDM_io_swap_endian
  * \param [in]  fmt               Format
  *
  */
-// void PROCF (pdm_io_fmt_donnee_set_cf, PDM_IO_FMT_DONNEE_SET_CF)
-// (
-//  const PDM_l_num_t *unite,
-//  const PDM_l_num_t *n_char_fmt,
-//  const PDM_l_num_t *data_type,
-//  const char           *fmt,
-//  const PDM_l_num_t *l_fmt
-//  ARGF_SUPP_CHAINE
-// );
 
 void PDM_io_fmt_donnee_set
 (
@@ -727,19 +597,10 @@ int PDM_io_mkdir
  * \param [in]  n_composantes    Nombre de composantes pour chaque donnee
  * \param [in]  n_donnees        Nombre de donnees
  * \param [in]  indirection      Indirection de redistribition des donnees
- * \param [out] donnees          Donnees
  *
  * \return   Taille totale d'un champ de donnees
  *
  */
-// void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
-// (const PDM_l_num_t  *unite,
-//  const int             *t_n_composantes,
-//  const PDM_l_num_t  *n_composantes,
-//  const PDM_l_num_t  *n_donnees,
-//  const PDM_g_num_t *indirection,
-//        PDM_g_num_t *t_n_donnees
-//  );
 
 PDM_g_num_t
 PDM_io_n_donnees_get
