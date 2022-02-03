@@ -12,7 +12,6 @@
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_partitioning_algorithm.h"
-#include "pdm_dmesh_partitioning.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
