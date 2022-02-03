@@ -254,14 +254,14 @@ int main(int argc, char *argv[])
    */
   int n_zone = 1;
   int n_part_zones = n_part;
-  int mpart_id = PDM_multipart_create(n_zone,
-                                      &n_part_zones,
-                                      PDM_FALSE,
-                                      part_method,
-                                      PDM_PART_SIZE_HOMOGENEOUS,
-                                      NULL,
-                                      comm,
-                                      PDM_OWNERSHIP_KEEP);
+  PDM_multipart_t *mpart_id = PDM_multipart_create(n_zone,
+						   &n_part_zones,
+						   PDM_FALSE,
+						   part_method,
+						   PDM_PART_SIZE_HOMOGENEOUS,
+						   NULL,
+						   comm,
+						   PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
