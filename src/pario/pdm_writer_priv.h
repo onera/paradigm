@@ -12,8 +12,8 @@
 #include "pdm_mpi.h"
 #include "pdm_writer.h"
 #include "pdm_io.h"
-#include "pdm_handles.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_handles.h"
 
 #ifdef __cplusplus
 extern "C" {

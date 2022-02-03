@@ -41,7 +41,6 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_part_renum.h"
-#include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_mesh_nodal.h"
