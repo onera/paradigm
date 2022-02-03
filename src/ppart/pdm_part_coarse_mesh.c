@@ -28,7 +28,6 @@
 #include "pdm_part_graph.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 
 /*=============================================================================
  * Macro definitions
@@ -62,7 +61,10 @@ extern "C" {
  * Storage of face renumbering methods
  */
 
-static PDM_Handles_t *_coarse_mesh_methods = NULL;
+static _coarse_mesh_method_t **_coarse_mesh_methods = NULL;
+static int s_coarse_mesh_methods = 0;
+static int n_coarse_mesh_methods = 0;
+
 
 /*============================================================================
  * Private function definitions
@@ -609,8 +611,7 @@ int            **cell_part)
 
   *cell_part = PDM_array_zeros_int(part_ini->n_cell);
 
-  const _coarse_mesh_method_t *method_ptr = (const _coarse_mesh_method_t *)
-  PDM_Handles_get (_coarse_mesh_methods, method);
+  const _coarse_mesh_method_t *method_ptr = (const _coarse_mesh_method_t *) _coarse_mesh_methods[method];
 
   PDM_coarse_mesh_fct_t fct = method_ptr->fct;
 
@@ -4367,12 +4368,20 @@ PDM_coarse_mesh_method_add
 )
 {
   if (_coarse_mesh_methods == NULL) {
-      PDM_coarse_mesh_method_load_local();
+    PDM_coarse_mesh_method_load_local();
+  }
+
+  if (n_coarse_mesh_methods >= s_coarse_mesh_methods) {
+    s_coarse_mesh_methods = PDM_MAX(2*s_coarse_mesh_methods,
+                                    n_coarse_mesh_methods + 1);
+    _coarse_mesh_methods = realloc (_coarse_mesh_methods,
+                                    sizeof(_coarse_mesh_method_t *) * s_coarse_mesh_methods);
   }
 
   _coarse_mesh_method_t *method_ptr = malloc (sizeof(_coarse_mesh_method_t));
 
-  int idx = PDM_Handles_store  (_coarse_mesh_methods, method_ptr);
+  int idx = n_coarse_mesh_methods;
+  _coarse_mesh_methods[n_coarse_mesh_methods++] = method_ptr;
 
   method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
   strcpy (method_ptr->name, name);
@@ -4420,14 +4429,12 @@ const char *name
   int idx = -1;
 
   if (_coarse_mesh_methods != NULL) {
-    int n_methods = PDM_Handles_n_get (_coarse_mesh_methods);
-    const int *index =  PDM_Handles_idx_get (_coarse_mesh_methods);
+    int n_methods = n_coarse_mesh_methods;
 
     for (int i = 0; i < n_methods; i++) {
-      _coarse_mesh_method_t *method_ptr =
-              (_coarse_mesh_method_t *) PDM_Handles_get (_coarse_mesh_methods, index[i]);
+      _coarse_mesh_method_t *method_ptr = _coarse_mesh_methods[i];
       if (!strcmp(method_ptr->name, name)) {
-        idx = index[i];
+        idx = i;
         break;
       }
     }
@@ -4472,16 +4479,13 @@ const int id
     PDM_coarse_mesh_method_load_local();
   }
 
-  int n_methods = PDM_Handles_n_get (_coarse_mesh_methods);
+  int n_methods = n_coarse_mesh_methods;
 
   if (id >= n_methods) {
     return NULL;
   }
 
-  const int *index =  PDM_Handles_idx_get (_coarse_mesh_methods);
-
-  _coarse_mesh_method_t *method_ptr =
-            (_coarse_mesh_method_t *) PDM_Handles_get (_coarse_mesh_methods, index[id]);
+  _coarse_mesh_method_t *method_ptr = _coarse_mesh_methods[id];
 
   return method_ptr->name;
 }
@@ -4514,8 +4518,7 @@ void
     PDM_coarse_mesh_method_load_local();
   }
 
-  return PDM_Handles_n_get (_coarse_mesh_methods);
-
+  return n_coarse_mesh_methods;
 }
 
 /**
@@ -4532,20 +4535,16 @@ void
 {
   if (_coarse_mesh_methods != NULL) {
 
-    const int *index =  PDM_Handles_idx_get (_coarse_mesh_methods);
-    int n_methods = PDM_Handles_n_get (_coarse_mesh_methods);
-
-    while (n_methods > 0) {
-      int idx = index[0];
-      _coarse_mesh_method_t *method_ptr =
-              (_coarse_mesh_method_t *) PDM_Handles_get (_coarse_mesh_methods, idx);
-      free (method_ptr->name);
-      PDM_Handles_handle_free (_coarse_mesh_methods, idx, PDM_TRUE);
-      n_methods = PDM_Handles_n_get (_coarse_mesh_methods);
+    for (int i = 0; i < n_coarse_mesh_methods; i++) {
+      if (_coarse_mesh_methods[i] != NULL) {
+        free (_coarse_mesh_methods[i]->name);
+        free (_coarse_mesh_methods[i]);
+        _coarse_mesh_methods[i] = NULL;
+      }
     }
 
-    _coarse_mesh_methods = PDM_Handles_free (_coarse_mesh_methods);
-
+    free (_coarse_mesh_methods);
+    _coarse_mesh_methods = NULL;
   }
 }
 
@@ -4564,7 +4563,9 @@ void
   if (_coarse_mesh_methods == NULL)  {
 
     const int n_default_methods = 2;
-    _coarse_mesh_methods = PDM_Handles_create (n_default_methods);
+    s_coarse_mesh_methods = n_default_methods;
+    n_coarse_mesh_methods = 0;
+    _coarse_mesh_methods = (_coarse_mesh_method_t **) malloc(sizeof(_coarse_mesh_method_t *) * s_coarse_mesh_methods);
 
     PDM_coarse_mesh_method_add ("PDM_COARSE_MESH_SCOTCH",
                              _coarse_from_scotch);
@@ -4574,25 +4575,6 @@ void
   }
 
 }
-
-
-
-/**
- *
- * \brief Return coarse mesh object from its identifier
- *
- * \param [in]   cmId        Coarse mesh identifier
- *
- */
-
-// _coarse_mesh_t *
-// PDM_part_coarse_mesh_get_from_id
-// (
-//  int  cmId
-//  )
-// {
-//   return _get_from_id (cmId);
-// }
 
 #ifdef __cplusplus
 }
