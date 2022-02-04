@@ -55,6 +55,29 @@ extern "C" {
 
 /**
  *
+ * \brief Free the properties of a asynchronous alltoall 
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [in]   request       Request
+ * 
+ */
+
+static void
+_free_async_alltoall
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  ptp->async_alltoall_subrequest[3 * request]     = -1;
+  ptp->async_alltoall_subrequest[3 * request + 1] = -1;
+  ptp->async_alltoall_subrequest[3 * request + 2] = -1;
+  ptp->async_alltoall_free[ptp->async_send_n_free++] = request;     
+}
+
+
+/**
+ *
  * \brief Free the properties of a asynchronous data sending
  *
  * \param [in]   ptp           Block to part structure
@@ -66,7 +89,7 @@ static void
 _free_async_send
 (
  PDM_part_to_part_t *ptp,
- const int                     request
+ const int           request
 )
 {
   if (ptp->async_send_request[request] != NULL) {
@@ -183,6 +206,49 @@ _free_async_exch
 
 
   ptp->async_exch_free[ptp->async_exch_n_free++] = request;     
+}
+
+
+/**
+ *
+ * \brief Check arrays of the asynchronous send   
+ *
+ * \param [in]   ptp           Block to part structure
+ *
+ */
+
+static void
+_check_async_alltoall_alloc
+(
+ PDM_part_to_part_t *ptp
+)
+{
+  if (ptp->async_alltoall_l_array == 0) {
+    ptp->async_alltoall_l_array    = 10;
+    ptp->async_alltoall_free       = malloc (sizeof(int) * ptp->async_alltoall_l_array);
+    ptp->async_alltoall_subrequest = malloc (sizeof(int) * 3 * ptp->async_alltoall_l_array);
+
+    for (int i = 0; i < ptp->async_alltoall_l_array; i++) {
+      ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = ptp->async_alltoall_l_array -1 - i; 
+      ptp->async_alltoall_subrequest[3*i]   = -1;
+      ptp->async_alltoall_subrequest[3*i+1] = -1;
+      ptp->async_alltoall_subrequest[3*i+2] = -1;
+    }
+  }
+
+  if (ptp->async_alltoall_n_free == 0) {
+    const int pre_val = ptp->async_alltoall_l_array; 
+    ptp->async_alltoall_l_array   *= 2;
+    ptp->async_alltoall_free       = realloc (ptp->async_alltoall_free      , sizeof(int) * ptp->async_alltoall_l_array);
+    ptp->async_alltoall_subrequest = realloc (ptp->async_alltoall_subrequest, sizeof(int) * 3 * ptp->async_alltoall_l_array);
+
+    for (int i = pre_val; i < ptp->async_alltoall_l_array; i++) {
+      ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = i;
+      ptp->async_alltoall_subrequest[3*i]   = -1;
+      ptp->async_alltoall_subrequest[3*i+1] = -1;
+      ptp->async_alltoall_subrequest[3*i+2] = -1;
+    }
+  }  
 }
 
 
@@ -382,6 +448,26 @@ _check_async_exch_alloc
       }
     }
   }
+}
+
+
+/**
+ *
+ * \brief Initialize an asynchronous data alltoall 
+ *
+ * \param [in]   ptp           Block to part structure
+ * 
+ */
+
+static int
+_find_open_async_alltoall_exch
+(
+ PDM_part_to_part_t *ptp
+)
+{
+  _check_async_alltoall_alloc (ptp);
+
+  return ptp->async_alltoall_free[--ptp->async_alltoall_n_free];
 }
 
 /**
@@ -2337,28 +2423,81 @@ PDM_part_to_part_part1_to_part2_get
 void
 PDM_part_to_part_ialltoall
 (
-PDM_part_to_part_t *ptp,
- const size_t       s_data,
- const int          cst_stride,
- void             **part1_to_part2_data,
- void             **ref_part2_data,
- int               *request
+ PDM_part_to_part_t *ptp,
+ const size_t        s_data,
+ const int           cst_stride,
+ void              **part1_to_part2_data,
+ void              **ref_part2_data,
+ int                *request
 )
 {
-  PDM_UNUSED (ptp);
-  PDM_UNUSED (s_data);
-  PDM_UNUSED (cst_stride);
-  PDM_UNUSED (part1_to_part2_data);
-  PDM_UNUSED (ref_part2_data);
-  PDM_UNUSED (request);
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part_to_part_ialltoall not yet implemented\n");
+
+  unsigned char ** _part1_data = (unsigned char **) part1_to_part2_data;
+
+  *request         = _find_open_async_alltoall_exch (ptp);
+  int request_send = _find_open_async_send_exch (ptp);
+  int request_recv = _find_open_async_recv_exch (ptp);
+
+  int _request = *request;
+  ptp->async_alltoall_subrequest[3 * _request]     = request_send;
+  ptp->async_alltoall_subrequest[3 * _request + 1] = request_recv;
+
+  ptp->async_send_s_data[request_send]      = s_data;      
+  ptp->async_send_cst_stride[request_send]  = cst_stride;      
+  ptp->async_send_tag[_request]             = -1;      
+  ptp->async_send_request[_request]         = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);      
+  ptp->async_n_send_buffer[_request]        = malloc (sizeof(int) * ptp->n_rank);
+  ptp->async_i_send_buffer[_request]        = malloc (sizeof(int) * (ptp->n_rank + 1));
+  ptp->async_i_send_buffer[_request][0]     = 0;
+  for (int i = 0; i < ptp->n_rank; i++) {
+    ptp->async_n_send_buffer[_request][i]   = cst_stride * ptp->default_n_send_buffer[i] * (int) s_data; 
+    ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_i_send_buffer[i+1] * (int) s_data; 
+  }
+  ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);      
+
+  int delta = (int) s_data * cst_stride;
+  for (int i = 0; i < ptp->n_part1; i++) {
+    for (int j = 0; j < ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]; j++) {
+      for (int k = ptp->gnum1_to_send_buffer_idx[i][j]; 
+               k < ptp->gnum1_to_send_buffer_idx[i][j+1]; 
+               k++) {
+
+        if (ptp->gnum1_to_send_buffer[i][k] >= 0) {
+          int idx = ptp->gnum1_to_send_buffer[i][k] * delta;
+          int idx1 = j* delta;
+          for (int k1 = 0; k1 < delta; k1++) {
+            ptp->async_send_buffer[_request][idx+k1] = _part1_data[i][idx1+k1]; 
+          }
+        }
+      } 
+    }
+  }
+
+  ptp->async_recv_s_data[request_recv]      = s_data;      
+  ptp->async_recv_cst_stride[request_recv]  = cst_stride;      
+  ptp->async_recv_tag[request_recv]         = -1;
+
+  ptp->async_recv_part2_data[request_recv]  = ref_part2_data;      
+  ptp->async_recv_request[request_recv]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
+  ptp->async_n_recv_buffer[request_recv]    = malloc (sizeof(int) * ptp->n_rank);
+  ptp->async_i_recv_buffer[request_recv]    = malloc (sizeof(int) * (ptp->n_rank + 1));
+  ptp->async_i_recv_buffer[request_recv][0] = 0;
+  for (int i = 0; i < ptp->n_rank; i++) {
+    ptp->async_n_recv_buffer[request_recv][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
+    ptp->async_i_recv_buffer[request_recv][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
+  }
+  ptp->async_recv_buffer[request_recv]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[request_recv][ptp->n_rank]);      
+
+  PDM_MPI_Ialltoallv (ptp->async_send_buffer[_request], ptp->async_n_send_buffer[_request], ptp->async_i_send_buffer[_request], PDM_MPI_UNSIGNED_CHAR,
+                      ptp->async_recv_buffer[_request], ptp->async_n_recv_buffer[_request], ptp->async_i_recv_buffer[_request], PDM_MPI_UNSIGNED_CHAR, 
+                      ptp->comm, &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+
 }
 
 
 /**
  *
- * \brief Wait a asynchronus issend
+ * \brief Wait a asynchronus ialltoall
  *
  * \param [in]  ptp           part to part structure
  * \param [in]  request       Request
@@ -2372,10 +2511,34 @@ PDM_part_to_part_ialltoall_wait
  int                 request
 )
 {
-  PDM_UNUSED (ptp);
-  PDM_UNUSED (request);
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part_to_part_ialltoall_wait not yet implemented\n");
+
+  PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
+
+  int request_send = ptp->async_alltoall_subrequest[3 * request];
+  int request_recv = ptp->async_alltoall_subrequest[3 * request + 1];
+
+  size_t s_data  = ptp->async_recv_s_data[request_recv];      
+  int cst_stride = ptp->async_recv_cst_stride[request_recv];      
+
+  unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request_recv];
+
+  int delta = (int) s_data * cst_stride;
+  for (int i = 0; i < ptp->n_part2; i++) {
+    for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
+      for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
+        int idx = ptp->recv_buffer_to_ref_gnum2[i][k] * delta;
+        int idx1 = k* delta;
+        for (int k1 = 0; k1 < delta; k1++) {
+          _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request_recv][idx+k1]; 
+        }
+      }
+    }
+  }
+
+  _free_async_send (ptp, request_send);
+  _free_async_recv (ptp, request_recv);
+  _free_async_alltoall (ptp, request);
+
 }
 
 
@@ -3832,7 +3995,6 @@ PDM_part_to_part_reverse_iexch
       abort();
 
     }
-
 
     else {
 

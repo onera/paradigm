@@ -89,6 +89,11 @@ struct _pdm_part_to_part_t {
   int               **async_n_send_buffer;          /*!< Number of data in the buffer to send to each rank of asynchonous sendings */
   int               **async_i_send_buffer;          /*!< Index in the send buffer of each rank of asynchonous sendings */
 
+  int                 async_alltoall_n_free;        /*!< Number of free asynchronous sendings */ 
+  int                *async_alltoall_free;          /*!< Free asynchronous sendings */ 
+  int                 async_alltoall_l_array;       /*!< Size of arrays to store asynchonous sendings */ 
+  int                *async_alltoall_subrequest;    /*!< send/recv request associated to the exchange */ 
+
   int                 async_recv_n_free;            /*!< Number of free asynchronous reception */ 
   int                *async_recv_free;              /*!< Free asynchronous receptions */ 
   int                 async_recv_l_array;           /*!< Size of arrays to store asynchonous receptions */ 

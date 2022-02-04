@@ -550,8 +550,8 @@ int PDM_MPI_Alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Ialltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                 void *recvbuf, int recvcount,
-                 PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+                      void *recvbuf, int recvcount,
+                      PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Alltoallv (wrapping de la fonction MPI_Alltoallv)
