@@ -106,7 +106,8 @@ struct _pdm_part_to_part_t {
   int                 async_exch_l_array;           /*!< Size of arrays to store asynchonous exchange properties */ 
   int                *async_exch_t_stride;          /*!< Type of stride used for the exchange */ 
   int                *async_exch_k_comm;            /*!< Communication kind used for the exchange */ 
-  int                *async_exch_subrequest;        /*!< send/recv request associated to the exchange */ 
+  int                *async_exch_subrequest_s;      /*!< Number of subrequest couple that async_exch_subrequest array can store */ 
+  int               **async_exch_subrequest;        /*!< send/recv request associated to the exchange */ 
   int               **async_exch_recv_n;            /*!< Number of received data (stride is taking into acount) */
   int               **async_exch_recv_idx;          /*!< Index to find received data */ 
   int              ***async_exch_part2_stride;      /*!< Stride of part2 data */ 
