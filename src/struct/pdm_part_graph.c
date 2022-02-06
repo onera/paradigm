@@ -544,7 +544,7 @@ PDM_part_graph_split_bis
 (
  int         method,
  int         n_part,
- int         graphSize,
+ int         graph_size,
  int        *cell_cell_idx,
  int        *cell_cell,
  int        *cell_weight,
@@ -552,7 +552,7 @@ PDM_part_graph_split_bis
  int       **cell_part
 )
 {
-  *cell_part = PDM_array_zeros_int(graphSize);
+  *cell_part = PDM_array_zeros_int(graph_size);
 
   switch(method) {
   case 1:
@@ -594,7 +594,7 @@ PDM_part_graph_split_bis
 
       if (n_part < 8) {
 
-        PDM_METIS_PartGraphRecursive (&(graphSize),
+        PDM_METIS_PartGraphRecursive (&(graph_size),
                                       &ncon,
                                       cell_cell_idx,
                                       cell_cell,
@@ -609,7 +609,7 @@ PDM_part_graph_split_bis
 
       else {
 
-        PDM_METIS_PartGraphKway (&(graphSize),
+        PDM_METIS_PartGraphKway (&(graph_size),
                                  &ncon,
                                  cell_cell_idx,
                                  cell_cell,
@@ -630,7 +630,7 @@ PDM_part_graph_split_bis
       // int time_limit = 0;
       // int seed  = 0;
       // int mode = 2;
-      // PDM_kaffpa(&(graphSize),
+      // PDM_kaffpa(&(graph_size),
       //            NULL,
       //            cell_cell_idx,
       //            NULL,
@@ -644,7 +644,7 @@ PDM_part_graph_split_bis
 
       if (0 == 1) {
         PDM_printf("\n Contenu de cell_part : \n");
-        for (int i = 0; i < graphSize; i++) {
+        for (int i = 0; i < graph_size; i++) {
           PDM_printf(" %d ", (*cell_part)[i]);
         }
         PDM_printf("\n");
@@ -672,7 +672,7 @@ PDM_part_graph_split_bis
 
       int check = 0;
 
-      PDM_SCOTCH_part (graphSize,
+      PDM_SCOTCH_part (graph_size,
                        cell_cell_idx,
                        cell_cell,
                        cell_weight,

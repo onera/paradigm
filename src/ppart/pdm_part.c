@@ -1094,10 +1094,6 @@ _distrib_cell
     for (int i1 = 0; i1 < mesh_part->n_face; i1++){
       mesh_part->new_to_old_order_face[i1] = i1;
     }
-    mesh_part->new_to_old_order_vtx = (int *) malloc (sizeof(int) * mesh_part->n_vtx);
-    for (int i1 = 0; i1 < mesh_part->n_vtx; i1++){
-      mesh_part->new_to_old_order_vtx[i1] = i1;
-    }
 
     /* Free */
 
@@ -1577,6 +1573,11 @@ _distrib_vtx
       if (ppart->_dvtx_tag != NULL)
         mesh_part->vtx_tag  = (int *) malloc(mesh_part->n_vtx * sizeof(int));
       mesh_part->vtx = (double *) malloc(3 * mesh_part->n_vtx * sizeof(double));
+
+      // mesh_part->new_to_old_order_vtx = (int *) malloc (sizeof(int) * mesh_part->n_vtx);
+      // for (int i1 = 0; i1 < mesh_part->n_vtx; i1++){
+      //   mesh_part->new_to_old_order_vtx[i1] = i1;
+      // }
 
       int k = 0;
       for (int i = 0; i < mesh_part->n_vtx; i++) {
