@@ -151,10 +151,10 @@ PDM_pconnectivity_to_pconnectivity
   const PDM_g_num_t   **part1_entity2_ln_to_gn,
   const int             n_part2,
   const int            *n_part2_entity1,
-  const int            *n_part2_entity2,
   const PDM_g_num_t   **part2_entity1_ln_to_gn,
   const int           **part2_entity1_to_part1_entity1_idx,
   const PDM_g_num_t   **part2_entity1_to_part1_entity1,
+        int           **n_part2_entity2,
         int          ***part2_entity1_entity2_idx,
         int          ***part2_entity1_entity2,
         PDM_g_num_t  ***part2_entity2_ln_to_gn
@@ -254,23 +254,41 @@ PDM_pconnectivity_to_pconnectivity
   /*
    * Post-treatment
    */
-  // int n_face_vtx = 4 * n_extract_face;
-  // PDM_g_num_t *equi_parent_vtx_ln_to_gn = (PDM_g_num_t * ) malloc(n_face_vtx * sizeof(PDM_g_num_t));
-  // int         *unique_order_vtx         = (int         * ) malloc(n_face_vtx * sizeof(int        ));
-  // for(int i = 0; i < n_face_vtx; ++i) {
-  //   equi_parent_vtx_ln_to_gn[i] = PDM_ABS(equi_extract_face_vtx[i]);
-  // }
-  // int n_extract_vtx = PDM_inplace_unique_long2(equi_parent_vtx_ln_to_gn, unique_order_vtx, 0, n_face_vtx-1);
+  int          *_n_part2_entity2           = malloc(n_part2 * sizeof(int          ));
+  int         **_part2_entity1_entity2_idx = malloc(n_part2 * sizeof(int         *));
+  int         **_part2_entity1_entity2     = malloc(n_part2 * sizeof(int         *));
+  PDM_g_num_t **_part2_entity2_ln_to_gn    = malloc(n_part2 * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < n_part2; ++i_part) {
 
-  // int *equi_face_vtx = (int *) malloc( n_face_vtx * sizeof(int));
-  // for(int idx = 0; idx < n_face_vtx; ++idx) {
-  //   int g_sgn  = PDM_SIGN(equi_extract_face_vtx[idx]);
-  //   int l_elmt = unique_order_vtx[idx];
-  //   equi_face_vtx[idx] = (l_elmt + 1) * g_sgn;
-  // }
-  // free(unique_order_vtx);
+    _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
 
+    /* Compute recv stride */
+    _part2_entity1_entity2_idx[i_part][0] = 0;
+    for(int i_entity1 = 0; i_entity1 < n_part2_entity1[i_part]; ++i_entity1) {
+      _part2_entity1_entity2_idx[i_part][i_entity1+1] = _part2_entity1_entity2_idx[i_part][i_entity1] + recv_entity1_entity2_n[i_part][i_entity1];
+    }
+    int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
+    _part2_entity2_ln_to_gn[i_part] = malloc( n_recv_entity1_entity2      * sizeof(PDM_g_num_t));
+
+    int *unique_order_entity2     = (int         * ) malloc(n_recv_entity1_entity2 * sizeof(int        ));
+    for(int i = 0; i < n_recv_entity1_entity2; ++i) {
+      _part2_entity2_ln_to_gn[i_part][i] = PDM_ABS(recv_entity1_entity2[i_part][i]);
+    }
+
+    int n_extract_entity2 = PDM_inplace_unique_long2(_part2_entity2_ln_to_gn[i_part], unique_order_entity2, 0, n_recv_entity1_entity2-1);
+    _part2_entity2_ln_to_gn[i_part] = realloc(_part2_entity2_ln_to_gn[i_part],  n_extract_entity2      * sizeof(PDM_g_num_t));
+
+    /* Recompute local numbering */
+    _part2_entity1_entity2 [i_part] = malloc( n_recv_entity1_entity2 * sizeof(int        ));
+
+    for(int idx = 0; idx < n_recv_entity1_entity2; ++idx) {
+      int g_sgn  = PDM_SIGN(recv_entity1_entity2[i_part][idx]);
+      int l_elmt = unique_order_entity2[idx];
+      _part2_entity1_entity2[i_part][idx] = (l_elmt + 1) * g_sgn;
+    }
+    free(unique_order_entity2);
+  }
 
   for(int i_part = 0; i_part < n_part2; ++i_part) {
     free(recv_entity1_entity2_n[i_part]);
@@ -280,6 +298,12 @@ PDM_pconnectivity_to_pconnectivity
   free(recv_entity1_entity2  );
 
   PDM_part_to_part_free(ptp);
+
+  *n_part2_entity2           = _n_part2_entity2;
+  *part2_entity1_entity2_idx = _part2_entity1_entity2_idx;
+  *part2_entity1_entity2     = _part2_entity1_entity2;
+  *part2_entity2_ln_to_gn    = _part2_entity2_ln_to_gn;
+
 }
 
 /**
@@ -759,7 +783,7 @@ int main(int argc, char *argv[])
     PDM_part_to_part_issend_wait(ptp, send_request);
     PDM_part_to_part_irecv_wait (ptp, recv_request);
   }
- 
+
   else {
     int  **part1_stride = malloc (sizeof(int *) * n_part_zones);
     void **part1_data = (void **) pextract_cell_face;
@@ -776,7 +800,7 @@ int main(int argc, char *argv[])
     PDM_g_num_t **_equi_extract_cell_face = NULL;
 
     PDM_part_to_part_iexch (ptp,
-                            PDM_MPI_COMM_KIND_P2P, 
+                            PDM_MPI_COMM_KIND_P2P,
                             PDM_STRIDE_VAR_INTERLACED,
                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2, // PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
                             - 1,
@@ -940,7 +964,7 @@ int main(int argc, char *argv[])
 
   if(0 == 1) {
     for (int i_part = 0; i_part < n_part_zones; i_part++) {
-      PDM_log_trace_array_int (ref_l_num_face[i_part], n_ref_face[i_part]                             , "ref_l_num_face      : ");
+      PDM_log_trace_array_int (ref_l_num_face[i_part], n_ref_face[i_part]                                  , "ref_l_num_face      : ");
       PDM_log_trace_array_int (gnum1_come_from_idx[i_part], n_ref_face[i_part]                             , "gnum1_come_from_idx : ");
       PDM_log_trace_array_long(gnum1_come_from    [i_part], gnum1_come_from_idx[i_part][n_ref_face[i_part]], "gnum1_come_from     : ");
     }
@@ -1034,7 +1058,7 @@ int main(int argc, char *argv[])
   //                                100,
   //                                &recv_request);
 
-  // PDM_part_to_part_reverse_issend_wait(ptp_face, send_request); 
+  // PDM_part_to_part_reverse_issend_wait(ptp_face, send_request);
   // PDM_part_to_part_reverse_irecv_wait (ptp_face, recv_request);
   // PDM_log_trace_array_long(equi_extract_face_vtx, 1 * n_extract_face, "equi_extract_face_vtx : ");
 
@@ -1063,6 +1087,37 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(equi_parent_vtx_ln_to_gn, n_extract_vtx, "equi_parent_vtx_ln_to_gn : ");
     PDM_log_trace_array_int (equi_face_vtx           , n_face_vtx   , "equi_face_vtx            : ");
   }
+
+  // TO see with Eric, tag pb because cast into int
+  // int          *part2_n_extract_vtx = NULL;
+  // int         **part2_face_vtx_idx  = NULL;
+  // int         **part2_face_vtx      = NULL;
+  // PDM_g_num_t **part2_vtx_ln_to_gn  = NULL;
+  // PDM_pconnectivity_to_pconnectivity(comm,
+  //                                    n_part,
+  //           (const int            *) pn_face,
+  //           (const int           **) pface_vtx_idx,
+  //           (const int           **) pface_vtx,
+  //           (const PDM_g_num_t   **) pface_ln_to_gn,
+  //           (const PDM_g_num_t   **) pvtx_ln_to_gn,
+  //           (const int             ) 1,
+  //           (const int            *) &n_extract_face,
+  //           (const PDM_g_num_t   **) &extract_face_ln_to_gn,
+  //           (const int           **) &equi_parent_face_idx,
+  //           (const PDM_g_num_t   **) &equi_parent_face_ln_to_gn,
+  //                                    &part2_n_extract_vtx,
+  //                                    &part2_face_vtx_idx,
+  //                                    &part2_face_vtx,
+  //                                    &part2_vtx_ln_to_gn);
+  // free(part2_n_extract_vtx);
+  // free(part2_face_vtx_idx[0]);
+  // free(part2_face_vtx[0]);
+  // free(part2_vtx_ln_to_gn[0]);
+  // free(part2_face_vtx_idx);
+  // free(part2_face_vtx);
+  // free(part2_vtx_ln_to_gn);
+
+
 
   /*
    * At this stage we have the vtx_ln_to_gn (parent) and we need to create the child
@@ -1166,7 +1221,7 @@ int main(int argc, char *argv[])
     PDM_part_to_part_reverse_irecv_wait (ptp_vtx, recv_request);
 
   }
-  
+
   else {
 
     int      request_exch;
@@ -1184,7 +1239,7 @@ int main(int argc, char *argv[])
     double **part1_data;
 
     PDM_part_to_part_reverse_iexch (ptp_vtx,
-                                    PDM_MPI_COMM_KIND_P2P, 
+                                    PDM_MPI_COMM_KIND_P2P,
                                     PDM_STRIDE_VAR_INTERLACED,
                                     PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
                                     -1,
@@ -1192,7 +1247,7 @@ int main(int argc, char *argv[])
                    (const int **)   part2_stride,
                    (const void **)  send_vtx_coord,
                                    &part1_stride,
-                   (void ***)      &part1_data, 
+                   (void ***)      &part1_data,
                                    &request_exch);
 
     PDM_part_to_part_reverse_iexch_wait (ptp_vtx, request_exch);
@@ -1205,7 +1260,7 @@ int main(int argc, char *argv[])
       free (part2_stride[i_part]);
     }
     free (part2_stride);
-  }  
+  }
 
   PDM_part_to_part_free(ptp_vtx);
 

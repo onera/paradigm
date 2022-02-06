@@ -2310,10 +2310,12 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
   MPI_Allreduce (&ltag, &mtag, 1, MPI_LONG, MPI_MAX, _pdm_mpi_2_mpi_comm(comm));
 
   MPI_Aint  *max_tag_tmp;
-  int flag; 
+  int flag;
 
   MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
-  long max_tag = (long) *max_tag_tmp; 
+  long max_tag = (long) *max_tag_tmp;
+
+  // printf("max_tag = %i | mtag = %i \n", max_tag, mtag);
 
   return mtag % max_tag;
 }
