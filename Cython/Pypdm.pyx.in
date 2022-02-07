@@ -42,8 +42,9 @@ cdef extern from "pdm.h":
         PDM_DOUBLE
 
     ctypedef enum PDM_stride_t:
-        PDM_STRIDE_CST
-        PDM_STRIDE_VAR
+        PDM_STRIDE_CST_INTERLACED
+        PDM_STRIDE_CST_BLOCK
+        PDM_STRIDE_VAR_INTERLACED
 
     ctypedef enum PDM_mesh_nature_t:
         PDM_MESH_NATURE_NODAL_SHARED
@@ -406,4 +407,3 @@ include "pdm_domain_merge.pxi"
 
 
 # TODO: PDM_writer, ...
-

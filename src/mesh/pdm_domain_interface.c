@@ -542,7 +542,7 @@ static int _extract_and_shift_jn_faces
   //to build the hash table later so return it
   PDM_block_to_block_exch(btb,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           2,
                           NULL,
                           _dextract_face_id_tmp,
@@ -550,7 +550,7 @@ static int _extract_and_shift_jn_faces
               (void **)   dextract_face_id);
   PDM_block_to_block_exch(btb,
                           sizeof(int),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           2,
                           NULL,
                           _dextract_face_group_id_tmp,
@@ -558,7 +558,7 @@ static int _extract_and_shift_jn_faces
               (void **)  dextract_face_group_id);
   PDM_block_to_block_exch(btb,
                           sizeof(int),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           2,
                           NULL,
                           _dextract_face_dom_id_tmp,
@@ -612,7 +612,7 @@ static int _extract_and_shift_jn_faces
   PDM_g_num_t **part_data   = NULL;
   PDM_multi_block_to_part_exch2(mptb,
                                 sizeof(PDM_g_num_t),
-                                PDM_STRIDE_VAR,
+                                PDM_STRIDE_VAR_INTERLACED,
                                 face_vtx_n,
                  (void **)      face_vtx_shifted,
                                &part_stride,
@@ -824,7 +824,7 @@ static int _match_internal_edges
   PDM_g_num_t *blk_edge_g_num     = NULL;
   int exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int **)  &stride_one,
                            (void **) &data_send_edge_g_num,
@@ -837,7 +837,7 @@ static int _match_internal_edges
   PDM_g_num_t* blk_data_sens   = NULL;
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(int),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int **)  &stride_two,
                            (void **) &data_send_sens,
@@ -851,7 +851,7 @@ static int _match_internal_edges
   PDM_g_num_t* blk_data_face_g_num   = NULL;
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int **)  &stride_two,
                            (void **) &data_send_face_g_num,
@@ -864,7 +864,7 @@ static int _match_internal_edges
   PDM_g_num_t *blk_data_connect = NULL;
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                           (int **)  &stride_four,
                           (void **) &data_send_connect,
@@ -1020,7 +1020,7 @@ static int _match_internal_edges
 
   PDM_part_to_block_exch(ptb,
                         sizeof(PDM_g_num_t),
-                        PDM_STRIDE_CST,
+                        PDM_STRIDE_CST_INTERLACED,
                         1,
                         NULL,
              (void **) &(results_edge_opp),
@@ -1218,7 +1218,7 @@ PDM_MPI_Comm   comm
   PDM_g_num_t *dall_vtx_opp     = NULL;
   int exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int  **) &stride_one,
                            (void **) &p_all_vtx_opp,
@@ -1228,7 +1228,7 @@ PDM_MPI_Comm   comm
   int *unused_recv_stride = NULL;
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(int),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int  **) &stride_one,
                            (void **) &p_all_vtx_group,
@@ -1238,7 +1238,7 @@ PDM_MPI_Comm   comm
 
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(int),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int  **) &stride_one,
                            (void **) &p_all_vtx_dom_id,
@@ -1248,7 +1248,7 @@ PDM_MPI_Comm   comm
 
   exch_size = PDM_part_to_block_exch(ptb,
                                      sizeof(int),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int  **) &stride_one,
                            (void **) &p_all_vtx_domopp_id,
@@ -1363,7 +1363,7 @@ static void _connect_additional_edges
   PDM_g_num_t *vtx_face_ids = NULL;
   int n_recv = PDM_part_to_block_exch(ptb_vtx,
                                       sizeof(PDM_g_num_t),
-                                      PDM_STRIDE_VAR,
+                                      PDM_STRIDE_VAR_INTERLACED,
                                       -1,
                             (int **)  &stride_two,
                            (void **)  &send_data,
@@ -1416,7 +1416,7 @@ static void _connect_additional_edges
   // n_key_vtx is the number of vertices involved in keys (counted multiple times) managed by this proc
   int n_key_vtx =  PDM_part_to_block_exch(ptb_key,
                                      sizeof(PDM_g_num_t),
-                                     PDM_STRIDE_VAR,
+                                     PDM_STRIDE_VAR_INTERLACED,
                                      -1,
                            (int **)  &stride_one,
                            (void **) &vtx_gnum,
@@ -1426,7 +1426,7 @@ static void _connect_additional_edges
   int *key_recv_face_n = NULL; // For each key (unmerged), number of face related to key
   PDM_part_to_block_exch(ptb_key,
                          sizeof(int),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          -1,
                (int **)  &stride_one,
                (void **) &vtx_face_n,
@@ -1438,7 +1438,7 @@ static void _connect_additional_edges
   PDM_g_num_t *key_recv_data = NULL; //For each key (unmerged), tuples (face/face_opp)  * nb of face related to key
   PDM_part_to_block_exch(ptb_key,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          -1,
                (int **)  &vtx_stride_two,
                (void **) &vtx_face_ids,
@@ -1528,7 +1528,7 @@ static void _connect_additional_edges
   PDM_g_num_t *matched_gnum_opp = NULL;
   PDM_part_to_block_exch(ptb_vtx2,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                          1,
                          NULL,
                (void **) &key_vtx_gnum_opp,
@@ -1569,7 +1569,7 @@ static void _connect_additional_edges
   PDM_g_num_t **recv_data;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           blk_stride,
                           matched_gnum_opp, 
                          &recv_stride,
@@ -1759,7 +1759,7 @@ static void _domain_interface_face_to_vertex
   int cst_stride = 1;
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                          &cst_stride,
                 (void *) dextract_face_join,
                          NULL,
@@ -1767,7 +1767,7 @@ static void _domain_interface_face_to_vertex
 
   PDM_block_to_part_exch(btp,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                          &cst_stride,
                 (void *) dextract_face_join_opp,
                          NULL,
@@ -1853,7 +1853,7 @@ static void _domain_interface_face_to_vertex
   PDM_g_num_t **recv_data_tmp   = NULL;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           dedge_gnum_n,
                           dedge_gnum_opp,
                          &recv_stride_tmp,
@@ -1866,7 +1866,7 @@ static void _domain_interface_face_to_vertex
   int stride2 = 2;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                          &stride2,
                           dedge_vtx,
                           NULL,

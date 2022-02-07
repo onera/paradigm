@@ -8422,7 +8422,7 @@ if (_octree->use_win_shared) {
   double *block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pts_dist2,
@@ -8433,7 +8433,7 @@ if (_octree->use_win_shared) {
   PDM_g_num_t *block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pts_g_num,
@@ -8988,7 +8988,7 @@ if (_octree->use_win_shared) {
   double *tmp_block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pts_dist22,
@@ -9000,7 +9000,7 @@ if (_octree->use_win_shared) {
   PDM_g_num_t *tmp_block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pts_g_num,
@@ -9045,7 +9045,7 @@ if (_octree->use_win_shared) {
   int stride = n_closest_points;
   PDM_block_to_part_exch (btp,
                           sizeof(double),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride,
                           block_closest_pts_dist2,
                           NULL,
@@ -9054,7 +9054,7 @@ if (_octree->use_win_shared) {
 
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride,
                           block_closest_pts_g_num,
                           NULL,
@@ -9943,7 +9943,7 @@ if (_octree->use_win_shared) {
   double *block_closest_pt_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pt_dist2,
@@ -9954,7 +9954,7 @@ if (_octree->use_win_shared) {
   PDM_g_num_t *block_closest_pt_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pt_g_num,
@@ -10652,7 +10652,7 @@ if (_octree->use_win_shared) {
   double *tmp_block_closest_pt_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pt_dist22,
@@ -10664,7 +10664,7 @@ if (_octree->use_win_shared) {
   PDM_g_num_t *tmp_block_closest_pt_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &part_stride,
                           (void **) &_closest_pt_g_num,
@@ -10705,7 +10705,7 @@ if (_octree->use_win_shared) {
   int stride = 1;
   PDM_block_to_part_exch (btp,
                           sizeof(double),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride,
                           block_closest_pt_dist2,
                           NULL,
@@ -10714,7 +10714,7 @@ if (_octree->use_win_shared) {
 
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride,
                           block_closest_pt_g_num,
                           NULL,
@@ -11536,7 +11536,7 @@ PDM_para_octree_points_inside_boxes
     PDM_g_num_t *block_pts_in_box_g_num = NULL;
     PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &box_pts_g_num,
@@ -11552,7 +11552,7 @@ PDM_para_octree_points_inside_boxes
     double *block_pts_in_box_coord = NULL;
     PDM_part_to_block_exch (ptb,
                             dim*sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &box_pts_coord,
@@ -11666,7 +11666,7 @@ PDM_para_octree_points_inside_boxes
     int one = 1;
     PDM_block_to_part_exch (btp,
                             sizeof(int),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &one,
                             (void *) block_pts_in_box_n,
                             NULL,
@@ -11677,7 +11677,7 @@ PDM_para_octree_points_inside_boxes
 
     PDM_block_to_part_exch (btp,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             block_pts_in_box_n,
                             (void *) block_pts_in_box_g_num,
                             &pts_in_box_n,
@@ -11697,7 +11697,7 @@ PDM_para_octree_points_inside_boxes
 
     PDM_block_to_part_exch (btp,
                             dim*sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             block_pts_in_box_n,
                             (void *) block_pts_in_box_coord,
                             &pts_in_box_n,

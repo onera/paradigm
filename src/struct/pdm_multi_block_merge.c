@@ -160,7 +160,7 @@ PDM_multi_block_merge_create
   PDM_g_num_t *blk_send_orig_g_num = NULL;
   int dn_blk_size = PDM_part_to_block_exch(ptb,
                                            sizeof(PDM_g_num_t),
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            _send_stride,
                                  (void **) _send_orig_g_num,
@@ -281,7 +281,7 @@ PDM_multi_block_merge_exch
                                 &tmp_block_strid_out,
                     (void ***)  &tmp_block_data_out);
 
-  if(t_stride == PDM_STRIDE_VAR) {
+  if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
     *merge_block_stride = tmp_block_strid_out[0];
     free(tmp_block_strid_out);
   }
@@ -438,7 +438,6 @@ PDM_multi_block_merge_exch_and_update
                  (void **)   shifted_block_data,
                              &dparent_child_strid,
                  (void **)   &dparent_child_mbm);
-
 
   // 3. Update received (dist) connectivity to have ids in the new numbering
   int dn_merge = PDM_multi_block_merge_get_n_block(mbm_cur);

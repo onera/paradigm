@@ -275,7 +275,7 @@ _search_matching_joins
   int         *block_data;
   PDM_part_to_block_exch(ptb,
                          sizeof(int),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                          3,
                          NULL,
                          (void **) part_data,
@@ -316,7 +316,7 @@ _search_matching_joins
 
   PDM_block_to_part_exch(btp,
                          sizeof(int),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                          &cst_stride,
                          (void *) block_data,
                          NULL,

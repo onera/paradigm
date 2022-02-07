@@ -2298,7 +2298,7 @@ PDM_coarse_mesh_t * cm
 
   PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             1,
                             &part_stride,
                             (void **) face_ln_to_gnTag,
@@ -2357,7 +2357,7 @@ PDM_coarse_mesh_t * cm
 
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride_one,
                           (void *) b_tIntersects,
                           &part_stride,
@@ -2494,7 +2494,7 @@ PDM_coarse_mesh_t * cm
 
   PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             1,
                             &part_stride,
                             (void **) vtx_ln_to_gnTag,
@@ -2551,7 +2551,7 @@ PDM_coarse_mesh_t * cm
 
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           &stride_one,
                           (void *) b_tIntersects,
                           &part_stride,
@@ -2768,7 +2768,7 @@ PDM_coarse_mesh_t * cm
 
     PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             1,
                             &part_stride,
                             (void **) faceGroupLNToGNTagGroup,
@@ -2835,7 +2835,7 @@ PDM_coarse_mesh_t * cm
 
     PDM_block_to_part_exch (btp,
                             sizeof(int),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &stride_one,
                             (void *) b_tIntersects,
                             &part_stride,

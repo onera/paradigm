@@ -667,7 +667,7 @@ _compute_overlay_planes
 
   PDM_part_to_block_exch (ptb_boxesA,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &part_strideA,
                          (void **) &boxesB_intersection_g_num,
@@ -902,7 +902,7 @@ _compute_overlay_planes
     face_vtxEpsCurrent[imesh]  = NULL;
 
     PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
-                                               PDM_STRIDE_VAR,
+                                               PDM_STRIDE_VAR_INTERLACED,
                                                1,
                                                data_size_l,
                                                faceStrideOrigin,
@@ -911,7 +911,7 @@ _compute_overlay_planes
                                                (void **) &faceToEdgeCurrent[imesh]);
 
     PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
-                                               PDM_STRIDE_VAR,
+                                               PDM_STRIDE_VAR_INTERLACED,
                                                1,
                                                data_size_l,
                                                faceStrideOrigin,
@@ -920,7 +920,7 @@ _compute_overlay_planes
                                                (void **) &faceToVtxCurrent[imesh]);
 
     PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
-                                               PDM_STRIDE_VAR,
+                                               PDM_STRIDE_VAR_INTERLACED,
                                                1,
                                                data_size_r,
                                                faceStrideOrigin,
@@ -936,7 +936,7 @@ _compute_overlay_planes
     }
 
     PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
-                                               PDM_STRIDE_VAR,
+                                               PDM_STRIDE_VAR_INTERLACED,
                                                1,
                                                data_size_r,
                                                faceStrideOrigin,
@@ -2412,7 +2412,7 @@ _compute_overlay_planes
   PDM_g_num_t *recvSubFacesConnecBN;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride,
                          (void **) &subFacesConnecN,
@@ -2455,7 +2455,7 @@ _compute_overlay_planes
   PDM_g_num_t *recvSubFacesConnecB;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride,
                          (void **) &subFacesConnecB_ordered,
@@ -2484,7 +2484,7 @@ _compute_overlay_planes
   double *recvSubFacesCoordsB;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(double),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride,
                          (void **) &subFacesCoordsA_ordered,
@@ -2598,7 +2598,7 @@ _compute_overlay_planes
   PDM_g_num_t *recvFaceToEdgeNPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride,
                          (void **) &sendFaceToEdgeNPtInt,
@@ -2641,7 +2641,7 @@ _compute_overlay_planes
 
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(double),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride,
                          (void **) &sendFaceToEdgeCoordsvtx,
@@ -2745,7 +2745,7 @@ _compute_overlay_planes
   PDM_g_num_t *recvFaceToEdgeOrAndGnumPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride2,
                          (void **) &sendFaceToEdgeOrAndGnumPtInt,
@@ -2762,7 +2762,7 @@ _compute_overlay_planes
   double *recvFaceToEdgeUPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
                          sizeof(double),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          0,
                          &_tmp_stride2,
                          (void **) &sendFaceToEdgeUPtInt,
@@ -3726,7 +3726,7 @@ _compute_overlay_planes
   }
 
   PDM_box_set_send_data_to_origin_distrib (boxesA,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,
@@ -3783,7 +3783,7 @@ _compute_overlay_planes
   PDM_g_num_t **secondRecvA = malloc (sizeof(PDM_g_num_t *) * n_partA);
 
   PDM_box_set_send_data_to_origin_distrib (boxesA,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,
@@ -3807,7 +3807,7 @@ _compute_overlay_planes
   double **thirdRecvA = malloc (sizeof(double *) * n_partA);
 
   PDM_box_set_send_data_to_origin_distrib (boxesA,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(double),
                                            firstSendStride,
@@ -3841,7 +3841,7 @@ _compute_overlay_planes
   PDM_g_num_t **fourthRecvA = malloc (sizeof(PDM_g_num_t *) * n_partA);
 
   PDM_box_set_send_data_to_origin_distrib (boxesA,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,
@@ -4007,7 +4007,7 @@ _compute_overlay_planes
   free (blockA_boxesB_gnum_data_cp);
 
   PDM_box_set_send_data_to_origin_distrib (boxesB,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,
@@ -4056,7 +4056,7 @@ _compute_overlay_planes
   PDM_g_num_t **secondRecvB = malloc (sizeof(PDM_g_num_t *) * n_partB);
 
   PDM_box_set_send_data_to_origin_distrib (boxesB,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,
@@ -4078,7 +4078,7 @@ _compute_overlay_planes
   double **thirdRecvB = malloc (sizeof(double *) * n_partB);
 
   PDM_box_set_send_data_to_origin_distrib (boxesB,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(double),
                                            firstSendStride,
@@ -4109,7 +4109,7 @@ _compute_overlay_planes
   PDM_g_num_t **fourthRecvB = malloc (sizeof(PDM_g_num_t *) * n_partB);
 
   PDM_box_set_send_data_to_origin_distrib (boxesB,
-                                           PDM_STRIDE_VAR,
+                                           PDM_STRIDE_VAR_INTERLACED,
                                            1,
                                            sizeof(PDM_g_num_t),
                                            firstSendStride,

@@ -770,7 +770,7 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *block_elt_pts_g_num = NULL;
     PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &part_pts_g_num,
@@ -787,7 +787,7 @@ PDM_dist_cloud_surf_compute
     double *block_elt_pts_coord = NULL;
     PDM_part_to_block_exch (ptb,
                             3*sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &part_pts_coord,
@@ -861,7 +861,7 @@ PDM_dist_cloud_surf_compute
     double *block_elt_vtx_coord = NULL;
     PDM_part_to_block_exch (ptb_elt,
                             3*sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             part_elt_vtx_n,
                             (void **) part_elt_vtx_coord,
@@ -1049,7 +1049,7 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *tmp_block_pts_elt_g_num = NULL;
     PDM_part_to_block_exch (ptb2,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &part_block_elt_g_num,
@@ -1062,7 +1062,7 @@ PDM_dist_cloud_surf_compute
     double *tmp_block_pts_elt_dist2 = NULL;
     PDM_part_to_block_exch (ptb2,
                             sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &block_elt_pts_dist2,
@@ -1078,7 +1078,7 @@ PDM_dist_cloud_surf_compute
     int *block_pts_elt_n3 = NULL;
     PDM_part_to_block_exch (ptb2,
                             3*sizeof(double),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
                             &part_stride,
                             (void **) &block_elt_pts_proj,
@@ -1159,7 +1159,7 @@ PDM_dist_cloud_surf_compute
     int one = 1;
     PDM_block_to_part_exch (btp,
                             sizeof(double),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &one,
                             block_pts_elt_dist2,
                             NULL,
@@ -1169,7 +1169,7 @@ PDM_dist_cloud_surf_compute
     int three = 3;
     PDM_block_to_part_exch (btp,
                             sizeof(double),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &three,
                             block_pts_elt_proj,
                             NULL,
@@ -1178,7 +1178,7 @@ PDM_dist_cloud_surf_compute
 
     PDM_block_to_part_exch (btp,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             &one,
                             block_pts_elt_g_num,
                             NULL,
