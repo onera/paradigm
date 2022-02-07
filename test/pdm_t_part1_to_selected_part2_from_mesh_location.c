@@ -1104,11 +1104,11 @@ int main(int argc, char *argv[])
   }
 
   PDM_part_to_part_issend (ptp,
-                                     sizeof (PDM_g_num_t),
-                                     1,
-                                     (void **)  gnum1_gnum2_data,
-                                     100,
-                                     &send_request);
+                           sizeof (PDM_g_num_t),
+                           1,
+         (const void **)  gnum1_gnum2_data,
+                           100,
+                           &send_request);
 
 
 
@@ -1119,11 +1119,11 @@ int main(int argc, char *argv[])
   }
 
   PDM_part_to_part_irecv (ptp,
-                                    sizeof (PDM_g_num_t),
-                                    1,
-                                    (void **) gnum_elt1_recv,
-                                    100,
-                                    &recv_request);
+                          sizeof (PDM_g_num_t),
+                          1,
+                (void **) gnum_elt1_recv,
+                          100,
+                          &recv_request);
 
 
 
@@ -1149,11 +1149,11 @@ int main(int argc, char *argv[])
 
   send_request = -1;
   PDM_part_to_part_issend (ptp2,
-                                     sizeof (PDM_g_num_t),
-                                     1,
-                                     (void **) ptp2_s_data,
-                                     100,
-                                     &send_request);
+                           sizeof (PDM_g_num_t),
+                           1,
+           (const void **) ptp2_s_data,
+                           100,
+                           &send_request);
 
   recv_request = -1;
   PDM_g_num_t **gnum_elt2_recv = malloc (sizeof(PDM_g_num_t*)  * n_part);
@@ -1162,11 +1162,11 @@ int main(int argc, char *argv[])
   }
 
   PDM_part_to_part_irecv (ptp2,
-                                    sizeof (PDM_g_num_t),
-                                    1,
-                                    (void **) gnum_elt2_recv,
-                                    100,
-                                    &recv_request);
+                          sizeof (PDM_g_num_t),
+                          1,
+                (void **) gnum_elt2_recv,
+                          100,
+                          &recv_request);
 
 
 
@@ -1284,12 +1284,14 @@ int main(int argc, char *argv[])
       PDM_sort_long (points_gnum[i] + elt_pts_inside_idx[i][j], NULL, n_pts2);
     }
 
-    if (0==1) {
+    if (0 == 1) {
+ 
       printf ("location from location :\n");
       for (int j = 0; j < n_located; j++) {
         printf(""PDM_FMT_G_NUM" : "PDM_FMT_G_NUM"", gnum_elt2[i][located[j]-1], location[i][j]);
       printf ("\n");
       }
+ 
       printf ("location from exchange  :\n");
       for (int j = 0; j < n_ref_gnum2[i]; j++) {
         printf(""PDM_FMT_G_NUM" :", gnum_elt2[i][ref_gnum2[i][j]-1]);
@@ -1320,18 +1322,14 @@ int main(int argc, char *argv[])
         }  
         printf ("\n");
       }
-
-
     }
-
-    // Check Exchanges
 
     for (int j = 0; j < n_ref_gnum2[i]; j++) {
       for (int k = gnum1_come_from_idx[i][j] ; k < gnum1_come_from_idx[i][j+1]; k++) {
-       assert(gnum_elt1_recv[i][k] == location[i][j]);
+        assert(gnum_elt1_recv[i][k] == location[i][j]);
       }  
-
     }
+
     for (int j = 0; j < ptp2_n_ref_gnum2[i]; j++) {
       int ielt = ptp2_ref_gnum2[i][j]-1;
       int n1 = ptp2_gnum1_come_from_idx[i][j+1] - ptp2_gnum1_come_from_idx[i][j];
@@ -1343,7 +1341,6 @@ int main(int argc, char *argv[])
         assert( val1 == val2); 
       }  
     }
-
   }
 
   for (int i = 0; i < n_part; i++) {
@@ -1376,12 +1373,9 @@ int main(int argc, char *argv[])
   free (gnum_elt2);
   free (n_elt2);
 
-  PDM_mesh_location_free (id_loc1,
-                          0);
+  PDM_mesh_location_free (id_loc1, 0);
 
-  PDM_mesh_location_free (id_loc2,
-                          0);
-
+  PDM_mesh_location_free (id_loc2, 0);
 
   PDM_part_to_part_free (ptp);
   PDM_part_to_part_free (ptp2);

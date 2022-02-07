@@ -127,11 +127,11 @@ void
 PDM_part_to_part_ialltoall
 (
 PDM_part_to_part_t *ptp,
- const size_t                  s_data,
- const int                     cst_stride,
- void                        **part1_to_part2_data,
- void                        **ref_part2_data,
- int                          *request
+ const size_t       s_data,
+ const int          cst_stride,
+ void             **part1_to_part2_data,
+ void             **ref_part2_data,
+ int               *request
 );
 
 

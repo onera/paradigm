@@ -2962,7 +2962,6 @@ PDM_part_to_part_irecv_wait
   }
 
   _free_async_recv (ptp, request);
-
   
 }
 
@@ -3155,7 +3154,7 @@ PDM_part_to_part_iexch
 
       if (t_part1_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART1) {
 
-        for (int i1 = 0; i1 < ptp->n_part1; i1++) { // Continuer ici !
+        for (int i1 = 0; i1 < ptp->n_part1; i1++) { 
 
           unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
           unsigned char *map_part1_data = (unsigned char*) part1_data[i] + i * (cst_stride * s_data * ptp->n_elt1[i]);
@@ -3201,10 +3200,12 @@ PDM_part_to_part_iexch
 
       else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
-        printf ("Error PDM_part_to_part_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
+        PDM_part_to_part_ialltoall (ptp,
+                                    s_data,
+                                    cst_stride,
+                                    _part1_to_part2_data,
+                            (void **)___part2_data,
+                                    &(ptp->async_exch_subrequest[_request][2*i]));                                  
 
       }
 
@@ -3317,10 +3318,12 @@ PDM_part_to_part_iexch
 
     else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
+      PDM_part_to_part_ialltoall (ptp,
+                                  s_data,
+                                  cst_stride,
+                                  _part1_to_part2_data,
+                          (void **)*part2_data,
+                                  &(ptp->async_exch_subrequest[_request][0]));                                  
 
     }
 
@@ -3475,8 +3478,8 @@ PDM_part_to_part_iexch
 void
 PDM_part_to_part_iexch_wait
 (
- PDM_part_to_part_t                *ptp,
- const int                          request
+ PDM_part_to_part_t *ptp,
+ const int           request
 )
 {
 
@@ -3496,10 +3499,11 @@ PDM_part_to_part_iexch_wait
 
     else if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
-      printf ("Error PDM_part_to_part_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLEAVED stride with"
-               " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
+      for (int i = 0; i < ptp->async_exch_subrequest_s[request]; i++) {
+
+        PDM_part_to_part_ialltoall_wait(ptp, ptp->async_exch_subrequest[request][2*i]);
+
+      }
 
     }
 
@@ -3562,10 +3566,7 @@ PDM_part_to_part_iexch_wait
 
     else if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
-      printf ("Error PDM_part_to_part_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
+      PDM_part_to_part_ialltoall_wait(ptp, ptp->async_exch_subrequest[request][0]);
 
     }
 
@@ -3613,7 +3614,6 @@ PDM_part_to_part_iexch_wait
       abort();
 
     }
-
 
     else {
 
@@ -3748,8 +3748,8 @@ PDM_part_to_part_reverse_iexch
       ptp->async_exch_subrequest[_request][i] = -1;
     }  
 
-    void  ** __part2_to_part1_data = (void **) malloc (sizeof (void*) * ptp->n_part2);
-    void  ** _part2_to_part1_data  = __part2_to_part1_data;
+    void **__part2_to_part1_data = (void **) malloc (sizeof (void*) * ptp->n_part2);
+    void **_part2_to_part1_data  = __part2_to_part1_data;
 
     if (t_part2_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART2) {
 
@@ -3761,7 +3761,9 @@ PDM_part_to_part_reverse_iexch
     }
 
     *part1_data = malloc(sizeof(void *) * ptp->n_part1);
+   
     void **_part1_data = *part1_data;
+   
     for (int i = 0; i < ptp->n_part1; i++) {
       _part1_data[i] = malloc(s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
     }
@@ -4475,8 +4477,6 @@ PDM_part_to_part_free
   return NULL;
   
 }
-
-
 
 #ifdef __cplusplus
 }
