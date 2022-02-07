@@ -38,65 +38,65 @@ module pdm_io
   !
   ! Endianness
 
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_bigendian        = 0 ! Contenu en bigendian
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_littleendian     = 1 ! Contenu en little endian
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_native           = 3 ! Contenu natif machine
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_BIGENDIAN        = 0 ! Contenu en bigendian
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_LITTLEENDIAN     = 1 ! Contenu en little endian
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_NATIVE           = 3 ! Contenu natif machine
 
   !
   ! Types de données
 
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_t_int    = 0 ! Type de donnee int
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_t_long   = 1 ! Type de donnee long
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_t_double = 2 ! Type de donnee double
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_t_float  = 3 ! Type de donnee float
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_t_char   = 4 ! Type de donnee char
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_T_INT    = 0 ! Type de donnee int
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_T_LONG   = 1 ! Type de donnee long
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_T_DOUBLE = 2 ! Type de donnee double
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_T_FLOAT  = 3 ! Type de donnee float
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_T_CHAR   = 4 ! Type de donnee char
 
   !
   ! Types d'entrees/sorties paralleles
 
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_acces_mpiio_eo   = 0 ! Acces parallele avec MPIIO (explicit offset)
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_acces_mpiio_ip   = 1 ! Acces parallele avec MPIIO (individual pointer)
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_acces_mpi_simple = 2 ! Acces parallele sans MPI
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_acces_seq        = 3 ! Acces 1 fichier par processus
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_ACCES_MPIIO_EO   = 0 ! Acces parallele avec MPIIO (explicit offset)
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_ACCES_MPIIO_IP   = 1 ! Acces parallele avec MPIIO (individual pointer)
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_ACCES_MPI_SIMPLE = 2 ! Acces parallele sans MPI
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_ACCES_SEQ        = 3 ! Acces 1 fichier par processus
 
   !
   ! Mode d'acces lecture, ecriture, lecture/ecriture
 
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_mode_lecture  = 0    ! Acces en lecture
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_mode_ecriture = 1    ! Acces en ecriture
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_mode_ajout    = 2    ! Acces en lecture/ecriture
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_MODE_LECTURE  = 0    ! Acces en lecture
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_MODE_ECRITURE = 1    ! Acces en ecriture
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_MODE_AJOUT    = 2    ! Acces en lecture/ecriture
 
   !
   ! Indique si le nombre de sous-variables d'une variable est constant ou variable
   ! selon le numero de la donnee
 
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_n_composante_constant = 0
-  integer (kind = pdm_l_num_s), parameter :: pdm_io_n_composante_variable = 1
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_N_COMPOSANTE_CONSTANT = 0
+  integer (kind = pdm_l_num_s), parameter :: PDM_IO_N_COMPOSANTE_VARIABLE = 1
 
   !
   ! Indique si les donnees lues ou écrites sont rangees par blocs contigus en memoire
   ! ou respectent une indirection (donnees entrelacees)
 
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_donnees_bloc = 0
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_donnees_entrelacee = 1
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_DONNEES_BLOC       = 0
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_DONNEES_ENTRELACEE = 1
 
   !
   ! Indique si le fichier contient une entete IOCEDRE
 
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_entete_on  = 0
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_entete_off = 1
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_ENTETE_ON  = 0
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_ENTETE_OFF = 1
 
   !
   ! Indique le format du fichier
 
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_fmt_txt = 0
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_fmt_bin = 1
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_FMT_TXT = 0
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_FMT_BIN = 1
 
   !
   ! Active ou non le backup d'un fichier preexistant
 
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_backup_on  = 0
-  integer(kind = pdm_l_num_s), parameter :: pdm_io_backup_off = 1
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_BACKUP_ON  = 0
+  integer(kind = pdm_l_num_s), parameter :: PDM_IO_BACKUP_OFF = 1
 
   interface
 
@@ -292,6 +292,151 @@ module pdm_io
     type(c_ptr), value :: fichier
 
   end subroutine PDM_io_swap_endian_off
+
+
+  !>
+  !! \brief Initialise une phase d'écriture parallèle de tableaux de données associées
+  !! aux numéros de variables PDM
+  !! Chaque tableau a ses propres caractéristiques :
+  !!         - taille de données
+  !!         - nombre de donnée
+  !!         - indirection (numérotation absolue)
+  !!
+  !! \param [in] unite              Unite du fichier
+  !! \param [in] t_rangement        Type de rangement
+  !! \param [in] num_var_cedre_max  Numéro max de variable PDM
+  !! \param [in] n_partition_local  Nombre de partitions locales
+  !!
+  !!
+
+  subroutine PDM_io_tab_ecr_debut (unite,             &
+                                   t_rangement,       &
+                                   num_var_cedre_max, &
+                                   n_partition_local) &
+  bind (c, name='PDM_io_tab_ecr_debut')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: unite
+    integer(c_int), value :: t_rangement
+    integer(c_int), value :: num_var_cedre_max
+    integer(c_int), value :: n_partition_local
+
+  end subroutine PDM_io_tab_ecr_debut
+
+
+  !>
+  !! \brief Definition d'une variable en ecriture
+  !!
+  !! \param [in] num_var_cedre          Numéro de variable PDM
+  !! \param [in] num_indirection_cedre  Numéro d'indirection PDM
+  !! \param [in] t_n_composantes        Type de tailles composantes (PDM_
+  !! \param [in] n_composantes          Nombre de composantes pour chaque
+  !! \param [in] taille_donnee          Taille unitaire de la donnnee
+  !!
+
+  subroutine PDM_io_tab_ecr_def_var (num_var_cedre,         &
+                                     num_indirection_cedre, &
+                                     t_n_composantes,       &
+                                     n_composantes,         &
+                                     taille_donnee)         &
+  bind (c, name='PDM_io_tab_ecr_def_var')
+    use iso_c_binding
+    implicit none
+
+    integer(c_int), value :: num_var_cedre
+    integer(c_int), value :: num_indirection_cedre
+    integer(c_int), value :: t_n_composantes
+    integer(c_int), value :: n_composantes
+    integer(c_int), value :: taille_donnee
+
+  end subroutine PDM_io_tab_ecr_def_var
+
+
+  !>
+  !! \brief Finalise une phase d'écriture parallèle de tableaux de données associées
+  !! aux numéros de variables PDM. Cette fonction déclenche réellement
+  !! les écritures
+  !!
+
+  subroutine PDM_io_tab_ecr_fin () &
+  bind (c, name='PDM_io_tab_ecr_fin')
+    use iso_c_binding
+    implicit none
+
+  end subroutine PDM_io_tab_ecr_fin
+
+
+  !>
+  !! \brief Initialise une phase de lecture parallèle de tableaux de données associées
+  !! aux numéros de variables PDM
+  !! Chaque tableau a ses propres caractéristiques :
+  !!         - taille de données
+  !!         - nombre de donnée
+  !!         - indirection (numérotation absolue)
+  !!
+  !! \param [in] unite              Unite du fichier
+  !! \param [in] t_rangement        Type de rangement
+  !! \param [in] num_var_cedre_max  Numéro max de variable PDM
+  !! \param [in] n_partition_local  Nombre de partitions locales
+  !!
+
+  subroutine PDM_io_tab_lec_debut (unite,             &
+                                   t_rangement,       &
+                                   num_var_cedre_max, &
+                                   n_partition_local) &
+  bind (c, name='PDM_io_tab_lec_debut')
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value :: unite
+    integer(c_int), value :: t_rangement
+    integer(c_int), value :: num_var_cedre_max
+    integer(c_int), value :: n_partition_local
+
+  end subroutine PDM_io_tab_lec_debut
+
+
+  !>
+  !! \brief Definition d'une variable en ecriture
+  !!
+  !! \param [in] num_var_cedre          Numéro de variable PDM
+  !! \param [in] num_indirection_cedre  Numéro d'indirection PDM
+  !! \param [in] t_n_composantes        Type de tailles composantes (PDM_IO_N_COMPOSANTE_CONSTANT ou PDM_IO_N_COMPOSANTE_VARIABLE)
+  !! \param [in] n_composantes          Nombre de composantes pour chaque donnee
+  !! \param [in] taille_donnee          Taille unitaire de la donnnee
+  !!
+
+  subroutine PDM_io_tab_lec_def_var (num_var_cedre,         &
+                                     num_indirection_cedre, &
+                                     t_n_composantes,       &
+                                     n_composantes,         &
+                                     taille_donnee)         &
+  bind (c, name='PDM_io_tab_lec_def_var')
+    use iso_c_binding
+    implicit none
+
+    integer(c_int), value :: num_var_cedre
+    integer(c_int), value :: num_indirection_cedre
+    integer(c_int), value :: t_n_composantes
+    integer(c_int), value :: n_composantes
+    integer(c_int), value :: taille_donnee
+
+  end subroutine PDM_io_tab_lec_def_var
+
+
+  !>
+  !! \brief Finalise une phase de lecture parallèle de tableaux de données associées
+  !! aux numéros de variables PDM. Cette fonction déclenche réellement
+  !! les écritures
+  !!
+
+  subroutine PDM_io_tab_lec_fin () &
+  bind (c, name='PDM_io_tab_lec_fin')
+    use iso_c_binding
+    implicit none
+
+  end subroutine PDM_io_tab_lec_fin
 
   end interface
 
@@ -1205,5 +1350,136 @@ subroutine PDM_io_n_donnees_get (fichier,         &
   taille = c_taille
 
 end subroutine PDM_io_n_donnees_get
+
+
+!>
+!! \brief Ajoute une partie des donnees dans un tableau associés à une variable
+!! PDM
+!!
+!! \param [in] num_var_cedre          Numéro de variable PDM
+!! \param [in] i_part                 indice de partition
+!! \param [in] n_composantes          Nombre de composantes pour chaque donnee
+!! \param [in] n_donnees              Nombre de donnees a lire
+!! \param [in] indirection            Indirection de redistribition des donnees
+!! \param [in] donnees                Donnees a écrire
+!!
+!!
+
+subroutine PDM_io_tab_ecr_ajout_donnees (num_var_cedre, &
+                                         i_part,        &
+                                         n_composantes, &
+                                         n_donnees,     &
+                                         indirection,   &
+                                         donnees)
+  use iso_c_binding
+  implicit none
+
+  integer(pdm_l_num_s)          :: num_var_cedre
+  integer(pdm_l_num_s)          :: i_part
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s), pointer :: indirection(:)
+  type(c_ptr), value            :: donnees
+
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                   :: c_indirection   = C_NULL_PTR
+
+  interface
+    subroutine PDM_io_tab_ecr_ajout_donnees_c (num_var_cedre, &
+                                               i_part,        &
+                                               n_composantes, &
+                                               n_donnees,     &
+                                               indirection,   &
+                                               donnees)       &
+    bind (c, name='PDM_io_tab_ecr_ajout_donnees')
+      use iso_c_binding
+      implicit none
+
+      integer(c_int), value :: num_var_cedre
+      integer(c_int), value :: i_part
+      type(c_ptr),    value :: n_composantes
+      integer(c_int), value :: n_donnees
+      type(c_ptr),    value :: indirection
+      type(c_ptr),    value :: donnees
+
+    end subroutine PDM_io_tab_ecr_ajout_donnees_c
+  end interface
+
+  c_n_composantes = c_loc(n_composantes)
+  c_indirection   = c_loc(indirection  )
+
+  call PDM_io_tab_ecr_ajout_donnees_c (num_var_cedre,   &
+                                       i_part,          &
+                                       c_n_composantes, &
+                                       n_donnees,       &
+                                       c_indirection,   &
+                                       donnees)
+
+end subroutine PDM_io_tab_ecr_ajout_donnees
+
+
+!>
+!! \brief Ajoute une partie des donnees dans un tableau associés à une variable PDM
+!!
+!! \param [in] num_var_cedre          Numéro de variable PDM
+!! \param [in] i_part                 indice de partition
+!! \param [in] n_composantes          Nombre de composantes pour chaque donnee
+!! \param [in] n_donnees              Nombre de donnees a lire
+!! \param [in] indirection            Indirection de redistribition des donnees
+!! \param [in] donnees                Donnees a écrire
+!!
+!!
+
+subroutine PDM_io_tab_lec_ajout_donnees (num_var_cedre, &
+                                         i_part,        &
+                                         n_composantes, &
+                                         n_donnees,     &
+                                         indirection,   &
+                                         donnees)
+  use iso_c_binding
+  implicit none
+
+  integer(pdm_l_num_s)          :: num_var_cedre
+  integer(pdm_l_num_s)          :: i_part
+  integer(pdm_l_num_s), pointer :: n_composantes(:)
+  integer(pdm_l_num_s)          :: n_donnees
+  integer(pdm_g_num_s), pointer :: indirection(:)
+  type(c_ptr), value            :: donnees
+
+  type(c_ptr)                   :: c_n_composantes = C_NULL_PTR
+  type(c_ptr)                   :: c_indirection   = C_NULL_PTR
+
+  interface
+    subroutine PDM_io_tab_lec_ajout_donnees_c (num_var_cedre, &
+                                               i_part,        &
+                                               n_composantes, &
+                                               n_donnees,     &
+                                               indirection,   &
+                                               donnees)       &
+    bind (c, name='PDM_io_tab_lec_ajout_donnees')
+      use iso_c_binding
+      implicit none
+
+      integer(c_int), value :: num_var_cedre
+      integer(c_int), value :: i_part
+      type(c_ptr),    value :: n_composantes
+      integer(c_int), value :: n_donnees
+      type(c_ptr),    value :: indirection
+      type(c_ptr),    value :: donnees
+
+    end subroutine PDM_io_tab_lec_ajout_donnees_c
+  end interface
+
+  c_n_composantes = c_loc(n_composantes)
+  c_indirection   = c_loc(indirection  )
+
+  call PDM_io_tab_lec_ajout_donnees_c (num_var_cedre,   &
+                                       i_part,          &
+                                       c_n_composantes, &
+                                       n_donnees,       &
+                                       c_indirection,   &
+                                       donnees)
+
+end subroutine PDM_io_tab_lec_ajout_donnees
 
 end module pdm_io
