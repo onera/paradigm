@@ -378,18 +378,25 @@ static int _interface_to_graph
   int n_keys = 0;
   n_connected_l = 0;
   int r_idx = 0;
+  /* is_key_gr : -1 if gnum is not a key (only min of group is the key),
+   *              1 if gnum is a key and gnum is not included in received ids
+   *              0 otherwise */
   int *is_key_gr = PDM_array_const_int(n_gnum, 1);
   for (int k = 0; k < n_gnum; k++) {
     for (int j = 0; j < recv_stride[k]; j++) {
-      if (recv_data[r_idx+j] < gnum[k]) {
+      if (recv_data[r_idx+j] == gnum[k]) {
         is_key_gr[k] = 0;
+      }
+      else if (recv_data[r_idx+j] < gnum[k]) {
+        is_key_gr[k] = -1;
         break;
       }
     }
-    if (is_key_gr[k])
-      n_connected_l += recv_stride[k] + 1;
+    if (is_key_gr[k] != -1) {
+      n_keys++;
+      n_connected_l += recv_stride[k] + is_key_gr[k];
+    }
     r_idx  += recv_stride[k];
-    n_keys += is_key_gr[k];
   }
 
   PDM_g_num_t *lngn_gr        = (PDM_g_num_t *) malloc(n_keys*sizeof(PDM_g_num_t));
@@ -400,12 +407,14 @@ static int _interface_to_graph
   int w_idx2 = 0;
   r_idx = 0;
   for (int k = 0; k < n_gnum; k++) {
-    if (is_key_gr[k]) {
+    if (is_key_gr[k] != -1) {
       lngn_gr[w_idx]        = gnum[k];
-      send_stride_gr[w_idx] = recv_stride[k] + 1; //Include gnum in send data so we have directly graph
-      weight_gr[w_idx]      = (double) (recv_stride[k] + 1);
+      send_stride_gr[w_idx] = recv_stride[k] + is_key_gr[k]; //Include gnum in send data (if needed) so we have directly graph
+      weight_gr[w_idx]      = (double) (recv_stride[k] + is_key_gr[k]);
       w_idx++;
-      send_data_gr[w_idx2++] = gnum[k];
+      if (is_key_gr[k] == 1) {
+        send_data_gr[w_idx2++] = gnum[k];
+      }
       memcpy(&send_data_gr[w_idx2], &recv_data[r_idx], recv_stride[k]*sizeof(PDM_g_num_t));
       w_idx2 += recv_stride[k];
     }
