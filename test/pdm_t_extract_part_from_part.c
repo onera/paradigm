@@ -1089,33 +1089,33 @@ int main(int argc, char *argv[])
   }
 
   // TO see with Eric, tag pb because cast into int
-  // int          *part2_n_extract_vtx = NULL;
-  // int         **part2_face_vtx_idx  = NULL;
-  // int         **part2_face_vtx      = NULL;
-  // PDM_g_num_t **part2_vtx_ln_to_gn  = NULL;
-  // PDM_pconnectivity_to_pconnectivity(comm,
-  //                                    n_part,
-  //           (const int            *) pn_face,
-  //           (const int           **) pface_vtx_idx,
-  //           (const int           **) pface_vtx,
-  //           (const PDM_g_num_t   **) pface_ln_to_gn,
-  //           (const PDM_g_num_t   **) pvtx_ln_to_gn,
-  //           (const int             ) 1,
-  //           (const int            *) &n_extract_face,
-  //           (const PDM_g_num_t   **) &extract_face_ln_to_gn,
-  //           (const int           **) &equi_parent_face_idx,
-  //           (const PDM_g_num_t   **) &equi_parent_face_ln_to_gn,
-  //                                    &part2_n_extract_vtx,
-  //                                    &part2_face_vtx_idx,
-  //                                    &part2_face_vtx,
-  //                                    &part2_vtx_ln_to_gn);
-  // free(part2_n_extract_vtx);
-  // free(part2_face_vtx_idx[0]);
-  // free(part2_face_vtx[0]);
-  // free(part2_vtx_ln_to_gn[0]);
-  // free(part2_face_vtx_idx);
-  // free(part2_face_vtx);
-  // free(part2_vtx_ln_to_gn);
+  int          *part2_n_extract_vtx = NULL;
+  int         **part2_face_vtx_idx  = NULL;
+  int         **part2_face_vtx      = NULL;
+  PDM_g_num_t **part2_vtx_ln_to_gn  = NULL;
+  PDM_pconnectivity_to_pconnectivity(comm,
+                                     n_part,
+            (const int            *) pn_face,
+            (const int           **) pface_vtx_idx,
+            (const int           **) pface_vtx,
+            (const PDM_g_num_t   **) pface_ln_to_gn,
+            (const PDM_g_num_t   **) pvtx_ln_to_gn,
+            (const int             ) 1,
+            (const int            *) &n_extract_face,
+            (const PDM_g_num_t   **) &extract_face_ln_to_gn,
+            (const int           **) &equi_parent_face_idx,
+            (const PDM_g_num_t   **) &equi_parent_face_ln_to_gn,
+                                     &part2_n_extract_vtx,
+                                     &part2_face_vtx_idx,
+                                     &part2_face_vtx,
+                                     &part2_vtx_ln_to_gn);
+  free(part2_n_extract_vtx);
+  free(part2_face_vtx_idx[0]);
+  free(part2_face_vtx[0]);
+  free(part2_vtx_ln_to_gn[0]);
+  free(part2_face_vtx_idx);
+  free(part2_face_vtx);
+  free(part2_vtx_ln_to_gn);
 
 
 
