@@ -176,7 +176,7 @@ cdef class MultiBlockMerge:
         _blocks_stride[i][0] = 1
     cdef void **_blocks_data = np_list_to_void_pointers(block_data)
 
-    cdef PDM_stride_t pdm_stride_t = PDM_STRIDE_VAR if var_stride else PDM_STRIDE_CST
+    cdef PDM_stride_t pdm_stride_t = PDM_STRIDE_VAR_INTERLACED if var_stride else PDM_STRIDE_CST_INTERLACED
 
     cdef int*  _merged_block_stride = NULL
     cdef void* _merged_block_data = NULL
@@ -253,7 +253,7 @@ cdef class MultiBlockMerge:
 
 
 
-    cdef PDM_stride_t pdm_stride_t = PDM_STRIDE_VAR if var_stride else PDM_STRIDE_CST
+    cdef PDM_stride_t pdm_stride_t = PDM_STRIDE_VAR_INTERLACED if var_stride else PDM_STRIDE_CST_INTERLACED
 
     cdef int*  _merged_block_stride = NULL
     cdef PDM_g_num_t* _merged_block_data = NULL

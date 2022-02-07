@@ -247,7 +247,7 @@ static int _interface_to_graph
   PDM_g_num_t *recv_data   = NULL;
   int n_connected_l = PDM_part_to_block_exch(ptb,
                                              sizeof(PDM_g_num_t),
-                                             PDM_STRIDE_VAR,
+                                             PDM_STRIDE_VAR_INTERLACED,
                                              -1,
                                              stride_one,
                                    (void **) send_data,
@@ -309,18 +309,18 @@ static int _interface_to_graph
       }
     }
     assert (w_idx == n_connected_l);
-    PDM_g_num_t *send_data = (PDM_g_num_t *) malloc(n_data*sizeof(PDM_g_num_t));
+    PDM_g_num_t *send_data2 = (PDM_g_num_t *) malloc(n_data*sizeof(PDM_g_num_t));
     w_idx = 0;
     int r_idx = 0;
     for (int k = 0; k < n_gnum; k++) {
       for (int j = 0; j < recv_stride[k]; j++) {
         //Add gnum
-        send_data[w_idx++] = gnum[k];
+        send_data2[w_idx++] = gnum[k];
         //Add others
         for (int i = 0; i < j; i++)
-          send_data[w_idx++] = recv_data[r_idx + i];
+          send_data2[w_idx++] = recv_data[r_idx + i];
         for (int i = j+1; i < recv_stride[k]; i++)
-          send_data[w_idx++] = recv_data[r_idx + i];
+          send_data2[w_idx++] = recv_data[r_idx + i];
       }
       r_idx += recv_stride[k];
     }
@@ -328,22 +328,22 @@ static int _interface_to_graph
     assert (w_idx == n_data);
     if (0 == 1) {
       PDM_log_trace_array_int(send_stride, n_connected_l, "  send stride");
-      PDM_log_trace_array_long(send_data, n_data, "  send_data");
+      PDM_log_trace_array_long(send_data2, n_data, "  send_data2");
     }
 
     int         *recv_stride_next = NULL;
     PDM_g_num_t *recv_data_next   = NULL;
     PDM_part_to_block_exch(ptb,
                            sizeof(PDM_g_num_t),
-                           PDM_STRIDE_VAR,
+                           PDM_STRIDE_VAR_INTERLACED,
                            -1,
                            &send_stride,
-                 (void **) &send_data,
+                 (void **) &send_data2,
                            &recv_stride_next,
                  (void **) &recv_data_next);
 
     free(send_stride);
-    free(send_data);
+    free(send_data2);
     PDM_part_to_block_free(ptb);
     
     // Post treat recv data to remove duplicated per gnum and count size of graph
@@ -440,7 +440,7 @@ static int _interface_to_graph
   PDM_g_num_t *graph_gnum = NULL;
   PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
+                         PDM_STRIDE_VAR_INTERLACED,
                          -1,
                          &send_stride_gr,
                (void **) &send_data_gr,

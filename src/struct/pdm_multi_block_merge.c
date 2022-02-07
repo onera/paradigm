@@ -350,7 +350,7 @@ static void _dist_data_update
   int *recv_stride = (int *) malloc(n_to_update*sizeof(int));
   PDM_block_to_part_exch (btp_update,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           dold_to_new_n,
                  (void *) dold_to_new,
                           &recv_stride,
@@ -403,7 +403,7 @@ PDM_multi_block_merge_exch_and_update
   PDM_g_num_t **shifted_block_data = (PDM_g_num_t **) malloc(n_block*sizeof(PDM_g_num_t*));
   for (int i_block = 0; i_block < n_block; i_block++) {
     int n_data_block = 0;
-    if (t_stride == PDM_STRIDE_CST) {
+    if (t_stride == PDM_STRIDE_CST_INTERLACED) {
       n_data_block = mbm_cur->blocks_ini_dn[i_block] * block_stride[0][0];
     }
     else {
@@ -441,7 +441,7 @@ PDM_multi_block_merge_exch_and_update
 
   // 3. Update received (dist) connectivity to have ids in the new numbering
   int dn_merge = PDM_multi_block_merge_get_n_block(mbm_cur);
-  if (t_stride == PDM_STRIDE_CST) { //Next function does not allow cst stride
+  if (t_stride == PDM_STRIDE_CST_INTERLACED) { //Next function does not allow cst stride
     int cst_stride = block_stride[0][0];
     dparent_child_strid = PDM_array_const_int(dn_merge, cst_stride);
   }
