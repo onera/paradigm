@@ -239,14 +239,6 @@ PDM_coarse_mesh_method_add
  * \return Index (-1 if not found)
  */
 
-void
-PROCF (pdm_coarse_mesh_method_idx_get_cf, PDM_COARSE_MESH_METHOD_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- );
-
 int
 PDM_coarse_mesh_method_idx_get
 (
@@ -264,11 +256,11 @@ const char *name
  */
 
 void
-PROCF (pdm_coarse_mesh_method_name_get_cf, PDM_COARSE_MESH_METHOD_NAME_GET_CF)
+PDM_coarse_mesh_method_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  );
 
 char *
@@ -285,12 +277,6 @@ const int id
  * \return Number of methods
  *
  */
-
-void
-PROCF (pdm_coarse_mesh_method_n_get, PDM_COARSE_MESH_METHOD_N_GET)
-(
- int  *n_method
- );
 
 int
 PDM_coarse_mesh_method_n_get

@@ -14,7 +14,6 @@
 #include "pdm_config.h"
 #include "pdm_priv.h"
 #include "pdm_para_graph_dual.h"
-#include "pdm_multipart.h"
 #include "pdm_part.h"
 #include "pdm_poly_vol_gen.h"
 #include "pdm_dmesh.h"

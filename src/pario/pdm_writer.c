@@ -30,7 +30,6 @@
 #include "pdm_remove_blank.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 #include "pdm_mesh_nodal.h"
 
 
@@ -216,6 +215,73 @@ _pdm_writer_var_tab_add
 
 
   return id_var;
+}
+
+
+/**
+ *
+ * \brief Create a \ref _PDM_writer_name_map_tab_t object
+ *
+ * \param [in]  size   Initial size of the array of name maps
+ *
+ * \return    Pointer to a new \ref _PDM_writer_name_map_tab_t object
+ *
+ */
+
+static _PDM_writer_name_map_tab_t *
+_pdm_writer_name_map_tab_create
+(
+ const int size
+ )
+{
+  _PDM_writer_name_map_tab_t *name_map_tab = (_PDM_writer_name_map_tab_t *) malloc(sizeof(_PDM_writer_name_map_tab_t));
+
+  name_map_tab->n_name_map = 0;
+  name_map_tab->s_name_map = size;
+
+  name_map_tab->name_map = (PDM_writer_name_map_t **) malloc(sizeof(PDM_writer_name_map_t *) * name_map_tab->s_name_map);
+  for (int i = 0; i < name_map_tab->s_name_map; i++) {
+    name_map_tab->name_map[i] = NULL;
+  }
+
+  return name_map_tab;
+}
+
+
+/**
+ *
+ * \brief Add a name map
+ *
+ * \param [in] name_map_tab   Pointer to \ref _PDM_writer_name_map_tab_t object
+ * \param [in] name_map       Pointer to \ref PDM_writer_name_map_t object
+ *
+ */
+
+static int
+_pdm_writer_name_map_tab_add
+(
+ _PDM_writer_name_map_tab_t *name_map_tab,
+ PDM_writer_name_map_t      *name_map
+ )
+{
+  assert (name_map_tab != NULL);
+
+  if (name_map_tab->n_name_map >= name_map_tab->s_name_map) {
+    name_map_tab->s_name_map = PDM_MAX(2*name_map_tab->s_name_map, name_map_tab->n_name_map+1);
+    name_map_tab->name_map = (PDM_writer_name_map_t **) realloc(name_map_tab->name_map, sizeof(PDM_writer_name_map_t *) * name_map_tab->s_name_map);
+
+    for (int i = name_map_tab->n_name_map+1; i < name_map_tab->s_name_map; i++) {
+      name_map_tab->name_map[i] = NULL;
+    }
+  }
+
+  int id_name_map = name_map_tab->n_name_map;
+  name_map_tab->n_name_map++;
+
+  name_map_tab->name_map[id_name_map] = name_map;
+
+
+  return id_name_map;
 }
 
 
@@ -487,7 +553,7 @@ const char                   *options
   cs->physical_time = 0;       /* Temps physique de simulation */
   cs->acces       = acces;
   cs->prop_noeuds_actifs = prop_noeuds_actifs;
-  cs->name_map   = NULL;
+  cs->name_map_tab = NULL;
 
   /* Appel de la fonction complementaire propre au format */
 
@@ -580,25 +646,21 @@ PDM_writer_free
     cs->geom_tab = NULL;
   }
 
-  if (cs->name_map != NULL) {
-
-    int n_map_tab = PDM_Handles_n_get (cs->name_map);
-    const int *map_index = PDM_Handles_idx_get(cs->name_map);
-
-    while (n_map_tab > 0) {
-      PDM_writer_name_map_t *map = (PDM_writer_name_map_t *)
-              PDM_Handles_get (cs->name_map, map_index[0]);
-      if (map != NULL) {
-        free (map->public_name);
-        free (map->private_name);
-        free (map);
+  if (cs->name_map_tab != NULL) {
+    if (cs->name_map_tab->name_map != NULL) {
+      for (int i = 0; i < cs->name_map_tab->n_name_map; i++) {
+        if (cs->name_map_tab->name_map[i] != NULL) {
+          free(cs->name_map_tab->name_map[i]->public_name);
+          free(cs->name_map_tab->name_map[i]->private_name);
+        }
       }
-      PDM_Handles_handle_free (cs->name_map, map_index[0], PDM_FALSE);
-      n_map_tab = PDM_Handles_n_get (cs->name_map);
+
+      free(cs->name_map_tab->name_map);
+      cs->name_map_tab->name_map = NULL;
     }
 
-    cs->name_map = PDM_Handles_free (cs->name_map);
-
+    free(cs->name_map_tab);
+    cs->name_map_tab = NULL;
   }
 
   /* Liberation de la structure */
@@ -1563,13 +1625,15 @@ PDM_writer_name_map_add
 
   /* Mise a jour du tableau de stockage */
 
-  if (cs->name_map == NULL) {
-    cs->name_map = PDM_Handles_create(3);
+  if (cs->name_map_tab == NULL) {
+    cs->name_map_tab = _pdm_writer_name_map_tab_create(3);
   }
+
 
   PDM_writer_name_map_t *name_map = (PDM_writer_name_map_t *) malloc (sizeof(PDM_writer_name_map_t));
 
-  PDM_Handles_store (cs->name_map, name_map);
+  _pdm_writer_name_map_tab_add(cs->name_map_tab, name_map);
+
 
   name_map->public_name = malloc ((strlen(public_name) + 1) * sizeof(char));
   name_map->private_name = malloc ((strlen(private_name) + 1) * sizeof(char));
@@ -1632,13 +1696,11 @@ PDM_writer_var_create
   var->_cs        = cs;
   var->private_name = NULL;
 
-  if (cs->name_map != NULL) {
-    const int n_map = PDM_Handles_n_get (cs->name_map);
-    const int *ind = PDM_Handles_idx_get (cs->name_map);
+  if (cs->name_map_tab != NULL) {
+    const int n_map = cs->name_map_tab->n_name_map;
 
     for (int i = 0; i < n_map; i++) {
-      PDM_writer_name_map_t *map = (PDM_writer_name_map_t *)
-              PDM_Handles_get (cs->name_map, ind[i]);
+      PDM_writer_name_map_t *map = cs->name_map_tab->name_map[i];
       if (!strcmp(nom_var, map->public_name)) {
         var->private_name = map->private_name;
       }

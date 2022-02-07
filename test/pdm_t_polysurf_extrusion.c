@@ -323,16 +323,16 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
-  int id_part;
-  PDM_part_t *ppart = NULL;
+  PDM_multipart_t *mpart = NULL;
+  PDM_part_t      *ppart = NULL;
   int n_join = 0;
   PDM_dmesh_t *dmesh;
 
   if (use_multipart) {
     /* Initialize multipart */
-    id_part = PDM_multipart_create(1, &n_part, PDM_FALSE,
-                                   method, PDM_PART_SIZE_HOMOGENEOUS,
-                                   NULL, comm, PDM_OWNERSHIP_KEEP);
+    mpart = PDM_multipart_create(1, &n_part, PDM_FALSE,
+				 method, PDM_PART_SIZE_HOMOGENEOUS,
+				 NULL, comm, PDM_OWNERSHIP_KEEP);
 
     /* Generate dmesh */
     dmesh = PDM_dmesh_create (PDM_OWNERSHIP_KEEP,
@@ -359,15 +359,15 @@ int main(int argc, char *argv[])
                    dface_join_idx,
                    dface_join);
 
-    PDM_multipart_register_block (id_part, 0, dmesh);
+    PDM_multipart_register_block (mpart, 0, dmesh);
 
     /* Connection between zones */
     int n_total_joins = 0;
     int *join_to_opposite = malloc(sizeof(int) * n_total_joins);
-    PDM_multipart_register_joins (id_part, n_total_joins, join_to_opposite);
+    PDM_multipart_register_joins (mpart, n_total_joins, join_to_opposite);
 
     /* Run */
-    PDM_multipart_run_ppart (id_part);
+    PDM_multipart_run_ppart (mpart);
 
     free (djoins_ids);
     free (dface_join_idx);
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
       PDM_g_num_t **elt_section_ln_to_gn;
 
       if (use_multipart) {
-        PDM_multipart_part_dim_get (id_part,
+        PDM_multipart_part_dim_get (mpart,
                                     0,
                                     i_part,
                                     &n_section,
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
                                     &sface_join,
                                     &n_joins);
 
-        PDM_multipart_part_val_get (id_part,
+        PDM_multipart_part_val_get (mpart,
                                     0,
                                     i_part,
                                     &elt_vtx_idx,
@@ -766,7 +766,7 @@ int main(int argc, char *argv[])
   free (dface_group);
 
   if (use_multipart) {
-    PDM_multipart_free (id_part);
+    PDM_multipart_free (mpart);
     PDM_dmesh_free (dmesh);
   }
   else {

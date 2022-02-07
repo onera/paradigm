@@ -91,16 +91,6 @@ PDM_octree_seq_create
  const double tolerance
 );
 
-//void
-//PROCF (pdm_octree_seq_create, PDM_OCTREE_SEQ_CREATE)
-//(
-// const int *n_point_cloud,
-// const int *depth_max,
-// const int *points_in_leaf_max,
-// const double *tolerance,
-// const PDM_MPI_Fint *fcomm,
-// const int *id
-//);
 
 /**
  *
@@ -115,12 +105,6 @@ PDM_octree_seq_free
 (
  PDM_octree_seq_t *octree
 );
-
-//void
-//PROCF (pdm_octree_seq_free, PDM_OCTREE_SEQ_FREE)
-//(
-// const int          *id
-//);
 
 
 /**
@@ -143,15 +127,6 @@ PDM_octree_seq_point_cloud_set
  const double     *coords
 );
 
-//void
-//PROCF (pdm_octree_seq_point_cloud_set, PDM_OCTREE_SEQ_POINT_CLOUD_SET)
-//(
-// const int          *id
-// const int          *i_point_cloud,
-// const int          *n_points,
-// const double       *coords
-//);
-
 
 /**
  *
@@ -167,11 +142,6 @@ PDM_octree_seq_build
  PDM_octree_seq_t *octree
 );
 
-//void
-//PROCF (pdm_octree_seq_build, PDM_OCTREE_SEQ_BUILD)
-//(
-// const int          *id
-//);
 
 /**
  *
@@ -206,13 +176,6 @@ PDM_octree_seq_extents_get
  PDM_octree_seq_t *octree
 );
 
-//void
-//PROCF (pdm_octree_seq_root_node_id_get, PDM_OCTREE_SEQ_ROOT_NODE_ID_GET)
-//(
-// const int          *id,
-// int                *root_node_id
-//);
-
 
 /**
  *
@@ -231,14 +194,6 @@ PDM_octree_seq_ancestor_node_id_get
  PDM_octree_seq_t *octree,
  const int         node_id
 );
-
-//void
-//PROCF (pdm_octree_seq_ancestor_node_id_get, PDM_OCTREE_SEQ_ANCESTOR_NODE_ID_GET)
-//(
-// const int          *id,
-// const int          *node_id,
-// int                *ancestor_node_id
-//);
 
 
 /**

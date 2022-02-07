@@ -17,7 +17,6 @@
 #include "pdm_config.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -608,16 +607,6 @@ PDM_octree_seq_create
 }
 
 
-//void
-//PROCF (pdm_octree_seq_create, PDM_OCTREE_SEQ_CREATE)
-//(
-// const int *n_point_cloud,
-// const int *depth_max,
-// const int *points_in_leaf_max,
-// const double *tolerance,
-// const int *id
-//);
-
 /**
  *
  * \brief Free an octree structure
@@ -642,12 +631,6 @@ PDM_octree_seq_free
 
   free (octree);
 }
-
-//void
-//PROCF (pdm_octree_seq_free, PDM_OCTREE_SEQ_FREE)
-//(
-// const int          *id
-//);
 
 
 /**
@@ -677,15 +660,6 @@ PDM_octree_seq_point_cloud_set
   _octree->point_clouds[i_point_cloud] = coords;
 }
 
-//void
-//PROCF (pdm_octree_seq_point_cloud_set, PDM_OCTREE_SEQ_POINT_CLOUD_SET)
-//(
-// const int          *id
-// const int          *i_point_cloud,
-// const int          *n_points,
-// const double       *coords
-//);
-
 
 /**
  *
@@ -709,11 +683,6 @@ PDM_octree_seq_build
 
 }
 
-//void
-//PROCF (pdm_octree_seq_build, PDM_OCTREE_SEQ_BUILD)
-//(
-// const int          *id
-//);
 
 /**
  *
@@ -762,13 +731,6 @@ PDM_octree_seq_extents_get
   return _octree->extents;
 }
 
-//void
-//PROCF (pdm_octree_seq_root_node_id_get, PDM_OCTREE_SEQ_ROOT_NODE_ID_GET)
-//(
-// const int          *id,
-// int                *root_node_id
-//);
-
 
 /**
  *
@@ -794,14 +756,6 @@ PDM_octree_seq_ancestor_node_id_get
 
   return _octree->nodes[node_id].ancestor_id;
 }
-
-//void
-//PROCF (pdm_octree_seq_ancestor_node_id_get, PDM_OCTREE_SEQ_ANCESTOR_NODE_ID_GET)
-//(
-// const int          *id,
-// const int          *node_id,
-// int                *ancestor_node_id
-//);
 
 
 /**
