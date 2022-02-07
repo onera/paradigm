@@ -903,19 +903,6 @@ PDM_gnum_from_hash_values_create
   return (PDM_gnum_from_hv_t *) _gnum_from_hv;
 }
 
-// void
-// PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
-// (
-//  const int          *n_part,
-//  const int          *equilibrate,
-//  const size_t       *s_data,
-//  const PDM_MPI_Fint *fcomm,
-//        int          *id
-// )
-// {
-//   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
-//   // *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
-// }
 
 /**
  *
@@ -978,20 +965,6 @@ PDM_gnum_set_hash_values
 
 }
 
-// void
-// PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
-// (
-//  const int           *id,
-//  const int           *i_part,
-//  const int           *n_elts,
-//  const size_t        *part_hkeys,
-//  const int           *part_hstri,
-//  const unsigned char *part_hdata
-// )
-// {
-//   PDM_gnum_set_hash_values (*id, *i_part, *n_elts, part_hkeys, part_hstri, part_hdata);
-// }
-
 
 /**
  *
@@ -1012,15 +985,6 @@ PDM_gnum_from_hv_compute
   _gnum_from_hv_compute(_gnum_from_hv);
 
 }
-
-// void
-// PROCF (PDM_gnum_from_hv_compute, PDM_GNUM_FROM_HV_COMPUTE)
-// (
-//  const int *id
-// )
-// {
-//   PDM_gnum_from_hv_compute (*id);
-// }
 
 
 /**
@@ -1045,22 +1009,6 @@ PDM_gnum_from_hv_get
 
   return _gnum_from_hv->g_nums[i_part];
 }
-
-// void
-// PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
-// (
-//  const int *id,
-//  const int *i_part,
-//  PDM_g_num_t *gnum
-// )
-// {
-//   _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (*id);
-
-//   const PDM_g_num_t *tmp = PDM_gnum_from_hv_get (*id, *i_part);
-//   for (int i = 0; i < _gnum_from_hv->n_elts[*i_part]; i++) {
-//     gnum[i] = tmp[i];
-//   }
-// }
 
 
 /**
@@ -1170,17 +1118,6 @@ PDM_gnum_from_hv_free
   free (_gnum_from_hv);
   _gnum_from_hv = NULL;
 }
-
-// void
-// PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
-// (
-//  const int *id,
-//  const int *partial
-// )
-// {
-//   PDM_gnum_from_hv_free (*id, *partial);
-// }
-
 
 
 // void

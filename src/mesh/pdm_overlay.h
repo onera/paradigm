@@ -18,17 +18,6 @@
  *============================================================================*/
 
 /*----------------------------------------------------------------------------
- * Macro pour la manipulation des noms des fonctions entre C et Fortran pour
- * le link.
- *----------------------------------------------------------------------------*/
-
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
-
-/*----------------------------------------------------------------------------
  * Macro permettant de prendre en compte les arguments caches des longueurs
  * de chaine du Fortran (Evite les erreurs de compilation)
  *----------------------------------------------------------------------------*/

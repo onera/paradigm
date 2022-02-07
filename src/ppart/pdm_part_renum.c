@@ -1173,23 +1173,6 @@ PDM_part_renum_method_purge
  * \return Index (-1 if not found)
  */
 
-void
-PROCF (pdm_part_renum_method_cell_idx_get_cf, PDM_PART_RENUM_METHOD_CELL_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_cell_idx_get (_name);
-
-  free (_name);
-
-}
-
-
 int
 PDM_part_renum_method_cell_idx_get
 (
@@ -1224,22 +1207,6 @@ const char *name
  *
  * \return Index (-1 if not found)
  */
-
-void
-PROCF (pdm_part_renum_method_face_idx_get_cf, PDM_PART_RENUM_METHOD_FACE_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_face_idx_get (_name);
-
-  free (_name);
-
-}
 
 int
 PDM_part_renum_method_face_idx_get
@@ -1276,22 +1243,6 @@ const char *name
  * \return Index (-1 if not found)
  */
 
-void
-PROCF (pdm_part_renum_method_edge_idx_get_cf, PDM_PART_RENUM_METHOD_edge_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_edge_idx_get (_name);
-
-  free (_name);
-
-}
-
 int
 PDM_part_renum_method_edge_idx_get
 (
@@ -1326,22 +1277,6 @@ const char *name
  *
  * \return Index (-1 if not found)
  */
-
-void
-PROCF (pdm_part_renum_method_vtx_idx_get_cf, PDM_PART_RENUM_METHOD_vtx_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_vtx_idx_get (_name);
-
-  free (_name);
-
-}
 
 int
 PDM_part_renum_method_vtx_idx_get
@@ -1424,15 +1359,6 @@ const int idx
  *
  */
 
-void
-PROCF (pdm_part_n_renum_method_cell_get, PDM_PART_N_RENUM_METHOD_CELL_GET)
-(
- int  *n_method
- )
-{
-  *n_method = PDM_part_n_renum_method_cell_get ();
-}
-
 int
 PDM_part_n_renum_method_cell_get
 (
@@ -1454,15 +1380,6 @@ void
  * \return Name of the method
  *
  */
-
-void
-PROCF (pdm_part_n_renum_method_face_get, PDM_PART_N_RENUM_METHOD_FACE_GET)
-(
- int  *n_method
- )
-{
-  *n_method = PDM_part_n_renum_method_face_get ();
-}
 
 int
 PDM_part_n_renum_method_face_get

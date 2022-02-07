@@ -25,81 +25,73 @@ module pdm_part
 
   implicit none
 
-  integer, parameter :: PDM_part_SPLIT_PARMETIS = 1
-  integer, parameter :: PDM_part_SPLIT_PTSCOTCH = 2
-  integer, parameter :: PDM_part_SPLIT_HILBERT  = 3
+  integer, parameter :: PDM_PART_SPLIT_PARMETIS = 1
+  integer, parameter :: PDM_PART_SPLIT_PTSCOTCH = 2
+  integer, parameter :: PDM_PART_SPLIT_HILBERT  = 3
 
   integer, parameter :: PDM_PART_RENUM_FACE_RANDOM        = 1
   integer, parameter :: PDM_PART_RENUM_FACE_NONE          = 2
   integer, parameter :: PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 
-  integer, parameter :: PDM_part_RENUM_CELL_HILBERT = 1
-  integer, parameter :: PDM_part_RENUM_CELL_RANDOM  = 2
-  integer, parameter :: PDM_part_RENUM_CELL_NONE    = 3
-  integer, parameter :: PDM_part_RENUM_CELL_CUTHILL = 4
+  integer, parameter :: PDM_PART_RENUM_CELL_HILBERT = 1
+  integer, parameter :: PDM_PART_RENUM_CELL_RANDOM  = 2
+  integer, parameter :: PDM_PART_RENUM_CELL_NONE    = 3
+  integer, parameter :: PDM_PART_RENUM_CELL_CUTHILL = 4
 
-  interface pdm_part_create ; module procedure  &
-    pdm_part_create_
+  interface PDM_part_create ; module procedure  &
+    PDM_part_create_
   end interface
 
-  interface pdm_part_part_dim_get ; module procedure  &
-    pdm_part_part_dim_get_
+  interface PDM_part_part_dim_get ; module procedure  &
+    PDM_part_part_dim_get_
   end interface
 
-  interface pdm_part_part_val_get ; module procedure  &
-  pdm_part_part_val_get_
+  interface PDM_part_part_val_get ; module procedure  &
+  PDM_part_part_val_get_
   end interface
 
-  interface pdm_part_time_get ; module procedure  &
-  pdm_part_time_get_
+  interface PDM_part_time_get ; module procedure  &
+  PDM_part_time_get_
   end interface
 
-  interface pdm_part_stat_get ; module procedure  &
-  pdm_part_stat_get_
+  interface PDM_part_stat_get ; module procedure  &
+  PDM_part_stat_get_
   end interface
 
-  interface pdm_part_part_color_get ; module procedure  &
-  pdm_part_part_color_get_
+  interface PDM_part_part_color_get ; module procedure  &
+  PDM_part_part_color_get_
   end interface
 
-  interface pdm_part_coarse_mesh_create ; module procedure  &
-    pdm_part_coarse_mesh_create_
+  interface PDM_part_coarse_mesh_create ; module procedure  &
+    PDM_part_coarse_mesh_create_
   end interface
 
-  interface pdm_part_coarse_mesh_input ; module procedure  &
-    pdm_part_coarse_mesh_input_
+  interface PDM_part_coarse_mesh_input ; module procedure  &
+    PDM_part_coarse_mesh_input_
   end interface
 
-  interface pdm_part_coarse_mesh_part_dim_get ; module procedure  &
-    pdm_part_coarse_mesh_part_dim_get_
+  interface PDM_part_coarse_mesh_part_dim_get ; module procedure  &
+    PDM_part_coarse_mesh_part_dim_get_
   end interface
 
-  interface pdm_part_coarse_mesh_part_get ; module procedure  &
-    pdm_part_coarse_mesh_part_get_
+  interface PDM_part_coarse_mesh_part_get ; module procedure  &
+    PDM_part_coarse_mesh_part_get_
   end interface
 
-  interface pdm_part_coarse_color_get ; module procedure  &
-  pdm_part_coarse_color_get_
+  interface PDM_part_coarse_color_get ; module procedure  &
+  PDM_part_coarse_color_get_
   end interface
 
-  interface pdm_part_coarse_mesh_time_get ; module procedure  &
-  pdm_part_coarse_mesh_time_get_
+  interface PDM_part_coarse_mesh_time_get ; module procedure  &
+  PDM_part_coarse_mesh_time_get_
   end interface
 
-  interface pdm_part_renum_method_cell_idx_get ; module procedure  &
-    pdm_part_renum_method_cell_idx_get_
+  interface PDM_part_renum_method_cell_name_get ; module procedure  &
+    PDM_part_renum_method_cell_name_get_
   end interface
 
-  interface pdm_part_renum_method_face_idx_get ; module procedure  &
-    pdm_part_renum_method_face_idx_get_
-  end interface
-
-  interface pdm_part_renum_method_cell_name_get ; module procedure  &
-    pdm_part_renum_method_cell_name_get_
-  end interface
-
-  interface pdm_part_renum_method_face_name_get ; module procedure  &
-    pdm_part_renum_method_face_name_get_
+  interface PDM_part_renum_method_face_name_get ; module procedure  &
+    PDM_part_renum_method_face_name_get_
   end interface
 
 interface
@@ -157,33 +149,33 @@ interface
   !!
   !!
 
-  function pdm_part_create_cf (comm, &
-                               split_method, &
-                               renum_cell_method, &
-                               renum_face_method, &
-                               n_property_cell, &
-                               renum_properties_cell, &
-                               n_property_face, &
-                               renum_properties_face, &
-                               n_part, &
-                               dn_cell, &
-                               dn_face, &
-                               dn_vtx, &
-                               n_face_group, &
-                               dcell_faceIdx, &
-                               dcell_face, &
-                               dcell_tag, &
-                               dcell_weight, &
-                               have_dcell_part, &
-                               dcell_part, &
-                               dface_cell, &
-                               dface_vtx_idx, &
-                               dface_vtx, &
-                               dface_tag, &
-                               dvtx_coord, &
-                               dvtx_tag, &
-                               dface_group_idx, &
-                               dface_group) &
+  function PDM_part_create_c (comm, &
+                              split_method, &
+                              renum_cell_method, &
+                              renum_face_method, &
+                              n_property_cell, &
+                              renum_properties_cell, &
+                              n_property_face, &
+                              renum_properties_face, &
+                              n_part, &
+                              dn_cell, &
+                              dn_face, &
+                              dn_vtx, &
+                              n_face_group, &
+                              dcell_faceIdx, &
+                              dcell_face, &
+                              dcell_tag, &
+                              dcell_weight, &
+                              have_dcell_part, &
+                              dcell_part, &
+                              dface_cell, &
+                              dface_vtx_idx, &
+                              dface_vtx, &
+                              dface_tag, &
+                              dvtx_coord, &
+                              dvtx_tag, &
+                              dface_group_idx, &
+                              dface_group) &
   result (ppart) &
   bind (c, name='PDM_part_create')
 
@@ -219,7 +211,7 @@ interface
     type(c_ptr),    value  :: dface_group_idx
     type(c_ptr),    value  :: dface_group
 
-  end function pdm_part_create_cf
+  end function PDM_part_create_c
 
 
   !>
@@ -241,18 +233,18 @@ interface
   !! \param [out]  n_face_group        Number of face groups
   !!
 
-  subroutine pdm_part_part_dim_get_cf (ppart, &
-                                       i_part, &
-                                       n_cell, &
-                                       n_face, &
-                                       n_face_part_bound, &
-                                       n_vtx, &
-                                       n_proc, &
-                                       n_total_part, &
-                                       scell_face, &
-                                       sface_vtx, &
-                                       sface_group, &
-                                       n_face_group) &
+  subroutine PDM_part_part_dim_get_c (ppart, &
+                                      i_part, &
+                                      n_cell, &
+                                      n_face, &
+                                      n_face_part_bound, &
+                                      n_vtx, &
+                                      n_proc, &
+                                      n_total_part, &
+                                      scell_face, &
+                                      sface_vtx, &
+                                      sface_group, &
+                                      n_face_group) &
   bind (c, name="PDM_part_part_dim_get")
     use pdm
     use iso_c_binding
@@ -272,7 +264,7 @@ interface
     integer(c_int)        :: sface_group
     integer(c_int)        :: n_face_group
 
-  end subroutine pdm_part_part_dim_get_cf
+  end subroutine PDM_part_part_dim_get_c
 
 
   !>
@@ -312,26 +304,26 @@ interface
   !!                                         (size = face_group_idx[n_face_group] = lFaceGroup, numbering : 1 to n)
   !!
 
-  subroutine pdm_part_part_val_get_cf (ppart, &
-                                       i_part, &
-                                       cell_tag, &
-                                       cell_face_idx, &
-                                       cell_face, &
-                                       cell_ln_to_gn, &
-                                       face_tag, &
-                                       face_cell, &
-                                       face_vtx_idx, &
-                                       face_vtx, &
-                                       face_ln_to_gn, &
-                                       face_part_bound_proc_idx, &
-                                       face_part_bound_part_idx, &
-                                       face_part_bound, &
-                                       vtx_tag, &
-                                       vtx, &
-                                       vtx_ln_to_gn, &
-                                       face_group_idx, &
-                                       face_group, &
-                                       face_group_ln_to_gn) &
+  subroutine PDM_part_part_val_get_c (ppart, &
+                                      i_part, &
+                                      cell_tag, &
+                                      cell_face_idx, &
+                                      cell_face, &
+                                      cell_ln_to_gn, &
+                                      face_tag, &
+                                      face_cell, &
+                                      face_vtx_idx, &
+                                      face_vtx, &
+                                      face_ln_to_gn, &
+                                      face_part_bound_proc_idx, &
+                                      face_part_bound_part_idx, &
+                                      face_part_bound, &
+                                      vtx_tag, &
+                                      vtx, &
+                                      vtx_ln_to_gn, &
+                                      face_group_idx, &
+                                      face_group, &
+                                      face_group_ln_to_gn) &
   bind (c, name='PDM_part_part_val_get')
 
     use pdm
@@ -360,7 +352,7 @@ interface
     type(c_ptr)           :: face_group
     type(c_ptr)           :: face_group_ln_to_gn
 
-  end subroutine pdm_part_part_val_get_cf
+  end subroutine PDM_part_part_val_get_c
 
 
   !>
@@ -371,7 +363,7 @@ interface
   !!
   !!
 
-  subroutine pdm_part_free (ppart) &
+  subroutine PDM_part_free (ppart) &
   bind (c, name='PDM_part_free')
 
     use iso_c_binding
@@ -379,7 +371,7 @@ interface
 
     type(c_ptr), value :: ppart
 
-  end subroutine pdm_part_free
+  end subroutine PDM_part_free
 
 
   !>
@@ -394,11 +386,11 @@ interface
   !!
   !!
 
-  subroutine pdm_part_time_get_cf (ppart,    &
-                                   elapsed,  &
-                                   cpu,      &
-                                   cpu_user, &
-                                   cpu_sys)  &
+  subroutine PDM_part_time_get_c (ppart,    &
+                                  elapsed,  &
+                                  cpu,      &
+                                  cpu_user, &
+                                  cpu_sys)  &
   bind (c, name='PDM_part_time_get')
 
     use iso_c_binding
@@ -410,7 +402,7 @@ interface
     type(c_ptr)        :: cpu_user
     type(c_ptr)        :: cpu_sys
 
-  end subroutine pdm_part_time_get_cf
+  end subroutine PDM_part_time_get_c
 
 
   !>
@@ -431,18 +423,18 @@ interface
   !!
   !!
 
-  subroutine pdm_part_stat_get_cf (ppart,                          &
-                                   cells_average,                  &
-                                   cells_median,                   &
-                                   cells_std_deviation,            &
-                                   cells_min,                      &
-                                   cells_max,                      &
-                                   bound_part_faces_average,       &
-                                   bound_part_faces_median,        &
-                                   bound_part_faces_std_deviation, &
-                                   bound_part_faces_min,           &
-                                   bound_part_faces_max,           &
-                                   bound_part_faces_sum)           &
+  subroutine PDM_part_stat_get_c (ppart,                          &
+                                  cells_average,                  &
+                                  cells_median,                   &
+                                  cells_std_deviation,            &
+                                  cells_min,                      &
+                                  cells_max,                      &
+                                  bound_part_faces_average,       &
+                                  bound_part_faces_median,        &
+                                  bound_part_faces_std_deviation, &
+                                  bound_part_faces_min,           &
+                                  bound_part_faces_max,           &
+                                  bound_part_faces_sum)           &
   bind (c, name='PDM_part_stat_get')
 
     use pdm
@@ -462,7 +454,7 @@ interface
     integer(c_int)     :: bound_part_faces_max
     integer(c_int)     :: bound_part_faces_sum
 
-  end subroutine pdm_part_stat_get_cf
+  end subroutine PDM_part_stat_get_c
 
 
 
@@ -479,12 +471,12 @@ interface
   !!
   !!
 
-  subroutine PDM_part_part_color_get_cf (ppart, &
-                                         i_part, &
-                                         cell_color, &
-                                         face_color, &
-                                         thread_color, &
-                                         hyperplane_color) &
+  subroutine PDM_part_part_color_get_c (ppart, &
+                                        i_part, &
+                                        cell_color, &
+                                        face_color, &
+                                        thread_color, &
+                                        hyperplane_color) &
   bind (c, name='PDM_part_part_color_get')
 
     use iso_c_binding
@@ -497,7 +489,7 @@ interface
     type(c_ptr)        :: thread_color
     type(c_ptr)        :: hyperplane_color
 
-  end subroutine PDM_part_part_color_get_cf
+  end subroutine PDM_part_part_color_get_c
 
 
 
@@ -527,23 +519,23 @@ interface
   !!
   !!
 
-  function PDM_part_coarse_mesh_create_cf (comm,                  &
-                                           method,                &
-                                           renum_cell_method,     &
-                                           renum_face_method,     &
-                                           n_property_cell,       &
-                                           renum_properties_cell, &
-                                           n_property_face,       &
-                                           renum_properties_face, &
-                                           n_part,                &
-                                           n_total_part,          &
-                                           n_face_group,          &
-                                           have_cell_tag,         &
-                                           have_face_tag,         &
-                                           have_vtx_tag,          &
-                                           have_cell_weight,      &
-                                           have_face_weight,      &
-                                           have_face_group)       &
+  function PDM_part_coarse_mesh_create_c (comm,                  &
+                                          method,                &
+                                          renum_cell_method,     &
+                                          renum_face_method,     &
+                                          n_property_cell,       &
+                                          renum_properties_cell, &
+                                          n_property_face,       &
+                                          renum_properties_face, &
+                                          n_part,                &
+                                          n_total_part,          &
+                                          n_face_group,          &
+                                          have_cell_tag,         &
+                                          have_face_tag,         &
+                                          have_vtx_tag,          &
+                                          have_cell_weight,      &
+                                          have_face_weight,      &
+                                          have_face_group)       &
   result (cm) &
   bind (c, name='PDM_part_coarse_mesh_create')
 
@@ -569,7 +561,7 @@ interface
     integer(c_int), value :: have_face_weight
     integer(c_int), value :: have_face_group
 
-  end function PDM_part_coarse_mesh_create_cf
+  end function PDM_part_coarse_mesh_create_c
 
 
   !>
@@ -615,7 +607,7 @@ interface
   !!                                            in the connected partition (numbering :1 to n)
   !!
 
-  subroutine PDM_part_coarse_mesh_input_cf (cm,                       &
+  subroutine PDM_part_coarse_mesh_input_c (cm,                       &
                                             i_part,                   &
                                             n_coarse_cell,            &
                                             n_cell,                   &
@@ -677,7 +669,7 @@ interface
     type(c_ptr),    value :: face_part_bound_part_idx
     type(c_ptr),    value :: face_part_bound
 
-  end subroutine PDM_part_coarse_mesh_input_cf
+  end subroutine PDM_part_coarse_mesh_input_c
 
 
   !>
@@ -718,7 +710,7 @@ interface
   !! \param [out]  sCoarseCellToFineCell  Size of coarseCellToFineCell array
   !!
 
-  subroutine PDM_part_coarse_mesh_part_dim_get_cf (cm,                    &
+  subroutine PDM_part_coarse_mesh_part_dim_get_c (cm,                    &
                                                    i_part,                &
                                                    n_cell,                &
                                                    n_face,                &
@@ -750,7 +742,7 @@ interface
     integer(c_int)        :: sface_group
     integer(c_int)        :: sCoarseCellToFineCell
 
-  end subroutine PDM_part_coarse_mesh_part_dim_get_cf
+  end subroutine PDM_part_coarse_mesh_part_dim_get_c
 
 
   !>
@@ -792,7 +784,7 @@ interface
   !!                                             in the connected partition (numbering :1 to n)
   !!
 
-  subroutine PDM_part_coarse_mesh_part_get_cf (cm,                       &
+  subroutine PDM_part_coarse_mesh_part_get_c (cm,                       &
                                                i_part,                   &
                                                cell_face_idx,            &
                                                cell_face,                &
@@ -848,7 +840,7 @@ interface
     type(c_ptr)           :: face_part_bound_part_idx
     type(c_ptr)           :: face_part_bound
 
-  end subroutine PDM_part_coarse_mesh_part_get_cf
+  end subroutine PDM_part_coarse_mesh_part_get_c
 
 
   !>
@@ -864,7 +856,7 @@ interface
   !!
   !!
 
-  subroutine PDM_part_coarse_color_get_cf (cm, &
+  subroutine PDM_part_coarse_color_get_c (cm, &
                                          i_part, &
                                          cell_color, &
                                          face_color, &
@@ -882,7 +874,7 @@ interface
     type(c_ptr)        :: thread_color
     type(c_ptr)        :: hyperplane_color
 
-  end subroutine PDM_part_coarse_color_get_cf
+  end subroutine PDM_part_coarse_color_get_c
 
 
 
@@ -894,7 +886,7 @@ interface
   !!
   !!
 
-  subroutine pdm_part_coarse_mesh_free (cm) &
+  subroutine PDM_part_coarse_mesh_free (cm) &
   bind (c, name='PDM_part_coarse_mesh_free')
 
     use iso_c_binding
@@ -902,7 +894,7 @@ interface
 
     type(c_ptr), value :: cm
 
-  end subroutine pdm_part_coarse_mesh_free
+  end subroutine PDM_part_coarse_mesh_free
 
 
 
@@ -918,7 +910,7 @@ interface
   !!
   !!
 
-  subroutine pdm_part_coarse_mesh_time_get_cf (cm,       &
+  subroutine PDM_part_coarse_mesh_time_get_c (cm,       &
                                                elapsed,  &
                                                cpu,      &
                                                cpu_user, &
@@ -934,7 +926,7 @@ interface
     type(c_ptr)        :: cpu_user
     type(c_ptr)        :: cpu_sys
 
-  end subroutine pdm_part_coarse_mesh_time_get_cf
+  end subroutine PDM_part_coarse_mesh_time_get_c
 
 
 
@@ -957,57 +949,22 @@ interface
   end subroutine PDM_part_coarse_mesh_display
 
 
-
- !================================================================================
- !
- ! \brief Get the number of renumbering cell methods
- !
- ! \param [out]    Number of methods
- !
- !================================================================================
-
- subroutine pdm_part_n_renum_method_cell_get (n_method)
-   use pdm
-   implicit none
-   integer      :: n_method
-
- end subroutine pdm_part_n_renum_method_cell_get
-
-
-
- !================================================================================
- !
- ! \brief Get the number of renumbering cell methods
- !
- ! \param [out]    Number of methods
- !
- !================================================================================
-
- subroutine pdm_part_n_renum_method_face_get (n_method)
-   use pdm
-   implicit none
-   integer      :: n_method
-
- end subroutine pdm_part_n_renum_method_face_get
-
 end interface
 
-private :: pdm_part_create_ ,&
-           pdm_part_part_dim_get_ ,&
-           pdm_part_part_val_get_ ,&
-           pdm_part_time_get_ ,&
-           pdm_part_stat_get_ ,&
-           pdm_part_part_color_get_ ,&
-           pdm_part_coarse_mesh_create_ ,&
-           pdm_part_coarse_mesh_input_ ,&
-           pdm_part_coarse_mesh_part_dim_get_ ,&
-           pdm_part_coarse_mesh_part_get_ ,&
-           pdm_part_coarse_color_get_ ,&
-           pdm_part_coarse_mesh_time_get_ ,&
-           pdm_part_renum_method_cell_idx_get_ ,&
-           pdm_part_renum_method_face_idx_get_ ,&
-           pdm_part_renum_method_cell_name_get_ ,&
-           pdm_part_renum_method_face_name_get_
+private :: PDM_part_create_ ,&
+           PDM_part_part_dim_get_ ,&
+           PDM_part_part_val_get_ ,&
+           PDM_part_time_get_ ,&
+           PDM_part_stat_get_ ,&
+           PDM_part_part_color_get_ ,&
+           PDM_part_coarse_mesh_create_ ,&
+           PDM_part_coarse_mesh_input_ ,&
+           PDM_part_coarse_mesh_part_dim_get_ ,&
+           PDM_part_coarse_mesh_part_get_ ,&
+           PDM_part_coarse_color_get_ ,&
+           PDM_part_coarse_mesh_time_get_ ,&
+           PDM_part_renum_method_cell_name_get_ ,&
+           PDM_part_renum_method_face_name_get_
 
 contains
 
@@ -1064,7 +1021,7 @@ contains
   !!
   !!
 
-  subroutine pdm_part_create_(ppart, &
+  subroutine PDM_part_create_(ppart, &
                               f_comm, &
                               split_method,  &
                               renum_cell_method, &
@@ -1202,7 +1159,7 @@ contains
 
     c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-    ppart = pdm_part_create_cf (c_comm, &
+    ppart = PDM_part_create_c (c_comm, &
                                 c_split_method, &
                                 renum_cell_method//C_NULL_CHAR, &
                                 renum_face_method//C_NULL_CHAR, &
@@ -1230,7 +1187,7 @@ contains
                                 c_dface_group_idx, &
                                 c_dface_group)
 
-  end subroutine pdm_part_create_
+  end subroutine PDM_part_create_
 
 
 
@@ -1253,7 +1210,7 @@ contains
   !! \param [out]  n_face_group        Number of face groups
   !!
 
-  subroutine pdm_part_part_dim_get_ (ppart, &
+  subroutine PDM_part_part_dim_get_ (ppart, &
                                      i_part, &
                                      n_cell, &
                                      n_face, &
@@ -1297,7 +1254,7 @@ contains
 
     c_i_part = i_part
 
-    call pdm_part_part_dim_get_cf(ppart, &
+    call PDM_part_part_dim_get_c(ppart, &
                                   c_i_part, &
                                   c_n_cell, &
                                   c_n_face, &
@@ -1321,7 +1278,7 @@ contains
     sface_group       = c_sface_group
     n_face_group      = c_n_face_group
 
-  end subroutine pdm_part_part_dim_get_
+  end subroutine PDM_part_part_dim_get_
 
 
   !>
@@ -1361,7 +1318,7 @@ contains
   !!                                         (size = face_group_idx[n_face_group] = lFaceGroup, numbering : 1 to n)
   !!
 
-  subroutine pdm_part_part_val_get_ (ppart,                    &
+  subroutine PDM_part_part_val_get_ (ppart,                    &
                                      i_part,                   &
                                      cell_tag,                 &
                                      cell_face_idx,            &
@@ -1440,7 +1397,7 @@ contains
 
     c_i_part = i_part
 
-    call pdm_part_part_dim_get_cf(ppart,             &
+    call PDM_part_part_dim_get_c(ppart,             &
                                   c_i_part,          &
                                   n_cell,            &
                                   n_face,            &
@@ -1453,7 +1410,7 @@ contains
                                   sface_group,       &
                                   n_face_group)
 
-    call pdm_part_part_val_get_cf(ppart,                     &
+    call PDM_part_part_val_get_c(ppart,                     &
                                   c_i_part,                   &
                                   c_cell_tag,                 &
                                   c_cell_face_idx,            &
@@ -1546,7 +1503,7 @@ contains
                      face_group_ln_to_gn,   &
                      [sface_group])
 
-  end subroutine pdm_part_part_val_get_
+  end subroutine PDM_part_part_val_get_
 
 
 
@@ -1562,7 +1519,7 @@ contains
   !!
   !!
 
-  subroutine pdm_part_time_get_ (ppart,    &
+  subroutine PDM_part_time_get_ (ppart,    &
                                  elapsed,  &
                                  cpu,      &
                                  cpu_user, &
@@ -1584,7 +1541,7 @@ contains
     double precision, pointer :: ptr(:)     => null()
 
 
-    call pdm_part_time_get_cf (ppart,      &
+    call PDM_part_time_get_c (ppart,      &
                                c_elapsed,  &
                                c_cpu,      &
                                c_cpu_user, &
@@ -1610,7 +1567,7 @@ contains
                      [4])
     cpu_sys(1:4) = ptr(1:4)
 
-  end subroutine pdm_part_time_get_
+  end subroutine PDM_part_time_get_
 
 
 
@@ -1632,7 +1589,7 @@ contains
   !!
   !!
 
-  subroutine pdm_part_stat_get_ (ppart,                          &
+  subroutine PDM_part_stat_get_ (ppart,                          &
                                  cells_average,                  &
                                  cells_median,                   &
                                  cells_std_deviation,            &
@@ -1675,7 +1632,7 @@ contains
     integer(c_int)            :: c_bound_part_faces_sum
 
 
-    call pdm_part_stat_get_cf(ppart,                            &
+    call PDM_part_stat_get_c(ppart,                            &
                               c_cells_average,                  &
                               c_cells_median,                   &
                               c_cells_std_deviation,            &
@@ -1700,7 +1657,7 @@ contains
     bound_part_faces_max           = c_bound_part_faces_max
     bound_part_faces_sum           = c_bound_part_faces_sum
 
-  end subroutine pdm_part_stat_get_
+  end subroutine PDM_part_stat_get_
 
 
 
@@ -1753,7 +1710,7 @@ contains
 
     c_i_part = i_part
 
-    call pdm_part_part_dim_get_cf(ppart,             &
+    call PDM_part_part_dim_get_c(ppart,             &
                                   c_i_part,          &
                                   n_cell,            &
                                   n_face,            &
@@ -1766,7 +1723,7 @@ contains
                                   sface_group,       &
                                   n_face_group)
 
-    call PDM_part_part_color_get_cf(ppart,              &
+    call PDM_part_part_color_get_c(ppart,              &
                                     c_i_part,           &
                                     c_cell_color,       &
                                     c_face_color,       &
@@ -1920,7 +1877,7 @@ contains
       c_have_face_group = 0
     endif
 
-    cm = PDM_part_coarse_mesh_create_cf (c_comm,                         &
+    cm = PDM_part_coarse_mesh_create_c (c_comm,                         &
                                          method//C_NULL_CHAR,            &
                                          renum_cell_method//C_NULL_CHAR, &
                                          renum_face_method//C_NULL_CHAR, &
@@ -2104,7 +2061,7 @@ contains
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
     c_face_part_bound          = c_loc(face_part_bound         )
 
-    call PDM_part_coarse_mesh_input_cf (cm,                         &
+    call PDM_part_coarse_mesh_input_c (cm,                         &
                                         c_i_part,                   &
                                         c_n_coarse_cell,            &
                                         c_n_cell,                   &
@@ -2202,7 +2159,7 @@ contains
 
     c_i_part = i_part
 
-    call PDM_part_coarse_mesh_part_dim_get_cf (cm,                      &
+    call PDM_part_coarse_mesh_part_dim_get_c (cm,                      &
                                                c_i_part,                &
                                                c_n_cell,                &
                                                c_n_face,                &
@@ -2364,7 +2321,7 @@ contains
 
     c_i_part = i_part
 
-    call PDM_part_coarse_mesh_part_dim_get_cf (cm,                    &
+    call PDM_part_coarse_mesh_part_dim_get_c (cm,                    &
                                                i_part,                &
                                                n_cell,                &
                                                n_face,                &
@@ -2378,7 +2335,7 @@ contains
                                                sface_group,           &
                                                sCoarseCellToFineCell)
 
-    call PDM_part_coarse_mesh_part_get_cf (cm,                         &
+    call PDM_part_coarse_mesh_part_get_c (cm,                         &
                                            c_i_part,                   &
                                            c_cell_face_idx,            &
                                            c_cell_face,                &
@@ -2549,7 +2506,7 @@ contains
 
     c_i_part = i_part
 
-    call PDM_part_coarse_mesh_part_dim_get_cf (cm,                    &
+    call PDM_part_coarse_mesh_part_dim_get_c (cm,                    &
                                                i_part,                &
                                                n_cell,                &
                                                n_face,                &
@@ -2564,7 +2521,7 @@ contains
                                                sCoarseCellToFineCell)
 
 
-    call PDM_part_coarse_color_get_cf(cm,                 &
+    call PDM_part_coarse_color_get_c(cm,                 &
                                       c_i_part,           &
                                       c_cell_color,       &
                                       c_face_color,       &
@@ -2603,7 +2560,7 @@ contains
   !!
   !!
 
-  subroutine pdm_part_coarse_mesh_time_get_ (cm,       &
+  subroutine PDM_part_coarse_mesh_time_get_ (cm,       &
                                              elapsed,  &
                                              cpu,      &
                                              cpu_user, &
@@ -2625,7 +2582,7 @@ contains
     double precision, pointer :: ptr(:)     => null()
 
 
-    call pdm_part_coarse_mesh_time_get_cf (cm,         &
+    call PDM_part_coarse_mesh_time_get_c (cm,         &
                                            c_elapsed,  &
                                            c_cpu,      &
                                            c_cpu_user, &
@@ -2651,63 +2608,217 @@ contains
                      [18])
     cpu_sys(1:18) = ptr(1:18)
 
-  end subroutine pdm_part_coarse_mesh_time_get_
+  end subroutine PDM_part_coarse_mesh_time_get_
 
 
- !================================================================================
- !
- ! \brief Get index of a renumbering face method
- !
- ! \param [in]       name   Name of the method
- ! \param [in, out]  idx    Index of method -1 otherwise
- !
- !================================================================================
+  !>
+  !!
+  !! \brief Get index of a renumbering face method
+  !!
+  !! \param [in]   name   Name of the method
+  !! \param [out]  idx    Index of method -1 otherwise
+  !!
+  !!
 
-  subroutine pdm_part_renum_method_face_idx_get_ (name, &
-                                                  idx)
-
-     use pdm
-
+  subroutine PDM_part_renum_method_face_idx_get (name, &
+                                                 idx)
+    use iso_c_binding
     implicit none
 
-    character (len=*) :: name
-    integer           :: idx
+    character (len=*), intent(in)  :: name
+    integer,           intent(out) :: idx
 
-    integer           :: l_name
+    interface
+      subroutine PDM_part_renum_method_face_idx_get_c (name, &
+                                                       idx)  &
+      bind (c, name='PDM_part_renum_method_face_idx_get')
+        use iso_c_binding
+        implicit none
 
-    l_name = len(name)
+        character(c_char) :: name(*)
+        integer(c_int)    :: idx
 
-    ! call pdm_part_renum_method_face_idx_get_cf (name, l_name, idx)
+      end subroutine PDM_part_renum_method_face_idx_get_c
+    end interface
 
-  end subroutine pdm_part_renum_method_face_idx_get_
+    call PDM_part_renum_method_face_idx_get_c (name//C_NULL_CHAR, &
+                                               idx)
+
+  end subroutine PDM_part_renum_method_face_idx_get
 
 
- !================================================================================
- !
- ! \brief Get index of a renumbering cell method
- !
- ! \param [in]       name   Name of the method
- ! \param [in, out]  idx    Index of method -1 otherwise
- !
- !================================================================================
+  !>
+  !!
+  !! \brief Get index of a renumbering cell method
+  !!
+  !! \param [in]   name   Name of the method
+  !! \param [out]  idx    Index of method -1 otherwise
+  !!
+  !!
 
- subroutine pdm_part_renum_method_cell_idx_get_ (name, &
-                                                 idx)
+  subroutine PDM_part_renum_method_cell_idx_get (name, &
+                                                  idx)
+     use iso_c_binding
+     implicit none
 
-   use pdm
+     character (len=*), intent(in)  :: name
+     integer,           intent(out) :: idx
 
-   implicit none
+     interface
+       subroutine PDM_part_renum_method_cell_idx_get_c (name, &
+                                                        idx)  &
+       bind (c, name='PDM_part_renum_method_cell_idx_get')
+         use iso_c_binding
+         implicit none
 
-   character (len=*) :: name
-   integer           :: idx
+         character(c_char) :: name(*)
+         integer(c_int)    :: idx
 
-   integer           :: l_name
+       end subroutine PDM_part_renum_method_cell_idx_get_c
+     end interface
 
-   l_name = len(name)
+     call PDM_part_renum_method_cell_idx_get_c (name//C_NULL_CHAR, &
+                                                idx)
 
-   ! call pdm_part_renum_method_cell_idx_get_cf (name, l_name, idx)
+  end subroutine PDM_part_renum_method_cell_idx_get
 
- end subroutine pdm_part_renum_method_cell_idx_get_
+
+  !>
+  !!
+  !! \brief Get index of a renumbering edge method
+  !!
+  !! \param [in]   name   Name of the method
+  !! \param [out]  idx    Index of method -1 otherwise
+  !!
+  !!
+
+  subroutine PDM_part_renum_method_edge_idx_get (name, &
+                                                  idx)
+     use iso_c_binding
+     implicit none
+
+     character (len=*), intent(in)  :: name
+     integer,           intent(out) :: idx
+
+     interface
+       subroutine PDM_part_renum_method_edge_idx_get_c (name, &
+                                                        idx)  &
+       bind (c, name='PDM_part_renum_method_edge_idx_get')
+         use iso_c_binding
+         implicit none
+
+         character(c_char) :: name(*)
+         integer(c_int)    :: idx
+
+       end subroutine PDM_part_renum_method_edge_idx_get_c
+     end interface
+
+     call PDM_part_renum_method_edge_idx_get_c (name//C_NULL_CHAR, &
+                                                idx)
+
+  end subroutine PDM_part_renum_method_edge_idx_get
+
+
+  !>
+  !!
+  !! \brief Get index of a renumbering vtx method
+  !!
+  !! \param [in]   name   Name of the method
+  !! \param [out]  idx    Index of method -1 otherwise
+  !!
+  !!
+
+  subroutine PDM_part_renum_method_vtx_idx_get (name, &
+                                                  idx)
+     use iso_c_binding
+     implicit none
+
+     character (len=*), intent(in)  :: name
+     integer,           intent(out) :: idx
+
+     interface
+       subroutine PDM_part_renum_method_vtx_idx_get_c (name, &
+                                                        idx)  &
+       bind (c, name='PDM_part_renum_method_vtx_idx_get')
+         use iso_c_binding
+         implicit none
+
+         character(c_char) :: name(*)
+         integer(c_int)    :: idx
+
+       end subroutine PDM_part_renum_method_vtx_idx_get_c
+     end interface
+
+     call PDM_part_renum_method_vtx_idx_get_c (name//C_NULL_CHAR, &
+                                                idx)
+
+  end subroutine PDM_part_renum_method_vtx_idx_get
+
+
+  !>
+  !!
+  !! \brief Get the number of renumbering cell methods
+  !!
+  !! \param [out]    Number of methods
+  !!
+  !!
+
+  subroutine PDM_part_n_renum_method_cell_get (n_method)
+
+    use iso_c_binding
+    implicit none
+
+    integer, intent(out) :: n_method
+
+    interface
+      function PDM_part_n_renum_method_cell_get_c () &
+      result (n_method)                              &
+      bind (c, name='PDM_part_n_renum_method_cell_get')
+        use iso_c_binding
+        implicit none
+
+        integer(c_int) :: n_method
+
+      end function PDM_part_n_renum_method_cell_get_c
+    end interface
+
+    n_method = PDM_part_n_renum_method_cell_get_c ()
+
+  end subroutine PDM_part_n_renum_method_cell_get
+
+
+  !>
+  !!
+  !! \brief Get the number of renumbering face methods
+  !!
+  !! \param [out]    Number of methods
+  !!
+  !!
+
+  subroutine PDM_part_n_renum_method_face_get (n_method)
+
+    use iso_c_binding
+    implicit none
+
+    integer, intent(out) :: n_method
+
+    interface
+      function PDM_part_n_renum_method_face_get_c () &
+      result (n_method)                              &
+      bind (c, name='PDM_part_n_renum_method_face_get')
+        use iso_c_binding
+        implicit none
+
+        integer(c_int) :: n_method
+
+      end function PDM_part_n_renum_method_face_get_c
+    end interface
+
+    n_method = PDM_part_n_renum_method_face_get_c ()
+
+  end subroutine PDM_part_n_renum_method_face_get
+
+
 
  !================================================================================
  !
@@ -2719,7 +2830,7 @@ contains
  !================================================================================
 
 
-subroutine pdm_part_renum_method_face_name_get_ (idx, &
+subroutine PDM_part_renum_method_face_name_get_ (idx, &
                                                 name)
 
    use pdm
@@ -2731,10 +2842,10 @@ subroutine pdm_part_renum_method_face_name_get_ (idx, &
    integer  :: l_name
    l_name = len(name)
 
-   ! call pdm_part_renum_method_face_name_get_cf (name, l_name, idx)
+   ! call PDM_part_renum_method_face_name_get_c (name, l_name, idx)
 
 
-end subroutine pdm_part_renum_method_face_name_get_
+end subroutine PDM_part_renum_method_face_name_get_
 
 
  !================================================================================
@@ -2747,7 +2858,7 @@ end subroutine pdm_part_renum_method_face_name_get_
  !================================================================================
 
 
-subroutine pdm_part_renum_method_cell_name_get_ (idx, &
+subroutine PDM_part_renum_method_cell_name_get_ (idx, &
                                                 name)
 
    use pdm
@@ -2759,9 +2870,9 @@ subroutine pdm_part_renum_method_cell_name_get_ (idx, &
    integer  :: l_name
    l_name = len(name)
 
-   ! call pdm_part_renum_method_cell_name_get_cf (name, l_name, idx)
+   ! call PDM_part_renum_method_cell_name_get_c (name, l_name, idx)
 
 
-end subroutine pdm_part_renum_method_cell_name_get_
+end subroutine PDM_part_renum_method_cell_name_get_
 
 end module pdm_part

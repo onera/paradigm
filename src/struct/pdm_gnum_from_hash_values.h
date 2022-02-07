@@ -81,15 +81,6 @@ PDM_gnum_from_hash_values_create
  const PDM_MPI_Comm   comm
 );
 
-// void
-// PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
-// (
-//  const int          *n_part,
-//  const int          *equilibrate,
-//  const size_t       *s_data,
-//  const PDM_MPI_Fint *fcomm,
-//        int          *id
-// );
 
 /**
  *
@@ -115,16 +106,6 @@ PDM_gnum_set_hash_values
  const unsigned char *part_hdata
 );
 
-// void
-// PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
-// (
-//  const int           *id,
-//  const int           *i_part,
-//  const int           *n_elts,
-//  const size_t        *part_hkeys,
-//  const int           *part_hstri,
-//  const unsigned char *part_hdata
-// );
 
 /**
  *
@@ -139,12 +120,6 @@ PDM_gnum_from_hv_compute
 (
  PDM_gnum_from_hv_t *gnum_from_hv
 );
-
-// void
-// PROCF (PDM_gnum_from_hv_compute, PDM_GNUM_FROM_HV_COMPUTE)
-// (
-//  const int *id
-// );
 
 
 /**
@@ -164,14 +139,6 @@ PDM_gnum_from_hv_get
  PDM_gnum_from_hv_t *gnum_from_hv,
  const int           i_part
 );
-
-// void
-// PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
-// (
-//  const int *id,
-//  const int *i_part,
-//  PDM_g_num_t *gnum
-// );
 
 
 /**
@@ -204,13 +171,6 @@ PDM_gnum_from_hv_free
  PDM_gnum_from_hv_t *gnum_from_hv,
  const int           partial
 );
-
-// void
-// PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
-// (
-//  const int *id,
-//  const int *partial
-// );
 
 
 /*----------------------------------------------------------------------------*/
