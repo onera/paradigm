@@ -176,11 +176,11 @@ const char *name
  */
 
 void
-PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
+PDM_part_renum_method_cell_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  );
 
 const char *
@@ -201,11 +201,11 @@ const int idx
  */
 
 void
-PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
+PDM_part_renum_method_face_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  );
 
 const char *

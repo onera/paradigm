@@ -86,14 +86,6 @@ module pdm_part
   PDM_part_coarse_mesh_time_get_
   end interface
 
-  interface PDM_part_renum_method_cell_name_get ; module procedure  &
-    PDM_part_renum_method_cell_name_get_
-  end interface
-
-  interface PDM_part_renum_method_face_name_get ; module procedure  &
-    PDM_part_renum_method_face_name_get_
-  end interface
-
 interface
 
   !>
@@ -962,9 +954,7 @@ private :: PDM_part_create_ ,&
            PDM_part_coarse_mesh_part_dim_get_ ,&
            PDM_part_coarse_mesh_part_get_ ,&
            PDM_part_coarse_color_get_ ,&
-           PDM_part_coarse_mesh_time_get_ ,&
-           PDM_part_renum_method_cell_name_get_ ,&
-           PDM_part_renum_method_face_name_get_
+           PDM_part_coarse_mesh_time_get_
 
 contains
 
@@ -2613,6 +2603,115 @@ contains
 
   !>
   !!
+  !! \brief Get index of a coarse mesh method from it's name
+  !!
+  !! \param [in]   name   Name of the method
+  !! \param [out]  idx    Index of method -1 otherwise
+  !!
+  !!
+
+  subroutine PDM_coarse_mesh_method_idx_get (name, &
+                                             idx)
+    use iso_c_binding
+    implicit none
+
+    character (len=*), intent(in)  :: name
+    integer,           intent(out) :: idx
+
+    interface
+      subroutine PDM_coarse_mesh_method_idx_get_c (name, &
+                                                   idx)  &
+      bind (c, name='PDM_coarse_mesh_method_idx_get')
+        use iso_c_binding
+        implicit none
+
+        character(c_char) :: name(*)
+        integer(c_int)    :: idx
+
+      end subroutine PDM_coarse_mesh_method_idx_get_c
+    end interface
+
+    call PDM_coarse_mesh_method_idx_get_c (name//C_NULL_CHAR, &
+                                           idx)
+
+  end subroutine PDM_coarse_mesh_method_idx_get
+
+
+  !>
+  !!
+  !! \brief Get the number of coarse mesh method
+  !!
+  !! \param [out]  n_method  Number of methods
+  !!
+  !!
+
+  subroutine PDM_coarse_mesh_method_n_get (n_method)
+
+    use iso_c_binding
+    implicit none
+
+    integer, intent(out) :: n_method
+
+    interface
+      function PDM_coarse_mesh_method_n_get_c () &
+      result (n_method)                              &
+      bind (c, name='PDM_coarse_mesh_method_n_get')
+        use iso_c_binding
+        implicit none
+
+        integer(c_int) :: n_method
+
+      end function PDM_coarse_mesh_method_n_get_c
+    end interface
+
+    n_method = PDM_coarse_mesh_method_n_get_c ()
+
+  end subroutine PDM_coarse_mesh_method_n_get
+
+
+  !>
+  !!
+  !! \brief Get name of a coarse mesh method from it's index
+  !!
+  !! \param [in]  idx     Index of the method
+  !! \param [out] name    Name of the method, '' otherwize
+  !!
+  !!
+
+  subroutine PDM_coarse_mesh_method_name_get (idx, &
+                                              name)
+    use iso_c_binding
+    implicit none
+
+    integer, intent(in) :: idx
+    character(len=*)    :: name
+
+    integer(c_int)      :: l_name
+
+    interface
+      subroutine PDM_coarse_mesh_method_name_get_c (idx,    &
+                                                    name,   &
+                                                    l_name) &
+      bind (c, name='PDM_coarse_mesh_method_name_get_cf')
+        use iso_c_binding
+        implicit none
+
+        integer(c_int), value :: idx
+        character(c_char)     :: name(*)
+        integer(c_int)        :: l_name
+
+      end subroutine PDM_coarse_mesh_method_name_get_c
+    end interface
+
+    call PDM_coarse_mesh_method_name_get_c (idx,    &
+                                            name,   &
+                                            l_name)
+
+  end subroutine PDM_coarse_mesh_method_name_get
+
+
+  !>
+  !!
   !! \brief Get index of a renumbering face method
   !!
   !! \param [in]   name   Name of the method
@@ -2759,7 +2858,7 @@ contains
   !!
   !! \brief Get the number of renumbering cell methods
   !!
-  !! \param [out]    Number of methods
+  !! \param [out] n_method   Number of methods
   !!
   !!
 
@@ -2819,60 +2918,84 @@ contains
   end subroutine PDM_part_n_renum_method_face_get
 
 
+  !>
+  !!
+  !! \brief Get name of the face renumbering method
+  !!
+  !! \param [in]  idx     Index of the method
+  !! \param [out] name    Name of the method, '' otherwize
+  !!
+  !!
 
- !================================================================================
- !
- ! \brief Get name of the face renumbering method
- !
- ! \param [in]  idx     Index of the method
- ! \param [in, out]     Name  of the method, '' otherwize
- !
- !================================================================================
+  subroutine PDM_part_renum_method_face_name_get (idx, &
+                                                  name)
+    use iso_c_binding
+    implicit none
 
+    integer, intent(in) :: idx
+    character(len=*)    :: name
 
-subroutine PDM_part_renum_method_face_name_get_ (idx, &
-                                                name)
+    integer(c_int)      :: l_name
 
-   use pdm
-   implicit none
+    interface
+      subroutine PDM_part_renum_method_face_name_get_c (idx,    &
+                                                        name,   &
+                                                        l_name) &
+      bind (c, name='PDM_part_renum_method_face_name_get_cf')
+        use iso_c_binding
+        implicit none
 
-   character (len = *) :: name
-   integer  :: idx
+        integer(c_int), value :: idx
+        character(c_char)     :: name(*)
+        integer(c_int)        :: l_name
 
-   integer  :: l_name
-   l_name = len(name)
+      end subroutine PDM_part_renum_method_face_name_get_c
+    end interface
 
-   ! call PDM_part_renum_method_face_name_get_c (name, l_name, idx)
+    call PDM_part_renum_method_face_name_get_c (idx,    &
+                                                name,   &
+                                                l_name)
 
-
-end subroutine PDM_part_renum_method_face_name_get_
-
-
- !================================================================================
- !
- ! \brief Get name of the face renumbering method
- !
- ! \param [in]  idx     Index of the method
- ! \param [in, out]     Name  of the method, '' otherwize
- !
- !================================================================================
-
-
-subroutine PDM_part_renum_method_cell_name_get_ (idx, &
-                                                name)
-
-   use pdm
-   implicit none
-
-   character (len = *) :: name
-   integer  :: idx
-
-   integer  :: l_name
-   l_name = len(name)
-
-   ! call PDM_part_renum_method_cell_name_get_c (name, l_name, idx)
+  end subroutine PDM_part_renum_method_face_name_get
 
 
-end subroutine PDM_part_renum_method_cell_name_get_
+  !>
+  !!
+  !! \brief Get name of the cell renumbering method
+  !!
+  !! \param [in]  idx     Index of the method
+  !! \param [out] name    Name of the method, '' otherwize
+  !!
+  !!
+
+  subroutine PDM_part_renum_method_cell_name_get (idx, &
+                                                  name)
+    use iso_c_binding
+    implicit none
+
+    integer, intent(in) :: idx
+    character(len=*)    :: name
+    integer(c_int)      :: l_name
+
+    interface
+      subroutine PDM_part_renum_method_cell_name_get_c (idx,    &
+                                                        name,   &
+                                                        l_name) &
+      bind (c, name='PDM_part_renum_method_cell_name_get_cf')
+        use iso_c_binding
+        implicit none
+
+        integer(c_int), value :: idx
+        character(c_char)     :: name(*)
+        integer(c_int)        :: l_name
+
+      end subroutine PDM_part_renum_method_cell_name_get_c
+    end interface
+
+    call PDM_part_renum_method_cell_name_get_c (idx,    &
+                                                name,   &
+                                                l_name)
+
+  end subroutine PDM_part_renum_method_cell_name_get
 
 end module pdm_part

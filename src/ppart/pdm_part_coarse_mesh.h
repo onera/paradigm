@@ -16,12 +16,6 @@
 #include "pdm_part.h"
 #include "pdm_part_coarse_mesh_priv.h"
 
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
-
 
 #ifdef	__cplusplus
 extern "C" {

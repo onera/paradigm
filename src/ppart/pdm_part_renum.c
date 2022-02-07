@@ -1315,20 +1315,20 @@ const char *name
  */
 
 void
-PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
+PDM_part_renum_method_cell_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  )
 {
-  // const char *_name = PDM_part_renum_method_cell_name_get (*idx);
+  const char *_name = PDM_part_renum_method_cell_name_get (idx);
 
-  // const int _l_name = strlen(_name);
+  const int _l_name = strlen(_name);
 
-  // *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
+  *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
 
-  // strncpy (name, _name, *l_name);
+  strncpy (name, _name, *l_name);
 }
 
 const char *
@@ -1583,20 +1583,20 @@ PDM_part_renum_cell
  */
 
 void
-PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
+PDM_part_renum_method_face_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  )
 {
-  // const char *_name = PDM_part_renum_method_face_name_get (*idx);
+  const char *_name = PDM_part_renum_method_face_name_get (idx);
 
-  // const int _l_name = strlen(_name);
+  const int _l_name = strlen(_name);
 
-  // *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
+  *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
 
-  // strncpy (name, _name, *l_name);
+  strncpy (name, _name, *l_name);
 }
 
 
