@@ -1031,6 +1031,7 @@ static void
 _p2p_stride_var_iexch
 (
  PDM_part_to_part_t                *ptp,
+ PDM_mpi_comm_kind_t                comm_kind,
  const int                          tag,
  const PDM_part_to_part_data_def_t  t_part1_data_def,
  const size_t                       s_data,
@@ -1088,57 +1089,61 @@ _p2p_stride_var_iexch
    *  Stride exchange
    */
      
-  int send_request_stri = -1;
 
-  PDM_part_to_part_issend(ptp,
-                          sizeof (int),
-                          1, // Stride = 1
-                          (const void **)  _part1_to_part2_stride,
-                          tag,
-                          &send_request_stri);
+  //if (PDM_MPI_COMM_KIND_P2P == comm_kind) {
 
-  int* send_n = malloc(ptp->n_rank * sizeof(int));
-  for (int i = 0; i < ptp->n_rank; i++) {
-    send_n[i] = 0;
-  }
+    int send_request_stri = -1;
 
-  int n_blk_send = ptp->async_i_send_buffer[send_request_stri][ptp->n_rank]/sizeof(int);
-  int *blk_send_stride = (int*) ptp->async_send_buffer[send_request_stri];
-  int *blk_send_idx    = malloc( (n_blk_send + 1) * sizeof(int) );
+    PDM_part_to_part_issend(ptp,
+                            sizeof (int),
+                            1, // Stride = 1
+                            (const void **)  _part1_to_part2_stride,
+                            tag,
+                            &send_request_stri);
 
-  for (int i = 0; i < ptp->n_active_rank_send; i++) {
-    int dest = ptp->active_rank_send[i];
-    int beg =       ptp->async_i_send_buffer[send_request_stri][dest]/sizeof(int);
-    int end = beg + ptp->async_n_send_buffer[send_request_stri][dest]/sizeof(int);
-    for(int j = beg; j < end; ++j) {
-      send_n[dest] += blk_send_stride[j];
+    int* send_n = malloc(ptp->n_rank * sizeof(int));
+    for (int i = 0; i < ptp->n_rank; i++) {
+      send_n[i] = 0;
     }
-  }
 
-  blk_send_idx[0] = 0;
-  for(int i = 0; i < n_blk_send; ++i) {
-    blk_send_idx[i+1] = blk_send_idx[i] + blk_send_stride[i];
-  }
+    int n_blk_send = ptp->async_i_send_buffer[send_request_stri][ptp->n_rank]/sizeof(int);
+    int *blk_send_stride = (int*) ptp->async_send_buffer[send_request_stri];
+    int *blk_send_idx    = malloc( (n_blk_send + 1) * sizeof(int) );
 
-  int** _part2_stride = malloc( ptp->n_part2 * sizeof(int*));
-  for(int i = 0; i < ptp->n_part2; ++i) {
-    _part2_stride[i] = malloc( ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]] * sizeof(int));
-  }
+    for (int i = 0; i < ptp->n_active_rank_send; i++) {
+      int dest = ptp->active_rank_send[i];
+      int beg =       ptp->async_i_send_buffer[send_request_stri][dest]/sizeof(int);
+      int end = beg + ptp->async_n_send_buffer[send_request_stri][dest]/sizeof(int);
+      for(int j = beg; j < end; ++j) {
+        send_n[dest] += blk_send_stride[j];
+      }
+    }
 
-  int recv_request_stri = -1;
-  PDM_part_to_part_irecv (ptp,
-                          sizeof (int),
-                          1,
-                          (void **) _part2_stride,
-                          tag,
-                          &recv_request_stri);
+    blk_send_idx[0] = 0;
+    for(int i = 0; i < n_blk_send; ++i) {
+      blk_send_idx[i+1] = blk_send_idx[i] + blk_send_stride[i];
+    }
 
-  PDM_part_to_part_issend_wait(ptp, send_request_stri);
+    int** _part2_stride = malloc( ptp->n_part2 * sizeof(int*));
+    for(int i = 0; i < ptp->n_part2; ++i) {
+      _part2_stride[i] = malloc( ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]] * sizeof(int));
+    }
 
-  _p2p_stride_var_irecv_stride_wait (ptp, 
-                                     &(ptp->async_exch_recv_n[request]), 
-                                     &(ptp->async_exch_recv_idx[request]), 
-                                     recv_request_stri);
+    int recv_request_stri = -1;
+    PDM_part_to_part_irecv (ptp,
+                            sizeof (int),
+                            1,
+                            (void **) _part2_stride,
+                            tag,
+                            &recv_request_stri);
+
+    PDM_part_to_part_issend_wait(ptp, send_request_stri);
+
+    _p2p_stride_var_irecv_stride_wait (ptp, 
+                                       &(ptp->async_exch_recv_n[request]), 
+                                       &(ptp->async_exch_recv_idx[request]), 
+                                       recv_request_stri);
+  //}
 
   /*
    * Exchange data
@@ -3396,6 +3401,7 @@ PDM_part_to_part_iexch
     if (k_comm == PDM_MPI_COMM_KIND_P2P) {
 
       _p2p_stride_var_iexch (ptp,
+                             PDM_MPI_COMM_KIND_P2P,
                              tag,
                              t_part1_data_def,
                              s_data,

@@ -137,7 +137,32 @@ PDM_part_to_part_t *ptp,
 
 /**
  *
- * \brief Wait a asynchronus issend
+ * \brief Initialize an exchange based on MPI_ialltoall
+ *
+ * \param [in]   ptp                     Block to part structure
+ * \param [in]   s_data                  Data size
+ * \param [in]   cst_stride              Constant stride
+ * \param [in]   ref_part2_to_part1_data Data in ref_gnum2 order
+ * \param [out]  part1_part2_data        Data in part1_to_part2 order
+ * \param [out]  request                 Request
+ *
+ */
+
+void
+PDM_part_to_part_reserve_ialltoall
+(
+PDM_part_to_part_t *ptp,
+ const size_t       s_data,
+ const int          cst_stride,
+ void             **ref_part2_to_part1_data,
+ void             **part1_part2_data,
+ int               *request
+);
+
+
+/**
+ *
+ * \brief Wait a asynchronus alltoall wait
  *
  * \param [in]  ptp           part to part structure
  * \param [in]  request       Request
@@ -151,6 +176,22 @@ PDM_part_to_part_ialltoall_wait
  int                 request
 );
 
+
+/**
+ *
+ * \brief Wait a asynchronus reverse alltoall wait
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part_to_part_reverse_ialltoall_wait
+(
+ PDM_part_to_part_t *ptp,
+ int                 request
+);
 
 
 /**
