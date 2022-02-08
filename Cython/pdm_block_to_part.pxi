@@ -44,7 +44,7 @@ cdef class BlockToPart:
     cdef PDM_block_to_part_t* BTP
     cdef int                  n_part
     cdef int                  dn_elt
-    cdef int*                 pn_elt,
+    cdef int*                 pn_elt
     cdef MPI.Comm             py_comm
     # ************************************************************************
     # ------------------------------------------------------------------------

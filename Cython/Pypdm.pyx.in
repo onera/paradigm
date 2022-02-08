@@ -240,6 +240,13 @@ cdef PDM_g_num_t** np_list_to_gnum_pointers(list datas):
     array[i] = <PDM_g_num_t *> numpy_gnum.data
   return array
 
+cdef double** np_list_to_double_pointers(list datas):
+  cdef NPY.ndarray[double, ndim=1, mode='c'] numpy_double
+  cdef double** array = <double **> malloc(len(datas) * sizeof(double*))
+  for i, numpy_double in enumerate(datas):
+    array[i] = <double *> numpy_double.data
+  return array
+
 
 cdef create_numpy_i(int* array, int size, bint flag_owndata=True):
     dim = <NPY.npy_intp> size
