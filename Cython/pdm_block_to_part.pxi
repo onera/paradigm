@@ -141,7 +141,6 @@ cdef class BlockToPart:
 
         if _stride_t == PDM_STRIDE_VAR_INTERLACED:
           stride = create_numpy_i(_part_stride[i_part], self.pn_elt[i_part])
-          PyArray_ENABLEFLAGS(stride, NPY.NPY_OWNDATA)
           part_stride.append(stride)
           dim_np = <NPY.npy_intp> stride.sum()
         else:
