@@ -161,7 +161,7 @@ cdef class BlockToPart:
       return part_stride, part_data
 
     # ------------------------------------------------------------------
-    def exchange_field_inplace(self, NPY.ndarray block_data, list part_data, block_stride=1):
+    def exchange_field_inplace(self, NPY.ndarray block_data, list part_data, block_stride=1, list part_stride=None):
       """
       Wrapping for PDM_block_to_part_exch : transfert a distributed data field to the
       partitions. Fill the pre-allocated partitionned arrays
@@ -172,10 +172,12 @@ cdef class BlockToPart:
                            and with same datatype than block_data
       :param block_stride: Stride for distributed array. Can be either an array of size dn_elt (variable
                            stride will be used) or an integer (cst stride will be used)
+      :param part_stride:  List of the partN pre allocated parititioned data strides
       """
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
       cdef PDM_stride_t _stride_t
       cdef int*         _block_stride
+      cdef int**        _part_stride = NULL
 
       assert len(part_data) == self.n_part
       if isinstance(block_stride, int):
@@ -184,12 +186,15 @@ cdef class BlockToPart:
         _block_stride[0] = block_stride
         assert_single_dim_np(block_data, block_data.dtype, block_stride*self.dn_elt)
       elif isinstance(block_stride, NPY.ndarray):
-        raise NotImplementedError("Variable stride is not supported for inplace exchange") #Todo
         _stride_t = PDM_STRIDE_VAR_INTERLACED
         assert_single_dim_np(block_stride, NPY.int32, self.dn_elt)
         assert_single_dim_np(block_data, block_data.dtype, block_stride.sum())
         numpy_int = block_stride
         _block_stride = <int *> numpy_int.data
+        assert len(part_stride) == self.n_part
+        for i_part in range(self.n_part):
+          assert_single_dim_np(part_stride[i_part], NPY.int32, self.pn_elt[i_part])
+        _part_stride = np_list_to_int_pointers(part_stride)
       else:
         raise ValueError("Invalid stride in BtP exchange")
 
@@ -197,9 +202,9 @@ cdef class BlockToPart:
       assert self.py_comm.allreduce(s_data, op=MPI.MIN) == self.py_comm.allreduce(s_data, op=MPI.MAX) == s_data
 
       for i_part in range(self.n_part):
-        assert_single_dim_np(part_data[i_part], block_data.dtype, _block_stride[0]*self.pn_elt[i_part])
+        expt_size = part_stride[i_part].sum() if _stride_t == PDM_STRIDE_VAR_INTERLACED else block_stride*self.pn_elt[i_part]
+        assert_single_dim_np(part_data[i_part], block_data.dtype, expt_size)
 
-      cdef int**  _part_stride = NULL
       cdef void** _part_data   = np_list_to_void_pointers(part_data)
       PDM_block_to_part_exch(self.BTP,
                              s_data,
@@ -208,7 +213,8 @@ cdef class BlockToPart:
                     <void *> block_data.data,
                              _part_stride,
                              _part_data)
-      free(_block_stride)
+      if _stride_t != PDM_STRIDE_VAR_INTERLACED:
+        free(_block_stride)
       free(_part_data)
 
     # ------------------------------------------------------------------
@@ -217,9 +223,12 @@ cdef class BlockToPart:
                                    PDM_stride_t t_stride = <PDM_stride_t> 0,
                                    BlkStride = 1):
       """ Shortcut to exchange multiple fieds stored in dict """
-      assert t_stride == PDM_STRIDE_CST_INTERLACED
+      assert t_stride != PDM_STRIDE_CST_INTERLEAVED
       for field_name in dField:
-        self.exchange_field_inplace(dField[field_name], pField[field_name], BlkStride)
+        PartStride = None
+        if field_name + '#PDM_Stride' in pField:
+          PartStride = pField[field_name + '#PDM_Stride']
+        self.exchange_field_inplace(dField[field_name], pField[field_name], BlkStride, PartStride)
 
     # ------------------------------------------------------------------
     def BlockToPart_Exchange2(self, dict         dField,
