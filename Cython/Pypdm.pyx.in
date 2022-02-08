@@ -1,6 +1,7 @@
 # Import Section (Python) :
 # ------------------------
 import numpy     as NPY
+from mpi4py import MPI
 
 # Import Section (Cython) :
 # ------------------------
