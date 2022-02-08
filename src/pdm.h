@@ -9,12 +9,6 @@
  * Macro definitions
  *============================================================================*/
 
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
-
 #if defined (__uxpv__)
 #define ARGF_SUPP_CHAINE
 #else
