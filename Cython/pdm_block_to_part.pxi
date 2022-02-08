@@ -163,6 +163,7 @@ cdef class BlockToPart:
           block_stride = <int *> BlkStride.data
           part_stride  = <int **>  malloc(self.partN * sizeof(void **))
           part_data    = <void **> malloc(self.partN * sizeof(void **))
+          t_stride = PDM_STRIDE_VAR_INTERLACED
           # part_stride  = NULL
           # part_data    = NULL
 
@@ -262,6 +263,7 @@ cdef class BlockToPart:
             block_stride = <int *> BlkStride.data
             part_stride  = NULL
             part_data    = NULL
+            t_stride = PDM_STRIDE_VAR_INTERLACED
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::

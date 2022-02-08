@@ -223,7 +223,7 @@ cdef class PartToBlock:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Prepare stride
-        if(self.t_stride == 0): # Cst Stride
+        if(self.t_stride != PDM_STRIDE_VAR_INTERLACED): # Cst Stride
            strideOne     = 1
            part_stride   = NULL
         else:
@@ -333,7 +333,7 @@ cdef class PartToBlock:
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
           # > Stride management
-          if(self.t_stride == 1 ):
+          if(self.t_stride == PDM_STRIDE_VAR_INTERLACED):
             dimStri = <NPY.npy_intp> blk_size
             # dField[field+'#Stride'] = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
             tmpData = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
@@ -344,7 +344,7 @@ cdef class PartToBlock:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Deallocate
         free(part_data)
-        if(self.t_stride != 0): # Var Stride
+        if(self.t_stride == PDM_STRIDE_VAR_INTERLACED): # Var Stride
           free(part_stride)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
