@@ -128,6 +128,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_gnum_f 2)
   test_fortran_create (pdm_t_part_f 2)
   test_fortran_create (pdm_t_writer_f 2)
+  test_fortran_create (pdm_t_mesh_check_f 1)
 endif()
 
 test_c_create (pdm_t_closest_points_1_point 1)
@@ -141,3 +142,4 @@ test_c_create (pdm_t_win_shared 1)
 
 test_c_create (pdm_t_point_in_polygon 1)
 test_c_create (pdm_t_line_intersection 1)
+test_c_create (pdm_t_mesh_check 1)
