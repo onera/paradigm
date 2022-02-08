@@ -9,12 +9,6 @@
  * Macro definitions
  *============================================================================*/
 
-#if defined (__uxpv__)
-#define ARGF_SUPP_CHAINE
-#else
-#define ARGF_SUPP_CHAINE , ...
-#endif
-
 #ifdef PDM_LONG_G_NUM
 #define PDM_FMT_G_NUM "%ld"
 #else
