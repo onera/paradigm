@@ -74,6 +74,21 @@ typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
  * Public function interfaces
  *============================================================================*/
 
+/**
+ *
+ * \brief Get the dimension of an element
+ *
+ * \param[in]  type    Element type
+ *
+ * \return     Dimension of the element
+ *
+ */
+
+int
+PDM_Mesh_nodal_elt_dim_get
+(
+ PDM_Mesh_nodal_elt_t type
+ );
 
 int
 PDM_Mesh_nodal_is_2D_element

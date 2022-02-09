@@ -152,31 +152,7 @@ int main(int argc, char *argv[])
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
 
-  int elt_dim = 0;
-  switch(t_elt) {
-  case PDM_MESH_NODAL_BAR2:
-  case PDM_MESH_NODAL_BARHO:
-    elt_dim = 1;
-    break;
-  case PDM_MESH_NODAL_TRIA3:
-  case PDM_MESH_NODAL_QUAD4:
-  case PDM_MESH_NODAL_TRIAHO:
-  case PDM_MESH_NODAL_QUADHO:
-    elt_dim = 2;
-    break;
-  case PDM_MESH_NODAL_TETRA4:
-  case PDM_MESH_NODAL_PYRAMID5:
-  case PDM_MESH_NODAL_PRISM6:
-  case PDM_MESH_NODAL_HEXA8:
-  case PDM_MESH_NODAL_TETRAHO:
-  case PDM_MESH_NODAL_PYRAMIDHO:
-  case PDM_MESH_NODAL_PRISMHO:
-  case PDM_MESH_NODAL_HEXAHO:
-    elt_dim = 3;
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
-  }
+  int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
   int *ijk_to_ijk  = malloc (sizeof(int) * n_nodes * elt_dim);
   int *user_to_ijk = malloc (sizeof(int) * n_nodes * elt_dim);
