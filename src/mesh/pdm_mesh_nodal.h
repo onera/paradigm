@@ -52,6 +52,13 @@ typedef enum {
   PDM_MESH_NODAL_PRISM6,
   PDM_MESH_NODAL_HEXA8,
   PDM_MESH_NODAL_POLY_3D,
+  PDM_MESH_NODAL_BARHO,
+  PDM_MESH_NODAL_TRIAHO,
+  PDM_MESH_NODAL_QUADHO,
+  PDM_MESH_NODAL_TETRAHO,
+  PDM_MESH_NODAL_PYRAMIDHO,
+  PDM_MESH_NODAL_PRISMHO,
+  PDM_MESH_NODAL_HEXAHO,
   PDM_MESH_NODAL_N_ELEMENT_TYPES
 
 } PDM_Mesh_nodal_elt_t;
@@ -95,7 +102,7 @@ int
 PDM_Mesh_nodal_n_vtx_elt_get
 (
   PDM_Mesh_nodal_elt_t type,
-  const int order
+  const int            order
 );
 
 /**

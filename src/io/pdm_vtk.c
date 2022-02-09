@@ -47,84 +47,68 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
 static int _vtk_elt_type
 (
  const PDM_Mesh_nodal_elt_t elt_type,
  const int                  order
  )
 {
-  //assert (order <= 2);
-
   int vtk_elt_type = -1;
+
   switch (elt_type) {
-  case PDM_MESH_NODAL_POINT:
-    vtk_elt_type = 1;
-    break;
-  case PDM_MESH_NODAL_BAR2:
-    if (order == 1) {
+    case PDM_MESH_NODAL_POINT:
+      vtk_elt_type = 1;
+      break;
+    case PDM_MESH_NODAL_BAR2:
       vtk_elt_type = 3;
-      //} else if (order == 2) {
-      // vtk_elt_type = 21;
-    } else {
-      vtk_elt_type = 68;
-    }
-    break;
-  case PDM_MESH_NODAL_TRIA3:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_TRIA3:
       vtk_elt_type = 5;
-      //} else if (order == 2) {
-      //vtk_elt_type = 22;
-    } else {
-      vtk_elt_type = 69;
-    }
-    break;
-  case PDM_MESH_NODAL_QUAD4:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_QUAD4:
       vtk_elt_type = 9;
-      //} else if (order == 2) {
-      //  vtk_elt_type = 23;
-    } else {
-      vtk_elt_type = 70;
-    }
-    break;
-  case PDM_MESH_NODAL_TETRA4:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_TETRA4:
       vtk_elt_type = 10;
-      //} else if (order == 2) {
-      //vtk_elt_type = 24;
-    } else {
-      vtk_elt_type = 71;
-    }
-    break;
-  case PDM_MESH_NODAL_PYRAMID5:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_PYRAMID5:
       vtk_elt_type = 14;
-    } else if (order == 2) {
-      vtk_elt_type = 27;
-    } else {
-      vtk_elt_type = 66;
-    }
-    break;
-  case PDM_MESH_NODAL_PRISM6:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_PRISM6:
       vtk_elt_type = 13;
-      //} else if (order == 2) {
-      //vtk_elt_type = 26;
-    } else {
-      vtk_elt_type = 73;
-    }
-    break;
-  case PDM_MESH_NODAL_HEXA8:
-    if (order == 1) {
+      break;
+    case PDM_MESH_NODAL_HEXA8:
       vtk_elt_type = 12;
-      //} else if (order == 2) {
-      //vtk_elt_type = 25;
-    } else {
+      break;
+
+    case PDM_MESH_NODAL_BARHO:
+      vtk_elt_type = 68;
+      break;
+    case PDM_MESH_NODAL_TRIAHO:
+      vtk_elt_type = 69;
+      break;
+    case PDM_MESH_NODAL_QUADHO:
+      vtk_elt_type = 70;
+      break;
+    case PDM_MESH_NODAL_TETRAHO:
+      vtk_elt_type = 71;
+      break;
+    case PDM_MESH_NODAL_PYRAMIDHO:
+      if (order == 2) {
+        vtk_elt_type = 27;
+      } else {
+        vtk_elt_type = 66;
+      }
+      break;
+    case PDM_MESH_NODAL_PRISMHO:
+      vtk_elt_type = 73;
+      break;
+    case PDM_MESH_NODAL_HEXAHO:
       vtk_elt_type = 72;
-    }
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "type %d is not a valid std elt type\n", elt_type);
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "type %d is not a valid std elt type\n", elt_type);
   }
 
   return vtk_elt_type;
@@ -143,10 +127,21 @@ _ijk_to_vtk
   switch (elt_type) {
 
   case PDM_MESH_NODAL_POINT:
-    idx[0] = 0;
-    break;
-
   case PDM_MESH_NODAL_BAR2:
+  case PDM_MESH_NODAL_TRIA3:
+  case PDM_MESH_NODAL_QUAD4:
+  case PDM_MESH_NODAL_TETRA4:
+  case PDM_MESH_NODAL_PYRAMID5:
+  case PDM_MESH_NODAL_PRISM6:
+  case PDM_MESH_NODAL_HEXA8:
+  {
+    int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
+    for (int i = 0; i < n_vtx; i++) {
+      idx[i] = i;
+    }
+    break;
+  }
+  case PDM_MESH_NODAL_BARHO:
     idx[0] = 0;
     idx[1] = order;
     for (int i = 1; i < order; i++) {
@@ -154,7 +149,7 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_TRIA3:
+  case PDM_MESH_NODAL_TRIAHO:
     if (order == 1) {
       idx[2] = 2;
       idx[0] = 0; idx[1] = 1;
@@ -178,7 +173,7 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_QUAD4:
+  case PDM_MESH_NODAL_QUADHO:
     if (order == 1) {
       idx[3] = 2; idx[2] = 3;
       idx[0] = 0; idx[1] = 1;
@@ -196,7 +191,7 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_TETRA4:
+  case PDM_MESH_NODAL_TETRAHO:
     if (order == 1) {
       idx[3] = 3;
 
@@ -216,7 +211,7 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_PRISM6:
+  case PDM_MESH_NODAL_PRISMHO:
     if (order == 1) {
       idx[5] = 4;
       idx[3] = 3; idx[4] = 5;
@@ -240,7 +235,7 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_HEXA8:
+  case PDM_MESH_NODAL_HEXAHO:
     if (order == 1) {
       idx[7] = 6; idx[6] = 7;
       idx[4] = 4; idx[5] = 5;
@@ -264,11 +259,8 @@ _ijk_to_vtk
     }
     break;
 
-  case PDM_MESH_NODAL_POLY_2D:
-  case PDM_MESH_NODAL_PYRAMID5:
-  case PDM_MESH_NODAL_POLY_3D:
-  case PDM_MESH_NODAL_N_ELEMENT_TYPES:
-    PDM_error(__FILE__, __LINE__, 0, "HEXA VTK ordering not implemented for order %d\n", order);
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "VTK ordering not implemented for element type %d at order %d\n", (int) elt_type, order);
     break;
   }
 }

@@ -1250,7 +1250,9 @@ PDM_Mesh_nodal_is_2D_element
 {
   return type==PDM_MESH_NODAL_TRIA3
       || type==PDM_MESH_NODAL_QUAD4
-      || type==PDM_MESH_NODAL_POLY_2D;
+      || type==PDM_MESH_NODAL_POLY_2D
+      || type==PDM_MESH_NODAL_TRIAHO
+      || type==PDM_MESH_NODAL_QUADHO;
 }
 
 int
@@ -1263,7 +1265,11 @@ PDM_Mesh_nodal_is_3D_element
       || type==PDM_MESH_NODAL_PYRAMID5
       || type==PDM_MESH_NODAL_PRISM6
       || type==PDM_MESH_NODAL_HEXA8
-      || type==PDM_MESH_NODAL_POLY_3D;
+      || type==PDM_MESH_NODAL_POLY_3D
+      || type==PDM_MESH_NODAL_TETRAHO
+      || type==PDM_MESH_NODAL_PYRAMIDHO
+      || type==PDM_MESH_NODAL_PRISMHO
+      || type==PDM_MESH_NODAL_HEXAHO;
 }
 
 
@@ -1281,7 +1287,7 @@ int
 PDM_Mesh_nodal_n_vtx_elt_get
 (
   PDM_Mesh_nodal_elt_t type,
-  const int order
+  const int            order
 )
 {
   switch (type) {
@@ -1289,32 +1295,50 @@ PDM_Mesh_nodal_n_vtx_elt_get
     return 1;
     break;
   case PDM_MESH_NODAL_BAR2 :
-    return order + 1;
+    return 2;
     break;
   case PDM_MESH_NODAL_TRIA3 :
-    return (order + 1) * (order + 2) / 2;
+    return 3;
     break;
   case PDM_MESH_NODAL_QUAD4 :
-    return (order + 1) * (order + 1);
+    return 4;
     break;
   case PDM_MESH_NODAL_TETRA4 :
-    return (order + 1) * (order + 2) * (order + 3) / 6;
+    return 4;
     break;
   case PDM_MESH_NODAL_PYRAMID5 :
-    /*if (order != 1) {
-      PDM_error (__FILE__, __LINE__, 0, "Pyramid not implemented yet for order > 1\n");
-    }
-    return 5;*/
-    return (order + 1) * (order + 2) * (2*order + 3) / 6;
+    return 5;
     break;
   case PDM_MESH_NODAL_PRISM6 :
-    return (order + 1) * (order + 1) * (order + 2) / 2;
+    return 6;
     break;
   case PDM_MESH_NODAL_HEXA8 :
+    return 8;
+    break;
+
+  case PDM_MESH_NODAL_BARHO :
+    return order + 1;
+    break;
+  case PDM_MESH_NODAL_TRIAHO :
+    return (order + 1) * (order + 2) / 2;
+    break;
+  case PDM_MESH_NODAL_QUADHO :
+    return (order + 1) * (order + 1);
+    break;
+  case PDM_MESH_NODAL_TETRAHO :
+    return (order + 1) * (order + 2) * (order + 3) / 6;
+    break;
+  case PDM_MESH_NODAL_PYRAMIDHO :
+    return (order + 1) * (order + 2) * (2*order + 3) / 6;
+    break;
+  case PDM_MESH_NODAL_PRISMHO :
+    return (order + 1) * (order + 1) * (order + 2) / 2;
+    break;
+  case PDM_MESH_NODAL_HEXAHO :
     return (order + 1) * (order + 1) * (order + 1);
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Polyu3D\n");
+    PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Poly3D\n");
   }
   return -1;
 }

@@ -325,19 +325,32 @@ _dmesh_nodal_dump_vtk
      */
     char filename[999];
     sprintf(filename, "%s_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
-    PDM_vtk_write_std_elements_ho(filename,
-                                  order,
-                                  pn_vtx,
-                                  pvtx_coord_out,
-                                  pvtx_ln_to_gn,
-                                  t_elt,
-                                  n_elt,
-                                  pcell_vtx,
-                                  delmt_ln_to_gn,
-                                  n_field,
-                (const char   **) &field_name,
-                (const double **) field);
-
+    if (order == 1) {
+      PDM_vtk_write_std_elements_double(filename,
+                                        pn_vtx,
+                                        pvtx_coord_out,
+                                        pvtx_ln_to_gn,
+                                        t_elt,
+                                        n_elt,
+                                        pcell_vtx,
+                                        delmt_ln_to_gn,
+                                        n_field,
+                                        (const char   **) &field_name,
+                                        (const double **) field);
+    } else {
+      PDM_vtk_write_std_elements_ho(filename,
+                                    order,
+                                    pn_vtx,
+                                    pvtx_coord_out,
+                                    pvtx_ln_to_gn,
+                                    t_elt,
+                                    n_elt,
+                                    pcell_vtx,
+                                    delmt_ln_to_gn,
+                                    n_field,
+                                    (const char   **) &field_name,
+                                    (const double **) field);
+    }
     free(tmp_pvtx_coord);
     free(pvtx_ln_to_gn);
     free(pcell_vtx_idx);
@@ -1190,14 +1203,20 @@ int main(int argc, char *argv[])
   int                  n_part = 1;
   int                  post   = 0;
   PDM_Mesh_nodal_elt_t t_elt  = PDM_MESH_NODAL_TRIA3;
-  // 2 -> tria
-  // 3 -> quad
-  // 5 -> tetra
-  // 6 -> pyramid
-  // 7 -> prism
-  // 8 -> hexa
+  //  2 -> tria
+  //  3 -> quad
+  //  5 -> tetra
+  //  6 -> pyramid
+  //  7 -> prism
+  //  8 -> hexa
+  // 11 -> tria_ho
+  // 12 -> quad_ho
+  // 13 -> tetra_ho
+  // 14 -> pyramid_ho
+  // 15 -> prism_ho
+  // 16 -> hexa_ho
 
-  #ifdef PDM_HAVE_PARMETIS
+#ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
@@ -1205,7 +1224,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-/*
+  /*
    *  Read args
    */
 
@@ -1221,6 +1240,17 @@ int main(int argc, char *argv[])
              &post,
              (int *) &method);
 
+  if (t_elt == PDM_MESH_NODAL_TRIA3    ||
+      t_elt == PDM_MESH_NODAL_QUAD4    ||
+      t_elt == PDM_MESH_NODAL_TETRA4   ||
+      t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+      t_elt == PDM_MESH_NODAL_PRISM6   ||
+      t_elt == PDM_MESH_NODAL_HEXA8) {
+    if (order != 1) {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid order %d for linear element type %d\n", order, (int) t_elt);
+    }
+  }
+
   /*
    *  Init
    */
@@ -1235,19 +1265,21 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_size(comm, &n_rank);
 
   int dim = 3;
-  if (t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 ) {
+  if (t_elt == PDM_MESH_NODAL_TRIA3  ||
+      t_elt == PDM_MESH_NODAL_QUAD4  ||
+      t_elt == PDM_MESH_NODAL_TRIAHO ||
+      t_elt == PDM_MESH_NODAL_QUADHO) {
     dim = 2;
   }
 
   if (order > 3) {
     int *ijk = NULL;
 
-    for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_BAR2;
-         type <= PDM_MESH_NODAL_HEXA8;
+    for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_BARHO;
+         type <= PDM_MESH_NODAL_HEXAHO;
          type++) {
 
-      if (type == PDM_MESH_NODAL_POLY_2D ||
-          type == PDM_MESH_NODAL_PYRAMID5) continue;
+      if (type == PDM_MESH_NODAL_PYRAMIDHO) continue;
 
       ijk = PDM_vtk_lagrange_to_ijk(type, order);
       PDM_ho_ordering_user_to_ijk_add ("PDM_HO_ORDERING_VTK",
@@ -1326,15 +1358,16 @@ int main(int argc, char *argv[])
     }
   }
 
-  /* Bounding boxes */
-  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
-  _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
+  if (t_elt > PDM_MESH_NODAL_HEXA8) {
+    /* Bounding boxes */
+    _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+    _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
 
-
-  /* Reorder */
-  PDM_dmesh_nodal_reorder (dmn,
-                           "PDM_HO_ORDERING_VTK",
-                           order);
+    /* Reorder */
+    PDM_dmesh_nodal_reorder (dmn,
+                             "PDM_HO_ORDERING_VTK",
+                             order);
+  }
 
   if (dim == 3) {
     _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic");
