@@ -325,7 +325,7 @@ int main
   /*
    *  Internal interfaces
    */
-  int *interface_dn = (int *) malloc(sizeof(int) * n_interface);
+  int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
   PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
   int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
 
@@ -364,7 +364,6 @@ int main
       }
     }
   }
-  free(distrib_i);
 
 
 
@@ -401,7 +400,6 @@ int main
       }
     }
   }
-  free(distrib_j);
 
 
 
@@ -438,9 +436,8 @@ int main
       }
     }
   }
-  free(distrib_k);
 
-  printf("i_interface = %d / %d\n", i_interface, n_interface);
+  // printf("i_interface = %d / %d\n", i_interface, n_interface);
 
   /*
    *  Periodic interfaces
@@ -448,6 +445,9 @@ int main
   //...
 
 
+  free(distrib_i);
+  free(distrib_j);
+  free(distrib_k);
 
 
   PDM_domain_interface_set (dom_intrf,
