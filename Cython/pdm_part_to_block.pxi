@@ -147,6 +147,7 @@ cdef class PartToBlock:
       :param part_data:   List of partitioned data arrays, each beeing 1 dimensional and with same datatype
       :param part_stride: Stride for partitioned arrays. Can be either a list of n_part array, each element beeing of size
                           pn_elt[i_part] (variable stride will be used) or an integer (cst stride will be used)
+      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
       """
       cdef PDM_stride_t _stride_t
       

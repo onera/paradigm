@@ -100,6 +100,7 @@ cdef class BlockToPart:
       :param block_data:   Distributed data array, 1 dimensional and with same datatype for each rank
       :param block_stride: Stride for distributed array. Can be either an array of size dn_elt (variable
                            stride will be used) or an integer (cst stride will be used)
+      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
       """
 
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
@@ -174,6 +175,7 @@ cdef class BlockToPart:
       :param block_stride: Stride for distributed array. Can be either an array of size dn_elt (variable
                            stride will be used) or an integer (cst stride will be used)
       :param part_stride:  List of the partN pre allocated parititioned data strides
+      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
       """
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
       cdef PDM_stride_t _stride_t
