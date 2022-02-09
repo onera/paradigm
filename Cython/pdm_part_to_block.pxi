@@ -138,7 +138,7 @@ cdef class PartToBlock:
           free(_weight)
 
     # ------------------------------------------------------------------------
-    def exchange_field(self, list part_data, part_stride=1):
+    def exchange_field(self, list part_data, part_stride=1, bint interlaced_str=True):
       """
       Wrapping for PDM_part_to_block_exch : transfert partioned data fields to the
       distribution, allocate and return the distributed array.
@@ -153,7 +153,7 @@ cdef class PartToBlock:
       cdef int   _part_stride_cst = 0
       cdef int** _part_stride = NULL
       if isinstance(part_stride, int):
-        _stride_t = PDM_STRIDE_CST_INTERLACED
+        _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
         _part_stride_cst = part_stride
       elif isinstance(part_stride, list):
         _stride_t = PDM_STRIDE_VAR_INTERLACED
@@ -210,13 +210,16 @@ cdef class PartToBlock:
 
       return block_stride, block_data
     # ------------------------------------------------------------------------
-    def PartToBlock_Exchange(self, dict dField, dict pField, pStrid = 1):
+    def PartToBlock_Exchange(self, dict dField, dict pField, pStrid=1, bint interlaced_str=True):
       """ Shortcut to exchange multiple fieds stored in dict """
       for field_name, part_data in pField.items():
-        block_stride, block_data = self.exchange_field(part_data, pStrid)
+        block_stride, block_data = self.exchange_field(part_data, pStrid, interlaced_str)
         dField[field_name] = block_data
         if block_stride is not None:
           dField[field_name + "#Stride"] = block_stride
+          dField[field_name + "#PDM_Stride"] = block_stride
+          warnings.warn("Stride is now know as #PDM_Stride instead of #Stride. Old key will be removed in further release",
+            DeprecationWarning, stacklevel=2)
 
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):

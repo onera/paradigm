@@ -1,3 +1,4 @@
+import warnings
 
 cdef extern from "pdm_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -90,7 +91,7 @@ cdef class BlockToPart:
         free(_ln_to_gn)
 
     # ------------------------------------------------------------------
-    def exchange_field(self, NPY.ndarray block_data, block_stride=1):
+    def exchange_field(self, NPY.ndarray block_data, block_stride=1, bint interlaced_str=True):
       """
       Wrapping for PDM_block_to_part_exch2 : transfert a distributed data field to the
       partitions, allocate and return the partitionned array list.
@@ -106,7 +107,7 @@ cdef class BlockToPart:
       cdef int*         _block_stride
 
       if isinstance(block_stride, int):
-        _stride_t = PDM_STRIDE_CST_INTERLACED
+        _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
         _block_stride = <int *> malloc(1 * sizeof(int *))
         _block_stride[0] = block_stride
         assert_single_dim_np(block_data, block_data.dtype, block_stride*self.dn_elt)
@@ -160,7 +161,8 @@ cdef class BlockToPart:
       return part_stride, part_data
 
     # ------------------------------------------------------------------
-    def exchange_field_inplace(self, NPY.ndarray block_data, list part_data, block_stride=1, list part_stride=None):
+    def exchange_field_inplace(self, NPY.ndarray block_data, list part_data, 
+      block_stride=1, list part_stride=None, bint interlaced_str=True):
       """
       Wrapping for PDM_block_to_part_exch : transfert a distributed data field to the
       partitions. Fill the pre-allocated partitionned arrays
@@ -180,7 +182,7 @@ cdef class BlockToPart:
 
       assert len(part_data) == self.n_part
       if isinstance(block_stride, int):
-        _stride_t = PDM_STRIDE_CST_INTERLACED
+        _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
         _block_stride = <int *> malloc(1 * sizeof(int *))
         _block_stride[0] = block_stride
         assert_single_dim_np(block_data, block_data.dtype, block_stride*self.dn_elt)
@@ -219,26 +221,36 @@ cdef class BlockToPart:
     # ------------------------------------------------------------------
     def BlockToPart_Exchange(self, dict         dField,
                                    dict         pField,
-                                   PDM_stride_t t_stride = <PDM_stride_t> 0,
-                                   BlkStride = 1):
+                                   PDM_stride_t t_stride = <PDM_stride_t> -1,
+                                   BlkStride = 1,
+                                   bint interlaced_str=True):
       """ Shortcut to exchange multiple fieds stored in dict """
-      assert t_stride != PDM_STRIDE_CST_INTERLEAVED
+      if t_stride != -1:
+        warnings.warn("Parameter t_stride is deprecated and will be removed in further release",
+          DeprecationWarning, stacklevel=2)
+      dField = {key:data for key,data in dField.items() \
+        if not (key.endswith("#PDM_Stride") or key.endswith("#Stride"))} #To remove when PtB output always #PDM_Stride
       for field_name in dField:
         PartStride = None
         if field_name + '#PDM_Stride' in pField:
           PartStride = pField[field_name + '#PDM_Stride']
-        self.exchange_field_inplace(dField[field_name], pField[field_name], BlkStride, PartStride)
+        self.exchange_field_inplace(dField[field_name], pField[field_name], BlkStride, PartStride, interlaced_str)
 
     # ------------------------------------------------------------------
     def BlockToPart_Exchange2(self, dict         dField,
                                     dict         pField,
-                                    PDM_stride_t t_stride = <PDM_stride_t> 0,
-                                    BlkStride = 1):
+                                    PDM_stride_t t_stride = <PDM_stride_t> -1,
+                                    BlkStride = 1,
+                                    bint interlaced_str=True):
 
       """ Shortcut to exchange multiple fieds stored in dict """
-      assert t_stride != PDM_STRIDE_CST_INTERLEAVED
+      if t_stride != -1:
+        warnings.warn("Parameter t_stride is deprecated and will be removed in further release",
+          DeprecationWarning, stacklevel=2)
+      dField = {key:data for key,data in dField.items() \
+        if not (key.endswith("#PDM_Stride") or key.endswith("#Stride"))}  #To remove when PtB output always #PDM_Stride
       for field_name, field in dField.items():
-        part_stride, part_data = self.exchange_field(field, BlkStride)
+        part_stride, part_data = self.exchange_field(field, BlkStride, interlaced_str)
         pField[field_name] = part_data
         if part_stride is not None:
           pField[field_name + "#PDM_Stride"] = part_stride
