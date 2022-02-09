@@ -2269,6 +2269,26 @@ void PDM_domain_interface_free
 }
 
 
+// Dans partitionning algorithm
+void
+PDM_ddomain_interface_to_pdomain_interface
+(
+  PDM_domain_interface_t  *ddi,
+  int                      n_part,
+  int                     *pn_entity,
+  PDM_g_num_t            **entity_ln_to_gn
+)
+{
+  PDM_UNUSED(ddi);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(pn_entity);
+  PDM_UNUSED(entity_ln_to_gn);
+
+  // PDM_part_domain_interface* PDM_part_domain_interface_create();
+  // le part domain doit contenir égalment la notion de n_part ...
+
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

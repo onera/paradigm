@@ -110,6 +110,14 @@ PDM_part_extension_set_part
   double               *vtx_coord
 );
 
+// void
+// PDM_part_extension_set_part_domain_interface
+// (
+//   PDM_part_extension_t      *part_ext,
+//   PDM_part_domain_interface *pdi
+// );
+// Sinon interface completement sans structure
+
 void
 PDM_part_extension_free
 (
