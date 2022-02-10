@@ -280,9 +280,9 @@ int main
    *  Initialize structs
    */
   int n_interface =
-  n_dom_j*n_dom_k*(n_dom_i-1 + periodic_i) +
-  n_dom_k*n_dom_i*(n_dom_j-1 + periodic_j) +
-  n_dom_i*n_dom_j*(n_dom_k-1 + periodic_k);
+  n_dom_j*n_dom_k*(n_dom_i - 1 + periodic_i) +
+  n_dom_k*n_dom_i*(n_dom_j - 1 + periodic_j) +
+  n_dom_i*n_dom_j*(n_dom_k - 1 + periodic_k);
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
@@ -323,7 +323,7 @@ int main
                                                                   comm);
 
   /*
-   *  Internal interfaces
+   *  Interfaces
    */
   int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
   PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
@@ -335,12 +335,12 @@ int main
   PDM_g_num_t *distrib_i = PDM_compute_uniform_entity_distribution(comm,
                                                                    ny * nz);
 
-  for (int i = 0; i < n_dom_i-1; i++) {
+  for (int i = 0; i < n_dom_i - 1 + periodic_i; i++) {
     for (int k = 0; k < n_dom_k; k++) {
       for (int j = 0; j < n_dom_j; j++) {
 
         int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = i_domain1 + 1;
+        int i_domain2 = (i+1)%n_dom_i + n_dom_i*(j + n_dom_j*k);// +1?
 
         interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
 
@@ -364,6 +364,7 @@ int main
       }
     }
   }
+  free(distrib_i);
 
 
 
@@ -371,12 +372,12 @@ int main
   PDM_g_num_t *distrib_j = PDM_compute_uniform_entity_distribution(comm,
                                                                    ny * nz);
 
-  for (int j = 0; j < n_dom_j-1; j++) {
+  for (int j = 0; j < n_dom_j - 1 + periodic_j; j++) {
     for (int i = 0; i < n_dom_i; i++) {
       for (int k = 0; k < n_dom_k; k++) {
 
         int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = i_domain1 + n_dom_i;
+        int i_domain2 = i + n_dom_i*((j+1)%n_dom_j + n_dom_j*k);// +1?
 
         interface_dn[i_interface] = (int) (distrib_j[i_rank+1] - distrib_j[i_rank]);
 
@@ -400,6 +401,7 @@ int main
       }
     }
   }
+  free(distrib_j);
 
 
 
@@ -407,12 +409,12 @@ int main
   PDM_g_num_t *distrib_k = PDM_compute_uniform_entity_distribution(comm,
                                                                    ny * nz);
 
-  for (int k = 0; k < n_dom_k-1; k++) {
+  for (int k = 0; k < n_dom_k - 1 + periodic_k; k++) {
     for (int j = 0; j < n_dom_j; j++) {
       for (int i = 0; i < n_dom_i; i++) {
 
         int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = i_domain1 + n_dom_i*n_dom_j;
+        int i_domain2 = i + n_dom_i*(j + n_dom_j*(k+1)%n_dom_k);// +1?
 
         interface_dn[i_interface] = (int) (distrib_k[i_rank+1] - distrib_k[i_rank]);
 
@@ -436,18 +438,10 @@ int main
       }
     }
   }
+  free(distrib_k);
 
   // printf("i_interface = %d / %d\n", i_interface, n_interface);
 
-  /*
-   *  Periodic interfaces
-   */
-  //...
-
-
-  free(distrib_i);
-  free(distrib_j);
-  free(distrib_k);
 
 
   PDM_domain_interface_set (dom_intrf,
@@ -478,7 +472,7 @@ int main
   free(dmn);
 
   if (i_rank == 0) {
-    printf("-- End");
+    printf("-- End\n");
     fflush(stdout);
   }
 
