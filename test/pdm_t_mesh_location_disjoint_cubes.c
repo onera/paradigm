@@ -779,6 +779,7 @@ int main(int argc, char *argv[])
                                                       ipart);
 
     printf("[%d] part %d, n_located = %d, n_unlocated = %d\n", i_rank, ipart, n_located, n_unlocated);
+    assert(n_located + n_unlocated == n_tgt[ipart]);
 
     tgt_location[ipart] = PDM_array_const_gnum (n_tgt[ipart], 0);
     tgt_proj_coord[ipart] = malloc (sizeof(double) * n_tgt[ipart] * 3);

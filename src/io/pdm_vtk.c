@@ -98,7 +98,7 @@ static int _vtk_elt_type
       if (order == 2) {
         vtk_elt_type = 27;
       } else {
-        vtk_elt_type = 66;
+        vtk_elt_type = 66;//74;//??
       }
       break;
     case PDM_MESH_NODAL_PRISMHO:
@@ -269,7 +269,7 @@ _ijk_to_vtk
 
 static int *_vtk_lagrange_bar_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_BAR2, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_BARHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes);
 
   int idx = 0;
@@ -288,7 +288,7 @@ static int *_vtk_lagrange_bar_to_ijk (const int order) {
 
 static int *_vtk_lagrange_tria_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIAHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes * 2);
 
   int idx = 0;
@@ -325,7 +325,7 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
     ijk[idx++] = 1;
   }
   else if (order > 3) {
-    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order-3);
+    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIAHO, order-3);
     int *ijk_sub = _vtk_lagrange_tria_to_ijk (order-3);
     for (int i = 0; i < n_sub; i++) {
       ijk[idx++] = ijk_sub[2*i  ] + 1;
@@ -340,7 +340,7 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
 
 static int *_vtk_lagrange_quad_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_QUAD4, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_QUADHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes * 2);
 
   int idx = 0;
@@ -393,7 +393,7 @@ static int *_vtk_lagrange_quad_to_ijk (const int order) {
 
 static int *_vtk_lagrange_tetra_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRA4, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRAHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes * 3);
 
   int idx = 0;
@@ -475,7 +475,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
     ijk[idx++] = 0;
   }
   else if (order > 3) {
-    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIA3, order-3);
+    int n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIAHO, order-3);
     int *ijk_sub = _vtk_lagrange_tria_to_ijk (order-3);
 
     // face v=0
@@ -495,8 +495,8 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
     // face u=0
     for (int i = 0; i < n_sub; i++) {
       ijk[idx++] = 0;
-      ijk[idx++] = ijk_sub[2*i  ] + 1;
       ijk[idx++] = ijk_sub[2*i+1] + 1;
+      ijk[idx++] = ijk_sub[2*i  ] + 1;
     }
 
     // face w=0
@@ -514,7 +514,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
       ijk[idx++] = 1;
     }
     else {
-      n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRA4, order-4);
+      n_sub = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRAHO, order-4);
       ijk_sub = _vtk_lagrange_tetra_to_ijk (order-4);
       for (int i = 0; i < 3*n_sub; i++) {
         ijk[idx++] = ijk_sub[i] + 1;
@@ -529,7 +529,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
 
 static int *_vtk_lagrange_prism_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_PRISM6, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_PRISMHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes * 3);
 
   int idx = 0;
@@ -558,10 +558,10 @@ static int *_vtk_lagrange_prism_to_ijk (const int order) {
     }
 
     for (int i = 1; i < order; i++) {
-      //ijk[idx++] = order-i;
-      //ijk[idx++] = i;
-      ijk[idx++] = i;
       ijk[idx++] = order-i;
+      ijk[idx++] = i;
+      // ijk[idx++] = i;
+      // ijk[idx++] = order-i;
       ijk[idx++] = order*k;
     }
 
@@ -621,7 +621,8 @@ static int *_vtk_lagrange_prism_to_ijk (const int order) {
   for (int k = 1; k < order; k++) {
     for (int j = 1; j < order; j++) {
       ijk[idx++] = 0;
-      ijk[idx++] = order-j;
+      // ijk[idx++] = order-j;
+      ijk[idx++] = j;
       ijk[idx++] = k;
     }
   }
@@ -643,7 +644,7 @@ static int *_vtk_lagrange_prism_to_ijk (const int order) {
 
 static int *_vtk_lagrange_hexa_to_ijk (const int order) {
 
-  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXAHO, order);
   int *ijk = malloc (sizeof(int) * n_nodes * 3);
 
   int idx = 0;
@@ -1594,22 +1595,22 @@ PDM_vtk_lagrange_to_ijk
     return _ijk;
   }
 
-  case PDM_MESH_NODAL_BAR2:
+  case PDM_MESH_NODAL_BARHO:
     return _vtk_lagrange_bar_to_ijk(order);
 
-  case PDM_MESH_NODAL_TRIA3:
+  case PDM_MESH_NODAL_TRIAHO:
     return _vtk_lagrange_tria_to_ijk(order);
 
-  case PDM_MESH_NODAL_QUAD4:
+  case PDM_MESH_NODAL_QUADHO:
     return _vtk_lagrange_quad_to_ijk(order);
 
-  case PDM_MESH_NODAL_TETRA4:
+  case PDM_MESH_NODAL_TETRAHO:
     return _vtk_lagrange_tetra_to_ijk(order);
 
-  case PDM_MESH_NODAL_PRISM6:
+  case PDM_MESH_NODAL_PRISMHO:
     return _vtk_lagrange_prism_to_ijk(order);
 
-  case PDM_MESH_NODAL_HEXA8:
+  case PDM_MESH_NODAL_HEXAHO:
     return _vtk_lagrange_hexa_to_ijk(order);
 
   default:
