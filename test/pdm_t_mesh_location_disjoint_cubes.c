@@ -512,7 +512,8 @@ int main(int argc, char *argv[])
    */
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
                                                             1,
-                                                            PDM_MPI_COMM_WORLD);
+                                                            PDM_MPI_COMM_WORLD,
+                                                            PDM_OWNERSHIP_KEEP);
 
 
   /* Set target point cloud */
@@ -1002,8 +1003,8 @@ int main(int argc, char *argv[])
   free (tgt_proj_coord);
   free (src_g_num);
 
-  PDM_mesh_location_free (mesh_loc,
-                          0);
+  PDM_mesh_location_free (mesh_loc);
+                          
 
   PDM_part_free (ppart_src);
   PDM_part_free (ppart_tgt);
