@@ -2367,6 +2367,7 @@ PDM_mesh_location_free
             }
           }
         }
+        free (pcloud->located);
         pcloud->located = NULL;
       }
 
