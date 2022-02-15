@@ -5492,13 +5492,20 @@ PDM_mesh_location_t        *ml
                                  _point_uvw);
                 //&(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
               }
+
+              // Check uvw
+              if (1) {//_points_in_elements->dist2[ipart][ipt] <= 0.) {
+                assert(_point_uvw[0] > -newton_tol && _point_uvw[0] < 1+newton_tol &&
+                       _point_uvw[1] > -newton_tol && _point_uvw[1] < 1+newton_tol &&
+                       _point_uvw[2] > -newton_tol && _point_uvw[2] < 1+newton_tol);
+              }
             }
           }
         }
         ielt += 1;
       }
 
-      if (_cell_coords_ijk != _cell_coords) free (_cell_coords_ijk);
+      free (_cell_coords_ijk);
       free (_cell_coords);
     }
 
