@@ -5393,7 +5393,7 @@ PDM_mesh_location_t        *ml
           for (int i = 0; i < n_elt_block; i++) {
             int order_ijk = 0;
             for (int k = 0; k < n_vtx; k++) {
-              int ivtx = connec[k] - 1;
+              int ivtx = connec[i*n_vtx + k] - 1;
               for (int j = 0; j < 3; j++) {
                 _cell_coords[3*k+j] = coords_vtx[3*ivtx+j];
               }
@@ -5442,7 +5442,7 @@ PDM_mesh_location_t        *ml
                       t_elt == PDM_MESH_NODAL_TETRA4 ||
                       t_elt == PDM_MESH_NODAL_TRIA3  ||
                       t_elt == PDM_MESH_NODAL_BAR2) {
-                    _cell_coords_ijk = _cell_coords;
+                    memcpy(_cell_coords_ijk, _cell_coords, sizeof(double) * n_vtx);
                   } else {
                     _cell_coords_ijk[ 0] = _cell_coords[ 0];
                     _cell_coords_ijk[ 1] = _cell_coords[ 1];

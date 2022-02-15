@@ -1200,6 +1200,17 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
     return &_user_hexa;
     break;
 
+  case PDM_MESH_NODAL_POINT:
+  case PDM_MESH_NODAL_BAR2:
+  case PDM_MESH_NODAL_TRIA3:
+  case PDM_MESH_NODAL_QUAD4:
+  case PDM_MESH_NODAL_TETRA4:
+  case PDM_MESH_NODAL_PYRAMID5:
+  case PDM_MESH_NODAL_PRISM6:
+  case PDM_MESH_NODAL_HEXA8:
+    return NULL;
+    break;
+
   default:
     PDM_error(__FILE__, __LINE__, 0,
               "Unvailable element type %d\n", (int) elt_type);
@@ -1315,7 +1326,11 @@ PDM_ho_basis
  double                     *weights
 )
 {
-  PDM_ho_basis_user_elt_t *user_elt = *(_get_user_elt (type));
+  // PDM_ho_basis_user_elt_t *user_elt = *(_get_user_elt (type));
+  PDM_ho_basis_user_elt_t *user_elt = NULL;
+  if (type > PDM_MESH_NODAL_HEXA8) {
+    user_elt = *(_get_user_elt (type));
+  }
 
   int entities_dim = PDM_Mesh_nodal_elt_dim_get(type);
 
