@@ -183,7 +183,7 @@ cdef class GlobalNumberingLocation:
     # ************************************************************************
     # > PDM call
     # Todo : tenir compte du partial ?
-    PDM_gnum_location_free(self._gnum_loc, 1)
+    PDM_gnum_location_free(self._gnum_loc)
     # ************************************************************************
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
