@@ -1,4 +1,5 @@
 cdef extern from "pdm_dconnectivity_transform.h":
+    # ------------------------------------------------------------------
     void PDM_dconnectivity_transpose(const PDM_MPI_Comm     comm,
                                      const PDM_g_num_t     *entity1_distrib,
                                            PDM_g_num_t     *entity2_distrib,
@@ -7,7 +8,39 @@ cdef extern from "pdm_dconnectivity_transform.h":
                                            int              is_signed,
                                            int            **dentity2_entity1_idx,
                                            PDM_g_num_t    **dentity2_entity1)
+    # ------------------------------------------------------------------
+    void PDM_combine_connectivity(int   n_entity1,
+                                  int  *entity1_entity2_idx,
+                                  int  *entity1_entity2,
+                                  int  *entity2_entity3_idx,
+                                  int  *entity2_entity3,
+                                  int **entity1_entity3_idx,
+                                  int **entity1_entity3)
+    # ------------------------------------------------------------------
+    void PDM_connectivity_transpose(const int   n_entity1,
+                                    const int   n_entity2,
+                                          int  *entity1_entity2_idx,
+                                          int  *entity1_entity2,
+                                          int **entity2_entity1_idx,
+                                          int **entity2_entity1)
+    # ------------------------------------------------------------------
+    void PDM_part_connectivity_transpose(const int    n_part,
+                                         const int   *n_entity1,
+                                         const int   *n_entity2,
+                                               int  **entity1_entity2_idx,
+                                               int  **entity1_entity2,
+                                               int ***entity2_entity1_idx,
+                                               int ***entity2_entity1)
+    # ------------------------------------------------------------------
+    void PDM_part_connectivity_to_connectity_idx(const int    n_part,
+                                                const int   *n_entity1,
+                                                      int  **entity1_entity2_in,
+                                                      int ***entity1_entity2_idx,
+                                                      int ***entity1_entity2)
+    # ------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------
 def dconnectivity_transpose(MPI.Comm comm,
                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity1_distrib,
                             NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity2_distrib,
@@ -47,9 +80,51 @@ def dconnectivity_transpose(MPI.Comm comm,
     dn_entity2 = entity2_distrib[comm.Get_rank()+1] - entity2_distrib[comm.Get_rank()]
 
     np_dentity2_entity1_idx = create_numpy_i(_dentity2_entity1_idx, dn_entity2 + 1)
-    PyArray_ENABLEFLAGS(np_dentity2_entity1_idx, NPY.NPY_OWNDATA)
 
     np_dentity2_entity1 = create_numpy_pdm_gnum(_dentity2_entity1, np_dentity2_entity1_idx[dn_entity2])
-    PyArray_ENABLEFLAGS(np_dentity2_entity1, NPY.NPY_OWNDATA)
 
     return np_dentity2_entity1_idx, np_dentity2_entity1
+
+# ------------------------------------------------------------------------
+def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
+                         NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2,
+                         NPY.ndarray[int, mode='c', ndim=1]    entity2_entity3_idx,
+                         NPY.ndarray[int, mode='c', ndim=1]    entity2_entity3):
+
+    assert_single_dim_np(entity1_entity2, NPY.int32, entity1_entity2_idx[-1])
+    assert_single_dim_np(entity2_entity3, NPY.int32, entity2_entity3_idx[-1])
+    
+    cdef int n_entity1 = entity1_entity2_idx.size -1
+    
+    cdef int *_entity1_entity2_idx
+    assert entity1_entity2_idx is not None
+    _entity1_entity2_idx = <int *> entity1_entity2_idx.data
+    
+    cdef int *_entity1_entity2
+    _entity1_entity2 = <int *> entity1_entity2.data
+    
+    cdef int *_entity2_entity3_idx
+    assert entity1_entity2_idx is not None
+    _entity2_entity3_idx = <int *> entity2_entity3_idx.data
+    
+    cdef int *_entity2_entity3
+    _entity2_entity3 = <int *> entity2_entity3.data
+    
+    cdef int *_entity1_entity3_idx = NULL
+    cdef int *_entity1_entity3     = NULL
+    
+    PDM_combine_connectivity( n_entity1,
+                              _entity1_entity2_idx,
+                              _entity1_entity2,
+                              _entity2_entity3_idx,
+                              _entity2_entity3,
+                             &_entity1_entity3_idx,
+                             &_entity1_entity3)
+    
+    assert _entity1_entity3_idx != NULL
+    
+    np_entity1_entity3_idx = create_numpy_i(_entity1_entity3_idx, n_entity1 + 1)
+
+    np_entity1_entity3     = create_numpy_i(_entity1_entity3, np_entity1_entity3_idx[n_entity1])
+    
+    return np_entity1_entity3_idx, np_entity1_entity3
