@@ -124,7 +124,39 @@ def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_i
     assert _entity1_entity3_idx != NULL
     
     np_entity1_entity3_idx = create_numpy_i(_entity1_entity3_idx, n_entity1 + 1)
-
     np_entity1_entity3     = create_numpy_i(_entity1_entity3, np_entity1_entity3_idx[n_entity1])
     
     return np_entity1_entity3_idx, np_entity1_entity3
+
+# ------------------------------------------------------------------------
+def connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
+                           NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2,
+                           NPY.int                               n_entity2): # We have to pass n_entity2 to manage empty tabs and gap numerbering
+    
+    assert_single_dim_np(entity1_entity2, NPY.int32, entity1_entity2_idx[-1])
+    
+    cdef int n_entity1 = entity1_entity2_idx.size -1
+    
+    cdef int *_entity1_entity2_idx
+    assert entity1_entity2_idx is not None
+    _entity1_entity2_idx = <int *> entity1_entity2_idx.data
+    
+    cdef int *_entity1_entity2
+    _entity1_entity2 = <int *> entity1_entity2.data
+    
+    cdef int *_entity2_entity1_idx = NULL
+    cdef int *_entity2_entity1     = NULL
+    
+    PDM_connectivity_transpose(      n_entity1,
+                               <int> n_entity2,
+                                     _entity1_entity2_idx,
+                                     _entity1_entity2,
+                                    &_entity2_entity1_idx,
+                                    &_entity2_entity1)
+    
+    assert _entity2_entity1_idx != NULL
+    
+    np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx, n_entity1 + 1)
+    np_entity2_entity1     = create_numpy_i(_entity2_entity1, np_entity2_entity1_idx[n_entity2])
+    
+    return np_entity2_entity1_idx, np_entity2_entity1
