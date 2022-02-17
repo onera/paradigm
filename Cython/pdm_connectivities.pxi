@@ -160,3 +160,64 @@ def connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2
     np_entity2_entity1     = create_numpy_i(_entity2_entity1, np_entity2_entity1_idx[n_entity2])
     
     return np_entity2_entity1_idx, np_entity2_entity1
+
+# ------------------------------------------------------------------------
+def part_connectivity_transpose(list                                  l_entity1_entity2_idx,
+                                list                                  l_entity1_entity2,
+                                NPY.ndarray[int, mode='c', ndim=1]    n_entity2): # We have to pass n_entity2 to manage empty tabs and gap numerbering for each partition
+
+    assert(len(l_entity1_entity2_idx) == len(l_entity1_entity2) == n_entity2.size)
+    
+    cdef int n_part = len(l_entity1_entity2_idx)
+    
+    _n_entity1           = <int *>  malloc(n_part * sizeof(int * ))
+    _n_entity2           = <int *>  malloc(n_part * sizeof(int * ))
+    _entity1_entity2_idx = <int **> malloc(n_part * sizeof(int **))
+    _entity1_entity2     = <int **> malloc(n_part * sizeof(int **))
+    _entity2_entity1_idx = <int **> malloc(n_part * sizeof(int **))
+    _entity2_entity1     = <int **> malloc(n_part * sizeof(int **))
+    
+    cdef NPY.ndarray[int, mode='c', ndim=1] pentity1_entity2_idx
+    cdef NPY.ndarray[int, mode='c', ndim=1] pentity1_entity2
+    
+    cdef int *pentity2_entity1_idx = NULL
+    cdef int *pentity2_entity1     = NULL
+    
+    for i_part in range(n_part):
+
+        pn_entity_1          = l_entity1_entity2_idx[i_part].size -1
+        pn_entity_2          = n_entity2[i_part]
+        pentity1_entity2_idx = l_entity1_entity2_idx[i_part]
+        pentity1_entity2     = l_entity1_entity2[i_part]
+
+        _n_entity1[i_part]           = <int  > pn_entity_1
+        _n_entity2[i_part]           = <int  > pn_entity_2
+        _entity1_entity2_idx[i_part] = <int *> pentity1_entity2_idx.data
+        _entity1_entity2[i_part]     = <int *> pentity1_entity2.data
+        _entity2_entity1_idx[i_part] = <int *> pentity2_entity1_idx
+        _entity2_entity1[i_part]     = <int *> pentity2_entity1
+
+    PDM_part_connectivity_transpose( n_part,
+                                     _n_entity1,
+                                     _n_entity2,
+                                     _entity1_entity2_idx,
+                                     _entity1_entity2,
+                                    &_entity2_entity1_idx,
+                                    &_entity2_entity1)
+    
+    l_np_entity2_entity1_idx = list()
+    l_np_entity2_entity1     = list()
+    
+    for i_part in range(n_part):
+        
+        assert _entity2_entity1_idx[i_part] != NULL
+        
+        np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx[i_part], _n_entity1[i_part] + 1)
+        np_entity2_entity1     = create_numpy_i(_entity2_entity1[i_part], np_entity2_entity1_idx[_n_entity2[i_part]])
+        
+        l_np_entity2_entity1_idx.append(np_entity2_entity1_idx)
+        l_np_entity2_entity1.append(np_entity2_entity1)
+    
+    return l_np_entity2_entity1_idx, l_np_entity2_entity1
+
+# ------------------------------------------------------------------------
