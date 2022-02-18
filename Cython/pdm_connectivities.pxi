@@ -8,6 +8,8 @@ cdef extern from "pdm_dconnectivity_transform.h":
                                            int              is_signed,
                                            int            **dentity2_entity1_idx,
                                            PDM_g_num_t    **dentity2_entity1)
+
+cdef extern from "pdm_part_connectivity_transform.h":
     # ------------------------------------------------------------------
     void PDM_combine_connectivity(int   n_entity1,
                                   int  *entity1_entity2_idx,
@@ -129,9 +131,9 @@ def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_i
     return np_entity1_entity3_idx, np_entity1_entity3
 
 # ------------------------------------------------------------------------
-def connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
-                           NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2,
-                           NPY.int                               n_entity2): # We have to pass n_entity2 to manage empty tabs and gap numerbering
+def connectivity_transpose(NPY.int                               n_entity2, # We have to pass n_entity2 to manage empty tabs and gap numerbering
+                           NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
+                           NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2):
     
     assert_single_dim_np(entity1_entity2, NPY.int32, entity1_entity2_idx[-1])
     
@@ -156,19 +158,19 @@ def connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2
     
     assert _entity2_entity1_idx != NULL
     
-    np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx, n_entity1 + 1)
+    np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx, n_entity2 + 1)
     np_entity2_entity1     = create_numpy_i(_entity2_entity1, np_entity2_entity1_idx[n_entity2])
     
     return np_entity2_entity1_idx, np_entity2_entity1
 
 # ------------------------------------------------------------------------
-def part_connectivity_transpose(list                                  l_entity1_entity2_idx,
-                                list                                  l_entity1_entity2,
-                                NPY.ndarray[int, mode='c', ndim=1]    n_entity2): # We have to pass n_entity2 to manage empty tabs and gap numerbering for each partition
+def part_connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    n_entity2, # We have to pass n_entity2 to manage empty tabs and gap numerbering for each partition
+                                list                                  l_entity1_entity2_idx,
+                                list                                  l_entity1_entity2):
 
-    assert(len(l_entity1_entity2_idx) == len(l_entity1_entity2) == n_entity2.size)
+    assert(n_entity2.size == len(l_entity1_entity2_idx) == len(l_entity1_entity2))
     
-    cdef int n_part = len(l_entity1_entity2_idx)
+    cdef int n_part = n_entity2.size
     
     _n_entity1           = <int *>  malloc(n_part * sizeof(int * ))
     _n_entity2           = <int *>  malloc(n_part * sizeof(int * ))
@@ -212,7 +214,7 @@ def part_connectivity_transpose(list                                  l_entity1_
         
         assert _entity2_entity1_idx[i_part] != NULL
         
-        np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx[i_part], _n_entity1[i_part] + 1)
+        np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx[i_part], _n_entity2[i_part] + 1)
         np_entity2_entity1     = create_numpy_i(_entity2_entity1[i_part], np_entity2_entity1_idx[_n_entity2[i_part]])
         
         l_np_entity2_entity1_idx.append(np_entity2_entity1_idx)
@@ -221,3 +223,50 @@ def part_connectivity_transpose(list                                  l_entity1_
     return l_np_entity2_entity1_idx, l_np_entity2_entity1
 
 # ------------------------------------------------------------------------
+def part_connectivity_to_connectity_idx(NPY.ndarray[int, mode='c', ndim=1]    n_entity1,
+                                        list                                  l_entity1_entity2_in):
+
+    assert(n_entity1.size == len(l_entity1_entity2_in))
+    
+    cdef int n_part = n_entity1.size
+
+    _n_entity1           = <int *>  malloc(n_part * sizeof(int * ))
+    _entity1_entity2_in  = <int **> malloc(n_part * sizeof(int **))
+    _entity1_entity2_idx = <int **> malloc(n_part * sizeof(int **))
+    _entity1_entity2     = <int **> malloc(n_part * sizeof(int **))
+    
+    cdef NPY.ndarray[int, mode='c', ndim=1] pentity1_entity2_in
+
+    cdef int *pentity1_entity2_idx = NULL
+    cdef int *pentity1_entity2     = NULL
+    
+    for i_part in range(n_part):
+
+        pn_entity_1         = n_entity1[i_part]
+        pentity1_entity2_in = l_entity1_entity2_in[i_part]
+        
+        _n_entity1[i_part]           = <int  > pn_entity_1
+        _entity1_entity2_in[i_part]  = <int *> pentity1_entity2_in.data
+        _entity1_entity2_idx[i_part] = <int *> pentity1_entity2_idx
+        _entity1_entity2[i_part]     = <int *> pentity1_entity2
+    
+    PDM_part_connectivity_to_connectity_idx( n_part,
+                                             _n_entity1,
+                                             _entity1_entity2_in,
+                                            &_entity1_entity2_idx,
+                                            &_entity1_entity2)
+    
+    l_np_entity1_entity2_idx = list()
+    l_np_entity1_entity2     = list()
+    
+    for i_part in range(n_part):
+        
+        assert _entity1_entity2_idx[i_part] != NULL
+        
+        np_entity1_entity2_idx = create_numpy_i(_entity1_entity2_idx[i_part], _n_entity1[i_part] + 1)
+        np_entity1_entity2     = create_numpy_i(_entity1_entity2[i_part], np_entity1_entity2_idx[_n_entity1[i_part]])
+        
+        l_np_entity1_entity2_idx.append(np_entity1_entity2_idx)
+        l_np_entity1_entity2.append(np_entity1_entity2)
+    
+    return l_np_entity1_entity2_idx, l_np_entity1_entity2
