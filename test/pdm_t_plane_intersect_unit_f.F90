@@ -253,11 +253,7 @@ program testf
 
   call PDM_ol_create (c_ol,         &
                       n_partMeshA,  &
-                      nGFaceMeshA,  &
-                      nGVtxMeshA,   &
                       n_partMeshB,  &
-                      nGFaceMeshB,  &
-                      nGVtxMeshB,   &
                       projectCoeff, &
                       fComm)
 

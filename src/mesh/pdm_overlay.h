@@ -86,11 +86,7 @@ typedef enum {
  * This function builds an initializes an overlaying surface meshes object
  *
  * \param [in]  n_partMeshA   Number of local partitions of the meshA input
- * \param [in]  nGFaceA      Number of global faces of the meshA input
- * \param [in]  nGVtxA       Number of global vertices of the meshA input
  * \param [in]  n_partMeshB   Number of local partitions of the meshB input
- * \param [in]  nGFaceB      Number of global faces of the meshB input
- * \param [in]  nGVtxB       Number of global vertices of the meshB input
  * \param [in]  projectCoeff Projection coefficient to define the overlay surface projection
  *                           If value == 0, the surface projection is MeshA
  *                           If value == 1, the surface projection is MeshB
@@ -105,11 +101,7 @@ PDM_ol_t *
 PDM_ol_create
 (
  const int          n_partMeshA,
- const PDM_g_num_t  nGFaceMeshA,
- const PDM_g_num_t  nGVtxMeshA,
  const int          n_partMeshB,
- const PDM_g_num_t  nGFaceMeshB,
- const PDM_g_num_t  nGVtxMeshB,
  const double       projectCoeff,
  const PDM_MPI_Comm comm
 );

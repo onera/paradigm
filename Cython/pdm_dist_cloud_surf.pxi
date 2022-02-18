@@ -29,8 +29,6 @@ cdef extern from "pdm_dist_cloud_surf.h":
 #                                           PDM_surf_mesh_t       *surf_mesh)
 
     void PDM_dist_cloud_surf_surf_mesh_global_data_set(PDM_dist_cloud_surf_t *dist,
-                                                       PDM_g_num_t            n_g_face,
-                                                       PDM_g_num_t            n_g_vtx,
                                                        int                    n_part)
 
     void PDM_dist_cloud_surf_surf_mesh_part_set(PDM_dist_cloud_surf_t *dist,
@@ -179,15 +177,11 @@ cdef class DistCloudSurf:
         self._nb_pts[i_point_cloud][i_part] = n_points
 
     # ------------------------------------------------------------------
-    def surf_mesh_global_data_set(self,
-                                  PDM_g_num_t n_g_face,
-                                  PDM_g_num_t n_g_vtx):
+    def surf_mesh_global_data_set(self):
         """
         Give the global properties of the surface mesh
         """
         PDM_dist_cloud_surf_surf_mesh_global_data_set(self._dist,
-                                                      n_g_face,
-                                                      n_g_vtx,
                                                       self.n_part_surf)
 
 

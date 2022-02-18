@@ -147,8 +147,6 @@ void
 PDM_dist_cloud_surf_surf_mesh_global_data_set
 (
        PDM_dist_cloud_surf_t *dist,
- const PDM_g_num_t            n_g_face,
- const PDM_g_num_t            n_g_vtx,
  const int                    n_part
 );
 

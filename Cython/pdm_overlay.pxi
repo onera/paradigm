@@ -20,11 +20,7 @@ cdef extern from "pdm_overlay.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping of function
   int PDM_ol_create(int          n_partMeshA,
-                    PDM_g_num_t  nGFaceMeshA,
-                    PDM_g_num_t  nGVtxMeshA,
                     int          n_partMeshB,
-                    PDM_g_num_t  nGFaceMeshB,
-                    PDM_g_num_t  nGVtxMeshB,
                     double       projectCoeff,
                     PDM_MPI_Comm comm)
 
@@ -107,11 +103,7 @@ cdef class Overlay:
 
   # ------------------------------------------------------------------------
   def __init__(self, int          n_partMeshA,
-                     PDM_g_num_t  nGFaceMeshA,
-                     PDM_g_num_t  nGVtxMeshA,
                      int          n_partMeshB,
-                     PDM_g_num_t  nGFaceMeshB,
-                     PDM_g_num_t  nGVtxMeshB,
                      double       projectCoeff,
                      MPI.Comm     comm):
     """
@@ -129,11 +121,7 @@ cdef class Overlay:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     self._id = PDM_ol_create(n_partMeshA,
-                             nGFaceMeshA,
-                             nGVtxMeshA,
                              n_partMeshB,
-                             nGFaceMeshB,
-                             nGVtxMeshB,
                              projectCoeff,
                              PDMC)
 

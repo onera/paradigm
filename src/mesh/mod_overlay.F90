@@ -69,11 +69,7 @@ module pdm_overlay
   !! This function builds an initializes an overlaying surface meshes object
   !!
   !! \param [in]  n_partMeshA   Number of local partitions of the meshA input
-  !! \param [in]  nGFaceA       Number of global faces of the meshA input
-  !! \param [in]  nGVtxA        Number of global vertices of the meshA input
   !! \param [in]  n_partMeshB   Number of local partitions of the meshB input
-  !! \param [in]  nGFaceB       Number of global faces of the meshB input
-  !! \param [in]  nGVtxB        Number of global vertices of the meshB input
   !! \param [in]  projectCoeff  Projection coefficient to define the overlay surface
   !!                            projection
   !!                            If value == 0, the surface projection is MeshA
@@ -87,11 +83,7 @@ module pdm_overlay
 
   function PDM_ol_create_cf ( &
     n_partMeshA,           &
-    nGFaceMeshA,           &
-    nGVtxMeshA,            &
     n_partMeshB,           &
-    nGFaceMeshB,           &
-    nGVtxMeshB,            &
     projectCoeff,          &
     comm)                  &
   result (ol)              &
@@ -101,21 +93,7 @@ module pdm_overlay
   implicit none
 
   integer(c_int), value :: n_partMeshA
-#ifdef PDM_LONG_G_NUM
-  integer(c_long), value :: nGFaceMeshA
-  integer(c_long), value :: nGVtxMeshA
-#else
-  integer(c_int), value :: nGFaceMeshA
-  integer(c_int), value :: nGVtxMeshA
-#endif
   integer(c_int), value :: n_partMeshB
-#ifdef PDM_LONG_G_NUM
-  integer(c_long), value :: nGFaceMeshB
-  integer(c_long), value :: nGVtxMeshB
-#else
-  integer(c_int), value :: nGFaceMeshB
-  integer(c_int), value :: nGVtxMeshB
-#endif
   real(c_double), value :: projectCoeff
   integer(c_int), value :: comm
 
@@ -542,11 +520,7 @@ contains
   subroutine PDM_ol_create_ ( &
     ol,                       &
     n_partMeshA,              &
-    nGFaceMeshA,              &
-    nGVtxMeshA,               &
     n_partMeshB,              &
-    nGFaceMeshB,              &
-    nGVtxMeshB,               &
     projectCoeff,             &
     f_comm)
 
@@ -554,11 +528,7 @@ contains
   implicit none
 
   integer                      :: n_partMeshA
-  integer (kind = pdm_g_num_s) :: nGFaceMeshA
-  integer (kind = pdm_g_num_s) :: nGVtxMeshA
   integer                      :: n_partMeshB
-  integer (kind = pdm_g_num_s) :: nGFaceMeshB
-  integer (kind = pdm_g_num_s) :: nGVtxMeshB
   double precision             :: projectCoeff
   integer                      :: f_comm
 
@@ -566,40 +536,18 @@ contains
 
 
   integer(c_int) :: c_n_partMeshA
-#ifdef PDM_LONG_G_NUM
-  integer(c_long) :: c_nGFaceMeshA
-  integer(c_long) :: c_nGVtxMeshA
-#else
-  integer(c_int) :: c_nGFaceMeshA
-  integer(c_int) :: c_nGVtxMeshA
-#endif
   integer(c_int) :: c_n_partMeshB
-#ifdef PDM_LONG_G_NUM
-  integer(c_long) :: c_nGFaceMeshB
-  integer(c_long) :: c_nGVtxMeshB
-#else
-  integer(c_int) :: c_nGFaceMeshB
-  integer(c_int) :: c_nGVtxMeshB
-#endif
   real(c_double) :: c_projectCoeff
   integer(c_int) :: c_comm
 
   c_comm = PDM_MPI_Comm_f2c(f_comm)
 
   c_n_partMeshA  = n_partMeshA
-  c_nGFaceMeshA  = nGFaceMeshA
-  c_nGVtxMeshA   = nGVtxMeshA
   c_n_partMeshB  = n_partMeshB
-  c_nGFaceMeshB  = nGFaceMeshB
-  c_nGVtxMeshB   = nGVtxMeshB
   c_projectCoeff = projectCoeff
 
   ol = PDM_ol_create_cf(c_n_partMeshA,  &
-                        c_nGFaceMeshA,  &
-                        c_nGVtxMeshA,   &
                         c_n_partMeshB,  &
-                        c_nGFaceMeshB,  &
-                        c_nGVtxMeshB,   &
                         c_projectCoeff, &
                         c_comm)
 

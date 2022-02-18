@@ -1353,8 +1353,6 @@ int main(int argc, char *argv[])
                      PDM_MPI_COMM_WORLD);
 
   PDM_dist_cloud_surf_surf_mesh_global_data_set (id_dist,
-                                           n_g_face,
-                                           n_g_vtx,
                                            n_part);
 
   PDM_dist_cloud_surf_n_part_cloud_set (id_dist, 0, n_part);

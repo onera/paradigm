@@ -64,6 +64,54 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+/**
+ * \brief Compute global number of entities
+ *
+ * \param [in]  mesh         Mesh 
+ *
+ */
+
+static 
+void
+_n_g_enttities_compute
+(
+PDM_surf_mesh_t *mesh
+)
+{
+
+  if (mesh->nGVtx < 0) {
+
+    PDM_g_num_t n_g_num_vtx = 0;
+
+    for (int i = 0; i < mesh->n_part; i++) {
+      PDM_surf_part_t *part = mesh->part[i];
+      for (int j = 0; j < part->n_vtx; j++) {
+        n_g_num_vtx = PDM_MAX (n_g_num_vtx, part->vtx_ln_to_gn[j]);
+      }
+    }
+
+    PDM_MPI_Allreduce(&n_g_num_vtx, &(mesh->nGVtx), 1,
+                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, mesh->comm);
+  }
+
+  if (mesh->nGFace < 0) {
+
+    PDM_g_num_t n_g_num_face = 0;
+
+    for (int i = 0; i < mesh->n_part; i++) {
+      PDM_surf_part_t *part = mesh->part[i];
+      for (int j = 0; j < part->n_face; j++) {
+        n_g_num_face = PDM_MAX (n_g_num_face, part->face_ln_to_gn[j]);
+      }
+    }
+
+    PDM_MPI_Allreduce(&n_g_num_face, &(mesh->nGFace), 1,
+                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, mesh->comm);
+  }
+ 
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -74,8 +122,6 @@ extern "C" {
  *
  * This function returns an initialized \ref PDM_surf_mesh_t structure
  *
- * \param [in]  nGface       Number of global faces
- * \param [in]  nGVtx        Number of global vertices
  * \param [in]  n_part        Number of partition
  * \param [in]  comm         MSG communicator of mesh
  *
@@ -86,23 +132,22 @@ extern "C" {
 PDM_surf_mesh_t *
 PDM_surf_mesh_create
 (
-const PDM_g_num_t  nGFace,
-const PDM_g_num_t  nGVtx,
-const int         n_part,
-PDM_MPI_Comm          comm
+const int    n_part,
+PDM_MPI_Comm comm
 )
 {
 
   PDM_surf_mesh_t *mesh = malloc (sizeof(PDM_surf_mesh_t));
 
+  mesh->nGFace  = -1;
+  mesh->nGVtx   = -1;
+
   mesh->comm    = comm;
-  mesh->nGFace  = nGFace;
-  mesh->nGVtx   = nGVtx;
   mesh->n_part   = n_part;
   mesh->part    = (PDM_surf_part_t **) malloc(n_part * sizeof(PDM_surf_part_t *));
 
   PDM_MPI_Allreduce ((void *)&n_part, (void *)&(mesh->nGPart), 1,
-                 PDM_MPI_INT, PDM_MPI_SUM, mesh->comm);
+                     PDM_MPI_INT, PDM_MPI_SUM, mesh->comm);
 
   mesh->gMinCarLgthVtx = DBL_MAX;
   mesh->gMaxCarLgthVtx = -DBL_MAX;
@@ -410,6 +455,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   PDM_g_num_t *nKeyProcs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
 
+  _n_g_enttities_compute(mesh);
+  
   nKeyProcs[0] = 1;
   PDM_g_num_t gKeyMax = 2 * mesh->nGVtx;
 
@@ -798,6 +845,8 @@ PDM_surf_mesh_t *mesh
    */
 
   int *nKeyProcs = (int *) malloc(sizeof(int) * (lComm + 1));
+
+  _n_g_enttities_compute(mesh);
 
   nKeyProcs[0] = 1;
   PDM_g_num_t gKeyMax = mesh->nGVtx + 1;
@@ -1880,6 +1929,8 @@ PDM_surf_mesh_is_plane_surface
     PDM_MPI_Allreduce (center, barycenter, 3,
                        PDM__PDM_MPI_REAL, PDM_MPI_SUM, mesh->comm);
 
+    _n_g_enttities_compute(mesh);
+
     for (int k = 0; k < 3; k++) {
       barycenter[k] = barycenter[k] / mesh->nGVtx;
     }
@@ -2402,6 +2453,9 @@ PDM_surf_mesh_n_g_vtx_get
 )
 {
   assert (mesh != NULL);
+  
+  _n_g_enttities_compute(mesh);
+
   return mesh->nGVtx;
 }
 

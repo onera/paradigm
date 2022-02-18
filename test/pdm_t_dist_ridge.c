@@ -326,8 +326,6 @@ int main(int argc, char *argv[])
                                                             PDM_OWNERSHIP_KEEP);
 
   PDM_dist_cloud_surf_surf_mesh_global_data_set (dist,
-                                                 gn_line,
-                                                 gn_vtx,
                                                  n_part);
 
   PDM_dist_cloud_surf_surf_mesh_part_set (dist,

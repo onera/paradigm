@@ -299,8 +299,6 @@ program testf
 
 
   call pdm_dist_cloud_surf_surf_mesh_global_data_set(dist,    &
-                                                     gn_face, &
-                                                     gn_vtx,  &
                                                      n_part)
 
   call pdm_dist_cloud_surf_surf_mesh_part_set(dist,          &

@@ -1049,9 +1049,6 @@ main
   nFace[0][0] = nFaceA_merge;
   nFace[1][0] = nFaceB;
 
-  PDM_g_num_t nGFace[2] = {nFaceA_merge, nFaceB};
-  PDM_g_num_t nGVtx[2] = {nVtxA_merge, nVtxB};
-
   double projectCoeff = 1.;
 
   //
@@ -1059,11 +1056,7 @@ main
   //
 
   PDM_ol_t *ol = PDM_ol_create (n_part,
-                                nGFace[0],
-                                nGVtx[0],
                                 n_part,
-                                nGFace[1],
-                                nGVtx[1],
                                 projectCoeff,
                                 PDM_MPI_COMM_WORLD);
 

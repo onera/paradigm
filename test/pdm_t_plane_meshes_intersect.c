@@ -1693,11 +1693,7 @@ char *argv[]
    */
 
   PDM_ol_t *ol = PDM_ol_create (n_part,
-                                nGFace[0],
-                                nGVtx[0],
                                 n_part,
-                                nGFace[1],
-                                nGVtx[1],
                                 projectCoeff,
                                 PDM_MPI_COMM_WORLD);
   if (i_rank == 0){

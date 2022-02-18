@@ -1673,8 +1673,6 @@ int main(int argc, char *argv[])
                                                                PDM_OWNERSHIP_KEEP);
 
   PDM_dist_cloud_surf_surf_mesh_global_data_set (id_dist,
-                                                 n_g_face,
-                                                 n_g_vtx,
                                                  n_part_src);
 
   for (int i_part = 0; i_part < n_part_src; i_part++) {

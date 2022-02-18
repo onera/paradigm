@@ -151,12 +151,10 @@ module pdm_dist_cloud_surf
     !> \brief Set global data of a surface mesh
     !!
     !! \param [in]   dcs            Pointer to \ref PDM_dist_cloud_surf object
-    !! \param [in]   n_g_face       Global number of faces
-    !! \param [in]   n_g_vtx        Global number of vertices
     !! \param [in]   n_part         Number of partition
     !!
 
-    subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set (dcs, n_g_face, n_g_vtx, n_part) &
+    subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set (dcs, n_part) &
          bind (c, name = 'PDM_dist_cloud_surf_surf_mesh_global_data_set')
 
       use iso_c_binding
@@ -164,13 +162,6 @@ module pdm_dist_cloud_surf
       implicit none
 
       type (c_ptr), value          :: dcs
-#ifdef PDM_LONG_G_NUM
-      integer(c_long), value       :: n_g_face
-      integer(c_long), value       :: n_g_vtx
-#else
-      integer(c_int), value        :: n_g_face
-      integer(c_int), value        :: n_g_vtx
-#endif
       integer(c_int), value        :: n_part
     end subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set
 

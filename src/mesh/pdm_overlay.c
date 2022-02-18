@@ -5499,11 +5499,7 @@ _compute_overlay
  * This function builds an initializes an overlaying surface meshes object
  *
  * \param [in]  n_partMeshA   Number of local partitions of the meshA input
- * \param [in]  nGFaceA       Number of global faces of the meshA input
- * \param [in]  nGVtxA        Number of global vertices of the meshA input
  * \param [in]  n_partMeshB   Number of local partitions of the meshB input
- * \param [in]  nGFaceB       Number of global faces of the meshB input
- * \param [in]  nGVtxB        Number of global vertices of the meshB input
  * \param [in]  projectCoeff  Projection coefficient to define the overlay surface projection
  *                            If value == 0, the surface projection is MeshA
  *                            If value == 1, the surface projection is MeshB
@@ -5520,11 +5516,7 @@ PDM_ol_t *
 PDM_ol_create
 (
  const int          n_partMeshA,
- const PDM_g_num_t  nGFaceMeshA,
- const PDM_g_num_t  nGVtxMeshA,
  const int          n_partMeshB,
- const PDM_g_num_t  nGFaceMeshB,
- const PDM_g_num_t  nGVtxMeshB,
  const double       projectCoeff,
  const PDM_MPI_Comm comm
 )
@@ -5555,8 +5547,8 @@ PDM_ol_create
   ol->extentsTol           = 1e-3;
   ol->samePlaneTol         = 1e-6;
   ol->comm                 = comm;
-  ol->meshA                = PDM_surf_mesh_create(nGFaceMeshA, nGVtxMeshA, n_partMeshA, comm);
-  ol->meshB                = PDM_surf_mesh_create(nGFaceMeshB, nGVtxMeshB, n_partMeshB, comm);
+  ol->meshA                = PDM_surf_mesh_create(n_partMeshA, comm);
+  ol->meshB                = PDM_surf_mesh_create(n_partMeshB, comm);
   ol->olMeshA              = NULL;
   ol->olMeshB              = NULL;
   //ol->dbbtreeA             = NULL;
