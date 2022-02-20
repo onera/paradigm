@@ -1512,6 +1512,8 @@ PDM_MPI_Comm       comm
                              &dface_edge_idx,
                              PDM_OWNERSHIP_KEEP);
 
+  // PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dmesh->dn_face, "dface_edge ::");
+
   int          *pn_edge        = NULL;
   PDM_g_num_t **pedge_ln_to_gn = NULL;
 
@@ -1539,6 +1541,14 @@ PDM_MPI_Comm       comm
     // PDM_log_trace_array_long(pface_ln_to_gn[ipart], pn_face       [ipart]             , "(in part ) face_ln_to_gn ::");
     // PDM_log_trace_array_int (pface_edge_idx[ipart], pn_face[ipart]+1             , "(in part ) face_edge_idx ::");
     // PDM_log_trace_array_int (pface_edge    [ipart], pface_edge_idx[ipart][pn_face[ipart]], "(in part ) face_edge ::");
+
+    // PDM_log_trace_part_connectivity_gnum(pmeshes->parts[ipart]->face_edge_idx,
+    //                                      pmeshes->parts[ipart]->face_edge,
+    //                                      pface_ln_to_gn[ipart],
+    //                                      pedge_ln_to_gn[ipart],
+    //                                      pn_face[ipart],
+    //                                      "face_edge_gnum");
+
   }
 
   // edge_vtx
@@ -1552,6 +1562,8 @@ PDM_MPI_Comm       comm
                              &dedge_vtx,
                              &dedge_vtx_idx,
                              PDM_OWNERSHIP_KEEP);
+
+  // PDM_log_trace_connectivity_long(dedge_vtx_idx, dedge_vtx, dmesh->dn_face, "dedge_vtx ::");
 
   int          *pn_vtx        = NULL;
   PDM_g_num_t **pvtx_ln_to_gn = NULL;
