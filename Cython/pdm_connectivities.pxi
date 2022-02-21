@@ -220,6 +220,13 @@ def part_connectivity_transpose(NPY.ndarray[int, mode='c', ndim=1]    n_entity2,
         l_np_entity2_entity1_idx.append(np_entity2_entity1_idx)
         l_np_entity2_entity1.append(np_entity2_entity1)
     
+    free(_n_entity1)
+    free(_n_entity2)
+    free(_entity1_entity2_idx)
+    free(_entity1_entity2)
+    free(_entity2_entity1_idx)
+    free(_entity2_entity1)
+    
     return l_np_entity2_entity1_idx, l_np_entity2_entity1
 
 # ------------------------------------------------------------------------
@@ -268,5 +275,10 @@ def part_connectivity_to_connectity_idx(NPY.ndarray[int, mode='c', ndim=1]    n_
         
         l_np_entity1_entity2_idx.append(np_entity1_entity2_idx)
         l_np_entity1_entity2.append(np_entity1_entity2)
+
+    free(_n_entity1)
+    free(_entity1_entity2_in)
+    free(_entity1_entity2_idx)
+    free(_entity1_entity2)
     
     return l_np_entity1_entity2_idx, l_np_entity1_entity2
