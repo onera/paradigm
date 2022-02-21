@@ -1860,6 +1860,20 @@ PDM_mesh_location_shared_nodal_mesh_set
 {
   ml->mesh_nodal = mesh_nodal;
   ml->shared_nodal = 1;
+
+  int n_part = 0;
+  if (mesh_nodal != NULL) {
+    n_part = PDM_Mesh_nodal_n_part_get(mesh_nodal);
+  }
+
+  ml->cell_vtx_idx = malloc(sizeof(PDM_l_num_t *) * n_part);
+  ml->cell_vtx     = malloc(sizeof(PDM_l_num_t *) * n_part);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    ml->cell_vtx_idx[i_part] = NULL;
+    ml->cell_vtx    [i_part] = NULL;
+  }
+
 }
 
 
@@ -1880,14 +1894,14 @@ PDM_mesh_location_mesh_global_data_set
 )
 {
 
+  assert (ml->shared_nodal == 0);
+
   if (ml->shared_nodal == 0) {
     if(ml->mesh_nodal != NULL) {
       PDM_Mesh_nodal_free (ml->mesh_nodal);
     }
     ml->mesh_nodal = PDM_Mesh_nodal_create (n_part, ml->comm);
   }
-
-
 
   if(ml->shared_nodal == 0) {
     ml->face_vtx_n   = malloc(sizeof(PDM_l_num_t *) * n_part);
@@ -1905,8 +1919,6 @@ PDM_mesh_location_mesh_global_data_set
     ml->cell_vtx_idx[i_part] = NULL;
     ml->cell_vtx    [i_part] = NULL;
   }
-
-
 }
 
 
@@ -3405,6 +3417,7 @@ PDM_mesh_location_t        *ml
         PDM_error(__FILE__, __LINE__, 0, "PDM_mesh_location error : Bad Element type\n");
       }
     }
+    
     ml->cell_vtx_idx[ipart] = malloc (sizeof(int) * (n_elt+1));
     ml->cell_vtx_idx[ipart][0] = 0;
     for (int i = 0; i < n_elt; i++) {
@@ -3449,20 +3462,22 @@ PDM_mesh_location_t        *ml
                                       ipart,
                                       &connec);
         if (parent_num != NULL) {
+          int idx2 = 0;
           for (int i = 0; i < n_elt_block; i++) {
             n_vtx_elt = n_vtx_per_elt[ipart][parent_num[i]];
             int idx = ml->cell_vtx_idx[ipart][parent_num[i]];
             for (int j = 0; j < n_vtx_elt; j++) {
-              ml->cell_vtx[ipart][idx+j] = connec[j];
+              ml->cell_vtx[ipart][idx+j] = connec[idx2++];
             }
           }
         }
         else {
+          int idx2 = 0;
           for (int i = 0; i < n_elt_block; i++) {
             n_vtx_elt = n_vtx_per_elt[ipart][ielt];
             int idx = ml->cell_vtx_idx[ipart][ielt++];
             for (int j = 0; j < n_vtx_elt; j++) {
-              ml->cell_vtx[ipart][idx+j] = connec[j];
+              ml->cell_vtx[ipart][idx+j] = connec[idx2++];
             }
           }
         }
@@ -4708,6 +4723,7 @@ PDM_mesh_location_t        *ml
     PDM_timer_resume(ml->timer);
 
     if (ml->reverse_result) {
+
       /*
        *  Reverse results : Get points in elements
        *  ----------------------------------------
