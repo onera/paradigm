@@ -29,6 +29,7 @@ ctypedef @PYX_NPY_L_NUM@ npy_pdm_lnum_t
 npy_pdm_gnum_dtype = @PYX_NPY_G_NUM_DTYPE@
 pdm_has_parmetis   = @PYX_PDM_HAS_PARMETIS@
 pdm_has_ptscotch   = @PYX_PDM_HAS_PTSCOTCH@
+pdm_has_pdma       = @PYX_PDM_HAS_PDMA@
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
 
