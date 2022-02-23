@@ -346,7 +346,6 @@ program testf
                                      i,            &
                                      stride)
 
-    ! Compute size of data array on current part
     call PDM_part_to_part_ref_gnum2_get (ptp,        &
                                          i-1,        &
                                          n_ref_num2, &
@@ -371,6 +370,7 @@ program testf
       do k = gnum1_come_from_idx(j)+1, gnum1_come_from_idx(j+1)
         write (fid, *) "    ", gnum1_come_from(k), " -> ", data(idx:idx+stride(k)-1)
         idx = idx + stride(k)
+        ! write (fid, *) "    ", gnum1_come_from(k), " -> ", data(k)
       end do
     end do
     write (fid, *) ""
@@ -401,19 +401,6 @@ program testf
     call PDM_pointer_array_part_set (part2_data_r,       &
                                      i,                  &
                                      my_part2(i)%data)
-
-    ! write (fid, *) "part2", i, ", stride :", my_part2(i)%stride
-    ! write (fid, *) "part2", i, ", data :", my_part2(i)%g_nums
-
-    ! call PDM_pointer_array_part_get (part2_stride_r,     &
-    !                                  i,                  &
-    !                                  stride)
-
-    ! call PDM_pointer_array_part_get (part2_data_r,       &
-    !                                  i,                  &
-    !                                  data)
-    ! write (fid, *) "part2", i, ", stride :", stride
-    ! write (fid, *) "part2", i, ", data :", data
   end do
 
 
@@ -461,6 +448,7 @@ program testf
       do k = my_part1(i)%part1_to_part2_idx(j)+1, my_part1(i)%part1_to_part2_idx(j+1)
         write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(idx:idx+stride(k)-1)
         idx = idx + stride(k)
+        ! write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(k)
       end do
     end do
     write (fid, *) ""

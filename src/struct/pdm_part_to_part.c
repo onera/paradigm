@@ -656,8 +656,8 @@ _p2p_stride_var_reverse_irecv_stride_wait
     _MPI_buffer_recv_idx[i+1] = _MPI_buffer_recv_idx[i] + blk_recv_stride[i];
   }
 
-  PDM_log_trace_array_int(_MPI_buffer_recv_n, ptp->n_rank, "MPI_buffer_recv_n : ");
-  PDM_log_trace_array_int(_MPI_buffer_recv_idx, n_blk_recv+1, "MPI_buffer_recv_idx : ");
+  // PDM_log_trace_array_int(_MPI_buffer_recv_n, ptp->n_rank, "MPI_buffer_recv_n : ");
+  // PDM_log_trace_array_int(_MPI_buffer_recv_idx, n_blk_recv+1, "MPI_buffer_recv_idx : ");
 
 
   *MPI_buffer_recv_n    = _MPI_buffer_recv_n;
@@ -1546,11 +1546,11 @@ _p2p_stride_var_reverse_iexch_wait
     }
   }
 
-  PDM_log_trace_array_int(ptp->async_i_recv_buffer[request_irecv], ptp->n_rank+1, "async_i_recv_buffer : ");
-  PDM_log_trace_array_int(ptp->async_n_recv_buffer[request_irecv], ptp->n_rank  , "async_n_recv_buffer : ");
-  double *buf = (double *) ptp->async_recv_buffer[request_irecv];
-  int size  = ptp->async_i_recv_buffer[request_irecv][ptp->n_rank]/(sizeof(double));
-  PDM_log_trace_array_double(buf, size, "buf : ");
+  // PDM_log_trace_array_int(ptp->async_i_recv_buffer[request_irecv], ptp->n_rank+1, "async_i_recv_buffer : ");
+  // PDM_log_trace_array_int(ptp->async_n_recv_buffer[request_irecv], ptp->n_rank  , "async_n_recv_buffer : ");
+  // double *buf = (double *) ptp->async_recv_buffer[request_irecv];
+  // int size  = ptp->async_i_recv_buffer[request_irecv][ptp->n_rank]/(sizeof(double));
+  // PDM_log_trace_array_double(buf, size, "buf : ");
 
 //  PDM_log_trace_array_double((double *) ptp->async_recv_buffer[request], ptp->async_i_recv_buffer[request][ptp->n_rank]/ (int) s_data, "ptp->async_recv_buffer[request] : ");
 
@@ -1645,7 +1645,7 @@ PDM_part_to_part_create
   ptp->part1_to_part2           = part1_to_part2;        
   ptp->comm                     = comm;
 
-  if (1) {
+  if (0) {
     log_trace("--- Part1 ---\n");
     for (int i_part = 0; i_part < ptp->n_part1; i_part++) {
       log_trace("part %d: n_elt = %d\n", i_part, ptp->n_elt1[i_part]);
@@ -2370,10 +2370,6 @@ PDM_part_to_part_create
       ptp->active_rank_recv[ptp->n_active_rank_recv++] = i;
     }
   }
-
-  log_trace("ptp->n_active_rank_send = %d, ptp->n_active_rank_recv = %d\n",
-            ptp->n_active_rank_send,
-            ptp->n_active_rank_recv);
 
   free (order);
 
@@ -3122,26 +3118,6 @@ PDM_part_to_part_iexch
  int                               *request
 )
 {
-  if (1) {
-    PDM_MPI_Barrier(ptp->comm);
-    log_trace("\n\n--- Part1 ---\n");
-    for (int i_part = 0; i_part < ptp->n_part1; i_part++) {
-      log_trace("part %d:\n", i_part);
-      PDM_log_trace_array_int(part1_stride[i_part],
-                              ptp->n_elt1[i_part],
-                              "part1_stride : ");
-      int *_idx = PDM_array_new_idx_from_sizes_int(part1_stride[i_part],
-                                                   ptp->n_elt1[i_part]);
-      PDM_log_trace_connectivity_long(_idx,
-                                     (PDM_g_num_t *) part1_data[i_part],
-                                     ptp->n_elt1[i_part],
-                                     "part1_data : ");
-      free (_idx);
-    }
-
-    PDM_MPI_Barrier(ptp->comm);
-  }
-
   int tag = PDM_MPI_Rand_tag (ptp->comm);
 
   PDM_UNUSED (cst_stride);
@@ -3765,33 +3741,6 @@ PDM_part_to_part_reverse_iexch
  int                               *request
 )
 {
-  if (1) {
-    PDM_MPI_Barrier(ptp->comm);
-    log_trace("\n\n--- Part2 ---\n");
-    for (int i_part = 0; i_part < ptp->n_part2; i_part++) {
-      log_trace("part %d:\n", i_part);
-
-      int _n_elt = 0;
-      if (t_part2_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART2) {
-        _n_elt = ptp->n_elt2[i_part];
-      } else if (t_part2_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM) {
-        _n_elt = ptp->gnum1_come_from_idx[i_part][ptp->n_ref_gnum2[i_part]];
-      }
-      PDM_log_trace_array_int(part2_stride[i_part],
-                              _n_elt,
-                              "part2_stride : ");
-      int *_idx = PDM_array_new_idx_from_sizes_int(part2_stride[i_part],
-                                                   _n_elt);
-      PDM_log_trace_connectivity_long(_idx,
-                                      (PDM_g_num_t *) part2_data[i_part],
-                                      _n_elt,
-                                      "part2_data : ");
-      free (_idx);
-    }
-
-    PDM_MPI_Barrier(ptp->comm);
-  }
-
   int tag = PDM_MPI_Rand_tag (ptp->comm);
 
   *request = _find_open_async_exch (ptp);

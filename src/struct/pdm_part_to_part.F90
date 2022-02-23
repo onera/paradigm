@@ -360,16 +360,24 @@ subroutine PDM_part_to_part_iexch (ptp,              &
                                                gnum1_come_from_idx, &
                                                gnum1_come_from)
 
-    part2_stride%length(i) = gnum1_come_from_idx(n_ref+1)
+    if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
 
-    call PDM_pointer_array_part_get (part2_stride, &
-                                     i,            &
-                                     stride)
+      part2_stride%length(i) = gnum1_come_from_idx(n_ref+1)
 
-    s_part2_data = 0
-    do j = 1,gnum1_come_from_idx(n_ref+1)
-      s_part2_data = s_part2_data + stride(j)
-    end do
+      call PDM_pointer_array_part_get (part2_stride, &
+                                       i,            &
+                                       stride)
+
+      s_part2_data = 0
+      do j = 1,gnum1_come_from_idx(n_ref+1)
+        s_part2_data = s_part2_data + stride(j)
+      end do
+
+    else
+
+      s_part2_data = cst_stride * gnum1_come_from_idx(n_ref+1)
+
+    end if
 
     part2_data%length(i) = s_part2_data
   end do
@@ -497,16 +505,24 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                               part1_to_part2_idx, &
                                               part1_to_part2)
 
-    part1_stride%length(i) = part1_to_part2_idx(n_elt1+1)
+    if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
 
-    call PDM_pointer_array_part_get (part1_stride, &
+      part1_stride%length(i) = part1_to_part2_idx(n_elt1+1)
+
+      call PDM_pointer_array_part_get (part1_stride, &
                                      i,            &
                                      stride)
 
-    s_part1_data = 0
-     do j = 1,part1_to_part2_idx(n_elt1+1)
-      s_part1_data = s_part1_data + stride(j)
-    end do
+      s_part1_data = 0
+      do j = 1,part1_to_part2_idx(n_elt1+1)
+        s_part1_data = s_part1_data + stride(j)
+      end do
+
+    else
+
+      s_part1_data = cst_stride * part1_to_part2_idx(n_elt1+1)
+
+    end if
 
     part1_data%length(i) = s_part1_data
   end do
