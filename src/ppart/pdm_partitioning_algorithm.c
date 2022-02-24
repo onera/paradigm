@@ -138,7 +138,7 @@ PDM_part_assemble_partitions
    * Each proc get all the entities affected to its partitions
    */
   PDM_part_to_block_t *ptb_partition =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                              &dpart_ln_to_gn,
@@ -421,7 +421,7 @@ PDM_part_distgroup_to_partgroup
    */
   int dgroup_tot_size = dgroup_idx[n_group];
   PDM_part_to_block_t *ptb_group =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                              (PDM_g_num_t **) & dgroup,
@@ -1564,7 +1564,7 @@ PDM_part_generate_entity_graph_comm
    * Setup protocol exchange
    */
   PDM_part_to_block_t *ptb =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
             (PDM_g_num_t **) pentity_ln_to_gn,

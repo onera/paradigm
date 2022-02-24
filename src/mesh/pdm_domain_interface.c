@@ -289,7 +289,7 @@ static int _interface_to_graph
     // log_trace("\nSize of graph : %d (prev %d), start new it\n", n_connected, n_connected_prev);
     n_connected_prev = n_connected;
 
-    ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                     1.,
                                    &recv_data,
@@ -1012,7 +1012,7 @@ static int _match_internal_edges
 
 
   // 4. Send back result on edge distribution
-                       ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                       ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_NOTHING,
                                                        1.,
                                                       &results_edge,
@@ -1522,7 +1522,7 @@ static void _connect_additional_edges
   free(key_recv_face_n);
 
   // 4. We send back the matches to vertex distribution to have block property
-  PDM_part_to_block_t *ptb_vtx2 = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  PDM_part_to_block_t *ptb_vtx2 = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                             PDM_PART_TO_BLOCK_POST_NOTHING,
                                                             1.,
                                           (PDM_g_num_t **) &key_vtx_gnum,

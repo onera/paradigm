@@ -151,17 +151,6 @@ PDM_block_to_part_create
 );
 
 
-PDM_block_to_part_t *
-PDM_block_to_part_create_cf
-(
- const PDM_g_num_t    *block_distrib_idx,
- const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Fint    fcomm
-);
-
-
 /**
  *
  * \brief Initialize an exchange

@@ -292,15 +292,15 @@ end subroutine PDM_part_to_block_create
 !!
 !!
 
-subroutine PDM_part_to_block_create2 (ptb,              &
-                                      t_distrib,        &
-                                      t_post,           &
-                                      partActiveNode,   &
-                                      gnum_elt,         &
-                                      dataDistribIndex, &
-                                      n_elt,            &
-                                      n_part,           &
-                                      comm)
+subroutine PDM_part_to_block_create_from_distrib (ptb,              &
+                                                  t_distrib,        &
+                                                  t_post,           &
+                                                  partActiveNode,   &
+                                                  gnum_elt,         &
+                                                  dataDistribIndex, &
+                                                  n_elt,            &
+                                                  n_part,           &
+                                                  comm)
   use iso_c_binding
   implicit none
 
@@ -317,16 +317,16 @@ subroutine PDM_part_to_block_create2 (ptb,              &
   integer(c_int)                    :: c_comm
 
   interface
-    function PDM_part_to_block_create2_c (t_distrib,        &
-                                          t_post,           &
-                                          partActiveNode,   &
-                                          gnum_elt,         &
-                                          dataDistribIndex, &
-                                          n_elt,            &
-                                          n_part,           &
-                                          comm)             &
-    result (ptb)                                            &
-    bind (c, name='PDM_part_to_block_create2')
+    function PDM_part_to_block_create_from_distrib_c (t_distrib,        &
+                                                      t_post,           &
+                                                      partActiveNode,   &
+                                                      gnum_elt,         &
+                                                      dataDistribIndex, &
+                                                      n_elt,            &
+                                                      n_part,           &
+                                                      comm)             &
+    result (ptb)                                                        &
+    bind (c, name='PDM_part_to_block_create_from_distrib')
       use iso_c_binding
       implicit none
 
@@ -340,21 +340,21 @@ subroutine PDM_part_to_block_create2 (ptb,              &
       integer(c_int), value :: n_part
       integer(c_int), value :: comm
 
-    end function PDM_part_to_block_create2_c
+    end function PDM_part_to_block_create_from_distrib_c
   end interface
 
   c_comm = PDM_MPI_Comm_f2c(comm)
 
-  ptb = PDM_part_to_block_create2_c (t_distrib,                    &
-                                     t_post,                       &
-                                     partActiveNode,               &
-                                     c_loc(gnum_elt%cptr),         &
-                                     c_loc(dataDistribIndex%cptr), &
-                                     c_loc(n_elt),                 &
-                                     n_part,                       &
-                                     c_comm)
+  ptb = PDM_part_to_block_create_from_distrib_c (t_distrib,                    &
+                                                 t_post,                       &
+                                                 partActiveNode,               &
+                                                 c_loc(gnum_elt%cptr),         &
+                                                 c_loc(dataDistribIndex%cptr), &
+                                                 c_loc(n_elt),                 &
+                                                 n_part,                       &
+                                                 c_comm)
 
-end subroutine PDM_part_to_block_create2
+end subroutine PDM_part_to_block_create_from_distrib
 
 
 !>

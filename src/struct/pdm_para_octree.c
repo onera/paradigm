@@ -8407,7 +8407,7 @@ if (_octree->use_win_shared) {
                                                             &n_pts,
                                                             (const PDM_g_num_t **) &pts_g_num);
 
-  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                                          1.,
                                                          &pts_g_num1,
@@ -8975,7 +8975,7 @@ if (_octree->use_win_shared) {
    *  Back to original partitioning
    */
   /* 1) Part-to-block */
-  ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  ptb1 = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                     1.,
                                     &pts_g_num2,
@@ -9928,7 +9928,7 @@ if (_octree->use_win_shared) {
                                                             &n_pts,
                                                             (const PDM_g_num_t **) &pts_g_num);
 
-  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                                          1.,
                                                          &pts_g_num1,
@@ -10639,7 +10639,7 @@ if (_octree->use_win_shared) {
    *  End of phase 2 -- Back to original partitioning
    */
   /* 1) Part-to-block */
-  ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  ptb1 = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                     1.,
                                     &pts_g_num2,

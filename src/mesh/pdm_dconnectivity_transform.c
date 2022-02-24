@@ -472,7 +472,7 @@ PDM_dconnectivity_transpose
 
   int save_entity_distrib = 0;
   if(entity2_distrib != NULL && entity2_distrib[0] != -1) {
-    ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                     1.,
                                     &ln_to_gn,
@@ -606,7 +606,7 @@ PDM_dorder_reverse
   /*
    * In order to revert the conncectivty we use the global numbering property
    */
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                        1.,
                                       (PDM_g_num_t **) &dentity1_entity2,
@@ -683,7 +683,7 @@ PDM_dgroup_entity_transpose
   PDM_MPI_Comm_size(comm, &n_rank);
 
   //printf(" dgroup_entity_idx[%i] = %i \n", n_group, dgroup_entity_idx[n_group]);
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                         PDM_PART_TO_BLOCK_POST_MERGE,
                                                         1.,
                                                         &dgroup_entity,
