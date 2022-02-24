@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1260,6 +1261,51 @@ PDM_block_to_part_gnum_idx_get
 )
 {
   return (PDM_l_num_t) (gNum - 1 - btp->block_distrib_idx[btp->i_rank]);
+}
+
+
+/**
+ *
+ * \brief Get the number of partitions
+ *
+ * \param [in] btp         Block to part structure
+ *
+ * \return  Number of partitions
+ */
+
+int
+PDM_block_to_part_n_part_get
+(
+ PDM_block_to_part_t *btp
+ )
+{
+  assert (btp != NULL);
+
+  return btp->n_part;
+}
+
+
+/**
+ *
+ * \brief Get the number of elements in a given partition
+ *
+ * \param [in] btp         Block to part structure
+ * \param [in] i_part      Id of current partition
+ *
+ * \return  Number of element in the current partition
+ */
+
+int
+PDM_block_to_part_n_elt_get
+(
+ PDM_block_to_part_t *btp,
+ const int            i_part
+ )
+{
+  assert (btp != NULL);
+  assert (i_part < btp->n_part);
+
+  return btp->n_elt[i_part];
 }
 
 #ifdef __cplusplus

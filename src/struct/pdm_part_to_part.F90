@@ -23,7 +23,6 @@ module pdm_part_to_part
 
   use pdm
   use pdm_pointer_array
-  use iso_c_binding
 
   implicit none
 
@@ -33,32 +32,13 @@ module pdm_part_to_part
   integer, parameter :: PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = 3
 
 
-  type part_t
-
-    integer                       :: n_elt
-    integer(pdm_g_num_s), pointer :: g_nums(:)             => null()
-    integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:) => null()
-    integer(pdm_g_num_s), pointer :: part1_to_part2(:)     => null()
-
-  end type part_t
-
-
-  type part_data_t
-
-    integer(pdm_l_num_s), pointer :: stride(:) => null()
-    type(c_ptr)                   :: data      = C_NULL_PTR
-
-  end type part_data_t
-
-
-
 interface
 
 !>
 !!
-!! \brief Free a block to part structure
+!! \brief Free a part to part structure
 !!
-!! \param [inout] ptp  Block to part structure
+!! \param [inout] ptp  Part to part structure
 !!
 !! \return       NULL
 !!
@@ -365,7 +345,7 @@ subroutine PDM_part_to_part_iexch (ptp,              &
       part2_stride%length(i) = gnum1_come_from_idx(n_ref+1)
 
       call PDM_pointer_array_part_get (part2_stride, &
-                                       i,            &
+                                       i-1,          &
                                        stride)
 
       s_part2_data = 0
@@ -510,8 +490,8 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
       part1_stride%length(i) = part1_to_part2_idx(n_elt1+1)
 
       call PDM_pointer_array_part_get (part1_stride, &
-                                     i,            &
-                                     stride)
+                                       i-1,          &
+                                       stride)
 
       s_part1_data = 0
       do j = 1,part1_to_part2_idx(n_elt1+1)

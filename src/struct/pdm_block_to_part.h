@@ -143,11 +143,11 @@ PDM_block_to_part_global_timer_get
 PDM_block_to_part_t *
 PDM_block_to_part_create
 (
- const PDM_g_num_t    *block_distrib_idx,
- const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Comm        comm
+ const PDM_g_num_t   *block_distrib_idx,
+ const PDM_g_num_t  **gnum_elt,
+ const int           *n_elt,
+ const int            n_part,
+ const PDM_MPI_Comm   comm
 );
 
 
@@ -251,6 +251,40 @@ PDM_block_to_part_gnum_idx_get
  PDM_block_to_part_t *btp,
  PDM_g_num_t gNum
 );
+
+
+/**
+ *
+ * \brief Get the number of partitions
+ *
+ * \param [in] btp         Block to part structure
+ *
+ * \return  Number of partitions
+ */
+
+int
+PDM_block_to_part_n_part_get
+(
+ PDM_block_to_part_t *btp
+ );
+
+
+/**
+ *
+ * \brief Get the number of elements in a given partition
+ *
+ * \param [in] btp         Block to part structure
+ * \param [in] i_part      Id of current partition
+ *
+ * \return  Number of element in the current partition
+ */
+
+int
+PDM_block_to_part_n_elt_get
+(
+ PDM_block_to_part_t *btp,
+ const int            i_part
+ );
 
 #ifdef	__cplusplus
 }

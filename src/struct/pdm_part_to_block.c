@@ -2726,6 +2726,47 @@ PDM_part_to_block_global_weight_get
   return ptb->weight_g;
 }
 
+
+
+/**
+ *
+ * \brief Get number of MPI ranks
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return  Number of MPI ranks
+ *
+ */
+
+int
+PDM_part_to_block_n_ranks_get
+(
+ PDM_part_to_block_t *ptb
+)
+{
+  return ptb->s_comm;
+}
+
+
+/**
+ *
+ * \brief Return total number of element in the current process (summed over all partitions)
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return Total number of element in the current process
+ *
+ */
+
+int
+PDM_part_to_block_n_elt_proc_get
+(
+ PDM_part_to_block_t *ptb
+ )
+ {
+  return ptb->n_elt_proc;
+ }
+
 #undef _MIN
 #undef _MAX
 

@@ -224,22 +224,22 @@ program testf
 
   do i = 1, n_part1
     call PDM_pointer_array_part_set(gnum_elt1,                      &
-                                    i,                              &
+                                    i-1,                            &
                                     my_part1(i)%g_nums)
 
     call PDM_pointer_array_part_set(part1_to_part2_idx,             &
-                                    i,                              &
+                                    i-1,                            &
                                     my_part1(i)%part1_to_part2_idx)
 
     call PDM_pointer_array_part_set(part1_to_part2,                 &
-                                    i,                              &
+                                    i-1,                            &
                                     my_part1(i)%part1_to_part2)
   end do
 
 
   do i = 1, n_part2
     call PDM_pointer_array_part_set(gnum_elt2,                      &
-                                    i,                              &
+                                    i-1,                            &
                                     my_part2(i)%g_nums)
   end do
 
@@ -303,14 +303,14 @@ program testf
     my_part1(i)%stride(:) = 1
 
     call PDM_pointer_array_part_set (part1_stride,       &
-                                     i,                  &
+                                     i-1,                &
                                      my_part1(i)%stride)
 
     allocate(my_part1(i)%data(n_elt1(i)))
     my_part1(i)%data(:) = my_part1(i)%g_nums(:)
 
     call PDM_pointer_array_part_set (part1_data,         &
-                                     i,                  &
+                                     i-1,                &
                                      my_part1(i)%data)
   end do
 
@@ -343,7 +343,7 @@ program testf
   do i = 1, n_part2
 
     call PDM_pointer_array_part_get (part2_stride, &
-                                     i,            &
+                                     i-1,          &
                                      stride)
 
     call PDM_part_to_part_ref_gnum2_get (ptp,        &
@@ -357,7 +357,7 @@ program testf
                                                gnum1_come_from)
 
     call PDM_pointer_array_part_get (part2_data,   &
-                                     i,            &
+                                     i-1,          &
                                      data)
 
 
@@ -392,14 +392,14 @@ program testf
     my_part2(i)%stride(:) = 1
 
     call PDM_pointer_array_part_set (part2_stride_r,     &
-                                     i,                  &
+                                     i-1,                &
                                      my_part2(i)%stride)
 
     allocate(my_part2(i)%data(n_elt2(i)))
     my_part2(i)%data(:) = my_part2(i)%g_nums(:)
 
     call PDM_pointer_array_part_set (part2_data_r,       &
-                                     i,                  &
+                                     i-1,                &
                                      my_part2(i)%data)
   end do
 
@@ -432,11 +432,11 @@ program testf
   do i = 1, n_part1
 
     call PDM_pointer_array_part_get (part1_stride_r, &
-                                     i,              &
+                                     i-1,            &
                                      stride)
 
     call PDM_pointer_array_part_get (part1_data_r,   &
-                                     i,              &
+                                     i-1,            &
                                      data)
 
     write (fid, *) "part1", i

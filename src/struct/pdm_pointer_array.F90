@@ -48,11 +48,13 @@ module pdm_pointer_array
   interface PDM_pointer_array_part_set
     module procedure PDM_pointer_array_part_set_int
     module procedure PDM_pointer_array_part_set_g_num
+    module procedure PDM_pointer_array_part_set_double
   end interface
 
   interface PDM_pointer_array_part_get
     module procedure PDM_pointer_array_part_get_int
     module procedure PDM_pointer_array_part_get_g_num
+    module procedure PDM_pointer_array_part_get_double
   end interface
 
 
@@ -167,16 +169,15 @@ module pdm_pointer_array
       stop
     end if
 
-    if (i_part .gt. size(pa%cptr)) then
+    if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_set_int : wrong i_part"
       stop
     end if
 
-    pa%cptr(i_part)   = c_loc(pointer_f)
-    pa%length(i_part) = size(pointer_f)
+    pa%cptr(i_part+1)   = c_loc(pointer_f)
+    pa%length(i_part+1) = size(pointer_f)
 
   end subroutine PDM_pointer_array_part_set_int
-
 
 
   !>
@@ -202,15 +203,49 @@ module pdm_pointer_array
       stop
     end if
 
-    if (i_part .gt. size(pa%cptr)) then
+    if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_set_g_num : wrong i_part"
       stop
     end if
 
-    pa%cptr(i_part)   = c_loc(pointer_f)
-    pa%length(i_part) = size(pointer_f)
+    pa%cptr(i_part+1)   = c_loc(pointer_f)
+    pa%length(i_part+1) = size(pointer_f)
 
   end subroutine PDM_pointer_array_part_set_g_num
+
+
+  !>
+  !! \brief Set a partition from a Fortran pointer
+  !!
+  !! \param [in]  pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]  i_part     Id of partition
+  !! \param [in]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_set_double (pa,        &
+                                                i_part,    &
+                                                pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    double precision,          pointer :: pointer_f(:)
+
+    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+      print *, "PDM_pointer_array_part_set_double : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_set_double : wrong i_part"
+      stop
+    end if
+
+    pa%cptr(i_part+1)   = c_loc(pointer_f)
+    pa%length(i_part+1) = size(pointer_f)
+
+  end subroutine PDM_pointer_array_part_set_double
 
 
   !>
@@ -233,18 +268,15 @@ module pdm_pointer_array
     type(c_ptr), value                 :: pointer_c
     integer, intent(in)                :: length
 
-    if (i_part .gt. size(pa%cptr)) then
+    if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_set_int : wrong i_part"
       stop
     end if
 
-    pa%cptr(i_part)   = pointer_c
-    pa%length(i_part) = length
+    pa%cptr(i_part+1)   = pointer_c
+    pa%length(i_part+1) = length
 
   end subroutine PDM_pointer_array_part_set_from_cptr
-
-
-
 
 
   !>
@@ -272,15 +304,15 @@ module pdm_pointer_array
       stop
     end if
 
-    if (i_part .gt. size(pa%cptr)) then
+    if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_set_int : wrong i_part"
       stop
     end if
 
 
-    call c_f_pointer(pa%cptr(i_part),     &
-                     pointer_f,           &
-                     [pa%length(i_part)])
+    call c_f_pointer(pa%cptr(i_part+1),     &
+                     pointer_f,             &
+                     [pa%length(i_part+1)])
 
   end subroutine PDM_pointer_array_part_get_int
 
@@ -310,17 +342,55 @@ module pdm_pointer_array
       stop
     end if
 
-    if (i_part .gt. size(pa%cptr)) then
+    if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_set_int : wrong i_part"
       stop
     end if
 
 
-    call c_f_pointer(pa%cptr(i_part),     &
-                     pointer_f,           &
-                     [pa%length(i_part)])
+    call c_f_pointer(pa%cptr(i_part+1),     &
+                     pointer_f,             &
+                     [pa%length(i_part+1)])
 
   end subroutine PDM_pointer_array_part_get_g_num
+
+
+  !>
+  !! \brief Get a partition
+  !!
+  !! Maps a Fortran pointer onto a C pointer
+  !!
+  !! \param [in]       pa         Array of \ref PDM_pointer_array_t
+  !! \param [in]       i_part     Id of partition
+  !! \param [in, out]  pointer_f  Pointer to a double array
+  !!
+
+  subroutine PDM_pointer_array_part_get_double (pa,        &
+                                                i_part,    &
+                                                pointer_f)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: i_part
+    double precision,          pointer :: pointer_f(:)
+
+    if (pa%type .ne. PDM_TYPE_double) then
+      print *, "PDM_pointer_array_part_set_double : wrong type"
+      stop
+    end if
+
+    if (i_part .ge. size(pa%cptr)) then
+      print *, "PDM_pointer_array_part_set_double : wrong i_part"
+      stop
+    end if
+
+
+    call c_f_pointer(pa%cptr(i_part+1),     &
+                     pointer_f,             &
+                     [pa%length(i_part+1)])
+
+  end subroutine PDM_pointer_array_part_get_double
 
 
 
