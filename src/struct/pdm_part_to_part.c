@@ -1067,13 +1067,15 @@ _p2p_stride_var_iexch
     for (int i = 0; i < ptp->n_part1; i++) {
       _part1_to_part2_stride[i] = malloc (sizeof(int) * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
       size_t k = 0;
+      size_t s_part_data = 0;
       for (int j = 0; j < ptp->n_elt1[i]; j++) {
         for (int j1 = ptp->part1_to_part2_idx[i][j]; j1 < ptp->part1_to_part2_idx[i][j+1]; j1++) {
           _part1_to_part2_stride[i][k++] = part1_stride[i][j];
+          s_part_data += part1_stride[i][j];
         }
       }
 
-      _part1_to_part2_data[i] = malloc (s_data * k);
+      _part1_to_part2_data[i] = malloc (s_data * s_part_data);
       unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
 
       int beg_data = 0;
