@@ -172,6 +172,8 @@ program testf
 
   if (exch_in_place) then
     deallocate(stride, data)
+    call PDM_pointer_array_free(part_data)
+    call PDM_pointer_array_free(part_stride)
   else
     call PDM_pointer_array_free_from_c(part_data)
     call PDM_pointer_array_free_from_c(part_stride)

@@ -93,12 +93,12 @@ end function PDM_block_to_part_n_elt_get
 
 
 subroutine PDM_block_to_part_exch_c (btp,          &
-                                              s_data,       &
-                                              t_stride,     &
-                                              block_stride, &
-                                              block_data,   &
-                                              part_stride,  &
-                                              part_data)    &
+                                     s_data,       &
+                                     t_stride,     &
+                                     block_stride, &
+                                     block_data,   &
+                                     part_stride,  &
+                                     part_data)    &
 bind (c, name='PDM_block_to_part_exch')
   use iso_c_binding
   implicit none
