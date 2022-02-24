@@ -1155,7 +1155,7 @@ PDM_dist_cloud_surf_compute
     }
 
     int one = 1;
-    PDM_block_to_part_exch (btp,
+    PDM_block_to_part_exch_in_place (btp,
                             sizeof(double),
                             PDM_STRIDE_CST_INTERLACED,
                             &one,
@@ -1165,7 +1165,7 @@ PDM_dist_cloud_surf_compute
     free (block_pts_elt_dist2);
 
     int three = 3;
-    PDM_block_to_part_exch (btp,
+    PDM_block_to_part_exch_in_place (btp,
                             sizeof(double),
                             PDM_STRIDE_CST_INTERLACED,
                             &three,
@@ -1174,7 +1174,7 @@ PDM_dist_cloud_surf_compute
                             (void **) pt_cloud->proj);
     free (block_pts_elt_proj);
 
-    PDM_block_to_part_exch (btp,
+    PDM_block_to_part_exch_in_place (btp,
                             sizeof(PDM_g_num_t),
                             PDM_STRIDE_CST_INTERLACED,
                             &one,

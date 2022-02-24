@@ -109,13 +109,13 @@ program testf
   block_data = [10.d0, 20.d0, 30.d0, 40.d0, 50.d0]
 
 
-  call PDM_block_to_part_exch_with_alloc (btp,                       &
-                                          8,                         & ! s_data
-                                          PDM_STRIDE_VAR_INTERLACED, & ! t_stride
-                                          block_stride,              &
-                                          block_data,                &
-                                          part_stride,               &
-                                          part_data)
+  call PDM_block_to_part_exch (btp,                       &
+                               8,                         & ! s_data
+                               PDM_STRIDE_VAR_INTERLACED, & ! t_stride
+                               block_stride,              &
+                               block_data,                &
+                               part_stride,               &
+                               part_data)
 
   call PDM_block_to_part_free (btp)
 

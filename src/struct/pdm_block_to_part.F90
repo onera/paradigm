@@ -92,14 +92,14 @@ bind (c, name='PDM_block_to_part_n_elt_get')
 end function PDM_block_to_part_n_elt_get
 
 
-subroutine PDM_block_to_part_exch_with_alloc_c (btp,          &
-                                                s_data,       &
-                                                t_stride,     &
-                                                block_stride, &
-                                                block_data,   &
-                                                part_stride,  &
-                                                part_data)    &
-bind (c, name='PDM_block_to_part_exch2')
+subroutine PDM_block_to_part_exch_c (btp,          &
+                                              s_data,       &
+                                              t_stride,     &
+                                              block_stride, &
+                                              block_data,   &
+                                              part_stride,  &
+                                              part_data)    &
+bind (c, name='PDM_block_to_part_exch')
   use iso_c_binding
   implicit none
 
@@ -111,19 +111,19 @@ bind (c, name='PDM_block_to_part_exch2')
   type(c_ptr)           :: part_stride
   type(c_ptr)           :: part_data
 
-end subroutine PDM_block_to_part_exch_with_alloc_c
+end subroutine PDM_block_to_part_exch_c
 
 
 end interface
 
 
-interface PDM_block_to_part_exch_with_alloc
-  module procedure PDM_block_to_part_exch_with_alloc_int
-  module procedure PDM_block_to_part_exch_with_alloc_g_num
-  module procedure PDM_block_to_part_exch_with_alloc_double
+interface PDM_block_to_part_exch
+  module procedure PDM_block_to_part_exch_int
+  module procedure PDM_block_to_part_exch_g_num
+  module procedure PDM_block_to_part_exch_double
 end interface
 
-private :: PDM_block_to_part_exch_with_alloc_finalize
+private :: PDM_block_to_part_exch_finalize
 
 contains
 
@@ -237,7 +237,7 @@ end subroutine PDM_block_to_part_create
 !                                          block_data,   &
 !                                          part_stride,  &
 !                                          part_data)    &
-!     bind (c, name='PDM_block_to_part_exch')
+!     bind (c, name='PDM_block_to_part_exch_in_place')
 !       use iso_c_binding
 !       implicit none
 
@@ -249,10 +249,10 @@ end subroutine PDM_block_to_part_create
 !       type(c_ptr)           :: part_stride
 !       type(c_ptr)           :: part_data
 
-!     end subroutine PDM_block_to_part_exch_c
+!     end subroutine PDM_block_to_part_exch_in_place_c
 !   end interface
 
-!   call PDM_block_to_part_exch_c (btp,                     &
+!   call PDM_block_to_part_exch_in_place_c (btp,                     &
 !                                  s_data,                  &
 !                                  t_stride,                &
 !                                  c_loc(block_stride),     &
@@ -304,7 +304,7 @@ end subroutine PDM_block_to_part_create
 
 !   end do
 
-! end subroutine PDM_block_to_part_exch
+! end subroutine PDM_block_to_part_exch_in_place
 
 
 !>
@@ -323,7 +323,7 @@ end subroutine PDM_block_to_part_create
 !!
 !!
 
-subroutine PDM_block_to_part_exch_with_alloc_int (btp,          &
+subroutine PDM_block_to_part_exch_int (btp,          &
                                                   s_data,       &
                                                   t_stride,     &
                                                   block_stride, &
@@ -344,7 +344,7 @@ subroutine PDM_block_to_part_exch_with_alloc_int (btp,          &
   type(c_ptr)                       :: c_part_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part_data   = C_NULL_PTR
 
-  call PDM_block_to_part_exch_with_alloc_c (btp,                 &
+  call PDM_block_to_part_exch_c (btp,                 &
                                             s_data,              &
                                             t_stride,            &
                                             c_loc(block_stride), &
@@ -352,7 +352,7 @@ subroutine PDM_block_to_part_exch_with_alloc_int (btp,          &
                                             c_part_stride,       &
                                             c_part_data)
 
-  call PDM_block_to_part_exch_with_alloc_finalize (btp,           &
+  call PDM_block_to_part_exch_finalize (btp,           &
                                                    t_stride,      &
                                                    block_stride,  &
                                                    PDM_TYPE_INT,  &
@@ -361,10 +361,10 @@ subroutine PDM_block_to_part_exch_with_alloc_int (btp,          &
                                                    part_stride,   &
                                                    part_data)
 
-end subroutine PDM_block_to_part_exch_with_alloc_int
+end subroutine PDM_block_to_part_exch_int
 
 
-subroutine PDM_block_to_part_exch_with_alloc_g_num (btp,          &
+subroutine PDM_block_to_part_exch_g_num (btp,          &
                                                     s_data,       &
                                                     t_stride,     &
                                                     block_stride, &
@@ -385,7 +385,7 @@ subroutine PDM_block_to_part_exch_with_alloc_g_num (btp,          &
   type(c_ptr)                       :: c_part_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part_data   = C_NULL_PTR
 
-  call PDM_block_to_part_exch_with_alloc_c (btp,                 &
+  call PDM_block_to_part_exch_c (btp,                 &
                                             s_data,              &
                                             t_stride,            &
                                             c_loc(block_stride), &
@@ -393,7 +393,7 @@ subroutine PDM_block_to_part_exch_with_alloc_g_num (btp,          &
                                             c_part_stride,       &
                                             c_part_data)
 
-  call PDM_block_to_part_exch_with_alloc_finalize (btp,            &
+  call PDM_block_to_part_exch_finalize (btp,            &
                                                    t_stride,       &
                                                    block_stride,   &
                                                    PDM_TYPE_G_NUM, &
@@ -402,10 +402,10 @@ subroutine PDM_block_to_part_exch_with_alloc_g_num (btp,          &
                                                    part_stride,    &
                                                    part_data)
 
-end subroutine PDM_block_to_part_exch_with_alloc_g_num
+end subroutine PDM_block_to_part_exch_g_num
 
 
-subroutine PDM_block_to_part_exch_with_alloc_double (btp,          &
+subroutine PDM_block_to_part_exch_double (btp,          &
                                                      s_data,       &
                                                      t_stride,     &
                                                      block_stride, &
@@ -426,7 +426,7 @@ subroutine PDM_block_to_part_exch_with_alloc_double (btp,          &
   type(c_ptr)                       :: c_part_stride = C_NULL_PTR
   type(c_ptr)                       :: c_part_data   = C_NULL_PTR
 
-  call PDM_block_to_part_exch_with_alloc_c (btp,                 &
+  call PDM_block_to_part_exch_c (btp,                 &
                                             s_data,              &
                                             t_stride,            &
                                             c_loc(block_stride), &
@@ -434,7 +434,7 @@ subroutine PDM_block_to_part_exch_with_alloc_double (btp,          &
                                             c_part_stride,       &
                                             c_part_data)
 
-  call PDM_block_to_part_exch_with_alloc_finalize (btp,             &
+  call PDM_block_to_part_exch_finalize (btp,             &
                                                    t_stride,        &
                                                    block_stride,    &
                                                    PDM_TYPE_DOUBLE, &
@@ -443,7 +443,7 @@ subroutine PDM_block_to_part_exch_with_alloc_double (btp,          &
                                                    part_stride,     &
                                                    part_data)
 
-end subroutine PDM_block_to_part_exch_with_alloc_double
+end subroutine PDM_block_to_part_exch_double
 
 
 !>
@@ -493,14 +493,14 @@ subroutine PDM_block_to_part_gnum_idx_get (btp,  &
 
 
 
-  subroutine PDM_block_to_part_exch_with_alloc_finalize (btp,           &
-                                                         t_stride,      &
-                                                         block_stride,  &
-                                                         data_type,     &
-                                                         c_part_stride, &
-                                                         c_part_data,   &
-                                                         part_stride,   &
-                                                         part_data)
+  subroutine PDM_block_to_part_exch_finalize (btp,           &
+                                              t_stride,      &
+                                              block_stride,  &
+                                              data_type,     &
+                                              c_part_stride, &
+                                              c_part_data,   &
+                                              part_stride,   &
+                                              part_data)
     use iso_c_binding
     implicit none
 
@@ -564,6 +564,6 @@ subroutine PDM_block_to_part_gnum_idx_get (btp,  &
 
     end do
 
-  end subroutine PDM_block_to_part_exch_with_alloc_finalize
+  end subroutine PDM_block_to_part_exch_finalize
 
 end module pdm_block_to_part

@@ -132,7 +132,7 @@ _deduce_combine_connectivity_impl
    */
   int**         pentity1_entity3_n;
   PDM_g_num_t** pentity1_entity3;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           dentity2_entity3_n,
@@ -838,7 +838,7 @@ PDM_dconnectivity_to_extract_dconnectivity
    */
   int**         tmp_pextract_entity1_entity2_n;
   PDM_g_num_t** tmp_pextract_entity1_entity2;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           dentity1_entity2_n,

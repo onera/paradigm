@@ -1576,7 +1576,7 @@ static void _connect_additional_edges
   }
   int         **recv_stride;
   PDM_g_num_t **recv_data;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stride,
@@ -1766,7 +1766,7 @@ static void _domain_interface_face_to_vertex
                                                       1,
                                                       comm);
   int cst_stride = 1;
-  PDM_block_to_part_exch(btp,
+  PDM_block_to_part_exch_in_place(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST_INTERLACED,
                          &cst_stride,
@@ -1774,7 +1774,7 @@ static void _domain_interface_face_to_vertex
                          NULL,
              (void ** ) &dedge_face_join);
 
-  PDM_block_to_part_exch(btp,
+  PDM_block_to_part_exch_in_place(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST_INTERLACED,
                          &cst_stride,
@@ -1860,7 +1860,7 @@ static void _domain_interface_face_to_vertex
 
   int         **recv_stride_tmp = NULL;
   PDM_g_num_t **recv_data_tmp   = NULL;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           dedge_gnum_n,
@@ -1873,7 +1873,7 @@ static void _domain_interface_face_to_vertex
   free(recv_data_tmp);
 
   int stride2 = 2;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST_INTERLACED,
                          &stride2,

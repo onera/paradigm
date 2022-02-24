@@ -462,7 +462,7 @@ PDM_block_to_part_create
  */
 
 void
-PDM_block_to_part_exch
+PDM_block_to_part_exch_in_place
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,
@@ -901,7 +901,7 @@ PDM_block_to_part_exch
  */
 
 void
-PDM_block_to_part_exch2
+PDM_block_to_part_exch
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,

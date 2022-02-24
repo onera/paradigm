@@ -528,7 +528,7 @@ PDM_part_distgroup_to_partgroup
    */
   int**         part_group_stri;
   PDM_g_num_t** part_group_data;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stri_full,
@@ -735,7 +735,7 @@ _dconnectivity_to_pconnectivity_abs
    * Exchange
    */
   int**         pstride;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stri,
@@ -1268,7 +1268,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
    */
   int**         pstride;
   PDM_g_num_t** pconnectivity_tmp; /* We keep it in double precision because it contains global numbering */
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stri,
@@ -1735,7 +1735,7 @@ PDM_part_generate_entity_graph_comm
 
   // printf(" PDM_part_assemble_partitions PDM_part_generate_entity_graph_comm flag 4 - 1 \n");
   // PDM_MPI_Barrier(comm);
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(int),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stri,
@@ -1747,7 +1747,7 @@ PDM_part_generate_entity_graph_comm
 
   if(setup_priority == 1 ){
     int stride_one = 1;
-    PDM_block_to_part_exch2(btp,
+    PDM_block_to_part_exch(btp,
                             sizeof(int),
                             PDM_STRIDE_CST_INTERLACED,
                             &stride_one,
@@ -1970,7 +1970,7 @@ PDM_part_dcoordinates_to_pcoordinates
 
   int cst_stride = 3;
   int **pvtx_stride = NULL;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(double),
                           PDM_STRIDE_CST_INTERLACED,
                           &cst_stride,
@@ -2017,7 +2017,7 @@ PDM_part_dfield_to_pfield
 
   int cst_stride = 1;
   int **pfield_stride = NULL;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           s_data,
                           PDM_STRIDE_CST_INTERLACED,
                           &cst_stride,
@@ -2065,7 +2065,7 @@ PDM_part_dfield_to_pfield2
                                                       n_part,
                                                       comm);
 
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           s_data,
                           t_stride,
              (int  *  )   dfield_stri,
@@ -2229,7 +2229,7 @@ PDM_extend_mesh
    */
   int**         part_dual_graph_n;
   PDM_g_num_t** part_dual_graph;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           dual_graph_n,

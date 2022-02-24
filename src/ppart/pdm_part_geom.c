@@ -493,7 +493,7 @@ PDM_dreorder_from_coords
                                                       comm);
 
   int stride_one = 1;
-  PDM_block_to_part_exch(btp,
+  PDM_block_to_part_exch_in_place(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
@@ -650,7 +650,7 @@ PDM_dreorder_from_length
                                                       comm);
 
   int stride_one = 1;
-  PDM_block_to_part_exch(btp,
+  PDM_block_to_part_exch_in_place(btp,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,

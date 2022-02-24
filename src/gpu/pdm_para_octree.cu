@@ -2986,7 +2986,7 @@ PDM_para_octree_closest_point_GPU
       block_upper_bound_dist[i] = block_closest_src_dist1[n_closest_points*(i+1) - 1];
     }
 
-    PDM_block_to_part_exch (btp2,
+    PDM_block_to_part_exch_in_place (btp2,
                             sizeof(double),
                             PDM_STRIDE_CST,
                             &one,
@@ -3203,7 +3203,7 @@ PDM_para_octree_closest_point_GPU
                                                         octree->comm);
   PDM_part_to_block_free (ptb1);
 
-  PDM_block_to_part_exch (btp1,
+  PDM_block_to_part_exch_in_place (btp1,
                           sizeof(double),
                           PDM_STRIDE_CST,
                           &_n_closest_points,
@@ -3211,7 +3211,7 @@ PDM_para_octree_closest_point_GPU
                           NULL,
                           (void **) &closest_octree_pt_dist2);
 
-  PDM_block_to_part_exch (btp1,
+  PDM_block_to_part_exch_in_place (btp1,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST,
                           &_n_closest_points,

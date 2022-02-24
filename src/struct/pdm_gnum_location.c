@@ -256,7 +256,7 @@ PDM_gnum_location_compute
                                                        gnum_loc->n_part_out,
                                                        gnum_loc->comm);
 
-  PDM_block_to_part_exch2 (btp,
+  PDM_block_to_part_exch (btp,
                           s_data,
                           PDM_STRIDE_VAR_INTERLACED,
                           block_stride,
