@@ -2166,6 +2166,110 @@ void PDM_domain_interface_translate_face2vtx
   }
 }
 
+
+void
+PDM_domain_interface_translate_vtx2face
+(
+ PDM_domain_interface_t  *dom_intrf,
+ int                     *dn_vtx,
+ int                     *dn_face,
+ int                    **dface_vtx_idx,
+ PDM_g_num_t            **dface_vtx
+)
+{
+  PDM_UNUSED(dom_intrf);
+  PDM_UNUSED(dn_vtx);
+  PDM_UNUSED(dn_face);
+  PDM_UNUSED(dface_vtx_idx);
+  PDM_UNUSED(dface_vtx);
+
+  assert (dom_intrf != NULL);
+  assert (dom_intrf->interface_dn_face == NULL);
+  assert (dom_intrf->interface_dn_vtx  != NULL);
+  dom_intrf->interface_dn_face  = (int          *) malloc(dom_intrf->n_interface * sizeof(int          ));
+  dom_intrf->interface_ids_face = (PDM_g_num_t **) malloc(dom_intrf->n_interface * sizeof(PDM_g_num_t *));
+  dom_intrf->interface_dom_face = (int         **) malloc(dom_intrf->n_interface * sizeof(int         *));
+
+  printf(" n_interface = %i \n", dom_intrf->n_interface);
+  // Simple case is not yet managed, copy to go back to full case
+  int **_interface_dom_vtx = NULL;
+  if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    _interface_dom_vtx = (int **) malloc(dom_intrf->n_interface * sizeof(int*));
+    printf(" n_interface = %i \n", dom_intrf->n_interface);
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+      _interface_dom_vtx[i_intrf] = (int *) malloc(2*dom_intrf->interface_dn_vtx[i_intrf]*sizeof(int));
+      for (int j = 0; j < dom_intrf->interface_dn_face[i_intrf]; j++) {
+        _interface_dom_vtx[i_intrf][2*j]   = dom_intrf->interface_dom_vtx[i_intrf][0];
+        _interface_dom_vtx[i_intrf][2*j+1] = dom_intrf->interface_dom_vtx[i_intrf][1];
+      }
+
+      if(0 == 0) {
+        PDM_log_trace_array_long(_interface_dom_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
+      }
+
+    }
+  } else {
+    _interface_dom_vtx = dom_intrf->interface_dom_vtx;
+  }
+
+  /*
+   * - part_to_block on interfaces ids (with global shift on vtx)
+   */
+  int n_domain = dom_intrf->n_domain;
+  PDM_g_num_t *face_per_block_offset = _per_block_offset(n_domain, dn_face, dom_intrf->comm);
+  PDM_g_num_t *vtx_per_block_offset  = _per_block_offset(n_domain, dn_vtx,  dom_intrf->comm);
+
+
+  // PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  //                                                     PDM_PART_TO_BLOCK_POST_MERGE,
+  //                                                     1.,
+  //                                                     interface_ids_shifted,
+  //                                                     weight,
+  //                                                     interface_dn_twice,
+  //                                                     n_interface,
+  //                                                     comm);
+
+  // int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+
+  // PDM_g_num_t *gnum = PDM_part_to_block_block_gnum_get(ptb)
+
+  // PDM_part_to_block_free(ptb);
+
+  /*
+   * - Shift face_vtx
+   */
+
+  /*
+   * - part_to_part avec part1 = dface_ln_to_gn et part2 = blk_gnum du ptb1 et part1_to_part2 = dface_vtx
+   */
+
+  free(face_per_block_offset);
+  free(vtx_per_block_offset );
+
+  // dom_intrf->is_result[PDM_BOUND_TYPE_FACE] = 1;
+
+  // Simple case is not yet managed, free working arrays
+  if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+    //   for (int j = 0; j < dom_intrf->interface_dn_vtx[i_intrf]; j++) {
+    //     assert(dom_intrf->interface_dom_vtx[i_intrf][2*j]   == dom_intrf->interface_dom_face[i_intrf][0]);
+    //     assert(dom_intrf->interface_dom_vtx[i_intrf][2*j+1] == dom_intrf->interface_dom_face[i_intrf][1]);
+    //   }
+      // free(dom_intrf->interface_dom_vtx[i_intrf]);
+      free(_interface_dom_vtx[i_intrf]);
+    }
+    free(_interface_dom_vtx);
+    // free(dom_intrf->interface_dom_face);
+    // dom_intrf->interface_dom_face = dom_intrf->interface_dom_vtx;
+  }
+
+  // To suppress when algo is done
+  free(dom_intrf->interface_dn_face );
+  free(dom_intrf->interface_ids_face);
+  free(dom_intrf->interface_dom_face);
+
+}
+
 void PDM_domain_interface_get
 (
  PDM_domain_interface_t *dom_intrf,
