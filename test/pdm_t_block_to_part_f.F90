@@ -37,6 +37,7 @@ program testf
 #endif  
 
   !-----------------------------------------------------------
+  logical, parameter                    :: exch_in_place = .true.
   integer, parameter                    :: comm = MPI_COMM_WORLD
 
   type(c_ptr)                           :: btp = C_NULL_PTR
@@ -55,6 +56,7 @@ program testf
 
   integer(pdm_l_num_s), pointer         :: stride(:) => null()
   double precision,     pointer         :: data(:)   => null()
+
 
   integer                               :: code
   integer                               :: i_rank
@@ -108,26 +110,53 @@ program testf
   allocate(block_data(n_elt(1)))
   block_data = [10.d0, 20.d0, 30.d0, 40.d0, 50.d0]
 
+  if (exch_in_place) then
+    call PDM_pointer_array_create (part_stride,  &
+                                   n_part,       &
+                                   PDM_TYPE_INT)
+    allocate(stride(n_elt(1)))
+    call PDM_pointer_array_part_set (part_stride, &
+                                     0,           &
+                                     stride)
 
-  call PDM_block_to_part_exch (btp,                       &
-                               8,                         & ! s_data
-                               PDM_STRIDE_VAR_INTERLACED, & ! t_stride
-                               block_stride,              &
-                               block_data,                &
-                               part_stride,               &
-                               part_data)
+    call PDM_pointer_array_create (part_data,       &
+                                   n_part,          &
+                                   PDM_TYPE_DOUBLE)
+    allocate(data(n_elt(1)))
+    call PDM_pointer_array_part_set (part_data, &
+                                     0,         &
+                                     data)
+
+    call PDM_block_to_part_exch_in_place (btp,                       &
+                                          8,                         & ! s_data
+                                          PDM_STRIDE_VAR_INTERLACED, & ! t_stride
+                                          block_stride,              &
+                                          block_data,                &
+                                          part_stride,               &
+                                          part_data)
+  else
+    call PDM_block_to_part_exch (btp,                       &
+                                 8,                         & ! s_data
+                                 PDM_STRIDE_VAR_INTERLACED, & ! t_stride
+                                 block_stride,              &
+                                 block_data,                &
+                                 part_stride,               &
+                                 part_data)
+  end if
 
   call PDM_block_to_part_free (btp)
 
 
   !  Check part data
-  call PDM_pointer_array_part_get (part_stride, &
-                                   0,           &
-                                   stride)
+  if (.not.exch_in_place) then
+    call PDM_pointer_array_part_get (part_stride, &
+                                     0,           &
+                                     stride)
 
-  call PDM_pointer_array_part_get (part_data,   &
-                                   0,           &
-                                   data)
+    call PDM_pointer_array_part_get (part_data,   &
+                                     0,           &
+                                     data)
+  end if
 
   print *, "part_stride :", stride
   print *, "part_data   :", data
@@ -141,8 +170,12 @@ program testf
   deallocate(block_data)
   call PDM_pointer_array_free (gnum_elt)
 
-  call PDM_pointer_array_free_from_c(part_data)
-  call PDM_pointer_array_free_from_c(part_stride)
+  if (exch_in_place) then
+    deallocate(stride, data)
+  else
+    call PDM_pointer_array_free_from_c(part_data)
+    call PDM_pointer_array_free_from_c(part_stride)
+  end if
 
   if (i_rank .eq. 0) then
     write(*, *) "-- End"
