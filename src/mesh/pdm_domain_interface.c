@@ -2221,13 +2221,54 @@ PDM_domain_interface_translate_entity1_entity2
       stride_one           [itrf][2*k  ] = 1;
       stride_one           [itrf][2*k+1] = 1;
     }
-    if (0 == 1) {
+    if (1 == 1) {
       log_trace("Interface %d\n", itrf);
       PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*dn_interface[itrf], "  shifted gnum");
       PDM_log_trace_array_long(send_data            [itrf], 2*dn_interface[itrf], "  send");
     }
   }
 
+  /*
+   * part_to_block to equilibrate / fit by block
+   */
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      interface_ids_shifted,
+                                                      weight,
+                                                      dn_interface_twice,
+                                                      n_interface,
+                                                      comm);
+
+  // Save distribution & gnum from first PtB. We will use it for following PtBs
+  int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t *gnum   = PDM_part_to_block_block_gnum_get(ptb);
+  PDM_g_num_t *distri = PDM_part_to_block_distrib_index_get(ptb);
+
+  int         *recv_stride = NULL;
+  PDM_g_num_t *recv_data   = NULL;
+  int n_connected_l = PDM_part_to_block_exch(ptb,
+                                             sizeof(PDM_g_num_t),
+                                             PDM_STRIDE_VAR_INTERLACED,
+                                             -1,
+                                             stride_one,
+                                   (void **) send_data,
+                                             &recv_stride,
+                                   (void **) &recv_data);
+  if (1 == 1) {
+    PDM_log_trace_array_long(gnum        , n_gnum       , "gnum"       );
+    PDM_log_trace_array_int (recv_stride , n_gnum       , "recv stride");
+    PDM_log_trace_array_long(recv_data   , n_connected_l, "recv data"  );
+  }
+
+  /*
+   * At this stage we have in block frame all entity1 and all occurence for all interface
+   */
+
+
+
+  PDM_part_to_block_free(ptb);
 
   for (int itrf = 0; itrf < n_interface; itrf++) {
     free(interface_ids_shifted[itrf]);
@@ -2235,8 +2276,6 @@ PDM_domain_interface_translate_entity1_entity2
     free(weight               [itrf]);
     free(stride_one           [itrf]);
   }
-
-
   free(interface_ids_shifted);
   free(send_data            );
   free(weight               );
