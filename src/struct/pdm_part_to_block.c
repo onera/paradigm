@@ -36,10 +36,6 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
-
 /*============================================================================
  * Type
  *============================================================================*/
@@ -108,9 +104,9 @@ _evaluate_distribution(int          n_ranges,
   for (i = 0; i < n_ranges; i++) {
 
     if (distribution[i] > optim)
-      d_up = _MAX(d_up, distribution[i] - optim);
+      d_up = PDM_MAX(d_up, distribution[i] - optim);
     else
-      d_low = _MAX(d_low, optim - distribution[i]);
+      d_low = PDM_MAX(d_low, optim - distribution[i]);
 
   }
 
@@ -171,7 +167,7 @@ _define_rank_distrib( PDM_part_to_block_t *ptb,
 
     for (int j = 0; j < ptb->n_elt[i]; j++) {
 
-      PDM_g_num_t _gnum_elt = ptb->gnum_elt[i][j] - 1;
+      PDM_g_num_t _gnum_elt = PDM_ABS(ptb->gnum_elt[i][j]) - 1;
 
       int iSample = PDM_binary_search_gap_long (_gnum_elt,
                                                 sampling,
@@ -418,10 +414,10 @@ _active_ranks
       }
 
       int n_node = ptb->n_active_ranks;
-      double part_active_node = _MIN (1, ptb->part_active_node);
-      part_active_node = _MAX (0, part_active_node);
+      double part_active_node = PDM_MIN (1, ptb->part_active_node);
+      part_active_node = PDM_MAX (0, part_active_node);
       ptb->n_active_ranks = (int) floor (n_node * part_active_node);
-      ptb->n_active_ranks = _MAX (1, ptb->n_active_ranks);
+      ptb->n_active_ranks = PDM_MAX (1, ptb->n_active_ranks);
 
       n_active_ranks = 0;
       int coeff = n_node / ptb->n_active_ranks;
@@ -493,7 +489,8 @@ _distrib_data
     ptb->n_elt_proc+= ptb->n_elt[i];
     if(user_distrib == 0) {
       for (int j = 0; j < ptb->n_elt[i]; j++) {
-        _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
+        PDM_g_num_t gnum = PDM_ABS(ptb->gnum_elt[i][j]);
+        _id_max = PDM_MAX (_id_max, gnum);
       }
     }
   }
@@ -715,7 +712,7 @@ _distrib_data
 
     for (int j = 0; j < ptb->n_elt[i]; j++) {
 
-      PDM_g_num_t _gnum_elt = ptb->gnum_elt[i][j] - 1;
+      PDM_g_num_t _gnum_elt = PDM_ABS(ptb->gnum_elt[i][j]) - 1;
 
       int iproc = PDM_binary_search_gap_long (_gnum_elt,
                                               ptb->data_distrib_index,
@@ -758,7 +755,7 @@ _distrib_data
     for (int j = 0; j < ptb->n_elt[i]; j++) {
       int iproc = ptb->dest_proc[idx];
       send_gnum[ptb->i_send_data[iproc] +
-                ptb->n_send_data[iproc]] = ptb->gnum_elt[i][j];
+                ptb->n_send_data[iproc]] = PDM_ABS(ptb->gnum_elt[i][j]);
       idx++;
       ptb->n_send_data[iproc] += 1;
     }
