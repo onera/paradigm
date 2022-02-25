@@ -224,8 +224,8 @@ end subroutine PDM_part_to_part_create
 !! \param [in]   s_data           Data size
 !! \param [in]   part1_stride     Stride of partition 1 data
 !! \param [in]   part1_data       Partition 1 data
-!! \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
-!! \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+!! \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
+!! \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
 !! \param [out]  request          Request
 !!
 !!
@@ -330,7 +330,7 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
   ! Compute lengths
   do i = 1, n_part2
-    call PDM_part_to_part_ref_gnum2_get (ptp,   &
+    call PDM_part_to_part_ref_lnum2_get (ptp,   &
                                          i-1,   &
                                          n_ref, &
                                          ref)
@@ -516,54 +516,54 @@ end subroutine PDM_part_to_part_reverse_iexch
 !!
 !! \param [in]   ptp             Pointer to \ref PDM_part_to_part_t object
 !! \param [in]   i_part          Id of partition
-!! \param [out]  n_ref_gnum2     Number of referenced gnum2
-!! \param [out]  ref_gnum2       Referenced gnum2
+!! \param [out]  n_ref_lnum2     Number of referenced gnum2
+!! \param [out]  ref_lnum2       Referenced gnum2
 !!
 !!
 
-subroutine PDM_part_to_part_ref_gnum2_get (ptp,         &
+subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
                                            i_part,      &
-                                           n_ref_gnum2, &
-                                           ref_gnum2)
+                                           n_ref_lnum2, &
+                                           ref_lnum2)
   use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp
   integer, intent(in)           :: i_part
-  integer, intent(out)          :: n_ref_gnum2
-  integer(pdm_l_num_s), pointer :: ref_gnum2(:)
+  integer, intent(out)          :: n_ref_lnum2
+  integer(pdm_l_num_s), pointer :: ref_lnum2(:)
 
-  type(c_ptr)                   :: c_ref_gnum2 = C_NULL_PTR
+  type(c_ptr)                   :: c_ref_lnum2 = C_NULL_PTR
 
   interface
 
-    subroutine PDM_part_to_part_ref_gnum2_get_c (ptp,         &
+    subroutine PDM_part_to_part_ref_lnum2_get_c (ptp,         &
                                                  i_part,      &
-                                                 n_ref_gnum2, &
-                                                 ref_gnum2)   &
-    bind (c, name='PDM_part_to_part_ref_gnum2_single_part_get')
+                                                 n_ref_lnum2, &
+                                                 ref_lnum2)   &
+    bind (c, name='PDM_part_to_part_ref_lnum2_single_part_get')
       use iso_c_binding
       implicit none
 
       type(c_ptr),    value :: ptp
       integer(c_int), value :: i_part
-      integer(c_int)        :: n_ref_gnum2
-      type(c_ptr)           :: ref_gnum2
+      integer(c_int)        :: n_ref_lnum2
+      type(c_ptr)           :: ref_lnum2
 
-    end subroutine PDM_part_to_part_ref_gnum2_get_c
+    end subroutine PDM_part_to_part_ref_lnum2_get_c
 
   end interface
 
-  call PDM_part_to_part_ref_gnum2_get_c (ptp,         &
+  call PDM_part_to_part_ref_lnum2_get_c (ptp,         &
                                          i_part,      &
-                                         n_ref_gnum2, &
-                                         c_ref_gnum2)
+                                         n_ref_lnum2, &
+                                         c_ref_lnum2)
 
-  call c_f_pointer(c_ref_gnum2,   &
-                   ref_gnum2,     &
-                   [n_ref_gnum2])
+  call c_f_pointer(c_ref_lnum2,   &
+                   ref_lnum2,     &
+                   [n_ref_lnum2])
 
-end subroutine PDM_part_to_part_ref_gnum2_get
+end subroutine PDM_part_to_part_ref_lnum2_get
 
 
 !>
@@ -572,54 +572,54 @@ end subroutine PDM_part_to_part_ref_gnum2_get
 !!
 !! \param [in]   ptp             Pointer to \ref PDM_part_to_part_t object
 !! \param [in]   i_part          Id of partition
-!! \param [out]  n_unref_gnum2   Number of unreferenced gnum2
-!! \param [out]  unref_gnum2     Unreferenced gnum2
+!! \param [out]  n_unref_lnum2   Number of unreferenced gnum2
+!! \param [out]  unref_lnum2     Unreferenced gnum2
 !!
 !!
 
-subroutine PDM_part_to_part_unref_gnum2_get (ptp,           &
+subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
                                              i_part,        &
-                                             n_unref_gnum2, &
-                                             unref_gnum2)
+                                             n_unref_lnum2, &
+                                             unref_lnum2)
   use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp
   integer, intent(in)           :: i_part
-  integer, intent(out)          :: n_unref_gnum2
-  integer(pdm_l_num_s), pointer :: unref_gnum2(:)
+  integer, intent(out)          :: n_unref_lnum2
+  integer(pdm_l_num_s), pointer :: unref_lnum2(:)
 
-  type(c_ptr)                   :: c_unref_gnum2 = C_NULL_PTR
+  type(c_ptr)                   :: c_unref_lnum2 = C_NULL_PTR
 
   interface
 
-    subroutine PDM_part_to_part_unref_gnum2_get_c (ptp,           &
+    subroutine PDM_part_to_part_unref_lnum2_get_c (ptp,           &
                                                    i_part,        &
-                                                   n_unref_gnum2, &
-                                                   unref_gnum2)   &
-    bind (c, name='PDM_part_to_part_unref_gnum2_single_part_get')
+                                                   n_unref_lnum2, &
+                                                   unref_lnum2)   &
+    bind (c, name='PDM_part_to_part_unref_lnum2_single_part_get')
       use iso_c_binding
       implicit none
 
       type(c_ptr),    value :: ptp
       integer(c_int), value :: i_part
-      integer(c_int)        :: n_unref_gnum2
-      type(c_ptr)           :: unref_gnum2
+      integer(c_int)        :: n_unref_lnum2
+      type(c_ptr)           :: unref_lnum2
 
-    end subroutine PDM_part_to_part_unref_gnum2_get_c
+    end subroutine PDM_part_to_part_unref_lnum2_get_c
 
   end interface
 
-  call PDM_part_to_part_unref_gnum2_get_c (ptp,           &
+  call PDM_part_to_part_unref_lnum2_get_c (ptp,           &
                                            i_part,        &
-                                           n_unref_gnum2, &
-                                           c_unref_gnum2)
+                                           n_unref_lnum2, &
+                                           c_unref_lnum2)
 
-  call c_f_pointer(c_unref_gnum2,   &
-                   unref_gnum2,     &
-                   [n_unref_gnum2])
+  call c_f_pointer(c_unref_lnum2,   &
+                   unref_lnum2,     &
+                   [n_unref_lnum2])
 
-end subroutine PDM_part_to_part_unref_gnum2_get
+end subroutine PDM_part_to_part_unref_lnum2_get
 
 
 !>
@@ -667,7 +667,7 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
     end subroutine PDM_part_to_part_gnum1_come_from_get_c
   end interface
 
-  call PDM_part_to_part_ref_gnum2_get (ptp,    &
+  call PDM_part_to_part_ref_lnum2_get (ptp,    &
                                        i_part, &
                                        n_ref,  &
                                        ref)

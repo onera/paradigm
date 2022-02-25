@@ -106,9 +106,6 @@ program testf
   call mpi_comm_rank(comm, i_rank, code)
   call mpi_comm_size(comm, n_rank, code)
 
-  write (strnum, '(i1)') i_rank
-
-  open(unit=fid, file="part_to_part_"//strnum//".log", action='write')
 
   if (n_rank .ne. 2) then
     write(*,*) 'Error : 2 MPI processes are mandatory'
@@ -116,6 +113,8 @@ program testf
     stop
   end if
 
+  write (strnum, '(i1)') i_rank
+  open(unit=fid, file="part_to_part_"//strnum//".log", action='write')
 
   !  Define partitions
   n_part1 = 3
@@ -264,12 +263,12 @@ program testf
   write (fid, *) ""
   write (fid, *) "---- Check ref/unref/gnum1_come_from ----"
   do i = 1, n_part2
-    call PDM_part_to_part_ref_gnum2_get (ptp,        &
+    call PDM_part_to_part_ref_lnum2_get (ptp,        &
                                          i-1,        &
                                          n_ref_num2, &
                                          ref_num2)
 
-    call PDM_part_to_part_unref_gnum2_get (ptp,          &
+    call PDM_part_to_part_unref_lnum2_get (ptp,          &
                                            i-1,          &
                                            n_unref_num2, &
                                            unref_num2)
@@ -361,7 +360,7 @@ program testf
                                      i-1,          &
                                      stride)
 
-    call PDM_part_to_part_ref_gnum2_get (ptp,        &
+    call PDM_part_to_part_ref_lnum2_get (ptp,        &
                                          i-1,        &
                                          n_ref_num2, &
                                          ref_num2)

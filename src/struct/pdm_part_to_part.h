@@ -127,7 +127,7 @@ PDM_part_to_part_t *ptp,
  * \param [in]   ptp                     Block to part structure
  * \param [in]   s_data                  Data size
  * \param [in]   cst_stride              Constant stride
- * \param [in]   ref_part2_to_part1_data Data in ref_gnum2 order
+ * \param [in]   ref_part2_to_part1_data Data in ref_lnum2 order
  * \param [out]  part1_part2_data        Data in part1_to_part2 order
  * \param [out]  request                 Request
  *
@@ -249,17 +249,17 @@ PDM_part_to_part_part1_to_part2_get
  * \brief Get referenced gnum2 elements
  *
  * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_gnum2   Number of referenced gnum2
- * \param [out]  ref_gnum2     Referenced gnum2
+ * \param [out]  n_ref_lnum2   Number of referenced gnum2
+ * \param [out]  ref_lnum2     Referenced gnum2
  *
  */
 
 void
-PDM_part_to_part_ref_gnum2_get
+PDM_part_to_part_ref_lnum2_get
 (
  PDM_part_to_part_t *ptp,
- int               **n_ref_gnum2,
- int              ***ref_gnum2
+ int               **n_ref_lnum2,
+ int              ***ref_lnum2
 );
 
 
@@ -268,17 +268,17 @@ PDM_part_to_part_ref_gnum2_get
  * \brief Get unreferenced gnum2 elements
  *
  * \param [in]   ptp           Block to part structure
- * \param [out]  n_unref_gnum2   Number of referenced gnum2
- * \param [out]  unref_gnum2     Referenced gnum2
+ * \param [out]  n_unref_lnum2   Number of referenced gnum2
+ * \param [out]  unref_lnum2     Referenced gnum2
  *
  */
 
 void
-PDM_part_to_part_unref_gnum2_get
+PDM_part_to_part_unref_lnum2_get
 (
  PDM_part_to_part_t *ptp,
- int               **n_unref_gnum2,
- int               ***unref_gnum2
+ int               **n_unref_lnum2,
+ int               ***unref_lnum2
 );
 
 
@@ -351,7 +351,7 @@ PDM_part_to_part_issend_wait
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
  * \param [in]   cst_stride          Constant stride
- * \param [in]   part2_to_part1_data Data (order given by gnum1_come_from and ref_gnum2 arrays)  
+ * \param [in]   part2_to_part1_data Data (order given by gnum1_come_from and ref_lnum2 arrays)
  * \param [in]   tag                 Tag of the exchange 
  * \param [out]  request             Request
  *
@@ -394,7 +394,7 @@ PDM_part_to_part_reverse_issend_wait
  * \param [in]  ptp           Part to part structure
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
- * \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays) 
+ * \param [in]  part2_data    Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
  * \param [in]  tag           Tag of the exchange 
  * \param [out] request       Request
  *
@@ -485,8 +485,8 @@ PDM_part_to_part_reverse_irecv_wait
  * \param [in]   s_data           Data size
  * \param [in]   part1_stride     Stride of partition 1 data 
  * \param [in]   part1_data       Partition 1 data 
- * \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
- * \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_gnum2 arrays)
+ * \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
+ * \param [out]  part2_data       Partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
  * \param [out]  request          Request
  *
  */
@@ -618,18 +618,18 @@ PDM_part_to_part_n_part_get
  *
  * \param [in]   ptp           Block to part structure
  * \param [in]   i_part        Id of partition
- * \param [out]  n_ref_gnum2   Number of referenced gnum2
- * \param [out]  ref_gnum2     Referenced gnum2
+ * \param [out]  n_ref_lnum2   Number of referenced gnum2
+ * \param [out]  ref_lnum2     Referenced gnum2
  *
  */
 
 void
-PDM_part_to_part_ref_gnum2_single_part_get
+PDM_part_to_part_ref_lnum2_single_part_get
 (
        PDM_part_to_part_t  *ptp,
  const int                  i_part,
-       int                 *n_ref_gnum2,
-       int                **ref_gnum2
+       int                 *n_ref_lnum2,
+       int                **ref_lnum2
 );
 
 
@@ -639,18 +639,18 @@ PDM_part_to_part_ref_gnum2_single_part_get
  *
  * \param [in]   ptp           Block to part structure
  * \param [in]   i_part        Id of partition
- * \param [out]  n_unref_gnum2 Number of unreferenced gnum2
- * \param [out]  unref_gnum2   Unreferenced gnum2
+ * \param [out]  n_unref_lnum2 Number of unreferenced gnum2
+ * \param [out]  unref_lnum2   Unreferenced gnum2
  *
  */
 
 void
-PDM_part_to_part_unref_gnum2_single_part_get
+PDM_part_to_part_unref_lnum2_single_part_get
 (
        PDM_part_to_part_t  *ptp,
  const int                  i_part,
-       int                 *n_unref_gnum2,
-       int                **unref_gnum2
+       int                 *n_unref_lnum2,
+       int                **unref_lnum2
 );
 
 
