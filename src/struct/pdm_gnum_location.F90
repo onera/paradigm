@@ -228,6 +228,7 @@ module pdm_gnum_location
     c_comm       = PDM_MPI_Comm_f2c(f_comm)
     c_n_part_in  = n_part_in
     c_n_part_out = n_part_out
+    c_owner      = owner
 
     gloc = pdm_gnum_location_create_cf(c_n_part_in,  &
                                        c_n_part_out, &
