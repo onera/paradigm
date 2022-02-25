@@ -92,7 +92,7 @@ program testf
   integer                               :: n_rank
   integer                               :: request
 
-  integer                               :: s_part1_data
+  integer                               :: s_part_data
 
   integer                               :: i, j, k, idx
   character                             :: strnum
@@ -303,10 +303,10 @@ program testf
   do i = 1, n_part1
     allocate(my_part1(i)%stride(n_elt1(i)))
     ! my_part1(i)%stride(:) = 1
-    s_part1_data = 0
+    s_part_data = 0
     do j = 1, n_elt1(i)
       my_part1(i)%stride(j) = int(my_part1(i)%g_nums(j))
-      s_part1_data = s_part1_data + my_part1(i)%stride(j)
+      s_part_data = s_part_data + my_part1(i)%stride(j)
     end do
 
     call PDM_pointer_array_part_set (part1_stride,       &
@@ -315,7 +315,7 @@ program testf
 
     ! allocate(my_part1(i)%data(n_elt1(i)))
     ! my_part1(i)%data(:) = my_part1(i)%g_nums(:)
-    allocate(my_part1(i)%data(s_part1_data))
+    allocate(my_part1(i)%data(s_part_data))
     idx = 1
     do j = 1, n_elt1(i)
       do k = 1, int(my_part1(i)%g_nums(j))
@@ -404,14 +404,27 @@ program testf
 
   do i = 1, n_part2
     allocate(my_part2(i)%stride(n_elt2(i)))
-    my_part2(i)%stride(:) = 1
+    ! my_part2(i)%stride(:) = 1
+    s_part_data = 0
+    do j = 1, n_elt2(i)
+      my_part2(i)%stride(j) = int(my_part2(i)%g_nums(j))
+      s_part_data = s_part_data + my_part2(i)%stride(j)
+    end do
 
     call PDM_pointer_array_part_set (part2_stride_r,     &
                                      i-1,                &
                                      my_part2(i)%stride)
 
-    allocate(my_part2(i)%data(n_elt2(i)))
-    my_part2(i)%data(:) = my_part2(i)%g_nums(:)
+    ! allocate(my_part2(i)%data(n_elt2(i)))
+    ! my_part2(i)%data(:) = my_part2(i)%g_nums(:)
+    allocate(my_part2(i)%data(s_part_data))
+    idx = 1
+    do j = 1, n_elt2(i)
+      do k = 1, int(my_part2(i)%g_nums(j))
+        my_part2(i)%data(idx) = k
+        idx = idx + 1
+      end do
+    end do
 
     call PDM_pointer_array_part_set (part2_data_r,       &
                                      i-1,                &

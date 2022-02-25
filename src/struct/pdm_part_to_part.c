@@ -1047,6 +1047,7 @@ _p2p_stride_var_iexch
  int                                request
 )
 {
+  PDM_UNUSED(comm_kind);
 
   int   **_part1_to_part2_stride = (int **) part1_stride; 
   void  **_part1_to_part2_data   = (void **) part1_data;
@@ -1276,7 +1277,6 @@ _p2p_stride_var_reverse_iexch
       int s = 0;
 
       for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
-        // int ielt2 = ptp->ref_gnum2[i][j];
         int ielt2 = ptp->ref_gnum2[i][j] - 1;
         for (int k1 = ptp->gnum1_come_from_idx[i][j]; k1 < ptp->gnum1_come_from_idx[i][j+1]; k1++) {
           _part2_to_part1_stride[i][k++] = part2_stride[i][ielt2];
@@ -1291,7 +1291,6 @@ _p2p_stride_var_reverse_iexch
 
       k = 0;
       for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
-        // int ielt2 = ptp->ref_gnum2[i][j];
         int ielt2 = ptp->ref_gnum2[i][j] - 1;
         for (int k1 = ptp->gnum1_come_from_idx[i][j]; k1 < ptp->gnum1_come_from_idx[i][j+1]; k1++) {
           for (int k2 = part2_idx[ielt2]; k2 < part2_idx[ielt2+1]; k2++) {
@@ -3796,7 +3795,6 @@ PDM_part_to_part_reverse_iexch
 
           int k = 0;
           for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
-            // int ielt2 = ptp->ref_gnum2[i][j];
             int ielt2 = ptp->ref_gnum2[i][j] - 1;
             for (int k1 = ptp->gnum1_come_from_idx[i][j]; k1 < ptp->gnum1_come_from_idx[i][j+1]; k1++) {
               for (int k2 = 0; k2 <  (int) s_data; k2++) {
@@ -3925,7 +3923,6 @@ PDM_part_to_part_reverse_iexch
 
         int k = 0;
         for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
-          // int ielt2 = ptp->ref_gnum2[i][j];
           int ielt2 = ptp->ref_gnum2[i][j] - 1;
           for (int k1 = ptp->gnum1_come_from_idx[i][j]; k1 < ptp->gnum1_come_from_idx[i][j+1]; k1++) {
             for (int k2 = 0; k2 < cst_stride * (int) s_data; k2++) {
