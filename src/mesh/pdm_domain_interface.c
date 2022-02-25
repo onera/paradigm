@@ -2281,13 +2281,13 @@ PDM_domain_interface_translate_entity1_entity2
 
   int **part_stride = NULL;
   int **part_data   = NULL;
-  PDM_block_to_part_exch2(btp,
-                          sizeof(int),
-                          PDM_STRIDE_VAR_INTERLACED,
-                          recv_stride,
-                          recv_data,
-                          &part_stride,
-              (void ***)  &part_data);
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         recv_stride,
+                         recv_data,
+                         &part_stride,
+             (void ***)  &part_data);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
