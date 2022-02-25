@@ -2265,9 +2265,46 @@ PDM_domain_interface_translate_entity1_entity2
   /*
    * At this stage we have in block frame all entity1 and all occurence for all interface
    */
+  int* n_dentity2_entity1 = (int *) malloc( n_domain * sizeof(int));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    n_dentity2_entity1[i_domain] = dentity2_entity1_idx[i_domain][dn_entity2[i_domain]];
+    PDM_log_trace_array_long(dentity2_entity1[i_domain], n_dentity2_entity1[i_domain], "dentity2_entity1");
+  }
 
 
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(gnum,
+                                                                        n_gnum,
+                                             (const PDM_g_num_t    **)  dentity2_entity1,
+                                                                        n_dentity2_entity1,
+                                                                        n_domain,
+                                                                        comm);
 
+  int **part_stride = NULL;
+  int **part_data   = NULL;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(int),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          recv_stride,
+                          recv_data,
+                          &part_stride,
+              (void ***)  &part_data);
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+
+    PDM_log_trace_array_int(part_stride[i_domain], n_dentity2_entity1[i_domain], "part_stride");
+
+    free(part_data[i_domain]);
+    free(part_stride[i_domain]);
+  }
+  free(part_data);
+  free(part_stride);
+
+  free(recv_stride);
+  free(recv_data);
+
+  PDM_block_to_part_free(btp);
+
+  free(n_dentity2_entity1);
   PDM_part_to_block_free(ptb);
 
   for (int itrf = 0; itrf < n_interface; itrf++) {
@@ -2350,32 +2387,6 @@ PDM_domain_interface_translate_vtx2face
                                                  dface_vtx_idx,
                                                  dface_vtx,
                                                  dom_intrf->comm);
-
-  // PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-  //                                                     PDM_PART_TO_BLOCK_POST_MERGE,
-  //                                                     1.,
-  //                                                     interface_ids_shifted,
-  //                                                     weight,
-  //                                                     interface_dn_twice,
-  //                                                     n_interface,
-  //                                                     comm);
-
-  // int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
-
-  // PDM_g_num_t *gnum = PDM_part_to_block_block_gnum_get(ptb)
-
-  // PDM_part_to_block_free(ptb);
-
-  /*
-   * - Shift face_vtx
-   */
-
-  /*
-   * - part_to_part avec part1 = dface_ln_to_gn et part2 = blk_gnum du ptb1 et part1_to_part2 = dface_vtx
-   */
-
-  // free(face_per_block_offset);
-  // free(vtx_per_block_offset );
 
   // dom_intrf->is_result[PDM_BOUND_TYPE_FACE] = 1;
 
