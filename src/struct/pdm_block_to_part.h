@@ -150,6 +150,42 @@ PDM_block_to_part_create
  const PDM_MPI_Comm   comm
 );
 
+/**
+ *
+ * \brief Create a block to partitions with sparse representation
+ *
+ * \param [in]   delt_gnum             Sorted list of gnum that represent the partial block, should be betwenn [1, N]
+ * \param [in]   dn_elt                Number of element in the partial block
+ * \param [in]   gnum_elt              Element global number (size : \ref n_part)
+ * \param [in]   n_elt                 Local number of elements (size : \ref n_part)
+ * \param [in]   n_part                Number of partition
+ * \param [in]   comm                  MPI communicator
+ *
+ * \return   Initialized \ref PDM_block_to_part instance
+ *
+ */
+PDM_block_to_part_t *
+PDM_block_to_part_create_from_sparse_block
+(
+ const PDM_g_num_t     *delt_gnum,
+ const int              dn_elt,
+ const PDM_g_num_t    **gnum_elt,
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
+);
+
+
+PDM_block_to_part_t *
+PDM_block_to_part_create_cf
+(
+ const PDM_g_num_t    *block_distrib_idx,
+ const PDM_g_num_t    **gnum_elt,
+ const int            *n_elt,
+ const int             n_part,
+ const PDM_MPI_Fint    fcomm
+);
+
 
 /**
  *

@@ -47,13 +47,17 @@ module pdm_pointer_array
 
   interface PDM_pointer_array_part_set
     module procedure PDM_pointer_array_part_set_int
+#ifdef PDM_LONG_G_NUM
     module procedure PDM_pointer_array_part_set_g_num
+#endif
     module procedure PDM_pointer_array_part_set_double
   end interface
 
   interface PDM_pointer_array_part_get
     module procedure PDM_pointer_array_part_get_int
+#ifdef PDM_LONG_G_NUM
     module procedure PDM_pointer_array_part_get_g_num
+#endif
     module procedure PDM_pointer_array_part_get_double
   end interface
 
@@ -327,6 +331,7 @@ module pdm_pointer_array
   !! \param [in, out]  pointer_f  Pointer to a g_num array
   !!
 
+#ifdef PDM_LONG_G_NUM
   subroutine PDM_pointer_array_part_get_g_num (pa,        &
                                                i_part,    &
                                                pointer_f)
@@ -353,6 +358,7 @@ module pdm_pointer_array
                      [pa%length(i_part+1)])
 
   end subroutine PDM_pointer_array_part_get_g_num
+#endif
 
 
   !>

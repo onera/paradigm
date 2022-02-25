@@ -141,13 +141,17 @@ end interface
 
 interface PDM_block_to_part_exch
   module procedure PDM_block_to_part_exch_int
+#ifdef PDM_LONG_G_NUM
   module procedure PDM_block_to_part_exch_g_num
+#endif
   module procedure PDM_block_to_part_exch_double
 end interface
 
 interface PDM_block_to_part_exch_in_place
   module procedure PDM_block_to_part_exch_in_place_int
+#ifdef PDM_LONG_G_NUM
   module procedure PDM_block_to_part_exch_in_place_g_num
+#endif
   module procedure PDM_block_to_part_exch_in_place_double
 end interface
 
@@ -273,6 +277,7 @@ subroutine PDM_block_to_part_exch_in_place_int (btp,          &
 end subroutine PDM_block_to_part_exch_in_place_int
 
 
+#ifdef PDM_LONG_G_NUM
 subroutine PDM_block_to_part_exch_in_place_g_num (btp,          &
                                                   s_data,       &
                                                   t_stride,     &
@@ -312,6 +317,7 @@ subroutine PDM_block_to_part_exch_in_place_g_num (btp,          &
                                                  part_data)
 
 end subroutine PDM_block_to_part_exch_in_place_g_num
+#endif
 
 
 subroutine PDM_block_to_part_exch_in_place_double (btp,          &
@@ -412,6 +418,7 @@ subroutine PDM_block_to_part_exch_int (btp,          &
 end subroutine PDM_block_to_part_exch_int
 
 
+#ifdef PDM_LONG_G_NUM
 subroutine PDM_block_to_part_exch_g_num (btp,          &
                                          s_data,       &
                                          t_stride,     &
@@ -451,7 +458,7 @@ subroutine PDM_block_to_part_exch_g_num (btp,          &
                                         part_data)
 
 end subroutine PDM_block_to_part_exch_g_num
-
+#endif
 
 subroutine PDM_block_to_part_exch_double (btp,          &
                                           s_data,       &

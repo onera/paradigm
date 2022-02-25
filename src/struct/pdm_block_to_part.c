@@ -15,6 +15,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_array.h"
 #include "pdm_priv.h"
+#include "pdm_logging.h"
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
@@ -271,6 +272,86 @@ PDM_block_to_part_global_timer_get
  */
 
 PDM_block_to_part_t *
+PDM_block_to_part_create_cf
+(
+ const PDM_g_num_t     *block_distrib_idx,
+ const PDM_g_num_t    **gnum_elt,
+ const int            *n_elt,
+ const int             n_part,
+ const PDM_MPI_Fint    fcomm
+ )
+{
+  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+  return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
+}
+
+
+PDM_block_to_part_t *
+PDM_block_to_part_create_from_sparse_block
+(
+ const PDM_g_num_t     *delt_gnum,  // Should be betwenn [1, N]
+ const int              dn_elt,
+ const PDM_g_num_t    **gnum_elt,
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
+)
+{
+  int n_rank = -1;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  PDM_g_num_t* _block_distrib_idx = malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t max_g_num = 0;
+
+  if(dn_elt > 0) {
+    max_g_num = delt_gnum[dn_elt-1];
+  }
+
+  PDM_MPI_Allgather(&max_g_num,
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    (&_block_distrib_idx[1]),
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    comm);
+
+  _block_distrib_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    _block_distrib_idx[i+1] = PDM_MAX(_block_distrib_idx[i+1], _block_distrib_idx[i]);
+  }
+
+  // PDM_log_trace_array_long(_block_distrib_idx, n_rank+1, "_block_distrib_idx : ");
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(_block_distrib_idx,
+                                                      gnum_elt,
+                                                      n_elt,
+                                                      n_part,
+                                                      comm);
+  free(_block_distrib_idx);
+  /*
+   *  Post traitement du distrib_data
+   */
+  assert(btp->idx_partial         == NULL);
+  assert(btp->n_elt_partial_block == 0);
+  btp->idx_partial = (int * ) malloc( btp->distributed_data_idx[btp->n_rank] * sizeof(int));
+
+  for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
+    int lid = btp->distributed_data[i];
+    PDM_g_num_t g_num_send = lid + btp->block_distrib_idx[btp->i_rank] + 1;
+    int idx_in_partial_block = PDM_binary_search_long(g_num_send, delt_gnum, dn_elt);
+    btp->idx_partial[i] = idx_in_partial_block;
+  }
+  btp->n_elt_partial_block = dn_elt;
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(btp->idx_partial, btp->distributed_data_idx[btp->n_rank], "idx_partial : ");
+  }
+
+  return btp;
+}
+
+
+PDM_block_to_part_t *
 PDM_block_to_part_create
 (
  const PDM_g_num_t     *block_distrib_idx,
@@ -297,6 +378,8 @@ PDM_block_to_part_create
   btp->comm = comm;
 
   btp->pttopt_comm = 0;
+  btp->n_elt_partial_block = 0;
+  btp->idx_partial         = NULL;
 
   PDM_MPI_Comm_size (comm, &btp->n_rank);
   PDM_MPI_Comm_rank (comm, &btp->i_rank);
@@ -335,9 +418,10 @@ PDM_block_to_part_create
 
     for (int j = 0; j < n_elt[i]; j++) {
 
-      int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
+      int ind = PDM_binary_search_gap_long (PDM_ABS(_gnum_elt[j]) - 1,
                                             block_distrib_idx,
                                             btp->n_rank + 1);
+      btp->ind[i][j] = ind; // Temporary use of this array to avoid le PDM_binary_search_gap_long
       // printf(" [%i][%i] --> ind = %i (g_num = %i )\n", i, j, ind, (int) _gnum_elt[j]);
       btp->requested_data_n[ind]++;
 
@@ -364,9 +448,10 @@ PDM_block_to_part_create
     // printf("n_elt[%i] = %i \n", i, (int) n_elt[i]);
     for (int j = 0; j < n_elt[i]; j++) {
 
-      int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
-                                            block_distrib_idx,
-                                            btp->n_rank + 1);
+      // int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
+      //                                       block_distrib_idx,
+      //                                       btp->n_rank + 1);
+      int ind = btp->ind[i][j];
       int idx = btp->requested_data_idx[ind] + btp->requested_data_n[ind]++;
 
       btp->ind[i][j] = idx;
@@ -527,8 +612,18 @@ PDM_block_to_part_exch_in_place
     int *send_stride = (int *) malloc (sizeof(int) * s_send_stride);
     recv_stride = (int *) malloc (sizeof(int) * s_recv_stride);
 
-    for (int i = 0; i < s_send_stride; i++) {
-      send_stride[i] = block_stride[btp->distributed_data[i]];
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_send_stride; i++) {
+        send_stride[i] = block_stride[btp->distributed_data[i]];
+      }
+    } else {                       // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_send_stride; i++) {
+        if(btp->idx_partial[i] != -1) {
+          send_stride[i] = block_stride[btp->idx_partial[i]];
+        } else {
+          send_stride[i] = 0;
+        }
+      }
     }
 
     PDM_MPI_Alltoallv (send_stride,
@@ -590,7 +685,11 @@ PDM_block_to_part_exch_in_place
       }
     }
 
-    block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    if(btp->idx_partial == NULL) {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    } else {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, btp->n_elt_partial_block);
+    }
     free(send_stride);
   }
 
@@ -684,31 +783,64 @@ PDM_block_to_part_exch_in_place
 
           if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
             int idx1 = 0;
-            for (int j = btp->distributed_data_idx[active_rank[i]];
-                 j < s_distributed_active_rank; j++) {
 
-              int ind =  block_stride_idx[btp->distributed_data[j]] * (int) s_data;
+            if(btp->idx_partial == NULL) { // block is full
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
 
-              int s_block_unit =  block_stride[btp->distributed_data[j]] * (int) s_data;
+                int ind =  block_stride_idx[btp->distributed_data[j]] * (int) s_data;
 
-              unsigned char *_block_data_deb = _block_data + ind;
+                int s_block_unit =  block_stride[btp->distributed_data[j]] * (int) s_data;
 
-              for (int k = 0; k < s_block_unit; k++) {
-                send_buffer[i][idx1++] = _block_data_deb[k];
+                unsigned char *_block_data_deb = _block_data + ind;
+
+                for (int k = 0; k < s_block_unit; k++) {
+                  send_buffer[i][idx1++] = _block_data_deb[k];
+                }
+              }
+            } else {  // block is partial and describe by delt_gnum
+
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+
+                if(btp->idx_partial[j] != -1) {
+                  int ind =  block_stride_idx[btp->idx_partial[j]] * (int) s_data;
+                  int s_block_unit =  block_stride[btp->idx_partial[j]] * (int) s_data;
+                  unsigned char *_block_data_deb = _block_data + ind;
+
+                  for (int k = 0; k < s_block_unit; k++) {
+                    send_buffer[i][idx1++] = _block_data_deb[k];
+                  }
+                }
               }
             }
+
           }
           else {
             int cst_stride = *block_stride;
             int s_block_unit = cst_stride * (int) s_data;
 
             int idx1 = 0;
-            for (int j = btp->distributed_data_idx[active_rank[i]];
-                 j < s_distributed_active_rank; j++) {
-              int ind = btp->distributed_data[j];
-              unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-              for (int k = 0; k < s_block_unit; k++) {
-                send_buffer[i][idx1++] = _block_data_deb[k];
+
+            if(btp->idx_partial == NULL) { // block is full
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+                int ind = btp->distributed_data[j];
+                unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+                for (int k = 0; k < s_block_unit; k++) {
+                  send_buffer[i][idx1++] = _block_data_deb[k];
+                }
+              }
+            } else {  // block is partial and describe by delt_gnum
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+                int ind = btp->idx_partial[j];
+                if(ind != -1) {
+                  unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+                  for (int k = 0; k < s_block_unit; k++) {
+                    send_buffer[i][idx1++] = _block_data_deb[k];
+                  }
+                }
               }
             }
           }
@@ -758,12 +890,26 @@ PDM_block_to_part_exch_in_place
 
     if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
       int idx1 = 0;
-      for (int i = 0; i < s_distributed_data; i++) {
-        int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
-        int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
-        unsigned char *_block_data_deb = _block_data + ind;
-        for (int k = 0; k < s_block_unit; k++) {
-          send_buffer[0][idx1++] = _block_data_deb[k];
+
+      if(btp->idx_partial == NULL) { // block is full
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
+          int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
+          unsigned char *_block_data_deb = _block_data + ind;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[0][idx1++] = _block_data_deb[k];
+          }
+        }
+      } else { // block is partial and describe by delt_gnum
+        for (int i = 0; i < s_distributed_data; i++) {
+          if(btp->idx_partial[i] != -1) {
+            int ind =  block_stride_idx[btp->idx_partial[i]] * (int) s_data;
+            int s_block_unit =  block_stride[btp->idx_partial[i]] * (int) s_data;
+            unsigned char *_block_data_deb = _block_data + ind;
+            for (int k = 0; k < s_block_unit; k++) {
+              send_buffer[0][idx1++] = _block_data_deb[k];
+            }
+          }
         }
       }
     }
@@ -771,11 +917,24 @@ PDM_block_to_part_exch_in_place
       int idx1 = 0;
       int cst_stride = *block_stride;
       int s_block_unit = cst_stride * (int) s_data;
-      for (int i = 0; i < s_distributed_data; i++) {
-        int ind = btp->distributed_data[i];
-        unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-        for (int k = 0; k < s_block_unit; k++) {
-          send_buffer[0][idx1++] = _block_data_deb[k];
+
+      if(btp->idx_partial == NULL) { // block is full
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind = btp->distributed_data[i];
+          unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[0][idx1++] = _block_data_deb[k];
+          }
+        }
+      } else { // block is partial and describe by delt_gnum
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind = btp->idx_partial[i];
+          if(ind != -1) {
+            unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+            for (int k = 0; k < s_block_unit; k++) {
+              send_buffer[0][idx1++] = _block_data_deb[k];
+            }
+          }
         }
       }
     }
@@ -956,8 +1115,18 @@ PDM_block_to_part_exch
     int *send_stride = (int *) malloc (sizeof(int) * s_send_stride);
     recv_stride = (int *) malloc (sizeof(int) * s_recv_stride);
 
-    for (int i = 0; i < s_send_stride; i++) {
-      send_stride[i] = block_stride[btp->distributed_data[i]];
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_send_stride; i++) {
+        send_stride[i] = block_stride[btp->distributed_data[i]];
+      }
+    } else {                       // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_send_stride; i++) {
+        if(btp->idx_partial[i] != -1) {
+          send_stride[i] = block_stride[btp->idx_partial[i]];
+        } else {
+          send_stride[i] = 0;
+        }
+      }
     }
 
     PDM_MPI_Alltoallv (send_stride,
@@ -1041,18 +1210,39 @@ PDM_block_to_part_exch
     // }
 
     int idx1 = 0;
+    int *block_stride_idx = NULL;
+    if(btp->idx_partial == NULL) {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    } else {
+      // printf("btp->n_elt_partial_block = %i \n", btp->n_elt_partial_block);
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, btp->n_elt_partial_block);
+    }
 
-    int *block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_distributed_data; i++) {
 
-    for (int i = 0; i < s_distributed_data; i++) {
+        int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
 
-      int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
+        int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
 
-      int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
+        unsigned char *_block_data_deb = _block_data + ind;
+        for (int k = 0; k < s_block_unit; k++) {
+          send_buffer[idx1++] = _block_data_deb[k];
+        }
+      }
+    } else { // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_distributed_data; i++) {
 
-      unsigned char *_block_data_deb = _block_data + ind;
-      for (int k = 0; k < s_block_unit; k++) {
-        send_buffer[idx1++] = _block_data_deb[k];
+        if(btp->idx_partial[i] != -1) {
+          int ind =  block_stride_idx[btp->idx_partial[i]] * (int) s_data;
+
+          int s_block_unit =  block_stride[btp->idx_partial[i]] * (int) s_data;
+
+          unsigned char *_block_data_deb = _block_data + ind;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[idx1++] = _block_data_deb[k];
+          }
+        }
       }
     }
     free(send_stride);
@@ -1083,11 +1273,24 @@ PDM_block_to_part_exch
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
     int idx1 = 0;
-    for (int i = 0; i < s_distributed_data; i++) {
-      int ind = btp->distributed_data[i];
-      unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-      for (int k = 0; k < s_block_unit; k++) {
-        send_buffer[idx1++] = _block_data_deb[k];
+
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_distributed_data; i++) {
+        int ind = btp->distributed_data[i];
+        unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+        for (int k = 0; k < s_block_unit; k++) {
+          send_buffer[idx1++] = _block_data_deb[k];
+        }
+      }
+    } else { // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_distributed_data; i++) {
+        int ind = btp->idx_partial[i];
+        if(ind != -1) {
+          unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[idx1++] = _block_data_deb[k];
+          }
+        }
       }
     }
   }
@@ -1213,6 +1416,10 @@ PDM_block_to_part_free
   free (btp->distributed_data_n);
   free (btp->requested_data_idx);
   free (btp->requested_data_n);
+
+  if(btp->idx_partial != NULL) {
+    free(btp->idx_partial);
+  }
 
   free (btp);
 
