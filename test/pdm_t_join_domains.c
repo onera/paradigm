@@ -587,6 +587,10 @@ int main
                                           dface_vtx_idx,
                                           dface_vtx);
 
+  /*
+   *  Pour le debug : extration des faces avec le extract part + vtk
+   */
+
 
   /*
    *  Free memory

@@ -2197,15 +2197,17 @@ PDM_domain_interface_translate_entity1_entity2
 
   // Prepare first PtB with multiple partitions.
   // Use (shifted) ids as gnum and send tuple (shited) id, opp_id
-  PDM_g_num_t **interface_ids_shifted = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t*));
-  PDM_g_num_t **send_data             = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t*));
-  double      **weight                = (double      **) malloc(n_interface * sizeof(double*     ));
-  int         **stride_one            = (int         **) malloc(n_interface * sizeof(int*        ));
-  int          *dn_interface_twice    = (int          *) malloc(n_interface * sizeof(int         ));
+  PDM_g_num_t **interface_ids_shifted = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  int         **send_data             = (PDM_g_num_t **) malloc(n_interface * sizeof(int         *));
+  int         **send_data_intno       = (PDM_g_num_t **) malloc(n_interface * sizeof(int         *));
+  double      **weight                = (double      **) malloc(n_interface * sizeof(double      *));
+  int         **stride_one            = (int         **) malloc(n_interface * sizeof(int         *));
+  int          *dn_interface_twice    = (int          *) malloc(n_interface * sizeof(int          ));
   for (int itrf = 0; itrf < n_interface; itrf++) {
     stride_one           [itrf] = (int         *) malloc(2*dn_interface[itrf]*sizeof(int        ));
     interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc(2*dn_interface[itrf]*sizeof(PDM_g_num_t));
-    send_data            [itrf] = (PDM_g_num_t *) malloc(2*dn_interface[itrf]*sizeof(PDM_g_num_t));
+    send_data            [itrf] = (int         *) malloc(2*dn_interface[itrf]*sizeof(int        ));
+    send_data_intno      [itrf] = (int         *) malloc(2*dn_interface[itrf]*sizeof(int        ));
     weight               [itrf] = (double      *) malloc(2*dn_interface[itrf]*sizeof(double     ));
     dn_interface_twice   [itrf] = 2*dn_interface[itrf];
 
@@ -2214,8 +2216,12 @@ PDM_domain_interface_translate_entity1_entity2
       int domopp = interface_dom[itrf][2*k+1];
       interface_ids_shifted[itrf][2*k  ] = interface_ids[itrf][2*k  ] + entity1_per_block_offset[dom   ];
       interface_ids_shifted[itrf][2*k+1] = interface_ids[itrf][2*k+1] + entity1_per_block_offset[domopp];
-      send_data            [itrf][2*k  ] = interface_ids[itrf][2*k+1] + entity1_per_block_offset[domopp];
-      send_data            [itrf][2*k+1] = interface_ids[itrf][2*k  ] + entity1_per_block_offset[dom   ];
+      // send_data            [itrf][2*k  ] = interface_ids[itrf][2*k+1] + entity1_per_block_offset[domopp];
+      // send_data            [itrf][2*k+1] = interface_ids[itrf][2*k  ] + entity1_per_block_offset[dom   ];
+      send_data            [itrf][2*k  ] = domopp;
+      send_data            [itrf][2*k+1] = dom   ;
+      send_data_intno      [itrf][2*k  ] = itrf;
+      send_data_intno      [itrf][2*k+1] = itrf;
       weight               [itrf][2*k  ] = 1.;
       weight               [itrf][2*k+1] = 1.;
       stride_one           [itrf][2*k  ] = 1;
@@ -2231,7 +2237,6 @@ PDM_domain_interface_translate_entity1_entity2
   /*
    * part_to_block to equilibrate / fit by block
    */
-
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
@@ -2244,22 +2249,36 @@ PDM_domain_interface_translate_entity1_entity2
   // Save distribution & gnum from first PtB. We will use it for following PtBs
   int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *gnum   = PDM_part_to_block_block_gnum_get(ptb);
-  PDM_g_num_t *distri = PDM_part_to_block_distrib_index_get(ptb);
+  // PDM_g_num_t *distri = PDM_part_to_block_distrib_index_get(ptb);
 
-  int         *recv_stride = NULL;
-  PDM_g_num_t *recv_data   = NULL;
+  int *recv_stride = NULL;
+  int *recv_data   = NULL;
   int n_connected_l = PDM_part_to_block_exch(ptb,
-                                             sizeof(PDM_g_num_t),
+                                             sizeof(int),
                                              PDM_STRIDE_VAR_INTERLACED,
                                              -1,
                                              stride_one,
                                    (void **) send_data,
                                              &recv_stride,
                                    (void **) &recv_data);
+
+  free(recv_stride);
+  recv_stride = NULL;
+  int *recv_data_intno = NULL;
+  n_connected_l = PDM_part_to_block_exch(ptb,
+                                         sizeof(int),
+                                         PDM_STRIDE_VAR_INTERLACED,
+                                         -1,
+                                         stride_one,
+                               (void **) send_data_intno,
+                                         &recv_stride,
+                               (void **) &recv_data_intno);
+
   if (1 == 1) {
-    PDM_log_trace_array_long(gnum        , n_gnum       , "gnum"       );
-    PDM_log_trace_array_int (recv_stride , n_gnum       , "recv stride");
-    PDM_log_trace_array_long(recv_data   , n_connected_l, "recv data"  );
+    PDM_log_trace_array_long(gnum           , n_gnum       , "gnum"           );
+    PDM_log_trace_array_int (recv_stride    , n_gnum       , "recv stride"    );
+    PDM_log_trace_array_long(recv_data      , n_connected_l, "recv data"      );
+    PDM_log_trace_array_long(recv_data_intno, n_connected_l, "recv_data_intno");
   }
 
   /*
@@ -2288,19 +2307,104 @@ PDM_domain_interface_translate_entity1_entity2
                          recv_data,
                          &part_stride,
              (void ***)  &part_data);
-
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
-
-    PDM_log_trace_array_int(part_stride[i_domain], n_dentity2_entity1[i_domain], "part_stride");
-
-    free(part_data[i_domain]);
     free(part_stride[i_domain]);
   }
-  free(part_data);
   free(part_stride);
+
+  int **part_data_intno   = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         recv_stride,
+                         recv_data_intno,
+                         &part_stride,
+             (void ***)  &part_data_intno);
 
   free(recv_stride);
   free(recv_data);
+  free(recv_data_intno);
+
+  /*
+   * Post-Treated
+   */
+  int **part_stride_idx = (int ** ) malloc( n_domain * sizeof(int *));
+  int max_size = 0;
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    part_stride_idx[i_domain] = PDM_array_new_idx_from_sizes_int(part_stride[i_domain], n_dentity2_entity1[i_domain]);
+    max_size = PDM_MAX(max_size, part_stride_idx[i_domain][n_dentity2_entity1[i_domain]]);
+  }
+  max_size = max_size + 1;
+
+  /*
+   * For each face we receive for each vertex all possible interface
+   *   - Condition 1 : All vtx of the should have the same interface domain
+   */
+  int *work          = (int * ) malloc( max_size    * sizeof(int));
+  int *order         = (int * ) malloc( max_size    * sizeof(int));
+  int *l_interface_n = (int * ) malloc( n_interface * sizeof(int));
+
+  PDM_log_trace_array_int(dn_entity1, n_domain, "dn_entity1"    );
+  PDM_log_trace_array_int(dn_entity2, n_domain, "dn_entity2"    );
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+
+    PDM_log_trace_array_int(part_stride    [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
+    PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
+    PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
+
+    int *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
+
+    for(int idx_entity2 = 0; idx_entity2 < dn_entity2[i_domain]; ++idx_entity2) {
+
+      for(int i = 0; i < n_interface; ++i) {
+        l_interface_n[i] = 0;
+      }
+
+      int n_to_sort = 0;
+      for(int j = _dentity2_entity1_idx[idx_entity2]; j < _dentity2_entity1_idx[idx_entity2+1]; ++j) {
+        int idx = part_stride_idx[i_domain][j];
+        for(int k = 0; k < part_stride[i_domain][j]; ++k) {
+          order[n_to_sort  ] = n_to_sort;
+          work [n_to_sort++] = part_data_intno[i_domain][idx+k];
+          l_interface_n[part_data_intno[i_domain][idx+k]]++;
+        }
+
+      }
+
+      int n_unique = PDM_inplace_unique_long(work, order, 0, n_to_sort-1);
+      PDM_log_trace_array_int(work, n_unique, "work"    );
+      PDM_log_trace_array_int(l_interface_n, n_interface, "l_interface_n"    );
+
+      // Count for all interface
+
+
+    }
+  }
+
+  free(work );
+  free(order);
+  free(l_interface_n);
+
+  /*
+   * At this stage we identify all gnum of faces that concern by a domain interface
+   * We need now to setup link between this faces
+   * For this we hash by connectivity
+   */
+
+
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+
+    free(part_data      [i_domain]);
+    free(part_data_intno[i_domain]);
+    free(part_stride    [i_domain]);
+    free(part_stride_idx[i_domain]);
+  }
+  free(part_data);
+  free(part_data_intno);
+  free(part_stride);
+  free(part_stride_idx);
+
 
   PDM_block_to_part_free(btp);
 
@@ -2310,11 +2414,13 @@ PDM_domain_interface_translate_entity1_entity2
   for (int itrf = 0; itrf < n_interface; itrf++) {
     free(interface_ids_shifted[itrf]);
     free(send_data            [itrf]);
+    free(send_data_intno      [itrf]);
     free(weight               [itrf]);
     free(stride_one           [itrf]);
   }
   free(interface_ids_shifted);
   free(send_data            );
+  free(send_data_intno      );
   free(weight               );
   free(stride_one           );
   free(dn_interface_twice   );
@@ -2375,7 +2481,7 @@ PDM_domain_interface_translate_vtx2face
   /*
    * - part_to_block on interfaces ids (with global shift on vtx)
    */
-  int n_domain = dom_intrf->n_domain;
+  // int n_domain = dom_intrf->n_domain;
 
   PDM_domain_interface_translate_entity1_entity2(dom_intrf->n_domain,
                                                  dom_intrf->n_interface,
