@@ -2430,12 +2430,12 @@ PDM_domain_interface_translate_entity1_entity2
         }
       }
 
-      int n_unique = PDM_inplace_unique_long(work, order, 0, n_to_sort-1);
+      // int n_unique = PDM_inplace_unique_long(work, order, 0, n_to_sort-1);
 
-      if( 1 == 1) {
-        PDM_log_trace_array_int(work         , n_unique   , "work          :: ");
-        PDM_log_trace_array_int(l_interface_n, n_interface, "l_interface_n :: ");
-      }
+      // if( 1 == 1) {
+      //   PDM_log_trace_array_int(work         , n_unique   , "work          :: ");
+      //   PDM_log_trace_array_int(l_interface_n, n_interface, "l_interface_n :: ");
+      // }
 
       // Count for all interface
       int n_connect = _dentity2_entity1_idx[i_entity2+1] - _dentity2_entity1_idx[i_entity2];
@@ -2473,23 +2473,62 @@ PDM_domain_interface_translate_entity1_entity2
   free(l_interface_n);
   // free(n_max_possible_entity2_intf);
 
-  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
-    free(entity2_lids       [i_domain]);
-    free(entity2_intf_no_idx[i_domain]);
-    free(entity2_intf_no    [i_domain]);
-  }
-  free(entity2_lids       );
-  free(entity2_intf_no_idx);
-  free(entity2_intf_no    );
-  free(n_entity2_intf    );
 
   /*
    * At this stage we identify all gnum of faces that concern by a domain interface
    * We need now to setup link between this faces
    * For this we hash by connectivity
    */
+  PDM_g_num_t mod_g_num_entity1 = entity1_per_block_offset[n_domain] / 4;
+  PDM_g_num_t **key_ln_to_gn = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **key_data     = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
+  int         **key_data_n   = (int         **) malloc( n_domain * sizeof(int         *));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+
+    key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(PDM_g_num_t));
+    key_data_n  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
+
+    key_data    [i_domain] = (PDM_g_num_t *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(PDM_g_num_t));
+    // key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( n_entity2_intf[i_domain] * sizeof(PDM_g_num_t));
+
+    PDM_g_num_t *_key_ln_to_gn         = key_ln_to_gn        [i_domain];
+    int         *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
+    PDM_g_num_t *_dentity2_entity1     = dentity2_entity1    [i_domain];
+
+    int idx_write = 0;
+    for(int idx_entity2 = 0; idx_entity2 < n_entity2_intf[i_domain]; idx_entity2++) {
+      int i_entity2 = entity2_lids[i_domain][idx_entity2];
+
+      _key_ln_to_gn[idx_write] = 0;
+
+      for(int idx_entity1 = _dentity2_entity1_idx[i_entity2]; idx_entity1 < _dentity2_entity1_idx[i_entity2+1]; ++idx_entity1) {
+        PDM_g_num_t entity1_gnum = _dentity2_entity1[idx_entity1];
+        _key_ln_to_gn[idx_write] += entity1_gnum;
+      }
+
+      /* Add opposite contribution */
 
 
+      _key_ln_to_gn[idx_write] = _key_ln_to_gn[idx_write]; // % mod_g_num_entity1 + 1;
+
+
+      idx_write++;
+
+    }
+    assert(idx_write == entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]]);
+
+    PDM_log_trace_array_long(_key_ln_to_gn, entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]], " _key_ln_to_gn ::");
+
+  }
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    free(key_ln_to_gn[i_domain]);
+    free(key_data    [i_domain]);
+    free(key_data_n  [i_domain]);
+  }
+  free(key_ln_to_gn);
+  free(key_data    );
+  free(key_data_n  );
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
@@ -2505,6 +2544,15 @@ PDM_domain_interface_translate_entity1_entity2
   free(part_stride);
   free(part_stride_idx);
 
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    free(entity2_lids       [i_domain]);
+    free(entity2_intf_no_idx[i_domain]);
+    free(entity2_intf_no    [i_domain]);
+  }
+  free(entity2_lids       );
+  free(entity2_intf_no_idx);
+  free(entity2_intf_no    );
+  free(n_entity2_intf    );
 
   PDM_block_to_part_free(btp);
 
