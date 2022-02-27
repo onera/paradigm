@@ -2328,62 +2328,127 @@ PDM_domain_interface_translate_entity1_entity2
   /*
    * Post-Treated
    */
-  int **part_stride_idx = (int ** ) malloc( n_domain * sizeof(int *));
-  int max_size = 0;
+  int **part_stride_idx             = (int ** ) malloc( n_domain * sizeof(int *));
+  // int  *n_max_possible_entity2_intf = (int *  ) malloc( n_domain * sizeof(int  ));
+  int max_size                    = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     part_stride_idx[i_domain] = PDM_array_new_idx_from_sizes_int(part_stride[i_domain], n_dentity2_entity1[i_domain]);
     max_size = PDM_MAX(max_size, part_stride_idx[i_domain][n_dentity2_entity1[i_domain]]);
+
+
+    // int *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
+    // n_max_possible_entity2_intf[i_domain] = 0;
+    // for(int i_entity2 = 0; i_entity2 < dn_entity2[i_domain]; ++i_entity2) {
+    //   for(int j = _dentity2_entity1_idx[i_entity2]; j < _dentity2_entity1_idx[i_entity2+1]; ++j) {
+    //     n_max_possible_entity2_intf[i_domain] += part_stride[i_domain][j];
+    //   }
+    // }
+
+    // printf("n_max_possible_entity2_intf  = %i \n", n_max_possible_entity2_intf[i_domain]);
+
   }
-  max_size = max_size + 1;
+
+  printf("max_size  = %i ", max_size);
+
 
   /*
    * For each face we receive for each vertex all possible interface
    *   - Condition 1 : All vtx of the should have the same interface domain
    */
-  int *work          = (int * ) malloc( max_size    * sizeof(int));
-  int *order         = (int * ) malloc( max_size    * sizeof(int));
-  int *l_interface_n = (int * ) malloc( n_interface * sizeof(int));
+  int  *work                 = (int *  ) malloc( max_size    * sizeof(int  ));
+  int  *order                = (int *  ) malloc( max_size    * sizeof(int  ));
+  int  *l_interface_n        = (int *  ) malloc( n_interface * sizeof(int  ));
+  int **entity2_lids         = (int ** ) malloc( n_domain    * sizeof(int *));
+  int **entity2_intf_no_idx  = (int ** ) malloc( n_domain    * sizeof(int *));
+  int **entity2_intf_no      = (int ** ) malloc( n_domain    * sizeof(int *));
+  int  *n_entity2_intf       = (int *  ) malloc( n_domain    * sizeof(int  ));
 
   PDM_log_trace_array_int(dn_entity1, n_domain, "dn_entity1"    );
   PDM_log_trace_array_int(dn_entity2, n_domain, "dn_entity2"    );
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
-    PDM_log_trace_array_int(part_stride    [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
-    PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
-    PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
+    if( 1 == 1) {
+      PDM_log_trace_array_int(part_stride    [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
+      PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
+      PDM_log_trace_array_int(part_data_intno[i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
+    }
 
     int *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
 
-    for(int idx_entity2 = 0; idx_entity2 < dn_entity2[i_domain]; ++idx_entity2) {
+    entity2_lids       [i_domain] = (int * ) malloc(  dn_entity2[i_domain]    * sizeof(int));
+    entity2_intf_no_idx[i_domain] = (int * ) malloc( (dn_entity2[i_domain]+1) * sizeof(int));
+    entity2_intf_no    [i_domain] = (int * ) malloc( (max_size              ) * sizeof(int));
+
+    n_entity2_intf[i_domain] = 0;
+    entity2_intf_no_idx[i_domain][0] = 0;
+    for(int i_entity2 = 0; i_entity2 < dn_entity2[i_domain]; ++i_entity2) {
 
       for(int i = 0; i < n_interface; ++i) {
         l_interface_n[i] = 0;
       }
 
       int n_to_sort = 0;
-      for(int j = _dentity2_entity1_idx[idx_entity2]; j < _dentity2_entity1_idx[idx_entity2+1]; ++j) {
+      for(int j = _dentity2_entity1_idx[i_entity2]; j < _dentity2_entity1_idx[i_entity2+1]; ++j) {
         int idx = part_stride_idx[i_domain][j];
         for(int k = 0; k < part_stride[i_domain][j]; ++k) {
           order[n_to_sort  ] = n_to_sort;
           work [n_to_sort++] = part_data_intno[i_domain][idx+k];
           l_interface_n[part_data_intno[i_domain][idx+k]]++;
         }
-
       }
 
       int n_unique = PDM_inplace_unique_long(work, order, 0, n_to_sort-1);
-      PDM_log_trace_array_int(work, n_unique, "work"    );
-      PDM_log_trace_array_int(l_interface_n, n_interface, "l_interface_n"    );
+
+      if( 1 == 1) {
+        PDM_log_trace_array_int(work         , n_unique   , "work          :: ");
+        PDM_log_trace_array_int(l_interface_n, n_interface, "l_interface_n :: ");
+      }
 
       // Count for all interface
+      int n_connect = _dentity2_entity1_idx[i_entity2+1] - _dentity2_entity1_idx[i_entity2];
 
+      int n_new_interface = 0;
+      for(int i = 0; i < n_interface; ++i) {
+        if(l_interface_n[i] == n_connect) {
+          int idx_write = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface++;
+          entity2_intf_no[i_domain][idx_write] = i;
+        }
+      }
+
+      if(n_new_interface > 0) {
+        entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]+1] = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface;
+        entity2_lids       [i_domain][n_entity2_intf[i_domain]++] = i_entity2;
+      }
+    }
+
+    entity2_lids       [i_domain] = (int * ) realloc(entity2_lids       [i_domain], ( n_entity2_intf[i_domain]   )                          * sizeof(int) );
+    entity2_intf_no_idx[i_domain] = (int * ) realloc(entity2_intf_no_idx[i_domain], ( n_entity2_intf[i_domain]+1 )                          * sizeof(int) );
+    entity2_intf_no    [i_domain] = (int * ) realloc(entity2_intf_no    [i_domain], entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int) );
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(entity2_lids       [i_domain], n_entity2_intf[i_domain]  , " n_entity2_intf ::");
+      PDM_log_trace_array_int(entity2_intf_no_idx[i_domain], n_entity2_intf[i_domain]+1, " entity2_intf_no_idx ::");
+      PDM_log_trace_array_int(entity2_intf_no    [i_domain], entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]], " n_entity2_intf ::");
 
     }
+
+
   }
 
   free(work );
   free(order);
   free(l_interface_n);
+  // free(n_max_possible_entity2_intf);
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    free(entity2_lids       [i_domain]);
+    free(entity2_intf_no_idx[i_domain]);
+    free(entity2_intf_no    [i_domain]);
+  }
+  free(entity2_lids       );
+  free(entity2_intf_no_idx);
+  free(entity2_intf_no    );
+  free(n_entity2_intf    );
 
   /*
    * At this stage we identify all gnum of faces that concern by a domain interface
