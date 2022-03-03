@@ -590,6 +590,9 @@ int main
   /*
    *  Pour le debug : extration des faces avec le extract part + vtk
    */
+  // PDM_part_domain_interface_t* pdi =
+
+
 
 
   /*
