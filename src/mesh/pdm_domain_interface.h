@@ -124,7 +124,7 @@ PDM_part_domain_interface_t*
 PDM_domain_interface_to_part_domain_interface
 (
  PDM_domain_interface_t  *dom_intrf,
- int                      n_part,
+ int                     *n_part,
  int                    **pn_face,
  int                    **pn_edge,
  int                    **pn_vtx,

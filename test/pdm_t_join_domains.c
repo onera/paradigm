@@ -604,10 +604,11 @@ int main
   /*
    *  Prepare pointer by domain and by part
    */
+  int           *pn_n_part     = (int           *) malloc( n_domain * sizeof(int          *));
   int          **pn_vtx        = (int          **) malloc( n_domain * sizeof(int          *));
   PDM_g_num_t ***pvtx_ln_to_gn = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
-
+    pn_n_part    [i_dom] = n_part;
     pn_vtx       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
     pvtx_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -622,7 +623,7 @@ int main
 
 
   PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
-                                                                                   n_part,
+                                                                                   pn_n_part,
                                                                                    NULL,
                                                                                    NULL,
                                                                                    pn_vtx,
@@ -644,6 +645,7 @@ int main
   }
   free(pn_vtx       );
   free(pvtx_ln_to_gn);
+  free(pn_n_part);
 
   /*
    *  Free memory

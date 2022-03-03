@@ -2797,15 +2797,16 @@ static
 void
 PDM_ddomain_interface_to_pdomain_interface
 (
- PDM_MPI_Comm    comm,
- int             n_interface,
- int             n_domain,
- int            *interface_dn,
- PDM_g_num_t   **interface_ids,
- int           **interface_dom,
- int             n_part,
- int           **pn_entity,
- PDM_g_num_t   **entity_ln_to_gn
+ PDM_MPI_Comm                   comm,
+ int                            n_interface,
+ int                            n_domain,
+ PDM_domain_interface_mult_t    multidomain_intrf,
+ int                           *interface_dn,
+ PDM_g_num_t                  **interface_ids,
+ int                          **interface_dom,
+ int                           *n_part,
+ int                          **pn_entity,
+ PDM_g_num_t                 ***entity_ln_to_gn
 )
 {
   PDM_UNUSED(comm);
@@ -2818,13 +2819,62 @@ PDM_ddomain_interface_to_pdomain_interface
   PDM_UNUSED(pn_entity);
   PDM_UNUSED(entity_ln_to_gn);
 
+  /*
+   * Find max on interface or partition to rebuild a total distribution
+   */
+  PDM_g_num_t *max_per_domain_loc = PDM_array_const_gnum(n_domain, 0);
+  PDM_g_num_t *max_per_domain     = (PDM_g_num_t *) malloc((n_domain+1) * sizeof(PDM_g_num_t));
+  for(int itrf = 0; itrf < n_interface; ++itrf) {
+    int dom, domopp;
+    if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
+    for (int k = 0; k < interface_dn[itrf]; k++) {
+      if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k];
+        domopp = interface_dom[itrf][2*k+1];
+      }
+      max_per_domain_loc[dom   ] = PDM_MAX(max_per_domain_loc[dom   ], interface_ids[itrf][2*k  ]);
+      max_per_domain_loc[domopp] = PDM_MAX(max_per_domain_loc[domopp], interface_ids[itrf][2*k+1]);
+    }
+  }
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      for(int i_entity = 0; i_entity < pn_entity[i_domain][i_part]; ++i_entity) {
+        max_per_domain_loc[i_domain] = PDM_MAX(max_per_domain_loc[i_domain], entity_ln_to_gn[i_domain][i_part][i_entity]);
+      }
+    }
+  }
+  max_per_domain[0] = 0;
+  PDM_MPI_Allreduce(max_per_domain_loc, &max_per_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  PDM_array_accumulate_gnum(max_per_domain, n_domain+1);
+  if (1 == 1) {
+    PDM_log_trace_array_long(max_per_domain, n_domain+1, "max per domain");
+  }
+
+  /*
+   * Shift all ln_to_gn
+   */
+  // PDM_g_num_t *entity_per_block_offset = _per_block_offset(n_domain, dn_face, comm);
+  free(max_per_domain);
+  free(max_per_domain_loc);
+
+
+
+
+  /*
+   * Unshift all ln_to_gn
+   */
+
 }
 
 PDM_part_domain_interface_t*
 PDM_domain_interface_to_part_domain_interface
 (
  PDM_domain_interface_t  *dom_intrf,
- int                      n_part,
+ int                     *n_part,
  int                    **pn_face,
  int                    **pn_edge,
  int                    **pn_vtx,
@@ -2850,6 +2900,7 @@ PDM_domain_interface_to_part_domain_interface
     PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
                                                dom_intrf->n_interface,
                                                dom_intrf->n_domain,
+                                               dom_intrf->multidomain_intrf,
                                                dom_intrf->interface_dn_vtx,
                                                dom_intrf->interface_ids_vtx,
                                                dom_intrf->interface_dom_vtx,
