@@ -3235,9 +3235,14 @@ PDM_ddomain_interface_to_pdomain_interface
                                                                   n_part_tot,
                                                                   comm);
 
+    /*
+     * Le bloc est plein normalement
+     */
     int          n_gnum_interf     = PDM_part_to_block_n_elt_block_get  (ptb_sync_part);
     // PDM_g_num_t* block_gnum = PDM_part_to_block_block_gnum_get   (ptb);
-    // PDM_g_num_t* distrib    = PDM_part_to_block_distrib_index_get(ptb);
+    PDM_g_num_t* distrib_interf    = PDM_part_to_block_distrib_index_get(ptb_sync_part);
+    assert(n_gnum_interf == distrib_interf[i_rank+1] - distrib_interf[i_rank]);
+
     /*
      * Exch i_part / i_proc
      */
@@ -3272,11 +3277,6 @@ PDM_ddomain_interface_to_pdomain_interface
                                            &blk_strid,
                                  (void **) &blk_entity_desc);
 
-    if(1 == 1) {
-      PDM_log_trace_array_int(blk_strid      ,     n_gnum_interf, "blk_strid       ::");
-      PDM_log_trace_array_int(blk_entity_desc, 3 * exch_size    , "blk_entity_desc ::");
-    }
-
     for(int i_part = 0; i_part < n_part_tot; ++i_part) {
       free(entity_desc[i_part]);
       free(pstride_one[i_part]);
@@ -3284,10 +3284,58 @@ PDM_ddomain_interface_to_pdomain_interface
     free(entity_desc);
     free(pstride_one);
 
+    if(1 == 1) {
+      PDM_log_trace_array_int(blk_strid      ,     n_gnum_interf, "blk_strid       ::");
+      PDM_log_trace_array_int(blk_entity_desc, 3 * exch_size    , "blk_entity_desc ::");
+    }
+
+    /*
+     * Renvoi vers les partitions
+     */
+    PDM_block_to_part_t *btp_sync_part = PDM_block_to_part_create(distrib_interf,
+                                           (const PDM_g_num_t **) _linterface_gnum,
+                                                                  _ln_interface,
+                                                                  n_part_tot,
+                                                                  comm);
+
+    int **precv_stride      = NULL;
+    int **precv_entity_desc = NULL;
+    PDM_block_to_part_exch(btp_sync_part,
+                           3 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           blk_strid,
+                           blk_entity_desc,
+                          &precv_stride,
+               (void ***) &precv_entity_desc);
+
+
     free(blk_strid);
     free(blk_entity_desc);
 
     PDM_part_to_block_free(ptb_sync_part);
+    PDM_block_to_part_free(btp_sync_part);
+
+    /*
+     * Post-Treatment
+     */
+
+    for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+
+      int n_data = 0;
+      for(int i = 0; i < _ln_interface[i_part]; ++i) {
+        n_data += precv_stride[i_part][i];
+      }
+
+      if(1 == 1) {
+        PDM_log_trace_array_int(precv_stride     [i_part],     _ln_interface[i_part], "precv_stride    ::");
+        PDM_log_trace_array_int(precv_entity_desc[i_part], 3 * n_data               , "blk_entity_desc ::");
+      }
+
+      free(precv_stride     [i_part]);
+      free(precv_entity_desc[i_part]);
+    }
+    free(precv_stride     );
+    free(precv_entity_desc);
 
     free(_ln_interface);
     free(_linterface_gnum);
