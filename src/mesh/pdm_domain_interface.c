@@ -3121,6 +3121,70 @@ PDM_ddomain_interface_to_pdomain_interface
     PDM_log_trace_array_long(part_data_itrf_gnum[i_part], n_data, "part_data_itrf_gnum");
   }
 
+  /*
+   *  Post-treatment - The first one
+   */
+  int* interface_idx = (int * ) malloc((n_interface+1) * sizeof(int));
+
+  int          **pn_interface       = (int          **) malloc( n_part_tot * sizeof(int         **));
+  int         ***pinterface_triplet = (int         ***) malloc( n_part_tot * sizeof(int         **));
+  int         ***pinterface_dom     = (int         ***) malloc( n_part_tot * sizeof(int         **));
+  PDM_g_num_t ***pinterface_gnum    = (PDM_g_num_t ***) malloc( n_part_tot * sizeof(PDM_g_num_t **));
+
+  shift_domain = 0;
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    // int *current_desc = (int *) malloc(3 * n_data * sizeof(int));
+
+    pn_interface      [i_part] = (int          * ) malloc( n_interface * sizeof(int          ));
+    pinterface_triplet[i_part] = (int         ** ) malloc( n_interface * sizeof(int         *));
+    pinterface_dom    [i_part] = (int         ** ) malloc( n_interface * sizeof(int         *));
+    pinterface_gnum   [i_part] = (PDM_g_num_t ** ) malloc( n_interface * sizeof(PDM_g_num_t *));
+
+    for(int i = 0; i < n_interface; ++i) {
+      pn_interface[i_part][i] = 0;
+    }
+
+    // Sort buffer by interface first
+    int idx_read = 0;
+    for(int i = 0; i < pn_entity_all[i_part]; ++i) {
+      for(int k = 0; k < part_stride    [i_part][i]; ++k) {
+        int i_interface = part_data_intno[i_part][idx_read++];
+        pn_interface[i_part][i_interface]++;
+      }
+    }
+
+    interface_idx[0] = 0;
+    for(int i = 0; i < n_interface; ++i) {
+      interface_idx[i+1] = interface_idx[i] + pn_interface[i_part][i];
+      pinterface_triplet[i_part][i] = (int         *) malloc( pn_interface[i_part][i] * sizeof(int        ));
+      pinterface_dom    [i_part][i] = (int         *) malloc( pn_interface[i_part][i] * sizeof(int        ));
+      pinterface_gnum   [i_part][i] = (PDM_g_num_t *) malloc( pn_interface[i_part][i] * sizeof(PDM_g_num_t));
+    }
+
+    idx_read = 0;
+
+
+
+
+  }
+  free(interface_idx);
+
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    for(int i = 0; i < n_interface; ++i) {
+      free(pinterface_triplet[i_part][i]);
+      free(pinterface_dom    [i_part][i]);
+      free(pinterface_gnum   [i_part][i]);
+    }
+    free(pinterface_triplet[i_part]);
+    free(pinterface_dom    [i_part]);
+    free(pinterface_gnum   [i_part]);
+    free(pn_interface      [i_part]);
+  }
+  free(pn_interface     );
+  free(pinterface_triplet);
+  free(pinterface_dom    );
+  free(pinterface_gnum   );
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
     free(part_data_dom      [i_part]);
