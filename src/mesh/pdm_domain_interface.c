@@ -2998,8 +2998,94 @@ PDM_ddomain_interface_to_pdomain_interface
   free(stride_one           );
   free(dn_interface_twice   );
 
+  /*
+   *
+   */
+  int n_part_tot = 0;
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    n_part_tot += n_part[i_domain];
+  }
+
+  int          *pn_entity_all        = (int          *) malloc( sizeof(int          ));
+  PDM_g_num_t **pentity_ln_to_gn_all = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *));
+
+  int shift_domain = 0;
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      pn_entity_all       [shift_domain+i_part] = pn_entity      [i_domain][i_part];
+      pentity_ln_to_gn_all[shift_domain+i_part] = entity_ln_to_gn[i_domain][i_part];
+    }
+    shift_domain += n_part[i_domain];
+  }
 
 
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(block_gnum,
+                                                                        n_gnum,
+                                             (const PDM_g_num_t    **)  pentity_ln_to_gn_all,
+                                                                        pn_entity_all,
+                                                                        n_part_tot,
+                                                                        comm);
+
+  /*
+   * Exchange to have for each partitions all information
+   */
+  int **part_stride   = NULL;
+  int **part_data_dom = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         recv_stride,
+                         recv_data_dom,
+                         &part_stride,
+             (void ***)  &part_data_dom);
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(part_stride[i_part]);
+  }
+  free(part_stride);
+
+  int **part_data_intno   = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         recv_stride,
+                         recv_data_intno,
+                         &part_stride,
+             (void ***)  &part_data_intno);
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(part_stride[i_part]);
+  }
+  free(part_stride);
+
+  int **part_data_gnum   = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         recv_stride,
+                         recv_data_gnum,
+                         &part_stride,
+             (void ***)  &part_data_gnum);
+
+
+
+
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    free(part_data_dom  [i_part]);
+    free(part_data_intno[i_part]);
+    free(part_data_gnum [i_part]);
+    free(part_stride    [i_part]);
+  }
+  free(part_data_dom  );
+  free(part_data_intno);
+  free(part_data_gnum );
+  free(part_stride    );
+
+
+  free(pn_entity_all);
+  free(pentity_ln_to_gn_all);
+
+  PDM_block_to_part_free(btp);
   free(recv_stride);
   free(recv_data_dom);
   free(recv_data_intno);

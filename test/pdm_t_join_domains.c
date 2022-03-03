@@ -207,7 +207,7 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-
+// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -pi -t 8
 int main
 (
  int   argc,
