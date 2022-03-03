@@ -2774,25 +2774,51 @@ void PDM_domain_interface_free
 
 
 // Dans partitionning algorithm
+// void
+// PDM_ddomain_interface_to_pdomain_interface
+// (
+//   PDM_domain_interface_t  *ddi,
+//   int                      n_part,
+//   int                     *pn_entity,
+//   PDM_g_num_t            **entity_ln_to_gn
+// )
+// {
+//   PDM_UNUSED(ddi);
+//   PDM_UNUSED(n_part);
+//   PDM_UNUSED(pn_entity);
+//   PDM_UNUSED(entity_ln_to_gn);
+
+//   // PDM_part_domain_interface* PDM_part_domain_interface_create();
+//   // le part domain doit contenir égalment la notion de n_part ...
+
+// }
+
+static
 void
 PDM_ddomain_interface_to_pdomain_interface
 (
-  PDM_domain_interface_t  *ddi,
-  int                      n_part,
-  int                     *pn_entity,
-  PDM_g_num_t            **entity_ln_to_gn
+ PDM_MPI_Comm    comm,
+ int             n_interface,
+ int             n_domain,
+ int            *interface_dn,
+ PDM_g_num_t   **interface_ids,
+ int           **interface_dom,
+ int             n_part,
+ int           **pn_entity,
+ PDM_g_num_t   **entity_ln_to_gn
 )
 {
-  PDM_UNUSED(ddi);
+  PDM_UNUSED(comm);
+  PDM_UNUSED(n_interface);
+  PDM_UNUSED(n_domain);
+  PDM_UNUSED(interface_dn);
+  PDM_UNUSED(interface_ids);
+  PDM_UNUSED(interface_dom);
   PDM_UNUSED(n_part);
   PDM_UNUSED(pn_entity);
   PDM_UNUSED(entity_ln_to_gn);
 
-  // PDM_part_domain_interface* PDM_part_domain_interface_create();
-  // le part domain doit contenir égalment la notion de n_part ...
-
 }
-
 
 PDM_part_domain_interface_t*
 PDM_domain_interface_to_part_domain_interface
@@ -2815,6 +2841,32 @@ PDM_domain_interface_to_part_domain_interface
   PDM_UNUSED(face_ln_to_gn);
   PDM_UNUSED(edge_ln_to_gn);
   PDM_UNUSED(vtx_ln_to_gn);
+
+  if(dom_intrf->interface_dn_vtx != NULL) {
+
+    printf("Rebuild vtx domain interface \n");
+
+
+    PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
+                                               dom_intrf->n_interface,
+                                               dom_intrf->n_domain,
+                                               dom_intrf->interface_dn_vtx,
+                                               dom_intrf->interface_ids_vtx,
+                                               dom_intrf->interface_dom_vtx,
+                                               n_part,
+                                               pn_vtx,
+                                               vtx_ln_to_gn);
+
+
+  }
+
+  if(dom_intrf->interface_dn_face != NULL) {
+
+    printf("Rebuild vtx domain interface \n");
+
+  }
+
+
 
 
   return NULL;
