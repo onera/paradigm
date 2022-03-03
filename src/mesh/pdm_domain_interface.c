@@ -2801,7 +2801,7 @@ PDM_ddomain_interface_to_pdomain_interface
  int                            n_interface,
  int                            n_domain,
  PDM_domain_interface_mult_t    multidomain_intrf,
- int                           *interface_dn,
+ int                           *dn_interface,
  PDM_g_num_t                  **interface_ids,
  int                          **interface_dom,
  int                           *n_part,
@@ -2812,7 +2812,7 @@ PDM_ddomain_interface_to_pdomain_interface
   PDM_UNUSED(comm);
   PDM_UNUSED(n_interface);
   PDM_UNUSED(n_domain);
-  PDM_UNUSED(interface_dn);
+  PDM_UNUSED(dn_interface);
   PDM_UNUSED(interface_ids);
   PDM_UNUSED(interface_dom);
   PDM_UNUSED(n_part);
@@ -2830,7 +2830,7 @@ PDM_ddomain_interface_to_pdomain_interface
       dom    = interface_dom[itrf][0];
       domopp = interface_dom[itrf][1];
     }
-    for (int k = 0; k < interface_dn[itrf]; k++) {
+    for (int k = 0; k < dn_interface[itrf]; k++) {
       if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
         dom    = interface_dom[itrf][2*k];
         domopp = interface_dom[itrf][2*k+1];
@@ -2857,17 +2857,176 @@ PDM_ddomain_interface_to_pdomain_interface
   /*
    * Shift all ln_to_gn
    */
-  // PDM_g_num_t *entity_per_block_offset = _per_block_offset(n_domain, dn_face, comm);
-  free(max_per_domain);
-  free(max_per_domain_loc);
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      for(int i_entity = 0; i_entity < pn_entity[i_domain][i_part]; ++i_entity) {
+        entity_ln_to_gn[i_domain][i_part][i_entity] += max_per_domain[i_domain];
+      }
+    }
+  }
 
 
+  // Prepare first PtB with multiple partitions.
+  // Use (shifted) ids as gnum and send tuple (shited) id, opp_id
+  PDM_g_num_t **interface_ids_shifted = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **send_data_gnum        = (PDM_g_num_t **) malloc(n_interface * sizeof(PDM_g_num_t *));
+  int         **send_data_dom         = (int         **) malloc(n_interface * sizeof(int         *));
+  int         **send_data_intno       = (PDM_g_num_t **) malloc(n_interface * sizeof(int         *));
+  double      **weight                = (double      **) malloc(n_interface * sizeof(double      *));
+  int         **stride_one            = (int         **) malloc(n_interface * sizeof(int         *));
+  int          *dn_interface_twice    = (int          *) malloc(n_interface * sizeof(int          ));
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    stride_one           [itrf] = (int         *) malloc( 2 * dn_interface[itrf] * sizeof(int        ));
+    interface_ids_shifted[itrf] = (PDM_g_num_t *) malloc( 2 * dn_interface[itrf] * sizeof(PDM_g_num_t));
+    send_data_gnum       [itrf] = (PDM_g_num_t *) malloc( 2 * dn_interface[itrf] * sizeof(PDM_g_num_t));
+    send_data_dom        [itrf] = (int         *) malloc( 2 * dn_interface[itrf] * sizeof(int        ));
+    send_data_intno      [itrf] = (int         *) malloc( 2 * dn_interface[itrf] * sizeof(int        ));
+    weight               [itrf] = (double      *) malloc( 2 * dn_interface[itrf] * sizeof(double     ));
+
+    dn_interface_twice   [itrf] = 2*dn_interface[itrf];
+    int dom, domopp;
+    if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+      dom    = interface_dom[itrf][0];
+      domopp = interface_dom[itrf][1];
+    }
+    for (int k = 0; k < dn_interface[itrf]; k++) {
+      if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        dom    = interface_dom[itrf][2*k  ];
+        domopp = interface_dom[itrf][2*k+1];
+      }
+      interface_ids_shifted[itrf][2*k  ] = interface_ids[itrf][2*k  ] + max_per_domain[dom   ];
+      interface_ids_shifted[itrf][2*k+1] = interface_ids[itrf][2*k+1] + max_per_domain[domopp];
+      send_data_gnum       [itrf][2*k  ] = interface_ids[itrf][2*k+1] + max_per_domain[domopp];
+      send_data_gnum       [itrf][2*k+1] = interface_ids[itrf][2*k  ] + max_per_domain[dom   ];
+      send_data_dom        [itrf][2*k  ] = domopp;
+      send_data_dom        [itrf][2*k+1] = dom   ;
+      send_data_intno      [itrf][2*k  ] = itrf;
+      send_data_intno      [itrf][2*k+1] = itrf;
+      weight               [itrf][2*k  ] = 1.;
+      weight               [itrf][2*k+1] = 1.;
+      stride_one           [itrf][2*k  ] = 1;
+      stride_one           [itrf][2*k+1] = 1;
+    }
+
+    if (1 == 1) {
+      log_trace("Interface %d\n", itrf);
+      PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*dn_interface[itrf], "shifted gnum    :: ");
+      PDM_log_trace_array_int (send_data_dom        [itrf], 2*dn_interface[itrf], "send_data_dom   :: ");
+      PDM_log_trace_array_int (send_data_intno      [itrf], 2*dn_interface[itrf], "send_data_intno :: ");
+      PDM_log_trace_array_long(send_data_gnum       [itrf], 2*dn_interface[itrf], "send_data_gnum  :: ");
+    }
+  }
+
+
+  /*
+   *   part_to_block des n_interfaces to have all interface in block frame
+   *   send relative position to have the entity_ln_to_gn and i_interface
+   *   Caution : We can have multiple interface for the same gnum (exemple for vtx )
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      interface_ids_shifted,
+                                                      weight,
+                                                      dn_interface_twice,
+                                                      n_interface,
+                                                      comm);
+
+  int          n_gnum     = PDM_part_to_block_n_elt_block_get  (ptb);
+  PDM_g_num_t* block_gnum = PDM_part_to_block_block_gnum_get   (ptb);
+  PDM_g_num_t* distrib    = PDM_part_to_block_distrib_index_get(ptb);
+
+  if (1 == 1) {
+    PDM_log_trace_array_long(block_gnum, n_gnum, "gnum");
+  }
+  int *recv_stride   = NULL;
+  int *recv_data_dom = NULL;
+  int n_connected_l = PDM_part_to_block_exch(ptb,
+                                             sizeof(int),
+                                             PDM_STRIDE_VAR_INTERLACED,
+                                             -1,
+                                             stride_one,
+                                   (void **) send_data_dom,
+                                             &recv_stride,
+                                   (void **) &recv_data_dom);
+
+  free(recv_stride);
+  recv_stride = NULL;
+  int *recv_data_intno = NULL;
+  n_connected_l = PDM_part_to_block_exch(ptb,
+                                         sizeof(int),
+                                         PDM_STRIDE_VAR_INTERLACED,
+                                         -1,
+                                         stride_one,
+                               (void **) send_data_intno,
+                                         &recv_stride,
+                               (void **) &recv_data_intno);
+
+  free(recv_stride);
+  recv_stride = NULL;
+  PDM_g_num_t *recv_data_gnum = NULL;
+  n_connected_l = PDM_part_to_block_exch(ptb,
+                                         sizeof(PDM_g_num_t),
+                                         PDM_STRIDE_VAR_INTERLACED,
+                                         -1,
+                                         stride_one,
+                               (void **) send_data_gnum,
+                                         &recv_stride,
+                               (void **) &recv_data_gnum);
+
+  if (1 == 1) {
+    PDM_log_trace_array_long(block_gnum     , n_gnum       , "block_gnum"     );
+    PDM_log_trace_array_int (recv_stride    , n_gnum       , "recv stride"    );
+    PDM_log_trace_array_long(recv_data_dom  , n_connected_l, "recv_data_dom"  );
+    PDM_log_trace_array_long(recv_data_intno, n_connected_l, "recv_data_intno");
+    PDM_log_trace_array_long(recv_data_gnum , n_connected_l, "recv_data_gnum" );
+  }
+
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    free(interface_ids_shifted[itrf]);
+    free(send_data_dom        [itrf]);
+    free(send_data_intno      [itrf]);
+    free(send_data_gnum       [itrf]);
+    free(weight               [itrf]);
+    free(stride_one           [itrf]);
+  }
+  free(interface_ids_shifted);
+  free(send_data_dom        );
+  free(send_data_intno      );
+  free(send_data_gnum       );
+  free(weight               );
+  free(stride_one           );
+  free(dn_interface_twice   );
+
+
+
+  free(recv_stride);
+  free(recv_data_dom);
+  free(recv_data_intno);
+  free(recv_data_gnum);
+
+
+
+  PDM_part_to_block_free(ptb);
+
+  /*
+   * block to part sparse to send all data of the current block (we need to fake the block_to_part to manage domain at the same time)
+   */
 
 
   /*
    * Unshift all ln_to_gn
    */
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      for(int i_entity = 0; i_entity < pn_entity[i_domain][i_part]; ++i_entity) {
+        entity_ln_to_gn[i_domain][i_part][i_entity] -= max_per_domain[i_domain];
+      }
+    }
+  }
 
+  free(max_per_domain);
+  free(max_per_domain_loc);
 }
 
 PDM_part_domain_interface_t*
