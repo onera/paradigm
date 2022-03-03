@@ -11,7 +11,7 @@
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
-#include "pdm_part.h"
+#include "pdm_multipart.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_distrib.h"
@@ -238,10 +238,10 @@ int main
   // 8 -> hexa
 
 #ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 
@@ -536,64 +536,114 @@ int main
   }
 
   /*
+   * Partitionnement
+   */
+  PDM_multipart_t *mpart_id = PDM_multipart_create(n_domain,
+                                                   &n_part,
+                                                   PDM_FALSE,
+                                                   method,
+                                                   PDM_PART_SIZE_HOMOGENEOUS,
+                                                   NULL,
+                                                   comm,
+                                                   PDM_OWNERSHIP_KEEP);
+
+  for (int i = 0; i < n_domain; i++) {
+    PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
+  }
+
+  PDM_multipart_run_ppart(mpart_id);
+
+
+
+
+  /*
    * Create dmesh_nodal_to_dmesh to setup face and edge
    */
-  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(n_domain, comm, PDM_OWNERSHIP_KEEP);
-  for (int i = 0; i < n_domain; i++) {
-    PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, i, dmn[i]);
-  }
+  // PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(n_domain, comm, PDM_OWNERSHIP_KEEP);
+  // for (int i = 0; i < n_domain; i++) {
+  //   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, i, dmn[i]);
+  // }
 
-  PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+  // PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+  //                                  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+  //                                  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
-  PDM_dmesh_t **dm = malloc(n_domain * sizeof(PDM_dmesh_t *));
+  // PDM_dmesh_t **dm = malloc(n_domain * sizeof(PDM_dmesh_t *));
 
-  int          *dn_vtx        = malloc( n_domain * sizeof(int          ));
-  int          *dn_face       = malloc( n_domain * sizeof(int          ));
-  int         **dface_vtx_idx = malloc( n_domain * sizeof(int         *));
-  PDM_g_num_t **dface_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
+  // int          *dn_vtx        = malloc( n_domain * sizeof(int          ));
+  // int          *dn_face       = malloc( n_domain * sizeof(int          ));
+  // int         **dface_vtx_idx = malloc( n_domain * sizeof(int         *));
+  // PDM_g_num_t **dface_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
 
-  for (int i = 0; i < n_domain; i++) {
-    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+  // for (int i = 0; i < n_domain; i++) {
+  //   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
 
-    int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
-    PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);
+  //   int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
+  //   PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);
 
-    dn_vtx [i] = _dn_vtx;
-    dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
-                                            PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                            &dface_vtx[i],
-                                            &dface_vtx_idx[i],
-                                            PDM_OWNERSHIP_KEEP);
-    assert(dface_vtx_idx[i] != NULL);
-    assert(dface_vtx[i] != NULL);
-  }
+  //   dn_vtx [i] = _dn_vtx;
+  //   dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
+  //                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
+  //                                           &dface_vtx[i],
+  //                                           &dface_vtx_idx[i],
+  //                                           PDM_OWNERSHIP_KEEP);
+  //   assert(dface_vtx_idx[i] != NULL);
+  //   assert(dface_vtx[i] != NULL);
+  // }
 
-  // int         *graph_vtx_idx = NULL;
-  // PDM_g_num_t *graph_vtx_ids = NULL;
-  // int         *graph_vtx_dom = NULL;
-  // int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
-  //     &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
-  // PDM_log_trace_array_int(graph_vtx_idx, graph_vtx_dn+1, "vtx graph idx");
-  // PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
-  // PDM_log_trace_array_int(graph_vtx_dom, graph_vtx_idx[graph_vtx_dn], "vtx graph dom");
+  // /*
+  //  * Transform interface by vtx by interface by faces
+  //  */
+  // PDM_domain_interface_translate_vtx2face(dom_intrf,
+  //                                         dn_vtx,
+  //                                         dn_face,
+  //                                         dface_vtx_idx,
+  //                                         dface_vtx);
+
+
   /*
-   * Transform interface by vtx by interface by faces
+   *  Prepare pointer by domain and by part
    */
-  PDM_domain_interface_translate_vtx2face(dom_intrf,
-                                          dn_vtx,
-                                          dn_face,
-                                          dface_vtx_idx,
-                                          dface_vtx);
+  int          **pn_vtx        = (int          **) malloc( n_domain * sizeof(int          *));
+  PDM_g_num_t ***pvtx_ln_to_gn = (PDM_g_num_t ***) malloc( n_domain * sizeof(PDM_g_num_t **));
+  for (int i_dom = 0; i_dom < n_domain; i_dom++) {
+
+    pn_vtx       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
+    pvtx_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pn_vtx[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
+                                                                 i_dom,
+                                                                 i_part,
+                                                                 PDM_MESH_ENTITY_VERTEX,
+                                                                 &pvtx_ln_to_gn[i_dom][i_part],
+                                                                 PDM_OWNERSHIP_KEEP);
+    }
+  }
+
+
+  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
+                                                                                   n_part,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pn_vtx,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pvtx_ln_to_gn);
+
+
+
+  PDM_UNUSED(pdi);
 
   /*
    *  Pour le debug : extration des faces avec le extract part + vtk
    */
-  // PDM_part_domain_interface_t* pdi =
 
-
-
+  for (int i_dom = 0; i_dom < n_domain; i_dom++) {
+    free(pn_vtx       [i_dom]);
+    free(pvtx_ln_to_gn[i_dom]);
+  }
+  free(pn_vtx       );
+  free(pvtx_ln_to_gn);
 
   /*
    *  Free memory
@@ -604,14 +654,15 @@ int main
     PDM_dcube_nodal_gen_free(dcube[i]);
     // PDM_dcube_nodal_gen_free(dmn[i]);
   }
+  PDM_multipart_free(mpart_id);
 
-  free(dm);
-  free(dn_vtx);
-  free(dn_face);
-  free(dface_vtx_idx);
-  free(dface_vtx);
+  // free(dm);
+  // free(dn_vtx);
+  // free(dn_face);
+  // free(dface_vtx_idx);
+  // free(dface_vtx);
 
-  PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+  // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_domain_interface_free(dom_intrf);
 
   for (int i = 0; i < n_interface; i++) {

@@ -10,7 +10,6 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_domain_interface.h"
 
 /*=============================================================================
  * Macro definitions
@@ -61,9 +60,6 @@ PDM_part_domain_interface_set
  int                         **interface_ids,
  int                         **interface_dom
 );
-
-
-
 
 void
 PDM_part_domain_interface_free

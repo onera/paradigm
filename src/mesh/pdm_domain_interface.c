@@ -30,7 +30,9 @@
 #include "pdm_dmesh_nodal_elements_utils.h"
 
 #include "pdm_domain_interface.h"
+#include "pdm_part_domain_interface.h"
 #include "pdm_domain_interface_priv.h"
+#include "pdm_part_domain_interface_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -2789,6 +2791,33 @@ PDM_ddomain_interface_to_pdomain_interface
   // PDM_part_domain_interface* PDM_part_domain_interface_create();
   // le part domain doit contenir égalment la notion de n_part ...
 
+}
+
+
+PDM_part_domain_interface_t*
+PDM_domain_interface_to_part_domain_interface
+(
+ PDM_domain_interface_t  *dom_intrf,
+ int                      n_part,
+ int                    **pn_face,
+ int                    **pn_edge,
+ int                    **pn_vtx,
+ PDM_g_num_t           ***face_ln_to_gn,
+ PDM_g_num_t           ***edge_ln_to_gn,
+ PDM_g_num_t           ***vtx_ln_to_gn
+)
+{
+  PDM_UNUSED(dom_intrf);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(pn_face);
+  PDM_UNUSED(pn_edge);
+  PDM_UNUSED(pn_vtx);
+  PDM_UNUSED(face_ln_to_gn);
+  PDM_UNUSED(edge_ln_to_gn);
+  PDM_UNUSED(vtx_ln_to_gn);
+
+
+  return NULL;
 }
 
 #ifdef __cplusplus
