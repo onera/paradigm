@@ -1643,6 +1643,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     free(rank_copy_num);
   }
 
+  PDM_box_tree_free_copies(_dbbt->btLoc);
 }
 
 
