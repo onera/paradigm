@@ -662,6 +662,7 @@ PDM_box_set_destroy(PDM_box_set_t  **boxes)
 
 
     free(_boxes);
+    _boxes = NULL;
   }
 }
 
