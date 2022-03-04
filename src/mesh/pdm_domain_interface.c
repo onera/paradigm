@@ -2865,6 +2865,7 @@ PDM_ddomain_interface_to_pdomain_interface
       for(int i_entity = 0; i_entity < pn_entity[i_domain][i_part]; ++i_entity) {
         entity_ln_to_gn[i_domain][i_part][i_entity] += max_per_domain[i_domain];
       }
+      PDM_log_trace_array_long(entity_ln_to_gn[i_domain][i_part], pn_entity[i_domain][i_part], "entity_ln_to_gn  ::" );
     }
   }
 
@@ -3031,8 +3032,8 @@ PDM_ddomain_interface_to_pdomain_interface
     n_part_tot += n_part[i_domain];
   }
 
-  int          *pn_entity_all        = (int          *) malloc( sizeof(int          ));
-  PDM_g_num_t **pentity_ln_to_gn_all = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *));
+  int          *pn_entity_all        = (int          *) malloc( n_part_tot * sizeof(int          ));
+  PDM_g_num_t **pentity_ln_to_gn_all = (PDM_g_num_t **) malloc( n_part_tot * sizeof(PDM_g_num_t *));
 
   int shift_domain = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {

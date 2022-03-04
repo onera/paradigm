@@ -538,8 +538,12 @@ int main
   /*
    * Partitionnement
    */
+  int* n_part_by_domain = (int *) malloc(n_domain * sizeof(int));
+  for(int i = 0; i < n_domain; ++i) {
+    n_part_by_domain[i] = n_part;
+  }
   PDM_multipart_t *mpart_id = PDM_multipart_create(n_domain,
-                                                   &n_part,
+                                                   n_part_by_domain,
                                                    PDM_FALSE,
                                                    method,
                                                    PDM_PART_SIZE_HOMOGENEOUS,
@@ -552,7 +556,6 @@ int main
   }
 
   PDM_multipart_run_ppart(mpart_id);
-
 
 
 
@@ -666,6 +669,7 @@ int main
 
   // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_domain_interface_free(dom_intrf);
+  free(n_part_by_domain);
 
   for (int i = 0; i < n_interface; i++) {
     free(interface_ids[i]);
