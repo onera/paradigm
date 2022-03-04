@@ -2164,7 +2164,7 @@ PDM_dcube_nodal_cart_topo
 
   /* j-direction */
   PDM_g_num_t *distrib_j = PDM_compute_uniform_entity_distribution(comm,
-                                                                   n_vtx_y * n_vtx_z);
+                                                                   n_vtx_x * n_vtx_z);
 
   for (int k = 0; k < n_dom_k; k++) {
     for (int j = 0; j < n_dom_j - 1 + periodic_j; j++) {
@@ -2203,7 +2203,7 @@ PDM_dcube_nodal_cart_topo
 
   /* k-direction */
   PDM_g_num_t *distrib_k = PDM_compute_uniform_entity_distribution(comm,
-                                                                   n_vtx_y * n_vtx_z);
+                                                                   n_vtx_x * n_vtx_y);
 
   for (int k = 0; k < n_dom_k - 1 + periodic_k; k++) {
     for (int j = 0; j < n_dom_j; j++) {

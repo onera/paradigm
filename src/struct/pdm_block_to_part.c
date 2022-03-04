@@ -343,8 +343,8 @@ PDM_block_to_part_create_from_sparse_block
   btp->idx_partial = (int * ) malloc( btp->distributed_data_idx[btp->n_rank] * sizeof(int));
 
 
-  PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
-  PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
+  // PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
+  // PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
 
   for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
     int lid = btp->distributed_data[i];
