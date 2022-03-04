@@ -39,18 +39,20 @@ struct _pdm_part_domain_interface_t {
 
   int                            n_interface;
   int                            n_domain;
-  int                            n_part;
+  int                           *n_part;
 
-  PDM_domain_interface_mult_t    multidomain_intrf;
-  int                          **interface_pn_face;
-  PDM_g_num_t                 ***interface_face_ln_to_gn;
-  int                         ***interface_ids_face;     // (i_proc, i_part, i_face)
-  int                         ***interface_dom_face;     // (i_dom_cur, i_dom_opp)
+  PDM_domain_interface_mult_t     multidomain_intrf;
+  int                          ***interface_pn_face;
+  PDM_g_num_t                 ****interface_face_ln_to_gn;
+  int                         ****interface_ids_face;     // (i_proc, i_part, i_face)
+  int                         ****interface_dom_face;     // (i_dom_cur, i_dom_opp)
 
-  int                          **interface_pn_vtx;
-  PDM_g_num_t                 ***interface_vtx_ln_to_gn;
-  int                         ***interface_ids_vtx;     // (i_proc, i_part, i_vtx)
-  int                         ***interface_dom_vtx;     // (i_dom_cur, i_dom_opp)
+  // ptr is = (i_domain, i_part, i_interface)
+
+  int                          ***interface_pn_vtx;
+  PDM_g_num_t                 ****interface_vtx_ln_to_gn;
+  int                         ****interface_ids_vtx;     // (i_proc, i_part, i_vtx)
+  int                         ****interface_dom_vtx;     // (i_dom_cur, i_dom_opp)
 
   PDM_ownership_t ownership;
   int is_result[PDM_BOUND_TYPE_MAX];

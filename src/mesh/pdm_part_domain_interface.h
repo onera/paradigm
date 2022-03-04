@@ -40,12 +40,12 @@ typedef struct _pdm_part_domain_interface_t PDM_part_domain_interface_t;
 PDM_part_domain_interface_t*
 PDM_part_domain_interface_create
 (
-const int                   n_interface,
-const int                   n_domain,
-const int                   n_part,
-PDM_domain_interface_mult_t multidomain_interface,
-PDM_ownership_t             ownership,
-PDM_MPI_Comm                comm
+const int                    n_interface,
+const int                    n_domain,
+const int                   *n_part,
+PDM_domain_interface_mult_t  multidomain_interface,
+PDM_ownership_t              ownership,
+PDM_MPI_Comm                 comm
 );
 
 
@@ -54,6 +54,7 @@ PDM_part_domain_interface_set
 (
  PDM_part_domain_interface_t  *dom_intrf,
  PDM_bound_type_t              interface_kind,
+ int                           i_domain,
  int                           i_part,
  int                          *interface_pn,
  PDM_g_num_t                 **interface_ln_to_gn,

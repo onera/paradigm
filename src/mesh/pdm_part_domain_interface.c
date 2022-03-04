@@ -62,34 +62,51 @@ extern "C" {
 PDM_part_domain_interface_t*
 PDM_part_domain_interface_create
 (
-const int                   n_interface,
-const int                   n_domain,
-const int                   n_part,
-PDM_domain_interface_mult_t multidomain_interface,
-PDM_ownership_t             ownership,
-PDM_MPI_Comm                comm
+const int                    n_interface,
+const int                    n_domain,
+const int                   *n_part,
+PDM_domain_interface_mult_t  multidomain_interface,
+PDM_ownership_t              ownership,
+PDM_MPI_Comm                 comm
 )
 {
   PDM_part_domain_interface_t *dom_intrf = (PDM_part_domain_interface_t *) malloc (sizeof(PDM_part_domain_interface_t));
   dom_intrf->n_interface       = n_interface;
   dom_intrf->n_domain          = n_domain;
-  dom_intrf->n_part            = n_part;
+  dom_intrf->n_part            = malloc(n_domain * sizeof(int));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain ) {
+    dom_intrf->n_part[i_domain] = n_part[i_domain];
+  }
   dom_intrf->multidomain_intrf = multidomain_interface;
   dom_intrf->ownership         = ownership;
   dom_intrf->comm              = comm;
 
-  dom_intrf->interface_pn_vtx        = (int          **) malloc(n_part * sizeof(int          *));
-  dom_intrf->interface_vtx_ln_to_gn  = (PDM_g_num_t ***) malloc(n_part * sizeof(PDM_g_num_t **));
-  dom_intrf->interface_ids_vtx       = (int         ***) malloc(n_part * sizeof(int         **));
-  dom_intrf->interface_dom_vtx       = (int         ***) malloc(n_part * sizeof(int         **));
+  dom_intrf->interface_pn_vtx        = (int          ***) malloc(n_domain * sizeof(int          **));
+  dom_intrf->interface_vtx_ln_to_gn  = (PDM_g_num_t ****) malloc(n_domain * sizeof(PDM_g_num_t ***));
+  dom_intrf->interface_ids_vtx       = (int         ****) malloc(n_domain * sizeof(int         ***));
+  dom_intrf->interface_dom_vtx       = (int         ****) malloc(n_domain * sizeof(int         ***));
 
-  dom_intrf->interface_pn_face       = (int         ** ) malloc(n_part * sizeof(int          *));
-  dom_intrf->interface_face_ln_to_gn = (PDM_g_num_t ***) malloc(n_part * sizeof(PDM_g_num_t **));
-  dom_intrf->interface_ids_face      = (int         ***) malloc(n_part * sizeof(int         **));
-  dom_intrf->interface_dom_face      = (int         ***) malloc(n_part * sizeof(int         **));
+  dom_intrf->interface_pn_face       = (int          ***) malloc(n_domain * sizeof(int          **));
+  dom_intrf->interface_face_ln_to_gn = (PDM_g_num_t ****) malloc(n_domain * sizeof(PDM_g_num_t ***));
+  dom_intrf->interface_ids_face      = (int         ****) malloc(n_domain * sizeof(int         ***));
+  dom_intrf->interface_dom_face      = (int         ****) malloc(n_domain * sizeof(int         ***));
 
-  for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++)
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain ) {
+    dom_intrf->interface_pn_vtx       [i_domain] = (int          **) malloc(n_part[i_domain] * sizeof(int          *));
+    dom_intrf->interface_vtx_ln_to_gn [i_domain] = (PDM_g_num_t ***) malloc(n_part[i_domain] * sizeof(PDM_g_num_t **));
+    dom_intrf->interface_ids_vtx      [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+    dom_intrf->interface_dom_vtx      [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+
+    dom_intrf->interface_pn_face      [i_domain] = (int          **) malloc(n_part[i_domain] * sizeof(int          *));
+    dom_intrf->interface_face_ln_to_gn[i_domain] = (PDM_g_num_t ***) malloc(n_part[i_domain] * sizeof(PDM_g_num_t **));
+    dom_intrf->interface_ids_face     [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+    dom_intrf->interface_dom_face     [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+  }
+
+
+  for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++) {
     dom_intrf->is_result[i] = 0;
+  }
 
   return dom_intrf;
 }
@@ -99,6 +116,7 @@ PDM_part_domain_interface_set
 (
  PDM_part_domain_interface_t  *dom_intrf,
  PDM_bound_type_t              interface_kind,
+ int                           i_domain,
  int                           i_part,
  int                          *interface_pn,
  PDM_g_num_t                 **interface_ln_to_gn,
@@ -106,19 +124,20 @@ PDM_part_domain_interface_set
  int                         **interface_dom
 )
 {
-  assert(i_part < dom_intrf->n_part);
+  assert(i_part < dom_intrf->n_part[i_domain]);
+
   assert (dom_intrf != NULL);
   if (interface_kind == PDM_BOUND_TYPE_VTX) {
-    dom_intrf->interface_pn_vtx      [i_part] = interface_pn;
-    dom_intrf->interface_vtx_ln_to_gn[i_part] = interface_ln_to_gn;
-    dom_intrf->interface_ids_vtx     [i_part] = interface_ids;
-    dom_intrf->interface_dom_vtx     [i_part] = interface_dom;
+    dom_intrf->interface_pn_vtx      [i_domain][i_part] = interface_pn;
+    dom_intrf->interface_vtx_ln_to_gn[i_domain][i_part] = interface_ln_to_gn;
+    dom_intrf->interface_ids_vtx     [i_domain][i_part] = interface_ids;
+    dom_intrf->interface_dom_vtx     [i_domain][i_part] = interface_dom;
   }
   else if (interface_kind == PDM_BOUND_TYPE_FACE) {
-    dom_intrf->interface_pn_face      [i_part] = interface_pn;
-    dom_intrf->interface_face_ln_to_gn[i_part] = interface_ln_to_gn;
-    dom_intrf->interface_ids_face     [i_part] = interface_ids;
-    dom_intrf->interface_dom_face     [i_part] = interface_dom;
+    dom_intrf->interface_pn_face      [i_domain][i_part] = interface_pn;
+    dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = interface_ln_to_gn;
+    dom_intrf->interface_ids_face     [i_domain][i_part] = interface_ids;
+    dom_intrf->interface_dom_face     [i_domain][i_part] = interface_dom;
   }
   else {
     PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
@@ -133,6 +152,21 @@ PDM_part_domain_interface_free
  PDM_part_domain_interface_t  *dom_intrf
 )
 {
+
+  free(dom_intrf->n_part);
+
+  for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain ) {
+    free(dom_intrf->interface_pn_vtx       [i_domain]);
+    free(dom_intrf->interface_vtx_ln_to_gn [i_domain]);
+    free(dom_intrf->interface_ids_vtx      [i_domain]);
+    free(dom_intrf->interface_dom_vtx      [i_domain]);
+
+    free(dom_intrf->interface_pn_face      [i_domain]);
+    free(dom_intrf->interface_face_ln_to_gn[i_domain]);
+    free(dom_intrf->interface_ids_face     [i_domain]);
+    free(dom_intrf->interface_dom_face     [i_domain]);
+
+  }
 
   free(dom_intrf->interface_pn_vtx       );
   free(dom_intrf->interface_vtx_ln_to_gn );

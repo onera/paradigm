@@ -2806,7 +2806,8 @@ PDM_ddomain_interface_to_pdomain_interface
  int                          **interface_dom,
  int                           *n_part,
  int                          **pn_entity,
- PDM_g_num_t                 ***entity_ln_to_gn
+ PDM_g_num_t                 ***entity_ln_to_gn,
+ PDM_part_domain_interface_t   *pditrf
 )
 {
   PDM_UNUSED(comm);
@@ -3216,6 +3217,7 @@ PDM_ddomain_interface_to_pdomain_interface
   /*
    *  Get opposite information by rexchange all data of partition interface
    */
+
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
     int          *_ln_interface    = (int          *) malloc( n_part_tot * sizeof(int          ));
@@ -3414,6 +3416,7 @@ PDM_ddomain_interface_to_pdomain_interface
 
   free(max_per_domain);
   free(max_per_domain_loc);
+
 }
 
 PDM_part_domain_interface_t*
@@ -3438,6 +3441,13 @@ PDM_domain_interface_to_part_domain_interface
   PDM_UNUSED(edge_ln_to_gn);
   PDM_UNUSED(vtx_ln_to_gn);
 
+  PDM_part_domain_interface_t* pditrf = PDM_part_domain_interface_create(dom_intrf->n_interface,
+                                                                         dom_intrf->n_domain,
+                                                                         n_part,
+                                                                         dom_intrf->multidomain_intrf,
+                                                                         PDM_OWNERSHIP_KEEP,
+                                                                         dom_intrf->comm);
+
   if(dom_intrf->interface_dn_vtx != NULL) {
 
     printf("Rebuild vtx domain interface \n");
@@ -3452,7 +3462,8 @@ PDM_domain_interface_to_part_domain_interface
                                                dom_intrf->interface_dom_vtx,
                                                n_part,
                                                pn_vtx,
-                                               vtx_ln_to_gn);
+                                               vtx_ln_to_gn,
+                                               pditrf);
 
 
   }
@@ -3466,7 +3477,7 @@ PDM_domain_interface_to_part_domain_interface
 
 
 
-  return NULL;
+  return pditrf;
 }
 
 #ifdef __cplusplus

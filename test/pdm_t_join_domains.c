@@ -635,7 +635,7 @@ int main
                                                                                    pvtx_ln_to_gn);
 
 
-
+  PDM_part_domain_interface_free(pdi);
   PDM_UNUSED(pdi);
 
   /*
