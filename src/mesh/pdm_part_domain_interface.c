@@ -84,25 +84,41 @@ PDM_MPI_Comm                 comm
   dom_intrf->interface_pn_vtx        = (int          ***) malloc(n_domain * sizeof(int          **));
   dom_intrf->interface_vtx_ln_to_gn  = (PDM_g_num_t ****) malloc(n_domain * sizeof(PDM_g_num_t ***));
   dom_intrf->interface_ids_vtx       = (int         ****) malloc(n_domain * sizeof(int         ***));
+  dom_intrf->interface_ids_vtx_idx   = (int         ****) malloc(n_domain * sizeof(int         ***));
   dom_intrf->interface_dom_vtx       = (int         ****) malloc(n_domain * sizeof(int         ***));
 
   dom_intrf->interface_pn_face       = (int          ***) malloc(n_domain * sizeof(int          **));
   dom_intrf->interface_face_ln_to_gn = (PDM_g_num_t ****) malloc(n_domain * sizeof(PDM_g_num_t ***));
   dom_intrf->interface_ids_face      = (int         ****) malloc(n_domain * sizeof(int         ***));
+  dom_intrf->interface_ids_face_idx  = (int         ****) malloc(n_domain * sizeof(int         ***));
   dom_intrf->interface_dom_face      = (int         ****) malloc(n_domain * sizeof(int         ***));
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain ) {
     dom_intrf->interface_pn_vtx       [i_domain] = (int          **) malloc(n_part[i_domain] * sizeof(int          *));
     dom_intrf->interface_vtx_ln_to_gn [i_domain] = (PDM_g_num_t ***) malloc(n_part[i_domain] * sizeof(PDM_g_num_t **));
     dom_intrf->interface_ids_vtx      [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+    dom_intrf->interface_ids_vtx_idx  [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
     dom_intrf->interface_dom_vtx      [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
 
     dom_intrf->interface_pn_face      [i_domain] = (int          **) malloc(n_part[i_domain] * sizeof(int          *));
     dom_intrf->interface_face_ln_to_gn[i_domain] = (PDM_g_num_t ***) malloc(n_part[i_domain] * sizeof(PDM_g_num_t **));
     dom_intrf->interface_ids_face     [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
+    dom_intrf->interface_ids_face_idx [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
     dom_intrf->interface_dom_face     [i_domain] = (int         ***) malloc(n_part[i_domain] * sizeof(int         **));
-  }
 
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      dom_intrf->interface_pn_vtx       [i_domain][i_part] = NULL;
+      dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] = NULL;
+      dom_intrf->interface_ids_vtx      [i_domain][i_part] = NULL;
+      dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] = NULL;
+      dom_intrf->interface_dom_vtx      [i_domain][i_part] = NULL;
+      dom_intrf->interface_pn_face      [i_domain][i_part] = NULL;
+      dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = NULL;
+      dom_intrf->interface_ids_face     [i_domain][i_part] = NULL;
+      dom_intrf->interface_ids_face_idx [i_domain][i_part] = NULL;
+      dom_intrf->interface_dom_face     [i_domain][i_part] = NULL;
+    }
+  }
 
   for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++) {
     dom_intrf->is_result[i] = 0;
@@ -121,6 +137,7 @@ PDM_part_domain_interface_set
  int                          *interface_pn,
  PDM_g_num_t                 **interface_ln_to_gn,
  int                         **interface_ids,
+ int                         **interface_ids_idx,
  int                         **interface_dom
 )
 {
@@ -131,12 +148,14 @@ PDM_part_domain_interface_set
     dom_intrf->interface_pn_vtx      [i_domain][i_part] = interface_pn;
     dom_intrf->interface_vtx_ln_to_gn[i_domain][i_part] = interface_ln_to_gn;
     dom_intrf->interface_ids_vtx     [i_domain][i_part] = interface_ids;
+    dom_intrf->interface_ids_vtx_idx [i_domain][i_part] = interface_ids_idx;
     dom_intrf->interface_dom_vtx     [i_domain][i_part] = interface_dom;
   }
   else if (interface_kind == PDM_BOUND_TYPE_FACE) {
     dom_intrf->interface_pn_face      [i_domain][i_part] = interface_pn;
     dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = interface_ln_to_gn;
     dom_intrf->interface_ids_face     [i_domain][i_part] = interface_ids;
+    dom_intrf->interface_ids_face_idx [i_domain][i_part] = interface_ids_idx;
     dom_intrf->interface_dom_face     [i_domain][i_part] = interface_dom;
   }
   else {
@@ -153,29 +172,104 @@ PDM_part_domain_interface_free
 )
 {
 
-  free(dom_intrf->n_part);
 
   for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain ) {
+
+    for(int i_part = 0; i_part < dom_intrf->n_part[i_domain]; ++i_part) {
+
+      if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+        if(dom_intrf->interface_pn_vtx       [i_domain][i_part] != NULL) {
+          free(dom_intrf->interface_pn_vtx       [i_domain][i_part]);
+          dom_intrf->interface_pn_vtx       [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part]);
+          dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_ids_vtx      [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_ids_vtx      [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_ids_vtx      [i_domain][i_part]);
+          dom_intrf->interface_ids_vtx      [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part]);
+          dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_dom_vtx      [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_dom_vtx      [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_dom_vtx      [i_domain][i_part]);
+          dom_intrf->interface_dom_vtx      [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_pn_face      [i_domain][i_part] != NULL) {
+          free(dom_intrf->interface_pn_face      [i_domain][i_part]);
+          dom_intrf->interface_pn_face      [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_face_ln_to_gn[i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part]);
+          dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_ids_face     [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_ids_face     [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_ids_face     [i_domain][i_part]);
+          dom_intrf->interface_ids_face     [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_ids_face_idx [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_ids_face_idx [i_domain][i_part]);
+          dom_intrf->interface_ids_face_idx [i_domain][i_part] = NULL;
+        };
+        if(dom_intrf->interface_dom_face     [i_domain][i_part] != NULL) {
+          for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
+            free(dom_intrf->interface_dom_face     [i_domain][i_part][i_interface]);
+          }
+          free(dom_intrf->interface_dom_face     [i_domain][i_part]);
+          dom_intrf->interface_dom_face     [i_domain][i_part] = NULL;
+        };
+      }
+    }
+
     free(dom_intrf->interface_pn_vtx       [i_domain]);
     free(dom_intrf->interface_vtx_ln_to_gn [i_domain]);
     free(dom_intrf->interface_ids_vtx      [i_domain]);
+    free(dom_intrf->interface_ids_vtx_idx  [i_domain]);
     free(dom_intrf->interface_dom_vtx      [i_domain]);
 
     free(dom_intrf->interface_pn_face      [i_domain]);
     free(dom_intrf->interface_face_ln_to_gn[i_domain]);
     free(dom_intrf->interface_ids_face     [i_domain]);
+    free(dom_intrf->interface_ids_face_idx [i_domain]);
     free(dom_intrf->interface_dom_face     [i_domain]);
 
   }
+  free(dom_intrf->n_part);
 
   free(dom_intrf->interface_pn_vtx       );
   free(dom_intrf->interface_vtx_ln_to_gn );
   free(dom_intrf->interface_ids_vtx      );
+  free(dom_intrf->interface_ids_vtx_idx  );
   free(dom_intrf->interface_dom_vtx      );
 
   free(dom_intrf->interface_pn_face      );
   free(dom_intrf->interface_face_ln_to_gn);
   free(dom_intrf->interface_ids_face     );
+  free(dom_intrf->interface_ids_face_idx );
   free(dom_intrf->interface_dom_face     );
 
 

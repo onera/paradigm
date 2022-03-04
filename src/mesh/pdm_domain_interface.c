@@ -2801,6 +2801,7 @@ PDM_ddomain_interface_to_pdomain_interface
  int                            n_interface,
  int                            n_domain,
  PDM_domain_interface_mult_t    multidomain_intrf,
+ PDM_bound_type_t               interface_kind,
  int                           *dn_interface,
  PDM_g_num_t                  **interface_ids,
  int                          **interface_dom,
@@ -3218,6 +3219,30 @@ PDM_ddomain_interface_to_pdomain_interface
   /*
    *  Get opposite information by rexchange all data of partition interface
    */
+  int          ***pres_interface_pn       = ( int          ***) malloc( n_domain * sizeof(int          **));
+  PDM_g_num_t ****pres_interface_ln_to_gn = ( PDM_g_num_t ****) malloc( n_domain * sizeof(PDM_g_num_t ***));
+  int         ****pres_interface_ids      = ( int         ****) malloc( n_domain * sizeof(int         ***));
+  int         ****pres_interface_ids_idx  = ( int         ****) malloc( n_domain * sizeof(int         ***));
+  int         ****pres_interface_dom      = ( int         ****) malloc( n_domain * sizeof(int         ***));
+
+  for( int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    pres_interface_pn      [i_domain] = ( int          **) malloc( n_part[i_domain] * sizeof(int          *));
+    pres_interface_ln_to_gn[i_domain] = ( PDM_g_num_t ***) malloc( n_part[i_domain] * sizeof(PDM_g_num_t **));
+    pres_interface_ids     [i_domain] = ( int         ***) malloc( n_part[i_domain] * sizeof(int         **));
+    pres_interface_ids_idx [i_domain] = ( int         ***) malloc( n_part[i_domain] * sizeof(int         **));
+    pres_interface_dom     [i_domain] = ( int         ***) malloc( n_part[i_domain] * sizeof(int         **));
+
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+
+      pres_interface_pn      [i_domain][i_part] = ( int          *) malloc( n_interface * sizeof(int          ));
+      pres_interface_ln_to_gn[i_domain][i_part] = ( PDM_g_num_t **) malloc( n_interface * sizeof(PDM_g_num_t *));
+      pres_interface_ids     [i_domain][i_part] = ( int         **) malloc( n_interface * sizeof(int         *));
+      pres_interface_ids_idx [i_domain][i_part] = ( int         **) malloc( n_interface * sizeof(int         *));
+      pres_interface_dom     [i_domain][i_part] = ( int         **) malloc( n_interface * sizeof(int         *));
+    }
+  }
+
+
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
@@ -3352,28 +3377,53 @@ PDM_ddomain_interface_to_pdomain_interface
      * Post-Treatment
      */
 
-    for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    shift_domain = 0;
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
 
-      int n_data = 0;
-      for(int i = 0; i < _ln_interface[i_part]; ++i) {
-        n_data += precv_stride[i_part][i];
-      }
-      int n_data_dom = 0;
-      for(int i = 0; i < _ln_interface[i_part]; ++i) {
-        n_data_dom += precv_stride_dom[i_part][i];
-      }
+        int s_i_part = shift_domain + i_part;
+        int n_data = 0;
 
-      if(1 == 1) {
-        PDM_log_trace_array_int(precv_stride     [i_part],     _ln_interface[i_part], "precv_stride      ::");
-        PDM_log_trace_array_int(precv_entity_desc[i_part], 3 * n_data               , "precv_entity_desc ::");
-        PDM_log_trace_array_int(precv_dom        [i_part], 2 * n_data_dom           , "precv_dom         ::");
-      }
+        int *interface_ids_idx = (int * ) malloc( (_ln_interface[s_i_part] + 1) * sizeof(int *));
 
-      free(precv_stride     [i_part]);
-      free(precv_stride_dom [i_part]);
-      free(precv_dom        [i_part]);
-      free(precv_entity_desc[i_part]);
+        interface_ids_idx[0] = 0;
+        for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
+          n_data += precv_stride[s_i_part][i];
+          interface_ids_idx[i+1] = interface_ids_idx[i] + precv_stride[s_i_part][i];
+        }
+        int n_data_dom = 0;
+        for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
+          n_data_dom += precv_stride_dom[s_i_part][i];
+        }
+
+        if(1 == 1) {
+          PDM_log_trace_array_int(precv_stride     [s_i_part],     _ln_interface[s_i_part], "precv_stride      ::");
+          PDM_log_trace_array_int(precv_entity_desc[s_i_part], 3 * n_data                 , "precv_entity_desc ::");
+          PDM_log_trace_array_int(precv_dom        [s_i_part], 2 * n_data_dom             , "precv_dom         ::");
+        }
+
+        // interface_ids_idx is transfer to PDM_part_domain_interface
+        // Set ptr properly :
+        pres_interface_pn      [i_domain][i_part][i_interface] = _ln_interface[s_i_part];
+        pres_interface_ln_to_gn[i_domain][i_part][i_interface] = (PDM_g_num_t * ) malloc( _ln_interface[s_i_part] * sizeof(PDM_g_num_t));
+
+        for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
+          pres_interface_ln_to_gn[i_domain][i_part][i_interface][i] = _linterface_gnum[s_i_part][i];
+        }
+
+        pres_interface_ids     [i_domain][i_part][i_interface] = precv_entity_desc[s_i_part];
+        pres_interface_ids_idx [i_domain][i_part][i_interface] = interface_ids_idx;
+        pres_interface_dom     [i_domain][i_part][i_interface] = precv_dom[s_i_part];
+
+
+        free(precv_stride     [s_i_part]);
+        free(precv_stride_dom [s_i_part]);
+        // free(precv_dom        [s_i_part]);
+        // free(precv_entity_desc[s_i_part]);
+      }
+      shift_domain += n_part[i_domain];
     }
+
     free(precv_stride     );
     free(precv_stride_dom );
     free(precv_dom        );
@@ -3383,6 +3433,36 @@ PDM_ddomain_interface_to_pdomain_interface
     free(_linterface_gnum);
 
   }
+
+  shift_domain = 0;
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      PDM_part_domain_interface_set(pditrf,
+                                    interface_kind,
+                                    i_domain,
+                                    i_part,
+                                    pres_interface_pn      [i_domain][i_part],
+                                    pres_interface_ln_to_gn[i_domain][i_part],
+                                    pres_interface_ids     [i_domain][i_part],
+                                    pres_interface_ids_idx [i_domain][i_part],
+                                    pres_interface_dom     [i_domain][i_part]);
+    }
+    shift_domain += n_part[i_domain];
+  }
+
+
+  for( int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    free(pres_interface_pn      [i_domain]);
+    free(pres_interface_ln_to_gn[i_domain]);
+    free(pres_interface_ids     [i_domain]);
+    free(pres_interface_ids_idx [i_domain]);
+    free(pres_interface_dom     [i_domain]);
+  }
+  free(pres_interface_pn      );
+  free(pres_interface_ln_to_gn);
+  free(pres_interface_ids     );
+  free(pres_interface_ids_idx );
+  free(pres_interface_dom     );
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
     free(pinterface_triplet[i_part]);
@@ -3458,6 +3538,7 @@ PDM_domain_interface_to_part_domain_interface
                                                dom_intrf->n_interface,
                                                dom_intrf->n_domain,
                                                dom_intrf->multidomain_intrf,
+                                               PDM_BOUND_TYPE_VTX,
                                                dom_intrf->interface_dn_vtx,
                                                dom_intrf->interface_ids_vtx,
                                                dom_intrf->interface_dom_vtx,
@@ -3471,7 +3552,20 @@ PDM_domain_interface_to_part_domain_interface
 
   if(dom_intrf->interface_dn_face != NULL) {
 
-    printf("Rebuild vtx domain interface \n");
+    printf("Rebuild face domain interface \n");
+
+    PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
+                                               dom_intrf->n_interface,
+                                               dom_intrf->n_domain,
+                                               dom_intrf->multidomain_intrf,
+                                               PDM_BOUND_TYPE_FACE,
+                                               dom_intrf->interface_dn_face,
+                                               dom_intrf->interface_ids_face,
+                                               dom_intrf->interface_dom_face,
+                                               n_part,
+                                               pn_face,
+                                               face_ln_to_gn,
+                                               pditrf);
 
   }
 
