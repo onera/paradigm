@@ -297,243 +297,266 @@ int main
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
-  PDM_dcube_nodal_t **dcube = (PDM_dcube_nodal_t **) malloc(sizeof(PDM_dcube_nodal_t *) * n_domain);
+  // PDM_dcube_nodal_t **dcube = (PDM_dcube_nodal_t **) malloc(sizeof(PDM_dcube_nodal_t *) * n_domain);
   PDM_dmesh_nodal_t **dmn   = (PDM_dmesh_nodal_t **) malloc(sizeof(PDM_dmesh_nodal_t *) * n_domain);
+  PDM_dcube_nodal_t **dcube = NULL;
+  PDM_domain_interface_t *dom_intrf = NULL;
 
   const int order = 1;
 
   int i_domain = 0;
 
-  for (int k = 0; k < n_dom_k; k++) {
-    for (int j = 0; j < n_dom_j; j++) {
-      for (int i = 0; i < n_dom_i; i++) {
-        dcube[i_domain] = PDM_dcube_nodal_gen_create(comm,
-                                                     nx,
-                                                     ny,
-                                                     nz,
-                                                     length,
-                                                     length*i,
-                                                     length*j,
-                                                     length*k,
-                                                     t_elt,
-                                                     order,
-                                                     PDM_OWNERSHIP_KEEP);
-        PDM_dcube_nodal_gen_build (dcube[i_domain]);
-        dmn[i_domain] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i_domain]);
-        PDM_dmesh_nodal_generate_distribution(dmn[i_domain]);
+  // for (int k = 0; k < n_dom_k; k++) {
+  //   for (int j = 0; j < n_dom_j; j++) {
+  //     for (int i = 0; i < n_dom_i; i++) {
+  //       dcube[i_domain] = PDM_dcube_nodal_gen_create(comm,
+  //                                                    nx,
+  //                                                    ny,
+  //                                                    nz,
+  //                                                    length,
+  //                                                    length*i,
+  //                                                    length*j,
+  //                                                    length*k,
+  //                                                    t_elt,
+  //                                                    order,
+  //                                                    PDM_OWNERSHIP_KEEP);
+  //       PDM_dcube_nodal_gen_build (dcube[i_domain]);
+  //       dmn[i_domain] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i_domain]);
+  //       PDM_dmesh_nodal_generate_distribution(dmn[i_domain]);
 
-        i_domain++;
-      }
-    }
-  }
+  //       i_domain++;
+  //     }
+  //   }
+  // }
 
-  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface,
-                                                                  n_domain,
-                                                                  PDM_DOMAIN_INTERFACE_MULT_NO,
-                                                                  PDM_OWNERSHIP_KEEP,
-                                                                  comm);
+  // PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(n_interface,
+  //                                                                 n_domain,
+  //                                                                 PDM_DOMAIN_INTERFACE_MULT_NO,
+  //                                                                 PDM_OWNERSHIP_KEEP,
+  //                                                                 comm);
 
-  /*
-   *  Interfaces
-   */
-  int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
-  PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
-  int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
+  // /*
+  //  *  Interfaces
+  //  */
+  // int          *interface_dn  = (int          *) malloc(sizeof(int          ) * n_interface);
+  // PDM_g_num_t **interface_ids = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_interface);
+  // int         **interface_dom = (int         **) malloc(sizeof(int         *) * n_interface);
 
-  int *i_period = PDM_array_zeros_int(n_interface);
+  // int *i_period = PDM_array_zeros_int(n_interface);
 
-  int i_interface = 0;
+  // int i_interface = 0;
 
-  /* i-direction */
-  PDM_g_num_t *distrib_i = PDM_compute_uniform_entity_distribution(comm,
-                                                                   ny * nz);
+  // /* i-direction */
+  // PDM_g_num_t *distrib_i = PDM_compute_uniform_entity_distribution(comm,
+  //                                                                  ny * nz);
 
-  for (int k = 0; k < n_dom_k; k++) {
-    for (int j = 0; j < n_dom_j; j++) {
-      for (int i = 0; i < n_dom_i - 1 + periodic_i; i++) {
+  // for (int k = 0; k < n_dom_k; k++) {
+  //   for (int j = 0; j < n_dom_j; j++) {
+  //     for (int i = 0; i < n_dom_i - 1 + periodic_i; i++) {
 
-        int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = (i+1)%n_dom_i + n_dom_i*(j + n_dom_j*k);// +1?
+  //       int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
+  //       int i_domain2 = (i+1)%n_dom_i + n_dom_i*(j + n_dom_j*k);// +1?
 
-        interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
+  //       interface_dn[i_interface] = (int) (distrib_i[i_rank+1] - distrib_i[i_rank]);
 
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
-        interface_dom[i_interface][0] = i_domain1;
-        interface_dom[i_interface][1] = i_domain2;
+  //       interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+  //       interface_dom[i_interface][0] = i_domain1;
+  //       interface_dom[i_interface][1] = i_domain2;
 
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+  //       interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
 
-        for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
-          PDM_g_num_t g = distrib_i[i_rank] + idx;
+  //       for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
+  //         PDM_g_num_t g = distrib_i[i_rank] + idx;
 
-          PDM_g_num_t jj = g % ny;
-          PDM_g_num_t kk = g / ny;
+  //         PDM_g_num_t jj = g % ny;
+  //         PDM_g_num_t kk = g / ny;
 
-          interface_ids[i_interface][2*idx  ] = 1 + nx-1 + nx*(jj + ny*kk);
-          interface_ids[i_interface][2*idx+1] = 1 +        nx*(jj + ny*kk);
-        }
+  //         interface_ids[i_interface][2*idx  ] = 1 + nx-1 + nx*(jj + ny*kk);
+  //         interface_ids[i_interface][2*idx+1] = 1 +        nx*(jj + ny*kk);
+  //       }
 
-        if (i == n_dom_i-1) {
-          i_period[i_interface] = 1;
-        }
+  //       if (i == n_dom_i-1) {
+  //         i_period[i_interface] = 1;
+  //       }
 
-        i_interface++;
-      }
-    }
-  }
-  free(distrib_i);
-
-
-
-  /* j-direction */
-  PDM_g_num_t *distrib_j = PDM_compute_uniform_entity_distribution(comm,
-                                                                   ny * nz);
-
-  for (int k = 0; k < n_dom_k; k++) {
-    for (int j = 0; j < n_dom_j - 1 + periodic_j; j++) {
-      for (int i = 0; i < n_dom_i; i++) {
-
-        int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = i + n_dom_i*((j+1)%n_dom_j + n_dom_j*k);// +1?
-
-        interface_dn[i_interface] = (int) (distrib_j[i_rank+1] - distrib_j[i_rank]);
-
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
-        interface_dom[i_interface][0] = i_domain1;
-        interface_dom[i_interface][1] = i_domain2;
-
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
-
-        for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
-          PDM_g_num_t g = distrib_j[i_rank] + idx;
-
-          PDM_g_num_t kk = g % nz;
-          PDM_g_num_t ii = g / nz;
-
-          interface_ids[i_interface][2*idx  ] = 1 + ii + nx*(ny-1 + ny*kk);
-          interface_ids[i_interface][2*idx+1] = 1 + ii + nx*(       ny*kk);
-        }
-
-        if (j == n_dom_j-1) {
-          i_period[i_interface] = 2;
-        }
-
-        i_interface++;
-      }
-    }
-  }
-  free(distrib_j);
+  //       i_interface++;
+  //     }
+  //   }
+  // }
+  // free(distrib_i);
 
 
 
-  /* k-direction */
-  PDM_g_num_t *distrib_k = PDM_compute_uniform_entity_distribution(comm,
-                                                                   ny * nz);
+  // /* j-direction */
+  // PDM_g_num_t *distrib_j = PDM_compute_uniform_entity_distribution(comm,
+  //                                                                  ny * nz);
 
-  for (int k = 0; k < n_dom_k - 1 + periodic_k; k++) {
-    for (int j = 0; j < n_dom_j; j++) {
-      for (int i = 0; i < n_dom_i; i++) {
+  // for (int k = 0; k < n_dom_k; k++) {
+  //   for (int j = 0; j < n_dom_j - 1 + periodic_j; j++) {
+  //     for (int i = 0; i < n_dom_i; i++) {
 
-        int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
-        int i_domain2 = i + n_dom_i*(j + n_dom_j*((k+1)%n_dom_k));// +1?
+  //       int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
+  //       int i_domain2 = i + n_dom_i*((j+1)%n_dom_j + n_dom_j*k);// +1?
 
-        interface_dn[i_interface] = (int) (distrib_k[i_rank+1] - distrib_k[i_rank]);
+  //       interface_dn[i_interface] = (int) (distrib_j[i_rank+1] - distrib_j[i_rank]);
 
-        interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
-        interface_dom[i_interface][0] = i_domain1;
-        interface_dom[i_interface][1] = i_domain2;
+  //       interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+  //       interface_dom[i_interface][0] = i_domain1;
+  //       interface_dom[i_interface][1] = i_domain2;
 
-        interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
+  //       interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
 
-        for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
-          PDM_g_num_t g = distrib_k[i_rank] + idx;
+  //       for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
+  //         PDM_g_num_t g = distrib_j[i_rank] + idx;
 
-          PDM_g_num_t ii = g % nx;
-          PDM_g_num_t jj = g / nx;
+  //         PDM_g_num_t kk = g % nz;
+  //         PDM_g_num_t ii = g / nz;
 
-          interface_ids[i_interface][2*idx  ] = 1 + ii + nx*(jj + ny*(nz-1));
-          interface_ids[i_interface][2*idx+1] = 1 + ii + nx*(jj            );
-        }
+  //         interface_ids[i_interface][2*idx  ] = 1 + ii + nx*(ny-1 + ny*kk);
+  //         interface_ids[i_interface][2*idx+1] = 1 + ii + nx*(       ny*kk);
+  //       }
 
-        if (k == n_dom_k-1) {
-          i_period[i_interface] = 3;
-        }
+  //       if (j == n_dom_j-1) {
+  //         i_period[i_interface] = 2;
+  //       }
 
-        i_interface++;
-      }
-    }
-  }
-  free(distrib_k);
+  //       i_interface++;
+  //     }
+  //   }
+  // }
+  // free(distrib_j);
 
-  printf("i_interface = %d / %d\n", i_interface, n_interface);
-  PDM_domain_interface_set (dom_intrf,
-                            PDM_BOUND_TYPE_VTX,
-                            interface_dn,
-                            interface_ids,
-                            interface_dom);
 
-  /* Check */
-  if (n_rank == 1) {
 
-    double vect[4][3] = {
-      {0.,             0.,             0.},
-      {length*n_dom_i, 0.,             0.},
-      {0,              length*n_dom_j, 0.},
-      {0.,             0.,             length*n_dom_k}
-    };
+  // /* k-direction */
+  // PDM_g_num_t *distrib_k = PDM_compute_uniform_entity_distribution(comm,
+  //                                                                  ny * nz);
 
-    double **all_coord = (double **) malloc(sizeof(double *) * n_domain);
-    for (int i = 0; i < n_domain; i++) {
-      all_coord[i] = PDM_DMesh_nodal_vtx_get(dmn[i]);
-    }
+  // for (int k = 0; k < n_dom_k - 1 + periodic_k; k++) {
+  //   for (int j = 0; j < n_dom_j; j++) {
+  //     for (int i = 0; i < n_dom_i; i++) {
 
-    for (i_interface = 0; i_interface < n_interface; i_interface++) {
+  //       int i_domain1 = i + n_dom_i*(j + n_dom_j*k);// +1?
+  //       int i_domain2 = i + n_dom_i*(j + n_dom_j*((k+1)%n_dom_k));// +1?
 
-      int i_domain1 = interface_dom[i_interface][0];// - 1?
-      int i_domain2 = interface_dom[i_interface][1];// - 1?
+  //       interface_dn[i_interface] = (int) (distrib_k[i_rank+1] - distrib_k[i_rank]);
 
-      for (int i = 0; i < interface_dn[i_interface]; i++) {
+  //       interface_dom[i_interface] = (int *) malloc(sizeof(int) * 2);
+  //       interface_dom[i_interface][0] = i_domain1;
+  //       interface_dom[i_interface][1] = i_domain2;
 
-        PDM_g_num_t ivtx_1 = interface_ids[i_interface][2*i]   - 1;
-        PDM_g_num_t ivtx_2 = interface_ids[i_interface][2*i+1] - 1;
+  //       interface_ids[i_interface] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * interface_dn[i_interface]);
 
-        // if(ivtx_1 < 0 || ivtx_1 >= PDM_DMesh_nodal_n_vtx_get(dmn[i_domain1])) {
-        //   printf("error : interface %d, domain 1:%d, pair %d, vtx "PDM_FMT_G_NUM"/%d\n",
-        //          i_interface, i_domain1, i, ivtx_1+1,
-        //          PDM_DMesh_nodal_n_vtx_get(dmn[i_domain1]));
-        // }
-        // if(ivtx_2 < 0 || ivtx_2 >= PDM_DMesh_nodal_n_vtx_get(dmn[i_domain2])) {
-        //   printf("error : interface %d, domain 2:%d, pair %d, vtx "PDM_FMT_G_NUM"/%d\n",
-        //          i_interface, i_domain2, i, ivtx_2+1,
-        //          PDM_DMesh_nodal_n_vtx_get(dmn[i_domain2]));
-        // }
+  //       for (int idx = 0; idx < interface_dn[i_interface]; idx++) {
+  //         PDM_g_num_t g = distrib_k[i_rank] + idx;
 
-        double *vtx_1 = all_coord[i_domain1] + 3*ivtx_1;
-        double *vtx_2 = all_coord[i_domain2] + 3*ivtx_2;
+  //         PDM_g_num_t ii = g % nx;
+  //         PDM_g_num_t jj = g / nx;
 
-        double dist2 = 0;
-        for (int j = 0; j < 3; j++) {
-          double delta = vtx_1[j] - (vtx_2[j] + vect[i_period[i_interface]][j]);
-          dist2 += delta * delta;
-        }
+  //         interface_ids[i_interface][2*idx  ] = 1 + ii + nx*(jj + ny*(nz-1));
+  //         interface_ids[i_interface][2*idx+1] = 1 + ii + nx*(jj            );
+  //       }
 
-        // assert(dist2 < 1e-9);
-        if (dist2 > 1e-9) {
-          printf("!! interface %d, domains %d %d, vtx ("PDM_FMT_G_NUM": %f %f %f) ("PDM_FMT_G_NUM": %f %f %f), dist = %f\n",
-                 i_interface, i_domain1, i_domain2,
-                 ivtx_1+1,
-                 vtx_1[0], vtx_1[1], vtx_1[2],
-                 ivtx_2+1,
-                 vtx_2[0], vtx_2[1], vtx_2[2],
-                 sqrt(dist2));
-        }
-      }
+  //       if (k == n_dom_k-1) {
+  //         i_period[i_interface] = 3;
+  //       }
 
-    }
+  //       i_interface++;
+  //     }
+  //   }
+  // }
+  // free(distrib_k);
 
-    free (all_coord);
+  PDM_dcube_nodal_cart_topo(comm,
+                            n_dom_i,
+                            n_dom_j,
+                            n_dom_k,
+                            periodic_i,
+                            periodic_j,
+                            periodic_k,
+                            nx,
+                            ny,
+                            nz,
+                            length,
+                            0.,
+                            0.,
+                            0.,
+                            t_elt,
+                            order,
+                            &dcube,
+                            &dom_intrf,
+                            PDM_OWNERSHIP_KEEP);
 
-  }
+
+  // printf("i_interface = %d / %d\n", i_interface, n_interface);
+  // PDM_domain_interface_set (dom_intrf,
+  //                           PDM_BOUND_TYPE_VTX,
+  //                           interface_dn,
+  //                           interface_ids,
+  //                           interface_dom);
+
+  // /* Check */
+  // if (n_rank == 1) {
+
+  //   double vect[4][3] = {
+  //     {0.,             0.,             0.},
+  //     {length*n_dom_i, 0.,             0.},
+  //     {0,              length*n_dom_j, 0.},
+  //     {0.,             0.,             length*n_dom_k}
+  //   };
+
+  //   double **all_coord = (double **) malloc(sizeof(double *) * n_domain);
+  //   for (int i = 0; i < n_domain; i++) {
+  //     all_coord[i] = PDM_DMesh_nodal_vtx_get(dmn[i]);
+  //   }
+
+  //   for (i_interface = 0; i_interface < n_interface; i_interface++) {
+
+  //     int i_domain1 = interface_dom[i_interface][0];// - 1?
+  //     int i_domain2 = interface_dom[i_interface][1];// - 1?
+
+  //     for (int i = 0; i < interface_dn[i_interface]; i++) {
+
+  //       PDM_g_num_t ivtx_1 = interface_ids[i_interface][2*i]   - 1;
+  //       PDM_g_num_t ivtx_2 = interface_ids[i_interface][2*i+1] - 1;
+
+  //       // if(ivtx_1 < 0 || ivtx_1 >= PDM_DMesh_nodal_n_vtx_get(dmn[i_domain1])) {
+  //       //   printf("error : interface %d, domain 1:%d, pair %d, vtx "PDM_FMT_G_NUM"/%d\n",
+  //       //          i_interface, i_domain1, i, ivtx_1+1,
+  //       //          PDM_DMesh_nodal_n_vtx_get(dmn[i_domain1]));
+  //       // }
+  //       // if(ivtx_2 < 0 || ivtx_2 >= PDM_DMesh_nodal_n_vtx_get(dmn[i_domain2])) {
+  //       //   printf("error : interface %d, domain 2:%d, pair %d, vtx "PDM_FMT_G_NUM"/%d\n",
+  //       //          i_interface, i_domain2, i, ivtx_2+1,
+  //       //          PDM_DMesh_nodal_n_vtx_get(dmn[i_domain2]));
+  //       // }
+
+  //       double *vtx_1 = all_coord[i_domain1] + 3*ivtx_1;
+  //       double *vtx_2 = all_coord[i_domain2] + 3*ivtx_2;
+
+  //       double dist2 = 0;
+  //       for (int j = 0; j < 3; j++) {
+  //         double delta = vtx_1[j] - (vtx_2[j] + vect[i_period[i_interface]][j]);
+  //         dist2 += delta * delta;
+  //       }
+
+  //       // assert(dist2 < 1e-9);
+  //       if (dist2 > 1e-9) {
+  //         printf("!! interface %d, domains %d %d, vtx ("PDM_FMT_G_NUM": %f %f %f) ("PDM_FMT_G_NUM": %f %f %f), dist = %f\n",
+  //                i_interface, i_domain1, i_domain2,
+  //                ivtx_1+1,
+  //                vtx_1[0], vtx_1[1], vtx_1[2],
+  //                ivtx_2+1,
+  //                vtx_2[0], vtx_2[1], vtx_2[2],
+  //                sqrt(dist2));
+  //       }
+  //     }
+
+  //   }
+
+  //   free (all_coord);
+
+  // }
 
   /*
    * Partitionnement
@@ -552,6 +575,8 @@ int main
                                                    PDM_OWNERSHIP_KEEP);
 
   for (int i = 0; i < n_domain; i++) {
+    dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
+    PDM_dmesh_nodal_generate_distribution(dmn[i]);
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
@@ -651,7 +676,7 @@ int main
   /*
    *  Free memory
    */
-  free(i_period);
+  // free(i_period);
 
   for (int i = 0; i < n_domain; i++) {
     PDM_dcube_nodal_gen_free(dcube[i]);
@@ -672,13 +697,13 @@ int main
   PDM_domain_interface_free(dom_intrf);
   free(n_part_by_domain);
 
-  for (int i = 0; i < n_interface; i++) {
-    free(interface_ids[i]);
-    free(interface_dom[i]);
-  }
-  free(interface_dn);
-  free(interface_ids);
-  free(interface_dom);
+  // for (int i = 0; i < n_interface; i++) {
+  //   free(interface_ids[i]);
+  //   free(interface_dom[i]);
+  // }
+  // free(interface_dn);
+  // free(interface_ids);
+  // free(interface_dom);
   free(dcube);
   free(dmn);
 

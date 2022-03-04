@@ -9,6 +9,7 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dcube_nodal_gen_priv.h"
 #include "pdm_domain_interface.h"
+#include "pdm_domain_interface_priv.h"
 #include "pdm_ho_ordering.h"
 #include "pdm_mpi.h"
 #include "pdm_distrib.h"
@@ -2097,6 +2098,7 @@ PDM_dcube_nodal_cart_topo
                                                       t_elt,
                                                       order,
                                                       owner);
+        PDM_dcube_nodal_gen_build (_dcube[i_domain]);
         i_domain++;
       }
     }
@@ -2106,7 +2108,7 @@ PDM_dcube_nodal_cart_topo
   *dom_intrf = PDM_domain_interface_create(n_interface,
                                            n_domain,
                                            PDM_DOMAIN_INTERFACE_MULT_NO,
-                                           PDM_OWNERSHIP_KEEP,
+                                           owner,
                                            comm);
   PDM_domain_interface_t* _dom_intrf = *dom_intrf;
 
@@ -2237,6 +2239,7 @@ PDM_dcube_nodal_cart_topo
     }
   }
   free(distrib_k);
+  free(i_period);
 
   printf("i_interface = %d / %d\n", i_interface, n_interface);
   PDM_domain_interface_set(_dom_intrf,
@@ -2244,6 +2247,6 @@ PDM_dcube_nodal_cart_topo
                            interface_dn,
                            interface_ids,
                            interface_dom);
-
+  _dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
 
 }

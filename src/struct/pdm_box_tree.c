@@ -3178,7 +3178,7 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt)
   free(_bt->local_data);
 
   // Free copied ranks tree data
-  PDM_box_tree_free_copies(_bt);
+  // PDM_box_tree_free_copies(_bt);
 
   free(_bt);
   *bt = _bt;

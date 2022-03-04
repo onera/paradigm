@@ -2748,24 +2748,28 @@ void PDM_domain_interface_free
     if (dom_intrf->is_result[PDM_BOUND_TYPE_VTX]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
         free(dom_intrf->interface_ids_vtx[i_interface]);
-        if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+        // if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
           free(dom_intrf->interface_dom_vtx[i_interface]);
+        // }
       }
       free(dom_intrf->interface_dn_vtx);
       free(dom_intrf->interface_ids_vtx);
-      if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+      // if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
         free(dom_intrf->interface_dom_vtx);
+      // }
     }
     if (dom_intrf->is_result[PDM_BOUND_TYPE_FACE]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
         free(dom_intrf->interface_ids_face[i_interface]);
-        if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+        if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
           free(dom_intrf->interface_dom_face[i_interface]);
+        }
       }
       free(dom_intrf->interface_dn_face);
       free(dom_intrf->interface_ids_face);
-      if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES)
+      if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
         free(dom_intrf->interface_dom_face);
+      }
     }
   }
 
