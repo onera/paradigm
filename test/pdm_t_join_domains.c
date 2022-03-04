@@ -635,8 +635,6 @@ int main
                                                                                    pvtx_ln_to_gn);
 
 
-  PDM_part_domain_interface_free(pdi);
-  PDM_UNUSED(pdi);
 
   /*
    *  Pour le debug : extration des faces avec le extract part + vtk
@@ -660,6 +658,9 @@ int main
     // PDM_dcube_nodal_gen_free(dmn[i]);
   }
   PDM_multipart_free(mpart_id);
+
+  PDM_part_domain_interface_free(pdi);
+  PDM_UNUSED(pdi);
 
   // free(dm);
   // free(dn_vtx);
