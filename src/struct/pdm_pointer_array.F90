@@ -28,7 +28,11 @@ module pdm_pointer_array
   implicit none
 
   integer, parameter :: PDM_TYPE_INT    = 0
+#ifdef PDM_LONG_G_NUM
   integer, parameter :: PDM_TYPE_G_NUM  = 1
+#else
+  integer, parameter :: PDM_TYPE_G_NUM  = 0
+#endif
   integer, parameter :: PDM_TYPE_DOUBLE = 2
 
 
@@ -168,12 +172,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer(pdm_l_num_s),      pointer :: pointer_f(:)
 
-#ifdef PDM_LONG_G_NUM
     if (pa%type .ne. PDM_TYPE_INT) then
-#else
-    if (pa%type .ne. PDM_TYPE_INT .and. &
-        pa%type .ne. PDM_TYPE_G_NUM) then
-#endif
       print *, "PDM_pointer_array_part_set_int : wrong type"
       stop
     end if
@@ -308,12 +307,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     integer(pdm_l_num_s),      pointer :: pointer_f(:)
 
-#ifdef PDM_LONG_G_NUM
     if (pa%type .ne. PDM_TYPE_INT) then
-#else
-    if (pa%type .ne. PDM_TYPE_INT .and. &
-        pa%type .ne. PDM_TYPE_G_NUM) then
-#endif
       print *, "PDM_pointer_array_part_set_int : wrong type"
       stop
     end if
