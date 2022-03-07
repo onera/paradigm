@@ -3392,6 +3392,21 @@ PDM_part_extension_free
 }
 
 
+/**
+ *
+ * \brief Get connectivity
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_connectivity_get
 (
@@ -3453,6 +3468,20 @@ PDM_part_extension_connectivity_get
 }
 
 
+/**
+ *
+ * \brief Get global ids
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_ln_to_gn_get
 (
@@ -3508,6 +3537,23 @@ PDM_part_extension_ln_to_gn_get
   return n_entity;
 }
 
+
+/**
+ *
+ * \brief Get groups
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_group_get
 (
@@ -3560,6 +3606,20 @@ PDM_part_extension_group_get
 
   return n_entity;
 }
+
+
+/**
+ *
+ * \brief Get vertex coordinates
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
+ *
+ * \return  n_vtx  Number of vertices
+ *
+ */
 
 int
 PDM_part_extension_coord_get
