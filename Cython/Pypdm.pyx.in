@@ -412,6 +412,8 @@ include "pdm_domain_merge.pxi"
 # --------------------
 include "pdm_connectivities.pxi"
 
+# PDM_writer :
+# --------------------
+include "pdm_writer.pxi"
 
-# TODO: PDM_writer, ...
 
