@@ -183,18 +183,76 @@ _dump_vectors
 }
 
 
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+extern void dgesvd_(const char *jobu,
+                    const char *jobvt,
+                    int        *m,
+                    int        *n,
+                    double     *a,
+                    int        *lda,
+                    double     *s,
+                    double     *u,
+                    int        *ldu,
+                    double     *vt,
+                    int        *ldvt,
+                    double     *work,
+                    int        *lwork,
+                    int        *info);
+
+
+static void
+_compute_least_square
+(
+ const int  m,
+ const int  n,
+ double    *u,
+ double    *s,
+ double    *v,
+ double    *b,
+ double    *x
+ )
+{
+  /* Compute y := S^{-1} U^T b */
+  double y[n];
+
+  for (int i = 0; i < n; i++) {
+
+    y[i] = 0.;
+
+    if (PDM_ABS(s[i]) > 1.e-16) {
+      for (int j = 0; j < m; j++) {
+        y[i] += u[j + m*i] * b[j];
+      }
+
+      y[i] /= s[i];
+    }
+  }
+
+  /* Compute x := V^T y */
+  for (int i = 0; i < n; i++) {
+    x[i] = 0.;
+
+    for (int j = 0; j < m; j++) {
+      x[i] += v[j + m*i] * y[j];
+    }
+  }
+}
+#endif
+
+
 static
 void
 _iso_surf
 (
  PDM_MPI_Comm  comm,
- int           n_face,
+ int           n_cell,
  int           n_edge,
  int           n_vtx,
- int          *pface_edge_idx,
- int          *pface_edge,
+ int          *pcell_edge_idx,
+ int          *pcell_edge,
  int          *pedge_vtx_idx,
  int          *pedge_vtx,
+ PDM_g_num_t  *pcell_ln_to_gn,
  PDM_g_num_t  *pedge_ln_to_gn,
  PDM_g_num_t  *pvtx_ln_to_gn,
  double       *pvtx_coord
@@ -204,11 +262,11 @@ _iso_surf
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   // PDM_UNUSED(comm);
-  PDM_UNUSED(n_face);
+  PDM_UNUSED(n_cell);
   // PDM_UNUSED(n_edge);
   PDM_UNUSED(n_vtx);
-  PDM_UNUSED(pface_edge_idx);
-  PDM_UNUSED(pface_edge);
+  PDM_UNUSED(pcell_edge_idx);
+  PDM_UNUSED(pcell_edge);
   PDM_UNUSED(pedge_vtx_idx);
   // PDM_UNUSED(pedge_vtx);
   PDM_UNUSED(pedge_ln_to_gn);
@@ -294,24 +352,125 @@ _iso_surf
                  edge_normal);
 
 
-  int n_face_edge_max = 0;
-  for (int i = 0; i < n_face; i++) {
-    n_face_edge_max = PDM_MAX(n_face_edge_max,
-                              pface_edge_idx[i+1] - pface_edge_idx[i]);
+  int n_cell_edge_max = 0;
+  for (int i = 0; i < n_cell; i++) {
+    n_cell_edge_max = PDM_MAX(n_cell_edge_max,
+                              pcell_edge_idx[i+1] - pcell_edge_idx[i]);
   }
 
-  double *isoline_vtx_coord = (double *) malloc(sizeof(double) * n_face * 3);
-  for (int i = 0; i < n_face; i++) {
+  double *mat = (double *) malloc (sizeof(double) * n_cell_edge_max * 3);
+  double *rhs = (double *) malloc (sizeof(double) * n_cell_edge_max);
 
-    int n_face_edge = pface_edge_idx[i+1] - pface_edge_idx[i];
+  double *S = (double *) malloc(sizeof(double) * 3);
+  double *U = (double *) malloc(sizeof(double) * n_cell_edge_max * 3);
+  double *V = (double *) malloc(sizeof(double) * n_cell_edge_max * 3);
 
+  double *isoline_vtx_coord = (double *) malloc(sizeof(double) * n_cell * 3);
+  for (int i = 0; i < n_cell; i++) {
+
+    int n_tagged_edge = 0;
+    for (int j = pcell_edge_idx[i]; j < pcell_edge_idx[i+1]; j++) {
+      int iedge = PDM_ABS(pcell_edge[j]) - 1;
+      n_tagged_edge += tag_edge[iedge];
+    }
+
+    int k = 0;
+    for (int j = pcell_edge_idx[i]; j < pcell_edge_idx[i+1]; j++) {
+      int iedge = PDM_ABS(pcell_edge[j]) - 1;
+
+      if (tag_edge[iedge]) {
+
+        // mat[2*k  ] = edge_normal[3*iedge  ];
+        // mat[2*k+1] = edge_normal[3*iedge+1];
+        mat[k              ]   = edge_normal[3*iedge  ];
+        mat[k+n_tagged_edge]   = edge_normal[3*iedge+1];
+        mat[k+2*n_tagged_edge] = edge_normal[3*iedge+2];
+
+        rhs[k] = PDM_DOT_PRODUCT(edge_normal + 3*iedge, edge_coord + 3*iedge);
+
+        k++;
+      }
+    }
+
+    assert(k >= 3);
+
+    // log_trace("A =\n");
+    // for (int j = 0; j < n_tagged_edge; j++) {
+    //   log_trace("[%20.16f, %20.16f]\n", mat[j], mat[j+n_tagged_edge]);
+    // }
+
+    // log_trace("b = [%20.16f, %20.16f]\n", rhs[0], rhs[1]);
+
+    /* Compute SVD of mat */
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+    int info = 0;
+    int n_row = n_tagged_edge;
+    int n_col = 3;
+    int lwork = 100;//>= MAX(1,5*MIN(M,N))
+    double work[100];
+    dgesvd_("S",
+            "S",
+            &n_row,
+            &n_col,
+            mat,
+            &n_row,
+            S,
+            U,
+            &n_row,
+            V,
+            &n_row,
+            work,
+            &lwork,
+            &info);
+#else
+    printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
+    abort();
+#endif
+
+    // log_trace("S = [%20.16f, %20.16f]\n", S[0], S[1]);
+    // log_trace("U =\n");
+    // for (int j = 0; j < n_tagged_edge; j++) {
+    //   log_trace("[%20.16f, %20.16f]\n", U[j], U[j+n_tagged_edge]);
+    // }
+    // log_trace("V  =\n");
+    // for (int j = 0; j < n_tagged_edge; j++) {
+    //   log_trace("[%20.16f, %20.16f]\n", V[j], V[j+n_tagged_edge]);
+    // }
+
+    /* Solve for iso-line vertex coordinates */
+    double *sol = isoline_vtx_coord + 3*i;
+
+    _compute_least_square (n_tagged_edge,
+                           3,
+                           U,
+                           S,
+                           V,
+                           rhs,
+                           sol);
+    // sol[2] = 0.;
+    // log_trace("sol = [%20.16f, %20.16f]\n", sol[0], sol[1]);
   }
+
+
+  sprintf(filename, "isoline_vtx_coord_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_cell,
+                            isoline_vtx_coord,
+                            pcell_ln_to_gn,
+                            NULL);
+  free (isoline_vtx_coord);
+
+
+  free (mat);
+  free (rhs);
+  free (S);
+  free (U);
+  free (V);
 
 
   free(tag_edge);
   free(edge_coord);
   free(edge_normal);
-  free(isoline_vtx_coord);
 
 }
 
@@ -748,6 +907,7 @@ int main(int argc, char *argv[])
             pequi_cell_edge,
             pequi_edge_vtx_idx,
             pequi_edge_vtx,
+            block_cell_equi_parent_g_num,
             pequi_edge_ln_to_gn,
             pequi_vtx_ln_to_gn,
             pequi_vtx_coord);
@@ -781,6 +941,11 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_dcube_nodal_gen_free(dcube);
+
+  if (i_rank == 0) {
+    printf("-- End\n");
+    fflush(stdout);
+  }
 
 
   PDM_MPI_Finalize();
