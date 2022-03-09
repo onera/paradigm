@@ -23,6 +23,7 @@
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
 #include "pdm_gnum.h"
+#include "pdm_array.h"
 
 /*============================================================================
  * Type definitions
@@ -123,11 +124,58 @@ _unit_circle_gradient
  double  x1,
  double  x2,
  double *df_dx1,
- double *df_dx2,
+ double *df_dx2
 )
 {
   *df_dx1 = 2*x1;
   *df_dx2 = 2*x2;
+}
+
+
+static void
+_dump_vectors
+(
+ const char   *filename,
+ const int     n_pts,
+ const double  pts_coord[],
+ const double  vector[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", pts_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_pts, 2*n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    fprintf(f, "1 %d\n", i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    fprintf(f, "1\n");
+  }
+
+  fprintf(f, "POINT_DATA %d\n", n_pts);
+  fprintf(f, "VECTORS vector double\n");
+  for (int i = 0; i < n_pts; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vector[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fclose(f);
 }
 
 
@@ -149,15 +197,15 @@ _iso_line
 )
 {
   int i_rank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_UNUSED(comm);
+  // PDM_UNUSED(comm);
   PDM_UNUSED(n_face);
   // PDM_UNUSED(n_edge);
   PDM_UNUSED(n_vtx);
   PDM_UNUSED(pface_edge_idx);
   PDM_UNUSED(pface_edge);
-  // PDM_UNUSED(pedge_vtx_idx);
+  PDM_UNUSED(pedge_vtx_idx);
   // PDM_UNUSED(pedge_vtx);
   PDM_UNUSED(pedge_ln_to_gn);
   PDM_UNUSED(pvtx_ln_to_gn);
@@ -174,11 +222,11 @@ _iso_line
   /*
    *  Tag edges that cross the iso-line,
    *  compute the intersection point
-   *  and the gradient at that point
+   *  and the normal at that point
    */
-  int    *tag_edge   = PDM_array_zeros_int(n_edge);
-  double *edge_coord = (double *) malloc(sizeof(double) * n_edge * 3);
-  double *edge_grad  = (double *) malloc(sizeof(double) * n_edge * 3);
+  int    *tag_edge    = PDM_array_zeros_int(n_edge);
+  double *edge_coord  = (double *) malloc(sizeof(double) * n_edge * 3);
+  double *edge_normal = (double *) malloc(sizeof(double) * n_edge * 3);
 
   for (int i = 0; i < n_edge; i++) {
 
@@ -206,20 +254,41 @@ _iso_line
 
       double t = val1 / (val1 - val2);
 
-      edge_coord[3*i  ] = (1. - t)*x1 + t*y1;
-      edge_coord[3*i+1] = (1. - t)*x2 + t*y2;
+      edge_coord[3*i  ] = (1. - t)*x1 + t*x2;
+      edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
       edge_coord[3*i+2] = 0.;
 
-      edge_gradient[3*i  ] = (1. - t)*grad1[0] + t*grad1[1];
-      edge_gradient[3*i+1] = (1. - t)*grad2[0] + t*grad2[1];
-      edge_gradient[3*i+2] = 0.;
+      double gx = (1. - t)*grad1[0] + t*grad2[0];
+      double gy = (1. - t)*grad1[1] + t*grad2[1];
+      double imag = 1. / sqrt(gx*gx + gy*gy);
+
+      edge_normal[3*i  ] = gx * imag;
+      edge_normal[3*i+1] = gy * imag;
+      edge_normal[3*i+2] = 0.;
+    }
+
+    else {
+      edge_coord[3*i  ] = 0.;
+      edge_coord[3*i+1] = 0.;
+      edge_coord[3*i+2] = 0.;
+
+      edge_normal[3*i  ] = 0.;
+      edge_normal[3*i+1] = 0.;
+      edge_normal[3*i+2] = 0.;
     }
 
   }
 
 
+  sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
+  _dump_vectors (filename,
+                 n_edge,
+                 edge_coord,
+                 edge_normal);
+
+
   /*
-   *
+   *  Synchronize edges ...
    */
 
   free(tag_edge);
