@@ -287,13 +287,24 @@ _iso_line
                  edge_normal);
 
 
-  /*
-   *  Synchronize edges ...
-   */
+  int n_face_edge_max = 0;
+  for (int i = 0; i < n_face; i++) {
+    n_face_edge_max = PDM_MAX(n_face_edge_max,
+                              pface_edge_idx[i+1] - pface_edge_idx[i]);
+  }
+
+  double *isoline_vtx_coord = (double *) malloc(sizeof(double) * n_face * 3);
+  for (int i = 0; i < n_face; i++) {
+
+    int n_face_edge = pface_edge_idx[i+1] - pface_edge_idx[i];
+
+  }
+
 
   free(tag_edge);
   free(edge_coord);
   free(edge_gradient);
+  }
 
 }
 
