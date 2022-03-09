@@ -212,6 +212,9 @@ _compute_least_square
  double    *x
  )
 {
+  const double tol = 1.e-6;
+  double tol_s = tol * PDM_ABS(s[0]);
+
   /* Compute y := S^{-1} U^T b */
   double y[n];
 
@@ -219,7 +222,7 @@ _compute_least_square
 
     y[i] = 0.;
 
-    if (PDM_ABS(s[i]) > 1.e-16) {
+    if (PDM_ABS(s[i]) > tol_s) {
       for (int j = 0; j < m; j++) {
         y[i] += u[j + m*i] * b[j];
       }
@@ -366,6 +369,8 @@ _iso_surf
   double *V = (double *) malloc(sizeof(double) * n_cell_edge_max * 3);
 
   double *isoline_vtx_coord = (double *) malloc(sizeof(double) * n_cell * 3);
+  double val_max = 0.;
+  int i_max = -1;
   for (int i = 0; i < n_cell; i++) {
 
     int n_tagged_edge = 0;
@@ -449,7 +454,20 @@ _iso_surf
                            sol);
     // sol[2] = 0.;
     // log_trace("sol = [%20.16f, %20.16f]\n", sol[0], sol[1]);
+
+    // check solution
+    double val = PDM_ABS(_unit_sphere(sol[0], sol[1], sol[2]));
+    if (val_max < val) {
+      val_max = val;
+      i_max = i;
+    }
+
+    // if (val > 1.e-3) {
+    //   log_trace("!!! cell "PDM_FMT_G_NUM" has val = %f\n", pcell_ln_to_gn[i], val);
+    // }
   }
+
+  log_trace("!!! val max = %f for parent cell "PDM_FMT_G_NUM"\n", val_max, pcell_ln_to_gn[i_max]);
 
 
   sprintf(filename, "isoline_vtx_coord_%2.2d.vtk", i_rank);
@@ -519,13 +537,13 @@ int main(int argc, char *argv[])
 
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
+                                                         2*n_vtx_seg,
+                                                         3*n_vtx_seg,
                                                          length,
                                                          -0.5,
                                                          -0.5,
                                                          -0.5,
-                                                         PDM_MESH_NODAL_HEXA8,
+                                                         PDM_MESH_NODAL_TETRA4,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
