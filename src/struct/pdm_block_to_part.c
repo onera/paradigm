@@ -471,7 +471,7 @@ PDM_block_to_part_create
 
       btp->ind[i][j] = idx;
 
-      PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - block_distrib_idx[ind];
+      PDM_g_num_t _requested_data = PDM_ABS(_gnum_elt[j]) - 1 - block_distrib_idx[ind];
       // printf("requested_data[%i] = %i / size_max = %i and gn_m = %i \n", idx, (int) _requested_data, s_requested_data, (int)_gnum_elt[j]);
       requested_data[idx] = (int) _requested_data;
     }

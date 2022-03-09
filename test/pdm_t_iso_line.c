@@ -165,7 +165,8 @@ int main(int argc, char *argv[])
                                                          -0.5,
                                                          -0.5,
                                                          0.,
-                                                         PDM_MESH_NODAL_QUAD4,
+                                                         PDM_MESH_NODAL_TRIA3,
+                                                         // PDM_MESH_NODAL_QUAD4,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
@@ -264,7 +265,7 @@ int main(int argc, char *argv[])
   /*
    * Select edge
    */
-  int *dedge_tag = malloc(dn_edge * sizeof(int));
+  int *dedge_tag = (int * ) malloc(dn_edge * sizeof(int));
 
   for(int i = 0; i < dn_edge; ++i) {
 
@@ -306,9 +307,11 @@ int main(int argc, char *argv[])
                             pvtx_coord,
                             NULL,
                             val);
+  free(val);
 
 
-  PDM_log_trace_array_int(dedge_tag, dn_edge, "dedge_tag");
+  // PDM_log_trace_array_int(dedge_tag, dn_edge, "dedge_tag");
+  free(pvtx_coord);
 
   /*
    * block_to_part on dface_edge
@@ -330,6 +333,7 @@ int main(int argc, char *argv[])
             (void ***)  &tmp_dface_edge_tag);
   int *dface_edge_tag = tmp_dface_edge_tag[0];
   free(tmp_dface_edge_tag);
+  free(dedge_tag);
 
   int         *dface_tag        = malloc(dn_face * sizeof(int        ));
   PDM_g_num_t *dface_to_extract = malloc(dn_face * sizeof(PDM_g_num_t));
@@ -345,8 +349,10 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_log_trace_array_int (dedge_tag, dn_face, "dface_tag");
-  PDM_log_trace_array_long(dface_to_extract, n_face_tag, "dface_to_extract");
+  if(0 == 1) {
+    PDM_log_trace_array_int (dedge_tag, dn_face, "dface_tag");
+    PDM_log_trace_array_long(dface_to_extract, n_face_tag, "dface_to_extract");
+  }
 
   PDM_block_to_part_free(btp);
 
@@ -409,6 +415,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pn_extract_vtx_ln_to_gn,
                                         &tmp_pvtx_extract_coord);
   double* pvtx_extract_coord = tmp_pvtx_extract_coord[0];
+  free(tmp_pvtx_extract_coord);
 
 
   sprintf(filename, "out_mesh_%2.2d.vtk", i_rank);
@@ -445,6 +452,7 @@ int main(int argc, char *argv[])
 
 
 
+  free(dface_to_extract);
   free(dface_tag);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
