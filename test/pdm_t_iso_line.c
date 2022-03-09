@@ -133,6 +133,9 @@ _iso_line
  double       *pvtx_coord
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+
   PDM_UNUSED(comm);
   PDM_UNUSED(n_face);
   PDM_UNUSED(n_edge);
@@ -145,6 +148,13 @@ _iso_line
   PDM_UNUSED(pvtx_ln_to_gn);
   PDM_UNUSED(pvtx_coord);
 
+  char filename[999];
+  sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_vtx,
+                            pvtx_coord,
+                            pvtx_ln_to_gn,
+                            NULL);
 
 }
 
@@ -546,7 +556,7 @@ int main(int argc, char *argv[])
                                                            dface_edge_idx,
                                                            dface_edge,
                                                            n_face_equi,
-                                     (const PDM_g_num_t *) block_face_g_num_child_equi,
+                                     (const PDM_g_num_t *) block_face_equi_parent_g_num,
                                                            &pn_edge_equi,
                                                            &pequi_edge_ln_to_gn,
                                                            &pequi_face_edge_idx,
