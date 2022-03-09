@@ -22,6 +22,7 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
+#include "pdm_gnum.h"
 
 /*============================================================================
  * Type definitions
@@ -210,7 +211,7 @@ int main(int argc, char *argv[])
                                            &dedge_vtx_idx,
                                            PDM_OWNERSHIP_KEEP);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_face, "dface_edge ::");
     PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx  ::");
   }
@@ -336,14 +337,14 @@ int main(int argc, char *argv[])
   free(dedge_tag);
 
   int         *dface_tag        = malloc(dn_face * sizeof(int        ));
-  PDM_g_num_t *dface_to_extract = malloc(dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *face_to_extract_gnum = malloc(dn_face * sizeof(PDM_g_num_t));
   int  n_face_tag = 0;
   for(int i = 0; i < dn_face; ++i) {
     dface_tag[i] = 0;
     for(int idx_face = dface_edge_idx[i]; idx_face < dface_edge_idx[i+1]; ++idx_face) {
       if(dface_edge_tag[idx_face] == 1) {
         dface_tag[i] = 1;
-        dface_to_extract[n_face_tag++] = distrib_face[i_rank] + i + 1;
+        face_to_extract_gnum[n_face_tag++] = distrib_face[i_rank] + i + 1;
         break;
       }
     }
@@ -351,7 +352,7 @@ int main(int argc, char *argv[])
 
   if(0 == 1) {
     PDM_log_trace_array_int (dedge_tag, dn_face, "dface_tag");
-    PDM_log_trace_array_long(dface_to_extract, n_face_tag, "dface_to_extract");
+    PDM_log_trace_array_long(face_to_extract_gnum, n_face_tag, "face_to_extract_gnum");
   }
 
   PDM_block_to_part_free(btp);
@@ -383,7 +384,7 @@ int main(int argc, char *argv[])
                                   &dface_vtx_idx,
                                   &dface_vtx);
 
-  PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_edge ::");
+  // PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_edge ::");
   for(int i = 0; i < dface_vtx_idx[dn_face]; ++i) {
     dface_vtx[i] = PDM_ABS(dface_vtx[i]);
   }
@@ -400,7 +401,7 @@ int main(int argc, char *argv[])
                                                            dface_vtx_idx,
                                                            dface_vtx,
                                                            n_face_tag,
-                                     (const PDM_g_num_t *) dface_to_extract,
+                                     (const PDM_g_num_t *) face_to_extract_gnum,
                                                            &pn_extract_vtx,
                                                            &pn_extract_vtx_ln_to_gn,
                                                            &pface_vtx_idx,
@@ -426,33 +427,89 @@ int main(int argc, char *argv[])
                          n_face_tag,
                          pface_vtx_idx,
                          pface_vtx,
-                         dface_to_extract,
+                         face_to_extract_gnum,
                          NULL);
 
 
 
   free(pn_extract_vtx_ln_to_gn);
+
+
+
+  double* face_center = (double *) malloc( 3 * n_face_tag * sizeof(double));
+  for(int i_face = 0; i_face < n_face_tag; ++i_face) {
+    face_center[3*i_face  ] = 0.;
+    face_center[3*i_face+1] = 0.;
+    face_center[3*i_face+2] = 0.;
+    int nvtx_on_face = pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face];
+    for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
+      int i_vtx = pface_vtx[idx_vtx]-1;
+      face_center[3*i_face  ] += pvtx_extract_coord[3*i_vtx  ];
+      face_center[3*i_face+1] += pvtx_extract_coord[3*i_vtx+1];
+      face_center[3*i_face+2] += pvtx_extract_coord[3*i_vtx+2];
+    }
+    double inv = 1./(double) nvtx_on_face;
+    face_center[3*i_face  ] = face_center[3*i_face  ] * inv;
+    face_center[3*i_face+1] = face_center[3*i_face+1] * inv;
+    face_center[3*i_face+2] = face_center[3*i_face+2] * inv;
+  }
+
+
   free(pface_vtx_idx);
   free(pface_vtx);
 
 
   free(pvtx_extract_coord);
-  free(dface_vtx_idx);
-  free(dface_vtx);
-
-
 
   /*
-   * Rebuild partition that contains faces
+   * Rebuild partition that contains faces and reequilibrate
    */
+  PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(2, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_coords(gnum_equi, 0, n_face_tag, face_center, NULL);
+  PDM_gnum_compute(gnum_equi);
+  PDM_g_num_t* child_equi_face_gnum = PDM_gnum_get(gnum_equi, 0);
+  PDM_gnum_free(gnum_equi);
+  free(face_center);
+
+  /*
+   * Equilibrage avec le part_to_block
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                       1.,
+                                                       &child_equi_face_gnum,
+                                                       NULL,
+                                                       &n_face_tag,
+                                                       1,
+                                                       comm);
+
+  int n_face_equi = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t *block_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
+
+  PDM_g_num_t *block_equi_parent_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+               (void **) &face_to_extract_gnum,
+                          NULL,
+               (void **) &block_equi_parent_g_num);
 
 
+  PDM_log_trace_array_long(block_equi_parent_g_num, n_face_equi, "block_equi_parent_g_num ::");
+  PDM_log_trace_array_long(block_g_num_child_equi , n_face_equi, "block_g_num_child_equi  ::");
+
+  free(block_equi_parent_g_num);
 
 
+  PDM_part_to_block_free(ptb);
+  free(dface_vtx_idx);
+  free(dface_vtx);
+  free(child_equi_face_gnum);
 
 
-
-  free(dface_to_extract);
+  free(face_to_extract_gnum);
   free(dface_tag);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
