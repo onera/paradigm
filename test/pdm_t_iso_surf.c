@@ -107,13 +107,14 @@ _read_args(int            argc,
 static
 inline
 double
-_unit_circle
+_unit_sphere
 (
- double x1,
- double x2
+ double x,
+ double y,
+ double z
 )
 {
-  return x1 * x1 + x2 * x2 - 0.125;
+  return x * x + y * y + z * z - 0.125;
 }
 
 static
@@ -123,12 +124,15 @@ _unit_circle_gradient
 (
  double  x1,
  double  x2,
+ double  x3,
  double *df_dx1,
- double *df_dx2
+ double *df_dx2,
+ double *df_dx3
 )
 {
   *df_dx1 = 2*x1;
   *df_dx2 = 2*x2;
+  *df_dx3 = 2*x3;
 }
 
 
@@ -181,7 +185,7 @@ _dump_vectors
 
 static
 void
-_iso_line
+_iso_surf
 (
  PDM_MPI_Comm  comm,
  int           n_face,
@@ -218,7 +222,7 @@ _iso_line
                             pvtx_coord,
                             pvtx_ln_to_gn,
                             NULL);
-
+  return;
   /*
    *  Tag edges that cross the iso-line,
    *  compute the intersection point
@@ -235,12 +239,14 @@ _iso_line
 
     double x1 = pvtx_coord[3*i_vtx1  ];
     double y1 = pvtx_coord[3*i_vtx1+1];
+    double z1 = pvtx_coord[3*i_vtx1+2];
 
     double x2 = pvtx_coord[3*i_vtx2  ];
     double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx2+2];
 
-    double val1 = _unit_circle(x1, y1);
-    double val2 = _unit_circle(x2, y2);
+    double val1 = _unit_sphere(x1, y1, z1);
+    double val2 = _unit_sphere(x2, y2, z2);
 
     int sgn1 = PDM_SIGN(val1);
     int sgn2 = PDM_SIGN(val2);
@@ -248,18 +254,20 @@ _iso_line
     if (sgn1 != sgn2) {
       tag_edge[i] = 1;
 
-      double grad1[2], grad2[2];
-      _unit_circle_gradient(x1, y1, &grad1[0], &grad1[1]);
-      _unit_circle_gradient(x2, y2, &grad2[0], &grad2[1]);
+      double grad1[3], grad2[3], grad3[3];
+      _unit_circle_gradient(x1, y1, z1, &grad1[0], &grad1[1], &grad1[2]);
+      _unit_circle_gradient(x2, y2, z2, &grad2[0], &grad2[1], &grad2[2]);
 
       double t = val1 / (val1 - val2);
 
       edge_coord[3*i  ] = (1. - t)*x1 + t*x2;
       edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
-      edge_coord[3*i+2] = 0.;
+      edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
 
+      abort();
       double gx = (1. - t)*grad1[0] + t*grad2[0];
       double gy = (1. - t)*grad1[1] + t*grad2[1];
+      double gz = (1. - t)*grad1[1] + t*grad2[1];
       double imag = 1. / sqrt(gx*gx + gy*gy);
 
       edge_normal[3*i  ] = gx * imag;
@@ -304,6 +312,7 @@ _iso_line
   free(tag_edge);
   free(edge_coord);
   free(edge_normal);
+  free(isoline_vtx_coord);
 
 }
 
@@ -357,7 +366,7 @@ int main(int argc, char *argv[])
                                                          length,
                                                          -0.5,
                                                          -0.5,
-                                                         0.,
+                                                         -0.5,
                                                          PDM_MESH_NODAL_HEXA8,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
@@ -372,7 +381,7 @@ int main(int argc, char *argv[])
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   if(1 == 1) {
-    // PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
+    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   }
 
@@ -431,7 +440,7 @@ int main(int argc, char *argv[])
   assert(distrib_face != NULL);
 
   PDM_g_num_t* distrib_cell = NULL;
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_cell);
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL  , &distrib_cell);
   assert(distrib_cell != NULL);
 
   PDM_g_num_t* edge_ln_to_gn = (PDM_g_num_t * ) malloc( dn_edge * sizeof(PDM_g_num_t));
@@ -468,7 +477,8 @@ int main(int argc, char *argv[])
   /*
    * Select edge
    */
-  int *dedge_tag = (int * ) malloc(dn_edge * sizeof(int));
+  int    *dedge_tag    = (int    * ) malloc(    dn_edge * sizeof(int   ));
+  double *dedge_center = (double * ) malloc(3 * dn_edge * sizeof(double));
 
   for(int i = 0; i < dn_edge; ++i) {
 
@@ -479,13 +489,14 @@ int main(int argc, char *argv[])
 
     double x1 = pvtx_coord[3*i_vtx1  ];
     double y1 = pvtx_coord[3*i_vtx1+1];
-    // int x3 = pvtx_coord[3*i_vtx1+2];
+    double z1 = pvtx_coord[3*i_vtx1+2];
 
     double x2 = pvtx_coord[3*i_vtx2  ];
     double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx2+2];
 
-    double val1 = _unit_circle(x1, y1);
-    double val2 = _unit_circle(x2, y2);
+    double val1 = _unit_sphere(x1, y1, z1);
+    double val2 = _unit_sphere(x2, y2, z2);
 
     int sgn1 = PDM_SIGN(val1);
     int sgn2 = PDM_SIGN(val2);
@@ -493,6 +504,11 @@ int main(int argc, char *argv[])
     if(sgn1 * sgn2 < 0) {
       dedge_tag[i] = 1;
     }
+
+    dedge_center[3*i  ] = 0.5 * (x1 + x2);
+    dedge_center[3*i+1] = 0.5 * (y1 + y2);
+    dedge_center[3*i+2] = 0.5 * (z1 + z2);
+
   }
 
   int* val = malloc(pn_vtx * sizeof(int));
@@ -500,7 +516,8 @@ int main(int argc, char *argv[])
   for(int i = 0; i < pn_vtx; ++i) {
     double x1 = pvtx_coord[3*i  ];
     double y1 = pvtx_coord[3*i+1];
-    val[i]    = PDM_SIGN( _unit_circle(x1, y1) );
+    double z1 = pvtx_coord[3*i+2];
+    val[i]    = PDM_SIGN( _unit_sphere(x1, y1, z1) );
   }
 
   char filename[999];
@@ -516,45 +533,96 @@ int main(int argc, char *argv[])
   // PDM_log_trace_array_int(dedge_tag, dn_edge, "dedge_tag");
   free(pvtx_coord);
 
+  // Compute dcell_edge to get all cell assiciate to an edge that cross iso surf
+  int         *dcell_edge_idx = NULL;
+  PDM_g_num_t *dcell_edge     = NULL;
+  PDM_deduce_combine_connectivity(comm,
+                                  distrib_cell,
+                                  distrib_face,
+                                  dcell_face_idx,
+                                  dcell_face,
+                                  dface_edge_idx,
+                                  dface_edge,
+                                  1,
+                                  &dcell_edge_idx,
+                                  &dcell_edge);
+
   /*
    * block_to_part on dface_edge
    */
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_edge,
-                               (const PDM_g_num_t **) &dface_edge,
-                                                      &dface_edge_idx[dn_face],
+                               (const PDM_g_num_t **) &dcell_edge,
+                                                      &dcell_edge_idx[dn_cell],
                                                       1,
                                                       comm);
 
   int strid_one = 1;
-  int **tmp_dface_edge_tag = NULL;
+  int **tmp_dcell_edge_tag = NULL;
   PDM_block_to_part_exch(btp,
                          sizeof(int),
                          PDM_STRIDE_CST_INTERLACED,
                          &strid_one,
             (void *  )   dedge_tag,
             (int  ***)   NULL,
-            (void ***)  &tmp_dface_edge_tag);
-  int *dface_edge_tag = tmp_dface_edge_tag[0];
-  free(tmp_dface_edge_tag);
+            (void ***)  &tmp_dcell_edge_tag);
+  int *dcell_edge_tag = tmp_dcell_edge_tag[0];
+  free(tmp_dcell_edge_tag);
   free(dedge_tag);
 
-  int         *dface_tag        = malloc(dn_face * sizeof(int        ));
-  PDM_g_num_t *face_to_extract_gnum = malloc(dn_face * sizeof(PDM_g_num_t));
-  int  n_face_tag = 0;
-  for(int i = 0; i < dn_face; ++i) {
-    dface_tag[i] = 0;
-    for(int idx_face = dface_edge_idx[i]; idx_face < dface_edge_idx[i+1]; ++idx_face) {
-      if(dface_edge_tag[idx_face] == 1) {
-        dface_tag[i] = 1;
-        face_to_extract_gnum[n_face_tag++] = distrib_face[i_rank] + i + 1;
+  double **tmp_dcell_edge_center = NULL;
+  PDM_block_to_part_exch(btp,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &strid_one,
+            (void *  )   dedge_center,
+            (int  ***)   NULL,
+            (void ***)  &tmp_dcell_edge_center);
+  double *dcell_edge_center = tmp_dcell_edge_center[0];
+  free(tmp_dcell_edge_center);
+  free(dedge_center);
+
+  int         *dcell_tag            = malloc(     dn_cell * sizeof(int        ));
+  PDM_g_num_t *cell_to_extract_gnum = malloc(     dn_cell * sizeof(PDM_g_num_t));
+  double      *dcell_center         = malloc( 3 * dn_cell * sizeof(double     ));
+  int  n_cell_tag = 0;
+  int idx_write   = 0;
+  for(int i = 0; i < dn_cell; ++i) {
+    dcell_tag[i] = 0;
+
+
+
+    for(int idx_cell = dcell_edge_idx[i]; idx_cell < dcell_edge_idx[i+1]; ++idx_cell) {
+      if(dcell_edge_tag[idx_cell] == 1) {
+        dcell_tag[i] = 1;
+        cell_to_extract_gnum[n_cell_tag++] = distrib_cell[i_rank] + i + 1;
         break;
       }
     }
+
+    if(dcell_tag[i] == 1) {
+      dcell_center[3*idx_write  ] = 0.;
+      dcell_center[3*idx_write+1] = 0.;
+      dcell_center[3*idx_write+2] = 0.;
+
+      double inv = 1./((double) (dcell_edge_idx[i+1] - dcell_edge_idx[i]));
+      for(int idx_cell = dcell_edge_idx[i]; idx_cell < dcell_edge_idx[i+1]; ++idx_cell) {
+        dcell_center[3*idx_write  ] += dcell_edge_center[3*idx_cell  ];
+        dcell_center[3*idx_write+1] += dcell_edge_center[3*idx_cell+1];
+        dcell_center[3*idx_write+2] += dcell_edge_center[3*idx_cell+2];
+      }
+      dcell_center[3*idx_write  ] = dcell_center[3*idx_write  ] * inv;
+      dcell_center[3*idx_write+1] = dcell_center[3*idx_write+1] * inv;
+      dcell_center[3*idx_write+2] = dcell_center[3*idx_write+2] * inv;
+
+      idx_write++;
+    }
+
   }
+  free(dcell_edge_center);
 
   if(0 == 1) {
-    PDM_log_trace_array_int (dedge_tag, dn_face, "dface_tag");
-    PDM_log_trace_array_long(face_to_extract_gnum, n_face_tag, "face_to_extract_gnum");
+    PDM_log_trace_array_int (dedge_tag, dn_cell, "dcell_tag");
+    PDM_log_trace_array_long(cell_to_extract_gnum, n_cell_tag, "cell_to_extract_gnum");
   }
 
   PDM_block_to_part_free(btp);
@@ -563,122 +631,28 @@ int main(int argc, char *argv[])
   free(pvtx_ln_to_gn);
   free(pedge_vtx_idx);
   free(pedge_vtx);
-  free(dface_edge_tag);
+  free(dcell_edge_tag);
 
-  /*
-   *  Visu
-   */
-  int         *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx     = NULL;
+  // Extract
 
-  for(int i = 0; i < dface_edge_idx[dn_face]; ++i) {
-    dface_edge[i] = PDM_ABS(dface_edge[i]);
-  }
-
-  PDM_deduce_combine_connectivity(comm,
-                                  distrib_face,
-                                  distrib_edge,
-                                  dface_edge_idx,
-                                  dface_edge,
-                                  dedge_vtx_idx,
-                                  dedge_vtx,
-                                  1,
-                                  &dface_vtx_idx,
-                                  &dface_vtx);
-
-  // PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_edge ::");
-  for(int i = 0; i < dface_vtx_idx[dn_face]; ++i) {
-    dface_vtx[i] = PDM_ABS(dface_vtx[i]);
-  }
-
-  // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1,"dface_vtx_idx :: " );
-  // PDM_log_trace_array_int(dface_edge_idx, dn_face+1,"dface_edge_idx :: " );
-
-  int          pn_extract_vtx           = 0;
-  PDM_g_num_t *pn_extract_vtx_ln_to_gn  = NULL;
-  int         *pface_vtx_idx    = NULL;
-  int         *pface_vtx        = NULL;
-  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           distrib_face,
-                                                           dface_vtx_idx,
-                                                           dface_vtx,
-                                                           n_face_tag,
-                                     (const PDM_g_num_t *) face_to_extract_gnum,
-                                                           &pn_extract_vtx,
-                                                           &pn_extract_vtx_ln_to_gn,
-                                                           &pface_vtx_idx,
-                                                           &pface_vtx);
-
-  double **tmp_pvtx_extract_coord = NULL;
-  PDM_part_dcoordinates_to_pcoordinates(comm,
-                                        1,
-                                        vtx_distrib,
-                                        dvtx_coord,
-                                        &pn_extract_vtx,
-                 (const PDM_g_num_t **) &pn_extract_vtx_ln_to_gn,
-                                        &tmp_pvtx_extract_coord);
-  double* pvtx_extract_coord = tmp_pvtx_extract_coord[0];
-  free(tmp_pvtx_extract_coord);
-
-
-  sprintf(filename, "out_mesh_%2.2d.vtk", i_rank);
-  PDM_vtk_write_polydata(filename,
-                         pn_extract_vtx,
-                         pvtx_extract_coord,
-                         pn_extract_vtx_ln_to_gn,//NULL,
-                         n_face_tag,
-                         pface_vtx_idx,
-                         pface_vtx,
-                         face_to_extract_gnum,
-                         NULL);
-
-
-
-  free(pn_extract_vtx_ln_to_gn);
-
-
-
-  double* face_center = (double *) malloc( 3 * n_face_tag * sizeof(double));
-  for(int i_face = 0; i_face < n_face_tag; ++i_face) {
-    face_center[3*i_face  ] = 0.;
-    face_center[3*i_face+1] = 0.;
-    face_center[3*i_face+2] = 0.;
-    int nvtx_on_face = pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face];
-    for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
-      int i_vtx = pface_vtx[idx_vtx]-1;
-      face_center[3*i_face  ] += pvtx_extract_coord[3*i_vtx  ];
-      face_center[3*i_face+1] += pvtx_extract_coord[3*i_vtx+1];
-      face_center[3*i_face+2] += pvtx_extract_coord[3*i_vtx+2];
-    }
-    double inv = 1./(double) nvtx_on_face;
-    face_center[3*i_face  ] = face_center[3*i_face  ] * inv;
-    face_center[3*i_face+1] = face_center[3*i_face+1] * inv;
-    face_center[3*i_face+2] = face_center[3*i_face+2] * inv;
-  }
-
-  sprintf(filename, "out_equi_face_coord_%2.2d.vtk", i_rank);
+  sprintf(filename, "out_equi_cell_coord_%2.2d.vtk", i_rank);
   PDM_vtk_write_point_cloud(filename,
-                            n_face_tag,
-                            face_center,
+                            n_cell_tag,
+                            dcell_center,
                             NULL,
                             NULL);
 
 
-  free(pface_vtx_idx);
-  free(pface_vtx);
-
-
-  free(pvtx_extract_coord);
 
   /*
    * Rebuild partition that contains faces and reequilibrate
    */
   PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
-  PDM_gnum_set_from_coords(gnum_equi, 0, n_face_tag, face_center, NULL);
+  PDM_gnum_set_from_coords(gnum_equi, 0, n_cell_tag, dcell_center, NULL);
   PDM_gnum_compute(gnum_equi);
-  PDM_g_num_t* child_equi_face_gnum = PDM_gnum_get(gnum_equi, 0);
+  PDM_g_num_t* child_equi_cell_gnum = PDM_gnum_get(gnum_equi, 0);
   PDM_gnum_free(gnum_equi);
-  free(face_center);
+  free(dcell_center);
 
   /*
    * Equilibrage avec le part_to_block
@@ -686,28 +660,28 @@ int main(int argc, char *argv[])
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                        1.,
-                                                       &child_equi_face_gnum,
+                                                       &child_equi_cell_gnum,
                                                        NULL,
-                                                       &n_face_tag,
+                                                       &n_cell_tag,
                                                        1,
                                                        comm);
 
-  int n_face_equi = PDM_part_to_block_n_elt_block_get (ptb);
-  PDM_g_num_t *block_face_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
+  int n_cell_equi = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t *block_cell_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
 
-  PDM_g_num_t *block_face_equi_parent_g_num = NULL;
+  PDM_g_num_t *block_cell_equi_parent_g_num = NULL;
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
-               (void **) &face_to_extract_gnum,
+               (void **) &cell_to_extract_gnum,
                           NULL,
-               (void **) &block_face_equi_parent_g_num);
+               (void **) &block_cell_equi_parent_g_num);
 
   if(0 == 1) {
-    PDM_log_trace_array_long(block_face_equi_parent_g_num, n_face_equi, "block_face_equi_parent_g_num ::");
-    PDM_log_trace_array_long(block_face_g_num_child_equi , n_face_equi, "block_face_g_num_child_equi  ::");
+    PDM_log_trace_array_long(block_cell_equi_parent_g_num, n_cell_equi, "block_cell_equi_parent_g_num ::");
+    PDM_log_trace_array_long(block_cell_g_num_child_equi , n_cell_equi, "block_cell_g_num_child_equi  ::");
   }
 
   /*
@@ -715,18 +689,18 @@ int main(int argc, char *argv[])
    */
   int          pn_edge_equi        = 0;
   PDM_g_num_t *pequi_parent_edge_ln_to_gn = NULL;
-  int         *pequi_face_edge_idx = NULL;
-  int         *pequi_face_edge     = NULL;
+  int         *pequi_cell_edge_idx = NULL;
+  int         *pequi_cell_edge     = NULL;
   PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           distrib_face,
-                                                           dface_edge_idx,
-                                                           dface_edge,
-                                                           n_face_equi,
-                                     (const PDM_g_num_t *) block_face_equi_parent_g_num,
+                                                           distrib_cell,
+                                                           dcell_edge_idx,
+                                                           dcell_edge,
+                                                           n_cell_equi,
+                                     (const PDM_g_num_t *) block_cell_equi_parent_g_num,
                                                            &pn_edge_equi,
                                                            &pequi_parent_edge_ln_to_gn,
-                                                           &pequi_face_edge_idx,
-                                                           &pequi_face_edge);
+                                                           &pequi_cell_edge_idx,
+                                                           &pequi_cell_edge);
 
   PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_from_parents(gnum_edge, 0, pn_edge_equi, pequi_parent_edge_ln_to_gn);
@@ -767,12 +741,12 @@ int main(int argc, char *argv[])
   double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
   free(tmp_pequi_vtx_coord);
 
-  _iso_line(comm,
-            n_face_equi,
+  _iso_surf(comm,
+            n_cell_equi,
             pn_edge_equi,
             pn_vtx_equi,
-            pequi_face_edge_idx,
-            pequi_face_edge,
+            pequi_cell_edge_idx,
+            pequi_cell_edge,
             pequi_edge_vtx_idx,
             pequi_edge_vtx,
             pequi_edge_ln_to_gn,
@@ -790,21 +764,21 @@ int main(int argc, char *argv[])
   free(pequi_edge_vtx);
 
   free(pequi_parent_edge_ln_to_gn);
-  free(pequi_face_edge_idx);
-  free(pequi_face_edge);
+  free(pequi_cell_edge_idx);
+  free(pequi_cell_edge);
 
 
-  free(block_face_equi_parent_g_num);
+  free(block_cell_equi_parent_g_num);
 
 
   PDM_part_to_block_free(ptb);
-  free(dface_vtx_idx);
-  free(dface_vtx);
-  free(child_equi_face_gnum);
+  free(dcell_edge_idx);
+  free(dcell_edge);
+  free(child_equi_cell_gnum);
 
 
-  free(face_to_extract_gnum);
-  free(dface_tag);
+  free(cell_to_extract_gnum);
+  free(dcell_tag);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_dcube_nodal_gen_free(dcube);
