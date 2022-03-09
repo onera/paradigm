@@ -115,6 +115,21 @@ _unit_circle
   return x1 * x1 + x2 * x2 - 0.125;
 }
 
+static
+inline
+void
+_unit_circle_gradient
+(
+ double  x1,
+ double  x2,
+ double *df_dx1,
+ double *df_dx2,
+)
+{
+  *df_dx1 = 2*x1;
+  *df_dx2 = 2*x2;
+}
+
 
 static
 void
@@ -138,12 +153,12 @@ _iso_line
 
   PDM_UNUSED(comm);
   PDM_UNUSED(n_face);
-  PDM_UNUSED(n_edge);
+  // PDM_UNUSED(n_edge);
   PDM_UNUSED(n_vtx);
   PDM_UNUSED(pface_edge_idx);
   PDM_UNUSED(pface_edge);
-  PDM_UNUSED(pedge_vtx_idx);
-  PDM_UNUSED(pedge_vtx);
+  // PDM_UNUSED(pedge_vtx_idx);
+  // PDM_UNUSED(pedge_vtx);
   PDM_UNUSED(pedge_ln_to_gn);
   PDM_UNUSED(pvtx_ln_to_gn);
   PDM_UNUSED(pvtx_coord);
@@ -155,6 +170,61 @@ _iso_line
                             pvtx_coord,
                             pvtx_ln_to_gn,
                             NULL);
+
+  /*
+   *  Tag edges that cross the iso-line,
+   *  compute the intersection point
+   *  and the gradient at that point
+   */
+  int    *tag_edge   = PDM_array_zeros_int(n_edge);
+  double *edge_coord = (double *) malloc(sizeof(double) * n_edge * 3);
+  double *edge_grad  = (double *) malloc(sizeof(double) * n_edge * 3);
+
+  for (int i = 0; i < n_edge; i++) {
+
+    int i_vtx1 = pedge_vtx[2*i  ]-1;
+    int i_vtx2 = pedge_vtx[2*i+1]-1;
+
+    double x1 = pvtx_coord[3*i_vtx1  ];
+    double y1 = pvtx_coord[3*i_vtx1+1];
+
+    double x2 = pvtx_coord[3*i_vtx2  ];
+    double y2 = pvtx_coord[3*i_vtx2+1];
+
+    double val1 = _unit_circle(x1, y1);
+    double val2 = _unit_circle(x2, y2);
+
+    int sgn1 = PDM_SIGN(val1);
+    int sgn2 = PDM_SIGN(val2);
+
+    if (sgn1 != sgn2) {
+      tag_edge[i] = 1;
+
+      double grad1[2], grad2[2];
+      _unit_circle_gradient(x1, y1, &grad1[0], &grad1[1]);
+      _unit_circle_gradient(x2, y2, &grad2[0], &grad2[1]);
+
+      double t = val1 / (val1 - val2);
+
+      edge_coord[3*i  ] = (1. - t)*x1 + t*y1;
+      edge_coord[3*i+1] = (1. - t)*x2 + t*y2;
+      edge_coord[3*i+2] = 0.;
+
+      edge_gradient[3*i  ] = (1. - t)*grad1[0] + t*grad1[1];
+      edge_gradient[3*i+1] = (1. - t)*grad2[0] + t*grad2[1];
+      edge_gradient[3*i+2] = 0.;
+    }
+
+  }
+
+
+  /*
+   *
+   */
+
+  free(tag_edge);
+  free(edge_coord);
+  free(edge_gradient);
 
 }
 
