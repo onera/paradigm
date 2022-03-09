@@ -222,7 +222,7 @@ _iso_surf
                             pvtx_coord,
                             pvtx_ln_to_gn,
                             NULL);
-  return;
+  // return;
   /*
    *  Tag edges that cross the iso-line,
    *  compute the intersection point
@@ -254,7 +254,7 @@ _iso_surf
     if (sgn1 != sgn2) {
       tag_edge[i] = 1;
 
-      double grad1[3], grad2[3], grad3[3];
+      double grad1[3], grad2[3];
       _unit_circle_gradient(x1, y1, z1, &grad1[0], &grad1[1], &grad1[2]);
       _unit_circle_gradient(x2, y2, z2, &grad2[0], &grad2[1], &grad2[2]);
 
@@ -264,15 +264,14 @@ _iso_surf
       edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
       edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
 
-      abort();
       double gx = (1. - t)*grad1[0] + t*grad2[0];
       double gy = (1. - t)*grad1[1] + t*grad2[1];
-      double gz = (1. - t)*grad1[1] + t*grad2[1];
-      double imag = 1. / sqrt(gx*gx + gy*gy);
+      double gz = (1. - t)*grad1[2] + t*grad2[2];
+      double imag = 1. / sqrt(gx*gx + gy*gy + gz*gz);
 
       edge_normal[3*i  ] = gx * imag;
       edge_normal[3*i+1] = gy * imag;
-      edge_normal[3*i+2] = 0.;
+      edge_normal[3*i+2] = gz * imag;
     }
 
     else {
