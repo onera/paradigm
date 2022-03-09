@@ -497,6 +497,13 @@ int main(int argc, char *argv[])
     face_center[3*i_face+2] = face_center[3*i_face+2] * inv;
   }
 
+  sprintf(filename, "out_equi_face_coord_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_face_tag,
+                            face_center,
+                            NULL,
+                            NULL);
+
 
   free(pface_vtx_idx);
   free(pface_vtx);
@@ -507,7 +514,7 @@ int main(int argc, char *argv[])
   /*
    * Rebuild partition that contains faces and reequilibrate
    */
-  PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(2, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
+  PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_from_coords(gnum_equi, 0, n_face_tag, face_center, NULL);
   PDM_gnum_compute(gnum_equi);
   PDM_g_num_t* child_equi_face_gnum = PDM_gnum_get(gnum_equi, 0);
