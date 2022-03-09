@@ -116,6 +116,39 @@ _unit_circle
 }
 
 
+static
+void
+_iso_line
+(
+ PDM_MPI_Comm  comm,
+ int           n_face,
+ int           n_edge,
+ int           n_vtx,
+ int          *pface_edge_idx,
+ int          *pface_edge,
+ int          *pedge_vtx_idx,
+ int          *pedge_vtx,
+ PDM_g_num_t  *pedge_ln_to_gn,
+ PDM_g_num_t  *pvtx_ln_to_gn,
+ double       *pvtx_coord
+)
+{
+  PDM_UNUSED(comm);
+  PDM_UNUSED(n_face);
+  PDM_UNUSED(n_edge);
+  PDM_UNUSED(n_vtx);
+  PDM_UNUSED(pface_edge_idx);
+  PDM_UNUSED(pface_edge);
+  PDM_UNUSED(pedge_vtx_idx);
+  PDM_UNUSED(pedge_vtx);
+  PDM_UNUSED(pedge_ln_to_gn);
+  PDM_UNUSED(pvtx_ln_to_gn);
+  PDM_UNUSED(pvtx_coord);
+
+
+}
+
+
 /**
  *
  * \brief  Main
@@ -484,9 +517,9 @@ int main(int argc, char *argv[])
                                                        comm);
 
   int n_face_equi = PDM_part_to_block_n_elt_block_get (ptb);
-  PDM_g_num_t *block_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
+  PDM_g_num_t *block_face_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
 
-  PDM_g_num_t *block_equi_parent_g_num = NULL;
+  PDM_g_num_t *block_face_equi_parent_g_num = NULL;
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST_INTERLACED,
@@ -494,13 +527,83 @@ int main(int argc, char *argv[])
                           NULL,
                (void **) &face_to_extract_gnum,
                           NULL,
-               (void **) &block_equi_parent_g_num);
+               (void **) &block_face_equi_parent_g_num);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(block_face_equi_parent_g_num, n_face_equi, "block_face_equi_parent_g_num ::");
+    PDM_log_trace_array_long(block_face_g_num_child_equi , n_face_equi, "block_face_g_num_child_equi  ::");
+  }
+
+  /*
+   * Je prepare tout pour mon petit Bastien
+   */
+  int          pn_edge_equi        = 0;
+  PDM_g_num_t *pequi_edge_ln_to_gn = NULL;
+  int         *pequi_face_edge_idx = NULL;
+  int         *pequi_face_edge     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_face,
+                                                           dface_edge_idx,
+                                                           dface_edge,
+                                                           n_face_equi,
+                                     (const PDM_g_num_t *) block_face_g_num_child_equi,
+                                                           &pn_edge_equi,
+                                                           &pequi_edge_ln_to_gn,
+                                                           &pequi_face_edge_idx,
+                                                           &pequi_face_edge);
+
+  int          pn_vtx_equi        = 0;
+  PDM_g_num_t *pequi_vtx_ln_to_gn = NULL;
+  int         *pequi_edge_vtx_idx = NULL;
+  int         *pequi_edge_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           dedge_vtx,
+                                                           pn_edge_equi,
+                                     (const PDM_g_num_t *) pequi_edge_ln_to_gn,
+                                                           &pn_vtx_equi,
+                                                           &pequi_vtx_ln_to_gn,
+                                                           &pequi_edge_vtx_idx,
+                                                           &pequi_edge_vtx);
+
+  double **tmp_pequi_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        1,
+                                        vtx_distrib,
+                                        dvtx_coord,
+                                        &pn_vtx_equi,
+                 (const PDM_g_num_t **) &pequi_vtx_ln_to_gn,
+                                        &tmp_pequi_vtx_coord);
+  double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
+  free(tmp_pequi_vtx_coord);
+
+  _iso_line(comm,
+            n_face_equi,
+            pn_edge_equi,
+            pn_vtx_equi,
+            pequi_face_edge_idx,
+            pequi_face_edge,
+            pequi_edge_vtx_idx,
+            pequi_edge_vtx,
+            pequi_edge_ln_to_gn,
+            pequi_vtx_ln_to_gn,
+            pequi_vtx_coord);
 
 
-  PDM_log_trace_array_long(block_equi_parent_g_num, n_face_equi, "block_equi_parent_g_num ::");
-  PDM_log_trace_array_long(block_g_num_child_equi , n_face_equi, "block_g_num_child_equi  ::");
 
-  free(block_equi_parent_g_num);
+  free(pequi_vtx_coord);
+
+  free(pequi_vtx_ln_to_gn);
+  free(pequi_edge_vtx_idx);
+  free(pequi_edge_vtx);
+
+  free(pequi_edge_ln_to_gn);
+  free(pequi_face_edge_idx);
+  free(pequi_face_edge);
+
+
+  free(block_face_equi_parent_g_num);
 
 
   PDM_part_to_block_free(ptb);
