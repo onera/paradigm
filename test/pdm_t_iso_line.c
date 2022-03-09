@@ -555,7 +555,7 @@ int main(int argc, char *argv[])
    * Je prepare tout pour mon petit Bastien
    */
   int          pn_edge_equi        = 0;
-  PDM_g_num_t *pequi_edge_ln_to_gn = NULL;
+  PDM_g_num_t *pequi_parent_edge_ln_to_gn = NULL;
   int         *pequi_face_edge_idx = NULL;
   int         *pequi_face_edge     = NULL;
   PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
@@ -565,12 +565,19 @@ int main(int argc, char *argv[])
                                                            n_face_equi,
                                      (const PDM_g_num_t *) block_face_equi_parent_g_num,
                                                            &pn_edge_equi,
-                                                           &pequi_edge_ln_to_gn,
+                                                           &pequi_parent_edge_ln_to_gn,
                                                            &pequi_face_edge_idx,
                                                            &pequi_face_edge);
 
+  PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_parents(gnum_edge, 0, pn_edge_equi, pequi_parent_edge_ln_to_gn);
+  PDM_gnum_compute(gnum_edge);
+  PDM_g_num_t* pequi_edge_ln_to_gn = PDM_gnum_get(gnum_edge, 0);
+  PDM_gnum_free(gnum_edge);
+
+
   int          pn_vtx_equi        = 0;
-  PDM_g_num_t *pequi_vtx_ln_to_gn = NULL;
+  PDM_g_num_t *pequi_parent_vtx_ln_to_gn = NULL;
   int         *pequi_edge_vtx_idx = NULL;
   int         *pequi_edge_vtx     = NULL;
   PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
@@ -578,11 +585,17 @@ int main(int argc, char *argv[])
                                                            dedge_vtx_idx,
                                                            dedge_vtx,
                                                            pn_edge_equi,
-                                     (const PDM_g_num_t *) pequi_edge_ln_to_gn,
+                                     (const PDM_g_num_t *) pequi_parent_edge_ln_to_gn,
                                                            &pn_vtx_equi,
-                                                           &pequi_vtx_ln_to_gn,
+                                                           &pequi_parent_vtx_ln_to_gn,
                                                            &pequi_edge_vtx_idx,
                                                            &pequi_edge_vtx);
+
+  PDM_gen_gnum_t* gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_parents(gnum_vtx, 0, pn_vtx_equi, pequi_parent_vtx_ln_to_gn);
+  PDM_gnum_compute(gnum_vtx);
+  PDM_g_num_t* pequi_vtx_ln_to_gn = PDM_gnum_get(gnum_vtx, 0);
+  PDM_gnum_free(gnum_vtx);
 
   double **tmp_pequi_vtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -590,7 +603,7 @@ int main(int argc, char *argv[])
                                         vtx_distrib,
                                         dvtx_coord,
                                         &pn_vtx_equi,
-                 (const PDM_g_num_t **) &pequi_vtx_ln_to_gn,
+                 (const PDM_g_num_t **) &pequi_parent_vtx_ln_to_gn,
                                         &tmp_pequi_vtx_coord);
   double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
   free(tmp_pequi_vtx_coord);
@@ -607,15 +620,17 @@ int main(int argc, char *argv[])
             pequi_vtx_ln_to_gn,
             pequi_vtx_coord);
 
+  free(pequi_edge_ln_to_gn);
+  free(pequi_vtx_ln_to_gn);
 
 
   free(pequi_vtx_coord);
 
-  free(pequi_vtx_ln_to_gn);
+  free(pequi_parent_vtx_ln_to_gn);
   free(pequi_edge_vtx_idx);
   free(pequi_edge_vtx);
 
-  free(pequi_edge_ln_to_gn);
+  free(pequi_parent_edge_ln_to_gn);
   free(pequi_face_edge_idx);
   free(pequi_face_edge);
 
