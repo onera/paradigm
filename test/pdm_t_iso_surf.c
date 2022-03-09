@@ -358,8 +358,7 @@ int main(int argc, char *argv[])
                                                          -0.5,
                                                          -0.5,
                                                          0.,
-                                                         PDM_MESH_NODAL_TRIA3,
-                                                         // PDM_MESH_NODAL_QUAD4,
+                                                         PDM_MESH_NODAL_HEXA8,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
@@ -384,11 +383,18 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_set_post_treat_result(dmntodm, 1);
 
   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
 
   PDM_dmesh_t* dmesh = NULL;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
+
+  int         *dcell_face_idx;
+  PDM_g_num_t *dcell_face;
+  int dn_cell = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                           &dcell_face,
+                                           &dcell_face_idx,
+                                           PDM_OWNERSHIP_KEEP);
 
   int         *dface_edge_idx;
   PDM_g_num_t *dface_edge;
@@ -423,6 +429,10 @@ int main(int argc, char *argv[])
   PDM_g_num_t* distrib_face = NULL;
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_face);
   assert(distrib_face != NULL);
+
+  PDM_g_num_t* distrib_cell = NULL;
+  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_cell);
+  assert(distrib_cell != NULL);
 
   PDM_g_num_t* edge_ln_to_gn = (PDM_g_num_t * ) malloc( dn_edge * sizeof(PDM_g_num_t));
   for(int i = 0; i < dn_edge; ++i) {
