@@ -600,8 +600,8 @@ int main(int argc, char *argv[])
                                                          n_vtx_seg,
                                                          n_vtx_seg,
                                                          length,
-                                                         -0.5,
-                                                         -0.5,
+                                                         0.,//-0.5,
+                                                         0.,//-0.5,
                                                          0.,
                                                          PDM_MESH_NODAL_TRIA3,
                                                          // PDM_MESH_NODAL_QUAD4,
@@ -681,8 +681,8 @@ int main(int argc, char *argv[])
     dgradient_field[3*i+2] = 0;
   }
 
-  // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
-  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
+  // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
 
   PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0);
 
