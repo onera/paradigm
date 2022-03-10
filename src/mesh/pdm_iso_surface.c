@@ -29,6 +29,7 @@
 #include "pdm_iso_surface_priv.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_vtk.h"
 
 
 #ifdef __cplusplus
@@ -117,7 +118,6 @@ _iso_surface_dist
                                                            &pvtx_ln_to_gn,
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
-  free(dedge_vtx_idx);
   free(pedge_vtx_idx);
   free(edge_ln_to_gn);
 
@@ -288,10 +288,116 @@ _iso_surface_dist
 
       idx_write++;
     }
-
   }
   free(dentity_edge_center);
   PDM_block_to_part_free(btp);
+
+  free(dentity_edge_tag);
+  free(dentity_edge_center);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "out_iso_surf_equi_entity_coord_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_entity_tag,
+                              dentity_center,
+                              NULL,
+                              NULL);
+  }
+
+  /*
+   * Rebuild partition that contains entity and reequilibrate
+   */
+  PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(3, 1, PDM_FALSE, 0., isos->comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_coords(gnum_equi, 0, n_entity_tag, dentity_center, NULL);
+  PDM_gnum_compute(gnum_equi);
+  PDM_g_num_t* child_equi_entity_gnum = PDM_gnum_get(gnum_equi, 0);
+  PDM_gnum_free(gnum_equi);
+  free(dentity_center);
+
+  /*
+   * Equilibrage avec le part_to_block
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                       1.,
+                                                       &child_equi_entity_gnum,
+                                                       NULL,
+                                                       &n_entity_tag,
+                                                       1,
+                                                       isos->comm);
+
+  int n_entity_equi = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t *block_entity_equi_shild_g_num = PDM_part_to_block_block_gnum_get (ptb);
+
+  PDM_g_num_t *block_entity_equi_parent_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+               (void **) &entity_to_extract_gnum,
+                          NULL,
+               (void **) &block_entity_equi_parent_g_num);
+
+  free(entity_to_extract_gnum);
+
+  /*
+   * A refléchir pour le 3D
+   */
+  int          pn_edge_equi               = 0;
+  PDM_g_num_t *pequi_parent_edge_ln_to_gn = NULL;
+  int         *pequi_entity_edge_idx      = NULL;
+  int         *pequi_entity_edge          = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(isos->comm,
+                                                           distrib_entity,
+                                                           dentity_edge_idx,
+                                                           dentity_edge,
+                                                           n_entity_equi,
+                                     (const PDM_g_num_t *) block_entity_equi_parent_g_num,
+                                                           &pn_edge_equi,
+                                                           &pequi_parent_edge_ln_to_gn,
+                                                           &pequi_entity_edge_idx,
+                                                           &pequi_entity_edge);
+
+  PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3, 1, PDM_FALSE, 0., isos->comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_parents(gnum_edge, 0, pn_edge_equi, pequi_parent_edge_ln_to_gn);
+  PDM_gnum_compute(gnum_edge);
+  PDM_g_num_t* pequi_edge_ln_to_gn = PDM_gnum_get(gnum_edge, 0);
+  PDM_gnum_free(gnum_edge);
+
+  int          pn_vtx_equi               = 0;
+  PDM_g_num_t *pequi_parent_vtx_ln_to_gn = NULL;
+  int         *pequi_edge_vtx_idx        = NULL;
+  int         *pequi_edge_vtx            = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(isos->comm,
+                                                           isos->distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           isos->dedge_vtx,
+                                                           pn_edge_equi,
+                                     (const PDM_g_num_t *) pequi_parent_edge_ln_to_gn,
+                                                           &pn_vtx_equi,
+                                                           &pequi_parent_vtx_ln_to_gn,
+                                                           &pequi_edge_vtx_idx,
+                                                           &pequi_edge_vtx);
+  free(dedge_vtx_idx);
+
+  PDM_gen_gnum_t* gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 0., isos->comm, PDM_OWNERSHIP_USER);
+  PDM_gnum_set_from_parents(gnum_vtx, 0, pn_vtx_equi, pequi_parent_vtx_ln_to_gn);
+  PDM_gnum_compute(gnum_vtx);
+  PDM_g_num_t* pequi_vtx_ln_to_gn = PDM_gnum_get(gnum_vtx, 0);
+  PDM_gnum_free(gnum_vtx);
+
+  double **tmp_pequi_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(isos->comm,
+                                        1,
+                                        isos->distrib_vtx,
+                                        isos->dvtx_coord,
+                                        &pn_vtx_equi,
+                 (const PDM_g_num_t **) &pequi_parent_vtx_ln_to_gn,
+                                        &tmp_pequi_vtx_coord);
+  double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
+  free(tmp_pequi_vtx_coord);
 
   if(isos->dim == 2) {
     _iso_line_dist(isos);
@@ -299,10 +405,25 @@ _iso_surface_dist
     _iso_surf_dist(isos);
   }
 
+
+  free(pequi_edge_ln_to_gn);
+  free(pequi_vtx_ln_to_gn);
+  free(pequi_vtx_coord);
+  free(pequi_parent_vtx_ln_to_gn);
+  free(pequi_edge_vtx_idx);
+  free(pequi_edge_vtx);
+  free(pequi_parent_edge_ln_to_gn);
+  free(pequi_entity_edge_idx);
+  free(pequi_entity_edge);
+  free(block_entity_equi_parent_g_num);
+  PDM_part_to_block_free(ptb);
+
+
   if(isos->dim == 3) {
     free(dentity_edge);
     free(dentity_edge_idx);
   }
+
 
   free(dedge_center);
   free(dedge_tag);
