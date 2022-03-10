@@ -1,5 +1,5 @@
-#ifndef __PDM_PART_MESH_PRIV_H__
-#define __PDM_PART_MESH_PRIV_H__
+#ifndef __PDM_ISO_SURFACE_PRIV_H__
+#define __PDM_ISO_SURFACE_PRIV_H__
 
 /*
   This file is part of the ParaDiGM library.
@@ -46,34 +46,65 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct _pdm_part_mesh_t
+ * \struct _pdm_iso_surface
  * \brief  Define a partition mesh. Arrays are shared
  *
  */
 
-struct _pdm_part_mesh_t
+struct _pdm_iso_surface_t
 {
+  int                  dim;
   int                  n_part;
+  PDM_ownership_t      ownership;
   PDM_MPI_Comm         comm;
 
-  int                **pn_entity;                       /* Size for each entity (size = PDM_MESH_ENTITY_MAX)            */
+  int                  is_dist; // Ins are distributed
 
-  int               ***pconnectivity;                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
-  int               ***pconnectivity_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
-  PDM_g_num_t       ***pentity_ln_to_gn;                /* Array of connectivty (size = PDM_MESH_ENTITY_MAX)            */
+  /* Distributed view */
+  PDM_g_num_t         *dcell_face;
+  int                 *dcell_face_idx;
+  PDM_g_num_t         *dface_edge;
+  int                 *dface_edge_idx;
+  PDM_g_num_t         *dedge_vtx;
 
-  PDM_bool_t         *is_owner_connectivity;
-  PDM_bool_t         *is_owner_ln_to_gn;
+  PDM_g_num_t         *distrib_cell;
+  PDM_g_num_t         *distrib_face;
+  PDM_g_num_t         *distrib_edge;
+  PDM_g_num_t         *distrib_vtx;
 
-  int                  n_group_bnd[PDM_BOUND_TYPE_MAX]; /*!< Number of group by elememnt type                                 */
-  PDM_g_num_t       ***pbound_ln_to_gn;                 /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)           */
-  int               ***pbound;                          /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
-  int               ***pbound_idx;                      /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  /* Shortcut possible but we need to compute edge */
+  PDM_g_num_t         *dface_vtx;
+  int                 *dface_vtx_idx;
 
-  PDM_bool_t         *is_owner_bound;
-  PDM_bool_t         *is_owner_bound_ln_to_gn;
+  double              *dvtx_coord;
 
+  double              *dfield;
+  double              *dgradient_field;
+
+  /* Partitioned view - To do with extract for selected gnum + part_to_part */
+  int                 *n_cell;
+  int                 *n_face;
+  int                 *n_edge;
+  int                 *n_vtx;
+  int                **pcell_face;
+  int                **pcell_face_idx;
+  int                **pface_edge;
+  int                **pface_edge_idx;
+  int                **pedge_vtx;
+
+  PDM_g_num_t        **cell_ln_to_gn;
+  PDM_g_num_t        **face_ln_to_gn;
+  PDM_g_num_t        **edge_ln_to_gn;
+  PDM_g_num_t        **vtx_ln_to_gn;
+
+  /* Shortcut possible but we need to compute edge */
+  int                **pface_vtx;
+  int                **pface_vtx_idx;
+
+  double             **pvtx_coord;
+  double             **pfield;
+  double             **pgradient_field;
 
 };
 
