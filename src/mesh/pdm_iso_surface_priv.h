@@ -53,13 +53,16 @@ extern "C" {
 
 struct _pdm_iso_surface_t
 {
-  int                  dim;
-  int                  n_part;
-  PDM_ownership_t      ownership;
-  PDM_MPI_Comm         comm;
+  int                    dim;
+  int                    n_part;
+  PDM_iso_surface_kind_t iso_kind;
+  PDM_ownership_t        ownership;
+  PDM_MPI_Comm           comm;
 
   int                  is_dist; // Ins are distributed
 
+  /* Plane equation */
+  double plane_equation[4];
 
   /* Distributed view */
   PDM_g_num_t         *dcell_face;

@@ -47,6 +47,7 @@ extern "C" {
 
 typedef struct _pdm_iso_surface_t PDM_iso_surface_t;
 
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -65,10 +66,11 @@ typedef struct _pdm_iso_surface_t PDM_iso_surface_t;
 PDM_iso_surface_t*
 PDM_iso_surface_create
 (
- const int             dim,
- const int             n_part,
-       PDM_ownership_t ownership,
-       PDM_MPI_Comm    comm
+ const int                    dim,
+       PDM_iso_surface_kind_t iso_kind,
+ const int                    n_part,
+       PDM_ownership_t        ownership,
+       PDM_MPI_Comm           comm
 );
 
 
@@ -180,6 +182,15 @@ PDM_iso_surface_graph_comm_get
   int                **iso_vtx_to_vtx_idx
 );
 
+void
+PDM_iso_surface_plane_equation_set
+(
+  PDM_iso_surface_t        *isos,
+  double                    a,
+  double                    b,
+  double                    c,
+  double                    d
+);
 
 void
 PDM_iso_surface_free

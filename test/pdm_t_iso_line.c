@@ -681,7 +681,11 @@ int main(int argc, char *argv[])
     dgradient_field[3*i+2] = 0;
   }
 
-  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, 1, PDM_OWNERSHIP_KEEP, comm);
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
+  // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
+
+  PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0.5);
+
 
   PDM_iso_surface_dconnectivity_set(isos,
                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
@@ -699,7 +703,6 @@ int main(int argc, char *argv[])
   PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
   PDM_iso_surface_dfield_set     (isos, dfield         );
   PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
-
 
   PDM_iso_surface_compute(isos);
 

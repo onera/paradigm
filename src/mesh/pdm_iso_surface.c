@@ -52,6 +52,41 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+inline
+double
+_plane_field
+(
+  double x,
+  double y,
+  double z,
+  double *plane_equation
+)
+{
+  return plane_equation[0] * x + plane_equation[1] * y + plane_equation[2] * z + plane_equation[3];
+}
+
+static
+inline
+void
+_plane_gradient_field
+(
+  double  x,
+  double  y,
+  double  z,
+  double *plane_equation,
+  double *gradx,
+  double *grady,
+  double *gradz
+)
+{
+  PDM_UNUSED(x);
+  PDM_UNUSED(y);
+  PDM_UNUSED(z);
+  *gradx = plane_equation[0];
+  *grady = plane_equation[1];
+  *gradz = plane_equation[2];
+}
 
 static void
 _dump_vectors
@@ -160,23 +195,24 @@ static
 void
 _iso_line_dist
 (
- PDM_MPI_Comm   comm,
- int            n_face,
- int            n_edge,
- int            n_vtx,
- int           *pface_edge_idx,
- int           *pface_edge,
- int           *pedge_vtx,
- PDM_g_num_t   *pface_ln_to_gn,
- PDM_g_num_t   *pedge_ln_to_gn,
- PDM_g_num_t   *pvtx_ln_to_gn,
- double        *pvtx_coord,
- double        *pfield,
- double        *pgradient_field,
- double       **isoline_dvtx_coord,
- int           *isoline_dn_edge,
- int          **isoline_dedge_vtx_idx,
- int          **isoline_dedge_vtx
+ PDM_iso_surface_t  *isos,
+ PDM_MPI_Comm        comm,
+ int                 n_face,
+ int                 n_edge,
+ int                 n_vtx,
+ int                *pface_edge_idx,
+ int                *pface_edge,
+ int                *pedge_vtx,
+ PDM_g_num_t        *pface_ln_to_gn,
+ PDM_g_num_t        *pedge_ln_to_gn,
+ PDM_g_num_t        *pvtx_ln_to_gn,
+ double             *pvtx_coord,
+ double             *pfield,
+ double             *pgradient_field,
+ double            **isoline_dvtx_coord,
+ int                *isoline_dn_edge,
+ int               **isoline_dedge_vtx_idx,
+ int               **isoline_dedge_vtx
 )
 {
   int i_rank;
@@ -206,12 +242,21 @@ _iso_line_dist
 
     double x1 = pvtx_coord[3*i_vtx1  ];
     double y1 = pvtx_coord[3*i_vtx1+1];
+    double z1 = pvtx_coord[3*i_vtx1+2];
 
     double x2 = pvtx_coord[3*i_vtx2  ];
     double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx2+2];
 
-    double val1 = pfield[i_vtx1];
-    double val2 = pfield[i_vtx2];
+    double val1 = 0.;
+    double val2 = 0.;
+    if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+      val1 = _plane_field(x1, y1, z1, isos->plane_equation);
+      val2 = _plane_field(x2, y2, z2, isos->plane_equation);
+    } else {
+      val1 = pfield[i_vtx1];
+      val2 = pfield[i_vtx2];
+    }
 
     int sgn1 = PDM_SIGN(val1);
     int sgn2 = PDM_SIGN(val2);
@@ -220,11 +265,18 @@ _iso_line_dist
       tag_edge[i] = 1;
 
       double grad1[2], grad2[2];
-      grad1[0] = pgradient_field[3*i_vtx1  ];
-      grad1[1] = pgradient_field[3*i_vtx1+1];
 
-      grad2[0] = pgradient_field[3*i_vtx2  ];
-      grad2[1] = pgradient_field[3*i_vtx2+1];
+      if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+        _plane_gradient_field(x1, y1, z1, isos->plane_equation, &grad1[0], &grad1[1], &grad1[2]);
+        _plane_gradient_field(x2, y2, z2, isos->plane_equation, &grad2[0], &grad2[1], &grad2[2]);
+      } else {
+        grad1[0] = pgradient_field[3*i_vtx1  ];
+        grad1[1] = pgradient_field[3*i_vtx1+1];
+
+        grad2[0] = pgradient_field[3*i_vtx2  ];
+        grad2[1] = pgradient_field[3*i_vtx2+1];
+
+      }
 
       double t = val1 / (val1 - val2);
 
@@ -527,7 +579,7 @@ _iso_surface_dist
                                                            &pvtx_ln_to_gn,
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, dn_edge, "pedge_vtx");
   }
   free(pedge_vtx_idx);
@@ -587,8 +639,15 @@ _iso_surface_dist
     double y2 = pvtx_coord[3*i_vtx2+1];
     double z2 = pvtx_coord[3*i_vtx1+2];
 
-    double val1 = pfield[i_vtx1];
-    double val2 = pfield[i_vtx2];
+    double val1 = 0;
+    double val2 = 0;
+    if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+      val1 = _plane_field(x1, y1, z1, isos->plane_equation);
+      val2 = _plane_field(x2, y2, z2, isos->plane_equation);
+    } else {
+      val1 = pfield[i_vtx1];
+      val2 = pfield[i_vtx2];
+    }
 
     int sgn1 = PDM_SIGN(val1);
     int sgn2 = PDM_SIGN(val2);
@@ -848,7 +907,8 @@ _iso_surface_dist
   int    *isoline_dedge_vtx_idx = NULL;
   int    *isoline_dedge_vtx     = NULL;
   if(isos->dim == 2) {
-    _iso_line_dist(isos->comm,
+    _iso_line_dist(isos,
+                   isos->comm,
                    n_entity_equi,
                    pn_edge_equi,
                    pn_vtx_equi,
@@ -906,15 +966,17 @@ _iso_surface_dist
 PDM_iso_surface_t*
 PDM_iso_surface_create
 (
- const int             dim,
- const int             n_part,
-       PDM_ownership_t ownership,
-       PDM_MPI_Comm    comm
+ const int                    dim,
+       PDM_iso_surface_kind_t iso_kind,
+ const int                    n_part,
+       PDM_ownership_t        ownership,
+       PDM_MPI_Comm           comm
 )
 {
   PDM_iso_surface_t *isos = (PDM_iso_surface_t *) malloc(sizeof(PDM_iso_surface_t));
 
   isos->dim       = dim;
+  isos->iso_kind  = iso_kind;
   isos->n_part    = n_part;
   isos->ownership = ownership;
   isos->comm      = comm;
@@ -1122,6 +1184,24 @@ PDM_iso_surface_dgrad_field_set
   isos->is_dist         = 1;
   isos->dgradient_field = dgrad_field;
 }
+
+
+void
+PDM_iso_surface_plane_equation_set
+(
+  PDM_iso_surface_t        *isos,
+  double                    a,
+  double                    b,
+  double                    c,
+  double                    d
+)
+{
+  isos->plane_equation[0] = a;
+  isos->plane_equation[1] = b;
+  isos->plane_equation[2] = c;
+  isos->plane_equation[3] = d;
+}
+
 
 void
 PDM_iso_surface_free
