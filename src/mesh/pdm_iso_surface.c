@@ -228,6 +228,17 @@ _dump_iso_line_dist
   char filename[999];
   sprintf(filename, "isoline_%2.2d.vtk", i_rank);
 
+  // check field values at isoline vertices
+  for (int i = 0; i < isoline_n_vtx; i++) {
+    double x = isoline_vtx_coord[3*i  ];
+    double y = isoline_vtx_coord[3*i+1];
+    double z = isoline_vtx_coord[3*i+2];
+
+    double v = x*x + y*y - 0.125;
+    log_trace("<d> isoline_vtx "PDM_FMT_G_NUM", coords %f %f %f, value = %f\n",
+              isoline_vtx_ln_to_gn[i], x, y, z, v);
+  }
+
 
   PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm,
                                                               isoline_n_edge);
@@ -268,6 +279,8 @@ _dump_iso_line_dist
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
 
+  PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, isoline_n_edge, "pedge_vtx : ");
+
   double** tmp_pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         1,
@@ -279,6 +292,16 @@ _dump_iso_line_dist
   double* pvtx_coord = tmp_pvtx_coord[0];
   free (tmp_pvtx_coord);
 
+  log_trace("\n\n");
+  for (int i = 0; i < pn_vtx; i++) {
+    double x = pvtx_coord[3*i  ];
+    double y = pvtx_coord[3*i+1];
+    double z = pvtx_coord[3*i+2];
+
+    double v = x*x + y*y - 0.125;
+    log_trace("<p> %d isoline_vtx "PDM_FMT_G_NUM", coords %f %f %f, value = %f\n",
+              i+1, pvtx_ln_to_gn[i], x, y, z, v);
+  }
 
 
   free(distrib_edge);
@@ -295,9 +318,9 @@ _dump_iso_line_dist
   // }
 
   PDM_vtk_write_std_elements (filename,
-                              isoline_n_vtx,
-                              isoline_vtx_coord,
-                              isoline_vtx_ln_to_gn,
+                              pn_vtx,
+                              pvtx_coord,
+                              pvtx_ln_to_gn,
                               PDM_MESH_NODAL_BAR2,
                               isoline_n_edge,
                               pedge_vtx,
