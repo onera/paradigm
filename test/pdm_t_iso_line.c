@@ -24,6 +24,7 @@
 #include "pdm_logging.h"
 #include "pdm_gnum.h"
 #include "pdm_array.h"
+#include "pdm_iso_surface.h"
 
 /*============================================================================
  * Type definitions
@@ -652,14 +653,6 @@ int main(int argc, char *argv[])
     PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx  ::");
   }
 
-  PDM_UNUSED(dn_face);
-  PDM_UNUSED(dn_edge);
-  PDM_UNUSED(dn_vtx);
-  PDM_UNUSED(dvtx_coord);
-
-  /*
-   * Select gnum that contains iso-surface
-   */
   PDM_g_num_t* distrib_edge = NULL;
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE  , &distrib_edge);
   assert(distrib_edge != NULL);
@@ -667,6 +660,70 @@ int main(int argc, char *argv[])
   PDM_g_num_t* distrib_face = NULL;
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_face);
   assert(distrib_face != NULL);
+
+  PDM_UNUSED(dn_face);
+  PDM_UNUSED(dn_edge);
+  PDM_UNUSED(dn_vtx);
+  PDM_UNUSED(dvtx_coord);
+
+  // Compute dfield and gradient field
+  double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
+  double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
+
+  for(int i = 0; i < dn_vtx; ++i) {
+
+    double x1 = dvtx_coord[3*i  ];
+    double y1 = dvtx_coord[3*i+1];
+    dfield[i] = _unit_circle(x1, y1);
+
+    _unit_circle_gradient(x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
+
+    dgradient_field[3*i+2] = 0;
+  }
+
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, 1, PDM_OWNERSHIP_KEEP, comm);
+
+  PDM_iso_surface_dconnectivity_set(isos,
+                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    dface_edge,
+                                    dface_edge_idx);
+  PDM_iso_surface_dconnectivity_set(isos,
+                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                    dedge_vtx,
+                                    dedge_vtx_idx);
+
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_FACE  , distrib_face);
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_EDGE  , distrib_edge);
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_VERTEX, vtx_distrib);
+
+  PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
+  PDM_iso_surface_dfield_set     (isos, dfield         );
+  PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+
+
+  PDM_iso_surface_compute(isos);
+
+  PDM_iso_surface_free(isos);
+
+  free(dfield);
+  free(dgradient_field);
+
+  PDM_dmesh_nodal_to_dmesh_free(dmntodm);
+  PDM_dcube_nodal_gen_free(dcube);
+
+
+  if (i_rank == 0) {
+    printf("-- End\n");
+    fflush(stdout);
+  }
+
+  PDM_MPI_Finalize();
+
+  return 0;
+
+  /*
+   * Select gnum that contains iso-surface
+   */
 
   PDM_g_num_t* edge_ln_to_gn = (PDM_g_num_t * ) malloc( dn_edge * sizeof(PDM_g_num_t));
   for(int i = 0; i < dn_edge; ++i) {
