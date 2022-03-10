@@ -105,31 +105,111 @@ _read_args(int            argc,
   }
 }
 
+static const double _A = 1.072;
+static const double _B = 1.044;
+static const double _C = 0.286;
+static const double _D = -0.042;
+static const double _E = 0.067;
+static const double _F = -0.025;
+
+
 static
 inline
 double
 _unit_circle
 (
- double x1,
- double x2
+ double x,
+ double y
 )
 {
-  return x1 * x1 + x2 * x2 - 0.125;
+  // return x * x + y * y - 0.125;
+  // return _A*x*x + _B*x*y + _C*y*y + _D*x + _E*y + _F;
+  // double a = (x*x + y*y - 1);
+  // return a*a*a - x*x*(6*y*x*x + x*x - 2*y*y*y - 6*y);
+  // return a*a*a - x*x*(x*x*(1 + 6*y) - y*(6 + 2*y*y));
+
+
+  // return x*x*x*x*x*x - y*x*(x*x-y*y) + y*y*y*y*y*y;
+  // return PDM_MAX(PDM_ABS(x), PDM_ABS(y)) - 0.25;
+  // return PDM_MIN(PDM_ABS(x) + PDM_ABS(y) - 0.25, (x-0.1)*(x-0.1) + (y+0.2)*(y+0.2) - 0.07);
+
+  double v1 = (x-0.23)*(x-0.23) + (y-0.28)*(y-0.28) - 0.03;
+  double v2 = (x+0.23)*(x+0.23) + (y-0.28)*(y-0.28) - 0.03;
+  double v3 = x*x + y*y - 0.1;
+  return PDM_MIN(PDM_MIN(v1, v2), v3);
 }
+
 
 static
 inline
 void
 _unit_circle_gradient
 (
- double  x1,
- double  x2,
- double *df_dx1,
- double *df_dx2
+ double  x,
+ double  y,
+ double *df_dx,
+ double *df_dy
 )
 {
-  *df_dx1 = 2*x1;
-  *df_dx2 = 2*x2;
+  *df_dx = 2*x;
+  *df_dy = 2*y;
+  *df_dx = 2*_A*x + _B*y + _D;
+  *df_dy = 2*_C*y + _B*x + _E;
+
+  *df_dx = 6*x*x*x*x*x + (12*y*y - 24*y - 16)*x*x*x + (6*y*y*y*y + 4*y*y*y - 12*y*y + 12*y + 6)*x;
+  // *df_dx = x*( (6 + 2*y*(6 + y*(6 + y*(2 + 3*y)))) + x*x*(16 + 12*y*(-2 + y)) + 6*x*x );
+  double a = (x*x + y*y - 1);
+  *df_dy = 6*y*a*a - x*x*(-6*y*y + 6*x*x - 6);
+  // *df_dy = 6*(y*a*a - x*x*(-y*y + x*x - 1));
+
+
+  *df_dx = 6*x*x*x*x*x - 3*y*x*x + y*y*y;
+  *df_dx = 6*y*y*y*y*y + 3*x*y*y - x*x*x;
+
+
+  // if (PDM_ABS(x) > PDM_ABS(y)) {
+  //   *df_dx = PDM_SIGN(x);
+  //   *df_dy = 0.;
+  // } else {
+  //   *df_dx = 0;
+  //   *df_dy = PDM_SIGN(y);
+  // }
+  // if (PDM_ABS(x) + PDM_ABS(y) - 0.25 < (x-0.1)*(x-0.1) + (y+0.2)*(y+0.2) - 0.07) {
+  //   *df_dx = PDM_SIGN(x);
+  //   *df_dy = PDM_SIGN(y);
+  // } else {
+  //   *df_dx = 2*(x-0.1);
+  //   *df_dy = 2*(y+0.2);
+  // }
+
+  double df_dx1 = 2*(x-0.23);
+  double df_dy1 = 2*(y-0.28);
+  double df_dx2 = 2*(x+0.23);
+  double df_dy2 = 2*(y-0.28);
+  double df_dx3 = 2*x;
+  double df_dy3 = 2*y;
+
+  double v1 = (x-0.23)*(x-0.23) + (y-0.2)*(y-0.2) - 0.03;
+  double v2 = (x+0.23)*(x+0.23) + (y-0.2)*(y-0.2) - 0.03;
+  double v3 = x*x + y*y - 0.1;
+
+  if (v1 < v2) {
+    if (v1 < v3) {
+      *df_dx = df_dx1;
+      *df_dy = df_dy1;
+    } else {
+      *df_dx = df_dx3;
+      *df_dy = df_dy3;
+    }
+  } else {
+    if (v2 < v3) {
+      *df_dx = df_dx2;
+      *df_dy = df_dy2;
+    } else {
+      *df_dx = df_dx3;
+      *df_dy = df_dy3;
+    }
+  }
 }
 
 
@@ -600,8 +680,8 @@ int main(int argc, char *argv[])
                                                          n_vtx_seg,
                                                          n_vtx_seg,
                                                          length,
-                                                         0.,//-0.5,
-                                                         0.,//-0.5,
+                                                         -0.5*length,// -0.35,
+                                                         -0.5*length,// -0.3,
                                                          0.,
                                                          PDM_MESH_NODAL_TRIA3,
                                                          // PDM_MESH_NODAL_QUAD4,
@@ -685,7 +765,7 @@ int main(int argc, char *argv[])
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
 
   PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0);
-
+  // PDM_iso_surface_plane_equation_set(isos, 1., 0.5, 0.25, -0.0234);
 
   PDM_iso_surface_dconnectivity_set(isos,
                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
