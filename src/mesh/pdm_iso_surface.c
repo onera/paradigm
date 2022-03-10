@@ -264,8 +264,7 @@ _iso_line_dist
     if (sgn1 != sgn2) {
       tag_edge[i] = 1;
 
-      double grad1[2], grad2[2];
-
+      double grad1[3], grad2[3];
       if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
         _plane_gradient_field(x1, y1, z1, isos->plane_equation, &grad1[0], &grad1[1], &grad1[2]);
         _plane_gradient_field(x2, y2, z2, isos->plane_equation, &grad2[0], &grad2[1], &grad2[2]);
