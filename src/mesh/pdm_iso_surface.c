@@ -56,10 +56,26 @@ static
 void
 _iso_line_dist
 (
-  PDM_iso_surface_t        *isos
+ PDM_MPI_Comm   comm,
+ int            n_face,
+ int            n_edge,
+ int            n_vtx,
+ int           *pface_edge_idx,
+ int           *pface_edge,
+ int           *pedge_vtx_idx,
+ int           *pedge_vtx,
+ PDM_g_num_t   *pface_ln_to_gn,
+ PDM_g_num_t   *pedge_ln_to_gn,
+ PDM_g_num_t   *pvtx_ln_to_gn,
+ double        *pvtx_coord,
+ double        *pfield,
+ double        *pgradient_field,
+ double       **isoline_dvtx_coord,
+ int           *isoline_dn_edge,
+ int          **isoline_dedge_vtx_idx,
+ int          **isoline_dedge_vtx
 )
 {
-  PDM_UNUSED(isos);
 
 }
 
@@ -152,6 +168,7 @@ _iso_surface_dist
 
 
   PDM_block_to_part_free(btp_vtx);
+  btp_vtx = NULL;
 
   /*
    *  Loop on edge to tag all edge
@@ -388,22 +405,79 @@ _iso_surface_dist
   PDM_g_num_t* pequi_vtx_ln_to_gn = PDM_gnum_get(gnum_vtx, 0);
   PDM_gnum_free(gnum_vtx);
 
+  assert(btp_vtx == NULL);
+  btp_vtx = PDM_block_to_part_create(isos->distrib_vtx,
+              (const PDM_g_num_t **) &pequi_parent_vtx_ln_to_gn,
+                                     &pn_vtx_equi,
+                                     1,
+                                     isos->comm);
+
   double **tmp_pequi_vtx_coord = NULL;
-  PDM_part_dcoordinates_to_pcoordinates(isos->comm,
-                                        1,
-                                        isos->distrib_vtx,
-                                        isos->dvtx_coord,
-                                        &pn_vtx_equi,
-                 (const PDM_g_num_t **) &pequi_parent_vtx_ln_to_gn,
-                                        &tmp_pequi_vtx_coord);
+  PDM_block_to_part_exch(btp_vtx,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   isos->dvtx_coord,
+            (int  ***)   NULL,
+            (void ***)   tmp_pequi_vtx_coord);
   double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
   free(tmp_pequi_vtx_coord);
 
+  double **tmp_pequi_pfield = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   isos->dfield,
+            (int  ***)   NULL,
+            (void ***)   tmp_pequi_pfield);
+  double* pequi_field = tmp_pequi_pfield[0];
+  free(tmp_pequi_pfield);
+
+
+  double **tmp_pequi_pgradient_field = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   isos->dfield,
+            (int  ***)   NULL,
+            (void ***)   tmp_pequi_pgradient_field);
+  double* pequi_gradient_field = tmp_pequi_pgradient_field[0];
+  free(tmp_pequi_pgradient_field);
+
+
+  double *isoline_dvtx_coord    = NULL;
+  int     isoline_dn_edge       = 0;
+  int    *isoline_dedge_vtx_idx = NULL;
+  int    *isoline_dedge_vtx     = NULL;
   if(isos->dim == 2) {
-    _iso_line_dist(isos);
+    _iso_line_dist(isos->comm,
+                   n_entity_equi,
+                   pn_edge_equi,
+                   pn_vtx_equi,
+                   pequi_entity_edge_idx,
+                   pequi_entity_edge,
+                   pequi_edge_vtx_idx,
+                   pequi_edge_vtx,
+                   block_entity_equi_shild_g_num,
+                   pequi_edge_ln_to_gn,
+                   pequi_vtx_ln_to_gn,
+                   pequi_vtx_coord,
+                   pequi_field,
+                   pequi_gradient_field,
+                   &isoline_dvtx_coord,
+                   &isoline_dn_edge,
+                   &isoline_dedge_vtx_idx,
+                   &isoline_dedge_vtx);
   } else {
     _iso_surf_dist(isos);
   }
+
+  free(isoline_dvtx_coord   );
+  free(isoline_dedge_vtx_idx);
+  free(isoline_dedge_vtx    );
+
 
 
   free(pequi_edge_ln_to_gn);
