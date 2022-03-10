@@ -27,6 +27,8 @@
 #include "pdm_gnum.h"
 #include "pdm_iso_surface.h"
 #include "pdm_iso_surface_priv.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_dconnectivity_transform.h"
 
 
 #ifdef __cplusplus
@@ -47,6 +49,30 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
+
+
+static
+void
+_iso_line_dist
+(
+  PDM_iso_surface_t        *isos
+)
+{
+  PDM_UNUSED(isos);
+
+}
+
+static
+void
+_iso_surf_dist
+(
+  PDM_iso_surface_t        *isos
+)
+{
+  PDM_UNUSED(isos);
+
+}
+
 static
 void
 _iso_surface_dist
@@ -54,9 +80,232 @@ _iso_surface_dist
   PDM_iso_surface_t        *isos
 )
 {
-
   PDM_UNUSED(isos);
 
+  /*
+   * Select gnum that contains iso-surface
+   */
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+  assert(isos->distrib_edge != NULL);
+  int dn_edge = isos->distrib_edge[i_rank+1] - isos->distrib_edge[i_rank];
+
+  PDM_g_num_t* edge_ln_to_gn = (PDM_g_num_t * ) malloc( dn_edge * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_edge; ++i) {
+    edge_ln_to_gn[i] = isos->distrib_edge[i_rank] + i + 1;
+  }
+
+
+  int          pn_vtx           = 0;
+  PDM_g_num_t *pvtx_ln_to_gn    = NULL;
+  int         *pedge_vtx_idx    = NULL;
+  int         *pedge_vtx        = NULL;
+
+  int* dedge_vtx_idx = malloc( (dn_edge + 1) * sizeof(int));
+  dedge_vtx_idx[0] = 0;
+  for(int i = 0; i < dn_edge; ++i) {
+    dedge_vtx_idx[i+1] = dedge_vtx_idx[i] + 1;
+  }
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(isos->comm,
+                                                           isos->distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           isos->dedge_vtx,
+                                                           dn_edge,
+                                     (const PDM_g_num_t *) edge_ln_to_gn,
+                                                           &pn_vtx,
+                                                           &pvtx_ln_to_gn,
+                                                           &pedge_vtx_idx,
+                                                           &pedge_vtx);
+  free(dedge_vtx_idx);
+  free(pedge_vtx_idx);
+  free(edge_ln_to_gn);
+
+  PDM_block_to_part_t* btp_vtx = PDM_block_to_part_create(isos->distrib_vtx,
+                                   (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                                          &pn_vtx,
+                                                          1,
+                                                          isos->comm);
+
+  int cst_stride = 1;
+  double **tmp_pvtx_coord = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   isos->dvtx_coord,
+            (int  ***)   NULL,
+            (void ***)   tmp_pvtx_coord);
+  double* pvtx_coord = tmp_pvtx_coord[0];
+  free(tmp_pvtx_coord);
+
+  double **tmp_pfield = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   isos->dfield,
+            (int  ***)   NULL,
+            (void ***)   tmp_pfield);
+  double* pfield = tmp_pfield[0];
+  free(tmp_pfield);
+
+
+  PDM_block_to_part_free(btp_vtx);
+
+  /*
+   *  Loop on edge to tag all edge
+   */
+  int    *dedge_tag    = (int    * ) malloc(    dn_edge * sizeof(int   ));
+  double *dedge_center = (double * ) malloc(3 * dn_edge * sizeof(double));
+  for(int i = 0; i < dn_edge; ++i) {
+
+    int i_vtx1 = pedge_vtx[2*i  ]-1;
+    int i_vtx2 = pedge_vtx[2*i+1]-1;
+
+    dedge_tag[i] = 0;
+
+    // Besoin des coordonnés si call back
+    double x1 = pvtx_coord[3*i_vtx1  ];
+    double y1 = pvtx_coord[3*i_vtx1+1];
+    double z1 = pvtx_coord[3*i_vtx1+2];
+
+    double x2 = pvtx_coord[3*i_vtx2  ];
+    double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx1+2];
+
+    double val1 = pfield[i_vtx1];
+    double val2 = pfield[i_vtx2];
+
+    int sgn1 = PDM_SIGN(val1);
+    int sgn2 = PDM_SIGN(val2);
+
+    if(sgn1 * sgn2 < 0) {
+      dedge_tag[i] = 1;
+    }
+
+    dedge_center[3*i  ] = 0.5 * (x1 + x2);
+    dedge_center[3*i+1] = 0.5 * (y1 + y2);
+    dedge_center[3*i+2] = 0.5 * (z1 + z2);
+  }
+
+  free(edge_ln_to_gn);
+  free(pvtx_ln_to_gn);
+  free(pedge_vtx_idx);
+  free(pedge_vtx);
+  free(pvtx_coord);
+  free(pfield);
+
+  PDM_g_num_t *dentity_edge     = NULL;
+  int         *dentity_edge_idx = NULL;
+  PDM_g_num_t *distrib_entity   = NULL;
+  int          dn_entity        = -1;
+
+  if(isos->dim == 3) {
+    PDM_deduce_combine_connectivity(isos->comm,
+                                    isos->distrib_cell,
+                                    isos->distrib_face,
+                                    isos->dcell_face_idx,
+                                    isos->dcell_face,
+                                    isos->dface_edge_idx,
+                                    isos->dface_edge,
+                                    1,
+                                    &dentity_edge_idx,
+                                    &dentity_edge);
+    distrib_entity = isos->distrib_cell;
+  } else {
+    dentity_edge     = isos->dface_edge;
+    dentity_edge_idx = isos->dface_edge_idx;
+    distrib_entity   = isos->distrib_face;
+  }
+
+  dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
+
+  /*
+   *  Deduce all entity concerns by the iso surface (could be optimize)
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(isos->distrib_edge,
+                               (const PDM_g_num_t **) &dentity_edge,
+                                                      &dentity_edge_idx[dn_entity],
+                                                      1,
+                                                      isos->comm);
+
+  int strid_one = 1;
+  int **tmp_dentity_edge_tag = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &strid_one,
+            (void *  )   dedge_tag,
+            (int  ***)   NULL,
+            (void ***)  &tmp_dentity_edge_tag);
+  int *dentity_edge_tag = tmp_dentity_edge_tag[0];
+  free(tmp_dentity_edge_tag);
+  free(dedge_tag);
+
+  double **tmp_dentity_edge_center = NULL;
+  PDM_block_to_part_exch(btp,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &strid_one,
+            (void *  )   dedge_center,
+            (int  ***)   NULL,
+            (void ***)  &tmp_dentity_edge_center);
+  double *dentity_edge_center = tmp_dentity_edge_center[0];
+  free(tmp_dentity_edge_center);
+  free(dedge_center);
+
+  int         *dentity_tag            = malloc(     dn_entity * sizeof(int        ));
+  PDM_g_num_t *entity_to_extract_gnum = malloc(     dn_entity * sizeof(PDM_g_num_t));
+  double      *dentity_center         = malloc( 3 * dn_entity * sizeof(double     ));
+  int  n_entity_tag = 0;
+  int idx_write   = 0;
+  for(int i = 0; i < dn_entity; ++i) {
+    dentity_tag[i] = 0;
+
+    for(int idx_entity = dentity_edge_idx[i]; idx_entity < dentity_edge_idx[i+1]; ++idx_entity) {
+      if(dentity_edge_tag[idx_entity] == 1) {
+        dentity_tag[i] = 1;
+        entity_to_extract_gnum[n_entity_tag++] = distrib_entity[i_rank] + i + 1;
+        break;
+      }
+    }
+
+    if(dentity_tag[i] == 1) {
+      dentity_center[3*idx_write  ] = 0.;
+      dentity_center[3*idx_write+1] = 0.;
+      dentity_center[3*idx_write+2] = 0.;
+
+      double inv = 1./((double) (dentity_edge_idx[i+1] - dentity_edge_idx[i]));
+      for(int idx_entity = dentity_edge_idx[i]; idx_entity < dentity_edge_idx[i+1]; ++idx_entity) {
+        dentity_center[3*idx_write  ] += dentity_edge_center[3*idx_entity  ];
+        dentity_center[3*idx_write+1] += dentity_edge_center[3*idx_entity+1];
+        dentity_center[3*idx_write+2] += dentity_edge_center[3*idx_entity+2];
+      }
+      dentity_center[3*idx_write  ] = dentity_center[3*idx_write  ] * inv;
+      dentity_center[3*idx_write+1] = dentity_center[3*idx_write+1] * inv;
+      dentity_center[3*idx_write+2] = dentity_center[3*idx_write+2] * inv;
+
+      idx_write++;
+    }
+
+  }
+  free(dentity_edge_center);
+  PDM_block_to_part_free(btp);
+
+  if(isos->dim == 2) {
+    _iso_line_dist(isos);
+  } else {
+    _iso_surf_dist(isos);
+  }
+
+  if(isos->dim == 3) {
+    free(dentity_edge);
+    free(dentity_edge_idx);
+  }
+
+  free(dedge_center);
+  free(dedge_tag);
 }
 
 
