@@ -208,6 +208,145 @@ _compute_least_square
 
 static
 void
+_compute_edge_isosurf_intersection
+(
+ PDM_iso_surface_t  *isos,
+ const int           n_edge,
+ int                *pedge_vtx,
+ double             *pvtx_coord,
+ double             *pfield,
+ double             *pgradient_field,
+ int                *edge_tag,
+ double             *edge_coord,
+ double             *edge_gradient
+ )
+{
+  for (int i = 0; i < n_edge; i++) {
+
+    int i_vtx1 = pedge_vtx[2*i  ]-1;
+    int i_vtx2 = pedge_vtx[2*i+1]-1;
+
+    double x1 = pvtx_coord[3*i_vtx1  ];
+    double y1 = pvtx_coord[3*i_vtx1+1];
+    double z1 = pvtx_coord[3*i_vtx1+2];
+
+    double x2 = pvtx_coord[3*i_vtx2  ];
+    double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx2+2];
+
+    double val1 = 0.;
+    double val2 = 0.;
+    if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+      val1 = _plane_field(x1, y1, z1, isos->plane_equation);
+      val2 = _plane_field(x2, y2, z2, isos->plane_equation);
+    } else {
+      val1 = pfield[i_vtx1];
+      val2 = pfield[i_vtx2];
+    }
+
+    int sgn1 = PDM_SIGN(val1);
+    int sgn2 = PDM_SIGN(val2);
+
+    if (sgn1 != sgn2) {
+      edge_tag[i] = sgn1;
+
+      double grad1[3], grad2[3];
+
+      if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+        _plane_gradient_field(x1, y1, z1, isos->plane_equation, &grad1[0], &grad1[1], &grad1[2]);
+        _plane_gradient_field(x2, y2, z2, isos->plane_equation, &grad2[0], &grad2[1], &grad2[2]);
+      } else {
+        grad1[0] = pgradient_field[3*i_vtx1  ];
+        grad1[1] = pgradient_field[3*i_vtx1+1];
+        grad1[2] = 0.;
+
+        grad2[0] = pgradient_field[3*i_vtx2  ];
+        grad2[1] = pgradient_field[3*i_vtx2+1];
+        grad2[2] = 0.;
+      }
+
+      // Linear interpolation
+      double t = val1 / (val1 - val2);
+
+      // Cubic (Hermite) interpolation
+      if (0) {
+        double vec[3] = {x2 - x1, y2 - y1, z2 - z1};
+        double m0 = PDM_DOT_PRODUCT(vec, grad1);
+        double m1 = PDM_DOT_PRODUCT(vec, grad2);
+
+        // Find a root of a_3*t^3 + a_2*t^2 + a_1*t + a_0 (for 0 <= t <= 1), with
+        double a_3 =  2*val1 - 2*m0 +   val2 + m1;
+        double a_2 = -3*val1 + 3*m0 - 2*val2 - m1;
+        double a_1 = val2;
+        double a_0 = val1;
+
+        double s = t;
+        int stat = 0;
+        log_trace("\nNewton:\n");
+        for (int iter = 0; iter < 5; iter++) {
+          double val = a_0 + s*(a_1 + s*(a_2 + s*a_3));
+          log_trace("  it %d, s = %f, |val| = %e\n", iter, s, PDM_ABS(val));
+
+          if (PDM_ABS(val) < 1e-6) {
+            // Converged
+            stat = 1;
+            break;
+          }
+          double dval_ds = a_1 + s*(2*a_2 + s*3*a_3);
+
+          if (PDM_ABS(dval_ds) < 1e-12) {
+            // Singular derivative
+            stat = -1;
+            break;
+          } else {
+            // Apply Newton step
+            s -= val / dval_ds;
+            if (s < 0. || s > 1.) {
+              // Iterate outside of valid bounds
+              stat = -2;
+              break;
+            }
+          }
+        }
+
+        if (stat == 1) {
+          // Newton converged successfully
+          t = s;
+        }
+      }
+
+      edge_coord[3*i  ] = (1. - t)*x1 + t*x2;
+      edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
+      edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
+
+      double gx = (1. - t)*grad1[0] + t*grad2[0];
+      double gy = (1. - t)*grad1[1] + t*grad2[1];
+      double gz = (1. - t)*grad1[2] + t*grad2[2];
+
+      edge_gradient[3*i  ] = gx;
+      edge_gradient[3*i+1] = gy;
+      edge_gradient[3*i+2] = gz;
+    }
+
+    else {
+      // Unnecessary
+      edge_coord[3*i  ] = 0.;
+      edge_coord[3*i+1] = 0.;
+      edge_coord[3*i+2] = 0.;
+
+      edge_gradient[3*i  ] = 0.;
+      edge_gradient[3*i+1] = 0.;
+      edge_gradient[3*i+2] = 0.;
+    }
+
+  }
+}
+
+
+
+
+static
+void
 _dump_iso_line_dist
 (
  PDM_MPI_Comm  comm,
@@ -378,7 +517,6 @@ void
 _iso_line_dist
 (
  PDM_iso_surface_t  *isos,
- PDM_MPI_Comm        comm,
  int                 n_face,
  int                 n_edge,
  int                 n_vtx,
@@ -401,6 +539,8 @@ _iso_line_dist
  PDM_g_num_t       **isoline_edge_ln_to_gn
 )
 {
+  PDM_MPI_Comm comm = isos->comm;
+
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
   int n_rank;
@@ -417,138 +557,28 @@ _iso_line_dist
   /*
    *  Tag edges that cross the iso-line,
    *  compute the intersection point
-   *  and the normal at that point
+   *  and the gradient at that point
    */
-  int    *edge_tag    = PDM_array_zeros_int(n_edge);
-  double *edge_coord  = (double *) malloc(sizeof(double) * n_edge * 3);
-  double *edge_normal = (double *) malloc(sizeof(double) * n_edge * 3);
+  int    *edge_tag      = PDM_array_zeros_int(n_edge);
+  double *edge_coord    = (double *) malloc(sizeof(double) * n_edge * 3);
+  double *edge_gradient = (double *) malloc(sizeof(double) * n_edge * 3);
 
-  for (int i = 0; i < n_edge; i++) {
-
-    int i_vtx1 = pedge_vtx[2*i  ]-1;
-    int i_vtx2 = pedge_vtx[2*i+1]-1;
-
-    double x1 = pvtx_coord[3*i_vtx1  ];
-    double y1 = pvtx_coord[3*i_vtx1+1];
-    double z1 = pvtx_coord[3*i_vtx1+2];
-
-    double x2 = pvtx_coord[3*i_vtx2  ];
-    double y2 = pvtx_coord[3*i_vtx2+1];
-    double z2 = pvtx_coord[3*i_vtx2+2];
-
-    double val1 = 0.;
-    double val2 = 0.;
-    if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
-      val1 = _plane_field(x1, y1, z1, isos->plane_equation);
-      val2 = _plane_field(x2, y2, z2, isos->plane_equation);
-    } else {
-      val1 = pfield[i_vtx1];
-      val2 = pfield[i_vtx2];
-    }
-
-    int sgn1 = PDM_SIGN(val1);
-    int sgn2 = PDM_SIGN(val2);
-
-    if (sgn1 != sgn2) {
-      edge_tag[i] = sgn1;
-      log_trace("bnd edge "PDM_FMT_G_NUM"\n", pedge_ln_to_gn[i]);
-
-      double grad1[3], grad2[3];
-
-      if(isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
-        _plane_gradient_field(x1, y1, z1, isos->plane_equation, &grad1[0], &grad1[1], &grad1[2]);
-        _plane_gradient_field(x2, y2, z2, isos->plane_equation, &grad2[0], &grad2[1], &grad2[2]);
-      } else {
-        grad1[0] = pgradient_field[3*i_vtx1  ];
-        grad1[1] = pgradient_field[3*i_vtx1+1];
-        grad1[2] = 0.;
-
-        grad2[0] = pgradient_field[3*i_vtx2  ];
-        grad2[1] = pgradient_field[3*i_vtx2+1];
-        grad2[2] = 0.;
-      }
-
-      // Linear interpolation
-      double t = val1 / (val1 - val2);
-
-      if (0) {
-        // Cubic (Hermite) interpolation
-        double vec[3] = {x2 - x1, y2 - y1, z2 - z1};
-        double m0 = PDM_DOT_PRODUCT(vec, grad1);
-        double m1 = PDM_DOT_PRODUCT(vec, grad2);
-
-        // Find a root of a_3*t^3 + a_2*t^2 + a_1*t + a_0 (for 0 <= t <= 1), with
-        double a_3 =  2*val1 - 2*m0 +   val2 + m1;
-        double a_2 = -3*val1 + 3*m0 - 2*val2 - m1;
-        double a_1 = val2;
-        double a_0 = val1;
-
-        double s = t;
-        int stat = 0;
-        log_trace("\nNewton:\n");
-        for (int iter = 0; iter < 5; iter++) {
-          double val = a_0 + s*(a_1 + s*(a_2 + s*a_3));
-          log_trace("  it %d, s = %f, |val| = %e\n", iter, s, PDM_ABS(val));
-
-          if (PDM_ABS(val) < 1e-6) {
-            // Converged
-            stat = 1;
-            break;
-          }
-          double dval_ds = a_1 + s*(2*a_2 + s*3*a_3);
-
-          if (PDM_ABS(dval_ds) < 1e-12) {
-            // Singular derivative
-            stat = -1;
-            break;
-          } else {
-            // Apply Newton step
-            s -= val / dval_ds;
-            if (s < 0. || s > 1.) {
-              // Iterate outside of valid bounds
-              stat = -2;
-              break;
-            }
-          }
-        }
-
-        if (stat == 1) {
-          // Newton converged successfully
-          t = s;
-        }
-      }
-
-      edge_coord[3*i  ] = (1. - t)*x1 + t*x2;
-      edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
-      edge_coord[3*i+2] = 0.;
-
-      double gx = (1. - t)*grad1[0] + t*grad2[0];
-      double gy = (1. - t)*grad1[1] + t*grad2[1];
-      // double imag = 1. / sqrt(gx*gx + gy*gy);
-
-      edge_normal[3*i  ] = gx;// * imag;
-      edge_normal[3*i+1] = gy;// * imag;
-      edge_normal[3*i+2] = 0.;
-    }
-
-    else {
-      edge_coord[3*i  ] = 0.;
-      edge_coord[3*i+1] = 0.;
-      edge_coord[3*i+2] = 0.;
-
-      edge_normal[3*i  ] = 0.;
-      edge_normal[3*i+1] = 0.;
-      edge_normal[3*i+2] = 0.;
-    }
-
-  }
+  _compute_edge_isosurf_intersection(isos,
+                                     n_edge,
+                                     pedge_vtx,
+                                     pvtx_coord,
+                                     pfield,
+                                     pgradient_field,
+                                     edge_tag,
+                                     edge_coord,
+                                     edge_gradient);
 
 
   sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
   _dump_vectors (filename,
                  n_edge,
                  edge_coord,
-                 edge_normal,
+                 edge_gradient,
                  NULL);
 
 
@@ -596,12 +626,10 @@ _iso_line_dist
 
       if (edge_tag[iedge] != 0) {
 
-        // mat[2*k  ] = edge_normal[3*iedge  ];
-        // mat[2*k+1] = edge_normal[3*iedge+1];
-        mat[k              ] = edge_normal[3*iedge  ];
-        mat[k+n_tagged_edge] = edge_normal[3*iedge+1];
+        mat[k              ] = edge_gradient[3*iedge  ];
+        mat[k+n_tagged_edge] = edge_gradient[3*iedge+1];
 
-        rhs[k] = PDM_DOT_PRODUCT(edge_normal + 3*iedge, edge_coord + 3*iedge);
+        rhs[k] = PDM_DOT_PRODUCT(edge_gradient + 3*iedge, edge_coord + 3*iedge);
 
         k++;
       }
@@ -679,28 +707,7 @@ _iso_line_dist
         next_vtx = pedge_vtx[2*cur_edge+1];
       }
 
-      // log_trace("Face "PDM_FMT_G_NUM" :\n", pface_ln_to_gn[i]);
-      // for (int j = 0; j < pface_edge_idx[i+1] - pface_edge_idx[i]; j++) {
-      //   cur_edge = pface_edge[j];
-      //   int vtx1, vtx2;
-      //   if (cur_edge < 0) {
-      //     cur_edge = -cur_edge - 1;
-      //     vtx1 = pedge_vtx[2*cur_edge+1];
-      //     vtx2 = pedge_vtx[2*cur_edge  ];
-      //   } else {
-      //     cur_edge = cur_edge - 1;
-      //     vtx1 = pedge_vtx[2*cur_edge  ];
-      //     vtx2 = pedge_vtx[2*cur_edge+1];
-      //   }
-      //   log_trace("  edge "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM", "PDM_FMT_G_NUM"\n",
-      //             pedge_ln_to_gn[cur_edge],
-      //             pvtx_ln_to_gn[vtx1-1],
-      //             pvtx_ln_to_gn[vtx2-1]);
-      // }
-
-      // log_trace("  face_vtx (g_num) :");
       for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
-        // log_trace(" "PDM_FMT_G_NUM, pvtx_ln_to_gn[cur_vtx-1]);
         memcpy(poly_coord + 3*ivtx, pvtx_coord + 3*(cur_vtx - 1), sizeof(double) * 3);
 
         for (int iedg = pface_edge_idx[i]; iedg < pface_edge_idx[i+1]; iedg++) {
@@ -723,7 +730,6 @@ _iso_line_dist
           }
         }
       }
-      // log_trace("\n");
 
       double poly_bounds[6] = {
         HUGE_VAL, -HUGE_VAL,
@@ -777,9 +783,7 @@ _iso_line_dist
   free(S);
   free(U);
   free(V);
-  // free(edge_tag);
-  // free(edge_coord);
-  free(edge_normal);
+  free(edge_gradient);
 
   pface_edge_inter_g_num = realloc(pface_edge_inter_g_num, sizeof(PDM_g_num_t) * pface_edge_inter_idx[n_face]);
 
@@ -944,11 +948,11 @@ _iso_line_dist
 
       (*isoline_vtx_ln_to_gn)[idx2] = (*isoline_edge_vtx)[2*i+1];
 
-      // if (dedge_tag[pos] < 0) {
-      //   PDM_g_num_t tmp = (*isoline_edge_vtx)[2*i];
-      //   (*isoline_edge_vtx)[2*i] = (*isoline_edge_vtx)[2*i+1];
-      //   (*isoline_edge_vtx)[2*i+1] = tmp;
-      // }
+      if (dedge_tag[pos] < 0) {
+        PDM_g_num_t tmp = (*isoline_edge_vtx)[2*i];
+        (*isoline_edge_vtx)[2*i] = (*isoline_edge_vtx)[2*i+1];
+        (*isoline_edge_vtx)[2*i+1] = tmp;
+      }
 
       (*isoline_vtx_parent_face)[idx2] = tmp_isoline_edge_vtx[idx];
       isoline_n_bnd_vtx++;
@@ -1005,7 +1009,7 @@ _iso_line_dist
   free(pface_edge_inter_face_g_num);
 
   free(part_stride);
-  // *isoline_edge_vtx_idx = PDM_array_new_idx_from_sizes_int(isoline_dedge_vtx_n, *isoline_n_edge);
+
   *isoline_edge_vtx_idx = (int *) malloc(sizeof(int) * (*isoline_n_edge + 1));
   for (int i = 0; i <= *isoline_n_edge; i++) {
     (*isoline_edge_vtx_idx)[i] = 2*i;
@@ -1029,14 +1033,66 @@ _iso_line_dist
   free(distrib_bnd_vtx);
 }
 
+
+
+
 static
 void
 _iso_surf_dist
 (
-  PDM_iso_surface_t        *isos
+  PDM_iso_surface_t  *isos,
+  int                 n_cell,
+  int                 n_face,
+  int                 n_edge,
+  int                 n_vtx,
+  int                *pcell_face_idx,
+  int                *pcell_face,
+  int                *pface_edge_idx,
+  int                *pface_edge,
+  int                *pedge_vtx,
+  PDM_g_num_t        *pcell_ln_to_gn,
+  PDM_g_num_t        *pface_ln_to_gn,
+  PDM_g_num_t        *pedge_ln_to_gn,
+  PDM_g_num_t        *pvtx_ln_to_gn,
+  double             *pvtx_coord,
+  double             *pfield,
+  double             *pgradient_field,
+  int                *isoline_n_vtx,
+  double            **isoline_vtx_coord,
+  PDM_g_num_t       **isoline_vtx_parent_face,
+  PDM_g_num_t       **isoline_vtx_ln_to_gn,
+  int                *isoline_n_face,
+  int               **isoline_face_vtx_idx,
+  PDM_g_num_t       **isoline_face_vtx,
+  PDM_g_num_t       **isoline_face_ln_to_gn
 )
 {
-  PDM_UNUSED(isos);
+  PDM_MPI_Comm comm = isos->comm;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  int n_rank;
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /*
+   *  Tag edges that cross the iso-line,
+   *  compute the intersection point
+   *  and the gradient at that point
+   */
+  int    *edge_tag      = PDM_array_zeros_int(n_edge);
+  double *edge_coord    = (double *) malloc(sizeof(double) * n_edge * 3);
+  double *edge_gradient = (double *) malloc(sizeof(double) * n_edge * 3);
+
+  _compute_edge_isosurf_intersection(isos,
+                                     n_edge,
+                                     pedge_vtx,
+                                     pvtx_coord,
+                                     pfield,
+                                     pgradient_field,
+                                     edge_tag,
+                                     edge_coord,
+                                     edge_gradient);
+
 
 }
 
@@ -1466,7 +1522,6 @@ _iso_surface_dist
   PDM_g_num_t *isoline_edge_ln_to_gn   = NULL;
   if(isos->dim == 2) {
     _iso_line_dist(isos,
-                   isos->comm,
                    n_entity_equi,
                    pn_edge_equi,
                    pn_vtx_equi,
@@ -1500,7 +1555,7 @@ _iso_surface_dist
                           isoline_edge_ln_to_gn);
     }
   } else {
-    _iso_surf_dist(isos);
+    // _iso_surf_dist(isos);
   }
 
   if(isos->dim == 3) {
