@@ -253,6 +253,13 @@ if (PDM_ENABLE_SHARED)
 
   get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
   target_include_directories(pdm_shared PUBLIC ${PDM_INC})
+  if (LAPACK_FOUND)
+    target_link_libraries(pdm_shared LAPACK::LAPACK)
+  else ()
+    if (BLAS_FOUND)
+      target_link_libraries(pdm_shared LAPACK::LAPACK)
+    endif()
+  endif()
 
 endif()
 
