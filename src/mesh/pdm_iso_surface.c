@@ -1339,6 +1339,7 @@ _iso_surface_dist
   PDM_g_num_t *pequi_parent_face_ln_to_gn = NULL;
   int         *pequi_cell_face_idx        = NULL;
   int         *pequi_cell_face            = NULL;
+  PDM_g_num_t *pequi_face_ln_to_gn        = NULL;
 
   if(isos->dim == 3) {
     PDM_g_num_t *block_cell_equi_parent_g_num = block_entity_equi_parent_g_num;
@@ -1352,6 +1353,13 @@ _iso_surface_dist
                                                              &pequi_parent_face_ln_to_gn,
                                                              &pequi_cell_face_idx,
                                                              &pequi_cell_face);
+
+    PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3, 1, PDM_FALSE, 0., isos->comm, PDM_OWNERSHIP_USER);
+    PDM_gnum_set_from_parents(gnum_face, 0, pn_face_equi, pequi_parent_face_ln_to_gn);
+    PDM_gnum_compute(gnum_face);
+    pequi_face_ln_to_gn = PDM_gnum_get(gnum_face, 0);
+    PDM_gnum_free(gnum_face);
+
   } else {
     pn_face_equi               = n_entity_equi;
     pequi_parent_face_ln_to_gn = block_entity_equi_parent_g_num;
@@ -1493,6 +1501,10 @@ _iso_surface_dist
     }
   } else {
     _iso_surf_dist(isos);
+  }
+
+  if(isos->dim == 3) {
+    free(pequi_face_ln_to_gn);
   }
 
   free(isoline_vtx_coord      );
