@@ -249,8 +249,6 @@ _setup_edge_upwind_and_downwind
 
         int i_cell = PDM_ABS(vtx_cell[idx_cell]) - 1;
 
-        log_trace("i_cell = %i \n", i_cell);
-
         for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
           int i_face = PDM_ABS(cell_face[idx_face])-1;
           if(face_flags[i_face] == 1) {
