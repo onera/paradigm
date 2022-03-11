@@ -1335,20 +1335,42 @@ _iso_surface_dist
   /*
    * A refléchir pour le 3D
    */
+  int          pn_face_equi               = 0;
+  PDM_g_num_t *pequi_parent_face_ln_to_gn = NULL;
+  int         *pequi_cell_face_idx        = NULL;
+  int         *pequi_cell_face            = NULL;
+
+  if(isos->dim == 3) {
+    PDM_g_num_t *block_cell_equi_parent_g_num = block_entity_equi_parent_g_num;
+    PDM_part_dconnectivity_to_pconnectivity_sort_single_part(isos->comm,
+                                                             isos->distrib_cell,
+                                                             isos->dcell_face_idx,
+                                                             isos->dcell_face,
+                                                             n_entity_equi,
+                                       (const PDM_g_num_t *) block_cell_equi_parent_g_num,
+                                                             &pn_face_equi,
+                                                             &pequi_parent_face_ln_to_gn,
+                                                             &pequi_cell_face_idx,
+                                                             &pequi_cell_face);
+  } else {
+    pn_face_equi               = n_entity_equi;
+    pequi_parent_face_ln_to_gn = block_entity_equi_parent_g_num;
+  }
+
   int          pn_edge_equi               = 0;
   PDM_g_num_t *pequi_parent_edge_ln_to_gn = NULL;
-  int         *pequi_entity_edge_idx      = NULL;
-  int         *pequi_entity_edge          = NULL;
+  int         *pequi_face_edge_idx        = NULL;
+  int         *pequi_face_edge            = NULL;
   PDM_part_dconnectivity_to_pconnectivity_sort_single_part(isos->comm,
-                                                           distrib_entity,
-                                                           dentity_edge_idx,
-                                                           dentity_edge,
-                                                           n_entity_equi,
-                                     (const PDM_g_num_t *) block_entity_equi_parent_g_num,
+                                                           isos->distrib_face,
+                                                           isos->dface_edge_idx,
+                                                           isos->dface_edge,
+                                                           pn_face_equi,
+                                     (const PDM_g_num_t *) pequi_parent_face_ln_to_gn,
                                                            &pn_edge_equi,
                                                            &pequi_parent_edge_ln_to_gn,
-                                                           &pequi_entity_edge_idx,
-                                                           &pequi_entity_edge);
+                                                           &pequi_face_edge_idx,
+                                                           &pequi_face_edge);
 
   PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3, 1, PDM_FALSE, 0., isos->comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_from_parents(gnum_edge, 0, pn_edge_equi, pequi_parent_edge_ln_to_gn);
@@ -1440,8 +1462,8 @@ _iso_surface_dist
                    n_entity_equi,
                    pn_edge_equi,
                    pn_vtx_equi,
-                   pequi_entity_edge_idx,
-                   pequi_entity_edge,
+                   pequi_face_edge_idx,
+                   pequi_face_edge,
                    pequi_edge_vtx,
                    block_entity_equi_shild_g_num,
                    pequi_edge_ln_to_gn,
@@ -1493,8 +1515,8 @@ _iso_surface_dist
   free(pequi_edge_vtx_idx);
   free(pequi_edge_vtx);
   free(pequi_parent_edge_ln_to_gn);
-  free(pequi_entity_edge_idx);
-  free(pequi_entity_edge);
+  free(pequi_face_edge_idx);
+  free(pequi_face_edge);
   free(block_entity_equi_parent_g_num);
   PDM_part_to_block_free(ptb);
 

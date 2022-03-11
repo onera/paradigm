@@ -236,7 +236,7 @@ _setup_edge_upwind_and_downwind
     double edge_diry = vtx_coord[3*i_vtx2+1] - vtx_coord[3*i_vtx1+1];
     double edge_dirz = vtx_coord[3*i_vtx2+2] - vtx_coord[3*i_vtx1+2];
 
-
+    log_trace(" -------------------------------------------- \n");
     for(int idx_vtx = 0; idx_vtx < 2; ++idx_vtx) {
 
       int lvtx    = 0;
@@ -451,7 +451,8 @@ int main(int argc, char *argv[])
                                                          0.,
                                                          0.,
                                                          0.,
-                                                         PDM_MESH_NODAL_HEXA8,
+                                                         // PDM_MESH_NODAL_HEXA8,
+                                                         PDM_MESH_NODAL_TETRA4,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
