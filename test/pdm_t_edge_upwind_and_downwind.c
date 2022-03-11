@@ -236,17 +236,21 @@ _setup_edge_upwind_and_downwind
     double edge_diry = vtx_coord[3*i_vtx2+1] - vtx_coord[3*i_vtx1+1];
     double edge_dirz = vtx_coord[3*i_vtx2+2] - vtx_coord[3*i_vtx1+2];
 
-    int lvtx    = 0;
-    int lface   = 0;
-    int lselect = 0;
 
     for(int idx_vtx = 0; idx_vtx < 2; ++idx_vtx) {
 
-      int i_vtx = edge_vtx[2*i_edge+idx_vtx];
+      int lvtx    = 0;
+      int lface   = 0;
+      int lselect = 0;
+
+      int i_vtx = edge_vtx[2*i_edge+idx_vtx]-1;
 
       for(int idx_cell = vtx_cell_idx[i_vtx]; idx_cell < vtx_cell_idx[i_vtx+1]; ++idx_cell) {
 
         int i_cell = PDM_ABS(vtx_cell[idx_cell]) - 1;
+
+        log_trace("i_cell = %i \n", i_cell);
+
         for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
           int i_face = PDM_ABS(cell_face[idx_face])-1;
           if(face_flags[i_face] == 1) {
@@ -344,8 +348,8 @@ _setup_edge_upwind_and_downwind
         }
       } /* End loop on selected face */
 
-      PDM_log_trace_array_int(idx_cell_keep, lface, "idx_cell_keep ::");
-      PDM_log_trace_array_int(idx_face_keep, lface, "idx_face_keep ::");
+      PDM_log_trace_array_int(idx_cell_keep, lselect, "idx_cell_keep ::");
+      PDM_log_trace_array_int(idx_face_keep, lselect, "idx_face_keep ::");
 
       // Debug
       for(int idx_face = 0; idx_face < lselect; ++idx_face) {
@@ -358,9 +362,9 @@ _setup_edge_upwind_and_downwind
         }
         log_trace("\n");
 
-        log_trace("face_center[%i]  = %12.5e / %12.5e / %12.5e ", i_face, face_center[3*i_face], face_center[3*i_face+1], face_center[3*i_face+2]);
-        log_trace("face_surf  [%i]  = %12.5e / %12.5e / %12.5e ", i_face, face_surf  [3*i_face], face_surf  [3*i_face+1], face_surf  [3*i_face+2]);
-        log_trace("pts_in_face[%i]  = %12.5e / %12.5e / %12.5e ", i_face, pts_in_face[3*idx_face], pts_in_face  [3*idx_face+1], pts_in_face[3*idx_face+2]);
+        log_trace("face_center[%i]  = %12.5e / %12.5e / %12.5e \n", i_face, face_center[3*i_face], face_center[3*i_face+1], face_center[3*i_face+2]);
+        log_trace("face_surf  [%i]  = %12.5e / %12.5e / %12.5e \n", i_face, face_surf  [3*i_face], face_surf  [3*i_face+1], face_surf  [3*i_face+2]);
+        log_trace("pts_in_face[%i]  = %12.5e / %12.5e / %12.5e \n", i_face, pts_in_face[3*idx_face], pts_in_face  [3*idx_face+1], pts_in_face[3*idx_face+2]);
       }
 
       /* Reset */
