@@ -761,8 +761,8 @@ int main(int argc, char *argv[])
     dgradient_field[3*i+2] = 0;
   }
 
-  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
-  // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
+  // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
 
   PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0);
   // PDM_iso_surface_plane_equation_set(isos, 1., 0.5, 0.25, -0.0234);
