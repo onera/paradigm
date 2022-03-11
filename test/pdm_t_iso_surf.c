@@ -24,6 +24,9 @@
 #include "pdm_logging.h"
 #include "pdm_gnum.h"
 #include "pdm_array.h"
+#include "pdm_poly_vol_gen.h"
+#include "pdm_distrib.h"
+#include "pdm_iso_surface.h"
 
 /*============================================================================
  * Type definitions
@@ -68,10 +71,11 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length)
+_read_args(int                    argc,
+           char                 **argv,
+           PDM_g_num_t           *n_vtx_seg,
+           double                *length,
+           PDM_Mesh_nodal_elt_t  *elt_type)
 {
   int i = 1;
 
@@ -98,11 +102,19 @@ _read_args(int            argc,
       else
         *length = atof(argv[i]);
     }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
   }
 }
+
 
 static
 inline
@@ -120,7 +132,7 @@ _unit_sphere
 static
 inline
 void
-_unit_circle_gradient
+_unit_sphere_gradient
 (
  double  x1,
  double  x2,
@@ -136,361 +148,6 @@ _unit_circle_gradient
 }
 
 
-static void
-_dump_vectors
-(
- const char   *filename,
- const int     n_pts,
- const double  pts_coord[],
- const double  vector[]
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  fprintf(f, "mesh\n");
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", pts_coord[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "CELLS %d %d\n", n_pts, 2*n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1 %d\n", i);
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1\n");
-  }
-
-  fprintf(f, "POINT_DATA %d\n", n_pts);
-  fprintf(f, "VECTORS vector double\n");
-  for (int i = 0; i < n_pts; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", vector[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fclose(f);
-}
-
-
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-extern void dgesvd_(const char *jobu,
-                    const char *jobvt,
-                    int        *m,
-                    int        *n,
-                    double     *a,
-                    int        *lda,
-                    double     *s,
-                    double     *u,
-                    int        *ldu,
-                    double     *vt,
-                    int        *ldvt,
-                    double     *work,
-                    int        *lwork,
-                    int        *info);
-
-
-static void
-_compute_least_square
-(
- const int  m,
- const int  n,
- double    *u,
- double    *s,
- double    *v,
- double    *b,
- double    *x
- )
-{
-  const double tol = 1.e-6;
-  double tol_s = tol * PDM_ABS(s[0]);
-
-  /* Compute y := S^{-1} U^T b */
-  double y[n];
-
-  for (int i = 0; i < n; i++) {
-
-    y[i] = 0.;
-
-    if (PDM_ABS(s[i]) > tol_s) {
-      for (int j = 0; j < m; j++) {
-        y[i] += u[j + m*i] * b[j];
-      }
-
-      y[i] /= s[i];
-    }
-  }
-
-  /* Compute x := V^T y */
-  for (int i = 0; i < n; i++) {
-    x[i] = 0.;
-
-    for (int j = 0; j < m; j++) {
-      x[i] += v[j + m*i] * y[j];
-    }
-  }
-}
-#endif
-
-
-static
-void
-_iso_surf
-(
- PDM_MPI_Comm  comm,
- int           n_cell,
- int           n_edge,
- int           n_vtx,
- int          *pcell_edge_idx,
- int          *pcell_edge,
- int          *pedge_vtx_idx,
- int          *pedge_vtx,
- PDM_g_num_t  *pcell_ln_to_gn,
- PDM_g_num_t  *pedge_ln_to_gn,
- PDM_g_num_t  *pvtx_ln_to_gn,
- double       *pvtx_coord
-)
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-
-  // PDM_UNUSED(comm);
-  PDM_UNUSED(n_cell);
-  // PDM_UNUSED(n_edge);
-  PDM_UNUSED(n_vtx);
-  PDM_UNUSED(pcell_edge_idx);
-  PDM_UNUSED(pcell_edge);
-  PDM_UNUSED(pedge_vtx_idx);
-  // PDM_UNUSED(pedge_vtx);
-  PDM_UNUSED(pedge_ln_to_gn);
-  PDM_UNUSED(pvtx_ln_to_gn);
-  PDM_UNUSED(pvtx_coord);
-
-  char filename[999];
-  sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_vtx,
-                            pvtx_coord,
-                            pvtx_ln_to_gn,
-                            NULL);
-  // return;
-  /*
-   *  Tag edges that cross the iso-line,
-   *  compute the intersection point
-   *  and the normal at that point
-   */
-  int    *tag_edge    = PDM_array_zeros_int(n_edge);
-  double *edge_coord  = (double *) malloc(sizeof(double) * n_edge * 3);
-  double *edge_normal = (double *) malloc(sizeof(double) * n_edge * 3);
-
-  for (int i = 0; i < n_edge; i++) {
-
-    int i_vtx1 = pedge_vtx[2*i  ]-1;
-    int i_vtx2 = pedge_vtx[2*i+1]-1;
-
-    double x1 = pvtx_coord[3*i_vtx1  ];
-    double y1 = pvtx_coord[3*i_vtx1+1];
-    double z1 = pvtx_coord[3*i_vtx1+2];
-
-    double x2 = pvtx_coord[3*i_vtx2  ];
-    double y2 = pvtx_coord[3*i_vtx2+1];
-    double z2 = pvtx_coord[3*i_vtx2+2];
-
-    double val1 = _unit_sphere(x1, y1, z1);
-    double val2 = _unit_sphere(x2, y2, z2);
-
-    int sgn1 = PDM_SIGN(val1);
-    int sgn2 = PDM_SIGN(val2);
-
-    if (sgn1 != sgn2) {
-      tag_edge[i] = 1;
-
-      double grad1[3], grad2[3];
-      _unit_circle_gradient(x1, y1, z1, &grad1[0], &grad1[1], &grad1[2]);
-      _unit_circle_gradient(x2, y2, z2, &grad2[0], &grad2[1], &grad2[2]);
-
-      double t = val1 / (val1 - val2);
-
-      edge_coord[3*i  ] = (1. - t)*x1 + t*x2;
-      edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
-      edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
-
-      double gx = (1. - t)*grad1[0] + t*grad2[0];
-      double gy = (1. - t)*grad1[1] + t*grad2[1];
-      double gz = (1. - t)*grad1[2] + t*grad2[2];
-      double imag = 1. / sqrt(gx*gx + gy*gy + gz*gz);
-
-      edge_normal[3*i  ] = gx * imag;
-      edge_normal[3*i+1] = gy * imag;
-      edge_normal[3*i+2] = gz * imag;
-    }
-
-    else {
-      edge_coord[3*i  ] = 0.;
-      edge_coord[3*i+1] = 0.;
-      edge_coord[3*i+2] = 0.;
-
-      edge_normal[3*i  ] = 0.;
-      edge_normal[3*i+1] = 0.;
-      edge_normal[3*i+2] = 0.;
-    }
-
-  }
-
-
-  sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
-  _dump_vectors (filename,
-                 n_edge,
-                 edge_coord,
-                 edge_normal);
-
-
-  int n_cell_edge_max = 0;
-  for (int i = 0; i < n_cell; i++) {
-    n_cell_edge_max = PDM_MAX(n_cell_edge_max,
-                              pcell_edge_idx[i+1] - pcell_edge_idx[i]);
-  }
-
-  double *mat = (double *) malloc (sizeof(double) * n_cell_edge_max * 3);
-  double *rhs = (double *) malloc (sizeof(double) * n_cell_edge_max);
-
-  double *S = (double *) malloc(sizeof(double) * 3);
-  double *U = (double *) malloc(sizeof(double) * n_cell_edge_max * 3);
-  double *V = (double *) malloc(sizeof(double) * n_cell_edge_max * 3);
-
-  double *isoline_vtx_coord = (double *) malloc(sizeof(double) * n_cell * 3);
-  double val_max = 0.;
-  int i_max = -1;
-  for (int i = 0; i < n_cell; i++) {
-
-    int n_tagged_edge = 0;
-    for (int j = pcell_edge_idx[i]; j < pcell_edge_idx[i+1]; j++) {
-      int iedge = PDM_ABS(pcell_edge[j]) - 1;
-      n_tagged_edge += tag_edge[iedge];
-    }
-
-    int k = 0;
-    for (int j = pcell_edge_idx[i]; j < pcell_edge_idx[i+1]; j++) {
-      int iedge = PDM_ABS(pcell_edge[j]) - 1;
-
-      if (tag_edge[iedge]) {
-
-        // mat[2*k  ] = edge_normal[3*iedge  ];
-        // mat[2*k+1] = edge_normal[3*iedge+1];
-        mat[k              ]   = edge_normal[3*iedge  ];
-        mat[k+n_tagged_edge]   = edge_normal[3*iedge+1];
-        mat[k+2*n_tagged_edge] = edge_normal[3*iedge+2];
-
-        rhs[k] = PDM_DOT_PRODUCT(edge_normal + 3*iedge, edge_coord + 3*iedge);
-
-        k++;
-      }
-    }
-
-    assert(k >= 3);
-
-    // log_trace("A =\n");
-    // for (int j = 0; j < n_tagged_edge; j++) {
-    //   log_trace("[%20.16f, %20.16f]\n", mat[j], mat[j+n_tagged_edge]);
-    // }
-
-    // log_trace("b = [%20.16f, %20.16f]\n", rhs[0], rhs[1]);
-
-    /* Compute SVD of mat */
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-    int info = 0;
-    int n_row = n_tagged_edge;
-    int n_col = 3;
-    int lwork = 100;//>= MAX(1,5*MIN(M,N))
-    double work[100];
-    dgesvd_("S",
-            "S",
-            &n_row,
-            &n_col,
-            mat,
-            &n_row,
-            S,
-            U,
-            &n_row,
-            V,
-            &n_row,
-            work,
-            &lwork,
-            &info);
-#else
-    printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
-    abort();
-#endif
-
-    // log_trace("S = [%20.16f, %20.16f]\n", S[0], S[1]);
-    // log_trace("U =\n");
-    // for (int j = 0; j < n_tagged_edge; j++) {
-    //   log_trace("[%20.16f, %20.16f]\n", U[j], U[j+n_tagged_edge]);
-    // }
-    // log_trace("V  =\n");
-    // for (int j = 0; j < n_tagged_edge; j++) {
-    //   log_trace("[%20.16f, %20.16f]\n", V[j], V[j+n_tagged_edge]);
-    // }
-
-    /* Solve for iso-line vertex coordinates */
-    double *sol = isoline_vtx_coord + 3*i;
-
-    _compute_least_square (n_tagged_edge,
-                           3,
-                           U,
-                           S,
-                           V,
-                           rhs,
-                           sol);
-    // sol[2] = 0.;
-    // log_trace("sol = [%20.16f, %20.16f]\n", sol[0], sol[1]);
-
-    // check solution
-    double val = PDM_ABS(_unit_sphere(sol[0], sol[1], sol[2]));
-    if (val_max < val) {
-      val_max = val;
-      i_max = i;
-    }
-
-    // if (val > 1.e-3) {
-    //   log_trace("!!! cell "PDM_FMT_G_NUM" has val = %f\n", pcell_ln_to_gn[i], val);
-    // }
-  }
-
-  log_trace("!!! val max = %f for parent cell "PDM_FMT_G_NUM"\n", val_max, pcell_ln_to_gn[i_max]);
-
-
-  sprintf(filename, "isoline_vtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_cell,
-                            isoline_vtx_coord,
-                            pcell_ln_to_gn,
-                            NULL);
-  free (isoline_vtx_coord);
-
-
-  free (mat);
-  free (rhs);
-  free (S);
-  free (U);
-  free (V);
-
-
-  free(tag_edge);
-  free(edge_coord);
-  free(edge_normal);
-
-}
 
 
 /**
@@ -506,8 +163,14 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length    = 1.;
+  PDM_g_num_t          n_vtx_seg = 10;
+  double               length    = 1.;
+  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TETRA4;
+  //  5 -> tetra
+  //  6 -> pyramid
+  //  7 -> prism
+  //  8 -> hexa
+  //  9 -> poly3d
 
   /*
    *  Read args
@@ -516,457 +179,195 @@ int main(int argc, char *argv[])
   _read_args(argc,
              argv,
              &n_vtx_seg,
-             &length);
+             &length,
+             &elt_type);
+
+  assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 3);
 
   /*
    *  Init
    */
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   int i_rank;
   int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
 
   /*
    *  Create distributed cube
    */
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_g_num_t *distrib_cell = NULL;
+  PDM_g_num_t *distrib_face = NULL;
+  PDM_g_num_t *distrib_edge = NULL;
+  PDM_g_num_t *vtx_distrib  = NULL;
 
-  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
-                                                         n_vtx_seg,
-                                                         2*n_vtx_seg,
-                                                         3*n_vtx_seg,
-                                                         length,
-                                                         -0.5,
-                                                         -0.5,
-                                                         -0.5,
-                                                         PDM_MESH_NODAL_TETRA4,
-                                                         1,
-                                                         PDM_OWNERSHIP_KEEP);
-  PDM_dcube_nodal_gen_build (dcube);
+  PDM_dcube_nodal_t          *dcube   = NULL;
+  PDM_dmesh_nodal_to_dmesh_t *dmntodm = NULL;
 
+  int dn_cell = 0;
+  int dn_face = 0;
+  int dn_edge = 0;
+  int dn_vtx  = 0;
+  double      *dvtx_coord     = NULL;
+  int         *dcell_face_idx = NULL;
+  PDM_g_num_t *dcell_face     = NULL;
+  int         *dface_edge_idx = NULL;
+  PDM_g_num_t *dface_edge     = NULL;
+  int         *dedge_vtx_idx  = NULL;
+  PDM_g_num_t *dedge_vtx      = NULL;
 
-  PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
-  PDM_dmesh_nodal_generate_distribution(dmn);
-
-  PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
-  int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-
-  if(1 == 1) {
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
-  }
-
-  PDM_dmesh_nodal_to_dmesh_t* dmntodm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
-
-  PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
-
-  PDM_dmesh_nodal_to_dmesh_set_post_treat_result(dmntodm, 1);
-
-  PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-
-  PDM_dmesh_t* dmesh = NULL;
-  PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
-
-  int         *dcell_face_idx;
-  PDM_g_num_t *dcell_face;
-  int dn_cell = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                           &dcell_face,
-                                           &dcell_face_idx,
-                                           PDM_OWNERSHIP_KEEP);
-
-  int         *dface_edge_idx;
-  PDM_g_num_t *dface_edge;
-  int dn_face = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                           &dface_edge,
-                                           &dface_edge_idx,
-                                           PDM_OWNERSHIP_KEEP);
-  int         *dedge_vtx_idx;
-  PDM_g_num_t *dedge_vtx;
-  int dn_edge  = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                           &dedge_vtx,
-                                           &dedge_vtx_idx,
-                                           PDM_OWNERSHIP_KEEP);
-
-  if(0 == 1) {
-    PDM_log_trace_connectivity_long(dface_edge_idx, dface_edge, dn_face, "dface_edge ::");
-    PDM_log_trace_connectivity_long(dedge_vtx_idx , dedge_vtx , dn_edge, "dedge_vtx  ::");
-  }
-
-  PDM_UNUSED(dn_face);
-  PDM_UNUSED(dn_edge);
-  PDM_UNUSED(dn_vtx);
-  PDM_UNUSED(dvtx_coord);
-
-  /*
-   * Select gnum that contains iso-surface
-   */
-  PDM_g_num_t* distrib_edge = NULL;
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE  , &distrib_edge);
-  assert(distrib_edge != NULL);
-
-  PDM_g_num_t* distrib_face = NULL;
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE  , &distrib_face);
-  assert(distrib_face != NULL);
-
-  PDM_g_num_t* distrib_cell = NULL;
-  PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL  , &distrib_cell);
-  assert(distrib_cell != NULL);
-
-  PDM_g_num_t* edge_ln_to_gn = (PDM_g_num_t * ) malloc( dn_edge * sizeof(PDM_g_num_t));
-  for(int i = 0; i < dn_edge; ++i) {
-    edge_ln_to_gn[i] = distrib_edge[i_rank] + i + 1;
-  }
-
-  int          pn_vtx           = 0;
-  PDM_g_num_t *pvtx_ln_to_gn  = NULL;
-  int         *pedge_vtx_idx    = NULL;
-  int         *pedge_vtx        = NULL;
-  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           distrib_edge,
-                                                           dedge_vtx_idx,
-                                                           dedge_vtx,
-                                                           dn_edge,
-                                     (const PDM_g_num_t *) edge_ln_to_gn,
-                                                           &pn_vtx,
-                                                           &pvtx_ln_to_gn,
-                                                           &pedge_vtx_idx,
-                                                           &pedge_vtx);
-
-  double **tmp_pvtx_coord = NULL;
-  PDM_part_dcoordinates_to_pcoordinates(comm,
+  if (elt_type < PDM_MESH_NODAL_POLY_3D) {
+    dcube = PDM_dcube_nodal_gen_create (comm,
+                                        n_vtx_seg,
+                                        n_vtx_seg,
+                                        n_vtx_seg,
+                                        length,
+                                        -0.1,//-0.5,
+                                        0.1,//-0.5,
+                                        0.13,//-0.5,
+                                        elt_type,
                                         1,
-                                        vtx_distrib,
-                                        dvtx_coord,
-                                        &pn_vtx,
-                 (const PDM_g_num_t **) &pvtx_ln_to_gn,
-                                        &tmp_pvtx_coord);
-  double* pvtx_coord = tmp_pvtx_coord[0];
-  free(tmp_pvtx_coord);
+                                        PDM_OWNERSHIP_KEEP);
 
-  /*
-   * Select edge
-   */
-  int    *dedge_tag    = (int    * ) malloc(    dn_edge * sizeof(int   ));
-  double *dedge_center = (double * ) malloc(3 * dn_edge * sizeof(double));
+    PDM_dcube_nodal_gen_build (dcube);
 
-  for(int i = 0; i < dn_edge; ++i) {
+    PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+    PDM_dmesh_nodal_generate_distribution(dmn);
 
-    int i_vtx1 = pedge_vtx[2*i  ]-1;
-    int i_vtx2 = pedge_vtx[2*i+1]-1;
+    vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+    dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
-    dedge_tag[i] = 0;
-
-    double x1 = pvtx_coord[3*i_vtx1  ];
-    double y1 = pvtx_coord[3*i_vtx1+1];
-    double z1 = pvtx_coord[3*i_vtx1+2];
-
-    double x2 = pvtx_coord[3*i_vtx2  ];
-    double y2 = pvtx_coord[3*i_vtx2+1];
-    double z2 = pvtx_coord[3*i_vtx2+2];
-
-    double val1 = _unit_sphere(x1, y1, z1);
-    double val2 = _unit_sphere(x2, y2, z2);
-
-    int sgn1 = PDM_SIGN(val1);
-    int sgn2 = PDM_SIGN(val2);
-
-    if(sgn1 * sgn2 < 0) {
-      dedge_tag[i] = 1;
+    if(1 == 1) {
+      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
+      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
     }
 
-    dedge_center[3*i  ] = 0.5 * (x1 + x2);
-    dedge_center[3*i+1] = 0.5 * (y1 + y2);
-    dedge_center[3*i+2] = 0.5 * (z1 + z2);
+    dmntodm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
 
+    PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
+
+    PDM_dmesh_nodal_to_dmesh_set_post_treat_result(dmntodm, 1);
+
+    PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+
+    PDM_dmesh_t* dmesh = NULL;
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dmesh);
+
+    dn_cell = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                         &dcell_face,
+                                         &dcell_face_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+    dn_face = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                         &dface_edge,
+                                         &dface_edge_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+    dn_edge  = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &dedge_vtx,
+                                          &dedge_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
+
+    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &distrib_edge);
+    assert(distrib_edge != NULL);
+
+    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
+    assert(distrib_face != NULL);
+
+    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL, &distrib_cell);
+    assert(distrib_cell != NULL);
   }
 
-  int* val = malloc(pn_vtx * sizeof(int));
-  printf("pn_vtx = %i \n", pn_vtx);
-  for(int i = 0; i < pn_vtx; ++i) {
-    double x1 = pvtx_coord[3*i  ];
-    double y1 = pvtx_coord[3*i+1];
-    double z1 = pvtx_coord[3*i+2];
-    val[i]    = PDM_SIGN( _unit_sphere(x1, y1, z1) );
+  else {
+    // polyvol_gen
+    abort();
   }
 
-  char filename[999];
-  sprintf(filename, "out_edge_tag_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            pn_vtx,
-                            pvtx_coord,
-                            NULL,
-                            val);
-  free(val);
 
+  // Compute dfield and gradient field
+  double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
+  double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
 
-  // PDM_log_trace_array_int(dedge_tag, dn_edge, "dedge_tag");
-  free(pvtx_coord);
+  for(int i = 0; i < dn_vtx; ++i) {
 
-  // Compute dcell_edge to get all cell assiciate to an edge that cross iso surf
-  int         *dcell_edge_idx = NULL;
-  PDM_g_num_t *dcell_edge     = NULL;
-  PDM_deduce_combine_connectivity(comm,
-                                  distrib_cell,
-                                  distrib_face,
-                                  dcell_face_idx,
-                                  dcell_face,
-                                  dface_edge_idx,
-                                  dface_edge,
-                                  1,
-                                  &dcell_edge_idx,
-                                  &dcell_edge);
+    double x1 = dvtx_coord[3*i  ];
+    double y1 = dvtx_coord[3*i+1];
+    double z1 = dvtx_coord[3*i+2];
+    dfield[i] = _unit_sphere(x1, y1, z1);
 
-  /*
-   * block_to_part on dface_edge
-   */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_edge,
-                               (const PDM_g_num_t **) &dcell_edge,
-                                                      &dcell_edge_idx[dn_cell],
-                                                      1,
-                                                      comm);
-
-  int strid_one = 1;
-  int **tmp_dcell_edge_tag = NULL;
-  PDM_block_to_part_exch(btp,
-                         sizeof(int),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &strid_one,
-            (void *  )   dedge_tag,
-            (int  ***)   NULL,
-            (void ***)  &tmp_dcell_edge_tag);
-  int *dcell_edge_tag = tmp_dcell_edge_tag[0];
-  free(tmp_dcell_edge_tag);
-  free(dedge_tag);
-
-  double **tmp_dcell_edge_center = NULL;
-  PDM_block_to_part_exch(btp,
-                         3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &strid_one,
-            (void *  )   dedge_center,
-            (int  ***)   NULL,
-            (void ***)  &tmp_dcell_edge_center);
-  double *dcell_edge_center = tmp_dcell_edge_center[0];
-  free(tmp_dcell_edge_center);
-  free(dedge_center);
-
-  int         *dcell_tag            = malloc(     dn_cell * sizeof(int        ));
-  PDM_g_num_t *cell_to_extract_gnum = malloc(     dn_cell * sizeof(PDM_g_num_t));
-  double      *dcell_center         = malloc( 3 * dn_cell * sizeof(double     ));
-  int  n_cell_tag = 0;
-  int idx_write   = 0;
-  for(int i = 0; i < dn_cell; ++i) {
-    dcell_tag[i] = 0;
-
-
-
-    for(int idx_cell = dcell_edge_idx[i]; idx_cell < dcell_edge_idx[i+1]; ++idx_cell) {
-      if(dcell_edge_tag[idx_cell] == 1) {
-        dcell_tag[i] = 1;
-        cell_to_extract_gnum[n_cell_tag++] = distrib_cell[i_rank] + i + 1;
-        break;
-      }
-    }
-
-    if(dcell_tag[i] == 1) {
-      dcell_center[3*idx_write  ] = 0.;
-      dcell_center[3*idx_write+1] = 0.;
-      dcell_center[3*idx_write+2] = 0.;
-
-      double inv = 1./((double) (dcell_edge_idx[i+1] - dcell_edge_idx[i]));
-      for(int idx_cell = dcell_edge_idx[i]; idx_cell < dcell_edge_idx[i+1]; ++idx_cell) {
-        dcell_center[3*idx_write  ] += dcell_edge_center[3*idx_cell  ];
-        dcell_center[3*idx_write+1] += dcell_edge_center[3*idx_cell+1];
-        dcell_center[3*idx_write+2] += dcell_edge_center[3*idx_cell+2];
-      }
-      dcell_center[3*idx_write  ] = dcell_center[3*idx_write  ] * inv;
-      dcell_center[3*idx_write+1] = dcell_center[3*idx_write+1] * inv;
-      dcell_center[3*idx_write+2] = dcell_center[3*idx_write+2] * inv;
-
-      idx_write++;
-    }
-
-  }
-  free(dcell_edge_center);
-
-  if(0 == 1) {
-    PDM_log_trace_array_int (dedge_tag, dn_cell, "dcell_tag");
-    PDM_log_trace_array_long(cell_to_extract_gnum, n_cell_tag, "cell_to_extract_gnum");
+    _unit_sphere_gradient(x1, y1, z1,
+                          &dgradient_field[3*i],
+                          &dgradient_field[3*i+1],
+                          &dgradient_field[3*i+2]);
   }
 
-  PDM_block_to_part_free(btp);
 
-  free(edge_ln_to_gn);
-  free(pvtx_ln_to_gn);
-  free(pedge_vtx_idx);
-  free(pedge_vtx);
-  free(dcell_edge_tag);
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
+  // PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
 
-  // Extract
+  PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0);
+  // PDM_iso_surface_plane_equation_set(isos, 1., 0.5, 0.25, -0.0234);
 
-  sprintf(filename, "out_equi_cell_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_cell_tag,
-                            dcell_center,
-                            NULL,
-                            NULL);
+  PDM_iso_surface_dconnectivity_set(isos,
+                                    PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                    dcell_face,
+                                    dcell_face_idx);
+  PDM_iso_surface_dconnectivity_set(isos,
+                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    dface_edge,
+                                    dface_edge_idx);
+  PDM_iso_surface_dconnectivity_set(isos,
+                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                    dedge_vtx,
+                                    dedge_vtx_idx);
+
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_CELL  , distrib_cell);
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_FACE  , distrib_face);
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_EDGE  , distrib_edge);
+  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_VERTEX, vtx_distrib);
+
+  PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
+  PDM_iso_surface_dfield_set     (isos, dfield         );
+  PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+
+  PDM_iso_surface_compute(isos);
+
+  PDM_iso_surface_free(isos);
+
+  free(dfield);
+  free(dgradient_field);
 
 
-
-  /*
-   * Rebuild partition that contains faces and reequilibrate
-   */
-  PDM_gen_gnum_t* gnum_equi = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
-  PDM_gnum_set_from_coords(gnum_equi, 0, n_cell_tag, dcell_center, NULL);
-  PDM_gnum_compute(gnum_equi);
-  PDM_g_num_t* child_equi_cell_gnum = PDM_gnum_get(gnum_equi, 0);
-  PDM_gnum_free(gnum_equi);
-  free(dcell_center);
-
-  /*
-   * Equilibrage avec le part_to_block
-   */
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                       1.,
-                                                       &child_equi_cell_gnum,
-                                                       NULL,
-                                                       &n_cell_tag,
-                                                       1,
-                                                       comm);
-
-  int n_cell_equi = PDM_part_to_block_n_elt_block_get (ptb);
-  PDM_g_num_t *block_cell_g_num_child_equi = PDM_part_to_block_block_gnum_get (ptb);
-
-  PDM_g_num_t *block_cell_equi_parent_g_num = NULL;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-               (void **) &cell_to_extract_gnum,
-                          NULL,
-               (void **) &block_cell_equi_parent_g_num);
-
-  if(0 == 1) {
-    PDM_log_trace_array_long(block_cell_equi_parent_g_num, n_cell_equi, "block_cell_equi_parent_g_num ::");
-    PDM_log_trace_array_long(block_cell_g_num_child_equi , n_cell_equi, "block_cell_g_num_child_equi  ::");
+  if (elt_type < PDM_MESH_NODAL_POLY_3D) {
+    PDM_dmesh_nodal_to_dmesh_free(dmntodm);
+    PDM_dcube_nodal_gen_free(dcube);
+  } else {
+    free(distrib_cell);
+    free(distrib_face);
+    free(distrib_edge);
+    free(vtx_distrib);
+    free(dvtx_coord);
+    free(dcell_face_idx);
+    free(dcell_face);
+    free(dface_edge_idx);
+    free(dface_edge);
+    free(dedge_vtx_idx);
+    free(dedge_vtx);
   }
-
-  /*
-   * Je prepare tout pour mon petit Bastien
-   */
-  int          pn_edge_equi        = 0;
-  PDM_g_num_t *pequi_parent_edge_ln_to_gn = NULL;
-  int         *pequi_cell_edge_idx = NULL;
-  int         *pequi_cell_edge     = NULL;
-  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           distrib_cell,
-                                                           dcell_edge_idx,
-                                                           dcell_edge,
-                                                           n_cell_equi,
-                                     (const PDM_g_num_t *) block_cell_equi_parent_g_num,
-                                                           &pn_edge_equi,
-                                                           &pequi_parent_edge_ln_to_gn,
-                                                           &pequi_cell_edge_idx,
-                                                           &pequi_cell_edge);
-
-  PDM_gen_gnum_t* gnum_edge = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
-  PDM_gnum_set_from_parents(gnum_edge, 0, pn_edge_equi, pequi_parent_edge_ln_to_gn);
-  PDM_gnum_compute(gnum_edge);
-  PDM_g_num_t* pequi_edge_ln_to_gn = PDM_gnum_get(gnum_edge, 0);
-  PDM_gnum_free(gnum_edge);
-
-
-  int          pn_vtx_equi        = 0;
-  PDM_g_num_t *pequi_parent_vtx_ln_to_gn = NULL;
-  int         *pequi_edge_vtx_idx = NULL;
-  int         *pequi_edge_vtx     = NULL;
-  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
-                                                           distrib_edge,
-                                                           dedge_vtx_idx,
-                                                           dedge_vtx,
-                                                           pn_edge_equi,
-                                     (const PDM_g_num_t *) pequi_parent_edge_ln_to_gn,
-                                                           &pn_vtx_equi,
-                                                           &pequi_parent_vtx_ln_to_gn,
-                                                           &pequi_edge_vtx_idx,
-                                                           &pequi_edge_vtx);
-
-  PDM_gen_gnum_t* gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 0., comm, PDM_OWNERSHIP_USER);
-  PDM_gnum_set_from_parents(gnum_vtx, 0, pn_vtx_equi, pequi_parent_vtx_ln_to_gn);
-  PDM_gnum_compute(gnum_vtx);
-  PDM_g_num_t* pequi_vtx_ln_to_gn = PDM_gnum_get(gnum_vtx, 0);
-  PDM_gnum_free(gnum_vtx);
-
-  double **tmp_pequi_vtx_coord = NULL;
-  PDM_part_dcoordinates_to_pcoordinates(comm,
-                                        1,
-                                        vtx_distrib,
-                                        dvtx_coord,
-                                        &pn_vtx_equi,
-                 (const PDM_g_num_t **) &pequi_parent_vtx_ln_to_gn,
-                                        &tmp_pequi_vtx_coord);
-  double* pequi_vtx_coord = tmp_pequi_vtx_coord[0];
-  free(tmp_pequi_vtx_coord);
-
-  _iso_surf(comm,
-            n_cell_equi,
-            pn_edge_equi,
-            pn_vtx_equi,
-            pequi_cell_edge_idx,
-            pequi_cell_edge,
-            pequi_edge_vtx_idx,
-            pequi_edge_vtx,
-            block_cell_equi_parent_g_num,
-            pequi_edge_ln_to_gn,
-            pequi_vtx_ln_to_gn,
-            pequi_vtx_coord);
-
-  free(pequi_edge_ln_to_gn);
-  free(pequi_vtx_ln_to_gn);
-
-
-  free(pequi_vtx_coord);
-
-  free(pequi_parent_vtx_ln_to_gn);
-  free(pequi_edge_vtx_idx);
-  free(pequi_edge_vtx);
-
-  free(pequi_parent_edge_ln_to_gn);
-  free(pequi_cell_edge_idx);
-  free(pequi_cell_edge);
-
-
-  free(block_cell_equi_parent_g_num);
-
-
-  PDM_part_to_block_free(ptb);
-  free(dcell_edge_idx);
-  free(dcell_edge);
-  free(child_equi_cell_gnum);
-
-
-  free(cell_to_extract_gnum);
-  free(dcell_tag);
-
-  PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  PDM_dcube_nodal_gen_free(dcube);
 
   if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }
 
-
   PDM_MPI_Finalize();
 
-  return 0;
 }

@@ -132,7 +132,7 @@ _unit_circle
  double y
 )
 {
-  return x * x + y * y - 0.1;
+  // return x * x + y * y - 0.1;
   // return _A*x*x + _B*x*y + _C*y*y + _D*x + _E*y + _F;
   // double a = (x*x + y*y - 1);
   // return a*a*a - x*x*(6*y*x*x + x*x - 2*y*y*y - 6*y);
@@ -143,10 +143,10 @@ _unit_circle
   // return PDM_MAX(PDM_ABS(x), PDM_ABS(y)) - 0.25;
   // return PDM_MIN(PDM_ABS(x) + PDM_ABS(y) - 0.25, (x-0.1)*(x-0.1) + (y+0.2)*(y+0.2) - 0.07);
 
-  // double v1 = (x-0.23)*(x-0.23) + (y-0.28)*(y-0.28) - 0.03;
-  // double v2 = (x+0.23)*(x+0.23) + (y-0.28)*(y-0.28) - 0.03;
-  // double v3 = x*x + y*y - 0.1;
-  // return PDM_MIN(PDM_MIN(v1, v2), v3);
+  double v1 = (x-0.23)*(x-0.23) + (y-0.28)*(y-0.28) - 0.03;
+  double v2 = (x+0.23)*(x+0.23) + (y-0.28)*(y-0.28) - 0.03;
+  double v3 = x*x + y*y - 0.1;
+  return PDM_MIN(PDM_MIN(v1, v2), v3);
 }
 
 
@@ -163,7 +163,7 @@ _unit_circle_gradient
 {
   *df_dx = 2*x;
   *df_dy = 2*y;
-  return;
+  // return;
   *df_dx = 2*_A*x + _B*y + _D;
   *df_dy = 2*_C*y + _B*x + _E;
 
@@ -328,22 +328,23 @@ int main(int argc, char *argv[])
              &length,
              &elt_type);
 
+  assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 2);
+
   /*
    *  Init
    */
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   int i_rank;
   int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   /*
    *  Create distributed cube
    */
-
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   PDM_g_num_t *distrib_face = NULL;
   PDM_g_num_t *distrib_edge = NULL;

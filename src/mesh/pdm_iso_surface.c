@@ -163,43 +163,117 @@ extern void dgesvd_(const char *jobu,
                     int        *info);
 #endif
 
+
 static void
-_compute_least_square
+_solve_least_square
 (
  const int  m,
  const int  n,
- double    *u,
- double    *s,
- double    *v,
+ double    *A,
+ double    *U,
+ double    *S,
+ double    *V,
  double    *b,
  double    *x
  )
 {
+  if (1) {
+    log_trace("A =\n");
+    for (int i = 0; i < m; i++) {
+      log_trace("[");
+      for (int j = 0; j < n; j++) {
+        log_trace("%20.16f ", A[i+m*j]);
+      }
+      log_trace("]\n");
+    }
+
+    log_trace("b = [");
+    for (int i = 0; i < m; i++) {
+      log_trace("%20.16f ", b[i]);
+    }
+    log_trace("]\n");
+  }
+
+  /* Compute SVD of A */
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+  int info = 0;
+  int n_row = m;
+  int n_col = n;
+  int lwork = 100;
+  double work[100];
+  dgesvd_("S",
+          "S",
+          &n_row,
+          &n_col,
+          A,
+          &n_row,
+          S,
+          U,
+          &n_row,
+          V,
+          &n_row,
+          work,
+          &lwork,
+          &info);
+#else
+    printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
+    abort();
+#endif
+
+  log_trace("U =\n");
+  for (int i = 0; i < m; i++) {
+    log_trace("[");
+    for (int j = 0; j < n; j++) {
+      log_trace("%20.16f ", U[i+m*j]);
+    }
+    log_trace("]\n");
+  }
+
+  log_trace("S = [");
+  for (int i = 0; i < n; i++) {
+    log_trace("%20.16f ", S[i]);
+  }
+  log_trace("]\n");
+
+  log_trace("V =\n");
+  for (int i = 0; i < m; i++) {
+    log_trace("[");
+    for (int j = 0; j < n; j++) {
+      log_trace("%20.16f ", V[i+m*j]);
+    }
+    log_trace("]\n");
+  }
+
   const double tol = 1.e-4;
-  double tol_s = tol * PDM_ABS(s[0]);
+  double tol_s = tol * PDM_ABS(S[0]);
 
   /* Compute y := S^{-1} U^T b */
   double y[n];
 
+  log_trace("y = [");
   for (int i = 0; i < n; i++) {
 
     y[i] = 0.;
 
-    if (PDM_ABS(s[i]) > tol_s) {
+    if (PDM_ABS(S[i]) > tol_s) {
       for (int j = 0; j < m; j++) {
-        y[i] += u[j + m*i] * b[j];
+        y[i] += U[j + m*i] * b[j];
       }
 
-      y[i] /= s[i];
+      y[i] /= S[i];
     }
+    log_trace("%f ", y[i]);
   }
+  log_trace("]\n");
 
   /* Compute x := V^T y */
   for (int i = 0; i < n; i++) {
     x[i] = 0.;
 
     for (int j = 0; j < m; j++) {
-      x[i] += v[j + m*i] * y[j];
+      if (V[j + m*i] >= 0 || V[j + m*i] < 0) {
+        x[i] += V[j + m*i] * y[j];
+      }
     }
   }
 }
@@ -258,11 +332,11 @@ _compute_edge_isosurf_intersection
       } else {
         grad1[0] = pgradient_field[3*i_vtx1  ];
         grad1[1] = pgradient_field[3*i_vtx1+1];
-        grad1[2] = 0.;
+        grad1[2] = pgradient_field[3*i_vtx1+2];
 
         grad2[0] = pgradient_field[3*i_vtx2  ];
         grad2[1] = pgradient_field[3*i_vtx2+1];
-        grad2[2] = 0.;
+        grad2[2] = pgradient_field[3*i_vtx2+2];
       }
 
       // Linear interpolation
@@ -592,12 +666,13 @@ _iso_line_dist
   pface_edge_inter_idx[0] = 0;
   PDM_g_num_t *pface_edge_inter_g_num = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * pface_edge_idx[n_face]);
 
-  double *mat = (double *) malloc (sizeof(double) * n_face_edge_max * 2);
+  const int dim = 2;
+  double *mat = (double *) malloc (sizeof(double) * n_face_edge_max * dim);
   double *rhs = (double *) malloc (sizeof(double) * n_face_edge_max);
 
-  double *S = (double *) malloc(sizeof(double) * 2);
-  double *U = (double *) malloc(sizeof(double) * n_face_edge_max * 2);
-  double *V = (double *) malloc(sizeof(double) * n_face_edge_max * 2);
+  double *S = (double *) malloc(sizeof(double) * dim);
+  double *U = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
+  double *V = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
 
   *isoline_n_vtx = n_face;
   *isoline_vtx_coord       = (double *)      malloc(sizeof(double)      * n_face * 3);
@@ -645,30 +720,30 @@ _iso_line_dist
     // log_trace("b = [%20.16f, %20.16f]\n", rhs[0], rhs[1]);
 
     /* Compute SVD of mat */
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-    int info = 0;
-    int n_row = n_tagged_edge;
-    int n_col = 2;
-    int lwork = 15;//>= MAX(1,5*MIN(M,N))
-    double work[15];
-    dgesvd_("S",
-            "S",
-            &n_row,
-            &n_col,
-            mat,
-            &n_row,
-            S,
-            U,
-            &n_row,
-            V,
-            &n_row,
-            work,
-            &lwork,
-            &info);
-#else
-    printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
-    abort();
-#endif
+// #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+//     int info = 0;
+//     int n_row = n_tagged_edge;
+//     int n_col = 2;
+//     int lwork = 15;//>= MAX(1,5*MIN(M,N))
+//     double work[15];
+//     dgesvd_("S",
+//             "S",
+//             &n_row,
+//             &n_col,
+//             mat,
+//             &n_row,
+//             S,
+//             U,
+//             &n_row,
+//             V,
+//             &n_row,
+//             work,
+//             &lwork,
+//             &info);
+// #else
+//     printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
+//     abort();
+// #endif
 
     // log_trace("S = [%20.16f, %20.16f]\n", S[0], S[1]);
     // log_trace("U =\n");
@@ -683,8 +758,9 @@ _iso_line_dist
     /* Solve for iso-line vertex coordinates */
     double *sol = *isoline_vtx_coord + 3*i;
 
-    _compute_least_square (n_tagged_edge,
-                           n_col,
+    _solve_least_square (n_tagged_edge,
+                           dim,
+                           mat,
                            U,
                            S,
                            V,
@@ -1059,7 +1135,7 @@ _iso_surf_dist
   double             *pgradient_field,
   int                *isoline_n_vtx,
   double            **isoline_vtx_coord,
-  PDM_g_num_t       **isoline_vtx_parent_face,
+  PDM_g_num_t       **isoline_vtx_parent_cell,
   PDM_g_num_t       **isoline_vtx_ln_to_gn,
   int                *isoline_n_face,
   int               **isoline_face_vtx_idx,
@@ -1073,6 +1149,14 @@ _iso_surf_dist
   PDM_MPI_Comm_rank(comm, &i_rank);
   int n_rank;
   PDM_MPI_Comm_size(comm, &n_rank);
+
+  char filename[999];
+  sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_vtx,
+                            pvtx_coord,
+                            pvtx_ln_to_gn,
+                            NULL);
 
   /*
    *  Tag edges that cross the iso-line,
@@ -1094,6 +1178,210 @@ _iso_surf_dist
                                      edge_gradient);
 
 
+  sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
+  _dump_vectors (filename,
+                 n_edge,
+                 edge_coord,
+                 edge_gradient,
+                 NULL);
+
+  int n_face_edge_max = 0;
+  for (int i = 0; i < n_face; i++) {
+    n_face_edge_max = PDM_MAX(n_face_edge_max,
+                              pface_edge_idx[i+1] - pface_edge_idx[i]);
+  }
+
+  int n_cell_edge_max = 0;
+  for (int i = 0; i < n_cell; i++) {
+    int n_cell_edge = 0;
+
+    for (int j = pcell_face_idx[i]; j < pcell_face_idx[i+1]; j++) {
+      int iface = PDM_ABS(pcell_face[j]) - 1;
+      n_cell_edge += pface_edge_idx[iface+1] - pface_edge_idx[iface];
+    }
+
+    n_cell_edge_max = PDM_MAX(n_cell_edge_max, n_cell_edge);
+  }
+  n_cell_edge_max /= 2;
+
+
+  int *face_tag = PDM_array_zeros_int(n_face);
+
+  const int dim = 3;
+  double *mat_cell = (double *) malloc (sizeof(double) * n_cell_edge_max * dim);
+  double *rhs_cell = (double *) malloc (sizeof(double) * n_cell_edge_max);
+  double *mat_face = (double *) malloc (sizeof(double) * n_face_edge_max * dim);
+  double *rhs_face = (double *) malloc (sizeof(double) * n_face_edge_max);
+
+  double *S_cell = (double *) malloc(sizeof(double) * dim);
+  double *U_cell = (double *) malloc(sizeof(double) * n_cell_edge_max * dim);
+  double *V_cell = (double *) malloc(sizeof(double) * n_cell_edge_max * dim);
+  double *S_face = (double *) malloc(sizeof(double) * dim);
+  double *U_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
+  double *V_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
+
+  int *is_visited    = PDM_array_zeros_int(n_edge);
+  int *visited_edges = (int *) malloc(sizeof(int) * n_edge);
+
+  double *face_coord = (double *) malloc(sizeof(double) * n_face * 3);
+  double *cell_coord = (double *) malloc(sizeof(double) * n_cell * 3);
+
+  // tmp -->>
+  for (int i = 0; i < 3*n_cell; i++) {
+    cell_coord[i] = 0.;
+  }
+  for (int i = 0; i < 3*n_face; i++) {
+    face_coord[i] = 0.;
+  }
+  //<<--
+
+  for (int icell = 0; icell < n_cell; icell++) {
+
+    int n_cell_edge = 0;
+
+    //-->>
+    for (int i = 0; i < n_cell_edge_max * dim; i++) {
+      mat_cell[i] = 123456789.;
+    }
+    for (int i = 0; i < n_cell_edge_max ; i++) {
+     rhs_cell[i] = 987654321.;
+    }
+    //<<--
+
+    // First loop to count number of tagged edges
+    for (int jface = pcell_face_idx[icell]; jface < pcell_face_idx[icell+1]; jface++) {
+
+      int iface = PDM_ABS(pcell_face[jface]) - 1;
+
+      for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+
+        int iedge = PDM_ABS(pface_edge[jedge]) - 1;
+
+        if (edge_tag[iedge] != 0) {
+          n_cell_edge++;
+        }
+      } // end of loop on edges of current face
+
+    } // end of loop on faces of current cell
+
+
+    log_trace("_n_cell_edge = %d\n", n_cell_edge);
+    n_cell_edge /= 2;
+
+    // Second loop to fill matrices
+    int i_cell_edge = 0;
+    for (int jface = pcell_face_idx[icell]; jface < pcell_face_idx[icell+1]; jface++) {
+
+      int iface = PDM_ABS(pcell_face[jface]) - 1;
+      int n_face_edge = 0;
+
+      if (face_tag[iface] == 0) {
+        for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+          int iedge = PDM_ABS(pface_edge[jedge]) - 1;
+
+          if (edge_tag[iedge] != 0) {
+            n_face_edge++;
+          }
+        }
+      }
+
+      int i_face_edge = 0;
+      for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+
+        int iedge = PDM_ABS(pface_edge[jedge]) - 1;
+
+        if (edge_tag[iedge] != 0) {
+
+          double _rhs = PDM_DOT_PRODUCT(edge_gradient + 3*iedge, edge_coord + 3*iedge);
+
+          if (is_visited[iedge] == 0) {
+            for (int l = 0; l < dim; l++) {
+              mat_cell[i_cell_edge + l*n_cell_edge] = edge_gradient[3*iedge + l];
+            }
+            rhs_cell[i_cell_edge] = _rhs;
+            visited_edges[i_cell_edge] = iedge;
+            is_visited[iedge] = 1;
+            i_cell_edge++;
+          }
+
+          if (face_tag[iface] == 0) {
+            for (int l = 0; l < dim; l++) {
+              mat_face[i_face_edge + l*n_face_edge] = edge_gradient[3*iedge + l];
+            }
+            rhs_face[i_face_edge] = _rhs;
+            i_face_edge++;
+          }
+
+        }
+      } // end of loop on edges of current face
+
+      if (face_tag[iface] == 0) {
+
+        log_trace("face %d ("PDM_FMT_G_NUM"), i_face_edge = %d\n",
+                  iface, pface_ln_to_gn[icell], i_face_edge);
+        if (i_face_edge > 0) {
+          _solve_least_square (i_face_edge,
+                               dim,
+                               mat_face,
+                               U_face,
+                               S_face,
+                               V_face,
+                               rhs_face,
+                               face_coord + 3*iface);
+        }
+
+        face_tag[iface] = 1;
+      }
+
+
+
+    } // end of loop on faces of current cell
+
+    log_trace("cell %d ("PDM_FMT_G_NUM"), i_cell_edge = %d\n",
+              icell, pcell_ln_to_gn[icell], i_cell_edge);
+    assert(i_cell_edge >= 3);
+    _solve_least_square (i_cell_edge,
+                         dim,
+                         mat_cell,
+                         U_cell,
+                         S_cell,
+                         V_cell,
+                         rhs_cell,
+                         cell_coord + 3*icell);
+    log_trace("coord = %f %f %f\n",
+              cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
+
+    for (int i = 0; i < i_cell_edge; i++) {
+      is_visited[visited_edges[i]] = 0;
+    }
+
+  } // end of loop on cells
+
+  sprintf(filename, "face_intersection_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_face,
+                            face_coord,
+                            pface_ln_to_gn,
+                            NULL);
+
+  sprintf(filename, "cell_intersection_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            n_cell,
+                            cell_coord,
+                            pcell_ln_to_gn,
+                            NULL);
+
+  free (is_visited);
+  free (visited_edges);
+
+  free (mat_cell);
+  free (rhs_cell);
+  free (mat_face);
+  free (rhs_face);
+
+  free (face_coord);
+  free (cell_coord);
+  free (face_tag);
 }
 
 static
@@ -1374,7 +1662,7 @@ _iso_surface_dist
                                                        isos->comm);
 
   int n_entity_equi = PDM_part_to_block_n_elt_block_get (ptb);
-  PDM_g_num_t *block_entity_equi_shild_g_num = PDM_part_to_block_block_gnum_get (ptb);
+  PDM_g_num_t *block_entity_equi_child_g_num = PDM_part_to_block_block_gnum_get (ptb);
 
   PDM_g_num_t *block_entity_equi_parent_g_num = NULL;
   PDM_part_to_block_exch (ptb,
@@ -1528,7 +1816,7 @@ _iso_surface_dist
                    pequi_face_edge_idx,
                    pequi_face_edge,
                    pequi_edge_vtx,
-                   block_entity_equi_shild_g_num,
+                   block_entity_equi_child_g_num,
                    pequi_edge_ln_to_gn,
                    pequi_vtx_ln_to_gn,
                    pequi_vtx_coord,
@@ -1555,7 +1843,31 @@ _iso_surface_dist
                           isoline_edge_ln_to_gn);
     }
   } else {
-    // _iso_surf_dist(isos);
+    _iso_surf_dist(isos,
+                   n_entity_equi,
+                   pn_face_equi,
+                   pn_edge_equi,
+                   pn_vtx_equi,
+                   pequi_cell_face_idx,
+                   pequi_cell_face,
+                   pequi_face_edge_idx,
+                   pequi_face_edge,
+                   pequi_edge_vtx,
+                   block_entity_equi_child_g_num,
+                   pequi_face_ln_to_gn,
+                   pequi_edge_ln_to_gn,
+                   pequi_vtx_ln_to_gn,
+                   pequi_vtx_coord,
+                   pequi_field,
+                   pequi_gradient_field,
+                   &isoline_n_vtx,
+                   &isoline_vtx_coord,
+                   &isoline_vtx_parent_face,
+                   &isoline_vtx_ln_to_gn,
+                   &isoline_n_edge,
+                   &isoline_edge_vtx_idx,
+                   &isoline_edge_vtx,
+                   &isoline_edge_ln_to_gn);
   }
 
   if(isos->dim == 3) {
