@@ -244,7 +244,7 @@ _solve_least_square
     log_trace("]\n");
   }
 
-  const double tol = 1.e-4;
+  const double tol = 1.e-1;
   double tol_s = tol * PDM_ABS(S[0]);
 
   /* Compute y := S^{-1} U^T b */
@@ -267,15 +267,16 @@ _solve_least_square
   log_trace("]\n");
 
   /* Compute x := V^T y */
+  log_trace("x = [");
   for (int i = 0; i < n; i++) {
     x[i] = 0.;
 
     for (int j = 0; j < m; j++) {
-      if (V[j + m*i] >= 0 || V[j + m*i] < 0) {
-        x[i] += V[j + m*i] * y[j];
-      }
+      x[i] += V[j + m*i] * y[j];
     }
+  log_trace("%f ", x[i]);
   }
+  log_trace("]\n");
 }
 
 
@@ -330,33 +331,36 @@ _compute_edge_isosurf_intersection
         _plane_gradient_field(x1, y1, z1, isos->plane_equation, &grad1[0], &grad1[1], &grad1[2]);
         _plane_gradient_field(x2, y2, z2, isos->plane_equation, &grad2[0], &grad2[1], &grad2[2]);
       } else {
-        grad1[0] = pgradient_field[3*i_vtx1  ];
-        grad1[1] = pgradient_field[3*i_vtx1+1];
-        grad1[2] = pgradient_field[3*i_vtx1+2];
+        if (pgradient_field != NULL) {
+          grad1[0] = pgradient_field[3*i_vtx1  ];
+          grad1[1] = pgradient_field[3*i_vtx1+1];
+          grad1[2] = pgradient_field[3*i_vtx1+2];
 
-        grad2[0] = pgradient_field[3*i_vtx2  ];
-        grad2[1] = pgradient_field[3*i_vtx2+1];
-        grad2[2] = pgradient_field[3*i_vtx2+2];
+          grad2[0] = pgradient_field[3*i_vtx2  ];
+          grad2[1] = pgradient_field[3*i_vtx2+1];
+          grad2[2] = pgradient_field[3*i_vtx2+2];
+        }
       }
 
       // Linear interpolation
       double t = val1 / (val1 - val2);
 
       // Cubic (Hermite) interpolation
-      if (0) {
+      if (pgradient_field != NULL) {
         double vec[3] = {x2 - x1, y2 - y1, z2 - z1};
         double m0 = PDM_DOT_PRODUCT(vec, grad1);
         double m1 = PDM_DOT_PRODUCT(vec, grad2);
 
         // Find a root of a_3*t^3 + a_2*t^2 + a_1*t + a_0 (for 0 <= t <= 1), with
-        double a_3 =  2*val1 - 2*m0 +   val2 + m1;
-        double a_2 = -3*val1 + 3*m0 - 2*val2 - m1;
-        double a_1 = val2;
+        double a_3 = 2*(val1 - val2) + m0 + m1;
+        double a_2 = 3*(val2 - val1) - 2*m0 - m1;
+        double a_1 = m0;
         double a_0 = val1;
+        log_trace("coefs = %f %f %f %f\n", a_3, a_2, a_1, a_0);
 
         double s = t;
         int stat = 0;
-        log_trace("\nNewton:\n");
+        log_trace("Newton:\n");
         for (int iter = 0; iter < 5; iter++) {
           double val = a_0 + s*(a_1 + s*(a_2 + s*a_3));
           log_trace("  it %d, s = %f, |val| = %e\n", iter, s, PDM_ABS(val));
@@ -393,13 +397,22 @@ _compute_edge_isosurf_intersection
       edge_coord[3*i+1] = (1. - t)*y1 + t*y2;
       edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
 
-      double gx = (1. - t)*grad1[0] + t*grad2[0];
-      double gy = (1. - t)*grad1[1] + t*grad2[1];
-      double gz = (1. - t)*grad1[2] + t*grad2[2];
+      if (pgradient_field != NULL) {
+        double gx = (1. - t)*grad1[0] + t*grad2[0];
+        double gy = (1. - t)*grad1[1] + t*grad2[1];
+        double gz = (1. - t)*grad1[2] + t*grad2[2];
+        double mag = sqrt(gx*gx + gy*gy + gz*gz);
+        if (mag > 1e-12) {
+          mag = 1./ mag;
+          gx *= mag;
+          gy *= mag;
+          gz *= mag;
+        }
 
       edge_gradient[3*i  ] = gx;
       edge_gradient[3*i+1] = gy;
       edge_gradient[3*i+2] = gz;
+      }
     }
 
     else {
@@ -408,9 +421,11 @@ _compute_edge_isosurf_intersection
       edge_coord[3*i+1] = 0.;
       edge_coord[3*i+2] = 0.;
 
-      edge_gradient[3*i  ] = 0.;
-      edge_gradient[3*i+1] = 0.;
-      edge_gradient[3*i+2] = 0.;
+      if (pgradient_field != NULL) {
+        edge_gradient[3*i  ] = 0.;
+        edge_gradient[3*i+1] = 0.;
+        edge_gradient[3*i+2] = 0.;
+      }
     }
 
   }
@@ -1110,6 +1125,60 @@ _iso_line_dist
 }
 
 
+static void
+_compute_face_vtx
+(
+ const int   n_face,
+ int        *pface_edge_idx,
+ int        *pface_edge,
+ int        *pedge_vtx,
+ int       **pface_vtx
+ )
+{
+  *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
+
+  for (int i = 0; i < n_face; i++) {
+
+    int *_pface_vtx = *pface_vtx + pface_edge_idx[i];
+
+    int cur_vtx, next_vtx;
+    int cur_edge = pface_edge[pface_edge_idx[i]];
+    if (cur_edge < 0) {
+      cur_edge = -cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge+1];
+      next_vtx = pedge_vtx[2*cur_edge  ];
+    } else {
+      cur_edge = cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge  ];
+      next_vtx = pedge_vtx[2*cur_edge+1];
+    }
+
+    for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
+      _pface_vtx[ivtx] = cur_vtx;
+
+      for (int iedg = pface_edge_idx[i]; iedg < pface_edge_idx[i+1]; iedg++) {
+        cur_edge = pface_edge[iedg];
+        int vtx1, vtx2;
+        if (cur_edge < 0) {
+          cur_edge = -cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge+1];
+          vtx2 = pedge_vtx[2*cur_edge  ];
+        } else {
+          cur_edge = cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge  ];
+          vtx2 = pedge_vtx[2*cur_edge+1];
+        }
+
+        if (vtx1 == next_vtx) {
+          cur_vtx  = next_vtx;
+          next_vtx = vtx2;
+          break;
+        }
+      }
+    }
+
+  }
+}
 
 
 static
@@ -1143,6 +1212,8 @@ _iso_surf_dist
   PDM_g_num_t       **isoline_face_ln_to_gn
 )
 {
+  const int use_gradient = (pgradient_field != NULL);
+
   PDM_MPI_Comm comm = isos->comm;
 
   int i_rank;
@@ -1205,6 +1276,7 @@ _iso_surf_dist
   n_cell_edge_max /= 2;
 
 
+  int *is_treated = PDM_array_zeros_int(n_face);
   int *face_tag = PDM_array_zeros_int(n_face);
 
   const int dim = 3;
@@ -1226,18 +1298,25 @@ _iso_surf_dist
   double *face_coord = (double *) malloc(sizeof(double) * n_face * 3);
   double *cell_coord = (double *) malloc(sizeof(double) * n_cell * 3);
 
+  double face_center[3], face_normal[3];
+  double *all_face_center = (double *) malloc(sizeof(double) * n_face * 3);
+  double *all_face_normal = (double *) malloc(sizeof(double) * n_face * 3);
+
   // tmp -->>
   for (int i = 0; i < 3*n_cell; i++) {
     cell_coord[i] = 0.;
   }
   for (int i = 0; i < 3*n_face; i++) {
     face_coord[i] = 0.;
+    all_face_center[i] = 0.;
+    all_face_normal[i] = 0.;
   }
   //<<--
 
   for (int icell = 0; icell < n_cell; icell++) {
 
     int n_cell_edge = 0;
+    double _cell_coord[3] = {0.};
 
     //-->>
     for (int i = 0; i < n_cell_edge_max * dim; i++) {
@@ -1274,8 +1353,9 @@ _iso_surf_dist
 
       int iface = PDM_ABS(pcell_face[jface]) - 1;
       int n_face_edge = 0;
+      double _face_coord[3] = {0.};
 
-      if (face_tag[iface] == 0) {
+      if (is_treated[iface] == 0) {
         for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
           int iedge = PDM_ABS(pface_edge[jedge]) - 1;
 
@@ -1283,6 +1363,8 @@ _iso_surf_dist
             n_face_edge++;
           }
         }
+
+        n_face_edge++;
       }
 
       int i_face_edge = 0;
@@ -1295,42 +1377,171 @@ _iso_surf_dist
           double _rhs = PDM_DOT_PRODUCT(edge_gradient + 3*iedge, edge_coord + 3*iedge);
 
           if (is_visited[iedge] == 0) {
-            for (int l = 0; l < dim; l++) {
-              mat_cell[i_cell_edge + l*n_cell_edge] = edge_gradient[3*iedge + l];
+            if (use_gradient) {
+              for (int l = 0; l < dim; l++) {
+                mat_cell[i_cell_edge + l*n_cell_edge] = edge_gradient[3*iedge + l];
+              }
+              rhs_cell[i_cell_edge] = _rhs;
             }
-            rhs_cell[i_cell_edge] = _rhs;
+            // else {
+              for (int l = 0; l < dim; l++) {
+                _cell_coord[l] += edge_coord[3*iedge + l];
+              }
+            // }
+
             visited_edges[i_cell_edge] = iedge;
             is_visited[iedge] = 1;
             i_cell_edge++;
           }
 
-          if (face_tag[iface] == 0) {
-            for (int l = 0; l < dim; l++) {
-              mat_face[i_face_edge + l*n_face_edge] = edge_gradient[3*iedge + l];
+          if (is_treated[iface] == 0) {
+            if (use_gradient) {
+              for (int l = 0; l < dim; l++) {
+                mat_face[i_face_edge + l*n_face_edge] = edge_gradient[3*iedge + l];
+              }
+              rhs_face[i_face_edge] = _rhs;
             }
-            rhs_face[i_face_edge] = _rhs;
+            // else {
+              for (int l = 0; l < dim; l++) {
+                _face_coord[l] += edge_coord[3*iedge + l];
+              }
+            // }
             i_face_edge++;
           }
 
         }
       } // end of loop on edges of current face
 
-      if (face_tag[iface] == 0) {
+      if (is_treated[iface] == 0) {
 
-        log_trace("face %d ("PDM_FMT_G_NUM"), i_face_edge = %d\n",
-                  iface, pface_ln_to_gn[icell], i_face_edge);
-        if (i_face_edge > 0) {
-          _solve_least_square (i_face_edge,
-                               dim,
-                               mat_face,
-                               U_face,
-                               S_face,
-                               V_face,
-                               rhs_face,
-                               face_coord + 3*iface);
+        // compute face center
+        face_center[0] = face_center[1] = face_center[2] = 0.;
+        for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+          int iedge = pface_edge[jedge];
+          int ivtx1;
+
+          if (iedge < 0) {
+            iedge = -iedge - 1;
+            ivtx1 = pedge_vtx[2*iedge+1] - 1;
+          } else {
+            iedge = iedge - 1;
+            ivtx1 = pedge_vtx[2*iedge  ] - 1;
+          }
+
+          for (int l = 0; l < dim; l++) {
+            face_center[l] += pvtx_coord[3*ivtx1 + l];
+          }
         }
 
-        face_tag[iface] = 1;
+        double normalization = 1. / (double) (pface_edge_idx[iface+1] - pface_edge_idx[iface]);
+        for (int l = 0; l < dim; l++) {
+          face_center[l] *= normalization;
+        }
+
+        // compute face normal
+        face_normal[0] = face_normal[1] = face_normal[2] = 0.;
+        for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+          int iedge = pface_edge[jedge];
+          int ivtx1, ivtx2;
+
+          if (iedge < 0) {
+            iedge = -iedge - 1;
+            ivtx1 = pedge_vtx[2*iedge+1] - 1;
+            ivtx2 = pedge_vtx[2*iedge  ] - 1;
+          } else {
+            iedge = iedge - 1;
+            ivtx1 = pedge_vtx[2*iedge  ] - 1;
+            ivtx2 = pedge_vtx[2*iedge+1] - 1;
+          }
+
+          double vec1[3] = {
+            pvtx_coord[3*ivtx1  ] - face_center[0],
+            pvtx_coord[3*ivtx1+1] - face_center[1],
+            pvtx_coord[3*ivtx1+2] - face_center[2],
+          };
+
+          double vec2[3] = {
+            pvtx_coord[3*ivtx2  ] - face_center[0],
+            pvtx_coord[3*ivtx2+1] - face_center[1],
+            pvtx_coord[3*ivtx2+2] - face_center[2],
+          };
+
+          double vec1xvec2[3];
+          PDM_CROSS_PRODUCT(vec1xvec2, vec1, vec2);
+
+          for (int l = 0; l < dim; l++) {
+            face_normal[l] += vec1xvec2[l];
+          }
+        }
+        double mag = PDM_MODULE(face_normal);
+        if (PDM_ABS(mag) > 1.e-16) {
+          mag = 1./ mag;
+          for (int l = 0; l < dim; l++) {
+            face_normal[l] *= mag;
+          }
+        }
+
+        memcpy(all_face_center + 3*iface, face_center, sizeof(double)*3);
+        memcpy(all_face_normal + 3*iface, face_normal, sizeof(double)*3);
+
+        for (int l = 0; l < dim; l++) {
+          mat_face[i_face_edge + l*n_face_edge] = face_normal[l];
+        }
+        rhs_face[i_face_edge] = PDM_DOT_PRODUCT(face_center, face_normal);
+        i_face_edge++;
+
+        log_trace("face %d ("PDM_FMT_G_NUM"), i_face_edge = %d\n",
+                  iface, pface_ln_to_gn[iface], i_face_edge);
+        if (1) {
+          log_trace("  face_edge_tag :");
+          for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
+            int iedge = PDM_ABS(pface_edge[jedge]) - 1;
+            log_trace(" %d", edge_tag[iedge]);
+          }
+          log_trace("\n");
+
+          log_trace("  face_center = %f %f %f\n",
+                    face_center[0], face_center[1], face_center[2]);
+          log_trace("  face_normal = %f %f %f\n",
+                    face_normal[0], face_normal[1], face_normal[2]);
+        }
+
+        if (i_face_edge > 1) {
+          if (use_gradient) {
+            _solve_least_square (i_face_edge,
+                                 dim,
+                                 mat_face,
+                                 U_face,
+                                 S_face,
+                                 V_face,
+                                 rhs_face,
+                                 face_coord + 3*iface);
+
+            if (PDM_ABS(S_face[dim-1]) < 1e-3 * PDM_ABS(S_face[0])) {
+              // rank-deficient matrix
+              normalization = 1. / (double) (i_face_edge - 1);
+              for (int l = 0; l < dim; l++) {
+                face_coord[3*iface+l] = _face_coord[l] * normalization;
+              }
+            }
+
+          } else {
+            normalization = 1. / (double) (i_face_edge - 1);
+            for (int l = 0; l < dim; l++) {
+              face_coord[3*iface+l] = _face_coord[l] * normalization;
+            }
+          }
+
+          face_tag[iface] = 1;
+
+          log_trace("face_coord = %f %f %f\n",
+              face_coord[3*iface], face_coord[3*iface+1], face_coord[3*iface+2]);
+        }
+        else {
+          face_tag[iface] = 0;
+        }
+
+        is_treated[iface] = 1;
       }
 
 
@@ -1340,15 +1551,40 @@ _iso_surf_dist
     log_trace("cell %d ("PDM_FMT_G_NUM"), i_cell_edge = %d\n",
               icell, pcell_ln_to_gn[icell], i_cell_edge);
     assert(i_cell_edge >= 3);
-    _solve_least_square (i_cell_edge,
-                         dim,
-                         mat_cell,
-                         U_cell,
-                         S_cell,
-                         V_cell,
-                         rhs_cell,
-                         cell_coord + 3*icell);
-    log_trace("coord = %f %f %f\n",
+    if (use_gradient) {
+      _solve_least_square (i_cell_edge,
+                           dim,
+                           mat_cell,
+                           U_cell,
+                           S_cell,
+                           V_cell,
+                           rhs_cell,
+                           cell_coord + 3*icell);
+
+      // Beware of NaNs
+      int singular = 0;
+      for (int l = 0; l < dim; l++) {
+        if (!(cell_coord[3*icell+l] >= 0) &&
+            !(cell_coord[3*icell+l] < 0)) {
+          singular = 1;
+          break;
+        }
+      }
+
+      if (singular) {
+        double normalization = 1. / (double) i_cell_edge;
+        for (int l = 0; l < dim; l++) {
+          cell_coord[3*icell+l] = _cell_coord[l] * normalization;
+        }
+      }
+
+    } else {
+      double normalization = 1. / (double) i_cell_edge;
+      for (int l = 0; l < dim; l++) {
+        cell_coord[3*icell+l] = _cell_coord[l] * normalization;
+      }
+    }
+    log_trace("cell_coord = %f %f %f\n",
               cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
 
     for (int i = 0; i < i_cell_edge; i++) {
@@ -1357,12 +1593,43 @@ _iso_surf_dist
 
   } // end of loop on cells
 
+
+  if (1) {
+    int *pface_vtx = NULL;
+    _compute_face_vtx(n_face,
+                      pface_edge_idx,
+                      pface_edge,
+                      pedge_vtx,
+                      &pface_vtx);
+
+    sprintf(filename, "out_equi_faces_%2.2d.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           n_vtx,
+                           pvtx_coord,
+                           pvtx_ln_to_gn,
+                           n_face,
+                           pface_edge_idx,
+                           pface_vtx,
+                           pface_ln_to_gn,
+                           face_tag);
+    free(pface_vtx);
+  }
+
+  sprintf(filename, "face_normal_%2.2d.vtk", i_rank);
+  _dump_vectors (filename,
+                 n_face,
+                 all_face_center,
+                 all_face_normal,
+                 NULL);
+  free(all_face_center);
+  free(all_face_normal);
+
   sprintf(filename, "face_intersection_%2.2d.vtk", i_rank);
   PDM_vtk_write_point_cloud(filename,
                             n_face,
                             face_coord,
-                            pface_ln_to_gn,
-                            NULL);
+                            NULL,//pface_ln_to_gn,
+                            face_tag);
 
   sprintf(filename, "cell_intersection_%2.2d.vtk", i_rank);
   PDM_vtk_write_point_cloud(filename,
@@ -1379,6 +1646,7 @@ _iso_surf_dist
   free (mat_face);
   free (rhs_face);
 
+  free (is_treated);
   free (face_coord);
   free (cell_coord);
   free (face_tag);

@@ -127,24 +127,29 @@ _unit_sphere
 )
 {
   return x * x + y * y + z * z - 0.125;
+  // return PDM_ABS(x) + PDM_ABS(y) + PDM_ABS(z) - 0.5;
 }
+// coordsX * coordsX + coordsY * coordsY + coordsZ * coordsZ - 0.125
 
 static
 inline
 void
 _unit_sphere_gradient
 (
- double  x1,
- double  x2,
- double  x3,
- double *df_dx1,
- double *df_dx2,
- double *df_dx3
+ double  x,
+ double  y,
+ double  z,
+ double *df_dx,
+ double *df_dy,
+ double *df_dz
 )
 {
-  *df_dx1 = 2*x1;
-  *df_dx2 = 2*x2;
-  *df_dx3 = 2*x3;
+  *df_dx = 2*x;
+  *df_dy = 2*y;
+  *df_dz = 2*z;
+  // *df_dx = PDM_SIGN(x);
+  // *df_dy = PDM_SIGN(y);
+  // *df_dz = PDM_SIGN(z);
 }
 
 
@@ -209,10 +214,13 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_t          *dcube   = NULL;
   PDM_dmesh_nodal_to_dmesh_t *dmntodm = NULL;
 
-  int dn_cell = 0;
-  int dn_face = 0;
-  int dn_edge = 0;
-  int dn_vtx  = 0;
+  PDM_g_num_t  ng_cell = 0;
+  PDM_g_num_t  ng_face = 0;
+  PDM_g_num_t  ng_vtx  = 0;
+  int          dn_cell = 0;
+  int          dn_face = 0;
+  int          dn_edge = 0;
+  int          dn_vtx  = 0;
   double      *dvtx_coord     = NULL;
   int         *dcell_face_idx = NULL;
   PDM_g_num_t *dcell_face     = NULL;
@@ -220,6 +228,11 @@ int main(int argc, char *argv[])
   PDM_g_num_t *dface_edge     = NULL;
   int         *dedge_vtx_idx  = NULL;
   PDM_g_num_t *dedge_vtx      = NULL;
+  int          n_face_group = 0;
+  PDM_g_num_t *dface_cell      = NULL;
+  PDM_g_num_t *dface_vtx       = NULL;
+  int         *dface_group_idx = NULL;
+  PDM_g_num_t *dface_group     = NULL;
 
   if (elt_type < PDM_MESH_NODAL_POLY_3D) {
     dcube = PDM_dcube_nodal_gen_create (comm,
@@ -271,10 +284,10 @@ int main(int argc, char *argv[])
                                          &dface_edge_idx,
                                          PDM_OWNERSHIP_KEEP);
 
-    dn_edge  = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &dedge_vtx,
-                                          &dedge_vtx_idx,
-                                          PDM_OWNERSHIP_KEEP);
+    dn_edge = PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                         &dedge_vtx,
+                                         &dedge_vtx_idx,
+                                         PDM_OWNERSHIP_KEEP);
 
     PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &distrib_edge);
     assert(distrib_edge != NULL);
@@ -288,6 +301,35 @@ int main(int argc, char *argv[])
 
   else {
     // polyvol_gen
+    PDM_poly_vol_gen (comm,
+                      -0.1,//-0.5,
+                      0.1,//-0.5,
+                      0.13,//-0.5,
+                      length,
+                      length,
+                      length,
+                      n_vtx_seg,
+                      n_vtx_seg,
+                      n_vtx_seg,
+                      1,
+                      0,
+                      &ng_cell,
+                      &ng_face,
+                      &ng_vtx,
+                      &n_face_group,
+                      &dn_cell,
+                      &dn_face,
+                      &dn_vtx,
+                      &dcell_face_idx,
+                      &dcell_face,
+                      &dface_cell,
+                      &dface_edge_idx,
+                      &dface_vtx,
+                      &dvtx_coord,
+                      &dface_group_idx,
+                      &dface_group);
+
+    printf("TO DO: build edges\n");
     abort();
   }
 
@@ -361,6 +403,10 @@ int main(int argc, char *argv[])
     free(dface_edge);
     free(dedge_vtx_idx);
     free(dedge_vtx);
+    free(dface_cell);
+    free(dface_vtx);
+    free(dface_group_idx);
+    free(dface_group);
   }
 
   if (i_rank == 0) {
