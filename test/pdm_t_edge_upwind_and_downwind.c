@@ -79,13 +79,14 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length,
-           int           *n_part,
-           int           *post,
-           int           *part_method)
+_read_args(int                    argc,
+           char                 **argv,
+           PDM_g_num_t           *n_vtx_seg,
+           double                *length,
+           int                   *n_part,
+           int                   *post,
+           int                   *part_method,
+           PDM_Mesh_nodal_elt_t  *elt_type)
 {
   int i = 1;
 
@@ -128,6 +129,13 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *part_method = 1;
+    }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
     else
       _usage(EXIT_FAILURE);
@@ -411,6 +419,32 @@ _setup_edge_upwind_and_downwind2
  double *vtx_coord
  )
 {
+
+
+  if (1) {
+    PDM_vtk_write_polydata("check_faces.vtk",
+                           n_vtx,
+                           vtx_coord,
+                           NULL,
+                           n_face,
+                           face_vtx_idx,
+                           face_vtx,
+                           NULL,
+                           NULL);
+
+    PDM_vtk_write_std_elements("check_edges.vtk",
+                               n_vtx,
+                               vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_BAR2,
+                               n_edge,
+                               edge_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
+
   int *upwind_face   = PDM_array_const_int(n_edge, -1);
   int *downwind_face = PDM_array_const_int(n_edge, -1);
   int *upwind_cell   = PDM_array_const_int(n_edge, -1);
@@ -591,11 +625,11 @@ _setup_edge_upwind_and_downwind2
             }
           }
 
-          PDM_polygon_status_t in_poly = PDM_polygon_point_in(intersection,
-                                                              n_vtx_on_face,
-                                                              poly_coord,
-                                                              poly_bound,
-                                                              face_normal + 3*iface);
+          PDM_polygon_status_t in_poly = PDM_polygon_point_in_new(intersection,
+                                                                  n_vtx_on_face,
+                                                                  poly_coord,
+                                                                  poly_bound,
+                                                                  face_normal + 3*iface);
           if (in_poly == PDM_POLYGON_INSIDE) {
 
             found[jvtx] = 1;
@@ -744,6 +778,62 @@ _setup_edge_upwind_and_downwind2
   free(downwind_point);
 }
 
+
+static void
+_compute_face_vtx
+(
+ const int   n_face,
+ int        *pface_edge_idx,
+ int        *pface_edge,
+ int        *pedge_vtx,
+ int       **pface_vtx
+ )
+{
+  *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
+
+  for (int i = 0; i < n_face; i++) {
+
+    int *_pface_vtx = *pface_vtx + pface_edge_idx[i];
+
+    int cur_vtx, next_vtx;
+    int cur_edge = pface_edge[pface_edge_idx[i]];
+    if (cur_edge < 0) {
+      cur_edge = -cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge+1];
+      next_vtx = pedge_vtx[2*cur_edge  ];
+    } else {
+      cur_edge = cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge  ];
+      next_vtx = pedge_vtx[2*cur_edge+1];
+    }
+
+    for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
+      _pface_vtx[ivtx] = cur_vtx;
+
+      for (int iedg = pface_edge_idx[i]; iedg < pface_edge_idx[i+1]; iedg++) {
+        cur_edge = pface_edge[iedg];
+        int vtx1, vtx2;
+        if (cur_edge < 0) {
+          cur_edge = -cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge+1];
+          vtx2 = pedge_vtx[2*cur_edge  ];
+        } else {
+          cur_edge = cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge  ];
+          vtx2 = pedge_vtx[2*cur_edge+1];
+        }
+
+        if (vtx1 == next_vtx) {
+          cur_vtx  = next_vtx;
+          next_vtx = vtx2;
+          break;
+        }
+      }
+    }
+
+  }
+}
+
 /**
  *
  * \brief  Main
@@ -768,6 +858,12 @@ int main(int argc, char *argv[])
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
+  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TETRA4;
+  //  5 -> tetra
+  //  6 -> pyramid
+  //  7 -> prism
+  //  8 -> hexa
+  //  9 -> poly3d
 
   /*
    *  Read args
@@ -778,7 +874,8 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-     (int *) &part_method);
+     (int *) &part_method,
+             &elt_type);
   /*
    *  Init
    */
@@ -804,8 +901,7 @@ int main(int argc, char *argv[])
                                                          0.,
                                                          0.,
                                                          0.,
-                                                         // PDM_MESH_NODAL_HEXA8,
-                                                         PDM_MESH_NODAL_TETRA4,
+                                                         elt_type,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
@@ -813,6 +909,17 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
+
+  if (0) {
+    PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+
+    double noise = 0.2 / (double) (n_vtx_seg - 1);
+    for (int i = 0; i < 3*dn_vtx; i++) {
+      dvtx_coord[i] += noise * (rand() / (double) RAND_MAX - 0.5);
+    }
+  }
 
   if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
@@ -927,14 +1034,22 @@ int main(int argc, char *argv[])
       assert(face_vtx_idx == NULL);
       assert(face_vtx     == NULL);
 
-      int* tmp_edge_vtx_idx = malloc( (n_edge+1) * sizeof(int));
-      tmp_edge_vtx_idx[0] = 0;
-      for(int i = 0; i < n_edge; ++i) {
-        tmp_edge_vtx_idx[i+1] = tmp_edge_vtx_idx[i] + 2;
-      }
+      // int* tmp_edge_vtx_idx = malloc( (n_edge+1) * sizeof(int));
+      // tmp_edge_vtx_idx[0] = 0;
+      // for(int i = 0; i < n_edge; ++i) {
+      //   tmp_edge_vtx_idx[i+1] = tmp_edge_vtx_idx[i] + 2;
+      // }
 
-      PDM_combine_connectivity(n_face, face_edge_idx, face_edge, tmp_edge_vtx_idx, edge_vtx, &face_vtx_idx, &face_vtx);
-      free(tmp_edge_vtx_idx);
+      // PDM_combine_connectivity(n_face, face_edge_idx, face_edge, tmp_edge_vtx_idx, edge_vtx, &face_vtx_idx, &face_vtx);
+      // free(tmp_edge_vtx_idx);
+      _compute_face_vtx(n_face,
+                        face_edge_idx,
+                        face_edge,
+                        edge_vtx,
+                        &face_vtx);
+      face_vtx_idx = (int *) malloc(sizeof(int) * (n_face + 1));
+      memcpy(face_vtx_idx, face_edge_idx, sizeof(int) * (n_face + 1));
+
 
       int* cell_vtx_idx = NULL;
       int* cell_vtx     = NULL;
