@@ -2451,3 +2451,7 @@ PDM_iso_surface_free
 
   free(isos);
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
