@@ -291,7 +291,8 @@ typedef enum {
 
 typedef enum {
   PDM_SPLIT_DUAL_WITH_PARMETIS = 1,
-  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
+  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2,
+  PDM_SPLIT_DUAL_WITH_HILBERT  = 3
 } PDM_split_dual_t;
 
 

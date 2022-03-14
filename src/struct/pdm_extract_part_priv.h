@@ -57,6 +57,7 @@ struct _pdm_extract_part_t
   int                    n_part_in;
   int                    n_part_out;
 
+  PDM_split_dual_t       split_dual_method;
   PDM_ownership_t        ownership;
   PDM_MPI_Comm           comm;
 

@@ -65,17 +65,19 @@ PDM_extract_part_create
  const int                    dim,
  const int                    n_part_in,
  const int                    n_part_out,
+       PDM_split_dual_t       split_dual_method,
        PDM_ownership_t        ownership,
        PDM_MPI_Comm           comm
 )
 {
   PDM_extract_part_t *extrp = (PDM_extract_part_t *) malloc(sizeof(PDM_extract_part_t));
 
-  extrp->dim        = dim;
-  extrp->n_part_in  = n_part_in;
-  extrp->n_part_out = n_part_out;
-  extrp->ownership  = ownership;
-  extrp->comm       = comm;
+  extrp->dim               = dim;
+  extrp->n_part_in         = n_part_in;
+  extrp->n_part_out        = n_part_out;
+  extrp->split_dual_method = split_dual_method;
+  extrp->ownership         = ownership;
+  extrp->comm              = comm;
 
   extrp->n_cell         = (int          *) malloc(n_part_in * sizeof(int          ));
   extrp->n_face         = (int          *) malloc(n_part_in * sizeof(int          ));
@@ -144,6 +146,61 @@ PDM_extract_part_compute
 
   /*
    * Calcul des coordonnées to setup hilbert ordering (independant of parallelism )
+   */
+  double **entity_center = NULL;
+  if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
+    if(extrp->dim == 2) {
+      // Compute entity_center with face_edge + edge_vtx
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        assert(extrp->pface_edge    [i_part] != NULL);
+        assert(extrp->pface_edge_idx[i_part] != NULL);
+        assert(extrp->pedge_vtx     [i_part] != NULL);
+        assert(extrp->pvtx_coord   [i_part] != NULL);
+      }
+
+      entity_center = malloc(extrp->n_part_in * sizeof(double * ));
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        entity_center[i_part] = (double *) malloc(3 * extrp->n_extract[i_part] * sizeof(double));
+
+        int    *_pface_edge     = extrp->pface_edge    [i_part];
+        int    *_pface_edge_idx = extrp->pface_edge_idx[i_part];
+        int    *_pedge_vtx      = extrp->pedge_vtx     [i_part];
+        double *_pvtx_coord     = extrp->pvtx_coord    [i_part];
+
+        for(int idx_face = 0; idx_face < extrp->n_extract[i_part]; ++idx_face) {
+
+          int i_face = extrp->extract_lnum[i_part][idx_face];
+          entity_center[i_part][3*i_face  ] = 0.;
+          entity_center[i_part][3*i_face+1] = 0.;
+          entity_center[i_part][3*i_face+2] = 0.;
+
+          double inv = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+            int i_edge = _pface_edge[idx_edge];
+            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+
+            entity_center[i_part][3*i_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+            entity_center[i_part][3*i_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+            entity_center[i_part][3*i_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+
+          }
+          entity_center[i_part][3*i_face  ] = entity_center[i_part][3*i_face  ] * inv;
+          entity_center[i_part][3*i_face+1] = entity_center[i_part][3*i_face+1] * inv;
+          entity_center[i_part][3*i_face+2] = entity_center[i_part][3*i_face+2] * inv;
+        }
+      }
+
+    } else {
+
+    }
+  }
+
+
+  /*
+   * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
+   *   Puis dconnectiviy_transpose puis combine
    */
 
 
