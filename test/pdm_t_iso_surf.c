@@ -128,8 +128,12 @@ _unit_sphere
 {
   return x * x + y * y + z * z - 0.125;
   // return PDM_ABS(x) + PDM_ABS(y) + PDM_ABS(z) - 0.5;
+  // double v1 = x * x + y * y + z * z - 0.125;
+  // double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
+  // return PDM_MIN(v1, v2);
 }
 // coordsX * coordsX + coordsY * coordsY + coordsZ * coordsZ - 0.125
+// (coordsX-0.2) * (coordsX-0.2) + (coordsY-0.2) * (coordsY-0.2) + (coordsZ-0.3) * (coordsZ-0.3) - 0.07
 
 static
 inline
@@ -150,6 +154,18 @@ _unit_sphere_gradient
   // *df_dx = PDM_SIGN(x);
   // *df_dy = PDM_SIGN(y);
   // *df_dz = PDM_SIGN(z);
+  // double v1 = x * x + y * y + z * z - 0.125;
+  // double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
+
+  // if (v1 < v2) {
+  //   *df_dx = 2*x;
+  //   *df_dy = 2*y;
+  //   *df_dz = 2*z;
+  // } else {
+  //   *df_dx = 2*(x-0.2);
+  //   *df_dy = 2*(y-0.2);
+  //   *df_dz = 2*(z-0.3);
+  // };
 }
 
 
@@ -241,8 +257,8 @@ int main(int argc, char *argv[])
                                         n_vtx_seg,
                                         length,
                                         -0.1,//-0.5,
-                                        0.1,//-0.5,
-                                        0.13,//-0.5,
+                                        -0.2,//-0.5,
+                                        0.07,//-0.5,
                                         elt_type,
                                         1,
                                         PDM_OWNERSHIP_KEEP);

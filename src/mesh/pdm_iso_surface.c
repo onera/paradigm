@@ -1230,7 +1230,7 @@ _iso_surf_dist
                             NULL);
 
   /*
-   *  Tag edges that cross the iso-line,
+   *  Tag edges that cross the iso-surface,
    *  compute the intersection point
    *  and the gradient at that point
    */
@@ -1276,7 +1276,7 @@ _iso_surf_dist
   n_cell_edge_max /= 2;
 
 
-  int *is_treated = PDM_array_zeros_int(n_face);
+  int *is_treated_face = PDM_array_zeros_int(n_face);
   int *face_tag = PDM_array_zeros_int(n_face);
 
   const int dim = 3;
@@ -1292,7 +1292,7 @@ _iso_surf_dist
   double *U_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
   double *V_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
 
-  int *is_visited    = PDM_array_zeros_int(n_edge);
+  int *is_visited_edge = PDM_array_zeros_int(n_edge);
   int *visited_edges = (int *) malloc(sizeof(int) * n_edge);
 
   double *face_coord = (double *) malloc(sizeof(double) * n_face * 3);
@@ -1317,15 +1317,6 @@ _iso_surf_dist
 
     int n_cell_edge = 0;
     double _cell_coord[3] = {0.};
-
-    //-->>
-    for (int i = 0; i < n_cell_edge_max * dim; i++) {
-      mat_cell[i] = 123456789.;
-    }
-    for (int i = 0; i < n_cell_edge_max ; i++) {
-     rhs_cell[i] = 987654321.;
-    }
-    //<<--
 
     // First loop to count number of tagged edges
     for (int jface = pcell_face_idx[icell]; jface < pcell_face_idx[icell+1]; jface++) {
@@ -1355,7 +1346,7 @@ _iso_surf_dist
       int n_face_edge = 0;
       double _face_coord[3] = {0.};
 
-      if (is_treated[iface] == 0) {
+      if (is_treated_face[iface] == 0) {
         for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
           int iedge = PDM_ABS(pface_edge[jedge]) - 1;
 
@@ -1376,7 +1367,7 @@ _iso_surf_dist
 
           double _rhs = PDM_DOT_PRODUCT(edge_gradient + 3*iedge, edge_coord + 3*iedge);
 
-          if (is_visited[iedge] == 0) {
+          if (is_visited_edge[iedge] == 0) {
             if (use_gradient) {
               for (int l = 0; l < dim; l++) {
                 mat_cell[i_cell_edge + l*n_cell_edge] = edge_gradient[3*iedge + l];
@@ -1390,11 +1381,11 @@ _iso_surf_dist
             // }
 
             visited_edges[i_cell_edge] = iedge;
-            is_visited[iedge] = 1;
+            is_visited_edge[iedge] = 1;
             i_cell_edge++;
           }
 
-          if (is_treated[iface] == 0) {
+          if (is_treated_face[iface] == 0) {
             if (use_gradient) {
               for (int l = 0; l < dim; l++) {
                 mat_face[i_face_edge + l*n_face_edge] = edge_gradient[3*iedge + l];
@@ -1412,7 +1403,7 @@ _iso_surf_dist
         }
       } // end of loop on edges of current face
 
-      if (is_treated[iface] == 0) {
+      if (is_treated_face[iface] == 0) {
 
         // compute face center
         face_center[0] = face_center[1] = face_center[2] = 0.;
@@ -1541,7 +1532,7 @@ _iso_surf_dist
           face_tag[iface] = 0;
         }
 
-        is_treated[iface] = 1;
+        is_treated_face[iface] = 1;
       }
 
 
@@ -1588,7 +1579,7 @@ _iso_surf_dist
               cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
 
     for (int i = 0; i < i_cell_edge; i++) {
-      is_visited[visited_edges[i]] = 0;
+      is_visited_edge[visited_edges[i]] = 0;
     }
 
   } // end of loop on cells
@@ -1638,7 +1629,7 @@ _iso_surf_dist
                             pcell_ln_to_gn,
                             NULL);
 
-  free (is_visited);
+  free (is_visited_edge);
   free (visited_edges);
 
   free (mat_cell);
@@ -1646,7 +1637,134 @@ _iso_surf_dist
   free (mat_face);
   free (rhs_face);
 
-  free (is_treated);
+  free (S_cell);
+  free (U_cell);
+  free (V_cell);
+  free (S_face);
+  free (U_face);
+  free (V_face);
+
+
+
+
+  /*
+   *  Build connectivity
+   */
+  int n_tagged_edge = 0;
+  int n_tagged_face = 0;
+  int *i_tagged_edge = PDM_array_const_int(n_edge, -1);
+  int *i_tagged_face = PDM_array_const_int(n_face, -1);
+  for (int i = 0; i < n_edge; i++) {
+    if (edge_tag[i] != 0) {
+      i_tagged_edge[i] = n_tagged_edge++;
+    }
+  }
+  for (int i = 0; i < n_face; i++) {
+    if (face_tag[i] != 0) {
+      i_tagged_face[i] = n_tagged_face++;
+    }
+  }
+  int _isosurf_n_vtx = n_cell + n_tagged_face + n_tagged_edge;
+  double *_isosurf_vtx_coord = (double *) malloc(sizeof(double) * _isosurf_n_vtx * 3);
+  memcpy(_isosurf_vtx_coord, cell_coord, sizeof(double) * n_cell * 3);
+
+  for (int i = 0; i < n_face; i++) {
+    if (face_tag[i] != 0) {
+      memcpy(_isosurf_vtx_coord + 3*(n_cell + i_tagged_face[i]),
+             face_coord + 3*i,
+             sizeof(double) * 3);
+    }
+  }
+
+  for (int i = 0; i < n_edge; i++) {
+    if (edge_tag[i] != 0) {
+      memcpy(_isosurf_vtx_coord + 3*(n_cell + n_tagged_face + i_tagged_edge[i]),
+             edge_coord + 3*i,
+             sizeof(double) * 3);
+    }
+  }
+
+  int _isosurf_n_tri = 0;
+  for (int icell = 0; icell < n_cell; icell++) {
+    for (int idx_face = pcell_face_idx[icell]; idx_face < pcell_face_idx[icell+1]; idx_face++) {
+      int iface = PDM_ABS(pcell_face[idx_face]) - 1;
+
+      if (face_tag[iface] == 0) {
+        continue;
+      }
+
+      for (int idx_edge = pface_edge_idx[iface]; idx_edge < pface_edge_idx[iface+1]; idx_edge++) {
+        int iedge = PDM_ABS(pface_edge[idx_edge]) - 1;
+
+        if (edge_tag[iedge] != 0) {
+          _isosurf_n_tri++;
+        }
+      }
+    }
+  }
+
+
+  int *_isosurf_tri_vtx = (int *) malloc(sizeof(int) * _isosurf_n_tri * 3);
+  _isosurf_n_tri = 0;
+  for (int icell = 0; icell < n_cell; icell++) {
+    for (int idx_face = pcell_face_idx[icell]; idx_face < pcell_face_idx[icell+1]; idx_face++) {
+      int iface = PDM_ABS(pcell_face[idx_face]) - 1;
+
+      if (face_tag[iface] == 0) {
+        continue;
+      }
+      int sgn_face = PDM_SIGN(pcell_face[idx_face]);
+      int ipt_face = n_cell + i_tagged_face[iface] + 1;
+
+      for (int idx_edge = pface_edge_idx[iface]; idx_edge < pface_edge_idx[iface+1]; idx_edge++) {
+        int iedge = PDM_ABS(pface_edge[idx_edge]) - 1;
+
+        if (edge_tag[iedge] != 0) {
+
+          int sgn_edge = PDM_SIGN(pface_edge[idx_edge]);
+          int ipt_edge = n_cell + n_tagged_face + i_tagged_edge[iedge] + 1;
+
+          int sgn = sgn_edge * sgn_face * edge_tag[iedge];
+
+          _isosurf_tri_vtx[3*_isosurf_n_tri]   = icell + 1;
+          if (sgn < 0) {
+            _isosurf_tri_vtx[3*_isosurf_n_tri+1] = ipt_face;
+            _isosurf_tri_vtx[3*_isosurf_n_tri+2] = ipt_edge;
+          } else {
+            _isosurf_tri_vtx[3*_isosurf_n_tri+1] = ipt_edge;
+            _isosurf_tri_vtx[3*_isosurf_n_tri+2] = ipt_face;
+          }
+          _isosurf_n_tri++;
+
+        }
+      }
+    }
+  }
+  free(edge_tag     );
+  free(edge_coord   );
+  free(edge_gradient);
+
+
+  sprintf(filename, "isosurf_tri_%2.2d.vtk", i_rank);
+  PDM_vtk_write_std_elements(filename,
+                             _isosurf_n_vtx,
+                             _isosurf_vtx_coord,
+                             NULL,
+                             PDM_MESH_NODAL_TRIA3,
+                             _isosurf_n_tri,
+                             _isosurf_tri_vtx,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+  free(_isosurf_vtx_coord);
+  free(_isosurf_tri_vtx);
+
+  free(i_tagged_edge);
+  free(i_tagged_face);
+
+
+  free (is_treated_face);
   free (face_coord);
   free (cell_coord);
   free (face_tag);
@@ -2139,7 +2257,10 @@ _iso_surface_dist
   }
 
   if(isos->dim == 3) {
+    free(pequi_parent_face_ln_to_gn);
     free(pequi_face_ln_to_gn);
+    free(pequi_cell_face_idx);
+    free(pequi_cell_face);
   }
 
   free(isoline_vtx_coord      );
