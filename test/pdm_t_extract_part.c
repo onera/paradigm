@@ -635,7 +635,7 @@ int main(int argc, char *argv[])
                                        pn_select_cell[i_part],
                                        selected_l_num[i_part]);
 
-    PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
+    // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
 
   }
 

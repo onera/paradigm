@@ -248,6 +248,54 @@ _cell_center_3d
   *cell_center = entity_center;
 }
 
+static
+void
+extract_entity1_entity2
+(
+int            n_part,
+int           *n_entity1,
+int           *n_extract_entity1,
+int          **extract_lnum,
+int          **entity1_entity2_idx,
+int          **entity1_entity2,
+PDM_g_num_t  **entity2_ln_to_gn,
+int         ***extract_entity1_entity2_idx,
+PDM_g_num_t ***extract_entity1_entity2
+)
+{
+  int         **_extract_entity1_entity2_idx = malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **_extract_entity1_entity2     = malloc(n_part * sizeof(PDM_g_num_t *));
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_extract = n_extract_entity1[i_part];
+    int         *_pentity1_entity2     = entity1_entity2    [i_part];
+    int         *_pentity1_entity2_idx = entity1_entity2_idx[i_part];
+    PDM_g_num_t *_pentity2_ln_to_gn    = entity2_ln_to_gn   [i_part];
+    int          _pn_entity1           = n_entity1          [i_part];
+
+    _extract_entity1_entity2    [i_part] = (PDM_g_num_t *) malloc( _pentity1_entity2_idx[_pn_entity1] * sizeof(PDM_g_num_t));
+    _extract_entity1_entity2_idx[i_part] = (int         *) malloc( (_pn_entity1+1) * sizeof(int        ));
+
+    int idx_write = 0;
+    _extract_entity1_entity2_idx[i_part][0] = 0;
+    for(int idx_entity = 0; idx_entity < n_extract; ++idx_entity) {
+      int i_entity = extract_lnum[i_part][idx_entity];
+
+      int n_tmp = _pentity1_entity2[i_entity+1] - _pentity1_entity2[i_entity];
+      _extract_entity1_entity2_idx[i_part][idx_entity+1] = _extract_entity1_entity2_idx[i_part][idx_entity] + n_tmp;
+
+      for(int idx_entity2 = _pentity1_entity2_idx[i_entity]; idx_entity2 < _pentity1_entity2_idx[i_entity+1]; ++idx_entity2) {
+        int i_entity2 = PDM_ABS(_pentity1_entity2[idx_entity2])-1;
+        _extract_entity1_entity2[i_part][idx_write++] = _pentity2_ln_to_gn[i_entity2];
+      }
+    }
+  }
+
+  *extract_entity1_entity2_idx = _extract_entity1_entity2_idx;
+  *extract_entity1_entity2     = _extract_entity1_entity2;
+}
+
 
 
 /*=============================================================================
@@ -424,26 +472,57 @@ PDM_extract_part_compute
   free(child_selected_g_num);
   PDM_gnum_free(gnum_extract);
 
-  int dn_cell_equi = PDM_part_to_block_n_elt_block_get (ptb_equi);
-  PDM_g_num_t *dextract_gnum = PDM_part_to_block_block_gnum_get(ptb_equi);
-
-  PDM_part_to_block_free(ptb_equi);
-
-  /*
-   * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
-   *   Puis dconnectiviy_transpose puis combine
-   */
-
-
-
+  int          dn_entity_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
+  PDM_g_num_t *dextract_gnum  = PDM_part_to_block_block_gnum_get (ptb_equi);
 
   if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
+
+    /*
+     *
+     */
+
+
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
       free(entity_center[i_part]);
     }
     free(entity_center);
+  } else {
+    /*
+     * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
+     *   Puis dconnectiviy_transpose puis combine
+     */
+
+    abort();
 
   }
+
+  /*
+   * Extraction des connectivités
+   */
+  if(extrp->dim == 3) {
+    PDM_g_num_t **selected_cell_face     = NULL;
+    int         **selected_cell_face_idx = NULL;
+    extract_entity1_entity2(extrp->n_part_in,
+                            extrp->n_cell,
+                            extrp->n_extract,
+                            extrp->extract_lnum,
+                            extrp->pcell_face_idx,
+                            extrp->pcell_face,
+                            extrp->face_ln_to_gn,
+                            &selected_cell_face_idx,
+                            &selected_cell_face);
+
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      free(selected_cell_face_idx[i_part]);
+      free(selected_cell_face    [i_part]);
+    }
+    free(selected_cell_face_idx);
+    free(selected_cell_face    );
+
+  }
+
+
+  PDM_part_to_block_free(ptb_equi);
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     free(entity_extract_g_num[i_part]);
