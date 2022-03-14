@@ -94,7 +94,7 @@ _face_center_2d
       double inv = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
 
       for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
-        int i_edge = _pface_edge[idx_edge];
+        int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
         int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
         int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
 
@@ -149,6 +149,55 @@ _cell_center_3d
     for(int i_part = 0; i_part < n_part_in; ++i_part) {
       entity_center[i_part] = (double *) malloc(3 * n_extract[i_part] * sizeof(double));
 
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
+      int    *_pface_vtx      = pface_vtx     [i_part];
+      int    *_pface_vtx_idx  = pface_vtx_idx [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
+        int i_cell = extract_lnum[i_part][idx_cell];
+
+        entity_center[i_part][3*i_cell  ] = 0.;
+        entity_center[i_part][3*i_cell+1] = 0.;
+        entity_center[i_part][3*i_cell+2] = 0.;
+
+        double inv = 1./((double)  _pcell_face_idx[i_cell+1] - _pcell_face_idx[i_cell]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double inv2 = 1./((double)  _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+          for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _pface_vtx[idx_vtx]-1;
+            fcx += _pvtx_coord[i_vtx];
+            fcy += _pvtx_coord[i_vtx];
+            fcz += _pvtx_coord[i_vtx];
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*i_cell  ] += fcx;
+          entity_center[i_part][3*i_cell+1] += fcy;
+          entity_center[i_part][3*i_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*i_cell  ] = entity_center[i_part][3*i_cell  ] * inv;
+        entity_center[i_part][3*i_cell+1] = entity_center[i_part][3*i_cell+1] * inv;
+        entity_center[i_part][3*i_cell+2] = entity_center[i_part][3*i_cell+2] * inv;
+      } /* End cell */
+    }
+  } else if( from_edge == 1) {
+    for(int i_part = 0; i_part < n_part_in; ++i_part) {
+      entity_center[i_part] = (double *) malloc(3 * n_extract[i_part] * sizeof(double));
+
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
       int    *_pface_edge     = pface_edge    [i_part];
       int    *_pface_edge_idx = pface_edge_idx[i_part];
       int    *_pedge_vtx      = pedge_vtx     [i_part];
@@ -156,10 +205,43 @@ _cell_center_3d
 
       for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
         int i_cell = extract_lnum[i_part][idx_cell];
-      }
-    }
-  } else if( from_edge == 1) {
 
+        entity_center[i_part][3*i_cell  ] = 0.;
+        entity_center[i_part][3*i_cell+1] = 0.;
+        entity_center[i_part][3*i_cell+2] = 0.;
+
+        double inv = 1./((double)  _pcell_face_idx[i_cell+1] - _pcell_face_idx[i_cell]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double inv2 = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+            int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
+            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+            fcx += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+            fcy += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+            fcz += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*i_cell  ] += fcx;
+          entity_center[i_part][3*i_cell+1] += fcy;
+          entity_center[i_part][3*i_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*i_cell  ] = entity_center[i_part][3*i_cell  ] * inv;
+        entity_center[i_part][3*i_cell+1] = entity_center[i_part][3*i_cell+1] * inv;
+        entity_center[i_part][3*i_cell+2] = entity_center[i_part][3*i_cell+2] * inv;
+      } /* End cell */
+    }
   }
 
 
