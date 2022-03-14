@@ -54,6 +54,67 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+void
+_face_center_2d
+(
+  int       n_part_in,
+  int      *n_extract,
+  int     **extract_lnum,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    assert(pface_edge    [i_part] != NULL);
+    assert(pface_edge_idx[i_part] != NULL);
+    assert(pedge_vtx     [i_part] != NULL);
+    assert(pvtx_coord    [i_part] != NULL);
+  }
+
+  double** entity_center = malloc(n_part_in * sizeof(double * ));
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    entity_center[i_part] = (double *) malloc(3 * n_extract[i_part] * sizeof(double));
+
+    int    *_pface_edge     = pface_edge    [i_part];
+    int    *_pface_edge_idx = pface_edge_idx[i_part];
+    int    *_pedge_vtx      = pedge_vtx     [i_part];
+    double *_pvtx_coord     = pvtx_coord    [i_part];
+
+    for(int idx_face = 0; idx_face < n_extract[i_part]; ++idx_face) {
+
+      int i_face = extract_lnum[i_part][idx_face];
+      entity_center[i_part][3*i_face  ] = 0.;
+      entity_center[i_part][3*i_face+1] = 0.;
+      entity_center[i_part][3*i_face+2] = 0.;
+
+      double inv = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+      for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+        int i_edge = _pface_edge[idx_edge];
+        int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+        int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+
+        entity_center[i_part][3*i_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*i_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*i_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+
+      }
+      entity_center[i_part][3*i_face  ] = entity_center[i_part][3*i_face  ] * inv;
+      entity_center[i_part][3*i_face+1] = entity_center[i_part][3*i_face+1] * inv;
+      entity_center[i_part][3*i_face+2] = entity_center[i_part][3*i_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
+
+
+
 
 /*=============================================================================
  * Public function definitions
@@ -151,48 +212,17 @@ PDM_extract_part_compute
   if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
     if(extrp->dim == 2) {
       // Compute entity_center with face_edge + edge_vtx
-      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-        assert(extrp->pface_edge    [i_part] != NULL);
-        assert(extrp->pface_edge_idx[i_part] != NULL);
-        assert(extrp->pedge_vtx     [i_part] != NULL);
-        assert(extrp->pvtx_coord   [i_part] != NULL);
-      }
+      _face_center_2d(extrp->n_part_in,
+                      extrp->n_extract,
+                      extrp->extract_lnum,
+                      extrp->pface_edge_idx,
+                      extrp->pface_edge,
+                      extrp->pedge_vtx,
+                      extrp->pvtx_coord,
+                      &entity_center);
 
-      entity_center = malloc(extrp->n_part_in * sizeof(double * ));
-      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-        entity_center[i_part] = (double *) malloc(3 * extrp->n_extract[i_part] * sizeof(double));
 
-        int    *_pface_edge     = extrp->pface_edge    [i_part];
-        int    *_pface_edge_idx = extrp->pface_edge_idx[i_part];
-        int    *_pedge_vtx      = extrp->pedge_vtx     [i_part];
-        double *_pvtx_coord     = extrp->pvtx_coord    [i_part];
-
-        for(int idx_face = 0; idx_face < extrp->n_extract[i_part]; ++idx_face) {
-
-          int i_face = extrp->extract_lnum[i_part][idx_face];
-          entity_center[i_part][3*i_face  ] = 0.;
-          entity_center[i_part][3*i_face+1] = 0.;
-          entity_center[i_part][3*i_face+2] = 0.;
-
-          double inv = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
-
-          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
-            int i_edge = _pface_edge[idx_edge];
-            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
-            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
-
-            entity_center[i_part][3*i_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-            entity_center[i_part][3*i_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-            entity_center[i_part][3*i_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-
-          }
-          entity_center[i_part][3*i_face  ] = entity_center[i_part][3*i_face  ] * inv;
-          entity_center[i_part][3*i_face+1] = entity_center[i_part][3*i_face+1] * inv;
-          entity_center[i_part][3*i_face+2] = entity_center[i_part][3*i_face+2] * inv;
-        }
-      }
-
-    } else {
+    } else {  // dim == 3
 
     }
   }
