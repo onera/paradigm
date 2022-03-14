@@ -338,6 +338,11 @@ PDM_extract_part_compute
     }
   }
 
+  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_in, PDM_FALSE,
+                                                 1.e-6,
+                                                 extrp->comm,
+                                                 PDM_OWNERSHIP_KEEP);
+;
 
   /*
    * Calcul des coordonnées to setup hilbert ordering (independant of parallelism )
@@ -355,7 +360,6 @@ PDM_extract_part_compute
                       extrp->pvtx_coord,
                       &entity_center);
     } else {  // dim == 3
-
       _cell_center_3d(extrp->n_part_in,
                       extrp->n_extract,
                       extrp->extract_lnum,
@@ -368,10 +372,61 @@ PDM_extract_part_compute
                       extrp->pedge_vtx,
                       extrp->pvtx_coord,
                       &entity_center);
+    }
 
+    for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+      PDM_gnum_set_from_coords(gnum_extract, i_part, extrp->n_extract[i_part], entity_center[i_part], NULL);
+    }
+  } else {
+
+    for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+      PDM_gnum_set_from_parents(gnum_extract, i_part, extrp->n_extract[i_part], entity_extract_g_num[i_part]);
+    }
+
+  }
+
+  /*
+   * Global numering computation
+   */
+  PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+  PDM_gnum_compute(gnum_extract);
+
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+    child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+    // PDM_log_trace_array_long(child_selected_g_num[i_part], pn_select_cell[i_part], "child_selected_g_num : ");
+  }
+  PDM_gnum_free(gnum_extract);
+
+  /*
+   *  Remake equilibrate block -> Block is not partial because we use child_gnum
+   */
+  double **weight = (double **) malloc( extrp->n_part_in * sizeof(double *));
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+    weight        [i_part] = malloc(extrp->n_extract[i_part] * sizeof(double));
+    for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
+      weight[i_part][i] = 1.;
     }
   }
 
+  PDM_part_to_block_t *ptb_equi = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_MERGE,
+                                                           1.,
+                                                           entity_extract_g_num,
+                                                           weight,
+                                                           extrp->n_extract,
+                                                           extrp->n_part_in,
+                                                           extrp->comm);
+
+
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+    free(weight[i_part]);
+  }
+  free(weight);
+
+  int dn_cell_equi = PDM_part_to_block_n_elt_block_get (ptb_equi);
+  PDM_g_num_t *dextract_gnum = PDM_part_to_block_block_gnum_get(ptb_equi);
+
+  PDM_part_to_block_free(ptb_equi);
 
   /*
    * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
@@ -380,24 +435,14 @@ PDM_extract_part_compute
 
 
 
-  /*
-   * Global numering computation
-   */
-  // PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  // for (int i_part = 0; i_part < n_part_zones; i_part++){
-  //   PDM_gnum_set_from_coords(gnum_extract, i_part, pn_select_cell[i_part], tmp_extract_cell_center[i_part], NULL);
-  // }
 
-  // PDM_gnum_compute(gnum_extract);
+  if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      free(entity_center[i_part]);
+    }
+    free(entity_center);
 
-  // for (int i_part = 0; i_part < n_part_zones; i_part++){
-  //   child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-  //   // PDM_log_trace_array_long(child_selected_g_num[i_part], pn_select_cell[i_part], "child_selected_g_num : ");
-  // }
-  // PDM_gnum_free(gnum_extract);
-
-
-
+  }
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     free(entity_extract_g_num[i_part]);
