@@ -87,25 +87,25 @@ _face_center_2d
     for(int idx_face = 0; idx_face < n_extract[i_part]; ++idx_face) {
 
       int i_face = extract_lnum[i_part][idx_face];
-      entity_center[i_part][3*i_face  ] = 0.;
-      entity_center[i_part][3*i_face+1] = 0.;
-      entity_center[i_part][3*i_face+2] = 0.;
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
 
-      double inv = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+      double inv = 1./((double) _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
 
       for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
         int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
         int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
         int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
 
-        entity_center[i_part][3*i_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-        entity_center[i_part][3*i_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-        entity_center[i_part][3*i_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
 
       }
-      entity_center[i_part][3*i_face  ] = entity_center[i_part][3*i_face  ] * inv;
-      entity_center[i_part][3*i_face+1] = entity_center[i_part][3*i_face+1] * inv;
-      entity_center[i_part][3*i_face+2] = entity_center[i_part][3*i_face+2] * inv;
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
     }
   }
 
@@ -155,14 +155,15 @@ _cell_center_3d
       int    *_pface_vtx_idx  = pface_vtx_idx [i_part];
       double *_pvtx_coord     = pvtx_coord    [i_part];
 
+      // PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum ::");
       for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
         int i_cell = extract_lnum[i_part][idx_cell];
 
-        entity_center[i_part][3*i_cell  ] = 0.;
-        entity_center[i_part][3*i_cell+1] = 0.;
-        entity_center[i_part][3*i_cell+2] = 0.;
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
 
-        double inv = 1./((double)  _pcell_face_idx[i_cell+1] - _pcell_face_idx[i_cell]);
+        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
 
         double fcx = 0;
         double fcy = 0;
@@ -182,14 +183,14 @@ _cell_center_3d
           fcy = fcy * inv2;
           fcz = fcz * inv2;
 
-          entity_center[i_part][3*i_cell  ] += fcx;
-          entity_center[i_part][3*i_cell+1] += fcy;
-          entity_center[i_part][3*i_cell+2] += fcz;
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
         }
 
-        entity_center[i_part][3*i_cell  ] = entity_center[i_part][3*i_cell  ] * inv;
-        entity_center[i_part][3*i_cell+1] = entity_center[i_part][3*i_cell+1] * inv;
-        entity_center[i_part][3*i_cell+2] = entity_center[i_part][3*i_cell+2] * inv;
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
       } /* End cell */
     }
   } else if( from_edge == 1) {
@@ -206,11 +207,11 @@ _cell_center_3d
       for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
         int i_cell = extract_lnum[i_part][idx_cell];
 
-        entity_center[i_part][3*i_cell  ] = 0.;
-        entity_center[i_part][3*i_cell+1] = 0.;
-        entity_center[i_part][3*i_cell+2] = 0.;
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
 
-        double inv = 1./((double)  _pcell_face_idx[i_cell+1] - _pcell_face_idx[i_cell]);
+        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
 
         double fcx = 0;
         double fcy = 0;
@@ -232,18 +233,17 @@ _cell_center_3d
           fcy = fcy * inv2;
           fcz = fcz * inv2;
 
-          entity_center[i_part][3*i_cell  ] += fcx;
-          entity_center[i_part][3*i_cell+1] += fcy;
-          entity_center[i_part][3*i_cell+2] += fcz;
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
         }
 
-        entity_center[i_part][3*i_cell  ] = entity_center[i_part][3*i_cell  ] * inv;
-        entity_center[i_part][3*i_cell+1] = entity_center[i_part][3*i_cell+1] * inv;
-        entity_center[i_part][3*i_cell+2] = entity_center[i_part][3*i_cell+2] * inv;
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
       } /* End cell */
     }
   }
-
 
   *cell_center = entity_center;
 }
@@ -393,9 +393,8 @@ PDM_extract_part_compute
 
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
     child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-    // PDM_log_trace_array_long(child_selected_g_num[i_part], pn_select_cell[i_part], "child_selected_g_num : ");
+    // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_extract[i_part], "child_selected_g_num : ");
   }
-  PDM_gnum_free(gnum_extract);
 
   /*
    *  Remake equilibrate block -> Block is not partial because we use child_gnum
@@ -411,7 +410,7 @@ PDM_extract_part_compute
   PDM_part_to_block_t *ptb_equi = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_MERGE,
                                                            1.,
-                                                           entity_extract_g_num,
+                                                           child_selected_g_num,
                                                            weight,
                                                            extrp->n_extract,
                                                            extrp->n_part_in,
@@ -422,6 +421,8 @@ PDM_extract_part_compute
     free(weight[i_part]);
   }
   free(weight);
+  free(child_selected_g_num);
+  PDM_gnum_free(gnum_extract);
 
   int dn_cell_equi = PDM_part_to_block_n_elt_block_get (ptb_equi);
   PDM_g_num_t *dextract_gnum = PDM_part_to_block_block_gnum_get(ptb_equi);
