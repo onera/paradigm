@@ -113,6 +113,58 @@ _face_center_2d
 }
 
 
+static
+void
+_cell_center_3d
+(
+  int       n_part_in,
+  int      *n_extract,
+  int     **extract_lnum,
+  int     **pcell_face_idx,
+  int     **pcell_face,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***cell_center
+)
+{
+  int from_edge = 0;
+  int from_face = 0;
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    if(pface_edge    [i_part] != NULL) {
+      from_edge = 1;
+    }
+    if(pface_vtx    [i_part] != NULL) {
+      from_face = 1;
+    }
+    assert(pvtx_coord    [i_part] != NULL);
+  }
+
+  double** entity_center = malloc(n_part_in * sizeof(double * ));
+
+  if(from_face == 1) {
+    for(int i_part = 0; i_part < n_part_in; ++i_part) {
+      entity_center[i_part] = (double *) malloc(3 * n_extract[i_part] * sizeof(double));
+
+      int    *_pface_edge     = pface_edge    [i_part];
+      int    *_pface_edge_idx = pface_edge_idx[i_part];
+      int    *_pedge_vtx      = pedge_vtx     [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
+        int i_cell = extract_lnum[i_part][idx_cell];
+      }
+    }
+  } else if( from_edge == 1) {
+
+  }
+
+
+  *cell_center = entity_center;
+}
 
 
 
@@ -220,9 +272,20 @@ PDM_extract_part_compute
                       extrp->pedge_vtx,
                       extrp->pvtx_coord,
                       &entity_center);
-
-
     } else {  // dim == 3
+
+      _cell_center_3d(extrp->n_part_in,
+                      extrp->n_extract,
+                      extrp->extract_lnum,
+                      extrp->pcell_face_idx,
+                      extrp->pcell_face,
+                      extrp->pface_edge_idx,
+                      extrp->pface_edge,
+                      extrp->pface_vtx_idx,
+                      extrp->pface_vtx,
+                      extrp->pedge_vtx,
+                      extrp->pvtx_coord,
+                      &entity_center);
 
     }
   }
