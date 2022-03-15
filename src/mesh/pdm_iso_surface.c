@@ -34,6 +34,7 @@
 #include "pdm_distrib.h"
 #include "pdm_polygon.h"
 #include "pdm_plane.h"
+#include "pdm_extract_part.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -2353,20 +2354,18 @@ _iso_surface_part
   /*
    *  Scan edges to find those which intersect the iso-surface
    */
-  int    **pedge_tag    = (int **)    malloc(sizeof(int *)    * isos->n_part);
-  // double **pedge_center = (double **) malloc(sizeof(double *) * isos->n_part);
+  int **edge_tag = (int **) malloc(sizeof(int *) * isos->n_part);
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
-    pedge_tag[i_part]    = (int *)    malloc(sizeof(int)    * isos->n_edge[i_part]);
-    // pedge_center[i_part] = (double *) malloc(sizeof(double) * isos->n_edge[i_part] * 3);
+    edge_tag[i_part] = (int *) malloc(sizeof(int) * isos->n_edge[i_part]);
 
     for (int i = 0; i < isos->n_edge[i_part]; i++) {
 
       int i_vtx1 = isos->pedge_vtx[i_part][2*i  ]-1;
       int i_vtx2 = isos->pedge_vtx[i_part][2*i+1]-1;
 
-      pedge_tag[i_part][i] = 0;
+      edge_tag[i_part][i] = 0;
 
       double x1 = isos->pvtx_coord[i_part][3*i_vtx1  ];
       double y1 = isos->pvtx_coord[i_part][3*i_vtx1+1];
@@ -2391,25 +2390,22 @@ _iso_surface_part
       int sgn2 = PDM_SIGN(val2);
 
       if (sgn1 * sgn2 < 0) {
-        pedge_tag[i_part][i] = 1;
+        edge_tag[i_part][i] = 1;
       }
 
-      // pedge_center[i_part][3*i  ] = 0.5 * (x1 + x2);
-      // pedge_center[i_part][3*i+1] = 0.5 * (y1 + y2);
-      // pedge_center[i_part][3*i+2] = 0.5 * (z1 + z2);
     }
   }
 
   /*
    *  Scan cells to find those which intersect the iso-surface
    */
-  int *n_tagged_cell = (int *) malloc(sizeof(int) * isos->n_part);
-  PDM_g_num_t **ptagged_cell_g_num = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * isos->n_part);
+  int *n_extract_cell = (int *)  malloc(sizeof(int)   * isos->n_part);
+  int **extract_cell  = (int **) malloc(sizeof(int *) * isos->n_part);
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
-    n_tagged_cell[i_part] = 0;
-    ptagged_cell_g_num[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->n_cell[i_part]);
+    n_extract_cell[i_part] = 0;
+    extract_cell[i_part] = (int *) malloc(sizeof(int) * isos->n_cell[i_part]);
     for (int i = 0; i < isos->n_cell[i_part]; i++) {
 
       int is_tagged = 0;
@@ -2422,9 +2418,9 @@ _iso_surface_part
 
           int iedge = PDM_ABS(isos->pface_edge[i_part][idx_edge]) - 1;
 
-          if (pedge_tag[i_part][iedge] != 0) {
+          if (edge_tag[i_part][iedge] != 0) {
             is_tagged = 1;
-            ptagged_cell_g_num[i_part][n_tagged_cell[i_part]++] = isos->cell_ln_to_gn[i_part][i];
+            extract_cell[i_part][n_extract_cell[i_part]++] = i;
             break;
           }
 
@@ -2435,8 +2431,7 @@ _iso_surface_part
 
     }
 
-    ptagged_cell_g_num[i_part] = realloc(ptagged_cell_g_num[i_part],
-                                         sizeof(PDM_g_num_t) * n_tagged_cell[i_part]);
+    extract_cell[i_part] = realloc(extract_cell[i_part], sizeof(int) * n_extract_cell[i_part]);
   }
 
 
@@ -2462,18 +2457,58 @@ _iso_surface_part
   double      *pfield          = NULL;
   double      *pgradient_field = NULL;
 
-  // (...)
+  int n_part_out = 1;
+  PDM_extract_part_t *extrp = PDM_extract_part_create(3,
+                                                      isos->n_part,
+                                                      n_part_out,
+                                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                      PDM_OWNERSHIP_KEEP,
+                                                      isos->comm);
+
+  for (int i_part = 0; i_part < isos->n_part; ++i_part) {
+
+    PDM_extract_part_part_set(extrp,
+                              i_part,
+                              isos->n_cell[i_part],
+                              isos->n_face[i_part],
+                              isos->n_edge[i_part],
+                              isos->n_vtx[i_part],
+                              isos->pcell_face_idx[i_part],
+                              isos->pcell_face[i_part],
+                              isos->pface_edge_idx[i_part],
+                              isos->pface_edge[i_part],
+                              isos->pedge_vtx[i_part],
+                              NULL,//isos->pface_vtx_idx[i_part],
+                              NULL,//isos->pface_vtx[i_part],
+                              isos->cell_ln_to_gn[i_part],
+                              isos->face_ln_to_gn[i_part],
+                              isos->edge_ln_to_gn[i_part],
+                              isos->vtx_ln_to_gn[i_part],
+                              isos->pvtx_coord[i_part]);
+
+    PDM_extract_part_selected_lnum_set(extrp,
+                                       i_part,
+                                       n_extract_cell[i_part],
+                                       extract_cell[i_part]);
+  }
+
+  printf("PDM_extract_part_compute not ready yet");
   abort();
+  PDM_extract_part_compute(extrp);
+
+
+  PDM_extract_part_free(extrp);
+
+
+  // get...
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    free(pedge_tag[i_part]);
-    // free(pedge_center[i_part]);
-    free(ptagged_cell_g_num[i_part]);
+    free(edge_tag[i_part]);
+    free(extract_cell[i_part]);
   }
-  free(pedge_tag);
-  // free(pedge_center);
-  free(ptagged_cell_g_num);
-  free(n_tagged_cell);
+  free(edge_tag);
+  free(extract_cell);
+  free(n_extract_cell);
 
 
 
