@@ -126,11 +126,11 @@ _unit_sphere
  double z
 )
 {
-  return x * x + y * y + z * z - 0.125;
+  // return x * x + y * y + z * z - 0.125;
   // return PDM_ABS(x) + PDM_ABS(y) + PDM_ABS(z) - 0.5;
-  // double v1 = x * x + y * y + z * z - 0.125;
-  // double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
-  // return PDM_MIN(v1, v2);
+  double v1 = x * x + y * y + z * z - 0.125;
+  double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
+  return PDM_MIN(v1, v2);
 }
 // coordsX * coordsX + coordsY * coordsY + coordsZ * coordsZ - 0.125
 // (coordsX-0.2) * (coordsX-0.2) + (coordsY-0.2) * (coordsY-0.2) + (coordsZ-0.3) * (coordsZ-0.3) - 0.07
@@ -148,24 +148,25 @@ _unit_sphere_gradient
  double *df_dz
 )
 {
-  *df_dx = 2*x;
-  *df_dy = 2*y;
-  *df_dz = 2*z;
+  // *df_dx = 2*x;
+  // *df_dy = 2*y;
+  // *df_dz = 2*z;
   // *df_dx = PDM_SIGN(x);
   // *df_dy = PDM_SIGN(y);
   // *df_dz = PDM_SIGN(z);
-  // double v1 = x * x + y * y + z * z - 0.125;
-  // double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
 
-  // if (v1 < v2) {
-  //   *df_dx = 2*x;
-  //   *df_dy = 2*y;
-  //   *df_dz = 2*z;
-  // } else {
-  //   *df_dx = 2*(x-0.2);
-  //   *df_dy = 2*(y-0.2);
-  //   *df_dz = 2*(z-0.3);
-  // };
+  double v1 = x * x + y * y + z * z - 0.125;
+  double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
+
+  if (v1 < v2) {
+    *df_dx = 2*x;
+    *df_dy = 2*y;
+    *df_dz = 2*z;
+  } else {
+    *df_dx = 2*(x-0.2);
+    *df_dy = 2*(y-0.2);
+    *df_dz = 2*(z-0.3);
+  };
 }
 
 

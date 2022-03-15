@@ -1569,6 +1569,10 @@ _iso_surf_dist
         }
       }
 
+      /* Compute location in cell */
+      //...
+
+
     } else {
       double normalization = 1. / (double) i_cell_edge;
       for (int l = 0; l < dim; l++) {
@@ -1585,6 +1589,11 @@ _iso_surf_dist
   } // end of loop on cells
 
 
+
+
+
+
+  // Visu
   if (1) {
     int *pface_vtx = NULL;
     _compute_face_vtx(n_face,
@@ -1648,7 +1657,7 @@ _iso_surf_dist
 
 
   /*
-   *  Build connectivity
+   *  Build connectivity and global ids
    */
   int n_tagged_edge = 0;
   int n_tagged_face = 0;
@@ -2341,12 +2350,172 @@ _iso_surface_part
   PDM_iso_surface_t        *isos
 )
 {
-  int i_rank;
-  PDM_MPI_Comm_rank(isos->comm, &i_rank);
-
   /*
    *  Scan edges to find those which intersect the iso-surface
    */
+  int    **pedge_tag    = (int **)    malloc(sizeof(int *)    * isos->n_part);
+  // double **pedge_center = (double **) malloc(sizeof(double *) * isos->n_part);
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+
+    pedge_tag[i_part]    = (int *)    malloc(sizeof(int)    * isos->n_edge[i_part]);
+    // pedge_center[i_part] = (double *) malloc(sizeof(double) * isos->n_edge[i_part] * 3);
+
+    for (int i = 0; i < isos->n_edge[i_part]; i++) {
+
+      int i_vtx1 = isos->pedge_vtx[i_part][2*i  ]-1;
+      int i_vtx2 = isos->pedge_vtx[i_part][2*i+1]-1;
+
+      pedge_tag[i_part][i] = 0;
+
+      double x1 = isos->pvtx_coord[i_part][3*i_vtx1  ];
+      double y1 = isos->pvtx_coord[i_part][3*i_vtx1+1];
+      double z1 = isos->pvtx_coord[i_part][3*i_vtx1+2];
+
+      double x2 = isos->pvtx_coord[i_part][3*i_vtx2  ];
+      double y2 = isos->pvtx_coord[i_part][3*i_vtx2+1];
+      double z2 = isos->pvtx_coord[i_part][3*i_vtx1+2];
+
+      double val1 = 0;
+      double val2 = 0;
+      if (isos->iso_kind == PDM_ISO_SURFACE_KIND_PLANE) {
+        val1 = _plane_field(x1, y1, z1, isos->plane_equation);
+        val2 = _plane_field(x2, y2, z2, isos->plane_equation);
+      }
+      else {
+        val1 = isos->pfield[i_part][i_vtx1];
+        val2 = isos->pfield[i_part][i_vtx2];
+      }
+
+      int sgn1 = PDM_SIGN(val1);
+      int sgn2 = PDM_SIGN(val2);
+
+      if (sgn1 * sgn2 < 0) {
+        pedge_tag[i_part][i] = 1;
+      }
+
+      // pedge_center[i_part][3*i  ] = 0.5 * (x1 + x2);
+      // pedge_center[i_part][3*i+1] = 0.5 * (y1 + y2);
+      // pedge_center[i_part][3*i+2] = 0.5 * (z1 + z2);
+    }
+  }
+
+  /*
+   *  Scan cells to find those which intersect the iso-surface
+   */
+  int *n_tagged_cell = (int *) malloc(sizeof(int) * isos->n_part);
+  PDM_g_num_t **ptagged_cell_g_num = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * isos->n_part);
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+
+    n_tagged_cell[i_part] = 0;
+    ptagged_cell_g_num[i_part] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->n_cell[i_part]);
+    for (int i = 0; i < isos->n_cell[i_part]; i++) {
+
+      int is_tagged = 0;
+
+      for (int idx_face = isos->pcell_face_idx[i_part][i]; idx_face < isos->pcell_face_idx[i_part][i+1]; idx_face++) {
+
+        int iface = PDM_ABS(isos->pcell_face[i_part][idx_face]) - 1;
+
+        for (int idx_edge = isos->pface_edge_idx[i_part][iface]; idx_edge < isos->pface_edge_idx[i_part][iface+1]; idx_edge++) {
+
+          int iedge = PDM_ABS(isos->pface_edge[i_part][idx_edge]) - 1;
+
+          if (pedge_tag[i_part][iedge] != 0) {
+            is_tagged = 1;
+            ptagged_cell_g_num[i_part][n_tagged_cell[i_part]++] = isos->cell_ln_to_gn[i_part][i];
+            break;
+          }
+
+        }
+
+        if (is_tagged) break;
+      }
+
+    }
+
+    ptagged_cell_g_num[i_part] = realloc(ptagged_cell_g_num[i_part],
+                                         sizeof(PDM_g_num_t) * n_tagged_cell[i_part]);
+  }
+
+
+
+
+  /*
+   *  Extract 'partition'
+   */
+  int          n_cell = 0;
+  int          n_face = 0;
+  int          n_edge = 0;
+  int          n_vtx  = 0;
+  int         *pcell_face_idx  = NULL;
+  int         *pcell_face      = NULL;
+  int         *pface_edge_idx  = NULL;
+  int         *pface_edge      = NULL;
+  int         *pedge_vtx       = NULL;
+  PDM_g_num_t *pcell_ln_to_gn  = NULL;
+  PDM_g_num_t *pface_ln_to_gn  = NULL;
+  PDM_g_num_t *pedge_ln_to_gn  = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn   = NULL;
+  double      *pvtx_coord      = NULL;
+  double      *pfield          = NULL;
+  double      *pgradient_field = NULL;
+
+  // (...)
+  abort();
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    free(pedge_tag[i_part]);
+    // free(pedge_center[i_part]);
+    free(ptagged_cell_g_num[i_part]);
+  }
+  free(pedge_tag);
+  // free(pedge_center);
+  free(ptagged_cell_g_num);
+  free(n_tagged_cell);
+
+
+
+  /*
+   *  Compute iso-surface
+   */
+  int          isosurf_n_vtx           = 0;
+  double      *isosurf_vtx_coord       = NULL;
+  PDM_g_num_t *isosurf_vtx_parent_cell = NULL;
+  PDM_g_num_t *isosurf_vtx_ln_to_gn    = NULL;
+  int          isosurf_n_face          = 0;
+  int         *isosurf_face_vtx_idx    = NULL;
+  PDM_g_num_t *isosurf_face_vtx_g_num  = NULL;
+  PDM_g_num_t *isosurf_face_ln_to_gn   = NULL;
+
+
+  _iso_surf_dist(isos,
+                 n_cell,
+                 n_face,
+                 n_edge,
+                 n_vtx,
+                 pcell_face_idx,
+                 pcell_face,
+                 pface_edge_idx,
+                 pface_edge,
+                 pedge_vtx,
+                 pcell_ln_to_gn,
+                 pface_ln_to_gn,
+                 pedge_ln_to_gn,
+                 pvtx_ln_to_gn,
+                 pvtx_coord,
+                 pfield,
+                 pgradient_field,
+                 &isosurf_n_vtx,
+                 &isosurf_vtx_coord,
+                 &isosurf_vtx_parent_cell,
+                 &isosurf_vtx_ln_to_gn,
+                 &isosurf_n_face,
+                 &isosurf_face_vtx_idx,
+                 &isosurf_face_vtx_g_num,
+                 &isosurf_face_ln_to_gn);
+
 }
 
 /*=============================================================================
@@ -2404,7 +2573,8 @@ PDM_iso_surface_compute
 )
 {
   if(isos->is_dist == 0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_iso_surface_compute Not implemented with partition layout\n");
+    // PDM_error(__FILE__, __LINE__, 0, "PDM_iso_surface_compute Not implemented with partition layout\n");
+    _iso_surface_part(isos);
   } else {
     _iso_surface_dist(isos);
   }

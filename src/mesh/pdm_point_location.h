@@ -102,6 +102,24 @@ PDM_point_location_compute_uvw
  double                     uvw[3]
  );
 
+
+int
+PDM_point_location_locate_points_in_polyhedron
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const int         n_pts,
+ const double      pts_coord[],
+ double            distance[],
+ double            proj_coord[],
+ double            bar_coord[]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

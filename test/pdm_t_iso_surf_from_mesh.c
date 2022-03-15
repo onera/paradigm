@@ -353,6 +353,10 @@ _read_surface_mesh
   *n_vtx  = (int) gn_vtx;
   *n_face = (int) gn_face;
 
+  if (i_rank == 0) {
+    printf("gsm_n_vtx = "PDM_FMT_G_NUM", gsm_n_face = "PDM_FMT_G_NUM"\n", gn_vtx, gn_face);
+  }
+
   *vtx_coord = malloc (sizeof(double) * (*n_vtx) * 3);
   for (int i = 0; i < *n_vtx; i++) {
     fscanf(f, "%lf %lf %lf\n",
@@ -636,7 +640,7 @@ int main(int argc, char *argv[])
                                         &gradient);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    for (int i = 0; i < n_vtx[i_part]; i++) {
+    for (int i = 0; i < pn_vtx[i_part]; i++) {
       field[i_part][i] -= level;
     }
   }
@@ -708,13 +712,13 @@ int main(int argc, char *argv[])
 
       int *edge_vtx_idx;
       int *edge_vtx;
-      int n_edge = PDM_multipart_part_connectivity_get(mpart,
-                                    0,
-                                    i_part,
-                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                    &edge_vtx,
-                                    &edge_vtx_idx,
-                                    PDM_OWNERSHIP_KEEP);
+      PDM_multipart_part_connectivity_get(mpart,
+                                          0,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &edge_vtx,
+                                          &edge_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
 
 
       PDM_g_num_t *cell_ln_to_gn;
