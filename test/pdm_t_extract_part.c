@@ -646,8 +646,6 @@ int main(int argc, char *argv[])
   PDM_extract_part_free(extrp);
 
 
-
-
   for (int i_part = 0; i_part < n_part_zones; i_part++){
     free(cell_center       [i_part]);
     free(selected_g_num    [i_part]);
