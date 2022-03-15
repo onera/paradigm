@@ -3618,6 +3618,29 @@ PDM_multipart_free
 }
 
 
+int
+PDM_multipart_part_vtx_coord_get
+(
+PDM_multipart_t                *multipart,
+const int                       i_zone,
+const int                       i_part,
+      double                  **vtx_coord,
+      PDM_ownership_t           ownership
+)
+{
+  PDM_UNUSED(ownership);
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  *vtx_coord = _pmeshes.parts[i_part]->vtx;
+
+  return _pmeshes.parts[i_part]->n_vtx;
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

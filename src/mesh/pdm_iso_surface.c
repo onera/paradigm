@@ -1202,14 +1202,14 @@ _iso_surf_dist
   double             *pvtx_coord,
   double             *pfield,
   double             *pgradient_field,
-  int                *isoline_n_vtx,
-  double            **isoline_vtx_coord,
-  PDM_g_num_t       **isoline_vtx_parent_cell,
-  PDM_g_num_t       **isoline_vtx_ln_to_gn,
-  int                *isoline_n_face,
-  int               **isoline_face_vtx_idx,
-  PDM_g_num_t       **isoline_face_vtx,
-  PDM_g_num_t       **isoline_face_ln_to_gn
+  int                *isosurf_n_vtx,
+  double            **isosurf_vtx_coord,
+  PDM_g_num_t       **isosurf_vtx_parent_cell,
+  PDM_g_num_t       **isosurf_vtx_ln_to_gn,
+  int                *isosurf_n_face,
+  int               **isosurf_face_vtx_idx,
+  PDM_g_num_t       **isosurf_face_vtx_g_num,
+  PDM_g_num_t       **isosurf_face_ln_to_gn
 )
 {
   const int use_gradient = (pgradient_field != NULL);
@@ -1664,12 +1664,34 @@ _iso_surf_dist
       i_tagged_face[i] = n_tagged_face++;
     }
   }
+
+
+  PDM_g_num_t *distrib_tagged_edge = PDM_compute_entity_distribution(comm, n_tagged_edge);
+  PDM_g_num_t *distrib_tagged_face = PDM_compute_entity_distribution(comm, n_tagged_face);
+
+  PDM_g_num_t gn_cell;
+  if (i_rank == n_rank-1) {
+    gn_cell = pcell_ln_to_gn[n_cell-1];
+  }
+  PDM_MPI_Bcast(&gn_cell, 1, PDM__PDM_MPI_G_NUM, n_rank-1, comm);
+
+
+
   int _isosurf_n_vtx = n_cell + n_tagged_face + n_tagged_edge;
-  double *_isosurf_vtx_coord = (double *) malloc(sizeof(double) * _isosurf_n_vtx * 3);
+  *isosurf_n_vtx = _isosurf_n_vtx;
+  *isosurf_vtx_coord = (double *) malloc(sizeof(double) * _isosurf_n_vtx * 3);
+  double *_isosurf_vtx_coord = *isosurf_vtx_coord;
   memcpy(_isosurf_vtx_coord, cell_coord, sizeof(double) * n_cell * 3);
+
+  *isosurf_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_vtx);
+  PDM_g_num_t *_isosurf_vtx_ln_to_gn = *isosurf_vtx_ln_to_gn;
+  memcpy(_isosurf_vtx_ln_to_gn, pcell_ln_to_gn, sizeof(PDM_g_num_t) * n_cell);
+
 
   for (int i = 0; i < n_face; i++) {
     if (face_tag[i] != 0) {
+
+      _isosurf_vtx_ln_to_gn[n_cell + i_tagged_face[i]] = gn_cell + distrib_tagged_face[i_rank] + i_tagged_face[i] + 1;
       memcpy(_isosurf_vtx_coord + 3*(n_cell + i_tagged_face[i]),
              face_coord + 3*i,
              sizeof(double) * 3);
@@ -1678,6 +1700,8 @@ _iso_surf_dist
 
   for (int i = 0; i < n_edge; i++) {
     if (edge_tag[i] != 0) {
+      _isosurf_vtx_ln_to_gn[n_cell + n_tagged_face + i_tagged_edge[i]] =
+      gn_cell + distrib_tagged_face[n_rank] + distrib_tagged_edge[i_rank] + i_tagged_edge[i] + 1;
       memcpy(_isosurf_vtx_coord + 3*(n_cell + n_tagged_face + i_tagged_edge[i]),
              edge_coord + 3*i,
              sizeof(double) * 3);
@@ -1703,7 +1727,7 @@ _iso_surf_dist
     }
   }
 
-
+  *isosurf_n_face = _isosurf_n_tri;
   int *_isosurf_tri_vtx = (int *) malloc(sizeof(int) * _isosurf_n_tri * 3);
   _isosurf_n_tri = 0;
   for (int icell = 0; icell < n_cell; icell++) {
@@ -1744,6 +1768,19 @@ _iso_surf_dist
   free(edge_coord   );
   free(edge_gradient);
 
+  free(distrib_tagged_edge);
+  free(distrib_tagged_face);
+
+
+  *isosurf_face_vtx_g_num = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri * 3);
+  for (int i = 0; i < _isosurf_n_tri * 3; i++) {
+    (*isosurf_face_vtx_g_num)[i] = _isosurf_vtx_ln_to_gn[_isosurf_tri_vtx[i] - 1];
+  }
+
+  *isosurf_face_vtx_idx = (int *) malloc(sizeof(int) * (_isosurf_n_tri + 1));
+  for (int i = 0; i <= _isosurf_n_tri; i++) {
+    (*isosurf_face_vtx_idx)[i] = 3*i;
+  }
 
   sprintf(filename, "isosurf_tri_%2.2d.vtk", i_rank);
   PDM_vtk_write_std_elements(filename,
@@ -1757,13 +1794,11 @@ _iso_surf_dist
                              0,
                              NULL,
                              NULL);
-  free(_isosurf_vtx_coord);
-  free(_isosurf_tri_vtx);
 
   free(i_tagged_edge);
   free(i_tagged_face);
 
-
+  free (_isosurf_tri_vtx);
   free (is_treated_face);
   free (face_coord);
   free (cell_coord);
@@ -2297,6 +2332,22 @@ _iso_surface_dist
 
 }
 
+
+
+static
+void
+_iso_surface_part
+(
+  PDM_iso_surface_t        *isos
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+
+  /*
+   *  Scan edges to find those which intersect the iso-surface
+   */
+}
 
 /*=============================================================================
  * Public function definitions
