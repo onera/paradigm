@@ -275,7 +275,6 @@ int         ***idx_visited
   int          *_n_extract_entity2         = malloc(n_part * sizeof(int          ));
   int         **_idx_visited               = malloc(n_part * sizeof(int         *));
 
-
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_extract = n_extract_entity1[i_part];
     int         *_pentity1_entity2     = entity1_entity2    [i_part];
@@ -311,7 +310,7 @@ int         ***idx_visited
           int idx = _n_extract_entity2[i_part]++;
           _extract_entity2_lnum[i_part][idx] = i_entity2;
           is_visited[i_entity2] = 1;
-          _idx_visited[i_part][idx] = idx_entity2;
+          _idx_visited[i_part][idx] = idx_write-1;
         }
       }
     }
@@ -368,17 +367,6 @@ int                 ***extract_entity2_lnum
   int         **_selected_entity1_entity2_n = *selected_entity1_entity2_n;
   PDM_g_num_t **_selected_entity1_entity2   = *selected_entity1_entity2;
 
-  int         *dequi_entity1_entity2_n = NULL;
-  PDM_g_num_t *dequi_entity1_entity2   = NULL;
-  int dn_entity1_entity2 = PDM_part_to_block_exch(ptb_entity1,
-                                                  sizeof(PDM_g_num_t),
-                                                  PDM_STRIDE_VAR_INTERLACED,
-                                                  -1,
-                                                  _selected_entity1_entity2_n,
-                                   (void **)      _selected_entity1_entity2,
-                                                  &dequi_entity1_entity2_n,
-                                   (void **)      &dequi_entity1_entity2);
-
   // PDM_gen_gnum_t* gnum_extract_entity2 = PDM_gnum_create(3, 1, PDM_FALSE,
   //                                                        1.e-6,
   //                                                        comm,
@@ -398,53 +386,99 @@ int                 ***extract_entity2_lnum
                                                          comm,
                                                          PDM_OWNERSHIP_USER);
   //
+  int *n_connect_tot = (int *) malloc( n_part * sizeof(int));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_connect_tot = 0;
-    for(int i = 0; i < _n_extract_entity2[i_part]; ++i) {
-      n_connect_tot += _selected_entity1_entity2_n[i_part][i];
+    n_connect_tot[i_part] = 0;
+    for(int i = 0; i < n_extract_entity1[i_part]; ++i) {
+      n_connect_tot[i_part] += _selected_entity1_entity2_n[i_part][i];
     }
     // TODO --> compute idx
 
-    PDM_gnum_set_from_parents(gnum_extract_entity2, i_part, n_connect_tot, _selected_entity1_entity2[i_part]);
+    PDM_gnum_set_from_parents(gnum_extract_entity2, i_part, n_connect_tot[i_part], _selected_entity1_entity2[i_part]);
   }
 
   PDM_gnum_compute(gnum_extract_entity2);
 
+  PDM_g_num_t **_child_entity1_entity2           = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **_child_entity2_ln_to_gn          = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_g_num_t *child_entity1_entity2 = PDM_gnum_get(gnum_extract_entity2, i_part);
+    _child_entity1_entity2[i_part] = PDM_gnum_get(gnum_extract_entity2, i_part);
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(_child_entity1_entity2[i_part], n_connect_tot[i_part], "_child_entity1_entity2 :: ");
+      PDM_log_trace_array_long(extract_entity1_entity2_idx[i_part], _n_extract_entity2[i_part], "extract_entity1_entity2_idx :: ");
+    }
 
     // Reforme a temporary ln_to_gn to setup recurence
-    PDM_g_num_t *child_entity2_ln_to_gn          = (PDM_g_num_t *) malloc( _n_extract_entity2[i_part] * sizeof(PDM_g_num_t));
-    PDM_g_num_t *extract_parent_entity2_ln_to_gn = (PDM_g_num_t *) malloc( _n_extract_entity2[i_part] * sizeof(PDM_g_num_t));
+    _child_entity2_ln_to_gn         [i_part] = (PDM_g_num_t *) malloc( _n_extract_entity2[i_part] * sizeof(PDM_g_num_t));
+    _extract_parent_entity2_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _n_extract_entity2[i_part] * sizeof(PDM_g_num_t));
     for(int i = 0; i < _n_extract_entity2[i_part]; ++i) {
       int idx = extract_entity1_entity2_idx[i_part][i];
-      child_entity2_ln_to_gn         [i] = child_entity1_entity2   [idx];
-      extract_parent_entity2_ln_to_gn[i] = selected_entity1_entity2[idx]; // To exchange to keep link with original part
+      _child_entity2_ln_to_gn         [i_part][i] = _child_entity1_entity2   [i_part][idx];
+      _extract_parent_entity2_ln_to_gn[i_part][i] = _selected_entity1_entity2[i_part][idx]; // To exchange to keep link with original part
     }
+
+    free(extract_entity1_entity2_idx[i_part]);
+  }
+  free(extract_entity1_entity2_idx);
+  free(n_connect_tot);
+  PDM_gnum_free(gnum_extract_entity2);
+
+  int         *dequi_entity1_entity2_n = NULL;
+  PDM_g_num_t *dequi_entity1_entity2   = NULL;
+  int dn_entity1_entity2 = PDM_part_to_block_exch(ptb_entity1,
+                                                  sizeof(PDM_g_num_t),
+                                                  PDM_STRIDE_VAR_INTERLACED,
+                                                  -1,
+                                                  _selected_entity1_entity2_n,
+                                   (void **)      _child_entity1_entity2,
+                                                  &dequi_entity1_entity2_n,
+                                   (void **)      &dequi_entity1_entity2);
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(_child_entity1_entity2 [i_part]);
+  }
+  free(_child_entity1_entity2 );
+
+
+  PDM_part_to_block_t *ptb_entity2_equi = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                   PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                   1.,
+                                                                   _child_entity2_ln_to_gn,
+                                                                   NULL,
+                                                                   _n_extract_entity2,
+                                                                   n_part,
+                                                                   comm);
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(_child_entity2_ln_to_gn[i_part]);
+  }
+  free(_child_entity2_ln_to_gn);
+
+  int          dn_entity2_equi        = PDM_part_to_block_n_elt_block_get(ptb_entity2_equi);
+  PDM_g_num_t *dextract_entity2_gnum  = PDM_part_to_block_block_gnum_get (ptb_entity2_equi);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(dextract_entity2_gnum, dn_entity2_equi, "dextract_entity2_gnum :: ");
   }
 
 
-  // child_entity2_gnum == dentity1_entity2 en new global numbering
-  // Dnnc on connait pour une face son numero child_g_num (Dans le frame de depart)
-  // Donc on peut faire part_to_block sur ce child et échanger le parent
-  // Il faut deduire le tableau unique child_ln_to_gn
-  // On a entity1_entity2 dans 2 gnum donc on peut faire le lien
-  // On stocke l'idx tagger
-  // Filtrage to deduce child_entity2_ln_to_gn avec idx_visited
-  // Attention dnas le cas de ghost cell
-
-  // PDM_log_trace_array_long(dequi_entity1_entity2, dn_entity1_entity2, "dequi_entity1_entity2 ::");
-  // PDM_log_trace_array_long(child_entity2_gnum, dn_entity1_entity2, "child_entity2_gnum ::");
-
-  // On doit garder le parent et l'enfant pour avoir la connectivité d'après
-
-  PDM_gnum_free(gnum_extract_entity2);
 
   /*
-   * On connait toutes les entités en jeux
-   * Ou alors on genere tous les gnum a partir des extractions (sans le cell_face donc )
-   * Puis on fait block_to_part_from_sparse_block
+   *  Exchange parent to keep link
    */
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(_extract_parent_entity2_ln_to_gn[i_part]);
+  }
+  free(_extract_parent_entity2_ln_to_gn);
+
+
+
+  PDM_part_to_block_free(ptb_entity2_equi);
 
 
   free(dequi_entity1_entity2_n);
@@ -675,88 +709,27 @@ PDM_extract_part_compute
    * Extraction des connectivités
    */
   if(extrp->dim == 3) {
+
+
     PDM_g_num_t **selected_cell_face    = NULL;
     int         **selected_cell_face_n  = NULL;
     int          *n_extract_face        = NULL;
     int         **extract_face_lnum     = NULL;
     int         **idx_face_in_cell_face = NULL;
-
-    extract_entity1_entity2(extrp->n_part_in,
-                            extrp->n_cell,
-                            extrp->n_face,
-                            extrp->n_extract,
-                            extrp->extract_lnum,
-                            extrp->pcell_face_idx,
-                            extrp->pcell_face,
-                            extrp->face_ln_to_gn,
-                            &selected_cell_face_n,
-                            &selected_cell_face,
-                            &n_extract_face,
-                            &extract_face_lnum,
-                            &idx_face_in_cell_face);
-
-    if(0 == 1) {
-      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-        PDM_log_trace_array_int(selected_cell_face_n[i_part], extrp->n_extract[i_part], "selected_cell_face_n :: ");
-        PDM_log_trace_array_int(idx_face_in_cell_face[i_part], n_extract_face[i_part], "idx_face_in_cell_face :: ");
-      }
-    }
-
-    /*
-     * PDM_g_num_t + update connectivity + sort
-     * Pour chaque face on prend le ln_to_gn qu'on quick sort + unique
-     *
-     */
-    int         *dequi_cell_face_n = NULL;
-    PDM_g_num_t *dequi_cell_face   = NULL;
-    int dn_cell_face = PDM_part_to_block_exch(ptb_equi,
-                                              sizeof(PDM_g_num_t),
-                                              PDM_STRIDE_VAR_INTERLACED,
-                                              -1,
-                                              selected_cell_face_n,
-                               (void **)      selected_cell_face,
-                                              &dequi_cell_face_n,
-                               (void **)      &dequi_cell_face);
-
-    PDM_gen_gnum_t* gnum_extract_face = PDM_gnum_create(3, 1, PDM_FALSE,
-                                                        1.e-6,
-                                                        extrp->comm,
-                                                        PDM_OWNERSHIP_KEEP);
-
-    PDM_gnum_set_from_parents(gnum_extract_face, 0, dn_cell_face, dequi_cell_face);
-    PDM_gnum_compute(gnum_extract_face);
-
-    PDM_g_num_t *child_face_gnum = PDM_gnum_get(gnum_extract_face, 0);
-
-    // PDM_log_trace_array_long(dequi_cell_face, dn_cell_face, "dequi_cell_face ::");
-    // PDM_log_trace_array_long(child_face_gnum, dn_cell_face, "child_face_gnum ::");
-
-    // On doit garder le parent et l'enfant pour avoir la connectivité d'après
-
-    PDM_gnum_free(gnum_extract_face);
-
-
-    PDM_g_num_t **selected_face_vtx   = NULL;
-    int         **selected_face_vtx_n = NULL;
-    int          *n_extract_vtx       = NULL;
-    int         **extract_vtx_lnum    = NULL;
-    int         **idx_vtx_in_face_vtx = NULL;
-    extract_entity1_entity2(extrp->n_part_in,
-                            extrp->n_face,
-                            extrp->n_vtx,
-                            extrp->n_extract,
-                            extrp->extract_lnum,
-                            extrp->pface_vtx_idx,
-                            extrp->pface_vtx,
-                            extrp->vtx_ln_to_gn,
-                            &selected_face_vtx_n,
-                            &selected_face_vtx,
-                            &n_extract_vtx,
-                            &extract_vtx_lnum,
-                            &idx_vtx_in_face_vtx);
-
-    free(dequi_cell_face_n);
-    free(dequi_cell_face);
+    extract_and_renum_entity1_entity2(extrp->comm,
+                                      ptb_equi,
+                                      extrp->n_part_in,
+                                      extrp->n_cell,
+                                      extrp->n_face,
+                                      extrp->n_extract,
+                                      extrp->extract_lnum,
+                                      extrp->pcell_face_idx,
+                                      extrp->pcell_face,
+                                      extrp->face_ln_to_gn,
+                                      &selected_cell_face_n,
+                                      &selected_cell_face,
+                                      &n_extract_face,
+                                      &extract_face_lnum);
 
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
       free(selected_cell_face_n[i_part]);
@@ -767,27 +740,6 @@ PDM_extract_part_compute
     free(selected_cell_face  );
     free(extract_face_lnum   );
     free(n_extract_face      );
-
-    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-      free(selected_face_vtx_n[i_part]);
-      free(selected_face_vtx  [i_part]);
-      free(extract_vtx_lnum   [i_part]);
-    }
-    free(selected_face_vtx_n);
-    free(selected_face_vtx  );
-    free(extract_vtx_lnum   );
-    free(n_extract_vtx      );
-
-    // On refait des block de faces et de vtx
-    // PDM_part_to_block_t *ptb_equi_face = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-    //                                                               PDM_PART_TO_BLOCK_POST_CLEANUP,
-    //                                                               1.,
-    //                                                               child_selected_face_g_num,
-    //                                                               weight,
-    //                                                               extrp->n_extract_face,
-    //                                                               extrp->n_part_in,
-    //                                                               extrp->comm);
-
 
   }
 
