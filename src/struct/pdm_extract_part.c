@@ -308,6 +308,7 @@ int         ***extract_entity2_lnum
           int idx = _n_extract_entity2[i_part]++;
           _extract_entity2_lnum[i_part][idx] = i_entity2;
           is_visited[i_entity2] = 1;
+          idx_visited[idx] = idx_entity2;
         }
       }
     }
@@ -382,6 +383,15 @@ int                 ***extract_entity2_lnum
 
   PDM_g_num_t *child_entity2_gnum = PDM_gnum_get(gnum_extract_entity2, 0);
 
+  // child_entity2_gnum == dentity1_entity2 en new global numbering
+  // Dnnc on connait pour une face son numero child_g_num (Dans le frame de depart)
+  // Donc on peut faire part_to_block sur ce child et échanger le parent
+  // Il faut deduire le tableau unique child_ln_to_gn
+  // On a entity1_entity2 dans 2 gnum donc on peut faire le lien
+  // On stocke l'idx tagger
+  // Filtrage to deduce child_entity2_ln_to_gn avec idx_visited
+  // Attention dnas le cas de ghost cell
+
   // PDM_log_trace_array_long(dequi_entity1_entity2, dn_entity1_entity2, "dequi_entity1_entity2 ::");
   // PDM_log_trace_array_long(child_entity2_gnum, dn_entity1_entity2, "child_entity2_gnum ::");
 
@@ -391,6 +401,8 @@ int                 ***extract_entity2_lnum
 
   /*
    * On connait toutes les entités en jeux
+   * Ou alors on genere tous les gnum a partir des extractions (sans le cell_face donc )
+   * Puis on fait block_to_part_from_sparse_block
    */
 
 
@@ -717,6 +729,17 @@ PDM_extract_part_compute
     free(selected_face_vtx  );
     free(extract_vtx_lnum   );
     free(n_extract_vtx      );
+
+    // On refait des block de faces et de vtx
+    // PDM_part_to_block_t *ptb_equi_face = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    //                                                               PDM_PART_TO_BLOCK_POST_CLEANUP,
+    //                                                               1.,
+    //                                                               child_selected_face_g_num,
+    //                                                               weight,
+    //                                                               extrp->n_extract_face,
+    //                                                               extrp->n_part_in,
+    //                                                               extrp->comm);
+
 
   }
 
