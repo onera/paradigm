@@ -805,7 +805,7 @@ _export_ini_mesh
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "mesh1",
@@ -816,7 +816,7 @@ _export_ini_mesh
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "mesh2",
@@ -839,14 +839,14 @@ _export_ini_mesh
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
     if (imesh == 0) {
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sfieldA");
     }
@@ -854,7 +854,7 @@ _export_ini_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rfieldB");
     }
@@ -862,14 +862,14 @@ _export_ini_mesh
 
     id_var_coo_x[imesh] = PDM_writer_var_create (id_cs[imesh],
                                        PDM_WRITER_ON,
-                                       PDM_WRITER_VAR_SCALAIRE,
-                                       PDM_WRITER_VAR_SOMMETS,
+                                       PDM_WRITER_VAR_SCALAR,
+                                       PDM_WRITER_VAR_VERTICES,
                                        "coo_x");
 
     id_var_coo_xyz[imesh] = PDM_writer_var_create (id_cs[imesh],
                                          PDM_WRITER_ON,
-                                         PDM_WRITER_VAR_VECTEUR,
-                                         PDM_WRITER_VAR_SOMMETS,
+                                         PDM_WRITER_VAR_VECTOR,
+                                         PDM_WRITER_VAR_VERTICES,
                                          "coo_xyz");
 
     /*
@@ -1099,7 +1099,7 @@ _export_ol_mesh
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "olmesh1",
@@ -1110,7 +1110,7 @@ _export_ol_mesh
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "olmesh2",
@@ -1135,7 +1135,7 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sOlField");
     }
@@ -1143,32 +1143,32 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rOlField");
     }
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
 
     id_var_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                  PDM_WRITER_OFF,
-                                                 PDM_WRITER_VAR_SCALAIRE,
+                                                 PDM_WRITER_VAR_SCALAR,
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "matching");
 
     id_var_cell_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                       PDM_WRITER_OFF,
-                                                      PDM_WRITER_VAR_SCALAIRE,
+                                                      PDM_WRITER_VAR_SCALAR,
                                                       PDM_WRITER_VAR_ELEMENTS,
                                                       "cell_matching");
 
     id_var_origin[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                   PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAIRE,
+                                                  PDM_WRITER_VAR_SCALAR,
                                                   PDM_WRITER_VAR_ELEMENTS,
                                                   "origin");
 

@@ -13,7 +13,7 @@ module pdm_writer
   !
   ! Type de topologie
 
-  integer, parameter :: PDM_WRITER_TOPO_CONSTANTE  = 0
+  integer, parameter :: PDM_WRITER_TOPO_CST  = 0
   integer, parameter :: PDM_WRITER_TOPO_DEFORMABLE = 1
   integer, parameter :: PDM_WRITER_TOPO_VARIABLE   = 2
 
@@ -53,14 +53,14 @@ module pdm_writer
 
   integer, parameter ::  PDM_WRITER_VAR_CSTE         = 0
   integer, parameter ::  PDM_WRITER_VAR_SCALAIRE     = 1
-  integer, parameter ::  PDM_WRITER_VAR_VECTEUR      = 3
+  integer, parameter ::  PDM_WRITER_VAR_VECTOR      = 3
   integer, parameter ::  PDM_WRITER_VAR_TENSEUR_SYM  = 6
   integer, parameter ::  PDM_WRITER_VAR_TENSEUR_ASYM = 9
 
   !
   ! Localisation des variables
 
-  integer, parameter ::  PDM_WRITER_VAR_SOMMETS      = 0
+  integer, parameter ::  PDM_WRITER_VAR_VERTICES      = 0
   integer, parameter ::  PDM_WRITER_VAR_ELEMENTS     = 1
   integer, parameter ::  PDM_WRITER_VAR_PARTICULES   = 2
 

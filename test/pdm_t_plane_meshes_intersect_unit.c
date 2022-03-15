@@ -70,7 +70,7 @@ _export_ol_mesh
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_unit_ens",
                                 "olmesh1",
@@ -81,7 +81,7 @@ _export_ol_mesh
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_unit_ens",
                                 "olmesh2",
@@ -106,7 +106,7 @@ _export_ol_mesh
     if (imesh == 0) {
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sOlField");
     }
@@ -114,32 +114,32 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rOlField");
     }
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
 
     id_var_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                  PDM_WRITER_OFF,
-                                                 PDM_WRITER_VAR_SCALAIRE,
+                                                 PDM_WRITER_VAR_SCALAR,
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "matching");
 
     id_var_cell_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                       PDM_WRITER_OFF,
-                                                      PDM_WRITER_VAR_SCALAIRE,
+                                                      PDM_WRITER_VAR_SCALAR,
                                                       PDM_WRITER_VAR_ELEMENTS,
                                                       "cell_matching");
 
     id_var_origin[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                   PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAIRE,
+                                                  PDM_WRITER_VAR_SCALAR,
                                                   PDM_WRITER_VAR_ELEMENTS,
                                                   "origin");
 
@@ -1294,7 +1294,7 @@ main
 
   PDM_writer_t *ens_meshA = PDM_writer_create ("Ensight",
                                                PDM_WRITER_FMT_ASCII,
-                                               PDM_WRITER_TOPO_CONSTANTE,
+                                               PDM_WRITER_TOPO_CST,
                                                PDM_WRITER_OFF,
                                                "test_2d_unit_ens",
                                                "meshA",
@@ -1305,7 +1305,7 @@ main
 
   int id_var_fieldA = PDM_writer_var_create (ens_meshA,
                                              PDM_WRITER_OFF,
-                                             PDM_WRITER_VAR_SCALAIRE,
+                                             PDM_WRITER_VAR_SCALAR,
                                              PDM_WRITER_VAR_ELEMENTS,
                                              "sfieldA");
   int ens_geoA_merge = PDM_writer_geom_create (ens_meshA,
@@ -1410,7 +1410,7 @@ main
 
   PDM_writer_t *ens_meshB = PDM_writer_create ("Ensight",
                                                PDM_WRITER_FMT_ASCII,
-                                               PDM_WRITER_TOPO_CONSTANTE,
+                                               PDM_WRITER_TOPO_CST,
                                                PDM_WRITER_OFF,
                                                "test_2d_unit_ens",
                                                "meshB",
@@ -1421,7 +1421,7 @@ main
 
   int id_var_fieldB = PDM_writer_var_create (ens_meshB,
                                              PDM_WRITER_OFF,
-                                             PDM_WRITER_VAR_SCALAIRE,
+                                             PDM_WRITER_VAR_SCALAR,
                                              PDM_WRITER_VAR_ELEMENTS,
                                              "rfieldB");
 

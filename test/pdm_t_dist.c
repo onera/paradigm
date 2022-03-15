@@ -802,7 +802,7 @@ int main(int argc, char *argv[])
     /* Prepare writer */
     PDM_writer_t *id_cs = PDM_writer_create ("Ensight",
                                              PDM_WRITER_FMT_ASCII,
-                                             PDM_WRITER_TOPO_CONSTANTE,
+                                             PDM_WRITER_TOPO_CST,
                                              PDM_WRITER_OFF,
                                              "test_dist",
                                              "dist",
@@ -819,13 +819,13 @@ int main(int argc, char *argv[])
 
     int id_var_dist = PDM_writer_var_create (id_cs,
                                              PDM_WRITER_OFF,
-                                             PDM_WRITER_VAR_SCALAIRE,
+                                             PDM_WRITER_VAR_SCALAR,
                                              PDM_WRITER_VAR_ELEMENTS,
                                              "wall_dist");
 
     int id_var_closest = PDM_writer_var_create (id_cs,
                                                 PDM_WRITER_OFF,
-                                                PDM_WRITER_VAR_SCALAIRE,
+                                                PDM_WRITER_VAR_SCALAR,
                                                 PDM_WRITER_VAR_ELEMENTS,
                                                 "closest_bnd_face");
 

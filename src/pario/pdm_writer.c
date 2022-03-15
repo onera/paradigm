@@ -330,8 +330,8 @@ PDM_writer_var_t *var
 {
   var->nom_var    = NULL;                    /* Nom de la geometrie */
   var->st_dep_tps = PDM_WRITER_OFF;          /* Variable en temps */
-  var->dim        = PDM_WRITER_VAR_CSTE;     /* Dimension de la variable */
-  var->loc        = PDM_WRITER_VAR_SOMMETS;  /* Dimension de la variable */
+  var->dim        = PDM_WRITER_VAR_CST;     /* Dimension de la variable */
+  var->loc        = PDM_WRITER_VAR_VERTICES;  /* Dimension de la variable */
   var->_val       = NULL;                    /* Valeurs de la variable */
   var->var_fmt    = NULL;                    /* Description propre au format fmt */
   var->_cs        = NULL;
@@ -473,8 +473,8 @@ PDM_writer_create
 (
 const char                   *fmt,
 const PDM_writer_fmt_fic_t    fmt_fic,
-const PDM_writer_topologie_t  topologie,
-const PDM_writer_statut_t     st_reprise,
+const PDM_writer_topology_t  topologie,
+const PDM_writer_status_t     st_reprise,
 const char                   *rep_sortie,
 const char                   *nom_sortie,
 const PDM_MPI_Comm            pdm_mpi_comm,
@@ -744,8 +744,8 @@ PDM_writer_geom_create
 (
  PDM_writer_t               *cs,
  const char                 *nom_geom,
- const PDM_writer_statut_t   st_decoup_poly2d,
- const PDM_writer_statut_t   st_decoup_poly3d,
+ const PDM_writer_status_t   st_decoup_poly2d,
+ const PDM_writer_status_t   st_decoup_poly3d,
  const int                   n_part
 )
 {
@@ -806,8 +806,8 @@ PDM_writer_geom_create_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const char                *nom_geom,
- const PDM_writer_statut_t  st_decoup_poly2d,
- const PDM_writer_statut_t  st_decoup_poly3d,
+ const PDM_writer_status_t  st_decoup_poly2d,
+ const PDM_writer_status_t  st_decoup_poly3d,
  PDM_Mesh_nodal_t          *mesh
 )
 {
@@ -984,7 +984,7 @@ PDM_writer_geom_bloc_add
 (
  PDM_writer_t                *cs,
  const int                    id_geom,
- PDM_writer_statut_t          st_free_data,
+ PDM_writer_status_t          st_free_data,
  const PDM_writer_elt_geom_t  t_elt
 )
 {
@@ -1661,7 +1661,7 @@ int
 PDM_writer_var_create
 (
  PDM_writer_t               *cs,
- const PDM_writer_statut_t   st_dep_tps,
+ const PDM_writer_status_t   st_dep_tps,
  const PDM_writer_var_dim_t  dim,
  const PDM_writer_var_loc_t  loc,
  const char                 *nom_var

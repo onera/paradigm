@@ -260,7 +260,7 @@ program testf
   call PDM_writer_create (cs,                        &
                           "Ensight",                 &
                           PDM_WRITER_FMT_ASCII,      &
-                          PDM_WRITER_TOPO_CONSTANTE, &
+                          PDM_WRITER_TOPO_CST, &
                           PDM_WRITER_OFF,            &
                           "test_writer",             &
                           "writer",                  &
