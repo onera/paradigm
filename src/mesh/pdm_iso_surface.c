@@ -2396,6 +2396,7 @@ _iso_surface_part
     }
   }
 
+
   /*
    *  Scan cells to find those which intersect the iso-surface
    */
@@ -2435,27 +2436,9 @@ _iso_surface_part
   }
 
 
-
-
   /*
    *  Extract 'partition'
    */
-  int          n_cell = 0;
-  int          n_face = 0;
-  int          n_edge = 0;
-  int          n_vtx  = 0;
-  int         *pcell_face_idx  = NULL;
-  int         *pcell_face      = NULL;
-  int         *pface_edge_idx  = NULL;
-  int         *pface_edge      = NULL;
-  int         *pedge_vtx       = NULL;
-  PDM_g_num_t *pcell_ln_to_gn  = NULL;
-  PDM_g_num_t *pface_ln_to_gn  = NULL;
-  PDM_g_num_t *pedge_ln_to_gn  = NULL;
-  PDM_g_num_t *pvtx_ln_to_gn   = NULL;
-  double      *pvtx_coord      = NULL;
-  double      *pfield          = NULL;
-  double      *pgradient_field = NULL;
 
   int n_part_out = 1;
   PDM_extract_part_t *extrp = PDM_extract_part_create(3,
@@ -2496,11 +2479,26 @@ _iso_surface_part
   abort();
   PDM_extract_part_compute(extrp);
 
-
-  PDM_extract_part_free(extrp);
-
+  int          n_cell = 0;
+  int          n_face = 0;
+  int          n_edge = 0;
+  int          n_vtx  = 0;
+  int         *pcell_face_idx  = NULL;
+  int         *pcell_face      = NULL;
+  int         *pface_edge_idx  = NULL;
+  int         *pface_edge      = NULL;
+  int         *pedge_vtx       = NULL;
+  PDM_g_num_t *pcell_ln_to_gn  = NULL;
+  PDM_g_num_t *pface_ln_to_gn  = NULL;
+  PDM_g_num_t *pedge_ln_to_gn  = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn   = NULL;
+  double      *pvtx_coord      = NULL;
+  double      *pfield          = NULL;
+  double      *pgradient_field = NULL;
 
   // get...
+
+  PDM_extract_part_free(extrp);
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
     free(edge_tag[i_part]);
@@ -2523,7 +2521,6 @@ _iso_surface_part
   int         *isosurf_face_vtx_idx    = NULL;
   PDM_g_num_t *isosurf_face_vtx_g_num  = NULL;
   PDM_g_num_t *isosurf_face_ln_to_gn   = NULL;
-
 
   _iso_surf_dist(isos,
                  n_cell,
