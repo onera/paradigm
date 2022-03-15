@@ -678,6 +678,23 @@ PDM_extract_part_compute
     PDM_gnum_free(gnum_extract_face);
 
 
+    PDM_g_num_t **selected_face_vtx   = NULL;
+    int         **selected_face_vtx_n = NULL;
+    int          *n_extract_vtx       = NULL;
+    int         **extract_vtx_lnum    = NULL;
+    extract_entity1_entity2(extrp->n_part_in,
+                            extrp->n_face,
+                            extrp->n_vtx,
+                            extrp->n_extract,
+                            extrp->extract_lnum,
+                            extrp->pface_vtx_idx,
+                            extrp->pface_vtx,
+                            extrp->vtx_ln_to_gn,
+                            &selected_face_vtx_n,
+                            &selected_face_vtx,
+                            &n_extract_vtx,
+                            &extract_vtx_lnum);
+
     free(dequi_cell_face_n);
     free(dequi_cell_face);
 
@@ -690,6 +707,16 @@ PDM_extract_part_compute
     free(selected_cell_face  );
     free(extract_face_lnum   );
     free(n_extract_face      );
+
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      free(selected_face_vtx_n[i_part]);
+      free(selected_face_vtx  [i_part]);
+      free(extract_vtx_lnum   [i_part]);
+    }
+    free(selected_face_vtx_n);
+    free(selected_face_vtx  );
+    free(extract_vtx_lnum   );
+    free(n_extract_vtx      );
 
   }
 
