@@ -704,8 +704,19 @@ PDM_extract_part_compute
   free(child_selected_g_num);
   PDM_gnum_free(gnum_extract);
 
+  PDM_g_num_t *dequi_parent_entity_ln_to_gn = NULL;
+  PDM_part_to_block_exch(ptb_equi,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+          (void **)      entity_extract_g_num,
+                         NULL,
+          (void **)      &dequi_parent_entity_ln_to_gn);
+
+
   int          dn_entity_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
-  PDM_g_num_t *dextract_gnum  = PDM_part_to_block_block_gnum_get (ptb_equi);
+  // PDM_g_num_t *dextract_gnum  = PDM_part_to_block_block_gnum_get (ptb_equi);
 
   if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
@@ -720,6 +731,11 @@ PDM_extract_part_compute
     abort();
   }
 
+  if(extrp->dim == 3) {
+    extrp->dequi_parent_cell_ln_to_gn = dequi_parent_entity_ln_to_gn;
+  } else {
+    extrp->dequi_parent_face_ln_to_gn = dequi_parent_entity_ln_to_gn;
+  }
 
   /*
    * Extraction des connectivités
