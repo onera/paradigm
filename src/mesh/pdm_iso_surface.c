@@ -35,6 +35,7 @@
 #include "pdm_polygon.h"
 #include "pdm_plane.h"
 #include "pdm_extract_part.h"
+#include "pdm_part_to_part.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1342,15 +1343,15 @@ _iso_surf_dist
   const int dim = 3;
   double *mat_cell = (double *) malloc (sizeof(double) * n_cell_edge_max * dim);
   double *rhs_cell = (double *) malloc (sizeof(double) * n_cell_edge_max);
-  double *mat_face = (double *) malloc (sizeof(double) * n_face_edge_max * dim);
-  double *rhs_face = (double *) malloc (sizeof(double) * n_face_edge_max);
+  double *mat_face = (double *) malloc (sizeof(double) * (n_face_edge_max+1) * dim);
+  double *rhs_face = (double *) malloc (sizeof(double) * (n_face_edge_max+1));
 
   double *S_cell = (double *) malloc(sizeof(double) * dim);
   double *U_cell = (double *) malloc(sizeof(double) * n_cell_edge_max * dim);
   double *V_cell = (double *) malloc(sizeof(double) * n_cell_edge_max * dim);
   double *S_face = (double *) malloc(sizeof(double) * dim);
-  double *U_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
-  double *V_face = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
+  double *U_face = (double *) malloc(sizeof(double) * (n_face_edge_max+1) * dim);
+  double *V_face = (double *) malloc(sizeof(double) * (n_face_edge_max+1) * dim);
 
   int *is_visited_edge = PDM_array_zeros_int(n_edge);
   int *visited_edges = (int *) malloc(sizeof(int) * n_edge);
@@ -2581,7 +2582,7 @@ _iso_surface_part
   PDM_g_num_t *pedge_parent_ln_to_gn  = NULL;
   PDM_g_num_t *pvtx_parent_ln_to_gn   = NULL;
 
-  // get...
+
   int *tmp_n;
   PDM_extract_part_n_entity_get(extrp,
                                 PDM_MESH_ENTITY_CELL,
@@ -2686,15 +2687,17 @@ _iso_surface_part
   pvtx_ln_to_gn = tmp_vtx_ln_to_gn[0];
   free(tmp_vtx_ln_to_gn);
 
+  PDM_log_trace_array_long(pvtx_ln_to_gn, n_vtx, "pvtx_ln_to_gn : ");
+
 
   /* Parent Global ids */
-  // PDM_g_num_t **tmp_cell_parent_ln_to_gn;
-  // PDM_extract_part_parent_ln_to_gn_get(extrp,
-  //                                      PDM_MESH_ENTITY_CELL,
-  //                                      &tmp_cell_parent_ln_to_gn,
-  //                                      PDM_OWNERSHIP_USER);
-  // pcell_parent_ln_to_gn = tmp_cell_parent_ln_to_gn[0];
-  // free(tmp_cell_parent_ln_to_gn);
+  PDM_g_num_t **tmp_cell_parent_ln_to_gn;
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       PDM_MESH_ENTITY_CELL,
+                                       &tmp_cell_parent_ln_to_gn,
+                                       PDM_OWNERSHIP_USER);
+  pcell_parent_ln_to_gn = tmp_cell_parent_ln_to_gn[0];
+  free(tmp_cell_parent_ln_to_gn);
 
 
   PDM_g_num_t **tmp_face_parent_ln_to_gn;
@@ -2725,12 +2728,62 @@ _iso_surface_part
 
 
   /* Field and gradient */
-  // PDM_part_to_part_t *ptp = PDM_part_to_part_create
+  int *child_to_parent_idx = (int *) malloc(sizeof(int) * (n_vtx + 1));
+  child_to_parent_idx[0] = 0;
+  for (int i = 0; i < n_vtx; i++) {
+    child_to_parent_idx[i+1] = child_to_parent_idx[i] + 1;
+  }
+  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                                    &n_vtx,
+                                                    1,
+                                                    (const PDM_g_num_t **) isos->vtx_ln_to_gn,
+                                                    isos->n_vtx,
+                                                    isos->n_part,
+                                                    (const int **) &child_to_parent_idx,
+                                                    (const PDM_g_num_t **) &pvtx_parent_ln_to_gn,
+                                                    isos->comm);
 
 
+  int request1;
+  double **tmp_pfield;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(double),
+                                 NULL,
+                 (const void **) isos->pfield,
+                                 NULL,
+                     (void ***) &tmp_pfield,
+                                &request1);
 
-  printf("OK!\n");
-  abort();
+  int request2;
+  double **tmp_pgradient_field;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 3*sizeof(double),
+                                 NULL,
+                 (const void **) isos->pgradient_field,
+                                 NULL,
+                     (void ***) &tmp_pgradient_field,
+                                &request2);
+
+  PDM_part_to_part_reverse_iexch_wait(ptp, request1);
+  pfield = tmp_pfield[0];
+  free(tmp_pfield);
+
+  PDM_part_to_part_reverse_iexch_wait(ptp, request2);
+  pgradient_field = tmp_pgradient_field[0];
+  free(tmp_pgradient_field);
+
+  PDM_part_to_part_free(ptp);
+  free(child_to_parent_idx);
+
+
 
   PDM_extract_part_free(extrp);
 

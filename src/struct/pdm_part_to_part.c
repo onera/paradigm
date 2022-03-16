@@ -1275,6 +1275,8 @@ _p2p_stride_var_reverse_iexch
       part2_idx[0] = 0;
 
       for (int j = 0; j < ptp->n_elt2[i]; j++) {
+        log_trace("j = %d / %d", j, ptp->n_elt2[i]);
+        log_trace(", stride = %d\n", part2_stride[i][j]);
         part2_idx[j+1] = part2_idx[j] + part2_stride[i][j] * s_data;
       }
 
@@ -1653,7 +1655,7 @@ PDM_part_to_part_create
   ptp->part1_to_part2           = part1_to_part2;        
   ptp->comm                     = comm;
 
-  if (0) {
+  if (1) {
     log_trace("--- Part1 ---\n");
     for (int i_part = 0; i_part < ptp->n_part1; i_part++) {
       log_trace("part %d: n_elt = %d\n", i_part, ptp->n_elt1[i_part]);
