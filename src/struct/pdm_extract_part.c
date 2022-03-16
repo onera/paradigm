@@ -787,35 +787,83 @@ PDM_extract_part_compute
         from_face_vtx = 1;
       }
     }
-    int                  *dequi_face_vtx_idx         = NULL;
-    PDM_g_num_t          *dequi_face_vtx             = NULL;
-    PDM_g_num_t          *dequi_parent_vtx_ln_to_gn  = NULL;
-    PDM_part_to_block_t  *ptb_equi_vtx               = NULL;
 
     if(from_face_edge == 1) {
+      int                  *n_extract_edge    = NULL;
+      int                 **extract_edge_lnum = NULL;
+      extrp->ptb_equi_edge = extract_and_renum_entity1_entity2(extrp->comm,
+                                                              extrp->ptb_equi_face,
+                                                              extrp->n_part_in,
+                                                              extrp->n_face,
+                                                              extrp->n_edge,
+                                                              n_extract_face,
+                                                              extract_face_lnum,
+                                                              extrp->pface_edge_idx,
+                                                              extrp->pface_edge,
+                                                              extrp->edge_ln_to_gn,
+                                                              &extrp->dequi_face_edge_idx,
+                                                              &extrp->dequi_face_edge,
+                                                              &extrp->dequi_parent_edge_ln_to_gn,
+                                                              &n_extract_edge,
+                                                              &extract_edge_lnum);
 
 
-      abort();
+      extrp->dn_equi_edge = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_edge);
+
+      int *dequi_edge_vtx_idx = NULL;
+      int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
+        pedge_vtx_idx[i_part][0] = 0;
+        for(int i_edge = 0; i_edge < extrp->n_edge[i_part]; ++i_edge) {
+          pedge_vtx_idx[i_part][i_edge+1] = pedge_vtx_idx[i_part][i_edge] + 2;
+        }
+      }
+      extrp->ptb_equi_vtx = extract_and_renum_entity1_entity2(extrp->comm,
+                                                              extrp->ptb_equi_edge,
+                                                              extrp->n_part_in,
+                                                              extrp->n_edge,
+                                                              extrp->n_vtx,
+                                                              n_extract_edge,
+                                                              extract_edge_lnum,
+                                                              pedge_vtx_idx,
+                                                              extrp->pedge_vtx,
+                                                              extrp->vtx_ln_to_gn,
+                                                              &dequi_edge_vtx_idx,
+                                                              &extrp->dequi_edge_vtx,
+                                                              &extrp->dequi_parent_vtx_ln_to_gn,
+                                                              &n_extract_vtx,
+                                                              &extract_vtx_lnum);
+      free(dequi_edge_vtx_idx);
+
+      extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_vtx);
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        free(extract_edge_lnum   [i_part]);
+        free(pedge_vtx_idx   [i_part]);
+      }
+      free(extract_edge_lnum   );
+      free(n_extract_edge      );
+      free(pedge_vtx_idx      );
 
     } else if(from_face_vtx == 1){
-      ptb_equi_vtx = extract_and_renum_entity1_entity2(extrp->comm,
-                                                       extrp->ptb_equi_face,
-                                                       extrp->n_part_in,
-                                                       extrp->n_face,
-                                                       extrp->n_vtx,
-                                                       n_extract_face,
-                                                       extract_face_lnum,
-                                                       extrp->pface_vtx_idx,
-                                                       extrp->pface_vtx,
-                                                       extrp->vtx_ln_to_gn,
-                                                       &extrp->dequi_face_vtx_idx,
-                                                       &extrp->dequi_face_vtx,
-                                                       &extrp->dequi_parent_vtx_ln_to_gn,
-                                                       &n_extract_vtx,
-                                                       &extract_vtx_lnum);
+      extrp->ptb_equi_vtx = extract_and_renum_entity1_entity2(extrp->comm,
+                                                              extrp->ptb_equi_face,
+                                                              extrp->n_part_in,
+                                                              extrp->n_face,
+                                                              extrp->n_vtx,
+                                                              n_extract_face,
+                                                              extract_face_lnum,
+                                                              extrp->pface_vtx_idx,
+                                                              extrp->pface_vtx,
+                                                              extrp->vtx_ln_to_gn,
+                                                              &extrp->dequi_face_vtx_idx,
+                                                              &extrp->dequi_face_vtx,
+                                                              &extrp->dequi_parent_vtx_ln_to_gn,
+                                                              &n_extract_vtx,
+                                                              &extract_vtx_lnum);
 
 
-      extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(ptb_equi_vtx);
+      extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_vtx);
       if(1 == 1) {
         PDM_log_trace_array_int (extrp->dequi_face_vtx_idx, extrp->dn_equi_face+1                         , "dequi_face_vtx_idx :: ");
         PDM_log_trace_array_long(extrp->dequi_face_vtx    , extrp->dequi_face_vtx_idx[extrp->dn_equi_face], "dequi_face_vtx     :: ");
@@ -828,12 +876,6 @@ PDM_extract_part_compute
     }
     free(extract_face_lnum   );
     free(n_extract_face      );
-
-
-    free(dequi_face_vtx_idx);
-    free(dequi_face_vtx);
-    free(dequi_parent_vtx_ln_to_gn);
-    PDM_part_to_block_free(ptb_equi_vtx);
 
   }
 
