@@ -248,20 +248,6 @@ _generate_volume_mesh
  const PDM_Mesh_nodal_elt_t    elt_type,
  const PDM_split_dual_t        part_method,
  const int                     n_part
- // int                         **n_cell,
- // int                         **n_face,
- // int                         **n_edge,
- // int                         **n_vtx,
- // int                        ***cell_face_idx,
- // int                        ***cell_face,
- // int                        ***face_edge_idx,
- // int                        ***face_edge,
- // int                        ***edge_vtx,
- // double                     ***vtx_coord,
- // PDM_g_num_t                ***cell_ln_to_gn,
- // PDM_g_num_t                ***face_ln_to_gn,
- // PDM_g_num_t                ***edge_ln_to_gn,
- // PDM_g_num_t                ***vtx_ln_to_gn
  )
 {
   double length = 0.;
@@ -374,6 +360,9 @@ _read_surface_mesh
   }
 
   fclose(f);
+
+
+  // PDM_g_num_t *distrib_vtx
 
 
   *vtx_ln_to_gn  = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_vtx));
@@ -705,6 +694,10 @@ int main(int argc, char *argv[])
                                     &face_edge,
                                     &face_edge_idx,
                                     PDM_OWNERSHIP_KEEP);
+      PDM_log_trace_connectivity_int(face_edge_idx,
+                                     face_edge,
+                                     n_face,
+                                     "face_edge : ");
 
       int *edge_vtx_idx;
       int *edge_vtx;

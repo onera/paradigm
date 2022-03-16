@@ -304,7 +304,8 @@ int         ***idx_visited
 
       for(int idx_entity2 = _pentity1_entity2_idx[i_entity]; idx_entity2 < _pentity1_entity2_idx[i_entity+1]; ++idx_entity2) {
         int i_entity2 = PDM_ABS(_pentity1_entity2[idx_entity2])-1;
-        _extract_entity1_entity2[i_part][idx_write++] = _pentity2_ln_to_gn[i_entity2];
+        int sgn       = PDM_SIGN(_pentity1_entity2[idx_entity2]);
+        _extract_entity1_entity2[i_part][idx_write++] = sgn*_pentity2_ln_to_gn[i_entity2];
 
         if(is_visited[i_entity2] == 0) {
           int idx = _n_extract_entity2[i_part]++;
@@ -378,12 +379,19 @@ int                 ***extract_entity2_lnum
                                                          PDM_OWNERSHIP_USER);
   //
   int *n_connect_tot = (int *) malloc( n_part * sizeof(int));
+  int **sgn_entity1_entity2 = (int **) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    n_connect_tot[i_part] = 0;
+    n_connect_tot[i_part] = 0;(int *) malloc( n_part * sizeof(int));
     for(int i = 0; i < n_extract_entity1[i_part]; ++i) {
       n_connect_tot[i_part] += _selected_entity1_entity2_n[i_part][i];
     }
     // TODO --> compute idx
+
+    sgn_entity1_entity2[i_part] = (int *) malloc(sizeof(int) * n_connect_tot[i_part]);
+    for(int i = 0; i < n_connect_tot[i_part]; ++i) {
+      sgn_entity1_entity2[i_part][i] = _selected_entity1_entity2[i_part][i];
+      _selected_entity1_entity2[i_part][i] = PDM_ABS(_selected_entity1_entity2[i_part][i]);
+    }
 
     PDM_gnum_set_from_parents(gnum_extract_entity2, i_part, n_connect_tot[i_part], _selected_entity1_entity2[i_part]);
   }
@@ -395,6 +403,10 @@ int                 ***extract_entity2_lnum
   PDM_g_num_t **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _child_entity1_entity2[i_part] = PDM_gnum_get(gnum_extract_entity2, i_part);
+
+    for(int i = 0; i < n_connect_tot[i_part]; ++i) {
+      _child_entity1_entity2[i_part][i] *= sgn_entity1_entity2[i_part][i];
+    }
 
     if(0 == 1) {
       PDM_log_trace_array_long(_child_entity1_entity2[i_part], n_connect_tot[i_part], "_child_entity1_entity2 :: ");
@@ -411,7 +423,9 @@ int                 ***extract_entity2_lnum
     }
 
     free(extract_entity1_entity2_idx[i_part]);
+    free(sgn_entity1_entity2[i_part]);
   }
+  free(sgn_entity1_entity2);
   free(extract_entity1_entity2_idx);
   free(n_connect_tot);
   PDM_gnum_free(gnum_extract_entity2);

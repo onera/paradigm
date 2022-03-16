@@ -179,7 +179,7 @@ _solve_least_square
  double    *x
  )
 {
-  if (1) {
+  if (0) {
     log_trace("A =\n");
     for (int i = 0; i < m; i++) {
       log_trace("[");
@@ -222,47 +222,47 @@ _solve_least_square
     abort();
 #endif
 
-  log_trace("U =\n");
-  for (int i = 0; i < m; i++) {
-    log_trace("[");
-    for (int j = 0; j < n; j++) {
-      log_trace("%20.16f ", U[i+m*j]);
-    }
-    log_trace("]\n");
-  }
+  // log_trace("U =\n");
+  // for (int i = 0; i < m; i++) {
+  //   log_trace("[");
+  //   for (int j = 0; j < n; j++) {
+  //     log_trace("%20.16f ", U[i+m*j]);
+  //   }
+  //   log_trace("]\n");
+  // }
 
-  log_trace("S = [");
-  for (int i = 0; i < n; i++) {
-    log_trace("%20.16f ", S[i]);
-  }
-  log_trace("]\n");
+  // log_trace("S = [");
+  // for (int i = 0; i < n; i++) {
+  //   log_trace("%20.16f ", S[i]);
+  // }
+  // log_trace("]\n");
 
-  log_trace("V =\n");
-  for (int i = 0; i < m; i++) {
-    log_trace("[");
-    for (int j = 0; j < n; j++) {
-      log_trace("%20.16f ", V[i+m*j]);
-    }
-    log_trace("]\n");
-  }
+  // log_trace("V =\n");
+  // for (int i = 0; i < m; i++) {
+  //   log_trace("[");
+  //   for (int j = 0; j < n; j++) {
+  //     log_trace("%20.16f ", V[i+m*j]);
+  //   }
+  //   log_trace("]\n");
+  // }
 
   const double tol = 1.e-2;
   double tol_s = tol * PDM_ABS(S[0]);
-  log_trace("cond = %e\n", S[0]/S[n-1]);
-  log_trace("S truncated = [");
+  // log_trace("cond = %e\n", S[0]/S[n-1]);
+  // log_trace("S truncated = [");
   for (int i = 0; i < n; i++) {
     double si = S[i];
     if (PDM_ABS(si) <= tol_s) {
       si = 0;
     }
-    log_trace("%20.16f ", si);
+    // log_trace("%20.16f ", si);
   }
-  log_trace("]\n");
+  // log_trace("]\n");
 
   /* Compute y := S^{-1} U^T b */
   double y[n];
 
-  log_trace("y = [");
+  // log_trace("y = [");
   for (int i = 0; i < n; i++) {
 
     y[i] = 0.;
@@ -276,21 +276,21 @@ _solve_least_square
     } else {
       S[i] = 0.;
     }
-    log_trace("%f ", y[i]);
+    // log_trace("%f ", y[i]);
   }
-  log_trace("]\n");
+  // log_trace("]\n");
 
   /* Compute x := V^T y */
-  log_trace("x = [");
+  // log_trace("x = [");
   for (int i = 0; i < n; i++) {
     x[i] = 0.;
 
     for (int j = 0; j < m; j++) {
       x[i] += V[j + m*i] * y[j];
     }
-  log_trace("%f ", x[i]);
+  // log_trace("%f ", x[i]);
   }
-  log_trace("]\n");
+  // log_trace("]\n");
 }
 
 
@@ -406,14 +406,14 @@ _compute_edge_isosurf_intersection
         double a_2 = 3*(val2 - val1) - 2*m0 - m1;
         double a_1 = m0;
         double a_0 = val1;
-        log_trace("coefs = %f %f %f %f\n", a_3, a_2, a_1, a_0);
+        // log_trace("coefs = %f %f %f %f\n", a_3, a_2, a_1, a_0);
 
         double s = t;
         int stat = 0;
-        log_trace("Newton:\n");
+        // log_trace("Newton:\n");
         for (int iter = 0; iter < 5; iter++) {
           double val = a_0 + s*(a_1 + s*(a_2 + s*a_3));
-          log_trace("  it %d, s = %f, |val| = %e\n", iter, s, PDM_ABS(val));
+          // log_trace("  it %d, s = %f, |val| = %e\n", iter, s, PDM_ABS(val));
 
           if (PDM_ABS(val) < 1e-6) {
             // Converged
@@ -1196,10 +1196,20 @@ _compute_face_vtx
  int       **pface_vtx
  )
 {
+  int dbg = 1;
   *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
 
   for (int i = 0; i < n_face; i++) {
 
+    if (dbg) {
+      log_trace("\nFace %d\n", i);
+      for (int idx_edge = pface_edge_idx[i]; idx_edge < pface_edge_idx[i+1]; idx_edge++) {
+        int iedge = PDM_ABS(pface_edge[idx_edge]) - 1;
+        log_trace("  edge %d: %d %d\n",
+                  pface_edge[idx_edge],
+                  pedge_vtx[2*iedge], pedge_vtx[2*iedge+1]);
+      }
+    }
     int *_pface_vtx = *pface_vtx + pface_edge_idx[i];
 
     int cur_vtx, next_vtx;
@@ -1236,6 +1246,14 @@ _compute_face_vtx
           break;
         }
       }
+    }
+
+    if (dbg) {
+      log_trace("  face_vtx = ");
+      for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
+        log_trace("%d ", _pface_vtx[ivtx]);
+      }
+      log_trace("\n");
     }
 
   }
@@ -1396,7 +1414,7 @@ _iso_surf_dist
     } // end of loop on faces of current cell
 
 
-    log_trace("_n_cell_edge = %d\n", n_cell_edge);
+    // log_trace("_n_cell_edge = %d\n", n_cell_edge);
     n_cell_edge /= 2;
 
     // Second loop to fill matrices
@@ -1542,9 +1560,9 @@ _iso_surf_dist
         rhs_face[i_face_edge] = PDM_DOT_PRODUCT(face_center, face_normal);
         i_face_edge++;
 
-        log_trace("face %d ("PDM_FMT_G_NUM"), i_face_edge = %d\n",
-                  iface, pface_ln_to_gn[iface], i_face_edge);
-        if (1) {
+        // log_trace("face %d ("PDM_FMT_G_NUM"), i_face_edge = %d\n",
+                  // iface, pface_ln_to_gn[iface], i_face_edge);
+        if (0) {
           log_trace("  face_edge_tag :");
           for (int jedge = pface_edge_idx[iface]; jedge < pface_edge_idx[iface+1]; jedge++) {
             int iedge = PDM_ABS(pface_edge[jedge]) - 1;
@@ -1586,8 +1604,8 @@ _iso_surf_dist
 
           face_tag[iface] = 1;
 
-          log_trace("face_coord = %f %f %f\n",
-              face_coord[3*iface], face_coord[3*iface+1], face_coord[3*iface+2]);
+          // log_trace("face_coord = %f %f %f\n",
+          //     face_coord[3*iface], face_coord[3*iface+1], face_coord[3*iface+2]);
         }
         else {
           face_tag[iface] = 0;
@@ -1605,8 +1623,8 @@ _iso_surf_dist
       _cell_coord[l] *= normalization;
     }
 
-    log_trace("cell %d ("PDM_FMT_G_NUM"), i_cell_edge = %d\n",
-              icell, pcell_ln_to_gn[icell], i_cell_edge);
+    // log_trace("cell %d ("PDM_FMT_G_NUM"), i_cell_edge = %d\n",
+    //           icell, pcell_ln_to_gn[icell], i_cell_edge);
     assert(i_cell_edge >= 3);
     if (use_gradient) {
       _solve_least_square (i_cell_edge,
@@ -1655,8 +1673,8 @@ _iso_surf_dist
     } else {
       memcpy(cell_coord + 3*icell, _cell_coord, sizeof(double) * 3);
     }
-    log_trace("cell_coord = %f %f %f\n",
-              cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
+    // log_trace("cell_coord = %f %f %f\n",
+    //           cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
 
     for (int i = 0; i < i_cell_edge; i++) {
       is_visited_edge[visited_edges[i]] = 0;
@@ -1677,6 +1695,25 @@ _iso_surf_dist
                       pface_edge,
                       pedge_vtx,
                       &pface_vtx);
+
+    // int *pedge_vtx_idx = (int *) malloc(sizeof(int) * (n_edge + 1));
+    // for (int i = 0; i <= n_edge; i++) {
+    //   pedge_vtx_idx[i] = 2*i;
+    // }
+    // PDM_log_trace_connectivity_int(pedge_vtx_idx,
+    //                                pedge_vtx,
+    //                                n_edge,
+    //                                "pedge_vtx : ");
+
+    // PDM_log_trace_connectivity_int(pface_edge_idx,
+    //                                pface_edge,
+    //                                n_face,
+    //                                "pface_edge : ");
+
+    // PDM_log_trace_connectivity_int(pface_edge_idx,
+    //                                pface_vtx,
+    //                                n_face,
+    //                                "pface_vtx : ");
 
     sprintf(filename, "out_equi_faces_%2.2d.vtk", i_rank);
     PDM_vtk_write_polydata(filename,
@@ -2687,7 +2724,7 @@ _iso_surface_part
   pvtx_ln_to_gn = tmp_vtx_ln_to_gn[0];
   free(tmp_vtx_ln_to_gn);
 
-  PDM_log_trace_array_long(pvtx_ln_to_gn, n_vtx, "pvtx_ln_to_gn : ");
+  // PDM_log_trace_array_long(pvtx_ln_to_gn, n_vtx, "pvtx_ln_to_gn : ");
 
 
   /* Parent Global ids */
