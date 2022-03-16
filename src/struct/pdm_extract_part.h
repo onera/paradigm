@@ -137,6 +137,15 @@ PDM_extract_part_connectivity_get
 
 
 void
+PDM_extract_part_ln_to_gn_get
+(
+ PDM_extract_part_t        *extrp,
+ PDM_mesh_entities_t       entity_type,
+ PDM_g_num_t            ***pentity_ln_to_gn,
+ PDM_ownership_t           ownership
+);
+
+void
 PDM_extract_part_vtx_coord_get
 (
  PDM_extract_part_t         *extrp,
