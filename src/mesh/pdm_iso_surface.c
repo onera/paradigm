@@ -571,7 +571,7 @@ _dump_iso_line_dist
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
 
-  PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, isoline_n_edge, "pedge_vtx : ");
+  // PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, isoline_n_edge, "pedge_vtx : ");
 
   double** tmp_pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -939,7 +939,7 @@ _iso_line_dist
 
   pface_edge_inter_g_num = realloc(pface_edge_inter_g_num, sizeof(PDM_g_num_t) * pface_edge_inter_idx[n_face]);
 
-  PDM_log_trace_connectivity_long(pface_edge_inter_idx, pface_edge_inter_g_num, n_face, "pface_edge_inter : ");
+  // PDM_log_trace_connectivity_long(pface_edge_inter_idx, pface_edge_inter_g_num, n_face, "pface_edge_inter : ");
 
 
   sprintf(filename, "isoline_vtx_coord_no_nbd_%2.2d.vtk", i_rank);
@@ -1196,7 +1196,7 @@ _compute_face_vtx
  int       **pface_vtx
  )
 {
-  int dbg = 1;
+  int dbg = 0;
   *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
 
   for (int i = 0; i < n_face; i++) {
@@ -1322,7 +1322,7 @@ _iso_surf_dist
                                      pedge_vtx,
                                      pvtx_coord,
                                      pfield,
-                                     pgradient_field,
+                                     NULL,//pgradient_field,
                                      edge_tag,
                                      edge_coord,
                                      edge_gradient);

@@ -115,6 +115,70 @@ _read_args(int                    argc,
   }
 }
 
+static
+inline
+void
+_mandelbulb_iteration
+(
+ const double  cx,
+ const double  cy,
+ const double  cz,
+ const int     n,
+ double       *xk,
+ double       *yk,
+ double       *zk
+ )
+{
+  double x = *xk;
+  double y = *yk;
+  double z = *zk;
+
+  double rn     = pow(sqrt(x*x + y*y + z*z), n);
+  double ntheta = n*atan2(y, x);
+  double nphi   = n*atan2(z, sqrt(x*x + y*y));
+
+  double cn = cos(nphi);
+
+  *xk = cx + rn * cos(ntheta) * cn;
+  *yk = cy + rn * sin(ntheta) * cn;
+  *zk = cz + rn * sin(nphi);
+}
+
+
+static
+inline
+double
+_mandelbulb
+(
+ const double x,
+ const double y,
+ const double z,
+ const int    n,
+ const int    it_max
+ )
+{
+  const double r2max = 4.;
+
+  int it;
+  double xk = x;
+  double yk = y;
+  double zk = z;
+
+  for (it = 0; it < it_max; it++) {
+    _mandelbulb_iteration (x, y, z,
+                           n,
+                           &xk, &yk, &zk);
+
+    double r2 = xk*xk + yk*yk + zk*zk;
+
+    if (r2 > r2max) {
+      break;
+    }
+  }
+
+  return (double) it;
+}
+
 
 static
 inline
@@ -283,7 +347,7 @@ int main(int argc, char *argv[])
     dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
     dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
-    if (1) {
+    if (0) {
       double noise = 0.2 * length / (double) (n_vtx_seg - 1);
       for (int i = 0; i < dn_vtx; i++) {
         for (int j = 0; j < 3; j++) {
@@ -296,7 +360,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");
       PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
     }
@@ -378,18 +442,36 @@ int main(int argc, char *argv[])
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
 
+  int *ifield = (int *) malloc(dn_vtx * sizeof(int));
+  const int it_max = 3;
   for(int i = 0; i < dn_vtx; ++i) {
 
     double x1 = dvtx_coord[3*i  ];
     double y1 = dvtx_coord[3*i+1];
     double z1 = dvtx_coord[3*i+2];
-    dfield[i] = _unit_sphere(x1, y1, z1);
+    // dfield[i] = _unit_sphere(x1, y1, z1);
+    ifield[i] = (int) _mandelbulb(x1, y1, z1, 8, it_max);
+    if (ifield[i] < it_max) {
+      dfield[i] = -1.;
+    } else {
+      dfield[i] =  1.;
+    }
+
 
     _unit_sphere_gradient(x1, y1, z1,
                           &dgradient_field[3*i],
                           &dgradient_field[3*i+1],
                           &dgradient_field[3*i+2]);
   }
+
+  char filename[999];
+  sprintf(filename, "ifield_%2.2d.vtk", i_rank);
+  PDM_vtk_write_point_cloud(filename,
+                            dn_vtx,
+                            dvtx_coord,
+                            NULL,
+                            ifield);
+  // free(ifield);
 
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);

@@ -381,7 +381,7 @@ int                 ***extract_entity2_lnum
   int *n_connect_tot = (int *) malloc( n_part * sizeof(int));
   int **sgn_entity1_entity2 = (int **) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    n_connect_tot[i_part] = 0;(int *) malloc( n_part * sizeof(int));
+    n_connect_tot[i_part] = 0;
     for(int i = 0; i < n_extract_entity1[i_part]; ++i) {
       n_connect_tot[i_part] += _selected_entity1_entity2_n[i_part][i];
     }
@@ -389,7 +389,7 @@ int                 ***extract_entity2_lnum
 
     sgn_entity1_entity2[i_part] = (int *) malloc(sizeof(int) * n_connect_tot[i_part]);
     for(int i = 0; i < n_connect_tot[i_part]; ++i) {
-      sgn_entity1_entity2[i_part][i] = _selected_entity1_entity2[i_part][i];
+      sgn_entity1_entity2[i_part][i]       = PDM_SIGN(_selected_entity1_entity2[i_part][i]);
       _selected_entity1_entity2[i_part][i] = PDM_ABS(_selected_entity1_entity2[i_part][i]);
     }
 
@@ -404,10 +404,6 @@ int                 ***extract_entity2_lnum
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _child_entity1_entity2[i_part] = PDM_gnum_get(gnum_extract_entity2, i_part);
 
-    for(int i = 0; i < n_connect_tot[i_part]; ++i) {
-      _child_entity1_entity2[i_part][i] *= sgn_entity1_entity2[i_part][i];
-    }
-
     if(0 == 1) {
       PDM_log_trace_array_long(_child_entity1_entity2[i_part], n_connect_tot[i_part], "_child_entity1_entity2 :: ");
       PDM_log_trace_array_int(extract_entity1_entity2_idx[i_part], _n_extract_entity2[i_part], "extract_entity1_entity2_idx :: ");
@@ -420,6 +416,9 @@ int                 ***extract_entity2_lnum
       int idx = extract_entity1_entity2_idx[i_part][i];
       _child_entity2_ln_to_gn         [i_part][i] = _child_entity1_entity2   [i_part][idx];
       _extract_parent_entity2_ln_to_gn[i_part][i] = _selected_entity1_entity2[i_part][idx]; // To exchange to keep link with original part
+    }
+    for(int i = 0; i < n_connect_tot[i_part]; ++i) {
+      _child_entity1_entity2[i_part][i] *= sgn_entity1_entity2[i_part][i];
     }
 
     free(extract_entity1_entity2_idx[i_part]);

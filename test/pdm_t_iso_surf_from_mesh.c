@@ -324,55 +324,68 @@ _read_surface_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  assert(n_rank == 1);
-
-  FILE *f = fopen(filename, "r");
-
-  if (f == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
-  }
-
-  PDM_g_num_t gn_vtx, gn_face;
-
-  fscanf(f, PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", &gn_vtx, &gn_face);
-
-  *n_vtx  = (int) gn_vtx;
-  *n_face = (int) gn_face;
+  // assert(n_rank == 1);
 
   if (i_rank == 0) {
-    printf("gsm_n_vtx = "PDM_FMT_G_NUM", gsm_n_face = "PDM_FMT_G_NUM"\n", gn_vtx, gn_face);
+    FILE *f = fopen(filename, "r");
+
+    if (f == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
+    }
+
+    PDM_g_num_t gn_vtx, gn_face;
+
+    fscanf(f, PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", &gn_vtx, &gn_face);
+
+    *n_vtx  = (int) gn_vtx;
+    *n_face = (int) gn_face;
+
+    if (i_rank == 0) {
+      printf("gsm_n_vtx = "PDM_FMT_G_NUM", gsm_n_face = "PDM_FMT_G_NUM"\n", gn_vtx, gn_face);
+    }
+
+    *vtx_coord = malloc (sizeof(double) * (*n_vtx) * 3);
+    for (int i = 0; i < *n_vtx; i++) {
+      fscanf(f, "%lf %lf %lf\n",
+             *vtx_coord + 3*i, *vtx_coord + 3*i+1, *vtx_coord + 3*i+2);
+    }
+
+    *face_vtx_idx = malloc (sizeof(int) * (*n_face + 1));
+    for (int i = 0; i <= *n_face; i++) {
+      fscanf(f, "%d", *face_vtx_idx + i);
+    }
+
+    *face_vtx = malloc (sizeof(int) * (*face_vtx_idx)[*n_face]);
+    for (int i = 0; i < (*face_vtx_idx)[*n_face]; i++) {
+      fscanf(f, "%d", *face_vtx + i);
+    }
+
+    fclose(f);
+
+
+
+    *vtx_ln_to_gn  = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_vtx));
+    for (int i = 0; i < *n_vtx; i++) {
+      (*vtx_ln_to_gn)[i] = i + 1; //use distrib
+    }
+
+    *face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_face));
+    for (int i = 0; i < *n_face; i++) {
+      (*face_ln_to_gn)[i] = i + 1; //use distrib
+    }
   }
 
-  *vtx_coord = malloc (sizeof(double) * (*n_vtx) * 3);
-  for (int i = 0; i < *n_vtx; i++) {
-    fscanf(f, "%lf %lf %lf\n",
-           *vtx_coord + 3*i, *vtx_coord + 3*i+1, *vtx_coord + 3*i+2);
-  }
+  else {
+    *n_vtx  = 0;
+    *n_face = 0;
 
-  *face_vtx_idx = malloc (sizeof(int) * (*n_face + 1));
-  for (int i = 0; i <= *n_face; i++) {
-    fscanf(f, "%d", *face_vtx_idx + i);
-  }
+    *vtx_coord = malloc (sizeof(double) * (*n_vtx) * 3);
+    *face_vtx_idx = malloc (sizeof(int) * (*n_face + 1));
+    (*face_vtx_idx)[0] = 0;
+    *face_vtx = malloc (sizeof(int) * (*face_vtx_idx)[*n_face]);
 
-  *face_vtx = malloc (sizeof(int) * (*face_vtx_idx)[*n_face]);
-  for (int i = 0; i < (*face_vtx_idx)[*n_face]; i++) {
-    fscanf(f, "%d", *face_vtx + i);
-  }
-
-  fclose(f);
-
-
-  // PDM_g_num_t *distrib_vtx
-
-
-  *vtx_ln_to_gn  = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_vtx));
-  for (int i = 0; i < *n_vtx; i++) {
-    (*vtx_ln_to_gn)[i] = i + 1; //use distrib
-  }
-
-  *face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_face));
-  for (int i = 0; i < *n_face; i++) {
-    (*face_ln_to_gn)[i] = i + 1; //use distrib
+    *vtx_ln_to_gn  = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_vtx));
+    *face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*n_face));
   }
 
 }
