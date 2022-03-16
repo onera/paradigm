@@ -576,7 +576,7 @@ int main(int argc, char *argv[])
     double y1 = dvtx_coord[3*i+1];
     dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1);
 
-    printf("dfield[i] = %12.5e \n", dfield[i]);
+    // printf("dfield[i] = %12.5e \n", dfield[i]);
 
     _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
 
