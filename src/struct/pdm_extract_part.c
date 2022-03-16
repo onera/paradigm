@@ -558,6 +558,7 @@ PDM_extract_part_create
   extrp->dequi_face_edge            = NULL;
   extrp->dequi_face_edge_idx        = NULL;
   extrp->dequi_edge_vtx             = NULL;
+  extrp->dequi_edge_vtx_idx         = NULL;
   extrp->dequi_face_vtx             = NULL;
   extrp->dequi_face_vtx_idx         = NULL;
 
@@ -808,7 +809,6 @@ PDM_extract_part_compute
 
       extrp->dn_equi_edge = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_edge);
 
-      int *dequi_edge_vtx_idx = NULL;
       int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
@@ -827,12 +827,11 @@ PDM_extract_part_compute
                                                               pedge_vtx_idx,
                                                               extrp->pedge_vtx,
                                                               extrp->vtx_ln_to_gn,
-                                                              &dequi_edge_vtx_idx,
+                                                              &extrp->dequi_edge_vtx_idx,
                                                               &extrp->dequi_edge_vtx,
                                                               &extrp->dequi_parent_vtx_ln_to_gn,
                                                               &n_extract_vtx,
                                                               &extract_vtx_lnum);
-      free(dequi_edge_vtx_idx);
 
       extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_vtx);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
@@ -877,7 +876,6 @@ PDM_extract_part_compute
 
   }
 
-  PDM_part_to_block_free(ptb_equi);
 
   /*
    * Exchange coordinates
@@ -911,12 +909,118 @@ PDM_extract_part_compute
   free(n_extract_vtx     );
   free(pextract_vtx_coord);
 
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
   /*
    * At this stage we have all information in block frame but we need to repart them
+   *   - if hilbert -> block and part is the same (implicite block numbering is hilbert)
+   *   - if scotch  -> Need to setup graph and split it before doing partitioning
    */
+  if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
+    assert(extrp->n_part_out == 1);
 
 
+    PDM_g_num_t* cell_distri = PDM_part_to_block_distrib_index_get(ptb_equi);
+    int dn_cell_equi = cell_distri[i_rank+1] - cell_distri[i_rank];
+
+    extrp->n_extract_cell        = (int  *) malloc(extrp->n_part_out * sizeof(int  ));
+    extrp->extract_cell_ln_to_gn = (int **) malloc(extrp->n_part_out * sizeof(int *));
+
+    int i_part0 = 0;
+    extrp->n_extract_cell       [i_part0] = dn_cell_equi;
+    extrp->extract_cell_ln_to_gn[i_part0] = (int *) malloc( extrp->n_extract_cell[i_part0] * sizeof(int));
+
+    for(int i = 0; i < dn_cell_equi; ++i) {
+      extrp->extract_cell_ln_to_gn[i_part0][i] = cell_distri[i_rank] + i + 1;
+    }
+
+
+  } else {
+    abort();
+  }
+
+
+  if(extrp->dim == 3) {
+
+    PDM_g_num_t* cell_distri = PDM_part_to_block_distrib_index_get(ptb_equi);
+    PDM_part_dconnectivity_to_pconnectivity_sort(extrp->comm,
+                                                 cell_distri,
+                                                 extrp->dequi_cell_face_idx,
+                                                 extrp->dequi_cell_face,
+                                                 extrp->n_part_out,
+                                                 extrp->n_extract_cell,
+                          (const PDM_g_num_t **) extrp->extract_cell_ln_to_gn,
+                                                &extrp->n_extract_face,
+                                                &extrp->extract_face_ln_to_gn,
+                                                &extrp->pextract_cell_face_idx,
+                                                &extrp->pextract_cell_face);
+
+    if(extrp->dequi_face_edge_idx != NULL) {
+      PDM_g_num_t* face_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_face);
+      PDM_part_dconnectivity_to_pconnectivity_sort(extrp->comm,
+                                                   face_distri,
+                                                   extrp->dequi_face_edge_idx,
+                                                   extrp->dequi_face_edge,
+                                                   extrp->n_part_out,
+                                                   extrp->n_extract_face,
+                            (const PDM_g_num_t **) extrp->extract_face_ln_to_gn,
+                                                  &extrp->n_extract_edge,
+                                                  &extrp->extract_edge_ln_to_gn,
+                                                  &extrp->pextract_face_edge_idx,
+                                                  &extrp->pextract_face_edge);
+
+      PDM_g_num_t* edge_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_edge);
+      int **pextract_edge_vtx_idx = NULL;
+      PDM_part_dconnectivity_to_pconnectivity_sort(extrp->comm,
+                                                   edge_distri,
+                                                   extrp->dequi_edge_vtx_idx,
+                                                   extrp->dequi_edge_vtx,
+                                                   extrp->n_part_out,
+                                                   extrp->n_extract_edge,
+                            (const PDM_g_num_t **) extrp->extract_edge_ln_to_gn,
+                                                  &extrp->n_extract_vtx,
+                                                  &extrp->extract_vtx_ln_to_gn,
+                                                  &pextract_edge_vtx_idx,
+                                                  &extrp->pextract_edge_vtx);
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(pextract_edge_vtx_idx[i_part]);
+      }
+      free(pextract_edge_vtx_idx);
+
+    } else {
+
+      PDM_g_num_t* face_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_face);
+      PDM_part_dconnectivity_to_pconnectivity_sort(extrp->comm,
+                                                   face_distri,
+                                                   extrp->dequi_face_vtx_idx,
+                                                   extrp->dequi_face_vtx,
+                                                   extrp->n_part_out,
+                                                   extrp->n_extract_face,
+                            (const PDM_g_num_t **) extrp->extract_face_ln_to_gn,
+                                                  &extrp->n_extract_vtx,
+                                                  &extrp->extract_vtx_ln_to_gn,
+                                                  &extrp->pextract_face_vtx_idx,
+                                                  &extrp->pextract_face_vtx);
+    }
+
+    /*
+     * Finalize with vtx
+     */
+    PDM_g_num_t* vtx_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_vtx);
+    PDM_part_dcoordinates_to_pcoordinates(extrp->comm,
+                                          extrp->n_part_out,
+                                          vtx_distri,
+                                          extrp->dequi_vtx_coord,
+                                          extrp->n_extract_vtx,
+                   (const PDM_g_num_t **) extrp->extract_vtx_ln_to_gn,
+                                         &extrp->pvtx_coord);
+
+
+
+  } else {
+    abort();
+  }
 
 
   /*
@@ -936,6 +1040,9 @@ PDM_extract_part_compute
   }
   if(extrp->dequi_edge_vtx != NULL ) {
     free(extrp->dequi_edge_vtx);
+  }
+  if(extrp->dequi_edge_vtx_idx != NULL ) {
+    free(extrp->dequi_edge_vtx_idx);
   }
   if(extrp->dequi_face_vtx != NULL ) {
     free(extrp->dequi_face_vtx);
@@ -959,6 +1066,7 @@ PDM_extract_part_compute
     free(extrp->dequi_vtx_coord);
   }
 
+  PDM_part_to_block_free(ptb_equi);
   if(extrp->ptb_equi_face != NULL) {
     PDM_part_to_block_free(extrp->ptb_equi_face);
   }

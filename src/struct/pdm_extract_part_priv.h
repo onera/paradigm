@@ -95,6 +95,7 @@ struct _pdm_extract_part_t
   int                  *dequi_face_edge;
   int                  *dequi_face_edge_idx;
   int                  *dequi_edge_vtx;
+  int                  *dequi_edge_vtx_idx;
   int                  *dequi_face_vtx;
   int                  *dequi_face_vtx_idx;
 
