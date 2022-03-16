@@ -573,6 +573,23 @@ PDM_extract_part_create
   extrp->ptb_equi_edge              = NULL;
   extrp->ptb_equi_vtx               = NULL;
 
+  extrp->is_owner_connectivity    = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_ln_to_gn        = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_parent_ln_to_gn = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_vtx_coord       = PDM_TRUE;
+
+  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
+    extrp->is_owner_connectivity   [i] = PDM_TRUE;
+    extrp->is_owner_ln_to_gn       [i] = PDM_TRUE;
+    extrp->is_owner_parent_ln_to_gn[i] = PDM_TRUE;
+  }
+
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    extrp->pextract_n_entity[i] = malloc( n_part_out * sizeof(int));
+    for(int i_part =0; i_part < n_part_out; ++i_part) {
+      extrp->pextract_n_entity[i][i_part] = 0;
+    }
+  }
 
   return extrp;
 }
@@ -1139,6 +1156,59 @@ PDM_extract_part_selected_lnum_set
   extrp->extract_lnum[i_part] = extract_lnum;
 }
 
+
+void
+PDM_extract_part_n_entity_get
+(
+ PDM_extract_part_t       *extrp,
+ PDM_mesh_entities_t       entity_type,
+ int                     **pn_entity
+)
+{
+  *pn_entity = malloc( extrp->n_part_out * sizeof(int));
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    (*pn_entity)[i_part] = extrp->pextract_n_entity[entity_type][i_part];
+  }
+}
+
+
+void
+PDM_extract_part_connectivity_get
+(
+ PDM_extract_part_t        *extrp,
+ PDM_connectivity_type_t    connectivity_type,
+ int                     ***connect,
+ int                     ***connect_idx,
+ PDM_ownership_t           ownership
+)
+{
+  *connect     = extrp->pextract_connectivity    [connectivity_type];
+  *connect_idx = extrp->pextract_connectivity_idx[connectivity_type];
+
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    extrp->is_owner_connectivity[connectivity_type] = PDM_FALSE;
+  } else {
+    extrp->is_owner_connectivity[connectivity_type] = PDM_TRUE;
+  }
+}
+
+void
+PDM_extract_part_vtx_coord_get
+(
+ PDM_extract_part_t         *extrp,
+ double                   ***pvtx_coord,
+ PDM_ownership_t           ownership
+)
+{
+  *pvtx_coord = extrp->pextract_vtx_coord;
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    extrp->is_owner_vtx_coord = PDM_FALSE;
+  } else {
+    extrp->is_owner_vtx_coord = PDM_TRUE;
+  }
+}
+
+
 void
 PDM_extract_part_free
 (
@@ -1168,6 +1238,21 @@ PDM_extract_part_free
   free(extrp->vtx_ln_to_gn  );
 
   free(extrp->pvtx_coord     );
+
+  /*
+   * Free extracted partition if owner
+   */
+
+
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    free(extrp->pextract_n_entity[i]);
+  }
+
+
+  free(extrp->is_owner_connectivity   );
+  free(extrp->is_owner_ln_to_gn       );
+  free(extrp->is_owner_parent_ln_to_gn);
+
 
   free(extrp);
 }

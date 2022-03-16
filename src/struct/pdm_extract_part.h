@@ -115,6 +115,35 @@ PDM_extract_part_part_set
 );
 
 
+
+void
+PDM_extract_part_n_entity_get
+(
+ PDM_extract_part_t       *extrp,
+ PDM_mesh_entities_t       entity_type,
+ int                     **pn_entity
+);
+
+
+void
+PDM_extract_part_connectivity_get
+(
+ PDM_extract_part_t        *extrp,
+ PDM_connectivity_type_t    connectivity_type,
+ int                     ***connect,
+ int                     ***connect_idx,
+ PDM_ownership_t           ownership
+);
+
+
+void
+PDM_extract_part_vtx_coord_get
+(
+ PDM_extract_part_t         *extrp,
+ double                   ***pvtx_coord,
+ PDM_ownership_t           ownership
+);
+
 void
 PDM_extract_part_free
 (
