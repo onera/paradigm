@@ -126,7 +126,7 @@ _unit_sphere
  double z
 )
 {
-  // return x * x + y * y + z * z - 0.125;
+  return x * x + y * y + z * z - 0.125;
 
   // return PDM_ABS(x) + PDM_ABS(y) + PDM_ABS(z) - 0.5;
 
@@ -134,7 +134,7 @@ _unit_sphere
   // double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
   // return PDM_MIN(v1, v2);
 
-  return cos(6*x * y * z) - 0.999;
+  // return cos(6*x * y * z) - 0.999;
 }
 // coordsX * coordsX + coordsY * coordsY + coordsZ * coordsZ - 0.125
 // (coordsX-0.2) * (coordsX-0.2) + (coordsY-0.2) * (coordsY-0.2) + (coordsZ-0.3) * (coordsZ-0.3) - 0.07
@@ -152,9 +152,9 @@ _unit_sphere_gradient
  double *df_dz
 )
 {
-  // *df_dx = 2*x;
-  // *df_dy = 2*y;
-  // *df_dz = 2*z;
+  *df_dx = 2*x;
+  *df_dy = 2*y;
+  *df_dz = 2*z;
 
   // *df_dx = PDM_SIGN(x);
   // *df_dy = PDM_SIGN(y);
@@ -173,10 +173,10 @@ _unit_sphere_gradient
   //   *df_dz = 2*(z-0.3);
   // };
 
-  double s = -6*sin(6*x*y*z);
-  *df_dx = y*z*s;
-  *df_dy = x*z*s;
-  *df_dz = x*y*s;
+  // double s = -6*sin(6*x*y*z);
+  // *df_dx = y*z*s;
+  // *df_dy = x*z*s;
+  // *df_dz = x*y*s;
 }
 
 
@@ -282,6 +282,19 @@ int main(int argc, char *argv[])
     vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
     dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
     dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+
+    if (1) {
+      double noise = 0.2 * length / (double) (n_vtx_seg - 1);
+      for (int i = 0; i < dn_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          dvtx_coord[3*i+j] += noise * (rand() / (double) RAND_MAX - 0.5);
+        }
+        double y = dvtx_coord[3*i+1];
+        dvtx_coord[3*i] += 0.15*length*sin(7*y);
+        double x = dvtx_coord[3*i];
+        dvtx_coord[3*i+2] += 0.2*length*cos(8*x);
+      }
+    }
 
     if(1 == 1) {
       PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "out_volumic");

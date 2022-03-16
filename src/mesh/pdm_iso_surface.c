@@ -1272,7 +1272,7 @@ _iso_surf_dist
   PDM_g_num_t       **isosurf_face_ln_to_gn
 )
 {
-  const int use_gradient = (pgradient_field != NULL);
+  const int use_gradient = 0;//(pgradient_field != NULL);
 
   PDM_MPI_Comm comm = isos->comm;
 
@@ -2697,22 +2697,22 @@ _iso_surface_part
   // free(tmp_cell_parent_ln_to_gn);
 
 
-  // PDM_g_num_t **tmp_face_parent_ln_to_gn;
-  // PDM_extract_part_parent_ln_to_gn_get(extrp,
-  //                                      PDM_MESH_ENTITY_FACE,
-  //                                      &tmp_face_parent_ln_to_gn,
-  //                                      PDM_OWNERSHIP_USER);
-  // pface_parent_ln_to_gn = tmp_face_parent_ln_to_gn[0];
-  // free(tmp_face_parent_ln_to_gn);
+  PDM_g_num_t **tmp_face_parent_ln_to_gn;
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       PDM_MESH_ENTITY_FACE,
+                                       &tmp_face_parent_ln_to_gn,
+                                       PDM_OWNERSHIP_USER);
+  pface_parent_ln_to_gn = tmp_face_parent_ln_to_gn[0];
+  free(tmp_face_parent_ln_to_gn);
 
 
-  // PDM_g_num_t **tmp_edge_parent_ln_to_gn;
-  // PDM_extract_part_parent_ln_to_gn_get(extrp,
-  //                                      PDM_MESH_ENTITY_EDGE,
-  //                                      &tmp_edge_parent_ln_to_gn,
-  //                                      PDM_OWNERSHIP_USER);
-  // pedge_parent_ln_to_gn = tmp_edge_parent_ln_to_gn[0];
-  // free(tmp_edge_parent_ln_to_gn);
+  PDM_g_num_t **tmp_edge_parent_ln_to_gn;
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       PDM_MESH_ENTITY_EDGE,
+                                       &tmp_edge_parent_ln_to_gn,
+                                       PDM_OWNERSHIP_USER);
+  pedge_parent_ln_to_gn = tmp_edge_parent_ln_to_gn[0];
+  free(tmp_edge_parent_ln_to_gn);
 
 
   PDM_g_num_t **tmp_vtx_parent_ln_to_gn;
