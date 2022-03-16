@@ -150,6 +150,64 @@ _unit_circle
 }
 
 
+
+static
+inline
+double
+_taylor_green_vortex
+(
+ double U0,
+ double L,
+ double nu,
+ double t0,
+ double x,
+ double y
+)
+{
+  double k  = 2. * PDM_PI / L;
+  double f  = exp(-2.*nu*k*k*t0);
+
+  // double u = f * U0 * sin(k * x) * cos( k * y);
+  // double v = f * U0 * cos(k * x) * sin( k * y);
+
+  // double dudx = f * U0 *
+
+  double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
+
+  double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+
+  return q - 20. * pow(L/U0, 2);
+
+}
+
+
+
+static
+inline
+void
+_taylor_green_vortex_gradient
+(
+ double  U0,
+ double  L,
+ double  nu,
+ double  t0,
+ double  x,
+ double  y,
+ double *df_dx,
+ double *df_dy
+)
+{
+  double k  = 2. * PDM_PI / L;
+  double f  = exp(-2.*nu*k*k*t0);
+
+  *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+
+}
+
+
+
 static
 inline
 void
@@ -494,6 +552,12 @@ int main(int argc, char *argv[])
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
   // double *dgradient_field = NULL;
 
+  // https://ddcampayo.wordpress.com/2016/03/29/taylor-green-vortex-sheet-reduced-units/
+  double U0 = 1.;
+  double L  = 1.;
+  double nu = 1.e-3;
+  double t0 = 10.;
+
   for(int i = 0; i < dn_vtx; ++i) {
 
     double x1 = dvtx_coord[3*i  ];
@@ -506,16 +570,18 @@ int main(int argc, char *argv[])
   }
 
   // Taylor Green
-  // for(int i = 0; i < dn_vtx; ++i) {
+  for(int i = 0; i < dn_vtx; ++i) {
 
-  //   double x1 = dvtx_coord[3*i  ];
-  //   double y1 = dvtx_coord[3*i+1];
-  //   dfield[i] = _unit_circle(x1, y1);
+    double x1 = dvtx_coord[3*i  ];
+    double y1 = dvtx_coord[3*i+1];
+    dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1);
 
-  //   _unit_circle_gradient(x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
+    printf("dfield[i] = %12.5e \n", dfield[i]);
 
-  //   dgradient_field[3*i+2] = 0;
-  // }
+    _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
+
+    dgradient_field[3*i+2] = 0;
+  }
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
