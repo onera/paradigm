@@ -720,6 +720,7 @@ PDM_extract_part_compute
     abort();
   }
 
+
   /*
    * Extraction des connectivités
    */
@@ -935,6 +936,7 @@ PDM_extract_part_compute
                                                 &extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE],
                                                 &extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE]);
 
+
     if(extrp->dequi_face_edge_idx != NULL) {
       PDM_g_num_t* face_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_face);
       PDM_part_dconnectivity_to_pconnectivity_sort(extrp->comm,
@@ -996,11 +998,19 @@ PDM_extract_part_compute
                                          &extrp->pextract_vtx_coord);
 
 
+    PDM_part_dfield_to_pfield(extrp->comm,
+                              extrp->n_part_out,
+                              sizeof(PDM_g_num_t),
+                              vtx_distri,
+       (unsigned char *)      extrp->dequi_parent_vtx_ln_to_gn,
+                              extrp->pextract_n_entity       [PDM_MESH_ENTITY_VERTEX],
+       (const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+      (unsigned char     ***) &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX]);
+
 
   } else {
     abort();
   }
-
 
   /*
    * Cleaning
@@ -1060,6 +1070,10 @@ PDM_extract_part_compute
     free(entity_extract_g_num[i_part]);
   }
   free(entity_extract_g_num);
+
+  /*
+   * Exchange parent (dommage on refais les block_to_part du dconnectivity_to_pconnectivity)
+   */
 
 }
 
