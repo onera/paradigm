@@ -183,6 +183,72 @@ _mandelbulb
 static
 inline
 double
+_taylor_green_vortex
+(
+ double U0,
+ double L,
+ double nu,
+ double t0,
+ double x,
+ double y,
+ double z
+)
+{
+  PDM_UNUSED(z);
+  double k  = 2. * PDM_PI / L;
+  double f  = exp(-2.*nu*k*k*t0);
+
+  // double u = f * U0 * sin(k * x) * cos( k * y);
+  // double v = f * U0 * cos(k * x) * sin( k * y);
+
+  // double dudx = f * U0 *
+
+  // double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
+  double q = 2*pow(k,2)*pow(U0,2)*(f * pow(sin(k*x), 2) * pow(sin(k*y), 2) +
+                                   pow(cos(k*x), 2) * pow(cos(k*y), 2));
+
+  // double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  // double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+
+  return q - 20. * pow(L/U0, 2);
+
+}
+
+static
+inline
+void
+_taylor_green_vortex_gradient
+(
+ double  U0,
+ double  L,
+ double  nu,
+ double  t0,
+ double  x,
+ double  y,
+ double  z,
+ double *df_dx,
+ double *df_dy,
+ double *df_dz
+)
+{
+  PDM_UNUSED(z);
+  double k  = 2. * PDM_PI / L;
+  double f  = exp(-2.*nu*k*k*t0);
+
+  // *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  // *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+  *df_dx = 4*pow(k,3)*pow(U0,2) * (f * cos(k*x) * pow(sin(k*x), 2) * pow(sin(k*y), 2) -
+                                   sin(k*x) * pow(cos(k*x), 2) * pow(cos(k*y), 2));
+  *df_dy = 4*pow(k,3)*pow(U0,2) * (f * pow(sin(k*x), 2) * cos(k*y) * pow(sin(k*y), 2) -
+                                   pow(cos(k*x), 2) * sin(k*y) * pow(cos(k*y), 2));
+  *df_dz = 0.;
+}
+
+
+
+static
+inline
+double
 _unit_sphere
 (
  double x,
@@ -442,35 +508,45 @@ int main(int argc, char *argv[])
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
 
-  int *ifield = (int *) malloc(dn_vtx * sizeof(int));
-  const int it_max = 3;
+  // int *ifield = (int *) malloc(dn_vtx * sizeof(int));
+  // const int it_max = 3;
+
+  // https://ddcampayo.wordpress.com/2016/03/29/taylor-green-vortex-sheet-reduced-units/
+  double U0 = 1.;
+  double L  = 1.;
+  double nu = 1.e-3;
+  double t0 = 10.;
+
   for(int i = 0; i < dn_vtx; ++i) {
 
     double x1 = dvtx_coord[3*i  ];
     double y1 = dvtx_coord[3*i+1];
     double z1 = dvtx_coord[3*i+2];
     // dfield[i] = _unit_sphere(x1, y1, z1);
-    ifield[i] = (int) _mandelbulb(x1, y1, z1, 8, it_max);
-    if (ifield[i] < it_max) {
-      dfield[i] = -1.;
-    } else {
-      dfield[i] =  1.;
-    }
+    // ifield[i] = (int) _mandelbulb(x1, y1, z1, 8, it_max);
+    // if (ifield[i] < it_max) {
+    //   dfield[i] = -1.;
+    // } else {
+    //   dfield[i] =  1.;
+    // }
+    dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1, z1);
 
 
-    _unit_sphere_gradient(x1, y1, z1,
-                          &dgradient_field[3*i],
-                          &dgradient_field[3*i+1],
-                          &dgradient_field[3*i+2]);
+    // _unit_sphere_gradient(x1, y1, z1,
+    //                       &dgradient_field[3*i],
+    //                       &dgradient_field[3*i+1],
+    //                       &dgradient_field[3*i+2]);
+    _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, z1,
+                                  &dgradient_field[3*i], &dgradient_field[3*i+1], &dgradient_field[3*i+2]);
   }
 
-  char filename[999];
-  sprintf(filename, "ifield_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            dn_vtx,
-                            dvtx_coord,
-                            NULL,
-                            ifield);
+  // char filename[999];
+  // sprintf(filename, "ifield_%2.2d.vtk", i_rank);
+  // PDM_vtk_write_point_cloud(filename,
+  //                           dn_vtx,
+  //                           dvtx_coord,
+  //                           NULL,
+  //                           ifield);
   // free(ifield);
 
 

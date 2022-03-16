@@ -1291,7 +1291,7 @@ _iso_surf_dist
   PDM_g_num_t       **isosurf_face_ln_to_gn
 )
 {
-  const int use_gradient = 0;//(pgradient_field != NULL);
+  const int use_gradient = (pgradient_field != NULL);
 
   PDM_MPI_Comm comm = isos->comm;
 
@@ -1322,7 +1322,7 @@ _iso_surf_dist
                                      pedge_vtx,
                                      pvtx_coord,
                                      pfield,
-                                     NULL,//pgradient_field,
+                                     pgradient_field,
                                      edge_tag,
                                      edge_coord,
                                      edge_gradient);

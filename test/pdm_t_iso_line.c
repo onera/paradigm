@@ -172,10 +172,13 @@ _taylor_green_vortex
 
   // double dudx = f * U0 *
 
-  double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
+  // double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
 
-  double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
-  double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+  // double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  // double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+
+  double q = 2*pow(k,2)*pow(U0,2)*(f * pow(sin(k*x), 2) * pow(sin(k*y), 2) +
+                                   pow(cos(k*x), 2) * pow(cos(k*y), 2));
 
   return q - 20. * pow(L/U0, 2);
 
@@ -201,9 +204,13 @@ _taylor_green_vortex_gradient
   double k  = 2. * PDM_PI / L;
   double f  = exp(-2.*nu*k*k*t0);
 
-  *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
-  *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+  // *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  // *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
 
+  *df_dx = 4*pow(k,3)*pow(U0,2) * (f * cos(k*x) * pow(sin(k*x), 2) * pow(sin(k*y), 2) -
+                                   sin(k*x) * pow(cos(k*x), 2) * pow(cos(k*y), 2));
+  *df_dy = 4*pow(k,3)*pow(U0,2) * (f * pow(sin(k*x), 2) * cos(k*y) * pow(sin(k*y), 2) -
+                                   pow(cos(k*x), 2) * sin(k*y) * pow(cos(k*y), 2));
 }
 
 
@@ -556,7 +563,7 @@ int main(int argc, char *argv[])
   double U0 = 1.;
   double L  = 1.;
   double nu = 1.e-3;
-  double t0 = 10.;
+  double t0 = 1.;
 
   for(int i = 0; i < dn_vtx; ++i) {
 
