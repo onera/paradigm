@@ -245,8 +245,18 @@ _solve_least_square
     log_trace("]\n");
   }
 
-  const double tol = 1.e-1;
+  const double tol = 1.e-2;
   double tol_s = tol * PDM_ABS(S[0]);
+  log_trace("cond = %e\n", S[0]/S[n-1]);
+  log_trace("S truncated = [");
+  for (int i = 0; i < n; i++) {
+    double si = S[i];
+    if (PDM_ABS(si) <= tol_s) {
+      si = 0;
+    }
+    log_trace("%20.16f ", si);
+  }
+  log_trace("]\n");
 
   /* Compute y := S^{-1} U^T b */
   double y[n];
@@ -262,6 +272,8 @@ _solve_least_square
       }
 
       y[i] /= S[i];
+    } else {
+      S[i] = 0.;
     }
     log_trace("%f ", y[i]);
   }
@@ -278,6 +290,42 @@ _solve_least_square
   log_trace("%f ", x[i]);
   }
   log_trace("]\n");
+}
+
+
+static
+inline
+void
+_unit_sphere_gradient
+(
+ double  x,
+ double  y,
+ double  z,
+ double *df_dx,
+ double *df_dy,
+ double *df_dz
+)
+{
+  // *df_dx = 2*x;
+  // *df_dy = 2*y;
+  // *df_dz = 2*z;
+
+  // *df_dx = PDM_SIGN(x);
+  // *df_dy = PDM_SIGN(y);
+  // *df_dz = PDM_SIGN(z);
+
+  double v1 = x * x + y * y + z * z - 0.125;
+  double v2 = (x-0.2) * (x-0.2) + (y-0.2) * (y-0.2) + (z-0.3) * (z-0.3) - 0.02;
+
+  if (v1 < v2) {
+    *df_dx = 2*x;
+    *df_dy = 2*y;
+    *df_dz = 2*z;
+  } else {
+    *df_dx = 2*(x-0.2);
+    *df_dy = 2*(y-0.2);
+    *df_dz = 2*(z-0.3);
+  };
 }
 
 
@@ -399,9 +447,20 @@ _compute_edge_isosurf_intersection
       edge_coord[3*i+2] = (1. - t)*z1 + t*z2;
 
       if (pgradient_field != NULL) {
-        double gx = (1. - t)*grad1[0] + t*grad2[0];
-        double gy = (1. - t)*grad1[1] + t*grad2[1];
-        double gz = (1. - t)*grad1[2] + t*grad2[2];
+        double gx, gy, gz;
+        if (1) {
+          gx = (1. - t)*grad1[0] + t*grad2[0];
+          gy = (1. - t)*grad1[1] + t*grad2[1];
+          gz = (1. - t)*grad1[2] + t*grad2[2];
+        } else {
+          _unit_sphere_gradient(edge_coord[3*i  ],
+                                edge_coord[3*i+1],
+                                edge_coord[3*i+2],
+                                &gx,
+                                &gy,
+                                &gz);
+        }
+
         double mag = sqrt(gx*gx + gy*gy + gz*gz);
         if (mag > 1e-12) {
           mag = 1./ mag;
@@ -1540,6 +1599,11 @@ _iso_surf_dist
 
     } // end of loop on faces of current cell
 
+    double normalization = 1. / (double) i_cell_edge;
+    for (int l = 0; l < dim; l++) {
+      _cell_coord[l] *= normalization;
+    }
+
     log_trace("cell %d ("PDM_FMT_G_NUM"), i_cell_edge = %d\n",
               icell, pcell_ln_to_gn[icell], i_cell_edge);
     assert(i_cell_edge >= 3);
@@ -1553,21 +1617,34 @@ _iso_surf_dist
                            rhs_cell,
                            cell_coord + 3*icell);
 
-      // Beware of NaNs
-      int singular = 0;
-      for (int l = 0; l < dim; l++) {
-        if (!(cell_coord[3*icell+l] >= 0) &&
-            !(cell_coord[3*icell+l] < 0)) {
-          singular = 1;
+      int mat_rank;
+      for (mat_rank = 3; mat_rank >= 0; mat_rank--) {
+        if (PDM_ABS(S_cell[mat_rank-1]) > 1e-9) {
           break;
         }
       }
 
-      if (singular) {
-        double normalization = 1. / (double) i_cell_edge;
-        for (int l = 0; l < dim; l++) {
-          cell_coord[3*icell+l] = _cell_coord[l] * normalization;
-        }
+
+      if (mat_rank == 2) {
+        // Ridge
+        double origin[3] = {cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]};
+        double direction[3] = {V_cell[2], V_cell[i_cell_edge+2], V_cell[2*i_cell_edge+2]};
+
+        // we have a line passing through 'origin' and directed by 'direction'
+        // find the orthogonal projection of '_cell_coord' on that line
+        double t =
+        direction[0]*(_cell_coord[0] - origin[0]) +
+        direction[1]*(_cell_coord[1] - origin[1]) +
+        direction[2]*(_cell_coord[2] - origin[2]);
+
+        cell_coord[3*icell  ] = origin[0] + t*direction[0];
+        cell_coord[3*icell+1] = origin[1] + t*direction[1];
+        cell_coord[3*icell+2] = origin[2] + t*direction[2];
+      }
+
+      else if (mat_rank == 1) {
+        // Plane
+        memcpy(cell_coord + 3*icell, _cell_coord, sizeof(double) * 3);
       }
 
       /* Compute location in cell */
@@ -1575,10 +1652,7 @@ _iso_surf_dist
 
 
     } else {
-      double normalization = 1. / (double) i_cell_edge;
-      for (int l = 0; l < dim; l++) {
-        cell_coord[3*icell+l] = _cell_coord[l] * normalization;
-      }
+      memcpy(cell_coord + 3*icell, _cell_coord, sizeof(double) * 3);
     }
     log_trace("cell_coord = %f %f %f\n",
               cell_coord[3*icell], cell_coord[3*icell+1], cell_coord[3*icell+2]);
@@ -1739,6 +1813,13 @@ _iso_surf_dist
 
   *isosurf_n_face = _isosurf_n_tri;
   int *_isosurf_tri_vtx = (int *) malloc(sizeof(int) * _isosurf_n_tri * 3);
+
+  PDM_g_num_t *distrib_isosurf_face = PDM_compute_entity_distribution(comm,
+                                                                      _isosurf_n_tri);
+
+  *isosurf_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri);
+  PDM_g_num_t *_isosurf_face_ln_to_gn = *isosurf_face_ln_to_gn;
+
   _isosurf_n_tri = 0;
   for (int icell = 0; icell < n_cell; icell++) {
     for (int idx_face = pcell_face_idx[icell]; idx_face < pcell_face_idx[icell+1]; idx_face++) {
@@ -1768,6 +1849,8 @@ _iso_surf_dist
             _isosurf_tri_vtx[3*_isosurf_n_tri+1] = ipt_edge;
             _isosurf_tri_vtx[3*_isosurf_n_tri+2] = ipt_face;
           }
+
+          _isosurf_face_ln_to_gn[_isosurf_n_tri] = distrib_isosurf_face[i_rank] + _isosurf_n_tri + 1;
           _isosurf_n_tri++;
 
         }
@@ -1796,11 +1879,11 @@ _iso_surf_dist
   PDM_vtk_write_std_elements(filename,
                              _isosurf_n_vtx,
                              _isosurf_vtx_coord,
-                             NULL,
+                             _isosurf_vtx_ln_to_gn,
                              PDM_MESH_NODAL_TRIA3,
                              _isosurf_n_tri,
                              _isosurf_tri_vtx,
-                             NULL,
+                             _isosurf_face_ln_to_gn,
                              0,
                              NULL,
                              NULL);
