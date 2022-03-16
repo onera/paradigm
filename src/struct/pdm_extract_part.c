@@ -98,9 +98,9 @@ _face_center_2d
         int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
         int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
 
-        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
 
       }
       entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
@@ -175,9 +175,9 @@ _cell_center_3d
 
           for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
             int i_vtx = _pface_vtx[idx_vtx]-1;
-            fcx += _pvtx_coord[i_vtx];
-            fcy += _pvtx_coord[i_vtx];
-            fcz += _pvtx_coord[i_vtx];
+            fcx += _pvtx_coord[3*i_vtx  ];
+            fcy += _pvtx_coord[3*i_vtx+1];
+            fcz += _pvtx_coord[3*i_vtx+2];
           }
           fcx = fcx * inv2;
           fcy = fcy * inv2;
@@ -225,9 +225,9 @@ _cell_center_3d
             int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
             int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
             int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
-            fcx += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-            fcy += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
-            fcz += 0.5 * (_pvtx_coord[i_vtx1] + _pvtx_coord[i_vtx2]);
+            fcx += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+            fcy += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+            fcz += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
           }
           fcx = fcx * inv2;
           fcy = fcy * inv2;
@@ -295,7 +295,6 @@ int         ***idx_visited
 
     int idx_write = 0;
     _n_extract_entity2[i_part] = 0;
-    _extract_entity1_entity2_n[i_part][0] = 0;
     for(int idx_entity = 0; idx_entity < n_extract; ++idx_entity) {
       int i_entity = extract_entity1_lnum[i_part][idx_entity];
 
@@ -693,59 +692,22 @@ PDM_extract_part_compute
   /*
    *  Remake equilibrate block -> Block is not partial because we use child_gnum
    */
-  double **weight = (double **) malloc( extrp->n_part_in * sizeof(double *));
-  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
-    weight        [i_part] = malloc(extrp->n_extract[i_part] * sizeof(double));
-    for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
-      weight[i_part][i] = 1.;
-    }
-  }
-
   PDM_part_to_block_t *ptb_equi = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                            1.,
                                                            child_selected_g_num,
-                                                           weight,
+                                                           NULL,
                                                            extrp->n_extract,
                                                            extrp->n_part_in,
                                                            extrp->comm);
 
-
-  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
-    free(weight[i_part]);
-  }
-  free(weight);
   free(child_selected_g_num);
   PDM_gnum_free(gnum_extract);
-
-  /*
-   *  exch parent_num + cell_face
-   */
-  // PDM_part_to_block_exch(ptb_equi,
-  //                        sizeof(PDM_g_num_t),
-  //                        PDM_STRIDE_VAR_INTERLACED,
-  //                        -1,
-  //                        pentity1_entity2_n,
-  //                        pentity1_entity2,
-  //                        &dequi_entity1_entity2_n,
-  //                        &dequi_entity1_entity2);
-
-  /*
-   * On ramene avec un part_to_block les faces aussi
-   * Mais on doit faire un dconnectivity_to_p_connectivty après
-   */
-
 
   int          dn_entity_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
   PDM_g_num_t *dextract_gnum  = PDM_part_to_block_block_gnum_get (ptb_equi);
 
   if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
-
-    /*
-     *
-     */
-
-
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
       free(entity_center[i_part]);
     }
@@ -755,9 +717,7 @@ PDM_extract_part_compute
      * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
      *   Puis dconnectiviy_transpose puis combine
      */
-
     abort();
-
   }
 
   /*
@@ -1214,6 +1174,23 @@ PDM_extract_part_ln_to_gn_get
   }
 }
 
+
+void
+PDM_extract_part_parent_ln_to_gn_get
+(
+ PDM_extract_part_t        *extrp,
+ PDM_mesh_entities_t       entity_type,
+ PDM_g_num_t            ***parent_entity_ln_to_gn,
+ PDM_ownership_t           ownership
+)
+{
+  *parent_entity_ln_to_gn = extrp->pextract_entity_parent_ln_to_gn[entity_type];
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
+  } else {
+    extrp->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
+  }
+}
 
 void
 PDM_extract_part_vtx_coord_get

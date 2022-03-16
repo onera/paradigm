@@ -113,28 +113,6 @@ struct _pdm_extract_part_t
 
 
   /* Extrated part */
-  // int                 *n_extract_cell;
-  // int                 *n_extract_face;
-  // int                 *n_extract_edge;
-  // int                 *n_extract_vtx;
-  // int                **pextract_cell_face;
-  // int                **pextract_cell_face_idx;
-  // int                **pextract_face_edge;
-  // int                **pextract_face_edge_idx;
-  // int                **pextract_edge_vtx;
-  // int                **pextract_face_vtx;
-  // int                **pextract_face_vtx_idx;
-
-  // PDM_g_num_t        **extract_cell_ln_to_gn;
-  // PDM_g_num_t        **extract_face_ln_to_gn;
-  // PDM_g_num_t        **extract_edge_ln_to_gn;
-  // PDM_g_num_t        **extract_vtx_ln_to_gn;
-
-  // PDM_g_num_t        **parent_cell_ln_to_gn;
-  // PDM_g_num_t        **parent_face_ln_to_gn;
-  // PDM_g_num_t        **parent_edge_ln_to_gn;
-  // PDM_g_num_t        **parent_vtx_ln_to_gn;
-
   double             **pextract_vtx_coord;
 
   PDM_bool_t         *is_owner_connectivity;
