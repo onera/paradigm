@@ -330,7 +330,7 @@ int         ***idx_visited
 
 
 static
-void
+PDM_part_to_block_t*
 extract_and_renum_entity1_entity2
 (
 PDM_MPI_Comm           comm,
@@ -343,13 +343,16 @@ int                  **extract_entity1_lnum,
 int                  **entity1_entity2_idx,
 int                  **entity1_entity2,
 PDM_g_num_t          **entity2_ln_to_gn,
-int                 ***selected_entity1_entity2_n,
-PDM_g_num_t         ***selected_entity1_entity2,
+int                  **dequi_entity1_entity2_idx,
+PDM_g_num_t          **dequi_entity1_entity2,
+PDM_g_num_t          **dequi_extract_parent_entity2_ln_to_gn,
 int                  **n_extract_entity2,
 int                 ***extract_entity2_lnum
 )
 {
-  int **extract_entity1_entity2_idx = NULL;
+  int         **extract_entity1_entity2_idx  = NULL;
+  int         **_selected_entity1_entity2_n  = NULL;
+  PDM_g_num_t **_selected_entity1_entity2    = NULL;
   extract_entity1_entity2(n_part,
                           n_entity1,
                           n_entity2,
@@ -358,24 +361,12 @@ int                 ***extract_entity2_lnum
                           entity1_entity2_idx,
                           entity1_entity2,
                           entity2_ln_to_gn,
-                          selected_entity1_entity2_n,
-                          selected_entity1_entity2,
+                          &_selected_entity1_entity2_n,
+                          &_selected_entity1_entity2,
                           n_extract_entity2,
                           extract_entity2_lnum,
                           &extract_entity1_entity2_idx);
 
-  int         **_selected_entity1_entity2_n = *selected_entity1_entity2_n;
-  PDM_g_num_t **_selected_entity1_entity2   = *selected_entity1_entity2;
-
-  // PDM_gen_gnum_t* gnum_extract_entity2 = PDM_gnum_create(3, 1, PDM_FALSE,
-  //                                                        1.e-6,
-  //                                                        comm,
-  //                                                        PDM_OWNERSHIP_KEEP);
-
-  // PDM_gnum_set_from_parents(gnum_extract_entity2, 0, dn_entity1_entity2, dequi_entity1_entity2);
-  // PDM_gnum_compute(gnum_extract_entity2);
-
-  // PDM_g_num_t *child_entity1_entity2_gnum = PDM_gnum_get(gnum_extract_entity2, 0);
 
   int *_n_extract_entity2 = *n_extract_entity2;
 
@@ -425,16 +416,16 @@ int                 ***extract_entity2_lnum
   free(n_connect_tot);
   PDM_gnum_free(gnum_extract_entity2);
 
-  int         *dequi_entity1_entity2_n = NULL;
-  PDM_g_num_t *dequi_entity1_entity2   = NULL;
+  int         *_dequi_entity1_entity2_n = NULL;
+  PDM_g_num_t *_dequi_entity1_entity2   = NULL;
   int dn_entity1_entity2 = PDM_part_to_block_exch(ptb_entity1,
                                                   sizeof(PDM_g_num_t),
                                                   PDM_STRIDE_VAR_INTERLACED,
                                                   -1,
                                                   _selected_entity1_entity2_n,
                                    (void **)      _child_entity1_entity2,
-                                                  &dequi_entity1_entity2_n,
-                                   (void **)      &dequi_entity1_entity2);
+                                                  &_dequi_entity1_entity2_n,
+                                   (void **)      &_dequi_entity1_entity2);
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -454,9 +445,13 @@ int                 ***extract_entity2_lnum
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(_child_entity2_ln_to_gn[i_part]);
+    free(_child_entity2_ln_to_gn    [i_part]);
+    free(_selected_entity1_entity2_n[i_part]);
+    free(_selected_entity1_entity2  [i_part]);
   }
   free(_child_entity2_ln_to_gn);
+  free(_selected_entity1_entity2_n);
+  free(_selected_entity1_entity2  );
 
   int          dn_entity2_equi        = PDM_part_to_block_n_elt_block_get(ptb_entity2_equi);
   PDM_g_num_t *dextract_entity2_gnum  = PDM_part_to_block_block_gnum_get (ptb_entity2_equi);
@@ -466,10 +461,18 @@ int                 ***extract_entity2_lnum
   }
 
 
-
   /*
    *  Exchange parent to keep link
    */
+  PDM_g_num_t *_dequi_extract_parent_entity2_ln_to_gn = NULL;
+  PDM_part_to_block_exch(ptb_entity2_equi,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+          (void **)      _extract_parent_entity2_ln_to_gn,
+                         NULL,
+          (void **)      &_dequi_extract_parent_entity2_ln_to_gn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(_extract_parent_entity2_ln_to_gn[i_part]);
@@ -478,14 +481,23 @@ int                 ***extract_entity2_lnum
 
 
 
-  PDM_part_to_block_free(ptb_entity2_equi);
+  // PDM_part_to_block_free(ptb_entity2_equi);
+
+  int dn_equi_entity1 = PDM_part_to_block_n_elt_block_get(ptb_entity1);
+  int *_dequi_entity1_entity2_idx = (int * ) malloc((dn_equi_entity1 + 1)  * sizeof(int));
+  _dequi_entity1_entity2_idx[0] = 0;
+  for(int i = 0; i < dn_equi_entity1; ++i) {
+    _dequi_entity1_entity2_idx[i+1] = _dequi_entity1_entity2_idx[i] + _dequi_entity1_entity2_n[i];
+  }
+
+  free(_dequi_entity1_entity2_n);
+
+  *dequi_entity1_entity2_idx             = _dequi_entity1_entity2_idx;
+  *dequi_entity1_entity2                 = _dequi_entity1_entity2;
+  *dequi_extract_parent_entity2_ln_to_gn = _dequi_extract_parent_entity2_ln_to_gn;
 
 
-  free(dequi_entity1_entity2_n);
-  free(dequi_entity1_entity2);
-
-
-
+  return ptb_entity2_equi;
 }
 
 
@@ -711,35 +723,40 @@ PDM_extract_part_compute
   if(extrp->dim == 3) {
 
 
-    PDM_g_num_t **selected_cell_face    = NULL;
-    int         **selected_cell_face_n  = NULL;
-    int          *n_extract_face        = NULL;
-    int         **extract_face_lnum     = NULL;
-    int         **idx_face_in_cell_face = NULL;
-    extract_and_renum_entity1_entity2(extrp->comm,
-                                      ptb_equi,
-                                      extrp->n_part_in,
-                                      extrp->n_cell,
-                                      extrp->n_face,
-                                      extrp->n_extract,
-                                      extrp->extract_lnum,
-                                      extrp->pcell_face_idx,
-                                      extrp->pcell_face,
-                                      extrp->face_ln_to_gn,
-                                      &selected_cell_face_n,
-                                      &selected_cell_face,
-                                      &n_extract_face,
-                                      &extract_face_lnum);
+    int          *dequi_cell_face_idx         = NULL;
+    PDM_g_num_t  *dequi_cell_face             = NULL;
+    PDM_g_num_t  *dequi_parent_face_ln_to_gn  = NULL;
+    int          *n_extract_face              = NULL;
+    int         **extract_face_lnum           = NULL;
+    int         **idx_face_in_cell_face       = NULL;
+    PDM_part_to_block_t *ptb_equi_face = extract_and_renum_entity1_entity2(extrp->comm,
+                                                                           ptb_equi,
+                                                                           extrp->n_part_in,
+                                                                           extrp->n_cell,
+                                                                           extrp->n_face,
+                                                                           extrp->n_extract,
+                                                                           extrp->extract_lnum,
+                                                                           extrp->pcell_face_idx,
+                                                                           extrp->pcell_face,
+                                                                           extrp->face_ln_to_gn,
+                                                                           &dequi_cell_face_idx,
+                                                                           &dequi_cell_face,
+                                                                           &dequi_parent_face_ln_to_gn,
+                                                                           &n_extract_face,
+                                                                           &extract_face_lnum);
 
     for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-      free(selected_cell_face_n[i_part]);
-      free(selected_cell_face  [i_part]);
       free(extract_face_lnum   [i_part]);
     }
-    free(selected_cell_face_n);
-    free(selected_cell_face  );
     free(extract_face_lnum   );
     free(n_extract_face      );
+
+    free(dequi_cell_face_idx);
+    free(dequi_cell_face);
+    free(dequi_parent_face_ln_to_gn);
+
+
+    PDM_part_to_block_free(ptb_equi_face);
 
   }
 
