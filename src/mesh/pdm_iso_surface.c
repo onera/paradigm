@@ -2558,8 +2558,6 @@ _iso_surface_part
                                        extract_cell[i_part]);
   }
 
-  printf("PDM_extract_part_compute not ready yet");
-  abort();
   PDM_extract_part_compute(extrp);
 
   int          n_cell = 0;
@@ -2578,8 +2576,161 @@ _iso_surface_part
   double      *pvtx_coord      = NULL;
   double      *pfield          = NULL;
   double      *pgradient_field = NULL;
+  PDM_g_num_t *pcell_parent_ln_to_gn  = NULL;
+  PDM_g_num_t *pface_parent_ln_to_gn  = NULL;
+  PDM_g_num_t *pedge_parent_ln_to_gn  = NULL;
+  PDM_g_num_t *pvtx_parent_ln_to_gn   = NULL;
 
   // get...
+  int *tmp_n;
+  PDM_extract_part_n_entity_get(extrp,
+                                PDM_MESH_ENTITY_CELL,
+                                &tmp_n);
+  n_cell = tmp_n[0];
+
+  PDM_extract_part_n_entity_get(extrp,
+                                PDM_MESH_ENTITY_FACE,
+                                &tmp_n);
+  n_face = tmp_n[0];
+
+  PDM_extract_part_n_entity_get(extrp,
+                                PDM_MESH_ENTITY_EDGE,
+                                &tmp_n);
+  n_edge = tmp_n[0];
+
+  PDM_extract_part_n_entity_get(extrp,
+                                PDM_MESH_ENTITY_VERTEX,
+                                &tmp_n);
+  n_vtx = tmp_n[0];
+
+  /* Connectivities */
+  int **tmp_cell_face_idx;
+  int **tmp_cell_face;
+  PDM_extract_part_connectivity_get(extrp,
+                                    PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                    &tmp_cell_face,
+                                    &tmp_cell_face_idx,
+                                    PDM_OWNERSHIP_USER);
+  pcell_face_idx = tmp_cell_face_idx[0];
+  pcell_face     = tmp_cell_face[0];
+  free(tmp_cell_face_idx);
+  free(tmp_cell_face);
+
+
+  int **tmp_face_edge_idx;
+  int **tmp_face_edge;
+  PDM_extract_part_connectivity_get(extrp,
+                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    &tmp_face_edge,
+                                    &tmp_face_edge_idx,
+                                    PDM_OWNERSHIP_USER);
+  pface_edge_idx = tmp_face_edge_idx[0];
+  pface_edge     = tmp_face_edge[0];
+  free(tmp_face_edge_idx);
+  free(tmp_face_edge);
+
+
+  int **tmp_edge_vtx_idx;
+  int **tmp_edge_vtx;
+  PDM_extract_part_connectivity_get(extrp,
+                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                    &tmp_edge_vtx,
+                                    &tmp_edge_vtx_idx,
+                                    PDM_OWNERSHIP_USER);
+  pedge_vtx = tmp_edge_vtx[0];
+  free(tmp_edge_vtx);
+
+
+  /* Coordinates */
+  double **tmp_vtx_coord;
+  PDM_extract_part_vtx_coord_get(extrp,
+                                 &tmp_vtx_coord,
+                                 PDM_OWNERSHIP_USER);
+  pvtx_coord = tmp_vtx_coord[0];
+  free(tmp_vtx_coord);
+
+
+  /* (Child) Global ids */
+  PDM_g_num_t **tmp_cell_ln_to_gn;
+  PDM_extract_part_ln_to_gn_get(extrp,
+                                PDM_MESH_ENTITY_CELL,
+                                &tmp_cell_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+  pcell_ln_to_gn = tmp_cell_ln_to_gn[0];
+  free(tmp_cell_ln_to_gn);
+
+
+  PDM_g_num_t **tmp_face_ln_to_gn;
+  PDM_extract_part_ln_to_gn_get(extrp,
+                                PDM_MESH_ENTITY_FACE,
+                                &tmp_face_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+  pface_ln_to_gn = tmp_face_ln_to_gn[0];
+  free(tmp_face_ln_to_gn);
+
+
+  PDM_g_num_t **tmp_edge_ln_to_gn;
+  PDM_extract_part_ln_to_gn_get(extrp,
+                                PDM_MESH_ENTITY_EDGE,
+                                &tmp_edge_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+  pedge_ln_to_gn = tmp_edge_ln_to_gn[0];
+  free(tmp_edge_ln_to_gn);
+
+
+  PDM_g_num_t **tmp_vtx_ln_to_gn;
+  PDM_extract_part_ln_to_gn_get(extrp,
+                                PDM_MESH_ENTITY_VERTEX,
+                                &tmp_vtx_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+  pvtx_ln_to_gn = tmp_vtx_ln_to_gn[0];
+  free(tmp_vtx_ln_to_gn);
+
+
+  /* Parent Global ids */
+  // PDM_g_num_t **tmp_cell_parent_ln_to_gn;
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      PDM_MESH_ENTITY_CELL,
+  //                                      &tmp_cell_parent_ln_to_gn,
+  //                                      PDM_OWNERSHIP_USER);
+  // pcell_parent_ln_to_gn = tmp_cell_parent_ln_to_gn[0];
+  // free(tmp_cell_parent_ln_to_gn);
+
+
+  // PDM_g_num_t **tmp_face_parent_ln_to_gn;
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      PDM_MESH_ENTITY_FACE,
+  //                                      &tmp_face_parent_ln_to_gn,
+  //                                      PDM_OWNERSHIP_USER);
+  // pface_parent_ln_to_gn = tmp_face_parent_ln_to_gn[0];
+  // free(tmp_face_parent_ln_to_gn);
+
+
+  // PDM_g_num_t **tmp_edge_parent_ln_to_gn;
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      PDM_MESH_ENTITY_EDGE,
+  //                                      &tmp_edge_parent_ln_to_gn,
+  //                                      PDM_OWNERSHIP_USER);
+  // pedge_parent_ln_to_gn = tmp_edge_parent_ln_to_gn[0];
+  // free(tmp_edge_parent_ln_to_gn);
+
+
+  PDM_g_num_t **tmp_vtx_parent_ln_to_gn;
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       PDM_MESH_ENTITY_VERTEX,
+                                       &tmp_vtx_parent_ln_to_gn,
+                                       PDM_OWNERSHIP_USER);
+  pvtx_parent_ln_to_gn = tmp_vtx_parent_ln_to_gn[0];
+  free(tmp_vtx_parent_ln_to_gn);
+
+
+  /* Field and gradient */
+  // PDM_part_to_part_t *ptp = PDM_part_to_part_create
+
+
+
+  printf("OK!\n");
+  abort();
 
   PDM_extract_part_free(extrp);
 

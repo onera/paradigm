@@ -646,10 +646,6 @@ int main(int argc, char *argv[])
   }
 
 
-  /*
-   *  Compute iso-surface from partitionned mesh
-   */
-  // TO DO
 
   if (1) {
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
@@ -838,6 +834,107 @@ int main(int argc, char *argv[])
     free(cell_faceNb);
   }
 
+
+  /*
+   *  Compute iso-surface from partitionned mesh
+   */
+  PDM_iso_surface_t* isos = PDM_iso_surface_create(3,
+                                                   PDM_ISO_SURFACE_KIND_FIELD,
+                                                   1,
+                                                   PDM_OWNERSHIP_KEEP,
+                                                   comm);
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int *cell_face_idx;
+     int *cell_face;
+     int n_cell = PDM_multipart_part_connectivity_get(mpart,
+                                                      0,
+                                                      i_part,
+                                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                      &cell_face,
+                                                      &cell_face_idx,
+                                                      PDM_OWNERSHIP_KEEP);
+
+      int *face_edge_idx;
+      int *face_edge;
+      int n_face = PDM_multipart_part_connectivity_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    &face_edge,
+                                    &face_edge_idx,
+                                    PDM_OWNERSHIP_KEEP);
+
+      int *edge_vtx_idx;
+      int *edge_vtx;
+      int n_edge = PDM_multipart_part_connectivity_get(mpart,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                       &edge_vtx,
+                                                       &edge_vtx_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+
+
+      PDM_g_num_t *cell_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *face_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                      &face_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *edge_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_EDGE,
+                                      &edge_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_iso_surface_part_set (isos,
+                              i_part,
+                              n_cell,
+                              n_face,
+                              n_edge,
+                              pn_vtx[i_part],
+                              cell_face_idx,
+                              cell_face,
+                              face_edge_idx,
+                              face_edge,
+                              edge_vtx,
+                              NULL,//face_vtx_idx,
+                              NULL,//face_vtx,
+                              cell_ln_to_gn,
+                              face_ln_to_gn,
+                              edge_ln_to_gn,
+                              pvtx_ln_to_gn[i_part],
+                              pvtx_coord[i_part]);
+
+    PDM_iso_surface_part_field_set (isos,
+                                    i_part,
+                                    field[i_part]);
+
+    PDM_iso_surface_part_gradient_field_set (isos,
+                                             i_part,
+                                             gradient[i_part]);
+  }
+
+
+  PDM_iso_surface_compute(isos);
+
+
+  PDM_iso_surface_free(isos);
 
   /*
    *  Free memory
