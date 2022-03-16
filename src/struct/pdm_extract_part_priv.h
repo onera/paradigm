@@ -90,13 +90,13 @@ struct _pdm_extract_part_t
   int                   dn_equi_face;
   int                   dn_equi_edge;
   int                   dn_equi_vtx;
-  int                  *dequi_cell_face;
+  PDM_g_num_t          *dequi_cell_face;
   int                  *dequi_cell_face_idx;
-  int                  *dequi_face_edge;
+  PDM_g_num_t          *dequi_face_edge;
   int                  *dequi_face_edge_idx;
-  int                  *dequi_edge_vtx;
+  PDM_g_num_t          *dequi_edge_vtx;
   int                  *dequi_edge_vtx_idx;
-  int                  *dequi_face_vtx;
+  PDM_g_num_t          *dequi_face_vtx;
   int                  *dequi_face_vtx_idx;
 
   PDM_g_num_t          *dequi_parent_cell_ln_to_gn;

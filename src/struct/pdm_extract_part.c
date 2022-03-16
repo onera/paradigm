@@ -397,7 +397,7 @@ int                 ***extract_entity2_lnum
 
     if(0 == 1) {
       PDM_log_trace_array_long(_child_entity1_entity2[i_part], n_connect_tot[i_part], "_child_entity1_entity2 :: ");
-      PDM_log_trace_array_long(extract_entity1_entity2_idx[i_part], _n_extract_entity2[i_part], "extract_entity1_entity2_idx :: ");
+      PDM_log_trace_array_int(extract_entity1_entity2_idx[i_part], _n_extract_entity2[i_part], "extract_entity1_entity2_idx :: ");
     }
 
     // Reforme a temporary ln_to_gn to setup recurence
@@ -905,11 +905,11 @@ PDM_extract_part_compute
     int dn_cell_equi = cell_distri[i_rank+1] - cell_distri[i_rank];
 
     extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = (int  *) malloc(extrp->n_part_out * sizeof(int  ));
-    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL] = (int **) malloc(extrp->n_part_out * sizeof(int *));
+    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL] = (PDM_g_num_t **) malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
 
     int i_part0 = 0;
     extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part0] = dn_cell_equi;
-    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL][i_part0] = (int *) malloc( extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part0] * sizeof(int));
+    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL][i_part0] = (PDM_g_num_t *) malloc( extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part0] * sizeof(PDM_g_num_t));
 
     for(int i = 0; i < dn_cell_equi; ++i) {
       extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL][i_part0][i] = cell_distri[i_rank] + i + 1;
