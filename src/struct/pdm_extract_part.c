@@ -479,8 +479,6 @@ int                 ***extract_entity2_lnum
   }
   free(_extract_parent_entity2_ln_to_gn);
 
-
-
   // PDM_part_to_block_free(ptb_entity2_equi);
 
   int dn_equi_entity1 = PDM_part_to_block_n_elt_block_get(ptb_entity1);
@@ -881,15 +879,41 @@ PDM_extract_part_compute
 
   PDM_part_to_block_free(ptb_equi);
 
+  /*
+   * Exchange coordinates
+   */
+  double **pextract_vtx_coord = (double **) malloc( extrp->n_part_in * sizeof(double *));
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    free(extract_vtx_lnum[i_part]);
+    pextract_vtx_coord[i_part] = (double *) malloc( 3 * n_extract_vtx[i_part] * sizeof(double));
+
+    for(int idx_vtx = 0; idx_vtx < n_extract_vtx[i_part]; ++idx_vtx) {
+      int i_vtx = extract_vtx_lnum[i_part][idx_vtx];
+      pextract_vtx_coord[i_part][3*idx_vtx  ] = extrp->pvtx_coord[i_part][3*i_vtx  ];
+      pextract_vtx_coord[i_part][3*idx_vtx+1] = extrp->pvtx_coord[i_part][3*i_vtx+1];
+      pextract_vtx_coord[i_part][3*idx_vtx+2] = extrp->pvtx_coord[i_part][3*i_vtx+2];
+    }
   }
-  free(extract_vtx_lnum   );
-  free(n_extract_vtx      );
+
+  PDM_part_to_block_exch(extrp->ptb_equi_vtx,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+          (void **)      pextract_vtx_coord,
+                         NULL,
+          (void **)      &extrp->dequi_vtx_coord);
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    free(extract_vtx_lnum  [i_part]);
+    free(pextract_vtx_coord[i_part]);
+  }
+  free(extract_vtx_lnum  );
+  free(n_extract_vtx     );
+  free(pextract_vtx_coord);
 
 
   /*
-   * Re-Part all
+   * At this stage we have all information in block frame but we need to repart them
    */
 
 
@@ -935,9 +959,6 @@ PDM_extract_part_compute
     free(extrp->dequi_vtx_coord);
   }
 
-
-
-
   if(extrp->ptb_equi_face != NULL) {
     PDM_part_to_block_free(extrp->ptb_equi_face);
   }
@@ -947,7 +968,6 @@ PDM_extract_part_compute
   if(extrp->ptb_equi_vtx != NULL) {
     PDM_part_to_block_free(extrp->ptb_equi_vtx);
   }
-
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     free(entity_extract_g_num[i_part]);
