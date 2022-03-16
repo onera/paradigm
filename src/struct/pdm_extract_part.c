@@ -861,6 +861,12 @@ PDM_extract_part_compute
         PDM_log_trace_array_int (extrp->dequi_face_vtx_idx, extrp->dn_equi_face+1                         , "dequi_face_vtx_idx :: ");
         PDM_log_trace_array_long(extrp->dequi_face_vtx    , extrp->dequi_face_vtx_idx[extrp->dn_equi_face], "dequi_face_vtx     :: ");
       }
+
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        free(extract_face_lnum[i_part]);
+      }
+      free(extract_face_lnum);
+      free(n_extract_face   );
     }
   } else { // dim == 2
     if(from_face_edge == 1) {
