@@ -764,7 +764,7 @@ PDM_extract_part_compute
 
 
     extrp->dn_equi_face = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_face);
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int (extrp->dequi_cell_face_idx, dn_entity_equi+1                          , "dequi_cell_face_idx :: ");
       PDM_log_trace_array_long(extrp->dequi_cell_face    , extrp->dequi_cell_face_idx[dn_entity_equi], "dequi_cell_face     :: ");
     }
@@ -857,7 +857,7 @@ PDM_extract_part_compute
 
 
       extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_vtx);
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_int (extrp->dequi_face_vtx_idx, extrp->dn_equi_face+1                         , "dequi_face_vtx_idx :: ");
         PDM_log_trace_array_long(extrp->dequi_face_vtx    , extrp->dequi_face_vtx_idx[extrp->dn_equi_face], "dequi_face_vtx     :: ");
       }
@@ -952,6 +952,16 @@ PDM_extract_part_compute
                                                 &extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE],
                                                 &extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE]);
 
+    PDM_part_dfield_to_pfield(extrp->comm,
+                              extrp->n_part_out,
+                              sizeof(PDM_g_num_t),
+                              cell_distri,
+       (unsigned char *)      extrp->dequi_parent_cell_ln_to_gn,
+                              extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL],
+       (const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL],
+      (unsigned char     ***) &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL]);
+
+
 
     if(extrp->dequi_face_edge_idx != NULL) {
       PDM_g_num_t* face_distri = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_face);
@@ -997,7 +1007,7 @@ PDM_extract_part_compute
       PDM_part_dfield_to_pfield(extrp->comm,
                                 extrp->n_part_out,
                                 sizeof(PDM_g_num_t),
-                                face_distri,
+                                edge_distri,
          (unsigned char *)      extrp->dequi_parent_edge_ln_to_gn,
                                 extrp->pextract_n_entity       [PDM_MESH_ENTITY_EDGE],
          (const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_EDGE],
