@@ -30,6 +30,7 @@
 #include "pdm_extract_part_priv.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_para_graph_dual.h"
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
@@ -728,7 +729,7 @@ PDM_extract_part_compute
      * Si scotch ou metis, on doit calculer le dcell_face + pdm_gnum (pour avoir les faces child)
      *   Puis dconnectiviy_transpose puis combine
      */
-    abort();
+    // abort();
   }
 
   if(extrp->dim == 3) {
@@ -933,7 +934,92 @@ PDM_extract_part_compute
 
 
   } else {
-    abort();
+
+    int         *delmt_to_arc_idx = NULL; // Donc cell_face OU face_edge
+    PDM_g_num_t *delmt_to_arc     = NULL;
+    PDM_g_num_t *distrib_elmt     = PDM_part_to_block_distrib_index_get(ptb_equi);;
+    PDM_g_num_t *distrib_arc      = NULL;
+
+    if(extrp->dim == 3) {
+      delmt_to_arc_idx = extrp->dequi_cell_face_idx;
+      delmt_to_arc     = extrp->dequi_cell_face;
+      distrib_arc      = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_face);
+    } else {
+      delmt_to_arc_idx = extrp->dequi_face_edge_idx;
+      delmt_to_arc     = extrp->dequi_face_edge;
+      distrib_arc      = PDM_part_to_block_distrib_index_get(extrp->ptb_equi_edge);
+    }
+
+    int         *darc_to_elmt_idx = NULL;
+    PDM_g_num_t *darc_to_elmt     = NULL;
+    PDM_dconnectivity_transpose(extrp->comm,
+                                distrib_elmt,
+                                distrib_arc,
+                                delmt_to_arc_idx,
+                                delmt_to_arc,
+                                1,
+                                &darc_to_elmt_idx,
+                                &darc_to_elmt);
+
+    PDM_g_num_t *dual_graph_idx = NULL;
+    PDM_g_num_t *dual_graph     = NULL;
+    PDM_deduce_combine_connectivity_dual(extrp->comm,
+                                         distrib_elmt,
+                                         distrib_arc,
+                                         delmt_to_arc_idx,
+                                         delmt_to_arc,
+                                         darc_to_elmt_idx,
+                                         darc_to_elmt,
+                                         1,
+                                         &dual_graph_idx,
+                                         &dual_graph);
+    free(darc_to_elmt_idx);
+    free(darc_to_elmt);
+
+    /* Shift to 0 dual */
+    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    int *_elmt_part = malloc(dn_elmt * sizeof(int));
+    for(int i = 0; i < dual_graph_idx[dn_elmt]; ++i) {
+      dual_graph[i] = dual_graph[i] - 1;
+    }
+
+    int tn_part;
+    PDM_MPI_Allreduce(& extrp->n_part_out, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, extrp->comm);
+
+    PDM_para_graph_split(extrp->split_dual_method,
+                         distrib_elmt,
+                         dual_graph_idx,
+                         dual_graph,
+                         NULL,
+                         NULL,
+                         tn_part,
+                         NULL,
+                         _elmt_part,
+                         extrp->comm);
+
+    PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(extrp->comm, extrp->n_part_out);
+
+    if(extrp->dim == 3) {
+      PDM_part_assemble_partitions(extrp->comm,
+                                   distrib_partition,
+                                   distrib_elmt,
+                                   _elmt_part,
+                                   &extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL],
+                                   &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL]);
+    } else {
+      PDM_part_assemble_partitions(extrp->comm,
+                                   distrib_partition,
+                                   distrib_elmt,
+                                   _elmt_part,
+                                   &extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE],
+                                   &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE]);
+    }
+
+    free(distrib_partition);
+    free(dual_graph_idx);
+    free(dual_graph);
+    free(_elmt_part);
+
   }
 
 
