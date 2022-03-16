@@ -492,6 +492,7 @@ int main(int argc, char *argv[])
   // Compute dfield and gradient field
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
+  // double *dgradient_field = NULL;
 
   for(int i = 0; i < dn_vtx; ++i) {
 
@@ -503,6 +504,18 @@ int main(int argc, char *argv[])
 
     dgradient_field[3*i+2] = 0;
   }
+
+  // Taylor Green
+  // for(int i = 0; i < dn_vtx; ++i) {
+
+  //   double x1 = dvtx_coord[3*i  ];
+  //   double y1 = dvtx_coord[3*i+1];
+  //   dfield[i] = _unit_circle(x1, y1);
+
+  //   _unit_circle_gradient(x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
+
+  //   dgradient_field[3*i+2] = 0;
+  // }
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);

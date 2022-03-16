@@ -271,12 +271,10 @@ int main(int argc, char *argv[])
   int i_zone = 0;
 
   double      **cell_center             = (double      **) malloc( n_part_zones * sizeof(double      *));
-  PDM_g_num_t **selected_g_num          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   int         **selected_l_num          = (int         **) malloc( n_part_zones * sizeof(int         *));
   PDM_g_num_t **pcell_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   PDM_g_num_t **pface_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   PDM_g_num_t **pvtx_ln_to_gn           = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
-  int         **selected_g_num_idx      = (int         **) malloc( n_part_zones * sizeof(int         *));
   int          *pn_cell                 = (int          *) malloc( n_part_zones * sizeof(int          ));
   int          *pn_face                 = (int          *) malloc( n_part_zones * sizeof(int          ));
   int          *pn_vtx                  = (int          *) malloc( n_part_zones * sizeof(int          ));
@@ -377,15 +375,11 @@ int main(int argc, char *argv[])
 
     free(face_center);
 
-    selected_g_num         [i_part] = (PDM_g_num_t *) malloc(  n_cell          * sizeof(PDM_g_num_t));
-    selected_l_num         [i_part] = (int         *) malloc(  n_cell          * sizeof(int        ));
-    selected_g_num_idx     [i_part] = (int         *) malloc( (n_cell + 1)     * sizeof(int        ));
-    // tmp_extract_cell_center[i_part] = (double      *) malloc(  3 * n_cell      * sizeof(double     ));
+    selected_l_num[i_part] = (int         *) malloc(  n_cell          * sizeof(int        ));
 
     /*
      * Sub-part
      */
-
     double bbox[6];
     bbox[0] = 0.3;
     bbox[1] = 0.3;
@@ -395,7 +389,6 @@ int main(int argc, char *argv[])
     bbox[5] = 0.65;
 
     int n_select_cell = 0;
-    selected_g_num_idx[i_part][0] = 0;
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
 
       int inside = 1;
@@ -405,26 +398,14 @@ int main(int argc, char *argv[])
         }
       }
       if(inside == 1) {
-        selected_g_num         [i_part][n_select_cell]     = cell_ln_to_gn[i_cell];
-        selected_l_num         [i_part][n_select_cell]     = i_cell;
-        // tmp_extract_cell_center[i_part][3*n_select_cell  ] = cell_center[i_part][3*i_cell  ];
-        // tmp_extract_cell_center[i_part][3*n_select_cell+1] = cell_center[i_part][3*i_cell+1];
-        // tmp_extract_cell_center[i_part][3*n_select_cell+2] = cell_center[i_part][3*i_cell+2];
+        selected_l_num[i_part][n_select_cell]     = i_cell;
         n_select_cell++;
 
       }
-      selected_g_num_idx[i_part][i_cell+1] = selected_g_num_idx[i_part][i_cell] + inside;
     }
 
-    selected_g_num         [i_part] = realloc(selected_g_num[i_part], n_select_cell * sizeof(PDM_g_num_t));
-    selected_l_num         [i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
-    pn_select_cell         [i_part] = n_select_cell;
-    // tmp_extract_cell_center[i_part] = realloc(tmp_extract_cell_center[i_part], 3 * n_select_cell * sizeof(double));
-
-    // PDM_log_trace_array_long(selected_g_num    [i_part], n_select_cell, "selected_g_num     : ");
-    // PDM_log_trace_array_int (selected_g_num_idx[i_part], n_cell+1     , "selected_g_num_idx : ");
-    // PDM_log_trace_array_long(cell_ln_to_gn             , n_cell       , "cell_ln_to_gn      : ");
-
+    selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
+    pn_select_cell[i_part] = n_select_cell;
 
   }
   free(dface_join_idx);
@@ -540,14 +521,10 @@ int main(int argc, char *argv[])
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
     free(cell_center       [i_part]);
-    free(selected_g_num    [i_part]);
     free(selected_l_num    [i_part]);
-    free(selected_g_num_idx[i_part]);
   }
   free(cell_center);
-  free(selected_g_num);
   free(selected_l_num);
-  free(selected_g_num_idx);
   free(pn_cell);
   free(pn_face);
   free(pn_vtx);
