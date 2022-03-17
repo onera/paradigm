@@ -615,6 +615,11 @@ int main(int argc, char *argv[])
 
   PDM_iso_surface_compute(isos);
 
+  char name[999];
+  sprintf(name, "iso_line_%dproc", n_rank);
+  PDM_iso_surface_write(isos, name);
+
+
   PDM_iso_surface_free(isos);
 
   free(dfield);

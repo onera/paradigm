@@ -465,9 +465,9 @@ int main(int argc, char *argv[])
                                         n_vtx_seg,
                                         n_vtx_seg,
                                         length,
-                                        -0.5*length,//-0.1,
-                                        -0.5*length,//-0.2,
-                                        -0.5*length,//0.07,
+                                        0.,//-0.5*length,//-0.1,
+                                        0.,//-0.5*length,//-0.2,
+                                        0.,//-0.5*length,//0.07,
                                         elt_type,
                                         1,
                                         PDM_OWNERSHIP_KEEP);
