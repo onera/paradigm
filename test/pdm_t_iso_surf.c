@@ -522,22 +522,22 @@ int main(int argc, char *argv[])
     double x1 = dvtx_coord[3*i  ];
     double y1 = dvtx_coord[3*i+1];
     double z1 = dvtx_coord[3*i+2];
-    // dfield[i] = _unit_sphere(x1, y1, z1);
+    dfield[i] = _unit_sphere(x1, y1, z1);
     // ifield[i] = (int) _mandelbulb(x1, y1, z1, 8, it_max);
     // if (ifield[i] < it_max) {
     //   dfield[i] = -1.;
     // } else {
     //   dfield[i] =  1.;
     // }
-    dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1, z1);
+    // dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1, z1);
 
 
-    // _unit_sphere_gradient(x1, y1, z1,
-    //                       &dgradient_field[3*i],
-    //                       &dgradient_field[3*i+1],
-    //                       &dgradient_field[3*i+2]);
-    _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, z1,
-                                  &dgradient_field[3*i], &dgradient_field[3*i+1], &dgradient_field[3*i+2]);
+    _unit_sphere_gradient(x1, y1, z1,
+                          &dgradient_field[3*i],
+                          &dgradient_field[3*i+1],
+                          &dgradient_field[3*i+2]);
+    // _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, z1,
+    //                               &dgradient_field[3*i], &dgradient_field[3*i+1], &dgradient_field[3*i+2]);
   }
 
   // char filename[999];
@@ -579,6 +579,10 @@ int main(int argc, char *argv[])
   PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
 
   PDM_iso_surface_compute(isos);
+
+  char name[999];
+  sprintf(name, "iso_surface_%dproc", n_rank);
+  PDM_iso_surface_write(isos, name);
 
   PDM_iso_surface_free(isos);
 

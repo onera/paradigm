@@ -198,6 +198,14 @@ PDM_iso_surface_free
   PDM_iso_surface_t  *isos
 );
 
+
+void
+PDM_iso_surface_write
+(
+ PDM_iso_surface_t  *isos,
+ const char         *name
+ );
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

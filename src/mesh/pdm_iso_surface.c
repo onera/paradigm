@@ -36,6 +36,8 @@
 #include "pdm_plane.h"
 #include "pdm_extract_part.h"
 #include "pdm_part_to_part.h"
+#include "pdm_gnum.h"
+#include "pdm_writer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -179,7 +181,9 @@ _solve_least_square
  double    *x
  )
 {
-  if (0) {
+  const int dbg = 0;
+
+  if (dbg) {
     log_trace("A =\n");
     for (int i = 0; i < m; i++) {
       log_trace("[");
@@ -222,29 +226,31 @@ _solve_least_square
     abort();
 #endif
 
-  // log_trace("U =\n");
-  // for (int i = 0; i < m; i++) {
-  //   log_trace("[");
-  //   for (int j = 0; j < n; j++) {
-  //     log_trace("%20.16f ", U[i+m*j]);
-  //   }
-  //   log_trace("]\n");
-  // }
+  if (dbg) {
+    log_trace("U =\n");
+    for (int i = 0; i < m; i++) {
+      log_trace("[");
+      for (int j = 0; j < n; j++) {
+        log_trace("%20.16f ", U[i+m*j]);
+      }
+      log_trace("]\n");
+    }
 
-  // log_trace("S = [");
-  // for (int i = 0; i < n; i++) {
-  //   log_trace("%20.16f ", S[i]);
-  // }
-  // log_trace("]\n");
+    log_trace("S = [");
+    for (int i = 0; i < n; i++) {
+      log_trace("%20.16f ", S[i]);
+    }
+    log_trace("]\n");
 
-  // log_trace("V =\n");
-  // for (int i = 0; i < m; i++) {
-  //   log_trace("[");
-  //   for (int j = 0; j < n; j++) {
-  //     log_trace("%20.16f ", V[i+m*j]);
-  //   }
-  //   log_trace("]\n");
-  // }
+    log_trace("V =\n");
+    for (int i = 0; i < m; i++) {
+      log_trace("[");
+      for (int j = 0; j < n; j++) {
+        log_trace("%20.16f ", V[i+m*j]);
+      }
+      log_trace("]\n");
+    }
+  }
 
   const double tol = 1.e-2;
   double tol_s = tol * PDM_ABS(S[0]);
@@ -262,7 +268,6 @@ _solve_least_square
   /* Compute y := S^{-1} U^T b */
   double y[n];
 
-  // log_trace("y = [");
   for (int i = 0; i < n; i++) {
 
     y[i] = 0.;
@@ -276,21 +281,32 @@ _solve_least_square
     } else {
       S[i] = 0.;
     }
-    // log_trace("%f ", y[i]);
   }
-  // log_trace("]\n");
+
+  if (dbg) {
+    log_trace("y = [");
+    for (int i = 0; i < n; i++) {
+      log_trace("%f ", y[i]);
+    }
+    log_trace("]\n");
+  }
 
   /* Compute x := V^T y */
-  // log_trace("x = [");
   for (int i = 0; i < n; i++) {
     x[i] = 0.;
 
     for (int j = 0; j < m; j++) {
       x[i] += V[j + m*i] * y[j];
     }
-  // log_trace("%f ", x[i]);
   }
-  // log_trace("]\n");
+
+  if (dbg) {
+    log_trace("x = [");
+    for (int i = 0; i < n; i++) {
+      log_trace("%f ", x[i]);
+    }
+    log_trace("]\n");
+  }
 }
 
 
@@ -454,6 +470,7 @@ _compute_edge_isosurf_intersection
           gy = (1. - t)*grad1[1] + t*grad2[1];
           gz = (1. - t)*grad1[2] + t*grad2[2];
         } else {
+          // Exact gradient (use function pointer?)
           _unit_sphere_gradient(edge_coord[3*i  ],
                                 edge_coord[3*i+1],
                                 edge_coord[3*i+2],
@@ -502,15 +519,12 @@ _dump_iso_line_dist
  PDM_MPI_Comm  comm,
  int           isoline_n_vtx,
  double       *isoline_vtx_coord,
- PDM_g_num_t  *isoline_vtx_parent_face,
  PDM_g_num_t  *isoline_vtx_ln_to_gn,
  int           isoline_n_edge,
- int          *isoline_edge_vtx_idx,
  PDM_g_num_t  *isoline_edge_vtx,
  PDM_g_num_t  *isoline_edge_ln_to_gn
  )
 {
-  PDM_UNUSED(isoline_vtx_parent_face);
 
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -531,6 +545,11 @@ _dump_iso_line_dist
               isoline_vtx_ln_to_gn[i], x, y, z, v);
   }
 
+
+  int *isoline_edge_vtx_idx = (int *) malloc(sizeof(int) * (isoline_n_edge + 1));
+  for (int i = 0; i <= isoline_n_edge; i++) {
+    isoline_edge_vtx_idx[i] = 2*i;
+  }
 
   PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm,
                                                               isoline_n_edge);
@@ -658,7 +677,7 @@ _dump_iso_line_dist
   free(pedge_vtx);
   free(pvtx_coord);
 
-
+  free(isoline_edge_vtx_idx);
 }
 
 
@@ -678,15 +697,7 @@ _iso_line_dist
  PDM_g_num_t        *pvtx_ln_to_gn,
  double             *pvtx_coord,
  double             *pfield,
- double             *pgradient_field,
- int                *isoline_n_vtx,
- double            **isoline_vtx_coord,
- PDM_g_num_t       **isoline_vtx_parent_face,
- PDM_g_num_t       **isoline_vtx_ln_to_gn,
- int                *isoline_n_edge,
- int               **isoline_edge_vtx_idx,
- PDM_g_num_t       **isoline_edge_vtx,
- PDM_g_num_t       **isoline_edge_ln_to_gn
+ double             *pgradient_field
 )
 {
   PDM_MPI_Comm comm = isos->comm;
@@ -697,12 +708,14 @@ _iso_line_dist
   PDM_MPI_Comm_size(comm, &n_rank);
 
   char filename[999];
-  sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_vtx,
-                            pvtx_coord,
-                            pvtx_ln_to_gn,
-                            NULL);
+  if (isos->debug) {
+    sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_vtx,
+                              pvtx_coord,
+                              pvtx_ln_to_gn,
+                              NULL);
+  }
 
   /*
    *  Tag edges that cross the iso-line,
@@ -723,13 +736,14 @@ _iso_line_dist
                                      edge_coord,
                                      edge_gradient);
 
-
-  sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
-  _dump_vectors (filename,
-                 n_edge,
-                 edge_coord,
-                 edge_gradient,
-                 NULL);
+  if (isos->debug) {
+    sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
+    _dump_vectors (filename,
+                   n_edge,
+                   edge_coord,
+                   edge_gradient,
+                   NULL);
+  }
 
 
   int n_face_edge_max = 0;
@@ -750,15 +764,15 @@ _iso_line_dist
   double *U = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
   double *V = (double *) malloc(sizeof(double) * n_face_edge_max * dim);
 
-  *isoline_n_vtx = n_face;
-  *isoline_vtx_coord       = (double *)      malloc(sizeof(double)      * n_face * 3);
-  *isoline_vtx_parent_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face );
+  isos->isosurf_n_vtx = n_face;
+  isos->isosurf_vtx_coord       = (double *)      malloc(sizeof(double)      * n_face * 3);
+  // *isoline_vtx_parent_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face );
 
   double *poly_coord = (double *) malloc(sizeof(double) * n_face_edge_max * 3);
 
   for (int i = 0; i < n_face; i++) {
 
-    (*isoline_vtx_parent_face)[i] = pface_ln_to_gn[i];
+    // (*isoline_vtx_parent_face)[i] = pface_ln_to_gn[i];
 
     pface_edge_inter_idx[i+1] = pface_edge_inter_idx[i];
 
@@ -832,7 +846,7 @@ _iso_line_dist
     // }
 
     /* Solve for iso-line vertex coordinates */
-    double *sol = *isoline_vtx_coord + 3*i;
+    double *sol = isos->isosurf_vtx_coord + 3*i;
 
     _solve_least_square (n_tagged_edge,
                            dim,
@@ -941,14 +955,14 @@ _iso_line_dist
 
   // PDM_log_trace_connectivity_long(pface_edge_inter_idx, pface_edge_inter_g_num, n_face, "pface_edge_inter : ");
 
-
-  sprintf(filename, "isoline_vtx_coord_no_nbd_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_face,
-                            *isoline_vtx_coord,
-                            pface_ln_to_gn,
-                            NULL);
-
+  if (isos->debug) {
+    sprintf(filename, "isoline_vtx_coord_no_nbd_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_face,
+                              isos->isosurf_vtx_coord,
+                              pface_ln_to_gn,
+                              NULL);
+  }
 
 
 
@@ -986,7 +1000,7 @@ _iso_line_dist
   free(pface_edge_inter_idx);
   int *part_stride = PDM_array_const_int(n_face_edge_inter, 1);
 
-  *isoline_n_edge = PDM_part_to_block_n_elt_block_get(ptb);
+  isos->isosurf_n_edge = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *distrib_edge = PDM_part_to_block_distrib_index_get(ptb);
   distrib_edge[n_rank] = gmax_edge_ln_to_gn;
 
@@ -1028,10 +1042,10 @@ _iso_line_dist
   PDM_g_num_t *ptb2_gnum = PDM_part_to_block_block_gnum_get (ptb2);
   int ptb2_n = PDM_part_to_block_n_elt_block_get(ptb2);
 
-  PDM_log_trace_array_long(ptb2_gnum, ptb2_n, "ptb2_gnum : ");
-  PDM_log_trace_array_int(isoline_dedge_coord_n, ptb2_n, "isoline_dedge_coord_n : ");
-  PDM_log_trace_array_int(dedge_tag_n, ptb2_n, "dedge_tag_n : ");
-  PDM_log_trace_array_int(dedge_tag, ptb2_n, "dedge_tag : ");
+  // PDM_log_trace_array_long(ptb2_gnum, ptb2_n, "ptb2_gnum : ");
+  // PDM_log_trace_array_int(isoline_dedge_coord_n, ptb2_n, "isoline_dedge_coord_n : ");
+  // PDM_log_trace_array_int(dedge_tag_n, ptb2_n, "dedge_tag_n : ");
+  // PDM_log_trace_array_int(dedge_tag, ptb2_n, "dedge_tag : ");
 
   free (edge_stride);
   free (edge_coord);
@@ -1050,13 +1064,13 @@ _iso_line_dist
                           &isoline_dedge_vtx_n,
                 (void **) &tmp_isoline_edge_vtx);
 
-  PDM_log_trace_array_long(ptb_gnum, *isoline_n_edge, "ptb_gnum : ");
-  PDM_log_trace_array_int(isoline_dedge_vtx_n, *isoline_n_edge, "isoline_dedge_vtx_n : ");
+  // PDM_log_trace_array_long(ptb_gnum, isos->isosurf_n_edge, "ptb_gnum : ");
+  // PDM_log_trace_array_int(isoline_dedge_vtx_n, isos->isosurf_n_edge, "isoline_dedge_vtx_n : ");
 
-  *isoline_edge_vtx = malloc(sizeof(PDM_g_num_t) * (*isoline_n_edge) * 2);
+  isos->isosurf_edge_vtx = malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_edge * 2);
 
   int isoline_n_bnd_vtx = 0;
-  for (int i = 0; i < *isoline_n_edge; i++) {
+  for (int i = 0; i < isos->isosurf_n_edge; i++) {
     if (isoline_dedge_vtx_n[i] == 1) {
       /* Boundary edge */
       isoline_n_bnd_vtx++;
@@ -1068,27 +1082,27 @@ _iso_line_dist
   PDM_g_num_t *distrib_bnd_vtx = PDM_compute_entity_distribution(comm,
                                                                  isoline_n_bnd_vtx);
 
-  *isoline_n_vtx += isoline_n_bnd_vtx;
-  *isoline_vtx_parent_face = realloc(*isoline_vtx_parent_face,
-                                      sizeof(PDM_g_num_t) * (*isoline_n_vtx));
-  *isoline_vtx_coord       = realloc(*isoline_vtx_coord,
-                                      sizeof(double) * (*isoline_n_vtx) * 3);
+  isos->isosurf_n_vtx += isoline_n_bnd_vtx;
+  // *isoline_vtx_parent_face = realloc(*isoline_vtx_parent_face,
+  //                                     sizeof(PDM_g_num_t) * isos->isosurf_n_vtx);
+  isos->isosurf_vtx_coord = realloc(isos->isosurf_vtx_coord,
+                                    sizeof(double) * isos->isosurf_n_vtx * 3);
 
-  *isoline_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*isoline_n_vtx));
-  memcpy(*isoline_vtx_ln_to_gn, pface_ln_to_gn, sizeof(PDM_g_num_t) * n_face);
+  isos->isosurf_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_vtx);
+  memcpy(isos->isosurf_vtx_ln_to_gn, pface_ln_to_gn, sizeof(PDM_g_num_t) * n_face);
 
   isoline_n_bnd_vtx = 0;
   int idx = 0;
-  for (int i = 0; i < *isoline_n_edge; i++) {
+  for (int i = 0; i < isos->isosurf_n_edge; i++) {
 
     for (int j = 0; j < isoline_dedge_vtx_n[i]; j++) {
-      (*isoline_edge_vtx)[2*i+j] = tmp_isoline_edge_vtx[idx+j];
+      isos->isosurf_edge_vtx[2*i+j] = tmp_isoline_edge_vtx[idx+j];
     }
 
     if (isoline_dedge_vtx_n[i] == 1) {
       /* Boundary edge */
-      (*isoline_edge_vtx)[2*i+1] = distrib_face[n_rank] + distrib_bnd_vtx[i_rank] + isoline_n_bnd_vtx + 1;
-      log_trace("bnd_vtx %d : g_num = "PDM_FMT_G_NUM"\n", isoline_n_bnd_vtx, (*isoline_edge_vtx)[2*i+1]);
+      isos->isosurf_edge_vtx[2*i+1] = distrib_face[n_rank] + distrib_bnd_vtx[i_rank] + isoline_n_bnd_vtx + 1;
+      // log_trace("bnd_vtx %d : g_num = "PDM_FMT_G_NUM"\n", isoline_n_bnd_vtx, isos->isosurf_edge_vtx[2*i+1]);
 
       int idx2 = n_face + isoline_n_bnd_vtx;
 
@@ -1096,17 +1110,17 @@ _iso_line_dist
                                        ptb2_gnum,
                                        ptb2_n);
       assert(pos >= 0);
-      memcpy((*isoline_vtx_coord) + 3*idx2, isoline_dedge_coord + 3*pos, sizeof(double) * 3);
+      memcpy(isos->isosurf_vtx_coord + 3*idx2, isoline_dedge_coord + 3*pos, sizeof(double) * 3);
 
-      (*isoline_vtx_ln_to_gn)[idx2] = (*isoline_edge_vtx)[2*i+1];
+      isos->isosurf_vtx_ln_to_gn[idx2] = isos->isosurf_edge_vtx[2*i+1];
 
       if (dedge_tag[pos] < 0) {
-        PDM_g_num_t tmp = (*isoline_edge_vtx)[2*i];
-        (*isoline_edge_vtx)[2*i] = (*isoline_edge_vtx)[2*i+1];
-        (*isoline_edge_vtx)[2*i+1] = tmp;
+        PDM_g_num_t tmp = isos->isosurf_edge_vtx[2*i];
+        isos->isosurf_edge_vtx[2*i] = isos->isosurf_edge_vtx[2*i+1];
+        isos->isosurf_edge_vtx[2*i+1] = tmp;
       }
 
-      (*isoline_vtx_parent_face)[idx2] = tmp_isoline_edge_vtx[idx];
+      // (*isoline_vtx_parent_face)[idx2] = tmp_isoline_edge_vtx[idx];
       isoline_n_bnd_vtx++;
     }
 
@@ -1116,21 +1130,21 @@ _iso_line_dist
   free(isoline_dedge_coord);
   PDM_part_to_block_free(ptb2);
 
+  if (isos->debug) {
+    sprintf(filename, "isoline_vtx_coord_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              isos->isosurf_n_vtx,
+                              isos->isosurf_vtx_coord,
+                              isos->isosurf_vtx_ln_to_gn,
+                              NULL);
+  }
 
-  sprintf(filename, "isoline_vtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            *isoline_n_vtx,
-                            *isoline_vtx_coord,
-                            *isoline_vtx_ln_to_gn,
-                            NULL);
-
-
-  if (0) {
+  if (0 && isos->debug) {
     double *pface_edge_inter_face_coord = (double *) malloc(sizeof(double) * n_face_edge_inter * 3);
     for (int i = 0; i < n_face; i++) {
       for (int j = pface_edge_inter_idx[i]; j < pface_edge_inter_idx[i+1]; j++) {
         for (int k = 0; k < 3; k++) {
-          pface_edge_inter_face_coord[3*j+k] = (*isoline_vtx_coord)[3*i+k];
+          pface_edge_inter_face_coord[3*j+k] = isos->isosurf_vtx_coord[3*i+k];
         }
       }
     }
@@ -1146,11 +1160,11 @@ _iso_line_dist
                             &isoline_dedge_vtx_coord_n,
                   (void **) &isoline_dedge_vtx_coord);
 
-    PDM_log_trace_array_int(isoline_dedge_vtx_coord_n, *isoline_n_edge, "isoline_dedge_vtx_coord_n : ");
+    // PDM_log_trace_array_int(isoline_dedge_vtx_coord_n, isos->isosurf_n_edge, "isoline_dedge_vtx_coord_n : ");
 
     sprintf(filename, "isoline_dedge_%2.2d.vtk", i_rank);
     PDM_vtk_write_lines (filename,
-                         *isoline_n_edge,
+                         isos->isosurf_n_edge,
                          isoline_dedge_vtx_coord,
                          NULL,
                          NULL);
@@ -1162,20 +1176,13 @@ _iso_line_dist
 
   free(part_stride);
 
-  *isoline_edge_vtx_idx = (int *) malloc(sizeof(int) * (*isoline_n_edge + 1));
-  for (int i = 0; i <= *isoline_n_edge; i++) {
-    (*isoline_edge_vtx_idx)[i] = 2*i;
-  }
-  free(isoline_dedge_vtx_n);
-
-  PDM_log_trace_connectivity_long(*isoline_edge_vtx_idx, *isoline_edge_vtx, *isoline_n_edge, "isoline_edge_vtx : ");
 
   PDM_g_num_t *distrib_isoline_edge = PDM_compute_entity_distribution(comm,
-                                                                      *isoline_n_edge);
+                                                                      isos->isosurf_n_edge);
 
-  (*isoline_edge_ln_to_gn) = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (*isoline_n_edge));
-  for (int i = 0; i < *isoline_n_edge; i++) {
-    (*isoline_edge_ln_to_gn)[i] = distrib_isoline_edge[i_rank] + i + 1;
+  isos->isosurf_edge_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_edge);
+  for (int i = 0; i < isos->isosurf_n_edge; i++) {
+    isos->isosurf_edge_ln_to_gn[i] = distrib_isoline_edge[i_rank] + i + 1;
   }
   free(distrib_isoline_edge);
 
@@ -1280,18 +1287,10 @@ _iso_surf_dist
   PDM_g_num_t        *pvtx_ln_to_gn,
   double             *pvtx_coord,
   double             *pfield,
-  double             *pgradient_field,
-  int                *isosurf_n_vtx,
-  double            **isosurf_vtx_coord,
-  PDM_g_num_t       **isosurf_vtx_parent_cell,
-  PDM_g_num_t       **isosurf_vtx_ln_to_gn,
-  int                *isosurf_n_face,
-  int               **isosurf_face_vtx_idx,
-  PDM_g_num_t       **isosurf_face_vtx_g_num,
-  PDM_g_num_t       **isosurf_face_ln_to_gn
+  double             *pgradient_field
 )
 {
-  const int use_gradient = (pgradient_field != NULL);
+  const int use_gradient = 0;//(pgradient_field != NULL);
 
   PDM_MPI_Comm comm = isos->comm;
 
@@ -1301,12 +1300,14 @@ _iso_surf_dist
   PDM_MPI_Comm_size(comm, &n_rank);
 
   char filename[999];
-  sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_vtx,
-                            pvtx_coord,
-                            pvtx_ln_to_gn,
-                            NULL);
+  if (isos->debug) {
+    sprintf(filename, "out_equi_vtx_coord_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_vtx,
+                              pvtx_coord,
+                              pvtx_ln_to_gn,
+                              NULL);
+  }
 
   /*
    *  Tag edges that cross the iso-surface,
@@ -1327,13 +1328,14 @@ _iso_surf_dist
                                      edge_coord,
                                      edge_gradient);
 
-
-  sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
-  _dump_vectors (filename,
-                 n_edge,
-                 edge_coord,
-                 edge_gradient,
-                 NULL);
+  if (isos->debug) {
+    sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
+    _dump_vectors (filename,
+                   n_edge,
+                   edge_coord,
+                   edge_gradient,
+                   NULL);
+  }
 
   int n_face_edge_max = 0;
   for (int i = 0; i < n_face; i++) {
@@ -1688,32 +1690,13 @@ _iso_surf_dist
 
 
   // Visu
-  if (1) {
+  if (isos->debug) {
     int *pface_vtx = NULL;
     _compute_face_vtx(n_face,
                       pface_edge_idx,
                       pface_edge,
                       pedge_vtx,
                       &pface_vtx);
-
-    // int *pedge_vtx_idx = (int *) malloc(sizeof(int) * (n_edge + 1));
-    // for (int i = 0; i <= n_edge; i++) {
-    //   pedge_vtx_idx[i] = 2*i;
-    // }
-    // PDM_log_trace_connectivity_int(pedge_vtx_idx,
-    //                                pedge_vtx,
-    //                                n_edge,
-    //                                "pedge_vtx : ");
-
-    // PDM_log_trace_connectivity_int(pface_edge_idx,
-    //                                pface_edge,
-    //                                n_face,
-    //                                "pface_edge : ");
-
-    // PDM_log_trace_connectivity_int(pface_edge_idx,
-    //                                pface_vtx,
-    //                                n_face,
-    //                                "pface_vtx : ");
 
     sprintf(filename, "out_equi_faces_%2.2d.vtk", i_rank);
     PDM_vtk_write_polydata(filename,
@@ -1728,28 +1711,30 @@ _iso_surf_dist
     free(pface_vtx);
   }
 
-  sprintf(filename, "face_normal_%2.2d.vtk", i_rank);
-  _dump_vectors (filename,
-                 n_face,
-                 all_face_center,
-                 all_face_normal,
-                 NULL);
-  free(all_face_center);
-  free(all_face_normal);
+  if (isos->debug) {
+    sprintf(filename, "face_normal_%2.2d.vtk", i_rank);
+    _dump_vectors (filename,
+                   n_face,
+                   all_face_center,
+                   all_face_normal,
+                   NULL);
+    free(all_face_center);
+    free(all_face_normal);
 
-  sprintf(filename, "face_intersection_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_face,
-                            face_coord,
+    sprintf(filename, "face_intersection_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_face,
+                              face_coord,
                             NULL,//pface_ln_to_gn,
                             face_tag);
 
-  sprintf(filename, "cell_intersection_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_cell,
-                            cell_coord,
-                            pcell_ln_to_gn,
-                            NULL);
+    sprintf(filename, "cell_intersection_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_cell,
+                              cell_coord,
+                              pcell_ln_to_gn,
+                              NULL);
+  }
 
   free (is_visited_edge);
   free (visited_edges);
@@ -1776,20 +1761,63 @@ _iso_surf_dist
   int n_tagged_face = 0;
   int *i_tagged_edge = PDM_array_const_int(n_edge, -1);
   int *i_tagged_face = PDM_array_const_int(n_face, -1);
+
+  PDM_g_num_t *tagged_edge_parent_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_edge);
+
   for (int i = 0; i < n_edge; i++) {
     if (edge_tag[i] != 0) {
+      tagged_edge_parent_ln_to_gn[n_tagged_edge] = pedge_ln_to_gn[i];
       i_tagged_edge[i] = n_tagged_edge++;
     }
   }
+  tagged_edge_parent_ln_to_gn = realloc(tagged_edge_parent_ln_to_gn,
+                                        sizeof(PDM_g_num_t) * n_tagged_edge);
+
+
+  PDM_g_num_t *tagged_face_parent_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face);
+
   for (int i = 0; i < n_face; i++) {
     if (face_tag[i] != 0) {
+      tagged_face_parent_ln_to_gn[n_tagged_face] = pface_ln_to_gn[i];
       i_tagged_face[i] = n_tagged_face++;
     }
   }
+  tagged_face_parent_ln_to_gn = realloc(tagged_face_parent_ln_to_gn,
+                                        sizeof(PDM_g_num_t) * n_tagged_face);
 
 
-  PDM_g_num_t *distrib_tagged_edge = PDM_compute_entity_distribution(comm, n_tagged_edge);
-  PDM_g_num_t *distrib_tagged_face = PDM_compute_entity_distribution(comm, n_tagged_face);
+  PDM_gen_gnum_t *gen_gnum_face = PDM_gnum_create(3,
+                                                  1,
+                                                  PDM_FALSE,
+                                                  1.,
+                                                  isos->comm,
+                                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_gnum_set_from_parents(gen_gnum_face,
+                            0,
+                            n_tagged_face,
+                            tagged_face_parent_ln_to_gn);
+
+  PDM_gnum_compute(gen_gnum_face);
+
+  PDM_g_num_t *tagged_face_ln_to_gn = PDM_gnum_get(gen_gnum_face, 0);
+
+
+  PDM_gen_gnum_t *gen_gnum_edge = PDM_gnum_create(3,
+                                                  1,
+                                                  PDM_FALSE,
+                                                  1.,
+                                                  isos->comm,
+                                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_gnum_set_from_parents(gen_gnum_edge,
+                            0,
+                            n_tagged_edge,
+                            tagged_edge_parent_ln_to_gn);
+
+  PDM_gnum_compute(gen_gnum_edge);
+
+  PDM_g_num_t *tagged_edge_ln_to_gn = PDM_gnum_get(gen_gnum_edge, 0);
 
   PDM_g_num_t gn_cell;
   if (i_rank == n_rank-1) {
@@ -1797,36 +1825,41 @@ _iso_surf_dist
   }
   PDM_MPI_Bcast(&gn_cell, 1, PDM__PDM_MPI_G_NUM, n_rank-1, comm);
 
+  PDM_g_num_t lmax_tagged_face_ln_to_gn = 0;
+  for (int i = 0; i < n_tagged_face; i++) {
+    lmax_tagged_face_ln_to_gn = PDM_MAX(lmax_tagged_face_ln_to_gn, tagged_face_ln_to_gn[i]);
+  }
+
+  PDM_g_num_t gmax_tagged_face_ln_to_gn;
+  PDM_MPI_Allreduce(&lmax_tagged_face_ln_to_gn, &gmax_tagged_face_ln_to_gn, 1,
+                    PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, isos->comm);
 
 
-  int _isosurf_n_vtx = n_cell + n_tagged_face + n_tagged_edge;
-  *isosurf_n_vtx = _isosurf_n_vtx;
-  *isosurf_vtx_coord = (double *) malloc(sizeof(double) * _isosurf_n_vtx * 3);
-  double *_isosurf_vtx_coord = *isosurf_vtx_coord;
-  memcpy(_isosurf_vtx_coord, cell_coord, sizeof(double) * n_cell * 3);
+  isos->isosurf_n_vtx = n_cell + n_tagged_face + n_tagged_edge;
+  isos->isosurf_vtx_coord = (double *) malloc(sizeof(double) * isos->isosurf_n_vtx * 3);
+  memcpy(isos->isosurf_vtx_coord, cell_coord, sizeof(double) * n_cell * 3);
 
-  *isosurf_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_vtx);
-  PDM_g_num_t *_isosurf_vtx_ln_to_gn = *isosurf_vtx_ln_to_gn;
-  memcpy(_isosurf_vtx_ln_to_gn, pcell_ln_to_gn, sizeof(PDM_g_num_t) * n_cell);
+  isos->isosurf_vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_vtx);
+  memcpy(isos->isosurf_vtx_ln_to_gn, pcell_ln_to_gn, sizeof(PDM_g_num_t) * n_cell);
 
-
+  int i_vtx = n_cell;
   for (int i = 0; i < n_face; i++) {
     if (face_tag[i] != 0) {
-
-      _isosurf_vtx_ln_to_gn[n_cell + i_tagged_face[i]] = gn_cell + distrib_tagged_face[i_rank] + i_tagged_face[i] + 1;
-      memcpy(_isosurf_vtx_coord + 3*(n_cell + i_tagged_face[i]),
+      isos->isosurf_vtx_ln_to_gn[i_vtx] = gn_cell + tagged_face_ln_to_gn[i_tagged_face[i]];
+      memcpy(isos->isosurf_vtx_coord + 3*i_vtx,
              face_coord + 3*i,
              sizeof(double) * 3);
+      i_vtx++;
     }
   }
 
   for (int i = 0; i < n_edge; i++) {
     if (edge_tag[i] != 0) {
-      _isosurf_vtx_ln_to_gn[n_cell + n_tagged_face + i_tagged_edge[i]] =
-      gn_cell + distrib_tagged_face[n_rank] + distrib_tagged_edge[i_rank] + i_tagged_edge[i] + 1;
-      memcpy(_isosurf_vtx_coord + 3*(n_cell + n_tagged_face + i_tagged_edge[i]),
+      isos->isosurf_vtx_ln_to_gn[i_vtx] = gn_cell + gmax_tagged_face_ln_to_gn + tagged_edge_ln_to_gn[i_tagged_edge[i]];
+      memcpy(isos->isosurf_vtx_coord + 3*i_vtx,
              edge_coord + 3*i,
              sizeof(double) * 3);
+      i_vtx++;
     }
   }
 
@@ -1849,14 +1882,13 @@ _iso_surf_dist
     }
   }
 
-  *isosurf_n_face = _isosurf_n_tri;
-  int *_isosurf_tri_vtx = (int *) malloc(sizeof(int) * _isosurf_n_tri * 3);
+  isos->isosurf_n_face = _isosurf_n_tri;
+  isos->isosurf_face_vtx = (int *) malloc(sizeof(int) * _isosurf_n_tri * 3);
 
   PDM_g_num_t *distrib_isosurf_face = PDM_compute_entity_distribution(comm,
                                                                       _isosurf_n_tri);
 
-  *isosurf_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri);
-  PDM_g_num_t *_isosurf_face_ln_to_gn = *isosurf_face_ln_to_gn;
+  isos->isosurf_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri);
 
   _isosurf_n_tri = 0;
   for (int icell = 0; icell < n_cell; icell++) {
@@ -1879,16 +1911,16 @@ _iso_surf_dist
 
           int sgn = sgn_edge * sgn_face * edge_tag[iedge];
 
-          _isosurf_tri_vtx[3*_isosurf_n_tri]   = icell + 1;
+          isos->isosurf_face_vtx[3*_isosurf_n_tri]   = icell + 1;
           if (sgn < 0) {
-            _isosurf_tri_vtx[3*_isosurf_n_tri+1] = ipt_face;
-            _isosurf_tri_vtx[3*_isosurf_n_tri+2] = ipt_edge;
+            isos->isosurf_face_vtx[3*_isosurf_n_tri+1] = ipt_face;
+            isos->isosurf_face_vtx[3*_isosurf_n_tri+2] = ipt_edge;
           } else {
-            _isosurf_tri_vtx[3*_isosurf_n_tri+1] = ipt_edge;
-            _isosurf_tri_vtx[3*_isosurf_n_tri+2] = ipt_face;
+            isos->isosurf_face_vtx[3*_isosurf_n_tri+1] = ipt_edge;
+            isos->isosurf_face_vtx[3*_isosurf_n_tri+2] = ipt_face;
           }
 
-          _isosurf_face_ln_to_gn[_isosurf_n_tri] = distrib_isosurf_face[i_rank] + _isosurf_n_tri + 1;
+          isos->isosurf_face_ln_to_gn[_isosurf_n_tri] = distrib_isosurf_face[i_rank] + _isosurf_n_tri + 1;
           _isosurf_n_tri++;
 
         }
@@ -1899,37 +1931,34 @@ _iso_surf_dist
   free(edge_coord   );
   free(edge_gradient);
 
-  free(distrib_tagged_edge);
-  free(distrib_tagged_face);
+
+  PDM_gnum_free(gen_gnum_face);
+  PDM_gnum_free(gen_gnum_edge);
 
 
-  *isosurf_face_vtx_g_num = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri * 3);
-  for (int i = 0; i < _isosurf_n_tri * 3; i++) {
-    (*isosurf_face_vtx_g_num)[i] = _isosurf_vtx_ln_to_gn[_isosurf_tri_vtx[i] - 1];
+  isos->isosurf_face_vtx_idx = (int *) malloc(sizeof(int) * (isos->isosurf_n_face + 1));
+  for (int i = 0; i <= isos->isosurf_n_face; i++) {
+    isos->isosurf_face_vtx_idx[i] = 3*i;
   }
 
-  *isosurf_face_vtx_idx = (int *) malloc(sizeof(int) * (_isosurf_n_tri + 1));
-  for (int i = 0; i <= _isosurf_n_tri; i++) {
-    (*isosurf_face_vtx_idx)[i] = 3*i;
+  if (isos->debug) {
+    sprintf(filename, "isosurf_tri_%2.2d.vtk", i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               isos->isosurf_n_vtx,
+                               isos->isosurf_vtx_coord,
+                               isos->isosurf_vtx_ln_to_gn,
+                               PDM_MESH_NODAL_TRIA3,
+                               isos->isosurf_n_face,
+                               isos->isosurf_face_vtx,
+                               isos->isosurf_face_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
   }
-
-  sprintf(filename, "isosurf_tri_%2.2d.vtk", i_rank);
-  PDM_vtk_write_std_elements(filename,
-                             _isosurf_n_vtx,
-                             _isosurf_vtx_coord,
-                             _isosurf_vtx_ln_to_gn,
-                             PDM_MESH_NODAL_TRIA3,
-                             _isosurf_n_tri,
-                             _isosurf_tri_vtx,
-                             _isosurf_face_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
 
   free(i_tagged_edge);
   free(i_tagged_face);
 
-  free (_isosurf_tri_vtx);
   free (is_treated_face);
   free (face_coord);
   free (cell_coord);
@@ -1951,13 +1980,15 @@ _iso_surface_dist
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
-  char filename[999];
-  sprintf(filename, "gradient_field_%2.2d.vtk", i_rank);
-  _dump_vectors (filename,
-                 (int) isos->distrib_vtx[i_rank+1] - isos->distrib_vtx[i_rank],
-                 isos->dvtx_coord,
-                 isos->dgradient_field,
-                 NULL);
+  if (isos->debug) {
+    char filename[999];
+    sprintf(filename, "gradient_field_%2.2d.vtk", i_rank);
+    _dump_vectors (filename,
+                   (int) isos->distrib_vtx[i_rank+1] - isos->distrib_vtx[i_rank],
+                   isos->dvtx_coord,
+                   isos->dgradient_field,
+                   NULL);
+  }
 
   assert(isos->distrib_edge != NULL);
   int dn_edge = isos->distrib_edge[i_rank+1] - isos->distrib_edge[i_rank];
@@ -1989,7 +2020,7 @@ _iso_surface_dist
                                                            &pvtx_ln_to_gn,
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
-  if(0 == 1) {
+  if (0 && isos->debug) {
     PDM_log_trace_connectivity_int(pedge_vtx_idx, pedge_vtx, dn_edge, "pedge_vtx");
   }
   free(pedge_vtx_idx);
@@ -2188,8 +2219,8 @@ _iso_surface_dist
   PDM_gnum_compute(gnum_equi);
   PDM_g_num_t* child_equi_entity_gnum = PDM_gnum_get(gnum_equi, 0);
 
-  if(1 == 1) {
-    // char filename[999];
+  if (isos->debug) {
+    char filename[999];
     sprintf(filename, "out_iso_surf_equi_entity_coord_%2.2d.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_entity_tag,
@@ -2352,14 +2383,14 @@ _iso_surface_dist
 
 
 
-  int          isoline_n_vtx           = 0;
-  double      *isoline_vtx_coord       = NULL;
-  PDM_g_num_t *isoline_vtx_parent_face = NULL;
-  PDM_g_num_t *isoline_vtx_ln_to_gn    = NULL;
-  int          isoline_n_edge          = 0;
-  int         *isoline_edge_vtx_idx    = NULL;
-  PDM_g_num_t *isoline_edge_vtx        = NULL;
-  PDM_g_num_t *isoline_edge_ln_to_gn   = NULL;
+  // int          isoline_n_vtx           = 0;
+  // double      *isoline_vtx_coord       = NULL;
+  // PDM_g_num_t *isoline_vtx_parent_face = NULL;
+  // PDM_g_num_t *isoline_vtx_ln_to_gn    = NULL;
+  // int          isoline_n_edge          = 0;
+  // int         *isoline_edge_vtx_idx    = NULL;
+  // PDM_g_num_t *isoline_edge_vtx        = NULL;
+  // PDM_g_num_t *isoline_edge_ln_to_gn   = NULL;
   if(isos->dim == 2) {
     _iso_line_dist(isos,
                    n_entity_equi,
@@ -2373,27 +2404,17 @@ _iso_surface_dist
                    pequi_vtx_ln_to_gn,
                    pequi_vtx_coord,
                    pequi_field,
-                   pequi_gradient_field,
-                   &isoline_n_vtx,
-                   &isoline_vtx_coord,
-                   &isoline_vtx_parent_face,
-                   &isoline_vtx_ln_to_gn,
-                   &isoline_n_edge,
-                   &isoline_edge_vtx_idx,
-                   &isoline_edge_vtx,
-                   &isoline_edge_ln_to_gn);
+                   pequi_gradient_field);
 
-    if (1) {
-      _dump_iso_line_dist(isos->comm,
-                          isoline_n_vtx,
-                          isoline_vtx_coord,
-                          isoline_vtx_parent_face,
-                          isoline_vtx_ln_to_gn,
-                          isoline_n_edge,
-                          isoline_edge_vtx_idx,
-                          isoline_edge_vtx,
-                          isoline_edge_ln_to_gn);
-    }
+    // if (isos->debug) {
+    //   _dump_iso_line_dist(isos->comm,
+    //                       isos->isosurf_n_vtx,
+    //                       isos->isosurf_vtx_coord,
+    //                       isos->isosurf_vtx_ln_to_gn,
+    //                       isos->isosurf_n_edge,
+    //                       isos->isosurf_edge_vtx,
+    //                       isos->isosurf_edge_ln_to_gn);
+    // }
   } else {
     _iso_surf_dist(isos,
                    n_entity_equi,
@@ -2411,15 +2432,7 @@ _iso_surface_dist
                    pequi_vtx_ln_to_gn,
                    pequi_vtx_coord,
                    pequi_field,
-                   pequi_gradient_field,
-                   &isoline_n_vtx,
-                   &isoline_vtx_coord,
-                   &isoline_vtx_parent_face,
-                   &isoline_vtx_ln_to_gn,
-                   &isoline_n_edge,
-                   &isoline_edge_vtx_idx,
-                   &isoline_edge_vtx,
-                   &isoline_edge_ln_to_gn);
+                   pequi_gradient_field);
   }
 
   if(isos->dim == 3) {
@@ -2429,12 +2442,6 @@ _iso_surface_dist
     free(pequi_cell_face);
   }
 
-  free(isoline_vtx_coord      );
-  free(isoline_vtx_parent_face);
-  free(isoline_vtx_ln_to_gn   );
-  free(isoline_edge_vtx_idx   );
-  free(isoline_edge_vtx       );
-  free(isoline_edge_ln_to_gn  );
 
   if(isos->iso_kind == PDM_ISO_SURFACE_KIND_FIELD) {
     free(pequi_field);
@@ -2472,6 +2479,10 @@ _iso_surface_part
   PDM_iso_surface_t        *isos
 )
 {
+  /*
+   *  TO DO: 2d case
+   */
+
   /*
    *  Scan edges to find those which intersect the iso-surface
    */
@@ -2724,7 +2735,6 @@ _iso_surface_part
   pvtx_ln_to_gn = tmp_vtx_ln_to_gn[0];
   free(tmp_vtx_ln_to_gn);
 
-  // PDM_log_trace_array_long(pvtx_ln_to_gn, n_vtx, "pvtx_ln_to_gn : ");
 
 
   /* Parent Global ids */
@@ -2837,15 +2847,6 @@ _iso_surface_part
   /*
    *  Compute iso-surface
    */
-  int          isosurf_n_vtx           = 0;
-  double      *isosurf_vtx_coord       = NULL;
-  PDM_g_num_t *isosurf_vtx_parent_cell = NULL;
-  PDM_g_num_t *isosurf_vtx_ln_to_gn    = NULL;
-  int          isosurf_n_face          = 0;
-  int         *isosurf_face_vtx_idx    = NULL;
-  PDM_g_num_t *isosurf_face_vtx_g_num  = NULL;
-  PDM_g_num_t *isosurf_face_ln_to_gn   = NULL;
-
   _iso_surf_dist(isos,
                  n_cell,
                  n_face,
@@ -2862,15 +2863,7 @@ _iso_surface_part
                  pvtx_ln_to_gn,
                  pvtx_coord,
                  pfield,
-                 pgradient_field,
-                 &isosurf_n_vtx,
-                 &isosurf_vtx_coord,
-                 &isosurf_vtx_parent_cell,
-                 &isosurf_vtx_ln_to_gn,
-                 &isosurf_n_face,
-                 &isosurf_face_vtx_idx,
-                 &isosurf_face_vtx_g_num,
-                 &isosurf_face_ln_to_gn);
+                 pgradient_field);
 
 }
 
@@ -2919,6 +2912,18 @@ PDM_iso_surface_create
   isos->pfield          = (double **) malloc(n_part * sizeof(double *));
   isos->pgradient_field = (double **) malloc(n_part * sizeof(double *));
 
+
+  isos->isosurf_n_vtx         = 0;
+  isos->isosurf_n_edge        = 0;
+  isos->isosurf_n_face        = 0;
+  isos->isosurf_face_vtx_idx  = NULL;
+  isos->isosurf_face_vtx      = NULL;
+  isos->isosurf_edge_vtx_idx  = NULL;
+  isos->isosurf_edge_vtx      = NULL;
+  isos->isosurf_vtx_coord     = NULL;
+  isos->isosurf_face_ln_to_gn = NULL;
+  isos->isosurf_vtx_ln_to_gn  = NULL;
+
   return isos;
 }
 
@@ -2929,7 +2934,6 @@ PDM_iso_surface_compute
 )
 {
   if(isos->is_dist == 0) {
-    // PDM_error(__FILE__, __LINE__, 0, "PDM_iso_surface_compute Not implemented with partition layout\n");
     _iso_surface_part(isos);
   } else {
     _iso_surface_dist(isos);
@@ -3147,8 +3151,193 @@ PDM_iso_surface_free
   free(isos->pfield         );
   free(isos->pgradient_field);
 
+  if (isos->ownership == PDM_OWNERSHIP_KEEP) {
+
+    if (isos->isosurf_face_vtx_idx  != NULL) {
+      free(isos->isosurf_face_vtx_idx);
+    }
+    if (isos->isosurf_face_vtx      != NULL) {
+      free(isos->isosurf_face_vtx);
+    }
+    if (isos->isosurf_edge_vtx_idx  != NULL) {
+      free(isos->isosurf_edge_vtx_idx);
+    }
+    if (isos->isosurf_edge_vtx      != NULL) {
+      free(isos->isosurf_edge_vtx);
+    }
+    if (isos->isosurf_vtx_coord     != NULL) {
+      free(isos->isosurf_vtx_coord);
+    }
+    if (isos->isosurf_face_ln_to_gn != NULL) {
+      free(isos->isosurf_face_ln_to_gn);
+    }
+    if (isos->isosurf_vtx_ln_to_gn  != NULL) {
+      free(isos->isosurf_vtx_ln_to_gn);
+    }
+  }
+
   free(isos);
 }
+
+
+
+
+void
+PDM_iso_surface_write
+(
+ PDM_iso_surface_t  *isos,
+ const char         *name
+ )
+ {
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+
+
+  char _name[999];
+
+  PDM_writer_t *cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_BIN,
+                                          PDM_WRITER_TOPO_CONSTANTE,
+                                          PDM_WRITER_OFF,
+                                          name,
+                                          name,
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_ACCES_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+  sprintf(_name, "%s_geom", name);
+  int id_geom = PDM_writer_geom_create(cs,
+                                       _name,
+                                       PDM_WRITER_OFF,
+                                       PDM_WRITER_OFF,
+                                       1);
+
+  int id_var_part = PDM_writer_var_create(cs,
+                                          PDM_WRITER_ON,
+                                          PDM_WRITER_VAR_SCALAIRE,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "num_part");
+
+  int id_var_vtx_gnum = PDM_writer_var_create(cs,
+                                              PDM_WRITER_ON,
+                                              PDM_WRITER_VAR_SCALAIRE,
+                                              PDM_WRITER_VAR_SOMMETS,
+                                              "vtx_g_num");
+
+  int id_var_elt_gnum = PDM_writer_var_create(cs,
+                                              PDM_WRITER_ON,
+                                              PDM_WRITER_VAR_SCALAIRE,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "elt_g_num");
+
+  PDM_writer_step_beg(cs, 0.);
+
+
+  /*
+   *  Write geometry
+   */
+  PDM_writer_geom_coord_set(cs,
+                            id_geom,
+                            0,
+                            isos->isosurf_n_vtx,
+                            isos->isosurf_vtx_coord,
+                            isos->isosurf_vtx_ln_to_gn);
+
+  int n_elt = 0;
+  PDM_g_num_t *elt_ln_to_gn = NULL;
+  if (isos->dim == 3) {
+    n_elt = isos->isosurf_n_face;
+    elt_ln_to_gn = isos->isosurf_face_ln_to_gn;
+
+    int id_block = PDM_writer_geom_bloc_add(cs,
+                                            id_geom,
+                                            PDM_WRITER_ON,
+                                            PDM_WRITER_POLY_2D);
+
+
+    PDM_writer_geom_bloc_poly2d_set(cs,
+                                    id_geom,
+                                    id_block,
+                                    0,
+                                    isos->isosurf_n_face,
+                                    isos->isosurf_face_vtx_idx,
+                                    isos->isosurf_face_vtx,
+                                    isos->isosurf_face_ln_to_gn);
+  }
+
+  else {
+    n_elt = isos->isosurf_n_edge;
+    elt_ln_to_gn = isos->isosurf_edge_ln_to_gn;
+
+    int id_block = PDM_writer_geom_bloc_add(cs,
+                                            id_geom,
+                                            PDM_WRITER_ON,
+                                            PDM_WRITER_BAR2);
+
+    PDM_writer_geom_bloc_std_set(cs,
+                                 id_geom,
+                                 id_block,
+                                 0,
+                                 isos->isosurf_n_edge,
+                                 isos->isosurf_edge_vtx,
+                                 isos->isosurf_edge_ln_to_gn);
+  }
+
+  PDM_writer_geom_write(cs,
+                          id_geom);
+
+
+  /*
+   *  Write variables
+   */
+  PDM_real_t *val_part     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
+  PDM_real_t *val_elt_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
+  PDM_real_t *val_vtx_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * isos->isosurf_n_vtx);
+
+  for (int i = 0; i < n_elt; i++) {
+    val_part[i]     = (PDM_real_t) i_rank;
+    val_elt_gnum[i] = (PDM_real_t) elt_ln_to_gn[i];
+  }
+
+  for (int i = 0; i < isos->isosurf_n_vtx; i++) {
+    val_vtx_gnum[i] = (PDM_real_t) isos->isosurf_vtx_ln_to_gn[i];
+  }
+
+  PDM_writer_var_set(cs,
+                     id_var_part,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_part);
+  PDM_writer_var_write(cs,
+                       id_var_part);
+
+  PDM_writer_var_set(cs,
+                     id_var_elt_gnum,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_elt_gnum);
+  PDM_writer_var_write(cs,
+                       id_var_elt_gnum);
+
+  PDM_writer_var_set(cs,
+                     id_var_vtx_gnum,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_vtx_gnum);
+  PDM_writer_var_write(cs,
+                       id_var_vtx_gnum);
+
+
+
+  PDM_writer_step_end(cs);
+
+  PDM_writer_free(cs);
+
+  free(val_part);
+  free(val_elt_gnum);
+  free(val_vtx_gnum);
+ }
 
 #ifdef __cplusplus
 }

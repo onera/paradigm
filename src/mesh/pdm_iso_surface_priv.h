@@ -109,6 +109,21 @@ struct _pdm_iso_surface_t
   double             **pfield;
   double             **pgradient_field;
 
+  /* Result */
+  int                  isosurf_n_vtx;
+  int                  isosurf_n_edge; // only in 2d
+  int                  isosurf_n_face;
+  int                 *isosurf_face_vtx_idx;
+  int                 *isosurf_face_vtx;
+  int                 *isosurf_edge_vtx_idx; // only in 2d
+  int                 *isosurf_edge_vtx; // only in 2d
+  double              *isosurf_vtx_coord;
+  PDM_g_num_t         *isosurf_vtx_ln_to_gn;
+  PDM_g_num_t         *isosurf_edge_ln_to_gn; // only in 2d
+  PDM_g_num_t         *isosurf_face_ln_to_gn;
+
+
+  int debug;
 };
 
 
