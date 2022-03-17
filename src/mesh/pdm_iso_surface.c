@@ -1290,7 +1290,7 @@ _iso_surf_dist
   double             *pgradient_field
 )
 {
-  const int use_gradient = 0;//(pgradient_field != NULL);
+  const int use_gradient = (pgradient_field != NULL);
 
   PDM_MPI_Comm comm = isos->comm;
 
@@ -1380,8 +1380,12 @@ _iso_surf_dist
   double *cell_coord = (double *) malloc(sizeof(double) * n_cell * 3);
 
   double face_center[3], face_normal[3];
-  double *all_face_center = (double *) malloc(sizeof(double) * n_face * 3);
-  double *all_face_normal = (double *) malloc(sizeof(double) * n_face * 3);
+  double *all_face_center = NULL;
+  double *all_face_normal = NULL;
+  if (isos->debug) {
+    all_face_center = (double *) malloc(sizeof(double) * n_face * 3);
+    all_face_normal = (double *) malloc(sizeof(double) * n_face * 3);
+  }
 
   // tmp -->>
   for (int i = 0; i < 3*n_cell; i++) {
@@ -1389,8 +1393,13 @@ _iso_surf_dist
   }
   for (int i = 0; i < 3*n_face; i++) {
     face_coord[i] = 0.;
-    all_face_center[i] = 0.;
-    all_face_normal[i] = 0.;
+  }
+
+  if (isos->debug) {
+    for (int i = 0; i < 3*n_face; i++) {
+      all_face_center[i] = 0.;
+      all_face_normal[i] = 0.;
+    }
   }
   //<<--
 
@@ -1553,8 +1562,10 @@ _iso_surf_dist
           }
         }
 
-        memcpy(all_face_center + 3*iface, face_center, sizeof(double)*3);
-        memcpy(all_face_normal + 3*iface, face_normal, sizeof(double)*3);
+        if (isos->debug) {
+          memcpy(all_face_center + 3*iface, face_center, sizeof(double)*3);
+          memcpy(all_face_normal + 3*iface, face_normal, sizeof(double)*3);
+        }
 
         for (int l = 0; l < dim; l++) {
           mat_face[i_face_edge + l*n_face_edge] = face_normal[l];
@@ -1911,7 +1922,7 @@ _iso_surf_dist
 
           int sgn = sgn_edge * sgn_face * edge_tag[iedge];
 
-          isos->isosurf_face_vtx[3*_isosurf_n_tri]   = icell + 1;
+          isos->isosurf_face_vtx[3*_isosurf_n_tri] = icell + 1;
           if (sgn < 0) {
             isos->isosurf_face_vtx[3*_isosurf_n_tri+1] = ipt_face;
             isos->isosurf_face_vtx[3*_isosurf_n_tri+2] = ipt_edge;
@@ -1931,7 +1942,9 @@ _iso_surf_dist
   free(edge_coord   );
   free(edge_gradient);
 
-
+  free(distrib_isosurf_face);
+  free(tagged_face_parent_ln_to_gn);
+  free(tagged_edge_parent_ln_to_gn);
   PDM_gnum_free(gen_gnum_face);
   PDM_gnum_free(gen_gnum_edge);
 
@@ -1972,7 +1985,10 @@ _iso_surface_dist
   PDM_iso_surface_t        *isos
 )
 {
-  PDM_UNUSED(isos);
+  double t1, t2;
+  double delta_t;
+  double delta_max;
+  double delta_min;
 
   /*
    * Select gnum that contains iso-surface
@@ -1989,6 +2005,8 @@ _iso_surface_dist
                    isos->dgradient_field,
                    NULL);
   }
+
+  t1 = PDM_MPI_Wtime();
 
   assert(isos->distrib_edge != NULL);
   int dn_edge = isos->distrib_edge[i_rank+1] - isos->distrib_edge[i_rank];
@@ -2109,6 +2127,16 @@ _iso_surface_dist
   free(pedge_vtx);
   free(pvtx_coord);
   free(pfield);
+
+  t2 = PDM_MPI_Wtime();
+  delta_t = t2 - t1;
+  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
+  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
+  if(i_rank == 0) {
+    printf("PDM_iso_surface : scan edges : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
+  }
+
+  t1 = PDM_MPI_Wtime();
 
   PDM_g_num_t *dentity_edge     = NULL;
   int         *dentity_edge_idx = NULL;
@@ -2368,29 +2396,34 @@ _iso_surface_dist
     free(tmp_pequi_pfield);
 
 
-    double **tmp_pequi_pgradient_field = NULL;
-    PDM_block_to_part_exch(btp_vtx,
-                           3 * sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &cst_stride,
-              (void *  )   isos->dgradient_field,
-              (int  ***)   NULL,
-              (void ***)   &tmp_pequi_pgradient_field);
-    pequi_gradient_field = tmp_pequi_pgradient_field[0];
-    free(tmp_pequi_pgradient_field);
+    if (isos->dgradient_field != NULL) {
+      double **tmp_pequi_pgradient_field = NULL;
+      PDM_block_to_part_exch(btp_vtx,
+                             3 * sizeof(double),
+                             PDM_STRIDE_CST_INTERLACED,
+                             &cst_stride,
+                             (void *  )   isos->dgradient_field,
+                             (int  ***)   NULL,
+                             (void ***)   &tmp_pequi_pgradient_field);
+      pequi_gradient_field = tmp_pequi_pgradient_field[0];
+      free(tmp_pequi_pgradient_field);
+    }
   }
   PDM_block_to_part_free(btp_vtx);
 
 
+  t2 = PDM_MPI_Wtime();
+  delta_t = t2 - t1;
+  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
+  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
+  if(i_rank == 0) {
+    printf("PDM_iso_surface : extraction : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
+  }
 
-  // int          isoline_n_vtx           = 0;
-  // double      *isoline_vtx_coord       = NULL;
-  // PDM_g_num_t *isoline_vtx_parent_face = NULL;
-  // PDM_g_num_t *isoline_vtx_ln_to_gn    = NULL;
-  // int          isoline_n_edge          = 0;
-  // int         *isoline_edge_vtx_idx    = NULL;
-  // PDM_g_num_t *isoline_edge_vtx        = NULL;
-  // PDM_g_num_t *isoline_edge_ln_to_gn   = NULL;
+  t1 = PDM_MPI_Wtime();
+
+
+
   if(isos->dim == 2) {
     _iso_line_dist(isos,
                    n_entity_equi,
@@ -2434,6 +2467,16 @@ _iso_surface_dist
                    pequi_field,
                    pequi_gradient_field);
   }
+
+  t2 = PDM_MPI_Wtime();
+  delta_t = t2 - t1;
+  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
+  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
+  if(i_rank == 0) {
+    printf("PDM_iso_surface : build isosurface : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
+  }
+
+  t1 = PDM_MPI_Wtime();
 
   if(isos->dim == 3) {
     free(pequi_parent_face_ln_to_gn);
@@ -2912,6 +2955,11 @@ PDM_iso_surface_create
   isos->pfield          = (double **) malloc(n_part * sizeof(double *));
   isos->pgradient_field = (double **) malloc(n_part * sizeof(double *));
 
+  for (int i = 0; i < n_part; i++) {
+    isos->pgradient_field[i] = NULL;
+  }
+  isos->dgradient_field = NULL;
+
 
   isos->isosurf_n_vtx         = 0;
   isos->isosurf_n_edge        = 0;
@@ -2924,6 +2972,8 @@ PDM_iso_surface_create
   isos->isosurf_face_ln_to_gn = NULL;
   isos->isosurf_vtx_ln_to_gn  = NULL;
 
+  isos->debug = 0;
+
   return isos;
 }
 
@@ -2933,14 +2983,28 @@ PDM_iso_surface_compute
   PDM_iso_surface_t        *isos
 )
 {
+  double t1 = PDM_MPI_Wtime();
+
   if(isos->is_dist == 0) {
     _iso_surface_part(isos);
   } else {
     _iso_surface_dist(isos);
   }
 
+  double t2 = PDM_MPI_Wtime();
 
+  double delta_t = t2 - t1;
+  double delta_max;
+  double delta_min;
 
+  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
+  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+  if(i_rank == 0) {
+    printf("PDM_iso_surface : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
+  }
 }
 
 // See with Eric et Bastien : par type ou une fonction avec 1000 arguments ?
@@ -3332,7 +3396,7 @@ PDM_iso_surface_write
 
   PDM_writer_step_end(cs);
 
-  PDM_writer_free(cs);
+  // PDM_writer_free(cs);
 
   free(val_part);
   free(val_elt_gnum);

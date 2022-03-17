@@ -180,6 +180,70 @@ _mandelbulb
 }
 
 
+
+
+static
+inline
+double
+_mandelbulb_distance_estimator
+(
+ const double x,
+ const double y,
+ const double z,
+ const int    n,
+ const int    it_max
+ )
+{
+  double dr = 1.;
+  double r;
+  double theta;
+  double phi;
+
+  double xk = x;
+  double yk = y;
+  double zk = z;
+
+  for (int it = 0; it < it_max; it++) {
+
+    // convert to polar coordinates
+    r = sqrt(xk*xk + yk*yk + zk*zk);
+
+    if (r > 2.) {
+      break;
+    }
+
+    phi   = atan2(z, sqrt(xk*xk + yk*yk));
+    theta = atan2(yk, xk);
+    dr = pow(r, n-1) * n * dr + 1.;
+
+    if (r > 2) {
+      return 100.;
+    }
+
+    // scale and rotate the point
+    r = pow(r, n);
+    theta *= n;
+    phi   *= n;
+
+    // convert back to cartesian coordinates
+    xk = x + r * cos(phi) * cos(theta);
+    yk = y + r * cos(phi) * sin(theta);
+    zk = z + r * sin(phi);
+  }
+
+  if (PDM_ABS(dr) < 1e-16) {
+    return 1e9 * PDM_SIGN(dr);
+  }
+  else {
+    if (r < 1e-16) {
+      return -1;
+    } else {
+      return 0.5*log(r)*r / dr;
+    }
+  }
+}
+
+
 static
 inline
 double
@@ -204,11 +268,13 @@ _taylor_green_vortex
   // double dudx = f * U0 *
 
   // double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
-  double q = 2*pow(k,2)*pow(U0,2)*(f * pow(sin(k*x), 2) * pow(sin(k*y), 2) +
-                                   pow(cos(k*x), 2) * pow(cos(k*y), 2));
+  // double q = 2*pow(k,2)*pow(U0,2)*(f * pow(sin(k*x), 2) * pow(sin(k*y), 2) +
+  //                                  pow(cos(k*x), 2) * pow(cos(k*y), 2));
 
   // double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
   // double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+
+  double q = f*2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
 
   return q - 20. * pow(L/U0, 2);
 
@@ -237,10 +303,12 @@ _taylor_green_vortex_gradient
 
   // *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
   // *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
-  *df_dx = 4*pow(k,3)*pow(U0,2) * (f * cos(k*x) * pow(sin(k*x), 2) * pow(sin(k*y), 2) -
-                                   sin(k*x) * pow(cos(k*x), 2) * pow(cos(k*y), 2));
-  *df_dy = 4*pow(k,3)*pow(U0,2) * (f * pow(sin(k*x), 2) * cos(k*y) * pow(sin(k*y), 2) -
-                                   pow(cos(k*x), 2) * sin(k*y) * pow(cos(k*y), 2));
+  // *df_dx = 4*pow(k,3)*pow(U0,2) * (f * cos(k*x) * pow(sin(k*x), 2) * pow(sin(k*y), 2) -
+  //                                  sin(k*x) * pow(cos(k*x), 2) * pow(cos(k*y), 2));
+  // *df_dy = 4*pow(k,3)*pow(U0,2) * (f * pow(sin(k*x), 2) * cos(k*y) * pow(sin(k*y), 2) -
+  //                                  pow(cos(k*x), 2) * sin(k*y) * pow(cos(k*y), 2));
+  *df_dx = f*4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)-4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  *df_dy = f*4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)-4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
   *df_dz = 0.;
 }
 
@@ -508,36 +576,60 @@ int main(int argc, char *argv[])
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
 
-  // int *ifield = (int *) malloc(dn_vtx * sizeof(int));
-  // const int it_max = 3;
 
   // https://ddcampayo.wordpress.com/2016/03/29/taylor-green-vortex-sheet-reduced-units/
   double U0 = 1.;
   double L  = 1.;
   double nu = 1.e-3;
-  double t0 = 10.;
+  double t0 = 1.;
+  int it_max = 6;
 
   for(int i = 0; i < dn_vtx; ++i) {
 
     double x1 = dvtx_coord[3*i  ];
     double y1 = dvtx_coord[3*i+1];
     double z1 = dvtx_coord[3*i+2];
-    dfield[i] = _unit_sphere(x1, y1, z1);
-    // ifield[i] = (int) _mandelbulb(x1, y1, z1, 8, it_max);
-    // if (ifield[i] < it_max) {
-    //   dfield[i] = -1.;
+    // dfield[i] = _unit_sphere(x1, y1, z1);
+    // dfield[i] = pow(_mandelbulb(x1, y1, z1, 8, it_max) / (double) (it_max - 1), 2) - 0.5;
+    dfield[i] = _mandelbulb_distance_estimator(x1, y1, z1, 8, it_max);
+    // int it = (int) _mandelbulb(x1, y1, z1, 8, it_max);
+    // if (it < it_max-1) {
+    //   dfield[i] = -1;
     // } else {
-    //   dfield[i] =  1.;
+    //   dfield[i] =  1;
     // }
+
     // dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1, z1);
 
 
-    _unit_sphere_gradient(x1, y1, z1,
-                          &dgradient_field[3*i],
-                          &dgradient_field[3*i+1],
-                          &dgradient_field[3*i+2]);
+    // _unit_sphere_gradient(x1, y1, z1,
+    //                       &dgradient_field[3*i],
+    //                       &dgradient_field[3*i+1],
+    //                       &dgradient_field[3*i+2]);
     // _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, z1,
     //                               &dgradient_field[3*i], &dgradient_field[3*i+1], &dgradient_field[3*i+2]);
+  }
+
+
+  if (0) {
+    FILE *f = fopen("mandelbuld_sdf.vtk", "w");
+    fprintf(f, "# vtk DataFile Version 2.0\n");
+    fprintf(f, "mesh\n");
+    fprintf(f, "ASCII\n");
+    fprintf(f, "DATASET STRUCTURED_GRID\n");
+    fprintf(f, "DIMENSIONS "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", n_vtx_seg, n_vtx_seg, n_vtx_seg);
+    fprintf(f, "POINTS %d double\n", dn_vtx);
+    for(int i = 0; i < dn_vtx; ++i) {
+      fprintf(f, "%f %f %f\n", dvtx_coord[3*i  ], dvtx_coord[3*i+1], dvtx_coord[3*i+2]);
+    }
+    fprintf(f, "POINT_DATA %d\n", dn_vtx);
+    fprintf(f, "SCALARS sdf double 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for(int i = 0; i < dn_vtx; ++i) {
+      fprintf(f, "%f\n", dfield[i]);
+    }
+    fclose(f);
+    abort();
   }
 
   // char filename[999];
@@ -576,7 +668,7 @@ int main(int argc, char *argv[])
 
   PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
   PDM_iso_surface_dfield_set     (isos, dfield         );
-  PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+  // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
 
   PDM_iso_surface_compute(isos);
 
@@ -610,6 +702,61 @@ int main(int argc, char *argv[])
     free(dface_group_idx);
     free(dface_group);
   }
+
+
+  double min_elaps_create;
+  double max_elaps_create;
+  double min_cpu_create;
+  double max_cpu_create;
+  double min_elaps_create2;
+  double max_elaps_create2;
+  double min_cpu_create2;
+  double max_cpu_create2;
+  double min_elaps_exch;
+  double max_elaps_exch;
+  double min_cpu_exch;
+  double max_cpu_exch;
+
+  PDM_part_to_block_global_timer_get (comm,
+                                      &min_elaps_create,
+                                      &max_elaps_create,
+                                      &min_cpu_create,
+                                      &max_cpu_create,
+                                      &min_elaps_create2,
+                                      &max_elaps_create2,
+                                      &min_cpu_create2,
+                                      &max_cpu_create2,
+                                      &min_elaps_exch,
+                                      &max_elaps_exch,
+                                      &min_cpu_exch,
+                                      &max_cpu_exch);
+
+  if (i_rank == 0) {
+    printf("Global time in PDM_part_to_block : \n");
+    printf("   - min max elaps create  : %12.5e %12.5e\n", min_elaps_create, max_elaps_create);
+    printf("   - min max elaps create2 : %12.5e %12.5e\n", min_elaps_create2, max_elaps_create2);
+    printf("   - min max elaps exch    : %12.5e %12.5e\n", min_elaps_exch, max_elaps_exch);
+    fflush(stdout);
+  }
+
+
+  PDM_block_to_part_global_timer_get (comm,
+                                      &min_elaps_create,
+                                      &max_elaps_create,
+                                      &min_cpu_create,
+                                      &max_cpu_create,
+                                      &min_elaps_exch,
+                                      &max_elaps_exch,
+                                      &min_cpu_exch,
+                                      &max_cpu_exch);
+
+  if (i_rank == 0) {
+    printf("Global time in pdm_block_to_part : \n");
+    printf("   - min max elaps create  : %12.5e %12.5e\n", min_elaps_create, max_elaps_create);
+    printf("   - min max elaps exch    : %12.5e %12.5e\n", min_elaps_exch, max_elaps_exch);
+    fflush(stdout);
+  }
+
 
   if (i_rank == 0) {
     printf("-- End\n");
