@@ -115,180 +115,6 @@ _read_args(int                    argc,
   }
 }
 
-static const double _A = 1.072;
-static const double _B = 1.044;
-static const double _C = 0.286;
-static const double _D = -0.042;
-static const double _E = 0.067;
-static const double _F = -0.025;
-
-
-static
-inline
-double
-_unit_circle
-(
- double x,
- double y
-)
-{
-  // return x * x + y * y - 0.1;
-  // return _A*x*x + _B*x*y + _C*y*y + _D*x + _E*y + _F;
-  // double a = (x*x + y*y - 1);
-  // return a*a*a - x*x*(6*y*x*x + x*x - 2*y*y*y - 6*y);
-  // return a*a*a - x*x*(x*x*(1 + 6*y) - y*(6 + 2*y*y));
-
-
-  // return x*x*x*x*x*x - y*x*(x*x-y*y) + y*y*y*y*y*y;
-  // return PDM_MAX(PDM_ABS(x), PDM_ABS(y)) - 0.25;
-  // return PDM_MIN(PDM_ABS(x) + PDM_ABS(y) - 0.25, (x-0.1)*(x-0.1) + (y+0.2)*(y+0.2) - 0.07);
-
-  double v1 = (x-0.23)*(x-0.23) + (y-0.28)*(y-0.28) - 0.03;
-  double v2 = (x+0.23)*(x+0.23) + (y-0.28)*(y-0.28) - 0.03;
-  double v3 = x*x + y*y - 0.1;
-  return PDM_MIN(PDM_MIN(v1, v2), v3);
-}
-
-
-
-static
-inline
-double
-_taylor_green_vortex
-(
- double U0,
- double L,
- double nu,
- double t0,
- double x,
- double y
-)
-{
-  double k  = 2. * PDM_PI / L;
-  double f  = exp(-2.*nu*k*k*t0);
-
-  // double u = f * U0 * sin(k * x) * cos( k * y);
-  // double v = f * U0 * cos(k * x) * sin( k * y);
-
-  // double dudx = f * U0 *
-
-  // double q = f * 2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
-
-  // double dqdx = 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
-  // double dqdy = 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
-
-  double q = 2*pow(k,2)*pow(U0,2)*(f * pow(sin(k*x), 2) * pow(sin(k*y), 2) +
-                                   pow(cos(k*x), 2) * pow(cos(k*y), 2));
-
-  return q - 20. * pow(L/U0, 2);
-
-}
-
-
-
-static
-inline
-void
-_taylor_green_vortex_gradient
-(
- double  U0,
- double  L,
- double  nu,
- double  t0,
- double  x,
- double  y,
- double *df_dx,
- double *df_dy
-)
-{
-  double k  = 2. * PDM_PI / L;
-  double f  = exp(-2.*nu*k*k*t0);
-
-  // *df_dx = f * 4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)*4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
-  // *df_dy = f * 4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)*4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
-
-  *df_dx = 4*pow(k,3)*pow(U0,2) * (f * cos(k*x) * pow(sin(k*x), 2) * pow(sin(k*y), 2) -
-                                   sin(k*x) * pow(cos(k*x), 2) * pow(cos(k*y), 2));
-  *df_dy = 4*pow(k,3)*pow(U0,2) * (f * pow(sin(k*x), 2) * cos(k*y) * pow(sin(k*y), 2) -
-                                   pow(cos(k*x), 2) * sin(k*y) * pow(cos(k*y), 2));
-}
-
-
-
-static
-inline
-void
-_unit_circle_gradient
-(
- double  x,
- double  y,
- double *df_dx,
- double *df_dy
-)
-{
-  *df_dx = 2*x;
-  *df_dy = 2*y;
-  // return;
-  *df_dx = 2*_A*x + _B*y + _D;
-  *df_dy = 2*_C*y + _B*x + _E;
-
-  *df_dx = 6*x*x*x*x*x + (12*y*y - 24*y - 16)*x*x*x + (6*y*y*y*y + 4*y*y*y - 12*y*y + 12*y + 6)*x;
-  // *df_dx = x*( (6 + 2*y*(6 + y*(6 + y*(2 + 3*y)))) + x*x*(16 + 12*y*(-2 + y)) + 6*x*x );
-  double a = (x*x + y*y - 1);
-  *df_dy = 6*y*a*a - x*x*(-6*y*y + 6*x*x - 6);
-  // *df_dy = 6*(y*a*a - x*x*(-y*y + x*x - 1));
-
-
-  *df_dx = 6*x*x*x*x*x - 3*y*x*x + y*y*y;
-  *df_dx = 6*y*y*y*y*y + 3*x*y*y - x*x*x;
-
-
-  // if (PDM_ABS(x) > PDM_ABS(y)) {
-  //   *df_dx = PDM_SIGN(x);
-  //   *df_dy = 0.;
-  // } else {
-  //   *df_dx = 0;
-  //   *df_dy = PDM_SIGN(y);
-  // }
-  // if (PDM_ABS(x) + PDM_ABS(y) - 0.25 < (x-0.1)*(x-0.1) + (y+0.2)*(y+0.2) - 0.07) {
-  //   *df_dx = PDM_SIGN(x);
-  //   *df_dy = PDM_SIGN(y);
-  // } else {
-  //   *df_dx = 2*(x-0.1);
-  //   *df_dy = 2*(y+0.2);
-  // }
-
-  double df_dx1 = 2*(x-0.23);
-  double df_dy1 = 2*(y-0.28);
-  double df_dx2 = 2*(x+0.23);
-  double df_dy2 = 2*(y-0.28);
-  double df_dx3 = 2*x;
-  double df_dy3 = 2*y;
-
-  double v1 = (x-0.23)*(x-0.23) + (y-0.28)*(y-0.28) - 0.03;
-  double v2 = (x+0.23)*(x+0.23) + (y-0.28)*(y-0.28) - 0.03;
-  double v3 = x*x + y*y - 0.1;
-
-  if (v1 < v2) {
-    if (v1 < v3) {
-      *df_dx = df_dx1;
-      *df_dy = df_dy1;
-    } else {
-      *df_dx = df_dx3;
-      *df_dy = df_dy3;
-    }
-  } else {
-    if (v2 < v3) {
-      *df_dx = df_dx2;
-      *df_dy = df_dy2;
-    } else {
-      *df_dx = df_dx3;
-      *df_dy = df_dy3;
-    }
-  }
-}
-
-
 
 static
 void
@@ -299,7 +125,8 @@ _dump_dmesh
  const int     dn_vtx,
  int          *dface_vtx_idx,
  PDM_g_num_t  *dface_vtx,
- double       *dvtx_coord
+ double       *dvtx_coord,
+ double       *dfield
  )
 {
   int i_rank;
@@ -339,28 +166,323 @@ _dump_dmesh
   double* pvtx_coord = tmp_pvtx_coord[0];
   free (tmp_pvtx_coord);
 
+  double** tmp_pfield = NULL;
+  PDM_part_dfield_to_pfield(comm,
+                            1,
+                            sizeof(double),
+                            distrib_vtx,
+       (unsigned char    *) dfield,
+                            &pn_vtx,
+    (const PDM_g_num_t **)  &pvtx_ln_to_gn,
+       (unsigned char ***)  &tmp_pfield);
+  double *pfield = tmp_pfield[0];
+  free(tmp_pfield);
+
+
   char filename[999];
   sprintf(filename, "mesh_%2.2d.vtk", i_rank);
-  PDM_vtk_write_polydata(filename,
-                         pn_vtx,
-                         pvtx_coord,
-                         pvtx_ln_to_gn,
-                         dn_face,
-                         pface_vtx_idx,
-                         pface_vtx,
-                         dface_ln_to_gn,
-                         NULL);
+  // PDM_vtk_write_polydata(filename,
+  //                        pn_vtx,
+  //                        pvtx_coord,
+  //                        pvtx_ln_to_gn,
+  //                        dn_face,
+  //                        pface_vtx_idx,
+  //                        pface_vtx,
+  //                        dface_ln_to_gn,
+  //                        NULL);
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET POLYDATA\n");
+
+  fprintf(f, "POINTS %d double\n", pn_vtx);
+  for (int i = 0; i < pn_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", pvtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "POLYGONS %d %d\n", dn_face, dn_face + pface_vtx_idx[dn_face]);
+  for (int i = 0; i < dn_face; i++) {
+    fprintf(f, "%d", pface_vtx_idx[i+1] - pface_vtx_idx[i]);
+    for (int j = pface_vtx_idx[i]; j < pface_vtx_idx[i+1]; j++) {
+      fprintf(f, " %d", pface_vtx[j] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "POINT_DATA %d\n", pn_vtx);
+  fprintf(f, "SCALARS field double 1\n");
+  fprintf(f, "LOOKUP_TABLE default\n");
+  for (int i = 0; i < pn_vtx; i++) {
+    fprintf(f, "%f\n", pfield[i]);
+  }
+
+  fclose(f);
+
 
   free(pvtx_ln_to_gn);
   free(pface_vtx_idx);
   free(pface_vtx);
   free(pvtx_coord);
+  free(pfield);
   free(dface_ln_to_gn);
   free(distrib_face);
   free(distrib_vtx);
 }
 
 
+
+static void
+_eval_circle
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(z);
+
+  double x1 = 0.0;
+  double y1 = 0.0;
+  double r1 = 0.25;
+
+  *f = (x-x1)*(x-x1) + (y-y1)*(y-y1) - r1*r1;
+
+  *df_dx = 2*(x-x1);
+  *df_dy = 2*(y-y1);
+  *df_dz = 0.;
+}
+
+
+static void
+_eval_mickey
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(z);
+
+  double x1 =  0.23;
+  double y1 =  0.28;
+  double r1 =  0.17;
+
+  double x2 = -0.23;
+  double y2 =  0.28;
+  double r2 =  0.17;
+
+  double x3 = 0.;
+  double y3 = 0.;
+  double r3 = 0.32;
+
+  double f1 = (x-x1)*(x-x1) + (y-y1)*(y-y1) - r1*r1;
+  double f2 = (x-x2)*(x-x2) + (y-y2)*(y-y2) - r2*r2;
+  double f3 = (x-x3)*(x-x3) + (y-y3)*(y-y3) - r3*r3;
+
+  *f = PDM_MIN(PDM_MIN(f1, f2), f3);
+
+  double df_dx1 = 2*(x-x1);
+  double df_dy1 = 2*(y-y1);
+  double df_dx2 = 2*(x-x2);
+  double df_dy2 = 2*(y-y2);
+  double df_dx3 = 2*(x-x3);
+  double df_dy3 = 2*(y-y3);
+
+  if (f1 < f2) {
+    if (f1 < f3) {
+      *df_dx = df_dx1;
+      *df_dy = df_dy1;
+    } else {
+      *df_dx = df_dx3;
+      *df_dy = df_dy3;
+    }
+  } else {
+    if (f2 < f3) {
+      *df_dx = df_dx2;
+      *df_dy = df_dy2;
+    } else {
+      *df_dx = df_dx3;
+      *df_dy = df_dy3;
+    }
+  }
+
+  *df_dz = 0.;
+}
+
+
+// https://ddcampayo.wordpress.com/2016/03/29/taylor-green-vortex-sheet-reduced-units/
+static const double U0 = 1.;
+static const double L  = 1.;
+static const double nu = 1.e-3;
+static const double t0 = 1.;
+
+static void
+_eval_taylor_green_vortex
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(z);
+  double k = 2. * PDM_PI / L;
+  double F = exp(-2.*nu*k*k*t0);
+
+  double q = F*2*pow(k,2)*pow(U0,2)*pow(sin(k*x),2)*pow(sin(k*y),2)+2*pow(k,2)*pow(U0,2)*pow(cos(k*x),2)*pow(cos(k*y),2);
+
+  *f = q - 20. * pow(L/U0, 2);
+
+  *df_dx = F*4*pow(k,3)*pow(U0,2)*sin(k*x)*pow(sin(k*y),2)*cos(k*x)-4*pow(k,3)*pow(U0,2)*sin(k*x)*cos(k*x)*pow(cos(k*y),2);
+  *df_dy = F*4*pow(k,3)*pow(U0,2)*pow(sin(k*x),2)*sin(k*y)*cos(k*y)-4*pow(k,3)*pow(U0,2)*sin(k*y)*pow(cos(k*x),2)*cos(k*y);
+  *df_dz = 0.;
+}
+
+
+
+static const int it_max = 40;
+static void
+_eval_mandelbrot
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(z);
+  PDM_UNUSED(df_dx);
+  PDM_UNUSED(df_dy);
+  PDM_UNUSED(df_dz);
+
+  double _x = x - 0.5;
+  double _y = y;
+
+  double xk = 0;
+  double yk = 0;
+
+  double zxk = 1.;
+  double zyk = 0.;
+  double rk;
+
+  int it;
+  for (it = 0; it < it_max; it++) {
+    double xk_new = xk*xk - yk*yk + _x;
+    double yk_new = 2*xk*yk       + _y;
+    xk = xk_new;
+    yk = yk_new;
+    rk = sqrt(xk*xk + yk*yk);
+
+    double zxk_new = 2*(xk*zxk - yk*zyk) + 1;
+    double zyk_new = 2*(zxk*yk + xk*zyk) + 1;
+
+    zxk = zxk_new;
+    zyk = zyk_new;
+
+    if (rk > 2.) {
+      break;
+    }
+  }
+
+  double mag_dz = sqrt(zxk*zxk + zyk*zyk);
+  *f = rk * log(PDM_MAX(1e-9, rk)) / PDM_MAX(1e-9, mag_dz);
+  // if (it < it_max-1) {
+  //   *f = 1.;
+  // } else {
+  //   *f = -1.;
+  // }
+}
+
+
+static const int it_max2 = 6;
+static const int power  = 8;
+static void
+_eval_mandelbulb_slice
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(df_dx);
+  PDM_UNUSED(df_dy);
+  PDM_UNUSED(df_dz);
+  PDM_UNUSED(z);
+
+  const double _z = 0.;
+
+  double dr = 1.;
+  double r;
+  double theta;
+  double phi;
+
+  double xk = x;
+  double yk = y;
+  double zk = z;
+
+  for (int it = 0; it < it_max2; it++) {
+
+    // convert to polar coordinates
+    r = sqrt(xk*xk + yk*yk + zk*zk);
+
+    if (r > 2.) {
+      break;
+    }
+
+    phi   = atan2(z, sqrt(xk*xk + yk*yk));
+    theta = atan2(yk, xk);
+    dr = pow(r, power-1) * power * dr + 1.;
+
+    if (r > 2) {
+      *f = 100.;
+      break;
+    }
+
+    // scale and rotate the point
+    r = pow(r, power);
+    theta *= power;
+    phi   *= power;
+
+    // convert back to cartesian coordinates
+    xk = x + r * cos(phi) * cos(theta);
+    yk = y + r * cos(phi) * sin(theta);
+    zk = z + r * sin(phi);
+  }
+
+  if (PDM_ABS(dr) < 1e-16) {
+    *f = 1e9 * PDM_SIGN(dr);
+  }
+  else {
+    if (r < 1e-16) {
+      *f = -1;
+    } else {
+      *f = 0.5*log(r)*r / dr;
+    }
+  }
+}
 
 
 /**
@@ -537,12 +659,12 @@ int main(int argc, char *argv[])
                        &dedge_group_idx,
                        &dedge_group);
 
-    _dump_dmesh (comm,
-                 dn_face,
-                 dn_vtx,
-                 dface_edge_idx,
-                 dface_vtx,
-                 dvtx_coord);
+    // _dump_dmesh (comm,
+    //              dn_face,
+    //              dn_vtx,
+    //              dface_edge_idx,
+    //              dface_vtx,
+    //              dvtx_coord);
 
     distrib_face = PDM_compute_entity_distribution(comm, dn_face);
     distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
@@ -557,38 +679,33 @@ int main(int argc, char *argv[])
   // Compute dfield and gradient field
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
   double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
-  // double *dgradient_field = NULL;
 
-  // https://ddcampayo.wordpress.com/2016/03/29/taylor-green-vortex-sheet-reduced-units/
-  double U0 = 1.;
-  double L  = 1.;
-  double nu = 1.e-3;
-  double t0 = 1.;
+  void (*eval_field_and_gradient) (const double, const double, const double,
+                                   double *,
+                                   double *, double *, double *) = NULL;
 
-  for(int i = 0; i < dn_vtx; ++i) {
+  eval_field_and_gradient = &_eval_mandelbulb_slice;
 
-    double x1 = dvtx_coord[3*i  ];
-    double y1 = dvtx_coord[3*i+1];
-    dfield[i] = _unit_circle(x1, y1);
-
-    _unit_circle_gradient(x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
-
-    dgradient_field[3*i+2] = 0;
+  for (int i = 0; i < dn_vtx; i++) {
+    eval_field_and_gradient(dvtx_coord[3*i  ],
+                            dvtx_coord[3*i+1],
+                            dvtx_coord[3*i+2],
+                            &dfield[i],
+                            &dgradient_field[3*i],
+                            &dgradient_field[3*i+1],
+                            &dgradient_field[3*i+2]);
   }
 
-  // Taylor Green
-  for(int i = 0; i < dn_vtx; ++i) {
-
-    double x1 = dvtx_coord[3*i  ];
-    double y1 = dvtx_coord[3*i+1];
-    dfield[i] = _taylor_green_vortex(U0, L, nu, t0, x1, y1);
-
-    // printf("dfield[i] = %12.5e \n", dfield[i]);
-
-    _taylor_green_vortex_gradient(U0, L, nu, t0, x1, y1, &dgradient_field[3*i], &dgradient_field[3*i+1]);
-
-    dgradient_field[3*i+2] = 0;
+  if (elt_type == PDM_MESH_NODAL_POLY_2D) {
+    _dump_dmesh (comm,
+                 dn_face,
+                 dn_vtx,
+                 dface_edge_idx,
+                 dface_vtx,
+                 dvtx_coord,
+                 dfield);
   }
+
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(2, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
@@ -609,9 +726,12 @@ int main(int argc, char *argv[])
   PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_EDGE  , distrib_edge);
   PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_VERTEX, vtx_distrib);
 
+  PDM_iso_surface_eval_field_and_gradient_set(isos,
+                                              eval_field_and_gradient);
+
   PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
   PDM_iso_surface_dfield_set     (isos, dfield         );
-  PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+  // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
 
   PDM_iso_surface_compute(isos);
 

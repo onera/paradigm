@@ -206,6 +206,15 @@ PDM_iso_surface_write
  const char         *name
  );
 
+void
+PDM_iso_surface_eval_field_and_gradient_set
+(
+ PDM_iso_surface_t *isos,
+ void (*eval_field_and_gradient) (const double, const double, const double,
+                                   double *,
+                                   double *, double *, double *)
+ );
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

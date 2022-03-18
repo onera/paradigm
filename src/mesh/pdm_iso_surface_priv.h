@@ -64,6 +64,11 @@ struct _pdm_iso_surface_t
   /* Plane equation */
   double plane_equation[4];
 
+  void (*eval_field_and_gradient) (const double, const double, const double,
+                                   double *,
+                                   double *, double *, double *);
+
+
   /* Distributed view */
   PDM_g_num_t         *dcell_face;
   int                 *dcell_face_idx;
