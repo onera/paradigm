@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
                                         length,
                                         -0.5*length,//-0.1,
                                         -0.5*length,//-0.2,
-                                        -length,//-0.5*length,//0.07,
+                                        -0.5*length,//0.07,
                                         elt_type,
                                         1,
                                         PDM_OWNERSHIP_KEEP);

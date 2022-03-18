@@ -39,6 +39,7 @@
 #include "pdm_gnum.h"
 #include "pdm_unique.h"
 #include "pdm_writer.h"
+#include "pdm_multipart.h"
 
 #ifdef __cplusplus
 extern "C" {

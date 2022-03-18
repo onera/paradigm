@@ -27,6 +27,7 @@
 #include "pdm_poly_surf_gen.h"
 #include "pdm_distrib.h"
 #include "pdm_iso_surface.h"
+#include "pdm_multipart.h"
 
 /*============================================================================
  * Type definitions
@@ -518,6 +519,13 @@ int main(int argc, char *argv[])
   double               length    = 1.;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
   int                  n_part    = -1;
+#ifdef PDM_HAVE_PARMETIS
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+#endif
+#endif
   //  2 -> tria
   //  3 -> quad
   //  4 -> poly2d
@@ -554,14 +562,14 @@ int main(int argc, char *argv[])
   int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
   n_part_zones[0] = n_part;
   if (n_part > 0) {
-    PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                  n_part_zones,
-                                                  PDM_FALSE,
-                                                  part_method,
-                                                  PDM_PART_SIZE_HOMOGENEOUS,
-                                                  NULL,
-                                                  comm,
-                                                  PDM_OWNERSHIP_KEEP);
+    mpart = PDM_multipart_create(n_zone,
+                                 n_part_zones,
+                                 PDM_FALSE,
+                                 part_method,
+                                 PDM_PART_SIZE_HOMOGENEOUS,
+                                 NULL,
+                                 comm,
+                                 PDM_OWNERSHIP_KEEP);
     PDM_multipart_set_reordering_options(mpart,
                                        -1,
                                        "PDM_PART_RENUM_CELL_NONE",
