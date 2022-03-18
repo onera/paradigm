@@ -1848,101 +1848,30 @@ _iso_surface_dist
   /*
    *  Deduce all entity concerns by the iso surface (could be optimize)
    */
-  PDM_g_num_t *tmp_dentity_edge = malloc( dentity_edge_idx[dn_entity] * sizeof(PDM_g_num_t));
-  // int         *unique_dentity_edge_order = malloc( dentity_edge_idx[dn_entity] * sizeof(int));
-  // int          dn_edge_sort = 0;
-  // if(isos->dim == 3) {
-  //   dn_edge_sort = PDM_inplace_unique_long2(dentity_edge, unique_dentity_edge_order, 0, dentity_edge_idx[dn_entity]-1);
-  //   tmp_dentity_edge = dentity_edge;
-  // } else {
-  //   // copy
-  //   abort();
-  // }
-
-  // PDM_log_trace_array_long(dentity_edge, dentity_edge_idx[dn_entity], "(Avant) dentity_edge :: ");
-  /*
-   * Tentative unique
-   */
-  // int *unique_dentity_edge_order = malloc( dentity_edge_idx[dn_entity] * sizeof(int));
-  // int *dentity_edge_order        = malloc( dentity_edge_idx[dn_entity] * sizeof(int));
-  // int *rank_id_n                 = PDM_array_zeros_int(n_rank+1);
-
-  // for(int i = 0; i < dentity_edge_idx[dn_entity]; ++i) {
-  //   int t_rank = PDM_binary_search_gap_long(PDM_ABS(dentity_edge[i]) - 1, isos->distrib_edge, n_rank + 1);
-  //   rank_id_n[t_rank]++;
-  //   unique_dentity_edge_order[i] = t_rank;
-  // }
-
-  // int *rank_id_idx = PDM_array_new_idx_from_sizes_int(rank_id_n, n_rank);
-  // int max_dblock = 0;
-
-  // for(int i = 0; i < n_rank; ++i) {
-  //   // max_dblock = PDM_MAX(max_dblock, rank_id_n[i]);
-  //   max_dblock = PDM_MAX(max_dblock, isos->distrib_edge[i+1] - isos->distrib_edge[i]);
-  //   rank_id_n[i] = 0;
-  // }
-
-  // // Swap by rank
-  // for(int i = 0; i < dentity_edge_idx[dn_entity]; ++i) {
-  //   int t_rank    = unique_dentity_edge_order[i];
-  //   int idx_write = rank_id_idx[t_rank]+rank_id_n[t_rank]++;
-  //   tmp_dentity_edge[idx_write] = PDM_ABS(dentity_edge[i]);
-  //   // dentity_edge_order[i] = idx_write;
-  //   dentity_edge_order[idx_write] = i;
-
-  //   unique_dentity_edge_order[i] = -1000000;
-  // }
-
-  // int dn_edge_sort = 0;
-  // int* unique_tag = malloc(max_dblock * sizeof(int));
-  // int shift_tag = 0;
-  // // PDM_log_trace_array_long(isos->distrib_edge, n_rank+1, "isos->distrib_edge");
-  // for(int i = 0; i < n_rank; ++i) {
-
-  //   // for(int j = 0; j < rank_id_n[i]; ++j) {
-  //   for(int j = 0; j < max_dblock; ++j) {
-  //     unique_tag[j] = -1;
-  //   }
-
-  //   // PDM_log_trace_array_long(&tmp_dentity_edge[ rank_id_idx[i]], rank_id_idx[i+1]-rank_id_idx[i], "tmp_dentity_edge :: ");
-  //   int found = 0;
-  //   for(int j = rank_id_idx[i]; j < rank_id_idx[i+1]; ++j) {
-
-  //     int lnum = PDM_ABS(tmp_dentity_edge[j]) - isos->distrib_edge[i] - 1;
-  //     // printf("lnum = %i \n", lnum);
-  //     if(unique_tag[lnum] == -1) {
-  //       unique_tag[lnum] = dn_edge_sort; //shift_tag + found++;
-  //       dentity_edge[dn_edge_sort++] = tmp_dentity_edge[j];
-  //     }
-  //     unique_dentity_edge_order[dentity_edge_order[j]] = unique_tag[lnum];
-  //   }
-
-  //   shift_tag += found;
-
-  // }
-  // free(tmp_dentity_edge);
-  // free(dentity_edge_order);
-  // free(unique_tag);
+  int         *unique_dentity_edge_order = NULL;
+  PDM_g_num_t *unique_dentity_edge       = NULL;
+  int dn_edge_sort = PDM_unique_long_with_distrib(isos->comm,
+                                                  dentity_edge,
+                                                  isos->distrib_edge,
+                                                  dentity_edge_idx[dn_entity],
+                                                  &unique_dentity_edge_order,
+                                                  &unique_dentity_edge);
 
 
-  // free(rank_id_idx);
-  // free(rank_id_n);
-
-  // PDM_log_trace_array_long(dentity_edge, dn_edge_sort, "dentity_edge :: ");
-  // PDM_log_trace_array_int(unique_dentity_edge_order, dentity_edge_idx[dn_entity], "unique_dentity_edge_order :: ");
-
-
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(isos->distrib_edge,
-                               (const PDM_g_num_t **) &dentity_edge,
-                                                      &dentity_edge_idx[dn_entity],
-                                                      1,
-                                                      isos->comm);
 
   // PDM_block_to_part_t* btp = PDM_block_to_part_create(isos->distrib_edge,
   //                              (const PDM_g_num_t **) &dentity_edge,
-  //                                                     &dn_edge_sort,
+  //                                                     &dentity_edge_idx[dn_entity],
   //                                                     1,
   //                                                     isos->comm);
+
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(isos->distrib_edge,
+                               (const PDM_g_num_t **) &unique_dentity_edge,
+                                                      &dn_edge_sort,
+                                                      1,
+                                                      isos->comm);
+
+  free(unique_dentity_edge);
 
   if(isos->dim == 3) {
     free(dentity_edge);
@@ -1983,8 +1912,8 @@ _iso_surface_dist
 
     for(int idx_entity = dentity_edge_idx[i]; idx_entity < dentity_edge_idx[i+1]; ++idx_entity) {
 
-      // int idx_read = unique_dentity_edge_order[idx_entity];
-      if(dentity_edge_tag[idx_entity] == 1) {
+      int idx_read = unique_dentity_edge_order[idx_entity];
+      if(dentity_edge_tag[idx_read] == 1) {
         dentity_tag[i] = 1;
         entity_to_extract_gnum[n_entity_tag++] = distrib_entity[i_rank] + i + 1;
         break;
@@ -1998,10 +1927,10 @@ _iso_surface_dist
 
       double inv = 1./((double) (dentity_edge_idx[i+1] - dentity_edge_idx[i]));
       for(int idx_entity = dentity_edge_idx[i]; idx_entity < dentity_edge_idx[i+1]; ++idx_entity) {
-        // int idx_read = unique_dentity_edge_order[idx_entity];
-        dentity_center[3*idx_write  ] += dentity_edge_center[3*idx_entity  ];
-        dentity_center[3*idx_write+1] += dentity_edge_center[3*idx_entity+1];
-        dentity_center[3*idx_write+2] += dentity_edge_center[3*idx_entity+2];
+        int idx_read = unique_dentity_edge_order[idx_entity];
+        dentity_center[3*idx_write  ] += dentity_edge_center[3*idx_read  ];
+        dentity_center[3*idx_write+1] += dentity_edge_center[3*idx_read+1];
+        dentity_center[3*idx_write+2] += dentity_edge_center[3*idx_read+2];
       }
       dentity_center[3*idx_write  ] = dentity_center[3*idx_write  ] * inv;
       dentity_center[3*idx_write+1] = dentity_center[3*idx_write+1] * inv;
@@ -2011,7 +1940,7 @@ _iso_surface_dist
     }
   }
   free(dentity_edge_center);
-  // free(unique_dentity_edge_order);
+  free(unique_dentity_edge_order);
   PDM_block_to_part_free(btp);
 
   free(dentity_tag);
