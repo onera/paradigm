@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <float.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -24,6 +25,7 @@
 #include "pdm_logging.h"
 #include "pdm_gnum.h"
 #include "pdm_array.h"
+#include "pdm_dbbtree.h"
 #include "pdm_poly_vol_gen.h"
 #include "pdm_distrib.h"
 #include "pdm_iso_surface.h"
@@ -385,28 +387,110 @@ int main(int argc, char *argv[])
 
 
   //
-  // PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
 
-  // int           n_part_mesh = 1;
-  // int          *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
-  // double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
-  // PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  int           n_part_mesh = 1;
+  int          *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
+  double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
+  PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
 
-  // PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
-  //                                                          n_part_mesh,
-  //                                                          part_n_elt,
-  //                                                          part_elt_extents,
-  //                                                          part_elt_g_num);
+  double tolerance = 1.e-11;
+  for(int i_part = 0; i_part < n_part_mesh; ++i_part) {
+    part_elt_extents[i_part] = (double *) malloc( 6 * part_n_elt[i_part] * sizeof(double));
+
+    double      *vtx_coord    = NULL;
+    int         *face_vtx_idx = NULL;
+    int         *face_vtx     = NULL;
+    PDM_g_num_t *face_g_num   = NULL;
+
+    double *_extents = part_elt_extents[i_part];
+    for (int j = 0; j < part_n_elt[i_part]; j++) {
+
+      for (int k1 = 0; k1 < 3; k1++) {
+        _extents[  k1] = DBL_MAX;
+        _extents[3+k1] = -DBL_MAX;
+      }
+
+      for (int k = face_vtx_idx[j]; k < face_vtx_idx[j+1]; k++) {
+        int i_vtx = face_vtx[k] - 1;
+        double *_coords = (double *) vtx_coord + 3 * i_vtx;
+
+        for (int k1 = 0; k1 < 3; k1++) {
+          _extents[k1]   = PDM_MIN (_coords[k1], _extents[k1]);
+          _extents[3+k1] = PDM_MAX (_coords[k1], _extents[3+k1]);
+        }
+      }
+
+      double delta = -DBL_MAX;
+
+      for (int k1 = 0; k1 < 3; k1++) {
+        delta = PDM_MAX (delta, fabs (_extents[k1+3] - _extents[k1]));
+      }
+
+      delta *= tolerance;
+
+      for (int k1 = 0; k1 < 3; k1++) {
+        _extents[k1]   +=  - delta;
+        _extents[3+k1] +=    delta;
+      }
+      _extents += 6;
+    }
+  }
 
 
-  // PDM_dbbtree_free (dbbt);
-  // PDM_box_set_destroy (&surf_mesh_boxes);
 
-  // for(int i_part = 0; i_part < n_part_mesh; ++i_part) {
-  //   free(part_elt_extents);
-  //   free(part_elt_g_num);
-  // }
-  // free(part_n_elt);
+
+  /* Compute local extents */
+  double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+  for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+    for (int i = 0; i < part_n_elt[ipart]; i++) {
+      for (int j = 0; j < 3; j++) {
+        my_extents[j]   = PDM_MIN (my_extents[j],   part_elt_extents[ipart][6*i + j]);
+        my_extents[j+3] = PDM_MAX (my_extents[j+3], part_elt_extents[ipart][6*i + 3 + j]);
+      }
+    }
+  }
+
+
+
+  double global_extents[6];
+  PDM_MPI_Allreduce (my_extents,   global_extents,   3,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce (my_extents+3, global_extents+3, 3,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  /* Break symmetry */
+  double max_range = 0.;
+  for (int i = 0; i < 3; i++) {
+    max_range = PDM_MAX (max_range, global_extents[i+3] - global_extents[i]);
+  }
+  for (int i = 0; i < 3; i++) {
+    global_extents[i]   -= max_range * 1.1e-3;
+    global_extents[i+3] += max_range * 1.0e-3;
+  }
+
+
+  PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
+
+
+  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
+                                                           n_part_mesh,
+                                                           part_n_elt,
+                                      (const double **)    part_elt_extents,
+                                  (const PDM_g_num_t **)   part_elt_g_num);
+
+  PDM_dbbtree_free (dbbt);
+  PDM_box_set_destroy (&surf_mesh_boxes);
+
+
+
+
+
+
+  for(int i_part = 0; i_part < n_part_mesh; ++i_part) {
+    free(part_elt_extents);
+    free(part_elt_g_num);
+  }
+  free(part_n_elt);
 
   PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
