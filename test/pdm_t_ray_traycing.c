@@ -774,9 +774,9 @@ int main(int argc, char *argv[])
                                   (const PDM_g_num_t **)   part_elt_g_num);
 
 
-  int          n_line = 0;
-  PDM_g_num_t *line_g_num = malloc(6 * n_line * sizeof(PDM_g_num_t));
-  double      *line_coord = malloc(6 * n_line * sizeof(double     ));
+  // int          n_line = 0;
+  // PDM_g_num_t *line_g_num = malloc(6 * n_line * sizeof(PDM_g_num_t));
+  // double      *line_coord = malloc(6 * n_line * sizeof(double     ));
 
   /*
    *  Construction des lignes
@@ -869,17 +869,81 @@ int main(int argc, char *argv[])
                               NULL);
   }
 
+
   /*
-   *  On a selectinné pas mal de vertex maintenant on :
-   *     -
+   *  On a selectionné pas mal de vertex maintenant on :
+   *     -calcul les rayons
    */
-  // for(int i_vtx = 0; i_vtx < dn_vtx_selected; ++i_vtx) {
+  int    n_rayons = 5;
+  double rayon_bb = 1.2*sqrt(pow(global_extents[3]-global_extents[0],2)
+                            +pow(global_extents[4]-global_extents[1],2)
+                            +pow(global_extents[5]-global_extents[2],2));
+  int n_line=n_rayons*dn_vtx_selected;
+  double  *line_coord = malloc(6 * n_line * sizeof(double));
+  PDM_g_num_t *line_g_num = malloc(n_line * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
+  double alpha;
+  double phi;
+  double theta;
+  for (int i_vtx = 0; i_vtx < dn_vtx_selected; ++i_vtx) {
 
-  //   global_extents
-  //   blk_vtx_coord
+    for (int j_rayon = 0; j_rayon < n_rayons; ++j_rayon) {
 
-  // }
+      line_g_num[n_rayons*i_vtx+j_rayon] = distrib[i_rank]+n_rayons*i_vtx+j_rayon+1;
+      
+      if (j_rayon==1){
+        alpha = (double) rand() / (double) RAND_MAX;
+        phi=alpha*PDM_PI;
+        alpha = (double) rand() / (double) RAND_MAX;
+        theta=alpha*2.*PDM_PI;
+      } 
+      else if (j_rayon==2){
+        phi=phi+PDM_PI*0.5;
+      } 
+      else if (j_rayon==3){
+        theta=theta-PDM_PI*0.5;
+        phi=phi-PDM_PI*0.5;
+      } 
+      else if (j_rayon==4){
+        phi=phi+PDM_PI*0.5;
+      } 
+      else if (j_rayon==5){
+        theta=theta+3.*PDM_PI*0.5;
+        phi=phi-PDM_PI*0.5;
+      } 
+      else if (j_rayon==6){
+        theta=theta-PDM_PI*0.5;
+      } 
+      else if ((j_rayon>=7) && (j_rayon<=14)){
+        theta=(j_rayon-7)*PDM_PI*0.25;
+        phi=PDM_PI*0.25;
+      } 
+      else if ((j_rayon>=15) && (j_rayon<=18)){
+        theta=(2*(j_rayon-15)+1)*PDM_PI*0.25;
+        phi=PDM_PI*0.5;
+      } 
+      else if ((j_rayon>=19) && (j_rayon<=26)){
+        theta=(j_rayon-19)*PDM_PI*0.25;
+        phi=3.*PDM_PI*0.5;
+      } 
+      else
+      { 
+        alpha = (double) rand() / (double) RAND_MAX;
+        phi=alpha*PDM_PI;
+        alpha = (double) rand() / (double) RAND_MAX;
+        theta=alpha*2.*PDM_PI;
+      } 
+      
+      line_coord[0+6*j_rayon+6*n_rayons*i_vtx]=blk_vtx_coord[0+3*i_vtx]; 
+      line_coord[1+6*j_rayon+6*n_rayons*i_vtx]=blk_vtx_coord[1+3*i_vtx];
+      line_coord[2+6*j_rayon+6*n_rayons*i_vtx]=blk_vtx_coord[2+3*i_vtx];
+      //  Calcul des coordonnees du point de controle
+      line_coord[3+6*j_rayon+6*n_rayons*i_vtx]=line_coord[0+6*j_rayon+6*n_rayons*i_vtx]+rayon_bb*cos(theta)*sin(phi);
+      line_coord[4+6*j_rayon+6*n_rayons*i_vtx]=line_coord[1+6*j_rayon+6*n_rayons*i_vtx]+rayon_bb*sin(theta)*sin(phi);
+      line_coord[5+6*j_rayon+6*n_rayons*i_vtx]=line_coord[2+6*j_rayon+6*n_rayons*i_vtx]+rayon_bb*cos(phi);
 
+    } 
+  }
 
 
   int         *box_idx   = NULL;
@@ -891,18 +955,58 @@ int main(int argc, char *argv[])
                                     &box_idx,
                                     &box_g_num);
 
+
+
+  PDM_g_num_t *distrib_faces = malloc(sizeof(PDM_g_num_t)*(n_rank+1));
+  distrib_faces[0]=-1;
+
+  int         *dface_rayon_idx;
+  PDM_g_num_t *dface_rayon;
+  PDM_dconnectivity_transpose(comm,
+                              distrib,
+                              distrib_faces,
+                              box_idx,
+                              box_g_num,
+                              1,
+                              &dface_rayon_idx,
+                              &dface_rayon);
+
+  
+  int dn_faces=distrib_faces[i_rank+1]-distrib_faces[i_rank]; 
+
+  PDM_log_trace_connectivity_long(dface_rayon_idx,dface_rayon,dn_faces,"dface_rayon :");
+
+
+
+  // double  *tagibc = malloc(dn_vtx_selected * sizeof(double));
+
+  // for (int i_vtx = 0; i_vtx < dn_vtx_selected; ++i_vtx) {
+  //   tagibc[i_vtx]=0.;
+  //   for (int j_rayon = 0; j_rayon < n_rayons; ++j_rayon) {
+      
+
+
+  //   } 
+  // }
+
+
+
+
+
+
+
   free(blk_vtx_coord);
   PDM_part_to_block_free(ptb);
 
-  // if (1) {
-  //   for (int i = 0; i < n_line; i++) {
-  //     log_trace("line "PDM_FMT_G_NUM": ", line_ln_to_gn[i]);
-  //     for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
-  //       log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
-  //     }
-  //     log_trace("\n");
-  //   }
-  // }
+  if (1) {
+    for (int i = 0; i < n_line; i++) {
+      log_trace("line "PDM_FMT_G_NUM": ", line_g_num[i]);
+      for (int j = box_idx[i]; j < box_idx[i+1]; j++) {
+        log_trace(PDM_FMT_G_NUM" ", box_g_num[j]);
+      }
+      log_trace("\n");
+    }
+  }
 
 
 
