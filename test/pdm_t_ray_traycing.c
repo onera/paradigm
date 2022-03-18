@@ -32,6 +32,9 @@
 #include "pdm_distrib.h"
 #include "pdm_iso_surface.h"
 #include "pdm_multipart.h"
+#include "pdm_plane.h"
+#include "pdm_triangle.h" 
+
 
 /*============================================================================
  * Type definitions
@@ -955,26 +958,260 @@ int main(int argc, char *argv[])
                                     &box_idx,
                                     &box_g_num);
 
+  double *weight = malloc(sizeof(double)*box_idx[n_line]);
+
+  for (int i = 0; i < box_idx[n_line]; ++i) {
+    weight[i]=1.;
+  } 
 
 
-  PDM_g_num_t *distrib_faces = malloc(sizeof(PDM_g_num_t)*(n_rank+1));
-  distrib_faces[0]=-1;
+  PDM_part_to_block_t *ptb_face = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                           1.,
+                                                          &box_g_num,
+                                                          &weight,
+                                                          &box_idx[n_line],
+                                                           1,
+                                                           comm);
 
-  int         *dface_rayon_idx;
-  PDM_g_num_t *dface_rayon;
-  PDM_dconnectivity_transpose(comm,
-                              distrib,
-                              distrib_faces,
-                              box_idx,
-                              box_g_num,
-                              1,
-                              &dface_rayon_idx,
-                              &dface_rayon);
+  PDM_g_num_t *distrib_faces = PDM_part_to_block_distrib_index_get(ptb_face);
+
+  PDM_g_num_t *part_data_g_num = malloc(sizeof(PDM_g_num_t)*box_idx[n_line]);
+  int *part_stride = malloc(sizeof(int)*box_idx[n_line]);
+  double* part_data_coord = malloc(6*sizeof(double)*box_idx[n_line]);
+
+
+  for (int i = 0; i < n_line; ++i) {
+    for (int j = box_idx[i] ; j < box_idx[i+1] ; ++j) {
+      part_data_g_num[j]=line_g_num[i];
+      part_stride[j]=1;
+      for (int k = 0; k < 6; ++k) {
+        part_data_coord[6*j+k]=line_coord[6*i+k];  
+      } 
+    } 
+  } 
+
+  PDM_g_num_t *dface_line = NULL;
+  int *dface_line_n =NULL;
+
+  PDM_part_to_block_exch (ptb_face,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                         &part_stride,
+              (void **)  &part_data_g_num,
+                         &dface_line_n,
+              (void **)  &dface_line);
+  free(dface_line_n);
+  double *dface_line_coord =NULL;
+
+  PDM_part_to_block_exch (ptb_face,
+                          6 * sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                         &part_stride,
+              (void **)  &part_data_coord,
+                         &dface_line_n,
+              (void **)  &dface_line_coord);
+
+  int dn_face=PDM_part_to_block_n_elt_block_get(ptb_face);
+  int* dface_line_idx = PDM_array_new_idx_from_sizes_int(dface_line_n,dn_face);
+
+  PDM_log_trace_connectivity_long(dface_line_idx,dface_line,dn_face,"dface_line :");
+
+  free(dface_line_n);
+
+  /*******************************************************************
+    *  Transfer element coords from parts to blocks
+    *******************************************************************/
+
+  PDM_g_num_t l_max_elt_g_num = 0;
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int          id_section = 0;
+    int         *elmt_vtx                 = NULL;
+    int         *parent_num               = NULL;
+    PDM_g_num_t *numabs                   = NULL;
+    PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_block_std_get(pmne_surf, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+    for (int j_part = 0 ; j_part<surf_pn_face[i_part] ; j_part++){
+      l_max_elt_g_num=PDM_MAX(l_max_elt_g_num,numabs[j_part]);
+    } 
+  } 
+
+  PDM_g_num_t g_max_elt_g_num = 0;
+
+
+  PDM_MPI_Allreduce (&l_max_elt_g_num,  &g_max_elt_g_num,   1,
+                    PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+
+  PDM_g_num_t *_block_elt_distrib_idx = distrib_faces;
+
+
+  if (distrib_faces[n_rank] < g_max_elt_g_num) {
+    _block_elt_distrib_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+    for (int i = 0; i < n_rank; i++) {
+      _block_elt_distrib_idx[i] = distrib_faces[i];
+    }
+    _block_elt_distrib_idx[n_rank] = g_max_elt_g_num;
+  }
+
+  PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                        1.,
+                                                                        (PDM_g_num_t **) surf_pface_ln_to_gn,
+                                                                        _block_elt_distrib_idx,
+                                                                        surf_pn_face,
+                                                                        n_part_mesh,
+                                                                        comm);
+
+  int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
+  double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
+  for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+
+    int id_section = 0;
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne_surf, id_section);
+    int         *part_face_vtx                 = NULL;
+    int         *parent_num               = NULL;
+    PDM_g_num_t *face_g_num               = NULL;
+    PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_block_std_get(pmne_surf,
+                                            id_section,
+                                            ipart,
+                                            &part_face_vtx,
+                                            &face_g_num,
+                                            &parent_num,
+                                            &parent_entitity_ln_to_gn);
+
+    int stride = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
+    const double *part_vtx = surf_pvtx_coord[ipart];
+
+    part_elt_vtx_n[ipart] = malloc (sizeof(int) * surf_pn_face[ipart]);
+    part_elt_vtx_coord[ipart] = malloc (sizeof(double) * stride * surf_pn_face[ipart] * 3);
+
+    for (int i = 0; i < surf_pn_face[ipart]; i++) {
+      part_elt_vtx_n[ipart][i] = stride;//3 * face_vtx_n;
+      for (int j = stride*i; j < stride*(i+1); j++) {
+        int ivtx = part_face_vtx[j] - 1;
+        for (int k = 0; k < 3; k++) {
+          part_elt_vtx_coord[ipart][3*j + k] = part_vtx[3*ivtx + k];
+        }
+      }
+    }
+  }
+
+  int *block_elt_vtx_n = NULL;
+  double *block_elt_vtx_coord = NULL;
+  PDM_part_to_block_exch (ptb_elt,
+                          3*sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          -1,
+                          part_elt_vtx_n,
+                          (void **) part_elt_vtx_coord,
+                          &block_elt_vtx_n,
+                          (void **) &block_elt_vtx_coord);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free (part_elt_vtx_n[ipart]);
+    free (part_elt_vtx_coord[ipart]);
+  }
+  free (part_elt_vtx_n);
+  free (part_elt_vtx_coord);
+
+
+  int* block_elt_vtx_idx = PDM_array_new_idx_from_sizes_int(block_elt_vtx_n,dn_face);
+
+
+  //dn_face : nb faces dans un block 
+  //graph face rayon dface_line (donne les n absolus des rayons candidats)
+  //dface_line_idx index de parcour de dface_line
+  // définition des faces donné par block_elt_vtx_n
+  // block_elt_vtx_coord coordonnés des vertex des faces 
+
+  double epsilon = 1e-12;
+
+  int  *tag_face = malloc(dface_line_idx[dn_face] * sizeof(int));
+
+  for (int i_face = 0; i_face < dn_face; ++i_face) {
+    double face_normal[3];
+    double* face_coord=block_elt_vtx_coord+3*block_elt_vtx_idx[i_face];
+
+    PDM_plane_normal(block_elt_vtx_n[i_face],face_coord,face_normal);
+    for (int j_rayon = dface_line_idx[i_face]; j_rayon < dface_line_idx[i_face+1]; ++j_rayon) {
+
+      double* rayon_coord=dface_line_coord+6*j_rayon;
+      int stat = -1;
+      double intersection[3];
+      double vec[3] = {
+        face_coord[0] - rayon_coord[0],
+        face_coord[1] - rayon_coord[1],
+        face_coord[2] - rayon_coord[2]
+      };
+
+      double rayon_vect[3] = {
+        rayon_coord[3] - rayon_coord[0],
+        rayon_coord[4] - rayon_coord[1],
+        rayon_coord[5] - rayon_coord[2]
+      };
+
+      double denom = PDM_DOT_PRODUCT(rayon_vect, face_normal);
+      double numer = PDM_DOT_PRODUCT(vec, face_normal);
+
+      if (PDM_ABS(denom) < epsilon) {   // Epsilon is here to avoid division by 0
+        if (PDM_ABS(numer) < epsilon) { // Le edge contenu dans le plan de la face
+          stat = 2;
+          memcpy(intersection, rayon_coord, sizeof(double) * 3);
+        } else {// Edge parallèle mais pas dans le même plan
+          stat = 0;
+        }
+      } else {  // Ca intersecte nickel
+        double t = numer/denom;
+
+        if ((t >=0)&&(t<1)) {
+          stat = 1;
+          for (int j = 0; j < 3; j++) {
+            intersection[j] = rayon_coord[j] + t*rayon_vect[j];
+          }
+        }
+      }
+      if(stat>0){
+        double closestPoint[3]; 
+        double min_dist2;
+        PDM_triangle_status_t statriangle= PDM_triangle_evaluate_position(intersection,
+                                                                          face_coord,
+                                                                          closestPoint,
+                                                                         &min_dist2,
+                                                                          NULL);
+        if(statriangle!=PDM_TRIANGLE_INSIDE){
+          tag_face[j_rayon]=0;
+        } 
+        else{
+          tag_face[j_rayon]=1; 
+        } 
+      } 
+    } 
+  }
+
+
+
+  // distrib_faces[0]=-1;
+
+  // int         *dface_rayon_idx;
+  // PDM_g_num_t *dface_rayon;
+  // PDM_dconnectivity_transpose(comm,
+  //                             distrib,
+  //                             distrib_faces,
+  //                             box_idx,
+  //                             box_g_num,
+  //                             1,
+  //                             &dface_rayon_idx,
+  //                             &dface_rayon);
 
   
-  int dn_faces=distrib_faces[i_rank+1]-distrib_faces[i_rank]; 
+  // int dn_faces=distrib_faces[i_rank+1]-distrib_faces[i_rank]; 
 
-  PDM_log_trace_connectivity_long(dface_rayon_idx,dface_rayon,dn_faces,"dface_rayon :");
+  // PDM_log_trace_connectivity_long(dface_rayon_idx,dface_rayon,dn_faces,"dface_rayon :");
 
 
 
