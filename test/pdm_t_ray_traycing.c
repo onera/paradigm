@@ -478,11 +478,84 @@ int main(int argc, char *argv[])
                                       (const double **)    part_elt_extents,
                                   (const PDM_g_num_t **)   part_elt_g_num);
 
+
+  int          n_line = 0;
+  PDM_g_num_t *line_g_num = malloc(6 * n_line * sizeof(PDM_g_num_t));
+  double      *line_coord = malloc(6 * n_line * sizeof(double     ));
+
+  /*
+   *  Construction des lignes
+   */
+  int          *pn_selected_vtx       = malloc(n_part * sizeof(int        ));
+  PDM_g_num_t **pn_selected_vtx_g_num = malloc(n_part * sizeof(PDM_g_num_t));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    // int id_section = 0;
+    // PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
+    // int         *elmt_vtx                 = NULL;
+    // int         *parent_num               = NULL;
+    // PDM_g_num_t *numabs                   = NULL;
+    // PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+    // PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+
+    pn_selected_vtx      [i_part] = 0;
+    pn_selected_vtx_g_num[i_part] = malloc(pn_vtx[i_part] * sizeof(double));
+
+    for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
+
+      int is_inside = 1;
+      for (int j = 0; j < 3; j++) {
+        if (pvtx_coord[i_part][3*i_vtx+j] < global_extents[j] ||
+            pvtx_coord[i_part][3*i_vtx+j] > global_extents[j+3]) {
+          is_inside = 0;
+        }
+      }
+
+      if(is_inside == 1) {
+        pn_selected_vtx_g_num[i_part][pn_selected_vtx[i_part]++] = pvtx_ln_to_gn[i_part][i_vtx];
+      }
+
+    }
+
+    pn_selected_vtx_g_num[i_part] = realloc(pn_selected_vtx_g_num[i_part], pn_selected_vtx[i_part] * sizeof(PDM_g_num_t));
+
+  }
+
+
+
+
+
+
+
+
+
+  int         *box_idx   = NULL;
+  PDM_g_num_t *box_g_num = NULL;
+  PDM_dbbtree_lines_intersect_boxes(dbbt,
+                                    n_line,
+                                    line_g_num,
+                                    line_coord,
+                                    &box_idx,
+                                    &box_g_num);
+
+  // if (1) {
+  //   for (int i = 0; i < n_line; i++) {
+  //     log_trace("line "PDM_FMT_G_NUM": ", line_ln_to_gn[i]);
+  //     for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {
+  //       log_trace(PDM_FMT_G_NUM" ", intersecting_box_g_num[j]);
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
+
+
+
+  free(line_g_num);
+  free(line_coord);
+
+
   PDM_dbbtree_free (dbbt);
   PDM_box_set_destroy (&surf_mesh_boxes);
-
-
-
 
 
 
