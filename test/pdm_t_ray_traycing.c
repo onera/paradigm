@@ -760,6 +760,9 @@ int main(int argc, char *argv[])
     global_extents[i+3] += max_range * 1.0e-3;
   }
 
+  log_trace("global_extents = %f %f %f   %f %f %f\n",
+            global_extents[0], global_extents[1], global_extents[2],
+            global_extents[3], global_extents[4], global_extents[5]);
 
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
 
@@ -778,8 +781,9 @@ int main(int argc, char *argv[])
   /*
    *  Construction des lignes
    */
-  int          *pn_selected_vtx       = malloc(n_part * sizeof(int        ));
-  PDM_g_num_t **pn_selected_vtx_g_num = malloc(n_part * sizeof(PDM_g_num_t));
+  int          *pn_selected_vtx      = malloc(n_part * sizeof(int        ));
+  PDM_g_num_t **p_selected_vtx_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
+  double      **p_selected_vtx_coord = malloc(n_part * sizeof(double *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     // int id_section = 0;
@@ -790,8 +794,9 @@ int main(int argc, char *argv[])
     // PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
     // PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
-    pn_selected_vtx      [i_part] = 0;
-    pn_selected_vtx_g_num[i_part] = malloc(pn_vtx[i_part] * sizeof(double));
+    pn_selected_vtx     [i_part] = 0;
+    p_selected_vtx_g_num[i_part] = malloc(pn_vtx[i_part] * sizeof(PDM_g_num_t));
+    p_selected_vtx_coord[i_part] = malloc(3 * pn_vtx[i_part] * sizeof(double));
 
     for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
 
@@ -804,18 +809,22 @@ int main(int argc, char *argv[])
       }
 
       if(is_inside == 1) {
-        pn_selected_vtx_g_num[i_part][pn_selected_vtx[i_part]++] = pvtx_ln_to_gn[i_part][i_vtx];
+        memcpy(p_selected_vtx_coord[i_part] + 3*pn_selected_vtx[i_part],
+               pvtx_coord[i_part] + 3*i_vtx,
+               sizeof(double) * 3);
+        p_selected_vtx_g_num[i_part][pn_selected_vtx[i_part]] = pvtx_ln_to_gn[i_part][i_vtx];
+        pn_selected_vtx[i_part]++;
       }
 
     }
 
-    pn_selected_vtx_g_num[i_part] = realloc(pn_selected_vtx_g_num[i_part], pn_selected_vtx[i_part] * sizeof(PDM_g_num_t));
+    p_selected_vtx_g_num[i_part] = realloc(p_selected_vtx_g_num[i_part], pn_selected_vtx[i_part] * sizeof(PDM_g_num_t));
 
   }
 
   if(1 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      PDM_log_trace_array_long(pn_selected_vtx_g_num[i_part], pn_selected_vtx[i_part], "pn_selected_vtx_g_num ::") ;
+      PDM_log_trace_array_long(p_selected_vtx_g_num[i_part], pn_selected_vtx[i_part], "p_selected_vtx_g_num ::") ;
     }
   }
 
@@ -823,7 +832,7 @@ int main(int argc, char *argv[])
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
-                                                      pn_selected_vtx_g_num,
+                                                      p_selected_vtx_g_num,
                                                       NULL,
                                                       pn_selected_vtx,
                                                       n_part,
@@ -831,7 +840,9 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *distrib_selected_vtx_idx = PDM_part_to_block_distrib_index_get(ptb);
   int dn_vtx_selected = PDM_part_to_block_n_elt_block_get (ptb);
-  // PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb);
+  PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
+
+  PDM_log_trace_array_long(block_g_num, dn_vtx_selected, "block_g_num : ");
 
   double *blk_vtx_coord = NULL;
   PDM_part_to_block_exch (ptb,
@@ -839,10 +850,24 @@ int main(int argc, char *argv[])
                           PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
-                (void **) pvtx_coord,
+                (void **) p_selected_vtx_coord,
                           NULL,
                 (void **) &blk_vtx_coord);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(p_selected_vtx_coord[i_part]);
+  }
+  free(p_selected_vtx_coord);
 
+
+  if (1) {
+    char filename[999];
+    sprintf(filename, "blk_vtx_coord_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              dn_vtx_selected,
+                              blk_vtx_coord,
+                              NULL,
+                              NULL);
+  }
 
   /*
    *  On a selectinné pas mal de vertex maintenant on :
