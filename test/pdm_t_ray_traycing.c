@@ -521,11 +521,47 @@ int main(int argc, char *argv[])
 
   }
 
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_long(pn_selected_vtx_g_num[i_part], pn_selected_vtx[i_part], "pn_selected_vtx_g_num ::") ;
+    }
+  }
 
 
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                                      pn_selected_vtx_g_num,
+                                                      NULL,
+                                                      pn_selected_vtx,
+                                                      n_part,
+                                                      comm);
+
+  PDM_g_num_t *distrib_selected_vtx_idx = PDM_part_to_block_distrib_index_get(ptb);
+  int dn_vtx_selected = PDM_part_to_block_n_elt_block_get (ptb);
+  // PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb);
+
+  double *blk_vtx_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          3 * sizeof(double),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void **) pvtx_coord,
+                          NULL,
+                (void **) &blk_vtx_coord);
 
 
+  /*
+   *  On a selectinné pas mal de vertex maintenant on :
+   *     -
+   */
+  // for(int i_vtx = 0; i_vtx < dn_vtx_selected; ++i_vtx) {
 
+  //   global_extents
+  //   blk_vtx_coord
+
+  // }
 
 
 
@@ -537,6 +573,9 @@ int main(int argc, char *argv[])
                                     line_coord,
                                     &box_idx,
                                     &box_g_num);
+
+  free(blk_vtx_coord);
+  PDM_part_to_block_free(ptb);
 
   // if (1) {
   //   for (int i = 0; i < n_line; i++) {
