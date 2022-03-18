@@ -176,7 +176,6 @@ _generate_surface_mesh
   const double step_v =   PDM_PI / (double) (nv + 1);
 
   int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
-  log_trace("$$ dn_vtx = %d\n", dn_vtx);
   double *dvtx_coord = (double *) malloc(sizeof(double) * dn_vtx * 3);
 
   for (int i = 0; i < dn_vtx; i++) {
@@ -353,10 +352,6 @@ _generate_surface_mesh
 
   *_mpart = mpart;
   *_dmn   = dmn;
-
-  // free(dvtx_coord);
-  // free(dface_vtx_idx);
-  // free(dface_vtx);
 }
 
 
