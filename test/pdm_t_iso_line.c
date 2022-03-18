@@ -75,7 +75,9 @@ _read_args(int                    argc,
            char                 **argv,
            PDM_g_num_t           *n_vtx_seg,
            double                *length,
-           PDM_Mesh_nodal_elt_t  *elt_type)
+           PDM_Mesh_nodal_elt_t  *elt_type,
+           int                   *n_part,
+           int                   *part_method)
 {
   int i = 1;
 
@@ -108,6 +110,20 @@ _read_args(int                    argc,
         _usage(EXIT_FAILURE);
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-n_part") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *n_part = atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-pt-scotch") == 0) {
+      *part_method = 2;
+    }
+    else if (strcmp(argv[i], "-parmetis") == 0) {
+      *part_method = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -501,6 +517,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t          n_vtx_seg = 10;
   double               length    = 1.;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
+  int                  n_part    = -1;
   //  2 -> tria
   //  3 -> quad
   //  4 -> poly2d
@@ -513,7 +530,9 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &length,
-             &elt_type);
+             &elt_type,
+             &n_part,
+     (int *) &part_method);
 
   assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 2);
 
@@ -528,6 +547,27 @@ int main(int argc, char *argv[])
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_multipart_t *mpart = NULL;
+
+  int n_zone = 1;
+  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
+  n_part_zones[0] = n_part;
+  if (n_part > 0) {
+    PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+                                                  n_part_zones,
+                                                  PDM_FALSE,
+                                                  part_method,
+                                                  PDM_PART_SIZE_HOMOGENEOUS,
+                                                  NULL,
+                                                  comm,
+                                                  PDM_OWNERSHIP_KEEP);
+    PDM_multipart_set_reordering_options(mpart,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
+  }
 
   /*
    *  Create distributed cube
@@ -675,6 +715,9 @@ int main(int argc, char *argv[])
       dedge_vtx_idx[i] = 2*i;
     }
   }
+
+
+
 
   // Compute dfield and gradient field
   double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));

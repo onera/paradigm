@@ -1172,7 +1172,7 @@ _iso_surf_dist
           }
         }
 
-        double normalization = 1. / (double) (pface_edge_idx[iface+1] - pface_edge_idx[iface]);
+        normalization = 1. / (double) (pface_edge_idx[iface+1] - pface_edge_idx[iface]);
         for (int l = 0; l < dim; l++) {
           face_center[l] *= normalization;
         }
