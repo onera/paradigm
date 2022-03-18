@@ -660,12 +660,29 @@ int main(int argc, char *argv[])
 
   double tolerance = 1.e-11;
   for(int i_part = 0; i_part < n_part_mesh; ++i_part) {
+    part_n_elt[i_part] = surf_pn_face[i_part];
     part_elt_extents[i_part] = (double *) malloc( 6 * part_n_elt[i_part] * sizeof(double));
 
-    double      *vtx_coord    = NULL;
-    int         *face_vtx_idx = NULL;
-    int         *face_vtx     = NULL;
-    PDM_g_num_t *face_g_num   = NULL;
+    // double      *vtx_coord    = surf_pvtx_coord[i_part];
+    // int         *face_vtx_idx = surf_pface_vtx_idx[i_part];
+    // int         *face_vtx     = surf_pface_vtx[i_part];
+    // PDM_g_num_t *face_g_num   = surf_pface_ln_to_gn[i_part];
+    int id_section = 0;
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne_surf, id_section);
+    int         *face_vtx                 = NULL;
+    int         *parent_num               = NULL;
+    PDM_g_num_t *face_g_num               = NULL;
+    PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_block_std_get(pmne_surf,
+                                            id_section,
+                                            i_part,
+                                            &face_vtx,
+                                            &face_g_num,
+                                            &parent_num,
+                                            &parent_entitity_ln_to_gn);
+    part_elt_g_num[i_part] = face_g_num;
+
+    int stride = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     double *_extents = part_elt_extents[i_part];
     for (int j = 0; j < part_n_elt[i_part]; j++) {
@@ -675,9 +692,9 @@ int main(int argc, char *argv[])
         _extents[3+k1] = -DBL_MAX;
       }
 
-      for (int k = face_vtx_idx[j]; k < face_vtx_idx[j+1]; k++) {
+      for (int k = stride*j; k < stride*(j+1); k++) {
         int i_vtx = face_vtx[k] - 1;
-        double *_coords = (double *) vtx_coord + 3 * i_vtx;
+        double *_coords = (double *) surf_pvtx_coord[i_part] + 3 * i_vtx;
 
         for (int k1 = 0; k1 < 3; k1++) {
           _extents[k1]   = PDM_MIN (_coords[k1], _extents[k1]);
@@ -694,10 +711,20 @@ int main(int argc, char *argv[])
       delta *= tolerance;
 
       for (int k1 = 0; k1 < 3; k1++) {
-        _extents[k1]   +=  - delta;
-        _extents[3+k1] +=    delta;
+        _extents[k1]   -= delta;
+        _extents[3+k1] += delta;
       }
       _extents += 6;
+    }
+
+
+    if (1) {
+      char filename[999];
+      sprintf(filename, "part_elt_extents_%i_%i.vtk", i_part, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          part_n_elt[i_part],
+                          part_elt_extents[i_part],
+                          face_g_num);
     }
   }
 
