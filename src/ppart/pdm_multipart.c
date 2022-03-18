@@ -1707,7 +1707,9 @@ PDM_MPI_Comm       comm
   }
 
   // Vertex
-  PDM_g_num_t *vtx_distrib = PDM_compute_entity_distribution(comm, dn_vtx);;
+  PDM_g_num_t *vtx_distrib = PDM_compute_entity_distribution(comm, dn_vtx);
+  PDM_log_trace_array_long(vtx_distrib, n_rank+1, "vtx_distrib : ");
+  PDM_log_trace_array_long(pvtx_ln_to_gn[0], pn_vtx[0], "pvtx_ln_to_gn[0] : ");
 
   const double *dvtx_coord = NULL;
   PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord);

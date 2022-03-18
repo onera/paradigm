@@ -12,6 +12,8 @@
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_partitioning_algorithm.h"
@@ -137,35 +139,224 @@ _read_args(int                    argc,
 
 
 
-static
-inline
-double
-_unit_sphere
-(
- double x,
- double y,
- double z
-)
-{
-  return x * x + y * y + z * z - 0.125;
-}
 
 static
-inline
 void
-_unit_sphere_gradient
+_generate_surface_mesh
 (
- double  x,
- double  y,
- double  z,
- double *df_dx,
- double *df_dy,
- double *df_dz
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         nu,
+ const PDM_g_num_t         nv,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+ const PDM_split_dual_t    part_method,
+ const int                 n_part,
+       PDM_dmesh_nodal_t **_dmn,
+       PDM_multipart_t   **_mpart
 )
 {
-  *df_dx = 2*x;
-  *df_dy = 2*y;
-  *df_dz = 2*z;
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  assert(nu > 1);
+  assert(nv > 1);
+
+  /*
+   *  Vertices
+   */
+  PDM_g_num_t gn_vtx = (nu - 1) * nv + 2;
+
+  PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution(comm,
+                                                                     gn_vtx);
+
+  const double step_u = 2*PDM_PI / (double) (nu - 2);
+  const double step_v =   PDM_PI / (double) (nv + 1);
+
+  int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
+  log_trace("$$ dn_vtx = %d\n", dn_vtx);
+  double *dvtx_coord = (double *) malloc(sizeof(double) * dn_vtx * 3);
+
+  for (int i = 0; i < dn_vtx; i++) {
+
+    PDM_g_num_t g = distrib_vtx[i_rank] + i;
+
+    if (g == gn_vtx-1) {
+      // north pole
+      dvtx_coord[3*i  ] = x_center;
+      dvtx_coord[3*i+1] = y_center;
+      dvtx_coord[3*i+2] = z_center + radius;
+
+    } else if (g == gn_vtx-2) {
+      // south pole
+      dvtx_coord[3*i  ] = x_center;
+      dvtx_coord[3*i+1] = y_center;
+      dvtx_coord[3*i+2] = z_center - radius;
+
+    } else {
+
+      PDM_g_num_t jj = g / (nu - 1);
+      PDM_g_num_t ii = g % (nu - 1);
+
+      double v = -0.5*PDM_PI + (jj+1)*step_v;
+      double u = ii*step_u;
+      double c = cos(v);
+
+      dvtx_coord[3*i  ] = x_center + radius * c * cos(u);
+      dvtx_coord[3*i+1] = y_center + radius * c * sin(u);
+      dvtx_coord[3*i+2] = z_center + radius * sin(v);
+
+    }
+
+  }
+
+  free(distrib_vtx);
+
+
+
+  /*
+   *  Faces
+   */
+  PDM_g_num_t gn_face = 2*((nu - 1)*(nv - 1) + nu - 1);
+
+  PDM_g_num_t *distrib_face = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_face);
+
+  int          dn_face       = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
+  int         *dface_vtx_idx = (int *)         malloc(sizeof(int)         * (dn_face + 1));
+  PDM_g_num_t *dface_vtx     = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_face * 3);
+
+  dface_vtx_idx[0] = 0;
+  for (int i = 0; i < dn_face; i++) {
+
+    PDM_g_num_t g = distrib_face[i_rank] + i;
+
+    dface_vtx_idx[i+1] = dface_vtx_idx[i] + 3;
+    PDM_g_num_t *_fv = dface_vtx + dface_vtx_idx[i];
+
+
+    if (g >= 2*(nu - 1)*(nv - 1) + nu - 1) {
+
+      // north pole cap
+      PDM_g_num_t ii = g - (2*(nu - 1)*(nv - 1) + nu - 1);
+
+      _fv[0] = 1 + ii            + (nu-1)*(nv-1);
+      _fv[1] = 1 + (ii+1)%(nu-1) + (nu-1)*(nv-1);
+      _fv[2] = gn_vtx;
+    }
+
+    else if (g >= 2*(nu - 1)*(nv - 1)) {
+
+      // south pole cap
+      PDM_g_num_t ii = g - 2*(nu - 1)*(nv - 1);
+
+      _fv[0] = 1 + ii;
+      _fv[1] = gn_vtx - 1;
+      _fv[2] = 1 + (ii+1)%(nu-1);
+    }
+
+    else {
+
+      if (g >= (nu - 1)*(nv - 1)) {
+        g -= (nu - 1)*(nv - 1);
+
+        PDM_g_num_t jj = g / (nu - 1);
+        PDM_g_num_t ii = g % (nu - 1);
+
+        _fv[0] = 1 + (ii+1)%(nu-1) + (nu-1)*jj;
+        _fv[1] = 1 + (ii+1)%(nu-1) + (nu-1)*(jj+1);
+        _fv[2] = 1 + ii            + (nu-1)*(jj+1);
+      }
+
+      else {
+
+        PDM_g_num_t jj = g / (nu - 1);
+        PDM_g_num_t ii = g % (nu - 1);
+
+        _fv[0] = 1 + ii +            (nu-1)*jj;
+        _fv[1] = 1 + (ii+1)%(nu-1) + (nu-1)*jj;
+        _fv[2] = 1 + ii            + (nu-1)*(jj+1);
+
+      }
+
+
+    }
+
+  }
+
+  free(distrib_face);
+
+
+  /*
+   *  Create dmesh nodal
+   */
+  PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
+                                                  2,
+                                                  gn_vtx,
+                                                  0,
+                                                  gn_face,
+                                                  0);
+
+  PDM_DMesh_nodal_coord_set(dmn,
+                            dn_vtx,
+                            dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  dmn->surfacic->n_g_elmts = gn_face;
+  int id_section = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
+                                                     PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
+                                        id_section,
+                                        dn_face,
+                                        dface_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+  int n_group = 0;
+  int *dgroup_elt_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  dgroup_elt_idx[0] = 0;
+  PDM_g_num_t *dgroup_elt = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
+                                  n_group,
+                                  dgroup_elt_idx,
+                                  dgroup_elt,
+                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  /*
+   * Partitionnement
+   */
+  int n_zone = 1;
+  // int n_part_zones = {n_part};
+  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
+  n_part_zones[0] = n_part;
+
+  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+                                                n_part_zones,
+                                                PDM_FALSE,
+                                                part_method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_set_reordering_options(mpart,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
+
+  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_run_ppart(mpart);
+
+  *_mpart = mpart;
+  *_dmn   = dmn;
+
+  // free(dvtx_coord);
+  // free(dface_vtx_idx);
+  // free(dface_vtx);
 }
 
 
@@ -190,9 +381,9 @@ _generate_volume_mesh
                                                          n_vtx_seg,
                                                          n_vtx_seg,
                                                          length,
-                                                         -1.,
-                                                         -1.,
-                                                         -1.,
+                                                         -0.5*length,
+                                                         -0.5*length,
+                                                         -0.5*length,
                                                          elt_type,
                                                          1,
                                                          PDM_OWNERSHIP_KEEP);
@@ -293,6 +484,93 @@ int main(int argc, char *argv[])
 
 
   /*
+   *  Generate surface mesh
+   */
+  if (i_rank == 0) {
+    printf("-- Generate surface mesh\n");
+    fflush(stdout);
+  }
+  PDM_g_num_t nu = 2*n_vtx_seg;
+  PDM_g_num_t nv = n_vtx_seg;
+
+  PDM_dmesh_nodal_t     *dmn_surf   = NULL;
+  PDM_multipart_t       *mpart_surf = NULL;
+  _generate_surface_mesh (comm,
+                          nu,
+                          nv,
+                          0.,
+                          0.,
+                          0.,
+                          0.3*length,
+                          part_method,
+                          n_part,
+                          &dmn_surf,
+                          &mpart_surf);
+
+  int          *surf_pn_vtx         = (int *)          malloc(sizeof(int)           * n_part);
+  int          *surf_pn_face        = (int *)          malloc(sizeof(int)           * n_part);
+  double      **surf_pvtx_coord     = (double **)      malloc(sizeof(double *)      * n_part);
+  PDM_g_num_t **surf_pvtx_ln_to_gn  = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **surf_pface_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    surf_pn_vtx[i_part] = PDM_multipart_part_vtx_coord_get(mpart_surf,
+                                                           0,
+                                                           i_part,
+                                                           &surf_pvtx_coord[i_part],
+                                                           PDM_OWNERSHIP_KEEP);
+
+    PDM_multipart_part_ln_to_gn_get(mpart_surf,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                    &surf_pvtx_ln_to_gn[i_part],
+                                    PDM_OWNERSHIP_KEEP);
+
+    surf_pn_face[i_part] = PDM_multipart_part_ln_to_gn_get(mpart_surf,
+                                                           0,
+                                                           i_part,
+                                                           PDM_MESH_ENTITY_FACE,
+                                                           &surf_pface_ln_to_gn[i_part],
+                                                           PDM_OWNERSHIP_KEEP);
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmne_surf = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn_surf,
+                                                                                    PDM_GEOMETRY_KIND_SURFACIC,
+                                                                                    n_part,
+                                                                                    surf_pn_vtx,
+                                                                                    surf_pvtx_ln_to_gn,
+                                                                                    surf_pn_face,
+                                                                                    surf_pface_ln_to_gn,
+                                                                                    NULL);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int id_section = 0;
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne_surf, id_section);
+    int         *elmt_vtx                 = NULL;
+    int         *parent_num               = NULL;
+    PDM_g_num_t *numabs                   = NULL;
+    PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_block_std_get(pmne_surf, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+
+    char filename[999];
+    sprintf(filename, "out_surfacic_%i_%i.vtk", i_part, i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               surf_pn_vtx[i_part],
+                               surf_pvtx_coord[i_part],
+                               surf_pvtx_ln_to_gn[i_part],
+                               t_elt,
+                               surf_pn_face[i_part],
+                               elmt_vtx,
+                               surf_pface_ln_to_gn[i_part],
+                               0,
+                               NULL,
+                               NULL);
+  }
+
+
+  /*
    *  Generate volume mesh
    */
   if (i_rank == 0) {
@@ -312,14 +590,6 @@ int main(int argc, char *argv[])
                          &dcube,
                          &dmn,
                          &mpart);
-
-  // PDM_multipart_t* mpart_surf = _generate_surf_mesh (comm,
-  //                                                    n_vtx_seg,
-  //                                                    elt_type,
-  //                                                    part_method,
-  //                                                    n_part,
-  //                                                    length);
-
 
   int          *pn_vtx         = (int *)          malloc(sizeof(int)           * n_part);
   int          *pn_cell        = (int *)          malloc(sizeof(int)           * n_part);
@@ -605,9 +875,12 @@ int main(int argc, char *argv[])
   free(part_n_elt);
 
   PDM_part_mesh_nodal_elmts_free(pmne_vol);
+  PDM_part_mesh_nodal_elmts_free(pmne_surf);
 
   PDM_dcube_nodal_gen_free(dcube);
   PDM_multipart_free(mpart);
+  PDM_multipart_free(mpart_surf);
+  PDM_DMesh_nodal_free(dmn_surf);
 
   if (i_rank == 0) {
     printf("-- End\n");
