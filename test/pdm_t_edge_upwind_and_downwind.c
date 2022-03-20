@@ -417,7 +417,7 @@ _setup_edge_upwind_and_downwind2
  int    *vtx_cell,
  int    *edge_vtx,
  double *vtx_coord
- )
+)
 {
 
 
