@@ -1500,8 +1500,10 @@ PDM_extract_part_free
           if(extrp->pextract_connectivity[i][i_part] != NULL) {
             free(extrp->pextract_connectivity[i][i_part]);
           }
-          if(extrp->pextract_connectivity_idx[i][i_part] != NULL) {
-            free(extrp->pextract_connectivity_idx[i][i_part]);
+          if(extrp->pextract_connectivity_idx[i] != NULL) {
+            if(extrp->pextract_connectivity_idx[i][i_part] != NULL) {
+              free(extrp->pextract_connectivity_idx[i][i_part]);
+            }
           }
         }
       }

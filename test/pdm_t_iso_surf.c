@@ -26,6 +26,7 @@
 #include "pdm_array.h"
 #include "pdm_poly_vol_gen.h"
 #include "pdm_distrib.h"
+#include "pdm_multipart.h"
 #include "pdm_iso_surface.h"
 
 /*============================================================================
@@ -75,7 +76,9 @@ _read_args(int                    argc,
            char                 **argv,
            PDM_g_num_t           *n_vtx_seg,
            double                *length,
-           PDM_Mesh_nodal_elt_t  *elt_type)
+           PDM_Mesh_nodal_elt_t  *elt_type,
+           int                   *n_part,
+           int                   *part_method)
 {
   int i = 1;
 
@@ -109,6 +112,20 @@ _read_args(int                    argc,
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "-n_part") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *n_part = atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-pt-scotch") == 0) {
+      *part_method = 2;
+    }
+    else if (strcmp(argv[i], "-parmetis") == 0) {
+      *part_method = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -133,6 +150,41 @@ _eval_sphere
   *df_dx = 2*x;
   *df_dy = 2*y;
   *df_dz = 2*z;
+}
+
+
+static void
+_eval_cylinder
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  const double axis[3]   = {0.6, 0.2, 0.3};
+  const double center[3] = {0., 0., 0.};
+  const double radius    = 0.3;
+
+  double dx = x - center[0];
+  double dy = y - center[1];
+  double dz = z - center[2];
+
+  double dot = dx*axis[0] + dy*axis[1] + dz*axis[2];
+  dot /= (axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);
+
+  dx -= dot*axis[0];
+  dy -= dot*axis[1];
+  dz -= dot*axis[2];
+
+  *f = dx*dx + dy*dy + dz*dz - radius*radius;
+
+  *df_dx = 2*dx;
+  *df_dy = 2*dy;
+  *df_dz = 2*dz;
 }
 
 
@@ -332,6 +384,105 @@ _eval_chmutov6
 }
 
 
+
+#define PERLIN_NOISE_N 8
+static double perlin_fx[PERLIN_NOISE_N][PERLIN_NOISE_N][PERLIN_NOISE_N];
+static double perlin_fy[PERLIN_NOISE_N][PERLIN_NOISE_N][PERLIN_NOISE_N];
+static double perlin_fz[PERLIN_NOISE_N][PERLIN_NOISE_N][PERLIN_NOISE_N];
+static const double perlin_step = 1. / (double) (PERLIN_NOISE_N - 1);
+
+static void
+_init_perlin_noise (void)
+{
+  double i_rand_max = 1./(double) RAND_MAX;
+
+  for (int k = 0; k < PERLIN_NOISE_N; k++) {
+    for (int j = 0; j < PERLIN_NOISE_N; j++) {
+      for (int i = 0; i < PERLIN_NOISE_N; i++) {
+        perlin_fx[i][j][k] = 2*rand()*i_rand_max - 1;
+        perlin_fy[i][j][k] = 2*rand()*i_rand_max - 1;
+        perlin_fz[i][j][k] = 2*rand()*i_rand_max - 1;
+      }
+    }
+  }
+}
+
+static inline double
+_interpolate_perlin_noise
+(
+const double a0,
+const double a1,
+const double x
+ )
+{
+ return (a1 - a0) * (3.0 - x * 2.0) * x * x + a0;
+  // return (a1 - a0) * ((x * (x * 6.0 - 15.0) + 10.0) * x * x * x) + a0;
+}
+
+static void
+_eval_perlin_noise
+(
+ const double  x,
+ const double  y,
+ const double  z,
+       double *f,
+       double *df_dx,
+       double *df_dy,
+       double *df_dz
+ )
+{
+  PDM_UNUSED(df_dx);
+  PDM_UNUSED(df_dy);
+  PDM_UNUSED(df_dz);
+
+  int pi = (int) (x / perlin_step);
+  int pj = (int) (y / perlin_step);
+  int pk = (int) (z / perlin_step);
+
+  pi = PDM_MIN(PDM_MAX(pi, 0), PERLIN_NOISE_N-2);
+  pj = PDM_MIN(PDM_MAX(pj, 0), PERLIN_NOISE_N-2);
+  pk = PDM_MIN(PDM_MAX(pk, 0), PERLIN_NOISE_N-2);
+
+  double x0 = pi*perlin_step;
+  double y0 = pj*perlin_step;
+  double z0 = pk*perlin_step;
+
+  double x1 = x0 + perlin_step;
+  double y1 = y0 + perlin_step;
+  double z1 = z0 + perlin_step;
+
+  double sx = (x - x0) / perlin_step;
+  double sy = (y - y0) / perlin_step;
+  double sz = (z - z0) / perlin_step;
+
+
+  double n0, n1, ix0, ix1;
+
+  n0 = (x - x0)*perlin_fx[pi][pj][pk]   + (y - y0)*perlin_fy[pi][pj][pk]   + (z - z0)*perlin_fz[pi][pj][pk];
+  n1 = (x - x1)*perlin_fx[pi+1][pj][pk] + (y - y0)*perlin_fy[pi+1][pj][pk] + (z - z0)*perlin_fz[pi+1][pj][pk];
+  ix0 = _interpolate_perlin_noise(n0, n1, sx);
+
+  n0 = (x - x0)*perlin_fx[pi][pj+1][pk]   + (y - y1)*perlin_fy[pi][pj+1][pk]   + (z - z0)*perlin_fz[pi][pj][pk];
+  n1 = (x - x1)*perlin_fx[pi+1][pj+1][pk] + (y - y1)*perlin_fy[pi+1][pj+1][pk] + (z - z0)*perlin_fz[pi+1][pj+1][pk];
+  ix1 = _interpolate_perlin_noise(n0, n1, sx);
+
+  double f0 = _interpolate_perlin_noise(ix0, ix1, sy);
+
+
+  n0 = (x - x0)*perlin_fx[pi][pj][pk+1]   + (y - y0)*perlin_fy[pi][pj][pk+1]   + (z - z1)*perlin_fz[pi][pj][pk+1];
+  n1 = (x - x1)*perlin_fx[pi+1][pj][pk+1] + (y - y0)*perlin_fy[pi+1][pj][pk+1] + (z - z1)*perlin_fz[pi+1][pj][pk+1];
+  ix0 = _interpolate_perlin_noise(n0, n1, sx);
+
+  n0 = (x - x0)*perlin_fx[pi][pj+1][pk+1]   + (y - y1)*perlin_fy[pi][pj+1][pk+1]   + (z - z1)*perlin_fz[pi][pj][pk+1];
+  n1 = (x - x1)*perlin_fx[pi+1][pj+1][pk+1] + (y - y1)*perlin_fy[pi+1][pj+1][pk+1] + (z - z1)*perlin_fz[pi+1][pj+1][pk+1];
+  ix1 = _interpolate_perlin_noise(n0, n1, sx);
+
+  double f1 = _interpolate_perlin_noise(ix0, ix1, sy);
+
+  *f = _interpolate_perlin_noise(f0, f1, sz);
+}
+
+
 /**
  *
  * \brief  Main
@@ -353,6 +504,14 @@ int main(int argc, char *argv[])
   //  7 -> prism
   //  8 -> hexa
   //  9 -> poly3d
+  int                  n_part    = -1;
+#ifdef PDM_HAVE_PARMETIS
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+#endif
+#endif
 
   /*
    *  Read args
@@ -362,8 +521,9 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &length,
-             &elt_type);
-
+             &elt_type,
+             &n_part,
+     (int *) &part_method);
   assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 3);
 
   /*
@@ -378,6 +538,33 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+
+  void (*eval_field_and_gradient) (const double, const double, const double,
+                                   double *,
+                                   double *, double *, double *) = NULL;
+
+
+
+  PDM_multipart_t *mpart = NULL;
+
+  int n_zone = 1;
+  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
+  n_part_zones[0] = n_part;
+  if (n_part > 0) {
+    mpart = PDM_multipart_create(n_zone,
+                                 n_part_zones,
+                                 PDM_FALSE,
+                                 part_method,
+                                 PDM_PART_SIZE_HOMOGENEOUS,
+                                 NULL,
+                                 comm,
+                                 PDM_OWNERSHIP_KEEP);
+    PDM_multipart_set_reordering_options(mpart,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
+  }
 
   /*
    *  Create distributed cube
@@ -417,9 +604,9 @@ int main(int argc, char *argv[])
                                         n_vtx_seg,
                                         n_vtx_seg,
                                         length,
-                                        -0.5*length,//-0.1,
-                                        -0.5*length,//-0.2,
-                                        -0.5*length,//0.07,
+                                        0,//-0.5*length,//-0.1,
+                                        0,//-0.5*length,//-0.2,
+                                        0,//-0.5*length,//0.07,
                                         elt_type,
                                         1,
                                         PDM_OWNERSHIP_KEEP);
@@ -487,6 +674,11 @@ int main(int argc, char *argv[])
 
     PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_CELL, &distrib_cell);
     assert(distrib_cell != NULL);
+
+
+    if (n_part > 0) {
+      PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+    }
   }
 
   else {
@@ -524,48 +716,13 @@ int main(int argc, char *argv[])
   }
 
 
-  // Compute dfield and gradient field
-  double *dfield          = (double *) malloc(     dn_vtx * sizeof(double));
-  double *dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
-
-  void (*eval_field_and_gradient) (const double, const double, const double,
-                                   double *,
-                                   double *, double *, double *) = NULL;
-
-  eval_field_and_gradient = &_eval_chmutov6;
-
-  for (int i = 0; i < dn_vtx; i++) {
-    eval_field_and_gradient(dvtx_coord[3*i  ],
-                            dvtx_coord[3*i+1],
-                            dvtx_coord[3*i+2],
-                            &dfield[i],
-                            &dgradient_field[3*i],
-                            &dgradient_field[3*i+1],
-                            &dgradient_field[3*i+2]);
+  if (n_part > 0) {
+    PDM_multipart_run_ppart(mpart);
   }
 
-  if (1 && n_rank == 1) {
-    FILE *f = fopen("mandelbuld_sdf.vtk", "w");
-    fprintf(f, "# vtk DataFile Version 2.0\n");
-    fprintf(f, "mesh\n");
-    fprintf(f, "ASCII\n");
-    fprintf(f, "DATASET STRUCTURED_GRID\n");
-    fprintf(f, "DIMENSIONS "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", n_vtx_seg, n_vtx_seg, n_vtx_seg);
-    fprintf(f, "POINTS %d double\n", dn_vtx);
-    for(int i = 0; i < dn_vtx; ++i) {
-      fprintf(f, "%f %f %f\n", dvtx_coord[3*i  ], dvtx_coord[3*i+1], dvtx_coord[3*i+2]);
-    }
-    fprintf(f, "POINT_DATA %d\n", dn_vtx);
-    fprintf(f, "SCALARS sdf double 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for(int i = 0; i < dn_vtx; ++i) {
-      fprintf(f, "%f\n", dfield[i]);
-    }
-    fclose(f);
-    // abort();
-  }
-
-
+  // eval_field_and_gradient = &_eval_cylinder;
+  _init_perlin_noise();
+  eval_field_and_gradient = &_eval_perlin_noise;
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
@@ -573,42 +730,229 @@ int main(int argc, char *argv[])
   PDM_iso_surface_plane_equation_set(isos, 1., 0., 0., -0);
   // PDM_iso_surface_plane_equation_set(isos, 1., 0.5, 0.25, -0.0234);
 
-  PDM_iso_surface_dconnectivity_set(isos,
-                                    PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                    dcell_face,
-                                    dcell_face_idx);
-  PDM_iso_surface_dconnectivity_set(isos,
-                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                    dface_edge,
-                                    dface_edge_idx);
-  PDM_iso_surface_dconnectivity_set(isos,
-                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                    dedge_vtx,
-                                    dedge_vtx_idx);
-
-  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_CELL  , distrib_cell);
-  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_FACE  , distrib_face);
-  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_EDGE  , distrib_edge);
-  PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_VERTEX, vtx_distrib);
-
   PDM_iso_surface_eval_field_and_gradient_set(isos,
-                                              eval_field_and_gradient);
+                                                eval_field_and_gradient);
 
-  PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
-  PDM_iso_surface_dfield_set     (isos, dfield         );
-  // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+  double  *dfield          = NULL;
+  double  *dgradient_field = NULL;
+  double **pfield          = NULL;
+  double **pgradient_field = NULL;
+
+  if (n_part > 0) {
+
+    pfield          = (double **) malloc(sizeof(double *) * n_part);
+    pgradient_field = (double **) malloc(sizeof(double *) * n_part);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      double *vtx_coord;
+      int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                   0,
+                                                   i_part,
+                                                   &vtx_coord,
+                                                   PDM_OWNERSHIP_KEEP);
+      // printf("vtx: %d %p\n", n_vtx, (void *) vtx_coord);
+
+      pfield[i_part]          = (double *) malloc(sizeof(double) * n_vtx);
+      pgradient_field[i_part] = (double *) malloc(sizeof(double) * n_vtx * 3);
+
+      for (int i = 0; i < n_vtx; i++) {
+        eval_field_and_gradient(vtx_coord[3*i  ],
+                                vtx_coord[3*i+1],
+                                vtx_coord[3*i+2],
+                                &pfield[i_part][i],
+                                &pgradient_field[i_part][3*i],
+                                &pgradient_field[i_part][3*i+1],
+                                &pgradient_field[i_part][3*i+2]);
+      }
+
+      int *cell_face_idx = NULL;
+      int *cell_face     = NULL;
+      int *face_edge_idx = NULL;
+      int *face_edge     = NULL;
+      int *edge_vtx_idx  = NULL;
+      int *edge_vtx      = NULL;
+
+      int n_cell = PDM_multipart_part_connectivity_get(mpart,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                       &cell_face,
+                                                       &cell_face_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+      // printf("cell_face: %d %p %p\n", n_cell, (void *) cell_face_idx, (void *) cell_face);
+
+      int n_face = PDM_multipart_part_connectivity_get(mpart,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                       &face_edge,
+                                                       &face_edge_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+      // printf("face_edge: %d %p %p\n", n_face, (void *) face_edge_idx, (void *) face_edge);
+
+      int n_edge = PDM_multipart_part_connectivity_get(mpart,
+                                                       0,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                       &edge_vtx,
+                                                       &edge_vtx_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+      // printf("edge_vtx: %d %p %p\n", n_edge, (void *) face_edge_idx, (void *) face_edge);
+
+      PDM_g_num_t *cell_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+      // printf("cell_ln_to_gn : %p\n", (void *) cell_ln_to_gn);
+
+      PDM_g_num_t *face_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                      &face_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+      // printf("face_ln_to_gn : %p\n", (void *) face_ln_to_gn);
+
+      PDM_g_num_t *edge_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_EDGE,
+                                      &edge_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+      // printf("edge_ln_to_gn : %p\n", (void *) edge_ln_to_gn);
+
+      PDM_g_num_t *vtx_ln_to_gn;
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_MESH_ENTITY_VERTEX,
+                                      &vtx_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
+      // printf("vtx_ln_to_gn : %p\n", (void *) vtx_ln_to_gn);
+
+
+
+      PDM_iso_surface_part_set (isos,
+                                i_part,
+                                n_cell,
+                                n_face,
+                                n_edge,
+                                n_vtx,
+                                cell_face_idx,
+                                cell_face,
+                                face_edge_idx,
+                                face_edge,
+                                edge_vtx,
+                                NULL,//face_vtx_idx,
+                                NULL,//face_vtx,
+                                cell_ln_to_gn,
+                                face_ln_to_gn,
+                                edge_ln_to_gn,
+                                vtx_ln_to_gn,
+                                vtx_coord);
+
+      PDM_iso_surface_part_field_set (isos,
+                                      i_part,
+                                      pfield[i_part]);
+
+      // PDM_iso_surface_part_gradient_field_set (isos,
+      //                                          i_part,
+      //                                          pgradient_field[i_part]);
+    }
+
+  }
+
+  else {
+
+
+    // Compute dfield and gradient field
+    dfield          = (double *) malloc(     dn_vtx * sizeof(double));
+    dgradient_field = (double *) malloc( 3 * dn_vtx * sizeof(double));
+
+    for (int i = 0; i < dn_vtx; i++) {
+      eval_field_and_gradient(dvtx_coord[3*i  ],
+                              dvtx_coord[3*i+1],
+                              dvtx_coord[3*i+2],
+                              &dfield[i],
+                              &dgradient_field[3*i],
+                              &dgradient_field[3*i+1],
+                              &dgradient_field[3*i+2]);
+    }
+
+    if (1 && n_rank == 1) {
+      FILE *f = fopen("mandelbuld_sdf.vtk", "w");
+      fprintf(f, "# vtk DataFile Version 2.0\n");
+      fprintf(f, "mesh\n");
+      fprintf(f, "ASCII\n");
+      fprintf(f, "DATASET STRUCTURED_GRID\n");
+      fprintf(f, "DIMENSIONS "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", n_vtx_seg, n_vtx_seg, n_vtx_seg);
+      fprintf(f, "POINTS %d double\n", dn_vtx);
+      for(int i = 0; i < dn_vtx; ++i) {
+        fprintf(f, "%f %f %f\n", dvtx_coord[3*i  ], dvtx_coord[3*i+1], dvtx_coord[3*i+2]);
+      }
+      fprintf(f, "POINT_DATA %d\n", dn_vtx);
+      fprintf(f, "SCALARS sdf double 1\n");
+      fprintf(f, "LOOKUP_TABLE default\n");
+      for(int i = 0; i < dn_vtx; ++i) {
+        fprintf(f, "%f\n", dfield[i]);
+      }
+      fclose(f);
+    // abort();
+    }
+
+
+    PDM_iso_surface_dconnectivity_set(isos,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      dcell_face,
+                                      dcell_face_idx);
+    PDM_iso_surface_dconnectivity_set(isos,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      dface_edge,
+                                      dface_edge_idx);
+    PDM_iso_surface_dconnectivity_set(isos,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      dedge_vtx,
+                                      dedge_vtx_idx);
+
+    PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_CELL  , distrib_cell);
+    PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_FACE  , distrib_face);
+    PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_EDGE  , distrib_edge);
+    PDM_iso_surface_distrib_set(isos, PDM_MESH_ENTITY_VERTEX, vtx_distrib);
+
+
+    PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
+    PDM_iso_surface_dfield_set     (isos, dfield         );
+    // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+  }
 
   PDM_iso_surface_compute(isos);
 
-  char name[999];
-  sprintf(name, "iso_surface_%dproc", n_rank);
-  PDM_iso_surface_write(isos, name);
+  // char name[999];
+  // sprintf(name, "iso_surface_%dproc", n_rank);
+  // PDM_iso_surface_write(isos, name);
 
   PDM_iso_surface_free(isos);
 
-  free(dfield);
-  free(dgradient_field);
+  if (n_part > 0) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      free(pfield[i_part]);
+      free(pgradient_field[i_part]);
+    }
+    free(pfield);
+    free(pgradient_field);
 
+    PDM_multipart_free(mpart);
+  }
+  else {
+    free(dfield);
+    free(dgradient_field);
+  }
 
   if (elt_type < PDM_MESH_NODAL_POLY_3D) {
     PDM_dmesh_nodal_to_dmesh_free(dmntodm);

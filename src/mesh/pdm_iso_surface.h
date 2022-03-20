@@ -215,6 +215,20 @@ PDM_iso_surface_eval_field_and_gradient_set
                                    double *, double *, double *)
  );
 
+
+void
+PDM_iso_surface_surface_get
+(
+ PDM_iso_surface_t  *isos,
+ int                *n_vtx,
+ int                *n_elt,
+ int               **elt_vtx_idx,
+ int               **elt_vtx,
+ double            **vtx_coord,
+ PDM_g_num_t       **elt_ln_to_gn,
+ PDM_g_num_t       **vtx_ln_to_gn
+ );
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
