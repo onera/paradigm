@@ -961,18 +961,15 @@ _distrib_data_hilbert
 
   /** Hilbert Coordinates Computation **/
   PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (ptb->n_elt_proc * sizeof(PDM_hilbert_code_t));
-  PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (ptb->n_elt_proc * sizeof(PDM_hilbert_code_t));
+
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, ptb->n_elt_proc, concat_vtx_coord, hilbert_codes);
 
   int* hilbert_order = (int * ) malloc(ptb->n_elt_proc * sizeof(int));
   for(int i = 0; i < ptb->n_elt_proc; ++i) {
     hilbert_order    [i] = i;
-    tmp_hilbert_codes[i] = hilbert_codes[i];
   }
 
-  assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  PDM_sort_double (tmp_hilbert_codes, hilbert_order, ptb->n_elt_proc);
-  free(tmp_hilbert_codes);
+  PDM_hilbert_local_order(ptb->n_elt_proc, hilbert_codes, hilbert_order); // Just deduce order hilbert_codes is unchanged
 
   if(ptb->n_part > 1 ) {
     free(concat_vtx_coord);
@@ -991,37 +988,22 @@ _distrib_data_hilbert
 
   if(0 == 1) {
     PDM_log_trace_array_double(hilbert_codes, ptb->n_elt_proc, "hilbert_codes :: ");
+    PDM_log_trace_array_double(hilbert_codes_idx, ptb->s_comm+1, "hilbert_codes_idx :: ");
   }
 
   if(ptb->n_part > 1 ) {
     free(concat_weight);
   }
 
-  if (1 == 0) {
-    if (ptb->i_rank == 0) {
-      PDM_printf("data_distrib_index : ");
-      for(int i = 0; i < ptb->s_comm + 1; i++)
-        PDM_printf(PDM_FMT_G_NUM" ", ptb->data_distrib_index[i]);
-      PDM_printf("\n");
-    }
-  }
-  //ptb->data_distrib_index --> A deduire aprés
-
   ptb->n_send_data = (int *) malloc (sizeof(int) * ptb->s_comm);
   ptb->n_recv_data = (int *) malloc (sizeof(int) * ptb->s_comm);
 
   /* Pour chaque donnee le proc ou elle va etre envoyee */
-
   ptb->dest_proc = (int *) malloc (sizeof(int) * ptb->n_elt_proc);
 
   /* Calcul du nombre de donnees a envoyer a chaque procesus */
-
   for (int i = 0; i < ptb->s_comm; i++) {
     ptb->n_send_data[i] = 0;
-  }
-
-  if(0 == 1) {
-    PDM_log_trace_array_double(hilbert_codes_idx, ptb->s_comm+1, "hilbert_codes_idx :: ");
   }
 
   /*
