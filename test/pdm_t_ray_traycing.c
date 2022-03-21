@@ -964,6 +964,77 @@ int main(int argc, char *argv[])
     weight[i]=1.;
   } 
 
+  /*
+   * @Bastien :
+   *   L'idée ici est d'avoir pour chaque boite le nombre de rayons qui la traverse
+   *   Si nb_rayons = 0, on degage la boite
+   */
+  // int          n_select_boxes   = 0;
+  // double      *box_center_coord = NULL;
+  // // PDM_g_num_t *box_g_num        = NULL;
+  // int         *box_ray_n        = NULL;
+  // PDM_part_to_block_t* ptb_equi = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  //                                                               PDM_PART_TO_BLOCK_POST_CLEANUP,
+  //                                                               1.,
+  //                                                               PDM_PART_GEOM_HILBERT,
+  //                                                               &box_center_coord,
+  //                                                               &box_g_num,
+  //                                                               &box_ray_n, // =  Weight
+  //                                                               &n_select_boxes,
+  //                                                               1,
+  //                                                               comm);
+
+  // int          n_parent         = PDM_part_to_block_n_elt_block_get     (ptb_equi);
+  // PDM_g_num_t *parent_gnum      = PDM_part_to_block_block_gnum_get      (ptb_equi);
+  // PDM_g_num_t *distrib_equi_box = PDM_part_to_block_distrib_index_get   (ptb_equi);
+  // Il faut s'assurer qu'on envoie que des boites qui ont au moins un rayons
+  // int         *equi_box_count   = PDM_part_to_block_block_gnum_count_get(ptb_equi);
+
+  /*
+   *  Pour la localisation : on peut échanger le type d'élement puis on fait une permutation
+   *  sur le parent_gnum (avec un idx par type )
+   */
+
+
+  /*
+   * Echange de l'information box->rayon dans le nouveau partitionnement
+   *   See : paradigm/test/pdm_t_extract_part_from_part.c ( A adapter car on a deja lesconectivités en gnum )
+   *   PDM_pconnectivty_to_pconnectivty(pbox_ray, pbox_ray_idx) --> ray_ln_to_gn + box_ray
+   *   part1 = box
+   *   part2 = ray
+   *   part1_to_part2 = box_ray_idx + box_ray_gnum ( et donc écahnge reverse )
+   *   Puis on échange aussi les rayons (c'est le même part_to_part)
+   *   Il faudrait découper PDM_pconnectivty_to_pconnectivty pour pouvoir garder le part_to_part
+   *      - Creation du protocol
+   *      - Echange spécifique a des connectivités (pour les passés en local )
+   *      - Finalisation
+   *
+   *
+   *  DOnc a ce stade, on a une connectivité local box_ray et les info de rayons locals (pas de duplication !!!!)
+   */
+
+
+  /*
+   * On peut faire je pense avec le ptb_equi mais :
+   *      - pour la localisation on peut pas faire le tri indirect pour choper des sections
+   *      - Plus dure de renvoyer les résultats après
+   * Nouvaux part_to_part entre les box redistribué et le partitionnement initiale
+   * Donc part1 = implicite ordering of current block
+   *      part2 = user ordering
+   *      part1_to_part2 = parent_gnum (si mesh location il est permuté pour avoir des block d'elements en entrée )
+   * Echange des connectivités part part_to_part reverse
+   */
+
+  /*
+   *  On a en local tout pour faire la localisation / ray_traycing
+   */
+
+  /*
+   * Renvoie des résultats par part_to_part
+   *   --> Direct
+   */
+
+
 
   PDM_part_to_block_t *ptb_face = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
