@@ -224,7 +224,7 @@ static void
 _ecr_entrelace_float
 (
  PDM_writer_t                 *cs,
- const PDM_writer_statut_t     s_ecr_n_valeur,
+ const PDM_writer_status_t     s_ecr_n_valeur,
  PDM_io_fichier_t             *f_unit_geom,
  const PDM_io_n_composantes_t  t_comp,
  const PDM_l_num_t            *n_comp,
@@ -287,7 +287,7 @@ static void
 _ecr_entrelace_int
 (
  PDM_writer_t                 *cs,
- const PDM_writer_statut_t     s_ecr_n_valeur,
+ const PDM_writer_status_t     s_ecr_n_valeur,
  PDM_io_fichier_t             *f_unit_geom,
  const PDM_io_n_composantes_t  t_comp,
  const PDM_l_num_t            *n_comp,
@@ -1019,7 +1019,7 @@ PDM_writer_ensight_geom_write
   float *coord_tmp = (float *) malloc(n_som_proc * sizeof(float));
   PDM_g_num_t *numabs_tmp =
     (PDM_g_num_t *) malloc(n_som_proc * sizeof(PDM_g_num_t));
-  PDM_writer_statut_t s_ecr_n_val;
+  PDM_writer_status_t s_ecr_n_val;
   for (int idim = 0; idim < 3; idim++) {
     if (idim == 0)
       s_ecr_n_val = PDM_WRITER_ON;
@@ -1635,7 +1635,7 @@ PDM_writer_ensight_var_write
       _ecr_string(cs, unite, "part");
       _ecr_int(cs, unite, num_part);
 
-      if (var->loc == PDM_WRITER_VAR_SOMMETS) {
+      if (var->loc == PDM_WRITER_VAR_VERTICES) {
 
         /* Ecriture des valeurs du mot "coordinates" */
 
@@ -1661,7 +1661,7 @@ PDM_writer_ensight_var_write
           }
         }
 
-        PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF ;
+        PDM_writer_status_t s_ecr_n_val = PDM_WRITER_OFF ;
         for (int k = 0; k < (int) var->dim; k++) {
           s_ecr_n_val = PDM_WRITER_OFF;
           n_som_proc = 0;
@@ -1757,7 +1757,7 @@ PDM_writer_ensight_var_write
             }
           }
 
-          PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF;
+          PDM_writer_status_t s_ecr_n_val = PDM_WRITER_OFF;
 
           for (int k = 0; k < (int) var->dim; k++) {
             n_val_buff = 0;
@@ -1802,7 +1802,7 @@ PDM_writer_ensight_var_write
 
       }
 
-      else if (var->loc == PDM_WRITER_VAR_PARTICULES) {
+      else if (var->loc == PDM_WRITER_VAR_PARTICLES) {
 
         /* Ecriture des valeurs aux particules */
 

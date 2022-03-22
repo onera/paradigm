@@ -5706,7 +5706,7 @@ PDM_Mesh_nodal_write
 
   PDM_writer_t *cs = PDM_writer_create("Ensight",
                                        PDM_WRITER_FMT_ASCII,
-                                       PDM_WRITER_TOPO_CONSTANTE,
+                                       PDM_WRITER_TOPO_CST,
                                        PDM_WRITER_OFF,
                                        "test_3d_ens",
                                        filename,
@@ -5718,20 +5718,18 @@ PDM_Mesh_nodal_write
   /* Creation de la geometrie */
   int id_geom = PDM_writer_geom_create_from_mesh_nodal (cs,
                                                         "test3d_geom",
-                                                        PDM_WRITER_OFF,
-                                                        PDM_WRITER_OFF,
                                                         mesh);
 
   /* Creation des variables */
   int id_var_elt_part = PDM_writer_var_create(cs,
                                               PDM_WRITER_OFF,
-                                              PDM_WRITER_VAR_SCALAIRE,
+                                              PDM_WRITER_VAR_SCALAR,
                                               PDM_WRITER_VAR_ELEMENTS,
                                               "num_part");
 
   int id_var_elt_gnum = PDM_writer_var_create(cs,
                                               PDM_WRITER_OFF,
-                                              PDM_WRITER_VAR_SCALAIRE,
+                                              PDM_WRITER_VAR_SCALAR,
                                               PDM_WRITER_VAR_ELEMENTS,
                                               "elt_gnum");
 
