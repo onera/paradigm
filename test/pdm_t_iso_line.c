@@ -694,9 +694,9 @@ int main(int argc, char *argv[])
                                    double *,
                                    double *, double *, double *) = NULL;
 
-  // eval_field_and_gradient = &_eval_mickey;
-  _init_perlin_noise();
-  eval_field_and_gradient = &_eval_perlin_noise;
+  eval_field_and_gradient = &_eval_mickey;
+  // _init_perlin_noise();
+  // eval_field_and_gradient = &_eval_perlin_noise;
 
 
   PDM_multipart_t *mpart = NULL;
@@ -826,10 +826,10 @@ int main(int argc, char *argv[])
   else {
 
     PDM_poly_surf_gen (comm,
-                       0,//-0.5*length,
-                       1,//0.5*length,
-                       0,//-0.5*length,
-                       1,//0.5*length,
+                       -0.5*length,
+                       0.5*length,
+                       -0.5*length,
+                       0.5*length,
                        1,
                        0,
                        n_vtx_seg,
@@ -1143,7 +1143,7 @@ int main(int argc, char *argv[])
 
     PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
     PDM_iso_surface_dfield_set     (isos, dfield         );
-    // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+    PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
   }
 
 
@@ -1159,26 +1159,39 @@ int main(int argc, char *argv[])
 
   PDM_iso_surface_free(isos);
 
-  // free(dfield);
-  // free(dgradient_field);
+  if (n_part > 0) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      free(pfield[i_part]);
+      free(pgradient_field[i_part]);
+    }
+    free(pfield);
+    free(pgradient_field);
 
-  // if (elt_type < PDM_MESH_NODAL_POLY_2D) {
-  //   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
-  //   PDM_dcube_nodal_gen_free(dcube);
-  // } else {
-  //   free(distrib_face);
-  //   free(distrib_edge);
-  //   free(vtx_distrib);
-  //   free(dvtx_coord);
-  //   free(dface_edge_idx);
-  //   free(dface_vtx);
-  //   free(dface_edge);
-  //   free(dedge_vtx_idx);
-  //   free(dedge_vtx);
-  //   free(dedge_face);
-  //   free(dedge_group_idx);
-  //   free(dedge_group);
-  // }
+    PDM_multipart_free(mpart);
+  }
+  else {
+    free(dfield);
+    free(dgradient_field);
+  }
+
+
+  if (elt_type < PDM_MESH_NODAL_POLY_2D) {
+    PDM_dmesh_nodal_to_dmesh_free(dmntodm);
+    PDM_dcube_nodal_gen_free(dcube);
+  } else {
+    free(distrib_face);
+    free(distrib_edge);
+    free(vtx_distrib);
+    free(dvtx_coord);
+    free(dface_edge_idx);
+    free(dface_vtx);
+    free(dface_edge);
+    free(dedge_vtx_idx);
+    free(dedge_vtx);
+    free(dedge_face);
+    free(dedge_group_idx);
+    free(dedge_group);
+  }
 
   if (i_rank == 0) {
     printf("-- End\n");

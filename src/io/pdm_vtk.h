@@ -341,6 +341,24 @@ PDM_vtk_lagrange_to_ijk
  const int                  order
  );
 
+
+void
+PDM_vtk_write_polydata_field
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          n_face,
+ const int          face_vtx_idx[],
+ const int          face_vtx[],
+ const PDM_g_num_t  face_g_num[],
+ const char         face_field_name[],
+ const double       face_field[],
+ const char         vtx_field_name[],
+ const double       vtx_field[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

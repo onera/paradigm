@@ -1655,7 +1655,7 @@ PDM_part_to_part_create
   ptp->part1_to_part2           = part1_to_part2;        
   ptp->comm                     = comm;
 
-  if (1) {
+  if (0) {
     log_trace("--- Part1 ---\n");
     for (int i_part = 0; i_part < ptp->n_part1; i_part++) {
       log_trace("part %d: n_elt = %d\n", i_part, ptp->n_elt1[i_part]);

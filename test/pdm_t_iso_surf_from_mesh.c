@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
                      &sm_face_ln_to_gn,
                      &sm_vtx_ln_to_gn);
 
-  if (1) {
+  if (0) {
     char filename[999];
     sprintf(filename, "surface_mesh_%2.2d.vtk", i_rank);
     PDM_vtk_write_polydata(filename,
@@ -939,6 +939,10 @@ int main(int argc, char *argv[])
 
   PDM_iso_surface_compute(isos);
 
+
+  char name[999];
+  sprintf(name, "iso_distance_l_%3.3f", level);
+  PDM_iso_surface_write(isos, name);
 
   PDM_iso_surface_free(isos);
 
