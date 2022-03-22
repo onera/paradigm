@@ -330,6 +330,18 @@ int main(int argc, char *argv[])
     pface_vtx_idx[i_part] = face_vtx_idx;
     pvtx_coord   [i_part] = vtx;
 
+    char filename[999];
+    sprintf(filename, "mesh_before_extract_%3.3d_%3.3d.vtk", i_part, i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pn_vtx[i_part],
+                           pvtx_coord[i_part],
+                           pvtx_ln_to_gn[i_part],
+                           pn_face[i_part],
+                           pface_vtx_idx[i_part],
+                           pface_vtx[i_part],
+                           pface_ln_to_gn[i_part],
+                           NULL);
+
     /*
      * Compute center-cell and extract cells corresponding to criteria
      */
