@@ -2669,11 +2669,13 @@ _iso_surface_part
   double delta_t;
   double delta_max;
   double delta_min;
+  double t_beg, t_end;
 
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
   t1 = PDM_MPI_Wtime();
+
   /*
    *  Scan edges to find those which intersect the iso-surface
    */
@@ -2720,12 +2722,9 @@ _iso_surface_part
   }
 
   t2 = PDM_MPI_Wtime();
-  delta_t = t2 - t1;
-  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
-  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
-  if(i_rank == 0) {
-    printf("PDM_iso_surface : scan edges : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
-  }
+  isos->times_elapsed[SCAN_EDGES] = t2 - t1;
+
+
 
   t1 = PDM_MPI_Wtime();
 
@@ -3095,12 +3094,8 @@ _iso_surface_part
 
 
   t2 = PDM_MPI_Wtime();
-  delta_t = t2 - t1;
-  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
-  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
-  if(i_rank == 0) {
-    printf("PDM_iso_surface : extraction : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
-  }
+  isos->times_elapsed[EXTRACTION] = t2 - t1;
+
 
   t1 = PDM_MPI_Wtime();
 
@@ -3146,14 +3141,7 @@ _iso_surface_part
   }
 
   t2 = PDM_MPI_Wtime();
-  delta_t = t2 - t1;
-  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
-  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
-  if(i_rank == 0) {
-    printf("PDM_iso_surface : build isosurface : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
-  }
-
-  t1 = PDM_MPI_Wtime();
+  isos->times_elapsed[BUILD_ISOSURF] = t2 - t1;
 
 
   /*
@@ -3236,6 +3224,10 @@ PDM_iso_surface_create
 
   isos->eval_field_and_gradient = NULL;
 
+  for (int i = 0; i < N_TIMER_ISO_SURFACE; i++) {
+    isos->times_elapsed[i] = 0.;
+  }
+
   return isos;
 }
 
@@ -3248,6 +3240,7 @@ PDM_iso_surface_compute
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
   double t1 = PDM_MPI_Wtime();
+
 
   if(isos->is_dist == 0) {
     if(i_rank == 0) {
@@ -3262,17 +3255,7 @@ PDM_iso_surface_compute
   }
 
   double t2 = PDM_MPI_Wtime();
-
-  double delta_t = t2 - t1;
-  double delta_max;
-  double delta_min;
-
-  PDM_MPI_Allreduce (&delta_t, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
-  PDM_MPI_Allreduce (&delta_t, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
-
-  if(i_rank == 0) {
-    printf("PDM_iso_surface : min/max = %12.5e / %12.5e\n", delta_min, delta_max);
-  }
+  isos->times_elapsed[TOTAL] = t2 - t1;
 }
 
 // See with Eric et Bastien : par type ou une fonction avec 1000 arguments ?
@@ -3524,6 +3507,8 @@ PDM_iso_surface_write
  const char         *name
  )
  {
+  double t1 = PDM_MPI_Wtime();
+
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
@@ -3672,6 +3657,9 @@ PDM_iso_surface_write
   free(val_part);
   free(val_elt_gnum);
   free(val_vtx_gnum);
+
+  double t2 = PDM_MPI_Wtime();
+  isos->times_elapsed[WRITE_ISOSURF] = t2 - t1;
  }
 
 
@@ -3722,6 +3710,35 @@ PDM_iso_surface_surface_get
     *elt_ln_to_gn = isos->isosurf_face_ln_to_gn;
   }
 }
+
+
+
+void
+PDM_iso_surface_dump_times
+(
+ PDM_iso_surface_t  *isos
+ )
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+
+  for (int i = 0; i < N_TIMER_ISO_SURFACE; i++) {
+
+    double delta_max;
+    double delta_min;
+    PDM_MPI_Allreduce (&isos->times_elapsed[i], &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, isos->comm);
+    PDM_MPI_Allreduce (&isos->times_elapsed[i], &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, isos->comm);
+
+    if (i_rank == 0) {
+      printf("PDM_iso_surface : %s min/max = %12.5e / %12.5e\n",
+             _iso_surface_timer_step_name[i],
+             delta_min, delta_max);
+    }
+  }
+}
+
+
+
 
 #ifdef __cplusplus
 }

@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -41,9 +42,31 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
+#define N_TIMER_ISO_SURFACE 5
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
+
+typedef enum {
+
+  SCAN_EDGES,
+  EXTRACTION,
+  BUILD_ISOSURF,
+  TOTAL,
+  WRITE_ISOSURF
+
+} _iso_surface_timer_step_t;
+
+
+static const char *_iso_surface_timer_step_name[N_TIMER_ISO_SURFACE] = {
+  "scan edges      ",
+  "extraction      ",
+  "build isosurface",
+  "total (w/o IO)  ",
+  "write isosurface"
+};
+
 
 /**
  * \struct _pdm_iso_surface
@@ -127,6 +150,7 @@ struct _pdm_iso_surface_t
   PDM_g_num_t         *isosurf_edge_ln_to_gn; // only in 2d
   PDM_g_num_t         *isosurf_face_ln_to_gn;
 
+  double times_elapsed[N_TIMER_ISO_SURFACE];
 
   int debug;
 };

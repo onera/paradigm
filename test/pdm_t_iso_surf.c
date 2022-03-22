@@ -1373,6 +1373,8 @@ int main(int argc, char *argv[])
   sprintf(name, "iso_surface_%dproc", n_rank);
   PDM_iso_surface_write(isos, name);
 
+  PDM_iso_surface_dump_times(isos);
+
   PDM_iso_surface_free(isos);
 
   if (n_part > 0) {

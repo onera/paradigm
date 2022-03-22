@@ -229,6 +229,12 @@ PDM_iso_surface_surface_get
  PDM_g_num_t       **vtx_ln_to_gn
  );
 
+void
+PDM_iso_surface_dump_times
+(
+ PDM_iso_surface_t  *isos
+ );
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
