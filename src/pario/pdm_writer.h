@@ -243,8 +243,6 @@ PDM_writer_step_end
  *
  * \param [in]  cs                Pointer to \ref PDM_writer object
  * \param [in]  nom_geom          Nom de l'objet geometrique
- * \param [in]  st_decoup_poly2d  Active le decoupage des polygones
- * \param [in]  st_decoup_poly3d  Active le decoupage des polyedres
  *
  * \return   Identificateur de l'objet geom dans cs
  *
@@ -255,8 +253,6 @@ PDM_writer_geom_create
 (
  PDM_writer_t               *cs,
  const char                 *nom_geom,
- const PDM_writer_status_t   st_decoup_poly2d,
- const PDM_writer_status_t   st_decoup_poly3d,
  const int                   n_part
 );
 
@@ -265,8 +261,6 @@ PDM_writer_geom_create_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const char                *nom_geom,
- const PDM_writer_status_t  st_decoup_poly2d,
- const PDM_writer_status_t  st_decoup_poly3d,
  PDM_Mesh_nodal_t          *mesh
  );
 

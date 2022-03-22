@@ -36,8 +36,6 @@ extern "C" {
 struct _PDM_writer_geom_t {
 
   char                     *nom_geom;           /* Nom de la geometrie */
-  PDM_writer_status_t       st_decoup_poly2d;   /* Decoupage des polygones */
-  PDM_writer_status_t       st_decoup_poly3d;   /* Decoupage des polyedres */
   void                     *geom_fmt;           /* Description propre au format fmt */
   PDM_writer_t             *_cs;                /* Pointeur sur la structure cs parente */
   PDM_MPI_Comm              pdm_mpi_comm;       /* Communicateur MPI */

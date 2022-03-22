@@ -884,8 +884,6 @@ _export_ini_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     /*
      * Debut des ecritures
@@ -1190,8 +1188,6 @@ _export_ol_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
 

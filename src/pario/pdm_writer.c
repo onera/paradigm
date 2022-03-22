@@ -304,9 +304,6 @@ const PDM_MPI_Comm  comm
 {
   geom->nom_geom = NULL;
 
-  geom->st_decoup_poly2d = PDM_WRITER_OFF;
-  geom->st_decoup_poly3d = PDM_WRITER_OFF;
-
   geom->mesh_nodal = PDM_Mesh_nodal_create (n_part, comm);
 
   geom->geom_fmt       = NULL;
@@ -732,8 +729,6 @@ PDM_writer_step_end
  *
  * \param [in]  cs                Pointer to \ref PDM_writer object
  * \param [in]  nom_geom          Nom de l'objet geometrique
- * \param [in]  st_decoup_poly2d  Active le decoupage des polygones
- * \param [in]  st_decoup_poly3d  Active le decoupage des polyedres
  *
  * \return   Identificateur de l'objet geom dans cs
  *
@@ -744,22 +739,14 @@ PDM_writer_geom_create
 (
  PDM_writer_t               *cs,
  const char                 *nom_geom,
- const PDM_writer_status_t   st_decoup_poly2d,
- const PDM_writer_status_t   st_decoup_poly3d,
  const int                   n_part
 )
 {
-  /* Erreur si le decoupage des polygones ou polyedres est choisi */
 
   if (n_part <= 0) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur cs_geom_create : Le nombre de partition doit etre >\n"
                     "                      Ajuster le communicateur MPI ou\n"
                     "                      Creer un sous-domaine avec 0 element\n");
-  }
-
-  if ((st_decoup_poly2d == 1) || (st_decoup_poly3d == 1)) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_geom_create : Les fonctions de decoupage ne sont pas operationnelles\n");
-    abort();
   }
 
   if (cs == NULL) {
@@ -806,17 +793,10 @@ PDM_writer_geom_create_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const char                *nom_geom,
- const PDM_writer_status_t  st_decoup_poly2d,
- const PDM_writer_status_t  st_decoup_poly3d,
  PDM_Mesh_nodal_t          *mesh
 )
 {
   /* Erreur si le decoupage des polygones ou polyedres est choisi */
-
-  if ((st_decoup_poly2d == 1) || (st_decoup_poly3d == 1)) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_geom_create : Les fonctions de decoupage ne sont pas operationnelles\n");
-    abort();
-  }
 
   if (cs == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
@@ -838,8 +818,6 @@ PDM_writer_geom_create_from_mesh_nodal
 
   //_geom_init(geom, n_part, cs->pdm_mpi_comm);
   geom->nom_geom = NULL;
-  geom->st_decoup_poly2d = PDM_WRITER_OFF;
-  geom->st_decoup_poly3d = PDM_WRITER_OFF;
   geom->mesh_nodal = mesh;
   geom->geom_fmt       = NULL;
 

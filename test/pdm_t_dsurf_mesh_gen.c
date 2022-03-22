@@ -782,8 +782,6 @@ _export_ini_mesh
 
     id_geom = PDM_writer_geom_create (id_cs,
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     /*
      * Debut des ecritures

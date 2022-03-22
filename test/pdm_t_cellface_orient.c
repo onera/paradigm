@@ -324,8 +324,6 @@ int main(int argc, char *argv[])
 
   int id_geom = PDM_writer_geom_create(id_cs,
                                        "test3d_geom",
-                                       PDM_WRITER_OFF,
-                                       PDM_WRITER_OFF,
                                        n_part);
 
   /* Creation des variables */

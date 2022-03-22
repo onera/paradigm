@@ -162,8 +162,6 @@ _export_ol_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
 
@@ -1310,8 +1308,6 @@ main
                                              "sfieldA");
   int ens_geoA_merge = PDM_writer_geom_create (ens_meshA,
                                          "meshA_merge",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_step_beg (ens_meshA, 0.);
 
@@ -1343,8 +1339,6 @@ main
 
   int ens_geoA = PDM_writer_geom_create (ens_meshA,
                                          "meshA",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_geom_coord_set (ens_meshA,
                              ens_geoA,
@@ -1427,8 +1421,6 @@ main
 
   int ens_geoB = PDM_writer_geom_create (ens_meshB,
                                          "meshB",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_step_beg (ens_meshB, 0.);
 

@@ -813,8 +813,6 @@ int main(int argc, char *argv[])
 
     int id_geom = PDM_writer_geom_create (id_cs,
                                           "mesh",
-                                          PDM_WRITER_OFF,
-                                          PDM_WRITER_OFF,
                                           n_part);
 
     int id_var_dist = PDM_writer_var_create (id_cs,

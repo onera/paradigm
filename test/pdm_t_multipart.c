@@ -329,8 +329,6 @@ int main(int argc, char *argv[])
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
       geom_ids[i_zone] = PDM_writer_geom_create(id_cs,
                                                 "mesh",
-                                                PDM_WRITER_OFF,
-                                                PDM_WRITER_OFF,
                                                 n_part_zones[i_zone]); //total nb of part for this proc/zone
     }
     // Cell local id
