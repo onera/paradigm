@@ -2671,9 +2671,12 @@ _iso_surface_part
   double delta_min;
   double t_beg, t_end;
 
+  int n_rank;
   int i_rank;
+  PDM_MPI_Comm_size(isos->comm, &n_rank);
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
+  // PDM_MPI_Barrier(isos->comm);
   t1 = PDM_MPI_Wtime();
 
   /*
@@ -2721,6 +2724,7 @@ _iso_surface_part
     }
   }
 
+  // PDM_MPI_Barrier(isos->comm);
   t2 = PDM_MPI_Wtime();
   isos->times_elapsed[SCAN_EDGES] = t2 - t1;
 
@@ -2796,6 +2800,58 @@ _iso_surface_part
   else {
     PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", isos->dim);
   }
+
+  /*
+   * Compute load imbalance
+   */
+  int n_tot_extract = 0;
+  for(int i_part = 0; i_part < isos->n_part; i_part++) {
+    n_tot_extract += n_extract_elt[i_part];
+  }
+  int *n_extract_per_proc = (int *) malloc(n_rank * sizeof(int));
+  PDM_MPI_Allgather(&n_tot_extract,
+                    1,
+                    PDM_MPI_INT,
+                    n_extract_per_proc,
+                    1,
+                    PDM_MPI_INT,
+                    isos->comm);
+  double mean_selected = 0.;
+  int    min_selected = pow(2, 30);
+  int    max_selected = 0;
+
+  // log_trace("n_tot_extract = %i \n", n_tot_extract);
+  // PDM_log_trace_array_int(n_extract_per_proc, n_rank, "n_extract_per_proc :: ");
+
+  PDM_g_num_t n_perfect_balancing = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    mean_selected = mean_selected + n_extract_per_proc[i];
+    min_selected = PDM_MIN(min_selected, n_extract_per_proc[i]);
+    max_selected = PDM_MAX(max_selected, n_extract_per_proc[i]);
+    n_perfect_balancing += n_extract_per_proc[i];
+  }
+  mean_selected = mean_selected/((double) n_rank);
+  n_perfect_balancing = n_perfect_balancing/n_rank;
+
+  double rms = 0.;
+  for(int i = 0; i < n_rank; ++i) {
+    rms += (mean_selected - n_extract_per_proc[i]) * (mean_selected - n_extract_per_proc[i]);
+  }
+  rms = sqrt(rms/((double) n_rank));
+
+  double alpha_max = (max_selected - n_perfect_balancing) / (n_perfect_balancing);
+  double alpha_min = (min_selected - n_perfect_balancing) / (n_perfect_balancing);
+
+  /*Compute the max between then number of cell in the smallest and bigger blocks*/
+  double alpha        = PDM_MAX(alpha_max, PDM_ABS(alpha_min));
+  double load_bal_err = 100. * alpha;
+
+
+  if(i_rank == 0) {
+    printf(" - Average number of selected cells : %12.5e min = %i / max = %i (rms = %12.5e) / load_bal_err = %12.5e % \n", mean_selected, min_selected, max_selected, rms, load_bal_err);
+  }
+
+  free(n_extract_per_proc);
 
 
   /*

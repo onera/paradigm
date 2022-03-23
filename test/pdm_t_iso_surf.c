@@ -1367,7 +1367,9 @@ int main(int argc, char *argv[])
     // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
   }
 
+  PDM_MPI_Barrier(comm);
   PDM_iso_surface_compute(isos);
+  PDM_MPI_Barrier(comm);
 
   char name[999];
   sprintf(name, "iso_surface_%dproc", n_rank);
