@@ -742,7 +742,7 @@ _export_ini_mesh
                                            "test_2d_surf_ens",
                                            "mesh1",
                                            pdm_mpi_comm,
-                                           PDM_IO_ACCES_MPI_SIMPLE,
+                                           PDM_IO_KIND_MPI_SIMPLE,
                                            1.,
                                            NULL);
 

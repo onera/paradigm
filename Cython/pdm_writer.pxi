@@ -1,11 +1,11 @@
 cdef extern from "pdm_io.h":
 
-  ctypedef enum PDM_io_acces_t:
+  ctypedef enum PDM_io_kind_t:
   
-    PDM_IO_ACCES_MPIIO_EO   = 0
-    PDM_IO_ACCES_MPIIO_IP   = 1
-    PDM_IO_ACCES_MPI_SIMPLE = 2
-    PDM_IO_ACCES_SEQ        = 3
+    PDM_IO_KIND_MPIIO_EO   = 0
+    PDM_IO_KIND_MPIIO_IP   = 1
+    PDM_IO_KIND_MPI_SIMPLE = 2
+    PDM_IO_KIND_SEQ        = 3
 
 cdef extern from "pdm_mesh_nodal.h":
 
@@ -75,7 +75,7 @@ cdef extern from "pdm_writer.h":
                                    char                   *rep_sortie,
                                    char                   *nom_sortie,
                                    PDM_MPI_Comm            pdm_mpi_comm,
-                                   PDM_io_acces_t          acces,
+                                   PDM_io_kind_t          acces,
                                    double                  prop_noeuds_actifs,
                                    char                   *options)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -251,7 +251,7 @@ cdef class Writer:
                 char                  *rep_sortie,
                 char                  *nom_sortie,
                 MPI.Comm               comm,
-                PDM_io_acces_t         acces,
+                PDM_io_kind_t         acces,
                 NPY.double_t           prop_noeuds_actifs,
                 char                  *options):
       """

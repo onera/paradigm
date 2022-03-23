@@ -265,7 +265,7 @@ program testf
                           "test_writer",             &
                           "writer",                  &
                           comm,                      &
-                          PDM_IO_ACCES_MPI_SIMPLE,   &
+                          PDM_IO_KIND_MPI_SIMPLE,   &
                           1.d0,                      &
                           "")
 

@@ -189,7 +189,7 @@ const PDM_writer_status_t     st_reprise,
 const char                   *rep_sortie,
 const char                   *nom_sortie,
 const PDM_MPI_Comm            pdm_mpi_comm,
-const PDM_io_acces_t          acces,
+const PDM_io_kind_t          acces,
 const double                  prop_noeuds_actifs,
 const char                   *options
 );

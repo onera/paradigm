@@ -127,7 +127,7 @@ struct _PDM_writer_t {
   _PDM_writer_var_tab_t      *var_tab;            /* Tableau des variables */
   _PDM_writer_geom_tab_t     *geom_tab;           /* Tableau des geometries */
   double                      physical_time;      /* Temps physique de la simulation */
-  PDM_io_acces_t              acces;              /* Type d'acces au fichier (MPIIIO,...) */
+  PDM_io_kind_t              acces;              /* Type d'acces au fichier (MPIIIO,...) */
   double                      prop_noeuds_actifs; /* Proportion des noeuds actifs */
   _PDM_writer_name_map_tab_t *name_map_tab;       /* Stockage du mapping des noms */
   int                         n_options;          /* Nombre d'options */

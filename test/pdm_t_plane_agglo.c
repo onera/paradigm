@@ -495,7 +495,7 @@ _export_ini_mesh
                                            "pdm_t_plane_agglo_ens",
                                            "fine_mesh",
                                            pdm_mpi_comm,
-                                           PDM_IO_ACCES_MPI_SIMPLE,
+                                           PDM_IO_KIND_MPI_SIMPLE,
                                            1.,
                                            NULL );
 
@@ -881,7 +881,7 @@ _export_ini_mesh
 //                               "pdm_t_plane_agglo_ens",
 //                               "coarse_mesh",
 //                               pdm_mpi_comm,
-//                               PDM_IO_ACCES_MPI_SIMPLE,
+//                               PDM_IO_KIND_MPI_SIMPLE,
 //                               1.,
 //                               NULL);
 

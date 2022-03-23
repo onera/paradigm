@@ -5711,7 +5711,7 @@ PDM_Mesh_nodal_write
                                        "test_3d_ens",
                                        filename,
                                        PDM_MPI_COMM_WORLD,
-                                       PDM_IO_ACCES_MPI_SIMPLE,
+                                       PDM_IO_KIND_MPI_SIMPLE,
                                        1.,
                                        NULL);
 

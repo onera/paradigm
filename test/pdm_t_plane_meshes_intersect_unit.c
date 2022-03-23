@@ -75,7 +75,7 @@ _export_ol_mesh
                                 "test_2d_unit_ens",
                                 "olmesh1",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1.,
                                 NULL);
 
@@ -86,7 +86,7 @@ _export_ol_mesh
                                 "test_2d_unit_ens",
                                 "olmesh2",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1,
                                 NULL);
 
@@ -1297,7 +1297,7 @@ main
                                                "test_2d_unit_ens",
                                                "meshA",
                                                PDM_MPI_COMM_WORLD,
-                                               PDM_IO_ACCES_MPI_SIMPLE,
+                                               PDM_IO_KIND_MPI_SIMPLE,
                                                1.,
                                                NULL);
 
@@ -1409,7 +1409,7 @@ main
                                                "test_2d_unit_ens",
                                                "meshB",
                                                PDM_MPI_COMM_WORLD,
-                                               PDM_IO_ACCES_MPI_SIMPLE,
+                                               PDM_IO_KIND_MPI_SIMPLE,
                                                1.,
                                                NULL);
 
