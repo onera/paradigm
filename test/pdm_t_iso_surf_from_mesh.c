@@ -707,11 +707,6 @@ int main(int argc, char *argv[])
                                     &face_edge,
                                     &face_edge_idx,
                                     PDM_OWNERSHIP_KEEP);
-      PDM_log_trace_connectivity_int(face_edge_idx,
-                                     face_edge,
-                                     n_face,
-                                     "face_edge : ");
-
       int *edge_vtx_idx;
       int *edge_vtx;
       PDM_multipart_part_connectivity_get(mpart,

@@ -362,6 +362,12 @@ int main(int argc, char *argv[])
     bbox[3] = 0.7;
     bbox[4] = 0.7;
     bbox[5] = 0.65;
+    // bbox[0] = 0.75;
+    // bbox[1] = 0.75;
+    // bbox[2] = 0.75;
+    // bbox[3] = 1.25;
+    // bbox[4] = 1.25;
+    // bbox[5] = 1.25;
 
     int n_select_face = 0;
 
@@ -473,25 +479,27 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  for(int i_part = 0; i_part < n_part_out; ++i_part) {
+  if(0 == 1) {
+    for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
-    char filename[999];
-    sprintf(filename, "extract_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
-    PDM_vtk_write_point_cloud(filename,
-                              pn_extract_vtx[i_part],
-                              pextract_vtx[i_part],
-                              NULL, NULL);
+      char filename[999];
+      sprintf(filename, "extract_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                pn_extract_vtx[i_part],
+                                pextract_vtx[i_part],
+                                NULL, NULL);
 
-    sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
-    PDM_vtk_write_polydata(filename,
-                           pn_extract_vtx[i_part],
-                           pextract_vtx[i_part],
-                           pextract_vtx_ln_to_gn[i_part],
-                           pn_extract_face[i_part],
-                           pextract_face_vtx_idx[i_part],
-                           pextract_face_vtx[i_part],
-                           pextract_face_ln_to_gn[i_part],
-                           NULL);
+      sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
+      PDM_vtk_write_polydata(filename,
+                             pn_extract_vtx[i_part],
+                             pextract_vtx[i_part],
+                             pextract_vtx_ln_to_gn[i_part],
+                             pn_extract_face[i_part],
+                             pextract_face_vtx_idx[i_part],
+                             pextract_face_vtx[i_part],
+                             pextract_face_ln_to_gn[i_part],
+                             NULL);
+    }
   }
 
   free(pn_extract_face);
