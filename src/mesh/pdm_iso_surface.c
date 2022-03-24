@@ -808,7 +808,7 @@ _iso_line_dist
   }
 
 
-  if (1) {//isos->debug) {
+  if (isos->debug) {
     // PDM_log_trace_connectivity_int(pface_edge_idx,
     //                                pface_edge,
     //                                n_face,
@@ -850,7 +850,7 @@ _iso_line_dist
                                      edge_coord,
                                      edge_gradient);
 
-  if (1) {//isos->debug) {
+  if (isos->debug) {
     sprintf(filename, "edge_intersection_%2.2d.vtk", i_rank);
     _dump_vectors (filename,
                    n_edge,
