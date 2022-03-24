@@ -31,6 +31,7 @@
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_priv.h"
+#include "pdm_writer.h"
 
 /*============================================================================
  * Type definitions
@@ -180,7 +181,7 @@ _eval_sphere
        double *df_dz
  )
 {
-  *f = x * x + y * y + z * z - 0.125;
+  *f = x * x + y * y + z * z - 0.26;
 
   *df_dx = 2*x;
   *df_dy = 2*y;
@@ -781,6 +782,174 @@ _read_args(int                    argc,
 
 
 
+static void
+_dump_dmesh
+(
+ int         dn_cell,
+ int         dcell_face_idx[],
+ PDM_g_num_t dcell_face[],
+ int         dn_face,
+ int         dface_vtx_idx[],
+ PDM_g_num_t dface_vtx[],
+ int         dn_vtx,
+ double      dvtx_coord[],
+ double      dfield[],
+ double      dgradient[]
+ )
+{
+  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_ASCII,
+                                          PDM_WRITER_TOPO_CONSTANTE,
+                                          PDM_WRITER_OFF,
+                                          "test_isosurf3d",
+                                          "isosurf3d",
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_ACCES_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+  int id_geom = PDM_writer_geom_create(id_cs,
+                                       "isosurf3d_geom",
+                                       PDM_WRITER_OFF,
+                                       PDM_WRITER_OFF,
+                                       1);
+
+  int id_var_field = PDM_writer_var_create(id_cs,
+                                           PDM_WRITER_ON,
+                                           PDM_WRITER_VAR_SCALAIRE,
+                                           PDM_WRITER_VAR_SOMMETS,
+                                           "field");
+
+  int id_var_gradient;
+
+  if (dgradient != NULL) {
+    id_var_gradient = PDM_writer_var_create(id_cs,
+                                            PDM_WRITER_ON,
+                                            PDM_WRITER_VAR_VECTEUR,
+                                            PDM_WRITER_VAR_SOMMETS,
+                                            "gradient");
+  }
+
+  PDM_writer_step_beg(id_cs, 0.);
+
+  PDM_g_num_t *cell_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_cell);
+  for (int i = 0; i < dn_cell; i++) {
+    cell_ln_to_gn[i] = i + 1;
+  }
+
+  PDM_g_num_t *face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_face);
+  for (int i = 0; i < dn_face; i++) {
+    face_ln_to_gn[i] = i + 1;
+  }
+
+  PDM_g_num_t *vtx_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_vtx);
+  for (int i = 0; i < dn_vtx; i++) {
+    vtx_ln_to_gn[i] = i + 1;
+  }
+
+
+  int *cell_face = (int *) malloc(sizeof(int) * dcell_face_idx[dn_cell]);
+  for (int i = 0; i < dcell_face_idx[dn_cell]; i++) {
+    cell_face[i] = (int) dcell_face[i];
+  }
+
+  int *face_vtx = (int *) malloc(sizeof(int) * dface_vtx_idx[dn_face]);
+  for (int i = 0; i < dface_vtx_idx[dn_face]; i++) {
+    face_vtx[i] = (int) dface_vtx[i];
+  }
+
+
+
+  int *face_vtxNb  = (int *) malloc(sizeof(int) * dn_face);
+  int *cell_faceNb = (int *) malloc(sizeof(int) * dn_cell);
+
+  for (int i = 0; i < dn_cell; i++) {
+    cell_faceNb[i] = dcell_face_idx[i+1] - dcell_face_idx[i];
+  }
+
+  for (int i = 0; i < dn_face; i++) {
+    face_vtxNb[i] = dface_vtx_idx[i+1] - dface_vtx_idx[i];
+  }
+
+  PDM_writer_geom_coord_set(id_cs,
+                            id_geom,
+                            0,
+                            dn_vtx,
+                            dvtx_coord,
+                            vtx_ln_to_gn);
+
+  PDM_writer_geom_cell3d_cellface_add (id_cs,
+                                       id_geom,
+                                       0,
+                                       dn_cell,
+                                       dn_face,
+                                       dface_vtx_idx,
+                                       face_vtxNb,
+                                       face_vtx,
+                                       dcell_face_idx,
+                                       cell_faceNb,
+                                       cell_face,
+                                       cell_ln_to_gn);
+
+
+  PDM_writer_geom_write(id_cs,
+                        id_geom);
+
+
+  PDM_real_t *val_field    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_vtx);
+  PDM_real_t *val_gradient = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_vtx * 3);
+
+  for (int i = 0; i < dn_vtx; i++) {
+    val_field[i] = (PDM_real_t) dfield[i];
+    if (dgradient != NULL) {
+      for (int j = 0; j < 3; j++) {
+        val_gradient[3*i+j] = (PDM_real_t) dgradient[3*i+j];
+      }
+    }
+  }
+
+
+  PDM_writer_var_set(id_cs,
+                     id_var_field,
+                     id_geom,
+                     0,
+                     val_field);
+
+  PDM_writer_var_write(id_cs,
+                       id_var_field);
+
+
+  if (dgradient != NULL) {
+    PDM_writer_var_set(id_cs,
+                       id_var_gradient,
+                       id_geom,
+                       0,
+                       val_gradient);
+
+    PDM_writer_var_write(id_cs,
+                         id_var_gradient);
+  }
+
+
+  PDM_writer_step_end(id_cs);
+
+  PDM_writer_free(id_cs);
+
+  free(val_field);
+  free(val_gradient);
+  free(face_vtxNb);
+  free(cell_faceNb);
+
+  free(cell_ln_to_gn);
+  free(face_ln_to_gn);
+  free(vtx_ln_to_gn);
+  free(cell_face);
+  free(face_vtx);
+}
+
+
+
+
 /**
  *
  * \brief  Main
@@ -984,16 +1153,16 @@ int main(int argc, char *argv[])
   else {
     // polyvol_gen
     PDM_poly_vol_gen (comm,
-                      -0.5*length,//-0.1,
-                      -0.5*length,//-0.2,
-                      -0.5*length,//0.07,
+                      0.,//-0.5*length,//-0.1,
+                      0.,//-0.5*length,//-0.2,
+                      0.,//-0.5*length,//0.07,
                       length,
                       length,
                       length,
                       n_vtx_seg,
                       n_vtx_seg,
                       n_vtx_seg,
-                      0, // randomize
+                      1, // randomize
                       0,
                       &ng_cell,
                       &ng_face,
@@ -1074,6 +1243,7 @@ int main(int argc, char *argv[])
     PDM_multipart_run_ppart(mpart);
   }
 
+<<<<<<< HEAD
   if(0 == 1) {
     _init_perlin_noise();
     _update_perlin_noise(1.);
@@ -1094,6 +1264,10 @@ int main(int argc, char *argv[])
 
 
   eval_field_and_gradient = &_eval_mandelbulb;
+=======
+  // _init_perlin_noise();
+  eval_field_and_gradient = &_eval_sphere;
+>>>>>>> 19dec9e8 ([pdm_iso_surface] add visu for polyhedral mesh)
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
   // PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_PLANE, 1, PDM_OWNERSHIP_KEEP, comm);
@@ -1360,6 +1534,18 @@ int main(int argc, char *argv[])
         fprintf(f, "%f\n", dfield[i]);
       }
       fclose(f);
+
+
+      _dump_dmesh (dn_cell,
+                   dcell_face_idx,
+                   dcell_face,
+                   dn_face,
+                   dface_vtx_idx,
+                   dface_vtx,
+                   dn_vtx,
+                   dvtx_coord,
+                   dfield,
+                   dgradient_field);
     // abort();
     }
 
@@ -1385,7 +1571,7 @@ int main(int argc, char *argv[])
 
     PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
     PDM_iso_surface_dfield_set     (isos, dfield         );
-    // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+    PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
   }
 
   PDM_MPI_Barrier(comm);
