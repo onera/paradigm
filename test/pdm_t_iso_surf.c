@@ -544,6 +544,9 @@ _eval_perlin
   double ux = _smooth_step_deriv(tx/perlin_step)/perlin_step;
   double vy = _smooth_step_deriv(ty/perlin_step)/perlin_step;
   double wz = _smooth_step_deriv(tz/perlin_step)/perlin_step;
+  PDM_UNUSED(ux);
+  PDM_UNUSED(vy);
+  PDM_UNUSED(wz);
 
 
   double x0 = tx;
@@ -1071,7 +1074,25 @@ int main(int argc, char *argv[])
     PDM_multipart_run_ppart(mpart);
   }
 
-  // _init_perlin_noise();
+  if(0 == 1) {
+    _init_perlin_noise();
+    _update_perlin_noise(1.);
+  }
+  if(0 == 1) {
+    eval_field_and_gradient = &_eval_helicoid;
+    eval_field_and_gradient = &_eval_chmutov6;
+    eval_field_and_gradient = &_eval_mcmullen;
+    eval_field_and_gradient = &_eval_pretzel;
+    eval_field_and_gradient = &_eval_taylor_green_vortex;
+    eval_field_and_gradient = &_eval_heart;
+    eval_field_and_gradient = &_eval_cylinder;
+    eval_field_and_gradient = &_eval_sphere;
+    eval_field_and_gradient = &_eval_smiley;
+    eval_field_and_gradient = &_eval_mandelbulb;
+    eval_field_and_gradient = &_eval_perlin_noise;
+  }
+
+
   eval_field_and_gradient = &_eval_mandelbulb;
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
@@ -1125,14 +1146,14 @@ int main(int argc, char *argv[])
       int n_cell;
       int n_face;
       // int n_edge;
-      int n_face_part_bound;
+      // int n_face_part_bound;
       // int n_vtx;
       int n_proc;
       int n_t_part;
-      int s_cell_face;
-      int s_face_vtx;
-      int s_face_group;
-      int n_edge_group2;
+      // int s_cell_face;
+      // int s_face_vtx;
+      // int s_face_group;
+      // int n_edge_group2;
 
       int n_bounds, n_joins, n_part_joins;
       int scell_face, sface_vtx, sface_bound, sface_join;
@@ -1154,9 +1175,9 @@ int main(int argc, char *argv[])
       int         *vtx_tag;
       // double      *vtx_coord;
       PDM_g_num_t *vtx_ln_to_gn;
-      int         *face_group_idx;
-      int         *face_group;
-      PDM_g_num_t *face_group_ln_to_gn;
+      // int         *face_group_idx;
+      // int         *face_group;
+      // PDM_g_num_t *face_group_ln_to_gn;
       PDM_g_num_t *face_bound_ln_to_gn, *face_join_ln_to_gn;
       int         *face_bound_idx, *face_bound, *face_join_idx, *face_join;
       int         **elt_vtx_idx;

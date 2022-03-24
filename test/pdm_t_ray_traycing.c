@@ -842,6 +842,7 @@ int main(int argc, char *argv[])
                                                       comm);
 
   PDM_g_num_t *distrib_selected_vtx_idx = PDM_part_to_block_distrib_index_get(ptb);
+  PDM_UNUSED(distrib_selected_vtx_idx);
   int dn_vtx_selected = PDM_part_to_block_n_elt_block_get (ptb);
   PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
 
@@ -886,8 +887,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t *line_g_num = malloc(n_line * sizeof(PDM_g_num_t));
   PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
   double alpha;
-  double phi;
-  double theta;
+  double phi   = 0.;
+  double theta = 0.;
   for (int i_vtx = 0; i_vtx < dn_vtx_selected; ++i_vtx) {
 
     for (int j_rayon = 0; j_rayon < n_rayons; ++j_rayon) {

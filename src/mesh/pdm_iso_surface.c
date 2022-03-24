@@ -475,88 +475,83 @@ _compute_edge_isosurf_intersection
   }
 }
 
+// static
+// PDM_polygon_status_t
+// _check_point_in_polygon
+// (
+//  const double  point[],
+//  const int     iface,
+//  const int     pface_edge_idx[],
+//  const int     pface_edge[],
+//  const int     pedge_vtx[],
+//  const double  pvtx_coord[],
+//  double       *poly_coord
+//  )
+// {
+//   int n_edge = pface_edge_idx[iface+1] - pface_edge_idx[iface];
+//   // Get poly_coord
+//   int cur_vtx, next_vtx;
+//   int cur_edge = pface_edge[pface_edge_idx[iface]];
+//   if (cur_edge < 0) {
+//     cur_edge = -cur_edge - 1;
+//     cur_vtx  = pedge_vtx[2*cur_edge+1];
+//     next_vtx = pedge_vtx[2*cur_edge  ];
+//   } else {
+//     cur_edge = cur_edge - 1;
+//     cur_vtx  = pedge_vtx[2*cur_edge  ];
+//     next_vtx = pedge_vtx[2*cur_edge+1];
+//   }
 
+//   for (int ivtx = 0; ivtx < n_edge; ivtx++) {
+//     memcpy(poly_coord + 3*ivtx, pvtx_coord + 3*(cur_vtx - 1), sizeof(double) * 3);
 
+//     for (int iedg = pface_edge_idx[iface]; iedg < pface_edge_idx[iface+1]; iedg++) {
+//       cur_edge = pface_edge[iedg];
+//       int vtx1, vtx2;
+//       if (cur_edge < 0) {
+//         cur_edge = -cur_edge - 1;
+//         vtx1 = pedge_vtx[2*cur_edge+1];
+//         vtx2 = pedge_vtx[2*cur_edge  ];
+//       } else {
+//         cur_edge = cur_edge - 1;
+//         vtx1 = pedge_vtx[2*cur_edge  ];
+//         vtx2 = pedge_vtx[2*cur_edge+1];
+//       }
 
+//       if (vtx1 == next_vtx) {
+//         cur_vtx  = next_vtx;
+//         next_vtx = vtx2;
+//         break;
+//       }
+//     }
+//   }
 
+//   double poly_bounds[6] = {
+//     HUGE_VAL, -HUGE_VAL,
+//     HUGE_VAL, -HUGE_VAL,
+//     HUGE_VAL, -HUGE_VAL
+//   };
+//   double poly_normal[3];
+//   for (int j = 0; j < n_edge; j++) {
+//     for (int l = 0; l < 3; l++) {
+//       double x = poly_coord[3*j + l];
+//       poly_bounds[2*l  ] = PDM_MIN(poly_bounds[2*l  ], x);
+//       poly_bounds[2*l+1] = PDM_MAX(poly_bounds[2*l+1], x);
+//     }
+//   }
 
-static
-PDM_polygon_status_t
-_check_point_in_polygon
-(
- const double  point[],
- const int     iface,
- const int     pface_edge_idx[],
- const int     pface_edge[],
- const int     pedge_vtx[],
- const double  pvtx_coord[],
- double       *poly_coord
- )
-{
-  int n_edge = pface_edge_idx[iface+1] - pface_edge_idx[iface];
-  // Get poly_coord
-  int cur_vtx, next_vtx;
-  int cur_edge = pface_edge[pface_edge_idx[iface]];
-  if (cur_edge < 0) {
-    cur_edge = -cur_edge - 1;
-    cur_vtx  = pedge_vtx[2*cur_edge+1];
-    next_vtx = pedge_vtx[2*cur_edge  ];
-  } else {
-    cur_edge = cur_edge - 1;
-    cur_vtx  = pedge_vtx[2*cur_edge  ];
-    next_vtx = pedge_vtx[2*cur_edge+1];
-  }
+//   PDM_plane_normal(n_edge,
+//                    poly_coord,
+//                    poly_normal);
 
-  for (int ivtx = 0; ivtx < n_edge; ivtx++) {
-    memcpy(poly_coord + 3*ivtx, pvtx_coord + 3*(cur_vtx - 1), sizeof(double) * 3);
+//   PDM_polygon_status_t stat = PDM_polygon_point_in_new(point,
+//                                                        n_edge,
+//                                                        poly_coord,
+//                                                        poly_bounds,
+//                                                        poly_normal);
 
-    for (int iedg = pface_edge_idx[iface]; iedg < pface_edge_idx[iface+1]; iedg++) {
-      cur_edge = pface_edge[iedg];
-      int vtx1, vtx2;
-      if (cur_edge < 0) {
-        cur_edge = -cur_edge - 1;
-        vtx1 = pedge_vtx[2*cur_edge+1];
-        vtx2 = pedge_vtx[2*cur_edge  ];
-      } else {
-        cur_edge = cur_edge - 1;
-        vtx1 = pedge_vtx[2*cur_edge  ];
-        vtx2 = pedge_vtx[2*cur_edge+1];
-      }
-
-      if (vtx1 == next_vtx) {
-        cur_vtx  = next_vtx;
-        next_vtx = vtx2;
-        break;
-      }
-    }
-  }
-
-  double poly_bounds[6] = {
-    HUGE_VAL, -HUGE_VAL,
-    HUGE_VAL, -HUGE_VAL,
-    HUGE_VAL, -HUGE_VAL
-  };
-  double poly_normal[3];
-  for (int j = 0; j < n_edge; j++) {
-    for (int l = 0; l < 3; l++) {
-      double x = poly_coord[3*j + l];
-      poly_bounds[2*l  ] = PDM_MIN(poly_bounds[2*l  ], x);
-      poly_bounds[2*l+1] = PDM_MAX(poly_bounds[2*l+1], x);
-    }
-  }
-
-  PDM_plane_normal(n_edge,
-                   poly_coord,
-                   poly_normal);
-
-  PDM_polygon_status_t stat = PDM_polygon_point_in_new(point,
-                                                       n_edge,
-                                                       poly_coord,
-                                                       poly_bounds,
-                                                       poly_normal);
-
-  return stat;
-}
+//   return stat;
+// }
 
 static
 PDM_polygon_status_t
@@ -1126,6 +1121,7 @@ _dump_extracted_mesh
  double       *pgradient_field
  )
 {
+  PDM_UNUSED(pface_ln_to_gn);
   const int n_part = 1;
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -2666,10 +2662,10 @@ _iso_surface_part
 )
 {
   double t1, t2;
-  double delta_t;
-  double delta_max;
-  double delta_min;
-  double t_beg, t_end;
+  // double delta_t;
+  // double delta_max;
+  // double delta_min;
+  // double t_beg, t_end;
 
   int n_rank;
   int i_rank;
@@ -2848,7 +2844,7 @@ _iso_surface_part
 
 
   if(i_rank == 0) {
-    printf(" - Average number of selected cells : %12.5e min = %i / max = %i (rms = %12.5e) / load_bal_err = %12.5e % \n", mean_selected, min_selected, max_selected, rms, load_bal_err);
+    printf(" - Average number of selected cells : %12.5e min = %i / max = %i (rms = %12.5e) / load_bal_err = %12.5e percent \n", mean_selected, min_selected, max_selected, rms, load_bal_err);
   }
 
   free(n_extract_per_proc);
@@ -2916,6 +2912,11 @@ _iso_surface_part
   PDM_g_num_t *pface_parent_ln_to_gn = NULL;
   PDM_g_num_t *pedge_parent_ln_to_gn = NULL;
   PDM_g_num_t *pvtx_parent_ln_to_gn  = NULL;
+
+  PDM_UNUSED(pcell_parent_ln_to_gn);
+  PDM_UNUSED(pface_parent_ln_to_gn);
+  PDM_UNUSED(pedge_parent_ln_to_gn);
+  PDM_UNUSED(pvtx_parent_ln_to_gn );
 
 
   int *tmp_n;
@@ -3768,6 +3769,13 @@ PDM_iso_surface_surface_get
 }
 
 
+static const char *_iso_surface_timer_step_name[N_TIMER_ISO_SURFACE] = {
+  "scan edges      ",
+  "extraction      ",
+  "build isosurface",
+  "total (w/o IO)  ",
+  "write isosurface"
+};
 
 void
 PDM_iso_surface_dump_times

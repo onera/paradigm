@@ -565,6 +565,12 @@ int main(int argc, char *argv[])
   int          dn_face = 0;
   int          dn_edge = 0;
   int          dn_vtx  = 0;
+
+  PDM_UNUSED(dn_cell);
+  PDM_UNUSED(dn_face);
+  PDM_UNUSED(dn_edge);
+  PDM_UNUSED(dn_vtx );
+
   double      *dvtx_coord      = NULL;
   int         *dcell_face_idx  = NULL;
   PDM_g_num_t *dcell_face      = NULL;

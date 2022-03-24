@@ -694,9 +694,20 @@ int main(int argc, char *argv[])
                                    double *,
                                    double *, double *, double *) = NULL;
 
+  if(0 == 1) { // Warning
+    eval_field_and_gradient = &_eval_mickey;
+    eval_field_and_gradient = &_eval_mandelbrot;
+    eval_field_and_gradient = &_eval_heart;
+    eval_field_and_gradient = &_eval_mandelbulb_slice;
+    eval_field_and_gradient = &_eval_taylor_green_vortex;
+    eval_field_and_gradient = &_eval_circle;
+  }
+
   eval_field_and_gradient = &_eval_mickey;
-  // _init_perlin_noise();
-  // eval_field_and_gradient = &_eval_perlin_noise;
+  if(0 == 1) {
+    _init_perlin_noise();
+    eval_field_and_gradient = &_eval_perlin_noise;
+  }
 
 
   PDM_multipart_t *mpart = NULL;

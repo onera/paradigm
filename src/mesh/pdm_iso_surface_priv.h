@@ -59,15 +59,6 @@ typedef enum {
 } _iso_surface_timer_step_t;
 
 
-static const char *_iso_surface_timer_step_name[N_TIMER_ISO_SURFACE] = {
-  "scan edges      ",
-  "extraction      ",
-  "build isosurface",
-  "total (w/o IO)  ",
-  "write isosurface"
-};
-
-
 /**
  * \struct _pdm_iso_surface
  * \brief  Define a partition mesh. Arrays are shared
