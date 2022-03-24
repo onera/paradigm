@@ -652,31 +652,29 @@ int main(int argc, char *argv[])
   if (1) {
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_ASCII,
-                                            PDM_WRITER_TOPO_CONSTANTE,
+                                            PDM_WRITER_TOPO_CST,
                                             PDM_WRITER_OFF,
                                             "test_isosurf3d",
                                             "isosurf3d",
                                             PDM_MPI_COMM_WORLD,
-                                            PDM_IO_ACCES_MPI_SIMPLE,
+                                            PDM_IO_KIND_MPI_SIMPLE,
                                             1.,
                                             NULL);
 
     int id_geom = PDM_writer_geom_create(id_cs,
                                          "isosurf3d_geom",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          n_part);
 
     int id_var_field = PDM_writer_var_create(id_cs,
                                              PDM_WRITER_ON,
-                                             PDM_WRITER_VAR_SCALAIRE,
-                                             PDM_WRITER_VAR_SOMMETS,
+                                             PDM_WRITER_VAR_SCALAR,
+                                             PDM_WRITER_VAR_VERTICES,
                                              "field");
 
     int id_var_gradient = PDM_writer_var_create(id_cs,
                                                 PDM_WRITER_ON,
-                                                PDM_WRITER_VAR_VECTEUR,
-                                                PDM_WRITER_VAR_SOMMETS,
+                                                PDM_WRITER_VAR_VECTOR,
+                                                PDM_WRITER_VAR_VERTICES,
                                                 "gradient");
 
     PDM_writer_step_beg(id_cs, 0.);
