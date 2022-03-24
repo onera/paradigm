@@ -3519,7 +3519,7 @@ PDM_ddomain_interface_to_pdomain_interface
           PDM_log_trace_array_long(_pentity_ln_to_gn           ,     _ln_interface[s_i_part], "_pentity_ln_to_gn ::");
           PDM_log_trace_array_int (precv_entity_desc[s_i_part] , 3 * n_data                 , "precv_entity_desc ::");
           PDM_log_trace_array_int (precv_dom        [s_i_part] , 2 * n_data_dom             , "precv_dom         ::");
-          PDM_log_trace_array_int (precv_gnum       [s_i_part] , 2 * n_data_dom             , "precv_gnum        ::");
+          PDM_log_trace_array_long(precv_gnum       [s_i_part] , 2 * n_data_dom             , "precv_gnum        ::");
           PDM_log_trace_array_int (precv_stride_gnum[s_i_part] , _ln_interface[s_i_part]    , "precv_stride_gnum ::");
           PDM_log_trace_array_int (pinterface_triplet[s_i_part], _ln_interface[s_i_part]    , "pinterface_triplet ::");
         }
