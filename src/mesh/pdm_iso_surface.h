@@ -226,7 +226,8 @@ PDM_iso_surface_surface_get
  int               **elt_vtx,
  double            **vtx_coord,
  PDM_g_num_t       **elt_ln_to_gn,
- PDM_g_num_t       **vtx_ln_to_gn
+ PDM_g_num_t       **vtx_ln_to_gn,
+ PDM_g_num_t       **elt_parent_g_num
  );
 
 void

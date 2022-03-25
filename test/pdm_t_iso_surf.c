@@ -32,6 +32,8 @@
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_priv.h"
 #include "pdm_writer.h"
+#include "pdm_dgeom_elem.h"
+#include "pdm_part_to_part.h"
 
 /*============================================================================
  * Type definitions
@@ -606,6 +608,23 @@ _eval_perlin_noise
 
 
 
+static double
+_eval_cell_field
+(
+ const double  x,
+ const double  y,
+ const double  z
+ )
+{
+  double _x = x - .45;
+  double _y = y - .37;
+  double _z = z - .32;
+  // return exp(-(_x*_x + _y*_y + _z*_z));
+  return cos(22*sqrt(_x*_x + _y*_y + _z*_z));
+}
+
+
+
 static void
 _generate_dedges
 (
@@ -794,7 +813,8 @@ _dump_dmesh
  int         dn_vtx,
  double      dvtx_coord[],
  double      dfield[],
- double      dgradient[]
+ double      dgradient[],
+ double      dcell_field[]
  )
 {
   PDM_writer_t *id_cs = PDM_writer_create("Ensight",
@@ -827,6 +847,19 @@ _dump_dmesh
                                             PDM_WRITER_VAR_VERTICES,
                                             "gradient");
   }
+
+
+  int id_var_parent_gnum = PDM_writer_var_create(id_cs,
+                                                 PDM_WRITER_ON,
+                                                 PDM_WRITER_VAR_SCALAR,
+                                                 PDM_WRITER_VAR_ELEMENTS,
+                                                 "parent_g_num");
+
+  int id_var_cell_field = PDM_writer_var_create(id_cs,
+                                                PDM_WRITER_ON,
+                                                PDM_WRITER_VAR_SCALAR,
+                                                PDM_WRITER_VAR_ELEMENTS,
+                                                "cell_field");
 
   PDM_writer_step_beg(id_cs, 0.);
 
@@ -896,6 +929,8 @@ _dump_dmesh
 
   PDM_real_t *val_field    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_vtx);
   PDM_real_t *val_gradient = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_vtx * 3);
+  PDM_real_t *val_parent_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_cell);
+  PDM_real_t *val_cell_field = (PDM_real_t *) malloc(sizeof(PDM_real_t) * dn_cell);
 
   for (int i = 0; i < dn_vtx; i++) {
     val_field[i] = (PDM_real_t) dfield[i];
@@ -904,6 +939,11 @@ _dump_dmesh
         val_gradient[3*i+j] = (PDM_real_t) dgradient[3*i+j];
       }
     }
+  }
+
+  for (int i = 0; i < dn_cell; i++) {
+    val_parent_gnum[i] = (PDM_real_t) cell_ln_to_gn[i];
+    val_cell_field[i] = (PDM_real_t) dcell_field[i];
   }
 
 
@@ -929,12 +969,35 @@ _dump_dmesh
   }
 
 
+  PDM_writer_var_set(id_cs,
+                     id_var_parent_gnum,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_parent_gnum);
+
+  PDM_writer_var_write(id_cs,
+                       id_var_parent_gnum);
+
+
+  PDM_writer_var_set(id_cs,
+                     id_var_cell_field,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_cell_field);
+
+  PDM_writer_var_write(id_cs,
+                       id_var_cell_field);
+
+
+
   PDM_writer_step_end(id_cs);
 
   PDM_writer_free(id_cs);
 
   free(val_field);
   free(val_gradient);
+  free(val_parent_gnum);
+  free(val_cell_field);
   free(face_vtxNb);
   free(cell_faceNb);
 
@@ -944,6 +1007,134 @@ _dump_dmesh
   free(cell_face);
   free(face_vtx);
 }
+
+
+
+static
+void
+_compute_dcell_center
+(
+ PDM_MPI_Comm   comm,
+int             dn_cell,
+int             dn_face,
+int             dn_edge,
+int             dn_vtx,
+int            *dcell_face_idx,
+PDM_g_num_t    *dcell_face,
+int            *dface_edge_idx,
+PDM_g_num_t    *dface_edge,
+PDM_g_num_t    *dedge_vtx,
+double         *dvtx_coord,
+double        **dcell_center
+ )
+ {
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+
+  double *dedge_center = (double *) malloc(sizeof(double) * dn_edge * 3);
+  double *dface_center = (double *) malloc(sizeof(double) * dn_face * 3);
+  *dcell_center        = (double *) malloc(sizeof(double) * dn_cell * 3);
+
+  PDM_g_num_t *distrib_vtx  = PDM_compute_entity_distribution(comm, dn_vtx);
+  PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, dn_edge);
+  PDM_g_num_t *distrib_face = PDM_compute_entity_distribution(comm, dn_face);
+
+  PDM_g_num_t *edge_ln_to_gn = (PDM_g_num_t *) malloc(dn_edge * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_edge; ++i) {
+    edge_ln_to_gn[i] = distrib_edge[i_rank] + i + 1;
+  }
+
+  int          pn_vtx           = 0;
+  PDM_g_num_t *pvtx_ln_to_gn    = NULL;
+  int         *pedge_vtx_idx    = NULL;
+  int         *pedge_vtx        = NULL;
+
+  int* dedge_vtx_idx = malloc( (dn_edge + 1) * sizeof(int));
+  dedge_vtx_idx[0] = 0;
+  for(int i = 0; i < dn_edge; ++i) {
+    dedge_vtx_idx[i+1] = dedge_vtx_idx[i] + 2;
+  }
+
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           distrib_edge,
+                                                           dedge_vtx_idx,
+                                                           dedge_vtx,
+                                                           dn_edge,
+                                     (const PDM_g_num_t *) edge_ln_to_gn,
+                                                           &pn_vtx,
+                                                           &pvtx_ln_to_gn,
+                                                           &pedge_vtx_idx,
+                                                           &pedge_vtx);
+  free(dedge_vtx_idx);
+  free(pedge_vtx_idx);
+  free(edge_ln_to_gn);
+
+  PDM_block_to_part_t* btp_vtx = PDM_block_to_part_create(distrib_vtx,
+                                   (const PDM_g_num_t **) &pvtx_ln_to_gn,
+                                                          &pn_vtx,
+                                                          1,
+                                                          comm);
+
+  int cst_stride = 1;
+  double **tmp_pvtx_coord = NULL;
+  PDM_block_to_part_exch(btp_vtx,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &cst_stride,
+            (void *  )   dvtx_coord,
+            (int  ***)   NULL,
+            (void ***)  &tmp_pvtx_coord);
+  double* pvtx_coord = tmp_pvtx_coord[0];
+  free(tmp_pvtx_coord);
+  PDM_block_to_part_free(btp_vtx);
+
+  for(int i = 0; i < dn_edge; ++i) {
+    int i_vtx1 = pedge_vtx[2*i  ]-1;
+    int i_vtx2 = pedge_vtx[2*i+1]-1;
+
+    double x1 = pvtx_coord[3*i_vtx1  ];
+    double y1 = pvtx_coord[3*i_vtx1+1];
+    double z1 = pvtx_coord[3*i_vtx1+2];
+
+    double x2 = pvtx_coord[3*i_vtx2  ];
+    double y2 = pvtx_coord[3*i_vtx2+1];
+    double z2 = pvtx_coord[3*i_vtx1+2];
+
+    dedge_center[3*i  ] = 0.5 * (x1 + x2);
+    dedge_center[3*i+1] = 0.5 * (y1 + y2);
+    dedge_center[3*i+2] = 0.5 * (z1 + z2);
+  }
+  free(pvtx_ln_to_gn);
+  free(pedge_vtx);
+  free(pvtx_coord);
+
+
+
+
+  PDM_compute_center_from_descending_connectivity(dface_edge_idx,
+                                                  dface_edge,
+                                                  dn_face,
+                                                  distrib_edge,
+                                                  dface_center,
+                                                  dedge_center,
+                                                  comm);
+  free(dedge_center);
+
+
+  PDM_compute_center_from_descending_connectivity(dcell_face_idx,
+                                                  dcell_face,
+                                                  dn_cell,
+                                                  distrib_face,
+                                                  *dcell_center,
+                                                  dface_center,
+                                                  comm);
+  free(dface_center);
+  free(distrib_vtx);
+  free(distrib_edge);
+  free(distrib_face);
+ }
 
 
 
@@ -1260,7 +1451,7 @@ int main(int argc, char *argv[])
     eval_field_and_gradient = &_eval_perlin_noise;
   }
 
-  eval_field_and_gradient = &_eval_mandelbulb;
+  eval_field_and_gradient = &_eval_sphere;
 
 
   PDM_iso_surface_t* isos = PDM_iso_surface_create(3, PDM_ISO_SURFACE_KIND_FIELD, 1, PDM_OWNERSHIP_KEEP, comm);
@@ -1271,10 +1462,12 @@ int main(int argc, char *argv[])
 
   PDM_iso_surface_eval_field_and_gradient_set(isos, eval_field_and_gradient);
 
+  int _n_part = PDM_MAX(1, n_part);
   double  *dfield          = NULL;
   double  *dgradient_field = NULL;
   double **pfield          = NULL;
   double **pgradient_field = NULL;
+  double **pcell_field     = (double **) malloc(sizeof(double) * _n_part);
 
   if (n_part > 0) {
 
@@ -1486,9 +1679,9 @@ int main(int argc, char *argv[])
                                       i_part,
                                       pfield[i_part]);
 
-      // PDM_iso_surface_part_gradient_field_set (isos,
-      //                                          i_part,
-      //                                          pgradient_field[i_part]);
+      PDM_iso_surface_part_gradient_field_set (isos,
+                                               i_part,
+                                               pgradient_field[i_part]);
     }
 
   }
@@ -1509,6 +1702,30 @@ int main(int argc, char *argv[])
                               &dgradient_field[3*i+1],
                               &dgradient_field[3*i+2]);
     }
+
+
+    pcell_field[0] = (double *) malloc(sizeof(double) * dn_cell);
+
+    double *dcell_center = NULL;
+    _compute_dcell_center(comm,
+                          dn_cell,
+                          dn_face,
+                          dn_edge,
+                          dn_vtx,
+                          dcell_face_idx,
+                          dcell_face,
+                          dface_edge_idx,
+                          dface_edge,
+                          dedge_vtx,
+                          dvtx_coord,
+                          &dcell_center);
+
+    for (int i = 0; i < dn_cell; i++) {
+      pcell_field[0][i] = _eval_cell_field(dcell_center[3*i],
+                                           dcell_center[3*i+1],
+                                           dcell_center[3*i+2]);
+    }
+    free(dcell_center);
 
     if (1 && n_rank == 1) {
       FILE *f = fopen("mandelbuld_sdf.vtk", "w");
@@ -1539,7 +1756,8 @@ int main(int argc, char *argv[])
                    dn_vtx,
                    dvtx_coord,
                    dfield,
-                   dgradient_field);
+                   dgradient_field,
+                   pcell_field[0]);
     // abort();
     }
 
@@ -1565,7 +1783,7 @@ int main(int argc, char *argv[])
 
     PDM_iso_surface_dvtx_coord_set (isos, dvtx_coord     );
     PDM_iso_surface_dfield_set     (isos, dfield         );
-    PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
+    // PDM_iso_surface_dgrad_field_set(isos, dgradient_field);
   }
 
   PDM_MPI_Barrier(comm);
@@ -1577,6 +1795,118 @@ int main(int argc, char *argv[])
   PDM_iso_surface_write(isos, name);
 
   PDM_iso_surface_dump_times(isos);
+
+
+
+
+
+
+
+
+  /*
+   *  Project the cell-centered field onto the iso-surface
+   */
+  PDM_g_num_t **cell_ln_to_gn = NULL;
+  int          *n_cell        = NULL;
+
+  if (n_part > 0) {
+    abort();
+  }
+
+  else {
+
+    n_cell = (int *) malloc(sizeof(int *) * _n_part);
+    n_cell[0] = dn_cell;
+
+    cell_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * _n_part);
+    cell_ln_to_gn[0] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dn_cell);
+    for (int i = 0; i < dn_cell; i++) {
+      cell_ln_to_gn[0][i] = distrib_cell[i_rank] + i + 1;
+    }
+  }
+
+
+
+  int          isosurf_n_vtx;
+  int          isosurf_n_face;
+  int         *isosurf_face_vtx_idx;
+  int         *isosurf_face_vtx;
+  double      *isosurf_vtx_coord;
+  PDM_g_num_t *isosurf_face_ln_to_gn;
+  PDM_g_num_t *isosurf_vtx_ln_to_gn;
+  PDM_g_num_t *isosurf_face_parent_g_num;
+  PDM_iso_surface_surface_get(isos,
+                              &isosurf_n_vtx,
+                              &isosurf_n_face,
+                              &isosurf_face_vtx_idx,
+                              &isosurf_face_vtx,
+                              &isosurf_vtx_coord,
+                              &isosurf_face_ln_to_gn,
+                              &isosurf_vtx_ln_to_gn,
+                              &isosurf_face_parent_g_num);
+
+
+  int *isosurf_face_parent_idx = (int *) malloc(sizeof(int) * (isosurf_n_face + 1));
+  for (int i = 0; i <= isosurf_n_face; i++) {
+    isosurf_face_parent_idx[i] = i;
+  }
+
+  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) &isosurf_face_ln_to_gn,
+                                                    &isosurf_n_face,
+                                                    1,
+                                                    (const PDM_g_num_t **) cell_ln_to_gn,
+                                                    n_cell,
+                                                    _n_part,
+                                                    (const int **) &isosurf_face_parent_idx,
+                                                    (const PDM_g_num_t **) &isosurf_face_parent_g_num,
+                                                    comm);
+
+
+  int request;
+  double **tmp_isosurf_face_field;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(double),
+                                 NULL,
+                 (const void **) pcell_field,
+                                 NULL,
+                     (void ***) &tmp_isosurf_face_field,
+                                &request);
+
+  PDM_part_to_part_reverse_iexch_wait(ptp, request);
+  double *isosurf_face_field = tmp_isosurf_face_field[0];
+  free(tmp_isosurf_face_field);
+
+  PDM_part_to_part_free(ptp);
+  for (int i_part = 0; i_part < _n_part; i_part++) {
+    free(pcell_field[i_part]);
+  }
+  free(pcell_field);
+  free(isosurf_face_parent_idx);
+
+
+  // Dump with field
+  const char* field_name[] = {"cell_field", 0 };
+  char filename[999];
+  sprintf(filename, "isosurf_face_field_%2.2d.vtk", i_rank);
+  PDM_vtk_write_std_elements_double(filename,
+                                    isosurf_n_vtx,
+                                    isosurf_vtx_coord,
+                                    isosurf_vtx_ln_to_gn,
+                                    PDM_MESH_NODAL_TRIA3,
+                                    isosurf_n_face,
+                                    isosurf_face_vtx,
+                                    isosurf_face_ln_to_gn,
+                                    1,
+                                    field_name,
+                  (const double **) &isosurf_face_field);
+  free(isosurf_face_field);
+
+
+
 
   PDM_iso_surface_free(isos);
 
@@ -1593,6 +1923,9 @@ int main(int argc, char *argv[])
   else {
     free(dfield);
     free(dgradient_field);
+    free(cell_ln_to_gn[0]);
+    free(cell_ln_to_gn);
+    free(n_cell);
   }
 
   if (elt_type < PDM_MESH_NODAL_POLY_3D) {

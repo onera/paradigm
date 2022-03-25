@@ -140,6 +140,8 @@ struct _pdm_iso_surface_t
   PDM_g_num_t         *isosurf_vtx_ln_to_gn;
   PDM_g_num_t         *isosurf_edge_ln_to_gn; // only in 2d
   PDM_g_num_t         *isosurf_face_ln_to_gn;
+  PDM_g_num_t         *isosurf_edge_parent_ln_to_gn; // parent face, only in 2d
+  PDM_g_num_t         *isosurf_face_parent_ln_to_gn; // parent cell
 
   double times_elapsed[N_TIMER_ISO_SURFACE];
 

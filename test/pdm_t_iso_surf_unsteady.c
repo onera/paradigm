@@ -851,6 +851,7 @@ int main(int argc, char *argv[])
     // double      *isosurf_vtx_coord     = NULL;
     // PDM_g_num_t *isosurf_face_ln_to_gn = NULL;
     // PDM_g_num_t *isosurf_vtx_ln_to_gn  = NULL;
+    // PDM_g_num_t *isosurf_face_parent_g_num = NULL;
     // PDM_iso_surface_surface_get (isos,
     //                              &isosurf_n_vtx,
     //                              &isosurf_n_face,
@@ -858,7 +859,8 @@ int main(int argc, char *argv[])
     //                              &isosurf_face_vtx,
     //                              &isosurf_vtx_coord,
     //                              &isosurf_face_ln_to_gn,
-    //                              &isosurf_vtx_ln_to_gn);
+    //                              &isosurf_vtx_ln_to_gn,
+    //                              &isosurf_face_parent_g_num);
     // printf("vtx1: %p %p\n", (void *) isos->isosurf_vtx_coord, (void *) isos->isosurf_vtx_ln_to_gn);
 
     // PDM_writer_step_beg (cs, step*dt);

@@ -773,6 +773,7 @@ _iso_line_dist
  int                *pface_edge,
  int                *pface_vtx,
  int                *pedge_vtx,
+ PDM_g_num_t        *pface_parent_ln_to_gn,
  PDM_g_num_t        *pface_ln_to_gn,
  PDM_g_num_t        *pedge_ln_to_gn,
  PDM_g_num_t        *pvtx_ln_to_gn,
@@ -1059,6 +1060,7 @@ _iso_line_dist
                                                                       isos->isosurf_n_edge);
 
   isos->isosurf_edge_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_edge);
+  isos->isosurf_edge_parent_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * isos->isosurf_n_edge);
 
   isos->isosurf_n_edge = 0;
   for (int iface = 0; iface < n_face; iface++) {
@@ -1084,6 +1086,7 @@ _iso_line_dist
       }
 
       isos->isosurf_edge_ln_to_gn[isos->isosurf_n_edge] = distrib_isosurf_edge[i_rank] + isos->isosurf_n_edge + 1;
+      isos->isosurf_edge_parent_ln_to_gn[isos->isosurf_n_edge] = pface_parent_ln_to_gn[iface];
       isos->isosurf_n_edge++;
 
     }
@@ -1298,6 +1301,7 @@ _iso_surf_dist
   int                *pface_edge,
   int                *pface_vtx,
   int                *pedge_vtx,
+  PDM_g_num_t        *pcell_parent_ln_to_gn,
   PDM_g_num_t        *pcell_ln_to_gn,
   PDM_g_num_t        *pface_ln_to_gn,
   PDM_g_num_t        *pedge_ln_to_gn,
@@ -2011,6 +2015,7 @@ _iso_surf_dist
                                                                       _isosurf_n_tri);
 
   isos->isosurf_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri);
+  isos->isosurf_face_parent_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _isosurf_n_tri);
 
   _isosurf_n_tri = 0;
   for (int icell = 0; icell < n_cell; icell++) {
@@ -2043,6 +2048,7 @@ _iso_surf_dist
           }
 
           isos->isosurf_face_ln_to_gn[_isosurf_n_tri] = distrib_isosurf_face[i_rank] + _isosurf_n_tri + 1;
+          isos->isosurf_face_parent_ln_to_gn[_isosurf_n_tri] = pcell_parent_ln_to_gn[icell];
           _isosurf_n_tri++;
 
         }
@@ -2583,6 +2589,7 @@ _iso_surface_dist
                    pequi_face_edge,
                    NULL,//face_vtx
                    pequi_edge_vtx,
+                   block_entity_equi_parent_g_num,
                    block_entity_equi_child_g_num,
                    pequi_edge_ln_to_gn,
                    pequi_vtx_ln_to_gn,
@@ -2601,6 +2608,7 @@ _iso_surface_dist
                    pequi_face_edge,
                    NULL,//face_vtx
                    pequi_edge_vtx,
+                   block_entity_equi_parent_g_num,
                    block_entity_equi_child_g_num,
                    pequi_face_ln_to_gn,
                    pequi_edge_ln_to_gn,
@@ -2811,7 +2819,7 @@ _iso_surface_part
                     PDM_MPI_INT,
                     isos->comm);
   double mean_selected = 0.;
-  int    min_selected = pow(2, 30);
+  int    min_selected = 1 << 30;//pow(2, 30);
   int    max_selected = 0;
 
   // log_trace("n_tot_extract = %i \n", n_tot_extract);
@@ -2833,8 +2841,8 @@ _iso_surface_part
   }
   rms = sqrt(rms/((double) n_rank));
 
-  double alpha_max = (max_selected - n_perfect_balancing) / (n_perfect_balancing);
-  double alpha_min = (min_selected - n_perfect_balancing) / (n_perfect_balancing);
+  double alpha_max = (double) (max_selected - n_perfect_balancing) / (double) (n_perfect_balancing);
+  double alpha_min = (double) (min_selected - n_perfect_balancing) / (double) (n_perfect_balancing);
 
   /*Compute the max between then number of cell in the smallest and bigger blocks*/
   double alpha        = PDM_MAX(alpha_max, PDM_ABS(alpha_min));
@@ -3170,6 +3178,7 @@ _iso_surface_part
                    pface_edge,
                    pface_vtx,
                    pedge_vtx,
+                   pcell_parent_ln_to_gn,
                    pcell_ln_to_gn,
                    pface_ln_to_gn,
                    pedge_ln_to_gn,
@@ -3187,6 +3196,7 @@ _iso_surface_part
                    pface_edge,
                    pface_vtx,
                    pedge_vtx,
+                   pface_parent_ln_to_gn,
                    pface_ln_to_gn,
                    pedge_ln_to_gn,
                    pvtx_ln_to_gn,
@@ -3274,6 +3284,8 @@ PDM_iso_surface_create
   isos->isosurf_face_ln_to_gn = NULL;
   isos->isosurf_edge_ln_to_gn = NULL;
   isos->isosurf_vtx_ln_to_gn  = NULL;
+  isos->isosurf_edge_parent_ln_to_gn = NULL;
+  isos->isosurf_face_parent_ln_to_gn = NULL;
 
   isos->debug = 0;
 
@@ -3547,6 +3559,12 @@ PDM_iso_surface_free
     if (isos->isosurf_vtx_ln_to_gn  != NULL) {
       free(isos->isosurf_vtx_ln_to_gn);
     }
+    if (isos->isosurf_edge_parent_ln_to_gn != NULL) {
+      free(isos->isosurf_edge_parent_ln_to_gn);
+    }
+    if (isos->isosurf_face_parent_ln_to_gn != NULL) {
+      free(isos->isosurf_face_parent_ln_to_gn);
+    }
   }
 
   free(isos);
@@ -3604,6 +3622,12 @@ PDM_iso_surface_write
                                               PDM_WRITER_VAR_ELEMENTS,
                                               "elt_g_num");
 
+  int id_var_parent_gnum = PDM_writer_var_create(cs,
+                                                 PDM_WRITER_ON,
+                                                 PDM_WRITER_VAR_SCALAR,
+                                                 PDM_WRITER_VAR_ELEMENTS,
+                                                 "parent_g_num");
+
   PDM_writer_step_beg(cs, 0.);
 
 
@@ -3618,10 +3642,12 @@ PDM_iso_surface_write
                             isos->isosurf_vtx_ln_to_gn);
 
   int n_elt = 0;
-  PDM_g_num_t *elt_ln_to_gn = NULL;
+  PDM_g_num_t *elt_ln_to_gn    = NULL;
+  PDM_g_num_t *parent_ln_to_gn = NULL;
   if (isos->dim == 3) {
     n_elt = isos->isosurf_n_face;
     elt_ln_to_gn = isos->isosurf_face_ln_to_gn;
+    parent_ln_to_gn = isos->isosurf_face_parent_ln_to_gn;
 
     int id_block = PDM_writer_geom_bloc_add(cs,
                                             id_geom,
@@ -3642,6 +3668,7 @@ PDM_iso_surface_write
   else {
     n_elt = isos->isosurf_n_edge;
     elt_ln_to_gn = isos->isosurf_edge_ln_to_gn;
+    parent_ln_to_gn = isos->isosurf_edge_parent_ln_to_gn;
 
     int id_block = PDM_writer_geom_bloc_add(cs,
                                             id_geom,
@@ -3664,13 +3691,15 @@ PDM_iso_surface_write
   /*
    *  Write variables
    */
-  PDM_real_t *val_part     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
-  PDM_real_t *val_elt_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
-  PDM_real_t *val_vtx_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * isos->isosurf_n_vtx);
+  PDM_real_t *val_part        = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
+  PDM_real_t *val_elt_gnum    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
+  PDM_real_t *val_parent_gnum = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_elt);
+  PDM_real_t *val_vtx_gnum    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * isos->isosurf_n_vtx);
 
   for (int i = 0; i < n_elt; i++) {
-    val_part[i]     = (PDM_real_t) i_rank;
-    val_elt_gnum[i] = (PDM_real_t) elt_ln_to_gn[i];
+    val_part[i]        = (PDM_real_t) i_rank;
+    val_elt_gnum[i]    = (PDM_real_t) elt_ln_to_gn[i];
+    val_parent_gnum[i] = (PDM_real_t) parent_ln_to_gn[i];
   }
 
   for (int i = 0; i < isos->isosurf_n_vtx; i++) {
@@ -3694,6 +3723,14 @@ PDM_iso_surface_write
                        id_var_elt_gnum);
 
   PDM_writer_var_set(cs,
+                     id_var_parent_gnum,
+                     id_geom,
+                     0,
+                     (const PDM_real_t *) val_parent_gnum);
+  PDM_writer_var_write(cs,
+                       id_var_parent_gnum);
+
+  PDM_writer_var_set(cs,
                      id_var_vtx_gnum,
                      id_geom,
                      0,
@@ -3709,6 +3746,7 @@ PDM_iso_surface_write
 
   free(val_part);
   free(val_elt_gnum);
+  free(val_parent_gnum);
   free(val_vtx_gnum);
 
   double t2 = PDM_MPI_Wtime();
@@ -3741,7 +3779,8 @@ PDM_iso_surface_surface_get
  int               **elt_vtx,
  double            **vtx_coord,
  PDM_g_num_t       **elt_ln_to_gn,
- PDM_g_num_t       **vtx_ln_to_gn
+ PDM_g_num_t       **vtx_ln_to_gn,
+ PDM_g_num_t       **elt_parent_g_num
  )
 {
   assert(isos != NULL);
@@ -3751,16 +3790,18 @@ PDM_iso_surface_surface_get
   *vtx_ln_to_gn = isos->isosurf_vtx_ln_to_gn;
 
   if (isos->dim == 2) {
-    *n_elt        = isos->isosurf_n_edge;
-    *elt_vtx      = isos->isosurf_edge_vtx;
-    *elt_ln_to_gn = isos->isosurf_edge_ln_to_gn;
+    *n_elt            = isos->isosurf_n_edge;
+    *elt_vtx          = isos->isosurf_edge_vtx;
+    *elt_ln_to_gn     = isos->isosurf_edge_ln_to_gn;
+    *elt_parent_g_num = isos->isosurf_edge_parent_ln_to_gn;
   }
 
   else {
-    *n_elt        = isos->isosurf_n_face;
-    *elt_vtx_idx  = isos->isosurf_face_vtx_idx;
-    *elt_vtx      = isos->isosurf_face_vtx;
-    *elt_ln_to_gn = isos->isosurf_face_ln_to_gn;
+    *n_elt            = isos->isosurf_n_face;
+    *elt_vtx_idx      = isos->isosurf_face_vtx_idx;
+    *elt_vtx          = isos->isosurf_face_vtx;
+    *elt_ln_to_gn     = isos->isosurf_face_ln_to_gn;
+    *elt_parent_g_num = isos->isosurf_face_parent_ln_to_gn;
   }
 }
 
