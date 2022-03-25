@@ -143,6 +143,131 @@ _read_args(int                    argc,
   }
 }
 
+
+static void
+_compute_cell_vtx_hexa
+(
+ int  n_cell,
+ int *cell_face,
+ int *face_vtx_idx,
+ int *face_vtx,
+ int *cell_vtx
+ )
+{
+  int dbg = 0;
+
+
+  for (int icell = 0; icell < n_cell; icell++) {
+
+    int *cf = cell_face + 6*icell;
+    int *cv = cell_vtx  + 8*icell;
+    for (int i = 0; i < 8; i++) {
+      cv[i] = 0;
+    }
+
+    if (dbg) {
+      log_trace("\nCell %d\n", icell);
+      for (int i = 0; i < 6; i++) {
+        int iface = PDM_ABS(cf[i]) - 1;
+        int *fv = face_vtx + face_vtx_idx[iface];
+        log_trace(" Face %6d : %6d %6d %6d %6d\n", cf[i], fv[0], fv[1], fv[2], fv[3]);
+      }
+    }
+
+
+    // first face
+    int iface = cf[0];
+
+    if (iface < 0) {
+      iface = -iface - 1;
+      int *fv = face_vtx + face_vtx_idx[iface];
+      assert(face_vtx_idx[iface+1] - face_vtx_idx[iface] == 4);
+      for (int i = 0; i < 4; i++) {
+        cv[i] = fv[i];
+      }
+    }
+
+    else {
+      iface = iface - 1;
+      int *fv = face_vtx + face_vtx_idx[iface];
+      assert(face_vtx_idx[iface+1] - face_vtx_idx[iface] == 4);
+      for (int i = 0; i < 4; i++) {
+        cv[i] = fv[3-i];
+      }
+    }
+
+    if (dbg) {
+      log_trace("first 4 vtx : %d %d %d %d\n", cv[0], cv[1], cv[2], cv[3]);
+    }
+
+    // opposite face
+    int count = 0;
+
+    for (int idx_face = 1; idx_face < 6; idx_face++) {
+      int jface = PDM_ABS(cf[idx_face]) - 1;
+      int sgn   = PDM_SIGN(cf[idx_face]);
+
+      if (dbg) {
+        log_trace("  face %6d\n", cf[idx_face]);
+      }
+
+      int *fv = face_vtx + face_vtx_idx[jface];
+      assert(face_vtx_idx[jface+1] - face_vtx_idx[jface] == 4);
+
+      for (int i = 0; i < 4; i++) {
+        int ivtx1, ivtx2;
+        if (sgn > 0) {
+          ivtx1 = fv[i];
+          ivtx2 = fv[(i+1)%4];
+        } else {
+          ivtx2 = fv[i];
+          ivtx1 = fv[(i+1)%4];
+        }
+
+        if (dbg) {
+          log_trace("    edge %6d %6d\n", ivtx1, ivtx2);
+        }
+
+        if (ivtx1 == cv[0] && ivtx2 == cv[1]) {
+          if (sgn < 0) {
+            cv[4] = fv[(i+2)%4];
+            cv[5] = fv[(i+3)%4];
+          } else {
+            cv[4] = fv[(i+3)%4];
+            cv[5] = fv[(i+2)%4];
+          }
+          count++;
+        }
+
+        else if (ivtx1 == cv[2] && ivtx2 == cv[3]) {
+          if (sgn < 0) {
+            cv[6] = fv[(i+2)%4];
+            cv[7] = fv[(i+3)%4];
+          } else {
+            cv[6] = fv[(i+3)%4];
+            cv[7] = fv[(i+2)%4];
+          }
+          count++;
+        }
+      }
+
+      if (count == 2) {
+        break;
+      }
+
+    }
+
+    if (dbg) {
+      log_trace("count = %d\n", count);
+      log_trace("cv = %d %d %d %d %d %d %d %d\n",
+                cv[0], cv[1], cv[2], cv[3],
+                cv[4], cv[5], cv[6], cv[7]);
+    }
+    assert(count == 2);
+  }
+}
+
+
 static
 void
 _setup_edge_upwind_and_downwind
@@ -161,7 +286,19 @@ _setup_edge_upwind_and_downwind
  double *vtx_coord
 )
 {
-
+  PDM_Mesh_nodal_elt_t elt_type;
+  int vtk_type_cell;
+  int n_face_cell = cell_face_idx[1] - cell_face_idx[0];
+  if (n_face_cell == 6) {
+    elt_type = PDM_MESH_NODAL_HEXA8;
+    vtk_type_cell = 12;
+  } else if (n_face_cell == 4) {
+    elt_type = PDM_MESH_NODAL_TETRA4;
+    vtk_type_cell = 10;
+  } else {
+    printf("Wrong type");
+    abort();
+  }
 
   if (1) {
     PDM_vtk_write_polydata("check_faces.vtk",
@@ -514,40 +651,48 @@ _setup_edge_upwind_and_downwind
 
 
   // -->> !! Only works with tetra
-  int *cell_vtx = (int *) malloc(sizeof(int) * 4 * n_cell);
-  for (int i = 0; i < n_cell; i++) {
-    int iface = cell_face[4*i];
+  int n_vtx_cell = PDM_Mesh_nodal_n_vertices_element(elt_type, 1);
+  int *cell_vtx = (int *) malloc(sizeof(int) * n_vtx_cell * n_cell);
 
-    if (iface < 0) {
-      iface = -iface - 1;
-      cell_vtx[4*i    ] = face_vtx[3*iface    ];
-      cell_vtx[4*i + 1] = face_vtx[3*iface + 1];
-      cell_vtx[4*i + 2] = face_vtx[3*iface + 2];
-    } else {
-      iface = iface - 1;
-      cell_vtx[4*i    ] = face_vtx[3*iface + 2];
-      cell_vtx[4*i + 1] = face_vtx[3*iface + 1];
-      cell_vtx[4*i + 2] = face_vtx[3*iface    ];
-    }
+  if (elt_type == PDM_MESH_NODAL_TETRA4) {
+    for (int i = 0; i < n_cell; i++) {
+      int iface = cell_face[4*i];
 
-    iface = PDM_ABS(cell_face[4*i+1]) - 1;
-    for (int j = 0; j < 3; j++) {
-      int ivtx = face_vtx[3*iface + j];
-      if (ivtx != cell_vtx[4*i    ] &&
-          ivtx != cell_vtx[4*i + 1] &&
-          ivtx != cell_vtx[4*i + 2] ) {
-        cell_vtx[4*i + 3] = ivtx;
+      if (iface < 0) {
+        iface = -iface - 1;
+        cell_vtx[4*i    ] = face_vtx[3*iface    ];
+        cell_vtx[4*i + 1] = face_vtx[3*iface + 1];
+        cell_vtx[4*i + 2] = face_vtx[3*iface + 2];
+      } else {
+        iface = iface - 1;
+        cell_vtx[4*i    ] = face_vtx[3*iface + 2];
+        cell_vtx[4*i + 1] = face_vtx[3*iface + 1];
+        cell_vtx[4*i + 2] = face_vtx[3*iface    ];
+      }
+
+      iface = PDM_ABS(cell_face[4*i+1]) - 1;
+      for (int j = 0; j < 3; j++) {
+        int ivtx = face_vtx[3*iface + j];
+        if (ivtx != cell_vtx[4*i    ] &&
+            ivtx != cell_vtx[4*i + 1] &&
+            ivtx != cell_vtx[4*i + 2] ) {
+          cell_vtx[4*i + 3] = ivtx;
+        }
       }
     }
   }
 
-
-  int *cell_vtx_idx = (int *) malloc(sizeof(int) * (n_cell + 1));
-  for (int i = 0; i <= n_cell; i++) {
-    cell_vtx_idx[i] = 4*i;
+  else if (elt_type == PDM_MESH_NODAL_HEXA8) {
+    _compute_cell_vtx_hexa(n_cell,
+                           cell_face,
+                           face_vtx_idx,
+                           face_vtx,
+                           cell_vtx);
   }
-  PDM_log_trace_connectivity_int(cell_vtx_idx, cell_vtx, n_cell, "cell_vtx : ");
   // <<--
+
+  int *cell_vtx_idx = PDM_array_new_idx_from_const_stride_int(n_vtx_cell, n_cell);
+  PDM_log_trace_connectivity_int(cell_vtx_idx, cell_vtx, n_cell, "cell_vtx : ");
 
   int n_elt = 0;
   int l_elt_vtx = 0;
@@ -650,13 +795,13 @@ _setup_edge_upwind_and_downwind
     if (upwind_cell[iedge] >= 0) {
       fprintf(f, "1\n"); // point
       fprintf(f, "7\n"); // polygon
-      fprintf(f, "10\n"); // tetra
+      fprintf(f, "%d\n", vtk_type_cell); // tetra
     }
 
     if (downwind_cell[iedge] >= 0) {
       fprintf(f, "1\n"); // point
       fprintf(f, "7\n"); // polygon
-      fprintf(f, "10\n"); // tetra
+      fprintf(f, "%d\n", vtk_type_cell); // tetra
     }
 
   }
@@ -937,7 +1082,9 @@ int main(int argc, char *argv[])
                                  &vtx_tag, &vtx, &vtx_ln_to_gn, &face_bound_idx, &face_bound,
                                  &face_bound_ln_to_gn, &face_join_idx, &face_join, &face_join_ln_to_gn);
 
-      PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn : ");
+      // PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn : ");
+
+      // PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
 
       int *vtx_part_bound_proc_idx = NULL;
       int *vtx_part_bound_part_idx = NULL;
@@ -1000,6 +1147,8 @@ int main(int argc, char *argv[])
       face_vtx_idx = (int *) malloc(sizeof(int) * (n_face + 1));
       memcpy(face_vtx_idx, face_edge_idx, sizeof(int) * (n_face + 1));
 
+      // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx : ");
+
 
       int* cell_vtx_idx = NULL;
       int* cell_vtx     = NULL;
@@ -1008,6 +1157,32 @@ int main(int argc, char *argv[])
       int* vtx_cell_idx = NULL;
       int* vtx_cell     = NULL;
       PDM_connectivity_transpose(n_cell, n_vtx, cell_vtx_idx, cell_vtx, &vtx_cell_idx, &vtx_cell);
+
+      // if (elt_type == PDM_MESH_NODAL_HEXA8) {
+      //   int *_cell_vtx = (int *) malloc(sizeof(int) * n_cell * 8);
+      //   _compute_cell_vtx_hexa(n_cell,
+      //                          cell_face,
+      //                          face_vtx_idx,
+      //                          face_vtx,
+      //                          &_cell_vtx);
+
+      //   PDM_vtk_write_std_elements("check_hexa.vtk",
+      //                              n_vtx,
+      //                              vtx,
+      //                              NULL,
+      //                              PDM_MESH_NODAL_HEXA8,
+      //                              n_cell,
+      //                              _cell_vtx,
+      //                              NULL,
+      //                              0,
+      //                              NULL,
+      //                              NULL);
+      //   free(_cell_vtx);
+
+      //   abort();
+      // }
+
+
 
       _setup_edge_upwind_and_downwind(n_cell,
                                       n_face,
