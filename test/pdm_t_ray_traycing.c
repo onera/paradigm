@@ -424,6 +424,83 @@ _generate_volume_mesh
 }
 
 
+static void
+_dump_face_ray
+(
+ PDM_MPI_Comm comm,
+ int          n_face,
+ int          face_vtx[],
+ int          n_vtx,
+ double       vtx_coord[],
+ int          face_ray_idx[],
+ double       ray_coord[],
+ int          face_ray_tag[]
+ )
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int *_face_vtx     = face_vtx;
+
+  if (_face_vtx == NULL) {
+    _face_vtx = (int *) malloc(sizeof(int) * n_face * 3);
+    for (int i = 0; i < 3*n_face; i++) {
+      _face_vtx[i] = i+1;
+    }
+  }
+
+
+  char filename[999];
+
+
+
+  sprintf(filename, "faces_%2.2d.vtk", i_rank);
+  PDM_vtk_write_std_elements(filename,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             PDM_MESH_NODAL_TRIA3,
+                             n_face,
+                             _face_vtx,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+
+
+
+  int *ray_iface = (int *) malloc(sizeof(int) * face_ray_idx[n_face]);
+  for (int i = 0; i < n_face; i++) {
+    for (int iray = face_ray_idx[i]; iray < face_ray_idx[i+1]; iray++) {
+      ray_iface[iray] = i;
+    }
+  }
+
+  const int *fields[2] = {ray_iface, face_ray_tag};
+  const char* field_name[] = {"iface", "tag", 0 };
+  int *_ray_vtx = (int * ) malloc(sizeof(int) * 2*face_ray_idx[n_face]);
+  for (int i = 0; i < 2*face_ray_idx[n_face]; i++) {
+    _ray_vtx[i] = i+1;
+  }
+
+  sprintf(filename, "rays_%2.2d.vtk", i_rank);
+  PDM_vtk_write_std_elements(filename,
+                             2*face_ray_idx[n_face],
+                             ray_coord,
+                             NULL,
+                             PDM_MESH_NODAL_BAR2,
+                             face_ray_idx[n_face],
+                             _ray_vtx,
+                             NULL,
+                             2,
+                             field_name,
+                             fields);
+  free(_ray_vtx);
+  free(ray_iface);
+
+}
+
+
 /**
  *
  * \brief  Main
@@ -1211,7 +1288,7 @@ int main(int argc, char *argv[])
 
     PDM_plane_normal(block_elt_vtx_n[i_face],face_coord,face_normal);
     for (int j_rayon = dface_line_idx[i_face]; j_rayon < dface_line_idx[i_face+1]; ++j_rayon) {
-
+      tag_face[j_rayon]=0;
       double* rayon_coord=dface_line_coord+6*j_rayon;
       int stat = -1;
       double intersection[3];
@@ -1265,7 +1342,7 @@ int main(int argc, char *argv[])
     } 
   }
 
-
+  PDM_log_trace_connectivity_int(dface_line_idx, tag_face, dn_face, "tag_face : ");
 
   // distrib_faces[0]=-1;
 
@@ -1300,6 +1377,16 @@ int main(int argc, char *argv[])
 
 
 
+  _dump_face_ray(comm,
+                 dn_face,
+                 NULL,
+                 3*dn_face,
+                 block_elt_vtx_coord,
+                 dface_line_idx,
+                 dface_line_coord,
+                 tag_face);
+
+
 
 
 
@@ -1329,8 +1416,8 @@ int main(int argc, char *argv[])
 
 
   for(int i_part = 0; i_part < n_part_mesh; ++i_part) {
-    free(part_elt_extents);
-    free(part_elt_g_num);
+    free(part_elt_extents[i_part]);
+    free(part_elt_g_num[i_part]);
   }
   free(part_n_elt);
 

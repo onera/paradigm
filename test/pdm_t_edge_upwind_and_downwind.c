@@ -662,23 +662,53 @@ _setup_edge_upwind_and_downwind
   }
 
   fprintf(f, "CELL_DATA %d\n", n_elt);
-  fprintf(f, "SCALARS i_edge int 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
+  // fprintf(f, "SCALARS i_edge int 1\n");
+  // fprintf(f, "LOOKUP_TABLE default\n");
+  // for (int iedge = 0; iedge < n_edge; iedge++) {
+  //   fprintf(f, "%d\n", iedge);
+
+  //   if (upwind_cell[iedge] >= 0) {
+  //     fprintf(f, "%d\n", iedge);
+  //     fprintf(f, "%d\n", iedge);
+  //     fprintf(f, "%d\n", iedge);
+  //   }
+
+  //   if (downwind_cell[iedge] >= 0) {
+  //     fprintf(f, "%d\n", iedge);
+  //     fprintf(f, "%d\n", iedge);
+  //     fprintf(f, "%d\n", iedge);
+  //   }
+
+  // }
+  fprintf(f, "FIELD fields 2\n");
+  fprintf(f, "i_edge 1 %d int\n", n_elt);
   for (int iedge = 0; iedge < n_edge; iedge++) {
     fprintf(f, "%d\n", iedge);
-
     if (upwind_cell[iedge] >= 0) {
       fprintf(f, "%d\n", iedge);
       fprintf(f, "%d\n", iedge);
       fprintf(f, "%d\n", iedge);
     }
-
     if (downwind_cell[iedge] >= 0) {
       fprintf(f, "%d\n", iedge);
       fprintf(f, "%d\n", iedge);
       fprintf(f, "%d\n", iedge);
     }
+  }
 
+  fprintf(f, "up_down 1 %d int\n", n_elt);
+  for (int iedge = 0; iedge < n_edge; iedge++) {
+    fprintf(f, "0\n");
+    if (upwind_cell[iedge] >= 0) {
+      fprintf(f, "1\n");
+      fprintf(f, "1\n");
+      fprintf(f, "1\n");
+    }
+    if (downwind_cell[iedge] >= 0) {
+      fprintf(f, "-1\n");
+      fprintf(f, "-1\n");
+      fprintf(f, "-1\n");
+    }
   }
 
   fclose(f);
