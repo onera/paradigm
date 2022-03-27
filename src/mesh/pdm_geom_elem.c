@@ -2300,6 +2300,11 @@ PDM_geom_elem_edge_upwind_and_downwind
   double *upwind_point   = (double *) malloc(sizeof(double) * n_edge * 3);
   double *downwind_point = (double *) malloc(sizeof(double) * n_edge * 3);
 
+  for(int i_edge = 0; i_edge < 3 * n_edge; ++i_edge) {
+    upwind_point   [i_edge] = -1000.;
+    downwind_point [i_edge] = -1000.;
+  }
+
   /*
    *  Compute face centers and normals
    */
@@ -2353,7 +2358,9 @@ PDM_geom_elem_edge_upwind_and_downwind
     }
   }
 
-  PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
+  if(0 == 1) {
+    PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
+  }
 
 
   int *is_visited_face = PDM_array_zeros_int(n_face);
@@ -2365,7 +2372,7 @@ PDM_geom_elem_edge_upwind_and_downwind
   const double epsilon = 1.e-12;
   for (int iedge = 0; iedge < n_edge; iedge++) {
 
-    log_trace("iedge = %d/%d\n", iedge, n_edge);
+    // log_trace("iedge = %d/%d\n", iedge, n_edge);
 
     int ivtx1 = edge_vtx[2*iedge  ] - 1;
     int ivtx2 = edge_vtx[2*iedge+1] - 1;
@@ -2387,17 +2394,17 @@ PDM_geom_elem_edge_upwind_and_downwind
     for (int jvtx = 0; jvtx < 2; jvtx++) {
 
       int ivtx = edge_vtx[2*iedge + jvtx] - 1;
-      log_trace("    ivtx = %d/%d\n", ivtx, n_vtx);
+      // log_trace("    ivtx = %d/%d\n", ivtx, n_vtx);
 
       for (int idx_cell = vtx_cell_idx[ivtx]; idx_cell < vtx_cell_idx[ivtx+1]; idx_cell++) {
 
         int icell = PDM_ABS(vtx_cell[idx_cell]) - 1;
-        log_trace("    icell = %d/%d\n", icell, n_cell);
+        // log_trace("    icell = %d/%d\n", icell, n_cell);
 
         for (int idx_face = cell_face_idx[icell]; idx_face < cell_face_idx[icell+1]; idx_face++) {
 
           int iface = PDM_ABS(cell_face[idx_face]) - 1;
-          log_trace("      idx_face = %d, iface = %d/%d\n", idx_face, iface, n_face);
+          // log_trace("      idx_face = %d, iface = %d/%d\n", idx_face, iface, n_face);
 
           if (is_visited_face[iface]) {
             continue;
@@ -2452,6 +2459,8 @@ PDM_geom_elem_edge_upwind_and_downwind
           if (stat <= 0) {
             continue;
           }
+          // log_trace("Intersection = (%12.5e / %12.5e / %12.5e) - t = %12.5e - num = %12.5e / denum = %12.5e \n",
+          //               intersection[0], intersection[1], intersection[2], 0, numer, denom);
 
           // We found an intersection point, now check if it is inside the face
           int *fv = face_vtx + face_vtx_idx[iface];
@@ -2493,7 +2502,6 @@ PDM_geom_elem_edge_upwind_and_downwind
                      intersection,
                      sizeof(double) * 3);
             }
-
           }
 
           if (found[jvtx]) {
@@ -2510,7 +2518,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 
       sgn = -sgn;
       // assert(found[jvtx]);
-      log_trace("found[%d] = %d\n", jvtx, found[jvtx]);
+      // log_trace("found[%d] = %d\n", jvtx, found[jvtx]);
 
     } // end of loop on current edge's vtx
 
@@ -2523,15 +2531,16 @@ PDM_geom_elem_edge_upwind_and_downwind
   free(visited_faces  );
   free(poly_coord);
 
-
-  for (int iedge = 0; iedge < n_edge; iedge++) {
-    log_trace("edge %d (%d %d), up : c %d, f %d, p (%f %f %f), down : c %d, f %d, p (%f %f %f)\n",
-              iedge,
-              edge_vtx[2*iedge]-1, edge_vtx[2*iedge+1]-1,
-              upwind_cell[iedge], upwind_face[iedge],
-              upwind_point[3*iedge], upwind_point[3*iedge+1], upwind_point[3*iedge+2],
-              downwind_cell[iedge], downwind_face[iedge],
-              downwind_point[3*iedge], downwind_point[3*iedge+1], downwind_point[3*iedge+2]);
+  if(0 == 1) {
+    for (int iedge = 0; iedge < n_edge; iedge++) {
+      log_trace("edge %d (%d %d), up : c %d, f %d, p (%f %f %f), down : c %d, f %d, p (%f %f %f)\n",
+                iedge,
+                edge_vtx[2*iedge]-1, edge_vtx[2*iedge+1]-1,
+                upwind_cell[iedge], upwind_face[iedge],
+                upwind_point[3*iedge], upwind_point[3*iedge+1], upwind_point[3*iedge+2],
+                downwind_cell[iedge], downwind_face[iedge],
+                downwind_point[3*iedge], downwind_point[3*iedge+1], downwind_point[3*iedge+2]);
+    }
   }
 
 
@@ -2651,7 +2660,7 @@ PDM_geom_elem_edge_upwind_and_downwind
   for (int i = 0; i <= n_cell; i++) {
     cell_vtx_idx[i] = 4*i;
   }
-  PDM_log_trace_connectivity_int(cell_vtx_idx, cell_vtx, n_cell, "cell_vtx : ");
+  // PDM_log_trace_connectivity_int(cell_vtx_idx, cell_vtx, n_cell, "cell_vtx : ");
   // <<--
 
   int n_elt = 0;
