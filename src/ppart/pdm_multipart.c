@@ -726,16 +726,26 @@ _part_free
 static void
 _setup_ghost_information
 (
-const int   i_rank,
-const int   n_part,
-const int  *pn_vtx,
-      int **pinternal_vtx_priority
+const int           i_rank,
+const int           n_part,
+const int          *pn_vtx,
+      int         **pinternal_vtx_priority,
+      PDM_g_num_t  *distrib_partition
 )
 {
   /* 0 : Interior / 1 : owner join (at least one) / 2 : not owner */
+  // pinternal_vtx_priority contains value between i_rank + i_part
   for (int ipart = 0; ipart < n_part; ipart++) {
     for(int ivtx = 0; ivtx < pn_vtx[ipart]; ++ivtx) {
-      if(pinternal_vtx_priority[ipart][ivtx] == i_rank){
+
+      int g_part = pinternal_vtx_priority[ipart][ivtx];
+      int t_part = -1;
+      if( g_part >= distrib_partition[i_rank] && g_part < distrib_partition[i_rank+1]) {
+        t_part = g_part - distrib_partition[i_rank];
+      }
+
+      // if(pinternal_vtx_priority[ipart][ivtx] == i_rank){
+      if(t_part == ipart){
         pinternal_vtx_priority[ipart][ivtx] = 1;
       } else if(pinternal_vtx_priority[ipart][ivtx] == -1) {
         pinternal_vtx_priority[ipart][ivtx] = 0;
@@ -1801,7 +1811,11 @@ PDM_MPI_Comm       comm
                                      &pinternal_vtx_bound,
                                      &pinternal_vtx_priority);
 
-  _setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+  _setup_ghost_information(i_rank,
+                           n_part,
+                           pn_vtx,
+                           pinternal_vtx_priority,
+                           distrib_partition);
 
   /* Free in order to be correclty */
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -2279,7 +2293,12 @@ PDM_MPI_Comm      comm
                                      &pinternal_vtx_bound,
                                      &pinternal_vtx_priority);
 
-  _setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+  _setup_ghost_information(i_rank,
+                           n_part,
+                           pn_vtx,
+                           pinternal_vtx_priority,
+                           part_distri);
+
   PDM_part_renum_vtx(pmeshes->parts, n_part, 1, (void *) pinternal_vtx_priority);
 
   /* Free in order to be correclty */
@@ -2349,7 +2368,11 @@ PDM_MPI_Comm      comm
                                      &pinternal_vtx_priority); // Egalemet possible de permeuter dans PMD_part_renum
 
   // Re setup the array properlly to have the good output
-  _setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+  _setup_ghost_information(i_rank,
+                           n_part,
+                           pn_vtx,
+                           pinternal_vtx_priority,
+                           part_distri);
 
   // Finally complete parts structure with internal join data and bounds
   for (int ipart = 0; ipart < n_part; ipart++) {
