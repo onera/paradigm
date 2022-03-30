@@ -1216,7 +1216,12 @@ PDM_multipart_create
   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) malloc(sizeof(_pdm_multipart_t));
 
   _multipart->n_zone           = n_zone;
-  _multipart->n_part           = n_part;
+  _multipart->n_part           = (int * ) malloc( _multipart->n_zone * sizeof(int));
+
+  for (int i = 0; i < _multipart->n_zone; ++i) {
+    _multipart->n_part[i] = n_part[i];
+  }
+
   _multipart->merge_blocks     = merge_blocks;
   _multipart->split_method     = split_method;
   _multipart->part_size_method = part_size_method;
@@ -3364,6 +3369,10 @@ const int                       i_part,
       *connect     = _pmeshes.parts[i_part]->face_edge;
       *connect_idx = _pmeshes.parts[i_part]->face_edge_idx;
       break;
+    case PDM_CONNECTIVITY_TYPE_FACE_VTX:
+      *connect     = _pmeshes.parts[i_part]->face_vtx;
+      *connect_idx = _pmeshes.parts[i_part]->face_vtx_idx;
+      break;
     case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
       *connect     = _pmeshes.parts[i_part]->edge_vtx;
       *connect_idx = NULL; // _pmeshes.parts[i_part]->edge_vtx_idx;
@@ -3632,6 +3641,7 @@ PDM_multipart_free
   free(_multipart->dmeshes);
   free(_multipart->dmeshes_nodal);
   free(_multipart->dmn_to_dm);
+  free(_multipart->n_part);
 
   //PDM_part_renum_method_purge();
   free (_multipart);
