@@ -1446,7 +1446,7 @@ min_sub_index
 {
   int min_idx = part_distribution[sub_indices[0]];
   for (int i = 1; i < n_sub_indices; ++i) {
-    int idx_part = part_distribution[sub_indices[i]] + sub_indices_part[sub_indices[i]];
+    int idx_part = part_distribution[sub_indices[i]] + sub_indices_part[i];
     if (array[idx_part] < array[min_idx]) {
       min_idx = idx_part;
     }
