@@ -1319,8 +1319,6 @@ _p2p_stride_var_reverse_iexch
      
   int send_request_stri = -1;
 
-  printf("tag = %i \n", tag);
-
   PDM_part_to_part_reverse_issend(ptp,
                                   sizeof (int),
                                   1, // Stride = 1
@@ -1505,6 +1503,8 @@ _p2p_stride_var_iexch_wait
   }
 
   //_free_async_exch (ptp, request);
+  free(ptp->async_recv_part2_data[request_irecv]);
+  ptp->async_recv_part2_data[request_irecv] = NULL;
 
   for (int i = 0; i < ptp->n_part2; i++) {
     free(part2_idx[i]);
@@ -1587,7 +1587,8 @@ _p2p_stride_var_reverse_iexch_wait
     }
   }
 
-
+  free(ptp->async_recv_part2_data[request_irecv]);
+  ptp->async_recv_part2_data[request_irecv] = NULL;
 
 
   //_free_async_exch (ptp, request);
@@ -2987,7 +2988,7 @@ PDM_part_to_part_irecv_wait
   }
 
   _free_async_recv (ptp, request);
-  
+  free(ptp->async_recv_part2_data[request]);
 }
 
 
@@ -3096,6 +3097,7 @@ PDM_part_to_part_reverse_irecv_wait
   }
 
   _free_async_recv (ptp, request);
+  free(ptp->async_recv_part2_data[request]);
 
 }
 

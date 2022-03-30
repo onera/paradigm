@@ -3190,7 +3190,10 @@ const int        i_part,
     *n_join_groups  = -1;
     *s_face_join    = -1;
   } else {
-    *s_cell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
+    *s_cell_face = 1;
+    if(*n_cell > 0) {
+      *s_cell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
+    }
     if(_pmeshes.parts[i_part]->face_vtx_idx != NULL) {
       *s_face_vtx  = _pmeshes.parts[i_part]->face_vtx_idx[*n_face];
     } else {
@@ -3198,7 +3201,10 @@ const int        i_part,
     }
 
 
-    *n_face_part_bound = _pmeshes.parts[i_part]->face_part_bound_part_idx[*n_total_part];
+    *n_face_part_bound = 0;
+    if(_pmeshes.parts[i_part]->face_part_bound_part_idx != NULL) {
+      *n_face_part_bound = _pmeshes.parts[i_part]->face_part_bound_part_idx[*n_total_part];
+    }
 
     *n_join_groups  = _pmeshes.n_joins;
     if(_pmeshes.parts[i_part]->face_join_idx != NULL) {
@@ -3208,7 +3214,11 @@ const int        i_part,
     }
   }
   *n_bound_groups = _pmeshes.n_bounds;
-  *s_face_bound   = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
+
+  *s_face_bound = 0;
+  if(_pmeshes.parts[i_part]->face_bound_idx !=NULL) {
+    *s_face_bound   = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
+  }
 }
 
 
