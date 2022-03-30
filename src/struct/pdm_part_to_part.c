@@ -164,6 +164,7 @@ _free_async_recv
   }
   ptp->async_i_recv_buffer[request]   = NULL;
 
+  free (ptp->async_recv_part2_data[request]);   
   ptp->async_recv_part2_data[request] = NULL;   
 
   ptp->async_recv_free[ptp->async_recv_n_free++] = request;     
@@ -722,7 +723,10 @@ _p2p_stride_var_data_irecv
   ptp->async_recv_s_data[_request]      = s_data;
   ptp->async_recv_cst_stride[_request]  = -1;
   ptp->async_recv_tag[_request]         = tag;
-  ptp->async_recv_part2_data[_request]  = part2_data;
+
+  ptp->async_recv_part2_data[_request]  = malloc(sizeof (void *) * ptp->n_part2);
+  memcpy(ptp->async_recv_part2_data[_request], part2_data, sizeof (void *) * ptp->n_part2);
+
   ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
@@ -776,7 +780,10 @@ _p2p_stride_var_data_reverse_irecv
   ptp->async_recv_s_data[_request]      = s_data;
   ptp->async_recv_cst_stride[_request]  = -1;
   ptp->async_recv_tag[_request]         = tag;
-  ptp->async_recv_part2_data[_request]  = part1_data;
+
+  ptp->async_recv_part2_data[_request]  = malloc(sizeof (void *) * ptp->n_part1);
+  memcpy(ptp->async_recv_part2_data[_request], part1_data, sizeof (void *) * ptp->n_part1);
+
   ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
@@ -2491,7 +2498,9 @@ PDM_part_to_part_ialltoall
   ptp->async_recv_cst_stride[request_recv]  = cst_stride;      
   ptp->async_recv_tag[request_recv]         = -1;
 
-  ptp->async_recv_part2_data[request_recv]  = ref_part2_data;      
+  ptp->async_recv_part2_data[request_recv]  = malloc(sizeof (void *) * ptp->n_part2);
+  memcpy(ptp->async_recv_part2_data[request_recv], ref_part2_data, sizeof (void *) * ptp->n_part2);
+
   ptp->async_recv_request[request_recv]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
   ptp->async_n_recv_buffer[request_recv]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[request_recv]    = malloc (sizeof(int) * (ptp->n_rank + 1));
@@ -2912,7 +2921,9 @@ PDM_part_to_part_irecv
   ptp->async_recv_cst_stride[_request]  = cst_stride;      
   ptp->async_recv_tag[_request]         = tag;
 
-  ptp->async_recv_part2_data[_request]  = part2_data;      
+  ptp->async_recv_part2_data[_request]  = malloc(sizeof (void *) * ptp->n_part2);
+  memcpy(ptp->async_recv_part2_data[_request], part2_data, sizeof (void *) * ptp->n_part2);
+
   ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_recv);      
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
@@ -3010,7 +3021,9 @@ PDM_part_to_part_reverse_irecv
   ptp->async_recv_cst_stride[_request]  = cst_stride;      
   ptp->async_recv_tag[_request]         = tag;
 
-  ptp->async_recv_part2_data[_request]  = part1_data;      
+  ptp->async_recv_part2_data[_request]  = malloc(sizeof (void *) * ptp->n_part1);
+  memcpy(ptp->async_recv_part2_data[_request], part1_data, sizeof (void *) * ptp->n_part1);
+
   ptp->async_recv_request[_request]     = malloc (sizeof (PDM_MPI_Request) * ptp->n_active_rank_send);      
   ptp->async_n_recv_buffer[_request]    = malloc (sizeof(int) * ptp->n_rank);
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
