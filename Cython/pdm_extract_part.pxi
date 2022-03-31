@@ -74,7 +74,7 @@ cdef class ExtractPart:
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
-  cdef list                keep_alive
+  keep_alive = []
   # --------------------------------------------------------------------------
 
   # ------------------------------------------------------------------
@@ -82,11 +82,8 @@ cdef class ExtractPart:
                 int               dim,
                 int               n_part_in,
                 int               n_part_out,
-                PDM_split_dual_t  split_method,
-                MPI.Comm          comm,
-                PDM_mesh_nature_t mesh_nature,
-                int               n_part_surf=1,
-                list              point_clouds=[]):
+                PDM_split_dual_t  split_dual_method,
+                MPI.Comm          comm):
     """
     Compute the distance from point clouds to a surface
     """
@@ -204,8 +201,7 @@ cdef class ExtractPart:
       np_connect  = create_numpy_i(connect    , 2 * n_entity)
 
     # return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
-    return {"np_connect_idx" : np_connect_idx,
-            "np_connect"     : np_connect}
+    return np_connect_idx, np_connect
 
   # ------------------------------------------------------------------
   def ln_to_gn_get(self,

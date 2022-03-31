@@ -135,6 +135,12 @@ cdef extern from "pdm_dmesh_nodal.h":
       PDM_MESH_NODAL_HEXA8    = 8
       PDM_MESH_NODAL_POLY_3D  = 9
 
+cdef extern from "pdm_para_graph_dual.h":
+    ctypedef enum PDM_split_dual_t:
+        PDM_SPLIT_DUAL_WITH_PARMETIS = 1
+        PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
+        PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+
 def Finalize ():
     PDM_Finalize
 
@@ -245,6 +251,9 @@ _PDM_ISO_SURFACE_KIND_SPHERE = PDM_ISO_SURFACE_KIND_SPHERE
 _PDM_ISO_SURFACE_KIND_FIELD  = PDM_ISO_SURFACE_KIND_FIELD
 
 
+_PDM_SPLIT_DUAL_WITH_PARMETIS = PDM_SPLIT_DUAL_WITH_PARMETIS
+_PDM_SPLIT_DUAL_WITH_PTSCOTCH = PDM_SPLIT_DUAL_WITH_PTSCOTCH
+_PDM_SPLIT_DUAL_WITH_HILBERT  = PDM_SPLIT_DUAL_WITH_HILBERT
 
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
@@ -467,10 +476,13 @@ include "pdm_domain_merge.pxi"
 # --------------------
 include "pdm_connectivities.pxi"
 
+# PDM_connectivities :
+# --------------------
+include "pdm_extract_part.pxi"
+
 # PDM_writer :
 # --------------------
 include "pdm_writer.pxi"
-
 
 
 

@@ -1377,7 +1377,11 @@ PDM_extract_part_n_entity_get
  PDM_mesh_entities_t       entity_type
 )
 {
-  return extrp->pextract_n_entity[entity_type][i_part_out];
+  if(extrp->pextract_n_entity[entity_type] != NULL) {
+    return extrp->pextract_n_entity[entity_type][i_part_out];
+  } else {
+    return 0;
+  }
 }
 
 
