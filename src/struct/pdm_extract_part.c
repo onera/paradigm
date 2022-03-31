@@ -1369,93 +1369,106 @@ PDM_extract_part_selected_lnum_set
 }
 
 
-void
+int
 PDM_extract_part_n_entity_get
 (
  PDM_extract_part_t       *extrp,
- PDM_mesh_entities_t       entity_type,
- int                     **pn_entity
+ int                       i_part_out,
+ PDM_mesh_entities_t       entity_type
 )
 {
-  *pn_entity = malloc( extrp->n_part_out * sizeof(int));
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    (*pn_entity)[i_part] = extrp->pextract_n_entity[entity_type][i_part];
-  }
+  return extrp->pextract_n_entity[entity_type][i_part_out];
 }
 
 
-void
+int
 PDM_extract_part_connectivity_get
 (
  PDM_extract_part_t        *extrp,
+ int                        i_part_out,
  PDM_connectivity_type_t    connectivity_type,
- int                     ***connect,
- int                     ***connect_idx,
+ int                      **connect,
+ int                      **connect_idx,
  PDM_ownership_t           ownership
 )
 {
-  *connect     = extrp->pextract_connectivity    [connectivity_type];
-  *connect_idx = extrp->pextract_connectivity_idx[connectivity_type];
+  assert(i_part_out < extrp->n_part_out);
+
+  PDM_mesh_entities_t entity_type = PDM_connectivity_type_to_entity_type(connectivity_type);
+
+  *connect     = extrp->pextract_connectivity    [connectivity_type][i_part_out];
+  *connect_idx = extrp->pextract_connectivity_idx[connectivity_type][i_part_out];
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_connectivity[connectivity_type] = PDM_FALSE;
   } else {
     extrp->is_owner_connectivity[connectivity_type] = PDM_TRUE;
   }
+
+  return extrp->pextract_n_entity[entity_type][i_part_out];
 }
 
 
 
 
-void
+int
 PDM_extract_part_ln_to_gn_get
 (
  PDM_extract_part_t        *extrp,
- PDM_mesh_entities_t       entity_type,
- PDM_g_num_t            ***pentity_ln_to_gn,
- PDM_ownership_t           ownership
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ PDM_g_num_t              **pentity_ln_to_gn,
+ PDM_ownership_t            ownership
 )
 {
-  *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type];
+  *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type][i_part_out];
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
   } else {
     extrp->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
   }
+
+  return extrp->pextract_n_entity[entity_type][i_part_out];
 }
 
 
-void
+int
 PDM_extract_part_parent_ln_to_gn_get
 (
  PDM_extract_part_t        *extrp,
+ int                        i_part_out,
  PDM_mesh_entities_t       entity_type,
- PDM_g_num_t            ***parent_entity_ln_to_gn,
+ PDM_g_num_t             **parent_entity_ln_to_gn,
  PDM_ownership_t           ownership
 )
 {
-  *parent_entity_ln_to_gn = extrp->pextract_entity_parent_ln_to_gn[entity_type];
+  *parent_entity_ln_to_gn = extrp->pextract_entity_parent_ln_to_gn[entity_type][i_part_out];
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_parent_ln_to_gn[entity_type] = PDM_FALSE;
   } else {
     extrp->is_owner_parent_ln_to_gn[entity_type] = PDM_TRUE;
   }
+
+  return extrp->pextract_n_entity[entity_type][i_part_out];
 }
 
-void
+int
 PDM_extract_part_vtx_coord_get
 (
  PDM_extract_part_t         *extrp,
- double                   ***pvtx_coord,
- PDM_ownership_t           ownership
+ int                        i_part_out,
+ double                   **pvtx_coord,
+ PDM_ownership_t            ownership
 )
 {
-  *pvtx_coord = extrp->pextract_vtx_coord;
+  *pvtx_coord = extrp->pextract_vtx_coord[i_part_out];
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_vtx_coord = PDM_FALSE;
   } else {
     extrp->is_owner_vtx_coord = PDM_TRUE;
   }
+
+  return extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part_out];
 }
 
 

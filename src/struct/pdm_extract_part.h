@@ -116,51 +116,57 @@ PDM_extract_part_part_set
 
 
 
-void
+int
 PDM_extract_part_n_entity_get
 (
  PDM_extract_part_t       *extrp,
- PDM_mesh_entities_t       entity_type,
- int                     **pn_entity
+ int                       i_part_out,
+ PDM_mesh_entities_t       entity_type
 );
 
 
-void
+
+int
 PDM_extract_part_connectivity_get
 (
  PDM_extract_part_t        *extrp,
+ int                        i_part_out,
  PDM_connectivity_type_t    connectivity_type,
- int                     ***connect,
- int                     ***connect_idx,
+ int                      **connect,
+ int                      **connect_idx,
  PDM_ownership_t           ownership
 );
 
 
-void
+int
 PDM_extract_part_ln_to_gn_get
 (
  PDM_extract_part_t        *extrp,
- PDM_mesh_entities_t       entity_type,
- PDM_g_num_t            ***pentity_ln_to_gn,
- PDM_ownership_t           ownership
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ PDM_g_num_t              **pentity_ln_to_gn,
+ PDM_ownership_t            ownership
 );
 
 
-void
+int
 PDM_extract_part_parent_ln_to_gn_get
 (
  PDM_extract_part_t        *extrp,
+ int                        i_part_out,
  PDM_mesh_entities_t       entity_type,
- PDM_g_num_t            ***pentity_parent_ln_to_gn,
+ PDM_g_num_t             **parent_entity_ln_to_gn,
  PDM_ownership_t           ownership
 );
 
-void
+
+int
 PDM_extract_part_vtx_coord_get
 (
  PDM_extract_part_t         *extrp,
- double                   ***pvtx_coord,
- PDM_ownership_t           ownership
+ int                        i_part_out,
+ double                   **pvtx_coord,
+ PDM_ownership_t            ownership
 );
 
 void
