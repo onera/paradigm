@@ -176,8 +176,7 @@ cdef class ExtractPart:
                    PDM_mesh_entities_t entity_type):
     """
     """
-    # return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
-    return 1
+    return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
 
   # ------------------------------------------------------------------
   def connectivity_get(self,
@@ -185,8 +184,72 @@ cdef class ExtractPart:
                        PDM_connectivity_type_t connectivity_type):
     """
     """
+    cdef int  n_entity
+    cdef int *connect
+    cdef int *connect_idx
+
+    n_entity = PDM_extract_part_connectivity_get(self._extrp,
+                                                 ipart,
+                                                 connectivity_type,
+                                                 &connect,
+                                                 &connect_idx,
+                                                 PDM_OWNERSHIP_USER)
+
+    np_connect_idx = None
+    np_connect     = None
+    if(connect_idx != NULL):
+      np_connect_idx = create_numpy_i(connect_idx, n_entity+1           )
+      np_connect     = create_numpy_i(connect    , connect_idx[n_entity])
+    else:
+      np_connect  = create_numpy_i(connect    , 2 * n_entity)
+
     # return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
-    return 1
+    return {"np_connect_idx" : np_connect_idx,
+            "np_connect"     : np_connect}
+
+  # ------------------------------------------------------------------
+  def ln_to_gn_get(self,
+                   int ipart,
+                   PDM_mesh_entities_t entity_type):
+    """
+    """
+    cdef int  n_entity
+    cdef PDM_g_num_t *entity_ln_to_gn
+
+    n_entity = PDM_extract_part_ln_to_gn_get(self._extrp,
+                                             ipart,
+                                             entity_type,
+                                             &entity_ln_to_gn,
+                                             PDM_OWNERSHIP_USER)
+    return create_numpy_pdm_gnum(entity_ln_to_gn, n_entity)
+
+  # ------------------------------------------------------------------
+  def parent_ln_to_gn_get(self,
+                          int ipart,
+                          PDM_mesh_entities_t entity_type):
+    """
+    """
+    cdef int  n_entity
+    cdef PDM_g_num_t *parent_ln_to_gn
+
+    n_entity = PDM_extract_part_parent_ln_to_gn_get(self._extrp,
+                                                    ipart,
+                                                    entity_type,
+                                                    &parent_ln_to_gn,
+                                                    PDM_OWNERSHIP_USER)
+    return create_numpy_pdm_gnum(parent_ln_to_gn, n_entity)
+
+  # ------------------------------------------------------------------
+  def vtx_coord_get(self,
+                    int ipart):
+    """
+    """
+    cdef int     n_vtx
+    cdef double *pvtx_coord
+
+    n_vtx = PDM_extract_part_vtx_coord_get(self._extrp, ipart, &pvtx_coord, PDM_OWNERSHIP_USER)
+
+    return create_numpy_d(pvtx_coord, 3 * n_vtx)
 
   # ------------------------------------------------------------------
   def __dealloc__(self):
