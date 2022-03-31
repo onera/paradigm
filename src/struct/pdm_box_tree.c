@@ -5528,7 +5528,185 @@ PDM_box_tree_intersect_lines_boxes
 
 
 
+/**
+ *
+ * \brief Get an indexed list of all lines intersecting boxes
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_line         Number of lines
+ * \param [in]   line_coord     Lines coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  box_line_idx   Pointer to the index array on boxes (size = \ref n_box + 1)
+ * \param [out]  box_line       Pointer to the list of lines intersecting boxes (size = \ref box_line_idx[\ref n_box])
+ *
+ */
 
+void
+PDM_box_tree_intersect_lines_boxes2
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_line_idx,
+ int           **box_line
+ )
+{
+  const int dim = bt->boxes->dim;
+  const int two_dim = 2*dim;
+
+  double *_line_coord = malloc (sizeof(double) * two_dim * n_line);
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+                                n_line*2,
+                                (double *) line_coord,
+                                _line_coord);
+
+
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+    box_tree_data = bt->local_data;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  int n_boxes = boxes->n_boxes;
+
+  int *line_box_idx = (int *) malloc(sizeof(int) * (n_line + 1));
+  line_box_idx[0] = 0;
+
+  int s_line_box = 2 * n_line;
+  int *line_box = (int *) malloc(sizeof(int) * s_line_box);
+
+  int *box_line_n = PDM_array_zeros_int(n_boxes);
+
+  int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  int *stack = malloc ((sizeof(int)) * s_stack);
+  int pos_stack = 0;
+
+  int n_visited_boxes = 0;
+  PDM_bool_t *is_visited_box = malloc(sizeof(PDM_bool_t) * n_boxes);
+  for (int i = 0; i < n_boxes; i++) {
+    is_visited_box[i] = PDM_FALSE;
+  }
+
+  int *visited_boxes = malloc(sizeof(int) * n_boxes);
+
+  double node_extents[2*dim];
+  double invdir[3];
+  for (int iline = 0; iline < n_line; iline++) {
+
+    line_box_idx[iline+1] = line_box_idx[iline];
+
+    const double *origin = _line_coord + two_dim * iline;
+    const double *destination = origin + dim;
+    for (int i = 0; i < 3; i++) {
+      double d = destination[i] - origin[i];
+      if (PDM_ABS(d) < 1e-15) {
+        invdir[i] = PDM_SIGN(d) * HUGE_VAL;
+      } else {
+        invdir[i] = 1. / d;
+      }
+    }
+
+    /* Init stack */
+    pos_stack = 0;
+    _extents (dim,
+              box_tree_data->nodes[0].morton_code,
+              node_extents);
+
+    if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+      stack[pos_stack++] = 0;
+    }
+
+    n_visited_boxes = 0;
+
+    /* Traverse box tree */
+    while (pos_stack > 0) {
+
+      int node_id = stack[--pos_stack];
+
+      _node_t *node = &(box_tree_data->nodes[node_id]);
+
+      if (node->n_boxes == 0) {
+        continue;
+      }
+
+      /* Leaf node */
+      if (node->is_leaf) {
+        /* inspect boxes contained in current leaf node */
+        for (int ibox = 0; ibox < node->n_boxes; ibox++) {
+          int box_id = box_tree_data->box_ids[node->start_id + ibox];
+
+          if (is_visited_box[box_id] == PDM_FALSE) {
+            const double *box_extents = boxes->extents + box_id*2*dim;
+
+            if (_intersect_line_box (dim, box_extents, origin, invdir)) {
+              if (line_box_idx[iline+1] >= s_line_box) {
+                s_line_box *= 2;
+                line_box = realloc (line_box, sizeof(int) * s_line_box);
+              }
+              line_box[line_box_idx[iline+1]++] = box_id;
+              box_line_n[box_id]++;
+            }
+            visited_boxes[n_visited_boxes++] = box_id;
+            is_visited_box[box_id] = PDM_TRUE;
+          }
+
+        }
+      }
+
+      /* Internal node */
+      else {
+        /* inspect children of current node */
+        int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+        for (int ichild = 0; ichild < bt->n_children; ichild++) {
+          int child_id = child_ids[ichild];
+          _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
+
+          if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+            stack[pos_stack++] = child_id;
+          }
+        }
+      }
+
+    } // End while stack not empty
+
+    for (int ibox = 0; ibox < n_visited_boxes; ibox++) {
+      is_visited_box[visited_boxes[ibox]] = PDM_FALSE;
+    }
+
+  } // End of loop on points
+
+  if (line_coord != _line_coord) {
+    free (_line_coord);
+  }
+
+  free (is_visited_box);
+  free (stack);
+  free (visited_boxes);
+
+
+
+  /* Transpose from line->box to box->line */
+  *box_line_idx = PDM_array_new_idx_from_sizes_int(box_line_n, n_boxes);
+  *box_line = (int *) malloc(sizeof(int) * (*box_line_idx)[n_boxes]);
+  PDM_array_reset_int(box_line_n, n_boxes, 0);
+  for (int iline = 0; iline < n_line; iline++) {
+    for (int idx_box = line_box_idx[iline]; idx_box < line_box_idx[iline+1]; idx_box++) {
+      int ibox = line_box[idx_box];
+      (*box_line)[(*box_line_idx)[ibox] + box_line_n[ibox]++] = iline;
+    }
+  }
+  free(box_line_n);
+  free(line_box_idx);
+  free(line_box);
+}
 
 #ifdef __cplusplus
 }
