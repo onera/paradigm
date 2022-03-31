@@ -293,6 +293,25 @@ PDM_setup_connectivity_idx
   PDM_g_num_t **dentity1_dentity2_new
 );
 
+
+void
+PDM_compute_face_edge_from_face_vtx
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int            *pn_face,
+  int            *pn_vtx,
+  int           **pface_vtx_idx,
+  int           **pface_vtx,
+  PDM_g_num_t   **pface_ln_to_gn,
+  PDM_g_num_t   **pvtx_ln_to_gn,
+  int          ***pface_edge_idx,
+  int          ***pface_edge,
+  int           **pn_edge,
+  int          ***pedge_vtx,
+  PDM_g_num_t  ***pedge_ln_to_gn
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

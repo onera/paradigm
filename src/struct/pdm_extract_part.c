@@ -1400,8 +1400,17 @@ PDM_extract_part_connectivity_get
 
   PDM_mesh_entities_t entity_type = PDM_connectivity_type_to_entity_type(connectivity_type);
 
-  *connect     = extrp->pextract_connectivity    [connectivity_type][i_part_out];
-  *connect_idx = extrp->pextract_connectivity_idx[connectivity_type][i_part_out];
+  if(extrp->pextract_connectivity[connectivity_type] != NULL) {
+    *connect     = extrp->pextract_connectivity    [connectivity_type][i_part_out];
+  } else {
+    *connect     = NULL;
+  }
+
+  if(extrp->pextract_connectivity_idx[connectivity_type] != NULL) {
+    *connect_idx = extrp->pextract_connectivity_idx[connectivity_type][i_part_out];
+  } else {
+    *connect_idx = NULL; // edge_vtx / face_cell
+  }
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_connectivity[connectivity_type] = PDM_FALSE;
