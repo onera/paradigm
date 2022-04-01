@@ -1275,8 +1275,6 @@ _p2p_stride_var_reverse_iexch
       part2_idx[0] = 0;
 
       for (int j = 0; j < ptp->n_elt2[i]; j++) {
-        log_trace("j = %d / %d", j, ptp->n_elt2[i]);
-        log_trace(", stride = %d\n", part2_stride[i][j]);
         part2_idx[j+1] = part2_idx[j] + part2_stride[i][j] * s_data;
       }
 

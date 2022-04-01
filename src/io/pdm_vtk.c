@@ -1328,10 +1328,12 @@ PDM_vtk_write_lines
     }
   }
 
-  else if (color != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_line);
-    fprintf(f, "SCALARS color long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
+  if (color != NULL) {
+    if (g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_line);
+    }
+    fprintf(f, "FIELD line_field 1\n");
+    fprintf(f, "color 1 %d int\n", n_line);
     for (int i = 0; i < n_line; i++) {
       fprintf(f, "%d\n", color[i]);
     }
