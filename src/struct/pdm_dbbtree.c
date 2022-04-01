@@ -3909,6 +3909,9 @@ _lines_intersect_shared_box_tree
     if (i_copied_rank != NULL) {
       free (i_copied_rank);
     }
+    if (copied_shift != NULL) {
+      free(copied_shift);
+    }
     free (line_rank);
     free (line_rank_idx);
 
@@ -4651,6 +4654,7 @@ PDM_dbbtree_lines_intersect_boxes2
     free(box_line_l_num);
     free(redistrib_line_g_num[i+1]);
   }
+  free(redistrib_n_line);
   free(redistrib_line_coord);
   free(redistrib_line_g_num);
 
