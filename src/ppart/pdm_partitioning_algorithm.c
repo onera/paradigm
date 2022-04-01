@@ -2460,24 +2460,24 @@ PDM_compute_face_edge_from_face_vtx
                                                       n_part,
                                                       comm);
 
-  int*         dface_vtx_idx_n = NULL;
+  int*         dface_vtx_n = NULL;
   PDM_g_num_t* dface_vtx   = NULL;
 
-  int dface_vtx_size = PDM_part_to_block_exch(ptb,
-                                              sizeof(PDM_g_num_t),
-                                              PDM_STRIDE_VAR_INTERLACED,
-                                              -1,
-                                              pface_vtx_n,
-                                    (void **) pface_vtx_g_num,
-                                              &dface_vtx_idx_n,
-                                    (void **) &dface_vtx);
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         -1,
+                         pface_vtx_n,
+               (void **) pface_vtx_g_num,
+                         &dface_vtx_n,
+               (void **) &dface_vtx);
 
   int dn_face = PDM_part_to_block_n_elt_block_get(ptb);
 
   int *dface_vtx_idx = malloc( (dn_face+1) * sizeof(int));
   dface_vtx_idx[0] = 0;
   for(int i = 0; i < dn_face; ++i) {
-    dface_vtx_idx[i+1] = dface_vtx_idx[i] + dface_vtx_idx_n[i];
+    dface_vtx_idx[i+1] = dface_vtx_idx[i] + dface_vtx_n[i];
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2515,8 +2515,11 @@ PDM_compute_face_edge_from_face_vtx
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
+  free(tmp_parent_elmt_pos);
+  free(dface_vtx);
+  free(dface_vtx_idx);
+  free(dface_vtx_n);
 
-  int n_entity_elt_tot = 0;
   int dn_edge = 0;
   PDM_g_num_t  *edge_distrib   = NULL;
   int          *dedge_vtx_idx  = NULL;
@@ -2586,6 +2589,9 @@ PDM_compute_face_edge_from_face_vtx
                                               &_ptmp_vtx_ln_to_gn,
                                               &_pedge_vtx_idx,
                                               &_pedge_vtx);
+
+  free(dface_edge_idx);
+  free(dface_edge);
 
   /*
    * Not in same frame - Translate to new frame
