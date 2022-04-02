@@ -30,6 +30,7 @@
 #include "pdm_dmesh.h"
 #include "pdm_unique.h"
 #include "pdm_part_geom.h"
+#include "pdm_surf_mesh.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
@@ -363,7 +364,6 @@ int main(int argc, char *argv[])
   free(pedge_vtx     );
   free(pedge_ln_to_gn);
   free(pn_edge);
-
 
   free(pn_cell);
   free(pn_face);

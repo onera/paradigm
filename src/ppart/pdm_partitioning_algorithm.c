@@ -2421,7 +2421,6 @@ PDM_compute_face_edge_from_face_vtx
 
   PDM_g_num_t _max_vtx_gnum = 0;
   PDM_g_num_t **pface_vtx_g_num  = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **pedge_face_g_num = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
   int         **pface_vtx_n      = (int         **) malloc(n_part * sizeof(int         *));
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2431,7 +2430,6 @@ PDM_compute_face_edge_from_face_vtx
 
     pface_vtx_n     [i_part] = (int         *) malloc(                       pn_face[i_part]  * sizeof(int        ));
     pface_vtx_g_num [i_part] = (PDM_g_num_t *) malloc( pface_vtx_idx[i_part][pn_face[i_part]] * sizeof(PDM_g_num_t));
-    pedge_face_g_num[i_part] = (PDM_g_num_t *) malloc( pface_vtx_idx[i_part][pn_face[i_part]] * sizeof(PDM_g_num_t));
     for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
 
       pface_vtx_n[i_part][i_face] = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
@@ -2439,7 +2437,6 @@ PDM_compute_face_edge_from_face_vtx
       for(int idx_vtx = pface_vtx_idx[i_part][i_face]; idx_vtx < pface_vtx_idx[i_part][i_face+1]; ++idx_vtx) {
         int i_vtx = PDM_ABS(pface_vtx[i_part][idx_vtx])-1;
         pface_vtx_g_num [i_part][idx_vtx] = pvtx_ln_to_gn [i_part][i_vtx];
-        pedge_face_g_num[i_part][idx_vtx] = pface_ln_to_gn[i_part][i_face];
       }
     }
   }
@@ -2483,11 +2480,9 @@ PDM_compute_face_edge_from_face_vtx
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pface_vtx_n     [i_part]);
     free(pface_vtx_g_num [i_part]);
-    free(pedge_face_g_num[i_part]);
   }
   free(pface_vtx_n     );
   free(pface_vtx_g_num );
-  free(pedge_face_g_num);
 
 
   PDM_g_num_t* face_distribution = PDM_part_to_block_distrib_index_get(ptb);
@@ -2539,7 +2534,7 @@ PDM_compute_face_edge_from_face_vtx
                                         &dedge_face_idx,
                                         &dedge_face);
 
-  if(1 == 0) {
+  if(0 == 1) {
     PDM_log_trace_array_long(edge_distrib, n_rank+1               , "edge_distrib::");
     PDM_log_trace_array_long(dedge_vtx   , dedge_vtx_idx [dn_edge], "dedge_vtx::"   );
     PDM_log_trace_array_long(dedge_face  , dedge_face_idx[dn_edge], "dedge_face::"  );
@@ -2573,6 +2568,8 @@ PDM_compute_face_edge_from_face_vtx
                                               &_pedge_ln_to_gn,
                                               &_pface_edge_idx,
                                               &_pface_edge);
+  free(dface_edge_idx);
+  free(dface_edge);
 
   int          *_ptmp_n_vtx        = NULL;
   PDM_g_num_t **_ptmp_vtx_ln_to_gn = NULL;
@@ -2590,9 +2587,6 @@ PDM_compute_face_edge_from_face_vtx
                                               &_pedge_vtx_idx,
                                               &_pedge_vtx);
 
-  free(dface_edge_idx);
-  free(dface_edge);
-
   /*
    * Not in same frame - Translate to new frame
    */
@@ -2601,26 +2595,23 @@ PDM_compute_face_edge_from_face_vtx
     int* order = malloc(pn_vtx[i_part] * sizeof(int));
 
     assert(pn_vtx[i_part] == _ptmp_n_vtx[i_part]);
+    assert(_pedge_vtx_idx[i_part][_pn_edge[i_part]] == 2 * _pn_edge[i_part]);
 
     for(int i_vtx = 0; i_vtx < pn_vtx[i_part]; ++i_vtx) {
       PDM_g_num_t g_vtx = pvtx_ln_to_gn[i_part][i_vtx];
       int pos = PDM_binary_search_long(g_vtx, _ptmp_vtx_ln_to_gn[i_part], pn_vtx[i_part]);
       order[pos] = i_vtx;
-      // order[i_vtx] = pos; // Donc
     }
 
-    PDM_log_trace_array_int(_pedge_vtx[i_part], _pedge_vtx_idx[i_part][pn_vtx[i_part]], "_pedge_vtx ::");
-
-    for(int i_vtx = 0; i_vtx < _pedge_vtx_idx[i_part][pn_vtx[i_part]]; ++i_vtx) {
-      int old_vtx = _pedge_vtx[i_part][i_vtx];
-      _pedge_vtx[i_part][i_vtx] = order[old_vtx];
+    for(int idx_vtx = 0; idx_vtx < _pedge_vtx_idx[i_part][_pn_edge[i_part]]; ++idx_vtx) {
+      int old_vtx = _pedge_vtx[i_part][idx_vtx]-1;
+      _pedge_vtx[i_part][idx_vtx] = order[old_vtx]+1;
     }
-
-    PDM_log_trace_array_int(_pedge_vtx[i_part], _pedge_vtx_idx[i_part][pn_vtx[i_part]], "_pedge_vtx ::");
 
     free(order);
     free(_ptmp_vtx_ln_to_gn[i_part]);
-    free(_pedge_vtx_idx   [i_part]);
+    free(_pedge_vtx_idx    [i_part]);
+
   }
 
   free(edge_distrib  );
