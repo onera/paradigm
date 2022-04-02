@@ -69,6 +69,7 @@ PDM_extract_part_create
  const int                    dim,
  const int                    n_part_in,
  const int                    n_part_out,
+       PDM_bool_t             equilibrate,
        PDM_split_dual_t       split_dual_method,
        PDM_ownership_t        ownership,
        PDM_MPI_Comm           comm

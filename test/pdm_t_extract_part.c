@@ -435,7 +435,7 @@ int main(int argc, char *argv[])
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
-                                                      // PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                      PDM_TRUE, // Equilibrate
                                                       PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);

@@ -750,113 +750,25 @@ int                 ***extract_entity2_lnum
   return ptb_entity2_equi;
 }
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
-PDM_extract_part_t*
-PDM_extract_part_create
-(
- const int                    dim,
- const int                    n_part_in,
- const int                    n_part_out,
-       PDM_split_dual_t       split_dual_method,
-       PDM_ownership_t        ownership,
-       PDM_MPI_Comm           comm
-)
-{
-  PDM_extract_part_t *extrp = (PDM_extract_part_t *) malloc(sizeof(PDM_extract_part_t));
-
-  extrp->dim               = dim;
-  extrp->n_part_in         = n_part_in;
-  extrp->n_part_out        = n_part_out;
-  extrp->split_dual_method = split_dual_method;
-  extrp->ownership         = ownership;
-  extrp->comm              = comm;
-
-  extrp->n_cell         = (int          *) malloc(n_part_in * sizeof(int          ));
-  extrp->n_face         = (int          *) malloc(n_part_in * sizeof(int          ));
-  extrp->n_edge         = (int          *) malloc(n_part_in * sizeof(int          ));
-  extrp->n_vtx          = (int          *) malloc(n_part_in * sizeof(int          ));
-  extrp->n_extract      = (int          *) malloc(n_part_in * sizeof(int          ));
-
-  extrp->pcell_face     = (int         **) malloc(n_part_in * sizeof(int         *));
-  extrp->pcell_face_idx = (int         **) malloc(n_part_in * sizeof(int         *));
-  extrp->pface_edge     = (int         **) malloc(n_part_in * sizeof(int         *));
-  extrp->pface_edge_idx = (int         **) malloc(n_part_in * sizeof(int         *));
-  extrp->pedge_vtx      = (int         **) malloc(n_part_in * sizeof(int         *));
-
-  extrp->extract_lnum   = (int         **) malloc(n_part_in * sizeof(int         *));
-
-  extrp->cell_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
-  extrp->face_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
-  extrp->edge_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
-  extrp->vtx_ln_to_gn   = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
-
-  extrp->pface_vtx_idx  = (int         **) malloc(n_part_in * sizeof(int         *));
-  extrp->pface_vtx      = (int         **) malloc(n_part_in * sizeof(int         *));
-
-  extrp->pvtx_coord     = (double      **) malloc(n_part_in * sizeof(double      *));
-
-  extrp->dn_equi_cell               = 0;
-  extrp->dn_equi_face               = 0;
-  extrp->dn_equi_edge               = 0;
-  extrp->dn_equi_vtx                = 0;
-
-  extrp->dequi_cell_face            = NULL;
-  extrp->dequi_cell_face_idx        = NULL;
-  extrp->dequi_face_edge            = NULL;
-  extrp->dequi_face_edge_idx        = NULL;
-  extrp->dequi_edge_vtx             = NULL;
-  extrp->dequi_edge_vtx_idx         = NULL;
-  extrp->dequi_face_vtx             = NULL;
-  extrp->dequi_face_vtx_idx         = NULL;
-
-  extrp->dequi_parent_cell_ln_to_gn = NULL;
-  extrp->dequi_parent_face_ln_to_gn = NULL;
-  extrp->dequi_parent_edge_ln_to_gn = NULL;
-  extrp->dequi_parent_vtx_ln_to_gn  = NULL;
-  extrp->dequi_vtx_coord            = NULL;
-
-  extrp->ptb_equi_cell              = NULL;
-  extrp->ptb_equi_face              = NULL;
-  extrp->ptb_equi_edge              = NULL;
-  extrp->ptb_equi_vtx               = NULL;
-
-  extrp->is_owner_connectivity    = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
-  extrp->is_owner_ln_to_gn        = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
-  extrp->is_owner_parent_ln_to_gn = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
-  extrp->is_owner_vtx_coord       = PDM_TRUE;
-
-  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-    extrp->is_owner_connectivity    [i] = PDM_TRUE;
-    extrp->pextract_connectivity    [i] = NULL;
-    extrp->pextract_connectivity_idx[i] = NULL;
-  }
-  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    extrp->is_owner_ln_to_gn              [i] = PDM_TRUE;
-    extrp->is_owner_parent_ln_to_gn       [i] = PDM_TRUE;
-    extrp->pextract_entity_ln_to_gn       [i] = NULL;
-    extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
-  }
-
-  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    extrp->pextract_n_entity[i] = NULL;
-  }
-
-  return extrp;
-}
-
-
-
+static
 void
-PDM_extract_part_compute
+_extract_part
 (
   PDM_extract_part_t        *extrp
 )
 {
-  assert(extrp->dim >= 2);
 
+  PDM_UNUSED(extrp);
+}
+
+
+static
+void
+_extract_part_and_reequilibrate
+(
+  PDM_extract_part_t        *extrp
+)
+{
   int          *pn_entity    = 0;
   PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
@@ -1544,11 +1456,127 @@ PDM_extract_part_compute
     free(entity_extract_g_num[i_part]);
   }
   free(entity_extract_g_num);
+}
 
-  /*
-   * Exchange parent (dommage on refais les block_to_part du dconnectivity_to_pconnectivity)
-   */
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
 
+PDM_extract_part_t*
+PDM_extract_part_create
+(
+ const int                    dim,
+ const int                    n_part_in,
+ const int                    n_part_out,
+       PDM_bool_t             equilibrate,
+       PDM_split_dual_t       split_dual_method,
+       PDM_ownership_t        ownership,
+       PDM_MPI_Comm           comm
+)
+{
+  PDM_extract_part_t *extrp = (PDM_extract_part_t *) malloc(sizeof(PDM_extract_part_t));
+
+  if(equilibrate == PDM_FALSE) {
+    if(n_part_in != n_part_out) {
+      PDM_error(__FILE__, __LINE__, 0,"PDM_extract_part_create : cannot not equilibrate with not same number of n_part_in / n_part_out \n");
+    }
+  }
+
+  extrp->equilibrate       = equilibrate;
+  extrp->dim               = dim;
+  extrp->n_part_in         = n_part_in;
+  extrp->n_part_out        = n_part_out;
+  extrp->split_dual_method = split_dual_method;
+  extrp->ownership         = ownership;
+  extrp->comm              = comm;
+
+  extrp->n_cell         = (int          *) malloc(n_part_in * sizeof(int          ));
+  extrp->n_face         = (int          *) malloc(n_part_in * sizeof(int          ));
+  extrp->n_edge         = (int          *) malloc(n_part_in * sizeof(int          ));
+  extrp->n_vtx          = (int          *) malloc(n_part_in * sizeof(int          ));
+  extrp->n_extract      = (int          *) malloc(n_part_in * sizeof(int          ));
+
+  extrp->pcell_face     = (int         **) malloc(n_part_in * sizeof(int         *));
+  extrp->pcell_face_idx = (int         **) malloc(n_part_in * sizeof(int         *));
+  extrp->pface_edge     = (int         **) malloc(n_part_in * sizeof(int         *));
+  extrp->pface_edge_idx = (int         **) malloc(n_part_in * sizeof(int         *));
+  extrp->pedge_vtx      = (int         **) malloc(n_part_in * sizeof(int         *));
+
+  extrp->extract_lnum   = (int         **) malloc(n_part_in * sizeof(int         *));
+
+  extrp->cell_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
+  extrp->face_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
+  extrp->edge_ln_to_gn  = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
+  extrp->vtx_ln_to_gn   = (PDM_g_num_t **) malloc(n_part_in * sizeof(PDM_g_num_t *));
+
+  extrp->pface_vtx_idx  = (int         **) malloc(n_part_in * sizeof(int         *));
+  extrp->pface_vtx      = (int         **) malloc(n_part_in * sizeof(int         *));
+
+  extrp->pvtx_coord     = (double      **) malloc(n_part_in * sizeof(double      *));
+
+  extrp->dn_equi_cell               = 0;
+  extrp->dn_equi_face               = 0;
+  extrp->dn_equi_edge               = 0;
+  extrp->dn_equi_vtx                = 0;
+
+  extrp->dequi_cell_face            = NULL;
+  extrp->dequi_cell_face_idx        = NULL;
+  extrp->dequi_face_edge            = NULL;
+  extrp->dequi_face_edge_idx        = NULL;
+  extrp->dequi_edge_vtx             = NULL;
+  extrp->dequi_edge_vtx_idx         = NULL;
+  extrp->dequi_face_vtx             = NULL;
+  extrp->dequi_face_vtx_idx         = NULL;
+
+  extrp->dequi_parent_cell_ln_to_gn = NULL;
+  extrp->dequi_parent_face_ln_to_gn = NULL;
+  extrp->dequi_parent_edge_ln_to_gn = NULL;
+  extrp->dequi_parent_vtx_ln_to_gn  = NULL;
+  extrp->dequi_vtx_coord            = NULL;
+
+  extrp->ptb_equi_cell              = NULL;
+  extrp->ptb_equi_face              = NULL;
+  extrp->ptb_equi_edge              = NULL;
+  extrp->ptb_equi_vtx               = NULL;
+
+  extrp->is_owner_connectivity    = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_ln_to_gn        = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_parent_ln_to_gn = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
+  extrp->is_owner_vtx_coord       = PDM_TRUE;
+
+  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
+    extrp->is_owner_connectivity    [i] = PDM_TRUE;
+    extrp->pextract_connectivity    [i] = NULL;
+    extrp->pextract_connectivity_idx[i] = NULL;
+  }
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    extrp->is_owner_ln_to_gn              [i] = PDM_TRUE;
+    extrp->is_owner_parent_ln_to_gn       [i] = PDM_TRUE;
+    extrp->pextract_entity_ln_to_gn       [i] = NULL;
+    extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
+  }
+
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    extrp->pextract_n_entity[i] = NULL;
+  }
+
+  return extrp;
+}
+
+
+
+void
+PDM_extract_part_compute
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  assert(extrp->dim >= 2);
+  if(extrp->equilibrate == PDM_FALSE) {
+    _extract_part(extrp);
+  } else {
+    _extract_part_and_reequilibrate(extrp);
+  }
 }
 
 

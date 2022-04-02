@@ -343,6 +343,7 @@ cdef create_numpy_d(double* array, int size, bint flag_owndata=True):
         PyArray_ENABLEFLAGS(nparray, NPY.NPY_OWNDATA)
     return nparray
 
+
 # PDM_dmesh :
 # --------------------
 include "pdm_dmesh.pxi"

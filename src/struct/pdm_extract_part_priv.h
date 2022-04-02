@@ -53,6 +53,7 @@ extern "C" {
 
 struct _pdm_extract_part_t
 {
+  PDM_bool_t             equilibrate;
   int                    dim;
   int                    n_part_in;
   int                    n_part_out;

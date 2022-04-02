@@ -6,6 +6,7 @@ cdef extern from "pdm_extract_part.h":
   PDM_extract_part_t* PDM_extract_part_create(int                    dim,
                                               int                    n_part_in,
                                               int                    n_part_out,
+                                              PDM_bool_t             equilibrate,
                                               PDM_split_dual_t       split_dual_method,
                                               PDM_ownership_t        ownership,
                                               PDM_MPI_Comm           comm);
@@ -82,6 +83,7 @@ cdef class ExtractPart:
                 int               dim,
                 int               n_part_in,
                 int               n_part_out,
+                PDM_bool_t        equilibrate,
                 PDM_split_dual_t  split_dual_method,
                 MPI.Comm          comm):
     """
@@ -91,6 +93,7 @@ cdef class ExtractPart:
     self._extrp =  PDM_extract_part_create(dim,
                                            n_part_in,
                                            n_part_out,
+                                           equilibrate,
                                            split_dual_method,
                                            PDM_OWNERSHIP_USER,
                                            PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm));
