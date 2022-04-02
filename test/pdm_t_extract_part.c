@@ -473,13 +473,13 @@ int main(int argc, char *argv[])
 
   PDM_extract_part_compute(extrp);
 
-  int          *pn_extract_face        = NULL;
-  int          *pn_extract_vtx         = NULL;
-  int         **pextract_face_vtx      = NULL;
-  int         **pextract_face_vtx_idx  = NULL;
-  double      **pextract_vtx           = NULL;
-  PDM_g_num_t **pextract_face_ln_to_gn = NULL;
-  PDM_g_num_t **pextract_vtx_ln_to_gn  = NULL;
+  int          *pn_extract_face        = malloc(n_part_out * sizeof(int          ));
+  int          *pn_extract_vtx         = malloc(n_part_out * sizeof(int          ));
+  int         **pextract_face_vtx      = malloc(n_part_out * sizeof(int         *));
+  int         **pextract_face_vtx_idx  = malloc(n_part_out * sizeof(int         *));
+  double      **pextract_vtx           = malloc(n_part_out * sizeof(double      *));
+  PDM_g_num_t **pextract_face_ln_to_gn = malloc(n_part_out * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pextract_vtx_ln_to_gn  = malloc(n_part_out * sizeof(PDM_g_num_t *));
 
 
   for(int i_part = 0; i_part < n_part_out; ++i_part) {
@@ -520,7 +520,7 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  if(0 == 1) {
+  if(1 == 1) {
     for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
       char filename[999];
@@ -545,6 +545,11 @@ int main(int argc, char *argv[])
 
   free(pn_extract_face);
   free(pn_extract_vtx);
+  free(pextract_face_vtx     );
+  free(pextract_face_vtx_idx );
+  free(pextract_vtx          );
+  free(pextract_face_ln_to_gn);
+  free(pextract_vtx_ln_to_gn );
 
   PDM_extract_part_free(extrp);
 
