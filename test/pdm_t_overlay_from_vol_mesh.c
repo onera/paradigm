@@ -33,6 +33,7 @@
 #include "pdm_part_geom.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
+#include "pdm_overlay.h"
 
 /*============================================================================
  * Type definitions
@@ -196,8 +197,8 @@ _generate_surf_mesh_1d
     PDM_g_num_t indj = g_vtx / surf_nx_vtx_seg;
 
     dvtx_coord[3 * i_vtx    ] = zero_x;
-    dvtx_coord[3 * i_vtx + 1] = indi * step_x + zero_x;
-    dvtx_coord[3 * i_vtx + 2] = indj * step_y + zero_y;
+    dvtx_coord[3 * i_vtx + 1] = indi * step_x + zero_y;
+    dvtx_coord[3 * i_vtx + 2] = indj * step_y + zero_z;
   }
 
   int         *dface_vtx_idx = malloc( (dn_face+1) * sizeof(int        ));
@@ -220,7 +221,7 @@ _generate_surf_mesh_1d
 
   }
 
-  PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx");
+  // PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx");
 
   int          _psurf_n_face       = dn_face;
   PDM_g_num_t *_surf_face_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
@@ -667,6 +668,142 @@ int main(int argc, char *argv[])
                            NULL);
   }
 
+
+  /*
+   * Prepare overlay
+   */
+  double projectCoeff = 0.;
+  int n_part2 = 1;
+  PDM_ol_t *ol = PDM_ol_create (n_part,
+                                n_part2,
+                                projectCoeff,
+                                PDM_MPI_COMM_WORLD);
+
+  PDM_ol_parameter_set (ol,
+                        PDM_OL_CAR_LENGTH_TOL,
+                        1e-4);
+
+  PDM_ol_parameter_set (ol,
+                        PDM_OL_EXTENTS_TOL,
+                        1e-4);
+
+  /* Set mesh A */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_ol_input_mesh_set (ol,
+                           PDM_OL_MESH_A,
+                           i_part,
+                           pn_extract_face       [i_part],
+                           pextract_face_vtx_idx [i_part],
+                           pextract_face_vtx     [i_part],
+                           pextract_face_ln_to_gn[i_part],
+                           pn_extract_vtx        [i_part],
+                           pextract_vtx          [i_part],
+                           pextract_vtx_ln_to_gn [i_part]);
+  }
+
+  /* Set mesh B */
+  PDM_ol_input_mesh_set (ol,
+                         PDM_OL_MESH_B,
+                         0,
+                         psurf_n_face,
+                         surf_face_vtx_idx,
+                         surf_face_vtx,
+                         surf_face_ln_to_gn,
+                         psurf_n_vtx,
+                         surf_vtx_coord,
+                         surf_vtx_ln_to_gn);
+
+  PDM_ol_compute (ol);
+
+  if (i_rank == 0){
+    PDM_ol_dump_times (ol);
+  }
+
+  PDM_ol_mesh_t mesht = PDM_OL_MESH_A;
+  for(int i_mesh = 0; i_mesh < 2; ++i_mesh) {
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      int           n_ol_face;
+      int           n_ol_linked_face;
+      int           n_ol_vtx;
+      int           s_ol_face_ini_vtx;
+      int           s_ol_face_vtx;
+      int           s_init_to_ol_face;
+
+      PDM_ol_part_mesh_dim_get (ol,
+                                mesht,
+                                ipart,
+                                &n_ol_face,
+                                &n_ol_linked_face,
+                                &n_ol_vtx,
+                                &s_ol_face_ini_vtx,
+                                &s_ol_face_vtx,
+                                &s_init_to_ol_face);
+
+
+      int            *ol_face_ini_vtx_idx;
+      int            *ol_face_ini_vtx;
+      int            *ol_face_vtx_idx;
+      int            *ol_face_vtx;
+      int            *ol_linked_face_proc_idx;
+      int            *ol_linked_face;
+      PDM_g_num_t    *ol_face_ln_to_gn;
+      double         *ol_vtx_coords;
+      PDM_g_num_t    *ol_vtx_ln_to_gn;
+      int            *init_to_ol_face_idx;
+      int            *init_to_ol_face;
+
+      PDM_ol_mesh_entities_get (ol,
+                                mesht,
+                                ipart,
+                                &ol_face_ini_vtx_idx,
+                                &ol_face_ini_vtx,
+                                &ol_face_vtx_idx,
+                                &ol_face_vtx,
+                                &ol_linked_face_proc_idx,
+                                &ol_linked_face,
+                                &ol_face_ln_to_gn,
+                                &ol_vtx_coords,
+                                &ol_vtx_ln_to_gn,
+                                &init_to_ol_face_idx,
+                                &init_to_ol_face);
+
+      char filename[999];
+      if(mesht == PDM_OL_MESH_A) {
+        sprintf(filename, "mesh_a_inter_b_%3.3d.vtk", i_rank);
+      } else {
+        sprintf(filename, "mesh_b_inter_a_%3.3d.vtk", i_rank);
+      }
+      PDM_vtk_write_polydata(filename,
+                             n_ol_vtx,
+                             ol_vtx_coords,
+                             ol_vtx_ln_to_gn,
+                             n_ol_face,
+                             ol_face_vtx_idx,
+                             ol_face_vtx,
+                             ol_face_ln_to_gn,
+                             NULL);
+
+      free(ol_face_ini_vtx_idx);
+      free(ol_face_ini_vtx);
+      free(ol_face_vtx_idx);
+      free(ol_face_vtx);
+      free(ol_linked_face_proc_idx);
+      free(ol_linked_face);
+      free(ol_face_ln_to_gn);
+      free(ol_vtx_coords);
+      free(ol_vtx_ln_to_gn);
+      free(init_to_ol_face_idx);
+      free(init_to_ol_face);
+
+    }
+    mesht = PDM_OL_MESH_B;
+  }
+
+
+
+
+  PDM_ol_del (ol);
   PDM_extract_part_free(extrp);
 
   free(surf_face_vtx_idx  );
