@@ -119,6 +119,7 @@ struct _pdm_extract_part_t
   PDM_bool_t         *is_owner_connectivity;
   PDM_bool_t         *is_owner_ln_to_gn;
   PDM_bool_t         *is_owner_parent_ln_to_gn;
+  PDM_bool_t         *is_owner_parent_lnum;
   PDM_bool_t          is_owner_vtx_coord;
 
   /* Only for mapping and clear API */
@@ -127,6 +128,7 @@ struct _pdm_extract_part_t
   int               **pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_MAX];
   PDM_g_num_t       **pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_MAX];
   PDM_g_num_t       **pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
+  int               **pextract_entity_parent_lnum    [PDM_MESH_ENTITY_MAX];
 
 
 };

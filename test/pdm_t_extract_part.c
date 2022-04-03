@@ -432,10 +432,12 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
+  PDM_bool_t equilibrate = PDM_FALSE;
+  // PDM_bool_t equilibrate = PDM_TRUE;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
-                                                      PDM_TRUE, // Equilibrate
+                                                      equilibrate,
                                                       PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
@@ -529,6 +531,10 @@ int main(int argc, char *argv[])
                                 pn_extract_vtx[i_part],
                                 pextract_vtx[i_part],
                                 NULL, NULL);
+
+      PDM_log_trace_connectivity_int(pextract_face_vtx_idx[i_part],
+                                     pextract_face_vtx    [i_part],
+                                     pn_extract_face[i_part], " pextract_face_vtx :: ");
 
       sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
       PDM_vtk_write_polydata(filename,

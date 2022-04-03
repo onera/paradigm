@@ -162,6 +162,16 @@ PDM_extract_part_parent_ln_to_gn_get
 
 
 int
+PDM_extract_part_parent_lnum_get
+(
+ PDM_extract_part_t        *extrp,
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ int                      **parent_entity_lnum,
+ PDM_ownership_t            ownership
+);
+
+int
 PDM_extract_part_vtx_coord_get
 (
  PDM_extract_part_t         *extrp,
