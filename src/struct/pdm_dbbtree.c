@@ -3654,8 +3654,8 @@ _lines_intersect_shared_box_tree
 
   int *copied_shift = NULL;
 
-  PDM_g_num_t *line_g_num1 = NULL;
-  double      *line_coord1 = NULL;
+  // PDM_g_num_t *line_g_num1 = NULL;
+  // double      *line_coord1 = NULL;
 
   if (_dbbt->btShared != NULL) {
     int *line_rank_idx = NULL;
