@@ -810,7 +810,8 @@ PDM_writer_t *cs
   _PDM_writer_ensight->ensight_case = PDM_writer_ensight_case_cree(cs->nom_sortie,
                                                                    restart,
                                                                    cs->rep_sortie,
-                                                                   cs->topologie);
+                                                                   cs->topologie,
+                                                                   &(cs->cst_global_var_tab));
   _PDM_writer_ensight->n_time_step = 0;
 
 }

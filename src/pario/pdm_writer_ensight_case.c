@@ -16,6 +16,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_writer.h"
+#include "pdm_writer_priv.h"
 #include "pdm_writer_ensight_case.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
@@ -86,6 +87,8 @@ struct _PDM_writer_ensight_case_t {
   PDM_writer_ensight_case_var_t   **var;          /* Variable entries */
 
   PDM_writer_topology_t   time_dependency;    /* Mesh time dependency */
+
+  _PDM_writer_cst_global_var_tab_t *cst_global_var;
 
 } _PDM_writer_ensight_case_t;
 
@@ -382,7 +385,8 @@ PDM_writer_ensight_case_cree
 const char                   *const name,
 const int                           restart,
 const char                   *const dir_prefix,
-const PDM_writer_topology_t                time_dependency
+const PDM_writer_topology_t                time_dependency,
+_PDM_writer_cst_global_var_tab_t *cst_global_var_tab
 )
 {
   size_t  i, name_len, prefix_len;
@@ -746,6 +750,8 @@ const PDM_writer_topology_t                time_dependency
     }
   }
 
+  this_case->cst_global_var = cst_global_var_tab;
+  
   /* Return new case structure */
 
   return this_case;
@@ -1070,11 +1076,17 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
 
   /* Output variables */
 
-  if (this_case->n_vars > 0) {
+  if (this_case->n_vars > 0 || this_case->cst_global_var->n_var > 0) {
 
     fprintf(f,
             "\n"
             "VARIABLE\n");
+   
+    for (i = 0 ; i < this_case->cst_global_var->n_var ; i++) {
+      fprintf(f, "constant per case: %32s %12.5e\n", 
+        this_case->cst_global_var->var[i]->nom_var, 
+        this_case->cst_global_var->var[i]->_val); 
+    }
 
     for (i = 0 ; i < this_case->n_vars ; i++) {
       const PDM_writer_ensight_case_var_t  *var = this_case->var[i];

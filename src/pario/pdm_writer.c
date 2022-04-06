@@ -538,6 +538,9 @@ const char                   *options
     _parse_options (options, &(cs->n_options), &(cs->options));
   }
 
+  cs->cst_global_var_tab.n_var = 0;
+  cs->cst_global_var_tab.s_var = 0;
+
   size_t l_nom_sortie = strlen(nom_sortie);
   cs->nom_sortie = (char *) malloc(sizeof(char) * (l_nom_sortie + 1));
   strcpy(cs->nom_sortie, nom_sortie);  /* Nom de la sortie */
@@ -611,6 +614,23 @@ PDM_writer_free
     free(cs->var_tab);
     cs->var_tab = NULL;
   }
+
+  if (cs->cst_global_var_tab.var != NULL) {
+    for (int i = 0; i < cs->cst_global_var_tab.s_var; i++) {
+      if (cs->cst_global_var_tab.var[i] != NULL) {
+        if (cs->cst_global_var_tab.var[i]->nom_var != NULL) {
+          free (cs->cst_global_var_tab.var[i]->nom_var);
+          cs->cst_global_var_tab.var[i]->nom_var = NULL;
+        } 
+        free (cs->cst_global_var_tab.var[i]);
+        cs->cst_global_var_tab.var[i] = NULL;
+      }
+    }
+
+    free(cs->cst_global_var_tab.var);
+    cs->cst_global_var_tab.var = NULL;
+  }
+
 
   if (cs->options != NULL) {
     for (int i = 0; i < cs->n_options; i++) {
@@ -1621,6 +1641,107 @@ PDM_writer_name_map_add
   strcpy(name_map->private_name, private_name);
 
 }
+
+
+/**
+ * \brief Create a global constant variable
+ *
+ * \param [in] cs              Pointer to \ref PDM_writer object
+ * \param [in] nom_var         Nom de la variable
+ * \param [in] val_var         Valeur de la variable
+ *
+ * \return  Identificateur de l'objet variable
+ *
+ */
+
+int
+PDM_writer_cst_global_var_create
+(
+ PDM_writer_t               *cs,
+ const char                 *nom_var,
+ const double                val_var
+)
+{
+ 
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
+
+  /* Mise a jour du tableau de stockage */
+
+  if (cs->cst_global_var_tab.s_var == 0) {
+
+    cs->cst_global_var_tab.n_var = 0;
+    cs->cst_global_var_tab.s_var = 4;
+
+    cs->cst_global_var_tab.var = (PDM_writer_cst_global_var_t **) malloc(sizeof(PDM_writer_cst_global_var_t *) * cs->cst_global_var_tab.s_var);
+    for (int i = 0; i < cs->cst_global_var_tab.s_var; i++) {
+      cs->cst_global_var_tab.var[i] = NULL;
+    }
+  }
+
+  /* Allocation de la structure PDM_writer_var_t */
+
+  PDM_writer_cst_global_var_t *var = (PDM_writer_cst_global_var_t *) malloc(sizeof(PDM_writer_cst_global_var_t));
+
+  var->nom_var = malloc(sizeof(char) * (1 + strlen (nom_var)));
+  strcpy (var->nom_var, nom_var);
+
+  var->_val = val_var;  
+
+  if (cs->cst_global_var_tab.n_var >= cs->cst_global_var_tab.s_var) {
+    cs->cst_global_var_tab.s_var = PDM_MAX(2*cs->cst_global_var_tab.s_var, cs->cst_global_var_tab.n_var+1);
+    cs->cst_global_var_tab.var = 
+    (PDM_writer_cst_global_var_t **) realloc(cs->cst_global_var_tab.var, sizeof(PDM_writer_cst_global_var_t *) * cs->cst_global_var_tab.s_var);
+
+    for (int i = cs->cst_global_var_tab.n_var+1; i < cs->cst_global_var_tab.s_var; i++) {
+      cs->cst_global_var_tab.var[i] = NULL;
+    }
+  }
+
+  int id_var = cs->cst_global_var_tab.n_var;
+  cs->cst_global_var_tab.n_var++;
+
+  cs->cst_global_var_tab.var[id_var] = var;
+
+  return id_var;
+
+}
+
+
+
+
+/**
+ * \brief Set a global constant variable
+ *
+ * \param [in] cs              Pointer to \ref PDM_writer object
+ * \param [in] id_var          Variable id
+ * \param [in] val_var         Valeur de la variable
+ *
+ * \return  Identificateur de l'objet variable
+ *
+ */
+
+void
+PDM_writer_cst_global_var_set
+(
+ PDM_writer_t               *cs,
+ const int                   id_var,
+ const double                val_var
+)
+{
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
+
+  assert (id_var < cs->cst_global_var_tab.s_var);
+  assert (cs->cst_global_var_tab.var[id_var] != NULL);
+
+  cs->cst_global_var_tab.var[id_var]->_val = val_var;
+
+}
+
+
 
 /**
  * \brief Creation d'une variable
