@@ -81,6 +81,8 @@ cdef class PartToPart:
     """
     # ************************************************************************
     # > Class attributes
+    cdef public:
+        object lpart1_ln_to_gn, lpart2_ln_to_gn, lpart1_to_part2_idx, lpart1_to_part2
     cdef PDM_part_to_part_t         *ptp
     cdef PDM_g_num_t               **gnum_elt1
     cdef int*                        n_elt1
@@ -96,11 +98,9 @@ cdef class PartToPart:
     cdef cpp_map[int, void**]        dict_part_data
     cdef cpp_map[int, int **]        dict_part_stride
     cdef cpp_map[int, size_t]        dict_npy_type
+    cdef cpp_map[int, size_t]        dict_s_data
     cdef cpp_map[int, PDM_stride_t]  dict_stride
-    _lpart1_ln_to_gn     = list()
-    _lpart2_ln_to_gn     = list()
-    _lpart1_to_part2_idx = list()
-    _lpart1_to_part2     = list()
+    cdef cpp_map[int, int         ]  dict_cst_strid
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __cinit__(self, MPI.Comm comm,
@@ -115,10 +115,10 @@ cdef class PartToPart:
 
       assert(len(part2_ln_to_gn) == self.n_part1)
 
-      self._lpart1_ln_to_gn     = part1_ln_to_gn
-      self._lpart2_ln_to_gn     = part2_ln_to_gn
-      self._lpart1_to_part2_idx = part1_to_part2_idx
-      self._lpart1_to_part2     = part1_to_part2
+      self.lpart1_ln_to_gn     = part1_ln_to_gn
+      self.lpart2_ln_to_gn     = part2_ln_to_gn
+      self.lpart1_to_part2_idx = part1_to_part2_idx
+      self.lpart1_to_part2     = part1_to_part2
 
       # > Convert input data
       cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
@@ -137,7 +137,7 @@ cdef class PartToPart:
                                                                 self.n_part1,
                                          <const PDM_g_num_t **> self._part2_ln_to_gn,
                                          <const int *>          self.n_elt2,
-                                                                self.n_part1,
+                                                                self.n_part2,
                                          <const PDM_g_num_t **> self._part1_to_part2_idx,
                                          <const PDM_g_num_t **> self._part1_to_part2,
                                          pdm_comm);
@@ -193,6 +193,7 @@ cdef class PartToPart:
       self.dict_part_stride[request_exch] = _part2_stride
       self.dict_npy_type   [request_exch] = npy_type
       self.dict_stride     [request_exch] = t_stride
+      self.dict_cst_strid  [request_exch] = _part1_stride_cst
 
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
         free(_part1_stride)
@@ -243,7 +244,7 @@ cdef class PartToPart:
           lnp_part_data .append(np_part2_data)
 
         else:
-          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * self.dict_stride[request_id]
+          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * self.dict_s_data[request_id]
           np_part2_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part2_data[i_part])
           PyArray_ENABLEFLAGS(np_part2_data, NPY.NPY_OWNDATA)
 
@@ -256,15 +257,67 @@ cdef class PartToPart:
       self.dict_part_stride.erase(request_id)
       self.dict_npy_type   .erase(request_id)
       self.dict_stride     .erase(request_id)
+      self.dict_cst_strid  .erase(request_id)
 
       return lnp_part_strid, lnp_part_data
 
     # ------------------------------------------------------------------------
-    def reverse_iexch(self):
+    def reverse_iexch(self,
+                      PDM_mpi_comm_kind_t         k_comm,
+                      PDM_stride_t                t_stride,
+                      PDM_part_to_part_data_def_t t_part2_data_def,
+                      list                        part2_data,
+                      part2_stride=1,
+                      bint interlaced_str=True):
       """
       """
-      cdef int request_exch = 0
+      cdef NPY.ndarray  np_part2_data
+      cdef int          request_exch
+      cdef PDM_stride_t _stride_t
 
+      cdef int   _part2_stride_cst = 0
+      cdef int** _part2_stride = NULL
+      if isinstance(part2_stride, int):
+        _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
+        _part2_stride_cst = part2_stride
+      elif isinstance(part2_stride, list):
+        _stride_t = PDM_STRIDE_VAR_INTERLACED
+        assert len(part2_stride) == self.n_part
+        for i_part in range(self.n_part2):
+          assert_single_dim_np(part2_stride[i_part], NPY.int32, self.n_elt2[i_part])
+        _part2_stride = np_list_to_int_pointers(part2_stride)
+      else:
+        raise ValueError("Invalid stride in PtB exchange")
+
+      cdef void** _part2_data   = np_list_to_void_pointers(part2_data)
+
+      np_part2_data        = part2_data[0]
+      cdef size_t s_data   = np_part2_data.dtype.itemsize
+      cdef size_t npy_type = part2_data[0].dtype.num
+
+      cdef int**  _part1_stride = NULL;
+      cdef void** _part1_data   = NULL;
+      PDM_part_to_part_reverse_iexch(self.ptp,
+                                     k_comm,
+                                     t_stride,
+                                     t_part2_data_def,
+                                     _part2_stride_cst,
+                                     s_data,
+                    <const int ** >  _part2_stride,
+                    <const void **>  _part2_data,
+                                     &_part1_stride,
+                          <void ***> &_part1_data,
+                                     &request_exch)
+
+      self.dict_part_data  [request_exch] = _part1_data
+      self.dict_part_stride[request_exch] = _part1_stride
+      self.dict_npy_type   [request_exch] = npy_type
+      self.dict_stride     [request_exch] = t_stride
+      self.dict_cst_strid  [request_exch] = _part2_stride_cst
+
+      if _stride_t == PDM_STRIDE_VAR_INTERLACED:
+        free(_part2_stride)
+      free(_part2_data)
 
       return request_exch
 
@@ -275,8 +328,49 @@ cdef class PartToPart:
       """
       PDM_part_to_part_reverse_iexch_wait(self.ptp, request_id)
 
+      cdef void **_part1_data   = self.dict_part_data  [request_id]
+      cdef int  **_part1_stride = self.dict_part_stride[request_id]
+      cdef NPY.npy_intp dim_np
 
+      lnp_part_strid = list()
+      lnp_part_data  = list()
+      for i_part in range(self.n_part1):
 
+        if(_part1_stride != NULL):
+
+          strid_size = self.n_elt1[i_part]
+
+          np_part1_stride = create_numpy_i(_part1_stride[i_part], strid_size)
+          dim_np = np_part1_stride.sum()
+
+          np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
+          PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
+
+          lnp_part_strid.append(np_part1_stride)
+          lnp_part_data .append(np_part1_data)
+
+        else:
+          dim_np  = self.n_elt1[i_part] * self.dict_cst_strid[request_id]
+
+          print("dim_np : ", dim_np)
+
+          np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
+          PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
+
+          lnp_part_data .append(np_part1_data)
+
+      free(self.dict_part_data  [request_id])
+
+      if(_part1_stride != NULL):
+        free(self.dict_part_stride[request_id])
+
+      self.dict_part_data  .erase(request_id)
+      self.dict_part_stride.erase(request_id)
+      self.dict_npy_type   .erase(request_id)
+      self.dict_stride     .erase(request_id)
+      self.dict_cst_strid  .erase(request_id)
+
+      return lnp_part_strid, lnp_part_data
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):

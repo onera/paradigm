@@ -10,7 +10,6 @@ from cpython.ref       cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer, PyCapsule_IsValid, PyCapsule_GetName
 cimport cython
 cimport numpy as NPY
-from licpp.map  import map as mapcpp
 from libcpp.map cimport map as cpp_map
 
 
@@ -48,9 +47,9 @@ cdef extern from "pdm.h":
 
    
     ctypedef enum PDM_stride_t:
-        PDM_STRIDE_CST_INTERLACED
-        PDM_STRIDE_CST_INTERLEAVED
-        PDM_STRIDE_VAR_INTERLACED
+        PDM_STRIDE_CST_INTERLACED  = 0
+        PDM_STRIDE_CST_INTERLEAVED = 1
+        PDM_STRIDE_VAR_INTERLACED  = 2
 
     ctypedef enum PDM_mesh_nature_t:
         PDM_MESH_NATURE_NODAL_SHARED
@@ -205,6 +204,12 @@ _PDM_CONNECTIVITY_TYPE_ELMT_FACE = PDM_CONNECTIVITY_TYPE_ELMT_FACE
 _PDM_CONNECTIVITY_TYPE_ELMT_EDGE = PDM_CONNECTIVITY_TYPE_ELMT_EDGE
 _PDM_CONNECTIVITY_TYPE_ELMT_VTX  = PDM_CONNECTIVITY_TYPE_ELMT_VTX
 _PDM_CONNECTIVITY_TYPE_MAX       = PDM_CONNECTIVITY_TYPE_MAX
+
+
+_PDM_STRIDE_CST_INTERLACED       = PDM_STRIDE_CST_INTERLACED
+_PDM_STRIDE_CST_INTERLEAVED      = PDM_STRIDE_CST_INTERLEAVED
+_PDM_STRIDE_VAR_INTERLACED       = PDM_STRIDE_VAR_INTERLACED
+
 
 _PDM_BOUND_TYPE_ELMT   = PDM_BOUND_TYPE_ELMT
 _PDM_BOUND_TYPE_CELL   = PDM_BOUND_TYPE_CELL
@@ -521,6 +526,15 @@ include "pdm_writer.pxi"
 # PDM_writer :
 # --------------------
 include "pdm_part_to_part.pxi"
+
+
+
+
+
+
+
+
+
 
 
 
