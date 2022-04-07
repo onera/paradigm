@@ -159,6 +159,8 @@ PDM_dmesh_create
     dmesh->dbound_idx    [i] = NULL;
   }
 
+  dmesh->is_computed_g_extents = PDM_FALSE;
+
   return dmesh;
 }
 
@@ -520,6 +522,36 @@ PDM_dmesh_free
   }
 
   free (dmesh);
+}
+
+
+
+const double *
+PDM_dmesh_global_extents_get
+(
+ PDM_dmesh_t         *dmesh
+ )
+{
+  if (dmesh->is_computed_g_extents == PDM_FALSE) {
+
+    double l_min[3] = { HUGE_VAL};
+    double l_max[3] = {-HUGE_VAL};
+
+    for (int i = 0; i < dmesh->dn_vtx; i++) {
+      for (int j = 0; j < 3; j++) {
+        double x = dmesh->_dvtx_coord[3*i + j];
+        l_min[j] = PDM_MIN(l_min[j], x);
+        l_max[j] = PDM_MAX(l_max[j], x);
+      }
+    }
+
+    PDM_MPI_Allreduce(l_min, dmesh->g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, dmesh->comm);
+    PDM_MPI_Allreduce(l_max, dmesh->g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, dmesh->comm);
+
+    dmesh->is_computed_g_extents = PDM_TRUE;
+  }
+
+  return dmesh->g_extents;
 }
 
 

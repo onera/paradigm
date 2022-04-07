@@ -226,6 +226,12 @@ PDM_dmesh_free
 );
 
 
+const double *
+PDM_dmesh_global_extents_get
+(
+ PDM_dmesh_t         *dmesh
+ );
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
