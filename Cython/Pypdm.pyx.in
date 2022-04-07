@@ -485,6 +485,3 @@ include "pdm_extract_part.pxi"
 # --------------------
 include "pdm_writer.pxi"
 
-
-
-
