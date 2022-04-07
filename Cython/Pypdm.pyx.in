@@ -10,9 +10,11 @@ from cpython.ref       cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer, PyCapsule_IsValid, PyCapsule_GetName
 cimport cython
 cimport numpy as NPY
+from licpp.map  import map as mapcpp
+from libcpp.map cimport map as cpp_map
+
 
 from mpi4py cimport MPI
-
 # -----------------------------------------------------------------
 cdef extern from "numpy/arrayobject.h":
   void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
@@ -120,6 +122,16 @@ cdef extern from "pdm.h":
       PDM_ISO_SURFACE_KIND_SPHERE = 1
       PDM_ISO_SURFACE_KIND_FIELD  = 2
 
+    ctypedef enum PDM_mpi_comm_kind_t:
+      PDM_MPI_COMM_KIND_P2P                                = 0
+      PDM_MPI_COMM_KIND_COLLECTIVE                         = 1
+      PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = 2
+      PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = 3
+      PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4
+      PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5
+      PDM_MPI_COMM_KIND_WIN_RMA                            = 6
+
+
     void PDM_Finalize ()
 
 cdef extern from "pdm_dmesh_nodal.h":
@@ -140,6 +152,14 @@ cdef extern from "pdm_para_graph_dual.h":
         PDM_SPLIT_DUAL_WITH_PARMETIS = 1
         PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
         PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+
+cdef extern from "pdm_part_to_part.h":
+    ctypedef enum PDM_part_to_part_data_def_t:
+       PDM_PART_TO_PART_DATA_DEF_ORDER_PART1           = 0
+       PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2  = 1
+       PDM_PART_TO_PART_DATA_DEF_ORDER_PART2           = 2
+       PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = 3
+
 
 def Finalize ():
     PDM_Finalize
@@ -254,6 +274,19 @@ _PDM_ISO_SURFACE_KIND_FIELD  = PDM_ISO_SURFACE_KIND_FIELD
 _PDM_SPLIT_DUAL_WITH_PARMETIS = PDM_SPLIT_DUAL_WITH_PARMETIS
 _PDM_SPLIT_DUAL_WITH_PTSCOTCH = PDM_SPLIT_DUAL_WITH_PTSCOTCH
 _PDM_SPLIT_DUAL_WITH_HILBERT  = PDM_SPLIT_DUAL_WITH_HILBERT
+
+_PDM_PART_TO_PART_DATA_DEF_ORDER_PART1           = PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
+_PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2  = PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
+_PDM_PART_TO_PART_DATA_DEF_ORDER_PART2           = PDM_PART_TO_PART_DATA_DEF_ORDER_PART2
+_PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM
+
+_PDM_MPI_COMM_KIND_P2P                                = PDM_MPI_COMM_KIND_P2P
+_PDM_MPI_COMM_KIND_COLLECTIVE                         = PDM_MPI_COMM_KIND_COLLECTIVE
+_PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE
+_PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P
+_PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE
+_PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
+_PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
@@ -484,4 +517,10 @@ include "pdm_extract_part.pxi"
 # PDM_writer :
 # --------------------
 include "pdm_writer.pxi"
+
+# PDM_writer :
+# --------------------
+include "pdm_part_to_part.pxi"
+
+
 
