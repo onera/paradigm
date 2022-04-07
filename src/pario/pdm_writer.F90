@@ -1454,6 +1454,103 @@ module pdm_writer
   end subroutine PDM_writer_var_create
 
 
+  !>
+  !! \brief Creation d'une variable globale constante
+  !!
+  !! \param [in]  cs              Pointer to \ref PDM_writer object
+  !! \param [out] id_var          Identificateur de l'objet variable
+  !! \param [in]  nom_var         Nom de la variable
+  !! \param [in]  val_var         Valeur
+  !!
+  !!
+
+  subroutine PDM_writer_cst_global_var_create (cs,      &
+                                               id_var,  &
+                                               nom_var, &
+                                               val_var)
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value   :: cs
+    integer, intent(out) :: id_var
+    character (len=*)    :: nom_var
+    double precision     :: val_var
+
+    real(c_double)       :: c_var_val
+
+    interface
+      function PDM_writer_cst_global_var_create_c (cs,         &
+                                                   nom_var,    &
+                                                   var_val)    &
+      result (id_var)                                          &
+      bind (c, name='PDM_writer_cst_global_var_create')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: cs
+        integer(c_int)        :: id_var
+        character(c_char)     :: nom_var(*)
+        real(c_double)        :: var_val
+
+      end function PDM_writer_cst_global_var_create_c
+    end interface
+
+    c_var_val    = val_var
+
+    id_var = PDM_writer_cst_global_var_create_c (cs,                   &
+                                                 nom_var//C_NULL_CHAR, &
+                                                 c_var_val)
+
+  end subroutine PDM_writer_cst_global_var_create
+
+
+  !>
+  !! \brief Creation d'une variable globale constante
+  !!
+  !! \param [in]  cs              Pointer to \ref PDM_writer object
+  !! \param [out] id_var          Identificateur de l'objet variable
+  !! \param [in]  nom_var         Nom de la variable
+  !! \param [in]  val_var         Valeur
+  !!
+  !!
+
+  subroutine PDM_writer_cst_global_var_set (cs,      &
+                                               id_var,  &
+                                               val_var)
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value          :: cs
+    integer                     :: id_var
+    double precision            :: val_var
+
+    real(c_double)       :: c_var_val
+    integer(c_int)       :: c_id_var
+
+    interface
+      subroutine PDM_writer_cst_global_var_set_c (cs,         &
+                                                   id_var,    &
+                                                   var_val)    &
+      bind (c, name='PDM_writer_cst_global_var_set')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: cs
+        integer(c_int)        :: id_var
+        real(c_double)        :: var_val
+
+      end subroutine PDM_writer_cst_global_var_set_c
+    end interface
+
+    c_var_val    = val_var
+    c_id_var     = id_var
+
+    call PDM_writer_cst_global_var_set_c (cs,                   &
+                                          c_id_var,             &
+                                          c_var_val)
+
+  end subroutine PDM_writer_cst_global_var_set
+
 
   !>
   !! \brief Mapping des noms de variable
