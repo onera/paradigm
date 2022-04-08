@@ -94,17 +94,6 @@ _deduce_combine_connectivity_impl
     dentity2_entity3_n[i] = dentity2_entity3_idx[i+1] - dentity2_entity3_idx[i];
   }
 
-  PDM_g_num_t* dentity1_entity2_cur = NULL;
-
-  if(is_signed) {
-    dentity1_entity2_cur = (PDM_g_num_t* ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
-    for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
-      dentity1_entity2_cur[i] = PDM_ABS(dentity1_entity2[i]);
-    }
-  } else {
-    dentity1_entity2_cur = (PDM_g_num_t *) dentity1_entity2;
-  }
-
   // PDM_log_trace_array_int(dentity1_entity2_idx, dn_entity1+1, "dentity1_entity2_idx::");
   // PDM_log_trace_array_long(dentity1_entity2_cur, dentity1_entity2_idx[dn_entity1], "dentity1_entity2::");
 
@@ -115,17 +104,10 @@ _deduce_combine_connectivity_impl
    * So, for each entity2 describe by dentity1_entity2, we receive all vtx
    */
   PDM_block_to_part_t* btp = PDM_block_to_part_create(entity2_distrib,
-                               (const PDM_g_num_t **) &dentity1_entity2_cur,
+                               (const PDM_g_num_t **) &dentity1_entity2,
                                                       &dentity1_entity2_idx[dn_entity1],
                                                       1,
                                                       comm);
-
-  /*
-   * Free
-   */
-  if(is_signed) {
-    free(dentity1_entity2_cur);
-  }
 
   /*
    * Exchange
