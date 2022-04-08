@@ -217,6 +217,7 @@ int main(int argc, char *argv[])
   }
   free(pelmts_ln_to_gn);
   free(prand_number);
+  free(pn_elmts);
 
   PDM_MPI_Finalize ();
   return 0;

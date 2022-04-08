@@ -439,19 +439,16 @@ PDM_dconnectivity_transpose
   int dn_entity1  = entity1_distrib[i_rank+1] - entity1_distrib[i_rank];
   // int dn_entity2  = entity2_distrib[i_rank+1] - entity2_distrib[i_rank];
 
-  PDM_g_num_t* ln_to_gn = NULL;
-  PDM_g_num_t* gnum = (PDM_g_num_t * ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
+  PDM_g_num_t* ln_to_gn = (PDM_g_num_t * ) dentity1_entity2;
+  PDM_g_num_t* gnum     = (PDM_g_num_t * ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
 
   PDM_g_num_t shift_g = 1 + entity1_distrib[i_rank]; // Entre 1 et N
 
   if(is_signed) {
-    ln_to_gn = (PDM_g_num_t * ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
-
     for(int i_entity = 0; i_entity < dn_entity1; ++i_entity) {
       for(int j = dentity1_entity2_idx[i_entity]; j < dentity1_entity2_idx[i_entity+1]; ++j) {
         int g_sign = PDM_SIGN(dentity1_entity2[j]);
         gnum[j] = g_sign * (i_entity + shift_g);
-        ln_to_gn[j] = PDM_ABS(dentity1_entity2[j]);
       }
     }
   } else {
@@ -493,10 +490,6 @@ PDM_dconnectivity_transpose
   }
 
   int* send_stri = PDM_array_const_int(dentity1_entity2_idx[dn_entity1], 1);
-
-  if(is_signed) {
-    free(ln_to_gn);
-  }
 
   int         *dentity2_entity1_n = NULL;
   PDM_g_num_t *recv_data          = NULL;
@@ -551,9 +544,9 @@ PDM_dconnectivity_transpose
   // PDM_log_trace_array_long(recv_data, blk_size, "Before : recv_data::");
 
   PDM_para_graph_compress_connectivity(dn_entity2_recv,
-                                        _dentity2_entity1_idx,
-                                        dentity2_entity1_n,
-                                        recv_data);
+                                       _dentity2_entity1_idx,
+                                       dentity2_entity1_n,
+                                       recv_data);
   // printf("*dentity2_entity1_idx[dn_entity2_recv]       ::%i\n", _dentity2_entity1_idx[dn_entity2_recv]       );
 
   // *dentity2_entity1 = recv_data;
@@ -562,11 +555,6 @@ PDM_dconnectivity_transpose
    * Realloc
    */
   *dentity2_entity1 = realloc(recv_data, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
-  // PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
-
-  // PDM_log_trace_array_int (_dentity2_entity1_idx, dn_entity2_recv+1         , "_dentity2_entity1_idx::");
-  // PDM_log_trace_array_long(*dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv], "recv_data::");
-
   free(dentity2_entity1_n);
 }
 
