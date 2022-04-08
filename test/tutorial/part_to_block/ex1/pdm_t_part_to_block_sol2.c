@@ -128,11 +128,13 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
   int         *pfield       = malloc(pn_elmt * sizeof(int        ));
+  int         *pstrid       = malloc(pn_elmt * sizeof(int        ));
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
     pln_to_to_gn[i] = (rand() % n_elmt) + 1;
     pfield      [i] = i_rank;
+    pstrid      [i] = 1;
   }
 
   if(1 == 1) {
@@ -141,7 +143,7 @@ int main(int argc, char *argv[])
 
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &pln_to_to_gn,
                                                       NULL,
@@ -161,18 +163,25 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(blk_gnum    , n_elmt_in_block, "blk_gnum     : ");
   }
 
+  int* dstrid = NULL;
   int* dfield = NULL;
-  PDM_part_to_block_exch(ptb,
-                         sizeof(int),
-                         PDM_STRIDE_CST_INTERLACED,
-                         1,
-                         NULL,
-              (void **)  &pfield,
-                         NULL,
-              (void **)  &dfield);
+  int blk_size = PDM_part_to_block_exch(ptb,
+                                        sizeof(int),
+                                        PDM_STRIDE_VAR_INTERLACED,
+                                        1,
+                                        &pstrid,
+                             (void **)  &pfield,
+                                        &dstrid,
+                             (void **)  &dfield);
 
   if(1 == 1) {
-    PDM_log_trace_array_long(dfield, n_elmt_in_block, "dfield     : ");
+    PDM_log_trace_array_long(dstrid, n_elmt_in_block, "dstrid : ");
+    int check_blk_size = 0;
+    for(int i = 0; i < n_elmt_in_block; ++i) {
+      check_blk_size += dstrid[i];
+    }
+    assert(check_blk_size == blk_size);
+    PDM_log_trace_array_long(dfield, blk_size       , "dfield : ");
   }
 
 
@@ -181,6 +190,8 @@ int main(int argc, char *argv[])
   free(pln_to_to_gn);
   free(distrib_init_elmt);
   free(pfield);
+  free(pstrid);
+  free(dstrid);
   free(dfield);
 
   PDM_MPI_Finalize ();
