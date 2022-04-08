@@ -90,6 +90,8 @@ struct _PDM_writer_ensight_case_t {
 
   _PDM_writer_cst_global_var_tab_t *cst_global_var;
 
+  int                      append;
+
 } _PDM_writer_ensight_case_t;
 
 /*============================================================================
@@ -313,7 +315,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   /* Replace current time index by wildcards */
 
-  if (var->time_dep == 1)
+  if ((var->time_dep == 1) && (!this_case->append))
     strcat(var->case_line, ".*****");
 
   /* Finally, associate variable entry in case file */
@@ -386,7 +388,8 @@ const char                   *const name,
 const int                           restart,
 const char                   *const dir_prefix,
 const PDM_writer_topology_t                time_dependency,
-_PDM_writer_cst_global_var_tab_t *cst_global_var_tab
+_PDM_writer_cst_global_var_tab_t *cst_global_var_tab,
+const int                   append
 )
 {
   size_t  i, name_len, prefix_len;
@@ -450,6 +453,7 @@ _PDM_writer_cst_global_var_tab_t *cst_global_var_tab
 
   this_case->geom_file_name_base = NULL;
   this_case->geom_file_name      = NULL;
+  this_case->append = append;
 
   char extension[5] = ".geo";
 
@@ -889,7 +893,8 @@ const char* name
   }
 
   char *file_name;
-  if (var->time_dep == PDM_WRITER_ON) {
+  if ((var->time_dep == PDM_WRITER_ON) && 
+      (!this_case->append)) {
     file_name = var->file_name;
   }
   else {
@@ -916,7 +921,8 @@ PDM_writer_ensight_case_t  *this_case
 )
 {
   char *name;
-  if (this_case->time_dependency != PDM_WRITER_TOPO_CST) {
+  if ((this_case->time_dependency != PDM_WRITER_TOPO_CST) && 
+      (!this_case->append))  {      
     name = this_case->geom_file_name;
   }
   else {
@@ -1059,20 +1065,43 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
           "GEOMETRY\n");
 
   if (this_case->time_dependency == PDM_WRITER_TOPO_CST)
-    fprintf(f, "model: %s.geo\n",
-            this_case->file_name_prefix + this_case->dir_name_length);
+    if (this_case->append) {
+      fprintf(f, "model: %d %d %s.geo\n",
+              1, 1,
+              this_case->file_name_prefix + this_case->dir_name_length);
+    }
+    else {
+      fprintf(f, "model: %s.geo\n",
+             this_case->file_name_prefix + this_case->dir_name_length);
+    }
 
 
-  else if (this_case->time_dependency == PDM_WRITER_TOPO_DEFORMABLE)
-    fprintf(f, "model: %d %s.geo.*****  change_coords_only\n",
-            1,
-            this_case->file_name_prefix + this_case->dir_name_length);
+  else if (this_case->time_dependency == PDM_WRITER_TOPO_DEFORMABLE) {
+    if (this_case->append) {
+      fprintf(f, "model: %d %d %s.geo  change_coords_only\n",
+              1, 1,
+              this_case->file_name_prefix + this_case->dir_name_length);
+    }
+    else {
+      fprintf(f, "model: %d %s.geo.*****  change_coords_only\n",
+              1,
+              this_case->file_name_prefix + this_case->dir_name_length);      
+    }
+  }
 
 
-  else
-    fprintf(f, "model: %d %s.geo.*****\n",
-            1,
-            this_case->file_name_prefix + this_case->dir_name_length);
+  else {
+    if (this_case->append) {
+      fprintf(f, "model: %d %d %s.geo\n",
+              1, 1,
+              this_case->file_name_prefix + this_case->dir_name_length);
+    }
+    else {
+      fprintf(f, "model: %d %s.geo.*****\n",
+              1,
+              this_case->file_name_prefix + this_case->dir_name_length);
+    }
+  }
 
   /* Output variables */
 
@@ -1082,11 +1111,11 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
             "\n"
             "VARIABLE\n");
    
-    for (i = 0 ; i < this_case->cst_global_var->n_var ; i++) {
-      fprintf(f, "constant per case: %32s %12.5e\n", 
-        this_case->cst_global_var->var[i]->nom_var, 
-        this_case->cst_global_var->var[i]->_val); 
-    }
+    // for (i = 0 ; i < this_case->cst_global_var->n_var ; i++) {
+    //   fprintf(f, "constant per case: %32s %12.5e\n", 
+    //     this_case->cst_global_var->var[i]->nom_var, 
+    //     this_case->cst_global_var->var[i]->_val); 
+    // }
 
     for (i = 0 ; i < this_case->n_vars ; i++) {
       const PDM_writer_ensight_case_var_t  *var = this_case->var[i];
@@ -1105,12 +1134,23 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
 
     fprintf(f, "time set:              %d\n", 1);
     fprintf(f, "number of steps:       %d\n", ts->n_time_values);
-    fprintf(f, "filename start number: 1\n");
-    fprintf(f, "filename increment:    1\n");
+    if (!this_case->append) {
+      fprintf(f, "filename start number: 1\n");
+      fprintf(f, "filename increment:    1\n");
+    }
     fprintf(f, "time values:\n");
 
     for (j = 0 ; j < ts->n_time_values ; j++)
       fprintf(f, "            %15.8e\n", ts->time_value[j]);
+  }
+
+  if (this_case->append) {
+    const PDM_writer_ensight_case_time_t  *ts = this_case->time_set;
+    fprintf(f,
+            "\n"
+            "FILE\n");
+    fprintf(f, "file set:              1\n");
+    fprintf(f, "number of steps:       %d\n", ts->n_time_values);
   }
 
   /* Close case file */

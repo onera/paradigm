@@ -55,7 +55,8 @@ const char                   *const name,
 const int                           restart,
 const char                   *const dir_prefix,
 const PDM_writer_topology_t         time_dependency,
-_PDM_writer_cst_global_var_tab_t *cst_global_var
+_PDM_writer_cst_global_var_tab_t *cst_global_var,
+const int append
 );
 
 /*----------------------------------------------------------------------------

@@ -538,6 +538,7 @@ const char                   *options
     _parse_options (options, &(cs->n_options), &(cs->options));
   }
 
+  cs->cst_global_var_tab.var = NULL;
   cs->cst_global_var_tab.n_var = 0;
   cs->cst_global_var_tab.s_var = 0;
 

@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
                                           PDM_MPI_COMM_WORLD,
                                           PDM_IO_KIND_MPI_SIMPLE,
                                           1.,
-                                          NULL);
+                                          "append = 1");
 
   int id_var = PDM_writer_cst_global_var_create (id_cs, "test_var_constante", -1.2345);
 
