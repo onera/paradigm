@@ -430,6 +430,9 @@ PDM_dmesh_free
  PDM_dmesh_t         *dmesh
 )
 {
+  if (dmesh == NULL) {
+    return;
+  }
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;

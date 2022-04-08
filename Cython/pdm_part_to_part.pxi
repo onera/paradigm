@@ -138,7 +138,7 @@ cdef class PartToPart:
                                          <const PDM_g_num_t **> self._part2_ln_to_gn,
                                          <const int *>          self.n_elt2,
                                                                 self.n_part2,
-                                         <const PDM_g_num_t **> self._part1_to_part2_idx,
+                                         <const int **>         self._part1_to_part2_idx,
                                          <const PDM_g_num_t **> self._part1_to_part2,
                                          pdm_comm);
 
