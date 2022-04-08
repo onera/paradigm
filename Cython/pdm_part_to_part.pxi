@@ -146,7 +146,6 @@ cdef class PartToPart:
     # ------------------------------------------------------------------------
     def iexch(self,
               PDM_mpi_comm_kind_t         k_comm,
-              PDM_stride_t                t_stride,
               PDM_part_to_part_data_def_t t_part1_data_def,
               list                        part1_data,
               part1_stride=1,
@@ -157,13 +156,13 @@ cdef class PartToPart:
       cdef PDM_stride_t _stride_t
 
       cdef int   _part1_stride_cst = 0
-      cdef int** _part1_stride = NULL
+      cdef int** _part1_stride     = NULL
       if isinstance(part1_stride, int):
         _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
         _part1_stride_cst = part1_stride
       elif isinstance(part1_stride, list):
         _stride_t = PDM_STRIDE_VAR_INTERLACED
-        assert len(part1_stride) == self.n_part
+        assert len(part1_stride) == self.n_part1
         for i_part in range(self.n_part1):
           assert_single_dim_np(part1_stride[i_part], NPY.int32, self.n_elt1[i_part])
         _part1_stride = np_list_to_int_pointers(part1_stride)
@@ -179,7 +178,7 @@ cdef class PartToPart:
       cdef void** _part2_data   = NULL;
       PDM_part_to_part_iexch(self.ptp,
                              k_comm,
-                             t_stride,
+                             _stride_t,
                              t_part1_data_def,
                              _part1_stride_cst,
                              s_data,
@@ -192,7 +191,7 @@ cdef class PartToPart:
       self.dict_part_data  [request_exch] = _part2_data
       self.dict_part_stride[request_exch] = _part2_stride
       self.dict_npy_type   [request_exch] = npy_type
-      self.dict_stride     [request_exch] = t_stride
+      self.dict_stride     [request_exch] = _stride_t
       self.dict_cst_strid  [request_exch] = _part1_stride_cst
 
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
@@ -264,7 +263,6 @@ cdef class PartToPart:
     # ------------------------------------------------------------------------
     def reverse_iexch(self,
                       PDM_mpi_comm_kind_t         k_comm,
-                      PDM_stride_t                t_stride,
                       PDM_part_to_part_data_def_t t_part2_data_def,
                       list                        part2_data,
                       part2_stride=1,
@@ -282,7 +280,7 @@ cdef class PartToPart:
         _part2_stride_cst = part2_stride
       elif isinstance(part2_stride, list):
         _stride_t = PDM_STRIDE_VAR_INTERLACED
-        assert len(part2_stride) == self.n_part
+        assert len(part2_stride) == self.n_part2
         for i_part in range(self.n_part2):
           assert_single_dim_np(part2_stride[i_part], NPY.int32, self.n_elt2[i_part])
         _part2_stride = np_list_to_int_pointers(part2_stride)
@@ -299,7 +297,7 @@ cdef class PartToPart:
       cdef void** _part1_data   = NULL;
       PDM_part_to_part_reverse_iexch(self.ptp,
                                      k_comm,
-                                     t_stride,
+                                     _stride_t,
                                      t_part2_data_def,
                                      _part2_stride_cst,
                                      s_data,
@@ -312,7 +310,7 @@ cdef class PartToPart:
       self.dict_part_data  [request_exch] = _part1_data
       self.dict_part_stride[request_exch] = _part1_stride
       self.dict_npy_type   [request_exch] = npy_type
-      self.dict_stride     [request_exch] = t_stride
+      self.dict_stride     [request_exch] = _stride_t
       self.dict_cst_strid  [request_exch] = _part2_stride_cst
 
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
@@ -342,6 +340,8 @@ cdef class PartToPart:
 
           np_part1_stride = create_numpy_i(_part1_stride[i_part], strid_size)
           dim_np = np_part1_stride.sum()
+          print("dim_np : ", dim_np)
+          print("np_part1_stride : ", np_part1_stride)
 
           np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
           PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)

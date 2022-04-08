@@ -527,14 +527,3 @@ include "pdm_writer.pxi"
 # --------------------
 include "pdm_part_to_part.pxi"
 
-
-
-
-
-
-
-
-
-
-
-
