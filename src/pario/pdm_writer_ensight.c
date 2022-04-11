@@ -374,7 +374,7 @@ _geom_entete_ecr
     _ecr_string(cs, f_unit_geom, buf);
   }
   /* 2nd description line */
-  _ecr_string(cs, f_unit_geom, "Sortie par CEDRE (V ?.?.?.?)");
+  _ecr_string(cs, f_unit_geom, "Nothing");
   _ecr_string(cs, f_unit_geom, "node id assign");
   _ecr_string(cs, f_unit_geom, "element id assign");
 }

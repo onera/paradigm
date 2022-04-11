@@ -314,6 +314,17 @@ int main(int argc, char *argv[])
                                           1.,
                                           "append = 1");
 
+  // PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+  //                                         PDM_WRITER_FMT_ASCII,
+  //                                         PDM_WRITER_TOPO_VARIABLE,
+  //                                         PDM_WRITER_OFF,
+  //                                         "test_3d_ens_mv_mesh",
+  //                                         "chrd3d",
+  //                                         PDM_MPI_COMM_WORLD,
+  //                                         PDM_IO_KIND_MPI_SIMPLE,
+  //                                         1.,
+  //                                         NULL);
+
   int id_var = PDM_writer_cst_global_var_create (id_cs, "test_var_constante", -1.2345);
 
   /* Creation de la geometrie */
