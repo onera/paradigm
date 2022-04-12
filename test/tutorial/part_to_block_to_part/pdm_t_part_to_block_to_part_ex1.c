@@ -159,23 +159,7 @@ int main(int argc, char *argv[])
    *
    */
 
-  /*
-   *  1) Move to block-vision
-   */
-  //...
-
-
-
-  /*
-   *  2) Compute sum in block-vision
-   */
-  //...
-
-
-  /*
-   *  3) Send summed values back to initial partitions
-   */
-  //...
+  // Good luck! ;)
 
 
   /* Check summed values in partitions */
