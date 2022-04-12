@@ -146,6 +146,14 @@ int main(int argc, char *argv[])
   /*
    * I want to replace pfield values by their global, element-wise sum
    *
+   * For example, if I have
+   *   on rank 0 : pln_to_gn = [3, 6, 4], pfield = [1, 1, 1]
+   *   on rank 1 : pln_to_gn = [4, 1],    pfield = [1, 1]
+   *
+   * In the end, I want to get
+   *   on rank 0 : pfield = [1, 1, 2]
+   *   on rank 1 : pfield = [2, 1]
+   *
    * Tips : use part_to_block with PDM_PART_TO_BLOCK_POST_MERGE
    * (/!\ only available in PDM_STRIDE_VAR_INTERLACED)
    *
