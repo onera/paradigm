@@ -64,8 +64,8 @@ struct _pdm_part_extension_t {
   int **unique_order_dist_neighbor_cell;
   int  *n_unique_order_dist_neighbor_cell;
 
-  int ***cell_cell_idx;
-  int ***cell_cell;
+  int **cell_cell_idx;
+  int **cell_cell;
 
   /* This one is only on the border and contains only border cells */
   int ***cell_cell_extended_idx;

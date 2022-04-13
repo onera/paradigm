@@ -197,8 +197,13 @@ _create_cell_cell_graph
 {
   // assert(extend_type == PDM_EXTEND_FROM_FACE);
 
-  part_ext->cell_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
-  part_ext->cell_cell     = malloc( part_ext->n_domain * sizeof(int ***));
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  part_ext->cell_cell_idx = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+  part_ext->cell_cell     = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
 
   if(extend_type == PDM_EXTEND_FROM_FACE ){
 
@@ -229,8 +234,6 @@ _create_cell_cell_graph
                                               &face_cell_idx[i_domain],
                                               &face_cell[i_domain]);
 
-      part_ext->cell_cell_idx[i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-      part_ext->cell_cell    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
@@ -252,12 +255,12 @@ _create_cell_cell_graph
                                  pcell_face[i_part],
                                  face_cell_idx[i_domain][i_part],
                                  face_cell[i_domain][i_part],
-                                 &part_ext->cell_cell_idx[i_domain][i_part],
-                                 &part_ext->cell_cell[i_domain][i_part]);
+                                 &part_ext->cell_cell_idx[i_part+shift_part],
+                                 &part_ext->cell_cell[i_part+shift_part]);
 
         // Remove sign for cell_cell
-        for(int i = 0; i < part_ext->cell_cell_idx[i_domain][i_part][pn_cell[i_part]]; ++i) {
-          part_ext->cell_cell[i_domain][i_part][i] = PDM_ABS(part_ext->cell_cell[i_domain][i_part][i]);
+        for(int i = 0; i < part_ext->cell_cell_idx[i_part+shift_part][pn_cell[i_part]]; ++i) {
+          part_ext->cell_cell[i_part+shift_part][i] = PDM_ABS(part_ext->cell_cell[i_part+shift_part][i]);
         }
 
         /*
@@ -294,9 +297,6 @@ _create_cell_cell_graph
 
     int shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-
-      part_ext->cell_cell_idx[i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-      part_ext->cell_cell    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         int pn_cell = part_ext->parts[i_domain][i_part].n_cell;
@@ -348,12 +348,12 @@ _create_cell_cell_graph
                                  cell_vtx,
                                  vtx_cell_idx,
                                  vtx_cell,
-                                 &part_ext->cell_cell_idx[i_domain][i_part],
-                                 &part_ext->cell_cell[i_domain][i_part]);
+                                 &part_ext->cell_cell_idx[i_part+shift_part],
+                                 &part_ext->cell_cell[i_part+shift_part]);
 
         // Remove sign for cell_cell
-        for(int i = 0; i < part_ext->cell_cell_idx[i_domain][i_part][pn_cell]; ++i) {
-          part_ext->cell_cell[i_domain][i_part][i] = PDM_ABS(part_ext->cell_cell[i_domain][i_part][i]);
+        for(int i = 0; i < part_ext->cell_cell_idx[i_part+shift_part][pn_cell]; ++i) {
+          part_ext->cell_cell[i_part+shift_part][i] = PDM_ABS(part_ext->cell_cell[i_part+shift_part][i]);
         }
         free(cell_vtx_idx);
         free(cell_vtx);
@@ -397,7 +397,7 @@ _create_cell_graph_comm
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
-  assert(part_ext->n_domain == 1);
+  // assert(part_ext->n_domain == 1);
 
   /* Si multidomain on fait un shift et tt roule */
   int n_tot_all_domain = 0;
@@ -406,8 +406,8 @@ _create_cell_graph_comm
     n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
-  // printf(" n_tot_all_domain      = %i \n", n_tot_all_domain);
-  // printf(" n_part_loc_all_domain = %i \n", n_part_loc_all_domain);
+  printf(" n_tot_all_domain      = %i \n", n_tot_all_domain);
+  printf(" n_part_loc_all_domain = %i \n", n_part_loc_all_domain);
 
   /* We flat all partition */
   assert(part_ext->neighbor_idx   == NULL);
@@ -958,9 +958,8 @@ _compute_dual_graph
       int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
       int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part];
 
-      int i_depth_cur = 0;
-      int* _cell_cell_idx = part_ext->cell_cell_idx[i_depth_cur][i_part+shift_part];
-      int* _cell_cell     = part_ext->cell_cell    [i_depth_cur][i_part+shift_part];
+      int* _cell_cell_idx = part_ext->cell_cell_idx[i_part+shift_part];
+      int* _cell_cell     = part_ext->cell_cell    [i_part+shift_part];
 
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         _cell_cell_extended_idx[i_cell] = 0;
@@ -1414,9 +1413,8 @@ _compute_first_extended_cell_graph
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
-  int i_depth_cur = 0;
-
   int shift_part = 0;
+  int i_depth_cur = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
@@ -1435,8 +1433,8 @@ _compute_first_extended_cell_graph
       int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part];
       int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part];
 
-      int* _cell_cell_idx = part_ext->cell_cell_idx[i_depth_cur][i_part+shift_part];
-      int* _cell_cell     = part_ext->cell_cell    [i_depth_cur][i_part+shift_part];
+      int* _cell_cell_idx = part_ext->cell_cell_idx[i_part+shift_part];
+      int* _cell_cell     = part_ext->cell_cell    [i_part+shift_part];
 
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         _cell_cell_extended_idx[i_cell] = 0;
@@ -3348,12 +3346,10 @@ PDM_part_extension_free
 
         }
 
-        free(part_ext->cell_cell_idx[i_domain][i_part]);
-        free(part_ext->cell_cell    [i_domain][i_part]);
+        free(part_ext->cell_cell_idx[i_part+shift_part]);
+        free(part_ext->cell_cell    [i_part+shift_part]);
 
       }
-      free(part_ext->cell_cell_idx[i_domain]);
-      free(part_ext->cell_cell    [i_domain]);
 
       shift_part += part_ext->n_part[i_domain];
     }
