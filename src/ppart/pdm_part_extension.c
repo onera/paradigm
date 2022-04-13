@@ -48,6 +48,67 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+static
+PDM_g_num_t*
+_compute_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_MPI_Comm     comm
+)
+{
+
+  PDM_g_num_t *shift_by_domain_loc = PDM_array_const_gnum(n_domain, 0);
+  PDM_g_num_t *shift_by_domain     = (PDM_g_num_t *) malloc((n_domain+1) * sizeof(PDM_g_num_t));
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+
+      int          _pn_entity        = pn_entity       [i_domain][i_part];
+      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
+      for(int i = 0; i < _pn_entity; ++i) {
+        shift_by_domain_loc[i_domain] = PDM_MAX(shift_by_domain_loc[i_domain], _pentity_ln_to_gn[i]);
+      }
+    }
+  }
+
+  shift_by_domain[0] = 0;
+  PDM_MPI_Allreduce(shift_by_domain_loc, &shift_by_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  PDM_array_accumulate_gnum(shift_by_domain, n_domain+1);
+
+  free(shift_by_domain_loc);
+
+  return shift_by_domain;
+}
+
+
+static
+void
+_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_g_num_t     *shift_by_domain,
+  int              sens
+)
+{
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      int          _pn_entity        = pn_entity       [i_domain][i_part];
+      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
+      for(int i = 0; i < _pn_entity; ++i) {
+        _pentity_ln_to_gn[i] = _pentity_ln_to_gn[i] + sens * shift_by_domain[i_domain];
+      }
+    }
+  }
+}
+
+
+
 static inline
 int
 _is_same_triplet
@@ -2705,7 +2766,11 @@ _rebuild_face_group
 
   /* Post treatment */
   // TODO MANAGEMENT of multiple domain
-  assert(part_ext->n_domain == 1);
+  // assert(part_ext->n_domain == 1);
+
+  if(part_ext->n_domain > 1) {
+    printf("WARNING : _rebuild_face_group is not managed with n_domain > 1 --> n_domain = %i \n", part_ext->n_domain);
+  }
 
   part_ext->border_face_group_idx      = malloc( n_part_loc_all_domain * sizeof(int         *));
   part_ext->border_face_group          = malloc( n_part_loc_all_domain * sizeof(int         *));
@@ -3037,6 +3102,14 @@ PDM_part_extension_compute
 
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
+
+
+  // if(0 == 1) {
+  //   PDM_g_num_t* cell_shift_by_domain = _compute_offset_ln_to_gn_by_domain(n_domain,
+  //                                                                          part_ext->n_part,
+  //                                                                          part_ext->parts);
+  // }
+
 
   part_ext->entity_cell_n    = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
   part_ext->entity_cell_idx  = (int **) malloc( n_part_loc_all_domain * sizeof(int *));

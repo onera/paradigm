@@ -487,14 +487,15 @@ int main
   /*
    * Deduction en partition du graphe entre domaine
    */
-  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
-                                                                                   pn_n_part,
-                                                                                   NULL,
-                                                                                   NULL,
-                                                                                   pn_vtx,
-                                                                                   NULL,
-                                                                                   NULL,
-                                                                                   pvtx_ln_to_gn);
+  PDM_part_domain_interface_t* pdi = NULL;
+  // PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
+  //                                                                                  pn_n_part,
+  //                                                                                  NULL,
+  //                                                                                  NULL,
+  //                                                                                  pn_vtx,
+  //                                                                                  NULL,
+  //                                                                                  NULL,
+  //                                                                                  pvtx_ln_to_gn);
 
   /*
    * Extension
@@ -630,7 +631,7 @@ int main
        */
       if(1 == 1) {
         printf("Flag 3 \n");
-        PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[shift_part+i_part],
+        PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                          PDM_GEOMETRY_KIND_VOLUMIC,
                                                                                          1, // n_part
                                                                                          &n_vtx,
@@ -652,7 +653,7 @@ int main
         }
 
         char filename[999];
-        sprintf(filename, "out_volumic_%i_%i.vtk", i_part, i_rank);
+        sprintf(filename, "out_volumic_%i_%i_%i.vtk", i_dom, i_part, i_rank);
         const char* field_name[] = {"cell_num", 0 };
         const int * field     [] = {cell_num};
         PDM_vtk_write_std_elements(filename,
@@ -844,7 +845,7 @@ int main
       // PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
 
       printf("Flag 6 \n");
-      PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[shift_part+i_part],
+      PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                        PDM_GEOMETRY_KIND_VOLUMIC,
                                                                                        1, // n_part
                                                                                        &n_vtx_tot,
@@ -862,7 +863,7 @@ int main
       PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
       char filename[999];
-      sprintf(filename, "out_volumic_extended_%i_%i.vtk", i_part, i_rank);
+      sprintf(filename, "out_volumic_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
 
       const char* field_name[] = {"is_extend", 0 };
       const int * field     [] = {is_extend};
@@ -916,7 +917,9 @@ int main
   }
   PDM_multipart_free(mpart_id);
 
-  PDM_part_domain_interface_free(pdi);
+  if(pdi != NULL) {
+    PDM_part_domain_interface_free(pdi);
+  }
   PDM_UNUSED(pdi);
 
   // free(dm);

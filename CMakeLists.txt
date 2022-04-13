@@ -362,7 +362,7 @@ else ()
 
   endif()
 
-  #find_package(mmg CONFIG)
+  # find_package(mmg CONFIG)
 
   # Check OpenMP (TODO : check MPI wrapper function check )
   # -------------------------------------------------------
