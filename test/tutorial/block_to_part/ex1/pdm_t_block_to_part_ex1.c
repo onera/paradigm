@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
    */
   PDM_g_num_t *distrib_elmt = PDM_compute_uniform_entity_distribution(comm, n_elmt);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(distrib_elmt, n_rank+1, "distrib_elmt : ");
   }
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     drand_number[i] = (rand() % n_elmt) + 1;
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(drand_number, dn_elmt, "drand_number : ");
   }
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pelmts_ln_to_gn[i_part], pn_elmts[i_part], "pelmts_ln_to_gn : ");
     }
@@ -175,24 +175,54 @@ int main(int argc, char *argv[])
    *       Warnign possible : tous les pointeurs intermédiaires dans les transtypages de «PDM_g_num_t **» {alias «int **»} vers «const PDM_g_num_t **» {alias «const int **»} doivent être qualifiés avec «const» [-Wcast-qual]
    *       --> Just do a cast (PDM_g_num_t **)
    */
+  PDM_block_to_part_t *btp = NULL;
 
+  btp = PDM_block_to_part_create(distrib_elmt, (const PDM_g_num_t  **) pelmts_ln_to_gn, pn_elmts, n_part, comm);
+
+
+// (
+//  const PDM_g_num_t   *block_distrib_idx,
+//  const PDM_g_num_t  **gnum_elt,
+//  const int           *n_elt,
+//  const int            n_part,
+//  const PDM_MPI_Comm   comm
+// );
 
   /*
    *  II/ Echange drand_number to get prand_number
    *        --> Tips : stride is constant
    *        --> We need also to cast data in void ***
    */
-  // PDM_g_num_t **prand_number = NULL;
+  PDM_g_num_t **prand_number = NULL;
 
+  PDM_block_to_part_exch(btp, sizeof(PDM_g_num_t), PDM_STRIDE_CST_INTERLACED, &freq, drand_number, NULL, (void ***) &prand_number);
+
+// (
+//  PDM_block_to_part_t *btp,
+//  size_t               s_data,
+//  PDM_stride_t         t_stride,
+//  int                 *block_stride,
+//  void                *block_data,
+//  int               ***part_stride,
+//  void              ***part_data
+// );
 
   /*
    * III/ Check results in partition
    */
 
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_long(prand_number[i_part], pn_elmts[i_part], "prand_number : ");
+    }
+  }
+
 
   /*
    * IV/ Free exchange protocol
    */
+
+  PDM_block_to_part_free(btp);
 
   /*
    *  Enjoy using multiple procs and see in paradigm_*.log how data is selected among all procs

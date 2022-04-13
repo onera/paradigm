@@ -121,38 +121,82 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_init_elmt = PDM_compute_uniform_entity_distribution(comm, n_elmt);
 
   if(0 == 1) {
-    PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_elmt : ");
+    PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_init_elmt : ");
   }
   int n_part  = 1;
-  PDM_UNUSED(n_part);
-  int pn_elmt = freq * (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) ;
+  int pn_elmt = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) / freq ;
 
   PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
   int         *pfield       = malloc(pn_elmt * sizeof(int        ));
+  int         *pstrid       = malloc(pn_elmt * sizeof(int        ));
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
     pln_to_to_gn[i] = (rand() % n_elmt) + 1;
+    pfield      [i] = i_rank;
+    pstrid      [i] = 1;
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
   /*
    * I want to know in block frame the value of field
-   * Tips : use part_to_block with PDM_PART_TO_BLOCK_POSTMERGE +  STRIDE_VAR
+   * Tips : use part_to_block with PDM_PART_TO_BLOCK_POST_MERGE +  PDM_STRIDE_VAR_INTERLACED
    *
    */
-
 
   /*
    * Print the block_g_num and distrib
    */
 
+  // Create part_to_block
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &pln_to_to_gn,
+                                                      NULL,
+                                                      &pn_elmt,
+                                                      n_part,
+                                                      comm);
+
+  int nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t *block_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(block_gnum, nelmt_proc, "block_gnum : ");
+    PDM_log_trace_array_long(distrib, n_rank+1, "distrib : ");
+  }
+
   /*
    *  Exchange field and print it / Check !
    */
+
+  int *dfield = NULL;
+  int *block_stride = NULL;
+
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         &pstrid,
+                         (void **) &pfield,
+                         &block_stride,
+                         (void **) &dfield);
+
+   // Print field
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(dfield, nelmt_proc, "dfield : ");
+  }
+
+  // Free part_to_block and dfield
+
+  PDM_part_to_block_free(ptb);
+  free(dfield);
 
   free(pln_to_to_gn);
   free(distrib_init_elmt);

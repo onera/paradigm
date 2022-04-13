@@ -140,6 +140,11 @@ int main(int argc, char *argv[])
   }
 
 
+  if(1 == 1) {
+    PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
+  }
+
+
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,

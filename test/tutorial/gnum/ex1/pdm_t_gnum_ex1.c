@@ -156,20 +156,30 @@ int main(int argc, char *argv[])
     }
   }
 
+  if(1 == 1) {
+    PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
+  }
+
   /*
    * I want to have a global numbering for all pair value
    * Tips : use pdm_gnum after extraction of pair value
    *
    */
 
+  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(1, n_part, PDM_FALSE, 1.e-3, comm, PDM_OWNERSHIP_USER);
 
-  /*
-   * Print the block_g_num and distrib
-   */
+  PDM_gnum_set_from_parents(gen_gnum, 0, pn_elmt_pair, ppair_ln_to_gn);
 
-  /*
-   *  Exchange field and print it / Check !
-   */
+  PDM_gnum_compute(gen_gnum);
+
+  PDM_g_num_t *pln_to_to_gn_child = PDM_gnum_get(gen_gnum, 0);
+  int pn_elmt_child = PDM_gnum_n_elt_get(gen_gnum, 0);
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(pln_to_to_gn_child, pn_elmt_child, "pln_to_to_gn_child : ");
+  }
+
+  PDM_gnum_free(gen_gnum);
 
   free(pln_to_to_gn);
   free(distrib_init_elmt);
