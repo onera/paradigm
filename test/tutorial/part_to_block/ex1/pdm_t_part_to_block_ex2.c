@@ -179,16 +179,15 @@ int main(int argc, char *argv[])
   int *block_stride = NULL;
 
   int s_block_data = PDM_part_to_block_exch(ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR_INTERLACED,
-                         1,
-                         &pstrid,
-                         (void **) &pfield,
-                         &block_stride,
-                         (void **) &dfield);
+                                            sizeof(int),
+                                            PDM_STRIDE_VAR_INTERLACED,
+                                            1,
+                                            &pstrid,
+                                            (void **) &pfield,
+                                            &block_stride,
+                                            (void **) &dfield);
 
-   // Print field
-
+  // Print field
   if(1 == 1) {
     PDM_log_trace_array_int(dfield, nelmt_proc, "dfield : ");
     int idx = 0;
