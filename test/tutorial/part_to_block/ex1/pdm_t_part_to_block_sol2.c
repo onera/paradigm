@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
       check_blk_size += dstrid[i];
     }
     assert(check_blk_size == blk_size);
-    PDM_log_trace_array_long(dfield, blk_size       , "dfield : ");
+    PDM_log_trace_array_int(dfield, blk_size       , "dfield : ");
   }
 
 

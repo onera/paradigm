@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
               (void **)  &dfield);
 
   if(1 == 1) {
-    PDM_log_trace_array_long(dfield, n_elmt_in_block, "dfield     : ");
+    PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
 
