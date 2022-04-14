@@ -1084,7 +1084,7 @@ PDM_vtk_write_polydata_with_field
 
     fprintf(f, "FIELD elt_field %d\n", n_elt_ifield);
     for (int i = 0; i < n_elt_ifield; i++) {
-      assert (elt_ifield[i] != NULL);
+      // assert (elt_ifield[i] != NULL);
       assert (elt_ifield_name[i] != NULL);
 
       fprintf(f, "%s 1 %d int\n", elt_ifield_name[i], n_face);
@@ -1441,7 +1441,7 @@ PDM_vtk_write_std_elements
 
     fprintf(f, "FIELD elt_field %d\n", n_elt_ifield);
     for (int i = 0; i < n_elt_ifield; i++) {
-      assert (elt_ifield[i] != NULL);
+      // assert (elt_ifield[i] != NULL);
       assert (elt_ifield_name[i] != NULL);
 
       fprintf(f, "%s 1 %d int\n", elt_ifield_name[i], n_elt);
@@ -1554,7 +1554,7 @@ PDM_vtk_write_std_elements_double
 
     fprintf(f, "FIELD elt_field %d\n", n_elt_field);
     for (int i = 0; i < n_elt_field; i++) {
-      assert (elt_field[i] != NULL);
+      // assert (elt_field[i] != NULL);
       assert (elt_field_name[i] != NULL);
 
       fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
@@ -1676,7 +1676,7 @@ PDM_vtk_write_std_elements_ho
 
     fprintf(f, "FIELD elt_field %d\n", n_elt_field);
     for (int i = 0; i < n_elt_field; i++) {
-      assert (elt_field[i] != NULL);
+      // assert (elt_field[i] != NULL);
       assert (elt_field_name[i] != NULL);
 
       fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
