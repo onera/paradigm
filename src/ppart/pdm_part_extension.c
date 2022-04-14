@@ -107,6 +107,94 @@ _offset_ln_to_gn_by_domain
   }
 }
 
+static
+void
+_offset_parts_by_domain
+(
+  PDM_part_extension_t *part_ext
+)
+{
+  int **pn_cell = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_face = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_edge = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_vtx  = malloc(part_ext->n_domain * sizeof(int *));
+
+  PDM_g_num_t ***cell_ln_to_gn = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***face_ln_to_gn = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***edge_ln_to_gn = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***vtx_ln_to_gn  = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    pn_cell[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_edge[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_vtx [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+
+    cell_ln_to_gn[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    face_ln_to_gn[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    edge_ln_to_gn[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    vtx_ln_to_gn [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      pn_cell[i_domain][i_part] = part_ext->parts[i_domain][i_part].n_cell;
+      pn_face[i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
+      pn_edge[i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+      pn_vtx [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+
+      cell_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
+      face_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+      edge_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+      vtx_ln_to_gn [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn ;
+
+    }
+  }
+
+  int sens = 1;
+  // Here we go
+  PDM_g_num_t* shift_by_dom_cell = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                      part_ext->n_part,
+                                                                      pn_cell,
+                                                                      cell_ln_to_gn,
+                                                                      part_ext->comm);
+
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_cell,
+                             cell_ln_to_gn,
+                             shift_by_dom_cell,
+                             sens);
+  free(shift_by_dom_cell);
+
+
+  // Attention il faut shifter tout les border_ln_to_gn aussi et deduire le border_i_domain
+  // (Recherche dicotomique dans le shift by domain)
+
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    free(pn_cell[i_domain]);
+    free(pn_face[i_domain]);
+    free(pn_edge[i_domain]);
+    free(pn_vtx [i_domain]);
+
+    free(cell_ln_to_gn[i_domain]);
+    free(face_ln_to_gn[i_domain]);
+    free(edge_ln_to_gn[i_domain]);
+    free(vtx_ln_to_gn [i_domain]);
+  }
+
+  free(pn_cell);
+  free(pn_face);
+  free(pn_edge);
+  free(pn_vtx );
+
+  free(cell_ln_to_gn);
+  free(face_ln_to_gn);
+  free(edge_ln_to_gn);
+  free(vtx_ln_to_gn );
+}
+
 
 
 static inline
