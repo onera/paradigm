@@ -2032,24 +2032,43 @@ contains
 
     c_cell_face_idx            = c_loc(cell_face_idx           )
     c_cell_face                = c_loc(cell_face               )
-    c_cell_tag                 = c_loc(cell_tag                )
-    c_cell_weight              = c_loc(cell_weight             )
-    c_face_weight              = c_loc(face_weight             )
     c_cell_ln_to_gn            = c_loc(cell_ln_to_gn           )
     c_face_cell                = c_loc(face_cell               )
     c_face_vtx_idx             = c_loc(face_vtx_idx            )
     c_face_vtx                 = c_loc(face_vtx                )
-    c_face_tag                 = c_loc(face_tag                )
     c_face_ln_to_gn            = c_loc(face_ln_to_gn           )
     c_vtxCoord                 = c_loc(vtxCoord                )
-    c_vtx_tag                  = c_loc(vtx_tag                 )
     c_vtx_ln_to_gn             = c_loc(vtx_ln_to_gn            )
     c_face_group_idx           = c_loc(face_group_idx          )
     c_face_group               = c_loc(face_group              )
     c_face_group_ln_to_gn      = c_loc(face_group_ln_to_gn     )
     c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
-    c_face_part_bound          = c_loc(face_part_bound         )
+    
+
+    if (associated(vtx_tag)) then
+      c_vtx_tag  = c_loc(vtx_tag)
+    endif
+
+    if (associated(face_tag)) then
+      c_face_tag = c_loc(face_tag)
+    endif
+
+    if (associated(cell_tag)) then
+      c_cell_tag = c_loc(cell_tag)
+    endif
+
+    if (associated(cell_weight)) then
+      c_cell_weight = c_loc(cell_weight)
+    endif
+
+    if (associated(face_weight)) then
+       c_face_weight = c_loc(face_weight)
+    endif
+
+    if (associated(face_part_bound)) then
+       c_face_part_bound = c_loc(face_part_bound)
+    endif
 
     call PDM_part_coarse_mesh_input_c (cm,                         &
                                        c_i_part,                   &

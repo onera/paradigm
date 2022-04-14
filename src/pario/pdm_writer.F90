@@ -653,7 +653,8 @@ module pdm_writer
   subroutine PDM_writer_geom_bloc_add (cs,           &
                                        id_geom,      &
                                        st_free_data, &
-                                       t_elt)
+                                       t_elt,        &
+                                       id_bloc)
     use iso_c_binding
     implicit none
 
@@ -661,16 +662,19 @@ module pdm_writer
     integer, intent(in)           :: id_geom
     integer, intent(in)           :: st_free_data
     integer, intent(in)           :: t_elt
+    integer, intent(out)          :: id_bloc
 
     integer(c_int)                :: c_id_geom
     integer(c_int)                :: c_st_free_data
     integer(c_int)                :: c_t_elt
+    integer(c_int)                :: c_id_bloc
 
     interface
-      subroutine PDM_writer_geom_bloc_add_c (cs,           &
+      function PDM_writer_geom_bloc_add_c (cs,             &
                                              id_geom,      &
                                              st_free_data, &
                                              t_elt)        &
+      result (id_bloc)                                     &
       bind (c, name='PDM_writer_geom_bloc_add')
         use iso_c_binding
         implicit none
@@ -679,15 +683,16 @@ module pdm_writer
         integer(c_int), value :: id_geom
         integer(c_int), value :: st_free_data
         integer(c_int), value :: t_elt
+        integer(c_int)        :: id_bloc
 
-      end subroutine PDM_writer_geom_bloc_add_c
+      end function PDM_writer_geom_bloc_add_c
     end interface
 
     c_id_geom      = id_geom
     c_st_free_data = st_free_data
     c_t_elt        = t_elt
 
-    call PDM_writer_geom_bloc_add_c (cs,             &
+    id_bloc = PDM_writer_geom_bloc_add_c (cs,        &
                                      c_id_geom,      &
                                      c_st_free_data, &
                                      c_t_elt)
