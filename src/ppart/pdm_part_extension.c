@@ -111,7 +111,8 @@ static
 void
 _offset_parts_by_domain
 (
-  PDM_part_extension_t *part_ext
+  PDM_part_extension_t *part_ext,
+  int                   sens
 )
 {
   int **pn_cell = malloc(part_ext->n_domain * sizeof(int *));
@@ -150,22 +151,66 @@ _offset_parts_by_domain
     }
   }
 
-  int sens = 1;
   // Here we go
-  PDM_g_num_t* shift_by_dom_cell = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
-                                                                      part_ext->n_part,
-                                                                      pn_cell,
-                                                                      cell_ln_to_gn,
-                                                                      part_ext->comm);
+  if(sens == 1) {
+    assert(part_ext->shift_by_domain_cell == NULL);
+    part_ext->shift_by_domain_cell = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_cell,
+                                                                        cell_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_face == NULL);
+    part_ext->shift_by_domain_face = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_face,
+                                                                        face_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_edge == NULL);
+    part_ext->shift_by_domain_edge = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_edge,
+                                                                        edge_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_vtx == NULL);
+    part_ext->shift_by_domain_vtx = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                       part_ext->n_part,
+                                                                       pn_vtx,
+                                                                       vtx_ln_to_gn,
+                                                                       part_ext->comm);
+  }
 
 
   _offset_ln_to_gn_by_domain(part_ext->n_domain,
                              part_ext->n_part,
                              pn_cell,
                              cell_ln_to_gn,
-                             shift_by_dom_cell,
+                             part_ext->shift_by_domain_cell,
                              sens);
-  free(shift_by_dom_cell);
+
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_face,
+                             face_ln_to_gn,
+                             part_ext->shift_by_domain_face,
+                             sens);
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_edge,
+                             edge_ln_to_gn,
+                             part_ext->shift_by_domain_edge,
+                             sens);
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_vtx,
+                             vtx_ln_to_gn,
+                             part_ext->shift_by_domain_vtx,
+                             sens);
 
 
   // Attention il faut shifter tout les border_ln_to_gn aussi et deduire le border_i_domain
@@ -195,6 +240,16 @@ _offset_parts_by_domain
   free(vtx_ln_to_gn );
 }
 
+static
+void
+_offset_results_by_domain
+(
+  PDM_part_extension_t *part_ext
+)
+{
+  PDM_UNUSED(part_ext);
+  // You need to shift border_* and fill the array border_dom_id
+}
 
 
 static inline
@@ -3058,6 +3113,11 @@ PDM_part_extension_create
 
   part_ext->pdi = NULL;
 
+  part_ext->shift_by_domain_cell = NULL;
+  part_ext->shift_by_domain_face = NULL;
+  part_ext->shift_by_domain_edge = NULL;
+  part_ext->shift_by_domain_vtx  = NULL;
+
   return part_ext;
 }
 
@@ -3192,11 +3252,9 @@ PDM_part_extension_compute
   }
 
 
-  // if(0 == 1) {
-  //   PDM_g_num_t* cell_shift_by_domain = _compute_offset_ln_to_gn_by_domain(n_domain,
-  //                                                                          part_ext->n_part,
-  //                                                                          part_ext->parts);
-  // }
+  if(0 == 1) {
+    _offset_parts_by_domain(part_ext, 1);
+  }
 
 
   part_ext->entity_cell_n    = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
@@ -3380,6 +3438,14 @@ PDM_part_extension_compute
 
   /* Condition limite - Face uniquement pour l'instant */
   _rebuild_face_group(part_ext);
+
+
+
+  if(0 == 1) {
+    _offset_parts_by_domain(part_ext, -1);
+    _offset_results_by_domain(part_ext);
+  }
+
 
 }
 
@@ -3652,6 +3718,18 @@ PDM_part_extension_free
   }
   free(part_ext->parts);
 
+  if(part_ext->shift_by_domain_cell != NULL){
+    free(part_ext->shift_by_domain_cell);
+  }
+  if(part_ext->shift_by_domain_face != NULL){
+    free(part_ext->shift_by_domain_face);
+  }
+  if(part_ext->shift_by_domain_edge != NULL){
+    free(part_ext->shift_by_domain_edge);
+  }
+  if(part_ext->shift_by_domain_vtx != NULL){
+    free(part_ext->shift_by_domain_vtx);
+  }
 
   free(part_ext);
 }

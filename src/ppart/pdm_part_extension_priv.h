@@ -124,6 +124,12 @@ struct _pdm_part_extension_t {
 
   double **border_vtx;
 
+  /* Shift by domain for all entities */
+  PDM_g_num_t *shift_by_domain_cell;
+  PDM_g_num_t *shift_by_domain_face;
+  PDM_g_num_t *shift_by_domain_edge;
+  PDM_g_num_t *shift_by_domain_vtx;
+
 
 };
 
