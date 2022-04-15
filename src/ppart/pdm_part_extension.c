@@ -310,9 +310,11 @@ _offset_results_by_domain
       _shift_ln_to_gn(n_border_face, face_ln_to_gn, part_ext->shift_by_domain_face[i_domain], -1);
 
       int n_edge        = part_ext->parts[i_domain][i_part].n_edge;
-      int n_border_edge = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
-      PDM_g_num_t *edge_ln_to_gn = part_ext->border_edge_ln_to_gn[shift_part+i_part];
-      _shift_ln_to_gn(n_border_edge, edge_ln_to_gn, part_ext->shift_by_domain_edge[i_domain], -1);
+      if(n_edge > 0) {
+        int n_border_edge = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
+        PDM_g_num_t *edge_ln_to_gn = part_ext->border_edge_ln_to_gn[shift_part+i_part];
+        _shift_ln_to_gn(n_border_edge, edge_ln_to_gn, part_ext->shift_by_domain_edge[i_domain], -1);
+      }
 
       int n_vtx        = part_ext->parts[i_domain][i_part].n_vtx;
       int n_border_vtx = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
