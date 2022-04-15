@@ -179,6 +179,7 @@ int main(int argc, char *argv[])
   int *block_stride = NULL;
 
   int s_block_data = PDM_part_to_block_exch(ptb,
+<<<<<<< HEAD
                                             sizeof(int),
                                             PDM_STRIDE_VAR_INTERLACED,
                                             1,
@@ -188,6 +189,18 @@ int main(int argc, char *argv[])
                                             (void **) &dfield);
 
   // Print field
+=======
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         &pstrid,
+                         (void **) &pfield,
+                         &block_stride,
+                         (void **) &dfield);
+
+   // Print field
+
+>>>>>>> tutorial part_to_block_to_part ex2
   if(1 == 1) {
     PDM_log_trace_array_int(dfield, nelmt_proc, "dfield : ");
     int idx = 0;
