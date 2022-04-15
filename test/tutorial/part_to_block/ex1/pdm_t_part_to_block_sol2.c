@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
                              (void **)  &dfield);
 
   if(1 == 1) {
-    PDM_log_trace_array_long(dstrid, n_elmt_in_block, "dstrid : ");
+    PDM_log_trace_array_int(dstrid, n_elmt_in_block, "dstrid : ");
     int check_blk_size = 0;
     for(int i = 0; i < n_elmt_in_block; ++i) {
       check_blk_size += dstrid[i];

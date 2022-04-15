@@ -127,19 +127,20 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_elmt : ");
   }
   int n_part  = 1;
-  PDM_UNUSED(n_part);
   int pn_elmt = freq * (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) ;
 
   PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
   int         *pfield       = malloc(pn_elmt * sizeof(int        ));
+  int         *pstrid       = malloc(pn_elmt * sizeof(int        )); // Added
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
     pln_to_to_gn[i] = (rand() % n_elmt) + 1;
     pfield[i]       = 1;
+    pstrid      [i] = 1; // Added
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
@@ -159,14 +160,137 @@ int main(int argc, char *argv[])
    *
    */
 
-  // Good luck! ;)
+  /* part_to_block to sum up in block vision using PDM_PART_TO_BLOCK_POST_MERGE */
 
+  // Create part_to_block
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &pln_to_to_gn,
+                                                      NULL,
+                                                      &pn_elmt,
+                                                      n_part,
+                                                      comm);
+
+  // Exchange part_to_block
+
+  int *dfield = NULL;
+  int *block_stride = NULL;
+
+  int s_block_data = PDM_part_to_block_exch(ptb,
+                                            sizeof(int),
+                                            PDM_STRIDE_VAR_INTERLACED,
+                                            1,
+                                            &pstrid,
+                                  (void **) &pfield,
+                                            &block_stride,
+                                  (void **) &dfield);
+
+  PDM_UNUSED(s_block_data);
+
+  /* sum up what has been merged */
+
+  // Compute size of block_stride DOES NOT WORK IF MORE THAN 1 PROC
+
+  // int size_block_stride = 0;
+  // int sum = 0;
+  // while (sum != 10) {
+  //   sum += block_stride[size_block_stride];
+  //   size_block_stride++;
+  // }
+
+  int nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb); // valeur de size_block_stride
+  int size_block_stride = nelmt_proc;
+
+  // Do the summation
+
+  int *dfield_summed = malloc(size_block_stride * sizeof(int));
+
+  int idx = 0;
+  int tmp = 0;
+
+  for (int i = 0; i < size_block_stride; i++) {
+
+    tmp = 0;
+
+    for (int j = 0; j < block_stride[i]; j++) {
+
+      tmp += dfield[idx++];
+
+    }
+
+    dfield_summed[i] = tmp;
+
+  }
+
+  PDM_g_num_t *block_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb); // bornes des gnum dans la partition
+
+  PDM_UNUSED(distrib);
+
+  PDM_log_trace_array_int(dfield_summed, size_block_stride, "dfield_summed : ");
+  PDM_log_trace_array_long(block_gnum, nelmt_proc, "block_gnum : ");
+
+  /* block_to_part to get back to the wanted format */
+
+  // Create block_to_part
+
+  PDM_block_to_part_t *btp = NULL;
+
+  btp = PDM_block_to_part_create(distrib_init_elmt,
+         (const PDM_g_num_t  **) &pln_to_to_gn,
+                                 &pn_elmt,
+                                 n_part,
+                                 comm);
+
+  // Create stride tab
+
+  int n_gnum_rank = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]);
+
+  int *dstrid = malloc(n_gnum_rank * sizeof(int));
+
+  for (int i = 0; i < n_gnum_rank; i++) {
+    dstrid[i] = 0;
+  }
+
+  for (int i = 0; i < nelmt_proc; i++) {
+    dstrid[block_gnum[i] - distrib_init_elmt[i_rank] - 1] = 1;
+  }
+
+  PDM_log_trace_array_int(dstrid, n_gnum_rank, "dstrid : ");
+  PDM_log_trace_array_int(pstrid, pn_elmt, "pstrid : ");
+
+  // Exchange block_to_part
+
+  PDM_block_to_part_exch_in_place(btp,
+                                  sizeof(int),
+                                  PDM_STRIDE_VAR_INTERLACED,
+                                  dstrid,
+                         (void *) dfield_summed,
+                                  &pstrid,
+                        (void **) &pfield);
 
   /* Check summed values in partitions */
   log_trace("Part vision :\n");
   for (int i = 0; i < pn_elmt; i++) {
     log_trace("elmt #"PDM_FMT_G_NUM" : sum = %d\n", pln_to_to_gn[i], pfield[i]);
   }
+
+  /* Free the used entities */
+
+  // Free part_to_block
+  PDM_part_to_block_free(ptb);
+
+  // Free block_to_part
+  PDM_block_to_part_free(btp);
+
+  // other free
+  free(dfield);
+  free(block_stride);
+  free(dfield_summed);
+  free(pstrid);
+  free(dstrid);
 
   free(pln_to_to_gn);
   free(distrib_init_elmt);
