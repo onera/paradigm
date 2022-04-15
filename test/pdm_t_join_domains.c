@@ -630,7 +630,6 @@ int main
        *  Mini-Bricoloage
        */
       if(1 == 1) {
-        printf("Flag 3 \n");
         PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                          PDM_GEOMETRY_KIND_VOLUMIC,
                                                                                          1, // n_part
@@ -671,7 +670,6 @@ int main
         free(cell_num);
 
         PDM_part_mesh_nodal_elmts_free(pmne_vol);
-        printf("Flag 4 \n");
       }
     }
     shift_part += pn_n_part[i_dom];
@@ -750,9 +748,10 @@ int main
         }
       }
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_array_long(border_vtx_ln_to_gn , n_vtx_extended , "border_vtx_ln_to_gn :: ");
         PDM_log_trace_array_long(border_cell_ln_to_gn, n_cell_extended, "border_cell_ln_to_gn :: ");
+        PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn :: ");
       }
 
 
@@ -844,7 +843,6 @@ int main
       // PDM_log_trace_array_long(concat_vtx_ln_to_gn , n_vtx_tot , "concat_vtx_ln_to_gn :: ");
       // PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
 
-      printf("Flag 6 \n");
       PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                        PDM_GEOMETRY_KIND_VOLUMIC,
                                                                                        1, // n_part
