@@ -358,8 +358,8 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
-  PDM_bool_t equilibrate = PDM_FALSE;
-  // PDM_bool_t equilibrate = PDM_TRUE;
+  // PDM_bool_t equilibrate = PDM_FALSE;
+  PDM_bool_t equilibrate = PDM_TRUE;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
@@ -441,12 +441,25 @@ int main(int argc, char *argv[])
                                   PDM_MESH_ENTITY_VERTEX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t* pextract_parent_cell_ln_to_gn = NULL;
+    int n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_CELL,
+                                         &pextract_parent_cell_ln_to_gn,
+                                         PDM_OWNERSHIP_KEEP);
+
+    for(int i = 0; i < n_cell; ++i) {
+      assert(pextract_parent_cell_ln_to_gn[i] == target_g_num[i_part][i]);
+    }
+    // PDM_log_trace_array_long(pextract_parent_cell_ln_to_gn, n_cell, "pextract_parent_cell_ln_to_gn ::");
+
   }
 
   /*
    * Export vtk en légende
    */
-  if(0 == 1) {
+  if(1 == 1) {
     for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
       char filename[999];
@@ -456,9 +469,9 @@ int main(int argc, char *argv[])
                                 pextract_vtx[i_part],
                                 NULL, NULL);
 
-      PDM_log_trace_connectivity_int(pextract_face_vtx_idx[i_part],
-                                     pextract_face_vtx    [i_part],
-                                     pn_extract_face[i_part], " pextract_face_vtx :: ");
+      // PDM_log_trace_connectivity_int(pextract_face_vtx_idx[i_part],
+      //                                pextract_face_vtx    [i_part],
+      //                                pn_extract_face[i_part], " pextract_face_vtx :: ");
 
       sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
       PDM_vtk_write_polydata(filename,
