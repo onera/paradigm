@@ -34,7 +34,7 @@
 #include "pdm_vtk.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
-#include "pdm_plane.h"
+#include "pdm_gnum_location.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -510,6 +510,73 @@ _cell_center_3d
 
 //   return ptb_entity2_equi;
 // }
+
+
+static
+void
+_deduce_extract_lnum_from_target
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  extrp->from_target = 1;
+  int          *pn_entity    = 0;
+  PDM_g_num_t **entity_g_num = NULL;
+  if(extrp->dim == 3) {
+    pn_entity    = extrp->n_cell;
+    entity_g_num = extrp->cell_ln_to_gn;
+  } else {
+    pn_entity    = extrp->n_face;
+    entity_g_num = extrp->face_ln_to_gn;
+  }
+
+  /*
+   *  We need to found where gnum is --> We can just make part_to_block then block_to_part and count stride
+   */
+  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_out,
+                                                           extrp->n_part_in,
+                                                           extrp->comm,
+                                                           PDM_OWNERSHIP_KEEP );
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    PDM_gnum_location_elements_set (gnum_loc, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
+  }
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    PDM_gnum_location_requested_elements_set (gnum_loc, i_part, pn_entity[i_part], entity_g_num[i_part]);
+  }
+
+  PDM_gnum_location_compute (gnum_loc);
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    int *location_idx = NULL;
+    int *location     = NULL;
+    PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
+
+    assert(extrp->n_extract   [i_part] == 0   );
+    assert(extrp->extract_lnum[i_part] == NULL);
+
+    extrp->extract_lnum[i_part] = malloc( pn_entity[i_part] * sizeof(int));
+
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+
+      int n_location = location_idx[i_entity+1] - location_idx[i_entity];
+      if(n_location > 0) {
+        extrp->extract_lnum[i_part][extrp->n_extract   [i_part]++] = i_entity;
+      }
+    }
+
+    extrp->extract_lnum[i_part] = realloc(extrp->extract_lnum[i_part], extrp->n_extract[i_part] * sizeof(int));
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(extrp->extract_lnum[i_part], extrp->n_extract[i_part], "extract_lnum :: ");
+    }
+
+  }
+
+  PDM_gnum_location_free (gnum_loc);
+}
+
+
 
 static
 void
@@ -1117,6 +1184,20 @@ _extract_part_and_reequilibrate
   PDM_extract_part_t        *extrp
 )
 {
+  /*
+   *  Deduce from target the selected gnum if target is available
+   */
+  int from_target = 0;
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    if(extrp->n_target[i_part] > 0 ) {
+      from_target = 1;
+    }
+  }
+  if(from_target == 1) {
+    _deduce_extract_lnum_from_target(extrp);
+  }
+
+
   int          *pn_entity    = 0;
   PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
@@ -1862,6 +1943,37 @@ PDM_extract_part_create
 
   extrp->pvtx_coord     = (double      **) malloc(n_part_in * sizeof(double      *));
 
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    extrp->n_cell    = 0;
+    extrp->n_face    = 0;
+    extrp->n_edge    = 0;
+    extrp->n_vtx     = 0;
+    extrp->n_extract = 0;
+
+    extrp->pcell_face    [i_part] = NULL;
+    extrp->pcell_face_idx[i_part] = NULL;
+    extrp->pface_edge    [i_part] = NULL;
+    extrp->pface_edge_idx[i_part] = NULL;
+    extrp->pedge_vtx     [i_part] = NULL;
+    extrp->extract_lnum  [i_part] = NULL;
+    extrp->cell_ln_to_gn [i_part] = NULL;
+    extrp->face_ln_to_gn [i_part] = NULL;
+    extrp->edge_ln_to_gn [i_part] = NULL;
+    extrp->vtx_ln_to_gn  [i_part] = NULL;
+    extrp->pface_vtx_idx [i_part] = NULL;
+    extrp->pface_vtx     [i_part] = NULL;
+    extrp->pvtx_coord    [i_part] = NULL;
+  }
+
+  extrp->from_target    = 0;
+  extrp->n_target       = (int          *) malloc(n_part_out * sizeof(int          ));
+  extrp->target_gnum    = (PDM_g_num_t **) malloc(n_part_out * sizeof(PDM_g_num_t *));
+
+  for(int i_part = 0; i_part < n_part_out; ++i_part) {
+    extrp->n_target            = 0;
+    extrp->target_gnum[i_part] = NULL;
+  }
+
   extrp->dn_equi_cell               = 0;
   extrp->dn_equi_face               = 0;
   extrp->dn_equi_edge               = 0;
@@ -1985,6 +2097,18 @@ PDM_extract_part_selected_lnum_set
   extrp->extract_lnum[i_part] = extract_lnum;
 }
 
+void
+PDM_extract_part_target_gnum_set
+(
+  PDM_extract_part_t       *extrp,
+  int                       i_part,
+  int                       n_target,
+  PDM_g_num_t              *target_gnum
+)
+{
+  extrp->n_target   [i_part] = n_target;
+  extrp->target_gnum[i_part] = target_gnum;
+}
 
 int
 PDM_extract_part_n_entity_get
@@ -2133,6 +2257,7 @@ PDM_extract_part_free
   free(extrp->n_edge        );
   free(extrp->n_vtx         );
   free(extrp->n_extract     );
+  free(extrp->n_target      );
 
   free(extrp->pcell_face    );
   free(extrp->pcell_face_idx);
@@ -2143,7 +2268,16 @@ PDM_extract_part_free
   free(extrp->pface_vtx     );
   free(extrp->pface_vtx_idx );
   free(extrp->pedge_vtx     );
+
+  if(extrp->from_target == 1) {
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      free(extrp->extract_lnum[i_part]);
+    }
+  }
+
+
   free(extrp->extract_lnum  );
+  free(extrp->target_gnum   );
 
   free(extrp->cell_ln_to_gn );
   free(extrp->face_ln_to_gn );

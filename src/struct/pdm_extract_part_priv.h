@@ -86,6 +86,11 @@ struct _pdm_extract_part_t
   int                 *n_extract;
   int                **extract_lnum;
 
+  /* Each rank specify the target AND order they want */
+  int                  from_target;
+  int                 *n_target;
+  PDM_g_num_t        **target_gnum;
+
   /* Extracted part (Intermediate distributed result) */
   int                   dn_equi_cell;
   int                   dn_equi_face;

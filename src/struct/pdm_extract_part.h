@@ -93,6 +93,15 @@ PDM_extract_part_selected_lnum_set
 );
 
 void
+PDM_extract_part_target_gnum_set
+(
+  PDM_extract_part_t       *extrp,
+  int                       i_part,
+  int                       n_target,
+  PDM_g_num_t              *target_gnum
+);
+
+void
 PDM_extract_part_part_set
 (
   PDM_extract_part_t        *extrp,
