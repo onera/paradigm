@@ -265,27 +265,28 @@ int main(int argc, char *argv[])
   PDM_multipart_register_block(mpart_id, 0, dm);
   PDM_multipart_run_ppart(mpart_id);
 
+  PDM_g_num_t* distrib_cell = PDM_compute_entity_distribution(comm, dn_cell);
+
   /*
    * Get the partition zone
    */
   int i_zone = 0;
 
-  double      **cell_center             = (double      **) malloc( n_part_zones * sizeof(double      *));
-  int         **selected_l_num          = (int         **) malloc( n_part_zones * sizeof(int         *));
   PDM_g_num_t **pcell_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   PDM_g_num_t **pface_ln_to_gn          = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   PDM_g_num_t **pvtx_ln_to_gn           = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   int          *pn_cell                 = (int          *) malloc( n_part_zones * sizeof(int          ));
   int          *pn_face                 = (int          *) malloc( n_part_zones * sizeof(int          ));
   int          *pn_vtx                  = (int          *) malloc( n_part_zones * sizeof(int          ));
-  int          *pn_select_cell          = (int          *) malloc( n_part_zones * sizeof(int          ));
-  // double      **weight                  = (double      **) malloc( n_part_zones * sizeof(double      *));
+
   int         **pcell_face              = (int         **) malloc( n_part_zones * sizeof(int         *));
   int         **pcell_face_idx          = (int         **) malloc( n_part_zones * sizeof(int         *));
   int         **pface_vtx               = (int         **) malloc( n_part_zones * sizeof(int         *));
   int         **pface_vtx_idx           = (int         **) malloc( n_part_zones * sizeof(int         *));
   double      **pvtx_coord              = (double      **) malloc( n_part_zones * sizeof(double      *));
-  // double      **tmp_extract_cell_center = (double      **) malloc( n_part_zones * sizeof(double      *));
+
+  PDM_g_num_t **target_g_num   = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  int          *pn_target_cell = (int          *) malloc( n_part_zones * sizeof(int          ));
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
 
@@ -330,103 +331,28 @@ int main(int argc, char *argv[])
     pface_vtx_idx[i_part] = face_vtx_idx;
     pvtx_coord   [i_part] = vtx;
 
-    // char filename[999];
-    // sprintf(filename, "mesh_before_extract_%3.3d_%3.3d.vtk", i_part, i_rank);
-    // PDM_vtk_write_polydata(filename,
-    //                        pn_vtx[i_part],
-    //                        pvtx_coord[i_part],
-    //                        pvtx_ln_to_gn[i_part],
-    //                        pn_face[i_part],
-    //                        pface_vtx_idx[i_part],
-    //                        pface_vtx[i_part],
-    //                        pface_ln_to_gn[i_part],
-    //                        NULL);
+    /* On prends tout les gnum impaire dans un ordre reverse */
+    int n_target_cell = 0;
+    target_g_num[i_part] = malloc(dn_cell * sizeof(PDM_g_num_t));
 
-    /*
-     * Compute center-cell and extract cells corresponding to criteria
-     */
-    double *face_center         = (double *) malloc( 3 * n_face * sizeof(double));
-
-    for(int i_face = 0; i_face < n_face; ++i_face) {
-      face_center[3*i_face  ] = 0.;
-      face_center[3*i_face+1] = 0.;
-      face_center[3*i_face+2] = 0.;
-      int n_vtx_on_face = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
-      for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
-        int i_vtx = PDM_ABS(face_vtx[idx_vtx])-1;
-        face_center[3*i_face  ] += vtx[3*i_vtx  ];
-        face_center[3*i_face+1] += vtx[3*i_vtx+1];
-        face_center[3*i_face+2] += vtx[3*i_vtx+2];
-      }
-      face_center[3*i_face  ] = face_center[3*i_face  ] / n_vtx_on_face;
-      face_center[3*i_face+1] = face_center[3*i_face+1] / n_vtx_on_face;
-      face_center[3*i_face+2] = face_center[3*i_face+2] / n_vtx_on_face;
-    }
-
-    cell_center[i_part] = (double *) malloc( 3 * n_cell * sizeof(double));
-
-    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-
-      cell_center[i_part][3*i_cell  ] = 0.;
-      cell_center[i_part][3*i_cell+1] = 0.;
-      cell_center[i_part][3*i_cell+2] = 0.;
-
-      int n_face_on_cell = cell_face_idx[i_cell+1] - cell_face_idx[i_cell];
-
-      for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
-
-        int i_face = PDM_ABS(cell_face[idx_face])-1;
-        cell_center[i_part][3*i_cell  ] += face_center[3*i_face  ];
-        cell_center[i_part][3*i_cell+1] += face_center[3*i_face+1];
-        cell_center[i_part][3*i_cell+2] += face_center[3*i_face+2];
-      }
-      cell_center[i_part][3*i_cell  ] = cell_center[i_part][3*i_cell  ] / n_face_on_cell;
-      cell_center[i_part][3*i_cell+1] = cell_center[i_part][3*i_cell+1] / n_face_on_cell;
-      cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
-    }
-
-    free(face_center);
-
-    selected_l_num[i_part] = (int         *) malloc(  n_cell          * sizeof(int        ));
-
-    /*
-     * Sub-part
-     */
-    double bbox[6];
-    // bbox[0] = 0.3;
-    // bbox[1] = 0.3;
-    // bbox[2] = 0.35;
-    // bbox[3] = 0.7;
-    // bbox[4] = 0.7;
-    // bbox[5] = 0.65;
-    bbox[0] = 0.5;
-    bbox[1] = 0.65;
-    bbox[2] = 0.75;
-    bbox[3] = 1.25;
-    bbox[4] = 1.25;
-    bbox[5] = 1.25;
-
-    int n_select_cell = 0;
-    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-
-      int inside = 1;
-      for(int i = 0; i < 3; ++i) {
-        if (cell_center[i_part][3*i_cell+i] > bbox[i+3] || cell_center[i_part][3*i_cell+i] < bbox[i]) {
-          inside = 0;
-        }
-      }
-      if(inside == 1) {
-        selected_l_num[i_part][n_select_cell]     = i_cell;
-        n_select_cell++;
-
+    for(int i = 0; i < dn_cell; ++i ) {
+      PDM_g_num_t gnum = distrib_cell[i_rank+1] - i;
+      if(gnum % 2 == 0) {
+        target_g_num[i_part][n_target_cell++] = gnum;
       }
     }
 
-    selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
-    pn_select_cell[i_part] = n_select_cell;
+    target_g_num  [i_part] = realloc(target_g_num[i_part], n_target_cell * sizeof(PDM_g_num_t));
+    pn_target_cell[i_part] = n_target_cell;
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(target_g_num  [i_part], pn_target_cell[i_part], "target_g_num :: ");
+    }
+
 
   }
   free(dface_join_idx);
+  free(distrib_cell);
 
   /*
    * Extract
@@ -463,12 +389,10 @@ int main(int argc, char *argv[])
                               pvtx_ln_to_gn[i_part],
                               pvtx_coord[i_part]);
 
-    PDM_extract_part_selected_lnum_set(extrp,
-                                       i_part,
-                                       pn_select_cell[i_part],
-                                       selected_l_num[i_part]);
-
-    // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
+    PDM_extract_part_target_gnum_set(extrp,
+                                     i_part,
+                                     pn_target_cell[i_part],
+                                     target_g_num  [i_part]);
 
   }
 
@@ -561,15 +485,13 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
-    free(cell_center       [i_part]);
-    free(selected_l_num    [i_part]);
+    free(target_g_num    [i_part]);
   }
-  free(cell_center);
-  free(selected_l_num);
+  free(pn_target_cell);
+  free(target_g_num);
   free(pn_cell);
   free(pn_face);
   free(pn_vtx);
-  free(pn_select_cell);
 
   free(pcell_ln_to_gn  );
   free(pface_ln_to_gn  );

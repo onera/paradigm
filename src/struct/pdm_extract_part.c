@@ -1944,12 +1944,6 @@ PDM_extract_part_create
   extrp->pvtx_coord     = (double      **) malloc(n_part_in * sizeof(double      *));
 
   for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    extrp->n_cell    = 0;
-    extrp->n_face    = 0;
-    extrp->n_edge    = 0;
-    extrp->n_vtx     = 0;
-    extrp->n_extract = 0;
-
     extrp->pcell_face    [i_part] = NULL;
     extrp->pcell_face_idx[i_part] = NULL;
     extrp->pface_edge    [i_part] = NULL;
@@ -2274,6 +2268,7 @@ PDM_extract_part_free
       free(extrp->extract_lnum[i_part]);
     }
   }
+  free(extrp->n_target);
 
 
   free(extrp->extract_lnum  );
