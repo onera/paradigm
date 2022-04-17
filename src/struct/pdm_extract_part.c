@@ -569,7 +569,7 @@ _deduce_extract_lnum_from_target
 
     extrp->extract_lnum[i_part] = realloc(extrp->extract_lnum[i_part], extrp->n_extract[i_part] * sizeof(int));
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(extrp->extract_lnum[i_part], extrp->n_extract[i_part], "extract_lnum :: ");
     }
 
