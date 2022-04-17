@@ -1605,7 +1605,7 @@ _extract_part_and_reequilibrate
                            NULL,
            (void ***)      &child_target_gnum);
 
-    if(1 == 1) {
+    if(0 == 1) {
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
         PDM_log_trace_array_long(child_target_gnum[i_part], extrp->n_target[i_part], "child_target_gnum :: ");
       }
