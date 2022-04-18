@@ -807,10 +807,12 @@ PDM_vtk_write_boxes
     fprintf(f, "12\n");
   }
 
-  fprintf(f, "CELL_DATA %d\n", n_box);
-  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
-  for (int i = 0; i < n_box; i++) {
-    fprintf(f, ""PDM_FMT_G_NUM"\n", box_g_num[i]);
+  if (box_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_box);
+    fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_box; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM"\n", box_g_num[i]);
+    }
   }
 
   fclose(f);
