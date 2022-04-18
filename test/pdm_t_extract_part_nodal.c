@@ -438,27 +438,30 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
+  PDM_extract_part_part_nodal_set(extrp, pmne_vol);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
+
     PDM_extract_part_part_set(extrp,
                               i_part,
-                              pn_cell       [i_part],
-                              pn_face       [i_part],
-                              pn_edge       [i_part],
-                              pn_vtx        [i_part],
-                              pcell_face_idx[i_part],
-                              pcell_face    [i_part],
-                              pface_edge_idx[i_part],
-                              pface_edge    [i_part],
-                              pedge_vtx     [i_part],
+                              pn_cell[i_part],
+                              pn_face[i_part],
+                              -1, // pn_edge[i_part],
+                              pn_vtx[i_part],
+                              NULL, // pcell_face_idx[i_part],
+                              NULL, // pcell_face[i_part],
+                              NULL, // pface_edge_idx[i_part],
+                              NULL, // pface_edge[i_part],
+                              NULL, // pedge_vtx[i_part],
                               NULL, // pface_vtx_idx[i_part],
                               NULL, // pface_vtx[i_part],
                               pcell_ln_to_gn[i_part],
-                              pface_ln_to_gn[i_part],
-                              pedge_ln_to_gn[i_part],
-                              pvtx_ln_to_gn [i_part],
-                              pvtx_coord    [i_part]);
+                              NULL,
+                              NULL, //pedge_ln_to_gn[i_part],
+                              pvtx_ln_to_gn[i_part],
+                              pvtx_coord[i_part]);
 
+    // ATTENTION SPECIFIE LE LNUM DANS LE REPERE DU PMNE_VOL
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        pn_select_cell[i_part],

@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -82,6 +83,9 @@ struct _pdm_extract_part_t
 
   double             **pvtx_coord;
 
+  /* If partition is described by elements */
+  PDM_part_mesh_nodal_elmts_t *pmne;
+
   /* Which cell or face is selected */
   int                 *n_extract;
   int                **extract_lnum;
@@ -116,6 +120,7 @@ struct _pdm_extract_part_t
   PDM_part_to_block_t  *ptb_equi_face;
   PDM_part_to_block_t  *ptb_equi_edge;
   PDM_part_to_block_t  *ptb_equi_vtx;
+
 
 
   /* Extrated part */

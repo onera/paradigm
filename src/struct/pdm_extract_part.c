@@ -35,6 +35,8 @@
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_gnum_location.h"
+#include "pdm_part_mesh_nodal_elmts_priv.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -923,6 +925,179 @@ int                 ***extract_entity2_lnum
   *selected_entity1_entity2         = _selected_entity1_entity2;
   *selected_entity2_ln_to_gn        = _child_entity2_ln_to_gn;
   *selected_parent_entity2_ln_to_gn = _extract_parent_entity2_ln_to_gn;
+
+}
+
+static
+void
+_extract_part_nodal
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  int          *pn_entity    = 0;
+  PDM_g_num_t **entity_g_num = NULL;
+  if(extrp->dim == 3) {
+    pn_entity    = extrp->n_cell;
+    entity_g_num = extrp->cell_ln_to_gn;
+  } else {
+    pn_entity    = extrp->n_face;
+    entity_g_num = extrp->face_ln_to_gn;
+  }
+
+  /*
+   *  Create array selected in gnum
+   */
+  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_in, PDM_FALSE,
+                                                 1.e-6,
+                                                 extrp->comm,
+                                                 PDM_OWNERSHIP_USER);
+  PDM_g_num_t** entity_extract_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( extrp->n_extract[i_part] * sizeof(PDM_g_num_t));
+    for(int i_entity = 0; i_entity < extrp->n_extract[i_part]; ++i_entity) {
+      entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extrp->extract_lnum[i_part][i_entity]];
+    }
+
+    PDM_gnum_set_from_parents(gnum_extract, i_part, extrp->n_extract[i_part], entity_extract_g_num[i_part]);
+    if(0 == 1) {
+      PDM_log_trace_array_long(entity_extract_g_num[i_part], extrp->n_extract[i_part], "entity_extract_g_num ::" );
+    }
+  }
+
+  /*
+   * Global numering computation
+   */
+  PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+  PDM_gnum_compute(gnum_extract);
+
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
+    child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+    // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_extract[i_part], "child_selected_g_num : ");
+  }
+  PDM_gnum_free(gnum_extract);
+
+  if(extrp->dim == 3) {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_extract[i_part];
+    }
+    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_CELL] = child_selected_g_num;
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL] = entity_extract_g_num;
+  } else {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_extract[i_part];
+    }
+    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE] = child_selected_g_num;
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE] = entity_extract_g_num;
+  }
+
+  int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extrp->pmne);
+
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extrp->pmne);
+
+  assert(extrp->pmne->n_part == extrp->n_part_in);
+
+  /*
+   * For each section we extract the selected part
+   *
+   */
+  for(int i_part = 0; i_part < extrp->pmne->n_part; ++i_part) {
+    int         *is_selected              = malloc(    pn_entity[i_part] * sizeof(int        ));
+    int         *is_selected_vtx          = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    int         *old_to_new_vtx           = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    int         *extract_vtx_lnum         = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    PDM_g_num_t *extract_parent_vtx_g_num = malloc( extrp->n_vtx[i_part] * sizeof(PDM_g_num_t));
+
+    /*
+     * En polyhédrique il faut aussi les faces ou edges a extraire
+     */
+    for(int i = 0; i < pn_entity[i_part]; ++i) {
+      is_selected[i] = 0;
+    }
+    for(int i = 0; i < extrp->n_vtx[i_part]; ++i) {
+      is_selected_vtx[i] = 0;
+    }
+
+    for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
+      int s_num = extrp->extract_lnum[i_part][i];
+      is_selected[s_num] = 1;
+    }
+
+    int n_extract_vtx = 0;
+
+    /* First pass to hook all vtx and create gnum */
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, i_part, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+      int         *elt_vtx          = NULL;
+      int         *parent_num       = NULL;
+      PDM_g_num_t *elt_ln_to_gn     = NULL;
+      PDM_g_num_t *parent_elt_g_num = NULL;
+
+      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                              i_part,
+                                              sections_id[i_section],
+                                              &elt_vtx,
+                                              &elt_ln_to_gn,
+                                              &parent_num,
+                                              &parent_elt_g_num);
+
+      /* Selection */
+      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+        int parent_elt = parent_num[i_elt];
+        if(is_selected[parent_elt] == 1) {
+          for(int idx_vtx = 0; idx_vtx < n_vtx_per_elmt; ++idx_vtx) {
+            int i_vtx = elt_vtx[idx_vtx] - 1;
+            if(is_selected_vtx[i_vtx] == 0) {
+              is_selected_vtx         [i_vtx        ] = 1;
+              old_to_new_vtx          [i_vtx        ] = n_extract_vtx;
+              extract_parent_vtx_g_num[n_extract_vtx] = extrp->vtx_ln_to_gn[i_part][i_vtx];
+              n_extract_vtx++;
+            }
+          }
+        }
+      }
+    } /* End section */
+
+    extract_vtx_lnum         = realloc(extract_vtx_lnum        , n_extract_vtx * sizeof(int        ));
+    extract_parent_vtx_g_num = realloc(extract_parent_vtx_g_num, n_extract_vtx * sizeof(PDM_g_num_t));
+
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = extract_parent_vtx_g_num;
+    extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX][i_part] = extract_vtx_lnum;
+
+
+    // extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = extract_vtx_g_num;
+
+    free(is_selected     );
+    free(is_selected_vtx );
+    free(old_to_new_vtx  );
+
+    // free(extract_vtx_lnum); // To keep
+  }
+
+
+
+
+}
+
+
+static
+void
+_extract_part_and_reequilibrate_nodal
+(
+  PDM_extract_part_t        *extrp
+)
+{
+
+  PDM_UNUSED(extrp);
+
+
 
 }
 
@@ -1972,6 +2147,7 @@ PDM_extract_part_create
   extrp->split_dual_method = split_dual_method;
   extrp->ownership         = ownership;
   extrp->comm              = comm;
+  extrp->pmne              = NULL;
 
   extrp->n_cell         = (int          *) malloc(n_part_in * sizeof(int          ));
   extrp->n_face         = (int          *) malloc(n_part_in * sizeof(int          ));
@@ -2089,9 +2265,17 @@ PDM_extract_part_compute
 {
   assert(extrp->dim >= 2);
   if(extrp->equilibrate == PDM_FALSE) {
-    _extract_part(extrp);
+    if(extrp->pmne == NULL) {
+      _extract_part(extrp);
+    } else {
+      _extract_part_nodal(extrp);
+    }
   } else {
-    _extract_part_and_reequilibrate(extrp);
+    if(extrp->pmne == NULL) {
+      _extract_part_and_reequilibrate(extrp);
+    } else {
+      _extract_part_and_reequilibrate_nodal(extrp);
+    }
   }
 }
 
@@ -2136,6 +2320,21 @@ PDM_extract_part_part_set
   extrp->pface_vtx     [i_part] = face_vtx;
   extrp->pvtx_coord    [i_part] = vtx_coord;
 }
+
+void
+PDM_extract_part_part_nodal_set
+(
+  PDM_extract_part_t          *extrp,
+  PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  assert(extrp->dim == pmne->mesh_dimension);
+
+  extrp->pmne = pmne;
+
+
+}
+
 
 void
 PDM_extract_part_selected_lnum_set

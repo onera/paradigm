@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -124,6 +125,12 @@ PDM_extract_part_part_set
   double                   *vtx_coord
 );
 
+void
+PDM_extract_part_part_nodal_set
+(
+  PDM_extract_part_t          *extrp,
+  PDM_part_mesh_nodal_elmts_t *pmne
+);
 
 
 int
