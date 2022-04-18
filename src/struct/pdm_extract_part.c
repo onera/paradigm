@@ -1009,12 +1009,16 @@ _extract_part_nodal
   extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX] = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
   extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX] = malloc( extrp->n_part_in * sizeof(int         *));
 
-  int          *n_extract_vtx            = malloc( extrp->n_part_in * sizeof(int          ));
-  int         **is_selected              = malloc( extrp->n_part_in * sizeof(int         *));
-  int         **is_selected_vtx          = malloc( extrp->n_part_in * sizeof(int         *));
-  int         **old_to_new_vtx           = malloc( extrp->n_part_in * sizeof(int         *));
-  int         **extract_vtx_lnum         = malloc( extrp->n_part_in * sizeof(int         *));
-  PDM_g_num_t **extract_parent_vtx_g_num = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+  int           *n_extract_vtx            = malloc( extrp->n_part_in * sizeof(int          ));
+  int          **is_selected              = malloc( extrp->n_part_in * sizeof(int         *));
+  int          **is_selected_vtx          = malloc( extrp->n_part_in * sizeof(int         *));
+  int          **old_to_new_vtx           = malloc( extrp->n_part_in * sizeof(int         *));
+  int          **extract_vtx_lnum         = malloc( extrp->n_part_in * sizeof(int         *));
+  PDM_g_num_t  **extract_parent_vtx_g_num = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+
+  int          **n_selected_section       = malloc( extrp->n_part_in * sizeof(int         *));
+  int         ***idx_selected_section     = malloc( extrp->n_part_in * sizeof(int        **));
+  int         ***extract_parent_num       = malloc( extrp->n_part_in * sizeof(int        **));
 
   for(int i_part = 0; i_part < extrp->pmne->n_part; ++i_part) {
     extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = NULL;
@@ -1031,7 +1035,7 @@ _extract_part_nodal
      * En polyhédrique il faut aussi les faces ou edges a extraire
      */
     for(int i = 0; i < pn_entity[i_part]; ++i) {
-      is_selected[i_part][i] = 0;
+      is_selected[i_part][i] = -1;
     }
     for(int i = 0; i < extrp->n_vtx[i_part]; ++i) {
       is_selected_vtx[i_part][i] = 0;
@@ -1039,17 +1043,27 @@ _extract_part_nodal
 
     for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
       int s_num = extrp->extract_lnum[i_part][i];
-      is_selected[i_part][s_num] = 1;
+      is_selected[i_part][s_num] = i;
     }
 
     n_extract_vtx[i_part] = 0;
 
+    n_selected_section  [i_part] = malloc( n_section * sizeof(int  ));
+    idx_selected_section[i_part] = malloc( n_section * sizeof(int *));
+    extract_parent_num  [i_part] = malloc( n_section * sizeof(int *));
+
     /* First pass to hook all vtx and create gnum */
     for(int i_section = 0; i_section < n_section; ++i_section) {
+
 
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, i_part, sections_id[i_section]);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+
+      n_selected_section  [i_part][i_section] = 0;
+      idx_selected_section[i_part][i_section] = malloc( n_elt * sizeof(int));
+      extract_parent_num  [i_part][i_section] = malloc( n_elt * sizeof(int));
 
       int         *elt_vtx          = NULL;
       int         *parent_num       = NULL;
@@ -1067,7 +1081,13 @@ _extract_part_nodal
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
         int parent_elt = parent_num[i_elt]-1;
-        if(is_selected[i_part][parent_elt] == 1) {
+        if(is_selected[i_part][parent_elt] != -1) {
+
+
+          int idx_write = n_selected_section[i_part][i_section]++;
+          idx_selected_section[i_part][i_section][idx_write] = i_elt;
+          extract_parent_num  [i_part][i_section][idx_write] = is_selected[i_part][parent_elt];
+
           for(int idx_vtx = 0; idx_vtx < n_vtx_per_elmt; ++idx_vtx) {
             int i_vtx = elt_vtx[idx_vtx] - 1;
             if(is_selected_vtx[i_part][i_vtx] == 0) {
@@ -1079,6 +1099,11 @@ _extract_part_nodal
           }
         }
       }
+
+
+      idx_selected_section[i_part][i_section] = realloc(idx_selected_section[i_part][i_section], n_selected_section  [i_part][i_section] * sizeof(int));
+      extract_parent_num  [i_part][i_section] = realloc(extract_parent_num  [i_part][i_section], n_selected_section  [i_part][i_section] * sizeof(int));
+
     } /* End section */
 
     extract_vtx_lnum        [i_part] = realloc(extract_vtx_lnum        [i_part], n_extract_vtx[i_part] * sizeof(int        ));
@@ -1108,6 +1133,79 @@ _extract_part_nodal
   PDM_gnum_free(gnum_extract_vtx);
 
 
+  /*
+   * Second pass to create the new part_mesh_nodal
+   */
+  PDM_part_mesh_nodal_elmts_t* extract_pmne = PDM_part_mesh_nodal_elmts_create(extrp->pmne->mesh_dimension,
+                                                                               extrp->pmne->n_part,
+                                                                               extrp->pmne->comm);
+
+
+
+  for(int i_part = 0; i_part < extrp->pmne->n_part; ++i_part) {
+
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+      int         *elt_vtx          = NULL;
+      int         *parent_num       = NULL;
+      PDM_g_num_t *elt_ln_to_gn     = NULL;
+      PDM_g_num_t *parent_elt_g_num = NULL;
+
+      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                              i_part,
+                                              sections_id[i_section],
+                                              &elt_vtx,
+                                              &elt_ln_to_gn,
+                                              &parent_num,
+                                              &parent_elt_g_num);
+
+      /* Allocate */
+      int         *extract_elt_vtx      = malloc( n_selected_section  [i_part][i_section] * n_vtx_per_elmt * sizeof(int        ));
+      PDM_g_num_t *extract_elt_ln_to_gn = malloc( n_selected_section  [i_part][i_section]                  * sizeof(PDM_g_num_t));
+
+      int idx_write = 0;
+      for(int i = 0; i < n_selected_section  [i_part][i_section]; ++i) {
+        int ielt = idx_selected_section[i_part][i_section][i];
+        int beg  = ielt * n_vtx_per_elmt;
+
+        for(int k = 0; k < n_vtx_per_elmt; ++k) {
+          extract_elt_vtx[idx_write++] = elt_vtx[beg+k];
+        }
+
+        int idx_parent = extract_parent_num[i_part][i_section][i];
+        extract_elt_ln_to_gn[i] = child_selected_g_num[i_part][idx_parent];
+      }
+
+      /* Fill up structure */
+      int extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
+      PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
+                                        i_part,
+                                        extract_section_id,
+                                        n_selected_section  [i_part][i_section],
+                                        extract_elt_vtx,
+                                        extract_parent_num[i_part][i_section],
+                                        extract_elt_ln_to_gn,
+                                        NULL,
+                                        PDM_OWNERSHIP_KEEP);
+
+      free(idx_selected_section[i_part][i_section]);
+
+    }
+
+    free(idx_selected_section[i_part]);
+    free(n_selected_section  [i_part]);
+    free(extract_parent_num  [i_part]);
+
+  }
+
+
+  free(idx_selected_section);
+  free(n_selected_section  );
+  free(extract_parent_num  );
+
 
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
@@ -1116,9 +1214,11 @@ _extract_part_nodal
     free(old_to_new_vtx [i_part]);
   }
 
-  free(is_selected     );
-  free(is_selected_vtx );
-  free(old_to_new_vtx  );
+  free(is_selected    );
+  free(is_selected_vtx);
+  free(old_to_new_vtx );
+
+  extrp->extract_pmne = extract_pmne;
 
 }
 

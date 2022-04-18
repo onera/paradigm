@@ -140,6 +140,8 @@ struct _pdm_extract_part_t
   PDM_g_num_t       **pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_parent_lnum    [PDM_MESH_ENTITY_MAX];
 
+  /* If partition is described by elements */
+  PDM_part_mesh_nodal_elmts_t *extract_pmne;
 
 };
 
