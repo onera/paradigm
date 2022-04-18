@@ -1004,29 +1004,45 @@ _extract_part_nodal
    * For each section we extract the selected part
    *
    */
+  assert(extrp->n_part_in == extrp->n_part_out);
+  extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX] = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+  extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX] = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+  extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX] = malloc( extrp->n_part_in * sizeof(int         *));
+
+  int          *n_extract_vtx            = malloc( extrp->n_part_in * sizeof(int          ));
+  int         **is_selected              = malloc( extrp->n_part_in * sizeof(int         *));
+  int         **is_selected_vtx          = malloc( extrp->n_part_in * sizeof(int         *));
+  int         **old_to_new_vtx           = malloc( extrp->n_part_in * sizeof(int         *));
+  int         **extract_vtx_lnum         = malloc( extrp->n_part_in * sizeof(int         *));
+  PDM_g_num_t **extract_parent_vtx_g_num = malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+
   for(int i_part = 0; i_part < extrp->pmne->n_part; ++i_part) {
-    int         *is_selected              = malloc(    pn_entity[i_part] * sizeof(int        ));
-    int         *is_selected_vtx          = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
-    int         *old_to_new_vtx           = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
-    int         *extract_vtx_lnum         = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
-    PDM_g_num_t *extract_parent_vtx_g_num = malloc( extrp->n_vtx[i_part] * sizeof(PDM_g_num_t));
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = NULL;
+    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX][i_part] = NULL;
+    extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX][i_part] = NULL;
+
+    is_selected             [i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+    is_selected_vtx         [i_part] = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    old_to_new_vtx          [i_part] = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    extract_vtx_lnum        [i_part] = malloc( extrp->n_vtx[i_part] * sizeof(int        ));
+    extract_parent_vtx_g_num[i_part] = malloc( extrp->n_vtx[i_part] * sizeof(PDM_g_num_t));
 
     /*
      * En polyhédrique il faut aussi les faces ou edges a extraire
      */
     for(int i = 0; i < pn_entity[i_part]; ++i) {
-      is_selected[i] = 0;
+      is_selected[i_part][i] = 0;
     }
     for(int i = 0; i < extrp->n_vtx[i_part]; ++i) {
-      is_selected_vtx[i] = 0;
+      is_selected_vtx[i_part][i] = 0;
     }
 
     for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
       int s_num = extrp->extract_lnum[i_part][i];
-      is_selected[s_num] = 1;
+      is_selected[i_part][s_num] = 1;
     }
 
-    int n_extract_vtx = 0;
+    n_extract_vtx[i_part] = 0;
 
     /* First pass to hook all vtx and create gnum */
     for(int i_section = 0; i_section < n_section; ++i_section) {
@@ -1050,39 +1066,59 @@ _extract_part_nodal
 
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt];
-        if(is_selected[parent_elt] == 1) {
+        int parent_elt = parent_num[i_elt]-1;
+        if(is_selected[i_part][parent_elt] == 1) {
           for(int idx_vtx = 0; idx_vtx < n_vtx_per_elmt; ++idx_vtx) {
             int i_vtx = elt_vtx[idx_vtx] - 1;
-            if(is_selected_vtx[i_vtx] == 0) {
-              is_selected_vtx         [i_vtx        ] = 1;
-              old_to_new_vtx          [i_vtx        ] = n_extract_vtx;
-              extract_parent_vtx_g_num[n_extract_vtx] = extrp->vtx_ln_to_gn[i_part][i_vtx];
-              n_extract_vtx++;
+            if(is_selected_vtx[i_part][i_vtx] == 0) {
+              is_selected_vtx         [i_part][i_vtx                ] = 1;
+              old_to_new_vtx          [i_part][i_vtx                ] = n_extract_vtx[i_part];
+              extract_parent_vtx_g_num[i_part][n_extract_vtx[i_part]] = extrp->vtx_ln_to_gn[i_part][i_vtx];
+              n_extract_vtx[i_part]++;
             }
           }
         }
       }
     } /* End section */
 
-    extract_vtx_lnum         = realloc(extract_vtx_lnum        , n_extract_vtx * sizeof(int        ));
-    extract_parent_vtx_g_num = realloc(extract_parent_vtx_g_num, n_extract_vtx * sizeof(PDM_g_num_t));
+    extract_vtx_lnum        [i_part] = realloc(extract_vtx_lnum        [i_part], n_extract_vtx[i_part] * sizeof(int        ));
+    extract_parent_vtx_g_num[i_part] = realloc(extract_parent_vtx_g_num[i_part], n_extract_vtx[i_part] * sizeof(PDM_g_num_t));
 
-    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = extract_parent_vtx_g_num;
-    extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX][i_part] = extract_vtx_lnum;
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = extract_parent_vtx_g_num[i_part];
+    extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VERTEX][i_part] = extract_vtx_lnum[i_part];
 
-
-    // extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = extract_vtx_g_num;
-
-    free(is_selected     );
-    free(is_selected_vtx );
-    free(old_to_new_vtx  );
-
-    // free(extract_vtx_lnum); // To keep
   }
 
+  /*
+   *  Create absolute numbering of vtx
+   */
+  PDM_gen_gnum_t* gnum_extract_vtx = PDM_gnum_create(3, extrp->n_part_in, PDM_FALSE,
+                                                     1.e-6,
+                                                     extrp->comm,
+                                                     PDM_OWNERSHIP_USER);
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    PDM_gnum_set_from_parents(gnum_extract_vtx, i_part, n_extract_vtx[i_part], extract_parent_vtx_g_num[i_part]);
+  }
+
+  PDM_gnum_compute(gnum_extract_vtx);
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = PDM_gnum_get(gnum_extract_vtx, i_part);
+  }
+  PDM_gnum_free(gnum_extract_vtx);
 
 
+
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    free(is_selected    [i_part]);
+    free(is_selected_vtx[i_part]);
+    free(old_to_new_vtx [i_part]);
+  }
+
+  free(is_selected     );
+  free(is_selected_vtx );
+  free(old_to_new_vtx  );
 
 }
 
