@@ -196,6 +196,15 @@ PDM_extract_part_vtx_coord_get
  PDM_ownership_t            ownership
 );
 
+
+void
+PDM_extract_part_part_mesh_nodal_get
+(
+  PDM_extract_part_t           *extrp,
+  PDM_part_mesh_nodal_elmts_t **extract_pmne,
+  PDM_ownership_t               ownership
+);
+
 void
 PDM_extract_part_free
 (
