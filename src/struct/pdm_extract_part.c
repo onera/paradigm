@@ -612,7 +612,7 @@ int         ***old_to_new_entity2_no
     int          _pn_entity2           = n_entity2          [i_part];
 
     _extract_entity2_lnum           [i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
-    _extract_parent_entity2_ln_to_gn[i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
+    _extract_parent_entity2_ln_to_gn[i_part] = (PDM_g_num_t  *) malloc( (_pn_entity2 ) * sizeof(PDM_g_num_t));
     _old_to_new_entity2_no          [i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
 
     int         *is_visited = (int *) malloc( _pn_entity2 * sizeof(int));
