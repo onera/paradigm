@@ -1553,6 +1553,93 @@ _extract_part
 
 static
 void
+_extract_part_and_reequilibrate_from_target
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  /*
+   *  Deduce from target the selected gnum if target is available
+   */
+  int from_target = 0;
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    if(extrp->n_target[i_part] > 0 ) {
+      from_target = 1;
+    }
+  }
+  if(from_target == 1) {
+    _deduce_extract_lnum_from_target(extrp);
+  }
+
+  int          *pn_entity    = 0;
+  PDM_g_num_t **entity_g_num = NULL;
+  if(extrp->dim == 3) {
+    pn_entity    = extrp->n_cell;
+    entity_g_num = extrp->cell_ln_to_gn;
+  } else {
+    pn_entity    = extrp->n_face;
+    entity_g_num = extrp->face_ln_to_gn;
+  }
+
+  /*
+   * Create part_to_part with :
+   *    part1 = Target       (translate in child gnum)
+   *    part2 = Current
+   *    part1_to_part2_idx = Id
+   *    part1_to_part2     = target_gnum
+   * Puis exchange reverse :
+   *    Il faudrait garder le ptp
+   */
+
+  int         **part2_cell_to_part1_cell_idx = NULL;
+  PDM_g_num_t **part2_cell_to_part1_cell     = NULL;
+
+  assert(extrp->dim == 3);
+  int          *n_target_face        = NULL;
+  int         **target_cell_face_idx = NULL;
+  int         **target_cell_face     = NULL;
+  PDM_g_num_t **target_face_ln_to_gn = NULL;
+
+  PDM_part_to_part_t* ptb_entity = NULL;
+  PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+                                          extrp->n_part_in,
+                 (const int            *) pn_entity,
+                 (const int           **) extrp->pcell_face_idx,
+                 (const int           **) extrp->pcell_face,
+                 (const PDM_g_num_t   **) entity_g_num,
+                 (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
+                 (const int             ) extrp->n_part_out,
+                 (const int            *) extrp->n_target,
+                 (const PDM_g_num_t   **) extrp->target_gnum,
+                 (const int           **) part2_cell_to_part1_cell_idx,
+                 (const PDM_g_num_t   **) part2_cell_to_part1_cell,
+                                          &n_target_face,
+                                          &target_cell_face_idx,
+                                          &target_cell_face,
+                                          &target_face_ln_to_gn,
+                                          &ptb_entity);
+  PDM_part_to_part_free(ptb_entity);
+
+  /*
+   * Translate target_face_ln_to_gn in a new global numbering
+   */
+
+
+  /*
+   * En fait tout est comme from target !!!!!!
+   *  Scothc / Hilbert --> Calcul le target
+   */
+
+
+  /*
+   *  Pour la suite on deduit le face_ln_to_gn + nouveau numero et on recommence
+   */
+
+
+}
+
+static
+void
 _extract_part_and_reequilibrate
 (
   PDM_extract_part_t        *extrp

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
@@ -310,6 +311,50 @@ PDM_compute_face_edge_from_face_vtx
   int           **pn_edge,
   int          ***pedge_vtx,
   PDM_g_num_t  ***pedge_ln_to_gn
+);
+
+
+void
+PDM_pconnectivity_to_pconnectivity
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part1,
+  const int            *n_part1_entity1,
+  const int           **part1_entity1_entity2_idx,
+  const int           **part1_entity1_entity2,
+  const PDM_g_num_t   **part1_entity1_ln_to_gn,
+  const PDM_g_num_t   **part1_entity2_ln_to_gn,
+  const int             n_part2,
+  const int            *n_part2_entity1,
+  const PDM_g_num_t   **part2_entity1_ln_to_gn,
+  const int           **part2_entity1_to_part1_entity1_idx,
+  const PDM_g_num_t   **part2_entity1_to_part1_entity1,
+        int           **n_part2_entity2,
+        int          ***part2_entity1_entity2_idx,
+        int          ***part2_entity1_entity2,
+        PDM_g_num_t  ***part2_entity2_ln_to_gn
+);
+
+void
+PDM_pconnectivity_to_pconnectivity_keep
+(
+  const PDM_MPI_Comm          comm,
+  const int                   n_part1,
+  const int                  *n_part1_entity1,
+  const int                 **part1_entity1_entity2_idx,
+  const int                 **part1_entity1_entity2,
+  const PDM_g_num_t         **part1_entity1_ln_to_gn,
+  const PDM_g_num_t         **part1_entity2_ln_to_gn,
+  const int                   n_part2,
+  const int                  *n_part2_entity1,
+  const PDM_g_num_t         **part2_entity1_ln_to_gn,
+  const int                 **part2_entity1_to_part1_entity1_idx,
+  const PDM_g_num_t         **part2_entity1_to_part1_entity1,
+        int                 **n_part2_entity2,
+        int                ***part2_entity1_entity2_idx,
+        int                ***part2_entity1_entity2,
+        PDM_g_num_t        ***part2_entity2_ln_to_gn,
+        PDM_part_to_part_t  **ptp
 );
 
 #ifdef __cplusplus
