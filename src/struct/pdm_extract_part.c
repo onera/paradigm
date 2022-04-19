@@ -1625,6 +1625,17 @@ _extract_part_and_reequilibrate_from_target
     }
   }
 
+
+  int         **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  int         **part2_edge_to_part1_edge_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  int         **part2_vtx_to_part1_vtx_idx   = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    part2_face_to_part1_face_idx[i_part] = NULL;
+    part2_edge_to_part1_edge_idx[i_part] = NULL;
+    part2_vtx_to_part1_vtx_idx  [i_part] = NULL;
+  }
+
   /*
    * Extraction des connectivités
    */
@@ -1646,10 +1657,10 @@ _extract_part_and_reequilibrate_from_target
   // PDM_g_num_t **target_face_ln_to_gn        = NULL;
   // PDM_g_num_t **target_parent_face_ln_to_gn = NULL;
 
-  PDM_part_to_part_t* ptb_entity = NULL;
-  PDM_part_to_part_t* ptb_face   = NULL;
-  PDM_part_to_part_t* ptb_edge   = NULL;
-  PDM_part_to_part_t* ptb_vtx    = NULL;
+  PDM_part_to_part_t* ptp_entity = NULL;
+  PDM_part_to_part_t* ptp_face   = NULL;
+  PDM_part_to_part_t* ptp_edge   = NULL;
+  PDM_part_to_part_t* ptp_vtx    = NULL;
 
   if(extrp->dim == 3) {
     PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
@@ -1669,18 +1680,22 @@ _extract_part_and_reequilibrate_from_target
                                             &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
                                             &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
-                                            &ptb_entity);
+                                            &ptp_entity);
 
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       free(part2_cell_to_part1_cell_idx[i_part]);
     }
     free(part2_cell_to_part1_cell_idx);
 
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      int n_face = extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part];
+      part2_face_to_part1_face_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_face);;
+    }
     if(from_face_edge == 1) {
-      int **part2_face_to_part1_face_idx = NULL;
+
       PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
                                               extrp->n_part_in,
-                     (const int            *) pn_entity,
+                     (const int            *) extrp->n_face,
                      (const int           **) extrp->pface_edge_idx,
                      (const int           **) extrp->pface_edge,
                      (const PDM_g_num_t   **) extrp->face_ln_to_gn,
@@ -1695,13 +1710,49 @@ _extract_part_and_reequilibrate_from_target
                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
-                                              &ptb_face);
-    } else if(from_face_vtx == 1) {
+                                              &ptp_face);
 
-      int **part2_face_to_part1_face_idx = NULL;
+      int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
+        pedge_vtx_idx[i_part][0] = 0;
+        for(int i_edge = 0; i_edge < extrp->n_edge[i_part]; ++i_edge) {
+          pedge_vtx_idx[i_part][i_edge+1] = pedge_vtx_idx[i_part][i_edge] + 2;
+        }
+      }
+
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        int n_edge = extrp->pextract_n_entity[PDM_MESH_ENTITY_EDGE][i_part];
+        part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_edge);;
+      }
       PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
                                               extrp->n_part_in,
-                     (const int            *) pn_entity,
+                     (const int            *) extrp->n_edge,
+                     (const int           **) pedge_vtx_idx,
+                     (const int           **) extrp->pedge_vtx,
+                     (const PDM_g_num_t   **) extrp->edge_ln_to_gn,
+                     (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
+                     (const int             ) extrp->n_part_out,
+                     (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
+                     (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_EDGE],
+                     (const int           **) part2_edge_to_part1_edge_idx,
+                     (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_EDGE],
+                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+                                              &ptp_edge);
+
+      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+        free(pedge_vtx_idx   [i_part]);
+      }
+      free(pedge_vtx_idx      );
+
+    } else if(from_face_vtx == 1) {
+      PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+                                              extrp->n_part_in,
+                     (const int            *) extrp->n_face,
                      (const int           **) extrp->pface_vtx_idx,
                      (const int           **) extrp->pface_vtx,
                      (const PDM_g_num_t   **) extrp->face_ln_to_gn,
@@ -1716,7 +1767,7 @@ _extract_part_and_reequilibrate_from_target
                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
-                                              &ptb_face);
+                                              &ptp_face);
     }
 
   }
@@ -1728,9 +1779,6 @@ _extract_part_and_reequilibrate_from_target
   //   }
   // }
 
-
-
-  PDM_part_to_part_free(ptb_entity);
 
   free(child_selected_g_num);
 
@@ -1749,6 +1797,36 @@ _extract_part_and_reequilibrate_from_target
    *  Pour la suite on deduit le face_ln_to_gn + nouveau numero et on recommence
    */
 
+  /*
+   *  Attention le part_to_part peut en avoir besoin
+   */
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    if(part2_face_to_part1_face_idx[i_part] != NULL) {
+      free(part2_face_to_part1_face_idx[i_part]);
+    }
+    if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
+      free(part2_edge_to_part1_edge_idx[i_part]);
+    }
+    if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
+      free(part2_vtx_to_part1_vtx_idx[i_part]);
+    }
+  }
+  free(part2_face_to_part1_face_idx);
+  free(part2_edge_to_part1_edge_idx);
+  free(part2_vtx_to_part1_vtx_idx  );
+
+  if(ptp_entity != NULL) {
+    PDM_part_to_part_free(ptp_entity);
+  }
+  if(ptp_face != NULL) {
+    PDM_part_to_part_free(ptp_face);
+  }
+  if(ptp_edge != NULL) {
+    PDM_part_to_part_free(ptp_edge);
+  }
+  if(ptp_vtx != NULL) {
+    PDM_part_to_part_free(ptp_vtx);
+  }
 
 }
 
@@ -1769,9 +1847,9 @@ _extract_part_and_reequilibrate
     }
   }
   if(from_target == 1) {
-    // _extract_part_and_reequilibrate_from_target(extrp);
-    // return;
-    _deduce_extract_lnum_from_target(extrp);
+    _extract_part_and_reequilibrate_from_target(extrp);
+    return;
+    // _deduce_extract_lnum_from_target(extrp);
   }
 
 
