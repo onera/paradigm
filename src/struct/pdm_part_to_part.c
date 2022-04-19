@@ -3931,7 +3931,7 @@ PDM_part_to_part_reverse_iexch
 
       for (int i = 0; i < ptp->n_part2; i++) {
 
-        _part2_to_part1_data[i] = malloc (s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i] *cst_stride]);
+        _part2_to_part1_data[i] = malloc (s_data * ptp->gnum1_come_from_idx[i][ptp->n_ref_lnum2[i]] * cst_stride);
 
         unsigned char *map_part2_to_part1_data = (unsigned char*) _part2_to_part1_data[i];
         unsigned char *map_part2_data = (unsigned char*) part2_data[i];

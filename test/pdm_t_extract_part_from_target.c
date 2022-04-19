@@ -442,16 +442,16 @@ int main(int argc, char *argv[])
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
 
-    PDM_g_num_t* pextract_parent_cell_ln_to_gn = NULL;
-    int n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                         i_part,
-                                         PDM_MESH_ENTITY_CELL,
-                                         &pextract_parent_cell_ln_to_gn,
-                                         PDM_OWNERSHIP_KEEP);
+    // PDM_g_num_t* pextract_parent_cell_ln_to_gn = NULL;
+    // int n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
+    //                                                   i_part,
+    //                                                   PDM_MESH_ENTITY_CELL,
+    //                                                   &pextract_parent_cell_ln_to_gn,
+    //                                                   PDM_OWNERSHIP_KEEP);
 
-    for(int i = 0; i < n_cell; ++i) {
-      assert(pextract_parent_cell_ln_to_gn[i] == target_g_num[i_part][i]);
-    }
+    // for(int i = 0; i < n_cell; ++i) {
+    //   assert(pextract_parent_cell_ln_to_gn[i] == target_g_num[i_part][i]);
+    // }
     // PDM_log_trace_array_long(pextract_parent_cell_ln_to_gn, n_cell, "pextract_parent_cell_ln_to_gn ::");
 
   }

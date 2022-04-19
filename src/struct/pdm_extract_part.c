@@ -1762,16 +1762,46 @@ _extract_part_and_reequilibrate_from_target
                      (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
                      (const int           **) part2_face_to_part1_face_idx,
                      (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_FACE],
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
+                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
                                               &ptp_face);
     }
-
   }
 
+
+  // Create ptp for vtx
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
+    part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_vtx);;
+  }
+
+  ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+                                                           extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                                           extrp->n_part_out,
+                                    (const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+                                                           extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                                           extrp->n_part_in,
+                                    (const int         **) part2_vtx_to_part1_vtx_idx,
+                                    (const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                                           extrp->comm);
+
+  int           exch_request = -1;
+  PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 3,
+                                 sizeof(double),
+                                 NULL,
+                (const void **)  extrp->pvtx_coord,
+                                 NULL,
+                    (void ***)   &extrp->pextract_vtx_coord,
+                                 &exch_request);
+
+  PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
 
   // if(0 == 1) {
   //   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -1780,7 +1810,7 @@ _extract_part_and_reequilibrate_from_target
   // }
 
 
-  free(child_selected_g_num);
+  // free(child_selected_g_num);
 
   /*
    * Translate target_face_ln_to_gn in a new global numbering
