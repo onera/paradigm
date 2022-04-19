@@ -920,10 +920,11 @@ int main(int argc, char *argv[])
   }
 
   // TO see with Eric, tag pb because cast into int
-  int          *part2_n_extract_vtx = NULL;
-  int         **part2_face_vtx_idx  = NULL;
-  int         **part2_face_vtx      = NULL;
-  PDM_g_num_t **part2_vtx_ln_to_gn  = NULL;
+  int          *part2_n_extract_vtx        = NULL;
+  int         **part2_face_vtx_idx         = NULL;
+  int         **part2_face_vtx             = NULL;
+  PDM_g_num_t **part2_parent_vtx_ln_to_gn  = NULL;
+  PDM_g_num_t **part2_vtx_ln_to_gn         = NULL;
   PDM_pconnectivity_to_pconnectivity(comm,
                                      n_part,
             (const int            *) pn_face,
@@ -939,14 +940,17 @@ int main(int argc, char *argv[])
                                      &part2_n_extract_vtx,
                                      &part2_face_vtx_idx,
                                      &part2_face_vtx,
+                                     &part2_parent_vtx_ln_to_gn,
                                      &part2_vtx_ln_to_gn);
   free(part2_n_extract_vtx);
   free(part2_face_vtx_idx[0]);
   free(part2_face_vtx[0]);
   free(part2_vtx_ln_to_gn[0]);
+  free(part2_parent_vtx_ln_to_gn[0]);
   free(part2_face_vtx_idx);
   free(part2_face_vtx);
   free(part2_vtx_ln_to_gn);
+  free(part2_parent_vtx_ln_to_gn);
 
 
 

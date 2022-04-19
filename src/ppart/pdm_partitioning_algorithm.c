@@ -40,6 +40,7 @@
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_part_to_part.h"
+#include "pdm_gnum.h"
 // #include "pdm_para_graph_dual.h"
 #include "pdm_logging.h"
 
@@ -2651,13 +2652,18 @@ PDM_pconnectivity_to_pconnectivity_keep
         int                ***part2_entity1_entity2_idx,
         int                ***part2_entity1_entity2,
         PDM_g_num_t        ***part2_entity2_ln_to_gn,
+        PDM_g_num_t        ***part2_entity2_child_ln_to_gn,
         PDM_part_to_part_t  **ptp_out
 )
 {
-    PDM_UNUSED(n_part2_entity2);
+  PDM_UNUSED(n_part2_entity2);
   PDM_UNUSED(part2_entity1_entity2_idx);
   PDM_UNUSED(part2_entity1_entity2);
   PDM_UNUSED(part2_entity2_ln_to_gn);
+
+  for(int i_part = 0; i_part < n_part1; ++i_part) {
+    PDM_log_trace_array_long(part2_entity1_ln_to_gn[i_part], n_part2_entity1[i_part], "part2_entity1_ln_to_gn : ");
+  }
 
   PDM_part_to_part_t* ptp = PDM_part_to_part_create(part2_entity1_ln_to_gn,
                                                     n_part2_entity1,
@@ -2711,9 +2717,10 @@ PDM_pconnectivity_to_pconnectivity_keep
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
       for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
-        int l_face = ref_l_num_entity1[i_part][k]-1;
-        for(int l = part1_entity1_entity2_idx[i_part][l_face]; l < part1_entity1_entity2_idx[i_part][l_face+1]; ++l) {
-          send_entity1_entity2[i_part][idx_write++] = part1_entity2_ln_to_gn[i_part][part1_entity1_entity2[i_part][l]-1];
+        int i_entity1 = ref_l_num_entity1[i_part][k]-1;
+        for(int l = part1_entity1_entity2_idx[i_part][i_entity1]; l < part1_entity1_entity2_idx[i_part][i_entity1+1]; ++l) {
+          int i_entity2 = PDM_ABS(part1_entity1_entity2[i_part][l])-1;
+          send_entity1_entity2[i_part][idx_write++] = part1_entity2_ln_to_gn[i_part][i_entity2];
         }
       }
     }
@@ -2772,6 +2779,8 @@ PDM_pconnectivity_to_pconnectivity_keep
     }
 
     int n_extract_entity2 = PDM_inplace_unique_long2(_part2_entity2_ln_to_gn[i_part], unique_order_entity2, 0, n_recv_entity1_entity2-1);
+
+    _n_part2_entity2[i_part] = n_extract_entity2;
     _part2_entity2_ln_to_gn[i_part] = realloc(_part2_entity2_ln_to_gn[i_part],  n_extract_entity2      * sizeof(PDM_g_num_t));
 
     /* Recompute local numbering */
@@ -2798,6 +2807,26 @@ PDM_pconnectivity_to_pconnectivity_keep
   *part2_entity1_entity2     = _part2_entity1_entity2;
   *part2_entity2_ln_to_gn    = _part2_entity2_ln_to_gn;
 
+  /*
+   * Compute child global numebring
+   */
+  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, n_part2, PDM_FALSE,
+                                                 1.e-6,
+                                                 comm,
+                                                 PDM_OWNERSHIP_USER);
+  for(int i_part = 0; i_part < n_part2; ++i_part) {
+    PDM_gnum_set_from_parents (gnum_extract, i_part, _n_part2_entity2[i_part], _part2_entity2_ln_to_gn[i_part]);
+  }
+  PDM_g_num_t **_part2_entity2_child_ln_to_gn = (PDM_g_num_t **) malloc( n_part2 * sizeof(PDM_g_num_t *));
+  PDM_gnum_compute(gnum_extract);
+
+  for (int i_part = 0; i_part < n_part2; i_part++){
+    _part2_entity2_child_ln_to_gn[i_part] = PDM_gnum_get(gnum_extract, i_part);
+  }
+  PDM_gnum_free(gnum_extract);
+
+  *part2_entity2_child_ln_to_gn    = _part2_entity2_child_ln_to_gn;
+
 }
 
 void
@@ -2818,7 +2847,8 @@ PDM_pconnectivity_to_pconnectivity
         int           **n_part2_entity2,
         int          ***part2_entity1_entity2_idx,
         int          ***part2_entity1_entity2,
-        PDM_g_num_t  ***part2_entity2_ln_to_gn
+        PDM_g_num_t  ***part2_entity2_ln_to_gn,
+        PDM_g_num_t  ***part2_entity2_child_ln_to_gn
 )
 {
 
@@ -2840,6 +2870,7 @@ PDM_pconnectivity_to_pconnectivity
                                           part2_entity1_entity2_idx,
                                           part2_entity1_entity2,
                                           part2_entity2_ln_to_gn,
+                                          part2_entity2_child_ln_to_gn,
                                           &ptp);
 
   PDM_part_to_part_free(ptp);

@@ -253,6 +253,8 @@ _cell_center_3d
 
 
 
+
+
 // static
 // void
 // extract_entity1_entity2
@@ -1558,19 +1560,6 @@ _extract_part_and_reequilibrate_from_target
   PDM_extract_part_t        *extrp
 )
 {
-  /*
-   *  Deduce from target the selected gnum if target is available
-   */
-  int from_target = 0;
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    if(extrp->n_target[i_part] > 0 ) {
-      from_target = 1;
-    }
-  }
-  if(from_target == 1) {
-    _deduce_extract_lnum_from_target(extrp);
-  }
-
   int          *pn_entity    = 0;
   PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
@@ -1582,6 +1571,42 @@ _extract_part_and_reequilibrate_from_target
   }
 
   /*
+   * Generate global numbering for traget g_num
+   */
+  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_out, PDM_FALSE,
+                                                 1.e-6,
+                                                 extrp->comm,
+                                                 PDM_OWNERSHIP_USER);
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    PDM_gnum_set_from_parents (gnum_extract, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
+    // PDM_log_trace_array_long(extrp->target_gnum[i_part], extrp->n_target[i_part], "target_gnum :: ");
+  }
+
+  PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_out * sizeof(PDM_g_num_t *));
+  PDM_gnum_compute(gnum_extract);
+
+  for (int i_part = 0; i_part < extrp->n_part_out; i_part++){
+    child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+    PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_target[i_part], "child_selected_g_num : ");
+  }
+  PDM_gnum_free(gnum_extract);
+
+  if(extrp->dim == 3) {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
+    }
+    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_CELL] = child_selected_g_num;
+  } else {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
+    }
+    extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE] = child_selected_g_num;
+  }
+
+
+  /*
    * Create part_to_part with :
    *    part1 = Target       (translate in child gnum)
    *    part2 = Current
@@ -1591,14 +1616,25 @@ _extract_part_and_reequilibrate_from_target
    *    Il faudrait garder le ptp
    */
 
-  int         **part2_cell_to_part1_cell_idx = NULL;
-  PDM_g_num_t **part2_cell_to_part1_cell     = NULL;
+  int         **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    part2_cell_to_part1_cell_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
+    part2_cell_to_part1_cell_idx[i_part][0] = 0;
+
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 1;
+    }
+
+  }
+
 
   assert(extrp->dim == 3);
-  int          *n_target_face        = NULL;
-  int         **target_cell_face_idx = NULL;
-  int         **target_cell_face     = NULL;
-  PDM_g_num_t **target_face_ln_to_gn = NULL;
+  int          *n_target_face               = NULL;
+  int         **target_cell_face_idx        = NULL;
+  int         **target_cell_face            = NULL;
+  PDM_g_num_t **target_face_ln_to_gn        = NULL;
+  PDM_g_num_t **target_parent_face_ln_to_gn = NULL;
 
   PDM_part_to_part_t* ptb_entity = NULL;
   PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
@@ -1610,15 +1646,32 @@ _extract_part_and_reequilibrate_from_target
                  (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
                  (const int             ) extrp->n_part_out,
                  (const int            *) extrp->n_target,
-                 (const PDM_g_num_t   **) extrp->target_gnum,
+                 (const PDM_g_num_t   **) child_selected_g_num,
                  (const int           **) part2_cell_to_part1_cell_idx,
-                 (const PDM_g_num_t   **) part2_cell_to_part1_cell,
+                 (const PDM_g_num_t   **) extrp->target_gnum,
                                           &n_target_face,
                                           &target_cell_face_idx,
                                           &target_cell_face,
+                                          &target_parent_face_ln_to_gn,
                                           &target_face_ln_to_gn,
                                           &ptb_entity);
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    free(part2_cell_to_part1_cell_idx[i_part]);
+  }
+  free(part2_cell_to_part1_cell_idx);
+
+  if(0 == 1) {
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      PDM_log_trace_array_long(target_face_ln_to_gn[i_part], n_target_face[i_part], "target_face_ln_to_gn : ");
+    }
+  }
+
+
+
   PDM_part_to_part_free(ptb_entity);
+
+  free(child_selected_g_num);
 
   /*
    * Translate target_face_ln_to_gn in a new global numbering
@@ -1655,6 +1708,8 @@ _extract_part_and_reequilibrate
     }
   }
   if(from_target == 1) {
+    // _extract_part_and_reequilibrate_from_target(extrp);
+    // return;
     _deduce_extract_lnum_from_target(extrp);
   }
 

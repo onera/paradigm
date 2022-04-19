@@ -332,6 +332,7 @@ PDM_pconnectivity_to_pconnectivity
         int           **n_part2_entity2,
         int          ***part2_entity1_entity2_idx,
         int          ***part2_entity1_entity2,
+        PDM_g_num_t  ***part2_entity2_child_ln_to_gn,
         PDM_g_num_t  ***part2_entity2_ln_to_gn
 );
 
@@ -354,6 +355,7 @@ PDM_pconnectivity_to_pconnectivity_keep
         int                ***part2_entity1_entity2_idx,
         int                ***part2_entity1_entity2,
         PDM_g_num_t        ***part2_entity2_ln_to_gn,
+        PDM_g_num_t        ***part2_entity2_child_ln_to_gn,
         PDM_part_to_part_t  **ptp
 );
 
