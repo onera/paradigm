@@ -2661,8 +2661,10 @@ PDM_pconnectivity_to_pconnectivity_keep
   PDM_UNUSED(part2_entity1_entity2);
   PDM_UNUSED(part2_entity2_ln_to_gn);
 
-  for(int i_part = 0; i_part < n_part1; ++i_part) {
-    PDM_log_trace_array_long(part2_entity1_ln_to_gn[i_part], n_part2_entity1[i_part], "part2_entity1_ln_to_gn : ");
+  if(0 == 1) {
+    for(int i_part = 0; i_part < n_part1; ++i_part) {
+      PDM_log_trace_array_long(part2_entity1_ln_to_gn[i_part], n_part2_entity1[i_part], "part2_entity1_ln_to_gn : ");
+    }
   }
 
   PDM_part_to_part_t* ptp = PDM_part_to_part_create(part2_entity1_ln_to_gn,
@@ -2699,8 +2701,8 @@ PDM_pconnectivity_to_pconnectivity_keep
 
     int n_tot_send = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
+      int l_entity1     = ref_l_num_entity1[i_part][j]-1;
       for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
-        int l_entity1     = ref_l_num_entity1[i_part][k]-1;
         int n_loc_entity2 = part1_entity1_entity2_idx[i_part][l_entity1+1] - part1_entity1_entity2_idx[i_part][l_entity1];
         send_entity1_entity2_n[i_part][k] = n_loc_entity2;
         n_tot_send += n_loc_entity2;

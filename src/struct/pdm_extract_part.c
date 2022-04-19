@@ -1587,7 +1587,7 @@ _extract_part_and_reequilibrate_from_target
 
   for (int i_part = 0; i_part < extrp->n_part_out; i_part++){
     child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-    PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_target[i_part], "child_selected_g_num : ");
+    // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_target[i_part], "child_selected_g_num : ");
   }
   PDM_gnum_free(gnum_extract);
 
@@ -1756,7 +1756,7 @@ _extract_part_and_reequilibrate_from_target
                      (const int           **) extrp->pface_vtx_idx,
                      (const int           **) extrp->pface_vtx,
                      (const PDM_g_num_t   **) extrp->face_ln_to_gn,
-                     (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
+                     (const PDM_g_num_t   **) extrp->vtx_ln_to_gn,
                      (const int             ) extrp->n_part_out,
                      (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
                      (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
@@ -1781,8 +1781,8 @@ _extract_part_and_reequilibrate_from_target
   ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
                                                            extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
                                                            extrp->n_part_out,
-                                    (const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
-                                                           extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                    (const PDM_g_num_t **) extrp->vtx_ln_to_gn,
+                                                           extrp->n_vtx,
                                                            extrp->n_part_in,
                                     (const int         **) part2_vtx_to_part1_vtx_idx,
                                     (const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
@@ -1800,14 +1800,44 @@ _extract_part_and_reequilibrate_from_target
                                  NULL,
                     (void ***)   &extrp->pextract_vtx_coord,
                                  &exch_request);
-
   PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
 
-  // if(0 == 1) {
-  //   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-  //     PDM_log_trace_array_long(target_face_ln_to_gn[i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part], "target_face_ln_to_gn : ");
-  //   }
-  // }
+
+  if(0 == 1) {
+    exch_request = -1;
+    PDM_g_num_t** check_vtx_gnum = NULL;
+    PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   1,
+                                   sizeof(PDM_g_num_t),
+                                   NULL,
+                                   (const void **)  extrp->vtx_ln_to_gn,
+                                   NULL,
+                                   (void ***)   &check_vtx_gnum,
+                                   &exch_request);
+
+    PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+
+      PDM_log_trace_connectivity_int(extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
+                                     extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
+                                     extrp->pextract_n_entity        [PDM_MESH_ENTITY_FACE          ][i_part],
+                                     "pextract_face_vtx : ");
+
+      PDM_log_trace_array_long(check_vtx_gnum[i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "check_vtx_gnum : ");
+      PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "target_face_ln_to_gn : ");
+      PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "target_vtx_ln_to_gn : ");
+      // PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL  ][i_part], "parent_cell_ln_to_gn : ");
+      PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "parent_face_ln_to_gn : ");
+      PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "parent_vtx_ln_to_gn : ");
+
+      free(check_vtx_gnum[i_part]);
+    }
+    free(check_vtx_gnum);
+  }
 
 
   // free(child_selected_g_num);

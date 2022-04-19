@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
     target_g_num  [i_part] = realloc(target_g_num[i_part], n_target_cell * sizeof(PDM_g_num_t));
     pn_target_cell[i_part] = n_target_cell;
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(target_g_num  [i_part], pn_target_cell[i_part], "target_g_num :: ");
     }
 
