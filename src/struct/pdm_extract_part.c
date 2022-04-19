@@ -600,7 +600,7 @@ int         ***old_to_new_entity2_no
 )
 {
   int         **_extract_entity2_lnum            = malloc(n_part * sizeof(int         *));
-  PDM_g_num_t **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  int         **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   int          *_n_extract_entity2               = malloc(n_part * sizeof(int          ));
   int         **_old_to_new_entity2_no           = malloc(n_part * sizeof(int         *));
 
@@ -612,7 +612,7 @@ int         ***old_to_new_entity2_no
     int          _pn_entity2           = n_entity2          [i_part];
 
     _extract_entity2_lnum           [i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
-    _extract_parent_entity2_ln_to_gn[i_part] = (PDM_g_num_t  *) malloc( (_pn_entity2 ) * sizeof(PDM_g_num_t));
+    _extract_parent_entity2_ln_to_gn[i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
     _old_to_new_entity2_no          [i_part] = (int          *) malloc( (_pn_entity2 ) * sizeof(int        ));
 
     int         *is_visited = (int *) malloc( _pn_entity2 * sizeof(int));
@@ -1194,8 +1194,8 @@ _extract_part_nodal
                                         extract_section_id,
                                         n_selected_section[i_part][i_section],
                                         extract_elt_vtx,
-                                        extract_elt_ln_to_gn,
                                         extract_parent_num[i_part][i_section],
+                                        extract_elt_ln_to_gn,
                                         NULL,
                                         PDM_OWNERSHIP_KEEP);
 
@@ -2346,6 +2346,7 @@ PDM_extract_part_create
   extrp->comm                  = comm;
   extrp->pmne                  = NULL;
   extrp->is_owner_extract_pmne = PDM_TRUE;
+  extrp->extract_pmne          = NULL;
 
   extrp->n_cell         = (int          *) malloc(n_part_in * sizeof(int          ));
   extrp->n_face         = (int          *) malloc(n_part_in * sizeof(int          ));
