@@ -338,28 +338,183 @@ int main(int argc, char *argv[])
    *  (cell_extents = [xmin_i, ymin_i, zmin_i, xmax_i, ymax_i, zmax_i],
    *   whith 0 <= i < n_cell)
    */
-  //...
+
+  // Data structure
+  double *tmp_bouding_box = malloc(6 * sizeof(double));
+  double *cell_bouding_box = malloc(n_cell * 6 * sizeof(double));
+  int n_face_cell = cell_face_idx[1] - cell_face_idx[0]; // only if all elements are the same
+  int face_idx = 0;
+  int edge_idx = 0;
+  int vtx_idx = 0;
+
+  int n_vtx_cell = 0;
+  switch (_elt_type) {
+    case 0:
+    n_vtx_cell = 4;
+    break;
+
+    case 1:
+    n_vtx_cell = 5;
+    break;
+
+    case 2:
+    n_vtx_cell = 6;
+    break;
+
+    default:
+    n_vtx_cell = 8;
+  }
+
+  double *cell_centers = malloc(n_cell * 3 * sizeof(double));
+  int *vtx_visited = malloc(n_vtx * sizeof(int));
+  int *vtx_currently_visited = malloc(n_vtx_cell * sizeof(int));
+  int current_vtx_idx = 0;
+
+  for (int i = 0; i < 3 * n_cell; i++) {
+    cell_centers[i] = 0;
+  }
+
+  for (int i = 0; i < n_vtx; i++) {
+    vtx_visited[i] = 0; // no one has been visited
+  }
+
+  // Max / Min set up
+  tmp_bouding_box[0] = HUGE_VAL;
+  tmp_bouding_box[1] = HUGE_VAL;
+  tmp_bouding_box[2] = HUGE_VAL;
+  tmp_bouding_box[3] = -HUGE_VAL;
+  tmp_bouding_box[4] = -HUGE_VAL;
+  tmp_bouding_box[5] = -HUGE_VAL;
+
+  // Loop over all cells
+  for (int i = 0; i < n_cell; i++) {
+    // Loop over the faces of cell i
+    for (int j = 0; j < n_face_cell; j++) {
+      // Select the face
+      face_idx = PDM_ABS(cell_face[i*n_face_cell + j])-1;
+      // Loop over the edges of face j
+      for (int k = face_edge_idx[face_idx]; k < face_edge_idx[face_idx+1]; k++) {
+        // Select the edge
+        edge_idx = PDM_ABS(face_edge[k])-1;
+        // Loop over the vertices
+        for (int l = 0; l < 2; l++) {
+          // Select vertice
+          vtx_idx = PDM_ABS(edge_vtx[2 * edge_idx + l])-1; // because 2 vertices per edge /!\ difference idx of entity and where it's subentities are
+          // Loop over the coordinates
+          for (int m = 0; m < 3; m++) {
+            if (vtx_coord[3*vtx_idx + m] < tmp_bouding_box[m]) {
+              tmp_bouding_box[m] = vtx_coord[3*vtx_idx + m];
+            }
+            if (vtx_coord[3*vtx_idx + m] > tmp_bouding_box[3 + m]) { // 3 offset for max
+              tmp_bouding_box[3 + m] = vtx_coord[3*vtx_idx + m];
+            }
+          }
+        }
+      }
+    }
+    // Fill in the cell bounding box array
+    cell_bouding_box[i*6] = tmp_bouding_box[0];
+    cell_bouding_box[i*6+1] = tmp_bouding_box[1];
+    cell_bouding_box[i*6+2] = tmp_bouding_box[2];
+    cell_bouding_box[i*6+3] = tmp_bouding_box[3];
+    cell_bouding_box[i*6+4] = tmp_bouding_box[4];
+    cell_bouding_box[i*6+5] = tmp_bouding_box[5];
+    // Reset tmp_bouding_box
+    tmp_bouding_box[0] = HUGE_VAL;
+    tmp_bouding_box[1] = HUGE_VAL;
+    tmp_bouding_box[2] = HUGE_VAL;
+    tmp_bouding_box[3] = -HUGE_VAL;
+    tmp_bouding_box[4] = -HUGE_VAL;
+    tmp_bouding_box[5] = -HUGE_VAL;
+  }
 
   /*
    *  2) Compute cell centers
    *  (just the average of each cell's vertices,
    *   not the actual center of mass)
    */
-  //...
 
+  // Loop over all cells
+  for (int i = 0; i < n_cell; i++) {
+    // Loop over the faces of cell i
+    printf("NEW CELL\n");
+    for (int j = 0; j < n_face_cell; j++) {
+      // Select the face
+      face_idx = PDM_ABS(cell_face[i*n_face_cell + j])-1;
+      // Loop over the edges of face j
+      for (int k = face_edge_idx[face_idx]; k < face_edge_idx[face_idx+1]; k++) {
+        // Select the edge
+        edge_idx = PDM_ABS(face_edge[k])-1;
+        // Loop over the vertices
+        for (int l = 0; l < 2; l++) {
+          // Select vertice
+          vtx_idx = PDM_ABS(edge_vtx[2 * edge_idx + l])-1;
+          printf("index of current vertex: %d\n", vtx_idx);
+          if (vtx_visited[vtx_idx] == 0) {
+            vtx_visited[vtx_idx] = 1;
+            vtx_currently_visited[current_vtx_idx++] = vtx_idx;
+            printf("counter: %d\n", current_vtx_idx);
+            cell_centers[3*i] += vtx_coord[3*vtx_idx];
+            cell_centers[3*i + 1] += vtx_coord[3*vtx_idx + 1];
+            cell_centers[3*i + 2] += vtx_coord[3*vtx_idx + 2];
+          }
+        }
+      }
+    }
+    // Divide by number of cells
+    cell_centers[3*i] /= n_vtx_cell; // only if whole mesh same elements
+    cell_centers[3*i + 1] /= n_vtx_cell;
+    cell_centers[3*i + 2] /= n_vtx_cell;
+    // Reset visited
+    for (int m = 0; m < n_vtx_cell; m++) {
+      vtx_visited[vtx_currently_visited[m]] = 0;
+    }
+    current_vtx_idx = 0;
+  }
 
 
   /* Visualize cells */
-  //...
+  char filename_cells[999] = "cells.vtk";
+
+  PDM_vtk_write_std_elements(filename_cells,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             elt_type,
+                             n_cell,
+                             cell_vtx,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
 
   /* Visualize bounding boxes */
-  //...
+  char filename_boxes[999] = "boxes.vtk";
+
+  PDM_vtk_write_boxes(filename_boxes,
+                      n_cell,
+                      cell_bouding_box,
+                      NULL);
 
   /* Visualize cell centers */
-  //...
+  char filename_centers[999] = "centers.vtk";
 
+  PDM_vtk_write_point_cloud(filename_centers,
+                            n_cell,
+                            cell_centers,
+                            NULL,
+                            NULL);
 
   /* Free memory */
+
+  // Additionnal frees
+  free(tmp_bouding_box);
+  free(cell_bouding_box);
+
+  free(cell_centers);
+  free(vtx_visited);
+  free(vtx_currently_visited);
+
   free(cell_face_idx);
   free(cell_face    );
   free(face_edge_idx);

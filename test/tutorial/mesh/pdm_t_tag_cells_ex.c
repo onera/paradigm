@@ -379,19 +379,71 @@ int main(int argc, char *argv[])
    *
    */
 
-  int *cell_tag = malloc(sizeof(int) * n_cell);
+  // Entities for cell tag
+  int *cell_tag = PDM_array_zeros_int(n_cell);
+  int idx_face  = 0;
+  int idx_edge  = 0;
+  int idx_vtx   = 0;
+  int sum       = 0;
+  int counter   = 0;
 
-  //...
+  int *current_cell_tag      = PDM_array_zeros_int(n_cell);
+  int n_current_cell_tag     = 0;
+  int *current_cell_tag_new  = PDM_array_zeros_int(n_cell);
+  int n_current_cell_tag_new = 0;
+  int idx                    = 0;
+  int idx_cell               = 0;
+  int idx_cell_other         = 0;
+  int *zeros                 = PDM_array_zeros_int(n_cell);
+  int cell_counter           = 0;
 
+  // Cell tag
+  for (int i = 0; i < n_cell; i++) {
+    for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+      idx_face = PDM_ABS(cell_face[j])-1;
+      for (int k = face_edge_idx[idx_face]; k < face_edge_idx[idx_face+1]; k++) {
+        idx_edge = PDM_ABS(face_edge[k])-1;
+        for (int l = 2*idx_edge; l < 2*(idx_edge+1); l++) { // astuce: sortir si changement de signe sur edge
+          idx_vtx = PDM_ABS(edge_vtx[l])-1;
+          sum += vtx_field[idx_vtx]; // because it is the table of signs of the field
+          counter++;
+        } // end loop on vertices
+      } // end loop on edges
+    } // end of loop on faces
+    // Set tag
+    if (counter != PDM_ABS(sum)) {
+      cell_tag[i] = 1;
+      current_cell_tag[idx++] = i;
+      cell_counter++;
+    }
+    // Reset entities
+    sum = 0;
+    counter = 0;
+  } // end of loop on cells
 
+  // Set end of first pass
+  n_current_cell_tag = idx;
+  idx = 0;
 
   /*
    *  Visualize cell tags
    */
-  //...
+  // Output cells and tag field
+  char filename[999];
+  sprintf(filename, "cells.vtk");
+  const char* fieldname[] = {"cell_tag", 0 };
 
-
-
+  PDM_vtk_write_std_elements(filename,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             elt_type,
+                             n_cell,
+                             cell_vtx,
+                             NULL,
+                             1,
+                             fieldname,
+             (const int **) &cell_tag);
 
   /*
    *  2) Tag all cells
@@ -410,13 +462,67 @@ int main(int argc, char *argv[])
    *
    */
 
-  //...
+  // Compute vtx_edge connectivity
+  int *face_cell_idx = NULL;
+  int *face_cell = NULL;
 
+  PDM_connectivity_transpose(n_cell,
+                             n_face,
+                             cell_face_idx,
+                             cell_face,
+                            &face_cell_idx,
+                            &face_cell);
+
+  // Extended cell tag
+  while (cell_counter < n_cell) { // 31513
+    for (int i = 0; i < n_current_cell_tag; i++) {
+      idx_cell = current_cell_tag[i];
+      for (int j = cell_face_idx[idx_cell]; j < cell_face_idx[idx_cell+1]; j++) {
+        idx_face = PDM_ABS(cell_face[j])-1;
+        // Not on boundary
+        if (face_cell_idx[idx_face+1] - face_cell_idx[idx_face] == 2) {
+          // Get other than me
+          if (PDM_ABS(face_cell[face_cell_idx[idx_face]])-1 != idx_cell) {
+            idx_cell_other = PDM_ABS(face_cell[face_cell_idx[idx_face]])-1;
+          } else {
+            idx_cell_other = PDM_ABS(face_cell[face_cell_idx[idx_face]+1])-1;
+          }
+          // Tag other if 0
+          if (cell_tag[idx_cell_other] == 0) {
+            cell_tag[idx_cell_other] = cell_tag[idx_cell] + 1;
+            n_current_cell_tag_new++;
+            current_cell_tag_new[idx++] = idx_cell_other;
+            cell_counter++;
+          }
+        }
+      } // end for on faces on cell
+    } // end for on tagged cells
+    printf("we dealt with %d cells of %d and the number of tagged cells is %d\n", cell_counter, n_cell, n_current_cell_tag_new);
+    idx = 0;
+    memcpy(current_cell_tag, current_cell_tag_new, PDM_MAX(n_current_cell_tag, n_current_cell_tag_new) * sizeof(int) );
+    memcpy(current_cell_tag_new, zeros, n_current_cell_tag_new * sizeof(int));
+    n_current_cell_tag = n_current_cell_tag_new;
+    n_current_cell_tag_new = 0; // pourquoi ça fonctionne mieux quand lui pas mis à 0
+  } // end loop on domain
 
   /*
    *  Visualize 'expanded' cell tags
    */
-  //...
+  char filename2[999];
+  sprintf(filename2, "cells_extended.vtk");
+  const char* fieldname2[] = {"cell_tag_extended", 0 };
+
+  PDM_vtk_write_std_elements(filename2,
+                             n_vtx,
+                             vtx_coord,
+                             NULL,
+                             elt_type,
+                             n_cell,
+                             cell_vtx,
+                             NULL,
+                             1,
+                             fieldname2,
+             (const int **) &cell_tag);
 
   /* Free memory */
   free(cell_face_idx);
