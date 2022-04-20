@@ -1400,14 +1400,20 @@ PDM_vtk_write_std_elements
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, 1);
 
   fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
-  for (int i = 0; i < n_elt; i++) {
-    fprintf(f, "%d", n_vtx_elt);
-    for (int j = 0; j < n_vtx_elt; j++) {
-      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+  if (elt_type == PDM_MESH_NODAL_POINT) {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "1 %d\n", i);
     }
-    fprintf(f, "\n");
   }
-
+  else {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "%d", n_vtx_elt);
+      for (int j = 0; j < n_vtx_elt; j++) {
+        fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+      }
+      fprintf(f, "\n");
+    }
+  }
 
   int vtk_elt_type = _vtk_elt_type (elt_type, 1);
   fprintf(f, "CELL_TYPES %d\n", n_elt);
@@ -1513,12 +1519,19 @@ PDM_vtk_write_std_elements_double
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, 1);
 
   fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
-  for (int i = 0; i < n_elt; i++) {
-    fprintf(f, "%d", n_vtx_elt);
-    for (int j = 0; j < n_vtx_elt; j++) {
-      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+  if (elt_type == PDM_MESH_NODAL_POINT) {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "1 %d\n", i);
     }
-    fprintf(f, "\n");
+  }
+  else {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "%d", n_vtx_elt);
+      for (int j = 0; j < n_vtx_elt; j++) {
+        fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+      }
+      fprintf(f, "\n");
+    }
   }
 
 
@@ -1634,13 +1647,20 @@ PDM_vtk_write_std_elements_ho
   }
 
   fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
-  for (int i = 0; i < n_elt; i++) {
-    fprintf(f, "%d", n_vtx_elt);
-    for (int j = 0; j < n_vtx_elt; j++) {
-      //fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
-      fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+  if (elt_type == PDM_MESH_NODAL_POINT) {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "1 %d\n", i);
     }
-    fprintf(f, "\n");
+  }
+  else {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "%d", n_vtx_elt);
+      for (int j = 0; j < n_vtx_elt; j++) {
+      //fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
+        fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+      }
+      fprintf(f, "\n");
+    }
   }
 
 

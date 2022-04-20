@@ -1711,7 +1711,7 @@ _translate_element_group_to_faces
   PDM_g_num_t *dface_bound;
   int         *dface_bound_idx;
 
-  if(dmesh_nodal->surfacic->n_group_elmt > 0) {
+  if(dmesh_nodal->surfacic != NULL && dmesh_nodal->surfacic->n_group_elmt > 0) {
     _translate_element_group_to_entity(dmesh_nodal->comm,
                                        dmesh_nodal->surfacic->delmt_child_distrib,
                                        dmesh_nodal->surfacic->dgroup_elmt,
@@ -1754,7 +1754,7 @@ _translate_element_group_to_edges
   PDM_g_num_t *dedge_bound;
   int         *dedge_bound_idx;
 
-  if(dmesh_nodal->ridge->n_group_elmt > 0) {
+  if(dmesh_nodal->ridge != NULL && dmesh_nodal->ridge->n_group_elmt > 0) {
     _translate_element_group_to_entity(dmesh_nodal->comm,
                                        dmesh_nodal->ridge->delmt_child_distrib,
                                        dmesh_nodal->ridge->dgroup_elmt,
@@ -2077,6 +2077,7 @@ PDM_dmesh_nodal_to_dmesh_compute
           {
             assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
             _translate_element_group_to_faces(dmesh_nodal_to_dm->link[i_mesh]);
+            _translate_element_group_to_edges(dmesh_nodal_to_dm->link[i_mesh]);
           }
           break;
         case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
