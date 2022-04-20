@@ -369,24 +369,50 @@ int main(int argc, char *argv[])
   int *vtx_ridge_idx    = NULL;
   int *vtx_ridge        = NULL;
 
-  //...
+  // Surface upon edge
 
-  if(0 == 1) {
-    PDM_log_trace_connectivity_int(edge_surface_idx,
-                                   edge_surface,
-                                   n_edge,
-                                   "edge_surface : ");
+  PDM_combine_connectivity(n_face_group,
+                           group_face_idx,
+                           group_face,
+                           face_edge_idx,
+                           face_edge,
+                          &edge_surface_idx,
+                          &edge_surface);
 
-    PDM_log_trace_connectivity_int(vtx_ridge_idx,
-                                   vtx_ridge,
-                                   n_vtx,
-                                   "vtx_ridge : ");
+  // Surface upon vertex
 
-    PDM_log_trace_connectivity_int(vtx_surface_idx,
-                                   vtx_surface,
-                                   n_vtx,
-                                   "vtx_surface : ");
-  }
+  PDM_combine_connectivity(n_face_group,
+                           edge_surface_idx,
+                           edge_surface,
+                           edge_vtx_idx,
+                           edge_vtx,
+                          &vtx_surface_idx,
+                          &vtx_surface);
+
+  // Ridge upon vertex
+
+  PDM_combine_connectivity(n_edge_group,
+                           group_edge_idx,
+                           group_edge,
+                           edge_vtx_idx,
+                           edge_vtx,
+                          &vtx_ridge_idx,
+                          &vtx_ridge);
+
+  PDM_log_trace_connectivity_int(edge_surface_idx,
+                                 edge_surface,
+                                 n_edge,
+                                 "edge_surface : ");
+
+  PDM_log_trace_connectivity_int(vtx_ridge_idx,
+                                 vtx_ridge,
+                                 n_vtx,
+                                 "vtx_ridge : ");
+
+  PDM_log_trace_connectivity_int(vtx_surface_idx,
+                                 vtx_surface,
+                                 n_vtx,
+                                 "vtx_surface : ");
 
   free(edge_surface_idx);
   free(edge_surface    );
