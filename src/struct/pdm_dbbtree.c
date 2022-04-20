@@ -874,10 +874,10 @@ PDM_dbbtree_intersect_boxes_set
     }
 
     PDM_box_distrib_t  *distrib = NULL;
-    distrib = PDM_box_distrib_create (boxes->local_boxes->n_boxes,//*
-                                      boxes->n_g_boxes,
-                                      1, // Don't use in this case
-                                      boxes->comm);
+    distrib = PDM_box_distrib_shared_create (boxes->local_boxes->n_boxes,//*
+                                             boxes->n_g_boxes,
+                                             1, // Don't use in this case
+                                             boxes->comm);
 
     PDM_array_reset_int(distrib->index, lComm + 1, 0);
 
