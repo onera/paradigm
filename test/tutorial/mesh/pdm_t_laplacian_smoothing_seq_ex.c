@@ -18,6 +18,8 @@
 #include "pdm_vtk.h"
 #include "pdm_array.h"
 
+#include "pdm_part_connectivity_transform.h" // Added
+
 
 /*============================================================================
  * Type definitions
@@ -213,6 +215,17 @@ const int      n_vtx_seg,
   #undef ij2idx
 }
 
+// Is in table
+int is_in_table(int *table, int value, int size) {
+  int boolean = 0;
+  for (int i = 0; i < size; i++) {
+    if (table[i] == value) {
+      boolean = 1;
+    }
+  }
+  return boolean;
+}
+
 
 
 
@@ -261,29 +274,153 @@ int main(int argc, char *argv[])
    *  coordinates of its neighbor vtx (linked by an edge) at step 'i_step-1'
    *  (https://en.wikipedia.org/wiki/Laplacian_smoothing)
    *
-   *  You get a bonus chocolate if you manage to freeze the boundary vertices ;)
+   *  You get a bonus chocolate if you manage to freeze the boundary vertices ;) // ici bord si N == 2 ou 4
    *
    */
 
-  //...
+  // New coordinate data structure
+  double *vtx_new_coord = malloc(n_vtx*3 * sizeof(double));
 
+  // Create edge_vtx_idx
+  int *edge_vtx_idx = malloc((n_edge+1) * sizeof(int)); // cf pdm_array
+  for (int i = 0; i < n_edge+1; i++) {
+    edge_vtx_idx[i] = 2*i;
+  }
+
+  // Compute vtx_edge connectivity
+  int *vtx_edge_idx = NULL;
+  int *vtx_edge = NULL;
+
+  PDM_connectivity_transpose(n_edge,
+                             n_vtx,
+                             edge_vtx_idx,
+                             edge_vtx,
+                            &vtx_edge_idx,
+                            &vtx_edge);
+
+  // Compute edge_face connectivity
+  int *edge_face_idx = NULL;
+  int *edge_face = NULL;
+
+  PDM_connectivity_transpose(n_face,
+                             n_edge,
+                             face_edge_idx,
+                             face_edge,
+                            &edge_face_idx,
+                            &edge_face);
+
+  // Entities for vtk output
+  char filename[999];
+
+  // Entities for laplace smoothing
+  int idx = 0;
+  int N = 1; // to avoid 0 zero division
+  int idx_vtx_of_edge = 0;
+  int idx_vtx_other = 0;
+  int idx_edge = 0;
+  int n_face_edge = 0;
+  double *laplace_smoothing_vtx_coord = malloc(2 * sizeof(double));
+
+  // Create face_vtx_idx
+  int face_vtx_idx[n_face+1];
+  for (int i = 0; i < n_face+1; i++) {
+    face_vtx_idx[i] = 3*i;
+  }
+
+  // Create group
+  int *bdr_group = malloc(10 * n_vtx * sizeof(double)); // il y a plus élégant...
+  int size = 0;
+
+  for (int i = 0; i < n_vtx; i++) {
+    N = (vtx_edge_idx[i+1]- vtx_edge_idx[i]);
+    for (int j = 0; j < N; j++){
+      idx_edge = vtx_edge[idx]-1;
+      n_face_edge = (edge_face_idx[idx_edge+1]- edge_face_idx[idx_edge]);
+      if (n_face_edge < 2) {
+        idx_vtx_of_edge = edge_vtx[edge_vtx_idx[vtx_edge[idx]-1]]-1;
+        idx_vtx_other = edge_vtx[edge_vtx_idx[vtx_edge[idx]-1]+1]-1;
+        bdr_group[size++] = idx_vtx_of_edge;
+        bdr_group[size++] = idx_vtx_other;
+      }
+      idx++;
+    }
+  }
+
+  // Do smoothing stepping
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 
     /*
      *  Export current mesh to vtk format to get a nice video :D
      */
-    //...
+
+    sprintf(filename, "out_mesh_%2.2d.vtk", i_step); // TO DO %2.2d change if more steps
+
+    PDM_vtk_write_polydata(filename,
+                           n_vtx,
+                           vtx_coord,
+                           NULL,
+                           n_face,
+                           face_vtx_idx,
+                           face_vtx,
+                           NULL,
+                           NULL);
 
     /*
      *  Apply one smoothing step
      */
-    //...
+
+    // 2D version
+    idx = 0;
+    laplace_smoothing_vtx_coord[0] = 0;
+    laplace_smoothing_vtx_coord[1] = 0;
+
+    // For each vertex
+    for (int i = 0; i < n_vtx; i++) {
+      // For each edge coming out of that vertex
+      N = (vtx_edge_idx[i+1]- vtx_edge_idx[i]);
+      for (int j = 0; j < N; j++){
+
+        if (!(is_in_table(bdr_group, i, size))) {
+
+        idx_vtx_of_edge = edge_vtx[edge_vtx_idx[vtx_edge[idx]-1]]-1;
+        idx_vtx_other = edge_vtx[edge_vtx_idx[vtx_edge[idx]-1]+1]-1;
+
+          if (i == idx_vtx_of_edge) {
+            laplace_smoothing_vtx_coord[0] += vtx_coord[3*idx_vtx_other];
+            laplace_smoothing_vtx_coord[1] += vtx_coord[3*idx_vtx_other+1];
+          } else {
+            laplace_smoothing_vtx_coord[0] += vtx_coord[3*idx_vtx_of_edge];
+            laplace_smoothing_vtx_coord[1] += vtx_coord[3*idx_vtx_of_edge+1];
+          }
+        }
+
+        idx++;
+
+      }
+      vtx_new_coord[3*i] = laplace_smoothing_vtx_coord[0] / N;
+      vtx_new_coord[3*i+1] = laplace_smoothing_vtx_coord[1] / N;
+      laplace_smoothing_vtx_coord[0] = 0;
+      laplace_smoothing_vtx_coord[1] = 0;
+    }
+
+    // put back in old table
+    for (int i = 0; i < n_vtx; i++) {
+      if (!(is_in_table(bdr_group, i, size))) {
+          vtx_coord[3*i] = vtx_new_coord[3*i];
+          vtx_coord[3*i+1] = vtx_new_coord[3*i+1];
+      }
+    }
 
     if (i_step == n_steps-1) {
       break;
     }
   }
 
+  // Additional free
+  free(vtx_new_coord);
+  free(vtx_edge_idx);
+  free(vtx_edge);
+  free(laplace_smoothing_vtx_coord);
 
   free(face_edge_idx);
   free(face_edge    );
