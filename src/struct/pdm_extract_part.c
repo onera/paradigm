@@ -602,7 +602,7 @@ int         ***old_to_new_entity2_no
 )
 {
   int         **_extract_entity2_lnum            = malloc(n_part * sizeof(int         *));
-  int         **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **_extract_parent_entity2_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   int          *_n_extract_entity2               = malloc(n_part * sizeof(int          ));
   int         **_old_to_new_entity2_no           = malloc(n_part * sizeof(int         *));
 
@@ -1196,8 +1196,8 @@ _extract_part_nodal
                                         extract_section_id,
                                         n_selected_section[i_part][i_section],
                                         extract_elt_vtx,
-                                        extract_parent_num[i_part][i_section],
                                         extract_elt_ln_to_gn,
+                                        extract_parent_num[i_part][i_section],
                                         NULL,
                                         PDM_OWNERSHIP_KEEP);
 
