@@ -411,6 +411,12 @@ int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int de
 int PDM_MPI_Wait(PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Test (wrapping de la fonction MPI_Test)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Test(PDM_MPI_Request *request, int *flag);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_hindexed (wrapping de la fonction MPI_Type_hindexed)
  *
  *----------------------------------------------------------------------------*/
@@ -659,7 +665,8 @@ int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win);
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Rand_tag (PDM_MPI_Comm comm);
+int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *flag);
+int PDM_MPI_Rand_tag            (PDM_MPI_Comm comm);
 
 #ifdef __cplusplus
 }

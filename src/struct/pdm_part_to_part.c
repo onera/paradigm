@@ -2395,8 +2395,16 @@ PDM_part_to_part_create
   free (tag_elt2);
   free (ielt_to_ref);
 
-  return ptp;
+  // Create tag for P2P
+  void  *max_tag_tmp;
+  int    flag = 0;
 
+  PDM_MPI_Comm_get_attr_tag_ub(comm, &max_tag_tmp, &flag);
+  ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+  ptp->seed_tag = PDM_MPI_Rand_tag(comm);
+  ptp->next_tag = 1;
+
+  return ptp;
 }
 
 
@@ -2889,6 +2897,42 @@ PDM_part_to_part_reverse_issend_wait
 }
 
 
+/**
+ *
+ * \brief Wait an asynchronus reverse issend (part2 to part1)
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  tag           Tag of the exchange
+ * \param [in]  request       Request
+ *
+ */
+int
+PDM_part_to_part_reverse_issend_test
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  for (int i = 0; i < ptp->n_active_rank_recv; i++) {
+    int flag = -1;
+    PDM_MPI_Test (&(ptp->async_send_request[request][i]), &flag);
+    if(flag == 0) {
+      return 0; // If one of message is not OK we return immediatly
+    }
+  }
+  return 1;
+}
+
+
+void
+PDM_part_to_part_reverse_issend_post
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  _free_async_send(ptp, request);
+}
 
 /**
  *
@@ -2945,6 +2989,96 @@ PDM_part_to_part_irecv
   
 }
 
+/**
+ *
+ * \brief Test the reception/send completion
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+int
+PDM_part_to_part_issend_test
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+    int flag = -1;
+    PDM_MPI_Test (&(ptp->async_send_request[request][i]), &flag);
+    if(flag == 0) {
+      return 0; // If one of message is not OK we return immediatly
+    }
+  }
+  return 1;
+}
+
+/**
+ *
+ * \brief Test the reception/send completion
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+int
+PDM_part_to_part_irecv_test
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  for (int i = 0; i < ptp->n_active_rank_recv; i++) {
+    int flag = -1;
+    PDM_MPI_Test (&(ptp->async_recv_request[request][i]), &flag);
+    if(flag == 0) {
+      return 0; // If one of message is not OK we return immediatly
+    }
+  }
+  return 1;
+}
+
+void
+PDM_part_to_part_issend_post
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  _free_async_send (ptp, request);
+}
+
+void
+PDM_part_to_part_irecv_post
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  size_t s_data  = ptp->async_recv_s_data[request];
+  int cst_stride = ptp->async_recv_cst_stride[request];
+
+  unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request];
+
+  int delta = (int) s_data * cst_stride;
+  for (int i = 0; i < ptp->n_part2; i++) {
+    for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
+      for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
+        int idx = ptp->recv_buffer_to_ref_lnum2[i][k] * delta;
+        int idx1 = k* delta;
+        for (int k1 = 0; k1 < delta; k1++) {
+          _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
+        }
+      }
+    }
+  }
+
+  _free_async_recv (ptp, request);
+  free(ptp->async_recv_part2_data[request]);
+}
 
 /**
  *
@@ -2962,31 +3096,32 @@ PDM_part_to_part_irecv_wait
  const int           request
 )
 {
-
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
   }
+  PDM_part_to_part_irecv_post(ptp, request);
 
-  size_t s_data  = ptp->async_recv_s_data[request];      
-  int cst_stride = ptp->async_recv_cst_stride[request];      
+  // = PDM_part_to_part_irecv_post but keep to debug purpose
+  // size_t s_data  = ptp->async_recv_s_data[request];
+  // int cst_stride = ptp->async_recv_cst_stride[request];
 
-  unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request];
+  // unsigned char ** _part2_data = (unsigned char **) ptp->async_recv_part2_data[request];
 
-  int delta = (int) s_data * cst_stride;
-  for (int i = 0; i < ptp->n_part2; i++) {
-    for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
-      for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
-        int idx = ptp->recv_buffer_to_ref_lnum2[i][k] * delta;
-        int idx1 = k* delta;
-        for (int k1 = 0; k1 < delta; k1++) {
-          _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1]; 
-        }
-      }
-    }
-  }
+  // int delta = (int) s_data * cst_stride;
+  // for (int i = 0; i < ptp->n_part2; i++) {
+  //   for (int j = 0; j < ptp->n_ref_lnum2[i]; j++) {
+  //     for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) {
+  //       int idx = ptp->recv_buffer_to_ref_lnum2[i][k] * delta;
+  //       int idx1 = k* delta;
+  //       for (int k1 = 0; k1 < delta; k1++) {
+  //         _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
+  //       }
+  //     }
+  //   }
+  // }
 
-  _free_async_recv (ptp, request);
-  free(ptp->async_recv_part2_data[request]);
+  // _free_async_recv (ptp, request);
+  // free(ptp->async_recv_part2_data[request]);
 }
 
 
@@ -3067,9 +3202,76 @@ PDM_part_to_part_reverse_irecv_wait
   for (int i = 0; i < ptp->n_active_rank_send; i++) {
     PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
   }
+  PDM_part_to_part_reverse_irecv_post(ptp, request);
 
-  size_t s_data  = ptp->async_recv_s_data[request];      
-  int cst_stride = ptp->async_recv_cst_stride[request];      
+  // size_t s_data  = ptp->async_recv_s_data[request];
+  // int cst_stride = ptp->async_recv_cst_stride[request];
+
+  // unsigned char ** _part1_data = (unsigned char **) ptp->async_recv_part2_data[request];
+
+  // int delta = (int) s_data * cst_stride;
+
+  // for (int i = 0; i < ptp->n_part1; i++) {
+  //   for (int i1 = 0; i1 < ptp->n_elt1[i]; i1++) {
+  //     for (int j = ptp->part1_to_part2_idx[i][i1]; j < ptp->part1_to_part2_idx[i][i1+1]; j++) {
+  //       for (int k = ptp->gnum1_to_send_buffer_idx[i][j];
+  //                k < ptp->gnum1_to_send_buffer_idx[i][j+1];
+  //                k++) {
+
+  //         if (ptp->gnum1_to_send_buffer[i][k] >= 0) {
+  //           int idx  = ptp->gnum1_to_send_buffer[i][k] * delta;
+  //           int idx1 = j * delta;
+  //           for (int k1 = 0; k1 < delta; k1++) {
+  //             _part1_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // _free_async_recv (ptp, request);
+  // free(ptp->async_recv_part2_data[request]);
+
+}
+
+
+/**
+ *
+ * \brief Test the reception/send completion
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+int
+PDM_part_to_part_reverse_irecv_test
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  for (int i = 0; i < ptp->n_active_rank_send; i++) {
+    int flag = -1;
+    PDM_MPI_Test (&(ptp->async_send_request[request][i]), &flag);
+    if(flag == 0) {
+      return 0; // If one of message is not OK we return immediatly
+    }
+  }
+  return 1;
+}
+
+
+void
+PDM_part_to_part_reverse_irecv_post
+(
+ PDM_part_to_part_t *ptp,
+ const int           request
+)
+{
+  size_t s_data  = ptp->async_recv_s_data    [request];
+  int cst_stride = ptp->async_recv_cst_stride[request];
 
   unsigned char ** _part1_data = (unsigned char **) ptp->async_recv_part2_data[request];
 
@@ -3078,8 +3280,8 @@ PDM_part_to_part_reverse_irecv_wait
   for (int i = 0; i < ptp->n_part1; i++) {
     for (int i1 = 0; i1 < ptp->n_elt1[i]; i1++) {
       for (int j = ptp->part1_to_part2_idx[i][i1]; j < ptp->part1_to_part2_idx[i][i1+1]; j++) {
-        for (int k = ptp->gnum1_to_send_buffer_idx[i][j]; 
-                 k < ptp->gnum1_to_send_buffer_idx[i][j+1]; 
+        for (int k = ptp->gnum1_to_send_buffer_idx[i][j];
+                 k < ptp->gnum1_to_send_buffer_idx[i][j+1];
                  k++) {
 
           if (ptp->gnum1_to_send_buffer[i][k] >= 0) {
@@ -3089,16 +3291,14 @@ PDM_part_to_part_reverse_irecv_wait
               _part1_data[i][idx1+k1] = ptp->async_recv_buffer[request][idx+k1];
             }
           }
-        } 
+        }
       }
     }
   }
 
   _free_async_recv (ptp, request);
   free(ptp->async_recv_part2_data[request]);
-
 }
-
 
 /**
  *
@@ -3134,7 +3334,11 @@ PDM_part_to_part_iexch
  int                               *request
 )
 {
-  int tag = PDM_MPI_Rand_tag (ptp->comm);
+  int tag = -10000;
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    tag  = ptp->seed_tag;
+    tag += (ptp->next_tag++) % ptp->max_tag;
+  }
 
   PDM_UNUSED (cst_stride);
 

@@ -117,6 +117,11 @@ struct _pdm_part_to_part_t {
   int               **async_exch_recv_idx;          /*!< Index to find received data */ 
   int              ***async_exch_part2_stride;      /*!< Stride of part2 data */ 
 
+  long                max_tag;
+  int                 seed_tag;
+  int                 next_tag;
+
+
 };
 
 

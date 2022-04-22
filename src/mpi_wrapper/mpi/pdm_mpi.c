@@ -186,7 +186,6 @@ static const MPI_Op mpi_op[] = {
 };
 
 
-
 /*----------------------------------------------------------------------------
  * Indirection constantes PDM_MPI_File ->constantes MPI_File
  *----------------------------------------------------------------------------*/
@@ -1596,7 +1595,42 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
   free(mpi_request[*request]);
   mpi_request[*request] = NULL;
   n_mpi_request += -1;
-  *request = PDM_MPI_COMM_NULL;
+  *request = PDM_MPI_REQUEST_NULL;
+
+  if (n_mpi_request == 0) {
+    free(mpi_request);
+    mpi_request = NULL;
+
+    l_mpi_datatype = 0;
+  }
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Test (wrapping de la fonction MPI_Test)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
+{
+  MPI_Request _request = _pdm_mpi_2_mpi_request(*request);
+
+  // Test was already done
+  if(_request == PDM_MPI_REQUEST_NULL) {
+    *flag = 1;
+    return _mpi_2_pdm_mpi_err(MPI_SUCCESS);
+  }
+  int code = MPI_Test(&_request, flag, MPI_STATUS_IGNORE);
+
+  if(*flag == 0) {
+    return code; // Message was not ready
+  }
+
+  free(mpi_request[*request]);
+  mpi_request[*request] = NULL;
+  n_mpi_request += -1;
+  *request = PDM_MPI_REQUEST_NULL;
 
   if (n_mpi_request == 0) {
     free(mpi_request);
@@ -2300,6 +2334,13 @@ PDM_MPI_Comm PDM_MPI_get_group_of_master(PDM_MPI_Comm comm, PDM_MPI_Comm sub_com
   return master_of_sub_comm;
 }
 
+// ------------------------------------------------------------------
+int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *flag)
+{
+  int code = MPI_Comm_get_attr(_pdm_mpi_2_mpi_comm(comm), MPI_TAG_UB, attribute_val, flag);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_rand_tag_get
@@ -2312,21 +2353,19 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
   gettimeofday(&t, NULL);
 
   long ltag = t.tv_usec + 1000000 * t.tv_sec;
-  long mtag;
 
-  MPI_Allreduce (&ltag, &mtag, 1, MPI_LONG, MPI_MAX, _pdm_mpi_2_mpi_comm(comm));
+  MPI_Bcast (&ltag, 1, MPI_LONG, 0, _pdm_mpi_2_mpi_comm(comm));
 
   void  *max_tag_tmp;
   int flag;
 
-  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
+  MPI_Comm_get_attr(_pdm_mpi_2_mpi_comm(comm), MPI_TAG_UB, &max_tag_tmp, &flag);
   long max_tag = (long) (*((int *) max_tag_tmp));
 
-  // printf("max_tag = %li | mtag = %li \n", max_tag, mtag);
+  // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);
 
-  return (int) (mtag % max_tag);
+  return (int) (ltag % max_tag);
 }
-
 
 #ifdef __cplusplus
 }

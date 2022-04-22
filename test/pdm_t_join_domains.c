@@ -221,7 +221,7 @@ int main
 (
  int   argc,
  char *argv[]
- )
+)
 {
   /*
    *  Set default values
