@@ -35,11 +35,12 @@ extern "C" {
 
 struct _PDM_writer_geom_t {
 
-  char                     *nom_geom;           /* Nom de la geometrie */
-  void                     *geom_fmt;           /* Description propre au format fmt */
-  PDM_writer_t             *_cs;                /* Pointeur sur la structure cs parente */
-  PDM_MPI_Comm              pdm_mpi_comm;       /* Communicateur MPI */
-  PDM_Mesh_nodal_t         *mesh_nodal;         /* Mesh handle */
+  char                      *nom_geom;           /* Nom de la geometrie */
+  void                      *geom_fmt;           /* Description propre au format fmt */
+  PDM_writer_t              *_cs;                /* Pointeur sur la structure cs parente */
+  PDM_MPI_Comm               pdm_mpi_comm;       /* Communicateur MPI */
+  PDM_Mesh_nodal_t          *mesh_nodal;         /* Mesh handle */
+  PDM_Mesh_nodal_t          *_mesh_nodal;        /* Local allocated mesh handle */
 
 };
 

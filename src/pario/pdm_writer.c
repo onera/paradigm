@@ -304,7 +304,8 @@ const PDM_MPI_Comm  comm
 {
   geom->nom_geom = NULL;
 
-  geom->mesh_nodal = PDM_Mesh_nodal_create (n_part, comm);
+  geom->_mesh_nodal = PDM_Mesh_nodal_create (n_part, comm);
+  geom->mesh_nodal = geom->_mesh_nodal; 
 
   geom->geom_fmt       = NULL;
   geom->_cs            = NULL;
@@ -838,9 +839,10 @@ PDM_writer_geom_create_from_mesh_nodal
   /* Initialisation de la structure PDM_writer_geom_t */
 
   //_geom_init(geom, n_part, cs->pdm_mpi_comm);
-  geom->nom_geom = NULL;
-  geom->mesh_nodal = mesh;
-  geom->geom_fmt       = NULL;
+  geom->nom_geom    = NULL;
+  geom->_mesh_nodal = NULL;
+  geom->mesh_nodal  = mesh;
+  geom->geom_fmt    = NULL;
 
   geom->_cs = cs;
   geom->pdm_mpi_comm = cs->pdm_mpi_comm;
@@ -899,7 +901,7 @@ PDM_writer_geom_coord_set
     abort();
   }
 
-  PDM_Mesh_nodal_coord_set (geom->mesh_nodal, id_part, n_som, coords, numabs);
+  PDM_Mesh_nodal_coord_set (geom->_mesh_nodal, id_part, n_som, coords, numabs);
 
   if (0 == 1) {
     printf("n_vtx : %d\n", n_som);
@@ -957,7 +959,7 @@ PDM_writer_geom_coord_from_parent_set
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
   }
 
-  PDM_Mesh_nodal_coord_from_parent_set (geom->mesh_nodal,
+  PDM_Mesh_nodal_coord_from_parent_set (geom->_mesh_nodal,
                                         id_part,
                                         n_som,
                                         n_som_parent,
@@ -1002,9 +1004,8 @@ PDM_writer_geom_bloc_add
     abort();
   }
 
-  int id_block = PDM_Mesh_nodal_block_add (geom->mesh_nodal, (PDM_bool_t) st_free_data,
+  int id_block = PDM_Mesh_nodal_block_add (geom->_mesh_nodal, (PDM_bool_t) st_free_data,
                                            (PDM_Mesh_nodal_elt_t) t_elt);
-
 
   return id_block;
 
@@ -1120,7 +1121,7 @@ PDM_writer_geom_bloc_std_set
     abort();
   }
 
-  PDM_Mesh_nodal_block_std_set (geom->mesh_nodal, id_bloc, id_part,
+  PDM_Mesh_nodal_block_std_set (geom->_mesh_nodal, id_bloc, id_part,
                                 n_elt, connec, numabs, NULL);
 
 }
@@ -1167,7 +1168,7 @@ const PDM_l_num_t    n_elt,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly2d_set (geom->mesh_nodal, id_bloc, id_part,
+  PDM_Mesh_nodal_block_poly2d_set (geom->_mesh_nodal, id_bloc, id_part,
                                 n_elt, connec_idx, connec, numabs, NULL);
 
 }
@@ -1220,7 +1221,7 @@ const PDM_l_num_t    n_face,
     abort();
   }
 
-  PDM_Mesh_nodal_block_poly3d_set (geom->mesh_nodal,
+  PDM_Mesh_nodal_block_poly3d_set (geom->_mesh_nodal,
                                    id_bloc,
                                    id_part,
                                    n_elt,
@@ -1286,7 +1287,7 @@ PDM_writer_geom_cell3d_cellface_add
     abort();
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add (geom->mesh_nodal,
+  PDM_Mesh_nodal_cell3d_cellface_add (geom->_mesh_nodal,
                                       id_part,
                                       n_cell,
                                       
@@ -1373,7 +1374,7 @@ PDM_writer_geom_cell2d_cellface_add
     abort();
   }
 
-  PDM_Mesh_nodal_cell2d_celledge_add (geom->mesh_nodal,
+  PDM_Mesh_nodal_cell2d_celledge_add (geom->_mesh_nodal,
                                       id_part,
                                       n_cell,
                                       n_face,
@@ -1433,7 +1434,7 @@ PDM_writer_geom_faces_facesom_add
     abort();
   }
 
-  PDM_Mesh_nodal_faces_facevtx_add (geom->mesh_nodal,
+  PDM_Mesh_nodal_faces_facevtx_add (geom->_mesh_nodal,
                                     id_part,
                                     n_face,
                                     face_som_idx,
@@ -1538,7 +1539,11 @@ PDM_writer_geom_free
 
   if (geom != NULL) {
 
-    PDM_Mesh_nodal_free (geom->mesh_nodal);
+    if (geom->_mesh_nodal != NULL) {
+      PDM_Mesh_nodal_free (geom->_mesh_nodal);
+      geom->_mesh_nodal = NULL;
+      geom->mesh_nodal = NULL;      
+    }
     if (geom->nom_geom != NULL) {
       free(geom->nom_geom);
       geom->nom_geom = NULL;
