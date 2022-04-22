@@ -3684,6 +3684,42 @@ const int                       i_part,
 }
 
 
+void PDM_multipart_bound_get
+(
+ PDM_multipart_t   *multipart,
+ const int          i_zone,
+ const int          i_part,
+ PDM_bound_type_t   bound_type,
+ int               *n_bound,
+ int              **bound_idx,
+ int              **bound,
+ PDM_g_num_t      **bound_ln_to_gn
+ )
+{
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  switch (bound_type) {
+    case PDM_BOUND_TYPE_EDGE:
+    *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
+    *bound          = _pmeshes.parts[i_part]->edge_bound;
+    *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+    break;
+
+    case PDM_BOUND_TYPE_FACE:
+    *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
+    *bound          = _pmeshes.parts[i_part]->face_bound;
+    *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+    break;
+
+    default:
+    PDM_error(__FILE__, __LINE__, 0,
+              "PDM_multipart_bound_get : Wrong bound_type %d\n", (int) bound_type);
+  }
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
