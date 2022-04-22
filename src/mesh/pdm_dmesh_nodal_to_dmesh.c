@@ -1767,14 +1767,14 @@ _translate_element_group_to_edges
     dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
     dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
-    dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt; // TODO : TO REMOVE
+    // dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt; // TODO : TO REMOVE
     dm->n_group_bnd   [PDM_BOUND_TYPE_EDGE] = dmesh_nodal->ridge->n_group_elmt;
   }
   else {
     dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
     dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = PDM_array_zeros_int(1);
     dm->dbound        [PDM_BOUND_TYPE_EDGE] = NULL;
-    dm->n_bnd                               = 0;
+    // dm->n_bnd                               = 0;
     dm->n_group_bnd   [PDM_BOUND_TYPE_EDGE] = 0;
   }
 }

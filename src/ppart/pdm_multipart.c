@@ -1858,7 +1858,7 @@ PDM_MPI_Comm       comm
                                            &dface_bound_idx,
                                            PDM_OWNERSHIP_KEEP);
 
-    assert(n_face_group == pmeshes->n_bounds);
+    // assert(n_face_group == pmeshes->n_bounds);
 
     int         **pface_bound_idx               = NULL;
     int         **pface_bound                   = NULL;
@@ -1869,7 +1869,7 @@ PDM_MPI_Comm       comm
     PDM_g_num_t **pface_bound_ln_to_gn          = NULL;
     PDM_part_distgroup_to_partgroup(comm,
                                     face_distri,
-                                    n_bnd,
+                                    n_face_group,
                                     dface_bound_idx,
                                     dface_bound,
                                     n_part,
