@@ -371,21 +371,22 @@ int main(int argc, char *argv[])
 
   //...
 
+  if(0 == 1) {
+    PDM_log_trace_connectivity_int(edge_surface_idx,
+                                   edge_surface,
+                                   n_edge,
+                                   "edge_surface : ");
 
-  PDM_log_trace_connectivity_int(edge_surface_idx,
-                                 edge_surface,
-                                 n_edge,
-                                 "edge_surface : ");
+    PDM_log_trace_connectivity_int(vtx_ridge_idx,
+                                   vtx_ridge,
+                                   n_vtx,
+                                   "vtx_ridge : ");
 
-  PDM_log_trace_connectivity_int(vtx_ridge_idx,
-                                 vtx_ridge,
-                                 n_vtx,
-                                 "vtx_ridge : ");
-
-  PDM_log_trace_connectivity_int(vtx_surface_idx,
-                                 vtx_surface,
-                                 n_vtx,
-                                 "vtx_surface : ");
+    PDM_log_trace_connectivity_int(vtx_surface_idx,
+                                   vtx_surface,
+                                   n_vtx,
+                                   "vtx_surface : ");
+  }
 
   free(edge_surface_idx);
   free(edge_surface    );
