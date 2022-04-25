@@ -1354,9 +1354,182 @@ _ptb_create
   return ptb;
 }
 
+
+static
+void
+_prepare_exchange
+(
+  PDM_part_to_block_t   *ptb,
+  size_t                 s_data,
+  PDM_stride_t           t_stride,
+  int                    cst_stride,
+  int                  **part_stride,
+  size_t                *i_send_buffer,
+  size_t                *i_recv_buffer,
+  int                   *n_send_buffer,
+  int                   *n_recv_buffer,
+  int                  **recv_stride
+)
+{
+  /*
+   * Exchange Stride and build buffer properties
+   */
+  int *_recv_stride = NULL;
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+
+    for (int i = 0; i < ptb->s_comm; i++) {
+      n_send_buffer[i] = 0;
+      n_recv_buffer[i] = 0;
+    }
+
+    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_send_data);
+
+    int idx = -1;
+    for (int i = 0; i < ptb->n_part; i++) {
+      for (int j = 0; j < ptb->n_elt[i]; j++) {
+        int iproc = ptb->dest_proc[++idx];
+        send_stride[ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
+        n_send_buffer[iproc] += 1;
+      }
+    }
+
+    _recv_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
+    assert (send_stride != NULL);
+    assert (_recv_stride != NULL);
+
+    *recv_stride = _recv_stride;
+
+    PDM_MPI_Alltoallv (send_stride,
+                       ptb->n_send_data,
+                       ptb->i_send_data,
+                       PDM_MPI_INT,
+                       _recv_stride,
+                       ptb->n_recv_data,
+                       ptb->i_recv_data,
+                       PDM_MPI_INT,
+                       ptb->comm);
+
+    /*
+     * Build buffers
+     */
+
+    for (int i = 0; i < ptb->s_comm; i++) {
+      int ibeg = ptb->i_send_data[i];
+      int iend = ptb->i_send_data[i] + ptb->n_send_data[i];
+
+      n_send_buffer[i] = 0;
+      for (int k = ibeg; k < iend; k++)
+        n_send_buffer[i] += send_stride[k];
+
+      n_send_buffer[i] *= (int) s_data;
+
+      if (i > 0) {
+        i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
+      }
+      else {
+        i_send_buffer[i] = 0;
+      }
+
+      ibeg = ptb->i_recv_data[i];
+      iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
+
+      n_recv_buffer[i] = 0;
+      for (int k = ibeg; k < iend; k++)
+        n_recv_buffer[i] += _recv_stride[k];
+
+      n_recv_buffer[i] *= (int) s_data;
+
+      if (i > 0)
+        i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
+      else
+        i_recv_buffer[i] = 0;
+
+    }
+
+    free(send_stride);
+
+  }
+
+  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+
+    for (int i = 0; i < ptb->s_comm; i++) {
+
+      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
+      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
+
+      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
+      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
+
+    }
+  }
+}
+
+static
+void
+_prepare_send_buffer
+(
+  PDM_part_to_block_t   *ptb,
+  size_t                 s_data,
+  PDM_stride_t           t_stride,
+  int                    cst_stride,
+  int                  **part_stride,
+  void                 **part_data,
+  size_t                *i_send_buffer,
+  int                   *n_send_buffer,
+  unsigned char         *send_buffer
+)
+{
+  unsigned char **_part_data = (unsigned char **) part_data;
+
+  for (int i = 0; i <  ptb->s_comm; i++) {
+    n_send_buffer[i] = 0;
+  }
+
+  int idx = -1;
+  for (int i = 0; i < ptb->n_part; i++) {
+
+    size_t *i_part = NULL;
+    if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+      i_part = (size_t *) malloc (sizeof(size_t) * (ptb->n_elt[i] + 1));
+      assert (i_part != NULL);
+
+    i_part[0] = 0;
+      for (int j = 1; j < ptb->n_elt[i] + 1; j++)
+        i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
+    }
+
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int iproc = ptb->dest_proc[++idx];
+      size_t s_octet_elt = 0;
+      size_t i_part_elt = 0;
+
+      if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+        s_octet_elt = cst_stride * (int) s_data;
+        i_part_elt  = cst_stride * (int) s_data * j;
+      }
+
+      else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+        s_octet_elt = i_part[j+1] - i_part[j];
+        i_part_elt  = i_part[j];
+      }
+
+      for (int k = 0; k < (int) s_octet_elt; k++) {
+        send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
+          _part_data[i][i_part_elt + k];
+      }
+
+
+    }
+
+    if (i_part != NULL)
+      free (i_part);
+  }
+}
+
+
 /**
  *
- * \brief  Define active ranks
+ * \brief  Post-treatment of the resulting buffer
  *
  * \param [inout]   ptb          Part to block structure
  *
@@ -2266,166 +2439,49 @@ PDM_part_to_block_exch
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
-  int *n_send_buffer = (int *) malloc (sizeof(int) * ptb->s_comm);
-  int *n_recv_buffer = (int *) malloc (sizeof(int) * ptb->s_comm);
+  int    *n_send_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
+  int    *n_recv_buffer = (int    *) malloc (sizeof(int   ) * ptb->s_comm);
 
   /*
    * Exchange Stride and build buffer properties
    */
+  int *recv_stride = NULL; // Release in post-treatment
+  _prepare_exchange(ptb,
+                    s_data,
+                    t_stride,
+                    cst_stride,
+                    part_stride,
+                    i_send_buffer,
+                    i_recv_buffer,
+                    n_send_buffer,
+                    n_recv_buffer,
+                    &recv_stride);
 
-  int *recv_stride = NULL;
-  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-
-    for (int i = 0; i < ptb->s_comm; i++) {
-      n_send_buffer[i] = 0;
-      n_recv_buffer[i] = 0;
-    }
-
-    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_send_data);
-
-    int idx = -1;
-    for (int i = 0; i < ptb->n_part; i++) {
-      for (int j = 0; j < ptb->n_elt[i]; j++) {
-        int iproc = ptb->dest_proc[++idx];
-        send_stride[ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
-        n_send_buffer[iproc] += 1;
-      }
-    }
-
-    recv_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
-    assert (send_stride != NULL);
-    assert (recv_stride != NULL);
-
-    PDM_MPI_Alltoallv (send_stride,
-                       ptb->n_send_data,
-                       ptb->i_send_data,
-                       PDM_MPI_INT,
-                       recv_stride,
-                       ptb->n_recv_data,
-                       ptb->i_recv_data,
-                       PDM_MPI_INT,
-                       ptb->comm);
-
-    /*
-     * Build buffers
-     */
-
-    for (int i = 0; i < ptb->s_comm; i++) {
-      int ibeg = ptb->i_send_data[i];
-      int iend = ptb->i_send_data[i] + ptb->n_send_data[i];
-
-      n_send_buffer[i] = 0;
-      for (int k = ibeg; k < iend; k++)
-        n_send_buffer[i] += send_stride[k];
-
-      n_send_buffer[i] *= (int) s_data;
-
-      if (i > 0) {
-        i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
-      }
-      else {
-        i_send_buffer[i] = 0;
-      }
-
-      ibeg = ptb->i_recv_data[i];
-      iend = ptb->i_recv_data[i] + ptb->n_recv_data[i];
-
-      n_recv_buffer[i] = 0;
-      for (int k = ibeg; k < iend; k++)
-        n_recv_buffer[i] += recv_stride[k];
-
-      n_recv_buffer[i] *= (int) s_data;
-
-      if (i > 0)
-        i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
-      else
-        i_recv_buffer[i] = 0;
-
-    }
-
-    free(send_stride);
-
-  }
-
-  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
-
-    for (int i = 0; i < ptb->s_comm; i++) {
-
-      i_send_buffer[i] = ptb->i_send_data[i] * cst_stride * (int) s_data;
-      i_recv_buffer[i] = ptb->i_recv_data[i] * cst_stride * (int) s_data;
-
-      n_send_buffer[i] = ptb->n_send_data[i] * cst_stride * (int) s_data;
-      n_recv_buffer[i] = ptb->n_recv_data[i] * cst_stride * (int) s_data;
-
-    }
-  }
-
+  /*
+   * Prepare buffer
+   */
   size_t s_send_buffer = i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
   size_t s_recv_buffer = i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
 
-  /*
-   * Data exchange
-   */
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
   assert (send_buffer != NULL);
   assert (recv_buffer != NULL);
 
-  unsigned char **_part_data = (unsigned char **) part_data;
+  _prepare_send_buffer(ptb,
+                       s_data,
+                       t_stride,
+                       cst_stride,
+                       part_stride,
+                       part_data,
+                       i_send_buffer,
+                       n_send_buffer,
+                       send_buffer);
 
-  for (int i = 0; i <  ptb->s_comm; i++) {
-    n_send_buffer[i] = 0;
-  }
-
-  int idx = -1;
-  for (int i = 0; i < ptb->n_part; i++) {
-
-    size_t *i_part = NULL;
-    if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-      i_part = (size_t *) malloc (sizeof(size_t) * (ptb->n_elt[i] + 1));
-      assert (i_part != NULL);
-
-    i_part[0] = 0;
-      for (int j = 1; j < ptb->n_elt[i] + 1; j++)
-        i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
-    }
-
-    //if ( ptb->i_rank==0 ){
-    //  printf("line %d PDM_part_to_block_exch  ptb->dest_proc[%d]=%d\n",__LINE__,idx,ptb->dest_proc[idx]);
-    //  fflush(stdout);
-    //  //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
-    //  //fflush(stdout);
-    //}
-
-
-    for (int j = 0; j < ptb->n_elt[i]; j++) {
-      int iproc = ptb->dest_proc[++idx];
-      size_t s_octet_elt = 0;
-      size_t i_part_elt = 0;
-
-      if (t_stride == PDM_STRIDE_CST_INTERLACED) {
-        s_octet_elt = cst_stride * (int) s_data;
-        i_part_elt  = cst_stride * (int) s_data * j;
-      }
-
-      else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-        s_octet_elt = i_part[j+1] - i_part[j];
-        i_part_elt  = i_part[j];
-      }
-
-      for (int k = 0; k < (int) s_octet_elt; k++) {
-        send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
-          _part_data[i][i_part_elt + k];
-      }
-
-
-    }
-
-    if (i_part != NULL)
-      free (i_part);
-  }
-
+  /*
+   * Data exchange
+   */
   PDM_MPI_Alltoallv_l(send_buffer,
                       n_send_buffer,
                       i_send_buffer,
@@ -2436,6 +2492,9 @@ PDM_part_to_block_exch
                       PDM_MPI_BYTE,
                       ptb->comm);
 
+  /*
+   * Statistics
+   */
   for (int i = 0; i < ptb->s_comm; i++) {
     if (ptb->i_rank != i) {
       exch_data[1] += n_recv_buffer[i];
