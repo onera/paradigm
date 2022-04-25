@@ -453,7 +453,7 @@ PDM_part_to_block_asyn_get_raw
  * \param [out]  block_data   Block data
  *
  */
-void
+int
 PDM_part_to_block_asyn_post_treatment
 (
  PDM_part_to_block_t *ptb,
