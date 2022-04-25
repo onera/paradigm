@@ -1354,7 +1354,181 @@ _ptb_create
   return ptb;
 }
 
+/**
+ *
+ * \brief  Define active ranks
+ *
+ * \param [inout]   ptb          Part to block structure
+ *
+ */
+static
+int
+_post_treatment
+(
+  PDM_part_to_block_t  *ptb,
+  size_t                s_data,
+  PDM_stride_t          t_stride,
+  int                   cst_stride,
+  int                  *recv_stride,
+  unsigned char        *recv_buffer,
+  size_t                s_recv_buffer,
+  int                 **block_stride,
+  void                **block_data
+)
+{
+  unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recv_buffer);
+  assert(_block_data != NULL);
+  *block_data = _block_data;
 
+  int *i_recv_stride = NULL;
+  int *i_block_stride = NULL;
+  int s_block_data = ((int) sizeof(unsigned char) * s_recv_buffer) / (int) s_data;
+
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+    *block_stride = NULL;
+    int* _block_stride = NULL;
+    if(ptb->tn_recv_data > 0){
+      _block_stride = malloc(sizeof(int) * ptb->tn_recv_data);
+    }
+    *block_stride = _block_stride;
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      _block_stride[i] = recv_stride[ptb->order[i]];
+    }
+
+    /*
+     * Compute index in data
+     */
+    i_recv_stride  = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
+    i_block_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
+
+    i_recv_stride [0] = 0;
+    i_block_stride[0] = 0;
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      i_recv_stride [i+1] = i_recv_stride [i] + recv_stride[i];
+      i_block_stride[i+1] = i_block_stride[i] + _block_stride[i];
+    }
+
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      i_recv_stride [i+1] *= (int) s_data;
+      i_block_stride[i+1] *= (int) s_data;
+    }
+
+    /*
+     * Sort Buffer
+     */
+
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      int old    = ptb->order[i];
+      int id_old = i_recv_stride[old];
+      for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
+        _block_data[k] = recv_buffer[id_old++];
+      }
+    }
+
+    free (recv_stride);
+    free (i_recv_stride);
+
+    /*
+     * post processing
+     */
+
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+
+      int idx1 = 0;
+      int idx2 = 0;
+
+      if (ptb->tn_recv_data == 1) {
+        idx2 = i_block_stride[1];
+      }
+
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
+        if (i == 1) {
+          idx2 = i_block_stride[1];
+        }
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
+          idx1 += 1;
+          _block_stride[idx1] = _block_stride[i];
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+            for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
+              _block_data[idx2++] = _block_data[k];
+            }
+          }
+        } else {
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
+            _block_stride[idx1] += _block_stride[i];
+          }
+        }
+      }
+
+      /* Cleanup */
+
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        *block_data = _block_data;
+
+        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
+
+        *block_stride = _block_stride;
+        s_block_data = idx2 / (int) s_data;
+      }
+    }
+    free (i_block_stride);
+  } else {
+
+    /*
+     * Sort Buffer
+     */
+    for (int i = 0; i < ptb->tn_recv_data; i++) {
+      int n_octet = cst_stride * (int) s_data;
+      int old = ptb->order[i];
+      int id_old = old * n_octet;
+
+      for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
+        _block_data[k] = recv_buffer[id_old++];
+      }
+    }
+
+    /*
+     * Post processing
+     */
+
+    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
+      int idx2 = 0;
+      int idx1 = 0;
+
+      assert (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE);
+
+      if (ptb->tn_recv_data == 1) {
+        idx2 =  cst_stride * (int) s_data;
+      }
+
+      for (int i = 1; i < ptb->tn_recv_data; i++) {
+        int n_octet = cst_stride * (int) s_data;
+        if (i == 1) {
+          idx2 = n_octet;
+        }
+        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
+          idx1 += 1;
+          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+            int idx3 = i * cst_stride * (int) s_data;
+            for (int k = 0; k < n_octet; k++) {
+              _block_data[idx2++] = _block_data[idx3++];
+            }
+          }
+        }
+      }
+
+      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
+        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
+        *block_data = _block_data;
+        s_block_data = idx2 / (int) s_data;
+      }
+
+    }
+  }
+
+  return s_block_data;
+}
 
 
 /*=============================================================================
@@ -2084,33 +2258,11 @@ PDM_part_to_block_exch
   double t1_cpu = PDM_timer_cpu(t_timer[2]);
   PDM_timer_resume(t_timer[2]);
 
-  //if ( ptb->i_rank==0 ){
-  //  printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
-  //  fflush(stdout);
-  //  printf("line %d PDM_part_to_block_exch t_stride=%d\n",__LINE__,t_stride);
-  //  fflush(stdout);
-  //  printf("line %d PDM_part_to_block_exch cst_stride=%d\n",__LINE__,cst_stride);
-  //  fflush(stdout);
-  //  printf("line %d PDM_part_to_block_exch ptb->n_elt[0]=%d\n",__LINE__,ptb->n_elt[0]);
-  //  fflush(stdout);
-  //  //for (int i = 0; i < ptb->n_part; i++) {
-  //  //for (int j = 0; j < ptb->n_elt[0]; j++) {
-  //  //  printf("line %d PDM_part_to_block_exch part_data[%d]==%d\n",__LINE__,j,(( int **) part_data)[0][j]);
-  //  //  fflush(stdout);
-  //  //}
-  //  //}
-  //}
-
-  //*
-  //*/
-
-
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
-
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
@@ -2214,8 +2366,6 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
-
-
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
@@ -2299,178 +2449,25 @@ PDM_part_to_block_exch
   free(n_recv_buffer);
   free(i_recv_buffer);
 
-  unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recv_buffer);
-  assert(_block_data != NULL);
-
-  *block_data = _block_data;
-  int *i_recv_stride = NULL;
-  int *i_block_stride = NULL;
-  int s_block_data = ((int) sizeof(unsigned char) * s_recv_buffer) / (int) s_data;
-
-  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    *block_stride = NULL;
-    int* _block_stride = NULL;
-    if(ptb->tn_recv_data > 0){
-      _block_stride = malloc(sizeof(int) * ptb->tn_recv_data);
-    }
-    *block_stride = _block_stride;
-    for (int i = 0; i < ptb->tn_recv_data; i++) {
-      _block_stride[i] = recv_stride[ptb->order[i]];
-    }
-
-    /*
-     * Compute index in data
-     */
-
-    i_recv_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
-    i_block_stride = malloc (sizeof(int) * (ptb->tn_recv_data + 1));
-
-    i_recv_stride[0] = 0;
-    i_block_stride[0] = 0;
-    for (int i = 0; i < ptb->tn_recv_data; i++) {
-      i_recv_stride[i+1]  = i_recv_stride[i] + recv_stride[i];
-      i_block_stride[i+1] = i_block_stride[i] + _block_stride[i];
-    }
-
-    for (int i = 0; i < ptb->tn_recv_data; i++) {
-      i_recv_stride[i+1]  *= (int) s_data;
-      i_block_stride[i+1] *= (int) s_data;
-    }
-
-    /*
-     * Sort Buffer
-     */
-
-    for (int i = 0; i < ptb->tn_recv_data; i++) {
-      int old = ptb->order[i];
-      int idOld = i_recv_stride[old];
-      for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
-        _block_data[k] = recv_buffer[idOld++];
-      }
-    }
-
-//    free (recv_buffer);
-    free (recv_stride);
-    free (i_recv_stride);
-
-    /*
-     * post processing
-     */
-
-    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
-
-      int idx1 = 0;
-      int idx2 = 0;
-
-      if (ptb->tn_recv_data == 1) {
-        idx2 = i_block_stride[1];
-      }
-
-      for (int i = 1; i < ptb->tn_recv_data; i++) {
-        if (i == 1) {
-          idx2 = i_block_stride[1];
-        }
-        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
-          idx1 += 1;
-          _block_stride[idx1] = _block_stride[i];
-          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-            for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
-              _block_data[idx2++] = _block_data[k];
-            }
-          }
-        }
-        else {
-          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
-            _block_stride[idx1] += _block_stride[i];
-          }
-        }
-      }
-
-      /* Cleanup */
-
-      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
-        *block_data = _block_data;
-
-        _block_stride = realloc (_block_stride, sizeof(int) * ptb->n_elt_block);
-
-        *block_stride = _block_stride;
-        s_block_data = idx2 / (int) s_data;
-
-      }
-
-    }
-
-    free (i_block_stride);
-
-  }
-
-  else {
-
-    /*
-     * Sort Buffer
-     */
-
-    for (int i = 0; i < ptb->tn_recv_data; i++) {
-      int n_octet = cst_stride * (int) s_data;
-      int old = ptb->order[i];
-      int idOld = old * n_octet;
-
-      for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
-        _block_data[k] = recv_buffer[idOld++];
-      }
-    }
-
-    /*
-     * Post processing
-     */
-
-    if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
-      int idx2 = 0;
-      int idx1 = 0;
-
-      assert (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE);
-
-      if (ptb->tn_recv_data == 1) {
-        idx2 =  cst_stride * (int) s_data;
-      }
-
-      for (int i = 1; i < ptb->tn_recv_data; i++) {
-        int n_octet = cst_stride * (int) s_data;
-        if (i == 1) {
-          idx2 = n_octet;
-        }
-        if (ptb->block_gnum[idx1] != ptb->sorted_recv_gnum[i]) {
-          idx1 += 1;
-          if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-            int idx3 = i * cst_stride * (int) s_data;
-            for (int k = 0; k < n_octet; k++) {
-              _block_data[idx2++] = _block_data[idx3++];
-            }
-          }
-        }
-      }
-
-      if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-        _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
-        *block_data = _block_data;
-        s_block_data = idx2 / (int) s_data;
-      }
-
-    }
-  }
-
+  int s_block_data = _post_treatment(ptb,
+                                     s_data,
+                                     t_stride,
+                                     cst_stride,
+                                     recv_stride,
+                                     recv_buffer,
+                                     s_recv_buffer,
+                                     block_stride,
+                                     block_data);
   free (recv_buffer);
 
   PDM_timer_hang_on(t_timer[2]);
   double t2_elaps = PDM_timer_elapsed(t_timer[2]);
-  double t2_cpu = PDM_timer_cpu(t_timer[2]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[2]);
 
   t_elaps[2] += (t2_elaps - t1_elaps);
-  t_cpu[2] += (t2_cpu - t1_cpu);
+  t_cpu  [2] += (t2_cpu   - t1_cpu  );
 
   return s_block_data;
-
 }
 
 /**
@@ -2858,9 +2855,9 @@ PDM_part_to_block_asyn_post_treatment
 
     for (int i = 0; i < ptb->tn_recv_data; i++) {
       int old = ptb->order[i];
-      int idOld = i_recv_stride[old];
+      int id_old = i_recv_stride[old];
       for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
-        _block_data[k] = recv_buffer[idOld++];
+        _block_data[k] = recv_buffer[id_old++];
       }
     }
 
@@ -2929,10 +2926,10 @@ PDM_part_to_block_asyn_post_treatment
     for (int i = 0; i < ptb->tn_recv_data; i++) {
       int n_octet = cst_stride * (int) s_data;
       int old = ptb->order[i];
-      int idOld = old * n_octet;
+      int id_old = old * n_octet;
 
       for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
-        _block_data[k] = recv_buffer[idOld++];
+        _block_data[k] = recv_buffer[id_old++];
       }
     }
 
