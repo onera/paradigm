@@ -376,6 +376,79 @@ int main(int argc, char *argv[])
   int *ridge_vtx_idx    = NULL;
   int *ridge_vtx        = NULL;
 
+  // Surface upon edge
+
+  // PDM_combine_connectivity(n_face_group,
+  //                          group_face_idx,
+  //                          group_face,
+  //                          face_edge_idx,
+  //                          face_edge,
+  //                         &surface_edge_idx,
+  //                         &surface_edge);
+
+  // PDM_connectivity_transpose(n_face_group,
+  //                            n_face,
+  //                            surface_edge_idx,
+  //                            surface_edge,
+  //                           &edge_surface_idx,
+  //                           &edge_surface);
+
+  // // Surface upon vertex
+
+  // PDM_combine_connectivity(n_face_group,
+  //                          surface_edge_idx,
+  //                          surface_edge,
+  //                          edge_vtx_idx,
+  //                          edge_vtx,
+  //                         &surface_vtx_idx,
+  //                         &surface_vtx);
+
+  // PDM_connectivity_transpose(n_face_group,
+  //                            n_vtx,
+  //                            surface_vtx_idx,
+  //                            surface_vtx,
+  //                           &vtx_surface_idx,
+  //                           &vtx_surface);
+
+  // // Ridge upon vertex
+
+  // PDM_combine_connectivity(n_edge_group,
+  //                          group_edge_idx,
+  //                          group_edge,
+  //                          edge_vtx_idx,
+  //                          edge_vtx,
+  //                         &ridge_vtx_idx,
+  //                         &ridge_vtx);
+
+  // PDM_connectivity_transpose(n_edge_group,
+  //                            n_vtx,
+  //                            ridge_vtx_idx,
+  //                            ridge_vtx,
+  //                           &vtx_ridge_idx,
+  //                           &vtx_ridge);
+
+  // PDM_log_trace_connectivity_int(edge_surface_idx,
+  //                                edge_surface,
+  //                                n_edge,
+  //                                "edge_surface : ");
+
+  // PDM_log_trace_connectivity_int(vtx_ridge_idx,
+  //                                vtx_ridge,
+  //                                n_vtx,
+  //                                "vtx_ridge : ");
+
+  // PDM_log_trace_connectivity_int(vtx_surface_idx,
+  //                                vtx_surface,
+  //                                n_vtx,
+  //                                "vtx_surface : ");
+
+  // free(edge_surface_idx);
+  // free(edge_surface    );
+  // free(vtx_surface_idx );
+  // free(vtx_surface     );
+  // free(vtx_ridge_idx   );
+  // free(vtx_ridge       );
+
 
   /* Free memory */
   free(cell_face_idx );
