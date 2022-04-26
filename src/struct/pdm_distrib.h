@@ -82,6 +82,19 @@ PDM_compute_uniform_entity_distribution_from_partition
  const PDM_g_num_t    **ln_to_gn
 );
 
+
+void
+PDM_distrib_weight
+(
+  const int            sampling_factor,
+  const int            n_active_ranks,
+  const int            n_part,
+  const int           *n_elmts,
+  const PDM_g_num_t  **ln_to_gn,
+  const double       **weight,
+        PDM_MPI_Comm   comm
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

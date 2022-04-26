@@ -937,6 +937,7 @@ _distrib_data_hilbert
     concat_weight    = weight     [0];
   } else {
     concat_vtx_coord = malloc( 3 * ptb->n_elt_proc * sizeof(double));
+    concat_weight    = malloc(     ptb->n_elt_proc * sizeof(double));
 
     int shift = 0;
     for(int i_part = 0; i_part < ptb->n_part; ++i_part) {
