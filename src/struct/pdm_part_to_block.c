@@ -2727,9 +2727,20 @@ PDM_part_to_block_iexch
     abort();
 
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
-    abort();
+
+    PDM_MPI_Win_fence(0, ptb->win_send[request_id]);
+    PDM_MPI_Win_fence(0, ptb->win_recv[request_id]);
+    PDM_MPI_Get_ialltoallv(ptb->win_send[request_id],
+                           ptb->win_recv[request_id],
+                           send_buffer,
+                           n_send_buffer,
+                           i_send_buffer,
+                           PDM_MPI_BYTE,
+                           recv_buffer,
+                           n_recv_buffer,
+                           i_recv_buffer,
+                           PDM_MPI_BYTE,
+                           ptb->comm);
 
   }
 
@@ -2757,8 +2768,13 @@ PDM_part_to_block_iexch_wait
 
   assert(ptb->wait_status[request_id] == 0);
 
-  int code = PDM_MPI_Wait(&ptb->request_mpi[request_id]);
-  assert(code == PDM_MPI_SUCCESS);
+  if(ptb->comm_kind[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    PDM_MPI_Win_fence(0, ptb->win_send[request_id]);
+    PDM_MPI_Win_fence(0, ptb->win_recv[request_id]);
+  } else {
+    int code = PDM_MPI_Wait(&ptb->request_mpi[request_id]);
+    assert(code == PDM_MPI_SUCCESS);
+  }
 
   ptb->wait_status[request_id] = 1;
 

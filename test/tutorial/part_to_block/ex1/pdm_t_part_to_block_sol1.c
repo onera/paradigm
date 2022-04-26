@@ -175,6 +175,23 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
+  // int  request_id = -1;
+  // int* dfield     = NULL;
+  // PDM_part_to_block_iexch(ptb,
+  //                         PDM_MPI_COMM_KIND_WIN_RMA,
+  //                         sizeof(int),
+  //                         PDM_STRIDE_CST_INTERLACED,
+  //                         1,
+  //                         NULL,
+  //              (void **)  &pfield,
+  //                         NULL,
+  //              (void **)  &dfield,
+  //                         &request_id);
+  // PDM_part_to_block_iexch_wait(ptb, request_id);
+
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
+  // }
 
   PDM_part_to_block_free(ptb);
 

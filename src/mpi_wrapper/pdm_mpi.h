@@ -587,6 +587,22 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                   PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Get_ialltoallv (Implemtation of alltoall like with window )
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
+                           PDM_MPI_Win       win_recv,
+                           void             *sendbuf,
+                           int              *sendcounts,
+                           int              *sdispls,
+                           PDM_MPI_Datatype  sendtype,
+                           void             *recvbuf,
+                           int              *recvcounts,
+                           int              *rdispls,
+                           PDM_MPI_Datatype  recvtype,
+                           PDM_MPI_Comm      comm);
+
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Win_allocate (wrapping de la fonction MPI_Win_allocate)
@@ -604,6 +620,13 @@ int PDM_MPI_Win_allocate(PDM_MPI_Aint  size,
  *
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Win_free(PDM_MPI_Win  *win);
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_fence (wrapping de la fonction MPI_Win_fence)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Win_fence(int assert, PDM_MPI_Win win);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Error_string (wrapping de la fonction MPI_Error_string)

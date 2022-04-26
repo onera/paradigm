@@ -1731,7 +1731,7 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
   MPI_Request _request = _pdm_mpi_2_mpi_request(*request);
 
   // Test was already done
-  if(_request == PDM_MPI_REQUEST_NULL) {
+  if(_request == MPI_REQUEST_NULL) {
     *flag = 1;
     return _mpi_2_pdm_mpi_err(MPI_SUCCESS);
   }
@@ -2212,6 +2212,73 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Get_ialltoallv (Implemtation of alltoall like with window )
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
+                           PDM_MPI_Win       win_recv,
+                           void             *sendbuf,
+                           int              *sendcounts,
+                           int              *sdispls,
+                           PDM_MPI_Datatype  sendtype,
+                           void             *recvbuf,
+                           int              *recvcounts,
+                           int              *rdispls,
+                           PDM_MPI_Datatype  recvtype,
+                           PDM_MPI_Comm      comm)
+{
+  int code = 0;
+
+  /*
+   * Exchange in target view the correct displacement for MPI_Get
+   */
+  int n_rank;
+  MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &n_rank);
+
+  int *target_disp = (int *) malloc(n_rank * sizeof(int));
+
+  MPI_Alltoall(sdispls    , 1, MPI_INT,
+               target_disp, 1, MPI_INT, _pdm_mpi_2_mpi_comm(comm));
+
+  // if(0 == 1) {
+  //   PDM_log_trace_array_int(sdispls    , n_rank, "sdispls     : ");
+  //   PDM_log_trace_array_int(target_disp, n_rank, "target_disp : ");
+  // }
+
+  MPI_Barrier(_pdm_mpi_2_mpi_comm(comm));
+
+  for(int i = 0; i < n_rank; ++i) {
+
+    int   origin_data_size = -1;
+    MPI_Type_size(_pdm_mpi_2_mpi_datatype(recvtype), &origin_data_size);
+
+    int            origin_displ = rdispls[i]; // + recvcounts[i] *
+    unsigned char *origin_addr  = (unsigned char *) recvbuf + origin_displ * origin_data_size;
+    int            origin_count = recvcounts[i];
+
+    if(origin_count > 0 ) {
+      MPI_Get(origin_addr,
+              origin_count,
+              _pdm_mpi_2_mpi_datatype(recvtype),
+              i,
+              (MPI_Aint) target_disp[i],
+              origin_count,
+              _pdm_mpi_2_mpi_datatype(sendtype),
+              _pdm_mpi_2_mpi_win(win_send));
+    }
+
+  }
+
+  PDM_UNUSED(win_recv  );
+  PDM_UNUSED(sendcounts);
+  PDM_UNUSED(sendbuf   ); // Implicit in win_send
+
+  free(target_disp);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Win_allocate (wrapping de la fonction MPI_Win_allocate)
  *
  *----------------------------------------------------------------------------*/
@@ -2259,7 +2326,18 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
   return _mpi_2_pdm_mpi_err(code);
 }
 
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_fence (wrapping de la fonction MPI_Win_fence)
+ *
+ *----------------------------------------------------------------------------*/
 
+int PDM_MPI_Win_fence(int assert, PDM_MPI_Win win)
+
+{
+  MPI_Win _win = _pdm_mpi_2_mpi_win(win);
+  int code = MPI_Win_fence(assert, _win);
+  return _mpi_2_pdm_mpi_err(code);
+}
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Error_string (wrapping de la fonction MPI_Error_string)
