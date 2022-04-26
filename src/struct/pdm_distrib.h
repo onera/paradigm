@@ -94,7 +94,8 @@ PDM_distrib_weight
   const double       **weight,
   const int            n_iter_max,
   const double         tolerance,
-        PDM_MPI_Comm   comm
+  const PDM_MPI_Comm   comm,
+        PDM_g_num_t  **rank_index
 );
 
 #ifdef __cplusplus

@@ -532,6 +532,7 @@ PDM_compute_uniform_entity_distribution_from_partition
  * \param [in]     n_iter_max           Maximum iteration of refinement
  * \param [in]     tolerance            Tolerance for load imbalance
  * \param [in]     comm                 MPI Communicator
+ * \param [out]    rank_index           distributation among n_active_ranks
  */
 void
 PDM_distrib_weight
@@ -544,7 +545,9 @@ PDM_distrib_weight
   const double       **weight,
   const int            n_iter_max,
   const double         tolerance,
-        PDM_MPI_Comm   comm
+  const PDM_MPI_Comm   comm,
+        PDM_g_num_t  **rank_index
+
 )
 {
 
@@ -667,16 +670,14 @@ PDM_distrib_weight
 
   sampling = best_sampling;
 
-  PDM_g_num_t *rank_index = malloc (sizeof(PDM_g_num_t) * (n_active_ranks + 1));
+  PDM_g_num_t *_rank_index = malloc (sizeof(PDM_g_num_t) * (n_active_ranks + 1));
   for (int i = 0; i < n_active_ranks + 1; i++) {
     int id = i * sampling_factor;
-    rank_index[i] = sampling[id];
+    _rank_index[i] = sampling[id];
   }
   free(sampling);
 
-
-
-
+  *rank_index = _rank_index;
 }
 
 
