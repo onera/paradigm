@@ -2196,7 +2196,7 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                        PDM_MPI_Request *request)
 {
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
-  double t1 = MPI_Wtime();
+  // double t1 = MPI_Wtime();
   int code = MPI_Ialltoallv(sendbuf,
                            sendcounts,
                            sdispls,
@@ -2207,8 +2207,8 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                            _pdm_mpi_2_mpi_datatype(recvtype),
                            _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
-  double dt = MPI_Wtime() - t1;
-  log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
+  // double dt = MPI_Wtime() - t1;
+  // log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
