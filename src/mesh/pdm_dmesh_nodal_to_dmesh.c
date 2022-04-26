@@ -757,7 +757,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange data
    */
-  int is_async = 0;
+  int is_async = 1;
 
   int         *blk_tot_entity_vtx_n    = NULL;
   PDM_g_num_t *blk_tot_entity_vtx      = NULL;
@@ -835,11 +835,13 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     }
     free(stride_one);
     free(part_id);
+
   } else {
 
-    PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_WIN_RMA;
-    // PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_COLLECTIVE;
+    // PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_WIN_RMA;
+    PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_COLLECTIVE;
 
+    // double t1 = PDM_MPI_Wtime();
     int request_entity_vtx = -1;
     PDM_part_to_block_iexch(ptb,
                             k_comm,
@@ -904,7 +906,18 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                  (void **) &blk_part_id,
                            &request_part_id);
 
+    // double dt = PDM_MPI_Wtime() - t1;
+    // log_trace("PDM_dmesh_nodal_to_dmesh exch dt = %12.5e \n", dt);
+    // t1 = PDM_MPI_Wtime();
 
+
+    blk_entity_elmt_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_elmt_size);
+
+    PDM_part_to_block_iexch_wait(ptb, request_parent_elmt_position);
+    free(tmp1_blk_elmt_entity_elmt_stri);
+
+    PDM_part_to_block_iexch_wait(ptb, request_part_id);
+    free(tmp2_blk_elmt_entity_elmt_stri);
 
     blk_tot_entity_vtx_size = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx);
     blk_entity_vtx_n_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx_n);
@@ -915,15 +928,6 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     }
     free(delmt_entity_vtx_n);
 
-    blk_entity_elmt_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_elmt_size);
-
-    PDM_part_to_block_iexch_wait(ptb, request_parent_elmt_position);
-    free(tmp1_blk_elmt_entity_elmt_stri);
-
-    PDM_part_to_block_iexch_wait(ptb, request_part_id);
-    free(tmp2_blk_elmt_entity_elmt_stri);
-
-
     for(int i_part = 0; i_part < n_part; ++i_part) {
       free(stride_one           [i_part]);
       free(part_id              [i_part]);
@@ -933,7 +937,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     free(stride_one);
     free(part_id);
 
-    abort();
+    // dt = PDM_MPI_Wtime() - t1;
+    // log_trace("PDM_dmesh_nodal_to_dmesh wait dt = %12.5e \n", dt);
   }
 
   /*

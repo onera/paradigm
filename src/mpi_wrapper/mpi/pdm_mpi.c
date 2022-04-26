@@ -25,6 +25,7 @@
 #include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_mpi_priv.h"
+#include "pdm_logging.h"
 
 #include <mpi.h>
 
@@ -2195,6 +2196,7 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                        PDM_MPI_Request *request)
 {
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
+  double t1 = MPI_Wtime();
   int code = MPI_Ialltoallv(sendbuf,
                            sendcounts,
                            sdispls,
@@ -2205,6 +2207,8 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                            _pdm_mpi_2_mpi_datatype(recvtype),
                            _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
+  double dt = MPI_Wtime() - t1;
+  log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
@@ -2246,6 +2250,7 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   //   PDM_log_trace_array_int(target_disp, n_rank, "target_disp : ");
   // }
 
+  // double t1 = MPI_Wtime();
   for(int i = 0; i < n_rank; ++i) {
 
     int   origin_data_size = -1;
@@ -2267,6 +2272,9 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
     }
 
   }
+
+  // double dt = MPI_Wtime() - t1;
+  // log_trace("PDM_MPI_Get_ialltoallv dt = %12.5e \n", dt);
 
   PDM_UNUSED(win_recv  );
   PDM_UNUSED(sendcounts);

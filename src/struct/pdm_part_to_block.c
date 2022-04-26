@@ -2728,6 +2728,7 @@ PDM_part_to_block_iexch
 
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
+    // double t1 = PDM_MPI_Wtime();
     PDM_MPI_Win_fence(0, ptb->win_send[request_id]);
     PDM_MPI_Win_fence(0, ptb->win_recv[request_id]);
     PDM_MPI_Get_ialltoallv(ptb->win_send[request_id],
@@ -2741,6 +2742,8 @@ PDM_part_to_block_iexch
                            i_recv_buffer,
                            PDM_MPI_BYTE,
                            ptb->comm);
+    // double dt = PDM_MPI_Wtime() - t1;
+    // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
 
   }
 
