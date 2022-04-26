@@ -656,6 +656,7 @@ const int               id_part
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -664,7 +665,8 @@ PDM_Mesh_nodal_cell_centers_compute
 (
       PDM_Mesh_nodal_t *mesh,
 const int               id_block,
-const int               i_part
+const int               i_part,
+const PDM_ownership_t  ownership
 );
 
 
@@ -868,6 +870,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  cell_face_nb   Number of faces for each cell
  * \param [in]  cell_face      Cell face connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -884,7 +887,8 @@ const PDM_l_num_t      *face_vtx,
 const PDM_l_num_t      *cell_face_idx,
 const PDM_l_num_t      *cell_face_nb,
 const PDM_l_num_t      *cell_face,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 );
 
 
@@ -906,6 +910,7 @@ const PDM_g_num_t      *numabs
  * \param [in]  cell_edge_nb   Number of edges for each cell
  * \param [in]  cell_edge      Cell edge connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -922,7 +927,8 @@ const PDM_l_num_t      *edge_vtx,
 const PDM_l_num_t      *cell_edge_idx,
 const PDM_l_num_t      *cell_edge_nb,
 const PDM_l_num_t      *cell_edge,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 );
 
 
@@ -940,6 +946,7 @@ const PDM_g_num_t      *numabs
  * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -952,7 +959,8 @@ const int               n_face,
 const PDM_l_num_t      *face_vtx_idx,
 const PDM_l_num_t      *face_vtx_nb,
 const PDM_l_num_t      *face_vtx,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 );
 
 
@@ -961,6 +969,7 @@ const PDM_g_num_t      *numabs
  *
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
  * \param [in]  id_block       Block identifier
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -968,7 +977,8 @@ void
 PDM_Mesh_nodal_g_num_in_block_compute
 (
       PDM_Mesh_nodal_t *mesh,
-const int               id_block
+const int               id_block,
+const PDM_ownership_t  ownership
 );
 
 

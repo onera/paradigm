@@ -2126,6 +2126,8 @@ const PDM_Mesh_nodal_elt_t  t_elt
         mesh->blocks_std[id_block]->_numabs[i]   = NULL;
       }
 
+      mesh->blocks_std[id_block]->owner = PDM_OWNERSHIP_USER;
+      
       id_block += PDM_BLOCK_ID_BLOCK_STD;
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
         PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
@@ -2167,6 +2169,8 @@ const PDM_Mesh_nodal_elt_t  t_elt
         mesh->blocks_poly2d[id_block]->_num_part[i]   = NULL;
         mesh->blocks_poly2d[id_block]->_numabs[i]     = NULL;
       }
+
+      mesh->blocks_std[id_block]->owner = PDM_OWNERSHIP_USER;
 
       id_block += PDM_BLOCK_ID_BLOCK_POLY2D;
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
@@ -2215,6 +2219,8 @@ const PDM_Mesh_nodal_elt_t  t_elt
         mesh->blocks_poly3d[id_block]->_cellvtx[i]     = NULL;
         mesh->blocks_poly3d[id_block]->_numabs[i]      = NULL;
       }
+
+      mesh->blocks_std[id_block]->owner = PDM_OWNERSHIP_USER;
 
       id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
 
@@ -3267,7 +3273,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  cell_face_nb   Number of faces for each cell
  * \param [in]  cell_face      Cell face connectivity
  * \param [in]  numabs         Global numbering
- * \param [out] ind_num        old numbering to new numbering
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -3284,7 +3290,8 @@ const PDM_l_num_t      *face_vtx,
 const PDM_l_num_t      *cell_face_idx,
 const PDM_l_num_t      *cell_face_nb,
 const PDM_l_num_t      *cell_face,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 )
 {
 
@@ -3461,30 +3468,60 @@ const PDM_g_num_t      *numabs
     int id_bloc_pyramid5 = -1;
     int id_bloc_poly_3d  = -1;
 
-    if (som_elts[0] > 0)
+    if (som_elts[0] > 0) {
       id_bloc_tetra4 = PDM_Mesh_nodal_block_add(mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_TETRA4);
 
-    if (som_elts[1] > 0)
+      int _id_block = id_bloc_tetra4 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[1] > 0) {
       id_bloc_hexa8 = PDM_Mesh_nodal_block_add(mesh,
                                                PDM_TRUE,
                                                PDM_MESH_NODAL_HEXA8);
 
-    if (som_elts[2] > 0)
+      int _id_block = id_bloc_hexa8 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[2] > 0) {
       id_bloc_prism6 = PDM_Mesh_nodal_block_add(mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_PRISM6);
 
-    if (som_elts[3] > 0)
+      int _id_block = id_bloc_prism6 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[3] > 0) {
       id_bloc_pyramid5 = PDM_Mesh_nodal_block_add(mesh,
                                                   PDM_TRUE,
                                                   PDM_MESH_NODAL_PYRAMID5);
 
-    if (som_elts[4] > 0)
+      int _id_block = id_bloc_pyramid5 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[4] > 0) {
       id_bloc_poly_3d = PDM_Mesh_nodal_block_add(mesh,
                                                  PDM_TRUE,
                                                  PDM_MESH_NODAL_POLY_3D);
+
+      int _id_block = id_bloc_poly_3d - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+      mesh->blocks_poly3d[_id_block]->owner = ownership; 
+
+    }
 
     /* Determination de la connectivite de chaque element */
 
@@ -3861,6 +3898,7 @@ const PDM_g_num_t      *numabs
  * \param [in]  cell_edge_nb   Number of edges for each cell
  * \param [in]  cell_edge      Cell edge connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -3877,7 +3915,8 @@ const PDM_l_num_t      *edge_vtx,
 const PDM_l_num_t      *cell_edge_idx,
 const PDM_l_num_t      *cell_edge_nb,
 const PDM_l_num_t      *cell_edge,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 )
 {
   int adjust = 0;
@@ -4000,20 +4039,35 @@ const PDM_g_num_t      *numabs
     int id_bloc_quad4 = -1;
     int id_bloc_poly_2d = -1;
 
-    if (som_elts[0] > 0)
+    if (som_elts[0] > 0) {
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_TRIA3);
+      int _id_block = id_bloc_tria3 - PDM_BLOCK_ID_BLOCK_STD;
 
-    if (som_elts[1] > 0)
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[1] > 0) {
       id_bloc_quad4 = PDM_Mesh_nodal_block_add (mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_QUAD4);
+      int _id_block = id_bloc_quad4 - PDM_BLOCK_ID_BLOCK_STD;
 
-    if (som_elts[2] > 0)
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
+
+    if (som_elts[2] > 0) {
       id_bloc_poly_2d = PDM_Mesh_nodal_block_add (mesh,
                                                   PDM_TRUE,
                                                   PDM_MESH_NODAL_POLY_2D);
+      int _id_block = id_bloc_poly_2d - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
+    }
 
     /* Determination de la connectivite de chaque element */
 
@@ -4250,6 +4304,7 @@ const PDM_g_num_t      *numabs
  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
  * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -4262,7 +4317,8 @@ const int               n_face,
 const PDM_l_num_t      *face_vtx_idx,
 const PDM_l_num_t      *face_vtx_nb,
 const PDM_l_num_t      *face_vtx,
-const PDM_g_num_t      *numabs
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
 )
 {
 
@@ -4383,18 +4439,29 @@ const PDM_g_num_t      *numabs
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_TRIA3);
+
+      int _id_block = id_bloc_tria3 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
+
     }
 
     if (som_elts[1] > 0) {
       id_bloc_quad4 = PDM_Mesh_nodal_block_add (mesh,
                                                 PDM_TRUE,
                                                 PDM_MESH_NODAL_QUAD4);
+      int _id_block = id_bloc_quad4 - PDM_BLOCK_ID_BLOCK_STD;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
     }
 
     if (som_elts[2] > 0) {
       id_bloc_poly_2d = PDM_Mesh_nodal_block_add (mesh,
                                                   PDM_TRUE,
                                                   PDM_MESH_NODAL_POLY_2D);
+      int _id_block = id_bloc_poly_2d - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+      mesh->blocks_std[_id_block]->owner = ownership; 
     }
 
     /* Determination de la connectivite de chaque element */
@@ -4565,6 +4632,7 @@ const PDM_g_num_t      *numabs
  *
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
  * \param [in]  id_block       Block identifier
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -4572,7 +4640,8 @@ void
 PDM_Mesh_nodal_g_num_in_block_compute
 (
       PDM_Mesh_nodal_t *mesh,
-const int               id_block
+const int               id_block,
+const PDM_ownership_t  ownership
 )
 {
 
@@ -4595,6 +4664,8 @@ const int               id_block
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
+
+    block->numabs_int_owner = ownership;
 
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
@@ -4623,6 +4694,8 @@ const int               id_block
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
 
+    block->numabs_int_owner = ownership;
+
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
       for (int i = 0; i < block->n_part; i++) {
@@ -4648,6 +4721,8 @@ const int               id_block
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
+
+    block->numabs_int_owner = ownership;
 
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
@@ -4709,6 +4784,7 @@ const int               id_block
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
+ * \param [in]  ownership      Ownership
  *
  */
 
@@ -4717,7 +4793,8 @@ PDM_Mesh_nodal_cell_centers_compute
 (
       PDM_Mesh_nodal_t *mesh,
 const int               id_block,
-const int               i_part
+const int               i_part,
+const PDM_ownership_t  ownership
 )
 {
 
@@ -4738,6 +4815,8 @@ const int               i_part
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
+
+    block->cell_centers_owner = ownership;
 
     double**  volume  = (double**)malloc(sizeof(double*)*mesh->n_part);
 
@@ -4795,6 +4874,8 @@ const int               i_part
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
 
+    block->cell_centers_owner = ownership;
+
     double**  surface_vector  = (double**)malloc(sizeof(double*)*mesh->n_part);
     double* coords = (double *) PDM_Mesh_nodal_vertices_get(mesh,i_part);
     surface_vector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
@@ -4843,6 +4924,8 @@ const int               i_part
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
+    
+    block->cell_centers_owner = ownership;
 
     double**  surface_vector  = (double**)malloc(sizeof(double*)*mesh->n_part);
     double**  volume         = (double**)malloc(sizeof(double*)*mesh->n_part);
@@ -5758,7 +5841,8 @@ PDM_Mesh_nodal_write
 
     if (1) {
       PDM_Mesh_nodal_g_num_in_block_compute (mesh,
-                                             mesh->blocks_id[iblock]);
+                                             mesh->blocks_id[iblock],
+                                      PDM_OWNERSHIP_KEEP);
     }
 
     for (int ipart = 0; ipart < mesh->n_part; ipart++) {

@@ -1982,7 +1982,8 @@ PDM_mesh_location_part_set
                                       cell_face_idx,
                                       ml->cell_face_n[i_part],
                                       cell_face,
-                                      cell_ln_to_gn);
+                                      cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -2063,7 +2064,8 @@ PDM_mesh_location_part_set_2d
                                       cell_edge_idx,
                                       cell_edge_nb,
                                       cell_edge,
-                                      cell_ln_to_gn);
+                                      cell_ln_to_gn,
+                                      PDM_OWNERSHIP_KEEP);
 }
 
 

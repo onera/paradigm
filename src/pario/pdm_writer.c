@@ -1298,7 +1298,8 @@ PDM_writer_geom_cell3d_cellface_add
                                       cell_face_idx,
                                       cell_face_nb,
                                       cell_face,
-                                      numabs);
+                                      numabs,
+                                      PDM_OWNERSHIP_KEEP);
   if (0 == 1) {
     printf("n_cell : %d\n", n_cell);
     for (int i = 0; i < n_cell; i++) {
@@ -1384,7 +1385,8 @@ PDM_writer_geom_cell2d_cellface_add
                                       cell_face_idx,
                                       cell_face_nb,
                                       cell_face,
-                                      numabs);
+                                      numabs,
+                                      PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -1440,7 +1442,8 @@ PDM_writer_geom_faces_facesom_add
                                     face_som_idx,
                                     face_som_nb,
                                     face_som,
-                                    numabs);
+                                    numabs,
+                                    PDM_OWNERSHIP_KEEP);
 }
 
 /**
@@ -1485,7 +1488,8 @@ PDM_writer_geom_write
   const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->mesh_nodal);
 
   for (int i = 0; i < n_blocks; i++) {
-    PDM_Mesh_nodal_g_num_in_block_compute (geom->mesh_nodal, blocks_id[i]);
+    PDM_Mesh_nodal_g_num_in_block_compute (geom->mesh_nodal, blocks_id[i],
+                                      PDM_OWNERSHIP_KEEP);
   }
 
   /* Ecriture au format */
