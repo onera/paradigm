@@ -92,6 +92,8 @@ PDM_distrib_weight
   const int           *n_elmts,
   const PDM_g_num_t  **ln_to_gn,
   const double       **weight,
+  const int            n_iter_max,
+  const double         tolerance,
         PDM_MPI_Comm   comm
 );
 

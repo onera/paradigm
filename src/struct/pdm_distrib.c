@@ -214,6 +214,90 @@ _define_rank_distrib(const int             sampling_factor,
 
 }
 
+
+/**
+ * \brief Update a distribution associated to sampling to assume a well-balanced
+ * distribution of the leaves of the tree.
+ *
+ *   \param [in]    dim      1D, 2D or 3D
+ *   \param [in]    n_ranks  number of ranks (= number of ranges)
+ *   \param [inout] c_freq   cumulative frequency array
+ *   \param [inout] sampling pointer to pointer to a sampling array
+ *   \param [in]    comm     mpi communicator
+ */
+
+static void
+_update_sampling(int            sampling_factor,
+                 int            n_ranks,
+                 double         c_freq[],
+                 PDM_g_num_t  *sampling[])
+{
+  int  i, j, next_id;
+  double  target_freq, f_high, f_low, delta;
+  PDM_g_num_t  s_low, s_high;
+
+  PDM_g_num_t  *new_sampling = NULL, *_sampling = *sampling;
+
+  const int  n_samples = sampling_factor * n_ranks;
+  const double  unit = 1/(double)n_samples;
+
+  /* Compute new_sampling */
+
+  new_sampling = ( PDM_g_num_t  *) malloc (sizeof(PDM_g_num_t) * (n_samples + 1));
+
+  new_sampling[0] = _sampling[0];
+
+  next_id = 1;
+
+  for (i = 0; i < n_samples; i++) {
+
+    target_freq = (i+1)*unit;
+
+    /* Find the next id such as c_freq[next_id] >= target_freq */
+
+    for (j = next_id; j < n_samples + 1; j++) {
+      if (c_freq[j] >= target_freq) {
+        next_id = j;
+        break;
+      }
+    }
+
+    /* Find new s such as new_s is equal to target_freq by
+       a linear interpolation */
+
+    f_low = c_freq[next_id-1];
+    f_high = c_freq[next_id];
+
+    s_low = _sampling[next_id-1];
+    s_high = _sampling[next_id];
+
+    if (f_high - f_low > 0) {
+      delta = (target_freq - f_low) * (s_high - s_low) / (f_high - f_low);
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + delta);
+    }
+    else /* f_high = f_low */
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + 0.5 * (s_low + s_high));
+
+#if 0 && defined(DEBUG) && !defined(NDEBUG)
+    PDM_printf( " <_update_distrib> (rank: %d) delta: %g, target: %g,"
+               " next_id: %d, f_low: %g, f_high: %g, s_low: %g, s_high: %g\n"
+               "\t => new_sampling: %g\n",
+               cs_glob_rank_id, delta, target_freq, next_id,
+               f_low, f_high, s_low, s_high, new_sampling[i+1]);
+#endif
+
+  } /* End of loop on samples */
+
+  new_sampling[n_samples] = _sampling[n_samples];
+
+  free(_sampling);
+
+  /* Return pointers */
+
+  *sampling = new_sampling;
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -435,6 +519,20 @@ PDM_compute_uniform_entity_distribution_from_partition
 }
 
 
+
+/**
+ * \brief Compute uniform distribution distribution from dNelmt
+ *
+ * \param [in]     sampling_factor      1, 2, 3, 4
+ * \param [in]     n_active_ranks       Number of ranks actives to computes samplings
+ * \param [in]     n_part
+ * \param [in]     n_elmts              Number of elements
+ * \param [in]     ln_to_gn             Global numbering
+ * \param [in]     weight               Weight associte to each elements
+ * \param [in]     n_iter_max           Maximum iteration of refinement
+ * \param [in]     tolerance            Tolerance for load imbalance
+ * \param [in]     comm                 MPI Communicator
+ */
 void
 PDM_distrib_weight
 (
@@ -444,6 +542,8 @@ PDM_distrib_weight
   const int           *n_elmts,
   const PDM_g_num_t  **ln_to_gn,
   const double       **weight,
+  const int            n_iter_max,
+  const double         tolerance,
         PDM_MPI_Comm   comm
 )
 {
@@ -526,6 +626,53 @@ PDM_distrib_weight
     best_sampling[i] = sampling[i];
   }
 
+  /* Loop to get a better sampling array */
+  for (int n_iters = 0;
+       (   n_iters < n_iter_max
+           && fit > tolerance);
+       n_iters++)  {
+
+    _update_sampling(sampling_factor, n_active_ranks, cfreq, &sampling);
+
+    /* Compute the new distribution associated to the new sampling */
+    _define_rank_distrib(sampling_factor,
+                         n_part,
+                         n_elmts,
+                         ln_to_gn,
+                         weight,
+                         n_active_ranks,
+                         gsum_weight,
+                         sampling,
+                         cfreq,
+                         distrib,
+                         comm);
+
+
+    fit = _evaluate_distribution(n_active_ranks, distrib, optim);
+
+    /* Save the best sampling array and its fit */
+
+    if (fit < best_fit) {
+
+      best_fit = fit;
+      for (int i = 0; i < (n_samples + 1); i++) {
+        best_sampling[i] = sampling[i];
+      }
+    }
+  } /* End of while */
+
+  free (distrib);
+  free (cfreq);
+  free (sampling);
+
+  sampling = best_sampling;
+
+  PDM_g_num_t *rank_index = malloc (sizeof(PDM_g_num_t) * (n_active_ranks + 1));
+  for (int i = 0; i < n_active_ranks + 1; i++) {
+    int id = i * sampling_factor;
+    rank_index[i] = sampling[id];
+  }
+  free(sampling);
 
 
 
