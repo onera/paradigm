@@ -3703,12 +3703,14 @@ void PDM_multipart_bound_get
 
   switch (bound_type) {
     case PDM_BOUND_TYPE_EDGE:
+    *n_bound        = _pmeshes.parts[i_part]->n_edge_group;
     *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
     *bound          = _pmeshes.parts[i_part]->edge_bound;
     *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
     break;
 
     case PDM_BOUND_TYPE_FACE:
+    *n_bound        = _pmeshes.parts[i_part]->n_face_group;
     *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
     *bound          = _pmeshes.parts[i_part]->face_bound;
     *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;

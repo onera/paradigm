@@ -1336,6 +1336,9 @@ _ptb_create
   ptb->n_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
   ptb->i_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
 
+  ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
+  ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
+
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
     ptb->recv_buffer  [i_req] = NULL;
@@ -1344,6 +1347,8 @@ _ptb_create
     ptb->i_send_buffer[i_req] = NULL;
     ptb->n_recv_buffer[i_req] = NULL;
     ptb->i_recv_buffer[i_req] = NULL;
+    ptb->block_stride [i_req] = NULL;
+    ptb->block_data   [i_req] = NULL;
   }
 
   /*
@@ -1974,6 +1979,10 @@ PDM_part_to_block_create
   ptb->n_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
   ptb->i_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
 
+  ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
+  ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
+
+
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
     ptb->recv_buffer  [i_req] = NULL;
@@ -1982,6 +1991,8 @@ PDM_part_to_block_create
     ptb->i_send_buffer[i_req] = NULL;
     ptb->n_recv_buffer[i_req] = NULL;
     ptb->i_recv_buffer[i_req] = NULL;
+    ptb->block_stride [i_req] = NULL;
+    ptb->block_data   [i_req] = NULL;
   }
   /*
    * Active ranks definition
@@ -2134,6 +2145,9 @@ PDM_part_to_block_create_from_distrib
   ptb->n_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
   ptb->i_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
 
+  ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
+  ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
+
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
     ptb->recv_buffer  [i_req] = NULL;
@@ -2142,6 +2156,8 @@ PDM_part_to_block_create_from_distrib
     ptb->i_send_buffer[i_req] = NULL;
     ptb->n_recv_buffer[i_req] = NULL;
     ptb->i_recv_buffer[i_req] = NULL;
+    ptb->block_stride [i_req] = NULL;
+    ptb->block_data   [i_req] = NULL;
   }
 
   /*
@@ -2529,6 +2545,247 @@ PDM_part_to_block_exch
   return s_block_data;
 }
 
+
+/**
+ *
+ * \brief Initialize a data exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Stride type
+ * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
+ * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
+ *
+ * \return       Size of highest block
+ *
+ */
+
+void
+PDM_part_to_block_iexch
+(
+       PDM_part_to_block_t  *ptb,
+ const PDM_mpi_comm_kind_t   k_comm,
+       size_t                s_data,
+       PDM_stride_t          t_stride,
+       int                   cst_stride,
+       int                 **part_stride,
+       void                **part_data,
+       int                 **block_stride,
+       void                **block_data,
+       int                  *request
+)
+{
+  if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
+      (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
+    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
+    abort ();
+  }
+
+  /*
+   * Take next id for message and buffer
+   */
+  int request_id = ptb->next_request++;
+  *request = request_id;
+
+  ptb->i_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->i_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->n_send_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+  ptb->n_recv_buffer[request_id] = (int *) malloc (sizeof(int) * ptb->s_comm);
+
+  ptb->block_stride[request_id] = block_stride;
+  ptb->block_data  [request_id] = block_data;
+
+
+  /* Store additionnal information necessary for post-process */
+  ptb->s_data    [request_id] = s_data;
+  ptb->t_stride  [request_id] = t_stride;
+  ptb->cst_stride[request_id] = cst_stride;
+  /* Short cut */
+  int* i_send_buffer = ptb->i_send_buffer[request_id];
+  int* i_recv_buffer = ptb->i_recv_buffer[request_id];
+  int* n_send_buffer = ptb->n_send_buffer[request_id];
+  int* n_recv_buffer = ptb->n_recv_buffer[request_id];
+
+  size_t *tmp_i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+  size_t *tmp_i_recv_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
+  /*
+   * Exchange Stride and build buffer properties
+   */
+  int *recv_stride = NULL; // Release in post-treatment
+  _prepare_exchange(ptb,
+                    s_data,
+                    t_stride,
+                    cst_stride,
+                    part_stride,
+                    tmp_i_send_buffer,
+                    tmp_i_recv_buffer,
+                    n_send_buffer,
+                    n_recv_buffer,
+                    &recv_stride);
+  ptb->recv_stride[request_id] = recv_stride;
+
+  /*
+   * Data exchange
+   */
+  int s_send_buffer = tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
+  int s_recv_buffer = tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
+
+  ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
+  ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+
+  /* Shortcut */
+  unsigned char *send_buffer = ptb->send_buffer[request_id];
+  unsigned char *recv_buffer = ptb->recv_buffer[request_id];
+
+  assert (send_buffer != NULL);
+  assert (recv_buffer != NULL);
+
+  _prepare_send_buffer(ptb,
+                       s_data,
+                       t_stride,
+                       cst_stride,
+                       part_stride,
+                       part_data,
+                       tmp_i_send_buffer,
+                       n_send_buffer,
+                       send_buffer);
+
+  /*
+   * Copy back
+   */
+  for (int i = 0; i < ptb->s_comm; i++) {
+    i_send_buffer[i] = (int ) tmp_i_send_buffer[i];
+    i_recv_buffer[i] = (int ) tmp_i_recv_buffer[i];
+  }
+
+  free(tmp_i_send_buffer);
+  free(tmp_i_recv_buffer);
+
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+    abort();
+  } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    PDM_MPI_Ialltoallv(send_buffer,
+                       n_send_buffer,
+                       i_send_buffer,
+                       PDM_MPI_BYTE,
+                       recv_buffer,
+                       n_recv_buffer,
+                       i_recv_buffer,
+                       PDM_MPI_BYTE,
+                       ptb->comm,
+                       &ptb->request_mpi[request_id]);
+  } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
+
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+    abort();
+
+  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
+
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
+    abort();
+
+  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
+
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
+    abort();
+
+  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
+
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+    abort();
+
+  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    printf ("Error PDM_part_to_block_iexch : "
+            " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
+    abort();
+
+  }
+
+
+  ptb->wait_status[request_id] = 0;
+}
+
+/**
+ *
+ * \brief Wait for an exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   request_id   Internal id of the current exchange
+ *
+ * \return       Size of highest block
+ */
+int
+PDM_part_to_block_iexch_wait
+(
+ PDM_part_to_block_t *ptb,
+ int                  request_id
+)
+{
+  // printf("PDM_part_to_block_async_wait::request_id::%d \n", request_id);
+
+  assert(ptb->wait_status[request_id] == 0);
+
+  int code = PDM_MPI_Wait(&ptb->request_mpi[request_id]);
+  assert(code == PDM_MPI_SUCCESS);
+
+  ptb->wait_status[request_id] = 1;
+
+  /*
+   *  Post-treatment
+   */
+  size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
+
+  free(ptb->send_buffer  [request_id]);
+  free(ptb->n_send_buffer[request_id]);
+  free(ptb->i_send_buffer[request_id]);
+  free(ptb->n_recv_buffer[request_id]);
+  free(ptb->i_recv_buffer[request_id]);
+
+  ptb->send_buffer  [request_id] = NULL;
+  ptb->n_send_buffer[request_id] = NULL;
+  ptb->i_send_buffer[request_id] = NULL;
+  ptb->n_recv_buffer[request_id] = NULL;
+  ptb->i_recv_buffer[request_id] = NULL;
+
+  size_t       s_data     = ptb->s_data    [request_id];
+  PDM_stride_t t_stride   = ptb->t_stride  [request_id];
+  int          cst_stride = ptb->cst_stride[request_id];
+
+  int           *recv_stride = ptb->recv_stride[request_id];
+  unsigned char *recv_buffer = ptb->recv_buffer[request_id];
+
+  // recv_stride is free inside
+  int s_block_data = _post_treatment(ptb,
+                                     s_data,
+                                     t_stride,
+                                     cst_stride,
+                                     recv_stride,
+                                     recv_buffer,
+                                     s_recv_buffer,
+                                     ptb->block_stride[request_id],
+                                     ptb->block_data  [request_id]);
+
+  /*
+   * Free
+   */
+  free(ptb->recv_buffer  [request_id]);
+  ptb->recv_stride [request_id] = NULL;
+  ptb->recv_buffer [request_id] = NULL;
+  ptb->block_stride[request_id] = NULL;
+  ptb->block_data  [request_id] = NULL;
+
+
+  ptb->wait_status[request_id] = 2;
+
+  return s_block_data;
+}
+
 /**
  *
  * \brief Initialize a data exchange
@@ -2879,6 +3136,8 @@ PDM_part_to_block_free
     assert(ptb->i_send_buffer[i_req] == NULL);
     assert(ptb->n_recv_buffer[i_req] == NULL);
     assert(ptb->i_recv_buffer[i_req] == NULL);
+    assert(ptb->block_stride [i_req] == NULL);
+    assert(ptb->block_data   [i_req] == NULL);
   }
 
   free(ptb->s_data       );
@@ -2893,6 +3152,8 @@ PDM_part_to_block_free
   free(ptb->i_send_buffer);
   free(ptb->n_recv_buffer);
   free(ptb->i_recv_buffer);
+  free(ptb->block_stride );
+  free(ptb->block_data   );
 
   free (ptb);
 

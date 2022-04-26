@@ -107,6 +107,9 @@ struct _pdm_part_to_block_t {
   int**            n_recv_buffer;
   int**            i_recv_buffer;
 
+  int***           block_stride;
+  void***          block_data;
+
 } ;
 
 /*=============================================================================
