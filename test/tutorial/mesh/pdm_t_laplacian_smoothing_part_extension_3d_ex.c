@@ -386,7 +386,6 @@ _compute_face_vtx
 }
 
 
-
 /**
  *
  * \brief  Main
@@ -553,6 +552,7 @@ int main(int argc, char *argv[])
   /* Get face_vtx (TO DO get with wright order) */
 
   int *pedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, pn_edge);
+<<<<<<< HEAD
   // int *pface_vtx_idx = NULL;
   // int *pface_vtx     = NULL;
 
@@ -563,6 +563,18 @@ int main(int argc, char *argv[])
   //                          pedge_vtx,
   //                          &pface_vtx_idx,
   //                          &pface_vtx);
+=======
+  int *pface_vtx_idx = NULL;
+  int *pface_vtx     = NULL;
+
+  PDM_combine_connectivity(pn_face,
+                           pface_edge_idx,
+                           pface_edge,
+                           pedge_vtx_idx,
+                           pedge_vtx,
+                           &pface_vtx_idx,
+                           &pface_vtx);
+>>>>>>> version 3d
 
   /* Get face_cell */
 
@@ -573,6 +585,7 @@ int main(int argc, char *argv[])
                              pn_face,
                              pcell_face_idx,
                              pcell_face,
+<<<<<<< HEAD
                              &pface_cell_idx,
                              &pface_cell);
 
@@ -645,6 +658,12 @@ int main(int argc, char *argv[])
                     pface_edge,
                     pedge_vtx,
                     &pface_vtx);
+=======
+                            &pface_cell_idx,
+                            &pface_cell);
+
+  /* TO DO get vtx_group */
+>>>>>>> version 3d
 
   /* part_extension */
 
@@ -675,7 +694,11 @@ int main(int argc, char *argv[])
                               pface_cell,
                               pface_edge_idx,
                               pface_edge,
+<<<<<<< HEAD
                               pface_edge_idx,
+=======
+                              pface_vtx_idx,
+>>>>>>> version 3d
                               pface_vtx,
                               pedge_vtx,
                               pface_group_idx,
@@ -712,7 +735,11 @@ int main(int argc, char *argv[])
                                       &pedge_vtx_extension,
                                       &pedge_vtx_extension_idx);
 
+<<<<<<< HEAD
   // Get coordinates
+=======
+  // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
+>>>>>>> version 3d
 
   double *pvtx_coord_extension = NULL;
 
@@ -757,6 +784,7 @@ int main(int argc, char *argv[])
   double *normalisation  = malloc(pn_vtx * sizeof(double));
   double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
 
+<<<<<<< HEAD
   /* Set up of Ensight output */
 
   PDM_writer_t *id_cs = PDM_writer_create("Ensight",
@@ -831,6 +859,26 @@ int main(int argc, char *argv[])
     //                            0,
     //                            NULL,
     //                            NULL);
+=======
+  // Step
+  for (int i_step = 0; i_step <= n_steps; i_step++) {
+
+    // Output in vtk format (TO DO face_vtx)
+
+    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+
+    PDM_vtk_write_std_elements(filename,
+                               pn_vtx,
+                               pvtx_coord,
+                               vtx_ln_to_gn,
+                               PDM_MESH_NODAL_BAR2,
+                               pn_edge,
+                               pedge_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+>>>>>>> version 3d
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {
@@ -862,10 +910,17 @@ int main(int argc, char *argv[])
     // Loop over extension edges
 
     for (int i = 0; i < pn_edge_extension; i++) {
+<<<<<<< HEAD
       vtx1_idx = pedge_vtx_extension[2*i]-1;
       vtx2_idx = pedge_vtx_extension[2*i+1]-1;
 
       if ((vtx1_idx < pn_vtx) &&  (vtx2_idx >= pn_vtx)){
+=======
+      vtx1_idx = pedge_vtx[2*i]-1;
+      vtx2_idx = pedge_vtx[2*i+1]-1;
+
+      if (vtx1_idx <= pn_vtx) {
+>>>>>>> version 3d
         if (i_step == 0) {
           normalisation[vtx1_idx]++;
         }
@@ -875,7 +930,11 @@ int main(int argc, char *argv[])
         pvtx_coord_new[3*vtx1_idx+2] += pvtx_coord_extension[3*(vtx2_idx-pn_vtx)+2];
       }
 
+<<<<<<< HEAD
       if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
+=======
+      if (vtx2_idx <= pn_vtx) {
+>>>>>>> version 3d
         if (i_step == 0) {
           normalisation[vtx2_idx]++;
         }
@@ -887,17 +946,28 @@ int main(int argc, char *argv[])
 
     } // end loop over extension edges
 
+<<<<<<< HEAD
     // Add normalisation and update coordinates
     for (int i = 0; i < pn_vtx; i++) {
+=======
+    // Add normalisation and update coordinates (TO DO vtx_group to fix boundary)
+    for (int i = 0; i < pn_edge; i++) {
+>>>>>>> version 3d
       if (i_step == 0) {
         normalisation[i] = 1 / normalisation[i];
       }
 
+<<<<<<< HEAD
       if (pvtx_group_idx[i+1]- pvtx_group_idx[i] == 0) {
         pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
         pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
         pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
       }
+=======
+      pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
+      pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
+      pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
+>>>>>>> version 3d
 
     } // end loop on coordinates
 
@@ -927,10 +997,15 @@ int main(int argc, char *argv[])
 
     free(pvtx_coord_extension_new);
 
+<<<<<<< HEAD
     PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
 
 
+=======
+  } // end Laplacian Smoothing loop
+
+>>>>>>> version 3d
   /* Free entities */
 
   PDM_multipart_free(mpart);
