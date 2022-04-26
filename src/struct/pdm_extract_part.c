@@ -2139,10 +2139,13 @@ _extract_part_and_reequilibrate
       extrp->dn_equi_vtx = PDM_part_to_block_n_elt_block_get(extrp->ptb_equi_vtx);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         free(extract_edge_lnum   [i_part]);
+        free(extract_face_lnum   [i_part]);
         free(pedge_vtx_idx   [i_part]);
       }
       free(extract_edge_lnum   );
+      free(extract_face_lnum   );
       free(n_extract_edge      );
+      free(n_extract_face      );
       free(pedge_vtx_idx      );
 
     } else if(from_face_vtx == 1){
