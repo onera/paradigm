@@ -586,6 +586,9 @@ int main(int argc, char *argv[])
                              pcell_face_idx,
                              pcell_face,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3d fixed
                              &pface_cell_idx,
                              &pface_cell);
 
@@ -640,6 +643,7 @@ int main(int argc, char *argv[])
     }
   log_trace("\n");
   }
+<<<<<<< HEAD
 
 
 
@@ -664,6 +668,8 @@ int main(int argc, char *argv[])
 
   /* TO DO get vtx_group */
 >>>>>>> version 3d
+=======
+>>>>>>> 3d fixed
 
   /* part_extension */
 
@@ -736,10 +742,14 @@ int main(int argc, char *argv[])
                                       &pedge_vtx_extension_idx);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Get coordinates
 =======
   // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
 >>>>>>> version 3d
+=======
+  // Get coordinates
+>>>>>>> 3d fixed
 
   double *pvtx_coord_extension = NULL;
 
@@ -911,6 +921,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < pn_edge_extension; i++) {
 <<<<<<< HEAD
+<<<<<<< HEAD
       vtx1_idx = pedge_vtx_extension[2*i]-1;
       vtx2_idx = pedge_vtx_extension[2*i+1]-1;
 
@@ -921,6 +932,12 @@ int main(int argc, char *argv[])
 
       if (vtx1_idx <= pn_vtx) {
 >>>>>>> version 3d
+=======
+      vtx1_idx = pedge_vtx_extension[2*i]-1;
+      vtx2_idx = pedge_vtx_extension[2*i+1]-1;
+
+      if ((vtx1_idx < pn_vtx) &&  (vtx2_idx >= pn_vtx)){
+>>>>>>> 3d fixed
         if (i_step == 0) {
           normalisation[vtx1_idx]++;
         }
@@ -931,10 +948,14 @@ int main(int argc, char *argv[])
       }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
 =======
       if (vtx2_idx <= pn_vtx) {
 >>>>>>> version 3d
+=======
+      if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
+>>>>>>> 3d fixed
         if (i_step == 0) {
           normalisation[vtx2_idx]++;
         }
@@ -947,27 +968,38 @@ int main(int argc, char *argv[])
     } // end loop over extension edges
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     // Add normalisation and update coordinates
     for (int i = 0; i < pn_vtx; i++) {
 =======
     // Add normalisation and update coordinates (TO DO vtx_group to fix boundary)
     for (int i = 0; i < pn_edge; i++) {
 >>>>>>> version 3d
+=======
+    // Add normalisation and update coordinates
+    for (int i = 0; i < pn_vtx; i++) {
+>>>>>>> 3d fixed
       if (i_step == 0) {
         normalisation[i] = 1 / normalisation[i];
       }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3d fixed
       if (pvtx_group_idx[i+1]- pvtx_group_idx[i] == 0) {
         pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
         pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
         pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
       }
+<<<<<<< HEAD
 =======
       pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
       pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
       pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
 >>>>>>> version 3d
+=======
+>>>>>>> 3d fixed
 
     } // end loop on coordinates
 
