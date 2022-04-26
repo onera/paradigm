@@ -1940,7 +1940,7 @@ PDM_MPI_Comm       comm
     PDM_g_num_t **pedge_bound_ln_to_gn          = NULL;
     PDM_part_distgroup_to_partgroup(comm,
                                     edge_distrib,
-                                    n_bnd,
+                                    n_edge_group,
                                     dedge_bound_idx,
                                     dedge_bound,
                                     n_part,
@@ -3700,6 +3700,8 @@ void PDM_multipart_bound_get
 
   assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  *n_bound = _pmeshes.n_bounds;
 
   switch (bound_type) {
     case PDM_BOUND_TYPE_EDGE:
