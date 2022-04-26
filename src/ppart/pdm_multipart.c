@@ -3303,9 +3303,16 @@ const int            i_part,
   *face_part_bound_part_idx = _pmeshes.parts[i_part]->face_part_bound_part_idx;
   *face_part_bound          = _pmeshes.parts[i_part]->face_part_bound;
 
-  *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
-  *face_bound           = _pmeshes.parts[i_part]->face_bound;
-  *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+
+  if (_pmeshes.parts[i_part]->n_cell > 0) {
+    *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
+    *face_bound           = _pmeshes.parts[i_part]->face_bound;
+    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+  } else {
+    *face_bound_idx       = _pmeshes.parts[i_part]->edge_bound_idx;
+    *face_bound           = _pmeshes.parts[i_part]->edge_bound;
+    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+  }
   *face_join_idx        = _pmeshes.parts[i_part]->face_join_idx;
   *face_join            = _pmeshes.parts[i_part]->face_join;
   *face_join_ln_to_gn   = _pmeshes.parts[i_part]->face_join_ln_to_gn;

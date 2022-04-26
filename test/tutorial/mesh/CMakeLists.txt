@@ -1,6 +1,9 @@
 test_c_create (pdm_t_laplacian_smoothing_seq_ex 1)
 test_c_create (pdm_t_laplacian_smoothing_seq_sol 1)
 
+test_c_create (pdm_t_laplacian_smoothing_par_ex 1)
+test_c_create (pdm_t_laplacian_smoothing_part_to_part_par_ex 1)
+
 test_c_create (pdm_t_cell_extents_ex 1)
 test_c_create (pdm_t_cell_extents_sol 1)
 

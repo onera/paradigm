@@ -369,6 +369,13 @@ int main(int argc, char *argv[])
   int *vtx_ridge_idx    = NULL;
   int *vtx_ridge        = NULL;
 
+  int *surface_edge_idx = NULL;
+  int *surface_edge     = NULL;
+  int *surface_vtx_idx  = NULL;
+  int *surface_vtx      = NULL;
+  int *ridge_vtx_idx    = NULL;
+  int *ridge_vtx        = NULL;
+
   // Surface upon edge
 
   PDM_combine_connectivity(n_face_group,
@@ -376,18 +383,32 @@ int main(int argc, char *argv[])
                            group_face,
                            face_edge_idx,
                            face_edge,
-                          &edge_surface_idx,
-                          &edge_surface);
+                          &surface_edge_idx,
+                          &surface_edge);
+
+  PDM_connectivity_transpose(n_face_group,
+                             n_face,
+                             surface_edge_idx,
+                             surface_edge,
+                            &edge_surface_idx,
+                            &edge_surface);
 
   // Surface upon vertex
 
   PDM_combine_connectivity(n_face_group,
-                           edge_surface_idx,
-                           edge_surface,
+                           surface_edge_idx,
+                           surface_edge,
                            edge_vtx_idx,
                            edge_vtx,
-                          &vtx_surface_idx,
-                          &vtx_surface);
+                          &surface_vtx_idx,
+                          &surface_vtx);
+
+  PDM_connectivity_transpose(n_face_group,
+                             n_vtx,
+                             surface_vtx_idx,
+                             surface_vtx,
+                            &vtx_surface_idx,
+                            &vtx_surface);
 
   // Ridge upon vertex
 
@@ -396,8 +417,15 @@ int main(int argc, char *argv[])
                            group_edge,
                            edge_vtx_idx,
                            edge_vtx,
-                          &vtx_ridge_idx,
-                          &vtx_ridge);
+                          &ridge_vtx_idx,
+                          &ridge_vtx);
+
+  PDM_connectivity_transpose(n_edge_group,
+                             n_vtx,
+                             ridge_vtx_idx,
+                             ridge_vtx,
+                            &vtx_ridge_idx,
+                            &vtx_ridge);
 
   PDM_log_trace_connectivity_int(edge_surface_idx,
                                  edge_surface,
