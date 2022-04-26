@@ -757,76 +757,184 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange data
    */
-  int*         blk_tot_entity_vtx_n = NULL;
-  PDM_g_num_t* blk_tot_entity_vtx   = NULL;
+  int is_async = 0;
 
-  int blk_tot_entity_vtx_size = PDM_part_to_block_exch(       ptb,
-                                                              sizeof(PDM_g_num_t),
-                                                              PDM_STRIDE_VAR_INTERLACED,
-                                                              -1,
-                                                              delmt_entity_vtx_n,
-                                                    (void **) delmt_entity_vtx,
-                                                              &blk_tot_entity_vtx_n,
-                                                    (void **) &blk_tot_entity_vtx);
+  int         *blk_tot_entity_vtx_n    = NULL;
+  PDM_g_num_t *blk_tot_entity_vtx      = NULL;
+  int          blk_tot_entity_vtx_size = -1;
 
-  int* blk_n_entity_per_key = NULL;
-  int* blk_entity_vtx_n     = NULL;
-  int blk_entity_vtx_n_size = PDM_part_to_block_exch(         ptb,
-                                                            sizeof(int),
-                                                            PDM_STRIDE_VAR_INTERLACED,
-                                                            -1,
-                                                             stride_one,
-                                                  (void **)  delmt_entity_vtx_n,
-                                                            &blk_n_entity_per_key,
-                                                  (void **) &blk_entity_vtx_n);
+  int *blk_n_entity_per_key  = NULL;
+  int *blk_entity_vtx_n      = NULL;
+  int  blk_entity_vtx_n_size = -1;
 
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(delmt_entity_vtx[i_part]);
-    free(delmt_entity_vtx_n[i_part]);
+  int          *blk_elmt_entity_elmt_stri = NULL;
+  PDM_g_num_t  *blk_elmt_entity_elmt      = NULL;
+  int           blk_entity_elmt_size      = -1;
+
+  int          *blk_part_id               = NULL;
+  int          *blk_parent_elmt_position  = NULL;
+  if(is_async == 0) {
+    blk_tot_entity_vtx_size = PDM_part_to_block_exch(ptb,
+                                                     sizeof(PDM_g_num_t),
+                                                     PDM_STRIDE_VAR_INTERLACED,
+                                                     -1,
+                                                     delmt_entity_vtx_n,
+                                           (void **) delmt_entity_vtx,
+                                                     &blk_tot_entity_vtx_n,
+                                           (void **) &blk_tot_entity_vtx);
+
+    blk_entity_vtx_n_size = PDM_part_to_block_exch(ptb,
+                                                   sizeof(int),
+                                                   PDM_STRIDE_VAR_INTERLACED,
+                                                   -1,
+                                                   stride_one,
+                                        (void **)  delmt_entity_vtx_n,
+                                                  &blk_n_entity_per_key,
+                                        (void **) &blk_entity_vtx_n);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(delmt_entity_vtx  [i_part]);
+      free(delmt_entity_vtx_n[i_part]);
+    }
+    free(delmt_entity_vtx_n);
+
+    blk_entity_elmt_size = PDM_part_to_block_exch(ptb,
+                                                  sizeof(PDM_g_num_t),
+                                                  PDM_STRIDE_VAR_INTERLACED,
+                                                  -1,
+                                                  stride_one,
+                                       (void **)  delmt_entity,
+                                                 &blk_elmt_entity_elmt_stri,
+                                       (void **) &blk_elmt_entity_elmt);
+
+    free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+    PDM_part_to_block_exch(        ptb,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           -1,
+                           stride_one,
+                (void **)  dparent_elmt_position,
+                          &blk_elmt_entity_elmt_stri,
+                (void **) &blk_parent_elmt_position);
+
+    free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+    PDM_part_to_block_exch(        ptb,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           -1,
+                           stride_one,
+                (void **)  part_id,
+                          &blk_elmt_entity_elmt_stri,
+                (void **) &blk_part_id);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(stride_one           [i_part]);
+      free(part_id              [i_part]);
+      free(delmt_entity         [i_part]);
+      free(dparent_elmt_position[i_part]);
+    }
+    free(stride_one);
+    free(part_id);
+  } else {
+
+    PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_WIN_RMA;
+    // PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_COLLECTIVE;
+
+    int request_entity_vtx = -1;
+    PDM_part_to_block_iexch(ptb,
+                            k_comm,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            delmt_entity_vtx_n,
+                  (void **) delmt_entity_vtx,
+                            &blk_tot_entity_vtx_n,
+                  (void **) &blk_tot_entity_vtx,
+                            &request_entity_vtx);
+
+
+    int request_entity_vtx_n = -1;
+    PDM_part_to_block_iexch(ptb,
+                            k_comm,
+                            sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            stride_one,
+                 (void **)  delmt_entity_vtx_n,
+                           &blk_n_entity_per_key,
+                 (void **) &blk_entity_vtx_n,
+                           &request_entity_vtx_n);
+
+    int request_entity_elmt_size = -1;
+    PDM_part_to_block_iexch(ptb,
+                            k_comm,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            stride_one,
+                 (void **)  delmt_entity,
+                           &blk_elmt_entity_elmt_stri,
+                 (void **) &blk_elmt_entity_elmt,
+                           &request_entity_elmt_size);
+
+
+    int* tmp1_blk_elmt_entity_elmt_stri = NULL;
+    int request_parent_elmt_position = -1;
+    PDM_part_to_block_iexch(ptb,
+                            k_comm,
+                            sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            stride_one,
+                 (void **)  dparent_elmt_position,
+                           &tmp1_blk_elmt_entity_elmt_stri,
+                 (void **) &blk_parent_elmt_position,
+                           &request_parent_elmt_position);
+
+    int* tmp2_blk_elmt_entity_elmt_stri = NULL;
+    int request_part_id = -1;
+    PDM_part_to_block_iexch(ptb,
+                            k_comm,
+                            sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            stride_one,
+                 (void **)  part_id,
+                           &tmp2_blk_elmt_entity_elmt_stri,
+                 (void **) &blk_part_id,
+                           &request_part_id);
+
+
+
+    blk_tot_entity_vtx_size = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx);
+    blk_entity_vtx_n_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx_n);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(delmt_entity_vtx  [i_part]);
+      free(delmt_entity_vtx_n[i_part]);
+    }
+    free(delmt_entity_vtx_n);
+
+    blk_entity_elmt_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_elmt_size);
+
+    PDM_part_to_block_iexch_wait(ptb, request_parent_elmt_position);
+    free(tmp1_blk_elmt_entity_elmt_stri);
+
+    PDM_part_to_block_iexch_wait(ptb, request_part_id);
+    free(tmp2_blk_elmt_entity_elmt_stri);
+
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(stride_one           [i_part]);
+      free(part_id              [i_part]);
+      free(delmt_entity         [i_part]);
+      free(dparent_elmt_position[i_part]);
+    }
+    free(stride_one);
+    free(part_id);
+
+    abort();
   }
-  free(delmt_entity_vtx_n);
-
-  int*         blk_elmt_entity_elmt_stri = NULL;
-  PDM_g_num_t* blk_elmt_entity_elmt      = NULL;
-  int blk_entity_elmt_size = PDM_part_to_block_exch(         ptb,
-                                                           sizeof(PDM_g_num_t),
-                                                           PDM_STRIDE_VAR_INTERLACED,
-                                                           -1,
-                                                            stride_one,
-                                                 (void **)  delmt_entity,
-                                                           &blk_elmt_entity_elmt_stri,
-                                                 (void **) &blk_elmt_entity_elmt);
-
-  free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
-  int* blk_parent_elmt_position      = NULL;
-  PDM_part_to_block_exch(        ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR_INTERLACED,
-                         -1,
-                         stride_one,
-              (void **)  dparent_elmt_position,
-                        &blk_elmt_entity_elmt_stri,
-              (void **) &blk_parent_elmt_position);
-
-  free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
-  int* blk_part_id      = NULL;
-  PDM_part_to_block_exch(        ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR_INTERLACED,
-                         -1,
-                         stride_one,
-              (void **)  part_id,
-                        &blk_elmt_entity_elmt_stri,
-              (void **) &blk_part_id);
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(stride_one           [i_part]);
-    free(part_id              [i_part]);
-    free(delmt_entity         [i_part]);
-    free(dparent_elmt_position[i_part]);
-  }
-  free(stride_one);
-  free(part_id);
 
   /*
    *  Get the size of the current process bloc

@@ -2246,8 +2246,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   //   PDM_log_trace_array_int(target_disp, n_rank, "target_disp : ");
   // }
 
-  MPI_Barrier(_pdm_mpi_2_mpi_comm(comm));
-
   for(int i = 0; i < n_rank; ++i) {
 
     int   origin_data_size = -1;
