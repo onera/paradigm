@@ -1339,6 +1339,10 @@ _ptb_create
   ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
   ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
 
+  ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
+  ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+  ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
     ptb->recv_buffer  [i_req] = NULL;
@@ -1349,6 +1353,8 @@ _ptb_create
     ptb->i_recv_buffer[i_req] = NULL;
     ptb->block_stride [i_req] = NULL;
     ptb->block_data   [i_req] = NULL;
+    ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
+    ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
   }
 
   /*
@@ -1982,6 +1988,9 @@ PDM_part_to_block_create
   ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
   ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
 
+  ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
+  ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+  ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
 
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
@@ -1993,6 +2002,8 @@ PDM_part_to_block_create
     ptb->i_recv_buffer[i_req] = NULL;
     ptb->block_stride [i_req] = NULL;
     ptb->block_data   [i_req] = NULL;
+    ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
+    ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
   }
   /*
    * Active ranks definition
@@ -2148,6 +2159,10 @@ PDM_part_to_block_create_from_distrib
   ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
   ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
 
+  ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
+  ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+  ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
+
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     ptb->send_buffer  [i_req] = NULL;
     ptb->recv_buffer  [i_req] = NULL;
@@ -2158,6 +2173,8 @@ PDM_part_to_block_create_from_distrib
     ptb->i_recv_buffer[i_req] = NULL;
     ptb->block_stride [i_req] = NULL;
     ptb->block_data   [i_req] = NULL;
+    ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
+    ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
   }
 
   /*
@@ -2600,6 +2617,8 @@ PDM_part_to_block_iexch
   ptb->s_data    [request_id] = s_data;
   ptb->t_stride  [request_id] = t_stride;
   ptb->cst_stride[request_id] = cst_stride;
+  ptb->comm_kind [request_id] = k_comm;
+
   /* Short cut */
   int* i_send_buffer = ptb->i_send_buffer[request_id];
   int* i_recv_buffer = ptb->i_recv_buffer[request_id];
@@ -2630,9 +2649,16 @@ PDM_part_to_block_iexch
   int s_send_buffer = tmp_i_send_buffer[ptb->s_comm - 1] + n_send_buffer[ptb->s_comm -1];
   int s_recv_buffer = tmp_i_recv_buffer[ptb->s_comm - 1] + n_recv_buffer[ptb->s_comm -1];
 
-  ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
-  ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+  if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
+    PDM_MPI_Win_allocate(s_send_buffer, sizeof(unsigned char), ptb->comm, &ptb->send_buffer[request_id], &ptb->win_send[request_id]);
+    PDM_MPI_Win_allocate(s_recv_buffer, sizeof(unsigned char), ptb->comm, &ptb->recv_buffer[request_id], &ptb->win_recv[request_id]);
+
+  } else {
+
+    ptb->send_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
+    ptb->recv_buffer[request_id] = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+  }
   /* Shortcut */
   unsigned char *send_buffer = ptb->send_buffer[request_id];
   unsigned char *recv_buffer = ptb->recv_buffer[request_id];
@@ -2741,7 +2767,12 @@ PDM_part_to_block_iexch_wait
    */
   size_t s_recv_buffer = ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1];
 
-  free(ptb->send_buffer  [request_id]);
+  if(ptb->comm_kind[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    PDM_MPI_Win_free(&ptb->win_send[request_id]);
+    ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
+  } else {
+    free(ptb->send_buffer  [request_id]);
+  }
   free(ptb->n_send_buffer[request_id]);
   free(ptb->i_send_buffer[request_id]);
   free(ptb->n_recv_buffer[request_id]);
@@ -2774,7 +2805,13 @@ PDM_part_to_block_iexch_wait
   /*
    * Free
    */
-  free(ptb->recv_buffer  [request_id]);
+
+  if(ptb->comm_kind[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    PDM_MPI_Win_free(&ptb->win_recv[request_id]);
+    ptb->win_recv[request_id] = PDM_MPI_WIN_NULL;
+  } else {
+    free(ptb->recv_buffer  [request_id]);
+  }
   ptb->recv_stride [request_id] = NULL;
   ptb->recv_buffer [request_id] = NULL;
   ptb->block_stride[request_id] = NULL;
@@ -3138,6 +3175,8 @@ PDM_part_to_block_free
     assert(ptb->i_recv_buffer[i_req] == NULL);
     assert(ptb->block_stride [i_req] == NULL);
     assert(ptb->block_data   [i_req] == NULL);
+    assert(ptb->win_send     [i_req] == PDM_MPI_WIN_NULL);
+    assert(ptb->win_recv     [i_req] == PDM_MPI_WIN_NULL);
   }
 
   free(ptb->s_data       );
@@ -3154,6 +3193,10 @@ PDM_part_to_block_free
   free(ptb->i_recv_buffer);
   free(ptb->block_stride );
   free(ptb->block_data   );
+
+  free(ptb->comm_kind);
+  free(ptb->win_send );
+  free(ptb->win_recv );
 
   free (ptb);
 

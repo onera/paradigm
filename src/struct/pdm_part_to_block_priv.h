@@ -110,6 +110,10 @@ struct _pdm_part_to_block_t {
   int***           block_stride;
   void***          block_data;
 
+  PDM_mpi_comm_kind_t *comm_kind;
+  PDM_MPI_Win         *win_send;
+  PDM_MPI_Win         *win_recv;
+
 } ;
 
 /*=============================================================================

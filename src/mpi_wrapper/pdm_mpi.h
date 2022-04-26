@@ -29,6 +29,7 @@ extern "C" {
  *============================================================================*/
 
 typedef int PDM_MPI_Request;
+typedef int PDM_MPI_Win;
 typedef int PDM_MPI_Comm;
 typedef int PDM_MPI_Datatype;
 typedef int PDM_MPI_File;
@@ -174,6 +175,10 @@ enum {
 
 enum {
   PDM_MPI_REQUEST_NULL  = -1
+};
+
+enum {
+  PDM_MPI_WIN_NULL  = -1
 };
 
 enum {
@@ -580,6 +585,25 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                   PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                   int *rdispls, PDM_MPI_Datatype recvtype,
                   PDM_MPI_Comm comm, PDM_MPI_Request *request);
+
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_allocate (wrapping de la fonction MPI_Win_allocate)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Win_allocate(PDM_MPI_Aint  size,
+                         int           disp_unit,
+                         PDM_MPI_Comm  comm,
+                         void         *baseptr,
+                         PDM_MPI_Win  *win);
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_free (wrapping de la fonction MPI_Win_free)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Win_free(PDM_MPI_Win  *win);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Error_string (wrapping de la fonction MPI_Error_string)

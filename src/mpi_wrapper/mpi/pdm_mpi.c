@@ -218,6 +218,17 @@ static const MPI_Request mpi_request_cste[] = {
 };
 
 /*----------------------------------------------------------------------------
+ * Indirection constantes PDM_MPI_Request ->constantes MPI_Request
+ *----------------------------------------------------------------------------*/
+
+static const MPI_Win mpi_win_cste[] = {
+
+  MPI_WIN_NULL,
+
+};
+
+
+/*----------------------------------------------------------------------------
  * Indirection PDM_MPI_File -> MPI_File
  * stockage dans un tableau
  *----------------------------------------------------------------------------*/
@@ -243,6 +254,15 @@ static int       n_mpi_comm = 0;     /* Nombre de communicateurs stockes */
 static MPI_Request **mpi_request = NULL; /* Tableau de stockage */
 static int       l_mpi_request = 0;   /* Taille du tableau */
 static int       n_mpi_request = 0;   /* Nombre de communicateurs stockes */
+
+/*----------------------------------------------------------------------------
+ * Indirection PDM_MPI_Win -> MPI_Win
+ * stockage dans un tableau
+ *----------------------------------------------------------------------------*/
+
+static MPI_Win **mpi_win = NULL; /* Tableau de stockage */
+static int       l_mpi_win = 0;   /* Taille du tableau */
+static int       n_mpi_win = 0;   /* Nombre de communicateurs stockes */
 
 /*----------------------------------------------------------------------------
  * Indirection PDM_MPI_Datatype -> MPI_Datatype
@@ -548,6 +568,34 @@ static MPI_Request _pdm_mpi_2_mpi_request(PDM_MPI_Request pdm_mpi_request)
 
 
 /*----------------------------------------------------------------------------
+ * _pdm_mpi_2_mpi_request
+ *
+ * PDM_MPI_win -> MPI_win
+ *----------------------------------------------------------------------------*/
+
+static MPI_Win _pdm_mpi_2_mpi_win(PDM_MPI_Win pdm_mpi_win)
+{
+
+  /* Traitement des communicateurs predefinis */
+
+  if (pdm_mpi_win < 0)
+    return mpi_win_cste[-pdm_mpi_win - 1];
+
+  /* Traitement des communicateurs utilisateurs */
+
+  else {
+    if (pdm_mpi_win < l_mpi_win)
+      return *(mpi_win[pdm_mpi_win]);
+    else {
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_win :"
+            " pdm_mpi_win '%d' non valide\n", pdm_mpi_win);
+      abort();
+    }
+  }
+}
+
+
+/*----------------------------------------------------------------------------
  * _mpi_2_pdm_mpi_request
  *
  * MPI_Request -> PDM_MPI_Request
@@ -661,6 +709,60 @@ static PDM_MPI_Request _mpi_2_pdm_mpi_request_add(MPI_Request request)
     n_mpi_request += 1;
 
     return (PDM_MPI_Request) i;
+  }
+}
+
+
+/*----------------------------------------------------------------------------
+ * _mpi_2_pdm_mpi_win
+ *
+ * MPI_Win -> PDM_MPI_win
+ *----------------------------------------------------------------------------*/
+
+static PDM_MPI_Win _mpi_2_pdm_mpi_win_add(MPI_Win win)
+{
+
+  /* Traitement des communicateurs predefinis */
+
+  if (win == MPI_WIN_NULL) {
+    return PDM_MPI_WIN_NULL;
+  }
+
+  /* Traitement des communicateurs utilisateurs */
+
+  else {
+
+
+    /* On stocke le win */
+
+    if (mpi_win == NULL) {
+      l_mpi_win = 4;
+      mpi_win = (MPI_Win **) malloc(sizeof(MPI_Win *) * l_mpi_win);
+      for (int i = 0; i < l_mpi_win; i++)
+        mpi_win[i] = NULL;
+    }
+
+    if (l_mpi_win <= n_mpi_win) {
+      int  p_l_mpi_win = l_mpi_win;
+      l_mpi_win = 2 * l_mpi_win;
+      mpi_win = (MPI_Win **) realloc((void*) mpi_win,
+                                             l_mpi_win *
+                                             sizeof(MPI_Win *));
+      for (int i = p_l_mpi_win; i < l_mpi_win; i++)
+        mpi_win[i] = NULL;
+    }
+
+    /* Recherche de la premiere place libre pour stocker le fichier */
+
+    int i = 0;
+    while (mpi_win[i] != NULL)
+      i++;
+
+    mpi_win[i] = (MPI_Win *) malloc(sizeof(MPI_Win));
+    *(mpi_win[i]) = win;
+    n_mpi_win += 1;
+
+    return (PDM_MPI_Win) i;
   }
 }
 
@@ -942,6 +1044,18 @@ int PDM_MPI_Finalize (void)
     free(mpi_request);
     l_mpi_request = 0;
     n_mpi_request = 0;
+  }
+
+  if (mpi_win != NULL) {
+    for (int i = 0; i < l_mpi_win; i++) {
+      if (mpi_win[i] != NULL) {
+        MPI_Win_free(mpi_win[i]);
+        mpi_win[i] = NULL;
+      }
+    }
+    free(mpi_win);
+    l_mpi_win = 0;
+    n_mpi_win = 0;
   }
 
   if (mpi_datatype != NULL) {
@@ -2096,6 +2210,56 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
 
   return _mpi_2_pdm_mpi_err(code);
 }
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_allocate (wrapping de la fonction MPI_Win_allocate)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Win_allocate(PDM_MPI_Aint  size,
+                         int           disp_unit,
+                         PDM_MPI_Comm  comm,
+                         void         *baseptr,
+                         PDM_MPI_Win  *win)
+{
+  MPI_Win _mpi_win;
+  int code = MPI_Win_allocate(size,
+                              disp_unit,
+                              MPI_INFO_NULL,
+                              _pdm_mpi_2_mpi_comm(comm),
+                              baseptr,
+                              &_mpi_win);
+  *win = _mpi_2_pdm_mpi_win_add(_mpi_win);
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_free (wrapping de la fonction MPI_Win_free)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Win_free(PDM_MPI_Win *win)
+
+{
+  MPI_Win _win = _pdm_mpi_2_mpi_win(*win);
+  int code = MPI_Win_free(&_win);
+
+  free(mpi_win[*win]);
+  mpi_win[*win] = NULL;
+  n_mpi_win += -1;
+  *win = PDM_MPI_WIN_NULL;
+
+  if (n_mpi_win == 0) {
+    free(mpi_win);
+    mpi_win = NULL;
+
+    l_mpi_datatype = 0;
+  }
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Error_string (wrapping de la fonction MPI_Error_string)
