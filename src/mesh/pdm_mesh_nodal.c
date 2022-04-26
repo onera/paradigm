@@ -70,7 +70,7 @@ _vtx_free
       vtx->parent =_vtx_free (vtx->parent);
     }
 
-    if (vtx->coords != NULL) {
+    if (vtx->coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
       free (vtx->coords);
       vtx->coords = NULL;
     }
@@ -110,6 +110,7 @@ _mesh_init
     mesh->vtx[i]->n_vtx      = 0;
     mesh->vtx[i]->parent     = NULL;
     mesh->vtx[i]->coords     = NULL;
+    mesh->vtx[i]->owner      = PDM_OWNERSHIP_USER;
     mesh->n_cell[i]          = 0;
   }
 
@@ -205,10 +206,12 @@ _block_std_free_partial
   }
 
   if (_block_std->_connec != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
+    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_connec[i] != NULL) {
-          free(_block_std->_connec[i]);
+          if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+            free(_block_std->_connec[i]);
+          }
           _block_std->_connec[i] = NULL;
         }
       }
@@ -218,29 +221,18 @@ _block_std_free_partial
   }
 
   if (_block_std->_numabs != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
+    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_numabs[i] != NULL) {
-          free(_block_std->_numabs[i]);
+          if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+            free(_block_std->_numabs[i]);
+          }
           _block_std->_numabs[i] = NULL;
         }
       }
     }
     free(_block_std->_numabs);
     _block_std->_numabs = NULL;
-  }
-
-  if (_block_std->_num_part != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_num_part[i] != NULL) {
-          free(_block_std->_num_part[i]);
-          _block_std->_num_part[i] = NULL;
-        }
-      }
-    }
-    free(_block_std->_num_part);
-    _block_std->_num_part = NULL;
   }
 
 }
@@ -276,9 +268,11 @@ _block_std_free
   }
 
   if (_block_std->numabs_int != NULL) {
-    for (int j = 0; j < _block_std->n_part; j++) {
-      if (_block_std->numabs_int[j] != NULL) {
-        free(_block_std->numabs_int[j]);
+    if (_block_std->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_std->n_part; j++) {
+        if (_block_std->numabs_int[j] != NULL) {
+          free(_block_std->numabs_int[j]);
+        }
       }
     }
     free(_block_std->numabs_int);
@@ -286,9 +280,11 @@ _block_std_free
   }
 
   if (_block_std->cell_centers != NULL) {
-    for (int j = 0; j < _block_std->n_part; j++) {
-      if (_block_std->cell_centers[j] != NULL) {
-        free(_block_std->cell_centers[j]);
+    if (_block_std->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_std->n_part; j++) {
+        if (_block_std->cell_centers[j] != NULL) {
+          free(_block_std->cell_centers[j]);
+        }
       }
     }
     free(_block_std->cell_centers);
@@ -296,7 +292,7 @@ _block_std_free
   }
 
   if (_block_std->_parent_num != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
+    if (_block_std->is_parent_num_get == 0 || _block_std->owner == PDM_OWNERSHIP_KEEP) { 
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_parent_num[i] != NULL)
           free(_block_std->_parent_num[i]);
@@ -341,7 +337,7 @@ _block_poly2d_free_partial
 {
 
   if (_block_poly2d->_connec_idx != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
+    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec_idx[i] != NULL)
           free(_block_poly2d->_connec_idx[i]);
@@ -353,7 +349,7 @@ _block_poly2d_free_partial
   }
 
   if (_block_poly2d->_connec != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
+    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec[i] != NULL)
           free(_block_poly2d->_connec[i]);
@@ -364,20 +360,8 @@ _block_poly2d_free_partial
     _block_poly2d->_connec = NULL;
   }
 
-  if (_block_poly2d->_num_part != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_num_part[i] != NULL)
-          free(_block_poly2d->_num_part[i]);
-        _block_poly2d->_num_part[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_num_part);
-    _block_poly2d->_num_part = NULL;
-  }
-
   if (_block_poly2d->_numabs != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
+    if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_numabs[i] != NULL)
           free(_block_poly2d->_numabs[i]);
@@ -416,9 +400,12 @@ _block_poly2d_free
   }
 
   if (_block_poly2d->numabs_int != NULL) {
-    for (int j = 0; j < _block_poly2d->n_part; j++) {
-      if (_block_poly2d->numabs_int[j] != NULL) {
-        free(_block_poly2d->numabs_int[j]);
+    if (_block_poly2d->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
+
+      for (int j = 0; j < _block_poly2d->n_part; j++) {
+        if (_block_poly2d->numabs_int[j] != NULL) {
+          free(_block_poly2d->numabs_int[j]);
+        }
       }
     }
     free(_block_poly2d->numabs_int);
@@ -426,9 +413,11 @@ _block_poly2d_free
   }
 
   if (_block_poly2d->cell_centers != NULL) {
-    for (int j = 0; j < _block_poly2d->n_part; j++) {
-      if (_block_poly2d->cell_centers[j] != NULL) {
-        free(_block_poly2d->cell_centers[j]);
+    if (_block_poly2d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_poly2d->n_part; j++) {
+        if (_block_poly2d->cell_centers[j] != NULL) {
+          free(_block_poly2d->cell_centers[j]);
+        }
       }
     }
     free(_block_poly2d->cell_centers);
@@ -436,7 +425,7 @@ _block_poly2d_free
   }
 
   if (_block_poly2d->_parent_num != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
+    if (_block_poly2d->is_parent_num_get == 0 || _block_poly2d->owner == PDM_OWNERSHIP_KEEP) { 
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_parent_num[i] != NULL)
           free(_block_poly2d->_parent_num[i]);
@@ -470,7 +459,7 @@ _block_poly3d_free_partial
 {
 
   if (_block_poly3d->_facvtx_idx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_facvtx_idx[i] != NULL)
           free(_block_poly3d->_facvtx_idx[i]);
@@ -482,7 +471,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_facvtx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_facvtx[i] != NULL)
           free(_block_poly3d->_facvtx[i]);
@@ -494,7 +483,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellfac_idx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellfac_idx[i] != NULL)
           free(_block_poly3d->_cellfac_idx[i]);
@@ -506,7 +495,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellfac != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellfac[i] != NULL)
           free(_block_poly3d->_cellfac[i]);
@@ -518,7 +507,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellvtx_idx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx_idx[i] != NULL)
           free(_block_poly3d->_cellvtx_idx[i]);
@@ -530,7 +519,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_cellvtx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx[i] != NULL)
           free(_block_poly3d->_cellvtx[i]);
@@ -542,7 +531,7 @@ _block_poly3d_free_partial
   }
 
   if (_block_poly3d->_numabs != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_numabs[i] != NULL)
           free(_block_poly3d->_numabs[i]);
@@ -585,9 +574,11 @@ _block_poly3d_free
   }
 
   if (_block_poly3d->numabs_int != NULL) {
-    for (int j = 0; j < _block_poly3d->n_part; j++) {
-      if (_block_poly3d->numabs_int[j] != NULL) {
-        free(_block_poly3d->numabs_int[j]);
+    if (_block_poly3d->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_poly3d->n_part; j++) {
+        if (_block_poly3d->numabs_int[j] != NULL) {
+          free(_block_poly3d->numabs_int[j]);
+        }
       }
     }
     free(_block_poly3d->numabs_int);
@@ -595,9 +586,11 @@ _block_poly3d_free
   }
 
   if (_block_poly3d->cell_centers != NULL) {
-    for (int j = 0; j < _block_poly3d->n_part; j++) {
-      if (_block_poly3d->cell_centers[j] != NULL) {
-        free(_block_poly3d->cell_centers[j]);
+    if (_block_poly3d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
+      for (int j = 0; j < _block_poly3d->n_part; j++) {
+        if (_block_poly3d->cell_centers[j] != NULL) {
+          free(_block_poly3d->cell_centers[j]);
+        }
       }
     }
     free(_block_poly3d->cell_centers);
@@ -605,7 +598,7 @@ _block_poly3d_free
   }
 
   if (_block_poly3d->_parent_num != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
+    if (_block_poly3d->is_parent_num_get == 0 || _block_poly3d->owner == PDM_OWNERSHIP_KEEP) { 
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_parent_num[i] != NULL)
           free(_block_poly3d->_parent_num[i]);
@@ -1662,7 +1655,8 @@ PDM_Mesh_nodal_coord_set
  const int               id_part,
  const int               n_vtx,
  const PDM_real_t       *coords,
- const PDM_g_num_t      *numabs
+ const PDM_g_num_t      *numabs,
+ PDM_ownership_t         ownership
 )
 {
 
@@ -1679,10 +1673,10 @@ PDM_Mesh_nodal_coord_set
 
   /* Mapping memoire */
 
-  vtx->n_vtx   = n_vtx;
-  vtx->_coords = coords;
-  vtx->_numabs = numabs;
-
+  vtx->n_vtx     = n_vtx;
+  vtx->_coords   = coords;
+  vtx->_numabs   = numabs;
+  vtx->owner     = ownership;
 }
 
 
@@ -1769,12 +1763,13 @@ PDM_Mesh_cell_centers_get
   if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
     _id_block = id_block;
 
-    const PDM_Mesh_nodal_block_std_t *block = mesh->blocks_std[_id_block];
+    PDM_Mesh_nodal_block_std_t *block = mesh->blocks_std[_id_block];
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
 
+    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
   }
 
@@ -1782,19 +1777,22 @@ PDM_Mesh_cell_centers_get
 
     _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
 
-    const PDM_Mesh_nodal_block_poly2d_t *block = mesh->blocks_poly2d[_id_block];
+    PDM_Mesh_nodal_block_poly2d_t *block = mesh->blocks_poly2d[_id_block];
 
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
+
+    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
   }
 
   else {
     _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-    const PDM_Mesh_nodal_block_poly3d_t *block = mesh->blocks_poly3d[_id_block];
+    PDM_Mesh_nodal_block_poly3d_t *block = mesh->blocks_poly3d[_id_block];
 
+    block->is_cell_centers_get = 1;
     elt_centers = block->cell_centers[id_part] ;
 
   }
@@ -1912,7 +1910,8 @@ PDM_Mesh_nodal_coord_from_parent_set
  const PDM_g_num_t      *numabs,
  const int              *num_parent,
  const PDM_real_t       *coords_parent,
- const PDM_g_num_t      *numabs_parent
+ const PDM_g_num_t      *numabs_parent,
+ const PDM_ownership_t  ownership
 )
 {
 
@@ -1939,12 +1938,14 @@ PDM_Mesh_nodal_coord_from_parent_set
   _parent->_coords = coords_parent ;
   _parent->_numabs = numabs_parent;
   _parent->_numparent = NULL;
+  _parent->owner = PDM_OWNERSHIP_USER;
 
   vtx->n_vtx      = n_vtx;
   vtx->coords     = malloc (sizeof(double) * 3 * n_vtx);
   vtx->_coords    = vtx->coords;
   vtx->_numabs    = numabs;
   vtx->_numparent = num_parent;
+  vtx->owner = ownership;
 
   for (int i = 0; i < n_vtx; i++) {
     int i_parent = num_parent[i] - 1;
@@ -2062,9 +2063,8 @@ const int               id_block
  * \brief  Add a new block to the current mesh
  *
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
- * \param [in]  st_free_data   Status of Release of the memory
- *                             when the block is destroyed
  * \param [in]  id_block       Block identifier
+ * \param [in]  ownership      Ownership
  *
  * \return Block identifier
  *
@@ -2074,8 +2074,8 @@ int
 PDM_Mesh_nodal_block_add
 (
       PDM_Mesh_nodal_t     *mesh,
-      PDM_bool_t            st_free_data,
-const PDM_Mesh_nodal_elt_t  t_elt
+const PDM_Mesh_nodal_elt_t  t_elt,
+const PDM_ownership_t       ownership
 )
 {
 
@@ -2107,22 +2107,24 @@ const PDM_Mesh_nodal_elt_t  t_elt
       /* Intialisation du bloc */
       mesh->blocks_std[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_std_t) );
       mesh->blocks_std[id_block]->t_elt        = t_elt;
-      mesh->blocks_std[id_block]->st_free_data = st_free_data;
+      mesh->blocks_std[id_block]->owner        = ownership;
       mesh->blocks_std[id_block]->n_part       = mesh->n_part;
 
       mesh->blocks_std[id_block]->n_elt                = (PDM_l_num_t  *) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_std[id_block]->n_part);
       mesh->blocks_std[id_block]->_connec              = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
-      mesh->blocks_std[id_block]->_num_part            = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_std[id_block]->n_part);
       mesh->blocks_std[id_block]->_numabs              = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * mesh->blocks_std[id_block]->n_part);
       mesh->blocks_std[id_block]->numabs_int           = NULL;
       mesh->blocks_std[id_block]->_parent_num          = NULL;
       mesh->blocks_std[id_block]->_parent_entity_g_num = NULL;
+      mesh->blocks_std[id_block]->is_parent_num_get    = 0;
+      mesh->blocks_std[id_block]->is_parent_entity_g_num_get = 0;
+      mesh->blocks_std[id_block]->is_numabs_int_get = 0;
+      mesh->blocks_std[id_block]->is_cell_centers_get = 0;
       mesh->blocks_std[id_block]->cell_centers         = NULL;
 
       for (int i = 0; i < mesh->blocks_std[id_block]->n_part; i++) {
         mesh->blocks_std[id_block]->n_elt[i]     = 0;
         mesh->blocks_std[id_block]->_connec[i]   = NULL;
-        mesh->blocks_std[id_block]->_num_part[i] = NULL;
         mesh->blocks_std[id_block]->_numabs[i]   = NULL;
       }
 
@@ -2150,23 +2152,25 @@ const PDM_Mesh_nodal_elt_t  t_elt
 
       /* Intialisation du bloc */
       mesh->blocks_poly2d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly2d_t) );
-      mesh->blocks_poly2d[id_block]->st_free_data = st_free_data;
-      mesh->blocks_poly2d[id_block]->n_part            = mesh->n_part;
+      mesh->blocks_poly2d[id_block]->owner       = ownership;
+      mesh->blocks_poly2d[id_block]->n_part      = mesh->n_part;
 
       mesh->blocks_poly2d[id_block]->n_elt       = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t ) * mesh->blocks_poly2d[id_block]->n_part);
       mesh->blocks_poly2d[id_block]->_connec_idx = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_poly2d[id_block]->n_part);
       mesh->blocks_poly2d[id_block]->_connec     = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_poly2d[id_block]->n_part);
-      mesh->blocks_poly2d[id_block]->_num_part   = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->blocks_poly2d[id_block]->n_part);
       mesh->blocks_poly2d[id_block]->_numabs     = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * mesh->blocks_poly2d[id_block]->n_part);
       mesh->blocks_poly2d[id_block]->numabs_int = NULL;
       mesh->blocks_poly2d[id_block]->cell_centers = NULL;
       mesh->blocks_poly2d[id_block]->_parent_num = NULL;
+      mesh->blocks_poly2d[id_block]->is_parent_num_get    = 0;
+      mesh->blocks_poly2d[id_block]->is_parent_entity_g_num_get = 0;
+      mesh->blocks_poly2d[id_block]->is_numabs_int_get = 0;
+      mesh->blocks_poly2d[id_block]->is_cell_centers_get = 0;
 
       for (int i = 0; i < mesh->blocks_poly2d[id_block]->n_part; i++) {
         mesh->blocks_poly2d[id_block]->n_elt[i]       = 0;
         mesh->blocks_poly2d[id_block]->_connec_idx[i] = NULL;
         mesh->blocks_poly2d[id_block]->_connec[i]     = NULL;
-        mesh->blocks_poly2d[id_block]->_num_part[i]   = NULL;
         mesh->blocks_poly2d[id_block]->_numabs[i]     = NULL;
       }
 
@@ -2193,7 +2197,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
 
       mesh->blocks_poly3d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly3d_t) );
       mesh->blocks_poly3d[id_block]->n_part       = mesh->n_part;
-      mesh->blocks_poly3d[id_block]->st_free_data = st_free_data;
+      mesh->blocks_poly2d[id_block]->owner        = ownership;
 
       mesh->blocks_poly3d[id_block]->n_elt        = (PDM_l_num_t * ) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_poly3d[id_block]->n_part);
       mesh->blocks_poly3d[id_block]->n_face       = (PDM_l_num_t * ) malloc(sizeof(PDM_l_num_t  ) * mesh->blocks_poly3d[id_block]->n_part);
@@ -2207,6 +2211,10 @@ const PDM_Mesh_nodal_elt_t  t_elt
       mesh->blocks_poly3d[id_block]->numabs_int   = NULL;
       mesh->blocks_poly3d[id_block]->cell_centers = NULL;
       mesh->blocks_poly3d[id_block]->_parent_num  = NULL;
+      mesh->blocks_poly3d[id_block]->is_parent_num_get    = 0;
+      mesh->blocks_poly3d[id_block]->is_parent_entity_g_num_get = 0;
+      mesh->blocks_poly3d[id_block]->is_numabs_int_get = 0;
+      mesh->blocks_poly3d[id_block]->is_cell_centers_get = 0;
 
       for (int i = 0; i < mesh->blocks_poly3d[id_block]->n_part; i++) {
         mesh->blocks_poly3d[id_block]->n_elt[i]        = 0;
@@ -2607,6 +2615,8 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
+
+    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 
@@ -2624,6 +2634,8 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
+
+    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 
@@ -2641,6 +2653,8 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
     if (block->numabs_int == NULL) printf("!!! id_block = %d\n", id_block);
+
+    block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];
   }
 }
@@ -2769,6 +2783,7 @@ const int               id_part
 
     PDM_Mesh_nodal_block_poly3d_t *block = mesh->blocks_poly3d[_id_block];
 
+
     if (block == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
@@ -2777,6 +2792,7 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
+    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -2796,6 +2812,7 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
+    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -2815,6 +2832,7 @@ const int               id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
+    block->is_parent_num_get = 1;
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
     }
@@ -3470,8 +3488,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[0] > 0) {
       id_bloc_tetra4 = PDM_Mesh_nodal_block_add(mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_TETRA4);
+                                                PDM_MESH_NODAL_TETRA4,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_tetra4 - PDM_BLOCK_ID_BLOCK_STD;
 
@@ -3481,8 +3499,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[1] > 0) {
       id_bloc_hexa8 = PDM_Mesh_nodal_block_add(mesh,
-                                               PDM_TRUE,
-                                               PDM_MESH_NODAL_HEXA8);
+                                               PDM_MESH_NODAL_HEXA8,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_hexa8 - PDM_BLOCK_ID_BLOCK_STD;
 
@@ -3492,8 +3510,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[2] > 0) {
       id_bloc_prism6 = PDM_Mesh_nodal_block_add(mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_PRISM6);
+                                                PDM_MESH_NODAL_PRISM6,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_prism6 - PDM_BLOCK_ID_BLOCK_STD;
 
@@ -3503,8 +3521,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[3] > 0) {
       id_bloc_pyramid5 = PDM_Mesh_nodal_block_add(mesh,
-                                                  PDM_TRUE,
-                                                  PDM_MESH_NODAL_PYRAMID5);
+                                                  PDM_MESH_NODAL_PYRAMID5,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_pyramid5 - PDM_BLOCK_ID_BLOCK_STD;
 
@@ -3514,8 +3532,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[4] > 0) {
       id_bloc_poly_3d = PDM_Mesh_nodal_block_add(mesh,
-                                                 PDM_TRUE,
-                                                 PDM_MESH_NODAL_POLY_3D);
+                                                 PDM_MESH_NODAL_POLY_3D,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_poly_3d - PDM_BLOCK_ID_BLOCK_POLY3D;
 
@@ -4041,8 +4059,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[0] > 0) {
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_TRIA3);
+                                                PDM_MESH_NODAL_TRIA3,
+                                                PDM_OWNERSHIP_KEEP);
       int _id_block = id_bloc_tria3 - PDM_BLOCK_ID_BLOCK_STD;
 
       mesh->blocks_std[_id_block]->owner = ownership; 
@@ -4051,8 +4069,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[1] > 0) {
       id_bloc_quad4 = PDM_Mesh_nodal_block_add (mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_QUAD4);
+                                                PDM_MESH_NODAL_QUAD4,
+                                                PDM_OWNERSHIP_KEEP);
       int _id_block = id_bloc_quad4 - PDM_BLOCK_ID_BLOCK_STD;
 
       mesh->blocks_std[_id_block]->owner = ownership; 
@@ -4061,8 +4079,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[2] > 0) {
       id_bloc_poly_2d = PDM_Mesh_nodal_block_add (mesh,
-                                                  PDM_TRUE,
-                                                  PDM_MESH_NODAL_POLY_2D);
+                                                  PDM_MESH_NODAL_POLY_2D,
+                                                  PDM_OWNERSHIP_KEEP);
       int _id_block = id_bloc_poly_2d - PDM_BLOCK_ID_BLOCK_POLY2D;
 
       mesh->blocks_std[_id_block]->owner = ownership; 
@@ -4437,8 +4455,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[0] > 0) {
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_TRIA3);
+                                                PDM_MESH_NODAL_TRIA3,
+                                                PDM_OWNERSHIP_KEEP);
 
       int _id_block = id_bloc_tria3 - PDM_BLOCK_ID_BLOCK_STD;
 
@@ -4448,8 +4466,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[1] > 0) {
       id_bloc_quad4 = PDM_Mesh_nodal_block_add (mesh,
-                                                PDM_TRUE,
-                                                PDM_MESH_NODAL_QUAD4);
+                                                PDM_MESH_NODAL_QUAD4,
+                                                PDM_OWNERSHIP_KEEP);
       int _id_block = id_bloc_quad4 - PDM_BLOCK_ID_BLOCK_STD;
 
       mesh->blocks_std[_id_block]->owner = ownership; 
@@ -4457,8 +4475,8 @@ const PDM_ownership_t  ownership
 
     if (som_elts[2] > 0) {
       id_bloc_poly_2d = PDM_Mesh_nodal_block_add (mesh,
-                                                  PDM_TRUE,
-                                                  PDM_MESH_NODAL_POLY_2D);
+                                                  PDM_MESH_NODAL_POLY_2D,
+                                                  PDM_OWNERSHIP_KEEP);
       int _id_block = id_bloc_poly_2d - PDM_BLOCK_ID_BLOCK_POLY2D;
 
       mesh->blocks_std[_id_block]->owner = ownership; 

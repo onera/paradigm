@@ -286,7 +286,8 @@ PDM_writer_geom_coord_set
  const int          id_part,
  const int          n_som,
  const PDM_real_t  *coords,
- const PDM_g_num_t *numabs
+ const PDM_g_num_t *numabs,
+ const PDM_ownership_t ownership
 );
 
 
@@ -338,8 +339,8 @@ PDM_writer_geom_bloc_add
 (
  PDM_writer_t                *cs,
  const int                    id_geom,
- PDM_writer_status_t          st_free_data,
- const PDM_writer_elt_geom_t  t_elt
+ const PDM_writer_elt_geom_t  t_elt,
+ const PDM_ownership_t        owner
 );
 
 

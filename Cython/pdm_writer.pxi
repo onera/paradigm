@@ -46,6 +46,12 @@ cdef extern from "pdm_writer.h":
     PDM_WRITER_FMT_ASCII = 1
 
 
+  ctypedef enum PDM_ownership_t: 
+    PDM_OWNERSHIP_KEEP                 = 0
+    PDM_OWNERSHIP_USER                 = 1
+    PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2
+    PDM_OWNERSHIP_BAD_VALUE            = 3
+
   ctypedef enum PDM_writer_var_dim_t:
     PDM_WRITER_VAR_CST           = 0
     PDM_WRITER_VAR_SCALAR        = 1
@@ -95,12 +101,13 @@ cdef extern from "pdm_writer.h":
                                             PDM_Mesh_nodal_t    *mesh)
 
 
-  void PDM_writer_geom_coord_set(PDM_writer_t  *cs,
-                                 int            id_geom,
-                                 int            id_part,
-                                 int            n_som,
-                                 PDM_real_t    *coords,
-                                 PDM_g_num_t   *numabs)
+  void PDM_writer_geom_coord_set(PDM_writer_t   *cs,
+                                 int             id_geom,
+                                 int             id_part,
+                                 int             n_som,
+                                 PDM_real_t      *coords,
+                                 PDM_g_num_t     *numabs,
+                                 PDM_ownership_t owner)
 
 
   void PDM_writer_geom_coord_from_parent_set(PDM_writer_t *cs,
@@ -362,7 +369,8 @@ cdef class Writer:
                                id_part,
                                n_som,
                                <PDM_real_t *> coords.data,
-                               <PDM_g_num_t *> numabs.data)
+                               <PDM_g_num_t *> numabs.data,
+                               PDM_OWNERSHIP_USER)
   
 
   def geom_faces_facesom_add(self,

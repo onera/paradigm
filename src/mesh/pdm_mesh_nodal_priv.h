@@ -60,7 +60,6 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   PDM_l_num_t                n_part;               /*!< Number of partitions */
   PDM_l_num_t               *n_elt;                /*!< Number elements */
   PDM_l_num_t              **_connec;              /*!< Connectivity (Memory mapping) */
-  PDM_l_num_t              **_num_part;            /*!< Initial numbering int the partition (Memory mapping) */
   PDM_g_num_t              **_numabs;              /*!< Global numbering (Memory mapping) */
   PDM_g_num_t              **numabs_int;           /*!< Global numbering inside each block */
   PDM_l_num_t              **_parent_num;          /*!< Parent numbering or NULL */
@@ -70,6 +69,11 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   PDM_ownership_t         owner;
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
+  int                     is_cell_centers_get;
+  int                     is_numabs_int_get;
+  int                     is_parent_num_get;
+  int                     is_parent_entity_g_num_get;
+
 
 } PDM_Mesh_nodal_block_std_t;
 
@@ -94,9 +98,13 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
   PDM_g_num_t            **_parent_entity_g_num; /*!< Global numbering of entity (cell/face/edge/vtx) */
   double                 **cell_centers;         /*!< Cell center coordinates */
 
-  PDM_ownership_t          owner;
+  PDM_ownership_t         owner;
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
+  int                     is_cell_centers_get;
+  int                     is_numabs_int_get;
+  int                     is_parent_num_get;
+  int                     is_parent_entity_g_num_get;
 
 } PDM_Mesh_nodal_block_poly2d_t;
 
@@ -137,6 +145,10 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
 
   PDM_ownership_t         cell_centers_owner;   /*!< Owner of cell centers */
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
+  int                     is_cell_centers_get;
+  int                     is_numabs_int_get;
+  int                     is_parent_num_get;
+  int                     is_parent_entity_g_num_get;
 
 } PDM_Mesh_nodal_block_poly3d_t;
 

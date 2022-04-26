@@ -1957,7 +1957,8 @@ PDM_mesh_location_part_set
                             i_part,
                             n_vtx,
                             coords,
-                            vtx_ln_to_gn);
+                            vtx_ln_to_gn,
+                            PDM_OWNERSHIP_KEEP);
 
 
 
@@ -2037,7 +2038,8 @@ PDM_mesh_location_part_set_2d
                             i_part,
                             n_vtx,
                             coords,
-                            vtx_ln_to_gn);
+                            vtx_ln_to_gn,
+                            PDM_OWNERSHIP_KEEP);
 
   ml->face_vtx_n[i_part]  = malloc (sizeof(PDM_l_num_t) * n_edge);
   ml->cell_face_n[i_part] = malloc (sizeof(PDM_l_num_t) * n_cell);

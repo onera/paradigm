@@ -175,6 +175,7 @@ PDM_Mesh_nodal_t *mesh
  * \param [in]  n_vtx     Number of vertices
  * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
  * \param [in]  numabs    Global numbering
+ * \param [in]  ownership Vertices ownship
  *
  */
 
@@ -185,7 +186,8 @@ PDM_Mesh_nodal_coord_set
  const int               id_part,
  const int               n_vtx,
  const PDM_real_t       *coords,
- const PDM_g_num_t      *numabs
+ const PDM_g_num_t      *numabs,
+ PDM_ownership_t         ownership
 );
 
 
@@ -319,7 +321,8 @@ PDM_Mesh_nodal_coord_from_parent_set
  const PDM_g_num_t      *numabs,
  const int              *num_parent,
  const PDM_real_t       *coords_parent,
- const PDM_g_num_t      *numabs_parent
+ const PDM_g_num_t      *numabs_parent,
+ const PDM_ownership_t  ownership
 );
 
 
@@ -393,9 +396,8 @@ const int               id_block
  * \brief  Add a new block to the current mesh
  *
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
- * \param [in]  st_free_data   Status of Release of the memory
- *                             when the block is destroyed
  * \param [in]  id_block       Block identifier
+ * \param [in]  ownership Vertices ownship
  *
  * \return Block identifier
  *
@@ -405,8 +407,8 @@ int
 PDM_Mesh_nodal_block_add
 (
       PDM_Mesh_nodal_t     *mesh,
-      PDM_bool_t            st_free_data,
-const PDM_Mesh_nodal_elt_t  t_elt
+const PDM_Mesh_nodal_elt_t  t_elt,
+const PDM_ownership_t       ownership
 );
 
 
