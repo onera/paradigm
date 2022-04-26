@@ -359,16 +359,16 @@ module pdm_writer
     c_acces              = acces
     c_prop_noeuds_actifs = prop_noeuds_actifs
 
-    cs = PDM_writer_create_c (fmt//C_NULL_CHAR,        &
+    cs = PDM_writer_create_c (trim(fmt)//C_NULL_CHAR,        &
                               c_fmt_fic,               &
                               c_topologie,             &
                               c_st_reprise,            &
-                              rep_sortie//C_NULL_CHAR, &
-                              nom_sortie//C_NULL_CHAR, &
+                              trim(rep_sortie)//C_NULL_CHAR, &
+                              trim(nom_sortie)//C_NULL_CHAR, &
                               c_comm,                  &
                               c_acces,                 &
                               c_prop_noeuds_actifs,    &
-                              options//C_NULL_CHAR)
+                              trim(options)//C_NULL_CHAR)
 
   end subroutine PDM_writer_create
 
@@ -458,7 +458,7 @@ module pdm_writer
     c_n_part           = n_part
 
     c_id_geom = PDM_writer_geom_create_c (cs,                    &
-                                          nom_geom//C_NULL_CHAR, &
+                                          trim(nom_geom)//C_NULL_CHAR, &
                                           c_n_part)
 
     id_geom = c_id_geom
@@ -1454,7 +1454,7 @@ module pdm_writer
                                       c_st_dep_tps,         &
                                       c_dim,                &
                                       c_dof_loc,            &
-                                      nom_var//C_NULL_CHAR)
+                                      trim(nom_var)//C_NULL_CHAR)
 
   end subroutine PDM_writer_var_create
 
@@ -1495,8 +1495,8 @@ module pdm_writer
     end interface
 
     call PDM_writer_name_map_add_c (cs,                        &
-                                    public_name//C_NULL_CHAR,  &
-                                    private_name//C_NULL_CHAR)
+                                    trim(public_name)//C_NULL_CHAR,  &
+                                    trim(private_name)//C_NULL_CHAR)
 
   end subroutine PDM_writer_name_map_add
 
@@ -1668,7 +1668,7 @@ module pdm_writer
     c_var_write_fct   = c_funloc(var_write_fct)
     c_var_free_fct    = c_funloc(var_free_fct)
 
-    call PDM_writer_fmt_add_c (name//C_NULL_CHAR, &
+    call PDM_writer_fmt_add_c (trim(name)//C_NULL_CHAR, &
                                c_create_fct,      &
                                c_free_fct,        &
                                c_beg_step_fct,    &
