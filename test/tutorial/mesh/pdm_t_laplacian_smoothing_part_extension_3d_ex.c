@@ -498,10 +498,60 @@ int main(int argc, char *argv[])
                              pn_face,
                              pcell_face_idx,
                              pcell_face,
-                            &pface_cell_idx,
-                            &pface_cell);
+                             &pface_cell_idx,
+                             &pface_cell);
 
-  /* TO DO get vtx_group */
+  /* Get vtx_group */
+
+  int *pedge_face_idx = NULL;
+  int *pedge_face     = NULL;
+
+  PDM_connectivity_transpose(pn_face,
+                             pn_edge,
+                             pface_edge_idx,
+                             pface_edge,
+                             &pedge_face_idx,
+                             &pedge_face);
+
+  int *pedge_group_idx = NULL;
+  int *pedge_group     = NULL;
+
+  PDM_combine_connectivity(pn_edge,
+                           pedge_face_idx,
+                           pedge_face,
+                           pface_group_idx,
+                           pface_group,
+                           &pedge_group_idx,
+                           &pedge_group);
+
+  int *pvtx_edge_idx = NULL;
+  int *pvtx_edge     = NULL;
+
+  PDM_connectivity_transpose(pn_edge,
+                             pn_vtx,
+                             pedge_vtx_idx,
+                             pedge_vtx,
+                             &pvtx_edge_idx,
+                             &pvtx_edge);
+
+  int *pvtx_group_idx = NULL;
+  int *pvtx_group     = NULL;
+
+  PDM_combine_connectivity(pn_vtx,
+                           pvtx_edge_idx,
+                           pvtx_edge,
+                           pedge_group_idx,
+                           pedge_group,
+                           &pvtx_group_idx,
+                           &pvtx_group);
+
+  for (int i = 0; i < pn_vtx; i++) {
+    log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
+    for (int j = pvtx_group_idx[i]; j < pvtx_group_idx[i+1]; j++) {
+      log_trace(" %d ", pvtx_group[j]);
+    }
+  log_trace("\n");
+  }
 
   /* part_extension */
 
@@ -569,7 +619,7 @@ int main(int argc, char *argv[])
                                       &pedge_vtx_extension,
                                       &pedge_vtx_extension_idx);
 
-  // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
+  // Get coordinates
 
   double *pvtx_coord_extension = NULL;
 
@@ -663,10 +713,10 @@ int main(int argc, char *argv[])
     // Loop over extension edges
 
     for (int i = 0; i < pn_edge_extension; i++) {
-      vtx1_idx = pedge_vtx[2*i]-1;
-      vtx2_idx = pedge_vtx[2*i+1]-1;
+      vtx1_idx = pedge_vtx_extension[2*i]-1;
+      vtx2_idx = pedge_vtx_extension[2*i+1]-1;
 
-      if (vtx1_idx <= pn_vtx) {
+      if ((vtx1_idx < pn_vtx) &&  (vtx2_idx >= pn_vtx)){
         if (i_step == 0) {
           normalisation[vtx1_idx]++;
         }
@@ -676,7 +726,7 @@ int main(int argc, char *argv[])
         pvtx_coord_new[3*vtx1_idx+2] += pvtx_coord_extension[3*(vtx2_idx-pn_vtx)+2];
       }
 
-      if (vtx2_idx <= pn_vtx) {
+      if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
         if (i_step == 0) {
           normalisation[vtx2_idx]++;
         }
@@ -688,15 +738,17 @@ int main(int argc, char *argv[])
 
     } // end loop over extension edges
 
-    // Add normalisation and update coordinates (TO DO vtx_group to fix boundary)
-    for (int i = 0; i < pn_edge; i++) {
+    // Add normalisation and update coordinates
+    for (int i = 0; i < pn_vtx; i++) {
       if (i_step == 0) {
         normalisation[i] = 1 / normalisation[i];
       }
 
-      pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
-      pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
-      pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
+      if (pvtx_group_idx[i+1]- pvtx_group_idx[i] == 0) {
+        pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
+        pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
+        pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
+      }
 
     } // end loop on coordinates
 
