@@ -1630,8 +1630,6 @@ PDM_part_to_block_create_from_distrib
  PDM_MPI_Comm                  comm
 )
 {
-
-  printf("PDM_part_to_block_create_from_distrib\n");
   /*
    * Common creation
    */
