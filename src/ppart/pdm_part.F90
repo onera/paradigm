@@ -1127,6 +1127,14 @@ contains
       c_dvtx_tag = c_loc(dVtxTag)
     endif
 
+    if (associated(dCellWeight)) then
+      c_dcell_weight = c_loc(dCellWeight)
+    endif
+
+    if (associated(renum_properties_face)) then
+      c_renum_properties_face = c_loc(renum_properties_face)
+    endif
+
     c_split_method    = split_method
     c_n_property_cell = nPropertyCell
     c_n_property_face = nPropertyFace
@@ -1137,10 +1145,8 @@ contains
     c_n_face_group    = nFaceGroup
 
     c_renum_properties_cell = c_loc(renum_properties_cell)
-    c_renum_properties_face = c_loc(renum_properties_face)
     c_dcell_faceIdx         = c_loc(dCellFaceIdx         )
     c_dcell_face            = c_loc(dCellFace            )
-    c_dcell_weight          = c_loc(dCellWeight          )
     c_dface_vtx_idx         = c_loc(dFaceVtxIdx          )
     c_dface_vtx             = c_loc(dFaceVtx             )
     c_dvtx_coord            = c_loc(dVtxCoord            )
@@ -1151,8 +1157,8 @@ contains
 
     ppart = PDM_part_create_c (c_comm, &
                                 c_split_method, &
-                                renum_cell_method//C_NULL_CHAR, &
-                                renum_face_method//C_NULL_CHAR, &
+                                trim(renum_cell_method)//C_NULL_CHAR, &
+                                trim(renum_face_method)//C_NULL_CHAR, &
                                 c_n_property_cell, &
                                 c_renum_properties_cell, &
                                 c_n_property_face, &
@@ -1867,22 +1873,22 @@ contains
       c_have_face_group = 0
     endif
 
-    cm = PDM_part_coarse_mesh_create_c (c_comm,                         &
-                                        method//C_NULL_CHAR,            &
-                                        renum_cell_method//C_NULL_CHAR, &
-                                        renum_face_method//C_NULL_CHAR, &
-                                        c_n_property_cell,              &
-                                        c_renum_properties_cell,        &
-                                        c_n_property_face,              &
-                                        c_renum_properties_face,        &
-                                        c_n_part,                       &
-                                        c_n_total_part,                 &
-                                        c_n_face_group,                 &
-                                        c_have_cell_tag,                &
-                                        c_have_face_tag,                &
-                                        c_have_vtx_tag,                 &
-                                        c_have_cell_weight,             &
-                                        c_have_face_weight,             &
+    cm = PDM_part_coarse_mesh_create_c (c_comm,                               &
+                                        trim(method)//C_NULL_CHAR,             &
+                                        trim(renum_cell_method)//C_NULL_CHAR, &
+                                        trim(renum_face_method)//C_NULL_CHAR, &
+                                        c_n_property_cell,                    &
+                                        c_renum_properties_cell,              &
+                                        c_n_property_face,                    &
+                                        c_renum_properties_face,              &
+                                        c_n_part,                             &
+                                        c_n_total_part,                       &
+                                        c_n_face_group,                       &
+                                        c_have_cell_tag,                      &
+                                        c_have_face_tag,                      &
+                                        c_have_vtx_tag,                       &
+                                        c_have_cell_weight,                   &
+                                        c_have_face_weight,                   &
                                         c_have_face_group)
 
   end subroutine PDM_part_coarse_mesh_create_
@@ -2032,24 +2038,43 @@ contains
 
     c_cell_face_idx            = c_loc(cell_face_idx           )
     c_cell_face                = c_loc(cell_face               )
-    c_cell_tag                 = c_loc(cell_tag                )
-    c_cell_weight              = c_loc(cell_weight             )
-    c_face_weight              = c_loc(face_weight             )
     c_cell_ln_to_gn            = c_loc(cell_ln_to_gn           )
     c_face_cell                = c_loc(face_cell               )
     c_face_vtx_idx             = c_loc(face_vtx_idx            )
     c_face_vtx                 = c_loc(face_vtx                )
-    c_face_tag                 = c_loc(face_tag                )
     c_face_ln_to_gn            = c_loc(face_ln_to_gn           )
     c_vtxCoord                 = c_loc(vtxCoord                )
-    c_vtx_tag                  = c_loc(vtx_tag                 )
     c_vtx_ln_to_gn             = c_loc(vtx_ln_to_gn            )
     c_face_group_idx           = c_loc(face_group_idx          )
     c_face_group               = c_loc(face_group              )
     c_face_group_ln_to_gn      = c_loc(face_group_ln_to_gn     )
     c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
-    c_face_part_bound          = c_loc(face_part_bound         )
+    
+
+    if (associated(vtx_tag)) then
+      c_vtx_tag  = c_loc(vtx_tag)
+    endif
+
+    if (associated(face_tag)) then
+      c_face_tag = c_loc(face_tag)
+    endif
+
+    if (associated(cell_tag)) then
+      c_cell_tag = c_loc(cell_tag)
+    endif
+
+    if (associated(cell_weight)) then
+      c_cell_weight = c_loc(cell_weight)
+    endif
+
+    if (associated(face_weight)) then
+       c_face_weight = c_loc(face_weight)
+    endif
+
+    if (associated(face_part_bound)) then
+       c_face_part_bound = c_loc(face_part_bound)
+    endif
 
     call PDM_part_coarse_mesh_input_c (cm,                         &
                                        c_i_part,                   &
@@ -2631,7 +2656,7 @@ contains
       end subroutine PDM_coarse_mesh_method_idx_get_c
     end interface
 
-    call PDM_coarse_mesh_method_idx_get_c (name//C_NULL_CHAR, &
+    call PDM_coarse_mesh_method_idx_get_c (trim(name)//C_NULL_CHAR, &
                                            idx)
 
   end subroutine PDM_coarse_mesh_method_idx_get
@@ -2740,7 +2765,7 @@ contains
       end subroutine PDM_part_renum_method_face_idx_get_c
     end interface
 
-    call PDM_part_renum_method_face_idx_get_c (name//C_NULL_CHAR, &
+    call PDM_part_renum_method_face_idx_get_c (trim(name)//C_NULL_CHAR, &
                                                idx)
 
   end subroutine PDM_part_renum_method_face_idx_get
@@ -2776,7 +2801,7 @@ contains
        end subroutine PDM_part_renum_method_cell_idx_get_c
      end interface
 
-     call PDM_part_renum_method_cell_idx_get_c (name//C_NULL_CHAR, &
+     call PDM_part_renum_method_cell_idx_get_c (trim(name)//C_NULL_CHAR, &
                                                 idx)
 
   end subroutine PDM_part_renum_method_cell_idx_get
@@ -2812,7 +2837,7 @@ contains
        end subroutine PDM_part_renum_method_edge_idx_get_c
      end interface
 
-     call PDM_part_renum_method_edge_idx_get_c (name//C_NULL_CHAR, &
+     call PDM_part_renum_method_edge_idx_get_c (trim(name)//C_NULL_CHAR, &
                                                 idx)
 
   end subroutine PDM_part_renum_method_edge_idx_get
@@ -2848,7 +2873,7 @@ contains
        end subroutine PDM_part_renum_method_vtx_idx_get_c
      end interface
 
-     call PDM_part_renum_method_vtx_idx_get_c (name//C_NULL_CHAR, &
+     call PDM_part_renum_method_vtx_idx_get_c (trim(name)//C_NULL_CHAR, &
                                                 idx)
 
   end subroutine PDM_part_renum_method_vtx_idx_get
