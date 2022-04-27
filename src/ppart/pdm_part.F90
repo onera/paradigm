@@ -3032,6 +3032,8 @@ contains
   !! \param [in]   anisotropic_option
   !!
 
+#ifdef PDM_HAVE_ANISO_AGGLO
+
   subroutine PDM_part_coarse_mesh_add_option_anisotropic (cm,                 &
                                                           anisotropic_option)
     use iso_c_binding
@@ -3056,7 +3058,6 @@ contains
     call PDM_part_coarse_mesh_add_option_anisotropic_f (cm, c_loc(anisotropic_option))
 
   end subroutine PDM_part_coarse_mesh_add_option_anisotropic
-
 
   !>
   !!
@@ -3219,5 +3220,7 @@ contains
                      [n_cell])
 
   end subroutine PDM_part_coarse_mesh_part_get_anisotropic_info
+
+#endif
 
 end module pdm_part
