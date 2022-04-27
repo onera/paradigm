@@ -1542,104 +1542,21 @@ PDM_part_to_block_create
  PDM_MPI_Comm                  comm
 )
 {
-
-  if (n_ptb == 0) {
-    t_timer[0] = PDM_timer_create ();
-    t_timer[1] = PDM_timer_create ();
-    t_timer[2] = PDM_timer_create ();
-  }
-  n_ptb++;
+  /*
+   * Common creation
+   */
+  PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
+                                         t_post,
+                                         part_active_node,
+                                         gnum_elt,
+                                         weight,
+                                         n_elt,
+                                         n_part,
+                                         comm);
 
   double t1_elaps = PDM_timer_elapsed(t_timer[0]);
-  double t1_cpu = PDM_timer_cpu(t_timer[0]);
+  double t1_cpu   = PDM_timer_cpu    (t_timer[0]);
   PDM_timer_resume(t_timer[0]);
-
-  PDM_part_to_block_t *ptb =
-    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
-
-  // if ((t_post != PDM_PART_TO_BLOCK_POST_MERGE) && (weight != NULL)) {
-  //   PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_create : weights are available only if PDM_PART_TO_BLOCK_POST_MERGE is selected\n");
-  // }
-
-  ptb->t_distrib         = t_distrib;    /*!< Distribution type */
-  ptb->t_post            = t_post;       /*!< Post processing type */
-  ptb->n_active_ranks    = 0;            /*!< Number of active ranks */
-  ptb->active_ranks      = NULL;         /*!< List of active ranks */
-  ptb->comm              = comm;         /*!< MSG communicator */
-  PDM_MPI_Comm_size (comm, &(ptb->s_comm));
-  PDM_MPI_Comm_rank (comm, &(ptb->i_rank));
-  ptb->is_my_rank_active   = 0;              /*!< Is active current rank */
-  ptb->part_active_node    = part_active_node; /*!< Part of active nodes */
-
-  ptb->n_part             = n_part;       /*!< Number of parts */
-  ptb->n_elt              = n_elt;        /*!< Number of elements for any part */
-  ptb->n_elt_proc         = 0;            /*!< Number of elements on the current rank */
-  ptb->gnum_elt           = gnum_elt;     /*!< Global numbering of elements for any part */
-  ptb->weight             = weight;
-  ptb->dest_proc          = NULL;
-  ptb->data_distrib_index =
-    (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
-
-  ptb->s_block_min   = INT_MAX;
-  ptb->s_block_max   = 0;
-
-  ptb->i_send_data   = NULL;  /*!< Data to send to other processes index (size = s_comm) */
-  ptb->i_recv_data   = NULL;  /*!< Received Data from other processes index (size = s_comm) */
-  ptb->n_send_data   = NULL;  /*!< Number of data to send to other processes (size = s_comm) */
-  ptb->n_recv_data   = NULL;  /*!< Number of received Data from other processes (size = s_comm) */
-
-  ptb->tn_send_data      = 0;     /*!< Total number of sended data */
-  ptb->tn_recv_data      = 0;     /*!< Total number of received data */
-  ptb->sorted_recv_gnum  = NULL;  /*!< Sorted recv global num */
-  ptb->order             = NULL;  /*!< Order */
-  ptb->n_elt_block       = 0;
-  ptb->block_gnum        = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
-  ptb->block_gnum_count  = NULL;  /*!< Number of occurence of reveived data (size = tn_recv_data) */
-
-  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
-
-  /* Asynchone */
-  ptb->max_exch_request = 10;
-  ptb->next_request     = 0;
-  ptb->s_data           = (size_t          * ) malloc ( ptb->max_exch_request * sizeof(size_t           ) );
-  ptb->t_stride         = (PDM_stride_t    * ) malloc ( ptb->max_exch_request * sizeof(PDM_stride_t     ) );
-  ptb->cst_stride       = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->wait_status      = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->request_mpi      = (PDM_MPI_Request * ) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Request  ) );
-
-  ptb->send_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
-  ptb->recv_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
-  ptb->recv_stride      = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->n_send_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->i_send_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->n_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->i_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-
-  ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
-  ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
-
-  ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
-  ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
-  ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
-
-  for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
-    ptb->send_buffer  [i_req] = NULL;
-    ptb->recv_buffer  [i_req] = NULL;
-    ptb->recv_stride  [i_req] = NULL;
-    ptb->n_send_buffer[i_req] = NULL;
-    ptb->i_send_buffer[i_req] = NULL;
-    ptb->n_recv_buffer[i_req] = NULL;
-    ptb->i_recv_buffer[i_req] = NULL;
-    ptb->block_stride [i_req] = NULL;
-    ptb->block_data   [i_req] = NULL;
-    ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
-    ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
-  }
-  /*
-   * Active ranks definition
-   */
-
-  _active_ranks (ptb);
 
   /*
    * Data distribution definition
@@ -1673,11 +1590,11 @@ PDM_part_to_block_create
   min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv); 
 
   PDM_timer_hang_on(t_timer[0]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[0] );
-  double t2_cpu = PDM_timer_cpu(t_timer[0]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[0]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[0]);
 
   t_elaps[0] += (t2_elaps - t1_elaps);
-  t_cpu[0] += (t2_cpu - t1_cpu);
+  t_cpu  [0] += (t2_cpu   - t1_cpu  );
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -1714,108 +1631,30 @@ PDM_part_to_block_create_from_distrib
 )
 {
 
-  if (n_ptb == 0) {
-    t_timer[0] = PDM_timer_create ();
-    t_timer[1] = PDM_timer_create ();
-    t_timer[2] = PDM_timer_create ();
-  }
-  n_ptb++;
-
-  double t1_elaps = PDM_timer_elapsed(t_timer[1]);
-  double t1_cpu = PDM_timer_cpu(t_timer[1]);
-  PDM_timer_resume(t_timer[1]);
-
-  PDM_part_to_block_t *ptb =
-    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
-
-  ptb->t_distrib         = t_distrib;    /*!< Distribution type */
-  ptb->t_post            = t_post;       /*!< Post processing type */
-  ptb->n_active_ranks    = 0;            /*!< Number of active ranks */
-  ptb->active_ranks      = NULL;         /*!< List of active ranks */
-  ptb->comm              = comm;         /*!< MSG communicator */
-  PDM_MPI_Comm_size (comm, &(ptb->s_comm));
-  PDM_MPI_Comm_rank (comm, &(ptb->i_rank));
-  ptb->is_my_rank_active   = 0;                /*!< Is active current rank */
-  ptb->part_active_node    = part_active_node; /*!< Part of active nodes */
-
-  ptb->n_part             = n_part;       /*!< Number of parts */
-  ptb->n_elt              = n_elt;        /*!< Number of elements for any part */
-  ptb->n_elt_proc         = 0;            /*!< Number of elements on the current rank */
-  ptb->gnum_elt           = gnum_elt;     /*!< Global numbering of elements for any part */
-  ptb->weight             = NULL;
-  ptb->dest_proc          = NULL;
-  ptb->data_distrib_index =
-    (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
+  printf("PDM_part_to_block_create_from_distrib\n");
+  /*
+   * Common creation
+   */
+  PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
+                                         t_post,
+                                         part_active_node,
+                                         gnum_elt,
+                                         NULL,
+                                         n_elt,
+                                         n_part,
+                                         comm);
 
   for(int i_rank = 0; i_rank < ptb->s_comm+1; i_rank++){
     ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
   }
 
-  ptb->s_block_min   = INT_MAX;
-  ptb->s_block_max   = 0;
-
-  ptb->i_send_data   = NULL;  /*!< Data to send to other processes index (size = s_comm) */
-  ptb->i_recv_data   = NULL;  /*!< Received Data from other processes index (size = s_comm) */
-  ptb->n_send_data   = NULL;  /*!< Number of data to send to other processes (size = s_comm) */
-  ptb->n_recv_data   = NULL;  /*!< Number of received Data from other processes (size = s_comm) */
-
-  ptb->tn_send_data     = 0;     /*!< Total number of sended data */
-  ptb->tn_recv_data     = 0;     /*!< Total number of received data */
-  ptb->sorted_recv_gnum = NULL;  /*!< Sorted recv global num */
-  ptb->order            = NULL;  /*!< Order */
-  ptb->n_elt_block      = 0;
-  ptb->block_gnum       = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
-  ptb->block_gnum_count = NULL;  /*!< Number of occurence of reveived data (size = tn_recv_data) */
-
-  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
-
-  /* Asynchone */
-  ptb->max_exch_request = 10;
-  ptb->next_request     = 0;
-  ptb->s_data           = (size_t          * ) malloc ( ptb->max_exch_request * sizeof(size_t           ) );
-  ptb->t_stride         = (PDM_stride_t    * ) malloc ( ptb->max_exch_request * sizeof(PDM_stride_t     ) );
-  ptb->cst_stride       = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->wait_status      = (int             * ) malloc ( ptb->max_exch_request * sizeof(int              ) );
-  ptb->request_mpi      = (PDM_MPI_Request * ) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Request  ) );
-
-  ptb->send_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
-  ptb->recv_buffer      = (unsigned char  ** ) malloc ( ptb->max_exch_request * sizeof(unsigned char   *) );
-  ptb->recv_stride      = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->n_send_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->i_send_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->n_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-  ptb->i_recv_buffer    = (int            ** ) malloc ( ptb->max_exch_request * sizeof(int             *) );
-
-  ptb->block_stride     = (int           *** ) malloc ( ptb->max_exch_request * sizeof(int            **) );
-  ptb->block_data       = (void          *** ) malloc ( ptb->max_exch_request * sizeof(void           **) );
-
-  ptb->comm_kind        = (PDM_mpi_comm_kind_t *) malloc ( ptb->max_exch_request * sizeof(PDM_mpi_comm_kind_t  ));
-  ptb->win_send         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
-  ptb->win_recv         = (PDM_MPI_Win         *) malloc ( ptb->max_exch_request * sizeof(PDM_MPI_Win         *));
-
-  for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
-    ptb->send_buffer  [i_req] = NULL;
-    ptb->recv_buffer  [i_req] = NULL;
-    ptb->recv_stride  [i_req] = NULL;
-    ptb->n_send_buffer[i_req] = NULL;
-    ptb->i_send_buffer[i_req] = NULL;
-    ptb->n_recv_buffer[i_req] = NULL;
-    ptb->i_recv_buffer[i_req] = NULL;
-    ptb->block_stride [i_req] = NULL;
-    ptb->block_data   [i_req] = NULL;
-    ptb->win_send     [i_req] = PDM_MPI_WIN_NULL;
-    ptb->win_recv     [i_req] = PDM_MPI_WIN_NULL;
-  }
-
-  /*
-   * Active ranks definition
-   */
-  _active_ranks (ptb);
+  double t1_elaps = PDM_timer_elapsed(t_timer[1]);
+  double t1_cpu = PDM_timer_cpu(t_timer[1]);
+  PDM_timer_resume(t_timer[1]);
 
   /*
    * Data distribution definition
    */
-  // Rajouter un attribut de classe pour passer user ?
   _distrib_data (ptb, 1);
 
   int n_rank_recv = 0;
@@ -1838,10 +1677,10 @@ PDM_part_to_block_create_from_distrib
 
   PDM_timer_hang_on(t_timer[1]);
   double t2_elaps = PDM_timer_elapsed(t_timer[1]);
-  double t2_cpu = PDM_timer_cpu(t_timer[1]);
+  double t2_cpu   = PDM_timer_cpu    (t_timer[1]);
 
   t_elaps[1] += (t2_elaps - t1_elaps);
-  t_cpu[1] += (t2_cpu - t1_cpu);
+  t_cpu  [1] += (t2_cpu   - t1_cpu);
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -1900,14 +1739,6 @@ PDM_part_to_block_geom_create
   } else if (geom_kind == PDM_PART_GEOM_MORTON ){
     abort();
   }
-
-
-  /*
-   * Data distribution definition
-   */
-
-  // _distrib_data (ptb, 0);
-
 
   /*
    * Compute global weight for each element

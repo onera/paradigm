@@ -2237,8 +2237,9 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   /*
    * Exchange in target view the correct displacement for MPI_Get
    */
-  int n_rank;
+  int n_rank, i_rank;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &n_rank);
+  MPI_Comm_rank(_pdm_mpi_2_mpi_comm(comm), &i_rank);
 
   int *target_disp = (int *) malloc(n_rank * sizeof(int));
 
@@ -2260,7 +2261,7 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
     unsigned char *origin_addr  = (unsigned char *) recvbuf + origin_displ * origin_data_size;
     int            origin_count = recvcounts[i];
 
-    if(origin_count > 0 ) {
+    if(origin_count > 0 && i != i_rank) {
       MPI_Get(origin_addr,
               origin_count,
               _pdm_mpi_2_mpi_datatype(recvtype),
@@ -2275,6 +2276,25 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
 
   // double dt = MPI_Wtime() - t1;
   // log_trace("PDM_MPI_Get_ialltoallv dt = %12.5e \n", dt);
+
+  // t1 = MPI_Wtime();
+  int   origin_data_size = -1;
+  MPI_Type_size(_pdm_mpi_2_mpi_datatype(recvtype), &origin_data_size);
+
+  int            origin_displ = rdispls[i_rank]; // + recvcounts[i_rank] *
+  unsigned char *origin_addr  = (unsigned char *) recvbuf + origin_displ * origin_data_size;
+  int            origin_count = recvcounts[i_rank];
+  MPI_Get(origin_addr,
+          origin_count,
+          _pdm_mpi_2_mpi_datatype(recvtype),
+          i_rank,
+          (MPI_Aint) target_disp[i_rank],
+          origin_count,
+          _pdm_mpi_2_mpi_datatype(sendtype),
+          _pdm_mpi_2_mpi_win(win_send));
+
+  // dt = MPI_Wtime() - t1;
+  // log_trace("PDM_MPI_Get_ialltoallv local dt = %12.5e \n", dt);
 
   PDM_UNUSED(win_recv  );
   PDM_UNUSED(sendcounts);
