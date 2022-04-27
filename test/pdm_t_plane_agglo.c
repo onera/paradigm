@@ -653,7 +653,7 @@ _export_ini_mesh
                                n_vtx,
                                vtx,
                                vtx_ln_to_gn,
-                                PDM_OWNERSHIP_USER);
+                               PDM_OWNERSHIP_USER);
 
     PDM_writer_geom_cell2d_cellface_add (id_cs,
                                          id_geom,

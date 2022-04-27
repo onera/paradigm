@@ -319,7 +319,8 @@ PDM_writer_geom_coord_from_parent_set
  const PDM_g_num_t *numabs,
  const int         *num_parent,
  const PDM_real_t  *coords_parent,
- const PDM_g_num_t *numabs_parent
+ const PDM_g_num_t *numabs_parent,
+ const PDM_ownership_t ownership
 );
 
 

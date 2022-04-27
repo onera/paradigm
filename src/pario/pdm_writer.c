@@ -943,7 +943,8 @@ PDM_writer_geom_coord_from_parent_set
  const PDM_g_num_t *numabs,
  const int         *num_parent,
  const PDM_real_t  *coords_parent,
- const PDM_g_num_t *numabs_parent
+ const PDM_g_num_t *numabs_parent,
+ const PDM_ownership_t ownership
 )
 {
   if (cs == NULL) {
@@ -968,7 +969,7 @@ PDM_writer_geom_coord_from_parent_set
                                         num_parent,
                                         coords_parent,
                                         numabs_parent,
-                                        PDM_OWNERSHIP_KEEP);
+                                        ownership);
 }
 
 /**

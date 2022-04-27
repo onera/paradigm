@@ -40,9 +40,11 @@ struct PDM_Mesh_nodal_vtx_t {
   PDM_Mesh_nodal_vtx_t *parent;     /*!< Parent vertices if they are extraxted from an other mesh partition */
   PDM_l_num_t           n_vtx;      /*!< Number of vertices */
   double               *coords;     /*!< Coordinates (Locally allocated) */
-  const double         *_coords;    /*!< Coordinates (Mapping) */
-  const PDM_g_num_t    *_numabs;    /*!< Global numbering */
-  const int            *_numparent; /*!< Numbering in the parent vertices (mapping) */
+  double               *_coords;    /*!< Coordinates (Mapping) */
+  PDM_g_num_t          *_numabs;    /*!< Global numbering */
+  int                  *_numparent; /*!< Numbering in the parent vertices (mapping) */
+
+  int is_coords_get;
 
   PDM_ownership_t       owner;
 };
