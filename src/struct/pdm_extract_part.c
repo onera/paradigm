@@ -2954,7 +2954,11 @@ PDM_extract_part_connectivity_get
     extrp->is_owner_connectivity[connectivity_type] = PDM_TRUE;
   }
 
-  return extrp->pextract_n_entity[entity_type][i_part_out];
+  if(extrp->pextract_n_entity[entity_type] != NULL) {
+    return extrp->pextract_n_entity[entity_type][i_part_out];
+  } else {
+    return 0;
+  }
 }
 
 
@@ -2970,14 +2974,19 @@ PDM_extract_part_ln_to_gn_get
  PDM_ownership_t            ownership
 )
 {
-  *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type][i_part_out];
-  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
-  } else {
-    extrp->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
-  }
+  if(extrp->pextract_n_entity[entity_type] != NULL) {
+    *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type][i_part_out];
+    if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+      extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
+    } else {
+      extrp->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
+    }
 
-  return extrp->pextract_n_entity[entity_type][i_part_out];
+    return extrp->pextract_n_entity[entity_type][i_part_out];
+  }
+  else {
+    return 0;
+  }
 }
 
 
