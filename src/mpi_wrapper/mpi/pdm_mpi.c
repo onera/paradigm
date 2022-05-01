@@ -1664,6 +1664,8 @@ int PDM_MPI_Irecv(void *buf, int count, PDM_MPI_Datatype datatype, int source,
   int code =  MPI_Irecv(buf, count, _pdm_mpi_2_mpi_datatype(datatype), source,
                        tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  assert(_mpi_request != MPI_REQUEST_NULL);
+
   return _mpi_2_pdm_mpi_err(code);
 }
 
