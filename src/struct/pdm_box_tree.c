@@ -5713,6 +5713,114 @@ PDM_box_tree_intersect_lines_boxes2
   free(line_box);
 }
 
+
+void
+PDM_box_tree_write_vtk
+(
+ const char     *filename,
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       normalized
+ )
+{
+  assert(bt != NULL);
+
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    box_tree_data = bt->local_data;
+  } else {
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  int n_nodes = box_tree_data->n_nodes;
+  int dim     = dim = bt->boxes->dim;
+
+  double *node_extents = (double *) malloc(sizeof(double) * n_nodes * 6);
+  int    *node_depth   = PDM_array_zeros_int(n_nodes);
+
+
+  /* Extents */
+  for (int i = 0; i < n_nodes; i++) {
+    double *e = node_extents + 6*i;
+    _extents(dim,
+             box_tree_data->nodes[i].morton_code,
+             e);
+
+    if (!normalized) {
+      double en[6] = {e[0], e[1], e[2], e[3], e[4], e[5]};
+      PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en,   e);
+      PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en+3, e+3);
+    }
+  }
+
+  /* Depth */
+  int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  int *stack = malloc ((sizeof(int)) * s_stack);
+  int pos_stack = 0;
+
+  stack[pos_stack++] = 0;
+  while (pos_stack > 0) {
+
+    int node_id = stack[--pos_stack];
+
+    int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+    _node_t *node = &(box_tree_data->nodes[node_id]);
+
+    if (node->is_leaf) {
+      continue;
+    }
+
+    for (int ichild = 0; ichild < bt->n_children; ichild++) {
+      int child_id = child_ids[ichild];
+      node_depth[child_id] = node_depth[node_id] + 1;
+      stack[pos_stack++] = child_id;
+    }
+
+  }
+  free(stack);
+
+
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nbox_tree\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    double *e = node_extents + 6*i;
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    int j = 8*i;
+    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "12\n");
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_nodes);
+  fprintf(f, "SCALARS depth int\n LOOKUP_TABLE default\n");
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "%d\n", node_depth[i]);
+  }
+
+  fclose(f);
+
+  free(node_extents);
+  free(node_depth);
+
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

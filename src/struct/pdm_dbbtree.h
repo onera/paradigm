@@ -350,6 +350,15 @@ PDM_dbbtree_lines_intersect_boxes2
  );
 
 
+void
+PDM_dbbtree_box_tree_write_vtk
+(
+ const char    *filename,
+ PDM_dbbtree_t *dbbt,
+ const int      i_copied_rank,
+ const int      normalized
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

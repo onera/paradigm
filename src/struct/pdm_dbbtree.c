@@ -5055,6 +5055,26 @@ PDM_dbbtree_lines_intersect_boxes2
   PDM_box_tree_free_copies(_dbbt->btLoc);
 }
 
+
+
+void
+PDM_dbbtree_box_tree_write_vtk
+(
+ const char    *filename,
+ PDM_dbbtree_t *dbbt,
+ const int      i_copied_rank,
+ const int      normalized
+ )
+{
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  PDM_box_tree_write_vtk(filename,
+                         _dbbt->btLoc,
+                         i_copied_rank,
+                         normalized);
+}
+
 #undef _MIN
 #undef _MAX
 

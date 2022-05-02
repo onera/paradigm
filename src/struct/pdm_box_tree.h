@@ -541,6 +541,17 @@ PDM_box_tree_intersect_lines_boxes2
  int           **box_line_l_num
  );
 
+
+
+void
+PDM_box_tree_write_vtk
+(
+ const char     *filename,
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       normalized
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

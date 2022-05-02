@@ -549,6 +549,15 @@ int main(int argc, char *argv[])
 
   t1 = PDM_MPI_Wtime();
 
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "box_tree_%i.vtk", i_rank);
+    PDM_dbbtree_box_tree_write_vtk(filename,
+                                   dbbt,
+                                   -1,
+                                   0);
+  }
+
 
 
   /*
