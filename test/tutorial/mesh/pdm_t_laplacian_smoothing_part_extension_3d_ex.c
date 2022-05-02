@@ -24,6 +24,7 @@
 #include "pdm_unique.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_extension.h"
+#include "pdm_writer.h"
 
 
 /*============================================================================
@@ -311,6 +312,80 @@ _get_groups_and_bounds
 
 
 
+static void
+_compute_face_vtx
+(
+ const int   n_face,
+ int        *pface_edge_idx,
+ int        *pface_edge,
+ int        *pedge_vtx,
+ int       **pface_vtx
+ )
+{
+  int dbg = 0;
+  *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
+
+  for (int i = 0; i < n_face; i++) {
+
+    if (dbg) {
+      log_trace("\nFace %d\n", i);
+      for (int idx_edge = pface_edge_idx[i]; idx_edge < pface_edge_idx[i+1]; idx_edge++) {
+        int iedge = PDM_ABS(pface_edge[idx_edge]) - 1;
+        log_trace("  edge %d: %d %d\n",
+                  pface_edge[idx_edge],
+                  pedge_vtx[2*iedge], pedge_vtx[2*iedge+1]);
+      }
+    }
+    int *_pface_vtx = *pface_vtx + pface_edge_idx[i];
+
+    int cur_vtx, next_vtx;
+    int cur_edge = pface_edge[pface_edge_idx[i]];
+    if (cur_edge < 0) {
+      cur_edge = -cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge+1];
+      next_vtx = pedge_vtx[2*cur_edge  ];
+    } else {
+      cur_edge = cur_edge - 1;
+      cur_vtx  = pedge_vtx[2*cur_edge  ];
+      next_vtx = pedge_vtx[2*cur_edge+1];
+    }
+
+    for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
+      _pface_vtx[ivtx] = cur_vtx;
+
+      for (int iedg = pface_edge_idx[i]; iedg < pface_edge_idx[i+1]; iedg++) {
+        cur_edge = pface_edge[iedg];
+        int vtx1, vtx2;
+        if (cur_edge < 0) {
+          cur_edge = -cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge+1];
+          vtx2 = pedge_vtx[2*cur_edge  ];
+        } else {
+          cur_edge = cur_edge - 1;
+          vtx1 = pedge_vtx[2*cur_edge  ];
+          vtx2 = pedge_vtx[2*cur_edge+1];
+        }
+
+        if (vtx1 == next_vtx) {
+          cur_vtx  = next_vtx;
+          next_vtx = vtx2;
+          break;
+        }
+      }
+    }
+
+    if (dbg) {
+      log_trace("  face_vtx = ");
+      for (int ivtx = 0; ivtx < pface_edge_idx[i+1] - pface_edge_idx[i]; ivtx++) {
+        log_trace("%d ", _pface_vtx[ivtx]);
+      }
+      log_trace("\n");
+    }
+
+  }
+}
+
+
 
 /**
  *
@@ -478,16 +553,16 @@ int main(int argc, char *argv[])
   /* Get face_vtx (TO DO get with wright order) */
 
   int *pedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, pn_edge);
-  int *pface_vtx_idx = NULL;
-  int *pface_vtx     = NULL;
+  // int *pface_vtx_idx = NULL;
+  // int *pface_vtx     = NULL;
 
-  PDM_combine_connectivity(pn_face,
-                           pface_edge_idx,
-                           pface_edge,
-                           pedge_vtx_idx,
-                           pedge_vtx,
-                           &pface_vtx_idx,
-                           &pface_vtx);
+  // PDM_combine_connectivity(pn_face,
+  //                          pface_edge_idx,
+  //                          pface_edge,
+  //                          pedge_vtx_idx,
+  //                          pedge_vtx,
+  //                          &pface_vtx_idx,
+  //                          &pface_vtx);
 
   /* Get face_cell */
 
@@ -553,6 +628,24 @@ int main(int argc, char *argv[])
   log_trace("\n");
   }
 
+
+
+  /* Build face_vtx */
+  // int *pface_vtx_idx;
+  int *pface_vtx;
+  // get_ordered_face_vtx(&pface_vtx,
+  //                      &pface_vtx_idx,
+  //                      pface_edge_idx,
+  //                      pface_edge,
+  //                      pedge_vtx,
+  //                      pn_face);
+
+  _compute_face_vtx(pn_face,
+                    pface_edge_idx,
+                    pface_edge,
+                    pedge_vtx,
+                    &pface_vtx);
+
   /* part_extension */
 
   // Create
@@ -582,7 +675,7 @@ int main(int argc, char *argv[])
                               pface_cell,
                               pface_edge_idx,
                               pface_edge,
-                              pface_vtx_idx,
+                              pface_edge_idx,
                               pface_vtx,
                               pedge_vtx,
                               pface_group_idx,
@@ -664,24 +757,80 @@ int main(int argc, char *argv[])
   double *normalisation  = malloc(pn_vtx * sizeof(double));
   double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
 
+  /* Set up of Ensight output */
+
+  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_BIN,
+                                          PDM_WRITER_TOPO_DEFORMABLE, // topologie constante mais coordonnées variables
+                                          PDM_WRITER_OFF,
+                                          "test_3d_ens",
+                                          "lapalcian_smoothing",
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_KIND_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+  int id_geom = PDM_writer_geom_create(id_cs,
+                                       "test3d_geom",
+                                       n_part);
+
+
+  int *face_vtx_n  = (int *) malloc (sizeof(int) * pn_face);
+  int *cell_face_n = (int *) malloc (sizeof(int) * pn_cell);
+
+  for (int i = 0; i < pn_face; i++) {
+    face_vtx_n[i] = pface_edge_idx[i+1] - pface_edge_idx[i];
+  }
+
+  for (int i = 0; i < pn_cell; i++) {
+    cell_face_n[i] = pcell_face_idx[i+1] - pcell_face_idx[i];
+  }
+
   // Step
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 
-    // Output in vtk format (TO DO face_vtx)
+    // Output in ensight format
+    PDM_writer_step_beg(id_cs, (double) i_step);
 
-    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+    if (i_step == 0) {
+      PDM_writer_geom_coord_set (id_cs,
+                                 id_geom,
+                                 0,
+                                 pn_vtx,
+                                 pvtx_coord,
+                                 vtx_ln_to_gn);
+      PDM_writer_geom_cell3d_cellface_add (id_cs,
+                                           id_geom,
+                                           0,
+                                           pn_cell,
+                                           pn_face,
+                                           pface_edge_idx,
+                                           face_vtx_n,
+                                           pface_vtx,
+                                           pcell_face_idx,
+                                           cell_face_n,
+                                           pcell_face,
+                                           cell_ln_to_gn);
+    }
+    PDM_writer_geom_write(id_cs,
+                          id_geom);
 
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
+
+    // Output in vtk format
+
+    // sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+
+    // PDM_vtk_write_std_elements(filename,
+    //                            pn_vtx,
+    //                            pvtx_coord,
+    //                            vtx_ln_to_gn,
+    //                            PDM_MESH_NODAL_BAR2,
+    //                            pn_edge,
+    //                            pedge_vtx,
+    //                            NULL,
+    //                            0,
+    //                            NULL,
+    //                            NULL);
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {
@@ -778,7 +927,9 @@ int main(int argc, char *argv[])
 
     free(pvtx_coord_extension_new);
 
+    PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
+
 
   /* Free entities */
 
