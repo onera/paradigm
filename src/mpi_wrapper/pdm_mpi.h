@@ -124,6 +124,8 @@ typedef enum {
   PDM_MPI_MAX,
   PDM_MPI_MIN,
   PDM_MPI_SUM,
+  PDM_MPI_MINLOC,
+  PDM_MPI_MAXLOC,
   PDM_MPI_OP_NULL
 
 } PDM_MPI_Op;

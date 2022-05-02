@@ -182,6 +182,8 @@ static const MPI_Op mpi_op[] = {
   MPI_MAX,
   MPI_MIN,
   MPI_SUM,
+  MPI_MINLOC,
+  MPI_MAXLOC,
   MPI_OP_NULL
 
 };
