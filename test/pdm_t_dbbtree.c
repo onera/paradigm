@@ -89,6 +89,23 @@ end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
   }
 }
 
+static void _rotate (const int  n_pts,
+                     double    *coord)
+{
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
 
 /**
  *
@@ -231,6 +248,15 @@ _generate_surface_mesh
                             z_center,
                             radius,
                             &dmn);
+
+
+  const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get (dmn);
+  double *dvtx_coord = PDM_DMesh_nodal_vtx_get (dmn);
+
+  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
+
+  // _rotate (dn_vtx, dvtx_coord);
+
 
   int n_zone = 1;
   // int n_part_zones = {n_part};
@@ -463,7 +489,7 @@ int main(int argc, char *argv[])
     part_vtx_coord  [i_part] = PDM_surf_mesh_part_vtx_get         (surf_mesh, i_part);
 
 
-    if (1 == 0) {
+    if (1 == 1) {
       char filename[999];
       sprintf(filename, "faces_all_%2.2d_%2.2d.vtk", i_part, i_rank);
       PDM_vtk_write_std_elements(filename,
@@ -515,21 +541,29 @@ int main(int argc, char *argv[])
   PDM_g_num_t* ray_g_num   = pts_g_num;
   for(int i = 0; i < n_ray; ++i) {
 
-    ray_coord[6*i  ] = 0.;
-    ray_coord[6*i+1] = 0.;
-    ray_coord[6*i+2] = 0.;
+    // ray_coord[6*i  ] = -1.;
+    // ray_coord[6*i+1] = -1.;
+    // ray_coord[6*i+2] = -1.;
 
-    ray_coord[6*i+3] = 1.;
-    ray_coord[6*i+4] = 1.;
-    ray_coord[6*i+5] = 1.;
+    // ray_coord[6*i+3] =  1.;
+    // ray_coord[6*i+4] =  1.;
+    // ray_coord[6*i+5] =  1.;
 
-    // ray_coord[6*i  ] = 0.;
-    // ray_coord[6*i+1] = 1.;
-    // ray_coord[6*i+2] = 0.;
+    ray_coord[6*i  ] = global_extents[0];
+    ray_coord[6*i+1] = global_extents[1];
+    ray_coord[6*i+2] = global_extents[2];
 
-    // ray_coord[6*i+3] = 1.;
-    // ray_coord[6*i+4] = 0.;
-    // ray_coord[6*i+5] = 1.;
+    ray_coord[6*i+3] = global_extents[3];
+    ray_coord[6*i+4] = global_extents[4];
+    ray_coord[6*i+5] = global_extents[5];
+
+    // ray_coord[6*i  ] = -1.;
+    // ray_coord[6*i+1] =  1.;
+    // ray_coord[6*i+2] = -1.;
+
+    // ray_coord[6*i+3] =  1.;
+    // ray_coord[6*i+4] = -1.;
+    // ray_coord[6*i+5] =  1.;
 
   }
 

@@ -297,12 +297,81 @@ _redistribute_boxes_for_intersect_line
    * Compute an index based on Morton encoding to ensure a good distribution
    * of bounding boxes among the ranks.
    */
+  int     normalized      = 1;
+  int     n_depth_max     = 2;
+  int     n_extract_boxes = 0;
+  double *extract_extents = NULL;
+  PDM_box_tree_extract_extents(coarse_tree,
+                               normalized,
+                               n_depth_max,
+                               &n_extract_boxes,
+                               &extract_extents);
+
+  if(1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_extract_coarse_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         n_extract_boxes,
+                         extract_extents,
+                         NULL);
+  }
+
+  if(1) {
+    const int sExtents = dbbt->dim * 2;
+    double *g_sampling_extent = (double *) malloc (sizeof(double) * sExtents * n_extract_boxes);
+    PDM_g_num_t *g_num_sampling = NULL;
+    int *init_location_proc = PDM_array_zeros_int(3 * n_extract_boxes);
+    PDM_box_set_t* rank_boxes = PDM_box_set_create(3,
+                                                   0,  // No normalization to preserve initial extents
+                                                   0,  // No projection to preserve initial extents
+                                                   n_extract_boxes,
+                                                   g_num_sampling,
+                                                   g_sampling_extent,
+                                                   1,
+                                                   &n_extract_boxes,
+                                                   init_location_proc,
+                                                   dbbt->comm);
+    memcpy (rank_boxes->d, dbbt->d, sizeof(double) * 3);
+    memcpy (rank_boxes->s, dbbt->s, sizeof(double) * 3);
+    free   (init_location_proc);
+
+    /*
+     *  Build a shared box_tree to evaluate distribution
+     *
+     */
+    PDM_box_tree_t* shared_box_tree = PDM_box_tree_create (dbbt->maxTreeDepthShared,
+                                                           dbbt->maxBoxesLeafShared,
+                                                           dbbt->maxBoxRatioShared);
+
+
+    /* Build a tree and associate boxes */
+    PDM_box_tree_set_boxes (shared_box_tree,
+                            rank_boxes,
+                            PDM_BOX_TREE_ASYNC_LEVEL);
+
+    /*
+     * Compute for each line the number of intersection with bt shared
+     *
+     */
+
+    /*
+     * For each child_id associate a extra_weight
+     */
+
+
+    PDM_box_tree_destroy(&shared_box_tree);
+    PDM_box_set_destroy (&rank_boxes);
+  }
+
+  free(extract_extents);
 
   PDM_box_distrib_t  *distrib = PDM_box_tree_get_distrib (coarse_tree, dbbt->boxes);
 
   PDM_box_tree_destroy (&coarse_tree);
 
-  if (1 == 1) {
+  if (0 == 1) {
     PDM_box_distrib_dump_statistics (distrib, dbbt->comm);
   }
 
@@ -316,7 +385,7 @@ _redistribute_boxes_for_intersect_line
   }
 
   PDM_box_set_redistribute (distrib, dbbt->boxes);
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
@@ -1037,7 +1106,7 @@ PDM_dbbtree_boxes_set_for_intersect_line
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
-    if(0 == 1 && myRank == 0) {
+    if(1 == 1 && myRank == 0) {
       const char* filename = "dbbt_shared_tree.vtk";
       PDM_vtk_write_boxes (filename,
                            _dbbt->rankBoxes->local_boxes->n_boxes,

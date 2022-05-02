@@ -552,6 +552,16 @@ PDM_box_tree_write_vtk
  const int       normalized
  );
 
+void
+PDM_box_tree_extract_extents
+(
+ PDM_box_tree_t  *bt,
+ const int        normalized,
+ const int        depth_max,
+       int       *n_extract_boxes,
+       double   **extract_extents
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
