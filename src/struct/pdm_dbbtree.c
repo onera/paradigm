@@ -297,7 +297,7 @@ _redistribute_boxes_for_intersect_line
    * Compute an index based on Morton encoding to ensure a good distribution
    * of bounding boxes among the ranks.
    */
-  int     normalized      = 1;
+  int     normalized      = 0;
   int     n_depth_max     = 2;
   int     n_extract_boxes = 0;
   double *extract_extents = NULL;
@@ -320,17 +320,62 @@ _redistribute_boxes_for_intersect_line
 
   if(1) {
     const int sExtents = dbbt->dim * 2;
-    double *g_sampling_extent = (double *) malloc (sizeof(double) * sExtents * n_extract_boxes);
-    PDM_g_num_t *g_num_sampling = NULL;
-    int *init_location_proc = PDM_array_zeros_int(3 * n_extract_boxes);
+
+    int n_rank;
+    int i_rank;
+    PDM_MPI_Comm_size (dbbt->comm, &n_rank);
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    int *n_g_extract_boxes = (int *) malloc (sizeof(int) * n_rank);
+    PDM_MPI_Allgather (&n_extract_boxes , 1, PDM_MPI_INT,
+                       n_g_extract_boxes, 1, PDM_MPI_INT, dbbt->comm);
+
+
+    /*
+     *  Compute idx
+     */
+    int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
+    g_extract_boxes_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_extract_boxes[i];
+    }
+
+    PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
+
+    int n_g_extract_boxes_all = g_extract_boxes_idx[n_rank];
+
+    PDM_g_num_t *g_num_sampling = (PDM_g_num_t * ) malloc( n_g_extract_boxes_all * sizeof(PDM_g_num_t));
+    for(int i = 0; i < n_rank; ++i) {
+      for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
+        g_num_sampling[j] = i;
+      }
+    }
+
+    double *g_sampling_extent = (double *) malloc (sizeof(double) * sExtents * n_g_extract_boxes_all);
+    for(int i = 0; i < n_rank; ++i) {
+      g_extract_boxes_idx[i] *= sExtents;
+      n_g_extract_boxes  [i] *= sExtents;
+    }
+    for(int i = 0; i < n_g_extract_boxes_all * sExtents; ++i) {
+      g_sampling_extent[i] = -10000.;
+    }
+    // PDM_log_trace_array_int(g_extract_boxes_idx, n_rank, "g_extract_boxes_idx ::");
+
+    PDM_MPI_Allgatherv(extract_extents  , n_extract_boxes   * sExtents , PDM__PDM_MPI_REAL,
+                       g_sampling_extent, n_g_extract_boxes,
+                       g_extract_boxes_idx,
+                       PDM__PDM_MPI_REAL, dbbt->comm);
+
+    // PDM_log_trace_array_double(g_sampling_extent, n_g_extract_boxes_all * sExtents, "g_sampling_extent ::");
+
+    int *init_location_proc = PDM_array_zeros_int(3 * n_g_extract_boxes_all);
     PDM_box_set_t* rank_boxes = PDM_box_set_create(3,
                                                    0,  // No normalization to preserve initial extents
                                                    0,  // No projection to preserve initial extents
-                                                   n_extract_boxes,
+                                                   n_g_extract_boxes_all,
                                                    g_num_sampling,
                                                    g_sampling_extent,
                                                    1,
-                                                   &n_extract_boxes,
+                                                   &n_g_extract_boxes_all,
                                                    init_location_proc,
                                                    dbbt->comm);
     memcpy (rank_boxes->d, dbbt->d, sizeof(double) * 3);
@@ -351,6 +396,14 @@ _redistribute_boxes_for_intersect_line
                             rank_boxes,
                             PDM_BOX_TREE_ASYNC_LEVEL);
 
+    if(1 == 1 && i_rank == 0) {
+      const char* filename = "dbbt_sampling_shared_tree.vtk";
+      PDM_vtk_write_boxes (filename,
+                           rank_boxes->local_boxes->n_boxes,
+                           rank_boxes->local_boxes->extents,
+                           rank_boxes->local_boxes->g_num);
+    }
+
     /*
      * Compute for each line the number of intersection with bt shared
      *
@@ -360,9 +413,17 @@ _redistribute_boxes_for_intersect_line
      * For each child_id associate a extra_weight
      */
 
+    /*
+     * Pour l'algo adaptatif il faut qu'on garde le lien child_id + proc
+     * A chaque passage on ne cherche une profondeur de plus uniquement sur le child id qui a trop de point
+     *  Du coup on rafine l'arbre uniquement ou on a besoin
+     */
+
+
 
     PDM_box_tree_destroy(&shared_box_tree);
     PDM_box_set_destroy (&rank_boxes);
+    free(n_g_extract_boxes);
   }
 
   free(extract_extents);
