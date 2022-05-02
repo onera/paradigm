@@ -113,6 +113,17 @@ PDM_dbbtree_boxes_set
  const PDM_g_num_t **gNum
  );
 
+PDM_box_set_t *
+PDM_dbbtree_boxes_set_for_intersect_line
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const double      **extents,
+ const PDM_g_num_t **gNum,
+ const int           n_line,
+ double             *line_coord
+);
 
 /**
  * \brief Assign boxes to intersect to the tree.

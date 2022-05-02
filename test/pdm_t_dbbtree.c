@@ -59,11 +59,8 @@ end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
   double t2 = PDM_MPI_Wtime();
 
   double delta_t = t2 - t1;
-  double delta_max;
-  double delta_min;
 
   PDM_MPI_double_int_t l_info;
-  PDM_MPI_double_int_t min_info;
 
   l_info.val  = delta_t;
   l_info.rank = i_rank;
@@ -444,7 +441,6 @@ int main(int argc, char *argv[])
   /*
    * Prepare for bbox-tree
    */
-  double t1=PDM_MPI_Wtime();
   int                *part_n_elt       = malloc (sizeof(int          ) * n_part);
   const double      **part_elt_extents = malloc (sizeof(double      *) * n_part);
   const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part);
@@ -507,27 +503,100 @@ int main(int argc, char *argv[])
     max_range = PDM_MAX (max_range, global_extents[i+3] - global_extents[i]);
   }
   for (int i = 0; i < 3; i++) {
-    global_extents[i]   -= max_range * 1.1e-3;
+    global_extents[i  ] -= max_range * 1.1e-3;
     global_extents[i+3] += max_range * 1.0e-3;
   }
 
+  /*
+   * Create ray
+   */
+  int n_ray = n_pts_clouds;
+  double* ray_coord = (double * ) malloc( 2 * 3 * n_ray * sizeof(double));
+  PDM_g_num_t* ray_g_num   = pts_g_num;
+  for(int i = 0; i < n_ray; ++i) {
+
+    ray_coord[6*i  ] = 0.;
+    ray_coord[6*i+1] = 0.;
+    ray_coord[6*i+2] = 0.;
+
+    ray_coord[6*i+3] = 1.;
+    ray_coord[6*i+4] = 1.;
+    ray_coord[6*i+5] = 1.;
+
+    // ray_coord[6*i  ] = 0.;
+    // ray_coord[6*i+1] = 1.;
+    // ray_coord[6*i+2] = 0.;
+
+    // ray_coord[6*i+3] = 1.;
+    // ray_coord[6*i+4] = 0.;
+    // ray_coord[6*i+5] = 1.;
+
+  }
+
+  double t1=PDM_MPI_Wtime();
 
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
 
-  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
-                                                           n_part,
-                                                           part_n_elt,
-                                      (const double **)    part_elt_extents,
-                                  (const PDM_g_num_t **)   part_elt_g_num);
+  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set_for_intersect_line(dbbt,
+                                                                             n_part,
+                                                                             part_n_elt,
+                                                        (const double **)    part_elt_extents,
+                                                    (const PDM_g_num_t **)   part_elt_g_num,
+                                                                             n_ray,
+                                                                             ray_coord);
 
-  double t1global = PDM_MPI_Wtime();
+  end_timer_and_print("Compute extent and build dbbtree",comm,t1);
+
+  t1 = PDM_MPI_Wtime();
+
+
+
+  /*
+   *  Intersect rays with bounding boxes of surface mesh faces
+   */
+  int           redistrib_n_part    = 0;
+  int          *redistrib_n_box     = NULL;
+  PDM_g_num_t **redistrib_box_g_num = NULL;
+  int         **box_ray_idx         = NULL;
+  PDM_g_num_t **box_ray_g_num       = NULL;
+  PDM_dbbtree_lines_intersect_boxes2(dbbt,
+                                     n_ray,
+                                     ray_g_num,
+                                     ray_coord,
+                                     &redistrib_n_part,
+                                     &redistrib_n_box,
+                                     &redistrib_box_g_num,
+                                     &box_ray_idx,
+                                     &box_ray_g_num);
+
+  end_timer_and_print("PDM_dbbtree_lines_intersect_boxes2 ", comm, t1);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "ray_%i.vtk", i_rank);
+    PDM_vtk_write_lines(filename,
+                        n_ray,
+                        ray_coord,
+                        ray_g_num,
+                        NULL);
+  }
+
+
+
+  free(ray_coord);
+
+  for(int i_part = 0; i_part < redistrib_n_part; ++i_part) {
+    free(redistrib_box_g_num[i_part]);
+    free(box_ray_idx        [i_part]);
+    free(box_ray_g_num      [i_part]);
+  }
+  free(redistrib_box_g_num);
+  free(box_ray_idx        );
+  free(box_ray_g_num      );
+  free(redistrib_n_box);
 
   PDM_dbbtree_free    (dbbt);
   PDM_box_set_destroy (&surf_mesh_boxes);
-  end_timer_and_print("Compute extent and build dbbtree",comm,t1);
-
-
-
 
   free(pts_coord);
   free(pts_g_num);

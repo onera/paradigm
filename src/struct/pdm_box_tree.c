@@ -5599,6 +5599,9 @@ PDM_box_tree_intersect_lines_boxes2
 
   double node_extents[2*dim];
   double invdir[3];
+
+  log_trace("i_copied_rank = %i | n_line = %i \n", i_copied_rank, n_line);
+
   for (int iline = 0; iline < n_line; iline++) {
 
     line_box_idx[iline+1] = line_box_idx[iline];
@@ -5665,6 +5668,8 @@ PDM_box_tree_intersect_lines_boxes2
       else {
         /* inspect children of current node */
         int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+
+        // log_trace("bt->n_children = %i \n", bt->n_children);
         for (int ichild = 0; ichild < bt->n_children; ichild++) {
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);

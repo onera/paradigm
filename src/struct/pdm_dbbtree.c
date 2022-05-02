@@ -198,6 +198,16 @@ _redistribute_boxes
     PDM_printf ("-- fin dump\n");
   }
 
+  if(0 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_coarse_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         dbbt->boxes->local_boxes->n_boxes,
+                         dbbt->boxes->local_boxes->extents,
+                         dbbt->boxes->local_boxes->g_num);
+  }
   /*
    * Compute an index based on Morton encoding to ensure a good distribution
    * of bounding boxes among the ranks.
@@ -234,6 +244,100 @@ _redistribute_boxes
 
 }
 
+static void
+_redistribute_boxes_for_intersect_line
+(
+ _PDM_dbbtree_t      *dbbt,
+ int                  n_line,
+ double              *line_coord
+ )
+{
+
+  /* Sanity checks */
+
+  assert (dbbt != NULL);
+
+  PDM_box_tree_t  *coarse_tree = PDM_box_tree_create (dbbt->maxTreeDepthCoarse,
+                                                      dbbt->maxBoxesLeafCoarse,
+                                                      dbbt->maxBoxRatioCoarse);
+
+  /* Build a tree and associate boxes */
+
+  PDM_box_tree_set_boxes (coarse_tree,
+                          dbbt->boxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  _update_bt_statistics(&(dbbt->btsCoarse), coarse_tree);
+
+  if (1 == 0) {
+    PDM_printf ("-- dump stats\n");
+
+    PDM_box_tree_dump_statistics(coarse_tree);
+
+    PDM_printf ("-- fin dump stats\n");
+
+    PDM_printf ("-- dump \n");
+
+    PDM_box_tree_dump(coarse_tree);
+
+    PDM_printf ("-- fin dump\n");
+  }
+
+  if(1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_coarse_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         dbbt->boxes->local_boxes->n_boxes,
+                         dbbt->boxes->local_boxes->extents,
+                         dbbt->boxes->local_boxes->g_num);
+  }
+  /*
+   * Compute an index based on Morton encoding to ensure a good distribution
+   * of bounding boxes among the ranks.
+   */
+
+  PDM_box_distrib_t  *distrib = PDM_box_tree_get_distrib (coarse_tree, dbbt->boxes);
+
+  PDM_box_tree_destroy (&coarse_tree);
+
+  if (1 == 1) {
+    PDM_box_distrib_dump_statistics (distrib, dbbt->comm);
+  }
+
+  /* Define a new distribution of boxes according to the Morton
+     encoding index */
+
+  if (1 == 0) {
+    PDM_printf("affichage 1\n");
+    PDM_box_set_dump( dbbt->boxes,1);
+    PDM_printf("fin affichage 1\n");
+  }
+
+  PDM_box_set_redistribute (distrib, dbbt->boxes);
+  if(1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_redistribute_coarse_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         dbbt->boxes->local_boxes->n_boxes,
+                         dbbt->boxes->local_boxes->extents,
+                         dbbt->boxes->local_boxes->g_num);
+  }
+
+  if (0 == 1) {
+    PDM_printf("affichage 2\n");
+    PDM_box_set_dump( dbbt->boxes,1);
+    PDM_printf("fin affichage 2\n");
+  }
+
+  /* Delete intermediate structures */
+
+  PDM_box_distrib_destroy (&distrib);
+
+}
 
 
 static void _export_point_cloud
@@ -657,6 +761,14 @@ PDM_dbbtree_boxes_set
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
+    if(0 == 1 && myRank == 0) {
+      const char* filename = "dbbt_shared_tree.vtk";
+      PDM_vtk_write_boxes (filename,
+                           _dbbt->rankBoxes->local_boxes->n_boxes,
+                           _dbbt->rankBoxes->local_boxes->extents,
+                           _dbbt->rankBoxes->local_boxes->g_num);
+    }
+
     free (allGExtents);
     free (gNumProc);
     free (initLocation_proc);
@@ -684,6 +796,281 @@ PDM_dbbtree_boxes_set
 }
 
 
+/**
+ * \brief Assign a set of boxes to an empty \ref PDM_dbbtree_t structure.
+ *
+ * This function assigns a set of boxes to an empty \ref PDM_dbbtree_t structure.
+ *
+ * \param [in]  dbbt     Pointer to a distributed bounding box tree
+ * \param [in]  n_part    Number of partitions
+ * \param [in]  nElts    Number of elements of each partition
+ * \param [in]  extents  Extents of each element of each partition
+ * \param [in]  gNum     Global number of each element of each partition
+ *
+ * \return associated \ref PDM_box_set_t structure distributed according to
+ * the tree location
+ *
+ */
+
+PDM_box_set_t *
+PDM_dbbtree_boxes_set_for_intersect_line
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const double      **extents,
+ const PDM_g_num_t **gNum,
+ const int           n_line,
+ double             *line_coord
+)
+{
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  int myRank;
+  PDM_MPI_Comm_rank (_dbbt->comm, &myRank);
+  int lComm;
+  PDM_MPI_Comm_size (_dbbt->comm, &lComm);
+
+  const int nInfoLocation = 3;
+  const int sExtents = _dbbt->dim * 2;
+
+  int nEltsProc = 0;
+  for (int i = 0; i < n_part; i++) {
+    nEltsProc += nElts[i];
+  }
+
+  PDM_g_num_t *_boxGnum = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nEltsProc);
+  double *_extents      = (double *) malloc (sizeof(double) * nEltsProc * sExtents);
+  int *_initLocation   = (int *) malloc (sizeof(int) * nEltsProc * nInfoLocation);
+
+  int idx = 0;
+  int idx1 = 0;
+  int idx2 = 0;
+
+  for (int i = 0; i < n_part; i++) {
+
+    for (int j = 0; j < nElts[i]; j++) {
+      _boxGnum[idx++] = gNum[i][j];
+
+      for (int k = 0; k < sExtents; k++) {
+        _extents[idx1++] = extents[i][sExtents*j+k];
+      }
+
+      _initLocation[idx2++] = myRank;
+      _initLocation[idx2++] = i;
+      _initLocation[idx2++] = j;
+    }
+  }
+
+  /*
+   * Redistribute boxes of mesh A
+   */
+
+  if (0 == 1) {
+
+    PDM_printf ("nEltsProc : %d\n", nEltsProc);
+
+    PDM_printf ("_boxGnum :");
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM, _boxGnum[i]);
+    }
+    PDM_printf ("\n");
+
+    PDM_printf ("_extents m2 :\n");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+
+    PDM_printf ("_initLocation :");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+  }
+
+  int ind_norm = 1;
+  if (_dbbt->global_extents != NULL) {
+    ind_norm = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      _normalize (_dbbt,
+                  _extents+2*i*_dbbt->dim,
+                  _extents+2*i*_dbbt->dim);
+      _normalize (_dbbt,
+                  _extents+(2*i+1)*_dbbt->dim,
+                  _extents+(2*i+1)*_dbbt->dim);
+    }
+  }
+
+  _dbbt->boxes = PDM_box_set_create(3,
+                                    ind_norm,  // No normalization to preserve initial extents
+                                    0,  // No projection to preserve initial extents
+                                    nEltsProc,
+                                    _boxGnum,
+                                    _extents,
+                                    n_part,
+                                    nElts,
+                                    _initLocation,
+                                    _dbbt->comm);
+
+  if (_dbbt->global_extents == NULL) {
+    memcpy (_dbbt->d, _dbbt->boxes->d, sizeof(double) * 3);
+    memcpy (_dbbt->s, _dbbt->boxes->s, sizeof(double) * 3);
+  }
+
+  free (_boxGnum);
+  free (_extents);
+  free (_initLocation);
+
+  if (lComm > 1) {
+    _redistribute_boxes_for_intersect_line(_dbbt, n_line, line_coord);
+
+    /*
+     * Compute processus extents
+     */
+
+    int nBoxes = PDM_box_set_get_size (_dbbt->boxes);
+    const double *extents2 = PDM_box_set_get_extents (_dbbt->boxes);
+
+    double gExtents[sExtents];
+    for (int i = 0; i < _dbbt->dim; i++) {
+      gExtents[i]   =  DBL_MAX;
+      gExtents[_dbbt->dim+i] = -DBL_MAX;
+    }
+
+
+    for (int i = 0; i < nBoxes; i++) {
+      for (int k1 = 0; k1 < _dbbt->dim; k1++) {
+        gExtents[k1]   = _MIN (gExtents[k1], extents2[sExtents * i + k1]);
+        gExtents[_dbbt->dim+k1] = _MAX (gExtents[_dbbt->dim+k1], extents2[sExtents * i
+                                                                          + _dbbt->dim + k1]);
+      }
+    }
+
+    /*
+     * Exchange extents to build shared boxes
+     */
+
+    int *allNBoxes = (int *) malloc (sizeof(int) * lComm);
+    PDM_MPI_Allgather (&nBoxes, 1, PDM_MPI_INT,
+                       allNBoxes, 1, PDM_MPI_INT,
+                       _dbbt->comm);
+
+    int nUsedRank = 0;
+    for (int i = 0; i < lComm; i++) {
+      if (allNBoxes[i] > 0) {
+        nUsedRank += 1;
+      }
+    }
+
+
+    double *allGExtents = (double *) malloc (sizeof(double) * sExtents * lComm);
+    PDM_MPI_Allgather (gExtents, sExtents, PDM__PDM_MPI_REAL,
+                       allGExtents, sExtents, PDM__PDM_MPI_REAL,
+                       _dbbt->comm);
+
+    int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
+
+    _dbbt->usedRank = numProc;
+    _dbbt->nUsedRank = nUsedRank;
+
+    PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+
+    idx = 0;
+    for (int i = 0; i < lComm; i++) {
+      if (allNBoxes[i] > 0) {
+        gNumProc[idx] = idx;
+        numProc[idx] = i;
+        for (int j = 0; j < sExtents; j++) {
+          allGExtents[idx*sExtents + j] = allGExtents[i*sExtents + j];
+        }
+        idx += 1;
+      }
+    }
+
+    free (allNBoxes);
+
+    allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
+
+    int *initLocation_proc = PDM_array_zeros_int(3 * nUsedRank);
+
+    //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
+
+    PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &(_dbbt->rankComm));
+
+    _dbbt->rankBoxes = PDM_box_set_create(3,
+                                          0,  // No normalization to preserve initial extents
+                                          0,  // No projection to preserve initial extents
+                                          nUsedRank,
+                                          gNumProc,
+                                          allGExtents,
+                                          1,
+                                          &nUsedRank,
+                                          initLocation_proc,
+                                          _dbbt->rankComm);
+
+    memcpy (_dbbt->rankBoxes->d, _dbbt->d, sizeof(double) * 3);
+    memcpy (_dbbt->rankBoxes->s, _dbbt->s, sizeof(double) * 3);
+
+    _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
+                                           _dbbt->maxBoxesLeafShared,
+                                           _dbbt->maxBoxRatioShared);
+
+    /* Build a tree and associate boxes */
+
+    PDM_box_tree_set_boxes (_dbbt->btShared,
+                            _dbbt->rankBoxes,
+                            PDM_BOX_TREE_ASYNC_LEVEL);
+
+    _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
+
+    if(0 == 1 && myRank == 0) {
+      const char* filename = "dbbt_shared_tree.vtk";
+      PDM_vtk_write_boxes (filename,
+                           _dbbt->rankBoxes->local_boxes->n_boxes,
+                           _dbbt->rankBoxes->local_boxes->extents,
+                           _dbbt->rankBoxes->local_boxes->g_num);
+    }
+
+    free (allGExtents);
+    free (gNumProc);
+    free (initLocation_proc);
+
+  }
+
+  /*
+   * Build local bt
+   */
+
+  _dbbt->btLoc = PDM_box_tree_create (_dbbt->maxTreeDepth,
+                                      _dbbt->maxBoxesLeaf,
+                                      _dbbt->maxBoxRatio);
+
+  /* Build a tree and associate boxes */
+
+  PDM_box_tree_set_boxes (_dbbt->btLoc,
+                          _dbbt->boxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  _update_bt_statistics(&(_dbbt->btsLoc), _dbbt->btLoc);
+  // PDM_box_tree_dump(_dbbt->btLoc);
+
+  return _dbbt->boxes;
+
+}
 
 /**
  * \brief Assign boxes to intersect to the tree.
@@ -3675,6 +4062,8 @@ _lines_intersect_shared_box_tree
       line_rank[i] = rank;
       send_count[rank]++;
     }
+
+    PDM_log_trace_array_int(send_count, _dbbt->nUsedRank, "send_count ::");
 
     recv_count = malloc (sizeof(int) * n_rank);
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
