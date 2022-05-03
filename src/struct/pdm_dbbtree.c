@@ -245,6 +245,209 @@ _redistribute_boxes
 
 }
 
+
+
+static
+void
+_adapt_tree_weight_for_intersect_line
+(
+ _PDM_dbbtree_t      *dbbt,
+ PDM_box_tree_t      *coarse_tree,
+ int                  n_line,
+ double              *line_coord
+)
+{
+
+  /*
+   * Compute an index based on Morton encoding to ensure a good distribution
+   * of bounding boxes among the ranks.
+   */
+  int     normalized      = 0;
+  int     n_depth_max     = 4;
+  int     n_extract_boxes = 0;
+  double *extract_extents = NULL;
+  int     n_extract_child = 0;
+  int    *extract_child_id        = NULL;
+  PDM_box_tree_extract_extents(coarse_tree,
+                               normalized,
+                               n_depth_max,
+                               &n_extract_boxes,
+                               &extract_extents,
+                               &n_extract_child,
+                               &extract_child_id);
+  PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
+  /*
+   *  Normalize coordinates
+   */
+  // double *_line_coord = malloc (sizeof(double) * n_line * 6);
+  // for (int i = 0; i < 2*n_line; i++) {
+  //   _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
+  // }
+  // free(_line_coord);
+
+
+  if(1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_extract_coarse_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         n_extract_boxes,
+                         extract_extents,
+                         NULL);
+  }
+
+  const int sExtents = dbbt->dim * 2;
+
+  int n_rank;
+  int i_rank;
+  PDM_MPI_Comm_size (dbbt->comm, &n_rank);
+  PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+  int *n_g_extract_boxes = (int *) malloc (sizeof(int) * n_rank);
+  PDM_MPI_Allgather (&n_extract_boxes , 1, PDM_MPI_INT,
+                     n_g_extract_boxes, 1, PDM_MPI_INT, dbbt->comm);
+
+
+  /*
+   *  Compute idx
+   */
+  int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
+  g_extract_boxes_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_extract_boxes[i];
+  }
+
+  PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
+
+  int n_g_extract_boxes_all = g_extract_boxes_idx[n_rank];
+
+  PDM_g_num_t *g_num_sampling = (PDM_g_num_t * ) malloc( n_g_extract_boxes_all * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_rank; ++i) {
+    for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
+      g_num_sampling[j] = i;
+    }
+  }
+
+  double *g_sampling_extent = (double *) malloc (sizeof(double) * sExtents * n_g_extract_boxes_all);
+  for(int i = 0; i < n_rank; ++i) {
+    g_extract_boxes_idx[i] *= sExtents;
+    n_g_extract_boxes  [i] *= sExtents;
+  }
+  for(int i = 0; i < n_g_extract_boxes_all * sExtents; ++i) {
+    g_sampling_extent[i] = -10000.;
+  }
+  // PDM_log_trace_array_int(g_extract_boxes_idx, n_rank, "g_extract_boxes_idx ::");
+
+  PDM_MPI_Allgatherv(extract_extents  , n_extract_boxes   * sExtents , PDM__PDM_MPI_REAL,
+                     g_sampling_extent, n_g_extract_boxes,
+                     g_extract_boxes_idx,
+                     PDM__PDM_MPI_REAL, dbbt->comm);
+  for(int i = 0; i < n_rank; ++i) {
+    g_extract_boxes_idx[i] /= sExtents;
+    n_g_extract_boxes  [i] /= sExtents;
+  }
+
+  // PDM_log_trace_array_double(g_sampling_extent, n_g_extract_boxes_all * sExtents, "g_sampling_extent ::");
+
+  int *init_location_proc = PDM_array_zeros_int(3 * n_g_extract_boxes_all);
+  PDM_box_set_t* rank_boxes = PDM_box_set_create(3,
+                                                 0,  // No normalization to preserve initial extents
+                                                 0,  // No projection to preserve initial extents
+                                                 n_g_extract_boxes_all,
+                                                 g_num_sampling,
+                                                 g_sampling_extent,
+                                                 1,
+                                                 &n_g_extract_boxes_all,
+                                                 init_location_proc,
+                                                 dbbt->comm);
+  memcpy (rank_boxes->d, dbbt->d, sizeof(double) * 3);
+  memcpy (rank_boxes->s, dbbt->s, sizeof(double) * 3);
+  free   (init_location_proc);
+
+  /*
+   *  Build a shared box_tree to evaluate distribution
+   *
+   */
+  PDM_box_tree_t* shared_box_tree = PDM_box_tree_create (dbbt->maxTreeDepthShared,
+                                                         dbbt->maxBoxesLeafShared,
+                                                         dbbt->maxBoxRatioShared);
+
+
+  /* Build a tree and associate boxes */
+  PDM_box_tree_set_boxes (shared_box_tree,
+                          rank_boxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  if(1 == 1 && i_rank == 0) {
+    const char* filename = "dbbt_sampling_shared_tree.vtk";
+    PDM_vtk_write_boxes (filename,
+                         rank_boxes->local_boxes->n_boxes,
+                         rank_boxes->local_boxes->extents,
+                         rank_boxes->local_boxes->g_num);
+  }
+
+  /*
+   * Compute for each line the number of intersection with bt shared
+   *
+   */
+  int *line_rank_idx = NULL;
+  int *line_rank     = NULL;
+  PDM_box_tree_intersect_lines_boxes (shared_box_tree,
+                                      -1,
+                                      n_line,
+                                      line_coord,
+                                      &line_rank_idx,
+                                      &line_rank);
+
+  /* Count points to send to each rank */
+  int* send_count  = PDM_array_zeros_int (n_rank);
+  int* send_count2 = PDM_array_zeros_int (n_g_extract_boxes_all);
+
+  for (int i = 0; i < line_rank_idx[n_line]; i++) {
+    int t_rank = PDM_binary_search_gap_int(line_rank[i], g_extract_boxes_idx, n_rank+1);
+    // line_rank[i] = t_rank;
+    send_count[t_rank]++;
+    send_count2[line_rank[i]]++;
+  }
+  PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
+  PDM_log_trace_array_int(send_count2, n_g_extract_boxes_all, "send_count2 ::");
+
+  /*
+   * For each extract_child_id associate a extra_weight
+   */
+  int* recv_count2 = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
+  PDM_MPI_Reduce_scatter(send_count2, recv_count2, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
+
+  PDM_log_trace_array_int(recv_count2, n_g_extract_boxes[i_rank], "recv_count2 ::");
+
+  /*
+   * Pour l'algo adaptatif il faut qu'on garde le lien extract_child_id + proc
+   * A chaque passage on ne cherche une profondeur de plus uniquement sur le child id qui a trop de point
+   *  Du coup on rafine l'arbre uniquement ou on a besoin
+   */
+
+
+
+  PDM_box_tree_destroy(&shared_box_tree);
+  PDM_box_set_destroy (&rank_boxes);
+  free(n_g_extract_boxes);
+  free(send_count);
+  free(send_count2);
+  free(recv_count2);
+  free(g_extract_boxes_idx);
+  free(g_sampling_extent);
+  free(g_num_sampling);
+
+  free(extract_extents);
+  free(extract_child_id);
+
+
+
+
+
+}
+
+
 static void
 _redistribute_boxes_for_intersect_line
 (
@@ -284,7 +487,7 @@ _redistribute_boxes_for_intersect_line
     PDM_printf ("-- fin dump\n");
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
@@ -294,189 +497,8 @@ _redistribute_boxes_for_intersect_line
                          dbbt->boxes->local_boxes->extents,
                          dbbt->boxes->local_boxes->g_num);
   }
-  /*
-   * Compute an index based on Morton encoding to ensure a good distribution
-   * of bounding boxes among the ranks.
-   */
-  int     normalized      = 0;
-  int     n_depth_max     = 4;
-  int     n_extract_boxes = 0;
-  double *extract_extents = NULL;
-  int     n_extract_child = 0;
-  int    *extract_child_id        = NULL;
-  PDM_box_tree_extract_extents(coarse_tree,
-                               normalized,
-                               n_depth_max,
-                               &n_extract_boxes,
-                               &extract_extents,
-                               &n_extract_child,
-                               &extract_child_id);
-  PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
-  /*
-   *  Normalize coordinates
-   */
-  double *_line_coord = malloc (sizeof(double) * n_line * 6);
-  for (int i = 0; i < 2*n_line; i++) {
-    _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
-  }
 
-
-  if(1 == 1) {
-    char filename[999];
-    int i_rank;
-    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
-    sprintf(filename, "dbbt_extract_coarse_tree_%3.3d.vtk",i_rank);
-    PDM_vtk_write_boxes (filename,
-                         n_extract_boxes,
-                         extract_extents,
-                         NULL);
-  }
-
-  if(1) {
-    const int sExtents = dbbt->dim * 2;
-
-    int n_rank;
-    int i_rank;
-    PDM_MPI_Comm_size (dbbt->comm, &n_rank);
-    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
-    int *n_g_extract_boxes = (int *) malloc (sizeof(int) * n_rank);
-    PDM_MPI_Allgather (&n_extract_boxes , 1, PDM_MPI_INT,
-                       n_g_extract_boxes, 1, PDM_MPI_INT, dbbt->comm);
-
-
-    /*
-     *  Compute idx
-     */
-    int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
-    g_extract_boxes_idx[0] = 0;
-    for(int i = 0; i < n_rank; ++i) {
-      g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_extract_boxes[i];
-    }
-
-    PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
-
-    int n_g_extract_boxes_all = g_extract_boxes_idx[n_rank];
-
-    PDM_g_num_t *g_num_sampling = (PDM_g_num_t * ) malloc( n_g_extract_boxes_all * sizeof(PDM_g_num_t));
-    for(int i = 0; i < n_rank; ++i) {
-      for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
-        g_num_sampling[j] = i;
-      }
-    }
-
-    double *g_sampling_extent = (double *) malloc (sizeof(double) * sExtents * n_g_extract_boxes_all);
-    for(int i = 0; i < n_rank; ++i) {
-      g_extract_boxes_idx[i] *= sExtents;
-      n_g_extract_boxes  [i] *= sExtents;
-    }
-    for(int i = 0; i < n_g_extract_boxes_all * sExtents; ++i) {
-      g_sampling_extent[i] = -10000.;
-    }
-    // PDM_log_trace_array_int(g_extract_boxes_idx, n_rank, "g_extract_boxes_idx ::");
-
-    PDM_MPI_Allgatherv(extract_extents  , n_extract_boxes   * sExtents , PDM__PDM_MPI_REAL,
-                       g_sampling_extent, n_g_extract_boxes,
-                       g_extract_boxes_idx,
-                       PDM__PDM_MPI_REAL, dbbt->comm);
-    for(int i = 0; i < n_rank; ++i) {
-      g_extract_boxes_idx[i] /= sExtents;
-      n_g_extract_boxes  [i] /= sExtents;
-    }
-
-    // PDM_log_trace_array_double(g_sampling_extent, n_g_extract_boxes_all * sExtents, "g_sampling_extent ::");
-
-    int *init_location_proc = PDM_array_zeros_int(3 * n_g_extract_boxes_all);
-    PDM_box_set_t* rank_boxes = PDM_box_set_create(3,
-                                                   0,  // No normalization to preserve initial extents
-                                                   0,  // No projection to preserve initial extents
-                                                   n_g_extract_boxes_all,
-                                                   g_num_sampling,
-                                                   g_sampling_extent,
-                                                   1,
-                                                   &n_g_extract_boxes_all,
-                                                   init_location_proc,
-                                                   dbbt->comm);
-    memcpy (rank_boxes->d, dbbt->d, sizeof(double) * 3);
-    memcpy (rank_boxes->s, dbbt->s, sizeof(double) * 3);
-    free   (init_location_proc);
-
-    /*
-     *  Build a shared box_tree to evaluate distribution
-     *
-     */
-    PDM_box_tree_t* shared_box_tree = PDM_box_tree_create (dbbt->maxTreeDepthShared,
-                                                           dbbt->maxBoxesLeafShared,
-                                                           dbbt->maxBoxRatioShared);
-
-
-    /* Build a tree and associate boxes */
-    PDM_box_tree_set_boxes (shared_box_tree,
-                            rank_boxes,
-                            PDM_BOX_TREE_ASYNC_LEVEL);
-
-    if(1 == 1 && i_rank == 0) {
-      const char* filename = "dbbt_sampling_shared_tree.vtk";
-      PDM_vtk_write_boxes (filename,
-                           rank_boxes->local_boxes->n_boxes,
-                           rank_boxes->local_boxes->extents,
-                           rank_boxes->local_boxes->g_num);
-    }
-
-    /*
-     * Compute for each line the number of intersection with bt shared
-     *
-     */
-    int *line_rank_idx = NULL;
-    int *line_rank     = NULL;
-    PDM_box_tree_intersect_lines_boxes (shared_box_tree,
-                                        -1,
-                                        n_line,
-                                        line_coord,
-                                        &line_rank_idx,
-                                        &line_rank);
-
-    /* Count points to send to each rank */
-    int* send_count  = PDM_array_zeros_int (n_rank);
-    int* send_count2 = PDM_array_zeros_int (n_g_extract_boxes_all);
-
-    for (int i = 0; i < line_rank_idx[n_line]; i++) {
-      int t_rank = PDM_binary_search_gap_int(line_rank[i], g_extract_boxes_idx, n_rank+1);
-      // line_rank[i] = t_rank;
-      send_count[t_rank]++;
-      send_count2[line_rank[i]]++;
-    }
-    PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
-    PDM_log_trace_array_int(send_count2, n_g_extract_boxes_all, "send_count2 ::");
-
-    /*
-     * For each extract_child_id associate a extra_weight
-     */
-    int* recv_count2 = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
-    PDM_MPI_Reduce_scatter(send_count2, recv_count2, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
-
-    PDM_log_trace_array_int(recv_count2, n_g_extract_boxes[i_rank], "recv_count2 ::");
-
-    /*
-     * Pour l'algo adaptatif il faut qu'on garde le lien extract_child_id + proc
-     * A chaque passage on ne cherche une profondeur de plus uniquement sur le child id qui a trop de point
-     *  Du coup on rafine l'arbre uniquement ou on a besoin
-     */
-
-
-
-    PDM_box_tree_destroy(&shared_box_tree);
-    PDM_box_set_destroy (&rank_boxes);
-    free(n_g_extract_boxes);
-    free(send_count);
-    free(send_count2);
-    free(recv_count2);
-    free(g_extract_boxes_idx);
-    free(g_sampling_extent);
-    free(g_num_sampling);
-  }
-
-  free(extract_extents);
-  free(extract_child_id);
+  _adapt_tree_weight_for_intersect_line(dbbt, coarse_tree, n_line, line_coord);
 
   PDM_box_distrib_t  *distrib = PDM_box_tree_get_distrib (coarse_tree, dbbt->boxes);
 
@@ -516,7 +538,6 @@ _redistribute_boxes_for_intersect_line
   /* Delete intermediate structures */
 
   PDM_box_distrib_destroy (&distrib);
-  free(_line_coord);
 
 }
 
