@@ -5901,8 +5901,82 @@ PDM_box_tree_extract_extents
   free(stack);
   free(node_depth);
 
-  _extract_extents  = realloc(_extract_extents, _n_extract_boxes * 6 * sizeof(double));
-  _extract_child_id = realloc(_extract_child_id       , _n_extract_child     * sizeof(int   ));
+  _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
+  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
+
+  *n_extract_child  = _n_extract_child;
+  *n_extract_boxes  = _n_extract_boxes;
+  *extract_extents  = _extract_extents;
+  *extract_child_id = _extract_child_id;
+}
+
+
+void
+PDM_box_tree_extract_extents_by_child_ids
+(
+ PDM_box_tree_t  *bt,
+ const int        normalized,
+ const int        n_child_to_extract,
+ const int       *child_ids_to_extract,
+       int       *n_extract_boxes,
+       double   **extract_extents,
+       int       *n_extract_child,
+       int      **extract_child_id
+)
+{
+  /*
+   * Il faudrait aussi sortir les child_id des noeuds extrait
+   *   Si on a le node_id -> On peut rajouter un poids fonction de la solicitation
+   *   box_tree_data->nodes[child_id].extra_weight = 0
+   */
+  assert(bt != NULL);
+
+  PDM_box_tree_data_t *box_tree_data = bt->local_data;
+
+  int dim     = bt->boxes->dim;
+
+  /* Depth */
+  double *_extract_extents  = malloc(n_child_to_extract * bt->n_children * 6 * sizeof(double));
+  int    *_extract_child_id = malloc(n_child_to_extract * bt->n_children     * sizeof(int   ));
+  int     _n_extract_boxes  = 0;
+  int     _n_extract_child  = 0;
+
+  for(int i = 0; i < n_child_to_extract; ++i) {
+    int node_id = child_ids_to_extract[i];
+
+    int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+    _node_t *node = &(box_tree_data->nodes[node_id]);
+
+    if (node->is_leaf) {
+      continue;
+    }
+
+    for (int ichild = 0; ichild < bt->n_children; ichild++) {
+      int child_id = child_ids[ichild];
+
+      // log_trace("node->n_boxes = %i\n", box_tree_data->nodes[child_id].n_boxes);
+      if(box_tree_data->nodes[child_id].n_boxes == 0) {
+        continue;
+      }
+
+      double *e = _extract_extents + 6*_n_extract_boxes;
+      _extents(dim, box_tree_data->nodes[child_id].morton_code, e);
+
+      _extract_child_id[_n_extract_child++] = child_id;
+
+      // log_trace("\n");
+
+      if (!normalized) {
+        double en[6] = {e[0], e[1], e[2], e[3], e[4], e[5]};
+        PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en,   e  );
+        PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en+3, e+3);
+      }
+      _n_extract_boxes++;
+    }
+  }
+
+  _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
+  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
 
   *n_extract_child  = _n_extract_child;
   *n_extract_boxes  = _n_extract_boxes;
