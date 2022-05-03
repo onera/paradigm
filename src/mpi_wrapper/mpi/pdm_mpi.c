@@ -1971,6 +1971,22 @@ int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count,
 }
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Reduce_scatter (wrapping de la fonction MPI_Reduce_scatter)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *counts,
+                           PDM_MPI_Datatype datatype, PDM_MPI_Op op,
+                           PDM_MPI_Comm comm)
+{
+  int code = MPI_Reduce_scatter(sendbuf, recvbuf, counts,
+                                _pdm_mpi_2_mpi_datatype(datatype),
+                                mpi_op[op],
+                                _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Allreduce (wrapping de la fonction MPI_Allreduce)
  *
  *----------------------------------------------------------------------------*/

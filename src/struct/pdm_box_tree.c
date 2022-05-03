@@ -5829,7 +5829,9 @@ PDM_box_tree_extract_extents
  const int        normalized,
  const int        depth_max,
        int       *n_extract_boxes,
-       double   **extract_extents
+       double   **extract_extents,
+       int       *n_extract_child,
+       int      **extract_child_id
 )
 {
   /*
@@ -5837,8 +5839,6 @@ PDM_box_tree_extract_extents
    *   Si on a le node_id -> On peut rajouter un poids fonction de la solicitation
    *   box_tree_data->nodes[child_id].extra_weight = 0
    */
-
-
   assert(bt != NULL);
 
   PDM_box_tree_data_t *box_tree_data = bt->local_data;
@@ -5851,9 +5851,11 @@ PDM_box_tree_extract_extents
   int *stack = malloc ((sizeof(int)) * s_stack);
   int pos_stack = 0;
 
-  int    *node_depth       = PDM_array_zeros_int(n_nodes);
-  double *_extract_extents = malloc(n_nodes * 6 * sizeof(double));
-  int     _n_extract_boxes = 0;
+  int    *node_depth        = PDM_array_zeros_int(n_nodes);
+  double *_extract_extents  = malloc(n_nodes * 6 * sizeof(double));
+  int    *_extract_child_id = malloc(n_nodes     * sizeof(int   ));
+  int     _n_extract_boxes  = 0;
+  int     _n_extract_child  = 0;
 
   stack[pos_stack++] = 0;
   while (pos_stack > 0) {
@@ -5884,6 +5886,8 @@ PDM_box_tree_extract_extents
       double *e = _extract_extents + 6*_n_extract_boxes;
       _extents(dim, box_tree_data->nodes[child_id].morton_code, e);
 
+      _extract_child_id[_n_extract_child++] = child_id;
+
       // log_trace("\n");
 
       if (!normalized) {
@@ -5897,10 +5901,13 @@ PDM_box_tree_extract_extents
   free(stack);
   free(node_depth);
 
-  _extract_extents = realloc(_extract_extents, _n_extract_boxes * 6 * sizeof(double));
+  _extract_extents  = realloc(_extract_extents, _n_extract_boxes * 6 * sizeof(double));
+  _extract_child_id = realloc(_extract_child_id       , _n_extract_child     * sizeof(int   ));
 
-  *n_extract_boxes = _n_extract_boxes;
-  *extract_extents = _extract_extents;
+  *n_extract_child  = _n_extract_child;
+  *n_extract_boxes  = _n_extract_boxes;
+  *extract_extents  = _extract_extents;
+  *extract_child_id = _extract_child_id;
 }
 
 #ifdef __cplusplus

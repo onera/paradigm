@@ -33,6 +33,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_timer.h"
 #include "pdm_logging.h"
+#include "pdm_binary_search.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -298,14 +299,27 @@ _redistribute_boxes_for_intersect_line
    * of bounding boxes among the ranks.
    */
   int     normalized      = 0;
-  int     n_depth_max     = 2;
+  int     n_depth_max     = 4;
   int     n_extract_boxes = 0;
   double *extract_extents = NULL;
+  int     n_extract_child = 0;
+  int    *extract_child_id        = NULL;
   PDM_box_tree_extract_extents(coarse_tree,
                                normalized,
                                n_depth_max,
                                &n_extract_boxes,
-                               &extract_extents);
+                               &extract_extents,
+                               &n_extract_child,
+                               &extract_child_id);
+  PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
+  /*
+   *  Normalize coordinates
+   */
+  double *_line_coord = malloc (sizeof(double) * n_line * 6);
+  for (int i = 0; i < 2*n_line; i++) {
+    _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
+  }
+
 
   if(1 == 1) {
     char filename[999];
@@ -364,6 +378,10 @@ _redistribute_boxes_for_intersect_line
                        g_sampling_extent, n_g_extract_boxes,
                        g_extract_boxes_idx,
                        PDM__PDM_MPI_REAL, dbbt->comm);
+    for(int i = 0; i < n_rank; ++i) {
+      g_extract_boxes_idx[i] /= sExtents;
+      n_g_extract_boxes  [i] /= sExtents;
+    }
 
     // PDM_log_trace_array_double(g_sampling_extent, n_g_extract_boxes_all * sExtents, "g_sampling_extent ::");
 
@@ -408,13 +426,38 @@ _redistribute_boxes_for_intersect_line
      * Compute for each line the number of intersection with bt shared
      *
      */
+    int *line_rank_idx = NULL;
+    int *line_rank     = NULL;
+    PDM_box_tree_intersect_lines_boxes (shared_box_tree,
+                                        -1,
+                                        n_line,
+                                        line_coord,
+                                        &line_rank_idx,
+                                        &line_rank);
+
+    /* Count points to send to each rank */
+    int* send_count  = PDM_array_zeros_int (n_rank);
+    int* send_count2 = PDM_array_zeros_int (n_g_extract_boxes_all);
+
+    for (int i = 0; i < line_rank_idx[n_line]; i++) {
+      int t_rank = PDM_binary_search_gap_int(line_rank[i], g_extract_boxes_idx, n_rank+1);
+      // line_rank[i] = t_rank;
+      send_count[t_rank]++;
+      send_count2[line_rank[i]]++;
+    }
+    PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
+    PDM_log_trace_array_int(send_count2, n_g_extract_boxes_all, "send_count2 ::");
 
     /*
-     * For each child_id associate a extra_weight
+     * For each extract_child_id associate a extra_weight
      */
+    int* recv_count2 = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
+    PDM_MPI_Reduce_scatter(send_count2, recv_count2, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
+
+    PDM_log_trace_array_int(recv_count2, n_g_extract_boxes[i_rank], "recv_count2 ::");
 
     /*
-     * Pour l'algo adaptatif il faut qu'on garde le lien child_id + proc
+     * Pour l'algo adaptatif il faut qu'on garde le lien extract_child_id + proc
      * A chaque passage on ne cherche une profondeur de plus uniquement sur le child id qui a trop de point
      *  Du coup on rafine l'arbre uniquement ou on a besoin
      */
@@ -424,9 +467,16 @@ _redistribute_boxes_for_intersect_line
     PDM_box_tree_destroy(&shared_box_tree);
     PDM_box_set_destroy (&rank_boxes);
     free(n_g_extract_boxes);
+    free(send_count);
+    free(send_count2);
+    free(recv_count2);
+    free(g_extract_boxes_idx);
+    free(g_sampling_extent);
+    free(g_num_sampling);
   }
 
   free(extract_extents);
+  free(extract_child_id);
 
   PDM_box_distrib_t  *distrib = PDM_box_tree_get_distrib (coarse_tree, dbbt->boxes);
 
@@ -466,6 +516,7 @@ _redistribute_boxes_for_intersect_line
   /* Delete intermediate structures */
 
   PDM_box_distrib_destroy (&distrib);
+  free(_line_coord);
 
 }
 
@@ -4193,7 +4244,7 @@ _lines_intersect_shared_box_tree
       send_count[rank]++;
     }
 
-    PDM_log_trace_array_int(send_count, _dbbt->nUsedRank, "send_count ::");
+    // PDM_log_trace_array_int(send_count, _dbbt->nUsedRank, "send_count ::");
 
     recv_count = malloc (sizeof(int) * n_rank);
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,

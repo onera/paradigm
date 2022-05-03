@@ -559,7 +559,9 @@ PDM_box_tree_extract_extents
  const int        normalized,
  const int        depth_max,
        int       *n_extract_boxes,
-       double   **extract_extents
+       double   **extract_extents,
+       int       *n_extract_child,
+       int      **extract_child_id
 );
 
 #ifdef __cplusplus

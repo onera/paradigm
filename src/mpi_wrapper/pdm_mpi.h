@@ -527,6 +527,14 @@ int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count,
 		   int root, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Reduce_scatter (wrapping de la fonction MPI_Reduce_scatter)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *counts,
+                           PDM_MPI_Datatype datatype, PDM_MPI_Op op,
+                           PDM_MPI_Comm comm);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Allreduce (wrapping de la fonction MPI_Allreduce)
  *
  *----------------------------------------------------------------------------*/
