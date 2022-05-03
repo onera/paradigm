@@ -321,7 +321,7 @@ _adapt_tree_weight_for_intersect_line
 
   int n_max_it = 4;
 
-  int n_child_to_extract    = 1;
+  int  n_child_to_extract   = 1;
   int *child_ids_to_extract = malloc(n_child_to_extract * sizeof(int));
 
   /* Init algo by root extract */
@@ -365,10 +365,11 @@ _adapt_tree_weight_for_intersect_line
       g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_extract_boxes[i];
     }
 
-    PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
+    if(1 == 1) {
+      PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
+    }
 
     int n_g_extract_boxes_all = g_extract_boxes_idx[n_rank];
-
     PDM_g_num_t *g_num_sampling = (PDM_g_num_t * ) malloc( n_g_extract_boxes_all * sizeof(PDM_g_num_t));
     for(int i = 0; i < n_rank; ++i) {
       for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
@@ -381,10 +382,6 @@ _adapt_tree_weight_for_intersect_line
       g_extract_boxes_idx[i] *= sExtents;
       n_g_extract_boxes  [i] *= sExtents;
     }
-    for(int i = 0; i < n_g_extract_boxes_all * sExtents; ++i) {
-      g_sampling_extent[i] = -10000.;
-    }
-    // PDM_log_trace_array_int(g_extract_boxes_idx, n_rank, "g_extract_boxes_idx ::");
 
     PDM_MPI_Allgatherv(extract_extents  , n_extract_boxes   * sExtents , PDM__PDM_MPI_REAL,
                        g_sampling_extent, n_g_extract_boxes,
@@ -448,25 +445,24 @@ _adapt_tree_weight_for_intersect_line
                                         &line_rank);
 
     /* Count points to send to each rank */
-    int* send_count  = PDM_array_zeros_int (n_rank);
-    int* send_count2 = PDM_array_zeros_int (n_g_extract_boxes_all);
-
+    int* send_count_by_sampling_boxes = PDM_array_zeros_int (n_g_extract_boxes_all);
     for (int i = 0; i < line_rank_idx[n_line]; i++) {
-      int t_rank = PDM_binary_search_gap_int(line_rank[i], g_extract_boxes_idx, n_rank+1);
-      // line_rank[i] = t_rank;
-      send_count[t_rank]++;
-      send_count2[line_rank[i]]++;
+      send_count_by_sampling_boxes[line_rank[i]]++;
     }
-    PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
-    PDM_log_trace_array_int(send_count2, n_g_extract_boxes_all, "send_count2 ::");
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(send_count_by_sampling_boxes, n_g_extract_boxes_all, "send_count_by_sampling_boxes ::");
+    }
 
     /*
      * For each extract_child_id associate a extra_weight
      */
-    int* recv_count2 = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
-    PDM_MPI_Reduce_scatter(send_count2, recv_count2, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
+    int* g_count_by_sampling_boxes = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
+    PDM_MPI_Reduce_scatter(send_count_by_sampling_boxes, g_count_by_sampling_boxes, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
 
-    PDM_log_trace_array_int(recv_count2, n_g_extract_boxes[i_rank], "recv_count2 ::");
+    if(1 == 1) {
+      PDM_log_trace_array_int(g_count_by_sampling_boxes, n_g_extract_boxes[i_rank], "g_count_by_sampling_boxes ::");
+    }
 
     /*
      * Pour l'algo adaptatif il faut qu'on garde le lien extract_child_id + proc
@@ -474,14 +470,20 @@ _adapt_tree_weight_for_intersect_line
      *  Du coup on rafine l'arbre uniquement ou on a besoin
      */
 
+    n_child_to_extract = 0;
+    child_ids_to_extract = realloc(child_ids_to_extract, n_g_extract_boxes[i_rank] * sizeof(int));
 
+    for(int i = 0; i < n_g_extract_boxes[i_rank]; ++i) {
+      if(g_count_by_sampling_boxes[i] > 0) {
+        child_ids_to_extract[n_child_to_extract++] = extract_child_id[i];
+      }
+    }
 
     PDM_box_tree_destroy(&shared_box_tree);
     PDM_box_set_destroy (&rank_boxes);
     free(n_g_extract_boxes);
-    free(send_count);
-    free(send_count2);
-    free(recv_count2);
+    free(send_count_by_sampling_boxes);
+    free(g_count_by_sampling_boxes);
     free(g_extract_boxes_idx);
     free(g_sampling_extent);
     free(g_num_sampling);
@@ -490,12 +492,7 @@ _adapt_tree_weight_for_intersect_line
     free(extract_child_id);
 
   }
-
-
-
-
-
-
+  free(child_ids_to_extract);
 
 }
 
