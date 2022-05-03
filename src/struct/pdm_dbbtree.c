@@ -475,9 +475,17 @@ _adapt_tree_weight_for_intersect_line
 
     for(int i = 0; i < n_g_extract_boxes[i_rank]; ++i) {
       if(g_count_by_sampling_boxes[i] > 0) {
-        child_ids_to_extract[n_child_to_extract++] = extract_child_id[i];
+        child_ids_to_extract     [n_child_to_extract] = extract_child_id[i];
+        g_count_by_sampling_boxes[n_child_to_extract] = g_count_by_sampling_boxes[i];
+        n_child_to_extract++;
       }
     }
+    PDM_log_trace_array_int(g_count_by_sampling_boxes, n_child_to_extract, "slect_g_count_by_sampling_boxes ::");
+
+    PDM_box_tree_assign_weight(coarse_tree,
+                               n_child_to_extract,
+                               extract_child_id,
+                               g_count_by_sampling_boxes);
 
     PDM_box_tree_destroy(&shared_box_tree);
     PDM_box_set_destroy (&rank_boxes);
@@ -567,7 +575,7 @@ _redistribute_boxes_for_intersect_line
   }
 
   PDM_box_set_redistribute (distrib, dbbt->boxes);
-  if(0 == 1) {
+  if(1 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);

@@ -578,6 +578,15 @@ PDM_box_tree_extract_extents_by_child_ids
        int      **extract_child_id
 );
 
+void
+PDM_box_tree_assign_weight
+(
+ PDM_box_tree_t  *bt,
+ const int        n_node,
+ const int       *nodes_id,
+       int       *weight
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

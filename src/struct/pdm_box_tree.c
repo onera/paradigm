@@ -92,6 +92,7 @@ typedef struct {
 
   int   n_boxes;             /* Number of associated bounding boxes */
   int   start_id;            /* Position of the first box_id */
+  int   extra_weight;
 
 } _node_t;
 
@@ -1703,6 +1704,7 @@ _new_node(PDM_box_tree_t     *bt,
 
   node->n_boxes = 0;
   node->start_id = -1; /* invalid value by default */
+  node->extra_weight = 0;
 
   for (i = 0; i < bt->n_children; i++) {
     _local_data->child_ids[node_id*bt->n_children + i] = -1;
@@ -1767,6 +1769,7 @@ _split_node_3d(PDM_box_tree_t       *bt,
   split_node.start_id = 0;
   split_node.n_boxes = node.n_boxes;
   split_node.is_leaf = false;
+  split_node.extra_weight = 0;
 
   next_bt->local_data->nodes[node_id] = split_node;
   next_bt->local_data->n_nodes = n_init_nodes + 8;
@@ -1948,6 +1951,7 @@ _split_node_2d(PDM_box_tree_t       *bt,
   split_node.start_id = 0;
   split_node.n_boxes = 0;
   split_node.is_leaf = false;
+  split_node.extra_weight = 0;
 
   next_bt->local_data->nodes[node_id] = split_node;
   next_bt->local_data->n_nodes = n_init_nodes + 4;
@@ -2129,6 +2133,7 @@ _split_node_1d(PDM_box_tree_t       *bt,
   split_node.start_id = 0;
   split_node.n_boxes = 0;
   split_node.is_leaf = false;
+  split_node.extra_weight = 0;
 
   next_bt->local_data->nodes[node_id] = split_node;
   next_bt->local_data->n_nodes = n_init_nodes + 2;
@@ -2317,6 +2322,7 @@ _build_next_level(PDM_box_tree_t       *bt,
 
       next_node->n_boxes = cur_node->n_boxes;
       next_node->start_id = _shift_ids;
+      next_node->extra_weight = 0;
 
       for (i = 0; i < cur_node->n_boxes; i++)
         next_bt->local_data->box_ids[_shift_ids++]
@@ -2365,11 +2371,12 @@ _build_next_level(PDM_box_tree_t       *bt,
  *----------------------------------------------------------------------------*/
 
 static void
-_build_leaf_weight(const PDM_box_tree_t  *bt,
-                   int              node_id,
-                   int             *n_leaves,
-                   PDM_morton_code_t     *leaf_codes,
-                   int             *weight)
+_build_leaf_weight(const PDM_box_tree_t    *bt,
+                         int                node_id,
+                         int                parent_weight,
+                         int               *n_leaves,
+                         PDM_morton_code_t *leaf_codes,
+                         int               *weight)
 {
   int  i;
 
@@ -2377,19 +2384,26 @@ _build_leaf_weight(const PDM_box_tree_t  *bt,
 
   const _node_t  *node = bt->local_data->nodes + node_id;
 
-  if (node->is_leaf == false)
-    for (i = 0; i < bt->n_children; i++)
+  if (node->is_leaf == false) {
+    int repart_weight = ceil((double) node->extra_weight/bt->n_children);
+    for (i = 0; i < bt->n_children; i++) {
       _build_leaf_weight(bt,
                          bt->local_data->child_ids[bt->n_children*node_id + i],
+                         repart_weight,
                          &_n_leaves,
                          leaf_codes,
                          weight);
-
-  else { /* node is a leaf */
+    }
+  } else { /* node is a leaf */
 
     if (node->n_boxes > 0) {
-      leaf_codes[_n_leaves] = node->morton_code;
-      weight[_n_leaves] = node->n_boxes;
+      leaf_codes[_n_leaves]  = node->morton_code;
+      weight    [_n_leaves]  = node->n_boxes;
+      if(node->extra_weight != 0) {
+        weight    [_n_leaves] *= node->extra_weight;
+      } else {
+        weight    [_n_leaves] *= parent_weight;
+      }
       _n_leaves += 1;
     }
   }
@@ -3284,6 +3298,7 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
   (_local_data->nodes[0]).is_leaf = true;
   (_local_data->nodes[0]).n_boxes = _local_boxes->n_boxes;
   (_local_data->nodes[0]).start_id = 0;
+  (_local_data->nodes[0]).extra_weight = 0;
 
   bt->stats.n_boxes = _local_boxes->n_boxes;
 
@@ -3387,14 +3402,17 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
   weight = (int *) malloc(bt->stats.n_leaves * sizeof(int));
 
   /* Build index for boxes */
-
+  int repart_weight = 0;
   _build_leaf_weight(bt,
                      0,
+                     repart_weight,
                      &n_leaves,
                      leaf_codes,
                      weight);
 
   assert(n_leaves <= bt->stats.n_leaves);
+
+  PDM_log_trace_array_int(weight, n_leaves, "weight : ");
 
   leaf_codes = (PDM_morton_code_t *) realloc((void *) leaf_codes, n_leaves * sizeof(PDM_morton_code_t));
   weight = (int *) realloc((void *) weight, n_leaves * sizeof(int));
@@ -5948,6 +5966,7 @@ PDM_box_tree_extract_extents_by_child_ids
     _node_t *node = &(box_tree_data->nodes[node_id]);
 
     if (node->is_leaf) {
+      // log_trace("is leaf --> %i \n", node_id);
       continue;
     }
 
@@ -5983,6 +6002,37 @@ PDM_box_tree_extract_extents_by_child_ids
   *extract_extents  = _extract_extents;
   *extract_child_id = _extract_child_id;
 }
+
+
+void
+PDM_box_tree_assign_weight
+(
+ PDM_box_tree_t  *bt,
+ const int        n_node,
+ const int       *nodes_id,
+       int       *weight
+)
+{
+
+  PDM_box_tree_data_t *box_tree_data = bt->local_data;
+
+  int dim     = bt->boxes->dim;
+
+  for(int i = 0; i < n_node; ++i) {
+    int node_id = nodes_id[i];
+
+    int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+    _node_t *node = &(box_tree_data->nodes[node_id]);
+
+    log_trace("Assign extra_weight = %i --> %i\n", node->extra_weight, weight[i]);
+    node->extra_weight += weight[i];
+
+  }
+
+
+}
+
+
 
 #ifdef __cplusplus
 }
