@@ -284,40 +284,23 @@ _adapt_tree_weight_for_intersect_line
   /*
    *  Normalize coordinates
    */
-  // double *_line_coord = malloc (sizeof(double) * n_line * 6);
-  // for (int i = 0; i < 2*n_line; i++) {
-  //   _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
-  // }
-  // free(_line_coord);
+  if(0 == 1) {
+    double *_line_coord = malloc (sizeof(double) * n_line * 6);
+    for (int i = 0; i < 2*n_line; i++) {
+      _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
+    }
 
-  /* Test */
-  // if(1 == 1) {
-  //   int     n_extract_boxes2  = 0;
-  //   double *extract_extents2  = NULL;
-  //   int     n_extract_child2  = 0;
-  //   int    *extract_child_id2 = NULL;
-  //   PDM_box_tree_extract_extents_by_child_ids(coarse_tree,
-  //                                             normalized,
-  //                                             n_extract_child,
-  //                                             extract_child_id,
-  //                                             &n_extract_boxes2,
-  //                                             &extract_extents2,
-  //                                             &n_extract_child2,
-  //                                             &extract_child_id2);
-
-  //   char filename[999];
-  //   int i_rank;
-  //   PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
-  //   sprintf(filename, "dbbt_extract_coarse_tree2_%3.3d.vtk",i_rank);
-  //   PDM_vtk_write_boxes (filename,
-  //                        n_extract_boxes2,
-  //                        extract_extents2,
-  //                        NULL);
-  //   free(extract_extents2 );
-  //   free(extract_child_id2);
-  // }
-
-
+    if(1 == 1) {
+      char filename[999];
+      sprintf(filename, "ray_normalize_%i.vtk", i_rank);
+      PDM_vtk_write_lines(filename,
+                          n_line,
+                          _line_coord,
+                          NULL,
+                          NULL);
+    }
+    free(_line_coord);
+  }
 
   int n_max_it = 4;
 
@@ -329,7 +312,7 @@ _adapt_tree_weight_for_intersect_line
 
   for(int it = 0; it < n_max_it; ++it) {
 
-    int n_extract_boxes       = 0;
+    int     n_extract_boxes  = 0;
     double *extract_extents  = NULL;
     int     n_extract_child  = 0;
     int    *extract_child_id = NULL;
@@ -498,6 +481,8 @@ _adapt_tree_weight_for_intersect_line
 
     free(extract_extents);
     free(extract_child_id);
+    free(line_rank_idx);
+    free(line_rank);
 
   }
   free(child_ids_to_extract);
@@ -1020,7 +1005,7 @@ PDM_dbbtree_boxes_set
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
-    if(0 == 1 && myRank == 0) {
+    if(1 == 1 && myRank == 0) {
       const char* filename = "dbbt_shared_tree.vtk";
       PDM_vtk_write_boxes (filename,
                            _dbbt->rankBoxes->local_boxes->n_boxes,

@@ -107,6 +107,46 @@ static void _rotate (const int  n_pts,
   }
 }
 
+static void _rotate_ray (const double *angle,
+                               double *coord)
+{
+  double Rx[3][3] = {{1.,             0,             0},
+                     {0., cos(angle[0]), -sin(angle[0])},
+                     {0., sin(angle[0]),  cos(angle[0])}};
+
+  double Ry[3][3] = {{ 0            , 0,  0            },
+                     { cos(angle[1]), 1, -sin(angle[1])},
+                     {-sin(angle[1]), 0,  cos(angle[1])}};
+
+  double Rz[3][3] = {{cos(angle[2]), -sin(angle[2]), 0},
+                     {sin(angle[2]),  cos(angle[2]), 0},
+                     {0            ,  0            , 1}};
+
+  double x = coord[0];
+  double y = coord[1];
+  double z = coord[2];
+
+  for (int j = 0; j < 3; j++) {
+    coord[j] = Rx[j][0]*x + Rx[j][1]*y + Rx[j][2]*z;
+  }
+
+  x = coord[0];
+  y = coord[1];
+  z = coord[2];
+
+  for (int j = 0; j < 3; j++) {
+    coord[j] = Ry[j][0]*x + Ry[j][1]*y + Ry[j][2]*z;
+  }
+
+  x = coord[0];
+  y = coord[1];
+  z = coord[2];
+  for (int j = 0; j < 3; j++) {
+    coord[j] = Rz[j][0]*x + Rz[j][1]*y + Rz[j][2]*z;
+  }
+
+
+}
 /**
  *
  * \brief  Usage
@@ -539,6 +579,10 @@ int main(int argc, char *argv[])
   int n_ray = n_pts_clouds;
   double* ray_coord = (double * ) malloc( 2 * 3 * n_ray * sizeof(double));
   PDM_g_num_t* ray_g_num   = pts_g_num;
+
+  double i_rand_max = 1. / ((double) RAND_MAX);
+  double pi = 4 * atan(1.);
+
   for(int i = 0; i < n_ray; ++i) {
 
     // ray_coord[6*i  ] = -1.;
@@ -549,6 +593,8 @@ int main(int argc, char *argv[])
     // ray_coord[6*i+4] =  1.;
     // ray_coord[6*i+5] =  1.;
 
+    srand(pts_g_num[i]);
+
     ray_coord[6*i  ] = global_extents[0];
     ray_coord[6*i+1] = global_extents[1];
     ray_coord[6*i+2] = global_extents[2];
@@ -556,6 +602,14 @@ int main(int argc, char *argv[])
     ray_coord[6*i+3] = global_extents[3];
     ray_coord[6*i+4] = global_extents[4];
     ray_coord[6*i+5] = global_extents[5];
+
+    double theta[3] = {(double) rand() * i_rand_max * pi / 8,
+                       (double) rand() * i_rand_max * pi / 8,
+                       (double) rand() * i_rand_max * pi / 8};
+    // printf("theta = %12.5e %12.5e %12.5e \n", theta[0], theta[1], theta[2]);
+
+    _rotate_ray(theta, &ray_coord[6*i  ]);
+    _rotate_ray(theta, &ray_coord[6*i+3]);
 
     // ray_coord[6*i  ] = -1.;
     // ray_coord[6*i+1] =  1.;
