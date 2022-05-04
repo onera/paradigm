@@ -442,7 +442,7 @@ _adapt_tree_weight_for_intersect_line
       send_count_by_sampling_boxes[line_rank[i]]++;
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(send_count_by_sampling_boxes, n_g_extract_boxes_all, "send_count_by_sampling_boxes ::");
     }
 
@@ -452,7 +452,7 @@ _adapt_tree_weight_for_intersect_line
     int* g_count_by_sampling_boxes = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
     PDM_MPI_Reduce_scatter(send_count_by_sampling_boxes, g_count_by_sampling_boxes, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(g_count_by_sampling_boxes, n_g_extract_boxes[i_rank], "g_count_by_sampling_boxes ::");
     }
 
@@ -485,7 +485,7 @@ _adapt_tree_weight_for_intersect_line
     /*
      * On garde toutes les feuilles
      */
-    PDM_log_trace_array_int(g_count_by_sampling_boxes, n_child_to_extract, "slect_g_count_by_sampling_boxes ::");
+    // PDM_log_trace_array_int(g_count_by_sampling_boxes, n_child_to_extract, "slect_g_count_by_sampling_boxes ::");
 
     PDM_box_tree_assign_weight(coarse_tree,
                                n_child_to_extract,
@@ -527,7 +527,7 @@ _adapt_tree_weight_for_intersect_line
     child_weight  [i] = (double) all_g_count_by_sampling_boxes[i];
   }
 
-  log_trace("beg_num_abs = "PDM_FMT_G_NUM" \n", beg_num_abs);
+  // log_trace("beg_num_abs = "PDM_FMT_G_NUM" \n", beg_num_abs);
 
   int sampling_factor = 2;
   int n_iter_max      = 5;
@@ -552,8 +552,8 @@ _adapt_tree_weight_for_intersect_line
   /*
    *  Extraction des boîtes --> Il faudra faire un  is_visited_box[box_id] + visited_box = box_id
    */
-  PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
-  PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
+  // PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
+  // PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
 
   /*
    * Equilibrate :
@@ -598,8 +598,7 @@ _adapt_tree_weight_for_intersect_line
     // send_n[t_rank] += PDM_box_tree_get_node_n_boxes(coarse_tree, i_child);
     send_n[t_rank] += n_child_box_ids[i];
 
-
-    PDM_log_trace_array_int(child_box_ids[i],n_child_box_ids[i], "n_child_box_ids ::");
+    // PDM_log_trace_array_int(child_box_ids[i],n_child_box_ids[i], "n_child_box_ids ::");
 
   }
 
@@ -625,6 +624,7 @@ _adapt_tree_weight_for_intersect_line
   for(int i = 0; i < n_rank; ++i) {
     send_idx[i+1] = send_idx[i] + send_n[i];
     recv_idx[i+1] = recv_idx[i] + recv_n[i];
+    send_n  [i  ] = 0;
   }
 
   /*
@@ -643,14 +643,32 @@ _adapt_tree_weight_for_intersect_line
   double      *recv_extents = malloc(recv_idx[n_rank] * stride *        sizeof(double     ));
   int         *recv_origin  = malloc(recv_idx[n_rank] * stride_origin * sizeof(int        ));
 
-
+  int n_recv_boxes = recv_idx[n_rank];
 
   for(int i = 0; i < n_all_child_ids; ++i) {
     PDM_g_num_t child_gnum = child_ln_to_gn[i];
     int t_rank = PDM_binary_search_gap_long(child_gnum-1, equi_child_distrib, n_rank+1);
 
-    /* Get number of box in child box_tree */
-    int i_child = all_child_ids[i];
+    /*
+     * Copy gnum
+     */
+    for(int j = 0; j < n_child_box_ids[i]; ++j) {
+
+      int shift  = send_idx[t_rank] + send_n[t_rank];
+      int box_id = child_box_ids[i][j];
+
+      send_g_num[shift] = _local_boxes->g_num[box_id];
+
+      for (int k = 0; k < stride; k++) {
+        send_extents[shift*stride + k] = _local_boxes->extents[box_id*stride + k];
+      }
+
+      for (int k = 0; k < stride_origin; k++) {
+        send_origin[shift*stride_origin + k] = _local_boxes->origin[box_id*stride_origin + k];
+      }
+
+      send_n[t_rank]++;
+    }
 
   }
 
@@ -659,6 +677,8 @@ _adapt_tree_weight_for_intersect_line
                     recv_g_num, recv_n, recv_idx, PDM__PDM_MPI_G_NUM,
                     dbbt->comm);
   free(send_g_num);
+
+  // PDM_log_trace_array_long(recv_g_num, recv_idx[n_rank], "recv_g_num :");
 
   /*  */
   for (int i = 0; i < n_rank; i++) {
@@ -685,6 +705,21 @@ _adapt_tree_weight_for_intersect_line
                     recv_origin, recv_n, recv_idx, PDM_MPI_INT,
                     dbbt->comm);
   free(send_origin);
+
+  if(1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
+    sprintf(filename, "dbbt_experimental_tree_%3.3d.vtk",i_rank);
+    PDM_vtk_write_boxes (filename,
+                         n_recv_boxes,
+                         recv_extents,
+                         recv_g_num);
+  }
+
+
+
+
 
   free(recv_g_num  );
   free(recv_extents);

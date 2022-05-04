@@ -6129,7 +6129,7 @@ PDM_box_tree_get_box_ids
   int n_box_ids_approx = 0;
   _count_box_ids(bt, dim, node_id, &n_box_ids_approx);
 
-  log_trace("n_box_ids_approx = %i \n", n_box_ids_approx);
+  // log_trace("n_box_ids_approx = %i \n", n_box_ids_approx);
   /* Allocate */
   int* _box_ids = malloc( n_box_ids_approx * sizeof(int));
 
@@ -6137,7 +6137,7 @@ PDM_box_tree_get_box_ids
   int n_box_ids = 0;
   _collect_box_ids(bt, dim, node_id, is_visited, _box_ids, &n_box_ids);
 
-  log_trace("n_box_ids = %i \n", n_box_ids);
+  // log_trace("n_box_ids = %i \n", n_box_ids);
 
   free(is_visited);
 
