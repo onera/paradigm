@@ -2397,7 +2397,7 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
     }
   } else { /* node is a leaf */
 
-    if (node->n_boxes > 0) {
+    if (node->n_boxes > 0&& node->extra_weight != 0) {
       leaf_codes[_n_leaves]  = node->morton_code;
       weight    [_n_leaves]  = node->n_boxes;
       if(node->extra_weight != 0) {
@@ -5940,7 +5940,8 @@ PDM_box_tree_extract_extents_by_child_ids
        int       *n_extract_boxes,
        double   **extract_extents,
        int       *n_extract_child,
-       int      **extract_child_id
+       int      **extract_child_id,
+       int      **extract_is_leaf
 )
 {
   /*
@@ -5957,6 +5958,7 @@ PDM_box_tree_extract_extents_by_child_ids
   /* Depth */
   double *_extract_extents  = malloc(n_child_to_extract * bt->n_children * 6 * sizeof(double));
   int    *_extract_child_id = malloc(n_child_to_extract * bt->n_children     * sizeof(int   ));
+  int    *_extract_is_leaf  = malloc(n_child_to_extract * bt->n_children     * sizeof(int   ));
   int     _n_extract_boxes  = 0;
   int     _n_extract_child  = 0;
 
@@ -5966,6 +5968,8 @@ PDM_box_tree_extract_extents_by_child_ids
     int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
     _node_t *node = &(box_tree_data->nodes[node_id]);
 
+    // log_trace("node->n_boxes = %i \n", node->n_boxes);
+
     if (node->is_leaf) {
       // log_trace("is leaf --> %i \n", node_id);
       continue;
@@ -5974,6 +5978,7 @@ PDM_box_tree_extract_extents_by_child_ids
     for (int ichild = 0; ichild < bt->n_children; ichild++) {
       int child_id = child_ids[ichild];
 
+      // log_trace("\t box_tree_data->nodes[child_id].n_boxes = %i \n", box_tree_data->nodes[child_id].n_boxes);
       // log_trace("node->n_boxes = %i\n", box_tree_data->nodes[child_id].n_boxes);
       if(box_tree_data->nodes[child_id].n_boxes == 0) {
         continue;
@@ -5982,9 +5987,13 @@ PDM_box_tree_extract_extents_by_child_ids
       double *e = _extract_extents + 6*_n_extract_boxes;
       _extents(dim, box_tree_data->nodes[child_id].morton_code, e);
 
-      _extract_child_id[_n_extract_child++] = child_id;
+      _extract_child_id[_n_extract_child  ] = child_id;
+      if(box_tree_data->nodes[child_id].is_leaf)  {
+        _extract_is_leaf [_n_extract_child++] = 1;
+      } else {
+        _extract_is_leaf [_n_extract_child++] = 0;
+      }
 
-      // log_trace("\n");
 
       if (!normalized) {
         double en[6] = {e[0], e[1], e[2], e[3], e[4], e[5]};
@@ -5997,11 +6006,13 @@ PDM_box_tree_extract_extents_by_child_ids
 
   _extract_extents  = realloc(_extract_extents , _n_extract_boxes * 6 * sizeof(double));
   _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
+  _extract_is_leaf  = realloc(_extract_is_leaf , _n_extract_child     * sizeof(int   ));
 
   *n_extract_child  = _n_extract_child;
   *n_extract_boxes  = _n_extract_boxes;
   *extract_extents  = _extract_extents;
   *extract_child_id = _extract_child_id;
+  *extract_is_leaf  = _extract_is_leaf;
 }
 
 

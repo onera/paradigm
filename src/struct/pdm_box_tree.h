@@ -568,14 +568,15 @@ PDM_box_tree_extract_extents
 void
 PDM_box_tree_extract_extents_by_child_ids
 (
- PDM_box_tree_t  *bt,
- const int        normalized,
- const int        n_child_to_extract,
- const int       *child_ids_to_extract,
-       int       *n_extract_boxes,
-       double   **extract_extents,
-       int       *n_extract_child,
-       int      **extract_child_id
+       PDM_box_tree_t  *bt,
+ const int              normalized,
+ const int              n_child_to_extract,
+ const int             *child_ids_to_extract,
+       int             *n_extract_boxes,
+       double         **extract_extents,
+       int             *n_extract_child,
+       int            **extract_child_id,
+       int            **extract_is_leaf
 );
 
 void

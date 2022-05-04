@@ -307,15 +307,20 @@ _adapt_tree_weight_for_intersect_line
   int  n_child_to_extract   = 1;
   int *child_ids_to_extract = malloc(n_child_to_extract * sizeof(int));
 
+  int  n_all_child_ids = 0;
+  int *all_child_ids                 = malloc(n_all_child_ids * sizeof(int));
+  int *all_g_count_by_sampling_boxes = malloc(n_all_child_ids * sizeof(int));
+
   /* Init algo by root extract */
   child_ids_to_extract[0] = 0;
 
   for(int it = 0; it < n_max_it; ++it) {
 
-    int     n_extract_boxes  = 0;
-    double *extract_extents  = NULL;
-    int     n_extract_child  = 0;
-    int    *extract_child_id = NULL;
+    int     n_extract_boxes       = 0;
+    double *extract_extents       = NULL;
+    int     n_extract_child       = 0;
+    int    *extract_child_id      = NULL;
+    int    *extract_child_is_leaf = NULL;
 
     PDM_box_tree_extract_extents_by_child_ids(coarse_tree,
                                               normalized,
@@ -324,7 +329,11 @@ _adapt_tree_weight_for_intersect_line
                                               &n_extract_boxes,
                                               &extract_extents,
                                               &n_extract_child,
-                                              &extract_child_id);
+                                              &extract_child_id,
+                                              &extract_child_is_leaf);
+
+    PDM_log_trace_array_int(extract_child_id     , n_extract_child, "extract_child_id :");
+    PDM_log_trace_array_int(extract_child_is_leaf, n_extract_child, "extract_child_is_leaf :");
 
     if(1 == 1) {
       char filename[999];
@@ -454,15 +463,28 @@ _adapt_tree_weight_for_intersect_line
      */
 
     n_child_to_extract = 0;
-    child_ids_to_extract = realloc(child_ids_to_extract, n_g_extract_boxes[i_rank] * sizeof(int));
+    child_ids_to_extract          = realloc(child_ids_to_extract         ,                    n_g_extract_boxes[i_rank]  * sizeof(int));
+    all_child_ids                 = realloc(all_child_ids                , (n_all_child_ids + n_g_extract_boxes[i_rank]) * sizeof(int));
+    all_g_count_by_sampling_boxes = realloc(all_g_count_by_sampling_boxes, (n_all_child_ids + n_g_extract_boxes[i_rank]) * sizeof(int));
 
     for(int i = 0; i < n_g_extract_boxes[i_rank]; ++i) {
       if(g_count_by_sampling_boxes[i] > 0) {
         child_ids_to_extract     [n_child_to_extract] = extract_child_id[i];
         g_count_by_sampling_boxes[n_child_to_extract] = g_count_by_sampling_boxes[i];
         n_child_to_extract++;
+
+        // Keep all for global extraction
+        if(extract_child_is_leaf[i] == 1 || it == n_max_it-1) {
+          all_child_ids                [n_all_child_ids] = extract_child_id[i];
+          all_g_count_by_sampling_boxes[n_all_child_ids] = g_count_by_sampling_boxes[i];
+          n_all_child_ids++;
+        }
       }
     }
+
+    /*
+     * On garde toutes les feuilles
+     */
     PDM_log_trace_array_int(g_count_by_sampling_boxes, n_child_to_extract, "slect_g_count_by_sampling_boxes ::");
 
     PDM_box_tree_assign_weight(coarse_tree,
@@ -481,11 +503,72 @@ _adapt_tree_weight_for_intersect_line
 
     free(extract_extents);
     free(extract_child_id);
+    free(extract_child_is_leaf);
     free(line_rank_idx);
     free(line_rank);
 
   }
   free(child_ids_to_extract);
+
+
+  /*
+   * Setup implicit child_ln_to_gn
+   */
+  PDM_g_num_t *child_ln_to_gn = malloc(n_all_child_ids * sizeof(PDM_g_num_t));
+  double      *child_weight   = malloc(n_all_child_ids * sizeof(double     ));
+
+  PDM_g_num_t _n_all_child_ids = n_all_child_ids;
+  PDM_g_num_t beg_num_abs;
+  PDM_MPI_Scan(&_n_all_child_ids, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dbbt->comm);
+  beg_num_abs -= _n_all_child_ids;
+
+  for(int i = 0; i < n_all_child_ids; ++i) {
+    child_ln_to_gn[i] = beg_num_abs + i + 1;
+    child_weight  [i] = (double) all_g_count_by_sampling_boxes[i];
+  }
+
+  log_trace("beg_num_abs = "PDM_FMT_G_NUM" \n", beg_num_abs);
+
+  int sampling_factor = 2;
+  int n_iter_max      = 5;
+  double tol = 0.10;
+  PDM_g_num_t* equi_child_distrib = NULL;
+  PDM_distrib_weight(sampling_factor,
+                     n_rank,
+                     1,
+                     &n_all_child_ids,
+  (const PDM_g_num_t **)  &child_ln_to_gn,
+  (const double      **)  &child_weight,
+                     n_iter_max,
+                     tol,
+                     dbbt->comm,
+                     &equi_child_distrib);
+  free(child_weight);
+
+  PDM_g_num_t* raw_child_distrib = PDM_compute_entity_distribution(dbbt->comm, n_all_child_ids);
+  PDM_log_trace_array_long(raw_child_distrib, n_rank+1, "raw_child_distrib ::");
+  PDM_log_trace_array_long(equi_child_distrib, n_rank+1, "equi_child_distrib ::");
+  free(raw_child_distrib);
+  free(equi_child_distrib);
+
+  /*
+   *  Extraction des boîtes --> Il faudra faire un  is_visited_box[box_id] + visited_box = box_id
+   */
+  PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
+  PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
+
+  /*
+   * Equilibrate
+   */
+
+
+
+
+  // PDM_distrib_weight
+  free(all_child_ids);
+  free(child_ln_to_gn);
+  free(all_g_count_by_sampling_boxes);
+
 
 }
 
@@ -529,7 +612,7 @@ _redistribute_boxes_for_intersect_line
     PDM_printf ("-- fin dump\n");
   }
 
-  if(0 == 1) {
+  if(1 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
@@ -540,7 +623,7 @@ _redistribute_boxes_for_intersect_line
                          dbbt->boxes->local_boxes->g_num);
   }
 
-  _adapt_tree_weight_for_intersect_line(dbbt, coarse_tree, n_line, line_coord);
+  // _adapt_tree_weight_for_intersect_line(dbbt, coarse_tree, n_line, line_coord);
 
   PDM_box_distrib_t  *distrib = PDM_box_tree_get_distrib (coarse_tree, dbbt->boxes);
 
@@ -560,6 +643,23 @@ _redistribute_boxes_for_intersect_line
   }
 
   PDM_box_set_redistribute (distrib, dbbt->boxes);
+
+  /*
+   * Rebuild coarse tree but with new distrib
+   */
+  coarse_tree = PDM_box_tree_create (dbbt->maxTreeDepthCoarse,
+                                     dbbt->maxBoxesLeafCoarse,
+                                     dbbt->maxBoxRatioCoarse);
+
+  PDM_box_tree_set_boxes (coarse_tree,
+                          dbbt->boxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  _update_bt_statistics(&(dbbt->btsCoarse), coarse_tree);
+  _adapt_tree_weight_for_intersect_line(dbbt, coarse_tree, n_line, line_coord);
+
+  PDM_box_tree_destroy (&coarse_tree);
+
   if(1 == 1) {
     char filename[999];
     int i_rank;
