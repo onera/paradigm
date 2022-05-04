@@ -2397,13 +2397,14 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
     }
   } else { /* node is a leaf */
 
-    if (node->n_boxes > 0&& node->extra_weight != 0) {
+    if (node->n_boxes > 0 ) {
       leaf_codes[_n_leaves]  = node->morton_code;
       weight    [_n_leaves]  = node->n_boxes;
       if(node->extra_weight != 0) {
         weight    [_n_leaves] *= node->extra_weight;
       } else {
-        weight    [_n_leaves] = parent_weight;
+        weight    [_n_leaves] = node->n_boxes;
+        // weight    [_n_leaves] = parent_weight;
       }
       _n_leaves += 1;
     }
@@ -2530,6 +2531,75 @@ _build_rank_to_box_list(const PDM_box_tree_t  *bt,
 
 }
 
+
+static void
+_count_box_ids(const PDM_box_tree_t  *bt,
+                     int              dim,
+                     int              node_id,
+                     int             *n_box_ids)
+{
+  int  i;
+
+  const _node_t  *node = bt->local_data->nodes + node_id;
+
+  int _n_box_ids = *n_box_ids;
+  if (node->is_leaf == false) {
+
+    for (i = 0; i < bt->n_children; i++)
+      _count_box_ids(bt,
+                     dim,
+                     bt->local_data->child_ids[bt->n_children*node_id + i],
+                     &_n_box_ids);
+  }
+  else {
+    if (node->n_boxes > 0) {
+      _n_box_ids += node->n_boxes;
+    }
+  }
+
+  *n_box_ids = _n_box_ids;
+}
+
+static void
+_collect_box_ids(const PDM_box_tree_t  *bt,
+                       int              dim,
+                       int              node_id,
+                       int             *is_visited,
+                       int             *box_ids,
+                       int             *n_box_ids)
+{
+  int  i;
+
+  const _node_t  *node = bt->local_data->nodes + node_id;
+
+  int _n_box_ids = *n_box_ids;
+  if (node->is_leaf == false) {
+
+    for (i = 0; i < bt->n_children; i++)
+      _collect_box_ids(bt,
+                       dim,
+                       bt->local_data->child_ids[bt->n_children*node_id + i],
+                       is_visited,
+                       box_ids,
+                       &_n_box_ids);
+  }
+  else {
+    if (node->n_boxes > 0) {
+
+      for (i = 0; i < node->n_boxes; i++) {
+
+        int   box_id = bt->local_data->box_ids[node->start_id + i];
+
+        if(is_visited[box_id] == 0) {
+          is_visited[box_id] = 1;
+          box_ids[_n_box_ids++] = box_id;
+        }
+      }
+    }
+  }
+
+  *n_box_ids = _n_box_ids;
+}
 
 /*----------------------------------------------------------------------------
  * Recursively build an index on boxes which intersect.
@@ -6028,20 +6098,54 @@ PDM_box_tree_assign_weight
 
   PDM_box_tree_data_t *box_tree_data = bt->local_data;
 
-  int dim     = bt->boxes->dim;
 
   for(int i = 0; i < n_node; ++i) {
     int node_id = nodes_id[i];
-
-    int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
     _node_t *node = &(box_tree_data->nodes[node_id]);
-
-    log_trace("Assign extra_weight = %i --> %i\n", node->extra_weight, weight[i]);
     node->extra_weight += weight[i];
-
   }
+}
 
 
+int
+PDM_box_tree_get_box_ids
+(
+ PDM_box_tree_t  *bt,
+ int              node_id,
+ int            **box_ids
+)
+{
+
+  PDM_boxes_t *boxes = bt->boxes->local_boxes;
+
+  int n_boxes = boxes->n_boxes;
+
+  int *is_visited = PDM_array_zeros_int(n_boxes);
+
+
+  // PDM_box_tree_data_t *box_tree_data = bt->local_data;
+
+  int dim              = bt->boxes->dim;
+  int n_box_ids_approx = 0;
+  _count_box_ids(bt, dim, node_id, &n_box_ids_approx);
+
+  log_trace("n_box_ids_approx = %i \n", n_box_ids_approx);
+  /* Allocate */
+  int* _box_ids = malloc( n_box_ids_approx * sizeof(int));
+
+  /* Collect */
+  int n_box_ids = 0;
+  _collect_box_ids(bt, dim, node_id, is_visited, _box_ids, &n_box_ids);
+
+  log_trace("n_box_ids = %i \n", n_box_ids);
+
+  free(is_visited);
+
+
+  _box_ids = realloc(_box_ids, n_box_ids * sizeof(int));
+  *box_ids = _box_ids;
+
+  return n_box_ids;
 }
 
 

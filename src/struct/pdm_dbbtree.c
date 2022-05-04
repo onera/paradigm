@@ -548,8 +548,6 @@ _adapt_tree_weight_for_intersect_line
   PDM_g_num_t* raw_child_distrib = PDM_compute_entity_distribution(dbbt->comm, n_all_child_ids);
   PDM_log_trace_array_long(raw_child_distrib, n_rank+1, "raw_child_distrib ::");
   PDM_log_trace_array_long(equi_child_distrib, n_rank+1, "equi_child_distrib ::");
-  free(raw_child_distrib);
-  free(equi_child_distrib);
 
   /*
    *  Extraction des boîtes --> Il faudra faire un  is_visited_box[box_id] + visited_box = box_id
@@ -558,13 +556,156 @@ _adapt_tree_weight_for_intersect_line
   PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
 
   /*
-   * Equilibrate
+   * Equilibrate :
+   *   - Get all boxes id for each required boxes
+   *   - Send gnum / origin / extents
+   */
+  int* send_n = malloc((n_rank) * sizeof(int));
+  int* recv_n = malloc((n_rank) * sizeof(int));
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+  }
+
+  PDM_boxes_t *_local_boxes = dbbt->boxes->local_boxes;
+
+  int n_boxes = _local_boxes->n_boxes;
+
+  // int* is_visited = malloc(n_boxes * sizeof(int));
+  // for(int i = 0; i < n_boxes; ++i) {
+  //   is_visited[i] = 0;
+  // }
+
+  int  *n_child_box_ids = (int  *) malloc(n_all_child_ids * sizeof(int  ));
+  int **child_box_ids   = (int **) malloc(n_all_child_ids * sizeof(int *));
+
+  for(int i = 0; i < n_all_child_ids; ++i) {
+    PDM_g_num_t child_gnum = child_ln_to_gn[i];
+    int t_rank = PDM_binary_search_gap_long(child_gnum-1, equi_child_distrib, n_rank+1);
+
+    /* Get number of box in child box_tree */
+    int i_child = all_child_ids[i];
+
+
+    n_child_box_ids[i] = PDM_box_tree_get_box_ids(coarse_tree,
+                                                  i_child,
+                                                  &child_box_ids[i]);
+
+    /* Reset is_visited */
+    // for(int i = 0; i < n_boxes; ++i) {
+    //   is_visited[i] = 0;
+    // }
+
+    // send_n[t_rank] += PDM_box_tree_get_node_n_boxes(coarse_tree, i_child);
+    send_n[t_rank] += n_child_box_ids[i];
+
+
+    PDM_log_trace_array_int(child_box_ids[i],n_child_box_ids[i], "n_child_box_ids ::");
+
+  }
+
+  /*
+   * TO MANAGE --> On peut envoyer plusieurs fois la même boite au même rang !!!
    */
 
+  /*
+   * Exchange size
+   */
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, dbbt->comm);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(send_n, n_rank, "send_n ::");
+    PDM_log_trace_array_int(recv_n, n_rank, "recv_n ::");
+  }
+
+  int* send_idx = malloc((n_rank+1) * sizeof(int));
+  int* recv_idx = malloc((n_rank+1) * sizeof(int));
+  send_idx[0] = 0;
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+
+  /*
+   * TODO :  Asynchrone
+   */
+  const int stride = dbbt->dim * 2;
+  const int stride_origin= 3;
+
+  /* Allocate */
+  PDM_g_num_t *send_g_num   = malloc(send_idx[n_rank] *                 sizeof(PDM_g_num_t));
+  double      *send_extents = malloc(send_idx[n_rank] * stride *        sizeof(double     ));
+  int         *send_origin  = malloc(send_idx[n_rank] * stride_origin * sizeof(int        ));
+
+  /* To be allocated before modification of recv_n / recv_idx */
+  PDM_g_num_t *recv_g_num   = malloc(recv_idx[n_rank] *                 sizeof(PDM_g_num_t));
+  double      *recv_extents = malloc(recv_idx[n_rank] * stride *        sizeof(double     ));
+  int         *recv_origin  = malloc(recv_idx[n_rank] * stride_origin * sizeof(int        ));
 
 
 
-  // PDM_distrib_weight
+  for(int i = 0; i < n_all_child_ids; ++i) {
+    PDM_g_num_t child_gnum = child_ln_to_gn[i];
+    int t_rank = PDM_binary_search_gap_long(child_gnum-1, equi_child_distrib, n_rank+1);
+
+    /* Get number of box in child box_tree */
+    int i_child = all_child_ids[i];
+
+  }
+
+  /* Exchange boxes between processes */
+  PDM_MPI_Alltoallv(send_g_num, send_n, send_idx, PDM__PDM_MPI_G_NUM,
+                    recv_g_num, recv_n, recv_idx, PDM__PDM_MPI_G_NUM,
+                    dbbt->comm);
+  free(send_g_num);
+
+  /*  */
+  for (int i = 0; i < n_rank; i++) {
+    send_n  [i] *= stride;
+    send_idx[i] *= stride;
+    recv_n  [i] *= stride;
+    recv_idx[i] *= stride;
+  }
+
+  /* Exchange extents */
+  PDM_MPI_Alltoallv(send_extents, send_n, send_idx, PDM_MPI_DOUBLE,
+                    recv_extents, recv_n, recv_idx, PDM_MPI_DOUBLE,
+                    dbbt->comm);
+  free(send_extents);
+
+  for (int i = 0; i < n_rank; i++) {
+    send_n  [i] = send_n  [i]/stride * stride_origin;
+    send_idx[i] = send_idx[i]/stride * stride_origin;
+    recv_n  [i] = recv_n  [i]/stride * stride_origin;
+    recv_idx[i] = recv_idx[i]/stride * stride_origin;
+  }
+
+  PDM_MPI_Alltoallv(send_origin, send_n, send_idx, PDM_MPI_INT,
+                    recv_origin, recv_n, recv_idx, PDM_MPI_INT,
+                    dbbt->comm);
+  free(send_origin);
+
+  free(recv_g_num  );
+  free(recv_extents);
+  free(recv_origin );
+
+
+
+  free(send_idx);
+  free(recv_idx);
+
+  free(send_n);
+  free(recv_n);
+
+  for(int i = 0; i < n_all_child_ids; ++i) {
+    free(child_box_ids[i]);
+  }
+  free(child_box_ids);
+  free(n_child_box_ids);
+
+  free(raw_child_distrib);
+  free(equi_child_distrib);
   free(all_child_ids);
   free(child_ln_to_gn);
   free(all_g_count_by_sampling_boxes);

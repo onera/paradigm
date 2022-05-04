@@ -588,6 +588,15 @@ PDM_box_tree_assign_weight
        int       *weight
 );
 
+
+int
+PDM_box_tree_get_box_ids
+(
+ PDM_box_tree_t  *bt,
+ int              node_id,
+ int            **box_ids
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
