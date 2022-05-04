@@ -529,7 +529,7 @@ int main(int argc, char *argv[])
     part_vtx_coord  [i_part] = PDM_surf_mesh_part_vtx_get         (surf_mesh, i_part);
 
 
-    if (1 == 1) {
+    if (0 == 1) {
       char filename[999];
       sprintf(filename, "faces_all_%2.2d_%2.2d.vtk", i_part, i_rank);
       PDM_vtk_write_std_elements(filename,
@@ -603,9 +603,9 @@ int main(int argc, char *argv[])
     ray_coord[6*i+4] = global_extents[4];
     ray_coord[6*i+5] = global_extents[5];
 
-    double theta[3] = {(double) rand() * i_rand_max * pi / 8,
-                       (double) rand() * i_rand_max * pi / 8,
-                       (double) rand() * i_rand_max * pi / 8};
+    double theta[3] = {(double) rand() * i_rand_max * pi / 4,
+                       (double) rand() * i_rand_max * pi / 4,
+                       (double) rand() * i_rand_max * pi / 4};
     // printf("theta = %12.5e %12.5e %12.5e \n", theta[0], theta[1], theta[2]);
 
     _rotate_ray(theta, &ray_coord[6*i  ]);
@@ -625,19 +625,24 @@ int main(int argc, char *argv[])
 
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
 
-  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set_for_intersect_line(dbbt,
-                                                                             n_part,
-                                                                             part_n_elt,
-                                                        (const double **)    part_elt_extents,
-                                                    (const PDM_g_num_t **)   part_elt_g_num,
-                                                                             n_ray,
-                                                                             ray_coord);
+  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set(dbbt,
+                                                          n_part,
+                                                          part_n_elt,
+                                     (const double **)    part_elt_extents,
+                                 (const PDM_g_num_t **)   part_elt_g_num);
+  // PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set_for_intersect_line(dbbt,
+  //                                                                            n_part,
+  //                                                                            part_n_elt,
+  //                                                       (const double **)    part_elt_extents,
+  //                                                   (const PDM_g_num_t **)   part_elt_g_num,
+  //                                                                            n_ray,
+  //                                                                            ray_coord);
 
   end_timer_and_print("Compute extent and build dbbtree",comm,t1);
 
   t1 = PDM_MPI_Wtime();
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     sprintf(filename, "box_tree_%i.vtk", i_rank);
     PDM_dbbtree_box_tree_write_vtk(filename,

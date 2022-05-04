@@ -3483,7 +3483,7 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
 
   assert(n_leaves <= bt->stats.n_leaves);
 
-  PDM_log_trace_array_int(weight, n_leaves, "weight : ");
+  // PDM_log_trace_array_int(weight, n_leaves, "weight : ");
 
   leaf_codes = (PDM_morton_code_t *) realloc((void *) leaf_codes, n_leaves * sizeof(PDM_morton_code_t));
   weight = (int *) realloc((void *) weight, n_leaves * sizeof(int));

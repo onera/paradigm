@@ -302,7 +302,15 @@ _adapt_tree_weight_for_intersect_line
     free(_line_coord);
   }
 
-  int n_max_it = 4;
+  PDM_g_num_t _n_g_line = n_line;
+  PDM_g_num_t  n_g_line = 0;
+  PDM_MPI_Allreduce(&_n_g_line, &n_g_line, 1,
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dbbt->comm);
+
+  double bucket_size_min = 0.2 * n_g_line / (n_rank);
+  log_trace("bucket_size_min : %12.5e \n", bucket_size_min);
+
+  int n_max_it = 6;
 
   int  n_child_to_extract   = 1;
   int *child_ids_to_extract = malloc(n_child_to_extract * sizeof(int));
@@ -357,7 +365,7 @@ _adapt_tree_weight_for_intersect_line
       g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_extract_boxes[i];
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(g_extract_boxes_idx, n_rank+1, "g_extract_boxes_idx ::");
     }
 
@@ -452,7 +460,7 @@ _adapt_tree_weight_for_intersect_line
     int* g_count_by_sampling_boxes = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
     PDM_MPI_Reduce_scatter(send_count_by_sampling_boxes, g_count_by_sampling_boxes, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
 
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_int(g_count_by_sampling_boxes, n_g_extract_boxes[i_rank], "g_count_by_sampling_boxes ::");
     }
 
@@ -468,7 +476,8 @@ _adapt_tree_weight_for_intersect_line
     all_g_count_by_sampling_boxes = realloc(all_g_count_by_sampling_boxes, (n_all_child_ids + n_g_extract_boxes[i_rank]) * sizeof(int));
 
     for(int i = 0; i < n_g_extract_boxes[i_rank]; ++i) {
-      if(g_count_by_sampling_boxes[i] > 0) {
+      // if(g_count_by_sampling_boxes[i] > 0) {
+      if(g_count_by_sampling_boxes[i] > bucket_size_min) {
         child_ids_to_extract     [n_child_to_extract] = extract_child_id[i];
         g_count_by_sampling_boxes[n_child_to_extract] = g_count_by_sampling_boxes[i];
         n_child_to_extract++;
@@ -553,7 +562,7 @@ _adapt_tree_weight_for_intersect_line
    *  Extraction des boîtes --> Il faudra faire un  is_visited_box[box_id] + visited_box = box_id
    */
   // PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
-  // PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
+  PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
 
   /*
    * Equilibrate :
@@ -568,7 +577,7 @@ _adapt_tree_weight_for_intersect_line
 
   PDM_boxes_t *_local_boxes = dbbt->boxes->local_boxes;
 
-  int n_boxes = _local_boxes->n_boxes;
+  // int n_boxes = _local_boxes->n_boxes;
 
   // int* is_visited = malloc(n_boxes * sizeof(int));
   // for(int i = 0; i < n_boxes; ++i) {
@@ -584,7 +593,6 @@ _adapt_tree_weight_for_intersect_line
 
     /* Get number of box in child box_tree */
     int i_child = all_child_ids[i];
-
 
     n_child_box_ids[i] = PDM_box_tree_get_box_ids(coarse_tree,
                                                   i_child,
@@ -706,10 +714,8 @@ _adapt_tree_weight_for_intersect_line
                     dbbt->comm);
   free(send_origin);
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
-    int i_rank;
-    PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
     sprintf(filename, "dbbt_experimental_tree_%3.3d.vtk",i_rank);
     PDM_vtk_write_boxes (filename,
                          n_recv_boxes,
@@ -718,14 +724,22 @@ _adapt_tree_weight_for_intersect_line
   }
 
 
+  /*
+   * Re-setup boxes
+   */
+  log_trace("Avant :  _local_boxes->n_boxes = %i --> %i \n",  _local_boxes->n_boxes, n_recv_boxes);
+  _local_boxes->n_boxes = n_recv_boxes;
+  free(_local_boxes->g_num);
+  free(_local_boxes->extents);
+  free(_local_boxes->origin);
 
+  _local_boxes->g_num   = recv_g_num  ;
+  _local_boxes->extents = recv_extents;
+  _local_boxes->origin  = recv_origin ;
 
-
-  free(recv_g_num  );
-  free(recv_extents);
-  free(recv_origin );
-
-
+  // free(recv_g_num  );
+  // free(recv_extents);
+  // free(recv_origin );
 
   free(send_idx);
   free(recv_idx);
@@ -788,7 +802,7 @@ _redistribute_boxes_for_intersect_line
     PDM_printf ("-- fin dump\n");
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
@@ -836,7 +850,7 @@ _redistribute_boxes_for_intersect_line
 
   PDM_box_tree_destroy (&coarse_tree);
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank (dbbt->comm, &i_rank);
