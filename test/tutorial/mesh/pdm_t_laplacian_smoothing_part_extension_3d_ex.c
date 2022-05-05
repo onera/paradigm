@@ -798,7 +798,8 @@ int main(int argc, char *argv[])
                                  0,
                                  pn_vtx,
                                  pvtx_coord,
-                                 vtx_ln_to_gn);
+                                 vtx_ln_to_gn,
+                                 PDM_OWNERSHIP_USER);
       PDM_writer_geom_cell3d_cellface_add (id_cs,
                                            id_geom,
                                            0,

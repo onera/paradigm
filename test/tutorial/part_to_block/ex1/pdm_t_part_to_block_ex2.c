@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_init_elmt : ");
   }
   int n_part  = 1;
+  PDM_UNUSED(n_part);
   int pn_elmt = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) / freq ;
 
   PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
@@ -151,72 +152,6 @@ int main(int argc, char *argv[])
    * Print the block_g_num and distrib
    */
 
-  // Create part_to_block
-
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCK_POST_MERGE,
-                                                      1.,
-                                                      &pln_to_to_gn,
-                                                      NULL,
-                                                      &pn_elmt,
-                                                      n_part,
-                                                      comm);
-
-  int nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
-  PDM_g_num_t *block_gnum = PDM_part_to_block_block_gnum_get(ptb);
-  PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
-
-  if(1 == 1) {
-    PDM_log_trace_array_long(block_gnum, nelmt_proc, "block_gnum : ");
-    PDM_log_trace_array_long(distrib, n_rank+1, "distrib : ");
-  }
-
-  /*
-   *  Exchange field and print it / Check !
-   */
-
-  int *dfield = NULL;
-  int *block_stride = NULL;
-
-  int s_block_data = PDM_part_to_block_exch(ptb,
-<<<<<<< HEAD
-                                            sizeof(int),
-                                            PDM_STRIDE_VAR_INTERLACED,
-                                            1,
-                                            &pstrid,
-                                            (void **) &pfield,
-                                            &block_stride,
-                                            (void **) &dfield);
-
-  // Print field
-=======
-                         sizeof(int),
-                         PDM_STRIDE_VAR_INTERLACED,
-                         1,
-                         &pstrid,
-                         (void **) &pfield,
-                         &block_stride,
-                         (void **) &dfield);
-
-   // Print field
-
->>>>>>> tutorial part_to_block_to_part ex2
-  if(1 == 1) {
-    PDM_log_trace_array_int(dfield, nelmt_proc, "dfield : ");
-    int idx = 0;
-    for (int i = 0; i < nelmt_proc; i++) {
-      log_trace("elt #"PDM_FMT_G_NUM" : ", block_gnum[i]);
-      for (int j = 0; j < block_stride[i]; j++) {
-        log_trace(" %d", dfield[idx++]);
-      }
-      log_trace("\n");
-    }
-  }
-
-  // Free part_to_block and dfield
-
-  PDM_part_to_block_free(ptb);
-  free(dfield);
 
   free(pln_to_to_gn);
   free(distrib_init_elmt);
