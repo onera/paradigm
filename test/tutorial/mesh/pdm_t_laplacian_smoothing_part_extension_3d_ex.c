@@ -385,10 +385,7 @@ _compute_face_vtx
   }
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> ordered neighbours exercise
 
 /**
  *
@@ -556,8 +553,6 @@ int main(int argc, char *argv[])
   /* Get face_vtx (TO DO get with wright order) */
 
   int *pedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, pn_edge);
-<<<<<<< HEAD
-<<<<<<< HEAD
   // int *pface_vtx_idx = NULL;
   // int *pface_vtx     = NULL;
 
@@ -568,30 +563,6 @@ int main(int argc, char *argv[])
   //                          pedge_vtx,
   //                          &pface_vtx_idx,
   //                          &pface_vtx);
-=======
-  int *pface_vtx_idx = NULL;
-  int *pface_vtx     = NULL;
-
-  PDM_combine_connectivity(pn_face,
-                           pface_edge_idx,
-                           pface_edge,
-                           pedge_vtx_idx,
-                           pedge_vtx,
-                           &pface_vtx_idx,
-                           &pface_vtx);
->>>>>>> version 3d
-=======
-  // int *pface_vtx_idx = NULL;
-  // int *pface_vtx     = NULL;
-
-  // PDM_combine_connectivity(pn_face,
-  //                          pface_edge_idx,
-  //                          pface_edge,
-  //                          pedge_vtx_idx,
-  //                          pedge_vtx,
-  //                          &pface_vtx_idx,
-  //                          &pface_vtx);
->>>>>>> ordered neighbours exercise
 
   /* Get face_cell */
 
@@ -602,10 +573,6 @@ int main(int argc, char *argv[])
                              pn_face,
                              pcell_face_idx,
                              pcell_face,
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 3d fixed
                              &pface_cell_idx,
                              &pface_cell);
 
@@ -660,33 +627,6 @@ int main(int argc, char *argv[])
     }
   log_trace("\n");
   }
-<<<<<<< HEAD
-
-
-
-  /* Build face_vtx */
-  // int *pface_vtx_idx;
-  int *pface_vtx;
-  // get_ordered_face_vtx(&pface_vtx,
-  //                      &pface_vtx_idx,
-  //                      pface_edge_idx,
-  //                      pface_edge,
-  //                      pedge_vtx,
-  //                      pn_face);
-
-  _compute_face_vtx(pn_face,
-                    pface_edge_idx,
-                    pface_edge,
-                    pedge_vtx,
-                    &pface_vtx);
-=======
-                            &pface_cell_idx,
-                            &pface_cell);
-
-  /* TO DO get vtx_group */
->>>>>>> version 3d
-=======
->>>>>>> 3d fixed
 
 
 
@@ -735,15 +675,7 @@ int main(int argc, char *argv[])
                               pface_cell,
                               pface_edge_idx,
                               pface_edge,
-<<<<<<< HEAD
-<<<<<<< HEAD
                               pface_edge_idx,
-=======
-                              pface_vtx_idx,
->>>>>>> version 3d
-=======
-                              pface_edge_idx,
->>>>>>> ordered neighbours exercise
                               pface_vtx,
                               pedge_vtx,
                               pface_group_idx,
@@ -780,15 +712,7 @@ int main(int argc, char *argv[])
                                       &pedge_vtx_extension,
                                       &pedge_vtx_extension_idx);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   // Get coordinates
-=======
-  // Get coordinates (TO DO PDM_part_extension_group_get for extension ou group)
->>>>>>> version 3d
-=======
-  // Get coordinates
->>>>>>> 3d fixed
 
   double *pvtx_coord_extension = NULL;
 
@@ -833,10 +757,6 @@ int main(int argc, char *argv[])
   double *normalisation  = malloc(pn_vtx * sizeof(double));
   double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> ordered neighbours exercise
   /* Set up of Ensight output */
 
   PDM_writer_t *id_cs = PDM_writer_create("Ensight",
@@ -866,7 +786,6 @@ int main(int argc, char *argv[])
     cell_face_n[i] = pcell_face_idx[i+1] - pcell_face_idx[i];
   }
 
-<<<<<<< HEAD
   // Step
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 
@@ -912,69 +831,6 @@ int main(int argc, char *argv[])
     //                            0,
     //                            NULL,
     //                            NULL);
-=======
-=======
->>>>>>> ordered neighbours exercise
-  // Step
-  for (int i_step = 0; i_step <= n_steps; i_step++) {
-
-    // Output in ensight format
-    PDM_writer_step_beg(id_cs, (double) i_step);
-
-    if (i_step == 0) {
-      PDM_writer_geom_coord_set (id_cs,
-                                 id_geom,
-                                 0,
-                                 pn_vtx,
-                                 pvtx_coord,
-                                 vtx_ln_to_gn);
-      PDM_writer_geom_cell3d_cellface_add (id_cs,
-                                           id_geom,
-                                           0,
-                                           pn_cell,
-                                           pn_face,
-                                           pface_edge_idx,
-                                           face_vtx_n,
-                                           pface_vtx,
-                                           pcell_face_idx,
-                                           cell_face_n,
-                                           pcell_face,
-                                           cell_ln_to_gn);
-    }
-    PDM_writer_geom_write(id_cs,
-                          id_geom);
-
-
-    // Output in vtk format
-
-<<<<<<< HEAD
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               vtx_ln_to_gn,
-                               PDM_MESH_NODAL_BAR2,
-                               pn_edge,
-                               pedge_vtx,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL);
->>>>>>> version 3d
-=======
-    // sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
-
-    // PDM_vtk_write_std_elements(filename,
-    //                            pn_vtx,
-    //                            pvtx_coord,
-    //                            vtx_ln_to_gn,
-    //                            PDM_MESH_NODAL_BAR2,
-    //                            pn_edge,
-    //                            pedge_vtx,
-    //                            NULL,
-    //                            0,
-    //                            NULL,
-    //                            NULL);
->>>>>>> ordered neighbours exercise
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {
@@ -1006,24 +862,10 @@ int main(int argc, char *argv[])
     // Loop over extension edges
 
     for (int i = 0; i < pn_edge_extension; i++) {
-<<<<<<< HEAD
-<<<<<<< HEAD
       vtx1_idx = pedge_vtx_extension[2*i]-1;
       vtx2_idx = pedge_vtx_extension[2*i+1]-1;
 
       if ((vtx1_idx < pn_vtx) &&  (vtx2_idx >= pn_vtx)){
-=======
-      vtx1_idx = pedge_vtx[2*i]-1;
-      vtx2_idx = pedge_vtx[2*i+1]-1;
-
-      if (vtx1_idx <= pn_vtx) {
->>>>>>> version 3d
-=======
-      vtx1_idx = pedge_vtx_extension[2*i]-1;
-      vtx2_idx = pedge_vtx_extension[2*i+1]-1;
-
-      if ((vtx1_idx < pn_vtx) &&  (vtx2_idx >= pn_vtx)){
->>>>>>> 3d fixed
         if (i_step == 0) {
           normalisation[vtx1_idx]++;
         }
@@ -1033,15 +875,7 @@ int main(int argc, char *argv[])
         pvtx_coord_new[3*vtx1_idx+2] += pvtx_coord_extension[3*(vtx2_idx-pn_vtx)+2];
       }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
       if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
-=======
-      if (vtx2_idx <= pn_vtx) {
->>>>>>> version 3d
-=======
-      if ((vtx2_idx < pn_vtx) && (vtx1_idx >= pn_vtx)) {
->>>>>>> 3d fixed
         if (i_step == 0) {
           normalisation[vtx2_idx]++;
         }
@@ -1053,39 +887,17 @@ int main(int argc, char *argv[])
 
     } // end loop over extension edges
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     // Add normalisation and update coordinates
     for (int i = 0; i < pn_vtx; i++) {
-=======
-    // Add normalisation and update coordinates (TO DO vtx_group to fix boundary)
-    for (int i = 0; i < pn_edge; i++) {
->>>>>>> version 3d
-=======
-    // Add normalisation and update coordinates
-    for (int i = 0; i < pn_vtx; i++) {
->>>>>>> 3d fixed
       if (i_step == 0) {
         normalisation[i] = 1 / normalisation[i];
       }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 3d fixed
       if (pvtx_group_idx[i+1]- pvtx_group_idx[i] == 0) {
         pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
         pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
         pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
       }
-<<<<<<< HEAD
-=======
-      pvtx_coord[3*i]   = pvtx_coord_new[3*i] * normalisation[i];
-      pvtx_coord[3*i+1] = pvtx_coord_new[3*i+1] * normalisation[i];
-      pvtx_coord[3*i+2] = pvtx_coord_new[3*i+2] * normalisation[i];
->>>>>>> version 3d
-=======
->>>>>>> 3d fixed
 
     } // end loop on coordinates
 
@@ -1115,22 +927,10 @@ int main(int argc, char *argv[])
 
     free(pvtx_coord_extension_new);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
 
 
-=======
-  } // end Laplacian Smoothing loop
-
->>>>>>> version 3d
-=======
-    PDM_writer_step_end(id_cs);
-  } // end Laplacian Smoothing loop
-
-
->>>>>>> ordered neighbours exercise
   /* Free entities */
 
   PDM_multipart_free(mpart);
