@@ -625,18 +625,18 @@ int main(int argc, char *argv[])
 
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, 3, global_extents);
 
-  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set(dbbt,
-                                                          n_part,
-                                                          part_n_elt,
-                                     (const double **)    part_elt_extents,
-                                 (const PDM_g_num_t **)   part_elt_g_num);
-  // PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set_for_intersect_line(dbbt,
-  //                                                                            n_part,
-  //                                                                            part_n_elt,
-  //                                                       (const double **)    part_elt_extents,
-  //                                                   (const PDM_g_num_t **)   part_elt_g_num,
-  //                                                                            n_ray,
-  //                                                                            ray_coord);
+  // PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set(dbbt,
+  //                                                         n_part,
+  //                                                         part_n_elt,
+  //                                    (const double **)    part_elt_extents,
+  //                                (const PDM_g_num_t **)   part_elt_g_num);
+  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set_for_intersect_line(dbbt,
+                                                                             n_part,
+                                                                             part_n_elt,
+                                                        (const double **)    part_elt_extents,
+                                                    (const PDM_g_num_t **)   part_elt_g_num,
+                                                                             n_ray,
+                                                                             ray_coord);
 
   end_timer_and_print("Compute extent and build dbbtree",comm,t1);
 

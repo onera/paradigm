@@ -850,6 +850,22 @@ _redistribute_boxes_for_intersect_line
 
   PDM_box_tree_destroy (&coarse_tree);
 
+  /*
+   * Rebuild coarse tree but with new distrib
+   */
+  coarse_tree = PDM_box_tree_create (dbbt->maxTreeDepthCoarse,
+                                     dbbt->maxBoxesLeafCoarse,
+                                     dbbt->maxBoxRatioCoarse);
+
+  PDM_box_tree_set_boxes (coarse_tree,
+                          dbbt->boxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  _update_bt_statistics(&(dbbt->btsCoarse), coarse_tree);
+  _adapt_tree_weight_for_intersect_line(dbbt, coarse_tree, n_line, line_coord);
+
+  PDM_box_tree_destroy (&coarse_tree);
+
   if(0 == 1) {
     char filename[999];
     int i_rank;
