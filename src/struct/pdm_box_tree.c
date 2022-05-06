@@ -2400,12 +2400,12 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
     if (node->n_boxes > 0 ) {
       leaf_codes[_n_leaves]  = node->morton_code;
       weight    [_n_leaves]  = node->n_boxes;
-      if(node->extra_weight != 0) {
-        weight    [_n_leaves] *= node->extra_weight;
-      } else {
-        weight    [_n_leaves] = node->n_boxes;
-        // weight    [_n_leaves] = parent_weight;
-      }
+      // if(node->extra_weight != 0) {
+      //   weight    [_n_leaves] *= node->extra_weight;
+      // } else {
+      //   weight    [_n_leaves] = node->n_boxes;
+      //   // weight    [_n_leaves] = parent_weight;
+      // }
       _n_leaves += 1;
     }
   }
