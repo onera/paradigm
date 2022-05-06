@@ -734,6 +734,112 @@ PDM_dgroup_entity_transpose
 }
 
 
+
+void
+PDM_dentity_group_transpose
+(
+ int            n_group,
+ int           *dentity_group_idx,
+ int           *dentity_group,
+ PDM_g_num_t   *distrib_entity,
+ int          **dgroup_entity_idx,
+ PDM_g_num_t  **dgroup_entity,
+ PDM_MPI_Comm   comm
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_entity = distrib_entity[i_rank+1] - distrib_entity[i_rank];
+
+  int          *select_entity_n = malloc(n_group * sizeof(int          ));
+  PDM_g_num_t **select_entity   = malloc(n_group * sizeof(PDM_g_num_t *));
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    select_entity_n[i_group] = 0;
+  }
+
+  for(int idx_entity = 0; idx_entity < dentity_group_idx[dn_entity]; ++idx_entity) {
+    select_entity_n[dentity_group[idx_entity]]++;
+  }
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(select_entity_n, n_group, " select_entity_n : ");
+  }
+
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    select_entity  [i_group] = malloc( select_entity_n[i_group] * sizeof(PDM_g_num_t));
+    select_entity_n[i_group] = 0;
+  }
+
+
+  for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
+    for(int idx_entity = dentity_group_idx[i_entity]; idx_entity <  dentity_group_idx[i_entity+1]; ++idx_entity) {
+      int i_group   = dentity_group[idx_entity];
+      int idx_write = select_entity_n[i_group]++;
+      select_entity[i_group][idx_write] = distrib_entity[i_rank] + i_entity + 1;
+    }
+  }
+
+  if(0 == 1) {
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_log_trace_array_long(select_entity[i_group], select_entity_n[i_group], " select_entity : ");
+    }
+  }
+
+  /*
+   *  For each group we repart all information by block
+   */
+  PDM_part_to_block_t **ptb = malloc(n_group * sizeof(PDM_part_to_block_t *));
+
+  int *_dgroup_entity_idx = (int * ) malloc( (n_group+1) * sizeof(int));
+  _dgroup_entity_idx[0] = 0;
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+
+    _dgroup_entity_idx[i_group+1] = _dgroup_entity_idx[i_group];
+    ptb[i_group] = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                            1.,
+                                            &select_entity[i_group],
+                                            NULL,
+                                            &select_entity_n[i_group],
+                                            1,
+                                            comm);
+    _dgroup_entity_idx[i_group+1] += PDM_part_to_block_n_elt_block_get(ptb[i_group]);
+  }
+
+  // PDM_log_trace_array_long(_dgroup_entity_idx, n_group+1, " _dgroup_entity_idx : ");
+  PDM_g_num_t *_dgroup_entity = malloc(_dgroup_entity_idx[n_group] * sizeof(PDM_g_num_t));
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(ptb[i_group]);
+
+
+    // PDM_log_trace_array_long(blk_gnum, PDM_part_to_block_n_elt_block_get(ptb[i_group]), " blk_gnum : ");
+
+    for(int i = _dgroup_entity_idx[i_group]; i < _dgroup_entity_idx[i_group+1]; ++i) {
+      int j = i - _dgroup_entity_idx[i_group];
+      _dgroup_entity[i] = blk_gnum[j];
+    }
+  }
+
+
+
+  for(int i_group = 0; i_group < n_group; ++i_group) {
+    free(select_entity[i_group]);
+    PDM_part_to_block_free(ptb[i_group]);
+  }
+  free(ptb);
+  free(select_entity_n);
+  free(select_entity  );
+
+  *dgroup_entity_idx = _dgroup_entity_idx;
+  *dgroup_entity     = _dgroup_entity;
+
+}
+
+
 void
 PDM_dconnectivity_to_extract_dconnectivity
 (
