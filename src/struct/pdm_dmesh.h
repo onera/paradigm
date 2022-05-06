@@ -232,6 +232,17 @@ PDM_dmesh_global_extents_get
  PDM_dmesh_t         *dmesh
  );
 
+
+void
+PDM_dmesh_bound_set
+(
+ PDM_dmesh_t      *dmesh,
+ PDM_bound_type_t  bound_type,
+ int               n_bound,
+ PDM_g_num_t      *connect,
+ int              *connect_idx
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
