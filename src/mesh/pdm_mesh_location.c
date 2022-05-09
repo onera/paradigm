@@ -35,6 +35,7 @@
 #include "pdm_gnum.h"
 #include "pdm_sort.h"
 #include "pdm_logging.h"
+#include "pdm_writer.h"
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus
@@ -2892,8 +2893,28 @@ PDM_mesh_location_t        *ml
     _export_boxes (filename, n_boxes, box_extents, box_g_num);
 
 
-    /*PDM_Mesh_nodal_write ("mesh_nodal",
-      ml->mesh_nodal);*/
+    PDM_writer_t *cs = PDM_writer_create("Ensight",
+                                         PDM_WRITER_FMT_ASCII,
+                                         PDM_WRITER_TOPO_CST,
+                                         PDM_WRITER_OFF,
+                                         "mesh_location",
+                                         "source_mesh",
+                                         PDM_MPI_COMM_WORLD,
+                                         PDM_IO_KIND_MPI_SIMPLE,
+                                         1.,
+                                         NULL);
+
+    int id_geom = PDM_writer_geom_create_from_mesh_nodal (cs,
+                                                          "source_mesh_geom",
+                                                          ml->mesh_nodal);
+
+    PDM_writer_step_beg(cs, 0.);
+
+    PDM_writer_geom_write(cs,
+                          id_geom);
+
+    PDM_writer_step_end(cs);
+    PDM_writer_free(cs);
   }
 
 
