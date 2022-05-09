@@ -1858,7 +1858,7 @@ PDM_MPI_Comm       comm
                                            &dface_bound_idx,
                                            PDM_OWNERSHIP_KEEP);
 
-    assert(n_face_group == pmeshes->n_bounds);
+    // assert(n_face_group == pmeshes->n_bounds);
 
     int         **pface_bound_idx               = NULL;
     int         **pface_bound                   = NULL;
@@ -1869,7 +1869,7 @@ PDM_MPI_Comm       comm
     PDM_g_num_t **pface_bound_ln_to_gn          = NULL;
     PDM_part_distgroup_to_partgroup(comm,
                                     face_distri,
-                                    n_bnd,
+                                    n_face_group,
                                     dface_bound_idx,
                                     dface_bound,
                                     n_part,
@@ -1940,7 +1940,7 @@ PDM_MPI_Comm       comm
     PDM_g_num_t **pedge_bound_ln_to_gn          = NULL;
     PDM_part_distgroup_to_partgroup(comm,
                                     edge_distrib,
-                                    n_bnd,
+                                    n_edge_group,
                                     dedge_bound_idx,
                                     dedge_bound,
                                     n_part,
@@ -3046,7 +3046,7 @@ PDM_multipart_run_ppart
         PDM_dmesh_nodal_generate_distribution(dmesh_nodal);
         PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmesh_nodal);
 
-        printf("dmesh_nodal->n_cell_abs = "PDM_FMT_G_NUM" \n", dmesh_nodal->n_cell_abs );
+        // printf("dmesh_nodal->n_cell_abs = "PDM_FMT_G_NUM" \n", dmesh_nodal->n_cell_abs );
         if(dmesh_nodal->n_cell_abs != 0) {
           PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
                                            PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
@@ -3303,9 +3303,16 @@ const int            i_part,
   *face_part_bound_part_idx = _pmeshes.parts[i_part]->face_part_bound_part_idx;
   *face_part_bound          = _pmeshes.parts[i_part]->face_part_bound;
 
-  *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
-  *face_bound           = _pmeshes.parts[i_part]->face_bound;
-  *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+
+  if (_pmeshes.parts[i_part]->n_cell > 0) {
+    *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
+    *face_bound           = _pmeshes.parts[i_part]->face_bound;
+    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+  } else {
+    *face_bound_idx       = _pmeshes.parts[i_part]->edge_bound_idx;
+    *face_bound           = _pmeshes.parts[i_part]->edge_bound;
+    *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+  }
   *face_join_idx        = _pmeshes.parts[i_part]->face_join_idx;
   *face_join            = _pmeshes.parts[i_part]->face_join;
   *face_join_ln_to_gn   = _pmeshes.parts[i_part]->face_join_ln_to_gn;
@@ -3683,6 +3690,46 @@ const int                       i_part,
   return _pmeshes.parts[i_part]->n_vtx;
 }
 
+
+void PDM_multipart_bound_get
+(
+ PDM_multipart_t   *multipart,
+ const int          i_zone,
+ const int          i_part,
+ PDM_bound_type_t   bound_type,
+ int               *n_bound,
+ int              **bound_idx,
+ int              **bound,
+ PDM_g_num_t      **bound_ln_to_gn
+ )
+{
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  *n_bound = _pmeshes.n_bounds;
+
+  switch (bound_type) {
+    case PDM_BOUND_TYPE_EDGE:
+    *n_bound        = _pmeshes.parts[i_part]->n_edge_group;
+    *bound_idx      = _pmeshes.parts[i_part]->edge_bound_idx;
+    *bound          = _pmeshes.parts[i_part]->edge_bound;
+    *bound_ln_to_gn = _pmeshes.parts[i_part]->edge_bound_ln_to_gn;
+    break;
+
+    case PDM_BOUND_TYPE_FACE:
+    *n_bound        = _pmeshes.parts[i_part]->n_face_group;
+    *bound_idx      = _pmeshes.parts[i_part]->face_bound_idx;
+    *bound          = _pmeshes.parts[i_part]->face_bound;
+    *bound_ln_to_gn = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+    break;
+
+    default:
+    PDM_error(__FILE__, __LINE__, 0,
+              "PDM_multipart_bound_get : Wrong bound_type %d\n", (int) bound_type);
+  }
+}
 
 /*----------------------------------------------------------------------------*/
 
