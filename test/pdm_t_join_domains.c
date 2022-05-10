@@ -499,6 +499,7 @@ int main
                                                                                    NULL,
                                                                                    NULL,
                                                                                    pvtx_ln_to_gn);
+  // exit(1);
 
   /*
    * Extension

@@ -53,6 +53,7 @@ struct _pdm_part_extension_t {
   /* Store for each depth / each domain / each part */
   int **neighbor_idx;
   int **neighbor_desc;
+  int **neighbor_interface;
   int  *n_entity_bound;
   int  *n_cell;
   int  *n_cell_border;

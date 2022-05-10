@@ -1166,7 +1166,7 @@ const double            *part_fraction,
                         _node_part,
                         comm);
 
-  // PDM_log_trace_array_int (cell_part, dn_face, "cell_part :: ");
+  // PDM_log_trace_array_int (_node_part, dn_node, "_node_part :: ");
 
   free(dual_graph_idx);
   free(dual_graph);

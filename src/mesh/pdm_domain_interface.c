@@ -2902,7 +2902,7 @@ PDM_ddomain_interface_to_pdomain_interface
   max_per_domain[0] = 0;
   PDM_MPI_Allreduce(max_per_domain_loc, &max_per_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
   PDM_array_accumulate_gnum(max_per_domain, n_domain+1);
-  if (1 == 1) {
+  if (0 == 1) {
     PDM_log_trace_array_long(max_per_domain, n_domain+1, "max per domain");
   }
 
@@ -3210,6 +3210,8 @@ PDM_ddomain_interface_to_pdomain_interface
       pn_interface[i_part][i] = 0;
     }
 
+    // PDM_log_trace_array_int(pn_interface_idx[i_part], n_interface+1, "pn_interface_idx[i_part]");
+
     pinterface_triplet[i_part] = (int         * ) malloc( pn_interface_idx[i_part][n_interface] * sizeof(int         ));
     pinterface_dom    [i_part] = (int         * ) malloc( pn_interface_idx[i_part][n_interface] * sizeof(int         ));
     pinterface_gnum   [i_part] = (PDM_g_num_t * ) malloc( pn_interface_idx[i_part][n_interface] * sizeof(PDM_g_num_t ));
@@ -3232,7 +3234,7 @@ PDM_ddomain_interface_to_pdomain_interface
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int (part_data_dom     [i_part], pn_interface_idx[i_part][n_interface], "part_data_dom      :: ");
       PDM_log_trace_array_int (pinterface_triplet[i_part], pn_interface_idx[i_part][n_interface], "pinterface_triplet :: ");
       PDM_log_trace_array_long(pinterface_gnum   [i_part], pn_interface_idx[i_part][n_interface], "pinterface_gnum    :: ");
@@ -3342,7 +3344,7 @@ PDM_ddomain_interface_to_pdomain_interface
     PDM_g_num_t **_linterface_gnum = (PDM_g_num_t **) malloc( n_part_tot * sizeof(PDM_g_num_t *));
     for(int i_part = 0; i_part < n_part_tot; ++i_part) {
       int beg = pn_interface_idx[i_part][i_interface];
-      _ln_interface[i_part] = pn_interface_idx[i_part][i_interface+1] - beg;
+      _ln_interface   [i_part] = pn_interface_idx[i_part][i_interface+1] - beg;
       _linterface_gnum[i_part] = &pinterface_gnum[i_part][beg];
     }
 
@@ -3375,10 +3377,11 @@ PDM_ddomain_interface_to_pdomain_interface
         entity_desc[shift+i_part] = (int *) malloc( 3 * _ln_interface[shift+i_part] * sizeof(int));
         pstride_one[shift+i_part] = (int *) malloc(     _ln_interface[shift+i_part] * sizeof(int));
         int* _entity_desc = entity_desc[shift+i_part];
+        int beg = pn_interface_idx[shift+i_part][i_interface];
         for(int i = 0; i < _ln_interface[i_part]; ++i) {
           _entity_desc[3*i  ] = i_rank;
           _entity_desc[3*i+1] = i_part;
-          _entity_desc[3*i+2] = pinterface_triplet[shift+i_part][i];
+          _entity_desc[3*i+2] = pinterface_triplet[shift+i_part][beg+i];
 
           pstride_one[shift+i_part][i] = 1;
         }

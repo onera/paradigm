@@ -2195,6 +2195,7 @@ PDM_dcube_nodal_cart_topo
           i_period[i_interface] = 2;
         }
 
+        // PDM_log_trace_array_long(interface_ids[i_interface], 2 * interface_dn[i_interface], "interface_ids[i_interface]");
         i_interface++;
       }
     }
