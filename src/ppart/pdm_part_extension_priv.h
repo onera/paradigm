@@ -62,6 +62,7 @@ struct _pdm_part_extension_t {
   int **dist_neighbor_cell_n;
   int **dist_neighbor_cell_idx;
   int **dist_neighbor_cell_desc;
+  int **dist_neighbor_cell_interface;
   int **unique_order_dist_neighbor_cell;
   int  *n_unique_order_dist_neighbor_cell;
 
