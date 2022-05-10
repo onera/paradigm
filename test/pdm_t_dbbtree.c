@@ -291,12 +291,13 @@ _generate_surface_mesh
 
 
   const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get (dmn);
-  double *dvtx_coord = PDM_DMesh_nodal_vtx_get (dmn);
+  
+  if (0) {
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get (dmn);
+    int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
-  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-
-  // _rotate (dn_vtx, dvtx_coord);
-
+    _rotate (dn_vtx, dvtx_coord);
+  }
 
   int n_zone = 1;
   // int n_part_zones = {n_part};

@@ -96,10 +96,15 @@ _modulo
  * vertices the associated edge_idx or 0 if no edge between those vertices
  */
 
-void get_vtx_vtx_edge(int** vtx_vtx_edge,
-                      int*   edge_vtx,
-                      int n_edge,
-                      int n_vtx)
+static 
+void 
+get_vtx_vtx_edge
+(
+  int** vtx_vtx_edge,
+  int*   edge_vtx,
+  int n_edge,
+  int n_vtx
+)
 {
   int idx_vtx1;
   int idx_vtx2;
@@ -120,10 +125,14 @@ void get_vtx_vtx_edge(int** vtx_vtx_edge,
  * Get initial edge: to avoid getting stuck in rotation by boundaries of the mesh
  */
 
-int get_initial_edge(int* vtx_edge,
-                     int* vtx_edge_idx,
-                     int  i,
-                     int* edge_face_idx)
+static int 
+get_initial_edge
+(
+  int* vtx_edge,
+  int* vtx_edge_idx,
+  int  i,
+  int* edge_face_idx
+)
 {
   int idx_edge;
   int idx_edge_out = -1;
@@ -146,16 +155,20 @@ int get_initial_edge(int* vtx_edge,
  * Get next edge: given the current face and edge, get the next neighbour edge in the face
  */
 
-int get_next_edge(int count,
-                  int  i,
-                  int  iter_face_idx,
-                  int  iter_vtx_idx,
-                  int  n_vtx,
-                  int* face_vtx_ordered,
-                  int* face_vtx_ordered_idx,
-                  int* vtx_vtx_edge,
-                  int* vtx_ordered_vtx_neighbours,
-                  int* idx_vtx_ordered_vtx_neighbours)
+static int 
+get_next_edge
+(
+  int count,
+  int  i,
+  int  iter_face_idx,
+  int  iter_vtx_idx,
+  int  n_vtx,
+  int* face_vtx_ordered,
+  int* face_vtx_ordered_idx,
+  int* vtx_vtx_edge,
+  int* vtx_ordered_vtx_neighbours,
+  int* idx_vtx_ordered_vtx_neighbours
+)
 {
   int next_edge_idx;
   int other_vtx_idx;

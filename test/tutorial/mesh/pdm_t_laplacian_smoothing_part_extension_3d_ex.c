@@ -751,7 +751,7 @@ int main(int argc, char *argv[])
 
   /* Laplacian Smoothing */
 
-  char    filename[999];
+  // char    filename[999];
   int     vtx1_idx;
   int     vtx2_idx;
   double *normalisation  = malloc(pn_vtx * sizeof(double));

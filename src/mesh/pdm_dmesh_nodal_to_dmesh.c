@@ -841,7 +841,6 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_WIN_RMA;
     // PDM_mpi_comm_kind_t k_comm = PDM_MPI_COMM_KIND_COLLECTIVE;
 
-    double t1 = PDM_MPI_Wtime();
     int request_entity_vtx = -1;
     PDM_part_to_block_iexch(ptb,
                             k_comm,

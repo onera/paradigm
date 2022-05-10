@@ -216,7 +216,14 @@ const int      n_vtx_seg,
 }
 
 // Is in table
-int is_in_table(int *table, int value, int size) {
+static int 
+is_in_table
+(
+  int *table, 
+  int value,
+  int size
+) 
+{
   int boolean = 0;
   for (int i = 0; i < size; i++) {
     if (table[i] == value) {

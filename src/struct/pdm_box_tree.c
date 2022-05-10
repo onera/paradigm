@@ -2378,6 +2378,9 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
                          PDM_morton_code_t *leaf_codes,
                          int               *weight)
 {
+
+  PDM_UNUSED (parent_weight);
+
   int  i;
 
   int _n_leaves = *n_leaves;

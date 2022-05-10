@@ -399,8 +399,8 @@ int main(int argc, char *argv[])
                                   &tmp_pedge_face_idx,
                                   &tmp_pedge_face);
 
-  int *pedge_face_idx = tmp_pedge_face_idx[i_part];
-  int *pedge_face     = tmp_pedge_face[i_part];
+  // int *pedge_face_idx = tmp_pedge_face_idx[i_part];
+  // int *pedge_face     = tmp_pedge_face[i_part];
 
   /* Transpose into edge_group */
   int **tmp_pedge_group_idx = NULL;
@@ -555,6 +555,8 @@ int main(int argc, char *argv[])
                  (void **) &pnew_vtx_coord,
                            &dstrid_new_vtx_coord,
                  (void **) &dnew_vtx_coord);
+
+    PDM_UNUSED (s_block_data);
 
     // Get block information
 

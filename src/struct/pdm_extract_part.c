@@ -516,71 +516,71 @@ _cell_center_3d
 // }
 
 
-static
-void
-_deduce_extract_lnum_from_target
-(
-  PDM_extract_part_t        *extrp
-)
-{
-  extrp->from_target = 1;
-  int          *pn_entity    = 0;
-  PDM_g_num_t **entity_g_num = NULL;
-  if(extrp->dim == 3) {
-    pn_entity    = extrp->n_cell;
-    entity_g_num = extrp->cell_ln_to_gn;
-  } else {
-    pn_entity    = extrp->n_face;
-    entity_g_num = extrp->face_ln_to_gn;
-  }
+// static
+// void
+// _deduce_extract_lnum_from_target
+// (
+//   PDM_extract_part_t        *extrp
+// )
+// {
+//   extrp->from_target = 1;
+//   int          *pn_entity    = 0;
+//   PDM_g_num_t **entity_g_num = NULL;
+//   if(extrp->dim == 3) {
+//     pn_entity    = extrp->n_cell;
+//     entity_g_num = extrp->cell_ln_to_gn;
+//   } else {
+//     pn_entity    = extrp->n_face;
+//     entity_g_num = extrp->face_ln_to_gn;
+//   }
 
-  /*
-   *  We need to found where gnum is --> We can just make part_to_block then block_to_part and count stride
-   */
-  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_out,
-                                                           extrp->n_part_in,
-                                                           extrp->comm,
-                                                           PDM_OWNERSHIP_KEEP );
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    PDM_gnum_location_elements_set (gnum_loc, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
-    // PDM_log_trace_array_long(extrp->target_gnum[i_part], extrp->n_target[i_part], "target_gnum :: ");
-  }
+//   /*
+//    *  We need to found where gnum is --> We can just make part_to_block then block_to_part and count stride
+//    */
+//   PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_out,
+//                                                            extrp->n_part_in,
+//                                                            extrp->comm,
+//                                                            PDM_OWNERSHIP_KEEP );
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     PDM_gnum_location_elements_set (gnum_loc, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
+//     // PDM_log_trace_array_long(extrp->target_gnum[i_part], extrp->n_target[i_part], "target_gnum :: ");
+//   }
 
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    PDM_gnum_location_requested_elements_set (gnum_loc, i_part, pn_entity[i_part], entity_g_num[i_part]);
-    // PDM_log_trace_array_long(entity_g_num[i_part], pn_entity[i_part], "entity_g_num :: ");
-  }
+//   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+//     PDM_gnum_location_requested_elements_set (gnum_loc, i_part, pn_entity[i_part], entity_g_num[i_part]);
+//     // PDM_log_trace_array_long(entity_g_num[i_part], pn_entity[i_part], "entity_g_num :: ");
+//   }
 
-  PDM_gnum_location_compute (gnum_loc);
+//   PDM_gnum_location_compute (gnum_loc);
 
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    int *location_idx = NULL;
-    int *location     = NULL;
-    PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
+//   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+//     int *location_idx = NULL;
+//     int *location     = NULL;
+//     PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
 
-    assert(extrp->n_extract   [i_part] == 0   );
-    assert(extrp->extract_lnum[i_part] == NULL);
+//     assert(extrp->n_extract   [i_part] == 0   );
+//     assert(extrp->extract_lnum[i_part] == NULL);
 
-    extrp->extract_lnum[i_part] = malloc( pn_entity[i_part] * sizeof(int));
+//     extrp->extract_lnum[i_part] = malloc( pn_entity[i_part] * sizeof(int));
 
-    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+//     for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
 
-      int n_location = location_idx[i_entity+1] - location_idx[i_entity];
-      if(n_location > 0) {
-        extrp->extract_lnum[i_part][extrp->n_extract   [i_part]++] = i_entity;
-      }
-    }
+//       int n_location = location_idx[i_entity+1] - location_idx[i_entity];
+//       if(n_location > 0) {
+//         extrp->extract_lnum[i_part][extrp->n_extract   [i_part]++] = i_entity;
+//       }
+//     }
 
-    extrp->extract_lnum[i_part] = realloc(extrp->extract_lnum[i_part], extrp->n_extract[i_part] * sizeof(int));
+//     extrp->extract_lnum[i_part] = realloc(extrp->extract_lnum[i_part], extrp->n_extract[i_part] * sizeof(int));
 
-    if(0 == 1) {
-      PDM_log_trace_array_int(extrp->extract_lnum[i_part], extrp->n_extract[i_part], "extract_lnum :: ");
-    }
+//     if(0 == 1) {
+//       PDM_log_trace_array_int(extrp->extract_lnum[i_part], extrp->n_extract[i_part], "extract_lnum :: ");
+//     }
 
-  }
+//   }
 
-  PDM_gnum_location_free (gnum_loc);
-}
+//   PDM_gnum_location_free (gnum_loc);
+// }
 
 
 

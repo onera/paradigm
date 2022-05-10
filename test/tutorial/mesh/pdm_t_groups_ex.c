@@ -362,19 +362,19 @@ int main(int argc, char *argv[])
    *
    */
 
-  int *edge_surface_idx = NULL;
-  int *edge_surface     = NULL;
-  int *vtx_surface_idx  = NULL;
-  int *vtx_surface      = NULL;
-  int *vtx_ridge_idx    = NULL;
-  int *vtx_ridge        = NULL;
+  // int *edge_surface_idx = NULL;
+  // int *edge_surface     = NULL;
+  // int *vtx_surface_idx  = NULL;
+  // int *vtx_surface      = NULL;
+  // int *vtx_ridge_idx    = NULL;
+  // int *vtx_ridge        = NULL;
 
-  int *surface_edge_idx = NULL;
-  int *surface_edge     = NULL;
-  int *surface_vtx_idx  = NULL;
-  int *surface_vtx      = NULL;
-  int *ridge_vtx_idx    = NULL;
-  int *ridge_vtx        = NULL;
+  // int *surface_edge_idx = NULL;
+  // int *surface_edge     = NULL;
+  // int *surface_vtx_idx  = NULL;
+  // int *surface_vtx      = NULL;
+  // int *ridge_vtx_idx    = NULL;
+  // int *ridge_vtx        = NULL;
 
   // Surface upon edge
 

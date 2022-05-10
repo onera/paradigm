@@ -236,12 +236,16 @@ static int where_next_couple(int* tab, int target, int start, int end) {
  * Get ordered face->vtx
  */
 
-void get_ordered_face_vtx(int** face_vtx_ordered,
-                          int** face_vtx_ordered_idx,
-                          int*  face_edge_idx,
-                          int*  face_edge,
-                          int*  edge_vtx,
-                          int   n_face)
+static
+void get_ordered_face_vtx
+(
+  int** face_vtx_ordered,
+  int** face_vtx_ordered_idx,
+  int*  face_edge_idx,
+  int*  face_edge,
+  int*  edge_vtx,
+  int   n_face
+)
 {
   /* Create face edge->(vtx1, vtx2) table with inverted edges and output it */
 
@@ -323,10 +327,14 @@ void get_ordered_face_vtx(int** face_vtx_ordered,
  * Get vtx_vtx_idx
  */
 
-void get_vtx_vtx_edge(int** vtx_vtx_edge,
-                      int*   edge_vtx,
-                      int n_edge,
-                      int n_vtx)
+static void 
+get_vtx_vtx_edge
+(
+  int** vtx_vtx_edge,
+  int*   edge_vtx,
+  int n_edge,
+  int n_vtx
+)
 {
   int idx_vtx1;
   int idx_vtx2;
@@ -347,13 +355,17 @@ void get_vtx_vtx_edge(int** vtx_vtx_edge,
  * Get next edge
  */
 
-int get_next_edge(int  i,
-                  int  iter_face_idx,
-                  int  iter_vtx_idx,
-                  int  n_vtx,
-                  int* face_vtx_ordered,
-                  int* face_vtx_ordered_idx,
-                  int* vtx_vtx_edge)
+static int 
+get_next_edge
+(
+  int  i,
+  int  iter_face_idx,
+  int  iter_vtx_idx,
+  int  n_vtx,
+  int* face_vtx_ordered,
+  int* face_vtx_ordered_idx,
+  int* vtx_vtx_edge
+)
 {
   int next_edge_idx;
   int other_vtx_idx;
