@@ -167,7 +167,9 @@ test_c_create (pdm_t_dist_ridge 1)
 # test_c_create (pdm_t_multi_block_merge 1)
 
 test_c_create (pdm_t_ho_ordering 1)
-test_c_create (pdm_t_win_shared 1)
+
+#TODO: Not fully implemented 
+#test_c_create (pdm_t_win_shared 1)
 
 #test_c_create (test_mpi_morton 2)
 
