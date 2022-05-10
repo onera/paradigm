@@ -237,7 +237,7 @@ _offset_parts_by_domain
   // (Recherche dicotomique dans le shift by domain)
 
 
-  if(part_ext->pdi != NULL) {
+  if(part_ext->pdi != NULL && part_ext->n_domain > 1) {
     abort();
   }
 
@@ -788,7 +788,9 @@ _create_cell_graph_comm
         n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
       }
 
-
+      /*
+       * First step : Count interface to add in distant neighbor due to connectivity betwenn domain
+       */
       for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
         log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
 
@@ -828,18 +830,16 @@ _create_cell_graph_comm
 
           log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i \n", i_proc_cur, i_part_cur, i_entity_cur);
 
-          // Only add the oppoite part of the graph
+          // Only add the opposite part of the graph
           for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
             int i_proc_opp   = interface_ids[i_interface][3*j  ];
             int i_part_opp   = interface_ids[i_interface][3*j+1];
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(idx_current != j) {
-
-
               log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+              _neighbor_n[i_entity_cur] += 1;
             }
-
           }
         }
       }
@@ -871,12 +871,61 @@ _create_cell_graph_comm
         _neighbor_desc[3*idx_write+2] = _entity_part_bound[4*idx_entity+3]-1;              // i_entity_opp
       }
 
+      /*
+       * Add graph du to connectivy between domain
+       */
+      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+
+          // Search the first in list that is in current part/proc
+          int i_proc_cur   = -1;
+          int i_part_cur   = -1;
+          int i_entity_cur = -1;
+          int found        = 0;
+          int idx_current  = -1;
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+              i_proc_cur   = i_proc_opp;
+              i_part_cur   = i_part_opp;
+              i_entity_cur = i_entity_opp;
+              idx_current  = j;
+              assert(found == 0);
+              found = 1;
+              break;
+            }
+          }
+
+          if(!found) {
+            continue;
+          }
+
+          assert(found == 1);
+
+          // Only add the opposite part of the graph
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(idx_current != j) {
+              log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+              int idx_write = _neighbor_idx[i_entity_cur] + _neighbor_n[i_entity_cur]++;
+              _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
+              _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
+              _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
+            }
+          }
+        }
+      }
+
       free(_neighbor_n);
+      PDM_log_trace_array_int(_neighbor_idx , part_ext->n_entity_bound[i_part+shift_part]+1, "_neighbor_idx::");
+      PDM_log_trace_array_int(_neighbor_desc , 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]], "_neighbor_desc::");
 
-      // PDM_log_trace_array_int(_neighbor_idx , part_ext->n_entity_bound[i_part+shift_part]+1, "_neighbor_idx::");
-      // PDM_log_trace_array_int(_neighbor_desc , 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]], "_neighbor_desc::");
-
-      /* Ici il faut faire les raccords entre domaine ---> Fill - Count _distant_neighbor_cell also */
 
     }
 

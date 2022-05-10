@@ -487,15 +487,15 @@ int main
   /*
    * Deduction en partition du graphe entre domaine
    */
-  PDM_part_domain_interface_t* pdi = NULL;
-  // PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
-  //                                                                                  pn_n_part,
-  //                                                                                  NULL,
-  //                                                                                  NULL,
-  //                                                                                  pn_vtx,
-  //                                                                                  NULL,
-  //                                                                                  NULL,
-  //                                                                                  pvtx_ln_to_gn);
+  // PDM_part_domain_interface_t* pdi = NULL;
+  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
+                                                                                   pn_n_part,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pn_vtx,
+                                                                                   NULL,
+                                                                                   NULL,
+                                                                                   pvtx_ln_to_gn);
 
   /*
    * Extension
