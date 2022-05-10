@@ -415,6 +415,9 @@ int main
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
+  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_run_ppart(mpart_id);
 
 

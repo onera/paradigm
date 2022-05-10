@@ -392,11 +392,7 @@ const int   *unique_neighbor_entity,
       last_part = curr_part;
       last_elmt = curr_elmt;
     }
-    // order_unique[i] = idx_unique; // NO NO NO
-    unique_order[old_order] = idx_unique; // NO NO NO
-    // unique_order[old_order] = idx_unique;
-    // log_trace("[%d] = %d --> %d \n", i, is_same, idx_unique);
-    // new_order[order[i]] = i;
+    unique_order[old_order] = idx_unique;
   }
 
   *unique_order_neighbor_entity = unique_order;
@@ -471,6 +467,197 @@ _unique_triplet
   *unique_neighbor_entity     = _unique_neighbor_entity;
   free(order);
 }
+
+
+static inline
+int
+_is_same_quadruplet
+(
+int iproc1, int ipart1, int ielt1, int iinterf1,
+int iproc2, int ipart2, int ielt2, int iinterf2
+)
+{
+  if(iproc1 == iproc2){
+    if(ipart1 == ipart2){
+      if(ielt1 == ielt2){
+        if(iinterf1 == iinterf2){
+          return 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+static
+int
+_setup_unique_order_quadruplet
+(
+const int    n_entity,
+const int   *unique_neighbor_entity_idx,
+const int   *unique_neighbor_entity,
+      int  **unique_order_neighbor_entity
+)
+{
+  int* order        = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+  int* unique_order = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+
+  PDM_order_lnum_s(unique_neighbor_entity,
+                   4,
+                   order,
+                   unique_neighbor_entity_idx[n_entity]);
+
+  int idx_unique = -1;
+  int last_proc  = -1;
+  int last_part  = -1;
+  int last_elmt  = -1;
+  int last_inte  = -4;
+
+  for(int i = 0; i < unique_neighbor_entity_idx[n_entity]; i++){
+
+    int old_order = order[i];
+    int curr_proc = unique_neighbor_entity[4*old_order  ];
+    int curr_part = unique_neighbor_entity[4*old_order+1];
+    int curr_elmt = unique_neighbor_entity[4*old_order+2];
+    int curr_inte = unique_neighbor_entity[4*old_order+3];
+    int is_same = _is_same_quadruplet(last_proc, last_part, last_elmt, last_inte,
+                                      curr_proc, curr_part, curr_elmt, curr_inte);
+    // log_trace(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
+    //             curr_proc, curr_part, curr_elmt,
+    //             last_proc, last_part, last_elmt);
+
+    if(is_same == 0){ // N'est pas le meme
+      idx_unique++;
+      last_proc = curr_proc;
+      last_part = curr_part;
+      last_elmt = curr_elmt;
+      last_inte = curr_inte;
+    }
+    unique_order[old_order] = idx_unique;
+  }
+
+  *unique_order_neighbor_entity = unique_order;
+  free(order);
+  return idx_unique+1;
+}
+
+
+static
+void
+_unique_quadruplet
+(
+  int   n_entity,
+  int  *neighbor_entity_idx,
+  int  *neighbor_entity,
+  int **unique_neighbor_entity_idx,
+  int **unique_neighbor_entity_n,
+  int **unique_neighbor_entity
+)
+{
+
+  int* _unique_neighbor_entity_idx = malloc( (n_entity + 1) * sizeof(int));
+  int* _unique_neighbor_entity_n   = malloc( (n_entity    ) * sizeof(int));
+  int* _unique_neighbor_entity     = malloc( 4 * neighbor_entity_idx[n_entity] * sizeof(int));
+  int* order                       = malloc(     neighbor_entity_idx[n_entity] * sizeof(int)); // Suralloc
+
+  _unique_neighbor_entity_idx[0] = 0;
+  for(int i_entity = 0; i_entity < n_entity; ++i_entity) {
+
+    int beg       = neighbor_entity_idx[i_entity];
+    int n_connect = neighbor_entity_idx[i_entity+1] - beg;
+
+    PDM_order_lnum_s(&neighbor_entity[4*beg], 4, order, n_connect);
+
+    _unique_neighbor_entity_n  [i_entity  ] = 0;
+    _unique_neighbor_entity_idx[i_entity+1] = _unique_neighbor_entity_idx[i_entity];
+
+    int last_proc  = -1;
+    int last_part  = -1;
+    int last_elmt  = -1;
+    int last_inte  = -4;
+    for(int i = 0; i < n_connect; ++i) {
+      int old_order   = order[i];
+      int curr_proc   = neighbor_entity[4*(beg+old_order)  ];
+      int curr_part   = neighbor_entity[4*(beg+old_order)+1];
+      int curr_entity = neighbor_entity[4*(beg+old_order)+2];
+      int curr_inte   = neighbor_entity[4*(beg+old_order)+3];
+      int is_same  = _is_same_quadruplet(last_proc, last_part, last_elmt  , last_inte,
+                                         curr_proc, curr_part, curr_entity, curr_inte);
+
+      if(is_same == 0){ // N'est pas le meme
+        // idx_unique++;
+        last_proc = curr_proc;
+        last_part = curr_part;
+        last_elmt = curr_entity;
+        last_inte = curr_inte;
+
+        int beg_write = 4 * _unique_neighbor_entity_idx[i_entity+1];
+        // printf("beg_write = %i | curr_proc = %i | curr_part = %i | curr_entity = %i \n", beg_write, curr_proc, curr_part, curr_entity);
+        _unique_neighbor_entity[beg_write  ] = curr_proc;
+        _unique_neighbor_entity[beg_write+1] = curr_part;
+        _unique_neighbor_entity[beg_write+2] = curr_entity;
+        _unique_neighbor_entity[beg_write+3] = curr_inte;
+
+        /* Increment the new counter */
+        _unique_neighbor_entity_idx[i_entity+1]++;
+        _unique_neighbor_entity_n  [i_entity  ]++;
+      }
+    }
+  }
+
+  _unique_neighbor_entity = realloc(_unique_neighbor_entity, 4 * neighbor_entity_idx[n_entity] * sizeof(int));
+
+  *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
+  *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
+  *unique_neighbor_entity     = _unique_neighbor_entity;
+  free(order);
+}
+
+
+void
+triplet_to_quadruplet
+(
+  int   size,
+  int  *triplet,
+  int  *array,
+  int **quadruplet
+)
+{
+  int *_quadruplet = malloc(4 * size * sizeof(int));
+  for(int i = 0; i < size; ++i) {
+    _quadruplet[4*i  ] = triplet[3*i  ];
+    _quadruplet[4*i+1] = triplet[3*i+1];
+    _quadruplet[4*i+2] = triplet[3*i+2];
+    _quadruplet[4*i+3] = array  [i];
+  }
+
+
+  *quadruplet = _quadruplet;
+}
+
+void
+quadruplet_to_triplet_and_array
+(
+  int   size,
+  int  *quadruplet,
+  int **array,
+  int **triplet
+)
+{
+  int *_triplet = malloc(3 * size * sizeof(int));
+  int *_array   = malloc(    size * sizeof(int));
+  for(int i = 0; i < size; ++i) {
+    _triplet[3*i  ] = quadruplet[4*i  ];
+    _triplet[3*i+1] = quadruplet[4*i+1];
+    _triplet[3*i+2] = quadruplet[4*i+2];
+    _array  [i    ] = quadruplet[4*i+3];
+  }
+
+
+  *triplet = _triplet;
+  *array   = _array;
+}
+
 
 static
 void
@@ -917,14 +1104,18 @@ _create_cell_graph_comm
               _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
               _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
               _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
+              // _neighbor_desc[4*idx_write+3] = i_interface;            // i_interface
             }
           }
         }
       }
 
       free(_neighbor_n);
-      PDM_log_trace_array_int(_neighbor_idx , part_ext->n_entity_bound[i_part+shift_part]+1, "_neighbor_idx::");
-      PDM_log_trace_array_int(_neighbor_desc , 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]], "_neighbor_desc::");
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(_neighbor_idx , part_ext->n_entity_bound[i_part+shift_part]+1, "_neighbor_idx::");
+        PDM_log_trace_array_int(_neighbor_desc , 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]], "_neighbor_desc::");
+      }
 
 
     }
@@ -1091,7 +1282,7 @@ _create_cell_graph_comm
   /*
    * Panic verbose
    */
-  if(0 == 1) {
+  if(1 == 1) {
     shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
@@ -1126,13 +1317,6 @@ _create_cell_graph_comm
   }
   // exit(1);
 
-  /*
-   *   Pour la reconstruction des ghost cell
-   *     -> On peut à mon avis faire une astuce pour faire 1 distant_neighbor avec
-   *         "1 voisins = 1 rangées "
-   *     -> Assez pratique car par partitione on va récupérer une liste de rangés également -_-
-   *     -> Pb possible quand une cellule apparait dans une partition de rang 2 et dans une autre en rang 1
-   */
 
 }
 
