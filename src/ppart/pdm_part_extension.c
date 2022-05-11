@@ -4511,6 +4511,74 @@ PDM_part_extension_ln_to_gn_get
   return n_entity;
 }
 
+/**
+ *
+ * \brief Get global ids
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
+int
+PDM_part_extension_interface_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ int                     **interface_no
+)
+{
+  int n_entity = -1;
+  int shift_part = part_ext->n_part_idx[i_domain];
+  switch(mesh_entity)
+  {
+    case PDM_MESH_ENTITY_CELL:
+    {
+      int n_cell    = part_ext->parts[i_domain][i_part].n_cell;
+      n_entity      = part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][n_cell];
+      *interface_no = part_ext->cell_cell_interface_pruned   [shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_FACE:
+    {
+      int n_face    = part_ext->parts[i_domain][i_part].n_face;
+      n_entity      = part_ext->face_face_extended_idx[shift_part+i_part][n_face];
+      *interface_no = part_ext->face_face_interface   [shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_EDGE:
+    {
+      int n_edge    = part_ext->parts[i_domain][i_part].n_edge;
+      n_entity      = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
+      *interface_no = part_ext->edge_edge_interface   [shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_VERTEX:
+    {
+      int n_vtx   =  part_ext->parts[i_domain][i_part].n_vtx;
+      n_entity      = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
+      *interface_no = part_ext->vtx_vtx_interface   [shift_part+i_part];
+    }
+    break;
+
+  default :
+    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    break;
+
+  }
+
+  return n_entity;
+}
 
 /**
  *

@@ -789,11 +789,20 @@ int main
         }
       }
 
-      if(post) {
+      int *border_vtx_interface  = NULL;
+      int *border_cell_interface = NULL;
+      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_interface);
+      PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL  , &border_cell_interface);
+
+      if(1 == 1) {
         PDM_log_trace_array_long(border_vtx_ln_to_gn , n_vtx_extended , "border_vtx_ln_to_gn :: ");
         PDM_log_trace_array_long(border_cell_ln_to_gn, n_cell_extended, "border_cell_ln_to_gn :: ");
+
+        PDM_log_trace_array_int (border_vtx_interface , n_vtx_extended , "border_vtx_interface :: ");
+        PDM_log_trace_array_int (border_cell_interface, n_cell_extended, "border_cell_interface :: ");
         PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn :: ");
       }
+
 
 
       // PDM_g_num_t* border_face_ln_to_gn;
