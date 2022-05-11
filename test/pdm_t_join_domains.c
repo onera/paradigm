@@ -451,9 +451,9 @@ int main
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
-  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL",
-                                       NULL,
-                                       "PDM_PART_RENUM_FACE_NONE");
+  // PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL",
+  //                                      NULL,
+  //                                      "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_run_ppart(mpart_id);
 
 
@@ -881,8 +881,8 @@ int main
       //                                      n_edge_extended,
       //                                      "edge_vtx_extented");
 
-      // PDM_log_trace_array_long(concat_vtx_ln_to_gn , n_vtx_tot , "concat_vtx_ln_to_gn :: ");
-      // PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
+      PDM_log_trace_array_long(concat_vtx_ln_to_gn , n_vtx_tot , "concat_vtx_ln_to_gn :: ");
+      PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
 
       PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                        PDM_GEOMETRY_KIND_VOLUMIC,
@@ -923,7 +923,40 @@ int main
       free(concat_vtx_ln_to_gn );
       free(concat_cell_ln_to_gn);
       free(concat_vtx_coord    );
+
+
+      pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
+                                                          PDM_GEOMETRY_KIND_VOLUMIC,
+                                                          1, // n_part
+                                                          &n_vtx_extended,
+                                                          &border_vtx_ln_to_gn,
+                                                          &n_cell_extended,
+                                                          &border_cell_ln_to_gn,
+                                                          NULL);
+
+      id_section = 0;
+      t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
+      PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+
+      sprintf(filename, "out_volumic_only_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+
+      PDM_vtk_write_std_elements(filename,
+                                 n_vtx_extended,
+                                 vtx_coord_extended,
+                                 border_vtx_ln_to_gn,
+                                 t_elt_loc,
+                                 n_cell_extended,
+                                 elmt_vtx,
+                                 border_cell_ln_to_gn,
+                                 1,
+                                 field_name,
+                (const int **)   field);
+
+      PDM_part_mesh_nodal_elmts_free(pmne_vol);
+
+
       free(is_extend    );
+
 
     }
     shift_part += pn_n_part[i_dom];

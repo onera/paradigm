@@ -421,6 +421,8 @@ const size_t           stride,
     }
   }
 
+  free(last_value);
+
   return new_size;
 }
 

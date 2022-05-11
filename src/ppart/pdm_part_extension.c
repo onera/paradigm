@@ -2465,12 +2465,17 @@ _generate_extended_partition_connectivity
   /*
    * New method by doublet
    */
-  PDM_g_num_t *_border_entity2_ln_to_gn_and_interface = (PDM_g_num_t * ) malloc( 2 * s_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t *_border_entity2_ln_to_gn_and_interface     = (PDM_g_num_t * ) malloc( 2 * s_tot * sizeof(PDM_g_num_t));
+  // PDM_g_num_t *init_border_entity2_ln_to_gn_and_interface = (PDM_g_num_t * ) malloc( 2 * s_tot * sizeof(PDM_g_num_t));
   int         *order_tmp                              = (int         * ) malloc(     s_tot * sizeof(int        ));
+  int         *border_gentity1_entity2_interface      = (int         * ) malloc(     s_tot * sizeof(int        ));
   for(int i = 0; i < n_neight_tot; ++i) {
     for(int j = _border_gentity1_entity2_idx[i]; j < _border_gentity1_entity2_idx[i+1]; ++j) {
-      _border_entity2_ln_to_gn_and_interface[2*j  ] = PDM_ABS(border_gentity1_entity2  [j]);
-      _border_entity2_ln_to_gn_and_interface[2*j+1] =         entity1_entity1_interface[i];
+      _border_entity2_ln_to_gn_and_interface    [2*j  ] = PDM_ABS(border_gentity1_entity2  [j]);
+      _border_entity2_ln_to_gn_and_interface    [2*j+1] =         entity1_entity1_interface[i];
+      // init_border_entity2_ln_to_gn_and_interface[2*j  ] = PDM_ABS(border_gentity1_entity2  [j]);
+      // init_border_entity2_ln_to_gn_and_interface[2*j+1] =         entity1_entity1_interface[i];
+      border_gentity1_entity2_interface     [j    ] =         entity1_entity1_interface[i];
     }
   }
 
@@ -2479,15 +2484,16 @@ _generate_extended_partition_connectivity
   // _border_entity2_ln_to_gn               = realloc(_border_entity2_ln_to_gn              ,     n_unique_test * sizeof(PDM_g_num_t));
 
   PDM_g_num_t *_border_entity2_ln_to_gn = malloc( n_unique_test * sizeof(PDM_g_num_t));
-  int         *border_entity2_iterface  = malloc( n_unique_test * sizeof(int        ));
+  // int         *border_entity2_iterface  = malloc( n_unique_test * sizeof(int        ));
 
   /*
    * Recopy in seperated array
    */
   for(int i = 0; i < n_unique_test; ++i) {
     _border_entity2_ln_to_gn[i] = _border_entity2_ln_to_gn_and_interface[2*i];
-    border_entity2_iterface [i] = _border_entity2_ln_to_gn_and_interface[2*i+1];
+    // border_entity2_iterface [i] = _border_entity2_ln_to_gn_and_interface[2*i+1];
   }
+  // free(border_entity2_iterface);
   int n_entity2_unique = n_unique_test;
 
   if(1 == 1) {
@@ -2498,7 +2504,6 @@ _generate_extended_partition_connectivity
   PDM_order_array(s_tot, sizeof(int), order_tmp, border_order);
 
   free(order_tmp );
-  free(_border_entity2_ln_to_gn_and_interface);
 
 
   int* border_entity1_order  = (int *) malloc( s_tot * sizeof(int));
@@ -2508,6 +2513,7 @@ _generate_extended_partition_connectivity
   int* border_entity2_first_unique = (int *) malloc( n_entity2_unique * sizeof(int));
 
   PDM_g_num_t last  = 0; // Gn is never 0 because start as 1
+  int last_inter    = -1;
   int idx_unique = -1;
   int idx_first  = 0;
   for(int i = 0; i < s_tot; ++i) {
@@ -2515,9 +2521,11 @@ _generate_extended_partition_connectivity
     int pos = PDM_binary_search_gap_int(old_order, _border_gentity1_entity2_idx, n_neight_tot+1);
     border_entity1_order[i] = pos;
 
-    if(last != PDM_ABS(border_gentity1_entity2[old_order])) {
+    if( (last != PDM_ABS(border_gentity1_entity2[old_order]) ) ||
+        (last == PDM_ABS(border_gentity1_entity2[old_order]) && last_inter != border_gentity1_entity2_interface[old_order])) {
       idx_unique = i;
-      last = PDM_ABS(border_gentity1_entity2[old_order]);
+      last       = PDM_ABS(border_gentity1_entity2[old_order]);
+      last_inter = border_gentity1_entity2_interface[old_order];
       border_entity2_first_unique[idx_first++] = i;
     }
     border_entity2_unique[old_order] = idx_unique;
@@ -2560,9 +2568,15 @@ _generate_extended_partition_connectivity
   int idx_write = 0;
 
   for(int i_entity2 = 0; i_entity2 < n_entity2_unique; ++i_entity2) {
-    PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn[i_entity2];
+    // PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn[i_entity2];
+    // int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
+
+    PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn_and_interface[2*i_entity2  ];
+    int         i_interf  = _border_entity2_ln_to_gn_and_interface[2*i_entity2+1];
+
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
-    if(pos == -1) {
+
+    if(pos == -1 || i_interf > -1) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
       // printf(" [%i] found [%i] = %i\n", i_part+shift_part, i_entity2, pos);
 
@@ -2590,12 +2604,14 @@ _generate_extended_partition_connectivity
       _entity2_entity2_extended [3*idx_write  ] = opp_proc;
       _entity2_entity2_extended [3*idx_write+1] = opp_part;
       _entity2_entity2_extended [3*idx_write+2] = PDM_ABS(opp_entity2)-1;
-      _entity2_entity2_interface[  idx_write  ] = -40;
+      _entity2_entity2_interface[  idx_write  ] = i_interf;
       idx_write++;
     }
 
   }
   // printf(" ----- \n");
+  free(_border_entity2_ln_to_gn_and_interface);
+  free(border_gentity1_entity2_interface);
 
   for(int i = 1; i < n_entity2; ++i) {
     _entity2_entity2_extended_idx[i+1] = _entity2_entity2_extended_idx[i];
@@ -2646,30 +2662,12 @@ _generate_extended_partition_connectivity
       assert(pos_interior  != -1);
       assert(pos_interior2 != -1);
 
-      // int old_order_entity1_entity2 = order_entity1_entity2[pos_interior];
-
-      // Keep it to check
-      // int sgn       = PDM_SIGN(gentity1_entity2[old_order_entity1_entity2]);
-      // int i_entity2 = PDM_ABS ( entity1_entity2[old_order_entity1_entity2]);
-      // int i_unique  = border_entity2_unique[i];
-      // int old_order = border_order[i_unique];
-      // int g_sgn     = PDM_SIGN(border_gentity1_entity2[old_order]);
-      // PDM_g_num_t g_num_check = border_gentity1_entity2[old_order];
-      // printf(" Border face comming from interior %i - %i | i_unique = %i | old_order = %i | g_sgn = %i | sgn = %i | g_num_check = %i | g_entity2 = %i\n", pos, idx, i_unique, old_order, g_sgn, sgn, (int)g_num_check, (int)g_entity2);
-      // printf("OKOK border_gentity1_entity2[%i] = %i for g_entity2 = %i \n", old_order, border_gentity1_entity2[old_order], g_entity2);
-
-      // border_lentity1_entity2[idx++] = sgn * ( order[pos_interior] + 1 ); // Car le tableau est trié pas comme la partition
-      // ON MET FORCEMENT L'OPPOSE
-      // printf(" Rebuild from interior [%i] with gnum = "PDM_FMT_G_NUM" and pos : %i \n ", i, g_entity2, pos_interior);
-      // OLD -> FOnctionne pas pour le edge_vtx
-      // border_lentity1_entity2[idx++] = - entity1_entity2[old_order_entity1_entity2]; // Car le tableau est trié pas comme la partition
-
       int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
       int old_pos = order[pos_interior2];
       border_lentity1_entity2[idx++] = sgn * ( old_pos + 1 );
 
       // PDM_g_num_t old_g_num = _sorted_entity2_ln_to_gn[pos_interior2];
-      // printf("Cas 1 : border_lentity1_entity2 [%i] | Cas 2  : %i \n", - entity1_entity2[old_order_entity1_entity2], sgn * ( old_pos + 1 ));
+      // printf("Cas 1 : border_lentity1_entity2 [%i] | Cas 2  : %i \n", idx-1, sgn * ( old_pos + 1 ));
       // printf("Cas 1 : border_lentity1_entity2 [%i] \n", sgn * old_g_num);
 
     }
@@ -3162,6 +3160,7 @@ _rebuild_connectivity_cell_face
   free(cell_face    );
   free(face_ln_to_gn);
   free(cell_ln_to_gn);
+  // exit(1);
 }
 
 
