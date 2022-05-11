@@ -80,6 +80,7 @@ struct _pdm_part_extension_t {
 
   int  **cell_cell_extended_pruned_idx;
   int  **cell_cell_extended_pruned;
+  int  **cell_cell_interface_pruned;
 
   int  *n_tot_part_by_domain;
 
