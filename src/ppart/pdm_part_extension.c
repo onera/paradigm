@@ -2403,7 +2403,6 @@ _generate_extended_partition_connectivity
     PDM_log_trace_array_long(border_gentity1_entity2     , s_tot         , "border_gentity1_entity2  ::");
   }
 
-  PDM_g_num_t* _border_entity2_ln_to_gn = (PDM_g_num_t * ) malloc( s_tot * sizeof(PDM_g_num_t));
 
   /*
    * Prepare and order the current entity ln_to_gn
@@ -2432,34 +2431,75 @@ _generate_extended_partition_connectivity
     PDM_log_trace_array_int (order_entity1_entity2, entity1_entity2_idx[n_entity1], "order_entity1_entity2::");
   }
 
-  /*
-   * Do the same but for the boundary limit
-   */
-  int* border_order = (int * ) malloc( s_tot * sizeof(int));
-  for(int i = 0; i < s_tot; ++i) {
-    _border_entity2_ln_to_gn[i] = PDM_ABS(border_gentity1_entity2[i]);
-  }
-
   // Ce qui compte ici c'est le order de la cellule !!!!
+  int* border_order = (int * ) malloc( s_tot * sizeof(int));
   for(int i = 0; i < n_neight_tot; ++i) {
     for(int j = _border_gentity1_entity2_idx[i]; j < _border_gentity1_entity2_idx[i+1]; ++j) {
       border_order[j] = j;
     }
   }
 
+  /*
+   * Do the same but for the boundary limit
+   */
+  // PDM_g_num_t* _border_entity2_ln_to_gn = (PDM_g_num_t * ) malloc( s_tot * sizeof(PDM_g_num_t));
+  // for(int i = 0; i < s_tot; ++i) {
+  //   _border_entity2_ln_to_gn[i] = PDM_ABS(border_gentity1_entity2[i]);
+  // }
+
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int (border_order            , s_tot, "border_order::");
+  //   PDM_log_trace_array_long(_border_entity2_ln_to_gn, s_tot, "_border_entity2_ln_to_gn (avant tri) ::");
+  // }
+
+  // int n_entity2_unique = PDM_inplace_unique_long(_border_entity2_ln_to_gn, border_order, 0, s_tot-1);
+  // _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_unique * sizeof(PDM_g_num_t));
+  // *border_entity2_ln_to_gn = _border_entity2_ln_to_gn;
+
+  // int *old_to_new_order_border = (int *) malloc (s_tot * sizeof(int));
+  // for(int i = 0; i < s_tot; i++) {
+  //   old_to_new_order_border[border_order[i]] = i;
+  // }
+
+
+  /*
+   * New method by doublet
+   */
+  PDM_g_num_t *_border_entity2_ln_to_gn_and_interface = (PDM_g_num_t * ) malloc( 2 * s_tot * sizeof(PDM_g_num_t));
+  int         *order_tmp                              = (int         * ) malloc(     s_tot * sizeof(int        ));
+  for(int i = 0; i < n_neight_tot; ++i) {
+    for(int j = _border_gentity1_entity2_idx[i]; j < _border_gentity1_entity2_idx[i+1]; ++j) {
+      _border_entity2_ln_to_gn_and_interface[2*j  ] = PDM_ABS(border_gentity1_entity2  [j]);
+      _border_entity2_ln_to_gn_and_interface[2*j+1] =         entity1_entity1_interface[i];
+    }
+  }
+
+  int n_unique_test = PDM_order_inplace_unique_long(s_tot, 2, _border_entity2_ln_to_gn_and_interface, order_tmp );
+  _border_entity2_ln_to_gn_and_interface = realloc(_border_entity2_ln_to_gn_and_interface, 2 * n_unique_test * sizeof(PDM_g_num_t));
+  // _border_entity2_ln_to_gn               = realloc(_border_entity2_ln_to_gn              ,     n_unique_test * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t *_border_entity2_ln_to_gn = malloc( n_unique_test * sizeof(PDM_g_num_t));
+  int         *border_entity2_iterface  = malloc( n_unique_test * sizeof(int        ));
+
+  /*
+   * Recopy in seperated array
+   */
+  for(int i = 0; i < n_unique_test; ++i) {
+    _border_entity2_ln_to_gn[i] = _border_entity2_ln_to_gn_and_interface[2*i];
+    border_entity2_iterface [i] = _border_entity2_ln_to_gn_and_interface[2*i+1];
+  }
+  int n_entity2_unique = n_unique_test;
+
   if(1 == 1) {
-    PDM_log_trace_array_int (border_order            , s_tot, "border_order::");
-    PDM_log_trace_array_long(_border_entity2_ln_to_gn, s_tot, "_border_entity2_ln_to_gn (avant tri) ::");
+    PDM_log_trace_array_long(_border_entity2_ln_to_gn_and_interface, 2 * n_unique_test, "_border_entity2_ln_to_gn_and_interface ::");
   }
 
-  int n_entity2_unique = PDM_inplace_unique_long(_border_entity2_ln_to_gn, border_order, 0, s_tot-1);
-  _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_unique * sizeof(PDM_g_num_t));
-  *border_entity2_ln_to_gn = _border_entity2_ln_to_gn;
+  /* Apply sort */
+  PDM_order_array(s_tot, sizeof(int), order_tmp, border_order);
 
-  int *old_to_new_order_border = (int *) malloc (s_tot * sizeof(int));
-  for(int i = 0; i < s_tot; i++) {
-    old_to_new_order_border[border_order[i]] = i;
-  }
+  free(order_tmp );
+  free(_border_entity2_ln_to_gn_and_interface);
+
 
   int* border_entity1_order  = (int *) malloc( s_tot * sizeof(int));
   int* border_entity2_unique = (int *) malloc( s_tot * sizeof(int));
@@ -2569,7 +2609,7 @@ _generate_extended_partition_connectivity
     PDM_log_trace_array_int(_entity2_entity2_extended    , 3 * n_entity2_extended, "_entity2_entity2_extended::");
   }
 
-  free(old_to_new_order_border);
+  // free(old_to_new_order_border);
   // exit(1);
 
   /*
