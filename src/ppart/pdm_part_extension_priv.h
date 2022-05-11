@@ -73,6 +73,7 @@ struct _pdm_part_extension_t {
   int ***cell_cell_extended_idx;
   int ***cell_cell_extended_n;
   int ***cell_cell_extended;
+  int ***cell_cell_interface;
   int ***unique_order_cell_cell_extended;
   int  **n_unique_order_cell_cell_extended;
   int  **border_cell_list;
