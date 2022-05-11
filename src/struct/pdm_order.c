@@ -179,7 +179,7 @@ _lexicographic_compare_long
   if(res == 1 && stride > 1) {
     return _lexicographic_compare_long(&x[1], &y[1], stride-1);
   }
-  return x[0] < y[0];
+  return x[0] == y[0];
 }
 
 inline
@@ -379,6 +379,52 @@ PDM_order_binary_search_long
   }
 
 }
+
+
+int
+PDM_order_inplace_unique_long
+(
+const int              n_entity,
+const size_t           stride,
+      PDM_g_num_t     *array,
+      int             *order
+)
+{
+  if(n_entity == 0) {
+    return 0;
+  }
+
+  PDM_order_lnum_s(array, stride, order, n_entity);
+
+  /* Apply sort */
+  PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
+
+  int *last_value = malloc(stride * sizeof(int));
+
+  int new_size  = 1;
+  int idx_write = 1;
+  for(int j = 0; j < (int) stride; ++j) {
+    last_value[j] = array[j];
+  }
+
+  // PDM_log_trace_array_long(array, n_entity * stride, "array :: ");
+
+  for(int i = 1; i < n_entity; i++){
+    int is_same = _lexicographic_compare_long(last_value, &array[stride*i], stride);
+    if(is_same == 0){ // N'est pas le meme
+      for(int j = 0; j < (int) stride; ++j) {
+        last_value[j] = array[stride*i+j];
+        array[stride*idx_write+j] = last_value[j];
+      }
+      new_size++;
+      idx_write++;
+    }
+  }
+
+  return new_size;
+}
+
+
 
 #ifdef __cplusplus
 }
