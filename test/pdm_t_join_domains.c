@@ -22,6 +22,7 @@
 #include "pdm_vtk.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_logging.h"
+#include "pdm_order.h"
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_domain_interface.h"
@@ -223,6 +224,41 @@ int main
  char *argv[]
 )
 {
+  // PDM_MPI_Init(&argc, &argv);
+
+  // int size          = 4;
+  // int array[2*4] = {4, 0, 2, 1, 2, 0, 1, 1};
+  // int* lorder = malloc(size * sizeof(int));
+  // PDM_order_lnum_s(array, 2, lorder, size);
+
+  // PDM_order_array(size, 2 * sizeof(int), lorder, array);
+
+  // PDM_log_trace_array_int(lorder,   size, "lorder : ");
+  // PDM_log_trace_array_int(array, 2 * size, "Sorted array : ");
+
+
+  // // Search
+  // int elt_to_find1[] = {1, 1};
+  // int elt_to_find2[] = {2, 0};
+  // int elt_to_find3[] = {2, 1};
+  // int elt_to_find4[] = {4, 0};
+  // int elt_to_find5[] = {4, 1};
+  // int pos1 = PDM_order_binary_search_long(elt_to_find1, array, 2, size);
+  // int pos2 = PDM_order_binary_search_long(elt_to_find2, array, 2, size);
+  // int pos3 = PDM_order_binary_search_long(elt_to_find3, array, 2, size);
+  // int pos4 = PDM_order_binary_search_long(elt_to_find4, array, 2, size);
+  // int pos5 = PDM_order_binary_search_long(elt_to_find5, array, 2, size);
+
+  // printf("pos1 = %i \n", pos1);
+  // printf("pos2 = %i \n", pos2);
+  // printf("pos3 = %i \n", pos3);
+  // printf("pos4 = %i \n", pos4);
+  // printf("pos5 = %i \n", pos5);
+
+  // free(lorder);
+
+  // PDM_MPI_Finalize();
+  // return 0;
   /*
    *  Set default values
    */

@@ -95,12 +95,15 @@ struct _pdm_part_extension_t {
   /* Internal results */
   int **face_face_extended_idx;
   int **face_face_extended;
+  int **face_face_interface;
 
   int **edge_edge_extended_idx;
   int **edge_edge_extended;
+  int **edge_edge_interface;
 
   int **vtx_vtx_extended_idx;
   int **vtx_vtx_extended;
+  int **vtx_vtx_interface;
 
   /* Results */
   int **border_cell_face_idx;
