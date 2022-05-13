@@ -3517,7 +3517,7 @@ PDM_ddomain_interface_to_pdomain_interface
         }
 
 
-        if(0 == 1) {
+        if(1 == 1) {
           PDM_log_trace_array_int (precv_stride     [s_i_part] ,     _ln_interface[s_i_part], "precv_stride      ::");
           PDM_log_trace_array_long(_pentity_ln_to_gn           ,     _ln_interface[s_i_part], "_pentity_ln_to_gn ::");
           PDM_log_trace_array_int (precv_entity_desc[s_i_part] , 3 * n_data                 , "precv_entity_desc ::");
@@ -3546,7 +3546,7 @@ PDM_ddomain_interface_to_pdomain_interface
           int pos = -1;
           int sgn =  0;
 
-          // Brute force because useless to sort (list is small ~2 )
+          // Brute force because useless to sort (list is small =2 )
           for(int k = 0; k < 2 * precv_stride_gnum[s_i_part][i]; ++k) {
             PDM_g_num_t gnum = PDM_ABS(precv_gnum[s_i_part][idx_read+k]);
             if(gnum_to_find == gnum) {
@@ -3556,21 +3556,27 @@ PDM_ddomain_interface_to_pdomain_interface
           }
           precv_sens[i] = sgn;
 
-          // log_trace(" i = %i | pos = %i | sgn = %i \n", i, pos, sgn);
+          // log_trace(" lnum = %i | gnum_to_find = %i | idx_read = %i | idx_write = %i \n", lnum, (int) gnum_to_find, idx_read, idx_write);
+          // log_trace(" i = %i | pos = %i | sgn = %i  \n", i, pos, sgn);
+          // PDM_log_trace_array_int(order, 2 * precv_stride_gnum[s_i_part][i], "order :: ");
           assert(pos != -1);
 
           int idx_first = idx_write;
           for(int k = 0; k < precv_stride[s_i_part][i]; ++k) {
             int idx_read2 = idx_read + k;
-            if(k != pos ) {
+            int i_cur_proc   = precv_entity_desc[s_i_part][3*(idx_read2)  ];
+            int i_cur_part   = precv_entity_desc[s_i_part][3*(idx_read2)+1];
+            int i_cur_entity = precv_entity_desc[s_i_part][3*(idx_read2)+2];
+
+            if(i_cur_proc == i_rank && i_cur_part == i_part + shift_domain && i_cur_entity == lnum ) {
+              precv_entity_desc_post[3*idx_first  ] = precv_entity_desc[s_i_part][3*(idx_read2)  ];
+              precv_entity_desc_post[3*idx_first+1] = precv_entity_desc[s_i_part][3*(idx_read2)+1];
+              precv_entity_desc_post[3*idx_first+2] = precv_entity_desc[s_i_part][3*(idx_read2)+2];
+            } else {
               precv_entity_desc_post[3*(idx_write+1)  ] = precv_entity_desc[s_i_part][3*(idx_read2)  ];
               precv_entity_desc_post[3*(idx_write+1)+1] = precv_entity_desc[s_i_part][3*(idx_read2)+1];
               precv_entity_desc_post[3*(idx_write+1)+2] = precv_entity_desc[s_i_part][3*(idx_read2)+2];
               idx_write++;
-            } else {
-              precv_entity_desc_post[3*idx_first  ] = precv_entity_desc[s_i_part][3*(idx_read2)  ];
-              precv_entity_desc_post[3*idx_first+1] = precv_entity_desc[s_i_part][3*(idx_read2)+1];
-              precv_entity_desc_post[3*idx_first+2] = precv_entity_desc[s_i_part][3*(idx_read2)+2];
             }
           }
 
@@ -3580,6 +3586,7 @@ PDM_ddomain_interface_to_pdomain_interface
 
         // PDM_log_trace_array_int(precv_entity_desc_post, 3 * n_data, "precv_entity_desc ::");
         free(_pentity_ln_to_gn);
+        // free(order);
 
         // interface_ids_idx is transfer to PDM_part_domain_interface
         // Set ptr properly :

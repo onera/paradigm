@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
@@ -803,7 +804,34 @@ int main
         PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn :: ");
       }
 
+      /* Apply periodicity */
+      int n_interface = PDM_part_domain_interface_n_interface_get(pdi);
+      double **translation_vector = malloc(n_interface * sizeof(double * ));
+      for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+        translation_vector[i_interf] = NULL;
+        PDM_part_domain_interface_translation_get(pdi, i_interf, &translation_vector[i_interf]);
+      }
 
+      char filename_pts[999];
+      sprintf(filename_pts, "out_vtx_extended_raw_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      PDM_vtk_write_point_cloud(filename_pts,
+                                n_vtx_extended,
+                                vtx_coord_extended,
+                                NULL,
+                                border_vtx_interface);
+      for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+        int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
+        for(int k = 0; k < 3; ++k) {
+          vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
+        }
+      }
+
+      sprintf(filename_pts, "out_vtx_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      PDM_vtk_write_point_cloud(filename_pts,
+                                n_vtx_extended,
+                                vtx_coord_extended,
+                                NULL,
+                                border_vtx_interface);
 
       // PDM_g_num_t* border_face_ln_to_gn;
       // PDM_g_num_t* border_edge_ln_to_gn;
@@ -966,6 +994,10 @@ int main
 
       free(is_extend    );
 
+      for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+        free(translation_vector[i_interf]);
+      }
+      free(translation_vector);
 
     }
     shift_part += pn_n_part[i_dom];
