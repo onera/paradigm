@@ -854,6 +854,221 @@ _create_cell_cell_graph
 
 static
 void
+_warm_up_domain_interface
+(
+  PDM_part_extension_t *part_ext,
+  PDM_bound_type_t      interface_kind
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+  PDM_MPI_Comm_size(part_ext->comm, &n_rank);
+
+  // int n_tot_all_domain = 0;
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    // n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+
+  int         **neighbor_n       = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_idx     = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_desc    = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int          *n_entity         = (int          *) malloc( n_part_loc_all_domain * sizeof(int          ) );
+
+
+  int shift_part   = 0;
+  int shift_part_g = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+    int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
+
+    /* First loop to count */
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      n_entity[i_part+shift_part] = 0;
+
+      if(interface_kind == PDM_BOUND_TYPE_VTX) {
+        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      } else if( interface_kind == PDM_BOUND_TYPE_EDGE) {
+        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+      } else if( interface_kind == PDM_BOUND_TYPE_FACE) {
+        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
+      }
+
+
+      int            n_interface        = 0;
+      int           *interface_pn       = NULL;
+      PDM_g_num_t  **interface_ln_to_gn = NULL;
+      int          **interface_sgn      = NULL;
+      int          **interface_ids      = NULL;
+      int          **interface_ids_idx  = NULL;
+      int          **interface_dom      = NULL;
+      PDM_part_domain_interface_get(part_ext->pdi,
+                                    interface_kind,
+                                    i_domain,
+                                    i_part,
+                                    &interface_pn,
+                                    &interface_ln_to_gn,
+                                    &interface_sgn,
+                                    &interface_ids,
+                                    &interface_ids_idx,
+                                    &interface_dom);
+      n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+
+      /* Fill */
+      neighbor_idx [i_part+shift_part] = (int         *) malloc(    (n_entity[i_part+shift_part] + 1) * sizeof(int        ));
+      neighbor_n   [i_part+shift_part] = (int         *) malloc(    (n_entity[i_part+shift_part]    ) * sizeof(int        ));
+
+      int* _neighbor_n   = neighbor_n  [i_part+shift_part];
+      int* _neighbor_idx = neighbor_idx[i_part+shift_part];
+
+      for(int i = 0; i < n_entity[i_part+shift_part]; ++i) {
+        _neighbor_n[i] = 0;
+      }
+
+      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+          // int i_proc_cur   = -1;
+          // int i_part_cur   = -1;
+          int i_entity_cur = -1;
+          int found        = 0;
+          int idx_current  = -1;
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+              // i_proc_cur   = i_proc_opp;
+              // i_part_cur   = i_part_opp;
+              i_entity_cur = i_entity_opp;
+              idx_current  = j;
+              assert(found == 0);
+              found = 1;
+              break;
+            }
+          }
+
+
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            // int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            // int i_part_opp   = interface_ids[i_interface][3*j+1];
+            // int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(idx_current != j) {
+              _neighbor_n[i_entity_cur] += 1;
+            }
+          }
+        }
+      }
+
+      /* Compute index */
+      _neighbor_idx[0] = 0;
+      for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
+        _neighbor_idx[i_entity+1] = _neighbor_idx[i_entity] + _neighbor_n[i_entity];
+        _neighbor_n[i_entity] = 0;
+      }
+
+      neighbor_desc[i_part+shift_part]  = (int *) malloc( 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] * sizeof(int) );
+      int* _neighbor_desc      = part_ext->neighbor_desc     [i_part+shift_part];
+
+      /*
+       * Add graph du to connectivy between domain
+       */
+      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+
+          // Search the first in list that is in current part/proc
+          // int i_proc_cur   = -1;
+          // int i_part_cur   = -1;
+          int i_entity_cur = -1;
+          int found        = 0;
+          int idx_current  = -1;
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+              // i_proc_cur   = i_proc_opp;
+              // i_part_cur   = i_part_opp;
+              i_entity_cur = i_entity_opp;
+              idx_current  = j;
+              assert(found == 0);
+              found = 1;
+              break;
+            }
+          }
+
+          if(!found) {
+            continue;
+          }
+
+          assert(found == 1);
+
+          // Only add the opposite part of the graph
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(idx_current != j) {
+              // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+              int idx_write = _neighbor_idx[i_entity_cur] + _neighbor_n[i_entity_cur]++;
+              _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
+              _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
+              _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
+            }
+          }
+        }
+      }
+
+
+    }
+
+
+    shift_part   += part_ext->n_part              [i_domain];
+    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
+  }
+
+
+
+
+
+
+
+  /*
+   * Free
+   */
+
+  shift_part   = 0;
+  shift_part_g = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    /* First loop to count */
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      free(neighbor_idx [i_part+shift_part]);
+      free(neighbor_n   [i_part+shift_part]);
+      free(neighbor_desc[i_part+shift_part]);
+    }
+
+    shift_part   += part_ext->n_part              [i_domain];
+    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
+  }
+
+  free(neighbor_idx );
+  free(neighbor_n   );
+  free(neighbor_desc);
+  free(n_entity);
+
+}
+
+
+
+static
+void
 _create_cell_graph_comm
 (
   PDM_part_extension_t *part_ext
@@ -3897,6 +4112,11 @@ PDM_part_extension_compute
 
   // TODO : vtx_cell
   _create_cell_graph_comm(part_ext);
+
+  /*
+   * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
+   */
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX);
 
   /*
    * Create for first level the proper graph
