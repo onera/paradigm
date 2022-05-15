@@ -142,6 +142,9 @@ PDM_MPI_Comm                 comm
     dom_intrf->rotation_angle    [i_interface] = 0.;
   }
 
+  dom_intrf->interface_describe_by_face = 0;
+  dom_intrf->interface_describe_by_vtx  = 0;
+
   return dom_intrf;
 }
 
@@ -170,6 +173,7 @@ PDM_part_domain_interface_set
     dom_intrf->interface_ids_vtx     [i_domain][i_part] = interface_ids;
     dom_intrf->interface_ids_vtx_idx [i_domain][i_part] = interface_ids_idx;
     dom_intrf->interface_dom_vtx     [i_domain][i_part] = interface_dom;
+    dom_intrf->interface_describe_by_vtx  = 1;
   }
   else if (interface_kind == PDM_BOUND_TYPE_FACE) {
     dom_intrf->interface_pn_face      [i_domain][i_part] = interface_pn;
@@ -178,6 +182,7 @@ PDM_part_domain_interface_set
     dom_intrf->interface_ids_face     [i_domain][i_part] = interface_ids;
     dom_intrf->interface_ids_face_idx [i_domain][i_part] = interface_ids_idx;
     dom_intrf->interface_dom_face     [i_domain][i_part] = interface_dom;
+    dom_intrf->interface_describe_by_face  = 1;
   }
   else {
     PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
@@ -230,6 +235,22 @@ PDM_part_domain_interface_n_interface_get
 )
 {
   return dom_intrf->n_interface;
+}
+
+
+int
+PDM_part_domain_interface_exist_get
+(
+ PDM_part_domain_interface_t  *dom_intrf,
+ PDM_bound_type_t              interface_kind
+)
+{
+  if (interface_kind == PDM_BOUND_TYPE_VTX) {
+    return dom_intrf->interface_describe_by_vtx;
+  } else if (interface_kind == PDM_BOUND_TYPE_FACE) {
+    return dom_intrf->interface_describe_by_face;
+  }
+  return 0;
 }
 
 void

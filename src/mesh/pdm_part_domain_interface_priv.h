@@ -41,6 +41,9 @@ struct _pdm_part_domain_interface_t {
   int                            n_domain;
   int                           *n_part;
 
+  int                            interface_describe_by_face;
+  int                            interface_describe_by_vtx;
+
   PDM_domain_interface_mult_t     multidomain_intrf;
   int                          ***interface_pn_face;
   PDM_g_num_t                 ****interface_face_ln_to_gn;

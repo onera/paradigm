@@ -908,6 +908,19 @@ _warm_up_domain_interface
     n_current_lentity      = part_ext->n_cur_interface_face;
   }
 
+  for(int i = 0; i < n_part_loc_all_domain; ++i) {
+    opp_interface_and_gnum[i] = NULL;
+    current_lentity       [i] = NULL;
+    n_current_lentity     [i] = 0;
+  }
+
+  int is_descibe = PDM_part_domain_interface_exist_get(part_ext->pdi,
+                                                       interface_kind);
+
+  if(is_descibe == 0) {
+    return;
+  }
+
 
   int         **neighbor_n         = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
   int         **neighbor_interface = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
@@ -1154,16 +1167,13 @@ _warm_up_domain_interface
 
       n_current_lentity[i_part+shift_part] = _neighbor_idx[n_entity[i_part+shift_part]];
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * _neighbor_idx[n_entity[i_part+shift_part]] , "_opp_interface_and_gnum : ");
         PDM_log_trace_array_int(_current_lentity       ,      _neighbor_idx[n_entity[i_part+shift_part]] , "_current_lentity : ");
       }
 
       free(entity_ln_to_gn_opp[i_part+shift_part]);
 
-      /*
-       * Store
-       */
 
     }
     shift_part   += part_ext->n_part              [i_domain];
@@ -3230,6 +3240,9 @@ _rebuild_connectivity
   int                  **entity1_entity2_idx,
   int                  **entity1_entity2,
   PDM_g_num_t          **entity2_ln_to_gn,
+  int                   *n_cur_interface_entity2,
+  PDM_g_num_t          **opp_interface_and_gnum_entity2,
+  int                  **cur_interface_entity2,
   int                 ***border_lentity1_entity2_idx,
   int                 ***border_lentity1_entity2,
   int                 ***entity2_entity2_extended_idx,
@@ -3500,6 +3513,9 @@ _rebuild_connectivity_cell_face
                         cell_face_idx,
                         cell_face,
                         face_ln_to_gn,
+                        part_ext->n_cur_interface_face,
+                        part_ext->opp_interface_and_gnum_face,
+                        part_ext->cur_interface_face,
                        &part_ext->border_cell_face_idx,
                        &part_ext->border_cell_face,
                        &part_ext->face_face_extended_idx,
@@ -3563,6 +3579,9 @@ _rebuild_connectivity_face_vtx
                         face_vtx_idx,
                         face_vtx,
                         vtx_ln_to_gn,
+                        part_ext->n_cur_interface_vtx,
+                        part_ext->opp_interface_and_gnum_vtx,
+                        part_ext->cur_interface_vtx,
                        &part_ext->border_face_vtx_idx,
                        &part_ext->border_face_vtx,
                        &part_ext->vtx_vtx_extended_idx,
@@ -3623,6 +3642,9 @@ _rebuild_connectivity_face_edge
                         face_edge_idx,
                         face_edge,
                         edge_ln_to_gn,
+                        part_ext->n_cur_interface_edge,
+                        part_ext->opp_interface_and_gnum_edge,
+                        part_ext->cur_interface_edge,
                        &part_ext->border_face_edge_idx,
                        &part_ext->border_face_edge,
                        &part_ext->edge_edge_extended_idx,
@@ -3689,6 +3711,9 @@ _rebuild_connectivity_edge_vtx
                         edge_vtx_idx,
                         edge_vtx,
                         vtx_ln_to_gn,
+                        part_ext->n_cur_interface_vtx,
+                        part_ext->opp_interface_and_gnum_vtx,
+                        part_ext->cur_interface_vtx,
                        &part_ext->border_edge_vtx_idx,
                        &part_ext->border_edge_vtx,
                        &part_ext->vtx_vtx_extended_idx,
@@ -4260,7 +4285,9 @@ PDM_part_extension_compute
   /*
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
-  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX);
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
 
   /*
    * Create for first level the proper graph
@@ -4470,27 +4497,27 @@ PDM_part_extension_free
         // }
 
 
-        if(part_ext->opp_interface_and_gnum_face != NULL) {
+        if(part_ext->opp_interface_and_gnum_face[i_part+shift_part] != NULL) {
           free(part_ext->opp_interface_and_gnum_face[i_part+shift_part]);
         }
 
-        if(part_ext->opp_interface_and_gnum_edge != NULL) {
+        if(part_ext->opp_interface_and_gnum_edge[i_part+shift_part] != NULL) {
           free(part_ext->opp_interface_and_gnum_edge[i_part+shift_part]);
         }
 
-        if(part_ext->opp_interface_and_gnum_vtx != NULL) {
+        if(part_ext->opp_interface_and_gnum_vtx[i_part+shift_part] != NULL) {
           free(part_ext->opp_interface_and_gnum_vtx[i_part+shift_part]);
         }
 
-        if(part_ext->cur_interface_face != NULL) {
+        if(part_ext->cur_interface_face[i_part+shift_part] != NULL) {
           free(part_ext->cur_interface_face[i_part+shift_part]);
         }
 
-        if(part_ext->cur_interface_edge != NULL) {
+        if(part_ext->cur_interface_edge[i_part+shift_part] != NULL) {
           free(part_ext->cur_interface_vtx[i_part+shift_part]);
         }
 
-        if(part_ext->cur_interface_vtx != NULL) {
+        if(part_ext->cur_interface_vtx[i_part+shift_part] != NULL) {
           free(part_ext->cur_interface_vtx[i_part+shift_part]);
         }
 

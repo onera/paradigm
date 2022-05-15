@@ -86,6 +86,13 @@ PDM_part_domain_interface_n_interface_get
  PDM_part_domain_interface_t   *dom_intrf
 );
 
+int
+PDM_part_domain_interface_exist_get
+(
+ PDM_part_domain_interface_t  *dom_intrf,
+ PDM_bound_type_t              interface_kind
+);
+
 void
 PDM_part_domain_interface_free
 (
