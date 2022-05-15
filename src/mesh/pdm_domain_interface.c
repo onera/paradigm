@@ -2496,6 +2496,7 @@ PDM_domain_interface_translate_entity1_entity2
   free(l_interface_n);
 
   PDM_log_trace_array_int(key_data_size_approx, n_domain, "key_data_size_approx ::");
+  free(stride_one);
 
   /*
    * At this stage we identify all gnum of faces that concern by a domain interface
@@ -2503,21 +2504,29 @@ PDM_domain_interface_translate_entity1_entity2
    * For this we hash by connectivity
    */
   PDM_g_num_t mod_g_num_entity1 = entity1_per_block_offset[n_domain] / 4;
+  int          *n_lkey       = (int          *) malloc( n_domain * sizeof(int          ));
   PDM_g_num_t **key_ln_to_gn = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
   PDM_g_num_t **key_data     = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
   int         **key_data_n   = (int         **) malloc( n_domain * sizeof(int         *));
+  double      **key_weight   = (double      **) malloc( n_domain * sizeof(double      *));
+
+  stride_one   = (int         **) malloc( n_domain * sizeof(int         *));
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
     key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(PDM_g_num_t));
     key_data_n  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
+    key_weight  [i_domain] = (double      *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(double     ));
+    stride_one  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
 
     key_data    [i_domain] = (PDM_g_num_t *) malloc( key_data_size_approx[i_domain] * sizeof(PDM_g_num_t));
     // key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( n_entity2_intf[i_domain] * sizeof(PDM_g_num_t));
 
     PDM_g_num_t *_key_ln_to_gn         = key_ln_to_gn        [i_domain];
     int         *_key_data_n           = key_data_n          [i_domain];
+    int         *_stride_one           = stride_one          [i_domain];
     PDM_g_num_t *_key_data             = key_data            [i_domain];
+    double      *_key_weight           = key_weight          [i_domain];
 
     int         *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
     PDM_g_num_t *_dentity2_entity1     = dentity2_entity1    [i_domain];
@@ -2531,8 +2540,10 @@ PDM_domain_interface_translate_entity1_entity2
 
         int i_interf = entity2_intf_no[i_domain][idx_interf];
 
+        _stride_one  [idx_write] = 1;
         _key_data_n  [idx_write] = 0;
         _key_ln_to_gn[idx_write] = 0;
+        _key_weight  [idx_write] = 1.;
 
         int first_idx_write_data = idx_write_data;
 
@@ -2562,15 +2573,75 @@ PDM_domain_interface_translate_entity1_entity2
         // Sort it
         PDM_sort_long(&_key_data[first_idx_write_data], NULL, _key_data_n[idx_write]);
 
-
         idx_write++;
       }
     }
     assert(idx_write == entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]]);
 
+    n_lkey[i_domain] = idx_write;
     PDM_log_trace_array_long(_key_ln_to_gn, entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]], " _key_ln_to_gn ::");
 
   }
+
+
+
+  /*
+   * Create hash table to find for all entity2 the connection between them
+   */
+
+  PDM_part_to_block_t *ptb_hash = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_MERGE,
+                                                           1.,
+                                                           key_ln_to_gn,
+                                                           key_weight,
+                                                           n_lkey,
+                                                           n_domain,
+                                                           comm);
+
+  /*
+   * Exchange key data
+   */
+  int         *dkey_data_n = NULL;
+  PDM_g_num_t *dkey_data   = NULL;
+  int data_size = PDM_part_to_block_exch(ptb_hash,
+                                         sizeof(PDM_g_num_t),
+                                         PDM_STRIDE_VAR_INTERLACED,
+                                         -1,
+                                         key_data_n,
+                               (void **) key_data,
+                                         &dkey_data_n,
+                               (void **) &dkey_data);
+
+  int *dkey_strid   = NULL;
+  int *dkey_intf_no = NULL;
+  PDM_part_to_block_exch(ptb_hash,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         -1,
+                         stride_one,
+               (void **) entity2_intf_no,
+                         &dkey_strid,
+               (void **) &dkey_intf_no);
+
+  /*
+   * Post-Treatment :
+   *   - Dans chaque bucket de clé on a dkey_strid conflict
+   *   - Yon need to unified them
+   */
+
+
+
+
+
+
+  free(dkey_data_n);
+  free(dkey_data);
+  free(dkey_strid);
+  free(dkey_intf_no);
+
+
+
+  PDM_part_to_block_free(ptb_hash);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     free(key_ln_to_gn[i_domain]);
