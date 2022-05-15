@@ -2209,6 +2209,8 @@ PDM_domain_interface_translate_entity1_entity2
  PDM_MPI_Comm             comm
 )
 {
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   PDM_g_num_t *entity1_per_block_offset = _per_block_offset(n_domain, dn_entity1, comm);
   PDM_g_num_t *entity2_per_block_offset = _per_block_offset(n_domain, dn_entity2, comm);
@@ -2401,6 +2403,11 @@ PDM_domain_interface_translate_entity1_entity2
 
   printf("max_size  = %i ", max_size);
 
+  PDM_g_num_t** distrib_entity2 = (PDM_g_num_t**) malloc( n_domain * sizeof(PDM_g_num_t *));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    distrib_entity2[i_domain] = PDM_compute_entity_distribution(comm, dn_entity2[i_domain]);
+  }
+
 
   /*
    * For each face we receive for each vertex all possible interface
@@ -2507,6 +2514,7 @@ PDM_domain_interface_translate_entity1_entity2
   int          *n_lkey       = (int          *) malloc( n_domain * sizeof(int          ));
   PDM_g_num_t **key_ln_to_gn = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
   PDM_g_num_t **key_data     = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **gnum_entity2 = (PDM_g_num_t **) malloc( n_domain * sizeof(PDM_g_num_t *));
   int         **key_data_n   = (int         **) malloc( n_domain * sizeof(int         *));
   double      **key_weight   = (double      **) malloc( n_domain * sizeof(double      *));
 
@@ -2518,6 +2526,7 @@ PDM_domain_interface_translate_entity1_entity2
     key_data_n  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
     key_weight  [i_domain] = (double      *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(double     ));
     stride_one  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
+    gnum_entity2[i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
 
     key_data    [i_domain] = (PDM_g_num_t *) malloc( key_data_size_approx[i_domain] * sizeof(PDM_g_num_t));
     // key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( n_entity2_intf[i_domain] * sizeof(PDM_g_num_t));
@@ -2526,6 +2535,7 @@ PDM_domain_interface_translate_entity1_entity2
     int         *_key_data_n           = key_data_n          [i_domain];
     int         *_stride_one           = stride_one          [i_domain];
     PDM_g_num_t *_key_data             = key_data            [i_domain];
+    PDM_g_num_t *_gnum_entity2         = gnum_entity2        [i_domain];
     double      *_key_weight           = key_weight          [i_domain];
 
     int         *_dentity2_entity1_idx = dentity2_entity1_idx[i_domain];
@@ -2544,6 +2554,7 @@ PDM_domain_interface_translate_entity1_entity2
         _key_data_n  [idx_write] = 0;
         _key_ln_to_gn[idx_write] = 0;
         _key_weight  [idx_write] = 1.;
+        _gnum_entity2[idx_write] = i_entity2 + distrib_entity2[i_domain][i_rank] + entity2_per_block_offset[i_domain];
 
         int first_idx_write_data = idx_write_data;
 
@@ -2625,6 +2636,17 @@ PDM_domain_interface_translate_entity1_entity2
                (void **) &dkey_intf_no);
   free(dkey_strid);
 
+  PDM_g_num_t *dkey_gnum_entity2 = NULL;
+  PDM_part_to_block_exch(ptb_hash,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         -1,
+                         stride_one,
+               (void **) gnum_entity2,
+                         &dkey_strid,
+               (void **) &dkey_gnum_entity2);
+  free(dkey_strid);
+
   int data_size_n = PDM_part_to_block_exch(ptb_hash,
                                          sizeof(PDM_g_num_t),
                                          PDM_STRIDE_VAR_INTERLACED,
@@ -2670,6 +2692,21 @@ PDM_domain_interface_translate_entity1_entity2
   int idx_read_data      = 0;
   int *is_treated        = (int *) malloc( max_conflict    * sizeof(int));
   int *conflict_data_idx = (int *) malloc((max_conflict+1) * sizeof(int));
+
+  int          *interface_dn_entity2  = (int          *) malloc( n_interface * sizeof(int           ));
+  PDM_g_num_t **interface_ids_entity2 = (PDM_g_num_t **) malloc( n_interface * sizeof(PDM_g_num_t * ));
+  int         **interface_dom_entity2 = (int         **) malloc( n_interface * sizeof(int         * ));
+
+  /*
+   * Allocation (sur alloc )
+   */
+  for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+    interface_dn_entity2 [i_interface] = 0;
+    interface_ids_entity2[i_interface] = (PDM_g_num_t *) malloc( n_interface * sizeof(PDM_g_num_t));;
+    interface_dom_entity2[i_interface] = (int         *) malloc( n_interface * sizeof(int        ));;
+  }
+
+
   for(int i = 0; i < dn_key; ++i) {
 
     int n_conflict_keys = dkey_strid[i];
@@ -2722,6 +2759,12 @@ PDM_domain_interface_translate_entity1_entity2
          * Si on arrive ici on a un match !!
          */
         printf("It's a match !!! \n");
+        is_treated[i_conflict ] = 1;
+        is_treated[i_conflict2] = 1;
+
+        /*
+         * Build for each interface the correct array
+         */
 
 
       }
@@ -2742,6 +2785,7 @@ PDM_domain_interface_translate_entity1_entity2
   free(dkey_data);
   free(dkey_strid);
   free(dkey_intf_no);
+  free(dkey_gnum_entity2);
 
 
 
@@ -2751,10 +2795,12 @@ PDM_domain_interface_translate_entity1_entity2
     free(key_ln_to_gn[i_domain]);
     free(key_data    [i_domain]);
     free(key_data_n  [i_domain]);
+    free(gnum_entity2[i_domain]);
   }
   free(key_ln_to_gn);
   free(key_data    );
   free(key_data_n  );
+  free(gnum_entity2);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
@@ -2801,6 +2847,10 @@ PDM_domain_interface_translate_entity1_entity2
   free(stride_one           );
   free(dn_interface_twice   );
 
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    free(distrib_entity2[i_domain]);
+  }
+  free(distrib_entity2);
 
   free(entity1_per_block_offset);
   free(entity2_per_block_offset);
