@@ -69,6 +69,14 @@ struct _pdm_part_extension_t {
   int **cell_cell_idx;
   int **cell_cell;
 
+  /* Management of interface */
+  PDM_g_num_t **opp_interface_and_gnum_face; /* For each entity in border contains the opposite gnum and interface */
+  PDM_g_num_t **opp_interface_and_gnum_edge;
+  PDM_g_num_t **opp_interface_and_gnum_vtx;
+  int         **cur_interface_face;          /* Works with opp_interface_and_gnum_*, sort in the smae way and give the local number     */
+  int         **cur_interface_edge;
+  int         **cur_interface_vtx;
+
   /* This one is only on the border and contains only border cells */
   int ***cell_cell_extended_idx;
   int ***cell_cell_extended_n;

@@ -872,18 +872,49 @@ _warm_up_domain_interface
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
+  PDM_g_num_t **opp_interface_and_gnum = NULL;
+  int         **current_lentity        = NULL;
 
-  int         **neighbor_n       = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
-  int         **neighbor_idx     = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
-  int         **neighbor_desc    = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
-  int          *n_entity         = (int          *) malloc( n_part_loc_all_domain * sizeof(int          ) );
+  if(interface_kind == PDM_BOUND_TYPE_VTX) {
+    assert(part_ext->opp_interface_and_gnum_vtx == NULL);
+    assert(part_ext->cur_interface_vtx          == NULL);
+    part_ext->opp_interface_and_gnum_vtx = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
+    part_ext->cur_interface_vtx          = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+
+    opp_interface_and_gnum = part_ext->opp_interface_and_gnum_vtx;
+    current_lentity        = part_ext->cur_interface_vtx;
+  } else if( interface_kind == PDM_BOUND_TYPE_EDGE) {
+    assert(part_ext->opp_interface_and_gnum_edge == NULL);
+    assert(part_ext->cur_interface_edge          == NULL);
+    part_ext->opp_interface_and_gnum_edge = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
+    part_ext->cur_interface_edge          = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+
+    opp_interface_and_gnum = part_ext->opp_interface_and_gnum_edge;
+    current_lentity        = part_ext->cur_interface_edge;
+  } else if( interface_kind == PDM_BOUND_TYPE_FACE) {
+    assert(part_ext->opp_interface_and_gnum_face == NULL);
+    assert(part_ext->cur_interface_face          == NULL);
+    part_ext->opp_interface_and_gnum_face = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
+    part_ext->cur_interface_face          = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+
+    opp_interface_and_gnum = part_ext->opp_interface_and_gnum_face;
+    current_lentity        = part_ext->cur_interface_face;
+  }
+
+
+  int         **neighbor_n         = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_interface = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_idx       = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_desc      = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int          *n_entity           = (int          *) malloc( n_part_loc_all_domain * sizeof(int          ) );
+  PDM_g_num_t **entity_ln_to_gn    = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
 
 
   int shift_part   = 0;
   int shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
-    int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
+    // int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
 
     /* First loop to count */
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -891,11 +922,14 @@ _warm_up_domain_interface
       n_entity[i_part+shift_part] = 0;
 
       if(interface_kind == PDM_BOUND_TYPE_VTX) {
-        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        n_entity       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        entity_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
       } else if( interface_kind == PDM_BOUND_TYPE_EDGE) {
-        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+        n_entity       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+        entity_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
       } else if( interface_kind == PDM_BOUND_TYPE_FACE) {
-        n_entity[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
+        n_entity       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
+        entity_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
       }
 
 
@@ -967,13 +1001,15 @@ _warm_up_domain_interface
 
       /* Compute index */
       _neighbor_idx[0] = 0;
-      for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
+      for(int i_entity = 0; i_entity < n_entity[i_part+shift_part]; ++i_entity) {
         _neighbor_idx[i_entity+1] = _neighbor_idx[i_entity] + _neighbor_n[i_entity];
         _neighbor_n[i_entity] = 0;
       }
 
-      neighbor_desc[i_part+shift_part]  = (int *) malloc( 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] * sizeof(int) );
-      int* _neighbor_desc      = part_ext->neighbor_desc     [i_part+shift_part];
+      neighbor_desc     [i_part+shift_part]  = (int *) malloc( 3 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int) );
+      neighbor_interface[i_part+shift_part]  = (int *) malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int) );
+      int* _neighbor_desc      = neighbor_desc[i_part+shift_part];
+      int* _neighbor_interface = neighbor_interface[i_part+shift_part];
 
       /*
        * Add graph du to connectivy between domain
@@ -1021,37 +1057,124 @@ _warm_up_domain_interface
               _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
               _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
               _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
+              _neighbor_interface[idx_write] = i_interface;
             }
           }
         }
       }
 
 
-    }
+      if(0 == 1) {
+        PDM_log_trace_array_int(_neighbor_idx      ,                    n_entity[i_part+shift_part]+1, "_neighbor_idx  : ");
+        PDM_log_trace_array_int(_neighbor_desc     , 3  * _neighbor_idx[n_entity[i_part+shift_part]] , "_neighbor_desc : ");
+        PDM_log_trace_array_int(_neighbor_interface,      _neighbor_idx[n_entity[i_part+shift_part]] , "_neighbor_interface : ");
+      }
 
+    }
 
     shift_part   += part_ext->n_part              [i_domain];
     shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
 
+  /*
+   * All partition of all domain is treated in the same time
+   *    -> All partition are flatten along i_domain
+   */
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
+                                                           n_part_loc_all_domain,
+                                                           n_entity,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+  PDM_g_num_t **entity_ln_to_gn_opp = NULL;
+  PDM_distant_neighbor_exch(dn,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) entity_ln_to_gn,
+                            NULL,
+                 (void ***)&entity_ln_to_gn_opp);
 
 
 
+  shift_part   = 0;
+  shift_part_g = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+    // int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
+
+    /* First loop to count */
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
 
+      // int         *_neighbor_n          = neighbor_n         [i_part+shift_part];
+      int         *_neighbor_idx        = neighbor_idx       [i_part+shift_part];
+      int         *_neighbor_interface  = neighbor_interface [i_part+shift_part];
+      PDM_g_num_t *_entity_ln_to_gn_opp = entity_ln_to_gn_opp[i_part+shift_part];
+
+      opp_interface_and_gnum[i_part+shift_part] = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
+      current_lentity       [i_part+shift_part] = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
+      PDM_g_num_t *_opp_interface_and_gnum = opp_interface_and_gnum[i_part+shift_part];
+      int         *_current_lentity = current_lentity[i_part+shift_part];
+
+      /* For each border count number of opposite */
+      for(int i_entity = 0; i_entity < n_entity[i_part+shift_part]; ++i_entity) {
+        for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
+
+          log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
+
+          _opp_interface_and_gnum[2*idx_entity  ] = _entity_ln_to_gn_opp[idx_entity];
+          _opp_interface_and_gnum[2*idx_entity+1] = _neighbor_interface [idx_entity];
+
+          _current_lentity[idx_entity] = i_entity;
+
+        }
+      }
+
+
+      /*
+       * Tri indirect sur le doublet et on order _current_lentity
+       */
+      int* order = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
+      PDM_order_gnum_s(_opp_interface_and_gnum, 2, order, _neighbor_idx[n_entity[i_part+shift_part]]);
+
+      PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]], 2 * sizeof(PDM_g_num_t), order, _opp_interface_and_gnum);
+      PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]],     sizeof(int        ), order, _current_lentity);
+
+      free(order);
+
+      if(1 == 1) {
+        PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * _neighbor_idx[n_entity[i_part+shift_part]] , "_opp_interface_and_gnum : ");
+        PDM_log_trace_array_int(_current_lentity       ,      _neighbor_idx[n_entity[i_part+shift_part]] , "_current_lentity : ");
+      }
+
+      free(entity_ln_to_gn_opp[i_part+shift_part]);
+
+      /*
+       * Store
+       */
+
+    }
+    shift_part   += part_ext->n_part              [i_domain];
+    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
+  }
+
+  PDM_distant_neighbor_free(dn);
+  free(entity_ln_to_gn_opp);
   /*
    * Free
    */
-
   shift_part   = 0;
   shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     /* First loop to count */
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      free(neighbor_idx [i_part+shift_part]);
-      free(neighbor_n   [i_part+shift_part]);
-      free(neighbor_desc[i_part+shift_part]);
+      free(neighbor_idx      [i_part+shift_part]);
+      free(neighbor_n        [i_part+shift_part]);
+      free(neighbor_desc     [i_part+shift_part]);
+      free(neighbor_interface[i_part+shift_part]);
     }
 
     shift_part   += part_ext->n_part              [i_domain];
@@ -1061,6 +1184,8 @@ _warm_up_domain_interface
   free(neighbor_idx );
   free(neighbor_n   );
   free(neighbor_desc);
+  free(neighbor_interface);
+  free(entity_ln_to_gn);
   free(n_entity);
 
 }
@@ -3885,6 +4010,13 @@ PDM_part_extension_create
   part_ext->entity_cell_opp_idx = NULL;
   part_ext->entity_cell_opp     = NULL;
 
+  part_ext->opp_interface_and_gnum_face = NULL;
+  part_ext->opp_interface_and_gnum_edge = NULL;
+  part_ext->opp_interface_and_gnum_vtx  = NULL;
+  part_ext->cur_interface_face          = NULL;
+  part_ext->cur_interface_edge          = NULL;
+  part_ext->cur_interface_vtx           = NULL;
+
   part_ext->cell_cell_extended_idx            = NULL;
   part_ext->cell_cell_extended_n              = NULL;
   part_ext->cell_cell_extended                = NULL;
@@ -4325,6 +4457,33 @@ PDM_part_extension_free
         free(part_ext->entity_cell    [i_part+shift_part]);
         // }
 
+
+        if(part_ext->opp_interface_and_gnum_face != NULL) {
+          free(part_ext->opp_interface_and_gnum_face[i_part+shift_part]);
+        }
+
+        if(part_ext->opp_interface_and_gnum_edge != NULL) {
+          free(part_ext->opp_interface_and_gnum_edge[i_part+shift_part]);
+        }
+
+        if(part_ext->opp_interface_and_gnum_vtx != NULL) {
+          free(part_ext->opp_interface_and_gnum_vtx[i_part+shift_part]);
+        }
+
+        if(part_ext->cur_interface_face != NULL) {
+          free(part_ext->cur_interface_face[i_part+shift_part]);
+        }
+
+        if(part_ext->cur_interface_edge != NULL) {
+          free(part_ext->cur_interface_vtx[i_part+shift_part]);
+        }
+
+        if(part_ext->cur_interface_vtx != NULL) {
+          free(part_ext->cur_interface_vtx[i_part+shift_part]);
+        }
+
+
+
         if(part_ext->face_face_extended_idx != NULL) {
           free(part_ext->face_face_extended_idx[i_part+shift_part]);
         }
@@ -4438,6 +4597,20 @@ PDM_part_extension_free
     free(part_ext->face_face_extended);
     free(part_ext->face_face_interface);
   }
+
+  if(part_ext->opp_interface_and_gnum_face != NULL) {
+    free(part_ext->opp_interface_and_gnum_face);
+    free(part_ext->cur_interface_face);
+  }
+  if(part_ext->opp_interface_and_gnum_edge != NULL) {
+    free(part_ext->opp_interface_and_gnum_edge);
+    free(part_ext->cur_interface_edge);
+  }
+  if(part_ext->opp_interface_and_gnum_vtx != NULL) {
+    free(part_ext->opp_interface_and_gnum_vtx);
+    free(part_ext->cur_interface_vtx);
+  }
+
 
   if(part_ext->edge_edge_extended_idx != NULL) {
     free(part_ext->edge_edge_extended_idx);
