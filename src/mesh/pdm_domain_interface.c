@@ -2611,6 +2611,7 @@ PDM_domain_interface_translate_entity1_entity2
                                (void **) key_data,
                                          &dkey_data_n,
                                (void **) &dkey_data);
+  free(dkey_data_n); // Useless cause is concatenate
 
   int *dkey_strid   = NULL;
   int *dkey_intf_no = NULL;
@@ -2622,16 +2623,119 @@ PDM_domain_interface_translate_entity1_entity2
                (void **) entity2_intf_no,
                          &dkey_strid,
                (void **) &dkey_intf_no);
+  free(dkey_strid);
+
+  int data_size_n = PDM_part_to_block_exch(ptb_hash,
+                                         sizeof(PDM_g_num_t),
+                                         PDM_STRIDE_VAR_INTERLACED,
+                                         -1,
+                                         stride_one,
+                               (void **) key_data_n,
+                                         &dkey_strid,
+                               (void **) &dkey_data_n);
 
   /*
    * Post-Treatment :
    *   - Dans chaque bucket de clé on a dkey_strid conflict
    *   - Yon need to unified them
    */
+  int dn_key = PDM_part_to_block_n_elt_block_get(ptb_hash);
 
 
+  PDM_log_trace_array_int(dkey_strid, dn_key, "dkey_strid : ");
+  log_trace("data_size_n = %i \n", data_size_n);
+
+  int* dkey_data_idx = (int * ) malloc( (data_size_n+1) * sizeof(int));
+  dkey_data_idx[0] = 0;
+  int tmp_idx   = 0;
+  dkey_data_idx[0] = 0;
+  int max_conflict = 0;
+  for(int i = 0; i < dn_key; ++i) {
+    max_conflict = PDM_MAX(max_conflict, dkey_strid[i]);
+    for(int j = 0; j < dkey_strid[i]; ++j) {
+      dkey_data_idx[tmp_idx+1] = dkey_data_idx[tmp_idx] + dkey_data_n[tmp_idx];
+      tmp_idx++;
+    }
+  }
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(dkey_data_idx, data_size_n+1, "dkey_data_idx : ");
+  }
 
 
+  /*
+   * Solve conflict
+   */
+  int idx_read           = 0;
+  int idx_read_data      = 0;
+  int *is_treated        = (int *) malloc( max_conflict    * sizeof(int));
+  int *conflict_data_idx = (int *) malloc((max_conflict+1) * sizeof(int));
+  for(int i = 0; i < dn_key; ++i) {
+
+    int n_conflict_keys = dkey_strid[i];
+
+    // * beg_data = &dkey_data_idx[idx_read_data];
+    conflict_data_idx[0] = 0;
+    for(int j = 0; j < n_conflict_keys; ++j) {
+      is_treated[j] = 0;
+      conflict_data_idx[j+1] = conflict_data_idx[j] + dkey_data_n[idx_read+j];
+    }
+
+    PDM_log_trace_array_int(conflict_data_idx, n_conflict_keys+1, "conflict_data_idx : ");
+
+
+    for(int i_conflict = 0; i_conflict < n_conflict_keys; ++i_conflict) {
+
+      if(is_treated[i_conflict] == 1) {
+        continue;
+      }
+
+      PDM_g_num_t* data1  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict]];
+      int          n_val1 = dkey_data_n[idx_read+i_conflict];
+
+      for(int i_conflict2 = i_conflict+1; i_conflict2 < n_conflict_keys; ++i_conflict2) {
+
+        if(is_treated[i_conflict2] == 1) {
+          continue;
+        }
+
+        PDM_g_num_t* data2  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict2]];
+        int          n_val2 = dkey_data_n[idx_read+i_conflict2];
+
+        if(n_val1 != n_val2) {
+          continue;
+        }
+
+        int is_same = 1;
+        for(int k = 0; k < n_val1; k++) {
+          if(data1[k] != data2[k]) {
+            is_same = 0;
+            break;
+          }
+        }
+
+        if(is_same == 0) {
+          continue;
+        }
+
+        /*
+         * Si on arrive ici on a un match !!
+         */
+        printf("It's a match !!! \n");
+
+
+      }
+
+    }
+
+    idx_read      += n_conflict_keys;
+    idx_read_data += conflict_data_idx[n_conflict_keys];
+  }
+
+
+  free(dkey_data_idx);
+  free(is_treated);
+  free(conflict_data_idx);
 
 
   free(dkey_data_n);
