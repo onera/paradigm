@@ -179,7 +179,7 @@ _lexicographic_compare_long
   if(res == 1 && stride > 1) {
     return _lexicographic_compare_long(&x[1], &y[1], stride-1);
   }
-  return x[0] == y[0];
+  return x[0] < y[0];
 }
 
 inline
@@ -410,7 +410,7 @@ const size_t           stride,
   // PDM_log_trace_array_long(array, n_entity * stride, "array :: ");
 
   for(int i = 1; i < n_entity; i++){
-    int is_same = _lexicographic_compare_long(last_value, &array[stride*i], stride);
+    int is_same = _lexicographic_equal_long(last_value, &array[stride*i], stride);
     if(is_same == 0){ // N'est pas le meme
       for(int j = 0; j < (int) stride; ++j) {
         last_value[j] = array[stride*i+j];

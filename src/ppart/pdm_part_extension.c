@@ -1167,7 +1167,7 @@ _warm_up_domain_interface
 
       n_current_lentity[i_part+shift_part] = _neighbor_idx[n_entity[i_part+shift_part]];
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * _neighbor_idx[n_entity[i_part+shift_part]] , "_opp_interface_and_gnum : ");
         PDM_log_trace_array_int(_current_lentity       ,      _neighbor_idx[n_entity[i_part+shift_part]] , "_current_lentity : ");
       }
@@ -2727,6 +2727,9 @@ _generate_extended_partition_connectivity
  int          *entity1_entity1_extended,
  int          *entity1_entity1_interface,
  PDM_g_num_t  *entity2_ln_to_gn,
+ int           n_cur_interface_entity2,
+ PDM_g_num_t  *opp_interface_and_gnum_entity2,
+ int          *cur_interface_entity2,
  int          *entity1_entity2_idx,
  int          *entity1_entity2,
  int          *border_gentity1_entity2_n,
@@ -2741,6 +2744,9 @@ _generate_extended_partition_connectivity
 {
   PDM_UNUSED(entity1_entity1_extended);
   PDM_UNUSED(entity1_entity1_interface);
+  PDM_UNUSED(n_cur_interface_entity2);
+  PDM_UNUSED(opp_interface_and_gnum_entity2);
+  PDM_UNUSED(cur_interface_entity2);
 
   PDM_g_num_t* gentity1_entity2 = (PDM_g_num_t *) malloc( entity1_entity2_idx[n_entity1] * sizeof(PDM_g_num_t));
   for(int i = 0; i < entity1_entity2_idx[n_entity1]; ++i) {
@@ -2936,6 +2942,22 @@ _generate_extended_partition_connectivity
     PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn_and_interface[2*i_entity2  ];
     int         i_interf  = _border_entity2_ln_to_gn_and_interface[2*i_entity2+1];
 
+    /*
+     * Management du cas ou on a deja le entity2 mais a travers une interface (donc pas le même gnum mais c'est le gnum_opposé)
+     */
+    if(i_interf != -40000 && n_cur_interface_entity2 > 0) {
+      int         i_interf_abs  = PDM_ABS(i_interf)-1;
+
+      // Recherche dans le tableau d'interface
+      PDM_g_num_t search_elmt[2] = {g_entity2, i_interf_abs};
+
+      int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
+
+      if(pos_interface != -1) {
+        continue;
+      }
+    }
+
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
     if(pos == -1 || i_interf != 0) {
@@ -2974,7 +2996,6 @@ _generate_extended_partition_connectivity
   }
   // printf(" ----- \n");
   free(_border_entity2_ln_to_gn_and_interface);
-  free(border_gentity1_entity2_interface);
 
   for(int i = 1; i < n_entity2; ++i) {
     _entity2_entity2_extended_idx[i+1] = _entity2_entity2_extended_idx[i];
@@ -2995,10 +3016,32 @@ _generate_extended_partition_connectivity
    * Reconstruction de la connectivité de bord
    *   On écrase border_lentity1_entity2
    */
+  if(1 == 0 && n_cur_interface_entity2 > 0) {
+    PDM_log_trace_array_long(opp_interface_and_gnum_entity2, 2 * n_cur_interface_entity2, "opp_interface_and_gnum_entity2 ::");
+  }
+
   int idx = 0;
   int i_entity2_extented = 0;
   for(int i = 0; i < s_tot; ++i) {
     PDM_g_num_t g_entity2 = PDM_ABS(border_gentity1_entity2[i]);
+
+    if(border_gentity1_entity2_interface[i] != -40000 && n_cur_interface_entity2 > 0) {
+      int         i_interf  = PDM_ABS(border_gentity1_entity2_interface[i])-1;
+
+      // Recherche dans le tableau d'interface
+      PDM_g_num_t search_elmt[2] = {g_entity2, i_interf};
+
+      int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
+
+      // log_trace("Search = %i %i --> pos_interface = %i \n", (int )g_entity2 , i_interf, pos_interface);
+
+      if(pos_interface != -1) {
+        int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
+        border_lentity1_entity2[idx++] = sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
+        i_entity2_extented++;
+        continue;
+      }
+    }
 
     /* On cherche d'abord dans le bord - face_extended_gnum is sort by construction */
     int pos = PDM_binary_search_long(g_entity2, entity2_extended_gnum, n_entity2_extended);
@@ -3036,6 +3079,7 @@ _generate_extended_partition_connectivity
     }
   }
   // exit(1);
+  free(border_gentity1_entity2_interface);
 
   // Mise à jour
   _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_extended * sizeof(PDM_g_num_t));
@@ -3372,15 +3416,18 @@ _rebuild_connectivity
       PDM_g_num_t *pentity2_ln_to_gn             = NULL;
       _generate_extended_partition_connectivity(pn_entity1,
                                                 pn_entity2,
-                                                entity1_entity1_extended_idx[i_part+shift_part],
-                                                entity1_entity1_extended    [i_part+shift_part],
-                                                entity1_entity1_interface   [i_part+shift_part],
-                                                entity2_ln_to_gn            [i_part+shift_part],
-                                                entity1_entity2_idx         [i_part+shift_part],
-                                                entity1_entity2             [i_part+shift_part],
-                                                border_gentity1_entity2_n   [i_part+shift_part],
-                                                border_gentity1_entity2     [i_part+shift_part],
-                                                border_part_and_proc_id     [i_part+shift_part],
+                                                entity1_entity1_extended_idx  [i_part+shift_part],
+                                                entity1_entity1_extended      [i_part+shift_part],
+                                                entity1_entity1_interface     [i_part+shift_part],
+                                                entity2_ln_to_gn              [i_part+shift_part],
+                                                n_cur_interface_entity2       [i_part+shift_part],
+                                                opp_interface_and_gnum_entity2[i_part+shift_part],
+                                                cur_interface_entity2         [i_part+shift_part],
+                                                entity1_entity2_idx           [i_part+shift_part],
+                                                entity1_entity2               [i_part+shift_part],
+                                                border_gentity1_entity2_n     [i_part+shift_part],
+                                                border_gentity1_entity2       [i_part+shift_part],
+                                                border_part_and_proc_id       [i_part+shift_part],
                                                 pborder_lentity1_entity2,
                                                &pentity2_entity2_extended_idx,
                                                &pentity2_entity2_extended,

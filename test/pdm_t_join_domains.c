@@ -962,34 +962,34 @@ int main
       free(concat_vtx_coord    );
 
 
-      pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
-                                                          PDM_GEOMETRY_KIND_VOLUMIC,
-                                                          1, // n_part
-                                                          &n_vtx_extended,
-                                                          &border_vtx_ln_to_gn,
-                                                          &n_cell_extended,
-                                                          &border_cell_ln_to_gn,
-                                                          NULL);
+      // pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
+      //                                                     PDM_GEOMETRY_KIND_VOLUMIC,
+      //                                                     1, // n_part
+      //                                                     &n_vtx_extended,
+      //                                                     &border_vtx_ln_to_gn,
+      //                                                     &n_cell_extended,
+      //                                                     &border_cell_ln_to_gn,
+      //                                                     NULL);
 
-      id_section = 0;
-      t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
-      PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      // id_section = 0;
+      // t_elt_loc = PDM_part_mesh_nodal_elmts_block_type_get(pmne_vol, id_section);
+      // PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
-      sprintf(filename, "out_volumic_only_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      // sprintf(filename, "out_volumic_only_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
 
-      PDM_vtk_write_std_elements(filename,
-                                 n_vtx_extended,
-                                 vtx_coord_extended,
-                                 border_vtx_ln_to_gn,
-                                 t_elt_loc,
-                                 n_cell_extended,
-                                 elmt_vtx,
-                                 border_cell_ln_to_gn,
-                                 1,
-                                 field_name,
-                (const int **)   field);
+      // PDM_vtk_write_std_elements(filename,
+      //                            n_vtx_extended,
+      //                            vtx_coord_extended,
+      //                            border_vtx_ln_to_gn,
+      //                            t_elt_loc,
+      //                            n_cell_extended,
+      //                            elmt_vtx,
+      //                            border_cell_ln_to_gn,
+      //                            1,
+      //                            field_name,
+      //           (const int **)   field);
 
-      PDM_part_mesh_nodal_elmts_free(pmne_vol);
+      // PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
 
       free(is_extend    );
