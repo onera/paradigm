@@ -382,7 +382,7 @@ main
                                      &intersecting_box_idx,
                                      &intersecting_box_g_num);
 
-  if (1) {
+  if (post) {
     for (int i = 0; i < n_line; i++) {
       log_trace("line "PDM_FMT_G_NUM": ", line_ln_to_gn[i]);
       for (int j = intersecting_box_idx[i]; j < intersecting_box_idx[i+1]; j++) {

@@ -224,10 +224,10 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
-  char *version = PDM_version_get();
+  // char *version = PDM_version_get();
 
-  log_trace("Version de ParaDiGM : %s\n", version);
-  free(version);
+  // log_trace("Version de ParaDiGM : %s\n", version);
+  // free(version);
 
   /*
    *  Set default values

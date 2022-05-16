@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 
 
 
-  if(1 == 1) {
+  if(post) {
     PDM_log_trace_array_long(extract_face_distribution, n_rank+1, "extract_face_distribution:: ");
     PDM_log_trace_array_long(extract_vtx_distribution , n_rank+1, "extract_vtx_distribution::  ");
 

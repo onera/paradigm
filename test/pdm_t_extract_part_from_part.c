@@ -659,7 +659,7 @@ int main(int argc, char *argv[])
 
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     printf("cst_stride * dn_cell_equi : %d %d \n", cst_stride, dn_cell_equi);
     PDM_log_trace_array_long(equi_extract_cell_face, cst_stride * dn_cell_equi, "equi_extract_cell_face : ");
   }
@@ -1105,9 +1105,10 @@ int main(int argc, char *argv[])
   fflush(stdout);
 
 
-  PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
 
   if (post) {
+    PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
+
     sprintf(filename, "extract_vtx_coord_%3.3d.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_extract_vtx,

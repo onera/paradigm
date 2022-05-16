@@ -749,7 +749,7 @@ int main
         }
       }
 
-      if(1 == 1) {
+      if(post) {
         PDM_log_trace_array_long(border_vtx_ln_to_gn , n_vtx_extended , "border_vtx_ln_to_gn :: ");
         PDM_log_trace_array_long(border_cell_ln_to_gn, n_cell_extended, "border_cell_ln_to_gn :: ");
         PDM_log_trace_array_long(cell_ln_to_gn, n_cell, "cell_ln_to_gn :: ");

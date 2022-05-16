@@ -385,7 +385,9 @@ _setup_edge_upwind_and_downwind
     }
   }
 
-  PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
+  if (debug) {
+    PDM_log_trace_connectivity_int(cell_face_idx, cell_face, n_cell, "cell_face : ");
+  }
 
 
   int *is_visited_face = PDM_array_zeros_int(n_face);
