@@ -677,19 +677,19 @@ int main(int argc, char *argv[])
 
 
   PDM_part_to_part_issend(ptp,
-                                     3 * sizeof(double),
-                                     1,
-                          (const void **)  pextract_cell_center,
-                                     100,
-                                     &send_request);
+                          3 * sizeof(double),
+                          1,
+               (const void **)  pextract_cell_center,
+                          100,
+                          &send_request);
 
 
   PDM_part_to_part_irecv(ptp,
-                                    3 * sizeof(double),
-                                    1, // Hack here because HEXA
-                          (void **) &equi_extract_cell_center,
-                                    100,
-                                    &recv_request);
+                         3 * sizeof(double),
+                         1, // Hack here because HEXA
+                         (void **) &equi_extract_cell_center,
+                         100,
+                         &recv_request);
 
   PDM_part_to_part_issend_wait(ptp, send_request);
   PDM_part_to_part_irecv_wait (ptp, recv_request);
@@ -701,11 +701,13 @@ int main(int argc, char *argv[])
    * Cell center post with vtk
    */
   char filename[999];
-  sprintf(filename, "extract_cell_center_%3.3d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            dn_cell_equi,
-                            equi_extract_cell_center,
-                            NULL, NULL);
+  if (post) {
+    sprintf(filename, "extract_cell_center_%3.3d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              dn_cell_equi,
+                              equi_extract_cell_center,
+                              NULL, NULL);
+  }
 
   printf("-- 3\n");
   fflush(stdout);
@@ -1105,11 +1107,13 @@ int main(int argc, char *argv[])
 
   PDM_log_trace_array_double(equi_extract_vtx_coord, 3 * n_extract_vtx, "equi_extract_vtx_coord : ");
 
-  sprintf(filename, "extract_vtx_coord_%3.3d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            n_extract_vtx,
-                            equi_extract_vtx_coord,
-                            NULL, NULL);
+  if (post) {
+    sprintf(filename, "extract_vtx_coord_%3.3d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_extract_vtx,
+                              equi_extract_vtx_coord,
+                              NULL, NULL);
+  }
 
   int* equi_face_vtx_idx = malloc( (n_extract_face + 1) * sizeof(int));
   equi_face_vtx_idx[0] = 0;
@@ -1117,16 +1121,18 @@ int main(int argc, char *argv[])
     equi_face_vtx_idx[i+1] = equi_face_vtx_idx[i] + 4;
   }
 
-  sprintf(filename, "face_vtx_coord_%3.3d.vtk", i_rank);
-  PDM_vtk_write_polydata(filename,
-                         n_extract_vtx,
-                         equi_extract_vtx_coord,
-                         extract_vtx_ln_to_gn,
-                         n_extract_face,
-                         equi_face_vtx_idx,
-                         equi_face_vtx,
-                         extract_face_ln_to_gn,
-                         NULL);
+  if (post) {
+    sprintf(filename, "face_vtx_coord_%3.3d.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           n_extract_vtx,
+                           equi_extract_vtx_coord,
+                           extract_vtx_ln_to_gn,
+                           n_extract_face,
+                           equi_face_vtx_idx,
+                           equi_face_vtx,
+                           extract_face_ln_to_gn,
+                           NULL);
+  }
 
   free(equi_face_vtx_idx);
 

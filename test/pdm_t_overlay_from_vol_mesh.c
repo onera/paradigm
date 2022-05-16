@@ -633,7 +633,7 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  if(1 == 1) {
+  if(post) {
     char filename[999];
     for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
@@ -768,21 +768,23 @@ int main(int argc, char *argv[])
                                 &init_to_ol_face_idx,
                                 &init_to_ol_face);
 
-      char filename[999];
-      if(mesht == PDM_OL_MESH_A) {
-        sprintf(filename, "mesh_a_inter_b_%3.3d.vtk", i_rank);
-      } else {
-        sprintf(filename, "mesh_b_inter_a_%3.3d.vtk", i_rank);
+      if (post) {
+        char filename[999];
+        if(mesht == PDM_OL_MESH_A) {
+          sprintf(filename, "mesh_a_inter_b_%3.3d.vtk", i_rank);
+        } else {
+          sprintf(filename, "mesh_b_inter_a_%3.3d.vtk", i_rank);
+        }
+        PDM_vtk_write_polydata(filename,
+                               n_ol_vtx,
+                               ol_vtx_coords,
+                               ol_vtx_ln_to_gn,
+                               n_ol_face,
+                               ol_face_vtx_idx,
+                               ol_face_vtx,
+                               ol_face_ln_to_gn,
+                               NULL);
       }
-      PDM_vtk_write_polydata(filename,
-                             n_ol_vtx,
-                             ol_vtx_coords,
-                             ol_vtx_ln_to_gn,
-                             n_ol_face,
-                             ol_face_vtx_idx,
-                             ol_face_vtx,
-                             ol_face_ln_to_gn,
-                             NULL);
 
       free(ol_face_ini_vtx_idx);
       free(ol_face_ini_vtx);

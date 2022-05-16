@@ -651,22 +651,23 @@ int main
           cell_num[i] = i;
         }
 
-        char filename[999];
-        sprintf(filename, "out_volumic_%i_%i_%i.vtk", i_dom, i_part, i_rank);
-        const char* field_name[] = {"cell_num", 0 };
-        const int * field     [] = {cell_num};
-        PDM_vtk_write_std_elements(filename,
-                                   n_vtx,
-                                   vtx,
-                                   vtx_ln_to_gn,
-                                   t_elt_loc,
-                                   n_cell,
-                                   elmt_vtx,
-                                   cell_ln_to_gn,
-                                   1,
-                                   field_name,
-                   (const int **)  field);
-
+        if (post) {
+          char filename[999];
+          sprintf(filename, "out_volumic_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+          const char* field_name[] = {"cell_num", 0 };
+          const int * field     [] = {cell_num};
+          PDM_vtk_write_std_elements(filename,
+                                     n_vtx,
+                                     vtx,
+                                     vtx_ln_to_gn,
+                                     t_elt_loc,
+                                     n_cell,
+                                     elmt_vtx,
+                                     cell_ln_to_gn,
+                                     1,
+                                     field_name,
+                                     (const int **)  field);
+        }
         free(cell_num);
 
         PDM_part_mesh_nodal_elmts_free(pmne_vol);
@@ -860,23 +861,24 @@ int main
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
       PDM_part_mesh_nodal_elmts_block_std_get(pmne_vol, id_section, 0, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
-      char filename[999];
-      sprintf(filename, "out_volumic_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      if (post) {
+        char filename[999];
+        sprintf(filename, "out_volumic_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
 
-      const char* field_name[] = {"is_extend", 0 };
-      const int * field     [] = {is_extend};
-      PDM_vtk_write_std_elements(filename,
-                                 n_vtx_tot,
-                                 concat_vtx_coord,
-                                 concat_vtx_ln_to_gn,
-                                 t_elt_loc,
-                                 n_cell_tot,
-                                 elmt_vtx,
-                                 concat_cell_ln_to_gn,
-                                 1,
-                                 field_name,
-                (const int **)   field);
-
+        const char* field_name[] = {"is_extend", 0 };
+        const int * field     [] = {is_extend};
+        PDM_vtk_write_std_elements(filename,
+                                   n_vtx_tot,
+                                   concat_vtx_coord,
+                                   concat_vtx_ln_to_gn,
+                                   t_elt_loc,
+                                   n_cell_tot,
+                                   elmt_vtx,
+                                   concat_cell_ln_to_gn,
+                                   1,
+                                   field_name,
+                                   (const int **)   field);
+      }
       PDM_part_mesh_nodal_elmts_free(pmne_vol);
       free(concat_vtx_ln_to_gn );
       free(concat_cell_ln_to_gn);

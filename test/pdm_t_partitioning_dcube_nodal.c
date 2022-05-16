@@ -193,7 +193,9 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
-  PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  if (post) {
+    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
+  }
   /*
    *  Warm up dmesh from dmesh_nodal
    */
