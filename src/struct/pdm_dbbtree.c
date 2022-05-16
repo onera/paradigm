@@ -465,7 +465,7 @@ _adapt_tree_weight_for_intersect_line
     int* g_count_by_sampling_boxes = malloc(n_g_extract_boxes[i_rank] * sizeof(int));
     PDM_MPI_Reduce_scatter(send_count_by_sampling_boxes, g_count_by_sampling_boxes, n_g_extract_boxes, PDM_MPI_INT, PDM_MPI_SUM, dbbt->comm);
 
-    if(1 == 1) {
+    if(debug) {
       PDM_log_trace_array_int(g_count_by_sampling_boxes, n_g_extract_boxes[i_rank], "g_count_by_sampling_boxes ::");
     }
 
@@ -560,14 +560,18 @@ _adapt_tree_weight_for_intersect_line
   free(child_weight);
 
   PDM_g_num_t* raw_child_distrib = PDM_compute_entity_distribution(dbbt->comm, n_all_child_ids);
-  PDM_log_trace_array_long(raw_child_distrib, n_rank+1, "raw_child_distrib ::");
-  PDM_log_trace_array_long(equi_child_distrib, n_rank+1, "equi_child_distrib ::");
+  if (debug) {
+    PDM_log_trace_array_long(raw_child_distrib, n_rank+1, "raw_child_distrib ::");
+    PDM_log_trace_array_long(equi_child_distrib, n_rank+1, "equi_child_distrib ::");
+  }
 
   /*
    *  Extraction des boîtes --> Il faudra faire un  is_visited_box[box_id] + visited_box = box_id
    */
-  // PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
-  PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
+  if (debug) {
+    // PDM_log_trace_array_int(all_child_ids, n_all_child_ids, "all_child_ids ::");
+    PDM_log_trace_array_int(all_g_count_by_sampling_boxes, n_all_child_ids, "all_g_count_by_sampling_boxes ::");
+  }
 
   /*
    * Equilibrate :
@@ -625,7 +629,7 @@ _adapt_tree_weight_for_intersect_line
   PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
                    recv_n, 1, PDM_MPI_INT, dbbt->comm);
 
-  if(1 == 1) {
+  if(debug) {
     PDM_log_trace_array_int(send_n, n_rank, "send_n ::");
     PDM_log_trace_array_int(recv_n, n_rank, "recv_n ::");
   }
@@ -1594,7 +1598,7 @@ PDM_dbbtree_boxes_set_for_intersect_line
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
-    if(1 == 1 && myRank == 0) {
+    if(0 == 1 && myRank == 0) {
       const char* filename = "dbbt_shared_tree.vtk";
       PDM_vtk_write_boxes (filename,
                            _dbbt->rankBoxes->local_boxes->n_boxes,
