@@ -1311,7 +1311,7 @@ PDM_dbbtree_boxes_set
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
-    if(1 == 1 && myRank == 0) {
+    if(0 == 1 && myRank == 0) {
       const char* filename = "dbbt_shared_tree.vtk";
       PDM_vtk_write_boxes (filename,
                            _dbbt->rankBoxes->local_boxes->n_boxes,

@@ -73,6 +73,7 @@ endif()
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 
+file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/meshes DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Test pdm_t_part_cube
 # --------------
