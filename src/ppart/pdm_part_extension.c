@@ -1351,8 +1351,8 @@ _create_cell_graph_comm
         for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
 
           // Search the first in list that is in current part/proc
-          int i_proc_cur   = -1;
-          int i_part_cur   = -1;
+          // int i_proc_cur   = -1;
+          // int i_part_cur   = -1;
           int i_entity_cur = -1;
           int found        = 0;
           int idx_current  = -1;
@@ -1362,8 +1362,8 @@ _create_cell_graph_comm
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(i_proc_opp == i_rank && i_part_opp == i_part) {
-              i_proc_cur   = i_proc_opp;
-              i_part_cur   = i_part_opp;
+              // i_proc_cur   = i_proc_opp;
+              // i_part_cur   = i_part_opp;
               i_entity_cur = i_entity_opp;
               idx_current  = j;
               assert(found == 0);
@@ -1384,9 +1384,9 @@ _create_cell_graph_comm
 
           // Only add the opposite part of the graph
           for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            int i_part_opp   = interface_ids[i_interface][3*j+1];
-            int i_entity_opp = interface_ids[i_interface][3*j+2];
+            // int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            // int i_part_opp   = interface_ids[i_interface][3*j+1];
+            // int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(idx_current != j) {
               // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
@@ -1831,10 +1831,29 @@ _compute_dual_graph
 
       int lidx_write = 0;
       _border_cell_cell_extended_idx[0] = 0;
+      int idx_read = 0;
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         int n_neight = 0;
         for(int idx_neight = part_ext->dist_neighbor_cell_idx [i_part+shift_part][i_cell]; idx_neight < part_ext->dist_neighbor_cell_idx[i_part+shift_part][i_cell+1]; ++idx_neight){
           n_neight += _border_cell_cell_extended_n[idx_neight];
+
+
+          printf(" Coming in interface = %i \n", part_ext->dist_neighbor_cell_interface[i_part+shift_part][idx_neight]);
+          int cur_interface = part_ext->dist_neighbor_cell_interface[i_part+shift_part][idx_neight];
+
+          for(int j = 0; j < _border_cell_cell_extended_n[idx_neight]; ++j ) {
+
+            // Adapt opposite with the current one
+            // if(_border_cell_cell_interface[idx_read] == -40000) {
+            //   _border_cell_cell_interface[idx_read] = cur_interface;
+            // }
+
+
+            idx_read++;
+          }
+
+
+
         }
         // printf(" beg = %i | end = %i | n_neight = %i \n", part_ext->dist_neighbor_cell_idx [i_part+shift_part][i_cell], part_ext->dist_neighbor_cell_idx [i_part+shift_part][i_cell+1], n_neight );
         if(n_neight > 0) {
@@ -1915,7 +1934,7 @@ _compute_dual_graph
       //                                                   _unique_border_cell_cell_extended,
       //                                                   &_unique_order_border_cell_cell_extended);
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_array_int(_border_cell_cell_extended_idx, n_cell_border+1, "next_border_cell_cell_extended_idx::");
         PDM_log_trace_array_int(_border_cell_cell_extended_n  , n_cell_border,   "next_border_cell_cell_extended_n::");
         PDM_log_trace_array_int(_border_cell_cell_extended    , 3 * _border_cell_cell_extended_idx[n_cell_border], "next_border_cell_cell_extended::");
@@ -1927,7 +1946,9 @@ _compute_dual_graph
             printf("i_cell -> %i -->  ", i_cell);
           }
           for(int idx = _border_cell_cell_extended_idx[i]; idx < _border_cell_cell_extended_idx[i+1]; ++idx) {
-            printf("(%i, %i) ", _border_cell_cell_extended[3*idx+1], _border_cell_cell_extended[3*idx+2]);
+            printf("(%i, %i, intrf = %i) ", _border_cell_cell_extended[3*idx+1],
+                                            _border_cell_cell_extended[3*idx+2],
+                                            _border_cell_cell_interface[idx]);
           }
           if( _border_cell_cell_extended_idx[i+1] > _border_cell_cell_extended_idx[i]){
             printf("\n");
@@ -4409,7 +4430,7 @@ PDM_part_extension_compute
     // _rebuild_connectivity_edge_vtx (part_ext);
   } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
     _rebuild_connectivity_cell_face(part_ext);
-    exit(1);
+    // exit(1);
     _rebuild_connectivity_face_edge(part_ext);
     _rebuild_connectivity_edge_vtx (part_ext);
   } else {
