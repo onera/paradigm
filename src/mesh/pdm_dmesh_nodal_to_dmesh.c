@@ -1095,8 +1095,22 @@ _generate_faces_from_dmesh_nodal
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
 
+
+
   int n_section_child = dmesh_nodal->surfacic->n_section;
   PDM_g_num_t n_g_child = dmesh_nodal->surfacic->section_distribution[n_section_child];
+  if(dmesh_nodal->surfacic->dparent_idx != NULL) {
+    free(dmesh_nodal->surfacic->dparent_idx);
+  }
+  if(dmesh_nodal->surfacic->dparent_gnum != NULL) {
+    free(dmesh_nodal->surfacic->dparent_gnum);
+  }
+  if(dmesh_nodal->surfacic->dparent_sign != NULL) {
+    free(dmesh_nodal->surfacic->dparent_sign);
+  }
+  if(dmesh_nodal->surfacic->delmt_child_distrib != NULL) {
+    free(dmesh_nodal->surfacic->delmt_child_distrib);
+  }
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
                                     n_g_child,
@@ -1351,6 +1365,23 @@ _generate_faces_from_dmesh_nodal
     if(dmesh_nodal->ridge != NULL) {
       n_section_child_ridge = dmesh_nodal->ridge->n_section;
       n_g_child_ridge       = dmesh_nodal->ridge->section_distribution[n_section_child_ridge];
+
+
+      if(dmesh_nodal->ridge->dparent_idx != NULL) {
+        free(dmesh_nodal->ridge->dparent_idx);
+      }
+      if(dmesh_nodal->ridge->dparent_gnum != NULL) {
+        free(dmesh_nodal->ridge->dparent_gnum);
+      }
+      if(dmesh_nodal->ridge->dparent_sign != NULL) {
+        free(dmesh_nodal->ridge->dparent_sign);
+      }
+      if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
+        free(dmesh_nodal->ridge->delmt_child_distrib);
+      }
+
+
+
       PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                         dmesh_nodal->n_vtx_abs,
                                         n_g_child_ridge,

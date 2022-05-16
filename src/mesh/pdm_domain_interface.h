@@ -107,6 +107,7 @@ PDM_domain_interface_free
 void
 PDM_domain_interface_translate_entity1_entity2
 (
+
  int                      n_domain,
  int                      n_interface,
  int                     *dn_entity1,
@@ -116,7 +117,10 @@ PDM_domain_interface_translate_entity1_entity2
  PDM_g_num_t            **interface_ids,
  int                    **dentity2_entity1_idx,
  PDM_g_num_t            **dentity2_entity1,
- PDM_MPI_Comm             comm
+ PDM_MPI_Comm             comm,
+ int                    **interface_dn_entity2,
+ PDM_g_num_t           ***interface_ids_entity2,
+ int                   ***interface_dom_entity2
 );
 
 
