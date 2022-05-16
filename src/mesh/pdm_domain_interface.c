@@ -2331,6 +2331,19 @@ PDM_domain_interface_translate_entity1_entity2
     PDM_log_trace_array_long(dentity2_entity1[i_domain], n_dentity2_entity1[i_domain], "dentity2_entity1");
   }
 
+  for (int itrf = 0; itrf < n_interface; itrf++) {
+    free(interface_ids_shifted[itrf]);
+    free(send_data_dom        [itrf]);
+    free(send_data_intno      [itrf]);
+    free(send_data_gnum       [itrf]);
+    free(weight               [itrf]);
+  }
+  free(interface_ids_shifted);
+  free(send_data_dom        );
+  free(send_data_intno      );
+  free(send_data_gnum       );
+  free(weight               );
+  free(dn_interface_twice   );
 
   PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(gnum,
                                                                         n_gnum,
@@ -2479,13 +2492,13 @@ PDM_domain_interface_translate_entity1_entity2
         if(l_interface_n[i] == n_connect) {
           int idx_write = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface++;
           entity2_intf_no[i_domain][idx_write] = i;
+          key_data_size_approx[i_domain] += n_connect * 2;
         }
       }
 
       if(n_new_interface > 0) {
         entity2_intf_no_idx [i_domain][n_entity2_intf[i_domain]+1] = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface;
         entity2_lids        [i_domain][n_entity2_intf[i_domain]++] = i_entity2;
-        key_data_size_approx[i_domain] += n_connect * 2;
       }
     }
 
@@ -2880,25 +2893,12 @@ PDM_domain_interface_translate_entity1_entity2
   free(n_dentity2_entity1);
   PDM_part_to_block_free(ptb);
 
-  for (int itrf = 0; itrf < n_interface; itrf++) {
-    free(interface_ids_shifted[itrf]);
-    free(send_data_dom        [itrf]);
-    free(send_data_intno      [itrf]);
-    free(send_data_gnum       [itrf]);
-    free(weight               [itrf]);
-    free(stride_one           [itrf]);
-  }
-  free(interface_ids_shifted);
-  free(send_data_dom        );
-  free(send_data_intno      );
-  free(send_data_gnum       );
-  free(weight               );
-  free(stride_one           );
-  free(dn_interface_twice   );
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     free(distrib_entity2[i_domain]);
+    free(stride_one[i_domain]);
   }
+  free(stride_one);
   free(distrib_entity2);
 
   free(entity1_per_block_offset);
