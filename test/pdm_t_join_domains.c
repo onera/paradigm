@@ -551,6 +551,7 @@ int main
    * Extension
    */
   int n_depth = 1;
+  // int n_depth = 2;
   PDM_part_extension_t* part_ext = PDM_part_extension_create(n_domain,
                                                              n_part_by_domain,
                                                              PDM_EXTEND_FROM_VTX,

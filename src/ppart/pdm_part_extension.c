@@ -1345,8 +1345,8 @@ _create_cell_graph_comm
        */
       for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
-        log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
-        PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
+        // log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
+        // PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
 
         for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
 
@@ -1380,7 +1380,7 @@ _create_cell_graph_comm
 
           assert(found == 1);
 
-          log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
+          // log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
 
           // Only add the opposite part of the graph
           for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
@@ -1389,7 +1389,7 @@ _create_cell_graph_comm
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(idx_current != j) {
-              log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+              // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
               _neighbor_n[i_entity_cur] += 1;
             }
           }
@@ -1806,14 +1806,16 @@ _compute_dual_graph
       int* _border_cell_cell_interface    = next_cell_cell_interface [i_part+shift_part];
       int* _border_cell_cell_extended_idx = (int * ) malloc( (n_cell_border+1) * sizeof(int) );
 
-      if( 0 == 1) {
+      if( 1 == 1) {
         printf("prev_cell_cell_extended :: --------------------- \n");
         for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
           if( prev_cell_cell_extended_idx[i_part+shift_part][i_cell+1] > prev_cell_cell_extended_idx[i_part+shift_part][i_cell]){
             printf("[%i] i_cell -> %i -->  ", i_part, i_cell);
           }
           for(int idx = prev_cell_cell_extended_idx[i_part+shift_part][i_cell]; idx < prev_cell_cell_extended_idx[i_part+shift_part][i_cell+1]; ++idx) {
-            printf("(%i, %i) ", prev_cell_cell_extended[i_part+shift_part][3*idx+1], prev_cell_cell_extended[i_part+shift_part][3*idx+2]);
+            printf("(%i, %i, intrf = %i) ", prev_cell_cell_extended[i_part+shift_part][3*idx+1],
+                                            prev_cell_cell_extended[i_part+shift_part][3*idx+2],
+                                            prev_cell_cell_interface[i_part+shift_part][idx]);
           }
           if( prev_cell_cell_extended_idx[i_part+shift_part][i_cell+1] > prev_cell_cell_extended_idx[i_part+shift_part][i_cell]){
             printf("\n");
@@ -2374,12 +2376,12 @@ _compute_dual_graph
 
       quadruplet_to_triplet_and_array(_ncell_cell_extended_idx[n_cell],
                                       _ncell_cell_extended,
-                                      &part_ext->cell_cell_extended [i_depth][i_part+shift_part],
-                                      &part_ext->cell_cell_interface[i_depth][i_part+shift_part]);
+                                      &part_ext->cell_cell_interface[i_depth][i_part+shift_part],
+                                      &part_ext->cell_cell_extended [i_depth][i_part+shift_part]);
       free(_ncell_cell_extended);
-      _ncell_cell_extended = part_ext->cell_cell_interface[i_depth][i_part+shift_part];
+      _ncell_cell_extended = part_ext->cell_cell_extended[i_depth][i_part+shift_part];
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_array_int(_ncell_cell_extended_idx, n_cell+1, "_ncell_cell_extended_idx:: ");
         PDM_log_trace_array_int(_ncell_cell_extended_n  , n_cell  , "_ncell_cell_extended_n:: ");
         PDM_log_trace_array_int(_ncell_cell_extended    , 3 * _ncell_cell_extended_idx[n_cell], "_ncell_cell_extended:: ");
@@ -2391,7 +2393,7 @@ _compute_dual_graph
             printf("[%i] i_cell -> %i -->  ", i_part, i_cell);
           }
           for(int idx = _ncell_cell_extended_idx[i_cell]; idx < _ncell_cell_extended_idx[i_cell+1]; ++idx) {
-            printf("(%i, %i) ", _ncell_cell_extended[3*idx+1], _ncell_cell_extended[3*idx+2]);
+            printf("(%i, %i, intrf = %i) ", _ncell_cell_extended[3*idx+1], _ncell_cell_extended[3*idx+2], part_ext->cell_cell_interface[i_depth][i_part+shift_part][idx]);
           }
           if( _ncell_cell_extended_idx[i_cell+1] > _ncell_cell_extended_idx[i_cell]){
             printf("\n");
@@ -2658,14 +2660,15 @@ _prune_cell_cell_extented
 
       int* _cell_cell_extended_pruned     = part_ext->cell_cell_extended_pruned    [i_part+shift_part];
       int* _cell_cell_extended_pruned_idx = part_ext->cell_cell_extended_pruned_idx[i_part+shift_part];
-      int* _cell_cell_interface_pruned    = part_ext->cell_cell_interface_pruned[i_part+shift_part];
+      int* _cell_cell_interface_pruned    = part_ext->cell_cell_interface_pruned   [i_part+shift_part];
 
+      PDM_log_trace_array_int(_quad_cell_cell_extended   ,   4 *  s_tot, "_quad_cell_cell_extended::");
 
       int idx_unique = 0;
       int last_proc  = -1;
       int last_part  = -1;
       int last_elmt  = -1;
-      int last_inte  = -40;
+      int last_inte  = -40000;
       _cell_cell_extended_pruned_idx[0] = 0;
       _cell_cell_extended_pruned_idx[1] = 0;
       for(int i = 0; i < s_tot; ++i) {
@@ -2677,8 +2680,14 @@ _prune_cell_cell_extented
         int is_same = _is_same_quadruplet(last_proc, last_part, last_elmt, last_inte,
                                           curr_proc, curr_part, curr_cell, curr_inte);
 
-        // On peut également trie les locaux qui ne serve à rien
+
         int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part) && (curr_inte == -40000);
+
+        printf("  last = %i / %i / %i / %i \n", last_proc, last_part, last_elmt, last_inte);
+        printf("  cur  = %i / %i / %i / %i \n", curr_proc, curr_part, curr_cell, curr_inte);
+        printf(" is_same = %i | is_local = %i \n", is_same, is_local);
+
+        // On peut également trie les locaux qui ne serve à rien
         // int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part);
         if(is_same == 0 && !is_local){ // N'est pas le meme
           // idx_unique++;
@@ -2695,6 +2704,13 @@ _prune_cell_cell_extented
 
           /* Increment the new counter */
           _cell_cell_extended_pruned_idx[1]++;
+        } else {
+
+          last_proc = curr_proc;
+          last_part = curr_part;
+          last_elmt = curr_cell;
+          last_inte = curr_inte;
+
         }
       }
       free(_quad_cell_cell_extended);
@@ -2945,8 +2961,6 @@ _generate_extended_partition_connectivity
     // PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn[i_entity2];
     // int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
-    printf(" --------------------------------------- \n");
-
     PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn_and_interface[2*i_entity2  ];
     int         i_interf  = _border_entity2_ln_to_gn_and_interface[2*i_entity2+1];
 
@@ -2962,7 +2976,7 @@ _generate_extended_partition_connectivity
 
       int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
       // printf("    i_interf_abs = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf_abs, (int) g_entity2, pos_interface);
-      printf("    i_interf = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf, (int) g_entity2, pos_interface);
+      // printf("    i_interf = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf, (int) g_entity2, pos_interface);
       if(pos_interface != -1) {
         continue;
       }
@@ -2970,10 +2984,10 @@ _generate_extended_partition_connectivity
 
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
-    printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
+    // printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
     if(pos == -1 || i_interf != 0) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
-      printf("\t\t found [%i] = %i\n", i_entity2, pos);
+      // printf("\t\t found [%i] = %i\n", i_entity2, pos);
 
       _entity2_entity2_extended_idx[1]++;
 
@@ -4369,6 +4383,7 @@ PDM_part_extension_compute
 
   for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
     /* Graph compute = local + distant */
+    printf(" ------------------------------------------------- i_depth = %i \n", i_depth);
     _compute_dual_graph(part_ext, dn, i_depth);
   }
 
@@ -4394,7 +4409,7 @@ PDM_part_extension_compute
     // _rebuild_connectivity_edge_vtx (part_ext);
   } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
     _rebuild_connectivity_cell_face(part_ext);
-    // exit(1);
+    exit(1);
     _rebuild_connectivity_face_edge(part_ext);
     _rebuild_connectivity_edge_vtx (part_ext);
   } else {
