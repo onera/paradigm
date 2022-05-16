@@ -381,10 +381,12 @@ int main(int argc, char *argv[])
   PDM_dcube_gen_free(dcube);
   PDM_dmesh_free(dm);
 
+  if (i_rank == 0) {
+    printf("-- End\n");
+    fflush(stdout);
+  }
   PDM_MPI_Finalize();
 
-  printf("-- Fin test\n");
-  fflush(stdout);
 
   return 0;
 }

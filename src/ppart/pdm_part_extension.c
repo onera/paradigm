@@ -671,6 +671,7 @@ _create_cell_graph_comm
   PDM_part_extension_t *part_ext
 )
 {
+  int debug = 0;
   /*
    * The idea is to use the first communicator graph to exchange directly the entity_cell
    *     -> We deduced first from this graph the data necessary for distant_neigbor
@@ -754,7 +755,9 @@ _create_cell_graph_comm
       }
 
       /* Join between domain */
-      printf(" Begin part_extension with domain \n");
+      if (debug) {
+        printf(" Begin part_extension with domain \n");
+      }
       PDM_bound_type_t interface_kind = PDM_BOUND_TYPE_MAX;
       if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
         interface_kind = PDM_BOUND_TYPE_FACE;
@@ -850,7 +853,9 @@ _create_cell_graph_comm
       }
 
 
-      printf("n_interface  = %i\n", n_interface);
+      if (debug) {
+        printf("n_interface  = %i\n", n_interface);
+      }
 
 
       part_ext->neighbor_desc[i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] * sizeof(int) );

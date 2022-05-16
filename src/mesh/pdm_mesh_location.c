@@ -3150,7 +3150,7 @@ PDM_mesh_location_t        *ml
     use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
 
 
-    if (1 && my_rank == 0 && use_extracted_mesh) {
+    if (DEBUG && my_rank == 0 && use_extracted_mesh) {
       printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" mesh elts ("PDM_FMT_G_NUM"%%)\n",
              g_n_elt[1], g_n_elt[0], (100 * g_n_elt[1]) / g_n_elt[0]);
     }
@@ -3220,7 +3220,7 @@ PDM_mesh_location_t        *ml
   }
 
 
-  if (1) {
+  if (0) {
     PDM_g_num_t ln_elt = n_select_boxes;
     PDM_g_num_t gn_elt;
     PDM_MPI_Allreduce (&ln_elt, &gn_elt, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
@@ -3723,7 +3723,7 @@ PDM_mesh_location_t        *ml
       pcloud_parent_g_num = pcloud_g_num;
     }
 
-    if (1) {
+    if (0) {
       PDM_g_num_t ln_pts = (PDM_g_num_t) n_pts_pcloud;
       if (0) printf("[%6d] n_pts_pcloud = %d, ln_pts = "PDM_FMT_G_NUM"\n", my_rank, n_pts_pcloud, ln_pts);
       PDM_g_num_t gn_pts;
@@ -3758,7 +3758,9 @@ PDM_mesh_location_t        *ml
       PDM_MPI_Barrier(ml->comm);
       double t1 = PDM_MPI_Wtime();
       PDM_para_octree_build (octree, NULL);
-      end_timer_and_print("PDM_para_octree_build ", ml->comm, t1);
+      if (0) {
+        end_timer_and_print("PDM_para_octree_build ", ml->comm, t1);
+      }
       // PDM_para_octree_dump (octree);
       // if (DEBUG) {
         // PDM_para_octree_dump_times (octree);
@@ -3774,7 +3776,9 @@ PDM_mesh_location_t        *ml
                                            &pts_idx,
                                            &pts_g_num,
                                            &pts_coord);
-      end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
+      if (0) {
+        end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
+      }
 
       /* Free octree */
       PDM_para_octree_free (octree);

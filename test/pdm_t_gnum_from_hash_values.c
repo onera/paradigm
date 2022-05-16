@@ -206,9 +206,10 @@ char *argv[]
   free(part_key);
   free(ln_to_gn);
 
+  if (i_rank == 0) {
+    PDM_printf ("-- End\n");
+  }
   PDM_MPI_Finalize ();
-
-  PDM_printf ("\nfin Test\n");
 
   return 0;
 

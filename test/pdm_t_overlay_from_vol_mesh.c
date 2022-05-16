@@ -844,10 +844,12 @@ int main(int argc, char *argv[])
   PDM_dcube_gen_free(dcube);
   PDM_dmesh_free(dm);
 
-  PDM_MPI_Finalize();
+  if (i_rank == 0) {
+    printf("-- End\n");
+    fflush(stdout);
+  }
 
-  printf("-- Fin test\n");
-  fflush(stdout);
+  PDM_MPI_Finalize();
 
   return 0;
 }

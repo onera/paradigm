@@ -224,17 +224,17 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
-  // char *version = PDM_version_get();
+  char *version = PDM_version_get();
 
-  // log_trace("Version de ParaDiGM : %s\n", version);
-  // free(version);
+  printf("Version de ParaDiGM : %s\n", version);
+  free(version);
 
   /*
    *  Set default values
    */
 
-  PDM_g_num_t  n_faceSeg  = 10;
-  double        length  = 1.;
+  PDM_g_num_t  n_faceSeg = 10;
+  double        length   = 1.;
   int           n_part   = 1;
 
   int n_closest_points = 10;
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
                           &closest_src_gnum,
                           &closest_src_dist);
 
-#if 1
+
   /* Check results */
   if (i_rank == 0) {
     printf("-- Check\n");
@@ -491,7 +491,6 @@ int main(int argc, char *argv[])
     //assert (n_wrong_total < 1);
   }
 
-#endif
 
 
 

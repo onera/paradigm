@@ -310,7 +310,9 @@ char *argv[]
   free(recv_entity_var_data);
   PDM_MPI_Finalize();
 
-  PDM_printf ("\nfin Test\n");
+  if (i_rank == 0) {
+    PDM_printf ("End\n");
+  }
 
   return 0;
 

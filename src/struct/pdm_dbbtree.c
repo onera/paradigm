@@ -257,6 +257,7 @@ _adapt_tree_weight_for_intersect_line
  double              *line_coord
 )
 {
+  int debug = 0;
   int n_rank;
   int i_rank;
   PDM_MPI_Comm_size (dbbt->comm, &n_rank);
@@ -290,7 +291,7 @@ _adapt_tree_weight_for_intersect_line
       _normalize (dbbt, line_coord  + 3*i, _line_coord + 3*i);
     }
 
-    if(1 == 1) {
+    if(debug) {
       char filename[999];
       sprintf(filename, "ray_normalize_%i.vtk", i_rank);
       PDM_vtk_write_lines(filename,
@@ -308,7 +309,9 @@ _adapt_tree_weight_for_intersect_line
                      PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dbbt->comm);
 
   double bucket_size_min = 0.2 * n_g_line / (n_rank);
-  log_trace("bucket_size_min : %12.5e \n", bucket_size_min);
+  if (debug) {
+    log_trace("bucket_size_min : %12.5e \n", bucket_size_min);
+  }
 
   int n_max_it = 6;
 
@@ -340,10 +343,12 @@ _adapt_tree_weight_for_intersect_line
                                               &extract_child_id,
                                               &extract_child_is_leaf);
 
-    PDM_log_trace_array_int(extract_child_id     , n_extract_child, "extract_child_id :");
-    PDM_log_trace_array_int(extract_child_is_leaf, n_extract_child, "extract_child_is_leaf :");
+    if (debug) {
+      PDM_log_trace_array_int(extract_child_id     , n_extract_child, "extract_child_id :");
+      PDM_log_trace_array_int(extract_child_is_leaf, n_extract_child, "extract_child_is_leaf :");
+    }
 
-    if(1 == 1) {
+    if(debug) {
       char filename[999];
       sprintf(filename, "dbbt_extract_coarse_tree_it=%3.3d_%3.3d.vtk",it,i_rank);
       PDM_vtk_write_boxes (filename,
@@ -423,7 +428,7 @@ _adapt_tree_weight_for_intersect_line
                             rank_boxes,
                             PDM_BOX_TREE_ASYNC_LEVEL);
 
-    if(1 == 1 && i_rank == 0) {
+    if(debug && i_rank == 0) {
       const char* filename = "dbbt_sampling_shared_tree.vtk";
       PDM_vtk_write_boxes (filename,
                            rank_boxes->local_boxes->n_boxes,
@@ -727,7 +732,9 @@ _adapt_tree_weight_for_intersect_line
   /*
    * Re-setup boxes
    */
-  log_trace("Avant :  _local_boxes->n_boxes = %i --> %i \n",  _local_boxes->n_boxes, n_recv_boxes);
+  if (debug) {
+    log_trace("Avant :  _local_boxes->n_boxes = %i --> %i \n",  _local_boxes->n_boxes, n_recv_boxes);
+  }
   _local_boxes->n_boxes = n_recv_boxes;
   free(_local_boxes->g_num);
   free(_local_boxes->extents);
@@ -2778,7 +2785,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_async
     free(n_requests);
 
     //------------->>>
-    if ( myRank == 0 ) {
+    if ( idebug && myRank == 0 ) {
       if ( n_copied_ranks == 0 ) {
         printf("n_copied_ranks = 0\n");
       } else {
@@ -3406,6 +3413,8 @@ PDM_dbbtree_points_inside_boxes
  const int           ellipsoids
  )
 {
+  int idebug = 0;
+
   const float f_threshold = 1.1;  // factor of the mean nb of requests
   const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
@@ -3537,7 +3546,7 @@ PDM_dbbtree_points_inside_boxes
       }
     }
 
-    if (i_rank == 0) {
+    if (idebug && i_rank == 0) {
       if (n_copied_ranks > 0) {
         if (n_copied_ranks == 1) {
           printf("1 copied rank: %d\n", copied_ranks[0]);
@@ -3614,7 +3623,9 @@ PDM_dbbtree_points_inside_boxes
 
     n_pts_recv = recv_shift[n_rank];
     n_pts1 = n_pts_local + n_pts_recv + n_pts_copied;
-    printf("[%d] n_pts1 = %d (without copies : %d)\n", i_rank, n_pts1, n_pts_recv_no_copies);
+    if (idebug) {
+      printf("[%d] n_pts1 = %d (without copies : %d)\n", i_rank, n_pts1, n_pts_recv_no_copies);
+    }
 
     pts_g_num1 = malloc (sizeof(PDM_g_num_t) * n_pts1);
     pts_coord1 = malloc (sizeof(double)      * n_pts1 * 3);
@@ -3971,6 +3982,8 @@ PDM_dbbtree_boxes_containing_points
  const int           ellipsoids
  )
 {
+  int idebug = 0;
+
   const float f_threshold = 1.1;  // factor of the mean nb of requests
   const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
@@ -4102,7 +4115,7 @@ PDM_dbbtree_boxes_containing_points
       }
     }
 
-    if (i_rank == 0) {
+    if (idebug && i_rank == 0) {
       if (n_copied_ranks > 0) {
         if (n_copied_ranks == 1) {
           printf("1 copied rank: %d\n", copied_ranks[0]);
@@ -4179,7 +4192,9 @@ PDM_dbbtree_boxes_containing_points
 
     n_pts_recv = recv_shift[n_rank];
     n_pts1 = n_pts_local + n_pts_recv + n_pts_copied;
-    printf("[%d] n_pts1 = %d (without copies : %d)\n", i_rank, n_pts1, n_pts_recv_no_copies);
+    if (idebug) {
+      printf("[%d] n_pts1 = %d (without copies : %d)\n", i_rank, n_pts1, n_pts_recv_no_copies);
+    }
 
     pts_g_num1 = malloc (sizeof(PDM_g_num_t) * n_pts1);
     pts_coord1 = malloc (sizeof(double)      * n_pts1 * 3);
@@ -4552,6 +4567,8 @@ _lines_intersect_shared_box_tree
  int             *n_copied_ranks
  )
 {
+  int idebug = 0;
+
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
@@ -4683,7 +4700,7 @@ _lines_intersect_shared_box_tree
       }
     }
 
-    if (i_rank == 0) {
+    if (idebug && i_rank == 0) {
       if (*n_copied_ranks > 0) {
         if (*n_copied_ranks == 1) {
           printf("1 copied rank: %d\n", copied_ranks[0]);
@@ -4760,7 +4777,9 @@ _lines_intersect_shared_box_tree
 
     n_line_recv = recv_shift[n_rank];
     n_line1 = n_line_local + n_line_recv + n_line_copied;
-    printf("[%d] n_line1 = %d (without copies : %d)\n", i_rank, n_line1, n_line_recv_no_copies);
+    if (idebug) {
+      printf("[%d] n_line1 = %d (without copies : %d)\n", i_rank, n_line1, n_line_recv_no_copies);
+    }
 
     // line_g_num1 = malloc (sizeof(PDM_g_num_t) * n_line1);
     // line_coord1 = malloc (sizeof(double)      * n_line1 * 6);
@@ -4944,6 +4963,8 @@ PDM_dbbtree_lines_intersect_boxes
  PDM_g_num_t   **box_g_num
  )
 {
+  int idebug = 0;
+
   const float f_threshold = 1.1;  // factor of the mean nb of requests
   const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
@@ -5077,7 +5098,7 @@ PDM_dbbtree_lines_intersect_boxes
       }
     }
 
-    if (i_rank == 0) {
+    if (idebug && i_rank == 0) {
       if (n_copied_ranks > 0) {
         if (n_copied_ranks == 1) {
           printf("1 copied rank: %d\n", copied_ranks[0]);
@@ -5154,7 +5175,9 @@ PDM_dbbtree_lines_intersect_boxes
 
     n_line_recv = recv_shift[n_rank];
     n_line1 = n_line_local + n_line_recv + n_line_copied;
-    printf("[%d] n_line1 = %d (without copies : %d)\n", i_rank, n_line1, n_line_recv_no_copies);
+    if (idebug) {
+      printf("[%d] n_line1 = %d (without copies : %d)\n", i_rank, n_line1, n_line_recv_no_copies);
+    }
 
     line_g_num1 = malloc (sizeof(PDM_g_num_t) * n_line1);
     line_coord1 = malloc (sizeof(double)      * n_line1 * 6);

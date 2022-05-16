@@ -90,7 +90,7 @@ end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
 
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
-  if(i_rank == 0) {
+  if(0 && i_rank == 0) {
     printf("[%i] %s : duration min/max -> %12.5e %12.5e \n", n_rank, msg, delta_min, delta_max);
   }
 }
@@ -2856,7 +2856,9 @@ PDM_g_num_t  **dentity_elmt
    */
   *entity_distrib = _make_absolute_entity_numbering(_dn_entity, comm);
 
-  end_timer_and_print("PDM_generate_entitiy_connectivity", comm, t1);
+  if (0) {
+    end_timer_and_print("PDM_generate_entitiy_connectivity", comm, t1);
+  }
 }
 
 

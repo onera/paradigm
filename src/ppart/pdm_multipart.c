@@ -1035,6 +1035,8 @@ const double            *part_fraction,
       int              **node_part
 )
 {
+  int verbose = 0;
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -1047,7 +1049,7 @@ const double            *part_fraction,
   int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
   PDM_dmesh_dims_get(dmesh, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
 
-  if(i_rank == 0) {
+  if(verbose && i_rank == 0) {
     printf(" dn_cell = %i \n", dn_cell);
     printf(" dn_face = %i \n", dn_face);
     printf(" dn_edge = %i \n", dn_edge);
@@ -2059,6 +2061,8 @@ const double*     part_fraction,
 PDM_MPI_Comm      comm
 )
 {
+  int verbose = 0;
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -2079,11 +2083,13 @@ PDM_MPI_Comm      comm
   PDM_dmesh_data_get(dmesh, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                      &dface_bound_idx, &dface_bound, &joins_ids, &dface_join_idx, &dface_join);
 
-  printf(" dn_cell = %i \n", dn_cell);
-  printf(" dn_face = %i \n", dn_face);
-  printf(" dn_edge = %i \n", dn_edge);
-  printf(" dn_vtx  = %i \n", dn_vtx );
-  printf(" n_bnd   = %i \n", n_bnd  );
+  if (verbose) {
+    printf(" dn_cell = %i \n", dn_cell);
+    printf(" dn_face = %i \n", dn_face);
+    printf(" dn_edge = %i \n", dn_edge);
+    printf(" dn_vtx  = %i \n", dn_vtx );
+    printf(" n_bnd   = %i \n", n_bnd  );
+  }
 
   // This will store all the partitions created by this proc on this zone
   // Copy number of bounds and joins (global data) in the part structure
@@ -3080,12 +3086,12 @@ PDM_multipart_run_ppart
         int n_part = _multipart->n_part[i_zone];
 
 
-        if (i_rank == 0)
+        if (0 && i_rank == 0)
           PDM_printf("Running partitioning for block %i...\n", i_zone+1);
         PDM_timer_resume(timer);
         _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
         PDM_timer_hang_on(timer);
-        if (i_rank == 0)
+        if (0 && i_rank == 0)
           PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
         cum_elapsed_time = PDM_timer_elapsed(timer);
       }

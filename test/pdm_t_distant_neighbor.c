@@ -322,10 +322,12 @@ char *argv[]
   free(recv_entity_data);
   free(recv_entity_var_stri);
   free(recv_entity_var_data);
+
+  if (i_rank == 0) {
+    PDM_printf ("-- End\n");
+  }
+
   PDM_MPI_Finalize();
-
-  PDM_printf ("\nfin Test\n");
-
 
   return 0;
 }
