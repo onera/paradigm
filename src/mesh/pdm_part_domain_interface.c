@@ -28,6 +28,7 @@
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_distant_neighbor.h"
 
 #include "pdm_part_domain_interface.h"
 #include "pdm_part_domain_interface_priv.h"
@@ -533,6 +534,7 @@ PDM_part_domain_interface_as_graph
 
   int n_interface = PDM_part_domain_interface_n_interface_get(dom_intrf);
 
+  int **neighbor_n         = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int **neighbor_idx       = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int **neighbor_desc      = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int **neighbor_interface = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
@@ -551,8 +553,9 @@ PDM_part_domain_interface_as_graph
 
       n_entity_bound[i_part+shift_part] = n_entity[i_domain][i_part];
       neighbor_idx  [i_part+shift_part] = (int *) malloc( (n_entity_bound[i_part+shift_part]+1) * sizeof(int) );
+      neighbor_n    [i_part+shift_part] = PDM_array_zeros_int(n_entity_bound[i_part+shift_part]);
 
-      int* _neighbor_n   = PDM_array_zeros_int(n_entity_bound[i_part+shift_part]);
+      int* _neighbor_n   = neighbor_n    [i_part+shift_part];
       int* _neighbor_idx = neighbor_idx  [i_part+shift_part];
 
       int           *interface_pn       = NULL;
@@ -690,15 +693,65 @@ PDM_part_domain_interface_as_graph
         }
       }
 
+    }
+    shift_part   += dom_intrf->n_part[i_domain];
+    shift_part_g += n_tot_part_by_domain[i_domain];
+  }
 
 
-      free(_neighbor_n);
 
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(dom_intrf->comm,
+                                                           n_part_loc_all_domain,
+                                                           n_entity_bound,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+  int **neighbor_opp_n = NULL;
+  int **neighbor_opp = NULL;
+  PDM_distant_neighbor_exch(dn,
+                            3 * sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            neighbor_n,
+                  (void **) neighbor_desc,
+                           &neighbor_opp_n,
+                 (void ***)&neighbor_opp);
+
+
+  shift_part   = 0;
+  shift_part_g = 0;
+  for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain ) {
+    for(int i_part = 0; i_part < dom_intrf->n_part[i_domain]; ++i_part) {
+
+      int   n_elmt = n_entity_bound[i_part+shift_part];
+      int  *_neighbor_idx   = neighbor_idx  [i_part+shift_part];
+      int  *_neighbor_opp   = neighbor_opp  [i_part+shift_part];
+      int  *_neighbor_opp_n = neighbor_opp_n[i_part+shift_part];
+
+      log_trace("n_elmt = %i \n", n_elmt);
+      int n_data = 0;
+      int idx_read = 0;
+      for(int i = 0; i < n_elmt; ++i) {
+
+        printf("i_elmt [%i] = ", i);
+        for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+          for(int k = 0; k < _neighbor_opp_n[idx]; ++k) {
+            printf(" (%i, %i, %i) ", _neighbor_opp[3*idx_read], _neighbor_opp[3*idx_read+1], _neighbor_opp[3*idx_read+2]);
+            idx_read += 1;
+          }
+          n_data += _neighbor_opp_n[idx];
+        }
+        printf("\n");
+      }
+
+      PDM_log_trace_array_int(_neighbor_opp, 3 * n_data, "neighbor_opp :: ");
 
     }
     shift_part   += dom_intrf->n_part[i_domain];
     shift_part_g += n_tot_part_by_domain[i_domain];
   }
+
+  PDM_distant_neighbor_free(dn);
 
 
 
