@@ -135,6 +135,17 @@ PDM_part_domain_interface_rotation_get
         double                       *angle
 );
 
+
+void
+PDM_part_domain_interface_as_graph
+(
+  PDM_part_domain_interface_t    *dom_intrf,
+  PDM_bound_type_t                interface_kind,
+  int                           **n_entity,
+  PDM_g_num_t                  ***entity_ln_to_gn
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

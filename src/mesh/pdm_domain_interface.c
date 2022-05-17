@@ -364,8 +364,9 @@ static int _interface_to_graph
     n_connected_l = 0;
     for (int i = 0; i < n_gnum; i ++) {
       int n_unique = PDM_inplace_unique_long(recv_data_next, NULL, start, start+recv_stride_next[i]-1);
-      //Compress array at the same time (let meanless data at the end of array)
-      memcpy(&recv_data_next[n_connected_l], &recv_data_next[start], n_unique*sizeof(PDM_g_num_t));
+      for(int k = 0; k < n_unique; ++k) {
+        recv_data_next[n_connected_l+k] = recv_data_next[start+k];
+      }
       start += recv_stride_next[i];
       recv_stride_next[i] = n_unique;
       n_connected_l += n_unique;
