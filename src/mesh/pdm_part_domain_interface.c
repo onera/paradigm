@@ -540,7 +540,9 @@ PDM_part_domain_interface_as_graph
   int **neighbor_interface = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
   int  *n_entity_bound     = (int  *) malloc( n_part_loc_all_domain * sizeof(int  ) );
 
-
+  int **neighbor_opp_n    = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  int **neighbor_opp_idx  = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  int **neighbor_opp_desc = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
 
   /*
    * Loop over all interfaces to create distant neighbor structure
@@ -557,6 +559,12 @@ PDM_part_domain_interface_as_graph
 
       int* _neighbor_n   = neighbor_n    [i_part+shift_part];
       int* _neighbor_idx = neighbor_idx  [i_part+shift_part];
+
+      neighbor_opp_idx  [i_part+shift_part] = (int *) malloc( (n_entity_bound[i_part+shift_part]+1) * sizeof(int) );
+      neighbor_opp_n    [i_part+shift_part] = PDM_array_zeros_int(n_entity_bound[i_part+shift_part]);
+
+      int* _neighbor_opp_n   = neighbor_opp_n    [i_part+shift_part];
+      int* _neighbor_opp_idx = neighbor_opp_idx  [i_part+shift_part];
 
       int           *interface_pn       = NULL;
       PDM_g_num_t  **interface_ln_to_gn = NULL;
@@ -596,14 +604,12 @@ PDM_part_domain_interface_as_graph
             int i_part_opp   = interface_ids[i_interface][3*j+1];
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+            if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
               // i_proc_cur   = i_proc_opp;
               // i_part_cur   = i_part_opp;
               i_entity_cur = i_entity_opp;
               idx_current  = j;
-              assert(found == 0);
               found = 1;
-              break;
             }
           }
 
@@ -626,6 +632,8 @@ PDM_part_domain_interface_as_graph
             if(idx_current != j) {
               // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
               _neighbor_n[i_entity_cur] += 1;
+            } else {
+              _neighbor_opp_n[i_entity_cur] += 1;
             }
           }
         }
@@ -633,14 +641,19 @@ PDM_part_domain_interface_as_graph
 
       /* Compute index */
       _neighbor_idx[0] = 0;
+      _neighbor_opp_idx[0] = 0;
       for(int i_entity = 0; i_entity < n_entity_bound[i_part+shift_part]; ++i_entity) {
-        _neighbor_idx[i_entity+1] = _neighbor_idx[i_entity] + _neighbor_n[i_entity];
-        _neighbor_n[i_entity] = 0;
+        _neighbor_idx    [i_entity+1] = _neighbor_idx    [i_entity] + _neighbor_n    [i_entity];
+        _neighbor_opp_idx[i_entity+1] = _neighbor_opp_idx[i_entity] + _neighbor_opp_n[i_entity];
+        _neighbor_n    [i_entity] = 0;
+        _neighbor_opp_n[i_entity] = 0;
       }
 
-      neighbor_desc     [i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx[n_entity_bound[i_part+shift_part]] * sizeof(int) );
+      neighbor_desc     [i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx    [n_entity_bound[i_part+shift_part]] * sizeof(int) );
+      neighbor_opp_desc [i_part+shift_part] = (int *) malloc( 4 * _neighbor_opp_idx[n_entity_bound[i_part+shift_part]] * sizeof(int) );
       neighbor_interface[i_part+shift_part] = (int *) malloc(     _neighbor_idx[n_entity_bound[i_part+shift_part]] * sizeof(int) );
       int* _neighbor_desc      = neighbor_desc     [i_part+shift_part];
+      int* _neighbor_opp_desc  = neighbor_opp_desc [i_part+shift_part];
       int* _neighbor_interface = neighbor_interface[i_part+shift_part];
 
       for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
@@ -657,14 +670,12 @@ PDM_part_domain_interface_as_graph
             int i_part_opp   = interface_ids[i_interface][3*j+1];
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+            if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
               // i_proc_cur   = i_proc_opp;
               // i_part_cur   = i_part_opp;
               i_entity_cur = i_entity_opp;
               idx_current  = j;
-              assert(found == 0);
               found = 1;
-              break;
             }
           }
 
@@ -688,9 +699,28 @@ PDM_part_domain_interface_as_graph
               _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
               _neighbor_interface[idx_write] = (i_interface+1) * interface_sgn[i_interface][idx_entity];
               // _neighbor_interface[idx_write] = (i_interface+1);
+            } else {
+              int idx_write = _neighbor_opp_idx[i_entity_cur] + _neighbor_opp_n[i_entity_cur]++;
+              _neighbor_opp_desc[4*idx_write  ] = i_proc_opp;              // i_proc_opp;
+              _neighbor_opp_desc[4*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
+              _neighbor_opp_desc[4*idx_write+2] = i_entity_opp;            // i_entity_opp
+              _neighbor_opp_desc[4*idx_write+3] = - (i_interface+1) * interface_sgn[i_interface][idx_entity];
             }
           }
         }
+      }
+
+
+      if(1 == 1) {
+        printf(" ------------------------------------- _neighbor graph : \n");
+        for(int i = 0; i < n_entity_bound[i_part+shift_part]; ++i) {
+          printf("i_elmt [%i] = ", i);
+          for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+              printf(" (%i, %i, %i, %i) ", _neighbor_desc[3*idx], _neighbor_desc[3*idx+1], _neighbor_desc[3*idx+2], _neighbor_interface[idx]);
+          }
+          printf("\n");
+        }
+        printf(" ------------------------------------- _neighbor graph END \n");
       }
 
     }
@@ -706,16 +736,16 @@ PDM_part_domain_interface_as_graph
                                                            neighbor_idx,
                                                            neighbor_desc);
 
-  int **neighbor_opp_n = NULL;
-  int **neighbor_opp = NULL;
+  int **next_neighbor_opp_n = NULL;
+  int **next_neighbor_opp = NULL;
   PDM_distant_neighbor_exch(dn,
-                            3 * sizeof(int),
+                            4 * sizeof(int),
                             PDM_STRIDE_VAR_INTERLACED,
                             -1,
-                            neighbor_n,
-                  (void **) neighbor_desc,
-                           &neighbor_opp_n,
-                 (void ***)&neighbor_opp);
+                            neighbor_opp_n,
+                  (void **) neighbor_opp_desc,
+                           &next_neighbor_opp_n,
+                 (void ***)&next_neighbor_opp);
 
 
   shift_part   = 0;
@@ -725,8 +755,8 @@ PDM_part_domain_interface_as_graph
 
       int   n_elmt = n_entity_bound[i_part+shift_part];
       int  *_neighbor_idx   = neighbor_idx  [i_part+shift_part];
-      int  *_neighbor_opp   = neighbor_opp  [i_part+shift_part];
-      int  *_neighbor_opp_n = neighbor_opp_n[i_part+shift_part];
+      int  *_next_neighbor_opp   = next_neighbor_opp  [i_part+shift_part];
+      int  *_next_neighbor_opp_n = next_neighbor_opp_n[i_part+shift_part];
 
       log_trace("n_elmt = %i \n", n_elmt);
       int n_data = 0;
@@ -735,16 +765,20 @@ PDM_part_domain_interface_as_graph
 
         printf("i_elmt [%i] = ", i);
         for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
-          for(int k = 0; k < _neighbor_opp_n[idx]; ++k) {
-            printf(" (%i, %i, %i) ", _neighbor_opp[3*idx_read], _neighbor_opp[3*idx_read+1], _neighbor_opp[3*idx_read+2]);
+          for(int k = 0; k < _next_neighbor_opp_n[idx]; ++k) {
+            printf(" (%i, %i, %i, %i) ",
+                   _next_neighbor_opp[4*idx_read],
+                   _next_neighbor_opp[4*idx_read+1],
+                   _next_neighbor_opp[4*idx_read+2],
+                   _next_neighbor_opp[4*idx_read+3]);
             idx_read += 1;
           }
-          n_data += _neighbor_opp_n[idx];
+          n_data += _next_neighbor_opp_n[idx];
         }
         printf("\n");
       }
 
-      PDM_log_trace_array_int(_neighbor_opp, 3 * n_data, "neighbor_opp :: ");
+      PDM_log_trace_array_int(_next_neighbor_opp, 4 * n_data, "next_neighbor_opp :: ");
 
     }
     shift_part   += dom_intrf->n_part[i_domain];

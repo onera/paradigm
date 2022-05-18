@@ -49,6 +49,7 @@ struct _pdm_part_extension_t {
 
   _part_t  **parts;
   PDM_part_domain_interface_t  *pdi;
+  int                           n_interface;
 
   /* Store for each depth / each domain / each part */
   int **neighbor_idx;

@@ -236,9 +236,13 @@ _offset_parts_by_domain
   // Attention il faut shifter tout les border_ln_to_gn aussi et deduire le border_i_domain
   // (Recherche dicotomique dans le shift by domain)
 
-
+  part_ext->n_interface = 0;
   if(part_ext->pdi != NULL && part_ext->n_domain > 1) {
     abort();
+  }
+
+  if(part_ext->pdi !=NULL) {
+    part_ext->n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
   }
 
 
@@ -1844,9 +1848,12 @@ _compute_dual_graph
           for(int j = 0; j < _border_cell_cell_extended_n[idx_neight]; ++j ) {
 
             // Adapt opposite with the current one
-            // if(_border_cell_cell_interface[idx_read] == -40000) {
-            //   _border_cell_cell_interface[idx_read] = cur_interface;
-            // }
+            if(_border_cell_cell_interface[idx_read] == -40000) {
+              _border_cell_cell_interface[idx_read] = cur_interface;
+            } else { // Composition
+              int interf_border = _border_cell_cell_interface[idx_read];
+              _border_cell_cell_interface[idx_read] = cur_interface + part_ext->n_interface * interf_border;
+            }
 
 
             idx_read++;
@@ -2406,6 +2413,8 @@ _compute_dual_graph
         PDM_log_trace_array_int(_ncell_cell_extended_idx, n_cell+1, "_ncell_cell_extended_idx:: ");
         PDM_log_trace_array_int(_ncell_cell_extended_n  , n_cell  , "_ncell_cell_extended_n:: ");
         PDM_log_trace_array_int(_ncell_cell_extended    , 3 * _ncell_cell_extended_idx[n_cell], "_ncell_cell_extended:: ");
+        PDM_log_trace_array_int(_ncell_cell_extended    , 3 * _ncell_cell_extended_idx[n_cell], "_ncell_cell_extended:: ");
+        PDM_log_trace_array_int(part_ext->cell_cell_interface[i_depth][i_part+shift_part]    , _ncell_cell_extended_idx[n_cell], "_ncell_cell_interface:: ");
 
         printf(" --------------------------------------------------------------- \n");
         printf("_ncell_cell_extended :: --------------------- \n");
@@ -2625,8 +2634,27 @@ _compute_first_extended_cell_graph
         PDM_log_trace_array_int(part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part], n_cell  , "t_cell_cell_extended_n::");
         PDM_log_trace_array_int(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part], n_cell+1, "t_cell_cell_extended_idx::");
         PDM_log_trace_array_int(part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part], 3 * _unique_cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
-        // PDM_log_trace_array_int(part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part], 3 * _unique_cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
+        PDM_log_trace_array_int(part_ext->cell_cell_interface   [i_depth_cur][i_part+shift_part],     _unique_cell_cell_extended_idx[n_cell]  , "t_cell_cell_interface::");
       }
+
+      if( 1 == 1) {
+        printf("_compute_first_extended_cell_graph - part_ext->cell_cell_extended :: --------------------- \n");
+        for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+          if( part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell+1] > part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell]){
+            printf("[%i] i_cell -> %i -->  ", i_part, i_cell);
+          }
+          for(int idx = part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell]; idx < part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell+1]; ++idx) {
+            printf("(%i, %i, intrf = %i) ", part_ext->cell_cell_extended[i_depth_cur][i_part+shift_part][3*idx+1],
+                                            part_ext->cell_cell_extended[i_depth_cur][i_part+shift_part][3*idx+2],
+                                            part_ext->cell_cell_interface[i_depth_cur][i_part+shift_part][idx]);
+          }
+          if( part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell+1] > part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part][i_cell]){
+            printf("\n");
+          }
+        }
+        printf("_compute_first_extended_cell_graph - part_ext->cell_cell_extended :: --------------------- END \n");
+      }
+
 
     }
     shift_part   += part_ext->n_part              [i_domain];
@@ -2661,9 +2689,9 @@ _prune_cell_cell_extented
       int s_tot       = _cell_cell_extended_idx[n_cell];
 
       if( 1 == 1) {
-        PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "_cell_cell_extended_idx::");
-        PDM_log_trace_array_int(_cell_cell_extended    , 3 * _cell_cell_extended_idx[n_cell], "_cell_cell_extended::");
-        PDM_log_trace_array_int(_cell_cell_interface   ,     _cell_cell_extended_idx[n_cell], "_cell_cell_interface::");
+        PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "(in pruned) _cell_cell_extended_idx::");
+        PDM_log_trace_array_int(_cell_cell_extended    , 3 * _cell_cell_extended_idx[n_cell], "(in pruned) _cell_cell_extended::");
+        PDM_log_trace_array_int(_cell_cell_interface   ,     _cell_cell_extended_idx[n_cell], "(in pruned) _cell_cell_interface::");
       }
 
       int *_quad_cell_cell_extended = NULL;
@@ -4402,7 +4430,8 @@ PDM_part_extension_compute
                                                            part_ext->dist_neighbor_cell_idx,
                                                            part_ext->dist_neighbor_cell_desc);
 
-  for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
+  // for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
+  for(int i_depth = 1; i_depth < depth; ++i_depth) {
     /* Graph compute = local + distant */
     printf(" ------------------------------------------------- i_depth = %i \n", i_depth);
     _compute_dual_graph(part_ext, dn, i_depth);
@@ -4813,7 +4842,7 @@ PDM_part_extension_free
 
   free(part_ext->n_part_idx);
 
-  for(int i_depth = 0; i_depth < part_ext->depth+1; ++i_depth) {
+  for(int i_depth = 0; i_depth < part_ext->depth; ++i_depth) {
 
     int shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
