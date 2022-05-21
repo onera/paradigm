@@ -711,7 +711,7 @@ PDM_part_domain_interface_as_graph
       }
 
 
-      if(1 == 1) {
+      if(0 == 1) {
         printf(" ------------------------------------- _neighbor graph : \n");
         for(int i = 0; i < n_entity_bound[i_part+shift_part]; ++i) {
           printf("i_elmt [%i] = ", i);
@@ -722,6 +722,7 @@ PDM_part_domain_interface_as_graph
         }
         printf(" ------------------------------------- _neighbor graph END \n");
       }
+      PDM_log_trace_graph_nuplet_int(_neighbor_idx, _neighbor_desc, 3, n_entity_bound[i_part+shift_part], "_neighbor graph :");
 
     }
     shift_part   += dom_intrf->n_part[i_domain];
@@ -753,32 +754,61 @@ PDM_part_domain_interface_as_graph
   for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain ) {
     for(int i_part = 0; i_part < dom_intrf->n_part[i_domain]; ++i_part) {
 
-      int   n_elmt = n_entity_bound[i_part+shift_part];
-      int  *_neighbor_idx   = neighbor_idx  [i_part+shift_part];
+      int   n_elmt               = n_entity_bound     [i_part+shift_part];
+      int  *_neighbor_idx        = neighbor_idx       [i_part+shift_part];
       int  *_next_neighbor_opp   = next_neighbor_opp  [i_part+shift_part];
       int  *_next_neighbor_opp_n = next_neighbor_opp_n[i_part+shift_part];
 
-      log_trace("n_elmt = %i \n", n_elmt);
-      int n_data = 0;
-      int idx_read = 0;
-      for(int i = 0; i < n_elmt; ++i) {
+      int *_next_neighbor_opp_idx = PDM_array_zeros_int(n_elmt+1);
 
-        printf("i_elmt [%i] = ", i);
+      _next_neighbor_opp_idx[0] = 0;
+      for(int i = 0; i < n_elmt; ++i) {
+        _next_neighbor_opp_idx[i+1] = _next_neighbor_opp_idx[i];
         for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
-          for(int k = 0; k < _next_neighbor_opp_n[idx]; ++k) {
-            printf(" (%i, %i, %i, %i) ",
-                   _next_neighbor_opp[4*idx_read],
-                   _next_neighbor_opp[4*idx_read+1],
-                   _next_neighbor_opp[4*idx_read+2],
-                   _next_neighbor_opp[4*idx_read+3]);
-            idx_read += 1;
-          }
-          n_data += _next_neighbor_opp_n[idx];
+          _next_neighbor_opp_idx[i+1] += _next_neighbor_opp_n[idx];
         }
-        printf("\n");
+      }
+      PDM_log_trace_graph_nuplet_int(_next_neighbor_opp_idx, _next_neighbor_opp, 4, n_entity_bound[i_part+shift_part], "_next_neighbor_opp :");
+
+
+
+      if(1 == 1){
+        log_trace("n_elmt = %i \n", n_elmt);
+        int n_data = 0;
+        int idx_read = 0;
+        for(int i = 0; i < n_elmt; ++i) {
+
+          printf("i_elmt [%i] = ", i);
+          for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+            for(int k = 0; k < _next_neighbor_opp_n[idx]; ++k) {
+              printf(" (%i, %i, %i, %i) ",
+                     _next_neighbor_opp[4*idx_read],
+                     _next_neighbor_opp[4*idx_read+1],
+                     _next_neighbor_opp[4*idx_read+2],
+                     _next_neighbor_opp[4*idx_read+3]);
+              idx_read += 1;
+            }
+            n_data += _next_neighbor_opp_n[idx];
+          }
+          printf("\n");
+        }
+
+        PDM_log_trace_array_int(_next_neighbor_opp, 4 * n_data, "next_neighbor_opp :: ");
       }
 
-      PDM_log_trace_array_int(_next_neighbor_opp, 4 * n_data, "next_neighbor_opp :: ");
+      /*
+       * Concatenate with the previous
+       */
+
+      /*
+       * Unique
+       */
+
+      /*
+       * Detect if the graph grows or not to stop algorithm
+       */
+
+      free(_next_neighbor_opp_idx);
 
     }
     shift_part   += dom_intrf->n_part[i_domain];
