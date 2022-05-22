@@ -271,6 +271,7 @@ _exchange_and_sort_neighbor
   int            *n_entity,
   int           **neighbor_idx,
   int           **neighbor_desc,
+  int           **neighbor_interface,
   int           **init_neighbor_idx,
   int           **init_neighbor_desc,
   int          ***all_neighbor_idx,
@@ -332,6 +333,9 @@ _exchange_and_sort_neighbor
                                     &concat_neighbor_opp_idx,
                                     &concat_neighbor_opp);
 
+    int is_same_l = is_same;
+    PDM_MPI_Allreduce (&is_same_l, &is_same, 1, PDM_MPI_INT, PDM_MPI_MIN, comm);
+
     /* Init next step */
     if(!first_step) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -361,8 +365,108 @@ _exchange_and_sort_neighbor
 
   PDM_distant_neighbor_free(dn);
 
-  *all_neighbor_idx  = concat_neighbor_opp_idx;
-  *all_neighbor_desc = concat_neighbor_opp;
+  /*
+   * Filter by removing self and already direct neighbor
+   */
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int **filter_neighbor_idx  = malloc(n_part * sizeof(int *));
+  int **filter_neighbor_desc = malloc(n_part * sizeof(int *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int *_concat_neighbor_opp_idx = concat_neighbor_opp_idx[i_part];
+    int *_concat_neighbor_opp     = concat_neighbor_opp    [i_part];
+
+    int *_neighbor_idx   = neighbor_idx      [i_part];
+    int *_neighbor_desc  = neighbor_desc     [i_part];
+    int *_neighbor_intrf = neighbor_interface[i_part];
+
+    filter_neighbor_idx [i_part] = malloc(     (n_entity[i_part] + 1)                       * sizeof(int));
+    filter_neighbor_desc[i_part] = malloc( 4 * (_concat_neighbor_opp_idx[n_entity[i_part]]) * sizeof(int));
+
+    int *_filter_neighbor_idx = filter_neighbor_idx [i_part];
+    int *_filter_neighbor     = filter_neighbor_desc[i_part];
+
+    _filter_neighbor_idx[0] = 0;
+    for(int i = 0; i < n_entity[i_part]; ++i) {
+
+      _filter_neighbor_idx[i+1] = _filter_neighbor_idx[i];
+
+      for(int idx = _concat_neighbor_opp_idx[i]; idx < _concat_neighbor_opp_idx[i+1]; ++idx) {
+
+        int curr_proc = _concat_neighbor_opp[4*idx  ];
+        int curr_part = _concat_neighbor_opp[4*idx+1];
+        int curr_elmt = _concat_neighbor_opp[4*idx+2];
+        int curr_inte = _concat_neighbor_opp[4*idx+3];
+
+        /* Rm if current elemt is inside */
+        int is_define_in_direct_neight = 0;
+
+        if(curr_proc == i_rank && curr_part == i_part && curr_elmt == i) {
+          continue;
+        }
+
+
+        /* Brut force */
+        for(int idx2 = _neighbor_idx[i]; idx2 < _neighbor_idx[i+1]; ++idx2) {
+          int opp_proc = _neighbor_desc[3*idx2  ];
+          int opp_part = _neighbor_desc[3*idx2+1];
+          int opp_elmt = _neighbor_desc[3*idx2+2];
+          int opp_inte = curr_inte; // Normal because i can come from another interface
+
+          is_define_in_direct_neight = _is_same_quadruplet(curr_proc, curr_part, curr_elmt, curr_inte,
+                                                           opp_proc , opp_part , opp_elmt , opp_inte);
+
+          if(is_define_in_direct_neight) {
+            break;
+          }
+        }
+
+        if(is_define_in_direct_neight) {
+          continue;
+        }
+
+        int idx_write = _filter_neighbor_idx[i+1]++;
+        _filter_neighbor[4*idx_write  ] = _concat_neighbor_opp[4*idx  ];
+        _filter_neighbor[4*idx_write+1] = _concat_neighbor_opp[4*idx+1];
+        _filter_neighbor[4*idx_write+2] = _concat_neighbor_opp[4*idx+2];
+        _filter_neighbor[4*idx_write+3] = _concat_neighbor_opp[4*idx+3];
+
+      }
+
+      /* On re-rajoute les neighbor */
+      for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+        int idx_write = _filter_neighbor_idx[i+1]++;
+        _filter_neighbor[4*idx_write  ] = _neighbor_desc[3*idx  ];
+        _filter_neighbor[4*idx_write+1] = _neighbor_desc[3*idx+1];
+        _filter_neighbor[4*idx_write+2] = _neighbor_desc[3*idx+2];
+        _filter_neighbor[4*idx_write+3] = _neighbor_intrf[idx];
+      }
+
+
+
+    }
+
+    /*
+     * Realloc
+     */
+    filter_neighbor_desc[i_part] = realloc(filter_neighbor_desc[i_part], 4 * (_filter_neighbor_idx[n_entity[i_part]]) * sizeof(int));
+    free(_concat_neighbor_opp_idx);
+    free(_concat_neighbor_opp);
+
+    if(1 == 1) {
+      PDM_log_trace_graph_nuplet_int(_filter_neighbor_idx, filter_neighbor_desc[i_part], 4, n_entity[i_part], "filter_neighbor_desc :");
+    }
+
+
+  }
+
+  free(concat_neighbor_opp_idx);
+  free(concat_neighbor_opp    );
+
+  *all_neighbor_idx  = filter_neighbor_idx;
+  *all_neighbor_desc = filter_neighbor_desc;
 
 }
 
@@ -1028,19 +1132,10 @@ PDM_part_domain_interface_as_graph
         }
       }
 
-
       if(0 == 1) {
-        printf(" ------------------------------------- _neighbor graph : \n");
-        for(int i = 0; i < n_entity_bound[i_part+shift_part]; ++i) {
-          printf("i_elmt [%i] = ", i);
-          for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
-              printf(" (%i, %i, %i, %i) ", _neighbor_desc[3*idx], _neighbor_desc[3*idx+1], _neighbor_desc[3*idx+2], _neighbor_interface[idx]);
-          }
-          printf("\n");
-        }
-        printf(" ------------------------------------- _neighbor graph END \n");
+        PDM_log_trace_graph_nuplet_int(_neighbor_idx, _neighbor_desc, 3, n_entity_bound[i_part+shift_part], "_neighbor graph :");
+        PDM_log_trace_graph_nuplet_int(_neighbor_opp_idx, _neighbor_opp_desc, 4, n_entity_bound[i_part+shift_part], "_neighbor_opp_idx :");
       }
-      PDM_log_trace_graph_nuplet_int(_neighbor_idx, _neighbor_desc, 3, n_entity_bound[i_part+shift_part], "_neighbor graph :");
 
     }
     shift_part   += dom_intrf->n_part[i_domain];
@@ -1049,11 +1144,18 @@ PDM_part_domain_interface_as_graph
 
   int **all_neighbor_idx  = NULL;
   int **all_neighbor_desc = NULL;
+
+  /*
+   * Au moment ou on propage il faut appliqué le signe de la transformation du raccord maybe ?
+   */
+
+
   _exchange_and_sort_neighbor(dom_intrf->comm,
                               n_part_loc_all_domain,
                               n_entity_bound,
                               neighbor_idx,
                               neighbor_desc,
+                              neighbor_interface,
                               neighbor_opp_idx,
                               neighbor_opp_desc,
                               &all_neighbor_idx,
