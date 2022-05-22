@@ -57,6 +57,145 @@ extern "C" {
  *============================================================================*/
 
 
+static
+void
+_concat_neighbor
+(
+  int             n_part,
+  int            *n_entity,
+  int           **neighbor_idx,
+  int           **init_neighbor_idx,
+  int           **init_neighbor_desc,
+  int           **next_neighbor_n,
+  int           **next_neighbor_desc,
+  int          ***concat_neighbor_idx,
+  int          ***concat_neighbor_desc
+)
+{
+
+  int **_concat_neighbor_idx  = malloc(n_part * sizeof(int *));
+  int **_concat_neighbor_desc = malloc(n_part * sizeof(int *));
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int   n_elmt           = n_entity    [i_part];
+    int  *_neighbor_idx    = neighbor_idx[i_part];
+
+    int  *_init_neighbor_idx  = init_neighbor_idx [i_part];
+    int  *_init_neighbor_desc = init_neighbor_desc[i_part];
+
+    int  *_next_neighbor_n    = next_neighbor_n   [i_part];
+    int  *_next_neighbor_desc = next_neighbor_desc[i_part];
+
+
+    int n_tot_next = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      for(int idx = _neighbor_idx[i]; i < _neighbor_idx[i+1]; ++idx) {
+        n_tot_next += _next_neighbor_n[idx];
+      }
+    }
+
+    int n_concat_idx_tot = _init_neighbor_idx[n_elmt] + n_tot_next;
+    _concat_neighbor_idx [i_part] = PDM_array_zeros_int(n_elmt+1);
+    _concat_neighbor_desc[i_part] = malloc(4 * n_concat_idx_tot * sizeof(int));
+
+
+    int idx_read  = 0;
+    _concat_neighbor_idx[i_part][0] = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      _concat_neighbor_idx[i_part][i+1] = _concat_neighbor_idx[i_part][i];
+
+      /* Current part */
+      for(int idx = _init_neighbor_idx[i]; idx < _init_neighbor_idx[i+1]; ++idx) {
+        int idx_write = _concat_neighbor_idx[i_part][i+1]++;
+
+        _concat_neighbor_desc[i_part][4*idx_write  ] = _init_neighbor_desc[4*idx  ];
+        _concat_neighbor_desc[i_part][4*idx_write+1] = _init_neighbor_desc[4*idx+1];
+        _concat_neighbor_desc[i_part][4*idx_write+2] = _init_neighbor_desc[4*idx+2];
+        _concat_neighbor_desc[i_part][4*idx_write+3] = _init_neighbor_desc[4*idx+3];
+
+      }
+
+      /* Opp part */
+      for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+        for(int k = 0; k < _next_neighbor_n[idx]; ++k) {
+          int idx_write = _concat_neighbor_idx[i_part][i+1]++;
+
+          _concat_neighbor_desc[i_part][4*idx_write  ] = _next_neighbor_desc[4*idx_read  ];
+          _concat_neighbor_desc[i_part][4*idx_write+1] = _next_neighbor_desc[4*idx_read+1];
+          _concat_neighbor_desc[i_part][4*idx_write+2] = _next_neighbor_desc[4*idx_read+2];
+          _concat_neighbor_desc[i_part][4*idx_write+3] = _next_neighbor_desc[4*idx_read+3];
+          idx_read++;
+        }
+      }
+    }
+
+    /* Debug */
+
+
+
+    /* Unique */
+
+  }
+
+  *concat_neighbor_idx  = _concat_neighbor_idx;
+  *concat_neighbor_desc = _concat_neighbor_desc;
+
+}
+
+
+static
+void
+_exchange_and_sort_neighbor
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int            *n_entity,
+  int           **neighbor_idx,
+  int           **neighbor_desc,
+  int           **init_neighbor_n,
+  int           **init_neighbor_desc,
+  int          ***all_neighbor_idx,
+  int          ***all_neighbor_desc
+)
+{
+
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(comm,
+                                                           n_part,
+                                                           n_entity,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+  int **next_neighbor_opp_n = NULL;
+  int **next_neighbor_opp   = NULL;
+  PDM_distant_neighbor_exch(dn,
+                            4 * sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            init_neighbor_n,
+                  (void **) init_neighbor_desc,
+                           &next_neighbor_opp_n,
+                 (void ***)&next_neighbor_opp);
+
+
+  int **concat_neighbor_opp_n = NULL;
+  int **concat_neighbor_opp   = NULL;
+  _concat_neighbor(n_part,
+                   n_entity,
+                   neighbor_idx,
+                   init_neighbor_n,
+                   init_neighbor_desc,
+                   next_neighbor_opp_n,
+                   next_neighbor_opp,
+                   &concat_neighbor_opp_n,
+                   &concat_neighbor_opp);
+
+
+
+  PDM_distant_neighbor_free(dn);
+}
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -632,8 +771,9 @@ PDM_part_domain_interface_as_graph
             if(idx_current != j) {
               // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
               _neighbor_n[i_entity_cur] += 1;
-            } else {
               _neighbor_opp_n[i_entity_cur] += 1;
+            // } else {
+            //   _neighbor_opp_n[i_entity_cur] += 1;
             }
           }
         }
@@ -698,13 +838,20 @@ PDM_part_domain_interface_as_graph
               _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
               _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
               _neighbor_interface[idx_write] = (i_interface+1) * interface_sgn[i_interface][idx_entity];
-              // _neighbor_interface[idx_write] = (i_interface+1);
-            } else {
-              int idx_write = _neighbor_opp_idx[i_entity_cur] + _neighbor_opp_n[i_entity_cur]++;
+
+              idx_write = _neighbor_opp_idx[i_entity_cur] + _neighbor_opp_n[i_entity_cur]++;
               _neighbor_opp_desc[4*idx_write  ] = i_proc_opp;              // i_proc_opp;
               _neighbor_opp_desc[4*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
               _neighbor_opp_desc[4*idx_write+2] = i_entity_opp;            // i_entity_opp
-              _neighbor_opp_desc[4*idx_write+3] = - (i_interface+1) * interface_sgn[i_interface][idx_entity];
+              _neighbor_opp_desc[4*idx_write+3] = (i_interface+1) * interface_sgn[i_interface][idx_entity];
+
+
+            // } else {
+            //   int idx_write = _neighbor_opp_idx[i_entity_cur] + _neighbor_opp_n[i_entity_cur]++;
+            //   _neighbor_opp_desc[4*idx_write  ] = i_proc_opp;              // i_proc_opp;
+            //   _neighbor_opp_desc[4*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
+            //   _neighbor_opp_desc[4*idx_write+2] = i_entity_opp;            // i_entity_opp
+            //   _neighbor_opp_desc[4*idx_write+3] = - (i_interface+1) * interface_sgn[i_interface][idx_entity];
             }
           }
         }
@@ -768,9 +915,7 @@ PDM_part_domain_interface_as_graph
           _next_neighbor_opp_idx[i+1] += _next_neighbor_opp_n[idx];
         }
       }
-      PDM_log_trace_graph_nuplet_int(_next_neighbor_opp_idx, _next_neighbor_opp, 4, n_entity_bound[i_part+shift_part], "_next_neighbor_opp :");
-
-
+      PDM_log_trace_graph_nuplet_int(_next_neighbor_opp_idx, _next_neighbor_opp, 4, n_elmt, "_next_neighbor_opp :");
 
       if(1 == 1){
         log_trace("n_elmt = %i \n", n_elmt);
@@ -799,15 +944,61 @@ PDM_part_domain_interface_as_graph
       /*
        * Concatenate with the previous
        */
+      int* _neighbor_desc      = neighbor_desc     [i_part+shift_part];
+      int* _neighbor_interface = neighbor_interface[i_part+shift_part];
+
+      int  *_neighbor_opp_idx  = neighbor_opp_idx[i_part+shift_part];
+      int  *_neighbor_opp_desc = neighbor_opp_desc    [i_part+shift_part];
+
+      int concat_idx_n = _neighbor_opp_idx[n_elmt] + _next_neighbor_opp_idx[n_elmt];
+      int *_concat_neighbor = malloc( 4 * concat_idx_n * sizeof(int));
+      int *_concat_neighbor_idx = PDM_array_zeros_int(n_elmt+1);
+
+      int idx_read  = 0;
+      _concat_neighbor_idx[0] = 0;
+      for(int i = 0; i < n_elmt; ++i) {
+        _concat_neighbor_idx[i+1] = _concat_neighbor_idx[i];
+
+        /* Current part */
+        for(int idx = _neighbor_opp_idx[i]; idx < _neighbor_opp_idx[i+1]; ++idx) {
+          int idx_write = _concat_neighbor_idx[i+1]++;
+          // _concat_neighbor[4*idx_write  ] = _neighbor_desc[3*idx  ];
+          // _concat_neighbor[4*idx_write+1] = _neighbor_desc[3*idx+1];
+          // _concat_neighbor[4*idx_write+2] = _neighbor_desc[3*idx+2];
+          // _concat_neighbor[4*idx_write+3] = _neighbor_interface[idx];
+          _concat_neighbor[4*idx_write  ] = _neighbor_opp_desc[4*idx  ];
+          _concat_neighbor[4*idx_write+1] = _neighbor_opp_desc[4*idx+1];
+          _concat_neighbor[4*idx_write+2] = _neighbor_opp_desc[4*idx+2];
+          _concat_neighbor[4*idx_write+3] = _neighbor_opp_desc[4*idx+3];
+        }
+
+        /* Opp part */
+        for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+          for(int k = 0; k < _next_neighbor_opp_n[idx]; ++k) {
+            int idx_write = _concat_neighbor_idx[i+1]++;
+
+            _concat_neighbor[4*idx_write  ] = _next_neighbor_opp[4*idx_read  ];
+            _concat_neighbor[4*idx_write+1] = _next_neighbor_opp[4*idx_read+1];
+            _concat_neighbor[4*idx_write+2] = _next_neighbor_opp[4*idx_read+2];
+            _concat_neighbor[4*idx_write+3] = _next_neighbor_opp[4*idx_read+3];
+            idx_read++;
+          }
+        }
+
+      }
 
       /*
        * Unique
        */
+      PDM_log_trace_graph_nuplet_int(_concat_neighbor_idx, _concat_neighbor, 4, n_elmt, "_concat_neighbor :");
+
+
 
       /*
        * Detect if the graph grows or not to stop algorithm
        */
 
+      free(_concat_neighbor);
       free(_next_neighbor_opp_idx);
 
     }
