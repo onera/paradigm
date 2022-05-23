@@ -1276,6 +1276,10 @@ _create_cell_graph_comm
   int **pdi_neighbor_idx = NULL;
   int **pdi_neighbor     = NULL;
 
+  assert(part_ext->n_composed_interface    == 0);
+  assert(part_ext->dcomposed_interface_idx == NULL);
+  assert(part_ext->dcomposed_interface     == NULL);
+
   if(part_ext->pdi != NULL) {
     if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
       int **pn_face = malloc(part_ext->n_domain * sizeof(int *));
@@ -1292,7 +1296,10 @@ _create_cell_graph_comm
                                          pn_face,
                                          NULL,
                                          &pdi_neighbor_idx,
-                                         &pdi_neighbor);
+                                         &pdi_neighbor,
+                                         &part_ext->n_composed_interface,
+                                         &part_ext->dcomposed_interface_idx,
+                                         &part_ext->dcomposed_interface);
 
       for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
         pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
@@ -1315,9 +1322,12 @@ _create_cell_graph_comm
                                          pn_vtx,
                                          NULL,
                                          &pdi_neighbor_idx,
-                                         &pdi_neighbor);
+                                         &pdi_neighbor,
+                                         &part_ext->n_composed_interface,
+                                         &part_ext->dcomposed_interface_idx,
+                                         &part_ext->dcomposed_interface);
+
       for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-        pn_vtx[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
         free(pn_vtx[i_domain]);
       }
       free(pn_vtx);
@@ -1741,6 +1751,13 @@ _create_cell_graph_comm
   }
 
   PDM_distant_neighbor_free(dn);
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    free(pdi_neighbor_idx[i_part]);
+    free(pdi_neighbor    [i_part]);
+  }
+  free(pdi_neighbor_idx);
+  free(pdi_neighbor    );
 
   /*
    * Panic verbose
@@ -4274,6 +4291,11 @@ PDM_part_extension_create
   part_ext->shift_by_domain_vtx        = NULL;
   part_ext->shift_by_domain_face_group = NULL;
 
+
+  part_ext->n_composed_interface       = 0;
+  part_ext->dcomposed_interface_idx    = NULL;
+  part_ext->dcomposed_interface        = NULL;
+
   return part_ext;
 }
 
@@ -4433,7 +4455,7 @@ PDM_part_extension_compute
   part_ext->cell_cell_interface               = (int *** ) malloc( (depth + 1) * sizeof(int  **));
   part_ext->n_unique_order_cell_cell_extended = (int  ** ) malloc( (depth + 1) * sizeof(int   *));
 
-  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
+  for(int i_depth = 0; i_depth < depth; ++i_depth) {
     part_ext->cell_cell_extended_idx           [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
     part_ext->cell_cell_extended_n             [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
     part_ext->cell_cell_extended               [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
@@ -4971,6 +4993,14 @@ PDM_part_extension_free
     free(part_ext->shift_by_domain_face_group);
   }
 
+  if(part_ext->dcomposed_interface_idx != NULL) {
+    free(part_ext->dcomposed_interface_idx);
+  }
+
+  if(part_ext->dcomposed_interface != NULL) {
+    free(part_ext->dcomposed_interface);
+  }
+
   free(part_ext);
 }
 
@@ -5288,6 +5318,24 @@ PDM_part_extension_coord_get
 
   return n_vtx_extended;
 }
+
+
+int
+PDM_part_extension_composed_interface_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                     **dcomposed_interface_idx,
+ int                     **dcomposed_interface
+)
+{
+  *dcomposed_interface_idx = part_ext->dcomposed_interface_idx;
+  *dcomposed_interface     = part_ext->dcomposed_interface;
+
+  return part_ext->n_composed_interface;
+}
+
+
+
 
 #ifdef __cplusplus
 }

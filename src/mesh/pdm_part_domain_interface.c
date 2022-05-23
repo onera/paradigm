@@ -927,7 +927,10 @@ PDM_part_domain_interface_as_graph
   int                           **n_entity,
   PDM_g_num_t                  ***entity_ln_to_gn,
   int                          ***neighbor_entity_idx,
-  int                          ***neighbor_entity_desc
+  int                          ***neighbor_entity_desc,
+  int                            *n_g_interface,
+  int                           **dcomposed_id_idx,
+  int                           **dcomposed_id
 )
 {
   PDM_UNUSED(entity_ln_to_gn);
@@ -1203,7 +1206,6 @@ PDM_part_domain_interface_as_graph
   PDM_g_num_t *composed_key            = malloc(     max_composed    * sizeof(PDM_g_num_t));
   int         *composed_key_update_idx = malloc( 2 * max_composed    * sizeof(PDM_g_num_t));
 
-  int **filter_neighbor_entity_idx = malloc(n_part_loc_all_domain * sizeof(int * ));
   composed_id_idx[0] = 0;
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
@@ -1211,8 +1213,7 @@ PDM_part_domain_interface_as_graph
     int *_neighbor_entity_idx  = (*neighbor_entity_idx [i_part]);
     int *_neighbor_entity_desc = (*neighbor_entity_desc[i_part]);
 
-    filter_neighbor_entity_idx[i_part] = malloc((n_elmt+1) * sizeof(int));
-    int *_filter_neighbor_entity_idx = filter_neighbor_entity_idx[i_part];
+    int *_filter_neighbor_entity_idx = malloc((n_elmt+1) * sizeof(int));
 
     _filter_neighbor_entity_idx[0] = 0;
     for(int i = 0; i < n_elmt; ++i) {
@@ -1358,6 +1359,9 @@ PDM_part_domain_interface_as_graph
     (*neighbor_entity_desc[i_part])[4*idx_update+3] = n_interface + composed_id_gnum[i];
   }
 
+  /*
+   * Panic verbose
+   */
   if(1 == 1) {
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
@@ -1378,6 +1382,7 @@ PDM_part_domain_interface_as_graph
     max_loc = PDM_MAX(max_loc, composed_id_gnum[i]);
     composed_id_n[i] = composed_id_idx[i+1] - composed_id_idx[i];
   }
+  free(composed_id_idx);
   PDM_g_num_t max_glob = -1;
   PDM_MPI_Allreduce(&max_loc, &max_glob, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, dom_intrf->comm);
 
@@ -1400,30 +1405,34 @@ PDM_part_domain_interface_as_graph
                                                                    1,
                                                                    dom_intrf->comm);
 
-  int *dcomposed_id_n = NULL;
-  int *dcomposed_id   = NULL;
+  free(composed_id_gnum);
+  int *_dcomposed_id_n = NULL;
+  int *_dcomposed_id   = NULL;
   PDM_part_to_block_exch(ptb,
                          sizeof(int),
                          PDM_STRIDE_VAR_INTERLACED,
                          -1,
                          &composed_id_n,
              (void **)   &composed_id,
-                         &dcomposed_id_n,
-             (void **)   &dcomposed_id);
+                         &_dcomposed_id_n,
+             (void **)   &_dcomposed_id);
 
-  int n_g_interface = PDM_part_to_block_n_elt_block_get(ptb);
+  free(composed_id);
+  free(composed_id_n);
+
+  int _n_g_interface = PDM_part_to_block_n_elt_block_get(ptb);
   if(i_rank > 0) {
-    assert(n_g_interface == 0);
-    free(dcomposed_id_n);
-    free(dcomposed_id);
+    assert(_n_g_interface == 0);
+    free(_dcomposed_id_n);
+    free(_dcomposed_id);
   }
 
-  int *dcomposed_id_idx = malloc( (n_g_interface+1) * sizeof(int));
-  dcomposed_id_idx[0] = 0;
-  for(int i = 0; i < n_g_interface; ++i) {
-    dcomposed_id_idx[i+1] = dcomposed_id_idx[i] + dcomposed_id_n[i];
+  int *_dcomposed_id_idx = malloc( (_n_g_interface+1) * sizeof(int));
+  _dcomposed_id_idx[0] = 0;
+  for(int i = 0; i < _n_g_interface; ++i) {
+    _dcomposed_id_idx[i+1] = _dcomposed_id_idx[i] + _dcomposed_id_n[i];
   }
-  free(dcomposed_id_n);
+  free(_dcomposed_id_n);
 
   free(distrib_interf);
 
@@ -1436,9 +1445,9 @@ PDM_part_domain_interface_as_graph
   /*
    *  Broadcast to all
    */
-  PDM_MPI_Bcast(&n_g_interface  , 1                              , PDM_MPI_INT, 0, dom_intrf->comm);
-  PDM_MPI_Bcast(dcomposed_id_idx, n_g_interface+1                , PDM_MPI_INT, 0, dom_intrf->comm);
-  PDM_MPI_Bcast(dcomposed_id    , dcomposed_id_idx[n_g_interface], PDM_MPI_INT, 0, dom_intrf->comm);
+  PDM_MPI_Bcast(&_n_g_interface  , 1                              , PDM_MPI_INT, 0, dom_intrf->comm);
+  PDM_MPI_Bcast(_dcomposed_id_idx, _n_g_interface+1                , PDM_MPI_INT, 0, dom_intrf->comm);
+  PDM_MPI_Bcast(_dcomposed_id    , _dcomposed_id_idx[_n_g_interface], PDM_MPI_INT, 0, dom_intrf->comm);
 
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
@@ -1460,5 +1469,11 @@ PDM_part_domain_interface_as_graph
 
   free(n_entity_bound);
   free(n_tot_part_by_domain);
+
+
+  *n_g_interface    = _n_g_interface;
+  *dcomposed_id_idx = _dcomposed_id_idx;
+  *dcomposed_id     = _dcomposed_id;
+
 
 }

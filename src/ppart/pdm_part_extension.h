@@ -328,6 +328,15 @@ PDM_part_extension_coord_get
  double                  **vtx_coord
 );
 
+
+int
+PDM_part_extension_composed_interface_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                     **dcomposed_interface_idx,
+ int                     **dcomposed_interface
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

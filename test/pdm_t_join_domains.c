@@ -755,6 +755,14 @@ int main
   double dt = PDM_MPI_Wtime() - t1;
   printf("PDM_part_extension_compute : %12.5e \n", dt);
   t1 = PDM_MPI_Wtime();
+
+  int *dcomposed_interface_idx = NULL;
+  int *dcomposed_interface = NULL;
+  int n_interf_composed = PDM_part_extension_composed_interface_get(part_ext,
+                                                                    &dcomposed_interface_idx,
+                                                                    &dcomposed_interface);
+
+
   /*
    * Export current domain with elements
    *   - Interface with dmesh_nodal
@@ -851,8 +859,19 @@ int main
                                 border_vtx_interface);
       for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
         int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
-        for(int k = 0; k < 3; ++k) {
-          vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
+        if(i_interf < n_interface){
+          for(int k = 0; k < 3; ++k) {
+            vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
+          }
+        } else {
+          int l_interf = PDM_ABS(border_vtx_interface[i_vtx]) - n_interface - 1;
+          for(int idx_comp = dcomposed_interface_idx[l_interf]; idx_comp < dcomposed_interface_idx[l_interf+1]; ++idx_comp) {
+            int i_tr = dcomposed_interface[idx_comp];
+            for(int k = 0; k < 3; ++k) {
+              vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(i_tr) * translation_vector[PDM_ABS(i_tr)-1][k];
+            }
+          }
+
         }
       }
 

@@ -144,7 +144,10 @@ PDM_part_domain_interface_as_graph
   int                           **n_entity,
   PDM_g_num_t                  ***entity_ln_to_gn,
   int                          ***neighbor_entity_idx,
-  int                          ***neighbor_entity_desc
+  int                          ***neighbor_entity_desc,
+  int                            *_n_g_interface,
+  int                           **_dcomposed_id_idx,
+  int                           **_dcomposed_id
 );
 
 

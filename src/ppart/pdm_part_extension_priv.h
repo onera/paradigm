@@ -150,6 +150,10 @@ struct _pdm_part_extension_t {
   PDM_g_num_t *shift_by_domain_vtx;
   PDM_g_num_t *shift_by_domain_face_group;
 
+  /* Composed interface */
+  int  n_composed_interface;
+  int *dcomposed_interface_idx;
+  int *dcomposed_interface;
 
 };
 
