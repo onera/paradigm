@@ -1197,10 +1197,11 @@ PDM_part_domain_interface_as_graph
     }
   }
 
-  int         *composed_id_idx = malloc((max_composed+1) * sizeof(int        ));
-  int         *composed_id     = malloc( max_composed    * sizeof(int        ));
-  int         *composed_id_tmp = malloc( max_lcomposed   * sizeof(int        ));
-  PDM_g_num_t *composed_key    = malloc( max_composed    * sizeof(PDM_g_num_t));
+  int         *composed_id_idx         = malloc(    (max_composed+1) * sizeof(int        ));
+  int         *composed_id             = malloc(     max_composed    * sizeof(int        ));
+  int         *composed_id_tmp         = malloc(     max_lcomposed   * sizeof(int        ));
+  PDM_g_num_t *composed_key            = malloc(     max_composed    * sizeof(PDM_g_num_t));
+  int         *composed_key_update_idx = malloc( 2 * max_composed    * sizeof(PDM_g_num_t));
 
   int **filter_neighbor_entity_idx = malloc(n_part_loc_all_domain * sizeof(int * ));
   composed_id_idx[0] = 0;
@@ -1283,7 +1284,9 @@ PDM_part_domain_interface_as_graph
               composed_id[idx_write_composed] = composed_id_tmp[k];
             }
 
-            composed_key[i_composed_interface++] = composed_interface;
+            composed_key_update_idx[2*i_composed_interface  ] = i_part;
+            composed_key_update_idx[2*i_composed_interface+1] = idx_write;
+            composed_key           [i_composed_interface++] = composed_interface;
           }
 
           first_proc = next_proc;
@@ -1348,6 +1351,23 @@ PDM_part_domain_interface_as_graph
     PDM_log_trace_array_int(composed_id_gnum, i_composed_interface, "composed_id_gnum :: ");
     PDM_log_trace_connectivity_int(composed_id_idx, composed_id, i_composed_interface, "composed_id :: ");
   }
+
+  for(int i = 0; i < i_composed_interface; ++i) {
+    int i_part     = composed_key_update_idx[2*i  ];
+    int idx_update = composed_key_update_idx[2*i+1];
+    (*neighbor_entity_desc[i_part])[4*idx_update+3] = n_interface + composed_id_gnum[i];
+  }
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+
+      int n_elmt = n_entity_bound[i_part];
+      int *_neighbor_entity_idx  = (*neighbor_entity_idx[i_part]);
+      int *_neighbor_entity_desc = (*neighbor_entity_desc[i_part]);
+      PDM_log_trace_graph_nuplet_int(_neighbor_entity_idx, _neighbor_entity_desc, 4, n_elmt, "_neighbor_entity_desc :");
+    }
+  }
+  free(composed_key_update_idx);
 
   int n_rank = -1;
   PDM_MPI_Comm_size(dom_intrf->comm, &n_rank);
