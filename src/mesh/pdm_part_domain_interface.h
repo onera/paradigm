@@ -142,7 +142,9 @@ PDM_part_domain_interface_as_graph
   PDM_part_domain_interface_t    *dom_intrf,
   PDM_bound_type_t                interface_kind,
   int                           **n_entity,
-  PDM_g_num_t                  ***entity_ln_to_gn
+  PDM_g_num_t                  ***entity_ln_to_gn,
+  int                          ***neighbor_entity_idx,
+  int                          ***neighbor_entity_desc
 );
 
 

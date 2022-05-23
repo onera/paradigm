@@ -1271,6 +1271,62 @@ _create_cell_graph_comm
   part_ext->unique_order_dist_neighbor_cell   = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
   part_ext->n_unique_order_dist_neighbor_cell = (int  *) malloc( n_part_loc_all_domain * sizeof(int  ) );
 
+
+  // Get connectivity between domain as a graph
+  int **pdi_neighbor_idx = NULL;
+  int **pdi_neighbor     = NULL;
+
+  if(part_ext->pdi != NULL) {
+    if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+      int **pn_face = malloc(part_ext->n_domain * sizeof(int *));
+
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          pn_face[i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
+        }
+      }
+
+      PDM_part_domain_interface_as_graph(part_ext->pdi,
+                                         PDM_BOUND_TYPE_FACE,
+                                         pn_face,
+                                         NULL,
+                                         &pdi_neighbor_idx,
+                                         &pdi_neighbor);
+
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
+        free(pn_face[i_domain]);
+      }
+      free(pn_face);
+
+    } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
+
+      int **pn_vtx = malloc(part_ext->n_domain * sizeof(int *));
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        pn_vtx[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          pn_vtx[i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        }
+      }
+
+      PDM_part_domain_interface_as_graph(part_ext->pdi,
+                                         PDM_BOUND_TYPE_VTX,
+                                         pn_vtx,
+                                         NULL,
+                                         &pdi_neighbor_idx,
+                                         &pdi_neighbor);
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        pn_vtx[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
+        free(pn_vtx[i_domain]);
+      }
+      free(pn_vtx);
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+    }
+
+  }
+
   // Begin with exchange by the connectivity the cell opposite number
   int shift_part   = 0;
   int shift_part_g = 0;
@@ -1662,33 +1718,6 @@ _create_cell_graph_comm
        * Storee interface number
        */
       part_ext->dist_neighbor_cell_interface[i_part+shift_part] = _unique_dist_neighbor_cell_interface;
-
-      /*
-       * Ancienne methode par triplet
-       */
-      // int* _unique_dist_neighbor_cell_idx = NULL;
-      // int* _unique_dist_neighbor_cell_n   = NULL;
-      // int* _unique_dist_neighbor_cell     = NULL;
-      // _unique_triplet(n_cell,
-      //                 _dist_neighbor_cell_idx,
-      //                 _dist_neighbor_cell_desc,
-      //                 &_unique_dist_neighbor_cell_idx,
-      //                 &_unique_dist_neighbor_cell_n,
-      //                 &_unique_dist_neighbor_cell);
-      // free(_dist_neighbor_cell_idx);
-      // free(_dist_neighbor_cell_desc);
-      // free(_dist_neighbor_cell_n);
-      // part_ext->dist_neighbor_cell_idx         [i_part+shift_part] = _unique_dist_neighbor_cell_idx;
-      // part_ext->dist_neighbor_cell_n           [i_part+shift_part] = _unique_dist_neighbor_cell_n;
-      // part_ext->dist_neighbor_cell_desc        [i_part+shift_part] = _unique_dist_neighbor_cell;
-
-      // int *_unique_order_dist_neighbor_cell = NULL;
-      // int n_unique = _setup_unique_order_triplet(n_cell,
-      //                                            _unique_dist_neighbor_cell_idx,
-      //                                            _unique_dist_neighbor_cell,
-      //                                            &_unique_order_dist_neighbor_cell);
-      // part_ext->unique_order_dist_neighbor_cell  [i_part+shift_part] = _unique_order_dist_neighbor_cell;
-      // part_ext->n_unique_order_dist_neighbor_cell[i_part+shift_part] = n_unique;
 
     }
     shift_part += part_ext->n_part[i_domain];

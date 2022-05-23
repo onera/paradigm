@@ -924,9 +924,13 @@ PDM_part_domain_interface_as_graph
   PDM_part_domain_interface_t    *dom_intrf,
   PDM_bound_type_t                interface_kind,
   int                           **n_entity,
-  PDM_g_num_t                  ***entity_ln_to_gn
+  PDM_g_num_t                  ***entity_ln_to_gn,
+  int                          ***neighbor_entity_idx,
+  int                          ***neighbor_entity_desc
 )
 {
+  PDM_UNUSED(entity_ln_to_gn);
+
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
@@ -1142,14 +1146,10 @@ PDM_part_domain_interface_as_graph
     shift_part_g += n_tot_part_by_domain[i_domain];
   }
 
-  int **all_neighbor_idx  = NULL;
-  int **all_neighbor_desc = NULL;
 
   /*
    * Au moment ou on propage il faut appliqué le signe de la transformation du raccord maybe ?
    */
-
-
   _exchange_and_sort_neighbor(dom_intrf->comm,
                               n_part_loc_all_domain,
                               n_entity_bound,
@@ -1158,13 +1158,11 @@ PDM_part_domain_interface_as_graph
                               neighbor_interface,
                               neighbor_opp_idx,
                               neighbor_opp_desc,
-                              &all_neighbor_idx,
-                              &all_neighbor_desc);
+                              neighbor_entity_idx,
+                              neighbor_entity_desc);
 
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(all_neighbor_idx  [i_part]);
-    free(all_neighbor_desc [i_part]);
     free(neighbor_n        [i_part]);
     free(neighbor_idx      [i_part]);
     free(neighbor_desc     [i_part]);
@@ -1173,8 +1171,6 @@ PDM_part_domain_interface_as_graph
     free(neighbor_opp_idx  [i_part]);
     free(neighbor_opp_desc [i_part]);
   }
-  free(all_neighbor_idx  );
-  free(all_neighbor_desc );
   free(neighbor_n        );
   free(neighbor_idx      );
   free(neighbor_desc     );
@@ -1183,9 +1179,7 @@ PDM_part_domain_interface_as_graph
   free(neighbor_opp_idx  );
   free(neighbor_opp_desc );
 
-
   free(n_entity_bound);
-
   free(n_tot_part_by_domain);
 
 }

@@ -534,14 +534,14 @@ int main
   }
 
 
-  int         *graph_vtx_idx = NULL;
-  PDM_g_num_t *graph_vtx_ids = NULL;
-  int         *graph_vtx_dom = NULL;
-  int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
-                                                       &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
-  PDM_log_trace_array_int(graph_vtx_idx, graph_vtx_dn+1, "vtx graph idx");
-  PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
-  PDM_log_trace_array_int(graph_vtx_dom, graph_vtx_idx[graph_vtx_dn], "vtx graph dom");
+  // int         *graph_vtx_idx = NULL;
+  // PDM_g_num_t *graph_vtx_ids = NULL;
+  // int         *graph_vtx_dom = NULL;
+  // int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
+  //                                                      &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
+  // PDM_log_trace_array_int(graph_vtx_idx, graph_vtx_dn+1, "vtx graph idx");
+  // PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
+  // PDM_log_trace_array_int(graph_vtx_dom, graph_vtx_idx[graph_vtx_dn], "vtx graph dom");
 
 
   /*
@@ -557,14 +557,14 @@ int main
                                                                                    NULL,
                                                                                    pvtx_ln_to_gn);
 
-  PDM_part_domain_interface_as_graph(pdi,
-                                     PDM_BOUND_TYPE_VTX,
-                                     pn_vtx,
-                                     pvtx_ln_to_gn);
+  // PDM_part_domain_interface_as_graph(pdi,
+  //                                    PDM_BOUND_TYPE_VTX,
+  //                                    pn_vtx,
+  //                                    pvtx_ln_to_gn);
 
 
 
-  exit(1);
+  // exit(1);
 
 
 
