@@ -1379,81 +1379,88 @@ _create_cell_graph_comm
         PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
       }
 
-      int            n_interface        = 0;
-      int           *interface_pn       = NULL;
-      PDM_g_num_t  **interface_ln_to_gn = NULL;
-      int          **interface_sgn      = NULL;
-      int          **interface_ids      = NULL;
-      int          **interface_ids_idx  = NULL;
-      int          **interface_dom      = NULL;
-      if(part_ext->pdi != NULL) {
-        PDM_part_domain_interface_get(part_ext->pdi,
-                                      interface_kind,
-                                      i_domain,
-                                      i_part,
-                                      &interface_pn,
-                                      &interface_ln_to_gn,
-                                      &interface_sgn,
-                                      &interface_ids,
-                                      &interface_ids_idx,
-                                      &interface_dom);
-        n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
-      }
+      // int            n_interface        = 0;
+      // int           *interface_pn       = NULL;
+      // PDM_g_num_t  **interface_ln_to_gn = NULL;
+      // int          **interface_sgn      = NULL;
+      // int          **interface_ids      = NULL;
+      // int          **interface_ids_idx  = NULL;
+      // int          **interface_dom      = NULL;
+      // if(part_ext->pdi != NULL) {
+      //   PDM_part_domain_interface_get(part_ext->pdi,
+      //                                 interface_kind,
+      //                                 i_domain,
+      //                                 i_part,
+      //                                 &interface_pn,
+      //                                 &interface_ln_to_gn,
+      //                                 &interface_sgn,
+      //                                 &interface_ids,
+      //                                 &interface_ids_idx,
+      //                                 &interface_dom);
+      //   n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+      // }
+
+      // /*
+      //  * First step : Count interface to add in distant neighbor due to connectivity betwenn domain
+      //  */
+      // for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+
+      //   // log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
+      //   // PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
+
+      //   for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+
+      //     // Search the first in list that is in current part/proc
+      //     // int i_proc_cur   = -1;
+      //     // int i_part_cur   = -1;
+      //     int i_entity_cur = -1;
+      //     int found        = 0;
+      //     int idx_current  = -1;
+      //     for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+      //       int i_proc_opp   = interface_ids[i_interface][3*j  ];
+      //       int i_part_opp   = interface_ids[i_interface][3*j+1];
+      //       int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+      //       if(i_proc_opp == i_rank && i_part_opp == i_part) {
+      //         // i_proc_cur   = i_proc_opp;
+      //         // i_part_cur   = i_part_opp;
+      //         i_entity_cur = i_entity_opp;
+      //         idx_current  = j;
+      //         assert(found == 0);
+      //         found = 1;
+      //         break;
+      //       }
+      //     }
+
+      //     if(!found) {
+      //       continue;
+      //     }
+
+      //     // Il manque une notion de direction sinon on sait pas dans quelle sens va le raccord
+
+      //     assert(found == 1);
+
+      //     // log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
+
+      //     // Only add the opposite part of the graph
+      //     for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+      //       // int i_proc_opp   = interface_ids[i_interface][3*j  ];
+      //       // int i_part_opp   = interface_ids[i_interface][3*j+1];
+      //       // int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+      //       if(idx_current != j) {
+      //         // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+      //         _neighbor_n[i_entity_cur] += 1;
+      //       }
+      //     }
+      //   }
+      // }
 
       /*
-       * First step : Count interface to add in distant neighbor due to connectivity betwenn domain
+       * Count comming from interface
        */
-      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-
-        // log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
-        // PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
-
-        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
-
-          // Search the first in list that is in current part/proc
-          // int i_proc_cur   = -1;
-          // int i_part_cur   = -1;
-          int i_entity_cur = -1;
-          int found        = 0;
-          int idx_current  = -1;
-          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            int i_part_opp   = interface_ids[i_interface][3*j+1];
-            int i_entity_opp = interface_ids[i_interface][3*j+2];
-
-            if(i_proc_opp == i_rank && i_part_opp == i_part) {
-              // i_proc_cur   = i_proc_opp;
-              // i_part_cur   = i_part_opp;
-              i_entity_cur = i_entity_opp;
-              idx_current  = j;
-              assert(found == 0);
-              found = 1;
-              break;
-            }
-          }
-
-          if(!found) {
-            continue;
-          }
-
-          // Il manque une notion de direction sinon on sait pas dans quelle sens va le raccord
-
-          assert(found == 1);
-
-          // log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
-
-          // Only add the opposite part of the graph
-          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            // int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            // int i_part_opp   = interface_ids[i_interface][3*j+1];
-            // int i_entity_opp = interface_ids[i_interface][3*j+2];
-
-            if(idx_current != j) {
-              // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
-              _neighbor_n[i_entity_cur] += 1;
-            }
-          }
-        }
+      for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
+        _neighbor_n[i_entity] += pdi_neighbor_idx[i_part+shift_part][i_entity+1] - pdi_neighbor_idx[i_part+shift_part][i_entity];
       }
 
 
@@ -1484,54 +1491,65 @@ _create_cell_graph_comm
       /*
        * Add graph du to connectivy between domain
        */
-      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+      // for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+      //   for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
 
-          // Search the first in list that is in current part/proc
-          // int i_proc_cur   = -1;
-          // int i_part_cur   = -1;
-          int i_entity_cur = -1;
-          int found        = 0;
-          int idx_current  = -1;
-          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            int i_part_opp   = interface_ids[i_interface][3*j+1];
-            int i_entity_opp = interface_ids[i_interface][3*j+2];
+      //     // Search the first in list that is in current part/proc
+      //     // int i_proc_cur   = -1;
+      //     // int i_part_cur   = -1;
+      //     int i_entity_cur = -1;
+      //     int found        = 0;
+      //     int idx_current  = -1;
+      //     for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+      //       int i_proc_opp   = interface_ids[i_interface][3*j  ];
+      //       int i_part_opp   = interface_ids[i_interface][3*j+1];
+      //       int i_entity_opp = interface_ids[i_interface][3*j+2];
 
-            if(i_proc_opp == i_rank && i_part_opp == i_part) {
-              // i_proc_cur   = i_proc_opp;
-              // i_part_cur   = i_part_opp;
-              i_entity_cur = i_entity_opp;
-              idx_current  = j;
-              assert(found == 0);
-              found = 1;
-              break;
-            }
-          }
+      //       if(i_proc_opp == i_rank && i_part_opp == i_part) {
+      //         // i_proc_cur   = i_proc_opp;
+      //         // i_part_cur   = i_part_opp;
+      //         i_entity_cur = i_entity_opp;
+      //         idx_current  = j;
+      //         assert(found == 0);
+      //         found = 1;
+      //         break;
+      //       }
+      //     }
 
-          if(!found) {
-            continue;
-          }
+      //     if(!found) {
+      //       continue;
+      //     }
 
-          assert(found == 1);
+      //     assert(found == 1);
 
-          // Only add the opposite part of the graph
-          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            int i_part_opp   = interface_ids[i_interface][3*j+1];
-            int i_entity_opp = interface_ids[i_interface][3*j+2];
+      //     // Only add the opposite part of the graph
+      //     for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+      //       int i_proc_opp   = interface_ids[i_interface][3*j  ];
+      //       int i_part_opp   = interface_ids[i_interface][3*j+1];
+      //       int i_entity_opp = interface_ids[i_interface][3*j+2];
 
-            if(idx_current != j) {
-              // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
-              int idx_write = _neighbor_idx[i_entity_cur] + _neighbor_n[i_entity_cur]++;
-              _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
-              _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
-              _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
-              _neighbor_interface[idx_write] = (i_interface+1) * interface_sgn[i_interface][idx_entity];
-              // _neighbor_interface[idx_write] = (i_interface+1);
-            }
-          }
+      //       if(idx_current != j) {
+      //         // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+      //         int idx_write = _neighbor_idx[i_entity_cur] + _neighbor_n[i_entity_cur]++;
+      //         _neighbor_desc[3*idx_write  ] = i_proc_opp;              // i_proc_opp;
+      //         _neighbor_desc[3*idx_write+1] = i_part_opp+shift_part_g; // i_part_opp
+      //         _neighbor_desc[3*idx_write+2] = i_entity_opp;            // i_entity_opp
+      //         _neighbor_interface[idx_write] = (i_interface+1) * interface_sgn[i_interface][idx_entity];
+      //         // _neighbor_interface[idx_write] = (i_interface+1);
+      //       }
+      //     }
+      //   }
+      // }
+
+      for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
+        for(int idx = pdi_neighbor_idx[i_part+shift_part][i_entity]; idx < pdi_neighbor_idx[i_part+shift_part][i_entity+1]; ++idx) {
+          int idx_write = _neighbor_idx[i_entity] + _neighbor_n[i_entity]++;
+          _neighbor_desc[3*idx_write  ]  = pdi_neighbor[i_part+shift_part][4*idx  ];
+          _neighbor_desc[3*idx_write+1]  = pdi_neighbor[i_part+shift_part][4*idx+1];
+          _neighbor_desc[3*idx_write+2]  = pdi_neighbor[i_part+shift_part][4*idx+2];
+          _neighbor_interface[idx_write] = pdi_neighbor[i_part+shift_part][4*idx+3];
         }
+
       }
 
       free(_neighbor_n);
@@ -1658,7 +1676,7 @@ _create_cell_graph_comm
           int i_proc_opp   = _neighbor_desc[3*idx_entity  ];
           int i_part_opp   = _neighbor_desc[3*idx_entity+1];
           int i_interf     = _neighbor_interface[idx_entity];
-          // int i_entity_opp = _neighbor_desc[3*idx_entity+2];
+          int i_entity_opp = _neighbor_desc[3*idx_entity+2];
           for(int idx_cell = _entity_cell_idx[i_entity]; idx_cell < _entity_cell_idx[i_entity+1]; ++idx_cell) {
             int i_cell = PDM_ABS(_entity_cell[idx_cell])-1;
 
@@ -1674,9 +1692,9 @@ _create_cell_graph_comm
               _dist_neighbor_cell_desc[4*idx_write+1] = i_part_opp;
               _dist_neighbor_cell_desc[4*idx_write+2] = i_opp_cell;
               _dist_neighbor_cell_desc[4*idx_write+3] = i_interf; // PDM_ABS(i_interf);
-              // printf("i_interf = %i \n", i_interf);
-              // printf("[%i][%i] _dist_neighbor_cell[%i] = %i %i %i - i_entity = %i from ii_part_opp = %i and  i_entity_opp = %i \n",
-              //        i_part, i_cell, idx_write, i_proc_opp, i_part_opp, i_opp_cell, i_entity, i_part_opp, i_entity_opp);
+              printf("i_interf = %i \n", i_interf);
+              printf("[%i][%i] _dist_neighbor_cell[%i] = %i %i %i - i_entity = %i from ii_part_opp = %i and  i_entity_opp = %i \n",
+                     i_part, i_cell, idx_write, i_proc_opp, i_part_opp, i_opp_cell, i_entity, i_part_opp, i_entity_opp);
             }
           }
         }

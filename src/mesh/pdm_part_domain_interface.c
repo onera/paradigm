@@ -1162,6 +1162,61 @@ PDM_part_domain_interface_as_graph
                               neighbor_entity_desc);
 
 
+  /*
+   * At this stage we have interface composition AND
+   * All combination is a real new connection
+   * We need to fused all combinaison in a sigle interface and keep the original link
+   */
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+
+    int n_elmt = n_entity_bound[i_part];
+    int *_neighbor_entity_idx  = (*neighbor_entity_idx [i_part]);
+    int *_neighbor_entity_desc = (*neighbor_entity_desc[i_part]);
+
+    for(int i = 0; i < n_elmt; ++i) {
+
+      /* Exclude void conectivity rapidly */
+      if(_neighbor_entity_idx[i] == _neighbor_entity_idx[i+1]) {
+        continue;
+      }
+
+      int idx_fisrt = _neighbor_entity_idx[i];
+      int first_proc = _neighbor_entity_desc[4*idx_fisrt  ];
+      int first_part = _neighbor_entity_desc[4*idx_fisrt+1];
+      int first_elmt = _neighbor_entity_desc[4*idx_fisrt+2];
+      int first_inte = _neighbor_entity_desc[4*idx_fisrt+3];
+
+      for(int idx = _neighbor_entity_idx[i]+1; idx < _neighbor_entity_idx[i+1]; ++idx){
+
+        int next_proc = _neighbor_entity_desc[4*idx  ];
+        int next_part = _neighbor_entity_desc[4*idx+1];
+        int next_elmt = _neighbor_entity_desc[4*idx+2];
+        int next_inte = _neighbor_entity_desc[4*idx+3];
+
+        if(first_proc == next_proc && first_part == next_part && first_elmt == next_elmt) {
+
+          // Donc même element mais interface différente --> On compose
+          printf("Hit !!!! (%i %i %i %i) / (%i %i %i %i) \n",
+                 first_proc, first_part, first_elmt, first_inte,
+                 next_proc , next_part , next_elmt , next_inte);
+
+        } else {
+          first_proc = next_proc;
+          first_part = next_part;
+          first_elmt = next_elmt;
+          first_inte = next_inte;
+        }
+
+
+
+      }
+    }
+
+
+  }
+
+
+
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
     free(neighbor_n        [i_part]);
     free(neighbor_idx      [i_part]);
