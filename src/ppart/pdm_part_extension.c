@@ -1752,12 +1752,15 @@ _create_cell_graph_comm
 
   PDM_distant_neighbor_free(dn);
 
-  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-    free(pdi_neighbor_idx[i_part]);
-    free(pdi_neighbor    [i_part]);
-  }
-  free(pdi_neighbor_idx);
-  free(pdi_neighbor    );
+  // for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+  //   free(pdi_neighbor_idx[i_part]);
+  //   free(pdi_neighbor    [i_part]);
+  // }
+  // free(pdi_neighbor_idx);
+  // free(pdi_neighbor    );
+  part_ext->pdi_neighbor_idx = pdi_neighbor_idx;
+  part_ext->pdi_neighbor     = pdi_neighbor;
+
 
   /*
    * Panic verbose
@@ -4566,6 +4569,95 @@ PDM_part_extension_compute
                             NULL,
                 (void ***) &part_ext->border_vtx);
 
+
+  int **pdi_neighbor_n = malloc(n_part_loc_all_domain * sizeof(int *));
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    pdi_neighbor_n[i_part] = malloc(n_vtx[i_part] * sizeof(int));
+    for(int i = 0; i < n_vtx[i_part]; ++i) {
+      pdi_neighbor_n[i_part][i] = part_ext->pdi_neighbor_idx[i_part][i+1] - part_ext->pdi_neighbor_idx[i_part][i];
+    }
+  }
+
+  int **border_neighor_n = NULL;
+  int **border_neighor   = NULL;
+  PDM_distant_neighbor_exch(dn_vtx,
+                            4 * sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            pdi_neighbor_n,
+                 (void **)  part_ext->pdi_neighbor,
+                           &border_neighor_n,
+                (void ***) &border_neighor);
+
+
+  int **border_neighor_idx = NULL;
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+
+    int *_border_neighor_n = border_neighor_n[i_part];
+    int *_border_neighor   = border_neighor  [i_part];
+
+    int *_vtx_vtx_extended_idx = part_ext->vtx_vtx_extended_idx[i_part];
+    int *_vtx_vtx_extended     = part_ext->vtx_vtx_extended    [i_part];
+    int *_vtx_vtx_interface     = part_ext->vtx_vtx_interface  [i_part];
+
+    int idx_read = 0;
+    for(int i = 0; i < n_vtx[i_part]; ++i) {
+      printf("i_vtx = %i \n", i);
+      for(int idx = _vtx_vtx_extended_idx[i]; idx < _vtx_vtx_extended_idx[i+1]; ++idx) {
+        printf("\t  ---> Connected with : %i %i %i (%i) \n", _vtx_vtx_extended[3*idx  ],
+                                                             _vtx_vtx_extended[3*idx+1],
+                                                             _vtx_vtx_extended[3*idx+2],
+                                                             _vtx_vtx_interface[idx]);
+
+        for(int k = 0; k < _border_neighor_n[idx]; ++k) {
+          printf("\t\t to merge with = %i %i %i %i \n", _border_neighor[4*idx_read], _border_neighor[4*idx_read+1], _border_neighor[4*idx_read+2], _border_neighor[4*idx_read+3]);
+          idx_read++;
+        }
+      }
+    }
+
+    /*
+     *  On tri indirect les quadruplet rentrant
+     *    On cherche dans le tableau trié si on est dedans ou pas
+     *  --> Si on est dedans et pas taggé --> On tag nous et notre connectivé et on incremente
+     *      sinon on recupère le tag
+     *  La connectivité permet de taggé au fur et à mesure les entité identique
+     */
+
+
+
+    // border_neighor_idx[i_part] = malloc( (n_vtx[i_part] + 1) * sizeof(int));
+    // int *_border_neighor_idx = border_neighor_idx[i_part];
+
+    // _border_neighor_idx[0] = 0;
+    // for(int i = 0; i < n_vtx[i_part]; ++i) {
+    //   _border_neighor_idx[i+1] = _border_neighor_idx[i] + _border_neighor_n[i_part][i];
+    // }
+
+    // PDM_log_trace_connectivity_int()
+
+  }
+
+
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    free(pdi_neighbor_n            [i_part]);
+    free(part_ext->pdi_neighbor_idx[i_part]);
+    free(part_ext->pdi_neighbor    [i_part]);
+  }
+  free(pdi_neighbor_n            );
+  free(part_ext->pdi_neighbor_idx);
+  free(part_ext->pdi_neighbor    );
+
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    free(border_neighor_n  [i_part]);
+    // free(border_neighor_idx[i_part]);
+    free(border_neighor    [i_part]);
+  }
+  free(border_neighor_n  );
+  // free(border_neighor_idx);
+  free(border_neighor    );
 
   // // Debug
   // PDM_g_num_t **gnum_check = (PDM_g_num_t ** ) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));

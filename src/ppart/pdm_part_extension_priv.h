@@ -155,6 +155,9 @@ struct _pdm_part_extension_t {
   int *dcomposed_interface_idx;
   int *dcomposed_interface;
 
+  int **pdi_neighbor_idx;
+  int **pdi_neighbor;
+
 };
 
 #ifdef __cplusplus
