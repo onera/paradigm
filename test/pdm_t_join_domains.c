@@ -857,7 +857,10 @@ int main
                                 vtx_coord_extended,
                                 NULL,
                                 border_vtx_interface);
+
+      int *i_num_vtx = malloc(n_vtx_extended * sizeof(int));
       for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+        i_num_vtx[i_vtx] = i_vtx;
         int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
         if(i_interf < n_interface){
           for(int k = 0; k < 3; ++k) {
@@ -876,11 +879,17 @@ int main
       }
 
       sprintf(filename_pts, "out_vtx_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      // PDM_vtk_write_point_cloud(filename_pts,
+      //                           n_vtx_extended,
+      //                           vtx_coord_extended,
+      //                           NULL,
+      //                           border_vtx_interface);
       PDM_vtk_write_point_cloud(filename_pts,
                                 n_vtx_extended,
                                 vtx_coord_extended,
                                 NULL,
-                                border_vtx_interface);
+                                i_num_vtx);
+      free(i_num_vtx);
 
       // PDM_g_num_t* border_face_ln_to_gn;
       // PDM_g_num_t* border_edge_ln_to_gn;

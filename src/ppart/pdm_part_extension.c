@@ -663,6 +663,102 @@ quadruplet_to_triplet_and_array
   *array   = _array;
 }
 
+static
+void
+_reverse_extended_graph
+(
+ PDM_MPI_Comm   comm,
+ int            n_part_tot,
+ int           *n_entity,
+ int          **entity_entity_extended_idx,
+ int          **entity_entity_extended
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int *send_n = PDM_array_zeros_int(n_rank);
+
+  /* Count */
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    for(int i = 0; i < n_entity[i_part]; ++i_part) {
+      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++i) {
+        int t_rank = entity_entity_extended[i_part][3*idx];
+        send_n[t_rank]++;
+      }
+    }
+  }
+
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_buffer = malloc(4 * send_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
+
+  for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    for(int i = 0; i < n_entity[i_part]; ++i_part) {
+      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++i) {
+        int t_rank = entity_entity_extended[i_part][idx];
+        int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+
+        send_buffer[4*idx_write  ] = i_part;
+        send_buffer[4*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
+        send_buffer[4*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
+        send_buffer[4*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
+
+      }
+    }
+  }
+
+  int *recv_n   = malloc( (n_rank  ) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+  PDM_MPI_Alltoall (send_n, 1, PDM_MPI_INT, recv_n, 1, PDM_MPI_INT, comm);
+
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+
+  int *recv_buffer = malloc(4 * recv_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n  [i] *= 4;
+    send_idx[i] *= 4;
+    recv_n  [i] *= 4;
+    recv_idx[i] *= 4;
+  }
+
+  PDM_MPI_Alltoallv (send_buffer,
+                     send_n,
+                     send_idx,
+                     PDM_MPI_INT,
+                     recv_buffer,
+                     recv_n,
+                     recv_idx,
+                     PDM_MPI_INT,
+                     comm);
+
+  free(send_n);
+  free(send_idx);
+  free(send_buffer);
+
+  for(int i = 0; i < n_rank; ++i) {
+    recv_n  [i] /= 4;
+    recv_idx[i] /= 4;
+  }
+
+  free(recv_n);
+  free(recv_idx);
+  free(recv_buffer);
+
+}
+
 
 static
 void
@@ -4496,13 +4592,14 @@ PDM_part_extension_compute
 
     int *_vtx_vtx_extended_idx = part_ext->vtx_vtx_extended_idx[i_part];
     int *_vtx_vtx_extended     = part_ext->vtx_vtx_extended    [i_part];
-    int *_vtx_vtx_interface     = part_ext->vtx_vtx_interface  [i_part];
+    int *_vtx_vtx_interface    = part_ext->vtx_vtx_interface  [i_part];
 
     int idx_read = 0;
     for(int i = 0; i < n_vtx[i_part]; ++i) {
       printf("i_vtx = %i \n", i);
       for(int idx = _vtx_vtx_extended_idx[i]; idx < _vtx_vtx_extended_idx[i+1]; ++idx) {
-        printf("\t  ---> Connected with : %i %i %i (%i) \n", _vtx_vtx_extended[3*idx  ],
+        printf("\t  ---> Connected with (%i): %i %i %i %i \n", idx,
+                                                             _vtx_vtx_extended[3*idx  ],
                                                              _vtx_vtx_extended[3*idx+1],
                                                              _vtx_vtx_extended[3*idx+2],
                                                              _vtx_vtx_interface[idx]);

@@ -242,7 +242,7 @@ _concatenate_neighbor
       }
     }
 
-    printf("is_same = %i\n", is_same);
+    // printf("is_same = %i\n", is_same);
 
     free(_concat_neighbor_idx [i_part]);
     free(_concat_neighbor_desc[i_part]);
@@ -251,7 +251,7 @@ _concatenate_neighbor
     _concat_neighbor_desc[i_part] = _unique_concat_neighbor_desc;
 
     /* Debug */
-    PDM_log_trace_graph_nuplet_int(_concat_neighbor_idx[i_part], _concat_neighbor_desc[i_part], 4, n_elmt, "_concat_neighbor_desc :");
+    // PDM_log_trace_graph_nuplet_int(_concat_neighbor_idx[i_part], _concat_neighbor_desc[i_part], 4, n_elmt, "_concat_neighbor_desc :");
 
 
   }
