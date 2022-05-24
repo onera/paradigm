@@ -1184,7 +1184,7 @@ PDM_part_domain_interface_as_graph
   for(int i = 0; i < n_interface ; ++i) {
     sgn_interf_to_interf[n_interface+i] = (i+1);
   }
-  PDM_log_trace_array_int(sgn_interf_to_interf, 2 * n_interface, "sgn_interf_to_interf ::");
+  // PDM_log_trace_array_int(sgn_interf_to_interf, 2 * n_interface, "sgn_interf_to_interf ::");
 
   int i_composed_interface = 0;
   int max_composed  = 0;

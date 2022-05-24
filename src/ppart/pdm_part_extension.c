@@ -669,6 +669,8 @@ _reverse_extended_graph
 (
  PDM_MPI_Comm   comm,
  int            n_part_tot,
+ int           *part_to_domain,
+ int           *shift_part_g_idx,
  int           *n_entity,
  int          **entity_entity_extended_idx,
  int          **entity_entity_extended
@@ -683,8 +685,8 @@ _reverse_extended_graph
 
   /* Count */
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    for(int i = 0; i < n_entity[i_part]; ++i_part) {
-      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++i) {
+    for(int i = 0; i < n_entity[i_part]; ++i) {
+      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
         int t_rank = entity_entity_extended[i_part][3*idx];
         send_n[t_rank]++;
       }
@@ -701,12 +703,15 @@ _reverse_extended_graph
   int *send_buffer = malloc(4 * send_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-    for(int i = 0; i < n_entity[i_part]; ++i_part) {
-      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++i) {
-        int t_rank = entity_entity_extended[i_part][idx];
+
+    int i_domain     = part_to_domain[i_part];
+    int shift_part_g = shift_part_g_idx[i_domain];
+    for(int i = 0; i < n_entity[i_part]; ++i) {
+      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
+        int t_rank = entity_entity_extended[i_part][3*idx];
         int idx_write = send_idx[t_rank] + send_n[t_rank]++;
 
-        send_buffer[4*idx_write  ] = i_part;
+        send_buffer[4*idx_write  ] = i_part + shift_part_g;
         send_buffer[4*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
         send_buffer[4*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
         send_buffer[4*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
@@ -717,7 +722,7 @@ _reverse_extended_graph
 
   int *recv_n   = malloc( (n_rank  ) * sizeof(int));
   int *recv_idx = malloc( (n_rank+1) * sizeof(int));
-  PDM_MPI_Alltoall (send_n, 1, PDM_MPI_INT, recv_n, 1, PDM_MPI_INT, comm);
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT, recv_n, 1, PDM_MPI_INT, comm);
 
 
   recv_idx[0] = 0;
@@ -756,6 +761,43 @@ _reverse_extended_graph
   free(recv_n);
   free(recv_idx);
   free(recv_buffer);
+
+}
+
+
+static
+void
+_generate_graph_comm_with_extended
+(
+ PDM_MPI_Comm                  comm,
+ int                           n_part_all_domain,
+ int                          *part_to_domain,
+ PDM_part_domain_interface_t  *dom_interf,
+ PDM_bound_type_t              interface_kind,
+ int                          *shift_part_idx,
+ int                          *shift_part_g_idx,
+ int                          *n_entity,
+ int                         **entity_entity_extended_idx,
+ int                         **entity_entity_extended
+)
+{
+
+  int *n_entity_extended = malloc(n_part_all_domain * sizeof(int));
+  for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+    n_entity_extended[i_part] = entity_entity_extended_idx[i_part][n_entity[i_part]];
+  }
+
+  _reverse_extended_graph(comm,
+                          n_part_all_domain,
+                          part_to_domain,
+                          shift_part_g_idx,
+                          n_entity,
+                          entity_entity_extended_idx,
+                          entity_entity_extended);
+
+
+
+  free(n_entity_extended);
 
 }
 
@@ -4198,12 +4240,22 @@ PDM_part_extension_create
   part_ext->extend_type = extend_type;
   part_ext->depth       = depth;
 
-  part_ext->n_part_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
+  part_ext->n_part_idx    = (int * ) malloc( (n_domain + 1) * sizeof(int));
+  part_ext->n_part_g_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
   part_ext->parts = malloc(n_domain * sizeof(_part_t *));
-  part_ext->n_part_idx[0] = 0;
+
+
+  part_ext->n_part_idx  [0] = 0;
+  part_ext->n_part_g_idx[0] = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     part_ext->parts[i_domain] = malloc( n_part[i_domain] * sizeof(_part_t));
     part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
+
+    int n_part_l = n_part[i_domain];
+    int n_part_g = -100;
+    PDM_MPI_Allreduce(&n_part_l, &n_part_g, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+    part_ext->n_part_g_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + n_part_g;
+
   }
 
   part_ext->neighbor_idx       = NULL;
@@ -4532,16 +4584,35 @@ PDM_part_extension_compute
   }
 
   int     *n_vtx     = (int     * ) malloc( n_part_loc_all_domain * sizeof(int     ));
+  int     *part_to_domain  = (int     * ) malloc( n_part_loc_all_domain * sizeof(int     ));
   double **vtx_coord = (double ** ) malloc( n_part_loc_all_domain * sizeof(double *));
 
   int shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      n_vtx        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
-      vtx_coord    [i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx;
+      n_vtx         [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      vtx_coord     [i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx;
+      part_to_domain[i_part+shift_part] = i_domain;
     }
     shift_part += part_ext->n_part[i_domain];
   }
+
+
+
+  _generate_graph_comm_with_extended(part_ext->comm,
+                                     n_part_loc_all_domain,
+                                     part_to_domain,
+                                     part_ext->pdi,
+                                     PDM_BOUND_TYPE_VTX,
+                                     part_ext->n_part_idx,
+                                     part_ext->n_part_g_idx,
+                                     n_vtx,
+                                     part_ext->vtx_vtx_extended_idx,
+                                     part_ext->vtx_vtx_extended);
+
+  free(part_to_domain);
+
+
 
   /* Finalize with vertex */
   PDM_distant_neighbor_t* dn_vtx = PDM_distant_neighbor_create(part_ext->comm,
@@ -4996,6 +5067,7 @@ PDM_part_extension_free
   }
 
   free(part_ext->n_part_idx);
+  free(part_ext->n_part_g_idx);
 
   for(int i_depth = 0; i_depth < part_ext->depth; ++i_depth) {
 
