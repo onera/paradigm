@@ -675,6 +675,11 @@ _reverse_extended_graph
  int          **entity_entity_extended_idx,
  int          **entity_entity_extended,
  int          **entity_entity_interface,
+ int            n_interface,
+ int            n_composed_interface,
+ int           *composed_interface_idx,
+ int           *composed_interface,
+ PDM_g_num_t   *composed_ln_to_gn_sorted,
  int          **revert_entity_extended_idx,
  int          **revert_entity_extended
 )
@@ -783,9 +788,11 @@ _generate_graph_comm_with_extended
  int                         **entity_entity_extended_idx,
  int                         **entity_entity_extended,
  int                         **entity_entity_interface,
+ int                           n_interface,
+ int                           n_composed_interface,
  int                          *composed_interface_idx,
  int                          *composed_interface,
- int                          *composed_interface_ln_to_gn
+ PDM_g_num_t                  *composed_interface_ln_to_gn
 )
 {
   int i_rank;
@@ -824,6 +831,11 @@ _generate_graph_comm_with_extended
                           entity_entity_extended_idx,
                           entity_entity_extended,
                           entity_entity_interface,
+                          n_interface,
+                          n_composed_interface,
+                          composed_interface_idx,
+                          composed_interface,
+                          composed_interface_ln_to_gn,
                           &revert_entity_extended_idx,
                           &revert_entity_extended);
 
@@ -4664,9 +4676,11 @@ PDM_part_extension_compute
                                      part_ext->vtx_vtx_extended_idx,
                                      part_ext->vtx_vtx_extended,
                                      part_ext->vtx_vtx_interface,
-                                     NULL,
-                                     NULL,
-                                     NULL);
+                                     part_ext->n_interface,
+                                     part_ext->n_composed_interface,
+                                     part_ext->composed_interface_idx,
+                                     part_ext->composed_interface,
+                                     part_ext->composed_ln_to_gn_sorted);
 
   free(part_to_domain);
 
