@@ -696,7 +696,22 @@ _reverse_extended_graph
     for(int i = 0; i < n_entity[i_part]; ++i) {
       for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
         int t_rank = entity_entity_extended[i_part][3*idx];
-        send_n[t_rank]++;
+
+        int i_interface = entity_entity_interface[i_part][idx]-1;
+
+
+        printf("i_interface = %i\n", i_interface);
+
+        if(i_interface < n_interface) {
+          send_n[t_rank]++;
+        } else { // Composed
+          int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
+          printf("l_interf = %i \n", l_interf);
+          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+            send_n[t_rank]++;
+          }
+        }
+
       }
     }
   }
@@ -708,7 +723,7 @@ _reverse_extended_graph
     send_n[i] = 0;
   }
 
-  int *send_buffer = malloc(4 * send_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
+  int *send_buffer = malloc(5 * send_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity, t_interf
 
   for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
@@ -717,12 +732,31 @@ _reverse_extended_graph
     for(int i = 0; i < n_entity[i_part]; ++i) {
       for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
         int t_rank = entity_entity_extended[i_part][3*idx];
-        int idx_write = send_idx[t_rank] + send_n[t_rank]++;
 
-        send_buffer[4*idx_write  ] = i_part + shift_part_g;
-        send_buffer[4*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
-        send_buffer[4*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
-        send_buffer[4*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
+        int i_interface = entity_entity_interface[i_part][idx]-1;
+
+        if(i_interface < n_interface) {
+          int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+
+          send_buffer[5*idx_write  ] = i_part + shift_part_g;
+          send_buffer[5*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
+          send_buffer[5*idx_write+2] = entity_entity_extended [i_part][3*idx+1];
+          send_buffer[5*idx_write+3] = entity_entity_extended [i_part][3*idx+2];
+          send_buffer[5*idx_write+4] = entity_entity_interface[i_part][idx];
+        } else { // Composed
+          int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
+          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+
+            int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+            int i_tr = composed_interface[idx_comp];
+            send_buffer[5*idx_write  ] = i_part + shift_part_g;
+            send_buffer[5*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
+            send_buffer[5*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
+            send_buffer[5*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
+            send_buffer[5*idx_write+4] = i_tr;
+
+          }
+        }
 
       }
     }
@@ -738,13 +772,13 @@ _reverse_extended_graph
     recv_idx[i+1] = recv_idx[i] + recv_n[i];
   }
 
-  int *recv_buffer = malloc(4 * recv_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
+  int *recv_buffer = malloc(5 * recv_idx[n_rank] * sizeof(int)); // i_part_cur, i_entity_cur, t_part, t_entity
 
   for(int i = 0; i < n_rank; ++i) {
-    send_n  [i] *= 4;
-    send_idx[i] *= 4;
-    recv_n  [i] *= 4;
-    recv_idx[i] *= 4;
+    send_n  [i] *= 5;
+    send_idx[i] *= 5;
+    recv_n  [i] *= 5;
+    recv_idx[i] *= 5;
   }
 
   PDM_MPI_Alltoallv (send_buffer,
@@ -762,8 +796,8 @@ _reverse_extended_graph
   free(send_buffer);
 
   for(int i = 0; i < n_rank; ++i) {
-    recv_n  [i] /= 4;
-    recv_idx[i] /= 4;
+    recv_n  [i] /= 5;
+    recv_idx[i] /= 5;
   }
   free(recv_n);
 
@@ -822,7 +856,7 @@ _generate_graph_comm_with_extended
   }
 
   int *revert_entity_extended_idx = NULL; // n_rank+1
-  int *revert_entity_extended     = NULL; // i_part_cur, i_entity_cur, t_part, t_entity
+  int *revert_entity_extended     = NULL; // i_part_cur, i_entity_cur, t_part, t_entity, t_interf
   _reverse_extended_graph(comm,
                           n_part_all_domain,
                           part_to_domain,
@@ -846,8 +880,8 @@ _generate_graph_comm_with_extended
    */
   int n_recv_tot = revert_entity_extended_idx[n_rank];
   for(int i = 0; i < n_recv_tot; ++i) {
-    int i_part   = revert_entity_extended[4*i+2];
-    int i_entity = revert_entity_extended[4*i+2];
+    int i_part   = revert_entity_extended[5*i+2];
+    int i_entity = revert_entity_extended[5*i+3];
     neighbor_n  [i_part][i_entity] += 1;
   }
 

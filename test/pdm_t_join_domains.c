@@ -765,8 +765,8 @@ int main
                                                                     &composed_interface,
                                                                     &composed_ln_to_gn_sorted);
 
-  PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
-  PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
+  // PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
+  // PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
 
   /*
    * Export current domain with elements
