@@ -664,6 +664,120 @@ quadruplet_to_triplet_and_array
 }
 
 static
+int
+_concatenate_neighbor
+(
+  int             n_part,
+  int            *n_entity,
+  int           **neighbor_idx,
+  int           **init_neighbor_idx,
+  int           **init_neighbor_desc,
+  int           **next_neighbor_n,
+  int           **next_neighbor_desc,
+  int          ***concat_neighbor_idx,
+  int          ***concat_neighbor_desc
+)
+{
+
+  int **_concat_neighbor_idx  = malloc(n_part * sizeof(int *));
+  int **_concat_neighbor_desc = malloc(n_part * sizeof(int *));
+
+  int is_same = 1;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int   n_elmt           = n_entity    [i_part];
+    int  *_neighbor_idx    = neighbor_idx[i_part];
+
+    int  *_init_neighbor_idx  = init_neighbor_idx [i_part];
+    int  *_init_neighbor_desc = init_neighbor_desc[i_part];
+
+    int  *_next_neighbor_n    = next_neighbor_n   [i_part];
+    int  *_next_neighbor_desc = next_neighbor_desc[i_part];
+
+
+    int n_tot_next = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+        n_tot_next += _next_neighbor_n[idx];
+      }
+    }
+
+    int n_concat_idx_tot = _init_neighbor_idx[n_elmt] + n_tot_next;
+    _concat_neighbor_idx [i_part] = PDM_array_zeros_int(n_elmt+1);
+    _concat_neighbor_desc[i_part] = malloc(4 * n_concat_idx_tot * sizeof(int));
+
+    int idx_read  = 0;
+    _concat_neighbor_idx[i_part][0] = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      _concat_neighbor_idx[i_part][i+1] = _concat_neighbor_idx[i_part][i];
+
+      /* Current part */
+      for(int idx = _init_neighbor_idx[i]; idx < _init_neighbor_idx[i+1]; ++idx) {
+        int idx_write = _concat_neighbor_idx[i_part][i+1]++;
+
+        _concat_neighbor_desc[i_part][4*idx_write  ] = _init_neighbor_desc[4*idx  ];
+        _concat_neighbor_desc[i_part][4*idx_write+1] = _init_neighbor_desc[4*idx+1];
+        _concat_neighbor_desc[i_part][4*idx_write+2] = _init_neighbor_desc[4*idx+2];
+        _concat_neighbor_desc[i_part][4*idx_write+3] = _init_neighbor_desc[4*idx+3];
+
+      }
+
+      /* Opp part */
+      for(int idx = _neighbor_idx[i]; idx < _neighbor_idx[i+1]; ++idx) {
+        for(int k = 0; k < _next_neighbor_n[idx]; ++k) {
+          int idx_write = _concat_neighbor_idx[i_part][i+1]++;
+
+          _concat_neighbor_desc[i_part][4*idx_write  ] = _next_neighbor_desc[4*idx_read  ];
+          _concat_neighbor_desc[i_part][4*idx_write+1] = _next_neighbor_desc[4*idx_read+1];
+          _concat_neighbor_desc[i_part][4*idx_write+2] = _next_neighbor_desc[4*idx_read+2];
+          _concat_neighbor_desc[i_part][4*idx_write+3] = _next_neighbor_desc[4*idx_read+3];
+          idx_read++;
+        }
+      }
+    }
+
+    /* Unique */
+    int *_unique_concat_neighbor_idx  = NULL;
+    int *_unique_concat_neighbor_n    = NULL;
+    int *_unique_concat_neighbor_desc = NULL;
+    _unique_quadruplet(n_elmt,
+                       _concat_neighbor_idx [i_part],
+                       _concat_neighbor_desc[i_part],
+                       &_unique_concat_neighbor_idx,
+                       &_unique_concat_neighbor_n,
+                       &_unique_concat_neighbor_desc);
+
+
+    for(int i = 0; i < n_elmt; ++i) {
+      int n_old_connect = _init_neighbor_idx[i+1] - _init_neighbor_idx[i];
+      if(n_old_connect != _unique_concat_neighbor_n[i]) {
+        is_same = 0;
+        break;
+      }
+    }
+
+    // printf("is_same = %i\n", is_same);
+
+    free(_concat_neighbor_idx [i_part]);
+    free(_concat_neighbor_desc[i_part]);
+    free(_unique_concat_neighbor_n);
+    _concat_neighbor_idx [i_part] = _unique_concat_neighbor_idx;
+    _concat_neighbor_desc[i_part] = _unique_concat_neighbor_desc;
+
+    /* Debug */
+    // PDM_log_trace_graph_nuplet_int(_concat_neighbor_idx[i_part], _concat_neighbor_desc[i_part], 4, n_elmt, "_concat_neighbor_desc :");
+
+
+  }
+
+  *concat_neighbor_idx  = _concat_neighbor_idx;
+  *concat_neighbor_desc = _concat_neighbor_desc;
+
+  return is_same;
+}
+
+
+static
 void
 _reverse_extended_graph
 (
@@ -800,6 +914,114 @@ _reverse_extended_graph
   *revert_entity_extended_idx = recv_idx;
   *revert_entity_extended     = recv_buffer;
 
+}
+
+
+static
+void
+_exchange_and_sort_neighbor
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int            *n_entity,
+  int           **neighbor_idx,
+  int           **neighbor_desc,
+  int           **neighbor_interface,
+  int           **init_neighbor_idx,
+  int           **init_neighbor_desc,
+  int          ***all_neighbor_idx,
+  int          ***all_neighbor_desc
+)
+{
+
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(comm,
+                                                           n_part,
+                                                           n_entity,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+  int **prev_neighbor_idx  = init_neighbor_idx;
+  int **prev_neighbor_desc = init_neighbor_desc;
+
+  int is_same    = 0;
+  int i_step     = 0;
+  int first_step = 1;
+  int **concat_neighbor_opp_idx = NULL;
+  int **concat_neighbor_opp     = NULL;
+  while(is_same != 1) {
+
+    /*
+     * Conpute stride
+     */
+    int **prev_neighbor_n = malloc(n_part * sizeof(int *));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      prev_neighbor_n[i_part] = malloc(n_entity[i_part] * sizeof(int));
+      for(int i = 0; i < n_entity[i_part]; ++i) {
+        prev_neighbor_n[i_part][i] = prev_neighbor_idx[i_part][i+1] - prev_neighbor_idx[i_part][i];
+      }
+    }
+
+    int **next_neighbor_opp_n = NULL;
+    int **next_neighbor_opp   = NULL;
+    PDM_distant_neighbor_exch(dn,
+                              4 * sizeof(int),
+                              PDM_STRIDE_VAR_INTERLACED,
+                              -1,
+                              prev_neighbor_n,
+                    (void **) prev_neighbor_desc,
+                             &next_neighbor_opp_n,
+                   (void ***)&next_neighbor_opp);
+
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(prev_neighbor_n[i_part]);
+    }
+    free(prev_neighbor_n);
+
+    is_same = _concatenate_neighbor(n_part,
+                                    n_entity,
+                                    neighbor_idx,
+                                    prev_neighbor_idx,
+                                    prev_neighbor_desc,
+                                    next_neighbor_opp_n,
+                                    next_neighbor_opp,
+                                    &concat_neighbor_opp_idx,
+                                    &concat_neighbor_opp);
+
+    int is_same_l = is_same;
+    PDM_MPI_Allreduce (&is_same_l, &is_same, 1, PDM_MPI_INT, PDM_MPI_MIN, comm);
+
+    /* Init next step */
+    if(!first_step) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        free(prev_neighbor_idx  [i_part]);
+        free(prev_neighbor_desc [i_part]);
+      }
+      free(prev_neighbor_idx);
+      free(prev_neighbor_desc);
+    }
+    prev_neighbor_idx  = concat_neighbor_opp_idx;
+    prev_neighbor_desc = concat_neighbor_opp;
+
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(next_neighbor_opp_n[i_part]);
+      free(next_neighbor_opp  [i_part]);
+    }
+    free(next_neighbor_opp_n);
+    free(next_neighbor_opp);
+
+    first_step = 0;
+    i_step++;
+    if(i_step > 50) {
+      abort();
+    }
+  }
+
+  PDM_distant_neighbor_free(dn);
+
+  *all_neighbor_idx  = concat_neighbor_opp_idx;
+  *all_neighbor_desc = concat_neighbor_opp;
 }
 
 
@@ -1157,8 +1379,48 @@ _generate_graph_comm_with_extended
 
   }
 
+  int **neighbor_entity_idx  = NULL;
+  int **neighbor_entity_desc = NULL;
+  _exchange_and_sort_neighbor(comm,
+                              n_part_all_domain,
+                              n_entity_tot,
+                              neighbor_idx,
+                              neighbor_desc,
+                              neighbor_interface,
+                              neighbor_opp_idx,
+                              neighbor_opp_desc,
+                              &neighbor_entity_idx,
+                              &neighbor_entity_desc);
 
+  for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+    free(neighbor_opp_n    [i_part]);
+    free(neighbor_idx      [i_part]);
+    free(neighbor_n        [i_part]);
+    free(neighbor_desc     [i_part]);
+    free(neighbor_opp_idx  [i_part]);
+    free(neighbor_opp_desc [i_part]);
+    free(neighbor_interface[i_part]);
+  }
+  free(neighbor_n);
+  free(neighbor_idx);
+  free(neighbor_opp_n);
+  free(neighbor_desc);
+  free(neighbor_opp_idx);
+  free(neighbor_opp_desc);
+  free(neighbor_interface);
 
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+      PDM_log_trace_graph_nuplet_int(neighbor_entity_idx[i_part],  neighbor_entity_desc[i_part], 4, n_entity_tot[i_part], "neighbor_entity_desc :");
+    }
+  }
+
+  for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+    free(neighbor_entity_idx[i_part]);
+    free(neighbor_entity_desc[i_part]);
+  }
+  free(neighbor_entity_idx);
+  free(neighbor_entity_desc);
 
 
   free(n_entity_extended);
