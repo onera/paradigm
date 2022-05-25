@@ -333,8 +333,9 @@ int
 PDM_part_extension_composed_interface_get
 (
  PDM_part_extension_t     *part_ext,
- int                     **dcomposed_interface_idx,
- int                     **dcomposed_interface
+ int                     **composed_interface_idx,
+ int                     **composed_interface,
+ PDM_g_num_t             **composed_ln_to_gn_sorted
 );
 
 #ifdef __cplusplus

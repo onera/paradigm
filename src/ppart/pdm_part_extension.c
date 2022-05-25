@@ -673,7 +673,10 @@ _reverse_extended_graph
  int           *shift_part_g_idx,
  int           *n_entity,
  int          **entity_entity_extended_idx,
- int          **entity_entity_extended
+ int          **entity_entity_extended,
+ int          **entity_entity_interface,
+ int          **revert_entity_extended_idx,
+ int          **revert_entity_extended
 )
 {
   int i_rank;
@@ -757,10 +760,10 @@ _reverse_extended_graph
     recv_n  [i] /= 4;
     recv_idx[i] /= 4;
   }
-
   free(recv_n);
-  free(recv_idx);
-  free(recv_buffer);
+
+  *revert_entity_extended_idx = recv_idx;
+  *revert_entity_extended     = recv_buffer;
 
 }
 
@@ -778,26 +781,70 @@ _generate_graph_comm_with_extended
  int                          *shift_part_g_idx,
  int                          *n_entity,
  int                         **entity_entity_extended_idx,
- int                         **entity_entity_extended
+ int                         **entity_entity_extended,
+ int                         **entity_entity_interface,
+ int                          *composed_interface_idx,
+ int                          *composed_interface,
+ int                          *composed_interface_ln_to_gn
 )
 {
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   int *n_entity_extended = malloc(n_part_all_domain * sizeof(int));
+  int *n_entity_tot      = malloc(n_part_all_domain * sizeof(int));
+
+  int **neighbor_n         = (int **) malloc( n_part_all_domain * sizeof(int *) );
+  int **neighbor_idx       = (int **) malloc( n_part_all_domain * sizeof(int *) );
+  int **neighbor_desc      = (int **) malloc( n_part_all_domain * sizeof(int *) );
+  int **neighbor_interface = (int **) malloc( n_part_all_domain * sizeof(int *) );
+
   for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
     n_entity_extended[i_part] = entity_entity_extended_idx[i_part][n_entity[i_part]];
+    n_entity_tot     [i_part] = n_entity[i_part] + n_entity_extended[i_part];
+
+    neighbor_idx[i_part] = malloc((n_entity_tot[i_part]+1) * sizeof(int));
+    neighbor_n  [i_part] = malloc( n_entity_tot[i_part]    * sizeof(int));
+
+    for(int i = 0; i < n_entity_tot[i_part]; ++i) {
+      neighbor_n  [i_part][i] = 0;
+    }
+
   }
 
+  int *revert_entity_extended_idx = NULL; // n_rank+1
+  int *revert_entity_extended     = NULL; // i_part_cur, i_entity_cur, t_part, t_entity
   _reverse_extended_graph(comm,
                           n_part_all_domain,
                           part_to_domain,
                           shift_part_g_idx,
                           n_entity,
                           entity_entity_extended_idx,
-                          entity_entity_extended);
+                          entity_entity_extended,
+                          entity_entity_interface,
+                          &revert_entity_extended_idx,
+                          &revert_entity_extended);
+
+  PDM_log_trace_array_int(revert_entity_extended, 4 * revert_entity_extended_idx[n_rank], "revert_entity_extended :: ");
+
+  /*
+   * Create the complet graph with interface and revert extended
+   */
+  int n_recv_tot = revert_entity_extended_idx[n_rank];
+  for(int i = 0; i < n_recv_tot; ++i) {
+    int i_part   = revert_entity_extended[4*i+2];
+    int i_entity = revert_entity_extended[4*i+2];
+    neighbor_n  [i_part][i_entity] += 1;
+  }
 
 
 
+  free(revert_entity_extended_idx);
+  free(revert_entity_extended);
   free(n_entity_extended);
+  free(n_entity_tot);
 
 }
 
@@ -1102,15 +1149,16 @@ _warm_up_domain_interface
     shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
-  int **pdi_neighbor_idx        = NULL;
-  int **pdi_neighbor            = NULL;
-  int   n_composed_interface    = 0;
-  int  *dcomposed_interface_idx = NULL;
-  int  *dcomposed_interface     = NULL;
+  int **pdi_neighbor_idx         = NULL;
+  int **pdi_neighbor             = NULL;
+  int   n_composed_interface     = 0;
+  int  *composed_interface_idx   = NULL;
+  int  *composed_interface       = NULL;
+  int  *composed_ln_to_gn_sorted = NULL;
 
   /*
    * Attention ici car pour différentes entités on obtient des nouvelles interfaces !!!!
-   * Je pense q'il faudrait finalement avoir part_ext->dcomposed_interface + part_ext->dcomposed_interface_ln_to_gn
+   * Je pense q'il faudrait finalement avoir part_ext->composed_interface + part_ext->composed_interface_ln_to_gn
    * Car sinon on a des numero absolu vtx / face par exemple qui coîncide pas / n'ont pas de sens
    */
   PDM_part_domain_interface_as_graph(part_ext->pdi,
@@ -1120,8 +1168,9 @@ _warm_up_domain_interface
                                      &pdi_neighbor_idx,
                                      &pdi_neighbor,
                                      &n_composed_interface,
-                                     &dcomposed_interface_idx,
-                                     &dcomposed_interface);
+                                     &composed_interface_idx,
+                                     &composed_interface,
+                                     &composed_ln_to_gn_sorted);
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
     neighbor_idx      [i_part] = pdi_neighbor_idx[i_part];
@@ -1141,8 +1190,9 @@ _warm_up_domain_interface
   }
   free(pdi_neighbor_idx);
   free(pdi_neighbor);
-  free(dcomposed_interface_idx);
-  free(dcomposed_interface);
+  free(composed_interface_idx);
+  free(composed_interface);
+  free(composed_ln_to_gn_sorted);
 
   /*
    * All partition of all domain is treated in the same time
@@ -1312,9 +1362,10 @@ _create_cell_graph_comm
   int **pdi_neighbor_idx = NULL;
   int **pdi_neighbor     = NULL;
 
-  assert(part_ext->n_composed_interface    == 0);
-  assert(part_ext->dcomposed_interface_idx == NULL);
-  assert(part_ext->dcomposed_interface     == NULL);
+  assert(part_ext->n_composed_interface     == 0);
+  assert(part_ext->composed_interface_idx   == NULL);
+  assert(part_ext->composed_interface       == NULL);
+  assert(part_ext->composed_ln_to_gn_sorted == NULL);
 
   if(part_ext->pdi != NULL) {
     if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
@@ -1334,8 +1385,9 @@ _create_cell_graph_comm
                                          &pdi_neighbor_idx,
                                          &pdi_neighbor,
                                          &part_ext->n_composed_interface,
-                                         &part_ext->dcomposed_interface_idx,
-                                         &part_ext->dcomposed_interface);
+                                         &part_ext->composed_interface_idx,
+                                         &part_ext->composed_interface,
+                                         &part_ext->composed_ln_to_gn_sorted);
 
       for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
         pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
@@ -1360,8 +1412,9 @@ _create_cell_graph_comm
                                          &pdi_neighbor_idx,
                                          &pdi_neighbor,
                                          &part_ext->n_composed_interface,
-                                         &part_ext->dcomposed_interface_idx,
-                                         &part_ext->dcomposed_interface);
+                                         &part_ext->composed_interface_idx,
+                                         &part_ext->composed_interface,
+                                         &part_ext->composed_ln_to_gn_sorted);
 
       for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
         free(pn_vtx[i_domain]);
@@ -4341,9 +4394,10 @@ PDM_part_extension_create
   part_ext->shift_by_domain_face_group = NULL;
 
 
-  part_ext->n_composed_interface       = 0;
-  part_ext->dcomposed_interface_idx    = NULL;
-  part_ext->dcomposed_interface        = NULL;
+  part_ext->n_composed_interface      = 0;
+  part_ext->composed_interface_idx    = NULL;
+  part_ext->composed_interface        = NULL;
+  part_ext->composed_ln_to_gn_sorted  = NULL;
 
   return part_ext;
 }
@@ -4608,7 +4662,11 @@ PDM_part_extension_compute
                                      part_ext->n_part_g_idx,
                                      n_vtx,
                                      part_ext->vtx_vtx_extended_idx,
-                                     part_ext->vtx_vtx_extended);
+                                     part_ext->vtx_vtx_extended,
+                                     part_ext->vtx_vtx_interface,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 
   free(part_to_domain);
 
@@ -5152,12 +5210,16 @@ PDM_part_extension_free
     free(part_ext->shift_by_domain_face_group);
   }
 
-  if(part_ext->dcomposed_interface_idx != NULL) {
-    free(part_ext->dcomposed_interface_idx);
+  if(part_ext->composed_interface_idx != NULL) {
+    free(part_ext->composed_interface_idx);
   }
 
-  if(part_ext->dcomposed_interface != NULL) {
-    free(part_ext->dcomposed_interface);
+  if(part_ext->composed_interface != NULL) {
+    free(part_ext->composed_interface);
+  }
+
+  if(part_ext->composed_ln_to_gn_sorted != NULL) {
+    free(part_ext->composed_ln_to_gn_sorted);
   }
 
   free(part_ext);
@@ -5483,12 +5545,14 @@ int
 PDM_part_extension_composed_interface_get
 (
  PDM_part_extension_t     *part_ext,
- int                     **dcomposed_interface_idx,
- int                     **dcomposed_interface
+ int                     **composed_interface_idx,
+ int                     **composed_interface,
+ PDM_g_num_t             **composed_ln_to_gn_sorted
 )
 {
-  *dcomposed_interface_idx = part_ext->dcomposed_interface_idx;
-  *dcomposed_interface     = part_ext->dcomposed_interface;
+  *composed_interface_idx   = part_ext->composed_interface_idx;
+  *composed_interface       = part_ext->composed_interface;
+  *composed_ln_to_gn_sorted = part_ext->composed_ln_to_gn_sorted;
 
   return part_ext->n_composed_interface;
 }

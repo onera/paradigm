@@ -153,8 +153,9 @@ struct _pdm_part_extension_t {
 
   /* Composed interface */
   int  n_composed_interface;
-  int *dcomposed_interface_idx;
-  int *dcomposed_interface;
+  int *composed_interface_idx;
+  int *composed_interface;
+  int *composed_ln_to_gn_sorted;
 
   int **pdi_neighbor_idx;
   int **pdi_neighbor;

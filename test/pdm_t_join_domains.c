@@ -24,6 +24,7 @@
 #include "pdm_dmesh_nodal.h"
 #include "pdm_logging.h"
 #include "pdm_order.h"
+#include "pdm_binary_search.h"
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_domain_interface.h"
@@ -756,12 +757,16 @@ int main
   printf("PDM_part_extension_compute : %12.5e \n", dt);
   t1 = PDM_MPI_Wtime();
 
-  int *dcomposed_interface_idx = NULL;
-  int *dcomposed_interface = NULL;
+  int         *composed_interface_idx   = NULL;
+  int         *composed_interface       = NULL;
+  PDM_g_num_t *composed_ln_to_gn_sorted = NULL;
   int n_interf_composed = PDM_part_extension_composed_interface_get(part_ext,
-                                                                    &dcomposed_interface_idx,
-                                                                    &dcomposed_interface);
+                                                                    &composed_interface_idx,
+                                                                    &composed_interface,
+                                                                    &composed_ln_to_gn_sorted);
 
+  PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
+  PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
 
   /*
    * Export current domain with elements
@@ -867,9 +872,10 @@ int main
             vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
           }
         } else {
-          int l_interf = PDM_ABS(border_vtx_interface[i_vtx]) - n_interface - 1;
-          for(int idx_comp = dcomposed_interface_idx[l_interf]; idx_comp < dcomposed_interface_idx[l_interf+1]; ++idx_comp) {
-            int i_tr = dcomposed_interface[idx_comp];
+          // int l_interf = PDM_ABS(border_vtx_interface[i_vtx]) - n_interface - 1;
+          int l_interf = PDM_binary_search_long(border_vtx_interface[i_vtx], composed_ln_to_gn_sorted, n_interf_composed);
+          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+            int i_tr = composed_interface[idx_comp];
             for(int k = 0; k < 3; ++k) {
               vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(i_tr) * translation_vector[PDM_ABS(i_tr)-1][k];
             }
