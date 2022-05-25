@@ -970,7 +970,6 @@ PDM_part_domain_interface_as_graph
   /*
    * Loop over all interfaces to create distant neighbor structure
    */
-
   int shift_part   = 0;
   int shift_part_g = 0;
   for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain ) {
