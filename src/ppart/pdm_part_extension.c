@@ -1161,7 +1161,8 @@ _generate_graph_comm_with_extended
  int                          *composed_interface_idx,
  int                          *composed_interface,
  PDM_g_num_t                  *composed_interface_ln_to_gn,
- PDM_g_num_t                 **border_entity_ln_to_gn
+ PDM_g_num_t                 **border_entity_ln_to_gn,
+ int                        ***old_to_new_indices
 )
 {
   int i_rank;
@@ -1171,6 +1172,7 @@ _generate_graph_comm_with_extended
 
   int *n_entity_extended = malloc(n_part_all_domain * sizeof(int));
   int *n_entity_tot      = malloc(n_part_all_domain * sizeof(int));
+  (*old_to_new_indices)  = malloc(n_part_all_domain * sizeof(int *));
 
   int **neighbor_n         = (int **) malloc( n_part_all_domain * sizeof(int *) );
   int **neighbor_idx       = (int **) malloc( n_part_all_domain * sizeof(int *) );
@@ -1680,6 +1682,12 @@ _generate_graph_comm_with_extended
 
     int* is_treated = PDM_array_zeros_int(n_entity_extended[i_part]);
 
+    int* _old_to_new_indices = malloc(n_entity_extended[i_part] * sizeof(int));
+    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
+      _old_to_new_indices[i] = -10000000;
+    }
+
+    int new_indices = 0;
     for(int i = 0; i < i_unique; ++i) {
 
       // n*n algo but n is supposed to be max at 3
@@ -1699,15 +1707,28 @@ _generate_graph_comm_with_extended
           PDM_g_num_t gnum2 = border_entity_ln_to_gn[i_part][old_order2];
 
           if(gnum1 != gnum2) {
-            printf("Is same !!! --> %i %i | %i %i \n", old_order, old_order2, (int)gnum1, (int)gnum2);
+            printf("Is same !!! --> %i %i | %i %i --> new_indices = %i \n", old_order, old_order2, (int)gnum1, (int)gnum2, new_indices);
             is_treated[idx ] = 1;
             is_treated[idx2] = 1;
+            _old_to_new_indices[old_order ] = new_indices;
+            _old_to_new_indices[old_order2] = new_indices;
+            break;
           }
-
         }
 
+        if(is_treated[idx ] == 1) {
+          new_indices++;
+        } else{
+          _old_to_new_indices[old_order] = new_indices++;
+        }
       }
+
+
     }
+
+    PDM_log_trace_array_int(_old_to_new_indices, n_entity_extended[i_part], "_old_to_new_indices :");
+
+    (*old_to_new_indices[i_part]) = _old_to_new_indices;
 
 
 
@@ -5542,7 +5563,7 @@ PDM_part_extension_compute
   }
 
 
-
+  int **old_to_new_indices = NULL;
   _generate_graph_comm_with_extended(part_ext->comm,
                                      n_part_loc_all_domain,
                                      part_to_domain,
@@ -5559,9 +5580,53 @@ PDM_part_extension_compute
                                      part_ext->composed_interface_idx,
                                      part_ext->composed_interface,
                                      part_ext->composed_ln_to_gn_sorted,
-                                     part_ext->border_vtx_ln_to_gn);
+                                     part_ext->border_vtx_ln_to_gn,
+                                     &old_to_new_indices);
 
   free(part_to_domain);
+
+  /*
+   * Apply order - TODO -> Update connectivity + realloc
+   */
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+
+    int n_extented_old = part_ext->vtx_vtx_extended_idx[i_part][n_vtx[i_part]];
+
+    int         *new_vtx_vtx_extended_idx = malloc((n_vtx[i_part]+1)  * sizeof(int        ));
+    int         *new_vtx_vtx_extended     = malloc(3 * n_extented_old * sizeof(int        ));
+    int         *new_vtx_vtx_interface    = malloc(    n_extented_old * sizeof(int        ));
+    PDM_g_num_t *new_border_vtx_ln_to_gn  = malloc(    n_extented_old * sizeof(PDM_g_num_t));
+
+    int n_extented_new = 0;
+    for(int i = 0; i < n_extented_old; ++i) {
+      n_extented_new = PDM_MAX(n_extented_new, old_to_new_indices[i_part][i]+1);
+    }
+
+    for(int i = 0; i < n_extented_old; ++i) {
+      int idx_write = old_to_new_indices[i_part][i];
+      new_vtx_vtx_extended[3*idx_write  ] = part_ext->vtx_vtx_extended [i_part][3*i  ];
+      new_vtx_vtx_extended[3*idx_write+1] = part_ext->vtx_vtx_extended [i_part][3*i+1];
+      new_vtx_vtx_extended[3*idx_write+2] = part_ext->vtx_vtx_extended [i_part][3*i+2];
+      new_vtx_vtx_interface[idx_write]    = part_ext->vtx_vtx_interface[i_part][i];
+      new_border_vtx_ln_to_gn[idx_write]  = part_ext->border_vtx_ln_to_gn[i_part][i];
+    }
+
+    new_vtx_vtx_extended_idx[0] = 0;
+    for(int i = 0; i < n_vtx[i_part]; ++i) {
+      new_vtx_vtx_extended_idx[i+1] = n_extented_new;
+    }
+
+    free(part_ext->vtx_vtx_extended_idx[i_part]);
+    free(part_ext->vtx_vtx_extended    [i_part]);
+    free(part_ext->vtx_vtx_interface   [i_part]);
+    free(part_ext->border_vtx_ln_to_gn [i_part]);
+    part_ext->vtx_vtx_extended_idx[i_part] = new_vtx_vtx_extended_idx;
+    part_ext->vtx_vtx_extended    [i_part] = new_vtx_vtx_extended;
+    part_ext->vtx_vtx_interface   [i_part] = new_vtx_vtx_interface;
+    part_ext->border_vtx_ln_to_gn [i_part] = new_border_vtx_ln_to_gn;
+    // PDM_log_trace_array_int(part_ext->vtx_vtx_extended, 3*)
+
+  }
 
 
 
