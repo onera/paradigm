@@ -1519,8 +1519,8 @@ _generate_graph_comm_with_extended
     int size_neight = 0;
     for(int i = n_entity[i_part]; i < n_entity_tot[i_part]; ++i) {
       sort_neighbor_n[i-n_entity[i_part]] = _neighbor_entity_idx[i+1] - _neighbor_entity_idx[i];
-      order     [i-n_entity[i_part]] = i-n_entity[i_part];
-      size_neight                    += _neighbor_entity_idx[i+1] - _neighbor_entity_idx[i];
+      order     [i-n_entity[i_part]]      = i; //-n_entity[i_part];
+      size_neight                        += _neighbor_entity_idx[i+1] - _neighbor_entity_idx[i];
     }
 
     PDM_sort_int(sort_neighbor_n, order, n_entity_extended[i_part]);
@@ -1536,9 +1536,11 @@ _generate_graph_comm_with_extended
     for(int i = 0; i < n_entity_extended[i_part]; ++i) {
       int old_order = order[i];
 
+      assert(_neighbor_entity_idx[old_order+1]-_neighbor_entity_idx[old_order] == sort_neighbor_n[i]);
       for(int k = 0; k < sort_neighbor_n[i]; ++k) {
         int idx_read  = _neighbor_entity_idx[old_order] + k ;
         int idx_write = sort_neighbor_idx[i] + k;
+
 
         sort1_neighbor[4*idx_write  ] = _neighbor_entity_desc[4*idx_read  ];
         sort1_neighbor[4*idx_write+1] = _neighbor_entity_desc[4*idx_read+1];
@@ -1547,9 +1549,52 @@ _generate_graph_comm_with_extended
       }
     }
 
+    if(1 == 1) {
+      PDM_log_trace_graph_nuplet_int(sort_neighbor_idx,  sort1_neighbor, 4, n_entity_extended[i_part], "sort1_neighbor :");
+    }
 
-    PDM_log_trace_graph_nuplet_int(sort_neighbor_idx,  sort1_neighbor, 4, n_entity_extended[i_part], "sort1_neighbor :");
+    /* Identify bucket size */
+    int n_bucket = -1;
+    int *bucket_idx = malloc( (n_entity_extended[i_part]+1) * sizeof(int));
+    int first_size = -1;
+    for(int i =  0; i < n_entity_extended[i_part]; ++i) {
+      if(sort_neighbor_n[i] > first_size) {
+        bucket_idx[n_bucket+1] = i;
+        first_size = sort_neighbor_n[i];
+        n_bucket++;
+      }
+    }
+    bucket_idx[ n_bucket+1] = n_entity_extended[i_part];
+    n_bucket++;
+    bucket_idx = realloc(bucket_idx,  (n_bucket+1) * sizeof(int));
 
+    PDM_log_trace_array_int(bucket_idx,  n_bucket+1, "bucket_idx :");
+    PDM_log_trace_array_int(sort_neighbor_n,  n_entity_extended[i_part], "sort_neighbor_n :");
+
+    for(int i_bucket = 0; i_bucket < n_bucket; ++i_bucket) {
+      int beg_bucket = bucket_idx[i_bucket];
+      int cst_size   = 4 * sort_neighbor_n[beg_bucket];
+
+
+      int beg = 4 * sort_neighbor_idx[beg_bucket];
+      int n_in_bucket = bucket_idx[i_bucket+1] - beg_bucket;
+
+      int *bucket_order = malloc(n_in_bucket * sizeof(int));
+
+      PDM_order_lnum_s(&sort1_neighbor[beg], cst_size, bucket_order, n_in_bucket);
+      PDM_order_array (n_in_bucket, cst_size * sizeof(int), bucket_order, &sort1_neighbor[beg]);
+      PDM_log_trace_array_int(bucket_order,  n_in_bucket, "bucket_order :");
+
+      free(bucket_order);
+
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_graph_nuplet_int(sort_neighbor_idx,  sort1_neighbor, 4, n_entity_extended[i_part], "sort1_neighbor (final) :");
+    }
+
+
+    free(bucket_idx);
     free(order);
     free(sort1_neighbor);
     free(sort_neighbor_n);
