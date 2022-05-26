@@ -1143,7 +1143,8 @@ _generate_graph_comm_with_extended
  int                           n_composed_interface,
  int                          *composed_interface_idx,
  int                          *composed_interface,
- PDM_g_num_t                  *composed_interface_ln_to_gn
+ PDM_g_num_t                  *composed_interface_ln_to_gn,
+ PDM_g_num_t                 **border_entity_ln_to_gn
 )
 {
   int i_rank;
@@ -1583,15 +1584,35 @@ _generate_graph_comm_with_extended
 
       PDM_order_lnum_s(&sort1_neighbor[beg], cst_size, bucket_order, n_in_bucket);
       PDM_order_array (n_in_bucket, cst_size * sizeof(int), bucket_order, &sort1_neighbor[beg]);
+      PDM_order_array (n_in_bucket, sizeof(int), bucket_order, &order[beg_bucket]);
+
       PDM_log_trace_array_int(bucket_order,  n_in_bucket, "bucket_order :");
 
       free(bucket_order);
 
     }
 
+
+    /*
+     * Shift order
+     */
+    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
+      order[i] = order[i] - n_entity[i_part];
+    }
+
     if(1 == 1) {
       PDM_log_trace_graph_nuplet_int(sort_neighbor_idx,  sort1_neighbor, 4, n_entity_extended[i_part], "sort1_neighbor (final) :");
+
+      PDM_log_trace_array_int(order,  n_entity_extended[i_part], "order :");
     }
+
+    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
+
+      int old_order = order[i];
+      printf("[%i] gnum = "PDM_FMT_G_NUM"\n", i, border_entity_ln_to_gn[i_part][old_order]);
+
+    }
+
 
 
     free(bucket_idx);
@@ -5437,7 +5458,8 @@ PDM_part_extension_compute
                                      part_ext->n_composed_interface,
                                      part_ext->composed_interface_idx,
                                      part_ext->composed_interface,
-                                     part_ext->composed_ln_to_gn_sorted);
+                                     part_ext->composed_ln_to_gn_sorted,
+                                     part_ext->border_vtx_ln_to_gn);
 
   free(part_to_domain);
 
