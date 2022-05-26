@@ -355,6 +355,23 @@ int iproc2, int ipart2, int ielt2
   return 0;
 }
 
+inline
+static
+int
+_lexicographic_equal_long
+(
+  const PDM_g_num_t *x,
+  const PDM_g_num_t *y,
+  const int          stride
+)
+{
+  int res = x[0] == y[0];
+  if(res == 1 && stride > 1) {
+    return _lexicographic_equal_long(&x[1], &y[1], stride-1);
+  }
+  return x[0] == y[0];
+}
+
 static
 int
 _setup_unique_order_triplet
@@ -1572,10 +1589,12 @@ _generate_graph_comm_with_extended
     PDM_log_trace_array_int(bucket_idx,  n_bucket+1, "bucket_idx :");
     PDM_log_trace_array_int(sort_neighbor_n,  n_entity_extended[i_part], "sort_neighbor_n :");
 
+    int max_cst_size = -1;
     for(int i_bucket = 0; i_bucket < n_bucket; ++i_bucket) {
       int beg_bucket = bucket_idx[i_bucket];
       int cst_size   = 4 * sort_neighbor_n[beg_bucket];
 
+      max_cst_size = PDM_MAX(max_cst_size, cst_size);
 
       int beg = 4 * sort_neighbor_idx[beg_bucket];
       int n_in_bucket = bucket_idx[i_bucket+1] - beg_bucket;
@@ -1606,15 +1625,96 @@ _generate_graph_comm_with_extended
       PDM_log_trace_array_int(order,  n_entity_extended[i_part], "order :");
     }
 
-    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
+    // Calcul des idx qui ont le meme type (donc dans un bucket les unifié)
+    // Pour chaque sous bucket on unifie si le gnum est différent et on les associes
 
+    int* unique_idx = malloc((n_entity_extended[i_part]+1) * sizeof(int));
+
+    for(int i = 0; i < n_entity_extended[i_part]+1; ++i) {
+      unique_idx[i] = 0;
+    }
+
+    int* last_value = malloc((max_cst_size               ) * sizeof(int));
+    int i_unique = 0;
+    for(int i_bucket = 0; i_bucket < n_bucket; ++i_bucket) {
+
+      int beg_bucket = bucket_idx[i_bucket];
+      int cst_size   = 4 * sort_neighbor_n[beg_bucket];
+      int n_in_bucket = bucket_idx[i_bucket+1] - beg_bucket;
+
+      int beg = 4 * sort_neighbor_idx[beg_bucket];
+
+      for(int j = 0; j < (int) cst_size; ++j) {
+        last_value[j] = sort1_neighbor[beg+j];
+      }
+
+      for(int k = 0; k < n_in_bucket; ++k) {
+        int is_same = _lexicographic_equal_long(last_value, &sort1_neighbor[beg+cst_size*k], cst_size);
+        if(is_same == 0){ // N'est pas le meme
+          for(int j = 0; j < (int) cst_size; ++j) {
+            last_value[j] = sort1_neighbor[beg+cst_size*k+j];
+          }
+
+          i_unique++;
+          unique_idx[i_unique+1]++;
+
+        } else {
+          unique_idx[i_unique+1]++;
+        }
+      }
+
+      i_unique++;
+    }
+
+    for(int i = 0; i < i_unique; ++i) {
+      unique_idx[i+1] += unique_idx[i];
+    }
+
+    PDM_log_trace_array_int(unique_idx,  i_unique+1, "unique_idx :");
+
+    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
       int old_order = order[i];
       printf("[%i] gnum = "PDM_FMT_G_NUM"\n", i, border_entity_ln_to_gn[i_part][old_order]);
+    }
 
+
+    int* is_treated = PDM_array_zeros_int(n_entity_extended[i_part]);
+
+    for(int i = 0; i < i_unique; ++i) {
+
+      // n*n algo but n is supposed to be max at 3
+      for(int idx = unique_idx[i]; idx < unique_idx[i+1]; ++idx) {
+
+        if(is_treated[idx] == 1) {
+          continue;
+        }
+        int old_order = order[idx];
+        PDM_g_num_t gnum1 = border_entity_ln_to_gn[i_part][old_order];
+
+        for(int idx2 = unique_idx[i]+1; idx2 < unique_idx[i+1]; ++idx2) {
+          if(is_treated[idx2] == 1) {
+            continue;
+          }
+          int old_order2 = order[idx2];
+          PDM_g_num_t gnum2 = border_entity_ln_to_gn[i_part][old_order2];
+
+          if(gnum1 != gnum2) {
+            printf("Is same !!! --> %i %i | %i %i \n", old_order, old_order2, (int)gnum1, (int)gnum2);
+            is_treated[idx ] = 1;
+            is_treated[idx2] = 1;
+          }
+
+        }
+
+      }
     }
 
 
 
+
+    free(is_treated);
+    free(unique_idx);
+    free(last_value);
     free(bucket_idx);
     free(order);
     free(sort1_neighbor);
