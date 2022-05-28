@@ -1191,7 +1191,7 @@ PDM_part_domain_interface_as_graph
   int max_lcomposed = 0;
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
     int n_elmt = n_entity_bound[i_part];
-    int *_neighbor_entity_idx  = (*neighbor_entity_idx [i_part]);
+    int *_neighbor_entity_idx  = (*neighbor_entity_idx)[i_part];
     max_composed += _neighbor_entity_idx[n_elmt];
 
     for(int i = 0; i < n_elmt; ++i) {
@@ -1210,8 +1210,8 @@ PDM_part_domain_interface_as_graph
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
     int n_elmt = n_entity_bound[i_part];
-    int *_neighbor_entity_idx  = (*neighbor_entity_idx [i_part]);
-    int *_neighbor_entity_desc = (*neighbor_entity_desc[i_part]);
+    int *_neighbor_entity_idx  = (*neighbor_entity_idx )[i_part];
+    int *_neighbor_entity_desc = (*neighbor_entity_desc)[i_part];
 
     int *_filter_neighbor_entity_idx = malloc((n_elmt+1) * sizeof(int));
 
@@ -1319,7 +1319,7 @@ PDM_part_domain_interface_as_graph
     }
 
     free(_neighbor_entity_idx);
-    (*neighbor_entity_idx [i_part]) = _filter_neighbor_entity_idx;
+    (*neighbor_entity_idx)[i_part] = _filter_neighbor_entity_idx;
 
     if(0 == 1) {
       PDM_log_trace_graph_nuplet_int(_filter_neighbor_entity_idx, _neighbor_entity_desc, 4, n_elmt, "_neighbor_entity_desc :");
@@ -1365,12 +1365,12 @@ PDM_part_domain_interface_as_graph
   /*
    * Panic verbose
    */
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
       int n_elmt = n_entity_bound[i_part];
-      int *_neighbor_entity_idx  = (*neighbor_entity_idx[i_part]);
-      int *_neighbor_entity_desc = (*neighbor_entity_desc[i_part]);
+      int *_neighbor_entity_idx  = (*neighbor_entity_idx )[i_part];
+      int *_neighbor_entity_desc = (*neighbor_entity_desc)[i_part];
       PDM_log_trace_graph_nuplet_int(_neighbor_entity_idx, _neighbor_entity_desc, 4, n_elmt, "_neighbor_entity_desc :");
     }
   }

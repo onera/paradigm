@@ -3764,11 +3764,12 @@ PDM_ddomain_interface_to_pdomain_interface
          *    - We refind the current entity concers by the domain_interace
          *    - Keep sens information
          */
-        int* precv_entity_desc_post = (int * ) malloc(              3 * n_data * sizeof(int));
+        int* precv_entity_desc_post = (int * ) malloc(           2*     3 * n_data * sizeof(int));
         int* precv_sens             = (int * ) malloc( _ln_interface[s_i_part] * sizeof(int));
 
-        int idx_read  = 0;
-        int idx_write = 0;
+        int idx_read      = 0;
+        int idx_read_desc = 0;
+        int idx_write     = 0;
         int shift_beg = pn_interface_idx[i_part][i_interface];
         for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
 
@@ -3787,23 +3788,28 @@ PDM_ddomain_interface_to_pdomain_interface
             }
           }
           precv_sens[i] = sgn;
+          assert(sgn != 0);
 
+          // log_trace(" ------------------------------------------------------------- \n");
           // log_trace(" lnum = %i | gnum_to_find = %i | idx_read = %i | idx_write = %i \n", lnum, (int) gnum_to_find, idx_read, idx_write);
           // log_trace(" i = %i | pos = %i | sgn = %i  \n", i, pos, sgn);
           // PDM_log_trace_array_int(order, 2 * precv_stride_gnum[s_i_part][i], "order :: ");
           assert(pos != -1);
 
           int idx_first = idx_write;
+          int found = 0;
           for(int k = 0; k < precv_stride[s_i_part][i]; ++k) {
-            int idx_read2 = idx_read + k;
+            int idx_read2 = idx_read_desc + k;
             int i_cur_proc   = precv_entity_desc[s_i_part][3*(idx_read2)  ];
             int i_cur_part   = precv_entity_desc[s_i_part][3*(idx_read2)+1];
             int i_cur_entity = precv_entity_desc[s_i_part][3*(idx_read2)+2];
 
+            // log_trace(" i_cur_proc = %i | i_cur_part = %i | i_cur_entity = %i | lnum = %i \n", i_cur_proc, i_cur_part, i_cur_entity, lnum);
             if(i_cur_proc == i_rank && i_cur_part == i_part + shift_domain && i_cur_entity == lnum ) {
               precv_entity_desc_post[3*idx_first  ] = precv_entity_desc[s_i_part][3*(idx_read2)  ];
               precv_entity_desc_post[3*idx_first+1] = precv_entity_desc[s_i_part][3*(idx_read2)+1];
               precv_entity_desc_post[3*idx_first+2] = precv_entity_desc[s_i_part][3*(idx_read2)+2];
+              found = 1;
             } else {
               precv_entity_desc_post[3*(idx_write+1)  ] = precv_entity_desc[s_i_part][3*(idx_read2)  ];
               precv_entity_desc_post[3*(idx_write+1)+1] = precv_entity_desc[s_i_part][3*(idx_read2)+1];
@@ -3811,12 +3817,16 @@ PDM_ddomain_interface_to_pdomain_interface
               idx_write++;
             }
           }
+          // log_trace("found = %i \n", found);
+          // log_trace(" ------------------------------------------------------------- \n");
 
+          assert(found == 1);
           idx_write++;
-          idx_read += 2 * precv_stride_gnum[s_i_part][i];
+          idx_read_desc += precv_stride[s_i_part][i];
+          idx_read      += 2 * precv_stride_gnum[s_i_part][i];
         }
 
-        // PDM_log_trace_array_int(precv_entity_desc_post, 3 * n_data, "precv_entity_desc ::");
+        PDM_log_trace_array_int(precv_entity_desc_post, 3 * n_data, "precv_entity_desc ::");
         free(_pentity_ln_to_gn);
         // free(order);
 

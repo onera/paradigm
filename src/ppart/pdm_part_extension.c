@@ -4711,7 +4711,7 @@ _rebuild_connectivity_cell_face
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         PDM_log_trace_array_long(part_ext->border_cell_ln_to_gn[shift_part+i_part]      , part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][part_ext->n_cell[shift_part+i_part]], "part_ext->border_cell_ln_to_gn : ");
-        PDM_log_trace_array_int (part_ext->cell_cell_interface_pruned[shift_part+i_part], part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][part_ext->n_cell[0]], "part_ext->cell_cell_interface_pruned : ");
+        PDM_log_trace_array_int (part_ext->cell_cell_interface_pruned[shift_part+i_part], part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][part_ext->n_cell[shift_part+i_part]], "part_ext->cell_cell_interface_pruned : ");
       }
       shift_part += part_ext->n_part[i_domain];
     }
