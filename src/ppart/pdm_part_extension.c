@@ -1365,6 +1365,13 @@ _generate_graph_comm_with_extended
       }
     }
 
+    /*
+     * Rajout des connexions entre partitions !!!
+     */
+    printf("Il faut rajouter les connexions entre partitions \n");
+    log_trace("Il faut rajouter les connexions entre partitions \n");
+
+
     /* Compute index */
     _neighbor_idx[0] = 0;
     _neighbor_opp_idx[0] = 0;
@@ -3693,42 +3700,60 @@ _compute_first_extended_cell_graph
       // free(_unique_cell_cell_interface);
       free(_unique_cell_cell_extended);
 
-      // /*
-      //  * Ancienne methode par triplet
-      //  */
-      // int* _unique_cell_cell_extended_idx = NULL;
-      // int* _unique_cell_cell_extended_n   = NULL;
-      // int* _unique_cell_cell_extended     = NULL;
-      // /* Sort and unique inside connectivity */
-      // _unique_triplet(n_cell,
-      //                 _cell_cell_extended_idx,
-      //                 _cell_cell_extended,
-      //                 &_unique_cell_cell_extended_idx,
-      //                 &_unique_cell_cell_extended_n,
-      //                 &_unique_cell_cell_extended);
+      /*
+       * Last post-treatment -> Remove entty that come twice : One from interior and another from periodicity
+       * Manage the case of one periodic is redondant with and existing join between 2 partitions
+       */
+      int *_post_cell_cell_extended_idx = malloc((n_cell+1) * sizeof(int));
+      int *_tmp_cell_cell_extended      = part_ext->cell_cell_extended[i_depth_cur][i_part+shift_part];
+      _post_cell_cell_extended_idx[0] = 0;
+      for(int i = 0; i < n_cell; ++i) {
+        _post_cell_cell_extended_idx[i+1] = _post_cell_cell_extended_idx[i];
 
-      // free(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part]);
-      // free(part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part]);
-      // free(part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part]);
+        int last_proc_opp    = -10000000;
+        int last_part_opp    = -10000000;
+        int last_entity_opp  = -10000000;
+        int last_intrf_opp   = -10000000;
+        for(int idx = _unique_cell_cell_extended_idx[i]; idx < _unique_cell_cell_extended_idx[i+1]; ++idx) {
 
-      // part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended_idx;
-      // part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended_n;
-      // part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended;
+          int i_proc_opp   = _tmp_cell_cell_extended    [3*idx  ];
+          int i_part_opp   = _tmp_cell_cell_extended    [3*idx+1];
+          int i_entity_opp = _tmp_cell_cell_extended    [3*idx+2];
+          int i_intrf_opp  = _unique_cell_cell_interface[idx];
 
-      // /*
-      //  * Setup a unique among all connecetvity to avoid adding same entity multiple times
-      //  */
-      // int *_unique_order_cell_cell_extended = NULL;
-      // int n_unique = _setup_unique_order_triplet(n_cell,
-      //                                            _unique_cell_cell_extended_idx,
-      //                                            _unique_cell_cell_extended,
-      //                                            &_unique_order_cell_cell_extended);
+          if(last_proc_opp   == i_proc_opp   &&
+             last_part_opp   == i_part_opp   &&
+             last_entity_opp == i_entity_opp)
+          {
+            if(last_intrf_opp != -40000) {
+              // On reecrit
+              int idx_write = _post_cell_cell_extended_idx[i+1]++;
+              _tmp_cell_cell_extended    [3*idx_write  ] = _tmp_cell_cell_extended    [3*idx  ];
+              _tmp_cell_cell_extended    [3*idx_write+1] = _tmp_cell_cell_extended    [3*idx+1];
+              _tmp_cell_cell_extended    [3*idx_write+2] = _tmp_cell_cell_extended    [3*idx+2];
+              _unique_cell_cell_interface[  idx_write  ] = _unique_cell_cell_interface[  idx  ];
+            }
+          } else {
+            last_proc_opp   = i_proc_opp;
+            last_part_opp   = i_part_opp;
+            last_entity_opp = i_entity_opp;
+            last_intrf_opp  = i_intrf_opp;
 
-      // part_ext->unique_order_cell_cell_extended  [i_depth_cur][i_part+shift_part] = _unique_order_cell_cell_extended;
-      // part_ext->n_unique_order_cell_cell_extended[i_depth_cur][i_part+shift_part] = n_unique;
+            // On reecrit
+            int idx_write = _post_cell_cell_extended_idx[i+1]++;
+            _tmp_cell_cell_extended    [3*idx_write  ] = _tmp_cell_cell_extended    [3*idx  ];
+            _tmp_cell_cell_extended    [3*idx_write+1] = _tmp_cell_cell_extended    [3*idx+1];
+            _tmp_cell_cell_extended    [3*idx_write+2] = _tmp_cell_cell_extended    [3*idx+2];
+            _unique_cell_cell_interface[  idx_write  ] = _unique_cell_cell_interface[  idx  ];
+          }
+        }
+      }
+
+      free(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part]);
+      part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part] = _post_cell_cell_extended_idx;
 
       // PDM_log_trace_array_int(_unique_order_cell_cell_extended, _unique_cell_cell_extended_idx[n_cell]  , "_unique_order_cell_cell_extended::");
-      if(1 == 1) {
+      if(0 == 1) {
         // PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell  , "t_cell_cell_extended_n::");
         // PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "t_cell_cell_extended_idx::");
         // PDM_log_trace_array_int(_cell_cell_extended, 3 * _cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
@@ -3812,7 +3837,7 @@ _prune_cell_cell_extented
       int* _cell_cell_extended_pruned_idx = part_ext->cell_cell_extended_pruned_idx[i_part+shift_part];
       int* _cell_cell_interface_pruned    = part_ext->cell_cell_interface_pruned   [i_part+shift_part];
 
-      PDM_log_trace_array_int(_quad_cell_cell_extended   ,   4 *  s_tot, "_quad_cell_cell_extended::");
+      // PDM_log_trace_array_int(_quad_cell_cell_extended   ,   4 *  s_tot, "_quad_cell_cell_extended::");
 
       int idx_unique = 0;
       int last_proc  = -1;
@@ -3833,9 +3858,9 @@ _prune_cell_cell_extented
 
         int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part) && (curr_inte == -40000);
 
-        printf("  last = %i / %i / %i / %i \n", last_proc, last_part, last_elmt, last_inte);
-        printf("  cur  = %i / %i / %i / %i \n", curr_proc, curr_part, curr_cell, curr_inte);
-        printf(" is_same = %i | is_local = %i \n", is_same, is_local);
+        // printf("  last = %i / %i / %i / %i \n", last_proc, last_part, last_elmt, last_inte);
+        // printf("  cur  = %i / %i / %i / %i \n", curr_proc, curr_part, curr_cell, curr_inte);
+        // printf(" is_same = %i | is_local = %i \n", is_same, is_local);
 
         // On peut également trie les locaux qui ne serve à rien
         // int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part);
@@ -4135,7 +4160,7 @@ _generate_extended_partition_connectivity
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
     // printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
-    if(pos == -1 || i_interf != 0) {
+    if(pos == -1 || i_interf != -40000) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
       // printf("\t\t found [%i] = %i\n", i_entity2, pos);
 
