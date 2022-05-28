@@ -815,6 +815,15 @@ _reverse_extended_graph
  int          **revert_entity_extended
 )
 {
+
+  PDM_UNUSED(n_composed_interface);
+  PDM_UNUSED(composed_interface_idx);
+  PDM_UNUSED(composed_interface);
+  PDM_UNUSED(composed_ln_to_gn_sorted);
+  PDM_UNUSED(revert_entity_extended_idx);
+  PDM_UNUSED(revert_entity_extended);
+
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -833,10 +842,11 @@ _reverse_extended_graph
         if(i_interface < n_interface) {
           send_n[t_rank]++;
         } else { // Composed
-          int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
-          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
-            send_n[t_rank]++;
-          }
+          send_n[t_rank]++;
+          // int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
+          // for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+          //   send_n[t_rank]++;
+          // }
         }
 
       }
@@ -871,18 +881,25 @@ _reverse_extended_graph
           send_buffer[5*idx_write+3] = entity_entity_extended [i_part][3*idx+2];
           send_buffer[5*idx_write+4] = entity_entity_interface[i_part][idx];
         } else { // Composed
-          int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
-          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
 
-            int idx_write = send_idx[t_rank] + send_n[t_rank]++;
-            int i_tr = composed_interface[idx_comp];
-            send_buffer[5*idx_write  ] = i_part + shift_part_g;
-            send_buffer[5*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
-            send_buffer[5*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
-            send_buffer[5*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
-            send_buffer[5*idx_write+4] = i_tr;
+          int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+          send_buffer[5*idx_write  ] = i_part + shift_part_g;
+          send_buffer[5*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
+          send_buffer[5*idx_write+2] = entity_entity_extended [i_part][3*idx+1];
+          send_buffer[5*idx_write+3] = entity_entity_extended [i_part][3*idx+2];
+          send_buffer[5*idx_write+4] = entity_entity_interface[i_part][idx];
+          // int l_interf = PDM_binary_search_long(i_interface+1, composed_ln_to_gn_sorted, n_composed_interface);
+          // for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
 
-          }
+          //   int idx_write = send_idx[t_rank] + send_n[t_rank]++;
+          //   int i_tr = composed_interface[idx_comp];
+          //   send_buffer[5*idx_write  ] = i_part + shift_part_g;
+          //   send_buffer[5*idx_write+1] = n_entity[i_part] + idx; // Hack here cause we stack at the end the extended ones
+          //   send_buffer[5*idx_write+2] = entity_entity_extended[i_part][3*idx+1];
+          //   send_buffer[5*idx_write+3] = entity_entity_extended[i_part][3*idx+2];
+          //   send_buffer[5*idx_write+4] = i_tr;
+
+          // }
         }
 
       }
@@ -1037,9 +1054,9 @@ _exchange_and_sort_neighbor
 
   PDM_distant_neighbor_free(dn);
 
-  *all_neighbor_idx  = concat_neighbor_opp_idx;
-  *all_neighbor_desc = concat_neighbor_opp;
-  return;
+  // *all_neighbor_idx  = concat_neighbor_opp_idx;
+  // *all_neighbor_desc = concat_neighbor_opp;
+  // return;
 
   /*
    * Filter by removing self and already direct neighbor
@@ -1165,6 +1182,8 @@ _generate_graph_comm_with_extended
  int                        ***old_to_new_indices
 )
 {
+  PDM_UNUSED(shift_part_idx);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -1197,8 +1216,11 @@ _generate_graph_comm_with_extended
       neighbor_n    [i_part][i] = 0;
       neighbor_opp_n[i_part][i] = 0;
     }
-
   }
+
+  PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_composed_interface, "composed_interface ::");
+  PDM_log_trace_array_long(composed_interface_ln_to_gn, n_composed_interface, "composed_interface_ln_to_gn ::");
+
 
   int *revert_entity_extended_idx = NULL; // n_rank+1
   int *revert_entity_extended     = NULL; // i_part_cur, i_entity_cur, t_part, t_entity, t_interf
@@ -1231,26 +1253,28 @@ _generate_graph_comm_with_extended
     neighbor_opp_n[i_part][i_entity] += 1;
   }
 
-  for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
-    for(int i = 0; i < n_entity[i_part]; ++i) {
-      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
-        int t_entity = n_entity[i_part] + idx;
+  // for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+  //   for(int i = 0; i < n_entity[i_part]; ++i) {
+  //     for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
+  //       int t_entity = n_entity[i_part] + idx;
 
-        int i_interface = entity_entity_interface[i_part][idx]-1;
+  //       int i_interface = entity_entity_interface[i_part][idx]-1;
 
-        if(i_interface < n_interface) {
-          neighbor_n    [i_part][t_entity] += 1;
-          neighbor_opp_n[i_part][t_entity] += 1;
-        } else {
-          int l_interf = PDM_binary_search_long(i_interface+1, composed_interface_ln_to_gn, n_composed_interface);
-          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
-            neighbor_n    [i_part][t_entity] += 1;
-            neighbor_opp_n[i_part][t_entity] += 1;
-          }
-        }
-      }
-    }
-  }
+  //       if(i_interface < n_interface) {
+  //         neighbor_n    [i_part][t_entity] += 1;
+  //         neighbor_opp_n[i_part][t_entity] += 1;
+  //       } else {
+  //         neighbor_n    [i_part][t_entity] += 1;
+  //         neighbor_opp_n[i_part][t_entity] += 1;
+  //         // int l_interf = PDM_binary_search_long(i_interface+1, composed_interface_ln_to_gn, n_composed_interface);
+  //         // for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+  //         //   neighbor_n    [i_part][t_entity] += 1;
+  //         //   neighbor_opp_n[i_part][t_entity] += 1;
+  //         // }
+  //       }
+  //     }
+  //   }
+  // }
 
 
   /*
@@ -1414,50 +1438,61 @@ _generate_graph_comm_with_extended
 
   /* Remplissage de fin */
 
-  for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
-    for(int i = 0; i < n_entity[i_part]; ++i) {
-      for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
-        int t_entity = n_entity[i_part] + idx;
+  // for(int i_part = 0; i_part < n_part_all_domain; ++i_part) {
+  //   for(int i = 0; i < n_entity[i_part]; ++i) {
+  //     for(int idx = entity_entity_extended_idx[i_part][i]; idx < entity_entity_extended_idx[i_part][i+1]; ++idx) {
+  //       int t_entity = n_entity[i_part] + idx;
 
-        int i_interface = entity_entity_interface[i_part][idx]-1;
+  //       int i_interface = entity_entity_interface[i_part][idx]-1;
 
-        if(i_interface < n_interface) {
+  //       if(i_interface < n_interface) {
 
-          int idx_write     = neighbor_idx    [i_part][t_entity] + neighbor_n    [i_part][t_entity]++;
-          int idx_write_opp = neighbor_opp_idx[i_part][t_entity] + neighbor_opp_n[i_part][t_entity]++;
+  //         int idx_write     = neighbor_idx    [i_part][t_entity] + neighbor_n    [i_part][t_entity]++;
+  //         int idx_write_opp = neighbor_opp_idx[i_part][t_entity] + neighbor_opp_n[i_part][t_entity]++;
 
-          neighbor_desc     [i_part][3*idx_write  ] = entity_entity_extended[i_part][3*idx  ];
-          neighbor_desc     [i_part][3*idx_write+1] = entity_entity_extended[i_part][3*idx+1];
-          neighbor_desc     [i_part][3*idx_write+2] = entity_entity_extended[i_part][3*idx+2];
-          neighbor_interface[i_part][idx_write    ] = entity_entity_interface[i_part][idx];
+  //         neighbor_desc     [i_part][3*idx_write  ] = entity_entity_extended[i_part][3*idx  ];
+  //         neighbor_desc     [i_part][3*idx_write+1] = entity_entity_extended[i_part][3*idx+1];
+  //         neighbor_desc     [i_part][3*idx_write+2] = entity_entity_extended[i_part][3*idx+2];
+  //         neighbor_interface[i_part][idx_write    ] = entity_entity_interface[i_part][idx];
 
-          neighbor_opp_desc[i_part][4*idx_write_opp  ] = entity_entity_extended [i_part][3*idx  ];
-          neighbor_opp_desc[i_part][4*idx_write_opp+1] = entity_entity_extended [i_part][3*idx+1];
-          neighbor_opp_desc[i_part][4*idx_write_opp+2] = entity_entity_extended [i_part][3*idx+2];
-          neighbor_opp_desc[i_part][4*idx_write_opp+3] = entity_entity_interface[i_part][idx];
-        } else {
+  //         neighbor_opp_desc[i_part][4*idx_write_opp  ] = entity_entity_extended [i_part][3*idx  ];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+1] = entity_entity_extended [i_part][3*idx+1];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+2] = entity_entity_extended [i_part][3*idx+2];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+3] = entity_entity_interface[i_part][idx];
+  //       } else {
 
-          int l_interf = PDM_binary_search_long(i_interface+1, composed_interface_ln_to_gn, n_composed_interface);
-          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+  //         int idx_write     = neighbor_idx    [i_part][t_entity] + neighbor_n    [i_part][t_entity]++;
+  //         int idx_write_opp = neighbor_opp_idx[i_part][t_entity] + neighbor_opp_n[i_part][t_entity]++;
+  //         neighbor_desc     [i_part][3*idx_write  ] = entity_entity_extended[i_part][3*idx  ];
+  //         neighbor_desc     [i_part][3*idx_write+1] = entity_entity_extended[i_part][3*idx+1];
+  //         neighbor_desc     [i_part][3*idx_write+2] = entity_entity_extended[i_part][3*idx+2];
+  //         neighbor_interface[i_part][idx_write    ] = entity_entity_interface[i_part][idx];
 
-            int idx_write     = neighbor_idx    [i_part][t_entity] + neighbor_n    [i_part][t_entity]++;
-            int idx_write_opp = neighbor_opp_idx[i_part][t_entity] + neighbor_opp_n[i_part][t_entity]++;
-            int i_tr = composed_interface[idx_comp];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp  ] = entity_entity_extended [i_part][3*idx  ];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+1] = entity_entity_extended [i_part][3*idx+1];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+2] = entity_entity_extended [i_part][3*idx+2];
+  //         neighbor_opp_desc[i_part][4*idx_write_opp+3] = entity_entity_interface[i_part][idx];
+  //         // int l_interf = PDM_binary_search_long(i_interface+1, composed_interface_ln_to_gn, n_composed_interface);
+  //         // for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
 
-            neighbor_desc     [i_part][3*idx_write  ] = entity_entity_extended[i_part][3*idx  ];
-            neighbor_desc     [i_part][3*idx_write+1] = entity_entity_extended[i_part][3*idx+1];
-            neighbor_desc     [i_part][3*idx_write+2] = entity_entity_extended[i_part][3*idx+2];
-            neighbor_interface[i_part][idx_write    ] = i_tr;
+  //         //   int idx_write     = neighbor_idx    [i_part][t_entity] + neighbor_n    [i_part][t_entity]++;
+  //         //   int idx_write_opp = neighbor_opp_idx[i_part][t_entity] + neighbor_opp_n[i_part][t_entity]++;
+  //         //   int i_tr = composed_interface[idx_comp];
 
-            neighbor_opp_desc[i_part][4*idx_write_opp  ] = entity_entity_extended [i_part][3*idx  ];
-            neighbor_opp_desc[i_part][4*idx_write_opp+1] = entity_entity_extended [i_part][3*idx+1];
-            neighbor_opp_desc[i_part][4*idx_write_opp+2] = entity_entity_extended [i_part][3*idx+2];
-            neighbor_opp_desc[i_part][4*idx_write_opp+3] = i_tr;
-          }
-        }
-      }
-    }
-  }
+  //         //   neighbor_desc     [i_part][3*idx_write  ] = entity_entity_extended[i_part][3*idx  ];
+  //         //   neighbor_desc     [i_part][3*idx_write+1] = entity_entity_extended[i_part][3*idx+1];
+  //         //   neighbor_desc     [i_part][3*idx_write+2] = entity_entity_extended[i_part][3*idx+2];
+  //         //   neighbor_interface[i_part][idx_write    ] = i_tr;
+
+  //         //   neighbor_opp_desc[i_part][4*idx_write_opp  ] = entity_entity_extended [i_part][3*idx  ];
+  //         //   neighbor_opp_desc[i_part][4*idx_write_opp+1] = entity_entity_extended [i_part][3*idx+1];
+  //         //   neighbor_opp_desc[i_part][4*idx_write_opp+2] = entity_entity_extended [i_part][3*idx+2];
+  //         //   neighbor_opp_desc[i_part][4*idx_write_opp+3] = i_tr;
+  //         // }
+  //       }
+  //     }
+  //   }
+  // }
 
   for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
     for(int i = revert_entity_extended_idx[t_rank]; i < revert_entity_extended_idx[t_rank+1]; ++i) {
@@ -1469,12 +1504,12 @@ _generate_graph_comm_with_extended
       neighbor_desc[i_part][3*idx_write  ] = t_rank;
       neighbor_desc[i_part][3*idx_write+1] = revert_entity_extended[5*i  ];
       neighbor_desc[i_part][3*idx_write+2] = revert_entity_extended[5*i+1];
-      neighbor_interface[i_part][idx_write] = revert_entity_extended[5*i+4];
+      neighbor_interface[i_part][idx_write] = -revert_entity_extended[5*i+4];
 
       neighbor_opp_desc[i_part][4*idx_write_opp  ] = t_rank;
       neighbor_opp_desc[i_part][4*idx_write_opp+1] = revert_entity_extended[5*i  ];
       neighbor_opp_desc[i_part][4*idx_write_opp+2] = revert_entity_extended[5*i+1];
-      neighbor_opp_desc[i_part][4*idx_write_opp+3] = revert_entity_extended[5*i+4];
+      neighbor_opp_desc[i_part][4*idx_write_opp+3] = -revert_entity_extended[5*i+4];
 
     }
   }
@@ -1712,7 +1747,7 @@ _generate_graph_comm_with_extended
             is_treated[idx2] = 1;
             _old_to_new_indices[old_order ] = new_indices;
             _old_to_new_indices[old_order2] = new_indices;
-            break;
+            // break; // This one is false
           }
         }
 
@@ -5562,72 +5597,73 @@ PDM_part_extension_compute
     shift_part += part_ext->n_part[i_domain];
   }
 
+  if(0 == 1) {
+    int **old_to_new_indices = NULL;
+    _generate_graph_comm_with_extended(part_ext->comm,
+                                       n_part_loc_all_domain,
+                                       part_to_domain,
+                                       part_ext->pdi,
+                                       PDM_BOUND_TYPE_VTX,
+                                       part_ext->n_part_idx,
+                                       part_ext->n_part_g_idx,
+                                       n_vtx,
+                                       part_ext->vtx_vtx_extended_idx,
+                                       part_ext->vtx_vtx_extended,
+                                       part_ext->vtx_vtx_interface,
+                                       part_ext->n_interface,
+                                       part_ext->n_composed_interface,
+                                       part_ext->composed_interface_idx,
+                                       part_ext->composed_interface,
+                                       part_ext->composed_ln_to_gn_sorted,
+                                       part_ext->border_vtx_ln_to_gn,
+                                       &old_to_new_indices);
 
-  int **old_to_new_indices = NULL;
-  _generate_graph_comm_with_extended(part_ext->comm,
-                                     n_part_loc_all_domain,
-                                     part_to_domain,
-                                     part_ext->pdi,
-                                     PDM_BOUND_TYPE_VTX,
-                                     part_ext->n_part_idx,
-                                     part_ext->n_part_g_idx,
-                                     n_vtx,
-                                     part_ext->vtx_vtx_extended_idx,
-                                     part_ext->vtx_vtx_extended,
-                                     part_ext->vtx_vtx_interface,
-                                     part_ext->n_interface,
-                                     part_ext->n_composed_interface,
-                                     part_ext->composed_interface_idx,
-                                     part_ext->composed_interface,
-                                     part_ext->composed_ln_to_gn_sorted,
-                                     part_ext->border_vtx_ln_to_gn,
-                                     &old_to_new_indices);
+    free(part_to_domain);
 
-  free(part_to_domain);
+    /*
+     * Apply order - TODO -> Update connectivity + realloc
+     */
+    for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
-  /*
-   * Apply order - TODO -> Update connectivity + realloc
-   */
-  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+      int n_extented_old = part_ext->vtx_vtx_extended_idx[i_part][n_vtx[i_part]];
 
-    int n_extented_old = part_ext->vtx_vtx_extended_idx[i_part][n_vtx[i_part]];
+      int         *new_vtx_vtx_extended_idx = malloc((n_vtx[i_part]+1)  * sizeof(int        ));
+      int         *new_vtx_vtx_extended     = malloc(3 * n_extented_old * sizeof(int        ));
+      int         *new_vtx_vtx_interface    = malloc(    n_extented_old * sizeof(int        ));
+      PDM_g_num_t *new_border_vtx_ln_to_gn  = malloc(    n_extented_old * sizeof(PDM_g_num_t));
 
-    int         *new_vtx_vtx_extended_idx = malloc((n_vtx[i_part]+1)  * sizeof(int        ));
-    int         *new_vtx_vtx_extended     = malloc(3 * n_extented_old * sizeof(int        ));
-    int         *new_vtx_vtx_interface    = malloc(    n_extented_old * sizeof(int        ));
-    PDM_g_num_t *new_border_vtx_ln_to_gn  = malloc(    n_extented_old * sizeof(PDM_g_num_t));
+      int n_extented_new = 0;
+      for(int i = 0; i < n_extented_old; ++i) {
+        n_extented_new = PDM_MAX(n_extented_new, old_to_new_indices[i_part][i]+1);
+      }
 
-    int n_extented_new = 0;
-    for(int i = 0; i < n_extented_old; ++i) {
-      n_extented_new = PDM_MAX(n_extented_new, old_to_new_indices[i_part][i]+1);
+      for(int i = 0; i < n_extented_old; ++i) {
+        int idx_write = old_to_new_indices[i_part][i];
+        new_vtx_vtx_extended[3*idx_write  ] = part_ext->vtx_vtx_extended [i_part][3*i  ];
+        new_vtx_vtx_extended[3*idx_write+1] = part_ext->vtx_vtx_extended [i_part][3*i+1];
+        new_vtx_vtx_extended[3*idx_write+2] = part_ext->vtx_vtx_extended [i_part][3*i+2];
+        new_vtx_vtx_interface[idx_write]    = part_ext->vtx_vtx_interface[i_part][i];
+        new_border_vtx_ln_to_gn[idx_write]  = part_ext->border_vtx_ln_to_gn[i_part][i];
+      }
+
+      new_vtx_vtx_extended_idx[0] = 0;
+      for(int i = 0; i < n_vtx[i_part]; ++i) {
+        new_vtx_vtx_extended_idx[i+1] = n_extented_new;
+      }
+
+      free(part_ext->vtx_vtx_extended_idx[i_part]);
+      free(part_ext->vtx_vtx_extended    [i_part]);
+      free(part_ext->vtx_vtx_interface   [i_part]);
+      free(part_ext->border_vtx_ln_to_gn [i_part]);
+      part_ext->vtx_vtx_extended_idx[i_part] = new_vtx_vtx_extended_idx;
+      part_ext->vtx_vtx_extended    [i_part] = new_vtx_vtx_extended;
+      part_ext->vtx_vtx_interface   [i_part] = new_vtx_vtx_interface;
+      part_ext->border_vtx_ln_to_gn [i_part] = new_border_vtx_ln_to_gn;
+      // PDM_log_trace_array_int(part_ext->vtx_vtx_extended, 3*)
+
     }
-
-    for(int i = 0; i < n_extented_old; ++i) {
-      int idx_write = old_to_new_indices[i_part][i];
-      new_vtx_vtx_extended[3*idx_write  ] = part_ext->vtx_vtx_extended [i_part][3*i  ];
-      new_vtx_vtx_extended[3*idx_write+1] = part_ext->vtx_vtx_extended [i_part][3*i+1];
-      new_vtx_vtx_extended[3*idx_write+2] = part_ext->vtx_vtx_extended [i_part][3*i+2];
-      new_vtx_vtx_interface[idx_write]    = part_ext->vtx_vtx_interface[i_part][i];
-      new_border_vtx_ln_to_gn[idx_write]  = part_ext->border_vtx_ln_to_gn[i_part][i];
-    }
-
-    new_vtx_vtx_extended_idx[0] = 0;
-    for(int i = 0; i < n_vtx[i_part]; ++i) {
-      new_vtx_vtx_extended_idx[i+1] = n_extented_new;
-    }
-
-    free(part_ext->vtx_vtx_extended_idx[i_part]);
-    free(part_ext->vtx_vtx_extended    [i_part]);
-    free(part_ext->vtx_vtx_interface   [i_part]);
-    free(part_ext->border_vtx_ln_to_gn [i_part]);
-    part_ext->vtx_vtx_extended_idx[i_part] = new_vtx_vtx_extended_idx;
-    part_ext->vtx_vtx_extended    [i_part] = new_vtx_vtx_extended;
-    part_ext->vtx_vtx_interface   [i_part] = new_vtx_vtx_interface;
-    part_ext->border_vtx_ln_to_gn [i_part] = new_border_vtx_ln_to_gn;
-    // PDM_log_trace_array_int(part_ext->vtx_vtx_extended, 3*)
-
   }
-
+  free(part_to_domain);
 
 
   /* Finalize with vertex */

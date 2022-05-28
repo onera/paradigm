@@ -2839,7 +2839,7 @@ PDM_domain_interface_translate_entity1_entity2
     _interface_ids_entity2[i_interface] = (PDM_g_num_t *) realloc( _interface_ids_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface] * sizeof(PDM_g_num_t));
     _interface_dom_entity2[i_interface] = (int         *) realloc( _interface_dom_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface] * sizeof(int        ));
 
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_long(_interface_ids_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface], "_interface_ids_entity2 : " );
       PDM_log_trace_array_int (_interface_dom_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface], "_interface_dom_entity2 : " );
     }
@@ -3149,7 +3149,7 @@ PDM_ddomain_interface_to_pdomain_interface
   for(int itrf = 0; itrf < n_interface; ++itrf) {
     int dom    = -1;
     int domopp = -1;
-    if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    if (dn_interface[itrf] > 0 && multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
       dom    = interface_dom[itrf][0];
       domopp = interface_dom[itrf][1];
     }
@@ -3217,7 +3217,7 @@ PDM_ddomain_interface_to_pdomain_interface
     dn_interface_twice   [itrf] = 2*dn_interface[itrf];
     int dom    = -1;
     int domopp = -1;
-    if (multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    if (dn_interface[itrf] > 0 && multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
       dom    = interface_dom[itrf][0];
       domopp = interface_dom[itrf][1];
     }

@@ -765,8 +765,8 @@ int main
                                                                     &composed_interface,
                                                                     &composed_ln_to_gn_sorted);
 
-  // PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
-  // PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
+  PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
+  PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
 
   /*
    * Export current domain with elements
@@ -866,6 +866,9 @@ int main
       int *i_num_vtx = malloc(n_vtx_extended * sizeof(int));
       for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
         i_num_vtx[i_vtx] = i_vtx;
+        if(border_vtx_interface[i_vtx] == -40000) {
+          continue;
+        }
         int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
         if(i_interf < n_interface){
           for(int k = 0; k < 3; ++k) {

@@ -1140,9 +1140,9 @@ PDM_part_domain_interface_as_graph
         }
       }
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_graph_nuplet_int(_neighbor_idx, _neighbor_desc, 3, n_entity_bound[i_part+shift_part], "_neighbor graph :");
-        PDM_log_trace_graph_nuplet_int(_neighbor_opp_idx, _neighbor_opp_desc, 4, n_entity_bound[i_part+shift_part], "_neighbor_opp_idx :");
+        PDM_log_trace_graph_nuplet_int(_neighbor_opp_idx, _neighbor_opp_desc, 4, n_entity_bound[i_part+shift_part], "_neighbor_opp_desc :");
       }
 
     }
@@ -1427,18 +1427,18 @@ PDM_part_domain_interface_as_graph
   PDM_g_num_t *ptb_composed_ln_to_gn_sorted = PDM_part_to_block_block_gnum_get(ptb);
 
 
-  if(i_rank > 0) {
-    assert(_n_g_interface == 0);
-    free(_composed_id_n);
-    free(_composed_id);
-  }
-
   int *_composed_id_idx = malloc( (_n_g_interface+1) * sizeof(int));
   _composed_id_idx[0] = 0;
   for(int i = 0; i < _n_g_interface; ++i) {
     _composed_id_idx[i+1] = _composed_id_idx[i] + _composed_id_n[i];
   }
+
   free(_composed_id_n);
+  if(i_rank > 0) {
+    assert(_n_g_interface == 0);
+    free(_composed_id);
+  }
+
 
   free(distrib_interf);
 
