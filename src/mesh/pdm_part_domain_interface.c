@@ -1426,14 +1426,6 @@ PDM_part_domain_interface_as_graph
   int _n_g_interface = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *ptb_composed_ln_to_gn_sorted = PDM_part_to_block_block_gnum_get(ptb);
 
-
-  int *_composed_id_idx = malloc( (_n_g_interface+1) * sizeof(int));
-  _composed_id_idx[0] = 0;
-  for(int i = 0; i < _n_g_interface; ++i) {
-    _composed_id_idx[i+1] = _composed_id_idx[i] + _composed_id_n[i];
-  }
-
-  free(_composed_id_n);
   if(i_rank > 0) {
     assert(_n_g_interface == 0);
     free(_composed_id);
@@ -1458,11 +1450,29 @@ PDM_part_domain_interface_as_graph
       _composed_ln_to_gn_sorted[i] =  ptb_composed_ln_to_gn_sorted[i];
     }
   }
+
+  int *_composed_id_idx = malloc( (_n_g_interface+1) * sizeof(int));
+
+  if(i_rank == 0) {
+    _composed_id_idx[0] = 0;
+    for(int i = 0; i < _n_g_interface; ++i) {
+      _composed_id_idx[i+1] = _composed_id_idx[i] + _composed_id_n[i];
+    }
+  }
+  free(_composed_id_n);
+
   PDM_part_to_block_free(ptb);
 
   PDM_MPI_Bcast(_composed_ln_to_gn_sorted    , _n_g_interface, PDM__PDM_MPI_G_NUM, 0, dom_intrf->comm);
 
-  PDM_MPI_Bcast(_composed_id_idx, _n_g_interface+1                 , PDM_MPI_INT, 0, dom_intrf->comm);
+  PDM_MPI_Bcast(_composed_id_idx, _n_g_interface+1                , PDM_MPI_INT, 0, dom_intrf->comm);
+
+
+  if(i_rank != 0) {
+    _composed_id = malloc(_composed_id_idx[_n_g_interface] * sizeof(int));
+  }
+
+
   PDM_MPI_Bcast(_composed_id    , _composed_id_idx[_n_g_interface], PDM_MPI_INT, 0, dom_intrf->comm);
 
 

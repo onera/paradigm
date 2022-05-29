@@ -2195,8 +2195,8 @@ _warm_up_domain_interface
 
           log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
 
-          _opp_interface_and_gnum[2*idx_entity  ] = _entity_ln_to_gn_opp[idx_entity];
-          _opp_interface_and_gnum[2*idx_entity+1] = _neighbor_interface [idx_entity];
+          _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
+          _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
 
           _current_lentity[idx_entity] = i_entity;
 
@@ -4160,8 +4160,8 @@ _generate_extended_partition_connectivity
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
     printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
-    // if(pos == -1 || i_interf != -40000) {
-    if(pos == -1 || i_interf != 0) {
+    if(pos == -1 || i_interf != -40000) {
+    // if(pos == -1 || i_interf != 0) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
       printf("\t\t found [%i] = %i\n", i_entity2, pos);
 
@@ -4227,10 +4227,10 @@ _generate_extended_partition_connectivity
     PDM_g_num_t g_entity2 = PDM_ABS(border_gentity1_entity2[i]);
 
     if(border_gentity1_entity2_interface[i] != -40000 && n_cur_interface_entity2 > 0) {
-      int         i_interf  = PDM_ABS(border_gentity1_entity2_interface[i])-1;
+      // int         i_interf  = PDM_ABS(border_gentity1_entity2_interface[i])-1;
 
       // Recherche dans le tableau d'interface
-      PDM_g_num_t search_elmt[2] = {g_entity2, i_interf};
+      PDM_g_num_t search_elmt[2] = {g_entity2, border_gentity1_entity2_interface[i]};
 
       int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
 
@@ -5551,7 +5551,7 @@ PDM_part_extension_compute
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
-  exit(1);
+  // exit(1);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
 
