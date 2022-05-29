@@ -1024,6 +1024,7 @@ int main
                                    (const int **)   field);
       }
       PDM_part_mesh_nodal_elmts_free(pmne_vol);
+
       free(concat_vtx_ln_to_gn );
       free(concat_cell_ln_to_gn);
       free(concat_vtx_coord    );
