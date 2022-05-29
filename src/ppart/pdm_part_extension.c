@@ -2137,7 +2137,7 @@ _warm_up_domain_interface
       neighbor_desc     [i_part][3*i+2] = pdi_neighbor[i_part][4*i+2];
       neighbor_interface[i_part][  i  ] = pdi_neighbor[i_part][4*i+3];
     }
-
+    PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], neighbor_desc[i_part], 3, n_entity[i_part], "neighbor_desc (debug) :");
     free(pdi_neighbor[i_part]);
 
   }
@@ -4150,8 +4150,8 @@ _generate_extended_partition_connectivity
       PDM_g_num_t search_elmt[2] = {g_entity2, i_interf_abs};
 
       int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
-      // printf("    i_interf_abs = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf_abs, (int) g_entity2, pos_interface);
-      // printf("    i_interf = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf, (int) g_entity2, pos_interface);
+      printf("    i_interf_abs = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf_abs, (int) g_entity2, pos_interface);
+      printf("    i_interf = %i | g_entity2 = %i --> pos_interface = %i \n", i_interf, (int) g_entity2, pos_interface);
       if(pos_interface != -1) {
         continue;
       }
@@ -4159,10 +4159,11 @@ _generate_extended_partition_connectivity
 
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
 
-    // printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
-    if(pos == -1 || i_interf != -40000) {
+    printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
+    // if(pos == -1 || i_interf != -40000) {
+    if(pos == -1 || i_interf != 0) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
-      // printf("\t\t found [%i] = %i\n", i_entity2, pos);
+      printf("\t\t found [%i] = %i\n", i_entity2, pos);
 
       _entity2_entity2_extended_idx[1]++;
 
@@ -4216,7 +4217,7 @@ _generate_extended_partition_connectivity
    * Reconstruction de la connectivité de bord
    *   On écrase border_lentity1_entity2
    */
-  if(1 == 0 && n_cur_interface_entity2 > 0) {
+  if(1 == 1 && n_cur_interface_entity2 > 0) {
     PDM_log_trace_array_long(opp_interface_and_gnum_entity2, 2 * n_cur_interface_entity2, "opp_interface_and_gnum_entity2 ::");
   }
 
@@ -4265,7 +4266,8 @@ _generate_extended_partition_connectivity
       int pos_interior2 = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
       int pos_interior = PDM_binary_search_long(g_entity2, gentity1_entity2, entity1_entity2_idx[n_entity1]);
       // printf(" Border face comming from interior %i - %i \n", pos_interior, idx);
-      assert(pos_interior  != -1);
+      printf(" g_entity2 = %i | pos_interior = %i - pos_interior2 = %i \n", (int)g_entity2, pos_interior, pos_interior2);
+      // assert(pos_interior  != -1);
       assert(pos_interior2 != -1);
 
       int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
@@ -5549,6 +5551,7 @@ PDM_part_extension_compute
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
+  exit(1);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
 
