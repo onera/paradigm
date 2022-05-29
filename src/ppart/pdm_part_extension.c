@@ -1291,22 +1291,25 @@ _generate_graph_comm_with_extended
     int* _neighbor_opp_n   = neighbor_opp_n    [i_part];
     int* _neighbor_opp_idx = neighbor_opp_idx  [i_part];
 
-    int           *interface_pn       = NULL;
-    PDM_g_num_t  **interface_ln_to_gn = NULL;
-    int          **interface_sgn      = NULL;
-    int          **interface_ids      = NULL;
-    int          **interface_ids_idx  = NULL;
-    int          **interface_dom      = NULL;
-    PDM_part_domain_interface_get(dom_interf,
-                                  interface_kind,
-                                  i_domain,
-                                  i_part,
-                                  &interface_pn,
-                                  &interface_ln_to_gn,
-                                  &interface_sgn,
-                                  &interface_ids,
-                                  &interface_ids_idx,
-                                  &interface_dom);
+    int           *interface_pn       = malloc(n_interface * sizeof(int          ));
+    PDM_g_num_t  **interface_ln_to_gn = malloc(n_interface * sizeof(PDM_g_num_t *));
+    int          **interface_sgn      = malloc(n_interface * sizeof(int         *));
+    int          **interface_ids      = malloc(n_interface * sizeof(int         *));
+    int          **interface_ids_idx  = malloc(n_interface * sizeof(int         *));
+    int          **interface_dom      = malloc(n_interface * sizeof(int         *));
+    for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+      PDM_part_domain_interface_get(dom_interf,
+                                    interface_kind,
+                                    i_domain,
+                                    i_part,
+                                    i_interface,
+                                    &interface_pn[i_interface],
+                                    &interface_ln_to_gn[i_interface],
+                                    &interface_sgn[i_interface],
+                                    &interface_ids[i_interface],
+                                    &interface_ids_idx[i_interface],
+                                    &interface_dom[i_interface]);
+    }
 
     /*
      * First step : Count interface to add in distant neighbor due to connectivity betwenn domain
@@ -1440,6 +1443,13 @@ _generate_graph_comm_with_extended
           }
         }
       }
+
+      free(interface_pn      );
+      free(interface_ln_to_gn);
+      free(interface_sgn     );
+      free(interface_ids     );
+      free(interface_ids_idx );
+      free(interface_dom     );
     }
   }
 

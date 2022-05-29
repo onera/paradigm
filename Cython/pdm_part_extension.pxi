@@ -79,6 +79,10 @@ cdef extern from "pdm_part_extension.h":
                                    int                       i_part,
                                    double                  **vtx_coord)
 
+  void PDM_part_extension_part_domain_interface_shared_set(PDM_part_extension_t        *part_ext,
+                                                           PDM_part_domain_interface_t *pdi);
+
+
 cdef class PartExtension:
   """
   """
