@@ -2081,6 +2081,9 @@ const int                         n_domain,
   dom_intrf->interface_dn_face   = NULL;
   dom_intrf->interface_ids_face  = NULL;
   dom_intrf->interface_dom_face  = NULL;
+  dom_intrf->interface_dn_edge   = NULL;
+  dom_intrf->interface_ids_edge  = NULL;
+  dom_intrf->interface_dom_edge  = NULL;
   dom_intrf->interface_dn_vtx    = NULL;
   dom_intrf->interface_ids_vtx   = NULL;
   dom_intrf->interface_dom_vtx   = NULL;
@@ -2118,8 +2121,11 @@ void PDM_domain_interface_set
     dom_intrf->interface_dn_vtx  = interface_dn;
     dom_intrf->interface_ids_vtx = interface_ids;
     dom_intrf->interface_dom_vtx = interface_dom;
-  }
-  else if (interface_kind == PDM_BOUND_TYPE_FACE) {
+  } else if (interface_kind == PDM_BOUND_TYPE_EDGE) {
+    dom_intrf->interface_dn_edge  = interface_dn;
+    dom_intrf->interface_ids_edge = interface_ids;
+    dom_intrf->interface_dom_edge = interface_dom;
+  } else if (interface_kind == PDM_BOUND_TYPE_FACE) {
     dom_intrf->interface_dn_face  = interface_dn;
     dom_intrf->interface_ids_face = interface_ids;
     dom_intrf->interface_dom_face = interface_dom;
@@ -2981,6 +2987,79 @@ PDM_domain_interface_translate_vtx2face
   }
 }
 
+
+
+void
+PDM_domain_interface_translate_vtx2edge
+(
+ PDM_domain_interface_t  *dom_intrf,
+ int                     *dn_vtx,
+ int                     *dn_edge,
+ int                    **dedge_vtx_idx,
+ PDM_g_num_t            **dedge_vtx
+)
+{
+  PDM_UNUSED(dom_intrf);
+  PDM_UNUSED(dn_vtx);
+  PDM_UNUSED(dn_edge);
+  PDM_UNUSED(dedge_vtx_idx);
+  PDM_UNUSED(dedge_vtx);
+
+  assert (dom_intrf != NULL);
+  assert (dom_intrf->interface_dn_edge == NULL);
+  assert (dom_intrf->interface_dn_vtx  != NULL);
+
+  // Simple case is not yet managed, copy to go back to full case
+  int **_interface_dom_vtx = NULL;
+  if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    _interface_dom_vtx = (int **) malloc(dom_intrf->n_interface * sizeof(int*));
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+      _interface_dom_vtx[i_intrf] = (int *) malloc(2*dom_intrf->interface_dn_vtx[i_intrf]*sizeof(int));
+      for (int j = 0; j < dom_intrf->interface_dn_vtx[i_intrf]; j++) {
+        _interface_dom_vtx[i_intrf][2*j]   = dom_intrf->interface_dom_vtx[i_intrf][0];
+        _interface_dom_vtx[i_intrf][2*j+1] = dom_intrf->interface_dom_vtx[i_intrf][1];
+      }
+
+      if(1 == 1) {
+        PDM_log_trace_array_int (_interface_dom_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
+        PDM_log_trace_array_long(dom_intrf->interface_ids_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
+      }
+    }
+  } else {
+    _interface_dom_vtx = dom_intrf->interface_dom_vtx;
+  }
+
+  /*
+   * - part_to_block on interfaces ids (with global shift on vtx)
+   */
+  // int n_domain = dom_intrf->n_domain;
+
+  PDM_domain_interface_translate_entity1_entity2(dom_intrf->n_domain,
+                                                 dom_intrf->n_interface,
+                                                 dn_vtx,
+                                                 dn_edge,
+                                                 dom_intrf->interface_dn_vtx,
+                                                 _interface_dom_vtx,
+                                                 dom_intrf->interface_ids_vtx,
+                                                 dedge_vtx_idx,
+                                                 dedge_vtx,
+                                                 dom_intrf->comm,
+                                                 &dom_intrf->interface_dn_edge,
+                                                 &dom_intrf->interface_ids_edge,
+                                                 &dom_intrf->interface_dom_edge);
+  dom_intrf->is_result[PDM_BOUND_TYPE_EDGE] = 1;
+
+  // Simple case is not yet managed, free working arrays
+  if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_NO) {
+    for (int i_intrf = 0; i_intrf < dom_intrf->n_interface; i_intrf++) {
+      free(_interface_dom_vtx[i_intrf]);
+    }
+    free(_interface_dom_vtx);
+  }
+}
+
+
+
 void
 PDM_domain_interface_get
 (
@@ -2997,14 +3076,17 @@ PDM_domain_interface_get
     *interface_dn  = dom_intrf->interface_dn_face;
     *interface_ids = dom_intrf->interface_ids_face;
     *interface_dom = dom_intrf->interface_dom_face;
-  }
-  else if (interface_kind == PDM_BOUND_TYPE_VTX) {
+  } else if (interface_kind == PDM_BOUND_TYPE_EDGE) {
+    assert (dom_intrf->interface_dn_edge != NULL);
+    *interface_dn  = dom_intrf->interface_dn_edge;
+    *interface_ids = dom_intrf->interface_ids_edge;
+    *interface_dom = dom_intrf->interface_dom_edge;
+  } else if (interface_kind == PDM_BOUND_TYPE_VTX) {
     assert (dom_intrf->interface_dn_vtx != NULL);
     *interface_dn  = dom_intrf->interface_dn_vtx;
     *interface_ids = dom_intrf->interface_ids_vtx;
     *interface_dom = dom_intrf->interface_dom_vtx;
-  }
-  else  {
+  } else  {
     PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
   }
 }
@@ -3028,14 +3110,17 @@ PDM_domain_interface_get_as_graph
     interface_dn  = dom_intrf->interface_dn_face;
     interface_ids = dom_intrf->interface_ids_face;
     interface_dom = dom_intrf->interface_dom_face;
-  }
-  else if (interface_kind == PDM_BOUND_TYPE_VTX) {
+  } else if (interface_kind == PDM_BOUND_TYPE_EDGE) {
+    assert (dom_intrf->interface_dn_edge != NULL);
+    interface_dn  = dom_intrf->interface_dn_edge;
+    interface_ids = dom_intrf->interface_ids_edge;
+    interface_dom = dom_intrf->interface_dom_edge;
+  } else if (interface_kind == PDM_BOUND_TYPE_VTX) {
     assert (dom_intrf->interface_dn_vtx != NULL);
     interface_dn  = dom_intrf->interface_dn_vtx;
     interface_ids = dom_intrf->interface_ids_vtx;
     interface_dom = dom_intrf->interface_dom_vtx;
-  }
-  else  {
+  } else  {
     PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
   }
 
@@ -3071,6 +3156,21 @@ void PDM_domain_interface_free
         free(dom_intrf->interface_dom_vtx);
       // }
     }
+
+    if (dom_intrf->is_result[PDM_BOUND_TYPE_EDGE]) {
+      for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
+        free(dom_intrf->interface_ids_edge[i_interface]);
+        // if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+          free(dom_intrf->interface_dom_edge[i_interface]);
+        // }
+      }
+      free(dom_intrf->interface_dn_edge);
+      free(dom_intrf->interface_ids_edge);
+      // if (dom_intrf->multidomain_intrf == PDM_DOMAIN_INTERFACE_MULT_YES) {
+        free(dom_intrf->interface_dom_edge);
+      // }
+    }
+
     if (dom_intrf->is_result[PDM_BOUND_TYPE_FACE]) {
       for (int i_interface = 0; i_interface < dom_intrf->n_interface; i_interface++) {
         free(dom_intrf->interface_ids_face[i_interface]);

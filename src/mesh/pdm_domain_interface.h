@@ -87,6 +87,17 @@ PDM_domain_interface_translate_face2vtx
  PDM_g_num_t            **dface_vtx
 );
 
+
+void
+PDM_domain_interface_translate_vtx2edge
+(
+ PDM_domain_interface_t  *dom_intrf,
+ int                     *dn_vtx,
+ int                     *dn_edge,
+ int                    **dedge_vtx_idx,
+ PDM_g_num_t            **dedge_vtx
+);
+
 void
 PDM_domain_interface_translate_vtx2face
 (
