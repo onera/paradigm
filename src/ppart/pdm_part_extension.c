@@ -5948,7 +5948,25 @@ PDM_part_extension_compute
       }
     }
   }
+
+
+  for(int i_interf = 0; i_interf < n_interface; ++i_interf) {
+    if(translation_vector[i_interf] != NULL) {
+      free(translation_vector[i_interf]);
+    }
+    if(rotation_center    [i_interf] != NULL) {
+      for(int k = 0; k < 3; ++k) {
+        free(rotation_matrix[i_interf][k]);
+      }
+      free(rotation_matrix[i_interf]);
+    }
+  }
+
   free(translation_vector);
+  free(rotation_matrix);
+  free(rotation_direction);
+  free(rotation_center);
+  free(rotation_angle);
 
 
   free(n_vtx);
