@@ -71,6 +71,7 @@ cdef class PartDomainInterface:
   # ************************************************************************
   # > Class attributes
   cdef PDM_part_domain_interface_t *pdi
+  cdef object keep_alive
   # ************************************************************************
   def __cinit__(self,
                 int                                           n_interface,
@@ -82,6 +83,7 @@ cdef class PartDomainInterface:
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+    self.keep_alive = list()
 
     cdef _multizone_interface = PDM_DOMAIN_INTERFACE_MULT_YES if multizone_interface else PDM_DOMAIN_INTERFACE_MULT_NO
     self.pdi = PDM_part_domain_interface_create(n_interface,
@@ -105,6 +107,11 @@ cdef class PartDomainInterface:
                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] interface_dom):
     """
     """
+    self.keep_alive.append(interface_ln_to_gn)
+    self.keep_alive.append(interface_sgn)
+    self.keep_alive.append(interface_ids)
+    self.keep_alive.append(interface_ids_idx)
+    self.keep_alive.append(interface_dom)
     PDM_part_domain_interface_set(self.pdi,
                                   interface_kind,
                                   i_domain,

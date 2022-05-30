@@ -73,7 +73,7 @@ PDM_part_domain_interface_get
  PDM_bound_type_t               interface_kind,
  int                            i_domain,
  int                            i_part,
- int                            i_interfaces,
+ int                            i_interface,
  int                           *interface_pn,
  PDM_g_num_t                  **interface_ln_to_gn,
  int                          **interface_sgn,

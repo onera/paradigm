@@ -573,8 +573,8 @@ int main
   /*
    * Extension
    */
-  int n_depth = 1;
-  // int n_depth = 2;
+  // int n_depth = 1;
+  int n_depth = 2;
   PDM_part_extension_t* part_ext = PDM_part_extension_create(n_domain,
                                                              n_part_by_domain,
                                                              PDM_EXTEND_FROM_VTX,
@@ -869,22 +869,21 @@ int main
         if(border_vtx_interface[i_vtx] == -40000) {
           continue;
         }
-        int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
-        if(i_interf < n_interface){
-          for(int k = 0; k < 3; ++k) {
-            vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
-          }
-        } else {
-          // int l_interf = PDM_ABS(border_vtx_interface[i_vtx]) - n_interface - 1;
-          int l_interf = PDM_binary_search_long(border_vtx_interface[i_vtx], composed_ln_to_gn_sorted, n_interf_composed);
-          for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
-            int i_tr = composed_interface[idx_comp];
-            for(int k = 0; k < 3; ++k) {
-              vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(i_tr) * translation_vector[PDM_ABS(i_tr)-1][k];
-            }
-          }
-
-        }
+        // int i_interf = PDM_ABS(border_vtx_interface[i_vtx])-1;
+        // if(i_interf < n_interface){
+        //   for(int k = 0; k < 3; ++k) {
+        //     vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
+        //   }
+        // } else {
+        //   // int l_interf = PDM_ABS(border_vtx_interface[i_vtx]) - n_interface - 1;
+        //   int l_interf = PDM_binary_search_long(border_vtx_interface[i_vtx], composed_ln_to_gn_sorted, n_interf_composed);
+        //   for(int idx_comp = composed_interface_idx[l_interf]; idx_comp < composed_interface_idx[l_interf+1]; ++idx_comp) {
+        //     int i_tr = composed_interface[idx_comp];
+        //     for(int k = 0; k < 3; ++k) {
+        //       vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(i_tr) * translation_vector[PDM_ABS(i_tr)-1][k];
+        //     }
+        //   }
+        // }
       }
 
       sprintf(filename_pts, "out_vtx_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);

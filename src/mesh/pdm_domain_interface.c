@@ -4008,26 +4008,28 @@ PDM_ddomain_interface_to_pdomain_interface
                                       pres_interface_ids_idx [i_domain][i_part][i_interface],
                                       pres_interface_dom     [i_domain][i_part][i_interface]);
 
-        free(pres_interface_pn      [i_domain][i_part]);
-        free(pres_interface_ln_to_gn[i_domain][i_part]);
-        free(pres_interface_sgn     [i_domain][i_part]);
-        free(pres_interface_ids     [i_domain][i_part]);
-        free(pres_interface_ids_idx [i_domain][i_part]);
-        free(pres_interface_dom     [i_domain][i_part]);
-
       }
     }
     shift_domain += n_part[i_domain];
   }
 
-
+  shift_domain = 0;
   for( int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      free(pres_interface_pn      [i_domain][i_part]);
+      free(pres_interface_ln_to_gn[i_domain][i_part]);
+      free(pres_interface_sgn     [i_domain][i_part]);
+      free(pres_interface_ids     [i_domain][i_part]);
+      free(pres_interface_ids_idx [i_domain][i_part]);
+      free(pres_interface_dom     [i_domain][i_part]);
+    }
     free(pres_interface_pn      [i_domain]);
     free(pres_interface_ln_to_gn[i_domain]);
     free(pres_interface_sgn     [i_domain]);
     free(pres_interface_ids     [i_domain]);
     free(pres_interface_ids_idx [i_domain]);
     free(pres_interface_dom     [i_domain]);
+    shift_domain += n_part[i_domain];
   }
   free(pres_interface_pn      );
   free(pres_interface_ln_to_gn);

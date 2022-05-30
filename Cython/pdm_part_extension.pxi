@@ -99,6 +99,7 @@ cdef class PartExtension:
   """
   """
   cdef PDM_part_extension_t* _part_ext
+  cdef object pdi
   # ------------------------------------------------------------------
   def __cinit__(self,
                 n_domain,
@@ -335,6 +336,7 @@ cdef class PartExtension:
   def part_domain_interface_shared_set(self, PartDomainInterface pdi):
     """
     """
+    self.pdi = pdi # Keep alive
     PDM_part_extension_part_domain_interface_shared_set(self._part_ext, pdi.pdi)
 
 
@@ -386,7 +388,9 @@ cdef class PartExtension:
     size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, mesh_ety_type, &ln_to_gn)
 
     if (ln_to_gn == NULL) :
-      np_ln_to_gn = None
+      # np_ln_to_gn = None
+      dim = <NPY.npy_intp> 0
+      np_ln_to_gn = NPY.PyArray_SimpleNew(1, &dim, PDM_G_NUM_NPY_INT)
     else :
       dim = <NPY.npy_intp> size
       np_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
