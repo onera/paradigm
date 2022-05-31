@@ -6072,20 +6072,12 @@ PDM_part_extension_free
           free(part_ext->face_face_extended[i_part+shift_part]);
         }
 
-        if(part_ext->face_face_interface != NULL) {
-          free(part_ext->face_face_interface[i_part+shift_part]);
-        }
-
         if(part_ext->edge_edge_extended_idx != NULL) {
           free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
         }
 
         if(part_ext->edge_edge_extended != NULL) {
           free(part_ext->edge_edge_extended[i_part+shift_part]);
-        }
-
-        if(part_ext->edge_edge_interface != NULL) {
-          free(part_ext->edge_edge_interface[i_part+shift_part]);
         }
 
         if(part_ext->vtx_vtx_extended_idx != NULL) {
@@ -6096,10 +6088,6 @@ PDM_part_extension_free
           free(part_ext->vtx_vtx_extended[i_part+shift_part]);
         }
 
-        if(part_ext->vtx_vtx_interface != NULL) {
-          free(part_ext->vtx_vtx_interface[i_part+shift_part]);
-        }
-
         if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
 
           if(part_ext->border_cell_face_idx != NULL) {
@@ -6108,8 +6096,8 @@ PDM_part_extension_free
           }
 
           if(part_ext->border_face_edge_idx != NULL) {
-            free(part_ext->border_face_edge_idx[i_part+shift_part]);
-            free(part_ext->border_face_edge    [i_part+shift_part]);
+            free(part_ext->border_face_edge_idx [i_part+shift_part]);
+            free(part_ext->border_face_edge     [i_part+shift_part]);
           }
 
           if(part_ext->border_edge_vtx_idx != NULL) {
@@ -6137,14 +6125,17 @@ PDM_part_extension_free
 
           if(part_ext->border_face_ln_to_gn != NULL) {
             free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
+            free(part_ext->face_face_interface  [i_part+shift_part]);
           }
 
           if(part_ext->border_edge_ln_to_gn != NULL) {
             free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
+            free(part_ext->edge_edge_interface[i_part+shift_part]);
           }
 
           if(part_ext->border_vtx_ln_to_gn != NULL) {
             free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
+            free(part_ext->vtx_vtx_interface  [i_part+shift_part]);
           }
 
           if(part_ext->border_face_group_ln_to_gn != NULL) {
@@ -6310,7 +6301,9 @@ PDM_part_extension_free
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       free(part_ext->cell_cell_extended_pruned_idx[i_part+shift_part]);
       free(part_ext->cell_cell_extended_pruned    [i_part+shift_part]);
-      free(part_ext->cell_cell_interface_pruned   [i_part+shift_part]);
+      if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
+        free(part_ext->cell_cell_interface_pruned   [i_part+shift_part]);
+      }
     }
     shift_part += part_ext->n_part[i_domain];
   }
@@ -6343,16 +6336,18 @@ PDM_part_extension_free
     free(part_ext->shift_by_domain_face_group);
   }
 
-  if(part_ext->composed_interface_idx != NULL) {
-    free(part_ext->composed_interface_idx);
-  }
+  if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
+    if(part_ext->composed_interface_idx != NULL) {
+      free(part_ext->composed_interface_idx);
+    }
 
-  if(part_ext->composed_interface != NULL) {
-    free(part_ext->composed_interface);
-  }
+    if(part_ext->composed_interface != NULL) {
+      free(part_ext->composed_interface);
+    }
 
-  if(part_ext->composed_ln_to_gn_sorted != NULL) {
-    free(part_ext->composed_ln_to_gn_sorted);
+    if(part_ext->composed_ln_to_gn_sorted != NULL) {
+      free(part_ext->composed_ln_to_gn_sorted);
+    }
   }
 
   free(part_ext);
