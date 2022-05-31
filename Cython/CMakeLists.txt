@@ -143,6 +143,11 @@ install(CODE
   --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR}
   --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   ")
+# useful Bundle for Topaze install
+install(CODE
+  "execute_process(COMMAND chrpath --delete ${SITE_PACKAGES_PDM}/Pypdm.so)
+  ")
+
 #install(TARGETS Pypdm
 #        LIBRARY DESTINATION "${SITE_PACKAGES_PDM}")
 #install(FILES       "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py"
