@@ -2976,6 +2976,10 @@ _compute_dual_graph
               _border_cell_cell_interface[idx_read] = cur_interface;
             } else { // Composition
 
+              if(cur_interface == -_border_cell_cell_interface[idx_read]) {
+                 _border_cell_cell_interface[idx_read] = -40000;
+              }
+
               // _border_cell_cell_interface[idx_read] = cur_interface;
               // printf("_compute_dual_graph Composition a gerer \n");
               // abort();
@@ -3251,37 +3255,6 @@ _compute_dual_graph
           tag_border_cell_cell_extended[icell_border_to_reset[j]] = 0;
         }
         n_border_unique_loc = 0;
-
-
-        /* Now we have to extend the interior */
-        // for(int idx_neight = _prev_cell_cell_extended_idx[i_cell]; idx_neight < _prev_cell_cell_extended_idx[i_cell+1]; ++idx_neight) {
-        //   int i_rank_neight = _prev_cell_cell_extended[3*idx_neight  ];
-        //   int i_part_neight = _prev_cell_cell_extended[3*idx_neight+1];
-        //   /* We add stencil only if it's local */
-        //   if(i_part+shift_part == i_part_neight && i_rank == i_rank_neight) {
-        //     int i_cell_neight = _prev_cell_cell_extended[3*idx_neight+2];
-
-        //     int i_unique = _unique_prev_cell_cell_extended[i_cell_neight];
-        //     int is_treat = tag_prev_cell_cell_extended    [i_unique];
-
-        //     printf("i_cell_neight = %i | tag_prev_cell_cell_extended[%i] = %i \n", i_cell_neight, i_unique, is_treat);
-
-        //     /* From interior */
-        //     _cell_cell_extended_n[i_cell] += _prev_cell_cell_extended_n[i_cell_neight];
-
-        //     int idx_border_neight = idx_border_cell[i_cell_neight];
-        //     if(idx_border_neight != -1) {
-        //       // Il faut rajouter les voisins aussi
-        //       _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_border_neight];
-        //     }
-
-        //     /* Rajout du vrai intérieur */
-        //     _cell_cell_extended_n[i_cell] += _cell_cell_idx[i_cell_neight+1] - _cell_cell_idx[i_cell_neight];
-
-        //     tag_prev_cell_cell_extended[i_unique] = 1;
-
-        //   } /* End if same part and same proc */
-        // } /* End loop neighbor */
 
       } /* End loop border */
 
@@ -5934,18 +5907,6 @@ PDM_part_extension_compute
       for(int k = 0; k < 3; ++k) {
         rotation_matrix[i_interf][k] = malloc(3 * sizeof(double));
       }
-
-      rotation_matrix[i_interf][0][0] = 1.;
-      rotation_matrix[i_interf][0][1] = 0.;
-      rotation_matrix[i_interf][0][2] = 0.;
-
-      rotation_matrix[i_interf][1][0] = 0.;
-      rotation_matrix[i_interf][1][1] =  cos(rotation_angle[i_interf]);
-      rotation_matrix[i_interf][1][2] = -sin(rotation_angle[i_interf]);
-
-      rotation_matrix[i_interf][2][0] = 0.;
-      rotation_matrix[i_interf][2][1] =  sin(rotation_angle[i_interf]);
-      rotation_matrix[i_interf][2][2] =  cos(rotation_angle[i_interf]);
     }
   }
 
@@ -5968,28 +5929,51 @@ PDM_part_extension_compute
             vtx_coord_extended[3*i_vtx+k] += PDM_SIGN(border_vtx_interface[i_vtx]) * translation_vector[i_interf][k];
           }
         } else if(rotation_direction[i_interf] != NULL) {
-        // if(rotation_direction[i_interf] != NULL) {
 
           double** rot = rotation_matrix[i_interf];
-
-          rot[0][0] = 1.;
-          rot[0][1] = 0.;
-          rot[0][2] = 0.;
-
-          rot[1][0] = 0.;
-          rot[1][1] =  cos(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
-          rot[1][2] = -sin(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
-
-          rot[2][0] = 0.;
-          rot[2][1] =  sin(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
-          rot[2][2] =  cos(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
 
           double x = vtx_coord_extended[3*i_vtx  ];
           double y = vtx_coord_extended[3*i_vtx+1];
           double z = vtx_coord_extended[3*i_vtx+2];
+
+          double xp = x - rotation_center[i_interf][0];
+          double yp = y - rotation_center[i_interf][1];
+          double zp = z - rotation_center[i_interf][2];
+
+          // rot[0][0] = 1.;
+          // rot[0][1] = 0.;
+          // rot[0][2] = 0.;
+
+          // rot[1][0] = 0.;
+          // rot[1][1] =  cos(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+          // rot[1][2] = -sin(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+
+          // rot[2][0] = 0.;
+          // rot[2][1] =  sin(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+          // rot[2][2] =  cos(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+
+          double c   = cos(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+          double s   = sin(PDM_SIGN(border_vtx_interface[i_vtx]) * rotation_angle[i_interf]);
+          double omc = 1.-c;
+          double xa  = rotation_direction[i_interf][0];
+          double ya  = rotation_direction[i_interf][1];
+          double za  = rotation_direction[i_interf][2];
+
+          rotation_matrix[i_interf][0][0] = xa * xa * omc + c;
+          rotation_matrix[i_interf][0][1] = xa * ya * omc - za * s;
+          rotation_matrix[i_interf][0][2] = xa * za * omc + ya * s;
+
+          rotation_matrix[i_interf][1][0] = xa * ya * omc + za * s;
+          rotation_matrix[i_interf][1][1] = ya * ya * omc + c;
+          rotation_matrix[i_interf][1][2] = ya * za * omc - xa * s;
+
+          rotation_matrix[i_interf][2][0] = xa * za * omc - ya * s;
+          rotation_matrix[i_interf][2][1] = ya * za * omc + xa * s;
+          rotation_matrix[i_interf][2][2] = za * za * omc + c;
+
           for(int k = 0; k < 3; ++k) {
             // vtx_coord_extended[3*i_vtx+k] = PDM_SIGN(border_vtx_interface[i_vtx]) * (rot[k][0]*x + rot[k][1]*y + rot[k][2]*z);
-            vtx_coord_extended[3*i_vtx+k] = (rot[k][0]*x + rot[k][1]*y + rot[k][2]*z);
+            vtx_coord_extended[3*i_vtx+k] = rotation_center[i_interf][k] + (rot[k][0]*xp + rot[k][1]*yp + rot[k][2]*zp);
           }
 
         }

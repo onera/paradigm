@@ -4104,10 +4104,6 @@ PDM_domain_interface_to_part_domain_interface
                                                                          dom_intrf->comm);
 
   if(dom_intrf->interface_dn_vtx != NULL) {
-
-    printf("Rebuild vtx domain interface \n");
-
-
     PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
                                                dom_intrf->n_interface,
                                                dom_intrf->n_domain,
@@ -4121,13 +4117,25 @@ PDM_domain_interface_to_part_domain_interface
                                                vtx_ln_to_gn,
                                                pditrf);
 
+  }
+
+  if(dom_intrf->interface_dn_edge != NULL) {
+    PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
+                                               dom_intrf->n_interface,
+                                               dom_intrf->n_domain,
+                                               dom_intrf->multidomain_intrf,
+                                               PDM_BOUND_TYPE_EDGE,
+                                               dom_intrf->interface_dn_edge,
+                                               dom_intrf->interface_ids_edge,
+                                               dom_intrf->interface_dom_edge,
+                                               n_part,
+                                               pn_edge,
+                                               edge_ln_to_gn,
+                                               pditrf);
 
   }
 
   if(dom_intrf->interface_dn_face != NULL) {
-
-    printf("Rebuild face domain interface \n");
-
     PDM_ddomain_interface_to_pdomain_interface(dom_intrf->comm,
                                                dom_intrf->n_interface,
                                                dom_intrf->n_domain,
