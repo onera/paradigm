@@ -157,7 +157,7 @@ program testf
   call mpi_comm_size(comm, n_rank, code)
 
   write (strnum, '(i1)') i_rank
-  open(unit=fid, file="part_extension_"//strnum//".log", action='write')
+  ! open(unit=fid, file="part_extension_"//strnum//".log", action='write')
 
 
   !  Generate a distributed mesh
@@ -479,9 +479,9 @@ program testf
                                               face_vtx_ext,                    &
                                               face_vtx_ext_idx)
 
-    write (fid, *) "part #", i_part-1
-    write (fid, *) "  n_cell_ext =", n_cell_ext
-    write (fid, *) "  cell_ln_to_gn_ext :", cell_ln_to_gn_ext
+    ! write (fid, *) "part #", i_part-1
+    ! write (fid, *) "  n_cell_ext =", n_cell_ext
+    ! write (fid, *) "  cell_ln_to_gn_ext :", cell_ln_to_gn_ext
   end do
 
 
@@ -491,7 +491,7 @@ program testf
   call PDM_part_extension_free (part_ext)
 
 
-  close(fid)
+  ! close(fid)
 
   if (i_rank .eq. 0) then
   write(*, *) "-- End"

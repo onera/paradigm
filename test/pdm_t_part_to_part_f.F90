@@ -114,7 +114,7 @@ program testf
   end if
 
   write (strnum, '(i1)') i_rank
-  open(unit=fid, file="part_to_part_"//strnum//".log", action='write')
+  ! open(unit=fid, file="part_to_part_"//strnum//".log", action='write')
 
   !  Define partitions
   n_part1 = 3
@@ -259,9 +259,9 @@ program testf
                                 comm)
 
   !  Check Part2 ref/unref/gnum1_come_from
-  write (fid, *) ""
-  write (fid, *) ""
-  write (fid, *) "---- Check ref/unref/gnum1_come_from ----"
+  ! write (fid, *) ""
+  ! write (fid, *) ""
+  ! write (fid, *) "---- Check ref/unref/gnum1_come_from ----"
   do i = 1, n_part2
     call PDM_part_to_part_ref_lnum2_get (ptp,        &
                                          i-1,        &
@@ -278,15 +278,15 @@ program testf
                                                gnum1_come_from_idx, &
                                                gnum1_come_from)
 
-    write (fid, *) "part2", i
-    write (fid, *) "referenced (l_num) :", ref_num2
-    write (fid, *) "unreferenced (g_num) :", my_part2(i)%g_nums(unref_num2)
-    write (fid, *) "gnum1_come_from_idx :", gnum1_come_from_idx(1:n_ref_num2+1)
-    write (fid, *) "referenced (g_num) -> gnum1_come_from :"
-    do j = 1, n_ref_num2
-      write (fid, *) my_part2(i)%g_nums(ref_num2(j)), "->", gnum1_come_from(gnum1_come_from_idx(j)+1:gnum1_come_from_idx(j+1))
-    end do
-    write (fid, *) ""
+    ! write (fid, *) "part2", i
+    ! write (fid, *) "referenced (l_num) :", ref_num2
+    ! write (fid, *) "unreferenced (g_num) :", my_part2(i)%g_nums(unref_num2)
+    ! write (fid, *) "gnum1_come_from_idx :", gnum1_come_from_idx(1:n_ref_num2+1)
+    ! write (fid, *) "referenced (g_num) -> gnum1_come_from :"
+    ! do j = 1, n_ref_num2
+    !   write (fid, *) my_part2(i)%g_nums(ref_num2(j)), "->", gnum1_come_from(gnum1_come_from_idx(j)+1:gnum1_come_from_idx(j+1))
+    ! end do
+    ! write (fid, *) ""
   end do
 
 
@@ -350,9 +350,9 @@ program testf
                                     request)
 
   !  Check data received on Part2
-  write (fid, *) ""
-  write (fid, *) ""
-  write (fid, *) "---- Check iexch ----"
+  ! write (fid, *) ""
+  ! write (fid, *) ""
+  ! write (fid, *) "---- Check iexch ----"
 
   do i = 1, n_part2
 
@@ -375,19 +375,19 @@ program testf
                                      data)
 
 
-    write (fid, *) "part2", i
-    write (fid, *) "stride :", stride
-    write (fid, *) "referenced (g_num) -> data :"
-    idx = 1
-    do j = 1, n_ref_num2
-      write (fid, *) my_part2(i)%g_nums(ref_num2(j)), " :"
-      do k = gnum1_come_from_idx(j)+1, gnum1_come_from_idx(j+1)
-        write (fid, *) "    ", gnum1_come_from(k), " -> ", data(idx:idx+stride(k)-1)
-        idx = idx + stride(k)
-        ! write (fid, *) "    ", gnum1_come_from(k), " -> ", data(k)
-      end do
-    end do
-    write (fid, *) ""
+    ! write (fid, *) "part2", i
+    ! write (fid, *) "stride :", stride
+    ! write (fid, *) "referenced (g_num) -> data :"
+    ! idx = 1
+    ! do j = 1, n_ref_num2
+    !   write (fid, *) my_part2(i)%g_nums(ref_num2(j)), " :"
+    !   do k = gnum1_come_from_idx(j)+1, gnum1_come_from_idx(j+1)
+    !     write (fid, *) "    ", gnum1_come_from(k), " -> ", data(idx:idx+stride(k)-1)
+    !     idx = idx + stride(k)
+    !     ! write (fid, *) "    ", gnum1_come_from(k), " -> ", data(k)
+    !   end do
+    ! end do
+    ! write (fid, *) ""
 
   end do
 
@@ -452,9 +452,9 @@ program testf
                                             request)
 
   !  Check data received on Part1
-  write (fid, *) ""
-  write (fid, *) ""
-  write (fid, *) "---- Check reverse iexch ----"
+  ! write (fid, *) ""
+  ! write (fid, *) ""
+  ! write (fid, *) "---- Check reverse iexch ----"
 
   do i = 1, n_part1
 
@@ -466,19 +466,19 @@ program testf
                                      i-1,            &
                                      data)
 
-    write (fid, *) "part1", i
-    write (fid, *) "stride :", stride
-    write (fid, *) "g_num -> data :"
-    idx = 1
-    do j = 1, n_elt1(i)
-      write (fid, *) my_part1(i)%g_nums(j), " :"
-      do k = my_part1(i)%part1_to_part2_idx(j)+1, my_part1(i)%part1_to_part2_idx(j+1)
-        write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(idx:idx+stride(k)-1)
-        idx = idx + stride(k)
-        ! write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(k)
-      end do
-    end do
-    write (fid, *) ""
+    ! write (fid, *) "part1", i
+    ! write (fid, *) "stride :", stride
+    ! write (fid, *) "g_num -> data :"
+    ! idx = 1
+    ! do j = 1, n_elt1(i)
+    !   write (fid, *) my_part1(i)%g_nums(j), " :"
+    !   do k = my_part1(i)%part1_to_part2_idx(j)+1, my_part1(i)%part1_to_part2_idx(j+1)
+    !     write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(idx:idx+stride(k)-1)
+    !     idx = idx + stride(k)
+    !     ! write (fid, *) "    ", my_part1(i)%part1_to_part2(k), " -> ", data(k)
+    !   end do
+    ! end do
+    ! write (fid, *) ""
 
   end do
 
@@ -520,7 +520,7 @@ program testf
   deallocate(my_part2)
 
 
-  close(fid)
+  ! close(fid)
 
 
   if (i_rank .eq. 0) then

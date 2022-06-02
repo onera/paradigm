@@ -80,7 +80,7 @@ program testf
   end if
 
   write (strnum, '(i1)') i_rank
-  open(unit=fid, file="gnum_location_"//strnum//".log", action='write')
+  ! open(unit=fid, file="gnum_location_"//strnum//".log", action='write')
 
 
   !  Define partitions
@@ -158,18 +158,18 @@ program testf
 
 
   !  Set elements
-  write (fid, *) "---- Elements ----"
+  ! write (fid, *) "---- Elements ----"
   do i = 1, n_part2
     call pdm_gnum_location_elements_set (gloc,                 &
                                          i-1,                  &
                                          my_part2(i)%n_elt,    &
                                          my_part2(i)%elt_gnum)
 
-    write (fid, *) "part", i-1
-    write (fid, *) "lnum -> gnum :"
-    do j = 1, my_part2(i)%n_elt
-      write (fid, *) j, " ->", my_part2(i)%elt_gnum(j)
-    end do
+    ! write (fid, *) "part", i-1
+    ! write (fid, *) "lnum -> gnum :"
+    ! do j = 1, my_part2(i)%n_elt
+    !   write (fid, *) j, " ->", my_part2(i)%elt_gnum(j)
+    ! end do
   end do
 
 
@@ -187,9 +187,9 @@ program testf
 
 
   !  Get location
-  write (fid, *) ""
-  write (fid, *) ""
-  write (fid, *) "---- Location ----"
+  ! write (fid, *) ""
+  ! write (fid, *) ""
+  ! write (fid, *) "---- Location ----"
   do i = 1, n_part1
 
     call pdm_gnum_location_get (gloc,         &
@@ -197,12 +197,12 @@ program testf
                                 location_idx, &
                                 location)
 
-    write (fid, *) "part", i-1
-    write (fid, *) "location_idx :", location_idx
-    write (fid, *) "requested gnum -> location (rank, part, lnum) :"
-    do j = 1, my_part1(i)%n_requested
-      write (fid, *) my_part1(i)%requested_gnum(j), " ->", location(location_idx(j)+1:location_idx(j+1))
-    end do
+    ! write (fid, *) "part", i-1
+    ! write (fid, *) "location_idx :", location_idx
+    ! write (fid, *) "requested gnum -> location (rank, part, lnum) :"
+    ! do j = 1, my_part1(i)%n_requested
+    !   write (fid, *) my_part1(i)%requested_gnum(j), " ->", location(location_idx(j)+1:location_idx(j+1))
+    ! end do
 
   end do
 
@@ -222,7 +222,7 @@ program testf
   deallocate(my_part2)
 
 
-  close(fid)
+  ! close(fid)
 
 
   if (i_rank .eq. 0) then
