@@ -1,3 +1,16 @@
+if (MPI_C_COMPILER)
+  set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+endif()
+
+if (MPI_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+endif()
+
+if (MPI_Fortran_COMPILER)
+  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+endif(MPI_Fortran_COMPILER)
+
+
 if (PDM_ENABLE_LONG_G_NUM)
    set(PYX_NPY_G_NUM NPY.int64_t)
    set(PYX_NPY_G_NUM_DTYPE NPY.int64)
