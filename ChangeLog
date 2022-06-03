@@ -1,3 +1,30 @@
+## [2.0.0] - 2022-06-??
+### Added
+- PDM_vtk : ??
+- PDM_dgeom_elem : ??
+- PDM_dmesh_nodal_elmts : ??
+- PDM_domain_interface : ??
+- PDM_ho_ordering : ??
+- PDM_part_domain_interface : ??
+- PDM_predicate : ??
+- PDM_point_cloud_gen : ??
+- PDM_sphere_surf_gen : ??
+- PDM_extract_part : ??
+- PDM_global_reduce : ??
+- PDM_multi_block_merge : ??
+- PDM_part_mesh : ??
+- PDM_part_to_part : ??
+- PDM_pointer_array : ??
+- PDM_hkey : ??
+- PDM_memory_stats : ??
+### Changed
+- New Fortran API based on iso-c-binding
+- Adds functionalities in Fortran API
+- Adds functionalities in Python API
+### Deprecated
+### Removed
+- Removes handles in some functionalities
+### Fixed
 ## [1.13.0] - 2021-07-28
 ### Added
 - PDM_part_extension: Generate extension of a existing partition for graph, usefull to setup ghost cell
