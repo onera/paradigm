@@ -4,6 +4,8 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_ho_ordering.h"
+#include "pdm_domain_interface.h"
 
 /*=============================================================================
  * Macro definitions
@@ -32,103 +34,132 @@ typedef struct _pdm_dcube_nodal_t PDM_dcube_nodal_t;
 
 /**
  *
- * \brief Create a distributed cube
+ * \brief Initialize a \ref PDM_dcube_nodal_t structure
  *
- * \param [out]  id             dcube_nodal identifier
- * \param [in]   comm           Communicator
- * \param [in]   n_vtx_seg        Number of vertices in segments
+ * \param [in]   comm           MPI communicator
+ * \param [in]   n_vtx_x        Number of vertices on segments in x-direction
+ * \param [in]   n_vtx_y        Number of vertices on segments in y-direction
+ * \param [in]   n_vtx_z        Number of vertices on segments in z-direction
  * \param [in]   length         Segment length
- * \param [in]   zero_x         Coordinates of the origin
- * \param [in]   zero_y         Coordinates of the origin
- * \param [in]   zero_z         Coordinates of the origin
+ * \param [in]   zero_x         X-coordinate of the origin
+ * \param [in]   zero_y         Y-coordinate of the origin
+ * \param [in]   zero_z         Z-coordinate of the origin
+ * \param [in]   t_elt          Element type
+ * \param [in]   order          Element order
+ * \param [in]   owner          Ownership
+ *
+ * \return   Pointer to new \ref PDM_dcube_nodal_t object
  *
  */
 
-PDM_dcube_nodal_t*
-PDM_dcube_nodal_gen_init
+PDM_dcube_nodal_t *
+PDM_dcube_nodal_gen_create
 (
-      PDM_MPI_Comm          comm,
-const PDM_g_num_t           n_vtx_seg,
-const double                length,
-const double                zero_x,
-const double                zero_y,
-const double                zero_z,
-      PDM_Mesh_nodal_elt_t  t_elt,
-      PDM_ownership_t       owner
+ PDM_MPI_Comm          comm,
+ const PDM_g_num_t     n_vtx_x,
+ const PDM_g_num_t     n_vtx_y,
+ const PDM_g_num_t     n_vtx_z,
+ const double          length,
+ const double          zero_x,
+ const double          zero_y,
+ const double          zero_z,
+ PDM_Mesh_nodal_elt_t  t_elt,
+ const int             order,
+ PDM_ownership_t       owner
 );
 
-/**
- *
- * \brief Return distributed cube size
- *
- * \param [in]   id          dcube_nodal identifier
- * \param [out]  n_face_group  Number of faces groups
- * \param [out]  dn_cell       Number of cells stored in this process
- * \param [out]  dn_face       Number of faces stored in this process
- * \param [out]  dn_vtx        Number of vertices stored in this process
- * \param [out]  sface_vtx     Length of dface_vtx array
- * \param [out]  sface_group   Length of dface_group array
- *
- */
-// void
-// PDM_dcube_nodal_gen_dim_get
-// (
-//  PDM_dcube_nodal_t  *dcube_nodal,
-//  int                *n_face_group,
-//  int                *dn_cell,
-//  int                *dn_face,
-//  int                *dn_vtx,
-//  int                *sface_vtx,
-//  int                *sface_group
-// );
 
 /**
  *
- * \brief Return distributed cube data
+ * \brief Free a \ref PDM_dcube_nodal_t structure
  *
- * \param [in]  id              dcube_nodal identifier
- * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
- * \param [out] dface_vtx_idx   Faces from vertices connectivity index (size = dn_face + 1)
- * \param [out] dface_vtx       Faces from vertices connectivity (size = dface_vtxL)
- * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
- * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
- * \param [out] dface_group     Faces groups (size = dFacegroupL)
- *
- */
-// void
-// PDM_dcube_nodal_gen_data_get
-// (
-//  PDM_dcube_nodal_t  *dcube_nodal,
-//  PDM_g_num_t       **delmt_vtx,
-//  double            **dvtx_coord,
-//  int               **dface_group_idx,
-//  PDM_g_num_t       **dface_group
-// );
-
-
-
-PDM_dmesh_nodal_t*
-PDM_dcube_nodal_gen_dmesh_nodal_get
-(
- PDM_dcube_nodal_t  *dcube_nodal
-);
-
-/**
- *
- * \brief Free a distributed cube
- *
- * \param [in]  id            dcube_nodal identifier
+ * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
  *
  */
 
 void
 PDM_dcube_nodal_gen_free
 (
- PDM_dcube_nodal_t       *dcube_nodal
+ PDM_dcube_nodal_t *dcube
+);
+
+
+/**
+ *
+ * \brief Set the HO-ordering for a \ref PDM_dcube_nodal_t structure
+ *
+ * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
+ * \param [in]  ordering   Name of the HO-ordering
+ *
+ */
+
+void PDM_dcube_nodal_gen_ordering_set
+(
+       PDM_dcube_nodal_t *dcube,
+ const char              *ordering
+);
+
+
+/**
+ *
+ * \brief Build a \ref PDM_dcube_nodal_t structure
+ *
+ * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
+ *
+ * \return   Pointer to the associated \ref PDM_dmesh_nodal_t object
+ *
+ */
+
+PDM_dmesh_nodal_t *
+PDM_dcube_nodal_gen_build
+(
+ PDM_dcube_nodal_t *dcube
+);
+
+
+/**
+ *
+ * \brief Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
+ *
+ * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
+ *
+ * \return   Pointer to the associated \ref PDM_dmesh_nodal_t object
+ *
+ */
+
+PDM_dmesh_nodal_t *
+PDM_dcube_nodal_gen_dmesh_nodal_get
+(
+ PDM_dcube_nodal_t *dcube
+);
+
+
+void
+PDM_dcube_nodal_cart_topo
+(
+       PDM_MPI_Comm              comm,
+       int                       n_dom_i,
+       int                       n_dom_j,
+       int                       n_dom_k,
+       int                       periodic_i,
+       int                       periodic_j,
+       int                       periodic_k,
+ const PDM_g_num_t               n_vtx_x_in,
+ const PDM_g_num_t               n_vtx_y_in,
+ const PDM_g_num_t               n_vtx_z_in,
+ const double                    length,
+ const double                    zero_x,
+ const double                    zero_y,
+ const double                    zero_z,
+       PDM_Mesh_nodal_elt_t      t_elt,
+ const int                       order,
+       PDM_dcube_nodal_t      ***dcube,
+       PDM_domain_interface_t  **dom_intrf,
+       PDM_ownership_t           owner
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif  /* __PDM_PART_DCUBE_NODAL_H__ */
+#endif  /* __PDM_DCUBE_NODAL_GEN_H__ */

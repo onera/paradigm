@@ -32,6 +32,8 @@ int argc,
 char *argv[]
 )
 {
+  int verbose = 0;
+
   int i_rank;
   int n_rank;
 
@@ -133,8 +135,8 @@ char *argv[]
    */
   int      n_cloud  = -1;
   int      n_points = 15;
-  double** coords;
-  double** char_lenght;
+  double** coords = NULL;
+  double** char_lenght = NULL;
   if(n_rank == 1){
     n_cloud = 2;
     coords      = (double **) malloc( n_cloud * sizeof(double *));
@@ -152,7 +154,7 @@ char *argv[]
     if(i_rank == 0){
       coords     [0] = xyz_j1;
       char_lenght[0] = cln_j1;
-    } else if (i_rank == 1){
+    } else {//if (i_rank == 1){
       coords     [0] = xyz_j2;
       char_lenght[0] = cln_j2;
     }
@@ -196,7 +198,7 @@ char *argv[]
     n_entity[i_cloud] = n_cloud_points;
 
     assert(n_desc == candidates_idx[i_cloud][n_cloud_points]);
-    if(1 == 1){
+    if(verbose){
       printf("-- n_desc:: %d \n ", n_desc);
       printf("-- candidates_idx[i_cloud][n_cloud_points+1]:: %d \n ", candidates_idx[i_cloud][n_cloud_points]);
       for(int i = 0; i < n_cloud_points; i++){
@@ -245,7 +247,7 @@ char *argv[]
   int** recv_entity_data = NULL;
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             stride,
                             NULL,
                  ( void**)  send_entity_data,
@@ -276,15 +278,15 @@ char *argv[]
   int** recv_entity_var_data = NULL;
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             send_entity_var_stri,
                  (void**)   send_entity_var_data,
                  (int***) &recv_entity_var_stri,
                 (void***) &recv_entity_var_data);
 
-  log_trace(" Variable strid exchange results ---- \n");
-  if(1 == 1){
+  if(verbose){
+    log_trace(" Variable strid exchange results ---- \n");
     for(int i_part = 0; i_part < n_cloud; i_part++){
       int *_part_neighbor_idx  = candidates_idx[i_part];
       log_trace(" ---> recv_entity_data[%d]::", i_part);
@@ -320,10 +322,12 @@ char *argv[]
   free(recv_entity_data);
   free(recv_entity_var_stri);
   free(recv_entity_var_data);
+
+  if (i_rank == 0) {
+    PDM_printf ("-- End\n");
+  }
+
   PDM_MPI_Finalize();
-
-  PDM_printf ("\nfin Test\n");
-
 
   return 0;
 }

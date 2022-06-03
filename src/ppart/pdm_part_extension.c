@@ -48,6 +48,291 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+static
+PDM_g_num_t*
+_compute_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_MPI_Comm     comm
+)
+{
+
+  PDM_g_num_t *shift_by_domain_loc = PDM_array_const_gnum(n_domain, 0);
+  PDM_g_num_t *shift_by_domain     = (PDM_g_num_t *) malloc((n_domain+1) * sizeof(PDM_g_num_t));
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+
+      int          _pn_entity        = pn_entity       [i_domain][i_part];
+      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
+      for(int i = 0; i < _pn_entity; ++i) {
+        shift_by_domain_loc[i_domain] = PDM_MAX(shift_by_domain_loc[i_domain], _pentity_ln_to_gn[i]);
+      }
+    }
+  }
+
+  shift_by_domain[0] = 0;
+  PDM_MPI_Allreduce(shift_by_domain_loc, &shift_by_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  PDM_array_accumulate_gnum(shift_by_domain, n_domain+1);
+
+  free(shift_by_domain_loc);
+
+  return shift_by_domain;
+}
+
+
+static
+void
+_offset_ln_to_gn_by_domain
+(
+  int              n_domain,
+  int             *n_part,
+  int            **pn_entity,
+  PDM_g_num_t   ***pentity_ln_to_gn,
+  PDM_g_num_t     *shift_by_domain,
+  int              sens
+)
+{
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+      int          _pn_entity        = pn_entity       [i_domain][i_part];
+      PDM_g_num_t *_pentity_ln_to_gn = pentity_ln_to_gn[i_domain][i_part];
+      for(int i = 0; i < _pn_entity; ++i) {
+        _pentity_ln_to_gn[i] = _pentity_ln_to_gn[i] + sens * shift_by_domain[i_domain];
+      }
+    }
+  }
+}
+
+static
+void
+_offset_parts_by_domain
+(
+  PDM_part_extension_t *part_ext,
+  int                   sens
+)
+{
+  int **pn_cell       = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_face       = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_edge       = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_vtx        = malloc(part_ext->n_domain * sizeof(int *));
+  int **pn_face_group = malloc(part_ext->n_domain * sizeof(int *));
+
+  PDM_g_num_t ***cell_ln_to_gn       = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***face_ln_to_gn       = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***edge_ln_to_gn       = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***vtx_ln_to_gn        = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***face_group_ln_to_gn = malloc(part_ext->n_domain * sizeof(PDM_g_num_t **));
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    pn_cell      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_face      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_edge      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_vtx       [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+    pn_face_group[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int *));
+
+    cell_ln_to_gn      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    face_ln_to_gn      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    edge_ln_to_gn      [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    vtx_ln_to_gn       [i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+    face_group_ln_to_gn[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(PDM_g_num_t *));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      pn_cell            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_cell;
+      pn_face            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
+      pn_edge            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+      pn_vtx             [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face_group;
+
+      cell_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
+      face_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+      edge_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+      vtx_ln_to_gn       [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+      face_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_group_ln_to_gn;
+
+    }
+  }
+
+  // Here we go
+  if(sens == 1) {
+    assert(part_ext->shift_by_domain_cell == NULL);
+    part_ext->shift_by_domain_cell = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_cell,
+                                                                        cell_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_face == NULL);
+    part_ext->shift_by_domain_face = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_face,
+                                                                        face_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_edge == NULL);
+    part_ext->shift_by_domain_edge = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                        part_ext->n_part,
+                                                                        pn_edge,
+                                                                        edge_ln_to_gn,
+                                                                        part_ext->comm);
+
+    assert(part_ext->shift_by_domain_vtx == NULL);
+    part_ext->shift_by_domain_vtx = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                       part_ext->n_part,
+                                                                       pn_vtx,
+                                                                       vtx_ln_to_gn,
+                                                                       part_ext->comm);
+
+    assert(part_ext->shift_by_domain_face_group == NULL);
+    part_ext->shift_by_domain_face_group = _compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                       part_ext->n_part,
+                                                                       pn_face_group,
+                                                                       face_group_ln_to_gn,
+                                                                       part_ext->comm);
+  }
+
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_cell,
+                             cell_ln_to_gn,
+                             part_ext->shift_by_domain_cell,
+                             sens);
+
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_face,
+                             face_ln_to_gn,
+                             part_ext->shift_by_domain_face,
+                             sens);
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_edge,
+                             edge_ln_to_gn,
+                             part_ext->shift_by_domain_edge,
+                             sens);
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_vtx,
+                             vtx_ln_to_gn,
+                             part_ext->shift_by_domain_vtx,
+                             sens);
+
+  _offset_ln_to_gn_by_domain(part_ext->n_domain,
+                             part_ext->n_part,
+                             pn_face_group,
+                             face_group_ln_to_gn,
+                             part_ext->shift_by_domain_face_group,
+                             sens);
+
+
+  // Attention il faut shifter tout les border_ln_to_gn aussi et deduire le border_i_domain
+  // (Recherche dicotomique dans le shift by domain)
+
+
+  if(part_ext->pdi != NULL) {
+    abort();
+  }
+
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    free(pn_cell      [i_domain]);
+    free(pn_face      [i_domain]);
+    free(pn_edge      [i_domain]);
+    free(pn_vtx       [i_domain]);
+    free(pn_face_group[i_domain]);
+
+    free(cell_ln_to_gn      [i_domain]);
+    free(face_ln_to_gn      [i_domain]);
+    free(edge_ln_to_gn      [i_domain]);
+    free(vtx_ln_to_gn       [i_domain]);
+    free(face_group_ln_to_gn[i_domain]);
+  }
+
+  free(pn_cell      );
+  free(pn_face      );
+  free(pn_edge      );
+  free(pn_vtx       );
+  free(pn_face_group);
+
+  free(cell_ln_to_gn      );
+  free(face_ln_to_gn      );
+  free(edge_ln_to_gn      );
+  free(vtx_ln_to_gn       );
+  free(face_group_ln_to_gn);
+}
+
+static
+void
+_shift_ln_to_gn
+(
+  int          n_entity,
+  PDM_g_num_t *entity_ln_to_gn,
+  PDM_g_num_t  shift,
+  int          sens
+)
+{
+  for(int i = 0; i < n_entity; ++i) {
+    entity_ln_to_gn[i] = entity_ln_to_gn[i] + sens * shift;
+  }
+}
+
+
+static
+void
+_offset_results_by_domain
+(
+  PDM_part_extension_t *part_ext
+)
+{
+  PDM_UNUSED(part_ext);
+  // You need to shift border_* and fill the array border_dom_id
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      int n_cell        = part_ext->parts[i_domain][i_part].n_cell;
+      int n_border_cell = part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][n_cell];
+      PDM_g_num_t *cell_ln_to_gn = part_ext->border_cell_ln_to_gn[shift_part+i_part];
+      _shift_ln_to_gn(n_border_cell, cell_ln_to_gn, part_ext->shift_by_domain_cell[i_domain], -1);
+
+      int n_face        = part_ext->parts[i_domain][i_part].n_face;
+      int n_border_face = part_ext->face_face_extended_idx[shift_part+i_part][n_face];
+      PDM_g_num_t *face_ln_to_gn = part_ext->border_face_ln_to_gn[shift_part+i_part];
+      _shift_ln_to_gn(n_border_face, face_ln_to_gn, part_ext->shift_by_domain_face[i_domain], -1);
+
+      int n_edge        = part_ext->parts[i_domain][i_part].n_edge;
+      if(n_edge > 0) {
+        int n_border_edge = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
+        PDM_g_num_t *edge_ln_to_gn = part_ext->border_edge_ln_to_gn[shift_part+i_part];
+        _shift_ln_to_gn(n_border_edge, edge_ln_to_gn, part_ext->shift_by_domain_edge[i_domain], -1);
+      }
+
+      int n_vtx        = part_ext->parts[i_domain][i_part].n_vtx;
+      int n_border_vtx = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
+      PDM_g_num_t *vtx_ln_to_gn = part_ext->border_vtx_ln_to_gn[shift_part+i_part];
+      _shift_ln_to_gn(n_border_vtx, vtx_ln_to_gn, part_ext->shift_by_domain_vtx[i_domain], -1);
+
+      int n_border_face_group          = part_ext->parts[i_domain][i_part].n_face_group;
+      PDM_g_num_t *face_group_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
+      int n_connect_face_group         = part_ext->border_face_group_idx     [shift_part+i_part][n_border_face_group];
+      _shift_ln_to_gn(n_connect_face_group, face_group_ln_to_gn, part_ext->shift_by_domain_face_group[i_domain], -1);
+
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+
+}
+
+
 static inline
 int
 _is_same_triplet
@@ -67,6 +352,127 @@ int iproc2, int ipart2, int ielt2
 }
 
 static
+int
+_setup_unique_order_triplet
+(
+const int    n_entity,
+const int   *unique_neighbor_entity_idx,
+const int   *unique_neighbor_entity,
+      int  **unique_order_neighbor_entity
+)
+{
+  int* order        = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+  int* unique_order = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+
+  PDM_order_lnum_s(unique_neighbor_entity,
+                   3,
+                   order,
+                   unique_neighbor_entity_idx[n_entity]);
+
+  int idx_unique = -1;
+  int last_proc  = -1;
+  int last_part  = -1;
+  int last_elmt  = -1;
+
+  for(int i = 0; i < unique_neighbor_entity_idx[n_entity]; i++){
+
+    int old_order = order[i];
+    int curr_proc = unique_neighbor_entity[3*old_order  ];
+    int curr_part = unique_neighbor_entity[3*old_order+1];
+    int curr_elmt = unique_neighbor_entity[3*old_order+2];
+    int is_same = _is_same_triplet(last_proc, last_part, last_elmt,
+                                   curr_proc, curr_part, curr_elmt);
+    // log_trace(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
+    //             curr_proc, curr_part, curr_elmt,
+    //             last_proc, last_part, last_elmt);
+
+    if(is_same == 0){ // N'est pas le meme
+      idx_unique++;
+      last_proc = curr_proc;
+      last_part = curr_part;
+      last_elmt = curr_elmt;
+    }
+    // order_unique[i] = idx_unique; // NO NO NO
+    unique_order[old_order] = idx_unique; // NO NO NO
+    // unique_order[old_order] = idx_unique;
+    // log_trace("[%d] = %d --> %d \n", i, is_same, idx_unique);
+    // new_order[order[i]] = i;
+  }
+
+  *unique_order_neighbor_entity = unique_order;
+  free(order);
+  return idx_unique+1;
+}
+
+
+static
+void
+_unique_triplet
+(
+  int   n_entity,
+  int  *neighbor_entity_idx,
+  int  *neighbor_entity,
+  int **unique_neighbor_entity_idx,
+  int **unique_neighbor_entity_n,
+  int **unique_neighbor_entity
+)
+{
+
+  int* _unique_neighbor_entity_idx = malloc( (n_entity + 1) * sizeof(int));
+  int* _unique_neighbor_entity_n   = malloc( (n_entity    ) * sizeof(int));
+  int* _unique_neighbor_entity     = malloc( 3 * neighbor_entity_idx[n_entity] * sizeof(int));
+  int* order                       = malloc(     neighbor_entity_idx[n_entity] * sizeof(int)); // Suralloc
+
+  _unique_neighbor_entity_idx[0] = 0;
+  for(int i_entity = 0; i_entity < n_entity; ++i_entity) {
+
+    int beg       = neighbor_entity_idx[i_entity];
+    int n_connect = neighbor_entity_idx[i_entity+1] - beg;
+
+    PDM_order_lnum_s(&neighbor_entity[3*beg], 3, order, n_connect);
+
+    _unique_neighbor_entity_n  [i_entity  ] = 0;
+    _unique_neighbor_entity_idx[i_entity+1] = _unique_neighbor_entity_idx[i_entity];
+
+    int last_proc  = -1;
+    int last_part  = -1;
+    int last_elmt  = -1;
+    for(int i = 0; i < n_connect; ++i) {
+      int old_order   = order[i];
+      int curr_proc   = neighbor_entity[3*(beg+old_order)  ];
+      int curr_part   = neighbor_entity[3*(beg+old_order)+1];
+      int curr_entity = neighbor_entity[3*(beg+old_order)+2];
+      int is_same  = _is_same_triplet(last_proc, last_part, last_elmt,
+                                      curr_proc, curr_part, curr_entity);
+
+      if(is_same == 0){ // N'est pas le meme
+        // idx_unique++;
+        last_proc = curr_proc;
+        last_part = curr_part;
+        last_elmt = curr_entity;
+
+        int beg_write = 3 * _unique_neighbor_entity_idx[i_entity+1];
+        // printf("beg_write = %i | curr_proc = %i | curr_part = %i | curr_entity = %i \n", beg_write, curr_proc, curr_part, curr_entity);
+        _unique_neighbor_entity[beg_write  ] = curr_proc;
+        _unique_neighbor_entity[beg_write+1] = curr_part;
+        _unique_neighbor_entity[beg_write+2] = curr_entity;
+
+        /* Increment the new counter */
+        _unique_neighbor_entity_idx[i_entity+1]++;
+        _unique_neighbor_entity_n  [i_entity  ]++;
+      }
+    }
+  }
+
+  _unique_neighbor_entity = realloc(_unique_neighbor_entity, 3 * neighbor_entity_idx[n_entity] * sizeof(int));
+
+  *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
+  *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
+  *unique_neighbor_entity     = _unique_neighbor_entity;
+  free(order);
+}
+
+static
 void
 _create_cell_cell_graph
 (
@@ -74,10 +480,15 @@ _create_cell_cell_graph
   PDM_extend_type_t     extend_type
 )
 {
-  assert(extend_type == PDM_EXTEND_FROM_FACE);
+  // assert(extend_type == PDM_EXTEND_FROM_FACE);
 
-  part_ext->cell_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
-  part_ext->cell_cell     = malloc( part_ext->n_domain * sizeof(int ***));
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  part_ext->cell_cell_idx = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+  part_ext->cell_cell     = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
 
   if(extend_type == PDM_EXTEND_FROM_FACE ){
 
@@ -108,8 +519,6 @@ _create_cell_cell_graph
                                               &face_cell_idx[i_domain],
                                               &face_cell[i_domain]);
 
-      part_ext->cell_cell_idx[i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-      part_ext->cell_cell    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
@@ -131,12 +540,12 @@ _create_cell_cell_graph
                                  pcell_face[i_part],
                                  face_cell_idx[i_domain][i_part],
                                  face_cell[i_domain][i_part],
-                                 &part_ext->cell_cell_idx[i_domain][i_part],
-                                 &part_ext->cell_cell[i_domain][i_part]);
+                                 &part_ext->cell_cell_idx[i_part+shift_part],
+                                 &part_ext->cell_cell[i_part+shift_part]);
 
         // Remove sign for cell_cell
-        for(int i = 0; i < part_ext->cell_cell_idx[i_domain][i_part][pn_cell[i_part]]; ++i) {
-          part_ext->cell_cell[i_domain][i_part][i] = PDM_ABS(part_ext->cell_cell[i_domain][i_part][i]);
+        for(int i = 0; i < part_ext->cell_cell_idx[i_part+shift_part][pn_cell[i_part]]; ++i) {
+          part_ext->cell_cell[i_part+shift_part][i] = PDM_ABS(part_ext->cell_cell[i_part+shift_part][i]);
         }
 
         /*
@@ -165,6 +574,91 @@ _create_cell_cell_graph
 
     free(face_cell_idx);
     free(face_cell);
+  } else if(extend_type == PDM_EXTEND_FROM_VTX) {
+
+    // Check
+
+    // Compute cell_cell = cell_face + face_edge + edge_vtx then transpose
+
+    int shift_part = 0;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+        int pn_cell = part_ext->parts[i_domain][i_part].n_cell;
+        int pn_edge = part_ext->parts[i_domain][i_part].n_edge;
+        int pn_vtx  = part_ext->parts[i_domain][i_part].n_vtx;
+
+        int* edge_vtx_idx = (int *) malloc( (pn_edge+1) * sizeof(int));
+        edge_vtx_idx[0] = 0;
+        for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
+          edge_vtx_idx[i_edge+1] = edge_vtx_idx[i_edge] + 2;
+        }
+
+        /* Compute cell_edge */
+        int* cell_edge_idx = NULL;
+        int* cell_edge     = NULL;
+        PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                 part_ext->parts[i_domain][i_part].cell_face_idx,
+                                 part_ext->parts[i_domain][i_part].cell_face,
+                                 part_ext->parts[i_domain][i_part].face_edge_idx,
+                                 part_ext->parts[i_domain][i_part].face_edge,
+                                 &cell_edge_idx,
+                                 &cell_edge);
+
+        /* Compute cell_vtx */
+        int* cell_vtx_idx = NULL;
+        int* cell_vtx     = NULL;
+        PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                 cell_edge_idx,
+                                 cell_edge,
+                                 edge_vtx_idx,
+                                 part_ext->parts[i_domain][i_part].edge_vtx,
+                                 &cell_vtx_idx,
+                                 &cell_vtx);
+        free(cell_edge_idx);
+        free(cell_edge);
+        free(edge_vtx_idx);
+
+        int *vtx_cell     = NULL;
+        int *vtx_cell_idx = NULL;
+        PDM_connectivity_transpose(part_ext->parts[i_domain][i_part].n_cell,
+                                   part_ext->parts[i_domain][i_part].n_vtx,
+                                   cell_vtx_idx,
+                                   cell_vtx,
+                                   &vtx_cell_idx,
+                                   &vtx_cell);
+
+        PDM_combine_connectivity(part_ext->parts[i_domain][i_part].n_cell,
+                                 cell_vtx_idx,
+                                 cell_vtx,
+                                 vtx_cell_idx,
+                                 vtx_cell,
+                                 &part_ext->cell_cell_idx[i_part+shift_part],
+                                 &part_ext->cell_cell[i_part+shift_part]);
+
+        // Remove sign for cell_cell
+        for(int i = 0; i < part_ext->cell_cell_idx[i_part+shift_part][pn_cell]; ++i) {
+          part_ext->cell_cell[i_part+shift_part][i] = PDM_ABS(part_ext->cell_cell[i_part+shift_part][i]);
+        }
+        free(cell_vtx_idx);
+        free(cell_vtx);
+
+        /*
+         * Setup shortcut and free useless memory
+         */
+        part_ext->entity_cell_idx[i_part+shift_part] = vtx_cell_idx;
+        part_ext->entity_cell    [i_part+shift_part] = vtx_cell    ;
+        part_ext->entity_cell_n  [i_part+shift_part] = (int * ) malloc( pn_vtx * sizeof(int));
+        for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
+          int n_connected = part_ext->entity_cell_idx[i_part+shift_part][i_vtx+1] - part_ext->entity_cell_idx[i_part+shift_part][i_vtx];
+          part_ext->entity_cell_n[i_part+shift_part][i_vtx] = n_connected;
+        }
+
+      } /* End i_part */
+      shift_part += part_ext->n_part[i_domain];
+    }
+
+
   } else {
     abort();
   }
@@ -177,6 +671,7 @@ _create_cell_graph_comm
   PDM_part_extension_t *part_ext
 )
 {
+  int debug = 0;
   /*
    * The idea is to use the first communicator graph to exchange directly the entity_cell
    *     -> We deduced first from this graph the data necessary for distant_neigbor
@@ -188,9 +683,9 @@ _create_cell_graph_comm
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
-  assert(part_ext->n_domain == 1);
-  /* Si multidomain on fait un shift et tt roule */
+  // assert(part_ext->n_domain == 1);
 
+  /* Si multidomain on fait un shift et tt roule */
   int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -211,12 +706,15 @@ _create_cell_graph_comm
 
   part_ext->entity_cell_opp_idx = (int  **) malloc( n_part_loc_all_domain * sizeof(int  *) );
 
-  part_ext->dist_neighbor_cell_n    = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
-  part_ext->dist_neighbor_cell_idx  = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
-  part_ext->dist_neighbor_cell_desc = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  part_ext->dist_neighbor_cell_n              = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  part_ext->dist_neighbor_cell_idx            = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  part_ext->dist_neighbor_cell_desc           = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  part_ext->unique_order_dist_neighbor_cell   = (int **) malloc( n_part_loc_all_domain * sizeof(int *) );
+  part_ext->n_unique_order_dist_neighbor_cell = (int  *) malloc( n_part_loc_all_domain * sizeof(int  ) );
 
   // Begin with exchange by the connectivity the cell opposite number
-  int shift_part = 0;
+  int shift_part   = 0;
+  int shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
     int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
@@ -224,16 +722,21 @@ _create_cell_graph_comm
     /* First loop to count */
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
-      int n_part_entity_bound_tot = part_ext->parts[i_domain][i_part].face_part_bound_part_idx[n_part_total];
+      int n_part_entity_bound_tot = -1;
 
       // printf(" i_part+shift_part = %i \n", i_part+shift_part);
       int* _entity_part_bound = NULL;
       if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
         // part_ext->n_entity_bound[i_part+shift_part] = n_part_entity_bound_tot;
+        n_part_entity_bound_tot = part_ext->parts[i_domain][i_part].face_part_bound_part_idx[n_part_total];
         part_ext->n_entity_bound[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
         _entity_part_bound = part_ext->parts[i_domain][i_part].face_part_bound;
+      } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
+        n_part_entity_bound_tot = part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx[n_part_total];
+        part_ext->n_entity_bound[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        _entity_part_bound = part_ext->parts[i_domain][i_part].vtx_part_bound;
       } else {
-        abort();
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
       }
 
       part_ext->neighbor_idx       [i_part+shift_part] = (int *) malloc(    (part_ext->n_entity_bound[i_part+shift_part]+1) * sizeof(int) );
@@ -251,6 +754,97 @@ _create_cell_graph_comm
         _neighbor_n[i_entity] += 1;
       }
 
+      /* Join between domain */
+      if (debug) {
+        printf(" Begin part_extension with domain \n");
+      }
+      PDM_bound_type_t interface_kind = PDM_BOUND_TYPE_MAX;
+      if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+        interface_kind = PDM_BOUND_TYPE_FACE;
+      } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
+        interface_kind = PDM_BOUND_TYPE_VTX;
+      } else {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+      }
+
+      int            n_interface        = 0;
+      int           *interface_pn       = NULL;
+      PDM_g_num_t  **interface_ln_to_gn = NULL;
+      int          **interface_sgn      = NULL;
+      int          **interface_ids      = NULL;
+      int          **interface_ids_idx  = NULL;
+      int          **interface_dom      = NULL;
+      if(part_ext->pdi != NULL) {
+        PDM_part_domain_interface_get(part_ext->pdi,
+                                      interface_kind,
+                                      i_domain,
+                                      i_part,
+                                      &interface_pn,
+                                      &interface_ln_to_gn,
+                                      &interface_sgn,
+                                      &interface_ids,
+                                      &interface_ids_idx,
+                                      &interface_dom);
+        n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+      }
+
+
+      for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+        log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
+
+        PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
+
+        for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
+
+          // Search the first in list that is in current part/proc
+          int i_proc_cur   = -1;
+          int i_part_cur   = -1;
+          int i_entity_cur = -1;
+          int found        = 0;
+          int idx_current  = -1;
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(i_proc_opp == i_rank && i_part_opp == i_part) {
+              i_proc_cur   = i_proc_opp;
+              i_part_cur   = i_part_opp;
+              i_entity_cur = i_entity_opp;
+              idx_current  = j;
+              assert(found == 0);
+              found = 1;
+              break;
+            }
+          }
+
+          if(!found) {
+            continue;
+          }
+
+          // Il manque une notion de direction sinon on sait pas dans quelle sens va le raccord
+
+          assert(found == 1);
+
+          log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i \n", i_proc_cur, i_part_cur, i_entity_cur);
+
+          // Only add the oppoite part of the graph
+          for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
+            int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            int i_part_opp   = interface_ids[i_interface][3*j+1];
+            int i_entity_opp = interface_ids[i_interface][3*j+2];
+
+            if(idx_current != j) {
+
+
+              log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+            }
+
+          }
+        }
+      }
+
+
       /* Compute index */
       _neighbor_idx[0] = 0;
       for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
@@ -258,7 +852,12 @@ _create_cell_graph_comm
         _neighbor_n[i_entity] = 0;
       }
 
-      /* Ici il faut faire les raccords entre domaine ---> Count */
+
+      if (debug) {
+        printf("n_interface  = %i\n", n_interface);
+      }
+
+
       part_ext->neighbor_desc[i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] * sizeof(int) );
       int* _neighbor_desc = part_ext->neighbor_desc[i_part+shift_part];
 
@@ -267,9 +866,9 @@ _create_cell_graph_comm
       for(int idx_entity = 0; idx_entity < n_part_entity_bound_tot; ++idx_entity) {
         int i_entity = _entity_part_bound[4*idx_entity]-1;
         int idx_write = _neighbor_idx[i_entity] + _neighbor_n[i_entity]++;
-        _neighbor_desc[3*idx_write  ] = _entity_part_bound[4*idx_entity+1];   // i_proc_opp;
-        _neighbor_desc[3*idx_write+1] = _entity_part_bound[4*idx_entity+2]-1; // i_part_opp
-        _neighbor_desc[3*idx_write+2] = _entity_part_bound[4*idx_entity+3]-1; // i_entity_opp
+        _neighbor_desc[3*idx_write  ] = _entity_part_bound[4*idx_entity+1];                // i_proc_opp;
+        _neighbor_desc[3*idx_write+1] = _entity_part_bound[4*idx_entity+2]+shift_part_g-1; // i_part_opp
+        _neighbor_desc[3*idx_write+2] = _entity_part_bound[4*idx_entity+3]-1;              // i_entity_opp
       }
 
       free(_neighbor_n);
@@ -281,7 +880,8 @@ _create_cell_graph_comm
 
     }
 
-    shift_part += part_ext->n_part[i_domain];
+    shift_part   += part_ext->n_part              [i_domain];
+    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
 
@@ -298,7 +898,7 @@ _create_cell_graph_comm
 
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             part_ext->entity_cell_n,
                   (void **) part_ext->entity_cell,
@@ -341,7 +941,8 @@ _create_cell_graph_comm
       int* _dist_neighbor_cell_idx = part_ext->dist_neighbor_cell_idx[i_part+shift_part];
 
 
-      part_ext->border_cell_list[i_part+shift_part] = malloc( n_elmt * sizeof(int));
+      // part_ext->border_cell_list[i_part+shift_part] = malloc( n_elmt * sizeof(int));
+      part_ext->border_cell_list[i_part+shift_part] = malloc( n_cell * sizeof(int));
       // for(int i = 0; i < n_elmt; ++i) {
       //   part_ext->border_cell_list[i_part+shift_part][i] = -1000;
       // }
@@ -372,6 +973,7 @@ _create_cell_graph_comm
           part_ext->border_cell_list[i_part+shift_part][idx_indic++] = i_cell;
         }
       }
+      part_ext->border_cell_list[i_part+shift_part] = realloc(part_ext->border_cell_list[i_part+shift_part], idx_indic * sizeof(int));
       /* Because cell can be associated twice */
       part_ext->n_cell_border[i_part+shift_part] = idx_indic;
 
@@ -406,6 +1008,30 @@ _create_cell_graph_comm
           }
         }
       }
+
+      int* _unique_dist_neighbor_cell_idx = NULL;
+      int* _unique_dist_neighbor_cell_n   = NULL;
+      int* _unique_dist_neighbor_cell     = NULL;
+      _unique_triplet(n_cell,
+                      _dist_neighbor_cell_idx,
+                      _dist_neighbor_cell_desc,
+                      &_unique_dist_neighbor_cell_idx,
+                      &_unique_dist_neighbor_cell_n,
+                      &_unique_dist_neighbor_cell);
+      free(_dist_neighbor_cell_idx);
+      free(_dist_neighbor_cell_desc);
+      free(_dist_neighbor_cell_n);
+      part_ext->dist_neighbor_cell_idx         [i_part+shift_part] = _unique_dist_neighbor_cell_idx;
+      part_ext->dist_neighbor_cell_n           [i_part+shift_part] = _unique_dist_neighbor_cell_n;
+      part_ext->dist_neighbor_cell_desc        [i_part+shift_part] = _unique_dist_neighbor_cell;
+
+      int *_unique_order_dist_neighbor_cell = NULL;
+      int n_unique = _setup_unique_order_triplet(n_cell,
+                                                 _unique_dist_neighbor_cell_idx,
+                                                 _unique_dist_neighbor_cell,
+                                                 &_unique_order_dist_neighbor_cell);
+      part_ext->unique_order_dist_neighbor_cell  [i_part+shift_part] = _unique_order_dist_neighbor_cell;
+      part_ext->n_unique_order_dist_neighbor_cell[i_part+shift_part] = n_unique;
 
     }
     shift_part += part_ext->n_part[i_domain];
@@ -492,7 +1118,7 @@ _compute_dual_graph
    */
   PDM_distant_neighbor_exch(dn,
                             3 * sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             prev_cell_cell_extended_n,
                   (void **) prev_cell_cell_extended,
@@ -549,6 +1175,32 @@ _compute_dual_graph
         _border_cell_cell_extended_n[i] = _border_cell_cell_extended_idx[i+1] - _border_cell_cell_extended_idx[i];
       }
 
+      int* _unique_border_cell_cell_extended_n   = NULL;
+      int* _unique_border_cell_cell_extended     = NULL;
+      int* _unique_border_cell_cell_extended_idx = NULL;
+      _unique_triplet(n_cell_border,
+                      _border_cell_cell_extended_idx,
+                      _border_cell_cell_extended,
+                      &_unique_border_cell_cell_extended_idx,
+                      &_unique_border_cell_cell_extended_n,
+                      &_unique_border_cell_cell_extended);
+
+      free(_border_cell_cell_extended_n   );
+      free(_border_cell_cell_extended     );
+      free(_border_cell_cell_extended_idx );
+
+      _border_cell_cell_extended_n   = _unique_border_cell_cell_extended_n  ;
+      _border_cell_cell_extended     = _unique_border_cell_cell_extended    ;
+      _border_cell_cell_extended_idx = _unique_border_cell_cell_extended_idx;
+      next_cell_cell_extended_n[i_part+shift_part] = _border_cell_cell_extended_n;
+      next_cell_cell_extended  [i_part+shift_part] = _border_cell_cell_extended;
+
+      int *_unique_order_border_cell_cell_extended = NULL;
+      int n_unique_border = _setup_unique_order_triplet(n_cell_border,
+                                                        _unique_border_cell_cell_extended_idx,
+                                                        _unique_border_cell_cell_extended,
+                                                        &_unique_order_border_cell_cell_extended);
+
       if(0 == 1) {
         PDM_log_trace_array_int(_border_cell_cell_extended_idx, n_cell_border+1, "next_border_cell_cell_extended_idx::");
         PDM_log_trace_array_int(_border_cell_cell_extended_n  , n_cell_border,   "next_border_cell_cell_extended_n::");
@@ -598,9 +1250,8 @@ _compute_dual_graph
       int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
       int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part];
 
-      int i_depth_cur = 0;
-      int* _cell_cell_idx = part_ext->cell_cell_idx[i_depth_cur][i_part+shift_part];
-      int* _cell_cell     = part_ext->cell_cell    [i_depth_cur][i_part+shift_part];
+      int* _cell_cell_idx = part_ext->cell_cell_idx[i_part+shift_part];
+      int* _cell_cell     = part_ext->cell_cell    [i_part+shift_part];
 
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         _cell_cell_extended_idx[i_cell] = 0;
@@ -608,20 +1259,74 @@ _compute_dual_graph
       }
       _cell_cell_extended_idx[n_cell] = 0;
 
+      /* Weak hash table */
+      int n_unique_dist_neighbor_cell = part_ext->n_unique_order_dist_neighbor_cell[i_part+shift_part];
+      int n_unique_cell_cell_extended = part_ext->n_unique_order_cell_cell_extended[i_depth-1][i_part+shift_part];
+
+      int *_unique_prev_cell_cell_extended = part_ext->unique_order_cell_cell_extended[i_depth-1][i_part+shift_part];
+
+      // printf("n_unique_dist_neighbor_cell = %i \n", n_unique_dist_neighbor_cell);
+      // printf("n_unique_cell_cell_extended = %i \n", n_unique_cell_cell_extended);
+
+      int *tag_border_cell_cell_extended = malloc( n_unique_border             * sizeof(int));
+      int *tag_dist_neighbor_cell        = malloc( n_unique_dist_neighbor_cell * sizeof(int));
+      int *tag_prev_cell_cell_extended   = malloc( n_unique_cell_cell_extended * sizeof(int));
+      int *tag_interior_cell             = malloc( n_cell                      * sizeof(int));
+
+      int n_work = n_unique_border + n_unique_dist_neighbor_cell + n_unique_cell_cell_extended;
+      int *icell_to_reset = malloc( n_work * sizeof(int)); // Suralloc but don't really have choice
+
+      int *icell_border_to_reset = malloc( n_unique_border * sizeof(int)); // Suralloc but don't really have choice
+
+      int n_work2 = _cell_cell_idx[n_cell];
+      int *icell_to_reset_interior = malloc( n_work2 * sizeof(int)); // Suralloc but don't really have choice
+
+      for(int i = 0; i < n_unique_border; ++i) {
+        tag_border_cell_cell_extended[i] = 0;
+      }
+      for(int i = 0; i < n_unique_dist_neighbor_cell; ++i) {
+        tag_dist_neighbor_cell[i] = 0;
+      }
+      for(int i = 0; i < n_unique_cell_cell_extended; ++i) {
+        tag_prev_cell_cell_extended[i] = 0;
+      }
+
+      for(int i = 0; i < n_cell; ++i) {
+        tag_interior_cell[i] = 0;
+      }
 
       /* Let's go - First pass to count */
       for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
         int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
+        int n_unique_loc = 0;
+        int n_interior_unique_loc = 0;
+        int n_border_unique_loc = 0;
 
         assert(_cell_cell_extended_n[i_cell] == 0); // All are sorted before
 
         /* From interior - we add the previous rank */
         _cell_cell_extended_n[i_cell] = _prev_cell_cell_extended_n[i_cell];
+        for(int idx_neight = _prev_cell_cell_extended_idx[i_cell]; idx_neight < _prev_cell_cell_extended_idx[i_cell+1]; ++idx_neight) {
+          int i_unique2 = _unique_prev_cell_cell_extended[idx_neight]; // Pas la cellule le tableau est unique !!!!!
+          tag_prev_cell_cell_extended[i_unique2 ] = 1;
+          icell_to_reset[n_unique_loc++ ] = i_unique2;
+        }
 
         /* From border */
+        // printf("_prev_cell_cell_extended_n[%i][%i] = %i\n", i_part, i_cell, _prev_cell_cell_extended_n[i_cell]);
         // printf("_border_cell_cell_extended_n[%i][%i] = %i\n", i_part, idx_cell, _border_cell_cell_extended_n[idx_cell]);
         assert(_border_cell_cell_extended_n[idx_cell] > 0);
-        _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_cell];
+        // _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_cell];
+
+        for(int idx_neight = _border_cell_cell_extended_idx[idx_cell]; idx_neight < _border_cell_cell_extended_idx[idx_cell+1]; ++idx_neight) {
+          int i_unique2 = _unique_order_border_cell_cell_extended[idx_neight];
+          int is_treat2 = tag_border_cell_cell_extended          [i_unique2 ];
+          if(is_treat2 == 0) {
+            _cell_cell_extended_n[i_cell] += 1;
+            tag_border_cell_cell_extended[i_unique2]  = 1;
+            icell_border_to_reset[n_border_unique_loc++] = i_unique2;
+          }
+        }
 
         /* Now we have to extend the interior */
         for(int idx_neight = _prev_cell_cell_extended_idx[i_cell]; idx_neight < _prev_cell_cell_extended_idx[i_cell+1]; ++idx_neight) {
@@ -631,20 +1336,105 @@ _compute_dual_graph
           if(i_part+shift_part == i_part_neight && i_rank == i_rank_neight) {
             int i_cell_neight = _prev_cell_cell_extended[3*idx_neight+2];
 
+            int i_unique = _unique_prev_cell_cell_extended[idx_neight]; // Pas la cellule le tableau est unique !!!!!
+            // int is_treat = tag_prev_cell_cell_extended    [i_unique  ];
+
+            // printf("i_cell_neight = %i | tag_prev_cell_cell_extended[%i] = %i \n", i_cell_neight, i_unique, is_treat);
+
             /* From interior */
-            _cell_cell_extended_n[i_cell] += _prev_cell_cell_extended_n[i_cell_neight];
+            // _cell_cell_extended_n[i_cell] += _prev_cell_cell_extended_n[i_cell_neight];
+
+            for(int idx_neight2 = _prev_cell_cell_extended_idx[i_cell_neight]; idx_neight2 < _prev_cell_cell_extended_idx[i_cell_neight+1]; ++idx_neight2) {
+
+              int i_unique2 = _unique_prev_cell_cell_extended[idx_neight2]; // Pas la cellule le tableau est unique !!!!!
+              // printf("[%i] [neighbor = %i] _unique_prev_cell_cell_extended[%i] = %i \n", i_cell, i_cell_neight, idx_neight2, i_unique2);
+              int is_treat2 = tag_prev_cell_cell_extended    [i_unique2  ];
+              if(is_treat2 == 0) {
+                _cell_cell_extended_n      [i_cell   ] += 1;
+                tag_prev_cell_cell_extended[i_unique2]  = 1;
+                icell_to_reset[n_unique_loc++] = i_unique2;
+              }
+            }
 
             int idx_border_neight = idx_border_cell[i_cell_neight];
             if(idx_border_neight != -1) {
               // Il faut rajouter les voisins aussi
-              _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_border_neight];
+              // _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_border_neight];
+              for(int idx_neight2 = _border_cell_cell_extended_idx[idx_border_neight]; idx_neight2 < _border_cell_cell_extended_idx[idx_border_neight+1]; ++idx_neight2) {
+                int i_unique2 = _unique_order_border_cell_cell_extended[idx_neight2];
+                int is_treat2 = tag_border_cell_cell_extended          [i_unique2 ];
+                if(is_treat2 == 0) {
+                  _cell_cell_extended_n[i_cell] += 1;
+                  tag_border_cell_cell_extended[i_unique2]  = 1;
+                  icell_border_to_reset[n_border_unique_loc++] = i_unique2;
+                }
+              }
             }
 
             /* Rajout du vrai intérieur */
-            _cell_cell_extended_n[i_cell] += _cell_cell_idx[i_cell_neight+1] - _cell_cell_idx[i_cell_neight];
+            // _cell_cell_extended_n[i_cell] += _cell_cell_idx[i_cell_neight+1] - _cell_cell_idx[i_cell_neight];
+
+            for(int idx_neight2 = _cell_cell_idx[i_cell_neight]; idx_neight2 < _cell_cell_idx[i_cell_neight+1]; ++idx_neight2 ) {
+              int i_cell_neight2 = _cell_cell[idx_neight2];
+              if(tag_interior_cell[i_cell_neight2-1] == 0) {
+
+                _cell_cell_extended_n[i_cell] += 1;
+
+                icell_to_reset_interior[n_interior_unique_loc++] = i_cell_neight2-1;
+                tag_interior_cell[i_cell_neight2-1] = 1;
+              }
+            }
+
+            tag_prev_cell_cell_extended[i_unique] = 1;
 
           } /* End if same part and same proc */
         } /* End loop neighbor */
+
+        // Reset tag
+        for(int j = 0; j < n_unique_loc; ++j) {
+          tag_prev_cell_cell_extended[icell_to_reset[j]] = 0;
+        }
+        n_unique_loc = 0;
+        for(int j = 0; j < n_interior_unique_loc; ++j) {
+          tag_interior_cell[icell_to_reset_interior[j]] = 0;
+        }
+        n_interior_unique_loc = 0;
+        for(int j = 0; j < n_border_unique_loc; ++j) {
+          tag_border_cell_cell_extended[icell_border_to_reset[j]] = 0;
+        }
+        n_border_unique_loc = 0;
+
+
+        /* Now we have to extend the interior */
+        // for(int idx_neight = _prev_cell_cell_extended_idx[i_cell]; idx_neight < _prev_cell_cell_extended_idx[i_cell+1]; ++idx_neight) {
+        //   int i_rank_neight = _prev_cell_cell_extended[3*idx_neight  ];
+        //   int i_part_neight = _prev_cell_cell_extended[3*idx_neight+1];
+        //   /* We add stencil only if it's local */
+        //   if(i_part+shift_part == i_part_neight && i_rank == i_rank_neight) {
+        //     int i_cell_neight = _prev_cell_cell_extended[3*idx_neight+2];
+
+        //     int i_unique = _unique_prev_cell_cell_extended[i_cell_neight];
+        //     int is_treat = tag_prev_cell_cell_extended    [i_unique];
+
+        //     printf("i_cell_neight = %i | tag_prev_cell_cell_extended[%i] = %i \n", i_cell_neight, i_unique, is_treat);
+
+        //     /* From interior */
+        //     _cell_cell_extended_n[i_cell] += _prev_cell_cell_extended_n[i_cell_neight];
+
+        //     int idx_border_neight = idx_border_cell[i_cell_neight];
+        //     if(idx_border_neight != -1) {
+        //       // Il faut rajouter les voisins aussi
+        //       _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_border_neight];
+        //     }
+
+        //     /* Rajout du vrai intérieur */
+        //     _cell_cell_extended_n[i_cell] += _cell_cell_idx[i_cell_neight+1] - _cell_cell_idx[i_cell_neight];
+
+        //     tag_prev_cell_cell_extended[i_unique] = 1;
+
+        //   } /* End if same part and same proc */
+        // } /* End loop neighbor */
+
       } /* End loop border */
 
       /* Setup idx and reset */
@@ -660,10 +1450,13 @@ _compute_dual_graph
       part_ext->cell_cell_extended[i_depth][i_part+shift_part] = (int *) malloc( 3 * _cell_cell_extended_idx[n_cell] * sizeof(int));
       int* _cell_cell_extended = part_ext->cell_cell_extended[i_depth][i_part+shift_part];
 
+
       /* Let's go - Second pass to fill */
       for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
         int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
-
+        int n_unique_loc = 0;
+        int n_interior_unique_loc = 0;
+        int n_border_unique_loc = 0;
         assert(_cell_cell_extended_n[i_cell] == 0); // All are sorted before
 
         /* From interior - we add the previous rank */
@@ -672,15 +1465,27 @@ _compute_dual_graph
           _cell_cell_extended[3*idx_write  ] = _prev_cell_cell_extended[3*idx_neight  ];
           _cell_cell_extended[3*idx_write+1] = _prev_cell_cell_extended[3*idx_neight+1];
           _cell_cell_extended[3*idx_write+2] = _prev_cell_cell_extended[3*idx_neight+2];
+
+          int i_unique2 = _unique_prev_cell_cell_extended[idx_neight]; // Pas la cellule le tableau est unique !!!!!
+          tag_prev_cell_cell_extended[i_unique2 ] = 1;
+          icell_to_reset[n_unique_loc++] = i_unique2;
         }
 
         /* From border */
         assert(_border_cell_cell_extended_n[idx_cell] > 0);
         for(int idx_neight = _border_cell_cell_extended_idx[idx_cell]; idx_neight < _border_cell_cell_extended_idx[idx_cell+1]; ++idx_neight) {
-          int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
-          _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight  ];
-          _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight+1];
-          _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight+2];
+          int i_unique2 = _unique_order_border_cell_cell_extended[idx_neight];
+          int is_treat2 = tag_border_cell_cell_extended          [i_unique2 ];
+          if(is_treat2 == 0) {
+
+            int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+            _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight  ];
+            _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight+1];
+            _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight+2];
+
+            tag_border_cell_cell_extended[i_unique2]  = 1;
+            icell_border_to_reset[n_border_unique_loc++] = i_unique2;
+          }
         }
 
         /* Now we have to extend the interior */
@@ -689,42 +1494,86 @@ _compute_dual_graph
           int i_part_neight = _prev_cell_cell_extended[3*idx_neight+1];
           /* We add stencil only if it's local */
           if(i_part+shift_part == i_part_neight && i_rank == i_rank_neight) {
+
             int i_cell_neight = _prev_cell_cell_extended[3*idx_neight+2];
 
             /* From interior */
             for(int idx_neight2 = _prev_cell_cell_extended_idx[i_cell_neight]; idx_neight2 < _prev_cell_cell_extended_idx[i_cell_neight+1]; ++idx_neight2) {
-              int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
-              _cell_cell_extended[3*idx_write  ] = _prev_cell_cell_extended[3*idx_neight2  ];
-              _cell_cell_extended[3*idx_write+1] = _prev_cell_cell_extended[3*idx_neight2+1];
-              _cell_cell_extended[3*idx_write+2] = _prev_cell_cell_extended[3*idx_neight2+2];
+
+              int i_unique2 = _unique_prev_cell_cell_extended[idx_neight2]; // Pas la cellule le tableau est unique !!!!!
+              int is_treat2 = tag_prev_cell_cell_extended    [i_unique2  ];
+              if(is_treat2 == 0) {
+                int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+                _cell_cell_extended[3*idx_write  ] = _prev_cell_cell_extended[3*idx_neight2  ];
+                _cell_cell_extended[3*idx_write+1] = _prev_cell_cell_extended[3*idx_neight2+1];
+                _cell_cell_extended[3*idx_write+2] = _prev_cell_cell_extended[3*idx_neight2+2];
+
+                // Update tag
+                tag_prev_cell_cell_extended[i_unique2]  = 1;
+                icell_to_reset[n_unique_loc++] = i_unique2;
+              }
             }
 
             int idx_border_neight = idx_border_cell[i_cell_neight];
             if(idx_border_neight != -1) {
               // Il faut rajouter les voisins aussi
               for(int idx_neight2 = _border_cell_cell_extended_idx[idx_border_neight]; idx_neight2 < _border_cell_cell_extended_idx[idx_border_neight+1]; ++idx_neight2) {
-                int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
-                _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight2  ];
-                _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight2+1];
-                _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight2+2];
+
+                int i_unique2 = _unique_order_border_cell_cell_extended[idx_neight2];
+                int is_treat2 = tag_border_cell_cell_extended          [i_unique2 ];
+                if(is_treat2 == 0) {
+                  int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+                  _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight2  ];
+                  _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight2+1];
+                  _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight2+2];
+
+                  tag_border_cell_cell_extended[i_unique2]  = 1;
+                  icell_border_to_reset[n_border_unique_loc++] = i_unique2;
+
+                }
               }
             }
 
             /* Rajout du vrai intérieur */
             for(int idx_neight2 = _cell_cell_idx[i_cell_neight]; idx_neight2 < _cell_cell_idx[i_cell_neight+1]; ++idx_neight2 ) {
               int i_cell_neight2 = _cell_cell[idx_neight2];
-              int idx_write =  _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
-              _cell_cell_extended[3*idx_write  ] = i_rank;
-              _cell_cell_extended[3*idx_write+1] = i_part;
-              _cell_cell_extended[3*idx_write+2] = i_cell_neight2-1;
-            }
 
+              if(tag_interior_cell[i_cell_neight2-1] == 0) {
+
+                int idx_write =  _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+                _cell_cell_extended[3*idx_write  ] = i_rank;
+                _cell_cell_extended[3*idx_write+1] = i_part;
+                _cell_cell_extended[3*idx_write+2] = i_cell_neight2-1;
+
+                icell_to_reset_interior[n_interior_unique_loc++] = i_cell_neight2-1;
+                tag_interior_cell[i_cell_neight2-1] = 1;
+              }
+            }
 
           } /* End if same part and same proc */
 
         } /* End loop neighbor */
-      } /* End loop border */
 
+        // Reset tag for next cell
+        for(int j = 0; j < n_unique_loc; ++j) {
+          tag_prev_cell_cell_extended[icell_to_reset[j]] = 0;
+        }
+        for(int j = 0; j < n_interior_unique_loc; ++j) {
+          tag_interior_cell[icell_to_reset_interior[j]] = 0;
+        }
+        for(int j = 0; j < n_border_unique_loc; ++j) {
+          tag_border_cell_cell_extended[icell_border_to_reset[j]] = 0;
+        }
+
+      } /* End loop border */
+      // free(_tag_cell_is_treated);
+      free(tag_border_cell_cell_extended);
+      free(tag_dist_neighbor_cell);
+      free(tag_prev_cell_cell_extended);
+      free(tag_interior_cell);
+      free(icell_to_reset);
+      free(icell_border_to_reset);
+      free(icell_to_reset_interior);
 
       /* The _cell_cell_extended need to be sorted because many entry is duplicated */
       int* order = malloc( max_neight * sizeof(int));
@@ -740,6 +1589,8 @@ _compute_dual_graph
 
         PDM_order_lnum_s(&_cell_cell_extended[3*beg], 3, order, n_connect);
 
+        // log_trace("i_cell = %i | n_cell = %i | n_connect = %i \n", i_cell, n_cell, n_connect);
+        // PDM_log_trace_array_int(order, )
         // printf(" order[%i] = ", i_cell);
         // for(int i = 0; i < n_connect; ++i) {
         //   printf(" %i", order[i]);
@@ -785,9 +1636,19 @@ _compute_dual_graph
       free(part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part]);
       free(part_ext->cell_cell_extended    [i_depth][i_part+shift_part]);
 
+      _ncell_cell_extended = realloc(_ncell_cell_extended, 3 * _ncell_cell_extended_idx[n_cell] * sizeof(int));
+
       part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = _ncell_cell_extended_idx;
       part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part] = _ncell_cell_extended_n;
       part_ext->cell_cell_extended    [i_depth][i_part+shift_part] = _ncell_cell_extended;
+
+      int *_unique_order_cell_cell_extended = NULL;
+      int n_unique = _setup_unique_order_triplet(n_cell,
+                                                 _ncell_cell_extended_idx,
+                                                 _ncell_cell_extended,
+                                                 &_unique_order_cell_cell_extended);
+      part_ext->unique_order_cell_cell_extended  [i_depth][i_part+shift_part] = _unique_order_cell_cell_extended;
+      part_ext->n_unique_order_cell_cell_extended[i_depth][i_part+shift_part] = n_unique;
 
       if(0 == 1) {
         PDM_log_trace_array_int(_ncell_cell_extended_idx, n_cell+1, "_ncell_cell_extended_idx:: ");
@@ -819,6 +1680,7 @@ _compute_dual_graph
       /* Free allocated memory in distant neigbor exhange */
       free(next_cell_cell_extended_n[i_part+shift_part]);
       free(next_cell_cell_extended  [i_part+shift_part]);
+      free(_unique_order_border_cell_cell_extended);
 
     }
     shift_part += part_ext->n_part[i_domain];
@@ -843,9 +1705,9 @@ _compute_first_extended_cell_graph
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
   PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
+  int shift_part   = 0;
+  int shift_part_g = 0;
   int i_depth_cur = 0;
-
-  int shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
@@ -864,8 +1726,8 @@ _compute_first_extended_cell_graph
       int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part];
       int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part];
 
-      int* _cell_cell_idx = part_ext->cell_cell_idx[i_depth_cur][i_part+shift_part];
-      int* _cell_cell     = part_ext->cell_cell    [i_depth_cur][i_part+shift_part];
+      int* _cell_cell_idx = part_ext->cell_cell_idx[i_part+shift_part];
+      int* _cell_cell     = part_ext->cell_cell    [i_part+shift_part];
 
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         _cell_cell_extended_idx[i_cell] = 0;
@@ -906,7 +1768,7 @@ _compute_first_extended_cell_graph
           int i_cell_neight = _cell_cell[idx_neight];
           int idx_write =  _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
           _cell_cell_extended[3*idx_write  ] = i_rank;
-          _cell_cell_extended[3*idx_write+1] = i_part;
+          _cell_cell_extended[3*idx_write+1] = i_part+shift_part_g;
           _cell_cell_extended[3*idx_write+2] = i_cell_neight-1;
         }
 
@@ -924,14 +1786,51 @@ _compute_first_extended_cell_graph
         // printf("[%i] _cell_cell_extended_n[%i] = %i\n", i_part, i_cell, _cell_cell_extended_n[i_cell]);
       }
 
+      int* _unique_cell_cell_extended_idx = NULL;
+      int* _unique_cell_cell_extended_n   = NULL;
+      int* _unique_cell_cell_extended     = NULL;
+
+      /* Sort and unique inside connectivity */
+      _unique_triplet(n_cell,
+                      _cell_cell_extended_idx,
+                      _cell_cell_extended,
+                      &_unique_cell_cell_extended_idx,
+                      &_unique_cell_cell_extended_n,
+                      &_unique_cell_cell_extended);
+
+      free(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part]);
+      free(part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part]);
+      free(part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part]);
+
+      part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended_idx;
+      part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended_n;
+      part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part] = _unique_cell_cell_extended;
+
+      /*
+       * Setup a unique among all connecetvity to avoid adding same entity multiple times
+       */
+      int *_unique_order_cell_cell_extended = NULL;
+      int n_unique = _setup_unique_order_triplet(n_cell,
+                                                 _unique_cell_cell_extended_idx,
+                                                 _unique_cell_cell_extended,
+                                                 &_unique_order_cell_cell_extended);
+
+      part_ext->unique_order_cell_cell_extended  [i_depth_cur][i_part+shift_part] = _unique_order_cell_cell_extended;
+      part_ext->n_unique_order_cell_cell_extended[i_depth_cur][i_part+shift_part] = n_unique;
+
+      // PDM_log_trace_array_int(_unique_order_cell_cell_extended, _unique_cell_cell_extended_idx[n_cell]  , "_unique_order_cell_cell_extended::");
       if(0 == 1) {
-        PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell  , "t_cell_cell_extended_n::");
-        PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "t_cell_cell_extended_idx::");
-        PDM_log_trace_array_int(_cell_cell_extended, 3 * _cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
+        // PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell  , "t_cell_cell_extended_n::");
+        // PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "t_cell_cell_extended_idx::");
+        // PDM_log_trace_array_int(_cell_cell_extended, 3 * _cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
+        PDM_log_trace_array_int(part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part], n_cell  , "t_cell_cell_extended_n::");
+        PDM_log_trace_array_int(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part], n_cell+1, "t_cell_cell_extended_idx::");
+        PDM_log_trace_array_int(part_ext->cell_cell_extended    [i_depth_cur][i_part+shift_part], 3 * _cell_cell_extended_idx[n_cell]  , "t_cell_cell_extended::");
       }
 
     }
-    shift_part += part_ext->n_part[i_domain];
+    shift_part   += part_ext->n_part              [i_domain];
+    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 }
 
@@ -960,7 +1859,7 @@ _prune_cell_cell_extented
       int n_cell      = part_ext->parts[i_domain][i_part].n_cell;
       int s_tot       = _cell_cell_extended_idx[n_cell];
 
-      if( 1 == 0) {
+      if( 0 == 1) {
         PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "_cell_cell_extended_idx::");
         PDM_log_trace_array_int(_cell_cell_extended    , 3 * _cell_cell_extended_idx[n_cell], "_cell_cell_extended::");
       }
@@ -1089,8 +1988,8 @@ _generate_extended_partition_connectivity
     order_entity1_entity2[i] = i;
   }
 
-  PDM_sort_long(_sorted_entity2_ln_to_gn, order, n_entity2-1);
-  PDM_sort_long(gentity1_entity2        , order_entity1_entity2, entity1_entity2_idx[n_entity1]-1);
+  PDM_sort_long(_sorted_entity2_ln_to_gn, order                , n_entity2                     );
+  PDM_sort_long(gentity1_entity2        , order_entity1_entity2, entity1_entity2_idx[n_entity1]);
   // abort(); // Il faut trier le cell_face !!!!! --> Permet de prendre le bon signe aprés !
 
   if(0 == 1) {
@@ -1266,16 +2165,14 @@ _generate_extended_partition_connectivity
       border_lentity1_entity2[idx++] = sgn * ( pos + n_entity2 + 1 ); // Car on shift
       i_entity2_extented++;
     } else {
-      /* La face existe deja dans la partition donc soit le numero
-       *   - Comment on fait car la face peut être dans les 2 sens
-       *   -
-       */
-      // int pos_interior = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
+
+      int pos_interior2 = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
       int pos_interior = PDM_binary_search_long(g_entity2, gentity1_entity2, entity1_entity2_idx[n_entity1]);
       // printf(" Border face comming from interior %i - %i \n", pos_interior, idx);
-      assert(pos_interior != -1);
+      assert(pos_interior  != -1);
+      assert(pos_interior2 != -1);
 
-      int old_order_entity1_entity2 = order_entity1_entity2[pos_interior];
+      // int old_order_entity1_entity2 = order_entity1_entity2[pos_interior];
 
       // Keep it to check
       // int sgn       = PDM_SIGN(gentity1_entity2[old_order_entity1_entity2]);
@@ -1290,8 +2187,17 @@ _generate_extended_partition_connectivity
       // border_lentity1_entity2[idx++] = sgn * ( order[pos_interior] + 1 ); // Car le tableau est trié pas comme la partition
       // ON MET FORCEMENT L'OPPOSE
       // printf(" Rebuild from interior [%i] with gnum = "PDM_FMT_G_NUM" and pos : %i \n ", i, g_entity2, pos_interior);
+      // OLD -> FOnctionne pas pour le edge_vtx
+      // border_lentity1_entity2[idx++] = - entity1_entity2[old_order_entity1_entity2]; // Car le tableau est trié pas comme la partition
 
-      border_lentity1_entity2[idx++] = - entity1_entity2[old_order_entity1_entity2]; // Car le tableau est trié pas comme la partition
+      int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
+      int old_pos = order[pos_interior2];
+      border_lentity1_entity2[idx++] = sgn * ( old_pos + 1 );
+
+      // PDM_g_num_t old_g_num = _sorted_entity2_ln_to_gn[pos_interior2];
+      // printf("Cas 1 : border_lentity1_entity2 [%i] | Cas 2  : %i \n", - entity1_entity2[old_order_entity1_entity2], sgn * ( old_pos + 1 ));
+      // printf("Cas 1 : border_lentity1_entity2 [%i] \n", sgn * old_g_num);
+
     }
   }
   // exit(1);
@@ -1517,10 +2423,10 @@ _rebuild_connectivity
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
-  *entity2_entity2_extended_idx = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         **));
-  *entity2_entity2_extended     = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         **));
-  *border_entity2_ln_to_gn      = (PDM_g_num_t ** ) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t **));
-  *border_lentity1_entity2_idx  = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         **));
+  *entity2_entity2_extended_idx = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         *));
+  *entity2_entity2_extended     = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         *));
+  *border_entity2_ln_to_gn      = (PDM_g_num_t ** ) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  *border_lentity1_entity2_idx  = (int         ** ) malloc( n_part_loc_all_domain * sizeof(int         *));
 
   PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
                                                            n_part_loc_all_domain,
@@ -1571,7 +2477,7 @@ _rebuild_connectivity
   PDM_g_num_t **border_gentity1_entity2;
   PDM_distant_neighbor_exch(dn,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             entity1_entity2_n,
                  (void **)  gentity1_entity2,
@@ -1581,7 +2487,7 @@ _rebuild_connectivity
   int         **border_lentity1_entity2_n;
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             entity1_entity2_n,
                  (void **)  entity1_entity2,
@@ -1592,7 +2498,7 @@ _rebuild_connectivity
   int         **border_lentity1_entity2_n_tmp;
   PDM_distant_neighbor_exch(dn,
                             2 * sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             entity1_entity2_n,
                  (void **)  part_and_proc_id,
@@ -1722,7 +2628,7 @@ _rebuild_connectivity_cell_face
   /* On fait le cell_ln_to_gn par la même occasion */
   PDM_distant_neighbor_exch(dn,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             1,
                             NULL,
                  (void **)  cell_ln_to_gn,
@@ -1815,6 +2721,151 @@ _rebuild_connectivity_face_vtx
   free(n_vtx       );
   free(face_vtx_idx);
   free(face_vtx    );
+  free(vtx_ln_to_gn);
+}
+
+
+static
+void
+_rebuild_connectivity_face_edge
+(
+  PDM_part_extension_t *part_ext
+)
+{
+
+  int n_tot_all_domain = 0;
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  /* Cell face */
+  int          *n_face         = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int          *n_edge         = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int         **face_edge_idx  = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  int         **face_edge      = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  PDM_g_num_t **edge_ln_to_gn  = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      n_face        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
+      n_edge        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+      face_edge_idx [i_part+shift_part] = part_ext->parts[i_domain][i_part].face_edge_idx;
+      face_edge     [i_part+shift_part] = part_ext->parts[i_domain][i_part].face_edge;
+      edge_ln_to_gn [i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+
+  assert(part_ext->edge_edge_extended_idx == NULL);
+  assert(part_ext->edge_edge_extended     == NULL);
+  _rebuild_connectivity(part_ext,
+                        n_face,
+                        n_edge,
+                        part_ext->face_face_extended_idx,
+                        part_ext->face_face_extended,
+                        face_edge_idx,
+                        face_edge,
+                        edge_ln_to_gn,
+                       &part_ext->border_face_edge_idx,
+                       &part_ext->border_face_edge,
+                       &part_ext->edge_edge_extended_idx,
+                       &part_ext->edge_edge_extended,
+                       &part_ext->border_edge_ln_to_gn);
+
+  free(n_face       );
+  free(n_edge        );
+  free(face_edge_idx);
+  free(face_edge    );
+  free(edge_ln_to_gn );
+}
+
+
+static
+void
+_rebuild_connectivity_edge_vtx
+(
+  PDM_part_extension_t *part_ext
+)
+{
+
+  int n_tot_all_domain = 0;
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  /* Cell face */
+  int          *n_edge        = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int          *n_vtx         = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int         **edge_vtx_idx  = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  int         **edge_vtx      = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  PDM_g_num_t **vtx_ln_to_gn  = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      n_edge      [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+      n_vtx       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      edge_vtx_idx[i_part+shift_part] = (int *) malloc((n_edge[i_part+shift_part]+1) * sizeof(int));
+      edge_vtx    [i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_vtx;
+      vtx_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+
+      edge_vtx_idx[i_part+shift_part][0] = 0;
+      for(int i_edge = 0; i_edge < n_edge[i_part+shift_part]; ++i_edge ){
+        edge_vtx_idx[i_part+shift_part][i_edge+1] = edge_vtx_idx[i_part+shift_part][i_edge] + 2;
+      }
+
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+
+  assert(part_ext->vtx_vtx_extended_idx == NULL);
+  assert(part_ext->vtx_vtx_extended     == NULL);
+  _rebuild_connectivity(part_ext,
+                        n_edge,
+                        n_vtx,
+                        part_ext->edge_edge_extended_idx,
+                        part_ext->edge_edge_extended,
+                        edge_vtx_idx,
+                        edge_vtx,
+                        vtx_ln_to_gn,
+                       &part_ext->border_edge_vtx_idx,
+                       &part_ext->border_edge_vtx,
+                       &part_ext->vtx_vtx_extended_idx,
+                       &part_ext->vtx_vtx_extended,
+                       &part_ext->border_vtx_ln_to_gn);
+
+  shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      free(edge_vtx_idx  [i_part+shift_part]);
+
+      /* Generic algorithm setup a sign on edge_vtx - We remove it by swap */
+      // int pn_edge = part_ext->parts[i_domain][i_part].n_edge;
+      // int pn_edge_extented = part_ext->edge_edge_extended_idx[shift_part+i_part][pn_edge];
+      // for(int i_edge = 0; i_edge < pn_edge_extented; ++i_edge) {
+      //   int i_vtx1 = part_ext->border_edge_vtx[i_part+shift_part][2*i_edge  ];
+      //   int i_vtx2 = part_ext->border_edge_vtx[i_part+shift_part][2*i_edge+1];
+      //   if(i_vtx1 < 0) {
+      //     part_ext->border_edge_vtx[i_part+shift_part][2*i_edge  ] = PDM_ABS(i_vtx2);
+      //     part_ext->border_edge_vtx[i_part+shift_part][2*i_edge+1] = PDM_ABS(i_vtx1);
+      //   } else {
+      //     part_ext->border_edge_vtx[i_part+shift_part][2*i_edge  ] = PDM_ABS(i_vtx1);
+      //     part_ext->border_edge_vtx[i_part+shift_part][2*i_edge+1] = PDM_ABS(i_vtx2);
+      //   }
+      // }
+
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+  free(n_edge      );
+  free(n_vtx       );
+  free(edge_vtx_idx);
+  free(edge_vtx    );
   free(vtx_ln_to_gn);
 }
 
@@ -1915,7 +2966,7 @@ _rebuild_face_group
   int** border_face_group_idg;
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             face_group_n,
                   (void **) face_group_idg,
@@ -1926,7 +2977,7 @@ _rebuild_face_group
   PDM_g_num_t **border_face_group_ln_to_gn;
   PDM_distant_neighbor_exch(dn,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             face_group_n,
                   (void **) face_group_ln_to_gn,
@@ -1937,7 +2988,7 @@ _rebuild_face_group
   PDM_g_num_t **border_face_ln_to_gn_check;
   PDM_distant_neighbor_exch(dn,
                             sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
+                            PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             face_group_n,
                   (void **) face_ln_to_gn_check,
@@ -1948,7 +2999,11 @@ _rebuild_face_group
 
   /* Post treatment */
   // TODO MANAGEMENT of multiple domain
-  assert(part_ext->n_domain == 1);
+  // assert(part_ext->n_domain == 1);
+
+  if(part_ext->n_domain > 1) {
+    printf("WARNING : _rebuild_face_group is not managed with n_domain > 1 --> n_domain = %i \n", part_ext->n_domain);
+  }
 
   part_ext->border_face_group_idx      = malloc( n_part_loc_all_domain * sizeof(int         *));
   part_ext->border_face_group          = malloc( n_part_loc_all_domain * sizeof(int         *));
@@ -2093,9 +3148,11 @@ PDM_part_extension_create
   part_ext->n_entity_bound   = NULL;
   part_ext->border_cell_list = NULL;
 
-  part_ext->dist_neighbor_cell_n     = NULL;
-  part_ext->dist_neighbor_cell_idx   = NULL;
-  part_ext->dist_neighbor_cell_desc  = NULL;
+  part_ext->dist_neighbor_cell_n              = NULL;
+  part_ext->dist_neighbor_cell_idx            = NULL;
+  part_ext->dist_neighbor_cell_desc           = NULL;
+  part_ext->unique_order_dist_neighbor_cell   = NULL;
+  part_ext->n_unique_order_dist_neighbor_cell = NULL;
 
   part_ext->n_tot_part_by_domain = NULL;
 
@@ -2104,11 +3161,13 @@ PDM_part_extension_create
   part_ext->entity_cell_opp_idx = NULL;
   part_ext->entity_cell_opp     = NULL;
 
-  part_ext->cell_cell_extended_idx        = NULL;
-  part_ext->cell_cell_extended_n          = NULL;
-  part_ext->cell_cell_extended            = NULL;
-  part_ext->cell_cell_extended_pruned_idx = NULL;
-  part_ext->cell_cell_extended_pruned     = NULL;
+  part_ext->cell_cell_extended_idx            = NULL;
+  part_ext->cell_cell_extended_n              = NULL;
+  part_ext->cell_cell_extended                = NULL;
+  part_ext->unique_order_cell_cell_extended   = NULL;
+  part_ext->n_unique_order_cell_cell_extended = NULL;
+  part_ext->cell_cell_extended_pruned_idx     = NULL;
+  part_ext->cell_cell_extended_pruned         = NULL;
 
   part_ext->face_face_extended_idx        = NULL;
   part_ext->face_face_extended            = NULL;
@@ -2142,6 +3201,14 @@ PDM_part_extension_create
   part_ext->border_vtx_ln_to_gn           = NULL;
   part_ext->border_face_group_ln_to_gn    = NULL;
 
+  part_ext->pdi = NULL;
+
+  part_ext->shift_by_domain_cell       = NULL;
+  part_ext->shift_by_domain_face       = NULL;
+  part_ext->shift_by_domain_edge       = NULL;
+  part_ext->shift_by_domain_vtx        = NULL;
+  part_ext->shift_by_domain_face_group = NULL;
+
   return part_ext;
 }
 
@@ -2155,6 +3222,7 @@ PDM_part_extension_set_part
   int                   n_face,
   int                   n_face_part_bound,
   int                   n_face_group,
+  int                   n_edge,
   int                   n_vtx,
   int                  *cell_face_idx,
   int                  *cell_face,
@@ -2171,6 +3239,9 @@ PDM_part_extension_set_part
   int                  *face_part_bound_proc_idx,
   int                  *face_part_bound_part_idx,
   int                  *face_part_bound,
+  int                  *vtx_part_bound_proc_idx,
+  int                  *vtx_part_bound_part_idx,
+  int                  *vtx_part_bound,
   PDM_g_num_t          *cell_ln_to_gn,
   PDM_g_num_t          *face_ln_to_gn,
   PDM_g_num_t          *edge_ln_to_gn,
@@ -2184,6 +3255,7 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].n_face            = n_face;
   part_ext->parts[i_domain][i_part].n_face_part_bound = n_face_part_bound;
   part_ext->parts[i_domain][i_part].n_face_group      = n_face_group;
+  part_ext->parts[i_domain][i_part].n_edge            = n_edge;
   part_ext->parts[i_domain][i_part].n_vtx             = n_vtx;
 
   part_ext->parts[i_domain][i_part].cell_face_idx = cell_face_idx;
@@ -2207,6 +3279,10 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].face_part_bound_part_idx = face_part_bound_part_idx;
   part_ext->parts[i_domain][i_part].face_part_bound          = face_part_bound;
 
+  part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx = vtx_part_bound_proc_idx;
+  part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx = vtx_part_bound_part_idx;
+  part_ext->parts[i_domain][i_part].vtx_part_bound          = vtx_part_bound;
+
   part_ext->parts[i_domain][i_part].face_bound_idx      = face_bound_idx;
   part_ext->parts[i_domain][i_part].face_bound          = face_bound;
   part_ext->parts[i_domain][i_part].face_bound_ln_to_gn = face_group_ln_to_gn;
@@ -2219,6 +3295,17 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].vtx = vtx_coord;
 }
 
+
+
+void
+PDM_part_extension_part_domain_interface_shared_set
+(
+  PDM_part_extension_t        *part_ext,
+  PDM_part_domain_interface_t *pdi
+)
+{
+  part_ext->pdi = pdi;
+}
 
 /**
  *
@@ -2255,6 +3342,11 @@ PDM_part_extension_compute
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
+  if(1 == 1) {
+    _offset_parts_by_domain(part_ext, 1);
+  }
+
+
   part_ext->entity_cell_n    = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
   part_ext->entity_cell_idx  = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
   part_ext->entity_cell      = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
@@ -2265,18 +3357,22 @@ PDM_part_extension_compute
   assert(part_ext != NULL);
   // printf(" PDM_part_extension_compute : depth = %i | extend_type = %i \n", depth, part_ext->extend_type);
 
-  assert(part_ext->extend_type == PDM_EXTEND_FROM_FACE);
+  // assert(part_ext->extend_type == PDM_EXTEND_FROM_FACE);
 
   _create_cell_cell_graph(part_ext, part_ext->extend_type);
 
-  part_ext->cell_cell_extended_idx  = (int *** ) malloc( (depth + 1) * sizeof(int  **));
-  part_ext->cell_cell_extended_n    = (int *** ) malloc( (depth + 1) * sizeof(int  **));
-  part_ext->cell_cell_extended      = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->cell_cell_extended_idx            = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->cell_cell_extended_n              = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->cell_cell_extended                = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->unique_order_cell_cell_extended   = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->n_unique_order_cell_cell_extended = (int  ** ) malloc( (depth + 1) * sizeof(int   *));
 
   for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-    part_ext->cell_cell_extended_idx [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
-    part_ext->cell_cell_extended_n   [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
-    part_ext->cell_cell_extended     [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->cell_cell_extended_idx           [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->cell_cell_extended_n             [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->cell_cell_extended               [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->unique_order_cell_cell_extended  [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->n_unique_order_cell_cell_extended[i_depth] = (int  *) malloc( n_part_loc_all_domain * sizeof(int  ));
   }
 
   part_ext->cell_cell_extended_pruned_idx = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
@@ -2325,9 +3421,18 @@ PDM_part_extension_compute
   // if( 0 == 1) {
   //   _rebuild_connectivity_cell_face_debug(part_ext);
   // }
-
-  _rebuild_connectivity_cell_face(part_ext);
-  _rebuild_connectivity_face_vtx(part_ext);
+  if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+    _rebuild_connectivity_cell_face(part_ext);
+    _rebuild_connectivity_face_vtx(part_ext);
+    // _rebuild_connectivity_face_edge(part_ext);
+    // _rebuild_connectivity_edge_vtx (part_ext);
+  } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
+    _rebuild_connectivity_cell_face(part_ext);
+    _rebuild_connectivity_face_edge(part_ext);
+    _rebuild_connectivity_edge_vtx (part_ext);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+  }
 
   int     *n_vtx     = (int     * ) malloc( n_part_loc_all_domain * sizeof(int     ));
   double **vtx_coord = (double ** ) malloc( n_part_loc_all_domain * sizeof(double *));
@@ -2354,7 +3459,7 @@ PDM_part_extension_compute
 
   PDM_distant_neighbor_exch(dn_vtx,
                             sizeof(double),
-                            PDM_STRIDE_CST,
+                            PDM_STRIDE_CST_INTERLACED,
                             3,
                             NULL,
                  (void **)  vtx_coord,
@@ -2424,6 +3529,14 @@ PDM_part_extension_compute
   /* Condition limite - Face uniquement pour l'instant */
   _rebuild_face_group(part_ext);
 
+
+
+  if(1 == 1) {
+    _offset_parts_by_domain(part_ext, -1);
+    _offset_results_by_domain(part_ext);
+  }
+
+
 }
 
 
@@ -2440,6 +3553,9 @@ PDM_part_extension_free
  PDM_part_extension_t *part_ext
 )
 {
+  if (part_ext == NULL) {
+    return;
+  }
 
   if(part_ext->n_tot_part_by_domain != NULL) {
     free(part_ext->n_tot_part_by_domain);
@@ -2453,9 +3569,10 @@ PDM_part_extension_free
         free(part_ext->neighbor_idx       [i_part+shift_part]);
         free(part_ext->neighbor_desc      [i_part+shift_part]);
 
-        free(part_ext->dist_neighbor_cell_n   [i_part+shift_part]);
-        free(part_ext->dist_neighbor_cell_idx [i_part+shift_part]);
-        free(part_ext->dist_neighbor_cell_desc[i_part+shift_part]);
+        free(part_ext->dist_neighbor_cell_n           [i_part+shift_part]);
+        free(part_ext->dist_neighbor_cell_idx         [i_part+shift_part]);
+        free(part_ext->dist_neighbor_cell_desc        [i_part+shift_part]);
+        free(part_ext->unique_order_dist_neighbor_cell[i_part+shift_part]);
 
         free(part_ext->entity_cell_opp_idx[i_part+shift_part]);
         free(part_ext->entity_cell_opp_n  [i_part+shift_part]);
@@ -2463,11 +3580,11 @@ PDM_part_extension_free
 
         free(part_ext->border_cell_list    [i_part+shift_part]);
 
-        if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
-          free(part_ext->entity_cell_idx[i_part+shift_part]);
-          free(part_ext->entity_cell_n  [i_part+shift_part]);
-          free(part_ext->entity_cell    [i_part+shift_part]);
-        }
+        // if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+        free(part_ext->entity_cell_idx[i_part+shift_part]);
+        free(part_ext->entity_cell_n  [i_part+shift_part]);
+        free(part_ext->entity_cell    [i_part+shift_part]);
+        // }
 
         if(part_ext->face_face_extended_idx != NULL) {
           free(part_ext->face_face_extended_idx[i_part+shift_part]);
@@ -2546,12 +3663,10 @@ PDM_part_extension_free
 
         }
 
-        free(part_ext->cell_cell_idx[i_domain][i_part]);
-        free(part_ext->cell_cell    [i_domain][i_part]);
+        free(part_ext->cell_cell_idx[i_part+shift_part]);
+        free(part_ext->cell_cell    [i_part+shift_part]);
 
       }
-      free(part_ext->cell_cell_idx[i_domain]);
-      free(part_ext->cell_cell    [i_domain]);
 
       shift_part += part_ext->n_part[i_domain];
     }
@@ -2638,20 +3753,25 @@ PDM_part_extension_free
     int shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        free(part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part]);
-        free(part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part]);
-        free(part_ext->cell_cell_extended    [i_depth][i_part+shift_part]);
+        free(part_ext->cell_cell_extended_idx         [i_depth][i_part+shift_part]);
+        free(part_ext->cell_cell_extended_n           [i_depth][i_part+shift_part]);
+        free(part_ext->cell_cell_extended             [i_depth][i_part+shift_part]);
+        free(part_ext->unique_order_cell_cell_extended[i_depth][i_part+shift_part]);
       }
       shift_part += part_ext->n_part[i_domain];
     }
-    free(part_ext->cell_cell_extended_idx[i_depth]);
-    free(part_ext->cell_cell_extended_n  [i_depth]);
-    free(part_ext->cell_cell_extended    [i_depth]);
+    free(part_ext->cell_cell_extended_idx           [i_depth]);
+    free(part_ext->cell_cell_extended_n             [i_depth]);
+    free(part_ext->cell_cell_extended               [i_depth]);
+    free(part_ext->unique_order_cell_cell_extended  [i_depth]);
+    free(part_ext->n_unique_order_cell_cell_extended[i_depth]);
   }
 
   free(part_ext->cell_cell_extended_idx);
   free(part_ext->cell_cell_extended_n);
   free(part_ext->cell_cell_extended);
+  free(part_ext->unique_order_cell_cell_extended);
+  free(part_ext->n_unique_order_cell_cell_extended);
 
   /* Only shortcut of user data */
   free(part_ext->entity_cell_idx    );
@@ -2661,6 +3781,8 @@ PDM_part_extension_free
   free(part_ext->dist_neighbor_cell_n   );
   free(part_ext->dist_neighbor_cell_idx );
   free(part_ext->dist_neighbor_cell_desc);
+  free(part_ext->unique_order_dist_neighbor_cell);
+  free(part_ext->n_unique_order_dist_neighbor_cell);
 
   /* Allocated by distant neightbor */
   free(part_ext->entity_cell_opp_idx);
@@ -2686,10 +3808,41 @@ PDM_part_extension_free
   }
   free(part_ext->parts);
 
+  if(part_ext->shift_by_domain_cell != NULL){
+    free(part_ext->shift_by_domain_cell);
+  }
+  if(part_ext->shift_by_domain_face != NULL){
+    free(part_ext->shift_by_domain_face);
+  }
+  if(part_ext->shift_by_domain_edge != NULL){
+    free(part_ext->shift_by_domain_edge);
+  }
+  if(part_ext->shift_by_domain_vtx != NULL){
+    free(part_ext->shift_by_domain_vtx);
+  }
+
+  if(part_ext->shift_by_domain_face_group != NULL){
+    free(part_ext->shift_by_domain_face_group);
+  }
 
   free(part_ext);
 }
 
+
+/**
+ *
+ * \brief Get connectivity
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
 
 int
 PDM_part_extension_connectivity_get
@@ -2752,6 +3905,20 @@ PDM_part_extension_connectivity_get
 }
 
 
+/**
+ *
+ * \brief Get global ids
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_ln_to_gn_get
 (
@@ -2807,6 +3974,23 @@ PDM_part_extension_ln_to_gn_get
   return n_entity;
 }
 
+
+/**
+ *
+ * \brief Get groups
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_group_get
 (
@@ -2859,6 +4043,20 @@ PDM_part_extension_group_get
 
   return n_entity;
 }
+
+
+/**
+ *
+ * \brief Get vertex coordinates
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
+ *
+ * \return  n_vtx  Number of vertices
+ *
+ */
 
 int
 PDM_part_extension_coord_get

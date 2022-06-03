@@ -149,11 +149,17 @@ PDM_dmesh_create
   dmesh->dbound_idx      = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
   dmesh->is_owner_bound  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
 
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
+    dmesh->n_group_bnd[i] = 0;
+  }
+
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     dmesh->is_owner_bound[i] = PDM_FALSE;
     dmesh->dbound        [i] = NULL;
     dmesh->dbound_idx    [i] = NULL;
   }
+
+  dmesh->is_computed_g_extents = PDM_FALSE;
 
   return dmesh;
 }
@@ -283,6 +289,16 @@ PDM_dmesh_data_get
   *dface_join      = dmesh->_dface_join;
 }
 
+void
+PDM_dmesh_vtx_coord_get
+(
+       PDM_dmesh_t   *dmesh,
+ const double       **dvtx_coord
+)
+{
+  *dvtx_coord      = dmesh->_dvtx_coord;
+}
+
 
 int
 PDM_dmesh_connectivity_get
@@ -365,7 +381,7 @@ PDM_dmesh_bound_get
   *connect     = dmesh->dbound    [bound_type];
   *connect_idx = dmesh->dbound_idx[bound_type];
 
-  return dmesh->n_bnd;
+  return dmesh->n_group_bnd[bound_type];
 }
 
 
@@ -390,6 +406,9 @@ PDM_dmesh_distrib_get
    case PDM_MESH_ENTITY_VERTEX:
      *distrib = dmesh->vtx_distrib;
      break;
+   default:
+    PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_distrib_get invalid entity_type %d\n", entity_type);
+    break;
    }
    int n_rank;
    PDM_MPI_Comm_size(dmesh->comm, &n_rank);
@@ -411,6 +430,9 @@ PDM_dmesh_free
  PDM_dmesh_t         *dmesh
 )
 {
+  if (dmesh == NULL) {
+    return;
+  }
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;
@@ -458,9 +480,10 @@ PDM_dmesh_free
 
       if(dmesh->is_owner_bound[i] == PDM_TRUE) {
 
-        printf(" dmesh_free :: %i \n", i);
-        assert(dmesh->dbound[i] != NULL);
-        free(dmesh->dbound[i]);
+        //printf(" dmesh_free :: %i \n", i);
+        if(dmesh->dbound[i] != NULL) {
+          free(dmesh->dbound[i]);
+        }
         if(dmesh->dbound_idx[i] != NULL){
           free(dmesh->dbound_idx[i]);
         }
@@ -502,6 +525,55 @@ PDM_dmesh_free
   }
 
   free (dmesh);
+}
+
+
+
+const double *
+PDM_dmesh_global_extents_get
+(
+ PDM_dmesh_t         *dmesh
+ )
+{
+  if (dmesh->is_computed_g_extents == PDM_FALSE) {
+
+    double l_min[3] = { HUGE_VAL};
+    double l_max[3] = {-HUGE_VAL};
+
+    for (int i = 0; i < dmesh->dn_vtx; i++) {
+      for (int j = 0; j < 3; j++) {
+        double x = dmesh->_dvtx_coord[3*i + j];
+        l_min[j] = PDM_MIN(l_min[j], x);
+        l_max[j] = PDM_MAX(l_max[j], x);
+      }
+    }
+
+    PDM_MPI_Allreduce(l_min, dmesh->g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, dmesh->comm);
+    PDM_MPI_Allreduce(l_max, dmesh->g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, dmesh->comm);
+
+    dmesh->is_computed_g_extents = PDM_TRUE;
+  }
+
+  return dmesh->g_extents;
+}
+
+
+
+void
+PDM_dmesh_bound_set
+(
+ PDM_dmesh_t      *dmesh,
+ PDM_bound_type_t  bound_type,
+ int               n_bound,
+ PDM_g_num_t      *connect,
+ int              *connect_idx
+)
+{
+  assert(dmesh != NULL);
+
+  dmesh->n_group_bnd[bound_type] = n_bound;
+  dmesh->dbound[bound_type]      = connect;
+  dmesh->dbound_idx[bound_type]  = connect_idx;
 }
 
 

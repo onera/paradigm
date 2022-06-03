@@ -3,6 +3,8 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdlib.h>
+#include <limits.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -13,6 +15,8 @@
 #include "pdm_binary_search.h"
 #include "pdm_array.h"
 #include "pdm_priv.h"
+#include "pdm_logging.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,15 +37,224 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
+static  double t_elaps[2] = {0., 0.};
+static  double t_cpu[2] = {0., 0.};
+static  PDM_timer_t *t_timer[2] = {NULL, NULL};
+
+static  int min_exch_rank[2] = {INT_MAX, INT_MAX};
+static  int max_exch_rank[2] = {-1, -1};
+
+static  unsigned long long exch_data[2] = {0, 0};
+
+static int n_btp = 0;
+
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+
+static
+void
+_comm_graph_statistics
+(
+ PDM_block_to_part_t* btp
+)
+{
+  /*
+   *  Statistic of send --> requested_data_idx
+   */
+  int min_n_rank_connected  = btp->n_rank+1;
+  int max_n_rank_connected  = -1;
+
+  int n_connect_rank = 0;
+  for(int i = 0; i < btp->n_rank; ++i) {
+    if(btp->requested_data_n[i] > 0) {
+      n_connect_rank++;
+    }
+  }
+
+  double d_n_rank_connected = n_connect_rank;
+  double mean_n_rank_connected = 0;
+  PDM_MPI_Allreduce(&n_connect_rank    , &max_n_rank_connected , 1, PDM_MPI_INT   , PDM_MPI_MAX, btp->comm);
+  PDM_MPI_Allreduce(&n_connect_rank    , &min_n_rank_connected , 1, PDM_MPI_INT   , PDM_MPI_MIN, btp->comm);
+  PDM_MPI_Allreduce(&d_n_rank_connected, &mean_n_rank_connected, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, btp->comm);
+
+  mean_n_rank_connected = mean_n_rank_connected/btp->n_rank;
+
+  if(btp->i_rank == 0) {
+    printf("PDM_block_to_part requested statistics : [min/max/mean] = %i / %i / %12.5e \n", min_n_rank_connected, max_n_rank_connected, mean_n_rank_connected);
+  }
+
+  n_connect_rank = 0;
+  for(int i = 0; i < btp->n_rank; ++i) {
+    if(btp->distributed_data_n[i] > 0) {
+      n_connect_rank++;
+    }
+  }
+
+  d_n_rank_connected = n_connect_rank;
+  mean_n_rank_connected = 0;
+  PDM_MPI_Allreduce(&n_connect_rank    , &max_n_rank_connected , 1, PDM_MPI_INT   , PDM_MPI_MAX, btp->comm);
+  PDM_MPI_Allreduce(&n_connect_rank    , &min_n_rank_connected , 1, PDM_MPI_INT   , PDM_MPI_MIN, btp->comm);
+  PDM_MPI_Allreduce(&d_n_rank_connected, &mean_n_rank_connected, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, btp->comm);
+
+  mean_n_rank_connected = mean_n_rank_connected/btp->n_rank;
+
+  if(btp->i_rank == 0) {
+    printf("PDM_block_to_part to send statistics : [min/max/mean] = %i / %i / %12.5e \n", min_n_rank_connected, max_n_rank_connected, mean_n_rank_connected);
+  }
+
+}
 
 
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Reset global statistic
+ *
+ */
+
+void
+PDM_block_to_part_global_statistic_reset
+(
+)
+{
+  for (int i = 0; i < 2; i++) {
+    t_elaps[i] = 0;
+    t_cpu[i] = 0;
+    min_exch_rank[i] = INT_MAX;
+    max_exch_rank[i] = -1;
+    exch_data[i] = 0;
+  }
+}
+
+
+/**
+ *
+ * \brief Get global timer in part to block
+ *
+ * \param [in]   comm                 MPI communicator
+ * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
+ * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
+ * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
+ * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
+ * \param [out]  min_exch_data_send   Global min sent data for a rank 
+ * \param [out]  min_exch_data_recv   Global min received data for a rank
+ * \param [out]  max_exch_data_send   Global max sent data for a rank
+ * \param [out]  max_exch_data_recv   Global max received data for a rank
+ * 
+ */
+
+void
+PDM_block_to_part_global_statistic_get
+(
+ PDM_MPI_Comm comm,
+ int *min_exch_rank_send,
+ int *min_exch_rank_recv,
+ int *max_exch_rank_send,
+ int *max_exch_rank_recv,
+ unsigned long long *min_exch_data_send,
+ unsigned long long *min_exch_data_recv,
+ unsigned long long *max_exch_data_send,
+ unsigned long long *max_exch_data_recv
+)
+{
+  unsigned long long max_exch_data[2];
+  unsigned long long min_exch_data[2];
+
+  PDM_MPI_Allreduce (exch_data, min_exch_data, 2,
+                     PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MIN, comm);
+  
+  PDM_MPI_Allreduce (exch_data, max_exch_data, 2,
+                     PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MAX, comm);
+
+  *min_exch_data_send = min_exch_data[0];
+  *min_exch_data_recv = min_exch_data[1];
+  *max_exch_data_send = max_exch_data[0];
+  *max_exch_data_recv = max_exch_data[1];
+
+
+  int max_max_exch_rank[2];
+  int min_min_exch_rank[2];
+
+  PDM_MPI_Allreduce (min_exch_rank, min_min_exch_rank, 2,
+                     PDM_MPI_INT, PDM_MPI_MIN, comm);
+  
+  PDM_MPI_Allreduce (max_exch_rank, max_max_exch_rank, 2,
+                     PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  *min_exch_rank_send = min_min_exch_rank[0];
+  *min_exch_rank_recv = min_min_exch_rank[1]; 
+  *max_exch_rank_send = max_max_exch_rank[0]; 
+  *max_exch_rank_recv = max_max_exch_rank[1];
+
+}
+
+
+/**
+ *
+ * \brief Get global timer in block to part
+ *
+ * \param [in]   comm              MPI communicator
+ * \param [out]  min_elaps         Min elapsed time
+ * \param [out]  max_elaps         Max elapsed time
+ * \param [out]  min_cpu           Min cpu time
+ * \param [out]  max_cpu           Max cpu time
+ * \param [out]  min_elaps_create  Global min elapsed for create function
+ * \param [out]  max_elaps_create  Global max elapsed for create function
+ * \param [out]  min_cpu_create    Global min cpu for create function
+ * \param [out]  max_cpu_create    Global max cpu for create function
+ * \param [out]  min_elaps_exch    Global min elapsed for exch function
+ * \param [out]  max_elaps_exch    Global max elapsed for exch function
+ * \param [out]  min_cpu_exch      Global min cpu for exch function
+ * \param [out]  max_cpu_exch      Global max cpu for exch function
+ * 
+ */
+
+void
+PDM_block_to_part_global_timer_get
+(
+ PDM_MPI_Comm comm,
+ double       *min_elaps_create,
+ double       *max_elaps_create,
+ double       *min_cpu_create,
+ double       *max_cpu_create,
+ double       *min_elaps_exch,
+ double       *max_elaps_exch,
+ double       *min_cpu_exch,
+ double       *max_cpu_exch
+)
+{
+
+  double min_elaps[2];
+  double max_elaps[2];
+  double min_cpu[2];
+  double max_cpu[2];
+
+  PDM_MPI_Allreduce (t_elaps, min_elaps, 2,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  
+  PDM_MPI_Allreduce (t_elaps, max_elaps, 2,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  PDM_MPI_Allreduce (t_cpu, min_cpu, 2,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  
+  PDM_MPI_Allreduce (t_cpu, max_cpu, 2,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  *min_elaps_create  = min_elaps[0];
+  *max_elaps_create  = max_elaps[0];
+  *min_cpu_create    = min_cpu[0];
+  *max_cpu_create    = max_cpu[0];
+  *min_elaps_exch    = min_elaps[1];
+  *max_elaps_exch    = max_elaps[1];
+  *min_cpu_exch      = min_cpu[1];
+  *max_cpu_exch      = max_cpu[1];
+
+}
 
 /**
  *
@@ -58,11 +271,10 @@ extern "C" {
  *
  */
 
-
 PDM_block_to_part_t *
 PDM_block_to_part_create_cf
 (
- const PDM_g_num_t    *block_distrib_idx,
+ const PDM_g_num_t     *block_distrib_idx,
  const PDM_g_num_t    **gnum_elt,
  const int            *n_elt,
  const int             n_part,
@@ -73,6 +285,90 @@ PDM_block_to_part_create_cf
   return PDM_block_to_part_create (block_distrib_idx, gnum_elt, n_elt, n_part, _comm);
 }
 
+
+PDM_block_to_part_t *
+PDM_block_to_part_create_from_sparse_block
+(
+ const PDM_g_num_t     *delt_gnum,  // Should be betwenn [1, N]
+ const int              dn_elt,
+ const PDM_g_num_t    **gnum_elt,
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
+)
+{
+  int n_rank = -1;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  PDM_g_num_t* _block_distrib_idx = malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t max_g_num = 0;
+
+  if(dn_elt > 0) {
+    max_g_num = delt_gnum[dn_elt-1];
+  }
+
+  PDM_g_num_t max_part_g_num = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i = 0; i < n_elt[i_part]; ++i) {
+      PDM_g_num_t g_num = PDM_ABS(gnum_elt[i_part][i]);
+      max_part_g_num = PDM_MAX(max_part_g_num, g_num);
+    }
+  }
+
+  PDM_MPI_Allgather(&max_g_num,
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    (&_block_distrib_idx[1]),
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    comm);
+
+  _block_distrib_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    _block_distrib_idx[i+1] = PDM_MAX(_block_distrib_idx[i+1], _block_distrib_idx[i]);
+  }
+
+  PDM_g_num_t gmax_part_g_num = 0;
+  PDM_MPI_Allreduce(&max_part_g_num, &gmax_part_g_num, 1,
+                    PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+  _block_distrib_idx[n_rank] = PDM_MAX(_block_distrib_idx[n_rank], gmax_part_g_num+1);
+
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(_block_distrib_idx,
+                                                      gnum_elt,
+                                                      n_elt,
+                                                      n_part,
+                                                      comm);
+  free(_block_distrib_idx);
+  /*
+   *  Post traitement du distrib_data
+   */
+  assert(btp->idx_partial         == NULL);
+  assert(btp->n_elt_partial_block == 0);
+  btp->idx_partial = (int * ) malloc( btp->distributed_data_idx[btp->n_rank] * sizeof(int));
+
+
+  // PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
+  // PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
+
+  for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
+    int lid = btp->distributed_data[i];
+    PDM_g_num_t g_num_send = lid + btp->block_distrib_idx[btp->i_rank] + 1;
+    if(dn_elt > 0) {
+      int idx_in_partial_block = PDM_binary_search_long(g_num_send, delt_gnum, dn_elt);
+      btp->idx_partial[i] = idx_in_partial_block;
+    } else {
+      btp->idx_partial[i] = -1;
+    }
+  }
+  btp->n_elt_partial_block = dn_elt;
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(btp->idx_partial, btp->distributed_data_idx[btp->n_rank], "idx_partial : ");
+  }
+
+  return btp;
+}
 
 
 PDM_block_to_part_t *
@@ -86,12 +382,24 @@ PDM_block_to_part_create
 )
 {
 
+  if (n_btp == 0) {
+    t_timer[0] = PDM_timer_create ();
+    t_timer[1] = PDM_timer_create ();
+  }
+  n_btp++;
+
+  double t1_elaps = PDM_timer_elapsed(t_timer[0]);
+  double t1_cpu = PDM_timer_cpu(t_timer[0]);
+  PDM_timer_resume(t_timer[0]);
+
   PDM_block_to_part_t *btp =
     (PDM_block_to_part_t *) malloc (sizeof(PDM_block_to_part_t));
 
   btp->comm = comm;
 
   btp->pttopt_comm = 0;
+  btp->n_elt_partial_block = 0;
+  btp->idx_partial         = NULL;
 
   PDM_MPI_Comm_size (comm, &btp->n_rank);
   PDM_MPI_Comm_rank (comm, &btp->i_rank);
@@ -130,9 +438,10 @@ PDM_block_to_part_create
 
     for (int j = 0; j < n_elt[i]; j++) {
 
-      int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
+      int ind = PDM_binary_search_gap_long (PDM_ABS(_gnum_elt[j]) - 1,
                                             block_distrib_idx,
                                             btp->n_rank + 1);
+      btp->ind[i][j] = ind; // Temporary use of this array to avoid le PDM_binary_search_gap_long
       // printf(" [%i][%i] --> ind = %i (g_num = %i )\n", i, j, ind, (int) _gnum_elt[j]);
       btp->requested_data_n[ind]++;
 
@@ -159,14 +468,15 @@ PDM_block_to_part_create
     // printf("n_elt[%i] = %i \n", i, (int) n_elt[i]);
     for (int j = 0; j < n_elt[i]; j++) {
 
-      int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
-                                            block_distrib_idx,
-                                            btp->n_rank + 1);
+      // int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
+      //                                       block_distrib_idx,
+      //                                       btp->n_rank + 1);
+      int ind = btp->ind[i][j];
       int idx = btp->requested_data_idx[ind] + btp->requested_data_n[ind]++;
 
       btp->ind[i][j] = idx;
 
-      PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - block_distrib_idx[ind];
+      PDM_g_num_t _requested_data = PDM_ABS(_gnum_elt[j]) - 1 - block_distrib_idx[ind];
       // printf("requested_data[%i] = %i / size_max = %i and gn_m = %i \n", idx, (int) _requested_data, s_requested_data, (int)_gnum_elt[j]);
       requested_data[idx] = (int) _requested_data;
     }
@@ -198,6 +508,10 @@ PDM_block_to_part_create
     btp->pttopt_comm = 1;
   }
 
+  if(0 == 1) {
+    _comm_graph_statistics(btp);
+  }
+
   //PDM_log_trace_array_long(btp->distributed_data_idx, btp->n_rank+1, "block_distrib");
 
   int tmp;
@@ -205,6 +519,32 @@ PDM_block_to_part_create
   btp->pttopt_comm = tmp;
 
   free (requested_data);
+
+
+  int n_rank_recv = 0;
+  int n_rank_send = 0;
+
+  for (int i = 0; i < btp->n_rank; i++) {
+    if (btp->i_rank != i && btp->distributed_data_n[i] > 0) {
+      n_rank_recv += 1;
+    }
+    if (btp->i_rank != i && btp->requested_data_n[i] > 0) {
+      n_rank_send += 1;
+    }
+  }
+
+  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send); 
+  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv); 
+  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send); 
+  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv); 
+
+
+  PDM_timer_hang_on(t_timer[0]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[0] );
+  double t2_cpu = PDM_timer_cpu(t_timer[0]);
+
+  t_elaps[0] += (t2_elaps - t1_elaps);
+  t_cpu[0] += (t2_cpu - t1_cpu);
 
   return (PDM_block_to_part_t *) btp;
 
@@ -227,7 +567,7 @@ PDM_block_to_part_create
  */
 
 void
-PDM_block_to_part_exch
+PDM_block_to_part_exch_in_place
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,
@@ -238,6 +578,11 @@ PDM_block_to_part_exch
  void               **part_data
 )
 {
+
+  double t1_elaps = PDM_timer_elapsed(t_timer[1]);
+  double t1_cpu = PDM_timer_cpu(t_timer[1]);
+  PDM_timer_resume(t_timer[1]);
+
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data = (unsigned char **) part_data;
 
@@ -278,7 +623,7 @@ PDM_block_to_part_exch
    */
 
   int *recv_stride = NULL;
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     int s_send_stride = btp->distributed_data_idx[btp->n_rank];
 
@@ -287,8 +632,18 @@ PDM_block_to_part_exch
     int *send_stride = (int *) malloc (sizeof(int) * s_send_stride);
     recv_stride = (int *) malloc (sizeof(int) * s_recv_stride);
 
-    for (int i = 0; i < s_send_stride; i++) {
-      send_stride[i] = block_stride[btp->distributed_data[i]];
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_send_stride; i++) {
+        send_stride[i] = block_stride[btp->distributed_data[i]];
+      }
+    } else {                       // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_send_stride; i++) {
+        if(btp->idx_partial[i] != -1) {
+          send_stride[i] = block_stride[btp->idx_partial[i]];
+        } else {
+          send_stride[i] = 0;
+        }
+      }
     }
 
     PDM_MPI_Alltoallv (send_stride,
@@ -350,7 +705,11 @@ PDM_block_to_part_exch
       }
     }
 
-    block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    if(btp->idx_partial == NULL) {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    } else {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, btp->n_elt_partial_block);
+    }
     free(send_stride);
   }
 
@@ -442,33 +801,66 @@ PDM_block_to_part_exch
           int s_distributed_active_rank = btp->distributed_data_idx[active_rank[i]] +
                                           btp->distributed_data_n [active_rank[i]];
 
-          if (t_stride == PDM_STRIDE_VAR) {
+          if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
             int idx1 = 0;
-            for (int j = btp->distributed_data_idx[active_rank[i]];
-                 j < s_distributed_active_rank; j++) {
 
-              int ind =  block_stride_idx[btp->distributed_data[j]] * (int) s_data;
+            if(btp->idx_partial == NULL) { // block is full
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
 
-              int s_block_unit =  block_stride[btp->distributed_data[j]] * (int) s_data;
+                int ind =  block_stride_idx[btp->distributed_data[j]] * (int) s_data;
 
-              unsigned char *_block_data_deb = _block_data + ind;
+                int s_block_unit =  block_stride[btp->distributed_data[j]] * (int) s_data;
 
-              for (int k = 0; k < s_block_unit; k++) {
-                send_buffer[i][idx1++] = _block_data_deb[k];
+                unsigned char *_block_data_deb = _block_data + ind;
+
+                for (int k = 0; k < s_block_unit; k++) {
+                  send_buffer[i][idx1++] = _block_data_deb[k];
+                }
+              }
+            } else {  // block is partial and describe by delt_gnum
+
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+
+                if(btp->idx_partial[j] != -1) {
+                  int ind =  block_stride_idx[btp->idx_partial[j]] * (int) s_data;
+                  int s_block_unit =  block_stride[btp->idx_partial[j]] * (int) s_data;
+                  unsigned char *_block_data_deb = _block_data + ind;
+
+                  for (int k = 0; k < s_block_unit; k++) {
+                    send_buffer[i][idx1++] = _block_data_deb[k];
+                  }
+                }
               }
             }
+
           }
           else {
             int cst_stride = *block_stride;
             int s_block_unit = cst_stride * (int) s_data;
 
             int idx1 = 0;
-            for (int j = btp->distributed_data_idx[active_rank[i]];
-                 j < s_distributed_active_rank; j++) {
-              int ind = btp->distributed_data[j];
-              unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-              for (int k = 0; k < s_block_unit; k++) {
-                send_buffer[i][idx1++] = _block_data_deb[k];
+
+            if(btp->idx_partial == NULL) { // block is full
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+                int ind = btp->distributed_data[j];
+                unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+                for (int k = 0; k < s_block_unit; k++) {
+                  send_buffer[i][idx1++] = _block_data_deb[k];
+                }
+              }
+            } else {  // block is partial and describe by delt_gnum
+              for (int j = btp->distributed_data_idx[active_rank[i]];
+                       j < s_distributed_active_rank; j++) {
+                int ind = btp->idx_partial[j];
+                if(ind != -1) {
+                  unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+                  for (int k = 0; k < s_block_unit; k++) {
+                    send_buffer[i][idx1++] = _block_data_deb[k];
+                  }
+                }
               }
             }
           }
@@ -501,6 +893,13 @@ PDM_block_to_part_exch
       }
     }
 
+    for (int i = 0; i < btp->n_rank; i++) {
+      if (btp->i_rank != i) {
+        exch_data[1] += n_recv_buffer[i];
+        exch_data[0] += n_send_buffer[i];
+      }
+    }
+
     free (s_request);
     free (r_request);
     free (active_rank);
@@ -509,14 +908,28 @@ PDM_block_to_part_exch
 
   else {
 
-    if (t_stride == PDM_STRIDE_VAR) {
+    if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
       int idx1 = 0;
-      for (int i = 0; i < s_distributed_data; i++) {
-        int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
-        int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
-        unsigned char *_block_data_deb = _block_data + ind;
-        for (int k = 0; k < s_block_unit; k++) {
-          send_buffer[0][idx1++] = _block_data_deb[k];
+
+      if(btp->idx_partial == NULL) { // block is full
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
+          int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
+          unsigned char *_block_data_deb = _block_data + ind;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[0][idx1++] = _block_data_deb[k];
+          }
+        }
+      } else { // block is partial and describe by delt_gnum
+        for (int i = 0; i < s_distributed_data; i++) {
+          if(btp->idx_partial[i] != -1) {
+            int ind =  block_stride_idx[btp->idx_partial[i]] * (int) s_data;
+            int s_block_unit =  block_stride[btp->idx_partial[i]] * (int) s_data;
+            unsigned char *_block_data_deb = _block_data + ind;
+            for (int k = 0; k < s_block_unit; k++) {
+              send_buffer[0][idx1++] = _block_data_deb[k];
+            }
+          }
         }
       }
     }
@@ -524,11 +937,24 @@ PDM_block_to_part_exch
       int idx1 = 0;
       int cst_stride = *block_stride;
       int s_block_unit = cst_stride * (int) s_data;
-      for (int i = 0; i < s_distributed_data; i++) {
-        int ind = btp->distributed_data[i];
-        unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-        for (int k = 0; k < s_block_unit; k++) {
-          send_buffer[0][idx1++] = _block_data_deb[k];
+
+      if(btp->idx_partial == NULL) { // block is full
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind = btp->distributed_data[i];
+          unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[0][idx1++] = _block_data_deb[k];
+          }
+        }
+      } else { // block is partial and describe by delt_gnum
+        for (int i = 0; i < s_distributed_data; i++) {
+          int ind = btp->idx_partial[i];
+          if(ind != -1) {
+            unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+            for (int k = 0; k < s_block_unit; k++) {
+              send_buffer[0][idx1++] = _block_data_deb[k];
+            }
+          }
         }
       }
     }
@@ -542,6 +968,14 @@ PDM_block_to_part_exch
                         i_recv_buffer,
                         PDM_MPI_BYTE,
                         btp->comm);
+  
+    for (int i = 0; i < btp->n_rank; i++) {
+      if (btp->i_rank != i) {
+        exch_data[1] += n_recv_buffer[i];
+        exch_data[0] += n_send_buffer[i];
+      }
+    }
+
   }
 
   for (int i = 0; i < n_active_buffer; i++) {
@@ -561,7 +995,7 @@ PDM_block_to_part_exch
    * Partitions filling
    */
 
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     int s_recv_elt = btp->requested_data_idx[n_rank1] +
       btp->requested_data_n[n_rank1];
@@ -597,7 +1031,7 @@ PDM_block_to_part_exch
     free (recv_stride);
   }
 
-  else if (t_stride == PDM_STRIDE_CST) {
+  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
     const int cst_stride = *block_stride;
     const int s_block_unit = cst_stride * (int) s_data;
@@ -615,6 +1049,13 @@ PDM_block_to_part_exch
       }
     }
   }
+
+  PDM_timer_hang_on(t_timer[1]);
+  double t2_elaps = PDM_timer_elapsed(t_timer[1]);
+  double t2_cpu = PDM_timer_cpu(t_timer[1]);
+
+  t_elaps[1] += (t2_elaps - t1_elaps);
+  t_cpu[1] += (t2_cpu - t1_cpu);
 
   free(recv_buffer);
 
@@ -639,7 +1080,7 @@ PDM_block_to_part_exch
  */
 
 void
-PDM_block_to_part_exch2
+PDM_block_to_part_exch
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,
@@ -685,7 +1126,7 @@ PDM_block_to_part_exch2
   int *recv_stride = NULL;
   int **_part_stride = NULL;
 
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     int s_send_stride = btp->distributed_data_idx[btp->n_rank];
 
@@ -694,8 +1135,18 @@ PDM_block_to_part_exch2
     int *send_stride = (int *) malloc (sizeof(int) * s_send_stride);
     recv_stride = (int *) malloc (sizeof(int) * s_recv_stride);
 
-    for (int i = 0; i < s_send_stride; i++) {
-      send_stride[i] = block_stride[btp->distributed_data[i]];
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_send_stride; i++) {
+        send_stride[i] = block_stride[btp->distributed_data[i]];
+      }
+    } else {                       // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_send_stride; i++) {
+        if(btp->idx_partial[i] != -1) {
+          send_stride[i] = block_stride[btp->idx_partial[i]];
+        } else {
+          send_stride[i] = 0;
+        }
+      }
     }
 
     PDM_MPI_Alltoallv (send_stride,
@@ -779,18 +1230,39 @@ PDM_block_to_part_exch2
     // }
 
     int idx1 = 0;
+    int *block_stride_idx = NULL;
+    if(btp->idx_partial == NULL) {
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    } else {
+      // printf("btp->n_elt_partial_block = %i \n", btp->n_elt_partial_block);
+      block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, btp->n_elt_partial_block);
+    }
 
-    int *block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, n_elt_block);
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_distributed_data; i++) {
 
-    for (int i = 0; i < s_distributed_data; i++) {
+        int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
 
-      int ind =  block_stride_idx[btp->distributed_data[i]] * (int) s_data;
+        int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
 
-      int s_block_unit =  block_stride[btp->distributed_data[i]] * (int) s_data;
+        unsigned char *_block_data_deb = _block_data + ind;
+        for (int k = 0; k < s_block_unit; k++) {
+          send_buffer[idx1++] = _block_data_deb[k];
+        }
+      }
+    } else { // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_distributed_data; i++) {
 
-      unsigned char *_block_data_deb = _block_data + ind;
-      for (int k = 0; k < s_block_unit; k++) {
-        send_buffer[idx1++] = _block_data_deb[k];
+        if(btp->idx_partial[i] != -1) {
+          int ind =  block_stride_idx[btp->idx_partial[i]] * (int) s_data;
+
+          int s_block_unit =  block_stride[btp->idx_partial[i]] * (int) s_data;
+
+          unsigned char *_block_data_deb = _block_data + ind;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[idx1++] = _block_data_deb[k];
+          }
+        }
       }
     }
     free(send_stride);
@@ -799,7 +1271,7 @@ PDM_block_to_part_exch2
 
   }
 
-  else if (t_stride == PDM_STRIDE_CST) {
+  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
     int cst_stride = *block_stride;
     int s_block_unit = cst_stride * (int) s_data;
@@ -821,11 +1293,24 @@ PDM_block_to_part_exch2
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
     int idx1 = 0;
-    for (int i = 0; i < s_distributed_data; i++) {
-      int ind = btp->distributed_data[i];
-      unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-      for (int k = 0; k < s_block_unit; k++) {
-        send_buffer[idx1++] = _block_data_deb[k];
+
+    if(btp->idx_partial == NULL) { // block is full
+      for (int i = 0; i < s_distributed_data; i++) {
+        int ind = btp->distributed_data[i];
+        unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+        for (int k = 0; k < s_block_unit; k++) {
+          send_buffer[idx1++] = _block_data_deb[k];
+        }
+      }
+    } else { // block is partial and describe by delt_gnum
+      for (int i = 0; i < s_distributed_data; i++) {
+        int ind = btp->idx_partial[i];
+        if(ind != -1) {
+          unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
+          for (int k = 0; k < s_block_unit; k++) {
+            send_buffer[idx1++] = _block_data_deb[k];
+          }
+        }
       }
     }
   }
@@ -857,7 +1342,7 @@ PDM_block_to_part_exch2
   *part_data = malloc(sizeof(unsigned char *) * btp->n_part);
   _part_data = (*(unsigned char ***) part_data);
 
-  if (t_stride == PDM_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     int s_recv_elt = btp->requested_data_idx[n_rank1] +
                      btp->requested_data_n[n_rank1];
@@ -897,7 +1382,7 @@ PDM_block_to_part_exch2
     free (recv_stride);
   }
 
-  else if (t_stride == PDM_STRIDE_CST) {
+  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
     const int cst_stride = *block_stride;
     const int s_block_unit = cst_stride * (int) s_data;
@@ -952,7 +1437,17 @@ PDM_block_to_part_free
   free (btp->requested_data_idx);
   free (btp->requested_data_n);
 
+  if(btp->idx_partial != NULL) {
+    free(btp->idx_partial);
+  }
+
   free (btp);
+
+  n_btp--;
+  if (n_btp == 0) {
+    PDM_timer_free(t_timer[0]);
+    PDM_timer_free(t_timer[1]);
+  }
 
   return NULL;
 }
@@ -976,6 +1471,51 @@ PDM_block_to_part_gnum_idx_get
 )
 {
   return (PDM_l_num_t) (gNum - 1 - btp->block_distrib_idx[btp->i_rank]);
+}
+
+
+/**
+ *
+ * \brief Get the number of partitions
+ *
+ * \param [in] btp         Block to part structure
+ *
+ * \return  Number of partitions
+ */
+
+int
+PDM_block_to_part_n_part_get
+(
+ PDM_block_to_part_t *btp
+ )
+{
+  assert (btp != NULL);
+
+  return btp->n_part;
+}
+
+
+/**
+ *
+ * \brief Get the number of elements in a given partition
+ *
+ * \param [in] btp         Block to part structure
+ * \param [in] i_part      Id of current partition
+ *
+ * \return  Number of element in the current partition
+ */
+
+int
+PDM_block_to_part_n_elt_get
+(
+ PDM_block_to_part_t *btp,
+ const int            i_part
+ )
+{
+  assert (btp != NULL);
+  assert (i_part < btp->n_part);
+
+  return btp->n_elt[i_part];
 }
 
 #ifdef __cplusplus

@@ -18,7 +18,9 @@ file(GLOB_RECURSE SOURCES
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
      io/pdm_logging.[hc]
+     io/pdm_vtk.[hc]
      pdm.h
+     pdm.c
      pdm_priv.h)
 
 file(GLOB_RECURSE SOURCESF
@@ -63,7 +65,7 @@ target_include_directories(pdm
   PRIVATE   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   PRIVATE   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   PRIVATE   $<BUILD_INTERFACE:${PDM_BINARY_DIR}>
-  PUBLIC    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pario>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
@@ -81,7 +83,7 @@ target_include_directories(pdm
 
 if (PDM_ENABLE_EXTENSION_PDMA)
   target_include_directories(pdm
-                             PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extensions/paradigma/src/plugins/renum>
+                             PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../extensions/paradigma/src/plugins/renum>
                              )
 endif()
 
@@ -91,7 +93,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PRIVATE   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     PRIVATE   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
     PRIVATE   $<BUILD_INTERFACE:${PDM_BINARY_DIR}>
-    PUBLIC    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pario>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
@@ -106,7 +108,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   )
     if (PDM_ENABLE_EXTENSION_PDMA)
       target_include_directories(pdmf
-                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extensions/paradigma/src/plugins/renum>
+                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../extensions/paradigma/src/plugins/renum>
                                  )
     endif()
 endif()
@@ -129,7 +131,7 @@ if (PDM_ENABLE_CUDA)
                               PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
                               PRIVATE  ${CMAKE_BINARY_DIR}
                               PRIVATE  ${PDM_BINARY_DIR}
-                              PUBLIC  ${CMAKE_SOURCE_DIR}
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/..
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
                               #PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
                               PUBLIC  ${MPI_INCLUDE_PATH}
@@ -155,6 +157,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_coarse_mesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_renum.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partitioning_algorithm.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_nodal.h")
@@ -170,9 +173,11 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum_from_hash_v
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_multi_block_to_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_interpolate_from_mesh_location.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_hash_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_handles.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_geom.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_binary_search.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
@@ -183,18 +188,20 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dmesh_nodal_to_dme
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dconnectivity_transform.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_part_connectivity_transform.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlay.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_geom_elem.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_edges_intersect.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlayf.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_poly_clipp.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_vtk.h")
 list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 
   set (LIST_HEADERF "")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/mod_pdm_io.F90")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/mod_pdm_writer.F90")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mod_pdm.F90")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/mod_pdm_part.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pdm.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partf.h")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pdmf.h")
   list(APPEND LIST_HEADERF "${PDM_BINARY_DIR}/pdm_configf.h")
@@ -221,7 +228,9 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_closest_points.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_closest_points.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_overlay.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/mod_overlay.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlay.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_mesh_check.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_check.F90")
 endif ()
 
 if (OPENMP_FOUND)
@@ -251,6 +260,13 @@ if (PDM_ENABLE_SHARED)
 
   get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
   target_include_directories(pdm_shared PUBLIC ${PDM_INC})
+  if (LAPACK_FOUND)
+    target_link_libraries(pdm_shared LAPACK::LAPACK)
+  else ()
+    if (BLAS_FOUND)
+      target_link_libraries(pdm_shared LAPACK::LAPACK)
+    endif()
+  endif()
 
 endif()
 

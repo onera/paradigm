@@ -34,8 +34,9 @@ typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
  * \param [in]   mesh_nature    Nature of the mesh
  * \param [in]   n_point_cloud  Number of point cloud
  * \param [in]   comm           MPI communicator
+ * \param [in]   owner          Ownership
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_mesh_location object
  *
  */
 
@@ -43,16 +44,9 @@ PDM_mesh_location_t*
 PDM_mesh_location_create
 (
  const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Comm comm
-);
-
-PDM_mesh_location_t*
-PDM_mesh_location_create_cf
-(
- const PDM_mesh_nature_t mesh_nature,
  const int               n_point_cloud,
- const PDM_MPI_Fint      comm
+ const PDM_MPI_Comm      comm,
+ const PDM_ownership_t   owner
 );
 
 
@@ -60,7 +54,7 @@ PDM_mesh_location_create_cf
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   n_part          Number of partitions
  *
@@ -80,7 +74,7 @@ PDM_mesh_location_n_part_cloud_set
  *
  * \brief Set a point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
@@ -105,12 +99,12 @@ PDM_mesh_location_cloud_set
  *
  * \brief Get a point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
- * \param [out]   n_points        Number of points
- * \param [out]   coords          Point coordinates
- * \param [out]   gnum            Point global number
+ * \param [out]  n_points        Number of points
+ * \param [out]  coords          Point coordinates
+ * \param [out]  gnum            Point global number
  *
  */
 
@@ -130,7 +124,7 @@ PDM_mesh_location_cloud_get
  *
  * \brief Get the number of located points
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  *
@@ -151,7 +145,7 @@ PDM_mesh_location_n_located_get
  *
  * \brief Get the number of unlocated points
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  *
@@ -172,7 +166,7 @@ PDM_mesh_location_n_unlocated_get
  *
  * \brief Get the list of unlocated points
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  *
@@ -193,7 +187,7 @@ PDM_mesh_location_unlocated_get
  *
  * \brief Get the list of located points
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud   Index of point cloud
  * \param [in]   i_part          Index of partition
  *
@@ -215,8 +209,8 @@ PDM_mesh_location_located_get
  *
  * \brief Set the mesh nodal
  *
- * \param [in]   id             Identifier
- * \param [in]   mesh_nodal_id  Mesh nodal identifier
+ * \param [in]   id             Pointer to \ref PDM_mesh_location object
+ * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_mesh_location object
  *
  */
 
@@ -232,7 +226,7 @@ PDM_mesh_location_shared_nodal_mesh_set
  *
  * \brief Set global data of a mesh
  *
- * \param [in]   id             Identifier
+ * \param [in]   id             Pointer to \ref PDM_mesh_location object
  * \param [in]   n_g_cell       Global number of cells
  * \param [in]   n_g_face       Global number of faces
  * \param [in]   n_g_vtx        Global number of vertices
@@ -252,7 +246,7 @@ PDM_mesh_location_mesh_global_data_set
  *
  * \brief Set a part of a mesh
  *
- * \param [in]   id            Identifier
+ * \param [in]   id            Pointer to \ref PDM_mesh_location object
  * \param [in]   i_part        Partition to define
  * \param [in]   n_cell        Number of cells
  * \param [in]   cell_face_idx Index in the cell -> face connectivity
@@ -290,7 +284,7 @@ PDM_mesh_location_part_set
  *
  * \brief Set a part of a mesh (2d version)
  *
- * \param [in]   id            Identifier
+ * \param [in]   id            Pointer to \ref PDM_mesh_location object
  * \param [in]   i_part        Partition to define
  * \param [in]   n_cell        Number of cells
  * \param [in]   cell_edge_idx Index in the cell -> edge connectivity
@@ -328,7 +322,7 @@ PDM_mesh_location_part_set_2d
  *
  * \brief Set the tolerance for bounding boxes
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   tol             Tolerance
  *
  */
@@ -345,7 +339,7 @@ PDM_mesh_location_tolerance_set
  *
  * \brief Set the method for computing location
  *
- * \param [in]   id              Identifier
+ * \param [in]   id              Pointer to \ref PDM_mesh_location object
  * \param [in]   method          Method
  *
  */
@@ -362,7 +356,7 @@ PDM_mesh_location_method_set
  *
  * \brief Compute point location
  *
- * \param [in]   id  Identifier
+ * \param [in]   id  Pointer to \ref PDM_mesh_location object
  *
  */
 
@@ -377,7 +371,7 @@ PDM_mesh_location_t        *ml
  *
  * \brief Get point location
  *
- * \param [in]   id                    Identifier
+ * \param [in]   id                    Pointer to \ref PDM_mesh_location object
  * \param [in]   i_point_cloud         Current cloud
  * \param [in]   i_part                Index of partition of the cloud
  * \param [out]  n_points              Number of points in point cloud
@@ -403,7 +397,7 @@ PDM_mesh_location_point_location_get
  *
  * \brief get cell vertex connectivity
  *
- * \param [in]   id                    Identifier
+ * \param [in]   id                    Pointer to \ref PDM_mesh_location object
  * \param [in]   i_part                Index of partition of the cloud
  * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
  * \param [out]  cell_vtx              Cell vertex connectivity
@@ -424,7 +418,7 @@ PDM_mesh_location_cell_vertex_get
  *
  * \brief Get point list located in elements
  *
- * \param [in]   id                      Identifier
+ * \param [in]   id                      Pointer to \ref PDM_mesh_location object
  * \param [in]   i_part                  Index of partition of the mesh
  * \param [in]   i_point_cloud           Index of cloud
  * \param [out]  elt_pts_inside_idx      Points index (size = n_elt + 1)
@@ -457,19 +451,16 @@ PDM_mesh_location_points_in_elt_get
 
 /**
  *
- * \brief Free a locationd mesh structure
+ * \brief Free a mesh location structure
  *
- * \param [in]  id       Identifier
- * \param [in]  partial  if partial is equal to 0, all data are removed.
- *                       Otherwise, results are kept.
+ * \param [in]  ml       Pointer to \ref PDM_mesh_location object
  *
  */
 
 void
 PDM_mesh_location_free
 (
-       PDM_mesh_location_t  *ml,
- const int                   partial
+ PDM_mesh_location_t  *ml
 );
 
 
@@ -477,7 +468,7 @@ PDM_mesh_location_free
  *
  * \brief Get the number of cells
  *
- * \param [in]  id       Identifier
+ * \param [in]  id       Pointer to \ref PDM_mesh_location object
  * \param [in]  i_part   Index of partition of the mesh
  *
  * \return Number of cells
@@ -495,7 +486,7 @@ PDM_mesh_location_n_cell_get
  *
  * \brief  Dump elapsed an CPU time
  *
- * \param [in]  id       Identifier
+ * \param [in]  id       Pointer to \ref PDM_mesh_location object
  *
  */
 
@@ -513,10 +504,11 @@ PDM_mesh_location_t *ml
 
 
 /**
-  * Disable uvw computation after reverse location data
-  */
+ * Enable reverse results computation (To call PDM_mesh_location_points_in_elt_get)
+ */
+
 void
-PDM_mesh_location_disable_uvw_computation
+PDM_mesh_location_reverse_results_enable
 (
 PDM_mesh_location_t *ml
 );

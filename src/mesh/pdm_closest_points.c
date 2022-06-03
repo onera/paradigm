@@ -94,7 +94,7 @@ typedef enum {
  *
  * \brief Reverse result
  *
- * \param [in]   id                    Identifier
+ * \param [in]   cls                   Pointer to \ref PDM_closest_points object
  *
  */
 static void
@@ -139,6 +139,20 @@ _closest_points_reverse_results
   PDM_MPI_Allreduce (&n_g_src, &_n_g_src, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, cls->comm);
   n_g_src = _n_g_src;
 
+  if (0) {
+    for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+      PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part],
+                               n_points[i_part],
+                               "closest_src_gnum : ");
+    }
+
+    for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+      PDM_log_trace_array_double(cls->tgt_cloud->closest_src_dist[i_part],
+                               n_points[i_part],
+                               "closest_src_dist : ");
+    }
+  }
+
   /*
    *  First part to block to map in global numbering of src all target associate
    */
@@ -158,7 +172,7 @@ _closest_points_reverse_results
   PDM_g_num_t *block_tgt_in_src_g_num = NULL;
   int blk_size = PDM_part_to_block_exch (ptb,
                                          sizeof(PDM_g_num_t),
-                                         PDM_STRIDE_VAR,
+                                         PDM_STRIDE_VAR_INTERLACED,
                                         1,
                                         tgt_g_num_n,
                               (void **) tgt_g_num,
@@ -198,9 +212,9 @@ _closest_points_reverse_results
 
 
   int** tgt_in_src_n;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_tgt_in_src_n,
                           block_tgt_in_src_g_num,
                          &tgt_in_src_n,
@@ -235,7 +249,7 @@ _closest_points_reverse_results
  * \param [in]   n_closest      Number of closest source points to find for each
  *                              target point
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_closest_points object
  *
  */
 
@@ -270,25 +284,13 @@ PDM_closest_points_create
   return closest;
 }
 
-PDM_closest_point_t*
-PDM_closest_points_create_cf
-(
- const PDM_MPI_Fint     comm,
- const int              n_closest,
- const PDM_ownership_t  owner
-)
-{
-  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
-
-  return PDM_closest_points_create(_comm, n_closest, owner);
-}
 
 
 /**
  *
  * \brief Set the number of partitions of a point cloud
  *
- * \param [in]   id                Identifier
+ * \param [in]   cls               Pointer to \ref PDM_closest_points object
  * \param [in]   n_part_cloud_src  Number of partitions of the source cloud
  * \param [in]   n_part_cloud_tgt  Number of partitions of the target cloud
  *
@@ -329,7 +331,7 @@ PDM_closest_points_n_part_cloud_set
  *
  * \brief Set the target point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   cls             Pointer to \ref PDM_closest_points object
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
@@ -358,7 +360,7 @@ PDM_closest_points_tgt_cloud_set
  *
  * \brief Set the source point cloud
  *
- * \param [in]   id              Identifier
+ * \param [in]   cls             Pointer to \ref PDM_closest_points object
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
@@ -386,7 +388,7 @@ PDM_closest_points_src_cloud_set
  *
  * \brief Look for closest points
  *
- * \param [in]   id  Identifier
+ * \param [in]   cls Pointer to \ref PDM_closest_points object
  *
  */
 
@@ -407,23 +409,45 @@ PDM_closest_point_t *cls
 
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
+  int n_rank;
+  PDM_MPI_Comm_rank (cls->comm, &n_rank);
+
+  /*if (i_rank == 0) {
+    printf(">> PDM_closest_points_compute\n");
+    fflush(stdout);
+    }*/
+
+  /*
+   *  Make sure we have at least as many source points as requested closest points
+   */
+  PDM_g_num_t ln_src_pts = 0;
+  for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
+    ln_src_pts += cls->src_cloud->n_points[i_part];
+  }
+
+  PDM_g_num_t gn_src_pts;
+  PDM_MPI_Allreduce (&ln_src_pts, &gn_src_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cls->comm);
+
+  assert (gn_src_pts >= cls->n_closest);
+
+
 
   const int depth_max = 31;
   const int points_in_leaf_max = cls->n_closest;
-  const int build_leaf_neighbours = 1;
+  const int build_leaf_neighbours = 0;
 
 
   /* Create empty parallel octree structure */
-  int octree_id = PDM_para_octree_create (cls->src_cloud->n_part,
-                                          depth_max,
-                                          points_in_leaf_max,
-                                          build_leaf_neighbours,
-                                          cls->comm);
+  PDM_para_octree_t *octree = PDM_para_octree_create (cls->src_cloud->n_part,
+                                                      depth_max,
+                                                      points_in_leaf_max,
+                                                      build_leaf_neighbours,
+                                                      cls->comm);
 
 
   /* Set source point clouds */
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
-    PDM_para_octree_point_cloud_set (octree_id,
+    PDM_para_octree_point_cloud_set (octree,
                                      i_part,
                                      cls->src_cloud->n_points[i_part],
                                      cls->src_cloud->coords[i_part],
@@ -431,9 +455,17 @@ PDM_closest_point_t *cls
   }
 
   /* Build parallel octree */
-  PDM_para_octree_build (octree_id, NULL);
-  //PDM_para_octree_dump (octree_id);
-  PDM_para_octree_dump_times (octree_id);
+  PDM_para_octree_build (octree, NULL);
+
+  /*if (i_rank == 0) {
+    printf("PDM_para_octree_build OK\n");
+    fflush(stdout);
+    }*/
+
+  //PDM_para_octree_dump (octree);
+  if (0) {
+    PDM_para_octree_dump_times (octree);
+  }
   //<--
 
 
@@ -459,14 +491,14 @@ PDM_closest_point_t *cls
 
   /* Search closest source points from target points */
   if (cls->n_closest == 1) {
-    PDM_para_octree_single_closest_point (octree_id,
+    PDM_para_octree_single_closest_point (octree,
                                           n_tgt,
                                           tgt_coord,
                                           tgt_g_num,
                                           closest_src_gnum,
                                           closest_src_dist);
   } else {
-    PDM_para_octree_closest_points (octree_id,
+    PDM_para_octree_closest_points (octree,
                                     cls->n_closest,
                                     n_tgt,
                                     tgt_coord,
@@ -513,7 +545,7 @@ PDM_closest_point_t *cls
 
   //-->GPU
   /* Free parallel octree */
-  PDM_para_octree_free (octree_id);
+  PDM_para_octree_free (octree);
   //<--
 
   _closest_points_reverse_results(cls);
@@ -532,9 +564,9 @@ PDM_closest_point_t *cls
 
 /**
  *
- * \brief Get mesh distance
+ * \brief Get closest source points global ids and (squared) distance
  *
- * \param [in]   id                    Identifier
+ * \param [in]   cls                   Pointer to \ref PDM_closest_points object
  * \param [in]   i_part_tgt            Index of partition of the cloud
  * \param [out]  closest_src_g_num     Global number of the closest element (size = n_closest * n_tgt_points)
  * \param [out]  closest_src_distance  Distance (size = n_closest * n_tgt_points)
@@ -565,7 +597,7 @@ PDM_closest_points_get
  *
  * \brief Get mesh distance
  *
- * \param [in]   id                 Identifier
+ * \param [in]   cls                Pointer to \ref PDM_closest_points object
  * \param [in]   i_part_src         Index of partition of the cloud
  * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
  * \param [out]  tgt_in_src         For each src point the globla number of target point located (size = tgt_in_src_idx[n_src_points] )
@@ -599,9 +631,9 @@ PDM_closest_points_tgt_in_src_get
 
 /**
  *
- * \brief Free a distance mesh structure
+ * \brief Free a closest points structure
  *
- * \param [in]  id       Identifier
+ * \param [in]  cls      Pointer to \ref PDM_closest_points object
  * \param [in]  partial  if partial is equal to 0, all data are removed.
  *                       Otherwise, results are kept.
  *
@@ -691,7 +723,7 @@ PDM_closest_point_t  *cls
  *
  * \brief  Dump elapsed and CPU time
  *
- * \param [in]  id       Identifier
+ * \param [in]  cls      Pointer to \ref PDM_closest_points object
  *
  */
 
@@ -727,7 +759,7 @@ PDM_closest_point_t  *cls
  * their original parent number.
  *
  * This function allow parent/child numbering to have a different partitionning than
- * gnum_to_transform. For both arrays, number of part and number of elt per part must 
+ * gnum_to_transform. For both arrays, number of part and number of elt per part must
  * be provided.
  *
  * gnum_to_transform is modified inplace
@@ -759,7 +791,7 @@ PDM_transform_to_parent_gnum
   PDM_g_num_t *block_parent = NULL;
   int s_block_data = PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST,
+                          PDM_STRIDE_CST_INTERLACED,
                           1,
                           NULL,
                (void **)  parent_ln_to_gn,
@@ -779,9 +811,9 @@ PDM_transform_to_parent_gnum
                                                       comm);
 
   int stride_one = 1;
-  PDM_block_to_part_exch(btp,
+  PDM_block_to_part_exch_in_place(btp,
                          sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST,
+                         PDM_STRIDE_CST_INTERLACED,
                         &stride_one,
                          block_parent,
                          NULL,
@@ -807,6 +839,51 @@ PDM_closest_points_closest_transfert
 )
 {
   return cls;
+}
+
+
+
+/**
+ *
+ * \brief  Get the number of target points in a partition
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ * \param [in]  i_part  Index of partition of the target cloud
+ *
+ * \return   Number of target point in the partition \ref i_part
+ *
+ */
+
+int
+PDM_closest_points_n_tgt_get
+(
+  PDM_closest_point_t  *cls,
+  const int             i_part
+)
+{
+  assert(cls->tgt_cloud != NULL);
+  return cls->tgt_cloud->n_points[i_part];
+}
+
+
+
+/**
+ *
+ * \brief  Get the number of closest points
+ *
+ * \param [in]  cls     Pointer to \ref PDM_closest_points object
+ *
+ * \return   Number of closest points
+ *
+ */
+
+int
+PDM_closest_points_n_closest_get
+(
+  PDM_closest_point_t  *cls
+)
+{
+  return cls->n_closest;
 }
 
 #ifdef	__cplusplus

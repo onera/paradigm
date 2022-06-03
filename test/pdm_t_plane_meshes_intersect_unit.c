@@ -48,7 +48,7 @@ static void
 _export_ol_mesh
 (
  const PDM_MPI_Comm pdm_mpi_comm,
- const int pdm_id,
+ const PDM_ol_t *ol,
  int           nFace[2][1],
  double  **sFieldOlA,
  double  **rFieldOlB,
@@ -66,27 +66,27 @@ _export_ol_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_unit_ens",
                                 "olmesh1",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1.,
                                 NULL);
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_unit_ens",
                                 "olmesh2",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1,
                                 NULL);
 
@@ -106,7 +106,7 @@ _export_ol_mesh
     if (imesh == 0) {
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sOlField");
     }
@@ -114,32 +114,32 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rOlField");
     }
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
 
     id_var_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                  PDM_WRITER_OFF,
-                                                 PDM_WRITER_VAR_SCALAIRE,
+                                                 PDM_WRITER_VAR_SCALAR,
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "matching");
 
     id_var_cell_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                       PDM_WRITER_OFF,
-                                                      PDM_WRITER_VAR_SCALAIRE,
+                                                      PDM_WRITER_VAR_SCALAR,
                                                       PDM_WRITER_VAR_ELEMENTS,
                                                       "cell_matching");
 
     id_var_origin[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                   PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAIRE,
+                                                  PDM_WRITER_VAR_SCALAR,
                                                   PDM_WRITER_VAR_ELEMENTS,
                                                   "origin");
 
@@ -162,8 +162,6 @@ _export_ol_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
 
@@ -187,7 +185,7 @@ _export_ol_mesh
     PDM_g_num_t    nGOlFace;
     PDM_g_num_t    nGOlVtx;
 
-    PDM_ol_mesh_dim_get (pdm_id,
+    PDM_ol_mesh_dim_get (ol,
                          mesht,
                          &nGOlFace,
                          &nGOlVtx);
@@ -209,7 +207,7 @@ _export_ol_mesh
       int           sOlface_vtx;
       int           sInitToOlFace;
 
-      PDM_ol_part_mesh_dim_get (pdm_id,
+      PDM_ol_part_mesh_dim_get (ol,
                                 mesht,
                                 ipart,
                                 &nOlFace,
@@ -231,7 +229,7 @@ _export_ol_mesh
       int            *initToOlFaceIdx;
       int            *initToOlFace;
 
-      PDM_ol_mesh_entities_get (pdm_id,
+      PDM_ol_mesh_entities_get (ol,
                                 mesht,
                                 ipart,
                                 &olFaceIniVtxIdx,
@@ -257,7 +255,8 @@ _export_ol_mesh
                                  ipart,
                                  nOlVtx,
                                  olCoords,
-                                 olvtx_ln_to_gn);
+                                 olvtx_ln_to_gn,
+                                 PDM_OWNERSHIP_USER);
 
       _olface_nb[ipart] = malloc(sizeof(int) * nOlFace);
       _olface_idx[ipart] = malloc(sizeof(int) * nOlFace);
@@ -1049,33 +1048,26 @@ main
   nFace[0][0] = nFaceA_merge;
   nFace[1][0] = nFaceB;
 
-  PDM_g_num_t nGFace[2] = {nFaceA_merge, nFaceB};
-  PDM_g_num_t nGVtx[2] = {nVtxA_merge, nVtxB};
-
   double projectCoeff = 1.;
 
   //
   // meshes intersection
   //
 
-  int pdm_id = PDM_ol_create (n_part,
-                              nGFace[0],
-                              nGVtx[0],
-                              n_part,
-                              nGFace[1],
-                              nGVtx[1],
-                              projectCoeff,
-                              PDM_MPI_COMM_WORLD);
+  PDM_ol_t *ol = PDM_ol_create (n_part,
+                                n_part,
+                                projectCoeff,
+                                PDM_MPI_COMM_WORLD);
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_CAR_LENGTH_TOL,
                         1e-3);
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_EXTENTS_TOL,
                         1e-3);
 
-  PDM_ol_input_mesh_set (pdm_id,
+  PDM_ol_input_mesh_set (ol,
                          PDM_OL_MESH_A,
                          0,
                          nFaceA_merge,
@@ -1087,7 +1079,7 @@ main
                          vtxLNToGNA_merge);
 
 
-  PDM_ol_input_mesh_set (pdm_id,
+  PDM_ol_input_mesh_set (ol,
                          PDM_OL_MESH_B,
                          0,
                          nFaceB,
@@ -1098,10 +1090,10 @@ main
                          vtxCoordB,
                          vtxLNToGNB);
 
-  PDM_ol_compute (pdm_id);
+  PDM_ol_compute (ol);
 
 
-  PDM_ol_dump_times (pdm_id);
+  PDM_ol_dump_times (ol);
 
   //
   // Field exchange
@@ -1152,7 +1144,7 @@ main
   int           sOlface_vtxA;
   int           sInitToOlFaceA;
 
-  PDM_ol_part_mesh_dim_get (pdm_id,
+  PDM_ol_part_mesh_dim_get (ol,
                             PDM_OL_MESH_A,
                             0,
                             &nOlFaceA,
@@ -1174,7 +1166,7 @@ main
   int            *initToOlFaceIdxA;
   int            *initToOlFaceA;
 
-  PDM_ol_mesh_entities_get (pdm_id,
+  PDM_ol_mesh_entities_get (ol,
                             PDM_OL_MESH_A,
                             0,
                             &olFaceIniVtxIdxA,
@@ -1197,7 +1189,7 @@ main
   int           sOlface_vtxB;
   int           sInitToOlFaceB;
 
-  PDM_ol_part_mesh_dim_get (pdm_id,
+  PDM_ol_part_mesh_dim_get (ol,
                             PDM_OL_MESH_B,
                             0,
                             &nOlFaceB,
@@ -1219,7 +1211,7 @@ main
   int            *initToOlFaceIdxB;
   int            *initToOlFaceB;
 
-  PDM_ol_mesh_entities_get (pdm_id,
+  PDM_ol_mesh_entities_get (ol,
                             PDM_OL_MESH_B,
                             0,
                             &olFaceIniVtxIdxB,
@@ -1299,26 +1291,24 @@ main
   // Export meshes to ensight
   //
 
-  int ens_meshA = PDM_writer_create ("Ensight",
-                                     PDM_WRITER_FMT_ASCII,
-                                     PDM_WRITER_TOPO_CONSTANTE,
-                                     PDM_WRITER_OFF,
-                                     "test_2d_unit_ens",
-                                     "meshA",
-                                     PDM_MPI_COMM_WORLD,
-                                     PDM_IO_ACCES_MPI_SIMPLE,
-                                     1.,
-                                     NULL);
+  PDM_writer_t *ens_meshA = PDM_writer_create ("Ensight",
+                                               PDM_WRITER_FMT_ASCII,
+                                               PDM_WRITER_TOPO_CST,
+                                               PDM_WRITER_OFF,
+                                               "test_2d_unit_ens",
+                                               "meshA",
+                                               PDM_MPI_COMM_WORLD,
+                                               PDM_IO_KIND_MPI_SIMPLE,
+                                               1.,
+                                               NULL);
 
   int id_var_fieldA = PDM_writer_var_create (ens_meshA,
                                              PDM_WRITER_OFF,
-                                             PDM_WRITER_VAR_SCALAIRE,
+                                             PDM_WRITER_VAR_SCALAR,
                                              PDM_WRITER_VAR_ELEMENTS,
                                              "sfieldA");
   int ens_geoA_merge = PDM_writer_geom_create (ens_meshA,
                                          "meshA_merge",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_step_beg (ens_meshA, 0.);
 
@@ -1327,7 +1317,8 @@ main
                              0,
                              nVtxA_merge,
                              vtxCoordA_merge,
-                             vtxLNToGNA_merge);
+                             vtxLNToGNA_merge,
+                             PDM_OWNERSHIP_USER);
 
   int *faceVtxNA_merge =  malloc(sizeof(int) * nFaceA_merge);
   for (int j = 0; j < nFaceA_merge; j++) {
@@ -1350,15 +1341,14 @@ main
 
   int ens_geoA = PDM_writer_geom_create (ens_meshA,
                                          "meshA",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_geom_coord_set (ens_meshA,
                              ens_geoA,
                              0,
                              nVtxA,
                              vtxCoordA,
-                             vtxLNToGNA);
+                             vtxLNToGNA,
+                             PDM_OWNERSHIP_USER);
 
   int *faceVtxNA =  malloc(sizeof(int) * nFaceA);
   for (int j = 0; j < nFaceA; j++) {
@@ -1415,27 +1405,25 @@ main
   free (faceVtxNA_merge);
 
 
-  int ens_meshB = PDM_writer_create ("Ensight",
-                                     PDM_WRITER_FMT_ASCII,
-                                     PDM_WRITER_TOPO_CONSTANTE,
-                                     PDM_WRITER_OFF,
-                                     "test_2d_unit_ens",
-                                     "meshB",
-                                     PDM_MPI_COMM_WORLD,
-                                     PDM_IO_ACCES_MPI_SIMPLE,
-                                     1.,
-                                     NULL);
+  PDM_writer_t *ens_meshB = PDM_writer_create ("Ensight",
+                                               PDM_WRITER_FMT_ASCII,
+                                               PDM_WRITER_TOPO_CST,
+                                               PDM_WRITER_OFF,
+                                               "test_2d_unit_ens",
+                                               "meshB",
+                                               PDM_MPI_COMM_WORLD,
+                                               PDM_IO_KIND_MPI_SIMPLE,
+                                               1.,
+                                               NULL);
 
   int id_var_fieldB = PDM_writer_var_create (ens_meshB,
                                              PDM_WRITER_OFF,
-                                             PDM_WRITER_VAR_SCALAIRE,
+                                             PDM_WRITER_VAR_SCALAR,
                                              PDM_WRITER_VAR_ELEMENTS,
                                              "rfieldB");
 
   int ens_geoB = PDM_writer_geom_create (ens_meshB,
                                          "meshB",
-                                         PDM_WRITER_OFF,
-                                         PDM_WRITER_OFF,
                                          1);
   PDM_writer_step_beg (ens_meshB, 0.);
 
@@ -1444,7 +1432,8 @@ main
                              0,
                              nVtxB,
                              vtxCoordB,
-                             vtxLNToGNB);
+                             vtxLNToGNB,
+                             PDM_OWNERSHIP_USER);
 
   int *faceVtxNB =  malloc(sizeof(int) * nFaceB);
   for (int j = 0; j < nFaceB; j++) {
@@ -1489,7 +1478,7 @@ main
 
 
   _export_ol_mesh (PDM_MPI_COMM_WORLD,
-                   pdm_id,
+                   ol,
                    nFace,
                    &sFieldOlA,
                    &rFieldOlB,
@@ -1540,7 +1529,7 @@ main
   free (vtxLNToGNA_merge);
   free (faceLNToGNA_merge);
 
-  PDM_ol_del (pdm_id);
+  PDM_ol_del (ol);
 
   PDM_MPI_Finalize ();
 

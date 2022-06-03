@@ -15,12 +15,15 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_poly_surf_gen.h"
+#include "pdm_point_cloud_gen.h"
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_distrib.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -93,7 +96,7 @@ _read_args(int                         argc,
            int                        *use_mesh_vtx)
 {
   int i = 1;
-  PDM_UNUSED (post);
+
   /* Parse and check command line */
 
   while (i < argc) {
@@ -155,7 +158,8 @@ _read_args(int                         argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *n_pts = atoi(argv[i]);
+        long _n_pts = atol(argv[i]);
+        *n_pts = (PDM_g_num_t) _n_pts;
       }
     }
 
@@ -201,6 +205,9 @@ _read_args(int                         argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -208,41 +215,6 @@ _read_args(int                         argc,
 }
 
 
-static void
-_random_cloud
-(
- const int      n_pts,
- const double   xyz_min[3],
- const double   xyz_max[3],
- const int      n_procs,
- const int      my_rank,
- double       **coord,
- int           *n_pts_l
- )
-{
-  double length[3] = {xyz_max[0] - xyz_min[0],
-                      xyz_max[1] - xyz_min[1],
-                      xyz_max[2] - xyz_min[2]};
-
-
-  *n_pts_l = (int) (n_pts/n_procs);
-  if (my_rank < n_pts%n_procs) {
-    *n_pts_l += 1;
-  }
-
-  *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
-  double *_coord = *coord;
-  double x;
-  int idx = 0;
-  for (PDM_g_num_t i = 0; i < n_procs*(*n_pts_l); i++) {
-    for (int idim = 0; idim < 3; idim++) {
-      x = xyz_min[idim] + length[idim] * (double) rand() / ((double) RAND_MAX);
-      if (i%n_procs == my_rank) {
-        _coord[idx++] = x;
-      }
-    }
-  }
-}
 
 
 static void
@@ -429,7 +401,7 @@ static int _set_rank_has_mesh
 static void
 _get_connectivity
 (
- int            ppartId,
+ PDM_part_t    *ppart,
  int            n_part,
  int          **nFace,
  int         ***faceEdgeIdx,
@@ -460,7 +432,7 @@ _get_connectivity
   *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
   *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
 
-   int id_ppart = ppartId;
+   // int id_ppart = ppartId;
 
   for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -475,7 +447,7 @@ _get_connectivity
     int _sEdgeGroup;
     int _nEdgeGroup2;
 
-    PDM_part_part_dim_get (id_ppart,
+    PDM_part_part_dim_get (ppart,
                            ipart,
                            &_nFace,
                            &_nEdge,
@@ -507,7 +479,7 @@ _get_connectivity
     int         *_edgeGroup;
     PDM_g_num_t *_edgeGroupLNToGN;
 
-    PDM_part_part_val_get (id_ppart,
+    PDM_part_part_val_get (ppart,
                            ipart,
                            &_faceTag,
                            &_faceEdgeIdx,
@@ -757,41 +729,40 @@ _create_split_mesh
     /*
      *  Split mesh
      */
-    int ppartId;
+    // int ppartId;
 
     int nPropertyCell = 0;
     int *renum_properties_cell = NULL;
     int nPropertyFace = 0;
     int *renum_properties_face = NULL;
 
-    PDM_part_create (&ppartId,
-                     pdm_mpi_comm,
-                     method,
-                     "PDM_PART_RENUM_CELL_NONE",
-                     "PDM_PART_RENUM_FACE_NONE",
-                     nPropertyCell,
-                     renum_properties_cell,
-                     nPropertyFace,
-                     renum_properties_face,
-                     n_part,
-                     dNFace,
-                     dNEdge,
-                     dNVtx,
-                     nEdgeGroup,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     have_dCellPart,
-                     dCellPart,
-                     dEdgeFace,
-                     dEdgeVtxIdx,
-                     dEdgeVtx,
-                     NULL,
-                     dVtxCoord,
-                     NULL,
-                     dEdgeGroupIdx,
-                     dEdgeGroup);
+    PDM_part_t *ppart = PDM_part_create (pdm_mpi_comm,
+                                         method,
+                                         "PDM_PART_RENUM_CELL_NONE",
+                                         "PDM_PART_RENUM_FACE_NONE",
+                                         nPropertyCell,
+                                         renum_properties_cell,
+                                         nPropertyFace,
+                                         renum_properties_face,
+                                         n_part,
+                                         dNFace,
+                                         dNEdge,
+                                         dNVtx,
+                                         nEdgeGroup,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         have_dCellPart,
+                                         dCellPart,
+                                         dEdgeFace,
+                                         dEdgeVtxIdx,
+                                         dEdgeVtx,
+                                         NULL,
+                                         dVtxCoord,
+                                         NULL,
+                                         dEdgeGroupIdx,
+                                         dEdgeGroup);
 
     free (dCellPart);
 
@@ -805,7 +776,7 @@ _create_split_mesh
     free (dEdgeGroupIdx);
     free (dEdgeGroup);
 
-    _get_connectivity (ppartId,
+    _get_connectivity (ppart,
                        n_part,
                        nFace,
                        faceEdgeIdx,
@@ -820,7 +791,7 @@ _create_split_mesh
                        vtxCoord,
                        vtxLNToGN);
 
-    PDM_part_free (ppartId);
+    PDM_part_free (ppart);
   }
 
   else {
@@ -937,19 +908,31 @@ int main(int argc, char *argv[])
    *  Init
    */
 
-  int my_rank;
-  int n_ranks;
+  int i_rank;
+  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &my_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_ranks);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
+  if (i_rank == 0) {
+    PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_rank      : %d\n", n_rank);
+    PDM_printf ("  - n_vtx_seg   : "PDM_FMT_G_NUM"\n", n_vtx_seg);
+    PDM_printf ("  - n_pts       : "PDM_FMT_G_NUM"\n", n_pts);
+    PDM_printf ("  - length      : %f\n", length);
+    PDM_printf ("  - depth       : %f\n", depth);
+    PDM_printf ("  - tolerance   : %f\n", tolerance);
+    PDM_printf ("  - part_method : %d\n", (int) part_method);
+    PDM_printf ("  - loc_method  : %d\n", (int) loc_method);
+    PDM_printf ("  - n_proc_data : %d\n", n_proc_data);
+  }
 
   /*
    *  Create partitionned surface mesh
    */
 
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Build surface mesh\n");
     fflush(stdout);
   }
@@ -1010,19 +993,18 @@ int main(int argc, char *argv[])
    * Point cloud definition
    *
    ************************/
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Point cloud\n");
     fflush(stdout);
   }
 
   int n_pts_l;
-  double *pts_coords = NULL;
+  double *pts_coords    = NULL;
+  PDM_g_num_t *pts_gnum = NULL;
 
   marge *= length;
   double _min = -0.5*length - marge;
   double _max = -_min;
-  double xyz_min[3] = {_min, _min, _min};
-  double xyz_max[3] = {_max, _max, _max};
 
   if (use_vtx) {
     _point_cloud_from_mesh_vtx (PDM_MPI_COMM_WORLD,
@@ -1036,13 +1018,17 @@ int main(int argc, char *argv[])
                                 &n_pts_l);
   }
   else {
-    _random_cloud (n_pts,
-                   xyz_min,
-                   xyz_max,
-                   n_ranks,
-                   my_rank,
-                   &pts_coords,
-                   &n_pts_l);
+    PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
+                                n_pts,
+                                _min,
+                                _min,
+                                0.,
+                                _max,
+                                _max,
+                                0.,
+                                &n_pts_l,
+                                &pts_coords,
+                                &pts_gnum);
   }
 
   _add_depth (n_pts_l,
@@ -1052,32 +1038,75 @@ int main(int argc, char *argv[])
 
 
   /* Point cloud global numbering */
-  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+  if (use_vtx) {
+    if (i_rank == 0) {
+      printf("-- Point cloud g_num\n");
+      fflush(stdout);
+    }
+  #if 1
+    PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
-  double *char_length = malloc(sizeof(double) * n_pts_l);
+    double *char_length = malloc(sizeof(double) * n_pts_l);
 
+    for (int i = 0; i < n_pts_l; i++) {
+      char_length[i] = length * 1.e-9;
+    }
+
+    PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
+
+    if (i_rank == 0) {
+      printf(">> PDM_gnum_compute\n");
+      fflush(stdout);
+    }
+    PDM_gnum_compute (gen_gnum);
+    if (i_rank == 0) {
+      printf("<< PDM_gnum_compute\n");
+      fflush(stdout);
+    }
+
+    pts_gnum = PDM_gnum_get(gen_gnum, 0);
+
+    PDM_gnum_free (gen_gnum);
+    free (char_length);
+  #else
+  PDM_g_num_t *distrib = PDM_compute_entity_distribution (PDM_MPI_COMM_WORLD,
+                                                          n_pts_l);
+  PDM_g_num_t *pts_gnum = malloc (sizeof(PDM_g_num_t) * n_pts_l);
   for (int i = 0; i < n_pts_l; i++) {
-    char_length[i] = length * 1.e-6;
+    pts_gnum[i] = distrib[i_rank] + i + 1;
   }
 
-  PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
+  free (distrib);
+  #endif
+  }
 
-  PDM_gnum_compute (gen_gnum);
 
-  PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum, 0);
+  if (post) {
+    char filename[999];
+    sprintf(filename, "point_cloud_%3.3d.vtk", i_rank);
 
-  PDM_gnum_free (gen_gnum);
-  free (char_length);
+    PDM_vtk_write_point_cloud (filename,
+                               n_pts_l,
+                               pts_coords,
+                               pts_gnum,
+                               NULL);
+  }
+
 
   /************************
    *
    * Mesh location struct initializaiton
    *
    ************************/
+  if (i_rank == 0) {
+    printf("-- Create mesh loc\n");
+    fflush(stdout);
+  }
 
   PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
                                          1,//const int n_point_cloud,
-                                         PDM_MPI_COMM_WORLD);
+                                         PDM_MPI_COMM_WORLD,
+                                         PDM_OWNERSHIP_KEEP);
 
   /* Set point cloud(s) */
   PDM_mesh_location_n_part_cloud_set (mesh_loc,
@@ -1095,6 +1124,10 @@ int main(int argc, char *argv[])
                                           n_part);
 
   /* Set mesh */
+  if (i_rank == 0) {
+    printf("-- Set mesh\n");
+    fflush(stdout);
+  }
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_mesh_location_part_set_2d (mesh_loc,
                                    ipart,
@@ -1125,7 +1158,7 @@ int main(int argc, char *argv[])
   /*
    * Compute location
    */
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Locate\n");
     fflush(stdout);
   }
@@ -1141,7 +1174,7 @@ int main(int argc, char *argv[])
   /*
    * Check results
    */
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- Check\n");
     fflush(stdout);
   }
@@ -1172,7 +1205,7 @@ int main(int argc, char *argv[])
                                         &p_dist2,
                                         &p_proj_coord);
 
-  if (1) {
+  if (0) {
     printf("Unlocated %d :\n", n_unlocated);
     for (int k1 = 0; k1 < n_unlocated; k1++) {
       printf("%d\n", unlocated[k1]);
@@ -1212,7 +1245,7 @@ int main(int argc, char *argv[])
   //                        &p_weights,
   //                        &p_proj_coord);
 
-  if (1) {
+  if (0) {
     printf("Unlocated %d :\n", n_unlocated);
     for (int k1 = 0; k1 < n_unlocated; k1++) {
       printf("%d\n", unlocated[k1]);
@@ -1258,8 +1291,8 @@ int main(int argc, char *argv[])
   /*
    * Finalize
    */
-  PDM_mesh_location_free (mesh_loc,
-                          0);
+  PDM_mesh_location_free (mesh_loc);
+                          
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     free(faceEdgeIdx[ipart]);
@@ -1302,7 +1335,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-  if (my_rank == 0) {
+  if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

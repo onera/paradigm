@@ -4,8 +4,9 @@
 #
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.19)
-cmake_policy(VERSION 3.19)
+cmake_minimum_required(VERSION 3.16)
+cmake_policy(VERSION 3.16)
+
 
 #------------------------------------------------------------------------------
 # Internal CMake module (shared with ParaDiGMA or CWIPI)
@@ -28,6 +29,12 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
 
 include(CTest)
 enable_testing ()
+
+# ----------------------------------------------------------------------
+# RPATH protection
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 #------------------------------------------------------------------------------
 # User option Definition
@@ -182,6 +189,11 @@ else ()
 
   option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module" OFF)
 
+  # BLAS/LAPACK
+  # -----------
+
+  option(PDM_ENABLE_BLASLAPACK "Build with BLAS/LAPACK" OFF)
+
   # Fortran interface
   # -----------------
 
@@ -325,6 +337,39 @@ else ()
         set(PDM_HAVE_PTSCOTCH 1)
      endif()
   endif()
+
+
+  if (PDM_ENABLE_BLASLAPACK)
+
+    if (CMAKE_C_COMPILER_ID STREQUAL "Intel")
+      set (BLA_VENDOR "Intel10_64lp")
+      find_package(BLAS)
+      find_package(LAPACK)
+      if (BLAS_FOUND AND LAPACK_FOUND)
+        set(PDM_HAVE_MKL 1)
+      endif()
+      unset (BLA_VENDOR)
+    endif()
+
+    if (NOT BLAS_FOUND)
+      find_package(BLAS)
+    endif()
+
+    if (NOT LAPACK_FOUND)
+      find_package(LAPACK)
+    endif()
+
+    if (BLAS_FOUND)
+      set(PDM_HAVE_BLAS 1)
+    endif()
+
+    if (LAPACK_FOUND)
+      set(PDM_HAVE_LAPACK 1)
+    endif()
+
+  endif()
+
+  # find_package(mmg CONFIG)
 
   # Check OpenMP (TODO : check MPI wrapper function check )
   # -------------------------------------------------------

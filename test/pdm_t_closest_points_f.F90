@@ -46,11 +46,8 @@ program testf
 
   integer, parameter :: n_closest = 2
 
-  double precision, pointer :: coords_src(:) ! pointer or allocatble, target
-  double precision, pointer :: coords_tgt(:) ! pointer or allocatble, target
-
-  type(c_ptr), pointer    :: cptr_coords_src(:)
-  type(c_ptr), pointer    :: cptr_coords_tgt(:)
+  double precision, pointer :: coords_src(:,:) ! pointer or allocatble, target
+  double precision, pointer :: coords_tgt(:,:) ! pointer or allocatble, target
 
   integer :: code
   integer :: i_rank
@@ -59,14 +56,8 @@ program testf
   integer (kind = pdm_g_num_s), pointer :: gnum_src(:) ! pointer or allocatble, target
   integer (kind = pdm_g_num_s), pointer :: gnum_tgt(:) ! pointer or allocatble, target
 
-  type(c_ptr), pointer    :: cptr_gnum_src(:)
-  type(c_ptr), pointer    :: cptr_gnum_tgt(:)
-
-  type(c_ptr)     :: cptr_closest_src_gnum
-  type(c_ptr)     :: cptr_closest_src_distance
-
   integer (kind = pdm_g_num_s), pointer :: closest_src_gnum(:)
-  double precision, pointer :: closest_src_distance(:)
+  double precision,             pointer :: closest_src_distance(:)
 
   integer :: i
 
@@ -82,50 +73,50 @@ program testf
     stop
   end if
 
-  allocate (coords_src(3*n_local_points_src))
-  allocate (coords_tgt(3*n_local_points_tgt))
+  allocate (coords_src(3,n_local_points_src))
+  allocate (coords_tgt(3,n_local_points_tgt))
   allocate (gnum_src(n_local_points_src))
   allocate (gnum_tgt(n_local_points_tgt))
 
   if (i_rank .eq. 0) then
     do i = 1, n_local_points_src
-      coords_src(3*(i-1)+1) = 0. + i - 1
-      coords_src(3*(i-1)+2) = 0. + i - 1
-      coords_src(3*(i-1)+3) = 0. + i - 1
+      coords_src(1,i) = 0. + i - 1
+      coords_src(2,i) = 0. + i - 1
+      coords_src(3,i) = 0. + i - 1
       gnum_src(i) = 2*(i-1) + 1
     end do
     do i = 1, n_local_points_tgt
-      coords_tgt(3*(i-1)+1) = n_local_points_tgt + i - 1
-      coords_tgt(3*(i-1)+2) = n_local_points_tgt + i - 1
-      coords_tgt(3*(i-1)+3) = n_local_points_tgt + i - 1
+      coords_tgt(1,i) = n_local_points_tgt + i - 1
+      coords_tgt(2,i) = n_local_points_tgt + i - 1
+      coords_tgt(3,i) = n_local_points_tgt + i - 1
       gnum_tgt(i) = 2*(i-1) + 2
     end do
   else
     do i = 1, n_local_points_src
-      coords_src(3*(i-1)+1) = n_local_points_tgt + i - 1
-      coords_src(3*(i-1)+2) = n_local_points_tgt + i - 1
-      coords_src(3*(i-1)+3) = n_local_points_tgt + i - 1
+      coords_src(1,i) = n_local_points_tgt + i - 1
+      coords_src(2,i) = n_local_points_tgt + i - 1
+      coords_src(3,i) = n_local_points_tgt + i - 1
       gnum_src(i) = 2*(i-1) + 2
     end do
     do i = 1, n_local_points_tgt
-      coords_tgt(3*(i-1)+1) = 0. + i - 1
-      coords_tgt(3*(i-1)+2) = 0. + i - 1
-      coords_tgt(3*(i-1)+3) = 0. + i - 1
+      coords_tgt(1,i) = 0. + i - 1
+      coords_tgt(2,i) = 0. + i - 1
+      coords_tgt(3,i) = 0. + i - 1
       gnum_tgt(i) = 2*(i-1) + 1
     end do
   endif
 
 
   do i = 1, n_local_points_tgt
-    coords_tgt(3*(i-1)+1) = coords_tgt(3*(i-1)+1) / 10.
-    coords_tgt(3*(i-1)+2) = coords_tgt(3*(i-1)+2) / 10.
-    coords_tgt(3*(i-1)+3) = coords_tgt(3*(i-1)+3) / 10.
+    coords_tgt(1,i) = coords_tgt(1,i) / 10.
+    coords_tgt(2,i) = coords_tgt(2,i) / 10.
+    coords_tgt(3,i) = coords_tgt(3,i) / 10.
   enddo
 
   do i = 1, n_local_points_src
-    coords_src(3*(i-1)+1) = coords_src(3*(i-1)+1) / 10.
-    coords_src(3*(i-1)+2) = coords_src(3*(i-1)+2) / 10.
-    coords_src(3*(i-1)+3) = coords_src(3*(i-1)+3) / 10.
+    coords_src(1,i) = coords_src(1,i) / 10.
+    coords_src(2,i) = coords_src(2,i) / 10.
+    coords_src(3,i) = coords_src(3,i) / 10.
   enddo
 
   !
@@ -134,9 +125,10 @@ program testf
   !
 
 
-  cls = PDM_closest_points_create (MPI_COMM_WORLD, &
-                                   n_closest, &
-                                   PDM_OWNERSHIP_KEEP)
+  call PDM_closest_points_create (cls,                &
+                                  MPI_COMM_WORLD,     &
+                                  n_closest,          &
+                                  PDM_OWNERSHIP_KEEP)
 
 
   !
@@ -151,30 +143,22 @@ program testf
   ! Set the point coordinates and the global numbering for any partition of the source
   !
 
-  allocate (cptr_gnum_src(n_part_cloud_src))
-  allocate (cptr_coords_src(n_part_cloud_src))
-
   if (n_part_cloud_src .ne. 1) then
     print *, "For this test, n_part_cloud_src must be equal to 1"
     stop
   end if
 
   do i = 1, n_part_cloud_src
-    cptr_gnum_src = c_loc(gnum_src)
-    cptr_coords_src = c_loc(coords_src)
     call PDM_closest_points_src_cloud_set (cls, &
                                            i-1, & !!! ipart : 0 -> n_part-1 !!!
                                            n_local_points_src, &
-                                           cptr_coords_src(i), &
-                                           cptr_gnum_src(i))
+                                           coords_src, &
+                                           gnum_src)
   end do
 
   !
   ! Set the point coordinates and the global numbering for any partition of the target
   !
-
-  allocate (cptr_gnum_tgt(n_part_cloud_tgt))
-  allocate (cptr_coords_tgt(n_part_cloud_tgt))
 
   if (n_part_cloud_tgt .ne. 1) then
     print *, "For this test, n_part_cloud_tgt must be equal to 1"
@@ -182,13 +166,11 @@ program testf
   end if
 
   do i = 1, n_part_cloud_tgt
-    cptr_gnum_tgt(i) = c_loc(gnum_tgt)
-    cptr_coords_tgt(i) = c_loc(coords_tgt)
     call PDM_closest_points_tgt_cloud_set (cls, &
                                            i-1, &  !!! ipart : 0 -> n_part-1 !!!
                                            n_local_points_tgt, &
-                                           cptr_coords_tgt(i), &
-                                           cptr_gnum_tgt(i))
+                                           coords_tgt, &
+                                           gnum_tgt)
   end do
 
 
@@ -212,10 +194,8 @@ program testf
   do i = 1, n_part_cloud_tgt
     call PDM_closest_points_get (cls, &
                                  i-1, & !!! ipart : 0 -> n_part-1 !!!
-                                 cptr_closest_src_gnum, &
-                                 cptr_closest_src_distance)
-    call c_f_pointer(cptr_closest_src_gnum, closest_src_gnum, [n_closest * n_local_points_tgt])
-    call c_f_pointer(cptr_closest_src_distance, closest_src_distance, [n_closest * n_local_points_tgt])
+                                 closest_src_gnum, &
+                                 closest_src_distance)
   end do
 
 
@@ -236,10 +216,6 @@ program testf
   deallocate (coords_tgt)
   deallocate (gnum_src)
   deallocate (gnum_tgt)
-  deallocate (cptr_gnum_src)
-  deallocate (cptr_coords_src)
-  deallocate (cptr_gnum_tgt)
-  deallocate (cptr_coords_tgt)
 
 
   call mpi_finalize(code)

@@ -11,6 +11,7 @@
 
 #include "pdm_mpi.h"
 #include "pdm.h"
+#include "pdm_part_domain_interface.h"
 
 /*=============================================================================
  * Macro definitions
@@ -72,6 +73,58 @@ PDM_part_extension_compute
   PDM_part_extension_t *part_ext
 );
 
+
+
+// void
+// PDM_part_extension_set_part_part_bound
+// (
+//   PDM_part_extension_t *part_ext,
+//   int                   i_domain,
+//   int                   i_part,
+//   PDM_bound_type_t      bound_type,
+//   int                  *bound_proc_idx,
+//   int                  *bound_part_idx,
+//   int                  *bound
+// )
+// {
+//   // Caratère optionelle sympa, si l'utilisateur
+
+// }
+
+// void
+// PDM_part_extension_set_part
+// (
+//   PDM_part_extension_t *part_ext,
+//   int                   i_domain,
+//   int                   i_part,
+//   int                   n_cell,
+//   int                   n_face,
+//   int                   n_face_part_bound,
+//   int                   n_face_group,
+//   int                   n_edge,
+//   int                   n_vtx,
+//   int                  *cell_face_idx,
+//   int                  *cell_face,
+//   int                  *face_edge_idx,
+//   int                  *face_edge,
+//   int                  *face_vtx_idx,
+//   int                  *face_vtx,
+//   int                  *edge_vtx,
+//   int                  *face_bound_idx,
+//   int                  *face_bound,
+//   int                  *edge_bound_idx,
+//   int                  *edge_bound,
+//   int                  *vtx_bound_idx,
+//   int                  *vtx_bound,
+//   PDM_g_num_t          *cell_ln_to_gn,
+//   PDM_g_num_t          *face_ln_to_gn,
+//   PDM_g_num_t          *edge_ln_to_gn,
+//   PDM_g_num_t          *vtx_ln_to_gn,
+//   PDM_g_num_t          *face_group_ln_to_gn,
+//   double               *vtx_coord
+// );
+
+
 void
 PDM_part_extension_set_part
 (
@@ -82,6 +135,7 @@ PDM_part_extension_set_part
   int                   n_face,
   int                   n_face_part_bound,
   int                   n_face_group,
+  int                   n_edge,
   int                   n_vtx,
   int                  *cell_face_idx,
   int                  *cell_face,
@@ -98,6 +152,9 @@ PDM_part_extension_set_part
   int                  *face_part_bound_proc_idx,
   int                  *face_part_bound_part_idx,
   int                  *face_part_bound,
+  int                  *vtx_part_bound_proc_idx,
+  int                  *vtx_part_bound_part_idx,
+  int                  *vtx_part_bound,
   PDM_g_num_t          *cell_ln_to_gn,
   PDM_g_num_t          *face_ln_to_gn,
   PDM_g_num_t          *edge_ln_to_gn,
@@ -106,12 +163,73 @@ PDM_part_extension_set_part
   double               *vtx_coord
 );
 
+
+void
+PDM_part_extension_part_domain_interface_shared_set
+(
+  PDM_part_extension_t        *part_ext,
+  PDM_part_domain_interface_t *pdi
+);
+
+// void
+// PDM_part_extension_n_domain_interface_set
+// (
+//   PDM_part_extension_t         *part_ext,
+//   const int                     n_interface,
+//   PDM_domain_interface_mult_t   multidomain_interface
+// );
+
+// void
+// PDM_part_extension_domain_interface_set
+// (
+//   PDM_part_extension_t         *part_ext,
+//   int                           i_interface,
+//   PDM_bound_type_t              interface_kind,
+//   int                           n_pair,
+//   PDM_g_num_t                  *interface_ids,
+//   int                          *interface_dom
+// );
+
+// void
+// PDM_part_extension_domain_interface_translation_set
+// (
+//         PDM_part_extension_t *part_ext,
+//         int                   i_interface,
+//   const double               *vect
+// );
+
+// void
+// PDM_part_extension_domain_interface_rotation_set
+// (
+//         PDM_part_extension_t    *part_ext,
+//   const int                      i_interface,
+//   const double                  *direction,
+//   const double                  *center,
+//   const double                   angle
+// );
+
+
 void
 PDM_part_extension_free
 (
  PDM_part_extension_t *part_ext
 );
 
+
+/**
+ *
+ * \brief Get connectivity
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
 
 int
 PDM_part_extension_connectivity_get
@@ -125,6 +243,20 @@ PDM_part_extension_connectivity_get
 );
 
 
+/**
+ *
+ * \brief Get global ids
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] ln_to_gn     Global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+
 int
 PDM_part_extension_ln_to_gn_get
 (
@@ -135,6 +267,22 @@ PDM_part_extension_ln_to_gn_get
  PDM_g_num_t             **ln_to_gn
 );
 
+
+/**
+ *
+ * \brief Get groups
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [in]  mesh_entity  Type of mesh entity
+ * \param [out] connect      Entity->group graph (size = \ref connect_idx[\ref n_elt])
+ * \param [out] connect_idx  Index for entity->group graph (size = \ref n_elt + 1)
+ * \param [out] ln_to_gn     Global ids (size = \ref connect_idx[\ref n_elt])
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
 
 int
 PDM_part_extension_group_get
@@ -147,6 +295,20 @@ PDM_part_extension_group_get
  int                     **connect_idx,
  PDM_g_num_t             **ln_to_gn
 );
+
+
+/**
+ *
+ * \brief Get vertex coordinates
+ *
+ * \param [in]  part_ext     Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain     Id of current domain
+ * \param [in]  i_part       Id of current partition
+ * \param [out] vtx_coord    Vertex coordinates (size = \ref n_vtx * 3)
+ *
+ * \return  n_vtx  Number of vertices
+ *
+ */
 
 int
 PDM_part_extension_coord_get

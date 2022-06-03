@@ -47,6 +47,8 @@ typedef struct {
   int        renum_cell_method;     // Choice of renumbering method for cells
   const int *renum_cell_properties; // Parameters used by some renumbering methods
   int        renum_face_method;     // Choice of renumbering method for faces
+  int        renum_edge_method;     // Choice of renumbering method for faces
+  int        renum_vtx_method;      // Choice of renumbering method for faces
 } _part_mesh_t;
 
 
@@ -62,7 +64,8 @@ typedef struct  {
 
   PDM_dmesh_t **dmeshes;             // Ids of dmesh structure storing
                                      // distributed meshes (size = n_zone)
-  PDM_dmesh_nodal_t **dmeshes_nodal;
+  PDM_dmesh_nodal_t          **dmeshes_nodal;
+  PDM_dmesh_nodal_to_dmesh_t **dmn_to_dm;
 
   int           n_total_joins;       // Total number of joins between zones (each counts twice)
   const int    *join_to_opposite;    // For each global joinId, give the globalId of
@@ -75,7 +78,7 @@ typedef struct  {
   PDM_bool_t       merge_blocks;     // Merge before partitionning or not
   PDM_split_dual_t split_method;     // Partitioning method (Metis or Scotch)
   PDM_part_size_t  part_size_method; // Procude homogeneous or heterogeneous partitions
-  const int       *n_part;           // Number of wanted partitions per proc
+  int             *n_part;           // Number of wanted partitions per proc
                                      // in each zone (size = n_zone)
   const double    *part_fraction;    // Weight (in %) of each partition, in each zone
                                      //   (size = sum n_part[i]), if heterogeneous

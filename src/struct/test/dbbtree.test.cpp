@@ -1,5 +1,6 @@
 #include "doctest/extensions/doctest_mpi.h"
 #include <limits>
+#include <vector>
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_doctest.h"
@@ -159,7 +160,8 @@ MPI_TEST_CASE("dbbtree test simple ",1) {
                                    cell_ln_to_gn.data(),
                                    &pts_idx,
                                    &pts_g_num,
-                                   &pts_coord);
+                                   &pts_coord,
+                                   0);
 
 
   for(int i_box = 0; i_box < n_boxes; ++i_box) {

@@ -119,7 +119,14 @@ struct _pdm_mesh_location_t {
 
   _points_in_element_t *points_in_elements;
 
-  int uvw_to_compute; /* Compute uvw from source point of view */
+  int  reverse_result; /*!< Enable reverse results */
+
+  PDM_ownership_t owner;       /*!< Ownership */
+  int  tag_unlocated_get;      /*!< Tag call to unlocated_get function */ 
+  int  tag_located_get;        /*!< Tag call to located_get function */ 
+  int  tag_point_location_get; /*!< Tag call to point_location_get function */ 
+  int  tag_points_in_elt_get;  /*!< Tag call to points_in_elt_get function */ 
+  int  tag_cell_vtx_get;       /*!< Tag call to cell_vtx_get function */ 
 
 } ;
 

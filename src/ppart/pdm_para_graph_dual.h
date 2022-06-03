@@ -9,12 +9,6 @@
  * Macro definitions
  *============================================================================*/
 
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -25,16 +19,6 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
-/**
- * \enum PDM_part_split_t
- * \brief Split method
- *
- */
-
-typedef enum {
-  PDM_SPLIT_DUAL_WITH_PARMETIS = 1,
-  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
-} PDM_split_dual_t;
 
 /*=============================================================================
  * Static global variables

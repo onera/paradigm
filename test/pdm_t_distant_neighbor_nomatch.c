@@ -48,10 +48,13 @@
 int
 main
 (
-int argc,
+int   argc,
 char *argv[]
 )
 {
+  int verbose = 0;
+
+
   int i_rank;
   int n_rank;
 
@@ -218,14 +221,14 @@ char *argv[]
   int** recv_entity_data = NULL;
   PDM_distant_neighbor_exch_int(dn,
                                 sizeof(int),
-                                PDM_STRIDE_CST,
+                                PDM_STRIDE_CST_INTERLACED,
                                 stride,
                                 NULL,
                                 send_entity_data,
                                 NULL,
                                 &recv_entity_data);
 
-  if(1 == 1){
+  if(verbose){
     log_trace(" Constant strid exchange results ---- \n");
     for(int i_part = 0; i_part < n_cloud; i_part++){
       int *_part_neighbor_idx  = candidates_idx[i_part];
@@ -264,15 +267,15 @@ char *argv[]
   // PDM_distant_neighbor_exch(dn,
   PDM_distant_neighbor_exch_int(dn,
                                 sizeof(int),
-                                PDM_STRIDE_VAR,
+                                PDM_STRIDE_VAR_INTERLACED,
                                 -1,
                                 send_entity_var_stri,
                                 send_entity_var_data,
                        (int***) &recv_entity_var_stri,
                                 &recv_entity_var_data);
 
-  log_trace(" Variable strid exchange results ---- \n");
-  if(1 == 1){
+  if(verbose){
+    log_trace(" Variable strid exchange results ---- \n");
     for(int i_part = 0; i_part < n_cloud; i_part++){
       int *_part_neighbor_idx  = candidates_idx[i_part];
       log_trace(" ---> recv_entity_data[%d]::", i_part);
@@ -307,7 +310,9 @@ char *argv[]
   free(recv_entity_var_data);
   PDM_MPI_Finalize();
 
-  PDM_printf ("\nfin Test\n");
+  if (i_rank == 0) {
+    PDM_printf ("End\n");
+  }
 
   return 0;
 

@@ -12,6 +12,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_geom.h"
 
 /*=============================================================================
  * Macro definitions
@@ -35,7 +36,7 @@ extern "C" {
  */
 
 typedef enum {
-
+ 
   PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC          = 0,  /*!< Distribute block on all processes */
   PDM_PART_TO_BLOCK_DISTRIB_ONE_PROC_PER_NODE = 1,  /*!< Distribute block on one processe pere node */
   PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE      = 2   /*!< Distribute block on part of nodes */
@@ -88,6 +89,91 @@ typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
  * Public function prototypes
  *============================================================================*/
 
+/**
+ *
+ * \brief Reset global statistic
+ *
+ */
+
+void
+PDM_part_to_block_global_statistic_reset
+(
+void
+);
+
+
+/**
+ *
+ * \brief Get global timer in part to block
+ *
+ * \param [in]   comm                 MPI communicator
+ * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
+ * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
+ * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
+ * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
+ * \param [out]  min_exch_data_send   Global min sent data for a rank 
+ * \param [out]  min_exch_data_recv   Global min received data for a rank
+ * \param [out]  max_exch_data_send   Global max sent data for a rank
+ * \param [out]  max_exch_data_recv   Global max received data for a rank
+ * 
+ */
+
+void
+PDM_part_to_block_global_statistic_get
+(
+ PDM_MPI_Comm comm,
+ int *min_exch_rank_send,
+ int *min_exch_rank_recv,
+ int *max_exch_rank_send,
+ int *max_exch_rank_recv,
+ unsigned long long *min_exch_data_send,
+ unsigned long long *min_exch_data_recv,
+ unsigned long long *max_exch_data_send,
+ unsigned long long *max_exch_data_recv
+);
+
+
+/**
+ *
+ * \brief Get global timer in part to block
+ *
+ * \param [in]   comm              MPI communicator
+ * \param [out]  min_elaps         Min elapsed time
+ * \param [out]  max_elaps         Max elapsed time
+ * \param [out]  min_cpu           Min cpu time
+ * \param [out]  max_cpu           Max cpu time
+ * \param [out]  min_elaps_create  Global min elapsed for create function
+ * \param [out]  max_elaps_create  Global max elapsed for create function
+ * \param [out]  min_cpu_create    Global min cpu for create function
+ * \param [out]  max_cpu_create    Global max cpu for create function
+ * \param [out]  min_elaps_create2 Global min elapsed for create2 function 
+ * \param [out]  max_elaps_create2 Global max elapsed for create2 function
+ * \param [out]  min_cpu_create2   Global min cpu for create2 function
+ * \param [out]  max_cpu_create2   Global max cpu for create2 function
+ * \param [out]  min_elaps_exch    Global min elapsed for exch function
+ * \param [out]  max_elaps_exch    Global max elapsed for exch function
+ * \param [out]  min_cpu_exch      Global min cpu for exch function
+ * \param [out]  max_cpu_exch      Global max cpu for exch function
+ * 
+ */
+
+void
+PDM_part_to_block_global_timer_get
+(
+ PDM_MPI_Comm comm,
+ double       *min_elaps_create,
+ double       *max_elaps_create,
+ double       *min_cpu_create,
+ double       *max_cpu_create,
+ double       *min_elaps_create2,
+ double       *max_elaps_create2,
+ double       *min_cpu_create2,
+ double       *max_cpu_create2,
+ double       *min_elaps_exch,
+ double       *max_elaps_exch,
+ double       *min_cpu_exch,
+ double       *max_cpu_exch
+);
 
 /**
  *
@@ -105,19 +191,6 @@ typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
  * \return   Initialized PDM_part_to_block_t
  *
  */
-
-PDM_part_to_block_t *
-PDM_part_to_block_create_cf
-(
- PDM_part_to_block_distrib_t   t_distrib,
- PDM_part_to_block_post_t      t_post,
- double                        part_active_node,
- PDM_g_num_t                 **gnum_elt,
- double                      **weight,
- int                          *n_elt,
- int                           n_part,
- PDM_MPI_Fint                  fcomm
- );
 
 PDM_part_to_block_t *
 PDM_part_to_block_create
@@ -151,24 +224,11 @@ PDM_part_to_block_create
  */
 
 PDM_part_to_block_t *
-PDM_part_to_block_create2_cf
+PDM_part_to_block_create_from_distrib
 (
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
- double                        part_active_node,
- PDM_g_num_t                 **gnum_elt,
- PDM_g_num_t                 *data_distrib_index,
- int                          *n_elt,
- int                           n_part,
- PDM_MPI_Fint                  fcomm
- );
-
-PDM_part_to_block_t *
-PDM_part_to_block_create2
-(
- PDM_part_to_block_distrib_t   t_distrib,
- PDM_part_to_block_post_t      t_post,
- double                         partActiveNode,
+ double                        partActiveNode,
  PDM_g_num_t                 **gnum_elt,
  const PDM_g_num_t            *dataDistribIndex,
  int                          *n_elt,
@@ -176,6 +236,20 @@ PDM_part_to_block_create2
  PDM_MPI_Comm                  comm
 );
 
+PDM_part_to_block_t *
+PDM_part_to_block_geom_create
+(
+ PDM_part_to_block_distrib_t   t_distrib,
+ PDM_part_to_block_post_t      t_post,
+ double                        part_active_node,
+ PDM_part_geom_t               geom_kind,
+ double                      **pvtx_coords,
+ PDM_g_num_t                 **gnum_elt,
+ int                         **weight,
+ int                          *n_elt,
+ int                           n_part,
+ PDM_MPI_Comm                  comm
+);
 
 /**
  *
@@ -261,6 +335,22 @@ PDM_part_to_block_block_gnum_get
  PDM_part_to_block_t *ptb
 );
 
+/**
+ *
+ * \brief Return numbers of occurence of each gnum element in the current process
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return  Global numbers counter
+ *
+ */
+
+int *
+PDM_part_to_block_block_gnum_count_get
+(
+ PDM_part_to_block_t *ptb
+);
+
 
 /**
  *
@@ -321,6 +411,51 @@ PDM_part_to_block_async_exch
 
 /**
  *
+ * \brief Initialize a asynchronous data exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Stride type
+ * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
+ * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
+ * \param [in]   part_data    partitioned data
+ *
+ *
+ */
+void
+PDM_part_to_block_iexch
+(
+       PDM_part_to_block_t  *ptb,
+ const PDM_mpi_comm_kind_t   k_comm,
+       size_t                s_data,
+       PDM_stride_t          t_stride,
+       int                   cst_stride,
+       int                 **part_stride,
+       void                **part_data,
+       int                 **block_stride,
+       void                **block_data,
+       int                  *request
+);
+
+/**
+ *
+ * \brief Finalize and post-treated a asynchronous data exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   request_id   id of request to wait / post
+ *
+ * \return       Size of highest block
+ *
+ */
+int
+PDM_part_to_block_iexch_wait
+(
+ PDM_part_to_block_t *ptb,
+ int                  request_id
+);
+
+/**
+ *
  * \brief Wait for an exchange
  *
  * \param [in]   ptb          Part to block structure
@@ -363,7 +498,7 @@ PDM_part_to_block_asyn_get_raw
  * \param [out]  block_data   Block data
  *
  */
-void
+int
 PDM_part_to_block_asyn_post_treatment
 (
  PDM_part_to_block_t *ptb,
@@ -445,6 +580,41 @@ PDM_part_to_block_global_weight_get
 (
  PDM_part_to_block_t *ptb
 );
+
+
+/**
+ *
+ * \brief Get number of MPI ranks
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return  Number of MPI ranks
+ *
+ */
+
+int
+PDM_part_to_block_n_ranks_get
+(
+ PDM_part_to_block_t *ptb
+);
+
+
+/**
+ *
+ * \brief Return total number of element in the current process (summed over all partitions)
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return Total number of element in the current process
+ *
+ */
+
+int
+PDM_part_to_block_n_elt_proc_get
+(
+ PDM_part_to_block_t *ptb
+ );
+
 
 #ifdef __cplusplus
 }

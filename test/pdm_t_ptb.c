@@ -68,7 +68,7 @@ char *argv[]
 
   PDM_part_to_block_exch (ptb,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &stride,
                           (void **) &weights,
@@ -109,9 +109,10 @@ char *argv[]
   free (block_stride);
   free (block_weights);
 
+  if (i_rank == 0) {
+    PDM_printf("-- End\n");
+  }
   PDM_MPI_Finalize ();
-
-  PDM_printf ("\nfin Test\n");
 
   return 0;
 

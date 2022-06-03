@@ -306,7 +306,7 @@ _gnum_from_coords_compute
 
   /* Merge double points */
 
-  PDM_points_merge_t* pts_merge;
+  PDM_points_merge_t* pts_merge = NULL;
 
   int n_entities = 0;
 
@@ -395,6 +395,10 @@ _gnum_from_coords_compute
   /* Build Morton encoding and order it */
 
   PDM_morton_get_coord_extents(gen_gnum->dim, n_entities, coords, extents, comm);
+  if (0 && iproc == 0) {
+    printf("  _gnum_from_coords_compute : PDM_morton_get_coord_extents OK\n");
+    fflush(stdout);
+  }
 
   m_code = malloc (n_entities * sizeof(PDM_morton_code_t));
   order = malloc (n_entities * sizeof(PDM_l_num_t));
@@ -402,8 +406,16 @@ _gnum_from_coords_compute
   double d[3];
   double s[3];
   PDM_morton_encode_coords(gen_gnum->dim, level, extents, n_entities, coords, m_code, d, s);
+  if (0 && iproc == 0) {
+    printf("  _gnum_from_coords_compute : PDM_morton_encode_coords OK\n");
+    fflush(stdout);
+  }
 
   PDM_morton_local_order(n_entities, m_code, order);
+  if (0 && iproc == 0) {
+    printf("  _gnum_from_coords_compute : PDM_morton_local_order OK\n");
+    fflush(stdout);
+  }
 
   if (n_ranks > 1) {
 
@@ -437,6 +449,10 @@ _gnum_from_coords_compute
                                 order,
                                 morton_index,
                                 comm);
+    if (0 && iproc == 0) {
+      printf("  _gnum_from_coords_compute : PDM_morton_build_rank_index OK\n");
+      fflush(stdout);
+    }
 
     free(order);
     free(weight);
@@ -469,6 +485,10 @@ _gnum_from_coords_compute
     /* Exchange number of coords to send to each process */
 
     PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT, recv_count, 1, PDM_MPI_INT, comm);
+    if (0 && iproc == 0) {
+      printf("  _gnum_from_coords_compute : Alltoall OK\n");
+      fflush(stdout);
+    }
 
     send_shift[0] = 0;
     recv_shift[0] = 0;
@@ -499,6 +519,10 @@ _gnum_from_coords_compute
     PDM_MPI_Alltoallv(send_coords, send_count, send_shift, PDM_MPI_DOUBLE,
                       recv_coords, recv_count, recv_shift, PDM_MPI_DOUBLE,
                       comm);
+    if (0 && iproc == 0) {
+      printf("  _gnum_from_coords_compute : Alltoallv OK\n");
+      fflush(stdout);
+    }
 
     free(send_coords);
 
@@ -1157,10 +1181,10 @@ _gnum_from_parent_compute
  * \param [in]   tolerance    Geometric tolerance (used if merge double points is activated)
  * \param [in]   comm         PDM_MPI communicator
  *
- * \return     Identifier
+ * \return     Pointer to PDM_gen_gnum object
  */
 
-PDM_gen_gnum_t*
+PDM_gen_gnum_t *
 PDM_gnum_create
 (
  const int             dim,
@@ -1197,22 +1221,6 @@ PDM_gnum_create
 
 }
 
-PDM_gen_gnum_t*
-PDM_gnum_create_cf
-(
- const int             *dim,
- const int             *n_part,
- const int             *merge,
- const double          *tolerance,
- const PDM_MPI_Fint    *fcomm,
- const PDM_ownership_t *owner
-)
-{
-  const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
-
-  return PDM_gnum_create (*dim, *n_part, (PDM_bool_t) *merge, *tolerance, c_comm, *owner);
-}
-
 
 /**
  *
@@ -1223,7 +1231,7 @@ PDM_gnum_create_cf
  * In the case that 2 entities have a same Morton code, their global
  * number will be determined by lexicographical ordering of coordinates.
  *
- * \param [in]   id           Identifier
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
  * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
@@ -1264,11 +1272,12 @@ PDM_gnum_set_from_coords
 
 }
 
+
 /**
  *
  * \brief Set Parent global numbering
  *
- * \param [in]   id           Identifier
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
  * \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
@@ -1298,14 +1307,16 @@ PDM_gnum_set_from_parents
 
 }
 
+
+
+
 /**
  *
  * \brief Compute
  *
- * \param [in]   id           Identifier
+ * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
  *
  */
-
 
 void
 PDM_gnum_compute
@@ -1313,24 +1324,34 @@ PDM_gnum_compute
  PDM_gen_gnum_t  *gen_gnum
 )
 {
-  if (gen_gnum->coords != NULL) {
+  //Detect if geometric or topologic -- works if a procs holds no partitions
+  int from_coords = (gen_gnum->coords != NULL);
+  int from_parent = (gen_gnum->parent != NULL);
+  int from_coords_g, from_parent_g;
+  PDM_MPI_Allreduce(&from_coords, &from_coords_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_parent, &from_parent_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+
+  assert (from_coords_g * from_parent_g == 0);
+
+  if (from_coords_g != 0) {
     _gnum_from_coords_compute (gen_gnum);
   }
-
-  else if (gen_gnum->parent != NULL) {
+  else if (from_parent_g != 0) {
     _gnum_from_parent_compute (gen_gnum);
   }
 
 }
 
+
+
 /**
  *
- * \brief Set from coordinates
+ * \brief Get global ids for a given partition
  *
- * \param [in]   id           Identifier
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
  * \param [in]   i_part       Current partition
- * \param [in]   n_elts       Number of elements
- * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
+ *
+ * \return     Array of global ids
  *
  */
 
@@ -1346,11 +1367,13 @@ PDM_gnum_get
   return gen_gnum->g_nums[i_part];
 }
 
+
+
 /**
  *
  * \brief Free
  *
- * \param [in]   id           Identifier
+ * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
  *
  */
 
@@ -1385,6 +1408,32 @@ PDM_gen_gnum_t *gen_gnum
 
   free (gen_gnum);
 
+}
+
+
+
+/**
+ *
+ * \brief Get number of elements in a partition
+ *
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
+ * \param [in]   i_part       Current partition
+ *
+ * \return     Number of elements
+ *
+ */
+
+int
+PDM_gnum_n_elt_get
+(
+       PDM_gen_gnum_t *gen_gnum,
+ const int             i_part
+)
+{
+  assert(gen_gnum         != NULL);
+  assert(gen_gnum->n_elts != NULL);
+
+  return gen_gnum->n_elts[i_part];
 }
 
 /*----------------------------------------------------------------------------*/
