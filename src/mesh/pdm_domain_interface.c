@@ -3812,7 +3812,7 @@ PDM_ddomain_interface_to_pdomain_interface
                           &precv_stride_dom,
                (void ***) &precv_dom);
 
-    int* _lpart_gnum = (int * ) malloc(2 * n_gnum_interf * sizeof(int));
+    PDM_g_num_t* _lpart_gnum = (PDM_g_num_t * ) malloc(2 * n_gnum_interf * sizeof(PDM_g_num_t));
     for(int j = 0; j < n_gnum_interf; ++j) {
       int dom    = _linterface_dom[2*j  ];
       int domopp = _linterface_dom[2*j+1];
@@ -3852,7 +3852,7 @@ PDM_ddomain_interface_to_pdomain_interface
         int s_i_part = shift_domain + i_part;
         int n_data = 0;
 
-        int *interface_ids_idx = (int * ) malloc( (_ln_interface[s_i_part] + 1) * sizeof(int *));
+        int *interface_ids_idx = (int * ) malloc( (_ln_interface[s_i_part] + 1) * sizeof(int ));
 
         interface_ids_idx[0] = 0;
         for(int i = 0; i < _ln_interface[s_i_part]; ++i) {
