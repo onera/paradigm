@@ -314,7 +314,7 @@ _offset_results_by_domain
       _shift_ln_to_gn(n_border_face, face_ln_to_gn, part_ext->shift_by_domain_face[i_domain], -1);
 
       int n_edge        = part_ext->parts[i_domain][i_part].n_edge;
-      if(n_edge > 0) {
+      if(n_edge > 0 && part_ext->edge_edge_extended_idx != NULL ) {
         int n_border_edge = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
         PDM_g_num_t *edge_ln_to_gn = part_ext->border_edge_ln_to_gn[shift_part+i_part];
         _shift_ln_to_gn(n_border_edge, edge_ln_to_gn, part_ext->shift_by_domain_edge[i_domain], -1);
@@ -372,122 +372,122 @@ _lexicographic_equal_long
   return x[0] == y[0];
 }
 
-static
-int
-_setup_unique_order_triplet
-(
-const int    n_entity,
-const int   *unique_neighbor_entity_idx,
-const int   *unique_neighbor_entity,
-      int  **unique_order_neighbor_entity
-)
-{
-  int* order        = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
-  int* unique_order = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+// static
+// int
+// _setup_unique_order_triplet
+// (
+// const int    n_entity,
+// const int   *unique_neighbor_entity_idx,
+// const int   *unique_neighbor_entity,
+//       int  **unique_order_neighbor_entity
+// )
+// {
+//   int* order        = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
+//   int* unique_order = malloc( unique_neighbor_entity_idx[n_entity] * sizeof(int));
 
-  PDM_order_lnum_s(unique_neighbor_entity,
-                   3,
-                   order,
-                   unique_neighbor_entity_idx[n_entity]);
+//   PDM_order_lnum_s(unique_neighbor_entity,
+//                    3,
+//                    order,
+//                    unique_neighbor_entity_idx[n_entity]);
 
-  int idx_unique = -1;
-  int last_proc  = -1;
-  int last_part  = -1;
-  int last_elmt  = -1;
+//   int idx_unique = -1;
+//   int last_proc  = -1;
+//   int last_part  = -1;
+//   int last_elmt  = -1;
 
-  for(int i = 0; i < unique_neighbor_entity_idx[n_entity]; i++){
+//   for(int i = 0; i < unique_neighbor_entity_idx[n_entity]; i++){
 
-    int old_order = order[i];
-    int curr_proc = unique_neighbor_entity[3*old_order  ];
-    int curr_part = unique_neighbor_entity[3*old_order+1];
-    int curr_elmt = unique_neighbor_entity[3*old_order+2];
-    int is_same = _is_same_triplet(last_proc, last_part, last_elmt,
-                                   curr_proc, curr_part, curr_elmt);
-    // log_trace(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
-    //             curr_proc, curr_part, curr_elmt,
-    //             last_proc, last_part, last_elmt);
+//     int old_order = order[i];
+//     int curr_proc = unique_neighbor_entity[3*old_order  ];
+//     int curr_part = unique_neighbor_entity[3*old_order+1];
+//     int curr_elmt = unique_neighbor_entity[3*old_order+2];
+//     int is_same = _is_same_triplet(last_proc, last_part, last_elmt,
+//                                    curr_proc, curr_part, curr_elmt);
+//     // log_trace(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
+//     //             curr_proc, curr_part, curr_elmt,
+//     //             last_proc, last_part, last_elmt);
 
-    if(is_same == 0){ // N'est pas le meme
-      idx_unique++;
-      last_proc = curr_proc;
-      last_part = curr_part;
-      last_elmt = curr_elmt;
-    }
-    unique_order[old_order] = idx_unique;
-  }
+//     if(is_same == 0){ // N'est pas le meme
+//       idx_unique++;
+//       last_proc = curr_proc;
+//       last_part = curr_part;
+//       last_elmt = curr_elmt;
+//     }
+//     unique_order[old_order] = idx_unique;
+//   }
 
-  *unique_order_neighbor_entity = unique_order;
-  free(order);
-  return idx_unique+1;
-}
+//   *unique_order_neighbor_entity = unique_order;
+//   free(order);
+//   return idx_unique+1;
+// }
 
 
-static
-void
-_unique_triplet
-(
-  int   n_entity,
-  int  *neighbor_entity_idx,
-  int  *neighbor_entity,
-  int **unique_neighbor_entity_idx,
-  int **unique_neighbor_entity_n,
-  int **unique_neighbor_entity
-)
-{
+// static
+// void
+// _unique_triplet
+// (
+//   int   n_entity,
+//   int  *neighbor_entity_idx,
+//   int  *neighbor_entity,
+//   int **unique_neighbor_entity_idx,
+//   int **unique_neighbor_entity_n,
+//   int **unique_neighbor_entity
+// )
+// {
 
-  int* _unique_neighbor_entity_idx = malloc( (n_entity + 1) * sizeof(int));
-  int* _unique_neighbor_entity_n   = malloc( (n_entity    ) * sizeof(int));
-  int* _unique_neighbor_entity     = malloc( 3 * neighbor_entity_idx[n_entity] * sizeof(int));
-  int* order                       = malloc(     neighbor_entity_idx[n_entity] * sizeof(int)); // Suralloc
+//   int* _unique_neighbor_entity_idx = malloc( (n_entity + 1) * sizeof(int));
+//   int* _unique_neighbor_entity_n   = malloc( (n_entity    ) * sizeof(int));
+//   int* _unique_neighbor_entity     = malloc( 3 * neighbor_entity_idx[n_entity] * sizeof(int));
+//   int* order                       = malloc(     neighbor_entity_idx[n_entity] * sizeof(int)); // Suralloc
 
-  _unique_neighbor_entity_idx[0] = 0;
-  for(int i_entity = 0; i_entity < n_entity; ++i_entity) {
+//   _unique_neighbor_entity_idx[0] = 0;
+//   for(int i_entity = 0; i_entity < n_entity; ++i_entity) {
 
-    int beg       = neighbor_entity_idx[i_entity];
-    int n_connect = neighbor_entity_idx[i_entity+1] - beg;
+//     int beg       = neighbor_entity_idx[i_entity];
+//     int n_connect = neighbor_entity_idx[i_entity+1] - beg;
 
-    PDM_order_lnum_s(&neighbor_entity[3*beg], 3, order, n_connect);
+//     PDM_order_lnum_s(&neighbor_entity[3*beg], 3, order, n_connect);
 
-    _unique_neighbor_entity_n  [i_entity  ] = 0;
-    _unique_neighbor_entity_idx[i_entity+1] = _unique_neighbor_entity_idx[i_entity];
+//     _unique_neighbor_entity_n  [i_entity  ] = 0;
+//     _unique_neighbor_entity_idx[i_entity+1] = _unique_neighbor_entity_idx[i_entity];
 
-    int last_proc  = -1;
-    int last_part  = -1;
-    int last_elmt  = -1;
-    for(int i = 0; i < n_connect; ++i) {
-      int old_order   = order[i];
-      int curr_proc   = neighbor_entity[3*(beg+old_order)  ];
-      int curr_part   = neighbor_entity[3*(beg+old_order)+1];
-      int curr_entity = neighbor_entity[3*(beg+old_order)+2];
-      int is_same  = _is_same_triplet(last_proc, last_part, last_elmt,
-                                      curr_proc, curr_part, curr_entity);
+//     int last_proc  = -1;
+//     int last_part  = -1;
+//     int last_elmt  = -1;
+//     for(int i = 0; i < n_connect; ++i) {
+//       int old_order   = order[i];
+//       int curr_proc   = neighbor_entity[3*(beg+old_order)  ];
+//       int curr_part   = neighbor_entity[3*(beg+old_order)+1];
+//       int curr_entity = neighbor_entity[3*(beg+old_order)+2];
+//       int is_same  = _is_same_triplet(last_proc, last_part, last_elmt,
+//                                       curr_proc, curr_part, curr_entity);
 
-      if(is_same == 0){ // N'est pas le meme
-        // idx_unique++;
-        last_proc = curr_proc;
-        last_part = curr_part;
-        last_elmt = curr_entity;
+//       if(is_same == 0){ // N'est pas le meme
+//         // idx_unique++;
+//         last_proc = curr_proc;
+//         last_part = curr_part;
+//         last_elmt = curr_entity;
 
-        int beg_write = 3 * _unique_neighbor_entity_idx[i_entity+1];
-        // printf("beg_write = %i | curr_proc = %i | curr_part = %i | curr_entity = %i \n", beg_write, curr_proc, curr_part, curr_entity);
-        _unique_neighbor_entity[beg_write  ] = curr_proc;
-        _unique_neighbor_entity[beg_write+1] = curr_part;
-        _unique_neighbor_entity[beg_write+2] = curr_entity;
+//         int beg_write = 3 * _unique_neighbor_entity_idx[i_entity+1];
+//         // printf("beg_write = %i | curr_proc = %i | curr_part = %i | curr_entity = %i \n", beg_write, curr_proc, curr_part, curr_entity);
+//         _unique_neighbor_entity[beg_write  ] = curr_proc;
+//         _unique_neighbor_entity[beg_write+1] = curr_part;
+//         _unique_neighbor_entity[beg_write+2] = curr_entity;
 
-        /* Increment the new counter */
-        _unique_neighbor_entity_idx[i_entity+1]++;
-        _unique_neighbor_entity_n  [i_entity  ]++;
-      }
-    }
-  }
+//         /* Increment the new counter */
+//         _unique_neighbor_entity_idx[i_entity+1]++;
+//         _unique_neighbor_entity_n  [i_entity  ]++;
+//       }
+//     }
+//   }
 
-  _unique_neighbor_entity = realloc(_unique_neighbor_entity, 3 * neighbor_entity_idx[n_entity] * sizeof(int));
+//   _unique_neighbor_entity = realloc(_unique_neighbor_entity, 3 * neighbor_entity_idx[n_entity] * sizeof(int));
 
-  *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
-  *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
-  *unique_neighbor_entity     = _unique_neighbor_entity;
-  free(order);
-}
+//   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
+//   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
+//   *unique_neighbor_entity     = _unique_neighbor_entity;
+//   free(order);
+// }
 
 
 static inline
@@ -2210,7 +2210,7 @@ _warm_up_domain_interface
           log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
 
           _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
-          _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
+          _opp_interface_and_gnum[2*idx_entity+1] =  - _neighbor_interface [idx_entity]; // Opposite interface so revert sign
 
           _current_lentity[idx_entity] = i_entity;
 
@@ -5129,6 +5129,9 @@ _rebuild_face_group
         }
       }
 
+      PDM_log_trace_array_long(_face_group_ln_to_gn, face_group_idx[pn_face], "_face_group_ln_to_gn");
+      PDM_log_trace_array_long(_face_ln_to_gn_check, face_group_idx[pn_face], "_face_ln_to_gn_check");
+
       free(face_group_idx);
     }
     shift_part += part_ext->n_part[i_domain];
@@ -5242,6 +5245,10 @@ _rebuild_face_group
           assert(g_num_face == part_ext->border_face_ln_to_gn[shift_part+i_part][pos]);
           idx++;
         }
+      }
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(_pborder_face_group, _pborder_face_group_idx[n_face_group], "_pborder_face_group :: ");
       }
 
       free(pborder_face_group_n);
@@ -6096,7 +6103,7 @@ PDM_part_extension_free
         }
 
         if(part_ext->cur_interface_edge[i_part+shift_part] != NULL) {
-          free(part_ext->cur_interface_vtx[i_part+shift_part]);
+          free(part_ext->cur_interface_edge[i_part+shift_part]);
         }
 
         if(part_ext->cur_interface_vtx[i_part+shift_part] != NULL) {
@@ -6504,6 +6511,8 @@ PDM_part_extension_ln_to_gn_get
       int n_cell   = part_ext->parts[i_domain][i_part].n_cell;
       n_entity     = part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][n_cell];
       *ln_to_gn    = part_ext->border_cell_ln_to_gn         [shift_part+i_part];
+
+      PDM_log_trace_array_int(*ln_to_gn, n_entity, "extent_cell :: ");
     }
     break;
 
@@ -6512,6 +6521,7 @@ PDM_part_extension_ln_to_gn_get
       int n_face   = part_ext->parts[i_domain][i_part].n_face;
       n_entity     = part_ext->face_face_extended_idx[shift_part+i_part][n_face];
       *ln_to_gn    = part_ext->border_face_ln_to_gn  [shift_part+i_part];
+      PDM_log_trace_array_int(*ln_to_gn, n_entity, "extent_face :: ");
     }
     break;
 
@@ -6528,6 +6538,7 @@ PDM_part_extension_ln_to_gn_get
       int n_vtx   = part_ext->parts[i_domain][i_part].n_vtx;
       n_entity     = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
       *ln_to_gn    = part_ext->border_vtx_ln_to_gn  [shift_part+i_part];
+      PDM_log_trace_array_int(*ln_to_gn, n_entity, "extent_vtx :: ");
     }
     break;
 

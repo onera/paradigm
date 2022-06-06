@@ -457,7 +457,7 @@ _exchange_and_sort_neighbor
     free(_concat_neighbor_opp);
 
     if(1 == 1) {
-      PDM_log_trace_graph_nuplet_int(_filter_neighbor_idx, filter_neighbor_desc[i_part], 4, n_entity[i_part], "filter_neighbor_desc :");
+      PDM_log_trace_graph_nuplet_int(_filter_neighbor_idx, filter_neighbor_desc[i_part], 4, n_entity[i_part], "filter_neighbor_desc OOOO :");
     }
 
 
