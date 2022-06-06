@@ -208,6 +208,88 @@ _read_args(int            argc,
   }
 }
 
+static void
+_compute_face_vtx
+(
+ int   n_face,
+ int  *face_edge_idx,
+ int  *face_edge,
+ int  *edge_vtx,
+ int **face_vtx
+ )
+{
+  int dbg = 0;
+
+  *face_vtx = malloc (sizeof(int) * face_edge_idx[n_face]);
+
+  int n_edge = 0;
+  for (int i = 0; i < face_edge_idx[n_face]; i++) {
+    n_edge = PDM_MAX(n_edge, PDM_ABS(face_edge[i]));
+  }
+
+
+  int *edge_tag = PDM_array_zeros_int(n_edge);
+
+  for (int iface = 0; iface < n_face; iface++) {
+    int *_face_vtx  = *face_vtx  + face_edge_idx[iface];
+    int *_face_edge =  face_edge + face_edge_idx[iface];
+
+    if (dbg) {
+      log_trace("\nFace %d\n", iface);
+      for (int idx_edge = face_edge_idx[iface]; idx_edge < face_edge_idx[iface+1]; idx_edge++) {
+        int iedge = PDM_ABS(face_edge[idx_edge]) - 1;
+        log_trace("  edge %d: %d %d\n",
+                  face_edge[idx_edge],
+                  edge_vtx[2*iedge], edge_vtx[2*iedge+1]);
+      }
+    }
+
+    int _n_edge = face_edge_idx[iface+1] - face_edge_idx[iface];
+    // first edge
+    int iedge = PDM_ABS(_face_edge[0]) - 1;
+    edge_tag[iedge] = 1;
+    _face_vtx[0] = edge_vtx[2*iedge  ];
+    _face_vtx[1] = edge_vtx[2*iedge+1];
+
+    for (int i = 2; i < _n_edge; i++) {
+
+      for (int j = 1; j < _n_edge; j++) {
+        iedge = PDM_ABS(_face_edge[j]) - 1;
+
+        if (edge_tag[iedge]) {
+          continue;
+        }
+
+        if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
+          _face_vtx[i] = edge_vtx[2*iedge+1];
+          edge_tag[iedge] = 1;
+          break;
+        }
+        else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
+          _face_vtx[i] = edge_vtx[2*iedge];
+          edge_tag[iedge] = 1;
+          break;
+        }
+      }
+    }
+
+    if (dbg) {
+      log_trace("  face_vtx = ");
+      for (int ivtx = 0; ivtx < face_edge_idx[iface+1] - face_edge_idx[iface]; ivtx++) {
+        log_trace("%d ", _face_vtx[ivtx]);
+      }
+      log_trace("\n");
+    }
+
+    // reset tags
+    for (int i = 0; i < _n_edge; i++) {
+      iedge = PDM_ABS(_face_edge[i]) - 1;
+      edge_tag[iedge] = 0;
+    }
+  }
+  free(edge_tag);
+}
+
 
 
 /**
@@ -277,8 +359,8 @@ int main
   int                  n_part     = 1;
   int                  post       = 0;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TRIA3;
-  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
-  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TETRA4;
+  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
+  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TETRA4;
   // 2 -> tria
   // 3 -> quad
   // 5 -> tetra
@@ -326,8 +408,7 @@ int main
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-
-
+  PDM_plugin_load();
   /*
    *  Initialize structs
    */
@@ -454,7 +535,16 @@ int main
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
-  // PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL",
+  const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};
+  // const int renum_properties_cell[6] = {12, 0, 1, 64, 3, 1};
+  // const int renum_properties_cell[6] = {256, 0, 1, 64, 1, 1};
+  // const int renum_properties_cell[6] = {16, 0, 1, 64, 1, 1};
+  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_HPC",
+                                            (void * ) renum_properties_cell,
+                                                     "PDM_PART_RENUM_FACE_NONE");
+  // PDM_multipart_set_reordering_options(mpart_id,
+  //                                      -1,
+  //                                      "PDM_PART_RENUM_CELL_NONE",
   //                                      NULL,
   //                                      "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_run_ppart(mpart_id);
@@ -574,8 +664,8 @@ int main
   /*
    * Extension
    */
-  // int n_depth = 1;
-  int n_depth = 2;
+  int n_depth = 1;
+  // int n_depth = 2;
   PDM_part_extension_t* part_ext = PDM_part_extension_create(n_domain,
                                                              n_part_by_domain,
                                                              PDM_EXTEND_FROM_VTX,
@@ -831,7 +921,7 @@ int main
 
 
       int *border_vtx_interface  = NULL;
-      int *border_face_interface  = NULL;
+      int *border_face_interface = NULL;
       int *border_cell_interface = NULL;
       PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_interface);
       PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE  , &border_face_interface);
@@ -861,12 +951,13 @@ int main
       PDM_vtk_write_point_cloud(filename_pts,
                                 n_vtx_extended,
                                 vtx_coord_extended,
-                                NULL,
+                                border_vtx_ln_to_gn,
                                 border_vtx_interface);
 
       int *i_num_vtx = malloc(n_vtx_extended * sizeof(int));
       for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
         i_num_vtx[i_vtx] = i_vtx;
+        // i_num_vtx[i_vtx] = border_vtx_ln_to_gn[i_vtx];
         if(border_vtx_interface[i_vtx] == -40000) {
           continue;
         }
@@ -905,19 +996,19 @@ int main
       // int n_face_extended  = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE, &border_face_ln_to_gn);
       // int n_edge_extended  = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_EDGE, &border_edge_ln_to_gn);
 
-      // int *pface_edge_idx;
-      // int *pface_edge;
-      // int n_face_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
-      //                                                            PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-      //                                                            &pface_edge,
-      //                                                            &pface_edge_idx);
+      int *extend_face_edge_idx;
+      int *extend_face_edge;
+      int n_face_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
+                                                                 PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                                 &extend_face_edge,
+                                                                 &extend_face_edge_idx);
 
-      // int *pedge_vtx_idx;
-      // int *pedge_vtx;
-      // int n_edge_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
-      //                                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-      //                                                            &pedge_vtx,
-      //                                                            &pedge_vtx_idx);
+      int *extend_edge_vtx_idx;
+      int *extend_edge_vtx;
+      int n_edge_extended2 = PDM_part_extension_connectivity_get(part_ext, i_dom, i_part,
+                                                                 PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                                 &extend_edge_vtx,
+                                                                 &extend_edge_vtx_idx);
 
       // PDM_g_num_t* edge_ln_to_gn = NULL;
       // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart_id,
@@ -1025,6 +1116,100 @@ int main
       }
       PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
+      // Rebuild poly connectivity to check mesh
+
+      int *face_edge     = NULL;
+      int *face_edge_idx = NULL;
+      int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,
+                                                        i_dom,
+                                                        i_part,
+                                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                        &face_edge,
+                                                        &face_edge_idx,
+                                                        PDM_OWNERSHIP_KEEP);
+      // assert(n_face == n_face2);
+      int *edge_vtx     = NULL;
+      int *edge_vtx_idx = NULL;
+      int n_edge = PDM_multipart_part_connectivity_get(mpart_id,
+                                                       i_dom,
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                       &edge_vtx,
+                                                       &edge_vtx_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+
+
+      int n_face_tot = n_face2+n_face_extended;
+
+      int *concat_face_edge_idx = malloc( (n_face_tot+1) * sizeof(int));
+      int *concat_face_edge     = malloc( (face_edge_idx[n_face2] + extend_face_edge_idx[n_face_extended])* sizeof(int));
+      int *concat_edge_vtx      = malloc( 2 * (n_edge + n_edge_extended2 ) * sizeof(int));
+
+      concat_face_edge_idx[0] = 0;
+      for(int i_face = 0; i_face < n_face2; ++i_face) {
+        concat_face_edge_idx[i_face+1] = concat_face_edge_idx[i_face];
+        for(int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
+          concat_face_edge[concat_face_edge_idx[i_face+1]++] = face_edge[idx_edge];
+        }
+      }
+
+      for(int i_face = 0; i_face < n_face_extended; ++i_face) {
+        int l_face = i_face + n_face2;
+        concat_face_edge_idx[l_face+1] = concat_face_edge_idx[l_face];
+        printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_edge_idx[l_face+1]);
+        for(int idx_edge = extend_face_edge_idx[i_face]; idx_edge < extend_face_edge_idx[i_face+1]; ++idx_edge) {
+          concat_face_edge[concat_face_edge_idx[l_face+1]++] = extend_face_edge[idx_edge];
+        }
+      }
+
+
+      for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
+        concat_edge_vtx[2*i_edge  ] = edge_vtx[2*i_edge  ];
+        concat_edge_vtx[2*i_edge+1] = edge_vtx[2*i_edge+1];
+      }
+
+      for(int i_edge = 0; i_edge < n_edge_extended2; ++i_edge) {
+        int l_edge = i_edge + n_edge;
+        concat_edge_vtx[2*l_edge  ] = extend_edge_vtx[2*i_edge  ];
+        concat_edge_vtx[2*l_edge+1] = extend_edge_vtx[2*i_edge+1];
+      }
+
+      PDM_log_trace_connectivity_int(concat_face_edge_idx,
+                                     concat_face_edge,
+                                     n_face_tot,
+                                     "concat_face_edge ::");
+
+      // Concatenate face_vtx
+      int *concat_face_vtx = NULL;
+      _compute_face_vtx(n_face_tot,
+                        concat_face_edge_idx,
+                        concat_face_edge,
+                        concat_edge_vtx,
+                        &concat_face_vtx);
+      PDM_log_trace_connectivity_int(concat_face_edge_idx,
+                                     concat_face_vtx,
+                                     n_face_tot,
+                                     "concat_face_vtx ::");
+
+      sprintf(filename_pts, "out_face_vtx_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+      PDM_vtk_write_polydata(filename_pts,
+                             n_vtx_tot,
+                             concat_vtx_coord,
+                             concat_vtx_ln_to_gn,
+                             n_face_tot,
+                             concat_face_edge_idx,
+                             concat_face_vtx,
+                             NULL,
+                             NULL);
+
+
+      free(concat_face_vtx);
+      free(concat_face_edge_idx);
+      free(concat_face_edge    );
+      free(concat_edge_vtx     );
+
+
+      // PDM_part_mesh_nodal_elmts_free(pmne_vol);
       free(concat_vtx_ln_to_gn );
       free(concat_cell_ln_to_gn);
       free(concat_vtx_coord    );
