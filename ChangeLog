@@ -1,11 +1,11 @@
 ## [2.0.0] - 2022-06-??
 ### Added
 - PDM_vtk : Write ASCII VTK files for visulization with ParaView
-- PDM_dgeom_elem : ??
-- PDM_dmesh_nodal_elmts : ??
-- PDM_domain_interface : ??
+- PDM_dgeom_elem : Multiple method to compute center of entity with distributed conectivities and coordinates (usefull for hilbert ordering)
+- PDM_dmesh_nodal_elmts : Sub-structure of dmesh_nodal that contains for one geom kind (volumic/surfacic/ridge/corner) the associate element connectivtities
+- PDM_domain_interface : Structure and algorithme to manage interface between domain (for exemple between 2 mesh with 2 separate global numbering). Algorithm is useful to deduce other connectivities betwenn domain (for exemple face -> vtx)
 - PDM_ho_ordering : Generic definition of high order elements
-- PDM_part_domain_interface : ??
+- PDM_part_domain_interface : Same as PDM_domain_interface but in partitioned view (usefull for part_extension)
 - PDM_predicate : Numerically robust geometric predicates
 - PDM_point_cloud_gen : Generate a random point cloud
 - PDM_sphere_surf_gen : Generate a distributed suface mesh of a sphere
@@ -16,7 +16,7 @@
 - PDM_part_to_part : Browse an MPI communication graph defined by two global numberings
 - PDM_pointer_array : Fortran derived type for interfacing C pointers of arrays
 - PDM_hkey : ??
-- PDM_memory_stats : ??
+- PDM_memory_stats : Structure to monitor the memory uses by snapshot
 ### Changed
 - New Fortran API based on iso-c-binding
 - Adds functionalities in Fortran API
