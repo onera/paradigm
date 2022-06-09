@@ -2684,6 +2684,7 @@ PDM_geom_elem_edge_upwind_and_downwind
     }
   }
 
+  return;
 
   printf("n_vtx = %d\n", n_vtx);
   FILE *f = fopen("visu_V4.vtk", "w");

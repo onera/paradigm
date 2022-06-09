@@ -2207,10 +2207,10 @@ _warm_up_domain_interface
       for(int i_entity = 0; i_entity < n_entity[i_part+shift_part]; ++i_entity) {
         for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
 
-          log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
+          // log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
 
           _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
-          _opp_interface_and_gnum[2*idx_entity+1] =  - _neighbor_interface [idx_entity]; // Opposite interface so revert sign
+          _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
 
           _current_lentity[idx_entity] = i_entity;
 
@@ -6438,6 +6438,9 @@ PDM_part_extension_connectivity_get
       n_entity     = part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][n_cell];
       *connect_idx = part_ext->border_cell_face_idx         [shift_part+i_part];
       *connect     = part_ext->border_cell_face             [shift_part+i_part];
+
+      // PDM_log_trace_connectivity_int(*connect_idx, *connect, n_entity, "cell_face");
+
     }
     break;
 
