@@ -23,8 +23,6 @@
 #include "pdm_geom_elem.h"
 #include "pdm_array.h"
 
-#include "pdm_writer.h"
-
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -93,18 +91,6 @@ _block_std_free_partial
     _block_std->_numabs = NULL;
   }
 
-  if (_block_std->_num_part != NULL) {
-    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_num_part[i] != NULL)
-          free(_block_std->_num_part[i]);
-        _block_std->_num_part[i] = NULL;
-      }
-    }
-    free(_block_std->_num_part);
-    _block_std->_num_part = NULL;
-  }
-
 }
 
 
@@ -157,6 +143,18 @@ _block_std_free
     }
     free(_block_std->_parent_num);
     _block_std->_parent_num = NULL;
+  }
+
+  if (_block_std->_parent_entity_g_num != NULL) {
+    if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_std->n_part; i++) {
+        if (_block_std->_parent_entity_g_num[i] != NULL)
+          free(_block_std->_parent_entity_g_num[i]);
+        _block_std->_parent_entity_g_num[i] = NULL;
+      }
+    }
+    free(_block_std->_parent_entity_g_num);
+    _block_std->_parent_entity_g_num = NULL;
   }
 
   free(_block_std);
@@ -245,7 +243,7 @@ PDM_part_mesh_nodal_elmts_create
   pmne->mesh_dimension   = mesh_dimension;
   pmne->n_part           = n_part;
 
-  pmne->n_elmts          = (int * ) malloc( n_part * sizeof(int));
+  pmne->n_elmts          = PDM_array_zeros_int(n_part);
 
   pmne->n_section        = 0;
   pmne->n_section_std    = 0;
@@ -316,19 +314,18 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_std[id_block]->t_elt        = t_elt;
       pmne->sections_std[id_block]->n_part       = pmne->n_part;
 
-      pmne->sections_std[id_block]->n_elt        = (int  *) malloc(sizeof(int  ) * pmne->sections_std[id_block]->n_part);
-      pmne->sections_std[id_block]->_connec      = (int **) malloc(sizeof(int *) * pmne->sections_std[id_block]->n_part);
-      pmne->sections_std[id_block]->_num_part    = (int **) malloc(sizeof(int *) * pmne->sections_std[id_block]->n_part);
-      pmne->sections_std[id_block]->_numabs      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_std[id_block]->n_part);
-      pmne->sections_std[id_block]->numabs_int   = NULL;
-      pmne->sections_std[id_block]->_parent_num  = NULL;
-      pmne->sections_std[id_block]->cell_centers = NULL;
-      pmne->sections_std[id_block]->owner        = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_block]->n_elt                 = (int  *) malloc(sizeof(int  ) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->_connec               = (int **) malloc(sizeof(int *) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->_numabs               = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->numabs_int            = NULL;
+      pmne->sections_std[id_block]->_parent_num           = NULL;
+      pmne->sections_std[id_block]->_parent_entity_g_num  = NULL;
+      pmne->sections_std[id_block]->cell_centers          = NULL;
+      pmne->sections_std[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
 
       for (int i = 0; i < pmne->sections_std[id_block]->n_part; i++) {
         pmne->sections_std[id_block]->n_elt    [i] = 0;
         pmne->sections_std[id_block]->_connec  [i] = NULL;
-        pmne->sections_std[id_block]->_num_part[i] = NULL;
         pmne->sections_std[id_block]->_numabs  [i] = NULL;
       }
 
@@ -356,21 +353,20 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly2d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly2d_t) );
       pmne->sections_poly2d[id_block]->n_part            = pmne->n_part;
 
-      pmne->sections_poly2d[id_block]->n_elt        = (int * ) malloc(sizeof(int  ) * pmne->sections_poly2d[id_block]->n_part);
-      pmne->sections_poly2d[id_block]->_connec_idx  = (int **) malloc(sizeof(int *) * pmne->sections_poly2d[id_block]->n_part);
-      pmne->sections_poly2d[id_block]->_connec      = (int **) malloc(sizeof(int *) * pmne->sections_poly2d[id_block]->n_part);
-      pmne->sections_poly2d[id_block]->_num_part    = (int **) malloc(sizeof(int *) * pmne->sections_poly2d[id_block]->n_part);
-      pmne->sections_poly2d[id_block]->_numabs      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly2d[id_block]->n_part);
-      pmne->sections_poly2d[id_block]->numabs_int   = NULL;
-      pmne->sections_poly2d[id_block]->cell_centers = NULL;
-      pmne->sections_poly2d[id_block]->_parent_num  = NULL;
-      pmne->sections_poly2d[id_block]->owner        = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_block]->n_elt                 = (int * ) malloc(sizeof(int  ) * pmne->sections_poly2d[id_block]->n_part);
+      pmne->sections_poly2d[id_block]->_connec_idx           = (int **) malloc(sizeof(int *) * pmne->sections_poly2d[id_block]->n_part);
+      pmne->sections_poly2d[id_block]->_connec               = (int **) malloc(sizeof(int *) * pmne->sections_poly2d[id_block]->n_part);
+      pmne->sections_poly2d[id_block]->_numabs               = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly2d[id_block]->n_part);
+      pmne->sections_poly2d[id_block]->numabs_int            = NULL;
+      pmne->sections_poly2d[id_block]->cell_centers          = NULL;
+      pmne->sections_poly2d[id_block]->_parent_num           = NULL;
+      pmne->sections_poly2d[id_block]->_parent_entity_g_num  = NULL;
+      pmne->sections_poly2d[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
 
       for (int i = 0; i < pmne->sections_poly2d[id_block]->n_part; i++) {
         pmne->sections_poly2d[id_block]->n_elt      [i] = 0;
         pmne->sections_poly2d[id_block]->_connec_idx[i] = NULL;
         pmne->sections_poly2d[id_block]->_connec    [i] = NULL;
-        pmne->sections_poly2d[id_block]->_num_part  [i] = NULL;
         pmne->sections_poly2d[id_block]->_numabs    [i] = NULL;
       }
 
@@ -396,18 +392,19 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly3d[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_poly3d_t) );
       pmne->sections_poly3d[id_block]->n_part       = pmne->n_part;
 
-      pmne->sections_poly3d[id_block]->n_elt        = (int * ) malloc(sizeof(int  ) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->n_face       = (int * ) malloc(sizeof(int  ) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_facvtx_idx  = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_facvtx      = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_cellfac_idx = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_cellfac     = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_cellvtx_idx = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_cellvtx     = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->_numabs      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly3d[id_block]->n_part);
-      pmne->sections_poly3d[id_block]->numabs_int   = NULL;
-      pmne->sections_poly3d[id_block]->cell_centers = NULL;
-      pmne->sections_poly3d[id_block]->_parent_num  = NULL;
+      pmne->sections_poly3d[id_block]->n_elt                = (int * ) malloc(sizeof(int  ) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->n_face               = (int * ) malloc(sizeof(int  ) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_facvtx_idx          = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_facvtx              = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_cellfac_idx         = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_cellfac             = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_cellvtx_idx         = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_cellvtx             = (int **) malloc(sizeof(int *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->_numabs              = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly3d[id_block]->n_part);
+      pmne->sections_poly3d[id_block]->numabs_int           = NULL;
+      pmne->sections_poly3d[id_block]->cell_centers         = NULL;
+      pmne->sections_poly3d[id_block]->_parent_num          = NULL;
+      pmne->sections_poly3d[id_block]->_parent_entity_g_num = NULL;
 
       pmne->sections_poly3d[id_block]->owner        = PDM_OWNERSHIP_KEEP;
 
@@ -451,6 +448,7 @@ const int                          n_elt,
 const int                         *connec,
 const PDM_g_num_t                 *numabs,
 const int                         *parent_num,
+const PDM_g_num_t                 *parent_entity_g_num,
       PDM_ownership_t              owner
 )
 {
@@ -472,10 +470,10 @@ const int                         *parent_num,
   }
 
   /* Mapping */
-  block->n_elt[id_part]  += n_elt;
-  block->_connec[id_part] = (PDM_l_num_t *) connec;
-  block->_numabs[id_part] = (PDM_g_num_t *) numabs;
-  block->owner            = owner;
+  block->n_elt  [id_part] += n_elt;
+  block->_connec[id_part]  = (PDM_l_num_t *) connec;
+  block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
+  block->owner             = owner;
 
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
@@ -486,6 +484,16 @@ const int                         *parent_num,
     }
     block->_parent_num[id_part] = (PDM_l_num_t *) parent_num;
   }
+
+  if (parent_entity_g_num != NULL) {
+    if (block->_parent_entity_g_num == NULL) {
+      block->_parent_entity_g_num = malloc (sizeof(PDM_l_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_entity_g_num[i] = NULL;
+      }
+    }
+    block->_parent_entity_g_num[id_part] = (PDM_g_num_t *) parent_entity_g_num;
+  }
 }
 
 void
@@ -494,7 +502,10 @@ PDM_part_mesh_nodal_elmts_block_std_get
       PDM_part_mesh_nodal_elmts_t  *pmne,
 const int                           id_block,
 const int                           id_part,
-      int                         **connec
+      int                         **connec,
+      PDM_g_num_t                 **numabs,
+      int                         **parent_num,
+      PDM_g_num_t                 **parent_entity_g_num
 )
 {
   if (pmne == NULL) {
@@ -513,9 +524,56 @@ const int                           id_part,
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *connec = block->_connec[id_part];
+  *connec              = block->_connec             [id_part];
+  *numabs              = block->_numabs             [id_part];
+  *parent_num          = block->_parent_num         [id_part];
+  *parent_entity_g_num = NULL;
+  if(block->_parent_entity_g_num != NULL) {
+    *parent_entity_g_num = block->_parent_entity_g_num[id_part];
+  }
 }
 
+PDM_Mesh_nodal_elt_t
+PDM_part_mesh_nodal_elmts_block_type_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block
+)
+{
+
+  PDM_Mesh_nodal_elt_t t_elt;
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+    const PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    t_elt = block->t_elt;
+  }
+
+  else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_2D;
+
+  }
+
+  else {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+
+  }
+
+  return t_elt;
+
+}
 
 int
 PDM_part_mesh_nodal_elmts_block_n_elt_get
@@ -584,6 +642,27 @@ const int                          id_part
   }
 
 }
+
+
+int
+PDM_part_mesh_nodal_elmts_n_section_get
+(
+  PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  return pmne->n_section;
+}
+
+
+int *
+PDM_part_mesh_nodal_elmts_sections_id_get
+(
+  PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  return pmne->sections_id;
+}
+
 
 void
 PDM_part_mesh_nodal_elmts_free

@@ -39,7 +39,6 @@
 #include "pdm_printf.h"
 #include "pdm_logging.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 #include "pdm_binary_search.h"
 #include "pdm_sort.h"
 #include "pdm_mpi.h"
@@ -127,13 +126,16 @@ typedef struct {
 
   double times_cpu_s[NTIMER_HASH_VALUES];    /*!< System CPU time */
 
+  PDM_ownership_t owner;       /*!< Ownership */
+  int  tag_results_get ;       /*!< Tag call to PDM_dist_cellcenter_surf_get function */ 
+
 } _pdm_gnum_from_hv_t;
 
 /*============================================================================
  * Global variable
  *============================================================================*/
 
-static PDM_Handles_t *_gnums_from_hv   = NULL;
+// static PDM_Handles_t *_gnums_from_hv   = NULL;
 
 /*=============================================================================
  * Private function definitions
@@ -147,21 +149,21 @@ static PDM_Handles_t *_gnums_from_hv   = NULL;
  *
  */
 
-static _pdm_gnum_from_hv_t *
-_get_from_id
-(
- int  id
-)
-{
+// static _pdm_gnum_from_hv_t *
+// _get_from_id
+// (
+//  int  id
+// )
+// {
 
-  _pdm_gnum_from_hv_t *gnum_from_hv = (_pdm_gnum_from_hv_t *) PDM_Handles_get (_gnums_from_hv, id);
+//   _pdm_gnum_from_hv_t *gnum_from_hv = (_pdm_gnum_from_hv_t *) PDM_Handles_get (_gnums_from_hv, id);
 
-  if (gnum_from_hv == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_from_hv error : Bad identifier\n");
-  }
+//   if (gnum_from_hv == NULL) {
+//     PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_from_hv error : Bad identifier\n");
+//   }
 
-  return gnum_from_hv;
-}
+//   return gnum_from_hv;
+// }
 
 /**
  *
@@ -843,11 +845,12 @@ _gnum_from_hv_compute
  * \param [in]   equilibrate  Use algorithm to equilibrate the block treatment (hash value is not a priori equi-reparti)
  * \param [in]   tolerance    Geometric tolerance (used if merge double points is activated)
  * \param [in]   comm         PDM_MPI communicator
+ * \param [in]   owner        Owner
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_gnum_from_hv_t object
  */
 
-int
+PDM_gnum_from_hv_t *
 PDM_gnum_from_hash_values_create
 (
  const int            n_part,
@@ -855,7 +858,8 @@ PDM_gnum_from_hash_values_create
  const size_t         s_data,
  gnum_from_hv_compare fcompare,
  gnum_from_hv_equal   fequal,
- const PDM_MPI_Comm   comm
+ const PDM_MPI_Comm   comm,
+ const PDM_ownership_t owner
 )
 {
   int i_rank;
@@ -864,15 +868,8 @@ PDM_gnum_from_hash_values_create
   int n_rank;
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  /*
-   * Search a gnum_from_hash_values free id
-   */
-  if (_gnums_from_hv == NULL) {
-    _gnums_from_hv = PDM_Handles_create (4);
-  }
 
   _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) malloc(sizeof(_pdm_gnum_from_hv_t));
-  int id = PDM_Handles_store (_gnums_from_hv, _gnum_from_hv);
 
   _gnum_from_hv->fcompare    = fcompare;
   _gnum_from_hv->fequal      = fequal;
@@ -908,29 +905,18 @@ PDM_gnum_from_hash_values_create
     _gnum_from_hv->times_cpu_s[i] = 0.;
   }
 
-  return id;
+  _gnum_from_hv->owner = owner;
+  _gnum_from_hv->tag_results_get = 0;
 
+  return (PDM_gnum_from_hv_t *) _gnum_from_hv;
 }
 
-// void
-// PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
-// (
-//  const int          *n_part,
-//  const int          *equilibrate,
-//  const size_t       *s_data,
-//  const PDM_MPI_Fint *fcomm,
-//        int          *id
-// )
-// {
-//   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
-//   // *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
-// }
 
 /**
  *
  * \brief Set hash values for one partition
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_from_hv Pointer to \ref PDM_gnum_from_hv_t object
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
  * \param [in]   part_hkey    For each elements the hash value associated
@@ -942,7 +928,7 @@ PDM_gnum_from_hash_values_create
 void
 PDM_gnum_set_hash_values
 (
- const int            id,
+ PDM_gnum_from_hv_t  *gnum_from_hv,
  const int            i_part,
  const int            n_elts,
  const size_t        *part_hkeys,
@@ -950,7 +936,7 @@ PDM_gnum_set_hash_values
  const unsigned char *part_hdata
 )
 {
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) gnum_from_hv;
 
   assert(_gnum_from_hv->part_hkeys != NULL);
   assert(_gnum_from_hv->part_hstri != NULL);
@@ -987,89 +973,50 @@ PDM_gnum_set_hash_values
 
 }
 
-void
-PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
-(
- const int           *id,
- const int           *i_part,
- const int           *n_elts,
- const size_t        *part_hkeys,
- const int           *part_hstri,
- const unsigned char *part_hdata
-)
-{
-  PDM_gnum_set_hash_values (*id, *i_part, *n_elts, part_hkeys, part_hstri, part_hdata);
-}
-
 
 /**
  *
  * \brief Compute
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_from_hv Pointer to \ref PDM_gnum_from_hv_t object
  *
  */
-
 
 void
 PDM_gnum_from_hv_compute
 (
- const int id
+ PDM_gnum_from_hv_t *gnum_from_hv
 )
 {
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) gnum_from_hv;
 
   _gnum_from_hv_compute(_gnum_from_hv);
 
 }
 
-void
-PROCF (PDM_gnum_from_hv_compute, PDM_GNUM_FROM_HV_COMPUTE)
-(
- const int *id
-)
-{
-  PDM_gnum_from_hv_compute (*id);
-}
-
 
 /**
  *
- * \brief Set from coordinates
+ * \brief Get the global ids for the current partition
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_from_hv Pointer to \ref PDM_gnum_from_hv_t object
  * \param [in]   i_part       Current partition
- * \param [in]   n_elts       Number of elements
- * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
+ *
+ * \return  Array of global ids for the current partition
  *
  */
 
 PDM_g_num_t *
 PDM_gnum_from_hv_get
 (
- const int id,
- const int i_part
+ PDM_gnum_from_hv_t *gnum_from_hv,
+ const int           i_part
 )
 {
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) gnum_from_hv;
 
+  _gnum_from_hv->tag_results_get = 1;
   return _gnum_from_hv->g_nums[i_part];
-}
-
-void
-PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
-(
- const int *id,
- const int *i_part,
- PDM_g_num_t *gnum
-)
-{
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (*id);
-
-  const PDM_g_num_t *tmp = PDM_gnum_from_hv_get (*id, *i_part);
-  for (int i = 0; i < _gnum_from_hv->n_elts[*i_part]; i++) {
-    gnum[i] = tmp[i];
-  }
 }
 
 
@@ -1077,18 +1024,18 @@ PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
  *
  * \brief Dump elapsed an CPU time
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_from_hv Pointer to \ref PDM_gnum_from_hv_t object
  *
  */
 
 void
 PDM_gnum_from_hv_dump_times
 (
- const int id
+ PDM_gnum_from_hv_t *gnum_from_hv
 )
 {
 
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) gnum_from_hv;
 
   double t_elaps_max[NTIMER_HASH_VALUES];
   PDM_MPI_Allreduce (_gnum_from_hv->times_elapsed, t_elaps_max, NTIMER_HASH_VALUES,
@@ -1148,20 +1095,21 @@ PDM_gnum_from_hv_dump_times
  *
  * \brief Free
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_from_hv Pointer to \ref PDM_gnum_from_hv_t object
+ * \param [in]   partial      1 to free partially, 0 else
  *
  */
 
 void
 PDM_gnum_from_hv_free
 (
- const int id,
- const int partial
+ PDM_gnum_from_hv_t *gnum_from_hv
 )
 {
-  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+  _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) gnum_from_hv;
 
-  if (partial != 1) {
+  if(( _gnum_from_hv->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( _gnum_from_hv->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_gnum_from_hv->tag_results_get)) {
     for (int i = 0; i < _gnum_from_hv->n_part; i++) {
       free (_gnum_from_hv->g_nums[i]);
     }
@@ -1177,27 +1125,8 @@ PDM_gnum_from_hv_free
   PDM_timer_free(_gnum_from_hv->timer);
 
   free (_gnum_from_hv);
-
-  PDM_Handles_handle_free (_gnums_from_hv, id, PDM_FALSE);
-
-  const int n_gnum_from_hv = PDM_Handles_n_get (_gnums_from_hv);
-
-  if (n_gnum_from_hv == 0) {
-    _gnums_from_hv = PDM_Handles_free (_gnums_from_hv);
-  }
-
+  _gnum_from_hv = NULL;
 }
-
-void
-PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
-(
- const int *id,
- const int *partial
-)
-{
-  PDM_gnum_from_hv_free (*id, *partial);
-}
-
 
 
 // void

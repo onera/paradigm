@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
 #else
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
 #endif
 #endif
 
@@ -178,6 +180,14 @@ int main(int argc, char *argv[])
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+
+  if (i_rank == 0) {
+    PDM_printf ("%Parametres : \n");
+    PDM_printf ("  - n_rank    : %d\n", n_rank);
+    PDM_printf ("  - n_vtx_seg : "PDM_FMT_G_NUM"\n", n_vtx_seg);
+    PDM_printf ("  - length    : %f\n", length);
+    PDM_printf ("  - method    : %d\n", method);
+  }
 
   int           dn_cell;
   int           dn_face;
@@ -232,7 +242,7 @@ int main(int argc, char *argv[])
                        &dvtx_coord,
                        &dface_group_idx,
                        &dface_group);
-  int ppart_id = 0;
+  // int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
 
@@ -254,34 +264,33 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_part_create(&ppart_id,
-                  PDM_MPI_COMM_WORLD,
-                  method,
-                  "PDM_PART_RENUM_CELL_NONE",
-                  "PDM_PART_RENUM_FACE_NONE",
-                  n_property_cell,
-                  renum_properties_cell,
-                  n_property_face,
-                  renum_properties_face,
-                  n_part,
-                  dn_cell,
-                  dn_face,
-                  dn_vtx,
-                  n_face_group,
-                  NULL,
-                  NULL,
-                  NULL,
-                  NULL,
-                  have_dcell_part,
-                  dcell_part,
-                  dface_cell,
-                  dface_vtx_idx,
-                  dface_vtx,
-                  NULL,
-                  dvtx_coord,
-                  NULL,
-                  dface_group_idx,
-                  dface_group);
+  PDM_part_t *ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
+                                      method,
+                                      "PDM_PART_RENUM_CELL_NONE",
+                                      "PDM_PART_RENUM_FACE_NONE",
+                                      n_property_cell,
+                                      renum_properties_cell,
+                                      n_property_face,
+                                      renum_properties_face,
+                                      n_part,
+                                      dn_cell,
+                                      dn_face,
+                                      dn_vtx,
+                                      n_face_group,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      have_dcell_part,
+                                      dcell_part,
+                                      dface_cell,
+                                      dface_vtx_idx,
+                                      dface_vtx,
+                                      NULL,
+                                      dvtx_coord,
+                                      NULL,
+                                      dface_group_idx,
+                                      dface_group);
 
   free(dcell_part);
 
@@ -337,7 +346,7 @@ int main(int argc, char *argv[])
     int sface_group;
     int nEdgeGroup2;
 
-    PDM_part_part_dim_get (ppart_id,
+    PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_cell,
                            &n_face,
@@ -384,7 +393,7 @@ int main(int argc, char *argv[])
     int          *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get (ppart_id,
+    PDM_part_part_val_get (ppart,
                            i_part,
                            &cell_tag,
                            &cell_face_idx,
@@ -541,8 +550,6 @@ int main(int argc, char *argv[])
                      PDM_MPI_COMM_WORLD);
 
   PDM_dist_cloud_surf_surf_mesh_global_data_set (dist,
-                                                 n_g_face,
-                                                 n_g_vtx,
                                                  n_part);
 
   PDM_dist_cloud_surf_n_part_cloud_set (dist, 0, n_part);
@@ -570,7 +577,7 @@ int main(int argc, char *argv[])
     int sface_group;
     int nEdgeGroup2;
 
-    PDM_part_part_dim_get (ppart_id,
+    PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_cell,
                            &n_face,
@@ -602,7 +609,7 @@ int main(int argc, char *argv[])
     int          *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get (ppart_id,
+    PDM_part_part_val_get (ppart,
                            i_part,
                            &cell_tag,
                            &cell_face_idx,
@@ -642,11 +649,11 @@ int main(int argc, char *argv[])
                                         NULL);
 
     PDM_dist_cloud_surf_cloud_set (dist,
-                             0,
-                             i_part,
-                             n_cell,
-                             cell_center[i_part],
-                             cell_ln_to_gn);
+                                   0,
+                                   i_part,
+                                   n_cell,
+                                   cell_center[i_part],
+                                   cell_ln_to_gn);
 
   }
 
@@ -668,11 +675,11 @@ int main(int argc, char *argv[])
     PDM_g_num_t *closest_elt_gnum;
 
     PDM_dist_cloud_surf_get (dist,
-                       0,
-                       i_part,
-                       &distance,
-                       &projected,
-                       &closest_elt_gnum);
+                             0,
+                             i_part,
+                             &distance,
+                             &projected,
+                             &closest_elt_gnum);
 
     int n_cell;
     int n_face;
@@ -685,7 +692,7 @@ int main(int argc, char *argv[])
     int sface_group;
     int nEdgeGroup2;
 
-    PDM_part_part_dim_get (ppart_id,
+    PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_cell,
                            &n_face,
@@ -717,7 +724,7 @@ int main(int argc, char *argv[])
     int          *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get (ppart_id,
+    PDM_part_part_val_get (ppart,
                            i_part,
                            &cell_tag,
                            &cell_face_idx,
@@ -790,6 +797,207 @@ int main(int argc, char *argv[])
     }
   }
 
+
+  if (post) {
+    /* Prepare writer */
+    PDM_writer_t *id_cs = PDM_writer_create ("Ensight",
+                                             PDM_WRITER_FMT_ASCII,
+                                             PDM_WRITER_TOPO_CST,
+                                             PDM_WRITER_OFF,
+                                             "test_dist",
+                                             "dist",
+                                             PDM_MPI_COMM_WORLD,
+                                             PDM_IO_KIND_MPI_SIMPLE,
+                                             1.,
+                                             NULL);
+
+    int id_geom = PDM_writer_geom_create (id_cs,
+                                          "mesh",
+                                          n_part);
+
+    int id_var_dist = PDM_writer_var_create (id_cs,
+                                             PDM_WRITER_OFF,
+                                             PDM_WRITER_VAR_SCALAR,
+                                             PDM_WRITER_VAR_ELEMENTS,
+                                             "wall_dist");
+
+    int id_var_closest = PDM_writer_var_create (id_cs,
+                                                PDM_WRITER_OFF,
+                                                PDM_WRITER_VAR_SCALAR,
+                                                PDM_WRITER_VAR_ELEMENTS,
+                                                "closest_bnd_face");
+
+    PDM_writer_step_beg (id_cs, 0.);
+
+    /* Write geometry */
+    int **face_vtx_n  = malloc (sizeof(int *) * n_part);
+    int **cell_face_n = malloc (sizeof(int *) * n_part);
+
+    PDM_real_t **val_dist    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_closest = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      double      *distance;
+      double      *projected;
+      PDM_g_num_t *closest_elt_gnum;
+
+      PDM_dist_cloud_surf_get (dist,
+                               0,
+                               i_part,
+                               &distance,
+                               &projected,
+                               &closest_elt_gnum);
+
+      int n_cell;
+      int n_face;
+      int n_face_part_bound;
+      int n_vtx;
+      int n_proc;
+      int n_total_part;
+      int scell_face;
+      int sface_vtx;
+      int sface_group;
+      int nEdgeGroup2;
+
+      PDM_part_part_dim_get (ppart,
+                             i_part,
+                             &n_cell,
+                             &n_face,
+                             &n_face_part_bound,
+                             &n_vtx,
+                             &n_proc,
+                             &n_total_part,
+                             &scell_face,
+                             &sface_vtx,
+                             &sface_group,
+                             &nEdgeGroup2);
+
+      int         *cell_tag;
+      int         *cell_face_idx;
+      int         *cell_face;
+      PDM_g_num_t *cell_ln_to_gn;
+      int         *face_tag;
+      int         *face_cell;
+      int         *face_vtx_idx;
+      int         *face_vtx;
+      PDM_g_num_t *face_ln_to_gn;
+      int         *face_part_bound_proc_idx;
+      int         *face_part_bound_part_idx;
+      int         *face_part_bound;
+      int         *vtx_tag;
+      double      *vtx;
+      PDM_g_num_t *vtx_ln_to_gn;
+      int         *face_group_idx;
+      int         *face_group;
+      PDM_g_num_t *face_group_ln_to_gn;
+
+      PDM_part_part_val_get (ppart,
+                             i_part,
+                             &cell_tag,
+                             &cell_face_idx,
+                             &cell_face,
+                             &cell_ln_to_gn,
+                             &face_tag,
+                             &face_cell,
+                             &face_vtx_idx,
+                             &face_vtx,
+                             &face_ln_to_gn,
+                             &face_part_bound_proc_idx,
+                             &face_part_bound_part_idx,
+                             &face_part_bound,
+                             &vtx_tag,
+                             &vtx,
+                             &vtx_ln_to_gn,
+                             &face_group_idx,
+                             &face_group,
+                             &face_group_ln_to_gn);
+
+      PDM_writer_geom_coord_set (id_cs,
+                                 id_geom,
+                                 i_part,
+                                 n_vtx,
+                                 vtx,
+                                 vtx_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
+
+      face_vtx_n[i_part] = malloc (sizeof(int) * n_face);
+      for (int i = 0; i < n_face; i++) {
+        face_vtx_n[i_part][i] = face_vtx_idx[i+1] - face_vtx_idx[i];
+      }
+
+      cell_face_n[i_part] = malloc (sizeof(int) * n_cell);
+      for (int i = 0; i < n_cell; i++) {
+        cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
+      }
+
+      PDM_writer_geom_cell3d_cellface_add (id_cs,
+                                           id_geom,
+                                           i_part,
+                                           n_cell,
+                                           n_face,
+                                           face_vtx_idx,
+                                           face_vtx_n[i_part],
+                                           face_vtx,
+                                           cell_face_idx,
+                                           cell_face_n[i_part],
+                                           cell_face,
+                                           cell_ln_to_gn);
+
+      val_dist[i_part]    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
+      val_closest[i_part] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
+      for (int i = 0; i < n_cell; i++) {
+        val_dist[i_part][i]    = (PDM_real_t) sqrt(distance[i]);
+        val_closest[i_part][i] = (PDM_real_t) closest_elt_gnum[i];
+      }
+    }
+
+    PDM_writer_geom_write (id_cs,
+                           id_geom);
+
+    // write variables
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_writer_var_set (id_cs,
+                          id_var_dist,
+                          id_geom,
+                          i_part,
+                          val_dist[i_part]);
+
+      PDM_writer_var_set (id_cs,
+                          id_var_closest,
+                          id_geom,
+                          i_part,
+                          val_closest[i_part]);
+    }
+
+    PDM_writer_var_write (id_cs,
+                          id_var_dist);
+    PDM_writer_var_write (id_cs,
+                          id_var_closest);
+
+    PDM_writer_var_free (id_cs,
+                         id_var_dist);
+    PDM_writer_var_free (id_cs,
+                         id_var_closest);
+
+    PDM_writer_step_end (id_cs);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      free (val_dist[i_part]);
+      free (val_closest[i_part]);
+      free (cell_face_n[i_part]);
+      free (face_vtx_n[i_part]);
+    }
+    free (val_dist);
+    free (val_closest);
+    free (cell_face_n);
+    free (face_vtx_n);
+
+    PDM_writer_geom_data_free (id_cs, id_geom);
+    PDM_writer_geom_free (id_cs, id_geom);
+    PDM_writer_free (id_cs);
+  }
+
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (cell_center[i_part]);
     free (cell_volume[i_part]);
@@ -797,7 +1005,7 @@ int main(int argc, char *argv[])
   free (cell_center);
   free (cell_volume);
 
-  PDM_part_free(ppart_id);
+  PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);
   PDM_dist_cloud_surf_dump_times(dist);

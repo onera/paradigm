@@ -4,16 +4,11 @@
 #include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
-
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,6 +118,21 @@ PDM_part_dconnectivity_to_pconnectivity_sort
        int          ***pconnectivity
 );
 
+void
+PDM_part_dconnectivity_to_pconnectivity_sort_single_part
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             pn_entity,
+ const PDM_g_num_t    *pentity_ln_to_gn,
+       int            *pn_child_entity,
+       PDM_g_num_t   **pchild_ln_to_gn,
+       int           **pconnectivity_idx,
+       int           **pconnectivity
+);
+
 /**
  *  \brief Generated the partitioned connectivity (entity->child_elements) associated
  *   to the given distributed connectivity, using element distribution and element local
@@ -213,6 +223,35 @@ PDM_part_dcoordinates_to_pcoordinates
         double       ***pvtx_coord
 );
 
+void
+PDM_part_dfield_to_pfield
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part,
+  size_t                s_data,
+  const PDM_g_num_t    *field_distribution,
+  const unsigned char  *dfield,
+  const int            *pn_field,
+  const PDM_g_num_t   **pfield_ln_to_gn,
+        unsigned char ***pfield
+);
+
+
+void
+PDM_part_dfield_to_pfield2
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  size_t                 s_data,
+  PDM_stride_t           t_stride,
+  const PDM_g_num_t     *field_distribution,
+  const int             *dfield_stri,
+  const unsigned char   *dfield,
+  const int             *pn_field,
+  const PDM_g_num_t    **pfield_ln_to_gn,
+  int                 ***pfield_stride,
+        unsigned char ***pfield
+);
 
 void
 PDM_extend_mesh
@@ -228,6 +267,96 @@ PDM_extend_mesh
        PDM_g_num_t   **pentity_ln_to_gn,
        int           **pn_entity_extented,
        PDM_g_num_t  ***pentity_ln_to_gn_extended
+);
+
+
+void
+PDM_part_dentity_group_to_pentity_group
+(
+  const PDM_MPI_Comm     comm,
+  const int              n_part,
+  const PDM_g_num_t     *entity_distribution,
+  const int             *dentity_group_idx,
+  const int             *dentity_group,
+  const int             *pn_entity,
+  const PDM_g_num_t    **pentity_ln_to_gn,
+  int                 ***pentity_group_idx,
+  int                 ***pentity_group
+);
+
+void
+PDM_setup_connectivity_idx
+(
+  int           dn_entity1,
+  int           stride,
+  PDM_g_num_t  *dentity1_dentity2,
+  int         **dentity1_dentity2_idx,
+  PDM_g_num_t **dentity1_dentity2_new
+);
+
+
+void
+PDM_compute_face_edge_from_face_vtx
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int            *pn_face,
+  int            *pn_vtx,
+  int           **pface_vtx_idx,
+  int           **pface_vtx,
+  PDM_g_num_t   **pface_ln_to_gn,
+  PDM_g_num_t   **pvtx_ln_to_gn,
+  int          ***pface_edge_idx,
+  int          ***pface_edge,
+  int           **pn_edge,
+  int          ***pedge_vtx,
+  PDM_g_num_t  ***pedge_ln_to_gn
+);
+
+
+void
+PDM_pconnectivity_to_pconnectivity
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part1,
+  const int            *n_part1_entity1,
+  const int           **part1_entity1_entity2_idx,
+  const int           **part1_entity1_entity2,
+  const PDM_g_num_t   **part1_entity1_ln_to_gn,
+  const PDM_g_num_t   **part1_entity2_ln_to_gn,
+  const int             n_part2,
+  const int            *n_part2_entity1,
+  const PDM_g_num_t   **part2_entity1_ln_to_gn,
+  const int           **part2_entity1_to_part1_entity1_idx,
+  const PDM_g_num_t   **part2_entity1_to_part1_entity1,
+        int           **n_part2_entity2,
+        int          ***part2_entity1_entity2_idx,
+        int          ***part2_entity1_entity2,
+        PDM_g_num_t  ***part2_entity2_child_ln_to_gn,
+        PDM_g_num_t  ***part2_entity2_ln_to_gn
+);
+
+void
+PDM_pconnectivity_to_pconnectivity_keep
+(
+  const PDM_MPI_Comm          comm,
+  const int                   n_part1,
+  const int                  *n_part1_entity1,
+  const int                 **part1_entity1_entity2_idx,
+  const int                 **part1_entity1_entity2,
+  const PDM_g_num_t         **part1_entity1_ln_to_gn,
+  const PDM_g_num_t         **part1_entity2_ln_to_gn,
+  const int                   n_part2,
+  const int                  *n_part2_entity1,
+  const PDM_g_num_t         **part2_entity1_ln_to_gn,
+  const int                 **part2_entity1_to_part1_entity1_idx,
+  const PDM_g_num_t         **part2_entity1_to_part1_entity1,
+        int                 **n_part2_entity2,
+        int                ***part2_entity1_entity2_idx,
+        int                ***part2_entity1_entity2,
+        PDM_g_num_t        ***part2_entity2_ln_to_gn,
+        PDM_g_num_t        ***part2_entity2_child_ln_to_gn,
+        PDM_part_to_part_t  **ptp
 );
 
 #ifdef __cplusplus

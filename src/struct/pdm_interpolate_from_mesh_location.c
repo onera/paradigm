@@ -95,7 +95,7 @@ PDM_interpolate_from_mesh_location_free
 )
 {
 
-  printf("PDM_interpolate_from_mesh_location_free \n");
+  //printf("PDM_interpolate_from_mesh_location_free \n");
 
   for (int icloud = 0; icloud < interp_from_ml->n_cloud_target; icloud++) {
 
@@ -198,9 +198,9 @@ PDM_interpolate_from_mesh_location_exch
 
     n_point_tot[i_part] = _elt_pts_inside_idx[n_elmt];
 
-    printf("n_cell[%i] = %i \n", i_part, n_cell);
-    printf("_elt_pts_inside_idx[%i] = %i \n", i_part, _elt_pts_inside_idx[1]);
-    printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
+    //printf("n_cell[%i] = %i \n", i_part, n_cell);
+    //printf("_elt_pts_inside_idx[%i] = %i \n", i_part, _elt_pts_inside_idx[1]);
+    //printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
     // printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
 
     cloud_data_in_current_src  [i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
@@ -244,7 +244,7 @@ PDM_interpolate_from_mesh_location_exch
   double *block_data;
   int s_block_data = PDM_part_to_block_exch(ptb,
                                             sizeof(double),
-                                            PDM_STRIDE_VAR,
+                                            PDM_STRIDE_VAR_INTERLACED,
                                             stride_one,
                                             cloud_data_in_current_src_n,
                                   (void **) cloud_data_in_current_src,
@@ -276,9 +276,9 @@ PDM_interpolate_from_mesh_location_exch
                                                       interp_from_ml->comm);
 
   int** part_strid = NULL;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_strid,
                           block_data,
                (int ***)  &part_strid,
@@ -349,7 +349,7 @@ PDM_interpolate_from_mesh_location_exch_inplace
 
     n_point_tot[i_part] = _elt_pts_inside_idx[n_elmt];
 
-    printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
+    // printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
 
     cloud_data_in_current_src  [i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
     cloud_data_in_current_src_n[i_part] = (int    *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(int   ));
@@ -392,7 +392,7 @@ PDM_interpolate_from_mesh_location_exch_inplace
   double *block_data;
   int s_block_data = PDM_part_to_block_exch(ptb,
                                             sizeof(double),
-                                            PDM_STRIDE_VAR,
+                                            PDM_STRIDE_VAR_INTERLACED,
                                             stride_one,
                                             cloud_data_in_current_src_n,
                                   (void **) cloud_data_in_current_src,
@@ -429,9 +429,9 @@ PDM_interpolate_from_mesh_location_exch_inplace
 
   int** part_strid;
   double** tmp_cloud_data_out;
-  PDM_block_to_part_exch2(btp,
+  PDM_block_to_part_exch(btp,
                           sizeof(double),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_strid,
                           block_data,
                           &part_strid,
@@ -566,7 +566,7 @@ PDM_interpolate_from_mesh_location_n_part_cloud_set
  const int                                   n_part
 )
 {
-  printf("PDM_interpolate_from_mesh_location_n_part_cloud_set : %i --> %i \n", i_point_cloud, n_part);
+  // printf("PDM_interpolate_from_mesh_location_n_part_cloud_set : %i --> %i \n", i_point_cloud, n_part);
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
 
@@ -701,7 +701,7 @@ PDM_interpolate_from_mesh_location_points_in_elt_set
 
   _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + i_point_cloud;
 
-  printf("PDM_interpolate_from_mesh_location_points_in_elt_set : i_part = %i | _points_in_elements->n_part = %i \n", i_part, _points_in_elements->n_part);
+  // printf("PDM_interpolate_from_mesh_location_points_in_elt_set : i_part = %i | _points_in_elements->n_part = %i \n", i_part, _points_in_elements->n_part);
 
   assert (interp_from_ml->points_in_elements != NULL);
   assert (i_part < _points_in_elements->n_part);

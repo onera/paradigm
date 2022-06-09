@@ -29,8 +29,6 @@ cdef extern from "pdm_dist_cloud_surf.h":
 #                                           PDM_surf_mesh_t       *surf_mesh)
 
     void PDM_dist_cloud_surf_surf_mesh_global_data_set(PDM_dist_cloud_surf_t *dist,
-                                                       PDM_g_num_t            n_g_face,
-                                                       PDM_g_num_t            n_g_vtx,
                                                        int                    n_part)
 
     void PDM_dist_cloud_surf_surf_mesh_part_set(PDM_dist_cloud_surf_t *dist,
@@ -84,19 +82,21 @@ cdef class DistCloudSurf:
         """
         Compute the distance from point clouds to a surface
         """
+        #print(f"[{comm.rank}] cinit DistCloudSurf object, n_part_surf = {n_part_surf}, point_clouds = {point_clouds} (len = {len(point_clouds)})")
         self._nb_pts      = []
         self._comm        = comm
         self._mesh_nature = mesh_nature
         self.n_part_surf  = n_part_surf
+        #print(f"[{comm.rank}] OK")
         if len(point_clouds) > 0:
             # NB: Create paradigm structure
             self.n_point_cloud = len(point_clouds)
             # Set number of partition per point cloud
             for i_point_cloud, n_part_cloud in enumerate(point_clouds):
                 self.set_n_part_cloud(i_point_cloud, n_part_cloud)
-            print("self.n_part_surf = ",self.n_part_surf,", self.n_point_cloud = ",self.n_point_cloud)
-            for i_point_cloud in range(self.n_point_cloud):
-                print("self.get_n_part_cloud(",i_point_cloud,") = ",self.get_n_part_cloud(i_point_cloud))
+            # print("self.n_part_surf = ",self.n_part_surf,", self.n_point_cloud = ",self.n_point_cloud)
+            # for i_point_cloud in range(self.n_point_cloud):
+                # print("self.get_n_part_cloud(",i_point_cloud,") = ",self.get_n_part_cloud(i_point_cloud))
 
     def _create_pdm_structure(self):
         # Free memory if it has been previously allocated
@@ -118,7 +118,7 @@ cdef class DistCloudSurf:
         return self._n_part_surf
 
     def set_n_part_surf(self, value):
-        if value >= 1:
+        if value >= 0:
             self._n_part_surf = <int> value
         else:
             raise ValueError("n_part_surf must be >= 1, but {} given here.".format(value))
@@ -149,7 +149,7 @@ cdef class DistCloudSurf:
         """
         Give the number of partitions of a point cloud
         """
-        if n_part_cloud >= 1:
+        if n_part_cloud >= 0:
             if i_point_cloud >= 0 and i_point_cloud < self.n_point_cloud:
                 PDM_dist_cloud_surf_n_part_cloud_set(self._dist, i_point_cloud, n_part_cloud)
                 self._nb_pts[i_point_cloud] = NPY.zeros(n_part_cloud, dtype='int32', order='C')
@@ -177,15 +177,11 @@ cdef class DistCloudSurf:
         self._nb_pts[i_point_cloud][i_part] = n_points
 
     # ------------------------------------------------------------------
-    def surf_mesh_global_data_set(self,
-                                  PDM_g_num_t n_g_face,
-                                  PDM_g_num_t n_g_vtx):
+    def surf_mesh_global_data_set(self):
         """
         Give the global properties of the surface mesh
         """
         PDM_dist_cloud_surf_surf_mesh_global_data_set(self._dist,
-                                                      n_g_face,
-                                                      n_g_vtx,
                                                       self.n_part_surf)
 
 
@@ -236,9 +232,10 @@ cdef class DistCloudSurf:
                                         &closest_elt_gnum)
 
                 # Encapsulate C array into a numpy array
-                np_closest_elt_distance  = create_numpy_d(closest_elt_distance, self._nb_pts[i_point_cloud][i_part_cloud])
-                np_closest_elt_projected = create_numpy_d(closest_elt_projected, 3 * self._nb_pts[i_point_cloud][i_part_cloud])
-                np_closest_elt_gnum      = create_numpy_pdm_gnum(closest_elt_gnum, self._nb_pts[i_point_cloud][i_part_cloud])
+                n_pts = self._nb_pts[i_point_cloud][i_part_cloud]
+                np_closest_elt_distance  = create_numpy_d(closest_elt_distance, n_pts)
+                np_closest_elt_projected = create_numpy_d(closest_elt_projected, 3 * n_pts)
+                np_closest_elt_gnum      = create_numpy_pdm_gnum(closest_elt_gnum, n_pts)
 
                 dresults = {'ClosestEltDistance'    : np_closest_elt_distance,
                             'ClosestEltProjected'   : np_closest_elt_projected,

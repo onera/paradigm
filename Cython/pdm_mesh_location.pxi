@@ -16,7 +16,8 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   PDM_mesh_location_t* PDM_mesh_location_create(PDM_mesh_nature_t mesh_nature,
                                int               _n_point_cloud,
-                               PDM_MPI_Comm      comm)
+                               PDM_MPI_Comm      comm,
+                               PDM_ownership_t owner)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -128,7 +129,11 @@ cdef extern from "pdm_mesh_location.h":
                                             double              **points_projected_coords)
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_free(PDM_mesh_location_t  *ml, int partial)
+  void PDM_mesh_location_free(PDM_mesh_location_t  *ml)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_mesh_location_reverse_results_enable(PDM_mesh_location_t  *ml)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -179,7 +184,10 @@ cdef class MeshLocation:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC)
+    self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC, PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)
+
+    PDM_mesh_location_reverse_results_enable (self._ml)
+
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -365,31 +373,17 @@ cdef class MeshLocation:
 
   def __cell_vertex_get (self, int i_part):
 
-    cdef int  n_elts
     cdef int *cell_vtx_idx
     cdef int *cell_vtx
 
-    n_elts =  PDM_mesh_location_n_cell_get(self._ml, i_part)
-
+    cdef int n_elts = PDM_mesh_location_n_cell_get(self._ml, i_part)
 
     PDM_mesh_location_cell_vertex_get(self._ml,
                                       i_part,
                                       &cell_vtx_idx,
                                       &cell_vtx)
-
-    cdef NPY.npy_intp dim
-    # > Build numpy capsule
-    dim = <NPY.npy_intp> n_elts + 1
-    np_cell_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                    &dim,
-                                                    NPY.NPY_INT32,
-                                                    <void *> cell_vtx_idx)
-
-    dim = <NPY.npy_intp> cell_vtx_idx[n_elts]
-    np_cell_vtx = NPY.PyArray_SimpleNewFromData(1,
-                                                &dim,
-                                                NPY.NPY_INT32,
-                                                <void *> cell_vtx)
+    np_cell_vtx_idx = create_numpy_i(cell_vtx_idx, n_elts+1)
+    np_cell_vtx     = create_numpy_i(cell_vtx, cell_vtx_idx[n_elts])
 
     return {'cell_vtx_idx'      : np_cell_vtx_idx,
             'cell_vtx'          : np_cell_vtx}
@@ -595,4 +589,4 @@ cdef class MeshLocation:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    PDM_mesh_location_free(self._ml, 1)
+    PDM_mesh_location_free(self._ml)

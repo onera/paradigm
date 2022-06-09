@@ -323,15 +323,16 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
-  int id_part;
+  PDM_multipart_t *mpart = NULL;
+  PDM_part_t      *ppart = NULL;
   int n_join = 0;
   PDM_dmesh_t *dmesh;
 
   if (use_multipart) {
     /* Initialize multipart */
-    id_part = PDM_multipart_create(1, &n_part, PDM_FALSE,
-                                   method, PDM_PART_SIZE_HOMOGENEOUS,
-                                   NULL, comm, PDM_OWNERSHIP_KEEP);
+    mpart = PDM_multipart_create(1, &n_part, PDM_FALSE,
+				 method, PDM_PART_SIZE_HOMOGENEOUS,
+				 NULL, comm, PDM_OWNERSHIP_KEEP);
 
     /* Generate dmesh */
     dmesh = PDM_dmesh_create (PDM_OWNERSHIP_KEEP,
@@ -358,15 +359,15 @@ int main(int argc, char *argv[])
                    dface_join_idx,
                    dface_join);
 
-    PDM_multipart_register_block (id_part, 0, dmesh);
+    PDM_multipart_register_block (mpart, 0, dmesh);
 
     /* Connection between zones */
     int n_total_joins = 0;
     int *join_to_opposite = malloc(sizeof(int) * n_total_joins);
-    PDM_multipart_register_joins (id_part, n_total_joins, join_to_opposite);
+    PDM_multipart_register_joins (mpart, n_total_joins, join_to_opposite);
 
     /* Run */
-    PDM_multipart_run_ppart (id_part);
+    PDM_multipart_run_ppart (mpart);
 
     free (djoins_ids);
     free (dface_join_idx);
@@ -383,88 +384,85 @@ int main(int argc, char *argv[])
     int n_property_cell = 0;
     int n_property_face = 0;
 
-    id_part = 0;
+    // id_part = 0;
 
-    PDM_part_create(&id_part,
-                    PDM_MPI_COMM_WORLD,
-                    method,
-                    "PDM_PART_RENUM_CELL_NONE",
-                    "PDM_PART_RENUM_FACE_NONE",
-                    n_property_cell,
-                    renum_properties_cell,
-                    n_property_face,
-                    renum_properties_face,
-                    n_part,
-                    dn_cell,
-                    dn_face,
-                    dn_vtx,
-                    n_face_group,
-                    NULL,
-                    NULL,
-                    NULL,
-                    NULL,
-                    have_dcell_part,
-                    dcell_part,
-                    dface_cell,
-                    dface_vtx_idx,
-                    dface_vtx,
-                    NULL,
-                    dvtx_coord,
-                    NULL,
-                    dface_group_idx,
-                    dface_group);
+    ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
+                            (PDM_part_split_t) method,
+                            "PDM_PART_RENUM_CELL_NONE",
+                            "PDM_PART_RENUM_FACE_NONE",
+                            n_property_cell,
+                            renum_properties_cell,
+                            n_property_face,
+                            renum_properties_face,
+                            n_part,
+                            dn_cell,
+                            dn_face,
+                            dn_vtx,
+                            n_face_group,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            have_dcell_part,
+                            dcell_part,
+                            dface_cell,
+                            dface_vtx_idx,
+                            dface_vtx,
+                            NULL,
+                            dvtx_coord,
+                            NULL,
+                            dface_group_idx,
+                            dface_group);
     free(dcell_part);
   }
 
 
   if (post) {
     /* Prepare writer */
-    int id_cs = PDM_writer_create ("Ensight",
+    PDM_writer_t *id_cs = PDM_writer_create ("Ensight",
                                    PDM_WRITER_FMT_ASCII,
-                                   PDM_WRITER_TOPO_CONSTANTE,
+                                   PDM_WRITER_TOPO_CST,
                                    PDM_WRITER_OFF,
                                    "test_polyvol",
                                    "polyvol",
                                    PDM_MPI_COMM_WORLD,
-                                   PDM_IO_ACCES_MPI_SIMPLE,
+                                   PDM_IO_KIND_MPI_SIMPLE,
                                    1.,
                                    NULL);
 
     int id_geom = PDM_writer_geom_create (id_cs,
                                           "mesh",
-                                          PDM_WRITER_OFF,
-                                          PDM_WRITER_OFF,
                                           n_part);
 
     // Cell local id
     int id_var_cell_g_num = PDM_writer_var_create (id_cs,
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "cell_g_num");
 
     int id_var_num_part = PDM_writer_var_create (id_cs,
                                                  PDM_WRITER_OFF,
-                                                 PDM_WRITER_VAR_SCALAIRE,
+                                                 PDM_WRITER_VAR_SCALAR,
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "num_part");
 
     int id_var_vtx_g_num = PDM_writer_var_create (id_cs,
                                                   PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAIRE,
-                                                  PDM_WRITER_VAR_SOMMETS,
+                                                  PDM_WRITER_VAR_SCALAR,
+                                                  PDM_WRITER_VAR_VERTICES,
                                                   "vtx_g_num");
 
     int id_var_coo_x = PDM_writer_var_create (id_cs,
                                               PDM_WRITER_ON,
-                                              PDM_WRITER_VAR_SCALAIRE,
-                                              PDM_WRITER_VAR_SOMMETS,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_VERTICES,
                                               "coo_x");
 
     int id_var_coo_xyz = PDM_writer_var_create (id_cs,
                                                 PDM_WRITER_ON,
-                                                PDM_WRITER_VAR_VECTEUR,
-                                                PDM_WRITER_VAR_SOMMETS,
+                                                PDM_WRITER_VAR_VECTOR,
+                                                PDM_WRITER_VAR_VERTICES,
                                                 "coo_xyz");
 
     PDM_writer_step_beg (id_cs, 0.);
@@ -521,7 +519,7 @@ int main(int argc, char *argv[])
       PDM_g_num_t **elt_section_ln_to_gn;
 
       if (use_multipart) {
-        PDM_multipart_part_dim_get (id_part,
+        PDM_multipart_part_dim_get (mpart,
                                     0,
                                     i_part,
                                     &n_section,
@@ -539,7 +537,7 @@ int main(int argc, char *argv[])
                                     &sface_join,
                                     &n_joins);
 
-        PDM_multipart_part_val_get (id_part,
+        PDM_multipart_part_val_get (mpart,
                                     0,
                                     i_part,
                                     &elt_vtx_idx,
@@ -569,7 +567,7 @@ int main(int argc, char *argv[])
       }
 
       else {
-        PDM_part_part_dim_get (id_part,
+        PDM_part_part_dim_get (ppart,
                                i_part,
                                &n_cell,
                                &n_face,
@@ -582,7 +580,7 @@ int main(int argc, char *argv[])
                                &s_face_group,
                                &n_edge_group2);
 
-        PDM_part_part_val_get (id_part,
+        PDM_part_part_val_get (ppart,
                                i_part,
                                &cell_tag,
                                &cell_face_idx,
@@ -609,7 +607,8 @@ int main(int argc, char *argv[])
                                  i_part,
                                  n_vtx,
                                  vtx,
-                                 vtx_ln_to_gn);
+                                 vtx_ln_to_gn,
+                                 PDM_OWNERSHIP_USER);
 
       face_vtx_n[i_part] = malloc (sizeof(int) * n_face);
       for (int i = 0; i < n_face; i++) {
@@ -645,7 +644,7 @@ int main(int argc, char *argv[])
       val_coo_x[i_part]     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx);
       val_coo_xyz[i_part]   = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx * 3);
       for (int i = 0; i < n_vtx; i++) {
-        val_vtx_g_num[i_part][i]   = vtx_ln_to_gn[i];
+        val_vtx_g_num[i_part][i]   = (PDM_real_t) vtx_ln_to_gn[i];
         val_coo_x[i_part][i]       = vtx[3*i];
         val_coo_xyz[i_part][3*i  ] = vtx[3*i  ];
         val_coo_xyz[i_part][3*i+1] = vtx[3*i+1];
@@ -766,11 +765,11 @@ int main(int argc, char *argv[])
   free (dface_group);
 
   if (use_multipart) {
-    PDM_multipart_free (id_part);
+    PDM_multipart_free (mpart);
     PDM_dmesh_free (dmesh);
   }
   else {
-    PDM_part_free (id_part);
+    PDM_part_free (ppart);
   }
 
   PDM_MPI_Finalize();

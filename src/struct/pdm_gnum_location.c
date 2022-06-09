@@ -83,8 +83,9 @@ extern "C" {
  * \param [in]   n_part_in      Number of local partitions for elements
  * \param [in]   n_part_out     Number of local partitions for requested locations
  * \param [in]   comm           PDM_MPI communicator
+ * \param [in]   owner          Owner
  *
- * \return     Identifier
+ * \return     Pointer to \ref PDM_gnum_locaion object
  */
 
 PDM_gnum_location_t*
@@ -92,7 +93,8 @@ PDM_gnum_location_create
 (
  const int          n_part_in,
  const int          n_part_out,
- const PDM_MPI_Comm comm
+ const PDM_MPI_Comm comm,
+ const PDM_ownership_t owner
 )
 {
 
@@ -115,29 +117,19 @@ PDM_gnum_location_create
   gnum_loc->location_idx = NULL;
   gnum_loc->location     = NULL;
   gnum_loc->comm         = comm;
+  gnum_loc->tag_results_get = 0;
+  gnum_loc->owner           = owner;
 
   return gnum_loc;
 }
 
 
-PDM_gnum_location_t*
-PDM_gnum_location_create_cf
-(
- const int          n_part_in,
- const int          n_part_out,
- const PDM_MPI_Fint comm
-)
-{
-  const PDM_MPI_Comm _comm = PDM_MPI_Comm_f2c(comm);
-
-  return PDM_gnum_location_create (n_part_in, n_part_out, _comm);
-}
 
 /**
  *
  * \brief Set global numbering
  *
- * \param [in]   id          Identifier
+ * \param [in]   gnum_loc    Pointer to \ref PDM_gnum_locaion object
  * \param [in]   i_part_in   Current partition
  * \param [in]   n_elts_in   Number of elements
  * \param [in]   gnum_in     Global numbering
@@ -163,7 +155,7 @@ PDM_gnum_location_elements_set
  *
  * \brief Set requested elements
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
  * \param [in]   i_part_out   Current partition
  * \param [in]   n_elts_out   Number of elements
  * \param [in]   gnum_out     Global numbering
@@ -188,7 +180,7 @@ PDM_gnum_location_requested_elements_set
  *
  * \brief Compute the location (processus, partittion, local number in the partition)
  *
- * \param [in]   id           Identifier
+ * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
  *
  */
 
@@ -214,10 +206,10 @@ PDM_gnum_location_compute
                                                        gnum_loc->n_part_in,
                                                        gnum_loc->comm);
 
-  PDM_g_num_t *block_distrib_index = PDM_part_to_block_distrib_index_get (ptb);
+  // PDM_g_num_t *block_distrib_index = PDM_part_to_block_distrib_index_get (ptb);
 
   const int s_data = sizeof(int);
-  const PDM_stride_t t_stride = PDM_STRIDE_VAR;
+  const PDM_stride_t t_stride = PDM_STRIDE_VAR_INTERLACED;
   const int cst_stride = 3;
 
   int  **part_stride = (int **) malloc (sizeof(int *) * gnum_loc->n_part_in);
@@ -254,15 +246,28 @@ PDM_gnum_location_compute
   free (part_data);
   free (part_stride);
 
-  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_index,
-                                                       gnum_loc->g_nums_out,
-                                                       gnum_loc->n_elts_out,
-                                                       gnum_loc->n_part_out,
-                                                       gnum_loc->comm);
+  // PDM_g_num_t* block_distrib_index_correct = PDM_part_to_block_adapt_partial_block_to_block(ptb,
+  //                                                                                           &block_stride,
+  //                                                                                           block_distrib_index[n_rank]);
+  // // PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_index,
+  // PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_index_correct,
+  //                                                      gnum_loc->g_nums_out,
+  //                                                      gnum_loc->n_elts_out,
+  //                                                      gnum_loc->n_part_out,
+  //                                                      gnum_loc->comm);
 
-  PDM_block_to_part_exch2 (btp,
+  PDM_g_num_t* block_g_num = PDM_part_to_block_block_gnum_get (ptb);
+  int          dn_block    = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(block_g_num,
+                                                                        dn_block,
+                                                                        gnum_loc->g_nums_out,
+                                                                        gnum_loc->n_elts_out,
+                                                                        gnum_loc->n_part_out,
+                                                                        gnum_loc->comm);
+
+  PDM_block_to_part_exch (btp,
                           s_data,
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           block_stride,
                           block_data,
                           &part_stride,
@@ -278,6 +283,7 @@ PDM_gnum_location_compute
   }
   free (block_stride);
   free (block_data);
+  // free (block_distrib_index_correct);
 
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
     free (part_stride[i]);
@@ -295,7 +301,7 @@ PDM_gnum_location_compute
  *
  * \brief Get location
  *
- * \param [in]    id             Identifier
+ * \param [in]    gnum_loc       Pointer to \ref PDM_gnum_locaion object
  * \param [in]    i_part_out     Current partition
  * \param [out]   location_idx   Index in the location arrays (size = \ref n_elts + 1)
  * \param [out]   location       Locations of each element
@@ -314,6 +320,7 @@ PDM_gnum_location_get
 {
   *location_idx = gnum_loc->location_idx[i_part_out];
   *location     = gnum_loc->location    [i_part_out];
+  gnum_loc->tag_results_get = 1;
 }
 
 
@@ -321,16 +328,14 @@ PDM_gnum_location_get
  *
  * \brief Free
  *
- * \param [in]   id            Identifier
- * \param [in]   keep_results  Keep location results
+ * \param [in]   gnum_loc      Pointer to \ref PDM_gnum_locaion object
  *
  */
 
 void
 PDM_gnum_location_free
 (
-       PDM_gnum_location_t *gnum_loc,
- const int                  keep_results
+  PDM_gnum_location_t *gnum_loc
 )
 {
 
@@ -340,7 +345,8 @@ PDM_gnum_location_free
   free (gnum_loc->n_elts_out);
   free (gnum_loc->g_nums_out);
 
-  if (keep_results != 1) {//if (partial != 1) {
+  if(( gnum_loc->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( gnum_loc->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gnum_loc->tag_results_get)) {
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
       free (gnum_loc->location_idx[i]);
     }
@@ -357,6 +363,31 @@ PDM_gnum_location_free
 
   free (gnum_loc);
 
+}
+
+
+/**
+ *
+ * \brief Get the number of requested elements in a given partition
+ *
+ * \param [in]  gnum_loc      Pointer to \ref PDM_gnum_locaion object
+ * \param [in]  i_part_out    Id of current partition
+ *
+ * \return  Number of requested elements in the current partition
+ *
+ */
+
+int
+PDM_gnum_location_n_requested_elt_get
+(
+       PDM_gnum_location_t *gnum_loc,
+ const int                  i_part_out
+ )
+{
+  assert (gnum_loc != NULL);
+  assert (i_part_out < gnum_loc->n_part_out);
+
+  return gnum_loc->n_elts_out[i_part_out];
 }
 
 

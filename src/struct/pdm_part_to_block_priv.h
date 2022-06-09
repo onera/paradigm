@@ -85,6 +85,8 @@ struct _pdm_part_to_block_t {
   int                         n_elt_block ;         /*!< Number of element in current block */
   PDM_g_num_t                *block_gnum;           /*!< Sorted Global number of
                                                          reveived data (size = block_n_elt) */
+  int                        *block_gnum_count;     /*!< Number of occurence of each gnum in partitions
+                                                         (size = block_n_elt) */
 
   double                    **weight_g;             /*!< Global weights of elements for any part */
 
@@ -104,6 +106,13 @@ struct _pdm_part_to_block_t {
   int**            i_send_buffer;
   int**            n_recv_buffer;
   int**            i_recv_buffer;
+
+  int***           block_stride;
+  void***          block_data;
+
+  PDM_mpi_comm_kind_t *comm_kind;
+  PDM_MPI_Win         *win_send;
+  PDM_MPI_Win         *win_recv;
 
 } ;
 

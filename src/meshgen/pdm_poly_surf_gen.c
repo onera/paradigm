@@ -17,11 +17,18 @@
   License along with this library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+/*----------------------------------------------------------------------------
+ *  System headers
+ *----------------------------------------------------------------------------*/
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+
+/*----------------------------------------------------------------------------
+ *  Local headers
+ *----------------------------------------------------------------------------*/
 
 #include "pdm_poly_surf_gen.h"
 #include "pdm_config.h"
@@ -30,6 +37,12 @@
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+
+
+/*============================================================================
+ * Local macro definitions
+ *============================================================================*/
+
 
 #define ABS(a)     ((a) <  0  ? -(a) : (a))
 #define MIN(a,b)   ((a) > (b) ?  (b) : (a))
@@ -42,6 +55,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+/*============================================================================
+ * Private function definitions
+ *============================================================================*/
+
+
 static double random01(void)
 {
   int sign;
@@ -51,6 +69,42 @@ static double random01(void)
   double resultat = sign*((double)rand())/((double)RAND_MAX);
   return resultat;
 }
+
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
+/**
+ *
+ * \brief Generate a distributed polygonal surface mesh
+ *
+ * \param [in]   pdm_comm         MPI communicator
+ * \param [in]   xmin             Minimum x-coordinate
+ * \param [in]   xmax             Maximum x-coordinate
+ * \param [in]   ymin             Minimum y-coordinate
+ * \param [in]   ymax             Maximum y-coordinate
+ * \param [in]   have_random      Enable/disable randomization
+ * \param [in]   init_random      Random seed
+ * \param [in]   nx               Number of vertices in the x-direction
+ * \param [in]   ny               Number of vertices in the y-direction
+ * \param [out]  ng_face          Global number of faces
+ * \param [out]  ng_vtx           Global number of vertices
+ * \param [out]  ng_edge          Global number of edges
+ * \param [out]  dn_vtx           Local number of vertices
+ * \param [out]  dvtx_coord       Coordinates of local vertices (size = 3 * \ref dn_vtx)
+ * \param [out]  dn_face          Local number of faces
+ * \param [out]  dface_vtx_idx    Index of face-vertex connectivity (size = \ref dn_face + 1)
+ * \param [out]  dface_vtx        Distributed face-vertex connectivity (size = \ref dface_vtx_idx[\ref dn_face])
+ * \param [out]  dn_edge          Local number of edges
+ * \param [out]  dedge_vtx        Distributed edge-vertex connectivity (size = 2 * \ref dn_edge)
+ * \param [out]  dedge_face       Distributed edge-face connectivity (size = 2 * \ref dn_edge)
+ * \param [out]  n_edge_group     Number of edge groups
+ * \param [out]  dedge_group_idx  Index of dedge_group (size = \ref n_edge_group + 1)
+ * \param [out]  dedge_group      Distributed lists of edges in each group (size = \ref dedge_group_idx[\ref n_edge_group])
+ *
+ */
 
 void PDM_poly_surf_gen
 (
@@ -80,6 +134,7 @@ int            **dedge_group_idx,
 PDM_g_num_t    **dedge_group
 )
 {
+  int verbose = 0;
 
   int n_rank;
   PDM_MPI_Comm_size(pdm_comm, &n_rank);
@@ -860,6 +915,8 @@ PDM_g_num_t    **dedge_group
   *ng_edge = dn_edge_abs;
   *ng_face = dn_face_abs;
 
+  if (verbose && local_rank == 0) printf("gn_vtx = "PDM_FMT_G_NUM"\ngn_elt = "PDM_FMT_G_NUM"\n", *ng_vtx, *ng_face);
+
   /* Definition des limites */
   /* ---------------------- */
 
@@ -948,8 +1005,7 @@ PDM_g_num_t    **dedge_group
     ++dn_edgeGroupAbs;
   }
 
-  int vb = 0;
-  if (vb==1){
+  if (verbose){
     PDM_printf ("- dface_vtx_idx : \n");
     for (int i=0; i<(*dn_face)+1; i++)
       PDM_printf ("%d->%d  ", i+1, (*dface_vtx_idx)[i]);
@@ -1002,79 +1058,6 @@ PDM_g_num_t    **dedge_group
   free(dn_edge_rank);
 }
 
-
-/* void PROCF(creemaillagepolygone2d_f, CREEMAILLAGEPOLYGONE2D_F) */
-/* ( */
-/* PDM_MPI_Fint   *localFComm, */
-/* double     *xmin, */
-/* double     *xmax, */
-/* double     *ymin, */
-/* double     *ymax, */
-/* int        *init_random, */
-/* PDM_g_num_t *nx, */
-/* PDM_g_num_t *ny, */
-/* int        *dn_vtx, */
-/* double     *dvtx_coord_f, */
-/* int        *dn_face, */
-/* int        *dface_vtx_idx_f, */
-/* PDM_g_num_t *dface_vtx_f, */
-/* PDM_g_num_t *dface_edge_f,    */
-/* int        *dn_edge, */
-/* PDM_g_num_t *dedge_vtx_f, */
-/* PDM_g_num_t *dedge_face_f */
-/* ) */
-/* { */
-/*   PDM_MPI_Comm pdm_comm = PDM_MPI_Comm_f2c(*localFComm); */
-/*   int dn_vtx_f = *dn_vtx; */
-/*   int dn_face_f = *dn_face; */
-
-/*   double *dvtx_coord = NULL; */
-/*   int    *dface_vtx_idx = NULL; */
-/*   int    *dface_vtx = NULL; */
-
-/*   creeMaillagePolygone2D(*order, */
-/*                          pdm_comm, */
-/*                          *xmin, */
-/*                          *xmax, */
-/*                          *ymin, */
-/*                          *ymax, */
-/*                          *init_random, */
-/*                          *nx, */
-/*                          *ny, */
-/*                          dn_vtx, */
-/*                          &dvtx_coord, */
-/*                          dn_face, */
-/*                          &dface_vtx_idx, */
-/*                          &dface_vtx); */
-
-/*   if (dn_vtx_f < *dn_vtx) { */
-/*     PDM_printf("Augmenter le nombre de sommets Fortran a : %i \n", *dn_vtx); */
-/*     exit(1); */
-/*   } */
-
-/*   if (dn_face_f < *dn_face) { */
-/*     PDM_printf("Augmenter le nombre d'elements a : %i \n", *dn_face); */
-/*     exit(1); */
-/*   } */
-
-/*   if (*lEltsConnecPointer_f < dface_vtx_idx[*dn_face]) { */
-/*     PDM_printf("Augmenter la taille du tableau de connectivite a : %i \n", dface_vtx_idx[*dn_face]); */
-/*     exit(1); */
-/*   } */
-
-/*   for(int i = 0; i < 3*(*dn_vtx); i++) */
-/*     dvtx_coord_f[i] = dvtx_coord[i]; */
-
-/*   for(int i = 0; i < *dn_face + 1; i++) */
-/*     dface_vtx_idx_f[i] = dface_vtx_idx[i]; */
-
-/*   for(int i = 0; i < dface_vtx_idx[*dn_face]; i++) */
-/*     dface_vtx_f[i] = dface_vtx[i]; */
-
-/*   free(dvtx_coord); */
-/*   free(dface_vtx_idx); */
-/*   free(dface_vtx); */
-/* } */
 
 #ifdef __cplusplus
 }

@@ -83,6 +83,32 @@ PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int 
   return idx_array;
 }
 
+int* PDM_array_new_idx_from_const_stride_int(const int stride, const int size) {
+  int *idx_array = (int *) malloc((size+1) * sizeof(int));
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + stride;
+  return idx_array;
+}
+
+/* Utils functions compararing arrays */
+
+/*
+ * Return 1 if the two arrays are equal, 0 otherwise
+*/
+int PDM_array_are_equal_int(const int *array1, const int *array2, const int size) {
+  for (int i = 0; i < size; i++) {
+    if (array1[i] != array2[i])
+      return 0;
+  }
+  return 1;
+}
+int PDM_array_are_equal_gnum(const PDM_g_num_t *array1, const PDM_g_num_t *array2, const int size) {
+  for (int i = 0; i < size; i++) {
+    if (array1[i] != array2[i])
+      return 0;
+  }
+  return 1;
+}
 
 /* Utils functions modifying arrays*/
 

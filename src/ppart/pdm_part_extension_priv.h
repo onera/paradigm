@@ -11,6 +11,7 @@
 
 // #include "pdm_multipart.h"
 #include "pdm_part_priv.h"
+#include "pdm_part_domain_interface.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +48,7 @@ struct _pdm_part_extension_t {
   int            *n_part_idx;
 
   _part_t  **parts;
+  PDM_part_domain_interface_t  *pdi;
 
   /* Store for each depth / each domain / each part */
   int **neighbor_idx;
@@ -59,14 +61,18 @@ struct _pdm_part_extension_t {
   int **dist_neighbor_cell_n;
   int **dist_neighbor_cell_idx;
   int **dist_neighbor_cell_desc;
+  int **unique_order_dist_neighbor_cell;
+  int  *n_unique_order_dist_neighbor_cell;
 
-  int ***cell_cell_idx;
-  int ***cell_cell;
+  int **cell_cell_idx;
+  int **cell_cell;
 
   /* This one is only on the border and contains only border cells */
   int ***cell_cell_extended_idx;
   int ***cell_cell_extended_n;
   int ***cell_cell_extended;
+  int ***unique_order_cell_cell_extended;
+  int  **n_unique_order_cell_cell_extended;
   int  **border_cell_list;
 
   int  **cell_cell_extended_pruned_idx;
@@ -117,6 +123,13 @@ struct _pdm_part_extension_t {
   PDM_g_num_t **border_face_group_ln_to_gn;
 
   double **border_vtx;
+
+  /* Shift by domain for all entities */
+  PDM_g_num_t *shift_by_domain_cell;
+  PDM_g_num_t *shift_by_domain_face;
+  PDM_g_num_t *shift_by_domain_edge;
+  PDM_g_num_t *shift_by_domain_vtx;
+  PDM_g_num_t *shift_by_domain_face_group;
 
 
 };

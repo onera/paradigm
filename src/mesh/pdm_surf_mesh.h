@@ -51,8 +51,6 @@ typedef struct _pdm_surf_mesh_t PDM_surf_mesh_t;
  *
  * This function returns an initialized \ref PDM_surf_mesh_t structure
  *
- * \param [in]  nGface       Number of global faces
- * \param [in]  nGVtx        Number of global vertices
  * \param [in]  n_part        Number of partition
  * \param [in]  comm         MSG communicator of mesh
  *
@@ -63,8 +61,6 @@ typedef struct _pdm_surf_mesh_t PDM_surf_mesh_t;
 PDM_surf_mesh_t *
 PDM_surf_mesh_create
 (
-const PDM_g_num_t  nGFace,
-const PDM_g_num_t  nGVtx,
 const int         n_part,
 PDM_MPI_Comm          comm
  );

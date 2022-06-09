@@ -10,6 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_writer.h"
+#include "pdm_writer_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +54,9 @@ PDM_writer_ensight_case_cree
 const char                   *const name,
 const int                           restart,
 const char                   *const dir_prefix,
-const PDM_writer_topologie_t                time_dependency
+const PDM_writer_topology_t         time_dependency,
+_PDM_writer_cst_global_var_tab_t *cst_global_var,
+const int append
 );
 
 /*----------------------------------------------------------------------------
@@ -82,7 +85,7 @@ PDM_writer_ensight_case_t  *this_case
  *   time dependency status
  *----------------------------------------------------------------------------*/
 
-PDM_writer_topologie_t
+PDM_writer_topology_t
 PDM_writer_ensight_case_geo_time_dep_get
 (
 PDM_writer_ensight_case_t  *this_case
@@ -98,7 +101,7 @@ PDM_writer_ensight_case_t  *this_case
  *   time dependency status
  *----------------------------------------------------------------------------*/
 
-PDM_writer_statut_t
+PDM_writer_status_t
 PDM_writer_ensight_case_var_time_dep_get
 (
 PDM_writer_ensight_case_t  *this_case,
@@ -154,7 +157,7 @@ PDM_writer_ensight_case_var_cree
 PDM_writer_ensight_case_t  *this_case,
 const char         *const name,
 const PDM_writer_var_dim_t  dimension,
-const PDM_writer_statut_t   time_dep,
+const PDM_writer_status_t   time_dep,
 const PDM_writer_var_loc_t  location
 );
 

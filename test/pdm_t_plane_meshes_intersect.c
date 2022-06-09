@@ -24,6 +24,8 @@
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm_priv.h"
 
+#include "pdm_predicate.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -231,6 +233,9 @@ _read_args
     else if (strcmp (argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp (argv[i], "-hilbert") == 0) {
+      *method = 3;
+    }
     else if (strcmp (argv[i], "-n_proc_data") == 0) {
       i++;
       if (i >= argc)
@@ -259,7 +264,7 @@ _read_args
 static void
 _compute_faceVtx
 (
- int           ppartId,
+ PDM_part_t    *ppart,
  int            n_part,
  int          **nFace,
  int         ***faceVtxIdx,
@@ -280,7 +285,7 @@ _compute_faceVtx
   *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
   *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
 
-  int id_ppart = ppartId;
+  // int id_ppart = ppartId;
 
   for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -295,7 +300,7 @@ _compute_faceVtx
     int _sEdgeGroup;
     int _nEdgeGroup2;
 
-    PDM_part_part_dim_get (id_ppart,
+    PDM_part_part_dim_get (ppart,
                            ipart,
                            &_nFace,
                            &_nEdge,
@@ -327,7 +332,7 @@ _compute_faceVtx
     int          *_edgeGroup;
     PDM_g_num_t  *_edgeGroupLNToGN;
 
-    PDM_part_part_val_get (id_ppart,
+    PDM_part_part_val_get (ppart,
                            ipart,
                            &_faceTag,
                            &_faceEdgeIdx,
@@ -580,7 +585,7 @@ _create_split_mesh
      *  Split mesh i
      */
 
-    int ppartId;
+    // int ppartId;
 
     int nPropertyCell = 0;
     int *renum_properties_cell = NULL;
@@ -616,35 +621,34 @@ _create_split_mesh
     //                  dEdgeGroupIdx,
     //                  dEdgeGroup);
 
-    printf("dNFace = %i | dNEdge = %i | dNVtx = %i \n", dNFace, dNEdge, dNVtx);
-    PDM_part_create (&ppartId,
-                     pdm_mpi_comm,
-                     method,
-                     "PDM_PART_RENUM_CELL_NONE",
-                     "PDM_PART_RENUM_FACE_NONE",
-                     nPropertyCell,
-                     renum_properties_cell,
-                     nPropertyFace,
-                     renum_properties_face,
-                     n_part,
-                     dNFace,
-                     dNEdge,
-                     dNVtx,
-                     nEdgeGroup,
-                     dFaceVtxIdx,
-                     dFaceEdge,
-                     NULL,
-                     NULL,
-                     have_dCellPart,
-                     dCellPart,
-                     NULL,
-                     dEdgeVtxIdx,
-                     dEdgeVtx,
-                     NULL,
-                     dVtxCoord,
-                     NULL,
-                     dEdgeGroupIdx,
-                     dEdgeGroup);
+    //printf("dNFace = %i | dNEdge = %i | dNVtx = %i \n", dNFace, dNEdge, dNVtx);
+    PDM_part_t *ppart = PDM_part_create (pdm_mpi_comm,
+                                         method,
+                                         "PDM_PART_RENUM_CELL_NONE",
+                                         "PDM_PART_RENUM_FACE_NONE",
+                                         nPropertyCell,
+                                         renum_properties_cell,
+                                         nPropertyFace,
+                                         renum_properties_face,
+                                         n_part,
+                                         dNFace,
+                                         dNEdge,
+                                         dNVtx,
+                                         nEdgeGroup,
+                                         dFaceVtxIdx,
+                                         dFaceEdge,
+                                         NULL,
+                                         NULL,
+                                         have_dCellPart,
+                                         dCellPart,
+                                         NULL,
+                                         dEdgeVtxIdx,
+                                         dEdgeVtx,
+                                         NULL,
+                                         dVtxCoord,
+                                         NULL,
+                                         dEdgeGroupIdx,
+                                         dEdgeGroup);
     free (dCellPart);
 
     double  *elapsed = NULL;
@@ -652,7 +656,7 @@ _create_split_mesh
     double  *cpu_user = NULL;
     double  *cpu_sys = NULL;
 
-    PDM_part_time_get (ppartId,
+    PDM_part_time_get (ppart,
                        &elapsed,
                        &cpu,
                        &cpu_user,
@@ -676,7 +680,7 @@ _create_split_mesh
     int    bound_part_faces_max;
     int    bound_part_faces_sum;
 
-    PDM_part_stat_get (ppartId,
+    PDM_part_stat_get (ppart,
                        &cells_average,
                        &cells_median,
                        &cells_std_deviation,
@@ -716,7 +720,7 @@ _create_split_mesh
     free (dEdgeGroupIdx);
     free (dEdgeGroup);
 
-    _compute_faceVtx (ppartId,
+    _compute_faceVtx (ppart,
                       n_part,
                       nFace,
                       faceVtxIdx,
@@ -726,7 +730,7 @@ _create_split_mesh
                       vtxCoord,
                       vtxLNToGN);
 
-    PDM_part_free (ppartId);
+    PDM_part_free (ppart);
 
   }
   else {
@@ -797,27 +801,27 @@ _export_ini_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "mesh1",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1.,
                                 NULL);
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "mesh2",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1,
                                 NULL);
 
@@ -835,14 +839,14 @@ _export_ini_mesh
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
     if (imesh == 0) {
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sfieldA");
     }
@@ -850,7 +854,7 @@ _export_ini_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rfieldB");
     }
@@ -858,14 +862,14 @@ _export_ini_mesh
 
     id_var_coo_x[imesh] = PDM_writer_var_create (id_cs[imesh],
                                        PDM_WRITER_ON,
-                                       PDM_WRITER_VAR_SCALAIRE,
-                                       PDM_WRITER_VAR_SOMMETS,
+                                       PDM_WRITER_VAR_SCALAR,
+                                       PDM_WRITER_VAR_VERTICES,
                                        "coo_x");
 
     id_var_coo_xyz[imesh] = PDM_writer_var_create (id_cs[imesh],
                                          PDM_WRITER_ON,
-                                         PDM_WRITER_VAR_VECTEUR,
-                                         PDM_WRITER_VAR_SOMMETS,
+                                         PDM_WRITER_VAR_VECTOR,
+                                         PDM_WRITER_VAR_VERTICES,
                                          "coo_xyz");
 
     /*
@@ -880,8 +884,6 @@ _export_ini_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     /*
      * Debut des ecritures
@@ -916,7 +918,8 @@ _export_ini_mesh
                                  ipart,
                                  nVtx[imesh][ipart],
                                  vtxCoord[imesh][ipart],
-                                 vtxLNToGN[imesh][ipart]);
+                                 vtxLNToGN[imesh][ipart],
+                                PDM_OWNERSHIP_USER);
 
       _face_nb[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
       _face_idx[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
@@ -1065,7 +1068,7 @@ _export_ini_mesh
  *
  * \brief  Export overlay mesh
  *
- * \param [in]    pdm_id    PDM identifier
+ * \param [in]    ol    Pointer to overlay structure
  *
  */
 
@@ -1073,7 +1076,7 @@ static void
 _export_ol_mesh
 (
  const PDM_MPI_Comm pdm_mpi_comm,
- const int pdm_id,
+ const PDM_ol_t *ol,
  int**     nFace,
  double**  sFieldOlA,
  double**  rFieldOlB,
@@ -1091,27 +1094,27 @@ _export_ol_mesh
    *  Export Mesh to Ensight
    */
 
-  int id_cs[2];
+  PDM_writer_t *id_cs[2];
 
   id_cs[0] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "olmesh1",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1.,
                                 NULL);
 
   id_cs[1] = PDM_writer_create ("Ensight",
                                 PDM_WRITER_FMT_ASCII,
-                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_TOPO_CST,
                                 PDM_WRITER_OFF,
                                 "test_2d_surf_ens",
                                 "olmesh2",
                                 pdm_mpi_comm,
-                                PDM_IO_ACCES_MPI_SIMPLE,
+                                PDM_IO_KIND_MPI_SIMPLE,
                                 1,
                                 NULL);
 
@@ -1131,7 +1134,7 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "sOlField");
     }
@@ -1139,32 +1142,32 @@ _export_ol_mesh
 
       id_var_field[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                    PDM_WRITER_OFF,
-                                                   PDM_WRITER_VAR_SCALAIRE,
+                                                   PDM_WRITER_VAR_SCALAR,
                                                    PDM_WRITER_VAR_ELEMENTS,
                                                    "rOlField");
     }
 
     id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                     PDM_WRITER_OFF,
-                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SCALAR,
                                                     PDM_WRITER_VAR_ELEMENTS,
                                                     "num_part");
 
     id_var_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                  PDM_WRITER_OFF,
-                                                 PDM_WRITER_VAR_SCALAIRE,
+                                                 PDM_WRITER_VAR_SCALAR,
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "matching");
 
     id_var_cell_match[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                       PDM_WRITER_OFF,
-                                                      PDM_WRITER_VAR_SCALAIRE,
+                                                      PDM_WRITER_VAR_SCALAR,
                                                       PDM_WRITER_VAR_ELEMENTS,
                                                       "cell_matching");
 
     id_var_origin[imesh] = PDM_writer_var_create (id_cs[imesh],
                                                   PDM_WRITER_OFF,
-                                                  PDM_WRITER_VAR_SCALAIRE,
+                                                  PDM_WRITER_VAR_SCALAR,
                                                   PDM_WRITER_VAR_ELEMENTS,
                                                   "origin");
 
@@ -1186,8 +1189,6 @@ _export_ol_mesh
 
     id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
                                              nom_geom,
-                                             PDM_WRITER_OFF,
-                                             PDM_WRITER_OFF,
                                              n_part);
     int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
 
@@ -1211,7 +1212,7 @@ _export_ol_mesh
     PDM_g_num_t    nGOlFace;
     PDM_g_num_t    nGOlVtx;
 
-    PDM_ol_mesh_dim_get (pdm_id,
+    PDM_ol_mesh_dim_get (ol,
                          mesht,
                          &nGOlFace,
                          &nGOlVtx);
@@ -1233,7 +1234,7 @@ _export_ol_mesh
       int           sOlface_vtx;
       int           sInitToOlFace;
 
-      PDM_ol_part_mesh_dim_get (pdm_id,
+      PDM_ol_part_mesh_dim_get (ol,
                                 mesht,
                                 ipart,
                                 &nOlFace,
@@ -1255,7 +1256,7 @@ _export_ol_mesh
       int            *initToOlFaceIdx;
       int            *initToOlFace;
 
-      PDM_ol_mesh_entities_get (pdm_id,
+      PDM_ol_mesh_entities_get (ol,
                                 mesht,
                                 ipart,
                                 &olFaceIniVtxIdx,
@@ -1281,7 +1282,8 @@ _export_ol_mesh
                                  ipart,
                                  nOlVtx,
                                  olCoords,
-                                 olvtx_ln_to_gn);
+                                 olvtx_ln_to_gn,
+                                PDM_OWNERSHIP_USER);
 
       _olface_nb[ipart] = malloc(sizeof(int) * nOlFace);
       _olface_idx[ipart] = malloc(sizeof(int) * nOlFace);
@@ -1438,6 +1440,8 @@ int argc,
 char *argv[]
 )
 {
+  PDM_predicate_exactinit();
+
   PDM_MPI_Init (&argc, &argv);
 
   /*
@@ -1457,7 +1461,15 @@ char *argv[]
   int              n_partB   = 1;
 
   int              post    = 0;
+#ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH
+  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+#endif
+#endif
   int              haveRandom = 1;
   int              randomTimeInit = 0;
 
@@ -1499,20 +1511,22 @@ char *argv[]
 
   if (i_rank == 0) {
     PDM_printf ("%Parametres : \n");
-    PDM_printf ("  - n_vtx_segA : %d\n", n_vtx_segA);
-    PDM_printf ("  - lengthA : %f\n", lengthA);
-    PDM_printf ("  - xminA : %d\n", xminA);
-    PDM_printf ("  - yminA : %d\n", yminA);
-    PDM_printf ("  - n_partA : %d\n", n_partA);
-    PDM_printf ("  - n_vtx_segB : %d\n", n_vtx_segB);
-    PDM_printf ("  - lengthB : %f\n", lengthB);
-    PDM_printf ("  - xminB : %d\n", xminB);
-    PDM_printf ("  - yminB : %d\n", yminB);
-    PDM_printf ("  - n_partB : %d\n", n_partB);
-    PDM_printf ("  - post : %d\n", post);
-    PDM_printf ("  - method : %d\n", method);
-    PDM_printf ("  - haveRandom : %d\n", haveRandom);
+    PDM_printf ("  - n_rank         : %d\n", numProcs);
+    PDM_printf ("  - n_vtx_segA     : %d\n", n_vtx_segA);
+    PDM_printf ("  - lengthA        : %f\n", lengthA);
+    PDM_printf ("  - xminA          : %f\n", xminA);
+    PDM_printf ("  - yminA          : %f\n", yminA);
+    PDM_printf ("  - n_partA        : %d\n", n_partA);
+    PDM_printf ("  - n_vtx_segB     : %d\n", n_vtx_segB);
+    PDM_printf ("  - lengthB        : %f\n", lengthB);
+    PDM_printf ("  - xminB          : %f\n", xminB);
+    PDM_printf ("  - yminB          : %f\n", yminB);
+    PDM_printf ("  - n_partB        : %d\n", n_partB);
+    PDM_printf ("  - post           : %d\n", post);
+    PDM_printf ("  - method         : %d\n", method);
+    PDM_printf ("  - haveRandom     : %d\n", haveRandom);
     PDM_printf ("  - randomTimeInit : %d\n", randomTimeInit);
+    PDM_printf ("  - nProcData      : %d\n", nProcData);
   }
 
   /*
@@ -1676,14 +1690,10 @@ char *argv[]
    *  Creation de l'objet PDM
    */
 
-  int pdm_id = PDM_ol_create (n_part,
-                              nGFace[0],
-                              nGVtx[0],
-                              n_part,
-                              nGFace[1],
-                              nGVtx[1],
-                              projectCoeff,
-                              PDM_MPI_COMM_WORLD);
+  PDM_ol_t *ol = PDM_ol_create (n_part,
+                                n_part,
+                                projectCoeff,
+                                PDM_MPI_COMM_WORLD);
   if (i_rank == 0){
     PDM_printf ("- n_part MeshA : %d \n", n_part);
     PDM_printf ("- nGFaceMeshA : %d \n", nGFace[0]);
@@ -1694,11 +1704,11 @@ char *argv[]
     PDM_printf ("- projectCoeff : %d \n", projectCoeff);
   }
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_CAR_LENGTH_TOL,
                         1e-4);
 
-  PDM_ol_parameter_set (pdm_id,
+  PDM_ol_parameter_set (ol,
                         PDM_OL_EXTENTS_TOL,
                         1e-4);
 
@@ -1735,7 +1745,7 @@ char *argv[]
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
-      PDM_ol_input_mesh_set (pdm_id,
+      PDM_ol_input_mesh_set (ol,
                              mesh,
                              ipart,
                              nFace[imesh][ipart],
@@ -1778,14 +1788,29 @@ char *argv[]
     }
   }
 
+
+  /*if (post) {
+    _export_ini_mesh (PDM_MPI_COMM_WORLD,
+                      n_part,
+                      nFace,
+                      faceVtxIdx,
+                      faceVtx,
+                      faceLNToGN,
+                      nVtx,
+                      vtxCoord,
+                      vtxLNToGN,
+                      sFieldA,
+                      rFieldB);
+		      }*/
+
   /*
    *  Calcul
    */
 
-  PDM_ol_compute (pdm_id);
+  PDM_ol_compute (ol);
 
   if (i_rank == 0){
-    PDM_ol_dump_times (pdm_id);
+    PDM_ol_dump_times (ol);
   }
 
   /*
@@ -1847,7 +1872,7 @@ char *argv[]
     PDM_g_num_t nGOlFace;
     PDM_g_num_t nGOlVtx;
 
-    PDM_ol_mesh_dim_get (pdm_id,
+    PDM_ol_mesh_dim_get (ol,
                          mesht,
                          &nGOlFace,
                          &nGOlVtx);
@@ -1866,7 +1891,7 @@ char *argv[]
       int           sOlface_vtx;
       int           sInitToOlFace;
 
-      PDM_ol_part_mesh_dim_get (pdm_id,
+      PDM_ol_part_mesh_dim_get (ol,
                                 mesht,
                                 ipart,
                                 &nOlFace,
@@ -1894,7 +1919,7 @@ char *argv[]
       int            *initToOlFaceIdx;
       int            *initToOlFace;
 
-      PDM_ol_mesh_entities_get (pdm_id,
+      PDM_ol_mesh_entities_get (ol,
                                 mesht,
                                 ipart,
                                 &olFaceIniVtxIdx,
@@ -2115,7 +2140,7 @@ char *argv[]
                       rFieldB);
 
     _export_ol_mesh (PDM_MPI_COMM_WORLD,
-                     pdm_id,
+                     ol,
                      nFace,
                      sFieldOlA,
                      rFieldOlB,
@@ -2195,7 +2220,9 @@ char *argv[]
    *  Free Pdm
    */
 
-  PDM_ol_del (pdm_id);
+  PDM_ol_del (ol);
+
+  if (i_rank == 0) printf("-- End\n");
 
   PDM_MPI_Finalize ();
 

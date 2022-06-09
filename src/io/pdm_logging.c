@@ -43,6 +43,7 @@
 
 #include "pdm_logging.h"
 #include "pdm_mpi.h"
+#include "pdm_priv.h"
 
 /*-----------------------------------------------------------------------------*/
 
@@ -242,6 +243,7 @@ PDM_log_trace_array_int
 )
 {
   log_trace(header);
+  log_trace("(%i) -> ", larray);
   for(int i = 0; i < larray; ++i){
     log_trace("%d ", array[i]);
   }
@@ -257,6 +259,7 @@ PDM_log_trace_array_long
 )
 {
   log_trace(header);
+  log_trace("(%i) -> ", larray);
   for(int i = 0; i < larray; ++i){
     log_trace(PDM_FMT_G_NUM" ", array[i]);
   }
@@ -273,8 +276,8 @@ PDM_log_trace_array_double
 {
   log_trace(header);
   for(int i = 0; i < larray; ++i){
-    log_trace("%12.5e ", array[i]);
-    // log_trace("%20.16e ", array[i]);
+    //log_trace("%12.5e ", array[i]);
+    log_trace("%20.16e ", array[i]);
   }
   log_trace("\n");
 }
@@ -294,6 +297,89 @@ PDM_log_trace_array_size_t
   log_trace("\n");
 }
 
+
+
+void
+PDM_log_trace_connectivity_long
+(
+ const int         *array_idx,
+ const PDM_g_num_t *array,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s[%i] -> ", header, i);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace(PDM_FMT_G_NUM" ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
+
+
+void
+PDM_log_trace_connectivity_int
+(
+ const int         *array_idx,
+ const int         *array,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s[%i] -> ", header, i);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace("%i ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
+
+
+void
+PDM_log_trace_part_connectivity_gnum
+(
+ const int         *entitiy1_entity2_idx,
+ const int         *entitiy1_entity2,
+ const PDM_g_num_t *entitiy1_ln_to_gn,
+ const PDM_g_num_t *entitiy2_ln_to_gn,
+ const int          n_entity1,
+ const char*        header
+)
+{
+  for(int i = 0; i < n_entity1; ++i) {
+    log_trace("%s[%i](g_num = "PDM_FMT_G_NUM") -> ", header, i, entitiy1_ln_to_gn[i]);
+    for(int j = entitiy1_entity2_idx[i]; j < entitiy1_entity2_idx[i+1]; ++j) {
+      int i_entity2 = PDM_ABS (entitiy1_entity2[j]) - 1;
+      int sgn       = PDM_SIGN(entitiy1_entity2[j]);
+      log_trace(PDM_FMT_G_NUM" ", sgn * entitiy2_ln_to_gn[i_entity2]);
+    }
+    log_trace("\n");
+  }
+}
+
+void
+PDM_log_trace_connectivity_int2
+(
+ const int         *array_idx,
+ const int         *array,
+ const PDM_g_num_t *g_num,
+ const int          larray,
+ const char*        header
+)
+{
+  // log_trace(header);
+  for(int i = 0; i < larray; ++i) {
+    log_trace("%s[%i](g_num = "PDM_FMT_G_NUM") -> ", header, i, g_num[i]);
+    for(int j = array_idx[i]; j < array_idx[i+1]; ++j) {
+      log_trace("%i ", array[j]);
+    }
+    log_trace("\n");
+  }
+}
 
 #ifdef __cplusplus
 }

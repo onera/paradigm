@@ -9,12 +9,6 @@
  * Macro definitions
  *============================================================================*/
 
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
-
 #if defined (__uxpv__)
 #define ARGF_SUPP_CHAINE
 #else
@@ -125,10 +119,31 @@ typedef enum {
 
 typedef enum {
 
-  PDM_STRIDE_CST = 0,  /*!< Constant stride element */
-  PDM_STRIDE_VAR = 1   /*!< Variable stride element */
+  PDM_STRIDE_CST_INTERLACED = 0, /*!< Constant stride interlaced */
+  PDM_STRIDE_CST_INTERLEAVED= 1, /*!< Constant stride interleaved */
+  PDM_STRIDE_VAR_INTERLACED = 2  /*!< Variable stride interlaced */
 
 } PDM_stride_t;
+
+
+/**
+ * \enum PDM_mpi_comm_t
+ * \brief Framework used for MPI communications
+ *
+ */
+
+typedef enum {
+
+  PDM_MPI_COMM_KIND_P2P                                = 0, /*!< Peer ro peer (MPI_issend/MPI_irecv) */
+  PDM_MPI_COMM_KIND_COLLECTIVE                         = 1, /*!< Collective communications (MPI_Ialltoall, ...) */
+  PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = 2, /*!< Neighborhood communcations (MPI_I_neighbor_alltoall, ...) */
+  PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = 3, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_WIN_RMA                            = 6  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
+  
+} PDM_mpi_comm_kind_t;
+
 
 /**
  * \enum PDM_bool_t
@@ -155,7 +170,8 @@ typedef enum {
   PDM_MESH_ENTITY_CELL    = 0,  /*!< Cell entity  */
   PDM_MESH_ENTITY_FACE    = 1,  /*!< Face entity  */
   PDM_MESH_ENTITY_EDGE    = 2,  /*!< Edge entity  */
-  PDM_MESH_ENTITY_VERTEX  = 3   /*!< Vertex entity  */
+  PDM_MESH_ENTITY_VERTEX  = 3,  /*!< Vertex entity  */
+  PDM_MESH_ENTITY_MAX     = 4   /*!<  */
 
 } PDM_mesh_entities_t;
 
@@ -227,6 +243,14 @@ typedef enum {
 } PDM_bound_type_t;
 
 typedef enum {
+  PDM_GEOMETRY_KIND_VOLUMIC  = 0,
+  PDM_GEOMETRY_KIND_SURFACIC = 1,
+  PDM_GEOMETRY_KIND_RIDGE    = 2,
+  PDM_GEOMETRY_KIND_CORNER   = 3,
+  PDM_GEOMETRY_KIND_MAX      = 4,
+} PDM_geometry_kind_t;
+
+typedef enum {
 
   PDM_MESH_LOCATION_OCTREE,
   PDM_MESH_LOCATION_DBBTREE,
@@ -234,10 +258,73 @@ typedef enum {
 } PDM_mesh_location_method_t;
 
 
+typedef enum {
+  PDM_VTX_KIND_NONE               = 0x0000000, /*=* empty flag, all values set to false */
+  PDM_VTX_KIND_NULL               = 0xFFFFFFF, /*=* unsignificant flags value           */
+  PDM_VTX_KIND_ON_VOLUME          = 0x0000001, /*=*  0                                  */
+  PDM_VTX_KIND_ON_SURFACE         = 0x0000002, /*=*  1                                  */
+  PDM_VTX_KIND_ON_RIDGE           = 0x0000004, /*=*  2                                  */
+  PDM_VTX_KIND_ON_CORNER          = 0x0000008, /*=*  3                                  */
+} PDM_vtx_kind;
+
+typedef enum {
+  PDM_REDUCE_OP_MIN,
+  PDM_REDUCE_OP_MAX,
+  PDM_REDUCE_OP_SUM//,
+  // PDM_REDUCE_OP_MEAN
+} PDM_reduce_op_t;
+
+
+typedef enum {
+
+  PDM_DOMAIN_INTERFACE_MULT_NO  = 0,  /*!< Each interface involves only 2 domains */
+  PDM_DOMAIN_INTERFACE_MULT_YES = 1,  /*!< Each interface involves several domains */
+
+} PDM_domain_interface_mult_t;
+
+
+/**
+ * \enum PDM_part_split_t
+ * \brief Split method
+ *
+ */
+
+typedef enum {
+  PDM_SPLIT_DUAL_WITH_PARMETIS = 1,
+  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2,
+  PDM_SPLIT_DUAL_WITH_HILBERT  = 3
+} PDM_split_dual_t;
+
+
+/**
+ * \enum PDM_iso_surface_kind_t
+ * \brief Type of iso surface
+ *
+ */
+typedef enum {
+
+  PDM_ISO_SURFACE_KIND_PLANE  = 0,
+  PDM_ISO_SURFACE_KIND_SPHERE = 1,
+  PDM_ISO_SURFACE_KIND_FIELD  = 2,
+
+} PDM_iso_surface_kind_t;
+
+
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
 
+/**
+ * \brief Helper to get entity type according to a connectivity
+ *
+ */
+PDM_mesh_entities_t
+PDM_connectivity_type_to_entity_type
+(
+ PDM_connectivity_type_t   connectivity_type
+);
 
 /**
  * \brief Finalize PDM

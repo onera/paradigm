@@ -39,6 +39,7 @@ _usage(int exit_code)
      "  -n_part <level>  Number of partitions par process.\n\n"
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scotch       Call PT-Scotch.\n\n"
+     "  -hilbert         Call PT-Hilbert.\n\n"
      "  -post            Write output in Ensight format.\n\n"
      "  -h               This message.\n\n");
 
@@ -54,7 +55,7 @@ _usage(int exit_code)
  * \param [in]      argv     Arguments
  * \param [inout]   n_vtx_seg  Number of vertices on the cube side
  * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
+ * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch, 3 Hilbert)
  * \param [inout]   post     Write output or not
  *
  */
@@ -65,7 +66,7 @@ _read_args(int            argc,
            PDM_g_num_t  *n_vtx_seg,
            int           *n_part,
            int           *post,
-	         int           *method
+           int           *method
            )
 {
   int i = 1;
@@ -97,6 +98,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
     }
+    else if (strcmp(argv[i], "-hilbert") == 0) {
+      *method = 3;
+    }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *method = 2;
     }
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
-  int                n_zone    = 3;
+  int                n_zone    = 1;
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -174,9 +178,9 @@ int main(int argc, char *argv[])
   for (int i_zone = 0; i_zone < n_zone; i_zone++){
     n_part_zones[i_zone] = n_part;
   }
-  int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
-                                      method, PDM_PART_SIZE_HOMOGENEOUS,
-                                      NULL, comm, PDM_OWNERSHIP_KEEP);
+  PDM_multipart_t *mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
+						   method, PDM_PART_SIZE_HOMOGENEOUS,
+						   NULL, comm, PDM_OWNERSHIP_KEEP);
   PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL", NULL, "PDM_PART_RENUM_FACE_LEXICOGRAPHIC");
   if (n_zone > 1)
     PDM_multipart_set_reordering_options(mpart_id,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
@@ -219,14 +223,17 @@ int main(int argc, char *argv[])
     }
 
     // Join numbering (left to right, increasing i_zone)
-    djoins_ids[i_zone] = (int *) malloc(n_jn * sizeof(int));
-    if (i_zone == 0)
-      djoins_ids[i_zone][0] = 0;
-    else if (i_zone == n_zone-1)
-      djoins_ids[i_zone][0] = 2*i_zone - 1;
-    else {
-      djoins_ids[i_zone][0] = 2*i_zone - 1;
-      djoins_ids[i_zone][1] = 2*i_zone;
+    printf("n_jn = %i \n", n_jn);
+    if(n_jn > 0 ) {
+      djoins_ids[i_zone] = (int *) malloc(n_jn * sizeof(int));
+      if (i_zone == 0)
+        djoins_ids[i_zone][0] = 0;
+      else if (i_zone == n_zone-1)
+        djoins_ids[i_zone][0] = 2*i_zone - 1;
+      else {
+        djoins_ids[i_zone][0] = 2*i_zone - 1;
+        djoins_ids[i_zone][1] = 2*i_zone;
+      }
     }
 
     dface_bnd_idx[i_zone]  = (int *) malloc((n_bnd+1) * sizeof(int));
@@ -313,35 +320,33 @@ int main(int argc, char *argv[])
   {
     /* Prepare writer */
     int *geom_ids = (int *) malloc(n_zone * sizeof(int));
-    int id_cs = PDM_writer_create("Ensight",
-                                  PDM_WRITER_FMT_ASCII,
-                                  PDM_WRITER_TOPO_CONSTANTE,
-                                  PDM_WRITER_OFF,
-                                  "test_mpart_cube",
-                                  "mpart",
-                                  PDM_MPI_COMM_WORLD,
-                                  PDM_IO_ACCES_MPI_SIMPLE,
-                                  1.,
-                                  NULL);
+    PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                            PDM_WRITER_FMT_ASCII,
+                                            PDM_WRITER_TOPO_CST,
+                                            PDM_WRITER_OFF,
+                                            "test_mpart_cube",
+                                            "mpart",
+                                            PDM_MPI_COMM_WORLD,
+                                            PDM_IO_KIND_MPI_SIMPLE,
+                                            1.,
+                                            NULL);
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
       geom_ids[i_zone] = PDM_writer_geom_create(id_cs,
                                                 "mesh",
-                                                PDM_WRITER_OFF,
-                                                PDM_WRITER_OFF,
                                                 n_part_zones[i_zone]); //total nb of part for this proc/zone
     }
     // Cell local id
-    int id_var_cell_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "cell_id");
+    int id_var_cell_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_ELEMENTS, "cell_id");
     // Global partition Id (ordred by proc / zone), staring at 1
-    int id_var_gpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "gpart_id");
+    int id_var_gpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_ELEMENTS, "gpart_id");
     // Local partition Id on the proc / zone, starting at 0
-    int id_var_lpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "lpart_id");
+    int id_var_lpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_ELEMENTS, "lpart_id");
     // Proc Id
-    int id_var_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "iproc");
+    int id_var_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_ELEMENTS, "iproc");
     // Id of opposite proc
-    int id_var_opp_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppProc");
+    int id_var_opp_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_VERTICES, "oppProc");
     // Id of opposite part (in the local numerotation of the opposite proc)
-    int id_var_opp_part_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppPart");
+    int id_var_opp_part_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAR, PDM_WRITER_VAR_VERTICES, "oppPart");
     PDM_writer_step_beg(id_cs, 0.);
 
     /* Alloc for part meshes */
@@ -428,7 +433,9 @@ int main(int argc, char *argv[])
                                   i_part,
                                   n_vtx,
                                   vtx,
-                                  vtx_ln_to_gn);
+                                  vtx_ln_to_gn,
+                                  PDM_OWNERSHIP_USER);
+        
         PDM_writer_geom_cell3d_cellface_add(id_cs,
                                             geom_ids[i_zone],
                                             i_part,
@@ -531,7 +538,9 @@ int main(int argc, char *argv[])
     free(dface_bnd[i_zone]);
     free(dface_join_idx[i_zone]);
     free(dface_join[i_zone]);
-    free(djoins_ids[i_zone]);
+    if(n_zone > 1) {
+      free(djoins_ids[i_zone]);
+    }
     PDM_dmesh_free(dmesh[i_zone]);
     PDM_dcube_gen_free(dcube[i_zone]);
   }

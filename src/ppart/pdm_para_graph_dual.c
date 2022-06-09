@@ -255,7 +255,7 @@ const int              compute_dnode_to_arc,
     darc_g = (PDM_g_num_t *) malloc( 2 * dn_arc * sizeof(PDM_g_num_t));
   }
 
-  int shift_arc_g   = graph_arc_distrib[i_rank]+1; // Entre 1 et N
+  PDM_g_num_t shift_arc_g   = graph_arc_distrib[i_rank]+1; // Entre 1 et N
   // printf(" shift_arc_g = %i \n", shift_arc_g);
   int dn_arc_int    = 0;
   int idx_data_arc  = 0;
@@ -326,7 +326,7 @@ const int              compute_dnode_to_arc,
    *           --> Semble necessaire pour parMetis mais pas scotch
    */
   PDM_part_to_block_t *ptb_dual =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM,
                              1.,
                              &dnode_ln_to_gn,
@@ -343,7 +343,7 @@ const int              compute_dnode_to_arc,
    */
   int req_id_dual = PDM_part_to_block_async_exch(ptb_dual,
                                                  sizeof(PDM_g_num_t),
-                                                 PDM_STRIDE_VAR,
+                                                 PDM_STRIDE_VAR_INTERLACED,
                                                  1,
                                                  &node_strid,
                                        (void **) &dopposite_node);
@@ -355,7 +355,7 @@ const int              compute_dnode_to_arc,
 
     req_id_node_arc = PDM_part_to_block_async_exch(ptb_dual,
                                                    sizeof(PDM_g_num_t),
-                                                   PDM_STRIDE_VAR,
+                                                   PDM_STRIDE_VAR_INTERLACED,
                                                    1,
                                                    &arc_strid,
                                          (void **) &darc_g);
@@ -631,7 +631,7 @@ const PDM_g_num_t     *dnode_arc,
   }
 
   PDM_part_to_block_t *ptb =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                             &arc_ln_to_gn,
@@ -648,7 +648,7 @@ const PDM_g_num_t     *dnode_arc,
 
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
+                          PDM_STRIDE_VAR_INTERLACED,
                           1,
                           &send_stride,
                 (void **) &node_g,
@@ -926,7 +926,7 @@ const PDM_MPI_Comm      comm
 
   int dn_elmt = graph_node_distrib[i_rank+1] - graph_node_distrib[i_rank];
 
-  printf("dn_elmt = %i \n", dn_elmt);
+  // printf("dn_elmt = %i \n", dn_elmt);
   PDM_array_reset_int(node_part_id, dn_elmt, 0);
 
   switch (split_method) {
@@ -986,6 +986,7 @@ const PDM_MPI_Comm      comm
                                  &edgecut,
                                   node_part_id,
                                   comm);
+        // printf("PDM_ParMETIS_dpart %d | %d  END\n", n_part, dn_elmt);
 
         free(ubvec);
         free(tpwgts);

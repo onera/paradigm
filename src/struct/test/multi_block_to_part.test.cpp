@@ -1,3 +1,4 @@
+#include <numeric>
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
@@ -53,7 +54,7 @@ MPI_TEST_CASE("[1p] multi_block_to_part",1) {
     }
 
     PDM_g_num_t** parray = NULL;
-    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_CST,
+    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_CST_INTERLACED,
                                   stride_one,
                        (void ** ) darray,
                                   NULL,
@@ -100,7 +101,7 @@ MPI_TEST_CASE("[1p] multi_block_to_part",1) {
 
     int**         pstrid = NULL;
     PDM_g_num_t** parray = NULL;
-    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_VAR,
+    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_VAR_INTERLACED,
                                   dstri,
                        (void ** ) darray,
                                   &pstrid,
@@ -210,7 +211,7 @@ MPI_TEST_CASE("[2p] multi_block_to_part",2) {
     }
 
     PDM_g_num_t** parray = NULL;
-    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_CST,
+    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_CST_INTERLACED,
                                   stride_one,
                        (void ** ) darray,
                                   NULL,
@@ -285,7 +286,7 @@ MPI_TEST_CASE("[2p] multi_block_to_part",2) {
 
     int**         pstrid = NULL;
     PDM_g_num_t** parray = NULL;
-    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_VAR,
+    PDM_multi_block_to_part_exch2(mbtp, sizeof(PDM_g_num_t), PDM_STRIDE_VAR_INTERLACED,
                                   dstri,
                        (void ** ) darray,
                                   &pstrid,
@@ -377,7 +378,7 @@ MPI_TEST_CASE("[3p] multi_block_to_part n_block=1",3) {
   darray_ptr[0] = darray.data();
 
   int32_t** parray = nullptr;
-  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST,
+  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST_INTERLACED,
                                 &stride_one,
                      (void ** ) darray_ptr.data(),
                                 nullptr,
@@ -451,7 +452,7 @@ MPI_TEST_CASE("[3p] multi_block_to_part n_block=2",3) {
   darray_ptr[1] = darray1.data();
 
   int32_t** parray = nullptr;
-  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST,
+  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST_INTERLACED,
                                 stride_one,
                      (void ** ) darray_ptr.data(),
                                 nullptr,

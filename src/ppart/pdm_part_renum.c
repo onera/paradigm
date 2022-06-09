@@ -31,7 +31,6 @@
 #include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
 #include "pdm_hilbert.h"
-#include "pdm_handles.h"
 #include "pdm_geom_elem.h"
 #include "pdm_sort.h"
 #include "pdm_cuthill.h"
@@ -39,6 +38,7 @@
 #include "pdm_error.h"
 #include "pdm_order.h"
 #include "pdm_array.h"
+// #include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,32 +79,82 @@ typedef struct _renum_method_t {
  *============================================================================*/
 
 /**
- * Storage of face renumbering methods
+ * Storage of renumbering methods for each type of mesh entity
  */
 
-static PDM_Handles_t *face_methods = NULL;
+static _renum_method_t **renum_methods[4] = {NULL, NULL, NULL, NULL};
+static int s_renum_methods[4] = {0, 0, 0, 0};
+static int n_renum_methods[4] = {0, 0, 0, 0};
 
-/**
- * Storage of cell renumbering methods
- */
-
-static PDM_Handles_t *cell_methods = NULL;
-
-/**
- * Storage of vtx renumbering methods
- */
-
-static PDM_Handles_t *edge_methods = NULL;
-
-/**
- * Storage of vtx renumbering methods
- */
-
-static PDM_Handles_t *vtx_methods = NULL;
 
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
+/**
+ *
+ * \brief Initialize an array renumbering method for a specific type of mesh entity
+ *
+ * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VERTEX)
+ * \param [in]  size       Size of the renumbering method array
+ *
+ */
+
+static void
+_PDM_part_renum_method_init
+(
+ const PDM_mesh_entities_t  entity,
+ const int                  size
+)
+{
+  if (renum_methods[entity] == NULL) {
+    s_renum_methods[entity] = size;
+    n_renum_methods[entity] = 0;
+    renum_methods[entity] = (_renum_method_t **) malloc(sizeof(_renum_method_t *) * s_renum_methods[entity]);
+  }
+}
+
+/**
+ *
+ * \brief Add a renumbering method for a specific type of mesh entity
+ *
+ * \param [in]  entity     Type of mesh entity (PDM_MESH_ENTITY_CELL, PDM_MESH_ENTITY_FACE, PDM_MESH_ENTITY_EDGE or PDM_MESH_ENTITY_VERTEX)
+ * \param [in]  name       Name of the renumbering method
+ * \param [in]  renum_fct  Pointer to the renumbering function
+ *
+ */
+
+static int
+_PDM_part_renum_method_add
+(
+ const PDM_mesh_entities_t   entity,
+ const char                 *name,
+ const PDM_part_renum_fct_t  renum_fct
+)
+{
+  if (renum_methods[entity] == NULL) {
+    PDM_part_renum_method_load_local ();
+  }
+
+  if (n_renum_methods[entity] >= s_renum_methods[entity]) {
+    s_renum_methods[entity] = PDM_MAX(2*s_renum_methods[entity],
+                                      n_renum_methods[entity] + 1);
+
+    renum_methods[entity] = realloc(renum_methods[entity],
+                                    sizeof(_renum_method_t *) * s_renum_methods[entity]);
+  }
+
+  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
+
+  int idx = n_renum_methods[entity];
+  renum_methods[entity][n_renum_methods[entity]++] = method_ptr;
+
+  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  strcpy (method_ptr->name, name);
+  method_ptr->fct = renum_fct;
+
+  return idx;
+}
 
 
 /**
@@ -178,8 +228,8 @@ const int  n_face,
  *
  */
 
-static void
-_order_face_cell
+void
+PDM_order_face_cell
 (
 int          n_face,
 int         *new_to_old_order,
@@ -230,6 +280,53 @@ int       *array
   }
 
   free(old_array);
+}
+
+/**
+ * \brief Order an array
+ *
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      new_to_old_order        New order (size = \ref n_elmt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void
+PDM_part_renum_graph
+(
+const int   n_entity1,
+      int  *entity1_entity1_idx,
+      int  *entity1_entity1,
+const int  *new_to_old_order,
+int         start
+)
+{
+
+  PDM_part_renum_connectivities (n_entity1,
+                                 new_to_old_order,
+                                 entity1_entity1_idx,
+                                 entity1_entity1);
+
+
+  int *old_to_new_order = (int *) malloc (n_entity1 * sizeof(int));
+  for(int i = 0; i < n_entity1; i++) {
+    old_to_new_order[new_to_old_order[i]] = i;
+  }
+
+  int *old_array = (int *) malloc (sizeof(int) * entity1_entity1_idx[n_entity1]);
+
+  for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
+    old_array[i] = entity1_entity1[i];
+  }
+
+  for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
+    int old_idx        = PDM_ABS (old_array[i]);
+    int sign           = PDM_SIGN(old_array[i]);
+    entity1_entity1[i] = sign * (old_to_new_order[old_idx-start] + start);
+  }
+
+  free(old_array);
+  free(old_to_new_order);
 }
 
 
@@ -568,8 +665,9 @@ _dual_graph_firstrank
   for (int i = 0; i < part_ini->n_face; i++) {
     int i_cell1 = PDM_ABS (part_ini->face_cell[2*i    ]) - 1;
     int i_cell2 = PDM_ABS (part_ini->face_cell[2*i + 1]) - 1;
-    //Only the non-boundary faces are stored
-    if (i_cell2 > 0) {
+
+    if(i_cell1 > -1 && i_cell2 > -1) {
+
       int idx1 = cell_cell_idx[i_cell1] + cell_cell_n[i_cell1];
       cell_cell[idx1] = i_cell2 + 1;
       cell_cell_n[i_cell1] += 1;
@@ -1050,42 +1148,18 @@ PDM_part_renum_method_purge
  void
 )
 {
-  if (face_methods != NULL) {
-    // printf("PDM_part_renum_method_purge: face_methods\n");
-
-    const int *index =  PDM_Handles_idx_get (face_methods);
-    int n_methods = PDM_Handles_n_get (face_methods);
-
-    while (n_methods > 0) {
-      int idx = index[0];
-      _renum_method_t *method_ptr =
-              (_renum_method_t *) PDM_Handles_get (face_methods, idx);
-      free (method_ptr->name);
-      PDM_Handles_handle_free (face_methods, idx, PDM_TRUE);
-      n_methods = PDM_Handles_n_get (face_methods);
+  for (int i = 0; i < 4; i++) {
+    if (renum_methods[i] != NULL) {
+      for (int j = 0; j < n_renum_methods[i]; j++) {
+        if (renum_methods[i][j] != NULL) {
+          free(renum_methods[i][j]->name);
+          free(renum_methods[i][j]);
+          renum_methods[i][j] = NULL;
+        }
+      }
+      free(renum_methods[i]);
+      renum_methods[i] = NULL;
     }
-
-    face_methods = PDM_Handles_free (face_methods);
-
-  }
-
-  if (cell_methods != NULL) {
-
-    // printf("PDM_part_renum_method_purge: cell_methods\n");
-    const int *index =  PDM_Handles_idx_get (cell_methods);
-    int n_methods = PDM_Handles_n_get (cell_methods);
-
-    while (n_methods > 0) {
-      int idx = index[0];
-      _renum_method_t *method_ptr =
-              (_renum_method_t *) PDM_Handles_get (cell_methods, idx);
-      free (method_ptr->name);
-      PDM_Handles_handle_free (cell_methods, idx, PDM_TRUE);
-      n_methods = PDM_Handles_n_get (cell_methods);
-    }
-
-    cell_methods = PDM_Handles_free (cell_methods);
-
   }
 }
 
@@ -1099,43 +1173,24 @@ PDM_part_renum_method_purge
  * \return Index (-1 if not found)
  */
 
-void
-PROCF (pdm_part_renum_method_cell_idx_get_cf, PDM_PART_RENUM_METHOD_CELL_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_cell_idx_get (_name);
-
-  free (_name);
-
-}
-
-
 int
 PDM_part_renum_method_cell_idx_get
 (
 const char *name
 )
 {
-  if (cell_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_CELL] == NULL) {
     PDM_part_renum_method_load_local();
   }
   int idx = -1;
 
-  if (cell_methods != NULL) {
-    int n_methods = PDM_Handles_n_get (cell_methods);
-    const int *index =  PDM_Handles_idx_get (cell_methods);
+  if (renum_methods[PDM_MESH_ENTITY_CELL] != NULL) {
+    int n_methods = n_renum_methods[PDM_MESH_ENTITY_CELL];
 
     for (int i = 0; i < n_methods; i++) {
-      _renum_method_t *method_ptr =
-              (_renum_method_t *) PDM_Handles_get (cell_methods, index[i]);
+      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_CELL][i];
       if (!strcmp(method_ptr->name, name)) {
-        idx = index[i];
+        idx = i;
         break;
       }
     }
@@ -1153,46 +1208,101 @@ const char *name
  * \return Index (-1 if not found)
  */
 
-void
-PROCF (pdm_part_renum_method_face_idx_get_cf, PDM_PART_RENUM_METHOD_FACE_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- )
-{
-  char *_name = PDM_fortran_to_c_string (name, *l_name);
-
-  *idx = PDM_part_renum_method_face_idx_get (_name);
-
-  free (_name);
-
-}
-
 int
 PDM_part_renum_method_face_idx_get
 (
 const char *name
 )
 {
-  if (face_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_FACE] == NULL) {
     PDM_part_renum_method_load_local();
   }
   int idx = -1;
-  int n_methods = PDM_Handles_n_get (face_methods);
-  const int *index =  PDM_Handles_idx_get (face_methods);
 
-  for (int i = 0; i < n_methods; i++) {
-    _renum_method_t *method_ptr =
-            (_renum_method_t *) PDM_Handles_get (face_methods, index[i]);
-    if (!strcmp(method_ptr->name, name)) {
-      idx = index[i];
-      break;
+  if (renum_methods[PDM_MESH_ENTITY_FACE] != NULL) {
+    int n_methods = n_renum_methods[PDM_MESH_ENTITY_FACE];
+
+    for (int i = 0; i < n_methods; i++) {
+      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_FACE][i];
+      if (!strcmp(method_ptr->name, name)) {
+        idx = i;
+        break;
+      }
     }
   }
   return idx;
+
 }
 
+/**
+ *
+ * \brief Get index of a renumbering edge method
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_part_renum_method_edge_idx_get
+(
+const char *name
+)
+{
+  if (renum_methods[PDM_MESH_ENTITY_EDGE] == NULL) {
+    PDM_part_renum_method_load_local();
+  }
+  int idx = -1;
+
+  if (renum_methods[PDM_MESH_ENTITY_EDGE] != NULL) {
+    int n_methods = n_renum_methods[PDM_MESH_ENTITY_EDGE];
+
+    for (int i = 0; i < n_methods; i++) {
+      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_EDGE][i];
+      if (!strcmp(method_ptr->name, name)) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  return idx;
+
+}
+
+/**
+ *
+ * \brief Get index of a renumbering vtx method
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_part_renum_method_vtx_idx_get
+(
+const char *name
+)
+{
+  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
+    PDM_part_renum_method_load_local();
+  }
+  int idx = -1;
+
+  if (renum_methods[PDM_MESH_ENTITY_VERTEX] != NULL) {
+    int n_methods = n_renum_methods[PDM_MESH_ENTITY_VERTEX];
+
+    for (int i = 0; i < n_methods; i++) {
+      _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VERTEX][i];
+      if (!strcmp(method_ptr->name, name)) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  return idx;
+
+}
 
 /**
  *
@@ -1205,14 +1315,14 @@ const char *name
  */
 
 void
-PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
+PDM_part_renum_method_cell_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  )
 {
-  const char *_name = PDM_part_renum_method_cell_name_get (*idx);
+  const char *_name = PDM_part_renum_method_cell_name_get (idx);
 
   const int _l_name = strlen(_name);
 
@@ -1227,20 +1337,15 @@ PDM_part_renum_method_cell_name_get
 const int idx
 )
 {
-  if (cell_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_CELL] == NULL) {
     PDM_part_renum_method_load_local();
   }
 
-  int n_methods = PDM_Handles_n_get (cell_methods);
-
-  if (idx >= n_methods) {
+  if (idx >= n_renum_methods[PDM_MESH_ENTITY_CELL]) {
     return NULL;
   }
 
-  const int *index =  PDM_Handles_idx_get (cell_methods);
-
-  _renum_method_t *method_ptr =
-            (_renum_method_t *) PDM_Handles_get (cell_methods, index[idx]);
+  _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_CELL][idx];
 
   return method_ptr->name;
 }
@@ -1254,27 +1359,17 @@ const int idx
  *
  */
 
-void
-PROCF (pdm_part_n_renum_method_cell_get, PDM_PART_N_RENUM_METHOD_CELL_GET)
-(
- int  *n_method
- )
-{
-  *n_method = PDM_part_n_renum_method_cell_get ();
-}
-
 int
 PDM_part_n_renum_method_cell_get
 (
 void
 )
 {
-  if (cell_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_CELL] == NULL) {
     PDM_part_renum_method_load_local();
   }
 
-  return PDM_Handles_n_get (cell_methods);
-
+  return n_renum_methods[PDM_MESH_ENTITY_CELL];
 }
 
 
@@ -1286,27 +1381,17 @@ void
  *
  */
 
-void
-PROCF (pdm_part_n_renum_method_face_get, PDM_PART_N_RENUM_METHOD_FACE_GET)
-(
- int  *n_method
- )
-{
-  *n_method = PDM_part_n_renum_method_face_get ();
-}
-
 int
 PDM_part_n_renum_method_face_get
 (
 void
 )
 {
-  if (face_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_FACE] == NULL) {
     PDM_part_renum_method_load_local();
   }
 
-  return PDM_Handles_n_get (face_methods);
-
+  return n_renum_methods[PDM_MESH_ENTITY_FACE];
 }
 
 /**
@@ -1325,19 +1410,9 @@ PDM_part_renum_method_cell_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */
 )
 {
-  if (cell_methods == NULL) {
-    PDM_part_renum_method_load_local ();
-  }
-
-  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
-
-  int idx = PDM_Handles_store  (cell_methods, method_ptr);
-
-  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
-  strcpy (method_ptr->name, name);
-  method_ptr->fct = renum_fct;
-
-  return idx;
+  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_CELL,
+                                     name,
+                                     renum_fct);
 }
 
 /**
@@ -1356,20 +1431,30 @@ PDM_part_renum_method_face_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 )
 {
-  if (face_methods == NULL) {
-    PDM_part_renum_method_load_local ();
-  }
+  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_FACE,
+                                     name,
+                                     renum_fct);
+}
 
-  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
+/**
+ *
+ * \brief Add a new method for face renumbering
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
 
-  int idx = PDM_Handles_store  (face_methods, method_ptr);
-
-  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
-  strcpy (method_ptr->name, name);
-
-  method_ptr->fct = renum_fct;
-
-  return idx;
+int
+PDM_part_renum_method_edge_add
+(
+ const char                 *name,     /*!< Name          */
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_edge function for the format */
+)
+{
+  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_EDGE,
+                                     name,
+                                     renum_fct);
 }
 
 /**
@@ -1388,20 +1473,9 @@ PDM_part_renum_method_vtx_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 )
 {
-  if (vtx_methods == NULL) {
-    PDM_part_renum_method_load_local ();
-  }
-
-  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
-
-  int idx = PDM_Handles_store  (vtx_methods, method_ptr);
-
-  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
-  strcpy (method_ptr->name, name);
-
-  method_ptr->fct = renum_fct;
-
-  return idx;
+  return _PDM_part_renum_method_add (PDM_MESH_ENTITY_VERTEX,
+                                     name,
+                                     renum_fct);
 }
 
 
@@ -1417,24 +1491,23 @@ PDM_part_renum_method_load_local
 void
 )
 {
-  if (cell_methods == NULL)  {
-
-    const int n_default_methods = 4;
-    cell_methods = PDM_Handles_create (n_default_methods);
+  if (renum_methods[PDM_MESH_ENTITY_CELL] == NULL) {
+    _PDM_part_renum_method_init(PDM_MESH_ENTITY_CELL,
+                                4);
 
     PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_NONE",
-                             NULL);
+                                    NULL);
     PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_RANDOM",
-                             _renum_cells_random);
+                                    _renum_cells_random);
     PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_HILBERT",
-                             _renum_cells_hilbert);
+                                    _renum_cells_hilbert);
     PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_CUTHILL",
-                             _renum_cells_cuthill);
+                                    _renum_cells_cuthill);
   }
 
-  if (face_methods == NULL)  {
-    const int n_default_methods = 3;
-    face_methods = PDM_Handles_create (n_default_methods);
+  if (renum_methods[PDM_MESH_ENTITY_FACE] == NULL) {
+    _PDM_part_renum_method_init(PDM_MESH_ENTITY_FACE,
+                                3);
 
     PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_NONE",
                                     NULL);
@@ -1444,9 +1517,17 @@ void
                                     _renum_faces_lexicographic);
   }
 
-  if (vtx_methods == NULL)  {
-    const int n_default_methods = 2;
-    vtx_methods = PDM_Handles_create (n_default_methods);
+  if (renum_methods[PDM_MESH_ENTITY_EDGE] == NULL) {
+    _PDM_part_renum_method_init(PDM_MESH_ENTITY_EDGE,
+                                2);
+
+    PDM_part_renum_method_edge_add ("PDM_PART_RENUM_EDGE_NONE",
+                                    NULL);
+  }
+
+  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
+    _PDM_part_renum_method_init(PDM_MESH_ENTITY_VERTEX,
+                                2);
 
     PDM_part_renum_method_vtx_add ("PDM_PART_RENUM_VTX_NONE",
                                     NULL);
@@ -1475,13 +1556,12 @@ PDM_part_renum_cell
 )
 {
 
-  if (cell_methods == NULL)  {
+  if (renum_methods[PDM_MESH_ENTITY_CELL] == NULL) {
     PDM_part_renum_method_load_local ();
   }
 
-  const _renum_method_t *method_ptr = (const _renum_method_t *)
-                                    PDM_Handles_get (cell_methods, renum_cell_method);
-                                    // PDM_Handles_get (cell_methods, ppart->renum_cell_method);
+  assert(renum_cell_method < n_renum_methods[PDM_MESH_ENTITY_CELL]);
+  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_CELL][renum_cell_method];
 
   PDM_part_renum_fct_t fct = method_ptr->fct;
 
@@ -1503,14 +1583,14 @@ PDM_part_renum_cell
  */
 
 void
-PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
+PDM_part_renum_method_face_name_get_cf
 (
- char *name,
- int  *l_name,
- int  *idx
+ const int  idx,
+ char      *name,
+ int       *l_name
  )
 {
-  const char *_name = PDM_part_renum_method_face_name_get (*idx);
+  const char *_name = PDM_part_renum_method_face_name_get (idx);
 
   const int _l_name = strlen(_name);
 
@@ -1526,20 +1606,15 @@ PDM_part_renum_method_face_name_get
 const int idx
 )
 {
-  if (face_methods == NULL) {
+  if (renum_methods[PDM_MESH_ENTITY_FACE] == NULL) {
     PDM_part_renum_method_load_local();
   }
 
-  int n_methods = PDM_Handles_n_get (face_methods);
-
-  if (idx >= n_methods) {
+  if (idx >= n_renum_methods[PDM_MESH_ENTITY_FACE]) {
     return NULL;
   }
 
-  const int *index =  PDM_Handles_idx_get (face_methods);
-
-  _renum_method_t *method_ptr =
-            (_renum_method_t *) PDM_Handles_get (face_methods, index[idx]);
+  _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_FACE][idx];
 
   return method_ptr->name;
 }
@@ -1562,13 +1637,12 @@ PDM_part_renum_face
  void     *specific_data
 )
 {
-  if (face_methods == NULL)  {
+  if (renum_methods[PDM_MESH_ENTITY_FACE] == NULL) {
     PDM_part_renum_method_load_local ();
   }
 
-  const _renum_method_t *method_ptr = (const _renum_method_t *)
-                                      PDM_Handles_get (face_methods, renum_face_method);
-                                      // PDM_Handles_get (face_methods, ppart->renum_face_method);
+  assert(renum_face_method < n_renum_methods[PDM_MESH_ENTITY_FACE]);
+  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_FACE][renum_face_method];
 
   PDM_part_renum_fct_t fct = method_ptr->fct;
 
@@ -1594,12 +1668,12 @@ PDM_part_renum_edge
  void     *specific_data
 )
 {
-  if (edge_methods == NULL)  {
+  if (renum_methods[PDM_MESH_ENTITY_EDGE] == NULL) {
     PDM_part_renum_method_load_local ();
   }
 
-  const _renum_method_t *method_ptr = (const _renum_method_t *)
-                                      PDM_Handles_get (edge_methods, renum_edge_method);
+  assert(renum_edge_method < n_renum_methods[PDM_MESH_ENTITY_EDGE]);
+  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_EDGE][renum_edge_method];
 
   PDM_part_renum_fct_t fct = method_ptr->fct;
 
@@ -1625,12 +1699,12 @@ PDM_part_renum_vtx
  void     *specific_data
 )
 {
-  if (vtx_methods == NULL)  {
+  if (renum_methods[PDM_MESH_ENTITY_VERTEX] == NULL) {
     PDM_part_renum_method_load_local ();
   }
 
-  const _renum_method_t *method_ptr = (const _renum_method_t *)
-                                      PDM_Handles_get (vtx_methods, renum_vtx_method);
+  assert(renum_vtx_method < n_renum_methods[PDM_MESH_ENTITY_VERTEX]);
+  const _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VERTEX][renum_vtx_method];
 
   PDM_part_renum_fct_t fct = method_ptr->fct;
 
@@ -1730,10 +1804,12 @@ int     *new_to_old_order
 {
 
   /** Renum face_vtx / face_vtx_idx **/
-  PDM_part_renum_connectivities (part->n_face,
-                                 new_to_old_order,
-                                 part->face_vtx_idx,
-                                 part->face_vtx);
+  if(part->face_vtx != NULL) {
+    PDM_part_renum_connectivities (part->n_face,
+                                   new_to_old_order,
+                                   part->face_vtx_idx,
+                                   part->face_vtx);
+  }
 
   /** Renum face_edge / face_edge_idx **/
   if(part->face_edge != NULL) {
@@ -1798,9 +1874,9 @@ int     *new_to_old_order
   }
 
   /** face_cell Face **/
-  _order_face_cell (part->n_face,
-                    new_to_old_order,
-                    part->face_cell);
+  PDM_order_face_cell (part->n_face,
+                       new_to_old_order,
+                       part->face_cell);
 
   /* Free */
   free (old_to_new_order);
@@ -1842,9 +1918,9 @@ int     *new_to_old_order
   }
 
   if( part->edge_vtx != NULL) {
-    _order_face_cell(part->n_edge,
-                     new_to_old_order,
-                     part->edge_vtx);
+    PDM_order_face_cell(part->n_edge,
+                        new_to_old_order,
+                        part->edge_vtx);
   }
 
   /** edge_tag **/
@@ -1903,9 +1979,11 @@ int     *new_to_old_order
   }
 
   if (part->n_face!=0) {
-    PDM_part_renum_array (part->face_vtx_idx[part->n_face],
-                          old_to_new_order,
-                          part->face_vtx);
+    if(part->face_vtx != NULL) {
+      PDM_part_renum_array (part->face_vtx_idx[part->n_face],
+                            old_to_new_order,
+                            part->face_vtx);
+    }
   } else { // the mesh is supposed to be described by elements
     int n_section = part->n_section;
     assert(n_section!=0);
@@ -1916,6 +1994,9 @@ int     *new_to_old_order
                             old_to_new_order,
                             part->elt_vtx[i_section]);
     }
+  }
+
+  if(part->vtx_ghost_information != NULL) {
     PDM_order_array (part->n_vtx,
                      sizeof(int),
                      new_to_old_order,
@@ -1923,11 +2004,10 @@ int     *new_to_old_order
   }
 
   if(part->edge_vtx != NULL) {
-    printf("PDM_part_reorder_vtx TO DEBUG \n");
-    abort();
-    PDM_part_renum_array (2 * part->n_edge,
-                          old_to_new_order,
-                          part->edge_vtx);
+    _renum_face_cell (part->n_vtx,
+                      part->n_edge,
+                      part->edge_vtx,
+                      new_to_old_order);
   }
 
   /** vtx **/
@@ -1945,12 +2025,12 @@ int     *new_to_old_order
   }
 
   /** vtx_color **/
-  // if (part->vtx_color != NULL) {
-  //   PDM_order_array (part->n_vtx,
-  //                    sizeof(int),
-  //                    new_to_old_order,
-  //                    part->vtx_color);
-  // }
+  if (part->vtx_color != NULL) {
+    PDM_order_array (part->n_vtx,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->vtx_color);
+  }
 
   /** vtx_color **/
   if (part->new_to_old_order_vtx != NULL) {

@@ -51,6 +51,83 @@ typedef struct _pdm_block_to_part_t PDM_block_to_part_t;
 
 /**
  *
+ * \brief Reset global statistic
+ *
+ */
+
+void
+PDM_block_to_part_global_statistic_reset
+(
+ void
+);
+
+
+/**
+ *
+ * \brief Get global timer in part to block
+ *
+ * \param [in]   comm                 MPI communicator
+ * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
+ * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
+ * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
+ * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
+ * \param [out]  min_exch_data_send   Global min sent data for a rank 
+ * \param [out]  min_exch_data_recv   Global min received data for a rank
+ * \param [out]  max_exch_data_send   Global max sent data for a rank
+ * \param [out]  max_exch_data_recv   Global max received data for a rank
+ * 
+ */
+
+void
+PDM_block_to_part_global_statistic_get
+(
+ PDM_MPI_Comm comm,
+ int *min_exch_rank_send,
+ int *min_exch_rank_recv,
+ int *max_exch_rank_send,
+ int *max_exch_rank_recv,
+ unsigned long long *min_exch_data_send,
+ unsigned long long *min_exch_data_recv,
+ unsigned long long *max_exch_data_send,
+ unsigned long long *max_exch_data_recv
+);
+
+/**
+ *
+ * \brief Get global timer in block to part
+ *
+ * \param [in]   comm              MPI communicator
+ * \param [out]  min_elaps         Min elapsed time
+ * \param [out]  max_elaps         Max elapsed time
+ * \param [out]  min_cpu           Min cpu time
+ * \param [out]  max_cpu           Max cpu time
+ * \param [out]  min_elaps_create  Global min elapsed for create function
+ * \param [out]  max_elaps_create  Global max elapsed for create function
+ * \param [out]  min_cpu_create    Global min cpu for create function
+ * \param [out]  max_cpu_create    Global max cpu for create function
+ * \param [out]  min_elaps_exch    Global min elapsed for exch function
+ * \param [out]  max_elaps_exch    Global max elapsed for exch function
+ * \param [out]  min_cpu_exch      Global min cpu for exch function
+ * \param [out]  max_cpu_exch      Global max cpu for exch function
+ * 
+ */
+
+void
+PDM_block_to_part_global_timer_get
+(
+ PDM_MPI_Comm comm,
+ double       *min_elaps_create,
+ double       *max_elaps_create,
+ double       *min_cpu_create,
+ double       *max_cpu_create,
+ double       *min_elaps_exch,
+ double       *max_elaps_exch,
+ double       *min_cpu_exch,
+ double       *max_cpu_exch
+);
+
+/**
+ *
  * \brief Create a block to partitions redistribution
  *
  * \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
@@ -66,11 +143,36 @@ typedef struct _pdm_block_to_part_t PDM_block_to_part_t;
 PDM_block_to_part_t *
 PDM_block_to_part_create
 (
- const PDM_g_num_t    *block_distrib_idx,
+ const PDM_g_num_t   *block_distrib_idx,
+ const PDM_g_num_t  **gnum_elt,
+ const int           *n_elt,
+ const int            n_part,
+ const PDM_MPI_Comm   comm
+);
+
+/**
+ *
+ * \brief Create a block to partitions with sparse representation
+ *
+ * \param [in]   delt_gnum             Sorted list of gnum that represent the partial block, should be betwenn [1, N]
+ * \param [in]   dn_elt                Number of element in the partial block
+ * \param [in]   gnum_elt              Element global number (size : \ref n_part)
+ * \param [in]   n_elt                 Local number of elements (size : \ref n_part)
+ * \param [in]   n_part                Number of partition
+ * \param [in]   comm                  MPI communicator
+ *
+ * \return   Initialized \ref PDM_block_to_part instance
+ *
+ */
+PDM_block_to_part_t *
+PDM_block_to_part_create_from_sparse_block
+(
+ const PDM_g_num_t     *delt_gnum,
+ const int              dn_elt,
  const PDM_g_num_t    **gnum_elt,
- const int            *n_elt,
- const int             n_part,
- const PDM_MPI_Comm        comm
+ const int             *n_elt,
+ const int              n_part,
+ const PDM_MPI_Comm     comm
 );
 
 
@@ -101,7 +203,7 @@ PDM_block_to_part_create_cf
  */
 
 void
-PDM_block_to_part_exch
+PDM_block_to_part_exch_in_place
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,
@@ -130,7 +232,7 @@ PDM_block_to_part_exch
  */
 
 void
-PDM_block_to_part_exch2
+PDM_block_to_part_exch
 (
  PDM_block_to_part_t *btp,
  size_t               s_data,
@@ -174,6 +276,40 @@ PDM_block_to_part_gnum_idx_get
  PDM_block_to_part_t *btp,
  PDM_g_num_t gNum
 );
+
+
+/**
+ *
+ * \brief Get the number of partitions
+ *
+ * \param [in] btp         Block to part structure
+ *
+ * \return  Number of partitions
+ */
+
+int
+PDM_block_to_part_n_part_get
+(
+ PDM_block_to_part_t *btp
+ );
+
+
+/**
+ *
+ * \brief Get the number of elements in a given partition
+ *
+ * \param [in] btp         Block to part structure
+ * \param [in] i_part      Id of current partition
+ *
+ * \return  Number of element in the current partition
+ */
+
+int
+PDM_block_to_part_n_elt_get
+(
+ PDM_block_to_part_t *btp,
+ const int            i_part
+ );
 
 #ifdef	__cplusplus
 }
