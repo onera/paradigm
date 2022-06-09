@@ -11,11 +11,9 @@
 - PDM_sphere_surf_gen : Generate a distributed suface mesh of a sphere
 - PDM_extract_part : Build a child mesh from the extraction of selected elements in the parent mesh
 - PDM_global_reduce : Global reduce applied to a partitionned field
-- PDM_multi_block_merge : ??
-- PDM_part_mesh :
 - PDM_part_to_part : Browse an MPI communication graph defined by two global numberings
 - PDM_pointer_array : Fortran derived type for interfacing C pointers of arrays
-- PDM_hkey : ??
+- PDM_hkey : Compute an hash key from a list of integer
 - PDM_memory_stats : Structure to monitor the memory uses by snapshot
 ### Changed
 - New Fortran API based on iso-c-binding
