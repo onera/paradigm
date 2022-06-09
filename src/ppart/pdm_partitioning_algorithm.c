@@ -2151,6 +2151,7 @@ PDM_part_dentity_group_to_pentity_group
   // PDM_MPI_Comm_size(comm, &n_rank);
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
+  log_trace("dn_entity = %d\n", dn_entity);
 
   int* dentity_group_n = (int * ) malloc( dn_entity * sizeof(int));
   for(int i = 0; i < dn_entity; ++i) {

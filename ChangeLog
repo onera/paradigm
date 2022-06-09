@@ -1,20 +1,20 @@
 ## [2.0.0] - 2022-06-??
 ### Added
-- PDM_vtk : ??
+- PDM_vtk : Write ASCII VTK files for visulization with ParaView
 - PDM_dgeom_elem : ??
 - PDM_dmesh_nodal_elmts : ??
 - PDM_domain_interface : ??
 - PDM_ho_ordering : Generic definition of high order elements
 - PDM_part_domain_interface : ??
-- PDM_predicate : ??
-- PDM_point_cloud_gen : Generate a points cloud
-- PDM_sphere_surf_gen : Generate a suface mesh on sphere
-- PDM_extract_part : Build a child mesh from the extraction of selected elements in the parent mesh     
-- PDM_global_reduce : Global reduce applied to a partitionned field 
+- PDM_predicate : Numerically robust geometric predicates
+- PDM_point_cloud_gen : Generate a random point cloud
+- PDM_sphere_surf_gen : Generate a distributed suface mesh of a sphere
+- PDM_extract_part : Build a child mesh from the extraction of selected elements in the parent mesh
+- PDM_global_reduce : Global reduce applied to a partitionned field
 - PDM_multi_block_merge : ??
-- PDM_part_mesh :  
-- PDM_part_to_part : Browse an MPI communication graph defined by two global numberings 
-- PDM_pointer_array : ??
+- PDM_part_mesh :
+- PDM_part_to_part : Browse an MPI communication graph defined by two global numberings
+- PDM_pointer_array : Fortran derived type for interfacing C pointers of arrays
 - PDM_hkey : ??
 - PDM_memory_stats : ??
 ### Changed
