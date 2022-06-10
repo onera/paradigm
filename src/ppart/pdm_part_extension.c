@@ -2212,6 +2212,7 @@ _warm_up_domain_interface
       // int         *_neighbor_n          = neighbor_n         [i_part+shift_part];
       int         *_neighbor_idx        = neighbor_idx       [i_part+shift_part];
       int         *_neighbor_interface  = neighbor_interface [i_part+shift_part];
+      PDM_g_num_t *_entity_ln_to_gn     = entity_ln_to_gn    [i_part+shift_part];
       PDM_g_num_t *_entity_ln_to_gn_opp = entity_ln_to_gn_opp[i_part+shift_part];
 
       opp_interface_and_gnum[i_part+shift_part] = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
@@ -2220,15 +2221,22 @@ _warm_up_domain_interface
       int         *_current_lentity = current_lentity[i_part+shift_part];
 
       /* For each border count number of opposite */
+      int idx_write = 0;
       for(int i_entity = 0; i_entity < n_entity[i_part+shift_part]; ++i_entity) {
         for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
 
           // log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
 
-          _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
-          _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
+          // _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
+          // _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
+          // _current_lentity[idx_entity] = i_entity;
 
-          _current_lentity[idx_entity] = i_entity;
+          if(_entity_ln_to_gn_opp[idx_entity] != _entity_ln_to_gn[i_entity]) {
+            _opp_interface_and_gnum[2*idx_write  ] = _entity_ln_to_gn_opp[idx_entity];
+            _opp_interface_and_gnum[2*idx_write+1] = _neighbor_interface[idx_entity];
+            _current_lentity[idx_write++] = i_entity;
+          }
+
 
         }
       }
@@ -2237,8 +2245,10 @@ _warm_up_domain_interface
       /*
        * Tri indirect sur le doublet et on order _current_lentity
        */
+      // idx_write = _neighbor_idx[n_entity[i_part+shift_part]];
       int* order = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
-      PDM_order_gnum_s(_opp_interface_and_gnum, 2, order, _neighbor_idx[n_entity[i_part+shift_part]]);
+      // PDM_order_gnum_s(_opp_interface_and_gnum, 2, order, _neighbor_idx[n_entity[i_part+shift_part]]);
+      PDM_order_gnum_s(_opp_interface_and_gnum, 2, order, idx_write);
 
       PDM_g_num_t *unique_opp_interface_and_gnum = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
       int         *unique_current_lentity        = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
@@ -2247,7 +2257,7 @@ _warm_up_domain_interface
 
       PDM_g_num_t last_elmt = -1;
       PDM_g_num_t last_inte = -4000000;
-      for(int i = 0; i < _neighbor_idx[n_entity[i_part+shift_part]]; ++i) {
+      for(int i = 0; i < idx_write; ++i) {
         int old_order = order[i];
         PDM_g_num_t curr_elmt   = _opp_interface_and_gnum[2*old_order  ];
         PDM_g_num_t curr_inte   = _opp_interface_and_gnum[2*old_order+1];
@@ -2255,7 +2265,7 @@ _warm_up_domain_interface
         int is_same = _is_same_doublet(last_elmt, last_inte, curr_elmt, curr_inte);
         if(is_same == 0) {
           unique_opp_interface_and_gnum[2*n_unique  ] = curr_elmt;
-          unique_opp_interface_and_gnum[2*n_unique+1] = curr_elmt;
+          unique_opp_interface_and_gnum[2*n_unique+1] = curr_inte;
           unique_current_lentity[n_unique] = _current_lentity[old_order];
           n_unique++;
           last_elmt = curr_elmt;
@@ -2281,8 +2291,8 @@ _warm_up_domain_interface
       n_current_lentity[i_part+shift_part] = n_unique; //_neighbor_idx[n_entity[i_part+shift_part]];
 
       if(1 == 1) {
-        PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
-        PDM_log_trace_array_int(_current_lentity       ,      n_current_lentity[i_part+shift_part] , "_current_lentity : ");
+        PDM_log_trace_array_int(opp_interface_and_gnum[i_part+shift_part], 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
+        PDM_log_trace_array_int(current_lentity       [i_part+shift_part],      n_current_lentity[i_part+shift_part] , "_current_lentity : ");
       }
 
       free(entity_ln_to_gn_opp[i_part+shift_part]);
