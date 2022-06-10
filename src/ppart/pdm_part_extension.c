@@ -4286,7 +4286,7 @@ _generate_extended_partition_connectivity
 
       int pos_interface = PDM_order_binary_search_long(search_elmt, opp_interface_and_gnum_entity2, 2, n_cur_interface_entity2);
 
-      // log_trace("Search = %i %i --> pos_interface = %i \n", (int )g_entity2 , i_interf, pos_interface);
+      log_trace("Search = %i %i --> pos_interface = %i \n", (int )g_entity2 , border_gentity1_entity2_interface[i], pos_interface);
 
       if(pos_interface != -1) {
         int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
@@ -6054,11 +6054,17 @@ PDM_part_extension_compute
         int* pface_vtx_extented     = part_ext->border_face_vtx       [shift_part+i_part];
         double* pvtx_coord_extented = part_ext->border_vtx            [shift_part+i_part];
 
+        PDM_g_num_t *pvtx_ln_to_gn        = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+        PDM_g_num_t *pface_ln_to_gn       = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+        PDM_g_num_t *border_vtx_ln_to_gn  = part_ext->border_vtx_ln_to_gn [i_part+shift_part];
+        PDM_g_num_t *border_face_ln_to_gn = part_ext->border_face_ln_to_gn[i_part+shift_part];
 
         int n_vtx_tot = pn_vtx + n_vtx_extended;
         int n_face_tot = pn_face+n_face_extended;
-        int *concat_face_vtx_idx = malloc( (n_face_tot+1) * sizeof(int));
-        int *concat_face_vtx     = malloc( (pface_vtx_idx[pn_face] + pface_vtx_extented_idx[n_face_extended])* sizeof(int));
+
+        int *concat_face_ln_to_gn = malloc( (n_face_tot+1) * sizeof(int));
+        int *concat_face_vtx_idx  = malloc( (n_face_tot+1) * sizeof(int));
+        int *concat_face_vtx      = malloc( (pface_vtx_idx[pn_face] + pface_vtx_extented_idx[n_face_extended])* sizeof(int));
 
 
         int *color_face = (int *) malloc(n_face_tot * sizeof(int));
@@ -6068,7 +6074,8 @@ PDM_part_extension_compute
           for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
             concat_face_vtx[concat_face_vtx_idx[i_face+1]++] = pface_vtx[idx_vtx];
           }
-          color_face[i_face] = 0;
+          color_face         [i_face] = 0;
+          concat_face_ln_to_gn[i_face] = pface_ln_to_gn[i_face];
         }
 
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
@@ -6079,20 +6086,24 @@ PDM_part_extension_compute
             concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = PDM_ABS(pface_vtx_extented[idx_vtx]);
           }
           color_face[l_face] = 1;
+          concat_face_ln_to_gn[l_face] = border_face_ln_to_gn[i_face];
         }
 
+        PDM_g_num_t *concat_vtx_ln_to_gn  = malloc(    n_vtx_tot  * sizeof(PDM_g_num_t));
         double      *concat_vtx_coord     = malloc(3 * n_vtx_tot  * sizeof(double     ));
         for(int i_vtx = 0; i_vtx < 3 * n_vtx_tot; ++i_vtx) {
           concat_vtx_coord[i_vtx] = -10000.;
         }
 
         for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
+          concat_vtx_ln_to_gn[i_vtx] = pvtx_ln_to_gn[i_vtx];
           concat_vtx_coord[3*i_vtx  ] = pvtx_coord[3*i_vtx  ];
           concat_vtx_coord[3*i_vtx+1] = pvtx_coord[3*i_vtx+1];
           concat_vtx_coord[3*i_vtx+2] = pvtx_coord[3*i_vtx+2];
         }
 
         for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+          concat_vtx_ln_to_gn[pn_vtx+i_vtx] = border_vtx_ln_to_gn[i_vtx];
           concat_vtx_coord[3*(pn_vtx+i_vtx)  ] = pvtx_coord_extented[3*i_vtx  ];
           concat_vtx_coord[3*(pn_vtx+i_vtx)+1] = pvtx_coord_extented[3*i_vtx+1];
           concat_vtx_coord[3*(pn_vtx+i_vtx)+2] = pvtx_coord_extented[3*i_vtx+2];
@@ -6104,16 +6115,17 @@ PDM_part_extension_compute
         PDM_vtk_write_polydata(filename,
                                n_vtx_tot,
                                concat_vtx_coord,
-                               NULL,
+                               concat_vtx_ln_to_gn,
                                n_face_tot,
                                concat_face_vtx_idx,
                                concat_face_vtx,
-                               color_face,
+                               concat_face_ln_to_gn,
                                NULL);
         free(color_face);
         free(concat_face_vtx_idx);
         free(concat_face_vtx);
         free(concat_vtx_coord);
+        free(concat_vtx_ln_to_gn);
 
 
       }
