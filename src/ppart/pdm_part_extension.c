@@ -510,6 +510,22 @@ int iproc2, int ipart2, int ielt2, int iinterf2
   return 0;
 }
 
+static inline
+int
+_is_same_doublet
+(
+PDM_g_num_t iproc1, PDM_g_num_t ipart1,
+PDM_g_num_t iproc2, PDM_g_num_t ipart2
+)
+{
+  if(iproc1 == iproc2){
+    if(ipart1 == ipart2){
+      return 1;
+    }
+  }
+  return 0;
+}
+
 static
 int
 _setup_unique_order_quadruplet
@@ -2224,16 +2240,49 @@ _warm_up_domain_interface
       int* order = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
       PDM_order_gnum_s(_opp_interface_and_gnum, 2, order, _neighbor_idx[n_entity[i_part+shift_part]]);
 
-      PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]], 2 * sizeof(PDM_g_num_t), order, _opp_interface_and_gnum);
-      PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]],     sizeof(int        ), order, _current_lentity);
+      PDM_g_num_t *unique_opp_interface_and_gnum = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
+      int         *unique_current_lentity        = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
+
+      int n_unique = 0;
+
+      PDM_g_num_t last_elmt = -1;
+      PDM_g_num_t last_inte = -4000000;
+      for(int i = 0; i < _neighbor_idx[n_entity[i_part+shift_part]]; ++i) {
+        int old_order = order[i];
+        PDM_g_num_t curr_elmt   = _opp_interface_and_gnum[2*old_order  ];
+        PDM_g_num_t curr_inte   = _opp_interface_and_gnum[2*old_order+1];
+
+        int is_same = _is_same_doublet(last_elmt, last_inte, curr_elmt, curr_inte);
+        if(is_same == 0) {
+          unique_opp_interface_and_gnum[2*n_unique  ] = curr_elmt;
+          unique_opp_interface_and_gnum[2*n_unique+1] = curr_elmt;
+          unique_current_lentity[n_unique] = _current_lentity[old_order];
+          n_unique++;
+          last_elmt = curr_elmt;
+          last_inte = curr_inte;
+        }
+
+      }
+
+      free(opp_interface_and_gnum[i_part+shift_part]);
+      free(current_lentity       [i_part+shift_part]);
+
+      unique_opp_interface_and_gnum = realloc(unique_opp_interface_and_gnum, 2 * n_unique * sizeof(PDM_g_num_t));
+      unique_current_lentity        = realloc(unique_current_lentity       ,     n_unique * sizeof(int        ));
+
+      opp_interface_and_gnum[i_part+shift_part] = unique_opp_interface_and_gnum;
+      current_lentity       [i_part+shift_part] = unique_current_lentity;
+
+      // PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]], 2 * sizeof(PDM_g_num_t), order, _opp_interface_and_gnum);
+      // PDM_order_array(_neighbor_idx[n_entity[i_part+shift_part]],     sizeof(int        ), order, _current_lentity);
 
       free(order);
 
-      n_current_lentity[i_part+shift_part] = _neighbor_idx[n_entity[i_part+shift_part]];
+      n_current_lentity[i_part+shift_part] = n_unique; //_neighbor_idx[n_entity[i_part+shift_part]];
 
       if(1 == 1) {
-        PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * _neighbor_idx[n_entity[i_part+shift_part]] , "_opp_interface_and_gnum : ");
-        PDM_log_trace_array_int(_current_lentity       ,      _neighbor_idx[n_entity[i_part+shift_part]] , "_current_lentity : ");
+        PDM_log_trace_array_int(_opp_interface_and_gnum, 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
+        PDM_log_trace_array_int(_current_lentity       ,      n_current_lentity[i_part+shift_part] , "_current_lentity : ");
       }
 
       free(entity_ln_to_gn_opp[i_part+shift_part]);
