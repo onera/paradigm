@@ -627,8 +627,6 @@ PDM_part_domain_interface_set
  int                          *interface_dom
 )
 {
-
-  printf("Inside PDM_part_domain_interface_set %i %i %i \n", i_domain, i_part, i_interface );
   assert(i_part < dom_intrf->n_part[i_domain]);
 
   assert (dom_intrf != NULL);
@@ -1140,8 +1138,8 @@ PDM_part_domain_interface_as_graph
         for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
 
           // Search the first in list that is in current part/proc
-          int i_proc_cur   = -1;
-          int i_part_cur   = -1;
+          // int i_proc_cur   = -1;
+          // int i_part_cur   = -1;
           int i_entity_cur = -1;
           int found        = 0;
           int idx_current  = -1;
@@ -1151,8 +1149,8 @@ PDM_part_domain_interface_as_graph
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(i_proc_opp == i_rank && i_part_opp == i_part && found == 0) {
-              i_proc_cur   = i_proc_opp;
-              i_part_cur   = i_part_opp;
+              // i_proc_cur   = i_proc_opp;
+              // i_part_cur   = i_part_opp;
               i_entity_cur = i_entity_opp;
               idx_current  = j;
               found = 1;
@@ -1171,9 +1169,9 @@ PDM_part_domain_interface_as_graph
 
           // Only add the opposite part of the graph
           for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
-            int i_proc_opp   = interface_ids[i_interface][3*j  ];
-            int i_part_opp   = interface_ids[i_interface][3*j+1];
-            int i_entity_opp = interface_ids[i_interface][3*j+2];
+            // int i_proc_opp   = interface_ids[i_interface][3*j  ];
+            // int i_part_opp   = interface_ids[i_interface][3*j+1];
+            // int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(idx_current != j) {
               // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
