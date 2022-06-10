@@ -1,4 +1,4 @@
-## [2.0.0] - 2022-06-??
+## [2.0.0] - 2022-06-10
 ### Added
 - PDM_vtk : Write ASCII VTK files for visulization with ParaView
 - PDM_dgeom_elem : Multiple method to compute center of entity with distributed conectivities and coordinates (usefull for hilbert ordering)
