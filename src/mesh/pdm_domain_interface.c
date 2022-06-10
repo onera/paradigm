@@ -197,8 +197,9 @@ static int _interface_to_graph
   max_per_domain[0] = 0;
   PDM_MPI_Allreduce(max_per_domain_loc, &max_per_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
   PDM_array_accumulate_gnum(max_per_domain, n_domain+1);
-  if (0 == 1)
+  if (0 == 1) {
     PDM_log_trace_array_long(max_per_domain, n_domain+1, "max per domain");
+  }
   free(max_per_domain_loc);
   
   // Prepare first PtB with multiple partitions.
@@ -2965,7 +2966,7 @@ PDM_domain_interface_translate_vtx2face
         _interface_dom_vtx[i_intrf][2*j+1] = dom_intrf->interface_dom_vtx[i_intrf][1];
       }
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_int (_interface_dom_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
         PDM_log_trace_array_long(dom_intrf->interface_ids_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
       }
@@ -3036,7 +3037,7 @@ PDM_domain_interface_translate_vtx2edge
         _interface_dom_vtx[i_intrf][2*j+1] = dom_intrf->interface_dom_vtx[i_intrf][1];
       }
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_int (_interface_dom_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
         PDM_log_trace_array_long(dom_intrf->interface_ids_vtx[i_intrf], 2 * dom_intrf->interface_dn_vtx[i_intrf], "interf_by_vtx");
       }
@@ -3887,7 +3888,7 @@ PDM_ddomain_interface_to_pdomain_interface
         }
 
 
-        if(1 == 1) {
+        if(0 == 1) {
           PDM_log_trace_array_int (precv_stride     [s_i_part] ,     _ln_interface[s_i_part], "precv_stride      ::");
           PDM_log_trace_array_long(_pentity_ln_to_gn           ,     _ln_interface[s_i_part], "_pentity_ln_to_gn ::");
           PDM_log_trace_array_int (precv_entity_desc[s_i_part] , 3 * n_data                 , "precv_entity_desc ::");
@@ -3977,7 +3978,7 @@ PDM_ddomain_interface_to_pdomain_interface
           pres_interface_ln_to_gn[i_domain][i_part][i_interface][i] = _linterface_gnum[s_i_part][i];
         }
 
-        PDM_log_trace_array_int(precv_sens, _ln_interface[s_i_part], "precv_sens ::");
+        // PDM_log_trace_array_int(precv_sens, _ln_interface[s_i_part], "precv_sens ::");
 
         // pres_interface_ids     [i_domain][i_part][i_interface] = precv_entity_desc[s_i_part];
         pres_interface_sgn     [i_domain][i_part][i_interface] = precv_sens;

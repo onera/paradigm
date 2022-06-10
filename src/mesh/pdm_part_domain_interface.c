@@ -456,7 +456,7 @@ _exchange_and_sort_neighbor
     free(_concat_neighbor_opp_idx);
     free(_concat_neighbor_opp);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_graph_nuplet_int(_filter_neighbor_idx, filter_neighbor_desc[i_part], 4, n_entity[i_part], "filter_neighbor_desc OOOO :");
     }
 
@@ -486,9 +486,6 @@ PDM_ownership_t              ownership,
 PDM_MPI_Comm                 comm
 )
 {
-
-  log_trace("n_interface = %i \n", n_interface);
-  log_trace("n_domain = %i \n", n_domain);
 
   PDM_part_domain_interface_t *dom_intrf = (PDM_part_domain_interface_t *) malloc (sizeof(PDM_part_domain_interface_t));
   dom_intrf->n_interface       = n_interface;
@@ -1137,8 +1134,8 @@ PDM_part_domain_interface_as_graph
        */
       for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
 
-        log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
-        PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
+        // log_trace("-------------------------------- i_interface = %i  -------------------------------- \n", i_interface);
+        // PDM_log_trace_array_int(interface_sgn[i_interface], interface_pn[i_interface], "interface_sgn :: ");
 
         for(int idx_entity = 0; idx_entity < interface_pn[i_interface]; ++idx_entity) {
 
@@ -1170,7 +1167,7 @@ PDM_part_domain_interface_as_graph
 
           assert(found == 1);
 
-          log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
+          // log_trace("i_proc_cur = %i | i_part_cur = %i | i_entity_cur = %i | sgn = %i \n", i_proc_cur, i_part_cur, i_entity_cur, interface_sgn[i_interface][idx_entity]);
 
           // Only add the opposite part of the graph
           for(int j = interface_ids_idx[i_interface][idx_entity]; j < interface_ids_idx[i_interface][idx_entity+1]; ++j) {
@@ -1179,7 +1176,7 @@ PDM_part_domain_interface_as_graph
             int i_entity_opp = interface_ids[i_interface][3*j+2];
 
             if(idx_current != j) {
-              log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
+              // log_trace("\t i_proc_opp = %i | i_part_opp = %i | i_entity_opp = %i \n", i_proc_opp, i_part_opp, i_entity_opp);
               _neighbor_n[i_entity_cur] += 1;
               _neighbor_opp_n[i_entity_cur] += 1;
             // } else {
@@ -1267,7 +1264,7 @@ PDM_part_domain_interface_as_graph
         }
       }
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_graph_nuplet_int(_neighbor_idx, _neighbor_desc, 3, n_entity_bound[i_part+shift_part], "_neighbor graph :");
         PDM_log_trace_graph_nuplet_int(_neighbor_opp_idx, _neighbor_opp_desc, 4, n_entity_bound[i_part+shift_part], "_neighbor_opp_desc :");
       }
