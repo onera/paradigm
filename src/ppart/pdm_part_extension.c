@@ -2357,7 +2357,6 @@ _create_cell_graph_comm
                                          &part_ext->composed_ln_to_gn_sorted);
 
       for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-        pn_face[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
         free(pn_face[i_domain]);
       }
       free(pn_face);
@@ -4174,7 +4173,7 @@ _generate_extended_partition_connectivity
   int* _entity2_entity2_extended     = *entity2_entity2_extended;
   int* _entity2_entity2_interface    = *entity2_entity2_interface;
 
-  PDM_g_num_t *entity2_extended_gnum = (PDM_g_num_t * ) malloc( n_entity2_unique * sizeof(PDM_g_num_t));
+  PDM_g_num_t *entity2_extended_gnum = (PDM_g_num_t * ) malloc( 2 * n_entity2_unique * sizeof(PDM_g_num_t));
   int n_entity2_extended = 0;
   _entity2_entity2_extended_idx[0] = 0;
   _entity2_entity2_extended_idx[1] = 0;
@@ -4186,6 +4185,8 @@ _generate_extended_partition_connectivity
 
     PDM_g_num_t g_entity2 = _border_entity2_ln_to_gn_and_interface[2*i_entity2  ];
     int         i_interf  = _border_entity2_ln_to_gn_and_interface[2*i_entity2+1];
+
+    log_trace("g_entity2 = "PDM_FMT_G_NUM" | i_interf = %i \n", g_entity2, i_interf);
 
     /*
      * Management du cas ou on a deja le entity2 mais a travers une interface (donc pas le même gnum mais c'est le gnum_opposé)
@@ -4210,7 +4211,9 @@ _generate_extended_partition_connectivity
     // printf(" \t  -----> Search found [g_entity2=%i] in  _sorted_entity2_ln_to_gn --> pos = %i\n", (int)g_entity2, pos);
     if(pos == -1 || i_interf != -40000) {
     // if(pos == -1 || i_interf != 0) {
-      entity2_extended_gnum[n_entity2_extended++] = g_entity2;
+      entity2_extended_gnum[2*n_entity2_extended  ] = g_entity2;
+      entity2_extended_gnum[2*n_entity2_extended+1] = i_interf;
+      n_entity2_extended++;
       // printf("\t\t found [%i] = %i\n", i_entity2, pos);
 
       _entity2_entity2_extended_idx[1]++;
@@ -4238,6 +4241,7 @@ _generate_extended_partition_connectivity
       _entity2_entity2_extended [3*idx_write+1] = opp_part;
       _entity2_entity2_extended [3*idx_write+2] = PDM_ABS(opp_entity2)-1;
       // _entity2_entity2_interface[  idx_write  ] = i_interf;
+      assert(i_interf == border_gentity1_entity2_interface[old_order]);
       _entity2_entity2_interface[  idx_write  ] = border_gentity1_entity2_interface[old_order];
       idx_write++;
     }
@@ -4253,7 +4257,7 @@ _generate_extended_partition_connectivity
 
   if(1 == 1) {
     _entity2_entity2_extended = *entity2_entity2_extended;
-    PDM_log_trace_array_long(entity2_extended_gnum       , n_entity2_extended    , "entity2_extended_gnum::");
+    PDM_log_trace_array_long(entity2_extended_gnum       , 2 * n_entity2_extended    , "entity2_extended_gnum::");
     PDM_log_trace_array_int(_entity2_entity2_extended_idx, n_entity2+1           , "_entity2_entity2_extended_idx::");
     PDM_log_trace_array_int(_entity2_entity2_extended    , 3 * n_entity2_extended, "_entity2_entity2_extended::");
   }
@@ -4293,7 +4297,10 @@ _generate_extended_partition_connectivity
     }
 
     /* On cherche d'abord dans le bord - face_extended_gnum is sort by construction */
-    int pos = PDM_binary_search_long(g_entity2, entity2_extended_gnum, n_entity2_extended);
+    // int pos = PDM_binary_search_long(g_entity2, entity2_extended_gnum, n_entity2_extended);
+
+    PDM_g_num_t search_elmt[2] = {g_entity2, border_gentity1_entity2_interface[i]};
+    int pos = PDM_order_binary_search_long(search_elmt, entity2_extended_gnum, 2, n_entity2_extended);
 
     if(pos != -1) {
       int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
@@ -4335,7 +4342,7 @@ _generate_extended_partition_connectivity
   _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_extended * sizeof(PDM_g_num_t));
   *border_entity2_ln_to_gn = _border_entity2_ln_to_gn;
   for(int i = 0; i < n_entity2_extended; ++i){
-    _border_entity2_ln_to_gn[i] = entity2_extended_gnum[i];
+    _border_entity2_ln_to_gn[i] = entity2_extended_gnum[2*i];
   }
 
   /*
@@ -6025,6 +6032,95 @@ PDM_part_extension_compute
 
   /* Condition limite - Face uniquement pour l'instant */
   _rebuild_face_group(part_ext);
+
+  /*
+   * Debug
+   */
+  if(1 == 1) {
+    shift_part = 0;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+        int     pn_vtx        = part_ext->parts[i_domain][i_part].n_vtx;
+        int     pn_face       = part_ext->parts[i_domain][i_part].n_face;
+
+        double *pvtx_coord    = part_ext->parts[i_domain][i_part].vtx;
+        int    *pface_vtx_idx = part_ext->parts[i_domain][i_part].face_vtx_idx;
+        int    *pface_vtx     = part_ext->parts[i_domain][i_part].face_vtx;
+
+        int n_vtx_extended = part_ext->vtx_vtx_extended_idx[shift_part+i_part][pn_vtx];
+        int n_face_extended         = part_ext->face_face_extended_idx[shift_part+i_part][pn_face];
+        int* pface_vtx_extented_idx = part_ext->border_face_vtx_idx   [shift_part+i_part];
+        int* pface_vtx_extented     = part_ext->border_face_vtx       [shift_part+i_part];
+        double* pvtx_coord_extented = part_ext->border_vtx            [shift_part+i_part];
+
+
+        int n_vtx_tot = pn_vtx + n_vtx_extended;
+        int n_face_tot = pn_face+n_face_extended;
+        int *concat_face_vtx_idx = malloc( (n_face_tot+1) * sizeof(int));
+        int *concat_face_vtx     = malloc( (pface_vtx_idx[pn_face] + pface_vtx_extented_idx[n_face_extended])* sizeof(int));
+
+
+        int *color_face = (int *) malloc(n_face_tot * sizeof(int));
+        concat_face_vtx_idx[0] = 0;
+        for(int i_face = 0; i_face < pn_face; ++i_face) {
+          concat_face_vtx_idx[i_face+1] = concat_face_vtx_idx[i_face];
+          for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
+            concat_face_vtx[concat_face_vtx_idx[i_face+1]++] = pface_vtx[idx_vtx];
+          }
+          color_face[i_face] = 0;
+        }
+
+        for(int i_face = 0; i_face < n_face_extended; ++i_face) {
+          int l_face = i_face + pn_face;
+          concat_face_vtx_idx[l_face+1] = concat_face_vtx_idx[l_face];
+          printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_vtx_idx[l_face+1]);
+          for(int idx_vtx = pface_vtx_extented_idx[i_face]; idx_vtx < pface_vtx_extented_idx[i_face+1]; ++idx_vtx) {
+            concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = PDM_ABS(pface_vtx_extented[idx_vtx]);
+          }
+          color_face[l_face] = 1;
+        }
+
+        double      *concat_vtx_coord     = malloc(3 * n_vtx_tot  * sizeof(double     ));
+        for(int i_vtx = 0; i_vtx < 3 * n_vtx_tot; ++i_vtx) {
+          concat_vtx_coord[i_vtx] = -10000.;
+        }
+
+        for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
+          concat_vtx_coord[3*i_vtx  ] = pvtx_coord[3*i_vtx  ];
+          concat_vtx_coord[3*i_vtx+1] = pvtx_coord[3*i_vtx+1];
+          concat_vtx_coord[3*i_vtx+2] = pvtx_coord[3*i_vtx+2];
+        }
+
+        for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+          concat_vtx_coord[3*(pn_vtx+i_vtx)  ] = pvtx_coord_extented[3*i_vtx  ];
+          concat_vtx_coord[3*(pn_vtx+i_vtx)+1] = pvtx_coord_extented[3*i_vtx+1];
+          concat_vtx_coord[3*(pn_vtx+i_vtx)+2] = pvtx_coord_extented[3*i_vtx+2];
+        }
+
+
+        char filename[999];
+        sprintf(filename, "out_part_extension_face_vtx_%i_%i_%i.vtk", i_domain, i_part, i_rank);
+        PDM_vtk_write_polydata(filename,
+                               n_vtx_tot,
+                               concat_vtx_coord,
+                               NULL,
+                               n_face_tot,
+                               concat_face_vtx_idx,
+                               concat_face_vtx,
+                               color_face,
+                               NULL);
+        free(color_face);
+        free(concat_face_vtx_idx);
+        free(concat_face_vtx);
+        free(concat_vtx_coord);
+
+
+      }
+      shift_part += part_ext->n_part[i_domain];
+    }
+  }
+
 
 
 

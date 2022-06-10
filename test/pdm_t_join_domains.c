@@ -252,8 +252,8 @@ _compute_face_vtx
     // first edge
     int iedge = PDM_ABS(_face_edge[0]) - 1;
     edge_tag[iedge] = 1;
-    _face_vtx[0] = edge_vtx[2*iedge  ];
-    _face_vtx[1] = edge_vtx[2*iedge+1];
+    _face_vtx[0] = PDM_ABS(edge_vtx[2*iedge  ]);
+    _face_vtx[1] = PDM_ABS(edge_vtx[2*iedge+1]);
 
     for (int i = 2; i < _n_edge; i++) {
 
@@ -265,12 +265,12 @@ _compute_face_vtx
         }
 
         if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
-          _face_vtx[i] = edge_vtx[2*iedge+1];
+          _face_vtx[i] = PDM_ABS(edge_vtx[2*iedge+1]);
           edge_tag[iedge] = 1;
           break;
         }
         else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
-          _face_vtx[i] = edge_vtx[2*iedge];
+          _face_vtx[i] = PDM_ABS(edge_vtx[2*iedge]);
           edge_tag[iedge] = 1;
           break;
         }
@@ -365,6 +365,7 @@ int main
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TRIA3;
   PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TETRA4;
+  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_PRISM6;
   // 2 -> tria
   // 3 -> quad
   // 5 -> tetra
@@ -1198,12 +1199,14 @@ int main
 
         // for(int i = 0; )
 
+        int *color_face = (int *) malloc(n_face_tot * sizeof(int));
         concat_face_edge_idx[0] = 0;
         for(int i_face = 0; i_face < n_face2; ++i_face) {
           concat_face_edge_idx[i_face+1] = concat_face_edge_idx[i_face];
           for(int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
             concat_face_edge[concat_face_edge_idx[i_face+1]++] = face_edge[idx_edge];
           }
+          color_face[i_face] = 0;
         }
 
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
@@ -1213,6 +1216,7 @@ int main
           for(int idx_edge = extend_face_edge_idx[i_face]; idx_edge < extend_face_edge_idx[i_face+1]; ++idx_edge) {
             concat_face_edge[concat_face_edge_idx[l_face+1]++] = extend_face_edge[idx_edge];
           }
+          color_face[l_face] = 1;
         }
 
 
@@ -1252,9 +1256,9 @@ int main
                                n_face_tot,
                                concat_face_edge_idx,
                                concat_face_vtx,
-                               NULL,
+                               color_face,
                                NULL);
-
+        free(color_face);
 
         free(concat_face_vtx);
         free(concat_face_edge_idx);
@@ -1279,14 +1283,14 @@ int main
         int *concat_face_vtx     = malloc( (face_edge_idx[n_face2] + extend_face_vtx_idx[n_face_extended])* sizeof(int));
 
 
-        // for(int i = 0; )
-
+        int *color_face = (int *) malloc(n_face_tot * sizeof(int));
         concat_face_vtx_idx[0] = 0;
         for(int i_face = 0; i_face < n_face2; ++i_face) {
           concat_face_vtx_idx[i_face+1] = concat_face_vtx_idx[i_face];
           for(int idx_vtx = face_edge_idx[i_face]; idx_vtx < face_edge_idx[i_face+1]; ++idx_vtx) {
             concat_face_vtx[concat_face_vtx_idx[i_face+1]++] = pface_vtx[i_dom][i_part][idx_vtx];
           }
+          color_face[i_face] = 0;
         }
 
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
@@ -1294,9 +1298,15 @@ int main
           concat_face_vtx_idx[l_face+1] = concat_face_vtx_idx[l_face];
           printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_vtx_idx[l_face+1]);
           for(int idx_vtx = extend_face_vtx_idx[i_face]; idx_vtx < extend_face_vtx_idx[i_face+1]; ++idx_vtx) {
-            concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = extend_face_vtx[idx_vtx];
+            concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = PDM_ABS(extend_face_vtx[idx_vtx]);
           }
+          color_face[l_face] = 1;
         }
+
+        PDM_log_trace_connectivity_int(concat_face_vtx_idx,
+                                       concat_face_vtx,
+                                       n_face_tot,
+                                       "concat_face_vtx ::");
 
         sprintf(filename_pts, "out_face_vtx_%i_%i_%i.vtk", i_dom, i_part, i_rank);
         PDM_vtk_write_polydata(filename_pts,
@@ -1306,9 +1316,11 @@ int main
                                n_face_tot,
                                concat_face_vtx_idx,
                                concat_face_vtx,
-                               NULL,
+                               color_face,
                                NULL);
-
+        free(color_face);
+        free(concat_face_vtx_idx);
+        free(concat_face_vtx);
 
 
       }
@@ -1356,6 +1368,7 @@ int main
         free(translation_vector[i_interf]);
       }
       free(translation_vector);
+      free(pface_vtx[i_dom][i_part]);
 
     }
     shift_part += pn_n_part[i_dom];

@@ -2765,6 +2765,8 @@ PDM_domain_interface_translate_entity1_entity2
       conflict_data_idx[j+1] = conflict_data_idx[j] + dkey_data_n[idx_read+j];
     }
 
+    // log_trace("----------------------------------------------- \n");
+    // log_trace("%i --> n_conflict = %i \n", i, n_conflict_keys);
 
     for(int i_conflict = 0; i_conflict < n_conflict_keys; ++i_conflict) {
 
@@ -2775,6 +2777,13 @@ PDM_domain_interface_translate_entity1_entity2
       PDM_g_num_t* data1  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict]];
       int          n_val1 = dkey_data_n[idx_read+i_conflict];
 
+      // PDM_log_trace_array_long(data1, n_val1, "data1 :: ");
+      // PDM_g_num_t key1 = 0;
+      // for(int k = 0; k < n_val1; ++k) {
+      //   key1 += data1[k];
+      // }
+      // log_trace("key1 = %i \n", key1);
+
       for(int i_conflict2 = i_conflict+1; i_conflict2 < n_conflict_keys; ++i_conflict2) {
 
         if(is_treated[i_conflict2] == 1) {
@@ -2783,6 +2792,13 @@ PDM_domain_interface_translate_entity1_entity2
 
         PDM_g_num_t* data2  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict2]];
         int          n_val2 = dkey_data_n[idx_read+i_conflict2];
+
+        // PDM_log_trace_array_long(data2, n_val2, "data2 :: ");
+        // PDM_g_num_t key2 = 0;
+        // for(int k = 0; k < n_val2; ++k) {
+        //   key2 += data2[k];
+        // }
+        // log_trace("key2 = %i \n", key2);
 
         if(n_val1 != n_val2) {
           continue;
@@ -2874,7 +2890,7 @@ PDM_domain_interface_translate_entity1_entity2
 
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_connectivity_long(dentity2_entity1_idx[0], dentity2_entity1[0], dn_entity2[0], "dentity2_entity1 :: ");
   }
 
