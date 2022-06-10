@@ -1212,7 +1212,6 @@ int main
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
           int l_face = i_face + n_face2;
           concat_face_edge_idx[l_face+1] = concat_face_edge_idx[l_face];
-          printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_edge_idx[l_face+1]);
           for(int idx_edge = extend_face_edge_idx[i_face]; idx_edge < extend_face_edge_idx[i_face+1]; ++idx_edge) {
             concat_face_edge[concat_face_edge_idx[l_face+1]++] = extend_face_edge[idx_edge];
           }
@@ -1231,10 +1230,10 @@ int main
           concat_edge_vtx[2*l_edge+1] = extend_edge_vtx[2*i_edge+1];
         }
 
-        PDM_log_trace_connectivity_int(concat_face_edge_idx,
-                                       concat_face_edge,
-                                       n_face_tot,
-                                       "concat_face_edge ::");
+        // PDM_log_trace_connectivity_int(concat_face_edge_idx,
+        //                                concat_face_edge,
+        //                                n_face_tot,
+        //                                "concat_face_edge ::");
 
         // Concatenate face_vtx
         int *concat_face_vtx = NULL;
@@ -1243,10 +1242,10 @@ int main
                           concat_face_edge,
                           concat_edge_vtx,
                           &concat_face_vtx);
-        PDM_log_trace_connectivity_int(concat_face_edge_idx,
-                                       concat_face_vtx,
-                                       n_face_tot,
-                                       "concat_face_vtx ::");
+        // PDM_log_trace_connectivity_int(concat_face_edge_idx,
+        //                                concat_face_vtx,
+        //                                n_face_tot,
+        //                                "concat_face_vtx ::");
 
         sprintf(filename_pts, "out_face_vtx_%i_%i_%i.vtk", i_dom, i_part, i_rank);
         PDM_vtk_write_polydata(filename_pts,
@@ -1296,17 +1295,17 @@ int main
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
           int l_face = i_face + n_face2;
           concat_face_vtx_idx[l_face+1] = concat_face_vtx_idx[l_face];
-          printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_vtx_idx[l_face+1]);
+          // printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_vtx_idx[l_face+1]);
           for(int idx_vtx = extend_face_vtx_idx[i_face]; idx_vtx < extend_face_vtx_idx[i_face+1]; ++idx_vtx) {
             concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = PDM_ABS(extend_face_vtx[idx_vtx]);
           }
           color_face[l_face] = 1;
         }
 
-        PDM_log_trace_connectivity_int(concat_face_vtx_idx,
-                                       concat_face_vtx,
-                                       n_face_tot,
-                                       "concat_face_vtx ::");
+        // PDM_log_trace_connectivity_int(concat_face_vtx_idx,
+        //                                concat_face_vtx,
+        //                                n_face_tot,
+        //                                "concat_face_vtx ::");
 
         sprintf(filename_pts, "out_face_vtx_%i_%i_%i.vtk", i_dom, i_part, i_rank);
         PDM_vtk_write_polydata(filename_pts,
