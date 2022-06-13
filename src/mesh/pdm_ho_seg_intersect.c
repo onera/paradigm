@@ -63,13 +63,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
- * Type definitions
- *============================================================================*/
-
-#define _MIN(a,b) ((a) < (b) ? (a) : (b))
-#define _MAX(a,b) ((a) > (b) ? (a) : (b))
-
-/*============================================================================
  * Private function definitions
  *============================================================================*/
 
@@ -159,7 +152,7 @@ extern "C" {
  *  Bounding boxes
  *----------------------------------------------------------------------------*/
 
-/* Get Bezier coordinates from Lagrange coordinates for a bar */
+/* Get Bezier coordinates from Lagrange coordinates for a bar (copied from pdm_t_dcube_nodal_gen.c) */
 static void
 _lagrange_to_bezier_bar
 (
@@ -217,7 +210,7 @@ _lagrange_to_bezier_bar
 
 }
 
-/* Get Bezier coordinates from Lagrange coordinates for a triangle */
+/* Get Bezier coordinates from Lagrange coordinates for a triangle (copied from pdm_t_dcube_nodal_gen.c) */
 static void
 _lagrange_to_bezier_tria
 (
@@ -309,7 +302,7 @@ _lagrange_to_bezier_tria
 
 }
 
-/* Get bezier bounding box */
+/* Get bezier bounding box (copied from pdm_t_dcube_nodal_gen.c) */
 static void
 _bezier_bounding_boxes
 (
@@ -362,11 +355,11 @@ _bezier_bounding_boxes
 static void
 _ho_bounding_box_line_intersect_points_get
 (
- const int        n_line,
- double          *line_coords,
- int             *line_boxes_idx,
- double          *extents,
- int            **box_line_intersect_points_idx
+ const int        n_line,                   // number of direction lines for the set of point to project
+ double          *line_coords,              // extrema coordinates of those lines
+ int             *line_boxes_idx,           // boxes associated to a given line
+ double          *extents,                  // extents of the background mesh element bounding boxes
+ double         **box_line_intersect_points // for each box the intersection points with a given line (2 per box)
 )
 {
   *box_line_intersect_points     = malloc(sizeof(double) * (*line_boxes_idx)[n_line] * 6);
@@ -375,6 +368,7 @@ _ho_bounding_box_line_intersect_points_get
   double *n[3];
   double *side_seg_start[3];
   double *side_seg_end[3];
+  double *x_int[3];
 
   double start_side;
   double end_side;
@@ -420,7 +414,6 @@ _ho_bounding_box_line_intersect_points_get
       /*
        * WARNING: - A needs to be "smaller"  than B
        *          - I might need to replace 1 by value on the face for the normal
-       *          - Check if intersection really is on the face before adding it
        */
 
       // x_min side
@@ -434,12 +427,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_min + z_min + y_min) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_min + z_min + y_min) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -454,12 +453,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_min + z_min + y_min) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_min + z_min + y_min) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -474,12 +479,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_min + z_min + y_min) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_min + z_min + y_min) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -494,12 +505,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_min + z_min + y_max) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_min + z_min + y_max) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -514,12 +531,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_max + z_min + y_min) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_max + z_min + y_min) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -534,12 +557,18 @@ _ho_bounding_box_line_intersect_points_get
 
       if (start_side * end_side < 0) {
 
-        t = ((x_min + z_max + y_min) + (x_a + y_a + z_a)) / (u + v + w);
+        t = ((x_min + z_max + y_min) - (x_a + y_a + z_a)) / (u + v + w);
 
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
-        _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
-        count_plane_intersect++;
+        x_int[0] = x_a + t * u;
+        x_int[1] = y_a + t * v;
+        x_int[2] = z_a + t * w;
+
+        if ((x_min <= x_int[0] && x_max >= x_int[0] ) && (y_min <= x_int[1] && y_max >= x_int[1] ) && (z_min <= x_int[2] && z_max >= x_int[2] )) {
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect)]   = x_a + t * u;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+1)] = y_a + t * v;
+          _box_line_intersect_points[ibox+ (3*count_plane_intersect+2)] = z_a + t * w;
+          count_plane_intersect++;
+        } // end if is on box
 
       } // == 0 point on face, > 0 no intersection
 
@@ -577,99 +606,115 @@ PDM_ho_seg_intersect_boxes_get
 }
 
 /**
- * \brief Determine intersection between a segment and a high order element
+ * \brief Determine intersection between P1 element and segment from line intersecting ho face bounding box
  *
- * \param [in]   type              Element type
- * \param [in]   order             Element order
- * \param [in]   n_nodes           Number of nodes
- * \param [in]   nodes_coords      Coordinates of the nodes (size = 3 * \ref n_nodes)
- * \param [in]   seg_coords        Coordinates of the point to locate (size = 3 * 2)
- * \param [out]  projected_coords  Coordinates of the projection on the element (size = 3)
- * \param [out]  uvw               Parametric coordinates of the projection on the element
- * \param [out]  t                 Parametric coordinates of the projection on the segment
+ * \param [in]   t_elt                           Element type
+ * \param [in]   n_back_face_to_intersect        Number of background mesh faces to intersect
+ * \param [in]   back_face_to_intersect_ln_to_gn Set of background mesh faces to intersect
+ * \param [in]   back_face_vtx                   Background face -> vertex connectivity
+ * \param [in]   back_vtx_coord                  Coordinates of vertices of the background mesh
+ * \param [in]   back_face_line_idx              Index of background face -> line connectivity
+ * \param [in]   back_face_line                  Background face -> line connectivity
+ * \param [in]   line_boxes_idx                  Index of line -> box connectivity
+ * \param [in]   box_line_intersect_points       Line -> box intersection points connectivity
+ * \param [out]  newton_initial_point            Initial point for Newthon Method
  *
  */
 
 void
-PDM_ho_seg_intersect_element
+PDM_ho_seg_intersect_P1_line
 (
  const PDM_Mesh_nodal_elt_t  t_elt,
- const int                   order,
- const int                   n_nodes,
- const double               *nodes_coords,
- const double               *seg_coords,
- const int                   n_face,
- PDM_g_num_t                *face_vtx,
- double                     *vtx_coord,
- double                     *newton_initial_point
+ int                         n_back_face_to_intersect,
+ PDM_g_num_t                *back_face_to_intersect_ln_to_gn,
+ PDM_g_num_t                *back_face_vtx,
+ double                     *back_vtx_coord,
+ int                        *back_face_line_idx,
+ PDM_g_num_t                *back_face_line,
+ int                        *line_boxes_idx,
+ double                     *box_line_intersect_points,
+ double                    **newton_initial_point
  )
 {
   switch (t_elt)
   {
   case PDM_MESH_NODAL_TRIA3:
 
-  // Get intersection between line and P1 approximation (to get starting point)
+    *newton_initial_point = malloc(sizeof(double) * 3 * line_boxes_idx[back_face_line_idx[n_back_face_to_intersect]]);
 
-  int vtx_id1, vtx_id2, vtx_id3;
+    // Get intersection between line and P1 approximation (to get starting point)
 
-  double *start[3];
-  double *end[3];
+    int face_id;
+    int line_id;
+    int vtx_id1, vtx_id2, vtx_id3;
 
-  double *u = NULL;
-  double *v = NULL;
+    double *start[3];
+    double *end[3];
 
-  double *n[3];
-  double *AB[3];
-  double *AC[3];
-  double *side_seg_start[3];
-  double *side_seg_end[3];
+    double *u = NULL;
+    double *v = NULL;
 
-  double d, t;
+    double *n[3];
+    double *AB[3];
+    double *AC[3];
+    double *side_seg_start[3];
+    double *side_seg_end[3];
+    double *box_in[3];
+    double *box_out[3];
 
-  PDM_line_intersect_t found;
+    double d, t;
 
-  for (int iface = 0; iface < n_face; iface++-) {
+    for (int iface = 0; iface < n_back_face_to_intersect; iface++) {
 
-    vtx_id1 = PDM_ABS(face_vtx[3*iface])  -1;
-    vtx_id2 = PDM_ABS(face_vtx[3*iface+1])-1;
-    vtx_id3 = PDM_ABS(face_vtx[3*iface+2])-1;
+      face_id = PDM_ABS(back_face_to_intersect_ln_to_gn[iface])-1;
 
-    AB[0] = vtx_coord[3*vtx_id1] - vtx_coord[3*vtx_id2];
-    AB[1] = vtx_coord[3*vtx_id1+1] - vtx_coord[3*vtx_id2+1];
-    AB[2] = vtx_coord[3*vtx_id1+2] - vtx_coord[3*vtx_id2+2];
+      vtx_id1 = PDM_ABS(face_vtx[3*face_id])  -1;
+      vtx_id2 = PDM_ABS(face_vtx[3*face_id+1])-1;
+      vtx_id3 = PDM_ABS(face_vtx[3*face_id+2])-1;
 
-    AC[0] = vtx_coord[3*vtx_id1] - vtx_coord[3*vtx_id3];
-    AC[1] = vtx_coord[3*vtx_id1+1] - vtx_coord[3*vtx_id3+1];
-    AC[2] = vtx_coord[3*vtx_id1+2] - vtx_coord[3*vtx_id3+2];
+      AB[0] = vtx_coord[3*vtx_id1] - vtx_coord[3*vtx_id2];
+      AB[1] = vtx_coord[3*vtx_id1+1] - vtx_coord[3*vtx_id2+1];
+      AB[2] = vtx_coord[3*vtx_id1+2] - vtx_coord[3*vtx_id2+2];
 
-    PDM_CROSS_PRODUCT(n, AB, AC);
+      AC[0] = vtx_coord[3*vtx_id1] - vtx_coord[3*vtx_id3];
+      AC[1] = vtx_coord[3*vtx_id1+1] - vtx_coord[3*vtx_id3+1];
+      AC[2] = vtx_coord[3*vtx_id1+2] - vtx_coord[3*vtx_id3+2];
 
-    d = -(n[0] * vtx_coord[3*vtx_id1] + n[1] * vtx_coord[3*vtx_id1+1] + n[2] * vtx_coord[3*vtx_id1+2]);
+      PDM_CROSS_PRODUCT(n, AB, AC);
 
-    side_seg_start[0] = vtx_coord[3*vtx_id1]   - box_in[0];
-    side_seg_start[1] = vtx_coord[3*vtx_id1+1] - box_in[1];
-    side_seg_start[2] = vtx_coord[3*vtx_id1+2] - box_in[2];
+      d = -(n[0] * vtx_coord[3*vtx_id1] + n[1] * vtx_coord[3*vtx_id1+1] + n[2] * vtx_coord[3*vtx_id1+2]);
 
-    side_seg_end[0] = vtx_coord[3*vtx_id1]   - box_out[0];
-    side_seg_end[1] = vtx_coord[3*vtx_id1+1] - box_out[1];
-    side_seg_end[2] = vtx_coord[3*vtx_id1+2] - box_out[2];
+      int line_id = back_face_line[back_face_line_idx[face_id]];
 
-    start_side = PDM_DOT_PRODUCT(n, side_seg_start);
-    end_side = PDM_DOT_PRODUCT(n, side_seg_end);
+      for (int ibox = line_boxes_idx[line_id]; ibox < line_boxes_idx[line_id+1]; ibox++ ) {
 
-    if (start_side * end_side < 0) {
+        box_in  = box_line_intersect_points[6*ibox];
+        box_out = box_line_intersect_points[6*ibox+3];
 
-      t = (vtx_coord[3*vtx_id1] + vtx_coord[3*vtx_id1+1] + vtx_coord[3*vtx_id1+2] + n[0]*vtx_coord[3*vtx_id1] + n[1]*vtx_coord[3*vtx_id1+1] + n[2]*vtx_coord[3*vtx_id1+2] + d);
-      t -= (box_in[0] + box_in[1] + box_in[2]);
-      t /= ((box_in[0] - box_out[0]) + (box_in[1] - box_out[1]) + (box_in[2] - box_out[2]));
+        side_seg_start[0] = vtx_coord[3*vtx_id1]   - box_in[0];
+        side_seg_start[1] = vtx_coord[3*vtx_id1+1] - box_in[1];
+        side_seg_start[2] = vtx_coord[3*vtx_id1+2] - box_in[2];
 
-      newton_initial_point[3*iface    ] = box_in[0] + t * (box_in[0] - box_out[0]);
-      newton_initial_point[3*iface + 1] = box_in[1] + t * (box_in[1] - box_out[1]);
-      newton_initial_point[3*iface + 2] = box_in[2] + t * (box_in[2] - box_out[2]);
+        side_seg_end[0] = vtx_coord[3*vtx_id1]   - box_out[0];
+        side_seg_end[1] = vtx_coord[3*vtx_id1+1] - box_out[1];
+        side_seg_end[2] = vtx_coord[3*vtx_id1+2] - box_out[2];
 
-    } // == 0 point on face, > 0 no intersection
+        start_side = PDM_DOT_PRODUCT(n, side_seg_start);
+        end_side = PDM_DOT_PRODUCT(n, side_seg_end);
 
-  } // end loop on faces
+        if (start_side * end_side < 0) {
+
+          t = (vtx_coord[3*vtx_id1] + vtx_coord[3*vtx_id1+1] + vtx_coord[3*vtx_id1+2] + n[0]*vtx_coord[3*vtx_id1] + n[1]*vtx_coord[3*vtx_id1+1] + n[2]*vtx_coord[3*vtx_id1+2] + d);
+          t -= (box_in[0] + box_in[1] + box_in[2]);
+          t /= ((box_in[0] - box_out[0]) + (box_in[1] - box_out[1]) + (box_in[2] - box_out[2]));
+
+          newton_initial_point[3*ibox    ] = box_in[0] + t * (box_in[0] - box_out[0]);
+          newton_initial_point[3*ibox + 1] = box_in[1] + t * (box_in[1] - box_out[1]);
+          newton_initial_point[3*ibox + 2] = box_in[2] + t * (box_in[2] - box_out[2]);
+
+        } // == 0 point on face, > 0 no intersection
+      } // end loop on boxes
+    } // end loop on faces
 
     break;
   default:
@@ -679,7 +724,7 @@ PDM_ho_seg_intersect_element
 }
 
 /**
- * \brief Get all intersections for a set op points
+ * \brief Compute intersection between line and ho element using Newton Method
  *
  * \param [in]   type              Element type
  * \param [out]  t                 Parametric coordinates of the projection on the segment
@@ -689,19 +734,56 @@ PDM_ho_seg_intersect_element
 void
 PDM_ho_seg_intersect_compute
 (
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   n_line,
+ double                     *line_coords,
+ int                         n_back_face_to_intersect,
+ PDM_g_num_t                *back_face_to_intersect_ln_to_gn,
+ PDM_g_num_t                *back_face_vtx,
+ double                     *back_vtx_coord,
+ int                        *back_face_line_idx,
+ PDM_g_num_t                *back_face_line,
+ double                    **line_box_intersection_point
 )
 {
-  // Get mesh boxes
+  // Get boxes from background faces to intersect
 
-   // ---> PDM_ho_seg_intersect_boxes_get
+  /*
+   * Out of PDM_ho_seg_intersect_boxes_get : - line_boxes_idx
+   *                                         - extents (equivalent to line_boxes_extents_coords)
+   */
+
+  // Get the intersection between the lines and those boxes
+
+  double **box_line_intersect_points = NULL;
+
+  _ho_bounding_box_line_intersect_points_get(n_line,
+                                             line_coords,
+                                             line_boxes_idx,
+                                             extents,
+                                             box_line_intersect_points);
 
   // Get points at which line intersects box (to have line parametrization)
 
-  // ---> PDM_ho_seg_intersect_element
+  double **newton_initial_point = NULL;
+
+  PDM_ho_seg_intersect_P1_line(t_elt,
+                               n_back_face_to_intersect,
+                               back_face_to_intersect_ln_to_gn,
+                               back_face_vtx,
+                               back_vtx_coord,
+                               back_face_line_idx,
+                               back_face_line,
+                               line_boxes_idx,
+                               *box_line_intersect_points,
+                               **newton_initial_point);
 
   // Operate intersection
 
-  // ---> Newton method
+  _newton_method(box_initial_points,
+                 box_ho_element_function,
+                 box_ho_element_function_derivative,
+                 line_box_intersection_point);
 
 }
 
