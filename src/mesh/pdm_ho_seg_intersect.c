@@ -51,7 +51,7 @@
 #include "pdm_box_tree.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_ho_seg_intersect.h"
-
+#include "pdm_line.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -144,7 +144,7 @@ _newton_method
 (
 int      n_boxes,
 double  *box_initial_points,
-double   eps,
+double   eps2,
 double **line_box_intersection_point)
 {
 
@@ -164,7 +164,7 @@ double **line_box_intersection_point)
     x_in[1] = HUGE_VAL;
     x_in[2] = HUGE_VAL;
 
-    while (norm(x_in, x) > eps) {
+    while (((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) + (x_in[2] - x[2])*(x_in[2] - x[2])) > eps2) {
 
       x_in[0] = x[0];
       x_in[1] = x[1];
@@ -685,6 +685,149 @@ _ho_bounding_box_line_intersect_points_get
 
 }
 
+
+/*----------------------------------------------------------------------------
+ *  Lagrange Polynoms
+ *----------------------------------------------------------------------------*/
+
+// Li(X)
+
+static double
+_line_lagrange_interpolation_polynom_2d
+(
+const int order,
+const int k,
+double *interpolation_points,
+double x_int,
+)
+{
+  double x_out = 1;
+
+  for (int j = 0; j < order+1; j++) {
+    if (j != k) {
+
+      x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
+
+    } // end if j != k
+  } // end loop on j
+
+  return x_out;
+
+}
+
+// Li'(X)
+
+static double
+_line_lagrange_interpolation_polynom_derivative_2d
+(
+const int order,
+const int k,
+double *interpolation_points,
+double x_int
+)
+{
+  double x_out   = 0;
+  double product = 1;
+
+  for (int i = 0; i < order+1; i++) {
+    for (int j = 0; j < order+1; j++) {
+      if (j != k) {
+
+        if (i != j) {
+
+          x_out *= (1 / (interpolation_points[2*k] - interpolation_points[2*j]));
+
+        } else {
+
+          x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
+
+        }
+
+      } // end if j != k
+    } // end loop on j
+
+    x_out += product;
+    product = 1;
+
+  } // end loop on i
+
+  return x_out;
+
+}
+
+// P(X) = \sum bi Li(X) with P(ai) = bi because L(ai) = 1
+
+static double
+_line_lagrange_polynom_2d
+(
+const int order,
+double *interpolation_points,
+double x_int
+)
+{
+  double x_out = 0;
+
+  for (int i = 0; i < order+1; i++) {
+    x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_2d(order, i, interpolation_points, x_int);
+  } // end loop on i
+
+  return x_out;
+}
+
+// P(X) = \sum bi Li'(X) with P(ai) = bi because L(ai) = 1
+
+static double
+_line_lagrange_polynom_derivative_2d
+(
+const int order,
+double *interpolation_points,
+double x_int
+)
+{
+  double x_out = 0;
+
+  for (int i = 0; i < order+1; i++) {
+    x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_derivative_2d(order, i, interpolation_points, x_int);
+  } // end loop on i
+
+  return x_out;
+}
+
+static double
+_ho_line_intersect_newton_2d
+(
+const double a1[3],
+const double a2[3],
+const double b1[3],
+const double b2[3],
+const int order,
+const int eps2,
+double *interpolation_points // a1 and a2 extrema of these points
+// direction line given by b
+)
+{
+  double *u = NULL;
+  double *v = NULL;
+
+  PDM_line_intersect_t found = PDM_line_intersection_mean_square(a1, a2, b1, b2, u, v);
+
+  double x;
+  double x_in = HUGE_VAL;
+  x = a1[0] + (a2[0] - a1[0]) * u[0];
+
+  while ((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) > eps2) {
+    x_in = x;
+
+    x = x - _line_lagrange_polynom_2d(order, intersection_point, x) / _line_lagrange_polynom_derivative_2d(order, intersection_point, x);
+
+
+  // add lagrange - line not only lagrange
+  }
+
+  return x;
+
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -738,8 +881,7 @@ PDM_ho_seg_intersect_P1_line
 {
 
   /*
-   * WARNING: - Make sure intersection is in triangle
-   *          - If not implement moving from one triangle to the other
+   * TO DO: implement move to neighbour triangle if no intersection in current
    */
 
   switch (t_elt)
