@@ -413,7 +413,6 @@ int main
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_plugin_load();
   /*
    *  Initialize structs
    */
@@ -540,18 +539,18 @@ int main
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
-  const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};
+  // const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};
   // const int renum_properties_cell[6] = {12, 0, 1, 64, 3, 1};
   // const int renum_properties_cell[6] = {256, 0, 1, 64, 1, 1};
   // const int renum_properties_cell[6] = {16, 0, 1, 64, 1, 1};
-  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_HPC",
-                                            (void * ) renum_properties_cell,
-                                                     "PDM_PART_RENUM_FACE_NONE");
-  // PDM_multipart_set_reordering_options(mpart_id,
-  //                                      -1,
-  //                                      "PDM_PART_RENUM_CELL_NONE",
-  //                                      NULL,
-  //                                      "PDM_PART_RENUM_FACE_NONE");
+  // PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_HPC",
+  //                                           (void * ) renum_properties_cell,
+  //                                                    "PDM_PART_RENUM_FACE_NONE");
+  PDM_multipart_set_reordering_options(mpart_id,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_run_ppart(mpart_id);
 
 
@@ -1060,6 +1059,7 @@ int main
                                                                &extend_face_vtx,
                                                                &extend_face_vtx_idx);
       }
+      PDM_UNUSED(n_face_extended2);
 
       // PDM_g_num_t* edge_ln_to_gn = NULL;
       // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart_id,
@@ -1263,7 +1263,7 @@ int main
         free(concat_face_edge_idx);
         free(concat_face_edge    );
         free(concat_edge_vtx     );
-      } else (post){
+      } else if (post){
 
         int *face_edge     = NULL;
         int *face_edge_idx = NULL;
