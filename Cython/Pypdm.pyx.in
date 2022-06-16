@@ -307,7 +307,9 @@ cdef extern from "numpy/arrayobject.h":
 
 # -----------------------------------------------------------------
 cdef assert_single_dim_np(NPY.ndarray tab, dtype, int size=-1):
-  assert isinstance(tab, NPY.ndarray) and tab.ndim == 1 and tab.dtype == dtype
+  assert isinstance(tab, NPY.ndarray)
+  assert tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] == 1 or tab.shape[1] == 1))
+  assert tab.dtype == dtype
   if size >= 0:
     assert tab.size == size
 
