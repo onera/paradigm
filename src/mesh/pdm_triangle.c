@@ -361,56 +361,56 @@ PDM_GCC_SUPPRESS_WARNING_POP
  *
  */
 
-PDM_triangle_status_t
-PDM_triangle_line_intersection
-(
-const double line[6],
-const double tria_coord[9],
-      double ip[3]
-)
-{
+// PDM_triangle_status_t
+// PDM_triangle_line_intersection
+// (
+// const double line[6],
+// const double tria_coord[9],
+//       double ip[3]
+// )
+// {
 
-  PDM_plane_line_intersection(line, tria_coord, ip);
+//   PDM_plane_line_intersection(line, tria_coord, ip);
 
-  PDM_triangle_status_t found = PDM_TRIANGLE_OUTSIDE;
+//   PDM_triangle_status_t found = PDM_TRIANGLE_OUTSIDE;
 
-  /* Check if intersection point is in the triangle */
-  double c1[3];
-  double c2[3];
-  double c3[3];
+//   /* Check if intersection point is in the triangle */
+//   double c1[3];
+//   double c2[3];
+//   double c3[3];
 
-  double det1, det2, det3;
+//   double det1, det2, det3;
 
-  // ABD
-  c1[0] = tria_coord[0]; c1[1] = tria_coord[3]; c1[2] = ip[0];
-  c2[0] = tria_coord[1]; c2[1] = tria_coord[4]; c2[2] = ip[1];
-  c3[0] = tria_coord[2]; c3[1] = tria_coord[5]; c3[2] = ip[2];
+//   // ABD
+//   c1[0] = tria_coord[0]; c1[1] = tria_coord[3]; c1[2] = ip[0];
+//   c2[0] = tria_coord[1]; c2[1] = tria_coord[4]; c2[2] = ip[1];
+//   c3[0] = tria_coord[2]; c3[1] = tria_coord[5]; c3[2] = ip[2];
 
-  det1 = _determinant_3x3(c1, c2, c3);
+//   det1 = _determinant_3x3(c1, c2, c3);
 
-  // DBC
-  c1[0] = ip[0]; c1[1] = tria_coord[3]; c1[2] = tria_coord[6];
-  c2[0] = ip[1]; c2[1] = tria_coord[4]; c2[2] = tria_coord[7];
-  c3[0] = ip[2]; c3[1] = tria_coord[5]; c3[2] = tria_coord[8];
+//   // DBC
+//   c1[0] = ip[0]; c1[1] = tria_coord[3]; c1[2] = tria_coord[6];
+//   c2[0] = ip[1]; c2[1] = tria_coord[4]; c2[2] = tria_coord[7];
+//   c3[0] = ip[2]; c3[1] = tria_coord[5]; c3[2] = tria_coord[8];
 
-  det2 = _determinant_3x3(c1, c2, c3);
+//   det2 = _determinant_3x3(c1, c2, c3);
 
-  // ADC
-  c1[0] = tria_coord[0]; c1[1] = ip[0]; c1[2] = tria_coord[6];
-  c2[0] = tria_coord[1]; c2[1] = ip[1]; c2[2] = tria_coord[7];
-  c3[0] = tria_coord[2]; c3[1] = ip[2]; c3[2] = tria_coord[8];
+//   // ADC
+//   c1[0] = tria_coord[0]; c1[1] = ip[0]; c1[2] = tria_coord[6];
+//   c2[0] = tria_coord[1]; c2[1] = ip[1]; c2[2] = tria_coord[7];
+//   c3[0] = tria_coord[2]; c3[1] = ip[2]; c3[2] = tria_coord[8];
 
-  det3 = _determinant_3x3(c1, c2, c3);
+//   det3 = _determinant_3x3(c1, c2, c3);
 
-  if (det1 > 0 && det2 > 0 && det3 > 0) {
+//   if (det1 > 0 && det2 > 0 && det3 > 0) {
 
-    found = PDM_TRIANGLE_INSIDE;
+//     found = PDM_TRIANGLE_INSIDE;
 
-  } // end if point is inside triangle
+//   } // end if point is inside triangle
 
-  return found;
+//   return found;
 
-}
+// }
 
 
 /**

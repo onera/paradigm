@@ -141,7 +141,7 @@ _basis_bezier_tria
  */
 
 void
-PDM_ho_basis
+PDM_ho_bezier_basis
 (
  const PDM_Mesh_nodal_elt_t  type,
  const int                   order,

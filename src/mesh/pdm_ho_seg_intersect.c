@@ -139,50 +139,50 @@ _determinant_3x3
 // }
 
 /* Apply Newton method */
-static void
-_newton_method
-(
-int      n_boxes,
-double  *box_initial_points,
-double   eps2,
-double **line_box_intersection_point)
-{
+// static void
+// _newton_method
+// (
+// int      n_boxes,
+// double  *box_initial_points,
+// double   eps2,
+// double **line_box_intersection_point)
+// {
 
 
-  *line_box_intersection_point = malloc(sizeof(double) * 3 * n_boxes);
+//   *line_box_intersection_point = malloc(sizeof(double) * 3 * n_boxes);
 
-  double x[3];
-  double x_in[3];
+//   double x[3];
+//   double x_in[3];
 
-  for (int ibox = 0; ibox < n_boxes; ibox++) {
+//   for (int ibox = 0; ibox < n_boxes; ibox++) {
 
-    x[0] = box_initial_points[3*ibox];
-    x[1] = box_initial_points[3*ibox + 1];
-    x[2] = box_initial_points[3*ibox + 2];
+//     x[0] = box_initial_points[3*ibox];
+//     x[1] = box_initial_points[3*ibox + 1];
+//     x[2] = box_initial_points[3*ibox + 2];
 
-    x_in[0] = HUGE_VAL;
-    x_in[1] = HUGE_VAL;
-    x_in[2] = HUGE_VAL;
+//     x_in[0] = HUGE_VAL;
+//     x_in[1] = HUGE_VAL;
+//     x_in[2] = HUGE_VAL;
 
-    while (((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) + (x_in[2] - x[2])*(x_in[2] - x[2])) > eps2) {
+//     while (((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) + (x_in[2] - x[2])*(x_in[2] - x[2])) > eps2) {
 
-      x_in[0] = x[0];
-      x_in[1] = x[1];
-      x_in[2] = x[2];
+//       x_in[0] = x[0];
+//       x_in[1] = x[1];
+//       x_in[2] = x[2];
 
-      x[0] = x[0] - f(x[0])/df(x[0]);
-      x[1] = x[1] - f(x[1])/df(x[1]);
-      x[2] = x[2] - f(x[2])/df(x[2]);
+//       x[0] = x[0] - f(x[0])/df(x[0]);
+//       x[1] = x[1] - f(x[1])/df(x[1]);
+//       x[2] = x[2] - f(x[2])/df(x[2]);
 
-    } // end eps criterion satisfied
+//     } // end eps criterion satisfied
 
-    (*line_box_intersection_point)[3*ibox] = x[0];
-    (*line_box_intersection_point)[3*ibox+1] = x[1];
-    (*line_box_intersection_point)[3*ibox+2] = x[2];
+//     (*line_box_intersection_point)[3*ibox] = x[0];
+//     (*line_box_intersection_point)[3*ibox+1] = x[1];
+//     (*line_box_intersection_point)[3*ibox+2] = x[2];
 
-  }
+//   }
 
-}
+// }
 
 
 
@@ -499,10 +499,10 @@ _ho_bounding_box_line_intersect_points_get
 static double
 _line_lagrange_interpolation_polynom_2d
 (
-const int order,
-const int k,
-double *interpolation_points,
-double x_int,
+const int     order,
+const int     k,
+      double *interpolation_points,
+      double  x_in
 )
 {
   double x_out = 1;
@@ -527,7 +527,7 @@ _line_lagrange_interpolation_polynom_derivative_2d
 const int order,
 const int k,
 double *interpolation_points,
-double x_int
+double x_in
 )
 {
   double x_out   = 0;
@@ -597,40 +597,40 @@ double x_int
   return x_out;
 }
 
-static double
-_ho_line_intersect_newton_2d
-(
-const double a1[3],
-const double a2[3],
-const double b1[3],
-const double b2[3],
-const int order,
-const int eps2,
-double *interpolation_points // a1 and a2 extrema of these points
-// direction line given by b
-)
-{
-  double *u = NULL;
-  double *v = NULL;
+// static double
+// _ho_line_intersect_newton_2d
+// (
+// const double a1[3],
+// const double a2[3],
+// const double b1[3],
+// const double b2[3],
+// const int order,
+// const int eps2,
+// double *interpolation_points // a1 and a2 extrema of these points
+// // direction line given by b
+// )
+// {
+//   double *u = NULL;
+//   double *v = NULL;
 
-  PDM_line_intersect_t found = PDM_line_intersection_mean_square(a1, a2, b1, b2, u, v);
+//   PDM_line_intersect_t found = PDM_line_intersection_mean_square(a1, a2, b1, b2, u, v);
 
-  double x;
-  double x_in = HUGE_VAL;
-  x = a1[0] + (a2[0] - a1[0]) * u[0];
+//   double x;
+//   double x_in = HUGE_VAL;
+//   x = a1[0] + (a2[0] - a1[0]) * u[0];
 
-  while ((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) > eps2) {
-    x_in = x;
+//   while ((x_in[0] - x[0])*(x_in[0] - x[0]) + (x_in[1] - x[1])*(x_in[1] - x[1]) > eps2) {
+//     x_in = x;
 
-    x = x - _line_lagrange_polynom_2d(order, intersection_point, x) / _line_lagrange_polynom_derivative_2d(order, intersection_point, x);
+//     x = x - _line_lagrange_polynom_2d(order, intersection_point, x) / _line_lagrange_polynom_derivative_2d(order, intersection_point, x);
 
 
-  // add lagrange - line not only lagrange
-  }
+//   // add lagrange - line not only lagrange
+//   }
 
-  return x;
+//   return x;
 
-}
+// }
 
 /*============================================================================
  * Public function definitions
