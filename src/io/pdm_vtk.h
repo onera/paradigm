@@ -255,6 +255,19 @@ PDM_vtk_write_std_elements_double
  );
 
 
+void
+PDM_vtk_write_point_cloud_with_field
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          color[],
+ const int          n_vtx_field,
+ const char        *vtx_field_name[],
+ const double      *vtx_field[]
+);
+
 /**
  * \brief Export a block of elements of arbitray order to ASCII VTK format (unstructured grid)
  *
