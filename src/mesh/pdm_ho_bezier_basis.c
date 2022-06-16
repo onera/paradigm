@@ -87,7 +87,42 @@ _basis_bezier_edge
 )
 {
 
-  const int n_nodes = order + 1;
+  if (order == 1) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double _u =  u[i];
+
+      weights[2*i]   = 1 - _u;
+      weights[2*i+1] = _u;
+    }
+  }
+
+  if (order == 2) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double _u =  u[i];
+
+      weights[3*i+0] = (1 - _u) * (1 - _u);
+      weights[3*i+1] = 2 * _u * (1 - _u);
+      weights[3*i+2] = _u * _u;
+    }
+  }
+
+  if (order == 3) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double _u =  u[i];
+
+      weights[4*i+0] = (1 - _u) * (1 - _u) * (1 - _u);
+      weights[4*i+1] = 3 * _u * (1 - _u) * (1 - _u);
+      weights[4*i+2] = 3 * _u * _u * (1 - _u);
+      weights[4*i+3] = _u * _u * _u;
+    }
+  }
+
+  if (order > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+  }
 }
 
 /**
@@ -106,19 +141,63 @@ _basis_bezier_tria
 (
  const int              order,
  const int              n_pts,
- const double *restrict u,
+ const double *restrict uv,
  double       *restrict weights
 )
 {
-  const int n_nodes = order + 1;
 
   if (order == 1) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      weights[3*i]   = 1 - u - v;
+      weights[3*i+1] = u;
+      weights[3*i+2] = v;
+
+    }
   }
 
   if (order == 2) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      weights[6*i+0] = (1 - u -v) * (1 - u -v);  // (i,j,k)=(0,0,2)
+      weights[6*i+1] = 2 * u * (1 - u -v);       // (i,j,k)=(1,0,1)
+      weights[6*i+2] = u * u;                    // (i,j,k)=(2,0,0)
+      weights[6*i+3] = 2 * v * (1 - u -v);       // (i,j,k)=(0,1,1)
+      weights[6*i+4] = 2 * u * v;                // (i,j,k)=(1,1,0)
+      weights[6*i+5] = v * v;                    // (i,j,k)=(0,2,0)
+
+    }
   }
 
   if (order == 3) {
+
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      weights[10*i+0] = (1 - u -v) * (1 - u -v) * (1 - u -v);  // (i,j,k)=(003)
+      weights[10*i+3] = u * u * u;                             // (i,j,k)=(300)
+      weights[10*i+9] = v * v * v;                             // (i,j,k)=(030)
+      weights[10*i+1] = 3 * u * (1 - u -v) * (1 - u -v);       // (i,j,k)=(102)
+      weights[10*i+2] = 3 * u * u * (1 -u -v);                 // (i,j,k)=(201)
+      weights[10*i+6] = 3 * u * u * v;                         // (i,j,k)=(210)
+      weights[10*i+8] = 3 * u * v * v;                         // (i,j,k)=(120)
+      weights[10*i+7] = 3 * v * v * (1 - u -v);                // (i,j,k)=(021)
+      weights[10*i+4] = 3 * v * (1 - u -v) * (1 - u -v);       // (i,j,k)=(012)
+      weights[10*i+5] = 6 * u * v * (1 - u -v);                // (i,j,k)=(111)
+
+    }
+  }
+
+  if (order > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
   }
 }
 
@@ -163,6 +242,7 @@ PDM_ho_bezier_basis
     _basis_bezier_tria(order, n_pts, uvw, weights);
     break;
   default:
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet type other than BAR and TRIA\n");
     break;
   }
 }

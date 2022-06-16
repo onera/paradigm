@@ -68,252 +68,202 @@ extern "C" {
  *============================================================================*/
 
 /*----------------------------------------------------------------------------
- *  Bernstein polynomials
- *----------------------------------------------------------------------------*/
-
-// static double
-// _pow
-// (
-// double value,
-// int    power
-// )
-// {
-//   double out = 1;
-
-//   for (int i = 0; i < power; i++) {
-//     out *= value;
-//   }
-
-//   return out;
-
-// }
-
-// static double
-// _fact
-// (
-// int value
-// )
-// {
-
-//   double out = 1;
-
-//   for (int i = 2; i < value+1; i++) {
-//     out *= i;
-//   }
-
-//   return out;
-
-// }
-
-
-// static void
-// _bernstein_polynomial_triangle
-// (
-// double *uvw,
-// int    *ijk,
-// int n
-// )
-// {
-//   return (_fact(n)/_fact(ijk[0])*_fact(ijk[1])*_fact(ijk[2])) * _pow(uvx[0], ijk[0]) * _pow(uvx[1], ijk[1]) * _pow(uvx[2], ijk[2]);
-// }
-
-/*----------------------------------------------------------------------------
  *  Get bounding boxes
  *----------------------------------------------------------------------------*/
 
 /* Get Bezier coordinates from Lagrange coordinates for a bar (copied from pdm_t_dcube_nodal_gen.c) */
-// static void
-// _lagrange_to_bezier_bar
-// (
-//  const int  order,
-//  double    *lag,
-//  double    *bez
-// )
-// {
-//   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order);
+static void
+_lagrange_to_bezier_bar
+(
+ const int  order,
+ double    *lag,
+ double    *bez
+)
+{
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order);
 
-//   if (order == 1) {
-//     memcpy (bez, lag, sizeof(double) * n_nodes * 3);
-//   }
+  if (order == 1) {
+    memcpy (bez, lag, sizeof(double) * n_nodes * 3);
+  }
 
-//   else if (order == 2) {
+  else if (order == 2) {
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[j] = lag[j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[6+j] = lag[6+j];
-//     }
-//   }
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = lag[6+j];
+    }
+  }
 
-//   else if (order == 3) {
+  else if (order == 3) {
 
-//     double f833 = 5. / 6.;
-//     double f333 = 1. / 3.;
+    double f833 = 5. / 6.;
+    double f333 = 1. / 3.;
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[j] = lag[j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[3+j] = -f833*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f333*lag[9+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -f833*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f333*lag[9+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[6+j] = f333*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f833*lag[9+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = f333*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f833*lag[9+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[9+j] = lag[9+j];
-//     }
-//   }
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = lag[9+j];
+    }
+  }
 
-//   else {
-//     PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
-//   }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+  }
 
-// }
+}
 
-// /* Get Bezier coordinates from Lagrange coordinates for a triangle (copied from pdm_t_dcube_nodal_gen.c) */
-// static void
-// _lagrange_to_bezier_tria
-// (
-//  const int  order,
-//  double    *lag,
-//  double    *bez
-// )
-// {
-//    int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
+/* Get Bezier coordinates from Lagrange coordinates for a triangle (copied from pdm_t_dcube_nodal_gen.c) */
+static void
+_lagrange_to_bezier_tria
+(
+ const int  order,
+ double    *lag,
+ double    *bez
+)
+{
+   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
 
-//   if (order == 1) {
-//     memcpy (bez, lag, sizeof(double) * n_nodes * 3);
-//   }
+  if (order == 1) {
+    memcpy (bez, lag, sizeof(double) * n_nodes * 3);
+  }
 
-//   else if (order == 2) {
-//     for (int j = 0; j < 3; j++) {
-//       bez[j] = lag[j];
-//     }
+  else if (order == 2) {
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -0.5*lag[j] + 2*lag[3+j] - 0.5*lag[6+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[6+j] = lag[6+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = lag[6+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[9+j] = -0.5*lag[j] + 2*lag[9+j] - 0.5*lag[15+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = -0.5*lag[j] + 2*lag[9+j] - 0.5*lag[15+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[12+j] = -0.5*lag[6+j] + 2*lag[12+j] - 0.5*lag[15+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = -0.5*lag[6+j] + 2*lag[12+j] - 0.5*lag[15+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[15+j] = lag[15+j];
-//     }
-//   }
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = lag[15+j];
+    }
+  }
 
-//   else if (order == 3) {
-//     double f5_6 = 5. / 6.;
-//     double f1_3 = 1. / 3.;
+  else if (order == 3) {
+    double f5_6 = 5. / 6.;
+    double f1_3 = 1. / 3.;
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[j] = lag[j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[j] = lag[j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[3+j] = -f5_6*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f1_3*lag[9+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[3+j] = -f5_6*lag[j] + 3*lag[3+j] - 1.5*lag[6+j] + f1_3*lag[9+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[6+j] = f1_3*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f5_6*lag[9+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[6+j] = f1_3*lag[j] - 1.5*lag[3+j] + 3*lag[6+j] - f5_6*lag[9+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[9+j] = lag[9+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[9+j] = lag[9+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[12+j] = -f5_6*lag[j] + 3*lag[12+j] - 1.5*lag[21+j] + f1_3*lag[27+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[12+j] = -f5_6*lag[j] + 3*lag[12+j] - 1.5*lag[21+j] + f1_3*lag[27+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[15+j] = f1_3*lag[j] - 0.75*lag[3+j] - 0.75*lag[6+j] + f1_3*lag[9+j] - 0.75*lag[12+j] + 4.5*lag[15+j] - 0.75*lag[18+j] - 0.75*lag[21+j] - 0.75*lag[24+j] + f1_3*lag[27+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[15+j] = f1_3*lag[j] - 0.75*lag[3+j] - 0.75*lag[6+j] + f1_3*lag[9+j] - 0.75*lag[12+j] + 4.5*lag[15+j] - 0.75*lag[18+j] - 0.75*lag[21+j] - 0.75*lag[24+j] + f1_3*lag[27+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[18+j] = -f5_6*lag[9+j] + 3*lag[18+j] - 1.5*lag[24+j] + f1_3*lag[27+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[18+j] = -f5_6*lag[9+j] + 3*lag[18+j] - 1.5*lag[24+j] + f1_3*lag[27+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[21+j] = f1_3*lag[j] - 1.5*lag[12+j] + 3*lag[21+j] - f5_6*lag[27+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[21+j] = f1_3*lag[j] - 1.5*lag[12+j] + 3*lag[21+j] - f5_6*lag[27+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[24+j] = f1_3*lag[9+j] - 1.5*lag[18+j] + 3*lag[24+j] - f5_6*lag[27+j];
-//     }
+    for (int j = 0; j < 3; j++) {
+      bez[24+j] = f1_3*lag[9+j] - 1.5*lag[18+j] + 3*lag[24+j] - f5_6*lag[27+j];
+    }
 
-//     for (int j = 0; j < 3; j++) {
-//       bez[27+j] = lag[27+j];
-//     }
-//   }
+    for (int j = 0; j < 3; j++) {
+      bez[27+j] = lag[27+j];
+    }
+  }
 
-//   else {
-//     PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
-//   }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+  }
 
-// }
+}
 
-// /* Get bezier bounding box (copied from pdm_t_dcube_nodal_gen.c) */
-// static void
-// _bezier_bounding_boxes
-// (
-//  const PDM_Mesh_nodal_elt_t  t_elt,
-//  const int                   order,
-//  const int                   n_nodes,
-//  int                         n_elt,
-//  double                     *lagrange_coord,
-//  double                    **extents
-// )
-// {
-//   double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
+/* Get bezier bounding box (copied from pdm_t_dcube_nodal_gen.c) */
+static void
+_bezier_bounding_boxes
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const int                   n_nodes,
+ int                         n_elt,
+ double                     *lagrange_coord,
+ double                    **extents
+)
+{
+  double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
 
-//   for (int i = 0; i < n_elt; i++) {
-//     double *_min = (*extents) + 6*i;
-//     double *_max = _min + 3;
+  for (int i = 0; i < n_elt; i++) {
+    double *_min = (*extents) + 6*i;
+    double *_max = _min + 3;
 
-//     for (int j = 0; j < 3; j++) {
-//       _min[j] =  1e30;
-//       _max[j] = -1e30;
-//     }
+    for (int j = 0; j < 3; j++) {
+      _min[j] =  1e30;
+      _max[j] = -1e30;
+    }
 
-//     if (t_elt == PDM_MESH_NODAL_BAR2 ||
-//         t_elt == PDM_MESH_NODAL_BARHO) {
-//       _lagrange_to_bezier_bar (order, lagrange_coord, bezier_coord);
-//     }
-//     else if (t_elt == PDM_MESH_NODAL_TRIA3 ||
-//              t_elt == PDM_MESH_NODAL_TRIAHO) {
-//       _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
-//     }
-//     else {
-//       PDM_error(__FILE__, __LINE__, 0, "Only implemented for other elements in pdm_t_dcube_nodal_gen.c\n");
-//     }
+    if (t_elt == PDM_MESH_NODAL_BAR2 ||
+        t_elt == PDM_MESH_NODAL_BARHO) {
+      _lagrange_to_bezier_bar (order, lagrange_coord, bezier_coord);
+    }
+    else if (t_elt == PDM_MESH_NODAL_TRIA3 ||
+             t_elt == PDM_MESH_NODAL_TRIAHO) {
+      _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Only implemented for other elements in pdm_t_dcube_nodal_gen.c\n");
+    }
 
-//     for (int k = 0; k < n_nodes; k++) {
-//       for (int j = 0; j < 3; j++) {
-//         _min[j] = _MIN(_min[j], bezier_coord[3*k + j]);
-//         _max[j] = _MAX(_max[j], bezier_coord[3*k + j]);
-//       }
-//     }
-//   }
-// }
+    for (int k = 0; k < n_nodes; k++) {
+      for (int j = 0; j < 3; j++) {
+        _min[j] = _MIN(_min[j], bezier_coord[3*k + j]);
+        _max[j] = _MAX(_max[j], bezier_coord[3*k + j]);
+      }
+    }
+  }
+}
 
 #ifdef __cplusplus
 }
