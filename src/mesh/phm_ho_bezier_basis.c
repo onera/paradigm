@@ -110,8 +110,16 @@ _basis_bezier_tria
  double       *restrict weights
 )
 {
-
   const int n_nodes = order + 1;
+
+  if (order == 1) {
+  }
+
+  if (order == 2) {
+  }
+
+  if (order == 3) {
+  }
 }
 
 /*============================================================================
