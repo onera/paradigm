@@ -1168,7 +1168,7 @@ int main
       PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
       // Rebuild poly connectivity to check mesh
-      if(extend_type == PDM_EXTEND_FROM_VTX) {
+      if(extend_type == PDM_EXTEND_FROM_VTX && post) {
         int *face_edge     = NULL;
         int *face_edge_idx = NULL;
         int n_face2 = PDM_multipart_part_connectivity_get(mpart_id,
@@ -1263,7 +1263,7 @@ int main
         free(concat_face_edge_idx);
         free(concat_face_edge    );
         free(concat_edge_vtx     );
-      } else {
+      } else (post){
 
         int *face_edge     = NULL;
         int *face_edge_idx = NULL;
