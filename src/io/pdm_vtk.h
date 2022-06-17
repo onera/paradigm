@@ -140,6 +140,34 @@ PDM_vtk_write_point_cloud
  const int          color[]
  );
 
+/**
+ * \brief Export a point cloud to ASCII VTK format (unstructured grid of points)
+ *
+ * \param [in]  filename       Output file name
+ * \param [in]  n_vtx          Number of points
+ * \param [in]  vtx_coord      Coordinates of the points (size = 3 * \ref n_vtx)
+ *                             (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num      Global ids of the points (or NULL)
+ * \param [in]  color          Integer color of the points (or NULL)
+ * \param [in]  n_vtx_field    Number of vertex fields
+ * \param [in]  vtx_field_name Name of those vertex fields
+ * \param [in]  vtx_field      Vertex fields
+ *
+ */
+
+void
+PDM_vtk_write_point_cloud_with_field
+(
+ const char        *filename,
+ const int          n_vtx,
+ const double       vtx_coord[],
+ const PDM_g_num_t  vtx_g_num[],
+ const int          color[],
+ const int          n_vtx_field,
+ const char        *vtx_field_name[],
+ const double      *vtx_field[]
+);
+
 
 /**
  * \brief Export a set of lines to ASCII VTK format (unstructured grid of line segments)
