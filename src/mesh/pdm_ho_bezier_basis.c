@@ -275,7 +275,7 @@ _basis_bezier_edge_derivative
  */
 
 static void
-_basis_bezier_tria
+_basis_bezier_tria_derivative
 (
  const int              order,
  const int              n_pts,
@@ -287,9 +287,6 @@ _basis_bezier_tria
 
   if (order == 1) {
     for (int i = 0; i < n_pts; i++) {
-
-      double u =  uv[2*i];
-      double v =  uv[2*i+1];
 
       dw_du[3*i]   = -1;
       dw_du[3*i+1] = 1;
@@ -373,7 +370,6 @@ _basis_bezier_tria
  *
  * \param [in]  type      Element type structure
  * \param [in]  order     Element order
- * \param [in]  n_nodes   Number of nodes
  * \param [in]  n_pts     Number of points
  * \param [in]  uvw       Parametric coordinates of the points (size = elt_dim * \ref n_pts)
  * \param [out] weights   Weights (size = \ref n_pts * \ref n_nodes)
@@ -385,7 +381,6 @@ PDM_ho_bezier_basis
 (
  const PDM_Mesh_nodal_elt_t  type,
  const int                   order,
- const int                   n_nodes,
  const int                   n_pts,
  const double               *uvw,
  double                     *weights
