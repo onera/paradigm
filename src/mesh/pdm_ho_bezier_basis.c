@@ -94,6 +94,7 @@ _basis_bezier_edge
 
       weights[2*i]   = 1 - _u;
       weights[2*i+1] = _u;
+
     }
   }
 
@@ -105,6 +106,7 @@ _basis_bezier_edge
       weights[3*i+0] = (1 - _u) * (1 - _u);
       weights[3*i+1] = 2 * _u * (1 - _u);
       weights[3*i+2] = _u * _u;
+
     }
   }
 
@@ -117,6 +119,7 @@ _basis_bezier_edge
       weights[4*i+1] = 3 * _u * (1 - _u) * (1 - _u);
       weights[4*i+2] = 3 * _u * _u * (1 - _u);
       weights[4*i+3] = _u * _u * _u;
+
     }
   }
 
@@ -131,7 +134,7 @@ _basis_bezier_edge
  *
  * \param [in]  order           Order
  * \param [in]  n_pts           Number of points
- * \param [in]  u               Parametric coordinates (size = \ref n_pts)
+ * \param [in]  uv              Parametric coordinates (size = \ref n_pts)
  * \param [out] weights         Weights (size = n_nodes * \ref n_pts)
  *
  */
@@ -192,6 +195,164 @@ _basis_bezier_tria
       weights[10*i+7] = 3 * v * v * (1 - u -v);                // (i,j,k)=(021)
       weights[10*i+4] = 3 * v * (1 - u -v) * (1 - u -v);       // (i,j,k)=(012)
       weights[10*i+5] = 6 * u * v * (1 - u -v);                // (i,j,k)=(111)
+
+    }
+  }
+
+  if (order > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+  }
+}
+
+/**
+ *
+ * \brief Edge Bézier basis derivative with respect to u
+ *
+ * \param [in]  order           Order
+ * \param [in]  n_pts           Number of points
+ * \param [in]  u               Parametric coordinates (size = \ref n_pts)
+ * \param [out] dw              Weights derivative (size = n_nodes * \ref n_pts)
+ *
+ */
+
+static void
+_basis_bezier_edge_derivative
+(
+ const int              order,
+ const int              n_pts,
+ const double *restrict u,
+ double       *restrict dw
+)
+{
+
+  if (order == 1) {
+    for (int i = 0; i < n_pts; i++) {
+
+      dw[2*i]   = -1;
+      dw[2*i+1] = 1;
+
+    }
+  }
+
+  if (order == 2) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double _u =  u[i];
+
+      dw[3*i+0] = 2 * (_u - 1);
+      dw[3*i+1] = 2 * (-2 * _u + 1);
+      dw[3*i+2] = 2 * _u;
+    }
+  }
+
+  if (order == 3) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double _u =  u[i];
+
+      dw[4*i+0] = 3 * (-1 + 2 * _u - _u * _u);
+      dw[4*i+1] = 3 * (1 - 2 * _u + 3 * _u * _u);
+      dw[4*i+2] = 3 * (2 * _u - 3 * _u * _u);
+      dw[4*i+3] = 3 * _u * _u;
+    }
+  }
+
+  if (order > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+  }
+}
+
+/**
+ *
+ * \brief Triangle Bézier basis derivative
+ *
+ * \param [in]  order           Order
+ * \param [in]  n_pts           Number of points
+ * \param [in]  uv              Parametric coordinates (size = \ref n_pts)
+ * \param [out] dw_du           Weights derivative with respect to u (size = n_nodes * \ref n_pts)
+ * \param [out] dw_dv           Weights derivative with respect to v (size = n_nodes * \ref n_pts)
+ *
+ */
+
+static void
+_basis_bezier_tria
+(
+ const int              order,
+ const int              n_pts,
+ const double *restrict uv,
+ double       *restrict dw_du,
+ double       *restrict dw_dv
+)
+{
+
+  if (order == 1) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      dw_du[3*i]   = -1;
+      dw_du[3*i+1] = 1;
+      dw_du[3*i+2] = 0;
+
+      dw_dv[3*i]   = -1;
+      dw_dv[3*i+1] = 0;
+      dw_dv[3*i+2] = 1;
+
+    }
+  }
+
+  if (order == 2) {
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      dw_du[6*i+0] = 2 * (-1 + u + v);    // (i,j,k)=(0,0,2)
+      dw_du[6*i+1] = 2 * (1 - 2 * u - v); // (i,j,k)=(1,0,1)
+      dw_du[6*i+2] = 2 * u;               // (i,j,k)=(2,0,0)
+      dw_du[6*i+3] = 2 * (- v);           // (i,j,k)=(0,1,1)
+      dw_du[6*i+4] = 2 * v;               // (i,j,k)=(1,1,0)
+      dw_du[6*i+5] = 0;                   // (i,j,k)=(0,2,0)
+
+      dw_dv[6*i+0] = 2 * (-1 + v + u);    // (i,j,k)=(0,0,2)
+      dw_dv[6*i+1] = 2 * (- u);           // (i,j,k)=(1,0,1)
+      dw_dv[6*i+2] = 0;                   // (i,j,k)=(2,0,0)
+      dw_dv[6*i+3] = 2 * (1 - u - 2 * v); // (i,j,k)=(0,1,1)
+      dw_dv[6*i+4] = 2 * u;               // (i,j,k)=(1,1,0)
+      dw_dv[6*i+5] = 2 * v;               // (i,j,k)=(0,2,0)
+
+    }
+  }
+
+  if (order == 3) {
+
+    for (int i = 0; i < n_pts; i++) {
+
+      double u =  uv[2*i];
+      double v =  uv[2*i+1];
+
+      dw_du[10*i+0] = 3 * (- u * u - 1 + 2 * v + 2 * u - v * v - 2 * u * v);   // (i,j,k)=(003)
+      dw_du[10*i+3] = 3 * u * u;                                               // (i,j,k)=(300)
+      dw_du[10*i+9] = 0;                                                       // (i,j,k)=(030)
+      dw_du[10*i+1] = (1 - 4 * u - 2 * v + 4 * u * v + 3 * u * u + v * v);     // (i,j,k)=(102)
+      dw_du[10*i+2] = 3 * (2 * u - 3 * u * u - 2 * u * v);                     // (i,j,k)=(201)
+      dw_du[10*i+6] = 6 * u * v;                                               // (i,j,k)=(210)
+      dw_du[10*i+8] = 3 * v * v;                                               // (i,j,k)=(120)
+      dw_du[10*i+7] = -3 * v * v;                                              // (i,j,k)=(021)
+      dw_du[10*i+4] = 3 * (1 - 2 * u - 2 * v * v + 2 * u * v);                 // (i,j,k)=(012)
+      dw_du[10*i+5] = 6 * (v - 2 * u * v - v * v);                             // (i,j,k)=(111)
+
+      dw_dv[10*i+0] = 3 * (- v * v - 1 + 2 * u + 2 * v - 2 * u * v - u * u);   // (i,j,k)=(003)
+      dw_dv[10*i+3] = 0;                                                       // (i,j,k)=(300)
+      dw_dv[10*i+9] = 3 * v * v;                                               // (i,j,k)=(030)
+      dw_dv[10*i+1] = 3 * (-2 * u + 2 * u * u + 2 * v * u);                    // (i,j,k)=(102)
+      dw_dv[10*i+2] = -3 * u * u;                                              // (i,j,k)=(201)
+      dw_dv[10*i+6] = 3 * u * u;                                               // (i,j,k)=(210)
+      dw_dv[10*i+8] = 6 * u * v;                                               // (i,j,k)=(120)
+      dw_dv[10*i+7] = 3 * (2* v - 2 * u * v - 3 * v * v);                      // (i,j,k)=(021)
+      dw_dv[10*i+4] = 3 * (1 - 2 * u - 4 * v + 4 * u * v + u * u + 3 * v * v); // (i,j,k)=(012)
+      dw_dv[10*i+5] = 6 * (u - u * u - 2 * u * v);                             // (i,j,k)=(111)
 
     }
   }
