@@ -2611,14 +2611,14 @@ PDM_g_num_t  **dentity_elmt
    * Get the max number of vertex of entitys
    */
   int* blk_entity_vtx_idx  = (int        *) malloc( (blk_entity_vtx_n_size+1) * sizeof(int        ));
-  int n_max_entity_per_key = -1;
+  int n_max_entity_per_key = 0;
   int n_tot_entity_per_key = 0;
   for(int i_entity = 0; i_entity < blk_size; ++i_entity) {
     n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, blk_n_entity_per_key[i_entity]);
     n_tot_entity_per_key += blk_n_entity_per_key[i_entity];
   }
 
-  int n_max_vtx       = -1;
+  int n_max_vtx       = 0;
   blk_entity_vtx_idx[0] = 0;
   for(int i_entity = 0; i_entity < blk_entity_vtx_n_size; ++i_entity) {
     n_max_vtx          = PDM_MAX(n_max_vtx         , blk_entity_vtx_n    [i_entity]);
