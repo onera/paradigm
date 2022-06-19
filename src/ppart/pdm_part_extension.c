@@ -24,6 +24,7 @@
 #include "pdm_part_extension_priv.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_array.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1743,11 +1744,12 @@ _generate_graph_comm_with_extended
       unique_idx[i+1] += unique_idx[i];
     }
 
-    // PDM_log_trace_array_int(unique_idx,  i_unique+1, "unique_idx :");
-
-    for(int i = 0; i < n_entity_extended[i_part]; ++i) {
-      int old_order = order[i];
-      // printf("[%i] gnum = "PDM_FMT_G_NUM"\n", i, border_entity_ln_to_gn[i_part][old_order]);
+    if(1 == 0) {
+      PDM_log_trace_array_int(unique_idx,  i_unique+1, "unique_idx :");
+      for(int i = 0; i < n_entity_extended[i_part]; ++i) {
+        int old_order = order[i];
+        printf("[%i] gnum = "PDM_FMT_G_NUM"\n", i, border_entity_ln_to_gn[i_part][old_order]);
+      }
     }
 
 
@@ -2340,7 +2342,6 @@ _create_cell_graph_comm
   PDM_part_extension_t *part_ext
 )
 {
-  int debug = 0;
   /*
    * The idea is to use the first communicator graph to exchange directly the entity_cell
    *     -> We deduced first from this graph the data necessary for distant_neigbor
@@ -2494,14 +2495,14 @@ _create_cell_graph_comm
       }
 
       /* Join between domain */
-      PDM_bound_type_t interface_kind = PDM_BOUND_TYPE_MAX;
-      if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
-        interface_kind = PDM_BOUND_TYPE_FACE;
-      } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
-        interface_kind = PDM_BOUND_TYPE_VTX;
-      } else {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
-      }
+      // PDM_bound_type_t interface_kind = PDM_BOUND_TYPE_MAX;
+      // if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
+      //   interface_kind = PDM_BOUND_TYPE_FACE;
+      // } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
+      //   interface_kind = PDM_BOUND_TYPE_VTX;
+      // } else {
+      //   PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+      // }
 
       // int            n_interface        = 0;
       // int           *interface_pn       = NULL;
@@ -4355,7 +4356,7 @@ _generate_extended_partition_connectivity
     } else {
 
       int pos_interior2 = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
-      int pos_interior = PDM_binary_search_long(g_entity2, gentity1_entity2, entity1_entity2_idx[n_entity1]);
+      // int pos_interior = PDM_binary_search_long(g_entity2, gentity1_entity2, entity1_entity2_idx[n_entity1]);
       // printf(" Border face comming from interior %i - %i \n", pos_interior, idx);
       // printf(" g_entity2 = %i | pos_interior = %i - pos_interior2 = %i \n", (int)g_entity2, pos_interior, pos_interior2);
       // assert(pos_interior  != -1);
@@ -5834,15 +5835,15 @@ PDM_part_extension_compute
                   (void ***) &border_neighor);
 
 
-    int **border_neighor_idx = NULL;
+    // int **border_neighor_idx = NULL;
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
 
       int *_border_neighor_n = border_neighor_n[i_part];
-      int *_border_neighor   = border_neighor  [i_part];
+      // int *_border_neighor   = border_neighor  [i_part];
 
       int *_vtx_vtx_extended_idx = part_ext->vtx_vtx_extended_idx[i_part];
-      int *_vtx_vtx_extended     = part_ext->vtx_vtx_extended    [i_part];
-      int *_vtx_vtx_interface    = part_ext->vtx_vtx_interface  [i_part];
+      // int *_vtx_vtx_extended     = part_ext->vtx_vtx_extended    [i_part];
+      // int *_vtx_vtx_interface    = part_ext->vtx_vtx_interface  [i_part];
 
       int idx_read = 0;
       for(int i = 0; i < n_vtx[i_part]; ++i) {
@@ -5935,7 +5936,10 @@ PDM_part_extension_compute
   //   }
   // }
 
-  int n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+  int n_interface = 0;
+  if(part_ext->pdi != NULL) {
+    n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
+  }
   double  **translation_vector = malloc(n_interface * sizeof(double *  ));
   double ***rotation_matrix    = malloc(n_interface * sizeof(double ** ));
   double  **rotation_direction = malloc(n_interface * sizeof(double *  ));
@@ -6117,7 +6121,6 @@ PDM_part_extension_compute
         for(int i_face = 0; i_face < n_face_extended; ++i_face) {
           int l_face = i_face + pn_face;
           concat_face_vtx_idx[l_face+1] = concat_face_vtx_idx[l_face];
-          printf("i_face = %i | l_face = %i | idx = %i \n", i_face, l_face, concat_face_vtx_idx[l_face+1]);
           for(int idx_vtx = pface_vtx_extented_idx[i_face]; idx_vtx < pface_vtx_extented_idx[i_face+1]; ++idx_vtx) {
             concat_face_vtx[concat_face_vtx_idx[l_face+1]++] = PDM_ABS(pface_vtx_extented[idx_vtx]);
           }

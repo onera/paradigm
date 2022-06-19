@@ -837,6 +837,7 @@ _compute_part_mesh_nodal_3d
     free(psurf_to_face_g_num[i_part]);
   }
   free(pn_surf);
+  free(psurf_gnum);
   free(psurf_to_face_g_num);
 
   /* Create top structure */

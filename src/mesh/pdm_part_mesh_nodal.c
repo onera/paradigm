@@ -138,7 +138,7 @@ PDM_part_mesh_nodal_create
     pmn->vtx[i]->n_vtx      = 0;
     pmn->vtx[i]->parent     = NULL;
     pmn->vtx[i]->coords     = NULL;
-    pmn->vtx[i]->owner      = PDM_OWNERSHIP_USER;
+    pmn->vtx[i]->owner      = PDM_OWNERSHIP_KEEP;
   }
 
   pmn->n_vol    = PDM_array_zeros_int(n_part);

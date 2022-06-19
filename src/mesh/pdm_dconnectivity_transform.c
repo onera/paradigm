@@ -661,7 +661,7 @@ void PDM_dcellface_to_dfacecell
     else { //Bnd faces
       assert (n_conn == 1);
       int sign = PDM_SIGN(_dface_cell[r_idx]);
-      PDM_g_num_t val = PDM_ABS(_dface_cell[r_idx]);
+      // PDM_g_num_t val = PDM_ABS(_dface_cell[r_idx]);
       if (sign > 0) {
         (*dface_cell)[2*i]   = _dface_cell[r_idx];
         (*dface_cell)[2*i+1] = 0;
