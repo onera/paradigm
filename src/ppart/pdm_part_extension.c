@@ -236,16 +236,13 @@ _offset_parts_by_domain
 
   // Attention il faut shifter tout les border_ln_to_gn aussi et deduire le border_i_domain
   // (Recherche dicotomique dans le shift by domain)
-
-  part_ext->n_interface = 0;
-  if(part_ext->pdi != NULL && part_ext->n_domain > 1) {
-    abort();
-  }
-
   if(part_ext->pdi !=NULL) {
     part_ext->n_interface = PDM_part_domain_interface_n_interface_get(part_ext->pdi);
   }
 
+  if(part_ext->pdi != NULL && part_ext->n_domain > 1 && part_ext->n_interface > 0) {
+    abort();
+  }
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     free(pn_cell      [i_domain]);

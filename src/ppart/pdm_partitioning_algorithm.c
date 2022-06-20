@@ -1775,7 +1775,6 @@ PDM_part_generate_entity_graph_comm
   /*
    * All data is now sort we cen resend to partition
    */
-  log_trace("PDM_part_generate_entity_graph_comm \n");
   PDM_block_to_part_t* btp = PDM_block_to_part_create(_entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,

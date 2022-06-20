@@ -1058,7 +1058,10 @@ PDM_part_domain_interface_as_graph
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
-  assert(dom_intrf->n_domain == 1); // TODO --> shift of gnum AND part_id
+  // assert(dom_intrf->n_domain == 1); // TODO --> shift of gnum AND part_id
+  if(dom_intrf->n_domain > 1) {
+    printf("WARNING : PDM_part_domain_interface_as_graph not general is n_domain > 1");
+  }
 
   int* n_tot_part_by_domain = (int *) malloc( dom_intrf->n_domain * sizeof(int));
   for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain) {
