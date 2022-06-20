@@ -105,13 +105,35 @@ int main(int argc, char *argv[])
   // line[1] = 0; line[4] = 0;
   // line[2] = 0; line[5] = 0;
 
-  tria_coord[0] = 0; tria_coord[3] = 20; tria_coord[6] = 0;
-  tria_coord[1] = 0; tria_coord[4] = 0; tria_coord[7] = 20;
-  tria_coord[2] = 0; tria_coord[5] = 0; tria_coord[8] = 0;
+  // (i,j,k)=(0,0,2)
+  tria_coord[0] = 0;
+  tria_coord[1] = 0;
+  tria_coord[2] = 10;
 
-  tria_coord[9]  = 10; tria_coord[12] = 0;  tria_coord[15] = 10;
-  tria_coord[10] = 0;  tria_coord[13] = 10; tria_coord[16] = 10;
-  tria_coord[11] = 0;  tria_coord[14] = 0;  tria_coord[17] = 0;
+  // (i,j,k)=(1,0,1)
+  tria_coord[3] = 10;
+  tria_coord[4] = 0;
+  tria_coord[5] = 20;
+
+  // (i,j,k)=(2,0,0)
+  tria_coord[6] = 20;
+  tria_coord[7] = 0;
+  tria_coord[8] = 10;
+
+  // (i,j,k)=(0,1,1)
+  tria_coord[9] = 0;
+  tria_coord[10] = 10;
+  tria_coord[11] = 20;
+
+  // (i,j,k)=(1,1,0)
+  tria_coord[12] = 10;
+  tria_coord[13] = 10;
+  tria_coord[14] = 20;
+
+  // (i,j,k)=(0,2,0)
+  tria_coord[15] = 0;
+  tria_coord[16] = 20;
+  tria_coord[17] = 10;
 
   // // Do triangle P1 line intersection
 
@@ -180,7 +202,7 @@ int main(int argc, char *argv[])
 
   uvw[0] = 0.25;
   uvw[1] = 0.25;
-  uvw[2] = 0;
+  uvw[2] = 0.5;
 
   PDM_ho_bezier_basis(PDM_MESH_NODAL_TRIAHO,
                       2,
@@ -192,35 +214,64 @@ int main(int argc, char *argv[])
 
   for (int j = 0; j < 3; j++) {
     xyz_Pn[j] += weights[0] * tria_coord[3*0+j]; // (i,j,k)=(0,0,2)
-    xyz_Pn[j] += weights[1] * tria_coord[3*3+j]; // (i,j,k)=(1,0,1)
-    xyz_Pn[j] += weights[2] * tria_coord[3*1+j]; // (i,j,k)=(2,0,0)
-    xyz_Pn[j] += weights[3] * tria_coord[3*4+j]; // (i,j,k)=(0,1,1)
-    xyz_Pn[j] += weights[4] * tria_coord[3*5+j]; // (i,j,k)=(1,1,0)
-    xyz_Pn[j] += weights[5] * tria_coord[3*2+j]; // (i,j,k)=(0,2,0)
+    xyz_Pn[j] += weights[1] * tria_coord[3*1+j]; // (i,j,k)=(1,0,1)
+    xyz_Pn[j] += weights[2] * tria_coord[3*2+j]; // (i,j,k)=(2,0,0)
+    xyz_Pn[j] += weights[3] * tria_coord[3*3+j]; // (i,j,k)=(0,1,1)
+    xyz_Pn[j] += weights[4] * tria_coord[3*4+j]; // (i,j,k)=(1,1,0)
+    xyz_Pn[j] += weights[5] * tria_coord[3*5+j]; // (i,j,k)=(0,2,0)
   }
 
   PDM_log_trace_array_double(xyz_Pn, 3, "xyz on P2: ");
 
-  // vtk output
+  // vtk ouput of ho element
+
+  char        *filename1 = "P2_triangle_ho.vtk";
+  int          n_vtx    = 7;
+  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 7);
+  int *face_vtx = malloc(sizeof(int) * 6);
+  PDM_g_num_t *face_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  char        *vtx_field_name = "ho_bezier_basis";
+  double      *vtx_field = malloc(sizeof(double) * 7);
+
+  for (int i = 0; i < 6; i++) {
+    vtx_g_num[i] = i + 1;
+    vtx_field[i] = 0;
+  }
+
+  face_vtx[0] = 1;
+  face_vtx[1] = 3;
+  face_vtx[2] = 6;
+  face_vtx[3] = 2;
+  face_vtx[4] = 5;
+  face_vtx[5] = 4;
+
+  face_g_num[0] = 1;
+
+  PDM_vtk_write_std_elements_ho(filename1,
+                                2,
+                                6,
+                                tria_coord,
+                                vtx_g_num,
+                                PDM_MESH_NODAL_TRIAHO,
+                                1,
+                                face_vtx,
+                                face_g_num,
+                                0,
+                                NULL,
+                                NULL);
+
+  // vtk output of points
+
+  char        *filename2 = "P2_triangle_vtx.vtk";
+
+  vtx_g_num[6] = 7;
+  vtx_field[6] = 1;
 
   tria_coord[18] = xyz_Pn[0];
   tria_coord[19] = xyz_Pn[1];
   tria_coord[20] = xyz_Pn[2];
 
-  char        *filename = "P2_triangle.vtk";
-  int          n_vtx    = 7;
-  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 7);
-  char        *vtx_field_name = "ho_bezier_basis";
-  double      *vtx_field = malloc(sizeof(double) * 7);
-
-  for (int i = 0; i < 7; i++) {
-    vtx_g_num[i] = i + 1;
-    vtx_field[i] = 0;
-  }
-
-  vtx_field[6] = 1;
-
-  PDM_vtk_write_point_cloud_with_field(filename,
+  PDM_vtk_write_point_cloud_with_field(filename2,
                                        n_vtx,
                                        tria_coord,
                                        vtx_g_num,
