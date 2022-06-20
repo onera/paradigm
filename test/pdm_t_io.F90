@@ -50,18 +50,18 @@ program pdm_io_fortran
   !> Ecritrue Globale
   ptr_int(1)=1
   print '("0 ptr_int(1)=",i0)',ptr_int(1)
-  call PDM_io_global_write(id,4,1,c_loc(ptr_int))
+  call PDM_io_global_write(id,1,4,c_loc(ptr_int))
   print '("1 ptr_int(1)=",i0)',ptr_int(1)
-
+  
   ptr_r8(1)=1d0
-  call PDM_io_global_write(id,1,4,c_loc(ptr_int))
-
+  call PDM_io_global_write(id,1,8,c_loc(ptr_r8))
+  
   ptr_c8(1)=(1d0,1d0)
-  call PDM_io_global_write(id,1,4,c_loc(ptr_int))
+  call PDM_io_global_write(id,1,16,c_loc(ptr_c8))
   
   buffer="Bonjour !" ; buffer(80:80)=C_NULL_CHAR
   call PDM_io_global_write(id,1,80,c_loc(buffer))
-
+  
   call PDM_io_close(id)
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
