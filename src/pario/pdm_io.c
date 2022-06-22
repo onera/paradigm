@@ -1083,6 +1083,7 @@ void PDM_io_global_write
  const void        *donnees
 )
 {
+
   int n_donnees_ecrites = 0;
   int err_code = 0;
 
@@ -1216,7 +1217,7 @@ void PDM_io_global_write
         if (fichier->rang_actif) {
 	  /* Vérification de non dépassement de la taille maximale pour n_donnees */
 	  if (n_donnees > 2147483647) {
-	    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_read :"
+	    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
 		      " Erreur : n_donnees dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
 	    abort() ;
 	  }

@@ -25,7 +25,8 @@ program pdm_io_fortran
   complex(8), pointer                  :: ptr_c8 (:)
   character(len=:), pointer            :: buffer=>null()
   type(c_ptr)                          :: cptr
-  integer(4)                           :: rank,size,iErr
+  integer(4)                           :: rank,size,iErr, s_data
+  integer(kind = pdm_g_num_s)          :: n_data
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   call MPI_INIT(iErr)
@@ -61,20 +62,33 @@ program pdm_io_fortran
   if( rank==0 )print '(3x,"Ecriture Globale")'
   
   ptr_int(1)=rank
-  !print '("0 ptr_int(1)=",i0)',ptr_int(1)
-  call PDM_io_global_write(id,1,4,c_loc(ptr_int))
+  !
+  print '("0 ptr_int(1)=",i0)',ptr_int(1)
+
+  n_data = 1
+  s_data = 8
+  call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_int))
+ 
   !call PDM_io_global_write(id,4,1,c_loc(ptr_int))
   !print '("1 ptr_int(1)=",i0)',ptr_int(1)
   
   ptr_r8(1)=1d0
-  call PDM_io_global_write(id,1,8,c_loc(ptr_r8))
+  n_data = 1
+  s_data = 8
+  call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_r8))
   
   ptr_c8(1)=(1d0,1d0)
-  call PDM_io_global_write(id,1,16,c_loc(ptr_c8))
+  n_data = 1
+  s_data = 16
+  call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_c8))
 
   write(buffer,'("Ecriture Global depuis le rank: ",i3)')rank
   buffer(80:80)=C_NULL_CHAR
-  call PDM_io_global_write(id,1,80,c_loc(buffer))
+
+
+  n_data = 80
+  s_data = 1
+  call PDM_io_global_write(id,s_data,n_data,c_loc(buffer))
   !call PDM_io_global_write(id,80,1,c_loc(buffer))
   !<<< Ecriture Globale
   
@@ -86,8 +100,8 @@ program pdm_io_fortran
     integer, pointer                     :: nLinesRank(:)
     character(80)                        :: ligne
     character(80), pointer               :: lignes(:)
-    integer(4)                           :: shift
-    integer, pointer                     :: iTab(:)
+    integer(kind = pdm_g_num_s)          :: shift
+    integer(4), pointer:: iTab(:)
     
     if( rank==0 )print '(3x,"Ecriture Blocs")'
     
@@ -108,6 +122,10 @@ program pdm_io_fortran
     shift=sum([(nLinesRank(iRank),iRank=0,rank-1)]) +1    !> debut_bloc
     
     allocate(iTab(1:1)) ; iTab(1)=1                    !> <=
+
+  ! Erreur : Compile pas en gfortran (On ne peut pas mettre un tableau de lignes
+   !         Il faudrait prendre une chaine de caracteres concatenee ) 
+
     call PDM_io_par_block_write(                    &
     &    fichier=id                                ,&  !> unite
     &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,&  !> t_n_composantes
@@ -128,7 +146,7 @@ program pdm_io_fortran
     integer                              :: iLine,nLines
     character(80)                        :: ligne
     character(80), pointer               :: lignes(:)
-    integer, pointer                     :: indirection(:)
+    integer (kind = pdm_g_num_s), pointer:: indirection(:)
     integer, pointer                     :: iTab(:)
     
     if( rank==0 )print '(3x,"Ecriture Entrelacee")'
@@ -148,6 +166,8 @@ program pdm_io_fortran
     enddo
     
     allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
+  ! Erreur : Compile pas en gfortran (On ne peut pas mettre un tableau de lignes
+   !         Il faudrait prendre une chaine de caracteres concatenee ) 
     call PDM_io_par_interlaced_write(               &
     &    fichier        =id                        ,& !> unite
     &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,& !> t_n_composantes
@@ -187,21 +207,37 @@ program pdm_io_fortran
   !>>> Lecture Globale
   if( rank==0 )print '(3x,"Lecture Globale")'
   
-  call PDM_io_global_read(id,1,4,cptr)
-  call c_f_pointer(cptr=cptr, fptr=ptr_int, shape=[1])
+  n_data = 1
+  s_data = 4
+
+  print *, 'Read1'
+  call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_int))
+  ! call c_f_pointer(cptr=cptr, fptr=ptr_int, shape=[1])
   if( rank==0 )print '("ptr_int(1)=",i0)',ptr_int(1)
   
-  call PDM_io_global_read(id, 1, 8, cptr)
+  n_data = 1
+  s_data = 8
+  print *, 'Read2'
+  call PDM_io_global_read(id, s_data, n_data, cptr)
   call c_f_pointer(cptr=cptr, fptr=ptr_r8 , shape=[1])
   if( rank==0 )print '("ptr_r8 (1)=",e22.15)',ptr_r8(1)
   
-  call PDM_io_global_read(id, 1,16, cptr)
+  n_data = 1
+  s_data = 16
+  print *, 'Read3'
+  call PDM_io_global_read(id, s_data, n_data, cptr)
   call c_f_pointer(cptr=cptr, fptr=ptr_c8 , shape=[1])
   if( rank==0 )print '("ptr_r8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
   
-  call PDM_io_global_read(id, 1, 80, cptr)
-  call c_f_pointer(cptr=cptr, fptr=buffer, shape=[80])
-  if( rank==0 )print '("buffer: ",a)',buffer
+  n_data = 80
+  s_data = 1
+  print *, 'Read4'
+  call PDM_io_global_read(id, s_data, n_data, cptr)
+   
+  ! Erreur : Compile pas en gfortran (buffer pas accepte pour fptr) 
+  !  
+  ! call c_f_pointer(cptr=cptr, fptr=buffer, shape=[80])
+  ! if( rank==0 )print '("buffer: ",a)',buffer
   
   !<<< Lecture Globale
   
@@ -228,16 +264,16 @@ program pdm_io_fortran
     &    iErr                             )
     shift=sum([(nLinesRank(iRank),iRank=0,rank-1)]) +1 !> debut_bloc
     
-    allocate(iTab(1:1)) ; iTab(1)=1                    !> <=
-    call PDM_io_par_block_read(                     &
-    &    fichier=id                                ,&  !> unite
-    &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,&  !> t_n_composantes
-    &    n_composantes=iTab                        ,&  !> n_composantes
-    &    taille_donnee=80                          ,&  !> taille_donnee
-    &    n_donnees=nLines                          ,&  !> n_donnees
-    &    debut_bloc=shift                          ,&  !> debut_bloc
-    &    donnees=cptr                               )  !> donnees
-    deallocate(iTab)
+    ! allocate(iTab(1:1)) ; iTab(1)=1                    !> <=
+    ! call PDM_io_par_block_read(                     &
+    ! &    fichier=id                                ,&  !> unite
+    ! &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,&  !> t_n_composantes
+    ! &    n_composantes=iTab                        ,&  !> n_composantes
+    ! &    taille_donnee=80                          ,&  !> taille_donnee
+    ! &    n_donnees=nLines                          ,&  !> n_donnees
+    ! &    debut_bloc=shift                          ,&  !> debut_bloc
+    ! &    donnees=cptr                               )  !> donnees
+    ! deallocate(iTab)
     
     print '("lu rank= ",i0)',rank
     !allocate(lignes(1:nLines))
@@ -279,16 +315,16 @@ program pdm_io_fortran
       indirection(iLine)=rank+(iLine-1)*nLines+1 !> Rangement Rank/iLine
     enddo
     
-    allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
-    call PDM_io_par_interlaced_read(                &
-    &    fichier        =id                        ,& !> unite
-    &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,& !> t_n_composantes
-    &    n_composantes  =iTab                      ,& !> *n_composantes
-    &    taille_donnee  =80                        ,& !> taille_donnee
-    &    n_donnees      =nLines                    ,& !> n_donnees
-    &    indirection    =indirection               ,& !> *indirection
-    &    donnees        =cptr                       ) !> *donnees
-    deallocate(iTab)
+    ! allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
+    ! call PDM_io_par_interlaced_read(                &
+    ! &    fichier        =id                        ,& !> unite
+    ! &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,& !> t_n_composantes
+    ! &    n_composantes  =iTab                      ,& !> *n_composantes
+    ! &    taille_donnee  =80                        ,& !> taille_donnee
+    ! &    n_donnees      =nLines                    ,& !> n_donnees
+    ! &    indirection    =indirection               ,& !> *indirection
+    ! &    donnees        =cptr                       ) !> *donnees
+    ! deallocate(iTab)
     
     deallocate(indirection)
     
