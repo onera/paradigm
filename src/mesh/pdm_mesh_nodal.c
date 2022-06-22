@@ -1395,6 +1395,13 @@ PDM_Mesh_nodal_n_vtx_elt_get
   case PDM_MESH_NODAL_HEXAHO :
     return (order + 1) * (order + 1) * (order + 1);
     break;
+
+  case PDM_MESH_NODAL_BARHO_BEZIER:
+    return order + 1;
+    break;
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
+   return (order + 1) * (order + 2) / 2;
+    break;
   default :
     PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Poly3D\n");
   }

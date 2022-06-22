@@ -266,10 +266,9 @@ _basis_bezier_edge_derivative
  *
  * \brief Triangle Bézier basis derivative
  *
- * \param [in]  mesh_dimension  Mesh dimension
  * \param [in]  order           Order
  * \param [in]  n_pts           Number of points
- * \param [in]  uv              Parametric coordinates (size = \ref n_pts)
+ * \param [in]  uvw              Parametric coordinates (size = \ref n_pts)
  * \param [out] dw_du           Weights derivative with respect to u (size = n_nodes * \ref n_pts)
  * \param [out] dw_dv           Weights derivative with respect to v (size = n_nodes * \ref n_pts)
  * \param [out] dw_dw           Weights derivative with respect to w = 1 - u - v (size = n_nodes * \ref n_pts)
@@ -279,182 +278,178 @@ _basis_bezier_edge_derivative
 static void
 _basis_bezier_tria_derivative
 (
- const int              mesh_dimension,
  const int              order,
  const int              n_pts,
- const double *restrict uv,
+ const double *restrict uvw,
  double       *restrict dw_du,
  double       *restrict dw_dv,
  double       *restrict dw_dw
 )
 {
-  if (mesh_dimension == 2) {
 
-    if (order == 1) {
-      for (int i = 0; i < n_pts; i++) {
+  if (order == 1) {
+    for (int i = 0; i < n_pts; i++) {
 
-        dw_du[3*i]   = -1;
-        dw_du[3*i+1] = 1;
-        dw_du[3*i+2] = 0;
+      dw_du[3*i]   = -1;
+      dw_du[3*i+1] = 1;
+      dw_du[3*i+2] = 0;
 
-        dw_dv[3*i]   = -1;
-        dw_dv[3*i+1] = 0;
-        dw_dv[3*i+2] = 1;
+      dw_dv[3*i]   = -1;
+      dw_dv[3*i+1] = 0;
+      dw_dv[3*i+2] = 1;
 
-      }
     }
+  }
 
-    if (order == 2) {
-      for (int i = 0; i < n_pts; i++) {
+  if (order == 2) {
+    for (int i = 0; i < n_pts; i++) {
 
-        double u =  uv[2*i];
-        double v =  uv[2*i+1];
+      double u =  uvw[2*i];
+      double v =  uvw[2*i+1];
 
-        dw_du[6*i+0] = 2 * (-1 + u + v);    // (i,j,k)=(0,0,2)
-        dw_du[6*i+1] = 2 * (1 - 2 * u - v); // (i,j,k)=(1,0,1)
-        dw_du[6*i+2] = 2 * u;               // (i,j,k)=(2,0,0)
-        dw_du[6*i+3] = 2 * (- v);           // (i,j,k)=(0,1,1)
-        dw_du[6*i+4] = 2 * v;               // (i,j,k)=(1,1,0)
-        dw_du[6*i+5] = 0;                   // (i,j,k)=(0,2,0)
+      dw_du[6*i+0] = 2 * (-1 + u + v);    // (i,j,k)=(0,0,2)
+      dw_du[6*i+1] = 2 * (1 - 2 * u - v); // (i,j,k)=(1,0,1)
+      dw_du[6*i+2] = 2 * u;               // (i,j,k)=(2,0,0)
+      dw_du[6*i+3] = 2 * (- v);           // (i,j,k)=(0,1,1)
+      dw_du[6*i+4] = 2 * v;               // (i,j,k)=(1,1,0)
+      dw_du[6*i+5] = 0;                   // (i,j,k)=(0,2,0)
 
-        dw_dv[6*i+0] = 2 * (-1 + v + u);    // (i,j,k)=(0,0,2)
-        dw_dv[6*i+1] = 2 * (- u);           // (i,j,k)=(1,0,1)
-        dw_dv[6*i+2] = 0;                   // (i,j,k)=(2,0,0)
-        dw_dv[6*i+3] = 2 * (1 - u - 2 * v); // (i,j,k)=(0,1,1)
-        dw_dv[6*i+4] = 2 * u;               // (i,j,k)=(1,1,0)
-        dw_dv[6*i+5] = 2 * v;               // (i,j,k)=(0,2,0)
+      dw_dv[6*i+0] = 2 * (-1 + v + u);    // (i,j,k)=(0,0,2)
+      dw_dv[6*i+1] = 2 * (- u);           // (i,j,k)=(1,0,1)
+      dw_dv[6*i+2] = 0;                   // (i,j,k)=(2,0,0)
+      dw_dv[6*i+3] = 2 * (1 - u - 2 * v); // (i,j,k)=(0,1,1)
+      dw_dv[6*i+4] = 2 * u;               // (i,j,k)=(1,1,0)
+      dw_dv[6*i+5] = 2 * v;               // (i,j,k)=(0,2,0)
 
-      }
     }
+  }
 
-    if (order == 3) {
+  if (order == 3) {
 
-      for (int i = 0; i < n_pts; i++) {
+    for (int i = 0; i < n_pts; i++) {
 
-        double u =  uv[2*i];
-        double v =  uv[2*i+1];
+      double u =  uvw[2*i];
+      double v =  uvw[2*i+1];
 
-        dw_du[10*i+0] = 3 * (- u * u - 1 + 2 * v + 2 * u - v * v - 2 * u * v);   // (i,j,k)=(003)
-        dw_du[10*i+3] = 3 * u * u;                                               // (i,j,k)=(300)
-        dw_du[10*i+9] = 0;                                                       // (i,j,k)=(030)
-        dw_du[10*i+1] = (1 - 4 * u - 2 * v + 4 * u * v + 3 * u * u + v * v);     // (i,j,k)=(102)
-        dw_du[10*i+2] = 3 * (2 * u - 3 * u * u - 2 * u * v);                     // (i,j,k)=(201)
-        dw_du[10*i+6] = 6 * u * v;                                               // (i,j,k)=(210)
-        dw_du[10*i+8] = 3 * v * v;                                               // (i,j,k)=(120)
-        dw_du[10*i+7] = -3 * v * v;                                              // (i,j,k)=(021)
-        dw_du[10*i+4] = 3 * (1 - 2 * u - 2 * v * v + 2 * u * v);                 // (i,j,k)=(012)
-        dw_du[10*i+5] = 6 * (v - 2 * u * v - v * v);                             // (i,j,k)=(111)
+      dw_du[10*i+0] = 3 * (- u * u - 1 + 2 * v + 2 * u - v * v - 2 * u * v);   // (i,j,k)=(003)
+      dw_du[10*i+3] = 3 * u * u;                                               // (i,j,k)=(300)
+      dw_du[10*i+9] = 0;                                                       // (i,j,k)=(030)
+      dw_du[10*i+1] = (1 - 4 * u - 2 * v + 4 * u * v + 3 * u * u + v * v);     // (i,j,k)=(102)
+      dw_du[10*i+2] = 3 * (2 * u - 3 * u * u - 2 * u * v);                     // (i,j,k)=(201)
+      dw_du[10*i+6] = 6 * u * v;                                               // (i,j,k)=(210)
+      dw_du[10*i+8] = 3 * v * v;                                               // (i,j,k)=(120)
+      dw_du[10*i+7] = -3 * v * v;                                              // (i,j,k)=(021)
+      dw_du[10*i+4] = 3 * (1 - 2 * u - 2 * v * v + 2 * u * v);                 // (i,j,k)=(012)
+      dw_du[10*i+5] = 6 * (v - 2 * u * v - v * v);                             // (i,j,k)=(111)
 
-        dw_dv[10*i+0] = 3 * (- v * v - 1 + 2 * u + 2 * v - 2 * u * v - u * u);   // (i,j,k)=(003)
-        dw_dv[10*i+3] = 0;                                                       // (i,j,k)=(300)
-        dw_dv[10*i+9] = 3 * v * v;                                               // (i,j,k)=(030)
-        dw_dv[10*i+1] = 3 * (-2 * u + 2 * u * u + 2 * v * u);                    // (i,j,k)=(102)
-        dw_dv[10*i+2] = -3 * u * u;                                              // (i,j,k)=(201)
-        dw_dv[10*i+6] = 3 * u * u;                                               // (i,j,k)=(210)
-        dw_dv[10*i+8] = 6 * u * v;                                               // (i,j,k)=(120)
-        dw_dv[10*i+7] = 3 * (2* v - 2 * u * v - 3 * v * v);                      // (i,j,k)=(021)
-        dw_dv[10*i+4] = 3 * (1 - 2 * u - 4 * v + 4 * u * v + u * u + 3 * v * v); // (i,j,k)=(012)
-        dw_dv[10*i+5] = 6 * (u - u * u - 2 * u * v);                             // (i,j,k)=(111)
+      dw_dv[10*i+0] = 3 * (- v * v - 1 + 2 * u + 2 * v - 2 * u * v - u * u);   // (i,j,k)=(003)
+      dw_dv[10*i+3] = 0;                                                       // (i,j,k)=(300)
+      dw_dv[10*i+9] = 3 * v * v;                                               // (i,j,k)=(030)
+      dw_dv[10*i+1] = 3 * (-2 * u + 2 * u * u + 2 * v * u);                    // (i,j,k)=(102)
+      dw_dv[10*i+2] = -3 * u * u;                                              // (i,j,k)=(201)
+      dw_dv[10*i+6] = 3 * u * u;                                               // (i,j,k)=(210)
+      dw_dv[10*i+8] = 6 * u * v;                                               // (i,j,k)=(120)
+      dw_dv[10*i+7] = 3 * (2* v - 2 * u * v - 3 * v * v);                      // (i,j,k)=(021)
+      dw_dv[10*i+4] = 3 * (1 - 2 * u - 4 * v + 4 * u * v + u * u + 3 * v * v); // (i,j,k)=(012)
+      dw_dv[10*i+5] = 6 * (u - u * u - 2 * u * v);                             // (i,j,k)=(111)
 
-      }
     }
+  }
 
-  } // en 2D case
+  // if (mesh_dimension == 3) {
 
-  if (mesh_dimension == 3) {
+  //   if (order == 1) {
+  //     for (int i = 0; i < n_pts; i++) {
 
-    if (order == 1) {
-      for (int i = 0; i < n_pts; i++) {
+  //       dw_du[3*i]   = 0;
+  //       dw_du[3*i+1] = 1;
+  //       dw_du[3*i+2] = 0;
 
-        dw_du[3*i]   = 0;
-        dw_du[3*i+1] = 1;
-        dw_du[3*i+2] = 0;
+  //       dw_dv[3*i]   = 0;
+  //       dw_dv[3*i+1] = 0;
+  //       dw_dv[3*i+2] = 1;
 
-        dw_dv[3*i]   = 0;
-        dw_dv[3*i+1] = 0;
-        dw_dv[3*i+2] = 1;
+  //       dw_dw[3*i]   = 1;
+  //       dw_dw[3*i+1] = 0;
+  //       dw_dw[3*i+2] = 0;
 
-        dw_dw[3*i]   = 1;
-        dw_dw[3*i+1] = 0;
-        dw_dw[3*i+2] = 0;
+  //     }
+  //   }
 
-      }
-    }
+  //   if (order == 2) {
+  //     for (int i = 0; i < n_pts; i++) {
 
-    if (order == 2) {
-      for (int i = 0; i < n_pts; i++) {
+  //       double u =  uv[2*i];
+  //       double v =  uv[2*i+1];
 
-        double u =  uv[2*i];
-        double v =  uv[2*i+1];
+  //       dw_du[6*i+0] = 0;              // (i,j,k)=(0,0,2)
+  //       dw_du[6*i+1] = 2 * (1 - u -v); // (i,j,k)=(1,0,1)
+  //       dw_du[6*i+2] = 2 * u;          // (i,j,k)=(2,0,0)
+  //       dw_du[6*i+3] = 0;              // (i,j,k)=(0,1,1)
+  //       dw_du[6*i+4] = 2 * v;          // (i,j,k)=(1,1,0)
+  //       dw_du[6*i+5] = 0;              // (i,j,k)=(0,2,0)
 
-        dw_du[6*i+0] = 0;              // (i,j,k)=(0,0,2)
-        dw_du[6*i+1] = 2 * (1 - u -v); // (i,j,k)=(1,0,1)
-        dw_du[6*i+2] = 2 * u;          // (i,j,k)=(2,0,0)
-        dw_du[6*i+3] = 0;              // (i,j,k)=(0,1,1)
-        dw_du[6*i+4] = 2 * v;          // (i,j,k)=(1,1,0)
-        dw_du[6*i+5] = 0;              // (i,j,k)=(0,2,0)
+  //       dw_dv[6*i+0] = 0;              // (i,j,k)=(0,0,2)
+  //       dw_dv[6*i+1] = 0;              // (i,j,k)=(1,0,1)
+  //       dw_dv[6*i+2] = 0;              // (i,j,k)=(2,0,0)
+  //       dw_dv[6*i+3] = 2 * (1 - u -v); // (i,j,k)=(0,1,1)
+  //       dw_dv[6*i+4] = 2 * u;          // (i,j,k)=(1,1,0)
+  //       dw_dv[6*i+5] = 2 * v;          // (i,j,k)=(0,2,0)
 
-        dw_dv[6*i+0] = 0;              // (i,j,k)=(0,0,2)
-        dw_dv[6*i+1] = 0;              // (i,j,k)=(1,0,1)
-        dw_dv[6*i+2] = 0;              // (i,j,k)=(2,0,0)
-        dw_dv[6*i+3] = 2 * (1 - u -v); // (i,j,k)=(0,1,1)
-        dw_dv[6*i+4] = 2 * u;          // (i,j,k)=(1,1,0)
-        dw_dv[6*i+5] = 2 * v;          // (i,j,k)=(0,2,0)
+  //       dw_dv[6*i+0] = 2 * (1 - u -v); // (i,j,k)=(0,0,2)
+  //       dw_dv[6*i+1] = 2 * u;          // (i,j,k)=(1,0,1)
+  //       dw_dv[6*i+2] = 0;              // (i,j,k)=(2,0,0)
+  //       dw_dv[6*i+3] = 2 * v;          // (i,j,k)=(0,1,1)
+  //       dw_dv[6*i+4] = 0;              // (i,j,k)=(1,1,0)
+  //       dw_dv[6*i+5] = 0;              // (i,j,k)=(0,2,0)
 
-        dw_dv[6*i+0] = 2 * (1 - u -v); // (i,j,k)=(0,0,2)
-        dw_dv[6*i+1] = 2 * u;          // (i,j,k)=(1,0,1)
-        dw_dv[6*i+2] = 0;              // (i,j,k)=(2,0,0)
-        dw_dv[6*i+3] = 2 * v;          // (i,j,k)=(0,1,1)
-        dw_dv[6*i+4] = 0;              // (i,j,k)=(1,1,0)
-        dw_dv[6*i+5] = 0;              // (i,j,k)=(0,2,0)
+  //     }
+  //   }
 
-      }
-    }
+  //   if (order == 3) {
 
-    if (order == 3) {
+  //     for (int i = 0; i < n_pts; i++) {
 
-      for (int i = 0; i < n_pts; i++) {
+  //       double u =  uv[2*i];
+  //       double v =  uv[2*i+1];
 
-        double u =  uv[2*i];
-        double v =  uv[2*i+1];
+  //       dw_du[10*i+0] =  0;                           // (i,j,k)=(003)
+  //       dw_du[10*i+3] =  3 * u * u;                   // (i,j,k)=(300)
+  //       dw_du[10*i+9] =  0;                           // (i,j,k)=(030)
+  //       dw_du[10*i+1] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(102)
+  //       dw_du[10*i+2] =  6 * u * (1 -u -v);           // (i,j,k)=(201)
+  //       dw_du[10*i+6] =  6 * u * v;                   // (i,j,k)=(210)
+  //       dw_du[10*i+8] =  3 *  v * v;                  // (i,j,k)=(120)
+  //       dw_du[10*i+7] =  0;                           // (i,j,k)=(021)
+  //       dw_du[10*i+4] =  0;                           // (i,j,k)=(012)
+  //       dw_du[10*i+5] =  6 * v * (1 - u -v);          // (i,j,k)=(111)
 
-        dw_du[10*i+0] =  0;                           // (i,j,k)=(003)
-        dw_du[10*i+3] =  3 * u * u;                   // (i,j,k)=(300)
-        dw_du[10*i+9] =  0;                           // (i,j,k)=(030)
-        dw_du[10*i+1] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(102)
-        dw_du[10*i+2] =  6 * u * (1 -u -v);           // (i,j,k)=(201)
-        dw_du[10*i+6] =  6 * u * v;                   // (i,j,k)=(210)
-        dw_du[10*i+8] =  3 *  v * v;                  // (i,j,k)=(120)
-        dw_du[10*i+7] =  0;                           // (i,j,k)=(021)
-        dw_du[10*i+4] =  0;                           // (i,j,k)=(012)
-        dw_du[10*i+5] =  6 * v * (1 - u -v);          // (i,j,k)=(111)
+  //       dw_dv[10*i+0] =  0;                           // (i,j,k)=(003)
+  //       dw_dv[10*i+3] =  0;                           // (i,j,k)=(300)
+  //       dw_dv[10*i+9] =  3 * v * v;                   // (i,j,k)=(030)
+  //       dw_dv[10*i+1] =  0;                           // (i,j,k)=(102)
+  //       dw_dv[10*i+2] =  0;                           // (i,j,k)=(201)
+  //       dw_dv[10*i+6] =  3 * u * u;                   // (i,j,k)=(210)
+  //       dw_dv[10*i+8] =  6 * u * v;                   // (i,j,k)=(120)
+  //       dw_dv[10*i+7] =  6 * v * (1 - u -v);          // (i,j,k)=(021)
+  //       dw_dv[10*i+4] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(012)
+  //       dw_dv[10*i+5] =  6 * u * (1 - u -v);          // (i,j,k)=(111)
 
-        dw_dv[10*i+0] =  0;                           // (i,j,k)=(003)
-        dw_dv[10*i+3] =  0;                           // (i,j,k)=(300)
-        dw_dv[10*i+9] =  3 * v * v;                   // (i,j,k)=(030)
-        dw_dv[10*i+1] =  0;                           // (i,j,k)=(102)
-        dw_dv[10*i+2] =  0;                           // (i,j,k)=(201)
-        dw_dv[10*i+6] =  3 * u * u;                   // (i,j,k)=(210)
-        dw_dv[10*i+8] =  6 * u * v;                   // (i,j,k)=(120)
-        dw_dv[10*i+7] =  6 * v * (1 - u -v);          // (i,j,k)=(021)
-        dw_dv[10*i+4] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(012)
-        dw_dv[10*i+5] =  6 * u * (1 - u -v);          // (i,j,k)=(111)
+  //       dw_dv[10*i+0] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(003)
+  //       dw_dv[10*i+3] =  0;                           // (i,j,k)=(300)
+  //       dw_dv[10*i+9] =  0;                           // (i,j,k)=(030)
+  //       dw_dv[10*i+1] =  6 * u * (1 - u -v);          // (i,j,k)=(102)
+  //       dw_dv[10*i+2] =  3 * u * u;                   // (i,j,k)=(201)
+  //       dw_dv[10*i+6] =  0;                           // (i,j,k)=(210)
+  //       dw_dv[10*i+8] =  0;                           // (i,j,k)=(120)
+  //       dw_dv[10*i+7] =  3 * v * v;                   // (i,j,k)=(021)
+  //       dw_dv[10*i+4] =  6 * v * (1 - u -v);          // (i,j,k)=(012)
+  //       dw_dv[10*i+5] =  6 * u * v;                   // (i,j,k)=(111)
 
-        dw_dv[10*i+0] =  3 * (1 - u -v) * (1 - u -v); // (i,j,k)=(003)
-        dw_dv[10*i+3] =  0;                           // (i,j,k)=(300)
-        dw_dv[10*i+9] =  0;                           // (i,j,k)=(030)
-        dw_dv[10*i+1] =  6 * u * (1 - u -v);          // (i,j,k)=(102)
-        dw_dv[10*i+2] =  3 * u * u;                   // (i,j,k)=(201)
-        dw_dv[10*i+6] =  0;                           // (i,j,k)=(210)
-        dw_dv[10*i+8] =  0;                           // (i,j,k)=(120)
-        dw_dv[10*i+7] =  3 * v * v;                   // (i,j,k)=(021)
-        dw_dv[10*i+4] =  6 * v * (1 - u -v);          // (i,j,k)=(012)
-        dw_dv[10*i+5] =  6 * u * v;                   // (i,j,k)=(111)
+  //     }
+  //   }
 
-      }
-    }
-
-  } // en 3D case
+  // } // en 3D case
 
 
 
@@ -500,6 +495,50 @@ PDM_ho_bezier_basis
   case PDM_MESH_NODAL_TRIA3:
   case PDM_MESH_NODAL_TRIAHO:
     _basis_bezier_tria(order, n_pts, uvw, weights);
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet type other than BAR and TRIA\n");
+    break;
+  }
+}
+
+/**
+ *
+ * \brief Evaluate high-order basis Bézier functions derivatives
+ *
+ *
+ * \param [in]  type      Element type structure
+ * \param [in]  order     Element order
+ * \param [in]  n_pts     Number of points
+ * \param [in]  uvw       Parametric coordinates of the points (size = elt_dim * \ref n_pts)
+ * \param [out] dw_du   Weights derivatives with respect to u
+ * \param [out] dw_dv   Weights derivatives with respect to v
+ * \param [out] dw_dw   Weights derivatives with respect to w
+ *
+ */
+
+void
+PDM_ho_bezier_basis_derivative
+(
+ const PDM_Mesh_nodal_elt_t  type,
+ const int                   order,
+ const int                   n_pts,
+ const double               *uvw,
+ double            *restrict dw_du,
+ double            *restrict dw_dv,
+ double            *restrict dw_dw
+)
+{
+ switch (type) {
+
+  case PDM_MESH_NODAL_BAR2:
+  case PDM_MESH_NODAL_BARHO:
+    _basis_bezier_edge_derivative(order, n_pts, uvw, dw_du);
+    break;
+
+  case PDM_MESH_NODAL_TRIA3:
+  case PDM_MESH_NODAL_TRIAHO:
+    _basis_bezier_tria_derivative(order, n_pts, uvw, dw_du, dw_dv, dw_dw);
     break;
   default:
     PDM_error(__FILE__, __LINE__, 0, "Not implemented yet type other than BAR and TRIA\n");

@@ -108,6 +108,14 @@ static int _vtk_elt_type
     case PDM_MESH_NODAL_HEXAHO:
       vtk_elt_type = 72;
       break;
+
+    case PDM_MESH_NODAL_BARHO_BEZIER:
+      vtk_elt_type = 75;
+      break;
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
+      vtk_elt_type = 76;
+      break;
+
     default:
       PDM_error(__FILE__, __LINE__, 0, "type %d is not a valid std elt type\n", elt_type);
   }
@@ -1583,6 +1591,27 @@ PDM_vtk_write_std_elements_double
   fclose(f);
 }
 
+/**
+ * \brief Export a point cloud to ASCII VTK format (unstructured grid of points)
+ *
+ * \param [in]  filename              Output file name
+ * \param [in]  n_vtx                 Number of points
+ * \param [in]  vtx_coord             Coordinates of the points (size = 3 * \ref n_vtx)
+ *                                    (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num             Global ids of the points (or NULL)
+ * \param [in]  color                 Integer color of the points (or NULL)
+ * \param [in]  n_vtx_field           Number of vertex fields
+ * \param [in]  vtx_field_name        Name of those vertex fields
+ * \param [in]  vtx_field             Vertex fields
+ * \param [in]  n_vtx_vector_field    Number of vertex vector fields
+ * \param [in]  vtx_vector_field_name Name of those vertex vector fields
+ * \param [in]  vtx_vector_field      Vertex vector fields
+ * \param [in]  n_vtx_normal_field    Number of vertex normal fields
+ * \param [in]  vtx_normal_field_name Name of those vertex normal fields
+ * \param [in]  vtx_normal_field      Vertex normal fields
+ *
+ */
+
 void
 PDM_vtk_write_point_cloud_with_field
 (
@@ -1593,7 +1622,13 @@ PDM_vtk_write_point_cloud_with_field
  const int          color[],
  const int          n_vtx_field,
  const char        *vtx_field_name[],
- const double      *vtx_field[]
+ const double      *vtx_field[],
+ const int          n_vtx_vector_field,
+ const char        *vtx_vector_field_name[],
+ const double      *vtx_vector_field[],
+ const int          n_vtx_normal_field,
+ const char        *vtx_normal_field_name[],
+ const double      *vtx_normal_field[]
 )
 {
   FILE *f = fopen(filename, "w");
@@ -1619,6 +1654,38 @@ PDM_vtk_write_point_cloud_with_field
   fprintf(f, "CELL_TYPES %d\n", n_vtx);
   for (int i = 0; i < n_vtx; i++) {
     fprintf(f, "1\n");
+  }
+
+  if (n_vtx_vector_field > 0 || n_vtx_normal_field > 0) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+  }
+
+  if (n_vtx_vector_field > 0) {
+    assert (vtx_vector_field != NULL);
+    for (int h = 0; h < n_vtx_vector_field; h++) {
+      assert (vtx_vector_field_name[h] != NULL);
+      fprintf(f, "VECTORS %s double\n", vtx_vector_field_name[h]);
+      for (int i = 0; i < n_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          fprintf(f, "%.20lf ", vtx_vector_field[h][3*i+j]);
+        }
+        fprintf(f, "\n");
+      }
+    }
+  }
+
+  if (n_vtx_normal_field > 0) {
+    assert (vtx_normal_field != NULL);
+    for (int h = 0; h < n_vtx_normal_field; h++) {
+      assert (vtx_normal_field_name[h] != NULL);
+      fprintf(f, "NORMALS %s double\n", vtx_normal_field_name[h]);
+      for (int i = 0; i < n_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          fprintf(f, "%.20lf ", vtx_normal_field[h][3*i+j]);
+        }
+        fprintf(f, "\n");
+      }
+    }
   }
 
   if (vtx_g_num != NULL) {

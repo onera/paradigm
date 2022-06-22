@@ -96,163 +96,272 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
 
+  int order = 3;
+  int n_vtx_triangle;
+
   // Set-up test
-  // double *line       = malloc(sizeof(double) * 6);
-  double tria_coord[21];
-  // double ip[3];
+  double tria_coord[330];
 
-  // line[0] = 0; line[3] = 0;
-  // line[1] = 0; line[4] = 0;
-  // line[2] = 0; line[5] = 0;
+  // order 1
+  if (order == 1) {
+    n_vtx_triangle = 3;
+    // (i,j,k)=(0,0,1)
+    tria_coord[0] = 0;
+    tria_coord[1] = 0;
+    tria_coord[2] = 10;
 
-  // (i,j,k)=(0,0,2)
-  tria_coord[0] = 0;
-  tria_coord[1] = 0;
-  tria_coord[2] = 10;
+    // (i,j,k)=(1,0,0)
+    tria_coord[0] = 10;
+    tria_coord[1] = 0;
+    tria_coord[2] = 10;
 
-  // (i,j,k)=(1,0,1)
-  tria_coord[3] = 10;
-  tria_coord[4] = 0;
-  tria_coord[5] = 20;
+    // (i,j,k)=(0,1,0)
+    tria_coord[0] = 0;
+    tria_coord[1] = 10;
+    tria_coord[2] = 10;
+  }
 
-  // (i,j,k)=(2,0,0)
-  tria_coord[6] = 20;
-  tria_coord[7] = 0;
-  tria_coord[8] = 10;
+  // order 2
+  if (order == 2) {
+    n_vtx_triangle = 6;
+    // (i,j,k)=(0,0,2)
+    tria_coord[0] = 0;
+    tria_coord[1] = 0;
+    tria_coord[2] = 10;
 
-  // (i,j,k)=(0,1,1)
-  tria_coord[9] = 0;
-  tria_coord[10] = 10;
-  tria_coord[11] = 20;
+    // (i,j,k)=(1,0,1)
+    tria_coord[3] = 10;
+    tria_coord[4] = 0;
+    tria_coord[5] = 20;
 
-  // (i,j,k)=(1,1,0)
-  tria_coord[12] = 10;
-  tria_coord[13] = 10;
-  tria_coord[14] = 20;
+    // (i,j,k)=(2,0,0)
+    tria_coord[6] = 20;
+    tria_coord[7] = 0;
+    tria_coord[8] = 10;
 
-  // (i,j,k)=(0,2,0)
-  tria_coord[15] = 0;
-  tria_coord[16] = 20;
-  tria_coord[17] = 10;
+    // (i,j,k)=(0,1,1)
+    tria_coord[9] = 0;
+    tria_coord[10] = 10;
+    tria_coord[11] = 20;
 
-  // // Do triangle P1 line intersection
+    // (i,j,k)=(1,1,0)
+    tria_coord[12] = 10;
+    tria_coord[13] = 10;
+    tria_coord[14] = 20;
 
-  // PDM_triangle_line_intersection(line, tria_coord, ip);
+    // (i,j,k)=(0,2,0)
+    tria_coord[15] = 0;
+    tria_coord[16] = 20;
+    tria_coord[17] = 10;
+  }
 
-  // // Construct matrices.  Since we have over determined system, need to find
-  // // which 2 out of 3 equations to use to develop equations. (Any 2 should
-  // // work since we've projected point to plane.)
+  // order 3
+  if (order == 3) {
+    n_vtx_triangle = 10;
+    // (i,j,k)=(0,0,3)
+    tria_coord[0] = 0;
+    tria_coord[1] = 0;
+    tria_coord[2] = 10;
 
-  // double rhs[2], c1[2], c2[2];
+    // (i,j,k)=(1,0,2)
+    tria_coord[3] = 10;
+    tria_coord[4] = 0;
+    tria_coord[5] = 20;
 
-  // for (int i = 0; i < 2; i++) {
-  //   rhs[i] = ip[i] - tria_coord[6 + i];
-  //   c1[i] = tria_coord[i] - tria_coord[6 + i];
-  //   c2[i] = tria_coord[3 + i] - tria_coord[6 + i];
-  // }
+    // (i,j,k)=(2,0,1)
+    tria_coord[6] = 20;
+    tria_coord[7] = 0;
+    tria_coord[8] = 30;
 
-  // double det = PDM_DETERMINANT2X2(c1,c2);
+    // (i,j,k)=(3,0,0)
+    tria_coord[9] = 30;
+    tria_coord[10] = 0;
+    tria_coord[11] = 10;
 
-  // double pcoords[3];
+    // (i,j,k)=(0,1,2)
+    tria_coord[12] = 0;
+    tria_coord[13] = 10;
+    tria_coord[14] = 20;
 
-  // pcoords[0] = PDM_DETERMINANT2X2(rhs,c2) / det;
-  // pcoords[1] = PDM_DETERMINANT2X2(c1,rhs) / det;
+    // (i,j,k)=(1,1,1)
+    tria_coord[15] = 10;
+    tria_coord[16] = 10;
+    tria_coord[17] = 40;
 
-  // double weights[3];
-  // double closest_point[3];
+    // (i,j,k)=(2,1,0)
+    tria_coord[18] = 20;
+    tria_coord[19] = 20;
+    tria_coord[20] = 30;
 
-  // weights[0] = 1 - (pcoords[0] + pcoords[1]);
-  // weights[1] = pcoords[0];
-  // weights[2] = pcoords[1];
-  // if ( weights[0] >= 0.0 && weights[0] <= 1.0 &&
-  //      weights[1] >= 0.0 && weights[1] <= 1.0 &&
-  //      weights[2] >= 0.0 && weights[2] <= 1.0 ) {
+    // (i,j,k)=(0,2,1)
+    tria_coord[21] = 0;
+    tria_coord[22] = 30;
+    tria_coord[23] = 30;
 
-  //   // Projection distance
+    // (i,j,k)=(1,2,0)
+    tria_coord[24] = 10;
+    tria_coord[25] = 20;
+    tria_coord[26] = 30;
 
-  //   closest_point[0] = ip[0];
-  //   closest_point[1] = ip[1];
-  //   closest_point[2] = ip[2];
+    // (i,j,k)=(0,3,0)
+    tria_coord[27] = 0;
+    tria_coord[28] = 30;
+    tria_coord[29] = 10;
 
-  // } // end is inside case
+  }
 
-  // // Get uvw in triangle Pn
+  double vector_du[330];
+  double vector_dv[330];
+  double normal[330];
 
-  // double uv_clossest_Pn[3];
-
-  // double _uvPn_sub_tria[6];
-
-  // _uvPn_sub_tria[0] = uv_nodes[2*idx1];
-  // _uvPn_sub_tria[1] = uv_nodes[2*idx1+1];
-  // _uvPn_sub_tria[2] = uv_nodes[2*idx2];
-  // _uvPn_sub_tria[3] = uv_nodes[2*idx2+1];
-  // _uvPn_sub_tria[4] = uv_nodes[2*idx3];
-  // _uvPn_sub_tria[5] = uv_nodes[2*idx3+1];
-
-  // for (int j = 0; j < 2; j++) {
-  //   for (int k = 0; k < 3; k++) {
-  //     uv_clossest_Pn[j] += weights[k] * uvPn_sub_tria[2*k + j];
-  //   }
-  // }
+  for (int i = 0; i < n_vtx_triangle; i++) {
+    for (int j = 0; j < 3; j++) {
+      vector_du[3*i + j] = 0;
+      vector_dv[3*i + j] = 0;
+      normal[3*i + j] = 0;
+    }
+  }
 
   // Get xyz coordinates from uvw coordinates
 
   double uvw[3];
-  double weights[6];
+  double weights[n_vtx_triangle];
+  double dw_du[n_vtx_triangle];
+  double dw_dv[n_vtx_triangle];
+  int n_vtx = n_vtx_triangle;
+  double pt_du[3];
+  double pt_dv[3];
+  double pt_normal[3];
+  double pt_normal_module;
 
-  uvw[0] = 0.25;
-  uvw[1] = 0.25;
-  uvw[2] = 0.5;
 
-  PDM_ho_bezier_basis(PDM_MESH_NODAL_TRIAHO,
-                      2,
-                      1,
-                      uvw,
-                      weights);
+  for (int i = 0; i < 11; i++) {
 
-  double xyz_Pn[3] = {0, 0, 0};
+    // double rd1 = (double)rand() / (double)RAND_MAX;
+    // uvw[0] = rd1;
 
-  for (int j = 0; j < 3; j++) {
-    xyz_Pn[j] += weights[0] * tria_coord[3*0+j]; // (i,j,k)=(0,0,2)
-    xyz_Pn[j] += weights[1] * tria_coord[3*1+j]; // (i,j,k)=(1,0,1)
-    xyz_Pn[j] += weights[2] * tria_coord[3*2+j]; // (i,j,k)=(2,0,0)
-    xyz_Pn[j] += weights[3] * tria_coord[3*3+j]; // (i,j,k)=(0,1,1)
-    xyz_Pn[j] += weights[4] * tria_coord[3*4+j]; // (i,j,k)=(1,1,0)
-    xyz_Pn[j] += weights[5] * tria_coord[3*5+j]; // (i,j,k)=(0,2,0)
-  }
+    // double rd2 = (double)rand() / (double)RAND_MAX;
+    // rd2 = rd2*(1-rd1); // normalize between [0,1-rd1]
+    // uvw[1] = rd2;
 
-  PDM_log_trace_array_double(xyz_Pn, 3, "xyz on P2: ");
+    // uvw[2] = 1 - uvw[0] - uvw[1];
+
+    uvw[0] = 0.1 * i;
+
+    for (int k = 0; k < (10-i+1); k++) {
+
+      uvw[1] = 0.1 * k;
+      uvw[2] = PDM_ABS(1 - uvw[0] - uvw[1]);
+
+      PDM_ho_bezier_basis(PDM_MESH_NODAL_TRIAHO,
+                          order,
+                          1,
+                          uvw,
+                          weights);
+
+      double xyz_Pn[3] = {0, 0, 0};
+
+      for (int j = 0; j < 3; j++) {
+        for (int l = 0; l < n_vtx_triangle; l++) {
+          xyz_Pn[j] += weights[l] * tria_coord[3*l+j];
+        } // end loop on triangle points
+      }
+
+      tria_coord[3*n_vtx    ] = xyz_Pn[0];
+      tria_coord[3*n_vtx + 1] = xyz_Pn[1];
+      tria_coord[3*n_vtx + 2] = xyz_Pn[2];
+
+      PDM_ho_bezier_basis_derivative(PDM_MESH_NODAL_TRIAHO,
+                                     order,
+                                     1,
+                                     uvw,
+                                     dw_du,
+                                     dw_dv,
+                                     NULL);
+
+      for (int j = 0; j < 3; j++) {
+        pt_du[j] = 0;
+        pt_dv[j] = 0;
+        for (int l = 0; l < n_vtx_triangle; l++) {
+          pt_du[j] += dw_du[l] * tria_coord[3*l+j];
+          pt_dv[j] += dw_dv[l] * tria_coord[3*l+j];
+        } // end loop on triangle points
+        vector_du[3*n_vtx + j] = pt_du[j];
+        vector_dv[3*n_vtx + j] = pt_dv[j];
+      }
+      PDM_CROSS_PRODUCT(pt_normal, pt_du, pt_dv);
+
+      PDM_log_trace_array_double(pt_normal, 3, "pt_normal:");
+
+      pt_normal_module = PDM_MODULE(pt_normal);
+      normal[3*n_vtx    ] = pt_normal[0] / pt_normal_module;
+      normal[3*n_vtx + 1] = pt_normal[1] / pt_normal_module;
+      normal[3*n_vtx + 2] = pt_normal[2] / pt_normal_module;
+
+      log_trace("n0 %lf n1 %lf n2 %lf\n", pt_normal[0] / pt_normal_module, pt_normal[1] / pt_normal_module, pt_normal[2] / pt_normal_module);
+
+      n_vtx++;
+
+    } // end loop on i
+  } // end loop on k
 
   // vtk ouput of ho element
+  char filename1[999];
+  sprintf(filename1, "P%d_triangle_ho.vtk", order);
 
-  char        *filename1 = "P2_triangle_ho.vtk";
-  int          n_vtx    = 7;
-  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 7);
-  int *face_vtx = malloc(sizeof(int) * 6);
+  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * n_vtx);
+  int *face_vtx = malloc(sizeof(int) * n_vtx_triangle);
   PDM_g_num_t *face_g_num = malloc(sizeof(PDM_g_num_t) * 1);
   char        *vtx_field_name = "ho_bezier_basis";
-  double      *vtx_field = malloc(sizeof(double) * 7);
+  double      *vtx_field = malloc(sizeof(double) * n_vtx);
 
-  for (int i = 0; i < 6; i++) {
-    vtx_g_num[i] = i + 1;
-    vtx_field[i] = 0;
+  for (int j = 0; j < n_vtx_triangle; j++) {
+    vtx_g_num[j] = j + 1;
+    vtx_field[j] = 0;
   }
 
-  face_vtx[0] = 1;
-  face_vtx[1] = 3;
-  face_vtx[2] = 6;
-  face_vtx[3] = 2;
-  face_vtx[4] = 5;
-  face_vtx[5] = 4;
+  if (order == 1) {
+
+    face_vtx[0] = 1;
+    face_vtx[1] = 2;
+    face_vtx[2] = 3;
+
+  }
+
+  if (order == 2) {
+
+    face_vtx[0] = 1;
+    face_vtx[1] = 3;
+    face_vtx[2] = 6;
+    face_vtx[3] = 2;
+    face_vtx[4] = 5;
+    face_vtx[5] = 4;
+
+  }
+
+  if (order == 3) {
+
+    face_vtx[0] = 1;
+    face_vtx[1] = 4;
+    face_vtx[2] = 10;
+    face_vtx[3] = 2;
+    face_vtx[4] = 3;
+    face_vtx[5] = 7;
+    face_vtx[6] = 9;
+    face_vtx[7] = 8;
+    face_vtx[8] = 5;
+    face_vtx[9] = 6;
+
+  }
 
   face_g_num[0] = 1;
 
   PDM_vtk_write_std_elements_ho(filename1,
-                                2,
-                                6,
+                                order,
+                                n_vtx_triangle,
                                 tria_coord,
                                 vtx_g_num,
-                                PDM_MESH_NODAL_TRIAHO,
+                                PDM_MESH_NODAL_TRIAHO_BEZIER,
                                 1,
                                 face_vtx,
                                 face_g_num,
@@ -261,15 +370,21 @@ int main(int argc, char *argv[])
                                 NULL);
 
   // vtk output of points
+  char filename2[999];
+  sprintf(filename2, "P%d_triangle_vtx.vtk", order);
 
-  char        *filename2 = "P2_triangle_vtx.vtk";
+  for (int j = n_vtx_triangle; j < n_vtx; j++) {
+    vtx_g_num[j] = j + 1;
+    vtx_field[j] = 1;
+  }
 
-  vtx_g_num[6] = 7;
-  vtx_field[6] = 1;
+  double *vector_derivatives[2] = {vector_du, vector_dv};
 
-  tria_coord[18] = xyz_Pn[0];
-  tria_coord[19] = xyz_Pn[1];
-  tria_coord[20] = xyz_Pn[2];
+  const char* vector_derivatives_names[] = {"dw_du", "dw_dv", 0};
+
+  double *vector_normal[1] = {normal};
+
+  const char* normal_name[] = {"n", 0};
 
   PDM_vtk_write_point_cloud_with_field(filename2,
                                        n_vtx,
@@ -277,8 +392,18 @@ int main(int argc, char *argv[])
                                        vtx_g_num,
                                        NULL,
                                        1,
-                      (const char **) &vtx_field_name,
-                    (const double **) &vtx_field);
+                       (const char **) &vtx_field_name,
+                     (const double **) &vtx_field,
+                                       2,
+                       (const char **) &vector_derivatives_names,
+                     (const double **) &vector_derivatives,
+                                       1,
+                       (const char **) &normal_name,
+                     (const double **) &vector_normal);
+
+  free(vtx_g_num);
+  free(face_vtx);
+  free(face_g_num);
 
   PDM_MPI_Finalize ();
 

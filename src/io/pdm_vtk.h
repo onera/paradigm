@@ -143,15 +143,21 @@ PDM_vtk_write_point_cloud
 /**
  * \brief Export a point cloud to ASCII VTK format (unstructured grid of points)
  *
- * \param [in]  filename       Output file name
- * \param [in]  n_vtx          Number of points
- * \param [in]  vtx_coord      Coordinates of the points (size = 3 * \ref n_vtx)
- *                             (x0, y0, z0, x1, ...)
- * \param [in]  vtx_g_num      Global ids of the points (or NULL)
- * \param [in]  color          Integer color of the points (or NULL)
- * \param [in]  n_vtx_field    Number of vertex fields
- * \param [in]  vtx_field_name Name of those vertex fields
- * \param [in]  vtx_field      Vertex fields
+ * \param [in]  filename              Output file name
+ * \param [in]  n_vtx                 Number of points
+ * \param [in]  vtx_coord             Coordinates of the points (size = 3 * \ref n_vtx)
+ *                                    (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num             Global ids of the points (or NULL)
+ * \param [in]  color                 Integer color of the points (or NULL)
+ * \param [in]  n_vtx_field           Number of vertex fields
+ * \param [in]  vtx_field_name        Name of those vertex fields
+ * \param [in]  vtx_field             Vertex fields
+ * \param [in]  n_vtx_vector_field    Number of vertex vector fields
+ * \param [in]  vtx_vector_field_name Name of those vertex vector fields
+ * \param [in]  vtx_vector_field      Vertex vector fields
+ * \param [in]  n_vtx_normal_field    Number of vertex normal fields
+ * \param [in]  vtx_normal_field_name Name of those vertex normal fields
+ * \param [in]  vtx_normal_field      Vertex normal fields
  *
  */
 
@@ -165,7 +171,13 @@ PDM_vtk_write_point_cloud_with_field
  const int          color[],
  const int          n_vtx_field,
  const char        *vtx_field_name[],
- const double      *vtx_field[]
+ const double      *vtx_field[],
+ const int          n_vtx_vector_field,
+ const char        *vtx_vector_field_name[],
+ const double      *vtx_vector_field[],
+ const int          n_vtx_normal_field,
+ const char        *vtx_normal_field_name[],
+ const double      *vtx_normal_field[]
 );
 
 
@@ -281,20 +293,6 @@ PDM_vtk_write_std_elements_double
  const char                 *elt_field_name[],
  const double               *elt_field[]
  );
-
-
-void
-PDM_vtk_write_point_cloud_with_field
-(
- const char        *filename,
- const int          n_vtx,
- const double       vtx_coord[],
- const PDM_g_num_t  vtx_g_num[],
- const int          color[],
- const int          n_vtx_field,
- const char        *vtx_field_name[],
- const double      *vtx_field[]
-);
 
 /**
  * \brief Export a block of elements of arbitray order to ASCII VTK format (unstructured grid)
