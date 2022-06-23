@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
   // Set up
 
   double edge[9] = {0, 0, 0, 1, 0, 0, 2, 0, 0}; // A---C---B
-  double direction_pt[3] = {1, 1, 0}; // C---D-->
+  double direction_pt[3] = {1, 20, 0}; // C---D-->
   double theta = PDM_PI / 3;
   double eps   = 1;
 
@@ -192,24 +192,24 @@ int main(int argc, char *argv[])
 
   // Determine eps translation planes
   // B--{eps}--G
-  double BC[3] = {edge[6]-edge[3], edge[7]-edge[4], edge[8]-edge[5]};
-  double inverse_module_BC = 1 / PDM_MODULE(BC);
-  pt_plane[0] = edge[6] + eps * BC[0] * inverse_module_BC;
-  pt_plane[1] = edge[7] + eps * BC[1] * inverse_module_BC;
-  pt_plane[2] = edge[8] + eps * BC[2] * inverse_module_BC;
-  n[0] = BC[0];
-  n[1] = BC[1];
-  n[2] = BC[2];
+  double CB[3] = {edge[3]-edge[6], edge[4]-edge[7], edge[5]-edge[8]};
+  double inverse_module_CB = 1 / PDM_MODULE(CB);
+  pt_plane[0] = edge[3] + (1+eps) * CB[0]; // * inverse_module_CB;
+  pt_plane[1] = edge[4] + (1+eps) * CB[1]; // * inverse_module_CB;
+  pt_plane[2] = edge[5] + (1+eps) * CB[2]; // * inverse_module_CB;
+  n[0] = -CB[0];
+  n[1] = -CB[1];
+  n[2] = -CB[2];
 
   // A--{eps}--H
   double CA[3] = {edge[3]-edge[0], edge[4]-edge[1], edge[5]-edge[2]};
   double inverse_module_CA = 1 / PDM_MODULE(CA);
-  pt_plane[3] = edge[6] + eps * CA[0] * inverse_module_CA;
-  pt_plane[4] = edge[7] + eps * CA[1] * inverse_module_CA;
-  pt_plane[5] = edge[8] + eps * CA[2] * inverse_module_CA;
-  n[3] = CA[0];
-  n[4] = CA[1];
-  n[5] = CA[2];
+  pt_plane[3] = edge[3] + (1+eps) * CA[0]; // * inverse_module_CA;
+  pt_plane[4] = edge[4] + (1+eps) * CA[1]; // * inverse_module_CA;
+  pt_plane[5] = edge[5] + (1+eps) * CA[2]; // * inverse_module_CA;
+  n[3] = -CA[0];
+  n[4] = -CA[1];
+  n[5] = -CA[2];
 
   // Determine theta angle planes E---D---F
   double cos_theta = cos(theta);
@@ -230,12 +230,13 @@ int main(int argc, char *argv[])
   pt_plane[8] += (AB_normalised[2] * AB_normalised[1] * (1 - cos_theta) + AB_normalised[0] * sin_theta) * direction_pt[1];
   pt_plane[8] += (cos_theta + (1 - cos_theta) * AB_normalised[2] * AB_normalised[2]) * direction_pt[2];
   double prod_vect[3];
-  double CE[3] = {pt_plane[6]-edge[0], pt_plane[7]-edge[1], pt_plane[8]-edge[2]};
+  double CE[3] = {pt_plane[6]-edge[3], pt_plane[7]-edge[4], pt_plane[8]-edge[5]};
   PDM_CROSS_PRODUCT(prod_vect, CA, CE);
-  double ED[3] = {pt_plane[6] - direction_pt[0], pt_plane[7] - direction_pt[1], pt_plane[8] - direction_pt[2]};
-  n[6] = PDM_SIGN(ED[0]) * prod_vect[0];
-  n[7] = PDM_SIGN(ED[1]) * prod_vect[1];
-  n[8] = PDM_SIGN(ED[2]) * prod_vect[2];
+  double ED[3] = {direction_pt[0] - pt_plane[6], direction_pt[1] - pt_plane[7], direction_pt[2] - pt_plane[8]};
+  double sign = PDM_SIGN(PDM_DOT_PRODUCT(prod_vect, ED));
+  n[6] = sign * prod_vect[0];
+  n[7] = sign * prod_vect[1];
+  n[8] = sign * prod_vect[2];
 
   double cos_minus_theta = cos(-theta);
   double sin_minus_theta = sin(-theta);
@@ -249,13 +250,157 @@ int main(int argc, char *argv[])
   pt_plane[11]  = (AB_normalised[2] * AB_normalised[0] * (1 - cos_minus_theta) - AB_normalised[1] * sin_minus_theta) * direction_pt[0];
   pt_plane[11] += (AB_normalised[2] * AB_normalised[1] * (1 - cos_minus_theta) + AB_normalised[0] * sin_minus_theta) * direction_pt[1];
   pt_plane[11] += (cos_minus_theta + (1 - cos_minus_theta) * AB_normalised[2] * AB_normalised[2]) * direction_pt[2];
-  n[9]  = -n[6];
-  n[10] = -n[7];
-  n[11] = -n[8];
+  double CF[3] = {pt_plane[9]-edge[4], pt_plane[10]-edge[4], pt_plane[11]-edge[5]};
+  PDM_CROSS_PRODUCT(prod_vect, CA, CF);
+  double FD[3] = {direction_pt[0] - pt_plane[9], direction_pt[1] - pt_plane[10], direction_pt[2] -  pt_plane[11]};
+  sign = PDM_SIGN(PDM_DOT_PRODUCT(prod_vect, FD));
+  n[9]  = sign * prod_vect[0];
+  n[10] = sign * prod_vect[1];
+  n[11] = sign * prod_vect[2];
 
   // Check if box is in volume
   int check = _box_in_volume(4, n, pt_plane, box_extents);
   log_trace("box is in volume = %d\n", check);
+
+  // vtk output of atomic test case
+
+  char *filename1 = "box.vtk";
+  PDM_g_num_t *box_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  box_g_num[0] = 1;
+
+  PDM_vtk_write_boxes(filename1,
+                      1,
+                      box_extents,
+                      box_g_num);
+
+  char *filename2 = "line.vtk";
+  double *coord = malloc(sizeof(double) * 6);
+  coord[0] = edge[3];
+  coord[1] = edge[4];
+  coord[2] = edge[5];
+  coord[3] = direction_pt[0];
+  coord[4] = direction_pt[1];
+  coord[5] = direction_pt[2];
+  PDM_g_num_t *line_g_num = malloc(sizeof(PDM_g_num_t) * 1);
+  line_g_num[0] = 1;
+
+  PDM_vtk_write_lines(filename2,
+                      1,
+                      coord,
+                      line_g_num,
+                      NULL);
+
+  char *filename3 = "planes.vtk";
+  double *vtx_coord = malloc(sizeof(double) * 30);
+  PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 10);
+  int *face_vtx = malloc(sizeof(int) * 12);
+
+  // A
+  vtx_coord[0] = edge[0];
+  vtx_coord[1] = edge[1];
+  vtx_coord[2] = edge[2];
+
+  // B
+  vtx_coord[3] = edge[6];
+  vtx_coord[4] = edge[7];
+  vtx_coord[5] = edge[8];
+
+  // E
+  vtx_coord[6] = pt_plane[6];
+  vtx_coord[7] = pt_plane[7];
+  vtx_coord[8] = pt_plane[8];
+
+  // F
+  vtx_coord[9]  = pt_plane[9];
+  vtx_coord[10] = pt_plane[10];
+  vtx_coord[11] = pt_plane[11];
+
+  // G
+  vtx_coord[12] = pt_plane[0];
+  vtx_coord[13] = pt_plane[1];
+  vtx_coord[14] = pt_plane[2];
+
+  // H
+  vtx_coord[15] = pt_plane[3];
+  vtx_coord[16] = pt_plane[4];
+  vtx_coord[17] = pt_plane[5];
+
+  double CH[3] = {pt_plane[3]-edge[3], pt_plane[4]-edge[4], pt_plane[5]-edge[5]};
+  double module_CH = PDM_MODULE(CH);
+
+  // I
+  vtx_coord[18] = direction_pt[0] + module_CH * CA[0] * inverse_module_CA;
+  vtx_coord[19] = direction_pt[1] + module_CH * CA[1] * inverse_module_CA;
+  vtx_coord[20] = direction_pt[2] + module_CH * CA[2] * inverse_module_CA;
+
+  // J
+  vtx_coord[21] = pt_plane[6] + module_CH * CA[0] * inverse_module_CA;
+  vtx_coord[22] = pt_plane[7] + module_CH * CA[1] * inverse_module_CA;
+  vtx_coord[23] = pt_plane[8] + module_CH * CA[2] * inverse_module_CA;
+
+  double CG[3] = {pt_plane[0]-edge[3], pt_plane[1]-edge[4], pt_plane[2]-edge[5]};
+  double module_CG = PDM_MODULE(CG);
+
+  // K
+  vtx_coord[24] = direction_pt[0] + module_CG * CB[0] * inverse_module_CB;
+  vtx_coord[25] = direction_pt[1] + module_CG * CB[1] * inverse_module_CB;
+  vtx_coord[26] = direction_pt[2] + module_CG * CB[2] * inverse_module_CB;
+
+  // L
+  vtx_coord[27] = pt_plane[6] + module_CG * CB[0] * inverse_module_CB;
+  vtx_coord[28] = pt_plane[7] + module_CG * CB[1] * inverse_module_CB;
+  vtx_coord[29] = pt_plane[8] + module_CG * CB[2] * inverse_module_CB;
+
+  for (int i = 0; i < 10; i++) {
+    vtx_g_num[i] = i + 1;
+  }
+
+  face_vtx[0]  = 1;
+  face_vtx[1]  = 2;
+  face_vtx[2]  = 3;
+  face_vtx[3]  = 1;
+  face_vtx[4]  = 2;
+  face_vtx[5]  = 4;
+  face_vtx[6]  = 5;
+  face_vtx[7]  = 9;
+  face_vtx[8]  = 10;
+  face_vtx[9]  = 6;
+  face_vtx[10] = 7;
+  face_vtx[11] = 8;
+
+
+  PDM_vtk_write_std_elements(filename3,
+                             10,
+                             vtx_coord,
+                             vtx_g_num,
+                             PDM_MESH_NODAL_TRIA3,
+                             4,
+                             face_vtx,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+
+  char *filename4 = "normal.vtk";
+
+  double *vector_normal[1] = {n};
+
+  const char* normal_name[] = {"n", 0};
+
+  PDM_vtk_write_point_cloud_with_field(filename4,
+                                       4,
+                                       pt_plane,
+                                       NULL,
+                                       NULL,
+                                       0,
+                                       NULL,
+                                       NULL,
+                                       1,
+                       (const char **) &normal_name,
+                     (const double **) &vector_normal,
+                                       0,
+                                       NULL,
+                                       NULL);
 
   /* dbbtree test case */
 
