@@ -25,7 +25,8 @@ program pdm_io_fortran
   complex(8), pointer                  :: ptr_c8 (:)
   character(len=:), pointer            :: buffer=>null()
   type(c_ptr)                          :: cptr
-  integer(4)                           :: rank,size,iErr, s_data
+  integer(4)                           :: rank,size,iErr
+  integer(kind=pdm_g_num_s)            :: s_data
   integer(kind=pdm_g_num_s)            :: n_data
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -60,27 +61,31 @@ program pdm_io_fortran
   
   !>>> Ecriture Globale
   if( rank==0 )print '(3x,"Ecriture Globale")'
-
-  ptr_int(1)=rank
+  
+  ptr_int(1)=10+rank
   n_data=1
-  s_data=8
+  s_data=4
   call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_int))
+  if( rank==0 )print '(6x,"ptr_int(1)=",i0)',ptr_int(1)
   
   ptr_r8(1)=1d0
   n_data=1
   s_data=8
   call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_r8))
+  if( rank==0 )print '(6x,"ptr_r8 (1)=",e22.15)',ptr_r8(1)
   
   ptr_c8(1)=(1d0,1d0)
   n_data= 1
   s_data=16
   call PDM_io_global_write(id,s_data,n_data,c_loc(ptr_c8))
+  if( rank==0 )print '(6x,"ptr_c8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
   
   write(buffer,'("Ecriture Global depuis le rank: ",i3)')rank
-  buffer(80:80)=C_NULL_CHAR
+  !buffer(80:80)=C_NULL_CHAR
   n_data=80
   s_data= 1
   call PDM_io_global_write(id,s_data,n_data,c_loc(buffer))
+  if( rank==0 )print '(6x,"buffer=""",a,"""")',buffer
   !<<< Ecriture Globale
   
   
@@ -91,8 +96,8 @@ program pdm_io_fortran
     integer, pointer                     :: nLinesRank(:)
     character(80)                        :: ligne
     character(80), pointer               :: lignes(:)
+    integer(4), pointer                  :: iTab(:)
     integer(kind=pdm_g_num_s)            :: shift
-    integer(4), pointer:: iTab(:)
     
     if( rank==0 )print '(3x,"Ecriture Blocs")'
     
@@ -100,7 +105,7 @@ program pdm_io_fortran
     allocate(lignes(1:nLines))
     do iLine=1,nLines
       write(ligne,'("Ecriture Bloc Rank: ",i3,2x,"ligne: ",i3)')rank,iLine
-      ligne(80:80)=C_NEW_LINE
+      !ligne(80:80)=C_NEW_LINE
       lignes(iLine)=ligne
     enddo
     
@@ -110,7 +115,7 @@ program pdm_io_fortran
     &    nLinesRank , 1,mpi_integer      ,&
     &    MPI_COMM_WORLD                  ,&
     &    iErr                             )
-    shift=sum([(nLinesRank(iRank),iRank=0,rank-1)]) +1    !> debut_bloc
+    shift=sum([(nLinesRank(iRank),iRank=0,rank-1)])+1    !> debut_bloc
     
     allocate(iTab(1:1)) ; iTab(1)=1                    !> <=
     call PDM_io_par_block_write(                    &
@@ -142,7 +147,7 @@ program pdm_io_fortran
     allocate(lignes(1:nLines))
     do iLine=1,nLines
       write(ligne,'("Ecriture Entrelacee Rank: ",i3,2x,"ligne: ",i3)')rank,iLine
-      ligne(80:80)=C_NEW_LINE
+      !ligne(80:80)=C_NEW_LINE
       lignes(iLine)=ligne
     enddo
     
@@ -191,7 +196,7 @@ program pdm_io_fortran
   
   !>>> Lecture Globale
   if( rank==0 )print '(3x,"Lecture Globale")'
-    
+  
   n_data=1
   s_data=4
   call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_int))
@@ -199,18 +204,18 @@ program pdm_io_fortran
   
   n_data=1
   s_data=8
-  call PDM_io_global_read(id, s_data, n_data, c_loc(ptr_r8))
+  call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_r8))
   if( rank==0 )print '(6x,"ptr_r8 (1)=",e22.15)',ptr_r8(1)
   
   n_data= 1
   s_data=16
-  call PDM_io_global_read(id, s_data, n_data, c_loc(ptr_c8))
+  call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_c8))
   if( rank==0 )print '(6x,"ptr_r8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
   
   n_data=80
   s_data= 1
   call PDM_io_global_read(id, s_data, n_data, c_loc(buffer))
-  if( rank==0 )print '(6x,"buffer: ",a)',buffer  
+  if( rank==0 )print '(6x,"buffer: """,a,"""")',buffer  
   !<<< Lecture Globale
   
   !>>> Lecture Blocs
@@ -233,8 +238,8 @@ program pdm_io_fortran
     &    nLinesRank , 1,mpi_integer      ,&
     &    MPI_COMM_WORLD                  ,&
     &    iErr                             )
-    shift=sum([(nLinesRank(iRank),iRank=0,rank-1)]) +1 !> debut_bloc
-
+    shift=sum([(nLinesRank(iRank),iRank=0,rank-1)])+1 !> debut_bloc
+    
     allocate(lignes(1:nLines))
     
     allocate(iTab(1:1)) ; iTab(1)=1                    !> <=
@@ -252,7 +257,7 @@ program pdm_io_fortran
       if( rank==iRank )then
         print '("rank= ",i0)',rank
         do iLine=1,nLines
-          print '(3x,"Lu sur rank",i0,": ",a)',rank,lignes(iLine)
+          print '(3x,"Lu sur rank",i0,": """,a,"""")',rank,lignes(iLine)
         enddo
       endif
       call mpi_barrier(MPI_COMM_WORLD,iErr)
@@ -303,7 +308,7 @@ program pdm_io_fortran
       if( rank==iRank )then
         print '("rank= ",i0)',rank
         do iLine=1,nLines
-          print '(3x,"Lu sur rank",i0,": ",a)',rank,lignes(iLine)
+          print '(3x,"Lu sur rank",i0,": """,a,"""")',rank,lignes(iLine)
         enddo
       endif
       call mpi_barrier(MPI_COMM_WORLD,iErr)
@@ -339,7 +344,7 @@ program pdm_io_fortran
       read(iUnit)ptr_int(1) ; print '(3x,"ptr_int(1)=",i0          )',ptr_int(1)
       read(iUnit)ptr_r8 (1) ; print '(3x,"ptr_r8 (1)=",e22.15      )',ptr_r8 (1)
       read(iUnit)ptr_c8 (1) ; print '(3x,"ptr_c8 (1)=",2(e22.15,1x))',ptr_c8 (1)
-      read(iUnit)buffer     ; print '(3x,"buffer: ",a           )',buffer
+      read(iUnit)buffer     ; print '(3x,"buffer: """,a,""""       )',buffer
       
       cpt=0
       iChar=0
@@ -352,12 +357,14 @@ program pdm_io_fortran
         endif
         cpt=cpt+1
         
-        if( char==C_NEW_LINE )then
-          print '(3x,"lecture fortran  iChar=",i0," ligne: "a)',iChar,ligne
+        iChar=iChar+1
+        !if( char==C_NEW_LINE )then
+        if( iChar==80 )then
+          ligne(iChar:iChar)=char
+          print '(3x,"lecture fortran  iChar=",i0," ligne: """,a,"""")',iChar,ligne
           ligne=""
           iChar=0
         else
-          iChar=iChar+1
           ligne(iChar:iChar)=char
         endif
       enddo lecture
