@@ -3093,6 +3093,84 @@ _dump_node(const PDM_box_tree_t  *bt,
   }
 }
 
+/*
+ * \brief Determine if a box is on the side of the plane where the normal points to
+ *
+ * \param [in]  n                Normal vector (n = (a, b, c))
+ * \param [in]  plane_pt         Point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n)
+ * \param [in]  box_extents      Box to determine
+ *
+ * \return 1 if the box is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+static int
+_plane_box_side
+(
+double *n,
+double *plane_pt,
+double *box_extents
+)
+{
+  double box_pt[3];
+  double vect[3];
+
+  for (int x = 0; x < 4; x += 3) {
+    box_pt[0] = box_extents[x];
+    for (int y = 1; y < 5; y += 3) {
+      box_pt[1] = box_extents[y];
+      for (int z = 2; z < 6; z += 3) {
+        box_pt[2] = box_extents[z];
+        vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
+        if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
+          return 1;
+        }
+      } // end loop on z
+    } // end loop on y
+  } // end loop on x
+  return 0;
+}
+
+/*
+ * \brief Determine a box is in a given volume region
+ *
+ * \param [in]  n_planes      Number of planes difining the volume
+ * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
+ * \param [in]  plane_pt      Table of a point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n) for each considered plane
+ * \param [in]  box_extents   Points to determine
+ *
+ * \return 1 if the plane_pt is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+
+static int
+_box_in_volume
+(
+int      n_planes,
+double  *n,
+double  *plane_pt,
+double  *box_extents
+)
+{
+  double n_iplane[3];
+  double plane_pt_iplane[3];
+
+  for (int iplane = 0; iplane < n_planes; iplane++) {
+
+    n_iplane[0] = n[3*iplane];
+    n_iplane[1] = n[3*iplane+1];
+    n_iplane[2] = n[3*iplane+2];
+
+    plane_pt_iplane[0] = plane_pt[3*iplane];
+    plane_pt_iplane[1] = plane_pt[3*iplane+1];
+    plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+    if (_plane_box_side(n_iplane, plane_pt_iplane, box_extents) == 0) {
+      return 0;
+    }
+  } // end loop on planes
+  return 1;
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -5803,6 +5881,197 @@ PDM_box_tree_intersect_lines_boxes2
   free(box_line_n);
   free(line_box_idx);
   free(line_box);
+}
+
+/**
+ *
+ * \brief Get an indexed list of all boxes inside given volumes
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt                    Pointer to box tree structure
+ * \param [in]   i_copied_rank         Copied rank
+ * \param [in]   n_volumes             Number of volumes
+ * \param [in]   n_planes_per_volume   Index of the number of planes per volume
+ * \param [in]   plane_normal          Oriented normal vector for a given plane
+ * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  volume_box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
+ * \param [out]  volume_box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
+ *
+ */
+
+void
+PDM_box_tree_intersect_volume_boxes
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_volumes,
+ const int      *volume_plane_idx,
+ double         *plane_normal,
+ double         *plane_pt_coord,
+ int           **volume_box_idx,
+ int           **volume_box_l_num
+ )
+ {
+  if (i_copied_rank >= bt->n_copied_ranks) {
+    PDM_error(__FILE__, __LINE__, 0, "Copied rank %d >= Number of copied ranks\n", (int) i_copied_rank);
+  }
+
+  const int dim = bt->boxes->dim;
+
+  // Total number of planes
+  int n_planes = volume_plane_idx[n_volumes+1];
+
+  double *plane_pt_coord_normalized = malloc(sizeof(double) * 3 * n_planes);
+  double *plane_normal_normalized   = malloc(sizeof(double) * 3 * n_planes);
+
+  // Normalize coordinates
+  PDM_box_set_normalize_robust((PDM_box_set_t *) bt->boxes,
+                                                 n_planes,
+                                                 plane_pt_coord,
+                                                 plane_pt_coord_normalized);
+
+  PDM_box_set_normalize_robust((PDM_box_set_t *) bt->boxes,
+                                                 n_planes,
+                                                 plane_normal,
+                                                 plane_normal_normalized);
+
+  // Different pointer depending if it is a copied rank or not
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+    box_tree_data = bt->local_data;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  int n_boxes = boxes->n_boxes;
+
+  // Set up output
+  *volume_box_idx      = malloc(sizeof(int) * (n_volumes + 1));
+  int *_volume_box_idx = *volume_box_idx;
+  _volume_box_idx[0] = 0;
+
+  int tmp_s_boxes = 4 * n_volumes;
+  *volume_box_l_num = malloc (sizeof(int) * tmp_s_boxes);
+  int *_volume_box_l_num = *volume_box_l_num;
+
+  // Set up stack
+  int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  int *stack = malloc ((sizeof(int)) * s_stack);
+  int pos_stack = 0;
+
+  // Set up tracking if boxes have been dealt with yet
+  int n_visited_boxes = 0;
+  PDM_bool_t *is_visited_box = malloc(sizeof(PDM_bool_t) * n_boxes);
+  for (int i = 0; i < n_boxes; i++) {
+    is_visited_box[i] = PDM_FALSE;
+  }
+
+  int *visited_boxes = malloc(sizeof(int) * n_boxes); // Optimiser ici et dans PDM_box_tree_intersect_lines_boxes
+
+  double *current_plane_normals = NULL;
+  double *current_pt_planes     = NULL;
+  int current_n_plane;
+
+  double current_node_box_extents[2*dim];
+
+  for (int ivolume = 0; ivolume < n_volumes; ivolume++) {
+
+    /* Init stack */
+    pos_stack = 0;
+
+    // Get current volume information
+    current_plane_normals = plane_normal + volume_plane_idx[ivolume];
+    current_pt_planes     = plane_pt_coord + volume_plane_idx[ivolume];
+    current_n_plane       =  volume_plane_idx[ivolume+1] - volume_plane_idx[ivolume];
+
+    // Get current box information
+    _extents (dim,
+              box_tree_data->nodes[0].morton_code,
+              current_node_box_extents);
+
+    if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
+      stack[pos_stack++] = 0;
+    }
+
+    n_visited_boxes = 0;
+
+    /* Traverse box tree */
+    while (pos_stack > 0) {
+
+      int node_id = stack[--pos_stack];
+
+      _node_t *node = &(box_tree_data->nodes[node_id]);
+
+      if (node->n_boxes == 0) {
+        continue;
+      }
+
+      /* Leaf node */
+      if (node->is_leaf) {
+        /* inspect boxes contained in current leaf node */
+        for (int ibox = 0; ibox < node->n_boxes; ibox++) {
+          int box_id = box_tree_data->box_ids[node->start_id + ibox];
+
+          if (is_visited_box[box_id] == PDM_FALSE) {
+            const double *box_extents = boxes->extents + box_id*2*dim;
+
+            if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, box_extents)) {
+              // Avoid table overflow
+              if (_volume_box_idx[ivolume+1] >= tmp_s_boxes) {
+                tmp_s_boxes *= 2;
+                *volume_box_l_num = realloc (*volume_box_l_num, sizeof(int) * tmp_s_boxes);
+                _volume_box_l_num = *volume_box_l_num;
+              }
+              _volume_box_l_num[_volume_box_idx[ivolume+1]++] = box_id;
+            } // end if box is in volume
+            visited_boxes[n_visited_boxes++] = box_id;
+            is_visited_box[box_id] = PDM_TRUE;
+          } // end if not yet dealt with this box
+
+        } // end loop on leaf boxes
+      } // end if is a leaf node
+
+      /* Internal node */
+      else {
+        /* inspect children of current node */
+        int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+        for (int ichild = 0; ichild < bt->n_children; ichild++) {
+          int child_id = child_ids[ichild];
+          _extents (dim, box_tree_data->nodes[child_id].morton_code, current_node_box_extents);
+
+          if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
+            stack[pos_stack++] = child_id;
+          }
+        } // end loop on children of curent node
+      } // end if is an internal node
+
+    } // end while dealing with stack
+
+    // Clean up visited information of current volume
+    for (int ibox = 0; ibox < n_visited_boxes; ibox++) {
+      is_visited_box[visited_boxes[ibox]] = PDM_FALSE;
+    }
+
+  } // end loop on volumes
+
+  // Free's
+  if (plane_pt_coord != plane_pt_coord_normalized) {
+    free (plane_pt_coord_normalized);
+  }
+  if (plane_normal != plane_normal_normalized) {
+    free (plane_normal_normalized);
+  }
+  free (is_visited_box);
+  free (stack);
+  free (visited_boxes);
+
+
+  *volume_box_l_num = realloc (*volume_box_l_num, sizeof(int) * _volume_box_idx[n_volumes]);
 }
 
 
