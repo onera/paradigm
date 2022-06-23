@@ -53,7 +53,8 @@ program pdm_io_fortran
   &    s_backup=PDM_IO_BACKUP_OFF     ,& !> s_backup  <-- Active le backup d'un fichier preexistant en mode ecriture
   &    acces=PDM_IO_KIND_MPIIO_EO     ,& !> accesio   <-- Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
   &    mode=PDM_IO_MOD_WRITE          ,& !> mode      <-- Mode d'acces (lecture, ecriture, lecture/ecriture)
-  &    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_io_littleendian
+ !&    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_IO_LITTLEENDIAN
+  &    endian=PDM_IO_BIGENDIAN        ,& !> PDM_IO_BIGENDIAN           
   &    comm=MPI_COMM_WORLD            ,& !> msg_comm  <-- Communicateur lie au fichier
   &    prop_noeuds_actifs=-1d0        ,& !> - 1: tous les rangs participent  +1: seuls les rangs maitres de chaque noeud participent
   &    unite=id                       ,& !> unite     --> Unite du fichier
@@ -188,7 +189,8 @@ program pdm_io_fortran
   &    s_backup=PDM_IO_BACKUP_OFF     ,& !> s_backup  <-- Active le backup d'un fichier preexistant en mode ecriture
   &    acces=PDM_IO_KIND_MPIIO_EO     ,& !> accesio   <-- Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
   &    mode=PDM_IO_MOD_READ           ,& !> mode      <-- Mode d'acces (lecture, ecriture, lecture/ecriture)
-  &    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_io_littleendian
+ !&    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_IO_LITTLEENDIAN
+  &    endian=PDM_IO_BIGENDIAN        ,& !> PDM_IO_BIGENDIAN           
   &    comm=MPI_COMM_WORLD            ,& !> msg_comm  <-- Communicateur lie au fichier
   &    prop_noeuds_actifs=-1d0        ,& !> - 1: tous les rangs participent  +1: seuls les rangs maitres de chaque noeud participent
   &    unite=id                       ,& !> unite     --> Unite du fichier
@@ -210,7 +212,7 @@ program pdm_io_fortran
   n_data= 1
   s_data=16
   call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_c8))
-  if( rank==0 )print '(6x,"ptr_r8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
+  if( rank==0 )print '(6x,"ptr_c8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
   
   n_data=80
   s_data= 1
@@ -279,7 +281,7 @@ program pdm_io_fortran
     integer, pointer                     :: iTab(:)
     type(c_ptr)                          :: cptr
     
-    if( rank==0 )print '(3x,"Lecture Entrelacee")'
+    if( rank==0 )print '(/3x,"Lecture Entrelacee")'
     
     nLines=4
     
@@ -290,17 +292,17 @@ program pdm_io_fortran
     enddo
     
     allocate(lignes(1:nLines))
-
-     allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
-     call PDM_io_par_interlaced_read(                &
-     &    fichier        =id                        ,& !> unite
-     &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,& !> t_n_composantes
-     &    n_composantes  =iTab                      ,& !> *n_composantes
-     &    taille_donnee  =80                        ,& !> taille_donnee
-     &    n_donnees      =nLines                    ,& !> n_donnees
-     &    indirection    =indirection               ,& !> *indirection
-     &    donnees        =c_loc(lignes)              ) !> *donnees
-     deallocate(iTab)
+    
+    allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
+    call PDM_io_par_interlaced_read(                &
+    &    fichier        =id                        ,& !> unite
+    &    t_n_composantes=PDM_STRIDE_CST_INTERLACED ,& !> t_n_composantes
+    &    n_composantes  =iTab                      ,& !> *n_composantes
+    &    taille_donnee  =80                        ,& !> taille_donnee
+    &    n_donnees      =nLines                    ,& !> n_donnees
+    &    indirection    =indirection               ,& !> *indirection
+    &    donnees        =c_loc(lignes)              ) !> *donnees
+    deallocate(iTab)
     
     deallocate(indirection)
         
@@ -338,7 +340,7 @@ program pdm_io_fortran
       &    file=trim(name)                      ,&
       &    access='stream'                      ,&
       &    form='unformatted'                   ,&
-     !&    convert="BIG_ENDIAN"                 ,&
+      &    convert="BIG_ENDIAN"                 ,&
       &    action='read'                         )
       
       read(iUnit)ptr_int(1) ; print '(3x,"ptr_int(1)=",i0          )',ptr_int(1)
