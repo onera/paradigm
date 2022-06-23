@@ -59,6 +59,31 @@ PDM_vtk_write_boxes
  const PDM_g_num_t *box_g_num
 );
 
+/**
+ * \brief Export a set of boxes to ASCII VTK format (unstructured grid of hexahedra)
+ *
+ * \param [in]  filename     Output file name
+ * \param [in]  n_box        Number of boxes
+ * \param [in]  box_extents  Extents of the boxes (size = 6 * \ref n_box)
+ *                           (xmin0, ymin0, zmin0, xmax0, ymax0, zmax0, xmin1, ...)
+ * \param [in]  box_g_num    Global ids of the boxes (or NULL)
+ * \param [in]  n_box_field           Number of box fields
+ * \param [in]  box_field_name        Name of those box fields
+ * \param [in]  box_field             Box fields
+ */
+
+void
+PDM_vtk_write_boxes_with_field
+(
+ const char        *filename,
+ const int          n_box,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num,
+ const int          n_box_field,
+ const char        *box_field_name[],
+ const double      *box_field[]
+);
+
 
 /**
  * \brief Export a set of circles to ASCII VTK format (unstructured grid of line segments)

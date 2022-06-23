@@ -826,6 +826,76 @@ PDM_vtk_write_boxes
   fclose(f);
 }
 
+void
+PDM_vtk_write_boxes_with_field
+(
+ const char        *filename,
+ const int          n_box,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num,
+ const int          n_box_field,
+ const char        *box_field_name[],
+ const double      *box_field[]
+)
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nboxes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_box);
+  for (int i = 0; i < n_box; i++) {
+    const double *e = box_extents + 6*i;
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
+  for (int i = 0; i < n_box; i++) {
+    int j = 8*i;
+    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_box);
+  for (int i = 0; i < n_box; i++) {
+    fprintf(f, "12\n");
+  }
+
+  if (box_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_box);
+    fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_box; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM"\n", box_g_num[i]);
+    }
+  }
+
+  if (n_box_field > 0) {
+    assert (box_field != NULL);
+
+    if (box_g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_box);
+    }
+
+    fprintf(f, "FIELD box_field %d\n", n_box_field);
+    for (int i = 0; i < n_box_field; i++) {
+      assert (box_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", box_field_name[i], n_box);
+      for (int j = 0; j < n_box; j++) {
+        fprintf(f, "%lf ", box_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fclose(f);
+}
+
 
 
 /**
