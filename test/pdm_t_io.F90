@@ -74,8 +74,8 @@ contains
     nombeEntier=1
     nombreReel=dacos(-1d0)
     nombreComplex=cmplx(nombreReel,nombreReel,kind=8)
-    write(message,'("Ecriture Global depuis le rank: ",i3)')rank
-  
+    write(message,'("Ecriture Globale depuis le rank: ",i3)')rank
+    
     allocate(character(len=80) :: buffer)
     allocate(ptr_int(1:1))
     allocate(ptr_r8 (1:1))
@@ -122,8 +122,8 @@ contains
     if( rank==0 )print '(6x,"ptr_c8 (1)=",e22.15,1x,e22.15)',ptr_c8(1)
     
     buffer=message
-    n_data=80
-    s_data= 1
+    n_data= 1
+    s_data=80
     call PDM_io_global_write(id,s_data,n_data,c_loc(buffer))
     if( rank==0 )print '(6x,"buffer=""",a,"""")',buffer
     !<<< Ecriture Globale
@@ -256,6 +256,7 @@ contains
     n_data=1
     s_data=4
     call PDM_io_global_read(id,s_data,n_data,c_loc(ptr_int))
+    
     if( .not. ptr_int(1)==nombeEntier )then
       consistance=.false.
       if( rank==0 )print '(/6x,"nombreEntier=",i0)',nombeEntier
@@ -280,8 +281,8 @@ contains
       if( rank==0 )print '( 6x,"ptr_c8 (1)   =",e22.15,1x,e22.15)',ptr_c8(1)
     endif
     
-    n_data=80
-    s_data= 1
+    n_data= 1 
+    s_data=80
     call PDM_io_global_read(id, s_data, n_data, c_loc(buffer))
     if( .not. buffer==message )then
       consistance=.false.
