@@ -286,8 +286,8 @@ contains
     call PDM_io_global_read(id, s_data, n_data, c_loc(buffer))
     if( .not. buffer==message )then
       consistance=.false.
-      if( rank==0 )print '(6x,"buffer : """,a,"""")',buffer
-      if( rank==0 )print '(6x,"message: """,a,"""")',message
+      if( rank==0 )print '(/6x,"message: """,a,"""")',message
+      if( rank==0 )print '( 6x,"buffer : """,a,"""")',buffer
     endif
     !<<< Lecture Globale
     
