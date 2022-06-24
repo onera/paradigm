@@ -3121,7 +3121,7 @@ double *box_extents
       for (int z = 2; z < 6; z += 3) {
         box_pt[2] = box_extents[z];
         vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
-        if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
+        if (PDM_DOT_PRODUCT(vect, n) >= 0) {
           return 1;
         }
       } // end loop on z
@@ -3131,7 +3131,7 @@ double *box_extents
 }
 
 /*
- * \brief Determine a box is in a given volume region
+ * \brief Determine a box is intersects a given volume region
  *
  * \param [in]  n_planes      Number of planes difining the volume
  * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
@@ -3143,7 +3143,7 @@ double *box_extents
 
 
 static int
-_box_in_volume
+_box_intersect_volume
 (
 int      n_planes,
 double  *n,
@@ -5921,7 +5921,7 @@ PDM_box_tree_intersect_volume_boxes
   const int dim = bt->boxes->dim;
 
   // Total number of planes
-  int n_planes = volume_plane_idx[n_volumes+1];
+  int n_planes = volume_plane_idx[n_volumes];
 
   double *plane_pt_coord_normalized = malloc(sizeof(double) * 3 * n_planes);
   double *plane_normal_normalized   = malloc(sizeof(double) * 3 * n_planes);
@@ -5951,9 +5951,8 @@ PDM_box_tree_intersect_volume_boxes
   int n_boxes = boxes->n_boxes;
 
   // Set up output
-  *volume_box_idx      = malloc(sizeof(int) * (n_volumes + 1));
+  *volume_box_idx      = PDM_array_const_int((n_volumes + 1), 0);
   int *_volume_box_idx = *volume_box_idx;
-  _volume_box_idx[0] = 0;
 
   int tmp_s_boxes = 4 * n_volumes;
   *volume_box_l_num = malloc (sizeof(int) * tmp_s_boxes);
@@ -5971,7 +5970,7 @@ PDM_box_tree_intersect_volume_boxes
     is_visited_box[i] = PDM_FALSE;
   }
 
-  int *visited_boxes = malloc(sizeof(int) * n_boxes); // Optimiser ici et dans PDM_box_tree_intersect_lines_boxes
+  int *visited_boxes = malloc(sizeof(int) * n_boxes);
 
   double *current_plane_normals = NULL;
   double *current_pt_planes     = NULL;
@@ -5989,12 +5988,16 @@ PDM_box_tree_intersect_volume_boxes
     current_pt_planes     = plane_pt_coord + volume_plane_idx[ivolume];
     current_n_plane       =  volume_plane_idx[ivolume+1] - volume_plane_idx[ivolume];
 
+    // PDM_log_trace_array_double(current_plane_normals, 12, "current_plane_normals: ");
+    // PDM_log_trace_array_double(current_pt_planes, 12, "current_plane_normals: ");
+    // log_trace("current_n_plane: %d\n", current_n_plane);
+
     // Get current box information
     _extents (dim,
               box_tree_data->nodes[0].morton_code,
               current_node_box_extents);
 
-    if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
+    if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
       stack[pos_stack++] = 0;
     }
 
@@ -6018,9 +6021,9 @@ PDM_box_tree_intersect_volume_boxes
           int box_id = box_tree_data->box_ids[node->start_id + ibox];
 
           if (is_visited_box[box_id] == PDM_FALSE) {
-            const double *box_extents = boxes->extents + box_id*2*dim;
+            double *box_extents = boxes->extents + box_id*2*dim;
 
-            if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, box_extents)) {
+            if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, box_extents)) {
               // Avoid table overflow
               if (_volume_box_idx[ivolume+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
@@ -6044,7 +6047,7 @@ PDM_box_tree_intersect_volume_boxes
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, current_node_box_extents);
 
-          if (_box_in_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
+          if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
             stack[pos_stack++] = child_id;
           }
         } // end loop on children of curent node
