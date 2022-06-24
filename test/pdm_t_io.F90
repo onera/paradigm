@@ -28,12 +28,27 @@ program pdm_io_fortran
   integer(4)                           :: rank,size,iErr
   integer(kind=pdm_g_num_s)            :: s_data
   integer(kind=pdm_g_num_s)            :: n_data
+  integer(kind=pdm_g_num_s)            :: ENDEAN
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   call MPI_INIT(iErr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD, size, iErr)
   call MPI_COMM_RANK(MPI_COMM_WORLD, rank, iErr)
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  !ENDEAN=PDM_IO_LITTLEENDIAN
+  ENDEAN=PDM_IO_BIGENDIAN
+  if( rank==0 )then
+    if( rank==0 )print '("Paradigm IO")'
+    select case(ENDEAN)
+    case(PDM_IO_BIGENDIAN)    ; print '(3x,"BIGENDEAN")'
+    case(PDM_IO_LITTLEENDIAN) ; print '(3x,"LITTLEENDEAN")'
+    end select
+  endif
+  !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+   
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   allocate(character(len=80) :: buffer)
   allocate(ptr_int(1:1))
@@ -42,7 +57,7 @@ program pdm_io_fortran
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   !> Ecriture
-  if( rank==0 )print '("Tests d''ecriture")'
+  if( rank==0 )print '(/"Tests d''ecriture")'
   
   name="toto.dat"
   call PDM_io_open(                    &
@@ -53,8 +68,7 @@ program pdm_io_fortran
   &    s_backup=PDM_IO_BACKUP_OFF     ,& !> s_backup  <-- Active le backup d'un fichier preexistant en mode ecriture
   &    acces=PDM_IO_KIND_MPIIO_EO     ,& !> accesio   <-- Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
   &    mode=PDM_IO_MOD_WRITE          ,& !> mode      <-- Mode d'acces (lecture, ecriture, lecture/ecriture)
- !&    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_IO_LITTLEENDIAN
-  &    endian=PDM_IO_BIGENDIAN        ,& !> PDM_IO_BIGENDIAN           
+  &    endian=ENDEAN                  ,& !> PDM_IO_LITTLEENDIAN/PDM_IO_BIGENDIAN           
   &    comm=MPI_COMM_WORLD            ,& !> msg_comm  <-- Communicateur lie au fichier
   &    prop_noeuds_actifs=-1d0        ,& !> - 1: tous les rangs participent  +1: seuls les rangs maitres de chaque noeud participent
   &    unite=id                       ,& !> unite     --> Unite du fichier
@@ -136,6 +150,7 @@ program pdm_io_fortran
   
   !>>> Ecriture Entrelacee
   block
+    integer                              :: iRank
     integer                              :: iLine,nLines
     character(80)                        :: ligne
     character(80), pointer               :: lignes(:)
@@ -148,7 +163,6 @@ program pdm_io_fortran
     allocate(lignes(1:nLines))
     do iLine=1,nLines
       write(ligne,'("Ecriture Entrelacee Rank: ",i3,2x,"ligne: ",i3)')rank,iLine
-      !ligne(80:80)=C_NEW_LINE
       lignes(iLine)=ligne
     enddo
     
@@ -156,6 +170,18 @@ program pdm_io_fortran
     allocate(indirection(1:nLines))
     do iLine=1,nLines
       indirection(iLine)=rank+(iLine-1)*nLines+1 !> Rangement Rank/iLine
+      
+      !indirection(iLine)=iLine !> Rangement Rank/iLine
+    enddo
+    
+    do iRank=0,size-1
+      if( rank==iRank )then
+        print '("rank= ",i0)',rank
+        do iLine=1,nLines
+          print '(3x,"Indirection sur rank",i0,": ",i3," -> ",i3)',rank,iLine,indirection(iLine)
+        enddo
+      endif
+      call mpi_barrier(MPI_COMM_WORLD,iErr)
     enddo
     
     allocate( iTab(1:1) ) ; iTab(1)=1                 !> <=
@@ -171,6 +197,16 @@ program pdm_io_fortran
     
     deallocate(indirection)
     
+    do iRank=0,size-1
+      if( rank==iRank )then
+        print '("rank= ",i0)',rank
+        do iLine=1,nLines
+          print '(3x,"Ecrit sur rank",i0,": """,a,"""")',rank,lignes(iLine)
+        enddo
+      endif
+      call mpi_barrier(MPI_COMM_WORLD,iErr)
+    enddo
+
     deallocate(lignes)
   end block
   !<<< Ecriture Entrelacee
@@ -189,8 +225,7 @@ program pdm_io_fortran
   &    s_backup=PDM_IO_BACKUP_OFF     ,& !> s_backup  <-- Active le backup d'un fichier preexistant en mode ecriture
   &    acces=PDM_IO_KIND_MPIIO_EO     ,& !> accesio   <-- Type (parallele avec mpiio, parallele sans mpiio, sequentiel)
   &    mode=PDM_IO_MOD_READ           ,& !> mode      <-- Mode d'acces (lecture, ecriture, lecture/ecriture)
- !&    endian=PDM_IO_LITTLEENDIAN     ,& !> PDM_IO_LITTLEENDIAN
-  &    endian=PDM_IO_BIGENDIAN        ,& !> PDM_IO_BIGENDIAN           
+  &    endian=ENDEAN                  ,& !> PDM_IO_LITTLEENDIAN/PDM_IO_BIGENDIAN           
   &    comm=MPI_COMM_WORLD            ,& !> msg_comm  <-- Communicateur lie au fichier
   &    prop_noeuds_actifs=-1d0        ,& !> - 1: tous les rangs participent  +1: seuls les rangs maitres de chaque noeud participent
   &    unite=id                       ,& !> unite     --> Unite du fichier
@@ -305,7 +340,7 @@ program pdm_io_fortran
     deallocate(iTab)
     
     deallocate(indirection)
-        
+    
     do iRank=0,size-1
       if( rank==iRank )then
         print '("rank= ",i0)',rank
@@ -336,13 +371,22 @@ program pdm_io_fortran
     if( rank==0 )then
       print '(/"Lecture Fortran sur rank 0")'
       
-      open(newunit=iUnit                        ,&
-      &    file=trim(name)                      ,&
-      &    access='stream'                      ,&
-      &    form='unformatted'                   ,&
-      &    convert="BIG_ENDIAN"                 ,&
-      &    action='read'                         )
-      
+      select case(ENDEAN)
+      case(PDM_IO_BIGENDIAN)
+        open(newunit=iUnit                        ,&
+        &    file=trim(name)                      ,&
+        &    access='stream'                      ,&
+        &    form='unformatted'                   ,&
+        &    convert="BIG_ENDIAN"                 ,&
+        &    action='read'                         )
+      case(PDM_IO_LITTLEENDIAN)
+        open(newunit=iUnit                        ,&
+        &    file=trim(name)                      ,&
+        &    access='stream'                      ,&
+        &    form='unformatted'                   ,&
+        &    action='read'                         )
+      end select
+
       read(iUnit)ptr_int(1) ; print '(3x,"ptr_int(1)=",i0          )',ptr_int(1)
       read(iUnit)ptr_r8 (1) ; print '(3x,"ptr_r8 (1)=",e22.15      )',ptr_r8 (1)
       read(iUnit)ptr_c8 (1) ; print '(3x,"ptr_c8 (1)=",2(e22.15,1x))',ptr_c8 (1)
