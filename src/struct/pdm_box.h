@@ -104,6 +104,28 @@ PDM_box_set_normalize_robust
  double         *pts_normalized
  );
 
+/**
+ *
+ * \brief Normalize a set of vectors according to a box set
+ *
+ * This implementation prevents division by zero.
+ *
+ * \param [in]   boxes              Pointer to box set structure
+ * \param [in]   n_pts              Number of coordinates
+ * \param [in]   pts_origin         Coordinates (size = 3 * \ref n_pts)
+ * \param [out]  pts_normalized     Normalized coordinates (size = 3 * \ref n_pts)
+ *
+ */
+
+void
+PDM_box_set_normalize_vector_robust
+(
+ PDM_box_set_t  *boxes,
+ const int       n_pts,
+ double         *pts_origin,
+ double         *pts_normalized
+ );
+
 
 /**
  *

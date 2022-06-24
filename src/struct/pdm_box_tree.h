@@ -569,7 +569,9 @@ PDM_box_tree_intersect_volume_boxes
  double         *plane_normal,
  double         *plane_pt_coord,
  int           **volume_box_idx,
- int           **volume_box_l_num
+ int           **volume_box_l_num,
+ double         *edge,
+ double         *direction_pt
  );
 
 void

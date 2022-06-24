@@ -96,6 +96,7 @@ _random01
   sign = (rsigna - rsignb) / PDM_ABS (rsigna - rsignb);
   double resultat = sign*((double)rand())/((double)RAND_MAX);
   return resultat;
+  // return (double) rand() / (double) RAND_MAX;
 }
 
 /* code from pdm_t_intersect_line_box */
@@ -265,6 +266,13 @@ PDM_g_num_t **vtx_g_num_in,
 int         **face_vtx_in
 )
 {
+  if (1) {
+    PDM_log_trace_array_double(edge, 9, "edge : ");
+    PDM_log_trace_array_double(direction_pt, 3, "direction_pt : ");
+    PDM_log_trace_array_double(n, 12, "n : ");
+    PDM_log_trace_array_double(pt_plane, 12, "pt_plane : ");
+  }
+
   *vtx_coord_in = malloc(sizeof(double) * 12 * 3);
   *vtx_g_num_in = malloc(sizeof(PDM_g_num_t) * 12);
   *face_vtx_in  = malloc(sizeof(int) * 12);
@@ -337,6 +345,136 @@ int         **face_vtx_in
 
 }
 
+/*
+ * \brief Determine if a box is on the side of the plane where the normal points to
+ *
+ * \param [in]  n                Normal vector (n = (a, b, c))
+ * \param [in]  plane_pt         Point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n)
+ * \param [in]  box_extents      Box to determine
+ *
+ * \return 1 if the box is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+static int
+_plane_box_side
+(
+double *n,
+double *plane_pt,
+double *box_extents
+)
+{
+  double box_pt[3];
+  double vect[3];
+
+  for (int x = 0; x < 4; x += 3) {
+    box_pt[0] = box_extents[x];
+    for (int y = 1; y < 5; y += 3) {
+      box_pt[1] = box_extents[y];
+      for (int z = 2; z < 6; z += 3) {
+        box_pt[2] = box_extents[z];
+        vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
+        if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
+          return 1;
+        }
+      } // end loop on z
+    } // end loop on y
+  } // end loop on x
+  return 0;
+}
+
+/*
+ * \brief Determine a box is in a given volume region
+ *
+ * \param [in]  n_planes      Number of planes difining the volume
+ * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
+ * \param [in]  plane_pt      Table of a point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n) for each considered plane
+ * \param [in]  box_extents   Points to determine
+ *
+ * \return 1 if the plane_pt is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+
+// static int
+// _box_in_volume
+// (
+// int      n_planes,
+// double  *n,
+// double  *plane_pt,
+// double  *box_extents
+// )
+// {
+//   double n_iplane[3];
+//   double plane_pt_iplane[3];
+
+//   for (int iplane = 0; iplane < n_planes; iplane++) {
+
+//     n_iplane[0] = n[3*iplane];
+//     n_iplane[1] = n[3*iplane+1];
+//     n_iplane[2] = n[3*iplane+2];
+
+//     plane_pt_iplane[0] = plane_pt[3*iplane];
+//     plane_pt_iplane[1] = plane_pt[3*iplane+1];
+//     plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+//     if (_plane_box_side(n_iplane, plane_pt_iplane, box_extents) == 0) {
+//       return 0;
+//     }
+//   } // end loop on planes
+//   return 1;
+// }
+
+static int
+_box_intersect_volume
+(
+int      n_planes,
+double  *n,
+double  *plane_pt,
+double  *box_extents
+)
+{
+  double box_pt[3];
+  double vect[3];
+  double n_iplane[3];
+  double plane_pt_iplane[3];
+
+  int count_intersected_planes;
+
+  for (int x = 0; x < 4; x += 3) {
+    box_pt[0] = box_extents[x];
+    for (int y = 1; y < 5; y += 3) {
+      box_pt[1] = box_extents[y];
+      for (int z = 2; z < 6; z += 3) {
+        box_pt[2] = box_extents[z];
+
+        count_intersected_planes = 0;
+
+        for (int iplane = 0; iplane < n_planes; iplane++) {
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) >= 0) {
+            count_intersected_planes++;
+          }
+
+        } // end loop on planes
+
+        if (count_intersected_planes == n_planes) {
+          return 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
 /**
  *
  * \brief  Main
@@ -381,7 +519,7 @@ int main(int argc, char *argv[])
   direction_pt[1] = 10;
   direction_pt[2] = 0;
   double theta = PDM_PI / 3;
-  double eps   = 1;
+  double eps   = 0;
 
   double *n        = NULL;
   double *pt_plane = NULL;
@@ -403,7 +541,7 @@ int main(int argc, char *argv[])
                                 &vtx_g_num,
                                 &face_vtx);
 
-  char *filename = "planes.vtk";
+  const char *filename = "planes.vtk";
 
    PDM_vtk_write_std_elements(filename,
                               12,
@@ -434,7 +572,7 @@ int main(int argc, char *argv[])
   int *origin = PDM_array_zeros_int(3 * n_boxes);
 
   PDM_box_set_t *boxes = PDM_box_set_create(3,
-                                            0,
+                                            1,
                                             0,
                                             n_boxes,
                                             box_ln_to_gn,
@@ -460,6 +598,20 @@ int main(int argc, char *argv[])
                       box_extents,
                       box_ln_to_gn);
 
+  // box à la main
+  int *vol_boxes = malloc(sizeof(int) * n_boxes);
+  int count = 0;
+  int check;
+  for (int j = 0; j < n_boxes; j++) {
+    check = _box_intersect_volume(4, n, pt_plane, box_extents + 6*j);
+    if (check) {
+      vol_boxes[count++] = j;
+    }
+  }
+  PDM_log_trace_array_int(vol_boxes, count, "vol_boxes: ");
+
+  free(vol_boxes);
+
   // Get for each volume the boxes it contains/intersects
   int *volume_box_idx   = NULL;
   int *volume_box_l_num = NULL;
@@ -476,9 +628,21 @@ int main(int argc, char *argv[])
                                       n,
                                       pt_plane,
                                       &volume_box_idx,
-                                      &volume_box_l_num);
+                                      &volume_box_l_num,
+                                      edge,
+                                      direction_pt);
 
   PDM_box_tree_dump(bt);
+
+  PDM_box_tree_write_vtk("box_tree_normalized.vtk",
+                         bt,
+                         -1,
+                         1);
+
+  PDM_box_tree_write_vtk("box_tree.vtk",
+                       bt,
+                       -1,
+                       0);
 
   PDM_log_trace_connectivity_int(volume_box_idx, volume_box_l_num, n_volumes, "volume->box: ");
   PDM_log_trace_array_long(box_ln_to_gn, n_boxes, "box_ln_to_gn: ");

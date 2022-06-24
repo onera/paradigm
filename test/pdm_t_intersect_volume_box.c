@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
 
   // vtk output of atomic test case
 
-  char *filename1 = "box.vtk";
+  const char *filename1 = "box.vtk";
   PDM_g_num_t *box_g_num = malloc(sizeof(PDM_g_num_t) * 1);
   box_g_num[0] = 1;
 
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
                       box_extents1,
                       box_g_num);
 
-  char *filename2 = "line.vtk";
+  const char *filename2 = "line.vtk";
   double *coord = malloc(sizeof(double) * 6);
   coord[0] = edge[3];
   coord[1] = edge[4];
@@ -515,7 +515,7 @@ int main(int argc, char *argv[])
                       line_g_num,
                       NULL);
 
-  char *filename3 = "planes.vtk";
+  const char *filename3 = "planes.vtk";
   double *vtx_coord = malloc(sizeof(double) * 30);
   PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * 10);
   int *face_vtx = malloc(sizeof(int) * 12);
@@ -605,7 +605,7 @@ int main(int argc, char *argv[])
                              NULL,
                              NULL);
 
-  char *filename4 = "normal.vtk";
+  const char *filename4 = "normal.vtk";
 
   double *vector_normal[1] = {n};
 
@@ -722,7 +722,7 @@ int main(int argc, char *argv[])
 
   }
 
-  char *filename6 = "scale_up_boxes.vtk";
+  const char *filename6 = "scale_up_boxes.vtk";
 
   PDM_vtk_write_boxes_with_field(filename6,
                                  n_box,
@@ -732,7 +732,7 @@ int main(int argc, char *argv[])
                  (const char **) box_tag_names,
                (const double **) box_tag);
 
-  char *filename7 = "scale_up_plane_boxes.vtk";
+  const char *filename7 = "scale_up_plane_boxes.vtk";
 
   PDM_vtk_write_boxes(filename7,
                       n_box_plane,
