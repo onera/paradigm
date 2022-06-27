@@ -1066,6 +1066,7 @@ _evaluate_splitting_3d(PDM_box_tree_t       *bt,
     const double  *box_min = _box_min(boxes, box_id);
     const double  *box_max = _box_max(boxes, box_id);
 
+
     min_code = PDM_morton_encode(3, next_level, box_min);
     max_code = PDM_morton_encode(3, next_level, box_max);
 
@@ -3098,7 +3099,7 @@ _dump_node(const PDM_box_tree_t  *bt,
 }
 
 /*
- * \brief Determine a box is intersects a given volume region
+ * \brief Determine if a box intersects a given volume region
  *
  * \param [in]  n_planes      Number of planes difining the volume
  * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
@@ -5884,104 +5885,12 @@ PDM_box_tree_intersect_lines_boxes2
  * \param [in]   i_copied_rank         Copied rank
  * \param [in]   n_volumes             Number of volumes
  * \param [in]   n_planes_per_volume   Index of the number of planes per volume
- * \param [in]   plane_normal          Oriented normal vector for a given plane
+ * \param [in]   plane_normal          Oriented normal vector for a given plane (oriented toward the interior of the volume)
  * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
  * \param [out]  volume_box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
  * \param [out]  volume_box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
  *
  */
-
-static void
-_volume_4planes_to_4triangles
-(
-double       *edge,
-double       *direction_pt,
-double       *n,
-double       *pt_plane,
-double      **vtx_coord_in,
-PDM_g_num_t **vtx_g_num_in,
-int         **face_vtx_in
-)
-{
-  log_trace("Tata!!!!!\n");
-  if (1) {
-    PDM_log_trace_array_double(edge, 9, "edge : ");
-    PDM_log_trace_array_double(direction_pt, 3, "direction_pt : ");
-    PDM_log_trace_array_double(n, 12, "n : ");
-    PDM_log_trace_array_double(pt_plane, 12, "pt_plane : ");
-  }
-
-  *vtx_coord_in = malloc(sizeof(double) * 12 * 3);
-  *vtx_g_num_in = malloc(sizeof(PDM_g_num_t) * 12);
-  *face_vtx_in  = malloc(sizeof(int) * 12);
-
-  double *vtx_coord = *vtx_coord_in;
-  PDM_g_num_t *vtx_g_num = *vtx_g_num_in;
-  int *face_vtx = *face_vtx_in;
-
-  for (int i = 0; i < 12; i ++) {
-    vtx_g_num[i] = i + 1;
-    face_vtx[i]  = i +1;
-  }
-
-  double x[3];
-  double origin[3];
-  double normal[3];
-  double proj_x[3];
-
-  // translation plane 1
-  // project E on 1
-  for (int k = 0; k < 3; k++) {
-    origin[k] = pt_plane[k]; // G
-    normal[k] = n[k];
-    x[k] = pt_plane[6 + k]; // E
-    vtx_coord[k] = pt_plane[k]; // G
-  }
-  PDM_plane_projection(x, origin, normal, proj_x);
-  // project D on 1
-  for (int k = 0; k < 3; k++) {
-    x[k] = direction_pt[k]; // D
-    vtx_coord[3 + k] = proj_x[k]; // proj_E
-  }
-  PDM_plane_projection(x, origin, normal, proj_x);
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[6 + k] = proj_x[k]; // proj_D
-  }
-
-  // translation plane 2
-  // project E on 2
-  for (int k = 0; k < 3; k++) {
-    origin[k] = pt_plane[3 + k]; // H
-    normal[k] = n[3 + k];
-    x[k] = pt_plane[6 + k]; // E
-    vtx_coord[9 + k] = pt_plane[3 + k]; // H
-  }
-  PDM_plane_projection(x, origin, normal, proj_x);
-  // project D on 2
-  for (int k = 0; k < 3; k++) {
-    x[k] = direction_pt[k]; // D
-    vtx_coord[12 + k] = proj_x[k]; // proj_E
-  }
-  PDM_plane_projection(x, origin, normal, proj_x);
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[15 + k] = proj_x[k]; // proj_D
-  }
-
-  // rotation plane 3
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[18 + 3*0 + k] = edge[k]; // A
-    vtx_coord[18 + 3*1 + k] = edge[6 + k]; // B
-    vtx_coord[18 + 3*2 + k] = pt_plane[6 + k]; // E
-  }
-
-  // rotation plane 4
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[27 + 3*0 + k] = edge[k]; // A
-    vtx_coord[27 + 3*1 + k] = edge[6 + k]; // B
-    vtx_coord[27 + 3*2 + k] = pt_plane[9 + k]; // E
-  }
-
-}
 
 void
 PDM_box_tree_intersect_volume_boxes
@@ -5993,19 +5902,13 @@ PDM_box_tree_intersect_volume_boxes
  double         *plane_normal,
  double         *plane_pt_coord,
  int           **volume_box_idx,
- int           **volume_box_l_num,
- double         *edge,
- double         *direction_pt
+ int           **volume_box_l_num
  )
  {
   if (i_copied_rank >= bt->n_copied_ranks) {
     PDM_error(__FILE__, __LINE__, 0, "Copied rank %d >= Number of copied ranks\n", (int) i_copied_rank);
   }
 
-  log_trace("Tatic!!!!!\n");
-  if (1) {
-    PDM_log_trace_array_double(plane_pt_coord, 12, "plane_pt_coord : ");
-  }
 
   const int dim = bt->boxes->dim;
 
@@ -6014,8 +5917,6 @@ PDM_box_tree_intersect_volume_boxes
 
   double *plane_pt_coord_normalized = malloc(sizeof(double) * 3 * n_planes);
   double *plane_normal_normalized   = malloc(sizeof(double) * 3 * n_planes);
-  double *edge_normalized = malloc(sizeof(double) * 3 * n_planes);
-  double *direction_pt_normalized   = malloc(sizeof(double) * 3 * n_planes);
 
   // Normalize coordinates
   PDM_box_set_normalize_robust((PDM_box_set_t *) bt->boxes,
@@ -6023,54 +5924,10 @@ PDM_box_tree_intersect_volume_boxes
                                                  plane_pt_coord,
                                                  plane_pt_coord_normalized);
 
-  PDM_box_set_normalize_robust((PDM_box_set_t *) bt->boxes,
-                                                 3,
-                                                 edge,
-                                                 edge_normalized);
-
-  PDM_box_set_normalize_robust((PDM_box_set_t *) bt->boxes,
-                                                 1,
-                                                 direction_pt,
-                                                 direction_pt_normalized);
-
-  PDM_log_trace_array_double(plane_pt_coord, n_planes * 3,"plane_pt_coord: ");
-  PDM_log_trace_array_double(plane_pt_coord_normalized, n_planes * 3,"plane_pt_coord_normalized: ");
-
-  PDM_box_set_normalize_vector_robust((PDM_box_set_t *) bt->boxes,
+  PDM_box_set_normalize_normal_vector((PDM_box_set_t *) bt->boxes,
                                                         n_planes,
                                                         plane_normal,
                                                         plane_normal_normalized);
-
-  PDM_log_trace_array_double(plane_normal, n_planes * 3,"plane_normal: ");
-  PDM_log_trace_array_double(plane_normal_normalized, n_planes * 3,"plane_normal_normalized: ");
-
-  // tmp vtk
-
-  double *vtx_coord =  NULL;
-  PDM_g_num_t *vtx_g_num =  NULL;
-  int *face_vtx = NULL;
-
-  _volume_4planes_to_4triangles(edge_normalized,
-                                direction_pt_normalized,
-                                plane_normal_normalized,
-                                plane_pt_coord_normalized,
-                                &vtx_coord,
-                                &vtx_g_num,
-                                &face_vtx);
-
-  const char *filename = "planes_normalised.vtk";
-
-   PDM_vtk_write_std_elements(filename,
-                              12,
-                              vtx_coord,
-                              vtx_g_num,
-                              PDM_MESH_NODAL_TRIA3,
-                              4,
-                              face_vtx,
-                              NULL,
-                              0,
-                              NULL,
-                              NULL);
 
   // Different pointer depending if it is a copied rank or not
   PDM_boxes_t *boxes;
@@ -6125,13 +5982,9 @@ PDM_box_tree_intersect_volume_boxes
     pos_stack = 0;
 
     // Get current volume information
-    current_plane_normals = plane_normal + volume_plane_idx[ivolume];
-    current_pt_planes     = plane_pt_coord + volume_plane_idx[ivolume];
-    current_n_plane       =  volume_plane_idx[ivolume+1] - volume_plane_idx[ivolume];
-
-    // PDM_log_trace_array_double(current_plane_normals, 12, "current_plane_normals: ");
-    // PDM_log_trace_array_double(current_pt_planes, 12, "current_plane_normals: ");
-    // log_trace("current_n_plane: %d\n", current_n_plane);
+    current_plane_normals = plane_normal_normalized + volume_plane_idx[ivolume];
+    current_pt_planes     = plane_pt_coord_normalized + volume_plane_idx[ivolume];
+    current_n_plane       = volume_plane_idx[ivolume+1] - volume_plane_idx[ivolume];
 
     // Get current box information
     _extents (dim,
@@ -6187,6 +6040,14 @@ PDM_box_tree_intersect_volume_boxes
         for (int ichild = 0; ichild < bt->n_children; ichild++) {
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, current_node_box_extents);
+
+          char filename99[999];
+          sprintf(filename99, "node_box_%d.vtk", child_id);
+
+          PDM_vtk_write_boxes(filename99,
+                              1,
+                              current_node_box_extents,
+                              NULL);
 
           if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
             stack[pos_stack++] = child_id;

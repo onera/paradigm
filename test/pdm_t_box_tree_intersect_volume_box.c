@@ -18,6 +18,7 @@
 #include "pdm_distrib.h"
 #include "pdm_gnum.h"
 #include "pdm_array.h"
+#include "pdm_box_priv.h"
 #include "pdm_box.h"
 #include "pdm_box_tree.h"
 #include "pdm_plane.h"
@@ -266,13 +267,6 @@ PDM_g_num_t **vtx_g_num_in,
 int         **face_vtx_in
 )
 {
-  if (1) {
-    PDM_log_trace_array_double(edge, 9, "edge : ");
-    PDM_log_trace_array_double(direction_pt, 3, "direction_pt : ");
-    PDM_log_trace_array_double(n, 12, "n : ");
-    PDM_log_trace_array_double(pt_plane, 12, "pt_plane : ");
-  }
-
   *vtx_coord_in = malloc(sizeof(double) * 12 * 3);
   *vtx_g_num_in = malloc(sizeof(PDM_g_num_t) * 12);
   *face_vtx_in  = malloc(sizeof(int) * 12);
@@ -355,32 +349,32 @@ int         **face_vtx_in
  * \return 1 if the box is on the side of the plane where the normal points to, 0 otherwise
  */
 
-static int
-_plane_box_side
-(
-double *n,
-double *plane_pt,
-double *box_extents
-)
-{
-  double box_pt[3];
-  double vect[3];
+// static int
+// _plane_box_side
+// (
+// double *n,
+// double *plane_pt,
+// double *box_extents
+// )
+// {
+//   double box_pt[3];
+//   double vect[3];
 
-  for (int x = 0; x < 4; x += 3) {
-    box_pt[0] = box_extents[x];
-    for (int y = 1; y < 5; y += 3) {
-      box_pt[1] = box_extents[y];
-      for (int z = 2; z < 6; z += 3) {
-        box_pt[2] = box_extents[z];
-        vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
-        if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
-          return 1;
-        }
-      } // end loop on z
-    } // end loop on y
-  } // end loop on x
-  return 0;
-}
+//   for (int x = 0; x < 4; x += 3) {
+//     box_pt[0] = box_extents[x];
+//     for (int y = 1; y < 5; y += 3) {
+//       box_pt[1] = box_extents[y];
+//       for (int z = 2; z < 6; z += 3) {
+//         box_pt[2] = box_extents[z];
+//         vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
+//         if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
+//           return 1;
+//         }
+//       } // end loop on z
+//     } // end loop on y
+//   } // end loop on x
+//   return 0;
+// }
 
 /*
  * \brief Determine a box is in a given volume region
@@ -475,6 +469,22 @@ double  *box_extents
   return 0;
 }
 
+static int
+_is_in_int_tab
+(
+int value,
+int len_tab,
+int *tab
+)
+{
+  for (int i = 0; i < len_tab; i++) {
+    if (tab[i] == value) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 /**
  *
  * \brief  Main
@@ -557,7 +567,7 @@ int main(int argc, char *argv[])
 
   // Create boxes extents
 
-  int gn_box = 10;
+  int gn_box = 10000;
   double      *box_extents  = NULL;
   PDM_g_num_t *box_ln_to_gn = NULL;
 
@@ -570,6 +580,11 @@ int main(int argc, char *argv[])
   // Create boxes
 
   int *origin = PDM_array_zeros_int(3 * n_boxes);
+  for (int i = 0 ; i < n_boxes; i++) {
+    origin[3*i  ] = 0;
+    origin[3*i+1] = 0;
+    origin[3*i+2] = i;
+  }
 
   PDM_box_set_t *boxes = PDM_box_set_create(3,
                                             1,
@@ -581,16 +596,18 @@ int main(int argc, char *argv[])
                                             &n_boxes, // n_boxes_orig
                                             origin, // origin
                                             comm);
-
   // Create PDM_box_tree_t
-  PDM_box_tree_t* bt = PDM_box_tree_create(10,
-                                           5,
-                                           6);
+  PDM_box_tree_t* bt = PDM_box_tree_create(1000,
+                                           10,
+                                           10);
 
   // Build tree and associate boxes
   PDM_box_tree_set_boxes(bt,
                          boxes,
                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  // WARNING: boxes outputed on internal nodes are wrong
+  PDM_box_tree_dump(bt);
 
   // VTK boxes output
   PDM_vtk_write_boxes("boxes.vtk",
@@ -598,7 +615,7 @@ int main(int argc, char *argv[])
                       box_extents,
                       box_ln_to_gn);
 
-  // box à la main
+  // Brute force box intersection computation
   int *vol_boxes = malloc(sizeof(int) * n_boxes);
   int count = 0;
   int check;
@@ -608,9 +625,6 @@ int main(int argc, char *argv[])
       vol_boxes[count++] = j;
     }
   }
-  PDM_log_trace_array_int(vol_boxes, count, "vol_boxes: ");
-
-  free(vol_boxes);
 
   // Get for each volume the boxes it contains/intersects
   int *volume_box_idx   = NULL;
@@ -628,11 +642,17 @@ int main(int argc, char *argv[])
                                       n,
                                       pt_plane,
                                       &volume_box_idx,
-                                      &volume_box_l_num,
-                                      edge,
-                                      direction_pt);
+                                      &volume_box_l_num);
 
-  PDM_box_tree_dump(bt);
+  // Check if the same result as with brute force is obtained
+  log_trace("is everything ok?\n");
+  for (int i = 0; i < volume_box_idx[n_volumes]; i++) {
+    if (!_is_in_int_tab(volume_box_l_num[i], count, vol_boxes)) {
+      log_trace("box %d is not detected as intersecting by the box_tree\n", volume_box_l_num[i]);
+    }
+  }
+
+  free(vol_boxes);
 
   PDM_box_tree_write_vtk("box_tree_normalized.vtk",
                          bt,
@@ -643,11 +663,6 @@ int main(int argc, char *argv[])
                        bt,
                        -1,
                        0);
-
-  PDM_log_trace_connectivity_int(volume_box_idx, volume_box_l_num, n_volumes, "volume->box: ");
-  PDM_log_trace_array_long(box_ln_to_gn, n_boxes, "box_ln_to_gn: ");
-
-  // Free's : how to free bt?
 
   PDM_MPI_Finalize ();
 }

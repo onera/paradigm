@@ -541,8 +541,6 @@ PDM_box_set_normalize_robust
  *
  * \brief Normalize a set of vectors according to a box set
  *
- * This implementation prevents division by zero.
- *
  * \param [in]   boxes              Pointer to box set structure
  * \param [in]   n_pts              Number of coordinates
  * \param [in]   pts_origin         Coordinates (size = 3 * \ref n_pts)
@@ -551,7 +549,7 @@ PDM_box_set_normalize_robust
  */
 
 void
-PDM_box_set_normalize_vector_robust
+PDM_box_set_normalize_normal_vector
 (
  PDM_box_set_t  *boxes,
  const int       n_pts,
@@ -559,26 +557,9 @@ PDM_box_set_normalize_vector_robust
  double         *pts_normalized
  )
 {
-  double invd[3] = {1., 1., 1.};
-
-  double d_max = 0.0;
-  const double epsilon = 1e-4;
-
-  for (int i = 0; i < boxes->dim; i++) {
-    d_max = PDM_MAX(d_max, boxes->d[i]);
-  }
-
-  double eps_max = PDM_MAX (d_max * epsilon, 1e-6);
-
-  for (int i = 0; i < boxes->dim; i++) {
-    if (boxes->d[i] >= eps_max) {
-      invd[i] = 1. / boxes->d[i];
-    }
-  }
-
   for (int i = 0; i < n_pts; i++) {
     for (int j = 0; j < boxes->dim; j++) {
-      pts_normalized[3*i + j] = pts_origin[3*i + j] * invd[j]; // only expension and not translation
+      pts_normalized[3*i + j] = pts_origin[3*i + j] * boxes->d[j]; // n'=(D^-1)^T*n (cf https://www.f-legrand.fr/scidoc/docimg/graphie/geometrie/affine/affine.html)
     }
   }
 }

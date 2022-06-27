@@ -552,7 +552,7 @@ PDM_box_tree_intersect_lines_boxes2
  * \param [in]   i_copied_rank         Copied rank
  * \param [in]   n_volumes             Number of volumes
  * \param [in]   n_planes_per_volume   Index of the number of planes per volume
- * \param [in]   plane_normal          Oriented normal vector for a given plane
+ * \param [in]   plane_normal          Oriented normal vector for a given plane (oriented toward the interior of the volume)
  * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
  * \param [out]  volume_box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
  * \param [out]  volume_box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
@@ -569,9 +569,7 @@ PDM_box_tree_intersect_volume_boxes
  double         *plane_normal,
  double         *plane_pt_coord,
  int           **volume_box_idx,
- int           **volume_box_l_num,
- double         *edge,
- double         *direction_pt
+ int           **volume_box_l_num
  );
 
 void
