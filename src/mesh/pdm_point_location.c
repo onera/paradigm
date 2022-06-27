@@ -993,11 +993,45 @@ _locate_in_cell_3d
 
     /* Failed to compute parametric coordinates */
     else {
+      // Retrieve ho type
+      PDM_Mesh_nodal_elt_t t_elt_ho;
+      switch (elt_type) {
+        case PDM_MESH_NODAL_BAR2:
+          t_elt_ho = PDM_MESH_NODAL_BARHO;
+          break;
+
+        case PDM_MESH_NODAL_TRIA3:
+          t_elt_ho = PDM_MESH_NODAL_TRIAHO;
+          break;
+
+        case PDM_MESH_NODAL_QUAD4:
+          t_elt_ho = PDM_MESH_NODAL_QUADHO;
+          break;
+
+        case PDM_MESH_NODAL_TETRA4:
+          t_elt_ho = PDM_MESH_NODAL_TETRAHO;
+          break;
+
+        case PDM_MESH_NODAL_PYRAMID5:
+          t_elt_ho = PDM_MESH_NODAL_PYRAMIDHO;
+          break;
+
+        case PDM_MESH_NODAL_PRISM6:
+          t_elt_ho = PDM_MESH_NODAL_PRISMHO;
+          break;
+
+        case PDM_MESH_NODAL_HEXA8:
+          t_elt_ho = PDM_MESH_NODAL_HEXAHO;
+          break;
+
+        default:
+          t_elt_ho = elt_type;
+      }
       /*
        * Use hierarchical subdivision
        */
       double _proj_coord[3];
-      double dist2 = PDM_ho_location (elt_type,
+      double dist2 = PDM_ho_location (t_elt_ho,
                                       order,
                                       n_vtx,
                                       _cell_coord,
