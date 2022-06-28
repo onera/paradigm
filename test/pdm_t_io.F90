@@ -39,7 +39,7 @@ contains
   
   subroutine LectureEcriture(ENDEAN)
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    integer(kind=pdm_g_num_s)            :: ENDEAN
+    integer(kind=4          )            :: ENDEAN
     !>
     character(80)                        :: name
     type(c_ptr)                          :: id
@@ -52,7 +52,7 @@ contains
     complex(8), pointer                  :: ptr_c8 (:)
     character(len=:), pointer            :: buffer=>null()
     type(c_ptr)                          :: cptr
-    integer(kind=pdm_g_num_s)            :: s_data
+    integer(kind=4)                      :: s_data
     integer(kind=pdm_g_num_s)            :: n_data
     character(80), pointer               :: lignesBlock(:)
     character(80), pointer               :: lignesEntre(:)
@@ -352,7 +352,7 @@ contains
       integer                              :: iLine,nLines
       character(80)                        :: ligne
       character(80), pointer               :: lignes(:)
-      integer, pointer                     :: indirection(:)
+      integer (kind = pdm_g_num_s), pointer:: indirection(:)
       integer, pointer                     :: iTab(:)
       type(c_ptr)                          :: cptr
       
