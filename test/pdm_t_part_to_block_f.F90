@@ -123,7 +123,6 @@ program testf
 
 
   call PDM_part_to_block_exch (ptb,                       &
-                               pdm_l_num_s,               & ! s_data
                                PDM_STRIDE_VAR_INTERLACED, & ! t_stride
                                1,                         & ! cst_stride
                                part_stride,               &

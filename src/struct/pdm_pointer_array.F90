@@ -42,6 +42,7 @@ module pdm_pointer_array
   type PDM_pointer_array_t
 
     integer                       :: type = -1
+    integer                       :: s_data = -1
     type(c_ptr),          pointer :: cptr(:)   => null()
     integer(pdm_l_num_s), pointer :: length(:) => null()
 
@@ -75,6 +76,11 @@ module pdm_pointer_array
   end interface
 
 
+  interface PDM_pointer_array_create
+    module procedure PDM_pointer_array_create_size
+    module procedure PDM_pointer_array_create_type
+  end interface
+  
   contains
 
 
@@ -86,7 +92,7 @@ module pdm_pointer_array
   !! \param [in]   type    Data type of pointers
   !!
 
-  subroutine PDM_pointer_array_create (pa,     &
+  subroutine PDM_pointer_array_create_type (pa,     &
                                        n_part, &
                                        type)
     use iso_c_binding
@@ -107,8 +113,42 @@ module pdm_pointer_array
       pa%length(i) = 0
     end do
 
-  end subroutine PDM_pointer_array_create
+  end subroutine PDM_pointer_array_create_type
 
+
+  !>
+  !! \brief Initialize a \ref PDM_pointer_array_t object
+  !!
+  !! \param [out]  pa      \ref PDM_pointer_array_t object
+  !! \param [in]   n_part  Number of partitions
+  !! \param [in]   type    Data type of pointers
+  !!
+
+  subroutine PDM_pointer_array_create_size (pa,     &
+                                       n_part, &
+                                       type,   &
+                                       s_data)
+    use iso_c_binding
+    implicit none
+
+    type(PDM_pointer_array_t), target  :: pa
+    integer, intent(in)                :: n_part
+    integer, intent(in)                :: type
+    integer, intent(in)                :: s_data
+
+    integer                            :: i
+
+    pa%type = type
+    allocate(pa%cptr(n_part))
+    allocate(pa%length(n_part))
+    pa%s_data = s_data
+
+    do i = 1, n_part
+      pa%cptr(i)   = C_NULL_PTR
+      pa%length(i) = 0
+    end do
+
+  end subroutine PDM_pointer_array_create_size
 
 
   !>
@@ -191,6 +231,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 4
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -225,6 +268,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 8
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -259,6 +305,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 8
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -282,7 +331,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     complex (kind = 4),        pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_COMPLEX4) then
       print *, "PDM_pointer_array_part_set_comùplex4 : wrong type"
       stop
     end if
@@ -292,6 +341,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 4
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -315,7 +367,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     complex (kind = 8),        pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_COMPLEX8) then
       print *, "PDM_pointer_array_part_set_comùplex8 : wrong type"
       stop
     end if
@@ -325,6 +377,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 8
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -349,7 +404,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     real (kind = 4),                    pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_REAL4) then
       print *, "PDM_pointer_array_part_set_real4 : wrong type"
       stop
     end if
@@ -359,6 +414,9 @@ module pdm_pointer_array
       stop
     end if
 
+    if (pa%s_data .eq. -1) then
+      pa%s_data = 4
+    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -532,7 +590,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     real (kind=4),             pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_REAL4) then
       print *, "PDM_pointer_array_part_set_double : wrong type"
       stop
     end if
@@ -569,7 +627,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     complex (kind=4),             pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_COMPLEX4) then
       print *, "PDM_pointer_array_part_get_complex4 : wrong type"
       stop
     end if
@@ -607,7 +665,7 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     complex (kind=8),             pointer :: pointer_f(:)
 
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
+    if (pa%type .ne. PDM_TYPE_COMPLEX8) then
       print *, "PDM_pointer_array_part_get_complex8 : wrong type"
       stop
     end if
@@ -647,11 +705,6 @@ module pdm_pointer_array
     integer, intent(in)                :: i_part
     type(c_ptr)                        :: pointer_c
     integer                            :: length
-
-    if (pa%type .ne. PDM_TYPE_DOUBLE) then
-      print *, "PDM_pointer_array_part_get_complex8 : wrong type"
-      stop
-    end if
 
     if (i_part .ge. size(pa%cptr)) then
       print *, "PDM_pointer_array_part_get_complex8 : wrong i_part"
