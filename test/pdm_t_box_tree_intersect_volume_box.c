@@ -158,18 +158,6 @@ PDM_g_num_t **box_ln_to_gn
   return n_box;
 }
 
-// static void
-// _generate_random_volumes
-// (
-// double **edge,
-// double **direction,
-// double  *theta,
-// double  *eps
-// )
-// {
-//   // TO DO: randomly generate an edge a theta that makes sense, a direction and a eps
-// }
-
 /* Create a 4 plane volume */
 
 static void
@@ -505,12 +493,6 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &numProcs);
-
-  /* TO DO :
-   *   - create a PDM_box_tree_inside_volume_boxes
-   *   - create _volume_intersect_shared_box_tree
-   *   - create PDM_dbbtree_boxes_inside_volume
-   */
 
   // Create volumes
 
