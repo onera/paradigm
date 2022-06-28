@@ -30,18 +30,6 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/*============================================================================
- * Type
- *============================================================================*/
-
-typedef enum {
-
-  PDM_LP_FEASIBLE,
-  PDM_LP_UNFEASIBLE,
-  PDM_LP_UNBOUNDED
-
-} PDM_lp_status_t;
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -82,6 +70,11 @@ _lp_solve_1d
   double L = -big_lp;
   double R =  big_lp;
 
+  if (_is_zero(c)) {
+    //?
+    return PDM_LP_UNBOUNDED;
+  }
+
   if (verbose) PDM_log_trace_array_double(a, n, "  a : ");
 
 
@@ -91,8 +84,11 @@ _lp_solve_1d
 
     if (verbose) log_trace("i = %d, a[i] = %f\n", i, a[i]);
     if (_is_zero(a[i])) {
-      // ignore current constraint
-      continue;
+      if (b[i] < 0) {
+        return PDM_LP_UNFEASIBLE;
+      } else {
+        continue;
+      }
     }
 
     double si = b[i] / a[i];
@@ -109,11 +105,11 @@ _lp_solve_1d
   if (L > R) {
     // unfeasible problem
     if (verbose) log_trace("unfeasible (L = %f, R = %f)\n", L, R);
-    return PDM_LP_UNBOUNDED;
+    return PDM_LP_UNFEASIBLE;
   }
 
   else {
-    if (c >= 0) { // if c = 0 then x = L (it is just a random choice between L and R because the objective function is constant)
+    if (c > 0) {
       if (n_R > 0) {
         *x = R;
         if (verbose) log_trace("feasible (L = %f, R = %f), x = R\n", L, R);
@@ -138,6 +134,89 @@ _lp_solve_1d
     }
 
   return PDM_LP_FEASIBLE;
+
+
+  // // Different cases
+  // enum { BOTH,
+  //        POSITIVE,
+  //        NEGATIVE};
+
+  // int cas; // cases of 1d Seidel's algorithm
+  // int count; // count if ai coefficients have same sign
+
+  // // Compute L and R
+  // double L = - big_lp;
+  // double R = big_lp;
+
+  // for (int i = 0; i < n; i++) {
+
+  //   if (!_is_zero(a[i])) {
+  //     if (a[i] > 0) {
+  //       double si = b[i] / a[i];
+  //       R = PDM_MIN(si, R);
+  //       count ++;
+  //     }
+
+  //     if (a[i] < 0) {
+  //       double si = b[i] / a[i];
+  //       L = PDM_MAX(si, L);
+  //       count --;
+  //     }
+  //   } // a[i] is not null
+
+  // }
+
+  // // log_trace("L = %lf and R = %lf\n", L, R);
+
+  // // Get case
+  // if (PDM_ABS(count) != n) {
+  //   cas = BOTH;
+  // } else {
+  //   if (count > 0) {
+  //     cas = POSITIVE;
+  //   } else {
+  //     cas = NEGATIVE;
+  //   }
+  // }
+
+  // // log_trace("case = %d\n", cas);
+
+  // // Procede according to case
+  // if (cas == BOTH) {
+  //   if (L > R) {
+  //     return PDM_LP_UNFEASIBLE;
+  //   } else {
+  //     if (c > 0) {
+  //       *x = R;
+  //       return PDM_LP_FEASIBLE;
+  //     } else {
+  //       *x = L;
+  //       return PDM_LP_FEASIBLE;
+  //     }
+  //   }
+  // }
+
+  // if (cas == POSITIVE) {
+  //   if (c > 0) {
+  //     *x = R;
+  //     return PDM_LP_FEASIBLE;
+  //   } else {
+  //     *x = R;
+  //     return PDM_LP_UNBOUNDED;
+  //   }
+  // }
+
+  // if (cas == NEGATIVE) {
+  //   if (c < 0) {
+  //     *x = L;
+  //     return PDM_LP_FEASIBLE;
+  //   } else {
+  //     *x = L;
+  //     return PDM_LP_UNBOUNDED;
+  //   }
+  // }
+
+  // return PDM_LP_FEASIBLE;
 }
 
 /*=============================================================================
@@ -174,15 +253,17 @@ PDM_lp_solve_nd
     return _lp_solve_1d(n, a, b, c[0], x);
   }
 
-  if (verbose) log_trace("\n\ndim = %d\n", dim);
-
+  // Set for sub-problem
   double sub_a[n*(dim-1)];
   double sub_b[n];
   double sub_c[dim-1];
   double sub_x[dim-1];
 
+    if (verbose) log_trace("\n\ndim = %d\n", dim);
+
   for (int i = 0; i < n; i++) {
 
+    // i-th constraint
     double *ai = a + dim*i;
     double ax_b = -b[i];
     for (int j = 0; j < dim; j++) {
@@ -197,13 +278,13 @@ PDM_lp_solve_nd
       log_trace("  ai.x - bi = %f\n", ax_b);
     }
 
+    // case: i-th constraint is satisfied
     if (ax_b <= 0) {
-      // i-th constraint is satified
       continue;
     }
 
-    // i-th constraint is not satified
-    // find largest component of the normal to the i-th hyperplane
+    // case: i-th constraint not satisfied
+    // --> find the largest component
     int    jmax   = -1;
     double aijmax = 0.;
     for (int j = 0; j < dim; j++) {
@@ -213,14 +294,19 @@ PDM_lp_solve_nd
         aijmax = aij;
       }
     }
+
     if (verbose) log_trace("  jmax = %d, aijmax = %f\n", jmax, ai[jmax]);
 
+    // --> null constraint
     if (jmax < 0) {
-      // null constraint
-      continue;
+      if (b[i] < 0) {
+        return PDM_LP_UNFEASIBLE;
+      } else {
+        continue;
+      }
     }
 
-    // project previous constraints and the objective function to lower dimension
+    // --> project previous constraints to lower dimension
     double inv_aijmax = 1. / ai[jmax];
 
     for (int k = 0; k < i; k++) {
@@ -236,6 +322,7 @@ PDM_lp_solve_nd
       sub_b[k] = b[k] - ak[jmax]*b[i]*inv_aijmax;
     }
 
+    // --> project c to lower dimension
     int jj = 0;
     double mag_sub_c = 0.;
     for (int j = 0; j < dim; j++) {
@@ -246,58 +333,39 @@ PDM_lp_solve_nd
       jj++;
     }
 
-    // solve lower-dimensional LP subproblem
     if (verbose) PDM_log_trace_array_double(sub_c, dim-1, "  sub_c : ");
     if (mag_sub_c < eps_lp) {
-
-      if (verbose) log_trace("  !!! null objective function\n");
-      // null objective function!!
-      // handle special case of null objective function
-      // project provisional optimum onto current constraint's hyperplane
-      // BUT does it really work ?????
-
-      double aiai = 0.;
-      for (int j = 0; j < dim; j++) {
-        aiai += ai[j]*ai[j];
-      }
-
-      double t = -ax_b/aiai;
-      for (int j = 0; j < dim; j++) {
-        x[j] -= t * ai[j];
-      }
-
+      log_trace("c is null !\n");
     }
 
-    else {
+    PDM_lp_status_t stat = PDM_lp_solve_nd(dim-1,
+                                           i,
+                                           sub_a,
+                                           sub_b,
+                                           sub_c,
+                                           sub_x);
 
-      PDM_lp_status_t stat = _lp_solve_nd(dim-1,
-                                          i,
-                                          sub_a,
-                                          sub_b,
-                                          sub_c,
-                                          sub_x);
-
-      if (stat == PDM_LP_UNFEASIBLE) {
-        return PDM_LP_UNFEASIBLE;
-      }
-
-      // back substitution
-      jj = 0;
-      double aix = 0.;
-      for (int j = 0; j < dim; j++) {
-        if (j == jmax) continue;
-        x[j] = sub_x[jj];
-        aix += ai[j] * x[j];
-        jj++;
-      }
-
-      x[jmax] = (b[i] - aix) * inv_aijmax;
-      if (verbose) PDM_log_trace_array_double(x,  dim, "  new x : ");
+    if (stat == PDM_LP_UNFEASIBLE) {
+      return PDM_LP_UNFEASIBLE;
     }
 
-  }
+    // back substitution
+    jj = 0;
+    double aix = 0.;
+    for (int j = 0; j < dim; j++) {
+      if (j == jmax) continue;
+      x[j] = sub_x[jj];
+      aix += ai[j] * x[j];
+      jj++;
+    }
+
+    x[jmax] = (b[i] - aix) * inv_aijmax;
+    if (verbose) PDM_log_trace_array_double(x,  dim, "  new x : ");
+
+  } // end loop on constraints
 
   return PDM_LP_FEASIBLE;
+
 }
 
 /**
@@ -353,7 +421,7 @@ PDM_lp_intersect_volume_box
     }
   }
 
-  PDM_lp_status_t stat =  _lp_solve_nd(3, n_plane+6, a, b, c, x);
+  PDM_lp_status_t stat =  PDM_lp_solve_nd(3, n_plane+6, a, b, c, x);
 
   return (stat != PDM_LP_UNFEASIBLE);
 

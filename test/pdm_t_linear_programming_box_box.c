@@ -20,6 +20,14 @@
 #include "pdm_array.h"
 #include "pdm_linear_programming.h"
 
+/*=============================================================================
+ * Static global variables
+ *============================================================================*/
+
+static const int    verbose = 0;
+static const int    vtk     = 0;
+static const int    only_lp = 1;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -304,6 +312,111 @@ const double  *extentsB
     return 1;
 }
 
+/*
+ * \brief Determine if a box intersects a given volume region
+ *
+ * \param [in]  n_planes      Number of planes difining the volume
+ * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
+ * \param [in]  plane_pt      Table of a point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n) for each considered plane
+ * \param [in]  box_extents   Points to determine
+ *
+ * \return 1 if the plane_pt is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+
+static int
+_box_intersect_volume
+(
+int      n_planes,
+double  *n,
+double  *plane_pt,
+double  *box_extents
+)
+{
+  double box_pt[3];
+  double vect[3];
+  double n_iplane[3];
+  double plane_pt_iplane[3];
+
+  int count_intersected_planes, count_points_not_intersect_plane;
+
+
+  // All planes for one point
+  for (int x = 0; x < 4; x += 3) {
+    box_pt[0] = box_extents[x];
+    for (int y = 1; y < 5; y += 3) {
+      box_pt[1] = box_extents[y];
+      for (int z = 2; z < 6; z += 3) {
+        box_pt[2] = box_extents[z];
+
+        count_intersected_planes = 0;
+
+        for (int iplane = 0; iplane < n_planes; iplane++) {
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) >= 0) {
+            count_intersected_planes++;
+          }
+
+        } // end loop on planes
+
+        if (count_intersected_planes == n_planes) {
+          return 1;
+        }
+
+      }
+    }
+  }
+
+  // All points for one plane
+  for (int iplane = 0; iplane < n_planes; iplane++) {
+
+    count_points_not_intersect_plane = 0;
+
+    for (int x = 0; x < 4; x += 3) {
+      box_pt[0] = box_extents[x];
+      for (int y = 1; y < 5; y += 3) {
+        box_pt[1] = box_extents[y];
+        for (int z = 2; z < 6; z += 3) {
+          box_pt[2] = box_extents[z];
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) < 0) {
+            count_points_not_intersect_plane++;
+          }
+
+        }
+      }
+    }
+
+    if (count_points_not_intersect_plane == 6) {
+      return 0;
+    }
+
+  }
+
+  // Undefined case
+  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
+}
+
 
 /**
  *
@@ -326,8 +439,8 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &numProcs);
 
-  PDM_g_num_t gn_box        = 10;
-  PDM_g_num_t gn_box_plane  = 10;
+  PDM_g_num_t gn_box        = 1000;
+  PDM_g_num_t gn_box_plane  = 1000;
 
   // Use random boxes generation ofpdm_t_intersect_line box
 
@@ -361,6 +474,9 @@ int main(int argc, char *argv[])
 
   int check1, check2;
 
+  if (verbose) {
+    log_trace("check if the result of classical box box intersection and lp is the same\n");
+  }
   for (int i = 0; i < n_box_plane; i++) {
 
     _box_extents_iplane = box_extents_plane + 6 * i;
@@ -371,12 +487,20 @@ int main(int argc, char *argv[])
 
       _box_extents_current = box_extents + 6 * j;
 
-      check1 = PDM_lp_intersect_volume_box(6, pt_plane_box, n_plane, box_extents_current);
-      check2 = _boxes_intersect_3d(_box_extents_iplane, _box_extents_current);
-      if (check1 != check2) {
-        log_trace("volume box %d and box box %d have check = %d but check2 = %d\n", i, j, check, check2);
+      if (only_lp) {
+        check1 = PDM_lp_intersect_volume_box(6, pt_plane_box, n_plane, _box_extents_current);
+      } else {
+        check1 = _box_intersect_volume(6, n_plane, pt_plane_box, _box_extents_current);
       }
-      box_intersects_box[j] = (double) check;
+      check2 = _boxes_intersect_3d(_box_extents_iplane, _box_extents_current);
+      if (verbose) {
+        if (check1 != check2) {
+          log_trace("volume box %d and box box %d have check1 = %d but check2 = %d\n", i, j, check1, check2);
+        }
+      }
+      box_intersects_box[j] = (double) check1;
+
+
     }
 
     box_tag[i] = malloc(sizeof(double) * n_box);
@@ -389,22 +513,24 @@ int main(int argc, char *argv[])
 
   }
 
-  const char *filename6 = "boxes.vtk";
+  if (vtk) {
+    const char *filename6 = "boxes.vtk";
 
-  PDM_vtk_write_boxes_with_field(filename6,
-                                 n_box,
-                                 box_extents,
-                                 NULL,
-                                 n_box_plane,
-                 (const char **) box_tag_names,
-               (const double **) box_tag);
+    PDM_vtk_write_boxes_with_field(filename6,
+                                   n_box,
+                                   box_extents,
+                                   NULL,
+                                   n_box_plane,
+                                   (const char **) box_tag_names,
+                                   (const double **) box_tag);
 
-  const char *filename7 = "plane_boxes.vtk";
+    const char *filename7 = "plane_boxes.vtk";
 
-  PDM_vtk_write_boxes(filename7,
-                      n_box_plane,
-                      box_extents_plane,
-                      NULL);
+    PDM_vtk_write_boxes(filename7,
+                        n_box_plane,
+                        box_extents_plane,
+                        NULL);
+  }
 
   PDM_MPI_Finalize ();
 

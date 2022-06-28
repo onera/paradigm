@@ -22,6 +22,14 @@
 #include "pdm_box.h"
 #include "pdm_box_tree.h"
 #include "pdm_plane.h"
+#include "pdm_linear_programming.h"
+
+/*=============================================================================
+ * Static global variables
+ *============================================================================*/
+
+static const int    verbose = 0;
+static const int    vtk     = 0;
 
 /*============================================================================
  * Private function definitions
@@ -327,83 +335,7 @@ int         **face_vtx_in
 
 }
 
-/*
- * \brief Determine if a box is on the side of the plane where the normal points to
- *
- * \param [in]  n                Normal vector (n = (a, b, c))
- * \param [in]  plane_pt         Point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n)
- * \param [in]  box_extents      Box to determine
- *
- * \return 1 if the box is on the side of the plane where the normal points to, 0 otherwise
- */
-
-// static int
-// _plane_box_side
-// (
-// double *n,
-// double *plane_pt,
-// double *box_extents
-// )
-// {
-//   double box_pt[3];
-//   double vect[3];
-
-//   for (int x = 0; x < 4; x += 3) {
-//     box_pt[0] = box_extents[x];
-//     for (int y = 1; y < 5; y += 3) {
-//       box_pt[1] = box_extents[y];
-//       for (int z = 2; z < 6; z += 3) {
-//         box_pt[2] = box_extents[z];
-//         vect[0] = box_pt[0] - plane_pt[0]; vect[1] = box_pt[1] - plane_pt[1]; vect[2] = box_pt[2] - plane_pt[2];
-//         if (PDM_DOT_PRODUCT(vect, n) > 0) { // if >= 0 also considers when point is on the plane
-//           return 1;
-//         }
-//       } // end loop on z
-//     } // end loop on y
-//   } // end loop on x
-//   return 0;
-// }
-
-/*
- * \brief Determine a box is in a given volume region
- *
- * \param [in]  n_planes      Number of planes difining the volume
- * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
- * \param [in]  plane_pt      Table of a point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n) for each considered plane
- * \param [in]  box_extents   Points to determine
- *
- * \return 1 if the plane_pt is on the side of the plane where the normal points to, 0 otherwise
- */
-
-
-// static int
-// _box_in_volume
-// (
-// int      n_planes,
-// double  *n,
-// double  *plane_pt,
-// double  *box_extents
-// )
-// {
-//   double n_iplane[3];
-//   double plane_pt_iplane[3];
-
-//   for (int iplane = 0; iplane < n_planes; iplane++) {
-
-//     n_iplane[0] = n[3*iplane];
-//     n_iplane[1] = n[3*iplane+1];
-//     n_iplane[2] = n[3*iplane+2];
-
-//     plane_pt_iplane[0] = plane_pt[3*iplane];
-//     plane_pt_iplane[1] = plane_pt[3*iplane+1];
-//     plane_pt_iplane[2] = plane_pt[3*iplane+2];
-
-//     if (_plane_box_side(n_iplane, plane_pt_iplane, box_extents) == 0) {
-//       return 0;
-//     }
-//   } // end loop on planes
-//   return 1;
-// }
+/* box volume intersection function used in box_tree */
 
 static int
 _box_intersect_volume
@@ -419,8 +351,10 @@ double  *box_extents
   double n_iplane[3];
   double plane_pt_iplane[3];
 
-  int count_intersected_planes;
+  int count_intersected_planes, count_points_not_intersect_plane;
 
+
+  // All planes for one point
   for (int x = 0; x < 4; x += 3) {
     box_pt[0] = box_extents[x];
     for (int y = 1; y < 5; y += 3) {
@@ -451,10 +385,49 @@ double  *box_extents
         if (count_intersected_planes == n_planes) {
           return 1;
         }
+
       }
     }
   }
-  return 0;
+
+  // All points for one plane
+  for (int iplane = 0; iplane < n_planes; iplane++) {
+
+    count_points_not_intersect_plane = 0;
+
+    for (int x = 0; x < 4; x += 3) {
+      box_pt[0] = box_extents[x];
+      for (int y = 1; y < 5; y += 3) {
+        box_pt[1] = box_extents[y];
+        for (int z = 2; z < 6; z += 3) {
+          box_pt[2] = box_extents[z];
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) < 0) {
+            count_points_not_intersect_plane++;
+          }
+
+        }
+      }
+    }
+
+    if (count_points_not_intersect_plane == 6) {
+      return 0;
+    }
+
+  }
+
+  // Undefined case
+  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
 }
 
 static int
@@ -518,34 +491,34 @@ int main(int argc, char *argv[])
 
   _create_volume_4planes(edge, direction_pt, theta, eps, &n, &pt_plane);
 
-  // PDM_log_trace_array_double(n, 12, "n: ");
-  // PDM_log_trace_array_double(pt_plane, 12, "pt_plane: ");
+  if (vtk) {
+    double *vtx_coord =  NULL;
+    PDM_g_num_t *vtx_g_num =  NULL;
+    int *face_vtx = NULL;
 
-  double *vtx_coord =  NULL;
-  PDM_g_num_t *vtx_g_num =  NULL;
-  int *face_vtx = NULL;
+    _volume_4planes_to_4triangles(edge,
+                                  direction_pt,
+                                  n,
+                                  pt_plane,
+                                  &vtx_coord,
+                                  &vtx_g_num,
+                                  &face_vtx);
 
-  _volume_4planes_to_4triangles(edge,
-                                direction_pt,
-                                n,
-                                pt_plane,
-                                &vtx_coord,
-                                &vtx_g_num,
-                                &face_vtx);
+    const char *filename = "planes.vtk";
 
-  const char *filename = "planes.vtk";
+    PDM_vtk_write_std_elements(filename,
+                               12,
+                               vtx_coord,
+                               vtx_g_num,
+                               PDM_MESH_NODAL_TRIA3,
+                               4,
+                               face_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
-   PDM_vtk_write_std_elements(filename,
-                              12,
-                              vtx_coord,
-                              vtx_g_num,
-                              PDM_MESH_NODAL_TRIA3,
-                              4,
-                              face_vtx,
-                              NULL,
-                              0,
-                              NULL,
-                              NULL);
 
   // Create boxes extents
 
@@ -589,13 +562,17 @@ int main(int argc, char *argv[])
                          PDM_BOX_TREE_ASYNC_LEVEL);
 
   // WARNING: boxes outputed on internal nodes are wrong
-  PDM_box_tree_dump(bt);
+  if (verbose) {
+    PDM_box_tree_dump(bt);
+  }
 
   // VTK boxes output
-  PDM_vtk_write_boxes("boxes.vtk",
-                      n_boxes,
-                      box_extents,
-                      box_ln_to_gn);
+  if (vtk) {
+    PDM_vtk_write_boxes("boxes.vtk",
+                        n_boxes,
+                        box_extents,
+                        box_ln_to_gn);
+  }
 
   // Brute force box intersection computation
   int *vol_boxes = malloc(sizeof(int) * n_boxes);
@@ -627,24 +604,29 @@ int main(int argc, char *argv[])
                                       &volume_box_l_num);
 
   // Check if the same result as with brute force is obtained
-  log_trace("is everything ok?\n");
-  for (int i = 0; i < volume_box_idx[n_volumes]; i++) {
-    if (!_is_in_int_tab(volume_box_l_num[i], count, vol_boxes)) {
-      log_trace("box %d is not detected as intersecting by the box_tree\n", volume_box_l_num[i]);
+  if (verbose) {
+    log_trace("check if the result of brute force and the box tree is the same: \n");
+    for (int i = 0; i < volume_box_idx[n_volumes]; i++) {
+      if (!_is_in_int_tab(volume_box_l_num[i], count, vol_boxes)) {
+        log_trace("box %d is not detected as intersecting by the box_tree\n", volume_box_l_num[i]);
+      }
     }
   }
 
   free(vol_boxes);
 
-  PDM_box_tree_write_vtk("box_tree_normalized.vtk",
-                         bt,
-                         -1,
-                         1);
+  if (vtk) {
+    PDM_box_tree_write_vtk("box_tree_normalized.vtk",
+                           bt,
+                           -1,
+                           1);
 
-  PDM_box_tree_write_vtk("box_tree.vtk",
-                       bt,
-                       -1,
-                       0);
+    PDM_box_tree_write_vtk("box_tree.vtk",
+                           bt,
+                           -1,
+                           0);
+  }
+
 
   PDM_MPI_Finalize ();
 }

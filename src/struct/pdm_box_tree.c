@@ -48,12 +48,11 @@
 #include "pdm_sort.h"
 #include "pdm_array.h"
 #include "pdm_logging.h"
-
 #include "pdm_morton.h"
-
 #include "pdm_vtk.h"
 #include "pdm_plane.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_linear_programming.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -3124,8 +3123,10 @@ double  *box_extents
   double n_iplane[3];
   double plane_pt_iplane[3];
 
-  int count_intersected_planes;
+  int count_intersected_planes, count_points_not_intersect_plane;
 
+
+  // All planes for one point
   for (int x = 0; x < 4; x += 3) {
     box_pt[0] = box_extents[x];
     for (int y = 1; y < 5; y += 3) {
@@ -3156,10 +3157,49 @@ double  *box_extents
         if (count_intersected_planes == n_planes) {
           return 1;
         }
+
       }
     }
   }
-  return 0;
+
+  // All points for one plane
+  for (int iplane = 0; iplane < n_planes; iplane++) {
+
+    count_points_not_intersect_plane = 0;
+
+    for (int x = 0; x < 4; x += 3) {
+      box_pt[0] = box_extents[x];
+      for (int y = 1; y < 5; y += 3) {
+        box_pt[1] = box_extents[y];
+        for (int z = 2; z < 6; z += 3) {
+          box_pt[2] = box_extents[z];
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) < 0) {
+            count_points_not_intersect_plane++;
+          }
+
+        }
+      }
+    }
+
+    if (count_points_not_intersect_plane == 6) {
+      return 0;
+    }
+
+  }
+
+  // Undefined case
+  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
 }
 
 /*============================================================================

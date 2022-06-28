@@ -28,6 +28,19 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+
+/*============================================================================
+ * Type
+ *============================================================================*/
+
+typedef enum {
+
+  PDM_LP_FEASIBLE,
+  PDM_LP_UNFEASIBLE,
+  PDM_LP_UNBOUNDED
+
+} PDM_lp_status_t;
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -47,7 +60,7 @@ extern "C" {
  *
  */
 
-static PDM_lp_status_t
+PDM_lp_status_t
 PDM_lp_solve_nd
 (
  const int  dim,
