@@ -5982,12 +5982,6 @@ PDM_box_tree_intersect_volume_boxes
 
   int n_boxes = boxes->n_boxes;
 
-  // VTK boxes output
-  PDM_vtk_write_boxes("boxes_normalized.vtk",
-                      n_boxes,
-                      boxes->extents,
-                      NULL);
-
   // Set up output
   *volume_box_idx      = PDM_array_const_int((n_volumes + 1), 0);
   int *_volume_box_idx = *volume_box_idx;
@@ -6080,14 +6074,6 @@ PDM_box_tree_intersect_volume_boxes
         for (int ichild = 0; ichild < bt->n_children; ichild++) {
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, current_node_box_extents);
-
-          char filename99[999];
-          sprintf(filename99, "node_box_%d.vtk", child_id);
-
-          PDM_vtk_write_boxes(filename99,
-                              1,
-                              current_node_box_extents,
-                              NULL);
 
           if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
             stack[pos_stack++] = child_id;

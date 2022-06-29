@@ -63,7 +63,7 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \brief  Normalize
+ * \brief  Normalize coorndinates
  */
 
 static void
@@ -76,6 +76,23 @@ _normalize
 {
   for (int j = 0; j < dbbt->dim; j++) {
     pt_nomalized[j] = (pt_origin[j] - dbbt->s[j]) / dbbt->d[j];
+  }
+}
+
+/**
+ * \brief  Normalize normal vector coordinates
+ */
+
+static void
+_normalize_normal_vector
+(
+ _PDM_dbbtree_t *dbbt,
+ const double   *normal_vector,
+ double         *normal_vector_nomalized
+)
+{
+  for (int j = 0; j < dbbt->dim; j++) {
+    normal_vector_nomalized[j] = normal_vector[j] * dbbt->d[j];
   }
 }
 
@@ -5633,6 +5650,186 @@ PDM_dbbtree_lines_intersect_boxes2
 }
 
 
+/**
+ *
+ * \brief Get an indexed list of all boxes intersecting volumes
+ *
+ * \param [in]   dbbt                  Pointer to distributed box tree structure
+ * \param [in]   n_volumes             Number of volumes
+ * \param [in]   n_planes_per_volume   Index of the number of planes per volume
+ * \param [in]   plane_normal          Oriented normal vector for a given plane (oriented toward the interior of the volume)
+ * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  volume_box_idx        Index of boxes (size = \ref n_line + 1, allocated inside function)
+ * \param [out]  volume_box_g_num      Global ids of boxes (size = \ref box_line_idx[\ref n_line], allocated inside function)
+ *
+ */
+
+void
+PDM_dbbtree_volumes_intersect_boxes
+(
+ PDM_dbbtree_t  *dbbt,
+ const int       n_volumes,
+ const int      *volume_plane_idx,
+ double         *plane_normal,
+ double         *plane_pt_coord,
+ int           **volume_box_idx,
+ PDM_g_num_t   **volume_box_g_num
+)
+{
+  // Debug variable
+  int dbbtree_debug = 0;
+
+  const float f_threshold = 1.1;  // factor of the mean nb of requests
+  const float f_max_copy  = 0.1;  // factor of the total nb of processes
+
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (_dbbt->comm, &i_rank);
+  PDM_MPI_Comm_size (_dbbt->comm, &n_rank);
+
+  int n_planes = volume_plane_idx[n_volumes];
+
+  // Normalize plane points and normal vectors
+  double *plane_pt_coord_normalized = malloc (sizeof(double) * n_planes * 3);
+  double *plane_normal_normalized = malloc (sizeof(double) * n_planes * 3);
+  for (int i = 0; i < n_planes; i++) {
+    _normalize(_dbbt,
+               plane_pt_coord            + 3*i,
+               plane_pt_coord_normalized + 3*i);
+    _normalize_normal_vector(_dbbt,
+                             plane_normal            + 3*i,
+                             plane_normal_normalized + 3*i);
+  } // end loop on planes
+
+  // Set up for counting the number of volumes that might intersect boxes on ranks
+  int *irank_jsubtree_n_volume            = NULL; // number of volumes per sub-box_tree on rank i
+  int *isubtree_jrank_n_volume            = NULL; // number of volumes for sub-box_tree i on each rank j
+  int  isubtree_total_n_volume            = 0;    // total number of volumes associated to sub-box_tree i
+  int *all_jrank_jsubtree_total_n_volume = NULL;  // total number of volumes associated to sub-box_tree j for each rank j
+  int  n_copied_ranks = 0;                        // Number of subtrees to copy
+  int *copied_ranks = NULL;                       // Index of copied subtrees
+
+  if (_dbbt->btShared != NULL) {
+
+    // For each volume, find all ranks that might have boxes intersecting that volume
+    // The shared box tree shouldn't be normalized
+    int *volume_subtree_idx = NULL;
+    int *volume_subtree     = NULL;
+    PDM_box_tree_intersect_volume_boxes(_dbbt->btShared,
+                                        -1,
+                                        n_volumes,
+                                        volume_plane_idx,
+                                        plane_normal,
+                                        plane_pt_coord,
+                                        &volume_subtree_idx,
+                                        &volume_subtree);
+
+    // Count on irank the number of volumes associated to each j sub-box_tree
+    irank_jsubtree_n_volume = PDM_array_zeros_int (n_rank);
+
+    for (int k = 0; k < volume_subtree_idx[n_rank]; k++) {
+      int jsubtree = dbbt->usedRank[volume_subtree[k]];
+      volume_subtree[k] = jsubtree;
+      irank_jsubtree_n_volume[jsubtree]++;
+    } // end loop on volumes associated to subtrees on rank i
+
+    isubtree_jrank_n_volume = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Alltoall (irank_jsubtree_n_volume, 1, PDM_MPI_INT,
+                      isubtree_jrank_n_volume, 1, PDM_MPI_INT,
+                      _dbbt->comm);
+
+    isub_tree_total_n_volume = 0;
+    for (int jrank = 0; jrank < n_rank; jrank++) {
+      isubtree_total_n_volume += isubtree_jrank_n_volume[jrank];
+    }
+
+    // int n_line_recv_no_copies = n_line_recv;
+
+    // Determine mean value of received volumes
+    int n_max_copy = (int) (f_max_copy * n_rank);
+    int *i_copied_rank = NULL;
+    int *copied_count = NULL;
+    int  mean_jsubtree_total_n_volume = 0;
+    int *jsubtree_to_copy_total_n_volume = NULL;
+
+    if (n_max_copy > 0) {
+      int *all_n_line_recv = malloc (sizeof(int) * n_rank);
+      PDM_MPI_Allgather (&isubtree_total_n_volume,    1, PDM_MPI_INT,
+                         all_jrank_jsubtree_total_n_volume, 1, PDM_MPI_INT,
+                         _dbbt->comm);
+
+      long long_tmp_mean = 0;
+      for (int j = 0; j < n_rank; j++) {
+        long_tmp_mean += all_jrank_jsubtree_total_n_volume[j];
+      }
+      mean_jsubtree_total_n_volume = (int) (long_tmp_mean / n_rank);
+
+      float n_threshold = f_threshold * mean_jsubtree_total_n_volume;
+
+      // Sort subtrees (i on rank i) according to the total number of associated volumes
+      int *order = malloc (sizeof(int) * n_rank);
+      for (int i = 0; i < n_rank; i++) {
+        order[i] = i;
+      }
+
+      PDM_sort_int (all_jrank_jsubtree_total_n_volume,
+                    order,
+                    n_rank);
+
+      // Identify ranks to copy
+      copied_ranks                    = malloc (sizeof(int) * n_max_copy);
+      jsubtree_to_copy_total_n_volume = malloc (sizeof(int) * n_max_copy);
+      for (int i = 0; i < n_max_copy; i++) {
+        int j = n_rank - i - 1;
+
+        if (all_jrank_jsubtree_total_n_volume[j] > n_threshold) {
+          copied_ranks[n_copied_ranks] = order[j];
+          jsubtree_to_copy_total_n_volume[n_copied_ranks] = all_jrank_jsubtree_total_n_volume[j];
+          n_copied_ranks++;
+        }
+        else {
+          break;
+        }
+      }
+      free (all_jrank_jsubtree_total_n_volume);
+      free (order);
+
+      if (n_copied_ranks > 0) {
+        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
+        jsubtree_to_copy_total_n_volume = realloc (jsubtree_to_copy_total_n_volume,
+                                           sizeof(int) * n_copied_ranks);
+      }
+
+    } // end if we want to copy subtrees
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  } // end if there is a shared bt
+
+  /* Copy data to ranks that help with the workload of some other rank */
+
+  /* Get boxes intersecting volumes */
+
+  /* Merge results */
+
+}
 
 void
 PDM_dbbtree_box_tree_write_vtk
