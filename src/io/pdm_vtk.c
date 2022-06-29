@@ -89,7 +89,7 @@ static int _vtk_elt_type
       vtk_elt_type = 68;
       break;
     case PDM_MESH_NODAL_TRIAHO:
-      vtk_elt_type = 76;//69;
+      vtk_elt_type = 69;//76;//
       break;
     case PDM_MESH_NODAL_QUADHO:
       vtk_elt_type = 70;
