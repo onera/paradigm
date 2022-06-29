@@ -971,7 +971,7 @@ void PDM_io_global_read
     }
 
     PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_swap_endian = fichier->timer_fichier;
+    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
 
     PDM_timer_resume(timer_total);
@@ -1091,6 +1091,7 @@ void PDM_io_global_write
 
     PDM_timer_t *timer_total = fichier->timer_total;
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
+    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
 
     PDM_timer_resume(timer_total);
     PDM_timer_resume(timer_fichier);
@@ -1103,6 +1104,7 @@ void PDM_io_global_write
       unsigned char* _donnees = (unsigned char*) donnees;
       const PDM_g_num_t l_string_donnee = n_donnees * fichier->n_char_fmt + 2;
       char *string_donnee = (char *) malloc(sizeof(char) * l_string_donnee);
+
       for (PDM_g_num_t i = 0; i < l_string_donnee; i++) {
         string_donnee[i] = '\0';
       }
@@ -1111,19 +1113,19 @@ void PDM_io_global_write
       unsigned char* t_buffer = _donnees;
       for (PDM_g_num_t i = 0; i < n_donnees; i++) {
         switch (fichier->data_type) {
-        case PDM_IO_T_INT :
+          case PDM_IO_T_INT :
           sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
           break;
-        case PDM_IO_T_LONG :
+          case PDM_IO_T_LONG :
           sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
           break;
-        case PDM_IO_T_DOUBLE :
+          case PDM_IO_T_DOUBLE :
           sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
           break;
-        case PDM_IO_T_FLOAT :
+          case PDM_IO_T_FLOAT :
           sprintf(s_tmp, fichier->fmt, *((float *) t_buffer));
           break;
-        case PDM_IO_T_CHAR :
+          case PDM_IO_T_CHAR :
           sprintf(s_tmp, fichier->fmt, *((char *) t_buffer));
           break;
         }
@@ -1134,50 +1136,51 @@ void PDM_io_global_write
 
       if (fichier->PDM_file_seq != NULL) {
         PDM_g_num_t n_donnees_ecrites_gnum = PDM_file_seq_write(fichier->PDM_file_seq,
-                                                                sizeof(char),
-                                                                l_string_donnee - 1,
-                                                                (void *) string_donnee);
+          sizeof(char),
+          l_string_donnee - 1,
+          (void *) string_donnee);
 	/* Traitement de l'erreur de lecture */
 
-	if (n_donnees_ecrites_gnum !=  l_string_donnee - 1) {
-	  PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
-		    " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
-	  abort();
-	  PDM_file_seq_close(fichier->PDM_file_seq);
-	}
-	if (fichier->acces != PDM_IO_KIND_SEQ) {
-	  if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
-	    n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
-	    if (n_donnees_ecrites_gnum > 2147483647) {
-	      PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-			" Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-	      abort() ;
-	    }
-	  }
-	}
+        if (n_donnees_ecrites_gnum !=  l_string_donnee - 1) {
+          PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
+            " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
+          abort();
+          PDM_file_seq_close(fichier->PDM_file_seq);
+        }  
+        if (fichier->acces != PDM_IO_KIND_SEQ) {
+          if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
+            n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
+            if (n_donnees_ecrites_gnum > 2147483647) {
+              PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+               " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
+              abort() ;
+            }
+          }
+        }
       }
+
       else if (fichier->PDM_file_par != NULL) {
         if (fichier->rang_actif) {
 	  /* Vérification de non dépassement de la taille maximale pour l_string_donnee */
-	  if (l_string_donnee > 2147483647) {
-	    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-		      " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-	    abort() ;
-	  }
-	  int l_string_donnee_shortint = (int) l_string_donnee ;
+          if (l_string_donnee > 2147483647) {
+            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+            " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
+            abort() ;
+          }
+          int l_string_donnee_shortint = (int) l_string_donnee ;
 
           n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
-                                                         sizeof(char),
-                                                          l_string_donnee_shortint - 1,
-                                                         (void *) string_donnee);
+                                                            sizeof(char),
+                                                            l_string_donnee_shortint - 1,
+                                                            (void *) string_donnee);
 	  /* Traitement de l'erreur de lecture */
 
-	  if (n_donnees_ecrites !=  l_string_donnee_shortint - 1) {
-	    PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
-		      " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
-	    abort();
-	    PDM_file_seq_close(fichier->PDM_file_seq);
-	  }
+          if (n_donnees_ecrites !=  l_string_donnee_shortint - 1) {
+            PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
+             " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
+            abort();
+            PDM_file_seq_close(fichier->PDM_file_seq);
+          }
         }
       }
 
@@ -1189,51 +1192,98 @@ void PDM_io_global_write
 
       free(string_donnee);
     }
+
     else {
       if (fichier->PDM_file_seq != NULL) {
-        PDM_g_num_t n_donnees_ecrites_gnum = PDM_file_seq_write(fichier->PDM_file_seq,
-                                              taille_donnee,
-                                              n_donnees,
-                                              (void *) donnees);
-	/* Traitement de l'erreur de lecture */
+        void *_donnees = (void *) donnees;
 
-	if (n_donnees_ecrites_gnum != n_donnees) {
-	  PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-		    " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
-	  abort();
-	}
-	if (fichier->acces != PDM_IO_KIND_SEQ) {
-	  if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
-	    n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
-	    if (n_donnees_ecrites_gnum > 2147483647) {
-	      PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-			" Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-	      abort() ;
-	    }
-	  }
-	}
+        if (fichier->swap_endian) {
+
+          PDM_timer_resume(timer_swap_endian);
+
+          _donnees = malloc (sizeof(unsigned char) * taille_donnee * n_donnees);
+
+          PDM_io_swap_endian(taille_donnee,
+                             n_donnees,
+                             donnees,
+                             _donnees);
+
+          PDM_timer_hang_on(timer_swap_endian);
+
+        }
+
+        PDM_g_num_t n_donnees_ecrites_gnum = PDM_file_seq_write(fichier->PDM_file_seq,
+                                                                taille_donnee,
+                                                                n_donnees,
+                                                                (void *) _donnees);
+
+        if (_donnees != donnees) {
+          free (_donnees);
+        }
+
+      	/* Traitement de l'erreur de lecture */
+
+        if (n_donnees_ecrites_gnum != n_donnees) {
+          PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+           " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
+          abort();
+        }
+
+        if (fichier->acces != PDM_IO_KIND_SEQ) {
+          if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
+            n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
+            if (n_donnees_ecrites_gnum > 2147483647) {
+              PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+              " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
+              abort() ;
+            }
+          }
+        }
       }
+ 
       else if (fichier->PDM_file_par != NULL) {
         if (fichier->rang_actif) {
 	  /* Vérification de non dépassement de la taille maximale pour n_donnees */
-	  if (n_donnees > 2147483647) {
-	    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-		      " Erreur : n_donnees dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-	    abort() ;
-	  }
-	  int n_donnees_shortint = (int) n_donnees ;
+          if (n_donnees > 2147483647) {
+            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+             " Erreur : n_donnees dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
+            abort() ;
+          }
+          int n_donnees_shortint = (int) n_donnees ;
+
+          void *_donnees = (void *) donnees;
+
+          if (fichier->swap_endian) {
+
+            PDM_timer_resume(timer_swap_endian);
+
+            _donnees = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_shortint);
+
+            PDM_io_swap_endian(taille_donnee,
+                               n_donnees_shortint,
+                               donnees,
+                               _donnees);
+
+            PDM_timer_hang_on(timer_swap_endian);
+
+          }
+
           n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
                                                             taille_donnee,
                                                             n_donnees_shortint,
-                                                            (void *) donnees);
+                                                            (void *) _donnees);
+
+          if (_donnees != donnees) {
+            free (_donnees);
+          }
 
 	  /* Traitement de l'erreur de lecture */
 
-	  if (n_donnees_ecrites != n_donnees_shortint) {
-	    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-		      " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
-	    abort();
-	  }
+          if (n_donnees_ecrites != n_donnees_shortint) {
+            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
+                      " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
+            abort();
+          }
         }
       }
 
@@ -2477,6 +2527,7 @@ void PDM_io_par_interlaced_write
 
     PDM_timer_t *timer_total = fichier->timer_total;
     PDM_timer_t *timer_distribution = fichier->timer_distribution;
+    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
 
     PDM_l_num_t _taille_donnee = taille_donnee;
@@ -2671,10 +2722,24 @@ void PDM_io_par_interlaced_write
       /* Ecriture binaire */
 
       else {
+
+        if (fichier->swap_endian) {
+
+          PDM_timer_resume(timer_swap_endian);
+
+          PDM_io_swap_endian(taille_donnee,
+                             _n_donnees,
+                             buffer,
+                             buffer);
+
+          PDM_timer_hang_on(timer_swap_endian);
+
+        }
+
         PDM_io_global_write(fichier,
-                                taille_donnee,
-                                _n_donnees,
-                                buffer);
+                            taille_donnee,
+                            _n_donnees,
+                            buffer);
       }
 
       PDM_timer_resume(timer_total);
@@ -3241,6 +3306,19 @@ void PDM_io_par_interlaced_write
 
       PDM_timer_resume(timer_fichier);
 
+      if (fichier->swap_endian && fichier->rang_actif) {
+
+        PDM_timer_resume(timer_swap_endian);
+
+        PDM_io_swap_endian(_taille_donnee,
+                           n_donnees_bloc,
+                           buffer,
+                           buffer);
+
+        PDM_timer_hang_on(timer_swap_endian);
+
+      }
+
       switch (fichier->acces) {
 
         /* Ecriture parallele des blocs */
@@ -3394,6 +3472,9 @@ void PDM_io_par_block_write
     PDM_timer_t *timer_total = fichier->timer_total;
     PDM_timer_t *timer_distribution = fichier->timer_distribution;
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
+    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
+
+    void *_donnees = (void *) donnees;
 
     PDM_timer_resume(timer_total);
 
@@ -3412,11 +3493,28 @@ void PDM_io_par_block_write
 
       PDM_timer_hang_on(timer_total);
 
-      PDM_io_global_write(fichier,
-                                taille_donnee,
-                                l_donnees,
-                                donnees);
+      if (fichier->swap_endian) {
 
+        _donnees = malloc (sizeof(unsigned char) * l_donnees * taille_donnee);
+
+        PDM_timer_resume(timer_swap_endian);
+
+        PDM_io_swap_endian(taille_donnee,
+                           l_donnees,
+                           donnees,
+                           _donnees);
+        PDM_timer_hang_on(timer_swap_endian);
+
+      }
+
+      PDM_io_global_write(fichier,
+                          taille_donnee,
+                          l_donnees,
+                          _donnees);
+
+      if (fichier->swap_endian) {
+        free (_donnees);
+      }
       PDM_timer_resume(timer_total);
 
     }
@@ -3627,11 +3725,34 @@ void PDM_io_par_block_write
       case PDM_IO_KIND_MPIIO_IP:
         if (fichier->rang_actif) {
 
+          void *_buffer = buffer;
+
+          if (fichier->swap_endian) {
+
+            PDM_timer_resume(timer_swap_endian);
+
+            if (buffer == donnees) {
+              _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+            }
+
+            PDM_io_swap_endian(taille_donnee,
+                               n_donnees_bloc_actif,
+                               buffer,
+                               _buffer);
+
+            PDM_timer_hang_on(timer_swap_endian);
+
+          }
+
           PDM_file_par_ecriture_parallele(fichier->PDM_file_par,
                                           taille_donnee,
                                           n_donnees_bloc_actif,
-                                          buffer,
+                                          _buffer,
                                           debut_bloc_actif);
+          if (buffer != _buffer) {
+            free (_buffer);
+          }
+
         }
         break;
 
@@ -3659,11 +3780,35 @@ void PDM_io_par_block_write
 
             /* Ecriture du buffer du proc maitre */
 
-	    PDM_g_num_t n_donnees_blocs_tmp = n_donnees_blocs_actifs[0];
+      	    PDM_g_num_t n_donnees_blocs_tmp = n_donnees_blocs_actifs[0];
+
+            void *_buffer = buffer;
+
+            if (fichier->swap_endian) {
+
+              PDM_timer_resume(timer_swap_endian);
+
+              if (buffer == donnees) {
+                _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+              }
+
+              PDM_io_swap_endian(taille_donnee,
+                                 n_donnees_blocs_tmp,
+                                 buffer,
+                                 _buffer);
+
+              PDM_timer_hang_on(timer_swap_endian);
+
+            }
+
             PDM_g_num_t donnees_ecrites = PDM_file_seq_write(fichier->PDM_file_seq,
-                                                    taille_donnee,
-                                                    n_donnees_blocs_tmp,
-                                                    buffer);
+                                                             taille_donnee,
+                                                             n_donnees_blocs_tmp,
+                                                             _buffer);
+            if (buffer != _buffer) {
+              free (_buffer);
+            }
+
             if (buffer == donnees)
               buffer = (unsigned char *) malloc (sizeof(unsigned char) *
                                                  max_n_donnees_blocs_actif * taille_donnee);
@@ -3683,8 +3828,8 @@ void PDM_io_par_block_write
               PDM_MPI_Recv(buffer, l_buffer, PDM_MPI_BYTE, fichier->rangs_actifs[i],
                        PDM_io_tag, fichier->comm);
 
-	      n_donnees_blocs_tmp = n_donnees_blocs_actifs[fichier->rangs_actifs[i]];
-              donnees_ecrites =
+	              n_donnees_blocs_tmp = n_donnees_blocs_actifs[fichier->rangs_actifs[i]];
+                donnees_ecrites =
                 PDM_file_seq_write(fichier->PDM_file_seq,
                                   taille_donnee,
                                   n_donnees_blocs_tmp,
@@ -3700,8 +3845,32 @@ void PDM_io_par_block_write
             /* Envoi du buffer au processu maitre si actif */
 
             int l_buffer = n_donnees_bloc_actif * taille_donnee;
-            PDM_MPI_Send(buffer, l_buffer, PDM_MPI_BYTE, 0,
-                     PDM_io_tag, fichier->comm);
+
+            void *_buffer = buffer;
+
+            if (fichier->swap_endian) {
+
+              PDM_timer_resume(timer_swap_endian);
+
+              if (buffer == donnees) {
+                _buffer = malloc (sizeof(unsigned char) * taille_donnee * n_donnees_bloc_actif);
+              }
+
+              PDM_io_swap_endian(taille_donnee,
+                                 n_donnees_bloc_actif,
+                                 buffer,
+                                 _buffer);
+
+              PDM_timer_hang_on(timer_swap_endian);
+
+            }
+
+            PDM_MPI_Send(_buffer, l_buffer, PDM_MPI_BYTE, 0,
+                         PDM_io_tag, fichier->comm);
+
+            if (buffer !=_buffer) {
+              free (_buffer);
+            }
           }
 
           PDM_MPI_Bcast(&etat_ecriture, 1, PDM_MPI_INT, 0, fichier->comm);
