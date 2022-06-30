@@ -5784,6 +5784,7 @@ PDM_dbbtree_volumes_intersect_boxes
     int *send_volume_stride              = NULL; // stride of volumes that need to be sent to other ranks
     int *receive_volume_stride           = NULL;
     int *copied_volume_idx               = NULL;
+    int *copied_plane_idx                = NULL;
     int *send_volume_idx                 = NULL;
     int *receive_volume_idx              = NULL;
     int *send_plane_stride               = NULL; // because there might not be the same amount of planes per volume
@@ -5887,7 +5888,8 @@ PDM_dbbtree_volumes_intersect_boxes
     }
 
     // Create copy idx
-    copied_volume_idx = PDM_array_new_idx_from_sizes_int (copied_volume_stride, n_copied_ranks);
+    copied_volume_idx = PDM_array_new_idx_from_sizes_int(copied_volume_stride, n_copied_ranks);
+    copied_plane_idx  = PDM_array_zeros_int (n_copied_ranks+1);
     int *copied_count_tmp = PDM_array_zeros_int (n_copied_ranks);
     n_copied_volumes = copied_volume_idx[n_copied_ranks];
 
@@ -5960,6 +5962,7 @@ PDM_dbbtree_volumes_intersect_boxes
             int _rank_idx = copied_volume_idx[_rank] + copied_count_tmp[_rank];
             copied_volume_g_num[_rank_idx]       = volume_g_num[ivol];
             copied_volume_plane_idx[_rank_idx+1] = copied_volume_plane_idx[n_local_volumes] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
+            copied_plane_idx[_rank+1] += copied_volume_plane_idx[_rank_idx+1] - copied_volume_plane_idx[_rank_idx];
             for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
               for (int j = 0; j < 3; j++) {
                 copied_plane_normal[3*copied_volume_plane_idx[_rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_normal_normalized[iplane*3 + j]
@@ -6122,18 +6125,18 @@ PDM_dbbtree_volumes_intersect_boxes
   double  *copied_plane_normal   = NULL;
   double  *copied_plane_pt_coord = NULL;
   if (n_copied_ranks > 0) {
-    copied_volume_box_idx = lrc_volume_box_idx + part_n_volume[0];
-    copied_plane_normal   = lrc_plane_normal   + part_n_volume[0] * 3;
-    copied_plane_pt_coord = lrc_plane_pt_coord + part_n_volume[0] * 3;
+    copied_volume_box_idx = lrc_volume_box_idx + part_n_volumes[0];
+    copied_plane_normal   = lrc_plane_normal   + part_n_volumes[0] * 3;
+    copied_plane_pt_coord = lrc_plane_pt_coord + part_n_volumes[0] * 3;
     for (int i = 0; i < n_copied_ranks; i++) {
       part_n_volumes[i+1] = copied_volume_idx[i+1] - copied_volume_idx[i];
 
       PDM_box_tree_intersect_volume_boxes(_dbbt->btLoc,
                                     -1,
                                     part_n_volumes[i+1],
-                                    lrc_volume_plane_idx + copied_volume_idx[i],     // WARNING: incorrect à changer avec plane
-                                    lrc_plane_normal     + copied_volume_idx[i] * 3, // WARNING: incorrect à changer avec plane
-                                    lrc_plane_pt_coord   + copied_volume_idx[i] * 3, // WARNING: incorrect à changer avec plane
+                                    lrc_volume_plane_idx + copied_plane_idx[i], // WARNING: right offset?
+                                    lrc_plane_normal     + copied_plane_idx[i] * 3,
+                                    lrc_plane_pt_coord   + copied_plane_idx[i] * 3,
                                     &(n_part_volume_box_idx[i+1]),
                                     &(n_part_volume_box[i+1]));
 
@@ -6147,9 +6150,163 @@ PDM_dbbtree_volumes_intersect_boxes
   free(lrc_plane_pt_coord);
 
   // from l_num to g_num
+  PDM_g_num_t **volume_box_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
+  volume_box_g_num[0] = malloc (sizeof(PDM_g_num_t) * n_part_volume_box_idx[0][part_n_line[0]]);
+  for (int j = 0; j < part_n_line[0]; j++) {
+    for (int k = n_part_volume_box_idx[0][j]; k < n_part_volume_box_idx[0][j+1]; k++) {
+      volume_box_g_num[0][k] = _dbbt->boxes->local_boxes->g_num[n_part_volume_box[0][k]];
+    }
+  }
+
+  for (int i = 0; i < n_copied_ranks; i++) {
+    volume_box_g_num[i+1] = malloc (sizeof(PDM_g_num_t) * n_part_volume_box_idx[i+1][part_n_line[i+1]]);
+    for (int j = 0; j < part_n_line[i+1]; j++) {
+      for (int k = n_part_volume_box_idx[i+1][j]; k < n_part_volume_box_idx[i+1][j+1]; k++) {
+        volume_box_g_num[i+1][k] = _dbbt->boxes->rank_boxes[i].g_num[n_part_volume_box[i+1][k]];
+      }
+    }
+  }
+
+  // Get weights of elements
+  PDM_g_num_t **part_volume_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int    **part_stride = malloc (sizeof(int *)    * n_part);
+  double **part_weight = malloc (sizeof(double *) * n_part);
+  int idx = 0;
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    part_volume_g_num[ipart] = lrc_volume_g_num + idx;
+    idx += part_n_volumes[ipart];
+
+    part_stride[ipart] = malloc (sizeof(int)    * part_n_volumes[ipart]);
+    part_weight[ipart] = malloc (sizeof(double) * part_n_volumes[ipart]);
+    for (int i = 0; i < part_n_volumes[ipart]; i++) {
+      part_stride[ipart][i] = volume_box_idx[ipart][i+1] - volume_box_idx[ipart][i];
+      part_weight[ipart][i] = (double) part_stride[ipart][i];
+    }
+  }
 
   // Merge results
+  /* 1) Part-to-Block */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       part_volume_g_num,
+                                                       part_weight,
+                                                       part_n_volumes,
+                                                       n_part,
+                                                       _dbbt->comm);
 
+  int *block_box_n = NULL;
+  PDM_g_num_t *block_box_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          part_stride,
+                          (void **) volume_box_g_num,
+                          &block_box_n,
+                          (void **) &block_box_g_num);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free (part_stride[ipart]);
+    free (part_weight[ipart]);
+    free (volume_box_g_num[ipart]);
+  }
+  free (part_stride);
+  free (part_weight);
+  free (volume_box_g_num);
+
+
+  /* Remove doubles */
+  int idx1 = 0, idx2 = 0;
+  int n_volume_block = PDM_part_to_block_n_elt_block_get (ptb);
+  int max_n = 0;
+  for (int i = 0; i < n_volume_block; i++) {
+    max_n = PDM_MAX (max_n, block_box_n[i]);
+  }
+
+  int *order = malloc (sizeof(int) * max_n);
+  idx1 = 0;
+  idx2 = 0;
+  for (int i = 0; i < n_volume_block; i++) {
+    if (block_box_n[i] == 0) continue;
+
+    PDM_g_num_t *_g_num1 = block_box_g_num + idx1;
+    PDM_g_num_t *_g_num2 = block_box_g_num + idx2;
+
+    for (int j = 0; j < block_box_n[i]; j++) {
+      order[j] = j;
+    }
+    PDM_sort_long (_g_num1,
+                   order,
+                   block_box_n[i]);
+
+    _g_num2[0] = _g_num1[0];
+    int tmp_n = 1;
+    for (int j = 1; j < block_box_n[i]; j++) {
+      if (_g_num1[j] != _g_num2[tmp_n-1]) {
+        _g_num2[tmp_n++] = _g_num1[j];
+      }
+    }
+
+    idx1 += block_box_n[i];
+    idx2 += tmp_n;
+    block_box_n[i] = tmp_n;
+  }
+  free (order);
+
+  /* Fix partial block stride */
+  PDM_g_num_t l_max_g_num = 0;
+  for (int i = 0; i < n_volumes; i++) {
+    l_max_g_num = PDM_MAX (l_max_g_num, volume_g_num[i]);
+  }
+
+  PDM_g_num_t g_max_g_num;
+  PDM_MPI_Allreduce (&l_max_g_num, &g_max_g_num, 1,
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, _dbbt->comm);
+
+  PDM_g_num_t *block_distrib_idx =
+    PDM_part_to_block_adapt_partial_block_to_block (ptb,
+                                                    &block_box_n,
+                                                    g_max_g_num);
+
+  /* 2) Block-to-Part */
+  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+                                                       (const PDM_g_num_t **) &volume_g_num,
+                                                       &n_volumes,
+                                                       1,
+                                                       _dbbt->comm);
+
+  int *box_n = malloc (sizeof(int) * n_volumes);
+  int one = 1;
+  PDM_block_to_part_exch_in_place (btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          &one,
+                          block_box_n,
+                          NULL,
+                          (void **) &box_n);
+
+  *box_idx = PDM_array_new_idx_from_sizes_int (box_n, n_volumes);
+
+  *box_g_num = malloc (sizeof(PDM_g_num_t) * (*box_idx)[n_volumes]);
+  PDM_block_to_part_exch_in_place (btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          block_box_n,
+                          block_box_g_num,
+                          &box_n,
+                          (void **) box_g_num);
+  free (block_box_g_num);
+  free (block_box_n);
+  free (box_n);
+
+  PDM_block_to_part_free(btp);
+  PDM_part_to_block_free(ptb);
+  free (block_distrib_idx);
+  free (part_n_volumes);
+
+  free (part_volume_g_num);
+  if (lcr_volume_g_num != volume_g_num) free (lcr_volume_g_num);
 
   PDM_box_tree_free_copies(_dbbt->btLoc);
 }
