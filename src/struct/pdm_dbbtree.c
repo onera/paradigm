@@ -5656,7 +5656,9 @@ PDM_dbbtree_lines_intersect_boxes2
  *
  * \param [in]   dbbt                  Pointer to distributed box tree structure
  * \param [in]   n_volumes             Number of volumes
- * \param [in]   n_planes_per_volume   Index of the number of planes per volume
+ * \param [in]   volume_g_num          Global number of volumes
+ * \param [in]   volume_plane_idx      Index of the number of planes per volume
+ * \param [in]   volume_plane          Number of planes per volume
  * \param [in]   plane_normal          Oriented normal vector for a given plane (oriented toward the interior of the volume)
  * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
  * \param [out]  volume_box_idx        Index of boxes (size = \ref n_line + 1, allocated inside function)
@@ -5664,12 +5666,24 @@ PDM_dbbtree_lines_intersect_boxes2
  *
  */
 
+/* WARNING: name equivalence with PDM_dbbtree_lines_intersect_boxes
+ *      n_line_recv_copied_ranks <=>      jsubtree_to_copy_total_n_volume
+ *      mean_n_line_recv         <=>      mean_jsubtree_total_n_volume
+ *      n_line_recv              <=>      isubtree_total_n_volume
+ *      send_count               <=>      irank_jsubtree_n_volume
+ *      recv_count               <=>      isubtree_jrank_n_volume
+ *      all_n_line_recv          <=>      all_jrank_jsubtree_total_n_volume
+ *      *1                       <=>      updated_*
+ */
+
 void
 PDM_dbbtree_volumes_intersect_boxes
 (
  PDM_dbbtree_t  *dbbt,
  const int       n_volumes,
+ PDM_g_num_t    *volume_g_num,
  const int      *volume_plane_idx,
+ int            *volume_plane,
  double         *plane_normal,
  double         *plane_pt_coord,
  int           **volume_box_idx,
@@ -5704,12 +5718,26 @@ PDM_dbbtree_volumes_intersect_boxes
   } // end loop on planes
 
   // Set up for counting the number of volumes that might intersect boxes on ranks
-  int *irank_jsubtree_n_volume            = NULL; // number of volumes per sub-box_tree on rank i
-  int *isubtree_jrank_n_volume            = NULL; // number of volumes for sub-box_tree i on each rank j
-  int  isubtree_total_n_volume            = 0;    // total number of volumes associated to sub-box_tree i
-  int *all_jrank_jsubtree_total_n_volume = NULL;  // total number of volumes associated to sub-box_tree j for each rank j
-  int  n_copied_ranks = 0;                        // Number of subtrees to copy
-  int *copied_ranks = NULL;                       // Index of copied subtrees
+  int          isubtree_total_n_volume            = 0;    // Total number of volumes associated to sub-box_tree i
+  int          n_copied_ranks                     = 0;    // Number of subtrees to copy
+  int          updated_total_n_volume             = 0;
+  int          n_lrc_volumes                      = 0;    // Updated n_volumes taking into acount the local, received and copied part
+  int         *irank_jsubtree_n_volume            = NULL; // Number of volumes per sub-box_tree on rank i
+  int         *isubtree_jrank_n_volume            = NULL; // Number of volumes for sub-box_tree i on each rank j
+  int         *all_jrank_jsubtree_total_n_volume  = NULL; // Total number of volumes associated to sub-box_tree j for each rank j
+  int         *copied_ranks                       = NULL; // Index of copied subtrees
+  PDM_g_num_t *lrc_volume_g_num                   = NULL;
+  int         *lrc_volume_plane_idx               = NULL;
+  double      *lrc_plane_normal                   = NULL;
+  double      *lrc_plane_pt_coord                 = NULL;
+  PDM_g_num_t *send_volume_g_num                  = NULL;
+  int         *send_volume_plane_idx              = NULL;
+  double      *send_plane_normal                  = NULL;
+  double      *send_plane_pt_coord                = NULL;
+  PDM_g_num_t *receive_volume_g_num               = NULL;
+  int         *receive_volume_plane_idx           = NULL;
+  double      *receive_plane_normal               = NULL;
+  double      *receive_plane_pt_coord             = NULL;
 
   if (_dbbt->btShared != NULL) {
 
@@ -5735,30 +5763,37 @@ PDM_dbbtree_volumes_intersect_boxes
       irank_jsubtree_n_volume[jsubtree]++;
     } // end loop on volumes associated to subtrees on rank i
 
-    isubtree_jrank_n_volume = malloc (sizeof(int) * n_rank);
-    PDM_MPI_Alltoall (irank_jsubtree_n_volume, 1, PDM_MPI_INT,
-                      isubtree_jrank_n_volume, 1, PDM_MPI_INT,
-                      _dbbt->comm);
+    isubtree_jrank_n_volume = malloc(sizeof(int) * n_rank);
+    PDM_MPI_Alltoall(irank_jsubtree_n_volume, 1, PDM_MPI_INT,
+                     isubtree_jrank_n_volume, 1, PDM_MPI_INT,
+                     _dbbt->comm);
 
-    isub_tree_total_n_volume = 0;
+    isubtree_total_n_volume = 0;
     for (int jrank = 0; jrank < n_rank; jrank++) {
       isubtree_total_n_volume += isubtree_jrank_n_volume[jrank];
     }
 
-    // int n_line_recv_no_copies = n_line_recv;
-
     // Determine mean value of received volumes
-    int n_max_copy = (int) (f_max_copy * n_rank);
-    int *i_copied_rank = NULL;
-    int *copied_count = NULL;
-    int  mean_jsubtree_total_n_volume = 0;
+    int  n_max_copy                      = (int) (f_max_copy * n_rank);
+    int  mean_jsubtree_total_n_volume    = 0;
+    int  n_local_volumes                 = 0; // number of volumes linked to subtree i on rank i
+    int  n_copied_volumes                = 0; // number of volumes linked to copied subtrees on rank i
+    int  n_receive_volumes               = 0; // number of received volumes linked to subtree i on rank i
+    int *i_copied_rank                   = NULL;
     int *jsubtree_to_copy_total_n_volume = NULL;
+    int *copied_volume_stride            = NULL; // portion of volumes linked to a copied subtree to keep on rank i
+    int *send_volume_stride              = NULL; // stride of volumes that need to be sent to other ranks
+    int *receive_volume_stride           = NULL;
+    int *copied_volume_idx               = NULL;
+    int *send_volume_idx                 = NULL;
+    int *receive_volume_idx              = NULL;
+
 
     if (n_max_copy > 0) {
-      int *all_n_line_recv = malloc (sizeof(int) * n_rank);
-      PDM_MPI_Allgather (&isubtree_total_n_volume,    1, PDM_MPI_INT,
-                         all_jrank_jsubtree_total_n_volume, 1, PDM_MPI_INT,
-                         _dbbt->comm);
+      int *all_n_line_recv = malloc(sizeof(int) * n_rank);
+      PDM_MPI_Allgather(&isubtree_total_n_volume,    1, PDM_MPI_INT,
+                        all_jrank_jsubtree_total_n_volume, 1, PDM_MPI_INT,
+                        _dbbt->comm);
 
       long long_tmp_mean = 0;
       for (int j = 0; j < n_rank; j++) {
@@ -5769,14 +5804,14 @@ PDM_dbbtree_volumes_intersect_boxes
       float n_threshold = f_threshold * mean_jsubtree_total_n_volume;
 
       // Sort subtrees (i on rank i) according to the total number of associated volumes
-      int *order = malloc (sizeof(int) * n_rank);
+      int *order = malloc(sizeof(int) * n_rank);
       for (int i = 0; i < n_rank; i++) {
         order[i] = i;
       }
 
-      PDM_sort_int (all_jrank_jsubtree_total_n_volume,
-                    order,
-                    n_rank);
+      PDM_sort_int(all_jrank_jsubtree_total_n_volume,
+                   order,
+                   n_rank);
 
       // Identify ranks to copy
       copied_ranks                    = malloc (sizeof(int) * n_max_copy);
@@ -5793,41 +5828,189 @@ PDM_dbbtree_volumes_intersect_boxes
           break;
         }
       }
-      free (all_jrank_jsubtree_total_n_volume);
-      free (order);
+      free(all_jrank_jsubtree_total_n_volume);
+      free(order);
 
       if (n_copied_ranks > 0) {
-        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
-        jsubtree_to_copy_total_n_volume = realloc (jsubtree_to_copy_total_n_volume,
+        copied_ranks = realloc(copied_ranks, sizeof(int) * n_copied_ranks);
+        jsubtree_to_copy_total_n_volume = realloc(jsubtree_to_copy_total_n_volume,
                                            sizeof(int) * n_copied_ranks);
       }
 
     } // end if we want to copy subtrees
 
+    // Copy subtree selected to be copied to all other ranks
+    i_copied_rank = malloc(sizeof(int) * n_rank);
+    PDM_box_tree_copy_to_ranks(_dbbt->btLoc,
+                               &n_copied_ranks,
+                               copied_ranks,
+                               i_copied_rank);
 
+    // Determine which fraction of copied rank we keep
+    copied_volume_stride = PDM_array_zeros_int (n_copied_ranks);
+    n_local_volumes = 0;
+    for (int i = 0; i < n_copied_ranks; i++) {
+      int rank = copied_ranks[i];
+      if (rank != i_rank) {
+        int keep_portion = irank_jsubtree_n_volume[rank];
 
+        keep_portion = PDM_MIN (keep_portion, PDM_MAX (0, (jsubtree_to_copy_total_n_volume[i] - isubtree_total_n_volume)/2));
+        if (i_copied_rank[i_rank] < 0) {
+          keep_portion = PDM_MIN (keep_portion, PDM_MAX (0, mean_jsubtree_total_n_volume - isubtree_total_n_volume));
+        }
 
+        copied_volume_stride[i] = keep_portion;
+        isubtree_total_n_volume += keep_portion;
+      } // edn if not i rank
+    } // end loop on copied ranks
 
+    if (copied_ranks != NULL) {
+      free (copied_ranks);
+    }
 
+    if (jsubtree_to_copy_total_n_volume != NULL) {
+      free (jsubtree_to_copy_total_n_volume);
+    }
 
+    // Create send stride
+    for (int i = 0; i < n_rank; i++) {
+      if (i == i_rank) {
+        n_local_volumes += irank_jsubtree_n_volume[i];
+        irank_jsubtree_n_volume[i] = 0;
+      }
+      else if (i_copied_rank[i] >= 0) {
+        irank_jsubtree_n_volume[i] -= copied_volume_stride[i_copied_rank[i]];
+      }
+    }
 
+    // Create copy idx
+    copied_volume_idx = PDM_array_new_idx_from_sizes_int (copied_volume_stride, n_copied_ranks);
+    int *copied_count_tmp = PDM_array_zeros_int (n_copied_ranks);
+    n_copied_volumes = copied_volume_idx[n_copied_ranks];
 
+    // Get for subtree i the amount of volumes rank i will get from rank j
+    PDM_MPI_Alltoall (irank_jsubtree_n_volume, 1, PDM_MPI_INT,
+                      isubtree_jrank_n_volume, 1, PDM_MPI_INT,
+                      _dbbt->comm);
 
+    send_volume_idx    = PDM_array_new_idx_from_sizes_int(send_volume_stride, n_rank);
+    receive_volume_idx = PDM_array_new_idx_from_sizes_int(receive_volume_stride, n_rank);
+    PDM_array_reset_int(irank_jsubtree_n_volume, n_rank, 0);
 
+    n_receive_volumes = receive_volume_idx[n_rank];
+    n_lrc_volumes     = n_local_volumes + n_receive_volumes + n_copied_volumes;
 
+    lrc_volume_g_num     = malloc(sizeof(PDM_g_num_t)     * n_lrc_volumes);
+    lrc_volume_plane_idx = malloc(sizeof(int        )     * (n_lrc_volumes+1));
+    lrc_plane_normal     = malloc(sizeof(double     ) * 3 * n_lrc_volumes);
+    lrc_plane_pt_coord   = malloc(sizeof(double     ) * 3 * n_lrc_volumes);
 
+    // Fill in send buffers and start to prepare volume table that has to be dealt with on rank i
+    send_volume_g_num     = malloc(sizeof(PDM_g_num_t)     * send_volume_idx[n_rank]);
+    send_volume_plane_idx = malloc(sizeof(int        )     * (send_volume_idx[n_rank]+1));
+    send_plane_normal     = malloc(sizeof(double     ) * 3 * send_volume_idx[n_rank]);
+    send_plane_pt_coord   = malloc(sizeof(double     ) * 3 * send_volume_idx[n_rank]);
 
+    int idx_copied = n_local_volumes + n_receive_volumes;
+    PDM_g_num_t *copied_volume_g_num               = lrc_volume_g_num     + idx_copied;
+    int         *copied_volume_plane_idx           = lrc_volume_plane_idx + idx_copied;
+    double      *copied_plane_normal               = lrc_plane_normal     + idx_copied;
+    double      *copied_plane_pt_coord             = lrc_plane_pt_coord   + idx_copied;
 
+    n_local_volumes            = 0;
+    lrc_volume_plane_idx[0]    = 0;
+    copied_volume_plane_idx[0] = 0;
+    send_volume_plane_idx[0]   = 0;
+    for (int ivol = 0; ivol < n_volumes; ivol++) {
+      for (int i = volume_subtree_idx[ivol]; i < volume_subtree_idx[ivol+1]; i++) {
+        int rank = volume_subtree[i];
 
+        // on rank i
+        if (rank == i_rank) {
+          lrc_volume_g_num[n_local_volumes]       = volume_g_num[ivol];
+          lrc_volume_plane_idx[n_local_volumes+1] = lrc_volume_plane_idx[n_local_volumes] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
+          for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
+            for (int j = 0; j < 3; j++) {
+              lrc_plane_normal[3*lrc_volume_plane_idx[n_local_volumes] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_normal_normalized[iplane*3 + j]
+              lrc_plane_pt_coord[3*lrc_volume_plane_idx[n_local_volumes] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_pt_coord_normalized[iplane*3 + j]
+            }
+          } // end loop on planes associated to ivol
+          n_local_volumes++;
+        }
 
+        // copied rank
+        else if (i_copied_rank[rank] >= 0) {
+          int _rank = i_copied_rank[rank]; // how manyth copied rank
+
+          // part of copied that we keep
+          if (copied_count_tmp[_rank] < copied_count[_rank]) {
+            int _rank_idx = copied_volume_idx[_rank] + copied_count_tmp[_rank];
+            copied_volume_g_num[_rank_idx]       = volume_g_num[ivol];
+            copied_volume_plane_idx[_rank_idx+1] = copied_volume_plane_idx[n_local_volumes] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
+            for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
+              for (int j = 0; j < 3; j++) {
+                copied_plane_normal[3*copied_volume_plane_idx[_rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_normal_normalized[iplane*3 + j]
+                copied_plane_pt_coord[3*copied_volume_plane_idx[_rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_pt_coord_normalized[iplane*3 + j]
+              }
+            } // end loop on planes associated to ivol
+            copied_count_tmp[_rank]++;
+          }
+
+          // part of copied that we send
+          else {
+            int rank_idx = copied_volume_idx[rank] + copied_count_tmp[rank];
+            send_volume_g_num[rank_idx]       = volume_g_num[ivol];
+            send_volume_plane_idx[rank_idx+1] = send_volume_plane_idx[n_local_volumes] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
+            for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
+              for (int j = 0; j < 3; j++) {
+                send_plane_normal[3*send_volume_plane_idx[rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_normal_normalized[iplane*3 + j]
+                send_plane_pt_coord[3*send_volume_plane_idx[rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_pt_coord_normalized[iplane*3 + j]
+              }
+            } // end loop on planes associated to ivol
+            send_volume_stride[rank]++;
+          }
+        }
+
+        // not-copied rank
+        else {
+          int rank_idx = copied_volume_idx[rank] + copied_count_tmp[rank];
+            send_volume_g_num[rank_idx]       = volume_g_num[ivol];
+            send_volume_plane_idx[rank_idx+1] = send_volume_plane_idx[n_local_volumes] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
+            for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
+              for (int j = 0; j < 3; j++) {
+                send_plane_normal[3*send_volume_plane_idx[rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_normal_normalized[iplane*3 + j]
+                send_plane_pt_coord[3*send_volume_plane_idx[rank_idx] + (iplane - volume_plane_idx[ivol])*3 + j] = plane_pt_coord_normalized[iplane*3 + j]
+              }
+            } // end loop on planes associated to ivol
+            send_volume_stride[rank]++;
+          }
+        }
+
+      } // end loop on subtrees on which ivol might have intersecting boxes
+    } // end loop on volumes
+
+    free(plane_normal_normalized);
+    free(plane_pt_coord_normalized);
+    free(volume_plane_idx);
+    if (copied_volume_stride != NULL) {
+      free(copied_volume_stride);
+    }
+    if (copied_count_tmp != NULL) {
+      free(copied_count_tmp);
+    }
+    if (i_copied_rank != NULL) {
+      free(i_copied_rank);
+    }
+    free(volume_subtree);
+    free(volume_subtree_idx);
+
+    // Exchange volumes and associated data
 
   } // end if there is a shared bt
 
-  /* Copy data to ranks that help with the workload of some other rank */
+  // Get boxes intersecting volumes
 
-  /* Get boxes intersecting volumes */
-
-  /* Merge results */
+  // Merge results
 
 }
 
