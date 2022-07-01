@@ -325,8 +325,8 @@ int main(int argc, char *argv[])
   PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
                                                  n_part,
                                                  &n_dbbtree_boxes,
-                                                 (const double **) &dbbtree_box_extents,
-                                                 (const PDM_g_num_t **) &dbbtree_box_g_num);
+                               (const double **) &dbbtree_box_extents,
+                          (const PDM_g_num_t **) &dbbtree_box_g_num);
 
   int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
 
