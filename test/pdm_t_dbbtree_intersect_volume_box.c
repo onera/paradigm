@@ -351,9 +351,12 @@ int main(int argc, char *argv[])
                                       &volume_boxes_g_num);
 
   if (verbose) {
+    log_trace("i_rank = %d\n", i_rank);
+    PDM_log_trace_array_double(plane_pt_coord, 3*6, "plane_pt_coord: ");
+    log_trace("----------\n");
     log_trace("VOLUME-BOX INTERSECTION\n");
     for (int ivol = 0; ivol < n_volume_boxes; ivol++) {
-      log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ");
+      log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", volume_box_g_num[ivol]);
       for (int i = volume_boxes_idx[ivol]; i < volume_boxes_idx[ivol+1]; i++) {
         log_trace("%d ", volume_boxes_g_num[i]);
       }

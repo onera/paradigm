@@ -335,7 +335,7 @@ PDM_lp_solve_nd
 
     if (verbose) PDM_log_trace_array_double(sub_c, dim-1, "  sub_c : ");
     if (mag_sub_c < eps_lp) {
-      log_trace("c is null !\n");
+      if (verbose) log_trace("c is null !\n");
     }
 
     PDM_lp_status_t stat = PDM_lp_solve_nd(dim-1,
