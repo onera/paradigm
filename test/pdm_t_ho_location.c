@@ -602,8 +602,8 @@ _uvw_nodes
     _uvw_ho_hexa_nodes(order, 0, 1, 0, 1, 0, 1, uvw);
     break;
 
-
-
+    default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid HO elt type %d\n", (int) elt_type);
   }
 }
 
@@ -819,89 +819,6 @@ _compute_uvw
 
 
 
-
-static void
-_hexa_ho_faces
-(
- const int              order,
- int                   *n_face,
- PDM_Mesh_nodal_elt_t **face_type,
- int                  **face_node_idx,
- int                  **face_node
- )
-{
-  #define ijk2idx(i, j, k) ((i) + (order+1)*((j) + (order+1)*(k)))
-
-  *n_face = 6;
-
-
-  *face_type = malloc(sizeof(PDM_Mesh_nodal_elt_t) * (*n_face));
-  *face_node_idx = malloc(sizeof(int) * (*n_face + 1));
-  (*face_node_idx)[0] = 0;
-  for (int i = 0; i < *n_face; i++) {
-    (*face_type)[i] = PDM_MESH_NODAL_QUADHO;
-    (*face_node_idx)[i+1] = (*face_node_idx)[i] + PDM_Mesh_nodal_n_vertices_element((*face_type)[i], order);
-  }
-
-  *face_node = malloc(sizeof(int) * (*face_node_idx)[*n_face]);
-
-  int face_node_n = PDM_Mesh_nodal_n_vertices_element(PDM_MESH_NODAL_QUADHO, order);
-
-  // face w = 0
-  int idx = 0;
-  for (int j = 0; j <= order; j++) {
-    for (int i = 0; i <= order; i++) {
-      (*face_node)[idx++] = 1 + ijk2idx(i, j, 0);
-    }
-  }
-
-  // face w = 1
-  for (int j = 0; j <= order; j++) {
-    for (int i = 0; i <= order; i++) {
-      (*face_node)[idx++] = 1 + ijk2idx(i, j, order);
-    }
-  }
-
-
-  // face v = 0
-  for (int i = 0; i <= order; i++) {
-    for (int k = 0; k <= order; k++) {
-      (*face_node)[idx++] = 1 + ijk2idx(i, 0, k);
-    }
-  }
-
-  // face v = 1
-  for (int i = 0; i <= order; i++) {
-    for (int k = 0; k <= order; k++) {
-      (*face_node)[idx++] = 1 + ijk2idx(i, order, k);
-    }
-  }
-
-
-  // face u = 0
-  for (int k = 0; k <= order; k++) {
-    for (int j = 0; j <= order; j++) {
-      (*face_node)[idx++] = 1 + ijk2idx(0, j, k);
-    }
-  }
-
-  // face u = 1
-  for (int k = 0; k <= order; k++) {
-    for (int j = 0; j <= order; j++) {
-      (*face_node)[idx++] = 1 + ijk2idx(order, j, k);
-    }
-  }
-
-  #undef ijk2idx
-}
-
-
-
-
-
-
-
-
 /**
  *
  * \brief  Main
@@ -949,7 +866,7 @@ int main(int argc, char *argv[])
   /*
    *  Init
    */
-  struct timeval t_elaps_debut;
+  // struct timeval t_elaps_debut;
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   int i_rank;
@@ -1028,8 +945,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
-  double amplitude = 0.1;//0.07;
-  double frequence = 4.;
+  // double amplitude = 0.1;//0.07;
+  // double frequence = 4.;
 
   if (1) {
     for (int i = 0; i < dn_vtx; i++) {
@@ -1088,8 +1005,8 @@ int main(int argc, char *argv[])
   // int  n_section   = PDM_DMesh_nodal_n_section_get  (dmn, geom_kind);
 
   int id_section = sections_id[0];
-  const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
-  int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
+  // const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
+  // int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
   PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
   assert(PDM_DMesh_nodal_section_type_get(dmn, geom_kind, id_section) == t_elt);
 
@@ -1212,7 +1129,7 @@ int main(int argc, char *argv[])
 
     double *q = pts_coord  + 3*i;
     double *p = proj_coord + 3*i;
-    double *u = pts_uvw_init + 3*i;
+    // double *u = pts_uvw_init + 3*i;
     double *w = pts_weight + n_node*i;
 
 
