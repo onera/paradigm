@@ -6407,6 +6407,31 @@ PDM_dbbtree_lines_intersect_boxes2
 //   PDM_box_tree_free_copies(_dbbt->btLoc);
 // }
 
+static void
+_volume_to_extents
+(
+ double *pt_plane,
+ double *extents
+)
+{
+  extents[0] = HUGE_VAL;
+  extents[1] = HUGE_VAL;
+  extents[2] = HUGE_VAL;
+  extents[3] = -HUGE_VAL;
+  extents[4] = -HUGE_VAL;
+  extents[5] = -HUGE_VAL;
+  for (int i = 0; i < 6; i++) {
+    extents[0] = PDM_MIN(extents[0], pt_plane[3*i]);
+    extents[1] = PDM_MIN(extents[1], pt_plane[3*i + 1]);
+    extents[2] = PDM_MIN(extents[2], pt_plane[3*i + 2]);
+
+    extents[3] = PDM_MAX(extents[3], pt_plane[3*i]);
+    extents[4] = PDM_MAX(extents[4], pt_plane[3*i+1]);
+    extents[5] = PDM_MAX(extents[5], pt_plane[3*i+2]);
+  }
+
+}
+
 
 void
 PDM_dbbtree_volumes_intersect_boxes
@@ -6431,6 +6456,12 @@ PDM_dbbtree_volumes_intersect_boxes
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
+  if (1) {
+    log_trace("dbbtree s = %f %f %f, d = %f %f %f\n",
+              _dbbt->s[0], _dbbt->s[1], _dbbt->s[2],
+              _dbbt->d[0], _dbbt->d[1], _dbbt->d[2]);
+  }
+
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (_dbbt->comm, &i_rank);
   PDM_MPI_Comm_size (_dbbt->comm, &n_rank);
@@ -6449,11 +6480,35 @@ PDM_dbbtree_volumes_intersect_boxes
                              plane_normal_normalized + 3*i);
   } // end loop on planes
 
+  if (vtk) {
+    double *extents = malloc(sizeof(double) * n_volumes * 6);
+    for (int i = 0; i < n_volumes; i++) {
+      _volume_to_extents(plane_pt_coord_normalized + i*6, extents + i*6);
+    }
+    char filename1[999];
+    sprintf(filename1, "volumes_normalized_%d.vtk", i_rank);
+    PDM_vtk_write_boxes(filename1,
+                        n_volumes,
+                        extents,
+                        NULL);
+  }
+
   if (verbose) {
-    PDM_log_trace_array_double(plane_pt_coord, 3*n_planes, "plane_pt_coord: ");
-    PDM_log_trace_array_double(plane_pt_coord_normalized, 3*n_planes, "plane_pt_coord_normalized: ");
-    PDM_log_trace_array_double(plane_normal, 3*n_planes, "plane_normal: ");
-    PDM_log_trace_array_double(plane_normal_normalized, 3*n_planes, "plane_normal_normalized: ");
+    for (int j = 0; j < n_volumes; j++) {
+      log_trace("volume g_num = %d\n", volume_g_num[j]);
+      for (int k = volume_plane_idx[j]; k < volume_plane_idx[j+1]; k++) {
+        log_trace("normal --> ");
+        for (int l = 0; l < 3; l++) {
+          log_trace(" %lf ", plane_normal_normalized[3*k + l]);
+        }
+        log_trace("\n");
+        log_trace("plane_pt --> ");
+        for (int l = 0; l < 3; l++) {
+          log_trace(" %lf ", plane_pt_coord_normalized[3*k + l]);
+        }
+        log_trace("\n");
+      }
+    }
   }
 
   // Set up for counting the number of volumes that might intersect boxes on ranks
@@ -6516,21 +6571,35 @@ PDM_dbbtree_volumes_intersect_boxes
                                         &volume_subtree_idx,
                                         &volume_subtree);
 
-    if (verbose) {
-      log_trace("i_rank = %d\n", i_rank);
-      PDM_g_num_t *boxes_gnum = PDM_box_set_get_g_num(_dbbt->boxes);
-      int n_boxes = PDM_box_set_get_size(_dbbt->boxes);
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "local_box_tree_%d.vtk", i_rank);
+      PDM_box_tree_write_vtk(filename1,
+                             _dbbt->btLoc,
+                             -1,
+                             0);
 
-      PDM_log_trace_array_long(boxes_gnum, n_boxes, "Global number of boxes on current rank: ");
-
-      for (int ivol = 0; ivol < n_volumes; ivol++) {
-        log_trace("vol_g_num = "PDM_FMT_G_NUM" has subtree ", volume_g_num[ivol]);
-        for (int j = volume_subtree_idx[ivol]; j < volume_subtree_idx[ivol+1]; j++) {
-          log_trace(" %d ", volume_subtree[j]);
-        }
-        log_trace("\n");
-      }
     }
+
+    if (verbose) {
+      log_trace("end_shared\n");
+    }
+
+    // if (verbose) {
+    //   log_trace("i_rank = %d\n", i_rank);
+    //   PDM_g_num_t *boxes_gnum = PDM_box_set_get_g_num(_dbbt->boxes);
+    //   int n_boxes = PDM_box_set_get_size(_dbbt->boxes);
+
+    //   PDM_log_trace_array_long(boxes_gnum, n_boxes, "Number of boxes on current rank: ");
+
+    //   for (int ivol = 0; ivol < n_volumes; ivol++) {
+    //     log_trace("vol_g_num = "PDM_FMT_G_NUM" has subtree ", volume_g_num[ivol]);
+    //     for (int j = volume_subtree_idx[ivol]; j < volume_subtree_idx[ivol+1]; j++) {
+    //       log_trace(" %d ", volume_subtree[j]);
+    //     }
+    //     log_trace("\n");
+    //   }
+    // }
 
     // Count on irank the number of volumes associated to each j sub-box_tree
     irank_jsubtree_n_volume = PDM_array_zeros_int(n_rank);
@@ -6670,7 +6739,6 @@ PDM_dbbtree_volumes_intersect_boxes
     // Allocate table for copied and local-rceived data on rank i
     int tmp_n_copied_planes                  = 3 * n_copied_volumes * 2;
     copied_volume_g_num                      = malloc(sizeof(PDM_g_num_t) * n_copied_volumes);
-    copied_volume_plane_idx                  = malloc(sizeof(int        ) * (n_copied_volumes+1));
     copied_plane_normal                      = malloc(sizeof(double     ) * tmp_n_copied_planes);
     copied_plane_pt_coord                    = malloc(sizeof(double     ) * tmp_n_copied_planes);
     copied_rank_volume_head                  = PDM_array_zeros_int(n_copied_ranks);
@@ -6703,7 +6771,7 @@ PDM_dbbtree_volumes_intersect_boxes
           // part of copied that we keep
           if (copied_rank_volume_head[_rank] < copied_volume_stride[_rank]) {
             int _rank_idx = copied_volume_idx[_rank] + copied_rank_volume_head[_rank];
-            copied_volume_g_num[_rank_idx]     = volume_g_num[ivol];
+            copied_volume_g_num[_rank_idx]  = volume_g_num[ivol];
             copied_rank_n_plane[_rank_idx] += volume_plane_idx[ivol+1] - volume_plane_idx[ivol];
             copied_rank_volume_head[_rank]++;
           } // end if kept-copied part
@@ -6748,6 +6816,7 @@ PDM_dbbtree_volumes_intersect_boxes
     send_plane_idx           = PDM_array_new_idx_from_sizes_int(send_rank_n_plane, n_rank);
     receive_plane_idx        = PDM_array_new_idx_from_sizes_int(receive_rank_n_plane, n_rank);
     send_rank_volume_n_plane = PDM_array_zeros_int(send_volume_idx[n_rank]);
+    copied_volume_plane_idx  = malloc(sizeof(int) * (n_copied_volumes+send_volume_idx[n_rank]));
 
     PDM_array_reset_int(send_rank_volume_head, n_rank, 0);
 
@@ -6755,34 +6824,35 @@ PDM_dbbtree_volumes_intersect_boxes
       for (int i = volume_subtree_idx[ivol]; i < volume_subtree_idx[ivol+1]; i++) {
         int rank = volume_subtree[i];
 
-        // on rank i
-        if (rank == i_rank) {
-          int rank_idx_vol = send_volume_idx[rank] + send_rank_volume_head[rank];
-          send_rank_volume_n_plane[rank_idx_vol] = volume_plane_idx[ivol+1] - volume_plane_idx[ivol];
-          for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
-            int rank_idx_plane = send_plane_idx[rank] + send_rank_plane_head[rank];
-            // Realloc if necessary
-            if ( 3*(rank_idx_plane+1) > tmp_n_send_planes) {
-              tmp_n_send_planes *= 2;
-              send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * tmp_n_send_planes);
-              send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * tmp_n_send_planes);
-            }
-            for (int j = 0; j < 3; j++) {
-              send_plane_normal[3*rank_idx_plane + j]   = plane_normal_normalized[3*iplane + j];
-              send_plane_pt_coord[3*rank_idx_plane + j] = plane_pt_coord_normalized[3*iplane + j];
-            }
-            send_rank_plane_head[rank]++;
-          } // end loop on ivol planes
-          send_rank_volume_head[rank]++;
-        } // end if on rank i
+        // // on rank i
+        // if (rank == i_rank) {
+        //   int rank_idx_vol = send_volume_idx[rank] + send_rank_volume_head[rank];
+        //   send_rank_volume_n_plane[rank_idx_vol] = volume_plane_idx[ivol+1] - volume_plane_idx[ivol];
+        //   for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
+        //     int rank_idx_plane = send_plane_idx[rank] + send_rank_plane_head[rank];
+        //     // Realloc if necessary
+        //     if ( 3*(rank_idx_plane+1) > tmp_n_send_planes) {
+        //       tmp_n_send_planes *= 2;
+        //       send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * tmp_n_send_planes);
+        //       send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * tmp_n_send_planes);
+        //     }
+        //     for (int j = 0; j < 3; j++) {
+        //       send_plane_normal[3*rank_idx_plane + j]   = plane_normal_normalized[3*iplane + j];
+        //       send_plane_pt_coord[3*rank_idx_plane + j] = plane_pt_coord_normalized[3*iplane + j];
+        //     }
+        //     send_rank_plane_head[rank]++;
+        //   } // end loop on ivol planes
+        //   send_rank_volume_head[rank]++;
+        // } // end if on rank i
 
         // copied rank
-        else if (i_copied_rank[rank] >= 0) {
+        if (i_copied_rank[rank] >= 0) { // else if
           int _rank = i_copied_rank[rank]; // how manyth copied rank
 
           // part of copied that we keep
           if (copied_rank_volume_head[_rank] < copied_volume_stride[_rank]) {
             int _rank_idx_plane = copied_plane_idx[_rank] + copied_rank_volume_head[_rank];
+            copied_volume_plane_idx[_rank_idx_plane] = copied_volume_plane_idx[_rank_idx_plane-1] + (volume_plane_idx[ivol+1] - volume_plane_idx[ivol]);
             for (int iplane = volume_plane_idx[ivol]; iplane < volume_plane_idx[ivol+1]; iplane++) {
               // Realloc if necessary
               if ( 3*(_rank_idx_plane+1) > tmp_n_copied_planes) {
@@ -6858,14 +6928,6 @@ PDM_dbbtree_volumes_intersect_boxes
       receive_plane_idx[i+1]  *= 3;
     }
 
-    if (verbose) {
-      int size = 0;
-      for (int i = 0; i < n_rank; i++) {
-        size += send_rank_plane_head[i];
-      }
-      PDM_log_trace_array_double(send_plane_pt_coord, size, "send_plane_pt_coord: ");
-    }
-
     send_plane_normal   = realloc(send_plane_normal   , sizeof(double) * send_plane_idx[n_rank]);
     send_plane_pt_coord = realloc(send_plane_pt_coord , sizeof(double) * send_plane_idx[n_rank]);
 
@@ -6875,9 +6937,10 @@ PDM_dbbtree_volumes_intersect_boxes
                       receive_plane_normal, receive_rank_n_plane, receive_plane_idx, PDM_MPI_DOUBLE,
                       _dbbt->comm);
 
-    if (verbose) {
-      PDM_log_trace_array_double(send_plane_pt_coord, send_plane_idx[n_rank], "send_plane_pt_coord: ");
-    }
+    // if (verbose) {
+    //   log_trace("send_plane_idx[n_rank] = %d\n", send_plane_idx[n_rank]);
+    //   PDM_log_trace_array_double(send_plane_pt_coord, send_plane_idx[n_rank], "send_plane_pt_coord: ");
+    // }
 
     receive_plane_pt_coord = malloc(sizeof(double) * 3 * receive_plane_idx[n_rank]);
     PDM_MPI_Alltoallv(send_plane_pt_coord, send_rank_n_plane, send_plane_idx, PDM_MPI_DOUBLE,
@@ -6910,7 +6973,6 @@ PDM_dbbtree_volumes_intersect_boxes
         if (verbose) {
           log_trace("subtree = %d\n", _rank);
           PDM_log_trace_connectivity_int(n_part_volume_box_idx[i+1], n_part_volume_box_l_num[i+1], part_n_volumes[i+1], "volume_boxes: ");
-          PDM_log_trace_array_double(copied_plane_pt_coord   + copied_plane_idx[i]  * 3, 6*3, "plane_pt_coord: ");
         }
 
       } // end loop on copied ranks
@@ -6937,8 +6999,49 @@ PDM_dbbtree_volumes_intersect_boxes
 
     if (verbose) {
       log_trace("subtree = %d\n", i_rank);
+      log_trace("--> in\n");
+      log_trace("n_volumes = %d\n", part_n_volumes[0]);
+      for (int j = 0; j < part_n_volumes[0]; j++) {
+        log_trace("volume g_num = %d\n", receive_volume_g_num[j]);
+        for (int k = receive_volume_plane_idx[j]; k < receive_volume_plane_idx[j+1]; k++) {
+          log_trace("normal --> ");
+          for (int l = 0; l < 3; l++) {
+            log_trace(" %lf ", receive_plane_normal[3*k + l]);
+          }
+          log_trace("\n");
+          log_trace("plane_pt --> ");
+          for (int l = 0; l < 3; l++) {
+            log_trace(" %lf ", receive_plane_pt_coord[3*k + l]);
+          }
+          log_trace("\n");
+        }
+      }
+      log_trace("<-- out\n");
+      PDM_log_trace_array_long(receive_volume_g_num, part_n_volumes[0], "receive_volume_g_num: ");
       PDM_log_trace_connectivity_int(n_part_volume_box_idx[0], n_part_volume_box_l_num[0], part_n_volumes[0], "volume_boxes: ");
-      PDM_log_trace_array_double(receive_plane_pt_coord, 6*3, "plane_pt_coord: ");
+    }
+
+    if (vtk) {
+
+      double *receive_plane_pt_coord_normalized = malloc(sizeof(double) * receive_volume_plane_idx[part_n_volumes[0]] * 3);
+
+      // Normalize coordinates
+      PDM_box_set_normalize_robust((PDM_box_set_t *) _dbbt->boxes,
+                                   receive_volume_plane_idx[part_n_volumes[0]],
+                                   receive_plane_pt_coord,
+                                   receive_plane_pt_coord_normalized);
+
+      // tmp vtk
+      double *extents = malloc(sizeof(double) * part_n_volumes[0] * 6);
+      for (int i = 0; i < part_n_volumes[0]; i++) {
+        _volume_to_extents(receive_plane_pt_coord_normalized + i*6, extents + i*6);
+      }
+      char filename13[999];
+      sprintf(filename13, "volumes_in_boxtree_normalized_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename13,
+                          part_n_volumes[0],
+                          extents,
+                          NULL);
     }
 
   } // end if there is a shared bt

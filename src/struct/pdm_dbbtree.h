@@ -377,19 +377,6 @@ PDM_dbbtree_volumes_intersect_boxes
  PDM_g_num_t   **out_volume_box_g_num
 );
 
-void
-PDM_dbbtree_volumes_intersect_boxes2
-(
- PDM_dbbtree_t  *dbbt,
- const int       n_volumes,
- PDM_g_num_t    *volume_g_num,
- int            *volume_plane_idx,
- double         *plane_normal,
- double         *plane_pt_coord,
- int           **volume_box_idx,
- PDM_g_num_t   **out_volume_box_g_num
-);
-
 
 void
 PDM_dbbtree_box_tree_write_vtk
