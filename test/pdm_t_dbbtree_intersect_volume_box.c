@@ -21,6 +21,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_box.h"
 #include "pdm_dbbtree.h"
+#include "pdm_linear_programming.h"
 
 /*=============================================================================
  * Static global variables
@@ -329,6 +330,111 @@ PDM_g_num_t *tab
   return 0;
 }
 
+/*
+ * \brief Determine if a box intersects a given volume region
+ *
+ * \param [in]  n_planes      Number of planes difining the volume
+ * \param [in]  n             Table of normal vector (n = (a, b, c)) of each considered plane
+ * \param [in]  plane_pt      Table of a point on plane (cartesian equation of plane being ax+by+cz+d=0 with d = -A.n) for each considered plane
+ * \param [in]  box_extents   Points to determine
+ *
+ * \return 1 if the plane_pt is on the side of the plane where the normal points to, 0 otherwise
+ */
+
+
+static int
+_box_intersect_volume
+(
+int      n_planes,
+double  *n,
+double  *plane_pt,
+double  *box_extents
+)
+{
+  double box_pt[3];
+  double vect[3];
+  double n_iplane[3];
+  double plane_pt_iplane[3];
+
+  int count_intersected_planes, count_points_not_intersect_plane;
+
+
+  // All planes for one point
+  for (int x = 0; x < 4; x += 3) {
+    box_pt[0] = box_extents[x];
+    for (int y = 1; y < 5; y += 3) {
+      box_pt[1] = box_extents[y];
+      for (int z = 2; z < 6; z += 3) {
+        box_pt[2] = box_extents[z];
+
+        count_intersected_planes = 0;
+
+        for (int iplane = 0; iplane < n_planes; iplane++) {
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) >= 0) {
+            count_intersected_planes++;
+          }
+
+        } // end loop on planes
+
+        if (count_intersected_planes == n_planes) {
+          return 1;
+        }
+
+      }
+    }
+  }
+
+  // All points for one plane
+  for (int iplane = 0; iplane < n_planes; iplane++) {
+
+    count_points_not_intersect_plane = 0;
+
+    for (int x = 0; x < 4; x += 3) {
+      box_pt[0] = box_extents[x];
+      for (int y = 1; y < 5; y += 3) {
+        box_pt[1] = box_extents[y];
+        for (int z = 2; z < 6; z += 3) {
+          box_pt[2] = box_extents[z];
+
+          n_iplane[0] = n[3*iplane];
+          n_iplane[1] = n[3*iplane+1];
+          n_iplane[2] = n[3*iplane+2];
+
+          plane_pt_iplane[0] = plane_pt[3*iplane];
+          plane_pt_iplane[1] = plane_pt[3*iplane+1];
+          plane_pt_iplane[2] = plane_pt[3*iplane+2];
+
+          vect[0] = box_pt[0] - plane_pt_iplane[0]; vect[1] = box_pt[1] - plane_pt_iplane[1]; vect[2] = box_pt[2] - plane_pt_iplane[2];
+
+          if (PDM_DOT_PRODUCT(vect, n_iplane) < 0) {
+            count_points_not_intersect_plane++;
+          }
+
+        }
+      }
+    }
+
+    if (count_points_not_intersect_plane == 6) {
+      return 0;
+    }
+
+  }
+
+  // Undefined case
+  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
+}
+
 /**
  *
  * \brief  Main
@@ -353,13 +459,14 @@ int main(int argc, char *argv[])
   // Choose which test
   enum { NO_COPIES,
          COPIES,
-         RANDOM };
+         RANDOM,
+         RANDOM_VARIABLE_STRIDE };
 
-  int test = RANDOM;
+  int test = RANDOM_VARIABLE_STRIDE;
 
   // Different tests
 
-  if (test == RANDOM) {
+  if (test == RANDOM || test == RANDOM_VARIABLE_STRIDE) {
 
     int          n_dbbtree_boxes     = 100;
     PDM_g_num_t  gn_dbbtree_boxes   = n_dbbtree_boxes * n_rank;
@@ -434,15 +541,32 @@ int main(int argc, char *argv[])
         (const double **) &dbbtree_box_extents,
    (const PDM_g_num_t **) &dbbtree_box_g_num);
 
-    int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+    int *volume_plane_idx = NULL;
+    if (test == RANDOM) {
+      volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+    }
+    if (test == RANDOM_VARIABLE_STRIDE) {
+      // WARNING: creating a shuffled index in a weird way
+      volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+      for (int i = 0; i < n_volume_boxes-2; i++) {
+        if (i < n_volume_boxes/2) {
+          int div = volume_plane_idx[i+1];
+          volume_plane_idx[i+1] -= i%div;
+          volume_plane_idx[i+2] += i%div;
+        } else {
+          volume_plane_idx[i+1] = volume_plane_idx[i] + 2;
+        }
+      }
+      PDM_log_trace_array_int(volume_plane_idx, n_volume_boxes + 1, "volume_plane_idx: ");
+    }
 
     double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
     double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
 
     for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
-    _box_extents_to_plane(volume_box_extents + 6 * ibox,
-                          plane_normal       + 6 * ibox * 3,
-                          plane_pt_coord     + 6 * ibox * 3);
+      _box_extents_to_plane(volume_box_extents + 6 * ibox,
+                            plane_normal       + 6 * ibox * 3,
+                            plane_pt_coord     + 6 * ibox * 3);
     } // end loop on volume boxes
 
     int         *volume_boxes_idx   = NULL;
@@ -470,21 +594,25 @@ int main(int argc, char *argv[])
     // Brute force check
     int check1, check2;
 
-    double *normal   = malloc(sizeof(double) * 3 * 6);
-    double *pt_plane = malloc(sizeof(double) * 3 * 6);
     for (int i = 0; i < n_volume_boxes; i++) {
-
-      _box_extents_to_plane(volume_box_extents + 6*i, normal, pt_plane);
 
       for (int j = 0; j < n_dbbtree_boxes; j++) {
 
         check1 = _is_in_int_tab(dbbtree_box_g_num[j], volume_boxes_idx[i+1] - volume_boxes_idx[i], volume_boxes_g_num + volume_boxes_idx[i]);
 
-        check2 = _boxes_intersect_3d(volume_box_extents + 6*i, dbbtree_box_extents + 6*j);
+        if (test == RANDOM) {
+          check2 = _boxes_intersect_3d(volume_box_extents + 6*i, dbbtree_box_extents + 6*j);
+        }
+        if (test == RANDOM_VARIABLE_STRIDE) {
+          check2 = _box_intersect_volume(volume_plane_idx[i+1] - volume_plane_idx[i],
+                                         plane_normal + 3* volume_plane_idx[i],
+                                         plane_pt_coord + 3 * volume_plane_idx[i],
+                                         dbbtree_box_extents + 6*j);
+        }
 
       if (verbose) {
         if (check1 != check2) {
-          log_trace("volume box %d and box box %d have check1 = %d but check2 = %d\n", i, j, check1, check2);
+          log_trace("volume %d and box %d have check1 = %d but check2 = %d\n", i, j, check1, check2);
         }
       }
 
@@ -492,7 +620,7 @@ int main(int argc, char *argv[])
 
     } // end loop on volumes
 
-  } // end if RANDOM
+  } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
   if (test == COPIES) {
 

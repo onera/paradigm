@@ -5666,11 +5666,9 @@ PDM_dbbtree_lines_intersect_boxes2
  */
 
 /**
- * TO DO Karmijn: - ajouter les frees manquants
- *                - remplacer l'ensemble sur les volumes puis sur les plans
+ * TO DO Karmijn: - remplacer l'ensemble sur les volumes puis sur les plans
  *                  par une grosse boucle en mettant le volume_n_plan
  *                  au niveau de l.5840 irank_jsubtree_n_volume
- *                - tester cette fonction avec des volumes à stride variable
  */
 
 void
@@ -5686,10 +5684,6 @@ PDM_dbbtree_volumes_intersect_boxes
  PDM_g_num_t   **out_volume_box_g_num
 )
 {
-  // For debug
-  int verbose = 1;
-  int vtk     = 1;
-
   const float f_threshold = 1.1;  // factor of the mean nb of requests
   const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
@@ -5773,28 +5767,6 @@ PDM_dbbtree_volumes_intersect_boxes
                                         plane_pt_coord,
                                         &volume_subtree_idx,
                                         &volume_subtree);
-
-
-    if (vtk) {
-      char filename1[999];
-      sprintf(filename1, "local_box_tree_%d.vtk", i_rank);
-      PDM_box_tree_write_vtk(filename1,
-                             _dbbt->btLoc,
-                             -1,
-                             0);
-    }
-
-    if (verbose) {
-      log_trace("i_rank = %d\n", i_rank);
-      PDM_g_num_t *boxes_gnum = PDM_box_set_get_g_num(_dbbt->boxes);
-      int n_boxes = PDM_box_set_get_size(_dbbt->boxes);
-
-      PDM_log_trace_array_long(boxes_gnum, n_boxes, "Boxes on current rank: ");
-
-      PDM_log_trace_connectivity_int(volume_subtree_idx, volume_subtree, n_volumes, "volume_subtree: ");
-
-      log_trace("end_shared\n");
-    }
 
     // Count on irank the number of volumes associated to each j sub-box_tree
     irank_jsubtree_n_volume = PDM_array_zeros_int(n_rank);
@@ -5888,10 +5860,6 @@ PDM_dbbtree_volumes_intersect_boxes
           keep_portion = PDM_MIN (keep_portion, PDM_MAX (0, mean_jsubtree_total_n_volume - isubtree_total_n_volume));
         }
 
-        if (verbose) {
-          log_trace("rank = %d and keep_portion = %d\n", rank, keep_portion);
-        }
-
         copied_volume_stride[i] = keep_portion;
         isubtree_total_n_volume += keep_portion;
       } // edn if not i rank
@@ -5928,8 +5896,6 @@ PDM_dbbtree_volumes_intersect_boxes
     receive_volume_idx    = PDM_array_new_idx_from_sizes_int(isubtree_jrank_n_volume, n_rank); // isubtree_jrank_n_volume is a receive_volume_stride
     send_volume_stride    = irank_jsubtree_n_volume; // updated with copied-kept
     receive_volume_stride = isubtree_jrank_n_volume;
-    send_plane_idx        = malloc(sizeof(int) * (n_rank+1));
-    receive_plane_idx     = malloc(sizeof(int) * (n_rank+1));
 
     n_receive_volumes = receive_volume_idx[n_rank];
 
@@ -6128,15 +6094,8 @@ PDM_dbbtree_volumes_intersect_boxes
     // -> on copied subtrees
     if (n_copied_ranks > 0) {
 
-      log_trace("ICI n_copied_ranks = %d\n", n_copied_ranks);
-
       for (int i = 0; i < n_copied_ranks; i++) {
           part_n_volumes[i+1] = copied_volume_idx[i+1] - copied_volume_idx[i];
-
-          if (verbose) {
-            log_trace("subtree = %d\n", i);
-            PDM_log_trace_array_int(copied_volume_plane_idx + copied_volume_idx[i] + i, part_n_volumes[i+1] + 1, "copied_volume_plane_idx: ");
-          }
 
           PDM_box_tree_intersect_volume_boxes(_dbbt->btLoc,
                                               i,
@@ -6146,11 +6105,6 @@ PDM_dbbtree_volumes_intersect_boxes
                                               copied_plane_pt_coord   + copied_plane_idx[i]  * 3,
                                               &(n_part_volume_box_idx[i+1]),
                                               &(n_part_volume_box_l_num[i+1]));
-
-
-          if (verbose) {
-            PDM_log_trace_connectivity_int(n_part_volume_box_idx[i+1], n_part_volume_box_l_num[i+1], part_n_volumes[i+1], "volume_boxes: ");
-          }
 
       } // end loop on copied ranks
     } // end if there are copied ranks
@@ -6174,29 +6128,9 @@ PDM_dbbtree_volumes_intersect_boxes
                                         &(n_part_volume_box_idx[0]),
                                         &(n_part_volume_box_l_num[0]));
 
-    if (verbose) {
-      log_trace("subtree = %d\n", i_rank);
-      log_trace("--> in\n");
-      log_trace("n_volumes = %d\n", part_n_volumes[0]);
-      for (int j = 0; j < part_n_volumes[0]; j++) {
-        log_trace("volume g_num = %d\n", receive_volume_g_num[j]);
-        for (int k = receive_volume_plane_idx[j]; k < receive_volume_plane_idx[j+1]; k++) {
-          log_trace("normal --> ");
-          for (int l = 0; l < 3; l++) {
-            log_trace(" %lf ", receive_plane_normal[3*k + l]);
-          }
-          log_trace("\n");
-          log_trace("plane_pt --> ");
-          for (int l = 0; l < 3; l++) {
-            log_trace(" %lf ", receive_plane_pt_coord[3*k + l]);
-          }
-          log_trace("\n");
-        }
-      }
-      log_trace("<-- out\n");
-      PDM_log_trace_array_long(receive_volume_g_num, part_n_volumes[0], "receive_volume_g_num: ");
-      PDM_log_trace_connectivity_int(n_part_volume_box_idx[0], n_part_volume_box_l_num[0], part_n_volumes[0], "volume_boxes: ");
-    }
+
+    free(receive_rank_volume_n_plane);
+    free(receive_volume_plane_idx);
 
   } // end if there is a shared bt
   else {
@@ -6379,13 +6313,47 @@ PDM_dbbtree_volumes_intersect_boxes
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
   free (block_distrib_idx);
-  free (part_n_volumes);
-
   free (part_volume_g_num);
-  if (copied_volume_g_num != volume_g_num) free (copied_volume_g_num);
-  if (copied_volume_plane_idx != volume_plane_idx) free (copied_volume_plane_idx);
-  if (copied_plane_normal != plane_normal) free (copied_plane_normal);
-  if (copied_plane_pt_coord != plane_pt_coord) free (copied_plane_pt_coord);
+
+  free (part_n_volumes);
+  free(n_part_volume_box_idx);
+  free(n_part_volume_box_l_num);
+
+  if (copied_volume_g_num != NULL)     free (copied_volume_g_num);
+  if (copied_volume_plane_idx != NULL) free (copied_volume_plane_idx);
+  if (copied_plane_normal != NULL)     free (copied_plane_normal);
+  if (copied_plane_pt_coord != NULL)   free (copied_plane_pt_coord);
+
+  if (_dbbt->btShared != NULL) {
+    free(plane_pt_coord_normalized);
+    free(plane_normal_normalized);
+    free(irank_jsubtree_n_volume);
+    free(isubtree_jrank_n_volume);
+    free(send_plane_normal);
+    free(send_plane_pt_coord);
+    free(receive_volume_g_num);
+    free(receive_plane_normal);
+    free(receive_plane_pt_coord);
+    free(i_copied_rank);
+    free(copied_volume_stride);
+    free(copied_volume_idx);
+    free(copied_plane_idx);
+    free(send_volume_idx);
+    free(receive_volume_idx);
+    free(send_plane_idx);
+    free(receive_plane_idx);
+    free(volume_subtree_idx);
+    free(volume_subtree);
+    free(copied_rank_n_plane);
+    free(copied_rank_volume_head);
+    free(send_rank_volume_head);
+    free(send_rank_n_plane);
+    free(receive_rank_n_plane);
+    free(send_rank_plane_head);
+    free(copied_rank_plane_head);
+    free(send_rank_volume_n_plane);
+  }
+
 
   PDM_box_tree_free_copies(_dbbt->btLoc);
 }
