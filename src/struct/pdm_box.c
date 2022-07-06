@@ -530,6 +530,7 @@ PDM_box_set_normalize_robust
     }
   }
 
+  log_trace("n_pts = %d\n", n_pts);
   for (int i = 0; i < n_pts; i++) {
     for (int j = 0; j < boxes->dim; j++) {
       pts_normalized[3*i + j] = (pts_origin[3*i + j] - boxes->s[j]) * invd[j];

@@ -243,126 +243,271 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  // Create dbbtree boxes
+  // Choose which test
+  enum { NO_COPIES,
+         COPIES,
+         RANDOM };
 
-  int          n_dbbtree_boxes     = 2;
-  double      *dbbtree_box_extents = malloc(sizeof(double)      * n_dbbtree_boxes * 6);
-  PDM_g_num_t *dbbtree_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_dbbtree_boxes);
+  int test = COPIES;
 
-  for (int j = 0; j < n_dbbtree_boxes; j++) {
-    dbbtree_box_extents[0 + 6 * j] = 0   + j * 0.5 + i_rank * 1;
-    dbbtree_box_extents[1 + 6 * j] = 0;
-    dbbtree_box_extents[2 + 6 * j] = 0;
-    dbbtree_box_extents[3 + 6 * j] = 0.5 + j * 0.5 + i_rank * 1;
-    dbbtree_box_extents[4 + 6 * j] = 1;
-    dbbtree_box_extents[5 + 6 * j] = 1;
+  // Different tests
 
-    dbbtree_box_g_num[j] = (i_rank * n_dbbtree_boxes) + j + 1;
-  }
+  if (test == COPIES) {
 
-  if (vtk) {
-    char filename1[999];
-    sprintf(filename1, "dbbtree_boxes_%d.vtk", i_rank);
-    PDM_vtk_write_boxes(filename1,
-                        n_dbbtree_boxes,
-                        dbbtree_box_extents,
-                        dbbtree_box_g_num);
-  }
+    // Create dbbtree boxes
 
-  // Create volume boxes
+    int          n_dbbtree_boxes     = 2;
+    double      *dbbtree_box_extents = malloc(sizeof(double)      * n_dbbtree_boxes * 6);
+    PDM_g_num_t *dbbtree_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_dbbtree_boxes);
 
-  int          n_volume_boxes     = 1;
-  double      *volume_box_extents = malloc(sizeof(double)      * n_volume_boxes * 6);
-  PDM_g_num_t *volume_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_volume_boxes);
+    for (int j = 0; j < n_dbbtree_boxes; j++) {
+        dbbtree_box_extents[0 + 6 * j] = 0 + j * n_rank + i_rank;
+        dbbtree_box_extents[1 + 6 * j] = 0;
+        dbbtree_box_extents[2 + 6 * j] = 0 + i_rank;
+        dbbtree_box_extents[3 + 6 * j] = 1 + j * n_rank + i_rank;
+        dbbtree_box_extents[4 + 6 * j] = 1;
+        dbbtree_box_extents[5 + 6 * j] = 1 + i_rank;
 
-  for (int j = 0; j < n_volume_boxes; j++) {
-    volume_box_extents[0 + 6 * j] = 0.5 + j * 0.5 + i_rank * 1;
-    volume_box_extents[1 + 6 * j] = 0;
-    volume_box_extents[2 + 6 * j] = 0;
-    volume_box_extents[3 + 6 * j] = 0.5 + j * 0.5 + (i_rank+1) * 1;
-    volume_box_extents[4 + 6 * j] = 1;
-    volume_box_extents[5 + 6 * j] = 1;
-
-    volume_box_g_num[j] = (i_rank * n_volume_boxes) + j + 1;
-  }
-
-  if (vtk) {
-    char filename2[999];
-    sprintf(filename2, "volume_boxes_%d.vtk", i_rank);
-    PDM_vtk_write_boxes(filename2,
-                        n_volume_boxes,
-                        volume_box_extents,
-                        volume_box_g_num);
-  }
-
-  // Create dbbtree
-
-  const int dim = 3;
-  double l_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL,
-                         -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-  for (int i = 0; i < n_dbbtree_boxes; i++) {
-    for (int k = 0; k < 3; k++) {
-      l_extents[k]     = PDM_MIN(l_extents[k],     dbbtree_box_extents[6*i + k]);
-      l_extents[k + 3] = PDM_MAX(l_extents[k + 3], dbbtree_box_extents[6*i + k + 3]);
+      dbbtree_box_g_num[j] = (i_rank * n_dbbtree_boxes) + j + 1;
     }
-  }
 
-  double g_extents[6];
-  PDM_MPI_Allreduce(l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-  PDM_MPI_Allreduce(l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "dbbtree_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename1,
+                          n_dbbtree_boxes,
+                          dbbtree_box_extents,
+                          dbbtree_box_g_num);
+    }
 
-  double max_range = 0.;
-  for (int i = 0; i < 3; i++) {
-    max_range = PDM_MAX(max_range, g_extents[i+3] - g_extents[i]);
-  }
-  for (int i = 0; i < 3; i++) {
-    g_extents[i]   -= max_range * 1.1e-3;
-    g_extents[i+3] += max_range * 1.0e-3;
-  }
+    // Create volume boxes
 
-  PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+    int          n_volume_boxes     = 4;
+    double      *volume_box_extents = malloc(sizeof(double)      * n_volume_boxes * 6);
+    PDM_g_num_t *volume_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_volume_boxes);
 
-  PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
-                                                 n_part,
-                                                 &n_dbbtree_boxes,
-                               (const double **) &dbbtree_box_extents,
-                          (const PDM_g_num_t **) &dbbtree_box_g_num);
-
-  int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
-
-  double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
-  double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
-
-  for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
-  _box_extents_to_plane(volume_box_extents + 6 * ibox,
-                        plane_normal       + 6 * ibox * 3,
-                        plane_pt_coord     + 6 * ibox * 3);
-  } // end loop on volume boxes
-
-  int         *volume_boxes_idx   = NULL;
-  PDM_g_num_t *volume_boxes_g_num = NULL;
-  PDM_dbbtree_volumes_intersect_boxes(dbbt,
-                                      n_volume_boxes,
-                                      volume_box_g_num,
-                                      volume_plane_idx,
-                                      plane_normal,
-                                      plane_pt_coord,
-                                      &volume_boxes_idx,
-                                      &volume_boxes_g_num);
-
-  if (verbose) {
-    log_trace("VOLUME-BOX INTERSECTION\n");
-    for (int ivol = 0; ivol < n_volume_boxes; ivol++) {
-      log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", volume_box_g_num[ivol]);
-      for (int i = volume_boxes_idx[ivol]; i < volume_boxes_idx[ivol+1]; i++) {
-        log_trace("%d ", volume_boxes_g_num[i]);
+    for (int j = 0; j < n_volume_boxes; j++) {
+      if (j%2 == 0) {
+        volume_box_extents[0 + 6 * j] = 0 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[1 + 6 * j] = 0;
+        volume_box_extents[2 + 6 * j] = 0 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[3 + 6 * j] = 0.2 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[4 + 6 * j] = 0.2;
+        volume_box_extents[5 + 6 * j] = 0.2 + 0.3 * j + 0.1 * i_rank;
+      } else {
+        volume_box_extents[0 + 6 * j] = 0 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[1 + 6 * j] = 0 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[2 + 6 * j] = 0;
+        volume_box_extents[3 + 6 * j] = 0.2 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[4 + 6 * j] = 0.2 + 0.3 * j + 0.1 * i_rank;
+        volume_box_extents[5 + 6 * j] = 0.2;
       }
-      log_trace("\n");
+      volume_box_g_num[j] = (i_rank * n_volume_boxes) + j + 1;
     }
-  }
 
-  PDM_dbbtree_free(dbbt);
-  PDM_box_set_destroy(&box_set);
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "volume_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename1,
+                          n_volume_boxes,
+                          volume_box_extents,
+                          volume_box_g_num);
+    }
+
+    // Create dbbtree
+
+    const int dim = 3;
+    double l_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL,
+                           -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int i = 0; i < n_dbbtree_boxes; i++) {
+      for (int k = 0; k < 3; k++) {
+        l_extents[k]     = PDM_MIN(l_extents[k],     dbbtree_box_extents[6*i + k]);
+        l_extents[k + 3] = PDM_MAX(l_extents[k + 3], dbbtree_box_extents[6*i + k + 3]);
+      }
+    }
+
+    double g_extents[6];
+    PDM_MPI_Allreduce(l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+    PDM_MPI_Allreduce(l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+    double max_range = 0.;
+    for (int i = 0; i < 3; i++) {
+      max_range = PDM_MAX(max_range, g_extents[i+3] - g_extents[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+      g_extents[i]   -= max_range * 1.1e-3;
+      g_extents[i+3] += max_range * 1.0e-3;
+    }
+
+    PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+
+    PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
+                                                   n_part,
+                                                   &n_dbbtree_boxes,
+                                 (const double **) &dbbtree_box_extents,
+                            (const PDM_g_num_t **) &dbbtree_box_g_num);
+
+    int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+
+    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+
+    for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
+    _box_extents_to_plane(volume_box_extents + 6 * ibox,
+                          plane_normal       + 6 * ibox * 3,
+                          plane_pt_coord     + 6 * ibox * 3);
+    } // end loop on volume boxes
+
+    int         *volume_boxes_idx   = NULL;
+    PDM_g_num_t *volume_boxes_g_num = NULL;
+    PDM_dbbtree_volumes_intersect_boxes(dbbt,
+                                        n_volume_boxes,
+                                        volume_box_g_num,
+                                        volume_plane_idx,
+                                        plane_normal,
+                                        plane_pt_coord,
+                                        &volume_boxes_idx,
+                                        &volume_boxes_g_num);
+
+    if (verbose) {
+      log_trace("VOLUME-BOX INTERSECTION\n");
+      for (int ivol = 0; ivol < n_volume_boxes; ivol++) {
+        log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", volume_box_g_num[ivol]);
+        for (int i = volume_boxes_idx[ivol]; i < volume_boxes_idx[ivol+1]; i++) {
+          log_trace("%d ", volume_boxes_g_num[i]);
+        }
+        log_trace("\n");
+      }
+    }
+
+    PDM_dbbtree_free(dbbt);
+    PDM_box_set_destroy(&box_set);
+  } // end if COPIES
+
+  if (test == NO_COPIES) {
+
+    // Create dbbtree boxes
+
+    int          n_dbbtree_boxes     = 2;
+    double      *dbbtree_box_extents = malloc(sizeof(double)      * n_dbbtree_boxes * 6);
+    PDM_g_num_t *dbbtree_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_dbbtree_boxes);
+
+    for (int j = 0; j < n_dbbtree_boxes; j++) {
+      dbbtree_box_extents[0 + 6 * j] = 0   + j * 0.5 + i_rank * 1;
+      dbbtree_box_extents[1 + 6 * j] = 0;
+      dbbtree_box_extents[2 + 6 * j] = 0;
+      dbbtree_box_extents[3 + 6 * j] = 0.5 + j * 0.5 + i_rank * 1;
+      dbbtree_box_extents[4 + 6 * j] = 1;
+      dbbtree_box_extents[5 + 6 * j] = 1;
+
+      dbbtree_box_g_num[j] = (i_rank * n_dbbtree_boxes) + j + 1;
+    }
+
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "dbbtree_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename1,
+                          n_dbbtree_boxes,
+                          dbbtree_box_extents,
+                          dbbtree_box_g_num);
+    }
+
+    // Create volume boxes
+
+    int          n_volume_boxes     = 1;
+    double      *volume_box_extents = malloc(sizeof(double)      * n_volume_boxes * 6);
+    PDM_g_num_t *volume_box_g_num   = malloc(sizeof(PDM_g_num_t) * n_volume_boxes);
+
+    for (int j = 0; j < n_volume_boxes; j++) {
+      volume_box_extents[0 + 6 * j] = 0.5 + j * 0.5 + i_rank * 1;
+      volume_box_extents[1 + 6 * j] = 0;
+      volume_box_extents[2 + 6 * j] = 0;
+      volume_box_extents[3 + 6 * j] = 0.5 + j * 0.5 + (i_rank+1) * 1;
+      volume_box_extents[4 + 6 * j] = 1;
+      volume_box_extents[5 + 6 * j] = 1;
+
+      volume_box_g_num[j] = (i_rank * n_volume_boxes) + j + 1;
+    }
+
+    if (vtk) {
+      char filename2[999];
+      sprintf(filename2, "volume_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename2,
+                          n_volume_boxes,
+                          volume_box_extents,
+                          volume_box_g_num);
+    }
+
+    // Create dbbtree
+
+    const int dim = 3;
+    double l_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL,
+                           -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int i = 0; i < n_dbbtree_boxes; i++) {
+      for (int k = 0; k < 3; k++) {
+        l_extents[k]     = PDM_MIN(l_extents[k],     dbbtree_box_extents[6*i + k]);
+        l_extents[k + 3] = PDM_MAX(l_extents[k + 3], dbbtree_box_extents[6*i + k + 3]);
+      }
+    }
+
+    double g_extents[6];
+    PDM_MPI_Allreduce(l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+    PDM_MPI_Allreduce(l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+    double max_range = 0.;
+    for (int i = 0; i < 3; i++) {
+      max_range = PDM_MAX(max_range, g_extents[i+3] - g_extents[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+      g_extents[i]   -= max_range * 1.1e-3;
+      g_extents[i+3] += max_range * 1.0e-3;
+    }
+
+    PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+
+    PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
+                                                   n_part,
+                                                   &n_dbbtree_boxes,
+                                 (const double **) &dbbtree_box_extents,
+                            (const PDM_g_num_t **) &dbbtree_box_g_num);
+
+    int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+
+    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+
+    for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
+    _box_extents_to_plane(volume_box_extents + 6 * ibox,
+                          plane_normal       + 6 * ibox * 3,
+                          plane_pt_coord     + 6 * ibox * 3);
+    } // end loop on volume boxes
+
+    int         *volume_boxes_idx   = NULL;
+    PDM_g_num_t *volume_boxes_g_num = NULL;
+    PDM_dbbtree_volumes_intersect_boxes(dbbt,
+                                        n_volume_boxes,
+                                        volume_box_g_num,
+                                        volume_plane_idx,
+                                        plane_normal,
+                                        plane_pt_coord,
+                                        &volume_boxes_idx,
+                                        &volume_boxes_g_num);
+
+    if (verbose) {
+      log_trace("VOLUME-BOX INTERSECTION\n");
+      for (int ivol = 0; ivol < n_volume_boxes; ivol++) {
+        log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", volume_box_g_num[ivol]);
+        for (int i = volume_boxes_idx[ivol]; i < volume_boxes_idx[ivol+1]; i++) {
+          log_trace("%d ", volume_boxes_g_num[i]);
+        }
+        log_trace("\n");
+      }
+    }
+
+    PDM_dbbtree_free(dbbt);
+    PDM_box_set_destroy(&box_set);
+
+  } // end if NO_COPIES
 
   PDM_MPI_Finalize ();
 }
