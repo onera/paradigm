@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t gn_box        = 1000;
   PDM_g_num_t gn_box_plane  = 1000;
 
-  // Use random boxes generation ofpdm_t_intersect_line box
+  // Use random boxes generation of pdm_t_intersect_line box
 
   double *box_extents       = NULL;
   PDM_g_num_t *box_ln_to_gn = NULL;

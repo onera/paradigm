@@ -5691,7 +5691,7 @@ PDM_dbbtree_volumes_intersect_boxes
   int vtk     = 1;
 
   const float f_threshold = 1.1;  // factor of the mean nb of requests
-  const float f_max_copy  = 0.8;  // factor of the total nb of processes 0.1
+  const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
@@ -6127,6 +6127,8 @@ PDM_dbbtree_volumes_intersect_boxes
 
     // -> on copied subtrees
     if (n_copied_ranks > 0) {
+
+      log_trace("ICI n_copied_ranks = %d\n", n_copied_ranks);
 
       for (int i = 0; i < n_copied_ranks; i++) {
           part_n_volumes[i+1] = copied_volume_idx[i+1] - copied_volume_idx[i];

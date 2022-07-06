@@ -88,6 +88,97 @@ _read_args
   }
 }
 
+/* _random01 from pdm_t_intersect_line_box */
+
+static double
+_random01
+(
+ void
+)
+{
+  int sign;
+  int rsigna = rand();
+  int rsignb = rand();
+  sign = (rsigna - rsignb) / PDM_ABS (rsigna - rsignb);
+  double resultat = sign*((double)rand())/((double)RAND_MAX);
+  return resultat;
+}
+
+/* code from pdm_t_intersect_line_box */
+
+static int
+_generate_random_boxes
+(
+PDM_MPI_Comm  comm,
+PDM_g_num_t   gn_box,
+int           i_rank,
+double      **box_extents,
+PDM_g_num_t **box_ln_to_gn
+)
+{
+  PDM_g_num_t *distrib_box = PDM_compute_uniform_entity_distribution (comm,
+                                                                      gn_box);
+  int n_box = (int) (distrib_box[i_rank+1] - distrib_box[i_rank]);
+  for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
+    rand();
+  }
+  free (distrib_box);
+
+  double *box_centers = malloc (sizeof(double) * n_box * 3);
+  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *_box_extents = *box_extents;
+  for (int i = 0; i < n_box; i++) {
+    for (int j = 0; j < 3; j++) {
+      double x1 = _random01();
+      double x2 = _random01();
+
+      box_centers[3*i + j] = 0.5 * (x1 + x2);
+      _box_extents[6*i + j]     = PDM_MIN (x1, x2);
+      _box_extents[6*i + j + 3] = PDM_MAX (x1, x2);
+    }
+  }
+
+
+  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3,
+                                              1,
+                                              PDM_FALSE,
+                                              1.e-3,
+                                              comm,
+                                              PDM_OWNERSHIP_USER);
+
+  PDM_gnum_set_from_coords (gen_gnum,
+                            0,
+                            n_box,
+                            box_centers,
+                            NULL);
+
+  PDM_gnum_compute (gen_gnum);
+
+  *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
+
+  PDM_gnum_free (gen_gnum);
+  free (box_centers);
+
+  return n_box;
+}
+
+/* _boxes_intersect_3d from pdm_box_tree */
+
+inline static int
+_boxes_intersect_3d
+(
+const double  *extents,
+const double  *extentsB
+)
+{
+  if (   extents[0] > extentsB[3] || extentsB[0] > extents[3]
+   || extents[1] > extentsB[4] || extentsB[1] > extents[4]
+   || extents[2] > extentsB[5] || extentsB[2] > extents[5])
+    return 0;
+  else
+    return 1;
+}
+
 /*
  * \brief Determine planes from box extents
  *
@@ -222,6 +313,22 @@ double *pt_plane
 
 }
 
+static int
+_is_in_int_tab
+(
+int value,
+int len_tab,
+PDM_g_num_t *tab
+)
+{
+  for (int i = 0; i < len_tab; i++) {
+    if (tab[i] == value) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 /**
  *
  * \brief  Main
@@ -248,9 +355,144 @@ int main(int argc, char *argv[])
          COPIES,
          RANDOM };
 
-  int test = COPIES;
+  int test = RANDOM;
 
   // Different tests
+
+  if (test == RANDOM) {
+
+    int          n_dbbtree_boxes     = 100;
+    PDM_g_num_t  gn_dbbtree_boxes   = n_dbbtree_boxes * n_rank;
+    double      *dbbtree_box_extents = NULL;
+    PDM_g_num_t *dbbtree_box_g_num   = NULL;
+
+    _generate_random_boxes(comm,
+                           gn_dbbtree_boxes,
+                           i_rank,
+                           &dbbtree_box_extents,
+                           &dbbtree_box_g_num);
+
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "dbbtree_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename1,
+                          n_dbbtree_boxes,
+                          dbbtree_box_extents,
+                          dbbtree_box_g_num);
+    }
+
+    int          n_volume_boxes     = 100;
+    PDM_g_num_t  gn_volume_boxes    = n_volume_boxes * n_rank;
+    double      *volume_box_extents = NULL;
+    PDM_g_num_t *volume_box_g_num   = NULL;
+
+    _generate_random_boxes(comm,
+                           gn_volume_boxes,
+                           i_rank,
+                           &volume_box_extents,
+                           &volume_box_g_num);
+
+    if (vtk) {
+      char filename1[999];
+      sprintf(filename1, "volume_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename1,
+                          n_volume_boxes,
+                          volume_box_extents,
+                          volume_box_g_num);
+    }
+
+    // Create dbbtree
+
+    const int dim = 3;
+    double l_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL,
+                           -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int i = 0; i < n_dbbtree_boxes; i++) {
+      for (int k = 0; k < 3; k++) {
+        l_extents[k]     = PDM_MIN(l_extents[k],     dbbtree_box_extents[6*i + k]);
+        l_extents[k + 3] = PDM_MAX(l_extents[k + 3], dbbtree_box_extents[6*i + k + 3]);
+      }
+    }
+
+    double g_extents[6];
+    PDM_MPI_Allreduce(l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+    PDM_MPI_Allreduce(l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+    double max_range = 0.;
+    for (int i = 0; i < 3; i++) {
+      max_range = PDM_MAX(max_range, g_extents[i+3] - g_extents[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+      g_extents[i]   -= max_range * 1.1e-3;
+      g_extents[i+3] += max_range * 1.0e-3;
+    }
+
+    PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+
+    PDM_dbbtree_boxes_set(dbbt,
+                          n_part,
+                          &n_dbbtree_boxes,
+        (const double **) &dbbtree_box_extents,
+   (const PDM_g_num_t **) &dbbtree_box_g_num);
+
+    int *volume_plane_idx = PDM_array_new_idx_from_const_stride_int(6, n_volume_boxes);
+
+    double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+    double *plane_pt_coord = malloc(sizeof(double) * 3 * n_volume_boxes * 6);
+
+    for (int ibox = 0; ibox < n_volume_boxes; ibox++) {
+    _box_extents_to_plane(volume_box_extents + 6 * ibox,
+                          plane_normal       + 6 * ibox * 3,
+                          plane_pt_coord     + 6 * ibox * 3);
+    } // end loop on volume boxes
+
+    int         *volume_boxes_idx   = NULL;
+    PDM_g_num_t *volume_boxes_g_num = NULL;
+    PDM_dbbtree_volumes_intersect_boxes(dbbt,
+                                        n_volume_boxes,
+                                        volume_box_g_num,
+                                        volume_plane_idx,
+                                        plane_normal,
+                                        plane_pt_coord,
+                                        &volume_boxes_idx,
+                                        &volume_boxes_g_num);
+
+    if (verbose) {
+      log_trace("VOLUME-BOX INTERSECTION\n");
+      for (int ivol = 0; ivol < n_volume_boxes; ivol++) {
+        log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", volume_box_g_num[ivol]);
+        for (int i = volume_boxes_idx[ivol]; i < volume_boxes_idx[ivol+1]; i++) {
+          log_trace("%d ", volume_boxes_g_num[i]);
+        }
+        log_trace("\n");
+      }
+    }
+
+    // Brute force check
+    int check1, check2;
+
+    double *normal   = malloc(sizeof(double) * 3 * 6);
+    double *pt_plane = malloc(sizeof(double) * 3 * 6);
+    for (int i = 0; i < n_volume_boxes; i++) {
+
+      _box_extents_to_plane(volume_box_extents + 6*i, normal, pt_plane);
+
+      for (int j = 0; j < n_dbbtree_boxes; j++) {
+
+        check1 = _is_in_int_tab(dbbtree_box_g_num[j], volume_boxes_idx[i+1] - volume_boxes_idx[i], volume_boxes_g_num + volume_boxes_idx[i]);
+
+        check2 = _boxes_intersect_3d(volume_box_extents + 6*i, dbbtree_box_extents + 6*j);
+
+      if (verbose) {
+        if (check1 != check2) {
+          log_trace("volume box %d and box box %d have check1 = %d but check2 = %d\n", i, j, check1, check2);
+        }
+      }
+
+      } // end loop on boxes
+
+    } // end loop on volumes
+
+  } // end if RANDOM
 
   if (test == COPIES) {
 
