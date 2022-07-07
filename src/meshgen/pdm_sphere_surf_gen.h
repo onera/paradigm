@@ -69,7 +69,34 @@ PDM_sphere_surf_gen_nodal
 );
 
 
+void
+PDM_sphere_surf_icosphere_gen
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       double            **dvtx_coord,
+       int               **dface_vtx_idx,
+       PDM_g_num_t       **dface_vtx,
+       PDM_g_num_t       **distrib_vtx,
+       PDM_g_num_t       **distrib_face
+);
 
+
+void
+PDM_sphere_surf_icosphere_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       PDM_dmesh_nodal_t **_dmn
+);
 
 #ifdef __cplusplus
 }
