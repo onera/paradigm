@@ -177,7 +177,7 @@ PDM_sphere_surf_gen
 
   PDM_g_num_t *_distrib_vtx = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
 
-  const double step_u = 2*PDM_PI / (double) (nu - 2);
+  const double step_u = 2*PDM_PI / (double) (nu - 1);
   const double step_v =   PDM_PI / (double) (nv + 1);
 
   int dn_vtx = (int) (_distrib_vtx[i_rank+1] - _distrib_vtx[i_rank]);

@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
 
   } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
-  if (test == COPIES) {
+  if (test == COPIES) { // change const float f_max_copy  = 0.1 into 0.8
 
     // Create dbbtree boxes
 
