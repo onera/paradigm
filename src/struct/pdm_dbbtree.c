@@ -5671,6 +5671,56 @@ PDM_dbbtree_lines_intersect_boxes2
  *                  au niveau de l.5840 irank_jsubtree_n_volume
  */
 
+static void
+_vtk_write_volume
+(
+ const char *filename,
+ double     *plane_point,
+ double     *plane_normal
+ )
+{
+  const double scale = 1.;
+
+  double u[3], v[3], w[3];
+  for (int i = 0; i < 3; i++) {
+    u[i] = plane_point[3+i] - plane_point[i];
+  }
+
+  PDM_CROSS_PRODUCT(v, u, plane_normal + 6);
+  PDM_CROSS_PRODUCT(w, plane_normal + 9, u);
+
+  double vtx_coord[18];
+  memcpy(vtx_coord, plane_point, sizeof(double) * 6);
+
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+      vtx_coord[6  + 3*i + j] = plane_point[j] + i*u[j] + v[j];
+      vtx_coord[12 + 3*i + j] = plane_point[j] + i*u[j] + w[j];
+    }
+  }
+
+  int face_vtx[14] = {
+    1, 5, 3,
+    2, 4, 6,
+    1, 3, 4, 2,
+    1, 2, 6, 5
+  };
+
+  int face_vtx_idx[5] = {0, 3, 6, 10, 14};
+
+  PDM_vtk_write_polydata(filename,
+                         6,
+                         vtx_coord,
+                         NULL,
+                         4,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
+}
+
+
+
 void
 PDM_dbbtree_volumes_intersect_boxes
 (
@@ -5711,7 +5761,7 @@ PDM_dbbtree_volumes_intersect_boxes
         const char *normal_name = "normal";
 
         char filename38[999];
-        sprintf(filename38, "before_normalization_edge_13_%d.vtk", i_rank);
+        sprintf(filename38, "before_normalization_edge_%ld_%d.vtk", volume_g_num[ivol], i_rank);
         PDM_vtk_write_point_cloud_with_field(filename38,
                                              4,
                                              plane_pt_coord + volume_plane_idx[ivol]*3,
@@ -5755,7 +5805,7 @@ PDM_dbbtree_volumes_intersect_boxes
         const char *normal_name = "normal";
 
         char filename38[999];
-        sprintf(filename38, "after_normalization_edge_13_%d.vtk", i_rank);
+        sprintf(filename38, "after_normalization_edge_%ld_%d.vtk", volume_g_num[ivol], i_rank);
         PDM_vtk_write_point_cloud_with_field(filename38,
                                              4,
                                              plane_pt_coord_normalized + volume_plane_idx[ivol]*3,
@@ -6210,7 +6260,7 @@ PDM_dbbtree_volumes_intersect_boxes
                 const char *normal_name = "normal";
 
                 char filename38[999];
-                sprintf(filename38, "normal_copied_%dedge_1_%d.vtk", i, i_rank);
+                sprintf(filename38, "normal_copied_%dedge_%ld_%d.vtk", i, copied_volume_g_num[ivol], i_rank);
                 PDM_vtk_write_point_cloud_with_field(filename38,
                                                      4,
                                                      copied_plane_pt_coord   + copied_plane_idx[i]  * 3 + 12*ivol,
@@ -6243,6 +6293,26 @@ PDM_dbbtree_volumes_intersect_boxes
 
     part_n_volumes[0] = n_receive_volumes;
 
+    if (1) {
+      // Dump subtree boxes
+      double *subtree_boxes  = NULL;
+      double n_subtree_boxes = PDM_box_tree_box_extents_get(_dbbt->btLoc,
+                                                            -1,
+                                                            &subtree_boxes);
+      char filename92[999];
+      sprintf(filename92, "subtree_local_boxes_%d.vtk", i_rank);
+      PDM_vtk_write_boxes(filename92,
+                          n_subtree_boxes,
+                          subtree_boxes,
+                          NULL);
+
+      sprintf(filename92, "subtree_local_%d.vtk", i_rank);
+      PDM_box_tree_write_vtk(filename92,
+                             _dbbt->btLoc,
+                             -1,
+                             1);
+    }
+
     PDM_box_tree_intersect_volume_boxes(_dbbt->btLoc,
                                         -1,
                                         part_n_volumes[0],
@@ -6267,7 +6337,7 @@ PDM_dbbtree_volumes_intersect_boxes
           const char *normal_name = "normal";
 
           char filename38[999];
-          sprintf(filename38, "normal_received_edge_1_%d.vtk", i_rank);
+          sprintf(filename38, "normal_received_edge_%ld_%d.vtk", receive_volume_g_num[ivol], i_rank);
           PDM_vtk_write_point_cloud_with_field(filename38,
                                                4,
                                                receive_plane_pt_coord + 3*receive_volume_plane_idx[ivol],
@@ -6282,6 +6352,11 @@ PDM_dbbtree_volumes_intersect_boxes
                                                0,
                                                NULL,
                                                NULL);
+
+          sprintf(filename38, "volume_received_edge_%ld_%d.vtk", receive_volume_g_num[ivol], i_rank);
+          _vtk_write_volume(filename38,
+                            receive_plane_pt_coord + 3*receive_volume_plane_idx[ivol],
+                            normal);
 
         }
       }

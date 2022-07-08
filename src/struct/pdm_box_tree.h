@@ -626,6 +626,14 @@ PDM_box_tree_get_box_ids
  int            **box_ids
 );
 
+int
+PDM_box_tree_box_extents_get
+(
+ PDM_box_tree_t  *bt,
+ const int        i_copied_rank,
+ double         **extents
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -13,6 +13,7 @@
 #include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_printf.h"
+#include "pdm_error.h"
 #include "pdm_logging.h"
 #include "pdm_vtk.h"
 #include "pdm_distrib.h"
@@ -277,6 +278,117 @@ int         **face_vtx_in
     vtx_coord[27 + 3*2 + k] = pt_plane[9 + k]; // E
   }
 
+}
+
+
+
+static void
+_create_volume_4planes_tata
+(
+double  *edge,
+double  *direction_pt,
+double   theta,
+double   eps,
+double **n_in,
+double **pt_plane_in
+)
+{
+  *n_in        = malloc(sizeof(double) * 12);
+  *pt_plane_in = malloc(sizeof(double) * 12);
+
+  double *n = *n_in;
+  double *pt_plane = *pt_plane_in;
+
+  double u[3], v[3], w[3];
+  for (int i = 0; i < 3; i++) {
+    u[i] = direction_pt[i] - edge[3+i];
+    w[i] = edge[6+i] - edge[i];
+  }
+
+
+  double mu = PDM_MODULE(u);
+  double mw = PDM_MODULE(w);
+
+  for (int i = 0; i < 3; i++) {
+    u[i] /= mu;
+    w[i] /= mw;
+  }
+
+
+  PDM_CROSS_PRODUCT(v, w, u);
+
+  if (PDM_ABS(PDM_DOT_PRODUCT(u, w)) > 1e-13) {
+    PDM_error(__FILE__, __LINE__, 0,"!!! u.w = %e\n", PDM_DOT_PRODUCT(u, w));
+  }
+
+  double c = cos(theta);
+  double s = sin(theta);
+
+
+  for (int i = 0; i < 3; i++) {
+
+    pt_plane[i] = edge[i] - mw*eps*w[i];
+    n[i] = w[i];
+
+    pt_plane[3+i] = edge[6+i] + mw*eps*w[i];
+    n[3+i] = -w[i];
+
+    pt_plane[6+i] = edge[3+i] + c*u[i] + s*v[i];
+    n[6+i] = s*u[i] - c*v[i];
+
+    pt_plane[9+i] = edge[3+i] + c*u[i] - s*v[i];
+    n[9+i] = s*u[i] + c*v[i];
+
+  }
+
+}
+
+static void
+_vtk_write_volume
+(
+ const char *filename,
+ double     *plane_point,
+ double     *plane_normal
+ )
+{
+  const double scale = 1.;
+
+  double u[3], v[3], w[3];
+  for (int i = 0; i < 3; i++) {
+    u[i] = plane_point[3+i] - plane_point[i];
+  }
+
+  PDM_CROSS_PRODUCT(v, u, plane_normal + 6);
+  PDM_CROSS_PRODUCT(w, plane_normal + 9, u);
+
+  double vtx_coord[18];
+  memcpy(vtx_coord, plane_point, sizeof(double) * 6);
+
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+      vtx_coord[6  + 3*i + j] = plane_point[j] + i*u[j] + v[j];
+      vtx_coord[12 + 3*i + j] = plane_point[j] + i*u[j] + w[j];
+    }
+  }
+
+  int face_vtx[14] = {
+    1, 5, 3,
+    2, 4, 6,
+    1, 3, 4, 2,
+    1, 2, 6, 5
+  };
+
+  int face_vtx_idx[5] = {0, 3, 6, 10, 14};
+
+  PDM_vtk_write_polydata(filename,
+                         6,
+                         vtx_coord,
+                         NULL,
+                         4,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
 }
 
 /**
@@ -703,14 +815,24 @@ int main(int argc, char *argv[])
       log_trace("theta is negative!!!\n");
       theta = PDM_ABS(theta);
     }
+
+
+
     int *tmp_edge_vtx = p_vol_edge_vtx + 2*iedge;
     int vtx_id1 = tmp_edge_vtx[0] - 1;
     int vtx_id2 = tmp_edge_vtx[1] - 1;
+    double edge_vector[3];
     double edge[9];
     for (int i = 0; i < 3; i++) {
       edge[i]     = p_vol_vtx_coord[3*vtx_id1 + i];
       edge[6 + i] = p_vol_vtx_coord[3*vtx_id2 + i];
       edge[3 + i]     = 0.5 * (p_vol_vtx_coord[3*vtx_id1 + i] + p_vol_vtx_coord[3*vtx_id2 + i]);
+      edge_vector[i] = edge[6 + i] - edge[i];
+    }
+
+    double fix = PDM_DOT_PRODUCT(edge_vector, direction) / PDM_DOT_PRODUCT(edge_vector, edge_vector);
+    for (int i = 0; i < 3; i++) {
+      direction[i] -= fix*edge_vector[i];
       direction_pt[i] = edge[3 + i] + 2 * direction[i]; // WARNING: 2 is a random distance choice
 
       // only vtk
@@ -721,7 +843,7 @@ int main(int argc, char *argv[])
     double *normal   = edge_normal + 12*iedge;
     double *pt_plane = edge_pt_plane + 12*iedge;
 
-    _create_volume_4planes(edge,
+    _create_volume_4planes_tata(edge,
                            direction_pt,
                            theta,
                            eps2,
@@ -758,6 +880,11 @@ int main(int argc, char *argv[])
                                  0,
                                  NULL,
                                  NULL);
+
+      sprintf(filename4, "volume_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
+      _vtk_write_volume(filename4,
+                        pt_plane,
+                        normal);
 
     const char *normal_name = "normal";
 

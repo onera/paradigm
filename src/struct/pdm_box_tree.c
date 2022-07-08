@@ -6508,6 +6508,29 @@ PDM_box_tree_get_box_ids
 
 
 
+int
+PDM_box_tree_box_extents_get
+(
+ PDM_box_tree_t  *bt,
+ const int        i_copied_rank,
+ double         **extents
+ )
+{
+  assert(bt != NULL);
+
+  PDM_boxes_t *boxes;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+  }
+
+  *extents = boxes->extents;
+
+  return boxes->n_boxes;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
