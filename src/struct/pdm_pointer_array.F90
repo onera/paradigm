@@ -89,6 +89,7 @@ module pdm_pointer_array
   !! \param [out]  pa      \ref PDM_pointer_array_t object
   !! \param [in]   n_part  Number of partitions
   !! \param [in]   type    Data type of pointers
+  !! \param [in]   s_data  Size of a data (only used for PDM_TYPE_CPTR)
   !!
 
   subroutine PDM_pointer_array_create_type (pa,     &
@@ -128,7 +129,7 @@ module pdm_pointer_array
       if (present (s_data)) then
         pa%s_data = s_data
       else 
-        print*, "Error PDM_pointer_array_creat : s_data parameter is mandataroy with PDM_TYPE_CPTR type"
+        print*, "Error PDM_pointer_array_create : s_data parameter is mandataroy with PDM_TYPE_CPTR type"
         call exit
       endif      
     endif  
@@ -224,9 +225,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 4
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -261,9 +259,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 8
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -298,9 +293,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 8
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -334,9 +326,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 4
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -370,9 +359,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 8
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
@@ -407,9 +393,6 @@ module pdm_pointer_array
       stop
     end if
 
-    if (pa%s_data .eq. -1) then
-      pa%s_data = 4
-    endif
     pa%cptr(i_part+1)   = c_loc(pointer_f)
     pa%length(i_part+1) = size(pointer_f)
 
