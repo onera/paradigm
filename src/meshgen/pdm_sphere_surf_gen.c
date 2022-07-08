@@ -70,12 +70,17 @@ idx2ij
  int       *j
  )
 {
-  int _j = 0;
-  for (_j = 0; _j <= n; _j++) {
-    if (idx >= ij2idx(0, _j, n) && idx < ij2idx(0, _j+1, n)) {
-      break;
-    }
-  }
+  // int _j = 0;
+  // for (_j = 0; _j <= n; _j++) {
+  //   if (idx >= ij2idx(0, _j, n) && idx < ij2idx(0, _j+1, n)) {
+  //     break;
+  //   }
+  // }
+
+  int b = -(2*n + 3);
+  int d = b*b - 8*idx;
+  int _j = (int) (0.5 * (-b - sqrt(d)));
+
   *i = idx - ij2idx(0, _j, n);
   *j = _j;
 }
