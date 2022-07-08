@@ -603,10 +603,10 @@ subroutine PDM_part_to_block_exch_real4 (ptb,          &
   type(c_ptr)                       :: c_block_stride = C_NULL_PTR
   type(c_ptr)                       :: c_block_data   = C_NULL_PTR
   integer                           :: n_elt_block
-  integer                           :: s_data = 8
+  integer                           :: s_data = 4
 
   if (part_data%type .ne. PDM_TYPE_REAL4) then
-    print *, "PDM_part_to_block_exch_complex4 : wrong type"
+    print *, "PDM_part_to_block_exch_real4 : wrong type"
     stop
   end if
 
@@ -654,7 +654,7 @@ subroutine PDM_part_to_block_exch_complex8 (ptb,          &
   type(c_ptr)                       :: c_block_stride = C_NULL_PTR
   type(c_ptr)                       :: c_block_data   = C_NULL_PTR
   integer                           :: n_elt_block
-  integer                           :: s_data = 8
+  integer                           :: s_data = 16
 
   if (part_data%type .ne. PDM_TYPE_COMPLEX8) then
     print *, "PDM_part_to_block_exch_complex8 : wrong type"

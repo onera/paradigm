@@ -340,7 +340,6 @@ program testf
                                PDM_STRIDE_VAR_INTERLACED,             & ! t_stride
                                PDM_PART_TO_PART_DATA_DEF_ORDER_PART1, & ! t_part1_data_def
                                1,                                     & ! cst_stride
-                               pdm_g_num_s,                           & ! s_data
                                part1_stride,                          &
                                part1_data,                            &
                                part2_stride,                          &
