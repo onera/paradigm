@@ -185,6 +185,18 @@ _closest_points_reverse_results
     PDM_log_trace_array_long(block_tgt_in_src_g_num, blk_size   , "block_tgt_in_src_g_num:: " );
   }
 
+  int *block_src_dist_n = NULL;
+  double *block_tgt_in_src_dist = NULL;
+  blk_size = PDM_part_to_block_exch(ptb,
+                                    sizeof(double),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    1,
+                                    tgt_g_num_n,
+                          (void **) cls->tgt_cloud->closest_src_dist,
+                                    &block_src_dist_n,
+                          (void **) &block_tgt_in_src_dist);
+  free(block_src_dist_n); // Same than block_tgt_in_src_n
+
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
     free(tgt_g_num  [i_part]);
     free(tgt_g_num_n[i_part]);
@@ -220,19 +232,31 @@ _closest_points_reverse_results
                          &tgt_in_src_n,
               (void ***) &cls->src_cloud->tgt_in_src);
 
+  int** useless_stride;
+  PDM_block_to_part_exch(btp,
+                          sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          block_tgt_in_src_n,
+                          block_tgt_in_src_dist,
+                         &useless_stride, //Same than tgt_in_src_n
+              (void ***) &cls->src_cloud->tgt_in_src_dist);
+
 
   cls->src_cloud->tgt_in_src_idx = (int **) malloc( cls->src_cloud->n_part * sizeof(int *));
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
     // PDM_log_trace_array_int(tgt_in_src_n[i_part]     , cls->src_cloud->n_points[i_part], "cls->src_cloud->n_points[i_part]:: " );
     cls->src_cloud->tgt_in_src_idx[i_part] = PDM_array_new_idx_from_sizes_int(tgt_in_src_n[i_part], cls->src_cloud->n_points[i_part]);
     free(tgt_in_src_n[i_part]);
+    free(useless_stride[i_part]);
   }
   free(tgt_in_src_n);
+  free(useless_stride);
 
   PDM_block_to_part_free(btp);
   free(_block_distrib_idx);
   free(block_tgt_in_src_n);
   free(block_tgt_in_src_g_num);
+  free(block_tgt_in_src_dist);
 }
 
 
@@ -267,6 +291,7 @@ PDM_closest_points_create
   closest->owner                        = owner;
   closest->results_is_getted            = PDM_FALSE;
   closest->tgt_in_src_results_is_getted = PDM_FALSE;
+  closest->tgt_in_src_results_is_getted_d = PDM_FALSE;
 
   closest->n_closest = n_closest;
   closest->src_cloud = NULL;
@@ -317,6 +342,7 @@ PDM_closest_points_n_part_cloud_set
 
   cls->src_cloud->tgt_in_src_idx = NULL;
   cls->src_cloud->tgt_in_src     = NULL;
+  cls->src_cloud->tgt_in_src_dist= NULL;
 
   cls->tgt_cloud->n_part           = n_part_cloud_tgt;
   cls->tgt_cloud->coords           = malloc (sizeof(double      *) * n_part_cloud_tgt);
@@ -627,6 +653,36 @@ PDM_closest_points_tgt_in_src_get
   cls->tgt_in_src_results_is_getted = PDM_TRUE;
 }
 
+/**
+ *
+ * \brief Get mesh distance
+ *
+ * \param [in]   cls                Pointer to \ref PDM_closest_points object
+ * \param [in]   i_part_src         Index of partition of the cloud
+ * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
+ * \param [out]  tgt_in_src_dist    For each src point the distance to the target point located (size = tgt_in_src_idx[n_src_points] )
+ *
+ */
+
+void
+PDM_closest_points_tgt_in_src_dist_get
+(
+       PDM_closest_point_t  *cls,
+ const int                   i_part_src,
+       int                 **tgt_in_src_idx,
+       double              **tgt_in_src_dist
+)
+{
+
+  assert (cls->src_cloud->tgt_in_src_idx != NULL);
+  assert (cls->src_cloud->tgt_in_src_dist != NULL);
+
+  *tgt_in_src_idx = cls->src_cloud->tgt_in_src_idx[i_part_src];
+  *tgt_in_src_dist = cls->src_cloud->tgt_in_src_dist[i_part_src];
+
+  cls->tgt_in_src_results_is_getted_d = PDM_TRUE;
+}
+
 
 
 /**
@@ -668,15 +724,36 @@ PDM_closest_point_t  *cls
   free (cls->tgt_cloud->closest_src_gnum);
   free (cls->tgt_cloud->closest_src_dist);
 
-  if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
+  int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
-     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted)){ // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
+     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted); // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
+  int free_tgt_in_src_dist = (cls->owner == PDM_OWNERSHIP_KEEP) ||
+     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
+     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
 
+  if (free_tgt_in_src_gnum) {
+    if (cls->src_cloud->tgt_in_src != NULL) {
+      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+        if (cls->src_cloud->tgt_in_src[j] != NULL) {
+          free (cls->src_cloud->tgt_in_src[j]);
+        }
+      }
+    }
+  }
+  if (free_tgt_in_src_dist) {
+    if (cls->src_cloud->tgt_in_src_dist != NULL) {
+      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+        if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
+          free (cls->src_cloud->tgt_in_src_dist[j]);
+        }
+      }
+    }
+  }
+  if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
     if (cls->src_cloud->tgt_in_src_idx != NULL) {
       for (int j = 0; j < cls->src_cloud->n_part ; j++) {
         if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
           free (cls->src_cloud->tgt_in_src_idx[j]);
-          free (cls->src_cloud->tgt_in_src[j]);
         }
       }
     }

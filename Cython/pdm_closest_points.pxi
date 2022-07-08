@@ -37,6 +37,11 @@ cdef extern from "pdm_closest_points.h":
                                          int                 **tgt_in_src_idx,
                                          PDM_g_num_t         **tgt_in_src)
 
+  void PDM_closest_points_tgt_in_src_dist_get(PDM_closest_point_t  *cls,
+                                              int                   i_part_src,
+                                              int                 **tgt_in_src_idx,
+                                              double              **tgt_in_src_dist)
+
   void PDM_closest_points_free(PDM_closest_point_t *cls)
 
   void PDM_closest_points_dump_times(PDM_closest_point_t *cls)
@@ -177,6 +182,7 @@ cdef class ClosestPoints:
     # > Declaration
     cdef int *tgt_in_src_idx
     cdef PDM_g_num_t *tgt_in_src
+    cdef double *tgt_in_src_dist
     # ************************************************************************
 
     # > Get
@@ -185,25 +191,16 @@ cdef class ClosestPoints:
                                       &tgt_in_src_idx,
                                       &tgt_in_src)
 
-    cdef NPY.npy_intp dim
+    PDM_closest_points_tgt_in_src_dist_get(self._cls,
+                                           i_part_src,
+                                           &tgt_in_src_idx,
+                                           &tgt_in_src_dist)
 
-    # > Build numpy capsule
-    dim = <NPY.npy_intp> self.src_n_points[i_part_src] + 1
-    np_tgt_in_src_idx = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> tgt_in_src_idx)
-    PyArray_ENABLEFLAGS(np_tgt_in_src_idx, NPY.NPY_OWNDATA)
-
-    dim = <NPY.npy_intp> np_tgt_in_src_idx[self.src_n_points[i_part_src]]
-    np_tgt_in_src = NPY.PyArray_SimpleNewFromData(1,
-                                                  &dim,
-                                                  PDM_G_NUM_NPY_INT,
-                                                  <void *> tgt_in_src)
-    PyArray_ENABLEFLAGS(np_tgt_in_src, NPY.NPY_OWNDATA)
-
-    return {'tgt_in_src_idx' : np_tgt_in_src_idx,
-            'tgt_in_src'     : np_tgt_in_src
+    src_n_pts = self.src_n_points[i_part_src]
+    return {
+            'tgt_in_src_idx'  : create_numpy_i(tgt_in_src_idx, src_n_pts+1),
+            'tgt_in_src'      : create_numpy_pdm_gnum(tgt_in_src, tgt_in_src_idx[src_n_pts]),
+            'tgt_in_src_dist2': create_numpy_d(tgt_in_src_dist, tgt_in_src_idx[src_n_pts])
             }
 
   # ------------------------------------------------------------------------

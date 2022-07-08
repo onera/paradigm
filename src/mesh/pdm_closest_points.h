@@ -221,6 +221,24 @@ PDM_closest_points_tgt_in_src_get
        int                 **tgt_in_src_idx,
        PDM_g_num_t         **tgt_in_src
 );
+/**
+ *
+ * \brief Get mesh distance
+ *
+ * \param [in]   cls                Pointer to \ref PDM_closest_points object
+ * \param [in]   i_part_src         Index of partition of the cloud
+ * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
+ * \param [out]  tgt_in_src_dist    For each src point the distance to the target point located (size = tgt_in_src_idx[n_src_points] )
+ *
+ */
+void
+PDM_closest_points_tgt_in_src_dist_get
+(
+       PDM_closest_point_t  *cls,
+ const int                   i_part_src,
+       int                 **tgt_in_src_idx,
+       double              **tgt_in_src_dist
+);
 
 
 void
