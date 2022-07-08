@@ -27,6 +27,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_part_to_block.h"
 #include "pdm_plane.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
 
 /*=============================================================================
  * Static global variables
@@ -206,6 +207,13 @@ int         **face_vtx_in
   double normal[3];
   double proj_x[3];
 
+  // double cross_prod[3];
+  // PDM_CROSS_PRODUCT(cross_prod, n, n + 3);
+  // log_trace("cross_prod = %f %f %f\n", cross_prod[0], cross_prod[1], cross_prod[2]);
+
+  // log_trace("G = %f %f %f\n", pt_plane[0], pt_plane[1], pt_plane[2]);
+  // log_trace("H = %f %f %f\n", pt_plane[3 + 0], pt_plane[3 + 1], pt_plane[3 + 2]);
+
   // translation plane 1
   // project E on 1
   for (int k = 0; k < 3; k++) {
@@ -214,13 +222,13 @@ int         **face_vtx_in
     x[k] = pt_plane[6 + k]; // E
     vtx_coord[k] = pt_plane[k]; // G
   }
-  PDM_plane_projection(x, origin, normal, proj_x);
+  PDM_plane_projection2(x, origin, normal, proj_x);
   // project D on 1
   for (int k = 0; k < 3; k++) {
     x[k] = direction_pt[k]; // D
     vtx_coord[3 + k] = proj_x[k]; // proj_E
   }
-  PDM_plane_projection(x, origin, normal, proj_x);
+  PDM_plane_projection2(x, origin, normal, proj_x);
   for (int k = 0; k < 3; k++) {
     vtx_coord[6 + k] = proj_x[k]; // proj_D
   }
@@ -233,16 +241,27 @@ int         **face_vtx_in
     x[k] = pt_plane[6 + k]; // E
     vtx_coord[9 + k] = pt_plane[3 + k]; // H
   }
-  PDM_plane_projection(x, origin, normal, proj_x);
+  PDM_plane_projection2(x, origin, normal, proj_x);
   // project D on 2
   for (int k = 0; k < 3; k++) {
     x[k] = direction_pt[k]; // D
     vtx_coord[12 + k] = proj_x[k]; // proj_E
   }
-  PDM_plane_projection(x, origin, normal, proj_x);
+  PDM_plane_projection2(x, origin, normal, proj_x);
   for (int k = 0; k < 3; k++) {
     vtx_coord[15 + k] = proj_x[k]; // proj_D
   }
+
+  // double DDproj[3];
+  // double CG[3];
+  // for (int k = 0; k < 3; k++) {
+  //   DDproj[k] = vtx_coord[6 + k] - direction_pt[k];
+  //   CG[k]     = pt_plane[k] - edge[3 + k];
+  // }
+
+  // log_trace("DDproj = %f %f %f\n", DDproj[0], DDproj[1], DDproj[2]);
+  // log_trace("CG     = %f %f %f\n", CG[0], CG[1], CG[2]);
+  // log_trace("DDproj - CG = %f %f %f\n", CG[0] - DDproj[0], CG[1] - DDproj[1], CG[2] - DDproj[2]);
 
   // rotation plane 3
   for (int k = 0; k < 3; k++) {
@@ -525,6 +544,8 @@ int main(int argc, char *argv[])
     g_extents[i+3] += max_range * 1.0e-3;
   }
 
+  log_trace("g_extents = %f %f %f %f %f %f\n", g_extents[0], g_extents[1], g_extents[2], g_extents[3], g_extents[4], g_extents[5]);
+
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
 
   PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
@@ -562,12 +583,7 @@ int main(int argc, char *argv[])
       vtx_id3 = p_vol_edge_vtx[2*edge_id2+1]-1;
     }
 
-    // with face_vtx
-    int *tmp_face_vtx = p_vol_face_vtx + 3*iface;
     double vect[6];
-    // int vtx_id1 = tmp_face_vtx[0] - 1;
-    // int vtx_id2 = tmp_face_vtx[1] - 1;
-    // int vtx_id3 = tmp_face_vtx[2] - 1;
     for (int i = 0; i < 3; i++) {
       vect[i]     = p_vol_vtx_coord[3*vtx_id2 + i] - p_vol_vtx_coord[3*vtx_id1 + i];
       vect[3 + i] = p_vol_vtx_coord[3*vtx_id3 + i] - p_vol_vtx_coord[3*vtx_id1 + i];
@@ -638,14 +654,6 @@ int main(int argc, char *argv[])
   int n_elt_block = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get(ptb);
 
-  if (verbose) {
-    PDM_log_trace_array_long(block_g_num, n_elt_block, "block_g_num: ");
-    PDM_log_trace_array_int(block_stride, n_elt_block, "block_stride: ");
-    for (int iedge = 0; iedge < n_elt_block; iedge++) {
-      log_trace("edge_g_num = "PDM_FMT_G_NUM" --> stride %d\n", block_g_num[iedge], block_stride[iedge]);
-    }
-  }
-
   // Block to Part
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(block_g_num,
@@ -686,8 +694,15 @@ int main(int argc, char *argv[])
     double dot_prod = PDM_DOT_PRODUCT(edge_face_normal + 6*iedge, edge_face_normal + 6*iedge + 3);
     double module1 = PDM_MODULE(edge_face_normal + 6*iedge);
     double module2 = PDM_MODULE(edge_face_normal + 6*iedge + 3);
-    theta = acos(dot_prod / (module1 * module2));
+    theta = acos(dot_prod / (module1 * module2)); // make sure between -1 and 1
     theta += theta_min;
+    if (theta > 3) { // WARNING: shouldn't be bigger than PI
+      theta = 3;
+    }
+    if (theta < 0) {
+      log_trace("theta is negative!!!\n");
+      theta = PDM_ABS(theta);
+    }
     int *tmp_edge_vtx = p_vol_edge_vtx + 2*iedge;
     int vtx_id1 = tmp_edge_vtx[0] - 1;
     int vtx_id2 = tmp_edge_vtx[1] - 1;
@@ -712,6 +727,9 @@ int main(int argc, char *argv[])
                            eps2,
                            &normal,
                            &pt_plane);
+
+    memcpy(edge_normal   + 12*iedge, normal,   sizeof(double) * 12);
+    memcpy(edge_pt_plane + 12*iedge, pt_plane, sizeof(double) * 12);
 
     if (vtk) {
 
@@ -740,6 +758,25 @@ int main(int argc, char *argv[])
                                  0,
                                  NULL,
                                  NULL);
+
+    const char *normal_name = "normal";
+
+    char filename38[999];
+    sprintf(filename38, "normal_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
+    PDM_vtk_write_point_cloud_with_field(filename38,
+                                         4,
+                                         pt_plane,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         1,
+                         (const char **) &normal_name,
+                       (const double **) &normal,
+                                         0,
+                                         NULL,
+                                         NULL);
 
     }
 
@@ -806,6 +843,7 @@ int main(int argc, char *argv[])
     log_trace("VOLUME-BOX INTERSECTION\n");
     for (int iedge = 0; iedge < p_vol_n_edge; iedge++) {
       log_trace("--> volume "PDM_FMT_G_NUM" is intersected by ", vol_edge_ln_to_gn[iedge]);
+      log_trace(" %d boxes ", volume_boxes_idx[iedge+1] - volume_boxes_idx[iedge]);
       for (int i = volume_boxes_idx[iedge]; i < volume_boxes_idx[iedge+1]; i++) {
         log_trace("%d ", volume_boxes_g_num[i]);
       }
@@ -814,7 +852,90 @@ int main(int argc, char *argv[])
   }
 
   // VTK output of surface mesh with tagged elements for each volume mesh edges
-  // use part_to_part to get information on background mesh
+
+  int n_boxes = volume_boxes_idx[p_vol_n_edge];
+
+  PDM_g_num_t *p_box_volume_g_num  = malloc(sizeof(PDM_g_num_t) * n_boxes);
+
+  for (int ivol = 0; ivol < p_vol_n_edge; ivol++) {
+    for (int ibox = volume_boxes_idx[ivol]; ibox < volume_boxes_idx[ivol+1]; ibox++) {
+      p_box_volume_g_num[ibox] = vol_edge_ln_to_gn[ivol];
+    } // end loop on ivol boxes
+  } // end loop on volumes
+
+  // Part to Block
+
+  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                    1.,
+                                                                    &volume_boxes_g_num,
+                                                                    back_distrib_face,
+                                                                    &n_boxes,
+                                                                    n_part,
+                                                                    comm);
+
+  int         *d_box_volume_stride = NULL;
+  PDM_g_num_t *d_box_volume_g_num  = NULL;
+  int         *part_stride         = PDM_array_const_int(n_boxes, 1);
+  PDM_part_to_block_exch(ptb2,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         &part_stride,
+               (void **) &p_box_volume_g_num,
+                         &d_box_volume_stride,
+               (void **) &d_box_volume_g_num);
+
+  PDM_g_num_t* distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb2,
+                                                                        &d_box_volume_stride,
+                                                                        back_distrib_face[n_rank]);
+  free(distrib);
+
+  int dn_block_face =  PDM_part_to_block_n_elt_block_get(ptb2);
+  log_trace("dn_block_face = %d and dn_back_face = %d\n", dn_block_face, dn_back_face);
+
+  free(part_stride);
+  PDM_part_to_block_free(ptb2);
+
+  int *d_box_volume_idx = PDM_array_new_idx_from_sizes_int(d_box_volume_stride, dn_back_face);
+
+  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
+  PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, vol_dmn);
+  PDM_dmesh_nodal_generate_distribution(vol_dmn);
+
+  PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+  PDM_dmesh_t* vol_dmesh = NULL;
+  PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &vol_dmesh);
+
+  PDM_g_num_t* dedge_distrib = NULL;
+  PDM_dmesh_distrib_get(vol_dmesh, PDM_MESH_ENTITY_EDGE, &dedge_distrib);
+
+  int total_n_edges = dedge_distrib[n_rank];
+
+  PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+
+  int         **volume       = malloc(sizeof(int  *) * total_n_edges);
+  const char  **volume_names = malloc(sizeof(char *) * total_n_edges);
+
+  for (int ivol = 0; ivol < total_n_edges; ivol++) {
+    volume[ivol] = PDM_array_zeros_int(dn_back_face);
+    volume_names[ivol] = malloc(sizeof(char) * 99);
+    sprintf((char * restrict) volume_names[ivol], "edge_%d.vtk", ivol+1);
+
+  }
+
+  log_trace("total_n_edges = %d\n", total_n_edges);
+  log_trace("dn_back_face = %d\n", dn_back_face);
+
+  for (int ibox = 0; ibox < dn_back_face; ibox++) {
+    PDM_g_num_t box_gnum = d_back_face_ln_to_gn[ibox];
+    for (int ivol = d_box_volume_idx[ibox]; ivol < d_box_volume_idx[ibox+1]; ivol++) {
+      PDM_g_num_t vol_gnum = d_box_volume_g_num[ivol];
+      volume[vol_gnum-1][ibox] = 1;
+    }
+  }
 
   if (vtk) {
 
@@ -824,13 +945,13 @@ int main(int argc, char *argv[])
                                p_back_n_vtx,
                                p_back_vtx_coord,
                                p_back_vtx_ln_to_gn,
-                             2, // PDM_MESH_NODAL_TRIA3
-                             dn_back_face,
-                             p_back_face_vtx,
-                             d_back_face_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
+                               2, // PDM_MESH_NODAL_TRIA3
+                               dn_back_face,
+                               p_back_face_vtx,
+                               d_back_face_ln_to_gn,
+                               total_n_edges,
+                               volume_names,
+                (const int **) volume);
 
     char filename2[999];
     sprintf(filename2, "volume_mesh_%d.vtk", i_rank);
@@ -838,13 +959,13 @@ int main(int argc, char *argv[])
                                p_vol_n_vtx,
                                p_vol_vtx_coord,
                                vol_vtx_ln_to_gn,
-                             2, // PDM_MESH_NODAL_TRIA3
-                             p_vol_n_face,
-                             p_vol_face_vtx,
-                             vol_face_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
+                               2, // PDM_MESH_NODAL_TRIA3
+                               p_vol_n_face,
+                               p_vol_face_vtx,
+                               vol_face_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
 
   }
 

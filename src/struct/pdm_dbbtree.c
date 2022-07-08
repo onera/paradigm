@@ -5696,6 +5696,41 @@ PDM_dbbtree_volumes_intersect_boxes
 
   int n_planes = volume_plane_idx[n_volumes];
 
+  if (1) {
+    for (int ivol = 0; ivol < n_volumes; ivol++) {
+      if (volume_g_num[ivol] == 1) {
+        log_trace("before normalization\n");
+        log_trace("for gnum = %ld --> \n", volume_g_num[ivol]);
+
+
+
+        double *normal = plane_normal + volume_plane_idx[ivol]*3;
+        PDM_log_trace_array_double(normal, 12, "normal                : ");
+        PDM_log_trace_array_double(plane_pt_coord + volume_plane_idx[ivol]*3, 12, "pt_plane              : ");
+
+        const char *normal_name = "normal";
+
+        char filename38[999];
+        sprintf(filename38, "before_normalization_edge_13_%d.vtk", i_rank);
+        PDM_vtk_write_point_cloud_with_field(filename38,
+                                             4,
+                                             plane_pt_coord + volume_plane_idx[ivol]*3,
+                                             NULL,
+                                             NULL,
+                                             0,
+                                             NULL,
+                                             NULL,
+                                             1,
+                                             (const char **) &normal_name,
+                                             (const double **) &normal,
+                                             0,
+                                             NULL,
+                                             NULL);
+
+      }
+    }
+  }
+
   // Normalize plane points and normal vectors
   double *plane_pt_coord_normalized = malloc (sizeof(double) * n_planes * 3);
   double *plane_normal_normalized = malloc (sizeof(double) * n_planes * 3);
@@ -5707,6 +5742,38 @@ PDM_dbbtree_volumes_intersect_boxes
                              plane_normal            + 3*i,
                              plane_normal_normalized + 3*i);
   } // end loop on planes
+
+    if (1) {
+    for (int ivol = 0; ivol < n_volumes; ivol++) {
+      if (volume_g_num[ivol] == 1) {
+        log_trace("after normalization\n");
+        log_trace("for gnum = %ld --> ", volume_g_num[ivol]);
+
+
+        double *normal = plane_normal_normalized + volume_plane_idx[ivol]*3;
+
+        const char *normal_name = "normal";
+
+        char filename38[999];
+        sprintf(filename38, "after_normalization_edge_13_%d.vtk", i_rank);
+        PDM_vtk_write_point_cloud_with_field(filename38,
+                                             4,
+                                             plane_pt_coord_normalized + volume_plane_idx[ivol]*3,
+                                             NULL,
+                                             NULL,
+                                             0,
+                                             NULL,
+                                             NULL,
+                                             1,
+                                             (const char **) &normal_name,
+                                             (const double **) &normal,
+                                             0,
+                                             NULL,
+                                             NULL);
+
+      }
+    }
+  }
 
   // Set up for counting the number of volumes that might intersect boxes on ranks
   int          isubtree_total_n_volume            = 0;    // Total number of volumes associated to sub-box_tree i
@@ -5759,6 +5826,7 @@ PDM_dbbtree_volumes_intersect_boxes
 
     // For each volume, find all ranks that might have boxes intersecting that volume
     // The shared box tree shouldn't be normalized
+    log_trace(">> shared\n");
     PDM_box_tree_intersect_volume_boxes(_dbbt->btShared,
                                         -1,
                                         n_volumes,
@@ -5767,6 +5835,27 @@ PDM_dbbtree_volumes_intersect_boxes
                                         plane_pt_coord,
                                         &volume_subtree_idx,
                                         &volume_subtree);
+    log_trace("<< shared\n");
+
+    if (1) {
+      for (int ivol = 0; ivol < n_volumes; ivol++) {
+        if (volume_g_num[ivol] == 1) {
+          log_trace("for gnum = %ld (%d) --> ", volume_g_num[ivol], ivol);
+          for (int j = volume_subtree_idx[ivol]; j < volume_subtree_idx[ivol+1]; j++) {
+            log_trace(" subtree %d ", volume_subtree[j]);
+          }
+          log_trace("\n");
+        }
+      }
+
+      if (i_rank ==0) {
+        char filename38[999] = "shared_box_tree.vtk";
+        PDM_box_tree_write_vtk(filename38,
+                               _dbbt->btShared,
+                               -1,
+                               0);
+      }
+    }
 
     // Count on irank the number of volumes associated to each j sub-box_tree
     irank_jsubtree_n_volume = PDM_array_zeros_int(n_rank);
@@ -6106,6 +6195,41 @@ PDM_dbbtree_volumes_intersect_boxes
                                               &(n_part_volume_box_idx[i+1]),
                                               &(n_part_volume_box_l_num[i+1]));
 
+          if (1) {
+            for (int ivol = 0; ivol < part_n_volumes[i+1]; ivol++) {
+              if (copied_volume_g_num[ivol] == 1) {
+                log_trace("subtree = %d\n", i);
+                log_trace("for gnum = %ld (%d) --> ", copied_volume_g_num[ivol], ivol);
+                for (int j = n_part_volume_box_idx[i+1][ivol]; j < n_part_volume_box_idx[i+1][ivol+1]; j++) {
+                  log_trace(" box %d ", n_part_volume_box_l_num[i+1][j]);
+                }
+                log_trace("\n");
+
+                double *normal = copied_plane_normal + copied_plane_idx[i]  * 3  + 12*ivol;
+
+                const char *normal_name = "normal";
+
+                char filename38[999];
+                sprintf(filename38, "normal_copied_%dedge_1_%d.vtk", i, i_rank);
+                PDM_vtk_write_point_cloud_with_field(filename38,
+                                                     4,
+                                                     copied_plane_pt_coord   + copied_plane_idx[i]  * 3 + 12*ivol,
+                                                     NULL,
+                                                     NULL,
+                                                     0,
+                                                     NULL,
+                                                     NULL,
+                                                     1,
+                                     (const char **) &normal_name,
+                                   (const double **) &normal,
+                                                     0,
+                                                     NULL,
+                                                     NULL);
+
+              }
+            }
+          }
+
       } // end loop on copied ranks
     } // end if there are copied ranks
 
@@ -6127,6 +6251,41 @@ PDM_dbbtree_volumes_intersect_boxes
                                         receive_plane_pt_coord,
                                         &(n_part_volume_box_idx[0]),
                                         &(n_part_volume_box_l_num[0]));
+
+    if (1) {
+      for (int ivol = 0; ivol < part_n_volumes[0]; ivol++) {
+        if (receive_volume_g_num[ivol] == 1) {
+          log_trace("subtree local\n");
+          log_trace("for gnum = %ld (%d) --> ", receive_volume_g_num[ivol], ivol);
+          for (int j = n_part_volume_box_idx[0][ivol]; j < n_part_volume_box_idx[0][ivol+1]; j++) {
+            log_trace(" box %d ", n_part_volume_box_l_num[0][j]);
+          }
+          log_trace("\n");
+
+          double *normal = receive_plane_normal + 3*receive_volume_plane_idx[ivol];
+
+          const char *normal_name = "normal";
+
+          char filename38[999];
+          sprintf(filename38, "normal_received_edge_1_%d.vtk", i_rank);
+          PDM_vtk_write_point_cloud_with_field(filename38,
+                                               4,
+                                               receive_plane_pt_coord + 3*receive_volume_plane_idx[ivol],
+                                               NULL,
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               NULL,
+                                               1,
+                               (const char **) &normal_name,
+                             (const double **) &normal,
+                                               0,
+                                               NULL,
+                                               NULL);
+
+        }
+      }
+    }
 
 
     free(receive_rank_volume_n_plane);

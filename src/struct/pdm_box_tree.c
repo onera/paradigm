@@ -174,6 +174,8 @@ struct _PDM_box_tree_t {
  *============================================================================*/
 
 static int iappel = 0;
+
+static int dbgTOTO = 0;
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -3155,6 +3157,9 @@ double  *box_extents
         } // end loop on planes
 
         if (count_intersected_planes == n_planes) {
+          if (dbgTOTO) {
+            log_trace("j'intersecte tous les demi-espaces!\n");
+          }
           return 1;
         }
 
@@ -3192,7 +3197,17 @@ double  *box_extents
       }
     }
 
-    if (count_points_not_intersect_plane == 6) {
+    if (count_points_not_intersect_plane == 8) {
+      if (dbgTOTO) {
+        log_trace("j'en pas intersecte totalement le demi-espace %d (point = %f %f %f, normal == %f %f %f)!\n",
+                  iplane,
+                  plane_pt_iplane[0],
+                  plane_pt_iplane[1],
+                  plane_pt_iplane[2],
+                  n_iplane[0],
+                  n_iplane[1],
+                  n_iplane[2]);
+      }
       return 0;
     }
 
@@ -6010,6 +6025,9 @@ PDM_box_tree_intersect_volume_boxes
   double current_node_box_extents[2*dim];
 
   for (int ivolume = 0; ivolume < n_volumes; ivolume++) {
+    int dbg = (ivolume == 0);
+     dbgTOTO = dbg;
+
     _volume_box_idx[ivolume+1] = _volume_box_idx[ivolume];
 
     /* Init stack */
@@ -6020,12 +6038,30 @@ PDM_box_tree_intersect_volume_boxes
     current_pt_planes     = plane_pt_coord_normalized + 3*volume_plane_idx[ivolume];
     current_n_plane       = volume_plane_idx[ivolume+1] - volume_plane_idx[ivolume];
 
+    if (dbg) {
+      log_trace("volume %d\n", ivolume);
+      PDM_log_trace_array_double(current_plane_normals, 3*current_n_plane, "current_plane_normals : ");
+      PDM_log_trace_array_double(current_pt_planes,     3*current_n_plane, "current_pt_planes     : ");
+    }
+
     // Get current box information
     _extents (dim,
               box_tree_data->nodes[0].morton_code,
               current_node_box_extents);
 
     if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
+      if (dbg) {
+        log_trace("root extents = %f %f %f %f %f %f\n",
+                  current_node_box_extents[0], current_node_box_extents[1], current_node_box_extents[2],
+                  current_node_box_extents[3], current_node_box_extents[4], current_node_box_extents[5]);
+        for (int i = 0; i < 4; i++) {
+          double *p = current_pt_planes + 3*i;
+          for (int j = 0; j < 3; j++) {
+            log_trace("i = %d, xmin = %f, x = %f, xmax = %f\n", i, current_node_box_extents[j], p[j], current_node_box_extents[j+3]);
+          }
+        }
+        log_trace(":D\n");
+      }
       stack[pos_stack++] = 0;
     }
 
@@ -6035,6 +6071,10 @@ PDM_box_tree_intersect_volume_boxes
     while (pos_stack > 0) {
 
       int node_id = stack[--pos_stack];
+
+      if (dbg) {
+        log_trace("node_id = %d\n", node_id);
+      }
 
       _node_t *node = &(box_tree_data->nodes[node_id]);
 
@@ -6047,11 +6087,17 @@ PDM_box_tree_intersect_volume_boxes
         /* inspect boxes contained in current leaf node */
         for (int ibox = 0; ibox < node->n_boxes; ibox++) {
           int box_id = box_tree_data->box_ids[node->start_id + ibox];
+          if (dbg) {
+            log_trace("box_id = %d\n", box_id);
+          }
 
           if (is_visited_box[box_id] == PDM_FALSE) {
             double *box_extents = boxes->extents + box_id*2*dim;
 
             if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, box_extents)) {
+              if (dbg) {
+                log_trace("intersect :)\n");
+              }
               // Avoid table overflow
               if (_volume_box_idx[ivolume+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
@@ -6061,6 +6107,11 @@ PDM_box_tree_intersect_volume_boxes
               _volume_box_l_num[_volume_box_idx[ivolume+1]++] = box_id;
 
             } // end if box is in volume
+            else {
+              if (dbg) {
+                log_trace("does not intersect :(\n");
+              }
+            }
             visited_boxes[n_visited_boxes++] = box_id;
             is_visited_box[box_id] = PDM_TRUE;
           } // end if not yet dealt with this box
@@ -6078,7 +6129,9 @@ PDM_box_tree_intersect_volume_boxes
 
           if (_box_intersect_volume(current_n_plane, current_plane_normals, current_pt_planes, current_node_box_extents)) {
             stack[pos_stack++] = child_id;
-
+            if (dbg) {
+              log_trace("child_id %d\n", child_id);
+            }
           }
         } // end loop on children of curent node
       } // end if is an internal node
