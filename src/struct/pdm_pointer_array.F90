@@ -77,7 +77,6 @@ module pdm_pointer_array
 
 
   interface PDM_pointer_array_create
-    module procedure PDM_pointer_array_create_size
     module procedure PDM_pointer_array_create_type
   end interface
   
@@ -93,18 +92,47 @@ module pdm_pointer_array
   !!
 
   subroutine PDM_pointer_array_create_type (pa,     &
-                                       n_part, &
-                                       type)
+                                            n_part, &
+                                            type,   &
+                                            s_data)
     use iso_c_binding
     implicit none
 
     type(PDM_pointer_array_t), target  :: pa
     integer, intent(in)                :: n_part
     integer, intent(in)                :: type
+    integer, intent(in), optional      :: s_data
 
     integer                            :: i
 
     pa%type = type
+
+    if (type .eq. PDM_TYPE_INT) then
+      pa%s_data = 4      
+#ifdef PDM_LONG_G_NUM
+    else if (type .eq. PDM_TYPE_G_NUM) then
+      pa%s_data = 8      
+#else
+    else if (type .eq. PDM_TYPE_G_NUM) then
+      pa%s_data = 4      
+#endif
+    else if (type .eq. PDM_TYPE_DOUBLE) then   
+      pa%s_data = 8      
+    else if (type .eq. PDM_TYPE_COMPLEX8) then
+      pa%s_data = 8      
+    else if (type .eq. PDM_TYPE_COMPLEX4) then
+      pa%s_data = 4      
+    else if (type .eq. PDM_TYPE_REAL4) then
+      pa%s_data = 4      
+    else if (type .eq. PDM_TYPE_CPTR) then
+      if (present (s_data)) then
+        pa%s_data = s_data
+      else 
+        print*, "Error PDM_pointer_array_creat : s_data parameter is mandataroy with PDM_TYPE_CPTR type"
+        call exit
+      endif      
+    endif  
+
     allocate(pa%cptr(n_part))
     allocate(pa%length(n_part))
 
@@ -114,41 +142,6 @@ module pdm_pointer_array
     end do
 
   end subroutine PDM_pointer_array_create_type
-
-
-  !>
-  !! \brief Initialize a \ref PDM_pointer_array_t object
-  !!
-  !! \param [out]  pa      \ref PDM_pointer_array_t object
-  !! \param [in]   n_part  Number of partitions
-  !! \param [in]   type    Data type of pointers
-  !!
-
-  subroutine PDM_pointer_array_create_size (pa,     &
-                                       n_part, &
-                                       type,   &
-                                       s_data)
-    use iso_c_binding
-    implicit none
-
-    type(PDM_pointer_array_t), target  :: pa
-    integer, intent(in)                :: n_part
-    integer, intent(in)                :: type
-    integer, intent(in)                :: s_data
-
-    integer                            :: i
-
-    pa%type = type
-    allocate(pa%cptr(n_part))
-    allocate(pa%length(n_part))
-    pa%s_data = s_data
-
-    do i = 1, n_part
-      pa%cptr(i)   = C_NULL_PTR
-      pa%length(i) = 0
-    end do
-
-  end subroutine PDM_pointer_array_create_size
 
 
   !>
