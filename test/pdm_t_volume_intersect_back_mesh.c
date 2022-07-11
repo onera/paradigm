@@ -93,227 +93,38 @@ _read_args
   }
 }
 
-/* Create a 4 plane volume */
+/* Create volume planes */
 
 static void
 _create_volume_4planes
 (
 double  *edge,
-double  *direction_pt,
+double  *direction,
 double   theta,
 double   eps,
-double **n_in,
-double **pt_plane_in
+double  *n,
+double  *pt_plane
 )
 {
-  *n_in        = malloc(sizeof(double) * 12);
-  *pt_plane_in = malloc(sizeof(double) * 12);
-
-  double *n = *n_in;
-  double *pt_plane = *pt_plane_in;
-
-  // Determine eps translation planes
-  // B--{eps}--G
-  double CB[3] = {edge[3]-edge[6], edge[4]-edge[7], edge[5]-edge[8]};
-  pt_plane[0] = edge[3] + (1+eps) * CB[0];
-  pt_plane[1] = edge[4] + (1+eps) * CB[1];
-  pt_plane[2] = edge[5] + (1+eps) * CB[2];
-  n[0] = -CB[0];
-  n[1] = -CB[1];
-  n[2] = -CB[2];
-
-  // A--{eps}--H
-  double CA[3] = {edge[3]-edge[0], edge[4]-edge[1], edge[5]-edge[2]};
-  pt_plane[3] = edge[3] + (1+eps) * CA[0];
-  pt_plane[4] = edge[4] + (1+eps) * CA[1];
-  pt_plane[5] = edge[5] + (1+eps) * CA[2];
-  n[3] = -CA[0];
-  n[4] = -CA[1];
-  n[5] = -CA[2];
-
-  // Determine theta angle planes E---D---F
-  double cos_theta = cos(theta);
-  double sin_theta = sin(theta);
-
-  double AB[3] = {edge[6]-edge[0], edge[7]-edge[1], edge[8]-edge[2]};
-  double inverse_module_AB = 1 / PDM_MODULE(AB);
-  double AB_normalised[3] = {AB[0] * inverse_module_AB, AB[1] * inverse_module_AB, AB[2] * inverse_module_AB};
-
-  pt_plane[6]  = (cos_theta + (1 - cos_theta) * AB_normalised[0] * AB_normalised[0]) * direction_pt[0];
-  pt_plane[6] += (AB_normalised[0] * AB_normalised[1] * (1 - cos_theta) - AB_normalised[2] * sin_theta) * direction_pt[1];
-  pt_plane[6] += (AB_normalised[0] * AB_normalised[2] * (1 - cos_theta) + AB_normalised[1] * sin_theta) * direction_pt[2];
-  pt_plane[7]  = (AB_normalised[1] * AB_normalised[0] * (1 - cos_theta) + AB_normalised[2] * sin_theta) * direction_pt[0];
-  pt_plane[7] += (cos_theta + (1 - cos_theta) * AB_normalised[1] * AB_normalised[1]) * direction_pt[1];
-  pt_plane[7] += (AB_normalised[1] * AB_normalised[2] * (1 - cos_theta) - AB_normalised[0] * sin_theta) * direction_pt[2];
-  pt_plane[8]  = (AB_normalised[2] * AB_normalised[0] * (1 - cos_theta) - AB_normalised[1] * sin_theta) * direction_pt[0];
-  pt_plane[8] += (AB_normalised[2] * AB_normalised[1] * (1 - cos_theta) + AB_normalised[0] * sin_theta) * direction_pt[1];
-  pt_plane[8] += (cos_theta + (1 - cos_theta) * AB_normalised[2] * AB_normalised[2]) * direction_pt[2];
-  double prod_vect[3];
-  double CE[3] = {pt_plane[6]-edge[3], pt_plane[7]-edge[4], pt_plane[8]-edge[5]};
-  PDM_CROSS_PRODUCT(prod_vect, CA, CE);
-  double ED[3] = {direction_pt[0] - pt_plane[6], direction_pt[1] - pt_plane[7], direction_pt[2] - pt_plane[8]};
-  double sign = PDM_SIGN(PDM_DOT_PRODUCT(prod_vect, ED));
-  n[6] = sign * prod_vect[0];
-  n[7] = sign * prod_vect[1];
-  n[8] = sign * prod_vect[2];
-
-  double cos_minus_theta = cos(-theta);
-  double sin_minus_theta = sin(-theta);
-
-  pt_plane[9]   = (cos_minus_theta + (1 - cos_minus_theta) * AB_normalised[0] * AB_normalised[0]) * direction_pt[0];
-  pt_plane[9]  += (AB_normalised[0] * AB_normalised[1] * (1 - cos_minus_theta) - AB_normalised[2] * sin_minus_theta) * direction_pt[1];
-  pt_plane[9]  += (AB_normalised[0] * AB_normalised[2] * (1 - cos_minus_theta) + AB_normalised[1] * sin_minus_theta) * direction_pt[2];
-  pt_plane[10]  = (AB_normalised[1] * AB_normalised[0] * (1 - cos_minus_theta) + AB_normalised[2] * sin_minus_theta) * direction_pt[0];
-  pt_plane[10] += (cos_minus_theta + (1 - cos_minus_theta) * AB_normalised[1] * AB_normalised[1]) * direction_pt[1];
-  pt_plane[10] += (AB_normalised[1] * AB_normalised[2] * (1 - cos_minus_theta) - AB_normalised[0] * sin_minus_theta) * direction_pt[2];
-  pt_plane[11]  = (AB_normalised[2] * AB_normalised[0] * (1 - cos_minus_theta) - AB_normalised[1] * sin_minus_theta) * direction_pt[0];
-  pt_plane[11] += (AB_normalised[2] * AB_normalised[1] * (1 - cos_minus_theta) + AB_normalised[0] * sin_minus_theta) * direction_pt[1];
-  pt_plane[11] += (cos_minus_theta + (1 - cos_minus_theta) * AB_normalised[2] * AB_normalised[2]) * direction_pt[2];
-  double CF[3] = {pt_plane[9]-edge[4], pt_plane[10]-edge[4], pt_plane[11]-edge[5]};
-  PDM_CROSS_PRODUCT(prod_vect, CA, CF);
-  double FD[3] = {direction_pt[0] - pt_plane[9], direction_pt[1] - pt_plane[10], direction_pt[2] -  pt_plane[11]};
-  sign = PDM_SIGN(PDM_DOT_PRODUCT(prod_vect, FD));
-  n[9]  = sign * prod_vect[0];
-  n[10] = sign * prod_vect[1];
-  n[11] = sign * prod_vect[2];
-}
-
-static void
-_volume_4planes_to_4triangles
-(
-double       *edge,
-double       *direction_pt,
-double       *n,
-double       *pt_plane,
-double      **vtx_coord_in,
-PDM_g_num_t **vtx_g_num_in,
-int         **face_vtx_in
-)
-{
-  *vtx_coord_in = malloc(sizeof(double) * 12 * 3);
-  *vtx_g_num_in = malloc(sizeof(PDM_g_num_t) * 12);
-  *face_vtx_in  = malloc(sizeof(int) * 12);
-
-  double *vtx_coord = *vtx_coord_in;
-  PDM_g_num_t *vtx_g_num = *vtx_g_num_in;
-  int *face_vtx = *face_vtx_in;
-
-  for (int i = 0; i < 12; i ++) {
-    vtx_g_num[i] = i + 1;
-    face_vtx[i]  = i +1;
-  }
-
-  double x[3];
-  double origin[3];
-  double normal[3];
-  double proj_x[3];
-
-  // double cross_prod[3];
-  // PDM_CROSS_PRODUCT(cross_prod, n, n + 3);
-  // log_trace("cross_prod = %f %f %f\n", cross_prod[0], cross_prod[1], cross_prod[2]);
-
-  // log_trace("G = %f %f %f\n", pt_plane[0], pt_plane[1], pt_plane[2]);
-  // log_trace("H = %f %f %f\n", pt_plane[3 + 0], pt_plane[3 + 1], pt_plane[3 + 2]);
-
-  // translation plane 1
-  // project E on 1
-  for (int k = 0; k < 3; k++) {
-    origin[k] = pt_plane[k]; // G
-    normal[k] = n[k];
-    x[k] = pt_plane[6 + k]; // E
-    vtx_coord[k] = pt_plane[k]; // G
-  }
-  PDM_plane_projection2(x, origin, normal, proj_x);
-  // project D on 1
-  for (int k = 0; k < 3; k++) {
-    x[k] = direction_pt[k]; // D
-    vtx_coord[3 + k] = proj_x[k]; // proj_E
-  }
-  PDM_plane_projection2(x, origin, normal, proj_x);
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[6 + k] = proj_x[k]; // proj_D
-  }
-
-  // translation plane 2
-  // project E on 2
-  for (int k = 0; k < 3; k++) {
-    origin[k] = pt_plane[3 + k]; // H
-    normal[k] = n[3 + k];
-    x[k] = pt_plane[6 + k]; // E
-    vtx_coord[9 + k] = pt_plane[3 + k]; // H
-  }
-  PDM_plane_projection2(x, origin, normal, proj_x);
-  // project D on 2
-  for (int k = 0; k < 3; k++) {
-    x[k] = direction_pt[k]; // D
-    vtx_coord[12 + k] = proj_x[k]; // proj_E
-  }
-  PDM_plane_projection2(x, origin, normal, proj_x);
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[15 + k] = proj_x[k]; // proj_D
-  }
-
-  // double DDproj[3];
-  // double CG[3];
-  // for (int k = 0; k < 3; k++) {
-  //   DDproj[k] = vtx_coord[6 + k] - direction_pt[k];
-  //   CG[k]     = pt_plane[k] - edge[3 + k];
-  // }
-
-  // log_trace("DDproj = %f %f %f\n", DDproj[0], DDproj[1], DDproj[2]);
-  // log_trace("CG     = %f %f %f\n", CG[0], CG[1], CG[2]);
-  // log_trace("DDproj - CG = %f %f %f\n", CG[0] - DDproj[0], CG[1] - DDproj[1], CG[2] - DDproj[2]);
-
-  // rotation plane 3
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[18 + 3*0 + k] = edge[k]; // A
-    vtx_coord[18 + 3*1 + k] = edge[6 + k]; // B
-    vtx_coord[18 + 3*2 + k] = pt_plane[6 + k]; // E
-  }
-
-  // rotation plane 4
-  for (int k = 0; k < 3; k++) {
-    vtx_coord[27 + 3*0 + k] = edge[k]; // A
-    vtx_coord[27 + 3*1 + k] = edge[6 + k]; // B
-    vtx_coord[27 + 3*2 + k] = pt_plane[9 + k]; // E
-  }
-
-}
-
-
-
-static void
-_create_volume_4planes_tata
-(
-double  *edge,
-double  *direction_pt,
-double   theta,
-double   eps,
-double **n_in,
-double **pt_plane_in
-)
-{
-  *n_in        = malloc(sizeof(double) * 12);
-  *pt_plane_in = malloc(sizeof(double) * 12);
-
-  double *n = *n_in;
-  double *pt_plane = *pt_plane_in;
-
+  // Gram-Schmidt orthonormalization
   double u[3], v[3], w[3];
+
   for (int i = 0; i < 3; i++) {
-    u[i] = direction_pt[i] - edge[3+i];
     w[i] = edge[6+i] - edge[i];
   }
-
-
-  double mu = PDM_MODULE(u);
   double mw = PDM_MODULE(w);
-
   for (int i = 0; i < 3; i++) {
-    u[i] /= mu;
     w[i] /= mw;
   }
 
+  double a = -1 * PDM_DOT_PRODUCT(w, direction) / (PDM_MODULE(w)*PDM_MODULE(w));
+  for (int i = 0; i < 3; i++) {
+    u[i] = direction[i] + a * w[i];
+  }
+  double mu = PDM_MODULE(u);
+  for (int i = 0; i < 3; i++) {
+    u[i] /= mu;
+  }
 
   PDM_CROSS_PRODUCT(v, w, u);
 
@@ -342,6 +153,8 @@ double **pt_plane_in
   }
 
 }
+
+/* Ouput volumes in VTK format */
 
 static void
 _vtk_write_volume
@@ -656,8 +469,6 @@ int main(int argc, char *argv[])
     g_extents[i+3] += max_range * 1.0e-3;
   }
 
-  log_trace("g_extents = %f %f %f %f %f %f\n", g_extents[0], g_extents[1], g_extents[2], g_extents[3], g_extents[4], g_extents[5]);
-
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
 
   PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
@@ -797,9 +608,8 @@ int main(int argc, char *argv[])
   double *edge_normal       = malloc(sizeof(double) * p_vol_n_edge * 3 * 4);
   double *edge_pt_plane     = malloc(sizeof(double) * p_vol_n_edge * 3 * 4);
   for (int iedge = 0; iedge < p_vol_n_edge; iedge++) {
-    double  theta;
-    double  direction_pt[3];
-    double *direction = malloc(sizeof(double) * 3);
+    double theta;
+    double direction[3];
     for (int i = 0; i < 3; i++) {
       direction[i] = 0.5 * (edge_face_normal[6*iedge + i] + edge_face_normal[6*iedge + 3 + i]);
     }
@@ -816,71 +626,36 @@ int main(int argc, char *argv[])
       theta = PDM_ABS(theta);
     }
 
-
-
     int *tmp_edge_vtx = p_vol_edge_vtx + 2*iedge;
     int vtx_id1 = tmp_edge_vtx[0] - 1;
     int vtx_id2 = tmp_edge_vtx[1] - 1;
-    double edge_vector[3];
+    // double edge_vector[3];
     double edge[9];
     for (int i = 0; i < 3; i++) {
       edge[i]     = p_vol_vtx_coord[3*vtx_id1 + i];
       edge[6 + i] = p_vol_vtx_coord[3*vtx_id2 + i];
       edge[3 + i]     = 0.5 * (p_vol_vtx_coord[3*vtx_id1 + i] + p_vol_vtx_coord[3*vtx_id2 + i]);
-      edge_vector[i] = edge[6 + i] - edge[i];
+      // edge_vector[i] = edge[6 + i] - edge[i];
     }
 
-    double fix = PDM_DOT_PRODUCT(edge_vector, direction) / PDM_DOT_PRODUCT(edge_vector, edge_vector);
-    for (int i = 0; i < 3; i++) {
-      direction[i] -= fix*edge_vector[i];
-      direction_pt[i] = edge[3 + i] + 2 * direction[i]; // WARNING: 2 is a random distance choice
-
-      // only vtk
-      middle_pt_coord[3*iedge + i] = edge[3 + i];
-      direction_vect[3*iedge + i]  = direction_pt[i];
-    }
+    // double fix = PDM_DOT_PRODUCT(edge_vector, direction) / PDM_DOT_PRODUCT(edge_vector, edge_vector);
+    // for (int i = 0; i < 3; i++) {
+    //   direction[i] -= fix*edge_vector[i];
+    // }
 
     double *normal   = edge_normal + 12*iedge;
     double *pt_plane = edge_pt_plane + 12*iedge;
 
-    _create_volume_4planes_tata(edge,
-                           direction_pt,
+    _create_volume_4planes(edge,
+                           direction,
                            theta,
                            eps2,
-                           &normal,
-                           &pt_plane);
-
-    memcpy(edge_normal   + 12*iedge, normal,   sizeof(double) * 12);
-    memcpy(edge_pt_plane + 12*iedge, pt_plane, sizeof(double) * 12);
+                           normal,
+                           pt_plane);
 
     if (vtk) {
 
-      // TO DO: output volumes in a more elegant way
-      double      *vtx_coord = NULL;
-      PDM_g_num_t *vtx_g_num = NULL;
-      int         *face_vtx  = NULL;
-      _volume_4planes_to_4triangles(edge,
-                                    direction_pt,
-                                    normal,
-                                    pt_plane,
-                                    &vtx_coord,
-                                    &vtx_g_num,
-                                    &face_vtx);
-
       char filename4[999];
-      sprintf(filename4, "planes_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
-      PDM_vtk_write_std_elements(filename4,
-                                 12,
-                                 vtx_coord,
-                                 vtx_g_num,
-                                 PDM_MESH_NODAL_TRIA3,
-                                 4,
-                                 face_vtx,
-                                 NULL,
-                                 0,
-                                 NULL,
-                                 NULL);
-
       sprintf(filename4, "volume_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
       _vtk_write_volume(filename4,
                         pt_plane,
@@ -1019,7 +794,6 @@ int main(int argc, char *argv[])
   free(distrib);
 
   int dn_block_face =  PDM_part_to_block_n_elt_block_get(ptb2);
-  log_trace("dn_block_face = %d and dn_back_face = %d\n", dn_block_face, dn_back_face);
 
   free(part_stride);
   PDM_part_to_block_free(ptb2);
@@ -1052,9 +826,6 @@ int main(int argc, char *argv[])
     sprintf((char * restrict) volume_names[ivol], "edge_%d.vtk", ivol+1);
 
   }
-
-  log_trace("total_n_edges = %d\n", total_n_edges);
-  log_trace("dn_back_face = %d\n", dn_back_face);
 
   for (int ibox = 0; ibox < dn_back_face; ibox++) {
     PDM_g_num_t box_gnum = d_back_face_ln_to_gn[ibox];
