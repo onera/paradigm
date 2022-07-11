@@ -14,9 +14,9 @@ if (NOT ParMETIS_FOUND)
 endif()
 
 include(CMakeFindDependencyMacro)
-# PTSCOTCH depends on MPI, try to find it
+# PARMETIS depends on MPI, try to find it
 if (NOT MPI_FOUND)
-  if (PTSCOTCH_FIND_REQUIRED)
+  if (PARMETIS_FIND_REQUIRED)
     find_dependency(MPI REQUIRED)
   else()
     find_dependency(MPI)
