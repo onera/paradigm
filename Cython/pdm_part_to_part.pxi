@@ -98,7 +98,6 @@ cdef class PartToPart:
     cdef cpp_map[int, void**]        dict_part_data
     cdef cpp_map[int, int **]        dict_part_stride
     cdef cpp_map[int, size_t]        dict_npy_type
-    cdef cpp_map[int, size_t]        dict_s_data
     cdef cpp_map[int, PDM_stride_t]  dict_stride
     cdef cpp_map[int, int         ]  dict_cst_strid
     # ************************************************************************
@@ -113,7 +112,7 @@ cdef class PartToPart:
       self.n_part1 = len(part1_ln_to_gn)
       self.n_part2 = len(part2_ln_to_gn)
 
-      assert(len(part2_ln_to_gn) == self.n_part1)
+      assert(len(part1_to_part2_idx) == self.n_part1)
 
       self.lpart1_ln_to_gn     = part1_ln_to_gn
       self.lpart2_ln_to_gn     = part2_ln_to_gn
@@ -142,6 +141,44 @@ cdef class PartToPart:
                                          <const PDM_g_num_t **> self._part1_to_part2,
                                          pdm_comm);
 
+
+    # ------------------------------------------------------------------------
+    def get_referenced_lnum2(self):
+      """ Return a copy of the local referenced ids for each part2 partition """
+      cdef int  *n_ref_lnum2 = NULL;
+      cdef int **ref_lnum2   = NULL;
+      PDM_part_to_part_ref_lnum2_get(self.ptp,
+                                     &n_ref_lnum2,
+                                     &ref_lnum2);
+      lnp_ref_lnum2 = list()
+      for i_part in range(self.n_part2):
+        np_ref_lnum2_id = create_numpy_i(ref_lnum2[i_part], n_ref_lnum2[i_part], flag_owndata=False)
+        lnp_ref_lnum2.append(NPY.copy(np_ref_lnum2_id))
+      return lnp_ref_lnum2
+
+    # ------------------------------------------------------------------------
+    def get_gnum1_come_from(self):
+      """ Return a copy of the sending part1 gnum for each part2 partition """
+      # Needed to get the sizes n_ref_lnum2
+      cdef int  *n_ref_lnum2 = NULL;
+      cdef int **ref_lnum2   = NULL;
+      PDM_part_to_part_ref_lnum2_get(self.ptp,
+                                     &n_ref_lnum2,
+                                     &ref_lnum2);
+
+      cdef int         **gnum1_come_from_idx = NULL
+      cdef PDM_g_num_t **gnum1_come_from     = NULL
+      PDM_part_to_part_gnum1_come_from_get(self.ptp,
+                                           &gnum1_come_from_idx,
+                                           &gnum1_come_from)
+      come_from_l = list()
+      for i_part in range(self.n_part2):
+        n_ref = n_ref_lnum2[i_part]
+        # Idx array is shaped as n_ref_lnum2
+        sending_idx = create_numpy_i(gnum1_come_from_idx[i_part], n_ref+1, flag_owndata=False)
+        sending_array = create_numpy_pdm_gnum(gnum1_come_from[i_part], gnum1_come_from_idx[i_part][n_ref], flag_owndata=False)
+        come_from_l.append({'come_from_idx' : NPY.copy(sending_idx), 'come_from' : NPY.copy(sending_array)})
+      return come_from_l
 
     # ------------------------------------------------------------------------
     def iexch(self,
@@ -243,7 +280,7 @@ cdef class PartToPart:
           lnp_part_data .append(np_part2_data)
 
         else:
-          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * self.dict_s_data[request_id]
+          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
           np_part2_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part2_data[i_part])
           PyArray_ENABLEFLAGS(np_part2_data, NPY.NPY_OWNDATA)
 
