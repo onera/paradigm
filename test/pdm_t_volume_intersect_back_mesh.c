@@ -29,6 +29,9 @@
 #include "pdm_part_to_block.h"
 #include "pdm_plane.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_triangle.h"
+#include "pdm_distrib.h"
+#include "pdm_unique.h"
 
 /*=============================================================================
  * Static global variables
@@ -600,7 +603,7 @@ int main(int argc, char *argv[])
   // compute volume angle
 
   // only for vtk
-  double *middle_pt_coord = malloc(sizeof(double) * 3 * p_vol_n_edge);
+  // double *middle_pt_coord = malloc(sizeof(double) * 3 * p_vol_n_edge);
   double *direction_vect  = malloc(sizeof(double) * 3 * p_vol_n_edge);
 
   double  theta_min         = 1.0e-1; // WARNING: randomly chosen value
@@ -638,10 +641,12 @@ int main(int argc, char *argv[])
       // edge_vector[i] = edge[6 + i] - edge[i];
     }
 
-    // double fix = PDM_DOT_PRODUCT(edge_vector, direction) / PDM_DOT_PRODUCT(edge_vector, edge_vector);
-    // for (int i = 0; i < 3; i++) {
-    //   direction[i] -= fix*edge_vector[i];
-    // }
+    // enfoncer le volume
+    for (int i = 0; i < 3; i++) {
+      edge[i]     = edge[i] -0.3*direction[i];
+      edge[6 + i] = edge[6 + i] -0.3*direction[i];
+      edge[3 + i] = 0.5 * (edge[i] + edge[6 + i]);
+    }
 
     double *normal   = edge_normal + 12*iedge;
     double *pt_plane = edge_pt_plane + 12*iedge;
@@ -687,24 +692,24 @@ int main(int argc, char *argv[])
 
   if (vtk) {
 
-    const char *direction_name = "direction";
+    // const char *direction_name = "direction";
 
-    char filename5[999];
-    sprintf(filename5, "direction_%d.vtk", i_rank);
-    PDM_vtk_write_point_cloud_with_field(filename5,
-                                         p_vol_n_edge,
-                                         middle_pt_coord,
-                                         vol_edge_ln_to_gn,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL,
-                                         1,
-                         (const char **) &direction_name,
-                       (const double **) &direction_vect,
-                                         0,
-                                         NULL,
-                                         NULL);
+    // char filename5[999];
+    // sprintf(filename5, "direction_%d.vtk", i_rank);
+    // PDM_vtk_write_point_cloud_with_field(filename5,
+    //                                      p_vol_n_edge,
+    //                                      middle_pt_coord,
+    //                                      vol_edge_ln_to_gn,
+    //                                      NULL,
+    //                                      0,
+    //                                      NULL,
+    //                                      NULL,
+    //                                      1,
+    //                      (const char **) &direction_name,
+    //                    (const double **) &direction_vect,
+    //                                      0,
+    //                                      NULL,
+    //                                      NULL);
 
     const char *normal_name = "face_normal";
 
@@ -866,6 +871,174 @@ int main(int argc, char *argv[])
                                NULL);
 
   }
+
+  // Create a fake cavity distribution to mimic the pdm_mesh_adaptation setting
+
+  int d_n_cavity = p_vol_n_edge;
+  PDM_g_num_t *distrib_cavity  = malloc (sizeof(PDM_g_num_t) * (d_n_cavity + 1));
+  PDM_distrib_compute(d_n_cavity,
+                      distrib_cavity,
+                      -1,
+                      comm);
+  PDM_g_num_t *cavity_ln_to_gn = vol_edge_ln_to_gn;
+
+  // Retreive associated edges (just the edges already in partition of rank i)
+
+  PDM_g_num_t *pcavity_seed_edge_g_num   = vol_edge_ln_to_gn;
+  int         *seed_edge_back_face_idx   = volume_boxes_idx;
+  PDM_g_num_t *seed_edge_back_face_g_num = volume_boxes_g_num;
+  int         *seed_edge_vtx             = p_vol_edge_vtx;
+  double      *seed_edge_vtx_coord       = p_vol_vtx_coord;
+
+  // Create a back_face partition
+
+  int p_n_back_face = 0;
+
+  // Unique sort
+
+  PDM_g_num_t *toto_g_num = malloc(sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
+  memcpy(toto_g_num, seed_edge_back_face_g_num, sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
+
+  int* order = (int *) malloc(seed_edge_back_face_idx[p_vol_n_edge] * sizeof(int));
+  for(int i = 0; i < seed_edge_back_face_idx[p_vol_n_edge]; ++i){
+    order[i] = i;
+  }
+  PDM_sort_long(seed_edge_back_face_g_num, order, seed_edge_back_face_idx[p_vol_n_edge]);
+
+  PDM_log_trace_array_int(order, seed_edge_back_face_idx[p_vol_n_edge],"order: ");
+
+  int *seed_edge_back_face_l_num = malloc(sizeof(int) * seed_edge_back_face_idx[p_vol_n_edge]);
+  seed_edge_back_face_l_num[order[0]] = 0;
+  PDM_g_num_t *p_back_face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * seed_edge_back_face_idx[p_vol_n_edge]);
+  p_back_face_ln_to_gn[0] = seed_edge_back_face_g_num[0];
+
+  int read_idx = 0;
+  int write_idx = 1;
+  PDM_g_num_t last_val = seed_edge_back_face_g_num[0];
+  int last_l_num = 0;
+  for (int i = 1; i < seed_edge_back_face_idx[p_vol_n_edge]; i++) {
+    read_idx = i;
+    if (seed_edge_back_face_g_num[read_idx] != last_val) {
+      last_val = seed_edge_back_face_g_num[read_idx];
+      p_back_face_ln_to_gn[write_idx++] = last_val;
+      last_l_num++;
+    }
+    seed_edge_back_face_l_num[order[read_idx]] = last_l_num;
+  }
+
+  p_n_back_face = write_idx;
+
+  int* unique_order = (int *) malloc(seed_edge_back_face_idx[p_vol_n_edge] * sizeof(int));
+  int new_size = PDM_inplace_unique_long2(toto_g_num, unique_order, 0, seed_edge_back_face_idx[p_vol_n_edge]-1);
+
+  PDM_log_trace_array_long(toto_g_num, new_size, "unique back_face_ln_to_gn: ");
+  PDM_log_trace_array_long(p_back_face_ln_to_gn, p_n_back_face, "hand made back_face_ln_to_gn: ");
+
+  PDM_log_trace_array_int(unique_order, seed_edge_back_face_idx[p_vol_n_edge], "unique_order: ");
+  PDM_log_trace_array_int(seed_edge_back_face_l_num, seed_edge_back_face_idx[p_vol_n_edge], "seed_edge_back_face_l_num: ");
+
+  // PDM_part_dconnectivity_to_pconnectivity_sort_single_part to get back_face->vtx and coord
+
+  free(p_back_vtx_ln_to_gn);
+  free(p_back_face_vtx_idx);
+  free(p_back_face_vtx    );
+
+  // PDM_g_num_t *p_back_vtx_ln_to_gn = NULL;
+  // int         *p_back_face_vtx_idx = NULL;
+  // int         *p_back_face_vtx     = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           back_distrib_face,
+                                                           d_back_face_vtx_idx,
+                                                           d_back_face_vtx,
+                                                           p_n_back_face,
+                                  (const PDM_g_num_t *)    p_back_face_ln_to_gn,
+                                                           &p_back_n_vtx,
+                                                           &p_back_vtx_ln_to_gn,
+                                                           &p_back_face_vtx_idx,
+                                                           &p_back_face_vtx);
+
+  free(n_part_p_back_n_vtx    );
+  free(n_part_p_back_vtx_coord);
+
+  n_part_p_back_n_vtx    = malloc(sizeof(int) * n_part);
+  n_part_p_back_n_vtx[0] = p_back_n_vtx;
+  // double  **n_part_p_back_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        n_part,
+                                        back_distrib_vtx,
+                                        d_back_vtx_coord,
+                                        n_part_p_back_n_vtx,
+                 (const PDM_g_num_t **) &p_back_vtx_ln_to_gn,
+                                        &n_part_p_back_vtx_coord);
+
+  p_back_vtx_coord = n_part_p_back_vtx_coord[0];
+
+  // Do projections
+
+  // for VTK
+  double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
+  int     n_back_face_proj_pts;
+
+  for (int icav = 0; icav < d_n_cavity; icav++) {
+    int edge_id = icav; // tmp in mesh_adaptation need an idx
+    // int edge_id = PDM_ABS(pcavity_seed_edge_g_num[icav])-1;
+    int vtx_id1 = seed_edge_vtx[2*edge_id]   - 1;
+    int vtx_id2 = seed_edge_vtx[2*edge_id+1] - 1;
+    double middle_pt[3];
+    for (int j = 0; j < 3; j++) {
+      middle_pt[j] = 0.5 * (seed_edge_vtx_coord[3*vtx_id1+j] + seed_edge_vtx_coord[3*vtx_id2+j]);
+    }
+
+    int face_head = 0;
+    for (int iface = seed_edge_back_face_idx[edge_id]; iface < seed_edge_back_face_idx[edge_id+1]; iface++) {
+      int back_face_id = seed_edge_back_face_l_num[iface];
+
+      double face_pt_coord[9];
+      int local_head = 0;
+      for (int j = p_back_face_vtx_idx[back_face_id]; j < p_back_face_vtx_idx[back_face_id+1]; j++) {
+        int vtx_id = p_back_face_vtx[j] - 1;
+        for (int k = 0; k < 3; k++) {
+          face_pt_coord[3*local_head + k] = p_back_vtx_coord[3*vtx_id + k];
+        }
+        local_head++;
+      }
+      double  closestPoint[3];
+      double  min_dist2;
+      double  *weights      = NULL;
+      PDM_triangle_evaluate_position(middle_pt,
+                                     face_pt_coord,
+                                     closestPoint,
+                                     &min_dist2,
+                                     weights);
+
+      memcpy(back_face_proj_pts + 3*face_head, closestPoint, sizeof(double) * 3);
+      face_head++;
+
+    } // end loop on back faces of icav
+
+    if (vtk) {
+
+      n_back_face_proj_pts = seed_edge_back_face_idx[edge_id+1] - seed_edge_back_face_idx[edge_id];
+
+      char filename42[999];
+      sprintf(filename42, "proj_points_of_edge_id_%ld.vtk", cavity_ln_to_gn[icav]);
+      PDM_vtk_write_point_cloud_with_field(filename42,
+                                           n_back_face_proj_pts,
+                                           back_face_proj_pts,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL);
+    }
+
+  } // end loop on cavities
 
   PDM_MPI_Finalize ();
 }

@@ -18,6 +18,8 @@
 #include "pdm_vtk.h"
 #include "pdm_error.h"
 
+#include "pdm_logging.h"
+
 #ifdef __cplusplus
 extern "C" {
 #if 0
