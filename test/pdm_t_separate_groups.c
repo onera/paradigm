@@ -595,13 +595,13 @@ static void
 _separate_groups
 (
  PDM_dmesh_nodal_t   *dmn,
- int                 *dn_vtx,
+ PDM_g_num_t        **distrib_vtx,
  double             **dvtx_coord,
  int                 *n_ridge,
- int                **ridge_dn_edge,
+ PDM_g_num_t       ***ridge_distrib_edge,
  PDM_g_num_t       ***ridge_dedge_vtx,
  int                 *n_surface,
- int                **surface_dn_face,
+ PDM_g_num_t       ***surface_distrib_face,
  PDM_g_num_t       ***surface_dface_vtx,
  PDM_ownership_t      ownership
  )
@@ -610,16 +610,20 @@ _separate_groups
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
-  const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dmn);
+  const PDM_g_num_t *_distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
-  *dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
+  int dn_vtx = (int) (_distrib_vtx[i_rank+1] - _distrib_vtx[i_rank]);
   double *_dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
   if (ownership == PDM_OWNERSHIP_USER) {
-    *dvtx_coord = malloc(sizeof(double) * (*dn_vtx) * 3);
-    memcpy(*dvtx_coord, _dvtx_coord, sizeof(double) * (*dn_vtx) * 3);
+    *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+    memcpy(*dvtx_coord, _dvtx_coord, sizeof(double) * dn_vtx * 3);
+
+    *distrib_vtx = malloc(sizeof(PDM_g_num_t) * (n_rank+1));
+    memcpy(*distrib_vtx, _distrib_vtx, sizeof(PDM_g_num_t) * (n_rank+1));
   } else {
     *dvtx_coord = _dvtx_coord;
+    *distrib_vtx = (PDM_g_num_t *) _distrib_vtx;
   }
 
 
@@ -633,9 +637,13 @@ _separate_groups
                                          &dridge_edge);
 
 
-  *ridge_dn_edge = malloc(sizeof(int) * (*n_ridge));
+  int *ridge_dn_edge  = malloc(sizeof(int          ) * (*n_ridge));
+  *ridge_distrib_edge = malloc(sizeof(PDM_g_num_t *) * (*n_ridge));
   for (int iridge = 0; iridge < *n_ridge; iridge++) {
-    (*ridge_dn_edge)[iridge] = dridge_edge_idx[iridge+1] - dridge_edge_idx[iridge];
+    ridge_dn_edge[iridge] = dridge_edge_idx[iridge+1] - dridge_edge_idx[iridge];
+
+    (*ridge_distrib_edge)[iridge] = PDM_compute_entity_distribution(dmn->comm,
+                                                                    ridge_dn_edge[iridge]);
   }
 
   const PDM_g_num_t **pedge_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * (*n_ridge));
@@ -660,7 +668,7 @@ _separate_groups
 
     PDM_block_to_part_t *btp_edge = PDM_block_to_part_create(distrib_edge,
                                                              pedge_ln_to_gn,
-                                                             *ridge_dn_edge,
+                                                             ridge_dn_edge,
                                                              *n_ridge,
                                                              dmn->comm);
 
@@ -673,6 +681,7 @@ _separate_groups
                 (void ***) ridge_dedge_vtx);
     PDM_block_to_part_free(btp_edge);
     free(pedge_ln_to_gn);
+    free(ridge_dn_edge);
   }
 
 
@@ -688,9 +697,13 @@ _separate_groups
                                          &dsurface_face);
 
 
-  *surface_dn_face = malloc(sizeof(int) * (*n_surface));
+  int *surface_dn_face  = malloc(sizeof(int          ) * (*n_surface));
+  *surface_distrib_face = malloc(sizeof(PDM_g_num_t *) * (*n_surface));
   for (int isurface = 0; isurface < *n_surface; isurface++) {
-    (*surface_dn_face)[isurface] = dsurface_face_idx[isurface+1] - dsurface_face_idx[isurface];
+    surface_dn_face[isurface] = dsurface_face_idx[isurface+1] - dsurface_face_idx[isurface];
+
+    (*surface_distrib_face)[isurface] = PDM_compute_entity_distribution(dmn->comm,
+                                                                        surface_dn_face[isurface]);
   }
 
   const PDM_g_num_t **pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * (*n_surface));
@@ -715,7 +728,7 @@ _separate_groups
 
     PDM_block_to_part_t *btp_face = PDM_block_to_part_create(distrib_face,
                                                              pface_ln_to_gn,
-                                                             *surface_dn_face,
+                                                             surface_dn_face,
                                                              *n_surface,
                                                              dmn->comm);
 
@@ -728,6 +741,7 @@ _separate_groups
                            (void ***) surface_dface_vtx);
     PDM_block_to_part_free(btp_face);
     free(pface_ln_to_gn);
+    free(surface_dn_face);
   }
 
 }
@@ -857,22 +871,22 @@ int main(int argc, char *argv[])
   /*
    *  Separate groups
    */
-  int           dn_vtx            = 0;
-  double       *dvtx_coord        = NULL;
-  int           n_ridge           = 0;
-  int          *ridge_dn_edge     = NULL;
-  PDM_g_num_t **ridge_dedge_vtx   = NULL;
-  int           n_surface         = 0;
-  int          *surface_dn_face   = NULL;
-  PDM_g_num_t **surface_dface_vtx = NULL;
+  double       *dvtx_coord           = NULL;
+  int           n_ridge              = 0;
+  PDM_g_num_t **ridge_distrib_edge   = NULL;
+  PDM_g_num_t **ridge_dedge_vtx      = NULL;
+  int           n_surface            = 0;
+  PDM_g_num_t **surface_distrib_face = NULL;
+  PDM_g_num_t **surface_dface_vtx    = NULL;
+  PDM_g_num_t  *distrib_vtx          = NULL;
   _separate_groups(dmn,
-                   &dn_vtx,
+                   &distrib_vtx,
                    &dvtx_coord,
                    &n_ridge,
-                   &ridge_dn_edge,
+                   &ridge_distrib_edge,
                    &ridge_dedge_vtx,
                    &n_surface,
-                   &surface_dn_face,
+                   &surface_distrib_face,
                    &surface_dface_vtx,
                    PDM_OWNERSHIP_KEEP);
 
@@ -883,40 +897,35 @@ int main(int argc, char *argv[])
   /*
    *  Visu
    */
-  PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
   char prefix[999];
 
   for (int i = 0; i < n_ridge; i++) {
-    PDM_g_num_t *distrib_edge = PDM_compute_entity_distribution(comm, ridge_dn_edge[i]);
 
     sprintf(prefix, "ridge_%d", i);
     _dump_dstd_elt(prefix,
                    comm,
                    distrib_vtx,
                    dvtx_coord,
-                   distrib_edge,
+                   ridge_distrib_edge[i],
                    ridge_dedge_vtx[i],
                    PDM_MESH_NODAL_BAR2,
                    order);
 
-    free(distrib_edge);
   }
 
 
   for (int i = 0; i < n_surface; i++) {
-    PDM_g_num_t *distrib_face = PDM_compute_entity_distribution(comm, surface_dn_face[i]);
 
     sprintf(prefix, "surface_%d", i);
     _dump_dstd_elt(prefix,
                    comm,
                    distrib_vtx,
                    dvtx_coord,
-                   distrib_face,
+                   surface_distrib_face[i],
                    surface_dface_vtx[i],
                    PDM_MESH_NODAL_TRIA3,
                    order);
 
-    free(distrib_face);
   }
 
 
@@ -924,17 +933,20 @@ int main(int argc, char *argv[])
    *  Free memory
    */
   PDM_DMesh_nodal_free(dmn);
-  free(ridge_dn_edge);
-  free(surface_dn_face);
+
   for (int i = 0; i < n_ridge; i++) {
     free(ridge_dedge_vtx[i]);
+    free(ridge_distrib_edge[i]);
   }
   free(ridge_dedge_vtx);
+  free(ridge_distrib_edge);
+
   for (int i = 0; i < n_surface; i++) {
     free(surface_dface_vtx[i]);
+    free(surface_distrib_face[i]);
   }
   free(surface_dface_vtx);
-  free(distrib_vtx);
+  free(surface_distrib_face);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
