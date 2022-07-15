@@ -5372,27 +5372,34 @@ PDM_Mesh_nodal_n_vertices_element
     n_vtx = 1;
     break;
   case PDM_MESH_NODAL_BAR2:           /* Edge */
+  case PDM_MESH_NODAL_BARHO:           /* Edge */
     n_vtx = (_order+1);
     break;
   case PDM_MESH_NODAL_TRIA3:          /* Triangle */
+  case PDM_MESH_NODAL_TRIAHO:          /* Triangle */
     n_vtx = (_order+1)*(_order+2)/2;
     break;
   case PDM_MESH_NODAL_QUAD4:          /* Quadrangle */
+  case PDM_MESH_NODAL_QUADHO:          /* Quadrangle */
     n_vtx = (_order+1)*(_order+1);
     break;
   case PDM_MESH_NODAL_POLY_2D:        /* Simple Polygon */
     n_vtx = -1;
     break;
   case PDM_MESH_NODAL_TETRA4:         /* Tetrahedron */
+  case PDM_MESH_NODAL_TETRAHO:         /* Tetrahedron */
     n_vtx = (_order+1)*(_order+2)*(_order+3)/6;
     break;
   case PDM_MESH_NODAL_PYRAMID5:       /* Pyramid */
+  case PDM_MESH_NODAL_PYRAMIDHO:       /* Pyramid */
     n_vtx = (_order+1)*(_order+2)*(2*_order+3)/6;
     break;
   case PDM_MESH_NODAL_PRISM6:         /* Prism (pentahedron) */
+  case PDM_MESH_NODAL_PRISMHO:         /* Prism (pentahedron) */
     n_vtx = (_order+1)*(_order+1)*(_order+2)/2;
     break;
   case PDM_MESH_NODAL_HEXA8:          /* Hexahedron (brick) */
+  case PDM_MESH_NODAL_HEXAHO:          /* Hexahedron (brick) */
     n_vtx = (_order+1)*(_order+1)*(_order+1);
     break;
   case PDM_MESH_NODAL_POLY_3D:        /* Simple Polyhedron (convex or quasi-convex) */

@@ -131,10 +131,15 @@ _set_dmesh_nodal
                                         dface_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
-  int n_group = 0;
+  int n_group = 1;
   int *dgroup_elt_idx = (int *) malloc(sizeof(int) * (n_group + 1));
   dgroup_elt_idx[0] = 0;
+  dgroup_elt_idx[1] = dn_face;
+
   PDM_g_num_t *dgroup_elt = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  for (int i = 0; i < dn_face; i++) {
+    dgroup_elt[i] = distrib_face[i_rank] + i + 1;
+  }
   PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
                                   n_group,
                                   dgroup_elt_idx,

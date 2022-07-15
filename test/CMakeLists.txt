@@ -188,4 +188,6 @@ test_c_create (pdm_t_join_domains 2)
 
 test_c_create (pdm_t_ho_bezier_intersect 1)
 
+test_c_create (pdm_t_sphere_vol_gen 1)
+
 add_subdirectory(tutorial)
