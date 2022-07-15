@@ -156,6 +156,25 @@ _set_dmesh_nodal
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  nu              Number of points in longitude
+ * \param[in]  nv              Number of points in latitude
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx_idx   Index of distributed face to vertex
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ *
+ */
+
 void
 PDM_sphere_surf_gen
 (
@@ -303,6 +322,20 @@ PDM_sphere_surf_gen
 }
 
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  nu              Number of points in longitude
+ * \param[in]  nv              Number of points in latitude
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
+ *
+ */
 
 void
 PDM_sphere_surf_gen_nodal
@@ -354,6 +387,23 @@ PDM_sphere_surf_gen_nodal
 }
 
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere (icosphere)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx_idx   Index of distributed face to vertex
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ *
+ */
 
 void
 PDM_sphere_surf_icosphere_gen
@@ -741,6 +791,19 @@ PDM_sphere_surf_icosphere_gen
 }
 
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere (icosphere)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
+ *
+ */
 
 void
 PDM_sphere_surf_icosphere_gen_nodal

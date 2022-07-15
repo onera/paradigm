@@ -664,7 +664,7 @@ _separate_groups
     assert(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO);
 
     int order = 1;//?
-    int edge_vtx_n = PDM_Mesh_nodal_n_vertices_element(t_elt, order);
+    int edge_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
     PDM_block_to_part_t *btp_edge = PDM_block_to_part_create(distrib_edge,
                                                              pedge_ln_to_gn,
@@ -713,7 +713,7 @@ _separate_groups
 
   {
     int *sections_id = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_SURFACIC);
-    int n_section   = PDM_DMesh_nodal_n_section_get  (dmn, PDM_GEOMETRY_KIND_SURFACIC);
+    int  n_section   = PDM_DMesh_nodal_n_section_get  (dmn, PDM_GEOMETRY_KIND_SURFACIC);
     assert(n_section == 1);
 
     int id_section = sections_id[0];
@@ -724,7 +724,7 @@ _separate_groups
     assert(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_TRIAHO);
 
     int order = 1;//?
-    int face_vtx_n = PDM_Mesh_nodal_n_vertices_element(t_elt, order);
+    int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
     PDM_block_to_part_t *btp_face = PDM_block_to_part_create(distrib_face,
                                                              pface_ln_to_gn,
@@ -736,9 +736,9 @@ _separate_groups
                            sizeof(PDM_g_num_t),
                            PDM_STRIDE_CST_INTERLACED,
                            &face_vtx_n,
-                           (void   *) dface_vtx,
+                (void   *) dface_vtx,
                            NULL,
-                           (void ***) surface_dface_vtx);
+                (void ***) surface_dface_vtx);
     PDM_block_to_part_free(btp_face);
     free(pface_ln_to_gn);
     free(surface_dn_face);
@@ -770,7 +770,7 @@ _dump_dstd_elt
 
   int dn_elt = (int) (distrib_elt[i_rank+1] - distrib_elt[i_rank]);
 
-  int elt_vtx_n = PDM_Mesh_nodal_n_vertices_element(elt_type, order);
+  int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
   int *delt_vtx_idx = PDM_array_new_idx_from_const_stride_int(elt_vtx_n, dn_elt);
 
   PDM_g_num_t *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t) * dn_elt);
@@ -871,6 +871,8 @@ int main(int argc, char *argv[])
   /*
    *  Separate groups
    */
+  PDM_ownership_t ownership = PDM_OWNERSHIP_KEEP;
+
   double       *dvtx_coord           = NULL;
   int           n_ridge              = 0;
   PDM_g_num_t **ridge_distrib_edge   = NULL;
@@ -888,7 +890,7 @@ int main(int argc, char *argv[])
                    &n_surface,
                    &surface_distrib_face,
                    &surface_dface_vtx,
-                   PDM_OWNERSHIP_KEEP);
+                   ownership);
 
   int order = 1;
 
@@ -947,6 +949,11 @@ int main(int argc, char *argv[])
   }
   free(surface_dface_vtx);
   free(surface_distrib_face);
+
+  if (ownership == PDM_OWNERSHIP_USER) {
+    free(dvtx_coord);
+    free(distrib_vtx);
+  }
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

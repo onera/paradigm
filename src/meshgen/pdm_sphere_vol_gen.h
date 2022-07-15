@@ -37,6 +37,25 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+
+/**
+ *
+ * \brief Create a volume mesh bounded by a sphere (deformed cube)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n_vtx_x         Number of vertices on segments in x-direction
+ * \param[in]  n_vtx_y         Number of vertices on segments in y-direction
+ * \param[in]  n_vtx_z         Number of vertices on segments in z-direction
+ * \param[in]  radius          Radius of the sphere
+ * \param[in]  center_x        x coordinate of the center of the sphere
+ * \param[in]  center_y        y coordinate of the center of the sphere
+ * \param[in]  center_z        z coordinate of the center of the sphere
+ * \param[in]  t_elt           Element type
+ * \param[in]  order           Element order
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
+
 void
 PDM_sphere_vol_gen_nodal
 (
