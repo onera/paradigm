@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
       vect[i]     = p_vol_vtx_coord[3*vtx_id2 + i] - p_vol_vtx_coord[3*vtx_id1 + i];
       vect[3 + i] = p_vol_vtx_coord[3*vtx_id3 + i] - p_vol_vtx_coord[3*vtx_id1 + i];
     }
-    int normal[3];
+    double normal[3];
     PDM_CROSS_PRODUCT(normal, vect, vect + 3);
 
     for (int i = 0; i < 3; i++) {
