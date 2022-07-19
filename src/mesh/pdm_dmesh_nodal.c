@@ -1495,6 +1495,23 @@ PDM_dmesh_nodal_dump_vtk
  const char                *filename_patter
 )
 {
+  PDM_dmesh_nodal_dump_vtk_ho(dmn,
+                              1,
+                              geom_kind,
+                              filename_patter);
+}
+
+
+void
+PDM_dmesh_nodal_dump_vtk_ho
+(
+       PDM_dmesh_nodal_t   *dmn,
+ const int                  order,
+       PDM_geometry_kind_t  geom_kind,
+ const char                *filename_patter
+)
+{
+  /* TODO: add groups as scalar, elt-based fields */
 
   int i_rank;
   int n_rank;
@@ -1515,7 +1532,7 @@ PDM_dmesh_nodal_dump_vtk
     int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
     PDM_g_num_t *delmt_ln_to_gn = (PDM_g_num_t * ) malloc( (n_elt  ) * sizeof(PDM_g_num_t));
 
-    int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt    , 1);
+    int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt    , order);
     dconnec_idx[0] = 0;
     for(int i = 0; i < n_elt; ++i) {
       dconnec_idx[i+1] = dconnec_idx[i] + strid;
@@ -1559,17 +1576,18 @@ PDM_dmesh_nodal_dump_vtk
      */
     char filename[999];
     sprintf(filename, "%s_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
-    PDM_vtk_write_std_elements(filename,
-                               pn_vtx,
-                               pvtx_coord_out,
-                               pvtx_ln_to_gn,
-                               t_elt,
-                               n_elt,
-                               pcell_vtx,
-                               delmt_ln_to_gn,
-                               0,
-                               NULL,
-                               NULL);
+    PDM_vtk_write_std_elements_ho(filename,
+                                  order,
+                                  pn_vtx,
+                                  pvtx_coord_out,
+                                  pvtx_ln_to_gn,
+                                  t_elt,
+                                  n_elt,
+                                  pcell_vtx,
+                                  delmt_ln_to_gn,
+                                  0,
+                                  NULL,
+                                  NULL);
 
     free(tmp_pvtx_coord);
     free(pvtx_ln_to_gn);
@@ -1582,6 +1600,7 @@ PDM_dmesh_nodal_dump_vtk
     free(pvtx_coord_out);
   }
 }
+
 
 
 
