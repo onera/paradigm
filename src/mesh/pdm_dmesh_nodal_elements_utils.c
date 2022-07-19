@@ -172,21 +172,27 @@ PDM_n_face_elt_per_elmt
   int n_face_elt = -1;
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      n_face_elt = 1;
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      n_face_elt = 1;
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      n_face_elt = 4;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      n_face_elt = 5;
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      n_face_elt = 5;
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      n_face_elt = 6;
      break;
    default:
@@ -252,21 +258,27 @@ PDM_n_sum_vtx_face_per_elmt
   int n_sum_vtx_face = -1;
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      n_sum_vtx_face = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      n_sum_vtx_face = 4;
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      n_sum_vtx_face = 12;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      n_sum_vtx_face = 16;
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      n_sum_vtx_face = 18;
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      n_sum_vtx_face = 24;
      break;
    default:
@@ -293,24 +305,31 @@ PDM_n_sum_vtx_edge_per_elmt
      n_sum_vtx_edge = 0;
      break;
    case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
      n_sum_vtx_edge = 2;
      break;
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      n_sum_vtx_edge = 6;
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      n_sum_vtx_edge = 8;
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      n_sum_vtx_edge = 12;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      n_sum_vtx_edge = 16;
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      n_sum_vtx_edge = 18;
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      n_sum_vtx_edge = 24;
      break;
    default:
@@ -1875,7 +1894,7 @@ PDM_sections_decompose_faces
 
   // A faire : local_num_in_parent_element
 
-  int n_elt_current  = 0;
+  int n_elt_current   = 0;
   int n_dface_current = 0;
 
   /* We need to loop over all sections in the good order */
@@ -1924,6 +1943,53 @@ PDM_sections_decompose_faces
                                  elmt_cell_face_idx,
                                  elmt_cell_face,
                                  parent_elmt_position);
+        // PDM_std_decomposes_faces(t_elt,
+        //                          n_elt,
+        //                          1,
+        //                          NULL,
+        //                          &n_elt_current,
+        //                          &n_dface_current,
+        //                          beg_elmt_gnum,
+        //                          beg_face_gnum,
+        //                          connec,
+        //                          elmt_face_vtx_idx,
+        //                          elmt_face_vtx,
+        //                          elmt_face_cell,
+        //                          elmt_cell_face_idx,
+        //                          elmt_cell_face,
+        //                          parent_elmt_position);
+        break;
+      }
+      case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_QUADHO:
+      case PDM_MESH_NODAL_TETRAHO:
+      case PDM_MESH_NODAL_PYRAMIDHO:
+      case PDM_MESH_NODAL_PRISMHO:
+      case PDM_MESH_NODAL_HEXAHO:
+      {
+        abort();
+        // int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
+        // PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+
+        // int order      = dmn_elts->sections_std[i_section]->order;
+        // const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
+
+        // PDM_std_decomposes_faces_ho(t_elt,
+        //                             order,
+        //                             parent_node,
+        //                             n_elt,
+        //                             &n_elt_current,
+        //                             &n_dface_current,
+        //                             beg_elmt_gnum,
+        //                             beg_face_gnum,
+        //                             connec,
+        //                             elmt_face_vtx_idx,
+        //                             elmt_face_vtx,
+        //                             elmt_face_cell,
+        //                             elmt_cell_face_idx,
+        //                             elmt_cell_face,
+        //                             parent_elmt_position);
         break;
       }
       case PDM_MESH_NODAL_POLY_2D:

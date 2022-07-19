@@ -202,6 +202,17 @@ int main(int argc, char *argv[])
                                                            PDM_MESH_NODAL_TETRA4,
                                                            1,
                                                            PDM_OWNERSHIP_KEEP);
+  // PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
+  //                                                          n_vtx_seg,
+  //                                                          n_vtx_seg,
+  //                                                          n_vtx_seg,
+  //                                                          length,
+  //                                                          0.,
+  //                                                          0.,
+  //                                                          0.,
+  //                                                          PDM_MESH_NODAL_TETRAHO,
+  //                                                          3,
+  //                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
 
 
