@@ -207,6 +207,63 @@ _vtk_write_volume
                          NULL);
 }
 
+static void
+_projection_on_background_mesh_get
+(
+ double              *pt_to_project_coord,
+ int                  n_back_elt,
+ int                 *cavity_back_elt,
+ int                 *back_elt_vtx_idx,
+ int                 *back_elt_vtx,
+ double              *back_vtx_coord,
+ int                  back_elt_order,
+ PDM_Mesh_nodal_elt_t back_elt_type,
+ double             **proj_pt_coord
+)
+{
+  int strid = PDM_Mesh_nodal_n_vtx_elt_get(back_elt_type,
+                                           back_elt_order);
+  int dim   = PDM_Mesh_nodal_elt_dim_get(back_elt_type);
+
+  double best_min_dist2 = 1.0e15;
+  *proj_pt_coord = malloc(sizeof(double) * 3);
+  double tmp_pt_to_project_coord[3];
+
+  if (dim == 2) {
+
+    double  closestPoint[3];
+    double elt_pt_coord[strid * 3];
+    double  min_dist2;
+    double  *weights  = NULL;
+    for (int ielt = 0; ielt < n_back_elt; ielt++) {
+      int elt_id = PDM_ABS(cavity_back_elt[ielt]); // not minus 1 here because already -1 in this tab in this test
+      int local_head = 0;
+      for (int j = back_elt_vtx_idx[elt_id]; j < back_elt_vtx_idx[elt_id+1]; j++) {
+        int vtx_id = back_elt_vtx[j] - 1;
+        for (int k = 0; k < 3; k++) {
+          elt_pt_coord[3*local_head + k] = back_vtx_coord[3*vtx_id + k];
+        }
+        local_head++;
+      }
+      memcpy(tmp_pt_to_project_coord, pt_to_project_coord, sizeof(double) * 3);
+      PDM_triangle_evaluate_position(tmp_pt_to_project_coord,
+                                     elt_pt_coord,
+                                     closestPoint,
+                                     &min_dist2,
+                                     weights);
+      if ( min_dist2 < best_min_dist2) {
+        best_min_dist2 = min_dist2;
+        memcpy(*proj_pt_coord, closestPoint, sizeof(double) * 3);
+      }
+    } // end loop on back elements
+
+  } // end 2D element case
+
+  // TO DO: 1D element case for ridges
+
+}
+
+
 /**
  *
  * \brief  Main
@@ -976,6 +1033,7 @@ int main(int argc, char *argv[])
   // Do projections
 
   // for VTK
+  // double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
   double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
   int     n_back_face_proj_pts;
 
@@ -989,56 +1047,68 @@ int main(int argc, char *argv[])
       middle_pt[j] = 0.5 * (seed_edge_vtx_coord[3*vtx_id1+j] + seed_edge_vtx_coord[3*vtx_id2+j]);
     }
 
-    int face_head = 0;
-    for (int iface = seed_edge_back_face_idx[edge_id]; iface < seed_edge_back_face_idx[edge_id+1]; iface++) {
-      int back_face_id = seed_edge_back_face_l_num[iface];
+    int n_back_elt = seed_edge_back_face_idx[edge_id+1] - seed_edge_back_face_idx[edge_id];
 
-      double face_pt_coord[9];
-      int local_head = 0;
-      for (int j = p_back_face_vtx_idx[back_face_id]; j < p_back_face_vtx_idx[back_face_id+1]; j++) {
-        int vtx_id = p_back_face_vtx[j] - 1;
-        for (int k = 0; k < 3; k++) {
-          face_pt_coord[3*local_head + k] = p_back_vtx_coord[3*vtx_id + k];
-        }
-        local_head++;
-      }
-      double  closestPoint[3];
-      double  min_dist2;
-      double  *weights      = NULL;
-      PDM_triangle_evaluate_position(middle_pt,
-                                     face_pt_coord,
-                                     closestPoint,
-                                     &min_dist2,
-                                     weights);
+    double *proj_pt_coord   = NULL;
+    int    *cavity_back_elt = seed_edge_back_face_l_num + seed_edge_back_face_idx[edge_id];
+    _projection_on_background_mesh_get(middle_pt,
+                                       n_back_elt,
+                                       cavity_back_elt,
+                                       p_back_face_vtx_idx,
+                                       p_back_face_vtx,
+                                       p_back_vtx_coord,
+                                       2,
+                                       2,
+                                       &proj_pt_coord);
 
-      memcpy(back_face_proj_pts + 3*face_head, closestPoint, sizeof(double) * 3);
-      face_head++;
-
-    } // end loop on back faces of icav
-
-    if (vtk) {
-
-      n_back_face_proj_pts = seed_edge_back_face_idx[edge_id+1] - seed_edge_back_face_idx[edge_id];
-
-      char filename42[999];
-      sprintf(filename42, "proj_points_of_edge_id_%ld.vtk", cavity_ln_to_gn[icav]);
-      PDM_vtk_write_point_cloud_with_field(filename42,
-                                           n_back_face_proj_pts,
-                                           back_face_proj_pts,
-                                           NULL,
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           NULL);
-    }
+    memcpy(back_face_proj_pts + 3*icav, proj_pt_coord, sizeof(double) * 3);
 
   } // end loop on cavities
+
+  if (vtk) {
+
+    char filename42[999];
+    sprintf(filename42, "cavity_proj_pts_%d.vtk", i_rank);
+    PDM_vtk_write_point_cloud_with_field(filename42,
+                                         d_n_cavity,
+                                         back_face_proj_pts,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL);
+  }
+
+    // int face_head = 0;
+    // for (int iface = seed_edge_back_face_idx[edge_id]; iface < seed_edge_back_face_idx[edge_id+1]; iface++) {
+    //   int back_face_id = seed_edge_back_face_l_num[iface];
+
+    //   double face_pt_coord[9];
+    //   int local_head = 0;
+    //   for (int j = p_back_face_vtx_idx[back_face_id]; j < p_back_face_vtx_idx[back_face_id+1]; j++) {
+    //     int vtx_id = p_back_face_vtx[j] - 1;
+    //     for (int k = 0; k < 3; k++) {
+    //       face_pt_coord[3*local_head + k] = p_back_vtx_coord[3*vtx_id + k];
+    //     }
+    //     local_head++;
+    //   }
+    //   double  closestPoint[3];
+    //   double  min_dist2;
+    //   double  *weights      = NULL;
+    //   PDM_triangle_evaluate_position(middle_pt,
+    //                                  face_pt_coord,
+    //                                  closestPoint,
+    //                                  &min_dist2,
+    //                                  weights);
+
+    //   memcpy(back_face_proj_pts + 3*face_head, closestPoint, sizeof(double) * 3);
+    //   face_head++;
 
   PDM_MPI_Finalize ();
 }
