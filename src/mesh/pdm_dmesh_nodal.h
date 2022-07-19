@@ -506,6 +506,16 @@ PDM_DMesh_nodal_section_std_get
 const int                  id_section
 );
 
+PDM_g_num_t *
+PDM_DMesh_nodal_section_std_HO_get
+(
+      PDM_dmesh_nodal_t   *dmesh_nodal,
+      PDM_geometry_kind_t  geom_kind,
+const int                  id_section,
+      int                 *order,
+const char               **ho_ordering
+);
+
 
 /**
  * \brief Get number of section elements
@@ -798,20 +808,10 @@ PDM_dmesh_nodal_dump_vtk
 );
 
 void
-PDM_dmesh_nodal_dump_vtk_ho
-(
-       PDM_dmesh_nodal_t   *dmn,
- const int                  order,
-       PDM_geometry_kind_t  geom_kind,
- const char                *filename_patter
-);
-
-void
 PDM_dmesh_nodal_reorder
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- const char        *ordering_name,
- const int          order
+ const char        *ordering_name
  );
 
 

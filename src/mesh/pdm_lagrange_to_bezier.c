@@ -46,13 +46,9 @@
 #include "pdm_logging.h"
 #include "pdm.h"
 #include "pdm_priv.h"
-#include "pdm_mpi.h"
 #include "pdm_vtk.h"
-#include "pdm_ho_location.h"
-#include "pdm_box_tree.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_ho_seg_intersect.h"
-#include "pdm_line.h"
+#include "pdm_lagrange_to_bezier.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -72,8 +68,8 @@ extern "C" {
  *----------------------------------------------------------------------------*/
 
 /* Get Bezier coordinates from Lagrange coordinates for a bar (copied from pdm_t_dcube_nodal_gen.c) */
-static void
-_lagrange_to_bezier_bar
+void
+PDM_lagrange_to_bezier_bar
 (
  const int  order,
  double    *lag,
@@ -130,15 +126,15 @@ _lagrange_to_bezier_bar
 }
 
 /* Get Bezier coordinates from Lagrange coordinates for a triangle (copied from pdm_t_dcube_nodal_gen.c) */
-static void
-_lagrange_to_bezier_tria
+void
+PDM_lagrange_to_bezier_tria
 (
  const int  order,
  double    *lag,
  double    *bez
 )
 {
-   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
+  int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
 
   if (order == 1) {
     memcpy (bez, lag, sizeof(double) * n_nodes * 3);
@@ -222,8 +218,8 @@ _lagrange_to_bezier_tria
 }
 
 /* Get bezier bounding box (copied from pdm_t_dcube_nodal_gen.c) */
-static void
-_bezier_bounding_boxes
+void
+PDM_bezier_bounding_boxes
 (
  const PDM_Mesh_nodal_elt_t  t_elt,
  const int                   order,
@@ -246,11 +242,11 @@ _bezier_bounding_boxes
 
     if (t_elt == PDM_MESH_NODAL_BAR2 ||
         t_elt == PDM_MESH_NODAL_BARHO) {
-      _lagrange_to_bezier_bar (order, lagrange_coord, bezier_coord);
+      PDM_lagrange_to_bezier_bar (order, lagrange_coord, bezier_coord);
     }
     else if (t_elt == PDM_MESH_NODAL_TRIA3 ||
              t_elt == PDM_MESH_NODAL_TRIAHO) {
-      _lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
+      PDM_lagrange_to_bezier_tria (order, lagrange_coord, bezier_coord);
     }
     else {
       PDM_error(__FILE__, __LINE__, 0, "Only implemented for other elements in pdm_t_dcube_nodal_gen.c\n");
@@ -258,8 +254,8 @@ _bezier_bounding_boxes
 
     for (int k = 0; k < n_nodes; k++) {
       for (int j = 0; j < 3; j++) {
-        _min[j] = _MIN(_min[j], bezier_coord[3*k + j]);
-        _max[j] = _MAX(_max[j], bezier_coord[3*k + j]);
+        _min[j] = PDM_MIN(_min[j], bezier_coord[3*k + j]);
+        _max[j] = PDM_MAX(_max[j], bezier_coord[3*k + j]);
       }
     }
   }

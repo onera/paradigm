@@ -492,8 +492,7 @@ int main(int argc, char *argv[])
     }
 
     PDM_dmesh_nodal_reorder(dmn,
-                            "PDM_HO_ORDERING_VTK",
-                            order);
+                            "PDM_HO_ORDERING_VTK");
   }
 
   _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "sphere_vol_surface");

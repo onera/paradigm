@@ -2033,8 +2033,7 @@ int main(int argc, char *argv[])
 
       /* Reorder */
       PDM_dmesh_nodal_reorder (dmn,
-                               "PDM_HO_ORDERING_VTK",
-                               order);
+                               "PDM_HO_ORDERING_VTK");
     }
 
 

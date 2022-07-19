@@ -936,10 +936,12 @@ PDM_ho_ordering_user_to_ijk_add
   int elt_dim = 0;
   switch(t_elt) {
   case PDM_MESH_NODAL_BARHO:
+  case PDM_MESH_NODAL_BARHO_BEZIER:
     ijk_to_user = _compute_ijk_to_user_bar(order, user_to_ijk);
     elt_dim = 1;
     break;
   case PDM_MESH_NODAL_TRIAHO:
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
     ijk_to_user = _compute_ijk_to_user_tria(order, user_to_ijk);
     elt_dim = 2;
     break;

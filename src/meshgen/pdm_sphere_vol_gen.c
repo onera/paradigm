@@ -250,17 +250,21 @@ PDM_sphere_vol_gen_nodal
   for (int i_section = 0; i_section < n_section; i_section++) {
 
     int id_section = sections_id[i_section];
+    int _order;
+    const char *ho_ordering = NULL;
     const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
     int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_get    (_dmn, geom_kind, id_section);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_HO_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
     PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
     memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
 
-    int _id_section = PDM_DMesh_nodal_elmts_section_add((*dmn)->volumic,
-                                                        elt_type);
+    int _id_section = PDM_DMesh_nodal_elmts_section_HO_add((*dmn)->volumic,
+                                                           elt_type,
+                                                           order,
+                                                           ho_ordering);
     PDM_DMesh_nodal_elmts_section_std_set((*dmn)->volumic,
                                           _id_section,
                                           dn_elt,
@@ -281,17 +285,21 @@ PDM_sphere_vol_gen_nodal
   for (int i_section = 0; i_section < n_section; i_section++) {
 
     int id_section = sections_id[i_section];
+    int _order;
+    const char *ho_ordering = NULL;
     const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
     int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_get    (_dmn, geom_kind, id_section);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_HO_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
     PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
     memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
 
-    int _id_section = PDM_DMesh_nodal_elmts_section_add((*dmn)->surfacic,
-                                                        elt_type);
+    int _id_section = PDM_DMesh_nodal_elmts_section_HO_add((*dmn)->surfacic,
+                                                           elt_type,
+                                                           order,
+                                                           ho_ordering);
     PDM_DMesh_nodal_elmts_section_std_set((*dmn)->surfacic,
                                           _id_section,
                                           dn_elt,
