@@ -211,6 +211,9 @@ _dmesh_nodal_dump_vtk
     dmne = dmn->ridge;
   } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC && dmn->mesh_dimension == 3) {
     dmne = dmn->surfacic;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+    dmne = dmn->corner;
+    log_trace("Corners\n");
   }
 
   PDM_g_num_t *distrib_elt = NULL;

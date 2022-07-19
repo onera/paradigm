@@ -639,7 +639,6 @@ _generate_corners
                                 i*dcube->nx, j*dcube->ny, k*dcube->nz,
                                 0, 0, 0);
   }
-  free (distrib_corner);
 
   dmesh_nodal->corner->n_g_elmts = gn_corner;
 
@@ -650,6 +649,33 @@ _generate_corners
                                         dn_corner,
                                         delt_vtx,
                                         PDM_OWNERSHIP_KEEP);
+
+  int n_group = (int) gn_corner;
+  int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
+  dgroup_elt_idx[0] = 0;
+  for (int i = 0; i < n_group; i++) {
+    dgroup_elt_idx[i+1] = dgroup_elt_idx[i];
+    if (i >= distrib_corner[i_rank] && i < distrib_corner[i_rank+1]) {
+      dgroup_elt_idx[i+1]++;
+    }
+  }
+  assert(dgroup_elt_idx[n_group] == dn_corner);
+
+
+  PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
+    dgroup_elt[i] = distrib_corner[i_rank] + i + 1;
+  }
+  free (distrib_corner);
+
+  PDM_log_trace_array_int(dgroup_elt_idx, n_group+1, "dgroup_elt_idx : ");
+  PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->corner,
+                                  n_group,
+                                  dgroup_elt_idx,
+                                  dgroup_elt,
+                                  PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -2030,7 +2056,6 @@ PDM_dcube_nodal_gen_build
         dcube->t_elt == PDM_MESH_NODAL_PYRAMID5 ||
         dcube->t_elt == PDM_MESH_NODAL_PRISM6   ||
         dcube->t_elt == PDM_MESH_NODAL_HEXA8) {
-      log_trace(">> reorder std elts\n");
       PDM_dmesh_nodal_reorder (dcube->dmesh_nodal,
                                "PDM_HO_ORDERING_CGNS");
     }

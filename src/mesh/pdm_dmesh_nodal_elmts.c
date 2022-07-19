@@ -1166,12 +1166,6 @@ const char                    *ho_ordering
         _delt_node[i] = __delt_node[ijk_to_user[i]];
       }
 
-      if (ielt == 0) {
-        log_trace("Current HO ordering -> IJK\n");
-        PDM_log_trace_array_int(ijk_to_user,  elt_node_n, "ijk->user : ");
-        PDM_log_trace_array_long(__delt_node, elt_node_n, "current   : ");
-        PDM_log_trace_array_long(_delt_node,  elt_node_n, "ijk       : ");
-      }
     }
 
     assert(ijk_to_user != NULL);
@@ -1194,13 +1188,6 @@ const char                    *ho_ordering
     for (int i = 0; i < elt_node_n; i++) {
       _delt_node[ijk_to_user[i]] = __delt_node[i];
     }
-
-    if (ielt == 0) {
-        log_trace("IJK -> New HO ordering\n");
-        PDM_log_trace_array_int(ijk_to_user,   elt_node_n, "ijk->user : ");
-        PDM_log_trace_array_long(__delt_node,  elt_node_n, "ijk       : ");
-        PDM_log_trace_array_long(_delt_node,   elt_node_n, "current   : ");
-      }
 
   }
 
