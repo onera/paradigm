@@ -733,7 +733,7 @@ const int                  id_section
 }
 
 PDM_g_num_t *
-PDM_DMesh_nodal_section_std_HO_get
+PDM_DMesh_nodal_section_std_ho_get
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
       PDM_geometry_kind_t  geom_kind,
@@ -745,7 +745,7 @@ const char               **ho_ordering
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
 
-  PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_elmts_section_std_HO_get(dmne, id_section, order, ho_ordering);
+  PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne, id_section, order, ho_ordering);
 
   return delt_vtx;
 }
@@ -782,7 +782,7 @@ const int                      id_section
 
 
 PDM_g_num_t *
-PDM_DMesh_nodal_elmts_section_std_HO_get
+PDM_DMesh_nodal_elmts_section_std_ho_get
 (
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
@@ -1559,7 +1559,7 @@ PDM_dmesh_nodal_dump_vtk
     const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
     int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
     // PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
-    PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_HO_get (dmn, geom_kind, id_section, &order, &ho_ordering);
+    PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
     int         *dconnec_idx    = (int         * ) malloc( (n_elt+1) * sizeof(int        ));
@@ -1667,7 +1667,7 @@ PDM_dmesh_nodal_reorder
 
     for (int isection = 0; isection < n_section; isection++) {
 
-      PDM_DMesh_nodal_elmts_section_std_HO_reorder(dmne,
+      PDM_DMesh_nodal_elmts_section_std_ho_reorder(dmne,
                                                    sections_id[isection],
                                                    ordering_name);
     }

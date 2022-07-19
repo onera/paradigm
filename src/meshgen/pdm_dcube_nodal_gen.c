@@ -161,7 +161,7 @@ _generate_tria_surf
 
   dmesh_nodal->surfacic->n_g_elmts = 2*dcube->distrib_quad[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -209,7 +209,7 @@ _generate_quad_surf
 
   dmesh_nodal->surfacic->n_g_elmts = dcube->distrib_quad[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -339,7 +339,7 @@ _generate_tetra_vol
 
   dmesh_nodal->volumic->n_g_elmts = 5*dcube->distrib_hexa[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->volumic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -484,7 +484,7 @@ _generate_pyramid_vol
 
   dmesh_nodal->volumic->n_g_elmts = 3*dcube->distrib_hexa[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->volumic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -544,7 +544,7 @@ _generate_prism_vol
 
   dmesh_nodal->volumic->n_g_elmts = 2*dcube->distrib_hexa[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->volumic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -596,7 +596,7 @@ _generate_hexa_vol
 
   dmesh_nodal->volumic->n_g_elmts = dcube->distrib_hexa[n_rank];
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->volumic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -833,7 +833,7 @@ _generate_ridges
   dmesh_nodal->ridge->n_g_elmts = gn_ridge;
 
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->ridge,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->ridge,
                                                         t_ridge,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -1150,7 +1150,7 @@ _generate_tetra_surf
   }
 
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         t_tria,
                                                         dcube->order,
                                                         dcube->ordering);
@@ -1320,7 +1320,7 @@ _generate_pyramid_surf
     }
   }
 
-  int id_tria = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_tria = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_tria,
                                                      dcube->order,
                                                      dcube->ordering);
@@ -1365,7 +1365,7 @@ _generate_pyramid_surf
 
   }
 
-  int id_quad = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_quad = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_quad,
                                                      dcube->order,
                                                      dcube->ordering);
@@ -1557,7 +1557,7 @@ _generate_prism_surf
     }
   }
 
-  int id_tria = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_tria = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_tria,
                                                      dcube->order,
                                                      dcube->ordering);
@@ -1588,7 +1588,7 @@ _generate_prism_surf
 
   }
 
-  int id_quad = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_quad = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_quad,
                                                      dcube->order,
                                                      dcube->ordering);
@@ -1679,7 +1679,7 @@ _generate_hexa_surf
 
 
 
-  int id_section = PDM_DMesh_nodal_elmts_section_HO_add(dmesh_nodal->surfacic,
+  int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         t_quad,
                                                         dcube->order,
                                                         dcube->ordering);

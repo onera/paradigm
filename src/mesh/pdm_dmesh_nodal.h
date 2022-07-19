@@ -507,7 +507,7 @@ const int                  id_section
 );
 
 PDM_g_num_t *
-PDM_DMesh_nodal_section_std_HO_get
+PDM_DMesh_nodal_section_std_ho_get
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
       PDM_geometry_kind_t  geom_kind,

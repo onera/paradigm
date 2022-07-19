@@ -538,7 +538,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
 
 
 int
-PDM_DMesh_nodal_elmts_section_HO_add
+PDM_DMesh_nodal_elmts_section_ho_add
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
 const PDM_Mesh_nodal_elt_t     t_elt,
@@ -1106,7 +1106,7 @@ PDM_dmesh_nodal_elmts_generate_distribution
 
 
 void
-PDM_DMesh_nodal_elmts_section_std_HO_reorder
+PDM_DMesh_nodal_elmts_section_std_ho_reorder
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
 const int                      id_section,

@@ -61,7 +61,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
 
 
 int
-PDM_DMesh_nodal_elmts_section_HO_add
+PDM_DMesh_nodal_elmts_section_ho_add
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
 const PDM_Mesh_nodal_elt_t     t_elt,
@@ -132,7 +132,7 @@ const int                      id_section
 );
 
 PDM_g_num_t *
-PDM_DMesh_nodal_elmts_section_std_HO_get
+PDM_DMesh_nodal_elmts_section_std_ho_get
 (
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
@@ -261,7 +261,7 @@ int                     *n_sum_vtx_edge_tot
 
 
 void
-PDM_DMesh_nodal_elmts_section_std_HO_reorder
+PDM_DMesh_nodal_elmts_section_std_ho_reorder
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
 const int                      id_section,
