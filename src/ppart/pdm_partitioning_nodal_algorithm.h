@@ -49,7 +49,6 @@ PDM_reverse_dparent_gnum
 (
        PDM_g_num_t    *dparent_gnum,
        int            *dparent_sign,
-       PDM_g_num_t    *parent_distrib,
        PDM_g_num_t    *delmt_child_distrib,
        int             n_part,
        int            *pn_parent,

@@ -351,7 +351,6 @@ PDM_reverse_dparent_gnum
 (
        PDM_g_num_t    *dparent_gnum,
        int            *dparent_sign,
-       PDM_g_num_t    *parent_distrib,
        PDM_g_num_t    *delmt_child_distrib,
        int             n_part,
        int            *pn_parent,
@@ -363,6 +362,7 @@ PDM_reverse_dparent_gnum
  const PDM_MPI_Comm    comm
 )
 {
+  // PDM_UNUSED(parent_distrib); // TO remove if all test is OK
   // TODO : pchild_parent_gnum Keep or remove ?
 
   int i_rank;
@@ -413,9 +413,11 @@ PDM_reverse_dparent_gnum
     free(blk_dparent_sign_n);
   }
 
-  PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
-  PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_child_n, n_g_parent);
-  PDM_g_num_t* blk_dparent_gnum      = PDM_part_to_block_block_gnum_get(ptb);
+  // PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
+  // PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_child_n, n_g_parent);
+
+  int dn_parent                 = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t* blk_dparent_gnum = PDM_part_to_block_block_gnum_get(ptb);
 
   free(pblk_child_n   );
   free(pblk_child_gnum);
@@ -424,11 +426,19 @@ PDM_reverse_dparent_gnum
    * At this stage we have in each block of parent the global number of child
    * We need to resend into part
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(block_distrib_tmp_idx,
-                              (const PDM_g_num_t **)  pparent_gnum,
-                                                      pn_parent,
-                                                      n_part,
-                                                      comm);
+  // PDM_block_to_part_t* btp = PDM_block_to_part_create(block_distrib_tmp_idx,
+  //                             (const PDM_g_num_t **)  pparent_gnum,
+  //                                                     pn_parent,
+  //                                                     n_part,
+  //                                                     comm);
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(blk_dparent_gnum,
+                                                                        dn_parent,
+                                                (const PDM_g_num_t **)  pparent_gnum,
+                                                                        pn_parent,
+                                                                        n_part,
+                                                                        comm);
+
+
 
   int         **_pchild_n    = NULL;
   PDM_g_num_t **_pchild_gnum = NULL;
@@ -470,7 +480,7 @@ PDM_reverse_dparent_gnum
   PDM_part_to_block_free(ptb);
   free(blk_child_n);
   free(blk_child_gnum);
-  free(block_distrib_tmp_idx);
+  // free(block_distrib_tmp_idx);
 
   /*
    * At this stage we have for each partition the number AND the gnum of childs inside

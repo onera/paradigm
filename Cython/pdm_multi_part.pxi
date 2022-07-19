@@ -94,7 +94,8 @@ cdef extern from "pdm_multipart.h":
     # ------------------------------------------------------------------
     void PDM_multipart_get_part_mesh_nodal(PDM_multipart_t   *mtp,
                                            const int   i_zone,
-                                           PDM_part_mesh_nodal_t **pmesh_nodal)
+                                           PDM_part_mesh_nodal_t **pmesh_nodal,
+                                           PDM_ownership_t         ownership)
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_graph_comm_vtx_dim_get(PDM_multipart_t   *mtp,
@@ -684,7 +685,7 @@ cdef class MultiPart:
     # ------------------------------------------------------------------
     def multipart_part_mesh_nodal_get(self, int zone_gid):
         cdef PDM_part_mesh_nodal_t *pmesh_nodal
-        PDM_multipart_get_part_mesh_nodal(self._mtp, zone_gid, &pmesh_nodal)
+        PDM_multipart_get_part_mesh_nodal(self._mtp, zone_gid, &pmesh_nodal, PDM_OWNERSHIP_USER)
         if pmesh_nodal == NULL:
           return None
         else:

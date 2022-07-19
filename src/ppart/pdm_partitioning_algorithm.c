@@ -1985,7 +1985,6 @@ PDM_part_generate_entity_graph_comm
   free(part_stri);
   free(part_data);
   PDM_block_to_part_free(btp);
-  log_trace("PDM_part_generate_entity_graph_comm end \n");
 }
 
 /**

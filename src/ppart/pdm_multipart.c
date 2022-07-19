@@ -757,13 +757,105 @@ const int          *pn_vtx,
   }
 }
 
+static
+void
+_create_dparent_num_corner
+(
+  PDM_dmesh_nodal_elmts_t  *dmn_elts,
+  PDM_g_num_t             **dparent_gnum_corner,
+  PDM_g_num_t             **distrib_corner
+)
+{
+  // Just repart all section in one block
+  int n_rank = -1;
+  PDM_MPI_Comm_size (dmn_elts->comm, &n_rank);
+
+  int n_section = dmn_elts->n_section;
+
+  int          *dn_corner       = malloc(n_section * sizeof(int          ));
+  PDM_g_num_t **corner_ln_to_gn = malloc(n_section * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **corner_vtx      = malloc(n_section * sizeof(PDM_g_num_t *));
+  int         **corner_vtx_n    = malloc(n_section * sizeof(int         *));
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    int id_section = dmn_elts->sections_id[i_section];
+    const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
+
+    PDM_g_num_t beg_elmt_gnum = distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
+
+    assert(t_elt == PDM_MESH_NODAL_POINT);
+
+    int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
+    PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+
+    dn_corner[i_section] = n_elt;
+    corner_ln_to_gn[i_section] = malloc( n_elt * sizeof(PDM_g_num_t));
+    corner_vtx_n   [i_section] = malloc( n_elt * sizeof(int        ));
+    corner_vtx     [i_section] = connec;
+    for(int i = 0; i < n_elt; ++i) {
+      corner_vtx_n   [i_section][i] = 1;
+      corner_ln_to_gn[i_section][i] = beg_elmt_gnum + i + 1;
+    }
+
+    // PDM_log_trace_array_long(connec, n_elt, "corner_vtx ::");
+    // PDM_log_trace_array_long(corner_ln_to_gn[i_section], n_elt, "corner_ln_to_gn ::");
+
+  }
+
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      corner_ln_to_gn,
+                                                      NULL,
+                                                      dn_corner,
+                                                      n_section,
+                                                      dmn_elts->comm);
+
+
+  PDM_g_num_t* distrib_ptb = PDM_part_to_block_distrib_index_get(ptb);
+
+  PDM_g_num_t* _distrib_corner = malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_rank+1; ++i) {
+    _distrib_corner[i] = distrib_ptb[i];
+  }
+
+  int         *blk_child_n    = NULL;
+  PDM_g_num_t *blk_child_gnum = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         -1,
+                         corner_vtx_n,
+             (void **)   corner_vtx,
+                        &blk_child_n,
+             (void **)  &blk_child_gnum);
+
+  *dparent_gnum_corner = blk_child_gnum;
+  free(blk_child_n);
+
+  PDM_part_to_block_free(ptb);
+  for (int i_section = 0; i_section < n_section; i_section++) {
+    free(corner_ln_to_gn[i_section]);
+    free(corner_vtx_n[i_section]);
+  }
+  free(corner_ln_to_gn);
+  free(corner_vtx_n);
+  free(corner_vtx);
+  free(dn_corner);
+
+  *distrib_corner = _distrib_corner;
+}
+
 static PDM_part_mesh_nodal_t*
 _compute_part_mesh_nodal_3d
 (
- PDM_dmesh_t       *dmesh,
  PDM_dmesh_nodal_t *dmn,
  _part_mesh_t      *pm,
- int                n_part
+ int                n_part,
+ PDM_ownership_t    ownership
 )
 {
   int i_rank;
@@ -805,7 +897,6 @@ _compute_part_mesh_nodal_3d
   PDM_g_num_t **psurf_to_face_g_num = NULL;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
                            NULL, // dparent_sign
-                           dmesh->face_distrib,
                            dmn->surfacic->delmt_child_distrib,
                            n_part,
                            pn_face,
@@ -839,18 +930,110 @@ _compute_part_mesh_nodal_3d
   free(pn_surf);
   free(psurf_gnum);
   free(psurf_to_face_g_num);
+  free(pface_ln_to_gn);
+  free(pn_face);
+
+  PDM_part_mesh_nodal_elmts_t* pmn_ridge = NULL;
+
+  if(dmn->ridge != NULL) {
+
+    PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+    int           *pn_edge        = (int *  )         malloc( n_part * sizeof(int          ));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
+      pn_edge       [i_part] = pm->parts[i_part]->n_edge;
+    }
+    int          *pn_ridge             = NULL;
+    PDM_g_num_t **pridge_gnum          = NULL;
+    PDM_g_num_t **pridge_to_edge_g_num = NULL;
+    PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
+                             NULL, // dparent_sign
+                             dmn->ridge->delmt_child_distrib,
+                             n_part,
+                             pn_edge,
+                             pedge_ln_to_gn,
+                            &pn_ridge,
+                            &pridge_gnum,
+                            &pridge_to_edge_g_num,
+                             NULL, // pchild_parent_sign
+                             dmn->comm);
+
+
+    pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
+                                                               n_part,
+                                                               pn_vtx,
+                                                               pvtx_ln_to_gn,
+                                                               pn_ridge,
+                                                               pridge_gnum,
+                                                               pridge_to_edge_g_num);
+
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      free(pridge_gnum[i_part]);
+      free(pridge_to_edge_g_num[i_part]);
+    }
+    free(pn_ridge);
+    free(pridge_gnum);
+    free(pridge_to_edge_g_num);
+    free(pedge_ln_to_gn);
+    free(pn_edge);
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmn_corner = NULL;
+
+  if(dmn->corner != NULL) {
+
+    PDM_g_num_t *dparent_gnum_corner = NULL;
+    PDM_g_num_t *distrib_corner      = NULL;
+    _create_dparent_num_corner(dmn->corner, &dparent_gnum_corner, &distrib_corner);
+
+    int          *pn_corner             = NULL;
+    PDM_g_num_t **pcorner_gnum          = NULL;
+    PDM_g_num_t **pcorner_to_vtx_g_num  = NULL;
+    PDM_reverse_dparent_gnum(dparent_gnum_corner,
+                             NULL, // dparent_sign
+                             distrib_corner,
+                             n_part,
+                             pn_vtx,
+                             pvtx_ln_to_gn,
+                            &pn_corner,
+                            &pcorner_gnum,
+                            &pcorner_to_vtx_g_num,
+                             NULL, // pchild_parent_sign
+                             dmn->comm);
+
+
+    pmn_corner = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->corner,
+                                                                n_part,
+                                                                pn_vtx,
+                                                                pvtx_ln_to_gn,
+                                                                pn_corner,
+                                                                pcorner_gnum,
+                                                                pcorner_to_vtx_g_num);
+    free(dparent_gnum_corner);
+    free(distrib_corner);
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      free(pcorner_gnum[i_part]);
+      free(pcorner_to_vtx_g_num[i_part]);
+    }
+    free(pn_corner);
+    free(pcorner_gnum);
+    free(pcorner_to_vtx_g_num);
+  }
 
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , PDM_OWNERSHIP_USER);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, PDM_OWNERSHIP_USER);
-  // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , ownership);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, ownership);
+  if(pmn_ridge != NULL) {
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+  }
+  if(pmn_corner != NULL) {
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_corner, ownership);
+  }
 
-  free(pface_ln_to_gn);
-  free(pn_face);
   free(pcell_ln_to_gn);
   free(pn_cell);
   free(pvtx_ln_to_gn);
@@ -935,10 +1118,10 @@ _compute_part_mesh_nodal_3d
 static PDM_part_mesh_nodal_t*
 _compute_part_mesh_nodal_2d
 (
- PDM_dmesh_t       *dmesh,
  PDM_dmesh_nodal_t *dmn,
  _part_mesh_t      *pm,
- int                n_part
+ int                n_part,
+ PDM_ownership_t    ownership
 )
 {
   int i_rank;
@@ -981,7 +1164,6 @@ _compute_part_mesh_nodal_2d
   PDM_g_num_t **psurf_to_face_g_num;
   PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
                            NULL, // dparent_sign
-                           dmesh->edge_distrib,
                            dmn->surfacic->delmt_child_distrib,
                            n_part,
                            pn_edge,
@@ -1012,8 +1194,8 @@ _compute_part_mesh_nodal_2d
                                                           n_part,
                                                           dmn->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_USER);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , ownership);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
 
   free(pedge_ln_to_gn);
   free(pn_edge);
@@ -3138,7 +3320,8 @@ PDM_multipart_get_part_mesh_nodal
 (
 PDM_multipart_t        *multipart,
 const int               i_zone,
-PDM_part_mesh_nodal_t **pmesh_nodal
+PDM_part_mesh_nodal_t **pmesh_nodal,
+PDM_ownership_t         ownership
 )
 {
   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
@@ -3146,7 +3329,6 @@ PDM_part_mesh_nodal_t **pmesh_nodal
 
 
   _part_mesh_t      *pmesh       = &(_multipart->pmeshes    [i_zone]);
-  PDM_dmesh_t       *dmesh       = _multipart->dmeshes      [i_zone];
   PDM_dmesh_nodal_t *dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
   if (dmesh_nodal == NULL) {
     *pmesh_nodal = NULL;
@@ -3154,9 +3336,9 @@ PDM_part_mesh_nodal_t **pmesh_nodal
   else {
     int n_part = _multipart->n_part[i_zone];
     if(dmesh_nodal->mesh_dimension == 3){
-      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh, dmesh_nodal, pmesh, n_part);
+      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part, ownership);
     } else if(dmesh_nodal->mesh_dimension == 2){
-      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh, dmesh_nodal, pmesh, n_part);
+      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh_nodal, pmesh, n_part, ownership);
     } else {
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
     }
