@@ -233,7 +233,7 @@ _bezier_bounding_boxes
  double                    **extents
 )
 {
-  double *bezier_coord   = malloc (sizeof(double) * n_nodes * 3);
+  double *bezier_coord = malloc (sizeof(double) * n_nodes * 3);
 
   for (int i = 0; i < n_elt; i++) {
     double *_min = (*extents) + 6*i;
@@ -263,6 +263,8 @@ _bezier_bounding_boxes
       }
     }
   }
+
+  free(bezier_coord);
 }
 
 #ifdef __cplusplus
