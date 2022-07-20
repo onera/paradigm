@@ -1493,6 +1493,30 @@ void PDM_multipart_set_reordering_options
     _multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
   }
 }
+void PDM_multipart_set_reordering_options_vtx
+(
+ PDM_multipart_t *multipart,
+ const int        i_zone,
+ const char      *renum_vtx_method
+)
+{
+  _pdm_multipart_t *_multipart = (_pdm_multipart_t *) multipart;
+
+  int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
+  if (_renum_vtx_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering vtx method\n", renum_vtx_method);
+  }
+
+  if(i_zone < 0) {
+    for (int izone = 0; izone < _multipart->n_zone; izone++) {
+      _multipart->pmeshes[izone].renum_vtx_method = _renum_vtx_method;
+    }
+  }
+  else {
+    assert(i_zone < _multipart->n_zone);
+    _multipart->pmeshes[i_zone].renum_vtx_method = _renum_vtx_method;
+  }
+}
 
 
 static
@@ -1839,7 +1863,6 @@ PDM_MPI_Comm       comm
   for (int ipart = 0; ipart < n_part; ipart++) {
     pmeshes->parts[ipart]->vtx_ghost_information = pinternal_vtx_priority[ipart];
   }
-  free(pinternal_vtx_priority);
 
   /*
    * Real re-numebering
@@ -1847,7 +1870,8 @@ PDM_MPI_Comm       comm
   PDM_part_renum_cell(pmeshes->parts, n_part, pmeshes->renum_cell_method, (void *) pmeshes->renum_cell_properties);
   PDM_part_renum_face(pmeshes->parts, n_part, pmeshes->renum_face_method, NULL);
   PDM_part_renum_edge(pmeshes->parts, n_part, pmeshes->renum_edge_method, NULL);
-  PDM_part_renum_vtx (pmeshes->parts, n_part, pmeshes->renum_vtx_method , NULL);
+  PDM_part_renum_vtx (pmeshes->parts, n_part, pmeshes->renum_vtx_method , (void *) pinternal_vtx_priority);
+  free(pinternal_vtx_priority);
 
   /*
    *  All data has been reorder, we can now and only now setup desired comm graph

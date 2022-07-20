@@ -169,6 +169,12 @@ void PDM_multipart_set_reordering_options
  const int       *renum_cell_properties,
  const char      *renum_face_method
 );
+void PDM_multipart_set_reordering_options_vtx
+(
+ PDM_multipart_t *multipart,
+ const int        i_zone,
+ const char      *renum_vtx_method
+);
 
 
 /**
