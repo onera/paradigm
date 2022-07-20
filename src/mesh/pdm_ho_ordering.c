@@ -677,9 +677,61 @@ void
                                        n_nodes,
                                        _bar_o3_def_to_ijk[idef]);
 
+      t_elt = PDM_MESH_NODAL_BARHO_BEZIER;
+
+      order = 1;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _bar_o1_def_to_ijk[idef]);
+
+      order = 2;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _bar_o2_def_to_ijk[idef]);
+
+      order = 3;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _bar_o3_def_to_ijk[idef]);
+
 
 
       t_elt = PDM_MESH_NODAL_TRIAHO;
+
+      order = 1;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _tria_o1_def_to_ijk[idef]);
+
+      order = 2;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _tria_o2_def_to_ijk[idef]);
+
+      order = 3;
+      n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      PDM_ho_ordering_user_to_ijk_add (default_orderings_names[idef],
+                                       t_elt,
+                                       order,
+                                       n_nodes,
+                                       _tria_o3_def_to_ijk[idef]);
+
+      t_elt = PDM_MESH_NODAL_TRIAHO_BEZIER;
 
       order = 1;
       n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);

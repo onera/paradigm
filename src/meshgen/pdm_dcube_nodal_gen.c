@@ -650,6 +650,7 @@ _generate_corners
                                         delt_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
+  // TODO: single group
   int n_group = (int) gn_corner;
   int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
   dgroup_elt_idx[0] = 0;
@@ -668,8 +669,8 @@ _generate_corners
   }
   free (distrib_corner);
 
-  PDM_log_trace_array_int(dgroup_elt_idx, n_group+1, "dgroup_elt_idx : ");
-  PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
+  // PDM_log_trace_array_int(dgroup_elt_idx, n_group+1, "dgroup_elt_idx : ");
+  // PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
 
   PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->corner,
                                   n_group,

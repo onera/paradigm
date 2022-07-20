@@ -59,9 +59,9 @@ typedef enum {
   PDM_MESH_NODAL_PYRAMIDHO,
   PDM_MESH_NODAL_PRISMHO,
   PDM_MESH_NODAL_HEXAHO,
-  PDM_MESH_NODAL_N_ELEMENT_TYPES,
   PDM_MESH_NODAL_BARHO_BEZIER, // temporary add to visualize Bezier curves
-  PDM_MESH_NODAL_TRIAHO_BEZIER // temporary add to visualize Bezier triangles
+  PDM_MESH_NODAL_TRIAHO_BEZIER, // temporary add to visualize Bezier triangles
+  PDM_MESH_NODAL_N_ELEMENT_TYPES
 } PDM_Mesh_nodal_elt_t;
 
 
