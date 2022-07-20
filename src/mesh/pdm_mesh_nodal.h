@@ -1159,6 +1159,16 @@ PDM_Mesh_nodal_extract_selection
  );
 
 
+
+void
+PDM_Mesh_nodal_ho_parent_node
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering,
+       int                  *parent_node
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

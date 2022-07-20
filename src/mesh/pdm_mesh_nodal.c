@@ -22,6 +22,7 @@
 #include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
 #include "pdm_array.h"
+#include "pdm_ho_ordering.h"
 
 #include "pdm_writer.h"
 
@@ -5773,6 +5774,188 @@ g
 #endif
   return child_mesh;
 }
+
+
+
+
+
+
+
+
+
+static inline int
+ij2idx_tria
+(
+ const int i,
+ const int j,
+ const int order
+ )
+{
+    return i + j*(order+1) - (j-1)*j/2;
+}
+
+static inline int
+ij2idx_quad
+(
+ const int i,
+ const int j,
+ const int order
+ )
+{
+    return i + j*(order+1);
+}
+
+static inline int
+ijk2idx_tetra
+(
+ const int i,
+ const int j,
+ const int k,
+ const int order
+ )
+{
+    return i + j*(order + 1 - k) - j*(j-1)/2 + (k*(k*(k - 3*order - 6) + 3*order*(order + 4) + 11)) / 6;
+}
+
+static inline int
+ijk2idx_pyramid
+(
+ const int i,
+ const int j,
+ const int k,
+ const int order
+ )
+{
+    return i + j*(order+1-k) + (k*(k*(2*k - 6*order - 9) + 6*order*(order + 3) + 13)) / 6;
+}
+
+static inline int
+ijk2idx_prism
+(
+ const int i,
+ const int j,
+ const int k,
+ const int order
+ )
+{
+    return i + j*(order+1) - j*(j-1)/2 + k*(order+1)*(order+2)/2;
+}
+
+static inline int
+ijk2idx_hexa
+(
+ const int i,
+ const int j,
+ const int k,
+ const int order
+ )
+{
+    return i + (order+1)*(j + (order+1)*k);
+}
+
+static void
+_principal_to_ijk
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ int                        *principal
+ )
+{
+    if (t_elt == PDM_MESH_NODAL_BARHO) {
+        principal[0] = 0;
+        principal[1] = order;
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_TRIAHO) {
+        principal[0] = ij2idx_tria(0,     0,     order);
+        principal[1] = ij2idx_tria(order, 0,     order);
+        principal[2] = ij2idx_tria(0,     order, order);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_QUADHO) {
+        principal[0] = ij2idx_quad(0,     0,     order);
+        principal[1] = ij2idx_quad(order, 0,     order);
+        principal[2] = ij2idx_quad(order, order, order);
+        principal[3] = ij2idx_quad(0,     order, order);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_TETRAHO) {
+        principal[0] = ijk2idx_tetra(0,     0,     0,     order);
+        principal[1] = ijk2idx_tetra(order, 0,     0,     order);
+        principal[2] = ijk2idx_tetra(0,     order, 0,     order);
+        principal[3] = ijk2idx_tetra(0,     0,     order, order);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_PYRAMIDHO) {
+        principal[0] = ijk2idx_pyramid(0,     0,     0,     order);
+        principal[1] = ijk2idx_pyramid(order, 0,     0,     order);
+        principal[2] = ijk2idx_pyramid(order, order, 0,     order);
+        principal[3] = ijk2idx_pyramid(0,     order, 0,     order);
+        principal[4] = ijk2idx_pyramid(0,     0,     order, order);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_PRISMHO) {
+        principal[0] = ijk2idx_prism(0,     0,     0,     order);
+        principal[1] = ijk2idx_prism(order, 0,     0,     order);
+        principal[2] = ijk2idx_prism(0,     order, 0,     order);
+        principal[3] = ijk2idx_prism(0,     0,     order, order);
+        principal[4] = ijk2idx_prism(order, 0,     order, order);
+        principal[5] = ijk2idx_prism(0,     order, order, order);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_HEXAHO) {
+        principal[0] = ijk2idx_hexa(0,     0,     0,     order);
+        principal[1] = ijk2idx_hexa(order, 0,     0,     order);
+        principal[2] = ijk2idx_hexa(order, order, 0,     order);
+        principal[3] = ijk2idx_hexa(0,     order, 0,     order);
+        principal[4] = ijk2idx_hexa(0,     0,     order, order);
+        principal[5] = ijk2idx_hexa(order, 0,     order, order);
+        principal[6] = ijk2idx_hexa(order, order, order, order);
+        principal[7] = ijk2idx_hexa(0,     order, order, order);
+    }
+
+    else {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid element type %d\n", (int) t_elt);
+    }
+}
+
+void
+PDM_Mesh_nodal_ho_parent_node
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering,
+       int                  *parent_node
+ )
+{
+  int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
+  int principal_to_ijk[8];
+  _principal_to_ijk(t_elt,
+                    order,
+                    principal_to_ijk);
+
+  if (ho_ordering == NULL) {
+    for (int i = 0; i < elt_vtx_n; i++) {
+      parent_node[i] = principal_to_ijk[i];
+    }
+  }
+  else {
+    int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
+                                                       t_elt,
+                                                       order);
+    assert(ijk_to_user != NULL);
+
+    for (int i = 0; i < elt_vtx_n; i++) {
+      parent_node[i] = ijk_to_user[principal_to_ijk[i]];
+    }
+  }
+
+}
+
+
+
+
 
 
 
