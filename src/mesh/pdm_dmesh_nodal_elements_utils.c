@@ -454,6 +454,8 @@ void
 PDM_std_decomposes_faces
 (
        PDM_Mesh_nodal_elt_t  t_elt,
+       int                   order,
+       int                  *parent_node,
        int                   n_elt,
        int                  *n_elt_current,
        int                  *n_dface_current,
@@ -477,21 +479,27 @@ PDM_std_decomposes_faces
      abort();
      break;
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      PDM_tri_decomposes_faces(n_elt,
-                               n_elt_current,
-                               n_dface_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_face_current,
-                               connectivity_elmt_vtx,
-                               elmt_face_vtx_idx,
-                               elmt_face_vtx,
-                               elmt_face_cell,
-                               elmt_cell_face_idx,
-                               elmt_cell_face,
-                               parent_elmt_position);
+                              order,
+                              parent_node,
+                              n_elt_current,
+                              n_dface_current,
+                              beg_gnum_elt_current,
+                              beg_gnum_face_current,
+                              connectivity_elmt_vtx,
+                              elmt_face_vtx_idx,
+                              elmt_face_vtx,
+                              elmt_face_cell,
+                              elmt_cell_face_idx,
+                              elmt_cell_face,
+                              parent_elmt_position);
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      PDM_quad_decomposes_faces(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dface_current,
                                beg_gnum_elt_current,
@@ -505,7 +513,10 @@ PDM_std_decomposes_faces
                                parent_elmt_position);
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      PDM_tetra_decomposes_faces(n_elt,
+                                order,
+                                parent_node,
                                 n_elt_current,
                                 n_dface_current,
                                 beg_gnum_elt_current,
@@ -519,7 +530,10 @@ PDM_std_decomposes_faces
                                 parent_elmt_position);
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      PDM_pyra_decomposes_faces(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dface_current,
                                beg_gnum_elt_current,
@@ -533,7 +547,10 @@ PDM_std_decomposes_faces
                                parent_elmt_position);
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      PDM_prism_decomposes_faces(n_elt,
+                                order,
+                                parent_node,
                                 n_elt_current,
                                 n_dface_current,
                                 beg_gnum_elt_current,
@@ -547,7 +564,10 @@ PDM_std_decomposes_faces
                                 parent_elmt_position);
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      PDM_hexa_decomposes_faces(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dface_current,
                                beg_gnum_elt_current,
@@ -573,6 +593,8 @@ void
 PDM_std_decomposes_edges
 (
        PDM_Mesh_nodal_elt_t  t_elt,
+       int                   order,
+       int                  *parent_node,
        int                   n_elt,
        int                  *n_elt_current,
        int                  *n_dedge_current,
@@ -593,7 +615,10 @@ PDM_std_decomposes_edges
      abort();
      break;
    case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
      PDM_bar_decomposes_edges(n_elt,
+                              order,
+                              parent_node,
                               n_elt_current,
                               n_dedge_current,
                               beg_gnum_elt_current,
@@ -607,21 +632,27 @@ PDM_std_decomposes_edges
                               parent_elmt_position);
      break;
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      PDM_tri_decomposes_edges(n_elt,
-                               n_elt_current,
-                               n_dedge_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_edge_current,
-                               connectivity_elmt_vtx,
-                               elmt_edge_vtx_idx,
-                               elmt_edge_vtx,
-                               elmt_edge_cell,
-                               elmt_cell_edge_idx,
-                               elmt_cell_edge,
-                               parent_elmt_position);
+                              order,
+                              parent_node,
+                              n_elt_current,
+                              n_dedge_current,
+                              beg_gnum_elt_current,
+                              beg_gnum_edge_current,
+                              connectivity_elmt_vtx,
+                              elmt_edge_vtx_idx,
+                              elmt_edge_vtx,
+                              elmt_edge_cell,
+                              elmt_cell_edge_idx,
+                              elmt_cell_edge,
+                              parent_elmt_position);
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      PDM_quad_decomposes_edges(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dedge_current,
                                beg_gnum_elt_current,
@@ -635,7 +666,10 @@ PDM_std_decomposes_edges
                                parent_elmt_position);
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      PDM_tetra_decomposes_edges(n_elt,
+                                order,
+                                parent_node,
                                 n_elt_current,
                                 n_dedge_current,
                                 beg_gnum_elt_current,
@@ -649,7 +683,10 @@ PDM_std_decomposes_edges
                                 parent_elmt_position);
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      PDM_pyra_decomposes_edges(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dedge_current,
                                beg_gnum_elt_current,
@@ -663,7 +700,10 @@ PDM_std_decomposes_edges
                                parent_elmt_position);
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      PDM_prism_decomposes_edges(n_elt,
+                                order,
+                                parent_node,
                                 n_elt_current,
                                 n_dedge_current,
                                 beg_gnum_elt_current,
@@ -677,7 +717,10 @@ PDM_std_decomposes_edges
                                 parent_elmt_position);
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      PDM_hexa_decomposes_edges(n_elt,
+                               order,
+                               parent_node,
                                n_elt_current,
                                n_dedge_current,
                                beg_gnum_elt_current,
@@ -706,6 +749,8 @@ void
 PDM_bar_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -725,7 +770,10 @@ PDM_bar_decomposes_edges
 
   const int n_edge_elt        = 1;
   const int n_sum_vtx_edge    = 2;
-  const int n_sum_vtx_elt     = 2;
+  int n_sum_vtx_elt           = 2;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -762,6 +810,8 @@ void
 PDM_tri_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -781,7 +831,11 @@ PDM_tri_decomposes_edges
 
   const int n_edge_elt        = 3;
   const int n_sum_vtx_edge    = 6;
-  const int n_sum_vtx_elt     = 3;
+  int n_sum_vtx_elt           = 3;
+
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -824,6 +878,8 @@ void
 PDM_quad_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -843,7 +899,10 @@ PDM_quad_decomposes_edges
 
   const int n_edge_elt        = 4;
   const int n_sum_vtx_edge    = 8;
-  const int n_sum_vtx_elt     = 4;
+  int n_sum_vtx_elt           = 4;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -888,6 +947,8 @@ void
 PDM_tri_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -907,7 +968,10 @@ PDM_tri_decomposes_faces
 
   const int n_face_elt        = 1;
   const int n_sum_vtx_face    = 3;
-  const int n_sum_vtx_elt     = 3;
+  int n_sum_vtx_elt           = 3;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
+  }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -944,6 +1008,8 @@ void
 PDM_quad_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -963,7 +1029,10 @@ PDM_quad_decomposes_faces
 
   const int n_face_elt        = 1;
   const int n_sum_vtx_face    = 4;
-  const int n_sum_vtx_elt     = 4;
+  int n_sum_vtx_elt           = 4;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
+  }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -1187,6 +1256,8 @@ void
 PDM_tetra_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1207,7 +1278,18 @@ PDM_tetra_decomposes_faces
 
   const int n_face_elt        = 4;
   const int n_sum_vtx_face    = 12;
-  const int n_sum_vtx_elt     = 4;
+  int n_sum_vtx_elt           = 4;
+
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRAHO, order);
+  }
+
+
+  // if(parent_node == NULL) {
+  //   _parent_node = {0, 1, 2, 3};
+  // } else {
+  //   _parent_node = parent_node;
+  // }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -1257,6 +1339,8 @@ void
 PDM_tetra_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1277,7 +1361,10 @@ PDM_tetra_decomposes_edges
 
   const int n_edge_elt        = 6;
   const int n_sum_vtx_edge    = 12;
-  const int n_sum_vtx_elt     = 4;
+  int n_sum_vtx_elt     = 4;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRAHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -1335,6 +1422,8 @@ void
 PDM_pyra_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1353,9 +1442,12 @@ PDM_pyra_decomposes_faces
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_face_current);
 
-  const int n_face_elt        = 5;
-  const int n_sum_vtx_face    = 1*4 + 4*3;
-  const int n_sum_vtx_elt     = 5;
+  const int n_face_elt     = 5;
+  const int n_sum_vtx_face = 1*4 + 4*3;
+  int n_sum_vtx_elt        = 5;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMIDHO, order);
+  }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -1416,6 +1508,8 @@ void
 PDM_pyra_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1434,9 +1528,12 @@ PDM_pyra_decomposes_edges
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_edge_current);
 
-  const int n_edge_elt        = 8;
-  const int n_sum_vtx_edge    = 16;
-  const int n_sum_vtx_elt     = 5;
+  const int n_edge_elt     = 8;
+  const int n_sum_vtx_edge = 16;
+  int n_sum_vtx_elt        = 5;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMIDHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -1502,6 +1599,8 @@ void
 PDM_prism_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1520,9 +1619,12 @@ PDM_prism_decomposes_faces
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_face_current);
 
-  const int n_face_elt        = 5;
-  const int n_sum_vtx_face    = 3*4 + 2*3;
-  const int n_sum_vtx_elt     = 6;
+  const int n_face_elt     = 5;
+  const int n_sum_vtx_face = 3*4 + 2*3;
+  int n_sum_vtx_elt        = 6;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PRISMHO, order);
+  }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -1593,6 +1695,8 @@ void
 PDM_prism_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1611,9 +1715,12 @@ PDM_prism_decomposes_edges
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_edge_current);
 
-  const int n_edge_elt        = 9;
-  const int n_sum_vtx_edge    = 18;
-  const int n_sum_vtx_elt     = 6;
+  const int n_edge_elt     = 9;
+  const int n_sum_vtx_edge = 18;
+  int n_sum_vtx_elt        = 6;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PRISMHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -1683,6 +1790,8 @@ void
 PDM_hexa_decomposes_faces
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_face_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1701,9 +1810,12 @@ PDM_hexa_decomposes_faces
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_face_current);
 
-  const int n_face_elt        = 6;
-  const int n_sum_vtx_face    = 24;
-  const int n_sum_vtx_elt     = 8;
+  const int n_face_elt     = 6;
+  const int n_sum_vtx_face = 24;
+  int n_sum_vtx_elt        = 8;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
+  }
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
@@ -1772,6 +1884,8 @@ void
 PDM_hexa_decomposes_edges
 (
        int          n_elt,
+       int          order,
+       int         *parent_node,
        int         *n_elt_current,
        int         *n_edge_current,
        PDM_g_num_t  beg_gnum_elt_current,
@@ -1790,9 +1904,12 @@ PDM_hexa_decomposes_edges
   PDM_UNUSED(beg_gnum_elt_current);
   PDM_UNUSED(beg_gnum_edge_current);
 
-  const int n_edge_elt        = 12;
-  const int n_sum_vtx_edge    = 24; // 2 vtx * 12 edge
-  const int n_sum_vtx_elt     = 8;
+  const int n_edge_elt     = 12;
+  const int n_sum_vtx_edge = 24; // 2 vtx * 12 edge
+  int n_sum_vtx_elt        = 8;
+  if(order > 1) {
+    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
+  }
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -1930,7 +2047,22 @@ PDM_sections_decompose_faces
       {
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+        // PDM_std_decomposes_faces(t_elt,
+        //                          n_elt,
+        //                          &n_elt_current,
+        //                          &n_dface_current,
+        //                          beg_elmt_gnum,
+        //                          beg_face_gnum,
+        //                          connec,
+        //                          elmt_face_vtx_idx,
+        //                          elmt_face_vtx,
+        //                          elmt_face_cell,
+        //                          elmt_cell_face_idx,
+        //                          elmt_cell_face,
+        //                          parent_elmt_position);
         PDM_std_decomposes_faces(t_elt,
+                                 1,
+                                 NULL,
                                  n_elt,
                                  &n_elt_current,
                                  &n_dface_current,
@@ -1943,21 +2075,6 @@ PDM_sections_decompose_faces
                                  elmt_cell_face_idx,
                                  elmt_cell_face,
                                  parent_elmt_position);
-        // PDM_std_decomposes_faces(t_elt,
-        //                          n_elt,
-        //                          1,
-        //                          NULL,
-        //                          &n_elt_current,
-        //                          &n_dface_current,
-        //                          beg_elmt_gnum,
-        //                          beg_face_gnum,
-        //                          connec,
-        //                          elmt_face_vtx_idx,
-        //                          elmt_face_vtx,
-        //                          elmt_face_cell,
-        //                          elmt_cell_face_idx,
-        //                          elmt_cell_face,
-        //                          parent_elmt_position);
         break;
       }
       case PDM_MESH_NODAL_BARHO:
@@ -1969,27 +2086,27 @@ PDM_sections_decompose_faces
       case PDM_MESH_NODAL_HEXAHO:
       {
         abort();
-        // int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
-        // PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
+        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
-        // int order      = dmn_elts->sections_std[i_section]->order;
+        int order      = dmn_elts->sections_std[i_section]->order;
         // const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
-
-        // PDM_std_decomposes_faces_ho(t_elt,
-        //                             order,
-        //                             parent_node,
-        //                             n_elt,
-        //                             &n_elt_current,
-        //                             &n_dface_current,
-        //                             beg_elmt_gnum,
-        //                             beg_face_gnum,
-        //                             connec,
-        //                             elmt_face_vtx_idx,
-        //                             elmt_face_vtx,
-        //                             elmt_face_cell,
-        //                             elmt_cell_face_idx,
-        //                             elmt_cell_face,
-        //                             parent_elmt_position);
+        int *parent_node = NULL;
+        PDM_std_decomposes_faces(t_elt,
+                                 order,
+                                 parent_node,
+                                 n_elt,
+                                 &n_elt_current,
+                                 &n_dface_current,
+                                 beg_elmt_gnum,
+                                 beg_face_gnum,
+                                 connec,
+                                 elmt_face_vtx_idx,
+                                 elmt_face_vtx,
+                                 elmt_face_cell,
+                                 elmt_cell_face_idx,
+                                 elmt_cell_face,
+                                 parent_elmt_position);
         break;
       }
       case PDM_MESH_NODAL_POLY_2D:
@@ -2081,6 +2198,41 @@ PDM_sections_decompose_edges
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
         PDM_std_decomposes_edges(t_elt,
+                                 1,
+                                 NULL,
+                                 n_elt,
+                                 &n_elt_current,
+                                 &n_dedge_current,
+                                 beg_elmt_gnum,
+                                 beg_edge_gnum,
+                                 connec,
+                                 elmt_edge_vtx_idx,
+                                 elmt_edge_vtx,
+                                 elmt_edge_cell,
+                                 elmt_cell_edge_idx,
+                                 elmt_cell_edge,
+                                 parent_elmt_position);
+        break;
+      }
+
+      case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_QUADHO:
+      case PDM_MESH_NODAL_TETRAHO:
+      case PDM_MESH_NODAL_PYRAMIDHO:
+      case PDM_MESH_NODAL_PRISMHO:
+      case PDM_MESH_NODAL_HEXAHO:
+      {
+        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
+        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+
+        int order      = dmn_elts->sections_std[i_section]->order;
+        // const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
+        int *parent_node = NULL;
+
+        PDM_std_decomposes_edges(t_elt,
+                                 order,
+                                 parent_node,
                                  n_elt,
                                  &n_elt_current,
                                  &n_dedge_current,
