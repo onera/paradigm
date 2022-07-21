@@ -6316,6 +6316,10 @@ PDM_dbbtree_volumes_intersect_boxes
   free (part_volume_g_num);
 
   free (part_n_volumes);
+  for (int i = 0; i < n_part; i++) {
+    free(n_part_volume_box_idx[i]);
+    free(n_part_volume_box_l_num[i]);
+  }
   free(n_part_volume_box_idx);
   free(n_part_volume_box_l_num);
 

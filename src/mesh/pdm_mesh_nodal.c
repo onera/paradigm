@@ -5955,8 +5955,108 @@ PDM_Mesh_nodal_ho_parent_node
 
 
 
+void
+PDM_Mesh_nodal_reorder_elt_vtx
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering_in,
+ const char                 *ho_ordering_out,
+ const int                   n_elt,
+       int                  *elt_vtx_in,
+       int                  *elt_vtx_out
+ )
+{
+  int stride = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+                                           order);
+
+  int *ijk_to_in = NULL;
+  if (ho_ordering_in != NULL) {
+    ijk_to_in = PDM_ho_ordering_ijk_to_user_get(ho_ordering_in,
+                                                t_elt,
+                                                order);
+    assert(ijk_to_in != NULL);
+  }
+
+  int *ijk_to_out = NULL;
+  if (ho_ordering_out != NULL) {
+    ijk_to_out = PDM_ho_ordering_ijk_to_user_get(ho_ordering_out,
+                                                 t_elt,
+                                                 order);
+    assert(ijk_to_out != NULL);
+  }
 
 
+  int *tmp = malloc(sizeof(int) * stride);
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    int *ev_in  = elt_vtx_in  + stride*ielt;
+    int *ev_out = elt_vtx_out + stride*ielt;
+    memcpy(tmp, ev_in, sizeof(int) * stride);
+
+    /* In --> IJK */
+    if (ijk_to_in != NULL) {
+      for (int i = 0; i < stride; i++) {
+        tmp[i] = ev_in[ijk_to_in[i]];
+      }
+    }
+
+    /* IJK --> Out */
+    if (ijk_to_out != NULL) {
+      for (int i = 0; i < stride; i++) {
+        ev_out[ijk_to_out[i]] = tmp[i];
+      }
+    }
+
+  }
+
+  // int *ijk_to_user = NULL;
+
+  // /* In --> IJK */
+  // if (ho_ordering_in != NULL){
+  //   ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering_in,
+  //                                                 t_elt,
+  //                                                 order);
+  //   assert(ijk_to_user != NULL);
+
+  //   for (int ielt = 0; ielt < n_elt; ielt++) {
+
+  //     int *ev_in  = elt_vtx_in  + ielt*stride;
+  //     int *ev_out = elt_vtx_out + ielt*stride;
+
+  //     for (int i = 0; i < stride; i++) {
+  //       ev_out[i] = ev_in[ijk_to_user[i]];
+  //     }
+
+  //   }
+  // }
+
+  // else {
+  //   if (elt_vtx_in != elt_vtx_out) {
+  //     memcpy(elt_vtx_out, elt_vtx_in, sizeof(int) * n_elt * stride);
+  //   }
+  // }
+
+
+  // /* IJK --> Out */
+  // int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering_out,
+  //                                                    t_elt,
+  //                                                    elt_order);
+  // assert(ijk_to_user != NULL;)
+
+  // int *tmp = malloc(sizeof(int) * stride);
+
+  // for (int ielt = 0; ielt < n_elt; ielt++) {
+  //   int *ev = elt_vtx_out + stride*i;
+  //   memcpy(tmv, ev, sizeof(int) * stride);
+
+  //   for (int i = 0; i < stride; i++) {
+  //     ev[ijk_to_user[i]] = tmp[i];
+  //   }
+  // }
+
+  free(tmp);
+}
 
 
 #ifdef __cplusplus

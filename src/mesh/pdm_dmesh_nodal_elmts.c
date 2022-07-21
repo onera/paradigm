@@ -1156,6 +1156,7 @@ const char                    *ho_ordering
     ijk_to_user = PDM_ho_ordering_ijk_to_user_get(section->ho_ordering,
                                                   t_elt,
                                                   section->order);
+    assert(ijk_to_user != NULL);
 
     for (int ielt = 0; ielt < section->n_elt; ielt++) {
 
@@ -1168,7 +1169,6 @@ const char                    *ho_ordering
 
     }
 
-    assert(ijk_to_user != NULL);
 
   }
 

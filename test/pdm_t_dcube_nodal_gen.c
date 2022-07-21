@@ -1849,6 +1849,62 @@ _bezier_bounding_boxes
 }
 
 
+static void
+_deformation
+(
+ const double       length,
+ const PDM_g_num_t  n_vtx_seg,
+ const int          n_vtx,
+ double            *vtx_coord
+ )
+{
+  // double amplitude = 0.1;//0.07;
+  // double frequency = 4.;
+
+  // for (int i = 0; i < n_vtx; i++) {
+  //   double x = (vtx_coord[3*i    ] - 0.5) / length;
+  //   double y = (vtx_coord[3*i + 1] - 0.5) / length;
+  //   double z = (vtx_coord[3*i + 2] - 0.5) / length;
+
+  //   vtx_coord[3*i    ] += amplitude*length*cos(frequency*y);
+  //   vtx_coord[3*i + 1] += amplitude*length*cos(frequency*z);
+  //   vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
+  // }
+
+  double amplitude = 0.25 * length / (double) (n_vtx_seg - 1);
+  double frequency = PDM_PI * (n_vtx_seg - 1) / length;
+
+  for (int i = 0; i < n_vtx; i++) {
+    double d[3];
+    double dmax = -1;
+    int jmax = -1;
+    for (int j = 0; j < 3; j++) {
+      d[j] = vtx_coord[3*i + j] - 0.5*length;
+      if (PDM_ABS(d[j]) > dmax) {
+        dmax = PDM_ABS(d[j]);
+        jmax = j;
+      }
+    }
+
+    double md = PDM_MODULE(d);
+    if (md > 1e-15) {
+      md = 1. / md;
+
+      double x1 = vtx_coord[3*i + (jmax+1)%3];
+      double x2 = vtx_coord[3*i + (jmax+2)%3];
+
+      double s = amplitude * PDM_ABS( sin(frequency*x1) * sin(frequency*x2) );
+
+      // double s = -amplitude * (sin(frequency*x1) + sin(frequency*x2));
+
+      // for (int j = 0; j < 3; j++) {
+      //   vtx_coord[3*i + j] += s * d[j] * md;
+      // }
+      vtx_coord[3*i + jmax] += s * PDM_SIGN(d[jmax]) * md;
+    }
+  }
+}
+
 
 /**
  *
@@ -1994,36 +2050,40 @@ int main(int argc, char *argv[])
   double amplitude = 0.1;//0.07;
   double frequence = 4.;
 
-  if (1) {
-    for (int i = 0; i < dn_vtx; i++) {
-      double x = (dvtx_coord[3*i    ] - 0.5) / length;
-      double y = (dvtx_coord[3*i + 1] - 0.5) / length;
-      double z = (dvtx_coord[3*i + 2] - 0.5) / length;
+  // if (1) {
+  //   for (int i = 0; i < dn_vtx; i++) {
+  //     double x = (dvtx_coord[3*i    ] - 0.5) / length;
+  //     double y = (dvtx_coord[3*i + 1] - 0.5) / length;
+  //     double z = (dvtx_coord[3*i + 2] - 0.5) / length;
 
-      //double scale = length * pow(2, order-1);
+  //     //double scale = length * pow(2, order-1);
 
-      if (dim == 2) {
-        //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
-        dvtx_coord[3*i + 2] = length * (x*x + y*y);
-      } else {
-        dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
-        dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
-        dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
-      }
-    }
+  //     if (dim == 2) {
+  //       //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
+  //       dvtx_coord[3*i + 2] = length * (x*x + y*y);
+  //     } else {
+  //       dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
+  //       dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
+  //       dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
+  //     }
+  //   }
 
-    if (1) {
-      for (int i = 0; i < dn_vtx; i++) {
-        double x = dvtx_coord[3*i  ];
-        double y = dvtx_coord[3*i+1];
-        double z = dvtx_coord[3*i+2];
+  //   if (1) {
+  //     for (int i = 0; i < dn_vtx; i++) {
+  //       double x = dvtx_coord[3*i  ];
+  //       double y = dvtx_coord[3*i+1];
+  //       double z = dvtx_coord[3*i+2];
 
-        for (int j = 0; j < 3; j++) {
-          dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
-        }
-      }
-    }
-  }
+  //       for (int j = 0; j < 3; j++) {
+  //         dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+  //       }
+  //     }
+  //   }
+  // }
+  _deformation(length,
+               nx,
+               dn_vtx,
+               dvtx_coord);
 
   if (post) {
     if (t_elt > PDM_MESH_NODAL_HEXA8) {

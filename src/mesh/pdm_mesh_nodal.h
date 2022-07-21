@@ -1169,6 +1169,19 @@ PDM_Mesh_nodal_ho_parent_node
        int                  *parent_node
  );
 
+
+void
+PDM_Mesh_nodal_reorder_elt_vtx
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering_in,
+ const char                 *ho_ordering_out,
+ const int                   n_elt,
+       int                  *elt_vtx_in,
+       int                  *elt_vtx_out
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
