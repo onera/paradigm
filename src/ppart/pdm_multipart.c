@@ -1926,6 +1926,7 @@ PDM_MPI_Comm       comm
     pmeshes->parts[ipart]->n_vtx        = pn_vtx       [ipart];
     pmeshes->parts[ipart]->vtx_ln_to_gn = pvtx_ln_to_gn[ipart];
     pmeshes->parts[ipart]->vtx          = pvtx_coord   [ipart];
+    // PDM_log_trace_array_long(pvtx_ln_to_gn[ipart], pn_vtx[ipart], "pvtx_ln_to_gn ::");
   }
 
   /*

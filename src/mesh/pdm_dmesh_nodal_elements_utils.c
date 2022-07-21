@@ -218,24 +218,31 @@ PDM_n_nedge_elt_per_elmt
      n_nedge_elt = 0;
      break;
    case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
      n_nedge_elt = 1;
      break;
    case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
      n_nedge_elt = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
      n_nedge_elt = 4;
      break;
    case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
      n_nedge_elt = 6;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
      n_nedge_elt = 8;
      break;
    case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
      n_nedge_elt = 9;
      break;
    case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
      n_nedge_elt = 12;
      break;
    default:
@@ -2184,7 +2191,6 @@ PDM_sections_decompose_faces
       case PDM_MESH_NODAL_PRISMHO:
       case PDM_MESH_NODAL_HEXAHO:
       {
-        abort();
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 

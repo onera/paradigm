@@ -322,6 +322,8 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_std[id_block]->_parent_entity_g_num  = NULL;
       pmne->sections_std[id_block]->cell_centers          = NULL;
       pmne->sections_std[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_block]->order                 = 1;
+      pmne->sections_std[id_block]->ho_ordering           = NULL;
 
       for (int i = 0; i < pmne->sections_std[id_block]->n_part; i++) {
         pmne->sections_std[id_block]->n_elt    [i] = 0;
@@ -436,6 +438,110 @@ const PDM_Mesh_nodal_elt_t         t_elt
   return id_block ;
 
 }
+
+
+
+int
+PDM_part_mesh_nodal_elmts_ho_add
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const PDM_Mesh_nodal_elt_t         t_elt,
+const int                          order,
+const char                        *ho_ordering
+)
+{
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
+  }
+
+  if(t_elt == PDM_MESH_NODAL_POINT) {
+    if(pmne->mesh_dimension != 0){
+      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 0);
+    }
+  } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO) {
+    if(pmne->mesh_dimension != 1){
+      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 1);
+    }
+  } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D ||
+            t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO) {
+    if(pmne->mesh_dimension != 2){
+      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 2);
+    }
+  } else {
+    if(pmne->mesh_dimension != 3){
+      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 3);
+    }
+  }
+
+  int id_block = -1;
+
+  switch (t_elt) {
+
+  case PDM_MESH_NODAL_BAR2      :
+  case PDM_MESH_NODAL_BARHO     :
+  case PDM_MESH_NODAL_TRIA3     :
+  case PDM_MESH_NODAL_TRIAHO    :
+  case PDM_MESH_NODAL_QUAD4     :
+  case PDM_MESH_NODAL_QUADHO    :
+  case PDM_MESH_NODAL_TETRA4    :
+  case PDM_MESH_NODAL_TETRAHO   :
+  case PDM_MESH_NODAL_PYRAMID5  :
+  case PDM_MESH_NODAL_PYRAMIDHO :
+  case PDM_MESH_NODAL_PRISM6    :
+  case PDM_MESH_NODAL_PRISMHO   :
+  case PDM_MESH_NODAL_HEXA8     :
+  case PDM_MESH_NODAL_HEXAHO    :
+    {
+      /* Mise a jour du tableau de stockage */
+
+      pmne->n_section_std++;
+
+      pmne->sections_std = realloc(pmne->sections_std, pmne->n_section_std * sizeof(PDM_Mesh_nodal_block_std_t *));
+
+      id_block = pmne->n_section_std-1;
+
+      /* Intialisation du bloc */
+      pmne->sections_std[id_block] = malloc( sizeof(PDM_Mesh_nodal_block_std_t) );
+      pmne->sections_std[id_block]->t_elt        = t_elt;
+      pmne->sections_std[id_block]->n_part       = pmne->n_part;
+
+      pmne->sections_std[id_block]->n_elt                 = (int  *) malloc(sizeof(int  ) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->_connec               = (int **) malloc(sizeof(int *) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->_numabs               = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_std[id_block]->n_part);
+      pmne->sections_std[id_block]->numabs_int            = NULL;
+      pmne->sections_std[id_block]->_parent_num           = NULL;
+      pmne->sections_std[id_block]->_parent_entity_g_num  = NULL;
+      pmne->sections_std[id_block]->cell_centers          = NULL;
+      pmne->sections_std[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_block]->order                 = order;
+      pmne->sections_std[id_block]->ho_ordering           = ho_ordering;
+
+      for (int i = 0; i < pmne->sections_std[id_block]->n_part; i++) {
+        pmne->sections_std[id_block]->n_elt    [i] = 0;
+        pmne->sections_std[id_block]->_connec  [i] = NULL;
+        pmne->sections_std[id_block]->_numabs  [i] = NULL;
+      }
+
+      id_block += PDM_BLOCK_ID_BLOCK_STD;
+      if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+        PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
+                  PDM_BLOCK_ID_BLOCK_POLY2D);
+        abort();
+      }
+    }
+
+    break;
+  default :
+    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    break;
+
+  }
+
+  _update_elmt_sections_id (pmne);
+  return id_block ;
+
+}
+
 
 
 void
