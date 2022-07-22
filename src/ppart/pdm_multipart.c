@@ -2034,6 +2034,38 @@ PDM_MPI_Comm       comm
   PDM_part_renum_vtx (pmeshes->parts, n_part, pmeshes->renum_vtx_method , NULL);
 
   /*
+   * All entities are reorder - In case of HO mesh we need to append all ho vtx in vtx_ln_to_gn AND pvtx_coord
+   */
+  int have_ho = PDM_dmesh_nodal_have_ho(dmesh_nodal);
+
+  printf("have_ho = %i \n", have_ho);
+  if(have_ho == 1) {
+
+    /* Deduce vtx from the connectivity by elmt */
+    int          *pn_vtx_all       = NULL;
+    PDM_g_num_t **vtx_all_ln_to_gn = NULL;
+    PDM_generate_ho_vtx_ln_to_gn(dmesh_nodal,
+                                 n_part,
+                                 pn_cell,
+                                 pcell_ln_to_gn,
+                                 pn_face,
+                                 pface_ln_to_gn,
+                                 pn_edge,
+                                 pedge_ln_to_gn,
+                                 pn_vtx,
+                                 pvtx_ln_to_gn,
+                                 &pn_vtx_all,
+                                 &vtx_all_ln_to_gn);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      log_trace("pn_vtx_all[%i] = %i \n", i_part, pn_vtx_all[i_part]);
+    }
+
+  }
+
+
+
+  /*
    *  All data has been reorder, we can now and only now setup desired comm graph
    */
   if(pn_cell != NULL){

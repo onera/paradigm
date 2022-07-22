@@ -1859,7 +1859,7 @@ const double *
 PDM_dmesh_nodal_global_extents_get
 (
  PDM_dmesh_nodal_t         *dmn
- )
+)
 {
   if (dmn->is_computed_g_extents == PDM_FALSE) {
 
@@ -1882,6 +1882,34 @@ PDM_dmesh_nodal_global_extents_get
 
   return dmn->g_extents;
 }
+
+
+int
+PDM_dmesh_nodal_have_ho
+(
+ PDM_dmesh_nodal_t         *dmesh_nodal
+)
+{
+  int have_ho_volumic  = 0;
+  int have_ho_surfacic = 0;
+  int have_ho_ridge    = 0;
+  int have_ho_corner   = 0;
+  if(dmesh_nodal->volumic  != NULL) {
+    have_ho_volumic = PDM_dmesh_nodal_elmts_have_ho(dmesh_nodal->volumic);
+  }
+  if(dmesh_nodal->surfacic != NULL) {
+    have_ho_surfacic = PDM_dmesh_nodal_elmts_have_ho(dmesh_nodal->surfacic);
+  }
+  if(dmesh_nodal->ridge    != NULL) {
+    have_ho_ridge = PDM_dmesh_nodal_elmts_have_ho(dmesh_nodal->ridge);
+  }
+  if(dmesh_nodal->corner   != NULL) {
+    have_ho_corner = PDM_dmesh_nodal_elmts_have_ho(dmesh_nodal->corner);
+  }
+
+  return have_ho_volumic || have_ho_surfacic || have_ho_ridge || have_ho_corner;
+}
+
 
 #ifdef __cplusplus
 }

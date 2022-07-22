@@ -1197,6 +1197,33 @@ const char                    *ho_ordering
 }
 
 
+int
+PDM_dmesh_nodal_elmts_have_ho
+(
+ PDM_dmesh_nodal_elmts_t *dmn_elts
+)
+{
+  int have_ho = 0;
+  for(int i_section = 0; i_section < dmn_elts->n_section; ++i_section) {
+
+    int id_section = dmn_elts->sections_id[i_section];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
+    if (t_elt == PDM_MESH_NODAL_BARHO ||
+        t_elt == PDM_MESH_NODAL_TRIAHO ||
+        t_elt == PDM_MESH_NODAL_QUADHO ||
+        t_elt == PDM_MESH_NODAL_TETRAHO ||
+        t_elt == PDM_MESH_NODAL_PYRAMIDHO ||
+        t_elt == PDM_MESH_NODAL_PRISMHO ||
+        t_elt == PDM_MESH_NODAL_HEXAHO)
+    {
+      have_ho = 1;
+    }
+  }
+  return have_ho;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

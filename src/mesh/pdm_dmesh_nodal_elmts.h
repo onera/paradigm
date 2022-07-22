@@ -269,6 +269,12 @@ const char                    *ho_ordering
 );
 
 
+int
+PDM_dmesh_nodal_elmts_have_ho
+(
+ PDM_dmesh_nodal_elmts_t *dmn_elts
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

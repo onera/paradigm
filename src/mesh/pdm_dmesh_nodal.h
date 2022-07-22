@@ -834,7 +834,14 @@ const double *
 PDM_dmesh_nodal_global_extents_get
 (
  PDM_dmesh_nodal_t         *dmn
- );
+);
+
+
+int
+PDM_dmesh_nodal_have_ho
+(
+ PDM_dmesh_nodal_t         *dmn
+);
 
 #ifdef __cplusplus
 }

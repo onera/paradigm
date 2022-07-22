@@ -1445,7 +1445,7 @@ _generate_faces_from_dmesh_nodal
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
 
-    if( 0 == 1 ){
+    if( 1 == 1 ){
       printf("dmesh_nodal->dn_edge ::%i\n", dm->dn_edge );
       PDM_log_trace_array_int (dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX], dm->dn_edge+1                  , "dm->_dedge_vtx_idx:: ");
       PDM_log_trace_array_long(dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX][dm->dn_edge], "dm->_dedge_vtx:: ");

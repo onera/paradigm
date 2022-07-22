@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
                                                            0.,
                                                            0.,
                                                            0.,
-                                                           PDM_MESH_NODAL_TETRAHO,
+                                                           PDM_MESH_NODAL_HEXAHO,
                                                            2,
                                                            PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
