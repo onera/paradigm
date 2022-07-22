@@ -889,6 +889,8 @@ int main(int argc, char *argv[])
 
   }
 
+  if (vtk) {
+
   for (int ibox = 0; ibox < dn_back_face; ibox++) {
     PDM_g_num_t box_gnum = d_back_face_ln_to_gn[ibox];
     for (int ivol = d_box_volume_idx[ibox]; ivol < d_box_volume_idx[ibox+1]; ivol++) {
@@ -897,7 +899,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (vtk) {
 
     char filename1[999];
     sprintf(filename1, "background_mesh_%d.vtk", i_rank);
