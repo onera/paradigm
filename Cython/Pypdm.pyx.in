@@ -451,11 +451,11 @@ include "pdm_dist_cloud_surf.pxi"
 
 # PDM_mesh_metric :
 # --------------------
-@COMMENT_NOT_PDMA@include "pdm_mesh_metric.pxi"
+#@COMMENT_NOT_PDMA@include "pdm_mesh_metric.pxi"
 
 # PDM_mesh_adaptation :
 # --------------------
-@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
+#@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
 
 # PDM_points_merge :
 # --------------------
