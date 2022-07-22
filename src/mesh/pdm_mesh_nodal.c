@@ -1264,6 +1264,7 @@ PDM_Mesh_nodal_elt_dim_get
       break;
     case PDM_MESH_NODAL_BAR2:
     case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER:
       elt_dim = 1;
       break;
     case PDM_MESH_NODAL_TRIA3:
@@ -1271,6 +1272,7 @@ PDM_Mesh_nodal_elt_dim_get
     case PDM_MESH_NODAL_POLY_2D:
     case PDM_MESH_NODAL_TRIAHO:
     case PDM_MESH_NODAL_QUADHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
       elt_dim = 2;
       break;
     case PDM_MESH_NODAL_TETRA4:
