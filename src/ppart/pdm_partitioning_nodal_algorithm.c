@@ -197,9 +197,9 @@ _delmt_vtx_to_pelmt_vtx
   int         **pelmts_stride_idx = malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
-    free(pelmts_stride);
+    free(pelmts_stride[i_part]);
   }
-
+  free(pelmts_stride);
   /*
    * Exchange type of elements
    */
@@ -842,45 +842,45 @@ PDM_generate_ho_vtx_ln_to_gn
     free(pn_surf);
   }
 
-  // if(dmn->ridge != NULL) {
-  //   /* Translate edge information into elmt information first */
-  //   int          *pn_ridge             = NULL;
-  //   PDM_g_num_t **pridge_gnum          = NULL;
-  //   PDM_g_num_t **pridge_to_edge_g_num = NULL;
-  //   PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
-  //                            NULL, // dparent_sign
-  //                            dmn->ridge->delmt_child_distrib,
-  //                            n_part,
-  //                            pn_edge,
-  //                            pedge_ln_to_gn,
-  //                           &pn_ridge,
-  //                           &pridge_gnum,
-  //                           &pridge_to_edge_g_num,
-  //                            NULL, // pchild_parent_sign
-  //                            dmn->comm);
+  if(dmn->ridge != NULL) {
+    /* Translate edge information into elmt information first */
+    int          *pn_ridge             = NULL;
+    PDM_g_num_t **pridge_gnum          = NULL;
+    PDM_g_num_t **pridge_to_edge_g_num = NULL;
+    PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
+                             NULL, // dparent_sign
+                             dmn->ridge->delmt_child_distrib,
+                             n_part,
+                             pn_edge,
+                             pedge_ln_to_gn,
+                            &pn_ridge,
+                            &pridge_gnum,
+                            &pridge_to_edge_g_num,
+                             NULL, // pchild_parent_sign
+                             dmn->comm);
 
-  //   int                  **pelmt_ridge_strid_idx = NULL;
-  //   PDM_Mesh_nodal_elt_t **pelmt_ridge_type      = NULL;
-  //   _delmt_vtx_to_pelmt_vtx(dmn->ridge,
-  //                           n_part,
-  //                           pn_edge,
-  //                           pedge_ln_to_gn,
-  //                           &pelmt_ridge_strid_idx,
-  //                           &pelmt_ridge_connec,
-  //                           &pelmt_ridge_type);
-  //   for(int i_part = 0; i_part < n_part; ++i_part) {
-  //     s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_ridge[i_part]];
-  //     free(pelmt_ridge_strid_idx[i_part]);
-  //     free(pelmt_ridge_type     [i_part]);
-  //     free(pridge_gnum          [i_part]);
-  //     free(pridge_to_edge_g_num [i_part]);
-  //   }
-  //   free(pelmt_ridge_strid_idx);
-  //   free(pelmt_ridge_type);
-  //   free(pridge_gnum);
-  //   free(pridge_to_edge_g_num);
-  //   free(pn_ridge);
-  // }
+    int                  **pelmt_ridge_strid_idx = NULL;
+    PDM_Mesh_nodal_elt_t **pelmt_ridge_type      = NULL;
+    _delmt_vtx_to_pelmt_vtx(dmn->ridge,
+                            n_part,
+                            pn_ridge,
+                            pridge_gnum,
+                            &pelmt_ridge_strid_idx,
+                            &pelmt_ridge_connec,
+                            &pelmt_ridge_type);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_ridge[i_part]];
+      free(pelmt_ridge_strid_idx[i_part]);
+      free(pelmt_ridge_type     [i_part]);
+      free(pridge_gnum          [i_part]);
+      free(pridge_to_edge_g_num [i_part]);
+    }
+    free(pelmt_ridge_strid_idx);
+    free(pelmt_ridge_type);
+    free(pridge_gnum);
+    free(pridge_to_edge_g_num);
+    free(pn_ridge);
+  }
 
   /*
    * We have all connectivity of HO elemnt for all geometric kind
@@ -906,6 +906,9 @@ PDM_generate_ho_vtx_ln_to_gn
     for(int i = 0; i < s_connec_ridge[i_part]; ++i){
       concat_connec[shift+i] = pelmt_ridge_connec[i_part][i];
     }
+    free(pelmt_volumic_connec [i_part]);
+    free(pelmt_surfacic_connec[i_part]);
+    free(pelmt_ridge_connec   [i_part]);
 
     /*
      * Sort also vtx_ln_to_gn
@@ -942,16 +945,25 @@ PDM_generate_ho_vtx_ln_to_gn
     free(sorted_vtx_ln_to_gn);
     free(concat_connec);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(all_vtx_ln_to_gn[i_part], nall_vtx[i_part], "all_vtx_ln_to_gn ::");
     }
 
 
   }
 
-  free(s_connec_volumic );
-  free(s_connec_surfacic);
-  free(s_connec_ridge   );
+  free(s_connec_volumic    );
+  free(s_connec_surfacic   );
+  free(s_connec_ridge      );
+  if(pelmt_volumic_connec != NULL){
+    free(pelmt_volumic_connec);
+  }
+  if(pelmt_surfacic_connec != NULL){
+    free(pelmt_surfacic_connec);
+  }
+  if(pelmt_ridge_connec != NULL){
+    free(pelmt_ridge_connec);
+  }
 
 
   *pn_vtx_all       = nall_vtx;

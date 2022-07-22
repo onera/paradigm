@@ -2274,6 +2274,7 @@ PDM_sections_decompose_edges
     return;
   }
 
+  int parent_node[8];
   /* We need to loop over all sections in the good order */
   int n_section = dmn_elts->n_section;
 
@@ -2337,8 +2338,12 @@ PDM_sections_decompose_edges
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
         int order      = dmn_elts->sections_std[i_section]->order;
-        // const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
-        int *parent_node = NULL;
+        const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
+        // int *parent_node = NULL;
+        PDM_Mesh_nodal_ho_parent_node(t_elt,
+                                      order,
+                                      ho_ordering,
+                                      parent_node);
 
         PDM_std_decomposes_edges(t_elt,
                                  order,

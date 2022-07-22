@@ -72,7 +72,6 @@ _vtx_free
       vtx->coords = NULL;
     }
 
-    free (vtx);
   }
 }
 
@@ -445,6 +444,7 @@ PDM_part_mesh_nodal_free
       if(pmn->vtx[i]->owner == PDM_OWNERSHIP_KEEP){
         _vtx_free (pmn->vtx[i]);
       }
+      free(pmn->vtx[i]);
     }
 
     free(pmn->vtx);

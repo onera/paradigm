@@ -937,48 +937,48 @@ _compute_part_mesh_nodal_3d
 
   PDM_part_mesh_nodal_elmts_t* pmn_ridge = NULL;
 
-  // if(dmn->ridge != NULL) {
+  if(dmn->ridge != NULL) {
 
-  //   PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
-  //   int           *pn_edge        = (int *  )         malloc( n_part * sizeof(int          ));
-  //   for(int i_part = 0; i_part < n_part; ++i_part) {
-  //     pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
-  //     pn_edge       [i_part] = pm->parts[i_part]->n_edge;
-  //   }
-  //   int          *pn_ridge             = NULL;
-  //   PDM_g_num_t **pridge_gnum          = NULL;
-  //   PDM_g_num_t **pridge_to_edge_g_num = NULL;
-  //   PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
-  //                            NULL, // dparent_sign
-  //                            dmn->ridge->delmt_child_distrib,
-  //                            n_part,
-  //                            pn_edge,
-  //                            pedge_ln_to_gn,
-  //                           &pn_ridge,
-  //                           &pridge_gnum,
-  //                           &pridge_to_edge_g_num,
-  //                            NULL, // pchild_parent_sign
-  //                            dmn->comm);
+    PDM_g_num_t  **pedge_ln_to_gn = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+    int           *pn_edge        = (int *  )         malloc( n_part * sizeof(int          ));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
+      pn_edge       [i_part] = pm->parts[i_part]->n_edge;
+    }
+    int          *pn_ridge             = NULL;
+    PDM_g_num_t **pridge_gnum          = NULL;
+    PDM_g_num_t **pridge_to_edge_g_num = NULL;
+    PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
+                             NULL, // dparent_sign
+                             dmn->ridge->delmt_child_distrib,
+                             n_part,
+                             pn_edge,
+                             pedge_ln_to_gn,
+                            &pn_ridge,
+                            &pridge_gnum,
+                            &pridge_to_edge_g_num,
+                             NULL, // pchild_parent_sign
+                             dmn->comm);
 
 
-  //   pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
-  //                                                              n_part,
-  //                                                              pn_vtx,
-  //                                                              pvtx_ln_to_gn,
-  //                                                              pn_ridge,
-  //                                                              pridge_gnum,
-  //                                                              pridge_to_edge_g_num);
+    pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
+                                                               n_part,
+                                                               pn_vtx,
+                                                               pvtx_ln_to_gn,
+                                                               pn_ridge,
+                                                               pridge_gnum,
+                                                               pridge_to_edge_g_num);
 
-  //   for(int i_part = 0; i_part < n_part; ++i_part){
-  //     free(pridge_gnum[i_part]);
-  //     free(pridge_to_edge_g_num[i_part]);
-  //   }
-  //   free(pn_ridge);
-  //   free(pridge_gnum);
-  //   free(pridge_to_edge_g_num);
-  //   free(pedge_ln_to_gn);
-  //   free(pn_edge);
-  // }
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      free(pridge_gnum[i_part]);
+      free(pridge_to_edge_g_num[i_part]);
+    }
+    free(pn_ridge);
+    free(pridge_gnum);
+    free(pridge_to_edge_g_num);
+    free(pedge_ln_to_gn);
+    free(pn_edge);
+  }
 
   PDM_part_mesh_nodal_elmts_t* pmn_corner = NULL;
 
@@ -2079,7 +2079,6 @@ PDM_MPI_Comm       comm
     }
     // free(pvtx_ln_to_gn);
     free(pvtx_coord);
-
     PDM_part_dcoordinates_to_pcoordinates(comm,
                                           n_part,
                                           vtx_distrib,
@@ -2095,6 +2094,9 @@ PDM_MPI_Comm       comm
       pmeshes->parts[ipart]->vtx          = pvtx_coord   [ipart];
     }
 
+
+    free(vtx_all_ln_to_gn);
+    free(pn_vtx_all);
 
 
   }

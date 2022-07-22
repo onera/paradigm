@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
                                                            0.,
                                                            0.,
                                                            0.,
-                                                           PDM_MESH_NODAL_PRISMHO,
+                                                           PDM_MESH_NODAL_HEXAHO,
                                                            3,
                                                            PDM_OWNERSHIP_KEEP);
   // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_VTK");
@@ -283,6 +283,7 @@ int main(int argc, char *argv[])
 
   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_");
   PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
+  PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "ridge_ho_");
 
   PDM_part_mesh_nodal_free(pmsh_nodal);
 
