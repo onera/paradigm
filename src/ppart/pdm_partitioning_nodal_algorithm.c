@@ -572,8 +572,6 @@ PDM_reverse_dparent_gnum
 
   /* First part_to_block to map in parent block the child g_num */
   int dn_child_elmt = delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank];
-  printf("dn_child_elmt = %i \n", dn_child_elmt);
-  PDM_log_trace_array_long(dparent_gnum, dn_child_elmt, " dparent_gnum ::");
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
@@ -943,6 +941,10 @@ PDM_generate_ho_vtx_ln_to_gn
 
     free(sorted_vtx_ln_to_gn);
     free(concat_connec);
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(all_vtx_ln_to_gn[i_part], nall_vtx[i_part], "all_vtx_ln_to_gn ::");
+    }
 
 
   }

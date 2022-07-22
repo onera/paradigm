@@ -639,6 +639,50 @@ const int                           id_part,
   }
 }
 
+
+void
+PDM_part_mesh_nodal_elmts_block_std_ho_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_block,
+const int                           id_part,
+      int                         **connec,
+      PDM_g_num_t                 **numabs,
+      int                         **parent_num,
+      PDM_g_num_t                 **parent_entity_g_num,
+      int                          *order,
+const char                        **ho_ordering
+)
+{
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
+  }
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+
+  PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_block];
+
+  if (block == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
+
+  if (id_part >= block->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  *connec              = block->_connec             [id_part];
+  *numabs              = block->_numabs             [id_part];
+  *parent_num          = block->_parent_num         [id_part];
+  *parent_entity_g_num = NULL;
+  if(block->_parent_entity_g_num != NULL) {
+    *parent_entity_g_num = block->_parent_entity_g_num[id_part];
+  }
+  *order       = block->order;
+  *ho_ordering = block->ho_ordering;
+
+
+}
+
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_block_type_get
 (

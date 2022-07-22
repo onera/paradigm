@@ -18,7 +18,6 @@
 #include "pdm_error.h"
 #include "pdm_geom_elem.h"
 #include "pdm_priv.h"
-#include "pdm_predicate.h"
 #include "pdm_multipart.h"
 
 /*============================================================================
@@ -125,6 +124,31 @@ _read_args(int            argc,
 }
 
 
+static void
+_deformation
+(
+ const double       length,
+ const PDM_g_num_t  n_vtx_seg,
+ const int          n_vtx,
+ double            *vtx_coord
+ )
+{
+  double amplitude = 0.1;//0.07;
+  double frequency = 4.;
+
+  for (int i = 0; i < n_vtx; i++) {
+    double x = (vtx_coord[3*i    ] - 0.5) / length;
+    double y = (vtx_coord[3*i + 1] - 0.5) / length;
+    double z = (vtx_coord[3*i + 2] - 0.5) / length;
+
+    vtx_coord[3*i    ] += amplitude*length*cos(frequency*y);
+    vtx_coord[3*i + 1] += amplitude*length*cos(frequency*z);
+    vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
+  }
+
+}
+
+
 /**
  *
  * \brief  Main
@@ -149,8 +173,6 @@ int main(int argc, char *argv[])
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #endif
 #endif
-
-  PDM_predicate_exactinit();
 
   /*
    *  Read args
@@ -210,14 +232,26 @@ int main(int argc, char *argv[])
                                                            0.,
                                                            0.,
                                                            0.,
-                                                           PDM_MESH_NODAL_HEXAHO,
-                                                           2,
+                                                           PDM_MESH_NODAL_PRISMHO,
+                                                           3,
                                                            PDM_OWNERSHIP_KEEP);
+  // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_VTK");
   PDM_dcube_nodal_gen_build (dcube);
+
 
 
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
+
+  PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+  int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  // double amplitude = 0.1;//0.07;
+  // double frequence = 4.;
+  _deformation(length,
+               n_vtx_seg,
+               dn_vtx,
+               dvtx_coord);
 
   int n_zone = 1;
   // int n_part_zones = {n_part};
@@ -246,6 +280,9 @@ int main(int argc, char *argv[])
 
   PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
+
+  PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "volumic_ho_");
+  PDM_part_mesh_nodal_dump_vtk(pmsh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "surfacic_ho_");
 
   PDM_part_mesh_nodal_free(pmsh_nodal);
 
