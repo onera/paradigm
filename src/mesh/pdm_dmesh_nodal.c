@@ -633,7 +633,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
     } else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
       dmesh_nodal->ridge = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_edge_abs);
     } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-      dmesh_nodal->corner = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 1, dmesh_nodal->n_vtx_abs);
+      dmesh_nodal->corner = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 0, dmesh_nodal->n_vtx_abs);
     }
   }
 
