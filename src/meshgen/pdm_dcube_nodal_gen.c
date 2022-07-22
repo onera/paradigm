@@ -164,7 +164,7 @@ _generate_tria_surf
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_section,
                                         dn_elt,
@@ -212,7 +212,7 @@ _generate_quad_surf
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_section,
                                         dn_elt,
@@ -342,7 +342,7 @@ _generate_tetra_vol
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
                                         id_section,
                                         dn_elt,
@@ -487,7 +487,7 @@ _generate_pyramid_vol
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
                                         id_section,
                                         dn_elt,
@@ -547,7 +547,7 @@ _generate_prism_vol
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
                                         id_section,
                                         dn_elt,
@@ -599,7 +599,7 @@ _generate_hexa_vol
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->volumic,
                                                         dcube->t_elt,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
                                         id_section,
                                         dn_elt,
@@ -837,7 +837,7 @@ _generate_ridges
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->ridge,
                                                         t_ridge,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
                                         id_section,
                                         dn_elt,
@@ -1154,7 +1154,7 @@ _generate_tetra_surf
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         t_tria,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_section,
                                         dn_elt,
@@ -1324,7 +1324,7 @@ _generate_pyramid_surf
   int id_tria = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_tria,
                                                      dcube->order,
-                                                     dcube->ordering);
+                                                     NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_tria,
                                         dn_tria,
@@ -1369,7 +1369,7 @@ _generate_pyramid_surf
   int id_quad = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_quad,
                                                      dcube->order,
-                                                     dcube->ordering);
+                                                     NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_quad,
                                         dn_quad,
@@ -1561,7 +1561,7 @@ _generate_prism_surf
   int id_tria = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_tria,
                                                      dcube->order,
-                                                     dcube->ordering);
+                                                     NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_tria,
                                         dn_tria,
@@ -1592,7 +1592,7 @@ _generate_prism_surf
   int id_quad = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                      t_quad,
                                                      dcube->order,
-                                                     dcube->ordering);
+                                                     NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_quad,
                                         dn_quad,
@@ -1683,7 +1683,7 @@ _generate_hexa_surf
   int id_section = PDM_DMesh_nodal_elmts_section_ho_add(dmesh_nodal->surfacic,
                                                         t_quad,
                                                         dcube->order,
-                                                        dcube->ordering);
+                                                        NULL);
   PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
                                         id_section,
                                         dn_elt,

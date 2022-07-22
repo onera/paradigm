@@ -1227,6 +1227,7 @@ _generate_faces_from_dmesh_nodal
     if(0 == 1) {
       PDM_log_trace_array_long(dface_cell, 2 * dm->dn_face, "face_cell::");
       PDM_log_trace_array_long(_dface_vtx, _dface_vtx_idx[dm->dn_face], "_dface_vtx::");
+      PDM_log_trace_connectivity_long(_dface_vtx_idx, _dface_vtx, dm->dn_face, "_dface_vtx::");
     }
   }
 
