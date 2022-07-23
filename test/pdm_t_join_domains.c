@@ -833,7 +833,7 @@ int main
       /*
        *  Mini-Bricoloage
        */
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                          PDM_GEOMETRY_KIND_VOLUMIC,
                                                                                          1, // n_part
@@ -895,8 +895,10 @@ int main
                                                                     &composed_interface,
                                                                     &composed_ln_to_gn_sorted);
 
-  PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
-  PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
+  if(0 == 1) {
+    PDM_log_trace_connectivity_int(composed_interface_idx, composed_interface, n_interf_composed, "composed_interface ::");
+    PDM_log_trace_array_long(composed_ln_to_gn_sorted, n_interf_composed, "composed_ln_to_gn_sorted ::");
+  }
 
   /*
    * Export current domain with elements
@@ -966,7 +968,7 @@ int main
       PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE  , &border_face_interface);
       PDM_part_extension_interface_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_CELL  , &border_cell_interface);
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_long(border_vtx_ln_to_gn , n_vtx_extended , "border_vtx_ln_to_gn :: ");
         PDM_log_trace_array_long(border_face_ln_to_gn, n_face_extended, "border_face_ln_to_gn :: ");
         PDM_log_trace_array_long(border_cell_ln_to_gn, n_cell_extended, "border_cell_ln_to_gn :: ");
@@ -986,12 +988,14 @@ int main
       }
 
       char filename_pts[999];
-      sprintf(filename_pts, "out_vtx_extended_raw_%i_%i_%i.vtk", i_dom, i_part, i_rank);
-      PDM_vtk_write_point_cloud(filename_pts,
-                                n_vtx_extended,
-                                vtx_coord_extended,
-                                border_vtx_ln_to_gn,
-                                border_vtx_interface);
+      if(0 == 1) {
+        sprintf(filename_pts, "out_vtx_extended_raw_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+        PDM_vtk_write_point_cloud(filename_pts,
+                                  n_vtx_extended,
+                                  vtx_coord_extended,
+                                  border_vtx_ln_to_gn,
+                                  border_vtx_interface);
+      }
 
       int *i_num_vtx = malloc(n_vtx_extended * sizeof(int));
       for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
@@ -1017,17 +1021,19 @@ int main
         // }
       }
 
-      sprintf(filename_pts, "out_vtx_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
-      // PDM_vtk_write_point_cloud(filename_pts,
-      //                           n_vtx_extended,
-      //                           vtx_coord_extended,
-      //                           NULL,
-      //                           border_vtx_interface);
-      PDM_vtk_write_point_cloud(filename_pts,
-                                n_vtx_extended,
-                                vtx_coord_extended,
-                                NULL,
-                                i_num_vtx);
+      if(0 == 1) {
+        sprintf(filename_pts, "out_vtx_extended_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+        // PDM_vtk_write_point_cloud(filename_pts,
+        //                           n_vtx_extended,
+        //                           vtx_coord_extended,
+        //                           NULL,
+        //                           border_vtx_interface);
+        PDM_vtk_write_point_cloud(filename_pts,
+                                  n_vtx_extended,
+                                  vtx_coord_extended,
+                                  NULL,
+                                  i_num_vtx);
+      }
       free(i_num_vtx);
 
       // PDM_g_num_t* border_face_ln_to_gn;
@@ -1120,15 +1126,17 @@ int main
         is_extend           [n_cell+i_cell] = 1;
       }
 
-      // PDM_log_trace_part_connectivity_gnum(pedge_vtx_idx,
-      //                                      pedge_vtx,
-      //                                      border_edge_ln_to_gn,
-      //                                      concat_vtx_ln_to_gn,
-      //                                      n_edge_extended,
-      //                                      "edge_vtx_extented");
+      if(0 == 1) {
+        // PDM_log_trace_part_connectivity_gnum(pedge_vtx_idx,
+        //                                      pedge_vtx,
+        //                                      border_edge_ln_to_gn,
+        //                                      concat_vtx_ln_to_gn,
+        //                                      n_edge_extended,
+        //                                      "edge_vtx_extented");
 
-      PDM_log_trace_array_long(concat_vtx_ln_to_gn , n_vtx_tot , "concat_vtx_ln_to_gn :: ");
-      PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
+        PDM_log_trace_array_long(concat_vtx_ln_to_gn , n_vtx_tot , "concat_vtx_ln_to_gn :: ");
+        PDM_log_trace_array_long(concat_cell_ln_to_gn, n_cell_tot, "concat_cell_ln_to_gn :: ");
+      }
 
       PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn[i_dom],
                                                                                        PDM_GEOMETRY_KIND_VOLUMIC,

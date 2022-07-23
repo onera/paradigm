@@ -495,10 +495,12 @@ int main(int argc, char *argv[])
                             "PDM_HO_ORDERING_VTK");
   }
 
-  _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "sphere_vol_surface");
-  _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC,  "sphere_vol_volume");
+  if(0 == 1) {
+    _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_SURFACIC, "sphere_vol_surface");
+    _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC,  "sphere_vol_volume");
 
-  _dmesh_nodal_dump_vtk(dmn2, 1, PDM_GEOMETRY_KIND_SURFACIC, "sphere_surf_surface");
+    _dmesh_nodal_dump_vtk(dmn2, 1, PDM_GEOMETRY_KIND_SURFACIC, "sphere_surf_surface");
+  }
 
   // Free memory
   PDM_DMesh_nodal_free(dmn);

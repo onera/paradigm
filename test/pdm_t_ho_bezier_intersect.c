@@ -291,14 +291,14 @@ int main(int argc, char *argv[])
       }
       PDM_CROSS_PRODUCT(pt_normal, pt_du, pt_dv);
 
-      PDM_log_trace_array_double(pt_normal, 3, "pt_normal:");
+      // PDM_log_trace_array_double(pt_normal, 3, "pt_normal:");
 
       pt_normal_module = PDM_MODULE(pt_normal);
       normal[3*n_vtx    ] = pt_normal[0] / pt_normal_module;
       normal[3*n_vtx + 1] = pt_normal[1] / pt_normal_module;
       normal[3*n_vtx + 2] = pt_normal[2] / pt_normal_module;
 
-      log_trace("n0 %lf n1 %lf n2 %lf\n", pt_normal[0] / pt_normal_module, pt_normal[1] / pt_normal_module, pt_normal[2] / pt_normal_module);
+      // log_trace("n0 %lf n1 %lf n2 %lf\n", pt_normal[0] / pt_normal_module, pt_normal[1] / pt_normal_module, pt_normal[2] / pt_normal_module);
 
       n_vtx++;
 

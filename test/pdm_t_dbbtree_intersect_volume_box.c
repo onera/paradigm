@@ -27,8 +27,8 @@
  * Static global variables
  *============================================================================*/
 
-static const int    verbose = 1;
-static const int    vtk     = 1;
+static const int    verbose = 0;
+static const int    vtk     = 0;
 
 /*============================================================================
  * Private function definitions
@@ -557,7 +557,9 @@ int main(int argc, char *argv[])
           volume_plane_idx[i+1] = volume_plane_idx[i] + 2;
         }
       }
-      PDM_log_trace_array_int(volume_plane_idx, n_volume_boxes + 1, "volume_plane_idx: ");
+      if(0 == 1) {
+        PDM_log_trace_array_int(volume_plane_idx, n_volume_boxes + 1, "volume_plane_idx: ");
+      }
     }
 
     double *plane_normal   = malloc(sizeof(double) * 3 * n_volume_boxes * 6);

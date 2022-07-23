@@ -37,8 +37,8 @@
  * Static global variables
  *============================================================================*/
 
-static const int    verbose = 1;
-static const int    vtk     = 1;
+static const int    verbose = 0;
+static const int    vtk     = 0;
 
 /*============================================================================
  * Private function definitions
@@ -963,7 +963,9 @@ int main(int argc, char *argv[])
   }
   PDM_sort_long(seed_edge_back_face_g_num, order, seed_edge_back_face_idx[p_vol_n_edge]);
 
-  PDM_log_trace_array_int(order, seed_edge_back_face_idx[p_vol_n_edge],"order: ");
+  if(verbose) {
+    PDM_log_trace_array_int(order, seed_edge_back_face_idx[p_vol_n_edge],"order: ");
+  }
 
   int *seed_edge_back_face_l_num = malloc(sizeof(int) * seed_edge_back_face_idx[p_vol_n_edge]);
   seed_edge_back_face_l_num[order[0]] = 0;
@@ -989,11 +991,13 @@ int main(int argc, char *argv[])
   int* unique_order = (int *) malloc(seed_edge_back_face_idx[p_vol_n_edge] * sizeof(int));
   int new_size = PDM_inplace_unique_long2(toto_g_num, unique_order, 0, seed_edge_back_face_idx[p_vol_n_edge]-1);
 
-  PDM_log_trace_array_long(toto_g_num, new_size, "unique back_face_ln_to_gn: ");
-  PDM_log_trace_array_long(p_back_face_ln_to_gn, p_n_back_face, "hand made back_face_ln_to_gn: ");
+  if(verbose) {
+    PDM_log_trace_array_long(toto_g_num, new_size, "unique back_face_ln_to_gn: ");
+    PDM_log_trace_array_long(p_back_face_ln_to_gn, p_n_back_face, "hand made back_face_ln_to_gn: ");
 
-  PDM_log_trace_array_int(unique_order, seed_edge_back_face_idx[p_vol_n_edge], "unique_order: ");
-  PDM_log_trace_array_int(seed_edge_back_face_l_num, seed_edge_back_face_idx[p_vol_n_edge], "seed_edge_back_face_l_num: ");
+    PDM_log_trace_array_int(unique_order, seed_edge_back_face_idx[p_vol_n_edge], "unique_order: ");
+    PDM_log_trace_array_int(seed_edge_back_face_l_num, seed_edge_back_face_idx[p_vol_n_edge], "seed_edge_back_face_l_num: ");
+  }
 
   // PDM_part_dconnectivity_to_pconnectivity_sort_single_part to get back_face->vtx and coord
 

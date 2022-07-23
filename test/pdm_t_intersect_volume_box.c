@@ -485,7 +485,8 @@ int main(int argc, char *argv[])
 
   // Check if box is in volume
   int check = _box_in_volume(4, n, pt_plane, box_extents1);
-  log_trace("box is in volume = %d\n", check);
+  PDM_UNUSED(check);
+  // log_trace("box is in volume = %d\n", check);
 
   // vtk output of atomic test case
 

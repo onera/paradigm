@@ -2049,7 +2049,6 @@ PDM_MPI_Comm       comm
    */
   int have_ho = PDM_dmesh_nodal_have_ho(dmesh_nodal);
 
-  printf("have_ho = %i \n", have_ho);
   if(have_ho == 1) {
 
     /* Deduce vtx from the connectivity by elmt */
@@ -2067,9 +2066,10 @@ PDM_MPI_Comm       comm
                                  pvtx_ln_to_gn,
                                  &pn_vtx_all,
                                  &vtx_all_ln_to_gn);
-
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      log_trace("pn_vtx_all[%i] = %i \n", i_part, pn_vtx_all[i_part]);
+    if(0 == 1) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        log_trace("pn_vtx_all[%i] = %i \n", i_part, pn_vtx_all[i_part]);
+      }
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {

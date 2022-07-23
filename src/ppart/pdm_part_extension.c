@@ -4822,7 +4822,7 @@ _rebuild_connectivity_cell_face
    * Ici on doit faire intervenir le tableau d'interface
    *   - On doit recevoir plusieurs fois les ln_to_gn qui viennent de différente interface
    */
-  if(0 == 0) {
+  if(1 == 0) {
     shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
