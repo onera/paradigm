@@ -491,6 +491,7 @@ int main(int argc, char *argv[])
 
   _create_volume_4planes(edge, direction_pt, theta, eps, &n, &pt_plane);
 
+
   if (vtk) {
     double *vtx_coord =  NULL;
     PDM_g_num_t *vtx_g_num =  NULL;
@@ -517,6 +518,9 @@ int main(int argc, char *argv[])
                                0,
                                NULL,
                                NULL);
+    free(vtx_coord);
+    free(vtx_g_num);
+    free(face_vtx);
   }
 
 
@@ -627,6 +631,13 @@ int main(int argc, char *argv[])
                            0);
   }
 
+  free(origin);
+  free(box_ln_to_gn);
+  free(box_extents);
+  free(n);
+  free(pt_plane);
+  PDM_box_set_destroy(&boxes);
+  PDM_box_tree_destroy(&bt);
 
   PDM_MPI_Finalize ();
 }

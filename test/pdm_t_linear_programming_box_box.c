@@ -532,6 +532,20 @@ int main(int argc, char *argv[])
                         NULL);
   }
 
+
+  free(box_extents_plane);
+  free(box_ln_to_gn_plane);
+  free(box_extents);
+  free(box_ln_to_gn);
+
+  for (int j = 0; j < n_box; j++) {
+    free(box_tag_names[j]);
+    free(box_tag[j]);
+  }
+  free(box_tag_names);
+  free(box_tag);
+  free(box_intersects_box);
+
   PDM_MPI_Finalize ();
 
 }
