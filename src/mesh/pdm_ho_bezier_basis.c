@@ -48,6 +48,7 @@
 #include "pdm_mpi.h"
 #include "pdm_vtk.h"
 #include "pdm_ho_location.h"
+#include "pdm_ho_bezier_basis.h"
 #include "pdm_box_tree.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_ho_seg_intersect.h"
@@ -286,7 +287,7 @@ _basis_bezier_tria_derivative
  double       *restrict dw_dw
 )
 {
-
+  PDM_UNUSED(dw_dw);
   if (order == 1) {
     for (int i = 0; i < n_pts; i++) {
 

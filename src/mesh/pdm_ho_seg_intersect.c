@@ -496,106 +496,107 @@ _ho_bounding_box_line_intersect_points_get
 
 // Li(X)
 
-static double
-_line_lagrange_interpolation_polynom_2d
-(
-const int     order,
-const int     k,
-      double *interpolation_points,
-      double  x_in
-)
-{
-  double x_out = 1;
+// static double
+// _line_lagrange_interpolation_polynom_2d
+// (
+// const int     order,
+// const int     k,
+//       double *interpolation_points,
+//       double  x_in
+// )
+// {
+//   double x_out = 1;
 
-  for (int j = 0; j < order+1; j++) {
-    if (j != k) {
+//   for (int j = 0; j < order+1; j++) {
+//     if (j != k) {
 
-      x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
+//       x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
 
-    } // end if j != k
-  } // end loop on j
+//     } // end if j != k
+//   } // end loop on j
 
-  return x_out;
+//   return x_out;
 
-}
+// }
 
-// Li'(X)
+// // Li'(X)
 
-static double
-_line_lagrange_interpolation_polynom_derivative_2d
-(
-const int order,
-const int k,
-double *interpolation_points,
-double x_in
-)
-{
-  double x_out   = 0;
-  double product = 1;
+// static double
+// _line_lagrange_interpolation_polynom_derivative_2d
+// (
+// const int order,
+// const int k,
+// double *interpolation_points,
+// double x_in
+// )
+// {
+//   double x_out   = 0;
+//   double product = 1;
 
-  for (int i = 0; i < order+1; i++) {
-    for (int j = 0; j < order+1; j++) {
-      if (j != k) {
+//   for (int i = 0; i < order+1; i++) {
+//     for (int j = 0; j < order+1; j++) {
+//       if (j != k) {
 
-        if (i != j) {
+//         if (i != j) {
 
-          x_out *= (1 / (interpolation_points[2*k] - interpolation_points[2*j]));
+//           x_out *= (1 / (interpolation_points[2*k] - interpolation_points[2*j]));
 
-        } else {
+//         } else {
 
-          x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
+//           x_out *= ((x_in - interpolation_points[2*j]) / (interpolation_points[2*k] - interpolation_points[2*j]));
 
-        }
+//         }
 
-      } // end if j != k
-    } // end loop on j
+//       } // end if j != k
+//     } // end loop on j
 
-    x_out += product;
-    product = 1;
+//     x_out += product;
+//     product = 1;
 
-  } // end loop on i
+//   } // end loop on i
 
-  return x_out;
+//   return x_out;
 
-}
+// }
 
 // P(X) = \sum bi Li(X) with P(ai) = bi because L(ai) = 1
 
-static double
-_line_lagrange_polynom_2d
-(
-const int order,
-double *interpolation_points,
-double x_int
-)
-{
-  double x_out = 0;
+// static double
+// _line_lagrange_polynom_2d
+// (
+// const int order,
+// double *interpolation_points,
+// double x_int
+// )
+// {
+//   double x_out = 0;
 
-  for (int i = 0; i < order+1; i++) {
-    x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_2d(order, i, interpolation_points, x_int);
-  } // end loop on i
+//   for (int i = 0; i < order+1; i++) {
+//     x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_2d(order, i, interpolation_points, x_int);
+//   } // end loop on i
 
-  return x_out;
-}
+//   return x_out;
+// }
 
-// P(X) = \sum bi Li'(X) with P(ai) = bi because L(ai) = 1
+// // P(X) = \sum bi Li'(X) with P(ai) = bi because L(ai) = 1
 
-static double
-_line_lagrange_polynom_derivative_2d
-(
-const int order,
-double *interpolation_points,
-double x_int
-)
-{
-  double x_out = 0;
+// static
+// double
+// _line_lagrange_polynom_derivative_2d
+// (
+// const int order,
+// double *interpolation_points,
+// double x_int
+// )
+// {
+//   double x_out = 0;
 
-  for (int i = 0; i < order+1; i++) {
-    x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_derivative_2d(order, i, interpolation_points, x_int);
-  } // end loop on i
+//   for (int i = 0; i < order+1; i++) {
+//     x_out += interpolation_points[2*i+1] * _line_lagrange_interpolation_polynom_derivative_2d(order, i, interpolation_points, x_int);
+//   } // end loop on i
 
-  return x_out;
-}
+//   return x_out;
+// }
 
 // static double
 // _ho_line_intersect_newton_2d

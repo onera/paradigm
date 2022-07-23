@@ -133,6 +133,7 @@ _deformation
  double            *vtx_coord
  )
 {
+  PDM_UNUSED(n_vtx_seg);
   double amplitude = 0.1;//0.07;
   double frequency = 4.;
 
