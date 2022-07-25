@@ -24,7 +24,6 @@
 #include "pdm_dmesh_nodal.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
-#include "pdm_mesh_metric.h"
 #include "pdm_predicate.h"
 #include "pdm_array.h"
 #include "pdm_vtk.h"
