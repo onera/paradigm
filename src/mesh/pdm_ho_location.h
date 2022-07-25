@@ -90,6 +90,20 @@ PDM_ho_location
  );
 
 
+/**
+ * \brief Get the parametric coordinates of the Lagrange nodes
+ *
+ * \param [in]   type              Element type
+ * \param [in]   order             Element order
+ * \param [in]   umin              Lower bound on u-coordinate
+ * \param [in]   umax              Upper bound on u-coordinate
+ * \param [in]   vmin              Lower bound on v-coordinate
+ * \param [in]   vmax              Upper bound on v-coordinate
+ * \param [in]   wmin              Lower bound on w-coordinate
+ * \param [in]   wmax              Upper bound on w-coordinate
+ * \param [out]  uvw_node          Parametric coordinates of the Lagrange nodes
+ *
+ */
 
 void
 PDM_ho_location_uvw_nodes
@@ -102,7 +116,7 @@ PDM_ho_location_uvw_nodes
  const double                vmax,
  const double                wmin,
  const double                wmax,
- double                     *uvw_node
+       double               *uvw_node
  );
 
 #ifdef __cplusplus

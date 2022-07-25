@@ -170,7 +170,8 @@ _newton_tria
         }
         break;
       }
-    } else {
+    }
+    else {
       // Outside triangle
       converged = 1; // ?
       if (vb) {
@@ -201,6 +202,25 @@ _newton_tria
 // TODO: implement de_casteljau_bar
 
 
+/**
+ *
+ * \brief De Casteljau algorithm for Bézier triangles
+ *
+ * Evaluates the point (u,v) on the Bézier triangle
+ * and (optionally) builds the control points of the three
+ * subtriangles sharing the evaluated point as a common vertex.
+ *
+ * \param[in]   dim     Dimension
+ * \param[in]   order   Order
+ * \param[in]   u       Parametric coordinate u
+ * \param[in]   v       Parametric coordinate v
+ * \param[in]   b       Bézier control points
+ * \param[out]  val     Evaluated point
+ * \param[out]  atr     Control points of the 1st subtriangle
+ * \param[out]  ars     Control points of the 2nd subtriangle
+ * \param[out]  ast     Control points of the 3rd subtriangle
+ *
+ */
 
 void
 PDM_ho_bezier_de_casteljau_tria
@@ -227,7 +247,8 @@ PDM_ho_bezier_de_casteljau_tria
   // initialize
   if (b != NULL) {
     memcpy(p[0], b, sizeof(double) * n * dim);
-  } else {
+  }
+  else {
     int idx = 0;
     for (int j = 0; j <= order; j++) {
       for (int i = 0; i <= order - j; i++) {
@@ -319,14 +340,26 @@ PDM_ho_bezier_de_casteljau_tria
 }
 
 
+/**
+ *
+ * \brief Build control points for partial derivatives of a Bézier triangle
+ *
+ * \param[in]   dim     Dimension
+ * \param[in]   order   Order
+ * \param[in]   b       Bézier control points
+ * \param[out]  bu      Bézier control points of 1st partial derivative
+ * \param[out]  bv      Bézier control points of 2nd partial derivative
+ *
+ */
+
 void
 PDM_ho_bezier_triangle_derivatives
 (
- const int  dim,
- const int  order,
- double    *b,
- double    *bu,
- double    *bv
+ const int     dim,
+ const int     order,
+       double *b,
+       double *bu,
+       double *bv
  )
 {
   int idx = 0;
@@ -334,7 +367,7 @@ PDM_ho_bezier_triangle_derivatives
     for (int i = 0; i < order-j; i++) {
 
       int idxij  = ij2idx(i, j, order);
-      int idxi1j = idxij + 1;//ij2idx(i+1, j, order);
+      int idxi1j = idxij + 1;            //ij2idx(i+1, j, order);
       int idxij1 = idxij + order - j + 1;//ij2idx(i, j+1, order);
 
       for (int k = 0; k < dim; k++) {
@@ -348,6 +381,18 @@ PDM_ho_bezier_triangle_derivatives
 }
 
 
+/**
+ *
+ * \brief Point location in a high-order Bézier triangle
+ *
+ * \param[in]   order             Order
+ * \param[in]   n_node            Number of nodes
+ * \param[in]   node_coord        Coordinates of the Bézier control points (size = 3 * \ref n_node)
+ * \param[in]   point_coord       Coordinates of the point to locate (size = 3)
+ * \param[out]  projected_coords  Coordinates of the projection on the Bézier triangle (size = 3)
+ * \param[out]  uvw               Parametric coordinates of the projection on the Bézier triangle
+ *
+ */
 
 double
 PDM_ho_bezier_tria_location
@@ -367,10 +412,10 @@ PDM_ho_bezier_tria_location
 
   double distance, weight[3];
   PDM_triangle_evaluate_position(point_coord,
-                             P1_coord,
-                             projected_coord,
-                             &distance,
-                             weight);
+                                 P1_coord,
+                                 projected_coord,
+                                 &distance,
+                                 weight);
   uvw[0] = weight[2];
   uvw[1] = weight[0];
   uvw[2] = weight[1];
