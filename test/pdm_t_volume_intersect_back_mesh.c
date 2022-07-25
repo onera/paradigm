@@ -167,8 +167,6 @@ _vtk_write_volume
  double     *plane_normal
  )
 {
-  const double scale = 1.;
-
   double u[3], v[3], w[3];
   for (int i = 0; i < 3; i++) {
     u[i] = plane_point[3+i] - plane_point[i];
@@ -868,7 +866,7 @@ int main(int argc, char *argv[])
                                                                         back_distrib_face[n_rank]);
   free(distrib);
 
-  int dn_block_face =  PDM_part_to_block_n_elt_block_get(ptb2);
+  // int dn_block_face =  PDM_part_to_block_n_elt_block_get(ptb2);
 
   free(part_stride);
   PDM_part_to_block_free(ptb2);
@@ -894,8 +892,8 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_DMesh_nodal_free(vol_dmn);
 
-  int         **volume       = malloc(sizeof(int  *) * total_n_edges);
-  const char  **volume_names = malloc(sizeof(char *) * total_n_edges);
+  int  **volume       = malloc(sizeof(int  *) * total_n_edges);
+  char **volume_names = malloc(sizeof(char *) * total_n_edges);
 
   for (int ivol = 0; ivol < total_n_edges; ivol++) {
     volume[ivol] = PDM_array_zeros_int(dn_back_face);
@@ -907,7 +905,7 @@ int main(int argc, char *argv[])
   if (vtk) {
 
   for (int ibox = 0; ibox < dn_back_face; ibox++) {
-    PDM_g_num_t box_gnum = d_back_face_ln_to_gn[ibox];
+    // PDM_g_num_t box_gnum = d_back_face_ln_to_gn[ibox];
     for (int ivol = d_box_volume_idx[ibox]; ivol < d_box_volume_idx[ibox+1]; ivol++) {
       PDM_g_num_t vol_gnum = d_box_volume_g_num[ivol];
       volume[vol_gnum-1][ibox] = 1;
@@ -926,7 +924,7 @@ int main(int argc, char *argv[])
                                p_back_face_vtx,
                                d_back_face_ln_to_gn,
                                total_n_edges,
-                               volume_names,
+               (const char **) volume_names,
                 (const int **) volume);
 
     char filename2[999];
@@ -968,11 +966,11 @@ int main(int argc, char *argv[])
                       -1,
                       comm);
   free(distrib_cavity);
-  PDM_g_num_t *cavity_ln_to_gn = vol_edge_ln_to_gn;
+  // PDM_g_num_t *cavity_ln_to_gn = vol_edge_ln_to_gn;
 
   // Retreive associated edges (just the edges already in partition of rank i)
 
-  PDM_g_num_t *pcavity_seed_edge_g_num   = vol_edge_ln_to_gn;
+  // PDM_g_num_t *pcavity_seed_edge_g_num   = vol_edge_ln_to_gn;
   int         *seed_edge_back_face_idx   = volume_boxes_idx;
   PDM_g_num_t *seed_edge_back_face_g_num = volume_boxes_g_num;
   int         *seed_edge_vtx             = p_vol_edge_vtx;
@@ -1075,7 +1073,7 @@ int main(int argc, char *argv[])
   // for VTK
   // double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
   double *back_face_proj_pts = malloc(sizeof(double) * p_n_back_face * 3);
-  int     n_back_face_proj_pts;
+  // int     n_back_face_proj_pts;
 
   for (int icav = 0; icav < d_n_cavity; icav++) {
     int edge_id = icav; // tmp in mesh_adaptation need an idx

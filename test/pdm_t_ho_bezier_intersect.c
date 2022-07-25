@@ -404,6 +404,7 @@ int main(int argc, char *argv[])
   free(vtx_g_num);
   free(face_vtx);
   free(face_g_num);
+  free(vtx_field);
 
   PDM_MPI_Finalize ();
 
