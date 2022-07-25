@@ -1067,6 +1067,7 @@ int main(int argc, char *argv[])
 
   p_back_vtx_coord = n_part_p_back_vtx_coord[0];
   free(n_part_p_back_vtx_coord);
+  free(n_part_p_back_n_vtx);
 
   // Do projections
 

@@ -1582,6 +1582,20 @@ _generate_edges_from_dmesh_nodal
   delmt_edge_vtx_idx[1] = delmt_ridge_edge_vtx_idx;
   delmt_edge_vtx    [1] = delmt_ridge_edge_vtx    ;
 
+
+  if(dmesh_nodal->ridge->dparent_idx != NULL) {
+    free(dmesh_nodal->ridge->dparent_idx);
+  }
+  if(dmesh_nodal->ridge->dparent_gnum != NULL) {
+    free(dmesh_nodal->ridge->dparent_gnum);
+  }
+  if(dmesh_nodal->ridge->dparent_sign != NULL) {
+    free(dmesh_nodal->ridge->dparent_sign);
+  }
+  if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
+    free(dmesh_nodal->ridge->delmt_child_distrib);
+  }
+
   /* Memory is deallocated inside */
   int n_section_child = dmesh_nodal->ridge->n_section;
   PDM_g_num_t n_g_child = dmesh_nodal->ridge->section_distribution[n_section_child];
