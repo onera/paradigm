@@ -187,6 +187,7 @@ test_c_create (pdm_t_mesh_check 1)
 test_c_create (pdm_t_join_domains 2)
 test_c_create (pdm_t_ho_location 1)
 test_c_create (pdm_t_subdivision_bezier_triangle 1)
+test_c_create (pdm_t_projection_back_mesh 1)
 
 test_c_create (pdm_t_ho_bezier_intersect 1)
 
