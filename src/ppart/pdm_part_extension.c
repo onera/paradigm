@@ -356,16 +356,16 @@ int iproc2, int ipart2, int ielt2
 inline
 static
 int
-_lexicographic_equal_long
+_lexicographic_equal_int
 (
-  const PDM_g_num_t *x,
-  const PDM_g_num_t *y,
+  const int *x,
+  const int *y,
   const int          stride
 )
 {
   int res = x[0] == y[0];
   if(res == 1 && stride > 1) {
-    return _lexicographic_equal_long(&x[1], &y[1], stride-1);
+    return _lexicographic_equal_int(&x[1], &y[1], stride-1);
   }
   return x[0] == y[0];
 }
@@ -1720,7 +1720,7 @@ _generate_graph_comm_with_extended
       }
 
       for(int k = 0; k < n_in_bucket; ++k) {
-        int is_same = _lexicographic_equal_long(last_value, &sort1_neighbor[beg+cst_size*k], cst_size);
+        int is_same = _lexicographic_equal_int(last_value, &sort1_neighbor[beg+cst_size*k], cst_size);
         if(is_same == 0){ // N'est pas le meme
           for(int j = 0; j < (int) cst_size; ++j) {
             last_value[j] = sort1_neighbor[beg+cst_size*k+j];
@@ -2134,12 +2134,12 @@ _warm_up_domain_interface
     shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
-  int **pdi_neighbor_idx         = NULL;
-  int **pdi_neighbor             = NULL;
-  int   n_composed_interface     = 0;
-  int  *composed_interface_idx   = NULL;
-  int  *composed_interface       = NULL;
-  int  *composed_ln_to_gn_sorted = NULL;
+  int         **pdi_neighbor_idx         = NULL;
+  int         **pdi_neighbor             = NULL;
+  int           n_composed_interface     = 0;
+  int          *composed_interface_idx   = NULL;
+  int          *composed_interface       = NULL;
+  PDM_g_num_t  *composed_ln_to_gn_sorted = NULL;
 
   /*
    * Attention ici car pour différentes entités on obtient des nouvelles interfaces !!!!
@@ -2290,7 +2290,7 @@ _warm_up_domain_interface
       n_current_lentity[i_part+shift_part] = n_unique; //_neighbor_idx[n_entity[i_part+shift_part]];
 
       if(0 == 1) {
-        PDM_log_trace_array_int(opp_interface_and_gnum[i_part+shift_part], 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
+        PDM_log_trace_array_long(opp_interface_and_gnum[i_part+shift_part], 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
         PDM_log_trace_array_int(current_lentity       [i_part+shift_part],      n_current_lentity[i_part+shift_part] , "_current_lentity : ");
       }
 
@@ -6099,7 +6099,7 @@ PDM_part_extension_compute
         int n_vtx_tot = pn_vtx + n_vtx_extended;
         int n_face_tot = pn_face+n_face_extended;
 
-        int *concat_face_ln_to_gn = malloc( (n_face_tot+1) * sizeof(int));
+        PDM_g_num_t *concat_face_ln_to_gn = malloc( (n_face_tot+1) * sizeof(PDM_g_num_t));
         int *concat_face_vtx_idx  = malloc( (n_face_tot+1) * sizeof(int));
         int *concat_face_vtx      = malloc( (pface_vtx_idx[pn_face] + pface_vtx_extented_idx[n_face_extended])* sizeof(int));
 

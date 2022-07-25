@@ -150,7 +150,7 @@ PDM_part_domain_interface_as_graph
   int                            *n_g_interface,
   int                           **composed_id_idx,
   int                           **composed_id,
-  int                           **composed_ln_to_gn_sorted
+  PDM_g_num_t                   **composed_ln_to_gn_sorted
 );
 
 

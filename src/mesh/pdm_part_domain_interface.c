@@ -1050,7 +1050,7 @@ PDM_part_domain_interface_as_graph
   int                            *n_g_interface,
   int                           **all_composed_id_idx,
   int                           **all_composed_id,
-  int                           **all_composed_ln_to_gn_sorted
+  PDM_g_num_t                   **all_composed_ln_to_gn_sorted
 )
 {
   PDM_UNUSED(entity_ln_to_gn);
@@ -1481,8 +1481,8 @@ PDM_part_domain_interface_as_graph
   PDM_g_num_t* composed_id_gnum = composed_key;
 
   if(0 == 1) {
-    PDM_log_trace_array_int(composed_key    , i_composed_interface, "composed_id :: ");
-    PDM_log_trace_array_int(composed_id_gnum, i_composed_interface, "composed_id_gnum :: ");
+    PDM_log_trace_array_long(composed_key    , i_composed_interface, "composed_id :: ");
+    PDM_log_trace_array_long(composed_id_gnum, i_composed_interface, "composed_id_gnum :: ");
     PDM_log_trace_connectivity_int(composed_id_idx, composed_id, i_composed_interface, "composed_id :: ");
   }
 

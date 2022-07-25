@@ -394,12 +394,12 @@ const size_t           stride,
     return 0;
   }
 
-  PDM_order_lnum_s(array, stride, order, n_entity);
+  PDM_order_gnum_s(array, stride, order, n_entity);
 
   /* Apply sort */
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
-  int *last_value = malloc(stride * sizeof(int));
+  PDM_g_num_t *last_value = malloc(stride * sizeof(PDM_g_num_t));
 
   int new_size  = 1;
   int idx_write = 1;

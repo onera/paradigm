@@ -2040,15 +2040,15 @@ int main(int argc, char *argv[])
 
 
   /* Deform */
-  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
-                    {0.3129918,  0.9447025, -0.0978434},
-                    {-0.1593451,  0.1537920,  0.9751703}};
+  // double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+  //                   {0.3129918,  0.9447025, -0.0978434},
+  //                   {-0.1593451,  0.1537920,  0.9751703}};
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
-  double amplitude = 0.1;//0.07;
-  double frequence = 4.;
+  // double amplitude = 0.1;//0.07;
+  // double frequence = 4.;
 
   // if (1) {
   //   for (int i = 0; i < dn_vtx; i++) {

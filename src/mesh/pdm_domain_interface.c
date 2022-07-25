@@ -2543,7 +2543,7 @@ PDM_domain_interface_translate_entity1_entity2
     key_data_n  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
     key_weight  [i_domain] = (double      *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(double     ));
     stride_one  [i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
-    gnum_entity2[i_domain] = (int         *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(int        ));
+    gnum_entity2[i_domain] = (PDM_g_num_t *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(PDM_g_num_t));
 
     key_data    [i_domain] = (PDM_g_num_t *) malloc( key_data_size_approx[i_domain] * sizeof(PDM_g_num_t));
     // key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( n_entity2_intf[i_domain] * sizeof(PDM_g_num_t));

@@ -51,7 +51,7 @@ contains
     real(8), pointer                     :: ptr_r8 (:)
     complex(8), pointer                  :: ptr_c8 (:)
     character(len=:), pointer            :: buffer=>null()
-    type(c_ptr)                          :: cptr
+    ! type(c_ptr)                          :: cptr
     integer(kind=4)                      :: s_data
     integer(kind=pdm_g_num_s)            :: n_data
     character(80), pointer               :: lignesBlock(:)
@@ -174,7 +174,7 @@ contains
     
     !>>> Ecriture Entrelacee
     block
-      integer                              :: iRank
+      ! integer                              :: iRank
       integer                              :: iLine,nLines
       character(80)                        :: ligne
       integer(kind=pdm_g_num_s), pointer   :: indirection(:)
@@ -296,7 +296,7 @@ contains
       integer                              :: iRank
       integer                              :: iLine,nLines
       integer, pointer                     :: nLinesRank(:)
-      character(80)                        :: ligne
+      ! character(80)                        :: ligne
       character(80), pointer               :: lignes(:)
       integer(kind=pdm_g_num_s)            :: shift
       integer, pointer                     :: iTab(:)
@@ -350,11 +350,11 @@ contains
     block
       integer                              :: iRank
       integer                              :: iLine,nLines
-      character(80)                        :: ligne
+      ! character(80)                        :: ligne
       character(80), pointer               :: lignes(:)
       integer (kind = pdm_g_num_s), pointer:: indirection(:)
       integer, pointer                     :: iTab(:)
-      type(c_ptr)                          :: cptr
+      ! type(c_ptr)                          :: cptr
       
       if( rank==0 )print '(/3x,"Lecture Entrelacee")'
       

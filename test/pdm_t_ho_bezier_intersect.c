@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * n_vtx);
   int *face_vtx = malloc(sizeof(int) * n_vtx_triangle);
   PDM_g_num_t *face_g_num = malloc(sizeof(PDM_g_num_t) * 1);
-  char        *vtx_field_name = "ho_bezier_basis";
+  const char        *vtx_field_name = "ho_bezier_basis";
   double      *vtx_field = malloc(sizeof(double) * n_vtx);
 
   for (int j = 0; j < n_vtx_triangle; j++) {

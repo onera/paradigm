@@ -575,8 +575,8 @@ int main
   int         **dface_vtx_idx = malloc( n_domain * sizeof(int         *));
   PDM_g_num_t **dface_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
   PDM_g_num_t **dedge_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **dedge_vtx_idx = malloc( n_domain * sizeof(PDM_g_num_t *));
-
+  int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
+ 
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
 
@@ -1207,7 +1207,7 @@ int main
 
         // for(int i = 0; )
 
-        int *color_face = (int *) malloc(n_face_tot * sizeof(int));
+        PDM_g_num_t *color_face = (PDM_g_num_t *) malloc(n_face_tot * sizeof(PDM_g_num_t));
         concat_face_edge_idx[0] = 0;
         for(int i_face = 0; i_face < n_face2; ++i_face) {
           concat_face_edge_idx[i_face+1] = concat_face_edge_idx[i_face];
@@ -1290,7 +1290,7 @@ int main
         int *concat_face_vtx     = malloc( (face_edge_idx[n_face2] + extend_face_vtx_idx[n_face_extended])* sizeof(int));
 
 
-        int *color_face = (int *) malloc(n_face_tot * sizeof(int));
+        PDM_g_num_t *color_face = (PDM_g_num_t *) malloc(n_face_tot * sizeof(PDM_g_num_t));
         concat_face_vtx_idx[0] = 0;
         for(int i_face = 0; i_face < n_face2; ++i_face) {
           concat_face_vtx_idx[i_face+1] = concat_face_vtx_idx[i_face];

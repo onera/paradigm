@@ -495,7 +495,7 @@ PDM_part_mesh_nodal_dump_vtk
       int         *pcell_vtx       = NULL;
       PDM_g_num_t *pelmt_ln_to_gn  = NULL;
       int         *parent_num      = NULL;
-      int         *parent_elmt_num = NULL;
+      PDM_g_num_t *parent_elmt_num = NULL;
       PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
                                                  section_id[i_section],
                                                  i_part,
