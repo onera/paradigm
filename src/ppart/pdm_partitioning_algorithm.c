@@ -153,8 +153,8 @@ PDM_part_assemble_partitions
                              comm);
 
   const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
-  printf("rank = %i | n_part_block = %i\n",i_rank,n_part_block);
-  printf("rank = %i | dn_part = %i\n",i_rank,dn_part);
+  // printf("rank = %i | n_part_block = %i\n",i_rank,n_part_block);
+  // printf("rank = %i | dn_part = %i\n",i_rank,dn_part);
   assert(n_part_block == dn_part || n_part_block==0);
   /*
    * Generate global numbering
