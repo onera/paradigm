@@ -423,6 +423,27 @@ PDM_vtk_write_polydata_field
  const double       vtx_field[]
  );
 
+
+void
+PDM_vtk_write_std_elements_ho_with_vtx_field
+(
+ const char                 *filename,
+ const int                   order,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const int                   n_elt,
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[],
+ const int                   n_vtx_field,
+ const char                 *vtx_field_name[],
+ const double               *vtx_field[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

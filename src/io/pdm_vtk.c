@@ -1929,6 +1929,137 @@ PDM_vtk_write_std_elements_ho
 
 
 
+void
+PDM_vtk_write_std_elements_ho_with_vtx_field
+(
+ const char                 *filename,
+ const int                   order,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const int                   n_elt,
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[],
+ const int                   n_vtx_field,
+ const char                 *vtx_field_name[],
+ const double               *vtx_field[]
+ )
+{
+  //assert (order < 3);
+
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
+  if(0 == 1) {
+    int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
+    _ijk_to_vtk (elt_type, order, vtk_idx);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_elt, n_elt * (1 + n_vtx_elt));
+  if (elt_type == PDM_MESH_NODAL_POINT) {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "1 %d\n", i);
+    }
+  }
+  else {
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, "%d", n_vtx_elt);
+      for (int j = 0; j < n_vtx_elt; j++) {
+      //fprintf(f, " %d", elt_vtx[n_vtx_elt*i + vtk_idx[j]] - 1);
+        fprintf(f, " %d", elt_vtx[n_vtx_elt*i + j] - 1);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+
+  int vtk_elt_type = _vtk_elt_type (elt_type, order);
+  fprintf(f, "CELL_TYPES %d\n", n_elt);
+  for (int i = 0; i < n_elt; i++) {
+    fprintf(f, "%d\n", vtk_elt_type);
+  }
+
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS vtx_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  }
+
+  if (elt_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_elt);
+    fprintf(f, "SCALARS elt_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", elt_g_num[i]);
+     }
+  }
+
+  if (n_elt_field > 0) {
+    assert (elt_field != NULL);
+
+    if (elt_g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_elt);
+    }
+
+    fprintf(f, "FIELD elt_field %d\n", n_elt_field);
+    for (int i = 0; i < n_elt_field; i++) {
+      // assert (elt_field[i] != NULL);
+      assert (elt_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
+      for (int j = 0; j < n_elt; j++) {
+        fprintf(f, "%lf ", elt_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  if (n_vtx_field > 0) {
+    assert (vtx_field != NULL);
+
+    if (vtx_g_num == NULL) {
+      fprintf(f, "POINT_DATA %d\n", n_vtx);
+    }
+
+    fprintf(f, "FIELD vtx_field %d\n", n_vtx_field);
+    for (int i = 0; i < n_vtx_field; i++) {
+      // assert (vtx_field[i] != NULL);
+      assert (vtx_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", vtx_field_name[i], n_vtx);
+      for (int j = 0; j < n_vtx; j++) {
+        fprintf(f, "%lf ", vtx_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fclose(f);
+}
+
+
+
 /**
  * \brief Export a set of ellipsed to ASCII VTK format (unstructured grid of line segments)
  *

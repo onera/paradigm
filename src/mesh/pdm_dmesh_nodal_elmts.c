@@ -368,6 +368,20 @@ const int                n_group_elmt,
   dmn_elts->dgroup_elmt_owner = owner;
 }
 
+void
+PDM_DMesh_nodal_elmts_group_get
+(
+ PDM_dmesh_nodal_elmts_t  *dmn_elts,
+ int                      *n_group_elmt,
+ int                     **dgroup_elmt_idx,
+ PDM_g_num_t             **dgroup_elmt
+)
+{
+  *n_group_elmt    = dmn_elts->n_group_elmt;
+  *dgroup_elmt_idx = dmn_elts->dgroup_elmt_idx;
+  *dgroup_elmt     = dmn_elts->dgroup_elmt;
+}
+
 
 void
 PDM_DMesh_nodal_elmts_free

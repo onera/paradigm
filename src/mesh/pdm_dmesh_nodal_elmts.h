@@ -97,6 +97,15 @@ const int                n_group_elmt,
 );
 
 void
+PDM_DMesh_nodal_elmts_group_get
+(
+ PDM_dmesh_nodal_elmts_t  *dmn_elts,
+ int                      *n_group_elmt,
+ int                     **dgroup_elmt_idx,
+ PDM_g_num_t             **dgroup_elmt
+);
+
+void
 PDM_DMesh_nodal_elmts_free
 (
 PDM_dmesh_nodal_elmts_t* dmn_elts
