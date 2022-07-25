@@ -83,7 +83,8 @@ static void
 _read_args(int            argc,
            char         **argv,
            char         **filename,
-           int           *dim)
+           int           *dim,
+           int           *visu)
 {
   int i = 1;
 
@@ -110,6 +111,10 @@ _read_args(int            argc,
       else {
         *dim = atoi(argv[i]);
       }
+    }
+
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
 
     else
@@ -855,10 +860,16 @@ int main(int argc, char *argv[])
    */
   char *filename = NULL;
   int   mesh_dim = 3;
+  int   visu     = 0;
   _read_args(argc,
              argv,
              &filename,
-             &mesh_dim);
+             &mesh_dim,
+             &visu);
+
+  if (filename == NULL) {
+    filename = (char *) "meshes/box.mesh";
+  }
 
 
   /*
@@ -899,35 +910,37 @@ int main(int argc, char *argv[])
   /*
    *  Visu
    */
-  char prefix[999];
+  if (visu) {
+    char prefix[999];
 
-  for (int i = 0; i < n_ridge; i++) {
+    for (int i = 0; i < n_ridge; i++) {
 
-    sprintf(prefix, "ridge_%d", i);
-    _dump_dstd_elt(prefix,
-                   comm,
-                   distrib_vtx,
-                   dvtx_coord,
-                   ridge_distrib_edge[i],
-                   ridge_dedge_vtx[i],
-                   PDM_MESH_NODAL_BAR2,
-                   order);
+      sprintf(prefix, "ridge_%d", i);
+      _dump_dstd_elt(prefix,
+                     comm,
+                     distrib_vtx,
+                     dvtx_coord,
+                     ridge_distrib_edge[i],
+                     ridge_dedge_vtx[i],
+                     PDM_MESH_NODAL_BAR2,
+                     order);
 
-  }
+    }
 
 
-  for (int i = 0; i < n_surface; i++) {
+    for (int i = 0; i < n_surface; i++) {
 
-    sprintf(prefix, "surface_%d", i);
-    _dump_dstd_elt(prefix,
-                   comm,
-                   distrib_vtx,
-                   dvtx_coord,
-                   surface_distrib_face[i],
-                   surface_dface_vtx[i],
-                   PDM_MESH_NODAL_TRIA3,
-                   order);
+      sprintf(prefix, "surface_%d", i);
+      _dump_dstd_elt(prefix,
+                     comm,
+                     distrib_vtx,
+                     dvtx_coord,
+                     surface_distrib_face[i],
+                     surface_dface_vtx[i],
+                     PDM_MESH_NODAL_TRIA3,
+                     order);
 
+    }
   }
 
 
