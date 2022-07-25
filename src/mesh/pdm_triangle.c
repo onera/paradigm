@@ -15,7 +15,6 @@
 #include "pdm_triangle.h"
 #include "pdm_line.h"
 #include "pdm_plane.h"
-#include "pdm_logging.h"
 
 /*=============================================================================
  * Macro definitions
@@ -29,7 +28,26 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
- * Type
+ * Private function definitions
+ *============================================================================*/
+
+/* Computes the determinant of a 3x3 matrix defined by its columns */
+
+static inline double
+_determinant_3x3
+(
+ const double a[3],
+ const double b[3],
+ const double c[3]
+ )
+{
+  return a[0] * (b[1]*c[2] - b[2]*c[1])
+    +    a[1] * (b[2]*c[0] - b[0]*c[2])
+    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
+}
+
+/*============================================================================
+ * Public function definitions
  *============================================================================*/
 
 
@@ -350,6 +368,66 @@ PDM_GCC_SUPPRESS_WARNING_POP
         }
     return PDM_TRIANGLE_OUTSIDE;
   }
+}
+
+/**
+ * \brief Computes the intersection between a line and a triangle
+ *
+ * \param [in]   line        Points of the line
+ * \param [in]   tria_coord  Points of the triangle
+ * \param [out]  ip          Intersection point
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_line_intersection
+(
+const double line[6],
+const double tria_coord[9],
+      double ip[3]
+)
+{
+
+  PDM_plane_line_intersection(line, tria_coord, ip);
+
+  PDM_triangle_status_t found = PDM_TRIANGLE_OUTSIDE;
+
+  /* Check if intersection point is in the triangle */
+  double c1[3];
+  double c2[3];
+  double c3[3];
+
+  double det1, det2, det3;
+
+  // ABD
+  c1[0] = tria_coord[0]; c1[1] = tria_coord[3]; c1[2] = ip[0];
+  c2[0] = tria_coord[1]; c2[1] = tria_coord[4]; c2[2] = ip[1];
+  c3[0] = tria_coord[2]; c3[1] = tria_coord[5]; c3[2] = ip[2];
+
+  det1 = _determinant_3x3(c1, c2, c3);
+
+  // DBC
+  c1[0] = ip[0]; c1[1] = tria_coord[3]; c1[2] = tria_coord[6];
+  c2[0] = ip[1]; c2[1] = tria_coord[4]; c2[2] = tria_coord[7];
+  c3[0] = ip[2]; c3[1] = tria_coord[5]; c3[2] = tria_coord[8];
+
+  det2 = _determinant_3x3(c1, c2, c3);
+
+  // ADC
+  c1[0] = tria_coord[0]; c1[1] = ip[0]; c1[2] = tria_coord[6];
+  c2[0] = tria_coord[1]; c2[1] = ip[1]; c2[2] = tria_coord[7];
+  c3[0] = tria_coord[2]; c3[1] = ip[2]; c3[2] = tria_coord[8];
+
+  det3 = _determinant_3x3(c1, c2, c3);
+
+  if (det1 > 0 && det2 > 0 && det3 > 0) {
+
+    found = PDM_TRIANGLE_INSIDE;
+
+  } // end if point is inside triangle
+
+  return found;
+
 }
 
 
