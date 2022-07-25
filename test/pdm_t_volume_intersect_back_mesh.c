@@ -441,6 +441,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < dn_back_vtx; ++i) {
     d_back_vtx_ln_to_gn[i] = back_distrib_face[i_rank] + i + 1;
   }
+  free(d_back_vtx_ln_to_gn);
 
   PDM_g_num_t *p_back_vtx_ln_to_gn = NULL;
   int         *p_back_face_vtx_idx = NULL;
@@ -467,8 +468,8 @@ int main(int argc, char *argv[])
                                         n_part_p_back_n_vtx,
                  (const PDM_g_num_t **) &p_back_vtx_ln_to_gn,
                                         &n_part_p_back_vtx_coord);
-
   double *p_back_vtx_coord = n_part_p_back_vtx_coord[0];
+  free(n_part_p_back_vtx_coord);
 
   // Create the extents faces as a partition and get associated coords
   double      *background_box_extents = malloc(sizeof(double)      * dn_back_face * 6);
@@ -536,6 +537,9 @@ int main(int argc, char *argv[])
                                                  &dn_back_face,
                                (const double **) &background_box_extents,
                           (const PDM_g_num_t **) &d_back_face_ln_to_gn);
+
+  free(background_box_extents);
+  free(d_back_face_ln_to_gn);
 
   // Create volumes using normals (first "volume" mesh then background mesh)
 
@@ -609,6 +613,7 @@ int main(int argc, char *argv[])
   if (verbose) {
     PDM_log_trace_array_double(edge_face_normal, edge_face_normal_idx[p_vol_n_edge], "edge_face_normal");
   }
+  free(edge_face_normal_idx);
 
   // Get normal contributions for other procs
 
@@ -656,6 +661,9 @@ int main(int argc, char *argv[])
 
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
+
+  free(block_data);
+  free(block_stride);
 
   // compute volume angle
 
@@ -718,7 +726,7 @@ int main(int argc, char *argv[])
     if (vtk) {
 
       char filename4[999];
-      sprintf(filename4, "volume_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
+      sprintf(filename4, "volume_of_edge_id_"PDM_FMT_G_NUM".vtk", vol_edge_ln_to_gn[iedge]);
       _vtk_write_volume(filename4,
                         pt_plane,
                         normal);
@@ -726,7 +734,7 @@ int main(int argc, char *argv[])
     const char *normal_name = "normal";
 
     char filename38[999];
-    sprintf(filename38, "normal_of_edge_id_%ld.vtk", vol_edge_ln_to_gn[iedge]);
+    sprintf(filename38, "normal_of_edge_id_"PDM_FMT_G_NUM".vtk", vol_edge_ln_to_gn[iedge]);
     PDM_vtk_write_point_cloud_with_field(filename38,
                                          4,
                                          pt_plane,
@@ -814,6 +822,10 @@ int main(int argc, char *argv[])
       log_trace("\n");
     }
   }
+  free(edge_normal);
+  free(edge_pt_plane);
+  free(direction_vect);
+  free(volume_plane_idx);
 
   // VTK output of surface mesh with tagged elements for each volume mesh edges
 
@@ -849,6 +861,7 @@ int main(int argc, char *argv[])
                (void **) &p_box_volume_g_num,
                          &d_box_volume_stride,
                (void **) &d_box_volume_g_num);
+  free(p_box_volume_g_num);
 
   PDM_g_num_t* distrib = PDM_part_to_block_adapt_partial_block_to_block(ptb2,
                                                                         &d_box_volume_stride,
@@ -861,6 +874,7 @@ int main(int argc, char *argv[])
   PDM_part_to_block_free(ptb2);
 
   int *d_box_volume_idx = PDM_array_new_idx_from_sizes_int(d_box_volume_stride, dn_back_face);
+  free(d_box_volume_stride);
 
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, comm, PDM_OWNERSHIP_KEEP);
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, vol_dmn);
@@ -878,6 +892,7 @@ int main(int argc, char *argv[])
   int total_n_edges = dedge_distrib[n_rank];
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+  PDM_DMesh_nodal_free(vol_dmn);
 
   int         **volume       = malloc(sizeof(int  *) * total_n_edges);
   const char  **volume_names = malloc(sizeof(char *) * total_n_edges);
@@ -930,6 +945,20 @@ int main(int argc, char *argv[])
 
   }
 
+  PDM_dbbtree_free(dbbt);
+  PDM_box_set_destroy(&box_set);
+  free(d_box_volume_idx);
+  free(d_box_volume_g_num);
+  for (int ivol = 0; ivol < total_n_edges; ivol++) {
+    free(volume[ivol]);
+    free(volume_names[ivol]);
+  }
+  free(volume);
+  free(volume_names);
+  free(p_vol_face_vtx);
+
+
+
   // Create a fake cavity distribution to mimic the pdm_mesh_adaptation setting
 
   int d_n_cavity = p_vol_n_edge;
@@ -938,6 +967,7 @@ int main(int argc, char *argv[])
                       distrib_cavity,
                       -1,
                       comm);
+  free(distrib_cavity);
   PDM_g_num_t *cavity_ln_to_gn = vol_edge_ln_to_gn;
 
   // Retreive associated edges (just the edges already in partition of rank i)
@@ -1004,6 +1034,9 @@ int main(int argc, char *argv[])
   free(p_back_vtx_ln_to_gn);
   free(p_back_face_vtx_idx);
   free(p_back_face_vtx    );
+  free(unique_order    );
+  free(order    );
+  free(toto_g_num    );
 
   // PDM_g_num_t *p_back_vtx_ln_to_gn = NULL;
   // int         *p_back_face_vtx_idx = NULL;
@@ -1020,7 +1053,8 @@ int main(int argc, char *argv[])
                                                            &p_back_face_vtx);
 
   free(n_part_p_back_n_vtx    );
-  free(n_part_p_back_vtx_coord);
+  free(p_back_face_ln_to_gn);
+  free(p_back_vtx_coord);
 
   n_part_p_back_n_vtx    = malloc(sizeof(int) * n_part);
   n_part_p_back_n_vtx[0] = p_back_n_vtx;
@@ -1034,6 +1068,7 @@ int main(int argc, char *argv[])
                                         &n_part_p_back_vtx_coord);
 
   p_back_vtx_coord = n_part_p_back_vtx_coord[0];
+  free(n_part_p_back_vtx_coord);
 
   // Do projections
 
@@ -1065,8 +1100,8 @@ int main(int argc, char *argv[])
                                        2,
                                        2,
                                        &proj_pt_coord);
-
     memcpy(back_face_proj_pts + 3*icav, proj_pt_coord, sizeof(double) * 3);
+    free(proj_pt_coord);
 
   } // end loop on cavities
 
@@ -1114,6 +1149,26 @@ int main(int argc, char *argv[])
 
     //   memcpy(back_face_proj_pts + 3*face_head, closestPoint, sizeof(double) * 3);
     //   face_head++;
+  PDM_multipart_free(mpart);
+  free(seed_edge_back_face_idx);
+  free(edge_face_normal_stride);
+  free(edge_face_normal);
+  free(back_face_proj_pts);
+  free(face_center);
+  free(face_normal);
+  free(p_back_vtx_ln_to_gn);
+  free(p_back_face_vtx_idx);
+  free(p_back_face_vtx    );
+  free(seed_edge_back_face_l_num    );
+  free(seed_edge_back_face_g_num    );
+  free(p_back_vtx_coord    );
+
+  free(d_back_vtx_coord   );
+  free(d_back_face_vtx_idx);
+  free(d_back_face_vtx    );
+  free(back_distrib_vtx   );
+  free(back_distrib_face  );
+
 
   PDM_MPI_Finalize ();
 }

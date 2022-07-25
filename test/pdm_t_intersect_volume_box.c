@@ -510,11 +510,13 @@ int main(int argc, char *argv[])
   PDM_g_num_t *line_g_num = malloc(sizeof(PDM_g_num_t) * 1);
   line_g_num[0] = 1;
 
-  PDM_vtk_write_lines(filename2,
-                      1,
-                      coord,
-                      line_g_num,
-                      NULL);
+  if(1 == 0) {
+    PDM_vtk_write_lines(filename2,
+                        1,
+                        coord,
+                        line_g_num,
+                        NULL);
+  }
 
   const char *filename3 = "planes.vtk";
   double *vtx_coord = malloc(sizeof(double) * 30);
@@ -594,17 +596,19 @@ int main(int argc, char *argv[])
   face_vtx[10] = 7;
   face_vtx[11] = 8;
 
-  PDM_vtk_write_std_elements(filename3,
-                             10,
-                             vtx_coord,
-                             vtx_g_num,
-                             PDM_MESH_NODAL_TRIA3,
-                             4,
-                             face_vtx,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+  if(1 == 0) {
+    PDM_vtk_write_std_elements(filename3,
+                               10,
+                               vtx_coord,
+                               vtx_g_num,
+                               PDM_MESH_NODAL_TRIA3,
+                               4,
+                               face_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
   const char *filename4 = "normal.vtk";
 
@@ -612,20 +616,22 @@ int main(int argc, char *argv[])
 
   const char* normal_name[] = {"n", 0};
 
-  PDM_vtk_write_point_cloud_with_field(filename4,
-                                       4,
-                                       pt_plane,
-                                       NULL,
-                                       NULL,
-                                       0,
-                                       NULL,
-                                       NULL,
-                                       1,
-                       (const char **) &normal_name,
-                     (const double **) &vector_normal,
-                                       0,
-                                       NULL,
-                                       NULL);
+  if(1 == 0) {
+    PDM_vtk_write_point_cloud_with_field(filename4,
+                                         4,
+                                         pt_plane,
+                                         NULL,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         1,
+                         (const char **) &normal_name,
+                       (const double **) &vector_normal,
+                                         0,
+                                         NULL,
+                                         NULL);
+  }
 
   /* Higher scale box-box test case */
 
@@ -681,6 +687,8 @@ int main(int argc, char *argv[])
                                           &box_extents_plane,
                                           &box_ln_to_gn_plane);
 
+
+
   double *_box_extents_iplane = NULL;
   double *_box_extents_current = NULL;
   double n_plane[18];
@@ -723,23 +731,42 @@ int main(int argc, char *argv[])
 
   }
 
-  const char *filename6 = "scale_up_boxes.vtk";
+  if(0 == 1) {
+    const char *filename6 = "scale_up_boxes.vtk";
 
-  PDM_vtk_write_boxes_with_field(filename6,
-                                 n_box,
-                                 box_extents,
-                                 NULL,
-                                 n_box_plane,
-                 (const char **) box_tag_names,
-               (const double **) box_tag);
+    PDM_vtk_write_boxes_with_field(filename6,
+                                   n_box,
+                                   box_extents,
+                                   NULL,
+                                   n_box_plane,
+                                   (const char **) box_tag_names,
+                                   (const double **) box_tag);
 
-  const char *filename7 = "scale_up_plane_boxes.vtk";
+    const char *filename7 = "scale_up_plane_boxes.vtk";
 
-  PDM_vtk_write_boxes(filename7,
-                      n_box_plane,
-                      box_extents_plane,
-                      NULL);
+    PDM_vtk_write_boxes(filename7,
+                        n_box_plane,
+                        box_extents_plane,
+                        NULL);
+  }
 
+  for (int i = 0; i < n_box; i++) {
+    free(box_tag[i]);
+    free(box_tag_names[i]);
+  }
+  free(coord);
+  free(box_tag);
+  free(box_tag_names);
+  free(box_extents);
+  free(box_ln_to_gn);
+  free(box_extents_plane);
+  free(box_ln_to_gn_plane);
+  free(box_intersects_box);
+  free(vtx_coord);
+  free(vtx_g_num);
+  free(face_vtx);
+  free(line_g_num);
+  free(box_g_num);
   PDM_MPI_Finalize ();
 
 }

@@ -486,6 +486,7 @@ int main(int argc, char *argv[])
   double theta = PDM_PI / 3;
   double eps   = 0;
 
+
   double *n        = NULL;
   double *pt_plane = NULL;
 
@@ -631,11 +632,16 @@ int main(int argc, char *argv[])
                            0);
   }
 
+  free(volume_box_idx);
+  free(volume_box_l_num);
+  free(volume_plane_idx);
   free(origin);
   free(box_ln_to_gn);
   free(box_extents);
   free(n);
   free(pt_plane);
+  free(edge);
+  free(direction_pt);
   PDM_box_set_destroy(&boxes);
   PDM_box_tree_destroy(&bt);
 

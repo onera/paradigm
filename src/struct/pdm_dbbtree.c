@@ -6328,9 +6328,9 @@ PDM_dbbtree_volumes_intersect_boxes
   if (copied_plane_normal != NULL)     free (copied_plane_normal);
   if (copied_plane_pt_coord != NULL)   free (copied_plane_pt_coord);
 
+  free(plane_pt_coord_normalized);
+  free(plane_normal_normalized);
   if (_dbbt->btShared != NULL) {
-    free(plane_pt_coord_normalized);
-    free(plane_normal_normalized);
     free(irank_jsubtree_n_volume);
     free(isubtree_jrank_n_volume);
     free(send_plane_normal);

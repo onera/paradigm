@@ -507,7 +507,6 @@ int main(int argc, char *argv[])
                           volume_box_extents,
                           volume_box_g_num);
     }
-
     // Create dbbtree
 
     const int dim = 3;
@@ -535,11 +534,11 @@ int main(int argc, char *argv[])
 
     PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
 
-    PDM_dbbtree_boxes_set(dbbt,
-                          n_part,
-                          &n_dbbtree_boxes,
-        (const double **) &dbbtree_box_extents,
-   (const PDM_g_num_t **) &dbbtree_box_g_num);
+    PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
+                                                   n_part,
+                                                   &n_dbbtree_boxes,
+                                 (const double **) &dbbtree_box_extents,
+                            (const PDM_g_num_t **) &dbbtree_box_g_num);
 
     int *volume_plane_idx = NULL;
     if (test == RANDOM) {
@@ -621,6 +620,18 @@ int main(int argc, char *argv[])
       } // end loop on boxes
 
     } // end loop on volumes
+
+    PDM_dbbtree_free(dbbt);
+    PDM_box_set_destroy(&box_set);
+    free(volume_boxes_idx);
+    free(volume_boxes_g_num);
+    free(plane_normal);
+    free(plane_pt_coord);
+    free(dbbtree_box_extents);
+    free(dbbtree_box_g_num);
+    free(volume_box_extents);
+    free(volume_box_g_num);
+    free(volume_plane_idx);
 
   } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
@@ -751,6 +762,8 @@ int main(int argc, char *argv[])
         log_trace("\n");
       }
     }
+    free(volume_boxes_idx);
+    free(volume_boxes_g_num);
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
@@ -879,6 +892,9 @@ int main(int argc, char *argv[])
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
 
+    free(volume_box_extents);
+    free(volume_box_g_num);
+    free(volume_boxes_idx);
   } // end if NO_COPIES
 
   PDM_MPI_Finalize ();
