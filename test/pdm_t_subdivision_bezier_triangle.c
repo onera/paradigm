@@ -375,6 +375,9 @@ int main(int argc, char *argv[])
   PDM_ho_bezier_de_casteljau_tria(3, order-1, uv[0], uv[1], deriv[1], dpdv, NULL, NULL, NULL);
   PDM_CROSS_PRODUCT(normal, dpdu, dpdv);
 
+  for (int i = 0; i < 2; i++) {
+    free(deriv[i]);
+  }
 
   // check weights
   if (order <= 3) {

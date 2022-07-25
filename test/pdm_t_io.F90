@@ -76,7 +76,8 @@ contains
     nombreComplex=cmplx(nombreReel,nombreReel,kind=8)
     write(message,'("Ecriture Globale depuis le rank: ",i3)')rank
     
-    allocate(character(len=80) :: buffer)
+    ! allocate(character(len=80) :: buffer)
+    allocate(buffer(80))
     allocate(ptr_int(1:1))
     allocate(ptr_r8 (1:1))
     allocate(ptr_c8 (1:1))

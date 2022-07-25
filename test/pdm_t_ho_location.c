@@ -1174,7 +1174,6 @@ int main(int argc, char *argv[])
     connec[i] = i + 1;
   }
 
-
   FILE *f = fopen("ho_location_elt.mesh", "w");
 
   fprintf(f, "MeshVersionFormatted 3\nDimension 3\n");
@@ -1307,6 +1306,13 @@ int main(int argc, char *argv[])
   // free(pts_ln_to_gn);
   free(proj_coord);
   free(pts_uvw);
+  free(pts_weight);
+  free(pts_uvw_init);
+
+  free(node_uvw);
+  free(node_field);
+  free(interp_field);
+  free(proj_field);
 
 
 
