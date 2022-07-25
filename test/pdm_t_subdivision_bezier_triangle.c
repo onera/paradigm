@@ -15,140 +15,17 @@
 #include "pdm_logging.h"
 #include "pdm_ho_basis.h"
 #include "pdm_ho_ordering.h"
+#include "pdm_ho_bezier.h"
+#include "pdm_ho_bezier_basis.h"
 #include "pdm_array.h"
 
 /*============================================================================
  * Private function definitions
  *============================================================================*/
 
-static int verbose = 0;
-
 #define ij2idx(i, j, n) ((i) + (j)*((n) + 1) - ((j)-1)*(j)/2)
 
-static void
-_de_casteljau_tria
-(
- const int     dim,
- const int     order,
- const double  u,
- const double  v,
- double       *b,
- double       *val,
- double       *atr,
- double       *ars,
- double       *ast
- )
-{
-  const int n = (order+1)*(order+2)/2;
 
-  double w = 1. - u - v;
-
-  double p0[n*dim];
-  double p1[(n-order-1)*dim];
-  double *p[2] = {p0, p1};
-
-  // initialize
-  if (b != NULL) {
-    memcpy(p[0], b, sizeof(double) * n * dim);
-  } else {
-    int idx = 0;
-    for (int j = 0; j <= order; j++) {
-      for (int i = 0; i <= order - j; i++) {
-        for (int k = 0; k < dim; k++) {
-          if (k == idx) {
-            p[0][dim*idx + k] = 1.;
-          } else {
-            p[0][dim*idx + k] = 0.;
-          }
-        }
-
-        if (verbose) {
-          log_trace("i = %d, j = %d, idx = %d, ", i, j, idx);
-          PDM_log_trace_array_double(p[0] + dim*idx, dim, "p0ij = ");
-        }
-
-        idx++;
-      }
-    }
-  }
-
-
-  // subdivision
-  if (atr != NULL || ars != NULL || ast != NULL) {
-    int idx = 0;
-    for (int j = 0; j <= order; j++) {
-      for (int i = 0; i <= order-j; i++) {
-        if (atr != NULL && j == 0) {
-          int idx_atr = ij2idx(order-i, i, order);
-          memcpy(atr + dim*idx_atr, b + dim*idx, sizeof(double)*dim);
-        }
-        if (ars != NULL) {
-          memcpy(ars + dim*idx, b + dim*idx, sizeof(double)*dim);
-        }
-        if (ast != NULL && i == 0) {
-          int idx_ast = ij2idx(j, order-j, order);
-          memcpy(ast + dim*idx_ast, b + dim*idx, sizeof(double)*dim);
-        }
-
-        idx++;
-      }
-    }
-  }
-
-
-
-  for (int l = 1; l <= order; l++) {
-
-    int idx = 0;
-    for (int j = 0; j <= order-l; j++) {
-      for (int i = 0; i <= order-l-j; i++) {
-        int idxu = ij2idx(i+1, j,   order-l+1);
-        int idxv = ij2idx(i,   j+1, order-l+1);
-        int idxw = ij2idx(i,   j,   order-l+1);
-
-        for (int k = 0; k < dim; k++) {
-          p[1][dim*idx + k] =
-          u*p[0][dim*idxu + k] +
-          v*p[0][dim*idxv + k] +
-          w*p[0][dim*idxw + k];
-        }
-
-        if (verbose) {
-          log_trace("l = %d, i = %d, j = %d, ", l, i, j);
-          PDM_log_trace_array_double(p[1] + dim*idx, dim, "plij = ");
-        }
-
-        // subdivision
-        if (atr != NULL && j == 0) {
-          int idx_atr = ij2idx(order-l-i, i, order);
-          memcpy(atr + dim*idx_atr, p[1] + dim*idx, sizeof(double)*dim);
-        }
-        if (ars != NULL) {
-          int idx_ars = ij2idx(i, j, order);
-          memcpy(ars + dim*idx_ars, p[1] + dim*idx, sizeof(double)*dim);
-        }
-        if (ast != NULL && i == 0) {
-          int idx_ast = ij2idx(j, order-l-j, order);
-          memcpy(ast + dim*idx_ast, p[1] + dim*idx, sizeof(double)*dim);
-        }
-
-
-        idx++;
-      }
-    }
-
-    if (l < order) {
-      // swap pointers
-      double *tmp = p[1];
-      p[1] = p[0];
-      p[0] = tmp;
-    }
-  }
-
-  if (val != NULL) {
-    memcpy(val, p[1], sizeof(double) * dim);
-  }
-}
 
 
 static void
@@ -166,25 +43,25 @@ _subdivide_bezier_triangle
   const int n = (order+1)*(order+2)/2;
 
   double atr[n*dim], ars[n*dim];
-  _de_casteljau_tria(dim, order, 0.0, 0.5, b,   NULL,
-                     atr, ars, NULL);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, 0.0, 0.5, b,   NULL,
+                                  atr, ars, NULL);
 
   // double bat[n*dim];
   double bra[n*dim];
-  _de_casteljau_tria(dim, order, 0.5, 0.5, atr, NULL,
-                     b0, NULL, bra);
-                     //bat, NULL, bra);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, 0.5, 0.5, atr, NULL,
+                                  b0, NULL, bra);
+                                  //bat, NULL, bra);
 
   //double csa[n*dim];
-  _de_casteljau_tria(dim, order, 0.5, 0.5, ars, NULL,
-                     NULL, NULL, b2);
-                     //NULL, NULL, csa);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, 0.5, 0.5, ars, NULL,
+                                  NULL, NULL, b2);
+                                  //NULL, NULL, csa);
 
   // double cbr[n*dim];
   // double cab[n*dim];
-  _de_casteljau_tria(dim, order, 1.0, 1.0, bra, NULL,
-                     b1, NULL, b3);
-                     //cbr, NULL, cab);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, 1.0, 1.0, bra, NULL,
+                                  b1, NULL, b3);
+                                  //cbr, NULL, cab);
 
   // TODO: check/transform the local uv frame of each subtriangle...
 }
@@ -208,16 +85,16 @@ _subdivide_bezier_triangle2
   double ctr[n*dim];
   double uc = umin;
   double vc = 1 - umin - wmin;
-  _de_casteljau_tria(dim, order, uc, vc, b, NULL,
-                     ctr, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, uc, vc, b, NULL,
+                                  ctr, NULL, NULL);
 
   double ub = 1 - vmin - wmin;
   double vb = vmin;
   double u1b = 1 - ub + (uc - 1) * vb/vc; // /!\ if vc == 0
   double v1b = ub - uc*vb/vc;             // /!\ if vc == 0
   double bct[n*dim];
-  _de_casteljau_tria(dim, order, u1b, v1b, ctr, NULL,
-                     bct, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(dim, order, u1b, v1b, ctr, NULL,
+                                  bct, NULL, NULL);
 
   double ua = umin;
   double va = vmin;
@@ -227,38 +104,8 @@ _subdivide_bezier_triangle2
   double F = -(1 + E*uc)/vc;
   double u2a = B*ua + C*va;
   double v2a = 1 + E*ua + F*va;
-  _de_casteljau_tria(dim, order, u2a, v2a, bct, NULL,
-                     bsub, NULL, NULL);
-}
-
-
-
-static void
-_bezier_triangle_derivatives
-(
- const int  dim,
- const int  order,
- double    *b,
- double    *bu,
- double    *bv
- )
-{
-  int idx = 0;
-  for (int j = 0; j < order; j++) {
-    for (int i = 0; i < order-j; i++) {
-
-      int idxij  = ij2idx(i, j, order);
-      int idxi1j = idxij + 1;//ij2idx(i+1, j, order);
-      int idxij1 = idxij + order - j + 1;//ij2idx(i, j+1, order);
-
-      for (int k = 0; k < dim; k++) {
-        bu[dim*idx + k] = order * (b[dim*idxi1j + k] - b[dim*idxij + k]);
-        bv[dim*idx + k] = order * (b[dim*idxij1 + k] - b[dim*idxij + k]);
-      }
-
-      idx++;
-    }
-  }
+  PDM_ho_bezier_de_casteljau_tria(dim, order, u2a, v2a, bct, NULL,
+                                  bsub, NULL, NULL);
 }
 
 
@@ -302,84 +149,6 @@ _tri_mesh
         (*tria_node)[idx++] = 1 + ij2idx(i,   j+1, n);
       }
     }
-  }
-}
-
-
-
-/**
- *
- * \brief Triangle Bézier basis
- *
- * \param [in]  order           Order
- * \param [in]  n_pts           Number of points
- * \param [in]  uv              Parametric coordinates (size = \ref n_pts)
- * \param [out] weights         Weights (size = n_nodes * \ref n_pts)
- *
- */
-
-static void
-_basis_bezier_tria
-(
- const int              order,
- const int              n_pts,
- const double *restrict uv,
- double       *restrict weights
-)
-{
-
-  if (order == 1) {
-    for (int i = 0; i < n_pts; i++) {
-
-      double u =  uv[2*i];
-      double v =  uv[2*i+1];
-
-      weights[3*i]   = 1 - u - v;
-      weights[3*i+1] = u;
-      weights[3*i+2] = v;
-
-    }
-  }
-
-  if (order == 2) {
-    for (int i = 0; i < n_pts; i++) {
-
-      double u =  uv[2*i];
-      double v =  uv[2*i+1];
-
-      weights[6*i+0] = (1 - u -v) * (1 - u -v);  // (i,j,k)=(0,0,2)
-      weights[6*i+1] = 2 * u * (1 - u -v);       // (i,j,k)=(1,0,1)
-      weights[6*i+2] = u * u;                    // (i,j,k)=(2,0,0)
-      weights[6*i+3] = 2 * v * (1 - u -v);       // (i,j,k)=(0,1,1)
-      weights[6*i+4] = 2 * u * v;                // (i,j,k)=(1,1,0)
-      weights[6*i+5] = v * v;                    // (i,j,k)=(0,2,0)
-
-    }
-  }
-
-  if (order == 3) {
-
-    for (int i = 0; i < n_pts; i++) {
-
-      double u =  uv[2*i];
-      double v =  uv[2*i+1];
-
-      weights[10*i+0] = (1 - u -v) * (1 - u -v) * (1 - u -v);  // (i,j,k)=(003)
-      weights[10*i+3] = u * u * u;                             // (i,j,k)=(300)
-      weights[10*i+9] = v * v * v;                             // (i,j,k)=(030)
-      weights[10*i+1] = 3 * u * (1 - u -v) * (1 - u -v);       // (i,j,k)=(102)
-      weights[10*i+2] = 3 * u * u * (1 -u -v);                 // (i,j,k)=(201)
-      weights[10*i+6] = 3 * u * u * v;                         // (i,j,k)=(210)
-      weights[10*i+8] = 3 * u * v * v;                         // (i,j,k)=(120)
-      weights[10*i+7] = 3 * v * v * (1 - u -v);                // (i,j,k)=(021)
-      weights[10*i+4] = 3 * v * (1 - u -v) * (1 - u -v);       // (i,j,k)=(012)
-      weights[10*i+5] = 6 * u * v * (1 - u -v);                // (i,j,k)=(111)
-
-    }
-  }
-
-  if (order > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
   }
 }
 
@@ -569,11 +338,11 @@ int main(int argc, char *argv[])
   for (int i = 0; i < 2; i++) {
     deriv[i] = malloc(sizeof(double) * 3 * order*(order+1)/2);
   }
-  _bezier_triangle_derivatives(3,
-                               order,
-                               node_xyz,
-                               deriv[0],
-                               deriv[1]);
+  PDM_ho_bezier_triangle_derivatives(3,
+                                     order,
+                                     node_xyz,
+                                     deriv[0],
+                                     deriv[1]);
 
 
   /*
@@ -586,15 +355,15 @@ int main(int argc, char *argv[])
   for (int i = 0; i < 3; i++) {
     sub3_node_xyz[i] = malloc(sizeof(double) * n_node * 3);
   }
-  _de_casteljau_tria(3,
-                     order,
-                     uv[0],
-                     uv[1],
-                     node_xyz,
-                     p,
-                     sub3_node_xyz[0],//NULL,//
-                     sub3_node_xyz[1],//NULL,//
-                     sub3_node_xyz[2]);//NULL);//
+  PDM_ho_bezier_de_casteljau_tria(3,
+                                  order,
+                                  uv[0],
+                                  uv[1],
+                                  node_xyz,
+                                  p,
+                                  sub3_node_xyz[0],//NULL,//
+                                  sub3_node_xyz[1],//NULL,//
+                                  sub3_node_xyz[2]);//NULL);//
 
   log_trace("u = %f, v = %f\n", uv[0], uv[1]);
   log_trace("p = %f %f %f\n", p[0], p[1], p[2]);
@@ -602,18 +371,19 @@ int main(int argc, char *argv[])
 
   // evaluate tangent and normal vectors
   double dpdu[3], dpdv[3], normal[3];
-  _de_casteljau_tria(3, order-1, uv[0], uv[1], deriv[0], dpdu, NULL, NULL, NULL);
-  _de_casteljau_tria(3, order-1, uv[0], uv[1], deriv[1], dpdv, NULL, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(3, order-1, uv[0], uv[1], deriv[0], dpdu, NULL, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(3, order-1, uv[0], uv[1], deriv[1], dpdv, NULL, NULL, NULL);
   PDM_CROSS_PRODUCT(normal, dpdu, dpdv);
 
 
   // check weights
   if (order <= 3) {
     double *weight = malloc(sizeof(double) * n_node);
-    _basis_bezier_tria(order,
-                       1,
-                       uv,
-                       weight);
+    PDM_ho_bezier_basis(PDM_MESH_NODAL_TRIAHO_BEZIER,
+                        order,
+                        1,
+                        uv,
+                        weight);
 
     double q[3] = {-p[0], -p[1], -p[2]};
     for (int i = 0; i < n_node; i++) {
@@ -625,8 +395,8 @@ int main(int argc, char *argv[])
 
     double *weight2 = malloc(sizeof(double) * n_node);
     // de Casteljau to compute weights
-    _de_casteljau_tria(n_node, order, uv[0], uv[1],
-                       NULL, weight2, NULL, NULL, NULL);
+    PDM_ho_bezier_de_casteljau_tria(n_node, order, uv[0], uv[1],
+                                    NULL, weight2, NULL, NULL, NULL);
     log_trace("diff weights :\n");
     int idx = 0;
     for (int j = 0; j <= order; j++) {
@@ -682,7 +452,7 @@ int main(int argc, char *argv[])
    *  Visu VTK
    */
   int *ijk_to_vtk = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
-                                                    PDM_MESH_NODAL_TRIAHO,
+                                                    PDM_MESH_NODAL_TRIAHO_BEZIER,
                                                     order);
   int *connec = malloc(sizeof(int) * n_node);
   for (int i = 0; i < n_node; i++) {
@@ -694,7 +464,7 @@ int main(int argc, char *argv[])
                                 n_node,
                                 node_xyz,
                                 NULL,
-                                PDM_MESH_NODAL_TRIAHO,
+                                PDM_MESH_NODAL_TRIAHO_BEZIER,
                                 1,
                                 connec,
                                 NULL,
@@ -724,7 +494,7 @@ int main(int argc, char *argv[])
                                   n_node,
                                   sub_node_xyz[i],
                                   NULL,
-                                  PDM_MESH_NODAL_TRIAHO,
+                                  PDM_MESH_NODAL_TRIAHO_BEZIER,
                                   1,
                                   connec,
                                   NULL,
@@ -753,7 +523,7 @@ int main(int argc, char *argv[])
                                   n_node,
                                   sub3_node_xyz[i],
                                   NULL,
-                                  PDM_MESH_NODAL_TRIAHO,
+                                  PDM_MESH_NODAL_TRIAHO_BEZIER,
                                   1,
                                   connec,
                                   NULL,
@@ -778,9 +548,9 @@ int main(int argc, char *argv[])
 
   double pts[9];
   int color[3] = {0, 1, 2};
-  _de_casteljau_tria(3, order, umin, vmin, node_xyz, &pts[0], NULL, NULL, NULL);
-  _de_casteljau_tria(3, order, 1 - vmin - wmin, vmin, node_xyz, &pts[3], NULL, NULL, NULL);
-  _de_casteljau_tria(3, order, umin, 1 - umin - wmin, node_xyz, &pts[6], NULL, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(3, order, umin, vmin, node_xyz, &pts[0], NULL, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(3, order, 1 - vmin - wmin, vmin, node_xyz, &pts[3], NULL, NULL, NULL);
+  PDM_ho_bezier_de_casteljau_tria(3, order, umin, 1 - umin - wmin, node_xyz, &pts[6], NULL, NULL, NULL);
   PDM_vtk_write_point_cloud("bezier_sub1tria_corners.vtk",
                             3,
                             pts,
@@ -793,7 +563,7 @@ int main(int argc, char *argv[])
                                 n_node,
                                 sub1_node_xyz,
                                 NULL,
-                                PDM_MESH_NODAL_TRIAHO,
+                                PDM_MESH_NODAL_TRIAHO_BEZIER,
                                 1,
                                 connec,
                                 NULL,

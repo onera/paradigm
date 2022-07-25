@@ -90,6 +90,21 @@ PDM_ho_location
  );
 
 
+
+void
+PDM_ho_location_uvw_nodes
+(
+ const PDM_Mesh_nodal_elt_t  type,
+ const int                   order,
+ const double                umin,
+ const double                umax,
+ const double                vmin,
+ const double                vmax,
+ const double                wmin,
+ const double                wmax,
+ double                     *uvw_node
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

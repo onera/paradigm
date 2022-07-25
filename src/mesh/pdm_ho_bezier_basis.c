@@ -47,10 +47,8 @@
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_vtk.h"
-#include "pdm_ho_location.h"
-#include "pdm_box_tree.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_ho_seg_intersect.h"
+#include "pdm_ho_bezier_basis.h"
 #include "pdm_line.h"
 
 /*----------------------------------------------------------------------------*/
@@ -286,6 +284,7 @@ _basis_bezier_tria_derivative
  double       *restrict dw_dw
 )
 {
+  PDM_UNUSED(dw_dw);
 
   if (order == 1) {
     for (int i = 0; i < n_pts; i++) {
@@ -489,11 +488,13 @@ PDM_ho_bezier_basis
 
   case PDM_MESH_NODAL_BAR2:
   case PDM_MESH_NODAL_BARHO:
+  case PDM_MESH_NODAL_BARHO_BEZIER:
     _basis_bezier_edge(order, n_pts, uvw, weights);
     break;
 
   case PDM_MESH_NODAL_TRIA3:
   case PDM_MESH_NODAL_TRIAHO:
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
     _basis_bezier_tria(order, n_pts, uvw, weights);
     break;
   default:

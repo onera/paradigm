@@ -5863,12 +5863,14 @@ _principal_to_ijk
  int                        *principal
  )
 {
-    if (t_elt == PDM_MESH_NODAL_BARHO) {
+    if (t_elt == PDM_MESH_NODAL_BARHO ||
+        t_elt == PDM_MESH_NODAL_BARHO_BEZIER) {
         principal[0] = 0;
         principal[1] = order;
     }
 
-    else if (t_elt == PDM_MESH_NODAL_TRIAHO) {
+    else if (t_elt == PDM_MESH_NODAL_TRIAHO ||
+             t_elt == PDM_MESH_NODAL_TRIAHO_BEZIER) {
         principal[0] = ij2idx_tria(0,     0,     order);
         principal[1] = ij2idx_tria(order, 0,     order);
         principal[2] = ij2idx_tria(0,     order, order);

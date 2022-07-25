@@ -15,6 +15,7 @@
 #include "pdm_triangle.h"
 #include "pdm_line.h"
 #include "pdm_plane.h"
+#include "pdm_logging.h"
 
 /*=============================================================================
  * Macro definitions
@@ -485,21 +486,34 @@ PDM_triangle_closest_point
   const double *v1 = v + 3;
   const double *v2 = v + 6;
 
-  double v20[3] = {v0[0] - v2[0],
-                   v0[1] - v2[1],
-                   v0[2] - v2[2]};
+  // double v20[3] = {v0[0] - v2[0],
+  //                  v0[1] - v2[1],
+  //                  v0[2] - v2[2]};
 
-  double v21[3] = {v1[0] - v2[0],
-                   v1[1] - v2[1],
-                   v1[2] - v2[2]};
+  // double v21[3] = {v1[0] - v2[0],
+  //                  v1[1] - v2[1],
+  //                  v1[2] - v2[2]};
 
-  double v2x[3] = {x[0] - v2[0],
-                   x[1] - v2[1],
-                   x[2] - v2[2]};
+  // double v2x[3] = {x[0] - v2[0],
+  //                  x[1] - v2[1],
+  //                  x[2] - v2[2]};
 
-  double a = PDM_DOT_PRODUCT (v20, v20);
-  double b = PDM_DOT_PRODUCT (v20, v21);
-  double c = PDM_DOT_PRODUCT (v21, v21);
+  // double a = PDM_DOT_PRODUCT (v20, v20);
+  // double b = PDM_DOT_PRODUCT (v20, v21);
+  // double c = PDM_DOT_PRODUCT (v21, v21);
+  double e1[3] = {v1[0] - v0[0],
+                  v1[1] - v0[1],
+                  v1[2] - v0[2]};
+  double e2[3] = {v2[0] - v0[0],
+                  v2[1] - v0[1],
+                  v2[2] - v0[2]};
+  double e[3]  = {x[0] - v0[0],
+                  x[1] - v0[1],
+                  x[2] - v0[2]};
+
+  double a = PDM_DOT_PRODUCT(e1, e1);
+  double b = PDM_DOT_PRODUCT(e1, e2);
+  double c = PDM_DOT_PRODUCT(e2, e2);
 
   double det = a*c - b*b;
 
@@ -507,8 +521,10 @@ PDM_triangle_closest_point
     return PDM_TRIANGLE_DEGENERATED;
   }
 
-  double r = PDM_DOT_PRODUCT (v20, v2x);
-  double s = PDM_DOT_PRODUCT (v21, v2x);
+  // double r = PDM_DOT_PRODUCT (v20, v2x);
+  // double s = PDM_DOT_PRODUCT (v21, v2x);
+  double r = PDM_DOT_PRODUCT(e1, e);
+  double s = PDM_DOT_PRODUCT(e2, e);
 
 
   /* Solve for weights of orthogonal projection of point on triangle's plane */
@@ -519,6 +535,7 @@ PDM_triangle_closest_point
   }
   _weights[1] = (r*c - s*b) / det;
   _weights[2] = (s*a - r*b) / det;
+  log_trace("  u = %f, v = %f\n", _weights[1], _weights[2]);
   _weights[0] = 1. - _weights[1] - _weights[2];
 
   /* Projection inside triangle (= closest point) */
@@ -528,7 +545,8 @@ PDM_triangle_closest_point
 
     *min_dist2 = 0.;
     for (int idim = 0; idim < 3; idim++) {
-      closest_point[idim] = v[6 + idim] + _weights[1]*v20[idim] + _weights[2]*v21[idim];
+      // closest_point[idim] = v[6 + idim] + _weights[1]*v20[idim] + _weights[2]*v21[idim];
+      closest_point[idim] = v[idim] + _weights[1]*e1[idim] + _weights[2]*e2[idim];
       double delta = x[idim] - closest_point[idim];
       *min_dist2 += delta * delta;
     }
@@ -546,11 +564,13 @@ PDM_triangle_closest_point
     d01 = PDM_line_distance (x, v0, v1, &t01, c01);
     d12 = PDM_line_distance (x, v1, v2, &t12, c12);
     d20 = PDM_line_distance (x, v2, v0, &t20, c20);
+    log_trace("d01/12/20 = %f / %f / %f\n", d01, d12, d20);
 
     if (d01 <= d12 && d01 <= d20) {
-      i = 0;
-      j = 1;
-      k = 2;
+      // i = 0;
+      // j = 1;
+      // k = 2;
+      i = 2; j = 0; k = 1;
       *min_dist2 = d01;
       t = t01;
 
@@ -560,9 +580,10 @@ PDM_triangle_closest_point
     }
 
     else if (d12 <= d01 && d12 <= d20) {
-      i = 1;
-      j = 2;
-      k = 0;
+      // i = 1;
+      // j = 2;
+      // k = 0;
+      i = 0; j = 1; k = 2;
       *min_dist2 = d12;
       t = t12;
 
@@ -572,9 +593,10 @@ PDM_triangle_closest_point
     }
 
     else {
-      i = 2;
-      j = 0;
-      k = 1;
+      // i = 2;
+      // j = 0;
+      // k = 1;
+      i = 1; j = 0; k = 2;
       *min_dist2 = d20;
       t = t20;
 
@@ -589,9 +611,9 @@ PDM_triangle_closest_point
       t = 1.;
     }
 
-    _weights[i] = 0.;
-    _weights[j] = 1. - t;
-    _weights[k] = t;
+    // _weights[i] = 0.;
+    // _weights[j] = 1. - t;
+    // _weights[k] = t;
 
     return PDM_TRIANGLE_OUTSIDE;
   }
