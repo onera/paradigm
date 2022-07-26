@@ -712,7 +712,10 @@ int main(int argc, char *argv[])
              &filename,
              pt_coord,
              &random_seed);
-  assert(filename != NULL);
+
+  if (filename == NULL) {
+    filename = (char *) "/stck/bandrieu/Public/adaptation/projection/back_faces_P1.dat";
+  }
 
   srand(random_seed);
   // if (random_seed >= 0) {
