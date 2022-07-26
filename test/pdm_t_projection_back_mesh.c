@@ -363,7 +363,8 @@ _projection_on_background_mesh_get2
  int                   back_elt_order,
  PDM_Mesh_nodal_elt_t  back_elt_type,
  double               *proj_pt_coord,
- int                  *history_elt
+ int                  *history_elt,
+ double               *history_proj
 )
 {
   const int vb = 1;
@@ -533,6 +534,10 @@ _projection_on_background_mesh_get2
       memcpy(proj_pt_coord, cp, sizeof(double) * 3);
       closest_elt  = id_elt + 1;
       min_distance = distance;
+    }
+
+    if (history_proj != NULL) {
+      memcpy(history_proj + 3*iter, proj_pt_coord, sizeof(double) * 3);
     }
 
 
@@ -826,7 +831,8 @@ int main(int argc, char *argv[])
   int *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(stride_ho, n_elt);
 
   double proj_pt_coord[3];
-  int *history_elt = malloc(sizeof(int) * n_elt);
+  int    *history_elt  = malloc(sizeof(int) * n_elt);
+  double *history_proj = malloc(sizeof(int) * n_elt * 3);
 
   // Pick a random elt to start from
   int start = rand() % n_elt;
@@ -841,7 +847,8 @@ int main(int argc, char *argv[])
                                                    elt_order,
                                                    elt_type,
                                                    proj_pt_coord,
-                                                   history_elt);
+                                                   history_elt,
+                                                   history_proj);
 
 
   /*
@@ -903,6 +910,25 @@ int main(int argc, char *argv[])
                              NULL,
                              NULL);
 
+  int *history_bar = malloc(sizeof(int) * (n_step-1) * 2);
+  for (int i = 0; i < n_step-1; i++) {
+    history_bar[2*i  ] = i+1;
+    history_bar[2*i+1] = i+2;
+  }
+
+  PDM_vtk_write_std_elements("history.vtk",
+                             n_step,
+                             history_proj,
+                             NULL,
+                             PDM_MESH_NODAL_BAR2,
+                             n_step-1,
+                             history_bar,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+  free(history_bar);
+
 
 
   free(vtx_coord);
@@ -910,6 +936,7 @@ int main(int argc, char *argv[])
   free(elt_vtx_idx);
   free(elt_elt);
   free(history_elt);
+  free(history_proj);
 
   PDM_MPI_Finalize();
 
