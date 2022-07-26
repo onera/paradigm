@@ -1862,6 +1862,7 @@ PDM_dmesh_nodal_global_extents_get
 )
 {
   if (dmn->is_computed_g_extents == PDM_FALSE) {
+    //TO DO Bastien: if high-order, compute extents using Bézier control points
 
     double l_min[3] = { HUGE_VAL};
     double l_max[3] = {-HUGE_VAL};
