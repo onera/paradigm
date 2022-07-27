@@ -525,9 +525,9 @@ _projection_on_background_mesh_get2
     }
 
     if (vb) {
-      log_trace("iter %d, id_elt %d, dist = %f",
-                iter, id_elt, distance, uvw[0], uvw[1], uvw[2]);
+      log_trace("iter %d, id_elt %d, dist = %f",iter, id_elt, distance);
       PDM_log_trace_array_double(uvw, stride-1, ", uvw = ");
+      log_trace("cp = %f %f %f\n", cp[0], cp[1], cp[2]);
     }
 
     if (distance < min_distance) {
@@ -584,6 +584,8 @@ _projection_on_background_mesh_get2
 
   if (vb) {
     printf("closest_elt = %d (0-based)\n", closest_elt-1);
+    log_trace("proj_pt_coord = %f %f %f\n",
+              proj_pt_coord[0], proj_pt_coord[1], proj_pt_coord[2]);
   }
 
   return iter+1;

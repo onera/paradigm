@@ -100,12 +100,15 @@ _newton_tria
                                     p,
                                     xyz,
                                     NULL, NULL, NULL);
+    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
 
     double vec[3] = {
       target[0] - xyz[0],
       target[1] - xyz[1],
       target[2] - xyz[2]
     };
+
+    log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
 
     // Jacobian
     PDM_ho_bezier_de_casteljau_tria(3,
@@ -185,6 +188,45 @@ _newton_tria
   if (converged) {
     *u = _u;
     *v = _v;
+
+    //-->>
+    // TO DO: project on the triangle's curved edges
+    if (_u < 0) {
+      _u = 0;
+    }
+
+    if (_v < 0) {
+      _v = 0;
+    }
+
+    if (_u >= 0 && _v >= 0) {
+      if (_v > _u + 1) {
+        _u = 0;
+        _v = 1;
+      }
+
+      else if (_v < _u - 1) {
+        _u = 1;
+        _v = 0;
+      }
+
+      else if (_u + _v > 1) {
+        double c = _v - _u;
+        _v = 0.5*(1 + c);
+        _u = 1 - _v;
+      }
+    }
+    //<<--
+
+    PDM_ho_bezier_de_casteljau_tria(3,
+                                    order,
+                                    _u,
+                                    _v,
+                                    p,
+                                    xyz,
+                                    NULL, NULL, NULL);
+    log_trace("uv = %f %f\n", _u, _v);
+    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
   }
 
   return converged;
@@ -436,6 +478,7 @@ PDM_ho_bezier_tria_location
                                db_du,
                                db_dv,
                                projected_coord);
+  log_trace("projected_coord : %f %f %f\n", projected_coord[0], projected_coord[1], projected_coord[2]);
   PDM_UNUSED(converged);
 
   uvw[2] = 1 - uvw[0] - uvw[1];
