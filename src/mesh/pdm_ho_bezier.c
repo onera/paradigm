@@ -93,13 +93,13 @@ _newton_tria
   int converged = 0;
 
   for (int it = 0; it < it_max; it++) {
-    PDM_ho_bezier_de_casteljau_tria(3,
-                                    order,
-                                    _u,
-                                    _v,
-                                    p,
-                                    xyz,
-                                    NULL, NULL, NULL);
+    PDM_ho_bezier_de_casteljau_triangle(3,
+                                        order,
+                                        _u,
+                                        _v,
+                                        p,
+                                        xyz,
+                                        NULL, NULL, NULL);
     log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
 
     double vec[3] = {
@@ -111,21 +111,21 @@ _newton_tria
     log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
 
     // Jacobian
-    PDM_ho_bezier_de_casteljau_tria(3,
-                                    order-1,
-                                    _u,
-                                    _v,
-                                    dp_du,
-                                    dxyz_du,
-                                    NULL, NULL, NULL);
+    PDM_ho_bezier_de_casteljau_triangle(3,
+                                        order-1,
+                                        _u,
+                                        _v,
+                                        dp_du,
+                                        dxyz_du,
+                                        NULL, NULL, NULL);
 
-    PDM_ho_bezier_de_casteljau_tria(3,
-                                    order-1,
-                                    _u,
-                                    _v,
-                                    dp_dv,
-                                    dxyz_dv,
-                                    NULL, NULL, NULL);
+    PDM_ho_bezier_de_casteljau_triangle(3,
+                                        order-1,
+                                        _u,
+                                        _v,
+                                        dp_dv,
+                                        dxyz_dv,
+                                        NULL, NULL, NULL);
 
     double a00 = PDM_DOT_PRODUCT(dxyz_du, dxyz_du);
     double a01 = PDM_DOT_PRODUCT(dxyz_du, dxyz_dv);
@@ -218,13 +218,13 @@ _newton_tria
     }
     //<<--
 
-    PDM_ho_bezier_de_casteljau_tria(3,
-                                    order,
-                                    _u,
-                                    _v,
-                                    p,
-                                    xyz,
-                                    NULL, NULL, NULL);
+    PDM_ho_bezier_de_casteljau_triangle(3,
+                                        order,
+                                        _u,
+                                        _v,
+                                        p,
+                                        xyz,
+                                        NULL, NULL, NULL);
     log_trace("uv = %f %f\n", _u, _v);
     log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
   }
@@ -241,7 +241,100 @@ _newton_tria
  * Public function interfaces
  *============================================================================*/
 
-// TODO: implement de_casteljau_bar
+/**
+ *
+ * \brief De Casteljau algorithm for Bézier curves
+ *
+ * Evaluates the point with parameter t on the Bézier curve
+ * and (optionally) builds the control points of the two
+ * subcurves sharing the evaluated point as a common vertex.
+ *
+ * \param[in]   dim     Dimension
+ * \param[in]   order   Order
+ * \param[in]   t       Parametric coordinate
+ * \param[in]   b       Bézier control points
+ * \param[out]  val     Evaluated point
+ * \param[out]  l       Control points of the 1st subcurve
+ * \param[out]  r       Control points of the 2nd subcurve
+ *
+ */
+
+void
+PDM_ho_bezier_de_casteljau_curve
+(
+ const int     dim,
+ const int     order,
+ const double  t,
+ double       *b,
+ double       *val,
+ double       *l,
+ double       *r
+ )
+{
+  const int n = order + 1;
+
+  double s = 1. - t;
+
+  double p0[n*dim];
+  double p1[(n-1)*dim];
+  double *p[2] = {p0, p1};
+
+  // initialize
+  if (b != NULL) {
+    memcpy(p[0], b, sizeof(double) * n * dim);
+  }
+  else {
+    int idx = 0;
+    for (int i = 0; i <= order; i++) {
+      for (int k = 0; k < dim; k++) {
+        if (k == idx) {
+          p[0][dim*idx + k] = 1.;
+        } else {
+          p[0][dim*idx + k] = 0.;
+        }
+      }
+
+      idx++;
+    }
+  }
+
+  // subdivision
+  if (l != NULL) {
+    memcpy(l, b, sizeof(double)*dim);
+  }
+  if (r != NULL) {
+    memcpy(r + (n-1)*dim, b + (n-1)*dim, sizeof(double)*dim);
+  }
+
+  for (int j = 1; j <= order; j++) {
+
+    for (int i = 0; i <= order - j; i++) {
+      for (int k = 0; k < dim; k++) {
+        p[1][dim*i + k] = s*p[0][dim*i + k] + t*p[0][dim*(i+1) + k];
+      }
+    }
+
+    // subdivision
+    if (l != NULL) {
+      memcpy(l + dim*j, p[1], sizeof(double)*dim);
+    }
+    if (r != NULL) {
+      memcpy(r + dim*(order-j), p[1] + dim*(order-j), sizeof(double)*dim);
+    }
+
+    if (j < order) {
+      // swap pointers
+      double *tmp = p[1];
+      p[1] = p[0];
+      p[0] = tmp;
+    }
+
+  }
+
+  if (val != NULL) {
+    memcpy(val, p[1], sizeof(double) * dim);
+  }
+}
 
 
 /**
@@ -265,7 +358,7 @@ _newton_tria
  */
 
 void
-PDM_ho_bezier_de_casteljau_tria
+PDM_ho_bezier_de_casteljau_triangle
 (
  const int     dim,
  const int     order,
@@ -384,6 +477,34 @@ PDM_ho_bezier_de_casteljau_tria
 
 /**
  *
+ * \brief Build control points for derivative of a Bézier curve
+ *
+ * \param[in]   dim     Dimension
+ * \param[in]   order   Order
+ * \param[in]   b       Bézier control points
+ * \param[out]  db_dt   Bézier control points of derivative
+ *
+ */
+
+void
+PDM_ho_bezier_curve_derivative
+(
+ const int     dim,
+ const int     order,
+       double *b,
+       double *db_dt
+ )
+{
+  for (int i = 0; i < order; i++) {
+    for (int k = 0; k < dim; k++) {
+      db_dt[dim*i + k] = order * (b[dim*(i+1) + k] - b[dim*i + k]);
+    }
+  }
+}
+
+
+/**
+ *
  * \brief Build control points for partial derivatives of a Bézier triangle
  *
  * \param[in]   dim     Dimension
@@ -437,7 +558,7 @@ PDM_ho_bezier_triangle_derivatives
  */
 
 double
-PDM_ho_bezier_tria_location
+PDM_ho_bezier_triangle_location
 (
  const int     order,
  const int     n_node,

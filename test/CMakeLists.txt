@@ -199,6 +199,7 @@ test_c_create (pdm_t_subdivision_bezier_triangle 1)
 test_c_create (pdm_t_projection_back_mesh 1)
 test_c_create (pdm_t_part_to_block_reverse_cleanup 1)
 test_c_create (pdm_t_part_to_block_reverse_merge   1)
+test_c_create (pdm_t_subdivision_bezier_curve 1)
 
 test_c_create (pdm_t_ho_bezier_intersect 1)
 

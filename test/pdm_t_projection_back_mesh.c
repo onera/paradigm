@@ -504,12 +504,12 @@ _projection_on_background_mesh_get2
                sizeof(double) * 3);
       }
 
-      distance = PDM_ho_bezier_tria_location(back_elt_order,
-                                             n_node,
-                                             tria_coord,
-                                             pt_to_project_coord,
-                                             cp,
-                                             uvw);
+      distance = PDM_ho_bezier_triangle_location(back_elt_order,
+                                                 n_node,
+                                                 tria_coord,
+                                                 pt_to_project_coord,
+                                                 cp,
+                                                 uvw);
       double u = uvw[0];
       double v = uvw[1];
       double w = uvw[2];
@@ -650,13 +650,13 @@ _bezier_to_lagrange
     //     int id_vtx = ev[k++] - 1;
 
     //     if (!is_set[id_vtx]) {
-    //       PDM_ho_bezier_de_casteljau_tria(3,
-    //                                       elt_order,
-    //                                       i*step,
-    //                                       j*step,
-    //                                       ec,
-    //                                       lag + 3*id_vtx,
-    //                                       NULL, NULL, NULL);
+    //       PDM_ho_bezier_de_casteljau_triangle(3,
+    //                                           elt_order,
+    //                                           i*step,
+    //                                           j*step,
+    //                                           ec,
+    //                                           lag + 3*id_vtx,
+    //                                           NULL, NULL, NULL);
     //       is_set[id_vtx] = 1;
     //     }
     //   }
