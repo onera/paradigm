@@ -28,6 +28,8 @@
 
 #include "pdm_part_extension.h"
 #include "pdm_vtk.h"
+#include "pdm_unique.h"
+#include "pdm_part_connectivity_transform.h"
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
@@ -795,9 +797,9 @@ _cube_mesh
     *(pface_group         )[i_part] = malloc( (face_group_idx[n_groups]+n_ext_face_group) * sizeof(int        ));
     *(pface_group_ln_to_gn)[i_part] = malloc( (face_group_idx[n_groups]+n_ext_face_group) * sizeof(PDM_g_num_t));
 
-    int         *_pface_group_idx      = (*pface_group_idx     )[i_part];
-    int         *_pface_group          = (*pface_group         )[i_part];
-    PDM_g_num_t *_pface_group_ln_to_gn = (*pface_group_ln_to_gn)[i_part];
+    int         *_pface_group_idx      = *(pface_group_idx     )[i_part];
+    int         *_pface_group          = *(pface_group         )[i_part];
+    PDM_g_num_t *_pface_group_ln_to_gn = *(pface_group_ln_to_gn)[i_part];
 
     _pface_group_idx[0] = 0;
     for(int i_group = 0; i_group < n_groups+1; ++i_group) {
@@ -830,7 +832,7 @@ _cube_mesh
       }
     }
 
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_int(_pface_group_idx, n_groups+1                , "_pface_group_idx ::");
       PDM_log_trace_array_int(_pface_group    , _pface_group_idx[n_groups], "_pface_group     ::");
     }
@@ -1100,6 +1102,7 @@ int main(int argc, char *argv[])
   int         **src_face_group     = NULL;
   PDM_g_num_t **src_group_ln_to_gn = NULL;
 
+  int n_group = 6;
   _cube_mesh (comm,
               n_part,
               part_method,
@@ -1182,6 +1185,7 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
+  int n_point_cloud = 1; // 1 : adjacent cell center | 2 : center_interface
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
                                                             1,
                                                             comm,
@@ -1194,22 +1198,33 @@ int main(int argc, char *argv[])
                                       0,
                                       n_part);
 
-  int          *n_tgt     = NULL;
+
+  /*
+   * Extraction des surfaces + centre voisins
+   */
+  int tgt_have_adjacent_cell_center = 1;
+  int tgt_have_face_center          = 1;
+
+  int          *n_tgt     = malloc(n_part * sizeof(int));
   PDM_g_num_t **tgt_g_num = NULL;
   double      **tgt_coord = NULL;
   if (use_tgt_nodes) {
-    n_tgt     = tgt_n_vtx;
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      n_tgt[i_part]     = tgt_n_vtx[i_part];
+    }
     tgt_g_num = tgt_vtx_ln_to_gn;
     tgt_coord = tgt_vtx_coord;
   }
   else {
-    n_tgt     = tgt_n_cell;
+    // n_tgt     = tgt_n_cell;
     tgt_g_num = tgt_cell_ln_to_gn;
     tgt_coord = (double **) malloc (sizeof(double *) * n_part);
+
+
     for (int i_part = 0; i_part < n_part; i_part++) {
       const int is_oriented = 1;
-      double *cell_volume = (double *) malloc(sizeof(double) * n_tgt[i_part]);
-      tgt_coord[i_part] = (double *) malloc(sizeof(double) * 3 * n_tgt[i_part]);
+      double *cell_volume = (double *) malloc(sizeof(double) *     tgt_n_cell[i_part]);
+      double *cell_center = (double *) malloc(sizeof(double) * 3 * tgt_n_cell[i_part]);
 
       PDM_geom_elem_polyhedra_properties (is_oriented,
                                           tgt_n_cell[i_part],
@@ -1221,11 +1236,55 @@ int main(int argc, char *argv[])
                                           tgt_n_vtx[i_part],
                                           tgt_vtx_coord[i_part],
                                           cell_volume,
-                                          tgt_coord[i_part],
+                                          cell_center,
                                           NULL,
                                           NULL);
 
       free (cell_volume);
+      n_tgt[i_part] = 0;
+
+      int* extract_cell = malloc(tgt_n_face[i_part] * sizeof(int));
+      int* face_cell_idx = NULL;
+      int* face_cell     = NULL;
+      PDM_connectivity_transpose(tgt_n_cell       [i_part],
+                                 tgt_n_face       [i_part],
+                                 tgt_cell_face_idx[i_part],
+                                 tgt_cell_face    [i_part],
+                                 &face_cell_idx,
+                                 &face_cell);
+
+      for(int i_group = 0; i_group < n_group; ++i_group) {
+        for(int idx_face = tgt_face_group_idx[i_part][i_group]; idx_face < tgt_face_group_idx[i_part][i_group+1]; ++idx_face) {
+          int i_face = tgt_face_group[i_part][idx_face]-1;
+          for(int idx_cell = face_cell_idx[i_face]; idx_cell < face_cell_idx[i_face+1]; ++idx_cell) {
+            extract_cell[n_tgt[i_part]++] = PDM_ABS(face_cell[idx_cell]);
+          }
+        }
+      }
+
+      // sort and extract coordinates
+      n_tgt[i_part] = PDM_inplace_unique(extract_cell, 0, n_tgt[i_part]-1);
+
+      extract_cell = realloc(extract_cell, n_tgt[i_part] * sizeof(int));
+      tgt_coord[i_part]   = (double *) malloc(sizeof(double) * 3 * n_tgt[i_part] );
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(extract_cell, n_tgt[i_part], "extract_cell :: ");
+      }
+
+      for(int i = 0; i < n_tgt[i_part]; ++i) {
+        int i_cell = extract_cell[i]-1;
+        tgt_coord[i_part][3*i  ] = cell_center[3*i_cell  ];
+        tgt_coord[i_part][3*i+1] = cell_center[3*i_cell+1];
+        tgt_coord[i_part][3*i+2] = cell_center[3*i_cell+2];
+      }
+
+
+      free(cell_center);
+      free(extract_cell);
+      free(face_cell_idx);
+      free(face_cell);
+
     }
   }
 
@@ -1549,7 +1608,7 @@ int main(int argc, char *argv[])
       free(tgt_coord[i_part]);
     }
   }
-
+  free(n_tgt);
   free(src_n_cell       );
   free(src_n_face       );
   free(src_n_vtx        );
