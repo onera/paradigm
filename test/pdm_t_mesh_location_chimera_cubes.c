@@ -832,7 +832,7 @@ _cube_mesh
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(_pface_group_idx, n_groups+1                , "_pface_group_idx ::");
       PDM_log_trace_array_int(_pface_group    , _pface_group_idx[n_groups], "_pface_group     ::");
     }
@@ -975,6 +975,162 @@ static void _export_point_cloud
 }
 
 
+/**
+ *
+ * \brief  Visu
+ *
+ */
+
+static void
+_visu
+(
+ const char      *name_chr,
+ const int        n_part,
+ int              n_cell[],
+ int              n_face[],
+ int              n_vtx[],
+ int             *cell_face_idx[],
+ int             *cell_face[],
+ PDM_g_num_t     *cell_ln_to_gn[],
+ int             *face_vtx_idx[],
+ int             *face_vtx[],
+ PDM_g_num_t     *face_ln_to_gn[],
+ double          *vtx[],
+ PDM_g_num_t     *vtx_ln_to_gn[]
+)
+{
+
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+
+
+  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_ASCII,
+                                          PDM_WRITER_TOPO_CST,
+                                          PDM_WRITER_OFF,
+                                          "test_chimera",
+                                          name_chr,
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_KIND_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+  /* Creation de la geometrie */
+
+  int id_geom = PDM_writer_geom_create(id_cs,
+                                       "cube_geom",
+                                       n_part);
+
+  int *n_part_procs = (int *) malloc(sizeof(int) * n_rank);
+
+  PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
+                     (void *) n_part_procs, 1, PDM_MPI_INT,
+                     PDM_MPI_COMM_WORLD);
+
+  int *distrib_part = (int *) malloc(sizeof(int) * (n_rank + 1));
+
+  distrib_part[0] = 0;
+  for (int i = 0; i < n_rank; i++) {
+    distrib_part[i+1] = distrib_part[i] + n_part_procs[i];
+  }
+
+  free(n_part_procs);
+
+  /* Creation des variables */
+
+  int id_var_num_part = PDM_writer_var_create(id_cs,
+                                    PDM_WRITER_OFF,
+                                    PDM_WRITER_VAR_SCALAR,
+                                    PDM_WRITER_VAR_ELEMENTS,
+                                    "num_part");
+
+
+  PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
+  int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
+  int **cell_face_n = (int **) malloc(sizeof(int *) * n_part);
+  PDM_writer_step_beg (id_cs, 0.);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    face_vtx_n[i_part] = (int *) malloc(sizeof(int) * n_face[i_part]);
+    cell_face_n[i_part] = (int *) malloc(sizeof(int) * n_cell[i_part]);
+
+    for (int i = 0; i < n_face[i_part]; i++) {
+      face_vtx_n[i_part][i] = face_vtx_idx[i_part][i+1] - face_vtx_idx[i_part][i];
+    }
+
+    for (int i = 0; i < n_cell[i_part]; i++) {
+      cell_face_n[i_part][i] = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i];
+    }
+
+    PDM_writer_geom_coord_set(id_cs,
+                              id_geom,
+                              i_part,
+                              n_vtx[i_part],
+                              vtx[i_part],
+                              vtx_ln_to_gn[i_part],
+                              PDM_OWNERSHIP_USER);
+
+    /* Construction de la connectivite pour sortie graphique */
+
+    PDM_writer_geom_cell3d_cellface_add (id_cs,
+                                         id_geom,
+                                         i_part,
+                                         n_cell       [i_part],
+                                         n_face       [i_part],
+                                         face_vtx_idx [i_part],
+                                         face_vtx_n   [i_part],
+                                         face_vtx     [i_part],
+                                         cell_face_idx[i_part],
+                                         cell_face_n  [i_part],
+                                         cell_face    [i_part],
+                                         cell_ln_to_gn[i_part]);
+
+  }
+
+  PDM_writer_geom_write(id_cs,
+                        id_geom);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    val_num_part[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
+    for (int i = 0; i < n_cell[i_part]; i++) {
+      val_num_part[i_part][i] = i_part + 1 + distrib_part[i_rank];
+    }
+    // PDM_log_trace_array_double(val_num_part[i_part], n_cell[i_part], "val_num_part :: ");
+
+    PDM_writer_var_set(id_cs,
+                       id_var_num_part,
+                       id_geom,
+                       i_part,
+                       val_num_part[i_part]);
+  }
+
+  PDM_writer_var_write(id_cs,
+                       id_var_num_part);
+
+  // PDM_writer_var_free(id_cs,
+  //                     id_var_num_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free (face_vtx_n[i_part]);
+    free (cell_face_n[i_part]);
+    free (val_num_part[i_part]);
+  }
+  free (distrib_part);
+  free (face_vtx_n);
+  free (val_num_part);
+  free (cell_face_n);
+
+  // PDM_writer_geom_free(id_cs,
+  //                      id_geom);
+
+  PDM_writer_step_end(id_cs);
+  PDM_writer_free(id_cs);
+
+}
 
 
 /**
@@ -992,7 +1148,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg           = 10;
   double      length              = 1.;
-  double      separation_x        = 2.;
+  double      separation_x        = 0.;
   double      separation_y        = 0.;
   double      separation_z        = 0.;
   int         deform              = 0;
@@ -1160,7 +1316,7 @@ int main(int argc, char *argv[])
               xmin + separation_x*length,
               ymin + separation_y*length,
               zmin + separation_z*length,
-              length,
+              length/4,
               deform,
               extension_depth_tgt,
               PDM_MESH_NODAL_HEXA8,
@@ -1305,26 +1461,24 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_mesh_location_part_set (mesh_loc,
                                 i_part,
-                                src_n_cell[i_part],
+                                src_n_cell       [i_part],
                                 src_cell_face_idx[i_part],
-                                src_cell_face[i_part],
+                                src_cell_face    [i_part],
                                 src_cell_ln_to_gn[i_part],
-                                src_n_face[i_part],
-                                src_face_vtx_idx[i_part],
-                                src_face_vtx[i_part],
+                                src_n_face       [i_part],
+                                src_face_vtx_idx [i_part],
+                                src_face_vtx     [i_part],
                                 src_face_ln_to_gn[i_part],
-                                src_n_vtx[i_part],
-                                src_vtx_coord[i_part],
-                                src_vtx_ln_to_gn[i_part]);
+                                src_n_vtx        [i_part],
+                                src_vtx_coord    [i_part],
+                                src_vtx_ln_to_gn [i_part]);
   }
 
 
   /* Set location parameters */
-  PDM_mesh_location_tolerance_set (mesh_loc,
-                                   tolerance);
+  PDM_mesh_location_tolerance_set (mesh_loc, tolerance);
 
-  PDM_mesh_location_method_set (mesh_loc,
-                                loc_method);
+  PDM_mesh_location_method_set (mesh_loc, loc_method);
 
   /*
    *  Compute location
@@ -1462,8 +1616,33 @@ int main(int argc, char *argv[])
   }
 
 
+  _visu ("source_mesh",
+         n_part,
+         src_n_cell,
+         src_n_face,
+         src_n_vtx,
+         src_cell_face_idx,
+         src_cell_face,
+         src_cell_ln_to_gn,
+         src_face_vtx_idx,
+         src_face_vtx,
+         src_face_ln_to_gn,
+         src_vtx_coord,
+         src_vtx_ln_to_gn);
 
-
+  _visu ("target_mesh",
+         n_part,
+         tgt_n_cell,
+         tgt_n_face,
+         tgt_n_vtx,
+         tgt_cell_face_idx,
+         tgt_cell_face,
+         tgt_cell_ln_to_gn,
+         tgt_face_vtx_idx,
+         tgt_face_vtx,
+         tgt_face_ln_to_gn,
+         tgt_vtx_coord,
+         tgt_vtx_ln_to_gn);
 
 
 
