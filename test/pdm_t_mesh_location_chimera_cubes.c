@@ -997,7 +997,9 @@ _visu
  int             *face_vtx[],
  PDM_g_num_t     *face_ln_to_gn[],
  double          *vtx[],
- PDM_g_num_t     *vtx_ln_to_gn[]
+ PDM_g_num_t     *vtx_ln_to_gn[],
+ double          *field[],
+ double          *block_interp[]
 )
 {
 
@@ -1043,11 +1045,21 @@ _visu
   /* Creation des variables */
 
   int id_var_num_part = PDM_writer_var_create(id_cs,
-                                    PDM_WRITER_OFF,
-                                    PDM_WRITER_VAR_SCALAR,
-                                    PDM_WRITER_VAR_ELEMENTS,
-                                    "num_part");
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "num_part");
+  int id_var_field = PDM_writer_var_create(id_cs,
+                                           PDM_WRITER_OFF,
+                                           PDM_WRITER_VAR_SCALAR,
+                                           PDM_WRITER_VAR_ELEMENTS,
+                                           "field");
 
+  int id_var_blk_interp = PDM_writer_var_create(id_cs,
+                                                PDM_WRITER_OFF,
+                                                PDM_WRITER_VAR_SCALAR,
+                                                PDM_WRITER_VAR_ELEMENTS,
+                                                "blk_interp");
 
   PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
@@ -1107,17 +1119,30 @@ _visu
                        id_geom,
                        i_part,
                        val_num_part[i_part]);
+
+    PDM_writer_var_set(id_cs,
+                       id_var_field,
+                       id_geom,
+                       i_part,
+                       field[i_part]);
+
+    PDM_writer_var_set(id_cs,
+                       id_var_blk_interp,
+                       id_geom,
+                       i_part,
+                       block_interp[i_part]);
   }
 
-  PDM_writer_var_write(id_cs,
-                       id_var_num_part);
+  PDM_writer_var_write(id_cs, id_var_field);
+  PDM_writer_var_write(id_cs, id_var_num_part);
+  PDM_writer_var_write(id_cs, id_var_blk_interp);
 
   // PDM_writer_var_free(id_cs,
   //                     id_var_num_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (face_vtx_n[i_part]);
-    free (cell_face_n[i_part]);
+    free (face_vtx_n  [i_part]);
+    free (cell_face_n [i_part]);
     free (val_num_part[i_part]);
   }
   free (distrib_part);
@@ -1362,8 +1387,8 @@ int main(int argc, char *argv[])
   int tgt_have_adjacent_cell_center = 1;
   int tgt_have_face_center          = 1;
 
-  int          *n_tgt     = malloc(n_part * sizeof(int));
-  PDM_g_num_t **tgt_g_num = NULL;
+  int          *n_tgt     = malloc(n_part * sizeof(int          ));
+  PDM_g_num_t **tgt_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
   double      **tgt_coord = NULL;
   if (use_tgt_nodes) {
     for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1374,7 +1399,6 @@ int main(int argc, char *argv[])
   }
   else {
     // n_tgt     = tgt_n_cell;
-    tgt_g_num = tgt_cell_ln_to_gn;
     tgt_coord = (double **) malloc (sizeof(double *) * n_part);
 
 
@@ -1423,7 +1447,8 @@ int main(int argc, char *argv[])
       n_tgt[i_part] = PDM_inplace_unique(extract_cell, 0, n_tgt[i_part]-1);
 
       extract_cell = realloc(extract_cell, n_tgt[i_part] * sizeof(int));
-      tgt_coord[i_part]   = (double *) malloc(sizeof(double) * 3 * n_tgt[i_part] );
+      tgt_coord[i_part] = (double      *) malloc(3 * n_tgt[i_part] * sizeof(double));
+      tgt_g_num[i_part] = (PDM_g_num_t *) malloc(    n_tgt[i_part] * sizeof(PDM_g_num_t));
 
       if(0 == 1) {
         PDM_log_trace_array_int(extract_cell, n_tgt[i_part], "extract_cell :: ");
@@ -1434,6 +1459,7 @@ int main(int argc, char *argv[])
         tgt_coord[i_part][3*i  ] = cell_center[3*i_cell  ];
         tgt_coord[i_part][3*i+1] = cell_center[3*i_cell+1];
         tgt_coord[i_part][3*i+2] = cell_center[3*i_cell+2];
+        tgt_g_num[i_part][i] = tgt_cell_ln_to_gn[i_part][i_cell];
       }
 
 
@@ -1508,9 +1534,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t **tgt_location   = malloc (sizeof(PDM_g_num_t *) * n_part);
   double      **tgt_proj_coord = malloc (sizeof(double *)      * n_part);
 
-  int n_wrong = 0;
-  const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
-  const double cell_side = length / ((double) n_cell_seg);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_located = PDM_mesh_location_n_located_get (mesh_loc,
@@ -1563,33 +1586,6 @@ int main(int argc, char *argv[])
 
   }
 
-  _visu ("source_mesh",
-         n_part,
-         src_n_cell,
-         src_n_face,
-         src_n_vtx,
-         src_cell_face_idx,
-         src_cell_face,
-         src_cell_ln_to_gn,
-         src_face_vtx_idx,
-         src_face_vtx,
-         src_face_ln_to_gn,
-         src_vtx_coord,
-         src_vtx_ln_to_gn);
-
-  _visu ("target_mesh",
-         n_part,
-         tgt_n_cell,
-         tgt_n_face,
-         tgt_n_vtx,
-         tgt_cell_face_idx,
-         tgt_cell_face,
-         tgt_cell_ln_to_gn,
-         tgt_face_vtx_idx,
-         tgt_face_vtx,
-         tgt_face_ln_to_gn,
-         tgt_vtx_coord,
-         tgt_vtx_ln_to_gn);
 
   /*
    * Create fields on src mesh
@@ -1598,12 +1594,14 @@ int main(int argc, char *argv[])
   double **src_cell_center = malloc( n_part * sizeof(double *));
   double **src_field       = malloc( n_part * sizeof(double *));
   double **src_grad_field  = malloc( n_part * sizeof(double *));
+  double **src_blk_interp  = malloc( n_part * sizeof(double *));
   for (int i_part = 0; i_part < n_part; i_part++) {
     const int is_oriented = 1;
     src_cell_volume[i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
     src_cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
     src_field      [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
     src_grad_field [i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
+    src_blk_interp [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
 
     PDM_geom_elem_polyhedra_properties (is_oriented,
                                         src_n_cell[i_part],
@@ -1623,6 +1621,7 @@ int main(int argc, char *argv[])
     int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
 
     for(int i = 0; i < src_n_cell[i_part]; ++i) {
+      src_blk_interp[i_part][i] = -1;
       src_field     [i_part][i] = -100000;
       src_grad_field[i_part][3*i  ] = -100000;
       src_grad_field[i_part][3*i+1] = -100000;
@@ -1646,8 +1645,6 @@ int main(int argc, char *argv[])
 
     }
   }
-
-
 
 
   /*
@@ -1714,27 +1711,37 @@ int main(int argc, char *argv[])
 
         // Do interpolation
         // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
-        src_tgt_field[i_part][j] = val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
+        src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
 
       }
     }
 
-    PDM_log_trace_array_double(src_tgt_field[i_part], n_tgt_to_interp, "src_tgt_field ::");
+    // PDM_log_trace_array_double(src_tgt_field[i_part], n_tgt_to_interp, "src_tgt_field ::");
   }
 
   /*
    * Send to target
    */
   int* src_cell_without_ext = malloc(n_part * sizeof(int));
+  int* tgt_cell_without_ext = malloc(n_part * sizeof(int));
+  int* src_face_without_ext = malloc(n_part * sizeof(int));
+  int* tgt_face_without_ext = malloc(n_part * sizeof(int));
+  int* src_vtx_without_ext  = malloc(n_part * sizeof(int));
+  int* tgt_vtx_without_ext  = malloc(n_part * sizeof(int));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    src_cell_without_ext[i_part] = src_n_cell[i_part]-src_n_cell_ext[i_part];
+    src_cell_without_ext[i_part] = src_n_cell[i_part] - src_n_cell_ext[i_part];
+    tgt_cell_without_ext[i_part] = tgt_n_cell[i_part] - tgt_n_cell_ext[i_part];
+    src_face_without_ext[i_part] = src_n_face[i_part] - src_n_face_ext[i_part];
+    tgt_face_without_ext[i_part] = tgt_n_face[i_part] - tgt_n_face_ext[i_part];
+    src_vtx_without_ext [i_part] = src_n_vtx [i_part] - src_n_vtx_ext [i_part];
+    tgt_vtx_without_ext [i_part] = tgt_n_vtx [i_part] - tgt_n_vtx_ext [i_part];
   }
 
   PDM_part_to_part_t *ptp = PDM_part_to_part_create ((const PDM_g_num_t **) src_cell_ln_to_gn,
                                                                             src_cell_without_ext,
                                                                             n_part,
                                                      (const PDM_g_num_t **) tgt_cell_ln_to_gn,
-                                                                            tgt_n_cell,
+                                                                            tgt_cell_without_ext,
                                                                             n_part,
                                                      (const int         **) src_tgt_idx,
                                                      (const PDM_g_num_t **) src_tgt_gnum,
@@ -1743,7 +1750,7 @@ int main(int argc, char *argv[])
   /*
    * On peut donc echanger des src -> tgt
    */
-  double **part_data2 = NULL;
+  double **part_data = NULL;
   int request_exch;
   PDM_part_to_part_iexch(ptp,
                          PDM_MPI_COMM_KIND_P2P,
@@ -1754,7 +1761,7 @@ int main(int argc, char *argv[])
          (const int  **) NULL,
          (const void **) src_tgt_field,
                          NULL,
-              (void ***) &part_data2,
+              (void ***) &part_data,
                          &request_exch);
 
   PDM_part_to_part_iexch_wait(ptp, request_exch);
@@ -1765,26 +1772,101 @@ int main(int argc, char *argv[])
                                   &n_ref_tgt,
                                   &ref_tgt);
 
+  int         **gnum1_come_from_idx = NULL;
+  PDM_g_num_t **gnum1_come_from     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
+
+
+  double **tgt_field       = malloc( n_part * sizeof(double *));
+  double **tgt_blk_interp  = malloc( n_part * sizeof(double *));
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    PDM_log_trace_array_double(part_data2[i_part], n_ref_tgt[i_part], "recv_field :: ");
+    int n_cell_without_ext = tgt_n_cell[i_part]-tgt_n_cell_ext[i_part];
 
+    tgt_field      [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
+    tgt_blk_interp [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
+
+    for(int i = 0; i < n_cell_without_ext; ++i) {
+      tgt_field      [i_part][i] = -1.;
+      tgt_blk_interp [i_part][i] = -1.;
+    }
+
+    /* Enforce with interpolation */
+    for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
+      int i_tgt = ref_tgt[i_part][i]-1;
+      for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
+        tgt_field     [i_part][i_tgt] = part_data[i_part][j];
+        tgt_blk_interp[i_part][i_tgt] = 0;
+      }
+    }
+
+    // PDM_log_trace_connectivity_int(gnum1_come_from_idx[i_part], ref_tgt[i_part], n_ref_tgt[i_part], "ref_tgt :: ");
+    // PDM_log_trace_array_double(part_data[i_part], gnum1_come_from_idx[i_part][n_ref_tgt[i_part]], "recv_field :: ");
 
   }
 
 
   PDM_part_to_part_free(ptp);
 
+  _visu ("source_mesh",
+         n_part,
+         src_cell_without_ext,
+         src_face_without_ext,
+         src_vtx_without_ext,
+         src_cell_face_idx,
+         src_cell_face,
+         src_cell_ln_to_gn,
+         src_face_vtx_idx,
+         src_face_vtx,
+         src_face_ln_to_gn,
+         src_vtx_coord,
+         src_vtx_ln_to_gn,
+         src_field,
+         src_blk_interp);
+
+  _visu ("target_mesh",
+         n_part,
+         tgt_cell_without_ext,
+         tgt_face_without_ext,
+         tgt_vtx_without_ext,
+         tgt_cell_face_idx,
+         tgt_cell_face,
+         tgt_cell_ln_to_gn,
+         tgt_face_vtx_idx,
+         tgt_face_vtx,
+         tgt_face_ln_to_gn,
+         tgt_vtx_coord,
+         tgt_vtx_ln_to_gn,
+         tgt_field,
+         tgt_blk_interp);
+
+
+
   free(src_cell_without_ext);
+  free(tgt_cell_without_ext);
+  free(src_face_without_ext);
+  free(tgt_face_without_ext);
+  free(src_vtx_without_ext );
+  free(tgt_vtx_without_ext );
   free(src_tgt_idx);
   free(src_tgt_gnum);
 
-
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(src_tgt_field[i_part]);
+    free(src_tgt_field [i_part]);
+    free(src_blk_interp[i_part]);
   }
   free(src_tgt_field);
+  free(src_blk_interp);
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(tgt_field     [i_part]);
+    free(tgt_blk_interp[i_part]);
+    free(part_data     [i_part]);
+  }
+  free(tgt_field);
+  free(tgt_blk_interp);
+  free(part_data);
 
   if (post) {
     char filename[999];
@@ -1852,10 +1934,13 @@ int main(int argc, char *argv[])
     free (tgt_location[i_part]);
     free (tgt_proj_coord[i_part]);
 
+    free(tgt_g_num[i_part]);
+
     if (!use_tgt_nodes) {
       free(tgt_coord[i_part]);
     }
   }
+  free(tgt_g_num);
   free(n_tgt);
   free(src_n_cell       );
   free(src_n_face       );
