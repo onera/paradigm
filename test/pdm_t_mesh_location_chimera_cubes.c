@@ -30,6 +30,7 @@
 #include "pdm_vtk.h"
 #include "pdm_unique.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_part_to_part.h"
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
@@ -1590,13 +1591,71 @@ int main(int argc, char *argv[])
          tgt_vtx_coord,
          tgt_vtx_ln_to_gn);
 
+  /*
+   * Create fields on src mesh
+   */
+  double **src_cell_volume = malloc( n_part * sizeof(double *));
+  double **src_cell_center = malloc( n_part * sizeof(double *));
+  double **src_field       = malloc( n_part * sizeof(double *));
+  double **src_grad_field  = malloc( n_part * sizeof(double *));
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    const int is_oriented = 1;
+    src_cell_volume[i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+    src_cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
+    src_field      [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+    src_grad_field [i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
+
+    PDM_geom_elem_polyhedra_properties (is_oriented,
+                                        src_n_cell[i_part],
+                                        src_n_face[i_part],
+                                        src_face_vtx_idx[i_part],
+                                        src_face_vtx[i_part],
+                                        src_cell_face_idx[i_part],
+                                        src_cell_face[i_part],
+                                        src_n_vtx[i_part],
+                                        src_vtx_coord[i_part],
+                                        src_cell_volume[i_part],
+                                        src_cell_center[i_part],
+                                        NULL,
+                                        NULL);
+
+
+    int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+
+    for(int i = 0; i < src_n_cell[i_part]; ++i) {
+      src_field     [i_part][i] = -100000;
+      src_grad_field[i_part][3*i  ] = -100000;
+      src_grad_field[i_part][3*i+1] = -100000;
+      src_grad_field[i_part][3*i+2] = -100000;
+    }
+
+    for(int i = 0; i < src_n_cell[i_part]; ++i) {
+      double xc = src_cell_center[i_part][3*i  ];
+      double yc = src_cell_center[i_part][3*i+1];
+      double zc = src_cell_center[i_part][3*i+2];
+
+      // src_field     [i_part][i    ] = sin(xc + yc + zc);
+      // src_grad_field[i_part][3*i  ] = cos(xc + yc + zc);
+      // src_grad_field[i_part][3*i+1] = cos(xc + yc + zc);
+      // src_grad_field[i_part][3*i+2] = cos(xc + yc + zc);
+
+      src_field     [i_part][i    ] = sin(xc*xc + yc*yc + zc*zc);
+      src_grad_field[i_part][3*i  ] = 2. * xc * cos(xc + yc + zc);
+      src_grad_field[i_part][3*i+1] = 2. * yc * cos(xc + yc + zc);
+      src_grad_field[i_part][3*i+2] = 2. * zc * cos(xc + yc + zc);
+
+    }
+  }
 
 
 
 
   /*
-   *  Check result from source PoV
+   *  Interpolate in src mesh
    */
+  double **src_tgt_field = malloc(n_part * sizeof(double      *));
+  int    **src_tgt_idx   = malloc(n_part * sizeof(int         *));
+  int    **src_tgt_gnum  = malloc(n_part * sizeof(PDM_g_num_t *));
   for (int i_part = 0; i_part < n_part; i_part++) {
     int *cell_vtx_idx;
     int *cell_vtx;
@@ -1626,18 +1685,70 @@ int main(int argc, char *argv[])
                                          &points_dist2,
                                          &points_projected_coords);
 
+    src_tgt_idx [i_part] = elt_pts_inside_idx;
+    src_tgt_gnum[i_part] = points_gnum;
+
     // PDM_log_trace_connectivity_int(elt_pts_inside_idx, points_gnum, src_n_cell[i_part], "elt_pts_inside_idx ::");
 
     int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+    int n_tgt_to_interp = elt_pts_inside_idx[n_cell_without_ext];
+
+    src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
+
     // int n_face_without_ext = src_n_face[i_part]-src_n_face_ext[i_part];
     // int n_vtx_without_ext  = src_n_vtx [i_part]-src_n_vtx_ext [i_part];
-    // for (int i = 0; i < n_cell_without_ext; i++) {
-    //   for (int j = elt_pts_inside_idx[i]; j < elt_pts_inside_idx[i+1]; j++) {
-    //     double *p = points_coords + 3*j;
-    //     // Do interpolation
-    //   }
-    // }
+    for (int i = 0; i < n_cell_without_ext; i++) {
+      for (int j = elt_pts_inside_idx[i]; j < elt_pts_inside_idx[i+1]; j++) {
+        double tgt_x = points_coords[3*j  ];
+        double tgt_y = points_coords[3*j+1];
+        double tgt_z = points_coords[3*j+2];
+
+        double xc = src_cell_center[i_part][3*i  ];
+        double yc = src_cell_center[i_part][3*i+1];
+        double zc = src_cell_center[i_part][3*i+2];
+
+        double val   = src_field     [i_part][i    ];
+        double gvalx = src_grad_field[i_part][3*i  ];
+        double gvaly = src_grad_field[i_part][3*i+1];
+        double gvalz = src_grad_field[i_part][3*i+2];
+
+        // Do interpolation
+        src_tgt_field[i_part][j] = val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
+
+      }
+    }
   }
+
+  /*
+   * Send to target
+   */
+  int* src_cell_without_ext = malloc(n_part * sizeof(int));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    src_cell_without_ext[i_part] = src_n_cell[i_part]-src_n_cell_ext[i_part];
+  }
+
+  PDM_part_to_part_t *ptp = PDM_part_to_part_create ((const PDM_g_num_t **) src_cell_ln_to_gn,
+                                                                            src_cell_without_ext,
+                                                                            n_part,
+                                                     (const PDM_g_num_t **) tgt_cell_ln_to_gn,
+                                                                            tgt_n_cell,
+                                                                            n_part,
+                                                     (const int         **) src_tgt_idx,
+                                                     (const PDM_g_num_t **) src_tgt_gnum,
+                                                                            comm);
+
+  PDM_part_to_part_free(ptp);
+
+  free(src_cell_without_ext);
+  free(src_tgt_idx);
+  free(src_tgt_gnum);
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(src_tgt_field[i_part]);
+  }
+  free(src_tgt_field);
+
 
   if (post) {
     char filename[999];
@@ -1664,6 +1775,18 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(src_cell_volume[i_part]);
+    free(src_cell_center[i_part]);
+    free(src_field      [i_part]);
+    free(src_grad_field [i_part]);
+  }
+
+  free(src_cell_volume);
+  free(src_cell_center);
+  free(src_field);
+  free(src_grad_field);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     free(src_cell_face_idx[i_part]);
     free(src_cell_face    [i_part]);
