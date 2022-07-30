@@ -1713,10 +1713,13 @@ int main(int argc, char *argv[])
         double gvalz = src_grad_field[i_part][3*i+2];
 
         // Do interpolation
+        // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
         src_tgt_field[i_part][j] = val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
 
       }
     }
+
+    PDM_log_trace_array_double(src_tgt_field[i_part], n_tgt_to_interp, "src_tgt_field ::");
   }
 
   /*
@@ -1736,6 +1739,39 @@ int main(int argc, char *argv[])
                                                      (const int         **) src_tgt_idx,
                                                      (const PDM_g_num_t **) src_tgt_gnum,
                                                                             comm);
+
+  /*
+   * On peut donc echanger des src -> tgt
+   */
+  double **part_data2 = NULL;
+  int request_exch;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(double),
+         (const int  **) NULL,
+         (const void **) src_tgt_field,
+                         NULL,
+              (void ***) &part_data2,
+                         &request_exch);
+
+  PDM_part_to_part_iexch_wait(ptp, request_exch);
+
+  int  *n_ref_tgt;
+  int **ref_tgt;
+  PDM_part_to_part_ref_lnum2_get (ptp,
+                                  &n_ref_tgt,
+                                  &ref_tgt);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    PDM_log_trace_array_double(part_data2[i_part], n_ref_tgt[i_part], "recv_field :: ");
+
+
+  }
+
 
   PDM_part_to_part_free(ptp);
 
