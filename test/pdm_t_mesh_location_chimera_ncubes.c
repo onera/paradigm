@@ -1848,13 +1848,127 @@ int main(int argc, char *argv[])
   }
 
 
+  /*
+   *  Prepare all part_to_part
+   */
+  int         ****mesh_pts_idx            = malloc(n_mesh * sizeof(int         ***));
+  PDM_g_num_t ****mesh_pts_gnum           = malloc(n_mesh * sizeof(PDM_g_num_t ***));
+  double      ****points_coords           = malloc(n_mesh * sizeof(double      ***));
+  double      ****points_uvw              = malloc(n_mesh * sizeof(double      ***));
+  int         ****points_weights_idx      = malloc(n_mesh * sizeof(int         ***));
+  double      ****points_weights          = malloc(n_mesh * sizeof(double      ***));
+  double      ****points_dist2            = malloc(n_mesh * sizeof(double      ***));
+  double      ****points_projected_coords = malloc(n_mesh * sizeof(double      ***));
+
+  PDM_part_to_part_t ***ptp = malloc(n_mesh * sizeof(PDM_part_to_part_t **));
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+    mesh_pts_idx           [i_mesh] = malloc(n_tot_cloud * sizeof(int         ***));
+    mesh_pts_gnum          [i_mesh] = malloc(n_tot_cloud * sizeof(PDM_g_num_t ***));
+    points_coords          [i_mesh] = malloc(n_tot_cloud * sizeof(double      ***));
+    points_uvw             [i_mesh] = malloc(n_tot_cloud * sizeof(double      ***));
+    points_weights_idx     [i_mesh] = malloc(n_tot_cloud * sizeof(int         ***));
+    points_weights         [i_mesh] = malloc(n_tot_cloud * sizeof(double      ***));
+    points_dist2           [i_mesh] = malloc(n_tot_cloud * sizeof(double      ***));
+    points_projected_coords[i_mesh] = malloc(n_tot_cloud * sizeof(double      ***));
+
+    ptp[i_mesh] = malloc(n_tot_cloud * sizeof(PDM_part_to_part_t *));
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+
+      mesh_pts_idx           [i_mesh][i_cloud] = malloc(n_part * sizeof(int         *));
+      mesh_pts_gnum          [i_mesh][i_cloud] = malloc(n_part * sizeof(PDM_g_num_t *));
+      points_coords          [i_mesh][i_cloud] = malloc(n_part * sizeof(double      *));
+      points_uvw             [i_mesh][i_cloud] = malloc(n_part * sizeof(double      *));
+      points_weights_idx     [i_mesh][i_cloud] = malloc(n_part * sizeof(int         *));
+      points_weights         [i_mesh][i_cloud] = malloc(n_part * sizeof(double      *));
+      points_dist2           [i_mesh][i_cloud] = malloc(n_part * sizeof(double      *));
+      points_projected_coords[i_mesh][i_cloud] = malloc(n_part * sizeof(double      *));
+
+      // Partition de maillage !!!
+      for (int i_part = 0; i_part < n_part; i_part++) {
+
+        PDM_mesh_location_points_in_elt_get (mesh_loc[i_mesh],
+                                             i_part,
+                                             i_cloud,
+                                             &mesh_pts_idx           [i_mesh][i_cloud][i_part],
+                                             &mesh_pts_gnum          [i_mesh][i_cloud][i_part],
+                                             &points_coords          [i_mesh][i_cloud][i_part],
+                                             &points_uvw             [i_mesh][i_cloud][i_part],
+                                             &points_weights_idx     [i_mesh][i_cloud][i_part],
+                                             &points_weights         [i_mesh][i_cloud][i_part],
+                                             &points_dist2           [i_mesh][i_cloud][i_part],
+                                             &points_projected_coords[i_mesh][i_cloud][i_part]);
+
+      }
+
+      /*
+       * Creation du part_to_part pour chaque mesh / cloud
+       */
+      assert(n_tot_cloud == n_mesh);
+      ptp[i_mesh][i_cloud] = PDM_part_to_part_create ((const PDM_g_num_t **) cell_ln_to_gn[i_mesh],
+                                                                             n_cell_without_ext[i_mesh],
+                                                                             n_part,
+                                                      (const PDM_g_num_t **) cell_ln_to_gn[i_cloud],
+                                                                             n_cell       [i_cloud],
+                                                                             n_part,
+                                                      (const int         **) mesh_pts_idx [i_mesh][i_cloud],
+                                                      (const PDM_g_num_t **) mesh_pts_gnum[i_mesh][i_cloud],
+                                                                             comm);
+
+
+    }
+  }
+
+
+  /*
+   *  Exchange data between src and target
+   */
+
+  /*
+   * Free ptp
+   */
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+      PDM_part_to_part_free(ptp[i_mesh][i_cloud]);
+    }
+    free(ptp[i_mesh]);
+  }
+  free(ptp);
+
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     PDM_mesh_location_free(mesh_loc[i_mesh]);
   }
 
 
-
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+      free(mesh_pts_idx           [i_mesh][i_cloud]);
+      free(mesh_pts_gnum          [i_mesh][i_cloud]);
+      free(points_coords          [i_mesh][i_cloud]);
+      free(points_uvw             [i_mesh][i_cloud]);
+      free(points_weights_idx     [i_mesh][i_cloud]);
+      free(points_weights         [i_mesh][i_cloud]);
+      free(points_dist2           [i_mesh][i_cloud]);
+      free(points_projected_coords[i_mesh][i_cloud]);
+    }
+    free(mesh_pts_idx           [i_mesh]);
+    free(mesh_pts_gnum          [i_mesh]);
+    free(points_coords          [i_mesh]);
+    free(points_uvw             [i_mesh]);
+    free(points_weights_idx     [i_mesh]);
+    free(points_weights         [i_mesh]);
+    free(points_dist2           [i_mesh]);
+    free(points_projected_coords[i_mesh]);
+  }
+  free(mesh_pts_idx           );
+  free(mesh_pts_gnum          );
+  free(points_coords          );
+  free(points_uvw             );
+  free(points_weights_idx     );
+  free(points_weights         );
+  free(points_dist2           );
+  free(points_projected_coords);
 
   free(mesh_loc);
 
