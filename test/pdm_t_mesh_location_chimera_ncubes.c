@@ -1923,6 +1923,121 @@ int main(int argc, char *argv[])
   /*
    *  Exchange data between src and target
    */
+  int n_data_send = 4; // Value / blk_interp / volume / dist (Reminder if dist < 0 -> Extrapolate )
+  double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
+  double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
+  int           **request_exch = malloc(n_mesh * sizeof(int      *));
+  // int           **recv_request = malloc(n_mesh * sizeof(int      *));
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+    send_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+    recv_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+    request_exch[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+    // recv_request[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+
+      send_buffer [i_mesh][i_cloud] = malloc(n_part * sizeof(double *));
+
+      for (int i_part = 0; i_part < n_part; i_part++) {
+
+        int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+
+        // src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
+
+        int *_mesh_pts_idx = mesh_pts_idx [i_mesh][i_cloud][i_part];
+        int n_tgt_to_interp = _mesh_pts_idx[_n_cell_without_ext];
+
+        send_buffer[i_mesh][i_cloud][i_part] = malloc( n_data_send * n_tgt_to_interp * sizeof(double));
+
+        double *_send_buffer = send_buffer [i_mesh][i_cloud][i_part];
+        double *_pts_dist    = points_dist2[i_mesh][i_cloud][i_part];
+
+        for (int i = 0; i < _n_cell_without_ext; i++) {
+          for (int j = _mesh_pts_idx[i]; j < _mesh_pts_idx[i+1]; j++) {
+
+            // Do interpolation
+            double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
+            double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
+            double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
+
+            double xc = cell_center[i_mesh][i_part][3*i  ];
+            double yc = cell_center[i_mesh][i_part][3*i+1];
+            double zc = cell_center[i_mesh][i_part][3*i+2];
+
+            double val   = field     [i_mesh][i_part][i    ];
+            double gvalx = grad_field[i_mesh][i_part][3*i  ];
+            double gvaly = grad_field[i_mesh][i_part][3*i+1];
+            double gvalz = grad_field[i_mesh][i_part][3*i+2];
+
+            // Do interpolation
+            // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
+            // src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
+
+            _send_buffer[n_data_send*j  ] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;;
+            _send_buffer[n_data_send*j+1] = i_mesh;
+            _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
+            _send_buffer[n_data_send*j+3] = _pts_dist[j];
+
+          }
+        }
+      }
+
+      /*
+       * Exchange - Can be done with explicit P2P
+       */
+       PDM_part_to_part_iexch(ptp[i_mesh][i_cloud],
+                              PDM_MPI_COMM_KIND_P2P,
+                              PDM_STRIDE_CST_INTERLACED,
+                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                              n_data_send,
+                              sizeof(double),
+              (const int  **) NULL,
+              (const void **) send_buffer[i_mesh][i_cloud],
+                              NULL,
+                   (void ***) &recv_buffer[i_mesh][i_cloud],
+                              &request_exch[i_mesh][i_cloud]);
+
+    }
+  }
+
+
+  /*
+   * Receive data
+   */
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+
+      // We can also do iexch_test and use the first request
+      PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
+    }
+  }
+
+
+
+
+
+  /*
+   * Exchange
+   */
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        free(send_buffer[i_mesh][i_cloud][i_part]);
+        free(recv_buffer[i_mesh][i_cloud][i_part]);
+      }
+      free(send_buffer [i_mesh][i_cloud]);
+      free(recv_buffer [i_mesh][i_cloud]);
+    }
+    free(send_buffer [i_mesh]);
+    free(recv_buffer [i_mesh]);
+    free(request_exch[i_mesh]);
+    // free(recv_request[i_mesh]);
+  }
+  free(send_buffer);
+  free(recv_buffer);
+  free(request_exch);
+  // free(recv_request);
 
   /*
    * Free ptp
