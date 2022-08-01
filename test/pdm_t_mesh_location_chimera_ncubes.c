@@ -1770,21 +1770,93 @@ int main(int argc, char *argv[])
            n_cell_without_ext[i_mesh],
            n_face_without_ext[i_mesh],
            n_vtx_without_ext [i_mesh],
-           cell_face_idx[i_mesh],
-           cell_face[i_mesh],
-           cell_ln_to_gn[i_mesh],
-           face_vtx_idx[i_mesh],
-           face_vtx[i_mesh],
-           face_ln_to_gn[i_mesh],
-           vtx_coord[i_mesh],
-           vtx_ln_to_gn[i_mesh],
-           field[i_mesh],
-           blk_interp_from[i_mesh]);
+           cell_face_idx     [i_mesh],
+           cell_face         [i_mesh],
+           cell_ln_to_gn     [i_mesh],
+           face_vtx_idx      [i_mesh],
+           face_vtx          [i_mesh],
+           face_ln_to_gn     [i_mesh],
+           vtx_coord         [i_mesh],
+           vtx_ln_to_gn      [i_mesh],
+           field             [i_mesh],
+           blk_interp_from   [i_mesh]);
+  }
 
+
+  /*
+   * Prepare localisation
+   */
+  int n_point_cloud = 1;  // 1 : adjacent cell center | 2 : center_interface
+  int n_tot_cloud = n_point_cloud * n_mesh;
+  PDM_mesh_location_t **mesh_loc = (PDM_mesh_location_t **) malloc( n_mesh * sizeof(PDM_mesh_location_t *));
+
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+    mesh_loc[i_mesh] = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
+                                                              n_tot_cloud, // Number of cloud
+                                                              comm,
+                                                              PDM_OWNERSHIP_KEEP);
+
+    PDM_mesh_location_reverse_results_enable(mesh_loc[i_mesh]);
+
+    /* Set target point cloud */
+    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+      PDM_mesh_location_n_part_cloud_set (mesh_loc[i_mesh], i_cloud, n_part);
+    }
+
+    /* Set target point cloud */
+    for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        printf("n_extract_cell         [i_cloud][i_part] = %i \n", n_extract_cell         [i_cloud][i_part]);
+        PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
+                                    i_cloud,
+                                    i_part,
+                                    n_extract_cell         [i_cloud][i_part],
+                                    extract_center_coord   [i_cloud][i_part],
+                                    extract_center_ln_to_gn[i_cloud][i_part]);
+      }
+    }
+
+    /* Set source mesh */
+    PDM_mesh_location_mesh_global_data_set(mesh_loc[i_mesh], n_part);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_mesh_location_part_set (mesh_loc[i_mesh],
+                                  i_part,
+                                  n_cell_without_ext[i_mesh][i_part],
+                                  cell_face_idx     [i_mesh][i_part],
+                                  cell_face         [i_mesh][i_part],
+                                  cell_ln_to_gn     [i_mesh][i_part],
+                                  n_face_without_ext[i_mesh][i_part],
+                                  face_vtx_idx      [i_mesh][i_part],
+                                  face_vtx          [i_mesh][i_part],
+                                  face_ln_to_gn     [i_mesh][i_part],
+                                  n_vtx_without_ext [i_mesh][i_part],
+                                  vtx_coord         [i_mesh][i_part],
+                                  vtx_ln_to_gn      [i_mesh][i_part]);
+    }
+
+    /* Set location parameters */
+    PDM_mesh_location_tolerance_set(mesh_loc[i_mesh], tolerance);
+    PDM_mesh_location_method_set(mesh_loc[i_mesh], loc_method);
+
+    PDM_mesh_location_compute (mesh_loc[i_mesh]);
+
+    PDM_mesh_location_dump_times (mesh_loc[i_mesh]);
 
 
   }
 
+
+
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    PDM_mesh_location_free(mesh_loc[i_mesh]);
+  }
+
+
+
+
+  free(mesh_loc);
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
