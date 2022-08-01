@@ -287,6 +287,52 @@ static void _rotate (const int  n_pts,
   }
 }
 
+static void _rotate_rand (const int  n_pts,
+                          double    *coord)
+{
+  double i_rand_max = 1. / ((double) RAND_MAX);
+  double pi = 4 * atan(1.);
+  double theta[3] = {(double) rand() * i_rand_max * pi ,
+                     (double) rand() * i_rand_max * pi ,
+                     (double) rand() * i_rand_max * pi };
+
+  double Rx[3][3] = {{1.,             0,             0},
+                     {0., cos(theta[0]), -sin(theta[0])},
+                     {0., sin(theta[0]),  cos(theta[0])}};
+
+  double Ry[3][3] = {{  cos(theta[1]) , 0,  sin(theta[1])},
+                     {  0             , 1,  0            },
+                     {-sin(theta[1])  , 0,  cos(theta[1])}};
+
+  double Rz[3][3] = {{cos(theta[2]), -sin(theta[2]), 0},
+                     {sin(theta[2]),  cos(theta[2]), 0},
+                     {0            ,  0            , 1}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i  ];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = Rx[j][0]*x + Rx[j][1]*y + Rx[j][2]*z;
+    }
+    x = coord[3*i  ];
+    y = coord[3*i+1];
+    z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = Ry[j][0]*x + Ry[j][1]*y + Ry[j][2]*z;
+    }
+    x = coord[3*i  ];
+    y = coord[3*i+1];
+    z = coord[3*i+2];
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = Rz[j][0]*x + Rz[j][1]*y + Rz[j][2]*z;
+    }
+  }
+
+}
+
 static void
 _cube_mesh
 (
@@ -404,8 +450,10 @@ _cube_mesh
       dvtx_coord[3*i]     += 0.1 * z * z;
       dvtx_coord[3*i + 2] += 0.2 * cos(PDM_PI * x);
       }*/
-    _rotate (dn_vtx,
-             dvtx_coord);
+    if(1 == 0) {
+      _rotate (dn_vtx, dvtx_coord);
+    }
+    _rotate_rand(dn_vtx, dvtx_coord);
   }
 
   /*
@@ -1043,6 +1091,54 @@ _compute_centers
 }
 
 
+/**
+ *   Compute volume and center_cell
+ */
+static
+void
+_init_fields
+(
+  int           n_part,
+  int          *n_cell,
+  double      **cell_center,
+  double     ***field,
+  double     ***grad_field,
+  double     ***blk_interp_from
+)
+{
+  *field           = (double ** ) malloc( n_part * sizeof(double));
+  *grad_field      = (double ** ) malloc( n_part * sizeof(double));
+  *blk_interp_from = (double ** ) malloc( n_part * sizeof(double));
+
+  double **_field           = *field;
+  double **_grad_field      = *grad_field;
+  double **_blk_interp_from = *blk_interp_from;
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    const int is_oriented = 1;
+    _field          [i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
+    _grad_field     [i_part] = (double *) malloc(3 * n_cell[i_part] * sizeof(double));
+    _blk_interp_from[i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
+
+    for(int i = 0; i < n_cell[i_part]; ++i) {
+      double xc = cell_center[i_part][3*i  ];
+      double yc = cell_center[i_part][3*i+1];
+      double zc = cell_center[i_part][3*i+2];
+
+      // field     [i_part][i    ] = sin(xc + yc + zc);
+      // grad_field[i_part][3*i  ] = cos(xc + yc + zc);
+      // grad_field[i_part][3*i+1] = cos(xc + yc + zc);
+      // grad_field[i_part][3*i+2] = cos(xc + yc + zc);
+
+      _field          [i_part][i    ] = sin(xc*xc + yc*yc + zc*zc);
+      _grad_field     [i_part][3*i  ] = 2. * xc * cos(xc + yc + zc);
+      _grad_field     [i_part][3*i+1] = 2. * yc * cos(xc + yc + zc);
+      _grad_field     [i_part][3*i+2] = 2. * zc * cos(xc + yc + zc);
+      _blk_interp_from[i_part][i    ] = -1;
+    }
+  }
+}
+
 
 /**
  *
@@ -1493,747 +1589,1024 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_size (comm, &n_rank);
 
 
-  const double xmin = 0;
-  const double ymin = 0;
-  const double zmin = 0;
+  const double xmin = -length/2;
+  const double ymin = -length/2;
+  const double zmin = -length/2;
 
   /*
    *  Source cube
    */
-  int          *src_n_cell         = NULL;
-  int          *src_n_face         = NULL;
-  int          *src_n_vtx          = NULL;
-  int          *src_n_cell_ext     = NULL;
-  int          *src_n_face_ext     = NULL;
-  int          *src_n_vtx_ext      = NULL;
-  int         **src_cell_face_idx  = NULL;
-  int         **src_cell_face      = NULL;
-  int         **src_face_vtx_idx   = NULL;
-  int         **src_face_vtx       = NULL;
-  double      **src_vtx_coord      = NULL;
-  PDM_g_num_t **src_cell_ln_to_gn  = NULL;
-  PDM_g_num_t **src_face_ln_to_gn  = NULL;
-  PDM_g_num_t **src_vtx_ln_to_gn   = NULL;
+  int n_mesh = 5;
 
-  int         **src_face_group_idx = NULL;
-  int         **src_face_group     = NULL;
-  PDM_g_num_t **src_group_ln_to_gn = NULL;
+  int          **n_cell         = malloc(n_mesh * sizeof(int          *));
+  int          **n_face         = malloc(n_mesh * sizeof(int          *));
+  int          **n_vtx          = malloc(n_mesh * sizeof(int          *));
+
+  int          **n_cell_without_ext = malloc(n_mesh * sizeof(int          *));
+  int          **n_face_without_ext = malloc(n_mesh * sizeof(int          *));
+  int          **n_vtx_without_ext  = malloc(n_mesh * sizeof(int          *));
+
+  int          **n_cell_ext     = malloc(n_mesh * sizeof(int          *));
+  int          **n_face_ext     = malloc(n_mesh * sizeof(int          *));
+  int          **n_vtx_ext      = malloc(n_mesh * sizeof(int          *));
+  int         ***cell_face_idx  = malloc(n_mesh * sizeof(int         **));
+  int         ***cell_face      = malloc(n_mesh * sizeof(int         **));
+  int         ***face_vtx_idx   = malloc(n_mesh * sizeof(int         **));
+  int         ***face_vtx       = malloc(n_mesh * sizeof(int         **));
+  double      ***vtx_coord      = malloc(n_mesh * sizeof(double      **));
+  PDM_g_num_t ***cell_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***face_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***vtx_ln_to_gn   = malloc(n_mesh * sizeof(PDM_g_num_t **));
+
+  int         ***face_group_idx = malloc(n_mesh * sizeof(int         **));
+  int         ***face_group     = malloc(n_mesh * sizeof(int         **));
+  PDM_g_num_t ***group_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
+
+  int          **n_extract_cell            = malloc(n_mesh * sizeof(int          *));
+  int          **n_extract_face            = malloc(n_mesh * sizeof(int          *));
+  PDM_g_num_t ***extract_center_ln_to_gn   = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double      ***extract_center_coord      = malloc(n_mesh * sizeof(double      **));
+  PDM_g_num_t ***extract_face_bnd_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double      ***extract_face_bnd_coord    = malloc(n_mesh * sizeof(double      **));
+
+  double ***cell_center = malloc(n_mesh * sizeof(int         **));
+  double ***cell_volume = malloc(n_mesh * sizeof(int         **));
+  double ***face_center = malloc(n_mesh * sizeof(PDM_g_num_t **));
+
+
+  double ***field           = malloc(n_mesh * sizeof(int         **));
+  double ***grad_field      = malloc(n_mesh * sizeof(int         **));
+  double ***blk_interp_from = malloc(n_mesh * sizeof(PDM_g_num_t **));
 
   int n_group = 6;
-  _cube_mesh (comm,
-              n_part,
-              part_method,
-              n_vtx_seg,
-              xmin,
-              ymin,
-              zmin,
-              length,
-              0,//deform
-              extension_depth_src,
-              elt_type,
-              &src_n_cell,
-              &src_n_face,
-              &src_n_vtx,
-              &src_n_cell_ext,
-              &src_n_face_ext,
-              &src_n_vtx_ext,
-              &src_cell_face_idx,
-              &src_cell_face,
-              &src_face_vtx_idx,
-              &src_face_vtx,
-              &src_vtx_coord,
-              &src_cell_ln_to_gn,
-              &src_face_ln_to_gn,
-              &src_vtx_ln_to_gn,
-              &src_face_group_idx,
-              &src_face_group,
-              &src_group_ln_to_gn);
-
-  /*
-   *  Target cube
-   */
-  int          *tgt_n_cell         = NULL;
-  int          *tgt_n_face         = NULL;
-  int          *tgt_n_vtx          = NULL;
-  int          *tgt_n_cell_ext     = NULL;
-  int          *tgt_n_face_ext     = NULL;
-  int          *tgt_n_vtx_ext      = NULL;
-  int         **tgt_cell_face_idx  = NULL;
-  int         **tgt_cell_face      = NULL;
-  int         **tgt_face_vtx_idx   = NULL;
-  int         **tgt_face_vtx       = NULL;
-  double      **tgt_vtx_coord      = NULL;
-  PDM_g_num_t **tgt_cell_ln_to_gn  = NULL;
-  PDM_g_num_t **tgt_face_ln_to_gn  = NULL;
-  PDM_g_num_t **tgt_vtx_ln_to_gn   = NULL;
-  int         **tgt_face_group_idx = NULL;
-  int         **tgt_face_group     = NULL;
-  PDM_g_num_t **tgt_group_ln_to_gn = NULL;
-
-  _cube_mesh (comm,
-              n_part,
-              part_method,
-              n_vtx_seg,
-              xmin + separation_x*length,
-              ymin + separation_y*length,
-              zmin + separation_z*length,
-              length/4,
-              deform,
-              extension_depth_tgt,
-              PDM_MESH_NODAL_HEXA8,
-              &tgt_n_cell,
-              &tgt_n_face,
-              &tgt_n_vtx,
-              &tgt_n_cell_ext,
-              &tgt_n_face_ext,
-              &tgt_n_vtx_ext,
-              &tgt_cell_face_idx,
-              &tgt_cell_face,
-              &tgt_face_vtx_idx,
-              &tgt_face_vtx,
-              &tgt_vtx_coord,
-              &tgt_cell_ln_to_gn,
-              &tgt_face_ln_to_gn,
-              &tgt_vtx_ln_to_gn,
-              &tgt_face_group_idx,
-              &tgt_face_group,
-              &tgt_group_ln_to_gn);
-
-
-  /*
-   * Pour chaque maillage target on cherche une source "correcte"
-   */
-  int n_mesh = 1;
+  int ldeform = deform;
+  int lextract_center_depth = 0;
+  int lextract_bnd_faces    = 0;
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
-    // Pour simplifier on fait autant de nuage de point que de maillage quitte a ce que n_point = 0 sur certains
-
-  }
-
-  /*
-   *  Mesh location structure initialization
-   */
-  int n_point_cloud = 1; // 1 : adjacent cell center | 2 : center_interface
-  PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
-                                                            1,
-                                                            comm,
-                                                            PDM_OWNERSHIP_KEEP);
-
-  PDM_mesh_location_reverse_results_enable(mesh_loc);
-
-  /* Set target point cloud */
-  PDM_mesh_location_n_part_cloud_set (mesh_loc,
-                                      0,
-                                      n_part);
-
-
-  /*
-   * Extraction des surfaces + centre voisins
-   */
-  int tgt_have_adjacent_cell_center = 1;
-  int tgt_have_face_center          = 1;
-
-  int          *n_tgt     = malloc(n_part * sizeof(int          ));
-  PDM_g_num_t **tgt_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
-  double      **tgt_coord = NULL;
-  if (use_tgt_nodes) {
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      n_tgt[i_part]     = tgt_n_vtx[i_part];
-    }
-    tgt_g_num = tgt_vtx_ln_to_gn;
-    tgt_coord = tgt_vtx_coord;
-  }
-  else {
-    // n_tgt     = tgt_n_cell;
-    tgt_coord = (double **) malloc (sizeof(double *) * n_part);
-
-
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      const int is_oriented = 1;
-      double *cell_volume = (double *) malloc(sizeof(double) *     tgt_n_cell[i_part]);
-      double *cell_center = (double *) malloc(sizeof(double) * 3 * tgt_n_cell[i_part]);
-
-      PDM_geom_elem_polyhedra_properties (is_oriented,
-                                          tgt_n_cell[i_part],
-                                          tgt_n_face[i_part],
-                                          tgt_face_vtx_idx[i_part],
-                                          tgt_face_vtx[i_part],
-                                          tgt_cell_face_idx[i_part],
-                                          tgt_cell_face[i_part],
-                                          tgt_n_vtx[i_part],
-                                          tgt_vtx_coord[i_part],
-                                          cell_volume,
-                                          cell_center,
-                                          NULL,
-                                          NULL);
-
-      free (cell_volume);
-      n_tgt[i_part] = 0;
-
-      int* extract_cell = malloc(tgt_n_face[i_part] * sizeof(int));
-      int* face_cell_idx = NULL;
-      int* face_cell     = NULL;
-      PDM_connectivity_transpose(tgt_n_cell       [i_part],
-                                 tgt_n_face       [i_part],
-                                 tgt_cell_face_idx[i_part],
-                                 tgt_cell_face    [i_part],
-                                 &face_cell_idx,
-                                 &face_cell);
-
-      for(int i_group = 0; i_group < n_group; ++i_group) {
-        for(int idx_face = tgt_face_group_idx[i_part][i_group]; idx_face < tgt_face_group_idx[i_part][i_group+1]; ++idx_face) {
-          int i_face = tgt_face_group[i_part][idx_face]-1;
-          for(int idx_cell = face_cell_idx[i_face]; idx_cell < face_cell_idx[i_face+1]; ++idx_cell) {
-            extract_cell[n_tgt[i_part]++] = PDM_ABS(face_cell[idx_cell]);
-          }
-        }
-      }
-
-      // sort and extract coordinates
-      n_tgt[i_part] = PDM_inplace_unique(extract_cell, 0, n_tgt[i_part]-1);
-
-      extract_cell = realloc(extract_cell, n_tgt[i_part] * sizeof(int));
-      tgt_coord[i_part] = (double      *) malloc(3 * n_tgt[i_part] * sizeof(double));
-      tgt_g_num[i_part] = (PDM_g_num_t *) malloc(    n_tgt[i_part] * sizeof(PDM_g_num_t));
-
-      if(0 == 1) {
-        PDM_log_trace_array_int(extract_cell, n_tgt[i_part], "extract_cell :: ");
-      }
-
-      for(int i = 0; i < n_tgt[i_part]; ++i) {
-        int i_cell = extract_cell[i]-1;
-        tgt_coord[i_part][3*i  ] = cell_center[3*i_cell  ];
-        tgt_coord[i_part][3*i+1] = cell_center[3*i_cell+1];
-        tgt_coord[i_part][3*i+2] = cell_center[3*i_cell+2];
-        tgt_g_num[i_part][i] = tgt_cell_ln_to_gn[i_part][i_cell];
-      }
-
-
-      free(cell_center);
-      free(extract_cell);
-      free(face_cell_idx);
-      free(face_cell);
-
-    }
-  }
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_mesh_location_cloud_set (mesh_loc,
-                                 0,
-                                 i_part,
-                                 n_tgt[i_part],
-                                 tgt_coord[i_part],
-                                 tgt_g_num[i_part]);
-  }
-
-
-  /* Set source mesh */
-  PDM_mesh_location_mesh_global_data_set (mesh_loc,
-                                          n_part);
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-
-    // Only include interior
-    int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
-    int n_face_without_ext = src_n_face[i_part]-src_n_face_ext[i_part];
-    int n_vtx_without_ext  = src_n_vtx [i_part]-src_n_vtx_ext [i_part];
-
-    PDM_mesh_location_part_set (mesh_loc,
-                                i_part,
-                                n_cell_without_ext,
-                                src_cell_face_idx[i_part],
-                                src_cell_face    [i_part],
-                                src_cell_ln_to_gn[i_part],
-                                n_face_without_ext,
-                                src_face_vtx_idx [i_part],
-                                src_face_vtx     [i_part],
-                                src_face_ln_to_gn[i_part],
-                                n_vtx_without_ext,
-                                src_vtx_coord    [i_part],
-                                src_vtx_ln_to_gn [i_part]);
-  }
-
-
-  /* Set location parameters */
-  PDM_mesh_location_tolerance_set (mesh_loc, tolerance);
-
-  PDM_mesh_location_method_set (mesh_loc, loc_method);
-
-  /*
-   *  Compute location
-   */
-  if (i_rank == 0) {
-    printf("-- Locate\n");
-    fflush(stdout);
-  }
-
-  PDM_mesh_location_compute (mesh_loc);
-
-  PDM_mesh_location_dump_times (mesh_loc);
-
-
-
-
-  /*
-   *  Check result from target PoV
-   */
-  PDM_g_num_t **tgt_location   = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **tgt_proj_coord = malloc (sizeof(double *)      * n_part);
-
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    int n_located = PDM_mesh_location_n_located_get (mesh_loc,
-                                                     0,//i_point_cloud,
-                                                     i_part);
-
-    int *located = PDM_mesh_location_located_get (mesh_loc,
-                                                  0,//i_point_cloud,
-                                                  i_part);
-
-    int n_unlocated = PDM_mesh_location_n_unlocated_get (mesh_loc,
-                                                         0,//i_point_cloud,
-                                                         i_part);
-
-    int *unlocated = PDM_mesh_location_unlocated_get (mesh_loc,
-                                                      0,//i_point_cloud,
-                                                      i_part);
-
-    printf("[%d] part %d, n_located = %d, n_unlocated = %d\n", i_rank, i_part, n_located, n_unlocated);
-    assert(n_located + n_unlocated == n_tgt[i_part]);
-
-    tgt_location  [i_part] = PDM_array_const_gnum (n_tgt[i_part], 0);
-    tgt_proj_coord[i_part] = malloc (sizeof(double) * n_tgt[i_part] * 3);
-
-    PDM_g_num_t *p_location    = NULL;
-    double      *p_dist2  = NULL;
-    double      *p_proj_coord  = NULL;
-    PDM_mesh_location_point_location_get (mesh_loc,
-                                          0,//i_point_cloud,
-                                          i_part,
-                                          &p_location,
-                                          &p_dist2,
-                                          &p_proj_coord);
-
-    for (int j = 0; j < n_located; j++) {
-      int i = located[j] - 1;
-      tgt_location[i_part][i] = p_location[j];
-      for (int k = 0; k < 3; k++) {
-        tgt_proj_coord[i_part][3*i+k] = p_proj_coord[3*j+k];
-      }
+    if(i_mesh == 0){
+      ldeform = 0;
+    } else {
+      ldeform = 1;
     }
 
-    for (int j = 0; j < n_unlocated; j++) {
-      int i = unlocated[j] - 1;
-      tgt_location[i_part][i] = -1;
-      for (int k = 0; k < 3; k++) {
-        tgt_proj_coord[i_part][3*i+k] = tgt_coord[i_part][3*i+k];
-      }
+    double i_rand_max = 1. / ((double) RAND_MAX);
+    double lseparation_x = 0.;
+    double lseparation_y = 0.;
+    double lseparation_z = 0.;
+    double llength       = length;
+
+    srand(i_mesh);
+    if(i_mesh > 0 ) {
+      lseparation_x = rand() * i_rand_max * 0.33;
+      lseparation_y = rand() * i_rand_max * 0.33;
+      lseparation_z = rand() * i_rand_max * 0.33;
+
+      lextract_center_depth = 1;
+      llength = rand() * i_rand_max /3.;
     }
 
-  }
+    double lxmin = -llength/2;
+    double lymin = -llength/2;
+    double lzmin = -llength/2;
 
+    printf("lseparation = %12.5e / %12.5e / %12.5e \n", lseparation_x, lseparation_y, lseparation_z);
+    printf("llength     = %12.5e  \n", llength);
 
-  /*
-   * Create fields on src mesh
-   */
-  double **src_cell_volume = malloc( n_part * sizeof(double *));
-  double **src_cell_center = malloc( n_part * sizeof(double *));
-  double **src_field       = malloc( n_part * sizeof(double *));
-  double **src_grad_field  = malloc( n_part * sizeof(double *));
-  double **src_blk_interp  = malloc( n_part * sizeof(double *));
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    const int is_oriented = 1;
-    src_cell_volume[i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
-    src_cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
-    src_field      [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
-    src_grad_field [i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
-    src_blk_interp [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+    /* Generate */
+    _cube_mesh (comm,
+                n_part,
+                part_method,
+                n_vtx_seg,
+                lxmin+lseparation_x*llength,
+                lymin+lseparation_y*llength,
+                lzmin+lseparation_z*llength,
+                llength,
+                ldeform,//deform
+                extension_depth_src,
+                elt_type,
+                &n_cell        [i_mesh],
+                &n_face        [i_mesh],
+                &n_vtx         [i_mesh],
+                &n_cell_ext    [i_mesh],
+                &n_face_ext    [i_mesh],
+                &n_vtx_ext     [i_mesh],
+                &cell_face_idx [i_mesh],
+                &cell_face     [i_mesh],
+                &face_vtx_idx  [i_mesh],
+                &face_vtx      [i_mesh],
+                &vtx_coord     [i_mesh],
+                &cell_ln_to_gn [i_mesh],
+                &face_ln_to_gn [i_mesh],
+                &vtx_ln_to_gn  [i_mesh],
+                &face_group_idx[i_mesh],
+                &face_group    [i_mesh],
+                &group_ln_to_gn[i_mesh]);
 
-    PDM_geom_elem_polyhedra_properties (is_oriented,
-                                        src_n_cell[i_part],
-                                        src_n_face[i_part],
-                                        src_face_vtx_idx[i_part],
-                                        src_face_vtx[i_part],
-                                        src_cell_face_idx[i_part],
-                                        src_cell_face[i_part],
-                                        src_n_vtx[i_part],
-                                        src_vtx_coord[i_part],
-                                        src_cell_volume[i_part],
-                                        src_cell_center[i_part],
-                                        NULL,
-                                        NULL);
+    /* Compute geometry + extraction */
+    _compute_centers(n_part,
+                     n_cell[i_mesh],
+                     n_face[i_mesh],
+                     n_vtx[i_mesh],
+                     cell_face_idx[i_mesh],
+                     cell_face[i_mesh],
+                     face_vtx_idx[i_mesh],
+                     face_vtx[i_mesh],
+                     vtx_coord[i_mesh],
+                     &cell_center[i_mesh],
+                     &cell_volume[i_mesh],
+                     &face_center[i_mesh]);
 
+    /* Init field */
+    _init_fields(n_part,
+                 n_cell[i_mesh],
+                 cell_center[i_mesh],
+                 &field[i_mesh],
+                 &grad_field[i_mesh],
+                 &blk_interp_from[i_mesh]);
 
-    int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+    /* Prepare extract */
+    _prepare_target_cloud(n_part,
+                          n_group,
+                          n_cell                   [i_mesh],
+                          n_face                   [i_mesh],
+                          n_vtx                    [i_mesh],
+                          cell_ln_to_gn            [i_mesh],
+                          face_ln_to_gn            [i_mesh],
+                          vtx_ln_to_gn             [i_mesh],
+                          group_ln_to_gn           [i_mesh],
+                          cell_face_idx            [i_mesh],
+                          cell_face                [i_mesh],
+                          face_vtx_idx             [i_mesh],
+                          face_vtx                 [i_mesh],
+                          face_group_idx           [i_mesh],
+                          face_group               [i_mesh],
+                          vtx_coord                [i_mesh],
+                          cell_center              [i_mesh],
+                          face_center              [i_mesh],
+                          lextract_center_depth,
+                          lextract_bnd_faces,
+                          &n_extract_cell           [i_mesh],
+                          &n_extract_face           [i_mesh],
+                          &extract_center_ln_to_gn  [i_mesh],
+                          &extract_center_coord     [i_mesh],
+                          &extract_face_bnd_ln_to_gn[i_mesh],
+                          &extract_face_bnd_coord   [i_mesh]);
 
-    for(int i = 0; i < src_n_cell[i_part]; ++i) {
-      src_blk_interp[i_part][i] = -1;
-      src_field     [i_part][i] = -100000;
-      src_grad_field[i_part][3*i  ] = -100000;
-      src_grad_field[i_part][3*i+1] = -100000;
-      src_grad_field[i_part][3*i+2] = -100000;
+    n_cell_without_ext[i_mesh] = malloc(n_part * sizeof(int));
+    n_face_without_ext[i_mesh] = malloc(n_part * sizeof(int));
+    n_vtx_without_ext [i_mesh] = malloc(n_part * sizeof(int));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      n_cell_without_ext[i_mesh][i_part] = n_cell[i_mesh][i_part] - n_cell_ext[i_mesh][i_part];
+      n_face_without_ext[i_mesh][i_part] = n_face[i_mesh][i_part] - n_face_ext[i_mesh][i_part];
+      n_vtx_without_ext [i_mesh][i_part] = n_vtx [i_mesh][i_part] - n_vtx_ext [i_mesh][i_part];
     }
 
-    for(int i = 0; i < src_n_cell[i_part]; ++i) {
-      double xc = src_cell_center[i_part][3*i  ];
-      double yc = src_cell_center[i_part][3*i+1];
-      double zc = src_cell_center[i_part][3*i+2];
-
-      // src_field     [i_part][i    ] = sin(xc + yc + zc);
-      // src_grad_field[i_part][3*i  ] = cos(xc + yc + zc);
-      // src_grad_field[i_part][3*i+1] = cos(xc + yc + zc);
-      // src_grad_field[i_part][3*i+2] = cos(xc + yc + zc);
-
-      src_field     [i_part][i    ] = sin(xc*xc + yc*yc + zc*zc);
-      src_grad_field[i_part][3*i  ] = 2. * xc * cos(xc + yc + zc);
-      src_grad_field[i_part][3*i+1] = 2. * yc * cos(xc + yc + zc);
-      src_grad_field[i_part][3*i+2] = 2. * zc * cos(xc + yc + zc);
-
-    }
-  }
-
-
-  /*
-   *  Interpolate in src mesh
-   */
-  double **src_tgt_field = malloc(n_part * sizeof(double      *));
-  int    **src_tgt_idx   = malloc(n_part * sizeof(int         *));
-  int    **src_tgt_gnum  = malloc(n_part * sizeof(PDM_g_num_t *));
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    int *cell_vtx_idx;
-    int *cell_vtx;
-    PDM_mesh_location_cell_vertex_get (mesh_loc,
-                                       i_part,
-                                       &cell_vtx_idx,
-                                       &cell_vtx);
-
-    int         *elt_pts_inside_idx;
-    PDM_g_num_t *points_gnum;
-    double      *points_coords;
-    double      *points_uvw;
-    int         *points_weights_idx;
-    double      *points_weights;
-    double      *points_dist2;
-    double      *points_projected_coords;
-
-    PDM_mesh_location_points_in_elt_get (mesh_loc,
-                                         i_part,
-                                         0,//i_point_cloud,
-                                         &elt_pts_inside_idx,
-                                         &points_gnum,
-                                         &points_coords,
-                                         &points_uvw,
-                                         &points_weights_idx,
-                                         &points_weights,
-                                         &points_dist2,
-                                         &points_projected_coords);
-
-    src_tgt_idx [i_part] = elt_pts_inside_idx;
-    src_tgt_gnum[i_part] = points_gnum;
-
-    // PDM_log_trace_connectivity_int(elt_pts_inside_idx, points_gnum, src_n_cell[i_part], "elt_pts_inside_idx ::");
-
-    int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
-    int n_tgt_to_interp = elt_pts_inside_idx[n_cell_without_ext];
-
-    src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
-
-    // int n_face_without_ext = src_n_face[i_part]-src_n_face_ext[i_part];
-    // int n_vtx_without_ext  = src_n_vtx [i_part]-src_n_vtx_ext [i_part];
-    for (int i = 0; i < n_cell_without_ext; i++) {
-      for (int j = elt_pts_inside_idx[i]; j < elt_pts_inside_idx[i+1]; j++) {
-        double tgt_x = points_coords[3*j  ];
-        double tgt_y = points_coords[3*j+1];
-        double tgt_z = points_coords[3*j+2];
-
-        double xc = src_cell_center[i_part][3*i  ];
-        double yc = src_cell_center[i_part][3*i+1];
-        double zc = src_cell_center[i_part][3*i+2];
-
-        double val   = src_field     [i_part][i    ];
-        double gvalx = src_grad_field[i_part][3*i  ];
-        double gvaly = src_grad_field[i_part][3*i+1];
-        double gvalz = src_grad_field[i_part][3*i+2];
-
-        // Do interpolation
-        // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
-        src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
-
-      }
-    }
-
-    // PDM_log_trace_array_double(src_tgt_field[i_part], n_tgt_to_interp, "src_tgt_field ::");
-  }
-
-  /*
-   * Send to target
-   */
-  int* src_cell_without_ext = malloc(n_part * sizeof(int));
-  int* tgt_cell_without_ext = malloc(n_part * sizeof(int));
-  int* src_face_without_ext = malloc(n_part * sizeof(int));
-  int* tgt_face_without_ext = malloc(n_part * sizeof(int));
-  int* src_vtx_without_ext  = malloc(n_part * sizeof(int));
-  int* tgt_vtx_without_ext  = malloc(n_part * sizeof(int));
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    src_cell_without_ext[i_part] = src_n_cell[i_part] - src_n_cell_ext[i_part];
-    tgt_cell_without_ext[i_part] = tgt_n_cell[i_part] - tgt_n_cell_ext[i_part];
-    src_face_without_ext[i_part] = src_n_face[i_part] - src_n_face_ext[i_part];
-    tgt_face_without_ext[i_part] = tgt_n_face[i_part] - tgt_n_face_ext[i_part];
-    src_vtx_without_ext [i_part] = src_n_vtx [i_part] - src_n_vtx_ext [i_part];
-    tgt_vtx_without_ext [i_part] = tgt_n_vtx [i_part] - tgt_n_vtx_ext [i_part];
-  }
-
-  PDM_part_to_part_t *ptp = PDM_part_to_part_create ((const PDM_g_num_t **) src_cell_ln_to_gn,
-                                                                            src_cell_without_ext,
-                                                                            n_part,
-                                                     (const PDM_g_num_t **) tgt_cell_ln_to_gn,
-                                                                            tgt_cell_without_ext,
-                                                                            n_part,
-                                                     (const int         **) src_tgt_idx,
-                                                     (const PDM_g_num_t **) src_tgt_gnum,
-                                                                            comm);
-
-  /*
-   * On peut donc echanger des src -> tgt
-   */
-  double **part_data = NULL;
-  int request_exch;
-  PDM_part_to_part_iexch(ptp,
-                         PDM_MPI_COMM_KIND_P2P,
-                         PDM_STRIDE_CST_INTERLACED,
-                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                         1,
-                         sizeof(double),
-         (const int  **) NULL,
-         (const void **) src_tgt_field,
-                         NULL,
-              (void ***) &part_data,
-                         &request_exch);
-
-  PDM_part_to_part_iexch_wait(ptp, request_exch);
-
-  int  *n_ref_tgt;
-  int **ref_tgt;
-  PDM_part_to_part_ref_lnum2_get (ptp,
-                                  &n_ref_tgt,
-                                  &ref_tgt);
-
-  int         **gnum1_come_from_idx = NULL;
-  PDM_g_num_t **gnum1_come_from     = NULL;
-  PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
-
-
-  double **tgt_field       = malloc( n_part * sizeof(double *));
-  double **tgt_blk_interp  = malloc( n_part * sizeof(double *));
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-
-    int n_cell_without_ext = tgt_n_cell[i_part]-tgt_n_cell_ext[i_part];
-
-    tgt_field      [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
-    tgt_blk_interp [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
-
-    for(int i = 0; i < n_cell_without_ext; ++i) {
-      tgt_field      [i_part][i] = -1.;
-      tgt_blk_interp [i_part][i] = -1.;
-    }
-
-    /* Enforce with interpolation */
-    for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
-      int i_tgt = ref_tgt[i_part][i]-1;
-      for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
-        tgt_field     [i_part][i_tgt] = part_data[i_part][j];
-        tgt_blk_interp[i_part][i_tgt] = 0;
-      }
-    }
-
-    // PDM_log_trace_connectivity_int(gnum1_come_from_idx[i_part], ref_tgt[i_part], n_ref_tgt[i_part], "ref_tgt :: ");
-    // PDM_log_trace_array_double(part_data[i_part], gnum1_come_from_idx[i_part][n_ref_tgt[i_part]], "recv_field :: ");
-
-  }
-
-
-  PDM_part_to_part_free(ptp);
-
-  _visu ("source_mesh",
-         n_part,
-         src_cell_without_ext,
-         src_face_without_ext,
-         src_vtx_without_ext,
-         src_cell_face_idx,
-         src_cell_face,
-         src_cell_ln_to_gn,
-         src_face_vtx_idx,
-         src_face_vtx,
-         src_face_ln_to_gn,
-         src_vtx_coord,
-         src_vtx_ln_to_gn,
-         src_field,
-         src_blk_interp);
-
-  _visu ("target_mesh",
-         n_part,
-         tgt_cell_without_ext,
-         tgt_face_without_ext,
-         tgt_vtx_without_ext,
-         tgt_cell_face_idx,
-         tgt_cell_face,
-         tgt_cell_ln_to_gn,
-         tgt_face_vtx_idx,
-         tgt_face_vtx,
-         tgt_face_ln_to_gn,
-         tgt_vtx_coord,
-         tgt_vtx_ln_to_gn,
-         tgt_field,
-         tgt_blk_interp);
-
-
-
-  free(src_cell_without_ext);
-  free(tgt_cell_without_ext);
-  free(src_face_without_ext);
-  free(tgt_face_without_ext);
-  free(src_vtx_without_ext );
-  free(tgt_vtx_without_ext );
-  free(src_tgt_idx);
-  free(src_tgt_gnum);
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(src_tgt_field [i_part]);
-    free(src_blk_interp[i_part]);
-  }
-  free(src_tgt_field);
-  free(src_blk_interp);
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(tgt_field     [i_part]);
-    free(tgt_blk_interp[i_part]);
-    free(part_data     [i_part]);
-  }
-  free(tgt_field);
-  free(tgt_blk_interp);
-  free(part_data);
-
-  if (post) {
+    /* Visu */
     char filename[999];
+    sprintf(filename, "mesh_%i", i_mesh);
+    _visu (filename,
+           n_part,
+           n_cell_without_ext[i_mesh],
+           n_face_without_ext[i_mesh],
+           n_vtx_without_ext [i_mesh],
+           cell_face_idx[i_mesh],
+           cell_face[i_mesh],
+           cell_ln_to_gn[i_mesh],
+           face_vtx_idx[i_mesh],
+           face_vtx[i_mesh],
+           face_ln_to_gn[i_mesh],
+           vtx_coord[i_mesh],
+           vtx_ln_to_gn[i_mesh],
+           field[i_mesh],
+           blk_interp_from[i_mesh]);
 
-    sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
-    _export_point_cloud (filename,
-                         n_part,
-                         n_tgt,
-                         tgt_coord,
-                         tgt_g_num,
-                         tgt_location);
 
-    sprintf(filename, "tgt_proj_coord_%3.3d.vtk", i_rank);
 
-    _export_point_cloud (filename,
-                         n_part,
-                         n_tgt,
-                         tgt_proj_coord,
-                         tgt_g_num,
-                         tgt_location);
   }
 
 
-  /*
-   *  Free memory
-   */
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(src_cell_volume[i_part]);
-    free(src_cell_center[i_part]);
-    free(src_field      [i_part]);
-    free(src_grad_field [i_part]);
-  }
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
 
-  free(src_cell_volume);
-  free(src_cell_center);
-  free(src_field);
-  free(src_grad_field);
+      free(cell_face_idx  [i_mesh][i_part]);
+      free(cell_face      [i_mesh][i_part]);
+      free(face_vtx_idx   [i_mesh][i_part]);
+      free(face_vtx       [i_mesh][i_part]);
+      free(vtx_coord      [i_mesh][i_part]);
+      free(cell_ln_to_gn  [i_mesh][i_part]);
+      free(face_ln_to_gn  [i_mesh][i_part]);
+      free(vtx_ln_to_gn   [i_mesh][i_part]);
+      free(face_group_idx [i_mesh][i_part]);
+      free(face_group     [i_mesh][i_part]);
+      free(group_ln_to_gn [i_mesh][i_part]);
+      free(cell_center    [i_mesh][i_part]);
+      free(cell_volume    [i_mesh][i_part]);
+      free(face_center    [i_mesh][i_part]);
+      free(field          [i_mesh][i_part]);
+      free(grad_field     [i_mesh][i_part]);
+      free(blk_interp_from[i_mesh][i_part]);
 
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(src_cell_face_idx[i_part]);
-    free(src_cell_face    [i_part]);
-    free(src_face_vtx_idx [i_part]);
-    free(src_face_vtx     [i_part]);
-    free(src_vtx_coord    [i_part]);
-    free(src_cell_ln_to_gn[i_part]);
-    free(src_face_ln_to_gn[i_part]);
-    free(src_vtx_ln_to_gn [i_part]);
+      if(extract_center_ln_to_gn[i_mesh][i_part] != NULL) {
+        free(extract_center_ln_to_gn[i_mesh][i_part]);
+        free(extract_center_coord[i_mesh][i_part]);
+      }
+      if(extract_face_bnd_ln_to_gn[i_mesh][i_part] != NULL) {
+        free(extract_face_bnd_ln_to_gn[i_mesh][i_part]);
+        free(extract_face_bnd_coord[i_mesh][i_part]);
+      }
 
-    free(src_face_group_idx[i_part]);
-    free(src_face_group    [i_part]);
-    free(src_group_ln_to_gn[i_part]);
-
-    free(tgt_cell_face_idx [i_part]);
-    free(tgt_cell_face     [i_part]);
-    free(tgt_face_vtx_idx  [i_part]);
-    free(tgt_face_vtx      [i_part]);
-    free(tgt_vtx_coord     [i_part]);
-    free(tgt_cell_ln_to_gn [i_part]);
-    free(tgt_face_ln_to_gn [i_part]);
-    free(tgt_vtx_ln_to_gn  [i_part]);
-    free(tgt_face_group_idx[i_part]);
-    free(tgt_face_group    [i_part]);
-    free(tgt_group_ln_to_gn[i_part]);
-
-    free (tgt_location[i_part]);
-    free (tgt_proj_coord[i_part]);
-
-    free(tgt_g_num[i_part]);
-
-    if (!use_tgt_nodes) {
-      free(tgt_coord[i_part]);
     }
-  }
-  free(tgt_g_num);
-  free(n_tgt);
-  free(src_n_cell       );
-  free(src_n_face       );
-  free(src_n_vtx        );
-  free(src_n_cell_ext   );
-  free(src_n_face_ext   );
-  free(src_n_vtx_ext    );
-  free(src_cell_face_idx);
-  free(src_cell_face    );
-  free(src_face_vtx_idx );
-  free(src_face_vtx     );
-  free(src_vtx_coord    );
-  free(src_cell_ln_to_gn);
-  free(src_face_ln_to_gn);
-  free(src_vtx_ln_to_gn );
+    free(n_cell         [i_mesh]);
+    free(n_face         [i_mesh]);
+    free(n_vtx          [i_mesh]);
 
-  free(src_face_group_idx);
-  free(src_face_group    );
-  free(src_group_ln_to_gn);
+    free(n_cell_without_ext[i_mesh]);
+    free(n_face_without_ext[i_mesh]);
+    free(n_vtx_without_ext [i_mesh]);
 
-  free(tgt_n_cell       );
-  free(tgt_n_face       );
-  free(tgt_n_vtx        );
-  free(tgt_n_cell_ext   );
-  free(tgt_n_face_ext   );
-  free(tgt_n_vtx_ext    );
-  free(tgt_cell_face_idx);
-  free(tgt_cell_face    );
-  free(tgt_face_vtx_idx );
-  free(tgt_face_vtx     );
-  free(tgt_vtx_coord    );
-  free(tgt_cell_ln_to_gn);
-  free(tgt_face_ln_to_gn);
-  free(tgt_vtx_ln_to_gn );
 
-  free(tgt_face_group_idx);
-  free(tgt_face_group    );
-  free(tgt_group_ln_to_gn);
+    free(n_cell_ext     [i_mesh]);
+    free(n_face_ext     [i_mesh]);
+    free(n_vtx_ext      [i_mesh]);
+    free(cell_face_idx  [i_mesh]);
+    free(cell_face      [i_mesh]);
+    free(face_vtx_idx   [i_mesh]);
+    free(face_vtx       [i_mesh]);
+    free(vtx_coord      [i_mesh]);
+    free(cell_ln_to_gn  [i_mesh]);
+    free(face_ln_to_gn  [i_mesh]);
+    free(vtx_ln_to_gn   [i_mesh]);
+    free(face_group_idx [i_mesh]);
+    free(face_group     [i_mesh]);
+    free(group_ln_to_gn [i_mesh]);
+    free(cell_center    [i_mesh]);
+    free(cell_volume    [i_mesh]);
+    free(face_center    [i_mesh]);
+    free(field          [i_mesh]);
+    free(grad_field     [i_mesh]);
+    free(blk_interp_from[i_mesh]);
 
-  free (tgt_location);
-  free (tgt_proj_coord);
-
-  if (!use_tgt_nodes) {
-    free(tgt_coord);
+    free(n_extract_cell[i_mesh]);
+    free(n_extract_face[i_mesh]);
+    free(extract_center_ln_to_gn  [i_mesh]);
+    free(extract_center_coord     [i_mesh]);
+    free(extract_face_bnd_ln_to_gn[i_mesh]);
+    free(extract_face_bnd_coord   [i_mesh]);
   }
 
-  PDM_mesh_location_free (mesh_loc);
+
+  free(n_cell        );
+  free(n_face        );
+  free(n_vtx         );
+
+  free(n_cell_without_ext);
+  free(n_face_without_ext);
+  free(n_vtx_without_ext );
+
+  free(n_cell_ext    );
+  free(n_face_ext    );
+  free(n_vtx_ext     );
+  free(cell_face_idx );
+  free(cell_face     );
+  free(face_vtx_idx  );
+  free(face_vtx      );
+  free(vtx_coord     );
+  free(cell_ln_to_gn );
+  free(face_ln_to_gn );
+  free(vtx_ln_to_gn  );
+  free(face_group_idx);
+  free(face_group    );
+  free(group_ln_to_gn);
+  free(cell_center);
+  free(cell_volume);
+  free(face_center);
+  free(field          );
+  free(grad_field     );
+  free(blk_interp_from);
+
+  free(n_extract_cell);
+  free(n_extract_face);
+  free(extract_center_ln_to_gn  );
+  free(extract_center_coord     );
+  free(extract_face_bnd_ln_to_gn);
+  free(extract_face_bnd_coord   );
+
+
+  // _cube_mesh (comm,
+  //             n_part,
+  //             part_method,
+  //             n_vtx_seg,
+  //             xmin,
+  //             ymin,
+  //             zmin,
+  //             length,
+  //             0,//deform
+  //             extension_depth_src,
+  //             elt_type,
+  //             &src_n_cell,
+  //             &src_n_face,
+  //             &src_n_vtx,
+  //             &src_n_cell_ext,
+  //             &src_n_face_ext,
+  //             &src_n_vtx_ext,
+  //             &src_cell_face_idx,
+  //             &src_cell_face,
+  //             &src_face_vtx_idx,
+  //             &src_face_vtx,
+  //             &src_vtx_coord,
+  //             &src_cell_ln_to_gn,
+  //             &src_face_ln_to_gn,
+  //             &src_vtx_ln_to_gn,
+  //             &src_face_group_idx,
+  //             &src_face_group,
+  //             &src_group_ln_to_gn);
+
+  // /*
+  //  *  Target cube
+  //  */
+  // int          *tgt_n_cell         = NULL;
+  // int          *tgt_n_face         = NULL;
+  // int          *tgt_n_vtx          = NULL;
+  // int          *tgt_n_cell_ext     = NULL;
+  // int          *tgt_n_face_ext     = NULL;
+  // int          *tgt_n_vtx_ext      = NULL;
+  // int         **tgt_cell_face_idx  = NULL;
+  // int         **tgt_cell_face      = NULL;
+  // int         **tgt_face_vtx_idx   = NULL;
+  // int         **tgt_face_vtx       = NULL;
+  // double      **tgt_vtx_coord      = NULL;
+  // PDM_g_num_t **tgt_cell_ln_to_gn  = NULL;
+  // PDM_g_num_t **tgt_face_ln_to_gn  = NULL;
+  // PDM_g_num_t **tgt_vtx_ln_to_gn   = NULL;
+  // int         **tgt_face_group_idx = NULL;
+  // int         **tgt_face_group     = NULL;
+  // PDM_g_num_t **tgt_group_ln_to_gn = NULL;
+
+  // _cube_mesh (comm,
+  //             n_part,
+  //             part_method,
+  //             n_vtx_seg,
+  //             xmin + separation_x*length,
+  //             ymin + separation_y*length,
+  //             zmin + separation_z*length,
+  //             length/4,
+  //             deform,
+  //             extension_depth_tgt,
+  //             PDM_MESH_NODAL_HEXA8,
+  //             &tgt_n_cell,
+  //             &tgt_n_face,
+  //             &tgt_n_vtx,
+  //             &tgt_n_cell_ext,
+  //             &tgt_n_face_ext,
+  //             &tgt_n_vtx_ext,
+  //             &tgt_cell_face_idx,
+  //             &tgt_cell_face,
+  //             &tgt_face_vtx_idx,
+  //             &tgt_face_vtx,
+  //             &tgt_vtx_coord,
+  //             &tgt_cell_ln_to_gn,
+  //             &tgt_face_ln_to_gn,
+  //             &tgt_vtx_ln_to_gn,
+  //             &tgt_face_group_idx,
+  //             &tgt_face_group,
+  //             &tgt_group_ln_to_gn);
+
+
+  // /*
+  //  * Pour chaque maillage target on cherche une source "correcte"
+  //  */
+  // int n_mesh = 1;
+  // for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+  //   // Pour simplifier on fait autant de nuage de point que de maillage quitte a ce que n_point = 0 sur certains
+
+  // }
+
+  // /*
+  //  *  Mesh location structure initialization
+  //  */
+  // int n_point_cloud = 1; // 1 : adjacent cell center | 2 : center_interface
+  // PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
+  //                                                           1,
+  //                                                           comm,
+  //                                                           PDM_OWNERSHIP_KEEP);
+
+  // PDM_mesh_location_reverse_results_enable(mesh_loc);
+
+  // /* Set target point cloud */
+  // PDM_mesh_location_n_part_cloud_set (mesh_loc,
+  //                                     0,
+  //                                     n_part);
+
+
+  // /*
+  //  * Extraction des surfaces + centre voisins
+  //  */
+  // int tgt_have_adjacent_cell_center = 1;
+  // int tgt_have_face_center          = 1;
+
+  // int          *n_tgt     = malloc(n_part * sizeof(int          ));
+  // PDM_g_num_t **tgt_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
+  // double      **tgt_coord = NULL;
+  // if (use_tgt_nodes) {
+  //   for (int i_part = 0; i_part < n_part; i_part++) {
+  //     n_tgt[i_part]     = tgt_n_vtx[i_part];
+  //   }
+  //   tgt_g_num = tgt_vtx_ln_to_gn;
+  //   tgt_coord = tgt_vtx_coord;
+  // }
+  // else {
+  //   // n_tgt     = tgt_n_cell;
+  //   tgt_coord = (double **) malloc (sizeof(double *) * n_part);
+
+
+  //   for (int i_part = 0; i_part < n_part; i_part++) {
+  //     const int is_oriented = 1;
+  //     double *cell_volume = (double *) malloc(sizeof(double) *     tgt_n_cell[i_part]);
+  //     double *cell_center = (double *) malloc(sizeof(double) * 3 * tgt_n_cell[i_part]);
+
+  //     PDM_geom_elem_polyhedra_properties (is_oriented,
+  //                                         tgt_n_cell[i_part],
+  //                                         tgt_n_face[i_part],
+  //                                         tgt_face_vtx_idx[i_part],
+  //                                         tgt_face_vtx[i_part],
+  //                                         tgt_cell_face_idx[i_part],
+  //                                         tgt_cell_face[i_part],
+  //                                         tgt_n_vtx[i_part],
+  //                                         tgt_vtx_coord[i_part],
+  //                                         cell_volume,
+  //                                         cell_center,
+  //                                         NULL,
+  //                                         NULL);
+
+  //     free (cell_volume);
+  //     n_tgt[i_part] = 0;
+
+  //     int* extract_cell = malloc(tgt_n_face[i_part] * sizeof(int));
+  //     int* face_cell_idx = NULL;
+  //     int* face_cell     = NULL;
+  //     PDM_connectivity_transpose(tgt_n_cell       [i_part],
+  //                                tgt_n_face       [i_part],
+  //                                tgt_cell_face_idx[i_part],
+  //                                tgt_cell_face    [i_part],
+  //                                &face_cell_idx,
+  //                                &face_cell);
+
+  //     for(int i_group = 0; i_group < n_group; ++i_group) {
+  //       for(int idx_face = tgt_face_group_idx[i_part][i_group]; idx_face < tgt_face_group_idx[i_part][i_group+1]; ++idx_face) {
+  //         int i_face = tgt_face_group[i_part][idx_face]-1;
+  //         for(int idx_cell = face_cell_idx[i_face]; idx_cell < face_cell_idx[i_face+1]; ++idx_cell) {
+  //           extract_cell[n_tgt[i_part]++] = PDM_ABS(face_cell[idx_cell]);
+  //         }
+  //       }
+  //     }
+
+  //     // sort and extract coordinates
+  //     n_tgt[i_part] = PDM_inplace_unique(extract_cell, 0, n_tgt[i_part]-1);
+
+  //     extract_cell = realloc(extract_cell, n_tgt[i_part] * sizeof(int));
+  //     tgt_coord[i_part] = (double      *) malloc(3 * n_tgt[i_part] * sizeof(double));
+  //     tgt_g_num[i_part] = (PDM_g_num_t *) malloc(    n_tgt[i_part] * sizeof(PDM_g_num_t));
+
+  //     if(0 == 1) {
+  //       PDM_log_trace_array_int(extract_cell, n_tgt[i_part], "extract_cell :: ");
+  //     }
+
+  //     for(int i = 0; i < n_tgt[i_part]; ++i) {
+  //       int i_cell = extract_cell[i]-1;
+  //       tgt_coord[i_part][3*i  ] = cell_center[3*i_cell  ];
+  //       tgt_coord[i_part][3*i+1] = cell_center[3*i_cell+1];
+  //       tgt_coord[i_part][3*i+2] = cell_center[3*i_cell+2];
+  //       tgt_g_num[i_part][i] = tgt_cell_ln_to_gn[i_part][i_cell];
+  //     }
+
+
+  //     free(cell_center);
+  //     free(extract_cell);
+  //     free(face_cell_idx);
+  //     free(face_cell);
+
+  //   }
+  // }
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   PDM_mesh_location_cloud_set (mesh_loc,
+  //                                0,
+  //                                i_part,
+  //                                n_tgt[i_part],
+  //                                tgt_coord[i_part],
+  //                                tgt_g_num[i_part]);
+  // }
+
+
+  // /* Set source mesh */
+  // PDM_mesh_location_mesh_global_data_set (mesh_loc,
+  //                                         n_part);
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+
+  //   // Only include interior
+  //   int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+  //   int n_face_without_ext = src_n_face[i_part]-src_n_face_ext[i_part];
+  //   int n_vtx_without_ext  = src_n_vtx [i_part]-src_n_vtx_ext [i_part];
+
+  //   PDM_mesh_location_part_set (mesh_loc,
+  //                               i_part,
+  //                               n_cell_without_ext,
+  //                               src_cell_face_idx[i_part],
+  //                               src_cell_face    [i_part],
+  //                               src_cell_ln_to_gn[i_part],
+  //                               n_face_without_ext,
+  //                               src_face_vtx_idx [i_part],
+  //                               src_face_vtx     [i_part],
+  //                               src_face_ln_to_gn[i_part],
+  //                               n_vtx_without_ext,
+  //                               src_vtx_coord    [i_part],
+  //                               src_vtx_ln_to_gn [i_part]);
+  // }
+
+
+  // /* Set location parameters */
+  // PDM_mesh_location_tolerance_set (mesh_loc, tolerance);
+
+  // PDM_mesh_location_method_set (mesh_loc, loc_method);
+
+  // /*
+  //  *  Compute location
+  //  */
+  // if (i_rank == 0) {
+  //   printf("-- Locate\n");
+  //   fflush(stdout);
+  // }
+
+  // PDM_mesh_location_compute (mesh_loc);
+
+  // PDM_mesh_location_dump_times (mesh_loc);
+
+
+
+
+  // /*
+  //  *  Check result from target PoV
+  //  */
+  // PDM_g_num_t **tgt_location   = malloc (sizeof(PDM_g_num_t *) * n_part);
+  // double      **tgt_proj_coord = malloc (sizeof(double *)      * n_part);
+
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   int n_located = PDM_mesh_location_n_located_get (mesh_loc,
+  //                                                    0,//i_point_cloud,
+  //                                                    i_part);
+
+  //   int *located = PDM_mesh_location_located_get (mesh_loc,
+  //                                                 0,//i_point_cloud,
+  //                                                 i_part);
+
+  //   int n_unlocated = PDM_mesh_location_n_unlocated_get (mesh_loc,
+  //                                                        0,//i_point_cloud,
+  //                                                        i_part);
+
+  //   int *unlocated = PDM_mesh_location_unlocated_get (mesh_loc,
+  //                                                     0,//i_point_cloud,
+  //                                                     i_part);
+
+  //   printf("[%d] part %d, n_located = %d, n_unlocated = %d\n", i_rank, i_part, n_located, n_unlocated);
+  //   assert(n_located + n_unlocated == n_tgt[i_part]);
+
+  //   tgt_location  [i_part] = PDM_array_const_gnum (n_tgt[i_part], 0);
+  //   tgt_proj_coord[i_part] = malloc (sizeof(double) * n_tgt[i_part] * 3);
+
+  //   PDM_g_num_t *p_location    = NULL;
+  //   double      *p_dist2  = NULL;
+  //   double      *p_proj_coord  = NULL;
+  //   PDM_mesh_location_point_location_get (mesh_loc,
+  //                                         0,//i_point_cloud,
+  //                                         i_part,
+  //                                         &p_location,
+  //                                         &p_dist2,
+  //                                         &p_proj_coord);
+
+  //   for (int j = 0; j < n_located; j++) {
+  //     int i = located[j] - 1;
+  //     tgt_location[i_part][i] = p_location[j];
+  //     for (int k = 0; k < 3; k++) {
+  //       tgt_proj_coord[i_part][3*i+k] = p_proj_coord[3*j+k];
+  //     }
+  //   }
+
+  //   for (int j = 0; j < n_unlocated; j++) {
+  //     int i = unlocated[j] - 1;
+  //     tgt_location[i_part][i] = -1;
+  //     for (int k = 0; k < 3; k++) {
+  //       tgt_proj_coord[i_part][3*i+k] = tgt_coord[i_part][3*i+k];
+  //     }
+  //   }
+
+  // }
+
+
+  // /*
+  //  * Create fields on src mesh
+  //  */
+  // double **src_cell_volume = malloc( n_part * sizeof(double *));
+  // double **src_cell_center = malloc( n_part * sizeof(double *));
+  // double **src_field       = malloc( n_part * sizeof(double *));
+  // double **src_grad_field  = malloc( n_part * sizeof(double *));
+  // double **src_blk_interp  = malloc( n_part * sizeof(double *));
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   const int is_oriented = 1;
+  //   src_cell_volume[i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+  //   src_cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
+  //   src_field      [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+  //   src_grad_field [i_part] = (double *) malloc(sizeof(double) * 3 * src_n_cell[i_part]);
+  //   src_blk_interp [i_part] = (double *) malloc(sizeof(double) *     src_n_cell[i_part]);
+
+  //   PDM_geom_elem_polyhedra_properties (is_oriented,
+  //                                       src_n_cell[i_part],
+  //                                       src_n_face[i_part],
+  //                                       src_face_vtx_idx[i_part],
+  //                                       src_face_vtx[i_part],
+  //                                       src_cell_face_idx[i_part],
+  //                                       src_cell_face[i_part],
+  //                                       src_n_vtx[i_part],
+  //                                       src_vtx_coord[i_part],
+  //                                       src_cell_volume[i_part],
+  //                                       src_cell_center[i_part],
+  //                                       NULL,
+  //                                       NULL);
+
+
+  //   int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+
+  //   for(int i = 0; i < src_n_cell[i_part]; ++i) {
+  //     src_blk_interp[i_part][i] = -1;
+  //     src_field     [i_part][i] = -100000;
+  //     src_grad_field[i_part][3*i  ] = -100000;
+  //     src_grad_field[i_part][3*i+1] = -100000;
+  //     src_grad_field[i_part][3*i+2] = -100000;
+  //   }
+
+  //   for(int i = 0; i < src_n_cell[i_part]; ++i) {
+  //     double xc = src_cell_center[i_part][3*i  ];
+  //     double yc = src_cell_center[i_part][3*i+1];
+  //     double zc = src_cell_center[i_part][3*i+2];
+
+  //     // src_field     [i_part][i    ] = sin(xc + yc + zc);
+  //     // src_grad_field[i_part][3*i  ] = cos(xc + yc + zc);
+  //     // src_grad_field[i_part][3*i+1] = cos(xc + yc + zc);
+  //     // src_grad_field[i_part][3*i+2] = cos(xc + yc + zc);
+
+  //     src_field     [i_part][i    ] = sin(xc*xc + yc*yc + zc*zc);
+  //     src_grad_field[i_part][3*i  ] = 2. * xc * cos(xc + yc + zc);
+  //     src_grad_field[i_part][3*i+1] = 2. * yc * cos(xc + yc + zc);
+  //     src_grad_field[i_part][3*i+2] = 2. * zc * cos(xc + yc + zc);
+
+  //   }
+  // }
+
+
+  // /*
+  //  *  Interpolate in src mesh
+  //  */
+  // double **src_tgt_field = malloc(n_part * sizeof(double      *));
+  // int    **src_tgt_idx   = malloc(n_part * sizeof(int         *));
+  // int    **src_tgt_gnum  = malloc(n_part * sizeof(PDM_g_num_t *));
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   int *cell_vtx_idx;
+  //   int *cell_vtx;
+  //   PDM_mesh_location_cell_vertex_get (mesh_loc,
+  //                                      i_part,
+  //                                      &cell_vtx_idx,
+  //                                      &cell_vtx);
+
+  //   int         *elt_pts_inside_idx;
+  //   PDM_g_num_t *points_gnum;
+  //   double      *points_coords;
+  //   double      *points_uvw;
+  //   int         *points_weights_idx;
+  //   double      *points_weights;
+  //   double      *points_dist2;
+  //   double      *points_projected_coords;
+
+  //   PDM_mesh_location_points_in_elt_get (mesh_loc,
+  //                                        i_part,
+  //                                        0,//i_point_cloud,
+  //                                        &elt_pts_inside_idx,
+  //                                        &points_gnum,
+  //                                        &points_coords,
+  //                                        &points_uvw,
+  //                                        &points_weights_idx,
+  //                                        &points_weights,
+  //                                        &points_dist2,
+  //                                        &points_projected_coords);
+
+  //   src_tgt_idx [i_part] = elt_pts_inside_idx;
+  //   src_tgt_gnum[i_part] = points_gnum;
+
+  //   // PDM_log_trace_connectivity_int(elt_pts_inside_idx, points_gnum, src_n_cell[i_part], "elt_pts_inside_idx ::");
+
+  //   int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+  //   int n_tgt_to_interp = elt_pts_inside_idx[n_cell_without_ext];
+
+  //   src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
+
+  //   // int n_face_without_ext = src_n_face[i_part]-src_n_face_ext[i_part];
+  //   // int n_vtx_without_ext  = src_n_vtx [i_part]-src_n_vtx_ext [i_part];
+  //   for (int i = 0; i < n_cell_without_ext; i++) {
+  //     for (int j = elt_pts_inside_idx[i]; j < elt_pts_inside_idx[i+1]; j++) {
+  //       double tgt_x = points_coords[3*j  ];
+  //       double tgt_y = points_coords[3*j+1];
+  //       double tgt_z = points_coords[3*j+2];
+
+  //       double xc = src_cell_center[i_part][3*i  ];
+  //       double yc = src_cell_center[i_part][3*i+1];
+  //       double zc = src_cell_center[i_part][3*i+2];
+
+  //       double val   = src_field     [i_part][i    ];
+  //       double gvalx = src_grad_field[i_part][3*i  ];
+  //       double gvaly = src_grad_field[i_part][3*i+1];
+  //       double gvalz = src_grad_field[i_part][3*i+2];
+
+  //       // Do interpolation
+  //       // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
+  //       src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
+
+  //     }
+  //   }
+
+  //   // PDM_log_trace_array_double(src_tgt_field[i_part], n_tgt_to_interp, "src_tgt_field ::");
+  // }
+
+  // /*
+  //  * Send to target
+  //  */
+  // int* src_cell_without_ext = malloc(n_part * sizeof(int));
+  // int* tgt_cell_without_ext = malloc(n_part * sizeof(int));
+  // int* src_face_without_ext = malloc(n_part * sizeof(int));
+  // int* tgt_face_without_ext = malloc(n_part * sizeof(int));
+  // int* src_vtx_without_ext  = malloc(n_part * sizeof(int));
+  // int* tgt_vtx_without_ext  = malloc(n_part * sizeof(int));
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   src_cell_without_ext[i_part] = src_n_cell[i_part] - src_n_cell_ext[i_part];
+  //   tgt_cell_without_ext[i_part] = tgt_n_cell[i_part] - tgt_n_cell_ext[i_part];
+  //   src_face_without_ext[i_part] = src_n_face[i_part] - src_n_face_ext[i_part];
+  //   tgt_face_without_ext[i_part] = tgt_n_face[i_part] - tgt_n_face_ext[i_part];
+  //   src_vtx_without_ext [i_part] = src_n_vtx [i_part] - src_n_vtx_ext [i_part];
+  //   tgt_vtx_without_ext [i_part] = tgt_n_vtx [i_part] - tgt_n_vtx_ext [i_part];
+  // }
+
+  // PDM_part_to_part_t *ptp = PDM_part_to_part_create ((const PDM_g_num_t **) src_cell_ln_to_gn,
+  //                                                                           src_cell_without_ext,
+  //                                                                           n_part,
+  //                                                    (const PDM_g_num_t **) tgt_cell_ln_to_gn,
+  //                                                                           tgt_cell_without_ext,
+  //                                                                           n_part,
+  //                                                    (const int         **) src_tgt_idx,
+  //                                                    (const PDM_g_num_t **) src_tgt_gnum,
+  //                                                                           comm);
+
+  // /*
+  //  * On peut donc echanger des src -> tgt
+  //  */
+  // double **part_data = NULL;
+  // int request_exch;
+  // PDM_part_to_part_iexch(ptp,
+  //                        PDM_MPI_COMM_KIND_P2P,
+  //                        PDM_STRIDE_CST_INTERLACED,
+  //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+  //                        1,
+  //                        sizeof(double),
+  //        (const int  **) NULL,
+  //        (const void **) src_tgt_field,
+  //                        NULL,
+  //             (void ***) &part_data,
+  //                        &request_exch);
+
+  // PDM_part_to_part_iexch_wait(ptp, request_exch);
+
+  // int  *n_ref_tgt;
+  // int **ref_tgt;
+  // PDM_part_to_part_ref_lnum2_get (ptp,
+  //                                 &n_ref_tgt,
+  //                                 &ref_tgt);
+
+  // int         **gnum1_come_from_idx = NULL;
+  // PDM_g_num_t **gnum1_come_from     = NULL;
+  // PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
+
+
+  // double **tgt_field       = malloc( n_part * sizeof(double *));
+  // double **tgt_blk_interp  = malloc( n_part * sizeof(double *));
+
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+
+  //   int n_cell_without_ext = tgt_n_cell[i_part]-tgt_n_cell_ext[i_part];
+
+  //   tgt_field      [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
+  //   tgt_blk_interp [i_part] = (double *) malloc(sizeof(double) * n_cell_without_ext);
+
+  //   for(int i = 0; i < n_cell_without_ext; ++i) {
+  //     tgt_field      [i_part][i] = -1.;
+  //     tgt_blk_interp [i_part][i] = -1.;
+  //   }
+
+  //   /* Enforce with interpolation */
+  //   for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
+  //     int i_tgt = ref_tgt[i_part][i]-1;
+  //     for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
+  //       tgt_field     [i_part][i_tgt] = part_data[i_part][j];
+  //       tgt_blk_interp[i_part][i_tgt] = 0;
+  //     }
+  //   }
+
+  //   // PDM_log_trace_connectivity_int(gnum1_come_from_idx[i_part], ref_tgt[i_part], n_ref_tgt[i_part], "ref_tgt :: ");
+  //   // PDM_log_trace_array_double(part_data[i_part], gnum1_come_from_idx[i_part][n_ref_tgt[i_part]], "recv_field :: ");
+
+  // }
+
+
+  // PDM_part_to_part_free(ptp);
+
+  // _visu ("source_mesh",
+  //        n_part,
+  //        src_cell_without_ext,
+  //        src_face_without_ext,
+  //        src_vtx_without_ext,
+  //        src_cell_face_idx,
+  //        src_cell_face,
+  //        src_cell_ln_to_gn,
+  //        src_face_vtx_idx,
+  //        src_face_vtx,
+  //        src_face_ln_to_gn,
+  //        src_vtx_coord,
+  //        src_vtx_ln_to_gn,
+  //        src_field,
+  //        src_blk_interp);
+
+  // _visu ("target_mesh",
+  //        n_part,
+  //        tgt_cell_without_ext,
+  //        tgt_face_without_ext,
+  //        tgt_vtx_without_ext,
+  //        tgt_cell_face_idx,
+  //        tgt_cell_face,
+  //        tgt_cell_ln_to_gn,
+  //        tgt_face_vtx_idx,
+  //        tgt_face_vtx,
+  //        tgt_face_ln_to_gn,
+  //        tgt_vtx_coord,
+  //        tgt_vtx_ln_to_gn,
+  //        tgt_field,
+  //        tgt_blk_interp);
+
+
+
+  // free(src_cell_without_ext);
+  // free(tgt_cell_without_ext);
+  // free(src_face_without_ext);
+  // free(tgt_face_without_ext);
+  // free(src_vtx_without_ext );
+  // free(tgt_vtx_without_ext );
+  // free(src_tgt_idx);
+  // free(src_tgt_gnum);
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   free(src_tgt_field [i_part]);
+  //   free(src_blk_interp[i_part]);
+  // }
+  // free(src_tgt_field);
+  // free(src_blk_interp);
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   free(tgt_field     [i_part]);
+  //   free(tgt_blk_interp[i_part]);
+  //   free(part_data     [i_part]);
+  // }
+  // free(tgt_field);
+  // free(tgt_blk_interp);
+  // free(part_data);
+
+  // if (post) {
+  //   char filename[999];
+
+  //   sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
+  //   _export_point_cloud (filename,
+  //                        n_part,
+  //                        n_tgt,
+  //                        tgt_coord,
+  //                        tgt_g_num,
+  //                        tgt_location);
+
+  //   sprintf(filename, "tgt_proj_coord_%3.3d.vtk", i_rank);
+
+  //   _export_point_cloud (filename,
+  //                        n_part,
+  //                        n_tgt,
+  //                        tgt_proj_coord,
+  //                        tgt_g_num,
+  //                        tgt_location);
+  // }
+
+
+  // /*
+  //  *  Free memory
+  //  */
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   free(src_cell_volume[i_part]);
+  //   free(src_cell_center[i_part]);
+  //   free(src_field      [i_part]);
+  //   free(src_grad_field [i_part]);
+  // }
+
+  // free(src_cell_volume);
+  // free(src_cell_center);
+  // free(src_field);
+  // free(src_grad_field);
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   free(src_cell_face_idx[i_part]);
+  //   free(src_cell_face    [i_part]);
+  //   free(src_face_vtx_idx [i_part]);
+  //   free(src_face_vtx     [i_part]);
+  //   free(src_vtx_coord    [i_part]);
+  //   free(src_cell_ln_to_gn[i_part]);
+  //   free(src_face_ln_to_gn[i_part]);
+  //   free(src_vtx_ln_to_gn [i_part]);
+
+  //   free(src_face_group_idx[i_part]);
+  //   free(src_face_group    [i_part]);
+  //   free(src_group_ln_to_gn[i_part]);
+
+  //   free(tgt_cell_face_idx [i_part]);
+  //   free(tgt_cell_face     [i_part]);
+  //   free(tgt_face_vtx_idx  [i_part]);
+  //   free(tgt_face_vtx      [i_part]);
+  //   free(tgt_vtx_coord     [i_part]);
+  //   free(tgt_cell_ln_to_gn [i_part]);
+  //   free(tgt_face_ln_to_gn [i_part]);
+  //   free(tgt_vtx_ln_to_gn  [i_part]);
+  //   free(tgt_face_group_idx[i_part]);
+  //   free(tgt_face_group    [i_part]);
+  //   free(tgt_group_ln_to_gn[i_part]);
+
+  //   free (tgt_location[i_part]);
+  //   free (tgt_proj_coord[i_part]);
+
+  //   free(tgt_g_num[i_part]);
+
+  //   if (!use_tgt_nodes) {
+  //     free(tgt_coord[i_part]);
+  //   }
+  // }
+  // free(tgt_g_num);
+  // free(n_tgt);
+  // free(src_n_cell       );
+  // free(src_n_face       );
+  // free(src_n_vtx        );
+  // free(src_n_cell_ext   );
+  // free(src_n_face_ext   );
+  // free(src_n_vtx_ext    );
+  // free(src_cell_face_idx);
+  // free(src_cell_face    );
+  // free(src_face_vtx_idx );
+  // free(src_face_vtx     );
+  // free(src_vtx_coord    );
+  // free(src_cell_ln_to_gn);
+  // free(src_face_ln_to_gn);
+  // free(src_vtx_ln_to_gn );
+
+  // free(src_face_group_idx);
+  // free(src_face_group    );
+  // free(src_group_ln_to_gn);
+
+  // free(tgt_n_cell       );
+  // free(tgt_n_face       );
+  // free(tgt_n_vtx        );
+  // free(tgt_n_cell_ext   );
+  // free(tgt_n_face_ext   );
+  // free(tgt_n_vtx_ext    );
+  // free(tgt_cell_face_idx);
+  // free(tgt_cell_face    );
+  // free(tgt_face_vtx_idx );
+  // free(tgt_face_vtx     );
+  // free(tgt_vtx_coord    );
+  // free(tgt_cell_ln_to_gn);
+  // free(tgt_face_ln_to_gn);
+  // free(tgt_vtx_ln_to_gn );
+
+  // free(tgt_face_group_idx);
+  // free(tgt_face_group    );
+  // free(tgt_group_ln_to_gn);
+
+  // free (tgt_location);
+  // free (tgt_proj_coord);
+
+  // if (!use_tgt_nodes) {
+  //   free(tgt_coord);
+  // }
+
+  // PDM_mesh_location_free (mesh_loc);
                           
 
   PDM_MPI_Finalize();
