@@ -1088,9 +1088,27 @@ _prepare_target_cloud
   *extract_center_coord    = malloc(n_part * sizeof(double      *));
   *extract_center_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
 
+  *n_extract_face            = malloc(n_part * sizeof(int          ));
+  *extract_face_bnd_coord    = malloc(n_part * sizeof(double      *));
+  *extract_face_bnd_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+
   int          *_n_extract_cell          = *n_extract_cell;
   double      **_extract_center_coord    = *extract_center_coord;
   PDM_g_num_t **_extract_center_ln_to_gn = *extract_center_ln_to_gn;
+
+  int          *_n_extract_face            = *n_extract_face;
+  double      **_extract_face_bnd_coord    = *extract_face_bnd_coord;
+  PDM_g_num_t **_extract_face_bnd_ln_to_gn = *extract_face_bnd_ln_to_gn;
+
+  /* Management of void */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    _n_extract_cell[i_part] = 0;
+    _n_extract_face[i_part] = 0;
+    _extract_center_coord     [i_part] = NULL;
+    _extract_center_ln_to_gn  [i_part] = NULL;
+    _extract_face_bnd_coord   [i_part] = NULL;
+    _extract_face_bnd_ln_to_gn[i_part] = NULL;
+  }
 
   if(extract_center_depth > 0) {
     for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1141,8 +1159,33 @@ _prepare_target_cloud
   }
 
 
+  if(extract_bnd_faces == 1) {
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      _n_extract_face[i_part] = 0;
+
+      _extract_face_bnd_coord   [i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(double     ));
+      _extract_face_bnd_ln_to_gn[i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(PDM_g_num_t));
 
 
+      /* Dans cette exemple on considère que toutes les frontières sont BCOVerlap */
+      for(int i_group = 0; i_group < n_group; ++i_group) {
+        for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
+          int i_face = face_group[i_part][idx_face]-1;
+
+          int idx_write = _n_extract_face[i_part]++;
+
+          _extract_face_bnd_coord   [i_part][3*idx_write  ] = face_center[i_part][3*i_face  ];
+          _extract_face_bnd_coord   [i_part][3*idx_write+1] = face_center[i_part][3*i_face+1];
+          _extract_face_bnd_coord   [i_part][3*idx_write+2] = face_center[i_part][3*i_face+2];
+          // _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_ln_to_gn[i_part][i_face]; // Change rien
+          _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_group_ln_to_gn[i_part][idx_face];
+
+        }
+      }
+      assert(_n_extract_face[i_part] == face_group_idx[i_part][n_group]);
+    }
+  }
 
 
 }
