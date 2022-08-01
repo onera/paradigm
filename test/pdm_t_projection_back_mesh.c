@@ -363,6 +363,7 @@ _projection_on_background_mesh_get2
  int                   back_elt_order,
  PDM_Mesh_nodal_elt_t  back_elt_type,
  double               *proj_pt_coord,
+ int                  *closest_back_elt,
  int                  *history_elt,
  double               *history_proj
 )
@@ -531,7 +532,7 @@ _projection_on_background_mesh_get2
     }
 
     if (distance < min_distance) {
-      memcpy(proj_pt_coord, cp, sizeof(double) * 3);
+      memcpy(proj_pt_coord, cp,  sizeof(double) * 3);
       closest_elt  = id_elt + 1;
       min_distance = distance;
     }
@@ -581,6 +582,8 @@ _projection_on_background_mesh_get2
   } // End of while loop
   free(is_visited);
   free(stack);
+
+  *closest_back_elt = closest_elt;
 
   if (vb) {
     printf("closest_elt = %d (0-based)\n", closest_elt-1);
@@ -832,7 +835,8 @@ int main(int argc, char *argv[])
   int stride_ho = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, elt_order);
   int *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(stride_ho, n_elt);
 
-  double proj_pt_coord[3];
+  double  proj_pt_coord[3];
+  int     closest_back_elt;
   int    *history_elt  = malloc(sizeof(int) * n_elt);
   double *history_proj = malloc(sizeof(int) * n_elt * 3);
 
@@ -849,6 +853,7 @@ int main(int argc, char *argv[])
                                                    elt_order,
                                                    elt_type,
                                                    proj_pt_coord,
+                                                   &closest_back_elt,
                                                    history_elt,
                                                    history_proj);
 

@@ -154,6 +154,31 @@ PDM_ho_bezier_triangle_derivatives
 
 /**
  *
+ * \brief Point location in a high-order Bézier curve
+ *
+ * \param[in]   order             Order
+ * \param[in]   n_node            Number of nodes
+ * \param[in]   node_coord        Coordinates of the Bézier control points (size = 3 * \ref n_node)
+ * \param[in]   point_coord       Coordinates of the point to locate (size = 3)
+ * \param[out]  projected_coords  Coordinates of the projection on the Bézier curve (size = 3)
+ * \param[out]  uvw               Parametric coordinates of the projection on the Bézier curve
+ *
+ */
+
+double
+PDM_ho_bezier_curve_location
+(
+ const int     order,
+ const int     n_node,
+       double *node_coord,
+       double *point_coord,
+       double *projected_coord,
+       double *u
+ );
+
+
+/**
+ *
  * \brief Point location in a high-order Bézier triangle
  *
  * \param[in]   order             Order
@@ -173,7 +198,7 @@ PDM_ho_bezier_triangle_location
        double *node_coord,
        double *point_coord,
        double *projected_coord,
-       double *uvw
+       double *uv
  );
 
 #endif /* __PDM_HO_BEZIER_H__ */
