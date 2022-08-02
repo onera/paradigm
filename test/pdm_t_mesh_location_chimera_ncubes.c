@@ -1599,8 +1599,9 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  int n_mesh = 5;
+  // int n_mesh = 5;
   // int n_mesh = 2;
+  int n_mesh = 5;
 
   int          **n_cell         = malloc(n_mesh * sizeof(int          *));
   int          **n_face         = malloc(n_mesh * sizeof(int          *));
@@ -1690,13 +1691,16 @@ int main(int argc, char *argv[])
 
 
     // Rand a number around 20% for n_vtx_seg
-    PDM_g_num_t n_vtx_add_rand = rand() % ( n_vtx_seg / 5);
+    PDM_g_num_t percent = ceil( (double) n_vtx_seg * (25. / 100.));
+    PDM_g_num_t n_vtx_add_rand = rand() % ( percent ) - percent / 2;
     PDM_g_num_t n_vtx_seg_rand = n_vtx_seg + n_vtx_add_rand;
 
     if(i_rank == 0) {
       printf("lseparation = %12.5e / %12.5e / %12.5e \n", lseparation_x, lseparation_y, lseparation_z);
       printf("llength     = %12.5e  \n", llength);
+      printf("n_vtx_add_rand = "PDM_FMT_G_NUM" \n", n_vtx_add_rand);
       printf("n_vtx_seg_rand = "PDM_FMT_G_NUM" \n", n_vtx_seg_rand);
+      printf("percent        = "PDM_FMT_G_NUM" \n", percent);
     }
 
     n_cell_tot += (n_vtx_seg_rand-1) * (n_vtx_seg_rand-1) * (n_vtx_seg_rand-1);
