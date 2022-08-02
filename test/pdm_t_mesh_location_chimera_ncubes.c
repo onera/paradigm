@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <float.h>
 
 #include <pdm_mpi.h>
 
@@ -1103,22 +1104,29 @@ _init_fields
   double      **cell_center,
   double     ***field,
   double     ***grad_field,
-  double     ***blk_interp_from
+  double     ***blk_interp_from,
+  double     ***blk_interp_vol,
+  double     ***cell_nat
 )
 {
-  *field           = (double ** ) malloc( n_part * sizeof(double));
-  *grad_field      = (double ** ) malloc( n_part * sizeof(double));
-  *blk_interp_from = (double ** ) malloc( n_part * sizeof(double));
+  *field           = (double ** ) malloc( n_part * sizeof(double *));
+  *grad_field      = (double ** ) malloc( n_part * sizeof(double *));
+  *blk_interp_from = (double ** ) malloc( n_part * sizeof(double *));
+  *blk_interp_vol  = (double ** ) malloc( n_part * sizeof(double *));
+  *cell_nat        = (double ** ) malloc( n_part * sizeof(double *));
 
   double **_field           = *field;
   double **_grad_field      = *grad_field;
   double **_blk_interp_from = *blk_interp_from;
+  double **_blk_interp_vol  = *blk_interp_vol;
+  double **_cell_nat        = *cell_nat;
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    const int is_oriented = 1;
     _field          [i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
     _grad_field     [i_part] = (double *) malloc(3 * n_cell[i_part] * sizeof(double));
     _blk_interp_from[i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
+    _blk_interp_vol [i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
+    _cell_nat       [i_part] = (double *) malloc(    n_cell[i_part] * sizeof(double));
 
     for(int i = 0; i < n_cell[i_part]; ++i) {
       double xc = cell_center[i_part][3*i  ];
@@ -1135,6 +1143,8 @@ _init_fields
       _grad_field     [i_part][3*i+1] = 2. * yc * cos(xc + yc + zc);
       _grad_field     [i_part][3*i+2] = 2. * zc * cos(xc + yc + zc);
       _blk_interp_from[i_part][i    ] = -1;
+      _blk_interp_vol [i_part][i    ] = DBL_MAX ;
+      _cell_nat       [i_part][i    ] = -4.; // Normal
     }
   }
 }
@@ -1167,6 +1177,7 @@ _prepare_target_cloud
   double       **vtx_coord,
   double       **cell_center,
   double       **face_center,
+  double       **cell_nat,
   int            extract_center_depth,
   int            extract_bnd_faces,
   int          **n_extract_cell,
@@ -1245,6 +1256,7 @@ _prepare_target_cloud
         _extract_center_coord   [i_part][3*i+1] = cell_center[i_part][3*i_cell+1];
         _extract_center_coord   [i_part][3*i+2] = cell_center[i_part][3*i_cell+2];
         _extract_center_ln_to_gn[i_part][i] = cell_ln_to_gn[i_part][i_cell];
+        cell_nat                [i_part][i_cell] = 1.; // Interpolated
       }
 
       free(face_cell_idx);
@@ -1288,27 +1300,6 @@ _prepare_target_cloud
 
 /**
  *
- *
- *
- */
-static
-void
-_interp_target
-(
-void
-)
-{
-
-  // Gestion de dist < 0 + Min volume
-
-
-
-}
-
-
-
-/**
- *
  * \brief  Visu
  *
  */
@@ -1330,7 +1321,8 @@ _visu
  double          *vtx[],
  PDM_g_num_t     *vtx_ln_to_gn[],
  double          *field[],
- double          *block_interp[]
+ double          *block_interp[],
+ double          *cell_nat[]
 )
 {
 
@@ -1391,6 +1383,11 @@ _visu
                                                 PDM_WRITER_VAR_SCALAR,
                                                 PDM_WRITER_VAR_ELEMENTS,
                                                 "blk_interp");
+  int id_var_cell_nat = PDM_writer_var_create(id_cs,
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "cell_nat");
 
   PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
@@ -1462,11 +1459,17 @@ _visu
                        id_geom,
                        i_part,
                        block_interp[i_part]);
+    PDM_writer_var_set(id_cs,
+                       id_var_cell_nat,
+                       id_geom,
+                       i_part,
+                       cell_nat[i_part]);
   }
 
   PDM_writer_var_write(id_cs, id_var_field);
   PDM_writer_var_write(id_cs, id_var_num_part);
   PDM_writer_var_write(id_cs, id_var_blk_interp);
+  PDM_writer_var_write(id_cs, id_var_cell_nat);
 
   // PDM_writer_var_free(id_cs,
   //                     id_var_num_part);
@@ -1597,6 +1600,7 @@ int main(int argc, char *argv[])
    *  Source cube
    */
   int n_mesh = 5;
+  // int n_mesh = 2;
 
   int          **n_cell         = malloc(n_mesh * sizeof(int          *));
   int          **n_face         = malloc(n_mesh * sizeof(int          *));
@@ -1629,14 +1633,16 @@ int main(int argc, char *argv[])
   PDM_g_num_t ***extract_face_bnd_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
   double      ***extract_face_bnd_coord    = malloc(n_mesh * sizeof(double      **));
 
-  double ***cell_center = malloc(n_mesh * sizeof(int         **));
-  double ***cell_volume = malloc(n_mesh * sizeof(int         **));
-  double ***face_center = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double ***cell_center = malloc(n_mesh * sizeof(double **));
+  double ***cell_volume = malloc(n_mesh * sizeof(double **));
+  double ***face_center = malloc(n_mesh * sizeof(double **));
 
 
-  double ***field           = malloc(n_mesh * sizeof(int         **));
-  double ***grad_field      = malloc(n_mesh * sizeof(int         **));
-  double ***blk_interp_from = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double ***field           = malloc(n_mesh * sizeof(double **));
+  double ***grad_field      = malloc(n_mesh * sizeof(double **));
+  double ***blk_interp_from = malloc(n_mesh * sizeof(double **));
+  double ***blk_interp_vol  = malloc(n_mesh * sizeof(double **));
+  double ***cell_nat        = malloc(n_mesh * sizeof(double **));
 
   int n_group = 6;
   int ldeform = deform;
@@ -1719,11 +1725,13 @@ int main(int argc, char *argv[])
 
     /* Init field */
     _init_fields(n_part,
-                 n_cell[i_mesh],
-                 cell_center[i_mesh],
-                 &field[i_mesh],
-                 &grad_field[i_mesh],
-                 &blk_interp_from[i_mesh]);
+                 n_cell          [i_mesh],
+                 cell_center     [i_mesh],
+                 &field          [i_mesh],
+                 &grad_field     [i_mesh],
+                 &blk_interp_from[i_mesh],
+                 &blk_interp_vol [i_mesh],
+                 &cell_nat       [i_mesh]);
 
     /* Prepare extract */
     _prepare_target_cloud(n_part,
@@ -1744,6 +1752,7 @@ int main(int argc, char *argv[])
                           vtx_coord                [i_mesh],
                           cell_center              [i_mesh],
                           face_center              [i_mesh],
+                          cell_nat                 [i_mesh],
                           lextract_center_depth,
                           lextract_bnd_faces,
                           &n_extract_cell           [i_mesh],
@@ -1762,24 +1771,25 @@ int main(int argc, char *argv[])
       n_vtx_without_ext [i_mesh][i_part] = n_vtx [i_mesh][i_part] - n_vtx_ext [i_mesh][i_part];
     }
 
-    /* Visu */
-    char filename[999];
-    sprintf(filename, "mesh_%i", i_mesh);
-    _visu (filename,
-           n_part,
-           n_cell_without_ext[i_mesh],
-           n_face_without_ext[i_mesh],
-           n_vtx_without_ext [i_mesh],
-           cell_face_idx     [i_mesh],
-           cell_face         [i_mesh],
-           cell_ln_to_gn     [i_mesh],
-           face_vtx_idx      [i_mesh],
-           face_vtx          [i_mesh],
-           face_ln_to_gn     [i_mesh],
-           vtx_coord         [i_mesh],
-           vtx_ln_to_gn      [i_mesh],
-           field             [i_mesh],
-           blk_interp_from   [i_mesh]);
+    // /* Visu */
+    // char filename[999];
+    // sprintf(filename, "mesh_%i", i_mesh);
+    // _visu (filename,
+    //        n_part,
+    //        n_cell_without_ext[i_mesh],
+    //        n_face_without_ext[i_mesh],
+    //        n_vtx_without_ext [i_mesh],
+    //        cell_face_idx     [i_mesh],
+    //        cell_face         [i_mesh],
+    //        cell_ln_to_gn     [i_mesh],
+    //        face_vtx_idx      [i_mesh],
+    //        face_vtx          [i_mesh],
+    //        face_ln_to_gn     [i_mesh],
+    //        vtx_coord         [i_mesh],
+    //        vtx_ln_to_gn      [i_mesh],
+    //        field             [i_mesh],
+    //        blk_interp_from   [i_mesh],
+    //        cell_nat          [i_mesh]);
   }
 
 
@@ -1793,9 +1803,9 @@ int main(int argc, char *argv[])
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
     mesh_loc[i_mesh] = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
-                                                              n_tot_cloud, // Number of cloud
-                                                              comm,
-                                                              PDM_OWNERSHIP_KEEP);
+                                                 n_tot_cloud, // Number of cloud
+                                                 comm,
+                                                 PDM_OWNERSHIP_KEEP);
 
     PDM_mesh_location_reverse_results_enable(mesh_loc[i_mesh]);
 
@@ -1808,12 +1818,22 @@ int main(int argc, char *argv[])
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
       for (int i_part = 0; i_part < n_part; i_part++) {
         printf("n_extract_cell         [i_cloud][i_part] = %i \n", n_extract_cell         [i_cloud][i_part]);
-        PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
-                                    i_cloud,
-                                    i_part,
-                                    n_extract_cell         [i_cloud][i_part],
-                                    extract_center_coord   [i_cloud][i_part],
-                                    extract_center_ln_to_gn[i_cloud][i_part]);
+        if(i_mesh != i_cloud) {
+          PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
+                                      i_cloud,
+                                      i_part,
+                                      n_extract_cell         [i_cloud][i_part],
+                                      extract_center_coord   [i_cloud][i_part],
+                                      extract_center_ln_to_gn[i_cloud][i_part]);
+        } else {
+          printf("Not provided cloud \n");
+          PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
+                                      i_cloud,
+                                      i_part,
+                                      0,
+                                      NULL,
+                                      NULL);
+        }
       }
     }
 
@@ -1923,7 +1943,7 @@ int main(int argc, char *argv[])
   /*
    *  Exchange data between src and target
    */
-  int n_data_send = 4; // Value / blk_interp / volume / dist (Reminder if dist < 0 -> Extrapolate )
+  int n_data_send = 5; // Value / blk_interp / volume / dist (Reminder if dist < 0 -> Extrapolate )
   double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
   double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
   int           **request_exch = malloc(n_mesh * sizeof(int      *));
@@ -1978,6 +1998,7 @@ int main(int argc, char *argv[])
             _send_buffer[n_data_send*j+1] = i_mesh;
             _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
             _send_buffer[n_data_send*j+3] = _pts_dist[j];
+            _send_buffer[n_data_send*j+4] = cell_nat[i_mesh][i_part][i];
 
           }
         }
@@ -2007,9 +2028,51 @@ int main(int argc, char *argv[])
    */
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
-
       // We can also do iexch_test and use the first request
       PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
+
+      /*
+       * Post-treatment
+       */
+      int  *n_ref_tgt;
+      int **ref_tgt;
+      PDM_part_to_part_ref_lnum2_get (ptp[i_mesh][i_cloud], &n_ref_tgt, &ref_tgt);
+
+      int         **gnum1_come_from_idx = NULL;
+      PDM_g_num_t **gnum1_come_from     = NULL;
+      PDM_part_to_part_gnum1_come_from_get(ptp[i_mesh][i_cloud], &gnum1_come_from_idx, &gnum1_come_from);
+
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+
+        int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+
+        double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
+
+        // CAUTION HERE : We fill the cloud !!!!
+        double *_field           = field           [i_cloud][i_part];
+        double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
+        double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
+        double *_cell_nat        = cell_nat        [i_cloud][i_part];
+
+        for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
+          int i_tgt = ref_tgt[i_part][i]-1;
+          for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
+
+            double lvol      = _recv_buffer[n_data_send*j+2];
+            double ldist     = _recv_buffer[n_data_send*j+3];
+            double lcell_nat = _recv_buffer[n_data_send*j+4];
+            // printf("dist = %12.5e | vol = %12.5e \n", dist, vol);
+
+            // On doit pouvoir gerer l'extrapolation également comme pour la condition du volume
+            if(lcell_nat < 0 && ldist < 0 && lvol < _blk_interp_vol[i_tgt]) {
+              _field          [i_tgt] = _recv_buffer[n_data_send*j  ];
+              // printf("i_tgt = %i | fld = %12.5e | interp_from = %12.5e \n", i_tgt, _recv_buffer[n_data_send*j  ], _recv_buffer[n_data_send*j+1]);
+              _blk_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
+              _blk_interp_vol [i_tgt] = PDM_MIN(_blk_interp_vol [i_tgt], lvol);
+            }
+          }
+        }
+      }
     }
   }
 
@@ -2053,6 +2116,29 @@ int main(int argc, char *argv[])
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     PDM_mesh_location_free(mesh_loc[i_mesh]);
+  }
+
+  /* Visu */
+
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    char filename[999];
+    sprintf(filename, "mesh_%i", i_mesh);
+    _visu (filename,
+           n_part,
+           n_cell_without_ext[i_mesh],
+           n_face_without_ext[i_mesh],
+           n_vtx_without_ext [i_mesh],
+           cell_face_idx     [i_mesh],
+           cell_face         [i_mesh],
+           cell_ln_to_gn     [i_mesh],
+           face_vtx_idx      [i_mesh],
+           face_vtx          [i_mesh],
+           face_ln_to_gn     [i_mesh],
+           vtx_coord         [i_mesh],
+           vtx_ln_to_gn      [i_mesh],
+           field             [i_mesh],
+           blk_interp_from   [i_mesh],
+           cell_nat          [i_mesh]);
   }
 
 
@@ -2107,6 +2193,8 @@ int main(int argc, char *argv[])
       free(field          [i_mesh][i_part]);
       free(grad_field     [i_mesh][i_part]);
       free(blk_interp_from[i_mesh][i_part]);
+      free(blk_interp_vol [i_mesh][i_part]);
+      free(cell_nat       [i_mesh][i_part]);
 
       if(extract_center_ln_to_gn[i_mesh][i_part] != NULL) {
         free(extract_center_ln_to_gn[i_mesh][i_part]);
@@ -2147,6 +2235,8 @@ int main(int argc, char *argv[])
     free(field          [i_mesh]);
     free(grad_field     [i_mesh]);
     free(blk_interp_from[i_mesh]);
+    free(blk_interp_vol [i_mesh]);
+    free(cell_nat       [i_mesh]);
 
     free(n_extract_cell[i_mesh]);
     free(n_extract_face[i_mesh]);
@@ -2185,6 +2275,8 @@ int main(int argc, char *argv[])
   free(field          );
   free(grad_field     );
   free(blk_interp_from);
+  free(blk_interp_vol);
+  free(cell_nat);
 
   free(n_extract_cell);
   free(n_extract_face);
