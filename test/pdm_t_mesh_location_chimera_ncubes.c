@@ -1825,6 +1825,7 @@ int main(int argc, char *argv[])
   /*
    * Prepare localisation
    */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   int n_point_cloud = 1;  // 1 : adjacent cell center | 2 : center_interface
   int n_tot_cloud = n_point_cloud * n_mesh;
@@ -1903,6 +1904,7 @@ int main(int argc, char *argv[])
   /*
    *  Prepare all part_to_part
    */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   int         ****mesh_pts_idx            = malloc(n_mesh * sizeof(int         ***));
   PDM_g_num_t ****mesh_pts_gnum           = malloc(n_mesh * sizeof(PDM_g_num_t ***));
@@ -1978,6 +1980,7 @@ int main(int argc, char *argv[])
   /*
    *  Exchange data between src and target
    */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   int n_data_send = 5; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate )
   double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
@@ -2064,6 +2067,7 @@ int main(int argc, char *argv[])
   /*
    * Receive data
    */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
@@ -2120,6 +2124,7 @@ int main(int argc, char *argv[])
   /*
    * Cleaning
    */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
@@ -2159,6 +2164,7 @@ int main(int argc, char *argv[])
   delta_t[5] = t2 - t1;
 
   /* Visu */
+  PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     char filename[999];
