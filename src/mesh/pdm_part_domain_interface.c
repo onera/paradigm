@@ -1635,3 +1635,151 @@ PDM_part_domain_interface_as_graph
   *all_composed_ln_to_gn_sorted = _composed_ln_to_gn_sorted;
 
 }
+
+void
+PDM_part_domain_interface_translate
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_entity1,
+ int                          **pn_entity2,
+ PDM_g_num_t                 ***entity2_ln_to_gn,
+ int                         ***entity2_entity1_idx,
+ int                         ***entity2_entity1
+)
+{
+  PDM_UNUSED(dom_intrf);
+  PDM_UNUSED(interface_kind1);
+  PDM_UNUSED(interface_kind2);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(pn_entity1);
+  PDM_UNUSED(pn_entity2);
+  PDM_UNUSED(entity2_ln_to_gn);
+  PDM_UNUSED(entity2_entity1_idx);
+  PDM_UNUSED(entity2_entity1);
+
+  int         **pdi_neighbor_idx         = NULL;
+  int         **pdi_neighbor             = NULL;
+  int           n_composed_interface     = 0;
+  int          *composed_interface_idx   = NULL;
+  int          *composed_interface       = NULL;
+  PDM_g_num_t  *composed_ln_to_gn_sorted = NULL;
+
+  PDM_part_domain_interface_as_graph(dom_intrf,
+                                     interface_kind1,
+                                     pn_entity1,
+                                     NULL,
+                                     &pdi_neighbor_idx,
+                                     &pdi_neighbor,
+                                     &n_composed_interface,
+                                     &composed_interface_idx,
+                                     &composed_interface,
+                                     &composed_ln_to_gn_sorted);
+  free(composed_interface_idx);
+  free(composed_interface);
+  free(composed_ln_to_gn_sorted);
+
+  int n_part_loc_all_domain = 0;
+  for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
+    n_part_loc_all_domain += n_part[i_dom];
+  }
+
+  int          *n_entity1          = (int          *) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_interface = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_idx       = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+  int         **neighbor_desc      = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
+
+  int shift_part = 0;
+  for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
+
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      neighbor_idx      [i_part] = pdi_neighbor_idx[i_part];
+      neighbor_desc     [i_part] = malloc( 3 * (neighbor_idx [i_part][pn_entity1[i_dom][i_part]]) * sizeof(int));
+      neighbor_interface[i_part] = malloc(     (neighbor_idx [i_part][pn_entity1[i_dom][i_part]]) * sizeof(int));
+
+      /* Copy */
+      for(int i = 0; i < neighbor_idx [i_part][pn_entity1[i_dom][i_part]]; ++i) {
+        neighbor_desc     [i_part][3*i  ] = pdi_neighbor[i_part][4*i  ];
+        neighbor_desc     [i_part][3*i+1] = pdi_neighbor[i_part][4*i+1];
+        neighbor_desc     [i_part][3*i+2] = pdi_neighbor[i_part][4*i+2];
+        neighbor_interface[i_part][  i  ] = pdi_neighbor[i_part][4*i+3];
+      }
+      PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], neighbor_desc[i_part], 3, pn_entity1[i_dom][i_part], "neighbor_desc (debug) :");
+      free(pdi_neighbor[i_part]);
+
+      n_entity1[i_part+shift_part] = pn_entity1[i_dom][i_part];
+
+    }
+    shift_part += n_part[i_dom];
+  }
+  free(pdi_neighbor_idx);
+  free(pdi_neighbor);
+
+  /*
+   * Prepare exchange by transform with local interface information - We change frame
+   */
+  int** entity2_is_join = malloc(n_part_loc_all_domain * sizeof(int *));
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+
+    entity2_is_join[i_part] = malloc(n_entity1[i_part] * sizeof(int));
+
+    for(int i = 0; i < n_entity1[i_part]; ++i) {
+      entity2_is_join[i_part][i] = 0;
+    }
+
+
+
+  }
+
+
+  /*
+   *  Create distant neighbor for exchange between entity1
+   */
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(dom_intrf->comm,
+                                                           n_part_loc_all_domain,
+                                                           n_entity1,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+
+
+
+  PDM_distant_neighbor_free(dn);
+
+
+
+  /*
+   *  Compute the transpose connectivity to post-treat exch
+   */
+
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    free(neighbor_interface[i_part]);
+    free(neighbor_idx      [i_part]);
+    free(neighbor_desc     [i_part]);
+  }
+  free(neighbor_interface);
+  free(neighbor_idx      );
+  free(neighbor_desc     );
+  free(n_entity1);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

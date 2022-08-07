@@ -153,6 +153,19 @@ PDM_part_domain_interface_as_graph
   PDM_g_num_t                   **composed_ln_to_gn_sorted
 );
 
+void
+PDM_part_domain_interface_translate
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_entity1,
+ int                          **pn_entity2,
+ PDM_g_num_t                 ***entity2_ln_to_gn,
+ int                         ***entity1_entity2_idx,
+ int                         ***entity1_entity2
+);
 
 #ifdef __cplusplus
 }
