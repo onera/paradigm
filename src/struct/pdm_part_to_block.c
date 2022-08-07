@@ -2492,12 +2492,6 @@ PDM_part_to_block_reverse_exch
  void              ***part_data
 )
 {
-
-  if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
-      (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
-    abort ();
-  }
   assert(ptb->enable_reverse == 1);
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * ptb->s_comm);
