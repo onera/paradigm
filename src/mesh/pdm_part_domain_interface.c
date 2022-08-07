@@ -1389,11 +1389,10 @@ PDM_part_domain_interface_as_graph
 
           composed_interface += (pos_next+1) * ( 2 * n_interface);
 
-          printf("Hit !!!! (%i %i %i %i) -> %i / (%i %i %i %i) -> %i \n",
-                 first_proc, first_part, first_elmt, first_inte, pos_first,
-                 next_proc , next_part , next_elmt , next_inte , pos_next);
-
-          printf(" --> Composed  :  %i \n", composed_interface);
+          // printf("Hit !!!! (%i %i %i %i) -> %i / (%i %i %i %i) -> %i \n",
+          //        first_proc, first_part, first_elmt, first_inte, pos_first,
+          //        next_proc , next_part , next_elmt , next_inte , pos_next);
+          // printf(" --> Composed  :  %i \n", composed_interface);
 
           composed_id_tmp[i_tmp++] = next_inte;
 
@@ -1720,18 +1719,40 @@ PDM_part_domain_interface_translate
   /*
    * Prepare exchange by transform with local interface information - We change frame
    */
-  int** entity2_is_join = malloc(n_part_loc_all_domain * sizeof(int *));
+  int** entity1_is_dom_intrf = malloc(n_part_loc_all_domain * sizeof(int *));
+  int** entity2_is_dom_intrf = malloc(n_part_loc_all_domain * sizeof(int *));
 
-  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+  shift_part = 0;
+  for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
+      int spart = shift_part + i_part;
+      entity1_is_dom_intrf[spart] = malloc(n_entity1        [spart] * sizeof(int));
+      entity2_is_dom_intrf[spart] = malloc(pn_entity2[i_dom][i_part] * sizeof(int));
 
-    entity2_is_join[i_part] = malloc(n_entity1[i_part] * sizeof(int));
+      for(int i = 0; i < n_entity1[spart]; ++i) {
+        entity1_is_dom_intrf[spart][i] = 0;
+      }
+      for(int i = 0; i < pn_entity2[i_dom][i_part]; ++i) {
+        entity2_is_dom_intrf[spart][i] = 0;
+      }
 
-    for(int i = 0; i < n_entity1[i_part]; ++i) {
-      entity2_is_join[i_part][i] = 0;
+      int *_entity1_is_dom_intrf = entity1_is_dom_intrf[spart];
+      int *_entity2_is_dom_intrf = entity2_is_dom_intrf[spart];
+
+      int *_entity2_entity1_idx = entity2_entity1_idx[i_dom][i_part];
+      int *_entity2_entity1     = entity2_entity1    [i_dom][i_part];
+
+      /* Loop over graph to flag all entity1 that have an interface */
+      for(int i_entity1 = 0; i_entity1 < pn_entity1[i_dom][i_part]; ++i_entity1) {
+        for(int idx_neight = neighbor_idx[i_part][i_entity1]; idx_neight < neighbor_idx[i_part][i_entity1+1]; ++idx_neight) {
+          _entity1_is_dom_intrf[i_entity1] += 1;
+        }
+      }
+
+      PDM_log_trace_array_int(_entity1_is_dom_intrf, n_entity1[spart], "_entity1_is_dom_intrf ::");
+
     }
-
-
-
+    shift_part += n_part[i_dom];
   }
 
 

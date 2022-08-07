@@ -578,7 +578,7 @@ int main
   int         ***pedge_vtx_idx  = (int         ***) malloc( n_domain * sizeof(int         **));
   int         ***pedge_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
-    pn_n_part    [i_dom] = n_part;
+    pn_n_part     [i_dom] = n_part;
     pn_face       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
     pn_edge       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
     pface_ln_to_gn[i_dom] = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));

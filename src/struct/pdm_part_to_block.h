@@ -383,6 +383,21 @@ PDM_part_to_block_exch
 );
 
 
+
+void
+PDM_part_to_block_reverse_exch
+(
+ PDM_part_to_block_t *ptb,
+ size_t               s_data,
+ PDM_stride_t         t_stride,
+ int                  cst_stride,
+ int                 *block_stride,
+ void                *block_data,
+ int               ***part_stride,
+ void              ***part_data
+);
+
+
 /**
  *
  * \brief Initialize a data exchange

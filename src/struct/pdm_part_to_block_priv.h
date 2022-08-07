@@ -90,6 +90,8 @@ struct _pdm_part_to_block_t {
 
   double                    **weight_g;             /*!< Global weights of elements for any part */
 
+  int                         enable_reverse;
+  int                        *idx_partial;          /*! Index of gnum in partial block */
 
   /* Asynchrone */
   int              max_exch_request;
