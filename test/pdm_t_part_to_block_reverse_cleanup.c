@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < pn_elmt; ++i) {
       for(int k = 0; k < pfield_post_strid[i]; ++k) {
         PDM_g_num_t check = pfield_post[s_data++];
-        // assert(check == pln_to_to_gn[i]);
+        assert(check == pln_to_to_gn[i]);
       }
     }
     PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");

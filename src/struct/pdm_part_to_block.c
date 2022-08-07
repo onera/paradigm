@@ -1339,7 +1339,6 @@ _prepare_reverse_send_buffer
   // unsigned char **_part_data = (unsigned char **) part_data;
   unsigned char *_block_data = (unsigned char *) block_data;
 
-  int* tmp_send_buffer = (int *) send_buffer;
   int s_send_buffer = i_send_buffer[ptb->s_comm-1] + n_send_buffer[ptb->s_comm-1];
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
@@ -1385,6 +1384,11 @@ _prepare_reverse_send_buffer
         send_buffer[s_octet_elt * ptb->order[i] + k] = _block_data[s_octet_elt*ptb->idx_partial[i]+k];
       }
     }
+  }
+
+  if(0 == 1) {
+    int* tmp_send_buffer = (int *) send_buffer;
+    PDM_log_trace_array_int(tmp_send_buffer, s_send_buffer/sizeof(int), "tmp_send_buffer ::");
   }
 
 }
@@ -1640,7 +1644,7 @@ _post_treatment_reverse
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         int iproc = ptb->dest_proc[++idx];
         int idx_write = n_octet * _part_idx[i][j];
-        for (int k = 0; k < (int) n_octet; k++) {
+        for (int k = 0; k < (int) n_octet * _part_stride[i][j]; k++) {
           int idx_read = i_recv_buffer[iproc] + n_recv_buffer[iproc]++;
           _part_data[i][idx_write + k] = recv_buffer[idx_read];
         }
@@ -1649,6 +1653,7 @@ _post_treatment_reverse
     }
     free(n_recv_strid);
     free(_part_idx);
+    free(recv_stride);
 
   } else { // PDM_STRIDE_CST_INTERLACED
 
