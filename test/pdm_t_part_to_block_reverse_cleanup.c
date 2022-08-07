@@ -180,28 +180,33 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
-  int* dfield_post = malloc(n_elmt_in_block * sizeof(int));
+
+  /*
+   *   Stride CST check
+   */
+  PDM_g_num_t* dfield_post = malloc(n_elmt_in_block * sizeof(PDM_g_num_t));
   for(int i = 0; i < n_elmt_in_block; ++i) {
     // dfield_post[i] = i;
-    dfield_post[i] = (int) blk_gnum[i];
+    dfield_post[i] = blk_gnum[i];
   }
 
-  int** tmp_pfield_post = NULL;
+  PDM_g_num_t** tmp_pfield_post = NULL;
   PDM_part_to_block_reverse_exch(ptb,
-                                 sizeof(int),
+                                 sizeof(PDM_g_num_t),
                                  PDM_STRIDE_CST_INTERLACED,
                                  1,
                                  NULL,
                       (void **)  dfield_post,
                                  NULL,
-                      (void **)  &tmp_pfield_post);
+                      (void ***) &tmp_pfield_post);
 
-  free(dfield_post);
 
-  int *pfield_post = tmp_pfield_post[0];
+  PDM_g_num_t *pfield_post = tmp_pfield_post[0];
   free(tmp_pfield_post);
 
-  PDM_log_trace_array_int(pfield_post, pn_elmt, "pfield_post : ");
+  if(1 == 0) {
+    PDM_log_trace_array_long(pfield_post, pn_elmt, "pfield_post : ");
+  }
 
   /*
    * Check
@@ -209,16 +214,50 @@ int main(int argc, char *argv[])
   for(int i = 0; i < pn_elmt; ++i) {
     assert(pfield_post[i] == pln_to_to_gn[i]);
   }
-
-
   free(pfield_post);
+
+  /*
+   * Stride Var check
+   */
+  PDM_g_num_t* dfield_strid = malloc(n_elmt_in_block * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_elmt_in_block; ++i) {
+    dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
+  }
+
+  int** tmp_pfield_post_strid = NULL;
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(PDM_g_num_t),
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 1,
+                                 dfield_strid,
+                      (void **)  dfield_post,
+                                 &tmp_pfield_post_strid,
+                      (void ***) &tmp_pfield_post);
+
+  pfield_post = tmp_pfield_post[0];
+  int *pfield_post_strid = tmp_pfield_post_strid[0];
+  free(tmp_pfield_post);
+  free(tmp_pfield_post_strid);
+
+  /*
+   * Check
+   */
+  for(int i = 0; i < pn_elmt; ++i) {
+    assert(pfield_post      [i] == pln_to_to_gn[i]);
+    assert(pfield_post_strid[i] == 1);
+  }
+  free(pfield_post);
+
+
 
   PDM_part_to_block_free(ptb);
 
+  free(dfield_post);
   free(pln_to_to_gn);
   free(distrib_init_elmt);
   free(pfield);
   free(dfield);
+  free(dfield_strid);
 
   PDM_MPI_Finalize ();
   return 0;

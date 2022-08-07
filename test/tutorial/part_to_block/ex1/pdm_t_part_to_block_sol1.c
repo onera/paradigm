@@ -180,40 +180,6 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
-  int* dfield_post = malloc(n_elmt_in_block * sizeof(int));
-  for(int i = 0; i < n_elmt_in_block; ++i) {
-    // dfield_post[i] = i;
-    dfield_post[i] = (int) blk_gnum[i];
-  }
-
-  int** tmp_pfield_post = NULL;
-  PDM_part_to_block_reverse_exch(ptb,
-                                 sizeof(int),
-                                 PDM_STRIDE_CST_INTERLACED,
-                                 1,
-                                 NULL,
-                      (void **)  dfield_post,
-                                 NULL,
-                      (void **)  &tmp_pfield_post);
-
-  free(dfield_post);
-
-  int *pfield_post = tmp_pfield_post[0];
-  free(tmp_pfield_post);
-
-  PDM_log_trace_array_int(pfield_post, pn_elmt, "pfield_post : ");
-
-  /*
-   * Check
-   */
-  for(int i = 0; i < pn_elmt; ++i) {
-    assert(pfield_post[i] == pln_to_to_gn[i]);
-  }
-
-
-  free(pfield_post);
-
-
   // int  request_id = -1;
   // int* dfield     = NULL;
   // PDM_part_to_block_iexch(ptb,

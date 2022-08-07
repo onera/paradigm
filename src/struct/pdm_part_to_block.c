@@ -1150,21 +1150,17 @@ _prepare_reverse_exchange
    */
   int *_recv_stride = NULL;
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    abort();
+
     for (int i = 0; i < ptb->s_comm; i++) {
       n_send_buffer[i] = 0;
       n_recv_buffer[i] = 0;
     }
 
-    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_send_data);
+    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
 
-    int idx = -1;
-    for (int i = 0; i < ptb->n_part; i++) {
-      for (int j = 0; j < ptb->n_elt[i]; j++) {
-        int iproc = ptb->dest_proc[++idx];
-        send_stride[ptb->i_send_data[iproc] + n_send_buffer[iproc]] = block_strid[idx];
-        n_send_buffer[iproc] += 1;
-      }
+    /* Because it's reverse we have tn_recn_data for send -_-' */
+    for(int i = 0; i < ptb->tn_recv_data; ++i) {
+      send_stride[ptb->order[i]] = block_strid[ptb->idx_partial[i]];
     }
 
     _recv_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
@@ -1182,6 +1178,11 @@ _prepare_reverse_exchange
                        ptb->i_recv_data,
                        PDM_MPI_INT,
                        ptb->comm);
+
+    if(1 == 1) {
+      int s_recv = ptb->i_recv_data[ptb->s_comm-1] + ptb->n_recv_data[ptb->s_comm-1];
+      PDM_log_trace_array_int(_recv_stride, s_recv, "recv_stride :: ");
+    }
 
     /*
      * Build buffers
@@ -1236,12 +1237,12 @@ _prepare_reverse_exchange
 
     }
 
-    PDM_log_trace_array_size_t(i_send_buffer, ptb->s_comm, "i_send_buffer ::");
-    PDM_log_trace_array_size_t(i_recv_buffer, ptb->s_comm, "i_recv_buffer ::");
-    PDM_log_trace_array_int   (n_send_buffer, ptb->s_comm, "n_send_buffer ::");
-    PDM_log_trace_array_int   (n_recv_buffer, ptb->s_comm, "n_recv_buffer ::");
-
   }
+
+  PDM_log_trace_array_size_t(i_send_buffer, ptb->s_comm, "i_send_buffer ::");
+  PDM_log_trace_array_size_t(i_recv_buffer, ptb->s_comm, "i_recv_buffer ::");
+  PDM_log_trace_array_int   (n_send_buffer, ptb->s_comm, "n_send_buffer ::");
+  PDM_log_trace_array_int   (n_recv_buffer, ptb->s_comm, "n_recv_buffer ::");
 }
 
 
@@ -1336,22 +1337,56 @@ _prepare_reverse_send_buffer
   int* tmp_send_buffer = (int *) send_buffer;
   int s_send_buffer = i_send_buffer[ptb->s_comm-1] + n_send_buffer[ptb->s_comm-1];
 
-  for(int i = 0; i < s_send_buffer/sizeof(int); ++i) {
-    tmp_send_buffer[i] = -1000000;
-  }
-  PDM_log_trace_array_int(tmp_send_buffer, s_send_buffer/sizeof(int), "tmp_send_buffer (Avant):: ");
-
-  // for (int i = 0; i <  ptb->s_comm; i++) {
-  //   n_send_buffer[i] = 0;
+  // for(int i = 0; i < s_send_buffer/sizeof(int); ++i) {
+  //   tmp_send_buffer[i] = -1000000;
   // }
+  // PDM_log_trace_array_int(tmp_send_buffer, s_send_buffer/sizeof(int), "tmp_send_buffer (Avant):: ");
 
-  PDM_log_trace_array_long(ptb->block_gnum, ptb->n_elt_block , "block_gnum ");
-  PDM_log_trace_array_int (ptb->order     , ptb->tn_recv_data, "order ");
 
-  size_t s_octet_elt = cst_stride * (int) s_data;
-  for(int i = 0; i < ptb->tn_recv_data; ++i) {
-    for (int k = 0; k < (int) s_octet_elt; k++) {
-      send_buffer[s_octet_elt * ptb->order[i] + k] = _block_data[s_octet_elt*ptb->idx_partial[i]+k];
+  if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+
+    int *send_stride = (int *) malloc (sizeof(int) * ptb->tn_recv_data);
+
+    /* Because it's reverse we have tn_recn_data for send -_-' */
+    for(int i = 0; i < ptb->tn_recv_data; ++i) {
+      send_stride[ptb->order[i]] = block_stride[ptb->idx_partial[i]];
+    }
+
+    int *send_idx = malloc((ptb->tn_recv_data+1) * sizeof(int));
+    send_idx[0] = 0;
+    for(int i = 0; i < ptb->tn_recv_data; ++i) {
+      send_idx[i+1] = send_idx[i] + send_stride[i];
+      // send_stride[i] = 0;
+    }
+
+    // Same for block_stride
+    int *block_idx = malloc((ptb->n_elt_block+1) * sizeof(int));
+    block_idx[0] = 0;
+    for(int i = 0; i < ptb->n_elt_block; ++i) {
+      block_idx[i+1] = block_idx[i] + block_stride[i];
+    }
+
+
+    for(int i = 0; i < ptb->tn_recv_data; ++i) {
+      size_t s_octet_elt = send_stride[ptb->order[i]] * s_data;
+      int idx_write = send_idx [ptb->order      [i]] * s_data;
+      int idx_read  = block_idx[ptb->idx_partial[i]] * s_data;
+      for (int k = 0; k < (int) s_octet_elt; k++) {
+        send_buffer[idx_write+k] = _block_data[idx_read+k];
+      }
+    }
+
+    free(send_stride);
+    free(send_idx);
+    free(block_idx);
+
+  }
+  else  {
+    size_t s_octet_elt = cst_stride * (int) s_data;
+    for(int i = 0; i < ptb->tn_recv_data; ++i) {
+      for (int k = 0; k < (int) s_octet_elt; k++) {
+        send_buffer[s_octet_elt * ptb->order[i] + k] = _block_data[s_octet_elt*ptb->idx_partial[i]+k];
+      }
     }
   }
 
