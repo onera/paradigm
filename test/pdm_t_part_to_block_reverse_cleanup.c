@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
     assert(pfield_post_strid[i] == 1);
   }
   free(pfield_post);
+  free(pfield_post_strid);
 
 
 
