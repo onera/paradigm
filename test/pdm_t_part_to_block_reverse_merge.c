@@ -200,7 +200,6 @@ int main(int argc, char *argv[])
                                  NULL,
                       (void ***) &tmp_pfield_post);
 
-  free(dfield_post);
 
   PDM_g_num_t *pfield_post = tmp_pfield_post[0];
   free(tmp_pfield_post);
@@ -216,6 +215,92 @@ int main(int argc, char *argv[])
 
 
   free(pfield_post);
+
+
+  /*
+   * Stride Var check
+   */
+  for(int i = 0; i < n_elmt_in_block; ++i) {
+    dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
+  }
+
+  int** tmp_pfield_post_strid = NULL;
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(PDM_g_num_t),
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 1,
+                                 dfield_strid,
+                      (void **)  dfield_post,
+                                 &tmp_pfield_post_strid,
+                      (void ***) &tmp_pfield_post);
+
+  pfield_post = tmp_pfield_post[0];
+  int *pfield_post_strid = tmp_pfield_post_strid[0];
+  free(tmp_pfield_post);
+  free(tmp_pfield_post_strid);
+
+  /*
+   * Check
+   */
+  for(int i = 0; i < pn_elmt; ++i) {
+    assert(pfield_post      [i] == pln_to_to_gn[i]);
+    assert(pfield_post_strid[i] == 1);
+  }
+  free(pfield_post);
+  free(pfield_post_strid);
+
+
+  /*
+   * Stride Var check more complex
+   */
+  int dn_data = 0;
+  for(int i = 0; i < n_elmt_in_block; ++i) {
+    dfield_strid[i] = (int) rand() % 10; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
+    dn_data += dfield_strid[i];
+  }
+
+
+  dfield_post = realloc(dfield_post, dn_data * sizeof(PDM_g_num_t));
+  int idx_write = 0;
+  for(int i = 0; i < n_elmt_in_block; ++i) {
+    for(int k = 0; k < dfield_strid[i]; ++k) {
+      dfield_post[idx_write++] = blk_gnum[i];
+    }
+  }
+  PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
+  PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
+
+  PDM_part_to_block_reverse_exch(ptb,
+                                 sizeof(PDM_g_num_t),
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 1,
+                                 dfield_strid,
+                      (void **)  dfield_post,
+                                 &tmp_pfield_post_strid,
+                      (void ***) &tmp_pfield_post);
+
+  pfield_post       = tmp_pfield_post[0];
+  pfield_post_strid = tmp_pfield_post_strid[0];
+  free(tmp_pfield_post);
+  free(tmp_pfield_post_strid);
+
+  if(1 == 1) {
+    int s_data = 0;
+    for(int i = 0; i < pn_elmt; ++i) {
+      for(int k = 0; k < pfield_post_strid[i]; ++k) {
+        PDM_g_num_t check = pfield_post[s_data++];
+        assert(check == pln_to_to_gn[i]);
+      }
+    }
+    PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
+  }
+
+
+  free(pfield_post);
+  free(pfield_post_strid);
+
+
+  free(dfield_post);
 
   PDM_part_to_block_free(ptb);
 
