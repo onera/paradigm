@@ -78,7 +78,7 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else {
         int _freq = atoi(argv[i]);
-        *freq = (PDM_g_num_t) _freq;
+        *freq = _freq;
       }
     }
     else

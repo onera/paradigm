@@ -42,6 +42,7 @@ _usage(int exit_code)
     ("\n"
      "  Usage: \n\n"
      "  -n      <level>  Total number of elements .\n\n"
+     "  -n_part <level>  Total number of elements .\n\n"
      "  -f      <level>  Frequency of extract .\n\n"
      "  -h               This message.\n\n");
 
@@ -52,7 +53,8 @@ static void
 _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_elmt,
-           int           *freq)
+           int           *freq,
+           int           *n_part)
 {
   int i = 1;
 
@@ -78,7 +80,16 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else {
         int _freq = atoi(argv[i]);
-        *freq = (PDM_g_num_t) _freq;
+        *freq = _freq;
+      }
+    }
+    else if (strcmp(argv[i], "-n_part") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        int _n_part = atoi(argv[i]);
+        *n_part = _n_part;
       }
     }
     else
@@ -97,10 +108,12 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_elmt = 10; // Number of elements in global configuration
   int         freq   = 1;
+  int         n_part = 1;
   _read_args(argc,
              argv,
              &n_elmt,
-             &freq);
+             &freq,
+             &n_part);
   /*
    *  Init
    */
@@ -123,34 +136,42 @@ int main(int argc, char *argv[])
   if(0 == 1) {
     PDM_log_trace_array_long(distrib_init_elmt, n_rank+1, "distrib_init_elmt : ");
   }
-  int n_part  = 1;
-  int pn_elmt = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) / freq ;
+  int dn_elmt = (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) / freq ;
 
-  PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
-  int         *pfield       = malloc(pn_elmt * sizeof(int        ));
-  for(int i = 0; i < pn_elmt; ++i) {
-    unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
-    srand(seed);
-    pln_to_to_gn[i] = (rand() % n_elmt) + 1;
-    pfield      [i] = i_rank;
+  int          *pn_elmt      = malloc(n_part * sizeof(int           ));
+  PDM_g_num_t **pln_to_to_gn = malloc(n_part * sizeof(PDM_g_num_t * ));
+  int         **pfield       = malloc(n_part * sizeof(int         * ));
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    PDM_g_num_t percent = ceil( (double) dn_elmt * (25. / 100.));
+    PDM_g_num_t n_elmt_add_rand = rand() % ( percent ) - percent / 2;
+    pn_elmt[i_part] = dn_elmt + n_elmt_add_rand;
+
+    pln_to_to_gn[i_part] = malloc(pn_elmt[i_part] * sizeof(PDM_g_num_t));
+    pfield      [i_part] = malloc(pn_elmt[i_part] * sizeof(int        ));
+    for(int i = 0; i < pn_elmt[i_part]; ++i) {
+      unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
+      srand(seed);
+      pln_to_to_gn[i_part][i] = (rand() % n_elmt) + 1;
+      pfield      [i_part][i] = i_rank;
+    }
   }
 
   if(1 == 1) {
-    PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
-  }
-
-
-  if(1 == 1) {
-    PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_long(pln_to_to_gn[i_part], pn_elmt[i_part], "pln_to_to_gn : ");
+      PDM_log_trace_array_int (pfield      [i_part], pn_elmt[i_part], "pfield : ");
+    }
   }
 
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
-                                                      &pln_to_to_gn,
+                                                      pln_to_to_gn,
                                                       NULL,
-                                                      &pn_elmt,
+                                                      pn_elmt,
                                                       n_part,
                                                       comm);
 
@@ -172,7 +193,7 @@ int main(int argc, char *argv[])
                          PDM_STRIDE_CST_INTERLACED,
                          1,
                          NULL,
-              (void **)  &pfield,
+              (void **)  pfield,
                          NULL,
               (void **)  &dfield);
 
@@ -190,7 +211,7 @@ int main(int argc, char *argv[])
     dfield_post[i] = blk_gnum[i];
   }
 
-  PDM_g_num_t** tmp_pfield_post = NULL;
+  PDM_g_num_t** pfield_post = NULL;
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(PDM_g_num_t),
                                  PDM_STRIDE_CST_INTERLACED,
@@ -198,21 +219,23 @@ int main(int argc, char *argv[])
                                  NULL,
                       (void **)  dfield_post,
                                  NULL,
-                      (void ***) &tmp_pfield_post);
+                      (void ***) &pfield_post);
 
-
-  PDM_g_num_t *pfield_post = tmp_pfield_post[0];
-  free(tmp_pfield_post);
 
   if(1 == 0) {
-    PDM_log_trace_array_long(pfield_post, pn_elmt, "pfield_post : ");
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_long(pfield_post[i_part], pn_elmt[i_part], "pfield_post : ");
+    }
   }
 
   /*
    * Check
    */
-  for(int i = 0; i < pn_elmt; ++i) {
-    assert(pfield_post[i] == pln_to_to_gn[i]);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i = 0; i < pn_elmt[i_part]; ++i) {
+      assert(pfield_post[i_part][i] == pln_to_to_gn[i_part][i]);
+    }
+    free(pfield_post[i_part]);
   }
   free(pfield_post);
 
@@ -224,27 +247,27 @@ int main(int argc, char *argv[])
     dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
   }
 
-  int** tmp_pfield_post_strid = NULL;
+  int** pfield_post_strid = NULL;
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(PDM_g_num_t),
                                  PDM_STRIDE_VAR_INTERLACED,
                                  1,
                                  dfield_strid,
                       (void **)  dfield_post,
-                                 &tmp_pfield_post_strid,
-                      (void ***) &tmp_pfield_post);
+                                 &pfield_post_strid,
+                      (void ***) &pfield_post);
 
-  pfield_post = tmp_pfield_post[0];
-  int *pfield_post_strid = tmp_pfield_post_strid[0];
-  free(tmp_pfield_post);
-  free(tmp_pfield_post_strid);
 
   /*
    * Check
    */
-  for(int i = 0; i < pn_elmt; ++i) {
-    assert(pfield_post      [i] == pln_to_to_gn[i]);
-    assert(pfield_post_strid[i] == 1);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i = 0; i < pn_elmt[i_part]; ++i) {
+      assert(pfield_post      [i_part][i] == pln_to_to_gn[i_part][i]);
+      assert(pfield_post_strid[i_part][i] == 1);
+    }
+    free(pfield_post      [i_part]);
+    free(pfield_post_strid[i_part]);
   }
   free(pfield_post);
   free(pfield_post_strid);
@@ -276,30 +299,35 @@ int main(int argc, char *argv[])
                                  1,
                                  dfield_strid,
                       (void **)  dfield_post,
-                                 &tmp_pfield_post_strid,
-                      (void ***) &tmp_pfield_post);
+                                 &pfield_post_strid,
+                      (void ***) &pfield_post);
 
-  pfield_post       = tmp_pfield_post[0];
-  pfield_post_strid = tmp_pfield_post_strid[0];
-  free(tmp_pfield_post);
-  free(tmp_pfield_post_strid);
 
-  if(1 == 1) {
+  for(int i_part = 0; i_part < n_part; ++i_part) {
     int s_data = 0;
-    for(int i = 0; i < pn_elmt; ++i) {
-      for(int k = 0; k < pfield_post_strid[i]; ++k) {
-        PDM_g_num_t check = pfield_post[s_data++];
-        assert(check == pln_to_to_gn[i]);
+    for(int i = 0; i < pn_elmt[i_part]; ++i) {
+      for(int k = 0; k < pfield_post_strid[i_part][i]; ++k) {
+        PDM_g_num_t check = pfield_post[i_part][s_data++];
+        assert(check == pln_to_to_gn[i_part][i]);
       }
     }
-    PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
-  }
+    if(1 == 1) {
+      PDM_log_trace_array_long(pfield_post[i_part], s_data, "pfield_post : ");
+    }
 
+    free(pfield_post      [i_part]);
+    free(pfield_post_strid[i_part]);
+  }
 
   free(pfield_post);
   free(pfield_post_strid);
 
   PDM_part_to_block_free(ptb);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pln_to_to_gn[i_part]);
+    free(pfield      [i_part]);
+  }
 
   free(dfield_post);
   free(pln_to_to_gn);
@@ -307,6 +335,7 @@ int main(int argc, char *argv[])
   free(pfield);
   free(dfield);
   free(dfield_strid);
+  free(pn_elmt);
 
   PDM_MPI_Finalize ();
   return 0;
