@@ -167,6 +167,23 @@ PDM_part_domain_interface_translate
  int                         ***entity1_entity2
 );
 
+
+void
+PDM_part_domain_interface_add
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_entity1,
+ PDM_g_num_t                 ***entity1_ln_to_gn,
+ int                          **pn_entity2,
+ PDM_g_num_t                 ***entity2_ln_to_gn,
+ int                         ***entity2_entity1_idx,
+ int                         ***entity2_entity1
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

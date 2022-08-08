@@ -638,16 +638,25 @@ int main
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
 
-  PDM_part_domain_interface_translate(pdi,
+  // PDM_part_domain_interface_translate(pdi,
+  //                                     PDM_BOUND_TYPE_VTX,
+  //                                     PDM_BOUND_TYPE_EDGE,
+  //                                     pn_n_part,
+  //                                     pn_vtx,
+  //                                     pn_edge,
+  //                                     pedge_ln_to_gn,
+  //                                     pedge_vtx_idx,
+  //                                     pedge_vtx);
+  PDM_part_domain_interface_add(pdi,
                                       PDM_BOUND_TYPE_VTX,
                                       PDM_BOUND_TYPE_EDGE,
                                       pn_n_part,
                                       pn_vtx,
+                                      pvtx_ln_to_gn,
                                       pn_edge,
                                       pedge_ln_to_gn,
                                       pedge_vtx_idx,
                                       pedge_vtx);
-
 
 
   for (int i = 0; i < n_domain; i++) {
