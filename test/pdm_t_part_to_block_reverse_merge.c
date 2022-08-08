@@ -137,12 +137,12 @@ int main(int argc, char *argv[])
     pstrid      [i] = 1;
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(pln_to_to_gn, pn_elmt, "pln_to_to_gn : ");
   }
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(pfield, pn_elmt, "pfield : ");
   }
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t* distrib_elmt   = PDM_part_to_block_distrib_index_get(ptb);
   const PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get   (ptb);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib_elmt, n_rank+1       , "distrib_elmt : ");
     PDM_log_trace_array_long(blk_gnum    , n_elmt_in_block, "blk_gnum     : ");
   }
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
                          &dfield_strid,
               (void **)  &dfield);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dfield      , n_elmt_in_block, "dfield       : ");
     PDM_log_trace_array_int(dfield_strid, n_elmt_in_block, "dfield_strid : ");
   }
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
   free(tmp_pfield_post);
   free(tmp_pfield_post_strid);
 
-  if(1 == 1) {
+  if(0 == 1) {
     int s_data = 0;
     for(int i = 0; i < pn_elmt; ++i) {
       for(int k = 0; k < pfield_post_strid[i]; ++k) {

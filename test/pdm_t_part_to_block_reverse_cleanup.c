@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_long(pln_to_to_gn[i_part], pn_elmt[i_part], "pln_to_to_gn : ");
       PDM_log_trace_array_int (pfield      [i_part], pn_elmt[i_part], "pfield : ");
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t* distrib_elmt   = PDM_part_to_block_distrib_index_get(ptb);
   const PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get   (ptb);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(distrib_elmt, n_rank+1       , "distrib_elmt : ");
     PDM_log_trace_array_long(blk_gnum    , n_elmt_in_block, "blk_gnum     : ");
   }
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
                          NULL,
               (void **)  &dfield);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(dfield, n_elmt_in_block, "dfield     : ");
   }
 
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
         assert(check == pln_to_to_gn[i_part][i]);
       }
     }
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(pfield_post[i_part], s_data, "pfield_post : ");
     }
 
@@ -321,6 +321,47 @@ int main(int argc, char *argv[])
 
   free(pfield_post);
   free(pfield_post_strid);
+
+  /*
+   * Madness asynchronous exchange
+   */
+  int request_id = -1;
+  PDM_part_to_block_reverse_iexch(ptb,
+                                  PDM_MPI_COMM_KIND_COLLECTIVE,
+                                  sizeof(PDM_g_num_t),
+                                  PDM_STRIDE_VAR_INTERLACED,
+                                  1,
+                                  dfield_strid,
+                       (void **)  dfield_post,
+                                  &pfield_post_strid,
+                       (void ***) &pfield_post,
+                                  &request_id);
+
+  PDM_part_to_block_reverse_iexch_wait(ptb, request_id);
+
+  /*
+   * Check
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int s_data = 0;
+    for(int i = 0; i < pn_elmt[i_part]; ++i) {
+      for(int k = 0; k < pfield_post_strid[i_part][i]; ++k) {
+        PDM_g_num_t check = pfield_post[i_part][s_data++];
+        assert(check == pln_to_to_gn[i_part][i]);
+      }
+    }
+    if(0 == 1) {
+      PDM_log_trace_array_long(pfield_post[i_part], s_data, "pfield_post : ");
+    }
+
+    free(pfield_post      [i_part]);
+    free(pfield_post_strid[i_part]);
+  }
+
+  free(pfield_post);
+  free(pfield_post_strid);
+
+
 
   PDM_part_to_block_free(ptb);
 
