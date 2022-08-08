@@ -177,6 +177,73 @@ PDM_gnum_location_requested_elements_set
 }
 
 
+// static
+// void
+// PDM_gnum_location_compute2
+// (
+//  PDM_gnum_location_t *gnum_loc
+// )
+// {
+
+//   int rank;
+//   PDM_MPI_Comm_rank (gnum_loc->comm, &rank);
+
+//   int n_rank;
+//   PDM_MPI_Comm_size (gnum_loc->comm, &n_rank);
+
+//   /*
+//    * Start with a ptb to know all wanted number in part_in
+//    */
+//   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+//                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+//                                                        1,
+//                                                        (PDM_g_num_t **) gnum_loc->g_nums_out,
+//                                                        NULL,
+//                                                        gnum_loc->n_elts_out,
+//                                                        gnum_loc->n_part_out,
+//                                                        gnum_loc->comm);
+
+
+//   // PDM_g_num_t* block_g_num = PDM_part_to_block_block_gnum_get (ptb);
+//   int          dn_block    = PDM_part_to_block_n_elt_block_get(ptb);
+//   PDM_g_num_t*          distrib    = PDM_part_to_block_n_elt_block_get(ptb);
+
+//   PDM_part_to_block_t *ptb_in = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+//                                                           PDM_PART_TO_BLOCK_POST_MERGE,
+//                                                           1,
+//                                                           (PDM_g_num_t **) gnum_loc->g_nums_in,
+//                                                           distrib,
+//                                                           gnum_loc->n_elts_in,
+//                                                           gnum_loc->n_part_in,
+//                                                           gnum_loc->comm);
+
+//   PDM_MPI_Barrier();
+//   printf(" ooooo \n");
+
+//   int          dn_block_in = PDM_part_to_block_n_elt_block_get(ptb);
+//   int* dtag_out = malloc(dn_block_in * sizeof(int));
+//   for(int i = 0; i < dn_block_in; ++i) {
+//     dtag_out[i] = 1;
+//   }
+
+//   int **ptag_out = NULL;
+//   PDM_part_to_block_reverse_exch(ptb_in,
+//                                  sizeof(int),
+//                                  PDM_STRIDE_CST_INTERLACED,
+//                                  1,
+//                                  NULL,
+//                       (void **)  dfield_post,
+//                                  NULL,
+//                       (void ***) &pfield_post);
+
+
+
+
+//   PDM_part_to_block_free(ptb);
+//   PDM_part_to_block_free(ptb_in);
+
+// }
+
 /**
  *
  * \brief Compute the location (processus, partittion, local number in the partition)
@@ -191,6 +258,8 @@ PDM_gnum_location_compute
  PDM_gnum_location_t *gnum_loc
 )
 {
+  // PDM_MPI_Barrier(gnum_loc->comm);
+  // double t1 = PDM_MPI_Wtime();
 
   int rank;
   PDM_MPI_Comm_rank (gnum_loc->comm, &rank);
@@ -230,32 +299,34 @@ PDM_gnum_location_compute
   int  *block_stride = NULL;
   int  *block_data = NULL;
 
-  PDM_part_to_block_exch (ptb,
-                          s_data,
-                          t_stride,
-                          cst_stride,
-                          part_stride,
-                          (void **) part_data,
-                          &block_stride,
-                          (void **) &block_data);
+  // PDM_part_to_block_exch (ptb,
+  //                         s_data,
+  //                         t_stride,
+  //                         cst_stride,
+  //                         part_stride,
+  //                         (void **) part_data,
+  //                         &block_stride,
+  //                         (void **) &block_data);
+
+  int request_id = -1;
+  PDM_part_to_block_iexch (ptb,
+                           PDM_MPI_COMM_KIND_COLLECTIVE,
+                           s_data,
+                           t_stride,
+                           cst_stride,
+                           part_stride,
+                 (void **) part_data,
+                           &block_stride,
+                 (void **) &block_data,
+                           &request_id);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
     free (part_stride[i]);
     free (part_data[i]);
   }
-
   free (part_data);
   free (part_stride);
 
-  // PDM_g_num_t* block_distrib_index_correct = PDM_part_to_block_adapt_partial_block_to_block(ptb,
-  //                                                                                           &block_stride,
-  //                                                                                           block_distrib_index[n_rank]);
-  // // PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_index,
-  // PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_index_correct,
-  //                                                      gnum_loc->g_nums_out,
-  //                                                      gnum_loc->n_elts_out,
-  //                                                      gnum_loc->n_part_out,
-  //                                                      gnum_loc->comm);
 
   PDM_g_num_t* block_g_num = PDM_part_to_block_block_gnum_get (ptb);
   int          dn_block    = PDM_part_to_block_n_elt_block_get(ptb);
@@ -266,13 +337,15 @@ PDM_gnum_location_compute
                                                                         gnum_loc->n_part_out,
                                                                         gnum_loc->comm);
 
+  PDM_part_to_block_iexch_wait(ptb, request_id);
+
   PDM_block_to_part_exch (btp,
                           s_data,
                           PDM_STRIDE_VAR_INTERLACED,
                           block_stride,
                           block_data,
                           &part_stride,
-                           (void ***) &gnum_loc->location);
+               (void ***) &gnum_loc->location);
 
   gnum_loc->location_idx = (int **) malloc (sizeof(int *) * gnum_loc->n_part_out);
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
@@ -294,6 +367,12 @@ PDM_gnum_location_compute
 
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
+
+  // PDM_MPI_Barrier(gnum_loc->comm);
+  // double dt = PDM_MPI_Wtime()-t1;
+  // if(rank == 0) {
+  //   printf("Time gnum_location compute : %12.5e \n", dt);
+  // }
 
 }
 

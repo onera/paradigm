@@ -545,7 +545,9 @@ _distrib_data
    * Create idx_partial for reverse
    */
   ptb->enable_reverse = 1;
-  if(ptb->enable_reverse == 1) {
+  if ( (ptb->t_post         != PDM_PART_TO_BLOCK_POST_NOTHING)       &&
+       (ptb->t_post         != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) &&
+       (ptb->enable_reverse == 1)) {
     ptb->idx_partial = malloc(ptb->tn_recv_data * sizeof(int));
     for(int i = 0; i < ptb->tn_recv_data; ++i) {
       PDM_g_num_t gnum = ptb->sorted_recv_gnum[i];
