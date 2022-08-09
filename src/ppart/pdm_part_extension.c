@@ -2024,6 +2024,132 @@ _create_cell_cell_graph
 
 static
 void
+_compute_other_domain_interface
+(
+  PDM_part_extension_t *part_ext
+)
+{
+  if(part_ext->pdi == NULL) {
+    return;
+  }
+
+  int is_descibe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
+  int is_descibe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
+  int is_descibe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
+
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    // n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  if(is_descibe_vtx == 1 && (is_descibe_edge == 0 || is_descibe_face == 0)) {
+
+    // Rebuild domaine_interface in distributed frame
+    // PDM_domain_interface* dintrf = PDM_part_domain_interface_to_domain_interface()
+
+    // Soit on a les edges
+    int have_edge = 0;
+    int have_face = 0;
+
+    if(have_edge == 1 &&  is_descibe_edge == 0) {
+
+      printf("Translate vtx to edge ... \n");
+
+      int          **pn_vtx         = (int         ** ) malloc( part_ext->n_domain * sizeof(int          *));
+      int          **pn_edge        = (int         ** ) malloc( part_ext->n_domain * sizeof(int          *));
+      PDM_g_num_t ***pedge_ln_to_gn = (PDM_g_num_t ***) malloc( part_ext->n_domain * sizeof(PDM_g_num_t **));
+      PDM_g_num_t ***pvtx_ln_to_gn  = (PDM_g_num_t ***) malloc( part_ext->n_domain * sizeof(PDM_g_num_t **));
+      int         ***pedge_vtx_idx  = (int         ***) malloc( part_ext->n_domain * sizeof(int         **));
+      int         ***pedge_vtx      = (int         ***) malloc( part_ext->n_domain * sizeof(int         **));
+
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        pn_vtx        [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+        pn_edge       [i_domain] = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+        pedge_ln_to_gn[i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+        pvtx_ln_to_gn [i_domain] = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
+        pedge_vtx_idx [i_domain] = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+        pedge_vtx     [i_domain] = (int         **) malloc( part_ext->n_domain * sizeof(int         *));
+
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          pn_vtx        [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+          pn_edge       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+          pedge_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+          pvtx_ln_to_gn [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+          pedge_vtx     [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_vtx;
+
+          int _nedge = pn_edge[i_domain][i_part];
+          pedge_vtx_idx [i_domain][i_part] = malloc((_nedge+1) * sizeof(int));
+
+          pedge_vtx_idx [i_domain][i_part][0] = 0;
+          for(int i = 0; i < _nedge; ++i) {
+            pedge_vtx_idx [i_domain][i_part][i+1] = pedge_vtx_idx [i_domain][i_part][i] + 2;
+          }
+        }
+      }
+
+
+      // Translate
+      PDM_part_domain_interface_add(part_ext->pdi,
+                                    PDM_BOUND_TYPE_VTX,
+                                    PDM_BOUND_TYPE_EDGE,
+                                    part_ext->n_part,
+                                    pn_vtx,
+                                    pvtx_ln_to_gn,
+                                    pn_edge,
+                                    pedge_ln_to_gn,
+                                    pedge_vtx_idx,
+                                    pedge_vtx);
+
+
+      for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+        for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+          free(pedge_vtx_idx [i_domain][i_part]);
+        }
+        free(pn_vtx        [i_domain]);
+        free(pn_edge       [i_domain]);
+        free(pedge_ln_to_gn[i_domain]);
+        free(pvtx_ln_to_gn [i_domain]);
+        free(pedge_vtx_idx [i_domain]);
+        free(pedge_vtx     [i_domain]);
+      }
+      free(pn_vtx        );
+      free(pn_edge       );
+      free(pedge_ln_to_gn);
+      free(pvtx_ln_to_gn );
+      free(pedge_vtx_idx );
+      free(pedge_vtx     );
+
+
+    }
+
+
+    if(have_face == 1 &&  is_descibe_face == 0) {
+
+      // Translate
+      printf("Translate edge to face ... \n");
+
+
+
+
+
+    }
+
+
+  } else if (is_descibe_face == 1) {
+
+    assert(is_descibe_vtx == 0);
+
+    // Faire la méthode de Julien face2vtx
+
+  }
+
+
+}
+
+
+static
+void
 _warm_up_domain_interface
 (
   PDM_part_extension_t *part_ext,
@@ -5646,6 +5772,7 @@ PDM_part_extension_compute
   /*
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
+  _compute_other_domain_interface(part_ext);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
   // exit(1);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
