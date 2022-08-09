@@ -2067,7 +2067,7 @@ PDM_part_domain_interface_add
 
   }
 
-  ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
+  ditrf->is_result[interface_kind1] = 1;
   PDM_domain_interface_set(ditrf,
                            interface_kind1,
                            dinterface_dn,
