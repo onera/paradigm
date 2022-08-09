@@ -3252,7 +3252,6 @@ void PDM_domain_interface_free
 
 // }
 
-static
 void
 PDM_ddomain_interface_to_pdomain_interface
 (

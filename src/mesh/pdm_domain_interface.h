@@ -134,6 +134,23 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 );
 
+void
+PDM_ddomain_interface_to_pdomain_interface
+(
+ PDM_MPI_Comm                   comm,
+ int                            n_interface,
+ int                            n_domain,
+ PDM_domain_interface_mult_t    multidomain_intrf,
+ PDM_bound_type_t               interface_kind,
+ int                           *dn_interface,
+ PDM_g_num_t                  **interface_ids,
+ int                          **interface_dom,
+ int                           *n_part,
+ int                          **pn_entity,
+ PDM_g_num_t                 ***entity_ln_to_gn,
+ PDM_part_domain_interface_t   *pditrf
+);
+
 
 PDM_part_domain_interface_t*
 PDM_domain_interface_to_part_domain_interface
