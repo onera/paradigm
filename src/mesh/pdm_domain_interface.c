@@ -2464,6 +2464,10 @@ PDM_domain_interface_translate_entity1_entity2
         l_interface_sgn[i] = 0;
       }
 
+      if(_dentity2_entity1_idx[i_entity2] == _dentity2_entity1_idx[i_entity2+1]) {
+        continue;
+      }
+
       for(int j = _dentity2_entity1_idx[i_entity2]; j < _dentity2_entity1_idx[i_entity2+1]; ++j) {
         int idx = part_stride_idx[i_domain][j];
         for(int k = 0; k < part_stride[i_domain][j]; ++k) {

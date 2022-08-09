@@ -2030,7 +2030,7 @@ PDM_part_domain_interface_add
 
         assert(sgn1 * sgn2 == -1); // Forcement de sgn opposé
 
-        if(sgn1 == 1) {
+        if(sgn1 == -1) {
           // Swap
           dentity1_gnum[idx_read  ] = gnum2;
           dentity1_gnum[idx_read+1] = gnum1;
@@ -2067,6 +2067,7 @@ PDM_part_domain_interface_add
 
   }
 
+  ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
   PDM_domain_interface_set(ditrf,
                            interface_kind1,
                            dinterface_dn,
@@ -2155,6 +2156,8 @@ PDM_part_domain_interface_add
       filter_entity2_entity1    [i_part] = realloc(filter_entity2_entity1    [i_part], _filter_entity2_entity1_idx[n_filter_entity2[i_part]] * sizeof(PDM_g_num_t));
       filter_entity2_entity1_idx[i_part] = realloc(filter_entity2_entity1_idx[i_part],  (n_filter_entity2[i_part] + 1)                       * sizeof(int        ));
       filter_entity2_ln_to_gn   [i_part] = entity2_ln_to_gn[i_dom][i_part];
+
+      assert(n_filter_entity2[i_part] == n_entity2);
     }
 
 
@@ -2223,6 +2226,14 @@ PDM_part_domain_interface_add
   /*
    * Translate in distributed
    */
+  if(0 == 1) {
+    for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+      PDM_log_trace_array_long(ditrf->interface_ids_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_ids_vtx ::");
+      PDM_log_trace_array_long(ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
+    }
+  }
+
+
   PDM_domain_interface_translate_entity1_entity2(ditrf->n_domain,
                                                  ditrf->n_interface,
                                                  dn_entity1,
@@ -2237,12 +2248,9 @@ PDM_part_domain_interface_add
                                                  &ditrf->interface_ids_edge,
                                                  &ditrf->interface_dom_edge);
 
+  ditrf->is_result[PDM_BOUND_TYPE_EDGE] = 1;
 
 
-
-  free(dinterface_dn );
-  free(dinterface_dom);
-  free(dinterface_ids);
 
   free(dn_entity1);
   free(dn_entity2);
