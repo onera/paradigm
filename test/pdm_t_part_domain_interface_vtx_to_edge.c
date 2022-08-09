@@ -306,47 +306,13 @@ _compute_face_vtx
 // mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi
 // mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi -pj
 // Repro LS89 : mpirun -np 2 ./test/pdm_t_join_domains -nx 5 -ny 4 -nz 2 -pt-scotch -pj
+// Debug this one : mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 3 -pi -pj -ni 2
 int main
 (
  int   argc,
  char *argv[]
 )
 {
-  // PDM_MPI_Init(&argc, &argv);
-
-  // int size          = 4;
-  // int array[2*4] = {4, 0, 2, 1, 2, 0, 1, 1};
-  // int* lorder = malloc(size * sizeof(int));
-  // PDM_order_lnum_s(array, 2, lorder, size);
-
-  // PDM_order_array(size, 2 * sizeof(int), lorder, array);
-
-  // PDM_log_trace_array_int(lorder,   size, "lorder : ");
-  // PDM_log_trace_array_int(array, 2 * size, "Sorted array : ");
-
-
-  // // Search
-  // int elt_to_find1[] = {1, 1};
-  // int elt_to_find2[] = {2, 0};
-  // int elt_to_find3[] = {2, 1};
-  // int elt_to_find4[] = {4, 0};
-  // int elt_to_find5[] = {4, 1};
-  // int pos1 = PDM_order_binary_search_long(elt_to_find1, array, 2, size);
-  // int pos2 = PDM_order_binary_search_long(elt_to_find2, array, 2, size);
-  // int pos3 = PDM_order_binary_search_long(elt_to_find3, array, 2, size);
-  // int pos4 = PDM_order_binary_search_long(elt_to_find4, array, 2, size);
-  // int pos5 = PDM_order_binary_search_long(elt_to_find5, array, 2, size);
-
-  // printf("pos1 = %i \n", pos1);
-  // printf("pos2 = %i \n", pos2);
-  // printf("pos3 = %i \n", pos3);
-  // printf("pos4 = %i \n", pos4);
-  // printf("pos5 = %i \n", pos5);
-
-  // free(lorder);
-
-  // PDM_MPI_Finalize();
-  // return 0;
   /*
    *  Set default values
    */
@@ -683,7 +649,7 @@ int main
   PDM_domain_interface_free(dom_intrf);
   free(n_part_by_domain);
   free(dcube);
-  // free(dmn);
+  free(dmn);
 
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
