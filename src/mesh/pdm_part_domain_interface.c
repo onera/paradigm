@@ -2059,6 +2059,7 @@ PDM_part_domain_interface_add
     free(interface_entity1_ln_to_gn[i_interface]);
     free(interface_ln_to_gn        [i_interface]);
     free(interface_sgn             [i_interface]);
+    free(interface_sens            [i_interface]);
     free(interface_dom             [i_interface]);
 
     int          n_gnum     = PDM_part_to_block_n_elt_block_get  (ptb);
@@ -2130,6 +2131,7 @@ PDM_part_domain_interface_add
 
     free(dentity1_gnum);
     free(dentity1_sgn);
+    free(dentity1_sens);
     free(dentity1_dom);
     free(dblk_strid);
     free(stride_one);

@@ -4142,7 +4142,9 @@ PDM_ddomain_interface_to_pdomain_interface
 
         free(precv_stride     [s_i_part]);
         free(precv_stride_dom [s_i_part]);
+        free(precv_stride_sens[s_i_part]);
         // free(precv_dom        [s_i_part]);
+        // free(precv_sens       [s_i_part]);
         free(precv_entity_desc[s_i_part]);
         free(precv_gnum       [s_i_part]);
         free(precv_stride_gnum[s_i_part]);
@@ -4152,9 +4154,11 @@ PDM_ddomain_interface_to_pdomain_interface
 
     free(precv_stride     );
     free(precv_stride_dom );
+    free(precv_stride_sens);
     free(precv_dom        );
     free(precv_stride_gnum);
     free(precv_gnum       );
+    free(precv_sens       );
     free(precv_entity_desc);
 
     free(_ln_interface);
@@ -4191,6 +4195,7 @@ PDM_ddomain_interface_to_pdomain_interface
       free(pres_interface_pn      [i_domain][i_part]);
       free(pres_interface_ln_to_gn[i_domain][i_part]);
       free(pres_interface_sgn     [i_domain][i_part]);
+      free(pres_interface_sens    [i_domain][i_part]);
       free(pres_interface_ids     [i_domain][i_part]);
       free(pres_interface_ids_idx [i_domain][i_part]);
       free(pres_interface_dom     [i_domain][i_part]);
@@ -4198,6 +4203,7 @@ PDM_ddomain_interface_to_pdomain_interface
     free(pres_interface_pn      [i_domain]);
     free(pres_interface_ln_to_gn[i_domain]);
     free(pres_interface_sgn     [i_domain]);
+    free(pres_interface_sens    [i_domain]);
     free(pres_interface_ids     [i_domain]);
     free(pres_interface_ids_idx [i_domain]);
     free(pres_interface_dom     [i_domain]);
@@ -4206,6 +4212,7 @@ PDM_ddomain_interface_to_pdomain_interface
   free(pres_interface_pn      );
   free(pres_interface_ln_to_gn);
   free(pres_interface_sgn     );
+  free(pres_interface_sens    );
   free(pres_interface_ids     );
   free(pres_interface_ids_idx );
   free(pres_interface_dom     );
