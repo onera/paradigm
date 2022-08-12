@@ -2493,27 +2493,68 @@ _warm_up_domain_interface
       int         *_current_sens    = current_sens   [i_part+shift_part];
 
       /* For each border count number of opposite */
-      int idx_write = 0;
-      int idx_read  = 0;
+      int idx_write     = 0;
+      int idx_read      = 0;
+      int idx_read_recv = 0;
       for(int i_entity = 0; i_entity < n_entity[i_part+shift_part]; ++i_entity) {
 
         /*
          * Treatement of sens
          */
+        int idx_write2 = idx_write;
         if(gentity2_entity1 != NULL) {
           log_trace("i_entity = %i \n", i_entity);
           for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
-
-
             int strid = entity2_entity1_opp_n[i_part+shift_part][idx_entity];
-            log_trace("\t --> ");
+            assert(strid == gentity2_entity1_n[i_part+shift_part][i_entity]);
+
+            log_trace("current connectivity =");
             for(int k = 0; k < strid; ++k) {
-              log_trace("%i ", entity2_entity1_opp[i_part+shift_part][idx_read++]);
+              log_trace("%i ", gentity2_entity1[i_part+shift_part][idx_read+k]);
             }
             log_trace("\n");
 
 
+            log_trace("\t --> ");
+            for(int k = 0; k < strid; ++k) {
+              log_trace("%i ", entity2_entity1_opp[i_part+shift_part][idx_read_recv+k]);
+            }
+            log_trace("\n");
+
+            /*
+             * Determine sens
+             */
+            int sens = 0;
+            for(int k = 0; k < strid; ++k) {
+              PDM_g_num_t gcur    = PDM_ABS (gentity2_entity1[i_part+shift_part][idx_read+k]);
+              int         sgn_cur = PDM_SIGN(gentity2_entity1[i_part+shift_part][idx_read+k]);
+              int lsens = 0;
+              for(int p = 0; p < strid; ++p) {
+                PDM_g_num_t gopp   = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+                if(gopp == gcur) {
+                  int sgn_opp   = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+                  if(sgn_opp != sgn_cur) { lsens = -1;}
+                  else                   { lsens =  1;}
+                }
+              }
+
+              assert(lsens != 0);
+
+              if(sens != 0) {
+                assert(lsens == sens);
+              }
+              sens = lsens;
+
+            }
+
+            if(_entity_ln_to_gn_opp[idx_entity] != _entity_ln_to_gn[i_entity]) {
+              _current_sens   [idx_write2++] = sens;
+            }
+
+
+            idx_read_recv += strid;
           }
+          idx_read += gentity2_entity1_n[i_part+shift_part][i_entity];
         }
 
 
@@ -2529,14 +2570,12 @@ _warm_up_domain_interface
             _opp_interface_and_gnum[2*idx_write  ] = _entity_ln_to_gn_opp[idx_entity];
             _opp_interface_and_gnum[2*idx_write+1] = _neighbor_interface[idx_entity];
             _current_lentity[idx_write] = i_entity;
-            _current_sens   [idx_write] = 1;
             idx_write++;
           }
 
 
         }
       }
-
 
       /*
        * Tri indirect sur le doublet et on order _current_lentity
@@ -2548,6 +2587,7 @@ _warm_up_domain_interface
 
       PDM_g_num_t *unique_opp_interface_and_gnum = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
       int         *unique_current_lentity        = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
+      int         *unique_current_sens           = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
 
       int n_unique = 0;
 
@@ -2563,6 +2603,7 @@ _warm_up_domain_interface
           unique_opp_interface_and_gnum[2*n_unique  ] = curr_elmt;
           unique_opp_interface_and_gnum[2*n_unique+1] = curr_inte;
           unique_current_lentity[n_unique] = _current_lentity[old_order];
+          unique_current_sens   [n_unique] = _current_sens   [old_order];
           n_unique++;
           last_elmt = curr_elmt;
           last_inte = curr_inte;
@@ -2572,20 +2613,24 @@ _warm_up_domain_interface
 
       free(opp_interface_and_gnum[i_part+shift_part]);
       free(current_lentity       [i_part+shift_part]);
+      free(current_sens          [i_part+shift_part]);
 
       unique_opp_interface_and_gnum = realloc(unique_opp_interface_and_gnum, 2 * n_unique * sizeof(PDM_g_num_t));
       unique_current_lentity        = realloc(unique_current_lentity       ,     n_unique * sizeof(int        ));
+      unique_current_sens           = realloc(unique_current_sens          ,     n_unique * sizeof(int        ));
 
       opp_interface_and_gnum[i_part+shift_part] = unique_opp_interface_and_gnum;
       current_lentity       [i_part+shift_part] = unique_current_lentity;
+      current_sens          [i_part+shift_part] = unique_current_sens   ;
 
       free(order);
 
       n_current_lentity[i_part+shift_part] = n_unique; //_neighbor_idx[n_entity[i_part+shift_part]];
 
-      if(0 == 1) {
+      if(1 == 1) {
         PDM_log_trace_array_long(opp_interface_and_gnum[i_part+shift_part], 2  * n_current_lentity[i_part+shift_part] , "_opp_interface_and_gnum : ");
-        PDM_log_trace_array_int(current_lentity       [i_part+shift_part],      n_current_lentity[i_part+shift_part] , "_current_lentity : ");
+        PDM_log_trace_array_int(current_lentity        [i_part+shift_part],      n_current_lentity[i_part+shift_part] , "_current_lentity        : ");
+        PDM_log_trace_array_int(current_sens           [i_part+shift_part],      n_current_lentity[i_part+shift_part] , "_current_sens           : ");
       }
 
       free(entity_ln_to_gn_opp[i_part+shift_part]);
@@ -6006,10 +6051,10 @@ PDM_part_extension_compute
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
   _compute_other_domain_interface(part_ext);
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
+  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
   // exit(1);
-  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
-  _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
 
   /*
    * Create for first level the proper graph
