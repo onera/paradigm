@@ -1772,27 +1772,18 @@ PDM_part_domain_interface_translate
    * Prepare exchange by transform with local interface information - We change frame
    */
   int** entity1_is_dom_intrf = malloc(n_part_loc_all_domain * sizeof(int *));
-  int** entity2_is_dom_intrf = malloc(n_part_loc_all_domain * sizeof(int *));
 
   shift_part = 0;
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
       int spart = shift_part + i_part;
       entity1_is_dom_intrf[spart] = malloc(n_entity1        [spart] * sizeof(int));
-      entity2_is_dom_intrf[spart] = malloc(pn_entity2[i_dom][i_part] * sizeof(int));
+      // entity2_is_dom_intrf[spart] = malloc(pn_entity2[i_dom][i_part] * sizeof(int));
 
       for(int i = 0; i < n_entity1[spart]; ++i) {
         entity1_is_dom_intrf[spart][i] = 0;
       }
-      for(int i = 0; i < pn_entity2[i_dom][i_part]; ++i) {
-        entity2_is_dom_intrf[spart][i] = 0;
-      }
-
       int *_entity1_is_dom_intrf = entity1_is_dom_intrf[spart];
-      int *_entity2_is_dom_intrf = entity2_is_dom_intrf[spart];
-
-      int *_entity2_entity1_idx = entity2_entity1_idx[i_dom][i_part];
-      int *_entity2_entity1     = entity2_entity1    [i_dom][i_part];
 
       /* Loop over graph to flag all entity1 that have an interface */
       for(int i_entity1 = 0; i_entity1 < pn_entity1[i_dom][i_part]; ++i_entity1) {
@@ -1935,9 +1926,9 @@ PDM_part_domain_interface_add
                                       &pinterface_dom);
 
         if(1 == 1) {
-          PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn ::");
-          PDM_log_trace_array_int (pinterface_sens     ,   ln_interface, "pinterface_sens ::");
-          PDM_log_trace_array_long(pinterface_dom     , 2*ln_interface, "pinterface_dom ::");
+          PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
+          PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
+          PDM_log_trace_array_long(pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
           PDM_log_trace_array_long(pinterface_ln_to_gn,   ln_interface, "pinterface_ln_to_gn ::");
         }
 
@@ -2094,6 +2085,8 @@ PDM_part_domain_interface_add
         int sens1 = dentity1_sens[idx_read  ];
         int sens2 = dentity1_sens[idx_read+1];
 
+        assert(sens1 == sens2);
+
         PDM_g_num_t gnum1 = dentity1_gnum[idx_read  ];
         PDM_g_num_t gnum2 = dentity1_gnum[idx_read+1];
 
@@ -2117,8 +2110,9 @@ PDM_part_domain_interface_add
           dom2 = dentity1_dom[idx_read+1];
 
         }
-        dinterface_ids[i_interface][2*i  ] = gnum1;
-        dinterface_ids[i_interface][2*i+1] = gnum2;
+        dinterface_ids[i_interface][2*i  ] =         gnum1;
+        dinterface_ids[i_interface][2*i+1] = sens1 * gnum2;
+        // dinterface_ids[i_interface][2*i+1] = gnum2;
 
         dinterface_dom[i_interface][2*i  ] = dom1;
         dinterface_dom[i_interface][2*i+1] = dom2;
@@ -2273,7 +2267,7 @@ PDM_part_domain_interface_add
     dn_entity2[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
     dfilter_entity2_entity1_idx[i_dom] = PDM_array_new_idx_from_sizes_int(dfilter_entity2_entity1_n, dn_entity2[i_dom] );
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_connectivity_long(dfilter_entity2_entity1_idx[i_dom], dfilter_entity2_entity1[i_dom], dn_entity2[i_dom] , "dfilter_entity2_entity1 ::");
     }
 

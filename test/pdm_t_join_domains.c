@@ -332,7 +332,7 @@ _compute_face_vtx2
 
     int idx_write = face_vtx_idx[i_face];
 
-    printf(" --------------------------------------- i_face = %i \n");
+    printf(" --------------------------------------- i_face = %i \n", i_face);
     for(int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
       int i_edge = PDM_ABS(face_edge[idx_edge]) - 1;
       int i_vtx1 = edge_vtx[2*i_edge  ];
