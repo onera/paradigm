@@ -2229,6 +2229,11 @@ _warm_up_domain_interface
   int          **gentity2_entity1_n    = NULL;
   PDM_g_num_t  **gentity2_entity1      = NULL;
 
+  PDM_g_num_t **entity1_opp_gnum_and_interface = NULL;
+  int         **entity1_current_lentity        = NULL;
+  int         **entity1_current_sens           = NULL;
+  int          *n_cur_interface_entity1        = NULL;
+
   if(interface_kind == PDM_BOUND_TYPE_VTX) {
     assert(part_ext->opp_interface_and_gnum_vtx == NULL);
     assert(part_ext->cur_interface_vtx          == NULL);
@@ -2297,6 +2302,7 @@ _warm_up_domain_interface
   int         **neighbor_desc      = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *) );
   int          *n_entity           = (int          *) malloc( n_part_loc_all_domain * sizeof(int          ) );
   PDM_g_num_t **entity_ln_to_gn    = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
+  PDM_g_num_t **entity1_ln_to_gn   = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *) );
 
   int **pn_entity = malloc(part_ext->n_domain * sizeof(int *));
 
@@ -2316,9 +2322,9 @@ _warm_up_domain_interface
         n_entity       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
         entity_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
       } else if( interface_kind == PDM_BOUND_TYPE_EDGE) {
-        pn_entity      [i_domain][i_part]  = part_ext->parts[i_domain][i_part].n_edge;
-        n_entity       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
-        entity_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+        pn_entity       [i_domain][i_part]  = part_ext->parts[i_domain][i_part].n_edge;
+        n_entity        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_edge;
+        entity_ln_to_gn [i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
 
         gentity2_entity1_n[i_part+shift_part] = malloc( (pn_entity[i_domain][i_part]) * sizeof(int));
         int         *_edge_vtx    = part_ext->parts[i_domain][i_part].edge_vtx;
@@ -2335,6 +2341,12 @@ _warm_up_domain_interface
           gentity2_entity1  [i_part+shift_part][2*i  ] =  vtx_ln_to_gn[i_vtx1-1];
           gentity2_entity1  [i_part+shift_part][2*i+1] = -vtx_ln_to_gn[i_vtx2-1];
         }
+
+        entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_vtx;
+        entity1_current_lentity             = part_ext->cur_interface_vtx;
+        entity1_current_sens                = part_ext->cur_sens_vtx;
+        n_cur_interface_entity1             = part_ext->n_cur_interface_vtx;
+        entity1_ln_to_gn[i_part+shift_part] = vtx_ln_to_gn;
 
       } else if( interface_kind == PDM_BOUND_TYPE_FACE) {
         pn_entity      [i_domain][i_part]  = part_ext->parts[i_domain][i_part].n_face;
@@ -2362,6 +2374,13 @@ _warm_up_domain_interface
               gentity2_entity1  [i_part+shift_part][idx_edge] = sgn * edge_ln_to_gn[i_edge];
             }
           }
+
+          entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_edge;
+          entity1_current_lentity             = part_ext->cur_interface_edge;
+          entity1_current_sens                = part_ext->cur_sens_edge;
+          n_cur_interface_entity1             = part_ext->n_cur_interface_edge;
+          entity1_ln_to_gn[i_part+shift_part] = edge_ln_to_gn;
+
         } else {
           assert(part_ext->parts[i_domain][i_part].face_vtx != NULL);
           int         *_face_vtx_idx = part_ext->parts[i_domain][i_part].face_vtx_idx;
@@ -2380,6 +2399,13 @@ _warm_up_domain_interface
               gentity2_entity1  [i_part+shift_part][idx_vtx] = vtx_ln_to_gn[i_vtx];
             }
           }
+
+
+          entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_vtx;
+          entity1_current_lentity             = part_ext->cur_interface_vtx;
+          entity1_current_sens                = part_ext->cur_sens_vtx;
+          n_cur_interface_entity1             = part_ext->n_cur_interface_vtx;
+          entity1_ln_to_gn[i_part+shift_part] = vtx_ln_to_gn;
 
         }
       }
@@ -2508,6 +2534,27 @@ _warm_up_domain_interface
             int strid = entity2_entity1_opp_n[i_part+shift_part][idx_entity];
             assert(strid == gentity2_entity1_n[i_part+shift_part][i_entity]);
 
+            /*
+             * Translate all incoming data in current partition info
+             */
+            for(int p = 0; p < strid; ++p) {
+              PDM_g_num_t gopp    = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+              int         sgn_opp = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+
+              PDM_g_num_t search_elmt[2] = {gopp, _neighbor_interface[idx_entity]};
+              // printf("Search elmt = %i %i\n", gopp, _neighbor_interface[idx_entity]);
+              // printf("n_cur_interface_entity1[i_part+shift_part] = %i \n", n_cur_interface_entity1[i_part+shift_part]);
+              // PDM_log_trace_array_long(entity1_opp_gnum_and_interface[i_part+shift_part], 2 * n_cur_interface_entity1[i_part+shift_part], "entity1_opp_gnum_and_interface ::");
+              int pos = PDM_order_binary_search_long(search_elmt, entity1_opp_gnum_and_interface[i_part+shift_part], 2, n_cur_interface_entity1[i_part+shift_part]);
+              // printf("pos = %i \n", pos);
+              assert(pos != -1);
+              PDM_g_num_t gopp_translate = entity1_ln_to_gn[i_part+shift_part][entity1_current_lentity[i_part+shift_part][pos]];
+              int         sgn_translate  = entity1_current_sens[i_part+shift_part][pos];
+
+              entity2_entity1_opp[i_part+shift_part][idx_read_recv+p] = sgn_translate * sgn_opp * gopp_translate;
+
+            }
+
             log_trace("current connectivity =");
             for(int k = 0; k < strid; ++k) {
               log_trace("%i ", gentity2_entity1[i_part+shift_part][idx_read+k]);
@@ -2531,6 +2578,7 @@ _warm_up_domain_interface
               int lsens = 0;
               for(int p = 0; p < strid; ++p) {
                 PDM_g_num_t gopp   = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+
                 if(gopp == gcur) {
                   int sgn_opp   = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
                   if(sgn_opp != sgn_cur) { lsens = -1;}
@@ -2551,7 +2599,6 @@ _warm_up_domain_interface
               _current_sens   [idx_write2++] = sens;
             }
 
-
             idx_read_recv += strid;
           }
           idx_read += gentity2_entity1_n[i_part+shift_part][i_entity];
@@ -2570,10 +2617,11 @@ _warm_up_domain_interface
             _opp_interface_and_gnum[2*idx_write  ] = _entity_ln_to_gn_opp[idx_entity];
             _opp_interface_and_gnum[2*idx_write+1] = _neighbor_interface[idx_entity];
             _current_lentity[idx_write] = i_entity;
+            if(gentity2_entity1 == NULL) {
+              _current_sens[idx_write] = 1;
+            }
             idx_write++;
           }
-
-
         }
       }
 
@@ -2643,6 +2691,24 @@ _warm_up_domain_interface
 
   PDM_distant_neighbor_free(dn);
   free(entity_ln_to_gn_opp);
+
+  if(gentity2_entity1 != NULL) {
+    for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+      free(gentity2_entity1_n    [i_part]);
+      free(gentity2_entity1      [i_part]);
+      free(entity2_entity1_opp_n[i_part]);
+      free(entity2_entity1_opp  [i_part]);
+    }
+    free(gentity2_entity1_n    );
+    free(gentity2_entity1      );
+    free(entity2_entity1_opp_n);
+    free(entity2_entity1_opp  );
+  }
+  free(entity1_ln_to_gn);
+
+
+
+
   /*
    * Free
    */
@@ -4370,6 +4436,7 @@ _generate_extended_partition_connectivity
  int           n_cur_interface_entity2,
  PDM_g_num_t  *opp_interface_and_gnum_entity2,
  int          *cur_interface_entity2,
+ int          *cur_interface_sens,
  int          *entity1_entity2_idx,
  int          *entity1_entity2,
  int          *border_gentity1_entity2_n,
@@ -4663,7 +4730,9 @@ _generate_extended_partition_connectivity
 
       if(pos_interface != -1) {
         int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
-        border_lentity1_entity2[idx++] = - sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
+        int sens   = cur_interface_sens[pos_interface];
+        border_lentity1_entity2[idx++] = sens * sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
+        // border_lentity1_entity2[idx++] = - sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
         i_entity2_extented++;
         continue;
       }
@@ -4917,6 +4986,7 @@ _rebuild_connectivity
   int                   *n_cur_interface_entity2,
   PDM_g_num_t          **opp_interface_and_gnum_entity2,
   int                  **cur_interface_entity2,
+  int                  **cur_interface_sens,
   int                 ***border_lentity1_entity2_idx,
   int                 ***border_lentity1_entity2,
   int                 ***entity2_entity2_extended_idx,
@@ -5053,6 +5123,7 @@ _rebuild_connectivity
                                                 n_cur_interface_entity2       [i_part+shift_part],
                                                 opp_interface_and_gnum_entity2[i_part+shift_part],
                                                 cur_interface_entity2         [i_part+shift_part],
+                                                cur_interface_sens            [i_part+shift_part],
                                                 entity1_entity2_idx           [i_part+shift_part],
                                                 entity1_entity2               [i_part+shift_part],
                                                 border_gentity1_entity2_n     [i_part+shift_part],
@@ -5193,6 +5264,7 @@ _rebuild_connectivity_cell_face
                         part_ext->n_cur_interface_face,
                         part_ext->opp_interface_and_gnum_face,
                         part_ext->cur_interface_face,
+                        part_ext->cur_sens_face,
                        &part_ext->border_cell_face_idx,
                        &part_ext->border_cell_face,
                        &part_ext->face_face_extended_idx,
@@ -5259,6 +5331,7 @@ _rebuild_connectivity_face_vtx
                         part_ext->n_cur_interface_vtx,
                         part_ext->opp_interface_and_gnum_vtx,
                         part_ext->cur_interface_vtx,
+                        part_ext->cur_sens_vtx,
                        &part_ext->border_face_vtx_idx,
                        &part_ext->border_face_vtx,
                        &part_ext->vtx_vtx_extended_idx,
@@ -5322,6 +5395,7 @@ _rebuild_connectivity_face_edge
                         part_ext->n_cur_interface_edge,
                         part_ext->opp_interface_and_gnum_edge,
                         part_ext->cur_interface_edge,
+                        part_ext->cur_sens_edge,
                        &part_ext->border_face_edge_idx,
                        &part_ext->border_face_edge,
                        &part_ext->edge_edge_extended_idx,
@@ -5446,6 +5520,7 @@ _rebuild_connectivity_edge_vtx
                         part_ext->n_cur_interface_vtx,
                         part_ext->opp_interface_and_gnum_vtx,
                         part_ext->cur_interface_vtx,
+                        part_ext->cur_sens_vtx,
                        &part_ext->border_edge_vtx_idx,
                        &part_ext->border_edge_vtx,
                        &part_ext->vtx_vtx_extended_idx,
@@ -6659,6 +6734,17 @@ PDM_part_extension_free
           free(part_ext->cur_interface_vtx[i_part+shift_part]);
         }
 
+        if(part_ext->cur_sens_face[i_part+shift_part] != NULL) {
+          free(part_ext->cur_sens_face[i_part+shift_part]);
+        }
+
+        if(part_ext->cur_sens_edge[i_part+shift_part] != NULL) {
+          free(part_ext->cur_sens_edge[i_part+shift_part]);
+        }
+
+        if(part_ext->cur_sens_vtx[i_part+shift_part] != NULL) {
+          free(part_ext->cur_sens_vtx[i_part+shift_part]);
+        }
 
 
         if(part_ext->face_face_extended_idx != NULL) {
