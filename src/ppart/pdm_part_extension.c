@@ -2136,7 +2136,8 @@ _compute_other_domain_interface
                                     pn_edge,
                                     pedge_ln_to_gn,
                                     pedge_vtx_idx,
-                                    pedge_vtx);
+                                    pedge_vtx,
+                                    1); // Connectivity_is_signed
       printf("Translate vtx to edge END \n");
     }
 
@@ -2155,7 +2156,8 @@ _compute_other_domain_interface
                                     pn_face,
                                     pface_ln_to_gn,
                                     pface_edge_idx,
-                                    pface_edge);
+                                    pface_edge,
+                                    1);// Connectivity_is_signed
     }
 
 

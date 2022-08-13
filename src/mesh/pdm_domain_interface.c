@@ -2215,6 +2215,7 @@ PDM_domain_interface_translate_entity1_entity2
  PDM_g_num_t            **interface_ids,
  int                    **dentity2_entity1_idx,
  PDM_g_num_t            **dentity2_entity1,
+ int                      connectivity_is_signed,
  PDM_MPI_Comm             comm,
  int                    **interface_dn_entity2,
  PDM_g_num_t           ***interface_ids_entity2,
@@ -2608,7 +2609,6 @@ PDM_domain_interface_translate_entity1_entity2
     gnum_entity2[i_domain] = (PDM_g_num_t *) malloc( entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] * sizeof(PDM_g_num_t));
 
     key_data    [i_domain] = (PDM_g_num_t *) malloc( key_data_size_approx[i_domain] * sizeof(PDM_g_num_t));
-    // key_ln_to_gn[i_domain] = (PDM_g_num_t *) malloc( n_entity2_intf[i_domain] * sizeof(PDM_g_num_t));
 
     PDM_g_num_t *_key_ln_to_gn         = key_ln_to_gn        [i_domain];
     int         *_key_data_n           = key_data_n          [i_domain];
@@ -2951,66 +2951,189 @@ PDM_domain_interface_translate_entity1_entity2
         PDM_g_num_t* raw_data1_opp = raw_data1 + n_val1/2;
         PDM_g_num_t* raw_data2_opp = raw_data2 + n_val2/2;
 
+
         // PDM_log_trace_array_long(raw_data1    , n_val1, "raw_data1_cur (all) :: ");
         // PDM_log_trace_array_long(raw_data2    , n_val1, "raw_data2_cur (all) :: ");
 
+        /*
+         * entity2_entity1 can be implicitly ordered or signed, we need to manage all cases :
+         *   - ex1 : face_vtx  -> connectivity_is_signed = 0 and implicit order
+         *   - ex2 : edge_vtx  -> connectivity_is_signed = 0 and implicit order
+         *   - ex3 : edge_vtx  -> connectivity_is_signed = 1  (an edge can be -6 4 )
+         *   - ex3 : face_edge -> connectivity_is_signed = 1
+         *
+         */
+        int sens = 0;
+        if(connectivity_is_signed == 0) {
 
-        // Mise a jour des donnés opposés avec l'orientation courante
-        for(int p = 0; p < n_connect; ++p) {
-          int sgn1 = PDM_SIGN(raw_data1[p]);
-          raw_data1_opp[p] = sgn1 * raw_data1_opp[p];
-          int sgn2 = PDM_SIGN(raw_data2[p]);
-          raw_data2_opp[p] = sgn2 * raw_data2_opp[p];
-        }
+          // PDM_log_trace_array_long(raw_data1_opp, n_connect, "raw_data1_opp :: ");
+          // PDM_log_trace_array_long(raw_data2_opp, n_connect, "raw_data2_opp :: ");
 
-        // PDM_log_trace_array_long(raw_data1    , n_connect, "raw_data1_cur :: ");
-        // PDM_log_trace_array_long(raw_data1_opp, n_connect, "raw_data1_opp :: ");
-        // PDM_log_trace_array_long(raw_data2    , n_connect, "raw_data2_cur :: ");
-        // PDM_log_trace_array_long(raw_data2_opp, n_connect, "raw_data2_opp :: ");
+          if(n_connect == 2) { // Cas particulier pour les edges -_-'
 
-        int sens1 = 0;
-        int sens2 = 0;
-        for(int p = 0; p < n_connect; ++p) {
-          PDM_g_num_t gnum_opp1 = PDM_ABS (raw_data1_opp[p]);
-          int         sgn_opp1  = PDM_SIGN(raw_data1_opp[p]);
-          PDM_g_num_t gnum_opp2 = PDM_ABS (raw_data2_opp[p]);
-          int         sgn_opp2  = PDM_SIGN(raw_data2_opp[p]);
-          int lsens1 = 0;
-          int lsens2 = 0;
+            // Comparaison opp1 with cur2
+            PDM_g_num_t i1 = raw_data1_opp[0];
+            PDM_g_num_t i2 = raw_data1_opp[1];
 
-          // Search brute force
-          for(int q = 0; q < n_connect; ++q) {
-            PDM_g_num_t gnum_cur1 = PDM_ABS (raw_data2[q]);
-            PDM_g_num_t gnum_cur2 = PDM_ABS (raw_data1[q]);
-            if(gnum_cur1 == gnum_opp1){
-              int sgn_cur2 = PDM_SIGN (raw_data2[q]);
-              if(sgn_opp1 != sgn_cur2) { lsens1 = -1;}
-              else {                     lsens1 =  1;}
+            PDM_g_num_t j1 = raw_data2[0];
+            PDM_g_num_t j2 = raw_data2[1];
+
+            int lsens1 = 0;
+            if(i1 == j1) {
+              lsens1 = 1;
+            } else {
+              assert(i1 == j2);
+              assert(i2 == j1);
+              lsens1 = -1;
             }
-            if(gnum_cur2 == gnum_opp2){
-              int sgn_cur1 = PDM_SIGN (raw_data1[q]);
-              if(sgn_opp2 != sgn_cur1) { lsens2 = -1;}
-              else {                     lsens2 =  1;}
+
+            // Comparaison opp2 with cur1
+            i1 = raw_data2_opp[0];
+            i2 = raw_data2_opp[1];
+
+            j1 = raw_data1[0];
+            j2 = raw_data1[1];
+
+            int lsens2 = 0;
+            if(i1 == j1) {
+              lsens2 = 1;
+            } else {
+              assert(i1 == j2);
+              assert(i2 == j1);
+              lsens2 = -1;
             }
+
+            assert(lsens1 == lsens2);
+            sens = lsens1;
+
+
+          } else {
+
+            /*
+             * In this case we search permutation inside raw_data
+             */
+            int idx_min_cur1 = 0;
+            int idx_min_cur2 = 0;
+            int idx_min_opp1 = 0;
+            int idx_min_opp2 = 0;
+            PDM_g_num_t first_gnum_cur1 = raw_data1    [0];
+            PDM_g_num_t first_gnum_cur2 = raw_data2    [0];
+            PDM_g_num_t first_gnum_opp1 = raw_data1_opp[0];
+            PDM_g_num_t first_gnum_opp2 = raw_data2_opp[0];
+
+
+            for(int p = 0; p < n_connect; ++p) {
+              if(raw_data1[p] < first_gnum_cur1) {
+                idx_min_cur1    = p;
+                first_gnum_cur1 = raw_data1[p];
+              }
+              if(raw_data2[p] < first_gnum_cur2) {
+                idx_min_cur2    = p;
+                first_gnum_cur2 = raw_data2[p];
+              }
+              if(raw_data1_opp[p] < first_gnum_opp1) {
+                idx_min_opp1    = p;
+                first_gnum_opp1 = raw_data1_opp[p];
+              }
+              if(raw_data2_opp[p] < first_gnum_opp2) {
+                idx_min_opp2    = p;
+                first_gnum_opp2 = raw_data2_opp[p];
+              }
+            }
+
+            // log_trace("idx_min_cur1 = %i | idx_min_cur2 = %i \n", idx_min_cur1, idx_min_cur2);
+            // log_trace("idx_min_opp1 = %i | idx_min_opp2 = %i \n", idx_min_opp1, idx_min_opp2);
+
+            int next_idx_cur1 = (idx_min_cur1+1) % n_connect;
+            // int prev_idx_cur1 = (idx_min_cur1-1) % n_connect;
+            int next_idx_cur2 = (idx_min_cur2+1) % n_connect;
+            int prev_idx_cur2 = (idx_min_cur2-1) % n_connect;
+            int next_idx_opp1 = (idx_min_opp1+1) % n_connect;
+            // int prev_idx_opp1 = (idx_min_opp1-1) % n_connect;
+            int next_idx_opp2 = (idx_min_opp2+1) % n_connect;
+            int prev_idx_opp2 = (idx_min_opp2-1) % n_connect;
+
+            // Comparaison opp1 with cur2
+            int lsens1 = 0;
+            if(raw_data2[next_idx_cur2] == raw_data1_opp[next_idx_opp1]){
+              lsens1 = 1;
+            } else {
+              assert(raw_data2[prev_idx_cur2] == raw_data1_opp[next_idx_opp1]);
+              lsens1 = -1;
+            }
+
+            // Comparaison opp2 with cur1
+            int lsens2 = 0;
+            if(raw_data2_opp[next_idx_opp2] == raw_data1[next_idx_cur1]){
+              lsens2 = 1;
+            } else {
+              assert(raw_data2_opp[prev_idx_opp2] == raw_data1[next_idx_cur1]);
+              lsens2 = -1;
+            }
+
+            assert(lsens1 == lsens2);
+            sens = lsens1;
+
+            // log_trace("sens = %i \n", sens);
           }
 
-          // log_trace("sens = %i | lsens = %i \n", sens, lsens);
-          if(sens1 != 0) {
-            assert(sens1 == lsens1);
+        } else {
+          // Mise a jour des donnés opposés avec l'orientation courante
+          for(int p = 0; p < n_connect; ++p) {
+            int sgn1 = PDM_SIGN(raw_data1[p]);
+            raw_data1_opp[p] = sgn1 * raw_data1_opp[p];
+            int sgn2 = PDM_SIGN(raw_data2[p]);
+            raw_data2_opp[p] = sgn2 * raw_data2_opp[p];
           }
-          if(sens2 != 0) {
-            assert(sens2 == lsens2);
+
+          // PDM_log_trace_array_long(raw_data1    , n_connect, "raw_data1_cur :: ");
+          // PDM_log_trace_array_long(raw_data1_opp, n_connect, "raw_data1_opp :: ");
+          // PDM_log_trace_array_long(raw_data2    , n_connect, "raw_data2_cur :: ");
+          // PDM_log_trace_array_long(raw_data2_opp, n_connect, "raw_data2_opp :: ");
+
+          int sens1 = 0;
+          int sens2 = 0;
+          for(int p = 0; p < n_connect; ++p) {
+            PDM_g_num_t gnum_opp1 = PDM_ABS (raw_data1_opp[p]);
+            int         sgn_opp1  = PDM_SIGN(raw_data1_opp[p]);
+            PDM_g_num_t gnum_opp2 = PDM_ABS (raw_data2_opp[p]);
+            int         sgn_opp2  = PDM_SIGN(raw_data2_opp[p]);
+            int lsens1 = 0;
+            int lsens2 = 0;
+
+            // Search brute force
+            for(int q = 0; q < n_connect; ++q) {
+              PDM_g_num_t gnum_cur1 = PDM_ABS (raw_data2[q]);
+              PDM_g_num_t gnum_cur2 = PDM_ABS (raw_data1[q]);
+              if(gnum_cur1 == gnum_opp1){
+                int sgn_cur2 = PDM_SIGN (raw_data2[q]);
+                if(sgn_opp1 != sgn_cur2) { lsens1 = -1;}
+                else {                     lsens1 =  1;}
+              }
+              if(gnum_cur2 == gnum_opp2){
+                int sgn_cur1 = PDM_SIGN (raw_data1[q]);
+                if(sgn_opp2 != sgn_cur1) { lsens2 = -1;}
+                else {                     lsens2 =  1;}
+              }
+            }
+
+            // log_trace("sens = %i | lsens = %i \n", sens, lsens);
+            if(sens1 != 0) {
+              assert(sens1 == lsens1);
+            }
+            if(sens2 != 0) {
+              assert(sens2 == lsens2);
+            }
+            sens1 = lsens1;
+            sens2 = lsens2;
           }
-          sens1 = lsens1;
-          sens2 = lsens2;
+
+          // log_trace("gnum1 = %i | gnum2 = %i | sens1 = %i | sens2 = %i\n", gnum1, gnum2, sens1, sens2);
+          assert(sens1 != 0);
+          assert(sens2 != 0);
+          assert(sens1 == sens2);
+          sens = sens1;
         }
-
-        // log_trace("gnum1 = %i | gnum2 = %i | sens1 = %i | sens2 = %i\n", gnum1, gnum2, sens1, sens2);
-        assert(sens1 != 0);
-        assert(sens2 != 0);
-        assert(sens1 == sens2);
-        int sens = sens1;
-
         assert(sens != 0);
 
         if(int_no1 > 0) {
@@ -3159,6 +3282,7 @@ PDM_domain_interface_translate_vtx2face
                                                  dom_intrf->interface_ids_vtx,
                                                  dface_vtx_idx,
                                                  dface_vtx,
+                                                 0, // Connectivity is signed
                                                  dom_intrf->comm,
                                                  &dom_intrf->interface_dn_face,
                                                  &dom_intrf->interface_ids_face,
@@ -3230,6 +3354,7 @@ PDM_domain_interface_translate_vtx2edge
                                                  dom_intrf->interface_ids_vtx,
                                                  dedge_vtx_idx,
                                                  dedge_vtx,
+                                                 0,  // connectivity_is_signed
                                                  dom_intrf->comm,
                                                  &dom_intrf->interface_dn_edge,
                                                  &dom_intrf->interface_ids_edge,

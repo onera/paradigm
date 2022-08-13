@@ -182,7 +182,8 @@ PDM_part_domain_interface_add
  int                          **pn_entity2,
  PDM_g_num_t                 ***entity2_ln_to_gn,
  int                         ***entity2_entity1_idx,
- int                         ***entity2_entity1
+ int                         ***entity2_entity1,
+ int                            connectivity_is_signed
 );
 
 

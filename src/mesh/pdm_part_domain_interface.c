@@ -1851,7 +1851,8 @@ PDM_part_domain_interface_add
  int                          **pn_entity2,
  PDM_g_num_t                 ***entity2_ln_to_gn,
  int                         ***entity2_entity1_idx,
- int                         ***entity2_entity1
+ int                         ***entity2_entity1,
+ int                            connectivity_is_signed
 )
 {
   int i_rank;
@@ -2338,6 +2339,7 @@ PDM_part_domain_interface_add
                                                  kind1_dinterface_ids,
                                                  dfilter_entity2_entity1_idx,
                                                  dfilter_entity2_entity1,
+                                                 connectivity_is_signed,
                                                  ditrf->comm,
                                                  kind2_interface_dn,
                                                  kind2_dinterface_ids,
@@ -2345,7 +2347,6 @@ PDM_part_domain_interface_add
 
   ditrf->is_result[interface_kind2] = 1;
 
-  printf(" PDM_ddomain_interface_to_pdomain_interface %i \n", interface_kind2);
   PDM_ddomain_interface_to_pdomain_interface(ditrf->comm,
                                              ditrf->n_interface,
                                              ditrf->n_domain,
@@ -2358,39 +2359,6 @@ PDM_part_domain_interface_add
                                              pn_entity2,
                                              entity2_ln_to_gn,
                                              dom_intrf);
-  printf(" PDM_ddomain_interface_to_pdomain_interface END \n");
-
-  // PDM_domain_interface_translate_entity1_entity2(ditrf->n_domain,
-  //                                                ditrf->n_interface,
-  //                                                dn_entity1,
-  //                                                dn_entity2,
-  //                                                ditrf->interface_dn_vtx,
-  //                                                dinterface_dom,
-  //                                                ditrf->interface_ids_vtx,
-  //                                                dfilter_entity2_entity1_idx,
-  //                                                dfilter_entity2_entity1,
-  //                                                ditrf->comm,
-  //                                                &ditrf->interface_dn_edge,
-  //                                                &ditrf->interface_ids_edge,
-  //                                                &ditrf->interface_dom_edge);
-
-  // ditrf->is_result[interface_kind2] = 1;
-
-  // PDM_ddomain_interface_to_pdomain_interface(ditrf->comm,
-  //                                            ditrf->n_interface,
-  //                                            ditrf->n_domain,
-  //                                            ditrf->multidomain_intrf,
-  //                                            PDM_BOUND_TYPE_EDGE,
-  //                                            ditrf->interface_dn_edge,
-  //                                            ditrf->interface_ids_edge,
-  //                                            ditrf->interface_dom_edge,
-  //                                            n_part,
-  //                                            pn_entity2,
-  //                                            entity2_ln_to_gn,
-  //                                            dom_intrf);
-  // }
-
-
   free(dn_entity1);
   free(dn_entity2);
 

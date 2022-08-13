@@ -202,12 +202,12 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -pi -t 8
-// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -ni 2 -pi 1
-// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi
-// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi -pj
-// Repro LS89 : mpirun -np 2 ./test/pdm_t_join_domains -nx 5 -ny 4 -nz 2 -pt-scotch -pj
-// Debug this one : mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 3 -pi -pj -ni 2
+// mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -nx 3 -ny 3 -nz 2 -pi -t 8
+// mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -nx 3 -ny 3 -nz 2 -t 8 -ni 2 -pi 1
+// mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -nx 3 -ny 3 -nz 2 -t 8 -pi
+// mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -nx 3 -ny 3 -nz 2 -t 8 -pi -pj
+// Debug this one : mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -n 3 -pi -pj -ni 2
+// Debug this one : mpirun -np 1 ./test/pdm_t_domain_interface_vtx_translate -nx 4 -ny 3 -nz 2 -post -ni 2
 int main
 (
  int   argc,
@@ -229,8 +229,8 @@ int main
   double               length     = 1.;
   int                  post       = 0;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TRIA3;
-  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_QUAD4;
-  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
+  // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_QUAD4;
+  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXA8;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_TETRA4;
   // PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_PRISM6;
   // 2 -> tria
@@ -395,6 +395,7 @@ int main
    * Transform interface by vtx by interface by faces
    */
   if(dim == 3) {
+    // Il faut rajouter un is_implicit_order
     PDM_domain_interface_translate_vtx2face(dom_intrf,
                                             dn_vtx,
                                             dn_face,
