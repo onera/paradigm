@@ -2305,7 +2305,7 @@ _warm_up_domain_interface
 
   int **pn_entity = malloc(part_ext->n_domain * sizeof(int *));
 
-  int implicit_order = 0;
+  int connectivity_is_signed = 0;
   int shift_part   = 0;
   int shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -2339,7 +2339,10 @@ _warm_up_domain_interface
 
           gentity2_entity1  [i_part+shift_part][2*i  ] =  vtx_ln_to_gn[i_vtx1-1];
           gentity2_entity1  [i_part+shift_part][2*i+1] = -vtx_ln_to_gn[i_vtx2-1];
+          // gentity2_entity1  [i_part+shift_part][2*i+1] =  vtx_ln_to_gn[i_vtx2-1]; // if connectivity_is_signed == 0
         }
+        connectivity_is_signed = 1;
+        // connectivity_is_signed = 0;
 
         entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_vtx;
         entity1_current_lentity             = part_ext->cur_interface_vtx;
@@ -2373,6 +2376,7 @@ _warm_up_domain_interface
               gentity2_entity1  [i_part+shift_part][idx_edge] = sgn * edge_ln_to_gn[i_edge];
             }
           }
+          connectivity_is_signed = 1;
 
           entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_edge;
           entity1_current_lentity             = part_ext->cur_interface_edge;
@@ -2389,8 +2393,6 @@ _warm_up_domain_interface
           gentity2_entity1_n[i_part+shift_part] = malloc( _n_face * sizeof(int));
           gentity2_entity1  [i_part+shift_part] = malloc( _face_vtx_idx[_n_face] * sizeof(PDM_g_num_t));
 
-          implicit_order = 1;
-
           for(int i = 0; i < _n_face; ++i) {
             gentity2_entity1_n[i_part+shift_part][i] = _face_vtx_idx[i+1] - _face_vtx_idx[i];
             for(int idx_vtx = _face_vtx_idx[i]; idx_vtx < _face_vtx_idx[i+1]; ++idx_vtx) {
@@ -2398,7 +2400,7 @@ _warm_up_domain_interface
               gentity2_entity1  [i_part+shift_part][idx_vtx] = vtx_ln_to_gn[i_vtx];
             }
           }
-
+          connectivity_is_signed = 0;
 
           entity1_opp_gnum_and_interface      = part_ext->opp_interface_and_gnum_vtx;
           entity1_current_lentity             = part_ext->cur_interface_vtx;
@@ -2573,28 +2575,79 @@ _warm_up_domain_interface
              * Determine sens
              */
             int sens = 0;
-            for(int k = 0; k < strid; ++k) {
-              PDM_g_num_t gcur    = PDM_ABS (gentity2_entity1[i_part+shift_part][idx_read+k]);
-              int         sgn_cur = PDM_SIGN(gentity2_entity1[i_part+shift_part][idx_read+k]);
-              int lsens = 0;
-              for(int p = 0; p < strid; ++p) {
-                PDM_g_num_t gopp   = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+            if(connectivity_is_signed == 0) {
 
-                if(gopp == gcur) {
-                  int sgn_opp   = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
-                  if(sgn_opp != sgn_cur) { lsens = -1;}
-                  else                   { lsens =  1;}
+              if(strid == 2) { // Cas particulier edge
+
+                PDM_g_num_t i1 = gentity2_entity1[i_part+shift_part][idx_read  ];
+                PDM_g_num_t i2 = gentity2_entity1[i_part+shift_part][idx_read+1];
+
+                PDM_g_num_t j1 = entity2_entity1_opp[i_part+shift_part][idx_read_recv  ];
+                PDM_g_num_t j2 = entity2_entity1_opp[i_part+shift_part][idx_read_recv+1];
+
+                if(i1 == j1) {
+                  sens = 1;
+                } else {
+                  assert(i1 == j2);
+                  assert(i2 == j1);
+                  sens = -1;
+                }
+              } else {
+
+                int idx_cur_min = 0;
+                int idx_opp_min = 0;
+                PDM_g_num_t gcur = gentity2_entity1   [i_part+shift_part][idx_read];
+                PDM_g_num_t gopp = entity2_entity1_opp[i_part+shift_part][idx_read_recv];
+
+                for(int k = 0; k < strid; ++k) {
+                  if(gentity2_entity1[i_part+shift_part][idx_read+k] < gcur) {
+                    gcur = gentity2_entity1   [i_part+shift_part][idx_read+k];
+                    idx_cur_min = k;
+                  }
+                  if(entity2_entity1_opp[i_part+shift_part][idx_read_recv+k] < gopp) {
+                    gopp = entity2_entity1_opp[i_part+shift_part][idx_read_recv+k];
+                    idx_opp_min = k;
+                  }
+                }
+
+                int next_idx_cur_min = (idx_cur_min+1) % strid;
+                int prev_idx_cur_min = (idx_cur_min-1) % strid;
+                int next_idx_opp_min = (idx_opp_min+1) % strid;
+                // int prev_idx_opp_min = (idx_opp_min-1) % strid;
+
+                if(gentity2_entity1[i_part+shift_part][idx_read+next_idx_cur_min] == entity2_entity1_opp[i_part+shift_part][idx_read_recv+next_idx_opp_min])  {
+                  sens = 1;
+                } else {
+                  assert(gentity2_entity1[i_part+shift_part][idx_read+prev_idx_cur_min] == entity2_entity1_opp[i_part+shift_part][idx_read_recv+next_idx_opp_min]);
+                  sens = -1;
                 }
               }
+            } else {
+              for(int k = 0; k < strid; ++k) {
+                PDM_g_num_t gcur    = PDM_ABS (gentity2_entity1[i_part+shift_part][idx_read+k]);
+                int         sgn_cur = PDM_SIGN(gentity2_entity1[i_part+shift_part][idx_read+k]);
+                int lsens = 0;
+                for(int p = 0; p < strid; ++p) {
+                  PDM_g_num_t gopp   = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
 
-              assert(lsens != 0);
+                  if(gopp == gcur) {
+                    int sgn_opp   = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
+                    if(sgn_opp != sgn_cur) { lsens = -1;}
+                    else                   { lsens =  1;}
+                  }
+                }
 
-              if(sens != 0) {
-                assert(lsens == sens);
+                assert(lsens != 0);
+
+                if(sens != 0) {
+                  assert(lsens == sens);
+                }
+                sens = lsens;
+
               }
-              sens = lsens;
-
             }
+            assert(sens != 0);
+
 
             if(_entity_ln_to_gn_opp[idx_entity] != _entity_ln_to_gn[i_entity]) {
               _current_sens   [idx_write2++] = sens;
