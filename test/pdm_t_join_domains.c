@@ -306,7 +306,6 @@ _compute_face_vtx2
  int **face_vtx_out
  )
 {
-  int dbg = 0;
 
   *face_vtx_out = malloc (sizeof(int) * face_edge_idx[n_face]);
   int *face_vtx = *face_vtx_out;
@@ -332,13 +331,13 @@ _compute_face_vtx2
 
     int idx_write = face_vtx_idx[i_face];
 
-    printf(" --------------------------------------- i_face = %i \n", i_face);
-    for(int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
-      int i_edge = PDM_ABS(face_edge[idx_edge]) - 1;
-      int i_vtx1 = edge_vtx[2*i_edge  ];
-      int i_vtx2 = edge_vtx[2*i_edge+1];
-      printf("i_edge = %i (%i)-> %i /%i (%i/%i) \n", i_edge, face_edge[idx_edge], i_vtx1, i_vtx2, i_vtx1-1, i_vtx2-1);
-    }
+    // printf(" --------------------------------------- i_face = %i \n", i_face);
+    // for(int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
+    //   int i_edge = PDM_ABS(face_edge[idx_edge]) - 1;
+    //   int i_vtx1 = edge_vtx[2*i_edge  ];
+    //   int i_vtx2 = edge_vtx[2*i_edge+1];
+    //   printf("i_edge = %i (%i)-> %i /%i (%i/%i) \n", i_edge, face_edge[idx_edge], i_vtx1, i_vtx2, i_vtx1-1, i_vtx2-1);
+    // }
 
     // Find first vtx of face
     int idx_first_edge = face_edge_idx[i_face];
@@ -360,7 +359,7 @@ _compute_face_vtx2
       for(int idx_edge = face_edge_idx[i_face]+1; idx_edge < face_edge_idx[i_face+1]; ++idx_edge) {
 
         int i_edge = PDM_ABS(face_edge[idx_edge]) - 1;
-        printf("idx_edge :: %i | i_edge ::  %i | treated ::  %i (  %i )\n", idx_edge, i_edge, is_treated[idx_edge-face_edge_idx[i_face]], idx_edge-face_edge_idx[i_face]);
+        // printf("idx_edge :: %i | i_edge ::  %i | treated ::  %i (  %i )\n", idx_edge, i_edge, is_treated[idx_edge-face_edge_idx[i_face]], idx_edge-face_edge_idx[i_face]);
 
         // Find the next edge that refers to next_vtx
         if(is_treated[idx_edge-face_edge_idx[i_face]] == -1) {
@@ -410,7 +409,7 @@ _compute_face_vtx2
       is_treated[i] = -1;
     }
   }
-  PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx ::");
+  // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx ::");
 
   free(face_vtx_idx);
   free(is_treated);
@@ -1166,7 +1165,6 @@ int main
       // int n_face_extended  = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_FACE, &border_face_ln_to_gn);
       // int n_edge_extended  = PDM_part_extension_ln_to_gn_get(part_ext, i_dom, i_part, PDM_MESH_ENTITY_EDGE, &border_edge_ln_to_gn);
 
-      printf("Toto 11111 \n");
       int *extend_face_edge_idx = NULL;
       int *extend_face_edge     = NULL;
       int n_face_extended2      = 0;
@@ -1192,9 +1190,6 @@ int main
                                                                &extend_face_vtx_idx);
       }
       PDM_UNUSED(n_face_extended2);
-      printf("Toto 222222 \n");
-      PDM_log_trace_connectivity_int(extend_face_edge_idx, extend_face_edge, n_face_extended2, "extend_face_edge");
-      PDM_log_trace_connectivity_int(extend_edge_vtx_idx, extend_edge_vtx, n_edge_extended2, "extend_edge_vtx");
 
       // PDM_g_num_t* edge_ln_to_gn = NULL;
       // int n_edge = PDM_multipart_part_ln_to_gn_get(mpart_id,

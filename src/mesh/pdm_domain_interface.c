@@ -2247,7 +2247,7 @@ PDM_domain_interface_translate_entity1_entity2
     weight               [itrf] = (double      *) malloc( 2 * dn_interface[itrf] * sizeof(double     ));
     dn_interface_twice   [itrf] = 2*dn_interface[itrf];
 
-    if (1 == 1) {
+    if (0 == 1) {
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
@@ -2497,7 +2497,7 @@ PDM_domain_interface_translate_entity1_entity2
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
-    if( 1 == 1) {
+    if( 0 == 1) {
       PDM_log_trace_array_int(part_stride    [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
       PDM_log_trace_array_int(part_stride_idx[i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
       PDM_log_trace_array_int(part_data_sens [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
@@ -2655,7 +2655,7 @@ PDM_domain_interface_translate_entity1_entity2
             if(t_itrf == i_interf) {
 
               int sens = part_data_sens[i_domain][idx+k];
-              log_trace("sens = %i \n", sens);
+              // log_trace("sens = %i \n", sens);
               _key_ln_to_gn[idx_write] += PDM_ABS(part_data_gnum[i_domain][idx+k]);
 
               _key_data_n[idx_write       ] += 1;
@@ -2840,8 +2840,8 @@ PDM_domain_interface_translate_entity1_entity2
       conflict_data_idx[j+1] = conflict_data_idx[j] + dkey_data_n[idx_read+j];
     }
 
-    log_trace("----------------------------------------------- \n");
-    log_trace("%i --> n_conflict = %i \n", i, n_conflict_keys);
+    // log_trace("----------------------------------------------- \n");
+    // log_trace("%i --> n_conflict = %i \n", i, n_conflict_keys);
 
     /*
      * On trie tout dans conflict_sort_data
@@ -2937,7 +2937,7 @@ PDM_domain_interface_translate_entity1_entity2
         assert(dom2 != -1);
 
         //
-        log_trace("Match !!!! "PDM_FMT_G_NUM" |  "PDM_FMT_G_NUM"\n", gnum1, gnum2);
+        // log_trace("Match !!!! "PDM_FMT_G_NUM" |  "PDM_FMT_G_NUM"\n", gnum1, gnum2);
 
         PDM_g_num_t* raw_data1  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict ]];
         PDM_g_num_t* raw_data2  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict2]];
@@ -2951,8 +2951,8 @@ PDM_domain_interface_translate_entity1_entity2
         PDM_g_num_t* raw_data1_opp = raw_data1 + n_val1/2;
         PDM_g_num_t* raw_data2_opp = raw_data2 + n_val2/2;
 
-        PDM_log_trace_array_long(raw_data1    , n_val1, "raw_data1_cur (all) :: ");
-        PDM_log_trace_array_long(raw_data2    , n_val1, "raw_data2_cur (all) :: ");
+        // PDM_log_trace_array_long(raw_data1    , n_val1, "raw_data1_cur (all) :: ");
+        // PDM_log_trace_array_long(raw_data2    , n_val1, "raw_data2_cur (all) :: ");
 
 
         // Mise a jour des donnés opposés avec l'orientation courante
@@ -2963,10 +2963,10 @@ PDM_domain_interface_translate_entity1_entity2
           raw_data2_opp[p] = sgn2 * raw_data2_opp[p];
         }
 
-        PDM_log_trace_array_long(raw_data1    , n_connect, "raw_data1_cur :: ");
-        PDM_log_trace_array_long(raw_data1_opp, n_connect, "raw_data1_opp :: ");
-        PDM_log_trace_array_long(raw_data2    , n_connect, "raw_data2_cur :: ");
-        PDM_log_trace_array_long(raw_data2_opp, n_connect, "raw_data2_opp :: ");
+        // PDM_log_trace_array_long(raw_data1    , n_connect, "raw_data1_cur :: ");
+        // PDM_log_trace_array_long(raw_data1_opp, n_connect, "raw_data1_opp :: ");
+        // PDM_log_trace_array_long(raw_data2    , n_connect, "raw_data2_cur :: ");
+        // PDM_log_trace_array_long(raw_data2_opp, n_connect, "raw_data2_opp :: ");
 
         int sens1 = 0;
         int sens2 = 0;
@@ -3005,7 +3005,7 @@ PDM_domain_interface_translate_entity1_entity2
           sens2 = lsens2;
         }
 
-        log_trace("gnum1 = %i | gnum2 = %i | sens1 = %i | sens2 = %i\n", gnum1, gnum2, sens1, sens2);
+        // log_trace("gnum1 = %i | gnum2 = %i | sens1 = %i | sens2 = %i\n", gnum1, gnum2, sens1, sens2);
         assert(sens1 != 0);
         assert(sens2 != 0);
         assert(sens1 == sens2);
@@ -3628,7 +3628,7 @@ PDM_ddomain_interface_to_pdomain_interface
                                          &recv_stride,
                                (void **) &recv_data_itrf_gnum);
 
-  if (1 == 1) {
+  if (0 == 1) {
     PDM_log_trace_array_long(block_gnum         , n_gnum       , "block_gnum"         );
     PDM_log_trace_array_int (recv_stride        , n_gnum       , "recv stride"        );
     // PDM_log_trace_array_int (recv_data_dom      , n_connected_l, "recv_data_dom"      );
@@ -3833,7 +3833,7 @@ PDM_ddomain_interface_to_pdomain_interface
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       // PDM_log_trace_array_int (part_data_dom     [i_part], pn_interface_idx[i_part][n_interface], "part_data_dom      :: ");
       // PDM_log_trace_array_int (part_data_sens    [i_part], pn_interface_idx[i_part][n_interface], "part_data_sens     :: ");
       PDM_log_trace_array_int (pinterface_triplet[i_part], pn_interface_idx[i_part][n_interface], "pinterface_triplet :: ");
@@ -4103,7 +4103,7 @@ PDM_ddomain_interface_to_pdomain_interface
         }
 
 
-        if(1 == 1) {
+        if(0 == 1) {
           PDM_log_trace_array_int (precv_stride     [s_i_part] ,     _ln_interface[s_i_part], "precv_stride      ::");
           PDM_log_trace_array_long(_pentity_ln_to_gn           ,     _ln_interface[s_i_part], "_pentity_ln_to_gn ::");
           PDM_log_trace_array_int (precv_entity_desc[s_i_part] , 3 * n_data                 , "precv_entity_desc ::");

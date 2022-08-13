@@ -447,13 +447,6 @@ int main
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
   }
 
-  // const int renum_properties_cell[6] = {1024, 0, 1, 64, 3, 1};
-  // const int renum_properties_cell[6] = {12, 0, 1, 64, 3, 1};
-  // const int renum_properties_cell[6] = {256, 0, 1, 64, 1, 1};
-  // const int renum_properties_cell[6] = {16, 0, 1, 64, 1, 1};
-  // PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_HPC",
-  //                                           (void * ) renum_properties_cell,
-  //                                                    "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_set_reordering_options(mpart_id,
                                        -1,
                                        "PDM_PART_RENUM_CELL_NONE",
@@ -604,30 +597,20 @@ int main
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
 
-  // PDM_part_domain_interface_translate(pdi,
-  //                                     PDM_BOUND_TYPE_VTX,
-  //                                     PDM_BOUND_TYPE_EDGE,
-  //                                     pn_n_part,
-  //                                     pn_vtx,
-  //                                     pn_edge,
-  //                                     pedge_ln_to_gn,
-  //                                     pedge_vtx_idx,
-  //                                     pedge_vtx);
   PDM_part_domain_interface_add(pdi,
-                                      PDM_BOUND_TYPE_VTX,
-                                      PDM_BOUND_TYPE_EDGE,
-                                      pn_n_part,
-                                      pn_vtx,
-                                      pvtx_ln_to_gn,
-                                      pn_edge,
-                                      pedge_ln_to_gn,
-                                      pedge_vtx_idx,
-                                      pedge_vtx);
+                                PDM_BOUND_TYPE_VTX,
+                                PDM_BOUND_TYPE_EDGE,
+                                pn_n_part,
+                                pn_vtx,
+                                pvtx_ln_to_gn,
+                                pn_edge,
+                                pedge_ln_to_gn,
+                                pedge_vtx_idx,
+                                pedge_vtx);
 
 
   for (int i = 0; i < n_domain; i++) {
     PDM_dcube_nodal_gen_free(dcube[i]);
-    // PDM_dcube_nodal_gen_free(dmn[i]);
   }
   PDM_multipart_free(mpart_id);
 

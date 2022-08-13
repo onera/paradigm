@@ -1925,7 +1925,7 @@ PDM_part_domain_interface_add
                                       &pinterface_ids_idx,
                                       &pinterface_dom);
 
-        if(1 == 1) {
+        if(0 == 1) {
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_long(pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
@@ -2061,7 +2061,7 @@ PDM_part_domain_interface_add
       n_data += dblk_strid[i];
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(dblk_strid   , n_gnum, "dblk_strid    ::");
       PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum ::");
       PDM_log_trace_array_long(dentity1_sgn , n_data, "dentity1_sgn  ::");
