@@ -2252,6 +2252,13 @@ PDM_domain_interface_translate_entity1_entity2
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
+    if(n_domain > 1) {
+      for(int i_domain = 1; i_domain < n_domain; ++i_domain) {
+        for(int i = 0; i < dentity2_entity1_idx[i_domain][dn_entity2[i_domain]]; ++i) {
+          dentity2_entity1[i_domain][i] += entity1_per_block_offset[i_domain];
+        }
+      }
+    }
 
 
     for (int k = 0; k < dn_interface[itrf]; k++) {
@@ -3214,6 +3221,18 @@ PDM_domain_interface_translate_entity1_entity2
   free(stride_one);
   free(distrib_entity2);
 
+  /*
+   * Unshift
+   */
+  if(n_domain > 1) {
+    for(int i_domain = 1; i_domain < n_domain; ++i_domain) {
+      for(int i = 0; i < dentity2_entity1_idx[i_domain][dn_entity2[i_domain]]; ++i) {
+        dentity2_entity1[i_domain][i] -= entity1_per_block_offset[i_domain];
+      }
+    }
+  }
+
+
   free(entity1_per_block_offset);
   free(entity2_per_block_offset);
 
@@ -4072,7 +4091,7 @@ PDM_ddomain_interface_to_pdomain_interface
         int beg = pn_interface_idx[shift+i_part][i_interface];
         for(int i = 0; i < _ln_interface[i_part]; ++i) {
           _entity_desc[3*i  ] = i_rank;
-          _entity_desc[3*i+1] = i_part;
+          _entity_desc[3*i+1] = i_part + shift;
           _entity_desc[3*i+2] = pinterface_triplet[shift+i_part][beg+i];
 
           pstride_one[shift+i_part][i] = 1;

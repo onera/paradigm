@@ -219,6 +219,7 @@ _read_args(int            argc,
 // mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi -pj
 // Repro LS89 : mpirun -np 2 ./test/pdm_t_join_domains -nx 5 -ny 4 -nz 2 -pt-scotch -pj
 // Debug this one : mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 3 -pi -pj -ni 2
+// mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 2 -pi -ni 2
 int main
 (
  int   argc,
