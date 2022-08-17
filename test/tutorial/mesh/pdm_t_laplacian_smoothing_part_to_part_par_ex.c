@@ -239,6 +239,9 @@ _get_groups
                              &s_face_join,
                              &n_join_groups);
 
+  log_trace("n_face_group = %d\n", n_face_group);
+  log_trace("n_join_groups = %d\n", n_join_groups);
+
 
   int         **elt_vtx_idx;
   int         **elt_vtx;
@@ -380,15 +383,26 @@ int main(int argc, char *argv[])
                                                &pface_edge_idx,
                                                PDM_OWNERSHIP_KEEP);
 
-  PDM_UNUSED (pn_face);
-
   /* Get groups */
-  _get_groups(mpart,
-              0,
-              i_part,
-              &pn_edge_group,
-              &pgroup_edge_idx,
-              &pgroup_edge);
+  // int          pn_edge_group        = 0;
+  // int         *pedge_group          = NULL;
+  // int         *pedge_group_idx      = NULL;
+  PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
+
+  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+                          &pn_edge_group,
+                          &pgroup_edge_idx,
+                          &pgroup_edge,
+                          &edge_bound_ln_to_gn);
+
+  // _get_groups(mpart,
+  //             0,
+  //             i_part,
+  //             &pn_edge_group,
+  //             &pgroup_edge_idx,
+  //             &pgroup_edge);
+
+  log_trace("pn_edge_group = %d\n", pn_edge_group);
 
   /* Create pvtx_vtx_gnum */
 
@@ -500,8 +514,6 @@ int main(int argc, char *argv[])
                (void **) &pvtx_vtx_gnum,
                          &dstrid_vtx_vtx_gnum,
                (void **) &dvtx_vtx_gnum);
-
-  PDM_UNUSED (s_block_data);
 
   int nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);

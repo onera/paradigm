@@ -2212,6 +2212,8 @@ PDM_MPI_Comm       comm
                                            &dedge_bound_idx,
                                            PDM_OWNERSHIP_KEEP);
 
+    log_trace("n_edge_group toto = %d\n", n_edge_group);
+
     int         **pedge_bound_idx               = NULL;
     int         **pedge_bound                   = NULL;
     // int         **pedge_join_idx                = NULL;
@@ -3516,6 +3518,8 @@ const int        i_part,
     }
   }
   *n_bound_groups = _pmeshes.n_bounds;
+
+  log_trace("_pmeshes.n_bounds = %d\n", _pmeshes.n_bounds);
 
   *s_face_bound = 0;
   if(_pmeshes.parts[i_part]->face_bound_idx !=NULL) {

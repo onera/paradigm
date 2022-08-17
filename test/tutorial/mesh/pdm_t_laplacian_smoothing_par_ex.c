@@ -379,12 +379,19 @@ int main(int argc, char *argv[])
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get groups */
-  _get_groups(mpart,
-              0,
-              i_part,
-              &pn_edge_group,
-              &pgroup_edge_idx,
-              &pgroup_edge);
+  // _get_groups(mpart,
+  //             0,
+  //             i_part,
+  //             &pn_edge_group,
+  //             &pgroup_edge_idx,
+  //             &pgroup_edge);
+  PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
+
+  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+                          &pn_edge_group,
+                          &pgroup_edge_idx,
+                          &pgroup_edge,
+                          &edge_bound_ln_to_gn);
 
   /* Transpose into edge_face */
   int   n_part          = 1;
@@ -627,7 +634,7 @@ int main(int argc, char *argv[])
     /* End loop Updates */
     for (int i = 0; i < pn_vtx; i++) {
       // Change pvtx_coord if has no group
-      if (1) { // pvtx_group_idx[i+1] - pvtx_group_idx[i] == 0
+      if (pvtx_group_idx[i+1] - pvtx_group_idx[i] == 0) {
         pvtx_coord[3*i]       = pnew_vtx_coord[3*i];
         pvtx_coord[3*i+1]     = pnew_vtx_coord[3*i+1];
         pnew_vtx_coord[3*i]   = 0;
