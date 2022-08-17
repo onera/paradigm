@@ -2278,10 +2278,11 @@ _warm_up_domain_interface
     n_current_lentity      = part_ext->n_cur_interface_face;
   }
 
-  for(int i = 0; i < n_part_loc_all_domain; ++i) {
-    opp_interface_and_gnum[i] = NULL;
-    current_lentity       [i] = NULL;
-    n_current_lentity     [i] = 0;
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
+    opp_interface_and_gnum[i_part] = NULL;
+    current_lentity       [i_part] = NULL;
+    current_sens          [i_part] = NULL;
+    n_current_lentity     [i_part] = 0;
   }
 
   if(part_ext->pdi != NULL) {
@@ -2289,9 +2290,17 @@ _warm_up_domain_interface
                                                          interface_kind);
 
     if(is_descibe == 0) {
+      if(gentity2_entity1_n != NULL) {
+        free(gentity2_entity1_n);
+        free(gentity2_entity1);
+      }
       return;
     }
   } else {
+    if(gentity2_entity1_n != NULL) {
+      free(gentity2_entity1_n);
+      free(gentity2_entity1);
+    }
     return;
   }
 
