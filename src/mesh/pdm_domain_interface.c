@@ -3051,14 +3051,14 @@ PDM_domain_interface_translate_entity1_entity2
             // log_trace("idx_min_cur1 = %i | idx_min_cur2 = %i \n", idx_min_cur1, idx_min_cur2);
             // log_trace("idx_min_opp1 = %i | idx_min_opp2 = %i \n", idx_min_opp1, idx_min_opp2);
 
-            int next_idx_cur1 = (idx_min_cur1+1) % n_connect;
-            // int prev_idx_cur1 = (idx_min_cur1-1) % n_connect;
-            int next_idx_cur2 = (idx_min_cur2+1) % n_connect;
-            int prev_idx_cur2 = (idx_min_cur2-1) % n_connect;
-            int next_idx_opp1 = (idx_min_opp1+1) % n_connect;
-            // int prev_idx_opp1 = (idx_min_opp1-1) % n_connect;
-            int next_idx_opp2 = (idx_min_opp2+1) % n_connect;
-            int prev_idx_opp2 = (idx_min_opp2-1) % n_connect;
+            int next_idx_cur1 = (idx_min_cur1 + 1            ) % n_connect;
+            // int prev_idx_cur1 = (idx_min_cur1 - 1 + n_connect) % n_connect;
+            int next_idx_cur2 = (idx_min_cur2 + 1            ) % n_connect;
+            int prev_idx_cur2 = (idx_min_cur2 - 1 + n_connect) % n_connect;
+            int next_idx_opp1 = (idx_min_opp1 + 1            ) % n_connect;
+            // int prev_idx_opp1 = (idx_min_opp1 - 1 + n_connect) % n_connect;
+            int next_idx_opp2 = (idx_min_opp2 + 1            ) % n_connect;
+            int prev_idx_opp2 = (idx_min_opp2 - 1 + n_connect) % n_connect;
 
             // Comparaison opp1 with cur2
             int lsens1 = 0;

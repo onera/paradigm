@@ -2619,14 +2619,20 @@ _warm_up_domain_interface
                   }
                 }
 
-                int next_idx_cur_min = (idx_cur_min+1) % strid;
-                int prev_idx_cur_min = (idx_cur_min-1) % strid;
-                int next_idx_opp_min = (idx_opp_min+1) % strid;
+                int next_idx_cur_min = (idx_cur_min + 1         ) % strid;
+                int prev_idx_cur_min = (idx_cur_min - 1  + strid) % strid;
+                int next_idx_opp_min = (idx_opp_min + 1         ) % strid;
                 // int prev_idx_opp_min = (idx_opp_min-1) % strid;
 
                 if(gentity2_entity1[i_part+shift_part][idx_read+next_idx_cur_min] == entity2_entity1_opp[i_part+shift_part][idx_read_recv+next_idx_opp_min])  {
                   sens = 1;
                 } else {
+                  // log_trace("strid      = %i\n", strid);
+                  // log_trace("idx_cur_min      = %i\n", idx_cur_min);
+                  // log_trace("next_idx_cur_min = %i\n", next_idx_cur_min);
+                  // log_trace("prev_idx_cur_min = %i\n", prev_idx_cur_min);
+                  // log_trace("next_idx_opp_min = %i\n", next_idx_opp_min);
+                  // log_trace("val1 = %i| val2 = %i \n", gentity2_entity1[i_part+shift_part][idx_read+prev_idx_cur_min], entity2_entity1_opp[i_part+shift_part][idx_read_recv+next_idx_opp_min]);
                   assert(gentity2_entity1[i_part+shift_part][idx_read+prev_idx_cur_min] == entity2_entity1_opp[i_part+shift_part][idx_read_recv+next_idx_opp_min]);
                   sens = -1;
                 }
