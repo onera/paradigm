@@ -150,6 +150,19 @@ PDM_para_octree_build
  double                  *global_extents
 );
 
+/**
+ *
+ * \brief Build octree
+ *
+ * \param [in]   octree             Pointer to octree structure
+ *
+ */
+
+void
+PDM_para_octree_build_shared
+(
+ const PDM_para_octree_t *octree
+);
 
 /**
  *
