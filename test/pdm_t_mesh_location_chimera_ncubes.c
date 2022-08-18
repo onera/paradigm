@@ -288,6 +288,34 @@ static void _rotate (const int  n_pts,
   }
 }
 
+static void _rotate_by_angle (const int  n_pts,
+                              double    *coord,
+                              double     angle)
+{
+
+  // for (int i = 0; i < n_pts; i++) {
+  //   double x = coord[3*i];
+  //   double y = coord[3*i+1];
+  //   double z = coord[3*i+2];
+  //   double theta = z;
+  //   coord[3*i+1] = y * cos(theta);
+  //   coord[3*i+2] = z * sin(theta);
+  // }
+  double Rx[3][3] = {{1.,          0,           0},
+                     {0., cos(angle), -sin(angle)},
+                     {0., sin(angle),  cos(angle)}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = Rx[j][0]*x + Rx[j][1]*y + Rx[j][2]*z;
+    }
+  }
+}
+
 static void _rotate_rand (const int  n_pts,
                           double    *coord)
 {
@@ -370,6 +398,10 @@ _cube_mesh
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
+  if(i_rank == 0)  {
+    printf("n_vtx_seg = %i \n", n_vtx_seg);
+    printf("elt_type  = %i \n", elt_type);
+  }
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
                                                          n_vtx_seg,
                                                          n_vtx_seg,
@@ -443,7 +475,7 @@ _cube_mesh
 
 
 
-  if (deform) {
+  if (deform == 1) {
     /*for (int i = 0; i < dn_vtx; i++) {
       double x = dvtx_coord[3*i];
       double z = dvtx_coord[3*i + 2];
@@ -455,6 +487,10 @@ _cube_mesh
       _rotate (dn_vtx, dvtx_coord);
     }
     _rotate_rand(dn_vtx, dvtx_coord);
+  } else if( deform >= 3) {
+    double angle = (deform-2) * PDM_PI/6;
+    // printf("angle = %12.5e \n", angle);
+    _rotate_by_angle (dn_vtx, dvtx_coord, angle);
   }
 
   /*
@@ -1499,6 +1535,7 @@ _visu
  *
  */
 // mpirun -np 24 ./test/pdm_t_mesh_location_chimera_ncubes -post -sepx 0.33 -sepy 0.33 -sepz 0.33 -def -n 100 -ext_depth 1
+// case_type = 1 --> mpirun -np 24 ./test/pdm_t_mesh_location_chimera_ncubes -post -sepx 0.33 -sepy 0.33 -sepz 0.33 -def -l 2 -n 100
 int main(int argc, char *argv[])
 {
 
@@ -1599,9 +1636,16 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  // int n_mesh = 5;
+  // int case_type = 0; // Random cube mesh
+  int case_type = 1; // Helice configuration
+  int n_mesh = -1;
   // int n_mesh = 2;
-  int n_mesh = 5;
+  // int n_mesh = 5;
+  if(case_type == 1) {
+    n_mesh = 1 + 3*4;
+  } else {
+    n_mesh = 5;
+  }
 
   int          **n_cell         = malloc(n_mesh * sizeof(int          *));
   int          **n_face         = malloc(n_mesh * sizeof(int          *));
@@ -1674,21 +1718,40 @@ int main(int argc, char *argv[])
     double lseparation_y = 0.;
     double lseparation_z = 0.;
     double llength       = length;
+    double lxmin         = 0.;
+    double lymin         = 0.;
+    double lzmin         = 0.;
 
-    srand(i_mesh);
-    if(i_mesh > 0 ) {
-      lseparation_x = rand() * i_rand_max * 0.33;
-      lseparation_y = rand() * i_rand_max * 0.33;
-      lseparation_z = rand() * i_rand_max * 0.33;
+    if(case_type == 0) {
+      srand(i_mesh);
+      if(i_mesh > 0 ) {
+        lseparation_x = rand() * i_rand_max * 0.33;
+        lseparation_y = rand() * i_rand_max * 0.33;
+        lseparation_z = rand() * i_rand_max * 0.33;
 
-      lextract_center_depth = 1;
-      llength = rand() * i_rand_max /3.;
+        lextract_center_depth = 1;
+        llength = rand() * i_rand_max /3.;
+        lxmin   = -llength/2;
+        lymin   = -llength/2;
+        lzmin   = -llength/2;
+      }
+    } else {
+      srand(i_mesh);
+      lxmin         = -llength/2;
+      lymin         = -llength/2;
+      lzmin         = -llength/2;
+
+      if(i_mesh > 0 ) {
+        lextract_center_depth = 1;
+        llength = length/6;
+
+        lxmin   = -llength/2;
+        lymin   = +llength*2;
+        lzmin   = -llength/2;
+
+        ldeform = (i_mesh+1);
+      }
     }
-
-    double lxmin = -llength/2;
-    double lymin = -llength/2;
-    double lzmin = -llength/2;
-
 
     // Rand a number around 20% for n_vtx_seg
     PDM_g_num_t percent = ceil( (double) n_vtx_seg * (25. / 100.));
@@ -1697,6 +1760,7 @@ int main(int argc, char *argv[])
 
     if(i_rank == 0) {
       printf("lseparation = %12.5e / %12.5e / %12.5e \n", lseparation_x, lseparation_y, lseparation_z);
+      printf("lxmin/lymin/lzmin = %12.5e / %12.5e / %12.5e \n", lxmin, lymin, lzmin);
       printf("llength     = %12.5e  \n", llength);
       printf("n_vtx_add_rand = "PDM_FMT_G_NUM" \n", n_vtx_add_rand);
       printf("n_vtx_seg_rand = "PDM_FMT_G_NUM" \n", n_vtx_seg_rand);
