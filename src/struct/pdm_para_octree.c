@@ -6310,7 +6310,7 @@ _build_shared_octree_among_nodes
     PDM_log_trace_array_int(shared_node_idx, n_rank_in_node+1, "shared_node_idx : ");
     PDM_log_trace_array_int(shared_pts_n, n_shared_nodes, "shared_pts_n : ");
 
-    if(1 == 1 && i_rank_in_node == 0) {
+    if(0 == 1 && i_rank_in_node == 0) {
       char filename[999];
 
       for (int i = 0; i < n_rank_in_node; i++) {
@@ -6338,6 +6338,11 @@ _build_shared_octree_among_nodes
   free(send_codes);
   free(send_extents);
   free(shared_codes);
+
+  PDM_mpi_win_shared_sync(wshared_pts_n);
+  PDM_mpi_win_shared_sync(wshared_node_idx);
+  PDM_mpi_win_shared_sync(wshared_pts_extents);
+  PDM_mpi_win_shared_sync(wrecv_codes);
 
   /*
    * Gather among all nodes
@@ -6375,6 +6380,7 @@ _build_shared_octree_among_nodes
     PDM_log_trace_array_int(recv_count     , n_rank_node  , "recv_count ::");
     PDM_log_trace_array_int(shared_all_node_idx, n_rank_node+1, "shared_all_node_idx ::");
   }
+  PDM_mpi_win_shared_sync(wshared_all_node_idx);
   PDM_MPI_Bcast (&n_shared_all_nodes, 1, PDM_MPI_INT, 0, comm_node);
 
 
@@ -6400,22 +6406,18 @@ _build_shared_octree_among_nodes
       recv_shift[i+1]  = shared_all_node_idx[i+1];
     }
 
-    log_trace("Exhcange 1 \n");
     PDM_MPI_Allgatherv(shared_pts_n    , n_shared_tot, PDM_MPI_INT,
                        shared_all_pts_n, recv_count  , recv_shift, PDM_MPI_INT,
                        comm_master_of_node);
-    log_trace("Exhcange 1 end \n");
 
     for (int i = 0; i < n_rank_node; i++) {
       recv_count[i  ] *= 4;
       recv_shift[i+1]  = shared_all_node_idx[i+1] * 4;
     }
 
-    log_trace("Exhcange 2\n");
     PDM_MPI_Allgatherv (shared_recv_codes, 4*n_shared_tot, PDM_MPI_INT,
                         recv_all_codes    , recv_count, recv_shift, PDM_MPI_INT,
                         comm_master_of_node);
-    log_trace("Exhcange 2 end \n");
 
     recv_shift[0] = 0;
     for (int i = 0; i < n_rank_node; i++) {
@@ -6424,25 +6426,56 @@ _build_shared_octree_among_nodes
       recv_shift[i+1]  = shared_all_node_idx[i+1] * 6;
     }
 
-    log_trace("Exhcange 3\n");
     PDM_MPI_Allgatherv (shared_pts_extents    , 6*n_shared_tot, PDM_MPI_DOUBLE,
                         shared_all_pts_extents, recv_count, recv_shift, PDM_MPI_DOUBLE,
                         comm_master_of_node);
-    log_trace("Exhcange 3 end \n");
 
 
     free(recv_shift);
   }
 
+  PDM_mpi_win_shared_sync(wshared_all_pts_n);
+  PDM_mpi_win_shared_sync(wrecv_all_codes);
+  PDM_mpi_win_shared_sync(wshared_all_pts_extents);
+  PDM_MPI_Barrier(octree->comm);
 
 
+  if(1 == 1 && i_rank_node == 0) {
+    char filename[999];
+
+    PDM_morton_code_t *shared_all_codes = malloc (sizeof(PDM_morton_code_t) * n_shared_all_nodes);
+    for (int i = 0; i < n_shared_all_nodes; i++) {
+      shared_all_codes[i].L = (PDM_morton_int_t) recv_all_codes[4*i];
+      for (int j = 0; j < 3; j++) {
+        shared_all_codes[i].X[j] = (PDM_morton_int_t) recv_all_codes[4*i+j+1];
+      }
+    }
+
+    for (int i = 0; i < n_rank_node; i++) {
+
+      sprintf(filename, "octree_shared_in_node_%4.4d_%4.4d.vtk", i_rank_node, i);
+      _export_nodes (filename,
+                     shared_all_node_idx[i+1] - shared_all_node_idx[i],
+                     shared_all_codes + shared_all_node_idx[i],
+                     octree->s,
+                     octree->d);
+
+
+      sprintf(filename, "octree_shared_in_node_extents__%4.4d_%4.4d.vtk", i_rank_node, i);
+      _export_boxes (filename,
+                     shared_all_node_idx[i+1] - shared_all_node_idx[i],
+                     shared_all_pts_extents + 6* shared_all_node_idx[i],
+                     NULL);
+    }
+
+    free(shared_all_codes);
+  }
 
 
 
   if (comm_master_of_node != PDM_MPI_COMM_NULL) {
     free(recv_count);
   }
-
 
 
   PDM_mpi_win_shared_unlock_all(wrecv_count);
