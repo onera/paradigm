@@ -287,6 +287,8 @@ typedef struct  {
 
   _copy_requests_t       copy_requests;
 
+  int shared_among_nodes;
+
 } _pdm_para_octree_t;
 
 
@@ -6199,6 +6201,10 @@ _build_shared_octree_among_nodes
   PDM_MPI_Comm comm_node;
   PDM_MPI_Comm_split_type(octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);
 
+  int n_rank, i_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
   int n_rank_in_node, i_rank_in_node;
   PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
   PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
@@ -6357,6 +6363,10 @@ _build_shared_octree_among_nodes
   PDM_mpi_win_shared_lock_all (0, wshared_all_node_idx);
 
 
+  PDM_mpi_win_shared_t* wshared_all_rank_idx = PDM_mpi_win_shared_create((n_rank+1), sizeof(int), comm_node);
+  int    *shared_all_rank_idx    = PDM_mpi_win_shared_get(wshared_all_rank_idx);
+  PDM_mpi_win_shared_lock_all (0, wshared_all_rank_idx);
+
   /*
    * Exchange
    */
@@ -6365,11 +6375,51 @@ _build_shared_octree_among_nodes
   int n_shared_all_nodes = 0;
   if (comm_master_of_node != PDM_MPI_COMM_NULL) {
 
-    recv_count = malloc (sizeof(int) * n_rank_node);
+    recv_count = malloc (n_rank_node * sizeof(int));
 
     PDM_MPI_Allgather (&n_shared_tot, 1, PDM_MPI_INT,
                        recv_count,    1, PDM_MPI_INT,
                        comm_master_of_node);
+
+    int* rank_by_node_n = malloc(n_rank_node * sizeof(int));
+    PDM_MPI_Allgather(&n_rank_in_node, 1, PDM_MPI_INT,
+                       rank_by_node_n, 1, PDM_MPI_INT,
+                       comm_master_of_node);
+
+    int *shared_node_n = malloc((n_rank_in_node) * sizeof(int));
+    for(int i = 0; i < n_rank_in_node; ++i) {
+      shared_node_n[i] = shared_node_idx[i+1] - shared_node_idx[i];
+    }
+
+
+    int* rank_by_node_idx = malloc((n_rank_node+1) * sizeof(int));
+    rank_by_node_idx[0] = 0;
+    for(int i = 0; i < n_rank_node; ++i) {
+      rank_by_node_idx[i+1] = rank_by_node_idx[i] + rank_by_node_n[i];
+    }
+    assert(rank_by_node_idx[n_rank_node] == n_rank);
+
+    PDM_log_trace_array_int(rank_by_node_idx     , n_rank_node+1  , "rank_by_node_idx ::");
+
+    int* shared_all_rank_n = malloc( n_rank * sizeof(int));
+    PDM_MPI_Allgatherv(shared_node_n, n_rank_in_node, PDM_MPI_INT,
+                       shared_all_rank_n, rank_by_node_n  , rank_by_node_idx, PDM_MPI_INT,
+                       comm_master_of_node);
+
+    shared_all_rank_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      shared_all_rank_idx[i+1] = shared_all_rank_idx[i] + shared_all_rank_n[i];
+    }
+
+    PDM_log_trace_array_int(shared_all_rank_n  , n_rank  , "shared_all_rank_n ::");
+    PDM_log_trace_array_int(shared_all_rank_idx, n_rank+1, "shared_all_rank_idx ::");
+
+    free(shared_all_rank_n);
+    free(rank_by_node_n);
+    free(rank_by_node_idx);
+    free(shared_node_n);
+
+    // abort(); // Faire le PDM_MPI_Allgatherv
 
     shared_all_node_idx[0] = 0;
     for(int i = 0; i < n_rank_node; ++i) {
@@ -6493,6 +6543,8 @@ _build_shared_octree_among_nodes
   PDM_mpi_win_shared_unlock_all(wshared_all_node_idx);
   PDM_mpi_win_shared_free(wshared_all_node_idx);
 
+  PDM_mpi_win_shared_unlock_all(wshared_all_rank_idx);
+  PDM_mpi_win_shared_free(wshared_all_rank_idx);
 
   PDM_mpi_win_shared_unlock_all(wshared_all_pts_n);
   PDM_mpi_win_shared_unlock_all(wrecv_all_codes);
@@ -6660,6 +6712,8 @@ PDM_para_octree_create
     octree->times_cpu_u[i] = 0.;
     octree->times_cpu_s[i] = 0.;
   }
+
+  octree->shared_among_nodes = 0;
 
   // return id;
   return (PDM_para_octree_t *) octree;
@@ -7285,8 +7339,7 @@ PDM_para_octree_build
 
 
     //-->>
-    int shared_among_nodes = 1;
-    if(shared_among_nodes == 1) {
+    if(_octree->shared_among_nodes == 1) {
       _build_shared_octree_among_nodes(_octree);
     } else {
       /*
@@ -8137,190 +8190,21 @@ PDM_para_octree_dump
 void
 PDM_para_octree_build_shared
 (
- const PDM_para_octree_t *octree
+ const PDM_para_octree_t *octree,
+ double                  *global_extents
 )
 {
-
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  _octree->shared_among_nodes = 1;
+  PDM_para_octree_build(octree, global_extents);
 
   /*
-   *  Compress octants
+   * Setup shared structure
    */
-  int n_local_nodes;
-  int *send_codes = NULL;
-  int *send_n_pts = NULL;
-  double *send_extents = NULL;
-  _compress_octants (_octree->octants,
-                     _octree->points,
-                     &n_local_nodes,
-                     &send_codes,
-                     &send_n_pts,
-                     &send_extents);
-  // if (dbg_enabled && rank == 0) {
-  //   printf("_compress_octants OK\n");
-  //   fflush(stdout);
-  // }
 
+  // Faire le fichier priv + decoupage fichier
+  // Il nous faut la double indirection rank et node --> allgrahterv sur la partie shared
 
-  // Shared
-  PDM_MPI_Comm comm_node;
-  PDM_MPI_Comm_split_type(_octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);
-
-  int n_rank_in_node, i_rank_in_node;
-  PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
-  PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
-
-
-  PDM_MPI_Comm comm_master_of_node = PDM_MPI_get_group_of_master(_octree->comm, comm_node);
-  int n_node      = -1;
-  int i_rank_node = -1;
-  int n_rank_node = -1;
-  if (comm_master_of_node != PDM_MPI_COMM_NULL) {
-    assert (i_rank_in_node == 0);
-
-    PDM_MPI_Comm_size (comm_master_of_node, &n_node);
-    PDM_MPI_Comm_rank (comm_master_of_node, &i_rank_node);
-    PDM_MPI_Comm_size (comm_master_of_node, &n_rank_node);
-  }
-  PDM_MPI_Bcast (&n_node     , 1, PDM_MPI_INT, 0, comm_node);
-  PDM_MPI_Bcast (&i_rank_node, 1, PDM_MPI_INT, 0, comm_node);
-  PDM_MPI_Bcast (&n_rank_node, 1, PDM_MPI_INT, 0, comm_node);
-
-  log_trace("n_rank_in_node = %i | i_rank_in_node = %i \n", n_rank_in_node, i_rank_in_node);
-
-
-  /*
-   * Create the shared structure inside each nodes
-   */
-  PDM_morton_code_t *shared_codes = NULL;
-  if(comm_node != PDM_MPI_COMM_NULL) {
-
-    PDM_mpi_win_shared_t* wrecv_count = PDM_mpi_win_shared_create(n_rank_in_node, sizeof(int), comm_node);
-    int *precv_count = PDM_mpi_win_shared_get(wrecv_count);
-    PDM_mpi_win_shared_lock_all (0, wrecv_count);
-    precv_count[i_rank_in_node] = n_local_nodes;
-
-    PDM_mpi_win_shared_sync(wrecv_count);
-    PDM_MPI_Barrier        (comm_node);
-
-    PDM_mpi_win_shared_t* wshared_node_idx = PDM_mpi_win_shared_create((n_rank_in_node+1), sizeof(int), comm_node);
-    int *shared_node_idx = PDM_mpi_win_shared_get(wshared_node_idx);
-
-    PDM_mpi_win_shared_lock_all (0, wshared_node_idx);
-    if(i_rank_in_node ==  0) {
-      shared_node_idx[0] = 0;
-      for(int i = 0; i < n_rank_in_node; ++i)  {
-        shared_node_idx[i+1] = shared_node_idx[i] + precv_count[i];
-      }
-    }
-    PDM_mpi_win_shared_sync(wshared_node_idx);
-    PDM_MPI_Barrier        (comm_node);
-
-    int n_shared_nodes = shared_node_idx[n_rank_in_node];
-
-    /*
-     * Shared pts exchange
-     */
-    PDM_mpi_win_shared_t* wshared_pts_n = PDM_mpi_win_shared_create(n_shared_nodes, sizeof(int), comm_node);
-    int *shared_pts_n = PDM_mpi_win_shared_get(wshared_pts_n);
-
-    PDM_mpi_win_shared_lock_all (0, wshared_pts_n);
-    int idx_write = shared_node_idx[i_rank_in_node];
-    for(int i = 0; i < n_local_nodes; ++i) {
-      shared_pts_n[idx_write+i] = send_n_pts[i];
-    }
-    PDM_mpi_win_shared_sync(wshared_pts_n);
-    PDM_MPI_Barrier        (comm_node);
-
-    /*
-     * Code exch
-     */
-    PDM_mpi_win_shared_t* wrecv_codes = PDM_mpi_win_shared_create(4 * n_shared_nodes, sizeof(int), comm_node);
-    int *recv_codes = PDM_mpi_win_shared_get(wrecv_codes);
-
-    PDM_mpi_win_shared_lock_all (0, wrecv_codes);
-    for(int i = 0; i < n_local_nodes; ++i) {
-      recv_codes[4*idx_write  ] = send_codes[4*i  ];
-      recv_codes[4*idx_write+1] = send_codes[4*i+1];
-      recv_codes[4*idx_write+2] = send_codes[4*i+2];
-      recv_codes[4*idx_write+3] = send_codes[4*i+3];
-    }
-    PDM_mpi_win_shared_sync(wrecv_codes);
-    PDM_MPI_Barrier        (comm_node);
-
-    /*
-     * Extents exch
-     */
-    PDM_mpi_win_shared_t* wshared_pts_extents = PDM_mpi_win_shared_create(6 * n_shared_nodes, sizeof(double), comm_node);
-    double *shared_pts_extents = PDM_mpi_win_shared_get(wshared_pts_extents);
-
-    PDM_mpi_win_shared_lock_all (0, wshared_pts_extents);
-    for(int i = 0; i < n_local_nodes; ++i) {
-      shared_pts_extents[6*idx_write  ] = send_extents[6*i  ];
-      shared_pts_extents[6*idx_write+1] = send_extents[6*i+1];
-      shared_pts_extents[6*idx_write+2] = send_extents[6*i+2];
-      shared_pts_extents[6*idx_write+3] = send_extents[6*i+3];
-      shared_pts_extents[6*idx_write+4] = send_extents[6*i+4];
-      shared_pts_extents[6*idx_write+5] = send_extents[6*i+5];
-    }
-    PDM_mpi_win_shared_sync(wshared_pts_extents);
-    PDM_MPI_Barrier        (comm_node);
-
-    shared_codes = malloc (sizeof(PDM_morton_code_t) * n_shared_nodes);
-    for (int i = 0; i < n_shared_nodes; i++) {
-      shared_codes[i].L = (PDM_morton_int_t) recv_codes[4*i];
-      for (int j = 0; j < 3; j++) {
-        shared_codes[i].X[j] = (PDM_morton_int_t) recv_codes[4*i+j+1];
-      }
-    }
-
-    PDM_log_trace_array_int(shared_node_idx, n_rank_in_node+1, "shared_node_idx : ");
-    PDM_log_trace_array_int(shared_pts_n, n_shared_nodes, "shared_pts_n : ");
-
-    if(1 == 1 && i_rank_in_node == 0) {
-      char filename[999];
-
-      for (int i = 0; i < n_rank_in_node; i++) {
-
-
-        sprintf(filename, "octree_shared_in_node_%4.4d_%4.4d.vtk", i_rank_node, i);
-        _export_nodes (filename,
-                       shared_node_idx[i+1] - shared_node_idx[i],
-                       shared_codes + shared_node_idx[i],
-                       _octree->s,
-                       _octree->d);
-
-
-        sprintf(filename, "octree_shared_in_node_extents__%4.4d_%4.4d.vtk", i_rank_node, i);
-        _export_boxes (filename,
-                       shared_node_idx[i+1] - shared_node_idx[i],
-                       shared_pts_extents + 6* shared_node_idx[i],
-                       NULL);
-      }
-    }
-
-
-    PDM_mpi_win_shared_unlock_all(wrecv_count);
-    PDM_mpi_win_shared_unlock_all(wshared_node_idx);
-    PDM_mpi_win_shared_unlock_all(wshared_pts_n);
-    PDM_mpi_win_shared_unlock_all(wrecv_codes);
-    PDM_mpi_win_shared_unlock_all(wshared_pts_extents);
-    PDM_mpi_win_shared_free(wrecv_count);
-    PDM_mpi_win_shared_free(wshared_node_idx);
-    PDM_mpi_win_shared_free(wshared_pts_n);
-    PDM_mpi_win_shared_free(wrecv_codes);
-    PDM_mpi_win_shared_free(wshared_pts_extents);
-
-  }
-
-  free(send_n_pts);
-  free(send_codes);
-  free(send_extents);
-  free(shared_codes);
-
-  /*
-   *
-   */
 
 
 

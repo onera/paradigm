@@ -199,7 +199,12 @@ char *argv[]
 
   PDM_para_octree_point_cloud_set (octree, 0, _n_pts_l, coords, gnum);
 
-  PDM_para_octree_build (octree, NULL);
+  // PDM_para_octree_build (octree, NULL);
+
+  // Mettre en shared l'octree
+  PDM_para_octree_build_shared(octree, NULL);
+
+  // Solicitations shared
 
   // PDM_para_octree_dump (octree);
 
