@@ -6691,13 +6691,161 @@ _make_octree_shared
     }
 
 
+    /* Octants */
+    PDM_mpi_win_shared_lock_all (0, w_coct->w_codes);
+    PDM_mpi_win_shared_lock_all (0, w_coct->w_n_points);
+    PDM_mpi_win_shared_lock_all (0, w_coct->w_range);
 
 
+    /* Points */
+    PDM_mpi_win_shared_lock_all (0, w_cpts->w_points);
+    PDM_mpi_win_shared_lock_all (0, w_cpts->w_points_gnum);
+    PDM_mpi_win_shared_lock_all (0, w_cpts->w_points_code);
 
+    /* Explicit nodes */
+    if (_octree->explicit_nodes_to_build) {
+      _w_l_explicit_node_t *w_cexp = _octree->w_shm_explicit_nodes[i];
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_codes);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_n_points);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_range);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_ancestor_id);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_children_id);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_leaf_id);
+      PDM_mpi_win_shared_lock_all (0, w_cexp->w_pts_extents);
+    }
+
+  }
+
+  PDM_MPI_Barrier (comm_node);
+
+  /*
+   * Copy
+   */
+    /* Octants */
+  _l_octant_t *coct = _octree->shm_octants[i_rank_in_node];
+
+  for (int i = 0; i < _octree->octants->n_nodes; i++) {
+    coct->codes[i].L = _octree->octants->codes[i].L;
+    for (int j = 0; j < 3; j++) {
+      coct->codes[i].X[j] = _octree->octants->codes[i].X[j];
+    }
+  }
+
+  if (0 && dbg_enabled) {
+    log_trace("octree->octants->codes :\n");
+    for (int i = 0; i < _octree->octants->n_nodes; i++) {
+      log_trace(" [%d] : L=%u, X=(%u, %u, %u)\n",
+                i, _octree->octants->codes[i].L,
+                _octree->octants->codes[i].X[0], _octree->octants->codes[i].X[1], _octree->octants->codes[i].X[2]);
+    }
+    PDM_log_trace_array_int(_octree->octants->n_points, _octree->octants->n_nodes, "_octree->n_points : ");
+  }
+
+  memcpy (coct->n_points, _octree->octants->n_points, sizeof(int) * _octree->octants->n_nodes);
+  memcpy (coct->range,    _octree->octants->range,    sizeof(int) * _octree->octants->n_nodes);
+
+
+  /* Points */
+  if (0 && dbg_enabled) {
+    log_trace("octree->points :\n");
+    for (int i = 0; i < _octree->n_points; i++) {
+      log_trace(" [%d] : %.3f %.3f %.3f\n", i,
+                _octree->points[3*i], _octree->points[3*i+1], _octree->points[3*i+2]);
+    }
+  }
+  memcpy (_octree->shm_points[i_rank_in_node],
+          _octree->points,
+          sizeof(double) * _octree->n_points * 3);
+  memcpy (_octree->shm_points_gnum[i_rank_in_node],
+          _octree->points_gnum,
+          sizeof(PDM_g_num_t) * _octree->n_points);
+  memcpy (_octree->shm_points_code[i_rank_in_node],
+          _octree->points_code,
+          sizeof(PDM_morton_code_t) * _octree->n_points);
+
+  /* Explicit nodes */
+  if (_octree->explicit_nodes_to_build) {
+    _l_explicit_node_t *cexp = _octree->shm_explicit_nodes[i_rank_in_node];
+
+    for (int i = 0; i < _octree->explicit_nodes->n_nodes; i++) {
+      cexp->codes[i].L = _octree->explicit_nodes->codes[i].L;
+      for (int j = 0; j < 3; j++) {
+        cexp->codes[i].X[j] = _octree->explicit_nodes->codes[i].X[j];
+      }
+    }
+
+    memcpy (cexp->n_points, _octree->explicit_nodes->n_points,
+            sizeof(int) * _octree->explicit_nodes->n_nodes);
+    memcpy (cexp->range , _octree->explicit_nodes->range,
+            sizeof(int) * _octree->explicit_nodes->n_nodes);
+    memcpy (cexp->ancestor_id , _octree->explicit_nodes->ancestor_id,
+            sizeof(int) * _octree->explicit_nodes->n_nodes);
+    memcpy (cexp->children_id , _octree->explicit_nodes->children_id,
+            sizeof(int) * _octree->explicit_nodes->n_nodes *n_child);
+    memcpy (cexp->leaf_id , _octree->explicit_nodes->leaf_id,
+            sizeof(int) * _octree->explicit_nodes->n_nodes);
+    memcpy (cexp->pts_extents, _octree->explicit_nodes->pts_extents,
+            sizeof(double) * _octree->explicit_nodes->n_nodes * 6);
   }
 
 
 
+  for(int i = 0; i < n_rank_in_node; ++i) {
+    /* Octants */
+    _w_l_octant_t *w_coct = _octree->w_shm_octants[i];
+    PDM_mpi_win_shared_sync (w_coct->w_codes);
+    PDM_mpi_win_shared_sync (w_coct->w_n_points);
+    PDM_mpi_win_shared_sync (w_coct->w_range);
+
+
+    /* Points */
+    _w_points_t *w_cpts = _octree->w_shm_points[i];
+    PDM_mpi_win_shared_sync (w_cpts->w_points);
+    PDM_mpi_win_shared_sync (w_cpts->w_points_gnum);
+    PDM_mpi_win_shared_sync (w_cpts->w_points_code);
+
+    /* Explicit nodes */
+    if (_octree->explicit_nodes_to_build) {
+      _w_l_explicit_node_t *w_cexp = _octree->w_shm_explicit_nodes[i];
+      PDM_mpi_win_shared_sync (w_cexp->w_codes);
+      PDM_mpi_win_shared_sync (w_cexp->w_n_points);
+      PDM_mpi_win_shared_sync (w_cexp->w_range);
+      PDM_mpi_win_shared_sync (w_cexp->w_ancestor_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_children_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_leaf_id);
+      PDM_mpi_win_shared_sync (w_cexp->w_pts_extents);
+    }
+  }
+
+  for(int i = 0; i < n_rank_in_node; ++i) {
+    /* Octants */
+    _w_l_octant_t *w_coct = _octree->w_shm_octants[i];
+    PDM_mpi_win_shared_unlock_all (w_coct->w_codes);
+    PDM_mpi_win_shared_unlock_all (w_coct->w_n_points);
+    PDM_mpi_win_shared_unlock_all (w_coct->w_range);
+
+
+    /* Points */
+    _w_points_t *w_cpts = _octree->w_shm_points[i];
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points);
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points_gnum);
+    PDM_mpi_win_shared_unlock_all (w_cpts->w_points_code);
+
+    /* Explicit nodes */
+    if (_octree->explicit_nodes_to_build) {
+      _w_l_explicit_node_t *w_cexp = _octree->w_shm_explicit_nodes[i];
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_codes);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_n_points);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_range);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_ancestor_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_children_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_leaf_id);
+      PDM_mpi_win_shared_unlock_all (w_cexp->w_pts_extents);
+    }
+  }
+  PDM_MPI_Barrier (comm_node);
+
+  free(s_shm_data_in_all_nodes);
 
 }
 
@@ -13370,6 +13518,10 @@ PDM_para_octree_free_shm
   if (_octree->shm_explicit_nodes != NULL) {
     free (_octree->shm_explicit_nodes);
     _octree->shm_explicit_nodes = NULL;
+  }
+
+  if(_octree->n_shm_points != NULL) {
+    free(_octree->n_shm_points);
   }
 
 
