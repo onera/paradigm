@@ -1636,8 +1636,8 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  // int case_type = 0; // Random cube mesh
-  int case_type = 1; // Helice configuration
+  int case_type = 0; // Random cube mesh
+  // int case_type = 1; // Helice configuration
   int n_mesh = -1;
   // int n_mesh = 2;
   // int n_mesh = 5;
@@ -2230,25 +2230,27 @@ int main(int argc, char *argv[])
   /* Visu */
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    char filename[999];
-    sprintf(filename, "mesh_%i", i_mesh);
-    _visu (filename,
-           n_part,
-           n_cell_without_ext[i_mesh],
-           n_face_without_ext[i_mesh],
-           n_vtx_without_ext [i_mesh],
-           cell_face_idx     [i_mesh],
-           cell_face         [i_mesh],
-           cell_ln_to_gn     [i_mesh],
-           face_vtx_idx      [i_mesh],
-           face_vtx          [i_mesh],
-           face_ln_to_gn     [i_mesh],
-           vtx_coord         [i_mesh],
-           vtx_ln_to_gn      [i_mesh],
-           field             [i_mesh],
-           blk_interp_from   [i_mesh],
-           cell_nat          [i_mesh]);
+  if(post) {
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      char filename[999];
+      sprintf(filename, "mesh_%i", i_mesh);
+      _visu (filename,
+             n_part,
+             n_cell_without_ext[i_mesh],
+             n_face_without_ext[i_mesh],
+             n_vtx_without_ext [i_mesh],
+             cell_face_idx     [i_mesh],
+             cell_face         [i_mesh],
+             cell_ln_to_gn     [i_mesh],
+             face_vtx_idx      [i_mesh],
+             face_vtx          [i_mesh],
+             face_ln_to_gn     [i_mesh],
+             vtx_coord         [i_mesh],
+             vtx_ln_to_gn      [i_mesh],
+             field             [i_mesh],
+             blk_interp_from   [i_mesh],
+             cell_nat          [i_mesh]);
+    }
   }
   t2 = PDM_MPI_Wtime();
   delta_t[6] = t2 - t1;
