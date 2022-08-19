@@ -13589,130 +13589,206 @@ PDM_para_octree_points_inside_boxes_shared
   if(n_rank > 0) {
     /* Encode box corners */
     box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
-    _morton_encode_coords (dim,
-                           PDM_morton_max_level,
-                           _octree->global_extents,
-                           2 * n_boxes,
-                           box_extents,
-                           box_corners,
-                           d,
-                           s);
 
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
+    // int precond_type = 0;
+    int precond_type = 1;
 
-
-    /* Find which ranks possibly intersect each box */
-    int *send_count = PDM_array_zeros_int (n_rank);
-
-    int tmp_size = 4 * n_boxes;
-    int *box_rank     = malloc (sizeof(int) * tmp_size);
-    int *box_rank_idx = malloc (sizeof(int) * (n_boxes + 1));
-    box_rank_idx[0] = 0;
-
-    size_t n_intersect_nodes;
-    PDM_morton_code_t *shared_all_codes    = PDM_mpi_win_shared_get(_octree->wshared_all_codes      );
-    int               *shared_all_pts_n    = PDM_mpi_win_shared_get(_octree->wshared_all_pts_n      );
     int               *shared_all_rank_idx = PDM_mpi_win_shared_get(_octree->wshared_all_rank_idx   );
     double            *shared_pts_extents  = PDM_mpi_win_shared_get(_octree->wshared_all_pts_extents);
-    int *intersect_nodes = malloc (sizeof(int) * shared_all_rank_idx[n_rank]);
 
-    PDM_morton_code_t root;
-    root.L    = 0;
-    root.X[0] = 0;
-    root.X[1] = 0;
-    root.X[2] = 0;
+    int *send_count = PDM_array_zeros_int (n_rank);
+    int *box_rank     = NULL;
+    int *box_rank_idx = NULL;
+    if(precond_type == 0) {
 
-    int *tag_rank = PDM_array_zeros_int (n_rank);
+      _morton_encode_coords (dim,
+                             PDM_morton_max_level,
+                             _octree->global_extents,
+                             2 * n_boxes,
+                             box_extents,
+                             box_corners,
+                             d,
+                             s);
 
-    log_trace("n_boxes = %i \n", n_boxes);
-    PDM_log_trace_array_int(shared_all_rank_idx, n_rank+1, "shared_all_rank_idx ::");
+      PDM_timer_hang_on (_octree->timer);
+      e_t_elapsed = PDM_timer_elapsed (_octree->timer);
+      times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE] = e_t_elapsed - b_t_elapsed;
+      b_t_elapsed = e_t_elapsed;
+      PDM_timer_resume (_octree->timer);
 
-    for (int ibox = 0; ibox < n_boxes; ibox++) {
-      box_rank_idx[ibox+1] = box_rank_idx[ibox];
+      /* Find which ranks possibly intersect each box */
+      int tmp_size = 4 * n_boxes;
+      box_rank     = malloc (sizeof(int) * tmp_size);
+      box_rank_idx = malloc (sizeof(int) * (n_boxes + 1));
+      box_rank_idx[0] = 0;
 
-      const double *box_min = box_extents + two_dim*ibox;
-      const double *box_max = box_min + dim;
-      if (dbg_enabled) {
-        printf("\n[%d] box %d ("PDM_FMT_G_NUM") extents %f %f %f %f %f %f\n",
-               i_rank, ibox, box_g_num[ibox],
-               box_min[0], box_min[1], box_min[2],
-               box_max[0], box_max[1], box_max[2]);
-        printf("[%d] code min/max: L = %u, X = %u %u %u / L = %u, X = %u %u %u\n",
-               i_rank,
-               box_corners[2*ibox].L, box_corners[2*ibox].X[0], box_corners[2*ibox].X[1], box_corners[2*ibox].X[2],
-               box_corners[2*ibox+1].L, box_corners[2*ibox+1].X[0], box_corners[2*ibox+1].X[1], box_corners[2*ibox+1].X[2]);
+      size_t n_intersect_nodes;
+      PDM_morton_code_t *shared_all_codes    = PDM_mpi_win_shared_get(_octree->wshared_all_codes      );
+      int               *shared_all_pts_n    = PDM_mpi_win_shared_get(_octree->wshared_all_pts_n      );
+      int *intersect_nodes = malloc (sizeof(int) * shared_all_rank_idx[n_rank]);
 
-      }
+      PDM_morton_code_t root;
+      root.L    = 0;
+      root.X[0] = 0;
+      root.X[1] = 0;
+      root.X[2] = 0;
 
-      n_intersect_nodes = 0;
-      double t1 = PDM_MPI_Wtime();
-      PDM_morton_intersect_box (dim,
-                                root,
-                                box_corners[2*ibox  ],
-                                box_corners[2*ibox+1],
-                                shared_all_codes,
-                                shared_all_pts_n,
-                                0,
-                                shared_all_rank_idx[n_rank],
-                                &n_intersect_nodes,
-                                intersect_nodes);
-      dt_morton_intersect_box += PDM_MPI_Wtime()-t1;
+      int *tag_rank = PDM_array_zeros_int (n_rank);
 
-      for (size_t i = 0; i < n_intersect_nodes; i++) {
-        int inode = intersect_nodes[i];
+      log_trace("n_boxes = %i \n", n_boxes);
+      PDM_log_trace_array_int(shared_all_rank_idx, n_rank+1, "shared_all_rank_idx ::");
 
-        int l = 0;
-        int r = n_rank;
-        while (l + 1 < r) {
-          int m = l + (r - l)/2;
-          if (inode < shared_all_rank_idx[m])
-            r = m;
-          else
-            l = m;
-        }
-        int rank = l;
+      for (int ibox = 0; ibox < n_boxes; ibox++) {
+        box_rank_idx[ibox+1] = box_rank_idx[ibox];
+
+        const double *box_min = box_extents + two_dim*ibox;
+        const double *box_max = box_min + dim;
         if (dbg_enabled) {
-          printf("[%d]  intersects shared node %d (rank %d)\n", i_rank, inode, rank);
+          printf("\n[%d] box %d ("PDM_FMT_G_NUM") extents %f %f %f %f %f %f\n",
+                 i_rank, ibox, box_g_num[ibox],
+                 box_min[0], box_min[1], box_min[2],
+                 box_max[0], box_max[1], box_max[2]);
+          printf("[%d] code min/max: L = %u, X = %u %u %u / L = %u, X = %u %u %u\n",
+                 i_rank,
+                 box_corners[2*ibox].L, box_corners[2*ibox].X[0], box_corners[2*ibox].X[1], box_corners[2*ibox].X[2],
+                 box_corners[2*ibox+1].L, box_corners[2*ibox+1].X[0], box_corners[2*ibox+1].X[1], box_corners[2*ibox+1].X[2]);
+
         }
 
-        if (tag_rank[rank]) continue;
+        n_intersect_nodes = 0;
+        double t1 = PDM_MPI_Wtime();
+        PDM_morton_intersect_box (dim,
+                                  root,
+                                  box_corners[2*ibox  ],
+                                  box_corners[2*ibox+1],
+                                  shared_all_codes,
+                                  shared_all_pts_n,
+                                  0,
+                                  shared_all_rank_idx[n_rank],
+                                  &n_intersect_nodes,
+                                  intersect_nodes);
+        dt_morton_intersect_box += PDM_MPI_Wtime()-t1;
 
-        int intersect = 1;
-        double *node_min = shared_pts_extents + 6*inode;
-        double *node_max = node_min + 3;
+        for (size_t i = 0; i < n_intersect_nodes; i++) {
+          int inode = intersect_nodes[i];
 
-        for (int j = 0; j < dim; j++) {
-          if (box_min[j] > node_max[j] || box_max[j] < node_min[j]) {
-            intersect = 0;
-            break;
+          int l = 0;
+          int r = n_rank;
+          while (l + 1 < r) {
+            int m = l + (r - l)/2;
+            if (inode < shared_all_rank_idx[m])
+              r = m;
+            else
+              l = m;
+          }
+          int rank = l;
+          if (dbg_enabled) {
+            printf("[%d]  intersects shared node %d (rank %d)\n", i_rank, inode, rank);
+          }
+
+          if (tag_rank[rank]) continue;
+
+          int intersect = 1;
+          double *node_min = shared_pts_extents + 6*inode;
+          double *node_max = node_min + 3;
+
+          for (int j = 0; j < dim; j++) {
+            if (box_min[j] > node_max[j] || box_max[j] < node_min[j]) {
+              intersect = 0;
+              break;
+            }
+          }
+
+          if (dbg_enabled) {
+            printf("[%d]    intersects node pts extents? %d\n", i_rank, intersect);
+          }
+
+          if (intersect) {
+            if (tmp_size <= box_rank_idx[ibox+1]) {
+              tmp_size *= 2;
+              box_rank = realloc (box_rank, sizeof(int) * tmp_size);
+            }
+            box_rank[box_rank_idx[ibox+1]++] = rank;
+            tag_rank[rank] = 1;
+            send_count[rank]++;
           }
         }
 
-        if (dbg_enabled) {
-          printf("[%d]    intersects node pts extents? %d\n", i_rank, intersect);
-        }
-
-        if (intersect) {
-          if (tmp_size <= box_rank_idx[ibox+1]) {
-            tmp_size *= 2;
-            box_rank = realloc (box_rank, sizeof(int) * tmp_size);
-          }
-          box_rank[box_rank_idx[ibox+1]++] = rank;
-          tag_rank[rank] = 1;
-          send_count[rank]++;
+        for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
+          tag_rank[box_rank[i]] = 0;
         }
       }
+      free (tag_rank);
+      free (intersect_nodes);
+    } else {
+      // dbbtree
+      PDM_box_set_t  *box_set   = NULL;
+      PDM_box_tree_t *bt_shared = NULL;
+      int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+      int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
+      float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
 
-      for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
-        tag_rank[box_rank[i]] = 0;
+      int n_shared_boxes = shared_all_rank_idx[n_rank];
+
+      const int n_info_location = 3;
+      int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
+      PDM_g_num_t *gnum_proc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_shared_boxes);
+      for (int i = 0; i < n_shared_boxes; i++) {
+        gnum_proc[i] = i + 1;
       }
+
+      box_set = PDM_box_set_create (3,             // dim
+                                    1,             // normalize
+                                    0,             // allow_projection
+                                    n_shared_boxes,
+                                    gnum_proc,
+                                    shared_pts_extents,
+                                    1,
+                                    &n_shared_boxes,
+                                    init_location_proc,
+                                    _octree->comm);
+
+      bt_shared = PDM_box_tree_create (max_tree_depth_shared,
+                                       max_boxes_leaf_shared,
+                                       max_box_ratio_shared);
+
+      PDM_box_tree_set_boxes (bt_shared,
+                              box_set,
+                              PDM_BOX_TREE_ASYNC_LEVEL);
+
+      /*
+       * Create box_set of current boxes
+       */
+      int *box_init_location   = (int *) malloc (sizeof(int) * n_boxes * n_info_location);
+      PDM_box_set_t  *boxes = PDM_box_set_create(3,
+                                                 0,  // No normalization to preserve initial extents
+                                                 0,  // No projection to preserve initial extents
+                                                 n_boxes,
+                                                 box_g_num,
+                                                 box_extents,
+                                                 1,
+                                                 &n_boxes,
+                                                 box_init_location,
+                                                 _octree->comm);
+      free(box_init_location);
+
+
+      PDM_box_tree_get_boxes_intersects (bt_shared,
+                                         boxes,
+                                         &box_rank_idx,
+                                         &box_rank);
+
+      PDM_log_trace_connectivity_int(box_rank_idx, box_rank, n_shared_boxes, "box_rank ::");
+
+      PDM_box_set_destroy (&box_set);
+      PDM_box_tree_destroy(&bt_shared);
+
+      free(init_location_proc);
+      free(gnum_proc);
+
+      exit(1);
+
     }
-    free (tag_rank);
-    free (intersect_nodes);
 
     PDM_timer_hang_on (_octree->timer);
     e_t_elapsed = PDM_timer_elapsed (_octree->timer);
