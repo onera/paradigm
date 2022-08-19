@@ -2015,6 +2015,27 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
     }
   }
 
+  if (n_vtx_field > 0) {
+    assert (vtx_field != NULL);
+
+    if (vtx_g_num == NULL) {
+      fprintf(f, "POINT_DATA %d\n", n_vtx);
+    }
+
+    fprintf(f, "FIELD vtx_field %d\n", n_vtx_field);
+    for (int i = 0; i < n_vtx_field; i++) {
+      // assert (vtx_field[i] != NULL);
+      assert (vtx_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", vtx_field_name[i], n_vtx);
+      for (int j = 0; j < n_vtx; j++) {
+        fprintf(f, "%lf ", vtx_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+
   if (elt_g_num != NULL) {
     fprintf(f, "CELL_DATA %d\n", n_elt);
     fprintf(f, "SCALARS elt_gnum long 1\n");
@@ -2039,26 +2060,6 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
       fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
       for (int j = 0; j < n_elt; j++) {
         fprintf(f, "%lf ", elt_field[i][j]);
-      }
-      fprintf(f, "\n");
-    }
-  }
-
-  if (n_vtx_field > 0) {
-    assert (vtx_field != NULL);
-
-    if (vtx_g_num == NULL) {
-      fprintf(f, "POINT_DATA %d\n", n_vtx);
-    }
-
-    fprintf(f, "FIELD vtx_field %d\n", n_vtx_field);
-    for (int i = 0; i < n_vtx_field; i++) {
-      // assert (vtx_field[i] != NULL);
-      assert (vtx_field_name[i] != NULL);
-
-      fprintf(f, "%s 1 %d double\n", vtx_field_name[i], n_vtx);
-      for (int j = 0; j < n_vtx; j++) {
-        fprintf(f, "%lf ", vtx_field[i][j]);
       }
       fprintf(f, "\n");
     }
