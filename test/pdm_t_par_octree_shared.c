@@ -17,6 +17,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
+#include "pdm_distrib.h"
 #include "pdm_point_cloud_gen.h"
 #include "pdm_para_octree.h"
 
@@ -125,6 +126,81 @@ _read_args
   }
 }
 
+/* _random01 from pdm_t_intersect_line_box */
+
+static double
+_random01
+(
+ void
+)
+{
+  int sign;
+  int rsigna = rand();
+  int rsignb = rand();
+  sign = (rsigna - rsignb) / PDM_ABS (rsigna - rsignb);
+  double resultat = sign*((double)rand())/((double)RAND_MAX);
+  return resultat;
+  // return (double) rand() / (double) RAND_MAX;
+}
+
+/* code from pdm_t_intersect_line_box */
+
+static int
+_generate_random_boxes
+(
+PDM_MPI_Comm  comm,
+PDM_g_num_t   gn_box,
+int           i_rank,
+double      **box_extents,
+PDM_g_num_t **box_ln_to_gn
+)
+{
+  PDM_g_num_t *distrib_box = PDM_compute_uniform_entity_distribution (comm,
+                                                                      gn_box);
+  int n_box = (int) (distrib_box[i_rank+1] - distrib_box[i_rank]);
+  for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
+    rand();
+  }
+  free (distrib_box);
+
+  double *box_centers = malloc (sizeof(double) * n_box * 3);
+  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *_box_extents = *box_extents;
+  for (int i = 0; i < n_box; i++) {
+    for (int j = 0; j < 3; j++) {
+      double x1 = _random01();
+      double x2 = _random01();
+
+      box_centers[3*i + j] = 0.5 * (x1 + x2);
+      _box_extents[6*i + j]     = PDM_MIN (x1, x2);
+      _box_extents[6*i + j + 3] = PDM_MAX (x1, x2);
+    }
+  }
+
+
+  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3,
+                                              1,
+                                              PDM_FALSE,
+                                              1.e-3,
+                                              comm,
+                                              PDM_OWNERSHIP_USER);
+
+  PDM_gnum_set_from_coords (gen_gnum,
+                            0,
+                            n_box,
+                            box_centers,
+                            NULL);
+
+  PDM_gnum_compute (gen_gnum);
+
+  *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
+
+  PDM_gnum_free (gen_gnum);
+  free (box_centers);
+
+  return n_box;
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -148,8 +224,8 @@ char *argv[]
   int i_rank;
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
-  int numProcs;
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   PDM_g_num_t nPts   = 10;
   double radius = 10.;
@@ -184,6 +260,16 @@ char *argv[]
                               &coords,
                               &gnum);
 
+  PDM_g_num_t gn_box = nPts;
+  double      *box_extents  = NULL;
+  PDM_g_num_t *box_ln_to_gn = NULL;
+
+  int n_boxes = _generate_random_boxes(PDM_MPI_COMM_WORLD,
+                                       gn_box,
+                                       i_rank,
+                                       &box_extents,
+                                       &box_ln_to_gn);
+
   /* Parallel octree */
 
   const int n_point_cloud = 1;
@@ -205,7 +291,16 @@ char *argv[]
   PDM_para_octree_build_shared(octree, NULL);
 
   // Solicitations shared
-
+  int         *box_pts_idx = NULL;
+  PDM_g_num_t *box_pts     = NULL;
+  double      *pts_coords  = NULL;
+  PDM_para_octree_points_inside_boxes_shared(octree,
+                                             n_boxes,
+                                             box_extents,
+                                             box_ln_to_gn,
+                                             &box_pts_idx,
+                                             &box_pts,
+                                             &pts_coords);
   // PDM_para_octree_dump (octree);
 
   // PDM_para_octree_build_shared(octree);
@@ -218,6 +313,8 @@ char *argv[]
 
   free (coords);
   free (gnum);
+  free (box_extents);
+  free (box_ln_to_gn);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
