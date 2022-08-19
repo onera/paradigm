@@ -78,7 +78,8 @@ _read_args
  PDM_g_num_t   *nPts,
  double        *radius,
  int           *local,
- int           *rand
+ int           *rand,
+ int           *shared
 )
 {
   int i = 1;
@@ -119,6 +120,9 @@ _read_args
       *rand = 1;
     }
 
+    else if (strcmp(argv[i], "-shared") == 0) {
+      *shared = 1;
+    }
     else {
       _usage(EXIT_FAILURE);
     }
@@ -201,6 +205,40 @@ PDM_g_num_t **box_ln_to_gn
   return n_box;
 }
 
+static
+void
+end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
+
+  double t2 = PDM_MPI_Wtime();
+
+  double delta_t = t2 - t1;
+  double delta_max;
+  double delta_min;
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_max,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     comm);
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_min,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MIN,
+                     comm);
+
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  if(i_rank == 0) {
+    printf("[%i] %s : duration min/max -> %12.5e %12.5e \n", n_rank, msg, delta_min, delta_max);
+  }
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -231,13 +269,15 @@ char *argv[]
   double radius = 10.;
   int local = 0;
   int rand = 0;
+  int shared = 0;
 
   _read_args(argc,
              argv,
              &nPts,
              &radius,
              &local,
-             &rand);
+             &rand,
+             &shared);
 
   /* Initialize random */
 
@@ -288,20 +328,43 @@ char *argv[]
   // PDM_para_octree_build (octree, NULL);
 
   // Mettre en shared l'octree
-  PDM_para_octree_build_shared(octree, NULL);
+  // PDM_para_octree_dump (octree);
 
   // Solicitations shared
   int         *box_pts_idx = NULL;
   PDM_g_num_t *box_pts     = NULL;
   double      *pts_coords  = NULL;
-  PDM_para_octree_points_inside_boxes_shared(octree,
-                                             n_boxes,
-                                             box_extents,
-                                             box_ln_to_gn,
-                                             &box_pts_idx,
-                                             &box_pts,
-                                             &pts_coords);
-  // PDM_para_octree_dump (octree);
+  if(shared == 0) {
+    PDM_MPI_Barrier(PDM_MPI_COMM_WORLD);
+    double t1 = PDM_MPI_Wtime();
+    PDM_para_octree_build (octree, NULL);
+    end_timer_and_print("PDM_para_octree_build ", PDM_MPI_COMM_WORLD, t1 );
+
+    double t2 = PDM_MPI_Wtime();
+    PDM_para_octree_points_inside_boxes(octree,
+                                        n_boxes,
+                                        box_extents,
+                                        box_ln_to_gn,
+                                        &box_pts_idx,
+                                        &box_pts,
+                                        &pts_coords);
+    end_timer_and_print("PDM_para_octree_points_inside_boxes ", PDM_MPI_COMM_WORLD, t2 );
+  } else {
+    PDM_MPI_Barrier(PDM_MPI_COMM_WORLD);
+    double t1 = PDM_MPI_Wtime();
+    PDM_para_octree_build_shared(octree, NULL);
+    end_timer_and_print("PDM_para_octree_build_shared ", PDM_MPI_COMM_WORLD, t1 );
+
+    double t2 = PDM_MPI_Wtime();
+    PDM_para_octree_points_inside_boxes_shared(octree,
+                                               n_boxes,
+                                               box_extents,
+                                               box_ln_to_gn,
+                                               &box_pts_idx,
+                                               &box_pts,
+                                               &pts_coords);
+    end_timer_and_print("PDM_para_octree_points_inside_boxes_shared ", PDM_MPI_COMM_WORLD, t2 );
+  }
 
   // PDM_para_octree_build_shared(octree);
 
@@ -309,7 +372,12 @@ char *argv[]
 
   PDM_para_octree_free (octree);
 
+  PDM_log_trace_connectivity_long(box_pts_idx, box_pts, n_boxes, "box_pts :: ");
+
   /* Free */
+  free(box_pts_idx);
+  free(box_pts);
+  free(pts_coords);
 
   free (coords);
   free (gnum);
