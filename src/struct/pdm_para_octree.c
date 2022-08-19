@@ -13340,9 +13340,22 @@ PDM_para_octree_points_inside_boxes_shared
   // PDM_g_num_t *box_g_num1   = NULL;
   // double      *box_extents1 = NULL;
 
+  // Shared
+  PDM_MPI_Comm comm_node;
+  PDM_MPI_Comm_split_type(_octree->comm, PDM_MPI_SPLIT_NUMA, &comm_node);
+
+  int n_rank_in_node, i_rank_in_node;
+  PDM_MPI_Comm_rank (comm_node, &i_rank_in_node);
+  PDM_MPI_Comm_size (comm_node, &n_rank_in_node);
+
+  int* parent_rank = malloc(n_rank_in_node * sizeof(int));
+
+  PDM_MPI_Allgather(&i_rank,     1, PDM_MPI_INT,
+                    parent_rank, 1, PDM_MPI_INT,
+                    comm_node);
+
+
   if(n_rank > 1) {
-
-
     /* Encode box corners */
     box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
     _morton_encode_coords (dim,
@@ -13462,14 +13475,138 @@ PDM_para_octree_points_inside_boxes_shared
 
     PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
 
-    free(box_corners);
-    free(box_rank     );
-    free(box_rank_idx );
-    free(send_count );
+
+    /* Exchange provisional send/recv counts */
+    int *recv_count = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
+                      recv_count, 1, PDM_MPI_INT,
+                      _octree->comm);
+
+
+    int *send_shift = malloc ( ( n_rank + 1) * sizeof(int));
+    int *recv_shift = malloc ( ( n_rank + 1) * sizeof(int));
+
+    // Deduce size of recv buffer shared inside the same node
+    // int* extract_recv_count = malloc(n_rank_in_node * sizeof(int));
+    int* shared_recv_count  = malloc(n_rank_in_node * sizeof(int));
+
+    // for(int i = 0; i < n_rank_in_node; ++i) {
+    //   extract_recv_count[i] = recv_count[parent_rank[i]];
+    //   shared_recv_count [i] = 0;
+    // }
+
+    int n_tot_recv = 0;
+    send_shift[0] = 0;
+    recv_shift[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      n_tot_recv += recv_count[i];
+      send_shift[i+1] = send_shift[i] + send_count[i];
+      recv_shift[i+1] = recv_shift[i] + recv_count[i];
+    }
+
+    PDM_MPI_Allgather(&n_tot_recv,      1, PDM_MPI_INT,
+                      shared_recv_count, 1, PDM_MPI_INT,
+                      comm_node);
+
+
+    int* shared_recv_idx = malloc((n_rank_in_node+1) * sizeof(int));
+    shared_recv_idx[0] = 0;
+    for(int i = 0; i < n_rank_in_node; ++i) {
+      shared_recv_idx[i+1] = shared_recv_idx[i] + shared_recv_count[i];
+    }
+
+    if(1 == 1) {
+      // PDM_log_trace_array_int(extract_recv_count, n_rank_in_node, "extract_recv_count :: ");
+      PDM_log_trace_array_int(shared_recv_count , n_rank_in_node, "shared_recv_count  :: ");
+      PDM_log_trace_array_int(shared_recv_idx , n_rank_in_node+1, "shared_recv_idx  :: ");
+    }
+
+    int n_tot_recv_shared = shared_recv_idx[n_rank_in_node];
+    PDM_mpi_win_shared_t* wshared_recv_gnum    = PDM_mpi_win_shared_create(          n_tot_recv_shared, sizeof(PDM_g_num_t), comm_node);
+    PDM_mpi_win_shared_t* wshared_recv_extents = PDM_mpi_win_shared_create(two_dim * n_tot_recv_shared, sizeof(double     ), comm_node);
+
+    int    *shared_recv_gnum    = PDM_mpi_win_shared_get(wshared_recv_gnum);
+    double *shared_recv_extents = PDM_mpi_win_shared_get(wshared_recv_extents);
+
+    PDM_mpi_win_shared_lock_all (0, wshared_recv_gnum);
+    PDM_mpi_win_shared_lock_all (0, wshared_recv_extents);
+
+    PDM_g_num_t *lrecv_gnum    = &shared_recv_gnum   [          shared_recv_idx[i_rank_in_node]];
+    double      *lrecv_extents = &shared_recv_extents[two_dim * shared_recv_idx[i_rank_in_node]];
+
+    /*
+     * Prepare send
+     */
+    PDM_g_num_t *send_g_num   = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
+    double      *send_extents = malloc (sizeof(double)      * send_shift[n_rank] * two_dim);
+
+    for(int i = 0; i < n_rank; ++i) {
+      send_count[i] = 0;
+    }
+
+    for (int ibox = 0; ibox < n_boxes; ibox++) {
+      for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
+        int t_rank = box_rank[i];
+
+        int idx_write = send_shift[t_rank] + send_count[t_rank]++;
+        send_g_num[idx_write] = box_g_num[ibox];
+
+        for (int j = 0; j < two_dim; j++) {
+          send_extents[two_dim*idx_write + j] = box_extents[two_dim*ibox + j];
+        }
+      }
+    }
+
+    /*
+     * Classic alltoall
+     */
+    PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
+                       lrecv_gnum, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
+                       _octree->comm);
+    free(send_g_num);
+
+    /* Send boxes extents buffer */
+    for (int i = 0; i < n_rank; i++) {
+      send_shift[i+1] *= two_dim;
+      recv_shift[i+1] *= two_dim;
+      send_count[i]   *= two_dim;
+      recv_count[i]   *= two_dim;
+    }
+    PDM_MPI_Alltoallv (send_extents , send_count, send_shift, PDM_MPI_DOUBLE,
+                       lrecv_extents, recv_count, recv_shift, PDM_MPI_DOUBLE,
+                       _octree->comm);
+    free(send_extents);
+
+
+    PDM_MPI_Barrier (comm_node);
+    PDM_mpi_win_shared_sync (wshared_recv_gnum);
+    PDM_mpi_win_shared_sync (wshared_recv_extents);
+    PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);
+    PDM_mpi_win_shared_unlock_all(wshared_recv_extents);
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(shared_recv_gnum, n_tot_recv_shared, "shared_recv_gnum ::");
+    }
+
+    PDM_mpi_win_shared_free (wshared_recv_gnum);
+    PDM_mpi_win_shared_free (wshared_recv_extents);
+
+    // free(extract_recv_count);
+    free(shared_recv_count );
+    free(shared_recv_idx );
+
+    free(box_corners );
+    free(box_rank    );
+    free(box_rank_idx);
+    free(send_count  );
+    free(recv_count  );
+    free(send_shift  );
+    free(recv_shift  );
   }
 
 
-
+  PDM_log_trace_array_int(parent_rank, n_rank_in_node, "parent_rank :: ");
+  free(parent_rank);
 }
 
 
