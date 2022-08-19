@@ -13941,6 +13941,25 @@ PDM_para_octree_points_inside_boxes_shared
         res_box_weight[i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
       }
 
+      /*
+       * Extract point and gnum
+       */
+      int *_box_pts_idx   = box_pts_idx  [i_shm];
+      int *_box_pts_l_num = box_pts_l_num[i_shm];
+      res_box_pts_coords[i_shm] = malloc(3 * _box_pts_idx[n_lbox] * sizeof(double     ));
+      res_box_pts_gnum  [i_shm] = malloc(    _box_pts_idx[n_lbox] * sizeof(PDM_g_num_t));
+
+      for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
+        int l_num = _box_pts_l_num[i];
+
+        res_box_pts_gnum  [i_shm][i] = _octree->shm_points_gnum[i_shm][l_num];
+        for (int k = 0; k < 3; k++) {
+          res_box_pts_coords[i_shm][3*i + k] = _octree->shm_points[i_shm][3*l_num + k];
+        }
+
+      }
+
+
       PDM_log_trace_array_long(res_box_g_num[i_shm], n_lbox, "res_box_g_num[i_shm] ::" );
 
     }
@@ -13967,13 +13986,63 @@ PDM_para_octree_points_inside_boxes_shared
 
   for(int i_shm = 0; i_shm < n_rank_in_node; ++i_shm) {
     free(res_box_weight[i_shm]);
-    free(res_box_strid [i_shm]);
     free(box_pts_idx   [i_shm]);
     free(box_pts_l_num [i_shm]);
   }
-  free(part_n_box    );
   free(box_pts_idx   );
   free(box_pts_l_num );
+
+  /*
+   * Exchange of gnum
+   */
+  int request_gnum = -1;
+  int         *block_pts_in_box_n     = NULL;
+  PDM_g_num_t *block_pts_in_box_g_num = NULL;
+  PDM_part_to_block_iexch (ptb,
+                           PDM_MPI_COMM_KIND_COLLECTIVE,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           res_box_strid,
+                 (void **) res_box_pts_gnum,
+                           &block_pts_in_box_n,
+                 (void **) &block_pts_in_box_g_num,
+                           &request_gnum);
+
+  int request_coord = -1;
+  int    *block_stride           = NULL;
+  double *block_pts_in_box_coord = NULL;
+  PDM_part_to_block_iexch (ptb,
+                           PDM_MPI_COMM_KIND_COLLECTIVE,
+                           dim * sizeof(double),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           res_box_strid,
+                 (void **) res_box_pts_coords,
+                           &block_stride,
+                 (void **) &block_pts_in_box_coord,
+                           &request_coord);
+
+  PDM_part_to_block_iexch_wait(ptb, request_gnum);
+  PDM_part_to_block_iexch_wait(ptb, request_coord);
+
+  free(block_stride);
+
+  for(int i_shm = 0; i_shm < n_rank_in_node; ++i_shm) {
+    free(res_box_pts_coords[i_shm]);
+    free(res_box_pts_gnum  [i_shm]);
+    free(res_box_strid     [i_shm]);
+  }
+  free(part_n_box    );
+
+  /*
+   *  Post-treatment
+   */
+
+  free(block_pts_in_box_coord);
+  free(block_pts_in_box_g_num);
+  free(block_pts_in_box_n);
+
   free(res_box_g_num );
   free(res_box_strid );
   free(res_box_weight);
