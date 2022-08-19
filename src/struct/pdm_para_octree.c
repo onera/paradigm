@@ -13584,9 +13584,48 @@ PDM_para_octree_points_inside_boxes_shared
     PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);
     PDM_mpi_win_shared_unlock_all(wshared_recv_extents);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_long(shared_recv_gnum, n_tot_recv_shared, "shared_recv_gnum ::");
     }
+
+
+    /*
+     * Repartition de la recherche
+     */
+    PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(comm_node, n_tot_recv_shared);
+
+    if(1 == 1) {
+      PDM_log_trace_array_long(distrib_search, n_rank_in_node+1, "distrib_search ::");
+    }
+
+    int  dn_search = distrib_search[i_rank_in_node+1] - distrib_search[i_rank_in_node];
+    int* check = malloc(dn_search * sizeof(int));
+
+    int* distrib_search_by_rank_idx = malloc((n_rank_in_node+1) * sizeof(int));
+    int* distrib_search_by_rank_n   = malloc((n_rank_in_node  ) * sizeof(int));
+    for(int i = 0; i < n_rank_in_node; ++i) {
+      distrib_search_by_rank_n[i] = 0;
+    }
+
+    // TODO : Faire un algo d'intersection de range pour ne pas faire la dicotomie x fois !
+    for(int i = distrib_search[i_rank_in_node]; i < distrib_search[i_rank_in_node+1]; ++i) {
+      int t_rank = PDM_binary_search_gap_int(i, shared_recv_idx, n_rank_in_node+1);
+      check[i-distrib_search[i_rank_in_node]] = t_rank;
+      distrib_search_by_rank_n[t_rank]++;
+    }
+
+    distrib_search_by_rank_idx[0] = 0;
+    for(int i = 0; i < n_rank_in_node; ++i) {
+      distrib_search_by_rank_idx[i+1] = distrib_search_by_rank_idx[i] + distrib_search_by_rank_n[i];
+    }
+
+    // PDM_log_trace_array_long(check, dn_search, "check ::");
+    PDM_log_trace_array_int(distrib_search_by_rank_idx, n_rank_in_node+1, "distrib_search_by_rank_idx ::");
+    free(check);
+
+
+    free(distrib_search_by_rank_idx);
+    free(distrib_search_by_rank_n);
 
     PDM_mpi_win_shared_free (wshared_recv_gnum);
     PDM_mpi_win_shared_free (wshared_recv_extents);
@@ -13594,6 +13633,7 @@ PDM_para_octree_points_inside_boxes_shared
     // free(extract_recv_count);
     free(shared_recv_count );
     free(shared_recv_idx );
+    free(distrib_search );
 
     free(box_corners );
     free(box_rank    );
