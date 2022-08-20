@@ -26,6 +26,9 @@
 #include "pdm_surf_mesh.h"
 
 #include "pdm_vtk.h"
+#include "pdm_array.h"
+#include "pdm_box_tree.h"
+#include "pdm_box.h"
 
 #include "pdm_writer.h"
 #include "pdm_printf.h"
@@ -187,11 +190,14 @@ _generate_cartesian_boxes
   int           n_vtx_y,
   int           n_vtx_z,
   double        length,
+  int          *n_box_out,
   double      **box_coord_out,
   PDM_g_num_t **box_gnum_out
 )
 {
-  PDM_g_num_t n_box = n_vtx_x * n_vtx_y * n_vtx_z;
+  PDM_g_num_t n_box = (n_vtx_x - 1) * ( n_vtx_y - 1) * ( n_vtx_z - 1);
+  // PDM_g_num_t n_box = (n_vtx_x) * ( n_vtx_y) * ( n_vtx_z);
+  *n_box_out = n_box;
   double      *box_coord = malloc( 6 * n_box * sizeof(double));
   PDM_g_num_t *box_gnum  = malloc(     n_box * sizeof(PDM_g_num_t));
 
@@ -199,22 +205,28 @@ _generate_cartesian_boxes
   double step_y = length / (double) (n_vtx_y - 1);
   double step_z = length / (double) (n_vtx_z - 1);
 
+  int n_box_x = n_vtx_x - 1;
+  int n_box_y = n_vtx_y - 1;
+  // int n_box_z = n_vtx_z - 1;
+
   for (int i_box = 0; i_box < n_box; ++i_box) {
 
 
     box_gnum[i_box] = i_box;
 
-    PDM_g_num_t indi = i_box % n_vtx_x;
-    PDM_g_num_t indj = ((i_box - indi) / n_vtx_x) % n_vtx_y;
-    PDM_g_num_t indk = i_box / (n_vtx_x * n_vtx_y);
+    PDM_g_num_t ind_box_i = i_box % n_box_x;
+    PDM_g_num_t ind_box_j = ((i_box - ind_box_i) / n_box_x) % n_box_y;
+    PDM_g_num_t ind_box_k = i_box / (n_box_x * n_box_y);
+
+    int i_vtx = ind_box_i + ind_box_j * n_vtx_x + ind_box_k * n_vtx_x * n_vtx_y;
+
+    PDM_g_num_t indi = i_vtx % n_vtx_x;
+    PDM_g_num_t indj = ((i_vtx - indi) / n_vtx_x) % n_vtx_y;
+    PDM_g_num_t indk = i_vtx / (n_vtx_x * n_vtx_y);
 
     box_coord[6 * i_box    ] = indi * step_x; //+ dcube->zero_x;
     box_coord[6 * i_box + 1] = indj * step_y; //+ dcube->zero_y;
     box_coord[6 * i_box + 2] = indk * step_z; //+ dcube->zero_z;
-
-    // PDM_g_num_t indi = i_box % n_vtx_x;
-    // PDM_g_num_t indj = ((i_box - indi) / n_vtx_x) % n_vtx_y;
-    // PDM_g_num_t indk = i_box / (n_vtx_x * n_vtx_y);
 
     box_coord[6 * i_box + 3] = (indi+1) * step_x; //+ dcube->zero_x;
     box_coord[6 * i_box + 4] = (indj+1) * step_y; //+ dcube->zero_y;
@@ -257,8 +269,6 @@ int main(int argc, char *argv[])
              &length,
              &post);
 
-  double radius         = length;//2*length;
-
   /*
    *  Init
    */
@@ -292,15 +302,16 @@ int main(int argc, char *argv[])
    */
   double      *tgt_box_extents = NULL;
   PDM_g_num_t *tgt_box_gnum    = NULL;
-  PDM_g_num_t n_gtg_box = (n_vtx_seg_tgt - 1) * (n_vtx_seg_tgt - 1) * (n_vtx_seg_tgt - 1);
-  _generate_cartesian_boxes(n_vtx_seg_tgt-1,
-                            n_vtx_seg_tgt-1,
-                            n_vtx_seg_tgt-1,
+  int          n_tgt_box = 0;
+  _generate_cartesian_boxes(n_vtx_seg_tgt,
+                            n_vtx_seg_tgt,
+                            n_vtx_seg_tgt,
                             length,
+                            &n_tgt_box,
                             &tgt_box_extents,
                             &tgt_box_gnum);
   if(post) {
-    PDM_vtk_write_boxes("target_boxes.vtk", n_gtg_box, tgt_box_extents, tgt_box_gnum);
+    PDM_vtk_write_boxes("target_boxes.vtk", n_tgt_box, tgt_box_extents, tgt_box_gnum);
   }
 
   /*
@@ -308,11 +319,12 @@ int main(int argc, char *argv[])
    */
   double      *box_extents = NULL;
   PDM_g_num_t *box_gnum    = NULL;
-  PDM_g_num_t n_box = (n_vtx_seg - 1) * (n_vtx_seg - 1) * (n_vtx_seg - 1);
-  _generate_cartesian_boxes(n_vtx_seg-1,
-                            n_vtx_seg-1,
-                            n_vtx_seg-1,
+  int n_box = 0;
+  _generate_cartesian_boxes(n_vtx_seg,
+                            n_vtx_seg,
+                            n_vtx_seg,
                             length,
+                            &n_box,
                             &box_extents,
                             &box_gnum);
   if(post) {
@@ -323,12 +335,74 @@ int main(int argc, char *argv[])
   /*
    * Start box tree
    */
+  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
+  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+
+  const int n_info_location = 3;
+  int *init_location_proc = PDM_array_zeros_int (n_info_location * n_box);
+
+  PDM_box_set_t* box_set = PDM_box_set_create(3,             // dim
+                                              1,             // normalize
+                                              0,             // allow_projection
+                                              n_box,
+                                              box_gnum,
+                                              box_extents,
+                                              1,
+                                              &n_box,
+                                              init_location_proc,
+                                              PDM_MPI_COMM_WORLD);
+
+  PDM_box_tree_t *box_tree = PDM_box_tree_create (max_tree_depth_shared,
+                                                  max_boxes_leaf_shared,
+                                                  max_box_ratio_shared);
+
+  PDM_box_tree_set_boxes (box_tree,
+                          box_set,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  if(post) {
+    PDM_box_tree_write_vtk("box_tree.vtk", box_tree, -1, 1);
+  }
+
+  int *init_location_tgt_box = PDM_array_zeros_int (n_info_location * n_tgt_box);
+  PDM_box_set_t* box_target = PDM_box_set_create(3,             // dim
+                                                 1,             // normalize
+                                                 0,             // allow_projection
+                                                 n_tgt_box,
+                                                 tgt_box_gnum,
+                                                 tgt_box_extents,
+                                                 1,
+                                                 &n_tgt_box,
+                                                 init_location_tgt_box,
+                                                 PDM_MPI_COMM_WORLD);
+
+
+  /*
+   * Intersect
+   */
+  double t1 = PDM_MPI_Wtime();
+  int  *shared_to_box_idx = NULL;
+  int  *shared_to_box     = NULL;
+  PDM_box_tree_get_boxes_intersects (box_tree,
+                                     box_target,
+                                     &shared_to_box_idx,
+                                     &shared_to_box);
+  double dt = PDM_MPI_Wtime()-t1;
+
+  printf("PDM_box_tree_get_boxes_intersects time : %12.5e \n", dt);
+
+  free(shared_to_box_idx);
+  free(shared_to_box    );
 
 
 
+  PDM_box_set_destroy (&box_set);
+  PDM_box_set_destroy (&box_target);
+  PDM_box_tree_destroy(&box_tree);
 
-
-
+  free(init_location_proc);
+  free(init_location_tgt_box);
   free(box_extents);
   free(box_gnum);
   free(tgt_box_extents);
