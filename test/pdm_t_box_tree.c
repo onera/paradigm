@@ -82,6 +82,7 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_vtx_seg,
            PDM_g_num_t   *n_vtx_seg_cloud,
+           PDM_g_num_t   *n_vtx_seg_tgt,
            double        *length,
            int           *post)
 {
@@ -110,6 +111,15 @@ _read_args(int            argc,
       else {
         long _n_vtx_seg_cloud = atol(argv[i]);
         *n_vtx_seg_cloud = (PDM_g_num_t) _n_vtx_seg_cloud;
+      }
+    }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        long _n_vtx_seg_tgt = atol(argv[i]);
+        *n_vtx_seg_tgt = (PDM_g_num_t) _n_vtx_seg_tgt;
       }
     }
     else if (strcmp(argv[i], "-l") == 0) {
@@ -169,6 +179,54 @@ _generate_cartesian_cloud
 }
 
 
+static
+void
+_generate_cartesian_boxes
+(
+  int           n_vtx_x,
+  int           n_vtx_y,
+  int           n_vtx_z,
+  double        length,
+  double      **box_coord_out,
+  PDM_g_num_t **box_gnum_out
+)
+{
+  PDM_g_num_t n_box = n_vtx_x * n_vtx_y * n_vtx_z;
+  double      *box_coord = malloc( 6 * n_box * sizeof(double));
+  PDM_g_num_t *box_gnum  = malloc(     n_box * sizeof(PDM_g_num_t));
+
+  double step_x = length / (double) (n_vtx_x - 1);
+  double step_y = length / (double) (n_vtx_y - 1);
+  double step_z = length / (double) (n_vtx_z - 1);
+
+  for (int i_box = 0; i_box < n_box; ++i_box) {
+
+
+    box_gnum[i_box] = i_box;
+
+    PDM_g_num_t indi = i_box % n_vtx_x;
+    PDM_g_num_t indj = ((i_box - indi) / n_vtx_x) % n_vtx_y;
+    PDM_g_num_t indk = i_box / (n_vtx_x * n_vtx_y);
+
+    box_coord[6 * i_box    ] = indi * step_x; //+ dcube->zero_x;
+    box_coord[6 * i_box + 1] = indj * step_y; //+ dcube->zero_y;
+    box_coord[6 * i_box + 2] = indk * step_z; //+ dcube->zero_z;
+
+    // PDM_g_num_t indi = i_box % n_vtx_x;
+    // PDM_g_num_t indj = ((i_box - indi) / n_vtx_x) % n_vtx_y;
+    // PDM_g_num_t indk = i_box / (n_vtx_x * n_vtx_y);
+
+    box_coord[6 * i_box + 3] = (indi+1) * step_x; //+ dcube->zero_x;
+    box_coord[6 * i_box + 4] = (indj+1) * step_y; //+ dcube->zero_y;
+    box_coord[6 * i_box + 5] = (indk+1) * step_z; //+ dcube->zero_z;
+
+  }
+
+  *box_coord_out = box_coord;
+  *box_gnum_out  = box_gnum;
+
+}
+
 /**
  *
  * \brief  Main
@@ -182,8 +240,9 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t           n_vtx_seg       = 100;
+  PDM_g_num_t           n_vtx_seg       = 10;
   PDM_g_num_t           n_vtx_seg_cloud = 10;
+  PDM_g_num_t           n_vtx_seg_tgt   = 10;
   double                length          = 1.;
   int                   post            = 1;
 
@@ -194,6 +253,7 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &n_vtx_seg_cloud,
+             &n_vtx_seg_tgt,
              &length,
              &post);
 
@@ -230,13 +290,49 @@ int main(int argc, char *argv[])
   /*
    *  Generate target_boxes
    */
-
+  double      *tgt_box_extents = NULL;
+  PDM_g_num_t *tgt_box_gnum    = NULL;
+  PDM_g_num_t n_gtg_box = (n_vtx_seg_tgt - 1) * (n_vtx_seg_tgt - 1) * (n_vtx_seg_tgt - 1);
+  _generate_cartesian_boxes(n_vtx_seg_tgt-1,
+                            n_vtx_seg_tgt-1,
+                            n_vtx_seg_tgt-1,
+                            length,
+                            &tgt_box_extents,
+                            &tgt_box_gnum);
+  if(post) {
+    PDM_vtk_write_boxes("target_boxes.vtk", n_gtg_box, tgt_box_extents, tgt_box_gnum);
+  }
 
   /*
    *  Generate boxes
    */
+  double      *box_extents = NULL;
+  PDM_g_num_t *box_gnum    = NULL;
+  PDM_g_num_t n_box = (n_vtx_seg - 1) * (n_vtx_seg - 1) * (n_vtx_seg - 1);
+  _generate_cartesian_boxes(n_vtx_seg-1,
+                            n_vtx_seg-1,
+                            n_vtx_seg-1,
+                            length,
+                            &box_extents,
+                            &box_gnum);
+  if(post) {
+    PDM_vtk_write_boxes("boxes.vtk", n_box, box_extents, box_gnum);
+  }
 
 
+  /*
+   * Start box tree
+   */
+
+
+
+
+
+
+  free(box_extents);
+  free(box_gnum);
+  free(tgt_box_extents);
+  free(tgt_box_gnum);
   free(pt_coord);
   free(pt_gnum);
 
