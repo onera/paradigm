@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t           n_vtx_seg_cloud = 10;
   PDM_g_num_t           n_vtx_seg_tgt   = 10;
   double                length          = 1.;
-  int                   post            = 1;
+  int                   post            = 0;
 
   /*
    *  Read args
@@ -389,12 +389,27 @@ int main(int argc, char *argv[])
                                      &shared_to_box_idx,
                                      &shared_to_box);
   double dt = PDM_MPI_Wtime()-t1;
-
-  printf("PDM_box_tree_get_boxes_intersects time : %12.5e \n", dt);
+  double complexity = n_tgt_box;
+  printf("PDM_box_tree_get_boxes_intersects time : %12.5e -  %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
   free(shared_to_box_idx);
   free(shared_to_box    );
 
+  t1 = PDM_MPI_Wtime();
+  int  *box_pts_idx = NULL;
+  int  *box_pts     = NULL;
+  PDM_box_tree_boxes_containing_points(box_tree,
+                                       -1,
+                                       n_pts,
+                                       pt_coord,
+                                       &box_pts_idx,
+                                       &box_pts);
+  dt = PDM_MPI_Wtime()-t1;
+  complexity = n_pts;
+  printf("PDM_box_tree_boxes_containing_points time : %12.5e - %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
+
+  free(box_pts_idx);
+  free(box_pts);
 
 
   PDM_box_set_destroy (&box_set);
