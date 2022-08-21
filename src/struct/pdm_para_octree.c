@@ -376,6 +376,23 @@ static const PDM_morton_int_t max_morton_level = 15;
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+/**
+ * \brief  Normalize coorndinates
+ */
+
+static void
+_normalize
+(
+ PDM_box_set_t *dbbt,
+ const double *pt_origin,
+ double *pt_nomalized
+ )
+{
+  for (int j = 0; j < dbbt->dim; j++) {
+    pt_nomalized[j] = (pt_origin[j] - dbbt->s[j]) / dbbt->d[j];
+  }
+}
+
 static _min_heap_t *
 _min_heap_create
 (
@@ -13599,6 +13616,8 @@ PDM_para_octree_points_inside_boxes_shared
     int *send_count = PDM_array_zeros_int (n_rank);
     int *box_rank     = NULL;
     int *box_rank_idx = NULL;
+    int *shared_to_box_idx = NULL;
+    int *shared_to_box     = NULL;
     if(precond_type == 0) {
 
       _morton_encode_coords (dim,
@@ -13724,11 +13743,16 @@ PDM_para_octree_points_inside_boxes_shared
       // dbbtree
       PDM_box_set_t  *box_set   = NULL;
       PDM_box_tree_t *bt_shared = NULL;
+      // int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+      // int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
+      // float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
       int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
-      int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
+      int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
       float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+      // int   max_tree_depth_shared = 1;  // Mieux mais débile -_-
 
       int n_shared_boxes = shared_all_rank_idx[n_rank];
+      log_trace("n_shared_boxes = %i \n", n_shared_boxes);
 
       const int n_info_location = 3;
       int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
@@ -13756,37 +13780,92 @@ PDM_para_octree_points_inside_boxes_shared
                               box_set,
                               PDM_BOX_TREE_ASYNC_LEVEL);
 
+
+      char filename[999];
+      if(0 == 1) {
+        sprintf(filename, "octree_extents_%i.vtk", i_rank);
+        PDM_vtk_write_boxes(filename, n_shared_boxes, shared_pts_extents, gnum_proc);
+
+        sprintf(filename, "box_tree_%i.vtk", i_rank);
+        PDM_box_tree_write_vtk(filename, bt_shared, -1, 1);
+        sprintf(filename, "normalize_box_tree_%i.vtk", i_rank);
+        PDM_box_tree_write_vtk(filename, bt_shared, -1, 0);
+
+        // Pour comparer --> octree_extents_ vs normalize_box_tree_
+      }
+
       /*
        * Create box_set of current boxes
        */
+      // log_trace("box_set->d = %12.5e / %12.5e / %12.5e \n", box_set->d[0], box_set->d[1], box_set->d[2]);
+      // log_trace("box_set->s = %12.5e / %12.5e / %12.5e \n", box_set->s[0], box_set->s[1], box_set->s[2]);
       int *box_init_location   = (int *) malloc (sizeof(int) * n_boxes * n_info_location);
+      double *normalize_box_extents = malloc(6 * n_boxes * sizeof(double));
+
+      for(int i = 0; i < n_boxes; ++i) {
+        normalize_box_extents[6*i  ] = box_extents[6*i  ];
+        normalize_box_extents[6*i+1] = box_extents[6*i+1];
+        normalize_box_extents[6*i+2] = box_extents[6*i+2];
+        normalize_box_extents[6*i+3] = box_extents[6*i+3];
+        normalize_box_extents[6*i+4] = box_extents[6*i+4];
+        normalize_box_extents[6*i+5] = box_extents[6*i+5];
+        _normalize (box_set,
+                    normalize_box_extents+2*i*box_set->dim,
+                    normalize_box_extents+2*i*box_set->dim);
+        _normalize (box_set,
+                    normalize_box_extents+(2*i+1)*box_set->dim,
+                    normalize_box_extents+(2*i+1)*box_set->dim);
+      }
+
+
       PDM_box_set_t  *boxes = PDM_box_set_create(3,
                                                  0,  // No normalization to preserve initial extents
                                                  0,  // No projection to preserve initial extents
                                                  n_boxes,
                                                  box_g_num,
-                                                 box_extents,
+                                                 normalize_box_extents,
                                                  1,
                                                  &n_boxes,
                                                  box_init_location,
                                                  _octree->comm);
+      memcpy (boxes->d, box_set->d, sizeof(double) * 3);
+      memcpy (boxes->s, box_set->s, sizeof(double) * 3);
       free(box_init_location);
 
+      if(0 == 1)  {
+        sprintf(filename, "normalize_box_extents_%i.vtk", i_rank);
+        PDM_vtk_write_boxes(filename, n_boxes, normalize_box_extents, box_g_num);
+        sprintf(filename, "box_extents_%i.vtk", i_rank);
+        PDM_vtk_write_boxes(filename, n_boxes,           box_extents, box_g_num);
+      }
 
+      double t1 = PDM_MPI_Wtime();
       PDM_box_tree_get_boxes_intersects (bt_shared,
                                          boxes,
-                                         &box_rank_idx,
-                                         &box_rank);
+                                         &shared_to_box_idx,
+                                         &shared_to_box);
+      dt_morton_intersect_box += PDM_MPI_Wtime()-t1;
 
-      PDM_log_trace_connectivity_int(box_rank_idx, box_rank, n_shared_boxes, "box_rank ::");
+      // PDM_log_trace_connectivity_int(shared_to_box_idx, shared_to_box, n_shared_boxes, "shared_to_box ::");
+
+      // boxes->local_boxes->g_num[(*box_l_num)[j]]);
+
+      // Preparation of send count and box_rank/box_rank_idx
+      for(int i = 0; i < n_rank; ++i) {
+        for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
+          send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
+        }
+      }
 
       PDM_box_set_destroy (&box_set);
+      PDM_box_set_destroy (&boxes);
       PDM_box_tree_destroy(&bt_shared);
 
+      free(normalize_box_extents);
       free(init_location_proc);
       free(gnum_proc);
 
-      exit(1);
+      // exit(1);
 
     }
 
@@ -13861,15 +13940,33 @@ PDM_para_octree_points_inside_boxes_shared
       send_count[i] = 0;
     }
 
-    for (int ibox = 0; ibox < n_boxes; ibox++) {
-      for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
-        int t_rank = box_rank[i];
+    if(precond_type == 0) {
+      for (int ibox = 0; ibox < n_boxes; ibox++) {
+        for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
+          int t_rank = box_rank[i];
 
-        int idx_write = send_shift[t_rank] + send_count[t_rank]++;
-        send_g_num[idx_write] = box_g_num[ibox];
+          int idx_write = send_shift[t_rank] + send_count[t_rank]++;
+          send_g_num[idx_write] = box_g_num[ibox];
 
-        for (int j = 0; j < two_dim; j++) {
-          send_extents[two_dim*idx_write + j] = box_extents[two_dim*ibox + j];
+          for (int j = 0; j < two_dim; j++) {
+            send_extents[two_dim*idx_write + j] = box_extents[two_dim*ibox + j];
+          }
+        }
+      }
+    } else {
+      for(int i = 0; i < n_rank; ++i) {
+        for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
+          for(int k = shared_to_box_idx[j]; k < shared_to_box_idx[j+1]; ++k) {
+            int lnum = shared_to_box[k];
+
+            int idx_write = send_shift[i] + send_count[i]++;
+
+            send_g_num[idx_write] = box_g_num[lnum];
+
+            for (int l = 0; l < two_dim; l++) {
+              send_extents[two_dim*idx_write + l] = box_extents[two_dim*lnum + l];
+            }
+          }
         }
       }
     }
@@ -13962,8 +14059,14 @@ PDM_para_octree_points_inside_boxes_shared
     free(distrib_search );
 
     free(box_corners );
-    free(box_rank    );
-    free(box_rank_idx);
+    if(box_rank != NULL) {
+      free(box_rank    );
+      free(box_rank_idx);
+    }
+    if(shared_to_box != NULL) {
+      free(shared_to_box    );
+      free(shared_to_box_idx);
+    }
     free(send_count  );
     free(recv_count  );
     free(send_shift  );
