@@ -89,34 +89,78 @@ PDM_MPI_Comm setup_numa_graph(PDM_MPI_Comm comm)
   int *rank_gid = PDM_mpi_win_shared_get(wsame_numa_id_rank_gid);
   PDM_mpi_win_shared_lock_all (0, wsame_numa_id_rank_gid);
 
-  int *lrank_id = &rank_gid[i_rank_in_node];
+  int *lrank_id = &rank_gid[same_numa_id_core_idx[i_rank_in_node]];
 
   PDM_MPI_Allgather(&i_rank, 1, PDM_MPI_INT, lrank_id, 1, PDM_MPI_INT, comm_same_numa_id);
   PDM_mpi_win_shared_sync(wsame_numa_id_rank_gid);
   PDM_MPI_Barrier(comm_shared);
 
-  PDM_log_trace_array_int(lrank_id, same_numa_id_core_idx[i_rank_in_node+1]-same_numa_id_core_idx[i_rank_in_node], "lrank_id ::");
-  PDM_log_trace_array_int(rank_gid, same_numa_id_core_idx[n_rank_in_node], "rank_gid ::");
+  if(1 == 1) {
+    PDM_log_trace_array_int(rank_gid, same_numa_id_core_idx[n_rank_in_node], "rank_gid ::");
+  }
 
   /*
    * Il faudrait arriver a ne pas trier lesnieghboor dans le comm shared
    */
-  srand(i_rank);
-  int n_val = rand() % 10;
+  srand(i_rank+11);
+  int n_val = (rand() % 8)+1;
   log_trace("n_val = %i \n", n_val);
+
+  int *val = malloc(n_val * sizeof(int));
+  for(int i = 0; i < n_val; ++i) {
+    val[i] = i_rank;
+  }
+
 
   /*
    * Build shared array of number of numa
    */
+  PDM_mpi_win_shared_t* wval_tot_n = PDM_mpi_win_shared_create(same_numa_id_core_idx[n_rank_in_node], sizeof(int), comm_shared);
+  int *val_tot_n  = PDM_mpi_win_shared_get(wval_tot_n);
+  int *lval_tot_n = &val_tot_n[same_numa_id_core_idx[i_rank_in_node]];
+  PDM_mpi_win_shared_lock_all (0, wval_tot_n);
 
-  // PDM_MPI_Allgather()
-  // free(rank_gid);
 
+  PDM_MPI_Allgather(&n_val    , 1, PDM_MPI_INT,
+                    lval_tot_n, 1, PDM_MPI_INT, comm_same_numa_id);
+  PDM_MPI_Barrier(comm_shared);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(val_tot_n, same_numa_id_core_idx[n_rank_in_node], "val_tot_n ::");
+  }
+
+  /*
+   * Ce qu'on souhaite c'est  obtenir le même resultat que sur le comm classique (même ordre que avec l'échange via comm_same_numa_id)
+   */
+  int *recv_count = malloc( n_rank_same_numa_id    * sizeof(int));
+  int *recv_shift = malloc((n_rank_same_numa_id+1) * sizeof(int));
+  recv_shift[0] = 0;
+  for(int i = 0; i < n_rank_same_numa_id; ++i) {
+    recv_count[i  ] = lval_tot_n[i];
+    recv_shift[i+1] = recv_shift[i] + lval_tot_n[i];
+  }
+
+  int *recv_val = malloc(recv_shift[n_rank_same_numa_id] * sizeof(int));
+
+
+  PDM_MPI_Allgatherv(val     , n_val,                  PDM_MPI_INT,
+                     recv_val, recv_count, recv_shift, PDM_MPI_INT, comm_same_numa_id);
+
+
+  PDM_log_trace_array_int(recv_val, recv_shift[n_rank_same_numa_id], "recv_val ::");
+
+  free(recv_val);
+  free(recv_count);
+  free(recv_shift);
 
   PDM_mpi_win_shared_unlock_all(wsame_numa_id_core_idx);
   PDM_mpi_win_shared_unlock_all(wsame_numa_id_rank_gid);
+  PDM_mpi_win_shared_unlock_all(wval_tot_n);
   PDM_mpi_win_shared_free(wsame_numa_id_core_idx);
   PDM_mpi_win_shared_free(wsame_numa_id_rank_gid);
+  PDM_mpi_win_shared_free(wval_tot_n);
+
+  free(val);
 
   PDM_MPI_Comm comm_dist_graph;
 
