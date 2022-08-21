@@ -255,7 +255,7 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
   PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shm, "numa_core_gid :: ");
 
   /*
-   * Computation of in_degree
+   * Computation of degree_in
    */
   int n_degrees_in = 0;
   for(int i = 0; i < n_rank_master_of_shm; ++i) {
@@ -279,9 +279,56 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
     }
   }
 
-  PDM_log_trace_array_int(neighbor_in, n_degrees_in, "neighbor_in ::");
+  /*
+   * Computation of degree_out : Il faut que tout le monde recupère une liste plein because all gather
+   *   Il faut verifier que tous le monde a envoyé sa donné dans chaque numa
+   *   Pour chaque range de numa il faut enlever ceux deja envoyer et rajouter les non envoyées
+   */
+  int *rank_tag = (int *) malloc(n_rank * sizeof(int));
+
+  int n_degrees_out = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int lid_rank = (j - numa_by_numa_idx[i]) % numa_by_numa_n[i]; // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        n_degrees_out++;
+      }
+    }
+  }
+
+  int* neighbor_out = malloc( (n_degrees_out ) * sizeof(int));
+  n_degrees_out = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int gid_rank = numa_core_gid[j];
+      int lid_rank = (j - numa_by_numa_idx[i]) % numa_by_numa_n[i];  // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        neighbor_out[n_degrees_out++] = gid_rank;
+      }
+    }
+  }
 
 
+  free(rank_tag);
+
+
+  // n_degrees_out = n_degrees_in;
+  // neighbor_out = neighbor_in;
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(neighbor_in , n_degrees_in , "neighbor_in  ::");
+    PDM_log_trace_array_int(neighbor_out, n_degrees_out, "neighbor_out ::");
+  }
+
+
+  PDM_MPI_Comm comm_dist_graph;
+  PDM_MPI_Dist_graph_create_adjacent(comm,
+                                     n_degrees_in,
+                                     neighbor_in,
+                                     n_degrees_out,
+                                     neighbor_out,
+                                     0,
+                                     &comm_dist_graph);
 
 
   PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
@@ -291,8 +338,7 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
   PDM_mpi_win_shared_free(wnuma_core_gid);
   PDM_mpi_win_shared_free(wnuma_by_numa_idx);
 
-  PDM_MPI_Comm comm_dist_graph;
-
+  free(neighbor_in);
   return comm_dist_graph;
 }
 
