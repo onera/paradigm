@@ -167,7 +167,105 @@ PDM_MPI_Comm setup_numa_graph(PDM_MPI_Comm comm)
   return comm_dist_graph;
 }
 
+static
+PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
+{
+  int i_rank;
+  int n_rank;
 
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  // Shared
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm_split_type(comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
+
+  int n_rank_in_node, i_rank_in_node;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_node);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_node);
+
+  PDM_MPI_Comm comm_master_of_shared = PDM_MPI_get_group_of_master(comm, comm_shared);
+
+  int i_rank_master_of_shared = -1;
+  int n_rank_master_of_shared;
+  if(comm_master_of_shared != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_rank(comm_master_of_shared, &i_rank_master_of_shared);
+    PDM_MPI_Comm_size(comm_master_of_shared, &n_rank_master_of_shared);
+  }
+  PDM_MPI_Bcast(&n_rank_master_of_shared, 1, PDM_MPI_INT, 0, comm_shared);
+  PDM_MPI_Bcast(&i_rank_master_of_shared, 1, PDM_MPI_INT, 0, comm_shared);
+
+  PDM_mpi_win_shared_t* wnuma_by_numa_n = PDM_mpi_win_shared_create(n_rank_master_of_shared, sizeof(int), comm_shared);
+  int *numa_by_numa_n  = PDM_mpi_win_shared_get(wnuma_by_numa_n);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_n);
+
+
+  if(comm_master_of_shared != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Allgather(&n_rank_in_node  , 1, PDM_MPI_INT,
+                      numa_by_numa_n, 1, PDM_MPI_INT, comm_master_of_shared);
+  }
+  PDM_mpi_win_shared_sync(wnuma_by_numa_n);
+  PDM_MPI_Barrier(comm_shared);
+
+  int n_tot_numa = 0;
+  for(int i = 0; i < n_rank_master_of_shared; ++i) {
+    n_tot_numa += numa_by_numa_n[i];
+  }
+
+  /*
+   * Create idx  and  gid of each numa
+   */
+  PDM_mpi_win_shared_t* wnuma_core_gid    = PDM_mpi_win_shared_create(n_tot_numa               , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wnuma_by_numa_idx = PDM_mpi_win_shared_create(n_rank_master_of_shared+1, sizeof(int), comm_shared);
+  int *numa_core_gid    = PDM_mpi_win_shared_get(wnuma_core_gid);
+  int *numa_by_numa_idx = PDM_mpi_win_shared_get(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_lock_all (0, wnuma_core_gid);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_idx);
+
+
+  if(comm_master_of_shared != PDM_MPI_COMM_NULL) {
+    numa_by_numa_idx[0] = 0;
+    for(int i = 0; i < n_rank_master_of_shared; ++i) {
+      numa_by_numa_idx[i+1] = numa_by_numa_idx[i] + numa_by_numa_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_by_numa_idx);
+
+  numa_core_gid[numa_by_numa_idx[i_rank_master_of_shared]+i_rank_in_node] = i_rank;
+
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  /*
+   *  Exchange of the global numbering of rank for each NUMA
+   */
+  if(comm_master_of_shared != PDM_MPI_COMM_NULL) {
+    int *lnuma_core_gid = malloc(n_rank_in_node * sizeof(int));
+    for(int i = 0; i < n_rank_in_node; ++i) {
+      lnuma_core_gid[i] = numa_core_gid[numa_by_numa_idx[i_rank_master_of_shared]+i];
+    }
+    PDM_MPI_Allgatherv(lnuma_core_gid, n_rank_in_node, PDM_MPI_INT,
+                       numa_core_gid , numa_by_numa_n, numa_by_numa_idx, PDM_MPI_INT, comm_master_of_shared);
+    free(lnuma_core_gid);
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shared, "numa_core_gid :: ");
+
+
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
+  PDM_mpi_win_shared_unlock_all(wnuma_core_gid);
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_free(wnuma_by_numa_n);
+  PDM_mpi_win_shared_free(wnuma_core_gid);
+  PDM_mpi_win_shared_free(wnuma_by_numa_idx);
+
+  PDM_MPI_Comm comm_dist_graph;
+
+  return comm_dist_graph;
+}
 
 /**
  *
@@ -199,7 +297,11 @@ int main(int argc, char *argv[])
   /*
    * Setup graph
    */
-  PDM_MPI_Comm comm_dist_graph = setup_numa_graph(comm);
+  if(0 == 1) {
+    PDM_MPI_Comm comm_dist_graph = setup_numa_graph(comm);
+  } else {
+    PDM_MPI_Comm comm_dist_graph = setup_numa_graph2(comm);
+  }
 
 
   PDM_MPI_Barrier (comm);
