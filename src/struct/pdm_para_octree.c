@@ -6437,6 +6437,229 @@ _export_nodes
   fclose(f);
 }
 
+static
+void
+_build_shared_octree_among_nodes2
+(
+ _pdm_para_octree_t *octree
+)
+{
+  int n_rank, i_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  /*
+   *  Compress octants
+   */
+  int n_local_nodes;
+  int *send_codes = NULL;
+  int *send_n_pts = NULL;
+  double *send_extents = NULL;
+  _compress_octants (octree->octants,
+                     octree->points,
+                     &n_local_nodes,
+                     &send_codes,
+                     &send_n_pts,
+                     &send_extents);
+
+  /*
+   * Get dist_comm_graph : exchange between core of shared  memory
+   */
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm comm_dist_graph;
+
+  int  n_degree_in = 0;
+  int *neighbor_in = NULL;
+
+  PDM_MPI_setup_hybrid_dist_comm_graph(octree->comm,
+                                       &comm_shared,
+                                       &comm_dist_graph,
+                                       &n_degree_in,
+                                       &neighbor_in);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+
+  /*
+   * Exchange size
+   */
+  int *lrecv_count = malloc(n_degree_in * sizeof(int));
+  PDM_MPI_Neighbor_allgather(&n_local_nodes, 1, PDM_MPI_INT,
+                             lrecv_count   , 1, PDM_MPI_INT, comm_dist_graph);
+
+  PDM_mpi_win_shared_t* wshared_local_nodes_n   = PDM_mpi_win_shared_create(n_rank  , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wshared_local_nodes_idx = PDM_mpi_win_shared_create(n_rank+1, sizeof(int), comm_shared);
+  int *shared_local_nodes_n   = PDM_mpi_win_shared_get(wshared_local_nodes_n);
+  int *shared_local_nodes_idx = PDM_mpi_win_shared_get(wshared_local_nodes_idx);
+  PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_n  );
+  PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_idx);
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    shared_local_nodes_n[neighbor_in[i]] = lrecv_count[i];
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  /*
+   * Tentative allgatherv
+   */
+  if(i_rank_in_shm == 0) {
+    shared_local_nodes_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_idx[i+1] = shared_local_nodes_idx[i] + shared_local_nodes_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(shared_local_nodes_n  , n_rank , "shared_local_nodes_n   ::");
+    PDM_log_trace_array_int(shared_local_nodes_idx, n_rank , "shared_local_nodes_idx ::");
+  }
+
+  // Hook local recv_shift
+  int *recv_shift = malloc(n_degree_in * sizeof(int));
+  for(int i = 0; i < n_degree_in; ++i) {
+    recv_shift[i] = shared_local_nodes_idx[neighbor_in[i]];
+  }
+
+  /*
+   *  Exchange
+   */
+  PDM_mpi_win_shared_t* wshared_pts_n       = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , comm_shared);
+  PDM_mpi_win_shared_t* wrecv_codes         = PDM_mpi_win_shared_create(4 * shared_local_nodes_idx[n_rank], sizeof(int)   , comm_shared);
+  PDM_mpi_win_shared_t* wshared_pts_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), comm_shared);
+  int    *shared_pts_n       = PDM_mpi_win_shared_get(wshared_pts_n);
+  int    *recv_codes         = PDM_mpi_win_shared_get(wrecv_codes);
+  double *shared_pts_extents = PDM_mpi_win_shared_get(wshared_pts_extents);
+  PDM_mpi_win_shared_lock_all (0, wshared_pts_n      );
+  PDM_mpi_win_shared_lock_all (0, wrecv_codes        );
+  PDM_mpi_win_shared_lock_all (0, wshared_pts_extents);
+
+  PDM_MPI_Neighbor_allgatherv(send_n_pts  , n_local_nodes, PDM_MPI_INT,
+                              shared_pts_n, lrecv_count  , recv_shift, PDM_MPI_INT, comm_dist_graph);
+  PDM_MPI_Barrier(comm_shared);
+
+  /*
+   * Exchange code
+   */
+  if(i_rank_in_shm == 0) {
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_n  [i  ] *= 4;
+      shared_local_nodes_idx[i+1] *= 4;
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wshared_local_nodes_n  );
+  PDM_mpi_win_shared_sync(wshared_local_nodes_idx);
+
+  /* Update */
+  for(int i = 0; i < n_degree_in; ++i) {
+    recv_shift [i]  = shared_local_nodes_idx[neighbor_in[i]];
+    lrecv_count[i] *= 4;
+  }
+
+  PDM_MPI_Neighbor_allgatherv(send_codes, 4 * n_local_nodes, PDM_MPI_INT,
+                              recv_codes, lrecv_count      , recv_shift, PDM_MPI_INT, comm_dist_graph);
+  PDM_MPI_Barrier(comm_shared);
+
+  /*
+   * Exchange extents
+   */
+  if(i_rank_in_shm == 0) {
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_n  [i  ] /= 4;
+      shared_local_nodes_idx[i+1] /= 4;
+      shared_local_nodes_n  [i  ] *= 6;
+      shared_local_nodes_idx[i+1] *= 6;
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wshared_local_nodes_n  );
+  PDM_mpi_win_shared_sync(wshared_local_nodes_idx);
+
+  /* Update */
+  for(int i = 0; i < n_degree_in; ++i) {
+    recv_shift [i]  = shared_local_nodes_idx[neighbor_in[i]];
+    lrecv_count[i] /= 4;
+    lrecv_count[i] *= 6;
+  }
+
+  PDM_MPI_Neighbor_allgatherv(send_extents      , 6 * n_local_nodes, PDM_MPI_DOUBLE,
+                              shared_pts_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, comm_dist_graph);
+  PDM_MPI_Barrier(comm_shared);
+
+  /*
+   * Update the array of shared_rank
+   */
+  if(i_rank_in_shm == 0) {
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_idx[i+1] /= 6;
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wshared_local_nodes_idx);
+
+
+  PDM_mpi_win_shared_unlock_all(wshared_local_nodes_n);
+
+  PDM_mpi_win_shared_free(wshared_local_nodes_n);
+
+  /*
+   * Prepare codes
+   */
+  octree->wshared_all_codes = PDM_mpi_win_shared_create(shared_local_nodes_idx[n_rank], sizeof(PDM_morton_code_t), comm_shared);
+  PDM_morton_code_t *shared_all_codes = PDM_mpi_win_shared_get(octree->wshared_all_codes);
+
+  PDM_g_num_t* distrib = PDM_compute_uniform_entity_distribution(comm_shared, shared_local_nodes_idx[n_rank]);
+
+  PDM_mpi_win_shared_lock_all (0, octree->wshared_all_codes);
+  for (int i = distrib[i_rank_in_shm]; i < distrib[i_rank_in_shm+1]; i++) {
+    shared_all_codes[i].L = (PDM_morton_int_t) recv_codes[4*i];
+    for (int j = 0; j < 3; j++) {
+      shared_all_codes[i].X[j] = (PDM_morton_int_t) recv_codes[4*i+j+1];
+    }
+  }
+  free(distrib);
+  PDM_mpi_win_shared_sync(octree->wshared_all_codes);
+  PDM_MPI_Barrier(octree->comm);
+
+  if(0 == 1 && i_rank_in_shm == 0) {
+    char filename[999];
+    for (int i = 0; i < n_rank; i++) {
+      sprintf(filename, "octree_shared_in_node_%4.4d_%4.4d.vtk", i_rank_in_shm, i);
+      _export_nodes (filename,
+                     shared_local_nodes_idx[i+1] - shared_local_nodes_idx[i],
+                     shared_all_codes + shared_local_nodes_idx[i],
+                     octree->s,
+                     octree->d);
+
+      sprintf(filename, "octree_shared_in_node_extents__%4.4d_%4.4d.vtk", i_rank_in_shm, i);
+      _export_boxes (filename,
+                     shared_local_nodes_idx[i+1] - shared_local_nodes_idx[i],
+                     shared_pts_extents + 6* shared_local_nodes_idx[i],
+                     NULL);
+    }
+  }
+
+  free(recv_shift);
+  free(neighbor_in);
+  free(send_n_pts);
+  free(send_extents);
+  free(send_codes);
+  free(lrecv_count);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(shared_local_nodes_n, n_rank , "shared_local_nodes_n ::");
+    PDM_log_trace_array_int(shared_local_nodes_idx, n_rank+1 , "shared_local_nodes_idx ::");
+  }
+
+  PDM_mpi_win_shared_unlock_all(wrecv_codes);
+  PDM_mpi_win_shared_free(wrecv_codes);
+  octree->wshared_all_rank_idx    = wshared_local_nodes_idx;
+  octree->wshared_all_pts_n       = wshared_pts_n;
+  octree->wshared_all_pts_extents = wshared_pts_extents;
+}
 
 static
 void
@@ -7281,6 +7504,12 @@ PDM_para_octree_create
   octree->w_shm_points         = NULL;
   octree->w_shm_explicit_nodes = NULL;
 
+  octree->wshared_all_rank_idx    = NULL;
+  octree->wshared_all_node_idx    = NULL;
+  octree->wshared_all_pts_n       = NULL;
+  octree->wshared_all_pts_extents = NULL;
+  octree->wshared_all_codes       = NULL;
+
   // return id;
   return (PDM_para_octree_t *) octree;
 }
@@ -7907,7 +8136,10 @@ PDM_para_octree_build
 
     //-->>
     if(_octree->shared_among_nodes == 1) {
-      _build_shared_octree_among_nodes(_octree);
+      _build_shared_octree_among_nodes2(_octree);
+      if(0 == 1) {
+        _build_shared_octree_among_nodes (_octree);
+      }
     } else {
       /*
        *  Compress octants
@@ -13607,8 +13839,8 @@ PDM_para_octree_points_inside_boxes_shared
     /* Encode box corners */
     box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
 
-    // int precond_type = 0;
-    int precond_type = 1;
+    int precond_type = 0;
+    // int precond_type = 1;
 
     int               *shared_all_rank_idx = PDM_mpi_win_shared_get(_octree->wshared_all_rank_idx   );
     double            *shared_pts_extents  = PDM_mpi_win_shared_get(_octree->wshared_all_pts_extents);
@@ -14670,13 +14902,17 @@ PDM_para_octree_free_shm
 
 
   /* Shared structure */
-  PDM_mpi_win_shared_unlock_all(_octree->wshared_all_node_idx   );
+  if(_octree->wshared_all_node_idx != NULL) {
+    PDM_mpi_win_shared_unlock_all(_octree->wshared_all_node_idx   );
+  }
   PDM_mpi_win_shared_unlock_all(_octree->wshared_all_rank_idx   );
   PDM_mpi_win_shared_unlock_all(_octree->wshared_all_codes      );
   PDM_mpi_win_shared_unlock_all(_octree->wshared_all_pts_extents);
   PDM_mpi_win_shared_unlock_all(_octree->wshared_all_pts_n      );
 
-  PDM_mpi_win_shared_free(_octree->wshared_all_node_idx   );
+  if(_octree->wshared_all_node_idx != NULL) {
+    PDM_mpi_win_shared_free(_octree->wshared_all_node_idx   );
+  }
   PDM_mpi_win_shared_free(_octree->wshared_all_rank_idx   );
   PDM_mpi_win_shared_free(_octree->wshared_all_codes      );
   PDM_mpi_win_shared_free(_octree->wshared_all_pts_extents);
