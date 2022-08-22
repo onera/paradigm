@@ -531,7 +531,7 @@ PDM_box_tree_intersect_lines_boxes
  */
 
 void
-PDM_box_tree_intersect_lines_boxes2
+PDM_box_tree_intersect_boxes_lines
 (
  PDM_box_tree_t *bt,
  const int       i_copied_rank,
@@ -540,6 +540,33 @@ PDM_box_tree_intersect_lines_boxes2
  int           **box_line_idx,
  int           **box_line_l_num
  );
+
+/**
+ *
+ * \brief Get an indexed list of all boxes intersecting boxes
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_line         Number of boxes
+ * \param [in]   line_coord     Boxes coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  box_idx        Pointer to the index array on boxes (size = \ref n_line + 1)
+ * \param [out]  box_l_num      Pointer to the list of boxes intersecting boxes (size = \ref box_idx[\ref n_line])
+ *
+ */
+
+void
+PDM_box_tree_intersect_boxes_boxes
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_box,
+ const double   *box_coord,
+ int           **box_idx,
+ int           **box_l_num
+);
 
 /**
  *

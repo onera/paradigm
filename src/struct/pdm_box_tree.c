@@ -3719,7 +3719,10 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   int ncall=0;
   int n_boxes =0;
 
+  double t1 = PDM_MPI_Wtime();
   for (int k = 0; k < boxesB->local_boxes->n_boxes; k++) {
+    ncall = 0;
+    n_boxes = 0;
     _count_boxes_intersections(bt,
                                &ncall,
                                &n_boxes,
@@ -3728,7 +3731,13 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                                0, /* start from root */
                                _index + 1);
 
+  // log_trace("ncall   =  %i \n", ncall);
+  // log_trace("n_boxes =  %i \n", n_boxes);
+
   }
+  log_trace("ncall   =  %i \n", ncall);
+  log_trace("n_boxes =  %i \n", n_boxes);
+  log_trace("count = %12.5e \n", PDM_MPI_Wtime()-t1);
 
   /* Build index from counts */
 
@@ -3743,6 +3752,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 
   /* Build list */
 
+  t1 = PDM_MPI_Wtime();
   for (int k = 0; k < boxesB->local_boxes->n_boxes; k++) {
     _get_boxes_intersections(bt,
                              boxesB,
@@ -3752,9 +3762,12 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                              _index,
                              _l_num);
   }
+  log_trace("get = %12.5e \n", PDM_MPI_Wtime()-t1);
+
 
   /* Remove duplicate boxes */
 
+  t1 = PDM_MPI_Wtime();
   int idx=0;
   for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
     counter[i] = 0;
@@ -3782,6 +3795,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 
   free(counter);
 
+  log_trace("sort = %12.5e \n", PDM_MPI_Wtime()-t1);
   /* Return pointers */
 
   *box_index = _index;
@@ -5747,7 +5761,7 @@ PDM_box_tree_intersect_lines_boxes
  */
 
 void
-PDM_box_tree_intersect_lines_boxes2
+PDM_box_tree_intersect_boxes_lines
 (
  PDM_box_tree_t *bt,
  const int       i_copied_rank,
@@ -5755,17 +5769,93 @@ PDM_box_tree_intersect_lines_boxes2
  const double   *line_coord,
  int           **box_line_idx,
  int           **box_line
- )
+)
 {
+  int *line_box_idx = NULL;
+  int *line_box     = NULL;
+  PDM_box_tree_intersect_lines_boxes(bt,
+                                     i_copied_rank,
+                                     n_line,
+                                     line_coord,
+                                     &line_box_idx,
+                                     &line_box);
+
+  /* Transpose from line->box to box->line */
+  PDM_boxes_t *boxes;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+  }
+  int n_boxes = boxes->n_boxes;
+
+  int* box_line_n = PDM_array_zeros_int(n_boxes);
+  for(int i = 0; i < n_line; ++i) {
+    for(int idx_box = line_box_idx[i]; idx_box <  line_box_idx[i+1]; ++idx_box ) {
+      box_line_n[line_box[idx_box-1]]++;
+    }
+  }
+
+  *box_line_idx = PDM_array_new_idx_from_sizes_int(box_line_n, n_boxes);
+  *box_line = (int *) malloc(sizeof(int) * (*box_line_idx)[n_boxes]);
+  PDM_array_reset_int(box_line_n, n_boxes, 0);
+  for (int iline = 0; iline < n_line; iline++) {
+    for (int idx_box = line_box_idx[iline]; idx_box < line_box_idx[iline+1]; idx_box++) {
+      int ibox = line_box[idx_box];
+      (*box_line)[(*box_line_idx)[ibox] + box_line_n[ibox]++] = iline;
+    }
+  }
+  free(box_line_n);
+  free(line_box_idx);
+  free(line_box);
+}
+
+/**
+ *
+ * \brief Get an indexed list of all boxes intersecting lines
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_line         Number of lines
+ * \param [in]   line_coord     Lines coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
+ * \param [out]  box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
+ *
+ */
+
+void
+PDM_box_tree_intersect_boxes_boxes
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_tgt_box,
+ const double   *tgt_box_extents,
+ int           **tgt_box_idx,
+ int           **tgt_box_l_num
+)
+{
+
+  assert(i_copied_rank < bt->n_copied_ranks);
+
   const int dim = bt->boxes->dim;
   const int two_dim = 2*dim;
+  //int normalized = bt->boxes->normalized;
 
-  double *_line_coord = malloc (sizeof(double) * two_dim * n_line);
+  /* if (normalized) { */
+  double *_tgt_box_extents = malloc (sizeof(double) * two_dim * n_tgt_box);
+  /*for (int i = 0; i < 2*n_tgt_box; i++) {
+    const double *_pt_origin =  tgt_box_extents + dim * i;
+    double *_pt              = _tgt_box_extents + dim * i;
+    PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
+    }*/
   PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
-                                n_line*2,
-                                (double *) line_coord,
-                                _line_coord);
-
+                                n_tgt_box*2,
+                                (double *) tgt_box_extents,
+                                _tgt_box_extents);
+  /* } */
 
   PDM_boxes_t *boxes;
   PDM_box_tree_data_t *box_tree_data;
@@ -5779,13 +5869,13 @@ PDM_box_tree_intersect_lines_boxes2
 
   int n_boxes = boxes->n_boxes;
 
-  int *line_box_idx = (int *) malloc(sizeof(int) * (n_line + 1));
-  line_box_idx[0] = 0;
+  *tgt_box_idx = malloc (sizeof(int) * (n_tgt_box + 1));
+  int *_tgt_box_idx = *tgt_box_idx;
+  _tgt_box_idx[0] = 0;
 
-  int s_line_box = 2 * n_line;
-  int *line_box = (int *) malloc(sizeof(int) * s_line_box);
-
-  int *box_line_n = PDM_array_zeros_int(n_boxes);
+  int tmp_s_boxes = 4 * n_tgt_box;
+  *tgt_box_l_num = malloc (sizeof(int) * tmp_s_boxes);
+  int *_tgt_box_l_num = *tgt_box_l_num;
 
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
   int *stack = malloc ((sizeof(int)) * s_stack);
@@ -5797,18 +5887,15 @@ PDM_box_tree_intersect_lines_boxes2
     is_visited_box[i] = PDM_FALSE;
   }
 
-  int *visited_boxes = malloc(sizeof(int) * n_boxes);
+  int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
   double node_extents[2*dim];
+
   double invdir[3];
+  for (int itgt_box = 0; itgt_box < n_tgt_box; itgt_box++) {
 
-  // log_trace("i_copied_rank = %i | n_line = %i \n", i_copied_rank, n_line);
-
-  for (int iline = 0; iline < n_line; iline++) {
-
-    line_box_idx[iline+1] = line_box_idx[iline];
-
-    const double *origin = _line_coord + two_dim * iline;
+    _tgt_box_idx[itgt_box+1] = _tgt_box_idx[itgt_box];
+    const double *origin = _tgt_box_extents + two_dim * itgt_box;
     const double *destination = origin + dim;
     for (int i = 0; i < 3; i++) {
       double d = destination[i] - origin[i];
@@ -5825,7 +5912,7 @@ PDM_box_tree_intersect_lines_boxes2
               box_tree_data->nodes[0].morton_code,
               node_extents);
 
-    if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+    if (_intersect_tgt_box_box (dim, node_extents, origin, invdir)) {
       stack[pos_stack++] = 0;
     }
 
@@ -5851,13 +5938,13 @@ PDM_box_tree_intersect_lines_boxes2
           if (is_visited_box[box_id] == PDM_FALSE) {
             const double *box_extents = boxes->extents + box_id*2*dim;
 
-            if (_intersect_line_box (dim, box_extents, origin, invdir)) {
-              if (line_box_idx[iline+1] >= s_line_box) {
-                s_line_box *= 2;
-                line_box = realloc (line_box, sizeof(int) * s_line_box);
+            if (_intersect_tgt_box_box (dim, box_extents, origin, invdir)) {
+              if (_tgt_box_idx[itgt_box+1] >= tmp_s_boxes) {
+                tmp_s_boxes *= 2;
+                *tgt_box_l_num = realloc (*tgt_box_l_num, sizeof(int) * tmp_s_boxes);
+                _tgt_box_l_num = *tgt_box_l_num;
               }
-              line_box[line_box_idx[iline+1]++] = box_id;
-              box_line_n[box_id]++;
+              _tgt_box_l_num[_tgt_box_idx[itgt_box+1]++] = box_id;
             }
             visited_boxes[n_visited_boxes++] = box_id;
             is_visited_box[box_id] = PDM_TRUE;
@@ -5870,13 +5957,11 @@ PDM_box_tree_intersect_lines_boxes2
       else {
         /* inspect children of current node */
         int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
-
-        // log_trace("bt->n_children = %i \n", bt->n_children);
         for (int ichild = 0; ichild < bt->n_children; ichild++) {
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
 
-          if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+          if (_intersect_tgt_box_box (dim, node_extents, origin, invdir)) {
             stack[pos_stack++] = child_id;
           }
         }
@@ -5890,30 +5975,20 @@ PDM_box_tree_intersect_lines_boxes2
 
   } // End of loop on points
 
-  if (line_coord != _line_coord) {
-    free (_line_coord);
+  if (tgt_box_extents != _tgt_box_extents) {
+    free (_tgt_box_extents);
   }
 
   free (is_visited_box);
   free (stack);
   free (visited_boxes);
 
+  *tgt_box_l_num = realloc (*tgt_box_l_num, sizeof(int) * _tgt_box_idx[n_tgt_box]);
 
-
-  /* Transpose from line->box to box->line */
-  *box_line_idx = PDM_array_new_idx_from_sizes_int(box_line_n, n_boxes);
-  *box_line = (int *) malloc(sizeof(int) * (*box_line_idx)[n_boxes]);
-  PDM_array_reset_int(box_line_n, n_boxes, 0);
-  for (int iline = 0; iline < n_line; iline++) {
-    for (int idx_box = line_box_idx[iline]; idx_box < line_box_idx[iline+1]; idx_box++) {
-      int ibox = line_box[idx_box];
-      (*box_line)[(*box_line_idx)[ibox] + box_line_n[ibox]++] = iline;
-    }
-  }
-  free(box_line_n);
-  free(line_box_idx);
-  free(line_box);
 }
+
+
+
 
 /**
  *
