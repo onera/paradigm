@@ -183,6 +183,7 @@ test_c_create (pdm_t_box_tree 1)
 # test_c_create (pdm_t_multi_block_merge 1)
 
 test_c_create (pdm_t_ho_ordering 1)
+test_c_create (pdm_t_mpi_shared_allgather 1)
 
 #TODO: Not fully implemented 
 #test_c_create (pdm_t_win_shared 1)

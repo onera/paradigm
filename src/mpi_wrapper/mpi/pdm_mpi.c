@@ -14,7 +14,9 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-//#include <sys/syscall.h> //Non portable mettre un ifdef
+#ifdef __linux__
+#include <sys/syscall.h> //Non portable mettre un ifdef
+#endif
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1894,7 +1896,7 @@ double PDM_MPI_Wtime(void)
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-              int root, PDM_MPI_Comm comm)
+                  int root, PDM_MPI_Comm comm)
 {
   int code = MPI_Bcast(buffer,
                        count,
@@ -1910,7 +1912,7 @@ int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-              int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+                   int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
 {
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
 
@@ -1929,8 +1931,8 @@ int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount,
-                  PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+                      void *recvbuf, int recvcount,
+                      PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
   int code =  MPI_Allgather(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
                             recvbuf, recvcount,
@@ -1945,8 +1947,8 @@ int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                   void *recvbuf, int *recvcounts,
-                   int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+                       void *recvbuf, int *recvcounts,
+                       int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
   int code = MPI_Allgatherv(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
                             recvbuf, recvcounts, displs,
@@ -2015,6 +2017,22 @@ int PDM_MPI_Scan(const void *sendbuf, void *recvbuf, int count,
                       _pdm_mpi_2_mpi_comm(comm));
   return _mpi_2_pdm_mpi_err(code);
 }
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Exscan (wrapping de la fonction MPI_Exscan)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Exscan(const void *sendbuf, void *recvbuf, int count,
+             PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm)
+{
+  int code = MPI_Exscan(sendbuf, recvbuf, count,
+                        _pdm_mpi_2_mpi_datatype(datatype),
+                        mpi_op[op],
+                        _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
 
 
 int PDM_MPI_Iscan(const void *sendbuf, void *recvbuf, int count,
@@ -2481,11 +2499,14 @@ PDM_MPI_Comm_split_type_numa
   int i_rank_node;
   PDM_MPI_Comm_rank(comm_node, &i_rank_node);
 
-  // int i_cpu;
+  int i_cpu;
   int i_numa;
-  //syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+#ifdef __linux__
+  syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+#else
   printf("PDM_MPI_Comm_split_type_numa : appel a SYS_getcpu commente car non portable : a reintroduire après tests dans CMake\n");
   abort();
+#endif
 
   /* Sur le shared on split par numa */
   int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
@@ -2653,6 +2674,158 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
   // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);
 
   return (int) (ltag % max_tag);
+}
+
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Dist_graph_create_adjacent
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
+                                             int     indegree,
+                                       const int     sources[],
+                                             int     outdegree,
+                                       const int     destinations[],
+                                       int           reorder,
+                                       PDM_MPI_Comm *newcomm)
+{
+  MPI_Comm _newcomm;
+  int code = MPI_Dist_graph_create_adjacent(_pdm_mpi_2_mpi_comm(comm_old),
+                                            indegree,
+                                            sources,
+                                            MPI_UNWEIGHTED,
+                                            outdegree,
+                                            destinations,
+                                            MPI_UNWEIGHTED,
+                                            MPI_INFO_NULL,
+                                            reorder,
+                                            &_newcomm);
+
+  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount,
+                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code =  MPI_Neighbor_allgather(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf, recvcount,
+                                     _pdm_mpi_2_mpi_datatype(recvtype),
+                                     _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_allgatherv (wrapping de la fonction MPI_Neighbor_allgatherv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                                void *recvbuf, int *recvcounts,
+                                int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_allgatherv(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf, recvcounts, displs,
+                                     _pdm_mpi_2_mpi_datatype(recvtype), _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_alltoall (wrapping de la fonction MPI_Neighbor_alltoall)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                              void *recvbuf, int recvcount,
+                              PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_alltoall(sendbuf, sendcount,
+                                   _pdm_mpi_2_mpi_datatype(sendtype),
+                                   recvbuf, recvcount,
+                                   _pdm_mpi_2_mpi_datatype(recvtype),
+                                   _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Ialltoall (wrapping de la fonction MPI_Ialltoall)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ineighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount,
+                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+{
+  MPI_Request _mpi_request = MPI_REQUEST_NULL;
+
+  int code = MPI_Ineighbor_alltoall(sendbuf, sendcount,
+                                    _pdm_mpi_2_mpi_datatype(sendtype),
+                                    recvbuf, recvcount,
+                                    _pdm_mpi_2_mpi_datatype(recvtype),
+                                    _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_alltoallv (wrapping de la fonction MPI_Neighbor_alltoallv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
+                               PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
+                               int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_alltoallv(sendbuf,
+                           sendcounts,
+                           sdispls,
+                           _pdm_mpi_2_mpi_datatype(sendtype),
+                           recvbuf,
+                           recvcounts,
+                           rdispls,
+                           _pdm_mpi_2_mpi_datatype(recvtype),
+                           _pdm_mpi_2_mpi_comm(comm));
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Ineighbor_alltoallv (wrapping de la fonction MPI_Ineighbor_alltoallv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
+                                PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
+                                int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm,
+                                PDM_MPI_Request *request)
+{
+  MPI_Request _mpi_request = MPI_REQUEST_NULL;
+  // double t1 = MPI_Wtime();
+  int code = MPI_Ineighbor_alltoallv(sendbuf,
+                                     sendcounts,
+                                     sdispls,
+                                     _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf,
+                                     recvcounts,
+                                     rdispls,
+                                     _pdm_mpi_2_mpi_datatype(recvtype),
+                                     _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+
+  // double dt = MPI_Wtime() - t1;
+  // log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
+
+  *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 #ifdef __cplusplus
