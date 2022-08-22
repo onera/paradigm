@@ -797,6 +797,17 @@ int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                                 int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm,
                                 PDM_MPI_Request *request);
 
+void
+PDM_MPI_setup_hybrid_dist_comm_graph
+(
+  PDM_MPI_Comm   comm,
+  PDM_MPI_Comm  *comm_shared_out,
+  PDM_MPI_Comm  *comm_dist_graph_out,
+  int           *n_degree,
+  int          **neighbor
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

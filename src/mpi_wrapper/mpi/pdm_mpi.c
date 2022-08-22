@@ -2821,12 +2821,219 @@ int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                                      _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   // double dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
+  // log_trace("MPI_Ineighbor_alltoallv dt = %12.5e \n", dt);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
   return _mpi_2_pdm_mpi_err(code);
 }
+
+void
+PDM_MPI_setup_hybrid_dist_comm_graph
+(
+  PDM_MPI_Comm   comm,
+  PDM_MPI_Comm  *comm_shared_out,
+  PDM_MPI_Comm  *comm_dist_graph_out,
+  int           *n_degree,
+  int          **neighbor
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  // Shared
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm_split_type(comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  PDM_MPI_Comm comm_master_of_shm = PDM_MPI_get_group_of_master(comm, comm_shared);
+
+  int i_rank_master_of_shm = -1;
+  int n_rank_master_of_shm;
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_rank(comm_master_of_shm, &i_rank_master_of_shm);
+    PDM_MPI_Comm_size(comm_master_of_shm, &n_rank_master_of_shm);
+  }
+  PDM_MPI_Bcast(&n_rank_master_of_shm, 1, PDM_MPI_INT, 0, comm_shared);
+  PDM_MPI_Bcast(&i_rank_master_of_shm, 1, PDM_MPI_INT, 0, comm_shared);
+
+  PDM_mpi_win_shared_t* wnuma_by_numa_n = PDM_mpi_win_shared_create(n_rank_master_of_shm, sizeof(int), comm_shared);
+  int *numa_by_numa_n  = PDM_mpi_win_shared_get(wnuma_by_numa_n);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_n);
+
+
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Allgather(&n_rank_in_shm, 1, PDM_MPI_INT,
+                      numa_by_numa_n, 1, PDM_MPI_INT, comm_master_of_shm);
+  }
+  PDM_mpi_win_shared_sync(wnuma_by_numa_n);
+  PDM_MPI_Barrier(comm_shared);
+
+  int n_tot_numa = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    n_tot_numa += numa_by_numa_n[i];
+  }
+  /*
+   * Create idx  and  gid of each numa
+   */
+  PDM_mpi_win_shared_t* wnuma_core_gid    = PDM_mpi_win_shared_create(n_tot_numa               , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wnuma_by_numa_idx = PDM_mpi_win_shared_create(n_rank_master_of_shm+1, sizeof(int), comm_shared);
+  int *numa_core_gid    = PDM_mpi_win_shared_get(wnuma_core_gid);
+  int *numa_by_numa_idx = PDM_mpi_win_shared_get(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_lock_all (0, wnuma_core_gid);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_idx);
+
+
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    numa_by_numa_idx[0] = 0;
+    for(int i = 0; i < n_rank_master_of_shm; ++i) {
+      numa_by_numa_idx[i+1] = numa_by_numa_idx[i] + numa_by_numa_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_by_numa_idx);
+
+  numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i_rank_in_shm] = i_rank;
+
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  /*
+   *  Exchange of the global numbering of rank for each NUMA
+   */
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    int *lnuma_core_gid = malloc(n_rank_in_shm * sizeof(int));
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      lnuma_core_gid[i] = numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i];
+    }
+    PDM_MPI_Allgatherv(lnuma_core_gid, n_rank_in_shm, PDM_MPI_INT,
+                       numa_core_gid , numa_by_numa_n, numa_by_numa_idx, PDM_MPI_INT, comm_master_of_shm);
+    free(lnuma_core_gid);
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  // PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shm, "numa_core_gid :: ");
+
+  /*
+   * Computation of degree_in
+   */
+  int *send_n   = malloc(  n_rank    * sizeof(int));
+  int *recv_n   = malloc(  n_rank    * sizeof(int));
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+    recv_n[i] = 0;
+  }
+
+  int n_degrees_in = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int lid_rank = (j - numa_by_numa_idx[i]) % n_rank_in_shm; // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        n_degrees_in++;
+      }
+    }
+  }
+
+  int* neighbor_in = malloc( (n_degrees_in ) * sizeof(int));
+  n_degrees_in = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int gid_rank = numa_core_gid[j];
+      int lid_rank = (j - numa_by_numa_idx[i]) % n_rank_in_shm;  // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        neighbor_in[n_degrees_in++] = gid_rank;
+      }
+    }
+  }
+
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    send_n[neighbor_in[i]]++;
+  }
+
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
+    send_cur_i_rank[idx_write] = i_rank;
+  }
+
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+
+  PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
+                    recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
+
+
+  // PDM_log_trace_connectivity_int(recv_idx, recv_opp_i_rank, n_rank, "recv_opp_i_rank ::");
+
+
+  int n_degrees_out = recv_idx[n_rank];
+  int *neighbor_out = recv_opp_i_rank; // Already sort normaly
+
+  free(send_n);
+  free(recv_n);
+  free(send_idx);
+  free(recv_idx);
+  free(send_cur_i_rank);
+
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(neighbor_in , n_degrees_in , "neighbor_in  ::");
+    PDM_log_trace_array_int(neighbor_out, n_degrees_out, "neighbor_out ::");
+  }
+
+  PDM_MPI_Comm comm_dist_graph;
+  PDM_MPI_Dist_graph_create_adjacent(comm,
+                                     n_degrees_in,
+                                     neighbor_in,
+                                     n_degrees_out,
+                                     neighbor_out,
+                                     0,
+                                     &comm_dist_graph);
+
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
+  PDM_mpi_win_shared_unlock_all(wnuma_core_gid);
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_free(wnuma_by_numa_n);
+  PDM_mpi_win_shared_free(wnuma_core_gid);
+  PDM_mpi_win_shared_free(wnuma_by_numa_idx);
+
+  free(recv_opp_i_rank);
+
+  *comm_shared_out     = comm_shared;
+  *comm_dist_graph_out = comm_dist_graph;
+
+  *n_degree = n_degrees_in;
+  *neighbor = neighbor_in;
+}
+
+
+
+
 
 #ifdef __cplusplus
 }
