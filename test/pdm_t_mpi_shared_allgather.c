@@ -367,34 +367,123 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
     n_vals[i] = (rand() % 8)+1;
   }
 
-  // int *val = malloc(n_val * sizeof(int));
-  // for(int i = 0; i < n_val; ++i) {
-  //   val[i] = i_rank;
-  // }
 
   int *n_vals_out = malloc(n_degrees_in * sizeof(int));
 
   PDM_MPI_Neighbor_alltoall(n_vals    , 1, PDM_MPI_INT,
                             n_vals_out, 1, PDM_MPI_INT, comm_dist_graph);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(n_vals    , n_degrees_out, "n_vals     ::");
     PDM_log_trace_array_int(n_vals_out, n_degrees_in , "n_vals_out ::");
   }
+  free(n_vals);
+
+  /*
+   * Tentative allgather
+   */
+  srand(i_rank+11);
+  int n_val = (rand() % 8)+1;
+
+  PDM_mpi_win_shared_t* wnuma_degrees_in_n   = PDM_mpi_win_shared_create(n_rank_in_shm  , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wnuma_degrees_in_idx = PDM_mpi_win_shared_create(n_rank_in_shm+1, sizeof(int), comm_shared);
+
+  int *numa_degrees_in_n   = PDM_mpi_win_shared_get(wnuma_degrees_in_n);
+  int *numa_degrees_in_idx = PDM_mpi_win_shared_get(wnuma_degrees_in_idx);
+
+  PDM_mpi_win_shared_lock_all (0, wnuma_degrees_in_n  );
+  PDM_mpi_win_shared_lock_all (0, wnuma_degrees_in_idx);
+
+  PDM_MPI_Scan(&n_degrees_in, &numa_degrees_in_idx[i_rank_in_shm+1], 1, PDM_MPI_INT, PDM_MPI_SUM, comm_shared);
+  PDM_MPI_Barrier(comm_shared);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(numa_degrees_in_idx, n_rank_in_shm+1 , "numa_degrees_in_idx ::");
+  }
+
+
+  PDM_MPI_Neighbor_allgather(&n_val    , 1, PDM_MPI_INT,
+                             n_vals_out, 1, PDM_MPI_INT, comm_dist_graph);
+  PDM_log_trace_array_int(n_vals_out, n_degrees_in , "n_vals_out ::");
 
 
 
+  PDM_mpi_win_shared_t* wshared_vals_out_n   = PDM_mpi_win_shared_create(n_rank  , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wshared_vals_out_idx = PDM_mpi_win_shared_create(n_rank+1, sizeof(int), comm_shared);
+  int *shared_vals_out_n   = PDM_mpi_win_shared_get(wshared_vals_out_n);
+  int *shared_vals_out_idx = PDM_mpi_win_shared_get(wshared_vals_out_idx);
+  PDM_mpi_win_shared_lock_all (0, wshared_vals_out_n  );
+  PDM_mpi_win_shared_lock_all (0, wshared_vals_out_idx);
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    shared_vals_out_n[neighbor_in[i]] = n_vals_out[i];
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  /*
+   * Tentative allgatherv
+   */
+
+  // Preparation du recv_shift
+  if(i_rank_in_shm == 0) {
+    shared_vals_out_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      shared_vals_out_idx[i+1] = shared_vals_out_idx[i] + shared_vals_out_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(shared_vals_out_n  , n_rank , "shared_vals_out_n   ::");
+    PDM_log_trace_array_int(shared_vals_out_idx, n_rank , "shared_vals_out_idx ::");
+  }
+
+  // Hook local recv_shift
+  int *recv_shift = malloc(n_degrees_in * sizeof(int));
+  for(int i = 0; i < n_degrees_in; ++i) {
+    recv_shift[i] = shared_vals_out_idx[neighbor_in[i]];
+  }
+
+  int *val = malloc(n_val * sizeof(int));
+  for(int i = 0; i < n_val; ++i) {
+    val[i] = i_rank;
+  }
+
+  PDM_mpi_win_shared_t* wshared_vals_out   = PDM_mpi_win_shared_create(shared_vals_out_idx[n_rank]  , sizeof(int), comm_shared);
+  int *shared_vals_out   = PDM_mpi_win_shared_get(wshared_vals_out);
+  PDM_mpi_win_shared_lock_all (0, wshared_vals_out  );
+
+  PDM_MPI_Neighbor_allgatherv(val            , n_val     , PDM_MPI_INT,
+                              shared_vals_out, n_vals_out, recv_shift, PDM_MPI_INT, comm_dist_graph);
+
+  PDM_MPI_Barrier(comm_shared);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(shared_vals_out, shared_vals_out_idx[n_rank], "shared_vals_out ::");
+  }
 
 
   free(n_vals_out);
-  free(n_vals);
+  free(recv_shift);
+  free(val);
+
 
   PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
   PDM_mpi_win_shared_unlock_all(wnuma_core_gid);
   PDM_mpi_win_shared_unlock_all(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_unlock_all(wnuma_degrees_in_n);
+  PDM_mpi_win_shared_unlock_all(wshared_vals_out_n);
+  PDM_mpi_win_shared_unlock_all(wshared_vals_out);
+  PDM_mpi_win_shared_unlock_all(wshared_vals_out_idx);
+  PDM_mpi_win_shared_unlock_all(wnuma_degrees_in_idx);
   PDM_mpi_win_shared_free(wnuma_by_numa_n);
   PDM_mpi_win_shared_free(wnuma_core_gid);
   PDM_mpi_win_shared_free(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_free(wnuma_degrees_in_n);
+  PDM_mpi_win_shared_free(wshared_vals_out_n);
+  PDM_mpi_win_shared_free(wshared_vals_out);
+  PDM_mpi_win_shared_free(wshared_vals_out_idx);
+  PDM_mpi_win_shared_free(wnuma_degrees_in_idx);
 
   free(neighbor_in);
   return comm_dist_graph;
