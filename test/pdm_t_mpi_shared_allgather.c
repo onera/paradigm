@@ -252,11 +252,21 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
   PDM_MPI_Barrier(comm_shared);
   PDM_mpi_win_shared_sync(wnuma_core_gid);
 
-  PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shm, "numa_core_gid :: ");
+  // PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shm, "numa_core_gid :: ");
 
   /*
    * Computation of degree_in
    */
+  int *send_n   = malloc(  n_rank    * sizeof(int));
+  int *recv_n   = malloc(  n_rank    * sizeof(int));
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+    recv_n[i] = 0;
+  }
+
   int n_degrees_in = 0;
   for(int i = 0; i < n_rank_master_of_shm; ++i) {
     for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
@@ -279,41 +289,50 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
     }
   }
 
-  /*
-   * Computation of degree_out : Il faut que tout le monde recupère une liste plein because all gather
-   *   Il faut verifier que tous le monde a envoyé sa donné dans chaque numa
-   *   Pour chaque range de numa il faut enlever ceux deja envoyer et rajouter les non envoyées
-   */
-  int *rank_tag = (int *) malloc(n_rank * sizeof(int));
 
-  int n_degrees_out = 0;
-  for(int i = 0; i < n_rank_master_of_shm; ++i) {
-    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
-      int lid_rank = (j - numa_by_numa_idx[i]) % numa_by_numa_n[i]; // Donc numero de numa dans le group
-      if(lid_rank == i_rank_in_shm){
-        n_degrees_out++;
-      }
-    }
+  for(int i = 0; i < n_degrees_in; ++i) {
+    send_n[neighbor_in[i]]++;
   }
 
-  int* neighbor_out = malloc( (n_degrees_out ) * sizeof(int));
-  n_degrees_out = 0;
-  for(int i = 0; i < n_rank_master_of_shm; ++i) {
-    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
-      int gid_rank = numa_core_gid[j];
-      int lid_rank = (j - numa_by_numa_idx[i]) % numa_by_numa_n[i];  // Donc numero de numa dans le group
-      if(lid_rank == i_rank_in_shm){
-        neighbor_out[n_degrees_out++] = gid_rank;
-      }
-    }
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
+    send_cur_i_rank[idx_write] = i_rank;
   }
 
 
-  free(rank_tag);
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+
+  PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
+                    recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
 
 
-  // n_degrees_out = n_degrees_in;
-  // neighbor_out = neighbor_in;
+  // PDM_log_trace_connectivity_int(recv_idx, recv_opp_i_rank, n_rank, "recv_opp_i_rank ::");
+
+
+  int n_degrees_out = recv_idx[n_rank];
+  int *neighbor_out = recv_opp_i_rank; // Already sort normaly
+
+  free(send_n);
+  free(recv_n);
+  free(send_idx);
+  free(recv_idx);
+  free(send_cur_i_rank);
+
 
   if(1 == 1) {
     PDM_log_trace_array_int(neighbor_in , n_degrees_in , "neighbor_in  ::");
@@ -330,6 +349,45 @@ PDM_MPI_Comm setup_numa_graph2(PDM_MPI_Comm comm)
                                      0,
                                      &comm_dist_graph);
 
+  free(recv_opp_i_rank);
+
+  /*
+   * Tentative alltoall
+   */
+  int n_rank_neigh, i_rank_neigh;
+  PDM_MPI_Comm_rank (comm_dist_graph, &i_rank_neigh);
+  PDM_MPI_Comm_size (comm_dist_graph, &n_rank_neigh);
+
+
+  srand(i_rank+11);
+
+  int *n_vals = malloc(n_degrees_out * sizeof(int));
+
+  for(int i = 0; i < n_degrees_out; ++i) {
+    n_vals[i] = (rand() % 8)+1;
+  }
+
+  // int *val = malloc(n_val * sizeof(int));
+  // for(int i = 0; i < n_val; ++i) {
+  //   val[i] = i_rank;
+  // }
+
+  int *n_vals_out = malloc(n_degrees_in * sizeof(int));
+
+  PDM_MPI_Neighbor_alltoall(n_vals    , 1, PDM_MPI_INT,
+                            n_vals_out, 1, PDM_MPI_INT, comm_dist_graph);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(n_vals    , n_degrees_out, "n_vals     ::");
+    PDM_log_trace_array_int(n_vals_out, n_degrees_in , "n_vals_out ::");
+  }
+
+
+
+
+
+  free(n_vals_out);
+  free(n_vals);
 
   PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
   PDM_mpi_win_shared_unlock_all(wnuma_core_gid);
@@ -373,6 +431,9 @@ int main(int argc, char *argv[])
    * Setup graph
    */
   if(0 == 1) {
+    // Faire une interface setup_numa_graph(comm, PDM_MPI_ALLGATHER_SHARED_OUT)
+    // Faire une interface setup_numa_graph(comm, PDM_MPI_ALLTOALL_SHARED_OUT)
+    // Faire une interface setup_numa_graph(comm, PDM_MPI_ALLTOALL_SHARED_IN_OUT)
     PDM_MPI_Comm comm_dist_graph = setup_numa_graph(comm);
   } else {
     PDM_MPI_Comm comm_dist_graph = setup_numa_graph2(comm);
