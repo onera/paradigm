@@ -140,6 +140,18 @@ struct _PDM_box_tree_data_t {
 
 };
 
+typedef struct {
+
+  PDM_mpi_win_shared_t *w_nodes;
+  PDM_mpi_win_shared_t *w_child_ids;
+  PDM_mpi_win_shared_t *w_box_ids;
+
+  int                n_max_nodes;
+  int                n_nodes;
+  int                n_linked_boxes;
+
+} _w_box_tree_data_t;
+
 
 
 
@@ -149,11 +161,12 @@ struct _PDM_box_tree_data_t {
 
 struct _PDM_box_tree_t {
 
+  PDM_MPI_Comm         comm;         /* Associated MPI communicator */
   int                  n_children;    /* 8, 4, or 2 (2^dim) */
 
   int                  max_level;     /* Max. possible level */
   int                  threshold;     /* Max number of boxes linked to a
-					 node if max_level is not reached */
+					                               node if max_level is not reached */
   float                max_box_ratio; /* Max n_linked_boxes / n_boxes value */
 
   PDM_box_tree_stats_t stats;         /* Statistics related to the structure */
@@ -162,11 +175,17 @@ struct _PDM_box_tree_t {
 
   int n_copied_ranks;                 /* Number of copies from other ranks */
   int *copied_ranks;                  /* Copied ranks */
-  PDM_box_tree_data_t *rank_data;    /* Box tree data copied from other ranks */
+  PDM_box_tree_data_t *rank_data;     /* Box tree data copied from other ranks */
 
-  PDM_MPI_Comm          comm;         /* Associated MPI communicator */
+  /* Shared memory */
+  int                  n_rank_in_shm;
+  PDM_box_tree_data_t *shm_data;
+  _w_box_tree_data_t  *wbox_tree_data;
+  // PDM_box_set_t       *shm_boxes;              /* Associated boxes */
 
-  PDM_box_set_t  *boxes;        /* Associated boxes */
+
+
+  PDM_box_set_t  *boxes;              /* Associated boxes */
 };
 
 /*=============================================================================
@@ -3673,8 +3692,13 @@ PDM_box_tree_create(int    max_level,
   //bt->local_data = NULL;
 
   bt->n_copied_ranks = 0;
-  bt->copied_ranks = NULL;
-  bt->rank_data    = NULL;
+  bt->copied_ranks   = NULL;
+  bt->rank_data      = NULL;
+
+  /* Shared memory */
+  bt->n_rank_in_shm  = 0;
+  bt->shm_data       = NULL;
+  bt->wbox_tree_data = NULL;
 
   return bt;
 }
@@ -3720,6 +3744,20 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt)
 
   if (_bt == NULL) {
     return;
+  }
+
+  if(_bt->shm_data != NULL) {
+    for(int i = 0; i < _bt->n_rank_in_shm; ++i) {
+      PDM_mpi_win_shared_unlock_all (_bt->wbox_tree_data[i].w_nodes    );
+      PDM_mpi_win_shared_unlock_all (_bt->wbox_tree_data[i].w_child_ids);
+      PDM_mpi_win_shared_unlock_all (_bt->wbox_tree_data[i].w_box_ids  );
+
+      PDM_mpi_win_shared_free(_bt->wbox_tree_data[i].w_nodes    );
+      PDM_mpi_win_shared_free(_bt->wbox_tree_data[i].w_child_ids);
+      PDM_mpi_win_shared_free(_bt->wbox_tree_data[i].w_box_ids  );
+    }
+    free(_bt->wbox_tree_data);
+    free(_bt->shm_data);
   }
 
   // Free local tree data
@@ -3911,8 +3949,9 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
 
 
   double dt = PDM_MPI_Wtime() - t1;
-
-  log_trace("PDM_box_tree_set_boxes : %12.5e \n", dt);
+  if(0) {
+    log_trace("PDM_box_tree_set_boxes : %12.5e \n", dt);
+  }
 
 
 }
@@ -5243,7 +5282,8 @@ PDM_box_tree_copy_to_ranks
  int            *n_copied_ranks,
  int            *copied_ranks,
  int            *rank_copy_num
- ) {
+)
+{
   // copy boxes
   PDM_box_copy_boxes_to_ranks ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
 
@@ -5394,6 +5434,105 @@ PDM_box_tree_copy_to_ranks
   *n_copied_ranks = bt->n_copied_ranks;
 }
 
+
+/**
+ *
+ * \brief Copy the local box tree of some ranks on all other ranks
+ *
+ * \param [in]   bt                 Pointer to box tree structure
+ * \param [in]   n_copied_ranks     Number of copied ranks
+ * \param [in]   copied_ranks       List of copied ranks
+ * \param [out]  rank_copy_num      Transpose of list of copied ranks (-1 for non-copied ranks)
+ *
+ */
+
+void
+PDM_box_tree_copy_to_shm
+(
+ PDM_box_tree_t *bt
+)
+{
+  // copy boxes
+  // PDM_box_copy_boxes_to_shm ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
+
+  int n_rank, i_rank;
+  PDM_MPI_Comm_rank(bt->comm, &i_rank);
+  PDM_MPI_Comm_size(bt->comm, &n_rank);
+
+  // Shared
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm_split_type(bt->comm, PDM_MPI_SPLIT_SHARED, &comm_shared);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  bt->n_rank_in_shm = n_rank_in_shm;
+
+  int s_shm_data_in_rank[4] = {0};
+  s_shm_data_in_rank[0] = bt->local_data->n_max_nodes;
+  s_shm_data_in_rank[1] = bt->local_data->n_nodes;
+  s_shm_data_in_rank[2] = bt->local_data->n_build_loops;
+  s_shm_data_in_rank[3] = bt->stats.n_linked_boxes;
+  int *s_shm_data_in_all_nodes = malloc(4 * n_rank_in_shm * sizeof(int));
+
+  PDM_MPI_Allgather(s_shm_data_in_rank     , 4, PDM_MPI_INT,
+                    s_shm_data_in_all_nodes, 4, PDM_MPI_INT, comm_shared);
+
+  /*
+   *  Pour l'instant on fait tout dans la fonction
+   */
+  bt->shm_data       = (PDM_box_tree_data_t *) malloc(n_rank_in_shm * sizeof(PDM_box_tree_data_t));
+  bt->wbox_tree_data = (_w_box_tree_data_t  *) malloc(n_rank_in_shm * sizeof(_w_box_tree_data_t ));
+
+  printf("n_rank_in_shm = %i \n", n_rank_in_shm);
+
+  /* Creation mémoire des windows */
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    int n_max_nodes    = s_shm_data_in_all_nodes[4*i  ];
+    int n_nodes        = s_shm_data_in_all_nodes[4*i+1];
+    int n_build_loops  = s_shm_data_in_all_nodes[4*i+2];
+    int n_linked_boxes = s_shm_data_in_all_nodes[4*i+3];
+    bt->wbox_tree_data[i].n_max_nodes    = n_max_nodes;
+    bt->wbox_tree_data[i].n_nodes        = n_nodes;
+    bt->wbox_tree_data[i].n_linked_boxes = n_linked_boxes;
+    bt->wbox_tree_data[i].w_nodes        = PDM_mpi_win_shared_create(n_max_nodes               , sizeof(_node_t), comm_shared);
+    bt->wbox_tree_data[i].w_child_ids    = PDM_mpi_win_shared_create(n_max_nodes*bt->n_children, sizeof(int    ), comm_shared);
+    bt->wbox_tree_data[i].w_box_ids      = PDM_mpi_win_shared_create(n_linked_boxes            , sizeof(int    ), comm_shared);
+
+    PDM_mpi_win_shared_lock_all (0, bt->wbox_tree_data[i].w_nodes    );
+    PDM_mpi_win_shared_lock_all (0, bt->wbox_tree_data[i].w_child_ids);
+    PDM_mpi_win_shared_lock_all (0, bt->wbox_tree_data[i].w_box_ids  );
+
+    bt->shm_data[i].n_max_nodes   = n_max_nodes;
+    bt->shm_data[i].n_nodes       = n_nodes;
+    bt->shm_data[i].n_build_loops = n_build_loops;
+
+    // Setup alias
+    bt->shm_data[i].nodes     = PDM_mpi_win_shared_get (bt->wbox_tree_data[i].w_nodes    );
+    bt->shm_data[i].child_ids = PDM_mpi_win_shared_get (bt->wbox_tree_data[i].w_child_ids);
+    bt->shm_data[i].box_ids   = PDM_mpi_win_shared_get (bt->wbox_tree_data[i].w_box_ids  );
+
+  }
+  PDM_MPI_Barrier (comm_shared);
+
+  printf("bt->local_data->n_max_nodes = %i \n", bt->local_data->n_max_nodes);
+
+  /* Copy from local to shared (After windows creation bcause window call is collective ) */
+  for (int j = 0; j < bt->local_data->n_max_nodes; j++) {
+    bt->shm_data[i_rank_in_shm].nodes[j].is_leaf     = bt->local_data->nodes[j].is_leaf;
+    bt->shm_data[i_rank_in_shm].nodes[j].n_boxes     = bt->local_data->nodes[j].n_boxes;
+    bt->shm_data[i_rank_in_shm].nodes[j].start_id    = bt->local_data->nodes[j].start_id;
+    bt->shm_data[i_rank_in_shm].nodes[j].morton_code = bt->local_data->nodes[j].morton_code;
+  }
+
+  memcpy(bt->shm_data[i_rank_in_shm].child_ids, bt->local_data->child_ids, sizeof(int) * bt->local_data->n_max_nodes*bt->n_children);
+  memcpy(bt->shm_data[i_rank_in_shm].box_ids,   bt->local_data->box_ids   , sizeof(int) * bt->stats.n_linked_boxes);
+
+  free(s_shm_data_in_all_nodes);
+
+  PDM_MPI_Barrier (comm_shared);
+}
 
 void
 PDM_box_tree_free_copies

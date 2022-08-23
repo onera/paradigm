@@ -393,8 +393,20 @@ PDM_box_tree_copy_to_ranks
  int            *n_copied_ranks,
  int            *copied_ranks,
  int            *rank_copy_num
- );
+);
 
+/**
+ *
+ * \brief Make box_tree shared among nodes
+ *
+ * \param [in]   bt                 Pointer to box tree structure
+ *
+ */
+void
+PDM_box_tree_copy_to_shm
+(
+ PDM_box_tree_t *bt
+);
 
 void
 PDM_box_tree_free_copies
