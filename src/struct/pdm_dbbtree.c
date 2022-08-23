@@ -1371,6 +1371,7 @@ PDM_dbbtree_boxes_set
 
   _update_bt_statistics(&(_dbbt->btsLoc), _dbbt->btLoc);
 
+  PDM_box_tree_copy_to_shm(_dbbt->btLoc);
 
   // double dt = PDM_MPI_Wtime() - t1;
   // log_trace("PDM_dbbtree_boxes_set : %12.5e \n", dt);
@@ -3490,12 +3491,12 @@ PDM_dbbtree_points_inside_boxes
   if (_dbbt->btShared != NULL) {
     int *pts_rank_idx = NULL;
     int *pts_rank = NULL;
-    PDM_box_tree_boxes_containing_points (_dbbt->btShared,
-                                       -1,
-                                       n_pts,
-                                       pts_coord,
-                                       &pts_rank_idx,
-                                       &pts_rank);
+    PDM_box_tree_boxes_containing_points(_dbbt->btShared,
+                                         -1,
+                                         n_pts,
+                                         pts_coord,
+                                         &pts_rank_idx,
+                                         &pts_rank);
 
     /* Count points to send to each rank */
     send_count = PDM_array_zeros_int (n_rank);
@@ -3995,6 +3996,321 @@ PDM_dbbtree_points_inside_boxes
 }
 
 
+
+/**
+ *
+ * \brief Get an indexed list of all points inside the boxes of a distributed box tree
+ *
+ *   \param [in]  dbbt               Pointer to distributed box tree structure
+ *   \param [in]  n_pts              Number of points
+ *   \param [in]  pts_g_num          Point global ids (size = \ref n_pts)
+ *   \param [in]  pts_coord          Point coordinates (size = 3 * \ref n_pts)
+ *   \param [in]  n_boxes            Number of boxes
+ *   \param [in]  box_g_num          Global ids of boxes (size = \ref n_boxes)
+ *   \param [out] pts_in_box_idx     Index of points in boxes (size = \ref n_boxes + 1, allocated inside function)
+ *   \param [out] pts_in_box_g_num   Global ids of points in boxes (size = \ref pts_in_box_idx[\ref n_boxes], allocated inside function)
+ *   \param [out] pts_in_box_coord   Coordinates of points in boxes (size = 3 *\ref pts_in_box_idx[\ref n_boxes], allocated inside function)
+ *   \param [in]  ellipsoids         Consider boxes as axis-aligned ellipsoids (1 or 0)
+ *
+ */
+
+void
+PDM_dbbtree_points_inside_boxes_shared
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ const int           n_boxes,
+ const PDM_g_num_t   box_g_num[],
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord,
+ const int           ellipsoids
+)
+{
+  // double t1 = PDM_MPI_Wtime();
+  int idebug = 0;
+
+  const float f_threshold = 1.1;  // factor of the mean nb of requests
+  const float f_max_copy  = 0.1;  // factor of the total nb of processes
+
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (_dbbt->comm, &i_rank);
+  PDM_MPI_Comm_size (_dbbt->comm, &n_rank);
+
+  // Shared
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm_split_type(_dbbt->comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  /*
+   *  Normalize target points coords
+   */
+  double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
+  for (int i = 0; i < n_pts; i++) {
+    _normalize (_dbbt, pts_coord  + 3*i, _pts_coord + 3*i);
+  }
+
+
+  int n_copied_ranks = 0;
+  int *copied_ranks = NULL;
+  int n_pts_local  = 0;
+  int n_pts_recv   = 0;
+  int n_pts_copied = 0;
+  int n_pts1;
+  PDM_g_num_t *pts_g_num1 = NULL;
+  double      *pts_coord1 = NULL;
+
+  PDM_mpi_win_shared_t* wshared_recv_gnum      = NULL;
+  PDM_mpi_win_shared_t* wshared_recv_pts_coord = NULL;
+
+  int *distrib_search_by_rank_idx = NULL;
+
+  /*
+   *  For each point, find all ranks that might have boxes containing that point
+   */
+  if (_dbbt->btShared != NULL) {
+    int *send_count = NULL;
+    int *send_shift = NULL;
+    int *recv_count = NULL;
+    int *recv_shift = NULL;
+    PDM_g_num_t *send_g_num = NULL;
+    // PDM_g_num_t *recv_g_num = NULL;
+    double      *send_coord = NULL;
+    // double      *recv_coord = NULL;
+
+    int *pts_rank_idx = NULL;
+    int *pts_rank     = NULL;
+    PDM_box_tree_boxes_containing_points(_dbbt->btShared,
+                                         -1,
+                                         n_pts,
+                                         pts_coord,
+                                         &pts_rank_idx,
+                                         &pts_rank);
+
+    /* Count points to send to each rank */
+    send_count = PDM_array_zeros_int (n_rank);
+
+    for (int i = 0; i < pts_rank_idx[n_pts]; i++) {
+      int t_rank = _dbbt->usedRank[pts_rank[i]];
+      pts_rank[i] = t_rank;
+      send_count[t_rank]++;
+    }
+
+    recv_count = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
+                      recv_count, 1, PDM_MPI_INT,
+                      _dbbt->comm);
+
+    send_shift = malloc ( ( n_rank + 1) * sizeof(int));
+    recv_shift = malloc ( ( n_rank + 1) * sizeof(int));
+
+    // Deduce size of recv buffer shared inside the same node
+    int* shared_recv_count  = malloc(n_rank_in_shm * sizeof(int));
+
+    int n_tot_recv = 0;
+    send_shift[0] = 0;
+    recv_shift[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      n_tot_recv += recv_count[i];
+      send_shift[i+1] = send_shift[i] + send_count[i];
+      recv_shift[i+1] = recv_shift[i] + recv_count[i];
+    }
+
+    PDM_MPI_Allgather(&n_tot_recv,      1, PDM_MPI_INT,
+                      shared_recv_count, 1, PDM_MPI_INT,
+                      comm_shared);
+
+
+    int* shared_recv_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+    shared_recv_idx[0] = 0;
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      shared_recv_idx[i+1] = shared_recv_idx[i] + shared_recv_count[i];
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(shared_recv_count , n_rank_in_shm, "shared_recv_count  :: ");
+      PDM_log_trace_array_int(shared_recv_idx , n_rank_in_shm+1, "shared_recv_idx  :: ");
+    }
+
+    int n_tot_recv_shared = shared_recv_idx[n_rank_in_shm];
+    wshared_recv_gnum      = PDM_mpi_win_shared_create(    n_tot_recv_shared, sizeof(PDM_g_num_t), comm_shared);
+    wshared_recv_pts_coord = PDM_mpi_win_shared_create(3 * n_tot_recv_shared, sizeof(double     ), comm_shared);
+
+    int    *shared_recv_gnum      = PDM_mpi_win_shared_get(wshared_recv_gnum);
+    double *shared_recv_pts_coord = PDM_mpi_win_shared_get(wshared_recv_pts_coord);
+
+    PDM_mpi_win_shared_lock_all (0, wshared_recv_gnum);
+    PDM_mpi_win_shared_lock_all (0, wshared_recv_pts_coord);
+
+    PDM_g_num_t *lrecv_gnum      = &shared_recv_gnum     [    shared_recv_idx[i_rank_in_shm]];
+    double      *lrecv_pts_coord = &shared_recv_pts_coord[3 * shared_recv_idx[i_rank_in_shm]];
+
+    /* Prepare send */
+    send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
+    send_coord = malloc (sizeof(double)      * send_shift[n_rank] * 3);
+
+    for(int i = 0; i < n_rank; ++i) {
+      send_count[i] = 0;
+    }
+
+    for (int ipt = 0; ipt < n_pts; ipt++) {
+      for (int i = pts_rank_idx[ipt]; i < pts_rank_idx[ipt+1]; i++) {
+        int t_rank = pts_rank[i];
+
+        int idx_write = send_shift[t_rank] + send_count[t_rank];
+        send_g_num[idx_write] = pts_g_num[ipt];
+        for (int j = 0; j < 3; j++) {
+          send_coord[3*idx_write + j] = _pts_coord[3*ipt + j];
+        }
+        send_count[t_rank]++;
+      }
+    }
+
+
+    free(pts_rank_idx);
+    free(pts_rank);
+
+
+    PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
+                       lrecv_gnum, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
+                       _dbbt->comm);
+    free(send_g_num);
+
+    for (int i = 0; i < n_rank; i++) {
+      send_count[i  ] *= 3;
+      recv_count[i  ] *= 3;
+      send_shift[i+1] *= 3;
+      recv_shift[i+1] *= 3;
+    }
+
+    PDM_MPI_Alltoallv (send_coord     , send_count, send_shift, PDM_MPI_DOUBLE,
+                       lrecv_pts_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
+                       _dbbt->comm);
+
+    free (send_coord);
+    free (send_count);
+    free (send_shift);
+    free (recv_count);
+    free (recv_shift);
+
+    PDM_MPI_Barrier (comm_shared);
+    PDM_mpi_win_shared_sync (wshared_recv_gnum);
+    PDM_mpi_win_shared_sync (wshared_recv_pts_coord);
+    PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);
+    PDM_mpi_win_shared_unlock_all(wshared_recv_pts_coord);
+
+    /*
+     * Redistribution by numa
+     */
+
+    PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(comm_shared, n_tot_recv_shared);
+
+    int  dn_search = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
+
+    distrib_search_by_rank_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+    int* distrib_search_by_rank_n   = malloc((n_rank_in_shm  ) * sizeof(int));
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      distrib_search_by_rank_n[i] = 0;
+    }
+
+    // TODO : Faire un algo d'intersection de range pour ne pas faire la dicotomie x fois !
+    for(int i = distrib_search[i_rank_in_shm]; i < distrib_search[i_rank_in_shm+1]; ++i) {
+      int t_rank = PDM_binary_search_gap_int(i, shared_recv_idx, n_rank_in_shm+1);
+      distrib_search_by_rank_n[t_rank]++;
+    }
+
+    distrib_search_by_rank_idx[0] = 0;
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      distrib_search_by_rank_idx[i+1] = distrib_search_by_rank_idx[i] + distrib_search_by_rank_n[i];
+    }
+
+    // PDM_log_trace_array_long(check, dn_search, "check ::");
+    PDM_log_trace_array_int(distrib_search_by_rank_idx, n_rank_in_shm+1, "distrib_search_by_rank_idx ::");
+
+    n_pts_local  = 0;
+    n_pts_recv   = dn_search;
+    n_pts_copied = 0;
+
+    n_pts1       = dn_search;
+    pts_g_num1   = (PDM_g_num_t *) &shared_recv_gnum     [    distrib_search[i_rank_in_shm]];
+    pts_coord1   = (double      *) &shared_recv_pts_coord[3 * distrib_search[i_rank_in_shm]];
+
+    free(distrib_search);
+    free(distrib_search_by_rank_n);
+    free(shared_recv_count );
+
+
+  } else {
+    n_pts_local  = n_pts;
+    n_pts_recv   = 0;
+    n_pts_copied = 0;
+
+    n_pts1 = n_pts;
+
+    pts_g_num1 = (PDM_g_num_t *) pts_g_num;
+    pts_coord1 = _pts_coord;
+  }
+
+  void (*_points_inside_volumes) (PDM_box_tree_t *bt,
+                                  const int,
+                                  const int,
+                                  const double *,
+                                  int **,
+                                  int **);
+  if (ellipsoids) {
+    _points_inside_volumes = &PDM_box_tree_ellipsoids_containing_points;
+  } else {
+    _points_inside_volumes = &PDM_box_tree_boxes_containing_points;
+  }
+
+  /* Management of size */
+  int n_part = n_rank_in_shm;
+  int *part_n_pts = malloc (sizeof(int) * n_part);
+
+  int **pts_box_idx   = malloc (sizeof(int *) * n_part);
+  int **pts_box_l_num = malloc (sizeof(int *) * n_part);
+  int size_pts_box = 0;
+
+  if(_dbbt->btShared != NULL) {
+
+
+    for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
+
+      int beg    = distrib_search_by_rank_idx[i_shm  ];
+      int n_lpts = distrib_search_by_rank_idx[i_shm+1] - beg;
+
+
+    }
+
+
+
+
+
+    PDM_mpi_win_shared_free (wshared_recv_gnum);
+    PDM_mpi_win_shared_free (wshared_recv_pts_coord);
+    free(distrib_search_by_rank_idx);
+  } else {
+    part_n_pts[0] = n_pts_local + n_pts_recv;
+    _points_inside_volumes (_dbbt->btLoc,
+                            -1,
+                            part_n_pts[0],
+                            pts_coord1,
+                            &(pts_box_idx[0]),
+                            &(pts_box_l_num[0]));
+    size_pts_box += pts_box_idx[0][part_n_pts[0]];
+  }
+
+
+  free(_pts_coord);
+}
 
 /**
  *
