@@ -314,9 +314,9 @@ int main(int argc, char *argv[])
                             &n_tgt_box,
                             &tgt_box_extents,
                             &tgt_box_gnum);
-  for(int i = 0; i < 6*n_tgt_box; ++i) {
-    tgt_box_extents[i] = 0.25 * tgt_box_extents[i];
-  }
+  // for(int i = 0; i < 6*n_tgt_box; ++i) {
+  //   tgt_box_extents[i] = 0.25 * tgt_box_extents[i];
+  // }
 
   if(post) {
     PDM_vtk_write_boxes("target_boxes.vtk", n_tgt_box, tgt_box_extents, tgt_box_gnum);
@@ -336,6 +336,19 @@ int main(int argc, char *argv[])
                             &box_extents,
                             &box_gnum);
 
+  int perturb = 0;
+  if(perturb == 1) {
+    for(int i = 0; i < n_box; ++i) {
+      // box_extents[i] = 0.5 * box_extents[i]+0.5;
+      for(int j = 0; j < 3; ++j) {
+        double mid  = 0.5 * (box_extents[6*i+j] + box_extents[6*i+j+3]);
+        double size = 0.5 * (box_extents[6*i+j+3] - box_extents[6*i+j]);
+        box_extents[6*i+j  ] = mid - 0.5 *size;
+        box_extents[6*i+j+3] = mid + 0.5 *size;
+      }
+    }
+  }
+
   if(post) {
     PDM_vtk_write_boxes("boxes.vtk", n_box, box_extents, box_gnum);
   }
@@ -344,18 +357,18 @@ int main(int argc, char *argv[])
   /*
    * Start box tree
    */
-  // int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
+  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+  // int   max_boxes_leaf_shared = 1; // Max number of boxes in a leaf for coarse shared BBTree
   // int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
   // float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
-  int   max_boxes_leaf_shared = 1; // Max number of boxes in a leaf for coarse shared BBTree
-  int   max_tree_depth_shared = 1; // Max tree depth for coarse shared BBTree
-  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
 
   const int n_info_location = 3;
   int *init_location_proc = PDM_array_zeros_int (n_info_location * n_box);
 
   PDM_box_set_t* box_set = PDM_box_set_create(3,             // dim
-                                              0,             // normalize
+                                              1,             // normalize
                                               0,             // allow_projection
                                               n_box,
                                               box_gnum,
@@ -374,7 +387,7 @@ int main(int argc, char *argv[])
                           PDM_BOX_TREE_ASYNC_LEVEL);
 
   if(post) {
-    PDM_box_tree_write_vtk("box_tree.vtk", box_tree, -1, 1);
+    PDM_box_tree_write_vtk("box_tree.vtk", box_tree, -1, 0);
   }
 
   int *init_location_tgt_box = PDM_array_zeros_int (n_info_location * n_tgt_box);
@@ -389,17 +402,28 @@ int main(int argc, char *argv[])
                                                  init_location_tgt_box,
                                                  PDM_MPI_COMM_WORLD);
 
-
   /*
    * Intersect
    */
   double t1 = PDM_MPI_Wtime();
   int  *shared_to_box_idx = NULL;
   int  *shared_to_box     = NULL;
-  PDM_box_tree_get_boxes_intersects (box_tree,
-                                     box_target,
-                                     &shared_to_box_idx,
-                                     &shared_to_box);
+  // PDM_box_tree_get_boxes_intersects (box_tree,
+  //                                    box_target,
+  //                                    &shared_to_box_idx,
+  //                                    &shared_to_box);
+  // PDM_box_tree_intersect_boxes_boxes(box_tree,
+  //                                    -1,
+  //                                    n_tgt_box,
+  //                                    tgt_box_extents,
+  //                                    &shared_to_box_idx,
+  //                                    &shared_to_box);
+  PDM_box_tree_intersect_boxes_boxes2(box_tree,
+                                      -1,
+                                      n_tgt_box,
+                                      tgt_box_extents,
+                                      &shared_to_box_idx,
+                                      &shared_to_box);
 
   if(post) {
     PDM_log_trace_connectivity_int(shared_to_box_idx, shared_to_box, n_box, "shared_to_box :");

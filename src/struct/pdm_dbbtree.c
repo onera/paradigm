@@ -1124,8 +1124,10 @@ PDM_dbbtree_boxes_set
  const int          *nElts,
  const double      **extents,
  const PDM_g_num_t **gNum
- )
+)
 {
+  // double t1 = PDM_MPI_Wtime();
+
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
@@ -1368,6 +1370,10 @@ PDM_dbbtree_boxes_set
                           PDM_BOX_TREE_ASYNC_LEVEL);
 
   _update_bt_statistics(&(_dbbt->btsLoc), _dbbt->btLoc);
+
+
+  // double dt = PDM_MPI_Wtime() - t1;
+  // log_trace("PDM_dbbtree_boxes_set : %12.5e \n", dt);
 
   return _dbbt->boxes;
 
@@ -3434,6 +3440,7 @@ PDM_dbbtree_points_inside_boxes
  const int           ellipsoids
  )
 {
+  // double t1 = PDM_MPI_Wtime();
   int idebug = 0;
 
   const float f_threshold = 1.1;  // factor of the mean nb of requests
@@ -3504,12 +3511,16 @@ PDM_dbbtree_points_inside_boxes
                       recv_count, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
+    // PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
+    // PDM_log_trace_array_int(recv_count, n_rank, "recv_count ::");
+
     n_pts_recv = 0;
     for (int i = 0; i < n_rank; i++) {
       n_pts_recv += recv_count[i];
     }
     int n_pts_recv_no_copies = n_pts_recv;
 
+    // log_trace(" n_pts_recv_no_copies = %i \n", n_pts_recv_no_copies);
     /* Prepare copies */
     int n_max_copy = (int) (f_max_copy * n_rank);
     int *i_copied_rank = NULL;
@@ -3783,6 +3794,7 @@ PDM_dbbtree_points_inside_boxes
   /*
    *  Search in local tree
    */
+  // double t1 = PDM_MPI_Wtime();
   _points_inside_volumes (_dbbt->btLoc,
                           -1,
                           part_n_pts[0],
@@ -3790,6 +3802,8 @@ PDM_dbbtree_points_inside_boxes
                           &(pts_box_idx[0]),
                           &(pts_box_l_num[0]));
   size_pts_box += pts_box_idx[0][part_n_pts[0]];
+  // double t2 = PDM_MPI_Wtime()-t1;
+  // log_trace("Point in boxes  = %12.5e \n", t2);
 
 
   /*
@@ -3849,6 +3863,7 @@ PDM_dbbtree_points_inside_boxes
     free (pts_box_idx[i+1]);
     free (pts_box_l_num[i+1]);
   }
+  PDM_log_trace_array_int(part_n_pts, n_part, "part_n_pts ::");
   free (part_n_pts);
   free (pts_box_idx);
   free (pts_box_l_num);
@@ -3864,6 +3879,10 @@ PDM_dbbtree_points_inside_boxes
     part_stride[i] = 1;
     weight[i]      = 1.;
   }
+
+  // double dt = PDM_MPI_Wtime()-t1;
+  // log_trace("point_in_boxes : %12.5e \n", dt);
+  // PDM_MPI_Barrier(_dbbt->comm);
 
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
@@ -5599,7 +5618,7 @@ PDM_dbbtree_lines_intersect_boxes2
 
   /* Search in local box tree */
   int *box_line_l_num = NULL;
-  PDM_box_tree_intersect_lines_boxes2(_dbbt->btLoc,
+  PDM_box_tree_intersect_boxes_lines(_dbbt->btLoc,
                                       -1,
                                       redistrib_n_line[0],
                                       redistrib_line_coord[0],
@@ -5621,7 +5640,7 @@ PDM_dbbtree_lines_intersect_boxes2
 
   /* Search in copied box trees */
   for (int i = 0; i < n_copied_ranks; i++) {
-    PDM_box_tree_intersect_lines_boxes2(_dbbt->btLoc,
+    PDM_box_tree_intersect_boxes_lines(_dbbt->btLoc,
                                         i,
                                         redistrib_n_line[i+1],
                                         redistrib_line_coord[i+1],

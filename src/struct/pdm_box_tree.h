@@ -568,6 +568,17 @@ PDM_box_tree_intersect_boxes_boxes
  int           **box_l_num
 );
 
+void
+PDM_box_tree_intersect_boxes_boxes2
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_tgt_box,
+ const double   *tgt_box_extents,
+ int           **tbox_box_idx,
+ int           **tbox_box
+);
+
 /**
  *
  * \brief Get an indexed list of all boxes inside given volumes

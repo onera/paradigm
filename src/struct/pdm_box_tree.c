@@ -435,6 +435,43 @@ _intersect_line_box
 
 
 
+inline static int
+_intersect_box_box
+(
+ const int              dim,
+ const double *restrict box_extents_a,
+ const double *restrict box_extents_b
+ )
+{
+  // printf("box_extents_a = %12.5e/%12.5e/%12.5e  %12.5e/%12.5e/%12.5e \n",
+  //        box_extents_a[0],
+  //        box_extents_a[1],
+  //        box_extents_a[2],
+  //        box_extents_a[3],
+  //        box_extents_a[4],
+  //        box_extents_a[5]);
+  // printf("box_extents_b = %12.5e/%12.5e/%12.5e  %12.5e/%12.5e/%12.5e \n",
+  //        box_extents_b[0],
+  //        box_extents_b[1],
+  //        box_extents_b[2],
+  //        box_extents_b[3],
+  //        box_extents_b[4],
+  //        box_extents_b[5]);
+
+  // int intersect = 1;
+  for (int i = 0; i < dim; i++) {
+    if (box_extents_a[i] > box_extents_b[i+dim] || box_extents_b[i] > box_extents_a[i+dim]) {
+      return 0;
+    }
+  }
+
+  // printf("intersect --> %i \n", intersect);
+
+  return 1;
+}
+
+
+
 
 /**
  *
@@ -1023,6 +1060,55 @@ _node_intersect_box_1d(PDM_morton_code_t  morton_code,
     return true;
 }
 
+
+/*----------------------------------------------------------------------------
+ * Split a node into its children and evaluate the box distribution.
+ *
+ * parameters:
+ *   bt       <-> pointer to the box tree being built
+ *   boxes    <-- pointer to the associated box set structure
+ *   node_id  <-- id of the node to split
+ *
+ * returns:
+ *   the number of associations between nodes and their children
+ *----------------------------------------------------------------------------*/
+
+static int
+_evaluate_splitting_cartesian(PDM_box_tree_t       *bt,
+                             const PDM_box_set_t  *boxes,
+                                   int             node_id)
+{
+  PDM_morton_code_t  children[bt->n_children];
+  double             child_extents[2*boxes->dim*bt->n_children];
+
+  int  n_linked_boxes = 0;
+
+  PDM_box_tree_data_t *_local_data = bt->local_data;
+  const _node_t  node = _local_data->nodes[node_id];
+
+  /* Define a Morton code for each child */
+  PDM_morton_get_children(boxes->dim, node.morton_code, children);
+
+  /* Compute extents of each child */
+  for(int i = 0; i < bt->n_children; ++i) {
+    _extents(boxes->dim, children[i], child_extents + 6*i);
+  }
+
+  /* Loop on boxes associated to the node_id */
+  for (int j = 0; j < node.n_boxes; j++) {
+    int   box_id = _local_data->box_ids[node.start_id + j];
+    const double  *box_min = _box_min(boxes, box_id);
+    /* Brute force */
+    for (int i = 0; i < bt->n_children; i++) {
+      if(_intersect_box_box(boxes->dim, box_min, child_extents + 2*boxes->dim*i)){
+        n_linked_boxes += 1;
+      }
+    }
+  } /* End of loop on boxes */
+  return n_linked_boxes;
+}
+
+
 /*----------------------------------------------------------------------------
  * Split a node into its children and evaluate the box distribution.
  *
@@ -1416,9 +1502,9 @@ _boxes_intersect_node (const PDM_box_tree_t     *bt,
 static void
 _count_next_level(PDM_box_tree_t           *bt,
                   const PDM_box_set_t      *boxes,
-                  int                 node_id,
+                  int                       node_id,
                   PDM_box_tree_sync_t       build_type,
-                  int                *next_level_size)
+                  int                      *next_level_size)
 {
   int   i;
 
@@ -1455,6 +1541,55 @@ _count_next_level(PDM_box_tree_t           *bt,
   }
 }
 
+
+/*----------------------------------------------------------------------------
+ * Evaluate the box distribution over the leaves of the box tree to help
+ * determine if we should add a level to the tree structure.
+ *
+ * parameters:
+ *   bt              <->  pointer to the box tree being built
+ *   boxes           <--  pointer to the associated box set structure
+ *   node_id         <--  id of the starting node
+ *   build_type      <--  layout variant for building the tree structure
+ *   next_level_size -->  size of box_ids for the next level
+ *----------------------------------------------------------------------------*/
+
+static void
+_count_next_level_cartesian(PDM_box_tree_t           *bt,
+                           const PDM_box_set_t      *boxes,
+                           int                       node_id,
+                           PDM_box_tree_sync_t       build_type,
+                           int                      *next_level_size)
+{
+  PDM_box_tree_data_t *_local_data = bt->local_data;
+  _node_t  *node = _local_data->nodes + node_id;
+
+  if (node->is_leaf == false) {
+
+    assert(_local_data->child_ids[bt->n_children*node_id] > 0);
+
+    for (int i = 0; i < bt->n_children; i++)
+      _count_next_level_cartesian(bt,
+                                 boxes,
+                                 _local_data->child_ids[bt->n_children*node_id + i],
+                                 build_type,
+                                 next_level_size);
+
+  }
+
+  else { /* if (node->is_leaf == true) */
+    if (   node->n_boxes < bt->threshold
+     && node_id != 0                    /* Root node is always divided */
+     && build_type == PDM_BOX_TREE_ASYNC_LEVEL)
+      *next_level_size += node->n_boxes;
+
+    else { /* Split node and evaluate box distribution between its children */
+      *next_level_size += _evaluate_splitting_cartesian(bt, boxes, node_id);
+    }
+  }
+}
+
+
 /*----------------------------------------------------------------------------
  * Test if we have to continue the building of the box tree.
  *
@@ -1469,13 +1604,14 @@ _count_next_level(PDM_box_tree_t           *bt,
  *----------------------------------------------------------------------------*/
 
 static _Bool
-_recurse_tree_build(PDM_box_tree_t       *bt,
-                    const PDM_box_set_t  *boxes,
-                    PDM_box_tree_sync_t   build_type,
-                    int            *next_size)
+_recurse_tree_build(      PDM_box_tree_t      *bt,
+                    const PDM_box_set_t       *boxes,
+                          PDM_box_tree_sync_t  build_type,
+                          int                  build_cartesian,
+                          int                 *next_size)
 {
   int  state = 0;
-  int   _next_size = 0;
+  int  _next_size = 0;
 
   _Bool retval = false;
 
@@ -1518,12 +1654,19 @@ _recurse_tree_build(PDM_box_tree_t       *bt,
     float box_ratio;
 
     /* Limit, to avoid excessive memory usage */
-
-    _count_next_level(bt,
-                      boxes,
-                      0,  /* Starts from root */
-                      build_type,
-                      &_next_size);
+    if(build_cartesian == 0) {
+      _count_next_level(bt,
+                        boxes,
+                        0,  /* Starts from root */
+                        build_type,
+                        &_next_size);
+    } else {
+      _count_next_level_cartesian(bt,
+                                  boxes,
+                                  0,  /* Starts from root */
+                                  build_type,
+                                  &_next_size);
+    }
 
     if (bt->stats.n_boxes > 0)
       box_ratio = (float) ((_next_size*1.0)/bt->stats.n_boxes);
@@ -1912,6 +2055,140 @@ _split_node_3d(PDM_box_tree_t       *bt,
 
   *shift_ids = _shift_ids;
 }
+
+
+/*----------------------------------------------------------------------------
+ * Split a node into its children and define the new box distribution.
+ *
+ * parameters:
+ *   bt         <->  pointer to the box tree being built
+ *   next_bt    <->  pointer to the next box tree being built
+ *   boxes      <--  pointer to the associated box set structure
+ *   node_id    <--  id of the starting node
+ *   shift_ids  <->  first free position free in new box_ids
+ *----------------------------------------------------------------------------*/
+
+static void
+_split_node_cartesian_3d(PDM_box_tree_t       *bt,
+                        PDM_box_tree_t       *next_bt,
+                        const PDM_box_set_t  *boxes,
+                        int                   node_id,
+                        int                  *shift_ids)
+{
+  int j, i;
+  PDM_morton_code_t  children[8];
+  double             child_extents[6*8];
+
+  int   n_linked_boxes = 0;
+  int   _shift_ids = *shift_ids;
+  int   n_init_nodes = next_bt->local_data->n_nodes;
+  _node_t  split_node = next_bt->local_data->nodes[node_id];
+
+  const _node_t  node = bt->local_data->nodes[node_id];
+
+  assert(bt->n_children == 8);
+
+  /* Add the leaves to the next_bt structure */
+
+  if (n_init_nodes + 8 > next_bt->local_data->n_max_nodes) {
+    assert(next_bt->local_data->n_max_nodes > 0);
+    next_bt->local_data->n_max_nodes += PDM_MAX (9, next_bt->local_data->n_max_nodes/3);
+    next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
+    next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*8 * sizeof(int));
+
+  }
+
+  /* Define a Morton code for each child and create the children nodes */
+
+  PDM_morton_get_children(3, node.morton_code, children);
+  /* Compute extents of each child */
+  for(i = 0; i < 8; ++i) {
+    _extents(3, children[i], child_extents + 6*i);
+  }
+
+  for (i = 0; i < 8; i++) {
+
+    const int   new_id = n_init_nodes + i;
+    next_bt->local_data->child_ids[node_id*8 + i] = new_id;
+
+    _new_node(next_bt, children[i], new_id);
+  }
+
+  split_node.start_id = 0;
+  split_node.n_boxes = node.n_boxes;
+  split_node.is_leaf = false;
+  split_node.extra_weight = 0;
+
+  next_bt->local_data->nodes[node_id] = split_node;
+  next_bt->local_data->n_nodes = n_init_nodes + 8;
+
+  /* Counting loop on boxes associated to the node_id */
+
+  for (j = 0; j < node.n_boxes; j++) {
+
+    int   box_id = bt->local_data->box_ids[node.start_id + j];
+    const double  *box_min = _box_min(boxes, box_id);
+
+    /* Brute force */
+    for (i = 0; i < 8; i++) {
+      if(_intersect_box_box(3, box_min, child_extents + 6*i)){
+        (next_bt->local_data->nodes[n_init_nodes + i]).n_boxes += 1;
+      }
+    }
+  } /* End of loop on boxes */
+
+  /* Build index */
+
+  for (i = 0; i < 8; i++) {
+    (next_bt->local_data->nodes[n_init_nodes + i]).start_id = _shift_ids + n_linked_boxes;
+    n_linked_boxes += (next_bt->local_data->nodes[n_init_nodes + i]).n_boxes;
+  }
+
+  _shift_ids += n_linked_boxes;
+
+  for (i = 0; i < 8; i++) {
+    (next_bt->local_data->nodes[n_init_nodes + i]).n_boxes = 0;
+  }
+
+  /* Second loop on boxes associated to the node_id: fill */
+
+  for (j = 0; j < node.n_boxes; j++) {
+
+    int   box_id = bt->local_data->box_ids[node.start_id + j];
+    const double  *box_min = _box_min(boxes, box_id);
+
+    /* Brute force */
+    for (i = 0; i < 8; i++) {
+      if(_intersect_box_box(3, box_min, child_extents + 6*i)){
+        const int sub_id = n_init_nodes + i;
+        const int shift =   (next_bt->local_data->nodes[sub_id]).n_boxes + (next_bt->local_data->nodes[sub_id]).start_id;
+        next_bt->local_data->box_ids[shift] = box_id;
+        (next_bt->local_data->nodes[sub_id]).n_boxes += 1;
+      }
+    }
+
+  } /* End of loop on boxes */
+
+#if 0 && defined(DEBUG) && !defined(NDEBUG)
+  for (i = 1; i < 8; i++) {
+    _node_t  n1 = next_bt->local_data->nodes[n_init_nodes + i - 1];
+    _node_t  n2 = next_bt->local_data->nodes[n_init_nodes + i];
+    assert(n1.n_boxes == (n2.start_id - n1.start_id));
+  }
+  assert(   _shift_ids
+      == (  next_bt->local_data->nodes[n_init_nodes + 8 - 1].start_id
+      + next_bt->local_data->nodes[n_init_nodes + 8 - 1].n_boxes));
+#endif
+
+  /* Return pointers */
+
+  *shift_ids = _shift_ids;
+}
+
+
+
+
+
 
 static void
 _split_node_2d(PDM_box_tree_t       *bt,
@@ -2361,6 +2638,80 @@ _build_next_level(PDM_box_tree_t       *bt,
 
   *shift_ids = _shift_ids;
 }
+
+
+/*----------------------------------------------------------------------------
+ * Evaluate the box distribution over the leaves of the box tree when adding
+ * a level to the tree structure.
+ *
+ * parameters:
+ *   bt         <->  pointer to the box tree being built
+ *   next_bt    <->  pointer to the next box tree being built
+ *   boxes      <--  pointer to the associated box set structure
+ *   node_id    <--  id of the starting node
+ *   build_type <--  layout variant for building the tree structure
+ *   shift_ids  <->  first free position free in new box_ids
+ *----------------------------------------------------------------------------*/
+
+static void
+_build_next_level_cartesian(PDM_box_tree_t       *bt,
+                           PDM_box_tree_t       *next_bt,
+                           const PDM_box_set_t  *boxes,
+                           int                   node_id,
+                           PDM_box_tree_sync_t   build_type,
+                           int                  *shift_ids)
+{
+  int   i;
+
+  int   _shift_ids = *shift_ids;
+  const _node_t  *cur_node = bt->local_data->nodes + node_id;
+
+  if (cur_node->is_leaf == false) {
+
+    assert(bt->local_data->child_ids[bt->n_children*node_id] > 0);
+
+    for (i = 0; i < bt->n_children; i++)
+      _build_next_level_cartesian(bt,
+                                 next_bt,
+                                 boxes,
+                                 bt->local_data->child_ids[bt->n_children*node_id + i],
+                                 build_type,
+                                 &_shift_ids);
+  }
+
+  else { /* if (node->is_leaf == true) */
+
+    if (   cur_node->n_boxes < bt->threshold
+           && node_id != 0                    /* Root node is always divided */
+           && build_type == PDM_BOX_TREE_ASYNC_LEVEL) {
+
+      /* Copy related box_ids in the new next_ids */
+
+      _node_t *next_node = next_bt->local_data->nodes + node_id;
+
+      next_node->n_boxes = cur_node->n_boxes;
+      next_node->start_id = _shift_ids;
+      next_node->extra_weight = 0;
+
+      for (i = 0; i < cur_node->n_boxes; i++)
+        next_bt->local_data->box_ids[_shift_ids++]
+          = bt->local_data->box_ids[cur_node->start_id + i];
+    }
+    else {  /* Split node and evaluate box distribution between its children */
+      _split_node_cartesian_3d(bt,
+                              next_bt,
+                              boxes,
+                              node_id,
+                              &_shift_ids);
+    }
+
+  }
+
+  /* Prepare return values */
+
+  *shift_ids = _shift_ids;
+}
+
 
 /*----------------------------------------------------------------------------
  * Loop on all nodes of the box tree to define an array with Morton codes
@@ -3429,6 +3780,8 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
   //printf("  -->> PDM_box_tree_set_boxes\n");
   PDM_boxes_t *_local_boxes = boxes->local_boxes;
 
+  double t1 = PDM_MPI_Wtime();
+
   int   box_id;
 
   PDM_box_tree_t  tmp_bt;
@@ -3500,10 +3853,17 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
   /*          ); */
   /* } */
 
+  char *env_var_oct = getenv ("BOX_TREE_CARTESIAN_BUILD");
+  int build_cartesian = 0;
+  if (env_var_oct != NULL) {
+    build_cartesian = atoi(env_var_oct);
+  }
+
   /* Build local tree structure by adding boxes from the root */
   while (_recurse_tree_build(bt,
                              boxes,
                              build_type,
+                             build_cartesian,
                              &next_box_ids_size)) {
     /* Initialize next_bt: copy of bt */
     _copy_tree(&tmp_bt, bt);
@@ -3518,12 +3878,21 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
     tmp_bt.local_data->box_ids = (int*) realloc((void *) tmp_bt.local_data->box_ids, next_box_ids_size * sizeof(int));
     shift = 0;
 
-    _build_next_level(bt,
-                      &tmp_bt,
-                      boxes,
-                      0, /* Starts from root */
-                      build_type,
-                      &shift);
+    if(build_cartesian == 0) {
+      _build_next_level(bt,
+                        &tmp_bt,
+                        boxes,
+                        0, /* Starts from root */
+                        build_type,
+                        &shift);
+     } else {
+      _build_next_level_cartesian(bt,
+                                 &tmp_bt,
+                                 boxes,
+                                 0, /* Starts from root */
+                                 build_type,
+                                 &shift);
+    }
     assert(shift == next_box_ids_size);
 
     /* replace current tree by the tree computed at a higher level */
@@ -3539,6 +3908,13 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
 
   } /* While building should continue */
   //printf("  <<-- PDM_box_tree_set_boxes\n");
+
+
+  double dt = PDM_MPI_Wtime() - t1;
+
+  log_trace("PDM_box_tree_set_boxes : %12.5e \n", dt);
+
+
 }
 
 
@@ -5792,7 +6168,7 @@ PDM_box_tree_intersect_boxes_lines
   int* box_line_n = PDM_array_zeros_int(n_boxes);
   for(int i = 0; i < n_line; ++i) {
     for(int idx_box = line_box_idx[i]; idx_box <  line_box_idx[i+1]; ++idx_box ) {
-      box_line_n[line_box[idx_box-1]]++;
+      box_line_n[line_box[idx_box]]++;
     }
   }
 
@@ -5846,16 +6222,10 @@ PDM_box_tree_intersect_boxes_boxes
 
   /* if (normalized) { */
   double *_tgt_box_extents = malloc (sizeof(double) * two_dim * n_tgt_box);
-  /*for (int i = 0; i < 2*n_tgt_box; i++) {
-    const double *_pt_origin =  tgt_box_extents + dim * i;
-    double *_pt              = _tgt_box_extents + dim * i;
-    PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-    }*/
   PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
                                 n_tgt_box*2,
                                 (double *) tgt_box_extents,
                                 _tgt_box_extents);
-  /* } */
 
   PDM_boxes_t *boxes;
   PDM_box_tree_data_t *box_tree_data;
@@ -5891,20 +6261,10 @@ PDM_box_tree_intersect_boxes_boxes
 
   double node_extents[2*dim];
 
-  double invdir[3];
   for (int itgt_box = 0; itgt_box < n_tgt_box; itgt_box++) {
 
     _tgt_box_idx[itgt_box+1] = _tgt_box_idx[itgt_box];
-    const double *origin = _tgt_box_extents + two_dim * itgt_box;
-    const double *destination = origin + dim;
-    for (int i = 0; i < 3; i++) {
-      double d = destination[i] - origin[i];
-      if (PDM_ABS(d) < 1e-15) {
-        invdir[i] = PDM_SIGN(d) * HUGE_VAL;
-      } else {
-        invdir[i] = 1. / d;
-      }
-    }
+    const double *lextents   = _tgt_box_extents + two_dim * itgt_box;
 
     /* Init stack */
     pos_stack = 0;
@@ -5912,7 +6272,8 @@ PDM_box_tree_intersect_boxes_boxes
               box_tree_data->nodes[0].morton_code,
               node_extents);
 
-    if (_intersect_tgt_box_box (dim, node_extents, origin, invdir)) {
+    // printf(" intersect with roots \n");
+    if (_intersect_box_box (dim, node_extents, lextents)) {
       stack[pos_stack++] = 0;
     }
 
@@ -5938,7 +6299,7 @@ PDM_box_tree_intersect_boxes_boxes
           if (is_visited_box[box_id] == PDM_FALSE) {
             const double *box_extents = boxes->extents + box_id*2*dim;
 
-            if (_intersect_tgt_box_box (dim, box_extents, origin, invdir)) {
+            if (_intersect_box_box (dim, box_extents, lextents)) {
               if (_tgt_box_idx[itgt_box+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
                 *tgt_box_l_num = realloc (*tgt_box_l_num, sizeof(int) * tmp_s_boxes);
@@ -5961,7 +6322,8 @@ PDM_box_tree_intersect_boxes_boxes
           int child_id = child_ids[ichild];
           _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
 
-          if (_intersect_tgt_box_box (dim, node_extents, origin, invdir)) {
+          // printf(" intersect with internal child_id = %i \n", child_id);
+          if (_intersect_box_box (dim, node_extents, lextents)) {
             stack[pos_stack++] = child_id;
           }
         }
@@ -5988,6 +6350,59 @@ PDM_box_tree_intersect_boxes_boxes
 }
 
 
+void
+PDM_box_tree_intersect_boxes_boxes2
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_tgt_box,
+ const double   *tgt_box_extents,
+ int           **tbox_box_idx,
+ int           **tbox_box
+)
+{
+  // tbox = tree_box
+  int *box_tbox_idx = NULL;
+  int *box_tbox     = NULL;
+  PDM_box_tree_intersect_boxes_boxes(bt,
+                                     i_copied_rank,
+                                     n_tgt_box,
+                                     tgt_box_extents,
+                                     &box_tbox_idx,
+                                     &box_tbox);
+
+  /* Transpose from line->box to box->line */
+  PDM_boxes_t *boxes;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+  }
+  int n_boxes = boxes->n_boxes;
+
+  // PDM_log_trace_connectivity_int(box_tbox_idx, box_tbox, n_tgt_box, "box_tbox ::");
+
+  int* tbox_box_n = PDM_array_zeros_int(n_boxes);
+  for(int i = 0; i < n_tgt_box; ++i) {
+    for(int idx_box = box_tbox_idx[i]; idx_box <  box_tbox_idx[i+1]; ++idx_box ) {
+      tbox_box_n[box_tbox[idx_box]]++;
+    }
+  }
+
+  *tbox_box_idx = PDM_array_new_idx_from_sizes_int(tbox_box_n, n_boxes);
+  *tbox_box = (int *) malloc(sizeof(int) * (*tbox_box_idx)[n_boxes]);
+  PDM_array_reset_int(tbox_box_n, n_boxes, 0);
+  for (int iline = 0; iline < n_tgt_box; iline++) {
+    for (int idx_box = box_tbox_idx[iline]; idx_box < box_tbox_idx[iline+1]; idx_box++) {
+      int ibox = box_tbox[idx_box];
+      (*tbox_box)[(*tbox_box_idx)[ibox] + tbox_box_n[ibox]++] = iline;
+    }
+  }
+  free(tbox_box_n);
+  free(box_tbox_idx);
+  free(box_tbox);
+
+}
 
 
 /**
