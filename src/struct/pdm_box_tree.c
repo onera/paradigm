@@ -181,8 +181,6 @@ struct _PDM_box_tree_t {
   int                  n_rank_in_shm;
   PDM_box_tree_data_t *shm_data;
   _w_box_tree_data_t  *wbox_tree_data;
-  // PDM_box_set_t       *shm_boxes;              /* Associated boxes */
-
 
 
   PDM_box_set_t  *boxes;              /* Associated boxes */
@@ -5453,7 +5451,7 @@ PDM_box_tree_copy_to_shm
 )
 {
   // copy boxes
-  // PDM_box_copy_boxes_to_shm ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
+  PDM_box_copy_boxes_to_shm ((PDM_box_set_t *) bt->boxes);
 
   int n_rank, i_rank;
   PDM_MPI_Comm_rank(bt->comm, &i_rank);
@@ -5479,9 +5477,6 @@ PDM_box_tree_copy_to_shm
   PDM_MPI_Allgather(s_shm_data_in_rank     , 4, PDM_MPI_INT,
                     s_shm_data_in_all_nodes, 4, PDM_MPI_INT, comm_shared);
 
-  /*
-   *  Pour l'instant on fait tout dans la fonction
-   */
   bt->shm_data       = (PDM_box_tree_data_t *) malloc(n_rank_in_shm * sizeof(PDM_box_tree_data_t));
   bt->wbox_tree_data = (_w_box_tree_data_t  *) malloc(n_rank_in_shm * sizeof(_w_box_tree_data_t ));
 
@@ -5527,7 +5522,7 @@ PDM_box_tree_copy_to_shm
   }
 
   memcpy(bt->shm_data[i_rank_in_shm].child_ids, bt->local_data->child_ids, sizeof(int) * bt->local_data->n_max_nodes*bt->n_children);
-  memcpy(bt->shm_data[i_rank_in_shm].box_ids,   bt->local_data->box_ids   , sizeof(int) * bt->stats.n_linked_boxes);
+  memcpy(bt->shm_data[i_rank_in_shm].box_ids,   bt->local_data->box_ids  , sizeof(int) * bt->stats.n_linked_boxes);
 
   free(s_shm_data_in_all_nodes);
 
