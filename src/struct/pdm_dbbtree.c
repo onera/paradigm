@@ -4030,10 +4030,7 @@ PDM_dbbtree_points_inside_boxes_shared
 )
 {
   // double t1 = PDM_MPI_Wtime();
-  int idebug = 0;
-
-  const float f_threshold = 1.1;  // factor of the mean nb of requests
-  const float f_max_copy  = 0.1;  // factor of the total nb of processes
+  // int idebug = 0;
 
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
@@ -4059,12 +4056,14 @@ PDM_dbbtree_points_inside_boxes_shared
   }
 
 
-  int n_copied_ranks = 0;
-  int *copied_ranks = NULL;
   int n_pts_local  = 0;
   int n_pts_recv   = 0;
   int n_pts_copied = 0;
   int n_pts1;
+
+  PDM_UNUSED(n_pts_recv);
+  PDM_UNUSED(n_pts_copied);
+  PDM_UNUSED(n_pts1);
   PDM_g_num_t *pts_g_num1 = NULL;
   double      *pts_coord1 = NULL;
 
@@ -4277,7 +4276,12 @@ PDM_dbbtree_points_inside_boxes_shared
 
   int **pts_box_idx   = malloc (sizeof(int *) * n_part);
   int **pts_box_l_num = malloc (sizeof(int *) * n_part);
-  int size_pts_box = 0;
+
+  PDM_g_num_t **part_box_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **part_pts_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
+  double      **part_pts_coord  = malloc (sizeof(double      *) * n_part);
+  int         **part_pts_strid  = malloc (sizeof(int         *) * n_part);
+  double      **part_pts_weight = malloc (sizeof(double      *) * n_part);
 
   if(_dbbt->btShared != NULL) {
 
@@ -4287,12 +4291,34 @@ PDM_dbbtree_points_inside_boxes_shared
       int beg    = distrib_search_by_rank_idx[i_shm  ];
       int n_lpts = distrib_search_by_rank_idx[i_shm+1] - beg;
 
+      part_n_pts[i_shm] = n_lpts;
 
+      PDM_g_num_t *lpts_gnum  = &pts_g_num1[  beg];
+      double      *lpts_coord = &pts_coord1[3*beg];
+
+      PDM_box_tree_boxes_containing_points_shared(_dbbt->btLoc,
+                                                  i_shm,
+                                                  part_n_pts[i_shm],
+                                                  lpts_coord,
+                                                  &(pts_box_idx[i_shm]),
+                                                  &(pts_box_l_num[i_shm]));
+
+      part_box_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
+      part_pts_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
+      part_pts_coord [i_shm] = malloc (sizeof(double     ) * 3 * pts_box_idx[i_shm][part_n_pts[i_shm]]);
+      part_pts_strid [i_shm] = malloc (sizeof(int        ) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
+      part_pts_weight[i_shm] = malloc (sizeof(double     ) * 3 * pts_box_idx[i_shm][part_n_pts[i_shm]]);
+
+      for (int j = 0; j < part_n_pts[i_shm]; j++) {
+        for (int k = pts_box_idx[i_shm][j]; k < pts_box_idx[i_shm][j+1]; k++) {
+          part_box_g_num[i_shm][k] = _dbbt->boxes->shm_boxes[i_shm].g_num[pts_box_l_num[i_shm][k]];
+          part_pts_g_num[i_shm][k] = lpts_gnum[j];
+          for (int l = 0; l < 3; l++) {
+            part_pts_coord[i_shm][3*k + l] = lpts_coord[3*j + l];
+          }
+        }
+      }
     }
-
-
-
-
 
     PDM_mpi_win_shared_free (wshared_recv_gnum);
     PDM_mpi_win_shared_free (wshared_recv_pts_coord);
@@ -4305,8 +4331,26 @@ PDM_dbbtree_points_inside_boxes_shared
                             pts_coord1,
                             &(pts_box_idx[0]),
                             &(pts_box_l_num[0]));
-    size_pts_box += pts_box_idx[0][part_n_pts[0]];
   }
+
+  for(int i = 0; i < n_part; ++i) {
+    free(pts_box_idx    [i]);
+    free(pts_box_l_num  [i]);
+    free(part_box_g_num [i]);
+    free(part_pts_g_num [i]);
+    free(part_pts_coord [i]);
+    free(part_pts_strid [i]);
+    free(part_pts_weight[i]);
+  }
+
+  free(pts_box_idx    );
+  free(pts_box_l_num  );
+  free(part_box_g_num );
+  free(part_pts_g_num );
+  free(part_pts_coord );
+  free(part_pts_strid );
+  free(part_pts_weight);
+
 
 
   free(_pts_coord);
