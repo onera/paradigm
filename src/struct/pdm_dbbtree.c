@@ -4245,6 +4245,7 @@ PDM_dbbtree_points_inside_boxes_shared
     free(distrib_search);
     free(distrib_search_by_rank_n);
     free(shared_recv_count );
+    free(shared_recv_idx );
 
 
   } else {
@@ -4272,7 +4273,8 @@ PDM_dbbtree_points_inside_boxes_shared
 
   /* Management of size */
   int n_part = n_rank_in_shm;
-  int *part_n_pts = malloc (sizeof(int) * n_part);
+  int *part_n_pts_box = malloc (sizeof(int) * n_part);
+  int *part_n_pts     = malloc (sizeof(int) * n_part);
 
   int **pts_box_idx   = malloc (sizeof(int *) * n_part);
   int **pts_box_l_num = malloc (sizeof(int *) * n_part);
@@ -4291,7 +4293,7 @@ PDM_dbbtree_points_inside_boxes_shared
       int beg    = distrib_search_by_rank_idx[i_shm  ];
       int n_lpts = distrib_search_by_rank_idx[i_shm+1] - beg;
 
-      part_n_pts[i_shm] = n_lpts;
+      part_n_pts    [i_shm] = n_lpts;
 
       PDM_g_num_t *lpts_gnum  = &pts_g_num1[  beg];
       double      *lpts_coord = &pts_coord1[3*beg];
@@ -4303,11 +4305,13 @@ PDM_dbbtree_points_inside_boxes_shared
                                                   &(pts_box_idx[i_shm]),
                                                   &(pts_box_l_num[i_shm]));
 
-      part_box_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
-      part_pts_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
-      part_pts_coord [i_shm] = malloc (sizeof(double     ) * 3 * pts_box_idx[i_shm][part_n_pts[i_shm]]);
-      part_pts_strid [i_shm] = malloc (sizeof(int        ) *     pts_box_idx[i_shm][part_n_pts[i_shm]]);
-      part_pts_weight[i_shm] = malloc (sizeof(double     ) * 3 * pts_box_idx[i_shm][part_n_pts[i_shm]]);
+      part_n_pts_box[i_shm] = pts_box_idx[i_shm][part_n_pts[i_shm]];
+
+      part_box_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
+      part_pts_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
+      part_pts_coord [i_shm] = malloc (sizeof(double     ) * 3 * part_n_pts_box[i_shm]);
+      part_pts_strid [i_shm] = malloc (sizeof(int        ) *     part_n_pts_box[i_shm]);
+      part_pts_weight[i_shm] = malloc (sizeof(double     ) * 3 * part_n_pts_box[i_shm]);
 
       for (int j = 0; j < part_n_pts[i_shm]; j++) {
         for (int k = pts_box_idx[i_shm][j]; k < pts_box_idx[i_shm][j+1]; k++) {
@@ -4316,6 +4320,8 @@ PDM_dbbtree_points_inside_boxes_shared
           for (int l = 0; l < 3; l++) {
             part_pts_coord[i_shm][3*k + l] = lpts_coord[3*j + l];
           }
+          part_pts_strid [i_shm][k]= 1;
+          part_pts_weight[i_shm][k]= 1.;
         }
       }
     }
@@ -4333,24 +4339,118 @@ PDM_dbbtree_points_inside_boxes_shared
                             &(pts_box_l_num[0]));
   }
 
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       part_box_g_num,
+                                                       part_pts_weight,
+                                                       part_n_pts_box,
+                                                       n_part,
+                                                       _dbbt->comm);
+  for(int i = 0; i < n_part; ++i) {
+    free(part_pts_weight[i]);
+  }
+  free(part_pts_weight);
+
+  /*
+   *  Exchange gnum
+   */
+  int         *block_box_pts_n = NULL;
+  PDM_g_num_t *block_box_pts_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          part_pts_strid,
+                (void **) part_pts_g_num,
+                          &block_box_pts_n,
+                (void **) &block_box_pts_g_num);
+
+  for(int i = 0; i < n_part; ++i) {
+    free(part_box_g_num [i]);
+  }
+  free(part_box_g_num);
+
+  int    *block_stride = NULL;
+  double *block_box_pts_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          3*sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          part_pts_strid,
+                (void **) part_pts_coord,
+                          &block_stride,
+                (void **) &block_box_pts_coord);
+  free(block_stride);
+
+  int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
+                                                                        n_elt_block,
+                                                (const PDM_g_num_t **) &box_g_num,
+                                                                       &n_boxes,
+                                                                       1,
+                                                                       _dbbt->comm);
+
+  int         **_tmp_pts_in_box_n     = NULL;
+  PDM_g_num_t **_tmp_pts_in_box_g_num = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         block_box_pts_n,
+                         block_box_pts_g_num,
+                         &_tmp_pts_in_box_n,
+              (void ***) &_tmp_pts_in_box_g_num);
+  free (block_box_pts_g_num);
+
+  *pts_in_box_g_num = _tmp_pts_in_box_g_num[0];
+  free(_tmp_pts_in_box_g_num);
+
+  free(_tmp_pts_in_box_n[0]);
+  free(_tmp_pts_in_box_n);
+
+  /*
+   * Coordinates
+   */
+  double **_tmp_pts_in_box_coord = NULL;
+  PDM_block_to_part_exch(btp,
+                         3*sizeof(double),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         block_box_pts_n,
+                         block_box_pts_coord,
+                         &_tmp_pts_in_box_n,
+              (void ***) &_tmp_pts_in_box_coord);
+  *pts_in_box_coord = _tmp_pts_in_box_coord[0];
+  free(_tmp_pts_in_box_coord);
+
+  *pts_in_box_idx = PDM_array_new_idx_from_sizes_int(_tmp_pts_in_box_n[0], n_boxes);
+  free(_tmp_pts_in_box_n[0]);
+  free(_tmp_pts_in_box_n);
+
+  free(block_box_pts_n);
+  free(block_box_pts_coord);
+
+
+  PDM_part_to_block_free(ptb);
+  PDM_block_to_part_free(btp);
+
   for(int i = 0; i < n_part; ++i) {
     free(pts_box_idx    [i]);
     free(pts_box_l_num  [i]);
-    free(part_box_g_num [i]);
     free(part_pts_g_num [i]);
     free(part_pts_coord [i]);
     free(part_pts_strid [i]);
-    free(part_pts_weight[i]);
   }
 
   free(pts_box_idx    );
   free(pts_box_l_num  );
-  free(part_box_g_num );
   free(part_pts_g_num );
   free(part_pts_coord );
   free(part_pts_strid );
-  free(part_pts_weight);
 
+  free(part_n_pts_box);
+  free(part_n_pts    );
 
 
   free(_pts_coord);
