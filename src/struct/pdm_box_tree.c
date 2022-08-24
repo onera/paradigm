@@ -5459,13 +5459,15 @@ PDM_box_tree_copy_to_shm
 
   // Shared
   PDM_MPI_Comm comm_shared;
-  PDM_MPI_Comm_split_type(bt->comm, PDM_MPI_SPLIT_SHARED, &comm_shared);
+  PDM_MPI_Comm_split_type(bt->comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
 
   int n_rank_in_shm, i_rank_in_shm;
   PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
   PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
 
   bt->n_rank_in_shm = n_rank_in_shm;
+  log_trace("PDM_box_tree_copy_to_shm ; n_rank_in_shm = %i \n", n_rank_in_shm);
+
 
   int s_shm_data_in_rank[4] = {0};
   s_shm_data_in_rank[0] = bt->local_data->n_max_nodes;
@@ -5515,10 +5517,13 @@ PDM_box_tree_copy_to_shm
 
   /* Copy from local to shared (After windows creation bcause window call is collective ) */
   for (int j = 0; j < bt->local_data->n_max_nodes; j++) {
-    bt->shm_data[i_rank_in_shm].nodes[j].is_leaf     = bt->local_data->nodes[j].is_leaf;
-    bt->shm_data[i_rank_in_shm].nodes[j].n_boxes     = bt->local_data->nodes[j].n_boxes;
-    bt->shm_data[i_rank_in_shm].nodes[j].start_id    = bt->local_data->nodes[j].start_id;
-    bt->shm_data[i_rank_in_shm].nodes[j].morton_code = bt->local_data->nodes[j].morton_code;
+    bt->shm_data[i_rank_in_shm].nodes[j].is_leaf          = bt->local_data->nodes[j].is_leaf;
+    bt->shm_data[i_rank_in_shm].nodes[j].n_boxes          = bt->local_data->nodes[j].n_boxes;
+    bt->shm_data[i_rank_in_shm].nodes[j].start_id         = bt->local_data->nodes[j].start_id;
+    bt->shm_data[i_rank_in_shm].nodes[j].morton_code.L    = bt->local_data->nodes[j].morton_code.L;
+    bt->shm_data[i_rank_in_shm].nodes[j].morton_code.X[0] = bt->local_data->nodes[j].morton_code.X[0];
+    bt->shm_data[i_rank_in_shm].nodes[j].morton_code.X[1] = bt->local_data->nodes[j].morton_code.X[1];
+    bt->shm_data[i_rank_in_shm].nodes[j].morton_code.X[2] = bt->local_data->nodes[j].morton_code.X[2];
   }
 
   memcpy(bt->shm_data[i_rank_in_shm].child_ids, bt->local_data->child_ids, sizeof(int) * bt->local_data->n_max_nodes*bt->n_children);
@@ -5738,7 +5743,6 @@ PDM_box_tree_points_inside_boxes
 }
 
 
-
 /**
  *
  * \brief Get an indexed list of all boxes containing points
@@ -5754,48 +5758,30 @@ PDM_box_tree_points_inside_boxes
  * \param [out]  box_l_num      Pointer to the list boxes containing points (size = \ref box_idx[\ref n_pts])
  *
  */
-
+static
 void
-PDM_box_tree_boxes_containing_points
+_box_tree_boxes_containing_points_impl
 (
- PDM_box_tree_t *bt,
- const int       i_copied_rank,
- const int       n_pts,
- const double   *pts_coord,
- int           **box_idx,
- int           **box_l_num
- )
+ PDM_box_tree_t       *bt,
+ PDM_boxes_t          *boxes,
+ PDM_box_tree_data_t  *box_tree_data,
+ const int             n_pts,
+ const double         *pts_coord,
+ int                 **box_idx,
+ int                 **box_l_num
+)
 {
-  assert(i_copied_rank < bt->n_copied_ranks);
-
   const int dim = bt->boxes->dim;
   //int normalized = bt->boxes->normalized;
 
   /* if (normalized) { */
   double *_pts_coord = malloc (sizeof(double) * dim * n_pts);
-  /*for (int i = 0; i < n_pts; i++) {
-    const double *_pt_origin = pts_coord + dim * i;
-    double *_pt              = _pts_coord + dim * i;
-    PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
-    }*/
   PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
                                 n_pts,
                                 (double *) pts_coord,
                                 _pts_coord);
-  /* } */
-
-  PDM_boxes_t *boxes;
-  PDM_box_tree_data_t *box_tree_data;
-  if (i_copied_rank < 0) {
-    boxes = bt->boxes->local_boxes;
-    box_tree_data = bt->local_data;
-  } else {
-    boxes = bt->boxes->rank_boxes + i_copied_rank;
-    box_tree_data = bt->rank_data + i_copied_rank;
-  }
 
   int n_boxes = boxes->n_boxes;
-
 
   *box_idx = malloc (sizeof(int) * (n_pts + 1));
   int *_box_idx = *box_idx;
@@ -5904,7 +5890,217 @@ PDM_box_tree_boxes_containing_points
   *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
 }
 
+/**
+ *
+ * \brief Get an indexed list of all boxes containing points
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_pts          Number of points
+ * \param [in]   pts_coord      Point coordinates
+ * \param [out]  box_idx        Pointer to the index array on points (size = \ref n_pts + 1)
+ * \param [out]  box_l_num      Pointer to the list boxes containing points (size = \ref box_idx[\ref n_pts])
+ *
+ */
 
+void
+PDM_box_tree_boxes_containing_points
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_pts,
+ const double   *pts_coord,
+ int           **box_idx,
+ int           **box_l_num
+)
+{
+  assert(i_copied_rank < bt->n_copied_ranks);
+
+  // const int dim = bt->boxes->dim;
+  //int normalized = bt->boxes->normalized;
+
+  // Done inside _box_tree_boxes_containing_points_impl
+  // /* if (normalized) { */
+  // double *_pts_coord = malloc (sizeof(double) * dim * n_pts);
+  // /*for (int i = 0; i < n_pts; i++) {
+  //   const double *_pt_origin = pts_coord + dim * i;
+  //   double *_pt              = _pts_coord + dim * i;
+  //   PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
+  //   }*/
+  // PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
+  //                               n_pts,
+  //                               (double *) pts_coord,
+  //                               _pts_coord);
+  // /* } */
+
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+    box_tree_data = bt->local_data;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  _box_tree_boxes_containing_points_impl(bt,
+                                         boxes,
+                                         box_tree_data,
+                                         n_pts,
+                                         pts_coord,
+                                         box_idx,
+                                         box_l_num);
+
+  // int n_boxes = boxes->n_boxes;
+
+  // *box_idx = malloc (sizeof(int) * (n_pts + 1));
+  // int *_box_idx = *box_idx;
+  // _box_idx[0] = 0;
+
+  // int tmp_s_boxes = 4 * n_pts;
+  // *box_l_num = malloc (sizeof(int) * tmp_s_boxes);
+  // int *_box_l_num = *box_l_num;
+
+  // int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  // int *stack = malloc ((sizeof(int)) * s_stack);
+  // int pos_stack = 0;
+
+  // int n_visited_boxes = 0;
+  // PDM_bool_t *is_visited_box = malloc(sizeof(PDM_bool_t) * n_boxes);
+  // for (int i = 0; i < n_boxes; i++) {
+  //   is_visited_box[i] = PDM_FALSE;
+  // }
+
+  // int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
+
+  // double node_extents[2*dim];
+
+  // for (int ipt = 0; ipt < n_pts; ipt++) {
+
+  //   _box_idx[ipt+1] = _box_idx[ipt];
+  //   const double *_pt = _pts_coord + dim * ipt;
+
+  //   /* Init stack */
+  //   pos_stack = 0;
+  //   _extents (dim,
+  //             box_tree_data->nodes[0].morton_code,
+  //             node_extents);
+
+  //   if (_point_inside_box (dim, node_extents, _pt)) {
+  //     stack[pos_stack++] = 0;
+  //   }
+
+  //   n_visited_boxes = 0;
+
+  //   /* Traverse box tree */
+  //   while (pos_stack > 0) {
+
+  //     int node_id = stack[--pos_stack];
+
+  //     _node_t *node = &(box_tree_data->nodes[node_id]);
+
+  //     if (node->n_boxes == 0) {
+  //       continue;
+  //     }
+
+  //     /* Leaf node */
+  //     if (node->is_leaf) {
+  //       /* inspect boxes contained in current leaf node */
+  //       for (int ibox = 0; ibox < node->n_boxes; ibox++) {
+  //         int box_id = box_tree_data->box_ids[node->start_id + ibox];
+
+  //         if (is_visited_box[box_id] == PDM_FALSE) {
+  //           const double *box_extents = boxes->extents + box_id*2*dim;
+
+  //           if (_point_inside_box (dim, box_extents, _pt)) {
+  //             if (_box_idx[ipt+1] >= tmp_s_boxes) {
+  //               tmp_s_boxes *= 2;
+  //               *box_l_num = realloc (*box_l_num, sizeof(int) * tmp_s_boxes);
+  //               _box_l_num = *box_l_num;
+  //             }
+  //             _box_l_num[_box_idx[ipt+1]++] = box_id;
+  //           }
+  //           visited_boxes[n_visited_boxes++] = box_id;
+  //           is_visited_box[box_id] = PDM_TRUE;
+  //         }
+
+  //       }
+  //     }
+
+  //     /* Internal node */
+  //     else {
+  //       /* inspect children of current node */
+  //       int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
+  //       for (int ichild = 0; ichild < bt->n_children; ichild++) {
+  //         int child_id = child_ids[ichild];
+  //         _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
+
+  //         if (_point_inside_box (dim, node_extents, _pt)) {
+  //           stack[pos_stack++] = child_id;
+  //         }
+  //       }
+  //     }
+
+  //   } // End while stack not empty
+
+  //   for (int ibox = 0; ibox < n_visited_boxes; ibox++) {
+  //     is_visited_box[visited_boxes[ibox]] = PDM_FALSE;
+  //   }
+
+  // } // End of loop on points
+
+  // if (pts_coord != _pts_coord) {
+  //   free (_pts_coord);
+  // }
+
+  // free (is_visited_box);
+  // free (stack);
+  // free (visited_boxes);
+
+  // *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
+}
+
+
+/**
+ *
+ * \brief Get an indexed list of all boxes containing points
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_pts          Number of points
+ * \param [in]   pts_coord      Point coordinates
+ * \param [out]  box_idx        Pointer to the index array on points (size = \ref n_pts + 1)
+ * \param [out]  box_l_num      Pointer to the list boxes containing points (size = \ref box_idx[\ref n_pts])
+ *
+ */
+
+void
+PDM_box_tree_boxes_containing_points_shared
+(
+ PDM_box_tree_t *bt,
+ const int       i_shm,
+ const int       n_pts,
+ const double   *pts_coord,
+ int           **box_idx,
+ int           **box_l_num
+)
+{
+  PDM_boxes_t         *boxes         = &bt->boxes->shm_boxes[i_shm];
+  PDM_box_tree_data_t *box_tree_data = &bt->shm_data        [i_shm];
+  _box_tree_boxes_containing_points_impl(bt,
+                                         boxes,
+                                         box_tree_data,
+                                         n_pts,
+                                         pts_coord,
+                                         box_idx,
+                                         box_l_num);
+}
 
 /**
  *

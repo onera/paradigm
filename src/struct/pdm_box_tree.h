@@ -469,6 +469,17 @@ PDM_box_tree_boxes_containing_points
  );
 
 
+void
+PDM_box_tree_boxes_containing_points_shared
+(
+ PDM_box_tree_t *bt,
+ const int       i_shm,
+ const int       n_pts,
+ const double   *pts_coord,
+ int           **box_idx,
+ int           **box_l_num
+);
+
 /**
  *
  * \brief Get an indexed list of all ellipsoids containing points

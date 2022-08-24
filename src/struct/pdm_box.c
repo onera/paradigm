@@ -2030,7 +2030,7 @@ PDM_box_copy_boxes_to_shm
 
   // Shared
   PDM_MPI_Comm comm_shared;
-  PDM_MPI_Comm_split_type(boxes->comm, PDM_MPI_SPLIT_SHARED, &comm_shared);
+  PDM_MPI_Comm_split_type(boxes->comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
 
   int n_rank_in_shm, i_rank_in_shm;
   PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
@@ -2078,12 +2078,21 @@ PDM_box_copy_boxes_to_shm
 
   /* Copy from local to shared (After windows creation bcause window call is collective ) */
   memcpy(boxes->shm_boxes[i_rank_in_shm].n_boxes_orig, boxes->local_boxes->n_boxes_orig, sizeof(int        ) * boxes->local_boxes->n_part_orig);
-  memcpy(boxes->shm_boxes[i_rank_in_shm].g_num       , boxes->local_boxes->g_num       , sizeof(PDM_g_num_t)              * boxes->local_boxes->n_boxes);
-  memcpy(boxes->shm_boxes[i_rank_in_shm].extents     , boxes->local_boxes->extents     , sizeof(double     ) * boxes->dim * boxes->local_boxes->n_boxes);
-  memcpy(boxes->shm_boxes[i_rank_in_shm].origin      , boxes->local_boxes->origin      , sizeof(int        ) * 3          * boxes->local_boxes->n_boxes);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].g_num       , boxes->local_boxes->g_num       , sizeof(PDM_g_num_t)                  * boxes->local_boxes->n_boxes);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].extents     , boxes->local_boxes->extents     , sizeof(double     ) * 2 * boxes->dim * boxes->local_boxes->n_boxes);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].origin      , boxes->local_boxes->origin      , sizeof(int        ) * 3              * boxes->local_boxes->n_boxes);
 
+  // PDM_log_trace_array_long(boxes->shm_boxes[i_rank_in_shm].g_num, boxes->shm_boxes[i_rank_in_shm].n_boxes, "shm_boxes.gnum :: ");
 
   PDM_MPI_Barrier (comm_shared);
+
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_g_num       );
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_extents     );
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_n_boxes_orig);
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_origin      );
+
+  }
 
 
   free(s_shm_data_in_all_nodes);
