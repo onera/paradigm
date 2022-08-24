@@ -123,6 +123,28 @@ _read_args
 
 
 
+static void
+_deformation
+(
+ const double  length,
+ const int     n_vtx,
+ double       *vtx_coord
+ )
+{
+  double amplitude = 0.15;
+  double frequency = 4.;
+
+  for (int i = 0; i < n_vtx; i++) {
+    double x = (vtx_coord[3*i    ] - 0.5) / length;
+    double y = (vtx_coord[3*i + 1] - 0.5) / length;
+    double z = (vtx_coord[3*i + 2] - 0.5) / length;
+
+    vtx_coord[3*i    ] += amplitude*length*cos(frequency*y);
+    vtx_coord[3*i + 1] += amplitude*length*cos(frequency*z);
+    vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
+  }
+}
+
 
 /**
  *
@@ -135,6 +157,7 @@ int main(int argc, char *argv[])
   int n_part = 1;
   PDM_g_num_t n_back = 10;
   PDM_g_num_t n_work = 1;
+  int deform         = 1;
  _read_args (argc,
               argv,
               &n_back,
@@ -188,6 +211,13 @@ int main(int argc, char *argv[])
                                 &dback_face_vtx,
                                 &back_distrib_vtx,
                                 &back_distrib_face);
+
+  if (deform) {
+    int dback_n_vtx = back_distrib_vtx[i_rank+1] - back_distrib_vtx[i_rank];
+    _deformation(radius,
+                 dback_n_vtx,
+                 dback_vtx_coord);
+  }
 
   /*
    *  Build the back mesh dbbtree
@@ -390,6 +420,12 @@ int main(int argc, char *argv[])
                                                      i_part,
                                                      &pwork_vtx_coord,
                                                      PDM_OWNERSHIP_KEEP);
+
+  if (deform) {
+    _deformation(radius,
+                 pwork_n_vtx,
+                 pwork_vtx_coord);
+  }
 
   PDM_g_num_t *pwork_vtx_ln_to_gn = NULL;
   PDM_multipart_part_ln_to_gn_get(mpart,
