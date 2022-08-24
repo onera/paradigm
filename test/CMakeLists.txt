@@ -204,5 +204,6 @@ test_c_create (pdm_t_ho_bezier_intersect 1)
 
 test_c_create (pdm_t_sphere_vol_gen 1)
 test_c_create (pdm_t_separate_groups 1)
+test_c_create (pdm_t_fetch_back_mesh 1)
 
 add_subdirectory(tutorial)
