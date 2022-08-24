@@ -121,6 +121,27 @@ _read_args
 }
 
 
+static void
+_rotate
+(
+ const int     n_pts,
+       double *coord
+ )
+{
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
 
 
 static void
@@ -128,7 +149,7 @@ _deformation
 (
  const double  length,
  const int     n_vtx,
- double       *vtx_coord
+       double *vtx_coord
  )
 {
   double amplitude = 0.15;
@@ -420,6 +441,10 @@ int main(int argc, char *argv[])
                                                      i_part,
                                                      &pwork_vtx_coord,
                                                      PDM_OWNERSHIP_KEEP);
+  if (1) {
+    _rotate(pwork_n_vtx,
+            pwork_vtx_coord);
+  }
 
   if (deform) {
     _deformation(radius,
