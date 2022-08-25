@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
   int n_part = 1;
   PDM_g_num_t n_back = 10;
   PDM_g_num_t n_work = 1;
-  int deform         = 0;
+  int deform         = 1;
  _read_args (argc,
               argv,
               &n_back,
@@ -580,7 +580,7 @@ int main(int argc, char *argv[])
 
     double *proj_line_coord = malloc (sizeof(double) * pback_n_vtx * 6);
     int idx = 0;
-    for (int i = 0; i < pwork_n_edge; i++) {
+    for (int i = 0; i < pback_n_vtx; i++) {
 
       for (int k = 0; k < 3; k++) {
         proj_line_coord[idx++] = pback_vtx_coord[3*i + k];
@@ -641,10 +641,11 @@ int main(int argc, char *argv[])
                                  &request_return_selected);
 
 
-  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_return_selected);
   double *recv_line_coord = tmp_part_data[0];
   free(tmp_part_data);
 
+  int request_return_gnum;
   PDM_g_num_t **tmp_debug_gnum = NULL;
   PDM_part_to_part_reverse_iexch(ptp,
                                  PDM_MPI_COMM_KIND_P2P,
@@ -656,8 +657,8 @@ int main(int argc, char *argv[])
                  (const void **) &pwork_edge_ln_to_gn,
                                  NULL,
                       (void ***) &tmp_debug_gnum,
-                                 &request_return_selected);
-  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
+                                 &request_return_gnum);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_return_gnum);
 
   PDM_g_num_t *recv_gnum = tmp_debug_gnum[0];
   free(tmp_debug_gnum);
@@ -672,9 +673,6 @@ int main(int argc, char *argv[])
   PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_entity1, &ref_l_num_entity1);
 
   PDM_log_trace_array_int(ref_l_num_entity1[0], n_ref_entity1[0], "ref_l_num_entity1 :: ");
-
-
-
 
   if(vtk) {
     char filename[999];
@@ -694,7 +692,7 @@ int main(int argc, char *argv[])
   /*
    * Correction extents
    */
-  for (int iface = 0; iface < 1; iface++) {
+  for (int iface = 0; iface < dback_n_face; iface++) {
 
     double *tmp_extents = back_face_extents + 6*iface;
     // for (int k = 0; k < 3; k++) {
@@ -772,8 +770,8 @@ int main(int argc, char *argv[])
   free(back_face_extents);
   free(dback_face_ln_to_gn);
 
-  int* line_to_back_idx = NULL;
-  int* line_to_back = NULL;
+  int         *line_to_back_idx = NULL;
+  PDM_g_num_t *line_to_back = NULL;
   PDM_dbbtree_lines_intersect_boxes(dbbt,
                                     pwork_n_edge,
                                     pwork_edge_ln_to_gn,
@@ -782,12 +780,67 @@ int main(int argc, char *argv[])
                                     &line_to_back);
 
   if(vtk) {
-
     PDM_log_trace_connectivity_long(line_to_back_idx, line_to_back, pwork_n_edge, "line_to_back ::");
-
   }
 
 
+  PDM_g_num_t *pwork_back_vtx_ln_to_gn = NULL;
+  int         *pwork_back_face_vtx_idx = NULL;
+  int         *pwork_back_face_vtx     = NULL;
+  int          pn_work_back_vtx;
+  PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
+                                                           back_distrib_face,
+                                                           dback_face_vtx_idx,
+                                                           dback_face_vtx,
+                                                           line_to_back_idx[pwork_n_edge],
+                                  (const PDM_g_num_t *)    line_to_back,
+                                                           &pn_work_back_vtx,
+                                                           &pwork_back_vtx_ln_to_gn,
+                                                           &pwork_back_face_vtx_idx,
+                                                           &pwork_back_face_vtx);
+  double **tmp_pwork_back_vtx_coord = NULL;
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        n_part,
+                                        back_distrib_vtx,
+                                        dback_vtx_coord,
+                                        &pn_work_back_vtx,
+                 (const PDM_g_num_t **) &pwork_back_vtx_ln_to_gn,
+                                        &tmp_pwork_back_vtx_coord);
+  double *pwork_back_vtx_coord = tmp_pwork_back_vtx_coord[0];
+  free(tmp_pwork_back_vtx_coord);
+
+
+  if (vtk) {
+    char filename[999];
+
+    int *halo_color = (int * ) malloc( line_to_back_idx[pwork_n_edge] * sizeof(int));
+
+    for(int i_line = 0; i_line < pwork_n_edge; ++i_line ){
+      for(int idx = line_to_back_idx[i_line]; idx < line_to_back_idx[i_line+1]; ++idx) {
+        halo_color[idx] = i_line;
+      }
+    }
+
+    sprintf(filename, "work_back_faces_%d.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pn_work_back_vtx,
+                           pwork_back_vtx_coord,
+                           pwork_back_vtx_ln_to_gn,
+                           line_to_back_idx[pwork_n_edge],
+                           pwork_back_face_vtx_idx,
+                           pwork_back_face_vtx,
+                           line_to_back,
+                           halo_color);
+
+    free(halo_color);
+  }
+
+
+
+  free(pwork_back_vtx_ln_to_gn);
+  free(pwork_back_face_vtx_idx     );
+  free(pwork_back_face_vtx         );
+  free(pwork_back_vtx_coord   );
 
 
 
