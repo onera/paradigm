@@ -640,21 +640,54 @@ int main(int argc, char *argv[])
                       (void ***) &tmp_part_data,
                                  &request_return_selected);
 
-  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
 
+  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
   double *recv_line_coord = tmp_part_data[0];
   free(tmp_part_data);
 
+  PDM_g_num_t **tmp_debug_gnum = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(PDM_g_num_t),
+                 (const int  **) NULL,
+                 (const void **) &pwork_edge_ln_to_gn,
+                                 NULL,
+                      (void ***) &tmp_debug_gnum,
+                                 &request_return_selected);
+  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
+
+  PDM_g_num_t *recv_gnum = tmp_debug_gnum[0];
+  free(tmp_debug_gnum);
+
   // PDM_log_trace_array_double(recv_line_coord, 6*pback_n_vtx, "recv_line_coord ::");
   PDM_log_trace_array_long(closest_elt_gnum, pback_n_vtx, "closest_elt_gnum :: ");
+  PDM_log_trace_array_long(recv_gnum, pback_n_vtx, "recv_gnum :: ");
+  free(recv_gnum);
+
+  int          *n_ref_entity1     = NULL;
+  int         **ref_l_num_entity1 = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_entity1, &ref_l_num_entity1);
+
+  PDM_log_trace_array_int(ref_l_num_entity1[0], n_ref_entity1[0], "ref_l_num_entity1 :: ");
+
+
+
 
   if(vtk) {
     char filename[999];
     sprintf(filename, "inflate_recv_line_%3.3d.vtk", i_rank);
+    // PDM_vtk_write_lines (filename,
+    //                      pback_n_vtx,
+    //                      recv_line_coord,
+    //                      closest_elt_gnum,
+    //                      NULL);
     PDM_vtk_write_lines (filename,
                          pback_n_vtx,
                          recv_line_coord,
-                         closest_elt_gnum,
+                         pback_vtx_ln_to_gn,
                          NULL);
   }
 
