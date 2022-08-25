@@ -34,6 +34,7 @@
 #include "pdm_part_to_part.h"
 #include "pdm_distrib.h"
 #include "pdm_unique.h"
+#include "pdm_para_octree.h"
 
 /*=============================================================================
  * Static global variables
@@ -167,6 +168,100 @@ _deformation
     vtx_coord[3*i + 2] += amplitude*length*cos(frequency*x);
   }
 }
+
+
+
+
+void
+_toto
+(
+ PDM_MPI_Comm   comm,
+ int            pback_n_vtx,
+ double        *pback_vtx_coord,
+ PDM_g_num_t   *pback_vtx_ln_to_gn,
+ // int            pback_n_face,
+ // int           *pback_face_vtx_idx,
+ // int           *pback_face_vtx,
+ // PDM_g_num_t   *pback_face_ln_to_gn,
+ PDM_dbbtree_t *dbbt,
+ int            pwork_n_vtx,
+ double        *pwork_vtx_coord,
+ PDM_g_num_t   *pwork_vtx_ln_to_gn,
+ int            pwork_n_edge,
+ int           *pwork_edge_vtx,
+ PDM_g_num_t   *pwork_edge_ln_to_gn,
+ int          **pwork_edge_back_face_idx,
+ PDM_g_num_t  **pwork_edge_back_face
+)
+{
+  /*
+   *  For each point inserted on a work edge, find its closest back vtx --> upper bound on distance
+   */
+  const int depth_max = 31;
+  const int points_in_leaf_max = 4;
+  PDM_para_octree_t *octree = PDM_para_octree_create(1,
+                                                     depth_max,
+                                                     points_in_leaf_max,
+                                                     0,
+                                                     comm);
+
+  PDM_para_octree_point_cloud_set(octree,
+                                  0,
+                                  pback_n_vtx,
+                                  pback_vtx_coord,
+                                  pback_vtx_ln_to_gn);
+
+  PDM_para_octree_build(octree, NULL);
+
+
+  // -->> take this as an input (riemannian midpoint...)
+  double *inserted_pt_coord = malloc(sizeof(double) * pwork_n_edge * 3);
+  for (int edge_id = 0; edge_id < pwork_n_edge; edge_id++) {
+    int vtx_id1 = pwork_edge_vtx[2*edge_id  ] - 1;
+    int vtx_id2 = pwork_edge_vtx[2*edge_id+1] - 1;
+
+    for (int j = 0; j < 3; j++) {
+      inserted_pt_coord[3*edge_id+j] = 0.5*(pwork_vtx_coord[3*vtx_id1+j] + pwork_vtx_coord[3*vtx_id2+j]);
+    }
+  }
+  // <<--
+
+  PDM_g_num_t *closest_back_vtx_gnum  = malloc(sizeof(PDM_g_num_t) * pwork_n_edge);
+  double      *closest_back_vtx_dist2 = malloc(sizeof(double)      * pwork_n_edge);
+  PDM_para_octree_single_closest_point(octree,
+                                       pwork_n_edge,
+                                       inserted_pt_coord,
+                                       pwork_edge_ln_to_gn,
+                                       closest_back_vtx_gnum,
+                                       closest_back_vtx_dist2);
+  PDM_para_octree_free(octree);
+  free(closest_back_vtx_gnum); // unused
+
+
+  /*
+   *  For each point inserted on a work edge, find all back elements closer than the upper bound distance
+   */
+  PDM_dbbtree_closest_upper_bound_dist_boxes_get(dbbt,
+                                                 pwork_n_edge,
+                                                 inserted_pt_coord,
+                                                 pwork_edge_ln_to_gn,
+                                                 closest_back_vtx_dist2,
+                                                 pwork_edge_back_face_idx,
+                                                 pwork_edge_back_face);
+  free(inserted_pt_coord);
+  free(closest_back_vtx_dist2);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 /**
@@ -501,8 +596,46 @@ int main(int argc, char *argv[])
   }
 
 
-  // int* line_to_back2_idx = NULL;
-  // int* line_to_back2 = NULL;
+
+  PDM_dbbtree_t *dbbt1 = PDM_dbbtree_create(comm, dim, g_extents);
+
+  PDM_box_set_t *box_set1 = PDM_dbbtree_boxes_set(dbbt1,
+                                                  n_part,
+                                                  &dback_n_face,
+                                (const double **) &back_face_extents,
+                           (const PDM_g_num_t **) &dback_face_ln_to_gn);
+
+  int*         line_to_back_idx1 = NULL;
+  PDM_g_num_t* line_to_back1     = NULL;
+  _toto(comm,
+        pback_n_vtx,
+        pback_vtx_coord,
+        pback_vtx_ln_to_gn,
+        // dback_n_face,
+        // pback_face_vtx_idx,
+        // pback_face_vtx,
+        // dback_face_ln_to_gn,
+        dbbt1,
+        pwork_n_vtx,
+        pwork_vtx_coord,
+        pwork_vtx_ln_to_gn,
+        pwork_n_edge,
+        pwork_edge_vtx,
+        pwork_edge_ln_to_gn,
+        &line_to_back_idx1,
+        &line_to_back1);
+
+
+  if(vtk) {
+
+    PDM_log_trace_connectivity_long(line_to_back_idx1, line_to_back1, pwork_n_edge, "line_to_back1::");
+
+  }
+
+
+
+  // int*         line_to_back2_idx = NULL;
+  // PDM_g_num_t* line_to_back2     = NULL;
   // PDM_dbbtree_lines_last_intersect_boxes(dbbt,
   //                                        pwork_n_edge,
   //                                        pwork_edge_ln_to_gn,
@@ -657,8 +790,8 @@ int main(int argc, char *argv[])
                  (const void **) &pwork_edge_ln_to_gn,
                                  NULL,
                       (void ***) &tmp_debug_gnum,
-                                 &request_return_gnum);
-  PDM_part_to_part_reverse_iexch_wait(ptp, request_return_gnum);
+                                 &request_return_selected);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_return_selected);
 
   PDM_g_num_t *recv_gnum = tmp_debug_gnum[0];
   free(tmp_debug_gnum);
