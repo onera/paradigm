@@ -29,6 +29,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_plane.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_dist_cloud_surf.h"
 #include "pdm_triangle.h"
 #include "pdm_distrib.h"
 #include "pdm_unique.h"
@@ -337,10 +338,6 @@ int main(int argc, char *argv[])
                         back_face_extents,
                         dback_face_ln_to_gn);
   }
-  free(pback_vtx_ln_to_gn);
-  free(pback_vtx_coord);
-  free(pback_face_vtx_idx);
-  free(pback_face_vtx);
 
 
   /* Create and build dbbtree */
@@ -499,8 +496,152 @@ int main(int argc, char *argv[])
                                NULL);
   }
 
+  double *line_coord = malloc(6 * pwork_n_edge * sizeof(double));
+
+  for(int i_edge = 0; i_edge < pwork_n_edge; ++i_edge) {
+    int i_vtx1 = PDM_ABS(pwork_edge_vtx[2*i_edge  ])-1;
+    int i_vtx2 = PDM_ABS(pwork_edge_vtx[2*i_edge+1])-1;
+
+    line_coord[6*i_edge  ] = pwork_vtx_coord[3*i_vtx1  ];
+    line_coord[6*i_edge+1] = pwork_vtx_coord[3*i_vtx1+1];
+    line_coord[6*i_edge+2] = pwork_vtx_coord[3*i_vtx1+2];
+
+    line_coord[6*i_edge+3] = pwork_vtx_coord[3*i_vtx2  ];
+    line_coord[6*i_edge+4] = pwork_vtx_coord[3*i_vtx2+1];
+    line_coord[6*i_edge+5] = pwork_vtx_coord[3*i_vtx2+2];
+  }
+
+  int* line_to_back_idx = NULL;
+  int* line_to_back = NULL;
+  PDM_dbbtree_lines_intersect_boxes(dbbt,
+                                    pwork_n_edge,
+                                    pwork_edge_ln_to_gn,
+                                    line_coord,
+                                    &line_to_back_idx,
+                                    &line_to_back);
+
+  if(vtk) {
+
+    PDM_log_trace_connectivity_long(line_to_back_idx, line_to_back, pwork_n_edge, "line_to_back ::");
+
+  }
+
+  // int* line_to_back2_idx = NULL;
+  // int* line_to_back2 = NULL;
+  // PDM_dbbtree_lines_last_intersect_boxes(dbbt,
+  //                                        pwork_n_edge,
+  //                                        pwork_edge_ln_to_gn,
+  //                                        line_coord,
+  //                                        &line_to_back2_idx,
+  //                                        &line_to_back2);
+
+  int n_point_cloud = 1;
+  PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
+                                                            n_point_cloud,
+                                                            comm,
+                                                            PDM_OWNERSHIP_KEEP);
+
+  PDM_dist_cloud_surf_surf_mesh_global_data_set (dist,
+                                                 1);
+
+  pwork_edge_vtx_idx = malloc((pwork_n_edge+1) * sizeof(double));
+  for(int i_edge = 0; i_edge < pwork_n_edge+1; ++i_edge) {
+    pwork_edge_vtx_idx[i_edge] = 2*i_edge;
+  }
+
+  PDM_dist_cloud_surf_surf_mesh_part_set (dist,
+                                          0,//i_part,
+                                          pwork_n_edge,
+                                          pwork_edge_vtx_idx,
+                                          pwork_edge_vtx,
+                                          pwork_edge_ln_to_gn,
+                                          pwork_n_vtx,
+                                          pwork_vtx_coord,
+                                          pwork_vtx_ln_to_gn);
+
+  PDM_dist_cloud_surf_n_part_cloud_set (dist, 0, n_part);
+
+  PDM_dist_cloud_surf_cloud_set (dist,
+                                 0,
+                                 0,//i_part,
+                                 pback_n_vtx,
+                                 pback_vtx_coord,
+                                 pback_vtx_ln_to_gn);
+
+  PDM_dist_cloud_surf_compute (dist);
+  if (1) {
+
+    char filename[999];
+
+    // double *line_coord = malloc (sizeof(double) * n_line * 6);
+    // int idx = 0;
+    // for (int i = 0; i < n_line; i++) {
+    //   for (int j = line_vtx_idx[i]; j < line_vtx_idx[i+1]; j++) {
+    //     int ivtx = line_vtx[j] - 1;
+    //     for (int k = 0; k < 3; k++) {
+    //       line_coord[idx++] = vtx_coord[3*ivtx + k];
+    //     }
+    //   }
+    // }
+
+    sprintf(filename, "dist_ridge_line_%3.3d.vtk", i_rank);
+    PDM_vtk_write_lines (filename,
+                         pwork_n_edge,
+                         line_coord,
+                         pwork_edge_ln_to_gn,
+                         NULL);
+    // free (line_coord);
 
 
+
+    sprintf(filename, "dist_ridge_pts_%3.3d.vtk", i_rank);
+    PDM_vtk_write_point_cloud (filename,
+                               pback_n_vtx,
+                               pback_vtx_coord,
+                               pback_vtx_ln_to_gn,
+                               NULL);
+
+    double      *distance;
+    double      *projected;
+    PDM_g_num_t *closest_elt_gnum;
+
+    PDM_dist_cloud_surf_get (dist,
+                             0,
+                             0,//i_part,
+                             &distance,
+                             &projected,
+                             &closest_elt_gnum);
+
+    double *proj_line_coord = malloc (sizeof(double) * pback_n_vtx * 6);
+    int idx = 0;
+    for (int i = 0; i < pwork_n_edge; i++) {
+
+      for (int k = 0; k < 3; k++) {
+        proj_line_coord[idx++] = pback_vtx_coord[3*i + k];
+      }
+
+      for (int k = 0; k < 3; k++) {
+       proj_line_coord[idx++] = projected[3*i + k];
+      }
+    }
+
+    sprintf(filename, "dist_ridge_proj_%3.3d.vtk", i_rank);
+    PDM_vtk_write_lines (filename,
+                         pback_n_vtx,
+                         proj_line_coord,
+                         pback_vtx_ln_to_gn,
+                         NULL);
+    free (proj_line_coord);
+
+  }
+
+
+  PDM_dist_cloud_surf_dump_times(dist);
+  PDM_dist_cloud_surf_free (dist);
+  free(line_coord);
+  free(line_to_back_idx);
+  free(line_to_back);
+  free(pwork_edge_vtx_idx);
   /*
    *  Free memory
    */
@@ -512,6 +653,10 @@ int main(int argc, char *argv[])
   free(back_distrib_vtx);
   free(back_distrib_face);
 
+  free(pback_vtx_ln_to_gn);
+  free(pback_vtx_coord);
+  free(pback_face_vtx_idx);
+  free(pback_face_vtx);
   PDM_dbbtree_free(dbbt);
   PDM_box_set_destroy(&box_set);
 
