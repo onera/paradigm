@@ -77,7 +77,7 @@ _newton_curve
        double *xyz
 )
 {
-  const int vb = 1;
+  const int vb = 0;
   if (vb) {
     log_trace(">>> Newton curve\n");
   }
@@ -100,7 +100,7 @@ _newton_curve
                                      xyz,
                                      NULL, NULL);
 
-    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
+    // log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
 
     double vec[3] = {
       target[0] - xyz[0],
@@ -108,7 +108,7 @@ _newton_curve
       target[2] - xyz[2]
     };
 
-    log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
+    // log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
 
     // Derivative
     PDM_ho_bezier_de_casteljau_curve(3,
@@ -193,8 +193,8 @@ _newton_curve
                                        NULL, NULL);
     }
 
-    log_trace("u = %f\n", _u);
-    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
+    // log_trace("u = %f\n", _u);
+    // log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
   }
 
   return converged;
@@ -214,7 +214,7 @@ _newton_triangle
        double *xyz
 )
 {
-  const int vb = 1;
+  const int vb = 0;
   if (vb) {
     log_trace(">>> Newton triangle\n");
   }
@@ -239,7 +239,7 @@ _newton_triangle
                                         p,
                                         xyz,
                                         NULL, NULL, NULL);
-    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
+    // log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
 
     double vec[3] = {
       target[0] - xyz[0],
@@ -247,7 +247,7 @@ _newton_triangle
       target[2] - xyz[2]
     };
 
-    log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
+    // log_trace("dist2 = %f\n", PDM_DOT_PRODUCT(vec, vec));
 
     // Jacobian
     PDM_ho_bezier_de_casteljau_triangle(3,
@@ -404,7 +404,7 @@ _newton_triangle
           }
         }
 
-        log_trace("closest edge: %d\n", jmin);
+        // log_trace("closest edge: %d\n", jmin);
         memcpy(xyz, cp[jmin], sizeof(double) * 3);
         if (jmin == 0) {
           _u = t[0];
@@ -433,8 +433,8 @@ _newton_triangle
     }
     //<<--
 
-    log_trace("uv = %f %f\n", _u, _v);
-    log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
+    // log_trace("uv = %f %f\n", _u, _v);
+    // log_trace("&&& %f %f %f\n", xyz[0], xyz[1], xyz[2]);
   }
 
   return converged;
@@ -785,6 +785,12 @@ PDM_ho_bezier_curve_location
                                &t,
                                projected_coord);
 
+  *u = t;
+
+  if (order == 1) {
+    return distance;
+  }
+
   const int n = order*(order+1)/2;
   double db_du[3*n];
   PDM_ho_bezier_curve_derivative(3,
@@ -792,7 +798,6 @@ PDM_ho_bezier_curve_location
                                  node_coord,
                                  db_du);
 
-  *u = t;
   int converged = _newton_curve(order,
                                 point_coord,
                                 u,
@@ -836,6 +841,8 @@ PDM_ho_bezier_triangle_location
        double *uv
  )
 {
+  int vb = 0;
+
   double P1_coord[9];
   memcpy(P1_coord,     node_coord,                sizeof(double) * 3);
   memcpy(P1_coord + 3, node_coord + 3*order,      sizeof(double) * 3);
@@ -850,6 +857,10 @@ PDM_ho_bezier_triangle_location
   uv[0] = weight[2];
   uv[1] = weight[0];
   uv[2] = weight[1];
+
+  if (order == 1) {
+    return distance;
+  }
 
   const int n = order*(order+1)/2;
   double db_du[3*n], db_dv[3*n];
@@ -867,7 +878,10 @@ PDM_ho_bezier_triangle_location
                                    db_du,
                                    db_dv,
                                    projected_coord);
-  log_trace("projected_coord : %f %f %f\n", projected_coord[0], projected_coord[1], projected_coord[2]);
+  if (vb) {
+    log_trace("projected_coord : %f %f %f\n",
+              projected_coord[0], projected_coord[1], projected_coord[2]);
+  }
   PDM_UNUSED(converged);
 
   uv[2] = 1 - uv[0] - uv[1];
