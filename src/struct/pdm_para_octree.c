@@ -14176,8 +14176,8 @@ PDM_para_octree_points_inside_boxes_shared
     wshared_recv_gnum    = PDM_mpi_win_shared_create(          n_tot_recv_shared, sizeof(PDM_g_num_t), comm_shared);
     wshared_recv_extents = PDM_mpi_win_shared_create(two_dim * n_tot_recv_shared, sizeof(double     ), comm_shared);
 
-    int    *shared_recv_gnum    = PDM_mpi_win_shared_get(wshared_recv_gnum);
-    double *shared_recv_extents = PDM_mpi_win_shared_get(wshared_recv_extents);
+    PDM_g_num_t *shared_recv_gnum    = PDM_mpi_win_shared_get(wshared_recv_gnum);
+    double      *shared_recv_extents = PDM_mpi_win_shared_get(wshared_recv_extents);
 
     PDM_mpi_win_shared_lock_all (0, wshared_recv_gnum);
     PDM_mpi_win_shared_lock_all (0, wshared_recv_extents);
