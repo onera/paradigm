@@ -31,6 +31,7 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dist_cloud_surf.h"
 #include "pdm_triangle.h"
+#include "pdm_part_to_part.h"
 #include "pdm_distrib.h"
 #include "pdm_unique.h"
 
@@ -179,7 +180,7 @@ int main(int argc, char *argv[])
   int n_part = 1;
   PDM_g_num_t n_back = 10;
   PDM_g_num_t n_work = 1;
-  int deform         = 1;
+  int deform         = 0;
  _read_args (argc,
               argv,
               &n_back,
@@ -365,18 +366,6 @@ int main(int argc, char *argv[])
     g_extents[i+3] += max_range * 1.0e-3;
   }
 
-  PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
-
-  PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
-                                                 n_part,
-                                                 &dback_n_face,
-                               (const double **) &back_face_extents,
-                          (const PDM_g_num_t **) &dback_face_ln_to_gn);
-  free(back_face_extents);
-  free(dback_face_ln_to_gn);
-
-
-
 
   /*
    *  Generate a coarse 'work' partitioned mesh
@@ -511,20 +500,6 @@ int main(int argc, char *argv[])
     line_coord[6*i_edge+5] = pwork_vtx_coord[3*i_vtx2+2];
   }
 
-  int* line_to_back_idx = NULL;
-  int* line_to_back = NULL;
-  PDM_dbbtree_lines_intersect_boxes(dbbt,
-                                    pwork_n_edge,
-                                    pwork_edge_ln_to_gn,
-                                    line_coord,
-                                    &line_to_back_idx,
-                                    &line_to_back);
-
-  if(vtk) {
-
-    PDM_log_trace_connectivity_long(line_to_back_idx, line_to_back, pwork_n_edge, "line_to_back ::");
-
-  }
 
   // int* line_to_back2_idx = NULL;
   // int* line_to_back2 = NULL;
@@ -569,20 +544,21 @@ int main(int argc, char *argv[])
                                  pback_vtx_ln_to_gn);
 
   PDM_dist_cloud_surf_compute (dist);
+
+  double      *distance;
+  double      *projected;
+  PDM_g_num_t *closest_elt_gnum;
+
+  PDM_dist_cloud_surf_get (dist,
+                           0,
+                           0,//i_part,
+                           &distance,
+                           &projected,
+                           &closest_elt_gnum);
+
   if (1) {
 
     char filename[999];
-
-    // double *line_coord = malloc (sizeof(double) * n_line * 6);
-    // int idx = 0;
-    // for (int i = 0; i < n_line; i++) {
-    //   for (int j = line_vtx_idx[i]; j < line_vtx_idx[i+1]; j++) {
-    //     int ivtx = line_vtx[j] - 1;
-    //     for (int k = 0; k < 3; k++) {
-    //       line_coord[idx++] = vtx_coord[3*ivtx + k];
-    //     }
-    //   }
-    // }
 
     sprintf(filename, "dist_ridge_line_%3.3d.vtk", i_rank);
     PDM_vtk_write_lines (filename,
@@ -601,16 +577,6 @@ int main(int argc, char *argv[])
                                pback_vtx_ln_to_gn,
                                NULL);
 
-    double      *distance;
-    double      *projected;
-    PDM_g_num_t *closest_elt_gnum;
-
-    PDM_dist_cloud_surf_get (dist,
-                             0,
-                             0,//i_part,
-                             &distance,
-                             &projected,
-                             &closest_elt_gnum);
 
     double *proj_line_coord = malloc (sizeof(double) * pback_n_vtx * 6);
     int idx = 0;
@@ -635,6 +601,168 @@ int main(int argc, char *argv[])
 
   }
 
+  /*
+   *  On souhaite gonflé les boites du maillage back -> Revient a envoyé au maillage back le projected
+   *   On envoie l'arrete + ses coordonnnées pour gonflé
+   *     closest_elt_gnum = vtx_back->working_edge
+   *     part1 = vtx_back
+   *     part2 = edge
+   */
+  int *closest_elt_gnum_idx = malloc((pback_n_vtx+1) * sizeof(int));
+  for(int i = 0; i < pback_n_vtx+1; ++i) {
+    closest_elt_gnum_idx[i] = i;
+  }
+  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) &pback_vtx_ln_to_gn,
+                                                                           &pback_n_vtx,
+                                                                           1,
+                                                    (const PDM_g_num_t **) &pwork_edge_ln_to_gn,
+                                                                           &pwork_n_edge,
+                                                                           1,
+                                                    (const int         **) &closest_elt_gnum_idx,
+                                                    (const PDM_g_num_t **) &closest_elt_gnum,
+                                                                           comm);
+
+  free(closest_elt_gnum_idx);
+
+
+  // int    **part_stride = NULL;
+  double **tmp_part_data = NULL;
+  int request_return_selected;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 6,
+                                 sizeof(double),
+                 (const int  **) NULL,
+                 (const void **) &line_coord,
+                                 NULL,
+                      (void ***) &tmp_part_data,
+                                 &request_return_selected);
+
+  PDM_part_to_part_iexch_wait(ptp, request_return_selected);
+
+  double *recv_line_coord = tmp_part_data[0];
+  free(tmp_part_data);
+
+  // PDM_log_trace_array_double(recv_line_coord, 6*pback_n_vtx, "recv_line_coord ::");
+  PDM_log_trace_array_long(closest_elt_gnum, pback_n_vtx, "closest_elt_gnum :: ");
+
+  if(vtk) {
+    char filename[999];
+    sprintf(filename, "inflate_recv_line_%3.3d.vtk", i_rank);
+    PDM_vtk_write_lines (filename,
+                         pback_n_vtx,
+                         recv_line_coord,
+                         closest_elt_gnum,
+                         NULL);
+  }
+
+  /*
+   * Correction extents
+   */
+  for (int iface = 0; iface < 1; iface++) {
+
+    double *tmp_extents = back_face_extents + 6*iface;
+    // for (int k = 0; k < 3; k++) {
+    //   tmp_extents[k]     =  HUGE_VAL;
+    //   tmp_extents[3 + k] = -HUGE_VAL;
+    // }
+
+    for (int ivtx = pback_face_vtx_idx[iface]; ivtx < pback_face_vtx_idx[iface+1]; ivtx++) {
+      int vtx_id = pback_face_vtx[ivtx]-1;
+      log_trace("vtx_id = %i \n", vtx_id);
+      double *tmp_coord = recv_line_coord + 6*vtx_id;
+      for (int k = 0; k < 3; k++) {
+        tmp_extents[k]     =  PDM_MIN(tmp_coord[k], tmp_extents[k]);
+        tmp_extents[3 + k] =  PDM_MAX(tmp_coord[k], tmp_extents[3 + k]);
+      }
+
+      tmp_coord = recv_line_coord + 6*vtx_id + 3;
+      for (int k = 0; k < 3; k++) {
+        tmp_extents[k]     =  PDM_MIN(tmp_coord[k], tmp_extents[k]);
+        tmp_extents[3 + k] =  PDM_MAX(tmp_coord[k], tmp_extents[3 + k]);
+      }
+      // double *tmp_coord = recv_line_coord + 3*vtx_id;
+      // for (int k = 0; k < 3; k++) {
+      //   tmp_extents[k]     =  PDM_MIN(tmp_coord[k], tmp_extents[k]);
+      //   tmp_extents[3 + k] =  PDM_MAX(tmp_coord[k], tmp_extents[3 + k]);
+      // }
+    } // end loop on vertices of iface
+
+    // Threshold/Inflate extents
+    for (int k = 0; k < 3; k++) {
+      double size = tmp_extents[3 + k] - tmp_extents[k];
+
+      // tmp_extents[k]     -= size*eps_extents;
+      // tmp_extents[3 + k] += size*eps_extents;
+
+      if (size < eps_extents) {
+        tmp_extents[k]     -= 0.5*eps_extents;
+        tmp_extents[3 + k] += 0.5*eps_extents;
+      }
+    }
+
+  } // end loop on background faces
+
+  if (vtk) {
+    char filename[999];
+
+    sprintf(filename, "back_faces_inflate_%d.vtk", i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pback_n_vtx,
+                           pback_vtx_coord,
+                           pback_vtx_ln_to_gn,
+                           dback_n_face,
+                           pback_face_vtx_idx,
+                           pback_face_vtx,
+                           dback_face_ln_to_gn,
+                           NULL);
+
+    sprintf(filename, "back_face_inflate_extents_%d.vtk", i_rank);
+    PDM_vtk_write_boxes(filename,
+                        dback_n_face,
+                        back_face_extents,
+                        dback_face_ln_to_gn);
+  }
+
+
+
+
+  PDM_dbbtree_t *dbbt = PDM_dbbtree_create(comm, dim, g_extents);
+
+  PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
+                                                 n_part,
+                                                 &dback_n_face,
+                               (const double **) &back_face_extents,
+                          (const PDM_g_num_t **) &dback_face_ln_to_gn);
+  free(back_face_extents);
+  free(dback_face_ln_to_gn);
+
+  int* line_to_back_idx = NULL;
+  int* line_to_back = NULL;
+  PDM_dbbtree_lines_intersect_boxes(dbbt,
+                                    pwork_n_edge,
+                                    pwork_edge_ln_to_gn,
+                                    line_coord,
+                                    &line_to_back_idx,
+                                    &line_to_back);
+
+  if(vtk) {
+
+    PDM_log_trace_connectivity_long(line_to_back_idx, line_to_back, pwork_n_edge, "line_to_back ::");
+
+  }
+
+
+
+
+
+
+  free(recv_line_coord);
+
+
+  PDM_part_to_part_free(ptp);
 
   PDM_dist_cloud_surf_dump_times(dist);
   PDM_dist_cloud_surf_free (dist);
