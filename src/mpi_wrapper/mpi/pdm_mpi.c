@@ -2508,9 +2508,12 @@ PDM_MPI_Comm_split_type_numa
   abort();
 #endif
 
+  // log_trace("PDM_MPI_Comm_split_type_numa : i_cpu = %i i_numa = %i i_rank_node = %i \n", i_cpu, i_numa, i_rank_node);
+
   /* Sur le shared on split par numa */
   int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
 
+  // *comm_numa = comm_node;
   // PDM_MPI_Comm_free(&comm_node);
   // int code = 0;
   return _mpi_2_pdm_mpi_err(code);

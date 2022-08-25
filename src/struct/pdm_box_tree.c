@@ -5466,7 +5466,7 @@ PDM_box_tree_copy_to_shm
   PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
 
   bt->n_rank_in_shm = n_rank_in_shm;
-  log_trace("PDM_box_tree_copy_to_shm ; n_rank_in_shm = %i \n", n_rank_in_shm);
+  // log_trace("PDM_box_tree_copy_to_shm ; n_rank_in_shm = %i \n", n_rank_in_shm);
 
 
   int s_shm_data_in_rank[4] = {0};
@@ -5481,8 +5481,6 @@ PDM_box_tree_copy_to_shm
 
   bt->shm_data       = (PDM_box_tree_data_t *) malloc(n_rank_in_shm * sizeof(PDM_box_tree_data_t));
   bt->wbox_tree_data = (_w_box_tree_data_t  *) malloc(n_rank_in_shm * sizeof(_w_box_tree_data_t ));
-
-  printf("n_rank_in_shm = %i \n", n_rank_in_shm);
 
   /* Creation mémoire des windows */
   for(int i = 0; i < n_rank_in_shm; ++i) {
@@ -5512,8 +5510,6 @@ PDM_box_tree_copy_to_shm
 
   }
   PDM_MPI_Barrier (comm_shared);
-
-  printf("bt->local_data->n_max_nodes = %i \n", bt->local_data->n_max_nodes);
 
   /* Copy from local to shared (After windows creation bcause window call is collective ) */
   for (int j = 0; j < bt->local_data->n_max_nodes; j++) {

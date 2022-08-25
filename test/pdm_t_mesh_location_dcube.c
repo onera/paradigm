@@ -531,7 +531,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pts_gnum   = NULL;
 
   marge *= length;
-  int strip = 1;
+  int strip = 0;
   if(strip == 0) {
     PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
                                 n_pts,

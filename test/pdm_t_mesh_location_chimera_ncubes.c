@@ -1224,6 +1224,14 @@ _prepare_target_cloud
   double      ***extract_face_bnd_coord
 )
 {
+
+  PDM_UNUSED(n_vtx);
+  PDM_UNUSED(face_ln_to_gn);
+  PDM_UNUSED(vtx_ln_to_gn);
+  PDM_UNUSED(face_vtx_idx);
+  PDM_UNUSED(face_vtx);
+  PDM_UNUSED(vtx_coord);
+
   /*
    * Extract cell with a given depth and also face center
    */
@@ -1361,6 +1369,8 @@ _visu
  double          *cell_nat[]
 )
 {
+
+  PDM_UNUSED(face_ln_to_gn);
 
   int i_rank;
   int n_rank;
@@ -2151,7 +2161,7 @@ int main(int argc, char *argv[])
 
       for(int i_part = 0; i_part < n_part; ++i_part) {
 
-        int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+        // int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
 
         double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
 
@@ -2159,7 +2169,7 @@ int main(int argc, char *argv[])
         double *_field           = field           [i_cloud][i_part];
         double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
         double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
-        double *_cell_nat        = cell_nat        [i_cloud][i_part];
+        // double *_cell_nat        = cell_nat        [i_cloud][i_part];
 
         for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
           int i_tgt = ref_tgt[i_part][i]-1;
