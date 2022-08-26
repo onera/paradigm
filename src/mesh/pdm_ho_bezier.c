@@ -332,7 +332,7 @@ _newton_triangle
     //-->>
     // TO DO: project on the triangle's curved edges
     if (outside) {
-      if (0) {
+      if (1) {
         // Quick and dirty (projection inside uv domain)
         if (_u < 0) {
           _u = 0;
@@ -804,7 +804,7 @@ PDM_ho_bezier_curve_location
                                 node_coord,
                                 db_du,
                                 projected_coord);
-  log_trace("projected_coord : %f %f %f\n", projected_coord[0], projected_coord[1], projected_coord[2]);
+  // log_trace("projected_coord : %f %f %f\n", projected_coord[0], projected_coord[1], projected_coord[2]);
   PDM_UNUSED(converged);
 
   distance = 0;
@@ -849,14 +849,23 @@ PDM_ho_bezier_triangle_location
   memcpy(P1_coord + 6, node_coord + 3*(n_node-1), sizeof(double) * 3);
 
   double distance, weight[3];
-  PDM_triangle_evaluate_position(point_coord,
-                                 P1_coord,
-                                 projected_coord,
-                                 &distance,
-                                 weight);
-  uv[0] = weight[2];
-  uv[1] = weight[0];
-  uv[2] = weight[1];
+  // PDM_triangle_evaluate_position(point_coord,
+  //                                P1_coord,
+  //                                projected_coord,
+  //                                &distance,
+  //                                weight);
+  // uv[0] = weight[2];
+  // uv[1] = weight[0];
+  // uv[2] = weight[1];
+  PDM_triangle_closest_point(point_coord,
+                             P1_coord,
+                             projected_coord,
+                             &distance,
+                             weight);
+  uv[0] = weight[1];
+  uv[1] = weight[2];
+  uv[2] = weight[0];
+
 
   if (order == 1) {
     return distance;

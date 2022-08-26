@@ -535,7 +535,7 @@ PDM_triangle_closest_point
   }
   _weights[1] = (r*c - s*b) / det;
   _weights[2] = (s*a - r*b) / det;
-  log_trace("  u = %f, v = %f\n", _weights[1], _weights[2]);
+  // log_trace("  u = %f, v = %f\n", _weights[1], _weights[2]);
   _weights[0] = 1. - _weights[1] - _weights[2];
 
   /* Projection inside triangle (= closest point) */
@@ -564,7 +564,7 @@ PDM_triangle_closest_point
     d01 = PDM_line_distance (x, v0, v1, &t01, c01);
     d12 = PDM_line_distance (x, v1, v2, &t12, c12);
     d20 = PDM_line_distance (x, v2, v0, &t20, c20);
-    log_trace("d01/12/20 = %f / %f / %f\n", d01, d12, d20);
+    // log_trace("d01/12/20 = %f / %f / %f\n", d01, d12, d20);
 
     if (d01 <= d12 && d01 <= d20) {
       // i = 0;
