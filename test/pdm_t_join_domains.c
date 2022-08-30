@@ -1412,7 +1412,7 @@ int main
                                                           &face_edge_idx,
                                                           PDM_OWNERSHIP_KEEP);
 
-        assert(n_face2 = pn_face[i_dom][i_part]);
+        assert(n_face2 == pn_face[i_dom][i_part]);
         int n_face_tot = pn_face[i_dom][i_part]+n_face_extended;
 
         int *concat_face_vtx_idx = malloc( (n_face_tot+1) * sizeof(int));

@@ -20,6 +20,7 @@
 #include "pdm_distrib.h"
 #include "pdm_point_cloud_gen.h"
 #include "pdm_para_octree.h"
+#include "pdm_logging.h"
 
 /*============================================================================
  * Macro definitions
@@ -372,7 +373,7 @@ char *argv[]
 
   PDM_para_octree_free (octree);
 
-  PDM_log_trace_connectivity_long(box_pts_idx, box_pts, n_boxes, "box_pts :: ");
+  // PDM_log_trace_connectivity_long(box_pts_idx, box_pts, n_boxes, "box_pts :: ");
 
   /* Free */
   free(box_pts_idx);
