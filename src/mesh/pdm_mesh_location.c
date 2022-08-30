@@ -3806,7 +3806,7 @@ PDM_mesh_location_t        *ml
                                        pcloud_g_num);
 
       /* Build parallel octree */
-      PDM_MPI_Barrier(ml->comm);
+      // PDM_MPI_Barrier(ml->comm);
       double t1 = PDM_MPI_Wtime();
 
 
@@ -3825,7 +3825,7 @@ PDM_mesh_location_t        *ml
       // PDM_para_octree_export_vtk(octree,"octree_debug_ml_");
 
       /* Locate points inside boxes */
-      PDM_MPI_Barrier (ml->comm);
+      // PDM_MPI_Barrier (ml->comm);
       t1 = PDM_MPI_Wtime();
       if(use_shared_octree == 0) {
         PDM_para_octree_points_inside_boxes (octree,
@@ -3844,7 +3844,7 @@ PDM_mesh_location_t        *ml
                                                    &pts_g_num,
                                                    &pts_coord);
       }
-      if (0) {
+      if (1) {
         end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
       }
 
@@ -3852,10 +3852,10 @@ PDM_mesh_location_t        *ml
       PDM_para_octree_free (octree);
       break;
      }
-    case PDM_MESH_LOCATION_DBBTREE:
+    case PDM_MESH_LOCATION_DBBTREE: {
       if (dbg_enabled) printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
       // if (USE_OCTREE_COPIES) {
-      double t1 = PDM_MPI_Wtime();
+      double t1dbtree = PDM_MPI_Wtime();
       if(use_shared_octree == 0) {
         PDM_dbbtree_points_inside_boxes (dbbt,
                                          n_pts_pcloud,
@@ -3868,7 +3868,7 @@ PDM_mesh_location_t        *ml
                                          &pts_coord,
                                          0);
       } else {
-        PDM_MPI_Barrier (ml->comm);
+        // PDM_MPI_Barrier (ml->comm);
         PDM_dbbtree_points_inside_boxes_shared(dbbt,
                                                n_pts_pcloud,
                                                pcloud_g_num,
@@ -3881,10 +3881,10 @@ PDM_mesh_location_t        *ml
                                                0);
       }
       if (0) {
-        end_timer_and_print("PDM_dbbtree_points_inside_boxes ", ml->comm, t1);
+        end_timer_and_print("PDM_dbbtree_points_inside_boxes ", ml->comm, t1dbtree);
       }
       break;
-
+     }
     default:
       printf("Error: unknown location method %d\n", ml->method);
       assert (1 == 0);

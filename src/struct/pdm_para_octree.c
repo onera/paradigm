@@ -14594,7 +14594,7 @@ PDM_para_octree_points_inside_boxes_shared
    */
   int **tmp_pts_in_box_n = NULL;
 
-  PDM_MPI_Barrier(_octree->comm);
+  // PDM_MPI_Barrier(_octree->comm);
 
   PDM_g_num_t **tmp_pts_in_box_g_num = NULL;
   PDM_block_to_part_exch(btp,
@@ -14648,8 +14648,8 @@ PDM_para_octree_points_inside_boxes_shared
   PDM_timer_resume (_octree->timer);
 
 
-  if (0) {
-    log_trace ("[%d] PiB_SHARED timers \n");
+  if (1) {
+    log_trace ("PiB_SHARED timers \n");
     log_trace ("PIB_SHARED_TOTAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
                times_elapsed[PIB_SHARED_TOTAL], times_elapsed[PIB_SHARED_TOTAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
     log_trace ("PIB_SHARED_REDISTRIBUTE_ENCODE       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
