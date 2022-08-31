@@ -1342,6 +1342,110 @@ _prepare_target_cloud
 
 }
 
+
+/**
+ *
+ *
+ *
+ */
+static
+void
+_prepare_external_faces
+(
+  PDM_MPI_Comm   comm,
+  int            n_part,
+  int            n_group,
+  int           *n_face,
+  int           *n_vtx,
+  PDM_g_num_t  **face_ln_to_gn,
+  PDM_g_num_t  **vtx_ln_to_gn,
+  PDM_g_num_t  **face_group_ln_to_gn,
+  int          **face_vtx_idx,
+  int          **face_vtx,
+  int          **face_group_idx,
+  int          **face_group,
+  double       **vtx_coord,
+  int          **n_external_face,
+  int          **n_external_vtx,
+  PDM_g_num_t ***external_face_ln_to_gn,
+  PDM_g_num_t ***external_vtx_ln_to_gn,
+  double      ***external_vtx_coord,
+  int         ***external_face_vtx_idx,
+  int         ***external_face_vtx
+)
+{
+
+  *n_external_face        = malloc(n_part * sizeof(int          ));
+  *n_external_vtx         = malloc(n_part * sizeof(int          ));
+  *external_face_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  *external_vtx_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  *external_vtx_coord    = malloc(n_part * sizeof(double      *));
+  *external_face_vtx_idx = malloc(n_part * sizeof(int         *));
+  *external_face_vtx     = malloc(n_part * sizeof(int         *));
+
+  int          *_n_external_face        = *n_external_face;
+  int          *_n_external_vtx         = *n_external_vtx;
+  PDM_g_num_t **_external_face_ln_to_gn = *external_face_ln_to_gn;
+  PDM_g_num_t **_external_vtx_ln_to_gn  = *external_vtx_ln_to_gn;
+
+  double      **_external_vtx_coord    = external_vtx_coord;
+  int         **_external_face_vtx_idx = external_face_vtx_idx;
+  int         **_external_face_vtx     = external_face_vtx;
+
+  /* Management of void */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    _n_external_face       [i_part] = 0;
+    _n_external_vtx        [i_part] = 0;
+    _external_face_ln_to_gn[i_part] = NULL;
+    _external_vtx_ln_to_gn [i_part] = NULL;
+    _external_vtx_coord    [i_part] = NULL;
+    _external_face_vtx_idx [i_part] = NULL;
+    _external_face_vtx     [i_part] = NULL;
+  }
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int *vtx_tag = malloc(n_vtx[i_part] * sizeof(int));
+    for(int i = 0; i < n_vtx[i_part]; ++i ) {
+      vtx_tag[i] = 0;
+    }
+
+    _external_face_vtx_idx[i_part] = malloc( (face_group_idx[i_part][n_group]+1) * sizeof(int));
+    _external_face_vtx_idx[i_part][0] = 0;
+
+    /* Count */
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
+        int i_face = face_group[i_part][idx_face]-1;
+
+        int n_vtx_on_face = face_vtx_idx[i_part][i_face+1] - face_vtx_idx[i_part][i_face];
+        _external_face_vtx_idx[i_part][n_external_face[i_part]+1]  = _external_face_vtx_idx[i_part][n_external_face[i_part]] + n_vtx_on_face;
+        n_external_face[i_part]++;
+      }
+    }
+
+    _external_face_vtx[i_part] = malloc( (_external_face_vtx_idx[i_part][n_external_face[i_part]]) * sizeof(int));
+    _external_face_vtx[i_part][0] = 0;
+
+    _external_face_ln_to_gn[i_part] = malloc(n_part * sizeof(PDM_g_num_t));;
+    _external_vtx_ln_to_gn [i_part] = malloc(n_part * sizeof(PDM_g_num_t));;
+    _external_vtx_coord    [i_part] = malloc(n_part * sizeof(double     ));;
+
+
+
+    /* Realloc */
+
+
+
+    free(vtx_tag);
+
+  }
+
+}
+
+
+
 /**
  *
  * \brief  Visu
@@ -1688,6 +1792,14 @@ int main(int argc, char *argv[])
   PDM_g_num_t ***extract_face_bnd_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
   double      ***extract_face_bnd_coord    = malloc(n_mesh * sizeof(double      **));
 
+  int          **n_external_face         = malloc(n_mesh * sizeof(int          *));
+  int          **n_external_vtx          = malloc(n_mesh * sizeof(int          *));
+  PDM_g_num_t ***external_face_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***external_vtx_ln_to_gn   = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double      ***external_vtx_coord      = malloc(n_mesh * sizeof(double      **));
+  int         ***external_face_vtx_idx   = malloc(n_mesh * sizeof(int         **));
+  int         ***external_face_vtx       = malloc(n_mesh * sizeof(int         **));
+
   double ***cell_center = malloc(n_mesh * sizeof(double **));
   double ***cell_volume = malloc(n_mesh * sizeof(double **));
   double ***face_center = malloc(n_mesh * sizeof(double **));
@@ -1872,6 +1984,29 @@ int main(int argc, char *argv[])
       n_vtx_without_ext [i_mesh][i_part] = n_vtx [i_mesh][i_part] - n_vtx_ext [i_mesh][i_part];
       n_interp_loc                      += n_extract_cell[i_mesh][i_part];
     }
+
+    /* Prepare extract */
+    _prepare_external_faces(comm,
+                            n_part,
+                            n_group,
+                            n_face                   [i_mesh],
+                            n_vtx                    [i_mesh],
+                            face_ln_to_gn            [i_mesh],
+                            vtx_ln_to_gn             [i_mesh],
+                            group_ln_to_gn           [i_mesh],
+                            face_vtx_idx             [i_mesh],
+                            face_vtx                 [i_mesh],
+                            face_group_idx           [i_mesh],
+                            face_group               [i_mesh],
+                            vtx_coord                [i_mesh],
+                            &n_external_face         [i_mesh],
+                            &n_external_vtx          [i_mesh],
+                            &external_face_ln_to_gn  [i_mesh],
+                            &external_vtx_ln_to_gn   [i_mesh],
+                            &external_vtx_coord      [i_mesh],
+                            &external_face_vtx_idx   [i_mesh],
+                            &external_face_vtx       [i_mesh]);
+
 
     // /* Visu */
     // char filename[999];
@@ -2340,6 +2475,12 @@ int main(int argc, char *argv[])
       free(blk_interp_vol [i_mesh][i_part]);
       free(cell_nat       [i_mesh][i_part]);
 
+      free(external_face_ln_to_gn[i_mesh][i_part]);
+      free(external_vtx_ln_to_gn [i_mesh][i_part]);
+      free(external_vtx_coord    [i_mesh][i_part]);
+      free(external_face_vtx_idx [i_mesh][i_part]);
+      free(external_face_vtx     [i_mesh][i_part]);
+
       if(extract_center_ln_to_gn[i_mesh][i_part] != NULL) {
         free(extract_center_ln_to_gn[i_mesh][i_part]);
         free(extract_center_coord[i_mesh][i_part]);
@@ -2382,12 +2523,21 @@ int main(int argc, char *argv[])
     free(blk_interp_vol [i_mesh]);
     free(cell_nat       [i_mesh]);
 
+    free(external_face_ln_to_gn[i_mesh]);
+    free(external_vtx_ln_to_gn [i_mesh]);
+    free(external_vtx_coord    [i_mesh]);
+    free(external_face_vtx_idx [i_mesh]);
+    free(external_face_vtx     [i_mesh]);
+
     free(n_extract_cell[i_mesh]);
     free(n_extract_face[i_mesh]);
     free(extract_center_ln_to_gn  [i_mesh]);
     free(extract_center_coord     [i_mesh]);
     free(extract_face_bnd_ln_to_gn[i_mesh]);
     free(extract_face_bnd_coord   [i_mesh]);
+
+    free(n_external_face[i_mesh]);
+    free(n_external_vtx [i_mesh]);
   }
 
 
@@ -2424,10 +2574,18 @@ int main(int argc, char *argv[])
 
   free(n_extract_cell);
   free(n_extract_face);
+  free(n_external_face);
+  free(n_external_vtx );
   free(extract_center_ln_to_gn  );
   free(extract_center_coord     );
   free(extract_face_bnd_ln_to_gn);
   free(extract_face_bnd_coord   );
+
+  free(external_face_ln_to_gn);
+  free(external_vtx_ln_to_gn );
+  free(external_vtx_coord    );
+  free(external_face_vtx_idx );
+  free(external_face_vtx     );
 
   PDM_MPI_Finalize();
 
