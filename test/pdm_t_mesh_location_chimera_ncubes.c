@@ -35,6 +35,7 @@
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_inside_cloud_surf.h"
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1741,7 +1742,8 @@ int main(int argc, char *argv[])
   int disable_uvw = 0;
   int use_tgt_nodes = 0;
 
-  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
+  // PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
+  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_TETRA4;
   //  2 -> tria
   //  3 -> quad
   //  5 -> tetra
@@ -2111,6 +2113,64 @@ int main(int argc, char *argv[])
   }
   t2 = PDM_MPI_Wtime();
   delta_t[0] = t2 - t1;
+
+
+  /*
+   * First step : mask
+   */
+  PDM_MPI_Barrier(comm);
+  t1 = PDM_MPI_Wtime();
+
+  PDM_inside_cloud_surf_t **ics = (PDM_inside_cloud_surf_t **) malloc( n_mesh * sizeof(PDM_inside_cloud_surf_t *));
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    ics[i_mesh] = PDM_inside_cloud_surf_create(n_mesh, PDM_OWNERSHIP_USER, comm);
+
+    for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
+      PDM_inside_cloud_surf_n_part_cloud_set(ics[i_mesh], i_cloud, n_part);
+      if(i_mesh ==  i_cloud) {
+        for(int i_part = 0; i_part < n_part; ++i_part) {
+          PDM_inside_cloud_surf_cloud_set(ics[i_mesh], i_cloud, i_part, 0, NULL, NULL);
+        }
+      } else {
+        for(int i_part = 0; i_part < n_part; ++i_part) {
+          PDM_inside_cloud_surf_cloud_set(ics[i_mesh],
+                                          i_cloud,
+                                          i_part,
+                                          n_vtx       [i_cloud][i_part],
+                                          vtx_coord   [i_cloud][i_part],
+                                          vtx_ln_to_gn[i_cloud][i_part]);
+        }
+      }
+    }
+
+    PDM_inside_cloud_surf_surf_mesh_global_data_set(ics[i_mesh], n_part);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_inside_cloud_surf_surf_mesh_part_set(ics[i_mesh],
+                                               i_part,
+                                               n_external_face       [i_mesh][i_part],
+                                               external_face_vtx_idx [i_mesh][i_part],
+                                               external_face_vtx     [i_mesh][i_part],
+                                               external_face_ln_to_gn[i_mesh][i_part],
+                                               n_external_vtx        [i_mesh][i_part],
+                                               external_vtx_coord    [i_mesh][i_part],
+                                               external_vtx_ln_to_gn [i_mesh][i_part]);
+    }
+
+    PDM_inside_cloud_surf_compute(ics[i_mesh]);
+
+    for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        int *is_inside = NULL;
+        PDM_inside_cloud_surf_get(ics[i_mesh], i_cloud, i_part, &is_inside);
+        free(is_inside);
+      }
+    }
+
+
+    PDM_inside_cloud_surf_free(ics[i_mesh]);
+  }
+  free(ics);
 
   /*
    * Prepare localisation
