@@ -1374,6 +1374,8 @@ _prepare_external_faces
   int         ***external_face_vtx
 )
 {
+  PDM_UNUSED(n_face);
+  PDM_UNUSED(face_group_ln_to_gn);
 
   *n_external_face        = malloc(n_part * sizeof(int          ));
   *n_external_vtx         = malloc(n_part * sizeof(int          ));
@@ -1389,9 +1391,9 @@ _prepare_external_faces
   PDM_g_num_t **_external_face_ln_to_gn = *external_face_ln_to_gn;
   PDM_g_num_t **_external_vtx_ln_to_gn  = *external_vtx_ln_to_gn;
 
-  double      **_external_vtx_coord    = external_vtx_coord;
-  int         **_external_face_vtx_idx = external_face_vtx_idx;
-  int         **_external_face_vtx     = external_face_vtx;
+  double      **_external_vtx_coord    = *external_vtx_coord;
+  int         **_external_face_vtx_idx = *external_face_vtx_idx;
+  int         **_external_face_vtx     = *external_face_vtx;
 
   /* Management of void */
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1408,7 +1410,7 @@ _prepare_external_faces
 
     int *vtx_tag = malloc(n_vtx[i_part] * sizeof(int));
     for(int i = 0; i < n_vtx[i_part]; ++i ) {
-      vtx_tag[i] = 0;
+      vtx_tag[i] = -1;
     }
 
     _external_face_vtx_idx[i_part] = malloc( (face_group_idx[i_part][n_group]+1) * sizeof(int));
@@ -1420,27 +1422,84 @@ _prepare_external_faces
         int i_face = face_group[i_part][idx_face]-1;
 
         int n_vtx_on_face = face_vtx_idx[i_part][i_face+1] - face_vtx_idx[i_part][i_face];
-        _external_face_vtx_idx[i_part][n_external_face[i_part]+1]  = _external_face_vtx_idx[i_part][n_external_face[i_part]] + n_vtx_on_face;
-        n_external_face[i_part]++;
+        _external_face_vtx_idx[i_part][_n_external_face[i_part]+1]  = _external_face_vtx_idx[i_part][_n_external_face[i_part]] + n_vtx_on_face;
+        _n_external_face[i_part]++;
       }
     }
 
-    _external_face_vtx[i_part] = malloc( (_external_face_vtx_idx[i_part][n_external_face[i_part]]) * sizeof(int));
-    _external_face_vtx[i_part][0] = 0;
+    _external_face_vtx[i_part] = malloc( (_external_face_vtx_idx[i_part][_n_external_face[i_part]]) * sizeof(int));
 
-    _external_face_ln_to_gn[i_part] = malloc(n_part * sizeof(PDM_g_num_t));;
-    _external_vtx_ln_to_gn [i_part] = malloc(n_part * sizeof(PDM_g_num_t));;
-    _external_vtx_coord    [i_part] = malloc(n_part * sizeof(double     ));;
+    _external_face_ln_to_gn[i_part] = malloc(_n_external_face[i_part] * sizeof(PDM_g_num_t));;
 
+    int max_size = _external_face_vtx_idx[i_part][_n_external_face[i_part]];
+    _external_vtx_ln_to_gn [i_part] = malloc(    max_size * sizeof(PDM_g_num_t));;
+    _external_vtx_coord    [i_part] = malloc(3 * max_size * sizeof(double     ));;
 
+    _n_external_face[i_part] = 0;
+    _n_external_vtx [i_part] = 0;
+
+    /*
+     * Fill
+     */
+    int idx_write = 0;
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
+        int i_face = face_group[i_part][idx_face]-1;
+
+        for(int idx_vtx = face_vtx_idx[i_part][i_face]; idx_vtx < face_vtx_idx[i_part][i_face+1]; ++idx_vtx) {
+          int i_vtx = face_vtx[i_part][idx_vtx]-1;
+
+          if(vtx_tag[i_vtx] == -1) {
+            vtx_tag[i_vtx] = _n_external_vtx [i_part]+1;
+            _external_vtx_ln_to_gn[i_part][_n_external_vtx [i_part]] = vtx_ln_to_gn[i_part][i_vtx];
+            _external_face_vtx[i_part][idx_write++] = vtx_tag[i_vtx];
+
+            _external_vtx_coord[i_part][3*_n_external_vtx[i_part]  ] = vtx_coord[i_part][3*i_vtx  ];
+            _external_vtx_coord[i_part][3*_n_external_vtx[i_part]+1] = vtx_coord[i_part][3*i_vtx+1];
+            _external_vtx_coord[i_part][3*_n_external_vtx[i_part]+2] = vtx_coord[i_part][3*i_vtx+2];
+
+            _n_external_vtx [i_part]++;
+          } else {
+            _external_face_vtx[i_part][idx_write++] = vtx_tag[i_vtx];
+          }
+
+        }
+
+        _external_face_ln_to_gn[i_part][_n_external_face[i_part]] = face_ln_to_gn[i_part][i_face];
+        _n_external_face[i_part]++;
+      }
+    }
 
     /* Realloc */
-
-
+    _external_vtx_ln_to_gn [i_part] = realloc(_external_vtx_ln_to_gn [i_part],     _n_external_vtx[i_part] * sizeof(PDM_g_num_t));
+    _external_vtx_coord    [i_part] = realloc(_external_vtx_coord    [i_part], 3 * _n_external_vtx[i_part] * sizeof(double     ));
 
     free(vtx_tag);
-
   }
+
+
+  /*
+   * Generate new global numbering
+   */
+  PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
+  PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_gnum_set_from_parents(gen_gnum_face, i_part, _n_external_face[i_part], _external_face_ln_to_gn[i_part]);
+    PDM_gnum_set_from_parents(gen_gnum_vtx , i_part, _n_external_vtx [i_part], _external_vtx_ln_to_gn [i_part]);
+  }
+  PDM_gnum_compute(gen_gnum_face);
+  PDM_gnum_compute(gen_gnum_vtx );
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(_external_face_ln_to_gn[i_part]);
+    free(_external_vtx_ln_to_gn [i_part]);
+    _external_face_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_face, i_part);
+    _external_vtx_ln_to_gn [i_part] = PDM_gnum_get(gen_gnum_vtx , i_part);
+  }
+
+  PDM_gnum_free(gen_gnum_face);
+  PDM_gnum_free(gen_gnum_vtx);
 
 }
 
@@ -1856,6 +1915,10 @@ int main(int argc, char *argv[])
         lxmin   = -llength/2;
         lymin   = -llength/2;
         lzmin   = -llength/2;
+      } else {
+        lxmin         = -llength/2;
+        lymin         = -llength/2;
+        lzmin         = -llength/2;
       }
     } else {
       srand(i_mesh);
@@ -2007,6 +2070,24 @@ int main(int argc, char *argv[])
                             &external_face_vtx_idx   [i_mesh],
                             &external_face_vtx       [i_mesh]);
 
+    /*
+     * Export vtk extract surface
+     */
+    if(1 == 1) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        char filename[999];
+        sprintf(filename, "external_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);
+        PDM_vtk_write_polydata(filename,
+                               n_external_vtx          [i_mesh][i_part],
+                               external_vtx_coord      [i_mesh][i_part],
+                               external_vtx_ln_to_gn   [i_mesh][i_part],
+                               n_external_face         [i_mesh][i_part],
+                               external_face_vtx_idx   [i_mesh][i_part],
+                               external_face_vtx       [i_mesh][i_part],
+                               external_face_ln_to_gn  [i_mesh][i_part],
+                               NULL);
+      }
+    }
 
     // /* Visu */
     // char filename[999];
