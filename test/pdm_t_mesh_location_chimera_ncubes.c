@@ -1530,7 +1530,8 @@ _visu
  PDM_g_num_t     *vtx_ln_to_gn[],
  double          *field[],
  double          *block_interp[],
- double          *cell_nat[]
+ double          *cell_nat[],
+ double          *mask[]
 )
 {
 
@@ -1598,6 +1599,11 @@ _visu
                                               PDM_WRITER_VAR_SCALAR,
                                               PDM_WRITER_VAR_ELEMENTS,
                                               "cell_nat");
+  int id_var_mask = PDM_writer_var_create(id_cs,
+                                          PDM_WRITER_OFF,
+                                          PDM_WRITER_VAR_SCALAR,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "mask");
 
   PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
@@ -1674,12 +1680,18 @@ _visu
                        id_geom,
                        i_part,
                        cell_nat[i_part]);
+    PDM_writer_var_set(id_cs,
+                       id_var_mask,
+                       id_geom,
+                       i_part,
+                       mask[i_part]);
   }
 
   PDM_writer_var_write(id_cs, id_var_field);
   PDM_writer_var_write(id_cs, id_var_num_part);
   PDM_writer_var_write(id_cs, id_var_blk_interp);
   PDM_writer_var_write(id_cs, id_var_cell_nat);
+  PDM_writer_var_write(id_cs, id_var_mask);
 
   // PDM_writer_var_free(id_cs,
   //                     id_var_num_part);
@@ -1871,8 +1883,9 @@ int main(int argc, char *argv[])
   double ***blk_interp_from = malloc(n_mesh * sizeof(double **));
   double ***blk_interp_vol  = malloc(n_mesh * sizeof(double **));
   double ***cell_nat        = malloc(n_mesh * sizeof(double **));
+  double ***mask            = malloc(n_mesh * sizeof(double **));
 
-  const int n_timer = 7;
+  const int n_timer = 8;
   double cpu_time_max[n_timer];
   double cpu_time_min[n_timer];
   double cpu_time_sum[n_timer];
@@ -2118,11 +2131,23 @@ int main(int argc, char *argv[])
   /*
    * First step : mask
    */
+  for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
+    mask[i_cloud] = malloc(n_part * sizeof(double *));
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      mask[i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(double));
+      for(int i = 0; i < n_cell[i_cloud][i_part]; ++i) {
+        mask[i_cloud][i_part][i] = 0.; // 0 -> pas masqué
+      }
+    }
+  }
+
+
+
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
 
   PDM_inside_cloud_surf_t **ics = (PDM_inside_cloud_surf_t **) malloc( n_mesh * sizeof(PDM_inside_cloud_surf_t *));
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+  for(int i_mesh = 1; i_mesh < n_mesh; ++i_mesh) { // Because first mesh mask all we skip it !!!
     ics[i_mesh] = PDM_inside_cloud_surf_create(n_mesh, PDM_OWNERSHIP_USER, comm);
 
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
@@ -2159,10 +2184,40 @@ int main(int argc, char *argv[])
 
     PDM_inside_cloud_surf_compute(ics[i_mesh]);
 
+    int mask_type = 1;
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
         int *is_inside = NULL;
         PDM_inside_cloud_surf_get(ics[i_mesh], i_cloud, i_part, &is_inside);
+        if(i_mesh ==  i_cloud) {
+          free(is_inside);
+          continue;
+        }
+
+        /* Translate information into a single field at cell */
+        for(int i_cell = 0; i_cell < n_cell[i_cloud][i_part]; ++i_cell) {
+
+          double cell_is_completely_inside = 1.;
+          double face_is_inside = 0.;
+          for(int idx_face = cell_face_idx[i_cloud][i_part][i_cell]; idx_face < cell_face_idx[i_cloud][i_part][i_cell+1]; ++idx_face) {
+            int i_face = PDM_ABS(cell_face[i_cloud][i_part][idx_face]) - 1;
+            for(int idx_vtx = face_vtx_idx[i_cloud][i_part][i_face]; idx_vtx < face_vtx_idx[i_cloud][i_part][i_face+1]; ++idx_vtx) {
+              int i_vtx = face_vtx[i_cloud][i_part][idx_vtx]-1;
+              // face_is_inside = PDM_MAX(face_is_inside, is_inside[i_vtx]);
+              face_is_inside = PDM_MAX(face_is_inside, is_inside[i_vtx]);
+              if(is_inside[i_vtx] == 0) {
+                cell_is_completely_inside = 0;
+              }
+            }
+          }
+          // A voir : On prends le plus grand recouvrement ou le plus petit
+          if(mask_type == 0) {
+            mask[i_cloud][i_part][i_cell] = PDM_MAX(mask[i_cloud][i_part][i_cell],  face_is_inside);
+          } else {
+            mask[i_cloud][i_part][i_cell] = PDM_MAX(mask[i_cloud][i_part][i_cell], cell_is_completely_inside);
+          }
+        }
+
         free(is_inside);
       }
     }
@@ -2171,6 +2226,8 @@ int main(int argc, char *argv[])
     PDM_inside_cloud_surf_free(ics[i_mesh]);
   }
   free(ics);
+  t2 = PDM_MPI_Wtime();
+  delta_t[1] = t2 - t1;
 
   /*
    * Prepare localisation
@@ -2248,7 +2305,7 @@ int main(int argc, char *argv[])
 
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[1] = t2 - t1;
+  delta_t[2] = t2 - t1;
 
 
   /*
@@ -2324,7 +2381,7 @@ int main(int argc, char *argv[])
     }
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[2] = t2 - t1;
+  delta_t[3] = t2 - t1;
 
 
   /*
@@ -2411,7 +2468,7 @@ int main(int argc, char *argv[])
     }
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[3] = t2 - t1;
+  delta_t[4] = t2 - t1;
 
 
   /*
@@ -2469,7 +2526,7 @@ int main(int argc, char *argv[])
     }
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[4] = t2 - t1;
+  delta_t[5] = t2 - t1;
 
   /*
    * Cleaning
@@ -2511,7 +2568,7 @@ int main(int argc, char *argv[])
     PDM_mesh_location_free(mesh_loc[i_mesh]);
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[5] = t2 - t1;
+  delta_t[6] = t2 - t1;
 
   /* Visu */
   PDM_MPI_Barrier(comm);
@@ -2535,11 +2592,12 @@ int main(int argc, char *argv[])
              vtx_ln_to_gn      [i_mesh],
              field             [i_mesh],
              blk_interp_from   [i_mesh],
-             cell_nat          [i_mesh]);
+             cell_nat          [i_mesh],
+             mask              [i_mesh]);
     }
   }
   t2 = PDM_MPI_Wtime();
-  delta_t[6] = t2 - t1;
+  delta_t[7] = t2 - t1;
 
 
   PDM_MPI_Allreduce (delta_t, cpu_time_max, n_timer, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
@@ -2554,12 +2612,13 @@ int main(int argc, char *argv[])
     printf("Total number of cells         : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_cell_tot  , n_cell_tot/n_rank);
     printf("Total number of interpolation : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_interp_tot, n_interp_tot/n_rank);
     printf("duration min/max : Generate cube   = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[0], cpu_time_max[0], cpu_time_sum[0]/((double) n_cell_tot), cpu_time_sum[0]/((double) n_interp_tot));
-    printf("duration min/max : Localisation    = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[1], cpu_time_max[1], cpu_time_sum[1]/((double) n_cell_tot), cpu_time_sum[1]/((double) n_interp_tot));
-    printf("duration min/max : ptp create      = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[2], cpu_time_max[2], cpu_time_sum[2]/((double) n_cell_tot), cpu_time_sum[2]/((double) n_interp_tot));
-    printf("duration min/max : ptp iexch       = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[3], cpu_time_max[3], cpu_time_sum[3]/((double) n_cell_tot), cpu_time_sum[3]/((double) n_interp_tot));
-    printf("duration min/max : ptp wait + post = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[4], cpu_time_max[4], cpu_time_sum[4]/((double) n_cell_tot), cpu_time_sum[4]/((double) n_interp_tot));
-    printf("duration min/max : Cleaning        = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[5], cpu_time_max[5], cpu_time_sum[5]/((double) n_cell_tot), cpu_time_sum[5]/((double) n_interp_tot));
-    printf("duration min/max : Visualisation   = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[6], cpu_time_max[6], cpu_time_sum[6]/((double) n_cell_tot), cpu_time_sum[6]/((double) n_interp_tot));
+    printf("duration min/max : Ray traicing    = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[1], cpu_time_max[1], cpu_time_sum[1]/((double) n_cell_tot), cpu_time_sum[1]/((double) n_interp_tot));
+    printf("duration min/max : Localisation    = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[2], cpu_time_max[2], cpu_time_sum[2]/((double) n_cell_tot), cpu_time_sum[2]/((double) n_interp_tot));
+    printf("duration min/max : ptp create      = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[3], cpu_time_max[3], cpu_time_sum[3]/((double) n_cell_tot), cpu_time_sum[3]/((double) n_interp_tot));
+    printf("duration min/max : ptp iexch       = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[4], cpu_time_max[4], cpu_time_sum[4]/((double) n_cell_tot), cpu_time_sum[4]/((double) n_interp_tot));
+    printf("duration min/max : ptp wait + post = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[5], cpu_time_max[5], cpu_time_sum[5]/((double) n_cell_tot), cpu_time_sum[5]/((double) n_interp_tot));
+    printf("duration min/max : Cleaning        = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[6], cpu_time_max[6], cpu_time_sum[6]/((double) n_cell_tot), cpu_time_sum[6]/((double) n_interp_tot));
+    printf("duration min/max : Visualisation   = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[7], cpu_time_max[7], cpu_time_sum[7]/((double) n_cell_tot), cpu_time_sum[7]/((double) n_interp_tot));
   }
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
@@ -2681,6 +2740,13 @@ int main(int argc, char *argv[])
     free(n_external_vtx [i_mesh]);
   }
 
+  for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(mask[i_cloud][i_part]);
+    }
+    free(mask[i_cloud]);
+  }
+  free(mask);
 
   free(n_cell        );
   free(n_face        );
