@@ -1823,8 +1823,8 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  int case_type = 0; // Random cube mesh
-  // int case_type = 1; // Helice configuration
+  // int case_type = 0; // Random cube mesh
+  int case_type = 1; // Helice configuration
   int n_mesh = -1;
   // int n_mesh = 2;
   // int n_mesh = 5;
@@ -1943,7 +1943,7 @@ int main(int argc, char *argv[])
 
       if(i_mesh > 0 ) {
         lextract_center_depth = 1;
-        llength = length/6;
+        llength = length/8;
 
         lxmin   = -llength/2;
         lymin   = +llength*2;

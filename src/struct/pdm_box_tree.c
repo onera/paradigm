@@ -5528,6 +5528,7 @@ PDM_box_tree_copy_to_shm
   free(s_shm_data_in_all_nodes);
 
   PDM_MPI_Barrier (comm_shared);
+  // PDM_MPI_Comm_free(&comm_shared);
 }
 
 void
@@ -6278,7 +6279,7 @@ _box_tree_intersect_lines_boxes_impl
  int                 **box_l_num
 )
 {
-
+  // double t1 = PDM_MPI_Wtime();
   const int dim = bt->boxes->dim;
   const int two_dim = 2*dim;
   //int normalized = bt->boxes->normalized;
@@ -6317,7 +6318,18 @@ _box_tree_intersect_lines_boxes_impl
 
   int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
-  double node_extents[2*dim];
+  // double node_extents[2*dim];
+
+  /*
+   * Compute once extents
+   */
+  double *node_extents = malloc(2 * dim * box_tree_data->n_nodes * sizeof(double));
+  for(int i = 0; i < box_tree_data->n_nodes; ++i) {
+    _extents (dim,
+              box_tree_data->nodes[i].morton_code,
+              &node_extents[i*2*dim]);
+  }
+
 
   double invdir[3];
   for (int iline = 0; iline < n_line; iline++) {
@@ -6336,11 +6348,13 @@ _box_tree_intersect_lines_boxes_impl
 
     /* Init stack */
     pos_stack = 0;
-    _extents (dim,
-              box_tree_data->nodes[0].morton_code,
-              node_extents);
+    // _extents (dim, box_tree_data->nodes[0].morton_code, node_extents);
+    // if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+    //   stack[pos_stack++] = 0;
+    // }
 
-    if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+    double *_node_extents = node_extents + 2 * dim * 0;
+    if (_intersect_line_box (dim, _node_extents, origin, invdir)) {
       stack[pos_stack++] = 0;
     }
 
@@ -6387,11 +6401,16 @@ _box_tree_intersect_lines_boxes_impl
         int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
         for (int ichild = 0; ichild < bt->n_children; ichild++) {
           int child_id = child_ids[ichild];
-          _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
+          // _extents (dim, box_tree_data->nodes[child_id].morton_code, node_extents);
+          // if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+          //   stack[pos_stack++] = child_id;
+          // }
 
-          if (_intersect_line_box (dim, node_extents, origin, invdir)) {
+          double *_node_extents_child = node_extents + 2 * dim * child_id;
+          if (_intersect_line_box (dim, _node_extents_child, origin, invdir)) {
             stack[pos_stack++] = child_id;
           }
+
         }
       }
 
@@ -6412,6 +6431,10 @@ _box_tree_intersect_lines_boxes_impl
   free (visited_boxes);
 
   *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_line]);
+  free(node_extents);
+
+  // double t2 = PDM_MPI_Wtime();
+  // log_trace("_box_tree_intersect_lines_boxes_impl = %12.5e \n", t2-t1);
 }
 
 /**

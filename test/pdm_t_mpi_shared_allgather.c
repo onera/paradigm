@@ -589,6 +589,8 @@ hybrid_exchange_numa(PDM_MPI_Comm comm)
   free(recv_shift);
   free(val);
   free(neighbor_in);
+  PDM_MPI_Comm_free(&comm_shared);
+  PDM_MPI_Comm_free(&comm_dist_graph);
 
 }
 /**
@@ -624,6 +626,7 @@ int main(int argc, char *argv[])
   hybrid_exchange_numa(comm);
 
 
+  PDM_MPI_Comm_free(&comm_shared);
   PDM_MPI_Barrier (comm);
   if (i_rank == 0) {
   PDM_printf ("-- End\n");

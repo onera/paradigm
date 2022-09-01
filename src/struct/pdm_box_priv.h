@@ -124,6 +124,7 @@ struct _PDM_box_set_t {
   double      d[3];                     /* Dilatation for the normalization */
 
   int                  n_rank_in_shm;
+  PDM_MPI_Comm         comm_shared;
   PDM_boxes_t         *shm_boxes;       /* Boxes shared from other ranks */
   _w_boxes_data_t     *wboxes_data;
 
