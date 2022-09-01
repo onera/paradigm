@@ -2088,7 +2088,7 @@ int main(int argc, char *argv[])
     /*
      * Export vtk extract surface
      */
-    if(1 == 1) {
+    if(0 == 1) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
         char filename[999];
         sprintf(filename, "external_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);

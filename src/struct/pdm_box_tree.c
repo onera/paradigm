@@ -6265,36 +6265,19 @@ PDM_box_tree_ellipsoids_containing_points
   *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_pts]);
 }
 
-
-
-/**
- *
- * \brief Get an indexed list of all boxes intersecting lines
- *
- * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
- * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
- *
- * \param [in]   bt             Pointer to box tree structure
- * \param [in]   i_copied_rank  Copied rank
- * \param [in]   n_line         Number of lines
- * \param [in]   line_coord     Lines coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
- * \param [out]  box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
- * \param [out]  box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
- *
- */
-
+static
 void
-PDM_box_tree_intersect_lines_boxes
+_box_tree_intersect_lines_boxes_impl
 (
- PDM_box_tree_t *bt,
- const int       i_copied_rank,
- const int       n_line,
- const double   *line_coord,
- int           **box_idx,
- int           **box_l_num
- )
+ PDM_box_tree_t       *bt,
+ PDM_boxes_t          *boxes,
+ PDM_box_tree_data_t  *box_tree_data,
+ const int             n_line,
+ const double         *line_coord,
+ int                 **box_idx,
+ int                 **box_l_num
+)
 {
-  assert(i_copied_rank < bt->n_copied_ranks);
 
   const int dim = bt->boxes->dim;
   const int two_dim = 2*dim;
@@ -6312,19 +6295,7 @@ PDM_box_tree_intersect_lines_boxes
                                 (double *) line_coord,
                                 _line_coord);
   /* } */
-
-  PDM_boxes_t *boxes;
-  PDM_box_tree_data_t *box_tree_data;
-  if (i_copied_rank < 0) {
-    boxes = bt->boxes->local_boxes;
-    box_tree_data = bt->local_data;
-  } else {
-    boxes = bt->boxes->rank_boxes + i_copied_rank;
-    box_tree_data = bt->rank_data + i_copied_rank;
-  }
-
   int n_boxes = boxes->n_boxes;
-
 
   *box_idx = malloc (sizeof(int) * (n_line + 1));
   int *_box_idx = *box_idx;
@@ -6443,7 +6414,76 @@ PDM_box_tree_intersect_lines_boxes
   *box_l_num = realloc (*box_l_num, sizeof(int) * _box_idx[n_line]);
 }
 
+/**
+ *
+ * \brief Get an indexed list of all boxes intersecting lines
+ *
+ * The search can be performed either in the local box tree (\ref i_copied_rank < 0) or in
+ * any distant box tree copied locally from rank bt->copied_rank[\ref i_copied_rank]
+ *
+ * \param [in]   bt             Pointer to box tree structure
+ * \param [in]   i_copied_rank  Copied rank
+ * \param [in]   n_line         Number of lines
+ * \param [in]   line_coord     Lines coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  box_idx        Pointer to the index array on lines (size = \ref n_line + 1)
+ * \param [out]  box_l_num      Pointer to the list of boxes intersecting lines (size = \ref box_idx[\ref n_line])
+ *
+ */
 
+void
+PDM_box_tree_intersect_lines_boxes
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_idx,
+ int           **box_l_num
+)
+{
+  assert(i_copied_rank < bt->n_copied_ranks);
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+    box_tree_data = bt->local_data;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  _box_tree_intersect_lines_boxes_impl(bt,
+                                       boxes,
+                                       box_tree_data,
+                                       n_line,
+                                       line_coord,
+                                       box_idx,
+                                       box_l_num);
+
+}
+
+
+void
+PDM_box_tree_intersect_lines_boxes_shared
+(
+ PDM_box_tree_t *bt,
+ const int       i_shm,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_idx,
+ int           **box_l_num
+)
+{
+  PDM_boxes_t         *boxes         = &bt->boxes->shm_boxes[i_shm];
+  PDM_box_tree_data_t *box_tree_data = &bt->shm_data        [i_shm];
+  _box_tree_intersect_lines_boxes_impl(bt,
+                                       boxes,
+                                       box_tree_data,
+                                       n_line,
+                                       line_coord,
+                                       box_idx,
+                                       box_l_num);
+}
 
 
 /**
@@ -6512,6 +6552,52 @@ PDM_box_tree_intersect_boxes_lines
   free(line_box);
 }
 
+
+
+void
+PDM_box_tree_intersect_boxes_lines_shared
+(
+ PDM_box_tree_t *bt,
+ const int       i_shm,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_line_idx,
+ int           **box_line
+)
+{
+  int *line_box_idx = NULL;
+  int *line_box     = NULL;
+  PDM_box_tree_intersect_lines_boxes_shared(bt,
+                                            i_shm,
+                                            n_line,
+                                            line_coord,
+                                            &line_box_idx,
+                                            &line_box);
+
+  /* Transpose from line->box to box->line */
+  PDM_boxes_t *boxes = &bt->boxes->shm_boxes[i_shm];
+  int n_boxes = boxes->n_boxes;
+
+  int* box_line_n = PDM_array_zeros_int(n_boxes);
+  for(int i = 0; i < n_line; ++i) {
+    for(int idx_box = line_box_idx[i]; idx_box <  line_box_idx[i+1]; ++idx_box ) {
+      box_line_n[line_box[idx_box]]++;
+    }
+  }
+
+  *box_line_idx = PDM_array_new_idx_from_sizes_int(box_line_n, n_boxes);
+  *box_line = (int *) malloc(sizeof(int) * (*box_line_idx)[n_boxes]);
+  PDM_array_reset_int(box_line_n, n_boxes, 0);
+  for (int iline = 0; iline < n_line; iline++) {
+    for (int idx_box = line_box_idx[iline]; idx_box < line_box_idx[iline+1]; idx_box++) {
+      int ibox = line_box[idx_box];
+      (*box_line)[(*box_line_idx)[ibox] + box_line_n[ibox]++] = iline;
+    }
+  }
+  free(box_line_n);
+  free(line_box_idx);
+  free(line_box);
+}
 /**
  *
  * \brief Get an indexed list of all boxes intersecting lines

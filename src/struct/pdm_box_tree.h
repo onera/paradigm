@@ -537,6 +537,17 @@ PDM_box_tree_intersect_lines_boxes
  int            **box_l_num
  );
 
+void
+PDM_box_tree_intersect_lines_boxes_shared
+(
+ PDM_box_tree_t  *bt,
+ const int        i_copied_rank,
+ const int        n_line,
+ const double    *line_coord,
+ int            **box_idx,
+ int            **box_l_num
+ );
+
 /**
  *
  * \brief Get an indexed list of all lines intersecting boxes
@@ -563,6 +574,18 @@ PDM_box_tree_intersect_boxes_lines
  int           **box_line_idx,
  int           **box_line_l_num
  );
+
+void
+PDM_box_tree_intersect_boxes_lines_shared
+(
+ PDM_box_tree_t *bt,
+ const int       i_shm,
+ const int       n_line,
+ const double   *line_coord,
+ int           **box_line_idx,
+ int           **box_line_l_num
+ );
+
 
 /**
  *
