@@ -6274,15 +6274,15 @@ PDM_dbbtree_lines_intersect_boxes2_shared
     int *line_rank_idx = NULL;
     int *line_rank     = NULL;
 
-    double t1a = PDM_MPI_Wtime();
+    // double t1a = PDM_MPI_Wtime();
     PDM_box_tree_intersect_lines_boxes (_dbbt->btShared,
                                         -1,
                                         n_line,
                                         line_coord,
                                         &line_rank_idx,
                                         &line_rank);
-    double t2a = PDM_MPI_Wtime();
-    log_trace("PDM_box_tree_intersect_lines_boxes (Shared) = %12.5e \n", t2a - t1a);
+    // double t2a = PDM_MPI_Wtime();
+    // log_trace("PDM_box_tree_intersect_lines_boxes (Shared) = %12.5e \n", t2a - t1a);
 
     /* Count points to send to each rank */
     send_count = PDM_array_zeros_int (n_rank);
@@ -6455,7 +6455,7 @@ PDM_dbbtree_lines_intersect_boxes2_shared
 
   if(_dbbt->btShared != NULL) {
 
-    double t1a = PDM_MPI_Wtime();
+    // double t1a = PDM_MPI_Wtime();
     for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
 
       int beg     = distrib_search_by_rank_idx[i_shm  ];
@@ -6522,7 +6522,7 @@ PDM_dbbtree_lines_intersect_boxes2_shared
       _box_line_idx [i_shm] = extract_box_line_idx;
       free(box_line_l_num);
     }
-    double t2a = PDM_MPI_Wtime();
+    // double t2a = PDM_MPI_Wtime();
     // log_trace("PDM_box_tree_intersect_lines_boxes (shm) = %12.5e \n", t2a-t1a);
 
     PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);
