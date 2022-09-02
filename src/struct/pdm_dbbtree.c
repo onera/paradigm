@@ -4070,7 +4070,7 @@ PDM_dbbtree_points_inside_boxes_shared
   int n_pts_local  = 0;
   int n_pts_recv   = 0;
   int n_pts_copied = 0;
-  int n_pts1;
+  int n_pts1       = 0;
 
   PDM_UNUSED(n_pts_recv);
   PDM_UNUSED(n_pts_copied);
@@ -6249,7 +6249,7 @@ PDM_dbbtree_lines_intersect_boxes2_shared
   int n_line_local  = 0;
   int n_line_recv   = 0;
   int n_line_copied = 0;
-  int n_line1;
+  int n_line1       = 0;
 
   PDM_UNUSED(n_line_local);
   PDM_UNUSED(n_line_recv);
