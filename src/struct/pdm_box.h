@@ -426,6 +426,17 @@ PDM_box_copy_boxes_to_ranks
  int            *copied_ranks
 );
 
+/**
+ * \brief Setup a shared structure among nodes
+ *
+ * \param [in] boxes            Pointer to the PDM_box_t structure
+ */
+void
+PDM_box_copy_boxes_to_shm
+(
+ PDM_box_set_t  *boxes
+);
+
 void
 PDM_box_set_free_copies
 (

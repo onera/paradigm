@@ -201,7 +201,7 @@ char *argv[]
 
   PDM_para_octree_build (octree, NULL);
 
-  //PDM_para_octree_dump (octree);
+  // PDM_para_octree_dump (octree);
 
   PDM_para_octree_dump_times (octree);
 

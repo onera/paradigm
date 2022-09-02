@@ -2791,7 +2791,11 @@ PDM_mesh_location_t        *ml
   if (env_var != NULL) {
     allow_extraction = atoi(env_var);
   }
-  int use_extracted_pts  = allow_extraction;
+  // int use_extracted_pts  = allow_extraction;
+  int *use_extracted_pts  = malloc(ml->n_point_cloud * sizeof(int));
+  for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+    use_extracted_pts[icloud] = allow_extraction;
+  }
   int use_extracted_mesh = allow_extraction;
 
   int          **n_select_pts = NULL;
@@ -3008,9 +3012,9 @@ PDM_mesh_location_t        *ml
       PDM_g_num_t g_n_pts[2];
       PDM_MPI_Allreduce (l_n_pts, g_n_pts, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
 
-      use_extracted_pts = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
+      use_extracted_pts[icloud] = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
 
-      if (use_extracted_pts) {
+      if (use_extracted_pts[icloud]) {
         _point_cloud_extract_selection (ml->comm,
                                         pcloud,
                                         n_select_pts[icloud],
@@ -3055,7 +3059,7 @@ PDM_mesh_location_t        *ml
 
 
 
-      if (dbg_enabled && my_rank == 0 && use_extracted_pts) {
+      if (dbg_enabled && my_rank == 0 && use_extracted_pts[icloud]) {
         printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" pts from cloud #%d ("PDM_FMT_G_NUM"%%)\n",
                g_n_pts[1], g_n_pts[0], icloud, (100 * g_n_pts[1]) / g_n_pts[0]);
       }
@@ -3105,14 +3109,14 @@ PDM_mesh_location_t        *ml
      *  Brute force (could be accelerated using bbtree)
      */
 
-    n_select_elt = malloc (sizeof(int *)  * n_blocks);
-    select_elt_l_num = malloc (sizeof(int **) * n_blocks);
+    n_select_elt     = malloc (n_blocks * sizeof(int  *));
+    select_elt_l_num = malloc (n_blocks * sizeof(int **));
 
     ibox = 0;
     for (int iblock = 0; iblock < n_blocks; iblock++) {
 
-      n_select_elt[iblock] = malloc (sizeof(int) * n_parts);
-      select_elt_l_num[iblock] = malloc (sizeof(int *) * n_parts);
+      n_select_elt    [iblock] = malloc (n_parts * sizeof(int  ));
+      select_elt_l_num[iblock] = malloc (n_parts * sizeof(int *));
 
       int id_block = blocks_id[iblock];
 
@@ -3688,6 +3692,7 @@ PDM_mesh_location_t        *ml
     b_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
     PDM_timer_resume(ml->timer);
 
+    int loc_use_extracted_mesh = use_extracted_mesh;
 
     _point_cloud_t *pcloud = ml->point_clouds + icloud;
 
@@ -3720,7 +3725,7 @@ PDM_mesh_location_t        *ml
         }
       }
 
-      if (use_extracted_pts) {
+      if (use_extracted_pts[icloud]) {
         pcloud_parent_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
         idx = 0;
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -3777,6 +3782,11 @@ PDM_mesh_location_t        *ml
     /*
      * Get points inside bounding boxes of elements
      */
+    char *env_var_oct = getenv ("OCTREE_SHARED");
+    int use_shared_octree = 0;
+    if (env_var_oct != NULL) {
+      use_shared_octree = atoi(env_var_oct);
+    }
 
     switch (ml->method) {
 
@@ -3796,9 +3806,15 @@ PDM_mesh_location_t        *ml
                                        pcloud_g_num);
 
       /* Build parallel octree */
-      PDM_MPI_Barrier(ml->comm);
+      // PDM_MPI_Barrier(ml->comm);
       double t1 = PDM_MPI_Wtime();
-      PDM_para_octree_build (octree, NULL);
+
+
+      if(use_shared_octree == 0) {
+        PDM_para_octree_build (octree, NULL);
+      } else {
+        PDM_para_octree_build_shared (octree, NULL);
+      }
       if (0) {
         end_timer_and_print("PDM_para_octree_build ", ml->comm, t1);
       }
@@ -3806,18 +3822,29 @@ PDM_mesh_location_t        *ml
       // if (dbg_enabled) {
         // PDM_para_octree_dump_times (octree);
       // }
+      // PDM_para_octree_export_vtk(octree,"octree_debug_ml_");
 
       /* Locate points inside boxes */
-      PDM_MPI_Barrier (ml->comm);
+      // PDM_MPI_Barrier (ml->comm);
       t1 = PDM_MPI_Wtime();
-      PDM_para_octree_points_inside_boxes (octree,
-                                           n_select_boxes,
-                                           select_box_extents,
-                                           select_box_g_num,
-                                           &pts_idx,
-                                           &pts_g_num,
-                                           &pts_coord);
-      if (0) {
+      if(use_shared_octree == 0) {
+        PDM_para_octree_points_inside_boxes (octree,
+                                             n_select_boxes,
+                                             select_box_extents,
+                                             select_box_g_num,
+                                             &pts_idx,
+                                             &pts_g_num,
+                                             &pts_coord);
+      } else {
+       PDM_para_octree_points_inside_boxes_shared (octree,
+                                                   n_select_boxes,
+                                                   select_box_extents,
+                                                   select_box_g_num,
+                                                   &pts_idx,
+                                                   &pts_g_num,
+                                                   &pts_coord);
+      }
+      if (1) {
         end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
       }
 
@@ -3825,9 +3852,11 @@ PDM_mesh_location_t        *ml
       PDM_para_octree_free (octree);
       break;
      }
-    case PDM_MESH_LOCATION_DBBTREE:
+    case PDM_MESH_LOCATION_DBBTREE: {
       if (dbg_enabled) printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
       // if (USE_OCTREE_COPIES) {
+      double t1dbtree = PDM_MPI_Wtime();
+      if(use_shared_octree == 0) {
         PDM_dbbtree_points_inside_boxes (dbbt,
                                          n_pts_pcloud,
                                          pcloud_g_num,
@@ -3838,8 +3867,24 @@ PDM_mesh_location_t        *ml
                                          &pts_g_num,
                                          &pts_coord,
                                          0);
+      } else {
+        // PDM_MPI_Barrier (ml->comm);
+        PDM_dbbtree_points_inside_boxes_shared(dbbt,
+                                               n_pts_pcloud,
+                                               pcloud_g_num,
+                                               pcloud_coord,
+                                               n_select_boxes,
+                                               select_box_g_num,
+                                               &pts_idx,
+                                               &pts_g_num,
+                                               &pts_coord,
+                                               0);
+      }
+      if (0) {
+        end_timer_and_print("PDM_dbbtree_points_inside_boxes ", ml->comm, t1dbtree);
+      }
       break;
-
+     }
     default:
       printf("Error: unknown location method %d\n", ml->method);
       assert (1 == 0);
@@ -3848,6 +3893,7 @@ PDM_mesh_location_t        *ml
     free (pcloud_coord);
 
     if (dbg_enabled) {
+      printf("n_select_boxes = %i \n", n_select_boxes);
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
@@ -3900,18 +3946,42 @@ PDM_mesh_location_t        *ml
     /*
      * 2nd extraction: Remove elements that cannot contain any target point
      */
-    if (use_extracted_mesh) {
+    int          **loc_n_select_elt            = NULL;
+    int         ***loc_select_elt_l_num        = NULL;
+    PDM_g_num_t   *loc_select_box_parent_g_num = NULL;
+    PDM_g_num_t   *loc_select_box_g_num        = NULL;
+    // printf("------------------------ icloud = %i loc_use_extracted_mesh = %i \n", icloud, use_extracted_mesh);
+    if (loc_use_extracted_mesh) {
+
+      loc_n_select_elt            = malloc(n_blocks       * sizeof(int  *     ));
+      loc_select_elt_l_num        = malloc(n_blocks       * sizeof(int **     ));
+      loc_select_box_parent_g_num = malloc(n_select_boxes * sizeof(PDM_g_num_t));
+      loc_select_box_g_num        = malloc(n_select_boxes * sizeof(PDM_g_num_t));
+      // printf("n_select_boxes = %i \n", n_select_boxes);
+
       int idx1 = 0;
       ibox = 0;
       for (int iblock = 0; iblock < n_blocks; iblock++) {
+
+        loc_n_select_elt    [iblock] = malloc (n_parts * sizeof(int  ));
+        loc_select_elt_l_num[iblock] = malloc (n_parts * sizeof(int *));
+
+        // PDM_log_trace_array_long(select_box_parent_g_num, n_select_boxes, "select_box_parent_g_num :: ");
+
         for (int ipart = 0; ipart < n_parts; ipart++) {
 
+          loc_n_select_elt    [iblock][ipart] = 0;
+          loc_select_elt_l_num[iblock][ipart] = malloc (sizeof(int) * n_select_elt[iblock][ipart]);
+
           int idx2 = 0;
+          // printf("n_select_elt[iblock][ipart] = %i \n", n_select_elt[iblock][ipart]);
           for (int ielt = 0; ielt < n_select_elt[iblock][ipart]; ielt++) {
+            // printf("ielt = %i | ibox = %i - %i %i \n", ielt, ibox, pts_idx[ibox], pts_idx[ibox+1]);
             if (pts_idx[ibox] < pts_idx[ibox+1]) {
-              select_elt_l_num[iblock][ipart][idx2] = select_elt_l_num[iblock][ipart][ielt];
-              select_box_parent_g_num[idx1] = select_box_parent_g_num[ibox];
-              select_box_g_num[idx1] = select_box_g_num[ibox];
+              loc_select_elt_l_num[iblock][ipart][idx2] = select_elt_l_num[iblock][ipart][ielt];
+
+              loc_select_box_parent_g_num[idx1] = select_box_parent_g_num[ibox];
+              loc_select_box_g_num       [idx1] = select_box_g_num       [ibox];
               pts_idx[idx1+1] = pts_idx[ibox+1];
               idx2++;
               idx1++;
@@ -3919,31 +3989,47 @@ PDM_mesh_location_t        *ml
             ibox++;
           }
           // realloc?
-          n_select_elt[iblock][ipart] = idx2;
+          loc_n_select_elt[iblock][ipart] = idx2;
+
+          loc_select_elt_l_num[iblock][ipart] = realloc(loc_select_elt_l_num[iblock][ipart], loc_n_select_elt[iblock][ipart] * sizeof(int));
 
         } // End of loop on parts
       } // End of loop on nodal blocks
+
       if (dbg_enabled) printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
+
+      /* Realloc */
+      loc_select_box_parent_g_num = realloc(loc_select_box_parent_g_num, idx1 * sizeof(PDM_g_num_t));
+      loc_select_box_g_num        = realloc(loc_select_box_g_num       , idx1 * sizeof(PDM_g_num_t));
     }
 
     else if (allow_extraction) {
-      use_extracted_mesh = 1;
-      select_box_parent_g_num = malloc (sizeof(PDM_g_num_t) * n_select_boxes);
+      loc_use_extracted_mesh = 1;
+
+      loc_n_select_elt            = malloc(n_blocks       * sizeof(int  *     ));
+      loc_select_elt_l_num        = malloc(n_blocks       * sizeof(int **     ));
+      loc_select_box_parent_g_num = malloc(n_select_boxes * sizeof(PDM_g_num_t));
 
       int idx1 = 0;
       ibox = 0;
       for (int iblock = 0; iblock < n_blocks; iblock++) {
+
+        loc_n_select_elt    [iblock] = malloc (n_parts * sizeof(int  ));
+        loc_select_elt_l_num[iblock] = malloc (n_parts * sizeof(int *));
+
         int id_block = blocks_id[iblock];
         for (int ipart = 0; ipart < n_parts; ipart++) {
           int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
                                                            id_block,
                                                            ipart);
 
+          loc_select_elt_l_num[iblock][ipart] = malloc (sizeof(int) * part_n_elt);
+
           int idx2 = 0;
           for (int ielt = 0; ielt < part_n_elt; ielt++) {
             if (pts_idx[ibox] < pts_idx[ibox+1]) {
-              select_elt_l_num[iblock][ipart][idx2] = ielt;
-              select_box_parent_g_num[idx1] = box_g_num[ibox];
+              loc_select_elt_l_num[iblock][ipart][idx2] = ielt;
+              loc_select_box_parent_g_num[idx1] = box_g_num[ibox];
               pts_idx[idx1+1] = pts_idx[ibox+1];
               idx2++;
               idx1++;
@@ -3951,13 +4037,17 @@ PDM_mesh_location_t        *ml
             ibox++;
           }
           // realloc?
-          n_select_elt[iblock][ipart] = idx2;
+          loc_n_select_elt[iblock][ipart] = idx2;
+
+          loc_select_elt_l_num[iblock][ipart] = realloc(loc_select_elt_l_num[iblock][ipart], idx2 * sizeof(int));
 
         } // End of loop on parts
       } // End of loop on nodal blocks
 
       if (dbg_enabled) printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
-      n_select_boxes = idx1;
+      int loc_n_select_boxes = idx1;
+
+      loc_select_box_parent_g_num = realloc(loc_select_box_parent_g_num, idx1 * sizeof(PDM_g_num_t));
 
       /*
        *  Generate a new global numbering for selected boxes
@@ -3970,15 +4060,15 @@ PDM_mesh_location_t        *ml
                                                         PDM_OWNERSHIP_USER);
       PDM_gnum_set_from_parents (gen_gnum_boxes,
                                  0,
-                                 n_select_boxes,
-                                 select_box_parent_g_num);
+                                 loc_n_select_boxes,
+                                 loc_select_box_parent_g_num);
 
       PDM_gnum_compute (gen_gnum_boxes);
 
-      select_box_g_num = PDM_gnum_get (gen_gnum_boxes, 0);
+      loc_select_box_g_num = PDM_gnum_get (gen_gnum_boxes, 0);
 
       PDM_gnum_free (gen_gnum_boxes);
-    }
+    } /* End if extracted_mesh */
 
 
     /*
@@ -4001,12 +4091,12 @@ PDM_mesh_location_t        *ml
 
     int redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
 
-    if (use_extracted_mesh) {
+    if (loc_use_extracted_mesh) {
       _extract_selected_mesh_elements (ml,
-                                       n_select_elt,
-                                       select_elt_l_num,
-                                       select_box_parent_g_num,
-                                       select_box_g_num,
+                                       loc_n_select_elt,
+                                       loc_select_elt_l_num,
+                                       loc_select_box_parent_g_num,
+                                       loc_select_box_g_num,
                                        pts_idx,
                                        pts_g_num,
                                        pts_coord,
@@ -4023,7 +4113,7 @@ PDM_mesh_location_t        *ml
                                        &redistrib_face_vtx_idx,
                                        &redistrib_face_vtx,
                                        &redistrib_face_orientation);
-      free (select_box_parent_g_num);
+      // free (select_box_parent_g_num);
     }
     else {
       _redistribute_elementary_location (ml,
@@ -4052,19 +4142,22 @@ PDM_mesh_location_t        *ml
     if (allow_extraction) {
       for (int iblock = 0; iblock < n_blocks; iblock++) {
         for (int ipart = 0; ipart < n_parts; ipart++) {
-          free (select_elt_l_num[iblock][ipart]);
+          free (loc_select_elt_l_num[iblock][ipart]);
         }
-        free (n_select_elt[iblock]);
-        free (select_elt_l_num[iblock]);
+        free (loc_n_select_elt[iblock]);
+        free (loc_select_elt_l_num[iblock]);
       }
-      free (n_select_elt);
-      free (select_elt_l_num);
+      free (loc_n_select_elt);
+      free (loc_select_elt_l_num);
+
+      free(loc_select_box_parent_g_num);
+      free(loc_select_box_g_num);
     }
 
 
     int n_pts = redistrib_pts_idx[redistrib_n_elt];
 
-    if (use_extracted_pts) {
+    if (use_extracted_pts[icloud]) {
       if (0) {
         printf("[%d] redistrib_pts_g_num = ", my_rank);
         for (int i = 0; i < n_pts; i++) {
@@ -4167,7 +4260,7 @@ PDM_mesh_location_t        *ml
      * Location in elements
      */
     PDM_g_num_t *redistrib_pts_location = malloc (sizeof(PDM_g_num_t) * n_pts);
-    if (use_extracted_mesh) {
+    if (loc_use_extracted_mesh) {
       for (ibox = 0; ibox < redistrib_n_elt; ibox++) {
         for (int i = redistrib_pts_idx[ibox]; i < redistrib_pts_idx[ibox+1]; i++) {
           redistrib_pts_location[i] = redistrib_elt_parent_g_num[ibox];
@@ -4215,33 +4308,33 @@ PDM_mesh_location_t        *ml
                               &weights_idx,
                               &weights);
 
-    if (dbg_enabled) {
-      for (int k = 0; k < redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES]; k++) {
-        if (use_extracted_mesh) {
-          log_trace("Elt gnum = "PDM_FMT_G_NUM"\n", redistrib_elt_parent_g_num[k]);
-        } else {
-          log_trace("Elt gnum = "PDM_FMT_G_NUM"\n", redistrib_elt_g_num[k]);
-        }
-        for (int i = redistrib_pts_idx[k]; i < redistrib_pts_idx[k+1]; i++) {
-          log_trace("Point gnum = ("PDM_FMT_G_NUM")\n", redistrib_pts_g_num[i]);
-          log_trace("\t        coords = (%f, %f, %f)\n",
-                    redistrib_pts_coord[dim*i],
-                    redistrib_pts_coord[dim*i+1],
-                    redistrib_pts_coord[dim*i+2]);
-          log_trace("\tlocation = ("PDM_FMT_G_NUM")\n", redistrib_pts_location[i]);
-          log_trace("\t  proj. coords = (%f, %f, %f)\n",
-                    projected_coord[dim*i],
-                    projected_coord[dim*i+1],
-                    projected_coord[dim*i+2]);
-          log_trace("\tdistance = %f\n", distance[i]);
-          log_trace("\t weights =");
-          for (int j = weights_idx[i]; j < weights_idx[i+1]; j++) {
-            log_trace(" %f", (float) weights[j]);
-          }
-          log_trace("\n");
-        }
-      }
-    }
+    // if (dbg_enabled) {
+    //   for (int k = 0; k < redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES]; k++) {
+    //     if (use_extracted_mesh) {
+    //       log_trace("Elt gnum = "PDM_FMT_G_NUM"\n", redistrib_elt_parent_g_num[k]);
+    //     } else {
+    //       log_trace("Elt gnum = "PDM_FMT_G_NUM"\n", redistrib_elt_g_num[k]);
+    //     }
+    //     for (int i = redistrib_pts_idx[k]; i < redistrib_pts_idx[k+1]; i++) {
+    //       log_trace("Point gnum = ("PDM_FMT_G_NUM")\n", redistrib_pts_g_num[i]);
+    //       log_trace("\t        coords = (%f, %f, %f)\n",
+    //                 redistrib_pts_coord[dim*i],
+    //                 redistrib_pts_coord[dim*i+1],
+    //                 redistrib_pts_coord[dim*i+2]);
+    //       log_trace("\tlocation = ("PDM_FMT_G_NUM")\n", redistrib_pts_location[i]);
+    //       log_trace("\t  proj. coords = (%f, %f, %f)\n",
+    //                 projected_coord[dim*i],
+    //                 projected_coord[dim*i+1],
+    //                 projected_coord[dim*i+2]);
+    //       log_trace("\tdistance = %f\n", distance[i]);
+    //       log_trace("\t weights =");
+    //       for (int j = weights_idx[i]; j < weights_idx[i+1]; j++) {
+    //         log_trace(" %f", (float) weights[j]);
+    //       }
+    //       log_trace("\n");
+    //     }
+    //   }
+    // }
     free (redistrib_elt_g_num);
     free (redistrib_vtx_coord);
     free (redistrib_vtx_idx);
@@ -4251,7 +4344,7 @@ PDM_mesh_location_t        *ml
     free (redistrib_face_vtx_idx);
     free (redistrib_face_vtx);
     free (redistrib_face_orientation);
-    if (use_extracted_mesh) {
+    if (loc_use_extracted_mesh) {
       free (redistrib_elt_parent_g_num);
     }
 
@@ -5696,13 +5789,32 @@ PDM_mesh_location_t        *ml
       PDM_timer_resume(ml->timer);
     }
 
-    if (allow_extraction) {
-      free (n_select_pts);
-      free (select_pts_parent_g_num);
-      free (select_pts_g_num);
-      free (select_pts_coord);
-    }
   } // Loop over point clouds
+
+
+  if (use_extracted_mesh) {
+    free(select_box_parent_g_num);
+  }
+
+  if(allow_extraction) {
+    for (int iblock = 0; iblock < n_blocks; iblock++) {
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        free (select_elt_l_num[iblock][ipart]);
+      }
+      free (n_select_elt[iblock]);
+      free (select_elt_l_num[iblock]);
+    }
+  }
+  free (n_select_elt);
+  free (select_elt_l_num);
+  free(use_extracted_pts);
+
+  if (allow_extraction) {
+    free (n_select_pts);
+    free (select_pts_parent_g_num);
+    free (select_pts_g_num);
+    free (select_pts_coord);
+  }
 
   if (select_box_g_num != box_g_num)     free (select_box_g_num);
   if (select_box_extents != box_extents) free (select_box_extents);
