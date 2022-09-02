@@ -6451,7 +6451,7 @@ PDM_dbbtree_lines_intersect_boxes2_shared
   int         **_box_line_idx           = *box_line_idx;
   int          *_redistrib_n_box        = *redistrib_n_box;
   PDM_g_num_t **_redistrib_box_ln_to_gn = *redistrib_box_ln_to_gn;
-  int         **_box_line_g_num         = *box_line_g_num;
+  PDM_g_num_t **_box_line_g_num         = *box_line_g_num;
 
   if(_dbbt->btShared != NULL) {
 
