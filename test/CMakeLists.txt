@@ -235,6 +235,7 @@ test_c_create (pdm_t_icoball 1)
 test_c_create (pdm_t_hollow_ball 1)
 test_c_create (pdm_t_extrude_polyline 1)
 test_c_create (pdm_t_fill_between_polylines 1)
+test_c_create (pdm_t_morton_order 1)
 
 add_subdirectory(tutorial)
 

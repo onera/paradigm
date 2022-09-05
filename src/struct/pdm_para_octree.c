@@ -7730,7 +7730,7 @@ PDM_para_octree_build
     /*
      * Dilate extents
      */
-    double max_range = 1e-12;
+    double max_range = 1e-12; // To handle case with degenerate extents
     for (int i = 0; i < dim; i++) {
       max_range = PDM_MAX (max_range,
                            _octree->global_extents[i+dim] - _octree->global_extents[i]);
