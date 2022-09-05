@@ -894,18 +894,16 @@ PDM_box_set_build_morton_index(const PDM_box_set_t *boxes,
                                int                 *weight)
 {
 
-  int   *order = NULL;
 
   assert(distrib != NULL);
   assert(distrib->morton_index != NULL);
 
-  order = (int *) malloc(n_leaves * sizeof(int));
 
   /* Locally order Morton encoding */
-
-  PDM_morton_local_order(n_leaves,
-                         leaf_codes,
-                         order);
+  // int   *order  = (int *) malloc(n_leaves * sizeof(int));
+  // PDM_morton_local_order(n_leaves,
+  //                        leaf_codes,
+  //                        order);
 
   /* Compute a Morton index on ranks and return the associated fit */
 
@@ -915,12 +913,11 @@ PDM_box_set_build_morton_index(const PDM_box_set_t *boxes,
                                                n_leaves,
                                                leaf_codes,
                                                weight,
-                                               order,
+                                               NULL, // order
                                                distrib->morton_index,
                                                boxes->comm);
   /* Free memory */
-
-  free(order);
+  // free(order);
 
 }
 

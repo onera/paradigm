@@ -339,6 +339,20 @@ PDM_Finalize
 void
 );
 
+/**
+ * \brief PDM_extents_conformize
+ *
+ * Correction extents to manage singular cases and di-symetrizes pb
+ * eps = 1.e-3 is a standard value
+ *
+ */
+void
+PDM_extents_conformize(int    dim,
+                       double extents[],
+                       double eps);
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

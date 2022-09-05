@@ -2560,17 +2560,23 @@ PDM_mpi_win_shared_create(PDM_MPI_Aint size,
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
+  MPI_Info info;
+  MPI_Info_create( &info );
+  MPI_Info_set(info, "no_locks", "true");
+  MPI_Info_set( info, "alloc_shared_noncontig", "true" );
+
   wins->win = MPI_WIN_NULL;
   wins->ptr = NULL;
   int res = 0;
   if(i_rank == 0) {
-    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, MPI_INFO_NULL, _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win);
+    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, info, _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win);
   } else {
-    res = MPI_Win_allocate_shared(0, disp_unit, MPI_INFO_NULL , _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win );
+    res = MPI_Win_allocate_shared(0, disp_unit, info , _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win );
     MPI_Aint size_0;
     int disp_0;
     MPI_Win_shared_query(wins->win, 0, &size_0, &disp_0, &wins->ptr);
   }
+  MPI_Info_free(&info);
   assert(res == PDM_MPI_SUCCESS);
   return wins;
 }
@@ -2589,7 +2595,9 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
  *
  *----------------------------------------------------------------------------*/
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
+  double t1 = PDM_MPI_Wtime();
   MPI_Win_free(&wins->win);
+  log_trace("PDM_MPI_Win_free = %12.5e \n", PDM_MPI_Wtime()-t1);
   wins->ptr = NULL;
   free(wins);
 }
@@ -2601,7 +2609,7 @@ void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
  *----------------------------------------------------------------------------*/
 int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win)
 {
-  int code = MPI_Win_lock_all(assert, win->win);
+  int code = MPI_Win_lock_all(MPI_MODE_NOCHECK, win->win);
   return _mpi_2_pdm_mpi_err(code);
 }
 

@@ -3518,8 +3518,6 @@ const int        i_part,
   }
   *n_bound_groups = _pmeshes.n_bounds;
 
-  log_trace("_pmeshes.n_bounds = %d\n", _pmeshes.n_bounds);
-
   *s_face_bound = 0;
   if(_pmeshes.parts[i_part]->face_bound_idx !=NULL) {
     *s_face_bound   = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];

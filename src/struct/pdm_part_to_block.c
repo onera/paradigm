@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <float.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -587,9 +588,10 @@ _distrib_data_hilbert
     int shift = 0;
     for(int i_part = 0; i_part < ptb->n_part; ++i_part) {
       for(int i_elt = 0; i_elt < ptb->n_elt[i_part]; ++i_elt) {
-        concat_vtx_coord[3*shift + 3 * i_elt    ] = pvtx_coords[i_part][3 * i_elt    ];
-        concat_vtx_coord[3*shift + 3 * i_elt + 1] = pvtx_coords[i_part][3 * i_elt + 1];
-        concat_vtx_coord[3*shift + 3 * i_elt + 2] = pvtx_coords[i_part][3 * i_elt + 2];
+        int idx_write = 3*(shift + i_elt);
+        concat_vtx_coord[idx_write    ] = pvtx_coords[i_part][3 * i_elt    ];
+        concat_vtx_coord[idx_write + 1] = pvtx_coords[i_part][3 * i_elt + 1];
+        concat_vtx_coord[idx_write + 2] = pvtx_coords[i_part][3 * i_elt + 2];
       }
       for(int i_elt = 0; i_elt < ptb->n_elt[i_part]; ++i_elt) {
         concat_weight[shift+i_elt] = weight[i_part][i_elt];
@@ -604,18 +606,12 @@ _distrib_data_hilbert
 
   /** Get EXTENTS **/
   PDM_hilbert_get_coord_extents_par(dim, ptb->n_elt_proc, concat_vtx_coord, extents, ptb->comm);
+  PDM_extents_conformize(dim, extents, 1e-3);
 
   /** Hilbert Coordinates Computation **/
   PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (ptb->n_elt_proc * sizeof(PDM_hilbert_code_t));
 
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, ptb->n_elt_proc, concat_vtx_coord, hilbert_codes);
-
-  int* hilbert_order = (int * ) malloc(ptb->n_elt_proc * sizeof(int));
-  for(int i = 0; i < ptb->n_elt_proc; ++i) {
-    hilbert_order    [i] = i;
-  }
-
-  PDM_hilbert_local_order(ptb->n_elt_proc, hilbert_codes, hilbert_order); // Just deduce order hilbert_codes is unchanged
 
   if(ptb->n_part > 1 ) {
     free(concat_vtx_coord);
@@ -628,9 +624,10 @@ _distrib_data_hilbert
                                ptb->n_elt_proc,
                                hilbert_codes,
                                concat_weight,
-                               hilbert_order,
+                               NULL,
                                hilbert_codes_idx, // Is the distrib
                                ptb->comm);
+
 
   if(0 == 1) {
     PDM_log_trace_array_double(hilbert_codes, ptb->n_elt_proc, "hilbert_codes :: ");
@@ -711,7 +708,7 @@ _distrib_data_hilbert
       ptb->n_send_data[t_rank] += 1;
     }
   }
-  free(hilbert_order);
+  // free(hilbert_order);
   free(hilbert_codes);
 
   ptb->sorted_recv_gnum                 = (PDM_g_num_t        *) malloc(sizeof(PDM_g_num_t       ) * ptb->tn_recv_data);

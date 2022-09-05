@@ -1823,8 +1823,8 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  // int case_type = 0; // Random cube mesh
-  int case_type = 1; // Helice configuration
+  int case_type = 0; // Random cube mesh
+  // int case_type = 1; // Helice configuration
   int n_mesh = -1;
   // int n_mesh = 2;
   // int n_mesh = 5;

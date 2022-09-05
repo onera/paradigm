@@ -3782,6 +3782,7 @@ PDM_mesh_location_t        *ml
     /*
      * Get points inside bounding boxes of elements
      */
+    double t1all = PDM_MPI_Wtime();
     char *env_var_oct = getenv ("OCTREE_SHARED");
     int use_shared_octree = 0;
     if (env_var_oct != NULL) {
@@ -3806,16 +3807,15 @@ PDM_mesh_location_t        *ml
                                        pcloud_g_num);
 
       /* Build parallel octree */
-      // PDM_MPI_Barrier(ml->comm);
+      PDM_MPI_Barrier(ml->comm);
       double t1 = PDM_MPI_Wtime();
-
 
       if(use_shared_octree == 0) {
         PDM_para_octree_build (octree, NULL);
       } else {
         PDM_para_octree_build_shared (octree, NULL);
       }
-      if (0) {
+      if (1) {
         end_timer_and_print("PDM_para_octree_build ", ml->comm, t1);
       }
       // PDM_para_octree_dump (octree);
@@ -3848,8 +3848,12 @@ PDM_mesh_location_t        *ml
         end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
       }
 
+      t1 = PDM_MPI_Wtime();
       /* Free octree */
       PDM_para_octree_free (octree);
+      if (1) {
+        end_timer_and_print("PDM_para_octree_free ", ml->comm, t1);
+      }
       break;
      }
     case PDM_MESH_LOCATION_DBBTREE: {
@@ -3924,8 +3928,9 @@ PDM_mesh_location_t        *ml
         }
       }
     }
+    end_timer_and_print("Search all  ", ml->comm, t1all);
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);

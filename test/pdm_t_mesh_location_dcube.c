@@ -534,14 +534,17 @@ int main(int argc, char *argv[])
   marge *= length;
   int strip = 1;
   if(strip == 0) {
+    // double llength = length/3;  // Desequilbrate
+    double llength = length;
+
     PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
                                 n_pts,
                                 -marge,
                                 -marge,
                                 -marge,
-                                length/3 + marge,
-                                length/3 + marge,
-                                length/3 + marge,
+                                llength + marge,
+                                llength + marge,
+                                llength + marge,
                                 &n_pts_l,
                                 &pts_coords,
                                 &pts_gnum);

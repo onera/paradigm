@@ -17,14 +17,9 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_distrib.h"
 #include "pdm_point_cloud_gen.h"
-#include "pdm_closest_points.h"
-#include "pdm_part_to_block.h"
-#include "pdm_vtk.h"
+#include "pdm_octree.h"
 #include "pdm_logging.h"
-#include "pdm_version.h"
-#include "pdm_hilbert.h"
 
 /*============================================================================
  * Macro definitions
@@ -47,13 +42,16 @@
 static void
 _usage
 (
- int exit_code
- )
+int exit_code
+)
 {
   PDM_printf
     ("\n"
      "  Usage: \n\n"
-     "  -s       <level> Number of Source points (default : 10).\n\n"
+     "  -n      <level>  Number of points (default : 10).\n\n"
+     "  -radius <level>  Radius of domain (default : 10).\n\n"
+     "  -local           Number of points is local (default : global).\n\n"
+     "  -rand            Random definition of point coordinates (default : false).\n\n"
      "  -h               This message.\n\n");
 
   exit (exit_code);
@@ -66,9 +64,7 @@ _usage
  *
  * \param [in]    argc   Number of arguments
  * \param [in]    argv   Arguments
- * \param [inout] nClosest   Number of closest points
- * \param [inout] n_src   Number of Source points
- * \param [inout] nTgt   Number of Target points
+ * \param [inout] nPts   Number of points
  * \param [inout] ls     Low scalability
  * \param [inout] length Length of domains
  *
@@ -79,7 +75,10 @@ _read_args
 (
  int            argc,
  char         **argv,
- PDM_g_num_t   *n_src
+ PDM_g_num_t   *nPts,
+ double        *radius,
+ int           *local,
+ int           *rand
 )
 {
   int i = 1;
@@ -90,16 +89,36 @@ _read_args
 
     if (strcmp(argv[i], "-h") == 0)
       _usage(EXIT_SUCCESS);
-    else if (strcmp(argv[i], "-s") == 0) {
+
+    else if (strcmp(argv[i], "-n") == 0) {
       i++;
       if (i >= argc) {
         _usage(EXIT_FAILURE);
       }
       else {
-        long _n_src = atol(argv[i]);
-        *n_src = (PDM_g_num_t) _n_src;
+        long _nPts = atol(argv[i]);
+        *nPts = (PDM_g_num_t) _nPts;
       }
     }
+
+    else if (strcmp(argv[i], "-radius") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *radius = atof(argv[i]);
+      }
+    }
+
+    else if (strcmp(argv[i], "-local") == 0) {
+      *local = 1;
+    }
+
+    else if (strcmp(argv[i], "-rand") == 0) {
+      *rand = 1;
+    }
+
     else {
       _usage(EXIT_FAILURE);
     }
@@ -107,11 +126,10 @@ _read_args
   }
 }
 
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+
 /**
  *
  * \brief  Main
@@ -121,44 +139,76 @@ _read_args
 int
 main
 (
- int argc,
- char *argv[]
- )
+int argc,
+char *argv[]
+)
 {
 
   PDM_MPI_Init (&argc, &argv);
-
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank (comm, &i_rank);
-  PDM_MPI_Comm_size (comm, &n_rank);
+  int i_rank;
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
-  PDM_g_num_t gn_src = 10;
-  double      radius = 1;
+  int n_rank;
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
+
+  PDM_g_num_t nPts   = 10;
+  double radius = 10.;
+  int local = 0;
+  int rand = 0;
 
   _read_args(argc,
              argv,
-             &gn_src);
+             &nPts,
+             &radius,
+             &local,
+             &rand);
 
-  if (i_rank == 0) {
-    PDM_printf ("%Parametres : \n");
-    PDM_printf ("  - n_rank           : %d\n", n_rank);
-    PDM_printf ("  - n_src            : "PDM_FMT_G_NUM"\n", gn_src);
+  /* Initialize random */
+
+  if (rand) {
+    srand(time(NULL));
+  }
+  else {
+    srand(i_rank);
   }
 
-
+  /* Random point cloud */
   /* Generate src and tgt point clouds */
   int          n_src     = 0;
   double      *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
   PDM_point_cloud_gen_random (comm,
-                              gn_src,
+                              nPts,
                               -radius, -radius, -radius,
                               radius, radius, radius,
                               &n_src,
                               &src_coord,
                               &src_g_num);
+
+  int depth_max = 5;
+  int points_in_leaf_max = 10;
+  const double tolerance = 1e-4;
+  PDM_octree_seq_t *oct_orig = PDM_octree_seq_create(1, // n_point_cloud
+                                                     depth_max,
+                                                     points_in_leaf_max,
+                                                     tolerance);
+
+  PDM_octree_seq_point_cloud_set(oct_orig,
+                                 0,
+                                 n_src,
+                                 src_coord);
+  PDM_octree_seq_build(oct_orig);
+
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "octree_orig_%i.vtk", i_rank);
+    PDM_octree_seq_write_octants(oct_orig, filename);
+
+  }
+
+  PDM_octree_seq_free(oct_orig);
 
   int *weight =  malloc( n_src * sizeof(int));
   for(int i = 0; i < n_src; ++i) {
@@ -176,10 +226,9 @@ main
                                                            &n_src,
                                                            1,
                                                            comm);
+  free(weight);
   double t2 = PDM_MPI_Wtime();
-  if(0) {
-    log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
-  }
+  log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
   double *blk_src_coord = NULL;
   PDM_part_to_block_exch(ptb,
@@ -191,102 +240,76 @@ main
                          NULL,
                (void **) &blk_src_coord);
 
-  PDM_g_num_t *blk_check_gnum = NULL;
-  PDM_part_to_block_exch(ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST_INTERLACED,
-                         1,
-                         NULL,
-               (void **) &src_g_num,
-                         NULL,
-               (void **) &blk_check_gnum);
-
-
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
-  if(0 == 1) {
-    PDM_log_trace_array_long(distrib_pts, n_rank+1, "distrib_pts :: ");
-    PDM_log_trace_array_long(parent_gnum, n_parent, "parent_gnum :: ");
-    PDM_log_trace_array_long(blk_check_gnum, n_parent, "blk_check_gnum :: ");
-  }
-
-  if(0 == 1) {
-    char filename[999];
-    sprintf(filename, "origin_pvtx_coord_%2.2d.vtk", i_rank);
-
-    PDM_vtk_write_point_cloud(filename,
-                              n_src,
-                              src_coord,
-                              src_g_num,
-                              NULL);
-
-
-    PDM_g_num_t *debug_gnum = malloc( n_parent * sizeof(PDM_g_num_t));
-
-    for(int i = 0; i < n_parent; ++i) {
-      debug_gnum[i] = distrib_pts[i_rank] + i + 1;
-    }
-
-    sprintf(filename, "redistrib_pvtx_coord_%2.2d.vtk", i_rank);
-    // PDM_vtk_write_point_cloud(filename,
-    //                           n_parent,
-    //                           blk_src_coord,
-    //                           parent_gnum,
-    //                           NULL);
-
-    // To debug hilbert ordering
-    PDM_vtk_write_point_cloud(filename,
-                              n_parent,
-                              blk_src_coord,
-                              debug_gnum,
-                              NULL);
-
-    free(debug_gnum);
-  }
-
-  /*
-   * Check ordering
-   */
-  int dim = 3;
-  double extents[2*dim]; /** DIM x 2**/
-
-  /** Get EXTENTS **/
-  PDM_hilbert_get_coord_extents_par(dim, n_parent, blk_src_coord, extents, comm);
-
-  PDM_hilbert_code_t* hilbert_codes = (PDM_hilbert_code_t * ) malloc(n_parent * sizeof(PDM_hilbert_code_t));
-  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_parent, blk_src_coord, hilbert_codes);
-
-  PDM_hilbert_code_t first = 0.;
-  if(n_parent > 0) {
-    first = hilbert_codes[0];
-  }
-  for(int i = 1; i < n_parent; ++i) {
-    assert(first <= hilbert_codes[i]);
-    first = hilbert_codes[i];
-  }
-
-  // PDM_log_trace_array_double(hilbert_codes, n_parent, "hilbert_codes ::");
-
-
   PDM_part_to_block_free(ptb);
 
+  /*
+   * Create octree seq
+   */
+  PDM_octree_seq_t *oct_equi = PDM_octree_seq_create(1, // n_point_cloud
+                                                     depth_max,
+                                                     points_in_leaf_max,
+                                                     tolerance);
+
+  PDM_octree_seq_point_cloud_set(oct_equi,
+                                 0,
+                                 n_parent,
+                                 blk_src_coord);
+  PDM_octree_seq_build(oct_equi);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "octree_equi_%i.vtk", i_rank);
+    PDM_octree_seq_write_octants(oct_equi, filename);
+
+  }
+
+  PDM_octree_seq_free(oct_equi);
+
+
+  free(blk_src_coord);
+
+
+  /* Parallel octree */
+  // const int n_point_cloud = 1;
+  // const int depth_max = 31;
+  // const int points_in_leaf_max = 1;
+
+  // const int build_leaf_neighbours = 1;
+  // PDM_para_octree_t *octree = PDM_para_octree_create (n_point_cloud,
+  //                                                     depth_max,
+  //                                                     points_in_leaf_max,
+  //                                                     build_leaf_neighbours,
+  //                                                     PDM_MPI_COMM_WORLD);
+
+  // PDM_para_octree_point_cloud_set (octree, 0, _n_pts_l, coords, gnum);
+
+  // PDM_para_octree_build (octree, NULL);
+
+  // // PDM_para_octree_dump (octree);
+
+  // PDM_para_octree_dump_times (octree);
+
+  // PDM_para_octree_free (octree);
+
   /* Free */
-  free (hilbert_codes);
-  free (blk_src_coord);
-  free (blk_check_gnum);
-  free (weight);
+
   free (src_coord);
   free (src_g_num);
 
-  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
+    fflush(stdout);
   }
 
+
+  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
   PDM_MPI_Finalize ();
 
   return 0;
+
 }
