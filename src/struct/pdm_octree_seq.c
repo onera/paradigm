@@ -1516,7 +1516,7 @@ PDM_octree_seq_inside_boxes2
   int *_pts_l_num = *pts_l_num;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
-    int dbg_enabled = 1; //(box_g_num[ibox] == 2793384);//
+    int dbg_enabled = 0; //(box_g_num[ibox] == 2793384);//
     if (dbg_enabled) {
       log_trace("box %d\n", ibox);
     }
@@ -1527,12 +1527,6 @@ PDM_octree_seq_inside_boxes2
     const double *box_min      = box_extents + 6*ibox;
     const double *box_max      = box_min + 3;
 
-    // _octant_t *root_node = &(_octree->nodes[0]);
-    // intersect = _intersect_node_box_explicit (3,
-    //                                           root_node->extents,
-    //                                           _box_extents,
-    //                                           &node_inside_box);
-    // _octant_t *root_node = &(_octree->nodes[0]);
     intersect = _intersect_node_box_explicit (3,
                                               &octants->extents[0],
                                               _box_extents,
@@ -1546,10 +1540,8 @@ PDM_octree_seq_inside_boxes2
     if (node_inside_box) {
       /* The box must contain all points */
       if (dbg_enabled) {
-        // log_trace("    add pts with lnum %d through %d\n", root_node->range[0], root_node->range[0] + root_node->n_points);
         log_trace("    add pts with lnum %d through %d\n", octants->range[0], octants->range[1] + octants->n_points[0]);
       }
-      // int new_size = _pts_idx[ibox+1] + root_node->n_points;
       int new_size = _pts_idx[ibox+1] + octants->n_points[0];
 
       if (tmp_size <= new_size) {
@@ -1559,9 +1551,7 @@ PDM_octree_seq_inside_boxes2
 
       }
 
-      // for (int j = 0; j < root_node->n_points; j++) {
       for (int j = 0; j < octants->n_points[0]; j++) {
-        // _pts_l_num[_pts_idx[ibox+1]++] = root_node->range[0] + j;
         _pts_l_num[_pts_idx[ibox+1]++] = octants->range[0] + j;
       }
       continue;
@@ -1574,14 +1564,8 @@ PDM_octree_seq_inside_boxes2
 
     while (pos_stack > 0) {
       int node_id = stack_id[--pos_stack];
-      // _octant_t *curr_node = &(_octree->nodes[node_id]);
 
       if (dbg_enabled) {
-        // log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
-        //        node_id,
-        //        curr_node->range[0], curr_node->range[1],
-        //        curr_node->n_points,
-        //        curr_node->is_leaf);
         log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
                node_id,
                octants->range[2*node_id], octants->range[2*node_id+1],
@@ -1590,20 +1574,14 @@ PDM_octree_seq_inside_boxes2
       }
 
       /* is leaf */
-      // if(curr_node->is_leaf == 1) {
       if(octants->is_leaf[node_id]) {
 
-        // int *point_clouds_id = _octree->point_icloud + curr_node->range[0];
-        // int *point_indexes   = _octree->point_ids    + curr_node->range[0];
         int *point_clouds_id = _octree->point_icloud + octants->range[2*node_id];
         int *point_indexes   = _octree->point_ids    + octants->range[2*node_id];
 
-        // for (int i = 0; i < curr_node->n_points; i++) {
         for (int i = 0; i < octants->n_points[node_id]; i++) {
-          // int ipt = curr_node->range[0] + i;
           int ipt = octants->range[2*node_id] + i;
           const double      *_pt       = _octree->point_clouds[point_clouds_id[i]] + dim * point_indexes[i];
-          // const PDM_g_num_t *_pt_g_num = _octree->point_gnum  [point_clouds_id[i]] +       point_indexes[i];
 
           int pt_inside_box = 1;
           for (int idim = 0; idim < 3; idim++) {
@@ -1621,37 +1599,18 @@ PDM_octree_seq_inside_boxes2
             }
 
             _pts_l_num[_pts_idx[ibox+1]++] = ipt;
-            // if (dbg_enabled) {
-            //   log_trace("    add point %d ("PDM_FMT_G_NUM")\n", ipt, _pt_g_num[ipt]);
-            // }
           }
         }
       } else { /* Internal nodes */
 
-        // const int *_child_ids = curr_node->children_id;
         const int *_child_ids = octants->children_id + 8*node_id;
         for (int i = 0; i < n_children; i++) {
           int child_id = _child_ids[i];
           if (child_id < 0) {
             continue;
           }
-          // _octant_t *child_node = &(_octree->nodes[child_id]);
 
           if (dbg_enabled) {
-            // log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
-            //        i,
-            //        child_id,
-            //        child_node->range[0],
-            //        child_node->range[1],
-            //        child_node->n_points,
-            //        child_node->is_leaf);
-            // log_trace("    pts_extents = %f %f %f %f %f %f\n",
-            //        child_node->extents[0],
-            //        child_node->extents[1],
-            //        child_node->extents[2],
-            //        child_node->extents[3],
-            //        child_node->extents[4],
-            //        child_node->extents[5]);
             log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
                    i,
                    child_id,
@@ -1682,11 +1641,9 @@ PDM_octree_seq_inside_boxes2
             if (node_inside_box) {
               /* The box must contain all points */
               if (dbg_enabled) {
-                // log_trace("    add pts with lnum %d through %d\n", child_node->range[0], child_node->range[1]);
                 log_trace("    add pts with lnum %d through %d\n", octants->range[2*child_id+0], octants->range[2*child_id+1]);
               }
 
-              // int new_size = _pts_idx[ibox+1] + child_node->n_points;
               int new_size = _pts_idx[ibox+1] + octants->n_points[child_id];
 
               if (tmp_size <= new_size) {
@@ -1695,9 +1652,6 @@ PDM_octree_seq_inside_boxes2
                 _pts_l_num = *pts_l_num;
               }
 
-              // for (int j = 0; j < child_node->n_points; j++) {
-              //   _pts_l_num[_pts_idx[ibox+1]++] = child_node->range[0] + j;
-              // }
               for (int j = 0; j < octants->n_points[child_id]; j++) {
                 _pts_l_num[_pts_idx[ibox+1]++] = octants->range[2*child_id] + j;
               }
