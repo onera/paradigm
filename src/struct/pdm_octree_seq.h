@@ -392,6 +392,19 @@ void PDM_octree_seq_write_octants2
  const char       *filename
  );
 
+
+
+void
+PDM_octree_seq_extract_extent
+(
+  PDM_octree_seq_t  *octree,
+  int                node_id,
+  int                n_depth,
+  int               *n_box,
+  double           **box_extents
+);
+
+
 #ifdef	__cplusplus
 }
 #endif

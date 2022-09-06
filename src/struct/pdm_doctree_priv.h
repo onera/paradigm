@@ -42,6 +42,10 @@ struct _pdm_doctree_t {
   int                        global_depth_max;           /*!< global_octree depth_max                   */
   int                        global_points_in_leaf_max;  /*!< global_octree max pts in leaf             */
 
+  int                        local_depth_max;
+  int                        local_points_in_leaf_max;
+  double                     local_tolerance;
+
   PDM_octree_seq_t          *global_octree;              /*! Global octree to orient among procs        */
   PDM_octree_seq_t          *local_octree;               /*! Local octree                               */
   PDM_octree_seq_t          *shmem_octree;               /*! Shared octree among cores in current nodes */

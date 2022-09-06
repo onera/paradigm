@@ -1302,6 +1302,88 @@ PDM_octree_seq_points_get
   *point_indexes = _octree->point_ids + _octree->nodes[node_id].range[0];
 }
 
+/**
+ *
+ * \brief Get indexes of points inside a node
+ *
+ * \param [in]   octree             Pointer to \ref PDM_octree_seq object
+ * \param [in]   node_id            Node identifier
+ * \param [out]  point_clouds_id    Point clouds number
+ *                                  (size = Number of points inside the node)
+ * \param [out]  point_indexes      Point indexes
+ *                                  (size = Number of points inside the node)
+ *
+ */
+
+void
+PDM_octree_seq_extract_extent
+(
+  PDM_octree_seq_t  *octree,
+  int                root_id,
+  int                n_depth,
+  int               *n_box,
+  double           **box_extents
+)
+{
+  _pdm_octree_seq_t *_octree = (_pdm_octree_seq_t *) octree;
+  _l_octant_t *octants = _octree->octants;
+
+  int n_children   = 8;
+  int s_pt_stack   = ((n_children - 1) * (_octree->depth_max - 1) + n_children);
+  int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
+  int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
+  // int *stack_id  = malloc (s_pt_stack * sizeof(int              ));
+
+  int n_extract_max = ((n_children - 1) * (n_depth - 1) + n_children);
+  int *id_to_extract = malloc( n_extract_max * sizeof(int));
+
+  int n_extract = 0;
+  int pos_stack = 0;
+  stack_id   [pos_stack] = root_id;
+  stack_depth[pos_stack] = 0;
+  pos_stack++;
+  while(pos_stack > 0) {
+
+    /* Inspect node */
+    --pos_stack;
+    int node_id = stack_id   [pos_stack];
+    int depth   = stack_depth[pos_stack];
+
+    if(octants->is_leaf[node_id] || depth == n_depth) {
+      id_to_extract[n_extract++] = node_id;
+    } else {
+
+      for (int i = 0; i < n_children; i++) {
+        int child_id = octants->children_id[8*node_id+i];
+        if (child_id < 0) {
+          continue;
+        }
+
+        if(depth < n_depth) {
+          stack_id   [pos_stack] = child_id;
+          stack_depth[pos_stack] = depth + 1;
+          pos_stack++;
+        }
+      }
+    }
+  }
+  free(stack_id);
+  free(stack_depth);
+
+  double* _extents = malloc(n_extract * 6 * sizeof(double));
+  for(int i = 0; i < n_extract; ++i) {
+    int node_id = id_to_extract[i];
+    for(int k = 0; k < 6; ++k) {
+      _extents[6*i+k] = octants->extents[6*node_id+k];
+    }
+  }
+
+  *n_box       = n_extract;
+  *box_extents = _extents;
+
+  free(id_to_extract);
+
+}
 
 /**
  *

@@ -74,6 +74,10 @@ PDM_doctree_create
   doct->global_depth_max          = 5;
   doct->global_points_in_leaf_max = 60;
 
+  doct->local_depth_max          = 5;
+  doct->local_points_in_leaf_max = 30;
+  doct->local_tolerance          = 1e-6;
+
   doct->local_tree_kind = local_tree_kind;
   doct->global_octree   = NULL;
   doct->local_octree    = NULL;
@@ -106,6 +110,10 @@ PDM_doctree_build
  PDM_doctree_t     *doct
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank (doct->comm, &i_rank);
+  int n_rank;
+  PDM_MPI_Comm_size (doct->comm, &n_rank);
 
   /*
    * Redistribute all pts and impose hilbert ordering
@@ -151,6 +159,93 @@ PDM_doctree_build
 
   free(blk_pts_coord);
 
+  /*
+   * Step 2 : Create coarse octree to equilibrate leaf
+   *   --> Il faut la solicitation
+   */
+
+
+
+  /*
+   * Step 3 : Build local octree
+   */
+  int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
+
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+
+    assert(doct->local_octree == NULL);
+    doct->local_octree = PDM_octree_seq_create(1, // n_point_cloud
+                                               doct->local_depth_max,
+                                               doct->local_points_in_leaf_max,
+                                               doct->local_tolerance);
+
+    PDM_octree_seq_point_cloud_set(doct->local_octree,
+                                   0,
+                                   dn_pts,
+                                   blk_pts_coord);
+
+    PDM_octree_seq_build(doct->local_octree);
+
+
+  } else {
+    abort();
+  }
+
+
+  /*
+   * Setup global tree to orien resarch in parallel
+   *    We take the first two level of the tree
+   */
+  int n_depth_per_proc = 2;
+
+  /*
+   * Extract extents on all local_tree
+   */
+  int n_coarse_box = 0;
+  double *coarse_box_extents = NULL;
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    PDM_octree_seq_extract_extent(doct->local_octree,
+                                  0,
+                                  n_depth_per_proc,
+                                  &n_coarse_box,
+                                  &coarse_box_extents);
+  } else {
+    abort();
+  }
+
+
+  /*
+   * Build a box_tree
+   */
+  int *g_coarse_box_n = (int *) malloc (n_rank * sizeof(int));
+  PDM_MPI_Allgather (&n_coarse_box , 1, PDM_MPI_INT,
+                     g_coarse_box_n, 1, PDM_MPI_INT,
+                     doct->comm);
+
+  int *g_coarse_box_idx = malloc((n_rank + 1 ) *sizeof(int));
+  g_coarse_box_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    g_coarse_box_idx[i+1] =  g_coarse_box_idx[i] + g_coarse_box_n[i];
+  }
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(g_coarse_box_idx, n_rank+1, "g_coarse_box_idx ::");
+  }
+
+  double *gcoarse_box_extents = malloc (g_coarse_box_idx[n_rank] * 6 * sizeof(double));
+
+  for(int i = 0; i < n_rank; ++i) {
+    g_coarse_box_n  [i] *= 6;
+    g_coarse_box_idx[i] *= 6;
+  }
+  PDM_MPI_Allgatherv (coarse_box_extents , 6 * n_coarse_box, PDM_MPI_DOUBLE,
+                      gcoarse_box_extents, g_coarse_box_n  , g_coarse_box_idx, PDM_MPI_DOUBLE,
+                      doct->comm);
+
+  free(g_coarse_box_n);
+  free(g_coarse_box_idx);
+  free(coarse_box_extents);
+  free(gcoarse_box_extents);
 
   PDM_part_to_block_free(ptb);
 
@@ -170,9 +265,9 @@ PDM_doctree_point_set
   assert(i_part_cloud < doct->n_part_cloud);
 
   doct->n_point_cloud    [i_part_cloud] = n_points;
-  doct->pts_g_num        [i_part_cloud] = (int         *) pts_g_num;
-  doct->pts_coords       [i_part_cloud] = (PDM_g_num_t *) pts_coords;
-  doct->pts_init_location[i_part_cloud] = (double      *) pts_init_location;
+  doct->pts_g_num        [i_part_cloud] = (PDM_g_num_t *) pts_g_num;
+  doct->pts_coords       [i_part_cloud] = (double      *) pts_coords;
+  doct->pts_init_location[i_part_cloud] = (int         *) pts_init_location;
 }
 
 void
@@ -185,6 +280,10 @@ PDM_doctree_free
   free(doct->pts_g_num        );
   free(doct->pts_coords       );
   free(doct->pts_init_location);
+
+  if(doct->local_octree != NULL) {
+    PDM_octree_seq_free(doct->local_octree);
+  }
 
   free(doct);
 }
