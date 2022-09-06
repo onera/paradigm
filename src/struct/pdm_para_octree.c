@@ -13977,6 +13977,8 @@ PDM_para_octree_points_inside_boxes_shared
         gnum_proc[i] = i + 1;
       }
 
+      PDM_MPI_Comm bt_comm;
+      PDM_MPI_Comm_split (_octree->comm, i_rank, 0, &bt_comm);
       box_set = PDM_box_set_create (3,             // dim
                                     1,             // normalize
                                     0,             // allow_projection
@@ -13986,7 +13988,7 @@ PDM_para_octree_points_inside_boxes_shared
                                     1,
                                     &n_shared_boxes,
                                     init_location_proc,
-                                    _octree->comm);
+                                    bt_comm);
 
       bt_shared = PDM_box_tree_create (max_tree_depth_shared,
                                        max_boxes_leaf_shared,
@@ -13995,7 +13997,6 @@ PDM_para_octree_points_inside_boxes_shared
       PDM_box_tree_set_boxes (bt_shared,
                               box_set,
                               PDM_BOX_TREE_ASYNC_LEVEL);
-
 
       char filename[999];
       if(0 == 1) {
@@ -14085,6 +14086,7 @@ PDM_para_octree_points_inside_boxes_shared
       PDM_box_set_destroy (&box_set);
       // PDM_box_set_destroy (&boxes);
       PDM_box_tree_destroy(&bt_shared);
+      PDM_MPI_Comm_free (&bt_comm);
 
       // free(normalize_box_extents);
       free(init_location_proc);

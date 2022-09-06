@@ -161,29 +161,50 @@ PDM_doctree_build
   /*
    * Step 2 : Create coarse octree to equilibrate leaf
    *   --> Il faut la solicitation
+   *   Creation bt_shared temporaire
+   *     puis solicitation
+   *   On connait le lien shared_to_box
    */
 
+   // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
+   //                                      -1,
+   //                                      n_boxes,
+   //                                      box_extents,
+   //                                      &shared_to_box_idx,
+   //                                      &shared_to_box);
+   // Preparation of send count and box_rank/box_rank_idx
+   // for(int i = 0; i < n_rank; ++i) {
+   //   for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
+   //     send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
+   //   }
+   // }
+
+   /*
+    * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
+    * Une fois qu'on connait le tri, on peut faire l'échange en asynchrone pdt que l'arbre se construit ?
+    *
+    */
 
 
   /*
    * Step 3 : Build local octree
    */
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
-
+  PDM_octree_seq_t *coarse_octree = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
 
-    assert(doct->local_octree == NULL);
-    doct->local_octree = PDM_octree_seq_create(1, // n_point_cloud
-                                               doct->local_depth_max,
-                                               doct->local_points_in_leaf_max,
-                                               doct->local_tolerance);
+    assert(coarse_octree == NULL);
+    coarse_octree = PDM_octree_seq_create(1, // n_point_cloud
+                                          doct->local_depth_max,
+                                          doct->local_points_in_leaf_max,
+                                          doct->local_tolerance);
 
-    PDM_octree_seq_point_cloud_set(doct->local_octree,
+    PDM_octree_seq_point_cloud_set(coarse_octree,
                                    0,
                                    dn_pts,
                                    blk_pts_coord);
 
-    PDM_octree_seq_build(doct->local_octree);
+    PDM_octree_seq_build(coarse_octree);
 
 
   } else {
@@ -195,7 +216,7 @@ PDM_doctree_build
    * Setup global tree to orien resarch in parallel
    *    We take the first two level of the tree
    */
-  int n_depth_per_proc = 2;
+  int n_depth_per_proc = 1;
 
   /*
    * Extract extents on all local_tree
@@ -203,7 +224,7 @@ PDM_doctree_build
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    PDM_octree_seq_extract_extent(doct->local_octree,
+    PDM_octree_seq_extract_extent(coarse_octree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
@@ -260,13 +281,6 @@ PDM_doctree_build
   }
 
 
-  free(g_coarse_box_n);
-  free(g_coarse_box_idx);
-  free(gcoarse_box_extents);
-  free(g_coarse_box_color);
-
-  free(blk_pts_coord);
-
   /*
    *  On pourrait faire du hilbert sur des niveaux de feuilles avec gnum = node_id implicitement odered
    *  Avec du sampling
@@ -275,12 +289,68 @@ PDM_doctree_build
    *  On fait part_to_block sur des child_id implictement hilbert puis on echange le contenu des noeuds
    *   La stride = le nombre de points -> Ca fait des echanges mais osef !!!
    *   L'algo ressemble ENORMEMENT à PDM_part_assemble_partitions
+   *   La pré-solicitation nous permet également d'avoir le lien grossier
+   *   Si on le preserve on n'a plus a interoger l'octree !!!
+   *   Pdt le transfert de la pré-solicitation --> On construit l'arbre fin
+   *   On peut également utiliser l'info du g_child_id dans lequel on est solicité pour preconditionné la recherche local (on gagnera 3/4 niveaux)
+   *   A affiner avec le double niveau node / numa
+   *   Reprendre le Allgatherv du para_octree sur le comm circulaire
+   */
+  int n_shared_boxes = g_coarse_box_idx[n_rank];
+  const int n_info_location = 3;
+  int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
+
+  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
+  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+
+  PDM_MPI_Comm bt_comm;
+  PDM_MPI_Comm_split (doct->comm, i_rank, 0, &bt_comm);
+  PDM_box_set_t  *box_set   = PDM_box_set_create(3,             // dim
+                                                 1,             // normalize
+                                                 0,             // allow_projection
+                                                 n_shared_boxes,
+                                                 g_coarse_box_color,
+                                                 gcoarse_box_extents,
+                                                 1,
+                                                 &n_shared_boxes,
+                                                 init_location_proc,
+                                                 doct->comm);
+
+  PDM_box_tree_t* bt_shared = PDM_box_tree_create (max_tree_depth_shared,
+                                                   max_boxes_leaf_shared,
+                                                   max_box_ratio_shared);
+
+  PDM_box_tree_set_boxes (bt_shared,
+                          box_set,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  PDM_box_set_destroy (&box_set);
+  PDM_box_tree_destroy(&bt_shared);
+  PDM_MPI_Comm_free (&bt_comm);
+
+
+  free(g_coarse_box_n);
+  free(g_coarse_box_idx);
+  free(gcoarse_box_extents);
+  free(g_coarse_box_color);
+  free(init_location_proc);
+
+  free(blk_pts_coord);
+
+  PDM_part_to_block_free(ptb);
+
+  /*
+   * Si l'octree ne change pas l'ordre des points -> On fait une allocation shared
    */
 
 
 
-
-  PDM_part_to_block_free(ptb);
+  /*
+   * A revoir quand on fera l'équilibrage
+   */
+  // PDM_octree_seq_free(coarse_octree);
+  doct->local_octree = coarse_octree;
 }
 
 void
