@@ -377,8 +377,8 @@ cdef class PartToPart:
 
           np_part1_stride = create_numpy_i(_part1_stride[i_part], strid_size)
           dim_np = np_part1_stride.sum()
-          print("dim_np : ", dim_np)
-          print("np_part1_stride : ", np_part1_stride)
+          # print("dim_np : ", dim_np)
+          # print("np_part1_stride : ", np_part1_stride)
 
           np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
           PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
@@ -389,7 +389,7 @@ cdef class PartToPart:
         else:
           dim_np  = self.n_elt1[i_part] * self.dict_cst_strid[request_id]
 
-          print("dim_np : ", dim_np)
+          # print("dim_np : ", dim_np)
 
           np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
           PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
