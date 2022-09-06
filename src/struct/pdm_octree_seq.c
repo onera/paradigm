@@ -107,6 +107,9 @@ typedef struct  {
 
   _l_octant_t   *octants;
 
+  int            n_nodes2;               /*!< Current number of nodes in octree */
+  int            n_nodes2_max;           /*!< Maximum number of nodes in octree */
+
 } _pdm_octree_seq_t;
 
 /*============================================================================
@@ -511,6 +514,213 @@ _build_octree_seq_leaves(const int                      ancestor_id,
   _node->location_in_ancestor = location_in_ancestor;
 }
 
+
+
+
+static void
+_build_octree_seq_leaves2(const int                      ancestor_id,
+                          const PDM_octree_seq_child_t   location_in_ancestor,
+                          const int                      depth,
+                          const double                   extents[],
+                          const double                 **point_coords,
+                          int                           *point_icloud_tmp,
+                          int                           *point_ids_tmp,
+                          _pdm_octree_seq_t             *octree,
+                          int                            point_range[2])
+{
+  int i, j, k, _n_nodes, _n_points, tmp_size;
+
+  int count[8], idx[9], octant_id[8];
+  double mid[3], sub_extents[6];
+
+  _l_octant_t *octants = octree->octants;
+
+  int octant_mask[3] = {4, 2, 1}; /* pow(2, 2), pow(2, 1), pow(2,0) */
+
+  _n_nodes = octree->n_nodes2;
+  tmp_size = octree->n_nodes2;
+
+  /* Resize octree if necessary */
+
+  if (octree->n_nodes2 >= octree->n_nodes2_max) {
+    if (octree->n_nodes2 == 0) {
+      octree->n_nodes2 = 1;
+      octree->n_nodes2_max = 8;
+    }
+    octree->n_nodes2_max *= 2;
+
+    octants->ancestor_id          = realloc(octants->ancestor_id,          sizeof(int                   ) * octree->n_nodes2_max);
+    octants->is_leaf              = realloc(octants->is_leaf,              sizeof(int                   ) * octree->n_nodes2_max);
+    octants->location_in_ancestor = realloc(octants->location_in_ancestor, sizeof(PDM_octree_seq_child_t) * octree->n_nodes2_max);
+    octants->depth                = realloc(octants->depth,                sizeof(int                   ) * octree->n_nodes2_max);
+    octants->children_id          = realloc(octants->children_id,          sizeof(int                   ) * octree->n_nodes2_max * 8);
+    octants->range                = realloc(octants->range,                sizeof(int                   ) * octree->n_nodes2_max * 2);
+    octants->idx                  = realloc(octants->idx,                  sizeof(int                   ) * octree->n_nodes2_max * 9);
+    octants->n_points             = realloc(octants->n_points,             sizeof(int                   ) * octree->n_nodes2_max);
+    octants->extents              = realloc(octants->extents,              sizeof(double                ) * octree->n_nodes2_max * 6);
+  }
+
+  /* Number of points */
+
+  _n_points = point_range[1] - point_range[0];
+
+  for (j = 0; j < 8; j++) {
+    count[j] = 0;
+    octant_id[j] = -1;
+  }
+
+  if (depth < octree->depth_max && _n_points > octree->points_in_leaf_max) {
+    /* Extents center */
+
+    for (j = 0; j < 3; j++) {
+      mid[j]= (extents[j] + extents[j + 3]) * 0.5;
+    }
+
+
+    /* Count points in each octant */
+
+    for (i = point_range[0]; i < point_range[1]; i++) {
+
+      for (j = 0, k = 0; j < 3; j++) {
+        if (point_coords[octree->point_icloud[i]][octree->point_ids[i]*3 + j] > mid[j])
+          k += octant_mask[j];
+      }
+
+      count[k] += 1;
+    }
+
+    /* Build index */
+
+    idx[0] = 0;
+    for (j = 0; j < 8; j++) {
+      idx[j+1] = idx[j] + count[j];
+    }
+
+    for (j = 0; j < 8; j++) {
+      count[j] = 0;
+    }
+
+    for (i = point_range[0], j = 0; i < point_range[1]; i++) {
+
+      for (j = 0, k = 0; j < 3; j++) {
+        if (point_coords[octree->point_icloud[i]][octree->point_ids[i]*3 + j] > mid[j])
+          k += octant_mask[j];
+      }
+
+      point_icloud_tmp[idx[k] + count[k]] = octree->point_icloud[i];
+      point_ids_tmp[idx[k] + count[k]] = octree->point_ids[i];
+      count[k] += 1;
+    }
+
+    /* Check if this subdivision is static
+       and check coordinates to find multi point */
+
+    for (i = point_range[0], j = 0; i < point_range[1]; i++, j++) {
+      octree->point_icloud[i] = point_icloud_tmp[j];
+      octree->point_ids[i] = point_ids_tmp[j];
+    }
+
+    for (i = 0; i < 9; i++)
+      idx[i] = point_range[0] + idx[i];
+
+    /* Build leaves recursively */
+
+    for (i = 0; i < 8; i++) {
+
+      if ((idx[i+1] - idx[i]) > 0) {
+
+        tmp_size++;
+
+        octant_id[i] = tmp_size;
+
+        if (i < 4) {
+          sub_extents[0] = extents[0];
+          sub_extents[3] = mid[0];
+        }
+        else {
+          sub_extents[0] = mid[0];
+          sub_extents[3] = extents[3];
+        }
+        /* 1.0e-12 term in assert() used to allow for
+           truncation error in for xmin = xmax case */
+        assert(sub_extents[0] < sub_extents[3] + 1.0e-14);
+
+        if (i%4 < 2) {
+          sub_extents[1] = extents[1];
+          sub_extents[4] = mid[1];
+        }
+        else {
+          sub_extents[1] = mid[1];
+          sub_extents[4] = extents[4];
+        }
+        assert(sub_extents[1] < sub_extents[4] + 1.0e-14);
+
+        if (i%2 < 1) {
+          sub_extents[2] = extents[2];
+          sub_extents[5] = mid[2];
+        }
+        else {
+          sub_extents[2] = mid[2];
+          sub_extents[5] = extents[5];
+        }
+        assert(sub_extents[2] < sub_extents[5] + 1.0e-14);
+
+        octree->n_nodes2 = tmp_size;
+
+        _build_octree_seq_leaves2(_n_nodes,
+                                  (PDM_octree_seq_child_t) i,
+                                  depth+1,
+                                  sub_extents,
+                                  point_coords,
+                                  point_icloud_tmp,
+                                  point_ids_tmp,
+                                  octree,
+                                  idx + i);
+
+        tmp_size = octree->n_nodes2;
+      }
+
+    }
+
+  }
+  /* Finalize node */
+
+
+
+  for (i = 0; i < 2; i++) {
+    octants->range[2*_n_nodes + i] = point_range[i];
+  }
+
+  for (i = 0; i < 9; i++) {
+    octants->idx[9*_n_nodes + i] = idx[i];
+  }
+
+  for (i = 0; i < 6; i++) {
+    octants->extents[6*_n_nodes + i] = extents[i];
+  }
+
+  for (i = 0; i < 8; i++) {
+    octants->children_id[8*_n_nodes + i] = octant_id[i];
+  }
+
+  octants->is_leaf[_n_nodes] =
+  (octants->children_id[8*_n_nodes + 0] == -1) &&
+  (octants->children_id[8*_n_nodes + 1] == -1) &&
+  (octants->children_id[8*_n_nodes + 2] == -1) &&
+  (octants->children_id[8*_n_nodes + 3] == -1) &&
+  (octants->children_id[8*_n_nodes + 4] == -1) &&
+  (octants->children_id[8*_n_nodes + 5] == -1) &&
+  (octants->children_id[8*_n_nodes + 6] == -1) &&
+  (octants->children_id[8*_n_nodes + 7] == -1);
+
+  octants->ancestor_id[_n_nodes] = ancestor_id;
+  octants->depth[_n_nodes]       = depth;
+
+  octants->n_points[_n_nodes]             = _n_points;
+  octants->location_in_ancestor[_n_nodes] = location_in_ancestor;
+}
+
+
 /**
  *
  * \brief   Compute extents of a point set
@@ -593,7 +803,21 @@ _pdm_octree_seq_t *octree
 
   octree->n_nodes = 0;
   octree->n_nodes_max = 0;
+  octree->n_nodes2 = 0;
+  octree->n_nodes2_max = 0;
   octree->nodes = NULL;
+
+
+  octree->octants = malloc(sizeof(_l_octant_t));
+  octree->octants->ancestor_id          = NULL;
+  octree->octants->is_leaf              = NULL;
+  octree->octants->location_in_ancestor = NULL;
+  octree->octants->depth                = NULL;
+  octree->octants->children_id          = NULL;
+  octree->octants->range                = NULL;
+  octree->octants->idx                  = NULL;
+  octree->octants->n_points             = NULL;
+  octree->octants->extents              = NULL;
 
   for (int i = 0; i < octree->n_point_clouds; i++) {
     octree->t_n_points += octree->n_points[i];
@@ -647,7 +871,6 @@ _pdm_octree_seq_t *octree
   int *point_ids_tmp = malloc (sizeof(int) * octree->t_n_points);
   int *point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
 
-
   _build_octree_seq_leaves(-1,
                        (PDM_octree_seq_child_t) 0,
                        -1,
@@ -659,6 +882,30 @@ _pdm_octree_seq_t *octree
                        point_range);
 
   octree->n_nodes +=1;
+
+  free (point_ids_tmp);
+  free (point_icloud_tmp);
+
+
+  point_range[0] = 0;
+  point_range[1] = octree->t_n_points;
+
+  point_ids_tmp    = malloc (sizeof(int) * octree->t_n_points);
+  point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
+
+  _build_octree_seq_leaves2(-1,
+                       (PDM_octree_seq_child_t) 0,
+                       -1,
+                       octree->extents,
+                       (const double **) octree->point_clouds,
+                       point_icloud_tmp,
+                       point_ids_tmp,
+                       octree,
+                       point_range);
+
+  octree->n_nodes2 +=1;
+
+  assert(octree->n_nodes ==octree->n_nodes2);
 
   free (point_ids_tmp);
   free (point_icloud_tmp);
@@ -797,7 +1044,7 @@ PDM_octree_seq_build
   if (_octree->nodes == NULL) {
     _build_octree (_octree);
 
-    _l_octant_set(_octree);
+    // _l_octant_set(_octree);
   }
 
 }
@@ -1724,6 +1971,68 @@ void PDM_octree_seq_write_octants
   int ileaf = 0;
   for (int inode = 0; inode < _octree->n_nodes; inode++) {
     if (1) {//_octree->nodes[inode].is_leaf) {
+      fprintf(f, "8 ");
+      for (int j = 0; j < 8; j++) {
+        fprintf(f, "%d ", 8*ileaf+j);
+      }
+      fprintf(f, "\n");
+      ileaf++;
+    }
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", _octree->n_nodes);//_octree->n_nodesn_leaves);
+  for (int i = 0; i < _octree->n_nodes; i++) {//n_leaves; i++) {
+    fprintf(f, "%d\n", 12);
+  }
+
+  fclose(f);
+}
+
+
+
+void PDM_octree_seq_write_octants2
+(
+ PDM_octree_seq_t *octree,
+ const char       *filename
+ )
+{
+  _pdm_octree_seq_t *_octree = (_pdm_octree_seq_t *) octree;
+
+  _l_octant_t *octants = _octree->octants;
+
+  // count leaves
+  int n_leaves = 0;
+  for (int i = 0; i < _octree->n_nodes; i++) {
+    if (octants->is_leaf[i]) n_leaves++;
+  }
+
+  // write VTK
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "octree_seq\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*_octree->n_nodes);//n_leaves);
+  for (int inode = 0; inode < _octree->n_nodes; inode++) {
+    if (1) {//octants->is_leaf[inode]) {
+      double *ext = octants->extents + 6*inode;
+      for (int k = 0; k < 2; k++) {
+        for (int j = 0; j < 2; j++) {
+          for (int i = 0; i < 2; i++) {
+            int ii = (1-j)*i + j*(1-i);
+            fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
+          }
+        }
+      }
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", _octree->n_nodes, 9*_octree->n_nodes);//n_leaves, 9*n_leaves);
+  int ileaf = 0;
+  for (int inode = 0; inode < _octree->n_nodes; inode++) {
+    if (1) {//octants->is_leaf[inode]) {
       fprintf(f, "8 ");
       for (int j = 0; j < 8; j++) {
         fprintf(f, "%d ", 8*ileaf+j);

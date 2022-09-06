@@ -340,6 +340,9 @@ char *argv[]
     sprintf(filename, "octree_equi_%i.vtk", i_rank);
     PDM_octree_seq_write_octants(oct_equi, filename);
 
+    sprintf(filename, "octree_equi2_%i.vtk", i_rank);
+    PDM_octree_seq_write_octants2(oct_equi, filename);
+
   }
 
 

@@ -386,6 +386,12 @@ void PDM_octree_seq_write_octants
  const char       *filename
  );
 
+void PDM_octree_seq_write_octants2
+(
+ PDM_octree_seq_t *octree,
+ const char       *filename
+ );
+
 #ifdef	__cplusplus
 }
 #endif
