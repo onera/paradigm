@@ -267,10 +267,20 @@ PDM_doctree_build
 
   free(blk_pts_coord);
 
+  /*
+   *  On pourrait faire du hilbert sur des niveaux de feuilles avec gnum = node_id implicitement odered
+   *  Avec du sampling
+   *  On encode en hilbert le millieu des feuilles -> meme en kd-tree ca marchera
+   *  On fait la pré-soliciation pour avoir des poids par boîtes
+   *  On fait part_to_block sur des child_id implictement hilbert puis on echange le contenu des noeuds
+   *   La stride = le nombre de points -> Ca fait des echanges mais osef !!!
+   *   L'algo ressemble ENORMEMENT à PDM_part_assemble_partitions
+   */
+
+
 
 
   PDM_part_to_block_free(ptb);
-
 }
 
 void
