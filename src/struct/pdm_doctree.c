@@ -121,14 +121,14 @@ PDM_doctree_build
   int **weight = malloc(doct->n_part_cloud * sizeof(int *));
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
     weight[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
-    for(int i = 0; i < doct->n_point_cloud[i]; ++i) {
+    for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
       weight[i_part][i] = 1;
     }
   }
 
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_MERGE,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
                                                            1.,
                                                            PDM_PART_GEOM_HILBERT,
                                                            doct->pts_coords,
@@ -157,7 +157,6 @@ PDM_doctree_build
   PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
-  free(blk_pts_coord);
 
   /*
    * Step 2 : Create coarse octree to equilibrate leaf
@@ -232,7 +231,14 @@ PDM_doctree_build
     PDM_log_trace_array_int(g_coarse_box_idx, n_rank+1, "g_coarse_box_idx ::");
   }
 
-  double *gcoarse_box_extents = malloc (g_coarse_box_idx[n_rank] * 6 * sizeof(double));
+  double      *gcoarse_box_extents = malloc(g_coarse_box_idx[n_rank] * 6 * sizeof(double     ));
+  PDM_g_num_t *g_coarse_box_color  = malloc(g_coarse_box_idx[n_rank] *     sizeof(PDM_g_num_t));
+
+  for(int i = 0; i < n_rank; ++i) {
+    for(int j = g_coarse_box_idx[i]; j < g_coarse_box_idx[i+1]; ++j) {
+      g_coarse_box_color[j] = i;
+    }
+  }
 
   for(int i = 0; i < n_rank; ++i) {
     g_coarse_box_n  [i] *= 6;
@@ -242,10 +248,26 @@ PDM_doctree_build
                       gcoarse_box_extents, g_coarse_box_n  , g_coarse_box_idx, PDM_MPI_DOUBLE,
                       doct->comm);
 
+  free(coarse_box_extents);
+
+  if(1 == 1 && i_rank == 0) {
+    char filename[999];
+    sprintf(filename, "gcoarse_box_extents_%i.vtk", i_rank);
+    PDM_vtk_write_boxes(filename,
+                        g_coarse_box_idx[n_rank],
+                        gcoarse_box_extents,
+                        g_coarse_box_color);
+  }
+
+
   free(g_coarse_box_n);
   free(g_coarse_box_idx);
-  free(coarse_box_extents);
   free(gcoarse_box_extents);
+  free(g_coarse_box_color);
+
+  free(blk_pts_coord);
+
+
 
   PDM_part_to_block_free(ptb);
 

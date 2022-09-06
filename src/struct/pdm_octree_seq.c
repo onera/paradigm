@@ -1332,10 +1332,9 @@ PDM_octree_seq_extract_extent
   int s_pt_stack   = ((n_children - 1) * (_octree->depth_max - 1) + n_children);
   int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
   int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
-  // int *stack_id  = malloc (s_pt_stack * sizeof(int              ));
 
-  int n_extract_max = ((n_children - 1) * (n_depth - 1) + n_children);
-  int *id_to_extract = malloc( n_extract_max * sizeof(int));
+  // int n_extract_max = ((n_children - 1) * (_octree->depth_max - 1) + n_children);
+  int *id_to_extract = malloc( _octree->n_nodes * sizeof(int));
 
   int n_extract = 0;
   int pos_stack = 0;
@@ -1350,9 +1349,10 @@ PDM_octree_seq_extract_extent
     int depth   = stack_depth[pos_stack];
 
     if(octants->is_leaf[node_id] || depth == n_depth) {
-      id_to_extract[n_extract++] = node_id;
+      if(octants->n_points[node_id] > 0) {
+        id_to_extract[n_extract++] = node_id;
+      }
     } else {
-
       for (int i = 0; i < n_children; i++) {
         int child_id = octants->children_id[8*node_id+i];
         if (child_id < 0) {
