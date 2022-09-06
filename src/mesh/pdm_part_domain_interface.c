@@ -1929,14 +1929,14 @@ PDM_part_domain_interface_add
         if(0 == 1) {
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
-          PDM_log_trace_array_long(pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
+          PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
           PDM_log_trace_array_long(pinterface_ln_to_gn,   ln_interface, "pinterface_ln_to_gn ::");
         }
 
         interface_entity1_ln_to_gn[i_interface][s_part+i_part] = malloc(ln_interface * sizeof(PDM_g_num_t));
         interface_dom             [i_interface][s_part+i_part] = malloc(ln_interface * sizeof(PDM_g_num_t));
         PDM_g_num_t* _interface_entity1_ln_to_gn = interface_entity1_ln_to_gn[i_interface][s_part+i_part];
-        PDM_g_num_t* _interface_dom              = interface_dom             [i_interface][s_part+i_part];
+        int        * _interface_dom              = interface_dom             [i_interface][s_part+i_part];
 
         int idx_write = 0;
         for(int idx_entity = 0; idx_entity < ln_interface; ++idx_entity) {
@@ -2063,11 +2063,11 @@ PDM_part_domain_interface_add
     }
 
     if(0 == 1) {
-      PDM_log_trace_array_long(dblk_strid   , n_gnum, "dblk_strid    ::");
+      PDM_log_trace_array_int (dblk_strid   , n_gnum, "dblk_strid    ::");
       PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum ::");
-      PDM_log_trace_array_long(dentity1_sgn , n_data, "dentity1_sgn  ::");
-      PDM_log_trace_array_long(dentity1_sens, n_data, "dentity1_sens ::");
-      PDM_log_trace_array_long(dentity1_dom , n_data, "dentity1_dom  ::");
+      PDM_log_trace_array_int (dentity1_sgn , n_data, "dentity1_sgn  ::");
+      PDM_log_trace_array_int (dentity1_sens, n_data, "dentity1_sens ::");
+      PDM_log_trace_array_int (dentity1_dom , n_data, "dentity1_dom  ::");
     }
 
     dinterface_dn [i_interface] = n_gnum;
@@ -2298,7 +2298,7 @@ PDM_part_domain_interface_add
   if(0 == 1) {
     for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
       PDM_log_trace_array_long(ditrf->interface_ids_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_ids_vtx ::");
-      PDM_log_trace_array_long(ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
+      PDM_log_trace_array_int (ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
     }
   }
 

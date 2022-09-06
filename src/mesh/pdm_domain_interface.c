@@ -2819,9 +2819,9 @@ PDM_domain_interface_translate_entity1_entity2
    */
   int         idx_read            = 0;
   int         idx_read_data       = 0;
-  int         *is_treated         = (int *) malloc( max_conflict         * sizeof(int        ));
-  int         *conflict_data_idx  = (int *) malloc((max_conflict+1)      * sizeof(int        ));
-  PDM_g_num_t *conflict_sort_data = (int *) malloc((max_n_data_conflict) * sizeof(PDM_g_num_t));
+  int         *is_treated         = (int         *) malloc( max_conflict         * sizeof(int        ));
+  int         *conflict_data_idx  = (int         *) malloc((max_conflict+1)      * sizeof(int        ));
+  PDM_g_num_t *conflict_sort_data = (PDM_g_num_t *) malloc((max_n_data_conflict) * sizeof(PDM_g_num_t));
 
   int          *_interface_dn_entity2  = (int          *) malloc( n_interface * sizeof(int           ));
   PDM_g_num_t **_interface_ids_entity2 = (PDM_g_num_t **) malloc( n_interface * sizeof(PDM_g_num_t * ));
