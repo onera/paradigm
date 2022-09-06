@@ -1650,7 +1650,7 @@ PDM_dmesh_nodal_reorder
     start = PDM_GEOMETRY_KIND_VOLUMIC;
   }
 
-  PDM_dmesh_nodal_elmts_t *dmne;
+  PDM_dmesh_nodal_elmts_t *dmne = NULL;
 
   for (PDM_geometry_kind_t geom_kind = start; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
 

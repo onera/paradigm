@@ -339,6 +339,27 @@ int              *closest_octree_pt_id,
 double           *closest_octree_pt_dist2
 );
 
+/**
+ *
+ * \brief Get points located inside a set of boxes
+ *
+ * \param [in]   octree                 Pointer to \ref PDM_octree_seq object
+ * \param [in]   n_box                  Number of boxes
+ * \param [in]   box_extents            Extents of boxes
+ * \param [out]  pts_idx                Index of points located in boxes
+ * \param [out]  pts_l_num              Local ids of points located in boxes
+ *
+ */
+
+void
+PDM_octree_seq_inside_boxes
+(
+       PDM_octree_seq_t   *octree,
+ const int                 n_box,
+ const double              box_extents[],
+       int               **pts_idx,
+       int               **pts_l_num
+);
 
 /**
  *

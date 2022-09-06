@@ -164,6 +164,31 @@ double                *restrict min_dist2
 
 }
 
+static int
+_intersect_node_box_explicit
+(
+ int           dim,
+ const double *node_extents,
+ const double *box_extents,
+ int          *inside
+)
+{
+  *inside = 1;
+
+  for (int i = 0; i < dim; i++) {
+    if (node_extents[i]   > box_extents[i+3] ||
+        node_extents[i+3] < box_extents[i]) {
+      return 0;
+    }
+    else if (node_extents[i]  < box_extents[i] ||
+             node_extents[i+3] > box_extents[i+3]) {
+      *inside = 0;
+    }
+  }
+
+  return 1;
+}
+
 /**
  *
  * \brief Return ppart object from it identifier
@@ -1151,6 +1176,212 @@ double           *closest_octree_pt_dist2
 }
 
 
+
+/**
+ *
+ * \brief Get points located inside a set of boxes
+ *
+ * \param [in]   octree                 Pointer to \ref PDM_octree_seq object
+ * \param [in]   n_box                  Number of boxes
+ * \param [in]   box_extents            Extents of boxes
+ * \param [out]  pts_idx                Index of points located in boxes
+ * \param [out]  pts_l_num              Local ids of points located in boxes
+ *
+ */
+
+void
+PDM_octree_seq_inside_boxes
+(
+       PDM_octree_seq_t   *octree,
+ const int                 n_box,
+ const double              box_extents[],
+       int               **pts_idx,
+       int               **pts_l_num
+)
+{
+
+  *pts_idx = malloc (sizeof(int) * (n_box + 1));
+  int *_pts_idx = *pts_idx;
+  _pts_idx[0] = 0;
+
+  if (n_box < 1) {
+    *pts_l_num = malloc (sizeof(int) * _pts_idx[n_box]);
+    return;
+  }
+
+  int dim = 3;
+  const int n_children = 8;
+
+  _pdm_octree_seq_t *_octree = (_pdm_octree_seq_t *) octree;
+
+  int s_pt_stack = ((n_children - 1) * (_octree->depth_max - 1) + n_children);
+  int *stack_id  = malloc (s_pt_stack * sizeof(int              ));
+
+  int node_inside_box;
+  int intersect;
+
+  int tmp_size = 4 * n_box;
+  *pts_l_num = malloc (sizeof(int) * tmp_size);
+  int *_pts_l_num = *pts_l_num;
+
+  for (int ibox = 0; ibox < n_box; ibox++) {
+    int dbg_enabled = 0; //(box_g_num[ibox] == 2793384);//
+
+    _pts_idx[ibox+1] = _pts_idx[ibox];
+
+    const double *_box_extents = box_extents + 6*ibox;
+    const double *box_min      = box_extents + 6*ibox;
+    const double *box_max      = box_min + 3;
+
+    _octant_t *root_node = &(_octree->nodes[0]);
+    intersect = _intersect_node_box_explicit (3,
+                                              root_node->extents,
+                                              _box_extents,
+                                              &node_inside_box);
+
+    if (!intersect) {
+      continue;
+    }
+
+
+    if (node_inside_box) {
+      /* The box must contain all points */
+      if (dbg_enabled) {
+        printf("    add pts with lnum %d through %d\n", root_node->range[0], root_node->range[0] + root_node->n_points);
+      }
+      int new_size = _pts_idx[ibox+1] + root_node->n_points;
+
+      if (tmp_size <= new_size) {
+        tmp_size = PDM_MAX (2*tmp_size, new_size);
+        *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+        _pts_l_num = *pts_l_num;
+
+      }
+
+      for (int j = 0; j < root_node->n_points; j++) {
+        _pts_l_num[_pts_idx[ibox+1]++] = root_node->range[0] + j;
+      }
+      continue;
+    } /* End node_inside_box */
+
+
+    /* Push root in stack */
+    int pos_stack = 0;
+    stack_id[pos_stack++] = 0;
+
+    while (pos_stack > 0) {
+      int node_id = stack_id[--pos_stack];
+      _octant_t *curr_node = &(_octree->nodes[node_id]);
+      if (dbg_enabled) {
+        printf("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+               node_id,
+               curr_node->range[0], curr_node->range[1],
+               curr_node->n_points,
+               curr_node->is_leaf);
+      }
+
+      /* is leaf */
+      if(curr_node->is_leaf == 1) {
+
+        int *point_clouds_id = _octree->point_icloud + curr_node->range[0];
+        int *point_indexes   = _octree->point_ids    + curr_node->range[0];
+
+        for (int i = 0; i < curr_node->n_points; i++) {
+          int ipt = curr_node->range[0] + i;
+          const double      *_pt       = _octree->point_clouds[point_clouds_id[i]] + dim * point_indexes[i];
+          // const PDM_g_num_t *_pt_g_num = _octree->point_gnum  [point_clouds_id[i]] +       point_indexes[i];
+
+          int pt_inside_box = 1;
+          for (int idim = 0; idim < 3; idim++) {
+            if (_pt[idim] < box_min[idim] || _pt[idim] > box_max[idim]) {
+              pt_inside_box = 0;
+              break;
+            }
+          }
+
+          if (pt_inside_box) {
+            if (_pts_idx[ibox+1] >= tmp_size) {
+              tmp_size = PDM_MAX (2*tmp_size, _pts_idx[ibox+1] + 1);
+              *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+              _pts_l_num = *pts_l_num;
+            }
+
+            _pts_l_num[_pts_idx[ibox+1]++] = ipt;
+            // if (dbg_enabled) {
+            //   printf("    add point %d ("PDM_FMT_G_NUM")\n", ipt, _pt_g_num[ipt]);
+            // }
+          }
+        }
+      } else { /* Internal nodes */
+
+        const int *_child_ids = curr_node->children_id;
+        for (int i = 0; i < n_children; i++) {
+          int child_id = _child_ids[i];
+          if (child_id < 0) {
+            continue;
+          }
+          _octant_t *child_node = &(_octree->nodes[child_id]);
+
+          if (dbg_enabled) {
+            printf("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                   i,
+                   child_id,
+                   child_node->range[0],
+                   child_node->range[1],
+                   child_node->n_points,
+                   child_node->is_leaf);
+            printf("    pts_extents = %f %f %f %f %f %f\n",
+                   child_node->extents[0],
+                   child_node->extents[1],
+                   child_node->extents[2],
+                   child_node->extents[3],
+                   child_node->extents[4],
+                   child_node->extents[5]);
+          }
+
+          intersect = _intersect_node_box_explicit (3,
+                                                    child_node->extents,
+                                                    _box_extents,
+                                                    &node_inside_box);
+
+          if (dbg_enabled) {
+            printf("    intersect = %d\n", intersect);
+          }
+
+          if (intersect) {
+            if (node_inside_box) {
+              /* The box must contain all points */
+              if (dbg_enabled) {
+                printf("    add pts with lnum %d through %d\n", child_node->range[0], child_node->range[1]);
+              }
+
+              int new_size = _pts_idx[ibox+1] + child_node->n_points;
+
+              if (tmp_size <= new_size) {
+                tmp_size = PDM_MAX (2*tmp_size, new_size);
+                *pts_l_num = realloc (*pts_l_num, sizeof(int) * tmp_size);
+                _pts_l_num = *pts_l_num;
+              }
+
+              for (int j = 0; j < child_node->n_points; j++) {
+                _pts_l_num[_pts_idx[ibox+1]++] = child_node->range[0] + j;
+              }
+            }
+
+            else {
+              /* Push child in stack */
+              stack_id[pos_stack++] = child_id;
+            }
+          }
+        } // End of loop on children
+      }
+
+    } /* End While */
+  } /* End boxe loop */
+
+  free (stack_id);
+  *pts_l_num = realloc (*pts_l_num, sizeof(int) * _pts_idx[n_box]);
+}
 
 /**
  *
