@@ -35,6 +35,9 @@ struct _pdm_doctree_t {
 
   PDM_MPI_Comm               comm;                       /*!< MPI communicator                          */
   int                        dim;                        /*!< Dimension                                 */
+  int                        n_part_cloud;               /*!< Dimension                                 */
+  PDM_doctree_local_tree_t   local_tree_kind;
+
 
   int                        global_depth_max;           /*!< global_octree depth_max                   */
   int                        global_points_in_leaf_max;  /*!< global_octree max pts in leaf             */
@@ -44,6 +47,13 @@ struct _pdm_doctree_t {
   PDM_octree_seq_t          *shmem_octree;               /*! Shared octree among cores in current nodes */
 
   PDM_MPI_Comm               comm_shared;
+
+
+  /* Cloud - Just reference */
+  int          *n_point_cloud;
+  PDM_g_num_t **pts_g_num;
+  double      **pts_coords;
+  int         **pts_init_location;
 
 
 };

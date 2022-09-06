@@ -257,6 +257,13 @@ typedef enum {
 
 } PDM_mesh_location_method_t;
 
+typedef enum {
+
+  PDM_DOCTREE_LOCAL_TREE_OCTREE,
+  PDM_DOCTREE_LOCAL_TREE_LINEAR_OCTREE,
+  PDM_DOCTREE_LOCAL_TREE_KDTREE,
+
+} PDM_doctree_local_tree_t;
 
 typedef enum {
   PDM_VTX_KIND_NONE               = 0x0000000, /*=* empty flag, all values set to false */
