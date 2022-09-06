@@ -322,6 +322,7 @@ typedef enum {
   PDM_ISO_SURFACE_KIND_FIELD   = 2,
   PDM_ISO_SURFACE_KIND_ELLIPSE = 3,
   PDM_ISO_SURFACE_KIND_QUADRIC = 4,
+  PDM_ISO_SURFACE_KIND_HEART   = 5,
 
 } PDM_iso_surface_kind_t;
 
