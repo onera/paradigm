@@ -201,6 +201,30 @@ PDM_kdtree_seq_points_inside_boxes
        int               **pts_l_num
 );
 
+
+/**
+ *
+ * \brief Look for closest points stored inside a kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_kdtree_pt_id   Closest point in kdtree index
+ * \param [out]  closest_kdtree_pt_dist Closest point in kdtree distance
+ *
+ */
+
+void
+PDM_kdtree_seq_closest_point
+(
+PDM_kdtree_seq_t *kdtree,
+const int         n_pts,
+double           *pts,
+int              *closest_kdtree_pt_id,
+double           *closest_kdtree_pt_dist2
+);
+
+
 #ifdef  __cplusplus
 }
 #endif

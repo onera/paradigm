@@ -58,49 +58,49 @@ static const double _eps_default = 1.e-12;
  * Private function definitions
  *============================================================================*/
 
-static void
-_l_octant_set
-(
- PDM_octree_seq_t *octree
- )
-{
-  octree->octants = malloc(sizeof(_l_octant_t));
+// static void
+// _l_octant_set
+// (
+//  PDM_octree_seq_t *octree
+//  )
+// {
+//   octree->octants = malloc(sizeof(_l_octant_t));
 
-  _l_octant_t *octants = octree->octants;
+//   _l_octant_t *octants = octree->octants;
 
-  octants->ancestor_id          = malloc(sizeof(int                   ) * octree->n_nodes);
-  octants->is_leaf              = malloc(sizeof(int                   ) * octree->n_nodes);
-  octants->location_in_ancestor = malloc(sizeof(PDM_octree_seq_child_t) * octree->n_nodes);
-  octants->depth                = malloc(sizeof(int                   ) * octree->n_nodes);
-  octants->children_id          = malloc(sizeof(int                   ) * octree->n_nodes * 8);
-  octants->range                = malloc(sizeof(int                   ) * octree->n_nodes * 2);
-  octants->idx                  = malloc(sizeof(int                   ) * octree->n_nodes * 9);
-  octants->n_points             = malloc(sizeof(int                   ) * octree->n_nodes);
-  octants->extents              = malloc(sizeof(double                ) * octree->n_nodes * 6);
+//   octants->ancestor_id          = malloc(sizeof(int                   ) * octree->n_nodes);
+//   octants->is_leaf              = malloc(sizeof(int                   ) * octree->n_nodes);
+//   octants->location_in_ancestor = malloc(sizeof(PDM_octree_seq_child_t) * octree->n_nodes);
+//   octants->depth                = malloc(sizeof(int                   ) * octree->n_nodes);
+//   octants->children_id          = malloc(sizeof(int                   ) * octree->n_nodes * 8);
+//   octants->range                = malloc(sizeof(int                   ) * octree->n_nodes * 2);
+//   octants->idx                  = malloc(sizeof(int                   ) * octree->n_nodes * 9);
+//   octants->n_points             = malloc(sizeof(int                   ) * octree->n_nodes);
+//   octants->extents              = malloc(sizeof(double                ) * octree->n_nodes * 6);
 
-  for (int i = 0; i < octree->n_nodes; i++) {
-    _octant_t *node = octree->nodes + i;
+//   for (int i = 0; i < octree->n_nodes; i++) {
+//     _octant_t *node = octree->nodes + i;
 
-    octants->ancestor_id[i] = node->ancestor_id;
-    octants->is_leaf[i] = node->is_leaf;
-    octants->location_in_ancestor[i] = node->location_in_ancestor;
-    octants->depth[i] = node->depth;
-    for (int j = 0; j < 8; j++) {
-      octants->children_id[8*i+j] = node->children_id[8*i+j];
-    }
-    for (int j = 0; j < 2; j++) {
-      octants->range[2*i+j] = node->range[2*i+j];
-    }
-    for (int j = 0; j < 9; j++) {
-      octants->idx[9*i+j] = node->idx[9*i+j];
-    }
-    octants->n_points[i] = node->n_points;
-    for (int j = 0; j < 6; j++) {
-      octants->extents[6*i+j] = node->extents[6*i+j];
-    }
-  }
+//     octants->ancestor_id[i] = node->ancestor_id;
+//     octants->is_leaf[i] = node->is_leaf;
+//     octants->location_in_ancestor[i] = node->location_in_ancestor;
+//     octants->depth[i] = node->depth;
+//     for (int j = 0; j < 8; j++) {
+//       octants->children_id[8*i+j] = node->children_id[8*i+j];
+//     }
+//     for (int j = 0; j < 2; j++) {
+//       octants->range[2*i+j] = node->range[2*i+j];
+//     }
+//     for (int j = 0; j < 9; j++) {
+//       octants->idx[9*i+j] = node->idx[9*i+j];
+//     }
+//     octants->n_points[i] = node->n_points;
+//     for (int j = 0; j < 6; j++) {
+//       octants->extents[6*i+j] = node->extents[6*i+j];
+//     }
+//   }
 
-}
+// }
 
 static void
 _l_octant_free
@@ -1396,7 +1396,7 @@ double           *closest_octree_pt_dist2
     closest_octree_pt_id[2*i+1] = -1;
     closest_octree_pt_dist2[i] = HUGE_VAL;
 
-    stack[pos_stack] = 0; /* push root in th stack */
+    stack[pos_stack] = 0; /* push root in the stack */
 
     double _min_dist2;
     _octant_t *root_node = &(octree->nodes[0]);
@@ -2270,8 +2270,8 @@ PDM_octree_seq_points_inside_balls
             if (pib_idx[iball+1] >= s_pib) {
               s_pib *= 2;
 
-              *ball_pts_l_num = realloc(ball_pts_l_num, sizeof(int   ) * s_pib * 2);
-              *ball_pts_dist2 = realloc(ball_pts_dist2, sizeof(double) * s_pib);
+              *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+              *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 
               pib_l_num = *ball_pts_l_num;
               pib_dist2 = *ball_pts_dist2;
@@ -2293,6 +2293,10 @@ PDM_octree_seq_points_inside_balls
         for (int ichild = 0; ichild < n_children; ichild++) {
 
           int child_id = nodes->children_id[n_children*node_id + ichild];
+
+          if (child_id < 0) {
+            continue;
+          }
 
           if (nodes->n_points[child_id] == 0) {
             continue;

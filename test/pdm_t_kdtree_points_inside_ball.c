@@ -340,7 +340,6 @@ char *argv[]
                                      &pts_inside_ball_idx,
                                      &pts_inside_ball_l_num,
                                      &pts_inside_ball_dist2);
-  PDM_octree_seq_free(oct);
 
   log_trace("> Octree\n");
   for (int i = 0; i < n_tgt; i++) {
@@ -366,11 +365,42 @@ char *argv[]
   //     }
   //   }
   // }
+  int    *closest_kdtree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
+  double *closest_kdtree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+  PDM_kdtree_seq_closest_point(kdt,
+                               n_tgt,
+                               tgt_coord,
+                               closest_kdtree_pt_id,
+                               closest_kdtree_pt_dist2);
+
+  int    *closest_octree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
+  double *closest_octree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+  PDM_octree_seq_closest_point(oct,
+                               n_tgt,
+                               tgt_coord,
+                               closest_octree_pt_id,
+                               closest_octree_pt_dist2);
+
+
+  for (int i = 0; i < n_tgt; i++) {
+    log_trace("%5d : %5d %5d %f / %5d %5d %f\n",
+              i,
+              closest_kdtree_pt_id[2*i], closest_kdtree_pt_id[2*i+1], closest_kdtree_pt_dist2[i],
+              closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
+  }
+
+  free(closest_kdtree_pt_id);
+  free(closest_kdtree_pt_dist2);
+  free(closest_octree_pt_id);
+  free(closest_octree_pt_dist2);
+
+
 
 
 
   /* Free */
   PDM_kdtree_seq_free(kdt);
+  PDM_octree_seq_free(oct);
   free (src_coord);
   free (src_g_num);
   free (tgt_coord);

@@ -1258,8 +1258,8 @@ PDM_kdtree_seq_points_inside_balls
             if (pib_idx[iball+1] >= s_pib) {
               s_pib *= 2;
 
-              *ball_pts_l_num = realloc(ball_pts_l_num, sizeof(int   ) * s_pib * 2);
-              *ball_pts_dist2 = realloc(ball_pts_dist2, sizeof(double) * s_pib);
+              *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+              *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 
               pib_l_num = *ball_pts_l_num;
               pib_dist2 = *ball_pts_dist2;
@@ -1281,6 +1281,10 @@ PDM_kdtree_seq_points_inside_balls
         for (int ichild = 0; ichild < n_children; ichild++) {
 
           int child_id = nodes->children_id[n_children*node_id + ichild];
+
+          if (child_id < 0) {
+            continue;
+          }
 
           if (nodes->n_points[child_id] == 0) {
             continue;
@@ -1607,6 +1611,170 @@ PDM_kdtree_seq_points_inside_boxes
 }
 
 
+
+/**
+ *
+ * \brief Look for closest points stored inside a kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_kdtree_pt_id   Closest point in kdtree index
+ * \param [out]  closest_kdtree_pt_dist Closest point in kdtree distance
+ *
+ */
+
+void
+PDM_kdtree_seq_closest_point
+(
+PDM_kdtree_seq_t *kdtree,
+const int         n_pts,
+double           *pts,
+int              *closest_kdtree_pt_id,
+double           *closest_kdtree_pt_dist2
+)
+{
+
+  const int n_children = 2;
+
+
+  int s_pt_stack = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
+  int sort_child[n_children];
+  double dist_child[n_children];
+  int inbox_child[n_children];
+
+  int    *stack           = malloc (sizeof(int   ) * s_pt_stack);
+  int    *inbox_stack     = malloc (sizeof(int   ) * s_pt_stack);
+  double *min_dist2_stack = malloc (sizeof(double) * s_pt_stack);
+
+  _l_nodes_t *nodes = kdtree->nodes;
+
+  int dim = 3;
+
+  for (int i = 0; i < n_pts; i++) {
+
+    int pos_stack = 0;
+    const double *_pt = pts + dim * i;
+
+    /* Init stack */
+
+    closest_kdtree_pt_id[2*i]   = -1;
+    closest_kdtree_pt_id[2*i+1] = -1;
+    closest_kdtree_pt_dist2[i]  = HUGE_VAL;
+
+    stack[pos_stack] = 0; /* push root in the stack */
+
+    double _min_dist2;
+    int inbox1 =  _box_dist2_min(dim,
+                                 &nodes->extents[0],
+                                 _pt,
+                                 &_min_dist2);
+
+    inbox_stack[pos_stack]     = inbox1;
+    min_dist2_stack[pos_stack] = _min_dist2;
+    pos_stack++;
+
+    while (pos_stack > 0) {
+      int node_id = stack[--pos_stack];
+
+      double min_dist2 = min_dist2_stack[pos_stack];
+      int    inbox     = inbox_stack[pos_stack];
+
+      if ((min_dist2 <= closest_kdtree_pt_dist2[i]) || (inbox == 1)) {
+
+        if (!nodes->is_leaf[node_id]) {
+
+          /* Sort children and store them into the stack */
+
+          const int *_child_ids = nodes->children_id + n_children*node_id;
+
+          for (int j = 0; j < n_children; j++) {
+            dist_child[j] = HUGE_VAL;
+          }
+
+          int n_selec = 0;
+          for (int j = 0; j < n_children; j++) {
+
+
+            int child_id = _child_ids[j];
+
+
+            int child_inbox = 0;
+
+            if (child_id != -1) {
+
+              double child_min_dist2;
+
+              child_inbox = _box_dist2_min(dim,
+                                           &nodes->extents[6*child_id],
+                                           _pt,
+                                           &child_min_dist2);
+
+              int i1 = 0;
+              for (i1 = n_selec;
+                   (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+                dist_child[i1]  = dist_child[i1-1];
+                sort_child[i1]  = sort_child[i1-1];
+                inbox_child[i1] = inbox_child[i1-1];
+              }
+
+              sort_child[i1]  = child_id;
+              dist_child[i1]  = child_min_dist2;
+              inbox_child[i1] = child_inbox;
+
+              n_selec += 1;
+
+            }
+          }
+
+          for (int j = 0; j < n_selec; j++) {
+            int j1 = n_selec- 1 - j;
+            int child_id = sort_child[j1];
+            if (child_id != -1) {
+              if ((dist_child[j1] < closest_kdtree_pt_dist2[i]) &&
+                  (nodes->n_points[child_id] > 0)) {
+
+                min_dist2_stack[pos_stack] = dist_child[j1];
+                inbox_stack[pos_stack]     = inbox_child[j1];
+
+                stack[pos_stack++] = child_id; /* push root in th stack */
+              }
+            }
+          }
+        }
+
+        else {
+
+          int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
+          int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
+
+          for (int j = 0; j < nodes->n_points[node_id]; j++) {
+
+            double point_dist2 = 0;
+            const double *_coords = kdtree->point_clouds[point_clouds_id[j]] + dim * point_indexes[j];
+
+            for (int k = 0; k < dim; k++) {
+              point_dist2 += (_coords[k] - _pt[k]) *
+                             (_coords[k] - _pt[k]);
+            }
+
+            if (point_dist2 < closest_kdtree_pt_dist2[i]) {
+              closest_kdtree_pt_id[2*i  ] = point_clouds_id[j];
+              closest_kdtree_pt_id[2*i+1] = point_indexes[j];
+              closest_kdtree_pt_dist2[i]  = point_dist2;
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  free (inbox_stack);
+  free (min_dist2_stack);
+  free (stack);
+
+}
 
 #ifdef  __cplusplus
 }
