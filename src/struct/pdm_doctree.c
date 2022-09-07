@@ -344,6 +344,12 @@ PDM_doctree_build
    * Si l'octree ne change pas l'ordre des points -> On fait une allocation shared
    */
 
+  /*
+   *  L'octree seq fait un tri indirect sur les pts, c'est maybe possible de le faire shared inplace !
+   *  Sinon on fait un chapeau pour le faire shared !!!!!
+   */
+
+
 
 
   /*

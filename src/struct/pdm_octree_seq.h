@@ -32,7 +32,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-typedef struct _pdm_octree_seq_t PDM_octree_seq_t;
+typedef struct _pdm_octree_seq_t     PDM_octree_seq_t;
+typedef struct _pdm_octree_seq_shm_t PDM_octree_seq_shm_t;
 
 /**
  * \enum PDM_octree_seq_child_t
@@ -404,6 +405,18 @@ PDM_octree_seq_extract_extent
   double           **box_extents
 );
 
+PDM_octree_seq_shm_t*
+PDM_octree_make_shared
+(
+  PDM_octree_seq_t* local_octree,
+  PDM_MPI_Comm      comm_shared
+);
+
+void
+PDM_octree_seq_shm_free
+(
+ PDM_octree_seq_shm_t* shm_octree
+);
 
 #ifdef	__cplusplus
 }
