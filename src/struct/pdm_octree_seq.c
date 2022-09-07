@@ -2074,7 +2074,7 @@ PDM_octree_make_shared
    */
   int s_shm_data_in_rank[3] = {0};
   s_shm_data_in_rank[0] = local_octree->n_nodes;
-  s_shm_data_in_rank[1] = local_octree->n_nodes_max;
+  s_shm_data_in_rank[1] = local_octree->n_nodes2_max;
   s_shm_data_in_rank[2] = local_octree->t_n_points;
   int *s_shm_data_in_all_nodes = malloc(3 * n_rank_in_shm * sizeof(int));
 
@@ -2097,15 +2097,31 @@ PDM_octree_make_shared
   int n_nodes_max_shared_tot = n_nodes_max_idx    [n_rank_in_shm];
   int t_n_points_shared_tot  = t_n_points_idx     [n_rank_in_shm];
 
+  /*
+   * Octree struct
+   */
+  shm_octree->w_is_leaf     = PDM_mpi_win_shared_create(    n_nodes_shared_tot, sizeof(int   ), comm_shared);
+  shm_octree->w_children_id = PDM_mpi_win_shared_create(8 * n_nodes_shared_tot, sizeof(int   ), comm_shared);
+  shm_octree->w_range       = PDM_mpi_win_shared_create(2 * n_nodes_shared_tot, sizeof(int   ), comm_shared);
+  shm_octree->w_n_points    = PDM_mpi_win_shared_create(    n_nodes_shared_tot, sizeof(int   ), comm_shared);
+  shm_octree->w_extents     = PDM_mpi_win_shared_create(6 * n_nodes_shared_tot, sizeof(double), comm_shared);
+
+  /*
+   * Pts and ids
+   */
+  shm_octree->w_point_ids    = PDM_mpi_win_shared_create(    t_n_points_shared_tot, sizeof(int   ), comm_shared);
+  shm_octree->w_point_clouds = PDM_mpi_win_shared_create(3 * t_n_points_shared_tot, sizeof(double), comm_shared);
+
+  // octants->is_leaf     = realloc(octants->is_leaf,     sizeof(int   ) * octree->n_nodes2_max);
+  // octants->children_id = realloc(octants->children_id, sizeof(int   ) * octree->n_nodes2_max * 8);
+  // octants->range       = realloc(octants->range,       sizeof(int   ) * octree->n_nodes2_max * 2);
+  // octants->idx         = realloc(octants->idx,         sizeof(int   ) * octree->n_nodes2_max * 9);
+  // octants->n_points    = realloc(octants->n_points,    sizeof(int   ) * octree->n_nodes2_max);
+  // octants->extents     = realloc(octants->extents,     sizeof(double) * octree->n_nodes2_max * 6);
+
+  // octants->depth       = realloc(octants->depth,       sizeof(int   ) * octree->n_nodes2_max);
   // octants->ancestor_id          = realloc(octants->ancestor_id,          sizeof(int                   ) * octree->n_nodes2_max);
-  // octants->is_leaf              = realloc(octants->is_leaf,              sizeof(int                   ) * octree->n_nodes2_max);
   // octants->location_in_ancestor = realloc(octants->location_in_ancestor, sizeof(PDM_octree_seq_child_t) * octree->n_nodes2_max);
-  // octants->depth                = realloc(octants->depth,                sizeof(int                   ) * octree->n_nodes2_max);
-  // octants->children_id          = realloc(octants->children_id,          sizeof(int                   ) * octree->n_nodes2_max * 8);
-  // octants->range                = realloc(octants->range,                sizeof(int                   ) * octree->n_nodes2_max * 2);
-  // octants->idx                  = realloc(octants->idx,                  sizeof(int                   ) * octree->n_nodes2_max * 9);
-  // octants->n_points             = realloc(octants->n_points,             sizeof(int                   ) * octree->n_nodes2_max);
-  // octants->extents              = realloc(octants->extents,              sizeof(double                ) * octree->n_nodes2_max * 6);
 
   free(s_shm_data_in_all_nodes);
   free(octants_n_nodes_idx);
@@ -2121,6 +2137,16 @@ PDM_octree_seq_shm_free
  PDM_octree_seq_shm_t* shm_octree
 )
 {
+
+  PDM_mpi_win_shared_free(shm_octree->w_is_leaf    );
+  PDM_mpi_win_shared_free(shm_octree->w_children_id);
+  PDM_mpi_win_shared_free(shm_octree->w_range      );
+  PDM_mpi_win_shared_free(shm_octree->w_n_points   );
+  PDM_mpi_win_shared_free(shm_octree->w_extents    );
+
+  PDM_mpi_win_shared_free(shm_octree->w_point_ids   );
+  PDM_mpi_win_shared_free(shm_octree->w_point_clouds);
+
 
   free(shm_octree->octrees);
   free(shm_octree);

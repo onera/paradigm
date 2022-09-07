@@ -111,15 +111,19 @@ struct _pdm_octree_seq_shm_t {
   PDM_MPI_Comm       comm_shared;
   PDM_octree_seq_t  *octrees;
 
-  PDM_mpi_win_shared_t *ancestor_id;
-  PDM_mpi_win_shared_t *is_leaf;
-  PDM_mpi_win_shared_t *location_in_ancestor;
-  PDM_mpi_win_shared_t *depth;
-  PDM_mpi_win_shared_t *children_id;
-  PDM_mpi_win_shared_t *range;
-  PDM_mpi_win_shared_t *idx;
-  PDM_mpi_win_shared_t *n_points;
-  PDM_mpi_win_shared_t *extents;
+  PDM_mpi_win_shared_t *w_is_leaf;
+  PDM_mpi_win_shared_t *w_children_id;
+  PDM_mpi_win_shared_t *w_range;
+  PDM_mpi_win_shared_t *w_n_points;
+  PDM_mpi_win_shared_t *w_extents;
+
+  PDM_mpi_win_shared_t *w_point_ids;
+  PDM_mpi_win_shared_t *w_point_clouds;
+
+  // PDM_mpi_win_shared_t *w_idx;
+  // PDM_mpi_win_shared_t *w_ancestor_id;
+  // PDM_mpi_win_shared_t *w_location_in_ancestor;
+  // PDM_mpi_win_shared_t *w_depth;
 
 };
 
