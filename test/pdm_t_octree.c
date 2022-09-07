@@ -263,7 +263,7 @@ char *argv[]
                               &src_g_num);
 
   int depth_max = 5;
-  int points_in_leaf_max = 10;
+  int points_in_leaf_max = 1;
   const double tolerance = 1e-4;
   PDM_octree_seq_t *oct_orig = PDM_octree_seq_create(1, // n_point_cloud
                                                      depth_max,

@@ -120,7 +120,7 @@ PDM_point_cloud_gen_random
 
   for (int i = 0; i < *ln_pts; i++) {
 
-    unsigned int seed = (unsigned int) (distrib_pts[i_rank] + i);
+    unsigned int seed = (unsigned int) (distrib_pts[i_rank] + i) + 1;
     srand(seed);
 
     for (int j = 0; j < 3; j++) {

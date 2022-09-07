@@ -830,14 +830,14 @@ PDM_octree_seq_t *octree
   point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
 
   _build_octree_seq_leaves2(-1,
-                       (PDM_octree_seq_child_t) 0,
-                       -1,
-                       octree->extents,
-                       (const double **) octree->point_clouds,
-                       point_icloud_tmp,
-                       point_ids_tmp,
-                       octree,
-                       point_range);
+                            (PDM_octree_seq_child_t) 0,
+                            -1,
+                            octree->extents,
+                            (const double **) octree->point_clouds,
+                            point_icloud_tmp,
+                            point_ids_tmp,
+                            octree,
+                            point_range);
 
   octree->n_nodes2 +=1;
 
@@ -2045,6 +2045,22 @@ void PDM_octree_seq_write_octants2
   fprintf(f, "CELL_TYPES %d\n", octree->n_nodes);//octree->n_nodesn_leaves);
   for (int i = 0; i < octree->n_nodes; i++) {//n_leaves; i++) {
     fprintf(f, "%d\n", 12);
+  }
+
+  fprintf(f, "CELL_DATA %d\n", _octree->n_nodes);//_octree->n_nodesn_leaves);
+
+  fprintf(f, "FIELD node_field 3\n");
+  fprintf(f, "depth 1 %d int\n", _octree->n_nodes);//_octree->n_nodesn_leaves);
+  for (int i = 0; i < _octree->n_nodes; i++) {//n_leaves; i++) {
+    fprintf(f, "%d\n", _octree->octants->depth[i]);
+  }
+  fprintf(f, "is_leaf 1 %d int\n", _octree->n_nodes);//_octree->n_nodesn_leaves);
+  for (int i = 0; i < _octree->n_nodes; i++) {//n_leaves; i++) {
+    fprintf(f, "%d\n", _octree->octants->is_leaf[i]);
+  }
+  fprintf(f, "n_pts 1 %d int\n", _octree->n_nodes);//_octree->n_nodesn_leaves);
+  for (int i = 0; i < _octree->n_nodes; i++) {//n_leaves; i++) {
+    fprintf(f, "%d\n", _octree->octants->range[2*i+1] - _octree->octants->range[2*i]);
   }
 
   fclose(f);
