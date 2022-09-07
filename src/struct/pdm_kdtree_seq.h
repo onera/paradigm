@@ -125,6 +125,33 @@ void PDM_kdtree_seq_write_nodes
  const char       *filename
  );
 
+
+
+
+void
+PDM_kdtree_seq_points_inside_ball
+(
+ const PDM_kdtree_seq_t  *kdtree,
+ const int                n_pts,
+ double                  *pts_coord,
+ double                  *ball_radius2,
+ int                    **pts_inside_ball_idx,
+ int                    **pts_inside_ball_l_num,
+ double                 **pts_inside_ball_dist2
+ );
+
+
+
+void
+PDM_kdtree_seq_extract_extent
+(
+  PDM_kdtree_seq_t  *kdtree,
+  int                root_id,
+  int                n_depth,
+  int               *n_box,
+  double           **box_extents
+);
+
 #ifdef  __cplusplus
 }
 #endif

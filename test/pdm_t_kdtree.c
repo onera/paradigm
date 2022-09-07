@@ -19,10 +19,13 @@
 #include "pdm_gnum.h"
 #include "pdm_point_cloud_gen.h"
 #include "pdm_kdtree_seq.h"
+#include "pdm_octree_seq.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 
+#include "pdm_dmesh_nodal.h"
+#include "pdm_reader_stl.h"
 
 /*============================================================================
  * Macro definitions
@@ -184,16 +187,43 @@ char *argv[]
   int          n_src     = 0;
   double      *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
-  PDM_point_cloud_gen_random (comm,
-                              nPts,
-                              -radius, -radius, -radius,
-                              radius, radius, radius,
-                              &n_src,
-                              &src_coord,
-                              &src_g_num);
+  if (1) {
+    PDM_point_cloud_gen_random (comm,
+                                nPts,
+                                -radius, -radius, -radius,
+                                radius, radius, radius,
+                                &n_src,
+                                &src_coord,
+                                &src_g_num);
 
-  int depth_max = 10;
-  int points_in_leaf_max = 2;//10;
+    for (int i = 0; i < n_src; i++) {
+      src_coord[3*i] *= 2;
+    }
+  }
+  else {
+    PDM_dmesh_nodal_t *dmn = PDM_reader_stl_dmesh_nodal(comm,
+                                                        "/stck/bandrieu/Public/CAD/dragon_fine2.stl");
+
+    const PDM_g_num_t *distrib = PDM_DMesh_nodal_distrib_vtx_get(dmn);
+
+    n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+
+    src_coord = malloc(sizeof(double) * n_src * 3);
+    memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);
+
+    src_g_num = malloc(sizeof(PDM_g_num_t) * n_src);
+    for (int i = 0; i < n_src; i++) {
+      src_g_num[i] = distrib[i_rank] + i + 1;
+    }
+
+    PDM_DMesh_nodal_free(dmn);
+  }
+
+
+
+  int depth_max = 20;
+  int points_in_leaf_max = 10;
   const double tolerance = 1e-4;
   PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(1, // n_point_cloud
                                                      depth_max,
@@ -211,15 +241,112 @@ char *argv[]
     sprintf(filename, "kdtree_orig_%i.vtk", i_rank);
     PDM_kdtree_seq_write_nodes(kdt_orig, filename);
 
-    sprintf(filename, "points_%i.vtk", i_rank);
+    sprintf(filename, "points_orig_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_src,
                               src_coord,
-                              NULL,
+                              src_g_num,
                               NULL);
   }
 
   PDM_kdtree_seq_free(kdt_orig);
+
+
+
+
+
+
+
+
+
+
+
+  int *weight =  malloc( n_src * sizeof(int));
+  for(int i = 0; i < n_src; ++i) {
+    weight[i] = 1;
+  }
+  PDM_MPI_Barrier(comm);
+  double t1 = PDM_MPI_Wtime();
+  PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                           1.,
+                                                           PDM_PART_GEOM_HILBERT,
+                                                           &src_coord,
+                                                           &src_g_num,
+                                                           &weight,
+                                                           &n_src,
+                                                           1,
+                                                           comm);
+  free(weight);
+  double t2 = PDM_MPI_Wtime();
+  log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
+
+  double *blk_src_coord = NULL;
+  PDM_part_to_block_exch(ptb,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) &src_coord,
+                         NULL,
+               (void **) &blk_src_coord);
+
+  int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
+  PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
+  // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
+
+
+
+
+  PDM_kdtree_seq_t *kdt_equi = PDM_kdtree_seq_create(1, // n_point_cloud
+                                                     depth_max,
+                                                     points_in_leaf_max,
+                                                     tolerance);
+
+  PDM_kdtree_seq_point_cloud_set(kdt_equi,
+                                 0,
+                                 n_parent,
+                                 blk_src_coord);
+  PDM_kdtree_seq_build(kdt_equi);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "kdtree_equi_%i.vtk", i_rank);
+    PDM_kdtree_seq_write_nodes(kdt_equi, filename);
+
+    sprintf(filename, "points_equi_%i.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_parent,
+                              blk_src_coord,
+                              parent_gnum,
+                              NULL);
+  }
+  PDM_kdtree_seq_free(kdt_equi);
+
+
+  PDM_octree_seq_t *oct_equi = PDM_octree_seq_create(1, // n_point_cloud
+                                                     depth_max,
+                                                     points_in_leaf_max,
+                                                     tolerance);
+
+  PDM_octree_seq_point_cloud_set(oct_equi,
+                                 0,
+                                 n_parent,
+                                 blk_src_coord);
+  PDM_octree_seq_build(oct_equi);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "octree_equi_%i.vtk", i_rank);
+    PDM_octree_seq_write_octants2(oct_equi, filename);
+  }
+  PDM_octree_seq_free(oct_equi);
+
+  PDM_part_to_block_free(ptb);
+
+  free(blk_src_coord);
+
+
 
 
   /* Free */

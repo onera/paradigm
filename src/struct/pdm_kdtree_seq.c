@@ -926,6 +926,40 @@ _l_nodes_free
 }
 
 
+
+inline static int
+_box_dist2_min
+(
+ const int              dim,
+ const double          *restrict extents,
+ const double          *restrict coords,
+ double                *restrict min_dist2
+ )
+{
+
+  int inbox = 0;
+  *min_dist2 = 0.;
+
+  for (int i = 0; i < dim; i++) {
+    if (coords[i] > extents[i+dim]) {
+      double _min_dist2 = coords[i] - extents[dim+i];
+      *min_dist2 += _min_dist2 * _min_dist2;
+    }
+
+    else if (coords[i] < extents[i]) {
+      double _min_dist2 = coords[i] - extents[i];
+      *min_dist2 += _min_dist2 * _min_dist2;
+    }
+
+    else {
+      inbox += 1;
+    }
+  }
+
+  return inbox == dim;
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1161,6 +1195,225 @@ void PDM_kdtree_seq_write_nodes
   }
 
   fclose(f);
+}
+
+
+
+
+
+
+
+void
+PDM_kdtree_seq_points_inside_ball
+(
+ const PDM_kdtree_seq_t  *kdtree,
+ const int                n_pts,
+ double                  *pts_coord,
+ double                  *ball_radius2,
+ int                    **pts_inside_ball_idx,
+ int                    **pts_inside_ball_l_num,
+ double                 **pts_inside_ball_dist2
+ )
+{
+  const int n_children = 2;
+
+  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
+
+  int s_pt_stack = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
+
+
+  *pts_inside_ball_idx = malloc(sizeof(int) * (n_pts + 1));
+  int *pib_idx = *pts_inside_ball_idx;
+  pib_idx[0] = 0;
+
+  int s_pib = 4*n_pts;
+  *pts_inside_ball_l_num = malloc(sizeof(int   ) * s_pib * 2);
+  *pts_inside_ball_dist2 = malloc(sizeof(double) * s_pib);
+
+  int    *pib_l_num = *pts_inside_ball_l_num;
+  double *pib_dist2 = *pts_inside_ball_dist2;
+
+
+  _l_nodes_t *nodes = _kdtree->nodes;
+
+
+  int *stack = malloc(sizeof(int) * s_pt_stack);
+
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+
+    pib_idx[ipt+1] = pib_idx[ipt];
+
+    double *_pt = pts_coord + 3*ipt;
+    double  br2 = ball_radius2[ipt];
+
+
+    /* Start by root */
+    int pos_stack = 0;
+    double min_dist2;
+    int inside_box = _box_dist2_min(3,
+                                    &nodes->extents[0],
+                                    _pt,
+                                    &min_dist2);
+
+    if (inside_box || min_dist2 <= br2) {
+      stack[pos_stack++] = 0;
+    }
+
+
+    while (pos_stack > 0) {
+
+      int node_id = stack[--pos_stack];
+
+      if (nodes->is_leaf[node_id]) {
+        /* Leaf node */
+
+        int *point_clouds_id = _kdtree->point_icloud + nodes->range[2*node_id];
+        int *point_indexes   = _kdtree->point_ids    + nodes->range[2*node_id];
+
+        for (int i = 0; i < nodes->n_points[node_id]; i++) {
+          const double *q = _kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
+
+          double dist2 = 0.;
+          for (int j = 0; j < 3; j++) {
+            double delta = q[j] - _pt[j];
+            dist2 += delta*delta;
+          }
+
+          if (dist2 <= br2) {
+            /* Check size and realloc if necessary */
+            if (pib_idx[ipt+1] >= s_pib) {
+              s_pib *= 2;
+
+              *pts_inside_ball_l_num = realloc(pts_inside_ball_l_num, sizeof(int   ) * s_pib * 2);
+              *pts_inside_ball_dist2 = realloc(pts_inside_ball_dist2, sizeof(double) * s_pib);
+
+              pib_l_num = *pts_inside_ball_l_num;
+              pib_dist2 = *pts_inside_ball_dist2;
+            }
+
+            /* Add point */
+            pib_l_num[2*pib_idx[ipt+1]  ] = point_clouds_id[i];
+            pib_l_num[2*pib_idx[ipt+1]+1] = point_indexes[i];
+
+            pib_dist2[pib_idx[ipt+1]] = dist2;
+
+            pib_idx[ipt+1]++;
+          }
+        } // End of loop on current leaf's points
+      }
+
+      else {
+        /* Internal node */
+        for (int ichild = 0; ichild < n_children; ichild++) {
+
+          int child_id = nodes->children_id[n_children*node_id + ichild];
+
+          if (nodes->n_points[child_id] == 0) {
+            continue;
+          }
+
+          inside_box = _box_dist2_min(3,
+                                      &nodes->extents[6*child_id],
+                                      _pt,
+                                      &min_dist2);
+
+          if (inside_box || min_dist2 <= br2) {
+            stack[pos_stack++] = child_id;
+          }
+
+        }
+
+      }
+
+
+
+
+    } // End of while loop
+
+
+  } // End of loop on points
+  free(stack);
+
+  s_pib = pib_idx[n_pts];
+  *pts_inside_ball_l_num = realloc(pts_inside_ball_l_num, sizeof(int   ) * s_pib * 2);
+  *pts_inside_ball_dist2 = realloc(pts_inside_ball_dist2, sizeof(double) * s_pib);
+
+
+}
+
+
+
+
+
+void
+PDM_kdtree_seq_extract_extent
+(
+  PDM_kdtree_seq_t  *kdtree,
+  int                root_id,
+  int                n_depth,
+  int               *n_box,
+  double           **box_extents
+)
+{
+  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
+  _l_nodes_t *nodes = _kdtree->nodes;
+
+  int n_children   = 2;
+  int s_pt_stack   = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
+  int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
+  int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
+
+  // int n_extract_max = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
+  int *id_to_extract = malloc( _kdtree->n_nodes * sizeof(int));
+
+  int n_extract = 0;
+  int pos_stack = 0;
+  stack_id   [pos_stack] = root_id;
+  stack_depth[pos_stack] = 0;
+  pos_stack++;
+  while(pos_stack > 0) {
+
+    /* Inspect node */
+    --pos_stack;
+    int node_id = stack_id   [pos_stack];
+    int depth   = stack_depth[pos_stack];
+
+    if(nodes->is_leaf[node_id] || depth == n_depth) {
+      if(nodes->n_points[node_id] > 0) {
+        id_to_extract[n_extract++] = node_id;
+      }
+    } else {
+      for (int i = 0; i < n_children; i++) {
+        int child_id = nodes->children_id[n_children*node_id+i];
+        if (child_id < 0) {
+          continue;
+        }
+
+        if(depth < n_depth) {
+          stack_id   [pos_stack] = child_id;
+          stack_depth[pos_stack] = depth + 1;
+          pos_stack++;
+        }
+      }
+    }
+  }
+  free(stack_id);
+  free(stack_depth);
+
+  double* _extents = malloc(n_extract * 6 * sizeof(double));
+  for(int i = 0; i < n_extract; ++i) {
+    int node_id = id_to_extract[i];
+    for(int k = 0; k < 6; ++k) {
+      _extents[6*i+k] = nodes->extents[6*node_id+k];
+    }
+  }
+
+  *n_box       = n_extract;
+  *box_extents = _extents;
+
+  free(id_to_extract);
+
 }
 
 
