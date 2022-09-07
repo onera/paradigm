@@ -1201,18 +1201,30 @@ void PDM_kdtree_seq_write_nodes
 
 
 
-
+/**
+ *
+ * \brief Look for points inside at set of balls
+ *
+ * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
+ * \param [in]  n_ball               Number of balls
+ * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
+ * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
+ * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
+ * \param [out] ball_pts_l_num       Ball->points graph (cloud_id, point_id)
+ * \param [out] ball_pts_dist2       Distance from points to ball centers
+ *
+ */
 
 void
 PDM_kdtree_seq_points_inside_ball
 (
  const PDM_kdtree_seq_t  *kdtree,
- const int                n_pts,
- double                  *pts_coord,
+ const int                n_ball,
+ double                  *ball_center,
  double                  *ball_radius2,
- int                    **pts_inside_ball_idx,
- int                    **pts_inside_ball_l_num,
- double                 **pts_inside_ball_dist2
+ int                    **ball_pts_idx,
+ int                    **ball_pts_l_num,
+ double                 **ball_pts_dist2
  )
 {
   const int n_children = 2;
@@ -1222,16 +1234,16 @@ PDM_kdtree_seq_points_inside_ball
   int s_pt_stack = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
 
 
-  *pts_inside_ball_idx = malloc(sizeof(int) * (n_pts + 1));
-  int *pib_idx = *pts_inside_ball_idx;
+  *ball_pts_idx = malloc(sizeof(int) * (n_ball + 1));
+  int *pib_idx = *ball_pts_idx;
   pib_idx[0] = 0;
 
-  int s_pib = 4*n_pts;
-  *pts_inside_ball_l_num = malloc(sizeof(int   ) * s_pib * 2);
-  *pts_inside_ball_dist2 = malloc(sizeof(double) * s_pib);
+  int s_pib = 4*n_ball;
+  *ball_pts_l_num = malloc(sizeof(int   ) * s_pib * 2);
+  *ball_pts_dist2 = malloc(sizeof(double) * s_pib);
 
-  int    *pib_l_num = *pts_inside_ball_l_num;
-  double *pib_dist2 = *pts_inside_ball_dist2;
+  int    *pib_l_num = *ball_pts_l_num;
+  double *pib_dist2 = *ball_pts_dist2;
 
 
   _l_nodes_t *nodes = _kdtree->nodes;
@@ -1240,12 +1252,12 @@ PDM_kdtree_seq_points_inside_ball
   int *stack = malloc(sizeof(int) * s_pt_stack);
 
 
-  for (int ipt = 0; ipt < n_pts; ipt++) {
+  for (int iball = 0; iball < n_ball; iball++) {
 
-    pib_idx[ipt+1] = pib_idx[ipt];
+    pib_idx[iball+1] = pib_idx[iball];
 
-    double *_pt = pts_coord + 3*ipt;
-    double  br2 = ball_radius2[ipt];
+    double *_center  = ball_center + 3*iball;
+    double  _radius2 = ball_radius2[iball];
 
 
     /* Start by root */
@@ -1253,10 +1265,10 @@ PDM_kdtree_seq_points_inside_ball
     double min_dist2;
     int inside_box = _box_dist2_min(3,
                                     &nodes->extents[0],
-                                    _pt,
+                                    _center,
                                     &min_dist2);
 
-    if (inside_box || min_dist2 <= br2) {
+    if (inside_box || min_dist2 <= _radius2) {
       stack[pos_stack++] = 0;
     }
 
@@ -1272,33 +1284,33 @@ PDM_kdtree_seq_points_inside_ball
         int *point_indexes   = _kdtree->point_ids    + nodes->range[2*node_id];
 
         for (int i = 0; i < nodes->n_points[node_id]; i++) {
-          const double *q = _kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
+          const double *_pt = _kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
 
           double dist2 = 0.;
           for (int j = 0; j < 3; j++) {
-            double delta = q[j] - _pt[j];
+            double delta = _pt[j] - _center[j];
             dist2 += delta*delta;
           }
 
-          if (dist2 <= br2) {
+          if (dist2 <= _radius2) {
             /* Check size and realloc if necessary */
-            if (pib_idx[ipt+1] >= s_pib) {
+            if (pib_idx[iball+1] >= s_pib) {
               s_pib *= 2;
 
-              *pts_inside_ball_l_num = realloc(pts_inside_ball_l_num, sizeof(int   ) * s_pib * 2);
-              *pts_inside_ball_dist2 = realloc(pts_inside_ball_dist2, sizeof(double) * s_pib);
+              *ball_pts_l_num = realloc(ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+              *ball_pts_dist2 = realloc(ball_pts_dist2, sizeof(double) * s_pib);
 
-              pib_l_num = *pts_inside_ball_l_num;
-              pib_dist2 = *pts_inside_ball_dist2;
+              pib_l_num = *ball_pts_l_num;
+              pib_dist2 = *ball_pts_dist2;
             }
 
             /* Add point */
-            pib_l_num[2*pib_idx[ipt+1]  ] = point_clouds_id[i];
-            pib_l_num[2*pib_idx[ipt+1]+1] = point_indexes[i];
+            pib_l_num[2*pib_idx[iball+1]  ] = point_clouds_id[i];
+            pib_l_num[2*pib_idx[iball+1]+1] = point_indexes[i];
 
-            pib_dist2[pib_idx[ipt+1]] = dist2;
+            pib_dist2[pib_idx[iball+1]] = dist2;
 
-            pib_idx[ipt+1]++;
+            pib_idx[iball+1]++;
           }
         } // End of loop on current leaf's points
       }
@@ -1315,10 +1327,10 @@ PDM_kdtree_seq_points_inside_ball
 
           inside_box = _box_dist2_min(3,
                                       &nodes->extents[6*child_id],
-                                      _pt,
+                                      _center,
                                       &min_dist2);
 
-          if (inside_box || min_dist2 <= br2) {
+          if (inside_box || min_dist2 <= _radius2) {
             stack[pos_stack++] = child_id;
           }
 
@@ -1335,16 +1347,26 @@ PDM_kdtree_seq_points_inside_ball
   } // End of loop on points
   free(stack);
 
-  s_pib = pib_idx[n_pts];
-  *pts_inside_ball_l_num = realloc(pts_inside_ball_l_num, sizeof(int   ) * s_pib * 2);
-  *pts_inside_ball_dist2 = realloc(pts_inside_ball_dist2, sizeof(double) * s_pib);
+  s_pib = pib_idx[n_ball];
+  *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+  *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 
 
 }
 
 
 
-
+/**
+ *
+ * \brief Get node extents of subtree of given depth and starting from given root
+ *
+ * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
+ * \param [in]  root_id              ID of subtree root
+ * \param [in]  n_depth              Depth of subtree
+ * \param [out] n_box                Number of subtree nodes
+ * \param [out] box_extents          Extents of subtree nodes
+ *
+ */
 
 void
 PDM_kdtree_seq_extract_extent

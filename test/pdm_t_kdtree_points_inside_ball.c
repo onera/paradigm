@@ -27,6 +27,8 @@
 #include "pdm_dmesh_nodal.h"
 #include "pdm_reader_stl.h"
 
+
+
 /*============================================================================
  * Macro definitions
  *============================================================================*/
@@ -82,7 +84,7 @@ _read_args
  int            argc,
  char         **argv,
  PDM_g_num_t   *nPts,
- double        *radius,
+ double        *length,
  int           *local,
  int           *rand
 )
@@ -107,13 +109,13 @@ _read_args
       }
     }
 
-    else if (strcmp(argv[i], "-radius") == 0) {
+    else if (strcmp(argv[i], "-l") == 0) {
       i++;
       if (i >= argc) {
         _usage(EXIT_FAILURE);
       }
       else {
-        *radius = atof(argv[i]);
+        *length = atof(argv[i]);
       }
     }
 
@@ -137,6 +139,8 @@ _read_args
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+
+
 
 /**
  *
@@ -162,20 +166,20 @@ char *argv[]
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   PDM_g_num_t nPts   = 10;
-  double radius = 10.;
+  double length = 10.;
   int local = 0;
-  int rand = 0;
+  int randomize = 0;
 
   _read_args(argc,
              argv,
              &nPts,
-             &radius,
+             &length,
              &local,
-             &rand);
+             &randomize);
 
   /* Initialize random */
 
-  if (rand) {
+  if (randomize) {
     srand(time(NULL));
   }
   else {
@@ -192,15 +196,15 @@ char *argv[]
                                 0, // seed
                                 0, // geometric_g_num
                                 nPts,
-                                -radius, -radius, -radius,
-                                radius, radius, radius,
+                                -length, -length, -length,
+                                length, length, length,
                                 &n_src,
                                 &src_coord,
                                 &src_g_num);
 
-    for (int i = 0; i < n_src; i++) {
-      src_coord[3*i] *= 2;
-    }
+    // for (int i = 0; i < n_src; i++) {
+    //   src_coord[3*i] *= 2;
+    // }
   }
   else {
     PDM_dmesh_nodal_t *dmn = PDM_reader_stl_dmesh_nodal(comm,
@@ -227,134 +231,113 @@ char *argv[]
   int depth_max = 20;
   int points_in_leaf_max = 10;
   const double tolerance = 1e-4;
-  PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(1, // n_point_cloud
-                                                     depth_max,
-                                                     points_in_leaf_max,
-                                                     tolerance);
+  PDM_kdtree_seq_t *kdt = PDM_kdtree_seq_create(1, // n_point_cloud
+                                                depth_max,
+                                                points_in_leaf_max,
+                                                tolerance);
 
-  PDM_kdtree_seq_point_cloud_set(kdt_orig,
+  PDM_kdtree_seq_point_cloud_set(kdt,
                                  0,
                                  n_src,
                                  src_coord);
-  PDM_kdtree_seq_build(kdt_orig);
+  PDM_kdtree_seq_build(kdt);
+
+
+
+
+
+  int          n_tgt     = 0;
+  double      *tgt_coord = NULL;
+  PDM_g_num_t *tgt_g_num = NULL;
+  PDM_point_cloud_gen_random (comm,
+                              123456789, // seed
+                              0,         // geometric_g_num
+                              nPts,
+                              -length, -length, -length,
+                              length, length, length,
+                              &n_tgt,
+                              &tgt_coord,
+                              &tgt_g_num);
+
+  // for (int i = 0; i < n_tgt; i++) {
+  //   for (int j = 0; j < 3; j++) {
+  //     tgt_coord[3*i+j] += 0.1*length*(2*((double) rand() / (double) RAND_MAX) - 1);
+  //   }
+  // }
+
+  double *ball_radius2 = malloc(sizeof(double) * n_tgt);
+  for (int i = 0; i < n_tgt; i++) {
+    double r = 0.8*length;
+    ball_radius2[i] = r*r;
+  }
+
+  int    *pts_inside_ball_idx   = NULL;
+  int    *pts_inside_ball_l_num = NULL;
+  double *pts_inside_ball_dist2 = NULL;
+  PDM_kdtree_seq_points_inside_ball(kdt,
+                                    n_tgt,
+                                    tgt_coord,
+                                    ball_radius2,
+                                    &pts_inside_ball_idx,
+                                    &pts_inside_ball_l_num,
+                                    &pts_inside_ball_dist2);
 
   if(1 == 1) {
     char filename[999];
-    sprintf(filename, "kdtree_orig_%i.vtk", i_rank);
-    PDM_kdtree_seq_write_nodes(kdt_orig, filename);
+    sprintf(filename, "kdtree_%i.vtk", i_rank);
+    PDM_kdtree_seq_write_nodes(kdt, filename);
 
-    sprintf(filename, "points_orig_%i.vtk", i_rank);
+    sprintf(filename, "src_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_src,
                               src_coord,
                               src_g_num,
                               NULL);
-  }
 
-  PDM_kdtree_seq_free(kdt_orig);
-
-
-
-
-
-
-
-
-
-
-
-  int *weight =  malloc( n_src * sizeof(int));
-  for(int i = 0; i < n_src; ++i) {
-    weight[i] = 1;
-  }
-  PDM_MPI_Barrier(comm);
-  double t1 = PDM_MPI_Wtime();
-  PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                           1.,
-                                                           PDM_PART_GEOM_HILBERT,
-                                                           &src_coord,
-                                                           &src_g_num,
-                                                           &weight,
-                                                           &n_src,
-                                                           1,
-                                                           comm);
-  free(weight);
-  double t2 = PDM_MPI_Wtime();
-  log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
-
-  double *blk_src_coord = NULL;
-  PDM_part_to_block_exch(ptb,
-                         3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         1,
-                         NULL,
-               (void **) &src_coord,
-                         NULL,
-               (void **) &blk_src_coord);
-
-  int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
-  PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
-  // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
-
-
-
-
-  PDM_kdtree_seq_t *kdt_equi = PDM_kdtree_seq_create(1, // n_point_cloud
-                                                     depth_max,
-                                                     points_in_leaf_max,
-                                                     tolerance);
-
-  PDM_kdtree_seq_point_cloud_set(kdt_equi,
-                                 0,
-                                 n_parent,
-                                 blk_src_coord);
-  PDM_kdtree_seq_build(kdt_equi);
-
-  if(1 == 1) {
-    char filename[999];
-    sprintf(filename, "kdtree_equi_%i.vtk", i_rank);
-    PDM_kdtree_seq_write_nodes(kdt_equi, filename);
-
-    sprintf(filename, "points_equi_%i.vtk", i_rank);
+    sprintf(filename, "tgt_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
-                              n_parent,
-                              blk_src_coord,
-                              parent_gnum,
+                              n_tgt,
+                              tgt_coord,
+                              tgt_g_num,
                               NULL);
   }
-  PDM_kdtree_seq_free(kdt_equi);
 
-
-  PDM_octree_seq_t *oct_equi = PDM_octree_seq_create(1, // n_point_cloud
-                                                     depth_max,
-                                                     points_in_leaf_max,
-                                                     tolerance);
-
-  PDM_octree_seq_point_cloud_set(oct_equi,
-                                 0,
-                                 n_parent,
-                                 blk_src_coord);
-  PDM_octree_seq_build(oct_equi);
-
-  if(1 == 1) {
-    char filename[999];
-    sprintf(filename, "octree_equi_%i.vtk", i_rank);
-    PDM_octree_seq_write_octants2(oct_equi, filename);
+  for (int i = 0; i < n_tgt; i++) {
+    log_trace("point %d (%f %f %f): n_pib = %d\n",
+              i,
+              tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
+              pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
+    for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
+      log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
+                pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+                pts_inside_ball_dist2[j], ball_radius2[i]);
+    }
   }
-  PDM_octree_seq_free(oct_equi);
 
-  PDM_part_to_block_free(ptb);
+  // /* Brute force check */
+  // for (int itgt = 0; itgt < n_tgt; itgt++) {
 
-  free(blk_src_coord);
-
+  //   for (int isrc = 0; isrc < n_src; isrc++) {
+  //     double dist2 = 0.;
+  //     for (int j = 0; j < 3; j++) {
+  //       double delta = tgt_coord[3*itgt + j] - src_coord[3*isrc + j];
+  //       dist2 += delta*delta;
+  //     }
+  //   }
+  // }
 
 
 
   /* Free */
-
+  PDM_kdtree_seq_free(kdt);
   free (src_coord);
   free (src_g_num);
+  free (tgt_coord);
+  free (tgt_g_num);
+  free(ball_radius2);
+  free(pts_inside_ball_idx);
+  free(pts_inside_ball_l_num);
+  free(pts_inside_ball_dist2);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

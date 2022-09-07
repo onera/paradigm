@@ -538,6 +538,8 @@ int main(int argc, char *argv[])
     double llength = length;
 
     PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
+                                0, // seed
+                                0, // geometric_g_num
                                 n_pts,
                                 -marge,
                                 -marge,

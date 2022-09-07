@@ -183,6 +183,8 @@ char *argv[]
   double      *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
   PDM_point_cloud_gen_random (comm,
+                              0, // seed
+                              0, // geometric_g_num
                               nPts,
                               -radius, -radius, -radius,
                               radius, radius, radius,

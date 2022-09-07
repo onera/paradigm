@@ -126,21 +126,44 @@ void PDM_kdtree_seq_write_nodes
  );
 
 
-
+/**
+ *
+ * \brief Look for points inside at set of balls
+ *
+ * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
+ * \param [in]  n_ball               Number of balls
+ * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
+ * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
+ * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
+ * \param [out] ball_pts_l_num       Ball->points graph (cloud_id, point_id)
+ * \param [out] ball_pts_dist2       Distance from points to ball centers
+ *
+ */
 
 void
 PDM_kdtree_seq_points_inside_ball
 (
  const PDM_kdtree_seq_t  *kdtree,
- const int                n_pts,
- double                  *pts_coord,
+ const int                n_ball,
+ double                  *ball_center,
  double                  *ball_radius2,
- int                    **pts_inside_ball_idx,
- int                    **pts_inside_ball_l_num,
- double                 **pts_inside_ball_dist2
+ int                    **ball_pts_idx,
+ int                    **ball_pts_l_num,
+ double                 **ball_pts_dist2
  );
 
 
+/**
+ *
+ * \brief Get node extents of subtree of given depth and starting from given root
+ *
+ * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
+ * \param [in]  root_id              ID of subtree root
+ * \param [in]  n_depth              Depth of subtree
+ * \param [out] n_box                Number of subtree nodes
+ * \param [out] box_extents          Extents of subtree nodes
+ *
+ */
 
 void
 PDM_kdtree_seq_extract_extent

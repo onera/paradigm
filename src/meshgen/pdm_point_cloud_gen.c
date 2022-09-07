@@ -60,7 +60,9 @@ extern "C"
  * \brief Generate a uniformly random point cloud inside a cuboid.
  *
  * \param [in]   comm                   MPI Communicator id
+ * \param [in]   seed                   Random seed
  * \param [in]   gn_pts                 Global number of points in the cloud
+ * \param [in]   geometric_g_num        Compute global ids from coordinates
  * \param [in]   x_min                  X-coordinate of the first cuboid corner
  * \param [in]   y_min                  Y-coordinate of the first cuboid corner
  * \param [in]   z_min                  Z-coordinate of the first cuboid corner
@@ -77,6 +79,8 @@ void
 PDM_point_cloud_gen_random
 (
  PDM_MPI_Comm        comm,
+ const int           seed,
+ const int           geometric_g_num,
  const PDM_g_num_t   gn_pts,
  const double        x_min,
  const double        y_min,
@@ -120,8 +124,8 @@ PDM_point_cloud_gen_random
 
   for (int i = 0; i < *ln_pts; i++) {
 
-    unsigned int seed = (unsigned int) (distrib_pts[i_rank] + i) + 1;
-    srand(seed);
+    unsigned int _seed = (unsigned int) (distrib_pts[i_rank] + i) + 1;
+    srand(_seed + seed);
 
     for (int j = 0; j < 3; j++) {
       (*coord)[3*i + j] = origin[j] + length[j] * (double) rand() * i_rand_max;
@@ -132,7 +136,7 @@ PDM_point_cloud_gen_random
   /**
    * Global numbers
    */
-  if (1) {
+  if (geometric_g_num) {
     double _char_length = 1e-6 * PDM_MAX(length[0], PDM_MAX(length[1], length[2]));
 
     double *char_length = malloc(sizeof(double) * (*ln_pts));
@@ -154,6 +158,7 @@ PDM_point_cloud_gen_random
   }
 
   else {
+    *g_num = malloc(sizeof(PDM_g_num_t) * (*ln_pts));
     for (int i = 0; i < *ln_pts; i++) {
       (*g_num)[i] = distrib_pts[i_rank] + i;
     }

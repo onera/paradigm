@@ -1,5 +1,5 @@
-#ifndef __PDM_POINT_CLOUD_GEN_H__
-#define __PDM_POINT_CLOUD_GEN_H__
+#ifndef __PDM_BOX_GEN_H__
+#define __PDM_BOX_GEN_H__
 
 /*
   This file is part of the ParaDiGM library.
@@ -46,44 +46,59 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
+void
+PDM_box_gen_cartesian
+(
+  int           n_vtx_x,
+  int           n_vtx_y,
+  int           n_vtx_z,
+  double        length,
+  int          *n_box_out,
+  double      **box_coord_out,
+  PDM_g_num_t **box_gnum_out
+);
 
 
 /**
  *
- * \brief Generate a uniformly random point cloud inside a cuboid.
+ * \brief Generate a random set of boxes
  *
  * \param [in]   comm                   MPI Communicator id
  * \param [in]   seed                   Random seed
- * \param [in]   gn_pts                 Global number of points in the cloud
  * \param [in]   geometric_g_num        Compute global ids from coordinates
- * \param [in]   x_min                  X-coordinate of the first cuboid corner
- * \param [in]   y_min                  Y-coordinate of the first cuboid corner
- * \param [in]   z_min                  Z-coordinate of the first cuboid corner
- * \param [in]   x_max                  X-coordinate of the opposite cuboid corner
- * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
- * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
- * \param [out]  ln_pts                 Local number of points in the cloud
- * \param [out]  coord                  XYZ-coordinates of the local points
- * \param [out]  g_num                  Global ids of the local points
+ * \param [in]   gn_box                 Global number of boxes
+ * \param [in]   min_size               Minimal box size
+ * \param [in]   max_size               Maximal box size
+ * \param [in]   x_min                  Minimal X-coordinate for box centers
+ * \param [in]   y_min                  Minimal Y-coordinate for box centers
+ * \param [in]   z_min                  Minimal Z-coordinate for box centers
+ * \param [in]   x_max                  Maximal X-coordinate for box centers
+ * \param [in]   y_max                  Maximal Y-coordinate for box centers
+ * \param [in]   z_max                  Maximal Z-coordinate for box centers
+ * \param [out]  n_box                  Local number of boxes
+ * \param [out]  box_extents            Extents of the local boxes
+ * \param [out]  box_ln_to_gn           Global ids of the local boxes
  *
  */
 
 void
-PDM_point_cloud_gen_random
+PDM_box_gen_random
 (
- PDM_MPI_Comm        comm,
- const int           seed,
- const int           geometric_g_num,
- const PDM_g_num_t   gn_pts,
- const double        x_min,
- const double        y_min,
- const double        z_min,
- const double        x_max,
- const double        y_max,
- const double        z_max,
- int                *ln_pts,
- double            **coord,
- PDM_g_num_t       **g_num
+ PDM_MPI_Comm   comm,
+ int            seed,
+ int            geometric_g_num,
+ PDM_g_num_t    gn_box,
+ double         min_size,
+ double         max_size,
+ double         x_min,
+ double         y_min,
+ double         z_min,
+ double         x_max,
+ double         y_max,
+ double         z_max,
+ int           *n_box,
+ double       **box_extents,
+ PDM_g_num_t  **box_ln_to_gn
  );
 
 
@@ -91,4 +106,4 @@ PDM_point_cloud_gen_random
 }
 #endif
 
-#endif // PDM_POINT_CLOUD_GEN_H
+#endif // PDM_BOX_GEN_H

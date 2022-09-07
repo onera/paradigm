@@ -18,6 +18,7 @@
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_point_cloud_gen.h"
+#include "pdm_box_gen.h"
 #include "pdm_octree.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
@@ -255,6 +256,8 @@ char *argv[]
   double      *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
   PDM_point_cloud_gen_random (comm,
+                              0, // seed
+                              0, // geometric_g_num
                               nPts,
                               -radius, -radius, -radius,
                               radius, radius, radius,
@@ -316,8 +319,8 @@ char *argv[]
                (void **) &blk_src_coord);
 
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
-  PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
-  PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
+  // PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
+  // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
   PDM_part_to_block_free(ptb);
 
@@ -357,17 +360,25 @@ char *argv[]
     double      *box_extents  = NULL;
     PDM_g_num_t *box_ln_to_gn = NULL;
 
-    _random_boxes(PDM_MPI_COMM_WORLD,
-                  gn_box,
-                  &n_box,
-                  &box_extents,
-                  &box_ln_to_gn);
+    // _random_boxes(PDM_MPI_COMM_WORLD,
+    //               gn_box,
+    //               &n_box,
+    //               &box_extents,
+    //               &box_ln_to_gn);
+    PDM_box_gen_random(comm,
+                       0,                         // seed
+                       0,                         // geometric_g_num
+                       gn_box,                    // gn_box
+                       0.5*radius,                // min_size
+                       1.5*radius,                // max_size
+                       -radius, -radius, -radius, // x,y,z_min
+                       radius, radius, radius,    // x,y,z_max
+                       &n_box,
+                       &box_extents,
+                       &box_ln_to_gn);
 
-    for (int i = 0; i < 6*n_box; i++) {
-      box_extents[i] *= radius;
-    }
 
-    if(0 == 1) {
+    if(1 == 1) {
       char filename[999];
       sprintf(filename, "boxes_%i.vtk", i_rank);
       PDM_vtk_write_boxes(filename,
