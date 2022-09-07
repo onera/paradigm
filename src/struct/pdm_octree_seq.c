@@ -1256,8 +1256,8 @@ PDM_octree_seq_extract_extent
 
   int n_children   = 8;
   int s_pt_stack   = ((n_children - 1) * (octree->depth_max - 1) + n_children);
-  int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
-  int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
+  int *stack_id    = malloc (s_pt_stack * sizeof(int));
+  int *stack_depth = malloc (s_pt_stack * sizeof(int));
 
   // int n_extract_max = ((n_children - 1) * (octree->depth_max - 1) + n_children);
   int *id_to_extract = malloc( octree->n_nodes * sizeof(int));
@@ -2171,6 +2171,156 @@ PDM_octree_seq_shm_free
 
   free(shm_octree->octrees);
   free(shm_octree);
+}
+
+
+
+
+/**
+ *
+ * \brief Look for points inside at set of balls
+ *
+ * \param [in]  octree               Pointer to \ref PDM_octree_seq object
+ * \param [in]  n_ball               Number of balls
+ * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
+ * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
+ * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
+ * \param [out] ball_pts_l_num       Ball->points graph (cloud_id, point_id)
+ * \param [out] ball_pts_dist2       Distance from points to ball centers
+ *
+ */
+
+void
+PDM_octree_seq_points_inside_ball
+(
+ const PDM_octree_seq_t  *octree,
+ const int                n_ball,
+ double                  *ball_center,
+ double                  *ball_radius2,
+ int                    **ball_pts_idx,
+ int                    **ball_pts_l_num,
+ double                 **ball_pts_dist2
+ )
+{
+  const int n_children = 8;
+
+  int s_pt_stack = ((n_children - 1) * (octree->depth_max - 1) + n_children);
+
+
+  *ball_pts_idx = malloc(sizeof(int) * (n_ball + 1));
+  int *pib_idx = *ball_pts_idx;
+  pib_idx[0] = 0;
+
+  int s_pib = 4*n_ball;
+  *ball_pts_l_num = malloc(sizeof(int   ) * s_pib * 2);
+  *ball_pts_dist2 = malloc(sizeof(double) * s_pib);
+
+  int    *pib_l_num = *ball_pts_l_num;
+  double *pib_dist2 = *ball_pts_dist2;
+
+
+  _l_octant_t *nodes = octree->octants;
+
+
+  int *stack = malloc(sizeof(int) * s_pt_stack);
+
+
+  for (int iball = 0; iball < n_ball; iball++) {
+
+    pib_idx[iball+1] = pib_idx[iball];
+
+    double *_center  = ball_center + 3*iball;
+    double  _radius2 = ball_radius2[iball];
+
+
+    /* Start by root */
+    int pos_stack = 0;
+    double min_dist2;
+    int inside_box = _box_dist2(3,
+                                &nodes->extents[0],
+                                _center,
+                                &min_dist2);
+
+    if (inside_box || min_dist2 <= _radius2) {
+      stack[pos_stack++] = 0;
+    }
+
+
+    while (pos_stack > 0) {
+
+      int node_id = stack[--pos_stack];
+
+      if (nodes->is_leaf[node_id]) {
+        /* Leaf node */
+
+        int *point_clouds_id = octree->point_icloud + nodes->range[2*node_id];
+        int *point_indexes   = octree->point_ids    + nodes->range[2*node_id];
+
+        for (int i = 0; i < nodes->n_points[node_id]; i++) {
+          const double *_pt = octree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
+
+          double dist2 = 0.;
+          for (int j = 0; j < 3; j++) {
+            double delta = _pt[j] - _center[j];
+            dist2 += delta*delta;
+          }
+
+          if (dist2 <= _radius2) {
+            /* Check size and realloc if necessary */
+            if (pib_idx[iball+1] >= s_pib) {
+              s_pib *= 2;
+
+              *ball_pts_l_num = realloc(ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+              *ball_pts_dist2 = realloc(ball_pts_dist2, sizeof(double) * s_pib);
+
+              pib_l_num = *ball_pts_l_num;
+              pib_dist2 = *ball_pts_dist2;
+            }
+
+            /* Add point */
+            pib_l_num[2*pib_idx[iball+1]  ] = point_clouds_id[i];
+            pib_l_num[2*pib_idx[iball+1]+1] = point_indexes[i];
+
+            pib_dist2[pib_idx[iball+1]] = dist2;
+
+            pib_idx[iball+1]++;
+          }
+        } // End of loop on current leaf's points
+      }
+
+      else {
+        /* Internal node */
+        for (int ichild = 0; ichild < n_children; ichild++) {
+
+          int child_id = nodes->children_id[n_children*node_id + ichild];
+
+          if (nodes->n_points[child_id] == 0) {
+            continue;
+          }
+
+          inside_box = _box_dist2(3,
+                                  &nodes->extents[6*child_id],
+                                  _center,
+                                  &min_dist2);
+
+          if (inside_box || min_dist2 <= _radius2) {
+            stack[pos_stack++] = child_id;
+          }
+
+        }
+
+      }
+
+
+    } // End of while loop
+
+
+  } // End of loop on points
+  free(stack);
+
+  s_pib = pib_idx[n_ball];
+  *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+  *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 }
 
 

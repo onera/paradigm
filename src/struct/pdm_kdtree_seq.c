@@ -1275,8 +1275,6 @@ PDM_kdtree_seq_points_inside_ball
       }
 
 
-
-
     } // End of while loop
 
 
@@ -1286,7 +1284,6 @@ PDM_kdtree_seq_points_inside_ball
   s_pib = pib_idx[n_ball];
   *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
   *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
-
 
 }
 
@@ -1320,8 +1317,8 @@ PDM_kdtree_seq_extract_extent
 
   int n_children   = 2;
   int s_pt_stack   = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
-  int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
-  int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
+  int *stack_id    = malloc (s_pt_stack * sizeof(int));
+  int *stack_depth = malloc (s_pt_stack * sizeof(int));
 
   // int n_extract_max = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
   int *id_to_extract = malloc( kdtree->n_nodes * sizeof(int));

@@ -302,6 +302,47 @@ char *argv[]
                               NULL);
   }
 
+  log_trace("> Kdtree\n");
+  for (int i = 0; i < n_tgt; i++) {
+    log_trace("point %d (%f %f %f): n_pib = %d\n",
+              i,
+              tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
+              pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
+    for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
+      log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
+                pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+                pts_inside_ball_dist2[j], ball_radius2[i]);
+    }
+  }
+  free(pts_inside_ball_idx);
+  free(pts_inside_ball_l_num);
+  free(pts_inside_ball_dist2);
+
+
+
+
+
+  PDM_octree_seq_t *oct = PDM_octree_seq_create(1, // n_point_cloud
+                                                depth_max,
+                                                points_in_leaf_max,
+                                                tolerance);
+
+  PDM_octree_seq_point_cloud_set(oct,
+                                 0,
+                                 n_src,
+                                 src_coord);
+  PDM_octree_seq_build(oct);
+
+  PDM_octree_seq_points_inside_ball(oct,
+                                    n_tgt,
+                                    tgt_coord,
+                                    ball_radius2,
+                                    &pts_inside_ball_idx,
+                                    &pts_inside_ball_l_num,
+                                    &pts_inside_ball_dist2);
+  PDM_octree_seq_free(oct);
+
+  log_trace("> Octree\n");
   for (int i = 0; i < n_tgt; i++) {
     log_trace("point %d (%f %f %f): n_pib = %d\n",
               i,

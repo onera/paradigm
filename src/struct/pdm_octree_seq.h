@@ -432,6 +432,33 @@ PDM_octree_seq_shm_free
  PDM_octree_seq_shm_t* shm_octree
 );
 
+
+/**
+ *
+ * \brief Look for points inside at set of balls
+ *
+ * \param [in]  octree               Pointer to \ref PDM_octree_seq object
+ * \param [in]  n_ball               Number of balls
+ * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
+ * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
+ * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
+ * \param [out] ball_pts_l_num       Ball->points graph (cloud_id, point_id)
+ * \param [out] ball_pts_dist2       Distance from points to ball centers
+ *
+ */
+
+void
+PDM_octree_seq_points_inside_ball
+(
+ const PDM_octree_seq_t  *octree,
+ const int                n_ball,
+ double                  *ball_center,
+ double                  *ball_radius2,
+ int                    **ball_pts_idx,
+ int                    **ball_pts_l_num,
+ double                 **ball_pts_dist2
+ );
+
 #ifdef	__cplusplus
 }
 #endif
