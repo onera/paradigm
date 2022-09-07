@@ -26,7 +26,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-typedef struct _pdm_kdtree_seq_t PDM_kdtree_seq_t;
+typedef struct _pdm_kdtree_seq_t     PDM_kdtree_seq_t;
+typedef struct _pdm_kdtree_seq_shm_t PDM_kdtree_seq_shm_t;
 
 /*============================================================================
  * Public function definitions
@@ -35,7 +36,7 @@ typedef struct _pdm_kdtree_seq_t PDM_kdtree_seq_t;
 
 /**
  *
- * \brief Create an kdtree structure
+ * \brief Create a kdtree structure
  *
  * \param [in]   n_point_cloud      Number of point cloud
  * \param [in]   depth_max          Maximum depth
@@ -57,7 +58,7 @@ PDM_kdtree_seq_create
 
 /**
  *
- * \brief Free an kdtree structure
+ * \brief Free a kdtree structure
  *
  * \param [in]   kdtree             Pointer to \ref PDM_kdtree_seq object
  *

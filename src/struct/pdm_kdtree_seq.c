@@ -26,6 +26,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_kdtree_seq.h"
+#include "pdm_kdtree_seq_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -47,48 +48,6 @@ extern "C" {
 /*============================================================================
  * Local structure definitions
  *============================================================================*/
-
-typedef struct {
-
-  int                    *ancestor_id;          /*!< Ids of ancestor in kdtree array */
-  int                    *is_leaf;              /*!< IS a leaf >*/
-  // PDM_kdtree_seq_child_t *location_in_ancestor; /*!< Location in ancestor */
-  int                    *depth;                /*!< Depth in the tree */
-  int                    *children_id;          /*!< Ids of children in kdtree array */
-  int                    *range;                /*!< Ids of children in kdtree array */
-  int                    *idx;                  /*!< Start index of point list for each node */
-  int                    *n_points;             /*!< Number of points in node*/
-  double                 *extents;              /*!< Extents of the node */
-
-} _l_nodes_t;
-
-
-/**
- * \struct _kdtree_seq_t
- * \brief  Define an kdtree
- *
- */
-
-typedef struct  {
-
-  double         extents[6];            /*!< Extents of current process */
-  int            depth_max;             /*!< Maximum depth of the three */
-  int            points_in_leaf_max;    /*!< Maximum number of points in a leaf */
-  double         tolerance;             /*!< Relative geometric tolerance */
-  int            n_nodes;               /*!< Current number of nodes in kdtree */
-  int            n_nodes_max;           /*!< Maximum number of nodes in kdtree */
-  int           *n_points;              /*!< Number of points in each cloud */
-  int            t_n_points;            /*!< total number of points */
-  int            n_point_clouds;        /*!< Number of point cloud */
-  const double **point_clouds;          /*!< points cloud */
-  int           *point_ids;             /*!< Id's of points in it cloud sorted by kdtree (size: n_points + 1) */
-  int           *point_icloud;          /*!< Cloud's of points sorted by kdtree (size: n_points + 1) */
-
-  _l_nodes_t    *nodes;
-
-} _pdm_kdtree_seq_t;
-
-
 
 /*============================================================================
  * Global variable
@@ -432,7 +391,7 @@ _build_kdtree_seq_leaves(const int                      ancestor_id,
                          const double                 **point_coords,
                          int                           *point_icloud_tmp,
                          int                           *point_ids_tmp,
-                         _pdm_kdtree_seq_t             *kdtree,
+                         PDM_kdtree_seq_t              *kdtree,
                          int                            point_range[2])
 {
   if (dbg_kdtree) {
@@ -768,7 +727,7 @@ _point_extents(const int     dim,
 static void
 _build_kdtree
 (
-_pdm_kdtree_seq_t *kdtree
+ PDM_kdtree_seq_t *kdtree
 )
 {
   int point_range[2];
@@ -904,7 +863,7 @@ _pdm_kdtree_seq_t *kdtree
 static void
 _l_nodes_free
 (
- _pdm_kdtree_seq_t *kdtree
+ PDM_kdtree_seq_t *kdtree
  )
 {
   if (kdtree->nodes != NULL) {
@@ -966,7 +925,7 @@ _box_dist2_min
 
 /**
  *
- * \brief Create an kdtree structure
+ * \brief Create a kdtree structure
  *
  * \param [in]   n_point_cloud      Number of point cloud
  * \param [in]   depth_max          Maximum depth
@@ -985,39 +944,39 @@ PDM_kdtree_seq_create
  const double tolerance
 )
 {
-  _pdm_kdtree_seq_t *kdtree = (_pdm_kdtree_seq_t *) malloc(sizeof(_pdm_kdtree_seq_t));
+  PDM_kdtree_seq_t *kdtree = (PDM_kdtree_seq_t *) malloc(sizeof(PDM_kdtree_seq_t));
 
-  kdtree->n_point_clouds = n_point_cloud;
-  kdtree->depth_max = depth_max;
+  kdtree->n_point_clouds     = n_point_cloud;
+  kdtree->depth_max          = depth_max;
   kdtree->points_in_leaf_max = points_in_leaf_max;
-  kdtree->tolerance = tolerance;
+  kdtree->tolerance          = tolerance;
 
-  kdtree->n_nodes = 0;
+  kdtree->n_nodes     = 0;
   kdtree->n_nodes_max = 0;
 
-  kdtree->n_points = malloc (sizeof(double) * n_point_cloud);
+  kdtree->n_points     = malloc (sizeof(double  ) * n_point_cloud);
   kdtree->point_clouds = malloc (sizeof(double *) * n_point_cloud);
   for (int i = 0; i < n_point_cloud; i++) {
-    kdtree->n_points[i] = 0;
+    kdtree->n_points[i]     = 0;
     kdtree->point_clouds[i] = NULL;
   }
 
   kdtree->point_icloud = NULL;
-  kdtree->point_ids = NULL;
-  kdtree->nodes = NULL;
+  kdtree->point_ids    = NULL;
+  kdtree->nodes        = NULL;
   kdtree->t_n_points = 0;
   for (int i = 0; i < 3; i++) {
     kdtree->extents[i]     =  HUGE_VAL;
     kdtree->extents[i + 3] = -HUGE_VAL;
   }
 
-  return (PDM_kdtree_seq_t *) kdtree;
+  return kdtree;
 }
 
 
 /**
  *
- * \brief Free an kdtree structure
+ * \brief Free a kdtree structure
  *
  * \param [in]   kdtree             Pointer to \ref PDM_kdtree_seq object
  *
@@ -1029,15 +988,12 @@ PDM_kdtree_seq_free
  PDM_kdtree_seq_t *kdtree
 )
 {
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
+  free (kdtree->n_points);
+  free (kdtree->point_clouds);
+  free (kdtree->point_ids);
+  free (kdtree->point_icloud);
 
-  free (_kdtree->n_points);
-  free (_kdtree->point_clouds);
-  free (_kdtree->point_ids);
-  // free (_kdtree->nodes);
-  free (_kdtree->point_icloud);
-
-  _l_nodes_free(_kdtree);
+  _l_nodes_free(kdtree);
 
   free (kdtree);
 }
@@ -1065,10 +1021,8 @@ PDM_kdtree_seq_point_cloud_set
  const double     *coords
 )
 {
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
-
-  _kdtree->n_points[i_point_cloud] = n_points;
-  _kdtree->point_clouds[i_point_cloud] = coords;
+  kdtree->n_points    [i_point_cloud] = n_points;
+  kdtree->point_clouds[i_point_cloud] = coords;
 }
 
 
@@ -1087,10 +1041,8 @@ PDM_kdtree_seq_build
  PDM_kdtree_seq_t *kdtree
 )
 {
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
-
-  if (_kdtree->nodes == NULL) {
-    _build_kdtree (_kdtree);
+  if (kdtree->nodes == NULL) {
+    _build_kdtree(kdtree);
   }
 
 }
@@ -1112,15 +1064,7 @@ void PDM_kdtree_seq_write_nodes
  const char       *filename
  )
 {
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
-
-  _l_nodes_t *nodes = _kdtree->nodes;
-
-  // count leaves
-  int n_leaves = 0;
-  for (int i = 0; i < _kdtree->n_nodes; i++) {
-    if (nodes->is_leaf[i]) n_leaves++;
-  }
+  _l_nodes_t *nodes = kdtree->nodes;
 
   double tol_visu = 1e-3;
   double _ext[6];
@@ -1133,65 +1077,59 @@ void PDM_kdtree_seq_write_nodes
   fprintf(f, "ASCII\n");
   fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
 
-  fprintf(f, "POINTS %d double\n", 8*_kdtree->n_nodes);//n_leaves);
-  for (int inode = 0; inode < _kdtree->n_nodes; inode++) {
-    if (1) {//nodes->is_leaf[inode]) {
-      double *ext = nodes->extents + 6*inode;
+  fprintf(f, "POINTS %d double\n", 8*kdtree->n_nodes);
+  for (int inode = 0; inode < kdtree->n_nodes; inode++) {
+    double *ext = nodes->extents + 6*inode;
 
-      if (1 && (_kdtree->nodes->range[2*inode+1] - _kdtree->nodes->range[2*inode] == 1)) {
-        // Trick to visualize nodes with degenerate extents (single point)
-        ext = _ext;
-        for (int i = 0; i < 3; i++) {
-          double x = nodes->extents[6*inode + i];
-          double eps = tol_visu*(_kdtree->extents[i+3] - _kdtree->extents[i]);
-          ext[i  ] = x - eps;
-          ext[i+3] = x + eps;
-        }
+    if (1 && (kdtree->nodes->range[2*inode+1] - kdtree->nodes->range[2*inode] == 1)) {
+      // Trick to visualize nodes with degenerate extents (single point)
+      ext = _ext;
+      for (int i = 0; i < 3; i++) {
+        double x = nodes->extents[6*inode + i];
+        double eps = tol_visu*(kdtree->extents[i+3] - kdtree->extents[i]);
+        ext[i  ] = x - eps;
+        ext[i+3] = x + eps;
       }
+    }
 
-      for (int k = 0; k < 2; k++) {
-        for (int j = 0; j < 2; j++) {
-          for (int i = 0; i < 2; i++) {
-            int ii = (1-j)*i + j*(1-i);
-            fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
-          }
+    for (int k = 0; k < 2; k++) {
+      for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 2; i++) {
+          int ii = (1-j)*i + j*(1-i);
+          fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
         }
       }
     }
   }
 
-  fprintf(f, "CELLS %d %d\n", _kdtree->n_nodes, 9*_kdtree->n_nodes);//n_leaves, 9*n_leaves);
-  int ileaf = 0;
-  for (int inode = 0; inode < _kdtree->n_nodes; inode++) {
-    if (1) {//nodes->is_leaf[inode]) {
-      fprintf(f, "8 ");
-      for (int j = 0; j < 8; j++) {
-        fprintf(f, "%d ", 8*ileaf+j);
-      }
-      fprintf(f, "\n");
-      ileaf++;
+  fprintf(f, "CELLS %d %d\n", kdtree->n_nodes, 9*kdtree->n_nodes);
+  for (int inode = 0; inode < kdtree->n_nodes; inode++) {
+    fprintf(f, "8 ");
+    for (int j = 0; j < 8; j++) {
+      fprintf(f, "%d ", 8*inode+j);
     }
+    fprintf(f, "\n");
   }
 
-  fprintf(f, "CELL_TYPES %d\n", _kdtree->n_nodes);
-  for (int i = 0; i < _kdtree->n_nodes; i++) {//n_leaves; i++) {
+  fprintf(f, "CELL_TYPES %d\n", kdtree->n_nodes);
+  for (int i = 0; i < kdtree->n_nodes; i++) {
     fprintf(f, "%d\n", 12);
   }
 
-  fprintf(f, "CELL_DATA %d\n", _kdtree->n_nodes);//_kdtree->n_nodesn_leaves);
+  fprintf(f, "CELL_DATA %d\n", kdtree->n_nodes);
 
   fprintf(f, "FIELD node_field 3\n");
-  fprintf(f, "depth 1 %d int\n", _kdtree->n_nodes);//_kdtree->n_nodesn_leaves);
-  for (int i = 0; i < _kdtree->n_nodes; i++) {//n_leaves; i++) {
-    fprintf(f, "%d\n", _kdtree->nodes->depth[i]);
+  fprintf(f, "depth 1 %d int\n", kdtree->n_nodes);
+  for (int i = 0; i < kdtree->n_nodes; i++) {
+    fprintf(f, "%d\n", kdtree->nodes->depth[i]);
   }
-  fprintf(f, "is_leaf 1 %d int\n", _kdtree->n_nodes);//_kdtree->n_nodesn_leaves);
-  for (int i = 0; i < _kdtree->n_nodes; i++) {//n_leaves; i++) {
-    fprintf(f, "%d\n", _kdtree->nodes->is_leaf[i]);
+  fprintf(f, "is_leaf 1 %d int\n", kdtree->n_nodes);
+  for (int i = 0; i < kdtree->n_nodes; i++) {
+    fprintf(f, "%d\n", kdtree->nodes->is_leaf[i]);
   }
-  fprintf(f, "n_pts 1 %d int\n", _kdtree->n_nodes);//_kdtree->n_nodesn_leaves);
-  for (int i = 0; i < _kdtree->n_nodes; i++) {//n_leaves; i++) {
-    fprintf(f, "%d\n", _kdtree->nodes->range[2*i+1] - _kdtree->nodes->range[2*i]);
+  fprintf(f, "n_pts 1 %d int\n", kdtree->n_nodes);
+  for (int i = 0; i < kdtree->n_nodes; i++) {
+    fprintf(f, "%d\n", kdtree->nodes->range[2*i+1] - kdtree->nodes->range[2*i]);
   }
 
   fclose(f);
@@ -1229,9 +1167,7 @@ PDM_kdtree_seq_points_inside_ball
 {
   const int n_children = 2;
 
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
-
-  int s_pt_stack = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
+  int s_pt_stack = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
 
 
   *ball_pts_idx = malloc(sizeof(int) * (n_ball + 1));
@@ -1246,7 +1182,7 @@ PDM_kdtree_seq_points_inside_ball
   double *pib_dist2 = *ball_pts_dist2;
 
 
-  _l_nodes_t *nodes = _kdtree->nodes;
+  _l_nodes_t *nodes = kdtree->nodes;
 
 
   int *stack = malloc(sizeof(int) * s_pt_stack);
@@ -1280,11 +1216,11 @@ PDM_kdtree_seq_points_inside_ball
       if (nodes->is_leaf[node_id]) {
         /* Leaf node */
 
-        int *point_clouds_id = _kdtree->point_icloud + nodes->range[2*node_id];
-        int *point_indexes   = _kdtree->point_ids    + nodes->range[2*node_id];
+        int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
+        int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
 
         for (int i = 0; i < nodes->n_points[node_id]; i++) {
-          const double *_pt = _kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
+          const double *_pt = kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
 
           double dist2 = 0.;
           for (int j = 0; j < 3; j++) {
@@ -1378,16 +1314,15 @@ PDM_kdtree_seq_extract_extent
   double           **box_extents
 )
 {
-  _pdm_kdtree_seq_t *_kdtree = (_pdm_kdtree_seq_t *) kdtree;
-  _l_nodes_t *nodes = _kdtree->nodes;
+  _l_nodes_t *nodes = kdtree->nodes;
 
   int n_children   = 2;
-  int s_pt_stack   = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
+  int s_pt_stack   = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
   int *stack_id    = malloc (s_pt_stack * sizeof(int              ));
   int *stack_depth  = malloc (s_pt_stack * sizeof(int              ));
 
-  // int n_extract_max = ((n_children - 1) * (_kdtree->depth_max - 1) + n_children);
-  int *id_to_extract = malloc( _kdtree->n_nodes * sizeof(int));
+  // int n_extract_max = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
+  int *id_to_extract = malloc( kdtree->n_nodes * sizeof(int));
 
   int n_extract = 0;
   int pos_stack = 0;
