@@ -500,41 +500,35 @@ _build_kdtree_seq_leaves(const int                      ancestor_id,
     }
 
     /* Choose split point */
-    // double step = (extents[3+_split_direction] - extents[_split_direction]) * i_n_sample;
-    // for (i = 0; i <= n_sample; i++) {
-    //   bucket[i] = extents[_split_direction] + step*i;
-    // }
-
-    // mid = _evaluate_distribution(n_sample,
-    //                              bucket,
-    //                              (double) _n_points * i_n_sample);
-    // // mid = 0.5*(extents[_split_direction] + extents[3+_split_direction]);
-    // if (dbg_kdtree) {
-    //   log_trace("_split_direction = %d, mid = %f\n",
-    //             _split_direction, mid);
-    // }
     if (dbg_kdtree) {
       log_trace("_split_direction = %d\n", _split_direction);
     }
 
-    mid = _median_point(_split_direction,
-                        extents[_split_direction],
-                        extents[3+_split_direction],
-                        point_range,
-                        kdtree->point_icloud,
-                        kdtree->point_ids,
-                        point_coords);
+    if (0) {
+      mid = _median_point(_split_direction,
+                          extents[_split_direction],
+                          extents[3+_split_direction],
+                          point_range,
+                          kdtree->point_icloud,
+                          kdtree->point_ids,
+                          point_coords);
 
-    log_trace("true mediant = %f\n", mid);
-
-    mid = _approx_median_point(6,
-                               _split_direction,
-                               extents[_split_direction],
-                               extents[3+_split_direction],
-                               point_range,
-                               kdtree->point_icloud,
-                               kdtree->point_ids,
-                               point_coords);
+      // log_trace("true median = %f\n", mid);
+    }
+    else {
+      mid = _approx_median_point(6,
+                                 _split_direction,
+                                 extents[_split_direction],
+                                 extents[3+_split_direction],
+                                 point_range,
+                                 kdtree->point_icloud,
+                                 kdtree->point_ids,
+                                 point_coords);
+    }
+    if (dbg_kdtree) {
+      log_trace("_split_direction = %d, mid = %f\n",
+                _split_direction, mid);
+    }
 
 
     /* Count points in each child node */
