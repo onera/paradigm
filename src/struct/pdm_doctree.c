@@ -227,20 +227,23 @@ PDM_doctree_build
    */
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
+  int    *coarse_box_weight  = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
     int n_depth_per_proc = 2;
     PDM_octree_seq_extract_extent(coarse_octree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
-                                  &coarse_box_extents);
+                                  &coarse_box_extents,
+                                  &coarse_box_weight);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
     int n_depth_per_proc = 16;
     PDM_kdtree_seq_extract_extent(coarse_kdtree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
-                                  &coarse_box_extents);
+                                  &coarse_box_extents,
+                                  &coarse_box_weight);
   }
 
   /*

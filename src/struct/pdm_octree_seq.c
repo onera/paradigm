@@ -1227,16 +1227,17 @@ PDM_octree_seq_points_get
   *point_indexes = octree->point_ids + octree->nodes[node_id].range[0];
 }
 
+
 /**
  *
- * \brief Get indexes of points inside a node
+ * \brief Get node extents of subtree of given depth and starting from given root
  *
- * \param [in]   octree             Pointer to \ref PDM_octree_seq object
- * \param [in]   node_id            Node identifier
- * \param [out]  point_clouds_id    Point clouds number
- *                                  (size = Number of points inside the node)
- * \param [out]  point_indexes      Point indexes
- *                                  (size = Number of points inside the node)
+ * \param [in]  octree               Pointer to \ref PDM_octree_seq object
+ * \param [in]  root_id              ID of subtree root
+ * \param [in]  n_depth              Depth of subtree
+ * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_extents         Extents of subtree nodes
+ * \param [out] node_weight          Weights of subtree nodes
  *
  */
 
@@ -1246,8 +1247,9 @@ PDM_octree_seq_extract_extent
   PDM_octree_seq_t  *octree,
   int                root_id,
   int                n_depth,
-  int               *n_box,
-  double           **box_extents
+  int               *n_node,
+  double           **node_extents,
+  int              **node_weight
 )
 {
   _l_octant_t *octants = octree->octants;
@@ -1295,15 +1297,18 @@ PDM_octree_seq_extract_extent
   free(stack_depth);
 
   double* _extents = malloc(n_extract * 6 * sizeof(double));
+  int   * _n_pts   = malloc(n_extract *     sizeof(int   ));
   for(int i = 0; i < n_extract; ++i) {
     int node_id = id_to_extract[i];
+    _n_pts[i] = octants->n_points[node_id];
     for(int k = 0; k < 6; ++k) {
       _extents[6*i+k] = octants->extents[6*node_id+k];
     }
   }
 
-  *n_box       = n_extract;
-  *box_extents = _extents;
+  *n_node       = n_extract;
+  *node_extents = _extents;
+  *node_weight  = _n_pts;
 
   free(id_to_extract);
 

@@ -161,8 +161,9 @@ PDM_kdtree_seq_points_inside_ball
  * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
  * \param [in]  root_id              ID of subtree root
  * \param [in]  n_depth              Depth of subtree
- * \param [out] n_box                Number of subtree nodes
- * \param [out] box_extents          Extents of subtree nodes
+ * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_extents         Extents of subtree nodes
+ * \param [out] node_weight          Weights of subtree nodes
  *
  */
 
@@ -172,8 +173,9 @@ PDM_kdtree_seq_extract_extent
   PDM_kdtree_seq_t  *kdtree,
   int                root_id,
   int                n_depth,
-  int               *n_box,
-  double           **box_extents
+  int               *n_node,
+  double           **node_extents,
+  int              **node_weight
 );
 
 #ifdef  __cplusplus

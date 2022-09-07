@@ -395,14 +395,28 @@ void PDM_octree_seq_write_octants2
 
 
 
+/**
+ *
+ * \brief Get node extents of subtree of given depth and starting from given root
+ *
+ * \param [in]  octree               Pointer to \ref PDM_octree_seq object
+ * \param [in]  root_id              ID of subtree root
+ * \param [in]  n_depth              Depth of subtree
+ * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_extents         Extents of subtree nodes
+ * \param [out] node_weight          Weights of subtree nodes
+ *
+ */
+
 void
 PDM_octree_seq_extract_extent
 (
   PDM_octree_seq_t  *octree,
-  int                node_id,
+  int                root_id,
   int                n_depth,
-  int               *n_box,
-  double           **box_extents
+  int               *n_node,
+  double           **node_extents,
+  int              **node_weight
 );
 
 PDM_octree_seq_shm_t*
