@@ -254,10 +254,102 @@ PDM_doctree_build
    *   On connait le lien shared_to_box
    */
 
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm comm_dist_graph;
+
+  int  n_degree_in = 0;
+  int *neighbor_in = NULL;
+
+  PDM_MPI_setup_hybrid_dist_comm_graph(doct->comm,
+                                       &comm_shared,
+                                       &comm_dist_graph,
+                                       &n_degree_in,
+                                       &neighbor_in);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  /*
+   * Equilibrate among nodes/numa - To reduce memory footprint we set up data in shared memory
+   */
+  int *lrecv_count = malloc(n_degree_in * sizeof(int));
+  PDM_MPI_Neighbor_allgather(&n_coarse_box , 1, PDM_MPI_INT,
+                             lrecv_count   , 1, PDM_MPI_INT, comm_dist_graph);
+
+  PDM_mpi_win_shared_t* wshared_local_nodes_n   = PDM_mpi_win_shared_create(n_rank  , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wshared_local_nodes_idx = PDM_mpi_win_shared_create(n_rank+1, sizeof(int), comm_shared);
+  int *shared_local_nodes_n   = PDM_mpi_win_shared_get(wshared_local_nodes_n);
+  int *shared_local_nodes_idx = PDM_mpi_win_shared_get(wshared_local_nodes_idx);
+  PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_n  );
+  PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_idx);
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    shared_local_nodes_n[neighbor_in[i]] = lrecv_count[i];
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  if(i_rank_in_shm == 0) {
+    shared_local_nodes_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_idx[i+1] = shared_local_nodes_idx[i] + shared_local_nodes_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(shared_local_nodes_n  , n_rank , "shared_local_nodes_n   ::");
+    PDM_log_trace_array_int(shared_local_nodes_idx, n_rank+1 , "shared_local_nodes_idx ::");
+    PDM_log_trace_array_int(neighbor_in, n_degree_in , "neighbor_in ::");
+  }
+
+  // Hook local recv_shift
+  int *recv_shift = malloc(n_degree_in * sizeof(int));
+  for(int i = 0; i < n_degree_in; ++i) {
+    recv_shift[i] = shared_local_nodes_idx[neighbor_in[i]];
+  }
+
+  /*
+   * Exchange extents
+   */
+  PDM_mpi_win_shared_t* wshared_box_n_pts   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , comm_shared);
+  PDM_mpi_win_shared_t* wshared_box_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), comm_shared);
+  int    *shared_box_n_pts   = PDM_mpi_win_shared_get(wshared_box_n_pts  );
+  double *shared_box_extents = PDM_mpi_win_shared_get(wshared_box_extents);
+  PDM_mpi_win_shared_lock_all (0, wshared_box_n_pts  );
+  PDM_mpi_win_shared_lock_all (0, wshared_box_extents);
+
+  int* box_n_pts = NULL;
+  PDM_MPI_Neighbor_allgatherv(box_n_pts       , n_coarse_box, PDM_MPI_INT,
+                              shared_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, comm_dist_graph);
+  PDM_MPI_Barrier(comm_shared);
 
 
+  /* Update */
+  for(int i = 0; i < n_degree_in; ++i) {
+    recv_shift [i]  = shared_local_nodes_idx[neighbor_in[i]];
+    lrecv_count[i] *= 6;
+  }
+
+  PDM_MPI_Neighbor_allgatherv(coarse_box_extents, 6 * n_coarse_box, PDM_MPI_DOUBLE,
+                              shared_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, comm_dist_graph);
+  PDM_MPI_Barrier(comm_shared);
 
 
+  PDM_mpi_win_shared_unlock_all(wshared_box_n_pts);
+  PDM_mpi_win_shared_unlock_all(wshared_box_extents);
+
+  PDM_mpi_win_shared_free(wshared_box_n_pts);
+  PDM_mpi_win_shared_free(wshared_box_extents);
+
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
+
+  PDM_mpi_win_shared_free (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_free (wshared_local_nodes_idx);
+
+  free(recv_shift);
+  free(lrecv_count);
 
    // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
    //                                      -1,
@@ -394,6 +486,9 @@ PDM_doctree_build
    */
 
 
+  PDM_MPI_Comm_free(&comm_dist_graph);
+  PDM_MPI_Comm_free(&comm_shared);
+  free(neighbor_in);
 
 
   /*
