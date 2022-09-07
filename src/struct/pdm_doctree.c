@@ -47,9 +47,71 @@ extern "C"
  * Local macro definitions
  *============================================================================*/
 
-/*============================================================================
- * Type definitions
+/*=============================================================================
+ * Static global variables
  *============================================================================*/
+
+/*=============================================================================
+ * Static function definitions
+ *============================================================================*/
+
+void
+_redistribute_pts_geom
+(
+ PDM_doctree_t        *doct,
+ PDM_part_to_block_t **ptb_out,
+ double              **dpts_coords_out
+)
+{
+
+  /*
+   * Redistribute all pts and impose hilbert ordering
+   */
+  int **weight = malloc(doct->n_part_cloud * sizeof(int *));
+  for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
+    weight[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
+    for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
+      weight[i_part][i] = 1;
+    }
+  }
+
+
+  PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
+                                                           1.,
+                                                           PDM_PART_GEOM_HILBERT,
+                                                           doct->pts_coords,
+                                                           doct->pts_g_num,
+                                                           weight,
+                                                           doct->n_point_cloud,
+                                                           doct->n_part_cloud,
+                                                           doct->comm);
+
+  for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
+    free(weight[i_part]);
+  }
+  free(weight);
+
+  double *blk_pts_coord = NULL;
+  PDM_part_to_block_exch(ptb,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) doct->pts_coords,
+                         NULL,
+               (void **) &blk_pts_coord);
+
+  /* Transport init_location - Attention au merge du ptb à faire */
+
+  // int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
+  // PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
+  // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
+
+  *ptb_out         = ptb;
+  *dpts_coords_out = blk_pts_coord;
+
+}
 
 
 
@@ -116,79 +178,14 @@ PDM_doctree_build
   int n_rank;
   PDM_MPI_Comm_size (doct->comm, &n_rank);
 
-  /*
-   * Redistribute all pts and impose hilbert ordering
-   */
-  int **weight = malloc(doct->n_part_cloud * sizeof(int *));
-  for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-    weight[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
-    for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
-      weight[i_part][i] = 1;
-    }
-  }
+  double              *blk_pts_coord = NULL;
+  PDM_part_to_block_t *ptb           = NULL;
+  _redistribute_pts_geom(doct, &ptb, &blk_pts_coord);
 
-
-  PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
-                                                           1.,
-                                                           PDM_PART_GEOM_HILBERT,
-                                                           doct->pts_coords,
-                                                           doct->pts_g_num,
-                                                           weight,
-                                                           doct->n_point_cloud,
-                                                           doct->n_part_cloud,
-                                                           doct->comm);
-
-  for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-    free(weight[i_part]);
-  }
-  free(weight);
-
-  double *blk_pts_coord = NULL;
-  PDM_part_to_block_exch(ptb,
-                         3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         1,
-                         NULL,
-               (void **) doct->pts_coords,
-                         NULL,
-               (void **) &blk_pts_coord);
-
-  int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
-  PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
-
   /*
-   * Step 2 : Create coarse octree to equilibrate leaf
-   *   --> Il faut la solicitation
-   *   Creation bt_shared temporaire
-   *     puis solicitation
-   *   On connait le lien shared_to_box
-   */
-
-   // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
-   //                                      -1,
-   //                                      n_boxes,
-   //                                      box_extents,
-   //                                      &shared_to_box_idx,
-   //                                      &shared_to_box);
-   // Preparation of send count and box_rank/box_rank_idx
-   // for(int i = 0; i < n_rank; ++i) {
-   //   for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
-   //     send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
-   //   }
-   // }
-
-   /*
-    * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
-    * Une fois qu'on connait le tri, on peut faire l'échange en asynchrone pdt que l'arbre se construit ?
-    *
-    */
-
-
-  /*
-   * Step 3 : Build local octree
+   * Step 2 : Build local coarse tree
    */
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
   PDM_octree_seq_t *coarse_octree = NULL;
@@ -225,25 +222,20 @@ PDM_doctree_build
     PDM_kdtree_seq_build(coarse_kdtree);
   }
 
-
-  /*
-   * Setup global tree to orien resarch in parallel
-   *    We take the first two level of the tree
-   */
-  int n_depth_per_proc = 4;
-
   /*
    * Extract extents on all local_tree
    */
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    int n_depth_per_proc = 2;
     PDM_octree_seq_extract_extent(coarse_octree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    int n_depth_per_proc = 16;
     PDM_kdtree_seq_extract_extent(coarse_kdtree,
                                   0,
                                   n_depth_per_proc,
@@ -251,6 +243,37 @@ PDM_doctree_build
                                   &coarse_box_extents);
   }
 
+  /*
+   * Step 2 : Create coarse octree to equilibrate leaf
+   *   --> Il faut la solicitation
+   *   Creation bt_shared temporaire
+   *     puis solicitation
+   *   On connait le lien shared_to_box
+   */
+
+
+
+
+
+
+   // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
+   //                                      -1,
+   //                                      n_boxes,
+   //                                      box_extents,
+   //                                      &shared_to_box_idx,
+   //                                      &shared_to_box);
+   // Preparation of send count and box_rank/box_rank_idx
+   // for(int i = 0; i < n_rank; ++i) {
+   //   for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
+   //     send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
+   //   }
+   // }
+
+   /*
+    * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
+    * Une fois qu'on connait le tri, on peut faire l'échange en asynchrone pdt que l'arbre se construit ?
+    *
+    */
 
   /*
    * Build a box_tree
