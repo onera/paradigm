@@ -23,6 +23,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_doctree.h"
+#include "pdm_box_gen.h"
 
 /*============================================================================
  * Macro definitions
@@ -206,14 +207,31 @@ char *argv[]
                         NULL,
                         src_g_num,
                         src_coord);
+  int n_box = 0;
+  int n_vtx_x = 10;
+  int n_vtx_y = 10;
+  int n_vtx_z = 10;
+  double      *box_extents = NULL;
+  PDM_g_num_t *box_gnum    = NULL;
+  PDM_box_gen_cartesian(n_vtx_x,
+                        n_vtx_y,
+                        n_vtx_z,
+                        1.,
+                        &n_box,
+                        &box_extents,
+                        &box_gnum);
 
+  int **init_locatation_box = NULL;
   PDM_doctree_solicitation_set(doct,
                                PDM_TREE_SOLICITATION_BOXES_POINTS,
                                1,
                                &n_box,
-                               &init_locatation,
+                               &init_locatation_box,
                                &box_gnum,
                                &box_extents);
+
+  free(box_gnum);
+  free(box_extents);
 
   PDM_doctree_build(doct);
 
