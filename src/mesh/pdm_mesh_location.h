@@ -369,6 +369,21 @@ PDM_mesh_location_t        *ml
 
 /**
  *
+ * \brief Compute point location optim
+ *
+ * \param [in]   id  Pointer to \ref PDM_mesh_location object
+ *
+ */
+
+void
+PDM_mesh_location_compute_optim
+(
+ PDM_mesh_location_t *ml
+);
+
+
+/**
+ *
  * \brief Get point location
  *
  * \param [in]   id                    Pointer to \ref PDM_mesh_location object
