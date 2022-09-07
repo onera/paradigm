@@ -32,6 +32,7 @@
 #include "pdm_distrib.h"
 #include "pdm_binary_search.h"
 #include "pdm_octree_seq.h"
+#include "pdm_kdtree_seq.h"
 #include "pdm_vtk.h"
 
 
@@ -191,6 +192,7 @@ PDM_doctree_build
    */
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
   PDM_octree_seq_t *coarse_octree = NULL;
+  PDM_kdtree_seq_t *coarse_kdtree = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
 
     assert(coarse_octree == NULL);
@@ -207,8 +209,20 @@ PDM_doctree_build
     PDM_octree_seq_build(coarse_octree);
 
 
-  } else {
-    abort();
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+
+    assert(coarse_kdtree == NULL);
+    coarse_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
+                                          doct->local_depth_max,
+                                          doct->local_points_in_leaf_max,
+                                          doct->local_tolerance);
+
+    PDM_kdtree_seq_point_cloud_set(coarse_kdtree,
+                                   0,
+                                   dn_pts,
+                                   blk_pts_coord);
+
+    PDM_kdtree_seq_build(coarse_kdtree);
   }
 
 
@@ -229,8 +243,12 @@ PDM_doctree_build
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents);
-  } else {
-    abort();
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    // PDM_kdtree_seq_extract_extent(coarse_kdtree,
+    //                               0,
+    //                               n_depth_per_proc,
+    //                               &n_coarse_box,
+    //                               &coarse_box_extents);
   }
 
 
@@ -389,8 +407,14 @@ PDM_doctree_free
   free(doct->pts_coords       );
   free(doct->pts_init_location);
 
-  if(doct->local_octree != NULL) {
-    PDM_octree_seq_free(doct->local_octree);
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    if(doct->local_octree != NULL) {
+      PDM_octree_seq_free(doct->local_octree);
+    }
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    if(doct->local_kdtree != NULL) {
+      PDM_kdtree_seq_free(doct->local_kdtree);
+    }
   }
 
   free(doct);

@@ -11,6 +11,7 @@
 
 #include "pdm_mpi.h"
 #include "pdm_octree_seq.h"
+#include "pdm_kdtree_seq.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,6 +50,11 @@ struct _pdm_doctree_t {
   PDM_octree_seq_t          *global_octree;              /*! Global octree to orient among procs        */
   PDM_octree_seq_t          *local_octree;               /*! Local octree                               */
   PDM_octree_seq_t          *shmem_octree;               /*! Shared octree among cores in current nodes */
+
+  PDM_kdtree_seq_t          *global_kdtree;              /*! Global octree to orient among procs        */
+  PDM_kdtree_seq_t          *local_kdtree;               /*! Local octree                               */
+  PDM_kdtree_seq_t          *shmem_kdtree;               /*! Shared octree among cores in current nodes */
+
 
   PDM_MPI_Comm               comm_shared;
 
