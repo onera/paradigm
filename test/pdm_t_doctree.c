@@ -192,11 +192,13 @@ char *argv[]
                               &src_coord,
                               &src_g_num);
 
+  // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
+  PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
   PDM_doctree_t *doct = PDM_doctree_create(comm,
                                            3,
                                            1,
                                            NULL, // global_extents
-                                           PDM_DOCTREE_LOCAL_TREE_OCTREE);
+                                           local_tree_kind);
 
   PDM_doctree_point_set(doct,
                         0,
@@ -204,6 +206,14 @@ char *argv[]
                         NULL,
                         src_g_num,
                         src_coord);
+
+  PDM_doctree_solicitation_set(doct,
+                               PDM_TREE_SOLICITATION_BOXES_POINTS,
+                               1,
+                               &n_box,
+                               &init_locatation,
+                               &box_gnum,
+                               &box_extents);
 
   PDM_doctree_build(doct);
 

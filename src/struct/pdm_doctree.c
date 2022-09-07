@@ -230,7 +230,7 @@ PDM_doctree_build
    * Setup global tree to orien resarch in parallel
    *    We take the first two level of the tree
    */
-  int n_depth_per_proc = 1;
+  int n_depth_per_proc = 4;
 
   /*
    * Extract extents on all local_tree
@@ -244,11 +244,11 @@ PDM_doctree_build
                                   &n_coarse_box,
                                   &coarse_box_extents);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    // PDM_kdtree_seq_extract_extent(coarse_kdtree,
-    //                               0,
-    //                               n_depth_per_proc,
-    //                               &n_coarse_box,
-    //                               &coarse_box_extents);
+    PDM_kdtree_seq_extract_extent(coarse_kdtree,
+                                  0,
+                                  n_depth_per_proc,
+                                  &n_coarse_box,
+                                  &coarse_box_extents);
   }
 
 
@@ -375,6 +375,7 @@ PDM_doctree_build
    */
   // PDM_octree_seq_free(coarse_octree);
   doct->local_octree = coarse_octree;
+  doct->local_kdtree = coarse_kdtree;
 }
 
 void
@@ -395,6 +396,36 @@ PDM_doctree_point_set
   doct->pts_coords       [i_part_cloud] = (double      *) pts_coords;
   doct->pts_init_location[i_part_cloud] = (int         *) pts_init_location;
 }
+
+void
+PDM_doctree_solicitation_set
+(
+ PDM_doctree_t             *doct,
+ PDM_tree_solicitation_t    solicitation_kind,
+ int                        n_part,
+ int                       *n_entity,
+ int                      **init_location_entity,
+ PDM_g_num_t              **entity_gnum,
+ double                   **entity_coords
+)
+{
+
+}
+
+// void
+// PDM_doctree_results_get
+// (
+//  PDM_doctree_t      *doct,
+//  int                *init_location_entity,
+//  int                *dentity1_entity2_idx,
+//  PDM_g_num_t        *dentity1_entity2,
+//  int                *
+//  double             *entity_coords
+// )
+// {
+
+// }
+
 
 void
 PDM_doctree_free

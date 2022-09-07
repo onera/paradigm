@@ -27,7 +27,10 @@ extern "C" {
 
 typedef struct _pdm_doctree_t PDM_doctree_t;
 
-
+typedef enum {
+  PDM_TREE_SOLICITATION_BOXES_POINTS,
+  PDM_TREE_SOLICITATION_BOXES_BOXES
+} PDM_tree_solicitation_t;
 
 /*============================================================================
  * Public function definitions
@@ -70,6 +73,17 @@ PDM_doctree_free
   PDM_doctree_t   *doct
 );
 
+void
+PDM_doctree_solicitation_set
+(
+ PDM_doctree_t             *doct,
+ PDM_tree_solicitation_t    solicitation_kind,
+ int                        n_part,
+ int                       *n_entity,
+ int                      **init_location_entity,
+ PDM_g_num_t              **entity_gnum,
+ double                   **entity_coords
+);
 
 
 #ifdef  __cplusplus
