@@ -213,10 +213,12 @@ char *argv[]
   int n_vtx_z = 10;
   double      *box_extents = NULL;
   PDM_g_num_t *box_gnum    = NULL;
-  PDM_box_gen_cartesian(n_vtx_x,
+  PDM_box_gen_cartesian(comm,
+                        n_vtx_x,
                         n_vtx_y,
                         n_vtx_z,
-                        1.,
+                        0., 0., 0.,
+                        1., 1., 1.,
                         &n_box,
                         &box_extents,
                         &box_gnum);
