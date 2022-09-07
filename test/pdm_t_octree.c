@@ -131,77 +131,6 @@ _read_args
 
 
 
-static double
-_random01
-(
- void
-)
-{
-  return 2 * ((double) rand() / (double) RAND_MAX) - 1;
-}
-
-static void
-_random_boxes
-(
- PDM_MPI_Comm   comm,
- PDM_g_num_t    gn_box,
- int           *n_box,
- double       **box_extents,
- PDM_g_num_t  **box_ln_to_gn
- )
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-
-  /*
-   *  Generate random boxes
-   */
-  PDM_g_num_t *distrib_box = PDM_compute_uniform_entity_distribution (comm,
-                                                                      gn_box);
-  *n_box = (int) (distrib_box[i_rank+1] - distrib_box[i_rank]);
-  for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
-    rand();
-  }
-  free (distrib_box);
-
-  double *box_centers = malloc (sizeof(double) * (*n_box) * 3);
-  *box_extents        = malloc (sizeof(double) * (*n_box) * 6);
-  for (int i = 0; i < (*n_box); i++) {
-    for (int j = 0; j < 3; j++) {
-      double x1 = _random01();
-      double x2 = _random01();
-
-      box_centers[3*i + j] = 0.5 * (x1 + x2);
-      (*box_extents)[6*i + j]     = PDM_MIN (x1, x2);
-      (*box_extents)[6*i + j + 3] = PDM_MAX (x1, x2);
-    }
-  }
-
-
-  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3,
-                                              1,
-                                              PDM_FALSE,
-                                              1.e-3,
-                                              comm,
-                                              PDM_OWNERSHIP_USER);
-
-  PDM_gnum_set_from_coords (gen_gnum,
-                            0,
-                            *n_box,
-                            box_centers,
-                            NULL);
-
-  PDM_gnum_compute (gen_gnum);
-
-  *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
-
-  PDM_gnum_free (gen_gnum);
-  free (box_centers);
-}
-
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -360,22 +289,30 @@ char *argv[]
     double      *box_extents  = NULL;
     PDM_g_num_t *box_ln_to_gn = NULL;
 
-    // _random_boxes(PDM_MPI_COMM_WORLD,
-    //               gn_box,
-    //               &n_box,
-    //               &box_extents,
-    //               &box_ln_to_gn);
-    PDM_box_gen_random(comm,
-                       0,                         // seed
-                       0,                         // geometric_g_num
-                       gn_box,                    // gn_box
-                       0.5*radius,                // min_size
-                       1.5*radius,                // max_size
-                       -radius, -radius, -radius, // x,y,z_min
-                       radius, radius, radius,    // x,y,z_max
-                       &n_box,
-                       &box_extents,
-                       &box_ln_to_gn);
+    if (0) {
+      PDM_box_gen_cartesian(comm,
+                            5,                         // nx
+                            5,                         // ny
+                            5,                         // nz
+                            -radius, -radius, -radius, // x,y,z_min
+                            radius, radius, radius,    // x,y,z_max
+                            &n_box,
+                            &box_extents,
+                            &box_ln_to_gn);
+    }
+    else {
+      PDM_box_gen_random(comm,
+                         0,                         // seed
+                         0,                         // geometric_g_num
+                         gn_box,                    // gn_box
+                         0.5*radius,                // min_size
+                         1.5*radius,                // max_size
+                         -radius, -radius, -radius, // x,y,z_min
+                         radius, radius, radius,    // x,y,z_max
+                         &n_box,
+                         &box_extents,
+                         &box_ln_to_gn);
+    }
 
 
     if(1 == 1) {

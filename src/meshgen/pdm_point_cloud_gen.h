@@ -87,6 +87,45 @@ PDM_point_cloud_gen_random
  );
 
 
+/**
+ *
+ * \brief Generate a cartesian point cloud inside a cuboid.
+ *
+ * \param [in]   comm                   MPI Communicator id
+ * \param [in]   nx                     Number of points in X-direction
+ * \param [in]   ny                     Number of points in Y-direction
+ * \param [in]   nz                     Number of points in Z-direction
+ * \param [in]   x_min                  X-coordinate of the first cuboid corner
+ * \param [in]   y_min                  Y-coordinate of the first cuboid corner
+ * \param [in]   z_min                  Z-coordinate of the first cuboid corner
+ * \param [in]   x_max                  X-coordinate of the opposite cuboid corner
+ * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
+ * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
+ * \param [out]  n_pts                  Local number of points in the cloud
+ * \param [out]  pts_coord              XYZ-coordinates of the local points
+ * \param [out]  pts_ln_to_gn           Global ids of the local points
+ *
+ */
+
+void
+PDM_point_cloud_gen_cartesian
+(
+ PDM_MPI_Comm        comm,
+ const int           nx,
+ const int           ny,
+ const int           nz,
+ const double        x_min,
+ const double        y_min,
+ const double        z_min,
+ const double        x_max,
+ const double        y_max,
+ const double        z_max,
+ int                *n_pts,
+ double            **pts_coord,
+ PDM_g_num_t       **pts_ln_to_gn
+ );
+
+
 #ifdef __cplusplus
 }
 #endif
