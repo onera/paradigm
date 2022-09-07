@@ -338,11 +338,11 @@ char *argv[]
 
     int *box_pts_idx = NULL;
     int *box_pts     = NULL;
-    PDM_octree_seq_inside_boxes(oct_equi,
-                                n_box,
-                                box_extents,
-                                &box_pts_idx,
-                                &box_pts);
+    PDM_octree_seq_points_inside_boxes(oct_equi,
+                                       n_box,
+                                       box_extents,
+                                       &box_pts_idx,
+                                       &box_pts);
 
     PDM_log_trace_connectivity_int(box_pts_idx,
                                    box_pts,
@@ -351,11 +351,11 @@ char *argv[]
 
     int *box_pts2_idx = NULL;
     int *box_pts2     = NULL;
-    PDM_octree_seq_inside_boxes2(oct_equi,
-                                 n_box,
-                                 box_extents,
-                                 &box_pts2_idx,
-                                 &box_pts2);
+    PDM_octree_seq_points_inside_boxes2(oct_equi,
+                                        n_box,
+                                        box_extents,
+                                        &box_pts2_idx,
+                                        &box_pts2);
 
     PDM_log_trace_connectivity_int(box_pts2_idx,
                                    box_pts2,

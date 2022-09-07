@@ -274,13 +274,13 @@ char *argv[]
   int    *pts_inside_ball_idx   = NULL;
   int    *pts_inside_ball_l_num = NULL;
   double *pts_inside_ball_dist2 = NULL;
-  PDM_kdtree_seq_points_inside_ball(kdt,
-                                    n_tgt,
-                                    tgt_coord,
-                                    ball_radius2,
-                                    &pts_inside_ball_idx,
-                                    &pts_inside_ball_l_num,
-                                    &pts_inside_ball_dist2);
+  PDM_kdtree_seq_points_inside_balls(kdt,
+                                     n_tgt,
+                                     tgt_coord,
+                                     ball_radius2,
+                                     &pts_inside_ball_idx,
+                                     &pts_inside_ball_l_num,
+                                     &pts_inside_ball_dist2);
 
   if(1 == 1) {
     char filename[999];
@@ -333,13 +333,13 @@ char *argv[]
                                  src_coord);
   PDM_octree_seq_build(oct);
 
-  PDM_octree_seq_points_inside_ball(oct,
-                                    n_tgt,
-                                    tgt_coord,
-                                    ball_radius2,
-                                    &pts_inside_ball_idx,
-                                    &pts_inside_ball_l_num,
-                                    &pts_inside_ball_dist2);
+  PDM_octree_seq_points_inside_balls(oct,
+                                     n_tgt,
+                                     tgt_coord,
+                                     ball_radius2,
+                                     &pts_inside_ball_idx,
+                                     &pts_inside_ball_l_num,
+                                     &pts_inside_ball_dist2);
   PDM_octree_seq_free(oct);
 
   log_trace("> Octree\n");

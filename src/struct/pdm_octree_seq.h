@@ -353,7 +353,7 @@ double           *closest_octree_pt_dist2
  */
 
 void
-PDM_octree_seq_inside_boxes
+PDM_octree_seq_points_inside_boxes
 (
        PDM_octree_seq_t   *octree,
  const int                 n_box,
@@ -363,7 +363,7 @@ PDM_octree_seq_inside_boxes
 );
 
 void
-PDM_octree_seq_inside_boxes2
+PDM_octree_seq_points_inside_boxes2
 (
        PDM_octree_seq_t   *octree,
  const int                 n_box,
@@ -448,7 +448,7 @@ PDM_octree_seq_shm_free
  */
 
 void
-PDM_octree_seq_points_inside_ball
+PDM_octree_seq_points_inside_balls
 (
  const PDM_octree_seq_t  *octree,
  const int                n_ball,

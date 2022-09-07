@@ -142,7 +142,7 @@ void PDM_kdtree_seq_write_nodes
  */
 
 void
-PDM_kdtree_seq_points_inside_ball
+PDM_kdtree_seq_points_inside_balls
 (
  const PDM_kdtree_seq_t  *kdtree,
  const int                n_ball,
@@ -176,6 +176,29 @@ PDM_kdtree_seq_extract_extent
   int               *n_node,
   double           **node_extents,
   int              **node_weight
+);
+
+
+/**
+ *
+ * \brief Get points located inside a set of boxes
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [in]   n_box                  Number of boxes
+ * \param [in]   box_extents            Extents of boxes
+ * \param [out]  pts_idx                Index of points located in boxes
+ * \param [out]  pts_l_num              Local ids of points located in boxes
+ *
+ */
+
+void
+PDM_kdtree_seq_points_inside_boxes
+(
+       PDM_kdtree_seq_t   *kdtree,
+ const int                 n_box,
+ const double              box_extents[],
+       int               **pts_idx,
+       int               **pts_l_num
 );
 
 #ifdef  __cplusplus
