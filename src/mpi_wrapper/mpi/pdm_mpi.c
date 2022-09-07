@@ -27,7 +27,6 @@
 #include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_mpi_priv.h"
-#include "pdm_logging.h"
 
 #include <mpi.h>
 
@@ -2246,7 +2245,6 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                            _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   // double dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
@@ -2284,10 +2282,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   MPI_Alltoall(sdispls    , 1, MPI_INT,
                target_disp, 1, MPI_INT, _pdm_mpi_2_mpi_comm(comm));
 
-  // if(0 == 1) {
-  //   PDM_log_trace_array_int(sdispls    , n_rank, "sdispls     : ");
-  //   PDM_log_trace_array_int(target_disp, n_rank, "target_disp : ");
-  // }
 
   // double t1 = MPI_Wtime();
   for(int i = 0; i < n_rank; ++i) {
@@ -2313,7 +2307,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   }
 
   // double dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Get_ialltoallv dt = %12.5e \n", dt);
 
   // t1 = MPI_Wtime();
   int   origin_data_size = -1;
@@ -2332,7 +2325,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
           _pdm_mpi_2_mpi_win(win_send));
 
   // dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Get_ialltoallv local dt = %12.5e \n", dt);
 
   PDM_UNUSED(win_recv  );
   PDM_UNUSED(sendcounts);
@@ -2508,7 +2500,6 @@ PDM_MPI_Comm_split_type_numa
   abort();
 #endif
 
-  // log_trace("PDM_MPI_Comm_split_type_numa : i_cpu = %i i_numa = %i i_rank_node = %i \n", i_cpu, i_numa, i_rank_node);
 
   /* Sur le shared on split par numa */
   int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
@@ -2597,7 +2588,6 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
   double t1 = PDM_MPI_Wtime();
   MPI_Win_free(&wins->win);
-  log_trace("PDM_MPI_Win_free = %12.5e \n", PDM_MPI_Wtime()-t1);
   wins->ptr = NULL;
   free(wins);
 }
@@ -2831,9 +2821,6 @@ int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                                      _pdm_mpi_2_mpi_datatype(recvtype),
                                      _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
-  // double dt = MPI_Wtime() - t1;
-  // log_trace("MPI_Ineighbor_alltoallv dt = %12.5e \n", dt);
-
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
   return _mpi_2_pdm_mpi_err(code);
@@ -2930,8 +2917,6 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   PDM_MPI_Barrier(comm_shared);
   PDM_mpi_win_shared_sync(wnuma_core_gid);
 
-  // PDM_log_trace_connectivity_int(numa_by_numa_idx, numa_core_gid, n_rank_master_of_shm, "numa_core_gid :: ");
-
   /*
    * Computation of degree_in
    */
@@ -2999,9 +2984,6 @@ PDM_MPI_setup_hybrid_dist_comm_graph
                     recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
 
 
-  // PDM_log_trace_connectivity_int(recv_idx, recv_opp_i_rank, n_rank, "recv_opp_i_rank ::");
-
-
   int n_degrees_out = recv_idx[n_rank];
   int *neighbor_out = recv_opp_i_rank; // Already sort normaly
 
@@ -3011,11 +2993,6 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   free(recv_idx);
   free(send_cur_i_rank);
 
-
-  if(0 == 1) {
-    PDM_log_trace_array_int(neighbor_in , n_degrees_in , "neighbor_in  ::");
-    PDM_log_trace_array_int(neighbor_out, n_degrees_out, "neighbor_out ::");
-  }
 
   PDM_MPI_Comm comm_dist_graph;
   PDM_MPI_Dist_graph_create_adjacent(comm,
