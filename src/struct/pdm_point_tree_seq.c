@@ -48,7 +48,7 @@
  *============================================================================*/
 
 static const double _eps_default = 1.e-12;
-static const int    dbg_ptree   = 0;
+static const int    dbg_ptree    = 1;
 
 /*=============================================================================
  * Private function definitions
