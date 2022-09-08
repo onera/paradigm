@@ -93,6 +93,7 @@ _redistribute_pts_geom
   }
   free(weight);
 
+  /* Il faut le faire en MERGE mais enlever les doublons de coords */
   double *blk_pts_coord = NULL;
   PDM_part_to_block_exch(ptb,
                          3 * sizeof(double),
@@ -103,7 +104,47 @@ _redistribute_pts_geom
                          NULL,
                (void **) &blk_pts_coord);
 
+
   /* Transport init_location - Attention au merge du ptb à faire */
+  int have_init_location = 1;
+  for(int i = 0; i < doct->n_part_cloud; ++i) {
+    if(doct->pts_init_location[i] == NULL) {
+      have_init_location = 0;
+    }
+  }
+
+  if(have_init_location == 1) {
+    int *blk_init_location_pts_n = NULL;
+    int *blk_init_location_pts   = NULL;
+
+    int **stride_one = malloc(doct->n_part_cloud * sizeof(int *));
+    for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
+      stride_one[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
+      for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
+        stride_one[i_part][i] = 1;
+      }
+    }
+
+    PDM_part_to_block_exch(ptb,
+                           3 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           stride_one,
+                 (void **) doct->pts_init_location,
+                           &blk_init_location_pts_n,
+                 (void **) &blk_init_location_pts);
+
+    for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
+      free(stride_one[i_part]);
+    }
+    free(stride_one);
+
+
+    free(blk_init_location_pts_n);
+    free(blk_init_location_pts);
+
+  }
+
 
   // int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
   // PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);

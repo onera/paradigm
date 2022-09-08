@@ -201,10 +201,17 @@ char *argv[]
                                            NULL, // global_extents
                                            local_tree_kind);
 
+  int *init_location_pts = malloc(3 * n_src * sizeof(int));
+  for(int i = 0; i < n_src; ++i) {
+    init_location_pts[3*i  ] = i_rank;
+    init_location_pts[3*i+1] = 0; // i_part
+    init_location_pts[3*i+2] = i;
+  }
+
   PDM_doctree_point_set(doct,
                         0,
                         n_src,
-                        NULL,
+                        init_location_pts,
                         src_g_num,
                         src_coord);
   int n_box = 0;
@@ -223,12 +230,18 @@ char *argv[]
                         &box_extents,
                         &box_gnum);
 
-  int **init_locatation_box = NULL;
+  int *init_location_box = malloc(3 * n_box * sizeof(int));
+  for(int i = 0; i < n_box; ++i) {
+    init_location_box[3*i  ] = i_rank;
+    init_location_box[3*i+1] = 0; // i_part
+    init_location_box[3*i+2] = i;
+  }
+
   PDM_doctree_solicitation_set(doct,
                                PDM_TREE_SOLICITATION_BOXES_POINTS,
                                1,
                                &n_box,
-                               &init_locatation_box,
+                               &init_location_box,
                                &box_gnum,
                                &box_extents);
 
@@ -239,6 +252,8 @@ char *argv[]
 
   free(box_gnum);
   free(box_extents);
+  free(init_location_box);
+  free(init_location_pts);
 
   free (src_coord);
   free (src_g_num);
