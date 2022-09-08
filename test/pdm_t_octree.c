@@ -271,10 +271,6 @@ char *argv[]
     char filename[999];
     sprintf(filename, "octree_equi_%i.vtk", i_rank);
     PDM_octree_seq_write_octants(oct_equi, filename);
-
-    sprintf(filename, "octree_equi2_%i.vtk", i_rank);
-    PDM_octree_seq_write_octants2(oct_equi, filename);
-
   }
 
 
@@ -348,24 +344,8 @@ char *argv[]
                                    box_pts,
                                    n_box,
                                    "box_pts : ");
-
-    int *box_pts2_idx = NULL;
-    int *box_pts2     = NULL;
-    PDM_octree_seq_points_inside_boxes2(oct_equi,
-                                        n_box,
-                                        box_extents,
-                                        &box_pts2_idx,
-                                        &box_pts2);
-
-    PDM_log_trace_connectivity_int(box_pts2_idx,
-                                   box_pts2,
-                                   n_box,
-                                   "box_pts2 : ");
-
     free(box_pts_idx);
     free(box_pts);
-    free(box_pts2_idx);
-    free(box_pts2);
 
     free(box_extents);
     free(box_ln_to_gn);

@@ -362,15 +362,6 @@ PDM_octree_seq_points_inside_boxes
        int               **pts_l_num
 );
 
-void
-PDM_octree_seq_points_inside_boxes2
-(
-       PDM_octree_seq_t   *octree,
- const int                 n_box,
- const double              box_extents[],
-       int               **pts_idx,
-       int               **pts_l_num
-);
 
 /**
  *
@@ -387,11 +378,6 @@ void PDM_octree_seq_write_octants
  const char       *filename
  );
 
-void PDM_octree_seq_write_octants2
-(
- PDM_octree_seq_t *octree,
- const char       *filename
- );
 
 
 

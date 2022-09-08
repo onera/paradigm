@@ -351,7 +351,7 @@ char *argv[]
   if(1 == 1) {
     char filename[999];
     sprintf(filename, "octree_equi_%i.vtk", i_rank);
-    PDM_octree_seq_write_octants2(oct_equi, filename);
+    PDM_octree_seq_write_octants(oct_equi, filename);
   }
   PDM_octree_seq_free(oct_equi);
 

@@ -46,19 +46,19 @@ extern "C" {
  *
  */
 
-typedef struct  {
-
-  int                     ancestor_id;          /*!< Ids of ancestor in octree array */
-  int                     is_leaf;              /*!< IS a leaf >*/
-  PDM_octree_seq_child_t  location_in_ancestor; /*!< Location in ancestor */
-  int                     depth;                /*!< Depth in the tree */
-  int                     children_id[8];       /*!< Ids of children in octree array */
-  int                     range[2];             /*!< Ids of children in octree array */
-  int                     idx[9];               /*!< Start index of point list for each octant */
-  int                     n_points;             /*!< Number of points in octant*/
-  double                  extents[6];           /*!< Extents of the node */
-
-} _octant_t;
+//typedef struct  {
+//
+//  int                     ancestor_id;          /*!< Ids of ancestor in octree array */
+//  int                     is_leaf;              /*!< IS a leaf >*/
+//  PDM_octree_seq_child_t  location_in_ancestor; /*!< Location in ancestor */
+//  int                     depth;                /*!< Depth in the tree */
+//  int                     children_id[8];       /*!< Ids of children in octree array */
+//  int                     range[2];             /*!< Ids of children in octree array */
+//  int                     idx[9];               /*!< Start index of point list for each octant */
+//  int                     n_points;             /*!< Number of points in octant*/
+//  double                  extents[6];           /*!< Extents of the node */
+//
+//} _octant_t;
 
 
 
@@ -74,7 +74,7 @@ typedef struct {
   int                    *n_points;             /*!< Number of points in octant*/
   double                 *extents;              /*!< Extents of the node */
 
-} _l_octant_t;
+} _l_nodes_t;
 
 
 /**
@@ -97,12 +97,8 @@ struct _pdm_octree_seq_t {
   const double **point_clouds;          /*!< points cloud */
   int           *point_ids;             /*!< Id's of points in it cloud sorted by octree (size: n_points + 1) */
   int           *point_icloud;          /*!< Cloud's of points sorted by octree (size: n_points + 1) */
-  _octant_t     *nodes;                 /*!< Array of octree nodes (size: n_nodes_max) */
 
-  _l_octant_t   *octants;
-
-  int            n_nodes2;               /*!< Current number of nodes in octree */
-  int            n_nodes2_max;           /*!< Maximum number of nodes in octree */
+  _l_nodes_t    *nodes;
 
 } ;
 
