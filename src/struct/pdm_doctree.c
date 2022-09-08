@@ -494,6 +494,46 @@ PDM_doctree_build
   PDM_mpi_win_shared_free (wshared_coarse_box_center);
 
   /*
+   * Update permutation of pre-solicitation
+   */
+  PDM_MPI_Neighbor_allgather(&dn_equi_tree, 1, PDM_MPI_INT,
+                             lrecv_count  , 1, PDM_MPI_INT, doct->comm_dist_graph);
+
+  for(int i = 0; i < doct->n_degree_in; ++i) {
+    shared_local_nodes_n[doct->neighbor_in[i]] = lrecv_count[i];
+  }
+  PDM_MPI_Barrier(doct->comm_shared);
+
+  if(i_rank_in_shm == 0) {
+    shared_local_nodes_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      shared_local_nodes_idx[i+1] = shared_local_nodes_idx[i] + shared_local_nodes_n[i];
+    }
+  }
+  PDM_MPI_Barrier(doct->comm_shared);
+
+  // Hook local recv_shift
+  for(int i = 0; i < doct->n_degree_in; ++i) {
+    recv_shift[i] = shared_local_nodes_idx[doct->neighbor_in[i]];
+  }
+
+  /*
+   * Exchange dparent_gnum
+   */
+  PDM_mpi_win_shared_t* wshared_parent_tree_gnum   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
+  int    *shared_parent_tree_gnum   = PDM_mpi_win_shared_get(wshared_parent_tree_gnum  );
+  PDM_mpi_win_shared_lock_all (0, wshared_parent_tree_gnum  );
+
+  PDM_MPI_Neighbor_allgatherv(parent_tree_gnum       , dn_equi_tree, PDM__PDM_MPI_G_NUM,
+                              shared_parent_tree_gnum, lrecv_count , recv_shift, PDM__PDM_MPI_G_NUM, doct->comm_dist_graph);
+  PDM_MPI_Barrier(doct->comm_shared);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(shared_parent_tree_gnum, n_shared_boxes, "shared_parent_tree_gnum :");
+  }
+
+
+  /*
    * Setup partitioning
    */
   PDM_g_num_t* impli_distrib_tree = PDM_compute_entity_distribution(doct->comm, n_coarse_box);
@@ -507,16 +547,13 @@ PDM_doctree_build
                                                       1,
                                                       doct->comm);
 
-  /*
-   * Pts transfer -> The block is implicit but it's reorder by octree
-   */
-  // PDM_octree_seq_points_get(octree, node_id, point_clouds_id, point_indexes);
 
-  int    *extract_box_id    = NULL;
+
 
   /*
    * Prepare buffer
    */
+  int    *extract_box_id    = NULL;
   int n_pts_tot = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = extract_box_id[i];
@@ -617,6 +654,10 @@ PDM_doctree_build
 
   PDM_mpi_win_shared_free(wshared_coarse_box_n_pts);
   PDM_mpi_win_shared_free(wshared_coarse_box_extents);
+
+
+  PDM_mpi_win_shared_unlock_all (wshared_parent_tree_gnum  );
+  PDM_mpi_win_shared_free (wshared_parent_tree_gnum  );
 
   free(recv_shift);
   free(lrecv_count);
