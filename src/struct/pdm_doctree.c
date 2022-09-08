@@ -458,20 +458,10 @@ PDM_doctree_build
   PDM_g_num_t* distrib_tree     = PDM_part_to_block_distrib_index_get(ptb_equi_box);
 
   if(1 == 1) {
-
     PDM_log_trace_array_long(parent_tree_gnum, dn_tree , "parent_tree_gnum :: ");
     PDM_log_trace_array_long(distrib_tree    , n_rank+1, "distrib_tree : ");
-
   }
 
-
-  /*
-   * Exhange coordinates
-   */
-
-  /*
-   * Equilibrate solicitation - Exchange parent gnum - Avec lereverse sur le parent_g_num
-   */
   free(weight);
 
   PDM_mpi_win_shared_unlock_all(wshared_coarse_boxes_gnum);
@@ -479,16 +469,104 @@ PDM_doctree_build
   PDM_mpi_win_shared_free (wshared_coarse_boxes_gnum);
   PDM_mpi_win_shared_free (wshared_box_center);
 
+  /*
+   * Setup partitioning
+   */
+  PDM_g_num_t* impli_distrib_tree = PDM_compute_entity_distribution(doct->comm, n_coarse_box);
 
+  if(1 == 1) {
+    PDM_log_trace_array_long(impli_distrib_tree    , n_rank+1, "impli_distrib_tree : ");
+  }
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(impli_distrib_tree,
+                               (const PDM_g_num_t **) &parent_tree_gnum,
+                                                      &dn_tree,
+                                                      1,
+                                                      doct->comm);
+
+  /*
+   * Pts transfer -> The block is implicit but it's reorder by octree
+   */
+  // PDM_octree_seq_points_get(octree, node_id, point_clouds_id, point_indexes);
+
+  int    *extract_box_id    = NULL;
+
+  /*
+   * Prepare buffer
+   */
+  int n_pts_tot = 0;
+  for(int i = 0; i < n_coarse_box; ++i ) {
+    int node_id = extract_box_id[i];
+    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+      n_pts_tot += PDM_octree_seq_n_points_get(coarse_octree, node_id);
+    } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+      abort();
+      // n_pts_tot += PDM_kdtree_seq_n_points_get(coarse_kdtree, node_id);
+    }
+  }
+
+  double *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double));
+
+  int idx_write = 0;
+  for(int i = 0; i < n_coarse_box; ++i ) {
+    int node_id = extract_box_id[i];
+
+    int  n_pts = 0;
+    int *point_clouds_id = NULL;
+    int *point_indexes   = NULL;
+
+    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+      n_pts = PDM_octree_seq_n_points_get(coarse_octree, node_id);
+      PDM_octree_seq_points_get(coarse_octree, node_id, &point_clouds_id, &point_indexes);
+    } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+      abort();
+      // n_pts = PDM_kdtree_seq_points_get(coarse_kdtree, node_id, &point_clouds_id, &point_indexes);
+    }
+
+    for(int i_pt = 0; i_pt < n_pts; ++i_pt) {
+      int orig_pt = point_indexes[i_pt];
+      reorder_blk_coord_send[3*idx_write  ] = blk_pts_coord[3*orig_pt  ];
+      reorder_blk_coord_send[3*idx_write+1] = blk_pts_coord[3*orig_pt+1];
+      reorder_blk_coord_send[3*idx_write+2] = blk_pts_coord[3*orig_pt+2];
+    }
+  }
+
+  /*
+   * Coordinates
+   */
+  int stride_one = 1;
+  double **tmp_equi_pts_coords = NULL;
+  PDM_block_to_part_exch(btp,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         &stride_one,
+                         reorder_blk_coord_send,
+                         NULL,
+              (void ***) &tmp_equi_pts_coords);
+  double* equi_pts_coords = tmp_equi_pts_coords[0];
+  free(tmp_equi_pts_coords);
+
+  /*
+   * g_num
+   */
+
+  /*
+   * Init location -> Attention si gnum de points dupliqué -> variable
+   */
+
+
+
+  free(reorder_blk_coord_send);
+  PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb_equi_box);
 
-
   free(distrib_shared_boxes);
+  free(impli_distrib_tree);
 
 
   free(coarse_tree_box_to_box_idx);
   free(coarse_tree_box_to_box);
 
+  free(equi_pts_coords);
 
   PDM_MPI_Comm_free(&comm_alone);
 
