@@ -58,12 +58,6 @@ struct _pdm_kdtree_seq_t{
   double         tolerance;             /*!< Relative geometric tolerance */
   int            n_nodes;               /*!< Current number of nodes in kdtree */
   int            n_nodes_max;           /*!< Maximum number of nodes in kdtree */
-  int           *n_points;              /*!< Number of points in each cloud */
-  int            t_n_points;            /*!< total number of points */
-  int            n_point_clouds;        /*!< Number of point cloud */
-  const double **point_clouds;          /*!< points cloud */
-  int           *point_ids;             /*!< Id's of points in it cloud sorted by kdtree (size: n_points + 1) */
-  int           *point_icloud;          /*!< Cloud's of points sorted by kdtree (size: n_points + 1) */
 
   int            n_pts;
   const double  *pts_coord;

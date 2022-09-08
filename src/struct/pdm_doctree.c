@@ -296,13 +296,11 @@ PDM_doctree_build
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
 
     assert(doct->coarse_kdtree == NULL);
-    doct->coarse_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
-                                                doct->coarse_depth_max,
+    doct->coarse_kdtree = PDM_kdtree_seq_create(doct->coarse_depth_max,
                                                 doct->coarse_points_in_leaf_max,
                                                 doct->local_tolerance);
 
     PDM_kdtree_seq_point_cloud_set(doct->coarse_kdtree,
-                                   0,
                                    dn_pts,
                                    blk_pts_coord);
 
@@ -313,6 +311,7 @@ PDM_doctree_build
    * Extract extents on all local_tree
    */
   int n_coarse_box = 0;
+  int    *coarse_box_id      = NULL;
   double *coarse_box_extents = NULL;
   int    *coarse_box_n_pts   = NULL; // Number of point in boxes
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
@@ -329,6 +328,7 @@ PDM_doctree_build
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
+                                  &coarse_box_id,
                                   &coarse_box_extents,
                                   &coarse_box_n_pts);
   }
@@ -561,9 +561,9 @@ PDM_doctree_build
   /*
    * Exchange dparent_gnum
    */
-  PDM_mpi_win_shared_t* wshared_parent_tree_gnum   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
-  int    *shared_parent_tree_gnum   = PDM_mpi_win_shared_get(wshared_parent_tree_gnum  );
-  PDM_mpi_win_shared_lock_all (0, wshared_parent_tree_gnum  );
+  PDM_mpi_win_shared_t* wshared_parent_tree_gnum = PDM_mpi_win_shared_create(shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
+  PDM_g_num_t *shared_parent_tree_gnum           = PDM_mpi_win_shared_get(wshared_parent_tree_gnum);
+  PDM_mpi_win_shared_lock_all (0, wshared_parent_tree_gnum);
 
   PDM_MPI_Neighbor_allgatherv(parent_tree_gnum       , dn_equi_tree, PDM__PDM_MPI_G_NUM,
                               shared_parent_tree_gnum, lrecv_count , recv_shift, PDM__PDM_MPI_G_NUM, doct->comm_dist_graph);
@@ -764,13 +764,11 @@ PDM_doctree_build
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
 
     assert(doct->local_kdtree == NULL);
-    doct->local_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
-                                               doct->local_depth_max,
+    doct->local_kdtree = PDM_kdtree_seq_create(doct->local_depth_max,
                                                doct->local_points_in_leaf_max,
                                                doct->local_tolerance);
 
     PDM_kdtree_seq_point_cloud_set(doct->local_kdtree,
-                                   0,
                                    equi_n_pts_tot,
                                    equi_pts_coords);
 

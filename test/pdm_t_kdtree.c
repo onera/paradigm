@@ -227,13 +227,11 @@ char *argv[]
   int depth_max = 4;
   int points_in_leaf_max = 2;
   const double tolerance = 1e-4;
-  PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(1, // n_point_cloud
-                                                     depth_max,
+  PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(depth_max,
                                                      points_in_leaf_max,
                                                      tolerance);
 
   PDM_kdtree_seq_point_cloud_set(kdt_orig,
-                                 0,
                                  n_src,
                                  src_coord);
   PDM_kdtree_seq_build(kdt_orig);
@@ -308,13 +306,11 @@ char *argv[]
 
 
 
-  PDM_kdtree_seq_t *kdt_equi = PDM_kdtree_seq_create(1, // n_point_cloud
-                                                     depth_max,
+  PDM_kdtree_seq_t *kdt_equi = PDM_kdtree_seq_create(depth_max,
                                                      points_in_leaf_max,
                                                      tolerance);
 
   PDM_kdtree_seq_point_cloud_set(kdt_equi,
-                                 0,
                                  n_parent,
                                  blk_src_coord);
   PDM_kdtree_seq_build(kdt_equi);

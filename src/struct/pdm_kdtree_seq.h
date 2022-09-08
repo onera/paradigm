@@ -38,7 +38,6 @@ typedef struct _pdm_kdtree_seq_shm_t PDM_kdtree_seq_shm_t;
  *
  * \brief Create a kdtree structure
  *
- * \param [in]   n_point_cloud      Number of point cloud
  * \param [in]   depth_max          Maximum depth
  * \param [in]   points_in_leaf_max Maximum points in a leaf
  * \param [in]   tolerance          Relative geometric tolerance
@@ -49,7 +48,6 @@ typedef struct _pdm_kdtree_seq_shm_t PDM_kdtree_seq_shm_t;
 PDM_kdtree_seq_t *
 PDM_kdtree_seq_create
 (
- const int    n_point_cloud,
  const int    depth_max,
  const int    points_in_leaf_max,
  const double tolerance
@@ -77,7 +75,6 @@ PDM_kdtree_seq_free
  * \brief Set a point cloud
  *
  * \param [in]   kdtree             Pointer to \ref PDM_kdtree_seq object
- * \param [in]   i_point_cloud      Number of point cloud
  * \param [in]   n_points           Maximum depth
  * \param [in]   coords             Point coordinates
  *
@@ -88,7 +85,6 @@ void
 PDM_kdtree_seq_point_cloud_set
 (
  PDM_kdtree_seq_t *kdtree,
- const int         i_point_cloud,
  const int         n_points,
  const double     *coords
 );
@@ -162,6 +158,7 @@ PDM_kdtree_seq_points_inside_balls
  * \param [in]  root_id              ID of subtree root
  * \param [in]  n_depth              Depth of subtree
  * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_ids             IDs of subtree nodes
  * \param [out] node_extents         Extents of subtree nodes
  * \param [out] node_weight          Weights of subtree nodes
  *
@@ -174,6 +171,7 @@ PDM_kdtree_seq_extract_extent
   int                root_id,
   int                n_depth,
   int               *n_node,
+  int              **node_ids,
   double           **node_extents,
   int              **node_weight
 );
