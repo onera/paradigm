@@ -247,7 +247,7 @@ PDM_doctree_build
                                   &coarse_box_extents,
                                   &box_n_pts);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    int n_depth_per_proc = 16;
+    int n_depth_per_proc = 6; // 2^(depth)
     PDM_kdtree_seq_extract_extent(coarse_kdtree,
                                   0,
                                   n_depth_per_proc,
