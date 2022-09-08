@@ -187,8 +187,8 @@ char *argv[]
                               0, // seed
                               0, // geometric_g_num
                               nPts,
-                              -radius, -radius, -radius,
-                              radius, radius, radius,
+                              0., 0., 0.,
+                              1., 1., 1.,
                               &n_src,
                               &src_coord,
                               &src_g_num);
