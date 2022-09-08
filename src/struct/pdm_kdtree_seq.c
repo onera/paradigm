@@ -1726,6 +1726,23 @@ PDM_kdtree_seq_sorted_points_get
   *pts_coord = kdtree->_pts_coord;
 }
 
+
+int
+PDM_kdtree_seq_point_range_get
+(
+       PDM_kdtree_seq_t  *kdtree,
+ const int                node_id,
+       int               *point_range
+)
+{
+  assert(node_id < kdtree->n_nodes);
+  for (int i = 0; i < 2; i++) {
+    point_range[i] = kdtree->nodes->range[2*node_id + i];
+  }
+
+  return point_range[1] - point_range[0];
+}
+
 #ifdef  __cplusplus
 }
 #endif

@@ -264,6 +264,15 @@ PDM_kdtree_seq_sorted_points_get
  double           **pts_coord
 );
 
+
+int
+PDM_kdtree_seq_point_range_get
+(
+       PDM_kdtree_seq_t  *kdtree,
+ const int                node_id,
+       int               *point_range
+);
+
 #ifdef  __cplusplus
 }
 #endif
