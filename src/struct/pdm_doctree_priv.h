@@ -40,21 +40,25 @@ struct _pdm_doctree_t {
   PDM_doctree_local_tree_t   local_tree_kind;
 
 
-  int                        global_depth_max;           /*!< global_octree depth_max                   */
-  int                        global_points_in_leaf_max;  /*!< global_octree max pts in leaf             */
+  int                        coarse_depth_max;           /*!< global_octree depth_max                   */
+  int                        coarse_points_in_leaf_max;  /*!< global_octree max pts in leaf             */
 
   int                        local_depth_max;
   int                        local_points_in_leaf_max;
   double                     local_tolerance;
 
-  PDM_octree_seq_t          *global_octree;              /*! Global octree to orient among procs        */
+  PDM_octree_seq_t          *coarse_octree;              /*! coarse octree to orient among procs        */
   PDM_octree_seq_t          *local_octree;               /*! Local octree                               */
   PDM_octree_seq_t          *shmem_octree;               /*! Shared octree among cores in current nodes */
 
-  PDM_kdtree_seq_t          *global_kdtree;              /*! Global octree to orient among procs        */
+  PDM_kdtree_seq_t          *coarse_kdtree;              /*! coarse octree to orient among procs        */
   PDM_kdtree_seq_t          *local_kdtree;               /*! Local octree                               */
   PDM_kdtree_seq_t          *shmem_kdtree;               /*! Shared octree among cores in current nodes */
 
+
+  PDM_MPI_Comm               comm_dist_graph;
+  int                        n_degree_in;
+  int*                       neighbor_in;
 
   PDM_MPI_Comm               comm_shared;
 

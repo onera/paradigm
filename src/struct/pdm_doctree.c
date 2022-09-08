@@ -115,10 +115,12 @@ _redistribute_pts_geom
 }
 
 // void
-// _setup_coarse_tree
+// _exchange_global_tree
 // (
 //  PDM_doctree_t        *doct,
-
+//  int                   n_coarse_box,
+//  double               *coarse_box_extents,
+//  int                  *box_n_pts
 // )
 // {
 
@@ -144,19 +146,40 @@ PDM_doctree_create
   doct->comm = comm;
   doct->dim  = dim;
 
-  doct->global_depth_max          = 5;
-  doct->global_points_in_leaf_max = 60;
-
-  doct->local_depth_max          = 5;
-  doct->local_points_in_leaf_max = 30;
-  doct->local_tolerance          = 1e-6;
-
   doct->local_tree_kind = local_tree_kind;
-  doct->global_octree   = NULL;
+
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    doct->coarse_depth_max          = 5;
+    doct->coarse_points_in_leaf_max = 60;
+
+    doct->local_depth_max          = 31;
+    doct->local_points_in_leaf_max = 30;
+    doct->local_tolerance          = 1e-6;
+
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    doct->coarse_depth_max          = 6;
+    doct->coarse_points_in_leaf_max = 60;
+
+    doct->local_depth_max          = 31;
+    doct->local_points_in_leaf_max = 30;
+    doct->local_tolerance          = 1e-6;
+  } else {
+    abort();
+  }
+
+  doct->coarse_octree   = NULL;
   doct->local_octree    = NULL;
   doct->shmem_octree    = NULL;
 
-  doct->comm_shared   = PDM_MPI_COMM_NULL;
+  doct->coarse_kdtree   = NULL;
+  doct->local_kdtree    = NULL;
+  doct->shmem_kdtree    = NULL;
+
+  doct->comm_dist_graph = PDM_MPI_COMM_NULL;
+  doct->n_degree_in     = 0;
+  doct->neighbor_in     = NULL;
+
+  doct->comm_shared     = PDM_MPI_COMM_NULL;
 
   PDM_UNUSED(global_extents);
 
@@ -183,11 +206,26 @@ PDM_doctree_build
  PDM_doctree_t     *doct
 )
 {
-  int i_rank;
+  int n_rank, i_rank;
   PDM_MPI_Comm_rank (doct->comm, &i_rank);
-  int n_rank;
   PDM_MPI_Comm_size (doct->comm, &n_rank);
 
+  /*
+   * Prepare graphe comm for hybrid MPI-MPI
+   */
+  PDM_MPI_setup_hybrid_dist_comm_graph(doct->comm,
+                                       &doct->comm_shared,
+                                       &doct->comm_dist_graph,
+                                       &doct->n_degree_in,
+                                       &doct->neighbor_in);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (doct->comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (doct->comm_shared, &n_rank_in_shm);
+
+  /*
+   * Redistribute all pts
+   */
   double              *blk_pts_coord = NULL;
   PDM_part_to_block_t *ptb           = NULL;
   _redistribute_pts_geom(doct, &ptb, &blk_pts_coord);
@@ -198,38 +236,36 @@ PDM_doctree_build
    * Step 2 : Build local coarse tree
    */
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
-  PDM_octree_seq_t *coarse_octree = NULL;
-  PDM_kdtree_seq_t *coarse_kdtree = NULL;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
 
-    assert(coarse_octree == NULL);
-    coarse_octree = PDM_octree_seq_create(1, // n_point_cloud
-                                          doct->local_depth_max,
-                                          doct->local_points_in_leaf_max,
+    assert(doct->coarse_octree == NULL);
+    doct->coarse_octree = PDM_octree_seq_create(1, // n_point_cloud
+                                          doct->coarse_depth_max,
+                                          doct->coarse_points_in_leaf_max,
                                           doct->local_tolerance);
 
-    PDM_octree_seq_point_cloud_set(coarse_octree,
+    PDM_octree_seq_point_cloud_set(doct->coarse_octree,
                                    0,
                                    dn_pts,
                                    blk_pts_coord);
 
-    PDM_octree_seq_build(coarse_octree);
+    PDM_octree_seq_build(doct->coarse_octree);
 
 
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
 
-    assert(coarse_kdtree == NULL);
-    coarse_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
-                                          doct->local_depth_max,
-                                          doct->local_points_in_leaf_max,
-                                          doct->local_tolerance);
+    assert(doct->coarse_kdtree == NULL);
+    doct->coarse_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
+                                                doct->coarse_depth_max,
+                                                doct->coarse_points_in_leaf_max,
+                                                doct->local_tolerance);
 
-    PDM_kdtree_seq_point_cloud_set(coarse_kdtree,
+    PDM_kdtree_seq_point_cloud_set(doct->coarse_kdtree,
                                    0,
                                    dn_pts,
                                    blk_pts_coord);
 
-    PDM_kdtree_seq_build(coarse_kdtree);
+    PDM_kdtree_seq_build(doct->coarse_kdtree);
   }
 
   /*
@@ -240,7 +276,7 @@ PDM_doctree_build
   int    *box_n_pts          = NULL; // Number of point in boxes
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
     int n_depth_per_proc = 2;
-    PDM_octree_seq_extract_extent(coarse_octree,
+    PDM_octree_seq_extract_extent(doct->coarse_octree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
@@ -248,7 +284,7 @@ PDM_doctree_build
                                   &box_n_pts);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
     int n_depth_per_proc = 6; // 2^(depth)
-    PDM_kdtree_seq_extract_extent(coarse_kdtree,
+    PDM_kdtree_seq_extract_extent(doct->coarse_kdtree,
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
@@ -257,47 +293,23 @@ PDM_doctree_build
   }
 
   /*
-   * Step 2 : Create coarse octree to equilibrate leaf
-   *   --> Il faut la solicitation
-   *   Creation bt_shared temporaire
-   *     puis solicitation
-   *   On connait le lien shared_to_box
-   */
-
-  PDM_MPI_Comm comm_shared;
-  PDM_MPI_Comm comm_dist_graph;
-
-  int  n_degree_in = 0;
-  int *neighbor_in = NULL;
-
-  PDM_MPI_setup_hybrid_dist_comm_graph(doct->comm,
-                                       &comm_shared,
-                                       &comm_dist_graph,
-                                       &n_degree_in,
-                                       &neighbor_in);
-
-  int n_rank_in_shm, i_rank_in_shm;
-  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
-  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
-
-  /*
    * Equilibrate among nodes/numa - To reduce memory footprint we set up data in shared memory
    */
-  int *lrecv_count = malloc(n_degree_in * sizeof(int));
+  int *lrecv_count = malloc(doct->n_degree_in * sizeof(int));
   PDM_MPI_Neighbor_allgather(&n_coarse_box , 1, PDM_MPI_INT,
-                             lrecv_count   , 1, PDM_MPI_INT, comm_dist_graph);
+                             lrecv_count   , 1, PDM_MPI_INT, doct->comm_dist_graph);
 
-  PDM_mpi_win_shared_t* wshared_local_nodes_n   = PDM_mpi_win_shared_create(n_rank  , sizeof(int), comm_shared);
-  PDM_mpi_win_shared_t* wshared_local_nodes_idx = PDM_mpi_win_shared_create(n_rank+1, sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wshared_local_nodes_n   = PDM_mpi_win_shared_create(n_rank  , sizeof(int), doct->comm_shared);
+  PDM_mpi_win_shared_t* wshared_local_nodes_idx = PDM_mpi_win_shared_create(n_rank+1, sizeof(int), doct->comm_shared);
   int *shared_local_nodes_n   = PDM_mpi_win_shared_get(wshared_local_nodes_n);
   int *shared_local_nodes_idx = PDM_mpi_win_shared_get(wshared_local_nodes_idx);
   PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_n  );
   PDM_mpi_win_shared_lock_all (0, wshared_local_nodes_idx);
 
-  for(int i = 0; i < n_degree_in; ++i) {
-    shared_local_nodes_n[neighbor_in[i]] = lrecv_count[i];
+  for(int i = 0; i < doct->n_degree_in; ++i) {
+    shared_local_nodes_n[doct->neighbor_in[i]] = lrecv_count[i];
   }
-  PDM_MPI_Barrier(comm_shared);
+  PDM_MPI_Barrier(doct->comm_shared);
 
   if(i_rank_in_shm == 0) {
     shared_local_nodes_idx[0] = 0;
@@ -305,50 +317,50 @@ PDM_doctree_build
       shared_local_nodes_idx[i+1] = shared_local_nodes_idx[i] + shared_local_nodes_n[i];
     }
   }
-  PDM_MPI_Barrier(comm_shared);
+  PDM_MPI_Barrier(doct->comm_shared);
 
   if(1 == 1) {
     PDM_log_trace_array_int(shared_local_nodes_n  , n_rank , "shared_local_nodes_n   ::");
     PDM_log_trace_array_int(shared_local_nodes_idx, n_rank+1 , "shared_local_nodes_idx ::");
-    PDM_log_trace_array_int(neighbor_in, n_degree_in , "neighbor_in ::");
+    PDM_log_trace_array_int(doct->neighbor_in, doct->n_degree_in , "doct->neighbor_in ::");
   }
 
   // Hook local recv_shift
-  int *recv_shift = malloc(n_degree_in * sizeof(int));
-  for(int i = 0; i < n_degree_in; ++i) {
-    recv_shift[i] = shared_local_nodes_idx[neighbor_in[i]];
+  int *recv_shift = malloc(doct->n_degree_in * sizeof(int));
+  for(int i = 0; i < doct->n_degree_in; ++i) {
+    recv_shift[i] = shared_local_nodes_idx[doct->neighbor_in[i]];
   }
 
   /*
    * Exchange extents
    */
-  PDM_mpi_win_shared_t* wshared_box_n_pts   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , comm_shared);
-  PDM_mpi_win_shared_t* wshared_box_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), comm_shared);
+  PDM_mpi_win_shared_t* wshared_box_n_pts   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
+  PDM_mpi_win_shared_t* wshared_box_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), doct->comm_shared);
   int    *shared_box_n_pts   = PDM_mpi_win_shared_get(wshared_box_n_pts  );
   double *shared_box_extents = PDM_mpi_win_shared_get(wshared_box_extents);
   PDM_mpi_win_shared_lock_all (0, wshared_box_n_pts  );
   PDM_mpi_win_shared_lock_all (0, wshared_box_extents);
 
   PDM_MPI_Neighbor_allgatherv(box_n_pts       , n_coarse_box, PDM_MPI_INT,
-                              shared_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, comm_dist_graph);
-  PDM_MPI_Barrier(comm_shared);
+                              shared_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, doct->comm_dist_graph);
+  PDM_MPI_Barrier(doct->comm_shared);
 
 
   /* Update */
-  for(int i = 0; i < n_degree_in; ++i) {
-    recv_shift [i]  = shared_local_nodes_idx[neighbor_in[i]]*6;
+  for(int i = 0; i < doct->n_degree_in; ++i) {
+    recv_shift [i]  = shared_local_nodes_idx[doct->neighbor_in[i]]*6;
     lrecv_count[i] *= 6;
   }
 
   PDM_MPI_Neighbor_allgatherv(coarse_box_extents, 6 * n_coarse_box, PDM_MPI_DOUBLE,
-                              shared_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, comm_dist_graph);
-  PDM_MPI_Barrier(comm_shared);
+                              shared_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, doct->comm_dist_graph);
+  PDM_MPI_Barrier(doct->comm_shared);
 
   /*
    * Solicitate
    */
   int n_shared_boxes = shared_local_nodes_idx[n_rank];
-  PDM_g_num_t* distrib_shared_boxes = PDM_compute_uniform_entity_distribution(comm_shared, n_shared_boxes);
+  PDM_g_num_t* distrib_shared_boxes = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_shared_boxes);
 
   PDM_box_set_t  *box_set   = NULL;
   PDM_box_tree_t *bt_shared = NULL;
@@ -360,14 +372,9 @@ PDM_doctree_build
   PDM_MPI_Comm_split(doct->comm, i_rank, 0, &(comm_alone));
   const int n_info_location = 3;
   int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
-  // PDM_g_num_t *coarse_boxes_gnum = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_shared_boxes);
-  // for (int i = 0; i < n_shared_boxes; i++) {
-  //   coarse_boxes_gnum[i] = i + 1;
-  // }
 
-
-  PDM_mpi_win_shared_t* wshared_coarse_boxes_gnum = PDM_mpi_win_shared_create(    n_shared_boxes, sizeof(PDM_g_num_t), comm_shared);
-  PDM_mpi_win_shared_t* wshared_box_center        = PDM_mpi_win_shared_create(3 * n_shared_boxes, sizeof(double     ), comm_shared);
+  PDM_mpi_win_shared_t* wshared_coarse_boxes_gnum = PDM_mpi_win_shared_create(    n_shared_boxes, sizeof(PDM_g_num_t), doct->comm_shared);
+  PDM_mpi_win_shared_t* wshared_box_center        = PDM_mpi_win_shared_create(3 * n_shared_boxes, sizeof(double     ), doct->comm_shared);
   PDM_g_num_t    *shared_coarse_boxes_gnum   = PDM_mpi_win_shared_get(wshared_coarse_boxes_gnum  );
   double         *shared_box_center          = PDM_mpi_win_shared_get(wshared_box_center  );
 
@@ -381,7 +388,7 @@ PDM_doctree_build
     shared_box_center[3*i+2] = 0.5 * (shared_box_extents[6*i+2] + shared_box_extents[6*i+5]);
 
   }
-  PDM_MPI_Barrier(comm_shared);
+  PDM_MPI_Barrier(doct->comm_shared);
 
 
   // double *shared_box_extents = PDM_mpi_win_shared_get(wshared_box_extents);
@@ -440,8 +447,9 @@ PDM_doctree_build
     weight[i] = coarse_tree_box_to_box_idx[i+1] - coarse_tree_box_to_box_idx[i];
   }
 
-
-
+  /*
+   * Equilibrate boxes leaf with solicitation
+   */
   PDM_part_to_block_t* ptb_equi_box = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                                                     1.,
@@ -497,10 +505,10 @@ PDM_doctree_build
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = extract_box_id[i];
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-      n_pts_tot += PDM_octree_seq_n_points_get(coarse_octree, node_id);
+      n_pts_tot += PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       abort();
-      // n_pts_tot += PDM_kdtree_seq_n_points_get(coarse_kdtree, node_id);
+      // n_pts_tot += PDM_kdtree_seq_n_points_get(doct->coarse_kdtree, node_id);
     }
   }
 
@@ -515,11 +523,11 @@ PDM_doctree_build
     int *point_indexes   = NULL;
 
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-      n_pts = PDM_octree_seq_n_points_get(coarse_octree, node_id);
-      PDM_octree_seq_points_get(coarse_octree, node_id, &point_clouds_id, &point_indexes);
+      n_pts = PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
+      PDM_octree_seq_points_get(doct->coarse_octree, node_id, &point_clouds_id, &point_indexes);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       abort();
-      // n_pts = PDM_kdtree_seq_points_get(coarse_kdtree, node_id, &point_clouds_id, &point_indexes);
+      // n_pts = PDM_kdtree_seq_points_get(doct->coarse_kdtree, node_id, &point_clouds_id, &point_indexes);
     }
 
     for(int i_pt = 0; i_pt < n_pts; ++i_pt) {
@@ -563,11 +571,8 @@ PDM_doctree_build
 
   free(distrib_shared_boxes);
   free(impli_distrib_tree);
-
-
   free(coarse_tree_box_to_box_idx);
   free(coarse_tree_box_to_box);
-
 
   PDM_MPI_Comm_free(&comm_alone);
 
@@ -589,8 +594,32 @@ PDM_doctree_build
   free(recv_shift);
   free(lrecv_count);
 
+  free(box_n_pts);
+  free(coarse_box_extents);
+
+  free(blk_pts_coord);
+
+  PDM_part_to_block_free(ptb);
+
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    if(doct->coarse_octree != NULL) {
+      PDM_octree_seq_free(doct->coarse_octree);
+    }
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    if(doct->coarse_kdtree != NULL) {
+      PDM_kdtree_seq_free(doct->coarse_kdtree);
+    }
+  }
+
+  // Preparation of send count and box_rank/box_rank_idx
+  // for(int i = 0; i < n_rank; ++i) {
+  //   for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
+  //     send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
+  //   }
+  // }
+
   /*
-   *  Update sahred_to_box
+   *  Update shared_to_box
    *  re-Solicitation is already done - Transfer update shared to box !!!
    *  Transfer boxes in shared maner + asynchronous with dist_comm_graph
    *  Pour avoir l'info if faut echanger le parent gnum -> Allgatherv shared to minimize memory footprint
@@ -604,78 +633,53 @@ PDM_doctree_build
    *   We can now rebuild a finer tree to finalize solicitation
    */
 
+  /*
+   * Step 3 : Build local tree
+   */
+  int equi_n_pts = -1;
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+
+    assert(doct->coarse_octree == NULL);
+    doct->local_octree = PDM_octree_seq_create(1, // n_point_cloud
+                                          doct->local_depth_max,
+                                          doct->local_points_in_leaf_max,
+                                          doct->local_tolerance);
+
+    PDM_octree_seq_point_cloud_set(doct->local_octree,
+                                   0,
+                                   equi_n_pts,
+                                   equi_pts_coords);
+
+    PDM_octree_seq_build(doct->local_octree);
+
+
+  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+
+    assert(doct->local_kdtree == NULL);
+    doct->local_kdtree = PDM_kdtree_seq_create(1, // n_point_cloud
+                                               doct->local_depth_max,
+                                               doct->local_points_in_leaf_max,
+                                               doct->local_tolerance);
+
+    PDM_kdtree_seq_point_cloud_set(doct->local_kdtree,
+                                   0,
+                                   equi_n_pts,
+                                   equi_pts_coords);
+
+    PDM_kdtree_seq_build(doct->local_kdtree);
+  }
 
 
 
 
 
   free(equi_pts_coords);
-   // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
-   //                                      -1,
-   //                                      n_boxes,
-   //                                      box_extents,
-   //                                      &shared_to_box_idx,
-   //                                      &shared_to_box);
-   // Preparation of send count and box_rank/box_rank_idx
-   // for(int i = 0; i < n_rank; ++i) {
-   //   for(int j = shared_all_rank_idx[i]; j < shared_all_rank_idx[i+1]; ++j) {
-   //     send_count[i] += shared_to_box_idx[j+1] - shared_to_box_idx[j];
-   //   }
-   // }
 
    /*
     * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
     * Une fois qu'on connait le tri, on peut faire l'échange en asynchrone pdt que l'arbre se construit ?
     *
     */
-
-  /*
-   * Build a box_tree
-   */
-  // int *g_coarse_box_n = (int *) malloc (n_rank * sizeof(int));
-  // PDM_MPI_Allgather (&n_coarse_box , 1, PDM_MPI_INT,
-  //                    g_coarse_box_n, 1, PDM_MPI_INT,
-  //                    doct->comm);
-
-  // int *g_coarse_box_idx = malloc((n_rank + 1 ) *sizeof(int));
-  // g_coarse_box_idx[0] = 0;
-  // for(int i = 0; i < n_rank; ++i) {
-  //   g_coarse_box_idx[i+1] =  g_coarse_box_idx[i] + g_coarse_box_n[i];
-  // }
-
-  // if(1 == 1) {
-  //   PDM_log_trace_array_int(g_coarse_box_idx, n_rank+1, "g_coarse_box_idx ::");
-  // }
-
-  // double      *gcoarse_box_extents = malloc(g_coarse_box_idx[n_rank] * 6 * sizeof(double     ));
-  // PDM_g_num_t *g_coarse_box_color  = malloc(g_coarse_box_idx[n_rank] *     sizeof(PDM_g_num_t));
-
-  // for(int i = 0; i < n_rank; ++i) {
-  //   for(int j = g_coarse_box_idx[i]; j < g_coarse_box_idx[i+1]; ++j) {
-  //     g_coarse_box_color[j] = i;
-  //   }
-  // }
-
-  // for(int i = 0; i < n_rank; ++i) {
-  //   g_coarse_box_n  [i] *= 6;
-  //   g_coarse_box_idx[i] *= 6;
-  // }
-  // PDM_MPI_Allgatherv (coarse_box_extents , 6 * n_coarse_box, PDM_MPI_DOUBLE,
-  //                     gcoarse_box_extents, g_coarse_box_n  , g_coarse_box_idx, PDM_MPI_DOUBLE,
-  //                     doct->comm);
-
-  // free(coarse_box_extents);
-  // free(box_n_pts);
-
-  // if(1 == 1 && i_rank == 0) {
-  //   char filename[999];
-  //   sprintf(filename, "gcoarse_box_extents_%i.vtk", i_rank);
-  //   PDM_vtk_write_boxes(filename,
-  //                       g_coarse_box_idx[n_rank],
-  //                       gcoarse_box_extents,
-  //                       g_coarse_box_color);
-  // }
-
 
   /*
    *  On pourrait faire du hilbert sur des niveaux de feuilles avec gnum = node_id implicitement odered
@@ -692,52 +696,6 @@ PDM_doctree_build
    *   A affiner avec le double niveau node / numa
    *   Reprendre le Allgatherv du para_octree sur le comm circulaire
    */
-  // int n_shared_boxes = g_coarse_box_idx[n_rank];
-  // const int n_info_location = 3;
-  // int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
-
-  // int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
-  // int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
-  // float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
-
-  // PDM_MPI_Comm bt_comm;
-  // PDM_MPI_Comm_split (doct->comm, i_rank, 0, &bt_comm);
-  // PDM_box_set_t  *box_set   = PDM_box_set_create(3,             // dim
-  //                                                1,             // normalize
-  //                                                0,             // allow_projection
-  //                                                n_shared_boxes,
-  //                                                g_coarse_box_color,
-  //                                                gcoarse_box_extents,
-  //                                                1,
-  //                                                &n_shared_boxes,
-  //                                                init_location_proc,
-  //                                                doct->comm);
-
-  // PDM_box_tree_t* bt_shared = PDM_box_tree_create (max_tree_depth_shared,
-  //                                                  max_boxes_leaf_shared,
-  //                                                  max_box_ratio_shared);
-
-  // PDM_box_tree_set_boxes (bt_shared,
-  //                         box_set,
-  //                         PDM_BOX_TREE_ASYNC_LEVEL);
-
-  // PDM_box_set_destroy (&box_set);
-  // PDM_box_tree_destroy(&bt_shared);
-  // PDM_MPI_Comm_free (&bt_comm);
-
-
-  // free(g_coarse_box_n);
-  // free(g_coarse_box_idx);
-  // free(gcoarse_box_extents);
-  // free(g_coarse_box_color);
-  // free(init_location_proc);
-
-  free(box_n_pts);
-  free(coarse_box_extents);
-
-  free(blk_pts_coord);
-
-  PDM_part_to_block_free(ptb);
 
   /*
    * Si l'octree ne change pas l'ordre des points -> On fait une allocation shared
@@ -749,17 +707,15 @@ PDM_doctree_build
    */
 
 
-  PDM_MPI_Comm_free(&comm_dist_graph);
-  PDM_MPI_Comm_free(&comm_shared);
-  free(neighbor_in);
-
+  PDM_MPI_Comm_free(&doct->comm_dist_graph);
+  PDM_MPI_Comm_free(&doct->comm_shared);
+  free(doct->neighbor_in);
 
   /*
    * A revoir quand on fera l'équilibrage
    */
-  // PDM_octree_seq_free(coarse_octree);
-  doct->local_octree = coarse_octree;
-  doct->local_kdtree = coarse_kdtree;
+  // doct->local_octree = coarse_octree;
+  // doct->local_kdtree = coarse_kdtree;
 }
 
 void
