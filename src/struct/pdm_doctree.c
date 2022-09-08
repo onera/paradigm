@@ -227,7 +227,7 @@ PDM_doctree_build
    */
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
-  int    *coarse_box_weight  = NULL;
+  int    *coarse_box_weight  = NULL; // Number of point in boxes
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
     int n_depth_per_proc = 2;
     PDM_octree_seq_extract_extent(coarse_octree,
