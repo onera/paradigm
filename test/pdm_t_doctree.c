@@ -232,13 +232,13 @@ char *argv[]
                                &box_gnum,
                                &box_extents);
 
-  free(box_gnum);
-  free(box_extents);
-
   PDM_doctree_build(doct);
 
   PDM_doctree_free(doct);
 
+
+  free(box_gnum);
+  free(box_extents);
 
   free (src_coord);
   free (src_g_num);

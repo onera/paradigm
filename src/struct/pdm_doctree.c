@@ -55,6 +55,7 @@ extern "C"
  * Static function definitions
  *============================================================================*/
 
+static
 void
 _redistribute_pts_geom
 (
@@ -385,6 +386,33 @@ PDM_doctree_build
   free(gnum_coarse_boxes);
   free(init_location_proc);
 
+  int* coarse_tree_box_to_box_idx = NULL;
+  int* coarse_tree_box_to_box     = NULL;
+  if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
+    assert(doct->n_part == 1);
+    PDM_box_tree_intersect_boxes_boxes2(bt_shared,
+                                        -1,
+                                        doct->n_entity[0],
+                                        doct->entity_coords[0],
+                                        &coarse_tree_box_to_box_idx,
+                                        &coarse_tree_box_to_box);
+
+    if(1 == 1) {
+      PDM_log_trace_connectivity_int(coarse_tree_box_to_box_idx,
+                                     coarse_tree_box_to_box,
+                                     n_shared_boxes,
+                                     "coarse_tree_box_to_box : ");
+    }
+
+  } else {
+    abort();
+  }
+
+
+  free(coarse_tree_box_to_box_idx);
+  free(coarse_tree_box_to_box);
+
+
   PDM_MPI_Comm_free(&comm_alone);
 
   PDM_box_set_destroy (&box_set);
@@ -526,6 +554,9 @@ PDM_doctree_build
   // free(gcoarse_box_extents);
   // free(g_coarse_box_color);
   // free(init_location_proc);
+
+  free(box_n_pts);
+  free(coarse_box_extents);
 
   free(blk_pts_coord);
 
