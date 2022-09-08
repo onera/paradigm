@@ -315,14 +315,29 @@ PDM_point_tree_seq_points_inside_boxes
 void
 PDM_point_tree_seq_points_inside_balls
 (
- const PDM_point_tree_seq_t  *ptree,
+       PDM_point_tree_seq_t  *ptree,
  const int                    n_ball,
        double                *ball_center,
        double                *ball_radius2,
        int                  **ball_pts_idx,
        int                  **ball_pts,
        double               **ball_pts_dist2
- );
+);
+
+
+
+PDM_point_tree_seq_shm_t *
+PDM_point_tree_make_shared
+(
+  PDM_point_tree_seq_t *local_ptree,
+  PDM_MPI_Comm          comm_shared
+);
+
+void
+PDM_point_tree_seq_shm_free
+(
+ PDM_point_tree_seq_shm_t *shm_ptree
+);
 
 #ifdef  __cplusplus
 }

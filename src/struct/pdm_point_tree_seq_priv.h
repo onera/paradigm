@@ -74,8 +74,8 @@ struct _pdm_point_tree_seq_t{
 
 
 struct _pdm_point_tree_seq_shm_t {
-  PDM_MPI_Comm       comm_shared;
-  PDM_point_tree_seq_t  *kdtrees;
+  PDM_MPI_Comm          comm_shared;
+  PDM_point_tree_seq_t *ptrees;
 
   PDM_mpi_win_shared_t *w_is_leaf;
   PDM_mpi_win_shared_t *w_children_id;

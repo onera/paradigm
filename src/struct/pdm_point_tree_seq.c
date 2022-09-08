@@ -784,6 +784,66 @@ _l_nodes_free
 }
 
 
+
+
+inline static int
+_box_dist2_min
+(
+ const int              dim,
+ const double          *restrict extents,
+ const double          *restrict coords,
+ double                *restrict min_dist2
+ )
+{
+
+  int inbox = 0;
+  *min_dist2 = 0.;
+
+  for (int i = 0; i < dim; i++) {
+    if (coords[i] > extents[i+dim]) {
+      double _min_dist2 = coords[i] - extents[dim+i];
+      *min_dist2 += _min_dist2 * _min_dist2;
+    }
+
+    else if (coords[i] < extents[i]) {
+      double _min_dist2 = coords[i] - extents[i];
+      *min_dist2 += _min_dist2 * _min_dist2;
+    }
+
+    else {
+      inbox += 1;
+    }
+  }
+
+  return inbox == dim;
+}
+
+
+static int
+_intersect_node_box_explicit
+(
+ int           dim,
+ const double *node_extents,
+ const double *box_extents,
+ int          *inside
+)
+{
+  *inside = 1;
+
+  for (int i = 0; i < dim; i++) {
+    if (node_extents[i]   > box_extents[i+3] ||
+        node_extents[i+3] < box_extents[i]) {
+      return 0;
+    }
+    else if (node_extents[i]  < box_extents[i] ||
+             node_extents[i+3] > box_extents[i+3]) {
+      *inside = 0;
+    }
+  }
+
+  return 1;
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1208,4 +1268,638 @@ PDM_point_tree_seq_extract_nodes
   *node_ids     = id_to_extract;
   *node_extents = _extents;
   *node_weight  = _n_pts;
+}
+
+
+/**
+ *
+ * \brief Look for closest points stored inside a point_tree
+ *
+ * \param [in]   ptree                  Pointer to \ref PDM_point_tree_seq object
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_kdtree_pt_id   Closest point in kdtree ID (zero-based)
+ * \param [out]  closest_kdtree_pt_dist Closest point in kdtree distance
+ *
+ */
+
+void
+PDM_point_tree_seq_closest_point
+(
+PDM_point_tree_seq_t *ptree,
+const int             n_pts,
+double               *pts,
+int                  *closest_ptree_pt_id,
+double               *closest_ptree_pt_dist2
+)
+{
+
+  const int n_children = PDM_point_tree_n_children_get(ptree);
+
+
+  int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
+  int sort_child[n_children];
+  double dist_child[n_children];
+  int inbox_child[n_children];
+
+  int    *stack           = malloc (sizeof(int   ) * s_pt_stack);
+  int    *inbox_stack     = malloc (sizeof(int   ) * s_pt_stack);
+  double *min_dist2_stack = malloc (sizeof(double) * s_pt_stack);
+
+  _l_nodes_t *nodes = ptree->nodes;
+
+  int dim = 3;
+
+  for (int i = 0; i < n_pts; i++) {
+
+    int pos_stack = 0;
+    const double *_pt = pts + dim * i;
+
+    /* Init stack */
+
+    closest_ptree_pt_id   [i] = -1;
+    closest_ptree_pt_dist2[i] = HUGE_VAL;
+
+    stack[pos_stack] = 0; /* push root in the stack */
+
+    double _min_dist2;
+    int inbox1 = _box_dist2_min(dim,
+                                &nodes->extents[0],
+                                _pt,
+                                &_min_dist2);
+
+    inbox_stack[pos_stack]     = inbox1;
+    min_dist2_stack[pos_stack] = _min_dist2;
+    pos_stack++;
+
+    while (pos_stack > 0) {
+      int node_id = stack[--pos_stack];
+
+      double min_dist2 = min_dist2_stack[pos_stack];
+      int    inbox     = inbox_stack[pos_stack];
+
+      if ((min_dist2 <= closest_ptree_pt_dist2[i]) || (inbox == 1)) {
+
+        if (!nodes->is_leaf[node_id]) {
+
+          /* Sort children and store them into the stack */
+
+          const int *_child_ids = nodes->children_id + n_children*node_id;
+
+          for (int j = 0; j < n_children; j++) {
+            dist_child[j] = HUGE_VAL;
+          }
+
+          int n_selec = 0;
+          for (int j = 0; j < n_children; j++) {
+
+
+            int child_id = _child_ids[j];
+
+
+            int child_inbox = 0;
+
+            if (child_id != -1) {
+
+              double child_min_dist2;
+
+              child_inbox = _box_dist2_min(dim,
+                                           &nodes->extents[6*child_id],
+                                           _pt,
+                                           &child_min_dist2);
+
+              int i1 = 0;
+              for (i1 = n_selec;
+                   (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+                dist_child[i1]  = dist_child[i1-1];
+                sort_child[i1]  = sort_child[i1-1];
+                inbox_child[i1] = inbox_child[i1-1];
+              }
+
+              sort_child[i1]  = child_id;
+              dist_child[i1]  = child_min_dist2;
+              inbox_child[i1] = child_inbox;
+
+              n_selec += 1;
+
+            }
+          }
+
+          for (int j = 0; j < n_selec; j++) {
+            int j1 = n_selec- 1 - j;
+            int child_id = sort_child[j1];
+            if (child_id != -1) {
+              if ((dist_child[j1] < closest_ptree_pt_dist2[i]) &&
+                  (nodes->n_points[child_id] > 0)) {
+
+                min_dist2_stack[pos_stack] = dist_child[j1];
+                inbox_stack[pos_stack]     = inbox_child[j1];
+
+                stack[pos_stack++] = child_id; /* push root in th stack */
+              }
+            }
+          }
+        }
+
+        else {
+
+
+          for (int j = 0; j < nodes->n_points[node_id]; j++) {
+
+            double point_dist2 = 0;
+            int ipt = nodes->range[2*node_id] + j;
+            double *_coords = ptree->_pts_coord + 3*ipt;
+
+            for (int k = 0; k < dim; k++) {
+              point_dist2 += (_coords[k] - _pt[k]) *
+                             (_coords[k] - _pt[k]);
+            }
+
+            if (point_dist2 < closest_ptree_pt_dist2[i]) {
+              closest_ptree_pt_id[i]    = ptree->new_to_old[ipt];
+              closest_ptree_pt_dist2[i] = point_dist2;
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  free (inbox_stack);
+  free (min_dist2_stack);
+  free (stack);
+
+}
+
+
+/**
+ *
+ * \brief Get points located inside a set of boxes
+ *
+ * \param [in]   ptree                  Pointer to \ref PDM_point_tree_seq object
+ * \param [in]   n_box                  Number of boxes
+ * \param [in]   box_extents            Extents of boxes
+ * \param [out]  box_pts_idx            Index of points located in boxes
+ * \param [out]  box_pts                Local ids of points located in boxes (zero-based)
+ *
+ */
+
+void
+PDM_point_tree_seq_points_inside_boxes
+(
+       PDM_point_tree_seq_t  *ptree,
+ const int                    n_box,
+ const double                 box_extents[],
+       int                  **box_pts_idx,
+       int                  **box_pts
+)
+{
+  *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
+  int *_box_pts_idx = *box_pts_idx;
+  _box_pts_idx[0] = 0;
+
+  if (n_box < 1) {
+    *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
+    return;
+  }
+
+  const int n_children = PDM_point_tree_n_children_get(ptree);
+
+
+  _l_nodes_t *nodes = ptree->nodes;
+
+  int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
+  int *stack_id  = malloc (s_pt_stack * sizeof(int));
+
+  int node_inside_box;
+  int intersect;
+
+  int tmp_size = 4 * n_box;
+  *box_pts = malloc (sizeof(int) * tmp_size);
+  int *_box_pts = *box_pts;
+
+  for (int ibox = 0; ibox < n_box; ibox++) {
+    int dbg_enabled = 0;
+    if (dbg_enabled) {
+      log_trace("box %d\n", ibox);
+    }
+
+    _box_pts_idx[ibox+1] = _box_pts_idx[ibox];
+
+    const double *_box_extents = box_extents + 6*ibox;
+    const double *box_min      = box_extents + 6*ibox;
+    const double *box_max      = box_min + 3;
+
+    intersect = _intersect_node_box_explicit (3,
+                                              &nodes->extents[0],
+                                              _box_extents,
+                                              &node_inside_box);
+
+    if (!intersect) {
+      continue;
+    }
+
+
+    if (node_inside_box) {
+      /* The box must contain all points */
+      if (dbg_enabled) {
+        log_trace("    add pts with lnum %d through %d\n", nodes->range[0], nodes->range[1] + nodes->n_points[0]);
+      }
+      int new_size = _box_pts_idx[ibox+1] + nodes->n_points[0];
+
+      if (tmp_size <= new_size) {
+        tmp_size = PDM_MAX (2*tmp_size, new_size);
+        *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+        _box_pts = *box_pts;
+
+      }
+
+      for (int j = 0; j < nodes->n_points[0]; j++) {
+        _box_pts[_box_pts_idx[ibox+1]++] = nodes->range[0] + j;
+      }
+      continue;
+    } /* End node_inside_box */
+
+
+    /* Push root in stack */
+    int pos_stack = 0;
+    stack_id[pos_stack++] = 0;
+
+    while (pos_stack > 0) {
+      int node_id = stack_id[--pos_stack];
+
+      if (dbg_enabled) {
+        log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                  node_id,
+                  nodes->range[2*node_id], nodes->range[2*node_id+1],
+                  nodes->n_points[node_id],
+                  nodes->is_leaf[node_id]);
+      }
+
+      /* is leaf */
+      if(nodes->is_leaf[node_id]) {
+
+
+        for (int i = 0; i < nodes->n_points[node_id]; i++) {
+          int ipt = nodes->range[2*node_id] + i;
+          const double *_pt = ptree->_pts_coord + 3*ipt;
+
+          int pt_inside_box = 1;
+          for (int idim = 0; idim < 3; idim++) {
+            if (_pt[idim] < box_min[idim] || _pt[idim] > box_max[idim]) {
+              pt_inside_box = 0;
+              break;
+            }
+          }
+
+          if (pt_inside_box) {
+            if (_box_pts_idx[ibox+1] >= tmp_size) {
+              tmp_size = PDM_MAX (2*tmp_size, _box_pts_idx[ibox+1] + 1);
+              *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+              _box_pts = *box_pts;
+            }
+
+            _box_pts[_box_pts_idx[ibox+1]++] = ptree->new_to_old[ipt];
+          }
+        }
+      } else { /* Internal nodes */
+
+        const int *_child_ids = nodes->children_id + 8*node_id;
+        for (int i = 0; i < n_children; i++) {
+          int child_id = _child_ids[i];
+          if (child_id < 0) {
+            continue;
+          }
+
+          if (dbg_enabled) {
+            log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                   i,
+                   child_id,
+                   nodes->range[2*child_id+0],
+                   nodes->range[2*child_id+1],
+                   nodes->n_points[child_id],
+                   nodes->is_leaf[child_id]);
+            log_trace("    pts_extents = %f %f %f %f %f %f\n",
+                   nodes->extents[6*child_id+0],
+                   nodes->extents[6*child_id+1],
+                   nodes->extents[6*child_id+2],
+                   nodes->extents[6*child_id+3],
+                   nodes->extents[6*child_id+4],
+                   nodes->extents[6*child_id+5]);
+          }
+
+          intersect = _intersect_node_box_explicit (3,
+                                                    // child_node->extents,
+                                                    nodes->extents + 6*child_id,
+                                                    _box_extents,
+                                                    &node_inside_box);
+
+          if (dbg_enabled) {
+            log_trace("    intersect = %d\n", intersect);
+          }
+
+          if (intersect) {
+            if (node_inside_box) {
+              /* The box must contain all points */
+              if (dbg_enabled) {
+                log_trace("    add pts with lnum %d through %d\n", nodes->range[2*child_id+0], nodes->range[2*child_id+1]);
+              }
+
+              int new_size = _box_pts_idx[ibox+1] + nodes->n_points[child_id];
+
+              if (tmp_size <= new_size) {
+                tmp_size = PDM_MAX (2*tmp_size, new_size);
+                *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+                _box_pts = *box_pts;
+              }
+
+              for (int j = 0; j < nodes->n_points[child_id]; j++) {
+                _box_pts[_box_pts_idx[ibox+1]++] = nodes->range[2*child_id] + j;
+              }
+            }
+
+            else {
+              /* Push child in stack */
+              stack_id[pos_stack++] = child_id;
+            }
+          }
+        } // End of loop on children
+      }
+
+    } /* End While */
+  } /* End boxe loop */
+
+  free (stack_id);
+  *box_pts = realloc (*box_pts, sizeof(int) * _box_pts_idx[n_box]);
+}
+
+
+
+/**
+ *
+ * \brief Look for points inside at set of balls
+ *
+ * \param [in]  ptree                Pointer to \ref PDM_point_tree_seq object
+ * \param [in]  n_ball               Number of balls
+ * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
+ * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
+ * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
+ * \param [out] ball_pts             Ball->points graph (zero-based IDs)
+ * \param [out] ball_pts_dist2       Distance from points to ball centers
+ *
+ */
+
+void
+PDM_point_tree_seq_points_inside_balls
+(
+       PDM_point_tree_seq_t  *ptree,
+ const int                    n_ball,
+       double                *ball_center,
+       double                *ball_radius2,
+       int                  **ball_pts_idx,
+       int                  **ball_pts,
+       double               **ball_pts_dist2
+)
+{
+  int dbg = 0;
+  const int n_children = PDM_point_tree_n_children_get(ptree);
+
+  int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
+
+
+  *ball_pts_idx = malloc(sizeof(int) * (n_ball + 1));
+  int *pib_idx = *ball_pts_idx;
+  pib_idx[0] = 0;
+
+  int s_pib = 4*n_ball;
+  *ball_pts       = malloc(sizeof(int   ) * s_pib);
+  *ball_pts_dist2 = malloc(sizeof(double) * s_pib);
+
+  int    *pib_l_num = *ball_pts;
+  double *pib_dist2 = *ball_pts_dist2;
+
+
+  _l_nodes_t *nodes = ptree->nodes;
+
+
+  int *stack = malloc(sizeof(int) * s_pt_stack);
+
+
+  for (int iball = 0; iball < n_ball; iball++) {
+
+    pib_idx[iball+1] = pib_idx[iball];
+
+    double *_center  = ball_center + 3*iball;
+    double  _radius2 = ball_radius2[iball];
+
+    if (dbg) {
+      log_trace("ball %d, center = %f %f %f, radius2 = %f\n",
+                iball,
+                _center[0], _center[1], _center[2], _radius2);
+    }
+
+
+    /* Start by root */
+    int pos_stack = 0;
+    double min_dist2;
+    int inside_box = _box_dist2_min(3,
+                                    &nodes->extents[0],
+                                    _center,
+                                    &min_dist2);
+
+    if (inside_box || min_dist2 <= _radius2) {
+      if (dbg) {
+        log_trace("  push root\n");
+      }
+      stack[pos_stack++] = 0;
+    }
+
+
+    while (pos_stack > 0) {
+
+      int node_id = stack[--pos_stack];
+      if (dbg) {
+        log_trace("  node_id = %d (is_leaf? %d)\n", node_id, nodes->is_leaf[node_id]);
+      }
+
+      if (nodes->is_leaf[node_id]) {
+        /* Leaf node */
+        for (int i = nodes->range[2*node_id]; i < nodes->range[2*node_id+1]; i++) {
+          double *_pt = ptree->_pts_coord + 3*i;
+
+          double dist2 = 0.;
+          for (int j = 0; j < 3; j++) {
+            double delta = _pt[j] - _center[j];
+            dist2 += delta*delta;
+          }
+
+          if (dbg) {
+            log_trace("    pt %d: dist2 = %f\n", i, dist2);
+          }
+
+          if (dist2 <= _radius2) {
+            /* Check size and realloc if necessary */
+            if (pib_idx[iball+1] >= s_pib) {
+              s_pib *= 2;
+
+              *ball_pts       = realloc(*ball_pts,       sizeof(int   ) * s_pib);
+              *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
+
+              pib_l_num = *ball_pts;
+              pib_dist2 = *ball_pts_dist2;
+            }
+
+            /* Add point */
+            pib_l_num[pib_idx[iball+1]] = ptree->new_to_old[i];
+            pib_dist2[pib_idx[iball+1]] = dist2;
+
+            pib_idx[iball+1]++;
+          }
+        } // End of loop on current leaf's points
+      }
+
+      else {
+        /* Internal node */
+        for (int ichild = 0; ichild < n_children; ichild++) {
+
+          int child_id = nodes->children_id[n_children*node_id + ichild];
+
+          if (child_id < 0) {
+            continue;
+          }
+
+          if (nodes->n_points[child_id] == 0) {
+            continue;
+          }
+
+          inside_box = _box_dist2_min(3,
+                                      &nodes->extents[6*child_id],
+                                      _center,
+                                      &min_dist2);
+
+          if (inside_box || min_dist2 <= _radius2) {
+            stack[pos_stack++] = child_id;
+            if (dbg) {
+              log_trace("  push child %d (%d)", ichild, child_id);
+            }
+          }
+
+        }
+
+      }
+
+
+    } // End of while loop
+
+
+  } // End of loop on points
+  free(stack);
+
+  s_pib = pib_idx[n_ball];
+  *ball_pts       = realloc(*ball_pts,       sizeof(int   ) * s_pib);
+  *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
+
+}
+
+
+
+PDM_point_tree_seq_shm_t *
+PDM_point_tree_make_shared
+(
+  PDM_point_tree_seq_t *local_ptree,
+  PDM_MPI_Comm          comm_shared
+)
+{
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  PDM_point_tree_seq_shm_t* shm_ptree = malloc(sizeof(PDM_point_tree_seq_shm_t));
+
+  shm_ptree->comm_shared = comm_shared;
+  shm_ptree->ptrees      = malloc(n_rank_in_shm * sizeof(PDM_point_tree_seq_t));
+
+  /*
+   * Exchange size
+   */
+  int s_shm_data_in_rank[3] = {0};
+  s_shm_data_in_rank[0] = local_ptree->n_nodes;
+  s_shm_data_in_rank[1] = local_ptree->n_nodes_max; // @Bruno: on a pas besoin pas ça à mon avis
+  s_shm_data_in_rank[2] = local_ptree->n_pts;
+  int *s_shm_data_in_all_nodes = malloc(3 * n_rank_in_shm * sizeof(int));
+
+  PDM_MPI_Allgather(s_shm_data_in_rank     , 3, PDM_MPI_INT,
+                    s_shm_data_in_all_nodes, 3, PDM_MPI_INT, comm_shared);
+
+  int *octants_n_nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+  int *n_nodes_max_idx     = malloc((n_rank_in_shm+1) * sizeof(int));
+  int *n_pts_idx           = malloc((n_rank_in_shm+1) * sizeof(int));
+  octants_n_nodes_idx[0] = 0;
+  n_nodes_max_idx    [0] = 0;
+  n_pts_idx          [0] = 0;
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    octants_n_nodes_idx[i+1] = octants_n_nodes_idx[i] + s_shm_data_in_all_nodes[3*i  ];
+    n_nodes_max_idx    [i+1] = n_nodes_max_idx    [i] + s_shm_data_in_all_nodes[3*i+1];
+    n_pts_idx          [i+1] = n_pts_idx          [i] + s_shm_data_in_all_nodes[3*i+2];
+  }
+
+  int n_nodes_shared_tot     = octants_n_nodes_idx[n_rank_in_shm];
+  int n_nodes_max_shared_tot = n_nodes_max_idx    [n_rank_in_shm];
+  int n_pts_shared_tot       = n_pts_idx          [n_rank_in_shm];
+
+  /*
+   * Point tree struct
+   */
+  int n_children = PDM_point_tree_n_children_get(local_ptree);
+  shm_ptree->w_is_leaf     = PDM_mpi_win_shared_create(n_nodes_shared_tot,              sizeof(int   ), comm_shared);
+  shm_ptree->w_children_id = PDM_mpi_win_shared_create(n_nodes_shared_tot * n_children, sizeof(int   ), comm_shared);
+  shm_ptree->w_range       = PDM_mpi_win_shared_create(n_nodes_shared_tot * 2,          sizeof(int   ), comm_shared);
+  shm_ptree->w_n_points    = PDM_mpi_win_shared_create(n_nodes_shared_tot,              sizeof(int   ), comm_shared);
+  shm_ptree->w_extents     = PDM_mpi_win_shared_create(n_nodes_shared_tot * 6,          sizeof(double), comm_shared);
+
+  /*
+   * Pts and ids
+   */
+  // shm_ptree->w_point_ids    = PDM_mpi_win_shared_create(    t_n_points_shared_tot, sizeof(int   ), comm_shared);
+  // shm_ptree->w_point_clouds = PDM_mpi_win_shared_create(3 * t_n_points_shared_tot, sizeof(double), comm_shared);
+
+  // nodes->is_leaf     = realloc(nodes->is_leaf,     sizeof(int   ) * octree->n_nodes2_max);
+  // nodes->children_id = realloc(nodes->children_id, sizeof(int   ) * octree->n_nodes2_max * 8);
+  // nodes->range       = realloc(nodes->range,       sizeof(int   ) * octree->n_nodes2_max * 2);
+  // nodes->idx         = realloc(nodes->idx,         sizeof(int   ) * octree->n_nodes2_max * 9);
+  // nodes->n_points    = realloc(nodes->n_points,    sizeof(int   ) * octree->n_nodes2_max);
+  // nodes->extents     = realloc(nodes->extents,     sizeof(double) * octree->n_nodes2_max * 6);
+
+  // nodes->depth       = realloc(nodes->depth,       sizeof(int   ) * octree->n_nodes2_max);
+  // nodes->ancestor_id          = realloc(nodes->ancestor_id,          sizeof(int                   ) * octree->n_nodes2_max);
+  // nodes->location_in_ancestor = realloc(nodes->location_in_ancestor, sizeof(PDM_octree_seq_child_t) * octree->n_nodes2_max);
+
+  free(s_shm_data_in_all_nodes);
+  free(octants_n_nodes_idx);
+  free(n_nodes_max_idx    );
+  free(n_pts_idx          );
+
+  return shm_ptree;
+}
+
+void
+PDM_point_tree_seq_shm_free
+(
+ PDM_point_tree_seq_shm_t* shm_ptree
+)
+{
+
+  PDM_mpi_win_shared_free(shm_ptree->w_is_leaf    );
+  PDM_mpi_win_shared_free(shm_ptree->w_children_id);
+  PDM_mpi_win_shared_free(shm_ptree->w_range      );
+  PDM_mpi_win_shared_free(shm_ptree->w_n_points   );
+  PDM_mpi_win_shared_free(shm_ptree->w_extents    );
+
+  PDM_mpi_win_shared_free(shm_ptree->w_point_ids   );
+  PDM_mpi_win_shared_free(shm_ptree->w_point_clouds);
+
+
+  free(shm_ptree->ptrees);
+  free(shm_ptree);
 }
