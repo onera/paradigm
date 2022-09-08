@@ -224,8 +224,8 @@ char *argv[]
 
 
 
-  int depth_max = 4;
-  int points_in_leaf_max = 2;
+  int depth_max = 31;
+  int points_in_leaf_max = 10;
   const double tolerance = 1e-4;
   PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(depth_max,
                                                      points_in_leaf_max,

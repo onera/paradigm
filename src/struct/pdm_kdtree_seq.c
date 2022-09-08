@@ -496,7 +496,7 @@ _build_kdtree_seq_leaves
 
     /* Reorder points */
     for (int i = point_range[0]; i < point_range[1]; i++) {
-      log_trace("copy old %d into new %d\n", kdtree->new_to_old[i], i);
+      // log_trace("copy old %d into new %d\n", kdtree->new_to_old[i], i);
       memcpy(kdtree->_pts_coord + 3*i,
              kdtree->pts_coord  + 3*kdtree->new_to_old[i],
              sizeof(double) * 3);
