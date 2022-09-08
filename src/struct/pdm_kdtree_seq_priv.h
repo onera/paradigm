@@ -65,6 +65,12 @@ struct _pdm_kdtree_seq_t{
   int           *point_ids;             /*!< Id's of points in it cloud sorted by kdtree (size: n_points + 1) */
   int           *point_icloud;          /*!< Cloud's of points sorted by kdtree (size: n_points + 1) */
 
+  int            n_pts;
+  const double  *pts_coord;
+  double        *_pts_coord;
+  int           *new_to_old;  /*< Zero-based numbering */
+  int           *old_to_new;  /*< Zero-based numbering */
+
   _l_nodes_t    *nodes;
 
 };

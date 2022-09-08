@@ -224,8 +224,8 @@ char *argv[]
 
 
 
-  int depth_max = 20;
-  int points_in_leaf_max = 10;
+  int depth_max = 4;
+  int points_in_leaf_max = 2;
   const double tolerance = 1e-4;
   PDM_kdtree_seq_t *kdt_orig = PDM_kdtree_seq_create(1, // n_point_cloud
                                                      depth_max,
@@ -238,6 +238,14 @@ char *argv[]
                                  src_coord);
   PDM_kdtree_seq_build(kdt_orig);
 
+  int *pts_order = NULL;
+  PDM_kdtree_seq_point_new_to_old_get(kdt_orig,
+                                      &pts_order);
+
+  double *pts_coord = NULL;
+  PDM_kdtree_seq_sorted_points_get(kdt_orig,
+                                   &pts_coord);
+
   if(1 == 1) {
     char filename[999];
     sprintf(filename, "kdtree_orig_%i.vtk", i_rank);
@@ -246,9 +254,9 @@ char *argv[]
     sprintf(filename, "points_orig_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_src,
-                              src_coord,
-                              src_g_num,
-                              NULL);
+                              pts_coord,//src_coord,
+                              NULL,//src_g_num,
+                              pts_order);
   }
 
   PDM_kdtree_seq_free(kdt_orig);
@@ -311,6 +319,13 @@ char *argv[]
                                  blk_src_coord);
   PDM_kdtree_seq_build(kdt_equi);
 
+  PDM_kdtree_seq_point_new_to_old_get(kdt_equi,
+                                      &pts_order);
+
+  PDM_kdtree_seq_sorted_points_get(kdt_equi,
+                                   &pts_coord);
+
+
   if(1 == 1) {
     char filename[999];
     sprintf(filename, "kdtree_equi_%i.vtk", i_rank);
@@ -319,9 +334,9 @@ char *argv[]
     sprintf(filename, "points_equi_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
                               n_parent,
-                              blk_src_coord,
-                              parent_gnum,
-                              NULL);
+                              pts_coord,//blk_src_coord,
+                              NULL,//parent_gnum,
+                              pts_order);
   }
   PDM_kdtree_seq_free(kdt_equi);
 

@@ -225,6 +225,47 @@ double           *closest_kdtree_pt_dist2
 );
 
 
+/**
+ *
+ * \brief Get point order in kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [out]  new_to_old             New to old order of points in kdtree
+ *
+ */
+
+void
+PDM_kdtree_seq_point_new_to_old_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ int              **new_to_old
+);
+
+
+/**
+ *
+ * \brief Get point order in kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [out]  old_to_new             Old to new order of points in kdtree
+ *
+ */
+
+void
+PDM_kdtree_seq_point_old_to_new_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ int              **old_to_new
+);
+
+
+void
+PDM_kdtree_seq_sorted_points_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ double           **pts_coord
+);
+
 #ifdef  __cplusplus
 }
 #endif

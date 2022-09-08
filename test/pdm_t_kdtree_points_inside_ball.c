@@ -229,7 +229,7 @@ char *argv[]
 
 
   int depth_max = 20;
-  int points_in_leaf_max = 10;
+  int points_in_leaf_max = 2;
   const double tolerance = 1e-4;
   PDM_kdtree_seq_t *kdt = PDM_kdtree_seq_create(1, // n_point_cloud
                                                 depth_max,
@@ -309,8 +309,8 @@ char *argv[]
               tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
               pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
     for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
-      log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
-                pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+      log_trace("  l_num %d, at dist2 %f / %f\n",
+                pts_inside_ball_l_num[j],
                 pts_inside_ball_dist2[j], ball_radius2[i]);
     }
   }
@@ -348,8 +348,10 @@ char *argv[]
               tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2],
               pts_inside_ball_idx[i+1] - pts_inside_ball_idx[i]);
     for (int j = pts_inside_ball_idx[i]; j < pts_inside_ball_idx[i+1]; j++) {
-      log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
-                pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+      // log_trace("  cloud %d, id %d, at dist2 %f / %f\n",
+                // pts_inside_ball_l_num[2*j], pts_inside_ball_l_num[2*j+1],
+      log_trace("  l_num %d, at dist2 %f / %f\n",
+                pts_inside_ball_l_num[2*j+1],
                 pts_inside_ball_dist2[j], ball_radius2[i]);
     }
   }
@@ -365,35 +367,37 @@ char *argv[]
   //     }
   //   }
   // }
-  int    *closest_kdtree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
-  double *closest_kdtree_pt_dist2 = malloc(sizeof(double) * n_tgt);
-  PDM_kdtree_seq_closest_point(kdt,
-                               n_tgt,
-                               tgt_coord,
-                               closest_kdtree_pt_id,
-                               closest_kdtree_pt_dist2);
+  if (1) {
+    int    *closest_kdtree_pt_id    = malloc(sizeof(int   ) * n_tgt);
+    double *closest_kdtree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+    PDM_kdtree_seq_closest_point(kdt,
+                                 n_tgt,
+                                 tgt_coord,
+                                 closest_kdtree_pt_id,
+                                 closest_kdtree_pt_dist2);
 
-  int    *closest_octree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
-  double *closest_octree_pt_dist2 = malloc(sizeof(double) * n_tgt);
-  PDM_octree_seq_closest_point(oct,
-                               n_tgt,
-                               tgt_coord,
-                               closest_octree_pt_id,
-                               closest_octree_pt_dist2);
+    int    *closest_octree_pt_id    = malloc(sizeof(int   ) * n_tgt * 2);
+    double *closest_octree_pt_dist2 = malloc(sizeof(double) * n_tgt);
+    PDM_octree_seq_closest_point(oct,
+                                 n_tgt,
+                                 tgt_coord,
+                                 closest_octree_pt_id,
+                                 closest_octree_pt_dist2);
 
 
-  for (int i = 0; i < n_tgt; i++) {
-    log_trace("%5d : %5d %5d %f / %5d %5d %f\n",
-              i,
-              closest_kdtree_pt_id[2*i], closest_kdtree_pt_id[2*i+1], closest_kdtree_pt_dist2[i],
-              closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
+    for (int i = 0; i < n_tgt; i++) {
+      log_trace("%5d : %5d %5d %f / %5d %5d %f\n",
+                i,
+                // closest_kdtree_pt_id[2*i], closest_kdtree_pt_id[2*i+1], closest_kdtree_pt_dist2[i],
+                0, closest_kdtree_pt_id[i], closest_kdtree_pt_dist2[i],
+                closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
+    }
+
+    free(closest_kdtree_pt_id);
+    free(closest_kdtree_pt_dist2);
+    free(closest_octree_pt_id);
+    free(closest_octree_pt_dist2);
   }
-
-  free(closest_kdtree_pt_id);
-  free(closest_kdtree_pt_dist2);
-  free(closest_octree_pt_id);
-  free(closest_octree_pt_dist2);
-
 
 
 

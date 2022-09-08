@@ -54,7 +54,7 @@ extern "C" {
  *============================================================================*/
 
 static const double _eps_default = 1.e-12;
-static const int    dbg_kdtree   = 0;
+static const int    dbg_kdtree   = 1;
 
 /*=============================================================================
  * Private function definitions
@@ -175,6 +175,64 @@ _define_rank_distrib
                                                sampling,
                                                n_sample+1);
 
+
+    l_distrib[isample]++;
+  }
+
+  // PDM_log_trace_array_int(l_distrib, n_sample, "l_distrib : ");
+
+
+  /* Define the cumulative frequency related to g_distribution */
+  cfreq[0] = 0.;
+  for (int id = 0; id < n_sample; id++) {
+    cfreq[id+1] = cfreq[id] + l_distrib[id] * i_npts;
+  }
+  cfreq[n_sample] = 1.0;
+  // PDM_log_trace_array_double(cfreq, n_sample+1, "cfreq : ");
+
+  distrib[0] = 0;
+  for (int id = 0; id < n_sample/2; id++) {
+    distrib[0] += l_distrib[id];
+  }
+  distrib[1] = (point_range[1] - point_range[0]) - distrib[0];
+
+  // PDM_log_trace_array_int(distrib, 2, "distrib : ");
+
+}
+
+
+
+static void
+_define_rank_distrib2
+(
+       int     split_direction,
+       int     point_range[2],
+ const double *pts_coord,
+       int     n_sample,
+       double *sampling,
+       double *cfreq,
+       int     distrib[2]
+ )
+{
+  double i_npts = 1. / (double) (point_range[1] - point_range[0]);
+
+  int l_distrib[n_sample];
+  for (int i = 0; i < n_sample; i++) {
+    l_distrib[i] = 0;
+  }
+
+
+  for (int i = point_range[0]; i < point_range[1]; i++) {
+    double x = pts_coord[3*i + split_direction];
+
+    int isample = PDM_binary_search_gap_double(x,
+                                               sampling,
+                                               n_sample+1);
+
+    if (isample >= n_sample || isample < 0) {
+      PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
+      log_trace("x = %f, isample = %d / %d\n", x, isample, n_sample);
+    }
 
     l_distrib[isample]++;
   }
@@ -335,6 +393,101 @@ _approx_median_point
                          sampling,
                          cfreq,
                          distrib);
+
+    fit = _evaluate_distribution(2, distrib, optim);
+    // log_trace("n_iters = %d, fit = %f\n", n_iters, fit);
+    // PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
+
+    /* Save the best sampling array and its fit */
+
+    if (fit < best_fit) {
+
+      best_fit = fit;
+      for (int i = 0; i < (n_sample + 1); i++){
+        best_sampling[i] = sampling[i];
+      }
+    }
+
+  } /* End of while */
+  free(sampling);
+
+  // PDM_log_trace_array_double(best_sampling, n_sample+1, "best_sampling : ");
+
+
+  double mid = best_sampling[n_sample/2];
+  // log_trace("mid = %f\n", mid);
+
+  return mid;
+}
+
+
+
+static double
+_approx_median_point2
+(
+ const int     n_sample,
+       int     split_direction,
+       double  extents_min,
+       double  extents_max,
+       int     point_range[2],
+ const double *pts_coord
+ )
+{
+  double  fit, best_fit, optim;
+
+  int n_pts = point_range[1] - point_range[0];
+
+  // double sampling[n_sample+1];
+  double *sampling = malloc(sizeof(double) * (n_sample+1));
+
+   /* Define a naive sampling (uniform distribution) */
+  double step = (extents_max - extents_min) / (double) n_sample;
+  for (int i = 0; i <= n_sample; i++) {
+    sampling[i] = extents_min + i*step;
+  }
+  sampling[n_sample] += 1e-3;
+
+  // PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
+
+
+  int distrib[2];
+  double cfreq[n_sample+1];
+  _define_rank_distrib2(split_direction,
+                        point_range,
+                        pts_coord,
+                        n_sample,
+                        sampling,
+                        cfreq,
+                        distrib);
+
+  optim = 0.5*n_pts;
+
+  /* Initialize best choice */
+
+  fit = _evaluate_distribution(2, distrib, optim);
+  best_fit = fit;
+
+  double best_sampling[n_sample+1];
+  for (int i = 0; i < (n_sample + 1); i++) {
+    best_sampling[i] = sampling[i];
+  }
+
+  /* Loop to get a better sampling array */
+
+  // log_trace(">> loop\n");
+  for (int n_iters = 0; (n_iters < 5 && fit > 0.10); n_iters++) {
+
+    _update_sampling(n_sample, cfreq, &sampling);
+
+    /* Compute the new distribution associated to the new sampling */
+
+    _define_rank_distrib2(split_direction,
+                          point_range,
+                          pts_coord,
+                          n_sample,
+                          sampling,
+                          cfreq,
+                          distrib);
 
     fit = _evaluate_distribution(2, distrib, optim);
     // log_trace("n_iters = %d, fit = %f\n", n_iters, fit);
@@ -566,7 +719,7 @@ _build_kdtree_seq_leaves(const int                      ancestor_id,
         }
 
         if (1) {
-          // Tighter extents (fix contained points)
+          // Tighter extents (fit contained points)
           for (int l = 0; l < 3; l++) {
             // if (l == _split_direction) continue;
             sub_extents[l  ] =  HUGE_VAL;
@@ -652,6 +805,255 @@ _build_kdtree_seq_leaves(const int                      ancestor_id,
   nodes->n_points[_n_nodes] = _n_points;
   // nodes->location_in_ancestor[_n_nodes] = location_in_ancestor;
 }
+
+
+
+
+
+
+
+static void
+_build_kdtree_seq_leaves2
+(
+ const int               ancestor_id,
+ const int               split_direction,
+ const int               depth,
+ const double            extents[],
+       PDM_kdtree_seq_t *kdtree,
+       int               point_range[2],
+       int              *new_to_old
+ )
+{
+  _l_nodes_t *nodes = kdtree->nodes;
+
+  if (dbg_kdtree) {
+    log_trace("\nnode_id = %d\n",
+              kdtree->n_nodes);
+    log_trace("ancestor_id = %d, split_direction = %d, depth = %d, point_range = %d/%d\n",
+              ancestor_id, split_direction, depth, point_range[0], point_range[1]);
+    log_trace("extents = %f %f %f  %f %f %f\n",
+              extents[0], extents[1], extents[2], extents[3], extents[4], extents[5]);
+  }
+
+
+  /* Resize kdtree if necessary */
+  int _n_nodes = kdtree->n_nodes;
+  int tmp_size = kdtree->n_nodes;
+
+  if (kdtree->n_nodes >= kdtree->n_nodes_max) {
+    if (kdtree->n_nodes == 0) {
+      kdtree->n_nodes     = 1;
+      kdtree->n_nodes_max = 8;//?
+    }
+    kdtree->n_nodes_max *= 2;
+
+    nodes->ancestor_id = realloc(nodes->ancestor_id, sizeof(int   ) * kdtree->n_nodes_max);
+    nodes->is_leaf     = realloc(nodes->is_leaf,     sizeof(int   ) * kdtree->n_nodes_max);
+    nodes->depth       = realloc(nodes->depth,       sizeof(int   ) * kdtree->n_nodes_max);
+    nodes->children_id = realloc(nodes->children_id, sizeof(int   ) * kdtree->n_nodes_max * 2);
+    nodes->range       = realloc(nodes->range,       sizeof(int   ) * kdtree->n_nodes_max * 2);
+    nodes->idx         = realloc(nodes->idx,         sizeof(int   ) * kdtree->n_nodes_max * 3);
+    nodes->n_points    = realloc(nodes->n_points,    sizeof(int   ) * kdtree->n_nodes_max);
+    nodes->extents     = realloc(nodes->extents,     sizeof(double) * kdtree->n_nodes_max * 6);
+  }
+
+
+  /* Number of points */
+  int _n_points = point_range[1] - point_range[0];
+
+  int idx[3];
+  int child_id[2] = {-1, -1};
+  if (depth < kdtree->depth_max && _n_points > kdtree->points_in_leaf_max) {
+
+    /* Choose split direction */
+    double max_range = -1.;
+    int _split_direction = split_direction;
+
+    if (_split_direction < 0) {
+      for (int direction = 0; direction < 3; direction++) {
+        double range = extents[3+direction] - extents[direction];
+        if (range > max_range) {
+          max_range        = range;
+          _split_direction = direction;
+        }
+      }
+    }
+
+    /* Choose split point */
+    if (dbg_kdtree) {
+      log_trace("_split_direction = %d\n", _split_direction);
+    }
+
+    double mid = _approx_median_point2(6,
+                                       _split_direction,
+                                       extents[_split_direction],
+                                       extents[3+_split_direction],
+                                       point_range,
+                                       kdtree->_pts_coord);
+    // double mid = 0.5*(extents[_split_direction] + extents[3+_split_direction]);
+    if (dbg_kdtree) {
+      log_trace("mid = %f\n", mid);
+    }
+
+    /* Count and reorder points in each child node */
+    int count[2] = {0};
+    for (int i = point_range[0]; i < point_range[1]; i++) {
+      int ichild = (kdtree->_pts_coord[3*i + _split_direction] > mid);
+      count[ichild]++;
+    }
+    if (dbg_kdtree) {
+      log_trace("count = %d %d\n", count[0], count[1]);
+    }
+
+
+    /* Build index */
+    idx[0] = 0;
+    for (int ichild = 0; ichild < 2; ichild++) {
+      idx[ichild+1] = idx[ichild] + count[ichild];
+      count[ichild] = 0;
+    }
+
+    for (int i = point_range[0]; i < point_range[1]; i++) {
+      int ichild = (kdtree->_pts_coord[3*i + _split_direction] > mid);
+      int old = kdtree->new_to_old[i];
+      int pos = point_range[0] + idx[ichild] + count[ichild];
+
+      new_to_old[pos]         = old;
+      kdtree->old_to_new[old] = pos;
+
+      log_trace("i = %4d (old %4d) %+3.3e %+3.3e %+3.3e -> child %d (new %4d)\n",
+                i,
+                old,
+                kdtree->_pts_coord[3*i], kdtree->_pts_coord[3*i+1], kdtree->_pts_coord[3*i+2],
+                ichild,
+                pos);
+      count[ichild]++;
+    }
+
+    for (int i = point_range[0]; i < point_range[1]; i++) {
+      kdtree->new_to_old[i] = new_to_old[i];
+    }
+    if (dbg_kdtree) {
+      PDM_log_trace_array_int(kdtree->new_to_old + point_range[0],
+                              _n_points,
+                              "new_to_old: ");
+    }
+
+    /* Reorder points */
+    for (int i = point_range[0]; i < point_range[1]; i++) {
+      log_trace("copy old %d into new %d\n", kdtree->new_to_old[i], i);
+      memcpy(kdtree->_pts_coord + 3*i,
+             kdtree->pts_coord  + 3*kdtree->new_to_old[i],
+             sizeof(double) * 3);
+    }
+
+
+    for (int i = 0; i <= 2; i++) {
+      idx[i] += point_range[0];
+    }
+
+    if (dbg_kdtree) {
+      PDM_log_trace_array_int(idx, 3, "idx : ");
+    }
+
+    /* Build leaves recursively */
+    double sub_extents[6];
+    for (int ichild = 0; ichild < 2; ichild++) {
+
+      if (idx[ichild+1] <= idx[ichild]) {
+        continue;
+      }
+
+      tmp_size++;
+
+      child_id[ichild] = tmp_size;
+
+      // memcpy(sub_extents, extents, sizeof(double) * 6);
+      // if (ichild == 0) {
+      //   sub_extents[3+_split_direction] = mid;
+      // }
+      // else {
+      //   sub_extents[_split_direction]   = mid;
+      // }
+
+      // Tight extents (fit contained points)
+      for (int j = 0; j < 3; j++) {
+        sub_extents[j  ] =  HUGE_VAL;
+        sub_extents[j+3] = -HUGE_VAL;
+      }
+      for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+        for (int j = 0; j < 3; j++) {
+          double x = kdtree->_pts_coord[3*ipt+j];
+          sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
+          sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+        }
+      }
+      for (int j = 0; j < 3; j++) {
+        // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
+        sub_extents[j  ] -= 0.5*_eps_default;
+        sub_extents[j+3] += 0.5*_eps_default;
+        // }
+      }
+
+      if (dbg_kdtree) {
+        log_trace("child %d, id %d, sub_extents = %f %f %f  %f %f %f\n",
+                  ichild, child_id[ichild],
+                  sub_extents[0], sub_extents[1], sub_extents[2],
+                  sub_extents[3], sub_extents[4], sub_extents[5]);
+      }
+
+      kdtree->n_nodes = tmp_size;
+
+      int next_split_direction = split_direction;
+      if (next_split_direction >= 0) {
+        next_split_direction = (next_split_direction+1) % 3;
+      }
+      _build_kdtree_seq_leaves2(_n_nodes,
+                                next_split_direction,
+                                depth + 1,
+                                sub_extents,
+                                kdtree,
+                                idx + ichild,
+                                new_to_old);
+
+      tmp_size = kdtree->n_nodes;
+    }
+
+  }
+
+  /* Finalize node */
+  for (int i = 0; i < 2; i++) {
+    nodes->range[2*_n_nodes + i] = point_range[i];
+  }
+
+  for (int i = 0; i < 3; i++) {
+    nodes->idx[3*_n_nodes + i] = idx[i];
+  }
+
+  for (int i = 0; i < 6; i++) {
+    nodes->extents[6*_n_nodes + i] = extents[i];
+  }
+
+  for (int i = 0; i < 2; i++) {
+    nodes->children_id[2*_n_nodes + i] = child_id[i];
+  }
+
+  nodes->is_leaf[_n_nodes] =
+  (nodes->children_id[2*_n_nodes + 0] == -1) &&
+  (nodes->children_id[2*_n_nodes + 1] == -1);
+
+  nodes->ancestor_id[_n_nodes] = ancestor_id;
+  nodes->depth[_n_nodes]       = depth;
+
+  nodes->n_points[_n_nodes] = _n_points;
+
+}
+
+
+
+
+
+
 
 
 
@@ -756,32 +1158,52 @@ _build_kdtree
   kdtree->point_ids    = malloc (sizeof(int) * kdtree->t_n_points);
   kdtree->point_icloud = malloc (sizeof(int) * kdtree->t_n_points);
 
-  int cpt = 0;
-  for (int i = 0; i < kdtree->n_point_clouds; i++) {
+  // int cpt = 0;
+  // for (int i = 0; i < kdtree->n_point_clouds; i++) {
 
-    int n_points = kdtree->n_points[i];
-    double extents[6];
+  //   int n_points = kdtree->n_points[i];
+  //   double extents[6];
 
-    if (n_points > 0) {
+  //   if (n_points > 0) {
 
-      _point_extents(3,
-                     n_points,
-                     NULL,
-                     kdtree->point_clouds[i],
-                     extents);
+  //     _point_extents(3,
+  //                    n_points,
+  //                    NULL,
+  //                    kdtree->point_clouds[i],
+  //                    extents);
 
-      for (int i1 = 0; i1 < 3; i1++) {
-        kdtree->extents[i1] = PDM_MIN (extents[i1], kdtree->extents[i1]);
-        kdtree->extents[i1 + 3] = PDM_MAX (extents[i1 + 3], kdtree->extents[i1 + 3]);
-      }
+  //     for (int i1 = 0; i1 < 3; i1++) {
+  //       kdtree->extents[i1  ] = PDM_MIN(extents[i1  ], kdtree->extents[i1  ]);
+  //       kdtree->extents[i1+3] = PDM_MAX(extents[i1+3], kdtree->extents[i1+3]);
+  //     }
 
-      for (int j = 0; j < n_points; j++) {
-        kdtree->point_ids[cpt] = j;
-        kdtree->point_icloud[cpt] = i;
-        cpt +=1;
-      }
+  //     for (int j = 0; j < n_points; j++) {
+  //       kdtree->point_ids[cpt] = j;
+  //       kdtree->point_icloud[cpt] = i;
+  //       cpt +=1;
+  //     }
+  //   }
+  // }
+  for (int i = 0; i < kdtree->n_pts; i++) {
+    for (int j = 0; j < 3; j++) {
+      double x = kdtree->pts_coord[3*i+j];
+      kdtree->extents[j  ] = PDM_MIN(kdtree->extents[j  ], x);
+      kdtree->extents[j+3] = PDM_MAX(kdtree->extents[j+3], x);
     }
   }
+
+  kdtree->new_to_old = malloc(sizeof(int) * kdtree->n_pts);
+  for (int i = 0; i < kdtree->n_pts; i++) {
+    kdtree->new_to_old[i] = i;
+  }
+
+  kdtree->old_to_new = malloc(sizeof(int) * kdtree->n_pts);
+  for (int i = 0; i < kdtree->n_pts; i++) {
+    kdtree->old_to_new[i] = i;
+  }
+
+  kdtree->_pts_coord = malloc(sizeof(double) * kdtree->n_pts * 3);
+  memcpy(kdtree->_pts_coord, kdtree->pts_coord, sizeof(double) * kdtree->n_pts * 3);
 
   double delta = -1;
   for (int i = 0; i < 3; i++) {
@@ -820,28 +1242,61 @@ _build_kdtree
   if (dbg_kdtree) {
     log_trace(">> _build_kdtree_seq_leaves\n");
   }
-  _build_kdtree_seq_leaves(-1,
-                           // location_in_ancestor,
-                           split_direction,
-                           -1,
-                           kdtree->extents,
-         (const double **) kdtree->point_clouds,
-                           point_icloud_tmp,
-                           point_ids_tmp,
-                           kdtree,
-                           point_range);
+  if (0) {
+    _build_kdtree_seq_leaves(-1,
+                             // location_in_ancestor,
+                             split_direction,
+                             -1,
+                             kdtree->extents,
+           (const double **) kdtree->point_clouds,
+                             point_icloud_tmp,
+                             point_ids_tmp,
+                             kdtree,
+                             point_range);
+  }
+  else {
+    int *tmp_new_to_old = malloc(sizeof(int) * kdtree->n_pts);
+    _build_kdtree_seq_leaves2(-1,
+                              split_direction,
+                              -1,
+                              kdtree->extents,
+                              kdtree,
+                              point_range,
+                              tmp_new_to_old);
+    free(tmp_new_to_old);
+  }
 
-  kdtree->n_nodes += 1;
+  log_trace("kdtree->n_nodes = %d\n", kdtree->n_nodes);
+  if (kdtree->n_nodes > 1) {
+    kdtree->n_nodes += 1;
+  }
 
   if (dbg_kdtree) {
+    if (dbg_kdtree) {
+      PDM_log_trace_array_int(kdtree->old_to_new,
+                              kdtree->n_pts,
+                              "old_to_new : ");
+      PDM_log_trace_array_int(kdtree->new_to_old,
+                              kdtree->n_pts,
+                              "new_to_old : ");
+      for (int i = 0; i < kdtree->n_pts; i++) {
+        // log_trace("old %d, new %d, new_to_old %d\n",
+        //           i+1, kdtree->old_to_new[i], kdtree->new_to_old[kdtree->old_to_new[i]-1]);
+        if (kdtree->new_to_old[kdtree->old_to_new[i]] != i) {
+          log_trace("!!! point %d error with old_to_new_to_old\n", i);
+        }
+      }
+    }
+
     // Dump kd-tree
     _l_nodes_t *nodes = kdtree->nodes;
 
     for (int i = 0; i < kdtree->n_nodes; i++) {
       if (1) {//nodes->is_leaf[i]) {
         log_trace("\nNode %d :", i);
-        log_trace("  is_leaf = %d\n", nodes->is_leaf[i]);
         log_trace("  depth = %d\n", nodes->depth[i]);
+        log_trace("  is_leaf = %d\n", nodes->is_leaf[i]);
+        log_trace("  children_id = %d %d\n", nodes->children_id[2*i], nodes->children_id[2*i+1]);
         log_trace("  extents = %f %f %f  %f %f %f\n",
                   nodes->extents[6*i+0],
                   nodes->extents[6*i+1],
@@ -995,6 +1450,11 @@ PDM_kdtree_seq_create
     kdtree->extents[i + 3] = -HUGE_VAL;
   }
 
+  kdtree->n_pts = 0;
+  kdtree->pts_coord  = NULL;
+  kdtree->_pts_coord = NULL;
+  kdtree->new_to_old  = NULL;
+
   return kdtree;
 }
 
@@ -1017,6 +1477,18 @@ PDM_kdtree_seq_free
   free (kdtree->point_clouds);
   free (kdtree->point_ids);
   free (kdtree->point_icloud);
+
+  if (kdtree->_pts_coord != NULL) {
+    free(kdtree->_pts_coord);
+  }
+
+  if (kdtree->new_to_old != NULL) {
+    free(kdtree->new_to_old);
+  }
+
+  if (kdtree->old_to_new != NULL) {
+    free(kdtree->old_to_new);
+  }
 
   _l_nodes_free(kdtree);
 
@@ -1048,6 +1520,11 @@ PDM_kdtree_seq_point_cloud_set
 {
   kdtree->n_points    [i_point_cloud] = n_points;
   kdtree->point_clouds[i_point_cloud] = coords;
+
+  if (i_point_cloud > 1) return;
+
+  kdtree->n_pts     = n_points;
+  kdtree->pts_coord = coords;
 }
 
 
@@ -1173,7 +1650,7 @@ void PDM_kdtree_seq_write_nodes
  * \param [in]  ball_center          Center of balls (size = \ref n_ball * 3)
  * \param [in]  ball_radius2         Squared radius of balls (size = \ref n_ball)
  * \param [out] ball_pts_idx         Index for ball->points graph (size \ref n_ball + 1)
- * \param [out] ball_pts_l_num       Ball->points graph (cloud_id, point_id)
+ * \param [out] ball_pts_l_num       Ball->points graph (zero-based IDs)
  * \param [out] ball_pts_dist2       Distance from points to ball centers
  *
  */
@@ -1190,6 +1667,7 @@ PDM_kdtree_seq_points_inside_balls
  double                 **ball_pts_dist2
  )
 {
+  int dbg = 0;
   const int n_children = 2;
 
   int s_pt_stack = ((n_children - 1) * (kdtree->depth_max - 1) + n_children);
@@ -1200,7 +1678,7 @@ PDM_kdtree_seq_points_inside_balls
   pib_idx[0] = 0;
 
   int s_pib = 4*n_ball;
-  *ball_pts_l_num = malloc(sizeof(int   ) * s_pib * 2);
+  *ball_pts_l_num = malloc(sizeof(int   ) * s_pib);
   *ball_pts_dist2 = malloc(sizeof(double) * s_pib);
 
   int    *pib_l_num = *ball_pts_l_num;
@@ -1220,6 +1698,12 @@ PDM_kdtree_seq_points_inside_balls
     double *_center  = ball_center + 3*iball;
     double  _radius2 = ball_radius2[iball];
 
+    if (dbg) {
+      log_trace("ball %d, center = %f %f %f, radius2 = %f\n",
+                iball,
+                _center[0], _center[1], _center[2], _radius2);
+    }
+
 
     /* Start by root */
     int pos_stack = 0;
@@ -1230,6 +1714,9 @@ PDM_kdtree_seq_points_inside_balls
                                     &min_dist2);
 
     if (inside_box || min_dist2 <= _radius2) {
+      if (dbg) {
+        log_trace("  push root\n");
+      }
       stack[pos_stack++] = 0;
     }
 
@@ -1237,15 +1724,14 @@ PDM_kdtree_seq_points_inside_balls
     while (pos_stack > 0) {
 
       int node_id = stack[--pos_stack];
+      if (dbg) {
+        log_trace("  node_id = %d (is_leaf? %d)\n", node_id, nodes->is_leaf[node_id]);
+      }
 
       if (nodes->is_leaf[node_id]) {
         /* Leaf node */
-
-        int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
-        int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
-
-        for (int i = 0; i < nodes->n_points[node_id]; i++) {
-          const double *_pt = kdtree->point_clouds[point_clouds_id[i]] + 3*point_indexes[i];
+        for (int i = nodes->range[2*node_id]; i < nodes->range[2*node_id+1]; i++) {
+          double *_pt = kdtree->_pts_coord + 3*i;
 
           double dist2 = 0.;
           for (int j = 0; j < 3; j++) {
@@ -1253,12 +1739,16 @@ PDM_kdtree_seq_points_inside_balls
             dist2 += delta*delta;
           }
 
+          if (dbg) {
+            log_trace("    pt %d: dist2 = %f\n", i, dist2);
+          }
+
           if (dist2 <= _radius2) {
             /* Check size and realloc if necessary */
             if (pib_idx[iball+1] >= s_pib) {
               s_pib *= 2;
 
-              *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+              *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib);
               *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 
               pib_l_num = *ball_pts_l_num;
@@ -1266,9 +1756,7 @@ PDM_kdtree_seq_points_inside_balls
             }
 
             /* Add point */
-            pib_l_num[2*pib_idx[iball+1]  ] = point_clouds_id[i];
-            pib_l_num[2*pib_idx[iball+1]+1] = point_indexes[i];
-
+            pib_l_num[pib_idx[iball+1]] = i;
             pib_dist2[pib_idx[iball+1]] = dist2;
 
             pib_idx[iball+1]++;
@@ -1297,6 +1785,9 @@ PDM_kdtree_seq_points_inside_balls
 
           if (inside_box || min_dist2 <= _radius2) {
             stack[pos_stack++] = child_id;
+            if (dbg) {
+              log_trace("  push child %d (%d)", ichild, child_id);
+            }
           }
 
         }
@@ -1311,7 +1802,7 @@ PDM_kdtree_seq_points_inside_balls
   free(stack);
 
   s_pib = pib_idx[n_ball];
-  *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib * 2);
+  *ball_pts_l_num = realloc(*ball_pts_l_num, sizeof(int   ) * s_pib);
   *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
 
 }
@@ -1414,7 +1905,7 @@ PDM_kdtree_seq_extract_extent
  * \param [in]   n_box                  Number of boxes
  * \param [in]   box_extents            Extents of boxes
  * \param [out]  pts_idx                Index of points located in boxes
- * \param [out]  pts_l_num              Local ids of points located in boxes
+ * \param [out]  pts_l_num              Local ids (zero-based) of points located in boxes
  *
  */
 
@@ -1437,7 +1928,7 @@ PDM_kdtree_seq_points_inside_boxes
     return;
   }
 
-  int dim = 3;
+  // int dim = 3;
   const int n_children = 2;
 
 
@@ -1514,12 +2005,13 @@ PDM_kdtree_seq_points_inside_boxes
       /* is leaf */
       if(nodes->is_leaf[node_id]) {
 
-        int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
-        int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
+        // int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
+        // int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
 
         for (int i = 0; i < nodes->n_points[node_id]; i++) {
           int ipt = nodes->range[2*node_id] + i;
-          const double      *_pt       = kdtree->point_clouds[point_clouds_id[i]] + dim * point_indexes[i];
+          // const double      *_pt       = kdtree->point_clouds[point_clouds_id[i]] + dim * point_indexes[i];
+          const double *_pt = kdtree->_pts_coord + 3*ipt;
 
           int pt_inside_box = 1;
           for (int idim = 0; idim < 3; idim++) {
@@ -1619,7 +2111,7 @@ PDM_kdtree_seq_points_inside_boxes
  * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
  * \param [in]   n_pts                  Number of points
  * \param [in]   pts                    Point Coordinates
- * \param [out]  closest_kdtree_pt_id   Closest point in kdtree index
+ * \param [out]  closest_kdtree_pt_id   Closest point in kdtree index (zero-based)
  * \param [out]  closest_kdtree_pt_dist Closest point in kdtree distance
  *
  */
@@ -1658,17 +2150,18 @@ double           *closest_kdtree_pt_dist2
 
     /* Init stack */
 
-    closest_kdtree_pt_id[2*i]   = -1;
-    closest_kdtree_pt_id[2*i+1] = -1;
-    closest_kdtree_pt_dist2[i]  = HUGE_VAL;
+    // closest_kdtree_pt_id[2*i]   = -1;
+    // closest_kdtree_pt_id[2*i+1] = -1;
+    closest_kdtree_pt_id   [i] = -1;
+    closest_kdtree_pt_dist2[i] = HUGE_VAL;
 
     stack[pos_stack] = 0; /* push root in the stack */
 
     double _min_dist2;
-    int inbox1 =  _box_dist2_min(dim,
-                                 &nodes->extents[0],
-                                 _pt,
-                                 &_min_dist2);
+    int inbox1 = _box_dist2_min(dim,
+                                &nodes->extents[0],
+                                _pt,
+                                &_min_dist2);
 
     inbox_stack[pos_stack]     = inbox1;
     min_dist2_stack[pos_stack] = _min_dist2;
@@ -1745,13 +2238,12 @@ double           *closest_kdtree_pt_dist2
 
         else {
 
-          int *point_clouds_id = kdtree->point_icloud + nodes->range[2*node_id];
-          int *point_indexes   = kdtree->point_ids    + nodes->range[2*node_id];
 
           for (int j = 0; j < nodes->n_points[node_id]; j++) {
 
             double point_dist2 = 0;
-            const double *_coords = kdtree->point_clouds[point_clouds_id[j]] + dim * point_indexes[j];
+            int ipt = nodes->range[2*node_id] + j;
+            double *_coords = kdtree->_pts_coord + 3*ipt;
 
             for (int k = 0; k < dim; k++) {
               point_dist2 += (_coords[k] - _pt[k]) *
@@ -1759,9 +2251,8 @@ double           *closest_kdtree_pt_dist2
             }
 
             if (point_dist2 < closest_kdtree_pt_dist2[i]) {
-              closest_kdtree_pt_id[2*i  ] = point_clouds_id[j];
-              closest_kdtree_pt_id[2*i+1] = point_indexes[j];
-              closest_kdtree_pt_dist2[i]  = point_dist2;
+              closest_kdtree_pt_id[i]    = ipt;
+              closest_kdtree_pt_dist2[i] = point_dist2;
             }
           }
         }
@@ -1774,6 +2265,59 @@ double           *closest_kdtree_pt_dist2
   free (min_dist2_stack);
   free (stack);
 
+}
+
+
+
+/**
+ *
+ * \brief Get point order in kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [out]  new_to_old             New to old order of points in kdtree
+ *
+ */
+
+void
+PDM_kdtree_seq_point_new_to_old_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ int              **new_to_old
+)
+{
+  *new_to_old = kdtree->new_to_old;
+}
+
+
+/**
+ *
+ * \brief Get point order in kdtree
+ *
+ * \param [in]   kdtree                 Pointer to \ref PDM_kdtree_seq object
+ * \param [out]  old_to_new             Old to new order of points in kdtree
+ *
+ */
+
+void
+PDM_kdtree_seq_point_old_to_new_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ int              **old_to_new
+)
+{
+  *old_to_new = kdtree->old_to_new;
+}
+
+
+
+void
+PDM_kdtree_seq_sorted_points_get
+(
+ PDM_kdtree_seq_t  *kdtree,
+ double           **pts_coord
+)
+{
+  *pts_coord = kdtree->_pts_coord;
 }
 
 #ifdef  __cplusplus
