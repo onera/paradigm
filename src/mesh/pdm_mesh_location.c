@@ -3128,8 +3128,8 @@ PDM_mesh_location_t        *ml
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
   //
-  // TODO: - Conserver que "allow_extraction = 1 et donc suprrimer la variable et les else"
-  //       - Mettre l'extraction mesh dans une fonction dédiée
+  // TODO: - ok - Conserver que "allow_extraction = 1 et donc suprrimer la variable et les else"
+  //       - ok - Mettre l'extraction mesh dans une fonction dédiée
   //       - Faire une extraction par paire nuage/maillage ?
   //       - Voir l'utilite d'un appel extract_part
   //       - part_to_block_geom sur select_pts (pcloud_*) (normalement ca casse pas tout, ajout d'un part_to_part à ma fin ?)
@@ -6446,6 +6446,7 @@ PDM_mesh_location_compute_optim
 
   /*
    *  Compute global extents of source mesh
+   *  -------------------------------------
    */
 
   double mesh_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
@@ -6509,7 +6510,6 @@ PDM_mesh_location_compute_optim
                                          sizeof(int) * n_select_pts[icloud][ipart]);
     } // End of loop on parts
 
-
     PDM_g_num_t l_n_pts[2] = {0, 0};
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       l_n_pts[0] += pcloud->n_points[ipart];
@@ -6529,7 +6529,9 @@ PDM_mesh_location_compute_optim
                                       &(select_pts_parent_g_num[icloud]),
                                       &(select_pts_g_num[icloud]),
                                       &(select_pts_coord[icloud]));
-    } else {
+    } 
+
+    else {
       free (n_select_pts[icloud]);
       n_select_pts[icloud] = pcloud->n_points;
       select_pts_parent_g_num[icloud] = pcloud->gnum;
@@ -6561,8 +6563,6 @@ PDM_mesh_location_compute_optim
                            select_pts_g_num[icloud],
                            select_pts_parent_g_num[icloud]);
     }
-
-
 
     if (dbg_enabled && my_rank == 0 && use_extracted_pts[icloud]) {
       printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" pts from cloud #%d ("PDM_FMT_G_NUM"%%)\n",
@@ -6604,8 +6604,7 @@ PDM_mesh_location_compute_optim
            g_pts_extents[0], g_pts_extents[1], g_pts_extents[2],
            g_pts_extents[3], g_pts_extents[4], g_pts_extents[5]);
   }
-
-
+  
   /*
    *  Select elements whose bounding box intersect
    *  the global extents of the extracted point clouds
