@@ -266,6 +266,12 @@ typedef enum {
 } PDM_doctree_local_tree_t;
 
 typedef enum {
+  PDM_TREE_SOLICITATION_BOXES_POINTS,
+  PDM_TREE_SOLICITATION_BOXES_BOXES
+} PDM_tree_solicitation_t;
+
+
+typedef enum {
   PDM_VTX_KIND_NONE               = 0x0000000, /*=* empty flag, all values set to false */
   PDM_VTX_KIND_NULL               = 0xFFFFFFF, /*=* unsignificant flags value           */
   PDM_VTX_KIND_ON_VOLUME          = 0x0000001, /*=*  0                                  */

@@ -65,6 +65,14 @@ struct _pdm_doctree_t {
   double      **pts_coords;
   int         **pts_init_location;
 
+  /* Solicitation */
+  PDM_tree_solicitation_t    solicitation_kind;
+  int                        n_part;
+  int                       *n_entity;
+  int                      **init_location_entity;
+  PDM_g_num_t              **entity_gnum;
+  double                   **entity_coords;
+
 
 };
 

@@ -113,6 +113,15 @@ _redistribute_pts_geom
 
 }
 
+// void
+// _setup_coarse_tree
+// (
+//  PDM_doctree_t        *doct,
+
+// )
+// {
+
+// }
 
 
 /*=============================================================================
@@ -227,7 +236,7 @@ PDM_doctree_build
    */
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
-  int    *coarse_box_weight  = NULL; // Number of point in boxes
+  int    *box_n_pts          = NULL; // Number of point in boxes
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
     int n_depth_per_proc = 2;
     PDM_octree_seq_extract_extent(coarse_octree,
@@ -235,7 +244,7 @@ PDM_doctree_build
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents,
-                                  &coarse_box_weight);
+                                  &box_n_pts);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
     int n_depth_per_proc = 16;
     PDM_kdtree_seq_extract_extent(coarse_kdtree,
@@ -243,7 +252,7 @@ PDM_doctree_build
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents,
-                                  &coarse_box_weight);
+                                  &box_n_pts);
   }
 
   /*
@@ -319,7 +328,6 @@ PDM_doctree_build
   PDM_mpi_win_shared_lock_all (0, wshared_box_n_pts  );
   PDM_mpi_win_shared_lock_all (0, wshared_box_extents);
 
-  int* box_n_pts = NULL;
   PDM_MPI_Neighbor_allgatherv(box_n_pts       , n_coarse_box, PDM_MPI_INT,
                               shared_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, comm_dist_graph);
   PDM_MPI_Barrier(comm_shared);
@@ -335,18 +343,64 @@ PDM_doctree_build
                               shared_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, comm_dist_graph);
   PDM_MPI_Barrier(comm_shared);
 
+  /*
+   * Solicitate
+   */
+  int n_shared_boxes = shared_local_nodes_idx[n_rank];
+
+  PDM_box_set_t  *box_set   = NULL;
+  PDM_box_tree_t *bt_shared = NULL;
+  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
+  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+
+  PDM_MPI_Comm comm_alone;
+  PDM_MPI_Comm_split(doct->comm, i_rank, 0, &(comm_alone));
+  const int n_info_location = 3;
+  int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
+  PDM_g_num_t *gnum_coarse_boxes = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_shared_boxes);
+  for (int i = 0; i < n_shared_boxes; i++) {
+    gnum_coarse_boxes[i] = i + 1;
+  }
+
+  box_set = PDM_box_set_create(3,
+                               0,  // No normalization to preserve initial extents
+                               0,  // No projection to preserve initial extents
+                               n_shared_boxes,
+                               gnum_coarse_boxes,
+                               shared_box_extents,
+                               1,
+                               &n_shared_boxes,
+                               init_location_proc,
+                               comm_alone);
+
+  bt_shared = PDM_box_tree_create (max_tree_depth_shared,
+                                   max_boxes_leaf_shared,
+                                   max_box_ratio_shared);
+
+  PDM_box_tree_set_boxes (bt_shared,
+                          box_set,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  free(gnum_coarse_boxes);
+  free(init_location_proc);
+
+  PDM_MPI_Comm_free(&comm_alone);
+
+  PDM_box_set_destroy (&box_set);
+  PDM_box_tree_destroy (&bt_shared);
 
   PDM_mpi_win_shared_unlock_all(wshared_box_n_pts);
   PDM_mpi_win_shared_unlock_all(wshared_box_extents);
-
-  PDM_mpi_win_shared_free(wshared_box_n_pts);
-  PDM_mpi_win_shared_free(wshared_box_extents);
 
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
 
   PDM_mpi_win_shared_free (wshared_local_nodes_n  );
   PDM_mpi_win_shared_free (wshared_local_nodes_idx);
+
+  PDM_mpi_win_shared_free(wshared_box_n_pts);
+  PDM_mpi_win_shared_free(wshared_box_extents);
 
   free(recv_shift);
   free(lrecv_count);
@@ -373,48 +427,49 @@ PDM_doctree_build
   /*
    * Build a box_tree
    */
-  int *g_coarse_box_n = (int *) malloc (n_rank * sizeof(int));
-  PDM_MPI_Allgather (&n_coarse_box , 1, PDM_MPI_INT,
-                     g_coarse_box_n, 1, PDM_MPI_INT,
-                     doct->comm);
+  // int *g_coarse_box_n = (int *) malloc (n_rank * sizeof(int));
+  // PDM_MPI_Allgather (&n_coarse_box , 1, PDM_MPI_INT,
+  //                    g_coarse_box_n, 1, PDM_MPI_INT,
+  //                    doct->comm);
 
-  int *g_coarse_box_idx = malloc((n_rank + 1 ) *sizeof(int));
-  g_coarse_box_idx[0] = 0;
-  for(int i = 0; i < n_rank; ++i) {
-    g_coarse_box_idx[i+1] =  g_coarse_box_idx[i] + g_coarse_box_n[i];
-  }
+  // int *g_coarse_box_idx = malloc((n_rank + 1 ) *sizeof(int));
+  // g_coarse_box_idx[0] = 0;
+  // for(int i = 0; i < n_rank; ++i) {
+  //   g_coarse_box_idx[i+1] =  g_coarse_box_idx[i] + g_coarse_box_n[i];
+  // }
 
-  if(1 == 1) {
-    PDM_log_trace_array_int(g_coarse_box_idx, n_rank+1, "g_coarse_box_idx ::");
-  }
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int(g_coarse_box_idx, n_rank+1, "g_coarse_box_idx ::");
+  // }
 
-  double      *gcoarse_box_extents = malloc(g_coarse_box_idx[n_rank] * 6 * sizeof(double     ));
-  PDM_g_num_t *g_coarse_box_color  = malloc(g_coarse_box_idx[n_rank] *     sizeof(PDM_g_num_t));
+  // double      *gcoarse_box_extents = malloc(g_coarse_box_idx[n_rank] * 6 * sizeof(double     ));
+  // PDM_g_num_t *g_coarse_box_color  = malloc(g_coarse_box_idx[n_rank] *     sizeof(PDM_g_num_t));
 
-  for(int i = 0; i < n_rank; ++i) {
-    for(int j = g_coarse_box_idx[i]; j < g_coarse_box_idx[i+1]; ++j) {
-      g_coarse_box_color[j] = i;
-    }
-  }
+  // for(int i = 0; i < n_rank; ++i) {
+  //   for(int j = g_coarse_box_idx[i]; j < g_coarse_box_idx[i+1]; ++j) {
+  //     g_coarse_box_color[j] = i;
+  //   }
+  // }
 
-  for(int i = 0; i < n_rank; ++i) {
-    g_coarse_box_n  [i] *= 6;
-    g_coarse_box_idx[i] *= 6;
-  }
-  PDM_MPI_Allgatherv (coarse_box_extents , 6 * n_coarse_box, PDM_MPI_DOUBLE,
-                      gcoarse_box_extents, g_coarse_box_n  , g_coarse_box_idx, PDM_MPI_DOUBLE,
-                      doct->comm);
+  // for(int i = 0; i < n_rank; ++i) {
+  //   g_coarse_box_n  [i] *= 6;
+  //   g_coarse_box_idx[i] *= 6;
+  // }
+  // PDM_MPI_Allgatherv (coarse_box_extents , 6 * n_coarse_box, PDM_MPI_DOUBLE,
+  //                     gcoarse_box_extents, g_coarse_box_n  , g_coarse_box_idx, PDM_MPI_DOUBLE,
+  //                     doct->comm);
 
-  free(coarse_box_extents);
+  // free(coarse_box_extents);
+  // free(box_n_pts);
 
-  if(1 == 1 && i_rank == 0) {
-    char filename[999];
-    sprintf(filename, "gcoarse_box_extents_%i.vtk", i_rank);
-    PDM_vtk_write_boxes(filename,
-                        g_coarse_box_idx[n_rank],
-                        gcoarse_box_extents,
-                        g_coarse_box_color);
-  }
+  // if(1 == 1 && i_rank == 0) {
+  //   char filename[999];
+  //   sprintf(filename, "gcoarse_box_extents_%i.vtk", i_rank);
+  //   PDM_vtk_write_boxes(filename,
+  //                       g_coarse_box_idx[n_rank],
+  //                       gcoarse_box_extents,
+  //                       g_coarse_box_color);
+  // }
 
 
   /*
@@ -432,45 +487,45 @@ PDM_doctree_build
    *   A affiner avec le double niveau node / numa
    *   Reprendre le Allgatherv du para_octree sur le comm circulaire
    */
-  int n_shared_boxes = g_coarse_box_idx[n_rank];
-  const int n_info_location = 3;
-  int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
+  // int n_shared_boxes = g_coarse_box_idx[n_rank];
+  // const int n_info_location = 3;
+  // int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
 
-  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
-  int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
-  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+  // int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  // int   max_tree_depth_shared = 4; // Max tree depth for coarse shared BBTree
+  // float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
 
-  PDM_MPI_Comm bt_comm;
-  PDM_MPI_Comm_split (doct->comm, i_rank, 0, &bt_comm);
-  PDM_box_set_t  *box_set   = PDM_box_set_create(3,             // dim
-                                                 1,             // normalize
-                                                 0,             // allow_projection
-                                                 n_shared_boxes,
-                                                 g_coarse_box_color,
-                                                 gcoarse_box_extents,
-                                                 1,
-                                                 &n_shared_boxes,
-                                                 init_location_proc,
-                                                 doct->comm);
+  // PDM_MPI_Comm bt_comm;
+  // PDM_MPI_Comm_split (doct->comm, i_rank, 0, &bt_comm);
+  // PDM_box_set_t  *box_set   = PDM_box_set_create(3,             // dim
+  //                                                1,             // normalize
+  //                                                0,             // allow_projection
+  //                                                n_shared_boxes,
+  //                                                g_coarse_box_color,
+  //                                                gcoarse_box_extents,
+  //                                                1,
+  //                                                &n_shared_boxes,
+  //                                                init_location_proc,
+  //                                                doct->comm);
 
-  PDM_box_tree_t* bt_shared = PDM_box_tree_create (max_tree_depth_shared,
-                                                   max_boxes_leaf_shared,
-                                                   max_box_ratio_shared);
+  // PDM_box_tree_t* bt_shared = PDM_box_tree_create (max_tree_depth_shared,
+  //                                                  max_boxes_leaf_shared,
+  //                                                  max_box_ratio_shared);
 
-  PDM_box_tree_set_boxes (bt_shared,
-                          box_set,
-                          PDM_BOX_TREE_ASYNC_LEVEL);
+  // PDM_box_tree_set_boxes (bt_shared,
+  //                         box_set,
+  //                         PDM_BOX_TREE_ASYNC_LEVEL);
 
-  PDM_box_set_destroy (&box_set);
-  PDM_box_tree_destroy(&bt_shared);
-  PDM_MPI_Comm_free (&bt_comm);
+  // PDM_box_set_destroy (&box_set);
+  // PDM_box_tree_destroy(&bt_shared);
+  // PDM_MPI_Comm_free (&bt_comm);
 
 
-  free(g_coarse_box_n);
-  free(g_coarse_box_idx);
-  free(gcoarse_box_extents);
-  free(g_coarse_box_color);
-  free(init_location_proc);
+  // free(g_coarse_box_n);
+  // free(g_coarse_box_idx);
+  // free(gcoarse_box_extents);
+  // free(g_coarse_box_color);
+  // free(init_location_proc);
 
   free(blk_pts_coord);
 
@@ -530,7 +585,12 @@ PDM_doctree_solicitation_set
  double                   **entity_coords
 )
 {
-
+  doct->solicitation_kind    = solicitation_kind;
+  doct->n_part               = n_part;
+  doct->n_entity             = n_entity;
+  doct->init_location_entity = init_location_entity;
+  doct->entity_gnum          = entity_gnum;
+  doct->entity_coords        = entity_coords;
 }
 
 // void
