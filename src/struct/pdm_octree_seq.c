@@ -1374,6 +1374,8 @@ double           *closest_octree_pt_dist2
   int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
   double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
 
+  _l_octant_t *nodes = octree->octants;
+
   int dim = 3;
   /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
   /* double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01}; */
@@ -1399,9 +1401,9 @@ double           *closest_octree_pt_dist2
     stack[pos_stack] = 0; /* push root in the stack */
 
     double _min_dist2;
-    _octant_t *root_node = &(octree->nodes[0]);
+    // _octant_t *root_node = &(octree->nodes[0]);
     int inbox1 =  _box_dist2 (dim,
-                              root_node->extents,
+                              &nodes->extents[0],//root_node->extents,
                               _pt,
                               &_min_dist2);
 
@@ -1412,7 +1414,7 @@ double           *closest_octree_pt_dist2
     while (pos_stack > 0) {
       //count++;
       int id_curr_node = stack[--pos_stack];
-      _octant_t *curr_node = &(octree->nodes[id_curr_node]);
+      // _octant_t *curr_node = &(octree->nodes[id_curr_node]);
 
       double min_dist2 = min_dist2_stack[pos_stack];
       int inbox =  inbox_stack[pos_stack];
@@ -1424,11 +1426,13 @@ double           *closest_octree_pt_dist2
 
       if ((min_dist2 <= closest_octree_pt_dist2[i]) || (inbox == 1)) {
 
-        if (!curr_node->is_leaf) {
+        // if (!curr_node->is_leaf) {
+        if (!nodes->is_leaf[id_curr_node]) {
 
           /* Sort children and store them into the stack */
 
-          const int *_child_ids = curr_node->children_id;
+          // const int *_child_ids = curr_node->children_id;
+          const int *_child_ids = nodes->children_id + n_children*id_curr_node;
 
           for (int j = 0; j < n_children; j++) {
             dist_child[j] = HUGE_VAL;
@@ -1445,11 +1449,11 @@ double           *closest_octree_pt_dist2
 
             if (child_id != -1) {
 
-              _octant_t *child_node = &(octree->nodes[child_id]);
+              // _octant_t *child_node = &(octree->nodes[child_id]);
               double child_min_dist2;
 
               child_inbox = _box_dist2 (dim,
-                                        child_node->extents,
+                                        &nodes->extents[6*child_id],//child_node->extents,
                                         _pt,
                                         &child_min_dist2);
 
@@ -1474,9 +1478,10 @@ double           *closest_octree_pt_dist2
             int j1 = n_selec- 1 - j;
             int child_id = sort_child[j1];
             if (child_id != -1) {
-              _octant_t *child_node = &(octree->nodes[child_id]);
+              // _octant_t *child_node = &(octree->nodes[child_id]);
               if ((dist_child[j1] < closest_octree_pt_dist2[i]) &&
-                  (child_node->n_points > 0)) {
+                  (nodes->n_points[child_id] > 0)) {
+                  // (child_node->n_points > 0)) {
 
                 min_dist2_stack[pos_stack] = dist_child[j1];
                 inbox_stack[pos_stack] = inbox_child[j1];
@@ -1489,10 +1494,13 @@ double           *closest_octree_pt_dist2
 
         else {
 
-          int *point_clouds_id = octree->point_icloud + curr_node->range[0];
-          int *point_indexes = octree->point_ids + curr_node->range[0];
+          // int *point_clouds_id = octree->point_icloud + curr_node->range[0];
+          // int *point_indexes = octree->point_ids + curr_node->range[0];
+          int *point_clouds_id = octree->point_icloud + nodes->range[2*id_curr_node];
+          int *point_indexes   = octree->point_ids    + nodes->range[2*id_curr_node];
 
-          for (int j = 0; j < curr_node->n_points; j++) {
+          // for (int j = 0; j < curr_node->n_points; j++) {
+          for (int j = 0; j < nodes->n_points[id_curr_node]; j++) {
 
             double point_dist2 = 0;
             const double *_coords = octree->point_clouds[point_clouds_id[j]]
@@ -1504,9 +1512,9 @@ double           *closest_octree_pt_dist2
             }
 
             if (point_dist2 < closest_octree_pt_dist2[i]) {
-              closest_octree_pt_id[2*i] = point_clouds_id[j];
+              closest_octree_pt_id[2*i  ] = point_clouds_id[j];
               closest_octree_pt_id[2*i+1] = point_indexes[j];
-              closest_octree_pt_dist2[i] = point_dist2;
+              closest_octree_pt_dist2[i]  = point_dist2;
             }
           }
         }

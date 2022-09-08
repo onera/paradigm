@@ -1164,7 +1164,7 @@ PDM_kdtree_seq_points_inside_balls
             }
 
             /* Add point */
-            pib_l_num[pib_idx[iball+1]] = i;
+            pib_l_num[pib_idx[iball+1]] = kdtree->new_to_old[i];
             pib_dist2[pib_idx[iball+1]] = dist2;
 
             pib_idx[iball+1]++;
@@ -1404,10 +1404,10 @@ PDM_kdtree_seq_points_inside_boxes
 
       if (dbg_enabled) {
         log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
-               node_id,
-               nodes->range[2*node_id], nodes->range[2*node_id+1],
-               nodes->n_points[node_id],
-               nodes->is_leaf[node_id]);
+                  node_id,
+                  nodes->range[2*node_id], nodes->range[2*node_id+1],
+                  nodes->n_points[node_id],
+                  nodes->is_leaf[node_id]);
       }
 
       /* is leaf */
@@ -1436,7 +1436,7 @@ PDM_kdtree_seq_points_inside_boxes
               _pts_l_num = *pts_l_num;
             }
 
-            _pts_l_num[_pts_idx[ibox+1]++] = ipt;
+            _pts_l_num[_pts_idx[ibox+1]++] = kdtree->new_to_old[ipt];
           }
         }
       } else { /* Internal nodes */
@@ -1558,8 +1558,6 @@ double           *closest_kdtree_pt_dist2
 
     /* Init stack */
 
-    // closest_kdtree_pt_id[2*i]   = -1;
-    // closest_kdtree_pt_id[2*i+1] = -1;
     closest_kdtree_pt_id   [i] = -1;
     closest_kdtree_pt_dist2[i] = HUGE_VAL;
 
@@ -1659,7 +1657,7 @@ double           *closest_kdtree_pt_dist2
             }
 
             if (point_dist2 < closest_kdtree_pt_dist2[i]) {
-              closest_kdtree_pt_id[i]    = ipt;
+              closest_kdtree_pt_id[i]    = kdtree->new_to_old[ipt];
               closest_kdtree_pt_dist2[i] = point_dist2;
             }
           }
