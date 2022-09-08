@@ -1301,9 +1301,6 @@ PDM_kdtree_seq_extract_extent
   *node_ids     = id_to_extract;
   *node_extents = _extents;
   *node_weight  = _n_pts;
-
-  // free(id_to_extract);
-
 }
 
 

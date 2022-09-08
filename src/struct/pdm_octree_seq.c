@@ -1236,6 +1236,7 @@ PDM_octree_seq_points_get
  * \param [in]  root_id              ID of subtree root
  * \param [in]  n_depth              Depth of subtree
  * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_ids             IDs of subtree nodes
  * \param [out] node_extents         Extents of subtree nodes
  * \param [out] node_weight          Weights of subtree nodes
  *
@@ -1248,6 +1249,7 @@ PDM_octree_seq_extract_extent
   int                root_id,
   int                n_depth,
   int               *n_node,
+  int              **node_ids,
   double           **node_extents,
   int              **node_weight
 )
@@ -1307,11 +1309,9 @@ PDM_octree_seq_extract_extent
   }
 
   *n_node       = n_extract;
+  *node_ids     = id_to_extract;
   *node_extents = _extents;
   *node_weight  = _n_pts;
-
-  free(id_to_extract);
-
 }
 
 /**

@@ -320,6 +320,7 @@ PDM_doctree_build
                                   0,
                                   n_depth_per_proc,
                                   &n_coarse_box,
+                                  &coarse_box_id,
                                   &coarse_box_extents,
                                   &coarse_box_n_pts);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
