@@ -273,7 +273,7 @@ PDM_doctree_build
    */
   int n_coarse_box = 0;
   double *coarse_box_extents = NULL;
-  int    *box_n_pts          = NULL; // Number of point in boxes
+  int    *coarse_box_n_pts   = NULL; // Number of point in boxes
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
     int n_depth_per_proc = 2;
     PDM_octree_seq_extract_extent(doct->coarse_octree,
@@ -281,7 +281,7 @@ PDM_doctree_build
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents,
-                                  &box_n_pts);
+                                  &coarse_box_n_pts);
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
     int n_depth_per_proc = 6; // 2^(depth)
     PDM_kdtree_seq_extract_extent(doct->coarse_kdtree,
@@ -289,7 +289,7 @@ PDM_doctree_build
                                   n_depth_per_proc,
                                   &n_coarse_box,
                                   &coarse_box_extents,
-                                  &box_n_pts);
+                                  &coarse_box_n_pts);
   }
 
   /*
@@ -334,15 +334,15 @@ PDM_doctree_build
   /*
    * Exchange extents
    */
-  PDM_mpi_win_shared_t* wshared_box_n_pts   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
-  PDM_mpi_win_shared_t* wshared_box_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), doct->comm_shared);
-  int    *shared_box_n_pts   = PDM_mpi_win_shared_get(wshared_box_n_pts  );
-  double *shared_box_extents = PDM_mpi_win_shared_get(wshared_box_extents);
-  PDM_mpi_win_shared_lock_all (0, wshared_box_n_pts  );
-  PDM_mpi_win_shared_lock_all (0, wshared_box_extents);
+  PDM_mpi_win_shared_t* wshared_coarse_box_n_pts   = PDM_mpi_win_shared_create(    shared_local_nodes_idx[n_rank], sizeof(int)   , doct->comm_shared);
+  PDM_mpi_win_shared_t* wshared_coarse_box_extents = PDM_mpi_win_shared_create(6 * shared_local_nodes_idx[n_rank], sizeof(double), doct->comm_shared);
+  int    *shared_coarse_box_n_pts   = PDM_mpi_win_shared_get(wshared_coarse_box_n_pts  );
+  double *shared_coarse_box_extents = PDM_mpi_win_shared_get(wshared_coarse_box_extents);
+  PDM_mpi_win_shared_lock_all (0, wshared_coarse_box_n_pts  );
+  PDM_mpi_win_shared_lock_all (0, wshared_coarse_box_extents);
 
-  PDM_MPI_Neighbor_allgatherv(box_n_pts       , n_coarse_box, PDM_MPI_INT,
-                              shared_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, doct->comm_dist_graph);
+  PDM_MPI_Neighbor_allgatherv(coarse_box_n_pts       , n_coarse_box, PDM_MPI_INT,
+                              shared_coarse_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, doct->comm_dist_graph);
   PDM_MPI_Barrier(doct->comm_shared);
 
 
@@ -353,7 +353,7 @@ PDM_doctree_build
   }
 
   PDM_MPI_Neighbor_allgatherv(coarse_box_extents, 6 * n_coarse_box, PDM_MPI_DOUBLE,
-                              shared_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, doct->comm_dist_graph);
+                              shared_coarse_box_extents, lrecv_count        , recv_shift, PDM_MPI_DOUBLE, doct->comm_dist_graph);
   PDM_MPI_Barrier(doct->comm_shared);
 
   /*
@@ -374,32 +374,32 @@ PDM_doctree_build
   int *init_location_proc = PDM_array_zeros_int (n_info_location * n_shared_boxes);
 
   PDM_mpi_win_shared_t* wshared_coarse_boxes_gnum = PDM_mpi_win_shared_create(    n_shared_boxes, sizeof(PDM_g_num_t), doct->comm_shared);
-  PDM_mpi_win_shared_t* wshared_box_center        = PDM_mpi_win_shared_create(3 * n_shared_boxes, sizeof(double     ), doct->comm_shared);
+  PDM_mpi_win_shared_t* wshared_coarse_box_center        = PDM_mpi_win_shared_create(3 * n_shared_boxes, sizeof(double     ), doct->comm_shared);
   PDM_g_num_t    *shared_coarse_boxes_gnum   = PDM_mpi_win_shared_get(wshared_coarse_boxes_gnum  );
-  double         *shared_box_center          = PDM_mpi_win_shared_get(wshared_box_center  );
+  double         *shared_box_center          = PDM_mpi_win_shared_get(wshared_coarse_box_center  );
 
   PDM_mpi_win_shared_lock_all (0, wshared_coarse_boxes_gnum  );
-  PDM_mpi_win_shared_lock_all (0, wshared_box_center  );
+  PDM_mpi_win_shared_lock_all (0, wshared_coarse_box_center  );
   for (int i = distrib_shared_boxes[i_rank_in_shm]; i < distrib_shared_boxes[i_rank_in_shm+1]; i++) {
     shared_coarse_boxes_gnum[i] = i + 1;
 
-    shared_box_center[3*i  ] = 0.5 * (shared_box_extents[6*i  ] + shared_box_extents[6*i+3]);
-    shared_box_center[3*i+1] = 0.5 * (shared_box_extents[6*i+1] + shared_box_extents[6*i+4]);
-    shared_box_center[3*i+2] = 0.5 * (shared_box_extents[6*i+2] + shared_box_extents[6*i+5]);
+    shared_box_center[3*i  ] = 0.5 * (shared_coarse_box_extents[6*i  ] + shared_coarse_box_extents[6*i+3]);
+    shared_box_center[3*i+1] = 0.5 * (shared_coarse_box_extents[6*i+1] + shared_coarse_box_extents[6*i+4]);
+    shared_box_center[3*i+2] = 0.5 * (shared_coarse_box_extents[6*i+2] + shared_coarse_box_extents[6*i+5]);
 
   }
   PDM_MPI_Barrier(doct->comm_shared);
 
 
-  // double *shared_box_extents = PDM_mpi_win_shared_get(wshared_box_extents);
-  // PDM_mpi_win_shared_lock_all (0, wshared_box_extents);
+  // double *shared_coarse_box_extents = PDM_mpi_win_shared_get(wshared_coarse_box_extents);
+  // PDM_mpi_win_shared_lock_all (0, wshared_coarse_box_extents);
   int dn_box_shared = distrib_shared_boxes[i_rank_in_shm+1] - distrib_shared_boxes[i_rank_in_shm];
   box_set = PDM_box_set_create(3,
                                0,  // No normalization to preserve initial extents
                                0,  // No projection to preserve initial extents
                                n_shared_boxes,
                                shared_coarse_boxes_gnum,
-                               shared_box_extents,
+                               shared_coarse_box_extents,
                                1,
                                &n_shared_boxes,
                                init_location_proc,
@@ -451,7 +451,7 @@ PDM_doctree_build
    * Equilibrate boxes leaf with solicitation
    */
   PDM_part_to_block_t* ptb_equi_box = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                    PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                                     1.,
                                                                     PDM_PART_GEOM_HILBERT,
                                                                     &shared_box_center,
@@ -461,21 +461,37 @@ PDM_doctree_build
                                                                     1,
                                                                     doct->comm);
 
-  int          dn_tree          = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
+  int          dn_equi_tree     = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
   PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
   PDM_g_num_t* distrib_tree     = PDM_part_to_block_distrib_index_get(ptb_equi_box);
 
   if(1 == 1) {
-    PDM_log_trace_array_long(parent_tree_gnum, dn_tree , "parent_tree_gnum :: ");
+    PDM_log_trace_array_long(parent_tree_gnum, dn_equi_tree , "parent_tree_gnum :: ");
     PDM_log_trace_array_long(distrib_tree    , n_rank+1, "distrib_tree : ");
   }
+
+  // Exchange n_pts
+  // int *equi_box_n_pts = NULL;
+  // PDM_part_to_block_exch(ptb,
+  //                        sizeof(int),
+  //                        PDM_STRIDE_CST_INTERLACED,
+  //                        1,
+  //                        NULL,
+  //              (void **) box_n_pts,
+  //                        NULL,
+  //              (void **) &equi_box_n_pts);
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int(equi_box_n_pts, dn_equi_tree, "equi_box_n_pts :");
+  // }
+
+
 
   free(weight);
 
   PDM_mpi_win_shared_unlock_all(wshared_coarse_boxes_gnum);
-  PDM_mpi_win_shared_unlock_all(wshared_box_center);
+  PDM_mpi_win_shared_unlock_all(wshared_coarse_box_center);
   PDM_mpi_win_shared_free (wshared_coarse_boxes_gnum);
-  PDM_mpi_win_shared_free (wshared_box_center);
+  PDM_mpi_win_shared_free (wshared_coarse_box_center);
 
   /*
    * Setup partitioning
@@ -487,7 +503,7 @@ PDM_doctree_build
   }
   PDM_block_to_part_t* btp = PDM_block_to_part_create(impli_distrib_tree,
                                (const PDM_g_num_t **) &parent_tree_gnum,
-                                                      &dn_tree,
+                                                      &dn_equi_tree,
                                                       1,
                                                       doct->comm);
 
@@ -511,6 +527,9 @@ PDM_doctree_build
       // n_pts_tot += PDM_kdtree_seq_n_points_get(doct->coarse_kdtree, node_id);
     }
   }
+
+  int dn_blk = impli_distrib_tree[i_rank+1] - impli_distrib_tree[i_rank];
+  assert(dn_blk == n_coarse_box);
 
   double *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double));
 
@@ -541,17 +560,25 @@ PDM_doctree_build
   /*
    * Coordinates
    */
-  int stride_one = 1;
   double **tmp_equi_pts_coords = NULL;
+  int    **tmp_equi_n_pts      = NULL;
   PDM_block_to_part_exch(btp,
                          3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &stride_one,
+                         PDM_STRIDE_VAR_INTERLACED,
+                         coarse_box_n_pts,
                          reorder_blk_coord_send,
-                         NULL,
+                         &tmp_equi_n_pts,
               (void ***) &tmp_equi_pts_coords);
-  double* equi_pts_coords = tmp_equi_pts_coords[0];
+  double *equi_pts_coords = tmp_equi_pts_coords[0];
+  int    *equi_n_pts      = tmp_equi_n_pts[0];
   free(tmp_equi_pts_coords);
+  free(tmp_equi_n_pts);
+
+
+  int equi_n_pts_tot = 0;
+  for(int i = 0; i < dn_equi_tree; ++i) {
+    equi_n_pts_tot += equi_n_pts[i];
+  }
 
   /*
    * g_num
@@ -579,8 +606,8 @@ PDM_doctree_build
   PDM_box_set_destroy (&box_set);
   PDM_box_tree_destroy (&bt_shared);
 
-  PDM_mpi_win_shared_unlock_all(wshared_box_n_pts);
-  PDM_mpi_win_shared_unlock_all(wshared_box_extents);
+  PDM_mpi_win_shared_unlock_all(wshared_coarse_box_n_pts);
+  PDM_mpi_win_shared_unlock_all(wshared_coarse_box_extents);
 
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
@@ -588,13 +615,13 @@ PDM_doctree_build
   PDM_mpi_win_shared_free (wshared_local_nodes_n  );
   PDM_mpi_win_shared_free (wshared_local_nodes_idx);
 
-  PDM_mpi_win_shared_free(wshared_box_n_pts);
-  PDM_mpi_win_shared_free(wshared_box_extents);
+  PDM_mpi_win_shared_free(wshared_coarse_box_n_pts);
+  PDM_mpi_win_shared_free(wshared_coarse_box_extents);
 
   free(recv_shift);
   free(lrecv_count);
 
-  free(box_n_pts);
+  free(coarse_box_n_pts);
   free(coarse_box_extents);
 
   free(blk_pts_coord);
@@ -636,7 +663,6 @@ PDM_doctree_build
   /*
    * Step 3 : Build local tree
    */
-  int equi_n_pts = -1;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
 
     assert(doct->coarse_octree == NULL);
@@ -647,7 +673,7 @@ PDM_doctree_build
 
     PDM_octree_seq_point_cloud_set(doct->local_octree,
                                    0,
-                                   equi_n_pts,
+                                   equi_n_pts_tot,
                                    equi_pts_coords);
 
     PDM_octree_seq_build(doct->local_octree);
@@ -663,7 +689,7 @@ PDM_doctree_build
 
     PDM_kdtree_seq_point_cloud_set(doct->local_kdtree,
                                    0,
-                                   equi_n_pts,
+                                   equi_n_pts_tot,
                                    equi_pts_coords);
 
     PDM_kdtree_seq_build(doct->local_kdtree);
@@ -674,6 +700,7 @@ PDM_doctree_build
 
 
   free(equi_pts_coords);
+  free(equi_n_pts);
 
    /*
     * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
