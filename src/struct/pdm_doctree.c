@@ -68,11 +68,15 @@ _redistribute_pts_geom
   /*
    * Redistribute all pts and impose hilbert ordering
    */
-  int **weight = malloc(doct->n_part_cloud * sizeof(int *));
+
+  int **stride_one = malloc(doct->n_part_cloud * sizeof(int *));
+  int **weight     = malloc(doct->n_part_cloud * sizeof(int *));
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-    weight[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
+    weight    [i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
+    stride_one[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
     for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
-      weight[i_part][i] = 1;
+      weight    [i_part][i] = 1;
+      stride_one[i_part][i] = 1;
     }
   }
 
@@ -93,17 +97,34 @@ _redistribute_pts_geom
   }
   free(weight);
 
-  /* Il faut le faire en MERGE mais enlever les doublons de coords */
-  double *blk_pts_coord = NULL;
-  PDM_part_to_block_exch(ptb,
-                         3 * sizeof(double),
-                         PDM_STRIDE_CST_INTERLACED,
-                         1,
-                         NULL,
-               (void **) doct->pts_coords,
-                         NULL,
-               (void **) &blk_pts_coord);
+  int dn_pts = PDM_part_to_block_n_elt_block_get(ptb);
 
+  /* Il faut le faire en MERGE mais enlever les doublons de coords */
+  int    *blk_coord_n   = NULL;
+  double *tmp_blk_pts_coord = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         stride_one,
+               (void **) doct->pts_coords,
+                         &blk_coord_n,
+               (void **) &tmp_blk_pts_coord);
+
+  // Copy
+  double *blk_pts_coord = malloc(3 * dn_pts * sizeof(int));
+  int idx_write = 0;
+  int idx_read  = 0;
+  for(int i = 0; i < dn_pts; ++i) {
+
+    blk_pts_coord[3*i  ] = tmp_blk_pts_coord[3*idx_read  ];
+    blk_pts_coord[3*i+1] = tmp_blk_pts_coord[3*idx_read+1];
+    blk_pts_coord[3*i+2] = tmp_blk_pts_coord[3*idx_read+2];
+
+    idx_read += blk_coord_n[i];
+  }
+  free(blk_coord_n);
+  free(tmp_blk_pts_coord);
 
   /* Transport init_location - Attention au merge du ptb à faire */
   int have_init_location = 1;
@@ -117,14 +138,6 @@ _redistribute_pts_geom
     int *blk_init_location_pts_n = NULL;
     int *blk_init_location_pts   = NULL;
 
-    int **stride_one = malloc(doct->n_part_cloud * sizeof(int *));
-    for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-      stride_one[i_part] = malloc(doct->n_point_cloud[i_part] * sizeof(int));
-      for(int i = 0; i < doct->n_point_cloud[i_part]; ++i) {
-        stride_one[i_part][i] = 1;
-      }
-    }
-
     PDM_part_to_block_exch(ptb,
                            3 * sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -134,21 +147,16 @@ _redistribute_pts_geom
                            &blk_init_location_pts_n,
                  (void **) &blk_init_location_pts);
 
-    for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-      free(stride_one[i_part]);
-    }
-    free(stride_one);
-
 
     free(blk_init_location_pts_n);
     free(blk_init_location_pts);
 
   }
 
-
-  // int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
-  // PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
-  // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
+  for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
+    free(stride_one[i_part]);
+  }
+  free(stride_one);
 
   *ptb_out         = ptb;
   *dpts_coords_out = blk_pts_coord;
@@ -433,8 +441,6 @@ PDM_doctree_build
   PDM_MPI_Barrier(doct->comm_shared);
 
 
-  // double *shared_coarse_box_extents = PDM_mpi_win_shared_get(wshared_coarse_box_extents);
-  // PDM_mpi_win_shared_lock_all (0, wshared_coarse_box_extents);
   int dn_box_shared = distrib_shared_boxes[i_rank_in_shm+1] - distrib_shared_boxes[i_rank_in_shm];
   box_set = PDM_box_set_create(3,
                                0,  // No normalization to preserve initial extents
@@ -589,20 +595,16 @@ PDM_doctree_build
                                                       1,
                                                       doct->comm);
 
-
-
-
   /*
    * Prepare buffer
    */
-  int    *extract_box_id    = NULL;
   int n_pts_tot = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
-    int node_id = extract_box_id[i];
+    int node_id = coarse_box_id[i];
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
       n_pts_tot += PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      abort();
+      // abort();
       // n_pts_tot += PDM_kdtree_seq_n_points_get(doct->coarse_kdtree, node_id);
     }
   }
@@ -614,7 +616,7 @@ PDM_doctree_build
 
   int idx_write = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
-    int node_id = extract_box_id[i];
+    int node_id = coarse_box_id[i];
 
     int  n_pts = 0;
     int *point_clouds_id = NULL;
