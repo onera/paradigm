@@ -548,10 +548,12 @@ PDM_doctree_build
   /*
    * g_num
    */
+  PDM_g_num_t* equi_pts_gnum = NULL;
 
   /*
    * Init location -> Attention si gnum de points dupliqué -> variable
    */
+  PDM_g_num_t* equi_pts_init_location = NULL;
 
 
 
@@ -566,7 +568,6 @@ PDM_doctree_build
   free(coarse_tree_box_to_box_idx);
   free(coarse_tree_box_to_box);
 
-  free(equi_pts_coords);
 
   PDM_MPI_Comm_free(&comm_alone);
 
@@ -588,6 +589,27 @@ PDM_doctree_build
   free(recv_shift);
   free(lrecv_count);
 
+  /*
+   *  Update sahred_to_box
+   *  re-Solicitation is already done - Transfer update shared to box !!!
+   *  Transfer boxes in shared maner + asynchronous with dist_comm_graph
+   *  Pour avoir l'info if faut echanger le parent gnum -> Allgatherv shared to minimize memory footprint
+   *  Transfer of box_extents + gnum + init_location
+   */
+
+
+
+  /*
+   * All pts are redistribute to equilibrate solicitation
+   *   We can now rebuild a finer tree to finalize solicitation
+   */
+
+
+
+
+
+
+  free(equi_pts_coords);
    // PDM_box_tree_intersect_boxes_boxes2(bt_shared,
    //                                      -1,
    //                                      n_boxes,
