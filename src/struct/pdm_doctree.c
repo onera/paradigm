@@ -670,6 +670,7 @@ PDM_doctree_build
   PDM_mpi_win_shared_t* wequi_pts_gnum = PDM_mpi_win_shared_create(n_equi_pts_shared_tot, sizeof(PDM_g_num_t), doct->comm_shared);
   PDM_g_num_t *equi_pts_gnum           = PDM_mpi_win_shared_get(wequi_pts_gnum);
 
+  PDM_mpi_win_shared_lock_all (0, wequi_pts_gnum);
   PDM_g_num_t *lequi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_rank_in_shm]];
 
   /*
@@ -686,7 +687,7 @@ PDM_doctree_build
   // PDM_g_num_t *equi_pts_gnum = tmp_equi_pts_gnum[0];
   // free(tmp_equi_pts_gnum);
   // free(tmp_equi_n_pts[0]);
-  free(tmp_equi_n_pts);
+  // free(tmp_equi_n_pts);
 
   /*
    * Init location -> Attention si gnum de points dupliqué -> variable
@@ -932,6 +933,7 @@ PDM_doctree_build
   PDM_MPI_Type_free(&mpi_init_location_type);
   free(send_g_num);
   free(send_extents);
+  free(send_init_location);
   free(send_entity_n);
   free(recv_entity_n);
   free(send_entity_idx);
@@ -961,8 +963,6 @@ PDM_doctree_build
 
 
   free(shared_recv_count);
-  free(shared_recv_idx);
-  free(distrib_search);
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
   PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
 
@@ -991,6 +991,8 @@ PDM_doctree_build
   for(int i = 0; i < n_rank_in_shm; ++i) {
     distrib_search_by_rank_idx[i+1] += distrib_search_by_rank_idx[i];
   }
+  free(distrib_search);
+  free(shared_recv_idx);
 
   int n_part_out = n_rank_in_shm;
   int          *part_n_box         = malloc (sizeof(int          ) * n_part_out);
@@ -1010,7 +1012,7 @@ PDM_doctree_build
       int n_lbox = distrib_search_by_rank_idx[i_shm+1] - beg;
 
       part_n_box[i_shm] = n_lbox;
-      PDM_g_num_t *lbox_gnum    = &shared_entity_gnum [  beg];
+      // PDM_g_num_t *lbox_gnum    = &shared_entity_gnum [  beg];
       double      *lbox_extents = &shared_entity_coord[6*beg];
 
       res_box_g_num[i_shm] = &shared_entity_gnum[beg];
@@ -1058,7 +1060,7 @@ PDM_doctree_build
     abort();
   }
 
-
+  printf("falg 1 \n");
 
   free(distrib_search_by_rank_idx);
   free(shm_equi_pts_tot_idx);
@@ -1066,14 +1068,17 @@ PDM_doctree_build
   PDM_mpi_win_shared_unlock_all (wequi_pts_gnum);
   PDM_mpi_win_shared_free (wequi_pts_gnum);
 
+  printf("falg 2 \n");
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
   PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
   PDM_mpi_win_shared_unlock_all (wshared_entity_init_location);
 
+  printf("falg 3 \n");
   PDM_mpi_win_shared_free (wshared_entity_coord  );
   PDM_mpi_win_shared_free (wshared_entity_gnum);
   PDM_mpi_win_shared_free (wshared_entity_init_location);
 
+  printf("falg 4 \n");
   PDM_MPI_Comm_free(&doct->comm_dist_graph);
   PDM_MPI_Comm_free(&doct->comm_shared);
   free(doct->neighbor_in);
