@@ -1095,8 +1095,43 @@ PDM_doctree_build
   free(box_pts_l_num );
 
   /*
-   * Exchange
+   * Exchange of gnum
    */
+  int request_gnum = -1;
+  int         *block_pts_in_box_n     = NULL;
+  PDM_g_num_t *block_pts_in_box_g_num = NULL;
+  PDM_part_to_block_iexch (ptb,
+                           PDM_MPI_COMM_KIND_COLLECTIVE,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           res_box_strid,
+                 (void **) res_box_pts_gnum,
+                           &block_pts_in_box_n,
+                 (void **) &block_pts_in_box_g_num,
+                           &request_gnum);
+
+  int request_coord = -1;
+  int    *block_stride           = NULL;
+  double *block_pts_in_box_coord = NULL;
+  PDM_part_to_block_iexch (ptb,
+                           PDM_MPI_COMM_KIND_COLLECTIVE,
+                           3 * sizeof(double),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           res_box_strid,
+                 (void **) res_box_pts_coords,
+                           &block_stride,
+                 (void **) &block_pts_in_box_coord,
+                           &request_coord);
+
+  PDM_part_to_block_iexch_wait(ptb, request_gnum);
+  PDM_part_to_block_iexch_wait(ptb, request_coord);
+
+  free(block_stride);
+
+
+  int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
 
 
   for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
