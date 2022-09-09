@@ -374,7 +374,18 @@ PDM_point_tree_seq_shm_point_new_to_old_get
 );
 
 
-
+/**
+ *
+ * \brief Get points located inside a set of boxes (search in shared-memory tree)
+ *
+ * \param [in]   ptree                  Pointer to \ref PDM_point_tree_seq object
+ * \param [in]   i_shm_rank             Shared-memory rank to explore
+ * \param [in]   n_box                  Number of boxes
+ * \param [in]   box_extents            Extents of boxes
+ * \param [out]  box_pts_idx            Index of points located in boxes
+ * \param [out]  box_pts                Local ids of points located in boxes (zero-based)
+ *
+ */
 
 void
 PDM_point_tree_seq_points_inside_boxes_shared
@@ -383,7 +394,6 @@ PDM_point_tree_seq_points_inside_boxes_shared
  const int                        i_shm_rank,
  const int                        n_box,
  const double                     box_extents[],
- // const PDM_g_num_t                box_g_num[],
        int                      **box_pts_idx,
        int                      **box_pts
  );

@@ -39,6 +39,8 @@
 
 #include "pdm_box.h"
 
+#include "pdm_point_tree_seq.h"
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -716,6 +718,16 @@ PDM_box_tree_box_extents_get
  PDM_box_tree_t  *bt,
  const int        i_copied_rank,
  double         **extents
+ );
+
+
+void
+PDM_tree_intersection_point_box
+(
+ PDM_point_tree_seq_t  *ptree,
+ PDM_box_tree_t        *btree,
+ int                  **box_pts_idx,
+ int                  **box_pts
  );
 
 #ifdef __cplusplus

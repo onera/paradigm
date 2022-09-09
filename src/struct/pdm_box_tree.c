@@ -53,6 +53,11 @@
 #include "pdm_plane.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_linear_programming.h"
+#include "pdm_binary_search.h"
+#include "pdm_unique.h"
+
+#include "pdm_point_tree_seq.h"
+#include "pdm_point_tree_seq_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -7401,6 +7406,376 @@ PDM_box_tree_box_extents_get
   *extents = boxes->extents;
 
   return boxes->n_boxes;
+}
+
+
+
+
+
+void
+PDM_tree_intersection_point_box
+(
+ PDM_point_tree_seq_t  *ptree,
+ PDM_box_tree_t        *btree,
+ int                  **box_pts_idx,
+ int                  **box_pts
+ )
+{
+  int dbg = 1;
+
+  int n_pts = ptree->n_pts;
+  double *ptree_pts_coord;
+  PDM_point_tree_seq_sorted_points_get(ptree,
+                                       &ptree_pts_coord);
+
+  double *_pts_coord  = malloc (sizeof(double) * 3 * n_pts);
+  PDM_box_set_normalize_robust ((PDM_box_set_t *) btree->boxes,
+                                n_pts,
+                     (double *) ptree_pts_coord,
+                                _pts_coord);
+
+  int *ptree_new_to_old = NULL;
+  PDM_point_tree_seq_point_new_to_old_get(ptree,
+                                          &ptree_new_to_old);
+
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+
+  boxes         = btree->boxes->local_boxes;
+  box_tree_data = btree->local_data;
+
+  int n_boxes = boxes->n_boxes;
+
+
+
+
+
+  int s_queue = 100; // ?
+  int *queue0 = malloc(sizeof(int) * s_queue * 2);
+  int *queue1 = malloc(sizeof(int) * s_queue * 2);
+  int *queues[2] = {queue0, queue1};
+
+  int ptree_n_children = PDM_point_tree_n_children_get(ptree);
+  // int    *ptree_depth       = ptree->nodes->depth;
+  int    *ptree_is_leaf     = ptree->nodes->is_leaf;
+  int    *ptree_range       = ptree->nodes->range;
+  int    *ptree_children_id = ptree->nodes->children_id;
+  double *ptree_extents     = ptree->nodes->extents;
+
+  double btree_extents[6];
+
+  /* Start from both roots */
+  int btree_node_id = 0;
+  int ptree_node_id = 0;
+
+  _extents(3,
+           box_tree_data->nodes[btree_node_id].morton_code,
+           btree_extents);
+  int intersect = _intersect_box_box(3,
+                                     btree_extents,
+                                     &ptree_extents[6*ptree_node_id]);
+
+  if (!intersect) {
+    *box_pts_idx = PDM_array_zeros_int(n_boxes + 1);
+    if (dbg) {
+      log_trace("roots do not intersect\n");
+    }
+    return;
+  }
+
+
+  int n_queue = 0;
+  queues[0][2*n_queue  ] = btree_node_id;
+  queues[0][2*n_queue+1] = ptree_node_id;
+  n_queue++;
+
+
+
+  int  *__box_pts_n = PDM_array_zeros_int(n_boxes);
+  int  *__box_pts_s = PDM_array_const_int(n_boxes, 4);
+  int **__box_pts   = malloc(sizeof(int *) * n_boxes);
+  for (int i = 0; i < n_boxes; i++) {
+    __box_pts[i] = malloc(sizeof(int) * __box_pts_s[i]);
+  }
+
+
+  while (n_queue > 0) {
+
+    int new_n_queue = 0;
+
+    PDM_log_trace_array_int(queues[0], 2*n_queue, "queue : ");
+
+    for (int ipair = 0; ipair < n_queue; ipair++) {
+
+      btree_node_id = queues[0][2*ipair  ];
+      ptree_node_id = queues[0][2*ipair+1];
+
+      if (dbg) {
+        log_trace("  node ids %d %d\n", btree_node_id, ptree_node_id);
+      }
+
+      _node_t *node = &(box_tree_data->nodes[btree_node_id]);
+
+      int btree_is_leaf = node->is_leaf;
+
+      int isubdiv;
+
+      /* Which tree do we subdivide? */
+      if (btree_is_leaf) {
+
+        if (ptree_is_leaf[ptree_node_id]) {
+          /* Both leaves */
+          isubdiv = -1;
+
+          if (dbg) {
+            log_trace("  both leaves\n");
+          }
+
+          /* inspect boxes contained in current leaf node */
+          for (int ibox = 0; ibox < node->n_boxes; ibox++) {
+
+            int box_id = box_tree_data->box_ids[node->start_id + ibox];
+
+            if (dbg) {
+              log_trace("    box_id = %d\n", box_id);
+            }
+
+            const double *box_extents = boxes->extents + box_id*6;
+
+            for (int ipt = ptree_range[2*ptree_node_id]; ipt < ptree_range[2*ptree_node_id+1]; ipt++) {
+
+              double *pt = _pts_coord + 3*ipt;
+
+              int point_id = ptree_new_to_old[ipt];
+              if (dbg) {
+                log_trace("      point_id = %d\n", point_id);
+              }
+
+              if (_point_inside_box(3, box_extents, pt)) {
+
+                /* Insertion sort */
+                if (__box_pts_n[box_id] == 0) {
+                  __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
+                }
+                else {
+
+                  int pos = PDM_binary_search_gap_int(point_id,
+                                                      __box_pts[box_id],
+                                                      __box_pts_n[box_id]);
+                  // if (dbg) {
+                  //   log_trace("%d at pos %d in array ", point_id, pos);
+                  //   PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "");
+                  // }
+
+                  if (pos < 0) {
+                    if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
+                      __box_pts_s[box_id] *= 2;
+                      __box_pts  [box_id] = realloc(__box_pts[box_id],
+                                                    sizeof(int) * __box_pts_s[box_id]);
+                    }
+
+                    if (point_id > __box_pts[box_id][__box_pts_n[box_id]-1]) {
+                      // if (dbg) {
+                      //   log_trace("  insert to the right\n");
+                      // }
+                      __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
+                    }
+                    else {
+                      // if (dbg) {
+                      //   log_trace("  insert to the left\n");
+                      // }
+                      for (int j = __box_pts_n[box_id]; j > 0; j--) {
+                        __box_pts[box_id][j] = __box_pts[box_id][j-1];
+                      }
+                      __box_pts[box_id][0] = point_id;
+                      __box_pts_n[box_id]++;
+                    }
+
+                  }
+                  else {
+
+                    if (__box_pts[box_id][pos] != point_id) {
+                      if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
+                        __box_pts_s[box_id] *= 2;
+                        __box_pts  [box_id] = realloc(__box_pts[box_id],
+                                                      sizeof(int) * __box_pts_s[box_id]);
+                      }
+
+                      for (int j = __box_pts_n[box_id]; j > pos+1; j--) {
+                        __box_pts[box_id][j] = __box_pts[box_id][j-1];
+                      }
+                      __box_pts[box_id][pos+1] = point_id;
+                      __box_pts_n[box_id]++;
+                    }
+
+                  }
+
+                  // PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "after insertion : ");
+                }
+
+                // do insertion sort instead
+                // __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
+
+              }
+
+            } // End of loop on current ptree leaf's points
+          } // End of loop on current btree leaf's boxes
+
+
+        }
+        else {
+          /* Subdivide point tree */
+          isubdiv = 1;
+        }
+
+      }
+
+      else if (ptree_is_leaf[ptree_node_id]) {
+        /* Subdivide box tree */
+        isubdiv = 0;
+      }
+
+      else {
+
+        // Decide which tree is subdivided
+        _extents(3,
+                 box_tree_data->nodes[btree_node_id].morton_code,
+                 btree_extents);
+
+        double btree_vol = 1.;
+        double ptree_vol = 1.;
+        for (int i = 0; i < 3; i++) {
+          btree_vol *= (btree_extents[i+3] - btree_extents[i]);
+          ptree_vol *= (ptree_extents[6*ptree_node_id + i+3] - ptree_extents[6*ptree_node_id + i]);
+        }
+
+        if (btree_vol > ptree_vol) {
+          /* Subdivide box tree */
+          isubdiv = 0;
+        }
+        else {
+          /* Subdivide point tree */
+          isubdiv = 1;
+        }
+
+      }
+
+
+      /*  */
+      if (isubdiv == 0) {
+        /* Subdivide box tree */
+        if (dbg) {
+          log_trace("  subdivide box tree\n");
+        }
+
+        int *children_id = box_tree_data->child_ids + btree_node_id*btree->n_children;
+        for (int ichild = 0; ichild < btree->n_children; ichild++) {
+          int child_id = children_id[ichild];
+
+          if (child_id < 0) continue;
+
+          _extents(3,
+                  box_tree_data->nodes[child_id].morton_code,
+                  btree_extents);
+
+          intersect = _intersect_box_box(3,
+                                         btree_extents,
+                                         &ptree_extents[6*ptree_node_id]);
+
+          if (dbg) {
+            log_trace("    child %d, intersect? %d\n", child_id, intersect);
+          }
+
+          if (intersect) {
+            // Check size!!!
+            if (new_n_queue >= s_queue) {
+              s_queue *= 2;
+              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
+              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+            }
+
+            queues[1][2*new_n_queue  ] = child_id;
+            queues[1][2*new_n_queue+1] = ptree_node_id;
+            new_n_queue++;
+          }
+        }
+
+      }
+      else if (isubdiv == 1) {
+        /* Subdivide point tree */
+        if (dbg) {
+          log_trace("  subdivide point tree\n");
+        }
+
+        _extents(3,
+                 box_tree_data->nodes[btree_node_id].morton_code,
+                 btree_extents);
+
+        int *children_id = ptree_children_id + ptree_node_id*ptree_n_children;
+        for (int ichild = 0; ichild < ptree_n_children; ichild++) {
+          int child_id = children_id[ichild];
+
+          if (child_id < 0) continue;
+
+          intersect = _intersect_box_box(3,
+                                         btree_extents,
+                                         &ptree_extents[6*child_id]);
+
+          if (dbg) {
+            log_trace("    child %d, intersect? %d\n", child_id, intersect);
+          }
+
+          if (intersect) {
+            // Check size!!!
+            if (new_n_queue >= s_queue) {
+              s_queue *= 2;
+              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
+              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+            }
+
+            queues[1][2*new_n_queue  ] = btree_node_id;
+            queues[1][2*new_n_queue+1] = child_id;
+            new_n_queue++;
+          }
+        }
+
+      }
+
+
+    } // End of loop in current queue
+
+
+    PDM_log_trace_array_int(queues[1], 2*new_n_queue, "new_queue : ");
+
+    /* Swap queues */
+    int *tmp = queues[1];
+    queues[1] = queues[0];
+    queues[0] = tmp;
+
+    n_queue = new_n_queue;
+
+  } // End of while loop
+  free(__box_pts_s);
+  free(_pts_coord);
+  free(queue0);
+  free(queue1);
+
+  /* Re-arrange result */
+  *box_pts_idx = PDM_array_new_idx_from_sizes_int(__box_pts_n, n_boxes);
+
+  *box_pts = malloc(sizeof(int) * (*box_pts_idx)[n_boxes]);
+  for (int i = 0; i < n_boxes; i++) {
+    int *bp = *box_pts + (*box_pts_idx)[i];
+
+    for (int j = 0; j < __box_pts_n[i]; j++) {
+      bp[j] = __box_pts[i][j];
+    }
+
+    free(__box_pts[i]);
+  }
+  free(__box_pts_n);
+  free(__box_pts);
+
 }
 
 
