@@ -103,7 +103,7 @@ _redistribute_pts_geom
   int    *blk_coord_n   = NULL;
   double *tmp_blk_pts_coord = NULL;
   PDM_part_to_block_exch(ptb,
-                         sizeof(int),
+                         3 * sizeof(double),
                          PDM_STRIDE_VAR_INTERLACED,
                          1,
                          stride_one,
@@ -111,8 +111,11 @@ _redistribute_pts_geom
                          &blk_coord_n,
                (void **) &tmp_blk_pts_coord);
 
+
+  PDM_log_trace_array_int(blk_coord_n, dn_pts, "blk_coord_n :: ");
+
   // Copy
-  double *blk_pts_coord = malloc(3 * dn_pts * sizeof(int));
+  double *blk_pts_coord = malloc(3 * dn_pts * sizeof(double));
   int idx_write = 0;
   int idx_read  = 0;
   for(int i = 0; i < dn_pts; ++i) {
@@ -601,21 +604,23 @@ PDM_doctree_build
   int n_pts_tot = 0;
   int point_range[2];
   double *sorted_tree_coord = NULL;
+  int    *new_to_old_pts = NULL;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
       n_pts_tot += PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      // abort();
       n_pts_tot += PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
-      PDM_kdtree_seq_sorted_points_get(doct->coarse_kdtree, &sorted_tree_coord);
     }
   }
 
   int dn_blk = impli_distrib_tree[i_rank+1] - impli_distrib_tree[i_rank];
+
+  PDM_g_num_t* blk_impli_pts_gnum = PDM_part_to_block_block_gnum_get(ptb);
   assert(dn_blk == n_coarse_box);
 
-  double *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double));
+  double      *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double     ));
+  PDM_g_num_t *reorder_blk_pts_gnum   = malloc(    n_pts_tot * sizeof(PDM_g_num_t));
   int idx_write = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
@@ -628,16 +633,18 @@ PDM_doctree_build
       n_pts = PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
       PDM_octree_seq_points_get(doct->coarse_octree, node_id, &point_clouds_id, &point_indexes);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      abort();
-      // n_pts = PDM_kdtree_seq_points_get(doct->coarse_kdtree, node_id, &point_clouds_id, &point_indexes);
       n_pts = PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
+      PDM_kdtree_seq_sorted_points_get(doct->coarse_kdtree, &sorted_tree_coord);
+      PDM_kdtree_seq_point_new_to_old_get(doct->coarse_kdtree, &new_to_old_pts);
     }
 
     for(int i_pt = point_range[0]; i_pt < point_range[1]; ++i_pt) {
-      int orig_pt = point_indexes[i_pt];
-      reorder_blk_coord_send[3*idx_write  ] = blk_pts_coord[3*orig_pt  ];
-      reorder_blk_coord_send[3*idx_write+1] = blk_pts_coord[3*orig_pt+1];
-      reorder_blk_coord_send[3*idx_write+2] = blk_pts_coord[3*orig_pt+2];
+      reorder_blk_coord_send[3*idx_write  ] = sorted_tree_coord[3*i_pt  ];
+      reorder_blk_coord_send[3*idx_write+1] = sorted_tree_coord[3*i_pt+1];
+      reorder_blk_coord_send[3*idx_write+2] = sorted_tree_coord[3*i_pt+2];
+
+      reorder_blk_pts_gnum[idx_write] = blk_impli_pts_gnum[new_to_old_pts[i_pt]];
+
       idx_write++;
     }
   }
@@ -668,7 +675,18 @@ PDM_doctree_build
   /*
    * g_num
    */
-  PDM_g_num_t* equi_pts_gnum = NULL;
+  PDM_g_num_t** tmp_equi_pts_gnum = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         coarse_box_n_pts,
+                         reorder_blk_pts_gnum,
+                         &tmp_equi_n_pts,
+              (void ***) &tmp_equi_pts_gnum);
+  PDM_g_num_t *equi_pts_gnum = tmp_equi_pts_gnum[0];
+  free(tmp_equi_pts_gnum);
+  free(tmp_equi_n_pts[0]);
+  free(tmp_equi_n_pts);
 
   /*
    * Init location -> Attention si gnum de points dupliqué -> variable
@@ -678,6 +696,7 @@ PDM_doctree_build
 
 
   free(reorder_blk_coord_send);
+  free(reorder_blk_pts_gnum);
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb_equi_box);
 
@@ -710,6 +729,7 @@ PDM_doctree_build
   free(recv_shift);
   free(lrecv_count);
 
+  free(coarse_box_id);
   free(coarse_box_n_pts);
   free(coarse_box_extents);
 
@@ -786,6 +806,7 @@ PDM_doctree_build
 
 
 
+  free(equi_pts_gnum);
   free(equi_pts_coords);
   free(equi_n_pts);
 
