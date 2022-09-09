@@ -673,7 +673,7 @@ PDM_doctree_build
   PDM_mpi_win_shared_lock_all (0, wequi_pts_gnum);
   PDM_g_num_t *lequi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_rank_in_shm]];
 
-  PDM_log_trace_array_long(shm_equi_pts_tot_idx, n_rank_in_shm+1, "shm_equi_pts_tot_idx ::");
+  // PDM_log_trace_array_int(shm_equi_pts_tot_idx, n_rank_in_shm+1, "shm_equi_pts_tot_idx ::");
 
   /*
    * g_num
@@ -957,6 +957,8 @@ PDM_doctree_build
   PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
   int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
 
+  // PDM_log_trace_array_long(shared_entity_gnum, n_tot_recv_shared, "shared_entity_gnum :");
+
   if(0 == 1) {
     char filename[999];
     sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
@@ -1002,8 +1004,10 @@ PDM_doctree_build
   for(int i = 0; i < n_rank_in_shm; ++i) {
     distrib_search_by_rank_idx[i+1] += distrib_search_by_rank_idx[i];
   }
-  free(distrib_search);
+  // PDM_log_trace_array_int(shared_recv_idx, n_rank_in_shm+1, "shared_recv_idx ::");
   free(shared_recv_idx);
+
+  // PDM_log_trace_array_int(distrib_search_by_rank_idx, n_rank_in_shm+1, "distrib_search_by_rank_idx ::");
 
   int n_part_out = n_rank_in_shm;
   int          *part_n_box         = malloc (sizeof(int          ) * n_part_out);
@@ -1015,6 +1019,9 @@ PDM_doctree_build
   double      **res_box_pts_coords = malloc (sizeof(double      *) * n_part_out);
   PDM_g_num_t **res_box_pts_gnum   = malloc (sizeof(PDM_g_num_t *) * n_part_out);
 
+  PDM_g_num_t *shm_box_gnum    = &shared_entity_gnum [     distrib_search[i_rank_in_shm]];
+  double      *shm_box_extents = &shared_entity_coord[ 6 * distrib_search[i_rank_in_shm]];
+
   if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
 
     for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
@@ -1023,10 +1030,10 @@ PDM_doctree_build
       int n_lbox = distrib_search_by_rank_idx[i_shm+1] - beg;
 
       part_n_box[i_shm] = n_lbox;
-      // PDM_g_num_t *lbox_gnum    = &shared_entity_gnum [  beg];
-      double      *lbox_extents = &shared_entity_coord[6*beg];
+      // PDM_g_num_t *lbox_gnum    = &shm_box_gnum [  beg];
+      double      *lbox_extents = &shm_box_extents[6*beg];
 
-      res_box_g_num[i_shm] = &shared_entity_gnum[beg];
+      res_box_g_num[i_shm] = &shm_box_gnum[beg];
 
       if(1 == 1) {
         char filename[999];
@@ -1068,7 +1075,7 @@ PDM_doctree_build
 
       PDM_g_num_t *shm_equi_pts_gnum   = &equi_pts_gnum      [  shm_equi_pts_tot_idx[i_shm]];
 
-      PDM_log_trace_connectivity_int(_box_pts_idx, _box_pts_l_num, part_n_box[i_shm], "_box_pts_l_num : ");
+      // PDM_log_trace_connectivity_int(_box_pts_idx, _box_pts_l_num, part_n_box[i_shm], "_box_pts_l_num : ");
 
       for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
         int l_num = _box_pts_l_num[i];
@@ -1082,6 +1089,7 @@ PDM_doctree_build
     abort();
   }
 
+  free(distrib_search);
   free(equi_pts_coords);
   free(distrib_search_by_rank_idx);
   free(shm_equi_pts_tot_idx);
