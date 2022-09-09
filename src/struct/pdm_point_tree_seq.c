@@ -2147,7 +2147,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
       int node_id = stack_id[--pos_stack];
 
       if (dbg_enabled) {
-        log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+        log_trace("  node %d, range=%d/%d, n_points=%d, is_leaf=%d\n",
                   node_id,
                   range[2*node_id], range[2*node_id+1],
                   n_points[node_id],
@@ -2183,7 +2183,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
       else {
         /* Internal nodes */
 
-        const int *_child_ids = children_id + 8*node_id;
+        const int *_child_ids = children_id + n_children*node_id;
         for (int i = 0; i < n_children; i++) {
           int child_id = _child_ids[i];
           if (child_id < 0) {
@@ -2191,6 +2191,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
           }
 
           if (dbg_enabled) {
+            // log_trace("    child %d / %d\n", child_id, n_nodes);
             log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
                    i,
                    child_id,
