@@ -27,6 +27,7 @@
 #include "pdm_box.h"
 #include "pdm_box_tree.h"
 #include "pdm_box_priv.h"
+#include "pdm_point_tree_seq_priv.h"
 #include "pdm_array.h"
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
@@ -654,19 +655,37 @@ PDM_doctree_build
   }
 
   /*
+   *  Compute size for directly have shared_memory pts_gnum
+   */
+  int *shm_equi_pts_tot_idx = malloc( (n_rank_in_shm + 1) * sizeof(int));
+  shm_equi_pts_tot_idx[0] = 0;
+  PDM_MPI_Allgather(&equi_n_pts_tot         , 1, PDM_MPI_INT,
+                    &shm_equi_pts_tot_idx[1], 1, PDM_MPI_INT, doct->comm_shared);
+
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    shm_equi_pts_tot_idx[i+1] += shm_equi_pts_tot_idx[i];
+  }
+  int n_equi_pts_shared_tot = shm_equi_pts_tot_idx[n_rank_in_shm];
+
+  PDM_mpi_win_shared_t* wequi_pts_gnum = PDM_mpi_win_shared_create(n_equi_pts_shared_tot, sizeof(PDM_g_num_t), doct->comm_shared);
+  PDM_g_num_t *equi_pts_gnum           = PDM_mpi_win_shared_get(wequi_pts_gnum);
+
+  PDM_g_num_t *lequi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_rank_in_shm]];
+
+  /*
    * g_num
    */
-  PDM_g_num_t** tmp_equi_pts_gnum = NULL;
-  PDM_block_to_part_exch(btp,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR_INTERLACED,
-                         coarse_box_n_pts,
-                         reorder_blk_pts_gnum,
-                         &tmp_equi_n_pts,
-              (void ***) &tmp_equi_pts_gnum);
-  PDM_g_num_t *equi_pts_gnum = tmp_equi_pts_gnum[0];
-  free(tmp_equi_pts_gnum);
-  free(tmp_equi_n_pts[0]);
+  // PDM_g_num_t** tmp_equi_pts_gnum = NULL;
+  PDM_block_to_part_exch_in_place(btp,
+                                  sizeof(PDM_g_num_t),
+                                  PDM_STRIDE_VAR_INTERLACED,
+                                  coarse_box_n_pts,
+                                  reorder_blk_pts_gnum,
+                                  &equi_n_pts,
+                        (void **) &lequi_pts_gnum);
+  // PDM_g_num_t *equi_pts_gnum = tmp_equi_pts_gnum[0];
+  // free(tmp_equi_pts_gnum);
+  // free(tmp_equi_n_pts[0]);
   free(tmp_equi_n_pts);
 
   /*
@@ -885,7 +904,7 @@ PDM_doctree_build
   } else {
     abort();
   }
-  free(equi_pts_gnum);
+  // free(equi_pts_gnum);
   free(equi_pts_coords);
   free(equi_n_pts);
 
@@ -898,6 +917,9 @@ PDM_doctree_build
   PDM_point_tree_seq_free(doct->local_tree);
   doct->local_tree = NULL;
 
+  /*
+   * Make shared the equi pts_gnum
+   */
 
 
   /*
@@ -1022,10 +1044,11 @@ PDM_doctree_build
       res_box_pts_coords[i_shm] = malloc(3 * _box_pts_idx[n_lbox] * sizeof(double     ));
       res_box_pts_gnum  [i_shm] = malloc(    _box_pts_idx[n_lbox] * sizeof(PDM_g_num_t));
 
+      PDM_g_num_t *shm_equi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_shm]];
+
       for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
         int l_num = _box_pts_l_num[i];
-        res_box_pts_gnum  [i_shm][i] = equi_pts_gnum[new_to_old_pts[l_num]];
-        abort(); // -> Il faut que le equi_pts_gnum soit également shared ...
+        res_box_pts_gnum  [i_shm][i] = shm_equi_pts_gnum[new_to_old_pts[l_num]];
         for (int k = 0; k < 3; k++) {
           res_box_pts_coords[i_shm][3*i + k] = sorted_tree_coord[3*l_num + k];
         }
@@ -1038,6 +1061,10 @@ PDM_doctree_build
 
 
   free(distrib_search_by_rank_idx);
+  free(shm_equi_pts_tot_idx);
+
+  PDM_mpi_win_shared_unlock_all (wequi_pts_gnum);
+  PDM_mpi_win_shared_free (wequi_pts_gnum);
 
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
   PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
