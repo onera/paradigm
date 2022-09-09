@@ -563,28 +563,19 @@ _build_point_tree_seq_leaves
         sub_extents[j  ] =  HUGE_VAL;
         sub_extents[j+3] = -HUGE_VAL;
       }
-      else {
-        sub_extents[split_direction]   = mid[0];
+      for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+        for (int j = 0; j < 3; j++) {
+          double x = ptree->_pts_coord[3*ipt+j];
+          sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
+          sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+        }
       }
-
-      // Tight extents (fit contained points)
-      // for (int j = 0; j < 3; j++) {
-      //   sub_extents[j  ] =  HUGE_VAL;
-      //   sub_extents[j+3] = -HUGE_VAL;
-      // }
-      // for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
-      //   for (int j = 0; j < 3; j++) {
-      //     double x = ptree->_pts_coord[3*ipt+j];
-      //     sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
-      //     sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
-      //   }
-      // }
-      // for (int j = 0; j < 3; j++) {
-      //   // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
-      //   sub_extents[j  ] -= 0.5*_eps_default;
-      //   sub_extents[j+3] += 0.5*_eps_default;
-      //   // }
-      // }
+      for (int j = 0; j < 3; j++) {
+        // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
+        sub_extents[j  ] -= 0.5*_eps_default;
+        sub_extents[j+3] += 0.5*_eps_default;
+        // }
+      }
 
       if (dbg_ptree) {
         log_trace("child %d, id %d, sub_extents = %f %f %f  %f %f %f\n",
@@ -2136,7 +2127,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   for (int ibox = 0; ibox < n_box; ibox++) {
 
-    int dbg_enabled = 1;
+    int dbg_enabled = 0;
     if (dbg_enabled) {
       log_trace("box %d\n", ibox);
     }

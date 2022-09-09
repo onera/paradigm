@@ -1084,6 +1084,13 @@ PDM_doctree_build
           res_box_pts_coords[i_shm][3*i + k] = sorted_tree_coord[3*old_to_new_pts[l_num] + k];
         }
       }
+
+      log_trace("i_shm = %d\n", i_shm);
+      PDM_log_trace_array_long(res_box_g_num[i_shm], part_n_box[i_shm], "res_box_g_num[i_shm] : ");
+      PDM_log_trace_connectivity_long(_box_pts_idx,
+                                      res_box_pts_gnum[i_shm],
+                                      part_n_box[i_shm],
+                                      "res_box_pts_gnum : ");
     }
   } else {
     abort();
