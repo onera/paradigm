@@ -1136,6 +1136,11 @@ PDM_doctree_build
   PDM_part_to_block_iexch_wait(ptb_unit_op_equi, request_coord);
 
   free(block_stride);
+  free(block_pts_in_box_n);
+
+
+  free(block_pts_in_box_g_num);
+  free(block_pts_in_box_coord);
 
 
   int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb_unit_op_equi);
