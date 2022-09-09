@@ -10,8 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_mpi.h"
-#include "pdm_octree_seq.h"
-#include "pdm_kdtree_seq.h"
+#include "pdm_point_tree_seq.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,14 +46,9 @@ struct _pdm_doctree_t {
   int                        local_points_in_leaf_max;
   double                     local_tolerance;
 
-  PDM_octree_seq_t          *coarse_octree;              /*! coarse octree to orient among procs        */
-  PDM_octree_seq_t          *local_octree;               /*! Local octree                               */
-  PDM_octree_seq_t          *shmem_octree;               /*! Shared octree among cores in current nodes */
-
-  PDM_kdtree_seq_t          *coarse_kdtree;              /*! coarse octree to orient among procs        */
-  PDM_kdtree_seq_t          *local_kdtree;               /*! Local octree                               */
-  PDM_kdtree_seq_t          *shmem_kdtree;               /*! Shared octree among cores in current nodes */
-
+  PDM_point_tree_seq_t      *coarse_tree;              /*! coarse tree to orient among procs        */
+  PDM_point_tree_seq_t      *local_tree;               /*! Local tree                               */
+  PDM_point_tree_seq_t      *shmem_tree;               /*! Shared tree among cores in current nodes */
 
   PDM_MPI_Comm               comm_dist_graph;
   int                        n_degree_in;

@@ -31,8 +31,7 @@
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_binary_search.h"
-#include "pdm_octree_seq.h"
-#include "pdm_kdtree_seq.h"
+#include "pdm_point_tree_seq.h"
 #include "pdm_vtk.h"
 
 
@@ -64,11 +63,9 @@ _redistribute_pts_geom
  double              **dpts_coords_out
 )
 {
-
   /*
    * Redistribute all pts and impose hilbert ordering
    */
-
   int **stride_one = malloc(doct->n_part_cloud * sizeof(int *));
   int **weight     = malloc(doct->n_part_cloud * sizeof(int *));
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
@@ -79,7 +76,6 @@ _redistribute_pts_geom
       stride_one[i_part][i] = 1;
     }
   }
-
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
@@ -216,13 +212,9 @@ PDM_doctree_create
     abort();
   }
 
-  doct->coarse_octree   = NULL;
-  doct->local_octree    = NULL;
-  doct->shmem_octree    = NULL;
-
-  doct->coarse_kdtree   = NULL;
-  doct->local_kdtree    = NULL;
-  doct->shmem_kdtree    = NULL;
+  doct->coarse_tree   = NULL;
+  doct->local_tree    = NULL;
+  doct->shmem_tree    = NULL;
 
   doct->comm_dist_graph = PDM_MPI_COMM_NULL;
   doct->n_degree_in     = 0;
@@ -285,39 +277,28 @@ PDM_doctree_build
    * Step 2 : Build local coarse tree
    */
   int dn_pts = distrib_pts[i_rank+1] - distrib_pts[i_rank];
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+     doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
 
-    assert(doct->coarse_octree == NULL);
-    doct->coarse_octree = PDM_octree_seq_create(1, // n_point_cloud
-                                          doct->coarse_depth_max,
-                                          doct->coarse_points_in_leaf_max,
-                                          doct->local_tolerance);
+    assert(doct->coarse_tree == NULL);
+    doct->coarse_tree = PDM_point_tree_seq_create(doct->local_tree_kind,
+                                                  doct->coarse_depth_max,
+                                                  doct->coarse_points_in_leaf_max,
+                                                  doct->local_tolerance);
 
-    PDM_octree_seq_point_cloud_set(doct->coarse_octree,
-                                   0,
-                                   dn_pts,
-                                   blk_pts_coord);
+    PDM_point_tree_seq_point_cloud_set(doct->coarse_tree,
+                                       dn_pts,
+                                       blk_pts_coord);
 
-    PDM_octree_seq_build(doct->coarse_octree);
-
-
-  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-
-    assert(doct->coarse_kdtree == NULL);
-    doct->coarse_kdtree = PDM_kdtree_seq_create(doct->coarse_depth_max,
-                                                doct->coarse_points_in_leaf_max,
-                                                doct->local_tolerance);
-
-    PDM_kdtree_seq_point_cloud_set(doct->coarse_kdtree,
-                                   dn_pts,
-                                   blk_pts_coord);
-
-    PDM_kdtree_seq_build(doct->coarse_kdtree);
+    PDM_point_tree_seq_build(doct->coarse_tree);
     if(1 == 1) {
       char filename[999];
-      sprintf(filename, "out_coarse_kdtree_%i.vtk", i_rank);
-      PDM_kdtree_seq_write_nodes(doct->coarse_kdtree, filename);
+      sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
+      PDM_point_tree_seq_write_nodes(doct->coarse_tree, filename);
     }
+
+  } else {
+    abort();
   }
 
   /*
@@ -327,25 +308,22 @@ PDM_doctree_build
   int    *coarse_box_id      = NULL;
   double *coarse_box_extents = NULL;
   int    *coarse_box_n_pts   = NULL; // Number of point in boxes
+  int     n_depth_per_proc   = 0;
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    int n_depth_per_proc = 2;
-    PDM_octree_seq_extract_extent(doct->coarse_octree,
-                                  0,
-                                  n_depth_per_proc,
-                                  &n_coarse_box,
-                                  &coarse_box_id,
-                                  &coarse_box_extents,
-                                  &coarse_box_n_pts);
-  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    int n_depth_per_proc = 6; // 2^(depth)
-    PDM_kdtree_seq_extract_extent(doct->coarse_kdtree,
-                                  0,
-                                  n_depth_per_proc,
-                                  &n_coarse_box,
-                                  &coarse_box_id,
-                                  &coarse_box_extents,
-                                  &coarse_box_n_pts);
+    n_depth_per_proc = 2;
+  } else if (doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    n_depth_per_proc = 6; // 2^(depth)
+  } else {
+    abort();
   }
+
+  PDM_point_tree_seq_extract_nodes(doct->coarse_tree,
+                                   0,
+                                   n_depth_per_proc,
+                                   &n_coarse_box,
+                                   &coarse_box_id,
+                                   &coarse_box_extents,
+                                   &coarse_box_n_pts);
 
   /*
    * Equilibrate among nodes/numa - To reduce memory footprint we set up data in shared memory
@@ -478,13 +456,12 @@ PDM_doctree_build
                                         &coarse_tree_box_to_box_idx,
                                         &coarse_tree_box_to_box);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_connectivity_int(coarse_tree_box_to_box_idx,
                                      coarse_tree_box_to_box,
                                      n_shared_boxes,
                                      "coarse_tree_box_to_box : ");
     }
-
   } else {
     abort();
   }
@@ -517,7 +494,7 @@ PDM_doctree_build
   PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
   PDM_g_num_t* distrib_tree     = PDM_part_to_block_distrib_index_get(ptb_equi_box);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(parent_tree_gnum, dn_equi_tree , "parent_tree_gnum :: ");
     PDM_log_trace_array_long(distrib_tree    , n_rank+1, "distrib_tree : ");
   }
@@ -599,10 +576,11 @@ PDM_doctree_build
   int    *new_to_old_pts = NULL;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
-    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-      n_pts_tot += PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
-    } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      n_pts_tot += PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
+    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+       doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+      n_pts_tot += PDM_point_tree_seq_point_range_get(doct->coarse_tree, node_id, point_range);
+    } else {
+      abort();
     }
   }
 
@@ -617,16 +595,13 @@ PDM_doctree_build
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
 
-    int *point_clouds_id = NULL;
-    int *point_indexes   = NULL;
-
-    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-      PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
-      PDM_octree_seq_points_get(doct->coarse_octree, node_id, &point_clouds_id, &point_indexes);
-    } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
-      PDM_kdtree_seq_sorted_points_get(doct->coarse_kdtree, &sorted_tree_coord);
-      PDM_kdtree_seq_point_new_to_old_get(doct->coarse_kdtree, &new_to_old_pts);
+    if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+       doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+      PDM_point_tree_seq_point_range_get(doct->coarse_tree, node_id, point_range);
+      PDM_point_tree_seq_sorted_points_get(doct->coarse_tree, &sorted_tree_coord);
+      PDM_point_tree_seq_point_new_to_old_get(doct->coarse_tree, &new_to_old_pts);
+    } else {
+      abort();
     }
 
     for(int i_pt = point_range[0]; i_pt < point_range[1]; ++i_pt) {
@@ -711,8 +686,6 @@ PDM_doctree_build
   PDM_mpi_win_shared_free(wshared_coarse_box_n_pts);
   PDM_mpi_win_shared_free(wshared_coarse_box_extents);
 
-
-
   free(recv_shift);
   free(lrecv_count);
 
@@ -724,14 +697,13 @@ PDM_doctree_build
 
   PDM_part_to_block_free(ptb);
 
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    if(doct->coarse_octree != NULL) {
-      PDM_octree_seq_free(doct->coarse_octree);
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+     doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+    if(doct->coarse_tree != NULL) {
+      PDM_point_tree_seq_free(doct->coarse_tree);
     }
-  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    if(doct->coarse_kdtree != NULL) {
-      PDM_kdtree_seq_free(doct->coarse_kdtree);
-    }
+  } else {
+    abort();
   }
 
   // Preparation of send count and box_rank/box_rank_idx
@@ -777,14 +749,12 @@ PDM_doctree_build
     shared_recv_idx[i+1] = shared_recv_idx[i] + shared_recv_count[i];
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(send_entity_n, n_rank, "send_entity_n :: ");
     PDM_log_trace_array_int(recv_entity_n, n_rank, "recv_entity_n :: ");
   }
 
-
   int n_tot_recv_shared = shared_recv_idx[n_rank_in_shm];
-
   PDM_mpi_win_shared_t* wshared_entity_coord         = NULL;
   PDM_mpi_win_shared_t* wshared_entity_gnum          = NULL;
   PDM_mpi_win_shared_t* wshared_entity_init_location = NULL;
@@ -857,41 +827,29 @@ PDM_doctree_build
    * Step 3 : All pts are redistribute to equilibrate solicitation
    *   We can now rebuild a finer tree to finalize solicitation
    */
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+     doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
 
-    assert(doct->coarse_octree == NULL);
-    doct->local_octree = PDM_octree_seq_create(1, // n_point_cloud
-                                          doct->local_depth_max,
-                                          doct->local_points_in_leaf_max,
-                                          doct->local_tolerance);
+    assert(doct->local_tree == NULL);
+    doct->local_tree = PDM_point_tree_seq_create(doct->local_tree_kind,
+                                                 doct->local_depth_max,
+                                                 doct->local_points_in_leaf_max,
+                                                 doct->local_tolerance);
 
-    PDM_octree_seq_point_cloud_set(doct->local_octree,
-                                   0,
-                                   equi_n_pts_tot,
-                                   equi_pts_coords);
+    PDM_point_tree_seq_point_cloud_set(doct->local_tree,
+                                       equi_n_pts_tot,
+                                       equi_pts_coords);
 
-    PDM_octree_seq_build(doct->local_octree);
-
-
-  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-
-    assert(doct->local_kdtree == NULL);
-    doct->local_kdtree = PDM_kdtree_seq_create(doct->local_depth_max,
-                                               doct->local_points_in_leaf_max,
-                                               doct->local_tolerance);
-
-    PDM_kdtree_seq_point_cloud_set(doct->local_kdtree,
-                                   equi_n_pts_tot,
-                                   equi_pts_coords);
-
-    PDM_kdtree_seq_build(doct->local_kdtree);
+    PDM_point_tree_seq_build(doct->local_tree);
 
     if(1 == 1) {
       char filename[999];
-      sprintf(filename, "out_local_kdtree_%i.vtk", i_rank);
-      PDM_kdtree_seq_write_nodes(doct->local_kdtree, filename);
+      sprintf(filename, "out_local_tree_%i.vtk", i_rank);
+      PDM_point_tree_seq_write_nodes(doct->local_tree, filename);
     }
 
+  } else {
+    abort();
   }
   free(equi_pts_gnum);
   free(equi_pts_coords);
@@ -1039,14 +997,13 @@ PDM_doctree_free
   free(doct->pts_coords       );
   free(doct->pts_init_location);
 
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    if(doct->local_octree != NULL) {
-      PDM_octree_seq_free(doct->local_octree);
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+     doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+    if(doct->local_tree != NULL) {
+      PDM_point_tree_seq_free(doct->local_tree);
     }
-  } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    if(doct->local_kdtree != NULL) {
-      PDM_kdtree_seq_free(doct->local_kdtree);
-    }
+  } else {
+    abort();
   }
 
   free(doct);
