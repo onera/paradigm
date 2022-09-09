@@ -1852,17 +1852,17 @@ PDM_point_tree_make_shared
   PDM_MPI_Allgather(s_shm_data_in_rank     , 2, PDM_MPI_INT,
                     s_shm_data_in_all_nodes, 2, PDM_MPI_INT, comm_shared);
 
-  int *nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
-  int *pts_idx   = malloc((n_rank_in_shm+1) * sizeof(int));
-  nodes_idx[0] = 0;
-  pts_idx  [0] = 0;
+  int *shared_nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+  int *shared_pts_idx   = malloc((n_rank_in_shm+1) * sizeof(int));
+  shared_nodes_idx[0] = 0;
+  shared_pts_idx  [0] = 0;
   for(int i = 0; i < n_rank_in_shm; ++i) {
-    nodes_idx[i+1] = nodes_idx[i] + s_shm_data_in_all_nodes[2*i  ];
-    pts_idx  [i+1] = pts_idx  [i] + s_shm_data_in_all_nodes[2*i+1];
+    shared_nodes_idx[i+1] = shared_nodes_idx[i] + s_shm_data_in_all_nodes[2*i  ];
+    shared_pts_idx  [i+1] = shared_pts_idx  [i] + s_shm_data_in_all_nodes[2*i+1];
   }
 
-  int n_nodes_shared_tot = nodes_idx[n_rank_in_shm];
-  int n_pts_shared_tot   = pts_idx  [n_rank_in_shm];
+  int n_nodes_shared_tot = shared_nodes_idx[n_rank_in_shm];
+  int n_pts_shared_tot   = shared_pts_idx  [n_rank_in_shm];
 
   /* Nodes */
   int n_children = PDM_point_tree_n_children_get(local_ptree);
@@ -1902,23 +1902,23 @@ PDM_point_tree_make_shared
 
     /* Nodes */
     shm_ptree->shm_n_nodes    [i] = s_shm_data_in_all_nodes[2*i];
-    shm_ptree->shm_is_leaf    [i] = &ptr_is_leaf    [nodes_idx[i]];
-    shm_ptree->shm_children_id[i] = &ptr_children_id[nodes_idx[i] * n_children];
-    shm_ptree->shm_range      [i] = &ptr_range      [nodes_idx[i] * 2];
-    shm_ptree->shm_n_points   [i] = &ptr_n_points   [nodes_idx[i]];
-    shm_ptree->shm_extents    [i] = &ptr_extents    [nodes_idx[i] * 6];
+    shm_ptree->shm_is_leaf    [i] = &ptr_is_leaf    [shared_nodes_idx[i]];
+    shm_ptree->shm_children_id[i] = &ptr_children_id[shared_nodes_idx[i] * n_children];
+    shm_ptree->shm_range      [i] = &ptr_range      [shared_nodes_idx[i] * 2];
+    shm_ptree->shm_n_points   [i] = &ptr_n_points   [shared_nodes_idx[i]];
+    shm_ptree->shm_extents    [i] = &ptr_extents    [shared_nodes_idx[i] * 6];
 
     /* Points */
     shm_ptree->shm_n_pts      [i] = s_shm_data_in_all_nodes[2*i+1];
-    shm_ptree->shm_pts_coord  [i] = &ptr_pts_coord [pts_idx[i] * 3];
-    shm_ptree->shm_new_to_old [i] = &ptr_new_to_old[pts_idx[i]];
+    shm_ptree->shm_pts_coord  [i] = &ptr_pts_coord         [shared_pts_idx[i] * 3];
+    shm_ptree->shm_new_to_old [i] = &ptr_new_to_old        [shared_pts_idx[i]];
 
   }
 
 
   free(s_shm_data_in_all_nodes);
-  free(nodes_idx);
-  free(pts_idx );
+  shm_ptree->shared_nodes_idx = shared_nodes_idx;
+  shm_ptree->shared_pts_idx   = shared_pts_idx;
 
 
   /*
@@ -1982,6 +1982,8 @@ PDM_point_tree_seq_shm_free
   PDM_mpi_win_shared_free(shm_ptree->w_pts_coord );
   PDM_mpi_win_shared_free(shm_ptree->w_new_to_old);
 
+  free(shm_ptree->shared_nodes_idx);
+  free(shm_ptree->shared_pts_idx  );
 
   free(shm_ptree->ptrees);
   free(shm_ptree);
