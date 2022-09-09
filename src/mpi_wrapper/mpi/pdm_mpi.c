@@ -2604,7 +2604,6 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
  *
  *----------------------------------------------------------------------------*/
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
-  double t1 = PDM_MPI_Wtime();
   MPI_Win_free(&wins->win);
   wins->ptr = NULL;
   free(wins);

@@ -673,6 +673,8 @@ PDM_doctree_build
   PDM_mpi_win_shared_lock_all (0, wequi_pts_gnum);
   PDM_g_num_t *lequi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_rank_in_shm]];
 
+  PDM_log_trace_array_long(shm_equi_pts_tot_idx, n_rank_in_shm+1, "shm_equi_pts_tot_idx ::");
+
   /*
    * g_num
    */
@@ -906,7 +908,6 @@ PDM_doctree_build
     abort();
   }
   // free(equi_pts_gnum);
-  free(equi_pts_coords);
   free(equi_n_pts);
 
   /*
@@ -1043,9 +1044,9 @@ PDM_doctree_build
       }
 
       double *sorted_tree_coord = NULL;
-      int    *new_to_old_pts    = NULL;
+      int    *old_to_new_pts    = NULL;
       PDM_point_tree_seq_shm_sorted_points_get   (doct->shmem_tree, i_shm, &sorted_tree_coord);
-      PDM_point_tree_seq_shm_point_new_to_old_get(doct->shmem_tree, i_shm, &new_to_old_pts);
+      PDM_point_tree_seq_shm_point_old_to_new_get(doct->shmem_tree, i_shm, &old_to_new_pts);
 
       /*
        * Extract point and gnum
@@ -1055,13 +1056,15 @@ PDM_doctree_build
       res_box_pts_coords[i_shm] = malloc(3 * _box_pts_idx[n_lbox] * sizeof(double     ));
       res_box_pts_gnum  [i_shm] = malloc(    _box_pts_idx[n_lbox] * sizeof(PDM_g_num_t));
 
-      PDM_g_num_t *shm_equi_pts_gnum = &equi_pts_gnum[shm_equi_pts_tot_idx[i_shm]];
+      PDM_g_num_t *shm_equi_pts_gnum   = &equi_pts_gnum      [  shm_equi_pts_tot_idx[i_shm]];
+
+      PDM_log_trace_connectivity_int(_box_pts_idx, _box_pts_l_num, part_n_box[i_shm], "_box_pts_l_num : ");
 
       for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
         int l_num = _box_pts_l_num[i];
         res_box_pts_gnum  [i_shm][i] = shm_equi_pts_gnum[l_num];
         for (int k = 0; k < 3; k++) {
-          res_box_pts_coords[i_shm][3*i + k] = sorted_tree_coord[3*l_num + k];
+          res_box_pts_coords[i_shm][3*i + k] = sorted_tree_coord[3*old_to_new_pts[l_num] + k];
         }
       }
     }
@@ -1069,8 +1072,10 @@ PDM_doctree_build
     abort();
   }
 
+  free(equi_pts_coords);
   free(distrib_search_by_rank_idx);
   free(shm_equi_pts_tot_idx);
+  PDM_MPI_Barrier(doct->comm_shared);
 
   PDM_mpi_win_shared_unlock_all (wequi_pts_gnum);
   PDM_mpi_win_shared_free (wequi_pts_gnum);

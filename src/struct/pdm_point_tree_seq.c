@@ -549,32 +549,32 @@ _build_point_tree_seq_leaves
       child_id[ichild] = tmp_size;
       is_leaf = 0;
 
-      // memcpy(sub_extents, extents, sizeof(double) * 6);
-      // if (ichild == 0) {
-      //   sub_extents[3+_split_direction] = mid;
-      // }
-      // else {
-      //   sub_extents[_split_direction]   = mid;
-      // }
+      memcpy(sub_extents, extents, sizeof(double) * 6);
+      if (ichild == 0) {
+        sub_extents[3+split_direction] = mid[0];
+      }
+      else {
+        sub_extents[split_direction]   = mid[0];
+      }
 
       // Tight extents (fit contained points)
-      for (int j = 0; j < 3; j++) {
-        sub_extents[j  ] =  HUGE_VAL;
-        sub_extents[j+3] = -HUGE_VAL;
-      }
-      for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
-        for (int j = 0; j < 3; j++) {
-          double x = ptree->_pts_coord[3*ipt+j];
-          sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
-          sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
-        }
-      }
-      for (int j = 0; j < 3; j++) {
-        // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
-        sub_extents[j  ] -= 0.5*_eps_default;
-        sub_extents[j+3] += 0.5*_eps_default;
-        // }
-      }
+      // for (int j = 0; j < 3; j++) {
+      //   sub_extents[j  ] =  HUGE_VAL;
+      //   sub_extents[j+3] = -HUGE_VAL;
+      // }
+      // for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+      //   for (int j = 0; j < 3; j++) {
+      //     double x = ptree->_pts_coord[3*ipt+j];
+      //     sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
+      //     sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+      //   }
+      // }
+      // for (int j = 0; j < 3; j++) {
+      //   // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
+      //   sub_extents[j  ] -= 0.5*_eps_default;
+      //   sub_extents[j+3] += 0.5*_eps_default;
+      //   // }
+      // }
 
       if (dbg_ptree) {
         log_trace("child %d, id %d, sub_extents = %f %f %f  %f %f %f\n",
@@ -1883,9 +1883,11 @@ PDM_point_tree_make_shared
   /* Points */
   shm_ptree->w_pts_coord  = PDM_mpi_win_shared_create(n_pts_shared_tot * 3, sizeof(double), comm_shared);
   shm_ptree->w_new_to_old = PDM_mpi_win_shared_create(n_pts_shared_tot,     sizeof(int   ), comm_shared);
+  shm_ptree->w_old_to_new = PDM_mpi_win_shared_create(n_pts_shared_tot,     sizeof(int   ), comm_shared);
 
   double *ptr_pts_coord   = PDM_mpi_win_shared_get(shm_ptree->w_pts_coord);
   int    *ptr_new_to_old  = PDM_mpi_win_shared_get(shm_ptree->w_new_to_old);
+  int    *ptr_old_to_new  = PDM_mpi_win_shared_get(shm_ptree->w_old_to_new);
 
   /*
    *  Set window pointers
@@ -1899,6 +1901,7 @@ PDM_point_tree_make_shared
   shm_ptree->shm_n_pts       = malloc(sizeof(int     ) * n_rank_in_shm);
   shm_ptree->shm_pts_coord   = malloc(sizeof(double *) * n_rank_in_shm);
   shm_ptree->shm_new_to_old  = malloc(sizeof(int    *) * n_rank_in_shm);
+  shm_ptree->shm_old_to_new  = malloc(sizeof(int    *) * n_rank_in_shm);
 
   for(int i = 0; i < n_rank_in_shm; ++i) {
 
@@ -1914,6 +1917,7 @@ PDM_point_tree_make_shared
     shm_ptree->shm_n_pts      [i] = s_shm_data_in_all_nodes[2*i+1];
     shm_ptree->shm_pts_coord  [i] = &ptr_pts_coord         [shared_pts_idx[i] * 3];
     shm_ptree->shm_new_to_old [i] = &ptr_new_to_old        [shared_pts_idx[i]];
+    shm_ptree->shm_old_to_new [i] = &ptr_old_to_new        [shared_pts_idx[i]];
 
   }
 
@@ -1952,6 +1956,9 @@ PDM_point_tree_make_shared
   memcpy(shm_ptree->shm_new_to_old[i_rank_in_shm],
          local_ptree->new_to_old,
          sizeof(int) * local_ptree->n_pts);
+  memcpy(shm_ptree->shm_old_to_new[i_rank_in_shm],
+         local_ptree->old_to_new,
+         sizeof(int) * local_ptree->n_pts);
 
   PDM_MPI_Barrier(comm_shared);
 
@@ -1974,6 +1981,7 @@ PDM_point_tree_seq_shm_free
   free(shm_ptree->shm_n_pts      );
   free(shm_ptree->shm_pts_coord  );
   free(shm_ptree->shm_new_to_old );
+  free(shm_ptree->shm_old_to_new );
 
   PDM_mpi_win_shared_free(shm_ptree->w_is_leaf    );
   PDM_mpi_win_shared_free(shm_ptree->w_children_id);
@@ -1983,6 +1991,7 @@ PDM_point_tree_seq_shm_free
 
   PDM_mpi_win_shared_free(shm_ptree->w_pts_coord );
   PDM_mpi_win_shared_free(shm_ptree->w_new_to_old);
+  PDM_mpi_win_shared_free(shm_ptree->w_old_to_new);
 
   free(shm_ptree->shared_nodes_idx);
   free(shm_ptree->shared_pts_idx  );
@@ -2037,16 +2046,26 @@ PDM_point_tree_seq_shm_point_new_to_old_get
 
 /**
  *
- * \brief Get points located inside a set of boxes (search in shared-memory tree)
+ * \brief Get point order in ptree
  *
- * \param [in]   ptree                  Pointer to \ref PDM_point_tree_seq object
- * \param [in]   i_shm_rank             Shared-memory rank to explore
- * \param [in]   n_box                  Number of boxes
- * \param [in]   box_extents            Extents of boxes
- * \param [out]  box_pts_idx            Index of points located in boxes
- * \param [out]  box_pts                Local ids of points located in boxes (zero-based)
+ * \param [in]   ptree                 Pointer to \ref PDM_ptree_seq object
+ * \param [out]  new_to_old             New to old order of points in ptree
  *
  */
+
+void
+PDM_point_tree_seq_shm_point_old_to_new_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ int                      **old_to_new
+)
+{
+  *old_to_new = shm_tree->shm_old_to_new[i_shm];
+}
+
+
+
 
 void
 PDM_point_tree_seq_points_inside_boxes_shared
@@ -2055,6 +2074,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
  const int                        i_shm_rank,
  const int                        n_box,
  const double                     box_extents[],
+ // const PDM_g_num_t                box_g_num[],
        int                      **box_pts_idx,
        int                      **box_pts
  )

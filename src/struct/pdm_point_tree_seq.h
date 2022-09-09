@@ -373,6 +373,13 @@ PDM_point_tree_seq_shm_point_new_to_old_get
  int                      **new_to_old
 );
 
+void
+PDM_point_tree_seq_shm_point_old_to_new_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ int                      **old_to_new
+);
 
 /**
  *
