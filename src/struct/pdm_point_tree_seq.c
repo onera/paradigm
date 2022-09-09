@@ -549,9 +549,19 @@ _build_point_tree_seq_leaves
       child_id[ichild] = tmp_size;
       is_leaf = 0;
 
-      memcpy(sub_extents, extents, sizeof(double) * 6);
-      if (ichild == 0) {
-        sub_extents[3+split_direction] = mid[0];
+      // WARNING : works only for kdtree
+      // memcpy(sub_extents, extents, sizeof(double) * 6);
+      // if (ichild == 0) {
+      //   sub_extents[3+split_direction] = mid[0];
+      // }
+      // else {
+      //   sub_extents[split_direction]   = mid[0];
+      // }
+
+      // Tight extents (fit contained points)
+      for (int j = 0; j < 3; j++) {
+        sub_extents[j  ] =  HUGE_VAL;
+        sub_extents[j+3] = -HUGE_VAL;
       }
       else {
         sub_extents[split_direction]   = mid[0];
@@ -1501,7 +1511,7 @@ PDM_point_tree_seq_points_inside_boxes
   int *_box_pts = *box_pts;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
-    int dbg_enabled = 0;
+    int dbg_enabled = 1;
     if (dbg_enabled) {
       log_trace("box %d\n", ibox);
     }
@@ -2126,7 +2136,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   for (int ibox = 0; ibox < n_box; ibox++) {
 
-    int dbg_enabled = 0;
+    int dbg_enabled = 1;
     if (dbg_enabled) {
       log_trace("box %d\n", ibox);
     }
@@ -2280,4 +2290,93 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   free (stack_id);
   *box_pts = realloc (*box_pts, sizeof(int) * _box_pts_idx[n_box]);
+}
+
+
+
+void
+PDM_point_tree_seq_write_nodes_shared
+(
+       PDM_point_tree_seq_shm_t *shm_ptree,
+ const int                       i_shm_rank,
+ const char                     *filename
+ )
+{
+  // _l_nodes_t *nodes = shm_ptree->nodes;
+  int     n_nodes     = shm_ptree->shm_n_nodes    [i_shm_rank];
+  int    *is_leaf     = shm_ptree->shm_is_leaf    [i_shm_rank];
+  // int    *children_id = shm_ptree->shm_children_id[i_shm_rank];
+  int    *range       = shm_ptree->shm_range      [i_shm_rank];
+  // int    *n_points    = shm_ptree->shm_n_points   [i_shm_rank];
+  double *extents     = shm_ptree->shm_extents    [i_shm_rank];
+  // double *pts_coord   = shm_ptree->shm_pts_coord  [i_shm_rank];
+  // int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
+
+  // double tol_visu = 1e-3;
+  // double _ext[6];
+
+  // write VTK
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "ptree_seq_shared\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_nodes);
+  for (int inode = 0; inode < n_nodes; inode++) {
+    double *ext = extents + 6*inode;
+
+    // if (1 && (range[2*inode+1] - range[2*inode] == 1)) {
+    //   // Trick to visualize nodes with degenerate extents (single point)
+    //   ext = _ext;
+    //   for (int i = 0; i < 3; i++) {
+    //     double x = nodes->extents[6*inode + i];
+    //     double eps = tol_visu*(ptree->extents[i+3] - ptree->extents[i]);
+    //     ext[i  ] = x - eps;
+    //     ext[i+3] = x + eps;
+    //   }
+    // }
+
+    for (int k = 0; k < 2; k++) {
+      for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 2; i++) {
+          int ii = (1-j)*i + j*(1-i);
+          fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
+        }
+      }
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "8 ");
+    for (int j = 0; j < 8; j++) {
+      fprintf(f, "%d ", 8*inode+j);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "%d\n", 12);
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_nodes);
+
+  fprintf(f, "FIELD node_field 2\n");
+  // fprintf(f, "depth 1 %d int\n", n_nodes);
+  // for (int i = 0; i < n_nodes; i++) {
+  //   fprintf(f, "%d\n", depth[i]);
+  // }
+  fprintf(f, "is_leaf 1 %d int\n", n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "%d\n", is_leaf[i]);
+  }
+  fprintf(f, "n_pts 1 %d int\n", n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "%d\n", range[2*i+1] - range[2*i]);
+  }
+
+  fclose(f);
 }

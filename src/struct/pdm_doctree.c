@@ -916,6 +916,16 @@ PDM_doctree_build
   doct->shmem_tree = PDM_point_tree_make_shared(doct->local_tree,
                                                 doct->comm_shared);
 
+  if(1 == 1) {
+    char filename[999];
+    for (int ishm = 0; ishm < n_rank_in_shm; ishm++) {
+      sprintf(filename, "out_shared_tree_%i_%i.vtk", ishm, i_rank);
+      PDM_point_tree_seq_write_nodes_shared(doct->shmem_tree,
+                                            ishm,
+                                            filename);
+    }
+  }
+
   PDM_point_tree_seq_free(doct->local_tree);
   doct->local_tree = NULL;
 

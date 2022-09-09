@@ -405,6 +405,14 @@ PDM_point_tree_seq_points_inside_boxes_shared
        int                      **box_pts
  );
 
+
+void PDM_point_tree_seq_write_nodes_shared
+(
+       PDM_point_tree_seq_shm_t *shm_ptree,
+ const int                       i_shm_rank,
+ const char                     *filename
+ );
+
 #ifdef  __cplusplus
 }
 #endif
