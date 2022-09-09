@@ -1060,25 +1060,60 @@ PDM_doctree_build
     abort();
   }
 
-  printf("falg 1 \n");
-
   free(distrib_search_by_rank_idx);
   free(shm_equi_pts_tot_idx);
 
   PDM_mpi_win_shared_unlock_all (wequi_pts_gnum);
   PDM_mpi_win_shared_free (wequi_pts_gnum);
 
-  printf("falg 2 \n");
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
   PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
   PDM_mpi_win_shared_unlock_all (wshared_entity_init_location);
 
-  printf("falg 3 \n");
   PDM_mpi_win_shared_free (wshared_entity_coord  );
   PDM_mpi_win_shared_free (wshared_entity_gnum);
   PDM_mpi_win_shared_free (wshared_entity_init_location);
 
-  printf("falg 4 \n");
+  /*
+   * Equilibrate unitary works
+   */
+  PDM_part_to_block_t *ptb_unit_op_equi = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                    1.,
+                                                   (PDM_g_num_t **) res_box_g_num,
+                                                                    res_box_weight,
+                                                                    part_n_box,
+                                                                    n_rank_in_shm,
+                                                                    doct->comm);
+
+  for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
+    free(res_box_weight[i_shm]);
+    free(box_pts_idx   [i_shm]);
+    free(box_pts_l_num [i_shm]);
+  }
+  free(box_pts_idx   );
+  free(box_pts_l_num );
+
+  /*
+   * Exchange
+   */
+
+
+  for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
+    free(res_box_pts_coords[i_shm]);
+    free(res_box_pts_gnum  [i_shm]);
+    free(res_box_strid     [i_shm]);
+  }
+  free(part_n_box    );
+
+  free(res_box_g_num );
+  free(res_box_strid );
+  free(res_box_weight);
+  free(res_box_pts_coords);
+  free(res_box_pts_gnum  );
+
+  PDM_part_to_block_free(ptb_unit_op_equi);
+
   PDM_MPI_Comm_free(&doct->comm_dist_graph);
   PDM_MPI_Comm_free(&doct->comm_shared);
   free(doct->neighbor_in);
