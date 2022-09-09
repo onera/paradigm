@@ -7184,7 +7184,7 @@ _make_octree_shared
     if (_octree->explicit_nodes_to_build) {
       _octree->shm_explicit_nodes[i] = malloc (sizeof(_l_explicit_node_t));
       _l_explicit_node_t *cexp = _octree->shm_explicit_nodes[i];
-      cexp->n_nodes     = s_shm_data_in_all_nodes[3*i+2];;
+      cexp->n_nodes     = s_shm_data_in_all_nodes[3*i+2];
       cexp->codes       = &ptr_expli_codes      [          explicit_n_nodes_idx[i]];
       cexp->n_points    = &ptr_expli_n_points   [          explicit_n_nodes_idx[i]];
       cexp->range       = &ptr_expli_range      [          explicit_n_nodes_idx[i]];

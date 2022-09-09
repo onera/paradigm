@@ -869,6 +869,13 @@ PDM_point_tree_seq_create
  const double                   tolerance
 )
 {
+  if (tree_type != PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+      tree_type != PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Tree_type %d not implemented yet\n", (int) tree_type);
+  }
+
+
   PDM_point_tree_seq_t *ptree = (PDM_point_tree_seq_t *) malloc(sizeof(PDM_point_tree_seq_t));
 
   ptree->tree_type = tree_type;
@@ -1823,62 +1830,112 @@ PDM_point_tree_make_shared
   /*
    * Exchange size
    */
-  int s_shm_data_in_rank[3] = {0};
+  int s_shm_data_in_rank[2] = {0};
   s_shm_data_in_rank[0] = local_ptree->n_nodes;
-  s_shm_data_in_rank[1] = local_ptree->n_nodes_max; // @Bruno: on a pas besoin pas ça à mon avis
-  s_shm_data_in_rank[2] = local_ptree->n_pts;
-  int *s_shm_data_in_all_nodes = malloc(3 * n_rank_in_shm * sizeof(int));
+  s_shm_data_in_rank[1] = local_ptree->n_pts;
+  int *s_shm_data_in_all_nodes = malloc(1 * n_rank_in_shm * sizeof(int));
 
-  PDM_MPI_Allgather(s_shm_data_in_rank     , 3, PDM_MPI_INT,
-                    s_shm_data_in_all_nodes, 3, PDM_MPI_INT, comm_shared);
+  PDM_MPI_Allgather(s_shm_data_in_rank     , 2, PDM_MPI_INT,
+                    s_shm_data_in_all_nodes, 2, PDM_MPI_INT, comm_shared);
 
-  int *octants_n_nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
-  int *n_nodes_max_idx     = malloc((n_rank_in_shm+1) * sizeof(int));
-  int *n_pts_idx           = malloc((n_rank_in_shm+1) * sizeof(int));
-  octants_n_nodes_idx[0] = 0;
-  n_nodes_max_idx    [0] = 0;
-  n_pts_idx          [0] = 0;
+  int *nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+  int *pts_idx   = malloc((n_rank_in_shm+1) * sizeof(int));
+  nodes_idx[0] = 0;
+  pts_idx  [0] = 0;
   for(int i = 0; i < n_rank_in_shm; ++i) {
-    octants_n_nodes_idx[i+1] = octants_n_nodes_idx[i] + s_shm_data_in_all_nodes[3*i  ];
-    n_nodes_max_idx    [i+1] = n_nodes_max_idx    [i] + s_shm_data_in_all_nodes[3*i+1];
-    n_pts_idx          [i+1] = n_pts_idx          [i] + s_shm_data_in_all_nodes[3*i+2];
+    nodes_idx[i+1] = nodes_idx[i] + s_shm_data_in_all_nodes[2*i  ];
+    pts_idx  [i+1] = pts_idx  [i] + s_shm_data_in_all_nodes[2*i+1];
   }
 
-  int n_nodes_shared_tot     = octants_n_nodes_idx[n_rank_in_shm];
-  int n_nodes_max_shared_tot = n_nodes_max_idx    [n_rank_in_shm];
-  int n_pts_shared_tot       = n_pts_idx          [n_rank_in_shm];
+  int n_nodes_shared_tot = nodes_idx[n_rank_in_shm];
+  int n_pts_shared_tot   = pts_idx  [n_rank_in_shm];
 
-  /*
-   * Point tree struct
-   */
+  /* Nodes */
   int n_children = PDM_point_tree_n_children_get(local_ptree);
   shm_ptree->w_is_leaf     = PDM_mpi_win_shared_create(n_nodes_shared_tot,              sizeof(int   ), comm_shared);
   shm_ptree->w_children_id = PDM_mpi_win_shared_create(n_nodes_shared_tot * n_children, sizeof(int   ), comm_shared);
   shm_ptree->w_range       = PDM_mpi_win_shared_create(n_nodes_shared_tot * 2,          sizeof(int   ), comm_shared);
   shm_ptree->w_n_points    = PDM_mpi_win_shared_create(n_nodes_shared_tot,              sizeof(int   ), comm_shared);
   shm_ptree->w_extents     = PDM_mpi_win_shared_create(n_nodes_shared_tot * 6,          sizeof(double), comm_shared);
+  int    *ptr_is_leaf      = PDM_mpi_win_shared_get(shm_ptree->w_is_leaf);
+  int    *ptr_children_id  = PDM_mpi_win_shared_get(shm_ptree->w_children_id);
+  int    *ptr_range        = PDM_mpi_win_shared_get(shm_ptree->w_range);
+  int    *ptr_n_points     = PDM_mpi_win_shared_get(shm_ptree->w_n_points);
+  double *ptr_extents      = PDM_mpi_win_shared_get(shm_ptree->w_extents);
+
+
+  /* Points */
+  shm_ptree->w_pts_coord  = PDM_mpi_win_shared_create(n_pts_shared_tot * 3, sizeof(double), comm_shared);
+  shm_ptree->w_new_to_old = PDM_mpi_win_shared_create(n_pts_shared_tot,     sizeof(int   ), comm_shared);
+
+  double *ptr_pts_coord   = PDM_mpi_win_shared_get(shm_ptree->w_pts_coord);
+  int    *ptr_new_to_old  = PDM_mpi_win_shared_get(shm_ptree->w_new_to_old);
 
   /*
-   * Pts and ids
+   *  Set window pointers
    */
-  // shm_ptree->w_point_ids    = PDM_mpi_win_shared_create(    t_n_points_shared_tot, sizeof(int   ), comm_shared);
-  // shm_ptree->w_point_clouds = PDM_mpi_win_shared_create(3 * t_n_points_shared_tot, sizeof(double), comm_shared);
+  shm_ptree->shm_n_nodes     = malloc(sizeof(int     ) * n_rank_in_shm);
+  shm_ptree->shm_is_leaf     = malloc(sizeof(int    *) * n_rank_in_shm);
+  shm_ptree->shm_children_id = malloc(sizeof(int    *) * n_rank_in_shm);
+  shm_ptree->shm_range       = malloc(sizeof(int    *) * n_rank_in_shm);
+  shm_ptree->shm_n_points    = malloc(sizeof(int    *) * n_rank_in_shm);
+  shm_ptree->shm_extents     = malloc(sizeof(double *) * n_rank_in_shm);
+  shm_ptree->shm_n_pts       = malloc(sizeof(int     ) * n_rank_in_shm);
+  shm_ptree->shm_pts_coord   = malloc(sizeof(double *) * n_rank_in_shm);
+  shm_ptree->shm_new_to_old  = malloc(sizeof(int    *) * n_rank_in_shm);
 
-  // nodes->is_leaf     = realloc(nodes->is_leaf,     sizeof(int   ) * octree->n_nodes2_max);
-  // nodes->children_id = realloc(nodes->children_id, sizeof(int   ) * octree->n_nodes2_max * 8);
-  // nodes->range       = realloc(nodes->range,       sizeof(int   ) * octree->n_nodes2_max * 2);
-  // nodes->idx         = realloc(nodes->idx,         sizeof(int   ) * octree->n_nodes2_max * 9);
-  // nodes->n_points    = realloc(nodes->n_points,    sizeof(int   ) * octree->n_nodes2_max);
-  // nodes->extents     = realloc(nodes->extents,     sizeof(double) * octree->n_nodes2_max * 6);
+  for(int i = 0; i < n_rank_in_shm; ++i) {
 
-  // nodes->depth       = realloc(nodes->depth,       sizeof(int   ) * octree->n_nodes2_max);
-  // nodes->ancestor_id          = realloc(nodes->ancestor_id,          sizeof(int                   ) * octree->n_nodes2_max);
-  // nodes->location_in_ancestor = realloc(nodes->location_in_ancestor, sizeof(PDM_octree_seq_child_t) * octree->n_nodes2_max);
+    /* Nodes */
+    shm_ptree->shm_n_nodes    [i] = s_shm_data_in_all_nodes[2*i];
+    shm_ptree->shm_is_leaf    [i] = &ptr_is_leaf    [nodes_idx[i]];
+    shm_ptree->shm_children_id[i] = &ptr_children_id[nodes_idx[i] * n_children];
+    shm_ptree->shm_range      [i] = &ptr_range      [nodes_idx[i] * 2];
+    shm_ptree->shm_n_points   [i] = &ptr_n_points   [nodes_idx[i]];
+    shm_ptree->shm_extents    [i] = &ptr_extents    [nodes_idx[i] * 6];
+
+    /* Points */
+    shm_ptree->shm_n_pts      [i] = s_shm_data_in_all_nodes[2*i+1];
+    shm_ptree->shm_pts_coord  [i] = &ptr_pts_coord [pts_idx[i] * 3];
+    shm_ptree->shm_new_to_old [i] = &ptr_new_to_old[pts_idx[i]];
+
+  }
+
 
   free(s_shm_data_in_all_nodes);
-  free(octants_n_nodes_idx);
-  free(n_nodes_max_idx    );
-  free(n_pts_idx          );
+  free(nodes_idx);
+  free(pts_idx );
+
+
+  /*
+   * Copy in window
+   */
+
+  /* Nodes */
+  _l_nodes_t *local_nodes = local_ptree->nodes;
+  memcpy(shm_ptree->shm_is_leaf[i_rank_in_shm],
+         local_nodes->is_leaf,
+         sizeof(int) * local_ptree->n_nodes);
+  memcpy(shm_ptree->shm_children_id[i_rank_in_shm],
+         local_nodes->children_id,
+         sizeof(int) * local_ptree->n_nodes * n_children);
+  memcpy(shm_ptree->shm_range[i_rank_in_shm],
+         local_nodes->range,
+         sizeof(int) * local_ptree->n_nodes * 2);
+  memcpy(shm_ptree->shm_n_points[i_rank_in_shm],
+         local_nodes->n_points,
+         sizeof(int) * local_ptree->n_nodes);
+  memcpy(shm_ptree->shm_extents[i_rank_in_shm],
+         local_nodes->extents,
+         sizeof(double) * local_ptree->n_nodes * 6);
+
+  /* Points */
+  memcpy(shm_ptree->shm_pts_coord[i_rank_in_shm],
+         local_ptree->_pts_coord,
+         sizeof(double) * local_ptree->n_pts * 3);
+  memcpy(shm_ptree->shm_new_to_old[i_rank_in_shm],
+         local_ptree->new_to_old,
+         sizeof(int) * local_ptree->n_pts);
 
   return shm_ptree;
 }
@@ -1890,16 +1947,59 @@ PDM_point_tree_seq_shm_free
 )
 {
 
+  free(shm_ptree->shm_n_nodes    );
+  free(shm_ptree->shm_is_leaf    );
+  free(shm_ptree->shm_children_id);
+  free(shm_ptree->shm_range      );
+  free(shm_ptree->shm_n_points   );
+  free(shm_ptree->shm_extents    );
+  free(shm_ptree->shm_n_pts      );
+  free(shm_ptree->shm_pts_coord  );
+  free(shm_ptree->shm_new_to_old );
+
   PDM_mpi_win_shared_free(shm_ptree->w_is_leaf    );
   PDM_mpi_win_shared_free(shm_ptree->w_children_id);
   PDM_mpi_win_shared_free(shm_ptree->w_range      );
   PDM_mpi_win_shared_free(shm_ptree->w_n_points   );
   PDM_mpi_win_shared_free(shm_ptree->w_extents    );
 
-  PDM_mpi_win_shared_free(shm_ptree->w_point_ids   );
-  PDM_mpi_win_shared_free(shm_ptree->w_point_clouds);
+  PDM_mpi_win_shared_free(shm_ptree->w_pts_coord );
+  PDM_mpi_win_shared_free(shm_ptree->w_new_to_old);
 
 
   free(shm_ptree->ptrees);
   free(shm_ptree);
 }
+
+
+
+
+
+
+
+
+// void
+// PDM_point_tree_seq_points_inside_boxes_shared
+// (
+//        PDM_point_tree_seq_shm_t  *shm_ptree,
+//  const int                        i_shm_rank,
+//  const int                        n_box,
+//  const double                     box_extents[],
+//  const PDM_g_num_t                box_g_num[],
+//        int                      **box_pts_idx,
+//        int                      **box_pts
+//  )
+// {
+//   *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
+//   int *_box_pts_idx = *box_pts_idx;
+//   _box_pts_idx[0] = 0;
+
+//   if (n_box < 1) {
+//     *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
+//     return;
+//   }
+
+
+
+
+// }

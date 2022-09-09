@@ -83,8 +83,19 @@ struct _pdm_point_tree_seq_shm_t {
   PDM_mpi_win_shared_t *w_n_points;
   PDM_mpi_win_shared_t *w_extents;
 
-  PDM_mpi_win_shared_t *w_point_ids;
-  PDM_mpi_win_shared_t *w_point_clouds;
+  PDM_mpi_win_shared_t *w_pts_coord;
+  PDM_mpi_win_shared_t *w_new_to_old;
+
+  int                  *shm_n_nodes;     /*!< Number of nodes shm from other ranks */
+  int                 **shm_is_leaf;
+  int                 **shm_children_id;
+  int                 **shm_range;
+  int                 **shm_n_points;
+  double              **shm_extents;
+  int                  *shm_n_pts;     /*!< Number of points shm from other ranks */
+  double              **shm_pts_coord;
+  int                 **shm_new_to_old;
+
 
   // PDM_mpi_win_shared_t *w_idx;
   // PDM_mpi_win_shared_t *w_ancestor_id;
