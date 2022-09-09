@@ -210,8 +210,8 @@ main
                              0, // seed
                              0, // geometric_g_num
                              gn_pts,
-                             0., 0., 0.,//-radius, -radius, -radius,
-                             1., 1., 1.,//radius, radius, radius,
+                             -radius, -radius, -radius,
+                             radius, radius, radius,
                              &n_pts,
                              &pts_coord,
                              &pts_g_num);
@@ -261,8 +261,8 @@ main
                         n_vtx_x,
                         n_vtx_y,
                         n_vtx_z,
-                        0., 0., 0.,//-radius, -radius, -radius,
-                        1., 1., 1.,//radius, radius, radius,
+                        -radius, -radius, -radius,
+                        radius, radius, radius,
                         &n_box,
                         &box_extents,
                         &box_g_num);
@@ -290,7 +290,7 @@ main
   }
 
   PDM_box_set_t *box_set = PDM_box_set_create(3,
-                                              0,  // No normalization to preserve initial extents
+                                              1,  // No normalization to preserve initial extents
                                               0,  // No projection to preserve initial extents
                                               n_box,
                                               box_g_num,

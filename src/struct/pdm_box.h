@@ -511,6 +511,14 @@ void
 PDM_box_distrib_dump(const PDM_box_distrib_t *distrib);
 
 
+void
+PDM_box_set_normalization_get
+(
+ PDM_box_set_t  *boxes,
+ double        **s,
+ double        **d
+ );
+
 
 #ifdef __cplusplus
 }

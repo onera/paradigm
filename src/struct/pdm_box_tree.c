@@ -226,6 +226,25 @@ _extents
   }
 }
 
+
+static void
+_extents_real
+(
+ const int               dim,
+       PDM_morton_code_t code,
+       double            s[],
+       double            d[],
+       double            extents[]
+ )
+{
+  double side = 1. / (double) (1 << code.L);
+  for (int i = 0; i < dim; i++) {
+    extents[i]       = s[i] +  (double) code.X[i] * side * d[i];
+    extents[dim + i] = extents[i] + side * d[i];
+  }
+}
+
+
 /**
  *
  * \brief Compute distance to a box
@@ -7423,21 +7442,6 @@ PDM_tree_intersection_point_box
 {
   int dbg = 1;
 
-  int n_pts = ptree->n_pts;
-  double *ptree_pts_coord;
-  PDM_point_tree_seq_sorted_points_get(ptree,
-                                       &ptree_pts_coord);
-
-  double *_pts_coord  = malloc (sizeof(double) * 3 * n_pts);
-  PDM_box_set_normalize_robust ((PDM_box_set_t *) btree->boxes,
-                                n_pts,
-                     (double *) ptree_pts_coord,
-                                _pts_coord);
-
-  int *ptree_new_to_old = NULL;
-  PDM_point_tree_seq_point_new_to_old_get(ptree,
-                                          &ptree_new_to_old);
-
   PDM_boxes_t *boxes;
   PDM_box_tree_data_t *box_tree_data;
 
@@ -7446,7 +7450,10 @@ PDM_tree_intersection_point_box
 
   int n_boxes = boxes->n_boxes;
 
-
+  double *btree_s, *btree_d;
+  PDM_box_set_normalization_get((PDM_box_set_t *) btree->boxes,
+                                &btree_s,
+                                &btree_d);
 
 
 
@@ -7455,6 +7462,8 @@ PDM_tree_intersection_point_box
   int *queue1 = malloc(sizeof(int) * s_queue * 2);
   int *queues[2] = {queue0, queue1};
 
+
+  /* Get point_tree data (use gets!!!) */
   int ptree_n_children = PDM_point_tree_n_children_get(ptree);
   // int    *ptree_depth       = ptree->nodes->depth;
   int    *ptree_is_leaf     = ptree->nodes->is_leaf;
@@ -7462,15 +7471,41 @@ PDM_tree_intersection_point_box
   int    *ptree_children_id = ptree->nodes->children_id;
   double *ptree_extents     = ptree->nodes->extents;
 
+  // int n_pts = ptree->n_pts;
+  double *ptree_pts_coord;
+  PDM_point_tree_seq_sorted_points_get(ptree,
+                                       &ptree_pts_coord);
+
+  double *_pts_coord = ptree_pts_coord;
+  // double *_pts_coord = malloc (sizeof(double) * 3 * n_pts);
+  // PDM_box_set_normalize_robust ((PDM_box_set_t *) btree->boxes,
+  //                               n_pts,
+  //                    (double *) ptree_pts_coord,
+  //                               _pts_coord);
+  // log_trace("normalization %f %f %f  --->  %f %f %f\n",
+  //           ptree_pts_coord[0], ptree_pts_coord[1], ptree_pts_coord[2],
+  //           _pts_coord[0], _pts_coord[1], _pts_coord[2]);
+
+  int *ptree_new_to_old = NULL;
+  PDM_point_tree_seq_point_new_to_old_get(ptree,
+                                          &ptree_new_to_old);
+
+
+
   double btree_extents[6];
 
   /* Start from both roots */
   int btree_node_id = 0;
   int ptree_node_id = 0;
 
-  _extents(3,
-           box_tree_data->nodes[btree_node_id].morton_code,
-           btree_extents);
+  _extents_real(3,
+                box_tree_data->nodes[btree_node_id].morton_code,
+                btree_s,
+                btree_d,
+                btree_extents);
+  log_trace("btree_extents : %f %f %f  %f %f %f",
+            btree_extents[0], btree_extents[1], btree_extents[2],
+            btree_extents[3], btree_extents[4], btree_extents[5]);
   int intersect = _intersect_box_box(3,
                                      btree_extents,
                                      &ptree_extents[6*ptree_node_id]);
@@ -7541,6 +7576,13 @@ PDM_tree_intersection_point_box
             }
 
             const double *box_extents = boxes->extents + box_id*6;
+            for (int i = 0; i < 3; i++) {
+              btree_extents[i] = btree_s[i] + btree_d[i]*(btree_extents[i] - btree_s[i]);
+              btree_extents[i+3] = btree_s[i] + btree_d[i]*(btree_extents[i+3] - btree_s[i]);
+            }
+            log_trace("btree_extents : %f %f %f  %f %f %f\n",
+                      btree_extents[0], btree_extents[1], btree_extents[2],
+                      btree_extents[3], btree_extents[4], btree_extents[5]);
 
             for (int ipt = ptree_range[2*ptree_node_id]; ipt < ptree_range[2*ptree_node_id+1]; ipt++) {
 
@@ -7638,9 +7680,11 @@ PDM_tree_intersection_point_box
       else {
 
         // Decide which tree is subdivided
-        _extents(3,
-                 box_tree_data->nodes[btree_node_id].morton_code,
-                 btree_extents);
+        _extents_real(3,
+                      box_tree_data->nodes[btree_node_id].morton_code,
+                      btree_s,
+                      btree_d,
+                      btree_extents);
 
         double btree_vol = 1.;
         double ptree_vol = 1.;
@@ -7674,9 +7718,14 @@ PDM_tree_intersection_point_box
 
           if (child_id < 0) continue;
 
-          _extents(3,
-                  box_tree_data->nodes[child_id].morton_code,
-                  btree_extents);
+          _extents_real(3,
+                        box_tree_data->nodes[child_id].morton_code,
+                        btree_s,
+                        btree_d,
+                        btree_extents);
+          log_trace("btree_extents : %f %f %f  %f %f %f",
+                    btree_extents[0], btree_extents[1], btree_extents[2],
+                    btree_extents[3], btree_extents[4], btree_extents[5]);
 
           intersect = _intersect_box_box(3,
                                          btree_extents,
@@ -7707,9 +7756,14 @@ PDM_tree_intersection_point_box
           log_trace("  subdivide point tree\n");
         }
 
-        _extents(3,
-                 box_tree_data->nodes[btree_node_id].morton_code,
-                 btree_extents);
+        _extents_real(3,
+                      box_tree_data->nodes[btree_node_id].morton_code,
+                      btree_s,
+                      btree_d,
+                      btree_extents);
+        log_trace("btree_extents : %f %f %f  %f %f %f",
+                  btree_extents[0], btree_extents[1], btree_extents[2],
+                  btree_extents[3], btree_extents[4], btree_extents[5]);
 
         int *children_id = ptree_children_id + ptree_node_id*ptree_n_children;
         for (int ichild = 0; ichild < ptree_n_children; ichild++) {
@@ -7756,7 +7810,7 @@ PDM_tree_intersection_point_box
 
   } // End of while loop
   free(__box_pts_s);
-  free(_pts_coord);
+  // free(_pts_coord);
   free(queue0);
   free(queue1);
 

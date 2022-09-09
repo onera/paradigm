@@ -2394,6 +2394,21 @@ PDM_box_distrib_dump(const PDM_box_distrib_t  *distrib)
   fflush(stdout);
 }
 
+
+
+void
+PDM_box_set_normalization_get
+(
+ PDM_box_set_t  *boxes,
+ double        **s,
+ double        **d
+ )
+{
+  *s = boxes->s;
+  *d = boxes->d;
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
