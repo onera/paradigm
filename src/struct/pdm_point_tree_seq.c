@@ -1838,6 +1838,8 @@ PDM_point_tree_make_shared
 
   PDM_point_tree_seq_shm_t* shm_ptree = malloc(sizeof(PDM_point_tree_seq_shm_t));
 
+  shm_ptree->tree_type = local_ptree->tree_type;
+
   shm_ptree->comm_shared = comm_shared;
   shm_ptree->ptrees      = malloc(n_rank_in_shm * sizeof(PDM_point_tree_seq_t));
 
@@ -2036,28 +2038,216 @@ PDM_point_tree_seq_shm_point_new_to_old_get
 
 
 
-// void
-// PDM_point_tree_seq_points_inside_boxes_shared
-// (
-//        PDM_point_tree_seq_shm_t  *shm_ptree,
-//  const int                        i_shm_rank,
-//  const int                        n_box,
-//  const double                     box_extents[],
-//  const PDM_g_num_t                box_g_num[],
-//        int                      **box_pts_idx,
-//        int                      **box_pts
-//  )
-// {
-//   *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
-//   int *_box_pts_idx = *box_pts_idx;
-//   _box_pts_idx[0] = 0;
+void
+PDM_point_tree_seq_points_inside_boxes_shared
+(
+       PDM_point_tree_seq_shm_t  *shm_ptree,
+ const int                        i_shm_rank,
+ const int                        n_box,
+ const double                     box_extents[],
+ // const PDM_g_num_t                box_g_num[],
+       int                      **box_pts_idx,
+       int                      **box_pts
+ )
+{
 
-//   if (n_box < 1) {
-//     *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
-//     return;
-//   }
+  *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
+  int *_box_pts_idx = *box_pts_idx;
+  _box_pts_idx[0] = 0;
+
+  if (n_box < 1) {
+    *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
+    return;
+  }
+
+   // const int n_children = PDM_point_tree_n_children_get(ptree);
+  int n_children;
+  if (shm_ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+    n_children = 2;
+  }
+  else if (shm_ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    n_children = 8;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Invalid tree_type %d\n", (int) shm_ptree->tree_type);
+  }
+
+  const int depth_max = 31;
+  // int     n_nodes     = shm_ptree->shm_n_nodes    [i_shm_rank];
+  int    *is_leaf     = shm_ptree->shm_is_leaf    [i_shm_rank];
+  int    *children_id = shm_ptree->shm_children_id[i_shm_rank];
+  int    *range       = shm_ptree->shm_range      [i_shm_rank];
+  int    *n_points    = shm_ptree->shm_n_points   [i_shm_rank];
+  double *extents     = shm_ptree->shm_extents    [i_shm_rank];
+  double *pts_coord   = shm_ptree->shm_pts_coord  [i_shm_rank];
+  int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
+
+  int s_pt_stack = ((n_children - 1) * (depth_max - 1) + n_children);
+  int *stack_id  = malloc (s_pt_stack * sizeof(int));
 
 
+  int node_inside_box;
+  int intersect;
+
+  int tmp_size = 4 * n_box;
+  *box_pts = malloc (sizeof(int) * tmp_size);
+  int *_box_pts = *box_pts;
 
 
-// }
+  for (int ibox = 0; ibox < n_box; ibox++) {
+
+    int dbg_enabled = 0;
+    if (dbg_enabled) {
+      log_trace("box %d\n", ibox);
+    }
+
+    _box_pts_idx[ibox+1] = _box_pts_idx[ibox];
+
+    const double *_box_extents = box_extents + 6*ibox;
+    const double *box_min      = box_extents + 6*ibox;
+    const double *box_max      = box_min + 3;
+
+    intersect = _intersect_node_box_explicit (3,
+                                              &extents[0],
+                                              _box_extents,
+                                              &node_inside_box);
+
+    if (!intersect) {
+      continue;
+    }
+
+    if (node_inside_box) {
+      /* The box must contain all points */
+      if (dbg_enabled) {
+        log_trace("    add pts with lnum %d through %d\n", range[0], range[1]);
+      }
+      int new_size = _box_pts_idx[ibox+1] + n_points[0];
+
+      if (tmp_size <= new_size) {
+        tmp_size = PDM_MAX (2*tmp_size, new_size);
+        *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+        _box_pts = *box_pts;
+
+      }
+
+      for (int j = 0; j < n_points[0]; j++) {
+        _box_pts[_box_pts_idx[ibox+1]++] = range[0] + j;
+      }
+      continue;
+    } /* End node_inside_box */
+
+
+    /* Push root in stack */
+    int pos_stack = 0;
+    stack_id[pos_stack++] = 0;
+
+    while (pos_stack > 0) {
+
+      int node_id = stack_id[--pos_stack];
+
+      if (dbg_enabled) {
+        log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                  node_id,
+                  range[2*node_id], range[2*node_id+1],
+                  n_points[node_id],
+                  is_leaf[node_id]);
+      }
+
+      if(is_leaf[node_id]) {
+        /* Leaf node */
+
+        for (int i = 0; i < n_points[node_id]; i++) {
+          int ipt = range[2*node_id] + i;
+          const double *_pt = pts_coord + 3*ipt;
+
+          int pt_inside_box = 1;
+          for (int idim = 0; idim < 3; idim++) {
+            if (_pt[idim] < box_min[idim] || _pt[idim] > box_max[idim]) {
+              pt_inside_box = 0;
+              break;
+            }
+          }
+
+          if (pt_inside_box) {
+            if (_box_pts_idx[ibox+1] >= tmp_size) {
+              tmp_size = PDM_MAX (2*tmp_size, _box_pts_idx[ibox+1] + 1);
+              *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+              _box_pts = *box_pts;
+            }
+
+            _box_pts[_box_pts_idx[ibox+1]++] = new_to_old[ipt];
+          }
+        }
+      }
+      else {
+        /* Internal nodes */
+
+        const int *_child_ids = children_id + 8*node_id;
+        for (int i = 0; i < n_children; i++) {
+          int child_id = _child_ids[i];
+          if (child_id < 0) {
+            continue;
+          }
+
+          if (dbg_enabled) {
+            log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                   i,
+                   child_id,
+                   range[2*child_id+0],
+                   range[2*child_id+1],
+                   n_points[child_id],
+                   is_leaf[child_id]);
+            log_trace("    pts_extents = %f %f %f %f %f %f\n",
+                   extents[6*child_id+0],
+                   extents[6*child_id+1],
+                   extents[6*child_id+2],
+                   extents[6*child_id+3],
+                   extents[6*child_id+4],
+                   extents[6*child_id+5]);
+          }
+
+          intersect = _intersect_node_box_explicit (3,
+                                                    extents + 6*child_id,
+                                                    _box_extents,
+                                                    &node_inside_box);
+
+          if (dbg_enabled) {
+            log_trace("    intersect = %d\n", intersect);
+          }
+
+          if (intersect) {
+            if (node_inside_box) {
+              /* The box must contain all points */
+              if (dbg_enabled) {
+                log_trace("    add pts with lnum %d through %d\n", range[2*child_id+0], range[2*child_id+1]);
+              }
+
+              int new_size = _box_pts_idx[ibox+1] + n_points[child_id];
+
+              if (tmp_size <= new_size) {
+                tmp_size = PDM_MAX (2*tmp_size, new_size);
+                *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+                _box_pts = *box_pts;
+              }
+
+              for (int j = 0; j < n_points[child_id]; j++) {
+                _box_pts[_box_pts_idx[ibox+1]++] = range[2*child_id] + j;
+              }
+            }
+
+            else {
+              /* Push child in stack */
+              stack_id[pos_stack++] = child_id;
+            }
+          }
+        } // End of loop on children
+      }
+
+    } // End of while loop
+
+  } // End of loop on boxes
+
+  free (stack_id);
+  *box_pts = realloc (*box_pts, sizeof(int) * _box_pts_idx[n_box]);
+}

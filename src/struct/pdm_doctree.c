@@ -993,13 +993,13 @@ PDM_doctree_build
 
       res_box_g_num[i_shm] = &shared_entity_gnum[beg];
 
-      // PDM_point_tree_seq_points_inside_boxes_shared(doct->shmem_tree,
-      //                                               i_shm,
-      //                                               part_n_box[i_shm],
-      //                                               lbox_extents,
-      //                                               lbox_gnum,
-      //                                               &(box_pts_idx[i_shm]),
-      //                                               &(box_pts_l_num[i_shm]));
+      PDM_point_tree_seq_points_inside_boxes_shared(doct->shmem_tree,
+                                                    i_shm,
+                                                    part_n_box[i_shm],
+                                                    lbox_extents,
+                                                    // lbox_gnum,
+                                                    &(box_pts_idx[i_shm]),
+                                                    &(box_pts_l_num[i_shm]));
 
       res_box_weight[i_shm] = malloc(n_lbox * sizeof(double));
       res_box_strid [i_shm] = malloc(n_lbox * sizeof(int   ));

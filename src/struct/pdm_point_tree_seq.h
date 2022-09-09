@@ -374,6 +374,20 @@ PDM_point_tree_seq_shm_point_new_to_old_get
 );
 
 
+
+
+void
+PDM_point_tree_seq_points_inside_boxes_shared
+(
+       PDM_point_tree_seq_shm_t  *shm_ptree,
+ const int                        i_shm_rank,
+ const int                        n_box,
+ const double                     box_extents[],
+ // const PDM_g_num_t                box_g_num[],
+       int                      **box_pts_idx,
+       int                      **box_pts
+ );
+
 #ifdef  __cplusplus
 }
 #endif

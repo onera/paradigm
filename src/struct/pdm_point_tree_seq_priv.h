@@ -74,7 +74,11 @@ struct _pdm_point_tree_seq_t{
 
 
 struct _pdm_point_tree_seq_shm_t {
+
   PDM_MPI_Comm          comm_shared;
+
+  PDM_doctree_local_tree_t tree_type;
+
   PDM_point_tree_seq_t *ptrees;
 
   int                  *shared_pts_idx;
