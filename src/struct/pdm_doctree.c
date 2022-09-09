@@ -599,13 +599,16 @@ PDM_doctree_build
    * Prepare buffer
    */
   int n_pts_tot = 0;
+  int point_range[2];
+  double *sorted_tree_coord = NULL;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
       n_pts_tot += PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       // abort();
-      // n_pts_tot += PDM_kdtree_seq_n_points_get(doct->coarse_kdtree, node_id);
+      n_pts_tot += PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
+      PDM_kdtree_seq_sorted_points_get(doct->coarse_kdtree, &sorted_tree_coord);
     }
   }
 
@@ -613,7 +616,6 @@ PDM_doctree_build
   assert(dn_blk == n_coarse_box);
 
   double *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double));
-
   int idx_write = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
@@ -628,13 +630,15 @@ PDM_doctree_build
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
       abort();
       // n_pts = PDM_kdtree_seq_points_get(doct->coarse_kdtree, node_id, &point_clouds_id, &point_indexes);
+      n_pts = PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
     }
 
-    for(int i_pt = 0; i_pt < n_pts; ++i_pt) {
+    for(int i_pt = point_range[0]; i_pt < point_range[1]; ++i_pt) {
       int orig_pt = point_indexes[i_pt];
       reorder_blk_coord_send[3*idx_write  ] = blk_pts_coord[3*orig_pt  ];
       reorder_blk_coord_send[3*idx_write+1] = blk_pts_coord[3*orig_pt+1];
       reorder_blk_coord_send[3*idx_write+2] = blk_pts_coord[3*orig_pt+2];
+      idx_write++;
     }
   }
 
