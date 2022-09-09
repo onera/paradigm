@@ -446,7 +446,6 @@ PDM_doctree_build
   PDM_MPI_Barrier(doct->comm_shared);
 
 
-  int dn_box_shared = distrib_shared_boxes[i_rank_in_shm+1] - distrib_shared_boxes[i_rank_in_shm];
   box_set = PDM_box_set_create(3,
                                0,  // No normalization to preserve initial extents
                                0,  // No projection to preserve initial extents
@@ -522,22 +521,6 @@ PDM_doctree_build
     PDM_log_trace_array_long(parent_tree_gnum, dn_equi_tree , "parent_tree_gnum :: ");
     PDM_log_trace_array_long(distrib_tree    , n_rank+1, "distrib_tree : ");
   }
-
-  // Exchange n_pts
-  // int *equi_box_n_pts = NULL;
-  // PDM_part_to_block_exch(ptb,
-  //                        sizeof(int),
-  //                        PDM_STRIDE_CST_INTERLACED,
-  //                        1,
-  //                        NULL,
-  //              (void **) box_n_pts,
-  //                        NULL,
-  //              (void **) &equi_box_n_pts);
-  // if(1 == 1) {
-  //   PDM_log_trace_array_int(equi_box_n_pts, dn_equi_tree, "equi_box_n_pts :");
-  // }
-
-
 
   free(weight);
 
@@ -725,18 +708,11 @@ PDM_doctree_build
   PDM_mpi_win_shared_unlock_all(wshared_coarse_box_n_pts);
   PDM_mpi_win_shared_unlock_all(wshared_coarse_box_extents);
 
-  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
-  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
-
-  PDM_mpi_win_shared_free (wshared_local_nodes_n  );
-  PDM_mpi_win_shared_free (wshared_local_nodes_idx);
 
   PDM_mpi_win_shared_free(wshared_coarse_box_n_pts);
   PDM_mpi_win_shared_free(wshared_coarse_box_extents);
 
 
-  PDM_mpi_win_shared_unlock_all (wshared_old_to_new_box_rank  );
-  PDM_mpi_win_shared_free (wshared_old_to_new_box_rank  );
 
   free(recv_shift);
   free(lrecv_count);
@@ -761,15 +737,174 @@ PDM_doctree_build
 
   // Preparation of send count and box_rank/box_rank_idx
   //
-  int *send_count = PDM_array_zeros_int(n_rank);
+  int *send_entity_n = PDM_array_zeros_int(n_rank);
+  int *recv_entity_n = malloc (sizeof(int) * n_rank);
   for(int i = 0; i < n_rank; ++i) {
     for(int j = shared_local_nodes_idx[i]; j < shared_local_nodes_idx[i+1]; ++j) {
-      send_count[shared_old_to_new_box_rank[j]] += coarse_tree_box_to_box_idx[j+1] - coarse_tree_box_to_box_idx[j];
+      send_entity_n[shared_old_to_new_box_rank[j]] += coarse_tree_box_to_box_idx[j+1] - coarse_tree_box_to_box_idx[j];
     }
   }
+  PDM_MPI_Alltoall (send_entity_n, 1, PDM_MPI_INT,
+                    recv_entity_n, 1, PDM_MPI_INT,
+                    doct->comm);
 
-  PDM_log_trace_array_int(send_count, n_rank, "send_count :: ");
-  free(send_count);
+  /*
+   * Setup shared
+   */
+  int *send_entity_idx = malloc ( ( n_rank + 1) * sizeof(int));
+  int *recv_entity_idx = malloc ( ( n_rank + 1) * sizeof(int));
+  send_entity_idx[0] = 0;
+  recv_entity_idx[0] = 0;
+
+  int* shared_recv_count  = malloc(n_rank_in_shm * sizeof(int));
+
+  int n_tot_recv = 0;
+  send_entity_idx[0] = 0;
+  recv_entity_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    n_tot_recv += recv_entity_n[i];
+    send_entity_idx[i+1] = send_entity_idx[i] + send_entity_n[i];
+    recv_entity_idx[i+1] = recv_entity_idx[i] + recv_entity_n[i];
+  }
+
+  PDM_MPI_Allgather(&n_tot_recv,       1, PDM_MPI_INT,
+                    shared_recv_count, 1, PDM_MPI_INT,
+                    doct->comm_shared);
+
+
+  int *shared_recv_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+  shared_recv_idx[0] = 0;
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    shared_recv_idx[i+1] = shared_recv_idx[i] + shared_recv_count[i];
+  }
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(send_entity_n, n_rank, "send_entity_n :: ");
+    PDM_log_trace_array_int(recv_entity_n, n_rank, "recv_entity_n :: ");
+  }
+
+
+  int n_tot_recv_shared = shared_recv_idx[n_rank_in_shm];
+
+  PDM_mpi_win_shared_t* wshared_entity_coord         = NULL;
+  PDM_mpi_win_shared_t* wshared_entity_gnum          = NULL;
+  PDM_mpi_win_shared_t* wshared_entity_init_location = NULL;
+
+  PDM_MPI_Request req_entity_gnum  = -1;
+  PDM_MPI_Request req_entity_coord = -1;
+
+  PDM_g_num_t *send_g_num   = malloc (    send_entity_idx[n_rank] * sizeof(PDM_g_num_t));
+  double      *send_extents = malloc (6 * send_entity_idx[n_rank] * sizeof(double     ));
+
+  PDM_MPI_Datatype mpi_entity_type;
+
+  if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
+
+    PDM_MPI_Type_create_contiguous(6, PDM_MPI_DOUBLE, &mpi_entity_type);
+    PDM_MPI_Type_commit(&mpi_entity_type);
+
+    wshared_entity_coord = PDM_mpi_win_shared_create(6 * n_tot_recv_shared, sizeof(double     ), doct->comm_shared);
+    wshared_entity_gnum  = PDM_mpi_win_shared_create(    n_tot_recv_shared, sizeof(PDM_g_num_t), doct->comm_shared);
+
+    PDM_mpi_win_shared_lock_all (0, wshared_entity_coord);
+    PDM_mpi_win_shared_lock_all (0, wshared_entity_gnum);
+
+    PDM_g_num_t *shared_entity_gnum  = PDM_mpi_win_shared_get(wshared_entity_gnum );
+    double      *shared_entity_coord = PDM_mpi_win_shared_get(wshared_entity_coord);
+
+    // Prepare send
+    for(int i = 0; i < n_rank; ++i) {
+      send_entity_n[i] = 0;
+    }
+
+    assert(doct->n_part == 1);
+    PDM_g_num_t *box_g_num   = doct->entity_gnum[0];
+    double      *box_extents = doct->entity_coords[0];
+
+    for(int i = 0; i < n_rank; ++i) {
+      for(int j = shared_local_nodes_idx[i]; j < shared_local_nodes_idx[i+1]; ++j) {
+        int t_rank = shared_old_to_new_box_rank[j];
+        for(int k = coarse_tree_box_to_box_idx[j]; k < coarse_tree_box_to_box_idx[j+1]; ++k) {
+          int lnum = coarse_tree_box_to_box[k];
+          int idx_lwrite = send_entity_idx[t_rank] + send_entity_n[t_rank]++;
+          send_g_num[idx_lwrite] = box_g_num[lnum];
+          for (int l = 0; l < 6; l++) {
+            send_extents[6*idx_lwrite + l] = box_extents[6*lnum + l];
+          }
+        }
+      }
+    }
+
+    PDM_g_num_t *lrecv_gnum    = &shared_entity_gnum [    shared_recv_idx[i_rank_in_shm]];
+    double      *lrecv_extents = &shared_entity_coord[6 * shared_recv_idx[i_rank_in_shm]];
+    PDM_MPI_Ialltoallv(send_g_num, send_entity_n, send_entity_idx, PDM__PDM_MPI_G_NUM,
+                       lrecv_gnum, recv_entity_n, recv_entity_idx, PDM__PDM_MPI_G_NUM,
+                       doct->comm,
+                       &req_entity_gnum);
+
+    log_trace("mpi_entity_type = %i \n", mpi_entity_type);
+
+    PDM_MPI_Ialltoallv(send_extents , send_entity_n, send_entity_idx, mpi_entity_type,
+                       lrecv_extents, recv_entity_n, recv_entity_idx, mpi_entity_type,
+                       doct->comm,
+                       &req_entity_coord);
+
+  } else {
+    abort();
+  }
+
+  /*
+   * Wait message and free all useless buffer
+   */
+
+  PDM_MPI_Wait(&req_entity_gnum);
+  PDM_MPI_Wait(&req_entity_coord);
+  PDM_MPI_Type_free(&mpi_entity_type);
+  free(send_g_num);
+  free(send_extents);
+  free(send_entity_n);
+  free(recv_entity_n);
+  free(send_entity_idx);
+  free(recv_entity_idx);
+
+  PDM_g_num_t *shared_entity_gnum  = PDM_mpi_win_shared_get(wshared_entity_gnum );
+  double      *shared_entity_coord = PDM_mpi_win_shared_get(wshared_entity_coord);
+
+  PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
+  int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
+
+    int beg    = distrib_search[i_rank_in_shm  ];
+    int n_lbox = distrib_search[i_rank_in_shm+1] - beg;
+
+    double      *ptr_shared_box_extents = &shared_entity_coord[6*beg];
+    PDM_g_num_t *ptr_shared_box_gnum    = &shared_entity_gnum [  beg];
+
+    PDM_vtk_write_boxes(filename,
+                        dn_shared_box,
+                        ptr_shared_box_extents,
+                        ptr_shared_box_gnum);
+  }
+
+
+  free(shared_recv_count);
+  free(shared_recv_idx);
+  free(distrib_search);
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
+
+  PDM_mpi_win_shared_free (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_free (wshared_local_nodes_idx);
+
+  PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
+  PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
+
+  PDM_mpi_win_shared_free (wshared_entity_coord  );
+  PDM_mpi_win_shared_free (wshared_entity_gnum);
+
   /*
    *  Update shared_to_box
    *  re-Solicitation is already done - Transfer update shared to box !!!
@@ -781,6 +916,8 @@ PDM_doctree_build
 
   free(coarse_tree_box_to_box_idx);
   free(coarse_tree_box_to_box);
+  PDM_mpi_win_shared_unlock_all (wshared_old_to_new_box_rank  );
+  PDM_mpi_win_shared_free (wshared_old_to_new_box_rank  );
 
   /*
    * All pts are redistribute to equilibrate solicitation

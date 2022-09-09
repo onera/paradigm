@@ -1721,7 +1721,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
     free(mpi_request);
     mpi_request = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_request = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -1756,7 +1756,7 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
     free(mpi_request);
     mpi_request = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_request = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -1791,6 +1791,24 @@ int PDM_MPI_Type_create_hindexed (int count,
   free (_array_of_displacements);
   return _mpi_2_pdm_mpi_err(code);
 
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Type_hindexed (wrapping de la fonction MPI_Type_hindexed)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_create_contiguous(int               count,
+                                   PDM_MPI_Datatype  old_datatype,
+                                   PDM_MPI_Datatype *newtype)
+{
+  MPI_Datatype mpi_newtype;
+  int code = MPI_Type_contiguous(count,
+                                 _pdm_mpi_2_mpi_datatype(old_datatype),
+                                 &mpi_newtype);
+  assert(code == 0);
+
+  *newtype = _mpi_2_pdm_mpi_datatype(mpi_newtype);
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 /*----------------------------------------------------------------------------
@@ -2376,7 +2394,7 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
     free(mpi_win);
     mpi_win = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_win = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);

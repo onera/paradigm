@@ -433,6 +433,14 @@ int PDM_MPI_Type_create_hindexed(int count, const int array_of_blocklengths[],
                       PDM_MPI_Datatype oldtype, PDM_MPI_Datatype *newtype);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Type_create_contiguous (wrapping de la fonction MPI_Type_create_contiguous)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Type_create_contiguous(int               count,
+                                   PDM_MPI_Datatype  oldtype,
+                                   PDM_MPI_Datatype *newtype);
+/*----------------------------------------------------------------------------
  * PDM_MPI_Type_commit (wrapping de la fonction MPI_Type_commit)
  *
  *----------------------------------------------------------------------------*/
