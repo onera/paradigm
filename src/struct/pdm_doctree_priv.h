@@ -48,7 +48,7 @@ struct _pdm_doctree_t {
 
   PDM_point_tree_seq_t      *coarse_tree;              /*! coarse tree to orient among procs        */
   PDM_point_tree_seq_t      *local_tree;               /*! Local tree                               */
-  PDM_point_tree_seq_t      *shmem_tree;               /*! Shared tree among cores in current nodes */
+  PDM_point_tree_seq_shm_t  *shmem_tree;               /*! Shared tree among cores in current nodes */
 
   PDM_MPI_Comm               comm_dist_graph;
   int                        n_degree_in;

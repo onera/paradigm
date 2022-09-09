@@ -715,6 +715,20 @@ _build_point_tree
     ptree->n_nodes += 1;
   }
 
+
+  /* Realloc */
+  int n_children = PDM_point_tree_n_children_get(ptree);
+  ptree->nodes->ancestor_id = realloc(ptree->nodes->ancestor_id, sizeof(int   ) * ptree->n_nodes);
+  ptree->nodes->is_leaf     = realloc(ptree->nodes->is_leaf,     sizeof(int   ) * ptree->n_nodes);
+  ptree->nodes->depth       = realloc(ptree->nodes->depth,       sizeof(int   ) * ptree->n_nodes);
+  ptree->nodes->children_id = realloc(ptree->nodes->children_id, sizeof(int   ) * ptree->n_nodes * n_children);
+  ptree->nodes->range       = realloc(ptree->nodes->range,       sizeof(int   ) * ptree->n_nodes * 2);
+  ptree->nodes->idx         = realloc(ptree->nodes->idx,         sizeof(int   ) * ptree->n_nodes * (n_children+1));
+  ptree->nodes->n_points    = realloc(ptree->nodes->n_points,    sizeof(int   ) * ptree->n_nodes);
+  ptree->nodes->extents     = realloc(ptree->nodes->extents,     sizeof(double) * ptree->n_nodes * 6);
+  ptree->nodes->location_in_ancestor = realloc(ptree->nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes);
+
+
   if (dbg_ptree) {
     // PDM_log_trace_array_int(ptree->old_to_new,
     //                         ptree->n_pts,
@@ -730,8 +744,6 @@ _build_point_tree
 
     // Dump kd-tree
     _l_nodes_t *nodes = ptree->nodes;
-
-    int n_children = PDM_point_tree_n_children_get(ptree);
 
     for (int i = 0; i < ptree->n_nodes; i++) {
       if (1) {//nodes->is_leaf[i]) {
@@ -869,7 +881,7 @@ PDM_point_tree_seq_create
  const double                   tolerance
 )
 {
-  if (tree_type != PDM_DOCTREE_LOCAL_TREE_OCTREE ||
+  if (tree_type != PDM_DOCTREE_LOCAL_TREE_OCTREE &&
       tree_type != PDM_DOCTREE_LOCAL_TREE_KDTREE) {
     PDM_error(__FILE__, __LINE__, 0,
               "Tree_type %d not implemented yet\n", (int) tree_type);
@@ -917,21 +929,23 @@ PDM_point_tree_seq_free
  PDM_point_tree_seq_t *ptree
 )
 {
-  if (ptree->_pts_coord != NULL) {
-    free(ptree->_pts_coord);
+  if (ptree != NULL) {
+    if (ptree->_pts_coord != NULL) {
+      free(ptree->_pts_coord);
+    }
+
+    if (ptree->new_to_old != NULL) {
+      free(ptree->new_to_old);
+    }
+
+    if (ptree->old_to_new != NULL) {
+      free(ptree->old_to_new);
+    }
+
+    _l_nodes_free(ptree);
+
+    free(ptree);
   }
-
-  if (ptree->new_to_old != NULL) {
-    free(ptree->new_to_old);
-  }
-
-  if (ptree->old_to_new != NULL) {
-    free(ptree->old_to_new);
-  }
-
-  _l_nodes_free(ptree);
-
-  free(ptree);
 }
 
 
@@ -1833,7 +1847,7 @@ PDM_point_tree_make_shared
   int s_shm_data_in_rank[2] = {0};
   s_shm_data_in_rank[0] = local_ptree->n_nodes;
   s_shm_data_in_rank[1] = local_ptree->n_pts;
-  int *s_shm_data_in_all_nodes = malloc(1 * n_rank_in_shm * sizeof(int));
+  int *s_shm_data_in_all_nodes = malloc(2 * n_rank_in_shm * sizeof(int));
 
   PDM_MPI_Allgather(s_shm_data_in_rank     , 2, PDM_MPI_INT,
                     s_shm_data_in_all_nodes, 2, PDM_MPI_INT, comm_shared);
