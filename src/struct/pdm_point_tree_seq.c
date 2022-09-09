@@ -1951,6 +1951,8 @@ PDM_point_tree_make_shared
          local_ptree->new_to_old,
          sizeof(int) * local_ptree->n_pts);
 
+  PDM_MPI_Barrier(comm_shared);
+
   return shm_ptree;
 }
 
@@ -1987,6 +1989,46 @@ PDM_point_tree_seq_shm_free
 
 
 
+/**
+ *
+ * \brief Get point coords in point_tree's order
+ *
+ * \param [in]   ptree                 Pointer to \ref PDM_point_tree_seq object
+ * \param [out]  pts_coord             Point coordinates
+ *
+ */
+
+void
+PDM_point_tree_seq_shm_sorted_points_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ double                   **pts_coord
+)
+{
+  *pts_coord = shm_tree->shm_pts_coord[i_shm];
+}
+
+
+/**
+ *
+ * \brief Get point order in ptree
+ *
+ * \param [in]   ptree                 Pointer to \ref PDM_ptree_seq object
+ * \param [out]  new_to_old             New to old order of points in ptree
+ *
+ */
+
+void
+PDM_point_tree_seq_shm_point_new_to_old_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ int                      **new_to_old
+)
+{
+  *new_to_old = shm_tree->shm_new_to_old[i_shm];
+}
 
 
 

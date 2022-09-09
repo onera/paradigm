@@ -339,6 +339,41 @@ PDM_point_tree_seq_shm_free
  PDM_point_tree_seq_shm_t *shm_ptree
 );
 
+
+/**
+ *
+ * \brief Get point coords in point_tree's order
+ *
+ * \param [in]   ptree                 Pointer to \ref PDM_point_tree_seq object
+ * \param [out]  pts_coord             Point coordinates
+ *
+ */
+void
+PDM_point_tree_seq_shm_sorted_points_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ double                   **pts_coord
+);
+
+/**
+ *
+ * \brief Get point order in ptree
+ *
+ * \param [in]   ptree                 Pointer to \ref PDM_ptree_seq object
+ * \param [out]  new_to_old             New to old order of points in ptree
+ *
+ */
+
+void
+PDM_point_tree_seq_shm_point_new_to_old_get
+(
+ PDM_point_tree_seq_shm_t  *shm_tree,
+ int                        i_shm,
+ int                      **new_to_old
+);
+
+
 #ifdef  __cplusplus
 }
 #endif

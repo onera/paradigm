@@ -586,8 +586,6 @@ PDM_doctree_build
    */
   int n_pts_tot = 0;
   int point_range[2];
-  double *sorted_tree_coord = NULL;
-  int    *new_to_old_pts = NULL;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
@@ -608,6 +606,9 @@ PDM_doctree_build
   int idx_write = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
+
+    double *sorted_tree_coord = NULL;
+    int    *new_to_old_pts    = NULL;
 
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
        doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
@@ -970,22 +971,69 @@ PDM_doctree_build
   }
 
   int n_part_out = n_rank_in_shm;
-  // int          *part_n_box         = malloc (sizeof(int          ) * n_part);
-  // int         **box_pts_idx        = malloc (sizeof(int         *) * n_part);
-  // int         **box_pts_l_num      = malloc (sizeof(int         *) * n_part);
-  // PDM_g_num_t **res_box_g_num      = malloc (sizeof(PDM_g_num_t *) * n_part);
-  // int         **res_box_strid      = malloc (sizeof(int         *) * n_part);
-  // double      **res_box_weight     = malloc (sizeof(double      *) * n_part);
-  // double      **res_box_pts_coords = malloc (sizeof(double      *) * n_part);
-  // PDM_g_num_t **res_box_pts_gnum   = malloc (sizeof(PDM_g_num_t *) * n_part);
+  int          *part_n_box         = malloc (sizeof(int          ) * n_part_out);
+  int         **box_pts_idx        = malloc (sizeof(int         *) * n_part_out);
+  int         **box_pts_l_num      = malloc (sizeof(int         *) * n_part_out);
+  PDM_g_num_t **res_box_g_num      = malloc (sizeof(PDM_g_num_t *) * n_part_out);
+  int         **res_box_strid      = malloc (sizeof(int         *) * n_part_out);
+  double      **res_box_weight     = malloc (sizeof(double      *) * n_part_out);
+  double      **res_box_pts_coords = malloc (sizeof(double      *) * n_part_out);
+  PDM_g_num_t **res_box_pts_gnum   = malloc (sizeof(PDM_g_num_t *) * n_part_out);
 
-  // if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
+  if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
 
-  //   PDM_octree_seq_shm_point_inside_boxes(distrib_search_by_rank_idx,
-  //                                         );
-  // } else {
-  //   abort();
-  // }
+    for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
+
+      int beg    = distrib_search_by_rank_idx[i_shm  ];
+      int n_lbox = distrib_search_by_rank_idx[i_shm+1] - beg;
+
+      part_n_box[i_shm] = n_lbox;
+      PDM_g_num_t *lbox_gnum    = &shared_entity_gnum [  beg];
+      double      *lbox_extents = &shared_entity_coord[6*beg];
+
+      res_box_g_num[i_shm] = &shared_entity_gnum[beg];
+
+      // PDM_point_tree_seq_points_inside_boxes_shared(doct->shmem_tree,
+      //                                               i_shm,
+      //                                               part_n_box[i_shm],
+      //                                               lbox_extents,
+      //                                               lbox_gnum,
+      //                                               &(box_pts_idx[i_shm]),
+      //                                               &(box_pts_l_num[i_shm]));
+
+      res_box_weight[i_shm] = malloc(n_lbox * sizeof(double));
+      res_box_strid [i_shm] = malloc(n_lbox * sizeof(int   ));
+
+      for(int i = 0; i < n_lbox; ++i ){
+        res_box_strid [i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+        res_box_weight[i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+      }
+
+      double *sorted_tree_coord = NULL;
+      int    *new_to_old_pts    = NULL;
+      PDM_point_tree_seq_shm_sorted_points_get   (doct->shmem_tree, i_shm, &sorted_tree_coord);
+      PDM_point_tree_seq_shm_point_new_to_old_get(doct->shmem_tree, i_shm, &new_to_old_pts);
+
+      /*
+       * Extract point and gnum
+       */
+      int *_box_pts_idx   = box_pts_idx  [i_shm];
+      int *_box_pts_l_num = box_pts_l_num[i_shm];
+      res_box_pts_coords[i_shm] = malloc(3 * _box_pts_idx[n_lbox] * sizeof(double     ));
+      res_box_pts_gnum  [i_shm] = malloc(    _box_pts_idx[n_lbox] * sizeof(PDM_g_num_t));
+
+      for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
+        int l_num = _box_pts_l_num[i];
+        res_box_pts_gnum  [i_shm][i] = equi_pts_gnum[new_to_old_pts[l_num]];
+        abort(); // -> Il faut que le equi_pts_gnum soit également shared ...
+        for (int k = 0; k < 3; k++) {
+          res_box_pts_coords[i_shm][3*i + k] = sorted_tree_coord[3*l_num + k];
+        }
+      }
+    }
+  } else {
+    abort();
+  }
 
 
 
