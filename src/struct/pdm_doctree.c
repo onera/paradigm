@@ -811,8 +811,6 @@ PDM_doctree_build
                        doct->comm,
                        &req_entity_gnum);
 
-    log_trace("mpi_entity_type = %i \n", mpi_entity_type);
-
     PDM_MPI_Ialltoallv(send_extents , send_entity_n, send_entity_idx, mpi_entity_type,
                        lrecv_extents, recv_entity_n, recv_entity_idx, mpi_entity_type,
                        doct->comm,
@@ -913,13 +911,42 @@ PDM_doctree_build
   /*
    * Finalize solicitation
    */
+  int *distrib_search_by_rank_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank_in_shm+1; ++i) {
+    distrib_search_by_rank_idx[i] = 0;
+  }
+
+  for(int i = distrib_search[i_rank_in_shm]; i < distrib_search[i_rank_in_shm+1]; ++i) {
+    int t_rank = PDM_binary_search_gap_int(i, shared_recv_idx, n_rank_in_shm+1);
+    distrib_search_by_rank_idx[t_rank+1]++;
+  }
+
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    distrib_search_by_rank_idx[i+1] += distrib_search_by_rank_idx[i];
+  }
+
+  int n_part_out = n_rank_in_shm;
+  // int          *part_n_box         = malloc (sizeof(int          ) * n_part);
+  // int         **box_pts_idx        = malloc (sizeof(int         *) * n_part);
+  // int         **box_pts_l_num      = malloc (sizeof(int         *) * n_part);
+  // PDM_g_num_t **res_box_g_num      = malloc (sizeof(PDM_g_num_t *) * n_part);
+  // int         **res_box_strid      = malloc (sizeof(int         *) * n_part);
+  // double      **res_box_weight     = malloc (sizeof(double      *) * n_part);
+  // double      **res_box_pts_coords = malloc (sizeof(double      *) * n_part);
+  // PDM_g_num_t **res_box_pts_gnum   = malloc (sizeof(PDM_g_num_t *) * n_part);
+
+  // if(doct->solicitation_kind == PDM_TREE_SOLICITATION_BOXES_POINTS) {
+
+  //   PDM_octree_seq_shm_point_inside_boxes(distrib_search_by_rank_idx,
+  //                                         );
+  // } else {
+  //   abort();
+  // }
 
 
 
-
-
-
-
+  free(distrib_search_by_rank_idx);
 
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
   PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
