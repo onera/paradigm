@@ -617,15 +617,14 @@ PDM_doctree_build
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
 
-    int  n_pts = 0;
     int *point_clouds_id = NULL;
     int *point_indexes   = NULL;
 
     if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-      n_pts = PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
+      PDM_octree_seq_n_points_get(doct->coarse_octree, node_id);
       PDM_octree_seq_points_get(doct->coarse_octree, node_id, &point_clouds_id, &point_indexes);
     } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-      n_pts = PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
+      PDM_kdtree_seq_point_range_get(doct->coarse_kdtree, node_id, point_range);
       PDM_kdtree_seq_sorted_points_get(doct->coarse_kdtree, &sorted_tree_coord);
       PDM_kdtree_seq_point_new_to_old_get(doct->coarse_kdtree, &new_to_old_pts);
     }
@@ -853,79 +852,10 @@ PDM_doctree_build
     abort();
   }
 
-  /*
-   * Wait message and free all useless buffer
-   */
-
-  PDM_MPI_Wait(&req_entity_gnum);
-  PDM_MPI_Wait(&req_entity_coord);
-  PDM_MPI_Type_free(&mpi_entity_type);
-  free(send_g_num);
-  free(send_extents);
-  free(send_entity_n);
-  free(recv_entity_n);
-  free(send_entity_idx);
-  free(recv_entity_idx);
-
-  PDM_g_num_t *shared_entity_gnum  = PDM_mpi_win_shared_get(wshared_entity_gnum );
-  double      *shared_entity_coord = PDM_mpi_win_shared_get(wshared_entity_coord);
-
-  PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
-  int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
-
-  if(1 == 1) {
-    char filename[999];
-    sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
-
-    int beg    = distrib_search[i_rank_in_shm  ];
-    int n_lbox = distrib_search[i_rank_in_shm+1] - beg;
-
-    double      *ptr_shared_box_extents = &shared_entity_coord[6*beg];
-    PDM_g_num_t *ptr_shared_box_gnum    = &shared_entity_gnum [  beg];
-
-    PDM_vtk_write_boxes(filename,
-                        dn_shared_box,
-                        ptr_shared_box_extents,
-                        ptr_shared_box_gnum);
-  }
-
-
-  free(shared_recv_count);
-  free(shared_recv_idx);
-  free(distrib_search);
-  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
-  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
-
-  PDM_mpi_win_shared_free (wshared_local_nodes_n  );
-  PDM_mpi_win_shared_free (wshared_local_nodes_idx);
-
-  PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
-  PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
-
-  PDM_mpi_win_shared_free (wshared_entity_coord  );
-  PDM_mpi_win_shared_free (wshared_entity_gnum);
 
   /*
-   *  Update shared_to_box
-   *  re-Solicitation is already done - Transfer update shared to box !!!
-   *  Transfer boxes in shared maner + asynchronous with dist_comm_graph
-   *  Pour avoir l'info if faut echanger le parent gnum -> Allgatherv shared to minimize memory footprint
-   *  Transfer of box_extents + gnum + init_location
-   */
-
-
-  free(coarse_tree_box_to_box_idx);
-  free(coarse_tree_box_to_box);
-  PDM_mpi_win_shared_unlock_all (wshared_old_to_new_box_rank  );
-  PDM_mpi_win_shared_free (wshared_old_to_new_box_rank  );
-
-  /*
-   * All pts are redistribute to equilibrate solicitation
+   * Step 3 : All pts are redistribute to equilibrate solicitation
    *   We can now rebuild a finer tree to finalize solicitation
-   */
-
-  /*
-   * Step 3 : Build local tree
    */
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
 
@@ -963,56 +893,85 @@ PDM_doctree_build
     }
 
   }
-
-
-
-
-
   free(equi_pts_gnum);
   free(equi_pts_coords);
   free(equi_n_pts);
 
-   /*
-    * Le nouveau tri donne le lien old_to_new_rank (car on permutera les bbox a peu de choses près)
-    * Une fois qu'on connait le tri, on peut faire l'échange en asynchrone pdt que l'arbre se construit ?
-    *
-    */
-
   /*
-   *  On pourrait faire du hilbert sur des niveaux de feuilles avec gnum = node_id implicitement odered
-   *  Avec du sampling
-   *  On encode en hilbert le millieu des feuilles -> meme en kd-tree ca marchera
-   *  On fait la pré-soliciation pour avoir des poids par boîtes
-   *  On fait part_to_block sur des child_id implictement hilbert puis on echange le contenu des noeuds
-   *   La stride = le nombre de points -> Ca fait des echanges mais osef !!!
-   *   L'algo ressemble ENORMEMENT à PDM_part_assemble_partitions
-   *   La pré-solicitation nous permet également d'avoir le lien grossier
-   *   Si on le preserve on n'a plus a interoger l'octree !!!
-   *   Pdt le transfert de la pré-solicitation --> On construit l'arbre fin
-   *   On peut également utiliser l'info du g_child_id dans lequel on est solicité pour preconditionné la recherche local (on gagnera 3/4 niveaux)
-   *   A affiner avec le double niveau node / numa
-   *   Reprendre le Allgatherv du para_octree sur le comm circulaire
+   * Setup shared
    */
 
-  /*
-   * Si l'octree ne change pas l'ordre des points -> On fait une allocation shared
-   */
+
 
   /*
-   *  L'octree seq fait un tri indirect sur les pts, c'est maybe possible de le faire shared inplace !
-   *  Sinon on fait un chapeau pour le faire shared !!!!!
+   * Wait message and free all useless buffer
+   */
+  PDM_MPI_Wait(&req_entity_gnum);
+  PDM_MPI_Wait(&req_entity_coord);
+  PDM_MPI_Type_free(&mpi_entity_type);
+  free(send_g_num);
+  free(send_extents);
+  free(send_entity_n);
+  free(recv_entity_n);
+  free(send_entity_idx);
+  free(recv_entity_idx);
+
+  PDM_g_num_t *shared_entity_gnum  = PDM_mpi_win_shared_get(wshared_entity_gnum );
+  double      *shared_entity_coord = PDM_mpi_win_shared_get(wshared_entity_coord);
+
+  PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
+  int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
+
+    int beg    = distrib_search[i_rank_in_shm  ];
+
+    double      *ptr_shared_box_extents = &shared_entity_coord[6*beg];
+    PDM_g_num_t *ptr_shared_box_gnum    = &shared_entity_gnum [  beg];
+
+    PDM_vtk_write_boxes(filename,
+                        dn_shared_box,
+                        ptr_shared_box_extents,
+                        ptr_shared_box_gnum);
+  }
+
+
+  free(shared_recv_count);
+  free(shared_recv_idx);
+  free(distrib_search);
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_unlock_all (wshared_local_nodes_idx);
+
+  PDM_mpi_win_shared_free (wshared_local_nodes_n  );
+  PDM_mpi_win_shared_free (wshared_local_nodes_idx);
+
+  free(coarse_tree_box_to_box_idx);
+  free(coarse_tree_box_to_box);
+  PDM_mpi_win_shared_unlock_all (wshared_old_to_new_box_rank  );
+  PDM_mpi_win_shared_free (wshared_old_to_new_box_rank  );
+
+  /*
+   * Finalize solicitation
    */
 
+
+
+
+
+
+
+
+  PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
+  PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
+
+  PDM_mpi_win_shared_free (wshared_entity_coord  );
+  PDM_mpi_win_shared_free (wshared_entity_gnum);
 
   PDM_MPI_Comm_free(&doct->comm_dist_graph);
   PDM_MPI_Comm_free(&doct->comm_shared);
   free(doct->neighbor_in);
-
-  /*
-   * A revoir quand on fera l'équilibrage
-   */
-  // doct->local_octree = coarse_octree;
-  // doct->local_kdtree = coarse_kdtree;
 }
 
 void
