@@ -29,6 +29,7 @@
 #include "pdm_ho_location.h"
 #include "pdm_array.h"
 #include "pdm_distrib.h"
+#include "pdm_doctree.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -3651,23 +3652,23 @@ PDM_mesh_location_t        *ml
   }
 
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed(ml->timer);
-    e_t_cpu     = PDM_timer_cpu(ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+  PDM_MPI_Barrier (ml->comm);
+  PDM_timer_hang_on(ml->timer);
+  e_t_elapsed = PDM_timer_elapsed(ml->timer);
+  e_t_cpu     = PDM_timer_cpu(ml->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
-    ml->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu[SEARCH_CANDIDATES]     += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u[SEARCH_CANDIDATES]   += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s[SEARCH_CANDIDATES]   += e_t_cpu_s - b_t_cpu_s;
+  ml->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
+  ml->times_cpu[SEARCH_CANDIDATES]     += e_t_cpu - b_t_cpu;
+  ml->times_cpu_u[SEARCH_CANDIDATES]   += e_t_cpu_u - b_t_cpu_u;
+  ml->times_cpu_s[SEARCH_CANDIDATES]   += e_t_cpu_s - b_t_cpu_s;
 
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(ml->timer);
 
 
   /*
@@ -3889,6 +3890,44 @@ PDM_mesh_location_t        *ml
       }
       break;
      }
+    case PDM_MESH_LOCATION_DOCTREE: {
+
+      PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
+      PDM_doctree_t *doct = PDM_doctree_create(ml->comm,
+                                               3,
+                                               1,
+                                               NULL, // global_extents
+                                               local_tree_kind);
+
+      PDM_doctree_point_set(doct,
+                            0,
+                            n_pts_pcloud,
+                            NULL,
+                            pcloud_g_num,
+                            pcloud_coord);
+
+
+      PDM_doctree_solicitation_set(doct,
+                                   PDM_TREE_SOLICITATION_BOXES_POINTS,
+                                   1,
+                                   &n_select_boxes,
+                                   NULL,
+                                   &select_box_g_num,
+                                   &select_box_extents);
+
+      PDM_doctree_build(doct);
+
+      PDM_doctree_results_in_orig_frame_get(doct,
+                                            n_select_boxes,
+                                            select_box_g_num,
+                                            &pts_idx,
+                                            &pts_g_num,
+                                            &pts_coord);
+
+      PDM_doctree_free(doct);
+
+      break;
+    }
     default:
       printf("Error: unknown location method %d\n", ml->method);
       assert (1 == 0);

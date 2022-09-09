@@ -254,6 +254,7 @@ typedef enum {
 
   PDM_MESH_LOCATION_OCTREE,
   PDM_MESH_LOCATION_DBBTREE,
+  PDM_MESH_LOCATION_DOCTREE,
 
 } PDM_mesh_location_method_t;
 
