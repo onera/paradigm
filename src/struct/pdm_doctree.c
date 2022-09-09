@@ -1017,20 +1017,14 @@ PDM_doctree_build
 
       res_box_g_num[i_shm] = &shared_entity_gnum[beg];
 
-      // if(1 == 1) {
-      //   char filename[999];
-      //   sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
-
-      //   int beg    = distrib_search[i_rank_in_shm  ];
-
-      //   double      *ptr_shared_box_extents = &shared_entity_coord[6*beg];
-      //   PDM_g_num_t *ptr_shared_box_gnum    = &shared_entity_gnum [  beg];
-
-      //   PDM_vtk_write_boxes(filename,
-      //                       dn_shared_box,
-      //                       ptr_shared_box_extents,
-      //                       ptr_shared_box_gnum);
-      // }
+      if(1 == 1) {
+        char filename[999];
+        sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
+        PDM_vtk_write_boxes(filename,
+                            part_n_box[i_shm],
+                            lbox_extents,
+                            res_box_g_num[i_shm]);
+      }
 
       PDM_point_tree_seq_points_inside_boxes_shared(doct->shmem_tree,
                                                     i_shm,
