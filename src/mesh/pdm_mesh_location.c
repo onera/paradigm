@@ -3906,12 +3906,18 @@ PDM_mesh_location_t        *ml
                             pcloud_g_num,
                             pcloud_coord);
 
+      int *init_location_box = malloc(3 * n_select_boxes * sizeof(int));
+      for(int i = 0; i < n_select_boxes; ++i) {
+        init_location_box[3*i  ] = my_rank;
+        init_location_box[3*i+1] = 0;
+        init_location_box[3*i+2] = i;
+      }
 
       PDM_doctree_solicitation_set(doct,
                                    PDM_TREE_SOLICITATION_BOXES_POINTS,
                                    1,
                                    &n_select_boxes,
-                                   NULL,
+                                   &init_location_box,
                                    &select_box_g_num,
                                    &select_box_extents);
 
@@ -3925,6 +3931,7 @@ PDM_mesh_location_t        *ml
                                             &pts_coord);
 
       PDM_doctree_free(doct);
+      free(init_location_box);
 
       break;
     }
