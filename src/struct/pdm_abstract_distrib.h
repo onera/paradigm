@@ -128,7 +128,7 @@ PDM_abstract_distrib_redistribute_wait
 /**
  * \brief Receive data from origin distribution 
  *
- * \param[in]     ad Pointer to the structure 
+ * \param[in]     ad                     Pointer to the structure 
  * \param[in]     t_stride               Type of stride
  * \param[in]     stride_cst             Constant stride
  * \param[in]     data_size              Size of data
@@ -142,22 +142,28 @@ PDM_abstract_distrib_redistribute_wait
  */
 
 void
-PDM_abstract_distrib_recv_data_from_originè_start
+PDM_abstract_distrib_recv_data_from_origin_start
 (
 	      PDM_abstract_distrib_t  ad,
   const PDM_stride_t            t_stride,
   const int                     stride_cst,
   const size_t                  data_size,
         int                   **current_distrib_stride,
-        void                  **current_distrib_data
+        void                  **current_distrib_data,
         int                   **origin_distrib_stride,
         void                  **origin_distrib_data,
 );
 
+/**
+ * \brief Receive data from origin distribution 
+ *
+ * \param[in]     ad                     Pointer to the structure 
+ */
+
 void
-PDM_abstract_distrib_recv_data_from_originè_finalize
+PDM_abstract_distrib_recv_data_from_origin_wait
 (
-	      PDM_abstract_distrib_t  ad,
+	      PDM_abstract_distrib_t  ad
 );
 
 
@@ -177,7 +183,7 @@ PDM_abstract_distrib_recv_data_from_originè_finalize
  */
 
 void
-PDM_abstract_distrib_send_data_to_origin_distrib_start
+PDM_abstract_distrib_send_data_to_origin_start
 (
 	      PDM_abstract_distrib_t  ad,
  const  PDM_stride_t            t_stride,
@@ -191,7 +197,7 @@ PDM_abstract_distrib_send_data_to_origin_distrib_start
 
 
 void
-PDM_abstract_distrib_send_data_to_origin_distrib_finalize
+PDM_abstract_distrib_send_data_to_origin_wait
 (
 	      PDM_abstract_distrib_t  ad,
 );
