@@ -1019,7 +1019,7 @@ PDM_doctree_build
 
       if(1 == 1) {
         char filename[999];
-        sprintf(filename, "equi_boxes_for_solicitate_%i.vtk", i_rank);
+        sprintf(filename, "equi_boxes_for_solicitate_%i_%i.vtk", i_shm, i_rank);
         PDM_vtk_write_boxes(filename,
                             part_n_box[i_shm],
                             lbox_extents,
@@ -1078,14 +1078,14 @@ PDM_doctree_build
   /*
    * Equilibrate unitary works
    */
-  PDM_part_to_block_t *ptb_unit_op_equi = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
-                                                                    1.,
-                                                   (PDM_g_num_t **) res_box_g_num,
-                                                                    res_box_weight,
-                                                                    part_n_box,
-                                                                    n_rank_in_shm,
-                                                                    doct->comm);
+  doct->ptb_unit_op_equi = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                     PDM_PART_TO_BLOCK_POST_MERGE,
+                                                     1.,
+                                    (PDM_g_num_t **) res_box_g_num,
+                                                     res_box_weight,
+                                                     part_n_box,
+                                                     n_rank_in_shm,
+                                                     doct->comm);
 
   for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
     free(res_box_weight[i_shm]);
@@ -1101,7 +1101,7 @@ PDM_doctree_build
   int request_gnum = -1;
   int         *block_pts_in_box_n     = NULL;
   PDM_g_num_t *block_pts_in_box_g_num = NULL;
-  PDM_part_to_block_iexch (ptb_unit_op_equi,
+  PDM_part_to_block_iexch (doct->ptb_unit_op_equi,
                            PDM_MPI_COMM_KIND_COLLECTIVE,
                            sizeof(PDM_g_num_t),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -1115,7 +1115,7 @@ PDM_doctree_build
   int request_coord = -1;
   int    *block_stride           = NULL;
   double *block_pts_in_box_coord = NULL;
-  PDM_part_to_block_iexch (ptb_unit_op_equi,
+  PDM_part_to_block_iexch (doct->ptb_unit_op_equi,
                            PDM_MPI_COMM_KIND_COLLECTIVE,
                            3 * sizeof(double),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -1126,19 +1126,67 @@ PDM_doctree_build
                  (void **) &block_pts_in_box_coord,
                            &request_coord);
 
-  PDM_part_to_block_iexch_wait(ptb_unit_op_equi, request_gnum);
-  PDM_part_to_block_iexch_wait(ptb_unit_op_equi, request_coord);
+  PDM_part_to_block_iexch_wait(doct->ptb_unit_op_equi, request_gnum);
+  PDM_part_to_block_iexch_wait(doct->ptb_unit_op_equi, request_coord);
 
   free(block_stride);
-  free(block_pts_in_box_n);
 
 
-  free(block_pts_in_box_g_num);
-  free(block_pts_in_box_coord);
 
+  //-->>
+  /* Remove doubles */
+  int n_unit_op_equi_elt_block = PDM_part_to_block_n_elt_block_get (doct->ptb_unit_op_equi);
+  if (1) {
+    int max_n = 0;
+    for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
+      max_n = PDM_MAX (max_n, block_pts_in_box_n[i]);
+    }
 
-  int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb_unit_op_equi);
+    int *order = malloc (sizeof(int) * max_n);
+    double *tmp_coord = malloc (sizeof(double) * max_n * 3);
+    int idx1 = 0, idx2 = 0;
+    for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
+      if (block_pts_in_box_n[i] == 0) continue;
 
+      PDM_g_num_t *_g_num1 = block_pts_in_box_g_num + idx1;
+      double      *_coord1 = block_pts_in_box_coord + idx1*3;
+      PDM_g_num_t *_g_num2 = block_pts_in_box_g_num + idx2;
+      double      *_coord2 = block_pts_in_box_coord + idx2*3;
+
+      memcpy (tmp_coord, _coord1, sizeof(double) * block_pts_in_box_n[i] * 3);
+
+      for (int j = 0; j < block_pts_in_box_n[i]; j++) {
+        order[j] = j;
+      }
+      PDM_sort_long (_g_num1, order, block_pts_in_box_n[i]);
+
+      _g_num2[0] = _g_num1[0];
+      for (int k = 0; k < 3; k++) {
+        _coord2[k] = tmp_coord[3*order[0] + k];
+      }
+      int tmp_n = 1;
+      for (int j = 1; j < block_pts_in_box_n[i]; j++) {
+        if (_g_num1[j] != _g_num2[tmp_n-1]) {
+          _g_num2[tmp_n] = _g_num1[j];
+          for (int k = 0; k < 3; k++) {
+            _coord2[3*tmp_n + k] = tmp_coord[3*order[j] + k];
+          }
+          tmp_n++;
+        }
+      }
+
+      idx1 += block_pts_in_box_n[i];
+      idx2 += tmp_n;
+      block_pts_in_box_n[i] = tmp_n;
+    }
+    free (order);
+    free (tmp_coord);
+  }
+  //<<--
+
+  doct->block_pts_in_box_n     = block_pts_in_box_n;
+  doct->block_pts_in_box_g_num = block_pts_in_box_g_num;
+  doct->block_pts_in_box_coord = block_pts_in_box_coord;
 
   for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
     free(res_box_pts_coords[i_shm]);
@@ -1161,7 +1209,6 @@ PDM_doctree_build
   PDM_mpi_win_shared_free (wshared_entity_gnum);
   PDM_mpi_win_shared_free (wshared_entity_init_location);
 
-  PDM_part_to_block_free(ptb_unit_op_equi);
 
   PDM_MPI_Comm_free(&doct->comm_dist_graph);
   PDM_MPI_Comm_free(&doct->comm_shared);
@@ -1207,19 +1254,68 @@ PDM_doctree_solicitation_set
   doct->entity_coords        = entity_coords;
 }
 
-// void
-// PDM_doctree_results_get
-// (
-//  PDM_doctree_t      *doct,
-//  int                *init_location_entity,
-//  int                *dentity1_entity2_idx,
-//  PDM_g_num_t        *dentity1_entity2,
-//  int                *
-//  double             *entity_coords
-// )
-// {
+void
+PDM_doctree_results_in_orig_frame_get
+(
+ PDM_doctree_t       *doct,
+ int                  n_boxes,
+ PDM_g_num_t         *box_g_num,
+ int                **box_pts_idx,
+ PDM_g_num_t        **box_pts,
+ double             **pts_coord
+)
+{
 
-// }
+  /*
+   *  Block to part
+   */
+  PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(doct->ptb_unit_op_equi);
+  int n_unit_op_equi_elt_block = PDM_part_to_block_n_elt_block_get (doct->ptb_unit_op_equi);
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
+                                                                        n_unit_op_equi_elt_block,
+                                                (const PDM_g_num_t **) &box_g_num,
+                                                                       &n_boxes,
+                                                                       1,
+                                                                       doct->comm);
+
+  int         **_tmp_pts_in_box_n     = NULL;
+  PDM_g_num_t **_tmp_pts_in_box_g_num = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         doct->block_pts_in_box_n,
+                         doct->block_pts_in_box_g_num,
+                         &_tmp_pts_in_box_n,
+              (void ***) &_tmp_pts_in_box_g_num);
+
+  int *pts_in_box_n = _tmp_pts_in_box_n[0];
+  free(_tmp_pts_in_box_n);
+
+  *box_pts_idx = PDM_array_new_idx_from_sizes_int(pts_in_box_n, n_boxes);
+  free(pts_in_box_n);
+
+  PDM_g_num_t *pts_in_box_g_num = _tmp_pts_in_box_g_num[0];
+  free(_tmp_pts_in_box_g_num);
+
+  double **tmp_pts_in_box_coord = NULL;
+
+  PDM_block_to_part_exch(btp,
+                          3 * sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          doct->block_pts_in_box_n,
+                 (void *) doct->block_pts_in_box_coord,
+                          &_tmp_pts_in_box_n,
+               (void ***) &tmp_pts_in_box_coord);
+  free(_tmp_pts_in_box_n[0]);
+  free(_tmp_pts_in_box_n);
+
+  PDM_block_to_part_free(btp);
+
+  *box_pts   = pts_in_box_g_num;
+  *pts_coord = tmp_pts_in_box_coord[0];
+  free(tmp_pts_in_box_coord);
+}
 
 
 void
@@ -1232,6 +1328,12 @@ PDM_doctree_free
   free(doct->pts_g_num        );
   free(doct->pts_coords       );
   free(doct->pts_init_location);
+
+  free(doct->block_pts_in_box_g_num);
+  free(doct->block_pts_in_box_coord);
+  free(doct->block_pts_in_box_n    );
+
+  PDM_part_to_block_free(doct->ptb_unit_op_equi);
 
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
      doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE) {

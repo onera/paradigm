@@ -247,6 +247,24 @@ char *argv[]
 
   PDM_doctree_build(doct);
 
+  if(1 == 1) {
+
+    int         *box_pts_idx = NULL;
+    PDM_g_num_t *box_pts     = NULL;
+    double      *pts_coord   = NULL;
+    PDM_doctree_results_in_orig_frame_get(doct,
+                                          n_box,
+                                          box_gnum,
+                                          &box_pts_idx,
+                                          &box_pts,
+                                          &pts_coord);
+
+    free(box_pts_idx);
+    free(box_pts    );
+    free(pts_coord  );
+  }
+
+
   PDM_doctree_free(doct);
 
 

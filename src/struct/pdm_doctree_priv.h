@@ -11,6 +11,7 @@
 
 #include "pdm_mpi.h"
 #include "pdm_point_tree_seq.h"
+#include "pdm_part_to_block.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,6 +71,12 @@ struct _pdm_doctree_t {
   int                      **init_location_entity;
   PDM_g_num_t              **entity_gnum;
   double                   **entity_coords;
+
+  /* Equilibrate results */
+  PDM_part_to_block_t       *ptb_unit_op_equi;
+  int                       *block_pts_in_box_n;
+  PDM_g_num_t               *block_pts_in_box_g_num;
+  double                    *block_pts_in_box_coord;
 
 
 };

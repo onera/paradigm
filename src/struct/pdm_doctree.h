@@ -81,6 +81,16 @@ PDM_doctree_solicitation_set
  double                   **entity_coords
 );
 
+void
+PDM_doctree_results_in_orig_frame_get
+(
+ PDM_doctree_t       *doct,
+ int                  n_boxes,
+ PDM_g_num_t         *box_g_num,
+ int                **box_pts_idx,
+ PDM_g_num_t        **box_pts,
+ double             **pts_coord
+);
 
 #ifdef  __cplusplus
 }
