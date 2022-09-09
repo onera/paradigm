@@ -160,7 +160,7 @@ PDM_point_cloud_gen_random
   else {
     *g_num = malloc(sizeof(PDM_g_num_t) * (*ln_pts));
     for (int i = 0; i < *ln_pts; i++) {
-      (*g_num)[i] = distrib_pts[i_rank] + i;
+      (*g_num)[i] = distrib_pts[i_rank] + i + 1;
     }
   }
 

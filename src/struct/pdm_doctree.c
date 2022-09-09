@@ -306,7 +306,7 @@ PDM_doctree_build
                                        blk_pts_coord);
 
     PDM_point_tree_seq_build(doct->coarse_tree);
-    if(1 == 1) {
+    if(0 == 1) {
       char filename[999];
       sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
       PDM_point_tree_seq_write_nodes(doct->coarse_tree, filename);
@@ -367,7 +367,7 @@ PDM_doctree_build
   }
   PDM_MPI_Barrier(doct->comm_shared);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(shared_local_nodes_n  , n_rank , "shared_local_nodes_n   ::");
     PDM_log_trace_array_int(shared_local_nodes_idx, n_rank+1 , "shared_local_nodes_idx ::");
     PDM_log_trace_array_int(doct->neighbor_in, doct->n_degree_in , "doct->neighbor_in ::");
@@ -562,7 +562,7 @@ PDM_doctree_build
                               shared_old_to_new_box_rank, lrecv_count , recv_shift, PDM_MPI_INT, doct->comm_dist_graph);
   PDM_MPI_Barrier(doct->comm_shared);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(shared_old_to_new_box_rank, n_shared_boxes, "shared_old_to_new_box_rank :");
   }
   free(proc_id);
@@ -573,7 +573,7 @@ PDM_doctree_build
    */
   PDM_g_num_t* impli_distrib_tree = PDM_compute_entity_distribution(doct->comm, n_coarse_box);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(impli_distrib_tree    , n_rank+1, "impli_distrib_tree : ");
   }
   PDM_block_to_part_t* btp = PDM_block_to_part_create(impli_distrib_tree,
@@ -1271,6 +1271,15 @@ PDM_doctree_results_in_orig_frame_get
    */
   PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(doct->ptb_unit_op_equi);
   int n_unit_op_equi_elt_block = PDM_part_to_block_n_elt_block_get (doct->ptb_unit_op_equi);
+
+  // PDM_log_trace_array_int(doct->block_pts_in_box_n, n_unit_op_equi_elt_block, "block_pts_in_box_n ::");
+  // int *dbox_pts_idx = PDM_array_new_idx_from_sizes_int(doct->block_pts_in_box_n, n_unit_op_equi_elt_block);
+  // PDM_log_trace_connectivity_long(dbox_pts_idx, doct->block_pts_in_box_g_num, n_unit_op_equi_elt_block, "block_pts_in_box_g_num : ");
+  // free(dbox_pts_idx);
+
+  // PDM_log_trace_array_int(doct->block_pts_in_box_g_num, n_unit_op_equi_elt_block, "block_pts_in_box_g_num ::");
+  // PDM_log_trace_array_int(doct->block_pts_in_box_n, n_unit_op_equi_elt_block, "block_pts_in_box_n ::");
+  // block_pts_in_box_coord
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
                                                                         n_unit_op_equi_elt_block,

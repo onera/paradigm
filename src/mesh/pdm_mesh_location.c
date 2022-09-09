@@ -3836,6 +3836,7 @@ PDM_mesh_location_t        *ml
                                              &pts_idx,
                                              &pts_g_num,
                                              &pts_coord);
+        PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
       } else {
        PDM_para_octree_points_inside_boxes_shared (octree,
                                                    n_select_boxes,
@@ -3929,6 +3930,8 @@ PDM_mesh_location_t        *ml
                                             &pts_idx,
                                             &pts_g_num,
                                             &pts_coord);
+
+      PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
 
       PDM_doctree_free(doct);
       free(init_location_box);

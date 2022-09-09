@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pts_gnum   = NULL;
 
   marge *= length;
-  int strip = 1;
+  int strip = 0;
   if(strip == 0) {
     // double llength = length/3;  // Desequilbrate
     double llength = length;
