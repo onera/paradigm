@@ -293,8 +293,8 @@ PDM_doctree_build
     n_depth_per_proc = 2;
   } else if (doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
     n_depth_per_proc = 6; // 2^(depth)
-    n_depth_per_proc = 1; // 2^(depth)
-    // n_depth_per_proc = 3; // 2^(depth)
+    // n_depth_per_proc = 1; // 2^(depth)
+    n_depth_per_proc = 3; // 2^(depth)
   } else {
     abort();
   }

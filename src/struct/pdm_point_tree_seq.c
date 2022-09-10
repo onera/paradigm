@@ -755,6 +755,27 @@ _build_point_tree
   ptree->nodes->extents     = realloc(ptree->nodes->extents,     sizeof(double) * ptree->n_nodes * 6);
   ptree->nodes->location_in_ancestor = realloc(ptree->nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes);
 
+  _l_nodes_t *nodes = ptree->nodes;
+
+  if(1) {
+    int depth_max      = 0;
+    int n_pts_leaf_max = -1;
+    int n_pts_leaf_min = ptree->n_pts+1;
+    int n_pts_mean     = 0;
+    int n_tot_leaf     = 0;
+    for (int i = 0; i < ptree->n_nodes; i++) {
+      depth_max     = PDM_MAX(depth_max, nodes->depth[i]);
+      if(nodes->is_leaf[i]) {
+        n_pts_leaf_max = PDM_MAX(n_pts_leaf_max, nodes->range[2*i+1]-nodes->range[2*i]);
+        n_pts_leaf_min = PDM_MIN(n_pts_leaf_min, nodes->range[2*i+1]-nodes->range[2*i]);
+        n_pts_mean += nodes->range[2*i+1]-nodes->range[2*i];
+        n_tot_leaf += 1;
+      }
+    }
+    n_pts_mean = n_pts_mean/n_tot_leaf;
+    log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
+              ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
+  }
 
   if (dbg_ptree) {
     // PDM_log_trace_array_int(ptree->old_to_new,
@@ -770,8 +791,6 @@ _build_point_tree
     }
 
     // Dump kd-tree
-    _l_nodes_t *nodes = ptree->nodes;
-
     for (int i = 0; i < ptree->n_nodes; i++) {
       if (1) {//nodes->is_leaf[i]) {
         log_trace("\nNode %d :", i);
