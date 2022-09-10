@@ -83,6 +83,7 @@ _read_args
  PDM_g_num_t   *gn_box,
  double        *radius,
  int           *tree_type,
+ int           *points_in_leaf_max,
  int           *visu
 )
 {
@@ -137,6 +138,16 @@ _read_args
       }
     }
 
+    else if (strcmp(argv[i], "-pil") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *points_in_leaf_max = atoi(argv[i]);
+      }
+    }
+
     else if (strcmp(argv[i], "-visu") == 0) {
       *visu = 1;
     }
@@ -183,6 +194,7 @@ main
   double                    radius    = 10.;
   PDM_doctree_local_tree_t  tree_type = PDM_DOCTREE_LOCAL_TREE_OCTREE;
   int                       visu      = 0;
+  int                       points_in_leaf_max = 10;
 
   _read_args(argc,
              argv,
@@ -190,6 +202,7 @@ main
              &gn_box,
              &radius,
      (int *) &tree_type,
+             &points_in_leaf_max,
              &visu);
 
 
@@ -213,8 +226,8 @@ main
 
   /* Build point tree */
   int depth_max          = 31;
-  int points_in_leaf_max = 2;
-  const double tolerance = 1e-4;
+  // int points_in_leaf_max = 10;
+  const double tolerance = 1e-6;
   PDM_point_tree_seq_t *ptree = PDM_point_tree_seq_create(tree_type,
                                                           depth_max,
                                                           points_in_leaf_max,
@@ -289,7 +302,7 @@ main
   }
 
   PDM_box_set_t *box_set = PDM_box_set_create(3,
-                                              1,  // No normalization to preserve initial extents
+                                              1,
                                               0,  // No projection to preserve initial extents
                                               n_box,
                                               box_g_num,

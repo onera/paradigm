@@ -7593,6 +7593,77 @@ _visu_pair
 
 
 
+static inline void
+_insertion_sort
+(
+ const int   point_id,
+ int        *box_pts_n,
+ int        *box_pts_s,
+ int       **box_pts
+ )
+{
+/* Insertion sort */
+  if ((*box_pts_n) == 0) {
+    (*box_pts)[(*box_pts_n)++] = point_id;
+  }
+  else {
+
+    int pos = PDM_binary_search_gap_int(point_id,
+                                        (*box_pts),
+                                        (*box_pts_n));
+    // if (dbg) {
+    //   log_trace("%d at pos %d in array ", point_id, pos);
+    //   PDM_log_trace_array_int((*box_pts), (*box_pts_n), "");
+    // }
+
+    if (pos < 0) {
+      if ((*box_pts_s) <= (*box_pts_n)) {
+        (*box_pts_s) *= 2;
+        (*box_pts)    = realloc((*box_pts),
+                                sizeof(int) * (*box_pts_s));
+      }
+
+      if (point_id > (*box_pts)[(*box_pts_n)-1]) {
+        // if (dbg) {
+        //   log_trace("  insert to the right\n");
+        // }
+        (*box_pts)[(*box_pts_n)++] = point_id;
+      }
+      else {
+        // if (dbg) {
+        //   log_trace("  insert to the left\n");
+        // }
+        for (int j = (*box_pts_n); j > 0; j--) {
+          (*box_pts)[j] = (*box_pts)[j-1];
+        }
+        (*box_pts)[0] = point_id;
+        (*box_pts_n)++;
+      }
+
+    }
+    else {
+
+      if ((*box_pts)[pos] != point_id) {
+        if ((*box_pts_s) <= (*box_pts_n)) {
+          (*box_pts_s) *= 2;
+          (*box_pts)    = realloc((*box_pts),
+                                  sizeof(int) * (*box_pts_s));
+        }
+
+        for (int j = (*box_pts_n); j > pos+1; j--) {
+          (*box_pts)[j] = (*box_pts)[j-1];
+        }
+        (*box_pts)[pos+1] = point_id;
+        (*box_pts_n)++;
+      }
+
+    }
+
+    // PDM_log_trace_array_int(*box_pts, *box_pts_n, "after insertion : ");
+  }
+}
+
+
 typedef enum {
   SUBDIVISION_CRITERION_VOLUME,
   SUBDIVISION_CRITERION_LENGTH,
@@ -7628,15 +7699,23 @@ PDM_tree_intersection_point_box
 
 
 
-  int s_queue = 100; // ?
+  int s_queue = 1000; // ?
   int *queue0 = malloc(sizeof(int) * s_queue * 2);
   int *queue1 = malloc(sizeof(int) * s_queue * 2);
   int *queues[2] = {queue0, queue1};
 
+  int *queue0_depth = NULL;
+  int *queue1_depth = NULL;
+  if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+    queue0_depth = malloc(sizeof(int) * s_queue);
+    queue1_depth = malloc(sizeof(int) * s_queue);
+  }
+
+  int *queues_depth[2] = {queue0_depth, queue1_depth};
 
   /* Get point_tree data (use gets!!!) */
   int ptree_n_children = PDM_point_tree_n_children_get(ptree);
-  // int    *ptree_depth       = ptree->nodes->depth;
+  int    *ptree_depth       = ptree->nodes->depth;
   int    *ptree_is_leaf     = ptree->nodes->is_leaf;
   int    *ptree_range       = ptree->nodes->range;
   int    *ptree_children_id = ptree->nodes->children_id;
@@ -7693,6 +7772,9 @@ PDM_tree_intersection_point_box
   int n_queue = 0;
   queues[0][2*n_queue  ] = btree_node_id;
   queues[0][2*n_queue+1] = ptree_node_id;
+  if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+    queues_depth[0][n_queue] = 0;
+  }
   n_queue++;
 
 
@@ -7720,6 +7802,10 @@ PDM_tree_intersection_point_box
 
       btree_node_id = queues[0][2*ipair  ];
       ptree_node_id = queues[0][2*ipair+1];
+      int btree_depth;
+      if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+        btree_depth = queues_depth[0][ipair];
+      }
 
       if (dbg) {
         log_trace("  Step %d\n", istep);
@@ -7789,65 +7875,69 @@ PDM_tree_intersection_point_box
                   log_trace("        inside box\n");
                 }
 
-                /* Insertion sort */
-                if (__box_pts_n[box_id] == 0) {
-                  __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
-                }
-                else {
+                // /* Insertion sort */
+                // if (__box_pts_n[box_id] == 0) {
+                //   __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
+                // }
+                // else {
 
-                  int pos = PDM_binary_search_gap_int(point_id,
-                                                      __box_pts[box_id],
-                                                      __box_pts_n[box_id]);
-                  // if (dbg) {
-                  //   log_trace("%d at pos %d in array ", point_id, pos);
-                  //   PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "");
-                  // }
+                //   int pos = PDM_binary_search_gap_int(point_id,
+                //                                       __box_pts[box_id],
+                //                                       __box_pts_n[box_id]);
+                //   // if (dbg) {
+                //   //   log_trace("%d at pos %d in array ", point_id, pos);
+                //   //   PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "");
+                //   // }
 
-                  if (pos < 0) {
-                    if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
-                      __box_pts_s[box_id] *= 2;
-                      __box_pts  [box_id] = realloc(__box_pts[box_id],
-                                                    sizeof(int) * __box_pts_s[box_id]);
-                    }
+                //   if (pos < 0) {
+                //     if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
+                //       __box_pts_s[box_id] *= 2;
+                //       __box_pts  [box_id] = realloc(__box_pts[box_id],
+                //                                     sizeof(int) * __box_pts_s[box_id]);
+                //     }
 
-                    if (point_id > __box_pts[box_id][__box_pts_n[box_id]-1]) {
-                      // if (dbg) {
-                      //   log_trace("  insert to the right\n");
-                      // }
-                      __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
-                    }
-                    else {
-                      // if (dbg) {
-                      //   log_trace("  insert to the left\n");
-                      // }
-                      for (int j = __box_pts_n[box_id]; j > 0; j--) {
-                        __box_pts[box_id][j] = __box_pts[box_id][j-1];
-                      }
-                      __box_pts[box_id][0] = point_id;
-                      __box_pts_n[box_id]++;
-                    }
+                //     if (point_id > __box_pts[box_id][__box_pts_n[box_id]-1]) {
+                //       // if (dbg) {
+                //       //   log_trace("  insert to the right\n");
+                //       // }
+                //       __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
+                //     }
+                //     else {
+                //       // if (dbg) {
+                //       //   log_trace("  insert to the left\n");
+                //       // }
+                //       for (int j = __box_pts_n[box_id]; j > 0; j--) {
+                //         __box_pts[box_id][j] = __box_pts[box_id][j-1];
+                //       }
+                //       __box_pts[box_id][0] = point_id;
+                //       __box_pts_n[box_id]++;
+                //     }
 
-                  }
-                  else {
+                //   }
+                //   else {
 
-                    if (__box_pts[box_id][pos] != point_id) {
-                      if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
-                        __box_pts_s[box_id] *= 2;
-                        __box_pts  [box_id] = realloc(__box_pts[box_id],
-                                                      sizeof(int) * __box_pts_s[box_id]);
-                      }
+                //     if (__box_pts[box_id][pos] != point_id) {
+                //       if (__box_pts_s[box_id] <= __box_pts_n[box_id]) {
+                //         __box_pts_s[box_id] *= 2;
+                //         __box_pts  [box_id] = realloc(__box_pts[box_id],
+                //                                       sizeof(int) * __box_pts_s[box_id]);
+                //       }
 
-                      for (int j = __box_pts_n[box_id]; j > pos+1; j--) {
-                        __box_pts[box_id][j] = __box_pts[box_id][j-1];
-                      }
-                      __box_pts[box_id][pos+1] = point_id;
-                      __box_pts_n[box_id]++;
-                    }
+                //       for (int j = __box_pts_n[box_id]; j > pos+1; j--) {
+                //         __box_pts[box_id][j] = __box_pts[box_id][j-1];
+                //       }
+                //       __box_pts[box_id][pos+1] = point_id;
+                //       __box_pts_n[box_id]++;
+                //     }
 
-                  }
+                //   }
 
-                  // PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "after insertion : ");
-                }
+                //   // PDM_log_trace_array_int(__box_pts[box_id], __box_pts_n[box_id], "after insertion : ");
+                // }
+                _insertion_sort(point_id,
+                                &__box_pts_n[box_id],
+                                &__box_pts_s[box_id],
+                                &__box_pts  [box_id]);
 
                 // do insertion sort instead
                 // __box_pts[box_id][__box_pts_n[box_id]++] = point_id;
@@ -7902,7 +7992,12 @@ PDM_tree_intersection_point_box
             }
             break;
           }
-          default:{
+          case SUBDIVISION_CRITERION_DEPTH: {
+            btree_crit = btree_depth;
+            ptree_crit = ptree_depth[ptree_node_id];
+            break;
+          }
+          default: {
             PDM_error(__FILE__, __LINE__, 0,
                       "Subdivision criterion %d not implemented\n", (int) subdiv_crit);
             break;
@@ -7921,7 +8016,7 @@ PDM_tree_intersection_point_box
       }
 
 
-      /*  */
+      /* Add children to new queue */
       if (isubdiv == 0) {
         /* Subdivide box tree */
         if (dbg) {
@@ -7957,10 +8052,18 @@ PDM_tree_intersection_point_box
               s_queue *= 2;
               queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
               queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+                queues_depth[0] = realloc(queues_depth[0], sizeof(int) * s_queue);
+                queues_depth[1] = realloc(queues_depth[1], sizeof(int) * s_queue);
+              }
             }
 
             queues[1][2*new_n_queue  ] = child_id;
             queues[1][2*new_n_queue+1] = ptree_node_id;
+            if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+              queues_depth[1][new_n_queue] = btree_depth + 1;
+            }
+
             new_n_queue++;
           }
         }
@@ -8001,10 +8104,18 @@ PDM_tree_intersection_point_box
               s_queue *= 2;
               queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
               queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+                queues_depth[0] = realloc(queues_depth[0], sizeof(int) * s_queue);
+                queues_depth[1] = realloc(queues_depth[1], sizeof(int) * s_queue);
+              }
             }
 
             queues[1][2*new_n_queue  ] = btree_node_id;
             queues[1][2*new_n_queue+1] = child_id;
+            if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+              queues_depth[1][new_n_queue] = btree_depth;
+            }
+
             new_n_queue++;
           }
         }
@@ -8022,6 +8133,11 @@ PDM_tree_intersection_point_box
     int *tmp = queues[1];
     queues[1] = queues[0];
     queues[0] = tmp;
+    if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+      tmp = queues_depth[1];
+      queues_depth[1] = queues_depth[0];
+      queues_depth[0] = tmp;
+    }
 
     n_queue = new_n_queue;
 
@@ -8030,6 +8146,10 @@ PDM_tree_intersection_point_box
   // free(_pts_coord);
   free(queues[0]);
   free(queues[1]);
+  if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+    free(queues_depth[0]);
+    free(queues_depth[1]);
+  }
 
   /* Re-arrange result */
   *box_pts_idx = PDM_array_new_idx_from_sizes_int(__box_pts_n, n_boxes);
