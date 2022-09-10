@@ -723,7 +723,7 @@ _build_point_tree
   int *tmp_new_to_old = malloc(sizeof(int) * ptree->n_pts);
   _build_point_tree_seq_leaves(-1,
                                (PDM_point_tree_seq_child_t) 0,
-                               -1,
+                               0,
                                ptree->extents,
                                ptree,
                                point_range,
@@ -2146,7 +2146,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   for (int ibox = 0; ibox < n_box; ibox++) {
 
-    int dbg_enabled = 0;
+    int dbg_enabled = 1;
     if (dbg_enabled) {
       log_trace("box %d\n", ibox);
     }

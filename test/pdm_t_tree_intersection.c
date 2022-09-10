@@ -83,7 +83,7 @@ _read_args
  PDM_g_num_t   *gn_box,
  double        *radius,
  int           *tree_type,
- char         **filename
+ int           *visu
 )
 {
   int i = 1;
@@ -137,14 +137,8 @@ _read_args
       }
     }
 
-    else if (strcmp(argv[i], "-f") == 0) {
-      i++;
-      if (i >= argc) {
-        _usage(EXIT_FAILURE);
-      }
-      else {
-        *filename = argv[i];
-      }
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
 
     else {
@@ -188,7 +182,7 @@ main
   PDM_g_num_t               gn_box    = 10;
   double                    radius    = 10.;
   PDM_doctree_local_tree_t  tree_type = PDM_DOCTREE_LOCAL_TREE_OCTREE;
-  char                     *filename  = NULL;
+  int                       visu      = 0;
 
   _read_args(argc,
              argv,
@@ -196,9 +190,10 @@ main
              &gn_box,
              &radius,
      (int *) &tree_type,
-             &filename);
+             &visu);
 
-  log_trace("gn_pts = %ld\n", gn_pts);
+
+  double t1, t2;
 
 
 
@@ -229,10 +224,13 @@ main
                                      n_pts,
                                      pts_coord);
 
+  t1 = PDM_MPI_Wtime();
   PDM_point_tree_seq_build(ptree);
+  t2 = PDM_MPI_Wtime();
+  printf("PDM_point_tree_seq_build        : %12.5es\n", t2 - t1);
 
 
-  if (1 == 1) {
+  if (visu) {
     char filename2[999];
     sprintf(filename2, "point_tree_%i.vtk", i_rank);
     PDM_point_tree_seq_write_nodes(ptree, filename2);
@@ -254,33 +252,33 @@ main
 
   double _n = PDM_MAX(2, 1 + pow(gn_box, 1./3.));
 
-  int n_vtx_x = _n;
-  int n_vtx_y = _n;
-  int n_vtx_z = _n;
-  PDM_box_gen_cartesian(comm,
-                        n_vtx_x,
-                        n_vtx_y,
-                        n_vtx_z,
-                        -radius, -radius, -radius,
-                        radius, radius, radius,
-                        &n_box,
-                        &box_extents,
-                        &box_g_num);
-  // PDM_box_gen_random(comm,
-  //                    0,
-  //                    0,
-  //                    gn_box,
-  //                    ,//min_size,
-  //                    ,//max_size,
-  //                    0.,//x_min,
-  //                    0.,//y_min,
-  //                    0.,//z_min,
-  //                    1.,//x_max,
-  //                    1.,//y_max,
-  //                    1.,//z_max,
-  //                    &n_box,
-  //                    &box_extents,
-  //                    &box_ln_to_gn);
+  // int n_vtx_x = _n;
+  // int n_vtx_y = _n;
+  // int n_vtx_z = _n;
+  // PDM_box_gen_cartesian(comm,
+  //                       n_vtx_x,
+  //                       n_vtx_y,
+  //                       n_vtx_z,
+  //                       -radius, -radius, -radius,
+  //                       radius, radius, radius,
+  //                       &n_box,
+  //                       &box_extents,
+  //                       &box_g_num);
+
+  double avg_size = 2*radius/(double) (_n - 1);
+  double min_size = 0.5*avg_size;
+  double max_size = 1.5*avg_size;
+  PDM_box_gen_random(comm,
+                     0,
+                     0,
+                     gn_box,
+                     min_size,
+                     max_size,
+                     -radius, -radius, -radius,
+                     radius, radius, radius,
+                     &n_box,
+                     &box_extents,
+                     &box_g_num);
 
   int *init_location_box = malloc(3 * n_box * sizeof(int));
   for(int i = 0; i < n_box; ++i) {
@@ -308,14 +306,16 @@ main
                                                max_boxes_leaf_shared,
                                                max_box_ratio_shared);
 
+  t1 = PDM_MPI_Wtime();
   PDM_box_tree_set_boxes (btree,
                           box_set,
                           PDM_BOX_TREE_ASYNC_LEVEL);
-
+  t2 = PDM_MPI_Wtime();
+  printf("PDM_box_tree_set_boxes          : %12.5es\n", t2 - t1);
   free(init_location_box);
 
 
-  if (1 == 1) {
+  if (visu) {
     char filename2[999];
     sprintf(filename2, "box_tree_%i.vtk", i_rank);
     PDM_box_tree_write_vtk(filename2,
@@ -331,34 +331,37 @@ main
   }
 
 
-
+  t1 = PDM_MPI_Wtime();
   int *box_pts_idx = NULL;
   int *box_pts     = NULL;
-  PDM_tree_intersection_point_box(ptree,
-                                  btree,
+  PDM_tree_intersection_point_box(btree,
+                                  ptree,
                                   &box_pts_idx,
                                   &box_pts);
+  t2 = PDM_MPI_Wtime();
+  printf("PDM_tree_intersection_point_box : %12.5es\n", t2 - t1);
   // PDM_log_trace_connectivity_int(box_pts_idx,
   //                                box_pts,
   //                                n_box,
   //                                "box_pts0 : ");
 
-  PDM_g_num_t *box_pts_g_num = malloc(sizeof(PDM_g_num_t) * box_pts_idx[n_box]);
-  for (int i = 0; i < box_pts_idx[n_box]; i++) {
-    box_pts_g_num[i] = pts_g_num[box_pts[i]];
+  if (visu) {
+    PDM_g_num_t *box_pts_g_num = malloc(sizeof(PDM_g_num_t) * box_pts_idx[n_box]);
+    for (int i = 0; i < box_pts_idx[n_box]; i++) {
+      box_pts_g_num[i] = pts_g_num[box_pts[i]];
+    }
+
+    PDM_log_trace_connectivity_long(box_pts_idx,
+                                    box_pts_g_num,
+                                    n_box,
+                                    "box_pts  : ");
+    free(box_pts_g_num);
   }
-
-  PDM_log_trace_connectivity_long(box_pts_idx,
-                                  box_pts_g_num,
-                                  n_box,
-                                  "box_pts  : ");
-
   free(box_pts_idx);
   free(box_pts);
-  free(box_pts_g_num);
 
 
-
+  t1 = PDM_MPI_Wtime();
   int         *box_pts_idx2   = NULL;
   PDM_g_num_t *box_pts_g_num2 = NULL;
   double      *box_pts_coord2 = NULL;
@@ -369,22 +372,26 @@ main
                                    &box_pts_idx2,
                                    &box_pts_g_num2,
                                    &box_pts_coord2);
+  t2 = PDM_MPI_Wtime();
 
-  for (int i = 0; i < n_box; i++) {
-    PDM_inplace_unique_long(box_pts_g_num2,
-                            NULL,
-                            box_pts_idx2[i],
-                            box_pts_idx2[i+1] - 1);
+  printf("PDM_box_tree_points_inside_boxes: %12.5es\n", t2 - t1);
+
+  if (visu) {
+    for (int i = 0; i < n_box; i++) {
+      PDM_inplace_unique_long(box_pts_g_num2,
+                              NULL,
+                              box_pts_idx2[i],
+                              box_pts_idx2[i+1] - 1);
+    }
+
+    PDM_log_trace_connectivity_long(box_pts_idx2,
+                                    box_pts_g_num2,
+                                    n_box,
+                                    "box_pts2 : ");
+    free(box_pts_idx2);
+    free(box_pts_g_num2);
+    free(box_pts_coord2);
   }
-
-  PDM_log_trace_connectivity_long(box_pts_idx2,
-                                  box_pts_g_num2,
-                                  n_box,
-                                 "box_pts2 : ");
-  free(box_pts_idx2);
-  free(box_pts_g_num2);
-  free(box_pts_coord2);
-
 
 
 

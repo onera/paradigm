@@ -317,10 +317,19 @@ PDM_doctree_build
                                        blk_pts_coord);
 
     PDM_point_tree_seq_build(doct->coarse_tree);
-    if(1 == 1) {
+    if(0 == 1) {
       char filename[999];
       sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
       PDM_point_tree_seq_write_nodes(doct->coarse_tree, filename);
+
+
+      PDM_g_num_t *blk_pts_g_num = PDM_part_to_block_block_gnum_get(ptb);
+      sprintf(filename, "out_coarse_points_%i.vtk", i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                dn_pts,
+                                blk_pts_coord,
+                                blk_pts_g_num,
+                                NULL);
     }
 
   } else {
@@ -619,6 +628,7 @@ PDM_doctree_build
       idx_write++;
     }
   }
+  // PDM_log_trace_array_long(reorder_blk_pts_gnum, n_pts_tot, "reorder_blk_pts_gnum : ");
 
   /*
    * Coordinates
@@ -685,7 +695,11 @@ PDM_doctree_build
   if(0 == 1) {
     char filename[999];
     sprintf(filename, "out_equi_pts_%i.vtk", i_rank);
-    PDM_vtk_write_point_cloud(filename, equi_n_pts_tot, equi_pts_coords, equi_pts_gnum, NULL);
+    PDM_vtk_write_point_cloud(filename,
+                              equi_n_pts_tot,
+                              equi_pts_coords,
+                              lequi_pts_gnum,
+                              NULL);
   }
 
 
@@ -1070,6 +1084,16 @@ PDM_doctree_build
       res_box_pts_gnum  [i_shm] = malloc(    _box_pts_idx[n_lbox] * sizeof(PDM_g_num_t));
 
       PDM_g_num_t *shm_equi_pts_gnum   = &equi_pts_gnum      [  shm_equi_pts_tot_idx[i_shm]];
+
+      if(0 == 1) {
+        char filename[999];
+        sprintf(filename, "points_shm_%i_%i.vtk", i_shm, i_rank);
+        PDM_vtk_write_point_cloud(filename,
+                                  doct->shmem_tree->shm_n_pts[i_shm],
+                                  doct->shmem_tree->shm_pts_coord[i_shm],
+                                  shm_equi_pts_gnum,
+                                  NULL);
+      }
 
       // PDM_log_trace_connectivity_int(_box_pts_idx, _box_pts_l_num, part_n_box[i_shm], "_box_pts_l_num : ");
 

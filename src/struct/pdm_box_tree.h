@@ -724,8 +724,8 @@ PDM_box_tree_box_extents_get
 void
 PDM_tree_intersection_point_box
 (
- PDM_point_tree_seq_t  *ptree,
  PDM_box_tree_t        *btree,
+ PDM_point_tree_seq_t  *ptree,
  int                  **box_pts_idx,
  int                  **box_pts
  );
