@@ -692,7 +692,7 @@ PDM_doctree_build
    */
   PDM_g_num_t* equi_pts_init_location = NULL;
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     sprintf(filename, "out_equi_pts_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
@@ -900,7 +900,7 @@ PDM_doctree_build
 
     PDM_point_tree_seq_build(doct->local_tree);
 
-    if(1 == 1) {
+    if(0 == 1) {
       char filename[999];
       sprintf(filename, "out_local_tree_%i.vtk", i_rank);
       PDM_point_tree_seq_write_nodes(doct->local_tree, filename);
@@ -918,7 +918,7 @@ PDM_doctree_build
   doct->shmem_tree = PDM_point_tree_make_shared(doct->local_tree,
                                                 doct->comm_shared);
 
-  if(1 == 1) {
+  if(0 == 1) {
     char filename[999];
     for (int ishm = 0; ishm < n_rank_in_shm; ishm++) {
       sprintf(filename, "out_shared_tree_%i_%i.vtk", ishm, i_rank);
