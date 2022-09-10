@@ -3894,6 +3894,7 @@ PDM_mesh_location_t        *ml
     case PDM_MESH_LOCATION_DOCTREE: {
 
       PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
+      // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
       PDM_doctree_t *doct = PDM_doctree_create(ml->comm,
                                                3,
                                                1,

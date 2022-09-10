@@ -207,7 +207,7 @@ PDM_doctree_create
     doct->coarse_points_in_leaf_max = 60;
 
     doct->local_depth_max          = 31;
-    doct->local_points_in_leaf_max = 30;
+    doct->local_points_in_leaf_max = 1;
     doct->local_tolerance          = 1e-6;
   } else {
     abort();
@@ -288,6 +288,17 @@ PDM_doctree_build
 
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
+  int     n_depth_per_proc   = 0;
+  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    n_depth_per_proc = 2;
+  } else if (doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
+    n_depth_per_proc = 6; // 2^(depth)
+    n_depth_per_proc = 1; // 2^(depth)
+    // n_depth_per_proc = 3; // 2^(depth)
+  } else {
+    abort();
+  }
+
   /*
    * Step 2 : Build local coarse tree
    */
@@ -297,7 +308,7 @@ PDM_doctree_build
 
     assert(doct->coarse_tree == NULL);
     doct->coarse_tree = PDM_point_tree_seq_create(doct->local_tree_kind,
-                                                  doct->coarse_depth_max,
+                                                  n_depth_per_proc,
                                                   doct->coarse_points_in_leaf_max,
                                                   doct->local_tolerance);
 
@@ -323,16 +334,6 @@ PDM_doctree_build
   int    *coarse_box_id      = NULL;
   double *coarse_box_extents = NULL;
   int    *coarse_box_n_pts   = NULL; // Number of point in boxes
-  int     n_depth_per_proc   = 0;
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    n_depth_per_proc = 2;
-  } else if (doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    n_depth_per_proc = 6; // 2^(depth)
-    // n_depth_per_proc = 2; // 2^(depth)
-    n_depth_per_proc = 3; // 2^(depth)
-  } else {
-    abort();
-  }
 
   PDM_point_tree_seq_extract_nodes(doct->coarse_tree,
                                    0,
@@ -885,7 +886,7 @@ PDM_doctree_build
 
     PDM_point_tree_seq_build(doct->local_tree);
 
-    if(0 == 1) {
+    if(1 == 1) {
       char filename[999];
       sprintf(filename, "out_local_tree_%i.vtk", i_rank);
       PDM_point_tree_seq_write_nodes(doct->local_tree, filename);
