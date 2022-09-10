@@ -977,6 +977,13 @@ int main(int argc, char *argv[])
           dist = PDM_MIN (dist, _dist);
         }
         //printf("distance = %e\n\n", dist);
+        if (dist >= location_tolerance) {
+          printf("point %ld : located in %ld (instead of %ld), dist = %e\n",
+                 pts_gnum[ipt],
+                 p_location[ipt],
+                 box_gnum,
+                 dist);
+        }
         assert (dist < location_tolerance);
         //<<--
       }

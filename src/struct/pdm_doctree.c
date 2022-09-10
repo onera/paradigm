@@ -1040,7 +1040,7 @@ PDM_doctree_build
       int n_lbox = distrib_search_by_rank_idx[i_shm+1] - beg;
 
       part_n_box[i_shm] = n_lbox;
-      // PDM_g_num_t *lbox_gnum    = &shm_box_gnum [  beg];
+      PDM_g_num_t *lbox_gnum    = &shm_box_gnum [  beg];
       double      *lbox_extents = &shm_box_extents[6*beg];
 
       res_box_g_num[i_shm] = &shm_box_gnum[beg];
@@ -1113,6 +1113,15 @@ PDM_doctree_build
                                         res_box_pts_gnum[i_shm],
                                         part_n_box[i_shm],
                                         "res_box_pts_gnum : ");
+      }
+
+      if (0) {
+        for (int ibox = 0; ibox < n_lbox; ibox++) {
+          log_trace("box %ld, ", lbox_gnum[ibox]);
+          PDM_log_trace_array_long(res_box_pts_gnum[i_shm] + _box_pts_idx[ibox],
+                                   _box_pts_idx[ibox+1] - _box_pts_idx[ibox],
+                                   "pts_g_num : ");
+        }
       }
     }
   } else {

@@ -571,7 +571,7 @@ _build_point_tree_seq_leaves
         }
       }
 
-      // int _is_leaf = (idx[ichild+1] - idx[ichild]) ==
+      // int _is_leaf = (idx[ichild+1] - idx[ichild]) <=
       //                 ptree->points_in_leaf_max;
       if (dbg_ptree) {//_is_leaf) {
         log_trace("child %d, id %d, loose extents = %f %f %f  %f %f %f\n",
@@ -581,17 +581,21 @@ _build_point_tree_seq_leaves
       }
 
       /* Tight extents (fit contained points) */
-      for (int j = 0; j < 3; j++) {
-        sub_extents[j  ] =  HUGE_VAL;
-        sub_extents[j+3] = -HUGE_VAL;
-      }
-      for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+      if (1) {
         for (int j = 0; j < 3; j++) {
-          double x = ptree->_pts_coord[3*ipt+j];
-          sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
-          sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+          sub_extents[j  ] =  HUGE_VAL;
+          sub_extents[j+3] = -HUGE_VAL;
+        }
+        for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+          for (int j = 0; j < 3; j++) {
+            double x = ptree->_pts_coord[3*ipt+j];
+            sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
+            sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+          }
         }
       }
+
+      /* Inflate slightly */
       for (int j = 0; j < 3; j++) {
         // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
         sub_extents[j  ] -= 0.5*_eps_default;
@@ -1560,7 +1564,7 @@ PDM_point_tree_seq_points_inside_boxes
       }
 
       for (int j = 0; j < nodes->n_points[0]; j++) {
-        _box_pts[_box_pts_idx[ibox+1]++] = nodes->range[0] + j;
+        _box_pts[_box_pts_idx[ibox+1]++] = ptree->new_to_old[nodes->range[0] + j];
       }
       continue;
     } /* End node_inside_box */
@@ -1959,8 +1963,8 @@ PDM_point_tree_make_shared
   memcpy(shm_ptree->shm_is_leaf[i_rank_in_shm],
          local_nodes->is_leaf,
          sizeof(int) * local_ptree->n_nodes);
-  PDM_log_trace_array_int(local_nodes->is_leaf, local_ptree->n_nodes, "local_is_leaf : ");
-  PDM_log_trace_array_int(shm_ptree->shm_is_leaf[i_rank_in_shm], local_ptree->n_nodes, "  shm_is_leaf : ");
+  // PDM_log_trace_array_int(local_nodes->is_leaf, local_ptree->n_nodes, "local_is_leaf : ");
+  // PDM_log_trace_array_int(shm_ptree->shm_is_leaf[i_rank_in_shm], local_ptree->n_nodes, "  shm_is_leaf : ");
   memcpy(shm_ptree->shm_children_id[i_rank_in_shm],
          local_nodes->children_id,
          sizeof(int) * local_ptree->n_nodes * n_children);
@@ -2287,7 +2291,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
               }
 
               for (int j = 0; j < n_points[child_id]; j++) {
-                _box_pts[_box_pts_idx[ibox+1]++] = range[2*child_id] + j;
+                _box_pts[_box_pts_idx[ibox+1]++] = new_to_old[range[2*child_id] + j];
               }
             }
 
@@ -2327,7 +2331,7 @@ PDM_point_tree_seq_write_nodes_shared
   // double *pts_coord   = shm_ptree->shm_pts_coord  [i_shm_rank];
   // int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
 
-  PDM_log_trace_array_int(shm_ptree->shm_is_leaf[i_shm_rank], n_nodes, " *shm_is_leaf : ");
+  // PDM_log_trace_array_int(shm_ptree->shm_is_leaf[i_shm_rank], n_nodes, " *shm_is_leaf : ");
 
   // double tol_visu = 1e-3;
   // double _ext[6];
