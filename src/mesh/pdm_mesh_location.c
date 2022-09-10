@@ -3931,8 +3931,8 @@ PDM_mesh_location_t        *ml
                                             &pts_g_num,
                                             &pts_coord);
 
-      PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
-      PDM_log_trace_array_long(select_box_g_num, n_select_boxes, "select_box_g_num : ");
+      // PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
+      // PDM_log_trace_array_long(select_box_g_num, n_select_boxes, "select_box_g_num : ");
 
       PDM_doctree_free(doct);
       free(init_location_box);
