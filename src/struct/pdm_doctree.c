@@ -207,7 +207,7 @@ PDM_doctree_create
     doct->coarse_points_in_leaf_max = 60;
 
     doct->local_depth_max          = 31;
-    doct->local_points_in_leaf_max = 1;
+    doct->local_points_in_leaf_max = 10;//1;
     doct->local_tolerance          = 1e-6;
   } else {
     abort();
@@ -692,7 +692,7 @@ PDM_doctree_build
    */
   PDM_g_num_t* equi_pts_init_location = NULL;
 
-  if(0 == 1) {
+  if(1 == 1) {
     char filename[999];
     sprintf(filename, "out_equi_pts_%i.vtk", i_rank);
     PDM_vtk_write_point_cloud(filename,
