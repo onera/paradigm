@@ -550,18 +550,9 @@ _build_point_tree_seq_leaves
       is_leaf = 0;
 
       // WARNING : works only for kdtree
-      // memcpy(sub_extents, extents, sizeof(double) * 6);
-      // if (ichild == 0) {
-      //   sub_extents[3+split_direction] = mid[0];
-      // }
-      // else {
-      //   sub_extents[split_direction]   = mid[0];
-      // }
-
-      // Tight extents (fit contained points)
-      for (int j = 0; j < 3; j++) {
-        sub_extents[j  ] =  HUGE_VAL;
-        sub_extents[j+3] = -HUGE_VAL;
+      memcpy(sub_extents, extents, sizeof(double) * 6);
+      if (ichild == 0) {
+        sub_extents[3+split_direction] = mid[0];
       }
       for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
         for (int j = 0; j < 3; j++) {
@@ -576,6 +567,34 @@ _build_point_tree_seq_leaves
         sub_extents[j+3] += 0.5*_eps_default;
         // }
       }
+
+      // Tight extents (fit contained points)
+      // for (int j = 0; j < 3; j++) {
+      //   sub_extents[j  ] =  HUGE_VAL;
+      //   sub_extents[j+3] = -HUGE_VAL;
+      // }
+      // else {
+      //   sub_extents[split_direction]   = mid[0];
+      // }
+
+      // Tight extents (fit contained points)
+      // for (int j = 0; j < 3; j++) {
+      //   sub_extents[j  ] =  HUGE_VAL;
+      //   sub_extents[j+3] = -HUGE_VAL;
+      // }
+      // for (int ipt = idx[ichild]; ipt < idx[ichild+1]; ipt++) {
+      //   for (int j = 0; j < 3; j++) {
+      //     double x = ptree->_pts_coord[3*ipt+j];
+      //     sub_extents[j  ] = PDM_MIN(sub_extents[j  ], x);
+      //     sub_extents[j+3] = PDM_MAX(sub_extents[j+3], x);
+      //   }
+      // }
+      // for (int j = 0; j < 3; j++) {
+      //   // if (sub_extents[j+3] < sub_extents[j] + _eps_default) {
+      //   sub_extents[j  ] -= 0.5*_eps_default;
+      //   sub_extents[j+3] += 0.5*_eps_default;
+      //   // }
+      // }
 
       if (dbg_ptree) {
         log_trace("child %d, id %d, sub_extents = %f %f %f  %f %f %f\n",
