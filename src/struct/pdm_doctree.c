@@ -207,7 +207,7 @@ PDM_doctree_create
     doct->coarse_points_in_leaf_max = 60;
 
     doct->local_depth_max          = 31;
-    doct->local_points_in_leaf_max = 10;//1;
+    doct->local_points_in_leaf_max = 10;
     doct->local_tolerance          = 1e-6;
   } else {
     abort();

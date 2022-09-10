@@ -2119,7 +2119,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
   }
 
    // const int n_children = PDM_point_tree_n_children_get(ptree);
-  int n_children;
+  int n_children = 2;
   if (shm_ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
     n_children = 2;
   }

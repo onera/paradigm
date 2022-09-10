@@ -227,6 +227,7 @@ main
   t1 = PDM_MPI_Wtime();
   PDM_point_tree_seq_build(ptree);
   t2 = PDM_MPI_Wtime();
+  double t_point_tree = t2 - t1;
   printf("PDM_point_tree_seq_build        : %12.5es\n", t2 - t1);
 
 
@@ -311,6 +312,7 @@ main
                           box_set,
                           PDM_BOX_TREE_ASYNC_LEVEL);
   t2 = PDM_MPI_Wtime();
+  double t_box_tree = t2 - t1;
   printf("PDM_box_tree_set_boxes          : %12.5es\n", t2 - t1);
   free(init_location_box);
 
@@ -339,6 +341,7 @@ main
                                   &box_pts_idx,
                                   &box_pts);
   t2 = PDM_MPI_Wtime();
+  double t_intersection = t2 - t1;
   printf("PDM_tree_intersection_point_box : %12.5es\n", t2 - t1);
   // PDM_log_trace_connectivity_int(box_pts_idx,
   //                                box_pts,
@@ -373,7 +376,7 @@ main
                                    &box_pts_g_num2,
                                    &box_pts_coord2);
   t2 = PDM_MPI_Wtime();
-
+  double t_old = t2 - t1;
   printf("PDM_box_tree_points_inside_boxes: %12.5es\n", t2 - t1);
 
   if (visu) {
@@ -394,9 +397,8 @@ main
   }
 
 
-
-
-
+  printf("Total intersection : %12.5es\n", t_point_tree + t_box_tree + t_intersection);
+  printf("Total old          : %12.5es\n", t_box_tree + t_old);
   /* Free */
   PDM_point_tree_seq_free(ptree);
   PDM_box_tree_destroy(&btree);
