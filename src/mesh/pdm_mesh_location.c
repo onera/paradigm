@@ -3892,8 +3892,8 @@ PDM_mesh_location_t        *ml
      }
     case PDM_MESH_LOCATION_DOCTREE: {
 
-      PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
-      // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
+      // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
+      PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
       PDM_doctree_t *doct = PDM_doctree_create(ml->comm,
                                                3,
                                                1,
@@ -3933,14 +3933,18 @@ PDM_mesh_location_t        *ml
                                    &select_box_g_num,
                                    &select_box_extents);
 
+      double t1 = PDM_MPI_Wtime();
       PDM_doctree_build(doct);
+      log_trace("PDM_doctree_build : %12.5e \n", PDM_MPI_Wtime()-t1);
 
+      t1 = PDM_MPI_Wtime();
       PDM_doctree_results_in_orig_frame_get(doct,
                                             n_select_boxes,
                                             select_box_g_num,
                                             &pts_idx,
                                             &pts_g_num,
                                             &pts_coord);
+      log_trace("PDM_doctree_results_in_orig_frame_get : %12.5e \n", PDM_MPI_Wtime()-t1);
 
       // PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
       // PDM_log_trace_array_long(select_box_g_num, n_select_boxes, "select_box_g_num : ");
