@@ -92,6 +92,14 @@ PDM_doctree_results_in_orig_frame_get
  double             **pts_coord
 );
 
+
+void
+PDM_doctree_dump_times
+(
+  PDM_doctree_t   *doct
+);
+
+
 #ifdef  __cplusplus
 }
 #endif

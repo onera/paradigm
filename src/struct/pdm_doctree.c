@@ -195,7 +195,7 @@ PDM_doctree_create
   doct->local_tree_kind = local_tree_kind;
 
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    doct->coarse_depth_max          = 5;
+    doct->coarse_depth_max          = 2;
     doct->coarse_points_in_leaf_max = 60;
 
     doct->local_depth_max          = 31;
@@ -203,7 +203,7 @@ PDM_doctree_create
     doct->local_tolerance          = 1e-6;
 
   } else if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    doct->coarse_depth_max          = 6;
+    doct->coarse_depth_max          = 3;
     doct->coarse_points_in_leaf_max = 60;
 
     doct->local_depth_max          = 31;
@@ -252,6 +252,14 @@ PDM_doctree_create
   //   doct->init_location_entity[i] = NULL;
   // }
 
+  doct->timer = PDM_timer_create ();
+  for (int i = 0; i < NTIMER_DOCTREE; i++) {
+    doct->times_elapsed[i] = 0.;
+    doct->times_cpu    [i] = 0.;
+    doct->times_cpu_u  [i] = 0.;
+    doct->times_cpu_s  [i] = 0.;
+  }
+
   return doct;
 }
 
@@ -265,6 +273,31 @@ PDM_doctree_build
   int n_rank, i_rank;
   PDM_MPI_Comm_rank (doct->comm, &i_rank);
   PDM_MPI_Comm_size (doct->comm, &n_rank);
+
+  /*
+   * Prepare all timer
+   */
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
+  PDM_MPI_Barrier (doct->comm);
+  doct->times_elapsed[BEGIN] = PDM_timer_elapsed (doct->timer);
+  doct->times_cpu    [BEGIN] = PDM_timer_cpu     (doct->timer);
+  doct->times_cpu_u  [BEGIN] = PDM_timer_cpu_user(doct->timer);
+  doct->times_cpu_s  [BEGIN] = PDM_timer_cpu_sys (doct->timer);
+
+  b_t_elapsed = doct->times_elapsed[BEGIN];
+  b_t_cpu     = doct->times_cpu    [BEGIN];
+  b_t_cpu_u   = doct->times_cpu_u  [BEGIN];
+  b_t_cpu_s   = doct->times_cpu_s  [BEGIN];
+  PDM_timer_resume(doct->timer);
 
   /*
    * Prepare graphe comm for hybrid MPI-MPI
@@ -288,16 +321,24 @@ PDM_doctree_build
 
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
-  int     n_depth_per_proc   = 0;
-  if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
-    n_depth_per_proc = 2;
-  } else if (doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_KDTREE){
-    n_depth_per_proc = 6; // 2^(depth)
-    // n_depth_per_proc = 1; // 2^(depth)
-    n_depth_per_proc = 3; // 2^(depth)
-  } else {
-    abort();
-  }
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[REDISTRIBUTE_PTS_HILBERT] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [REDISTRIBUTE_PTS_HILBERT] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [REDISTRIBUTE_PTS_HILBERT] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [REDISTRIBUTE_PTS_HILBERT] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
   /*
    * Step 2 : Build local coarse tree
@@ -308,7 +349,7 @@ PDM_doctree_build
 
     assert(doct->coarse_tree == NULL);
     doct->coarse_tree = PDM_point_tree_seq_create(doct->local_tree_kind,
-                                                  n_depth_per_proc,
+                                                  doct->coarse_depth_max,
                                                   doct->coarse_points_in_leaf_max,
                                                   doct->local_tolerance);
 
@@ -317,6 +358,11 @@ PDM_doctree_build
                                        blk_pts_coord);
 
     PDM_point_tree_seq_build(doct->coarse_tree);
+
+
+    /*
+     * Panic verbose
+     */
     if(0 == 1) {
       char filename[999];
       sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
@@ -346,11 +392,30 @@ PDM_doctree_build
 
   PDM_point_tree_seq_extract_nodes(doct->coarse_tree,
                                    0,
-                                   n_depth_per_proc,
+                                   doct->coarse_depth_max,
                                    &n_coarse_box,
                                    &coarse_box_id,
                                    &coarse_box_extents,
                                    &coarse_box_n_pts);
+
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[BUILD_COARSE_TREE_AND_EXTRACT] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [BUILD_COARSE_TREE_AND_EXTRACT] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [BUILD_COARSE_TREE_AND_EXTRACT] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [BUILD_COARSE_TREE_AND_EXTRACT] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
   /*
    * Equilibrate among nodes/numa - To reduce memory footprint we set up data in shared memory
@@ -404,7 +469,6 @@ PDM_doctree_build
   PDM_MPI_Neighbor_allgatherv(coarse_box_n_pts       , n_coarse_box, PDM_MPI_INT,
                               shared_coarse_box_n_pts, lrecv_count  , recv_shift, PDM_MPI_INT, doct->comm_dist_graph);
   PDM_MPI_Barrier(doct->comm_shared);
-
 
   /* Update */
   for(int i = 0; i < doct->n_degree_in; ++i) {
@@ -491,6 +555,25 @@ PDM_doctree_build
   } else {
     abort();
   }
+
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[BUILD_BBOX_COARSE_AND_SOLICITATE] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [BUILD_BBOX_COARSE_AND_SOLICITATE] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [BUILD_BBOX_COARSE_AND_SOLICITATE] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [BUILD_BBOX_COARSE_AND_SOLICITATE] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
   /*
    * Pour chaque shared box on connait le poids de la solitation
@@ -647,7 +730,6 @@ PDM_doctree_build
   free(tmp_equi_pts_coords);
   free(tmp_equi_n_pts);
 
-
   int equi_n_pts_tot = 0;
   for(int i = 0; i < dn_equi_tree; ++i) {
     equi_n_pts_tot += equi_n_pts[i];
@@ -739,6 +821,25 @@ PDM_doctree_build
   } else {
     abort();
   }
+
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[EQUILIBRATE_WITH_SOLICITATON] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [EQUILIBRATE_WITH_SOLICITATON] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [EQUILIBRATE_WITH_SOLICITATON] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [EQUILIBRATE_WITH_SOLICITATON] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
   // Preparation of send count and box_rank/box_rank_idx
   //
@@ -881,6 +982,25 @@ PDM_doctree_build
 
   PDM_part_to_block_free(ptb_equi_box);
 
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[UPDATE_SOLICITATION_SEND] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [UPDATE_SOLICITATION_SEND] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [UPDATE_SOLICITATION_SEND] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [UPDATE_SOLICITATION_SEND] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
+
   /*
    * Step 3 : All pts are redistribute to equilibrate solicitation
    *   We can now rebuild a finer tree to finalize solicitation
@@ -912,6 +1032,25 @@ PDM_doctree_build
   // free(equi_pts_gnum);
   free(equi_n_pts);
 
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[BUILD_LOCAL_TREE] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [BUILD_LOCAL_TREE] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [BUILD_LOCAL_TREE] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [BUILD_LOCAL_TREE] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
+
+
   /*
    * Setup shared
    */
@@ -931,9 +1070,24 @@ PDM_doctree_build
   PDM_point_tree_seq_free(doct->local_tree);
   doct->local_tree = NULL;
 
-  /*
-   * Make shared the equi pts_gnum
-   */
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[BUILD_SHARED_LOCAL_TREE] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [BUILD_SHARED_LOCAL_TREE] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [BUILD_SHARED_LOCAL_TREE] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [BUILD_SHARED_LOCAL_TREE] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
 
   /*
@@ -995,6 +1149,25 @@ PDM_doctree_build
 
   free(coarse_tree_box_to_box_idx);
   free(coarse_tree_box_to_box);
+
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[UPDATE_SOLICITATION_WAIT] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [UPDATE_SOLICITATION_WAIT] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [UPDATE_SOLICITATION_WAIT] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [UPDATE_SOLICITATION_WAIT] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
 
   /*
    * Finalize solicitation
@@ -1137,6 +1310,25 @@ PDM_doctree_build
   PDM_mpi_win_shared_unlock_all (wequi_pts_gnum);
   PDM_mpi_win_shared_free (wequi_pts_gnum);
 
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[LOCAL_SOLICITATE] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [LOCAL_SOLICITATE] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [LOCAL_SOLICITATE] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [LOCAL_SOLICITATE] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
+
+
   /*
    * Equilibrate unitary works
    */
@@ -1272,6 +1464,31 @@ PDM_doctree_build
   PDM_MPI_Comm_free(&doct->comm_dist_graph);
   PDM_MPI_Comm_free(&doct->comm_shared);
   free(doct->neighbor_in);
+
+
+  PDM_MPI_Barrier  (doct->comm);
+  PDM_timer_hang_on(doct->timer);
+  e_t_elapsed = PDM_timer_elapsed (doct->timer);
+  e_t_cpu     = PDM_timer_cpu     (doct->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(doct->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (doct->timer);
+
+  doct->times_elapsed[EQUILIBRATE_PB] += e_t_elapsed - b_t_elapsed;
+  doct->times_cpu    [EQUILIBRATE_PB] += e_t_cpu     - b_t_cpu;
+  doct->times_cpu_u  [EQUILIBRATE_PB] += e_t_cpu_u   - b_t_cpu_u;
+  doct->times_cpu_s  [EQUILIBRATE_PB] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(doct->timer);
+
+  doct->times_elapsed[END] = e_t_elapsed;
+  doct->times_cpu    [END] = e_t_cpu;
+  doct->times_cpu_u  [END] = e_t_cpu_u;
+  doct->times_cpu_s  [END] = e_t_cpu_s;
+
 }
 
 void
@@ -1415,8 +1632,63 @@ PDM_doctree_free
     abort();
   }
 
+  PDM_timer_free(doct->timer);
+
   free(doct);
 }
+
+
+
+void
+PDM_doctree_dump_times
+(
+  PDM_doctree_t   *doct
+)
+{
+  double t1 = doct->times_elapsed[END] - doct->times_elapsed[BEGIN];
+  double t2 = doct->times_cpu    [END] - doct->times_cpu    [BEGIN];
+
+  double t1max;
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, doct->comm);
+
+  double t2max;
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, doct->comm);
+
+  double t_elaps_max[NTIMER_DOCTREE];
+  PDM_MPI_Allreduce (doct->times_elapsed,
+                     t_elaps_max,
+                     NTIMER_DOCTREE,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     doct->comm);
+
+  double t_cpu_max[NTIMER_DOCTREE];
+  PDM_MPI_Allreduce (doct->times_cpu,
+                     t_cpu_max, NTIMER_DOCTREE,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     doct->comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank (doct->comm, &i_rank);
+
+  if (i_rank == 0) {
+    PDM_printf( "doctree timer : all    (elapsed and cpu)              : %12.5es %12.5es\n", t1max, t2max);
+    PDM_printf( "doctree timer : redistribute pts hilbert              : %12.5es %12.5es\n", t_elaps_max[REDISTRIBUTE_PTS_HILBERT], t_cpu_max[REDISTRIBUTE_PTS_HILBERT]);
+    PDM_printf( "doctree timer : build coarse tree                     : %12.5es %12.5es\n", t_elaps_max[BUILD_COARSE_TREE_AND_EXTRACT], t_cpu_max[BUILD_COARSE_TREE_AND_EXTRACT]);
+    PDM_printf( "doctree timer : build bbox coarse tree and solicitate : %12.5es %12.5es\n", t_elaps_max[BUILD_BBOX_COARSE_AND_SOLICITATE], t_cpu_max[BUILD_BBOX_COARSE_AND_SOLICITATE]);
+    PDM_printf( "doctree timer : equilibrate with solicitation         : %12.5es %12.5es\n", t_elaps_max[EQUILIBRATE_WITH_SOLICITATON], t_cpu_max[EQUILIBRATE_WITH_SOLICITATON]);
+    PDM_printf( "doctree timer : update solicitate send                : %12.5es %12.5es\n", t_elaps_max[UPDATE_SOLICITATION_SEND], t_cpu_max[UPDATE_SOLICITATION_SEND]);
+    PDM_printf( "doctree timer : build local tree                      : %12.5es %12.5es\n", t_elaps_max[BUILD_LOCAL_TREE], t_cpu_max[BUILD_LOCAL_TREE]);
+    PDM_printf( "doctree timer : build shared tree                     : %12.5es %12.5es\n", t_elaps_max[BUILD_SHARED_LOCAL_TREE], t_cpu_max[BUILD_SHARED_LOCAL_TREE]);
+    PDM_printf( "doctree timer : update solicitate wait                : %12.5es %12.5es\n", t_elaps_max[UPDATE_SOLICITATION_WAIT], t_cpu_max[UPDATE_SOLICITATION_WAIT]);
+    PDM_printf( "doctree timer : local solicitate                      : %12.5es %12.5es\n", t_elaps_max[LOCAL_SOLICITATE], t_cpu_max[LOCAL_SOLICITATE]);
+    PDM_printf( "doctree timer : equilibrate problem                   : %12.5es %12.5es\n", t_elaps_max[EQUILIBRATE_PB], t_cpu_max[EQUILIBRATE_PB]);
+  }
+
+}
+
+
 
 #ifdef __cplusplus
 }

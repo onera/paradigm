@@ -10,6 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_mpi.h"
+#include "pdm_timer.h"
 #include "pdm_point_tree_seq.h"
 #include "pdm_part_to_block.h"
 
@@ -27,6 +28,30 @@ extern "C" {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
+
+#define NTIMER_DOCTREE 12
+
+/**
+ * \enum _ol_timer_step_t
+ *
+ */
+
+typedef enum {
+
+  BEGIN                            = 0,
+  REDISTRIBUTE_PTS_HILBERT         = 1,
+  BUILD_COARSE_TREE_AND_EXTRACT    = 2,
+  BUILD_BBOX_COARSE_AND_SOLICITATE = 3,
+  EQUILIBRATE_WITH_SOLICITATON     = 4,
+  UPDATE_SOLICITATION_SEND         = 5,
+  BUILD_LOCAL_TREE                 = 6,
+  BUILD_SHARED_LOCAL_TREE          = 7,
+  UPDATE_SOLICITATION_WAIT         = 8,
+  LOCAL_SOLICITATE                 = 9,
+  EQUILIBRATE_PB                   = 10,
+  END                              = 11
+
+} _doctree_timer_step_t;
 
 /*============================================================================
  * Type definitions
@@ -57,7 +82,6 @@ struct _pdm_doctree_t {
 
   PDM_MPI_Comm               comm_shared;
 
-
   /* Cloud - Just reference */
   int          *n_point_cloud;
   PDM_g_num_t **pts_g_num;
@@ -78,6 +102,12 @@ struct _pdm_doctree_t {
   PDM_g_num_t               *block_pts_in_box_g_num;
   double                    *block_pts_in_box_coord;
 
+  /* Misc */
+  PDM_timer_t *timer; /*!< Timer */
+  double times_elapsed[NTIMER_DOCTREE]; /*!< Elapsed time */
+  double times_cpu    [NTIMER_DOCTREE]; /*!< CPU time */
+  double times_cpu_u  [NTIMER_DOCTREE]; /*!< User CPU time */
+  double times_cpu_s  [NTIMER_DOCTREE]; /*!< System CPU time */
 
 };
 
