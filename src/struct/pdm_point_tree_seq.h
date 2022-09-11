@@ -290,7 +290,7 @@ PDM_point_tree_seq_closest_point
 void
 PDM_point_tree_seq_points_inside_boxes
 (
-       PDM_point_tree_seq_t  *kdtree,
+       PDM_point_tree_seq_t  *ptree,
  const int                    n_box,
  const double                 box_extents[],
        int                  **box_pts_idx,
@@ -411,6 +411,18 @@ void PDM_point_tree_seq_write_nodes_shared
        PDM_point_tree_seq_shm_t *shm_ptree,
  const int                       i_shm_rank,
  const char                     *filename
+ );
+
+
+void
+PDM_point_tree_seq_closest_point_shared
+(
+       PDM_point_tree_seq_shm_t *shm_ptree,
+ const int                       i_shm_rank,
+ const int                       n_pts,
+       double                   *pts_coord,
+       int                      *closest_point_id,
+       double                   *closest_point_dist2
  );
 
 #ifdef  __cplusplus

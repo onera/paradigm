@@ -1632,7 +1632,7 @@ PDM_point_tree_seq_points_inside_boxes
         }
       } else { /* Internal nodes */
 
-        const int *_child_ids = nodes->children_id + 8*node_id;
+        const int *_child_ids = nodes->children_id + n_children*node_id;
         for (int i = 0; i < n_children; i++) {
           int child_id = _child_ids[i];
           if (child_id < 0) {
@@ -2419,4 +2419,166 @@ PDM_point_tree_seq_write_nodes_shared
   }
 
   fclose(f);
+}
+
+
+void
+PDM_point_tree_seq_closest_point_shared
+(
+       PDM_point_tree_seq_shm_t *shm_ptree,
+ const int                       i_shm_rank,
+ const int                       n_pts,
+       double                   *pts_coord,
+       int                      *closest_point_id,
+       double                   *closest_point_dist2
+ )
+{
+  // const int n_children = PDM_point_tree_n_children_get(ptree);
+  int n_children = 2;
+  if (shm_ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_KDTREE) {
+    n_children = 2;
+  }
+  else if (shm_ptree->tree_type == PDM_DOCTREE_LOCAL_TREE_OCTREE) {
+    n_children = 8;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Invalid tree_type %d\n", (int) shm_ptree->tree_type);
+  }
+
+  const int depth_max = 31;
+  // int     n_nodes     = shm_ptree->shm_n_nodes    [i_shm_rank];
+  int    *is_leaf     = shm_ptree->shm_is_leaf    [i_shm_rank];
+  int    *children_id = shm_ptree->shm_children_id[i_shm_rank];
+  int    *range       = shm_ptree->shm_range      [i_shm_rank];
+  int    *n_points    = shm_ptree->shm_n_points   [i_shm_rank];
+  double *extents     = shm_ptree->shm_extents    [i_shm_rank];
+  double *_pts_coord  = shm_ptree->shm_pts_coord  [i_shm_rank];
+  int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
+
+  int s_pt_stack = ((n_children - 1) * (depth_max - 1) + n_children);
+  int    *stack           = malloc(sizeof(int   ) * s_pt_stack);
+  int    *inbox_stack     = malloc(sizeof(int   ) * s_pt_stack);
+  double *min_dist2_stack = malloc(sizeof(double) * s_pt_stack);
+
+  int    sort_child[8];
+  double dist_child[8];
+  int    inbox_child[8];
+
+  const int dim = 3;
+
+  for (int i = 0; i < n_pts; i++) {
+
+    int pos_stack = 0;
+    const double *_pt = pts_coord + dim*i;
+
+    /* Init stack */
+    closest_point_id   [i] = -1;
+    closest_point_dist2[i] = HUGE_VAL;
+
+
+    double _min_dist2;
+    int inbox1 = _box_dist2_min(dim,
+                                &extents[0],
+                                _pt,
+                                &_min_dist2);
+
+    stack          [pos_stack] = 0;
+    inbox_stack    [pos_stack] = inbox1;
+    min_dist2_stack[pos_stack] = _min_dist2;
+    pos_stack++;
+
+    while (pos_stack > 0) {
+
+      pos_stack--;
+      int    node_id   = stack          [pos_stack];
+      double min_dist2 = min_dist2_stack[pos_stack];
+      int    inbox     = inbox_stack    [pos_stack];
+
+      if ((min_dist2 > closest_point_dist2[i]) || (inbox == 0)) {
+        continue;
+      }
+
+      if (is_leaf[node_id]) {
+        /* Leaf node */
+        for (int ipt = range[2*node_id]; ipt < range[2*node_id+1]; ipt++) {
+          double *_coords = _pts_coord + 3*ipt;
+
+          double point_dist2 = 0;
+          for (int j = 0; j < dim; j++) {
+            point_dist2 +=
+            (_coords[j] - _pt[j]) *
+            (_coords[j] - _pt[j]);
+          }
+
+          if (point_dist2 < closest_point_dist2[i]) {
+            closest_point_id   [i] = new_to_old[ipt];
+            closest_point_dist2[i] = point_dist2;
+          }
+        } // End of loop on current leaf's points
+      }
+
+      else {
+        /* Internal node */
+        /* Sort children */
+        const int *_child_ids = children_id + n_children*node_id;
+
+        for (int ichild = 0; ichild < n_children; ichild++) {
+          dist_child[ichild] = HUGE_VAL;
+        }
+
+        int n_selec = 0;
+        for (int ichild = 0; ichild < n_children; ichild++) {
+
+          int child_id = _child_ids[ichild];
+
+          if (child_id < 0) {
+            continue;
+          }
+
+          double child_min_dist2;
+          int child_inbox = _box_dist2_min(dim,
+                                           &extents[6*child_id],
+                                           _pt,
+                                           &child_min_dist2);
+
+          int i1 = 0;
+          for (i1 = n_selec;
+               (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+            dist_child [i1] = dist_child[i1-1];
+            sort_child [i1] = sort_child[i1-1];
+            inbox_child[i1] = inbox_child[i1-1];
+          }
+
+          sort_child [i1] = child_id;
+          dist_child [i1] = child_min_dist2;
+          inbox_child[i1] = child_inbox;
+
+          n_selec++;
+
+        } // End of loop on current node's children
+
+
+        /* Push selected children into the stack */
+        for (int j = 0; j < n_selec; j++) {
+          int j1 = n_selec - 1 - j;
+          int child_id = sort_child[j1];
+          if (child_id != -1) {
+            if ((dist_child[j1] < closest_point_dist2[i]) &&
+                (n_points[child_id] > 0)) {
+
+              min_dist2_stack[pos_stack] = dist_child[j1];
+              inbox_stack    [pos_stack] = inbox_child[j1];
+
+              stack[pos_stack++] = child_id; /* push root in th stack */
+            }
+          }
+        } // End of loop on selected children
+
+      }
+
+
+    } // End of while loop
+
+  } // End of loop on target points
 }
