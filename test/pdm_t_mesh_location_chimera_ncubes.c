@@ -72,6 +72,7 @@ _usage(int exit_code)
      "  -p      <level>  Number of points to locate.\n\n"
      "  -octree          Use octree-based method.\n\n"
      "  -dbbree          Use dbbtree-based method.\n\n"
+     "  -doctree         Use doctree-based method.\n\n"
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scotch       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
@@ -221,6 +222,9 @@ _read_args(int                          argc,
     }
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
+    }
+    else if (strcmp(argv[i], "-doctree") == 0) {
+      *loc_method = PDM_MESH_LOCATION_DOCTREE;
     }
     else if (strcmp(argv[i], "-no_uvw") == 0) {
       *disable_uvw = 1;

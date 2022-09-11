@@ -3892,20 +3892,31 @@ PDM_mesh_location_t        *ml
      }
     case PDM_MESH_LOCATION_DOCTREE: {
 
-      // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
-      PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
+      PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
+      // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
       PDM_doctree_t *doct = PDM_doctree_create(ml->comm,
                                                3,
                                                1,
                                                NULL, // global_extents
                                                local_tree_kind);
 
+      int *init_location_pts = NULL;
+      if(0) {
+        init_location_pts = malloc(3 * n_pts_pcloud * sizeof(int));
+        for(int i = 0; i < n_pts_pcloud; ++i) {
+          init_location_pts[3*i  ] = my_rank;
+          init_location_pts[3*i+1] = 0;
+          init_location_pts[3*i+2] = i;
+        }
+      }
+
       PDM_doctree_point_set(doct,
                             0,
                             n_pts_pcloud,
-                            NULL,
+                            init_location_pts,
                             pcloud_g_num,
                             pcloud_coord);
+
 
       int *init_location_box = malloc(3 * n_select_boxes * sizeof(int));
       for(int i = 0; i < n_select_boxes; ++i) {
@@ -3935,6 +3946,9 @@ PDM_mesh_location_t        *ml
       // PDM_log_trace_array_long(select_box_g_num, n_select_boxes, "select_box_g_num : ");
       PDM_doctree_dump_times(doct);
       PDM_doctree_free(doct);
+      if(init_location_pts != NULL) {
+        free(init_location_pts);
+      }
       free(init_location_box);
 
       break;

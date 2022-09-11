@@ -61,7 +61,9 @@ _redistribute_pts_geom
 (
  PDM_doctree_t        *doct,
  PDM_part_to_block_t **ptb_out,
- double              **dpts_coords_out
+ double              **dpts_coords_out,
+ int                 **dinit_location_pts_idx_out,
+ int                 **dinit_location_pts_out
 )
 {
   /*
@@ -79,7 +81,7 @@ _redistribute_pts_geom
   }
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
+                                                           PDM_PART_TO_BLOCK_POST_MERGE, // A voir avec merge mais attention au init_location
                                                            1.,
                                                            PDM_PART_GEOM_HILBERT,
                                                            doct->pts_coords,
@@ -131,10 +133,10 @@ _redistribute_pts_geom
     }
   }
 
+  int *blk_init_location_pts_idx = NULL;
+  int *blk_init_location_pts     = NULL;
   if(have_init_location == 1) {
     int *blk_init_location_pts_n = NULL;
-    int *blk_init_location_pts   = NULL;
-
     PDM_part_to_block_exch(ptb,
                            3 * sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -144,10 +146,8 @@ _redistribute_pts_geom
                            &blk_init_location_pts_n,
                  (void **) &blk_init_location_pts);
 
-
+    blk_init_location_pts_idx = PDM_array_new_idx_from_sizes_int(blk_init_location_pts_n, dn_pts);
     free(blk_init_location_pts_n);
-    free(blk_init_location_pts);
-
   }
 
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
@@ -157,6 +157,9 @@ _redistribute_pts_geom
 
   *ptb_out         = ptb;
   *dpts_coords_out = blk_pts_coord;
+
+  *dinit_location_pts_idx_out = blk_init_location_pts_idx;
+  *dinit_location_pts_out     = blk_init_location_pts;
 
 }
 
@@ -315,12 +318,19 @@ PDM_doctree_build
   /*
    * Redistribute all pts
    */
-  double              *blk_pts_coord = NULL;
-  PDM_part_to_block_t *ptb           = NULL;
-  _redistribute_pts_geom(doct, &ptb, &blk_pts_coord);
+  double              *blk_pts_coord          = NULL;
+  PDM_part_to_block_t *ptb                    = NULL;
+  int                 *dinit_location_pts_idx = NULL;
+  int                 *dinit_location_pts     = NULL;
+  _redistribute_pts_geom(doct, &ptb, &blk_pts_coord, &dinit_location_pts_idx, &dinit_location_pts);
 
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
+
+  int have_pts_init_location = 0;
+  if(dinit_location_pts != NULL) {
+    have_pts_init_location = 1;
+  }
 
   PDM_MPI_Barrier  (doct->comm);
   PDM_timer_hang_on(doct->timer);
@@ -683,9 +693,28 @@ PDM_doctree_build
   PDM_g_num_t* blk_impli_pts_gnum = PDM_part_to_block_block_gnum_get(ptb);
   assert(dn_blk == n_coarse_box);
 
-  double      *reorder_blk_coord_send = malloc(3 * n_pts_tot * sizeof(double     ));
-  PDM_g_num_t *reorder_blk_pts_gnum   = malloc(    n_pts_tot * sizeof(PDM_g_num_t));
-  int idx_write = 0;
+  double      *reorder_blk_coord_send     = malloc(3 * n_pts_tot * sizeof(double     ));
+  PDM_g_num_t *reorder_blk_pts_gnum       = malloc(    n_pts_tot * sizeof(PDM_g_num_t));
+  int         *reorder_init_location_n    = NULL;
+  int         *reorder_init_location      = NULL;
+  int         *coarse_box_init_location_n = NULL;
+  if(dinit_location_pts != NULL) {
+    reorder_init_location_n    = malloc(n_pts_tot * sizeof(int));
+    coarse_box_init_location_n = malloc(n_coarse_box * sizeof(int));
+    for(int i = 0; i < n_coarse_box; ++i) {
+      coarse_box_init_location_n[i] = 0;
+    }
+    // Suralloc
+    int n_tot_init_location = 0;
+    for(int i = 0; i < dn_pts; ++i) {
+      n_tot_init_location += dinit_location_pts_idx[i+1] - dinit_location_pts_idx[i];
+    }
+    reorder_init_location = malloc(3 * n_tot_init_location * sizeof(int));
+  }
+
+  int idx_write  = 0;
+  int idx_write2 = 0;
+  int idx_write3 = 0;
   for(int i = 0; i < n_coarse_box; ++i ) {
     int node_id = coarse_box_id[i];
 
@@ -710,8 +739,29 @@ PDM_doctree_build
 
       idx_write++;
     }
+
+    if(have_pts_init_location == 1) {
+      for(int i_pt = point_range[0]; i_pt < point_range[1]; ++i_pt) {
+        int i_old = new_to_old_pts[i_pt];
+        reorder_init_location_n[idx_write2] = dinit_location_pts_idx[i_old+1] - dinit_location_pts_idx[i_old];
+        coarse_box_init_location_n[i] += dinit_location_pts_idx[i_old+1] - dinit_location_pts_idx[i_old];
+        idx_write2++;
+
+        for(int k = dinit_location_pts_idx[i_old]; k < dinit_location_pts_idx[i_old+1]; k++) {
+          reorder_init_location[3*idx_write3  ] = dinit_location_pts[3*k  ];
+          reorder_init_location[3*idx_write3+1] = dinit_location_pts[3*k+1];
+          reorder_init_location[3*idx_write3+2] = dinit_location_pts[3*k+2];
+        }
+        idx_write3++;
+      }
+    }
   }
   // PDM_log_trace_array_long(reorder_blk_pts_gnum, n_pts_tot, "reorder_blk_pts_gnum : ");
+
+  if(have_pts_init_location) {
+    free(dinit_location_pts_idx);
+    free(dinit_location_pts);
+  }
 
   /*
    * Coordinates
@@ -772,16 +822,54 @@ PDM_doctree_build
   /*
    * Init location -> Attention si gnum de points dupliqué -> variable
    */
-  PDM_g_num_t* equi_pts_init_location = NULL;
+  int* equi_pts_init_location_idx = NULL;
+  int* equi_pts_init_location     = NULL;
+  if(have_pts_init_location == 1) {
+    int* equi_pts_init_location_n = malloc(equi_n_pts_tot * sizeof(int));
 
-  if(0 == 1) {
-    char filename[999];
-    sprintf(filename, "out_equi_pts_%i.vtk", i_rank);
-    PDM_vtk_write_point_cloud(filename,
-                              equi_n_pts_tot,
-                              equi_pts_coords,
-                              lequi_pts_gnum,
-                              NULL);
+    PDM_block_to_part_exch_in_place(btp,
+                                    sizeof(int),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    coarse_box_n_pts,
+                                    reorder_init_location_n,
+                                    &equi_n_pts,
+                          (void **) &equi_pts_init_location_n);
+
+    equi_pts_init_location_idx = PDM_array_new_idx_from_sizes_int(equi_pts_init_location_n, equi_n_pts_tot);
+
+    int recv_size = equi_pts_init_location_idx[equi_n_pts_tot];
+    equi_pts_init_location = malloc(3 * recv_size * sizeof(int));
+
+    int *tmp_n = malloc(dn_equi_tree * sizeof(int));
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(coarse_box_n_pts, n_coarse_box, "coarse_box_n_pts :");
+      PDM_log_trace_array_int(coarse_box_init_location_n, n_coarse_box, "coarse_box_init_location_n :");
+      int n_tot = 0;
+      for(int i = 0; i < n_coarse_box; ++i) {
+        n_tot += coarse_box_init_location_n[i];
+      }
+      PDM_log_trace_array_int(reorder_init_location, 3 * n_tot, "reorder_init_location : ");
+    }
+
+    PDM_block_to_part_exch_in_place(btp,
+                                    3 * sizeof(int),
+                                    PDM_STRIDE_VAR_INTERLACED,
+                                    coarse_box_init_location_n,
+                                    reorder_init_location,
+                                    &tmp_n,
+                          (void **) &equi_pts_init_location);
+
+    free(tmp_n);
+    free(reorder_init_location);
+    free(reorder_init_location_n);
+    free(coarse_box_init_location_n);
+
+    // A mettre dans la structure
+    free(equi_pts_init_location);
+    free(equi_pts_init_location_n);
+    free(equi_pts_init_location_idx);
+
   }
 
 
@@ -822,6 +910,18 @@ PDM_doctree_build
     abort();
   }
 
+  /*
+   * Panic vtk
+   */
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "out_equi_pts_%i.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              equi_n_pts_tot,
+                              equi_pts_coords,
+                              lequi_pts_gnum,
+                              NULL);
+  }
 
   PDM_MPI_Barrier  (doct->comm);
   PDM_timer_hang_on(doct->timer);
