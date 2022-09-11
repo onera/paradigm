@@ -29,7 +29,7 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-#define NTIMER_DOCTREE 12
+#define NTIMER_DOCTREE 14
 
 /**
  * \enum _ol_timer_step_t
@@ -38,18 +38,20 @@ extern "C" {
 
 typedef enum {
 
-  BEGIN                            = 0,
-  REDISTRIBUTE_PTS_HILBERT         = 1,
-  BUILD_COARSE_TREE_AND_EXTRACT    = 2,
-  BUILD_BBOX_COARSE_AND_SOLICITATE = 3,
-  EQUILIBRATE_WITH_SOLICITATON     = 4,
-  UPDATE_SOLICITATION_SEND         = 5,
-  BUILD_LOCAL_TREE                 = 6,
-  BUILD_SHARED_LOCAL_TREE          = 7,
-  UPDATE_SOLICITATION_WAIT         = 8,
-  LOCAL_SOLICITATE                 = 9,
-  EQUILIBRATE_PB                   = 10,
-  END                              = 11
+  BEGIN                                  = 0,
+  REDISTRIBUTE_PTS_HILBERT               = 1,
+  BUILD_COARSE_TREE_AND_EXTRACT          = 2,
+  BUILD_BBOX_COARSE                      = 3,
+  BBOX_COARSE_SOLICITATE                 = 4,
+  EQUILIBRATE_WITH_SOLICITATON           = 5,
+  EQUILIBRATE_WITH_SOLICITATON_TRANSFERT = 6,
+  UPDATE_SOLICITATION_SEND               = 7,
+  BUILD_LOCAL_TREE                       = 8,
+  BUILD_SHARED_LOCAL_TREE                = 9,
+  UPDATE_SOLICITATION_WAIT               = 10,
+  LOCAL_SOLICITATE                       = 11,
+  EQUILIBRATE_PB                         = 12,
+  END                                    = 13
 
 } _doctree_timer_step_t;
 
