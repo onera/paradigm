@@ -257,6 +257,7 @@ _strip_cloud
   double *char_length = malloc (sizeof(double) * n_pts);
 
   double _char_length = (xmax-xmin)/n_vtx_seg;
+  srand(i_rank+1); // Pas independant du parallèlisme mais pas de point double ...
 
   int idx  = 0;
   int idx2 = 0;
