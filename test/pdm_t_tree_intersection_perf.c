@@ -295,7 +295,7 @@ main
                                               comm);
 
   int   max_boxes_leaf = 30;
-  int   max_tree_depth = 10.;
+  int   max_tree_depth = 10;
   float max_box_ratio  = 30;
 
   PDM_box_tree_t *btree = PDM_box_tree_create (max_tree_depth,

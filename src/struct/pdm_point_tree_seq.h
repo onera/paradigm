@@ -121,6 +121,15 @@ PDM_point_tree_seq_build
 );
 
 
+void
+PDM_point_tree_seq_build_from_boxes
+(
+       PDM_point_tree_seq_t *ptree,
+ const int                   n_box,
+       double               *box_extents
+);
+
+
 /**
  *
  * \brief Write point_tree nodes in a VTK file
@@ -423,6 +432,16 @@ PDM_point_tree_seq_closest_point_shared
        double                   *pts_coord,
        int                      *closest_point_id,
        double                   *closest_point_dist2
+ );
+
+void
+PDM_tree_intersection_point_box2
+(
+ PDM_point_tree_seq_t  *btree,
+ PDM_point_tree_seq_t  *ptree,
+ double                *box_extents,
+ int                  **box_pts_idx,
+ int                  **box_pts
  );
 
 #ifdef  __cplusplus

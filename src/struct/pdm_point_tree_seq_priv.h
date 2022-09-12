@@ -70,6 +70,10 @@ struct _pdm_point_tree_seq_t{
 
   _l_nodes_t    *nodes;
 
+  int n_leaf;
+  int n_leaf_max;
+  int *leaf_ids;
+
 };
 
 

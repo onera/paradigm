@@ -215,4 +215,6 @@ test_c_create (pdm_t_fetch_back_mesh 1)
 test_c_create (pdm_t_tree_intersection 1)
 test_c_create (pdm_t_tree_intersection_perf 1)
 
+test_c_create (pdm_t_simultaneous_trees 1)
+
 add_subdirectory(tutorial)
