@@ -294,13 +294,13 @@ main
                                               init_location_box,
                                               comm);
 
-  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
-  int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
-  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+  int   max_boxes_leaf = 30;
+  int   max_tree_depth = 10.;
+  float max_box_ratio  = 30;
 
-  PDM_box_tree_t *btree = PDM_box_tree_create (max_tree_depth_shared,
-                                               max_boxes_leaf_shared,
-                                               max_box_ratio_shared);
+  PDM_box_tree_t *btree = PDM_box_tree_create (max_tree_depth,
+                                               max_boxes_leaf,
+                                               max_box_ratio);
 
   t1 = PDM_MPI_Wtime();
   PDM_box_tree_set_boxes (btree,
