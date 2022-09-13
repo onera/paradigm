@@ -4156,7 +4156,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   int ncall=0;
   int n_boxes =0;
 
-  double t1 = PDM_MPI_Wtime();
   for (int k = 0; k < boxesB->local_boxes->n_boxes; k++) {
     ncall = 0;
     n_boxes = 0;
@@ -4172,9 +4171,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   // log_trace("n_boxes =  %i \n", n_boxes);
 
   }
-  log_trace("ncall   =  %i \n", ncall);
-  log_trace("n_boxes =  %i \n", n_boxes);
-  log_trace("count = %12.5e \n", PDM_MPI_Wtime()-t1);
 
   /* Build index from counts */
 
@@ -4189,7 +4185,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 
   /* Build list */
 
-  t1 = PDM_MPI_Wtime();
   for (int k = 0; k < boxesB->local_boxes->n_boxes; k++) {
     _get_boxes_intersections(bt,
                              boxesB,
@@ -4199,12 +4194,9 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                              _index,
                              _l_num);
   }
-  log_trace("get = %12.5e \n", PDM_MPI_Wtime()-t1);
-
 
   /* Remove duplicate boxes */
 
-  t1 = PDM_MPI_Wtime();
   int idx=0;
   for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
     counter[i] = 0;
@@ -4232,7 +4224,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 
   free(counter);
 
-  log_trace("sort = %12.5e \n", PDM_MPI_Wtime()-t1);
   /* Return pointers */
 
   *box_index = _index;

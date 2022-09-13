@@ -1552,6 +1552,16 @@ PDM_point_tree_seq_free
       free(ptree->old_to_new);
     }
 
+    if(ptree->leaf_box_ids != NULL) {
+      free(ptree->leaf_box_ids);
+    }
+    if(ptree->leaf_box_idx != NULL) {
+      free(ptree->leaf_box_idx);
+    }
+    if(ptree->leaf_ids != NULL) {
+      free(ptree->leaf_ids);
+    }
+
     _l_nodes_free(ptree);
 
     free(ptree);
