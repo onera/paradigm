@@ -6709,6 +6709,8 @@ PDM_mesh_location_compute_optim
       } // End of loop on parts
     } // End of loop on blocks
 
+    // Cree 
+
     /*
      *  Generate a new global numbering for selected boxes
      *  --------------------------------------------------
@@ -6723,7 +6725,7 @@ PDM_mesh_location_compute_optim
     PDM_gnum_set_from_parents (gen_gnum_boxes,
                                0,
                                n_select_boxes,
-                               select_box_parent_g_num);
+                               select_box_parent_g_num); 
 
     PDM_gnum_compute (gen_gnum_boxes);
 
@@ -6766,6 +6768,19 @@ PDM_mesh_location_compute_optim
   b_t_cpu_s   = e_t_cpu_s;
   PDM_timer_resume(ml->timer);
 
+  //
+  // PDM_abstract_distrib_create sur les elements selectionnes
+
+  // PDM_abstract_distrib_create sur les points selectionnes par cloud
+  //            - ajout des coordonnees en track
+ 
+  // PDM_par_to_block_geom sur les points
+
+  // PDM_abstract_distrib_redistribute_start vs part_to_block_iexchange
+
+  // Recouvert par l'etape suivante
+ 
+
   /*
    *  Store cell vertex connectivity
    *  ------------------------------
@@ -6790,6 +6805,8 @@ PDM_mesh_location_compute_optim
   b_t_cpu_u   = e_t_cpu_u;
   b_t_cpu_s   = e_t_cpu_s;
   PDM_timer_resume(ml->timer);
+
+  // PDM_abstract_distrib_redistribute_wait vs part_to_block_iexchange_wait
 
   /*
    *  Location : search candidates
@@ -6826,6 +6843,8 @@ PDM_mesh_location_compute_optim
     }
 
     dbbt = PDM_dbbtree_create (ml->comm, dim, g_extents);
+
+    // PDM_dbbtree_boxes_set en n_part + plus tard tarnsformer le box_set en abstract distrib
 
     box_set = PDM_dbbtree_boxes_set (dbbt,
                                      1,
@@ -6891,6 +6910,12 @@ PDM_mesh_location_compute_optim
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       n_pts_pcloud += n_select_pts[icloud][ipart];
     }
+
+// --------------------------------------------------------------------------------------
+// -- A supprimer ca en blocs donc une part
+//    Remplacer le remplissage de pcloud_g_num pcloud_coord par le get abstract_distrib sur les points   
+// --------------------------------------------------------------------------------------    
+
     pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
     pcloud_coord = malloc (sizeof(double)      * n_pts_pcloud * dim);
     int idx = 0;
@@ -6938,6 +6963,10 @@ PDM_mesh_location_compute_optim
       }
     }
 
+// --------------------------------------------------------------------------------------    
+// -- Fin - a supprimer ca en blocs donc une part
+// --------------------------------------------------------------------------------------    
+
     /*
      * Get points inside bounding boxes of elements
      */
@@ -6962,7 +6991,7 @@ PDM_mesh_location_compute_optim
       PDM_para_octree_point_cloud_set (octree,
                                        0,
                                        n_pts_pcloud,
-                                       pcloud_coord,
+                                       pcloud_coord,   
                                        pcloud_g_num);
 
       /* Build parallel octree */
@@ -6989,7 +7018,7 @@ PDM_mesh_location_compute_optim
       if(use_shared_octree == 0) {
         PDM_para_octree_points_inside_boxes (octree,
                                              n_select_boxes,
-                                             select_box_extents,
+                                             select_box_extents, // Attention faire une distribution part_to_bloc_geom dans le cas octree
                                              select_box_g_num,
                                              &pts_idx,
                                              &pts_g_num,
@@ -6997,12 +7026,16 @@ PDM_mesh_location_compute_optim
       } else {
        PDM_para_octree_points_inside_boxes_shared (octree,
                                                    n_select_boxes,
-                                                   select_box_extents,
+                                                   select_box_extents, // Attention faire une distribution part_to_bloc_geom dans le cas octree
                                                    select_box_g_num,
                                                    &pts_idx,
                                                    &pts_g_num,
                                                    &pts_coord);
       }
+
+
+      //
+
       if (1) {
         end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
       }
@@ -7025,7 +7058,7 @@ PDM_mesh_location_compute_optim
                                          pcloud_g_num,
                                          pcloud_coord,
                                          n_select_boxes,
-                                         select_box_g_num,
+                                         select_box_g_num, // Attention faire une distribution part_to_bloc_geom dans le cas octree
                                          &pts_idx,
                                          &pts_g_num,
                                          &pts_coord,
@@ -7037,7 +7070,7 @@ PDM_mesh_location_compute_optim
                                                pcloud_g_num,
                                                pcloud_coord,
                                                n_select_boxes,
-                                               select_box_g_num,
+                                               select_box_g_num, // Attention faire une distribution part_to_bloc_geom dans le cas octree
                                                &pts_idx,
                                                &pts_g_num,
                                                &pts_coord,
@@ -7054,6 +7087,25 @@ PDM_mesh_location_compute_optim
 
     }
     free (pcloud_coord);
+
+
+    //
+    // block_to_block pondéré pour réquilibrage charge sur les boites -> Def de la nouvelle frame des elements
+
+    //
+    // tri des points pour eleminer les points multiples -> Def de la nouvelle frame des points  
+
+    //
+    // PDM_abstract_redistribute pour les points et les elements
+
+    //
+    // PDM_abstract_distrib_from_origin sur les types d'element pour les ranges + tri local
+
+    //
+    // PDM_abstract_distrib_permutation_locale a partir du resultat du tri 
+
+    //
+    // PDM_abstract_distrib_from_origin pour recuperer les connectivite et coordonnees des noeuds 
 
     if (dbg_enabled) {
       printf("n_select_boxes = %i \n", n_select_boxes);
@@ -7106,6 +7158,9 @@ PDM_mesh_location_compute_optim
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+
+
+/// A supprimer : deja fait
 
     /*
      * 2nd extraction: Remove elements that cannot contain any target point
@@ -7449,6 +7504,10 @@ PDM_mesh_location_compute_optim
       }
     }
 
+/// --------------------------------------------------------------------------------------------------
+/// Fin A supprimer : deja fait
+/// --------------------------------------------------------------------------------------------------
+
     double *distance        = NULL;
     double *projected_coord = NULL;
     int    *weights_idx     = NULL;
@@ -7533,6 +7592,15 @@ PDM_mesh_location_compute_optim
     /*
      *   1) Part-to-block
      */
+
+//
+// part_to_block (partiel) sur les points en passant distance et element local
+// choix du plus proche 
+// renvoi du num dupoint a l'element selectionne -1 sinon
+// tassage du tableau en blocs d'elements (supprimer les -1 et donnees associees)
+// pdm_abstract_distrib_to origin pour envoyer les resultats aux points
+// pdm_abstract_distrib_to origin pour envoyer les resultats aux elements
+
     PDM_g_num_t *block_parent_distrib_idx =
       PDM_compute_uniform_entity_distribution_from_partition (ml->comm,
                                                               pcloud->n_part,
