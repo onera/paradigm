@@ -26,6 +26,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_unique.h"
+#include "pdm_hilbert.h"
 
 
 /*============================================================================
@@ -205,6 +206,7 @@ main
   PDM_MPI_Comm_size(comm, &n_rank);
 
   PDM_doctree_local_tree_t  tree_type = PDM_DOCTREE_LOCAL_TREE_OCTREE;
+  // PDM_doctree_local_tree_t  tree_type = PDM_DOCTREE_LOCAL_TREE_KDTREE;
 
   double radius = 10.;
 
@@ -257,6 +259,13 @@ main
     }
   }
 
+  /* Build "point-box"_tree */
+  double *blk_box_center = malloc(sizeof(double) * 3 * n_box);
+  for (int i = 0; i < n_box; i++) {
+    for (int j = 0; j < 3; j++) {
+      blk_box_center[3*i+j] = 0.5*(box_extents[6*i+j] + box_extents[6*i+j+3]);
+    }
+  }
 
 
   /* Random point cloud */
@@ -275,6 +284,59 @@ main
                                &pts_g_num);
 
 
+  double t1, t2, t3;
+
+  int reorder = 1;
+  if(reorder == 1) {
+    PDM_MPI_Barrier(comm);
+    t1 = PDM_MPI_Wtime();
+    int dim = 3;
+    double extents[2*dim]; /** DIM x 2**/
+    PDM_hilbert_code_t *hilbert_box_codes     = (PDM_hilbert_code_t *) malloc (n_box * sizeof(PDM_hilbert_code_t));
+    int *box_order     = (int *) malloc (n_box * sizeof(int));
+    PDM_hilbert_get_coord_extents_par(dim, n_pts, pts_coord, extents, comm);
+    // PDM_hilbert_get_coord_extents_par(dim, n_box, blk_box_center, extents, comm);
+    PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_box, blk_box_center, hilbert_box_codes);
+    PDM_hilbert_local_order(n_box, hilbert_box_codes, box_order);
+    PDM_order_array(n_box, 6 * sizeof(double), box_order, box_extents);
+    PDM_order_array(n_box, sizeof(PDM_g_num_t), box_order, box_g_num);
+
+    for(int i = 0; i < n_box; ++i) {
+      box_g_num[i] = i + 1;
+    }
+
+    t2 = PDM_MPI_Wtime();
+    free(hilbert_box_codes);
+    free(box_order);
+
+    printf("Hilbert box times : %12.5e \n", t2 - t1);
+
+    PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (n_pts * sizeof(PDM_hilbert_code_t));
+    int *order     = (int *) malloc (n_pts * sizeof(int));
+    int *weight     = (int *) malloc (n_pts * sizeof(int));
+    PDM_hilbert_get_coord_extents_par(dim, n_pts, pts_coord, extents, comm);
+    PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_pts, pts_coord, hilbert_codes);
+    PDM_hilbert_local_order(n_pts, hilbert_codes, order);
+    PDM_order_array(n_pts, 3 * sizeof(double)     , order, pts_coord);
+    PDM_order_array(n_pts,     sizeof(PDM_g_num_t), order, pts_g_num);
+    t2 = PDM_MPI_Wtime();
+    printf("Hilbert times : %12.5e \n", t2 - t1);
+    free(hilbert_codes);
+    free(order);
+
+    for(int i = 0; i < n_pts; ++i) {
+      pts_g_num[i] = i + 1;
+      weight   [i] = 1;
+    }
+
+    // int n_part = n_pts/30;
+    // PDM_hilbert_code_t *rank_index = malloc(n_part * sizeof(PDM_hilbert_code_t));
+    // PDM_hilbert_build_rank_index(dim, n_part, n_pts, hilbert_codes, weight, NULL, rank_index, comm);
+
+    // PDM_log_trace_array_double(rank_index, n_part, "rank_index :: ");
+
+  }
+
 
   int depth_max          = 31;
   // int points_in_leaf_max = 10;
@@ -289,7 +351,6 @@ main
                                      pts_coord);
 
 
-  double t1, t2, t3;
 
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
@@ -298,45 +359,126 @@ main
                                       box_extents);
   t2 = PDM_MPI_Wtime();
 
-  int *box_pts_idx = malloc(sizeof(int) * (n_box + 1));
-  box_pts_idx[0] = 0;
-  int s_box_pts = 4*n_box;
-  int *box_pts = malloc(sizeof(int) * s_box_pts);
+  // PDM_log_trace_connectivity_int(ptree->leaf_box_idx, ptree->leaf_box_ids, ptree->n_leaf, "leaf_box :");
 
-  for (int ibox = 0; ibox < n_box; ibox++) {
-    box_pts_idx[ibox+1] = box_pts_idx[ibox];
+  // int *box_pts_idx = malloc(sizeof(int) * (n_box + 1));
+  // box_pts_idx[0] = 0;
+  // int s_box_pts = 4*n_box;
+  // int *box_pts = malloc(sizeof(int) * s_box_pts);
 
-    double *be = box_extents + 6*ibox;
+  // for (int ibox = 0; ibox < n_box; ibox++) {
+  //   box_pts_idx[ibox+1] = box_pts_idx[ibox];
 
-    for (int ileaf = 0; ileaf < ptree->n_leaf; ileaf++) {
-      int leaf_id = ptree->leaf_ids[ileaf];
+  //   double *be = box_extents + 6*ibox;
 
-      double *le = ptree->nodes->extents + 6*leaf_id;
+  //   for (int ileaf = 0; ileaf < ptree->n_leaf; ileaf++) {
+  //     int leaf_id = ptree->leaf_ids[ileaf];
 
-      if (_intersect_box_box(3, be, le)) {
+  //     double *le = ptree->nodes->extents + 6*leaf_id;
 
-        for (int ipt = ptree->nodes->range[2*leaf_id]; ipt < ptree->nodes->range[2*leaf_id+1]; ipt++) {
+  //     if (_intersect_box_box(3, be, le)) {
 
-          int point_id = ptree->new_to_old[ipt];
+  //       for (int ipt = ptree->nodes->range[2*leaf_id]; ipt < ptree->nodes->range[2*leaf_id+1]; ipt++) {
 
-          double *pc = ptree->_pts_coord + 3*ipt;
+  //         int point_id = ptree->new_to_old[ipt];
 
-          if (_point_inside_box(3, be, pc)) {
+  //         double *pc = ptree->_pts_coord + 3*ipt;
 
-            if (box_pts_idx[ibox+1] >= s_box_pts) {
-              s_box_pts *= 2;
-              box_pts = realloc(box_pts, sizeof(int) * s_box_pts);
-            }
-            box_pts[box_pts_idx[ibox+1]++] = point_id;
+  //         if (_point_inside_box(3, be, pc)) {
 
-          }
+  //           if (box_pts_idx[ibox+1] >= s_box_pts) {
+  //             s_box_pts *= 2;
+  //             box_pts = realloc(box_pts, sizeof(int) * s_box_pts);
+  //           }
+  //           box_pts[box_pts_idx[ibox+1]++] = point_id;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
+  // Tentative Bruno
+  // int *box_pts_idx = malloc(sizeof(int) * (n_box + 1));
+  // box_pts_idx[0] = 0;
+  // int s_box_pts = 4*n_box;
+  // int *box_pts = malloc(sizeof(int) * s_box_pts);
+
+  // for (int ileaf = 0; ileaf < ptree->n_leaf; ileaf++) {
+  //   int leaf_id = ptree->leaf_ids[ileaf];
+  //   double *le = ptree->nodes->extents + 6*leaf_id;
+  //   for(int idx_box = ptree->leaf_box_idx[ileaf]; idx_box < ptree->leaf_box_idx[ileaf+1]; ++idx_box) {
+  //     int boxe_id = ptree->leaf_box_ids[idx_box];
+  //     double *be = box_extents + 6*boxe_id;
+  //     if (_intersect_box_box(3, be, le)) {
+  //     }
+  //   }
+  // }
+
+  printf("new : build %12.5es, sollicitate %12.5es, total %12.5es\n", t2-t1, t3-t2, t3-t1);
+
+  // Plus simple dans l'autre sens nan ?
+  int *pts_box_idx = malloc(sizeof(int) * (n_pts + 1));
+  int *pts_box     = malloc(sizeof(int) * (8 * n_pts + 1));
+  for(int i = 0; i < n_pts+1; ++i)  {
+    pts_box_idx[i] = 0;
+  }
+
+  int idx_write_pts = 0;
+  for (int ileaf = 0; ileaf < ptree->n_leaf; ileaf++) {
+    int leaf_id = ptree->leaf_ids[ileaf];
+    for (int ipt = ptree->nodes->range[2*leaf_id]; ipt < ptree->nodes->range[2*leaf_id+1]; ipt++) {
+      int point_id = ptree->new_to_old[ipt];
+      double *pc = ptree->_pts_coord + 3*ipt;
+
+      /* Brute force because already pre-conditionned */
+      for(int idx_box = ptree->leaf_box_idx[ileaf]; idx_box < ptree->leaf_box_idx[ileaf+1]; ++idx_box) {
+        int boxe_id = ptree->leaf_box_ids[idx_box];
+        double *be = box_extents + 6*boxe_id;
+
+        if (_point_inside_box(3, be, pc)) {
+          pts_box[idx_write_pts++] = boxe_id;
+          pts_box_idx[ipt+1]++;
         }
-
       }
-
     }
   }
+
+
+  // Accumulate
+  for(int i = 0; i < n_pts; ++i)  {
+    pts_box_idx[i+1] += pts_box_idx[i];
+  }
+
+  // PDM_log_trace_connectivity_int(pts_box_idx, pts_box, n_pts, "pts_box :: ");
+
+  // Revert
+  int *box_pts_idx = malloc(sizeof(int) * (n_box + 1));
+  int *box_pts_n   = malloc(sizeof(int) * (n_box + 1));
+  for(int i = 0; i < n_box; ++i)  {
+    box_pts_n[i] = 0;
+  }
+
+  for(int i = 0; i < pts_box_idx[n_pts]; ++i){
+    box_pts_n[pts_box[i]]++;
+  }
+
+  box_pts_idx[0] = 0;
+  for(int i = 0; i < n_box; ++i)  {
+    box_pts_idx[i+1] = box_pts_idx[i] + box_pts_n[i];
+    box_pts_n[i] = 0;
+  }
+  // PDM_log_trace_array_int(box_pts_idx, n_box, "box_pts_idx : ");
+  // Fill
+  int *box_pts   = malloc(sizeof(int) * (box_pts_idx[n_box]));
+  for(int ipt = 0; ipt < n_pts; ++ipt) {
+    for(int idx_box = pts_box_idx[ipt]; idx_box < pts_box_idx[ipt+1]; ++idx_box) {
+      int box_id = pts_box[idx_box];
+      int idx_write = box_pts_idx[box_id] + box_pts_n[box_id]++;
+      // printf("idx_write = %i \n", idx_write);
+      box_pts[idx_write] = ptree->new_to_old[ipt];
+    }
+  }
+
   t3 = PDM_MPI_Wtime();
   printf("new : build %12.5es, sollicitate %12.5es, total %12.5es\n", t2-t1, t3-t2, t3-t1);
 
@@ -344,10 +486,6 @@ main
                                  box_pts,
                                  n_box,
                                  "box_pts : ");
-
-
-
-
 
 
   PDM_point_tree_seq_t *ptree2 = PDM_point_tree_seq_create(tree_type,

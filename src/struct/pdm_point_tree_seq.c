@@ -731,7 +731,7 @@ _build_point_tree_seq_leaves_from_boxes
   int octant_mask[3] = {4, 2, 1}; /* pow(2, 2), pow(2, 1), pow(2,0) */
 
   int is_leaf = 1;
-  if (depth < ptree->depth_max && _n_points > ptree->points_in_leaf_max) {
+  if (depth < ptree->depth_max && _n_points > ptree->points_in_leaf_max && curr_n_box > ptree->points_in_leaf_max) {
 
     /* Choose split direction */
     double max_range = -1.;
@@ -1001,7 +1001,27 @@ _build_point_tree_seq_leaves_from_boxes
       }
 
       ptree->leaf_ids = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf_max);
+      // ptree->box_ids  = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf_max);
+      ptree->leaf_box_idx  = realloc(ptree->leaf_box_idx, sizeof(int) * (ptree->n_leaf_max+1));
     }
+
+    if(ptree->n_leaf_box_max + curr_n_box >= ptree->n_leaf_box_max) {
+      if (ptree->n_leaf_box_max == 0) {
+        ptree->n_leaf_box_max = 8;
+      }
+      else {
+        ptree->n_leaf_box_max *= 2;
+      }
+      ptree->n_leaf_box_max = PDM_MAX(ptree->n_leaf_box_max, ptree->leaf_box_idx[ptree->n_leaf] + curr_n_box);
+
+      ptree->leaf_box_ids  = realloc(ptree->leaf_box_ids, sizeof(int) * ptree->n_leaf_box_max);
+    }
+
+    ptree->leaf_box_idx[ptree->n_leaf+1] = ptree->leaf_box_idx[ptree->n_leaf];
+    for(int i = 0; i < curr_n_box; ++i) {
+      ptree->leaf_box_ids[ptree->leaf_box_idx[ptree->n_leaf+1]++] = curr_box_ids[i];
+    }
+
     // log_trace("leaf #%d: node id %d\n", ptree->n_leaf, _n_nodes);
     ptree->leaf_ids[ptree->n_leaf++] = _n_nodes;
   }
@@ -1252,7 +1272,8 @@ _build_point_tree_from_boxes
     }
   }
 
-
+  ptree->leaf_box_idx = malloc(2 * sizeof(int));
+  ptree->leaf_box_idx[0] = 0;
 
   if (dbg_ptree) {
     log_trace(">> _build_point_tree_seq_leaves\n");
@@ -1495,7 +1516,10 @@ PDM_point_tree_seq_create
 
   ptree->n_leaf = 0;
   ptree->n_leaf_max = 0;
+  ptree->n_leaf_box_max = 0;
   ptree->leaf_ids = NULL;
+  ptree->leaf_box_idx = NULL;
+  ptree->leaf_box_ids = NULL;
 
   return ptree;
 }
