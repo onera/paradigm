@@ -1521,14 +1521,6 @@ PDM_part_domain_interface_as_graph
    * Generate table to give from interface number the composed one
    *   - We need the g_id of new interface and the associate composition
    */
-  // PDM_gen_gnum_t* gen_gnum_interf = PDM_gnum_create(3, 1, PDM_FALSE, 1.e-6, dom_intrf->comm, PDM_OWNERSHIP_USER);
-
-  // PDM_gnum_set_from_parents(gen_gnum_interf, 0, i_composed_interface, composed_key);
-  // PDM_gnum_compute(gen_gnum_interf);
-
-  // PDM_g_num_t* composed_id_gnum = PDM_gnum_get(gen_gnum_interf, 0);
-
-  // PDM_gnum_free(gen_gnum_interf);
   PDM_g_num_t* composed_id_gnum = composed_key;
 
   if(0 == 1) {
@@ -1536,14 +1528,6 @@ PDM_part_domain_interface_as_graph
     PDM_log_trace_array_long(composed_id_gnum, i_composed_interface, "composed_id_gnum :: ");
     PDM_log_trace_connectivity_int(composed_id_idx, composed_id, i_composed_interface, "composed_id :: ");
   }
-
-
-  // No update because we need FOR all entity the same interface global numbering so we keep the rules
-  // for(int i = 0; i < i_composed_interface; ++i) {
-  //   int i_part     = composed_key_update_idx[2*i  ];
-  //   int idx_update = composed_key_update_idx[2*i+1];
-  //   (*neighbor_entity_desc[i_part])[4*idx_update+3] = n_interface + composed_id_gnum[i];
-  // }
 
   /*
    * Panic verbose
@@ -2074,7 +2058,85 @@ PDM_part_domain_interface_add
     dinterface_ids[i_interface] = malloc(2 * n_gnum * sizeof(PDM_g_num_t));
     dinterface_dom[i_interface] = malloc(2 * n_gnum * sizeof(int        ));
 
-    int idx_read = 0;
+    /*
+     * We can have multiple occurence for the same gnum (triple point for exemple)
+     *
+     */
+    int max_blk_strid = 0;
+    for(int i = 0; i < n_gnum; ++i) {
+      max_blk_strid = PDM_MAX(max_blk_strid, dblk_strid[i]);
+    }
+    int         *order             = malloc(max_blk_strid * sizeof(int        ));
+    PDM_g_num_t *tmp_dentity1_sgn  = malloc(max_blk_strid * sizeof(int        ));
+    PDM_g_num_t *tmp_dentity1_sens = malloc(max_blk_strid * sizeof(int        ));
+    PDM_g_num_t *tmp_dentity1_dom  = malloc(max_blk_strid * sizeof(int        ));
+    PDM_g_num_t *tmp_dentity1_gnum = malloc(max_blk_strid * sizeof(PDM_g_num_t));
+
+    int* dblk_strid_unique = malloc(n_gnum  * sizeof(int));
+
+    int idx_read  = 0;
+    int idx_write = 0;
+    for(int i = 0; i < n_gnum; ++i) {
+      int beg = idx_read;
+      int end = beg + dblk_strid[i];
+      int n_ldata = end - beg;
+      for(int k = 0; k < n_ldata; ++k) {
+        order[k] = k;
+        tmp_dentity1_gnum[k] = dentity1_gnum[idx_read+k];
+        tmp_dentity1_sgn [k] = dentity1_sgn [idx_read+k];
+        tmp_dentity1_sens[k] = dentity1_sens[idx_read+k];
+        tmp_dentity1_dom [k] = dentity1_dom [idx_read+k];
+      }
+
+      PDM_sort_long(tmp_dentity1_gnum, order, n_ldata);
+
+      PDM_g_num_t first = tmp_dentity1_gnum[0];
+      dblk_strid_unique[i] = 1;
+
+      dentity1_gnum[idx_write] = tmp_dentity1_gnum[0];
+      dentity1_sgn [idx_write] = tmp_dentity1_sgn [order[0]];
+      dentity1_sens[idx_write] = tmp_dentity1_sens[order[0]];
+      dentity1_dom [idx_write] = tmp_dentity1_dom [order[0]];
+      idx_write++;
+      for(int k = 1; k < n_ldata; ++k) {
+        if(first != tmp_dentity1_gnum[k]) {
+          dentity1_gnum[idx_write] = tmp_dentity1_gnum[k];
+          dentity1_sgn [idx_write] = tmp_dentity1_sgn [order[k]];
+          dentity1_sens[idx_write] = tmp_dentity1_sens[order[k]];
+          dentity1_dom [idx_write] = tmp_dentity1_dom [order[k]];
+          idx_write++;
+
+          dblk_strid_unique[i]++;
+          first = tmp_dentity1_gnum[k];
+        }
+      }
+
+      idx_read += dblk_strid[i];
+    }
+
+    free(order);
+    free(tmp_dentity1_sgn );
+    free(tmp_dentity1_sens);
+    free(tmp_dentity1_dom );
+    free(tmp_dentity1_gnum);
+    free(dblk_strid);
+    dblk_strid = dblk_strid_unique;
+
+    n_data = 0;
+    for(int i = 0; i < n_gnum; ++i) {
+      n_data += dblk_strid[i];
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_int (dblk_strid   , n_gnum, "dblk_strid    (unique)::");
+      PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum (unique)::");
+      PDM_log_trace_array_int (dentity1_sgn , n_data, "dentity1_sgn  (unique)::");
+      PDM_log_trace_array_int (dentity1_sens, n_data, "dentity1_sens (unique)::");
+      PDM_log_trace_array_int (dentity1_dom , n_data, "dentity1_dom  (unique)::");
+    }
+
+
+    idx_read = 0;
     for(int i = 0; i < n_gnum; ++i) {
 
       assert(dblk_strid[i] % 2 == 0);
