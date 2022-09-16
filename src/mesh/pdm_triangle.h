@@ -154,6 +154,28 @@ PDM_triangle_circumcircle
  );
 
 
+/**
+ * \brief Compute intersection point between a triangle and a semi-infinite ray
+ *
+ * \param[in]  origin        Ray origin
+ * \param[in]  direction     Ray direction (need not be normalized)
+ * \param[in]  tri_coord     Coordinates of the triangle's vertices
+ * \param[out] intersection  Coordinates of the intersection point
+ *
+ * \return Intersection status
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_ray_intersection
+(
+ const double origin[3],
+ const double direction[3],
+ const double tri_coord[9],
+       double intersection[3]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

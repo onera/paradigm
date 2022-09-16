@@ -5,6 +5,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -12,9 +13,11 @@
 
 #include "pdm.h"
 #include "pdm_priv.h"
+#include "pdm_logging.h"
 #include "pdm_plane.h"
 #include "pdm_line.h"
 #include "pdm_polygon.h"
+#include "pdm_geom_elem.h"
 #include "pdm_predicate.h"
 
 /*=============================================================================
@@ -1102,6 +1105,136 @@ PDM_polygon_status_t PDM_polygon_point_in_new
   }
 }
 
+
+/**
+ * \brief Compute intersection point between a polygon and a semi-infinite ray
+ *
+ * \param[in]  ray_origin        Ray origin
+ * \param[in]  ray_direction     Ray direction (need not be normalized)
+ * \param[in]  n_vtx             Number of vertices
+ * \param[in]  vtx_coord         Coordinates of the polygon's vertices
+ * \param[in]  poly_center       Coordinates of the polygon's centroid (or NULL)
+ * \param[in]  poly_normal       Normal to polygon's median plane (or NULL)
+ * \param[in]  poly_bound        Polygon's bounds ([xmin, xmax, ymin, ymax, zmin, zmax] or NULL)
+ * \param[out] intersection      Coordinates of the intersection point
+ *
+ * \return Intersection status
+ *
+ */
+
+PDM_polygon_status_t
+PDM_polygon_ray_intersection
+(
+ const double  ray_origin[3],
+ const double  ray_direction[3],
+ const int     n_vtx,
+ const double *vtx_coord,
+       double *poly_center,
+       double *poly_normal,
+       double *poly_bound,
+       double  intersection[3]
+ )
+{
+  const double epsilon = 1e-12;
+
+  double __poly_center[3], __poly_normal[3];
+  double *_poly_center = poly_center;
+  double *_poly_normal = poly_normal;
+
+  if (_poly_center == NULL || _poly_normal == NULL) {
+    int poly_vtx_idx[2] = {0, n_vtx};
+    int poly_vtx[n_vtx];
+    for (int i = 0; i < n_vtx; i++) {
+      poly_vtx[i] = i+1;
+    }
+    PDM_geom_elem_polygon_properties(1,
+                                     poly_vtx_idx,
+                                     poly_vtx,
+                                     vtx_coord,
+                                     __poly_normal,
+                                     __poly_center,
+                                     NULL,
+                                     NULL);
+  }
+
+  if (_poly_center == NULL) {
+    _poly_center = __poly_center;
+  }
+
+  if (_poly_normal == NULL) {
+    _poly_normal = __poly_normal;
+  }
+
+
+  // intersect ray with polygon's median plane
+  int stat = -1;
+  double vec[3] = {
+    _poly_center[0] - ray_origin[0],
+    _poly_center[1] - ray_origin[1],
+    _poly_center[2] - ray_origin[2]
+  };
+
+  double denom = PDM_DOT_PRODUCT(ray_direction, _poly_normal);
+  double numer = PDM_DOT_PRODUCT(vec,           _poly_normal);
+
+  if (PDM_ABS(denom) < epsilon) {   // Epsilon is here to avoid division by 0
+    if (PDM_ABS(numer) < epsilon) { // The ray is inside the polygon's median plane
+      stat = 2;
+      memcpy(intersection, ray_origin, sizeof(double) * 3);
+    } else { // The ray is parallel but not coplanar
+      stat = 0;
+    }
+  }
+  else { // General case
+    double t = numer/denom;
+
+    if (t > 0) {
+      stat = 1;
+      intersection[0] = ray_origin[0] + t*ray_direction[0];
+      intersection[1] = ray_origin[1] + t*ray_direction[1];
+      intersection[2] = ray_origin[2] + t*ray_direction[2];
+    }
+  }
+
+  if (stat <= 0) {
+    return PDM_POLYGON_OUTSIDE;
+  }
+
+  // We found an intersection point, now check if it is inside the polygon
+  // double poly_bound[6] = {
+  //   HUGE_VAL, -HUGE_VAL,
+  //   HUGE_VAL, -HUGE_VAL,
+  //   HUGE_VAL, -HUGE_VAL
+  // };
+  // for (int i = 0; i < poly_vtx_n; i++) {
+  //   double *vc = vtx_coord + 3*i;
+  //   for (int j = 0; j < 3; j++) {
+  //     poly_bound[2*j  ] = PDM_MIN(poly_bound[2*j  ], vc[j]);
+  //     poly_bound[2*j+1] = PDM_MAX(poly_bound[2*j+1], vc[j]);
+  //   }
+  // }
+
+  // // Inflate the face's bounding box
+  // double d = 0.;
+  // for (int j = 0; j < 3; j++) {
+  //   d += (face_bound[2*j+1] - face_bound[2*j])*(face_bound[2*j+1] - face_bound[2*j]);
+  // }
+  // d = 0.1*sqrt(d);
+  // for (int j = 0; j < 3; j++) {
+  //   face_bound[2*j  ] -= d;
+  //   face_bound[2*j+1] += d;
+  // }
+
+  // PDM_log_trace_array_double(intersection, 3, "intersection : ");
+
+  PDM_polygon_status_t in_poly = PDM_polygon_point_in_new(intersection,
+                                                          n_vtx,
+                                                          vtx_coord,
+                                                          poly_bound,
+                                                          _poly_normal);
+
+  return in_poly;
+}
 
 #ifdef __cplusplus
 }
