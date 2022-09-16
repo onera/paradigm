@@ -1568,7 +1568,7 @@ PDM_octree_make_shared
   }
 
   int n_nodes_shared_tot     = octants_n_nodes_idx[n_rank_in_shm];
-  int n_nodes_max_shared_tot = n_nodes_max_idx    [n_rank_in_shm];
+  // int n_nodes_max_shared_tot = n_nodes_max_idx    [n_rank_in_shm];
   int t_n_points_shared_tot  = t_n_points_idx     [n_rank_in_shm];
 
   /*

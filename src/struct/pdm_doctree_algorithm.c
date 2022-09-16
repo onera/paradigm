@@ -56,28 +56,28 @@ extern "C"
  * Public function definitions
  *============================================================================*/
 
-void
-PDM_doctree_points_inside_boxes
-(
-       PDM_doctree_t      *doct,
- const int                 n_boxes,
- const double             *box_extents,
- const PDM_g_num_t        *box_g_num,
-       int               **pts_in_box_idx,
-       PDM_g_num_t       **pts_in_box_g_num,
-       double            **pts_in_box_coord
-)
-{
+// void
+// PDM_doctree_points_inside_boxes
+// (
+//        PDM_doctree_t      *doct,
+//  const int                 n_boxes,
+//  const double             *box_extents,
+//  const PDM_g_num_t        *box_g_num,
+//        int               **pts_in_box_idx,
+//        PDM_g_num_t       **pts_in_box_g_num,
+//        double            **pts_in_box_coord
+// )
+// {
 
-  PDM_UNUSED(doct);
-  PDM_UNUSED(n_boxes);
-  PDM_UNUSED(box_extents);
-  PDM_UNUSED(box_g_num);
-  PDM_UNUSED(pts_in_box_idx);
-  PDM_UNUSED(pts_in_box_g_num);
-  PDM_UNUSED(pts_in_box_coord);
+//   PDM_UNUSED(doct);
+//   PDM_UNUSED(n_boxes);
+//   PDM_UNUSED(box_extents);
+//   PDM_UNUSED(box_g_num);
+//   PDM_UNUSED(pts_in_box_idx);
+//   PDM_UNUSED(pts_in_box_g_num);
+//   PDM_UNUSED(pts_in_box_coord);
 
-}
+// }
 
 
 

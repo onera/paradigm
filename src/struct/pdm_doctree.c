@@ -1324,7 +1324,7 @@ PDM_doctree_build
 
   PDM_g_num_t *shared_entity_gnum          = PDM_mpi_win_shared_get(wshared_entity_gnum );
   double      *shared_entity_coord         = PDM_mpi_win_shared_get(wshared_entity_coord);
-  int         *shared_entity_init_location = PDM_mpi_win_shared_get(wshared_entity_init_location);
+  // int         *shared_entity_init_location = PDM_mpi_win_shared_get(wshared_entity_init_location);
 
   PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
   int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];

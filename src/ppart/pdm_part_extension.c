@@ -5504,7 +5504,7 @@ _rebuild_connectivity_face_edge
             int sgn    = PDM_SIGN(face_edge[i_part+shift_part][idx_edge]);
             PDM_g_num_t g_edge = edge_ln_to_gn [i_part+shift_part][i_edge];
 
-            printf("%i ", sgn * g_edge);
+            printf(PDM_FMT_G_NUM" ", sgn * g_edge);
           }
           printf("---- \n");
         }
@@ -5520,7 +5520,7 @@ _rebuild_connectivity_face_edge
             } else {
               g_edge = extended_edge_ln_to_gn[i_edge-_n_edge];
             }
-            printf("%i ", sgn * g_edge);
+            printf(PDM_FMT_G_NUM" ", sgn * g_edge);
           }
           printf("---- \n");
         }
