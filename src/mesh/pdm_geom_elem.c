@@ -212,6 +212,7 @@ _intersect_ray_face
     face_bound[2*j+1] += d;
   }
 
+  double t;
   return PDM_polygon_ray_intersection(ray_origin,
                                       ray_direction,
                                       face_vtx_n,
@@ -219,7 +220,9 @@ _intersect_ray_face
                                       face_center,
                                       face_normal,
                                       face_bound,
-                                      intersection_coord);
+                                      intersection_coord,
+                                      &t,
+                                      NULL);
 }
 
 

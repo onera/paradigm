@@ -19,6 +19,7 @@
 #include "pdm_polygon.h"
 #include "pdm_geom_elem.h"
 #include "pdm_predicate.h"
+#include "pdm_mean_values.h"
 
 /*=============================================================================
  * Macro definitions
@@ -1117,6 +1118,8 @@ PDM_polygon_status_t PDM_polygon_point_in_new
  * \param[in]  poly_normal       Normal to polygon's median plane (or NULL)
  * \param[in]  poly_bound        Polygon's bounds ([xmin, xmax, ymin, ymax, zmin, zmax] or NULL)
  * \param[out] intersection      Coordinates of the intersection point
+ * \param[out] t                 Ray-parameter of the intersection point
+ * \param[out] weight            Barycentric coordinates in polygon of intersection point (or NULL)
  *
  * \return Intersection status
  *
@@ -1132,7 +1135,9 @@ PDM_polygon_ray_intersection
        double *poly_center,
        double *poly_normal,
        double *poly_bound,
-       double  intersection[3]
+       double  intersection[3],
+       double *t,
+       double *weight
  )
 {
   const double epsilon = 1e-12;
@@ -1167,7 +1172,6 @@ PDM_polygon_ray_intersection
 
 
   // intersect ray with polygon's median plane
-  int stat = -1;
   double vec[3] = {
     _poly_center[0] - ray_origin[0],
     _poly_center[1] - ray_origin[1],
@@ -1179,26 +1183,88 @@ PDM_polygon_ray_intersection
 
   if (PDM_ABS(denom) < epsilon) {   // Epsilon is here to avoid division by 0
     if (PDM_ABS(numer) < epsilon) { // The ray is inside the polygon's median plane
-      stat = 2;
-      memcpy(intersection, ray_origin, sizeof(double) * 3);
+      // 1) Check if ray origin is inside polygon
+      PDM_polygon_status_t orig_in_poly = PDM_polygon_point_in_new(intersection,
+                                                                   n_vtx,
+                                                                   vtx_coord,
+                                                                   poly_bound,
+                                                                   _poly_normal);
+
+      if (orig_in_poly == PDM_POLYGON_INSIDE) {
+
+        memcpy(intersection, ray_origin, sizeof(double) * 3);
+        *t = 0.;
+
+        if (weight != NULL) {
+          PDM_mean_values_polygon_3d(n_vtx,
+                                     vtx_coord,
+                                     1,
+                                     intersection,
+                                     weight);
+        }
+
+        return orig_in_poly;
+      }
+
+      // 2) Find first intersection between ray and the polygon's edges
+      double ray_destination[3] = {
+        ray_origin[0] + ray_direction[0],
+        ray_origin[1] + ray_direction[1],
+        ray_origin[2] + ray_direction[2]
+      };
+
+      PDM_polygon_status_t stat = PDM_POLYGON_OUTSIDE;
+      *t = HUGE_VAL;
+      double s, _s, _t;
+      int iedge = -1;
+      for (int i = 0; i < n_vtx; i++) {
+        PDM_line_intersection_mean_square(vtx_coord + 3*i,
+                                          vtx_coord + 3*((i+1)%n_vtx),
+                                          ray_origin,
+                                          ray_destination,
+                                          &_s,
+                                          &_t);
+        if (_s >= 0. && _s <= 1. && _t >= 0.) {
+          stat = PDM_POLYGON_INSIDE;
+          if (_t < *t) {
+            iedge = i;
+            s  = _s;
+            *t = _t;
+          }
+        }
+      }
+
+      if (stat == PDM_POLYGON_INSIDE) {
+        intersection[0] = ray_origin[0] + (*t)*ray_direction[0];
+        intersection[1] = ray_origin[1] + (*t)*ray_direction[1];
+        intersection[2] = ray_origin[2] + (*t)*ray_direction[2];
+
+        if (weight != NULL) {
+          for (int i = 0; i < n_vtx; i++) {
+            weight[i] = 0;
+          }
+          weight[iedge]           = 1. - s;
+          weight[(iedge+1)%n_vtx] =      s;
+        }
+      }
+
+      return stat;
+
+
     } else { // The ray is parallel but not coplanar
-      stat = 0;
+      return PDM_POLYGON_OUTSIDE;
     }
   }
   else { // General case
-    double t = numer/denom;
+    *t = numer/denom;
 
-    if (t > 0) {
-      stat = 1;
-      intersection[0] = ray_origin[0] + t*ray_direction[0];
-      intersection[1] = ray_origin[1] + t*ray_direction[1];
-      intersection[2] = ray_origin[2] + t*ray_direction[2];
+    if (*t > 0) {
+      intersection[0] = ray_origin[0] + (*t)*ray_direction[0];
+      intersection[1] = ray_origin[1] + (*t)*ray_direction[1];
+      intersection[2] = ray_origin[2] + (*t)*ray_direction[2];
     }
   }
 
-  if (stat <= 0) {
-    return PDM_POLYGON_OUTSIDE;
-  }
 
   // We found an intersection point, now check if it is inside the polygon
   // double poly_bound[6] = {
@@ -1232,6 +1298,14 @@ PDM_polygon_ray_intersection
                                                           vtx_coord,
                                                           poly_bound,
                                                           _poly_normal);
+
+  if (in_poly == PDM_POLYGON_INSIDE && weight != NULL) {
+    PDM_mean_values_polygon_3d(n_vtx,
+                               vtx_coord,
+                               1,
+                               intersection,
+                               weight);
+  }
 
   return in_poly;
 }
