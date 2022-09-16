@@ -2616,7 +2616,7 @@ void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
  *----------------------------------------------------------------------------*/
 int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win)
 {
-  int code = MPI_Win_lock_all(MPI_MODE_NOCHECK, win->win);
+  int code = MPI_Win_lock_all(assert, win->win);
   return _mpi_2_pdm_mpi_err(code);
 }
 

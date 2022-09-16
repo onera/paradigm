@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
   /*
    * Stride Var check
    */
-  PDM_g_num_t* dfield_strid = malloc(n_elmt_in_block * sizeof(PDM_g_num_t));
+  int* dfield_strid = malloc(n_elmt_in_block * sizeof(int));
   for(int i = 0; i < n_elmt_in_block; ++i) {
     dfield_strid[i] = 1; // TO DO --> Generation aléatoire de strid entre 1 et 6 par exemple
   }

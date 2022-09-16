@@ -404,7 +404,7 @@ _cube_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   if(i_rank == 0)  {
-    printf("n_vtx_seg = %i \n", n_vtx_seg);
+    printf("n_vtx_seg = "PDM_FMT_G_NUM" \n", n_vtx_seg);
     printf("elt_type  = %i \n", elt_type);
   }
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
@@ -818,7 +818,7 @@ _cube_mesh
     PDM_g_num_t *ext_face_ln_to_gn       = NULL;
     int         *ext_face_group          = NULL;
     int         *ext_face_group_idx      = NULL;
-    int         *ext_face_group_ln_to_gn = NULL;
+    PDM_g_num_t *ext_face_group_ln_to_gn = NULL;
 
     int n_ext_face_group = 0;
     if (part_extension_depth > 0) {
@@ -1005,65 +1005,65 @@ _cube_mesh
 }
 
 
-static void _export_point_cloud
-(
- char         *filename,
- int           n_part,
- int          *n_pts,
- double      **coord,
- PDM_g_num_t **g_num,
- PDM_g_num_t **location
- )
-{
-  FILE *f = fopen(filename, "w");
+// static void _export_point_cloud
+// (
+//  char         *filename,
+//  int           n_part,
+//  int          *n_pts,
+//  double      **coord,
+//  PDM_g_num_t **g_num,
+//  PDM_g_num_t **location
+//  )
+// {
+//   FILE *f = fopen(filename, "w");
 
-  fprintf(f, "# vtk DataFile Version 2.0\npoints\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+//   fprintf(f, "# vtk DataFile Version 2.0\npoints\nASCII\nDATASET UNSTRUCTURED_GRID\n");
 
-  int n_pts_t = 0;
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    n_pts_t += n_pts[i_part];
-  }
+//   int n_pts_t = 0;
+//   for (int i_part = 0; i_part < n_part; i_part++) {
+//     n_pts_t += n_pts[i_part];
+//   }
 
-  fprintf(f, "POINTS %d double\n", n_pts_t);
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    for (int i = 0; i < n_pts[i_part]; i++) {
-      for (int j = 0; j < 3; j++) {
-        fprintf(f, "%f ", coord[i_part][3*i + j]);
-      }
-      fprintf(f, "\n");
-    }
-  }
+//   fprintf(f, "POINTS %d double\n", n_pts_t);
+//   for (int i_part = 0; i_part < n_part; i_part++) {
+//     for (int i = 0; i < n_pts[i_part]; i++) {
+//       for (int j = 0; j < 3; j++) {
+//         fprintf(f, "%f ", coord[i_part][3*i + j]);
+//       }
+//       fprintf(f, "\n");
+//     }
+//   }
 
-  fprintf(f, "CELLS %d %d\n", n_pts_t, 2*n_pts_t);
-  for (int i = 0; i < n_pts_t; i++) {
-    fprintf(f, "1 %d\n", i);
-  }
+//   fprintf(f, "CELLS %d %d\n", n_pts_t, 2*n_pts_t);
+//   for (int i = 0; i < n_pts_t; i++) {
+//     fprintf(f, "1 %d\n", i);
+//   }
 
-  fprintf(f, "CELL_TYPES %d\n", n_pts_t);
-  for (int i = 0; i < n_pts_t; i++) {
-    fprintf(f, "1\n");
-  }
+//   fprintf(f, "CELL_TYPES %d\n", n_pts_t);
+//   for (int i = 0; i < n_pts_t; i++) {
+//     fprintf(f, "1\n");
+//   }
 
-  fprintf(f, "CELL_DATA %d\n", n_pts_t);
-  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    for (int i = 0; i < n_pts[i_part]; i++) {
-      fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i_part][i]);
-    }
-  }
+//   fprintf(f, "CELL_DATA %d\n", n_pts_t);
+//   fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+//   for (int i_part = 0; i_part < n_part; i_part++) {
+//     for (int i = 0; i < n_pts[i_part]; i++) {
+//       fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i_part][i]);
+//     }
+//   }
 
-  if (location != NULL) {
-    fprintf(f, "FIELD FieldData 1\n");
-    fprintf(f, "location 1 %d int\n", n_pts_t);
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      for (int i = 0; i < n_pts[i_part]; i++) {
-        fprintf(f, ""PDM_FMT_G_NUM"\n", location[i_part][i]);
-      }
-    }
-  }
+//   if (location != NULL) {
+//     fprintf(f, "FIELD FieldData 1\n");
+//     fprintf(f, "location 1 %d int\n", n_pts_t);
+//     for (int i_part = 0; i_part < n_part; i_part++) {
+//       for (int i = 0; i < n_pts[i_part]; i++) {
+//         fprintf(f, ""PDM_FMT_G_NUM"\n", location[i_part][i]);
+//       }
+//     }
+//   }
 
-  fclose(f);
-}
+//   fclose(f);
+// }
 
 
 /**
@@ -2613,8 +2613,8 @@ int main(int argc, char *argv[])
 
 
   if(i_rank == 0) {
-    printf("Total number of cells         : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_cell_tot  , n_cell_tot/n_rank);
-    printf("Total number of interpolation : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_interp_tot, n_interp_tot/n_rank);
+    printf("Total number of cells         : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_cell_tot  , (int) n_cell_tot/n_rank);
+    printf("Total number of interpolation : "PDM_FMT_G_NUM" | Mean by proc = %i\n", n_interp_tot, (int) n_interp_tot/n_rank);
     printf("duration min/max : Generate cube   = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[0], cpu_time_max[0], cpu_time_sum[0]/((double) n_cell_tot), cpu_time_sum[0]/((double) n_interp_tot));
     printf("duration min/max : Ray traicing    = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[1], cpu_time_max[1], cpu_time_sum[1]/((double) n_cell_tot), cpu_time_sum[1]/((double) n_interp_tot));
     printf("duration min/max : Localisation    = %12.5e %12.5e | Adim (cell) = %12.5e | Adim (interp)  = %12.5e \n", cpu_time_min[2], cpu_time_max[2], cpu_time_sum[2]/((double) n_cell_tot), cpu_time_sum[2]/((double) n_interp_tot));

@@ -728,7 +728,7 @@ _cube_mesh
     PDM_g_num_t *ext_face_ln_to_gn       = NULL;
     int         *ext_face_group          = NULL;
     int         *ext_face_group_idx      = NULL;
-    int         *ext_face_group_ln_to_gn = NULL;
+    PDM_g_num_t *ext_face_group_ln_to_gn = NULL;
 
     int n_ext_face_group = 0;
     if (part_extension_depth > 0) {
@@ -976,238 +976,227 @@ static void _export_point_cloud
 }
 
 
-/**
- *   Compute volume and center_cell
- */
-static
-void
-_compute_centers
-(
-  int           n_part,
-  int          *n_cell,
-  int          *n_face,
-  int          *n_vtx,
-  int         **cell_face_idx,
-  int         **cell_face,
-  int         **face_vtx_idx,
-  int         **face_vtx,
-  double      **vtx_coord,
-  double     ***cell_center_out,
-  double     ***cell_volume_out,
-  double     ***face_center_out
-)
-{
+// /**
+//  *   Compute volume and center_cell
+//  */
+// static
+// void
+// _compute_centers
+// (
+//   int           n_part,
+//   int          *n_cell,
+//   int          *n_face,
+//   int          *n_vtx,
+//   int         **cell_face_idx,
+//   int         **cell_face,
+//   int         **face_vtx_idx,
+//   int         **face_vtx,
+//   double      **vtx_coord,
+//   double     ***cell_center_out,
+//   double     ***cell_volume_out,
+//   double     ***face_center_out
+// )
+// {
 
-  double **cell_volume = (double ** ) malloc( n_part * sizeof(double));
-  double **cell_center = (double ** ) malloc( n_part * sizeof(double));
-  double **face_center = (double ** ) malloc( n_part * sizeof(double));
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    const int is_oriented = 1;
-    cell_volume[i_part] = (double *) malloc(sizeof(double) *     n_cell[i_part]);
-    cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * n_cell[i_part]);
+//   double **cell_volume = (double ** ) malloc( n_part * sizeof(double));
+//   double **cell_center = (double ** ) malloc( n_part * sizeof(double));
+//   double **face_center = (double ** ) malloc( n_part * sizeof(double));
+//   for (int i_part = 0; i_part < n_part; i_part++) {
+//     const int is_oriented = 1;
+//     cell_volume[i_part] = (double *) malloc(sizeof(double) *     n_cell[i_part]);
+//     cell_center[i_part] = (double *) malloc(sizeof(double) * 3 * n_cell[i_part]);
 
-    face_center[i_part] = (double *) malloc(sizeof(double) * 3 * n_face[i_part]);
+//     face_center[i_part] = (double *) malloc(sizeof(double) * 3 * n_face[i_part]);
 
-    double* face_normal = (double *) malloc(sizeof(double) * 3 * n_face[i_part]);
+//     double* face_normal = (double *) malloc(sizeof(double) * 3 * n_face[i_part]);
 
-    PDM_geom_elem_polyhedra_properties(is_oriented,
-                                       n_cell       [i_part],
-                                       n_face       [i_part],
-                                       face_vtx_idx [i_part],
-                                       face_vtx     [i_part],
-                                       cell_face_idx[i_part],
-                                       cell_face    [i_part],
-                                       n_vtx        [i_part],
-                                       vtx_coord    [i_part],
-                                       cell_volume  [i_part],
-                                       cell_center  [i_part],
-                                       NULL,
-                                       NULL);
+//     PDM_geom_elem_polyhedra_properties(is_oriented,
+//                                        n_cell       [i_part],
+//                                        n_face       [i_part],
+//                                        face_vtx_idx [i_part],
+//                                        face_vtx     [i_part],
+//                                        cell_face_idx[i_part],
+//                                        cell_face    [i_part],
+//                                        n_vtx        [i_part],
+//                                        vtx_coord    [i_part],
+//                                        cell_volume  [i_part],
+//                                        cell_center  [i_part],
+//                                        NULL,
+//                                        NULL);
 
-    PDM_geom_elem_polygon_properties(n_face      [i_part],
-                                     face_vtx_idx[i_part],
-                                     face_vtx    [i_part],
-                                     vtx_coord   [i_part],
-                                     face_normal,
-                                     face_center [i_part],
-                                     NULL,
-                                     NULL);
-    free(face_normal);
+//     PDM_geom_elem_polygon_properties(n_face      [i_part],
+//                                      face_vtx_idx[i_part],
+//                                      face_vtx    [i_part],
+//                                      vtx_coord   [i_part],
+//                                      face_normal,
+//                                      face_center [i_part],
+//                                      NULL,
+//                                      NULL);
+//     free(face_normal);
 
-  }
+//   }
 
-  *cell_center_out = cell_center;
-  *cell_volume_out = cell_volume;
-  *face_center_out = face_center;
+//   *cell_center_out = cell_center;
+//   *cell_volume_out = cell_volume;
+//   *face_center_out = face_center;
 
-}
-
-
-
-/**
- *
- *
- *
- */
-static
-void
-_prepare_target_cloud
-(
-  int            n_part,
-  int            n_group,
-  int           *n_cell,
-  int           *n_face,
-  int           *n_vtx,
-  PDM_g_num_t  **cell_ln_to_gn,
-  PDM_g_num_t  **face_ln_to_gn,
-  PDM_g_num_t  **vtx_ln_to_gn,
-  PDM_g_num_t  **face_group_ln_to_gn,
-  int          **cell_face_idx,
-  int          **cell_face,
-  int          **face_vtx_idx,
-  int          **face_vtx,
-  int          **face_group_idx,
-  int          **face_group,
-  double       **vtx_coord,
-  double       **cell_center,
-  double       **face_center,
-  int            extract_center_depth,
-  int            extract_bnd_faces,
-  int          **n_extract_cell,
-  int          **n_extract_face,
-  PDM_g_num_t ***extract_center_ln_to_gn,
-  double      ***extract_center_coord,
-  PDM_g_num_t ***extract_face_bnd_ln_to_gn,
-  double      ***extract_face_bnd_coord
-)
-{
-  /*
-   * Extract cell with a given depth and also face center
-   */
-  *n_extract_cell          = malloc(n_part * sizeof(int          ));
-  *extract_center_coord    = malloc(n_part * sizeof(double      *));
-  *extract_center_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
-
-  *n_extract_face            = malloc(n_part * sizeof(int          ));
-  *extract_face_bnd_coord    = malloc(n_part * sizeof(double      *));
-  *extract_face_bnd_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
-
-  int          *_n_extract_cell          = *n_extract_cell;
-  double      **_extract_center_coord    = *extract_center_coord;
-  PDM_g_num_t **_extract_center_ln_to_gn = *extract_center_ln_to_gn;
-
-  int          *_n_extract_face            = *n_extract_face;
-  double      **_extract_face_bnd_coord    = *extract_face_bnd_coord;
-  PDM_g_num_t **_extract_face_bnd_ln_to_gn = *extract_face_bnd_ln_to_gn;
-
-  /* Management of void */
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    _n_extract_cell[i_part] = 0;
-    _n_extract_face[i_part] = 0;
-    _extract_center_coord     [i_part] = NULL;
-    _extract_center_ln_to_gn  [i_part] = NULL;
-    _extract_face_bnd_coord   [i_part] = NULL;
-    _extract_face_bnd_ln_to_gn[i_part] = NULL;
-  }
-
-  if(extract_center_depth > 0) {
-    for (int i_part = 0; i_part < n_part; i_part++) {
-
-      int* face_cell_idx = NULL;
-      int* face_cell     = NULL;
-      PDM_connectivity_transpose(n_cell       [i_part],
-                                 n_face       [i_part],
-                                 cell_face_idx[i_part],
-                                 cell_face    [i_part],
-                                 &face_cell_idx,
-                                 &face_cell);
-
-      int* extract_cell = malloc(n_face[i_part] * sizeof(int)); // Surallocated buyt needed
-
-      _n_extract_cell[i_part] = 0;
-
-      for(int i_group = 0; i_group < n_group; ++i_group) {
-        for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
-          int i_face = face_group[i_part][idx_face]-1;
-          for(int idx_cell = face_cell_idx[i_face]; idx_cell < face_cell_idx[i_face+1]; ++idx_cell) {
-            extract_cell[_n_extract_cell[i_part]++] = PDM_ABS(face_cell[idx_cell]);
-          }
-        }
-      }
-
-      // sort and extract coordinates
-      _n_extract_cell[i_part] = PDM_inplace_unique(extract_cell, 0, _n_extract_cell[i_part]-1);
-
-      extract_cell = realloc(extract_cell, _n_extract_cell[i_part] * sizeof(int));
-
-      _extract_center_coord   [i_part] = (double      *) malloc(3 * _n_extract_cell[i_part] * sizeof(double     ));
-      _extract_center_ln_to_gn[i_part] = (PDM_g_num_t *) malloc(    _n_extract_cell[i_part] * sizeof(PDM_g_num_t));
-
-      for(int i = 0; i < _n_extract_cell[i_part]; ++i) {
-        int i_cell = extract_cell[i]-1;
-        _extract_center_coord   [i_part][3*i  ] = cell_center[i_part][3*i_cell  ];
-        _extract_center_coord   [i_part][3*i+1] = cell_center[i_part][3*i_cell+1];
-        _extract_center_coord   [i_part][3*i+2] = cell_center[i_part][3*i_cell+2];
-        _extract_center_ln_to_gn[i_part][i] = cell_ln_to_gn[i_part][i_cell];
-      }
-
-      free(face_cell_idx);
-      free(face_cell);
-      free(extract_cell);
-
-    }
-  }
-
-
-  if(extract_bnd_faces == 1) {
-
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      _n_extract_face[i_part] = 0;
-
-      _extract_face_bnd_coord   [i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(double     ));
-      _extract_face_bnd_ln_to_gn[i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(PDM_g_num_t));
-
-
-      /* Dans cette exemple on considère que toutes les frontières sont BCOVerlap */
-      for(int i_group = 0; i_group < n_group; ++i_group) {
-        for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
-          int i_face = face_group[i_part][idx_face]-1;
-
-          int idx_write = _n_extract_face[i_part]++;
-
-          _extract_face_bnd_coord   [i_part][3*idx_write  ] = face_center[i_part][3*i_face  ];
-          _extract_face_bnd_coord   [i_part][3*idx_write+1] = face_center[i_part][3*i_face+1];
-          _extract_face_bnd_coord   [i_part][3*idx_write+2] = face_center[i_part][3*i_face+2];
-          // _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_ln_to_gn[i_part][i_face]; // Change rien
-          _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_group_ln_to_gn[i_part][idx_face];
-
-        }
-      }
-      assert(_n_extract_face[i_part] == face_group_idx[i_part][n_group]);
-    }
-  }
-
-
-}
-
-/**
- *
- *
- *
- */
-static
-void
-_interp_target
-(
-void
-)
-{
-
-  // Gestion de dist < 0 + Min volume
+// }
 
 
 
-}
+// /**
+//  *
+//  *
+//  *
+//  */
+// static
+// void
+// _prepare_target_cloud
+// (
+//   int            n_part,
+//   int            n_group,
+//   int           *n_cell,
+//   int           *n_face,
+//   int           *n_vtx,
+//   PDM_g_num_t  **cell_ln_to_gn,
+//   PDM_g_num_t  **face_ln_to_gn,
+//   PDM_g_num_t  **vtx_ln_to_gn,
+//   PDM_g_num_t  **face_group_ln_to_gn,
+//   int          **cell_face_idx,
+//   int          **cell_face,
+//   int          **face_vtx_idx,
+//   int          **face_vtx,
+//   int          **face_group_idx,
+//   int          **face_group,
+//   double       **vtx_coord,
+//   double       **cell_center,
+//   double       **face_center,
+//   int            extract_center_depth,
+//   int            extract_bnd_faces,
+//   int          **n_extract_cell,
+//   int          **n_extract_face,
+//   PDM_g_num_t ***extract_center_ln_to_gn,
+//   double      ***extract_center_coord,
+//   PDM_g_num_t ***extract_face_bnd_ln_to_gn,
+//   double      ***extract_face_bnd_coord
+// )
+// {
+//   PDM_UNUSED(n_vtx);
+//   PDM_UNUSED(face_ln_to_gn);
+//   PDM_UNUSED(vtx_ln_to_gn);
+//   PDM_UNUSED(face_vtx_idx);
+//   PDM_UNUSED(face_vtx);
+//   PDM_UNUSED(vtx_coord);
+
+
+//   /*
+//    * Extract cell with a given depth and also face center
+//    */
+//   *n_extract_cell          = malloc(n_part * sizeof(int          ));
+//   *extract_center_coord    = malloc(n_part * sizeof(double      *));
+//   *extract_center_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+
+//   *n_extract_face            = malloc(n_part * sizeof(int          ));
+//   *extract_face_bnd_coord    = malloc(n_part * sizeof(double      *));
+//   *extract_face_bnd_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+
+//   int          *_n_extract_cell          = *n_extract_cell;
+//   double      **_extract_center_coord    = *extract_center_coord;
+//   PDM_g_num_t **_extract_center_ln_to_gn = *extract_center_ln_to_gn;
+
+//   int          *_n_extract_face            = *n_extract_face;
+//   double      **_extract_face_bnd_coord    = *extract_face_bnd_coord;
+//   PDM_g_num_t **_extract_face_bnd_ln_to_gn = *extract_face_bnd_ln_to_gn;
+
+//   /* Management of void */
+//   for (int i_part = 0; i_part < n_part; i_part++) {
+//     _n_extract_cell[i_part] = 0;
+//     _n_extract_face[i_part] = 0;
+//     _extract_center_coord     [i_part] = NULL;
+//     _extract_center_ln_to_gn  [i_part] = NULL;
+//     _extract_face_bnd_coord   [i_part] = NULL;
+//     _extract_face_bnd_ln_to_gn[i_part] = NULL;
+//   }
+
+//   if(extract_center_depth > 0) {
+//     for (int i_part = 0; i_part < n_part; i_part++) {
+
+//       int* face_cell_idx = NULL;
+//       int* face_cell     = NULL;
+//       PDM_connectivity_transpose(n_cell       [i_part],
+//                                  n_face       [i_part],
+//                                  cell_face_idx[i_part],
+//                                  cell_face    [i_part],
+//                                  &face_cell_idx,
+//                                  &face_cell);
+
+//       int* extract_cell = malloc(n_face[i_part] * sizeof(int)); // Surallocated buyt needed
+
+//       _n_extract_cell[i_part] = 0;
+
+//       for(int i_group = 0; i_group < n_group; ++i_group) {
+//         for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
+//           int i_face = face_group[i_part][idx_face]-1;
+//           for(int idx_cell = face_cell_idx[i_face]; idx_cell < face_cell_idx[i_face+1]; ++idx_cell) {
+//             extract_cell[_n_extract_cell[i_part]++] = PDM_ABS(face_cell[idx_cell]);
+//           }
+//         }
+//       }
+
+//       // sort and extract coordinates
+//       _n_extract_cell[i_part] = PDM_inplace_unique(extract_cell, 0, _n_extract_cell[i_part]-1);
+
+//       extract_cell = realloc(extract_cell, _n_extract_cell[i_part] * sizeof(int));
+
+//       _extract_center_coord   [i_part] = (double      *) malloc(3 * _n_extract_cell[i_part] * sizeof(double     ));
+//       _extract_center_ln_to_gn[i_part] = (PDM_g_num_t *) malloc(    _n_extract_cell[i_part] * sizeof(PDM_g_num_t));
+
+//       for(int i = 0; i < _n_extract_cell[i_part]; ++i) {
+//         int i_cell = extract_cell[i]-1;
+//         _extract_center_coord   [i_part][3*i  ] = cell_center[i_part][3*i_cell  ];
+//         _extract_center_coord   [i_part][3*i+1] = cell_center[i_part][3*i_cell+1];
+//         _extract_center_coord   [i_part][3*i+2] = cell_center[i_part][3*i_cell+2];
+//         _extract_center_ln_to_gn[i_part][i] = cell_ln_to_gn[i_part][i_cell];
+//       }
+
+//       free(face_cell_idx);
+//       free(face_cell);
+//       free(extract_cell);
+
+//     }
+//   }
+
+
+//   if(extract_bnd_faces == 1) {
+
+//     for (int i_part = 0; i_part < n_part; i_part++) {
+//       _n_extract_face[i_part] = 0;
+
+//       _extract_face_bnd_coord   [i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(double     ));
+//       _extract_face_bnd_ln_to_gn[i_part] = malloc(face_group_idx[i_part][n_group] * sizeof(PDM_g_num_t));
+
+
+//       /* Dans cette exemple on considère que toutes les frontières sont BCOVerlap */
+//       for(int i_group = 0; i_group < n_group; ++i_group) {
+//         for(int idx_face = face_group_idx[i_part][i_group]; idx_face < face_group_idx[i_part][i_group+1]; ++idx_face) {
+//           int i_face = face_group[i_part][idx_face]-1;
+
+//           int idx_write = _n_extract_face[i_part]++;
+
+//           _extract_face_bnd_coord   [i_part][3*idx_write  ] = face_center[i_part][3*i_face  ];
+//           _extract_face_bnd_coord   [i_part][3*idx_write+1] = face_center[i_part][3*i_face+1];
+//           _extract_face_bnd_coord   [i_part][3*idx_write+2] = face_center[i_part][3*i_face+2];
+//           // _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_ln_to_gn[i_part][i_face]; // Change rien
+//           _extract_face_bnd_ln_to_gn[i_part][idx_write] = face_group_ln_to_gn[i_part][idx_face];
+
+//         }
+//       }
+//       assert(_n_extract_face[i_part] == face_group_idx[i_part][n_group]);
+//     }
+//   }
+
+
+// }
 
 
 
@@ -1237,6 +1226,7 @@ _visu
  double          *block_interp[]
 )
 {
+  PDM_UNUSED(face_ln_to_gn);
 
   int i_rank;
   int n_rank;
@@ -1602,7 +1592,7 @@ int main(int argc, char *argv[])
   /*
    *  Mesh location structure initialization
    */
-  int n_point_cloud = 1; // 1 : adjacent cell center | 2 : center_interface
+  // int n_point_cloud = 1; // 1 : adjacent cell center | 2 : center_interface
   PDM_mesh_location_t *mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,
                                                             1,
                                                             comm,
@@ -1619,8 +1609,8 @@ int main(int argc, char *argv[])
   /*
    * Extraction des surfaces + centre voisins
    */
-  int tgt_have_adjacent_cell_center = 1;
-  int tgt_have_face_center          = 1;
+  // int tgt_have_adjacent_cell_center = 1;
+  // int tgt_have_face_center          = 1;
 
   int          *n_tgt     = malloc(n_part * sizeof(int          ));
   PDM_g_num_t **tgt_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
@@ -1853,7 +1843,7 @@ int main(int argc, char *argv[])
                                         NULL);
 
 
-    int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
+    // int n_cell_without_ext = src_n_cell[i_part]-src_n_cell_ext[i_part];
 
     for(int i = 0; i < src_n_cell[i_part]; ++i) {
       src_blk_interp[i_part][i] = -1;
@@ -1885,9 +1875,9 @@ int main(int argc, char *argv[])
   /*
    *  Interpolate in src mesh
    */
-  double **src_tgt_field = malloc(n_part * sizeof(double      *));
-  int    **src_tgt_idx   = malloc(n_part * sizeof(int         *));
-  int    **src_tgt_gnum  = malloc(n_part * sizeof(PDM_g_num_t *));
+  double      **src_tgt_field = malloc(n_part * sizeof(double      *));
+  int         **src_tgt_idx   = malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **src_tgt_gnum  = malloc(n_part * sizeof(PDM_g_num_t *));
   for (int i_part = 0; i_part < n_part; i_part++) {
     int *cell_vtx_idx;
     int *cell_vtx;

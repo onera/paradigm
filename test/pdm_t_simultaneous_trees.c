@@ -26,6 +26,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_unique.h"
+#include "pdm_order.h"
 #include "pdm_hilbert.h"
 
 
@@ -483,7 +484,7 @@ main
   for (int ileaf = 0; ileaf < ptree->n_leaf; ileaf++) {
     int leaf_id = ptree->leaf_ids[ileaf];
     for (int ipt = ptree->nodes->range[2*leaf_id]; ipt < ptree->nodes->range[2*leaf_id+1]; ipt++) {
-      int point_id = ptree->new_to_old[ipt];
+      // int point_id = ptree->new_to_old[ipt];
       double *pc = ptree->_pts_coord + 3*ipt;
 
       /* Brute force because already pre-conditionned */
