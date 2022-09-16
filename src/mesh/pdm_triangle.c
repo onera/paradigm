@@ -698,6 +698,8 @@ PDM_triangle_circumcircle
  * \param[in]  direction     Ray direction (need not be normalized)
  * \param[in]  tri_coord     Coordinates of the triangle's vertices
  * \param[out] intersection  Coordinates of the intersection point
+ * \param[out] t             Ray-parameter of the intersection point
+ * \param[out] weight        Barycentric coordinates in triangle of intersection point (or NULL)
  *
  * \return Intersection status
  *
@@ -706,10 +708,12 @@ PDM_triangle_circumcircle
 PDM_triangle_status_t
 PDM_triangle_ray_intersection
 (
- const double origin[3],
- const double direction[3],
- const double tri_coord[9],
-       double intersection[3]
+ const double  origin[3],
+ const double  direction[3],
+ const double  tri_coord[9],
+       double  intersection[3],
+       double *t,
+       double *weight
  )
 {
   const double epsilon = 1e-12;
@@ -767,6 +771,13 @@ PDM_triangle_ray_intersection
 
       if (u >= 0. && v >= 0. && u + v <= det) {
         memcpy(intersection, origin, sizeof(double)*3);
+        *t = 0.;
+        if (weight != NULL) {
+          double idet = 1./det;
+          weight[1] = u*idet;
+          weight[2] = v*idet;
+          weight[0] = 1. - weight[1] - weight[2];
+        }
         return PDM_TRIANGLE_INSIDE;
       }
 
@@ -778,25 +789,44 @@ PDM_triangle_ray_intersection
       };
 
       PDM_triangle_status_t stat = PDM_TRIANGLE_OUTSIDE;
-      double t = HUGE_VAL;
-      double s, _t;
+      *t = HUGE_VAL;
+      double s, _s, _t;
+      int iedge = -1;
       for (int i = 0; i < 3; i++) {
         PDM_line_intersection_mean_square(tri_coord + 3*i,
                                           tri_coord + 3*((i+1)%3),
                                           origin,
                                           destination,
-                                          &s,
+                                          &_s,
                                           &_t);
         if (s >= 0. && s <= 1. && _t >= 0.) {
           stat = PDM_TRIANGLE_INSIDE;
-          t = PDM_MIN(t, _t);
+          iedge = i;
+          s = _s;
+          *t = PDM_MIN(*t, _t);
         }
       }
 
       if (stat == PDM_TRIANGLE_INSIDE) {
-        intersection[0] = origin[0] + t*direction[0];
-        intersection[1] = origin[1] + t*direction[1];
-        intersection[2] = origin[2] + t*direction[2];
+        intersection[0] = origin[0] + (*t)*direction[0];
+        intersection[1] = origin[1] + (*t)*direction[1];
+        intersection[2] = origin[2] + (*t)*direction[2];
+
+        if (weight != NULL) {
+          if (iedge == 0) {
+            weight[1] = s;
+            weight[2] = 0;
+          }
+          else if (iedge == 1) {
+            weight[1] = 1 - s;
+            weight[2] = s;
+          }
+          else {
+            weight[1] = 0;
+            weight[2] = 1 - s;
+          }
+          weight[0] = 1. - weight[1] - weight[2];
+        }
       }
 
       return stat;
@@ -809,21 +839,21 @@ PDM_triangle_ray_intersection
   }
   else {
     // General case
-    double t = numer/denom;
+    *t = numer/denom;
     // log_trace("t = %f (%f %f %f)\n",
     //           t,
     //           origin[0] + t*direction[0],
     //           origin[1] + t*direction[1],
     //           origin[2] + t*direction[2]);
 
-    if (t < 0.) {
+    if (*t < 0.) {
       return PDM_TRIANGLE_OUTSIDE;
     }
     else {
       // Check if ray-plane intersection is inside triangle
-      intersection[0] = origin[0] + t*direction[0];
-      intersection[1] = origin[1] + t*direction[1];
-      intersection[2] = origin[2] + t*direction[2];
+      intersection[0] = origin[0] + (*t)*direction[0];
+      intersection[1] = origin[1] + (*t)*direction[1];
+      intersection[2] = origin[2] + (*t)*direction[2];
       // log_trace("intersection = %f %f %f\n",
       //           intersection[0], intersection[1], intersection[2]);
 
@@ -845,17 +875,22 @@ PDM_triangle_ray_intersection
       double u = e*c - f*b;
       double v = a*f - b*e;
 
-      // log_trace("u = %f, v = %f\n", u/det, v/det);
+      if (weight != NULL) {
+        double idet = 1./det;
+        weight[1] = u*idet;
+        weight[2] = v*idet;
+        weight[0] = 1. - weight[1] - weight[2];
+      }
 
-      if (u < 0. || v < 0. || u + v > det) {
-        return PDM_TRIANGLE_OUTSIDE;
+      if (u >= 0. && v >= 0. && u + v <= det) {
+        return PDM_TRIANGLE_INSIDE;
       }
 
     }
 
   }
 
-  return PDM_TRIANGLE_INSIDE;
+  return PDM_TRIANGLE_OUTSIDE;
 }
 
 

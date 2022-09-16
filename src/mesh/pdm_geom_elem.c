@@ -130,6 +130,9 @@ _intersect_ray_triangulated_face
   }
 
   /* Intersect sub-triangles with edge ray */
+  /* If multiple intersections, pick the one closest from the ray's origin */
+  double t = HUGE_VAL;
+  PDM_polygon_status_t stat = PDM_POLYGON_OUTSIDE;
   for (int itri = 0; itri < n_tri; itri++) {
 
     int *_tri_vtx = tri_vtx + 3*itri;
@@ -141,18 +144,31 @@ _intersect_ray_triangulated_face
              sizeof(double) * 3);
     }
 
-    PDM_triangle_status_t stat = PDM_triangle_ray_intersection(ray_origin,
-                                                               ray_direction,
-                                                               tri_coord,
-                                                               intersection_coord);
+    double _t;
+    double ip[3];
+    PDM_triangle_status_t _stat = PDM_triangle_ray_intersection(ray_origin,
+                                                                ray_direction,
+                                                                tri_coord,
+                                                                ip,
+                                                                &_t,
+                                                                NULL);
 
-    if (stat == PDM_TRIANGLE_INSIDE) {
-      return PDM_POLYGON_INSIDE;
+    if (_stat == PDM_TRIANGLE_INSIDE && _t >= 0.) {
+      stat = PDM_POLYGON_INSIDE;
+      if (_t < t) {
+        t = _t;
+      }
     }
 
   } // End of loop on subtriangles
 
-  return PDM_POLYGON_OUTSIDE;
+  if (stat == PDM_POLYGON_INSIDE) {
+    intersection_coord[0] = ray_origin[0] + t*ray_direction[0];
+    intersection_coord[1] = ray_origin[1] + t*ray_direction[1];
+    intersection_coord[2] = ray_origin[2] + t*ray_direction[2];
+  }
+
+  return stat;
 }
 
 

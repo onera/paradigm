@@ -161,6 +161,8 @@ PDM_triangle_circumcircle
  * \param[in]  direction     Ray direction (need not be normalized)
  * \param[in]  tri_coord     Coordinates of the triangle's vertices
  * \param[out] intersection  Coordinates of the intersection point
+ * \param[out] t             Ray-parameter of the intersection point
+ * \param[out] weight        Barycentric coordinates in triangle of intersection point (or NULL)
  *
  * \return Intersection status
  *
@@ -169,10 +171,12 @@ PDM_triangle_circumcircle
 PDM_triangle_status_t
 PDM_triangle_ray_intersection
 (
- const double origin[3],
- const double direction[3],
- const double tri_coord[9],
-       double intersection[3]
+ const double  origin[3],
+ const double  direction[3],
+ const double  tri_coord[9],
+       double  intersection[3],
+       double *t,
+       double *weight
  );
 
 
