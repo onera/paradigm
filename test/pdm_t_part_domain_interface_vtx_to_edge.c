@@ -220,6 +220,7 @@ _read_args(int            argc,
 // Repro LS89 : mpirun -np 2 ./test/pdm_t_join_domains -nx 5 -ny 4 -nz 2 -pt-scotch -pj
 // Debug this one : mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 3 -pi -pj -ni 2
 // mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -n 2 -pi -ni 2
+// mpirun -np 1 ./test/pdm_t_part_domain_interface_vtx_to_edge -nx 6 -ny 4 -nz 2 -pi -n_part 3 -pt-scotch
 int main
 (
  int   argc,
@@ -493,6 +494,23 @@ int main
 
       for(int i = 0; i < pn_edge[i_dom][i_part]+1; ++i) {
         pedge_vtx_idx [i_dom][i_part][i] = 2*i;
+      }
+
+      if(1 == 1) {
+        double *vtx_coord = NULL;
+        int n_vtx = PDM_multipart_part_vtx_coord_get(mpart_id,
+                                                     i_dom,
+                                                     i_part,
+                                                     &vtx_coord,
+                                                     PDM_OWNERSHIP_KEEP);
+        char filename[999];
+        sprintf(filename, "out_vtx_%i_%i_%i.vtk", i_dom, i_part, i_rank);
+        PDM_vtk_write_point_cloud(filename,
+                                  n_vtx,
+                                  vtx_coord,
+                                  pvtx_ln_to_gn[i_dom][i_part],
+                                  NULL);
+
       }
 
     }

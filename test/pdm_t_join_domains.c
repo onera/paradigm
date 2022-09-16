@@ -426,47 +426,13 @@ _compute_face_vtx2
 // mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi
 // mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -t 8 -pi -pj
 // Repro LS89 : mpirun -np 2 ./test/pdm_t_join_domains -nx 5 -ny 4 -nz 2 -pt-scotch -pj
+// mpirun -np 1 ./test/pdm_t_join_domains -nx 3 -ny 3 -nz 2 -pi -pt-scotch -n_part 2
 int main
 (
  int   argc,
  char *argv[]
 )
 {
-  // PDM_MPI_Init(&argc, &argv);
-
-  // int size          = 4;
-  // int array[2*4] = {4, 0, 2, 1, 2, 0, 1, 1};
-  // int* lorder = malloc(size * sizeof(int));
-  // PDM_order_lnum_s(array, 2, lorder, size);
-
-  // PDM_order_array(size, 2 * sizeof(int), lorder, array);
-
-  // PDM_log_trace_array_int(lorder,   size, "lorder : ");
-  // PDM_log_trace_array_int(array, 2 * size, "Sorted array : ");
-
-
-  // // Search
-  // int elt_to_find1[] = {1, 1};
-  // int elt_to_find2[] = {2, 0};
-  // int elt_to_find3[] = {2, 1};
-  // int elt_to_find4[] = {4, 0};
-  // int elt_to_find5[] = {4, 1};
-  // int pos1 = PDM_order_binary_search_long(elt_to_find1, array, 2, size);
-  // int pos2 = PDM_order_binary_search_long(elt_to_find2, array, 2, size);
-  // int pos3 = PDM_order_binary_search_long(elt_to_find3, array, 2, size);
-  // int pos4 = PDM_order_binary_search_long(elt_to_find4, array, 2, size);
-  // int pos5 = PDM_order_binary_search_long(elt_to_find5, array, 2, size);
-
-  // printf("pos1 = %i \n", pos1);
-  // printf("pos2 = %i \n", pos2);
-  // printf("pos3 = %i \n", pos3);
-  // printf("pos4 = %i \n", pos4);
-  // printf("pos5 = %i \n", pos5);
-
-  // free(lorder);
-
-  // PDM_MPI_Finalize();
-  // return 0;
   /*
    *  Set default values
    */
@@ -724,6 +690,7 @@ int main
 
     // PDM_log_trace_array_int(dedge_vtx_idx[i], dn_edge[i], "dedge_vtx_idx[i] :: ");
     // PDM_log_trace_array_long(dedge_vtx[i], dedge_vtx_idx[i][dn_edge[i]], "dedge_vtx[i] :: ");
+    // PDM_log_trace_connectivity_long(dedge_vtx_idx[i], dedge_vtx[i], dn_edge[i], "dedge_vtx ::");
 
   }
 
@@ -954,6 +921,16 @@ int main
                                   vtx_ln_to_gn,
                                   face_bound_ln_to_gn,
                                   vtx);
+
+      // for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
+      //   int i_vtx1 = PDM_ABS(edge_vtx[2*i_edge  ])-1;
+      //   int i_vtx2 = PDM_ABS(edge_vtx[2*i_edge+1])-1;
+      //   log_trace("i_edge(%i) = %i / %i | %i = %i / %i\n", i_edge,
+      //             i_vtx1, i_vtx2, edge_ln_to_gn[i_edge],
+      //             vtx_ln_to_gn[i_vtx1], vtx_ln_to_gn[i_vtx2]);
+      //   // log_trace("i_edge(%i) = %i / %i \n", edge_ln_to_gn[i_edge],
+      //   //           vtx_ln_to_gn[i_vtx1], vtx_ln_to_gn[i_vtx2]);
+      // }
 
       /*
        *  Mini-Bricoloage

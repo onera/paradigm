@@ -2462,6 +2462,7 @@ _warm_up_domain_interface
       neighbor_interface[i_part][  i  ] = pdi_neighbor[i_part][4*i+3];
     }
     // PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], neighbor_desc[i_part], 3, n_entity[i_part], "neighbor_desc (debug) :");
+    // PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], pdi_neighbor[i_part], 4, n_entity[i_part], "neighbor_desc (debug) :");
     free(pdi_neighbor[i_part]);
 
   }
@@ -2539,7 +2540,7 @@ _warm_up_domain_interface
          */
         int idx_write2 = idx_write;
         if(gentity2_entity1 != NULL) {
-          // log_trace("i_entity = %i \n", i_entity);
+          // log_trace("-------------------------- i_entity = %i \n", i_entity);
           for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
             int strid = entity2_entity1_opp_n[i_part+shift_part][idx_entity];
             assert(strid == gentity2_entity1_n[i_part+shift_part][i_entity]);
@@ -2547,6 +2548,14 @@ _warm_up_domain_interface
             /*
              * Translate all incoming data in current partition info
              */
+            // log_trace(" \t \t i_entity = %i %i \n", _entity_ln_to_gn[i_entity], _entity_ln_to_gn_opp[idx_entity]);
+
+            // Dans le cas ou on a une entité qui rebondit sur nous on ignore car gérer par les raccord de partitionnement
+            if(_entity_ln_to_gn[i_entity] == _entity_ln_to_gn_opp[idx_entity]) {
+              idx_read_recv += strid;
+              continue; // Cause we are the same entities, no interface need to be manage
+            }
+
             for(int p = 0; p < strid; ++p) {
               PDM_g_num_t gopp    = PDM_ABS (entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
               int         sgn_opp = PDM_SIGN(entity2_entity1_opp[i_part+shift_part][idx_read_recv+p]);
@@ -2555,8 +2564,11 @@ _warm_up_domain_interface
               // printf("Search elmt = %i %i\n", gopp, _neighbor_interface[idx_entity]);
               // printf("n_cur_interface_entity1[i_part+shift_part] = %i \n", n_cur_interface_entity1[i_part+shift_part]);
               // PDM_log_trace_array_long(entity1_opp_gnum_and_interface[i_part+shift_part], 2 * n_cur_interface_entity1[i_part+shift_part], "entity1_opp_gnum_and_interface ::");
+
+              // log_trace("i_entity = %i | idx_entity = %i \n", i_entity, idx_entity);
+              // log_trace("Search elmt = %i %i \n", gopp, _neighbor_interface[idx_entity]);
               int pos = PDM_order_binary_search_long(search_elmt, entity1_opp_gnum_and_interface[i_part+shift_part], 2, n_cur_interface_entity1[i_part+shift_part]);
-              // printf("pos = %i \n", pos);
+              // log_trace("pos = %i \n", pos);
               assert(pos != -1);
 
               int         lentity        = entity1_current_lentity[i_part+shift_part][pos    ];
@@ -2671,13 +2683,12 @@ _warm_up_domain_interface
             idx_read_recv += strid;
           }
           idx_read += gentity2_entity1_n[i_part+shift_part][i_entity];
-        }
+        } /* END gentity2_entity1 != NULL */
 
 
         for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
 
-          // log_trace("_entity_ln_to_gn_opp[%i] = %i \n", idx_entity, _entity_ln_to_gn_opp[idx_entity]);
-
+          // log_trace("(%i) _entity_ln_to_gn_opp[%i] = %i \n", _entity_ln_to_gn[i_entity], idx_entity, _entity_ln_to_gn_opp[idx_entity]);
           // _opp_interface_and_gnum[2*idx_entity  ] =  _entity_ln_to_gn_opp[idx_entity];
           // _opp_interface_and_gnum[2*idx_entity+1] =  _neighbor_interface [idx_entity]; // Opposite interface so revert sign
           // _current_lentity[idx_entity] = i_entity;
@@ -2704,6 +2715,7 @@ _warm_up_domain_interface
       PDM_g_num_t *unique_opp_interface_and_gnum = malloc( 2 * _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(PDM_g_num_t));
       int         *unique_current_lentity        = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
       int         *unique_current_sens           = malloc(     _neighbor_idx[n_entity[i_part+shift_part]] * sizeof(int        ));
+      // PDM_log_trace_array_long(opp_interface_and_gnum[i_part+shift_part], 2  * idx_write , "_opp_interface_and_gnum (Avant unique) ");
 
       int n_unique = 0;
 
@@ -6194,8 +6206,11 @@ PDM_part_extension_compute
    * Warm up domain interface --> Usefull to rebuild connectivity inside domain interface
    */
   _compute_other_domain_interface(part_ext);
+  // log_trace("_warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX ) \n");
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_VTX );
+  // log_trace("_warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE ) \n");
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_EDGE);
+  // log_trace("_warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE ) \n");
   _warm_up_domain_interface(part_ext, PDM_BOUND_TYPE_FACE);
   // exit(1);
 
