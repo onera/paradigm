@@ -732,6 +732,10 @@ PDM_triangle_ray_intersection
 
   double normal[3];
   PDM_CROSS_PRODUCT(normal, v01, v02);
+  double det = PDM_DOT_PRODUCT(normal, normal);
+  if (det < 1e-30) {
+    return PDM_TRIANGLE_DEGENERATED;
+  }
   // PDM_log_trace_array_double(normal, 3, "normal : ");
 
   double vec[3] = {
@@ -755,7 +759,7 @@ PDM_triangle_ray_intersection
       double b = PDM_DOT_PRODUCT(v01, v02);
       double c = PDM_DOT_PRODUCT(v02, v02);
 
-      double det = a*c - b*b;
+      // double det = a*c - b*b;
 
       double vec2[3] = {
         origin[0] - tri_coord[0],
@@ -861,7 +865,7 @@ PDM_triangle_ray_intersection
       double b = PDM_DOT_PRODUCT(v01, v02);
       double c = PDM_DOT_PRODUCT(v02, v02);
 
-      double det = a*c - b*b;
+      // double det = a*c - b*b;
 
       double vec2[3] = {
         intersection[0] - tri_coord[0],

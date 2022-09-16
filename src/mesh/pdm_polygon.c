@@ -1152,6 +1152,7 @@ PDM_polygon_ray_intersection
     for (int i = 0; i < n_vtx; i++) {
       poly_vtx[i] = i+1;
     }
+    int is_degenerate = 0;
     PDM_geom_elem_polygon_properties(1,
                                      poly_vtx_idx,
                                      poly_vtx,
@@ -1159,7 +1160,11 @@ PDM_polygon_ray_intersection
                                      __poly_normal,
                                      __poly_center,
                                      NULL,
-                                     NULL);
+                                     &is_degenerate);
+
+    if (is_degenerate) {
+      return PDM_POLYGON_DEGENERATED;
+    }
   }
 
   if (_poly_center == NULL) {
@@ -1184,23 +1189,25 @@ PDM_polygon_ray_intersection
   if (PDM_ABS(denom) < epsilon) {   // Epsilon is here to avoid division by 0
     if (PDM_ABS(numer) < epsilon) { // The ray is inside the polygon's median plane
       // 1) Check if ray origin is inside polygon
-      PDM_polygon_status_t orig_in_poly = PDM_polygon_point_in_new(intersection,
+      PDM_polygon_status_t orig_in_poly = PDM_polygon_point_in_new(ray_origin,
                                                                    n_vtx,
                                                                    vtx_coord,
                                                                    poly_bound,
                                                                    _poly_normal);
 
-      if (orig_in_poly == PDM_POLYGON_INSIDE) {
+      if (orig_in_poly != PDM_POLYGON_OUTSIDE) {
 
-        memcpy(intersection, ray_origin, sizeof(double) * 3);
-        *t = 0.;
+        if (orig_in_poly == PDM_POLYGON_INSIDE) {
+          memcpy(intersection, ray_origin, sizeof(double) * 3);
+          *t = 0.;
 
-        if (weight != NULL) {
-          PDM_mean_values_polygon_3d(n_vtx,
-                                     vtx_coord,
-                                     1,
-                                     intersection,
-                                     weight);
+          if (weight != NULL) {
+            PDM_mean_values_polygon_3d(n_vtx,
+                                       vtx_coord,
+                                       1,
+                                       intersection,
+                                       weight);
+          }
         }
 
         return orig_in_poly;
@@ -1266,7 +1273,7 @@ PDM_polygon_ray_intersection
   }
 
 
-  // We found an intersection point, now check if it is inside the polygon
+  /* We found an intersection point, now check if it is inside the polygon */
   // double poly_bound[6] = {
   //   HUGE_VAL, -HUGE_VAL,
   //   HUGE_VAL, -HUGE_VAL,
