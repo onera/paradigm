@@ -300,7 +300,7 @@ char *argv[]
                (void **) &blk_src_coord);
 
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
-  PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
+  // PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   // PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
 
