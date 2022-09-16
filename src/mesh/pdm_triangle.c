@@ -759,16 +759,8 @@ PDM_triangle_ray_intersection
       double b = PDM_DOT_PRODUCT(v01, v02);
       double c = PDM_DOT_PRODUCT(v02, v02);
 
-      // double det = a*c - b*b;
-
-      double vec2[3] = {
-        origin[0] - tri_coord[0],
-        origin[1] - tri_coord[1],
-        origin[2] - tri_coord[2]
-      };
-
-      double e = PDM_DOT_PRODUCT(vec2, v01);
-      double f = PDM_DOT_PRODUCT(vec2, v02);
+      double e = -PDM_DOT_PRODUCT(vec, v01);
+      double f = -PDM_DOT_PRODUCT(vec, v02);
 
       double u = e*c - f*b;
       double v = a*f - b*e;
@@ -864,8 +856,6 @@ PDM_triangle_ray_intersection
       double a = PDM_DOT_PRODUCT(v01, v01);
       double b = PDM_DOT_PRODUCT(v01, v02);
       double c = PDM_DOT_PRODUCT(v02, v02);
-
-      // double det = a*c - b*b;
 
       double vec2[3] = {
         intersection[0] - tri_coord[0],
