@@ -140,6 +140,270 @@ _read_args
 
 static
 void
+_adaptative_tree2
+(
+  int           n_pts,
+  double       *pts_coord,
+  PDM_g_num_t  *pts_gnum,
+  int           n_box,
+  double       *box_extents,
+  PDM_g_num_t  *box_gnum,
+  PDM_MPI_Comm  comm
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+  /*
+   * Hilbert of points AND boxes
+   */
+  int    *weight_pts = malloc(    n_pts * sizeof(int   ));
+  int    *weight_box = malloc(    n_box * sizeof(int   ));
+  double *box_center = malloc(3 * n_box * sizeof(double));
+  for(int i = 0; i < n_pts; ++i) {
+    weight_pts[i] = 1;
+  }
+  for(int i = 0; i < n_box; ++i) {
+    weight_box[i] = 1;
+    box_center[3*i  ] = 0.5 * (box_extents[6*i  ] + box_extents[6*i+3]);
+    box_center[3*i+1] = 0.5 * (box_extents[6*i+1] + box_extents[6*i+4]);
+    box_center[3*i+2] = 0.5 * (box_extents[6*i+2] + box_extents[6*i+5]);
+  }
+
+  PDM_part_to_block_t* ptb_pts = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                               PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
+                                                               1.,
+                                                               PDM_PART_GEOM_HILBERT,
+                                                               &pts_coord,
+                                                               &pts_gnum,
+                                                               &weight_pts,
+                                                               &n_pts,
+                                                               1,
+                                                               comm);
+  free(weight_pts);
+
+  PDM_part_to_block_t* ptb_box = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                               PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
+                                                               1.,
+                                                               PDM_PART_GEOM_HILBERT,
+                                                               &box_center,
+                                                               &box_gnum,
+                                                               &weight_box,
+                                                               &n_box,
+                                                               1,
+                                                               comm);
+  free(weight_box);
+  free(box_center);
+
+
+  double *blk_pts_coord = NULL;
+  PDM_part_to_block_exch(ptb_pts,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) &pts_coord,
+                         NULL,
+               (void **) &blk_pts_coord);
+
+
+  double *blk_box_extents = NULL;
+  PDM_part_to_block_exch(ptb_box,
+                         6 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) &box_extents,
+                         NULL,
+               (void **) &blk_box_extents);
+
+  int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
+  int dn_box = PDM_part_to_block_n_elt_block_get(ptb_box);
+
+  // Plus besoin du gnum pour l'instant ....
+  PDM_part_to_block_free(ptb_pts);
+  PDM_part_to_block_free(ptb_box);
+
+  PDM_MPI_Comm comm_alone;
+  PDM_MPI_Comm_split(comm, i_rank, 0, &(comm_alone));
+
+  PDM_MPI_Datatype mpi_extent_type;
+  PDM_MPI_Type_create_contiguous(6, PDM_MPI_DOUBLE, &mpi_extent_type);
+  PDM_MPI_Type_commit(&mpi_extent_type);
+
+  // Build only octree
+  PDM_point_tree_seq_t* coarse_tree_pts = PDM_point_tree_seq_create(PDM_DOCTREE_LOCAL_TREE_OCTREE,
+                                                                    3, // depth_max
+                                                                    1,
+                                                                    1e-8);
+  PDM_point_tree_seq_point_cloud_set(coarse_tree_pts, dn_pts, blk_pts_coord);
+  PDM_point_tree_seq_build(coarse_tree_pts);
+
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
+    PDM_point_tree_seq_write_nodes(coarse_tree_pts, filename);
+  }
+
+  int n_iter = 2;
+  for(int i_iter = 0; i_iter < n_iter; ++i_iter) {
+
+    /*
+     * Extract extents on all local_tree
+     */
+    int     n_coarse_pts_box       = 0;
+    int    *coarse_pts_box_id      = NULL;
+    double *coarse_pts_box_extents = NULL;
+    int    *coarse_pts_box_n_pts   = NULL; // Number of point in boxes
+
+    PDM_point_tree_seq_extract_nodes(coarse_tree_pts,
+                                     0,
+                                     1, // Depth
+                                     &n_coarse_pts_box,
+                                     &coarse_pts_box_id,
+                                     &coarse_pts_box_extents,
+                                     &coarse_pts_box_n_pts);
+
+    int *n_g_coarse_pts_box = malloc(n_rank * sizeof(int));
+    PDM_MPI_Allgather (&n_coarse_pts_box , 1, PDM_MPI_INT,
+                       n_g_coarse_pts_box, 1, PDM_MPI_INT, comm);
+
+    int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
+    g_extract_boxes_idx[0] = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_coarse_pts_box[i];
+    }
+    double *g_coarse_pts_box_extents = malloc(6 * g_extract_boxes_idx[n_rank] * sizeof(double));
+
+    PDM_MPI_Allgatherv(coarse_pts_box_extents  , n_coarse_pts_box, mpi_extent_type,
+                       g_coarse_pts_box_extents, n_g_coarse_pts_box,
+                       g_extract_boxes_idx,
+                       mpi_extent_type, comm);
+
+    int *g_coarse_pts_box_id = malloc( g_extract_boxes_idx[n_rank] * sizeof(int));
+    PDM_MPI_Allgatherv(coarse_pts_box_id  , n_coarse_pts_box, PDM_MPI_INT,
+                       g_coarse_pts_box_id, n_g_coarse_pts_box,
+                       g_extract_boxes_idx,
+                       PDM_MPI_INT, comm);
+
+    for(int i = 0; i < n_rank; ++i) {
+      for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
+        g_coarse_pts_box_id[j] += g_extract_boxes_idx[i];
+      }
+    }
+
+    /*
+     * Build tree
+     */
+    PDM_g_num_t *coarse_pts_box_gnum         = malloc(    g_extract_boxes_idx[n_rank] * sizeof(PDM_g_num_t));
+    int         *init_location_coase_pts_box = malloc(3 * g_extract_boxes_idx[n_rank] * sizeof(int        ));
+    for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
+      // coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i] + 1;
+      coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]; // On suppose que root = 0 donc g_id lineraire a partir de 1
+      init_location_coase_pts_box[3*i  ] = 0;
+      init_location_coase_pts_box[3*i+1] = 0;
+      init_location_coase_pts_box[3*i+2] = i+1;
+    }
+    free(g_coarse_pts_box_id);
+
+    PDM_log_trace_connectivity_long(g_extract_boxes_idx, coarse_pts_box_gnum, n_rank, "coarse_pts_box_gnum ::");
+
+    PDM_box_set_t  *coarse_pts_box_set = PDM_box_set_create(3,
+                                                            0,  // No normalization to preserve initial extents
+                                                            0,  // No projection to preserve initial extents
+                                                            g_extract_boxes_idx[n_rank],
+                                                            coarse_pts_box_gnum,
+                                                            g_coarse_pts_box_extents,
+                                                            1,
+                                                            &g_extract_boxes_idx[n_rank],
+                                                            init_location_coase_pts_box,
+                                                            comm_alone);
+
+    int   max_boxes_leaf_coarse = 1;   // Max number of boxes in a leaf for coarse coarse BBTree
+    int   max_tree_depth_coarse = 31;  // Max tree depth for coarse coarse BBTree
+    float max_box_ratio_coarse  = 5;   // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+    PDM_box_tree_t* coarse_pts_bt_shared = PDM_box_tree_create (max_tree_depth_coarse,
+                                                                max_boxes_leaf_coarse,
+                                                                max_box_ratio_coarse);
+
+    PDM_box_tree_set_boxes (coarse_pts_bt_shared,
+                            coarse_pts_box_set,
+                            PDM_BOX_TREE_ASYNC_LEVEL);
+
+    free(coarse_pts_box_gnum);
+    free(init_location_coase_pts_box);
+
+    if(1 == 1) {
+      char filename[999];
+      sprintf(filename, "coarse_pts_box_set_%i.vtk", i_rank);
+      PDM_box_tree_write_vtk(filename, coarse_pts_bt_shared, -1, 0);
+
+      sprintf(filename, "coarse_pts_box_%i.vtk", i_rank);
+      PDM_vtk_write_boxes(filename,
+                          g_extract_boxes_idx[n_rank],
+                          g_coarse_pts_box_extents,
+                          NULL);
+    }
+
+
+    // Intersect naîvily
+    int *box_to_coarse_box_pts_idx = NULL;
+    int *box_to_coarse_box_pts     = NULL;
+    PDM_box_tree_intersect_boxes_boxes(coarse_pts_bt_shared,
+                                       -1,
+                                       dn_box,
+                                       blk_box_extents,
+                                       &box_to_coarse_box_pts_idx,
+                                       &box_to_coarse_box_pts);
+
+    PDM_log_trace_connectivity_int(box_to_coarse_box_pts_idx,
+                                   box_to_coarse_box_pts,
+                                   dn_box, "box_to_coarse_box_pts ::");
+
+
+    free(coarse_pts_box_id     );
+    free(coarse_pts_box_extents);
+    free(coarse_pts_box_n_pts  );
+
+    free(box_to_coarse_box_pts_idx);
+    free(box_to_coarse_box_pts);
+    free(g_coarse_pts_box_extents);
+    free(g_extract_boxes_idx);
+    free(n_g_coarse_pts_box);
+
+
+    // On fait block_to_part sur les box en refaisant une distrib implicit !!
+    // Attention il faut envoyer le gnum original également
+    // On compresse l'info des boites de pts intersecter
+    //    --> On cherche
+
+
+    // L'idée c'est pour un nouveau block de données garder le lien grossier avec l'arbre de points
+    // Donc le gnum de box_pts puis on retrouve le rank avec le g_extract_boxes_idx (PDM_binary_search_gap )
+    // Attention au deuxieme coup le binary search gap se fait sur le neigbor qu'il faut garder !!!!
+    // PDM_binary_search_gap(i_leaf, distrib, n_degree) + puis translate en numero global de rank
+
+
+
+    PDM_box_set_destroy (&coarse_pts_box_set);
+    PDM_box_tree_destroy(&coarse_pts_bt_shared);
+
+  }
+
+
+  PDM_point_tree_seq_free(coarse_tree_pts);
+
+  PDM_MPI_Comm_free(&comm_alone);
+  PDM_MPI_Type_free(&mpi_extent_type);
+
+  free(blk_pts_coord);
+  free(blk_box_extents);
+}
+
+static
+void
 _adaptative_tree
 (
   int           n_pts,
@@ -414,7 +678,7 @@ _adaptative_tree
       coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]; // On suppose que root = 0 donc g_id lineraire a partir de 1
       init_location_coase_pts_box[3*i  ] = 0;
       init_location_coase_pts_box[3*i+1] = 0;
-      init_location_coase_pts_box[3*i+2] = i;
+      init_location_coase_pts_box[3*i+2] = i+1;
     }
     free(g_coarse_pts_box_id);
 
@@ -574,6 +838,9 @@ _adaptative_tree
 
       for(int j = coarse_box_to_coarse_box_pts_idx[i_coarse_box]; j < coarse_box_to_coarse_box_pts_idx[i_coarse_box+1]; ++j) {
         int t_rank = target_rank[idx++];
+
+        // if(box intersect octree) -> Elimine les boites qui rentre pas dans la feuille de l'octree
+
         send_box_n[t_rank] += n_boxes;
       }
     }
@@ -764,6 +1031,18 @@ _adaptative_tree
     PDM_box_set_destroy (&box_set);
     PDM_box_tree_destroy(&bt_shared);
 
+    /*
+     * Pour l'octree adaptative, il faut faire converger par rang MPI le ratio box / pts
+     *  Donc on sait que il faut rajouter une profondeur sur une feuille en particulier
+     *  Dans l'échange de ptb_equi_pts_box on rajoute le nombre de points par boites de boites
+     *  Si c'est inférieur à une tolérence -> Ok la feuille est deja bien decoupé
+     *  Sinon ben c'est elle qu'on deglingue d'un niveau
+     *  Il faut enlever le truc sur les global_extents et laisser l'octree se faire separement sur les pts / boites
+     *  --> Sinon on contraint l'un avec l'autre -> C'est pas l'idée ici
+     *
+     */
+
+
   }
 
   PDM_MPI_Comm_free(&comm_alone);
@@ -935,13 +1214,13 @@ char *argv[]
 
   // PDM_doctree_build(doct);
 
-  _adaptative_tree(n_src,
-                   src_coord,
-                   src_g_num,
-                   n_box,
-                   box_extents,
-                   box_gnum,
-                   comm);
+  _adaptative_tree2(n_src,
+                    src_coord,
+                    src_g_num,
+                    n_box,
+                    box_extents,
+                    box_gnum,
+                    comm);
 
   // if(1 == 1) {
 
