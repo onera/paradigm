@@ -1746,11 +1746,17 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_compute (mesh_loc);
+  // PDM_mesh_location_compute (mesh_loc);
+  PDM_mesh_location_compute_optim2(mesh_loc);
 
   PDM_mesh_location_dump_times (mesh_loc);
 
-
+  PDM_MPI_Barrier(comm);
+  if (i_rank == 0) {
+    printf("OK! :D");
+  }
+  PDM_MPI_Finalize();
+  return 0;
 
 
   /*

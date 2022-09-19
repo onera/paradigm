@@ -264,6 +264,12 @@ PDM_doctree_create
     doct->times_cpu_s  [i] = 0.;
   }
 
+  doct->ownership              = PDM_OWNERSHIP_KEEP;
+  doct->ptb_unit_op_equi       = NULL;
+  doct->block_pts_in_box_n     = NULL;
+  doct->block_pts_in_box_g_num = NULL;
+  doct->block_pts_in_box_coord = NULL;
+
   return doct;
 }
 
@@ -1607,6 +1613,15 @@ PDM_doctree_build
   /* Remove doubles */
   int n_unit_op_equi_elt_block = PDM_part_to_block_n_elt_block_get (doct->ptb_unit_op_equi);
   if (1) {
+    log_trace("-- doctree block frame (before removing doubles) --\n");
+    int sum_weight = 0;
+    for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
+      sum_weight += block_pts_in_box_n[i];
+    }
+    log_trace("sum_weight = %d\n", sum_weight);
+  }
+
+  if (1) {
     int max_n = 0;
     for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
       max_n = PDM_MAX (max_n, block_pts_in_box_n[i]);
@@ -1657,6 +1672,21 @@ PDM_doctree_build
   doct->block_pts_in_box_n     = block_pts_in_box_n;
   doct->block_pts_in_box_g_num = block_pts_in_box_g_num;
   doct->block_pts_in_box_coord = block_pts_in_box_coord;
+
+  if (1) {
+    PDM_g_num_t *dbox_g_num = PDM_part_to_block_block_gnum_get(doct->ptb_unit_op_equi);
+    int *idx = PDM_array_new_idx_from_sizes_int(block_pts_in_box_n,
+                                                n_unit_op_equi_elt_block);
+    log_trace("-- doctree block frame (after removing doubles) --\n");
+    for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
+      log_trace("box "PDM_FMT_G_NUM" : pts ", dbox_g_num[i]);
+      PDM_log_trace_array_long(block_pts_in_box_g_num + idx[i],
+                               block_pts_in_box_n[i],
+                               "");
+    }
+    log_trace("sum_weight = %d\n", idx[n_unit_op_equi_elt_block]);
+    free(idx);
+  }
 
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
   PDM_mpi_win_shared_unlock_all (wshared_entity_gnum);
@@ -1808,6 +1838,41 @@ PDM_doctree_results_in_orig_frame_get
   free(tmp_pts_in_box_coord);
 }
 
+void
+PDM_doctree_results_in_block_frame_get
+(
+ PDM_doctree_t       *doct,
+ int                 *dn_box,
+ PDM_g_num_t        **dbox_g_num,
+ int                **dbox_pts_idx,
+ PDM_g_num_t        **dbox_pts,
+ double             **pts_coord,
+ PDM_ownership_t      ownership
+)
+{
+  doct->ownership = ownership;
+
+  *dn_box = PDM_part_to_block_n_elt_block_get(doct->ptb_unit_op_equi);
+
+  PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get(doct->ptb_unit_op_equi);
+
+  if (ownership == PDM_OWNERSHIP_USER) {
+    *dbox_g_num = malloc(sizeof(PDM_g_num_t) * (*dn_box));
+    memcpy(*dbox_g_num,
+           block_g_num,
+           sizeof(PDM_g_num_t) * (*dn_box));
+  }
+  else {
+    *dbox_g_num = block_g_num;
+  }
+
+  *dbox_pts_idx = PDM_array_new_idx_from_sizes_int(doct->block_pts_in_box_n,
+                                                   *dn_box);
+
+  *dbox_pts  = doct->block_pts_in_box_g_num;
+  *pts_coord = doct->block_pts_in_box_coord;
+}
+
 
 void
 PDM_doctree_free
@@ -1820,8 +1885,10 @@ PDM_doctree_free
   free(doct->pts_coords       );
   free(doct->pts_init_location);
 
-  free(doct->block_pts_in_box_g_num);
-  free(doct->block_pts_in_box_coord);
+  if (doct->ownership == PDM_OWNERSHIP_KEEP) {
+    free(doct->block_pts_in_box_g_num);
+    free(doct->block_pts_in_box_coord);
+  }
   free(doct->block_pts_in_box_n    );
 
   PDM_part_to_block_free(doct->ptb_unit_op_equi);

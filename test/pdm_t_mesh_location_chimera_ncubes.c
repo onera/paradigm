@@ -2092,7 +2092,7 @@ int main(int argc, char *argv[])
     /*
      * Export vtk extract surface
      */
-    if(0 == 1) {
+    if(1 == 1) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
         char filename[999];
         sprintf(filename, "external_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);
@@ -2302,9 +2302,17 @@ int main(int argc, char *argv[])
     PDM_mesh_location_tolerance_set(mesh_loc[i_mesh], tolerance);
     PDM_mesh_location_method_set(mesh_loc[i_mesh], loc_method);
 
-    PDM_mesh_location_compute (mesh_loc[i_mesh]);
+    // PDM_mesh_location_compute (mesh_loc[i_mesh]);
+    PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
 
     PDM_mesh_location_dump_times (mesh_loc[i_mesh]);
+
+    PDM_MPI_Barrier(comm);
+    if (i_rank == 0) {
+      printf("OK! :D");
+    }
+    PDM_MPI_Finalize();
+    return 0;
 
 
   }

@@ -209,6 +209,9 @@ _read_args(int                          argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-doctree") == 0) {
+      *loc_method = PDM_MESH_LOCATION_DOCTREE;
+    }
     else if (strcmp(argv[i], "-no_uvw") == 0) {
       *disable_uvw = 1;
     }
@@ -1163,7 +1166,8 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_compute (mesh_loc);
+  // PDM_mesh_location_compute (mesh_loc);
+  PDM_mesh_location_compute_optim2(mesh_loc);
 
   PDM_mesh_location_dump_times (mesh_loc);
 
