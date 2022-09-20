@@ -3039,6 +3039,121 @@ PDM_MPI_setup_hybrid_dist_comm_graph
 
 
 
+int
+PDM_MPI_Dist_graph_neighbors_count
+(
+  PDM_MPI_Comm  comm,
+  int          *n_degree_in,
+  int          *n_degree_out,
+  int          *is_weighted
+)
+{
+  int code = MPI_Dist_graph_neighbors_count(_pdm_mpi_2_mpi_comm(comm),
+                                            n_degree_in,
+                                            n_degree_out,
+                                            is_weighted);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+
+int
+PDM_MPI_Dist_graph_neighbors
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *sources,
+  int            n_degree_out,
+  int           *destinations
+)
+{
+  int code = MPI_Dist_graph_neighbors(_pdm_mpi_2_mpi_comm(comm),
+                                      n_degree_in, sources, MPI_UNWEIGHTED,
+                                      n_degree_out, destinations, MPI_UNWEIGHTED);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+
+
+void
+PDM_MPI_setup_dist_graph_from_neighbor_in
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *neighbor_in,
+  PDM_MPI_Comm  *comm_dist_graph_out
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int *send_n   = malloc(  n_rank    * sizeof(int));
+  int *recv_n   = malloc(  n_rank    * sizeof(int));
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+    recv_n[i] = 0;
+  }
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    send_n[neighbor_in[i]]++;
+  }
+
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
+    send_cur_i_rank[idx_write] = i_rank;
+  }
+
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+
+  PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
+                    recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
+
+
+  int n_degrees_out = recv_idx[n_rank];
+  int *neighbor_out = recv_opp_i_rank; // Already sort normaly
+
+  free(send_n);
+  free(recv_n);
+  free(send_idx);
+  free(recv_idx);
+  free(send_cur_i_rank);
+
+  PDM_MPI_Dist_graph_create_adjacent(comm,
+                                     n_degree_in,
+                                     neighbor_in,
+                                     n_degrees_out,
+                                     neighbor_out,
+                                     0,
+                                     comm_dist_graph_out);
+}
+
+
+
 
 #ifdef __cplusplus
 }

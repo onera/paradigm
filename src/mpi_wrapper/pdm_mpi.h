@@ -815,6 +815,34 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   int          **neighbor
 );
 
+int
+PDM_MPI_Dist_graph_neighbors_count
+(
+  PDM_MPI_Comm  comm,
+  int          *n_degree_in,
+  int          *n_degree_out,
+  int          *is_weighted
+);
+
+int
+PDM_MPI_Dist_graph_neighbors
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *sources,
+  int            n_degree_out,
+  int           *destinations
+);
+
+void
+PDM_MPI_setup_dist_graph_from_neighbor_in
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *neighbor_in,
+  PDM_MPI_Comm  *comm_dist_graph_out
+);
+
 
 #ifdef __cplusplus
 }
