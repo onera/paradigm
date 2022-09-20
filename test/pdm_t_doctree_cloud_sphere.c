@@ -301,7 +301,8 @@ _adaptative_tree2
     int         *init_location_coase_pts_box = malloc(3 * g_extract_boxes_idx[n_rank] * sizeof(int        ));
     for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
       // coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i] + 1;
-      coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]; // On suppose que root = 0 donc g_id lineraire a partir de 1
+      // coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]; // On suppose que root = 0 donc g_id lineraire a partir de 1
+      coarse_pts_box_gnum[i] = i+1; // On suppose que root = 0 donc g_id lineraire a partir de 1
       init_location_coase_pts_box[3*i  ] = 0;
       init_location_coase_pts_box[3*i+1] = 0;
       init_location_coase_pts_box[3*i+2] = i+1;
@@ -331,6 +332,7 @@ _adaptative_tree2
     PDM_box_tree_set_boxes (coarse_pts_bt_shared,
                             coarse_pts_box_set,
                             PDM_BOX_TREE_ASYNC_LEVEL);
+    const PDM_g_num_t *bt_box_pts_gnum = PDM_box_set_get_g_num (coarse_pts_box_set);
 
     free(coarse_pts_box_gnum);
     free(init_location_coase_pts_box);
@@ -368,29 +370,49 @@ _adaptative_tree2
     free(coarse_pts_box_n_pts  );
 
     free(g_coarse_pts_box_extents);
-    free(g_extract_boxes_idx);
-    free(n_g_coarse_pts_box);
 
 
     // On fait block_to_part sur les box en refaisant une distrib implicit !!
     // Attention il faut envoyer le gnum original également
     // On compresse l'info des boites de pts intersecter
     //    --> On cherche
-
-    PDM_g_num_t *extract_box_gnum    = malloc(    dn_box    * sizeof(PDM_g_num_t));
-    double      *weight              = malloc(    dn_box    * sizeof(double));
-    double      *extract_box_extents = malloc(6 * dn_box    * sizeof(double));
     int n_extract = 0;
+    int n_extract_box_to_coarse_box_pts_tot = 0;
     for(int i = 0; i < dn_box; ++i) {
       if(box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i] == 0) {
         continue;
       }
+      n_extract_box_to_coarse_box_pts_tot += box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i];
+      n_extract++;
+    }
+
+    PDM_g_num_t *extract_box_gnum                = malloc(    n_extract    * sizeof(PDM_g_num_t));
+    double      *weight                          = malloc(    n_extract    * sizeof(double     ));
+    double      *extract_box_extents             = malloc(6 * n_extract    * sizeof(double     ));
+    int         *extract_box_to_coarse_box_pts_n = malloc(6 * n_extract    * sizeof(int        ));
+    int         *extract_box_to_coarse_box_pts   = malloc(n_extract_box_to_coarse_box_pts_tot * sizeof(int        ));
+
+    int idx_write = 0;
+    n_extract = 0;
+    for(int i = 0; i < dn_box; ++i) {
+
+      if(box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i] == 0) {
+        continue;
+      }
+
       extract_box_gnum[n_extract] = n_extract+1;
       weight          [n_extract] = box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i];
       for(int k = 0; k < 6; ++k) {
         extract_box_extents[6*n_extract+k] = blk_box_extents[6*i+k];
       }
+
+      extract_box_to_coarse_box_pts_n[n_extract] = box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i];
+      for(int j = box_to_coarse_box_pts_idx[i]; j < box_to_coarse_box_pts_idx[i+1]; ++j) {
+        extract_box_to_coarse_box_pts[idx_write++] = (int) bt_box_pts_gnum[box_to_coarse_box_pts[j]];
+      }
+
       n_extract++;
+
     }
 
     PDM_g_num_t _n_extract = n_extract;
@@ -428,16 +450,115 @@ _adaptative_tree2
                  (void **) &tmp_blk_box_extents);
     free(extract_box_extents);
 
-    int          dn_equi_box      = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
+    int *blk_box_to_coarse_box_pts_n = NULL;
+    int *blk_box_to_coarse_box_pts   = NULL;
+    PDM_part_to_block_exch(ptb_equi_box,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                 (int  **) &extract_box_to_coarse_box_pts_n,
+                 (void **) &extract_box_to_coarse_box_pts,
+                           &blk_box_to_coarse_box_pts_n,
+                 (void **) &blk_box_to_coarse_box_pts);
+    free(extract_box_to_coarse_box_pts_n);
+    free(extract_box_to_coarse_box_pts);
+
+    int          dn_equi_box      = PDM_part_to_block_n_elt_block_get(ptb_equi_box);
+    int          dn_box_proc      = PDM_part_to_block_n_elt_proc_get (ptb_equi_box);
     // PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
 
     dn_box = dn_equi_box;
     free(blk_box_extents);
     blk_box_extents = tmp_blk_box_extents;
 
+    /*
+     * Unique id of boxes
+     */
+    int *shared_box_tag = malloc(g_extract_boxes_idx[n_rank] * sizeof(int)); // Suralloc
+    int *shared_box_id = malloc(g_extract_boxes_idx[n_rank] * sizeof(int)); // Suralloc
+    for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
+      shared_box_tag[i] = -1;
+    }
 
+    int n_neighbor_in = 0;
+
+    int idx_read = 0;
+    for(int i = 0; i < dn_equi_box; ++i) {
+      for(int j = 0; j < blk_box_to_coarse_box_pts_n[i]; ++j) {
+        if(shared_box_tag[blk_box_to_coarse_box_pts[idx_read]-1] == -1) {
+          shared_box_tag[blk_box_to_coarse_box_pts[idx_read]-1] = blk_box_to_coarse_box_pts[idx_read];
+          shared_box_id[n_neighbor_in++] = blk_box_to_coarse_box_pts[idx_read];
+        }
+        idx_read++;
+      }
+    }
+
+
+    free(blk_box_to_coarse_box_pts_n);
+    free(blk_box_to_coarse_box_pts);
+
+    PDM_log_trace_array_int(shared_box_id, n_neighbor_in, "shared_box_id :");
+
+    free(g_extract_boxes_idx);
+    free(n_g_coarse_pts_box);
+    free(shared_box_tag);
+    free(shared_box_id);
+
+    /*
+     * Identify where block are send and keep original intersection with pts_boxes
+     */
+    // int *dest_rank = PDM_part_to_block_destination_get(ptb_equi_box);
+    // int *rank_tag    = malloc(n_rank * sizeof(int));
+    // int *neighbor_in = malloc(n_rank * sizeof(int)); // A adpater avec le nombre de range voisin courant
+    // for(int i = 0; i < n_rank; ++i) {
+    //   neighbor_in[i] = -1;
+    //   rank_tag   [i] = -1;
+    // }
+
+    // PDM_log_trace_array_int(dest_rank, dn_box_proc, "dest_rank :");
+
+    // int n_neighbor = 0;
+    // for(int i = 0; i < dn_box_proc; ++i) {
+    //   if(rank_tag[dest_rank[i]] == -1) {
+    //     neighbor_in[n_neighbor++] = dest_rank[i];
+    //     rank_tag[dest_rank[i]] = 1;
+    //   }
+    // }
+    // free(rank_tag);
+
+    // neighbor_in = realloc(neighbor_in, n_neighbor * sizeof(int));
+
+    // int *send_n = malloc(n_rank * sizeof(int));
+    // int *recv_n = malloc(n_rank * sizeof(int));
+
+    // for(int i = 0; i < n_rank; ++i) {
+    //   send_n[i] = 0;
+    // }
+
+    // for(int i = 0; i < n_neighbor; ++i) {
+    //   send_n[neighbor_in[i]] = n_intersect_box_pts;
+    // }
+
+
+    // PDM_log_trace_array_int(neighbor_in, n_neighbor, "neighbor_in ::");
+
+    /*
+     * Setup comm_dist_graph
+     */
+    // PDM_MPI_Comm comm_dist_graph;
+    // PDM_MPI_setup_dist_graph_from_neighbor_in(comm, n_neighbor, neighbor_in, &comm_dist_graph);
+
+
+    // Au coup d'après
+    // int *lrecv_count = malloc(n_degree_in * sizeof(int));
+    // PDM_MPI_Neighbor_allgather(&n_coarse_box , 1, PDM_MPI_INT,
+    //                            lrecv_count   , 1, PDM_MPI_INT, comm_dist_graph);
+
+
+    // PDM_MPI_Comm_free(&comm_dist_graph);
+
+    // J'envoie à mes voisins les feuilles que j'ai intersecté
     PDM_part_to_block_free(ptb_equi_box);
-
 
     // L'idée c'est pour un nouveau block de données garder le lien grossier avec l'arbre de points
     // Donc le gnum de box_pts puis on retrouve le rank avec le g_extract_boxes_idx (PDM_binary_search_gap )
@@ -456,6 +577,8 @@ _adaptative_tree2
 
     PDM_box_set_destroy (&coarse_pts_box_set);
     PDM_box_tree_destroy(&coarse_pts_bt_shared);
+
+    // free(neighbor_in);
 
   }
 
