@@ -32,6 +32,7 @@
 #include "pdm_box_tree.h"
 #include "pdm_block_to_part.h"
 #include "pdm_box_priv.h"
+#include "pdm_binary_search.h"
 
 /*============================================================================
  * Macro definitions
@@ -464,7 +465,7 @@ _adaptative_tree2
     free(extract_box_to_coarse_box_pts);
 
     int          dn_equi_box      = PDM_part_to_block_n_elt_block_get(ptb_equi_box);
-    int          dn_box_proc      = PDM_part_to_block_n_elt_proc_get (ptb_equi_box);
+    // int          dn_box_proc      = PDM_part_to_block_n_elt_proc_get (ptb_equi_box);
     // PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
 
     dn_box = dn_equi_box;
@@ -480,14 +481,14 @@ _adaptative_tree2
       shared_box_tag[i] = -1;
     }
 
-    int n_neighbor_in = 0;
+    int n_shared_box_in = 0;
 
     int idx_read = 0;
     for(int i = 0; i < dn_equi_box; ++i) {
       for(int j = 0; j < blk_box_to_coarse_box_pts_n[i]; ++j) {
         if(shared_box_tag[blk_box_to_coarse_box_pts[idx_read]-1] == -1) {
-          shared_box_tag[blk_box_to_coarse_box_pts[idx_read]-1] = blk_box_to_coarse_box_pts[idx_read];
-          shared_box_id[n_neighbor_in++] = blk_box_to_coarse_box_pts[idx_read];
+          shared_box_tag[blk_box_to_coarse_box_pts[idx_read]-1] = blk_box_to_coarse_box_pts[idx_read]-1;
+          shared_box_id[n_shared_box_in++] = blk_box_to_coarse_box_pts[idx_read]-1;
         }
         idx_read++;
       }
@@ -497,65 +498,68 @@ _adaptative_tree2
     free(blk_box_to_coarse_box_pts_n);
     free(blk_box_to_coarse_box_pts);
 
-    PDM_log_trace_array_int(shared_box_id, n_neighbor_in, "shared_box_id :");
+    PDM_log_trace_array_int(shared_box_id, n_shared_box_in, "shared_box_id :");
+
+    // Ok now we know with wich proc we communicate
+    int n_neighbor_in = 0;
+    int *neighbor_in  = malloc(n_rank * sizeof(int)); // A adpater avec le nombre de range voisin courant
+    int *neighbor_tag = malloc(n_rank * sizeof(int)); // A adpater avec le nombre de range voisin courant
+    for(int i = 0; i < n_rank; ++i) {
+      neighbor_tag[i] = -1;
+    }
+
+    for(int i = 0; i < n_shared_box_in; ++i) {
+      int t_rank = PDM_binary_search_gap_long((PDM_g_num_t) shared_box_id[i], g_extract_boxes_idx, n_rank+1);
+      if(neighbor_tag[t_rank] == -1) {
+        neighbor_tag[t_rank] = t_rank;
+        neighbor_in [n_neighbor_in++] = t_rank;
+      }
+    }
+
+    PDM_log_trace_array_int(neighbor_in, n_neighbor_in, "neighbor_in :");
+
+    PDM_MPI_Comm comm_dist_graph;
+    PDM_MPI_setup_dist_graph_from_neighbor_in(comm, n_neighbor_in, neighbor_in, &comm_dist_graph);
+
+    int n_sources      = 0;
+    int n_destinations = 0;
+    int is_weight      = 0;
+    PDM_MPI_Dist_graph_neighbors_count(comm_dist_graph, &n_sources, &n_destinations, &is_weight);
+
+    int *sources      = malloc(n_sources      * sizeof(int));
+    int *destinations = malloc(n_destinations * sizeof(int));
+
+    PDM_MPI_Dist_graph_neighbors(comm_dist_graph, n_sources, sources, n_destinations, destinations);
+
+    /*
+     * On connait les rang qui ont la data qu'on souhaite
+     */
+    int *send_n = malloc(n_destinations * sizeof(int));
+    int *recv_n = malloc(n_sources      * sizeof(int));
+
+    //
+
+    PDM_MPI_Neighbor_alltoall(send_n, 1, PDM_MPI_INT,
+                              recv_n, 1, PDM_MPI_INT, comm_dist_graph);
+
+
+
+    free(send_n);
+    free(recv_n);
+
+    free(sources);
+    free(destinations);
+    free(neighbor_in);
+    free(neighbor_tag);
 
     free(g_extract_boxes_idx);
     free(n_g_coarse_pts_box);
     free(shared_box_tag);
     free(shared_box_id);
 
-    /*
-     * Identify where block are send and keep original intersection with pts_boxes
-     */
-    // int *dest_rank = PDM_part_to_block_destination_get(ptb_equi_box);
-    // int *rank_tag    = malloc(n_rank * sizeof(int));
-    // int *neighbor_in = malloc(n_rank * sizeof(int)); // A adpater avec le nombre de range voisin courant
-    // for(int i = 0; i < n_rank; ++i) {
-    //   neighbor_in[i] = -1;
-    //   rank_tag   [i] = -1;
-    // }
-
-    // PDM_log_trace_array_int(dest_rank, dn_box_proc, "dest_rank :");
-
-    // int n_neighbor = 0;
-    // for(int i = 0; i < dn_box_proc; ++i) {
-    //   if(rank_tag[dest_rank[i]] == -1) {
-    //     neighbor_in[n_neighbor++] = dest_rank[i];
-    //     rank_tag[dest_rank[i]] = 1;
-    //   }
-    // }
-    // free(rank_tag);
-
-    // neighbor_in = realloc(neighbor_in, n_neighbor * sizeof(int));
-
-    // int *send_n = malloc(n_rank * sizeof(int));
-    // int *recv_n = malloc(n_rank * sizeof(int));
-
-    // for(int i = 0; i < n_rank; ++i) {
-    //   send_n[i] = 0;
-    // }
-
-    // for(int i = 0; i < n_neighbor; ++i) {
-    //   send_n[neighbor_in[i]] = n_intersect_box_pts;
-    // }
 
 
-    // PDM_log_trace_array_int(neighbor_in, n_neighbor, "neighbor_in ::");
-
-    /*
-     * Setup comm_dist_graph
-     */
-    // PDM_MPI_Comm comm_dist_graph;
-    // PDM_MPI_setup_dist_graph_from_neighbor_in(comm, n_neighbor, neighbor_in, &comm_dist_graph);
-
-
-    // Au coup d'après
-    // int *lrecv_count = malloc(n_degree_in * sizeof(int));
-    // PDM_MPI_Neighbor_allgather(&n_coarse_box , 1, PDM_MPI_INT,
-    //                            lrecv_count   , 1, PDM_MPI_INT, comm_dist_graph);
-
-
-    // PDM_MPI_Comm_free(&comm_dist_graph);
+    PDM_MPI_Comm_free(&comm_dist_graph);
 
     // J'envoie à mes voisins les feuilles que j'ai intersecté
     PDM_part_to_block_free(ptb_equi_box);
