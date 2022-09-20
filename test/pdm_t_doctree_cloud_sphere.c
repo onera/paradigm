@@ -367,8 +367,6 @@ _adaptative_tree2
     free(coarse_pts_box_extents);
     free(coarse_pts_box_n_pts  );
 
-    free(box_to_coarse_box_pts_idx);
-    free(box_to_coarse_box_pts);
     free(g_coarse_pts_box_extents);
     free(g_extract_boxes_idx);
     free(n_g_coarse_pts_box);
@@ -379,13 +377,82 @@ _adaptative_tree2
     // On compresse l'info des boites de pts intersecter
     //    --> On cherche
 
+    PDM_g_num_t *extract_box_gnum    = malloc(    dn_box    * sizeof(PDM_g_num_t));
+    double      *weight              = malloc(    dn_box    * sizeof(double));
+    double      *extract_box_extents = malloc(6 * dn_box    * sizeof(double));
+    int n_extract = 0;
+    for(int i = 0; i < dn_box; ++i) {
+      if(box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i] == 0) {
+        continue;
+      }
+      extract_box_gnum[n_extract] = n_extract+1;
+      weight          [n_extract] = box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i];
+      for(int k = 0; k < 6; ++k) {
+        extract_box_extents[6*n_extract+k] = blk_box_extents[6*i+k];
+      }
+      n_extract++;
+    }
+
+    PDM_g_num_t _n_extract = n_extract;
+    PDM_g_num_t offset = 0;
+    PDM_MPI_Exscan(&n_extract, &offset, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+
+    for(int i = 0; i < n_extract; ++i) {
+      extract_box_gnum[i] = extract_box_gnum[i] + offset;
+    }
+    PDM_log_trace_array_long(extract_box_gnum, n_extract, "extract_box_gnum ::");
+
+    free(box_to_coarse_box_pts_idx);
+    free(box_to_coarse_box_pts);
+
+    PDM_part_to_block_t* ptb_equi_box = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                 1.,
+                                                                 &extract_box_gnum,
+                                                                 &weight,
+                                                                 &n_extract,
+                                                                 1,
+                                                                 comm);
+    free(weight);
+    free(extract_box_gnum);
+
+    double *tmp_blk_box_extents = NULL;
+    int     stride_one = 1;
+    PDM_part_to_block_exch(ptb_equi_box,
+                           6 * sizeof(double),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+                 (void **) &extract_box_extents,
+                           NULL,
+                 (void **) &tmp_blk_box_extents);
+    free(extract_box_extents);
+
+    int          dn_equi_box      = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
+    // PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
+
+    dn_box = dn_equi_box;
+    free(blk_box_extents);
+    blk_box_extents = tmp_blk_box_extents;
+
+
+    PDM_part_to_block_free(ptb_equi_box);
+
 
     // L'idée c'est pour un nouveau block de données garder le lien grossier avec l'arbre de points
     // Donc le gnum de box_pts puis on retrouve le rank avec le g_extract_boxes_idx (PDM_binary_search_gap )
     // Attention au deuxieme coup le binary search gap se fait sur le neigbor qu'il faut garder !!!!
     // PDM_binary_search_gap(i_leaf, distrib, n_degree) + puis translate en numero global de rank
-
-
+    // MPI_TOPO_TEST(comm, status) --> Pas besoin on peut se baser sur n_iter
+    // On a 2 comm, le basique + le courant : On detruit le courant puis on le refait avec le nouveau neighbor
+    if(1 == 1) {
+      char filename[999];
+      sprintf(filename, "boxes_iter_%i_%i.vtk", i_iter, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          dn_box,
+                          blk_box_extents,
+                          NULL);
+    }
 
     PDM_box_set_destroy (&coarse_pts_box_set);
     PDM_box_tree_destroy(&coarse_pts_bt_shared);
