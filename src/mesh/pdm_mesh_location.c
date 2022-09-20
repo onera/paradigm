@@ -9720,6 +9720,7 @@ PDM_mesh_location_compute_optim2
 
     int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
     PDM_g_num_t *dpts_g_num = PDM_part_to_block_block_gnum_get(ptb_pts);
+    PDM_log_trace_array_long(dpts_g_num, dn_pts, "dpts_g_num : ");
 
     /* Exchange coordinates (do this with abstract distrib?) */
     double *dpts_coord = NULL;
@@ -9734,6 +9735,20 @@ PDM_mesh_location_compute_optim2
                             NULL,
                   (void **) &dpts_coord,
                             &request_pts_coord);
+
+    /* Exchange init location or parent g_num */
+    PDM_g_num_t *dpts_parent_g_num = NULL;
+    int request_pts_parent_g_num = -1;
+    PDM_part_to_block_iexch(ptb_pts,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) select_pts_parent_g_num,
+                            NULL,
+                  (void **) &dpts_parent_g_num,
+                            &request_pts_parent_g_num);
 
 
     // PDM_abstract_distrib_redistribute_start(ad_pts,
@@ -9761,6 +9776,7 @@ PDM_mesh_location_compute_optim2
 
     // PDM_abstract_distrib_redistribute_wait(ad_pts);
     PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
+    PDM_part_to_block_iexch_wait(ptb_pts, request_pts_parent_g_num);
 
     if (dbg_enabled) {
       char filename[999];
@@ -9768,7 +9784,7 @@ PDM_mesh_location_compute_optim2
       PDM_vtk_write_point_cloud(filename,
                                 dn_pts,
                                 dpts_coord,
-                                dpts_g_num,
+                                dpts_parent_g_num,
                                 NULL);
     }
 
@@ -9837,6 +9853,9 @@ PDM_mesh_location_compute_optim2
                             NULL,
                   (void **) &delt_extents,
                             &request_elt_extents);
+
+    /* Exchange init location */
+    //...
 
     // overlap this exchange?
     PDM_part_to_block_iexch_wait(ptb_elt, request_elt_extents);
@@ -9964,7 +9983,7 @@ PDM_mesh_location_compute_optim2
           for(int i = 0; i < dn_pts; ++i) {
             init_location_pts[3*i  ] = i_rank;
             init_location_pts[3*i+1] = 0;
-            init_location_pts[3*i+2] = i;
+            init_location_pts[3*i+2] = i+1;
           }
         }
         PDM_doctree_point_set(doct,
@@ -9980,7 +9999,7 @@ PDM_mesh_location_compute_optim2
         for(int i = 0; i < dn_elt; ++i) {
           init_location_box[3*i  ] = i_rank;
           init_location_box[3*i+1] = 0;
-          init_location_box[3*i+2] = i;
+          init_location_box[3*i+2] = i+1;
         }
 
         PDM_doctree_solicitation_set(doct,
@@ -10118,7 +10137,7 @@ PDM_mesh_location_compute_optim2
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
-    if (dbg_enabled) {
+    if (0) {//dbg_enabled) {
       log_trace("-- origin frame --\n");
       for (int i = 0; i < dn_elt; i++) {
         log_trace("box "PDM_FMT_G_NUM" : pts ", delt_g_num[i]);
@@ -10128,11 +10147,13 @@ PDM_mesh_location_compute_optim2
       }
     }
 
+    // part_to_part pour échanger parent_g_num des pts et des elt
+
     //
     // block_to_block pondéré pour réquilibrage charge sur les boites -> Def de la nouvelle frame des elements
 
     //
-    // tri des points pour eleminer les points multiples -> Def de la nouvelle frame des points
+    // (tri des points pour eleminer les points multiples) -> Def de la nouvelle frame des points
 
     //
     // PDM_abstract_redistribute pour les points et les elements
@@ -10142,9 +10163,23 @@ PDM_mesh_location_compute_optim2
 
     //
     // PDM_abstract_distrib_permutation_locale a partir du resultat du tri
+    // permutation locale dans ptp?
 
     //
     // PDM_abstract_distrib_from_origin pour recuperer les connectivite et coordonnees des noeuds
+    // sans triplet pour l'instant (ptp_elt classique en reverse)
+
+
+    // appeler PDM_point_location_nodal
+
+    // part_to_block (partiel) sur les points en passant distance et element local
+    // choix du plus proche
+    // renvoi du num dupoint a l'element selectionne -1 sinon
+    // tassage du tableau en blocs d'elements (supprimer les -1 et donnees associees)
+
+
+    // ptp elt->init points
+    // ptp_elt direct
 
 
     free(box_pts_idx);
