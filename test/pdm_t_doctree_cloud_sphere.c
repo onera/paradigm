@@ -780,14 +780,14 @@ _adaptative_tree2
       recv_child_extract_idx[i+1] = recv_child_extract_idx[i] + recv_child_extract_n[i];
     }
 
-    if(0 == 1) {
+    if(1 == 1) {
       PDM_log_trace_array_int(send_child_extract_idx, n_destinations+1, "send_child_extract_idx ::");
       PDM_log_trace_array_int(recv_child_extract_idx, n_sources+1     , "recv_child_extract_idx ::");
     }
 
     int *recv_extract_id = malloc(recv_child_extract_idx[n_sources] * sizeof(int));
-    PDM_MPI_Neighbor_alltoallv (extract_child_id, send_child_extract_n, send_child_extract_idx, mpi_extent_type,
-                                recv_extract_id , recv_child_extract_n, recv_child_extract_idx, mpi_extent_type, comm_dist_graph);
+    PDM_MPI_Neighbor_alltoallv (extract_child_id, send_child_extract_n, send_child_extract_idx, PDM_MPI_INT,
+                                recv_extract_id , recv_child_extract_n, recv_child_extract_idx, PDM_MPI_INT, comm_dist_graph);
 
 
     double *recv_extract_extents = malloc(6 * recv_child_extract_idx[n_sources] * sizeof(double));
