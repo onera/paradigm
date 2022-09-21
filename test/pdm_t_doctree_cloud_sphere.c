@@ -741,7 +741,7 @@ _adaptative_tree2
     int    *extract_child_id  = NULL;
     int    *extract_is_leaf   = NULL;
     double *extract_extents   = NULL;
-    double *node_to_child_idx = NULL;
+    int    *node_to_child_idx = NULL;
 
     PDM_point_tree_seq_extract_extents_by_child_ids(coarse_tree_pts,
                                                     n_node_to_extract,
@@ -755,31 +755,60 @@ _adaptative_tree2
     PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
     PDM_log_trace_connectivity_int(node_to_child_idx, extract_child_id, n_node_to_extract, "node_to_child ::");
 
-    // int *n_g_coarse_next_pts_box = malloc(n_rank * sizeof(int));
-    // PDM_MPI_Neighbor_allgather (&n_coarse_next_pts_box , 1, PDM_MPI_INT,
-    //                             n_g_coarse_next_pts_box, 1, PDM_MPI_INT, comm_dist_graph_reverse);
+    // Accumulate to prepare send
+    int *send_child_extract_n = malloc(n_destinations * sizeof(int));
+    for(int i = 0; i < n_destinations; ++i) {
+      send_child_extract_n[i] = 0;
+      for(int j = recv_request_pts_box_idx[i]; j < recv_request_pts_box_idx[i+1]; ++j) {
+        send_child_extract_n[i] += node_to_child_idx[j+1] - node_to_child_idx[j];
+      }
+    }
 
-    // int *g_extract_boxes_next_idx = (int *) malloc (sizeof(int) * (n_rank+1));
-    // g_extract_boxes_next_idx[0] = 0;
-    // for(int i = 0; i < n_rank; ++i) {
-    //   g_extract_boxes_next_idx[i+1] = g_extract_boxes_next_idx[i] + n_g_coarse_next_pts_box[i];
-    // }
-    // double *g_coarse_next_pts_box_extents = malloc(6 * g_extract_boxes_next_idx[n_rank] * sizeof(double));
+    int *send_child_extract_idx = malloc((n_destinations+1) * sizeof(int));
+    send_child_extract_idx[0] = 0;
+    for(int i = 0; i < n_destinations; ++i) {
+      send_child_extract_idx[i+1] = send_child_extract_idx[i] + send_child_extract_n[i];
+    }
 
-    // free(coarse_next_pts_box_id     );
-    // free(coarse_next_pts_box_extents);
-    // free(coarse_next_pts_box_n_pts  );
-    // free(g_extract_boxes_next_idx);
-    // free(g_coarse_next_pts_box_extents);
+    int *recv_child_extract_n = malloc(n_sources * sizeof(int));
+    PDM_MPI_Neighbor_alltoall (send_child_extract_n, 1, PDM_MPI_INT,
+                               recv_child_extract_n, 1, PDM_MPI_INT, comm_dist_graph);
+
+    int *recv_child_extract_idx = malloc((n_sources+1) * sizeof(int));
+    recv_child_extract_idx[0] = 0;
+    for(int i = 0; i < n_sources; ++i) {
+      recv_child_extract_idx[i+1] = recv_child_extract_idx[i] + recv_child_extract_n[i];
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(send_child_extract_idx, n_destinations+1, "send_child_extract_idx ::");
+      PDM_log_trace_array_int(recv_child_extract_idx, n_sources+1     , "recv_child_extract_idx ::");
+    }
+
+    double *recv_extract_extents = malloc(6 * recv_child_extract_idx[n_sources] * sizeof(double));
+    PDM_MPI_Neighbor_alltoallv (extract_extents     , send_child_extract_n, send_child_extract_idx, mpi_extent_type,
+                                recv_extract_extents, recv_child_extract_n, recv_child_extract_idx, mpi_extent_type, comm_dist_graph);
+
+
+    if(1 == 1) {
+      char filename[999];
+      sprintf(filename, "recv_extract_extents_%i_%i.vtk", i_iter, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          recv_child_extract_idx[n_sources],
+                          recv_extract_extents,
+                          NULL);
+    }
+
+    free(send_child_extract_idx);
+    free(recv_child_extract_n);
+    free(recv_child_extract_idx);
+    free(send_child_extract_n);
 
     free(node_to_child_idx);
     free(extract_child_id);
     free(extract_is_leaf );
     free(extract_extents );
-
-
-
-
+    free(recv_extract_extents );
     free(blk_box_to_coarse_box_pts_n);
     free(blk_box_to_coarse_box_pts);
 
