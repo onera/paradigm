@@ -716,9 +716,69 @@ _adaptative_tree2
     PDM_MPI_Neighbor_alltoallv(blk_box_to_coarse_box_pts, send_request_pts_box_n, send_request_pts_box_idx, PDM_MPI_INT,
                                recv_request_pts_box     , recv_request_pts_box_n, recv_request_pts_box_idx, PDM_MPI_INT, comm_dist_graph_reverse);
 
+    // Unshift
+    int n_node_to_extract = recv_request_pts_box_idx[n_destinations];
+    for(int i = 0; i < n_node_to_extract; ++i) {
+      recv_request_pts_box[i] -= distrib_pts_box[i_rank];
+    }
+
     if(1 == 1) {
       PDM_log_trace_connectivity_long(recv_request_pts_box_idx, recv_request_pts_box, n_destinations, "recv_request_pts_box ::");
     }
+
+
+
+    /*
+     * Extract extents on all local_tree
+     */
+    // int     n_coarse_next_pts_box       = 0;
+    // int    *coarse_next_pts_box_id      = NULL;
+    // double *coarse_next_pts_box_extents = NULL;
+    // int    *coarse_next_pts_box_n_pts   = NULL; // Number of point in boxes
+
+
+    int     n_extract_child   = 0;
+    int    *extract_child_id  = NULL;
+    int    *extract_is_leaf   = NULL;
+    double *extract_extents   = NULL;
+    double *node_to_child_idx = NULL;
+
+    PDM_point_tree_seq_extract_extents_by_child_ids(coarse_tree_pts,
+                                                    n_node_to_extract,
+                                                    recv_request_pts_box,
+                                                    &n_extract_child,
+                                                    &node_to_child_idx,
+                                                    &extract_child_id,
+                                                    &extract_is_leaf,
+                                                    &extract_extents);
+
+    PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
+    PDM_log_trace_connectivity_int(node_to_child_idx, extract_child_id, n_node_to_extract, "node_to_child ::");
+
+    // int *n_g_coarse_next_pts_box = malloc(n_rank * sizeof(int));
+    // PDM_MPI_Neighbor_allgather (&n_coarse_next_pts_box , 1, PDM_MPI_INT,
+    //                             n_g_coarse_next_pts_box, 1, PDM_MPI_INT, comm_dist_graph_reverse);
+
+    // int *g_extract_boxes_next_idx = (int *) malloc (sizeof(int) * (n_rank+1));
+    // g_extract_boxes_next_idx[0] = 0;
+    // for(int i = 0; i < n_rank; ++i) {
+    //   g_extract_boxes_next_idx[i+1] = g_extract_boxes_next_idx[i] + n_g_coarse_next_pts_box[i];
+    // }
+    // double *g_coarse_next_pts_box_extents = malloc(6 * g_extract_boxes_next_idx[n_rank] * sizeof(double));
+
+    // free(coarse_next_pts_box_id     );
+    // free(coarse_next_pts_box_extents);
+    // free(coarse_next_pts_box_n_pts  );
+    // free(g_extract_boxes_next_idx);
+    // free(g_coarse_next_pts_box_extents);
+
+    free(node_to_child_idx);
+    free(extract_child_id);
+    free(extract_is_leaf );
+    free(extract_extents );
+
+
+
 
     free(blk_box_to_coarse_box_pts_n);
     free(blk_box_to_coarse_box_pts);

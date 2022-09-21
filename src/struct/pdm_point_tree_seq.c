@@ -1934,6 +1934,90 @@ PDM_point_tree_seq_extract_nodes
 
 /**
  *
+ * \brief Get node extents of subtree of given depth and starting from given root
+ *
+ * \param [in]  kdtree               Pointer to \ref PDM_kdtree_seq object
+ * \param [in]  root_id              ID of subtree root
+ * \param [in]  n_depth              Depth of subtree
+ * \param [out] n_node               Number of subtree nodes
+ * \param [out] node_ids             IDs of subtree nodes
+ * \param [out] node_extents         Extents of subtree nodes
+ * \param [out] node_weight          Weights of subtree nodes
+ *
+ */
+
+void
+PDM_point_tree_seq_extract_extents_by_child_ids
+(
+  PDM_point_tree_seq_t  *ptree,
+  const int              n_node_to_extract,
+  const int             *node_ids_to_extract,
+        int             *n_extract_child,
+        int            **node_to_child_idx,
+        int            **extract_child_id,
+        int            **extract_is_leaf,
+        double         **extract_extents
+)
+{
+  _l_nodes_t *nodes = ptree->nodes;
+
+  int    *_node_to_child_idx = malloc((n_node_to_extract + 1 ) * sizeof(int   ));
+  _node_to_child_idx[0] = 0;
+
+  int n_children   = PDM_point_tree_n_children_get(ptree);
+  double *_extract_extents   = malloc(n_node_to_extract * n_children * 6 * sizeof(double));
+  int    *_extract_child_id  = malloc(n_node_to_extract * n_children     * sizeof(int   ));
+  int    *_extract_is_leaf   = malloc(n_node_to_extract * n_children     * sizeof(int   ));
+  int     _n_extract_child   = 0;
+
+  for(int i_node_to_extract = 0; i_node_to_extract < n_node_to_extract; ++i_node_to_extract) {
+    int node_id = node_ids_to_extract[i_node_to_extract];
+    _node_to_child_idx[i_node_to_extract+1] = _node_to_child_idx[i_node_to_extract];
+
+    if(nodes->is_leaf[node_id]) {
+      _extract_child_id[_n_extract_child] = 1;
+      for(int k = 0; k < 6; ++k) {
+        _extract_extents[6*_n_extract_child+k] = nodes->extents[6*node_id+k];
+      }
+      _n_extract_child++;
+
+      _node_to_child_idx[i_node_to_extract+1]++;
+
+    } else {
+      const int *_child_ids = nodes->children_id + n_children*node_id;
+      for (int i = 0; i < n_children; i++) {
+        int child_id = _child_ids[i];
+        if (child_id < 0) {
+          continue;
+        }
+
+        _extract_child_id[_n_extract_child] = child_id;
+        _extract_is_leaf [_n_extract_child] = 1;
+
+        for(int k = 0; k < 6; ++k) {
+          _extract_extents[6*_n_extract_child+k] = nodes->extents[6*child_id+k];
+        }
+
+        _node_to_child_idx[i_node_to_extract+1]++;
+        _n_extract_child++;
+      }
+    }
+  }
+
+  _extract_extents  = realloc(_extract_extents , _n_extract_child * 6 * sizeof(double));
+  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
+  _extract_is_leaf  = realloc(_extract_is_leaf , _n_extract_child     * sizeof(int   ));
+
+  *n_extract_child   = _n_extract_child;
+  *node_to_child_idx = _node_to_child_idx;
+  *extract_child_id  = _extract_child_id;
+  *extract_is_leaf   = _extract_is_leaf;
+  *extract_extents   = _extract_extents;
+}
+
+
+/**
+ *
  * \brief Look for closest points stored inside a point_tree
  *
  * \param [in]   ptree                  Pointer to \ref PDM_point_tree_seq object
