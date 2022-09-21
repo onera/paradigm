@@ -6668,9 +6668,9 @@ PDM_box_tree_intersect_boxes_boxes
 
   const int dim = bt->boxes->dim;
   const int two_dim = 2*dim;
-  //int normalized = bt->boxes->normalized;
+  // int normalized = bt->boxes->normalized;
 
-  /* if (normalized) { */
+  // if (normalized) {
   double *_tgt_box_extents = malloc (sizeof(double) * two_dim * n_tgt_box);
   PDM_box_set_normalize_robust ((PDM_box_set_t *) bt->boxes,
                                 n_tgt_box*2,
@@ -7208,7 +7208,7 @@ PDM_box_tree_extract_extents
     int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
     _node_t *node = &(box_tree_data->nodes[node_id]);
 
-    if (node->is_leaf) {
+    if (node_depth[node_id] < depth_max && node->is_leaf) {
       continue;
     }
 

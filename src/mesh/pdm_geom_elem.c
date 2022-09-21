@@ -2452,6 +2452,19 @@ PDM_geom_elem_edge_upwind_and_downwind
   double *upwind_point   = *upwind_point_out;
   double *downwind_point = *downwind_point_out;
 
+  for(int i = 0; i < n_edge; ++i) {
+    upwind_cell  [i] = -1;
+    downwind_cell[i] = -1;
+    upwind_face  [i] = -1;
+    downwind_face[i] = -1;
+    upwind_point  [3*i  ] = DBL_MAX;
+    upwind_point  [3*i+1] = DBL_MAX;
+    upwind_point  [3*i+2] = DBL_MAX;
+    downwind_point[3*i  ] = DBL_MAX;
+    downwind_point[3*i+1] = DBL_MAX;
+    downwind_point[3*i+2] = DBL_MAX;
+  }
+
 
   PDM_triangulate_state_t *tri_state  = NULL;
   int                     *tri_vtx    = NULL;

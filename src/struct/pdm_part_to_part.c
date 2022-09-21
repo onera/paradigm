@@ -1634,8 +1634,7 @@ _create
  const PDM_MPI_Comm    comm
 )
 {
-  PDM_part_to_part_t *ptp =
-    (PDM_part_to_part_t *) malloc (sizeof(PDM_part_to_part_t));
+  PDM_part_to_part_t *ptp = (PDM_part_to_part_t *) malloc (sizeof(PDM_part_to_part_t));
 
   /* Init */
   ptp->comm                     = comm;
@@ -1650,7 +1649,7 @@ _create
 
   ptp->part1_to_part2_triplet   = part1_to_part2_triplet;
 
-  assert( (gnum_elt2 == NULL) ? (part1_to_part2_triplet != NULL) : (part1_to_part2 != NULL)); 
+  // assert( (gnum_elt2 == NULL) ? (part1_to_part2_triplet != NULL) : (part1_to_part2 != NULL));
 
   /* Copy */
   ptp->n_elt1 = malloc( ptp->n_part1 * sizeof(int));
@@ -1770,7 +1769,7 @@ _create
 
   PDM_gnum_location_t *gl = NULL;
 
-  if (gnum_elt2 != NULL) {
+  if (gnum_elt2 != NULL || part1_to_part2_triplet == NULL ) {
 
     gl = PDM_gnum_location_create (n_part2, n_part1, comm, PDM_OWNERSHIP_KEEP);
 
@@ -2518,6 +2517,7 @@ PDM_part_to_part_create
  const PDM_MPI_Comm    comm
 )
 {
+  // int from_triplet = 0;
   return _create (gnum_elt1,
                   n_elt1,
                   n_part1,
