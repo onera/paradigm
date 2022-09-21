@@ -98,7 +98,7 @@ PDM_doctree_results_in_block_frame_get
  PDM_doctree_t       *doct,
  int                 *dn_box,
  PDM_g_num_t        **dbox_g_num,
- int                **dbox_pts_idx,
+ int                **dbox_pts_n,
  PDM_g_num_t        **dbox_pts,
  double             **pts_coord,
  PDM_ownership_t      ownership

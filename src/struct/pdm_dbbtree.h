@@ -13,6 +13,7 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_box.h"
+#include "pdm_part_to_block.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -240,6 +241,20 @@ PDM_dbbtree_points_inside_boxes
  PDM_g_num_t       **pts_in_box_g_num,
  double            **pts_in_box_coord,
  const int           ellipsoids
+ );
+
+void
+PDM_dbbtree_points_inside_boxes_block_frame
+(
+ PDM_dbbtree_t        *dbbt,
+ const int             n_pts,
+ PDM_g_num_t           pts_g_num[],
+ double                pts_coord[],
+ PDM_part_to_block_t **ptb_out,
+ int                 **dbox_pts_n,
+ PDM_g_num_t         **dbox_pts_g_num,
+ double              **dbox_pts_coord,
+ const int             ellipsoids
  );
 
 

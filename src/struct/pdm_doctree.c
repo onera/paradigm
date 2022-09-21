@@ -1844,7 +1844,7 @@ PDM_doctree_results_in_block_frame_get
  PDM_doctree_t       *doct,
  int                 *dn_box,
  PDM_g_num_t        **dbox_g_num,
- int                **dbox_pts_idx,
+ int                **dbox_pts_n,
  PDM_g_num_t        **dbox_pts,
  double             **pts_coord,
  PDM_ownership_t      ownership
@@ -1866,11 +1866,9 @@ PDM_doctree_results_in_block_frame_get
     *dbox_g_num = block_g_num;
   }
 
-  *dbox_pts_idx = PDM_array_new_idx_from_sizes_int(doct->block_pts_in_box_n,
-                                                   *dn_box);
-
-  *dbox_pts  = doct->block_pts_in_box_g_num;
-  *pts_coord = doct->block_pts_in_box_coord;
+  *dbox_pts_n = doct->block_pts_in_box_n;
+  *dbox_pts   = doct->block_pts_in_box_g_num;
+  *pts_coord  = doct->block_pts_in_box_coord;
 }
 
 
@@ -1888,8 +1886,8 @@ PDM_doctree_free
   if (doct->ownership == PDM_OWNERSHIP_KEEP) {
     free(doct->block_pts_in_box_g_num);
     free(doct->block_pts_in_box_coord);
+    free(doct->block_pts_in_box_n    );
   }
-  free(doct->block_pts_in_box_n    );
 
   PDM_part_to_block_free(doct->ptb_unit_op_equi);
 
