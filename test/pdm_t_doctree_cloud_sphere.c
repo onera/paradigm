@@ -34,6 +34,8 @@
 #include "pdm_box_priv.h"
 #include "pdm_binary_search.h"
 #include "pdm_point_tree_seq_priv.h"
+#include "pdm_array.h"
+#include "pdm_unique.h"
 
 /*============================================================================
  * Macro definitions
@@ -619,8 +621,6 @@ _adaptative_tree2
 
     PDM_log_trace_array_int(blk_box_to_coarse_box_pts, n_unique_box_pts, "blk_box_to_coarse_box_pts :");
 
-    free(blk_box_to_coarse_box_pts_n);
-    free(blk_box_to_coarse_box_pts);
 
     /*
      * Setup boxes
@@ -638,28 +638,101 @@ _adaptative_tree2
      */
     int n_neighbor_in = 0;
     int *neighbor_tag = malloc(n_rank * sizeof(int));
-    int *neighbor_id  = malloc(n_rank * sizeof(int));
+    int *neighbor_in  = malloc(n_rank * sizeof(int));
     for(int i = 0; i < n_rank; ++i) {
       neighbor_tag[i] = -1;
     }
 
     // C'est sort donc on peux faire une range
-    int *pts_box_idx = PDM_array_zeros_int(n_rank+1);
+    int *send_request_pts_box_n   = PDM_array_zeros_int(n_rank+1);
+    int *send_request_pts_box_idx = PDM_array_zeros_int(n_rank+1);
     for(int i = 0; i < n_unique_box_pts; ++i) {
       int t_rank = PDM_binary_search_gap_long(blk_box_to_coarse_box_pts[i], distrib_pts_box, n_rank+1);
       if(neighbor_tag[t_rank] == -1) {
-        neighbor_id[n_neighbor_in++] = t_rank;
+        neighbor_in[n_neighbor_in++] = t_rank;
         neighbor_tag[t_rank] = n_neighbor_in;
       }
-      pts_box_idx[n_neighbor_in]++; // Car tout est trié
+      send_request_pts_box_n[n_neighbor_in-1]++; // Car tout est trié
     }
 
-    PDM_log_trace_array_int(neighbor_id, n_neighbor_in  , "neighbor_id :");
-    PDM_log_trace_array_int(pts_box_idx, n_neighbor_in+1, "pts_box_idx :");
+    send_request_pts_box_idx[0] = 0;
+    for(int i = 0; i < n_neighbor_in; ++i) {
+      send_request_pts_box_idx[i+1] = send_request_pts_box_idx[i] + send_request_pts_box_n[i];
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(neighbor_in, n_neighbor_in  , "neighbor_in :");
+      PDM_log_trace_array_int(send_request_pts_box_idx, n_neighbor_in+1, "send_request_pts_box_idx :");
+      PDM_log_trace_array_int(send_request_pts_box_n, n_neighbor_in  , "send_request_pts_box_n :");
+    }
+
+    PDM_MPI_Comm comm_dist_graph;
+    PDM_MPI_setup_dist_graph_from_neighbor_in(comm, n_neighbor_in, neighbor_in, &comm_dist_graph);
+
+    int n_sources      = 0;
+    int n_destinations = 0;
+    int is_weight      = 0;
+    PDM_MPI_Dist_graph_neighbors_count(comm_dist_graph, &n_sources, &n_destinations, &is_weight);
+
+    int *sources      = malloc(n_sources      * sizeof(int));
+    int *destinations = malloc(n_destinations * sizeof(int));
+
+    PDM_MPI_Dist_graph_neighbors(comm_dist_graph, n_sources, sources, n_destinations, destinations);
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(sources     , n_sources     , "sources ::");
+      PDM_log_trace_array_int(destinations, n_destinations, "destinations ::");
+    }
+
+    PDM_MPI_Comm comm_dist_graph_reverse;
+    PDM_MPI_Dist_graph_create_adjacent(comm,
+                                       n_destinations,
+                                       destinations,
+                                       n_sources,
+                                       sources,
+                                       0,
+                                       &comm_dist_graph_reverse);
+
+    int *recv_request_pts_box_n = malloc(n_destinations * sizeof(int));
+
+    PDM_MPI_Neighbor_alltoall(send_request_pts_box_n, 1, PDM_MPI_INT,
+                              recv_request_pts_box_n, 1, PDM_MPI_INT, comm_dist_graph_reverse);
 
 
+    int *recv_request_pts_box_idx = malloc((n_destinations+1) * sizeof(int));
+    recv_request_pts_box_idx[0] = 0;
+    for(int i = 0; i < n_destinations; ++i) {
+      recv_request_pts_box_idx[i+1] = recv_request_pts_box_idx[i] + recv_request_pts_box_n[i];
+    }
 
 
+    if(1 == 1) {
+      PDM_log_trace_array_int(recv_request_pts_box_idx, n_destinations+1, "recv_request_pts_box_idx :");
+      PDM_log_trace_array_int(recv_request_pts_box_n, n_destinations  , "recv_request_pts_box_n :");
+    }
+
+    int *recv_request_pts_box = malloc(recv_request_pts_box_idx[n_destinations] * sizeof(int));
+
+    PDM_MPI_Neighbor_alltoallv(blk_box_to_coarse_box_pts, send_request_pts_box_n, send_request_pts_box_idx, PDM_MPI_INT,
+                               recv_request_pts_box     , recv_request_pts_box_n, recv_request_pts_box_idx, PDM_MPI_INT, comm_dist_graph_reverse);
+
+    if(1 == 1) {
+      PDM_log_trace_connectivity_long(recv_request_pts_box_idx, recv_request_pts_box, n_destinations, "recv_request_pts_box ::");
+    }
+
+    free(blk_box_to_coarse_box_pts_n);
+    free(blk_box_to_coarse_box_pts);
+
+    free(send_request_pts_box_idx);
+    free(send_request_pts_box_n);
+    free(recv_request_pts_box_n);
+    free(recv_request_pts_box_idx);
+    free(recv_request_pts_box);
+
+    PDM_MPI_Comm_free(&comm_dist_graph);
+    PDM_MPI_Comm_free(&comm_dist_graph_reverse);
+
+    // Il faut faire attention a ne pas trop descendre dans l'arboresence !!!
 
     if(1 == 1) {
       char filename[999];
@@ -673,9 +746,13 @@ _adaptative_tree2
     PDM_box_set_destroy (&coarse_pts_box_set);
     PDM_box_tree_destroy(&coarse_pts_bt_shared);
 
-    // free(neighbor_in);
+    free(g_extract_boxes_idx);
+    free(n_g_coarse_pts_box);
     free(neighbor_tag);
-    free(neighbor_id);
+    free(neighbor_in);
+    free(sources);
+    free(destinations);
+
 
   }
 
