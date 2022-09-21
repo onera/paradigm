@@ -372,7 +372,7 @@ _adaptative_tree2
 
   // Build only octree
   PDM_point_tree_seq_t* coarse_tree_pts = PDM_point_tree_seq_create(PDM_DOCTREE_LOCAL_TREE_OCTREE,
-                                                                    2, // depth_max
+                                                                    3, // depth_max
                                                                     1,
                                                                     1e-8);
   PDM_point_tree_seq_point_cloud_set(coarse_tree_pts, dn_pts, blk_pts_coord);
@@ -388,62 +388,68 @@ _adaptative_tree2
   int dn_node = coarse_tree_pts->n_nodes;
   PDM_g_num_t* distrib_pts_box = PDM_compute_entity_distribution(comm, dn_node);
 
-  PDM_log_trace_array_long(distrib_pts_box, n_rank+1, "distrib_pts_box :");
+  // PDM_log_trace_array_long(distrib_pts_box, n_rank+1, "distrib_pts_box :");
 
+  /*
+   * Initialisation : Extract extents on all local_tree
+   */
+  int     n_coarse_pts_box       = 0;
+  int    *coarse_pts_box_id      = NULL;
+  double *coarse_pts_box_extents = NULL;
+  int    *coarse_pts_box_n_pts   = NULL; // Number of point in boxes
 
-  int n_iter = 1;
+  PDM_point_tree_seq_extract_nodes(coarse_tree_pts,
+                                   0,
+                                   1, // Depth
+                                   &n_coarse_pts_box,
+                                   &coarse_pts_box_id,
+                                   &coarse_pts_box_extents,
+                                   &coarse_pts_box_n_pts);
+
+  int *n_g_coarse_pts_box = malloc(n_rank * sizeof(int));
+  PDM_MPI_Allgather (&n_coarse_pts_box , 1, PDM_MPI_INT,
+                     n_g_coarse_pts_box, 1, PDM_MPI_INT, comm);
+
+  int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
+  g_extract_boxes_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_coarse_pts_box[i];
+  }
+  double *g_coarse_pts_box_extents = malloc(6 * g_extract_boxes_idx[n_rank] * sizeof(double));
+
+  PDM_MPI_Allgatherv(coarse_pts_box_extents  , n_coarse_pts_box, mpi_extent_type,
+                     g_coarse_pts_box_extents, n_g_coarse_pts_box,
+                     g_extract_boxes_idx,
+                     mpi_extent_type, comm);
+
+  int *g_coarse_pts_box_id = malloc( g_extract_boxes_idx[n_rank] * sizeof(int));
+  PDM_MPI_Allgatherv(coarse_pts_box_id  , n_coarse_pts_box, PDM_MPI_INT,
+                     g_coarse_pts_box_id, n_g_coarse_pts_box,
+                     g_extract_boxes_idx,
+                     PDM_MPI_INT, comm);
+
+  for(int i = 0; i < n_rank; ++i) {
+    for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
+      g_coarse_pts_box_id[j] += distrib_pts_box[i];
+    }
+  }
+
+  free(coarse_pts_box_id     );
+  free(coarse_pts_box_extents);
+  free(coarse_pts_box_n_pts  );
+  free(n_g_coarse_pts_box);
+
+  int n_neighbor_current = n_rank;
+
+  int n_iter = 2;
   for(int i_iter = 0; i_iter < n_iter; ++i_iter) {
-
-    /*
-     * Extract extents on all local_tree
-     */
-    int     n_coarse_pts_box       = 0;
-    int    *coarse_pts_box_id      = NULL;
-    double *coarse_pts_box_extents = NULL;
-    int    *coarse_pts_box_n_pts   = NULL; // Number of point in boxes
-
-    PDM_point_tree_seq_extract_nodes(coarse_tree_pts,
-                                     0,
-                                     1, // Depth
-                                     &n_coarse_pts_box,
-                                     &coarse_pts_box_id,
-                                     &coarse_pts_box_extents,
-                                     &coarse_pts_box_n_pts);
-
-    int *n_g_coarse_pts_box = malloc(n_rank * sizeof(int));
-    PDM_MPI_Allgather (&n_coarse_pts_box , 1, PDM_MPI_INT,
-                       n_g_coarse_pts_box, 1, PDM_MPI_INT, comm);
-
-    int *g_extract_boxes_idx = (int *) malloc (sizeof(int) * (n_rank+1));
-    g_extract_boxes_idx[0] = 0;
-    for(int i = 0; i < n_rank; ++i) {
-      g_extract_boxes_idx[i+1] = g_extract_boxes_idx[i] + n_g_coarse_pts_box[i];
-    }
-    double *g_coarse_pts_box_extents = malloc(6 * g_extract_boxes_idx[n_rank] * sizeof(double));
-
-    PDM_MPI_Allgatherv(coarse_pts_box_extents  , n_coarse_pts_box, mpi_extent_type,
-                       g_coarse_pts_box_extents, n_g_coarse_pts_box,
-                       g_extract_boxes_idx,
-                       mpi_extent_type, comm);
-
-    int *g_coarse_pts_box_id = malloc( g_extract_boxes_idx[n_rank] * sizeof(int));
-    PDM_MPI_Allgatherv(coarse_pts_box_id  , n_coarse_pts_box, PDM_MPI_INT,
-                       g_coarse_pts_box_id, n_g_coarse_pts_box,
-                       g_extract_boxes_idx,
-                       PDM_MPI_INT, comm);
-
-    for(int i = 0; i < n_rank; ++i) {
-      for(int j = g_extract_boxes_idx[i]; j < g_extract_boxes_idx[i+1]; ++j) {
-        g_coarse_pts_box_id[j] += distrib_pts_box[i];
-      }
-    }
 
     /*
      * Build tree
      */
-    PDM_g_num_t *coarse_pts_box_gnum         = malloc(    g_extract_boxes_idx[n_rank] * sizeof(PDM_g_num_t));
-    int         *init_location_coase_pts_box = malloc(3 * g_extract_boxes_idx[n_rank] * sizeof(int        ));
-    for(int i = 0; i < g_extract_boxes_idx[n_rank]; ++i) {
+    PDM_g_num_t *coarse_pts_box_gnum         = malloc(    g_extract_boxes_idx[n_neighbor_current] * sizeof(PDM_g_num_t));
+    int         *init_location_coase_pts_box = malloc(3 * g_extract_boxes_idx[n_neighbor_current] * sizeof(int        ));
+    for(int i = 0; i < g_extract_boxes_idx[n_neighbor_current]; ++i) {
       coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]+1;
       init_location_coase_pts_box[3*i  ] = 0;
       init_location_coase_pts_box[3*i+1] = 0;
@@ -451,16 +457,16 @@ _adaptative_tree2
     }
     free(g_coarse_pts_box_id);
 
-    PDM_log_trace_connectivity_long(g_extract_boxes_idx, coarse_pts_box_gnum, n_rank, "coarse_pts_box_gnum ::");
+    // PDM_log_trace_connectivity_long(g_extract_boxes_idx, coarse_pts_box_gnum, n_neighbor_current, "coarse_pts_box_gnum ::");
 
     PDM_box_set_t  *coarse_pts_box_set = PDM_box_set_create(3,
                                                             1,  // No normalization to preserve initial extents
                                                             0,  // No projection to preserve initial extents
-                                                            g_extract_boxes_idx[n_rank],
+                                                            g_extract_boxes_idx[n_neighbor_current],
                                                             coarse_pts_box_gnum,
                                                             g_coarse_pts_box_extents,
                                                             1,
-                                                            &g_extract_boxes_idx[n_rank],
+                                                            &g_extract_boxes_idx[n_neighbor_current],
                                                             init_location_coase_pts_box,
                                                             comm_alone);
 
@@ -487,7 +493,7 @@ _adaptative_tree2
 
       sprintf(filename, "coarse_pts_box_%i.vtk", i_rank);
       PDM_vtk_write_boxes(filename,
-                          g_extract_boxes_idx[n_rank],
+                          g_extract_boxes_idx[n_neighbor_current],
                           g_coarse_pts_box_extents,
                           NULL);
     }
@@ -503,14 +509,10 @@ _adaptative_tree2
                                        &box_to_coarse_box_pts_idx,
                                        &box_to_coarse_box_pts);
 
-    PDM_log_trace_connectivity_int(box_to_coarse_box_pts_idx,
-                                   box_to_coarse_box_pts,
-                                   dn_box, "box_to_coarse_box_pts ::");
+    // PDM_log_trace_connectivity_int(box_to_coarse_box_pts_idx,
+    //                                box_to_coarse_box_pts,
+    //                                dn_box, "box_to_coarse_box_pts ::");
 
-
-    free(coarse_pts_box_id     );
-    free(coarse_pts_box_extents);
-    free(coarse_pts_box_n_pts  );
 
     free(g_coarse_pts_box_extents);
 
@@ -552,7 +554,6 @@ _adaptative_tree2
       extract_box_to_coarse_box_pts_n[n_extract] = box_to_coarse_box_pts_idx[i+1] - box_to_coarse_box_pts_idx[i];
       for(int j = box_to_coarse_box_pts_idx[i]; j < box_to_coarse_box_pts_idx[i+1]; ++j) {
         extract_box_to_coarse_box_pts[idx_write++] = (int) bt_box_pts_gnum[box_to_coarse_box_pts[j]];
-        // extract_box_to_coarse_box_pts[idx_write++] = (int) bt_box_pts_origin[3*box_to_coarse_box_pts[j]+2];
       }
 
       n_extract++;
@@ -565,7 +566,6 @@ _adaptative_tree2
      *  Attention il faut transmetre le numero de la boites de l'arbre, pas juste le numero de rank
      *  Mais il faut trié avant !!!
      */
-
     PDM_g_num_t _n_extract = n_extract;
     PDM_g_num_t offset = 0;
     PDM_MPI_Exscan(&n_extract, &offset, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
@@ -603,24 +603,30 @@ _adaptative_tree2
     free(extract_box_to_coarse_box_pts);
 
     double *tmp_blk_box_extents = NULL;
-    int     stride_one = 1;
-    PDM_part_to_block_exch(ptb_equi_box,
-                           6 * sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           1,
-                           NULL,
-                 (void **) &extract_box_extents,
-                           NULL,
-                 (void **) &tmp_blk_box_extents);
-    free(extract_box_extents);
+    int     request_box_extents = -1;
+    PDM_part_to_block_iexch(ptb_equi_box,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            6 * sizeof(double),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) &extract_box_extents,
+                            NULL,
+                  (void **) &tmp_blk_box_extents,
+                            &request_box_extents);
 
-    // Faire asynchrone pendant le trie
-    // On veut recuperer tout les gnums de point qu'on veut interoger
+    /*
+     * Make sort
+     */
     int n_unique_box_pts = PDM_inplace_unique(blk_box_to_coarse_box_pts, 0, blk_size-1);
     blk_box_to_coarse_box_pts = realloc(blk_box_to_coarse_box_pts, n_unique_box_pts * sizeof(int));
 
-    PDM_log_trace_array_int(blk_box_to_coarse_box_pts, n_unique_box_pts, "blk_box_to_coarse_box_pts :");
+    if(0 == 1) {
+      PDM_log_trace_array_int(blk_box_to_coarse_box_pts, n_unique_box_pts, "blk_box_to_coarse_box_pts :");
+    }
 
+    PDM_part_to_block_iexch_wait(ptb_equi_box, request_box_extents);
+    free(extract_box_extents);
 
     /*
      * Setup boxes
@@ -726,17 +732,9 @@ _adaptative_tree2
       PDM_log_trace_connectivity_long(recv_request_pts_box_idx, recv_request_pts_box, n_destinations, "recv_request_pts_box ::");
     }
 
-
-
     /*
      * Extract extents on all local_tree
      */
-    // int     n_coarse_next_pts_box       = 0;
-    // int    *coarse_next_pts_box_id      = NULL;
-    // double *coarse_next_pts_box_extents = NULL;
-    // int    *coarse_next_pts_box_n_pts   = NULL; // Number of point in boxes
-
-
     int     n_extract_child   = 0;
     int    *extract_child_id  = NULL;
     int    *extract_is_leaf   = NULL;
@@ -752,8 +750,10 @@ _adaptative_tree2
                                                     &extract_is_leaf,
                                                     &extract_extents);
 
-    PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
-    PDM_log_trace_connectivity_int(node_to_child_idx, extract_child_id, n_node_to_extract, "node_to_child ::");
+    if(0 == 1) {
+      PDM_log_trace_array_int(extract_child_id, n_extract_child, "extract_child_id ::");
+      PDM_log_trace_connectivity_int(node_to_child_idx, extract_child_id, n_node_to_extract, "node_to_child ::");
+    }
 
     // Accumulate to prepare send
     int *send_child_extract_n = malloc(n_destinations * sizeof(int));
@@ -785,6 +785,11 @@ _adaptative_tree2
       PDM_log_trace_array_int(recv_child_extract_idx, n_sources+1     , "recv_child_extract_idx ::");
     }
 
+    int *recv_extract_id = malloc(recv_child_extract_idx[n_sources] * sizeof(int));
+    PDM_MPI_Neighbor_alltoallv (extract_child_id, send_child_extract_n, send_child_extract_idx, mpi_extent_type,
+                                recv_extract_id , recv_child_extract_n, recv_child_extract_idx, mpi_extent_type, comm_dist_graph);
+
+
     double *recv_extract_extents = malloc(6 * recv_child_extract_idx[n_sources] * sizeof(double));
     PDM_MPI_Neighbor_alltoallv (extract_extents     , send_child_extract_n, send_child_extract_idx, mpi_extent_type,
                                 recv_extract_extents, recv_child_extract_n, recv_child_extract_idx, mpi_extent_type, comm_dist_graph);
@@ -801,14 +806,12 @@ _adaptative_tree2
 
     free(send_child_extract_idx);
     free(recv_child_extract_n);
-    free(recv_child_extract_idx);
     free(send_child_extract_n);
 
     free(node_to_child_idx);
     free(extract_child_id);
     free(extract_is_leaf );
     free(extract_extents );
-    free(recv_extract_extents );
     free(blk_box_to_coarse_box_pts_n);
     free(blk_box_to_coarse_box_pts);
 
@@ -822,7 +825,6 @@ _adaptative_tree2
     PDM_MPI_Comm_free(&comm_dist_graph_reverse);
 
     // Il faut faire attention a ne pas trop descendre dans l'arboresence !!!
-
     if(1 == 1) {
       char filename[999];
       sprintf(filename, "boxes_iter_%i_%i.vtk", i_iter, i_rank);
@@ -832,18 +834,26 @@ _adaptative_tree2
                           NULL);
     }
 
+    // Ok on prepare pour le coup d'après
+    free(g_extract_boxes_idx);
+
+    n_neighbor_current       = n_sources;
+    g_extract_boxes_idx      = recv_child_extract_idx;
+    g_coarse_pts_box_id      = recv_extract_id;
+    g_coarse_pts_box_extents = recv_extract_extents;
+
     PDM_box_set_destroy (&coarse_pts_box_set);
     PDM_box_tree_destroy(&coarse_pts_bt_shared);
 
-    free(g_extract_boxes_idx);
-    free(n_g_coarse_pts_box);
     free(neighbor_tag);
     free(neighbor_in);
     free(sources);
     free(destinations);
-
-
   }
+
+  free(g_extract_boxes_idx);
+  free(g_coarse_pts_box_id);
+  free(g_coarse_pts_box_extents);
 
   PDM_point_tree_seq_free(coarse_tree_pts);
 
@@ -976,9 +986,9 @@ char *argv[]
   //                       src_g_num,
   //                       src_coord);
   int n_box   = 0;
-  int n_vtx_x = 12;
-  int n_vtx_y = 12;
-  int n_vtx_z = 12;
+  int n_vtx_x = 50;
+  int n_vtx_y = 50;
+  int n_vtx_z = 50;
   double      *box_extents = NULL;
   PDM_g_num_t *box_gnum    = NULL;
   PDM_box_gen_cartesian(comm,
