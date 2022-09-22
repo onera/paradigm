@@ -1285,6 +1285,73 @@ _extract_part_nodal
 
 }
 
+static
+void
+_extract_part_and_reequilibrate_nodal_from_target
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  int          *pn_entity       = NULL;
+  PDM_g_num_t **entity_g_num    = NULL;
+  PDM_g_num_t **entity_location = NULL;
+  if(extrp->dim == 3) {
+    pn_entity    = extrp->n_cell;
+    entity_g_num = extrp->cell_ln_to_gn;
+  } else {
+    pn_entity    = extrp->n_face;
+    entity_g_num = extrp->face_ln_to_gn;
+  }
+
+
+  printf("_extract_part_and_reequilibrate_nodal_from_target \n");
+
+  // Choix 1 : j'ai le cell_ln_to_gn
+  // Choix 2 : j'ai le cell_ln_to_gn par sections
+
+  // Target : reference des cellules
+
+  assert(extrp->pmne != NULL);
+
+  int **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    part2_cell_to_part1_cell_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
+    part2_cell_to_part1_cell_idx[i_part][0] = 0;
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 3;
+    }
+  }
+
+  // PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) entity_g_num,
+  //                                                                     (const int         **) pn_entity,
+  //                                                                                            extrp->n_part_in,
+  //                                                                                            extrp->n_target,
+  //                                                                                            extrp->n_part_out,
+  //                                                                                            part2_cell_to_part1_cell_idx,
+  //                                                                     (const int         **) extrp->target_location,
+  //                                                                     extrp->comm);
+
+  PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->target_gnum,
+                                                                      (const int         **) extrp->n_target,
+                                                                                             extrp->n_part_out,
+                                                                                             pn_entity,
+                                                                                             extrp->n_part_in,
+                                                                                             part2_cell_to_part1_cell_idx,
+                                                                      (const int         **) extrp->target_location,
+                                                                      extrp->comm);
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    free(part2_cell_to_part1_cell_idx[i_part]);
+  }
+  free(part2_cell_to_part1_cell_idx);
+
+
+  // part_target_to_part_init (cell)
+
+  // target_cell // target_elmts
+
+
+}
 
 static
 void
@@ -1293,10 +1360,22 @@ _extract_part_and_reequilibrate_nodal
   PDM_extract_part_t        *extrp
 )
 {
+  /*
+   *  Deduce from target the selected gnum if target is available
+   */
+  int from_target = 0;
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    if(extrp->n_target[i_part] > 0 ) {
+      from_target = 1;
+    }
+  }
+  if(from_target == 1) {
+    // _extract_part_and_reequilibrate_from_target(extrp);
+    _extract_part_and_reequilibrate_nodal_from_target(extrp);
+    return;
+  }
 
-  PDM_UNUSED(extrp);
-
-
+  abort();
 
 }
 
@@ -2030,8 +2109,13 @@ _extract_part_and_reequilibrate_from_target2
                                                             &pextract_vtx_to_vtx_location,
                                                             &ptp_face);
     }
+  } else { // dim == 2
+    abort();
   }
 
+  /*
+   * Vtx only
+   */
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
     part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_vtx);;

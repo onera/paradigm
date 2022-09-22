@@ -33,6 +33,8 @@
 #include "pdm_part_geom.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
+#include "pdm_gnum_location.h"
+#include "pdm_distrib.h"
 
 /*============================================================================
  * Type definitions
@@ -229,6 +231,14 @@ int main(int argc, char *argv[])
 
   PDM_multipart_run_ppart(mpart_id);
 
+  PDM_g_num_t n_cell_abs;
+  PDM_g_num_t n_face_abs;
+  PDM_g_num_t n_edge_abs;
+  PDM_g_num_t n_vtx_abs;
+  PDM_DMesh_nodal_section_g_dims_get(dmn, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs);
+  PDM_g_num_t* distrib_cell = PDM_compute_uniform_entity_distribution(comm, n_cell_abs);
+  int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
+
   /*
    * Get the partition zone
    */
@@ -252,7 +262,14 @@ int main(int argc, char *argv[])
   int         **pface_edge_idx          = (int         **) malloc( n_part_zones * sizeof(int         *));
   int         **pedge_vtx               = (int         **) malloc( n_part_zones * sizeof(int         *));
   double      **pvtx_coord              = (double      **) malloc( n_part_zones * sizeof(double      *));
-  // double      **tmp_extract_cell_center = (double      **) malloc( n_part_zones * sizeof(double      *));
+
+  PDM_g_num_t **target_g_num   = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
+  int          *pn_target_cell = (int          *) malloc( n_part_zones * sizeof(int          ));
+
+  /*
+   * Compute gnum location
+   */
+  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part, n_part, comm, PDM_OWNERSHIP_KEEP);
 
   for (int i_part = 0; i_part < n_part_zones; i_part++){
 
@@ -404,10 +421,37 @@ int main(int argc, char *argv[])
       }
     }
 
+    /* On prends tout les gnum impaire dans un ordre reverse */
+    int n_target_cell = 0;
+    target_g_num[i_part] = malloc(dn_cell * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < dn_cell; ++i ) {
+      PDM_g_num_t gnum = distrib_cell[i_rank+1] - i;
+      if(gnum % 2 == 0) {
+        target_g_num[i_part][n_target_cell++] = gnum;
+      }
+    }
+
+    target_g_num  [i_part] = realloc(target_g_num[i_part], n_target_cell * sizeof(PDM_g_num_t));
+    pn_target_cell[i_part] = n_target_cell;
+
+
     selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
     pn_select_cell[i_part] = n_select_cell;
 
+    PDM_gnum_location_elements_set(gnum_loc,
+                                   i_part,
+                                   pn_cell[i_part],
+                                   pcell_ln_to_gn[i_part]);
+    PDM_gnum_location_requested_elements_set(gnum_loc,
+                                             i_part,
+                                             pn_target_cell[i_part],
+                                             target_g_num  [i_part]);
+
+
+
   }
+  PDM_gnum_location_compute(gnum_loc);
 
 
   PDM_part_mesh_nodal_elmts_t* pmne_vol = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn,
@@ -462,10 +506,23 @@ int main(int argc, char *argv[])
                               pvtx_coord[i_part]);
 
     // ATTENTION SPECIFIE LE LNUM DANS LE REPERE DU PMNE_VOL
-    PDM_extract_part_selected_lnum_set(extrp,
-                                       i_part,
-                                       pn_select_cell[i_part],
-                                       selected_l_num[i_part]);
+    // PDM_extract_part_selected_lnum_set(extrp,
+    //                                    i_part,
+    //                                    pn_select_cell[i_part],
+    //                                    selected_l_num[i_part]);
+
+    PDM_extract_part_target_gnum_set(extrp,
+                                     i_part,
+                                     pn_target_cell[i_part],
+                                     target_g_num  [i_part]);
+
+    int *location_idx = NULL;
+    int *location     = NULL;
+    PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
+    PDM_extract_part_target_location_set(extrp,
+                                         i_part,
+                                         pn_target_cell[i_part],
+                                         location);
 
     // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
 
@@ -543,6 +600,7 @@ int main(int argc, char *argv[])
   //                            NULL);
   //   }
   // }
+  PDM_gnum_location_free(gnum_loc);
 
   free(pn_extract_cell);
   free(pn_extract_vtx);
