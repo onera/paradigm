@@ -454,17 +454,19 @@ int main(int argc, char *argv[])
                                    &pextract_vtx[i_part],
                                    PDM_OWNERSHIP_KEEP);
 
-    PDM_extract_part_ln_to_gn_get(extrp,
-                                  i_part,
-                                  PDM_MESH_ENTITY_FACE,
-                                  &pextract_face_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_KEEP);
+    // PDM_extract_part_ln_to_gn_get(extrp,
+    //                               i_part,
+    //                               PDM_MESH_ENTITY_FACE,
+    //                               &pextract_face_ln_to_gn[i_part],
+    //                               PDM_OWNERSHIP_KEEP);
 
-    PDM_extract_part_ln_to_gn_get(extrp,
-                                  i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
-                                  &pextract_vtx_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_KEEP);
+    // PDM_extract_part_ln_to_gn_get(extrp,
+    //                               i_part,
+    //                               PDM_MESH_ENTITY_VERTEX,
+    //                               &pextract_vtx_ln_to_gn[i_part],
+    //                               PDM_OWNERSHIP_KEEP);
+    pextract_face_ln_to_gn[i_part] = NULL;
+    pextract_vtx_ln_to_gn [i_part] = NULL;
 
     // PDM_g_num_t* pextract_parent_cell_ln_to_gn = NULL;
     // int n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
