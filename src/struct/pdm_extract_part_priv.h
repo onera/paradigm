@@ -94,6 +94,7 @@ struct _pdm_extract_part_t
   int                  from_target;
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
+  int                **target_location;
 
   /* Extracted part (Intermediate distributed result) */
   int                   dn_equi_cell;

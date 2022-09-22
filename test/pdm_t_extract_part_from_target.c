@@ -31,6 +31,7 @@
 #include "pdm_dmesh.h"
 #include "pdm_unique.h"
 #include "pdm_part_geom.h"
+#include "pdm_gnum_location.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
@@ -288,6 +289,12 @@ int main(int argc, char *argv[])
   PDM_g_num_t **target_g_num   = (PDM_g_num_t **) malloc( n_part_zones * sizeof(PDM_g_num_t *));
   int          *pn_target_cell = (int          *) malloc( n_part_zones * sizeof(int          ));
 
+  /*
+   * Compute gnum location
+   */
+  PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part,
+                                                           n_part, comm, PDM_OWNERSHIP_KEEP);
+
   for (int i_part = 0; i_part < n_part_zones; i_part++){
 
     int n_proc, tn_part;
@@ -349,10 +356,19 @@ int main(int argc, char *argv[])
       PDM_log_trace_array_long(target_g_num  [i_part], pn_target_cell[i_part], "target_g_num :: ");
     }
 
-
+    PDM_gnum_location_elements_set(gnum_loc,
+                                   i_part,
+                                   pn_cell[i_part],
+                                   pcell_ln_to_gn[i_part]);
+    PDM_gnum_location_requested_elements_set(gnum_loc,
+                                             i_part,
+                                             pn_target_cell[i_part],
+                                             target_g_num  [i_part]);
   }
   free(dface_join_idx);
   free(distrib_cell);
+
+  PDM_gnum_location_compute(gnum_loc);
 
   /*
    * Extract
@@ -393,6 +409,14 @@ int main(int argc, char *argv[])
                                      i_part,
                                      pn_target_cell[i_part],
                                      target_g_num  [i_part]);
+
+    int *location_idx = NULL;
+    int *location     = NULL;
+    PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
+    PDM_extract_part_target_location_set(extrp,
+                                         i_part,
+                                         pn_target_cell[i_part],
+                                         location);
 
   }
 
@@ -455,6 +479,7 @@ int main(int argc, char *argv[])
     // PDM_log_trace_array_long(pextract_parent_cell_ln_to_gn, n_cell, "pextract_parent_cell_ln_to_gn ::");
 
   }
+  PDM_gnum_location_free(gnum_loc);
 
   /*
    * Export vtk en légende

@@ -522,7 +522,7 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  if(0 == 1) {
+  if(post) {
     for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
       char filename[999];

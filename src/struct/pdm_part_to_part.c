@@ -1631,6 +1631,7 @@ _create
  const int           **part1_to_part2_idx,
  const PDM_g_num_t   **part1_to_part2,
  const int           **part1_to_part2_triplet,
+ const int             from_triplet,
  const PDM_MPI_Comm    comm
 )
 {
@@ -1670,7 +1671,7 @@ _create
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
     ptp->part1_to_part2_idx[i_part] = malloc((ptp->n_elt1[i_part] + 1) * sizeof(int));
 
-    if (gnum_elt2 != NULL) {
+    if (from_triplet == 0) {
       for(int i = 0; i < n_elt1[i_part]+1; ++i) {
         ptp->part1_to_part2_idx[i_part][i] = part1_to_part2_idx[i_part][i];
       }
@@ -1769,7 +1770,8 @@ _create
 
   PDM_gnum_location_t *gl = NULL;
 
-  if (gnum_elt2 != NULL || part1_to_part2_triplet == NULL ) {
+  // if (gnum_elt2 != NULL || part1_to_part2_triplet == NULL ) {
+  if (from_triplet == 0) {
 
     gl = PDM_gnum_location_create (n_part2, n_part1, comm, PDM_OWNERSHIP_KEEP);
 
@@ -1792,18 +1794,20 @@ _create
     int *location_part1_to_part2_idx;
     int *location_part1_to_part2;
 
-    if (part1_to_part2_triplet == NULL) {
+    if (from_triplet == 0) {
       PDM_gnum_location_get (gl,
                              i,
                              &location_part1_to_part2_idx,
                              &location_part1_to_part2);
+      n_total_elt += location_part1_to_part2_idx[part1_to_part2_idx[i][n_elt1[i]]];
     }
     else {
-      location_part1_to_part2_idx = (int *) part1_to_part2_idx[i];
+      location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
       location_part1_to_part2 = (int *)  part1_to_part2_triplet[i];
+
+      n_total_elt += 3 * location_part1_to_part2_idx[ptp->part1_to_part2_idx[i][n_elt1[i]]];
     }
 
-    n_total_elt += location_part1_to_part2_idx[part1_to_part2_idx[i][n_elt1[i]]];
   }
 
   n_total_elt /= 3;
@@ -1860,12 +1864,12 @@ _create
 
     else {
 
-      location_part1_to_part2_idx = (int *) part1_to_part2_idx[i];
-      location_part1_to_part2 = (int *) part1_to_part2_triplet[i];
+      location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
+      location_part1_to_part2     = (int *) part1_to_part2_triplet[i];
 
       for (int j = 0; j < n_elt1[i]; j++) {
-        for (int k = location_part1_to_part2_idx[j]/3; 
-                 k < location_part1_to_part2_idx[j+1]/3; k++) {
+        for (int k = location_part1_to_part2_idx[j];
+                 k < location_part1_to_part2_idx[j+1]; k++) {
           int i_rank2 = location_part1_to_part2[3*k];
           n_part1_to_part2_rank[i_rank2]++;
           merge_part1_to_part2_rank2[n_total_elt] = i_rank2;
@@ -2065,7 +2069,8 @@ _create
 
   for (int i = 0; i < n_part1; i++) {
     ptp->gnum1_to_send_buffer_idx[i] = malloc (sizeof (int) * (ptp->part1_to_part2_idx[i][n_elt1[i]]+1));    
-    gnum1_to_send_buffer_n[i] = malloc (sizeof (int) * ptp->part1_to_part2_idx[i][n_elt1[i]]);    
+    gnum1_to_send_buffer_n[i] = malloc (sizeof (int) * ptp->part1_to_part2_idx[i][n_elt1[i]]);
+
     ptp->gnum1_to_send_buffer_idx[i][0] = 0;
     for (int k = 0; k < ptp->part1_to_part2_idx[i][n_elt1[i]]; k++) {
       ptp->gnum1_to_send_buffer_idx[i][k+1] = 0;
@@ -2517,7 +2522,7 @@ PDM_part_to_part_create
  const PDM_MPI_Comm    comm
 )
 {
-  // int from_triplet = 0;
+  int from_triplet = 0;
   return _create (gnum_elt1,
                   n_elt1,
                   n_part1,
@@ -2527,6 +2532,7 @@ PDM_part_to_part_create
                   part1_to_part2_idx,
                   part1_to_part2,
                   NULL,
+                  from_triplet,
                   comm);
 }
 
@@ -2561,6 +2567,7 @@ PDM_part_to_part_create_from_num2_triplet
  const PDM_MPI_Comm    comm
 )
 {
+  int from_triplet = 1;
   return _create (gnum_elt1,
                   n_elt1,
                   n_part1,
@@ -2570,6 +2577,7 @@ PDM_part_to_part_create_from_num2_triplet
                   part1_to_part2_idx,
                   NULL,
                   part1_to_part2_triplet,
+                  from_triplet,
                   comm);
 }
 

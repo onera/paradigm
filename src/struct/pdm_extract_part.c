@@ -1560,7 +1560,7 @@ _extract_part_and_reequilibrate_from_target
   PDM_extract_part_t        *extrp
 )
 {
-  int          *pn_entity    = 0;
+  int          *pn_entity    = NULL;
   PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
@@ -1891,6 +1891,112 @@ _extract_part_and_reequilibrate_from_target
 
 }
 
+
+
+static
+void
+_extract_part_and_reequilibrate_from_target2
+(
+  PDM_extract_part_t        *extrp
+)
+{
+  int          *pn_entity       = NULL;
+  PDM_g_num_t **entity_g_num    = NULL;
+  PDM_g_num_t **entity_location = NULL;
+  if(extrp->dim == 3) {
+    pn_entity    = extrp->n_cell;
+    entity_g_num = extrp->cell_ln_to_gn;
+  } else {
+    pn_entity    = extrp->n_face;
+    entity_g_num = extrp->face_ln_to_gn;
+  }
+
+  // Gnum sur option
+
+
+
+  /*
+   * Create part_to_part with :
+   *    part1 = Target       (translate in child gnum)
+   *    part2 = Current
+   *    part1_to_part2_idx = Id
+   *    part1_to_part2     = target_gnum
+   * Puis exchange reverse :
+   *    Il faudrait garder le ptp
+   */
+  int **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    part2_cell_to_part1_cell_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
+    part2_cell_to_part1_cell_idx[i_part][0] = 0;
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 3;
+    }
+  }
+
+  int         **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  int         **part2_edge_to_part1_edge_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+  int         **part2_vtx_to_part1_vtx_idx   = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    part2_face_to_part1_face_idx[i_part] = NULL;
+    part2_edge_to_part1_edge_idx[i_part] = NULL;
+    part2_vtx_to_part1_vtx_idx  [i_part] = NULL;
+  }
+
+  /*
+   * Extraction des connectivités
+   */
+  int from_face_edge = 0;
+  int from_face_vtx  = 0;
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    if(extrp->pface_edge    [i_part] != NULL) {
+      from_face_edge = 1;
+    }
+    if(extrp->pface_vtx    [i_part] != NULL) {
+      from_face_vtx = 1;
+    }
+  }
+
+  assert(extrp->dim == 3);
+
+  PDM_part_to_part_t* ptp_entity = NULL;
+  PDM_part_to_part_t* ptp_face   = NULL;
+  PDM_part_to_part_t* ptp_edge   = NULL;
+  PDM_part_to_part_t* ptp_vtx    = NULL;
+
+  if(extrp->dim == 3) {
+    PDM_pconnectivity_to_pconnectivity_from_location_keep(extrp->comm,
+                                                          extrp->n_part_in,
+                                 (const int            *) pn_entity,
+                                 (const int           **) extrp->pcell_face_idx,
+                                 (const int           **) extrp->pcell_face,
+                                 (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
+                                 (const int             ) extrp->n_part_out,
+                                 (const int            *) extrp->n_target,
+                                 (const PDM_g_num_t   **) extrp->target_gnum,
+                                 (const int           **) part2_cell_to_part1_cell_idx,
+                                 (const int           **) extrp->target_location,
+                                                          &extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
+                                                          &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                                          &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                                          &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
+                                                          &ptp_entity);
+
+    // if(gnum) {
+    //   &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
+    // }
+
+    PDM_log_trace_connectivity_int(extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_CELL_FACE][0],
+                                   extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_CELL_FACE][0],
+                                   extrp->n_target[0], "pcell_face::");
+
+  }
+
+
+
+
+}
+
 static
 void
 _extract_part_and_reequilibrate
@@ -1908,7 +2014,8 @@ _extract_part_and_reequilibrate
     }
   }
   if(from_target == 1) {
-    _extract_part_and_reequilibrate_from_target(extrp);
+    // _extract_part_and_reequilibrate_from_target(extrp);
+    _extract_part_and_reequilibrate_from_target2(extrp);
     return;
     // _deduce_extract_lnum_from_target(extrp);
   }
@@ -2738,13 +2845,15 @@ PDM_extract_part_create
     extrp->pvtx_coord    [i_part] = NULL;
   }
 
-  extrp->from_target    = 0;
-  extrp->n_target       = (int          *) malloc(n_part_out * sizeof(int          ));
-  extrp->target_gnum    = (PDM_g_num_t **) malloc(n_part_out * sizeof(PDM_g_num_t *));
+  extrp->from_target     = 0;
+  extrp->n_target        = (int          *) malloc(n_part_out * sizeof(int          ));
+  extrp->target_gnum     = (PDM_g_num_t **) malloc(n_part_out * sizeof(PDM_g_num_t *));
+  extrp->target_location = (int         **) malloc(n_part_out * sizeof(int         *));
 
   for(int i_part = 0; i_part < n_part_out; ++i_part) {
-    extrp->n_target   [i_part] = 0;
-    extrp->target_gnum[i_part] = NULL;
+    extrp->n_target       [i_part] = 0;
+    extrp->target_gnum    [i_part] = NULL;
+    extrp->target_location[i_part] = NULL;
   }
 
   extrp->dn_equi_cell               = 0;
@@ -2904,6 +3013,19 @@ PDM_extract_part_target_gnum_set
 {
   extrp->n_target   [i_part] = n_target;
   extrp->target_gnum[i_part] = target_gnum;
+}
+
+void
+PDM_extract_part_target_location_set
+(
+  PDM_extract_part_t       *extrp,
+  int                       i_part,
+  int                       n_target,
+  int                      *target_location
+)
+{
+  extrp->n_target       [i_part] = n_target;
+  extrp->target_location[i_part] = target_location;
 }
 
 int
@@ -3098,8 +3220,9 @@ PDM_extract_part_free
   }
 
 
-  free(extrp->extract_lnum  );
-  free(extrp->target_gnum   );
+  free(extrp->extract_lnum   );
+  free(extrp->target_gnum    );
+  free(extrp->target_location);
 
   free(extrp->cell_ln_to_gn );
   free(extrp->face_ln_to_gn );
