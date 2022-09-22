@@ -1613,7 +1613,6 @@ _extract_part_and_reequilibrate_nodal_from_target
 
     // Bucket sort by sections id
     int *n_elmt_by_section   = malloc( n_section    * sizeof(int));
-    int *elmt_by_section_idx = malloc((n_section+1) * sizeof(int));
     for(int i = 0; i < n_section; ++i) {
       n_elmt_by_section[i] = 0;
     }
@@ -1627,14 +1626,15 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     int **elmt_vtx_by_section = malloc(n_section * sizeof(int *));
-    elmt_by_section_idx[0] = 0;
+    int **extract_parent_num  = malloc(n_section * sizeof(int *));
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
       elmt_vtx_by_section[i_section  ] = malloc( n_vtx_per_elmt * n_elmt_by_section[i_section] * sizeof(int));
-      elmt_by_section_idx[i_section+1] = elmt_by_section_idx[i_section] + n_elmt_by_section[i_section];
+      extract_parent_num [i_section  ] = malloc(                  n_elmt_by_section[i_section] * sizeof(int));
+
       n_elmt_by_section  [i_section  ] = 0;
     }
 
@@ -1645,8 +1645,9 @@ _extract_part_and_reequilibrate_nodal_from_target
       int lsection_id    = recv_elmt_section_id[i_part][i];
       int n_vtx_per_elmt = recv_elmt_vtx_n     [i_part][i];
 
-      int idx_write = elmt_by_section_idx[lsection_id] + n_elmt_by_section[lsection_id]++;
+      int idx_write = n_elmt_by_section[lsection_id]++;
       for(int j = 0; j < n_vtx_per_elmt; ++j) {
+        extract_parent_num[lsection_id][idx_write] = i;
         int l_elmt     = unique_order_entity2[idx_read++];
         elmt_vtx_by_section[lsection_id][n_vtx_per_elmt*idx_write+j] = (l_elmt+1);
       }
@@ -1664,7 +1665,6 @@ _extract_part_and_reequilibrate_nodal_from_target
       target_vtx_to_part1_vtx[i_part][3*l_elmt+2] = recv_vtx_init_location[i_part][3*i+2];
     }
 
-
     /*
      * Fill up structure
      */
@@ -1678,14 +1678,14 @@ _extract_part_and_reequilibrate_nodal_from_target
                                         n_elmt_by_section[i_section],
                                         elmt_vtx_by_section[i_section],
                                         NULL,
-                                        NULL, //extract_parent_num[i_part][i_section],
+                                        extract_parent_num[i_section],
                                         NULL,
                                         PDM_OWNERSHIP_KEEP);
     }
 
     free(n_elmt_by_section);
-    free(elmt_by_section_idx);
     free(elmt_vtx_by_section);
+    free(extract_parent_num);
     free(unique_order_entity2);
 
     free(recv_elmt_section_id  [i_part]);

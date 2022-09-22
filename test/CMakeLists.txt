@@ -201,7 +201,7 @@ test_c_create (pdm_t_line_intersection 1)
 test_c_create (pdm_t_mesh_check 1)
 test_c_create (pdm_t_part_to_part 2)
 test_c_create (pdm_t_ho_location 1)
-test_c_create (pdm_t_ho_location_projection 1)
+# test_c_create (pdm_t_ho_location_projection 1)
 test_c_create (pdm_t_subdivision_bezier_triangle 1)
 test_c_create (pdm_t_projection_back_mesh 1)
 test_c_create (pdm_t_part_to_block_reverse_cleanup 1)
@@ -219,6 +219,5 @@ test_c_create (pdm_t_tree_intersection_perf 1)
 
 test_c_create (pdm_t_simultaneous_trees 1)
 
-test_c_create (pdm_t_debug_ptp 1)
 
 add_subdirectory(tutorial)
