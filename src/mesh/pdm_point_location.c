@@ -28,6 +28,7 @@
 #include "pdm_geom_elem.h"
 #include "pdm_binary_search.h"
 #include "pdm_ho_location.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
 #include "pdm_point_location.h"
 
@@ -1898,6 +1899,80 @@ if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 
 }
 
+
+
+void
+PDM_point_location_nodal2
+(
+ PDM_part_mesh_nodal_elmts_t   *pmne,
+ const int                    **pts_idx,
+ const double                 **pts_coord,
+ const double                  *tolerance,
+ double                      ***distance,
+ double                      ***projected_coord,
+ int                         ***bar_coord_idx,
+ double                      ***bar_coord
+ )
+{
+  int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
+
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+  int n_part;
+  // get n_part
+
+  *distance        = malloc(sizeof(double *) * n_part);
+  *projected_coord = malloc(sizeof(double *) * n_part);
+  *bar_coord_idx   = malloc(sizeof(int    *) * n_part);
+  *bar_coord       = malloc(sizeof(double *) * n_part);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    int pn_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, ipart);
+    int pn_pts = pts_idx[ipart][pn_elt];
+
+    (*distance       )[ipart] = malloc (sizeof(double) * pn_pts);
+    (*projected_coord)[ipart] = malloc (sizeof(double) * pn_pts * 3);
+    (*bar_coord_idx  )[ipart] = malloc (sizeof(int   ) * (pn_pts+1));
+
+    double *_distance        = (*distance)       [ipart];
+    double *_projected_coord = (*projected_coord)[ipart];
+    int    *_bar_coord_idx   = (*bar_coord_idx)  [ipart];
+    _bar_coord_idx[0] = 0;
+
+    int idx_elt = 0;
+    for (int isection = 0; isection < n_section; isection++) {
+
+      int id_section = sections_id[isection];
+
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+                                                            isection,
+                                                            ipart);
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+                                                                            isection);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+        /* Polygonal block */
+        int *connec_idx;
+        int *connec;
+        PDM_Mesh_nodal_block_poly2d_get(ml->mesh_nodal,
+                                        id_block,
+                                        ipart,
+                                        &connec_idx,
+                                        &connec);
+
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+
+        }
+
+
+      }
+
+    } // End of loop on current part's sections
+  } // End of loop on parts
+}
 
 
 /**
