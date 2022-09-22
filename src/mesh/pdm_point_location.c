@@ -1905,6 +1905,7 @@ void
 PDM_point_location_nodal2
 (
  PDM_part_mesh_nodal_elmts_t   *pmne,
+ const int                      n_part,
  const int                    **pts_idx,
  const double                 **pts_coord,
  const double                  *tolerance,
@@ -1918,59 +1919,260 @@ PDM_point_location_nodal2
 
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
-  int n_part;
-  // get n_part
-
   *distance        = malloc(sizeof(double *) * n_part);
   *projected_coord = malloc(sizeof(double *) * n_part);
   *bar_coord_idx   = malloc(sizeof(int    *) * n_part);
   *bar_coord       = malloc(sizeof(double *) * n_part);
 
+  /* First loop to allocate */
   for (int ipart = 0; ipart < n_part; ipart++) {
 
-    // int pn_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, ipart);
-    // int pn_pts = pts_idx[ipart][pn_elt];
+    int pn_elt = 0;
+    for (int isection = 0; isection < n_section; isection++) {
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+                                                            isection,
+                                                            ipart);
 
-    // (*distance       )[ipart] = malloc (sizeof(double) * pn_pts);
-    // (*projected_coord)[ipart] = malloc (sizeof(double) * pn_pts * 3);
-    // (*bar_coord_idx  )[ipart] = malloc (sizeof(int   ) * (pn_pts+1));
+      pn_elt += n_elt;
+    }
 
-    // double *_distance        = (*distance)       [ipart];
-    // double *_projected_coord = (*projected_coord)[ipart];
-    // int    *_bar_coord_idx   = (*bar_coord_idx)  [ipart];
-    // _bar_coord_idx[0] = 0;
+    int pn_pts = pts_idx[ipart][pn_elt];
 
-    // int idx_elt = 0;
+    (*distance       )[ipart] = malloc (sizeof(double) * pn_pts);
+    (*projected_coord)[ipart] = malloc (sizeof(double) * pn_pts * 3);
+    (*bar_coord_idx  )[ipart] = malloc (sizeof(int   ) * (pn_pts+1));
+
+    int *_bar_coord_idx = (*bar_coord_idx)[ipart];
+    _bar_coord_idx[0] = 0;
+
+    int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
 
-      // int id_section = sections_id[isection];
+      int id_section = sections_id[isection];
 
-      // int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
-      //                                                       isection,
-      //                                                       ipart);
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+                                                            isection,
+                                                            ipart);
 
-      // PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
-      //                                                                       isection);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+                                                                            isection);
 
-      // if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
 
-      //   /* Polygonal block */
-      //   int *connec_idx;
-      //   int *connec;
-      //   PDM_Mesh_nodal_block_poly2d_get(ml->mesh_nodal,
-      //                                   id_block,
-      //                                   ipart,
-      //                                   &connec_idx,
-      //                                   &connec);
+        /* Polygonal section */
+        int *connec_idx;
+        int *connec;
+        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+                                                   id_section,
+                                                   ipart,
+                                                   &connec_idx,
+                                                   &connec);
 
-      //   for (int ielt = 0; ielt < n_elt; ielt++) {
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          }
+          idx_elt++;
+        }
 
-      //   }
+      }
 
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
 
-      // }
+        /* Polyhedral section */
+        int *connec_idx;
+        int *connec;
+        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+                                                                    id_section,
+                                                                    ipart,
+                                                                    &connec_idx,
+                                                                    &connec);
+
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          }
+          idx_elt++;
+        }
+
+      }
+
+      else {
+
+        /* Standard section */
+              int         *connec              = NULL;
+              PDM_g_num_t *numabs              = NULL;
+              int         *parent_num          = NULL;
+              PDM_g_num_t *parent_entity_g_num = NULL;
+              int          order               = 0;
+        const char        *ho_ordering         = NULL;
+        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+                                                   id_section,
+                                                   ipart,
+                                                   &connec,
+                                                   &numabs,
+                                                   &parent_num,
+                                                   &parent_entity_g_num,
+                                                   &order,
+                                                   &ho_ordering);
+
+        int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+                                                 order);
+
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          }
+          idx_elt++;
+        }
+
+      }
 
     } // End of loop on current part's sections
+
+
+    (*bar_coord)[ipart] = malloc(sizeof(double) * _bar_coord_idx[pn_pts]);
+
+  } // End of loop on parts
+
+
+
+
+  /* Second loop to perform location */
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    double *_distance        = (*distance)       [ipart];
+    double *_projected_coord = (*projected_coord)[ipart];
+    int    *_bar_coord_idx   = (*bar_coord_idx)  [ipart];
+    double *_bar_coord       = (*bar_coord)      [ipart];
+
+    int idx_elt = 0;
+    for (int isection = 0; isection < n_section; isection++) {
+
+      int id_section = sections_id[isection];
+
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+                                                            isection,
+                                                            ipart);
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+                                                                            isection);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+        /* Polygonal section */
+        // int *connec_idx;
+        // int *connec;
+        // PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        //                                            id_section,
+        //                                            ipart,
+        //                                            &connec_idx,
+        //                                            &connec);
+
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          // int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+          // for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+          //   _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          // }
+          idx_elt++;
+        }
+
+      }
+
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+        /* Polyhedral section */
+        // int *connec_idx;
+        // int *connec;
+        // PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        //                                                             id_section,
+        //                                                             ipart,
+        //                                                             &connec_idx,
+        //                                                             &connec);
+
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          // int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+          // for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+          //   _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          // }
+          idx_elt++;
+        }
+
+      }
+
+      else {
+
+        /* Standard section */
+              int         *connec              = NULL;
+              PDM_g_num_t *numabs              = NULL;
+              int         *parent_num          = NULL;
+              PDM_g_num_t *parent_entity_g_num = NULL;
+              int          order               = 0;
+        const char        *ho_ordering         = NULL;
+        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+                                                   id_section,
+                                                   ipart,
+                                                   &connec,
+                                                   &numabs,
+                                                   &parent_num,
+                                                   &parent_entity_g_num,
+                                                   &order,
+                                                   &ho_ordering);
+
+        // int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+        //                                          order);
+
+        switch (t_elt) {
+
+          case PDM_MESH_NODAL_POINT: {
+
+            for (int ielt = 0; ielt < n_elt; ielt++) {
+              for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+                // _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+
+              }
+              idx_elt++;
+            }
+            break;
+
+          } // end case PDM_MESH_NODAL_POINT
+
+          case PDM_MESH_NODAL_BAR2: {
+
+            double edge_coord[6];
+
+            for (int ielt = 0; ielt < n_elt; ielt++) {
+
+              // copy into edge_coord...
+
+              int idx_pt = pts_idx[ipart][idx_elt];
+
+              _locate_on_edge(edge_coord,
+                              pts_idx[ipart][idx_elt+1] - idx_pt,
+             (const double *) pts_coord        + idx_pt * 3,
+                              _distance        + idx_pt,
+                              _projected_coord + idx_pt * 3,
+                              _bar_coord       + _bar_coord_idx[idx_pt]);
+
+              idx_elt++;
+            } // End of loop on edges
+
+            break;
+          }
+
+          default: {
+            idx_elt += n_elt;
+            break;
+          }
+
+        } // End switch on std elt type
+
+      } // End if standard section
+
+    } // End of loop on current part's sections
+
   } // End of loop on parts
 }
 

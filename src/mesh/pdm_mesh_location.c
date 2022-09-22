@@ -10431,7 +10431,7 @@ PDM_mesh_location_compute_optim2
                                 NULL,
                                 NULL, //pedge_ln_to_gn[ipart],
                                 pvtx_ln_to_gn,
-                                pvtx_coord);
+                     (double *) pvtx_coord);
     }
 
 
@@ -10476,6 +10476,7 @@ PDM_mesh_location_compute_optim2
     /* Permutation */
     int *new_to_old_elt = malloc(sizeof(int) * dn_elt2);
     delt_pts_n3         = malloc(sizeof(int) * dn_elt2);
+    /* -->> Pas besoin, le new_to_old c'est extract_parent_num (local id) */
     for (int i = 0; i < dn_elt2; i++) {
       int old = PDM_binary_search_long(pextract_cell_ln_to_gn[i],
                                        delt_g_num2,
@@ -10483,6 +10484,7 @@ PDM_mesh_location_compute_optim2
       new_to_old_elt[i] = old;
       delt_pts_n3[i] = delt_pts_n2[old];
     }
+    /* <<-- */
 
     delt_pts_idx3 = malloc(sizeof(int) * (dn_elt2+1));
     delt_pts_idx3[0] = 0;

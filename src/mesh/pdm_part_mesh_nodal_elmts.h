@@ -118,6 +118,48 @@ const int                           id_part,
 const char                        **ho_ordering
 );
 
+/**
+ * \brief Return a polygon block description
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
+ * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_block_poly2d_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           id_block,
+ const int                           id_part,
+       int                         **connec_idx,
+       int                         **connec
+);
+
+/**
+ * \brief Get the cell-vertex connectivity of a polyhedra block
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] cellvtx_idx    Index of cell vertex connectivity
+ * \param [out] cellvtx        Cell vertex connectivity
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           id_block,
+ const int                           id_part,
+       int                         **cellvtx_idx,
+       int                         **cellvtx
+);
+
 int
 PDM_part_mesh_nodal_elmts_block_n_elt_get
 (

@@ -687,6 +687,96 @@ const char                        **ho_ordering
 
 }
 
+
+/**
+ * \brief Return a polygon block description
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
+ * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_block_poly2d_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           id_block,
+ const int                           id_part,
+       int                         **connec_idx,
+       int                         **connec
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
+  }
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+  PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_block];
+
+  if (block == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
+
+  if (id_part >= block->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  *connec_idx = block->_connec_idx[id_part];
+  *connec     = block->_connec[id_part];
+
+}
+
+
+/**
+ * \brief Get the cell-vertex connectivity of a polyhedra block
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] cellvtx_idx    Index of cell vertex connectivity
+ * \param [out] cellvtx        Cell vertex connectivity
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           id_block,
+ const int                           id_part,
+       int                         **cellvtx_idx,
+       int                         **cellvtx
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
+  }
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+
+  PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_block];
+
+  if (block == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
+
+  if (id_part >= block->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  *cellvtx_idx = block->_cellvtx_idx[id_part];
+  *cellvtx     = block->_cellvtx[id_part];
+
+}
+
+
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_block_type_get
 (
