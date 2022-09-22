@@ -559,11 +559,12 @@ int main(int argc, char *argv[])
                                   &pextract_cell_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
 
-    PDM_extract_part_ln_to_gn_get(extrp,
-                                  i_part,
-                                  PDM_MESH_ENTITY_VERTEX,
-                                  &pextract_vtx_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_KEEP);
+    pextract_vtx_ln_to_gn[i_part] = NULL;
+    // PDM_extract_part_ln_to_gn_get(extrp,
+    //                               i_part,
+    //                               PDM_MESH_ENTITY_VERTEX,
+    //                               &pextract_vtx_ln_to_gn[i_part],
+    //                               PDM_OWNERSHIP_KEEP);
   }
 
   PDM_part_mesh_nodal_elmts_t* extract_pmne = NULL;
@@ -615,14 +616,18 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part_zones; i_part++){
     free(cell_center       [i_part]);
     free(selected_l_num    [i_part]);
+    free(target_g_num      [i_part]);
   }
   free(cell_center);
   free(selected_l_num);
+  free(target_g_num);
+  free(pn_target_cell);
   free(pn_cell);
   free(pn_face);
   free(pn_edge);
   free(pn_vtx);
   free(pn_select_cell);
+  free(distrib_cell);
 
   free(pcell_ln_to_gn);
   free(pface_ln_to_gn);

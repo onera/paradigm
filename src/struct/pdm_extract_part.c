@@ -1541,6 +1541,27 @@ _extract_part_and_reequilibrate_nodal_from_target
   }
   free(recv_vtx_init_location_n);
 
+  PDM_part_to_part_free(ptp);
+
+  /*
+   * Free
+   */
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    free(is_selected      [i_part]);
+    free(elmt_vtx_n       [i_part]);
+    free(elmt_type        [i_part]);
+    free(elmt_vtx         [i_part]);
+    free(elmt_section_id  [i_part]);
+    free(vtx_init_location[i_part]);
+  }
+  free(is_selected);
+  free(n_extract_vtx);
+  free(elmt_vtx_n     );
+  free(elmt_type      );
+  free(elmt_vtx       );
+  free(elmt_section_id);
+  free(vtx_init_location);
+
   /*
    * Second pass to create the new part_mesh_nodal
    */
@@ -1548,6 +1569,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                                extrp->pmne->n_part,
                                                                                extrp->pmne->comm);
 
+  extrp->extract_pmne = extract_pmne;
   /*
    * Post-traitement
    */
@@ -1564,10 +1586,7 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     // PDM_log_trace_array_long(recv_elmt_section_id, n_tot_size, " :");
-    PDM_log_trace_array_long(recv_elmt_section_id[i_part], extrp->n_target[i_part], "recv_elmt_section_id :");
-
-    // PDM_g_num_t* sorted_vtx_ln_to_gn = malloc(n_tot_size * sizeof(PDM_g_num_t));
-    // for(int i = 0; i < )
+    // PDM_log_trace_array_long(recv_elmt_section_id[i_part], extrp->n_target[i_part], "recv_elmt_section_id :");
 
     int *unique_order_entity2 = malloc( n_tot_size * sizeof(int));
     int n_lextract_vtx = PDM_inplace_unique_long2(recv_elmt_vtx[i_part], unique_order_entity2, 0, n_tot_size-1);
@@ -1652,7 +1671,19 @@ _extract_part_and_reequilibrate_nodal_from_target
     free(elmt_by_section_idx);
     free(elmt_vtx_by_section);
     free(unique_order_entity2);
+
+    free(recv_elmt_section_id  [i_part]);
+    free(recv_elmt_type        [i_part]);
+    free(recv_elmt_vtx_n         [i_part]);
+    free(recv_vtx_init_location[i_part]);
+
   }
+
+  free(recv_elmt_section_id  );
+  free(recv_elmt_type        );
+  free(recv_elmt_vtx         );
+  free(recv_elmt_vtx_n       );
+  free(recv_vtx_init_location);
 
   /*
    * Vtx only
@@ -1689,24 +1720,27 @@ _extract_part_and_reequilibrate_nodal_from_target
 
 
 
-
-
   /*
    * Free
    */
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    free(is_selected    [i_part]);
-    free(elmt_vtx_n     [i_part]);
-    free(elmt_type      [i_part]);
-    free(elmt_vtx       [i_part]);
-    free(elmt_section_id[i_part]);
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+
+    if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
+      free(part2_vtx_to_part1_vtx_idx[i_part]);
+    }
+
+    if(target_vtx_to_part1_vtx[i_part] != NULL) {
+      free(target_vtx_to_part1_vtx[i_part]);
+    }
   }
-  free(is_selected);
-  free(n_extract_vtx);
-  free(elmt_vtx_n     );
-  free(elmt_type      );
-  free(elmt_vtx       );
-  free(elmt_section_id);
+  free(part2_vtx_to_part1_vtx_idx);
+  free(target_vtx_to_part1_vtx);
+
+
+  if(ptp_vtx != NULL) {
+    PDM_part_to_part_free(ptp_vtx);
+  }
+
 }
 
 static
