@@ -1587,7 +1587,7 @@ _p2p_stride_var_reverse_iexch_wait
 
   free(ptp->async_recv_part2_data[request_irecv]);
   ptp->async_recv_part2_data[request_irecv] = NULL;
-
+  ptp->async_recv_free[ptp->async_recv_n_free++] = request_irecv;
 
   //_free_async_exch (ptp, request);
 
@@ -4659,7 +4659,7 @@ PDM_part_to_part_reverse_iexch_wait
 
     if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_P2P) {
 
-      // PDM_part_to_part_reverse_issend_wait(ptp, ptp->async_exch_subrequest[request][0]);
+      PDM_part_to_part_reverse_issend_wait(ptp, ptp->async_exch_subrequest[request][0]);
  
       _p2p_stride_var_reverse_iexch_wait (ptp, request);
 

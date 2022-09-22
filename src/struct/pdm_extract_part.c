@@ -1383,7 +1383,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(ref_l_num_entity1[i_part], n_ref_entity1[i_part],"ref_l_num_entity1 :");
       PDM_log_trace_connectivity_long(gnum1_come_from_idx[i_part],
                                       gnum1_come_from    [i_part],
@@ -1402,7 +1402,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       is_selected[i_part][i_entity1] = j;
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(is_selected[i_part], pn_entity[i_part], "is_selected ::");
     }
 
@@ -1690,7 +1690,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
     free(recv_elmt_section_id  [i_part]);
     free(recv_elmt_type        [i_part]);
-    free(recv_elmt_vtx_n         [i_part]);
+    free(recv_elmt_vtx_n       [i_part]);
     free(recv_vtx_init_location[i_part]);
 
   }
