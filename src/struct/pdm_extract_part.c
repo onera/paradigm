@@ -35,6 +35,7 @@
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_gnum_location.h"
+#include "pdm_unique.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
 
 
@@ -1463,6 +1464,146 @@ _extract_part_and_reequilibrate_nodal_from_target
         }
       }
     } /* End section */
+  }
+
+
+  PDM_Mesh_nodal_elt_t **recv_elmt_type    = NULL;
+  int                    request_elmt_type = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 1,
+                                 sizeof(PDM_Mesh_nodal_elt_t),
+                                 NULL,
+                (const void **)  elmt_type,
+                                 NULL,
+                    (void ***)   &recv_elmt_type,
+                                 &request_elmt_type);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_type);
+
+  int **recv_elmt_section_id    = NULL;
+  int   request_elmt_section_id = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 1,
+                                 sizeof(int),
+                                 NULL,
+                (const void **)  elmt_section_id,
+                                 NULL,
+                    (void ***)   &recv_elmt_section_id,
+                                 &request_elmt_section_id);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_section_id);
+
+  int         **recv_elmt_vtx_n  = NULL;
+  PDM_g_num_t **recv_elmt_vtx    = NULL;
+  int           request_elmt_vtx = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 -1,
+                                 sizeof(PDM_g_num_t),
+                (const int  **)  elmt_vtx_n,
+                (const void **)  elmt_vtx,
+                                 &recv_elmt_vtx_n,
+                    (void ***)   &recv_elmt_vtx,
+                                 &request_elmt_vtx);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_vtx);
+
+
+  /*
+   * Second pass to create the new part_mesh_nodal
+   */
+  PDM_part_mesh_nodal_elmts_t* extract_pmne = PDM_part_mesh_nodal_elmts_create(extrp->pmne->mesh_dimension,
+                                                                               extrp->pmne->n_part,
+                                                                               extrp->pmne->comm);
+
+  /*
+   * Post-traitement
+   */
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+
+    int n_tot_size = 0;
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      n_tot_size += recv_elmt_vtx_n[i_part][i];
+    }
+
+    // PDM_log_trace_array_long(recv_elmt_section_id, n_tot_size, " :");
+    PDM_log_trace_array_long(recv_elmt_section_id[i_part], extrp->n_target[i_part], "recv_elmt_section_id :");
+
+    // PDM_g_num_t* sorted_vtx_ln_to_gn = malloc(n_tot_size * sizeof(PDM_g_num_t));
+    // for(int i = 0; i < )
+
+    int *unique_order_entity2 = malloc( n_tot_size * sizeof(int));
+    int n_lextract_vtx = PDM_inplace_unique_long2(recv_elmt_vtx[i_part], unique_order_entity2, 0, n_tot_size-1);
+    recv_elmt_vtx[i_part] = realloc(recv_elmt_vtx[i_part], n_lextract_vtx * sizeof(PDM_g_num_t));
+
+    // Bucket sort by sections id
+    int *n_elmt_by_section   = malloc( n_section    * sizeof(int));
+    int *elmt_by_section_idx = malloc((n_section+1) * sizeof(int));
+    for(int i = 0; i < n_section; ++i) {
+      n_elmt_by_section[i] = 0;
+    }
+
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      n_elmt_by_section[recv_elmt_section_id[i_part][i]]++;
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(n_elmt_by_section, n_section, "n_elmt_by_section ::");
+    }
+
+    int **elmt_vtx_by_section = malloc(n_section * sizeof(int *));
+    elmt_by_section_idx[0] = 0;
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+      elmt_vtx_by_section[i_section  ] = malloc( n_vtx_per_elmt * n_elmt_by_section[i_section] * sizeof(int));
+      elmt_by_section_idx[i_section+1] = elmt_by_section_idx[i_section] + n_elmt_by_section[i_section];
+      n_elmt_by_section  [i_section  ] = 0;
+    }
+
+
+    // On reclasse tout les éléments
+    int idx_read = 0;
+    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+      int lsection_id    = recv_elmt_section_id[i_part][i];
+      int n_vtx_per_elmt = recv_elmt_vtx_n     [i_part][i];
+
+      int idx_write = elmt_by_section_idx[lsection_id] + n_elmt_by_section[lsection_id]++;
+      for(int j = 0; j < n_vtx_per_elmt; ++j) {
+        int l_elmt     = unique_order_entity2[idx_read++];
+        elmt_vtx_by_section[lsection_id][n_vtx_per_elmt*idx_write+j] = (l_elmt+1);
+      }
+    }
+
+    /*
+     * Fill up structure
+     */
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
+      PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
+                                        i_part,
+                                        i_section,
+                                        n_elmt_by_section[i_section],
+                                        elmt_vtx_by_section[i_section],
+                                        NULL,
+                                        NULL, //extract_parent_num[i_part][i_section],
+                                        NULL,
+                                        PDM_OWNERSHIP_KEEP);
+    }
+
+    free(n_elmt_by_section);
+    free(elmt_by_section_idx);
+    free(elmt_vtx_by_section);
+    free(unique_order_entity2);
   }
 
 

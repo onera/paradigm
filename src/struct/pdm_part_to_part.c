@@ -4659,7 +4659,7 @@ PDM_part_to_part_reverse_iexch_wait
 
     if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_P2P) {
 
-      PDM_part_to_part_reverse_issend_wait(ptp, ptp->async_exch_subrequest[request][0]);
+      // PDM_part_to_part_reverse_issend_wait(ptp, ptp->async_exch_subrequest[request][0]);
  
       _p2p_stride_var_reverse_iexch_wait (ptp, request);
 
