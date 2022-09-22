@@ -544,10 +544,13 @@ int main(int argc, char *argv[])
                                                             i_part,
                                                             PDM_MESH_ENTITY_CELL);
 
+
     pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                            i_part,
                                                            PDM_MESH_ENTITY_VERTEX);
 
+    printf("pn_extract_cell[i_part] = %i \n", pn_extract_cell[i_part]);
+    printf("pn_extract_vtx[i_part]  = %i \n", pn_extract_vtx[i_part] );
     PDM_extract_part_vtx_coord_get(extrp,
                                    i_part,
                                    &pextract_vtx[i_part],
@@ -573,35 +576,40 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  // PDM_part_mesh_nodal_dump_vtk(extract_pmne, PDM_GEOMETRY_KIND_VOLUMIC, "extract_vol_");
 
-  // if(0 == 1) {
-  //   for(int i_part = 0; i_part < n_part_out; ++i_part) {
-
-  //     char filename[999];
-  //     sprintf(filename, "extract_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
-  //     PDM_vtk_write_point_cloud(filename,
-  //                               pn_extract_vtx[i_part],
-  //                               pextract_vtx[i_part],
-  //                               NULL, NULL);
-
-  //     PDM_log_trace_connectivity_int(pextract_face_vtx_idx[i_part],
-  //                                    pextract_face_vtx    [i_part],
-  //                                    pn_extract_face[i_part], " pextract_face_vtx :: ");
-
-  //     sprintf(filename, "extract_face_vtx_coord_%3.3d_%3.3d.vtk", i_part, i_rank);
-  //     PDM_vtk_write_polydata(filename,
-  //                            pn_extract_vtx[i_part],
-  //                            pextract_vtx[i_part],
-  //                            pextract_vtx_ln_to_gn[i_part],
-  //                            pn_extract_face[i_part],
-  //                            pextract_face_vtx_idx[i_part],
-  //                            pextract_face_vtx[i_part],
-  //                            pextract_face_ln_to_gn[i_part],
-  //                            NULL);
-  //   }
-  // }
   PDM_gnum_location_free(gnum_loc);
+
+
+  // PDM_part_mesh_nodal_dump_vtk(extract_pmne, PDM_GEOMETRY_KIND_VOLUMIC, "extract_vol_");
+  if(post){
+
+    // int *extract_sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extrp->extract_pmne);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      char filename[999];
+      sprintf(filename, "out_extract_%i_%i.vtk", i_part, i_rank);
+
+      int id_section = 0;
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne, id_section);
+      int         *elmt_vtx                 = NULL;
+      int         *parent_num               = NULL;
+      PDM_g_num_t *numabs                   = NULL;
+      PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+
+      PDM_vtk_write_std_elements(filename,
+                                 pn_extract_vtx[i_part],
+                                 pextract_vtx[i_part],
+                                 pextract_vtx_ln_to_gn[i_part],
+                                 t_elt,
+                                 pn_extract_cell[i_part],
+                                 elmt_vtx,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
+  }
 
   free(pn_extract_cell);
   free(pn_extract_vtx);

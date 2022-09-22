@@ -1308,6 +1308,22 @@ _extract_part_and_reequilibrate_nodal_from_target
 
   printf("_extract_part_and_reequilibrate_nodal_from_target \n");
 
+
+  if(extrp->dim == 3) {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL] = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
+    }
+  } else {
+    extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE] = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
+    }
+  }
+
+
+
+
   // Choix 1 : j'ai le cell_ln_to_gn
   // Choix 2 : j'ai le cell_ln_to_gn par sections
 
@@ -3677,7 +3693,10 @@ PDM_extract_part_ln_to_gn_get
 )
 {
   if(extrp->pextract_n_entity[entity_type] != NULL) {
-    *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type][i_part_out];
+    *pentity_ln_to_gn = NULL;
+    if(extrp->pextract_entity_ln_to_gn[entity_type] != NULL) {
+      *pentity_ln_to_gn = extrp->pextract_entity_ln_to_gn[entity_type][i_part_out];
+    }
     if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
       extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
     } else {
