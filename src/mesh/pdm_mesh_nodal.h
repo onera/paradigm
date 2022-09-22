@@ -243,6 +243,14 @@ PDM_Mesh_nodal_vertices_get
 );
 
 
+int
+PDM_Mesh_nodal_vertices_ln_to_gn_get
+(
+       PDM_Mesh_nodal_t  *mesh,
+ const int                id_part,
+       PDM_g_num_t      **vtx_ln_to_gn
+);
+
 /**
  * \brief  Return cell centers
  *

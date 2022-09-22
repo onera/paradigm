@@ -10406,26 +10406,32 @@ PDM_mesh_location_compute_optim2
 
     // Set vtx_coord
     for (int ipart = 0; ipart < n_part; ipart++) {
-      // const double *vtx_coord = PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
-      //                                                       ipart);
-      // PDM_extract_part_part_set(extrp,
-      //                           ipart,
-      //                           pn_cell[ipart],
-      //                           pn_face[ipart],
-      //                           -1, // pn_edge[ipart],
-      //                           pn_vtx[ipart],
-      //                           NULL, // pcell_face_idx[ipart],
-      //                           NULL, // pcell_face[ipart],
-      //                           NULL, // pface_edge_idx[ipart],
-      //                           NULL, // pface_edge[ipart],
-      //                           NULL, // pedge_vtx[ipart],
-      //                           NULL, // pface_vtx_idx[ipart],
-      //                           NULL, // pface_vtx[ipart],
-      //                           pcell_ln_to_gn[ipart],
-      //                           NULL,
-      //                           NULL, //pedge_ln_to_gn[ipart],
-      //                           pvtx_ln_to_gn[ipart],
-      //                           vtx_coord);
+      const double *pvtx_coord = PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
+                                                             ipart);
+
+      PDM_g_num_t *pvtx_ln_to_gn = NULL;
+      const int pn_vtx = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
+                                                              ipart,
+                                                              &pvtx_ln_to_gn);
+
+      PDM_extract_part_part_set(extrp,
+                                ipart,
+                                pn_elt[ipart],
+                                0,  // pn_face[ipart],
+                                -1, // pn_edge[ipart],
+                                pn_vtx,
+                                NULL, // pcell_face_idx[ipart],
+                                NULL, // pcell_face[ipart],
+                                NULL, // pface_edge_idx[ipart],
+                                NULL, // pface_edge[ipart],
+                                NULL, // pedge_vtx[ipart],
+                                NULL, // pface_vtx_idx[ipart],
+                                NULL, // pface_vtx[ipart],
+                                elt_g_num[ipart],
+                                NULL,
+                                NULL, //pedge_ln_to_gn[ipart],
+                                pvtx_ln_to_gn,
+                                pvtx_coord);
     }
 
 
