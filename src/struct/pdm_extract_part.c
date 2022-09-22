@@ -1303,6 +1303,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     entity_g_num = extrp->face_ln_to_gn;
   }
 
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
   printf("_extract_part_and_reequilibrate_nodal_from_target \n");
 
@@ -1356,10 +1358,11 @@ _extract_part_and_reequilibrate_nodal_from_target
   int           *n_extract_vtx            = malloc( extrp->n_part_in * sizeof(int          ));
   int          **is_selected              = malloc( extrp->n_part_in * sizeof(int         *));
 
-  int                  **elmt_vtx_n      = malloc(extrp->n_part_in * sizeof(int                  *));
-  PDM_Mesh_nodal_elt_t **elmt_type       = malloc(extrp->n_part_in * sizeof(PDM_Mesh_nodal_elt_t *));
-  PDM_g_num_t          **elmt_vtx        = malloc(extrp->n_part_in * sizeof(PDM_g_num_t          *));
-  int                  **elmt_section_id = malloc(extrp->n_part_in * sizeof(int                  *));
+  int                  **elmt_vtx_n        = malloc(extrp->n_part_in * sizeof(int                  *));
+  PDM_Mesh_nodal_elt_t **elmt_type         = malloc(extrp->n_part_in * sizeof(PDM_Mesh_nodal_elt_t *));
+  PDM_g_num_t          **elmt_vtx          = malloc(extrp->n_part_in * sizeof(PDM_g_num_t          *));
+  int                  **vtx_init_location = malloc(extrp->n_part_in * sizeof(int                  *));
+  int                  **elmt_section_id   = malloc(extrp->n_part_in * sizeof(int                  *));
 
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
@@ -1412,16 +1415,17 @@ _extract_part_and_reequilibrate_nodal_from_target
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
         int parent_elt = parent_num[i_elt]-1;
         if(is_selected[i_part][parent_elt] != -1) {
-          n_elmt_to_send += 1;
+          n_elmt_to_send     += 1;
           n_elmt_vtx_to_send += n_vtx_per_elmt;
         }
       }
     } /* End section */
 
-    elmt_vtx_n     [i_part] = malloc(n_elmt_to_send     * sizeof(int                 ));
-    elmt_type      [i_part] = malloc(n_elmt_to_send     * sizeof(PDM_Mesh_nodal_elt_t));
-    elmt_vtx       [i_part] = malloc(n_elmt_vtx_to_send * sizeof(PDM_g_num_t         ));
-    elmt_section_id[i_part] = malloc(n_elmt_to_send     * sizeof(int                 ));
+    elmt_vtx_n       [i_part] = malloc(    n_elmt_to_send     * sizeof(int                 ));
+    elmt_type        [i_part] = malloc(    n_elmt_to_send     * sizeof(PDM_Mesh_nodal_elt_t));
+    elmt_vtx         [i_part] = malloc(    n_elmt_vtx_to_send * sizeof(PDM_g_num_t         ));
+    vtx_init_location[i_part] = malloc(3 * n_elmt_vtx_to_send * sizeof(int                 ));
+    elmt_section_id  [i_part] = malloc(    n_elmt_to_send     * sizeof(int                 ));
 
     PDM_g_num_t* _vtx_ln_to_gn = extrp->vtx_ln_to_gn[i_part];
 
@@ -1452,11 +1456,14 @@ _extract_part_and_reequilibrate_nodal_from_target
 
           elmt_type      [i_part][n_elmt_to_send] = t_elt;
           elmt_vtx_n     [i_part][n_elmt_to_send] = n_vtx_per_elmt;
-          elmt_section_id[i_part][n_elmt_to_send] = sections_id[i_section];
+          elmt_section_id[i_part][n_elmt_to_send] = i_section; //sections_id[i_section];
 
           int idx_read = i_elt * n_vtx_per_elmt;
           for(int k = 0; k < n_vtx_per_elmt; ++k) {
-            elmt_vtx[i_part][n_elmt_vtx_to_send+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]];
+            elmt_vtx         [i_part][n_elmt_vtx_to_send+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]];
+            vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)  ] = i_rank;
+            vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)+1] = i_part;
+            vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)+2] = elt_vtx[idx_read+k];
           }
 
           n_elmt_to_send     += 1;
@@ -1513,6 +1520,26 @@ _extract_part_and_reequilibrate_nodal_from_target
                                  &request_elmt_vtx);
   PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_vtx);
 
+  int         **recv_vtx_init_location_n  = NULL;
+  PDM_g_num_t **recv_vtx_init_location    = NULL;
+  int           request_vtx_init_location = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 -1,
+                                 3 * sizeof(int),
+                (const int  **)  elmt_vtx_n,
+                (const void **)  vtx_init_location,
+                                 &recv_vtx_init_location_n,
+                    (void ***)   &recv_vtx_init_location,
+                                 &request_vtx_init_location);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_vtx_init_location);
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    free(recv_vtx_init_location_n[i_part]);
+  }
+  free(recv_vtx_init_location_n);
 
   /*
    * Second pass to create the new part_mesh_nodal
@@ -1524,6 +1551,11 @@ _extract_part_and_reequilibrate_nodal_from_target
   /*
    * Post-traitement
    */
+  assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX] == NULL);
+  extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX] = malloc(extrp->n_part_out * sizeof(int         *));
+  extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX] = malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
+  int **target_vtx_to_part1_vtx = malloc(extrp->n_part_out * sizeof(int *));
+
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
 
     int n_tot_size = 0;
@@ -1540,6 +1572,9 @@ _extract_part_and_reequilibrate_nodal_from_target
     int *unique_order_entity2 = malloc( n_tot_size * sizeof(int));
     int n_lextract_vtx = PDM_inplace_unique_long2(recv_elmt_vtx[i_part], unique_order_entity2, 0, n_tot_size-1);
     recv_elmt_vtx[i_part] = realloc(recv_elmt_vtx[i_part], n_lextract_vtx * sizeof(PDM_g_num_t));
+
+    extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX][i_part] = n_lextract_vtx;
+    extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = recv_elmt_vtx[i_part];
 
     // Bucket sort by sections id
     int *n_elmt_by_section   = malloc( n_section    * sizeof(int));
@@ -1583,6 +1618,19 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     /*
+     * Prepare vtx_init_location
+     */
+    target_vtx_to_part1_vtx[i_part] = malloc(3 * n_lextract_vtx * sizeof(int));
+    for(int i = 0; i < n_tot_size; ++i) {
+      int l_elmt = unique_order_entity2[i];
+      // C'est maybe ecraser plusieurs fois
+      target_vtx_to_part1_vtx[i_part][3*l_elmt  ] = recv_vtx_init_location[i_part][3*i  ];
+      target_vtx_to_part1_vtx[i_part][3*l_elmt+1] = recv_vtx_init_location[i_part][3*i+1];
+      target_vtx_to_part1_vtx[i_part][3*l_elmt+2] = recv_vtx_init_location[i_part][3*i+2];
+    }
+
+
+    /*
      * Fill up structure
      */
     for(int i_section = 0; i_section < n_section; ++i_section) {
@@ -1606,6 +1654,42 @@ _extract_part_and_reequilibrate_nodal_from_target
     free(unique_order_entity2);
   }
 
+  /*
+   * Vtx only
+   */
+  int **part2_vtx_to_part1_vtx_idx = malloc(extrp->n_part_out * sizeof(int *));
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
+    part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_vtx);;
+  }
+
+  PDM_part_to_part_t* ptp_vtx    = NULL;
+  ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                                      (const int          *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                                      extrp->n_part_out,
+                                                      extrp->n_vtx,
+                                                      extrp->n_part_in,
+                                                      (const int **) part2_vtx_to_part1_vtx_idx,
+                                                      (const int **) target_vtx_to_part1_vtx,
+                                                      extrp->comm);
+
+  int           exch_request = -1;
+  PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 3,
+                                 sizeof(double),
+                                 NULL,
+                (const void **)  extrp->pvtx_coord,
+                                 NULL,
+                    (void ***)   &extrp->pextract_vtx_coord,
+                                 &exch_request);
+  PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+
+
+
+
 
   /*
    * Free
@@ -1623,12 +1707,6 @@ _extract_part_and_reequilibrate_nodal_from_target
   free(elmt_type      );
   free(elmt_vtx       );
   free(elmt_section_id);
-
-  // part_target_to_part_init (cell)
-
-  // target_cell // target_elmts
-
-
 }
 
 static
