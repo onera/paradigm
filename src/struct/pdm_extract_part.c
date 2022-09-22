@@ -2444,10 +2444,7 @@ _extract_part_and_reequilibrate_from_target2
 
   assert(extrp->dim == 3);
 
-  PDM_part_to_part_t* ptp_entity = NULL;
-  PDM_part_to_part_t* ptp_face   = NULL;
-  PDM_part_to_part_t* ptp_edge   = NULL;
-  PDM_part_to_part_t* ptp_vtx    = NULL;
+  PDM_part_to_part_t* ptp_vtx          = NULL;
   int **pextract_face_to_face_location = NULL;
   int **pextract_vtx_to_vtx_location   = NULL;
   if(extrp->dim == 3) {
@@ -2471,7 +2468,7 @@ _extract_part_and_reequilibrate_from_target2
                                                           &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
                                                           &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
                                                           &pextract_face_to_face_location,
-                                                          &ptp_entity);
+                                                          &extrp->ptp_entity[PDM_MESH_ENTITY_CELL]);
 
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       free(part2_cell_to_part1_cell_idx[i_part]);
@@ -2496,7 +2493,6 @@ _extract_part_and_reequilibrate_from_target2
     if(from_face_edge == 1) {
       abort();
     } else if(from_face_vtx == 1) {
-
       PDM_pconnectivity_to_pconnectivity_from_location_keep(extrp->comm,
                                                             extrp->n_part_in,
                                    (const int            *) extrp->n_face,
@@ -2513,7 +2509,7 @@ _extract_part_and_reequilibrate_from_target2
                                                             &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
                                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                                             &pextract_vtx_to_vtx_location,
-                                                            &ptp_face);
+                                                            &extrp->ptp_entity[PDM_MESH_ENTITY_FACE]);
     }
   } else { // dim == 2
     abort();
@@ -2535,7 +2531,7 @@ _extract_part_and_reequilibrate_from_target2
                                                       (const int **) part2_vtx_to_part1_vtx_idx,
                                                       (const int **) pextract_vtx_to_vtx_location,
                                                       extrp->comm);
-
+  extrp->ptp_entity[PDM_MESH_ENTITY_VERTEX] = ptp_vtx;
   int           exch_request = -1;
   PDM_part_to_part_reverse_iexch(ptp_vtx,
                                  PDM_MPI_COMM_KIND_P2P,
@@ -2553,43 +2549,43 @@ _extract_part_and_reequilibrate_from_target2
   /*
    *  Attention le part_to_part peut en avoir besoin
    */
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    if(part2_face_to_part1_face_idx[i_part] != NULL) {
-      free(part2_face_to_part1_face_idx[i_part]);
-    }
-    if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
-      free(part2_edge_to_part1_edge_idx[i_part]);
-    }
-    if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
-      free(part2_vtx_to_part1_vtx_idx[i_part]);
-    }
+  // for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+  //   if(part2_face_to_part1_face_idx[i_part] != NULL) {
+  //     free(part2_face_to_part1_face_idx[i_part]);
+  //   }
+  //   if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
+  //     free(part2_edge_to_part1_edge_idx[i_part]);
+  //   }
+  //   if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
+  //     free(part2_vtx_to_part1_vtx_idx[i_part]);
+  //   }
 
-    if(pextract_face_to_face_location != NULL) {
-      free(pextract_face_to_face_location[i_part]);
-    }
-    if(pextract_vtx_to_vtx_location != NULL) {
-      free(pextract_vtx_to_vtx_location[i_part]);
-    }
+  //   if(pextract_face_to_face_location != NULL) {
+  //     free(pextract_face_to_face_location[i_part]);
+  //   }
+  //   if(pextract_vtx_to_vtx_location != NULL) {
+  //     free(pextract_vtx_to_vtx_location[i_part]);
+  //   }
 
-  }
-  free(part2_face_to_part1_face_idx);
-  free(part2_edge_to_part1_edge_idx);
-  free(pextract_face_to_face_location);
-  free(pextract_vtx_to_vtx_location);
-  free(part2_vtx_to_part1_vtx_idx  );
+  // }
+  // free(part2_face_to_part1_face_idx);
+  // free(part2_edge_to_part1_edge_idx);
+  // free(pextract_face_to_face_location);
+  // free(pextract_vtx_to_vtx_location);
+  // free(part2_vtx_to_part1_vtx_idx  );
 
-  if(ptp_entity != NULL) {
-    PDM_part_to_part_free(ptp_entity);
-  }
-  if(ptp_face != NULL) {
-    PDM_part_to_part_free(ptp_face);
-  }
-  if(ptp_edge != NULL) {
-    PDM_part_to_part_free(ptp_edge);
-  }
-  if(ptp_vtx != NULL) {
-    PDM_part_to_part_free(ptp_vtx);
-  }
+  // if(ptp_entity != NULL) {
+  //   PDM_part_to_part_free(ptp_entity);
+  // }
+  // if(ptp_face != NULL) {
+  //   PDM_part_to_part_free(ptp_face);
+  // }
+  // if(ptp_edge != NULL) {
+  //   PDM_part_to_part_free(ptp_edge);
+  // }
+  // if(ptp_vtx != NULL) {
+  //   PDM_part_to_part_free(ptp_vtx);
+  // }
 }
 
 static
@@ -3494,6 +3490,8 @@ PDM_extract_part_create
     extrp->pextract_entity_ln_to_gn       [i] = NULL;
     extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
     extrp->pextract_entity_parent_lnum    [i] = NULL;
+    extrp->ptp_entity                     [i] = NULL;
+    extrp->ptp_ownership                  [i] = PDM_OWNERSHIP_KEEP;
   }
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
@@ -3932,7 +3930,29 @@ PDM_extract_part_free
     PDM_part_mesh_nodal_elmts_free(extrp->extract_pmne);
   }
 
+  for (int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if (extrp->ptp_ownership[i] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(extrp->ptp_entity[i]);
+    }
+  }
+
   free(extrp);
+}
+
+
+void
+PDM_extract_part_part_to_part_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_mesh_entities_t   entity_type,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+
+ )
+{
+  *ptp = extrp->ptp_entity[entity_type];
+
+  extrp->ptp_ownership[entity_type] = ownership;
 }
 
 #ifdef __cplusplus

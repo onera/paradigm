@@ -176,7 +176,7 @@ enum {
 };
 
 enum {
-  PDM_MPI_REQUEST_NULL  = -1
+  PDM_MPI_REQUEST_NULL  = -123456789
 };
 
 enum {

@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 
 /*----------------------------------------------------------------------------*/
@@ -220,6 +221,16 @@ PDM_extract_part_free
 (
   PDM_extract_part_t  *extrp
 );
+
+void
+PDM_extract_part_part_to_part_get
+(
+       PDM_extract_part_t   *extrp,
+ const PDM_mesh_entities_t   entity_type,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+
+ );
 
 /*----------------------------------------------------------------------------*/
 

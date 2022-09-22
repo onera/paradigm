@@ -164,8 +164,10 @@ _free_async_recv
   }
   ptp->async_i_recv_buffer[request]   = NULL;
 
-  free (ptp->async_recv_part2_data[request]);   
-  ptp->async_recv_part2_data[request] = NULL;   
+  if (ptp->async_recv_part2_data[request] != NULL) {
+    free (ptp->async_recv_part2_data[request]);
+    ptp->async_recv_part2_data[request] = NULL;
+  }
 
   ptp->async_recv_free[ptp->async_recv_n_free++] = request;     
 }
@@ -1585,10 +1587,10 @@ _p2p_stride_var_reverse_iexch_wait
     }
   }
 
-  free(ptp->async_recv_part2_data[request_irecv]);
-  ptp->async_recv_part2_data[request_irecv] = NULL;
-  ptp->async_recv_free[ptp->async_recv_n_free++] = request_irecv;
+  // free(ptp->async_recv_part2_data[request_irecv]);
+  // ptp->async_recv_part2_data[request_irecv] = NULL;
 
+  _free_async_recv(ptp, request_irecv);
   //_free_async_exch (ptp, request);
 
   for (int i = 0; i < ptp->n_part1; i++) {

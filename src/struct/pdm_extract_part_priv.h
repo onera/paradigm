@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 
 /*----------------------------------------------------------------------------*/
@@ -124,7 +125,7 @@ struct _pdm_extract_part_t
 
 
 
-  /* Extrated part */
+  /* Extracted part */
   double             **pextract_vtx_coord;
 
   PDM_bool_t         *is_owner_connectivity;
@@ -145,6 +146,9 @@ struct _pdm_extract_part_t
   PDM_bool_t                   is_owner_extract_pmne;
   PDM_part_mesh_nodal_elmts_t *extract_pmne;
 
+  /* Part-to-part objects */
+  PDM_part_to_part_t *ptp_entity[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     ptp_ownership[PDM_MESH_ENTITY_MAX];
 };
 
 
