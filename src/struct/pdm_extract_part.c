@@ -1063,7 +1063,6 @@ _extract_part_nodal
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
-
       n_selected_section  [i_part][i_section] = 0;
       idx_selected_section[i_part][i_section] = malloc( n_elt * sizeof(int));
       extract_parent_num  [i_part][i_section] = malloc( n_elt * sizeof(int));
@@ -1322,21 +1321,12 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
   }
 
-  // PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) entity_g_num,
-  //                                                                     (const int         **) pn_entity,
-  //                                                                                            extrp->n_part_in,
-  //                                                                                            extrp->n_target,
-  //                                                                                            extrp->n_part_out,
-  //                                                                                            part2_cell_to_part1_cell_idx,
-  //                                                                     (const int         **) extrp->target_location,
-  //                                                                     extrp->comm);
-
   PDM_part_to_part_t* ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->target_gnum,
-                                                                      (const int         **) extrp->n_target,
+                                                                      (const int         * ) extrp->n_target,
                                                                                              extrp->n_part_out,
                                                                                              pn_entity,
                                                                                              extrp->n_part_in,
-                                                                                             part2_cell_to_part1_cell_idx,
+                                                                      (const int         **) part2_cell_to_part1_cell_idx,
                                                                       (const int         **) extrp->target_location,
                                                                       extrp->comm);
 
@@ -1345,6 +1335,153 @@ _extract_part_and_reequilibrate_nodal_from_target
   }
   free(part2_cell_to_part1_cell_idx);
 
+  /*
+   * Protocol are created then we can extract information in part1 to reverse send it to part2
+   */
+  int          *n_ref_entity1     = NULL;
+  int         **ref_l_num_entity1 = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp, &n_ref_entity1, &ref_l_num_entity1);
+
+  int         **gnum1_come_from_idx = NULL;
+  PDM_g_num_t **gnum1_come_from     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp, &gnum1_come_from_idx, &gnum1_come_from);
+
+  int n_section    = PDM_part_mesh_nodal_elmts_n_section_get(extrp->pmne);
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extrp->pmne);
+
+  assert(extrp->pmne->n_part == extrp->n_part_in);
+
+
+  int           *n_extract_vtx            = malloc( extrp->n_part_in * sizeof(int          ));
+  int          **is_selected              = malloc( extrp->n_part_in * sizeof(int         *));
+
+  int                  **elmt_vtx_n      = malloc(extrp->n_part_in * sizeof(int                  *));
+  PDM_Mesh_nodal_elt_t **elmt_type       = malloc(extrp->n_part_in * sizeof(PDM_Mesh_nodal_elt_t *));
+  PDM_g_num_t          **elmt_vtx        = malloc(extrp->n_part_in * sizeof(PDM_g_num_t          *));
+  int                  **elmt_section_id = malloc(extrp->n_part_in * sizeof(int                  *));
+
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(ref_l_num_entity1[i_part], n_ref_entity1[i_part],"ref_l_num_entity1 :");
+      PDM_log_trace_connectivity_long(gnum1_come_from_idx[i_part],
+                                      gnum1_come_from    [i_part],
+                                      n_ref_entity1  [i_part], "gnum1_come_from ::");
+    }
+
+    is_selected             [i_part] = malloc(    pn_entity[i_part] * sizeof(int        ));
+
+    for(int i = 0; i < pn_entity[i_part]; ++i) {
+      is_selected[i_part][i] = -1;
+    }
+
+    // Preparation des buffers d'envoi
+    for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
+      int i_entity1 = ref_l_num_entity1[i_part][j]-1;
+      is_selected[i_part][i_entity1] = j;
+    }
+
+    if(1 == 1) {
+      PDM_log_trace_array_int(is_selected[i_part], pn_entity[i_part], "is_selected ::");
+    }
+
+    /* Compute buffer size */
+    int n_elmt_to_send     = 0;
+    int n_elmt_vtx_to_send = 0;
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, i_part, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+      int         *elt_vtx          = NULL;
+      int         *parent_num       = NULL;
+      PDM_g_num_t *elt_ln_to_gn     = NULL;
+      PDM_g_num_t *parent_elt_g_num = NULL;
+
+      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                              i_part,
+                                              sections_id[i_section],
+                                              &elt_vtx,
+                                              &elt_ln_to_gn,
+                                              &parent_num,
+                                              &parent_elt_g_num);
+      /* Selection */
+      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+        int parent_elt = parent_num[i_elt]-1;
+        if(is_selected[i_part][parent_elt] != -1) {
+          n_elmt_to_send += 1;
+          n_elmt_vtx_to_send += n_vtx_per_elmt;
+        }
+      }
+    } /* End section */
+
+    elmt_vtx_n     [i_part] = malloc(n_elmt_to_send     * sizeof(int                 ));
+    elmt_type      [i_part] = malloc(n_elmt_to_send     * sizeof(PDM_Mesh_nodal_elt_t));
+    elmt_vtx       [i_part] = malloc(n_elmt_vtx_to_send * sizeof(PDM_g_num_t         ));
+    elmt_section_id[i_part] = malloc(n_elmt_to_send     * sizeof(int                 ));
+
+    PDM_g_num_t* _vtx_ln_to_gn = extrp->vtx_ln_to_gn[i_part];
+
+    /* Remplissage */
+    n_elmt_to_send     = 0;
+    n_elmt_vtx_to_send = 0;
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, i_part, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
+
+      int         *elt_vtx          = NULL;
+      int         *parent_num       = NULL;
+      PDM_g_num_t *elt_ln_to_gn     = NULL;
+      PDM_g_num_t *parent_elt_g_num = NULL;
+
+      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                              i_part,
+                                              sections_id[i_section],
+                                              &elt_vtx,
+                                              &elt_ln_to_gn,
+                                              &parent_num,
+                                              &parent_elt_g_num);
+      /* Selection */
+      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+        int parent_elt = parent_num[i_elt]-1;
+        if(is_selected[i_part][parent_elt] != -1) {
+
+          elmt_type      [i_part][n_elmt_to_send] = t_elt;
+          elmt_vtx_n     [i_part][n_elmt_to_send] = n_vtx_per_elmt;
+          elmt_section_id[i_part][n_elmt_to_send] = sections_id[i_section];
+
+          int idx_read = i_elt * n_vtx_per_elmt;
+          for(int k = 0; k < n_vtx_per_elmt; ++k) {
+            elmt_vtx[i_part][n_elmt_vtx_to_send+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]];
+          }
+
+          n_elmt_to_send     += 1;
+          n_elmt_vtx_to_send += n_vtx_per_elmt;
+        }
+      }
+    } /* End section */
+  }
+
+
+  /*
+   * Free
+   */
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    free(is_selected    [i_part]);
+    free(elmt_vtx_n     [i_part]);
+    free(elmt_type      [i_part]);
+    free(elmt_vtx       [i_part]);
+    free(elmt_section_id[i_part]);
+  }
+  free(is_selected);
+  free(n_extract_vtx);
+  free(elmt_vtx_n     );
+  free(elmt_type      );
+  free(elmt_vtx       );
+  free(elmt_section_id);
 
   // part_target_to_part_init (cell)
 
