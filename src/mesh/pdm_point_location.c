@@ -2162,8 +2162,6 @@ PDM_point_location_nodal2
             break;
           }
 
-          // TODO: all remaining std elements (+ plug ho_location?)
-
           default: {
             idx_elt += n_elt;
             break;
