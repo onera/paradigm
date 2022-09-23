@@ -1083,7 +1083,7 @@ _extract_part_nodal
 
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt]-1;
+        int parent_elt = parent_num[i_elt];//-1;
         if(is_selected[i_part][parent_elt] != -1) {
 
 
@@ -1429,7 +1429,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &parent_elt_g_num);
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt]-1;
+        int parent_elt = parent_num[i_elt];//-1;
         if(is_selected[i_part][parent_elt] != -1) {
           n_elmt_to_send     += 1;
           n_elmt_vtx_to_send += n_vtx_per_elmt;
@@ -1467,7 +1467,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &parent_elt_g_num);
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt]-1;
+        int parent_elt = parent_num[i_elt];//-1;
         if(is_selected[i_part][parent_elt] != -1) {
 
           elmt_type      [i_part][n_elmt_to_send] = t_elt;
@@ -1536,9 +1536,9 @@ _extract_part_and_reequilibrate_nodal_from_target
                                  &request_elmt_vtx);
   PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_vtx);
 
-  int         **recv_vtx_init_location_n  = NULL;
-  PDM_g_num_t **recv_vtx_init_location    = NULL;
-  int           request_vtx_init_location = -1;
+  int **recv_vtx_init_location_n  = NULL;
+  int **recv_vtx_init_location    = NULL;
+  int   request_vtx_init_location = -1;
   PDM_part_to_part_reverse_iexch(ptp,
                                  PDM_MPI_COMM_KIND_P2P,
                                  PDM_STRIDE_VAR_INTERLACED,

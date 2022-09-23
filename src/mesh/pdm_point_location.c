@@ -1900,15 +1900,16 @@ if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 }
 
 
-
+/* Awkward to pass n_part and pvtx_coord aside from pmne... */
 void
 PDM_point_location_nodal2
 (
  PDM_part_mesh_nodal_elmts_t   *pmne,
  const int                      n_part,
+ const double                 **pvtx_coord,
  const int                    **pts_idx,
  const double                 **pts_coord,
- const double                  *tolerance,
+ const double                   tolerance,
  double                      ***distance,
  double                      ***projected_coord,
  int                         ***bar_coord_idx,
@@ -2048,6 +2049,8 @@ PDM_point_location_nodal2
     int    *_bar_coord_idx   = (*bar_coord_idx)  [ipart];
     double *_bar_coord       = (*bar_coord)      [ipart];
 
+    const double *vtx_coord = pvtx_coord[ipart];
+
     int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
 
@@ -2127,25 +2130,27 @@ PDM_point_location_nodal2
         switch (t_elt) {
 
           case PDM_MESH_NODAL_POINT: {
-
+            abort();
             for (int ielt = 0; ielt < n_elt; ielt++) {
               for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
                 // _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
-
               }
               idx_elt++;
             }
             break;
-
           } // end case PDM_MESH_NODAL_POINT
 
           case PDM_MESH_NODAL_BAR2: {
-
             double edge_coord[6];
-
             for (int ielt = 0; ielt < n_elt; ielt++) {
 
               // copy into edge_coord...
+              int *_connec = connec + 2*ielt;
+              for (int i = 0; i < 2; i++) {
+                int vtx_id = _connec[i] - 1;
+                // parent num?
+                memcpy(edge_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+              }
 
               int idx_pt = pts_idx[ipart][idx_elt];
 
@@ -2158,9 +2163,48 @@ PDM_point_location_nodal2
 
               idx_elt++;
             } // End of loop on edges
-
             break;
-          }
+          } // end case PDM_MESH_NODAL_BAR2
+
+          // TRIA3
+          // QUAD4
+          // POLY2D
+          // TETRA4
+
+          case PDM_MESH_NODAL_PYRAMID5:
+          case PDM_MESH_NODAL_PRISM6:
+          case PDM_MESH_NODAL_HEXA8: {
+            double elt_coord[24];
+            int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+                                                     order);
+            for (int ielt = 0; ielt < n_elt; ielt++) {
+
+              // copy into elt_coord...
+              int *_connec = connec + n_vtx*ielt;
+              for (int i = 0; i < n_vtx; i++) {
+                int vtx_id = _connec[i] - 1;
+                // parent num?
+                memcpy(elt_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+              }
+
+              int idx_pt = pts_idx[ipart][idx_elt];
+
+              _locate_in_cell_3d(t_elt,
+                                 elt_coord,
+                                 pts_idx[ipart][idx_elt+1] - idx_pt,
+                (const double *) pts_coord        + idx_pt * 3,
+                                 tolerance,
+                                 _distance        + idx_pt,
+                                 _projected_coord + idx_pt * 3,
+                                 _bar_coord       + _bar_coord_idx[idx_pt]);
+
+              idx_elt++;
+            } // End of loop on pyramids/prisms/hexahedra
+            break;
+          } // end case PDM_MESH_NODAL_PYRAMID5/PRISM6/HEXA8
+
+          // POLY3D
+          // HO
 
           default: {
             idx_elt += n_elt;

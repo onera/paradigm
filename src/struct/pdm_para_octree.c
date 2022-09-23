@@ -12670,7 +12670,7 @@ PDM_para_octree_points_inside_boxes_block_frame
   PDM_timer_resume (_octree->timer);
 
 
-  if (n_rank == 1) {
+  if (0) {//n_rank == 1) {
     // *pts_in_box_g_num = box_pts_g_num;
     // *pts_in_box_coord = box_pts_coord;
 
