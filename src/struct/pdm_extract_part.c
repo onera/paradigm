@@ -1476,7 +1476,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
           int idx_read = i_elt * n_vtx_per_elmt;
           for(int k = 0; k < n_vtx_per_elmt; ++k) {
-            elmt_vtx         [i_part][n_elmt_vtx_to_send+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]];
+            elmt_vtx         [i_part][n_elmt_vtx_to_send+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]-1];
             vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)  ] = i_rank;
             vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)+1] = i_part;
             vtx_init_location[i_part][3*(n_elmt_vtx_to_send+k)+2] = elt_vtx[idx_read+k];
@@ -1733,8 +1733,6 @@ _extract_part_and_reequilibrate_nodal_from_target
                     (void ***)   &extrp->pextract_vtx_coord,
                                  &exch_request);
   PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
-
-
 
   /*
    * Free
