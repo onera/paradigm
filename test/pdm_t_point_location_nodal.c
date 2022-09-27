@@ -1153,6 +1153,7 @@ int main(int argc, char *argv[])
   double **projected_coord = NULL;
   int    **bar_coord_idx   = NULL;
   double **bar_coord       = NULL;
+  double **uvw             = NULL;
   PDM_point_location_nodal2(pmne,
                             n_part,
           (const double **) pvtx_coord,
@@ -1162,7 +1163,8 @@ int main(int argc, char *argv[])
                             &distance,
                             &projected_coord,
                             &bar_coord_idx,
-                            &bar_coord);
+                            &bar_coord,
+                            &uvw);
 
   if (post) {
     char filename[999];
@@ -1198,6 +1200,7 @@ int main(int argc, char *argv[])
     free(projected_coord[ipart]);
     free(bar_coord_idx  [ipart]);
     free(bar_coord      [ipart]);
+    free(uvw            [ipart]);
     free(pelt_ln_to_gn  [ipart]);
     free(pvtx_coord     [ipart]);
   }
@@ -1207,6 +1210,7 @@ int main(int argc, char *argv[])
   free(projected_coord);
   free(bar_coord_idx);
   free(bar_coord);
+  free(uvw);
   free(pelt_ln_to_gn);
   free(pvtx_coord);
 

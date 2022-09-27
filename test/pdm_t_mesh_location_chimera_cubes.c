@@ -1406,7 +1406,7 @@ int main(int argc, char *argv[])
   double      tolerance           = 1e-6;
   double      marge               = 0.;
   int         n_part              = 1;
-  int         post                = 0;
+  int         post                = 1;
   int         extension_depth_tgt = 0;
   int         extension_depth_src = 0;
 #ifdef PDM_HAVE_PARMETIS
@@ -1751,12 +1751,6 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_dump_times (mesh_loc);
 
-  PDM_MPI_Barrier(comm);
-  if (i_rank == 0) {
-    printf("OK! :D");
-  }
-  PDM_MPI_Finalize();
-  return 0;
 
 
   /*
@@ -2118,6 +2112,8 @@ int main(int argc, char *argv[])
                          tgt_proj_coord,
                          tgt_g_num,
                          tgt_location);
+
+    printf("AAAAAAAAAAAAAA\n");
   }
 
 

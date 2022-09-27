@@ -595,9 +595,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int          *pn_pts         = NULL;
-  double      **ppts_coord     = NULL;
-  PDM_g_num_t **ppts_ln_to_gn  = NULL;
+  int          *pn_pts          = NULL;
+  double      **ppts_coord      = NULL;
+  PDM_g_num_t **ppts_ln_to_gn   = NULL;
   int          *pn_face2        = NULL;
   int         **pface_vtx_idx2  = NULL;
   int         **pface_vtx2      = NULL;
@@ -717,17 +717,17 @@ int main(int argc, char *argv[])
   double              **pelt_pts_proj_coord = malloc(sizeof(double      *) * n_part_mesh);
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-  PDM_mesh_location_points_in_elt_get(mesh_loc,
-                                      ipart,
-                                      0, // i_point_cloud,
-                                      &pelt_pts_idx       [ipart],
-                                      &pelt_pts_gnum      [ipart],
-                                      &pelt_pts_coord     [ipart],
-                                      &pelt_pts_uvw       [ipart],
-                                      &pelt_pts_weight_idx[ipart],
-                                      &pelt_pts_weight    [ipart],
-                                      &pelt_pts_dist2     [ipart],
-                                      &pelt_pts_proj_coord[ipart]);
+    PDM_mesh_location_points_in_elt_get(mesh_loc,
+                                        ipart,
+                                        0, // i_point_cloud,
+                                        &pelt_pts_idx       [ipart],
+                                        &pelt_pts_gnum      [ipart],
+                                        &pelt_pts_coord     [ipart],
+                                        &pelt_pts_uvw       [ipart],
+                                        &pelt_pts_weight_idx[ipart],
+                                        &pelt_pts_weight    [ipart],
+                                        &pelt_pts_dist2     [ipart],
+                                        &pelt_pts_proj_coord[ipart]);
   }
 
   /* Create exchange protocol */

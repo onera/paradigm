@@ -90,7 +90,8 @@ PDM_point_location_nodal2
  double                      ***distance,
  double                      ***projected_coord,
  int                         ***bar_coord_idx,
- double                      ***bar_coord
+ double                      ***bar_coord,
+ double                      ***uvw
  );
 
 

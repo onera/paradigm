@@ -1827,8 +1827,8 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  int case_type = 0; // Random cube mesh
-  // int case_type = 1; // Helice configuration
+  // int case_type = 0; // Random cube mesh
+  int case_type = 1; // Helice configuration
   int n_mesh = -1;
   // int n_mesh = 2;
   // int n_mesh = 5;
@@ -2308,11 +2308,11 @@ int main(int argc, char *argv[])
     PDM_mesh_location_dump_times (mesh_loc[i_mesh]);
 
     PDM_MPI_Barrier(comm);
-    if (i_rank == 0) {
-      printf("OK! :D");
-    }
-    PDM_MPI_Finalize();
-    return 0;
+    // if (i_rank == 0) {
+    //   printf("OK! :D");
+    // }
+    // PDM_MPI_Finalize();
+    // return 0;
 
 
   }

@@ -862,10 +862,11 @@ _locate_in_cell_3d
  const double                tolerance,
  double                     *distance,
  double                     *proj_coord,
- double                     *bar_coord
+ double                     *bar_coord,
+ double                     *uvw
  )
 {
-  double uvw[3];
+  double _uvw[3];
   double eps_vtx2 = 1.e-6 * tolerance;
   eps_vtx2 *= eps_vtx2;
 
@@ -886,6 +887,14 @@ _locate_in_cell_3d
                             distance,
                             proj_coord,
                             bar_coord);
+    // TODO: compute uvw...
+    if (uvw != NULL) {
+      for (int ipt = 0; ipt < n_pts; ipt++) {
+        uvw[3*ipt  ] = -1.;
+        uvw[3*ipt+1] = -1.;
+        uvw[3*ipt+2] = -1.;
+      }
+    }
     return;
   }
 
@@ -979,9 +988,9 @@ _locate_in_cell_3d
                                         _pt,
                                         cell_coord,
                                         tolerance,
-                                        uvw);
+                                        _uvw);
     if (stat_uvw == PDM_TRUE) {
-      _compute_shapef_3d (elt_type, uvw, _bc, NULL);
+      _compute_shapef_3d (elt_type, _uvw, _bc, NULL);
 
       double min_bc = HUGE_VAL;
       for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
@@ -1040,10 +1049,10 @@ _locate_in_cell_3d
                                       _cell_coord,
                                       _pt,
                                       _proj_coord,
-                                      uvw);
+                                      _uvw);
       /* Point inside */
       if (dist2 < 1.e-12) {
-        _compute_shapef_3d (elt_type, uvw, _bc, NULL);
+        _compute_shapef_3d (elt_type, _uvw, _bc, NULL);
 
         double min_bc = HUGE_VAL;
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
@@ -1070,6 +1079,10 @@ _locate_in_cell_3d
       for (int i = 0; i < 3; i++) {
         _cp[i] = _pt[i];
       }
+    }
+
+    if (uvw != NULL) {
+      memcpy(uvw + 3*ipt, _uvw, sizeof(double) * 3);
     }
 
   } // End loop on points
@@ -1869,7 +1882,8 @@ if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
                           tolerance,
                           *distance + pts_idx[ielt],
                           *projected_coord + pts_idx[ielt] * 3,
-                          *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+                          *bar_coord + (*bar_coord_idx)[pts_idx[ielt]],
+                          NULL);
     }
   }
 
@@ -1914,8 +1928,8 @@ PDM_point_location_nodal2
  double                      ***distance,
  double                      ***projected_coord,
  int                         ***bar_coord_idx,
- double                      ***bar_coord//,
- // double                      ***uvw
+ double                      ***bar_coord,
+ double                      ***uvw
  )
 {
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
@@ -1926,6 +1940,7 @@ PDM_point_location_nodal2
   *projected_coord = malloc(sizeof(double *) * n_part);
   *bar_coord_idx   = malloc(sizeof(int    *) * n_part);
   *bar_coord       = malloc(sizeof(double *) * n_part);
+  *uvw             = malloc(sizeof(double *) * n_part);
 
   /* First loop to allocate */
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1947,6 +1962,8 @@ PDM_point_location_nodal2
 
     int *_bar_coord_idx = (*bar_coord_idx)[ipart];
     _bar_coord_idx[0] = 0;
+
+    (*uvw            )[ipart] = malloc (sizeof(double) * pn_pts * 3);
 
     int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
@@ -2050,6 +2067,7 @@ PDM_point_location_nodal2
     double *_projected_coord = (*projected_coord)[ipart];
     int    *_bar_coord_idx   = (*bar_coord_idx)  [ipart];
     double *_bar_coord       = (*bar_coord)      [ipart];
+    double *_uvw             = (*uvw)            [ipart];
 
     const double *vtx_coord = pvtx_coord[ipart];
 
@@ -2101,6 +2119,10 @@ PDM_point_location_nodal2
                              _distance        + idx_pt,
                              _projected_coord + idx_pt * 3,
                              _bar_coord       + _bar_coord_idx[idx_pt]);
+
+          for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+            _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
+          }
 
           idx_elt++;
         } // End of loop on polygons
@@ -2201,6 +2223,10 @@ PDM_point_location_nodal2
                                 _projected_coord  + idx_pt * 3,
                                 _bar_coord        + _bar_coord_idx[idx_pt]);
 
+          for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+            _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
+          }
+
           // Reset local vtx_id
           for (int idx = cell_vtx_idx[ielt]; idx < cell_vtx_idx[ielt+1]; idx++) {
             int vtx_id = cell_vtx[idx] - 1;
@@ -2253,7 +2279,10 @@ PDM_point_location_nodal2
                   dist2 += dj * dj;
                 }
                 _distance [idx_pt] = dist2;
-                _bar_coord[idx_pt] = 1.;
+                _bar_coord[_bar_coord_idx[idx_pt]] = 1.;
+                _uvw      [3*idx_pt  ] = 0.;
+                _uvw      [3*idx_pt+1] = -1.;
+                _uvw      [3*idx_pt+2] = -1.;
               }
               idx_elt++;
             }
@@ -2280,6 +2309,12 @@ PDM_point_location_nodal2
                               _projected_coord + idx_pt * 3,
                               _bar_coord       + _bar_coord_idx[idx_pt]);
 
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+                _uvw[3*ipt  ] = _bar_coord[_bar_coord_idx[ipt]+1];
+                _uvw[3*ipt+1] = -1.;
+                _uvw[3*ipt+2] = -1.;
+              }
+
               idx_elt++;
             } // End of loop on edges
             break;
@@ -2300,6 +2335,12 @@ PDM_point_location_nodal2
                                    _distance        + idx_pt,
                                    _projected_coord + idx_pt * 3,
                                    _bar_coord       + _bar_coord_idx[idx_pt]);
+
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+                _uvw[3*ipt  ] = _bar_coord[_bar_coord_idx[ipt]+1];
+                _uvw[3*ipt+1] = _bar_coord[_bar_coord_idx[ipt]+2];
+                _uvw[3*ipt+2] = -1.;
+              }
 
               idx_elt++;
             } // End of loop on triangles
@@ -2327,6 +2368,13 @@ PDM_point_location_nodal2
                                     _projected_coord + idx_pt * 3,
                                     _bar_coord       + _bar_coord_idx[idx_pt]);
 
+              // TODO: compute uvw
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+                _uvw[3*ipt  ] = -1;
+                _uvw[3*ipt+1] = -1;
+                _uvw[3*ipt+2] = -1.;
+              }
+
               idx_elt++;
             } // End of loop on quadrangles
             break;
@@ -2350,6 +2398,12 @@ PDM_point_location_nodal2
                                      _distance        + idx_pt,
                                      _projected_coord + idx_pt * 3,
                                      _bar_coord       + _bar_coord_idx[idx_pt]);
+              // TODO: compute uvw
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+                _uvw[3*ipt  ] = -1;
+                _uvw[3*ipt+1] = -1;
+                _uvw[3*ipt+2] = -1.;
+              }
 
               idx_elt++;
             } // End of loop on tetrahedra
@@ -2372,6 +2426,9 @@ PDM_point_location_nodal2
               }
 
               int idx_pt = pts_idx[ipart][idx_elt];
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+                _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
+              }
 
               _locate_in_cell_3d(t_elt,
                                  elt_coord,
@@ -2380,7 +2437,8 @@ PDM_point_location_nodal2
                                  tolerance,
                                  _distance        + idx_pt,
                                  _projected_coord + idx_pt * 3,
-                                 _bar_coord       + _bar_coord_idx[idx_pt]);
+                                 _bar_coord       + _bar_coord_idx[idx_pt],
+                                 _uvw             + idx_pt * 3);
 
               idx_elt++;
             } // End of loop on pyramids/prisms/hexahedra

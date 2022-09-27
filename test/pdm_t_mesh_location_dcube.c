@@ -892,6 +892,9 @@ int main(int argc, char *argv[])
     }
   }
 
+  log_trace("n_pts_l = %d\n", n_pts_l);
+  PDM_log_trace_array_int(unlocated, n_unlocated, "unlocated : ");
+
   if (0) {
     printf("Unlocated %d :\n", n_unlocated);
     for (int k1 = 0; k1 < n_unlocated; k1++) {
@@ -954,7 +957,7 @@ int main(int argc, char *argv[])
       }
 
       //printf("%d: ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM")\n", ipt, p_location[ipt], box_gnum);
-      if (p_location[ipt] != box_gnum) {
+      if (p_location[k1] != box_gnum) {
         // double *cp = p_proj_coord + 3*ipt;
         /*printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
                ipt, pts_gnum[ipt],

@@ -1340,10 +1340,10 @@ int main(int argc, char *argv[])
                                            &points_dist2,
                                            &points_projected_coords);
                                            
-      PDM_log_trace_connectivity_long(elt_pts_inside_idx,
-                                      points_gnum,
-                                      src_n_cell[ipart],
-                                      "pie->gnum : ");
+      // PDM_log_trace_connectivity_long(elt_pts_inside_idx,
+      //                                 points_gnum,
+      //                                 src_n_cell[ipart],
+      //                                 "pie->gnum : ");
 
       for (int i = 0; i < src_n_cell[ipart]; i++) {
 

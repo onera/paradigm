@@ -1626,7 +1626,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       n_elmt_by_section[recv_elmt_section_id[i_part][i]]++;
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(n_elmt_by_section, n_section, "n_elmt_by_section ::");
     }
 
@@ -1773,18 +1773,19 @@ _extract_part_and_reequilibrate_nodal
   /*
    *  Deduce from target the selected gnum if target is available
    */
-  int from_target = 0;
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    if(extrp->n_target[i_part] > 0 ) {
-      from_target = 1;
-    }
-  }
+  // int from_target = 0;
+  // for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+  //   if(extrp->n_target[i_part] > 0 ) {
+  //     from_target = 1;
+  //   }
+  // }
+  int from_target = extrp->from_target;
   if(from_target == 1) {
     // _extract_part_and_reequilibrate_from_target(extrp);
     _extract_part_and_reequilibrate_nodal_from_target(extrp);
     return;
   }
-
+  log_trace("Banane\n");
   abort();
 
 }
@@ -3608,6 +3609,7 @@ PDM_extract_part_target_gnum_set
   PDM_g_num_t              *target_gnum
 )
 {
+  extrp->from_target = 1;
   extrp->n_target   [i_part] = n_target;
   extrp->target_gnum[i_part] = target_gnum;
 }
@@ -3621,6 +3623,7 @@ PDM_extract_part_target_location_set
   int                      *target_location
 )
 {
+  extrp->from_target = 1;
   extrp->n_target       [i_part] = n_target;
   extrp->target_location[i_part] = target_location;
 }
