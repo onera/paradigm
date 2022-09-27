@@ -218,5 +218,7 @@ test_c_create (pdm_t_tree_intersection 1)
 test_c_create (pdm_t_tree_intersection_perf 1)
 
 test_c_create (pdm_t_simultaneous_trees 1)
+test_c_create (pdm_t_point_location_nodal 1)
+test_c_create (pdm_t_projection_point_cloud_surf 1)
 
 add_subdirectory(tutorial)

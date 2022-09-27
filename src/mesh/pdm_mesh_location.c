@@ -2016,7 +2016,17 @@ _store_cell_vtx_selected
   } // End of loop on parts
 }
 
-
+static void _pmesh_nodal_elmts_free
+(
+ PDM_part_mesh_nodal_elmts_t *pmne
+ )
+{
+  free(pmne->sections_std   );
+  free(pmne->sections_poly2d);
+  free(pmne->sections_poly3d);
+  free(pmne->n_elmts);
+  free(pmne);
+}
 
 static PDM_part_mesh_nodal_elmts_t *
 _mesh_nodal_to_pmesh_nodal_elmts
@@ -2048,10 +2058,10 @@ _mesh_nodal_to_pmesh_nodal_elmts
 
     int id_block = blocks_id[iblock];
 
-    if (id_block < PDM_MESH_NODAL_POLY_2D) {
+    if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
       pmne->n_section_std++;
     }
-    else if (id_block < PDM_MESH_NODAL_POLY_3D) {
+    else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
       pmne->n_section_poly2d++;
     }
@@ -2075,10 +2085,10 @@ _mesh_nodal_to_pmesh_nodal_elmts
 
     int id_block = blocks_id[iblock];
 
-    if (id_block < PDM_MESH_NODAL_POLY_2D) {
+    if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
       pmne->sections_std[pmne->n_section_std++] = mesh_nodal->blocks_std[id_block];
     }
-    else if (id_block < PDM_MESH_NODAL_POLY_3D) {
+    else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
       pmne->sections_poly2d[pmne->n_section_poly2d++] = mesh_nodal->blocks_poly2d[id_block];
     }
@@ -2089,15 +2099,10 @@ _mesh_nodal_to_pmesh_nodal_elmts
 
   }
 
-
-
-  pmne->n_elmts = malloc(sizeof(PDM_l_num_t) * n_part);
   for (int i = 0; i < n_part; i++) {
     pmne->n_elmts[i] = PDM_Mesh_nodal_n_cell_get(mesh_nodal,
                                                  i);
   }
-
-
 
   return pmne;
 }
@@ -2836,14 +2841,14 @@ PDM_mesh_location_points_in_elt_get
   *elt_pts_inside_idx      = _points_in_elements->pts_inside_idx[i_part];
   *points_gnum             = _points_in_elements->gnum[i_part];
   *points_coords           = _points_in_elements->coords[i_part];
-  *points_uvw              = _points_in_elements->uvw[i_part];
+  // *points_uvw              = _points_in_elements->uvw[i_part];
   *points_weights_idx      = _points_in_elements->weights_idx[i_part];
   *points_weights          = _points_in_elements->weights[i_part];
   *points_dist2            = _points_in_elements->dist2[i_part];
   *points_projected_coords = _points_in_elements->projected_coords[i_part];
 
   ml->tag_points_in_elt_get = 1;
-
+  // ml->tag_pts_in_elt_get[i_cloud] = 1;
 }
 
 
@@ -2876,7 +2881,7 @@ PDM_mesh_location_free
           for (int i_part = 0; i_part < _points_in_elements->n_part; ++i_part) {
             free (_points_in_elements->pts_inside_idx[i_part]);
             free (_points_in_elements->gnum[i_part]);
-            free (_points_in_elements->uvw[i_part]);
+            // free (_points_in_elements->uvw[i_part]);
             free (_points_in_elements->coords[i_part]);
             free (_points_in_elements->projected_coords[i_part]);
             free (_points_in_elements->weights_idx[i_part]);
@@ -2887,7 +2892,7 @@ PDM_mesh_location_free
         free (_points_in_elements->pts_inside_idx);
         free (_points_in_elements->n_elts);
         free (_points_in_elements->gnum);
-        free (_points_in_elements->uvw);
+        // free (_points_in_elements->uvw);
         free (_points_in_elements->coords);
         free (_points_in_elements->projected_coords);
         free (_points_in_elements->weights_idx);
@@ -9328,6 +9333,132 @@ PDM_mesh_location_compute_optim
  *   -> _store_cell_vtx_selected (one per cloud for PDM_mesh_location_cell_vertex_get?)
  */
 
+ static void
+_dump_point_cloud
+(
+ const char     *name,
+ PDM_MPI_Comm    comm,
+ int             n_part,
+ int            *pn_pts,
+ double        **ppts_coord,
+ PDM_g_num_t   **ppts_ln_to_gn,
+ const int       n_field,
+ const char    **field_name,
+ double       ***field_value
+ )
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_writer_t *wrt = PDM_writer_create("Ensight",
+                                        PDM_WRITER_FMT_BIN,
+                                        PDM_WRITER_TOPO_CST,
+                                        PDM_WRITER_OFF,
+                                        name,
+                                        name,
+                                        comm,
+                                        PDM_IO_KIND_MPI_SIMPLE,
+                                        1.,
+                                        NULL);
+
+  int id_geom = PDM_writer_geom_create(wrt,
+                                       name,
+                                       n_part);
+
+  int id_var_num_part = PDM_writer_var_create(wrt,
+                                              PDM_WRITER_OFF,
+                                              PDM_WRITER_VAR_SCALAR,
+                                              PDM_WRITER_VAR_ELEMENTS,
+                                              "num_part");
+
+  int id_var[n_field];
+  for (int i = 0; i < n_field; i++) {
+    id_var[i] = PDM_writer_var_create(wrt,
+                                      PDM_WRITER_OFF,
+                                      PDM_WRITER_VAR_SCALAR,
+                                      PDM_WRITER_VAR_ELEMENTS,
+                                      field_name[i]);
+  }
+
+  PDM_writer_step_beg(wrt, 0.);
+
+  int id_block = PDM_writer_geom_bloc_add(wrt,
+                                          id_geom,
+                                          PDM_WRITER_POINT,
+                                          PDM_OWNERSHIP_USER);
+
+  PDM_real_t **val_num_part = malloc(sizeof(PDM_real_t  *) * n_part);
+  int **connec = malloc(sizeof(int *) * n_part);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    PDM_writer_geom_coord_set(wrt,
+                              id_geom,
+                              ipart,
+                              pn_pts[ipart],
+                              ppts_coord[ipart],
+                              ppts_ln_to_gn[ipart],
+                              PDM_OWNERSHIP_USER);
+
+    connec[ipart] = malloc(sizeof(int) * pn_pts[ipart]);
+    for (int i = 0; i < pn_pts[ipart]; i++) {
+      connec[ipart][i] = i+1;
+    }
+    PDM_writer_geom_bloc_std_set(wrt,
+                                 id_geom,
+                                 id_block,
+                                 ipart,
+                                 pn_pts[ipart],
+                                 connec[ipart],
+                                 ppts_ln_to_gn[ipart]);
+
+    val_num_part[ipart] = malloc(sizeof(PDM_real_t) * pn_pts[ipart]);
+    for (int i = 0; i < pn_pts[ipart]; i++) {
+      val_num_part[ipart][i] = n_part*i_rank + ipart;
+    }
+
+    PDM_writer_var_set(wrt,
+                       id_var_num_part,
+                       id_geom,
+                       ipart,
+                       val_num_part[ipart]);
+
+    for (int i = 0; i < n_field; i++) {
+      PDM_writer_var_set(wrt,
+                         id_var[i],
+                         id_geom,
+                         ipart,
+                         field_value[i][ipart]);
+    }
+  }
+
+  PDM_writer_geom_write(wrt,
+                        id_geom);
+
+  PDM_writer_var_write(wrt,
+                       id_var_num_part);
+  PDM_writer_var_free(wrt,
+                      id_var_num_part);
+
+  for (int i = 0; i < n_field; i++) {
+    PDM_writer_var_write(wrt,
+                         id_var[i]);
+    PDM_writer_var_free(wrt,
+                        id_var[i]);
+  }
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(val_num_part[ipart]);
+    free(connec[ipart]);
+  }
+  free(val_num_part);
+  free(connec);
+
+  PDM_writer_step_end(wrt);
+
+  PDM_writer_free(wrt);
+}
+
+
 void
 PDM_mesh_location_compute_optim2
 (
@@ -9337,7 +9468,6 @@ PDM_mesh_location_compute_optim2
   /*
    *  Parameters
    */
-  const double eps_dist = 1.e-10;
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
@@ -9378,6 +9508,9 @@ PDM_mesh_location_compute_optim2
   b_t_cpu_s   = ml->times_cpu_s  [BEGIN];
   PDM_timer_resume(ml->timer);
 
+
+  ml->points_in_elements = malloc(sizeof(_points_in_element_t) * ml->n_point_cloud);
+
   /*
    *  Compute global extents of source mesh
    *  -------------------------------------
@@ -9401,7 +9534,7 @@ PDM_mesh_location_compute_optim2
                                           PDM_WRITER_OFF,
                                           "mesh_location",
                                           "source_mesh",
-                                          PDM_MPI_COMM_WORLD,
+                                          ml->comm,
                                           PDM_IO_KIND_MPI_SIMPLE,
                                           1.,
                                           NULL);
@@ -9573,6 +9706,20 @@ PDM_mesh_location_compute_optim2
 
     _point_cloud_t *pcloud = ml->point_clouds + icloud;
 
+    if (dbg_enabled) {
+      char name[999];
+      sprintf(name, "mesh_location_point_cloud_%d", icloud);
+      _dump_point_cloud(name,
+                        ml->comm,
+                        pcloud->n_part,
+                        pcloud->n_points,
+                        pcloud->coords,
+                        pcloud->gnum,
+                        0,
+                        NULL,
+                        NULL);
+    }
+
     /*
      *  Extract points that intersect the source mesh global extents
      *  Brute force (could be accelerated using octree)
@@ -9621,6 +9768,9 @@ PDM_mesh_location_compute_optim2
     PDM_g_num_t **select_pts_g_num        = NULL;
     double      **select_pts_coord        = NULL;
     if (use_extracted_pts) {
+      if (dbg_enabled) {
+        log_trace("point cloud extraction %d / %d\n", l_n_pts[1], l_n_pts[0]);
+      }
       _point_cloud_extract_selection(ml->comm,
                                      pcloud,
                                      n_select_pts,
@@ -9631,6 +9781,9 @@ PDM_mesh_location_compute_optim2
     }
     else {
       /* We keep the whole point cloud */
+      if (dbg_enabled) {
+        log_trace("no point cloud extraction\n");
+      }
       free(n_select_pts);
       n_select_pts            = pcloud->n_points;
       select_pts_parent_g_num = pcloud->gnum;
@@ -9735,6 +9888,9 @@ PDM_mesh_location_compute_optim2
     PDM_g_num_t **select_elt_g_num        = NULL;
 
     if (use_extracted_mesh) {
+      if (dbg_enabled) {
+        log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
+      }
 
       select_elt_extents      = malloc(sizeof(double      *) * n_part);
       select_elt_parent_g_num = malloc(sizeof(PDM_g_num_t *) * n_part);
@@ -9777,6 +9933,11 @@ PDM_mesh_location_compute_optim2
 
     }
     else {
+      if (dbg_enabled) {
+        log_trace("no mesh extraction\n");
+      }
+      free(n_select_elt);
+      n_select_elt            = pn_elt;
       select_elt_extents      = elt_extents;
       select_elt_parent_g_num = elt_g_num;
       select_elt_g_num        = elt_g_num;
@@ -9822,7 +9983,7 @@ PDM_mesh_location_compute_optim2
     int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
     PDM_g_num_t *dpts_g_num = PDM_part_to_block_block_gnum_get(ptb_pts);
     if (dbg_enabled) {
-      PDM_log_trace_array_long(dpts_g_num, dn_pts, "dpts_g_num : ");
+      PDM_log_trace_array_long(dpts_g_num, dn_pts, "dpts_g_num        : ");
     }
 
     /* Exchange coordinates (do this with abstract distrib?) */
@@ -9880,6 +10041,10 @@ PDM_mesh_location_compute_optim2
     // PDM_abstract_distrib_redistribute_wait(ad_pts);
     PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
     PDM_part_to_block_iexch_wait(ptb_pts, request_pts_parent_g_num);
+
+    if (dbg_enabled) {
+      PDM_log_trace_array_long(dpts_parent_g_num, dn_pts, "dpts_parent_g_num : ");
+    }
 
     if (dbg_enabled) {
       char filename[999];
@@ -10048,7 +10213,6 @@ PDM_mesh_location_compute_optim2
           //                                     &box_pts_coord);
 
           PDM_part_to_block_t *ptb_pib = NULL;
-          // int *delt_pts_n2 = NULL;
           PDM_para_octree_points_inside_boxes_block_frame(octree,
                                                           dn_elt1,
                                                           delt_extents1,
@@ -10257,6 +10421,7 @@ PDM_mesh_location_compute_optim2
 
     }
     free(delt_extents1);
+    free(dpts_coord);
 
 
     PDM_MPI_Barrier (ml->comm);
@@ -10280,6 +10445,16 @@ PDM_mesh_location_compute_optim2
     if (dbg_enabled) {
       log_trace("before compression\n");
       PDM_log_trace_array_long(delt_g_num2, dn_elt2, "delt_g_num2 : ");
+    }
+
+    /* TODO: maybe take into account element type to yield better weights ?? */
+    if (dbg_enabled) {
+      int *_idx = PDM_array_new_idx_from_sizes_int(delt_pts_n2, dn_elt2);
+      PDM_log_trace_connectivity_long(_idx,
+                                      delt_pts_g_num2,
+                                      dn_elt2,
+                                      "delt_pts_g_num2 : ");
+      free(_idx);
     }
 
     /* Compress block (remove elements with zero candidate point) -> frame (2) */
@@ -10307,7 +10482,7 @@ PDM_mesh_location_compute_optim2
     }
 
     int *delt_pts_idx2 = PDM_array_new_idx_from_sizes_int(delt_pts_n2, dn_elt2);
-
+    free(delt_pts_n2);
 
     /* Exchange elt parent_g_num from (1) to current frame (2) */
     int *part2_to_part1_idx = PDM_array_new_idx_from_const_stride_int(1, dn_elt2);
@@ -10338,49 +10513,55 @@ PDM_mesh_location_compute_optim2
     // delay wait?
     PDM_part_to_part_reverse_iexch_wait(ptp_elt21,
                                         request_elt_parent_g_num);
+    free(delt_parent_g_num1);
     free(tmp_delt_parent_g_num2);
     PDM_part_to_part_free(ptp_elt21);
+    free(part2_to_part1_idx);
 
 
+    /* Exchange elt parent_g_num from (1) to current frame (2) */
+    PDM_part_to_part_t *ptp_elt_pts21 = PDM_part_to_part_create((const PDM_g_num_t **) &delt_g_num2,
+                                                                &dn_elt2,
+                                                                1,
+                                                                (const PDM_g_num_t **) &dpts_g_num,//parent_g_num,
+                                                                &dn_pts,
+                                                                1,
+                                                                (const int         **) &delt_pts_idx2,
+                                                                (const PDM_g_num_t **) &delt_pts_g_num2,
+                                                                ml->comm);
+    int request_elt_pts_parent_g_num;
+    PDM_g_num_t **tmp_delt_pts_parent_g_num2 = NULL;
+    PDM_part_to_part_reverse_iexch(ptp_elt_pts21,
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   1,
+                                   sizeof(PDM_g_num_t),
+                                   NULL,
+                  (const void  **) &dpts_parent_g_num,
+                                   NULL,
+                  (      void ***) &tmp_delt_pts_parent_g_num2,
+                                   &request_elt_pts_parent_g_num);
+    PDM_g_num_t *delt_pts_parent_g_num2 = tmp_delt_pts_parent_g_num2[0];
+
+    // delay wait?
+    PDM_part_to_part_reverse_iexch_wait(ptp_elt_pts21,
+                                        request_elt_pts_parent_g_num);
+    free(dpts_parent_g_num);
+    free(tmp_delt_pts_parent_g_num2);
+    PDM_part_to_part_free(ptp_elt_pts21);
 
 
-    // /* Exchange elt type from user frame (0) to current frame (2) */
-    // PDM_part_to_part_t *ptp_elt20 = PDM_part_to_part_create((const PDM_g_num_t **) &delt_g_num2,
-    //                                                         &dn_elt2,
-    //                                                         1,
-    //                                                         (const PDM_g_num_t **) elt_g_num,
-    //                                                         pn_elt,
-    //                                                         n_part,
-    //                                                         (const int         **) &part2_to_part1_idx,
-    //                                                         (const PDM_g_num_t **) &delt_parent_g_num2,
-    //                                                         ml->comm);
-
-    // PDM_Mesh_nodal_elt_t **tmp_delt_type2 = NULL;
-    // int request_elt_type;
-    // PDM_part_to_part_reverse_iexch(ptp_elt20,
-    //                                PDM_MPI_COMM_KIND_P2P,
-    //                                PDM_STRIDE_CST_INTERLACED,
-    //                                PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-    //                                1,
-    //                                sizeof(PDM_Mesh_nodal_elt_t),
-    //                                NULL,
-    //               (const void  **) elt_type,
-    //                                NULL,
-    //               (      void ***) &tmp_delt_type2,
-    //                                &request_elt_type);
-    // PDM_Mesh_nodal_elt_t *delt_type2 = tmp_delt_type2[0];
+    if (dbg_enabled) {
+      PDM_log_trace_array_long(delt_pts_g_num2,        delt_pts_idx2[dn_elt2], "delt_pts_g_num2        : ");
+      PDM_log_trace_array_long(delt_pts_parent_g_num2, delt_pts_idx2[dn_elt2], "delt_pts_parent_g_num2 : ");
+    }
 
 
-    // // delay wait?
-    // PDM_part_to_part_reverse_iexch_wait(ptp_elt20,
-    //                                     request_elt_type);
-    // PDM_part_to_part_free(ptp_elt20);
-
-
+    /* Get init locations of elements to extract */
     int *delt_init_location_idx2 = NULL;
     int *delt_init_location2     = NULL;
     //-->> TO REMOVE
-    /* Get init locations of elements to extract */
     PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part,
                                                              1,
                                                              ml->comm,
@@ -10393,11 +10574,10 @@ PDM_mesh_location_compute_optim2
                                      elt_g_num[ipart]);
     }
 
-    log_trace("dn_elt2 = %d\n", dn_elt2);
     PDM_gnum_location_requested_elements_set(gnum_loc,
                                              0,
                                              dn_elt2,
-                                             delt_g_num2);
+                                             delt_parent_g_num2);
 
     PDM_gnum_location_compute(gnum_loc);
 
@@ -10409,108 +10589,10 @@ PDM_mesh_location_compute_optim2
 
     PDM_gnum_location_free(gnum_loc);
     //<<--
+    free(delt_init_location_idx2);
 
 
-
-    if (1 && dbg_enabled && n_rank == 1) {
-    PDM_writer_t *wrt = PDM_writer_create("Ensight",
-                                          PDM_WRITER_FMT_BIN,
-                                          PDM_WRITER_TOPO_CST,
-                                          PDM_WRITER_OFF,
-                                          "mesh_location",
-                                          "source_mesh",
-                                          PDM_MPI_COMM_WORLD,
-                                          PDM_IO_KIND_MPI_SIMPLE,
-                                          1.,
-                                          NULL);
-
-    int id_geom = PDM_writer_geom_create_from_mesh_nodal(wrt,
-                                                         "source_mesh_geom",
-                                                         ml->mesh_nodal);
-
-    int id_var_num_part = PDM_writer_var_create(wrt,
-                                                PDM_WRITER_OFF,
-                                                PDM_WRITER_VAR_SCALAR,
-                                                PDM_WRITER_VAR_ELEMENTS,
-                                                "num_part");
-
-    int id_var_is_extracted = PDM_writer_var_create(wrt,
-                                                PDM_WRITER_OFF,
-                                                PDM_WRITER_VAR_SCALAR,
-                                                PDM_WRITER_VAR_ELEMENTS,
-                                                "is_extracted");
-
-    PDM_writer_step_beg(wrt, 0.);
-
-    PDM_writer_geom_write(wrt,
-                          id_geom);
-
-    PDM_real_t **val_num_part = malloc (sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_is_extracted = malloc (sizeof(PDM_real_t *) * n_part);
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
-                                            ipart);
-      val_num_part[ipart] = malloc(sizeof(PDM_real_t) * n_elt);
-      val_is_extracted[ipart] = malloc(sizeof(PDM_real_t) * n_elt);
-      for (int i = 0; i < n_elt; i++) {
-        val_num_part[ipart][i] = (PDM_real_t) (i_rank*n_part + ipart);
-        val_is_extracted[ipart][i] = 0;
-      }
-
-      PDM_writer_var_set(wrt,
-                         id_var_num_part,
-                         id_geom,
-                         ipart,
-                         val_num_part[ipart]);
-    }
-    PDM_writer_var_write(wrt,
-                         id_var_num_part);
-    PDM_writer_var_free(wrt,
-                        id_var_num_part);
-
-
-    for (int i = 0; i < dn_elt2; i++) {
-      int ipart = delt_init_location2[3*i+1];
-      int l_num = delt_init_location2[3*i+2]-1;
-      val_is_extracted[ipart][l_num] = 1;
-    }
-
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      PDM_writer_var_set(wrt,
-                         id_var_is_extracted,
-                         id_geom,
-                         ipart,
-                         val_is_extracted[ipart]);
-    }
-    PDM_writer_var_write(wrt,
-                         id_var_is_extracted);
-    PDM_writer_var_free(wrt,
-                        id_var_is_extracted);
-
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      free(val_num_part[ipart]);
-      free(val_is_extracted[ipart]);
-    }
-    free(val_num_part);
-    free(val_is_extracted);
-
-    PDM_writer_step_end(wrt);
-    PDM_writer_free(wrt);
-  }
-
-
-    /* Apply local permutation (sort elements by type) --> frame (3) */
-    // PDM_g_num_t *delt_g_num3      = NULL;
-    // int         *delt_pts_n3      = NULL;
-    // int         *delt_pts_idx3    = NULL;
-    // PDM_g_num_t *delt_pts_g_num3  = NULL;
-    // double      *delt_pts_coord3  = NULL;
-    // PDM_part_to_part_t *ptp_elt30 = NULL;
-    // int type_elt_n  [PDM_MESH_NODAL_N_ELEMENT_TYPES];
-    // int type_elt_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES+1];
-
-
-    // Call extract_part_nodal with output elements sorted by type
+    /* Extract partition associated to current frame (2) */
     int n_part_out = 1;
     PDM_bool_t equilibrate = PDM_TRUE;// LOL
     PDM_extract_part_t *extrp = PDM_extract_part_create(3,
@@ -10527,7 +10609,7 @@ PDM_mesh_location_compute_optim2
 
     PDM_extract_part_part_nodal_set(extrp, pmne);
 
-    // Set vtx_coord
+    /* Set vtx_coord */
     for (int ipart = 0; ipart < n_part; ipart++) {
       const double *pvtx_coord = PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
                                                              ipart);
@@ -10536,7 +10618,6 @@ PDM_mesh_location_compute_optim2
       const int pn_vtx = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
                                                               ipart,
                                                               &pvtx_ln_to_gn);
-
 
       PDM_extract_part_part_set(extrp,
                                 ipart,
@@ -10571,24 +10652,31 @@ PDM_mesh_location_compute_optim2
 
     PDM_extract_part_compute(extrp);
     log_trace("Yeah :D\n");
+    _pmesh_nodal_elmts_free(pmne);
 
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     PDM_extract_part_part_mesh_nodal_get(extrp,
                                          &extract_pmne,
-                                         PDM_OWNERSHIP_KEEP);
+                                         PDM_OWNERSHIP_USER);
+
+    PDM_part_to_part_t *ptp_elt = NULL;
+    PDM_extract_part_part_to_part_get(extrp,
+                                      PDM_MESH_ENTITY_CELL,
+                                      &ptp_elt,
+                                      PDM_OWNERSHIP_USER);
 
 
-    int          *pn_extract_elt        = malloc(sizeof(int          ) * n_part);
-    int          *pn_extract_vtx        = malloc(sizeof(int          ) * n_part);
+    int          *pextract_n_elt        = malloc(sizeof(int          ) * n_part);
+    int          *pextract_n_vtx        = malloc(sizeof(int          ) * n_part);
     double      **pextract_vtx_coord    = malloc(sizeof(double      *) * n_part);
     PDM_g_num_t **pextract_elt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-      pn_extract_elt[ipart] = PDM_extract_part_n_entity_get(extrp,
-                                                             ipart,
-                                                             PDM_MESH_ENTITY_CELL);
+      pextract_n_elt[ipart] = PDM_extract_part_n_entity_get(extrp,
+                                                            ipart,
+                                                            PDM_MESH_ENTITY_CELL);
 
-      pn_extract_vtx[ipart] = PDM_extract_part_n_entity_get(extrp,
+      pextract_n_vtx[ipart] = PDM_extract_part_n_entity_get(extrp,
                                                             ipart,
                                                             PDM_MESH_ENTITY_VERTEX);
 
@@ -10597,15 +10685,103 @@ PDM_mesh_location_compute_optim2
                                      &pextract_vtx_coord[ipart],
                                      PDM_OWNERSHIP_KEEP);
 
-      PDM_extract_part_ln_to_gn_get(extrp,
-                                    ipart,
-                                    PDM_MESH_ENTITY_CELL,
-                                    &pextract_elt_ln_to_gn[ipart],
-                                    PDM_OWNERSHIP_KEEP);
+      // PDM_extract_part_parent_ln_to_gn_get(extrp,
+      //                                      ipart,
+      //                                      PDM_MESH_ENTITY_CELL,
+      //                                      &pextract_elt_ln_to_gn[ipart],
+      //                                      PDM_OWNERSHIP_KEEP);
     }
 
 
     if (dbg_enabled) {
+
+      if (n_rank == 1) {
+        PDM_writer_t *wrt = PDM_writer_create("Ensight",
+                                              PDM_WRITER_FMT_BIN,
+                                              PDM_WRITER_TOPO_CST,
+                                              PDM_WRITER_OFF,
+                                              "mesh_location",
+                                              "source_mesh",
+                                              PDM_MPI_COMM_WORLD,
+                                              PDM_IO_KIND_MPI_SIMPLE,
+                                              1.,
+                                              NULL);
+
+        int id_geom = PDM_writer_geom_create_from_mesh_nodal(wrt,
+                                                             "source_mesh_geom",
+                                                             ml->mesh_nodal);
+
+        int id_var_num_part = PDM_writer_var_create(wrt,
+                                                    PDM_WRITER_OFF,
+                                                    PDM_WRITER_VAR_SCALAR,
+                                                    PDM_WRITER_VAR_ELEMENTS,
+                                                    "num_part");
+
+        int id_var_is_extracted = PDM_writer_var_create(wrt,
+                                                        PDM_WRITER_OFF,
+                                                        PDM_WRITER_VAR_SCALAR,
+                                                        PDM_WRITER_VAR_ELEMENTS,
+                                                        "is_extracted");
+
+        PDM_writer_step_beg(wrt, 0.);
+
+        PDM_writer_geom_write(wrt,
+                              id_geom);
+
+        PDM_real_t **val_num_part = malloc (sizeof(PDM_real_t *) * n_part);
+        PDM_real_t **val_is_extracted = malloc (sizeof(PDM_real_t *) * n_part);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
+                                                ipart);
+          val_num_part[ipart] = malloc(sizeof(PDM_real_t) * n_elt);
+          val_is_extracted[ipart] = malloc(sizeof(PDM_real_t) * n_elt);
+          for (int i = 0; i < n_elt; i++) {
+            val_num_part[ipart][i] = (PDM_real_t) (i_rank*n_part + ipart);
+            val_is_extracted[ipart][i] = 0;
+          }
+
+          PDM_writer_var_set(wrt,
+                             id_var_num_part,
+                             id_geom,
+                             ipart,
+                             val_num_part[ipart]);
+        }
+        PDM_writer_var_write(wrt,
+                             id_var_num_part);
+        PDM_writer_var_free(wrt,
+                            id_var_num_part);
+
+
+        for (int i = 0; i < dn_elt2; i++) {
+          int ipart = delt_init_location2[3*i+1];
+          int l_num = delt_init_location2[3*i+2]-1;
+          val_is_extracted[ipart][l_num] = 1;
+        }
+
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          PDM_writer_var_set(wrt,
+                             id_var_is_extracted,
+                             id_geom,
+                             ipart,
+                             val_is_extracted[ipart]);
+        }
+        PDM_writer_var_write(wrt,
+                             id_var_is_extracted);
+        PDM_writer_var_free(wrt,
+                            id_var_is_extracted);
+
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          free(val_num_part[ipart]);
+          free(val_is_extracted[ipart]);
+        }
+        free(val_num_part);
+        free(val_is_extracted);
+
+        PDM_writer_step_end(wrt);
+        PDM_writer_free(wrt);
+      }
+
+	    /* Visualize extracted part_mesh_nodal and point cloud */
       char filename[999];
       sprintf(filename, "delt_pts_coord2_%3.3d.vtk", i_rank);
       PDM_vtk_write_point_cloud(filename,
@@ -10614,149 +10790,859 @@ PDM_mesh_location_compute_optim2
                                 NULL,
                                 NULL);
 
+      int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extract_pmne);
+
+      int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
+
       for (int ipart = 0; ipart < n_part; ipart++) {
 
-        int id_section = 0;
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+        // int id_section = 0;
+        // PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+        //                                                                       id_section);
+        // int         *elmt_vtx                 = NULL;
+        // int         *parent_num               = NULL;
+        // PDM_g_num_t *numabs                   = NULL;
+        // PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+        // PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne,
+        //                                         id_section,
+        //                                         ipart,
+        //                                         &elmt_vtx,
+        //                                         &numabs,
+        //                                         &parent_num,
+        //                                         &parent_entitity_ln_to_gn);
+
+        // sprintf(filename, "extract_pmne_%d_%3.3d.vtk", ipart, i_rank);
+        // PDM_vtk_write_std_elements(filename,
+        //                            pextract_n_vtx[ipart],
+        //                            pextract_vtx_coord[ipart],
+        //                            NULL,
+        //                            t_elt,
+        //                            pextract_n_elt[ipart],
+        //                            elmt_vtx,
+        //                            pextract_elt_ln_to_gn[ipart],
+        //                            0,
+        //                            NULL,
+        //                            NULL);
+
+        for (int isection = 0; isection < n_section; isection++) {
+
+          sprintf(filename, "extract_pmne_part_%d_section_%d_%3.3d.vtk",
+                  ipart, isection, i_rank);
+
+          int id_section = sections_id[isection];
+          PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+                                                                                id_section);
+
+          int _n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                                 id_section,
+                                                                 ipart);
+
+          if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+
+            int *connec_idx;
+            int *connec;
+            PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+                                                       id_section,
+                                                       ipart,
+                                                       &connec_idx,
+                                                       &connec);
+
+            PDM_vtk_write_polydata(filename,
+                                   pextract_n_vtx[ipart],
+                                   pextract_vtx_coord[ipart],
+                                   NULL,
+                                   _n_elt,
+                                   connec_idx,
+                                   connec,
+                                   NULL,
+                                   NULL);
+
+          }
+
+          else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+            int  n_face;
+            int *face_vtx_idx;
+            int *face_vtx;
+            int *cell_face_idx;
+            int *cell_face;
+            PDM_part_mesh_nodal_elmts_block_poly3d_get(extract_pmne,
+                                                       id_section,
+                                                       ipart,
+                                                       &n_face,
+                                                       &face_vtx_idx,
+                                                       &face_vtx,
+                                                       &cell_face_idx,
+                                                       &cell_face);
+
+            PDM_vtk_write_polydata(filename,
+                                   pextract_n_vtx[ipart],
+                                   pextract_vtx_coord[ipart],
+                                   NULL,
+                                   n_face,
+                                   face_vtx_idx,
+                                   face_vtx,
+                                   NULL,
+                                   NULL);
+
+          }
+
+          else {
+            int         *elmt_vtx                 = NULL;
+            int         *parent_num               = NULL;
+            PDM_g_num_t *numabs                   = NULL;
+            PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+            PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne,
+                                                    id_section,
+                                                    ipart,
+                                                    &elmt_vtx,
+                                                    &numabs,
+                                                    &parent_num,
+                                                    &parent_entitity_ln_to_gn);
+
+            PDM_vtk_write_std_elements(filename,
+                                       pextract_n_vtx[ipart],
+                                       pextract_vtx_coord[ipart],
+                                       NULL,
+                                       t_elt,
+                                       _n_elt,
+                                       elmt_vtx,
+                                       parent_entitity_ln_to_gn,//numabs,//
+                                       0,
+                                       NULL,
+                                       NULL);
+          }
+        }
+      }
+    }
+    free(pextract_n_vtx);
+    free(pextract_elt_ln_to_gn);
+
+    /* Permutation */
+    PDM_g_num_t **final_elt_parent_g_num = malloc(sizeof(PDM_g_num_t *) * n_part);//tmp
+    int         **elt_pts_idx3   = malloc(sizeof(int         *) * n_part);
+    double      **elt_pts_coord3 = malloc(sizeof(double      *) * n_part);
+    PDM_g_num_t **elt_pts_g_num3 = malloc(sizeof(PDM_g_num_t *) * n_part);
+    PDM_g_num_t **elt_pts_parent_g_num3 = malloc(sizeof(PDM_g_num_t *) * n_part);
+    int         **elt_pts_init_location3_idx = NULL;
+    int         **elt_pts_init_location3     = NULL;
+    int *pn_pts = malloc(sizeof(int) * n_part);
+
+    int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (extract_pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      int _pextract_n_elt = 0;
+      for (int isection = 0; isection < n_section; isection++) {
+        int id_section = sections_id[isection];
+        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                              id_section,
+                                                              ipart);
+        _pextract_n_elt += n_elt;
+      }
+
+      int *parent_num = NULL;
+      // get parent_num from extract_pmne !!!
+      //--->>> A reprendre
+      parent_num = malloc(sizeof(int) * _pextract_n_elt);
+      final_elt_parent_g_num[ipart] = malloc(sizeof(PDM_g_num_t) * _pextract_n_elt);
+      // for (int i = 0; i < p_extract_n_elt; i++) {
+      //   int old = PDM_binary_search_long(pextract_elt_ln_to_gn[ipart][i],
+      //                                    delt_g_num2,
+      //                                    dn_elt2);
+      //   parent_num[i] = old;
+      // }
+      int idx_elt = 0;
+      for (int isection = 0; isection < n_section; isection++) {
+        int id_section = sections_id[isection];
+        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                              id_section,
+                                                              ipart);
+
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
                                                                               id_section);
-        int         *elmt_vtx                 = NULL;
-        int         *parent_num               = NULL;
-        PDM_g_num_t *numabs                   = NULL;
-        PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
+
+
+        assert(t_elt != PDM_MESH_NODAL_POLY_2D &&
+               t_elt != PDM_MESH_NODAL_POLY_3D);
+
+        int         *connec              = NULL;
+        PDM_g_num_t *numabs              = NULL;
+        int         *_parent_num         = NULL;
+        PDM_g_num_t *parent_entity_g_num = NULL;
         PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne,
                                                 id_section,
                                                 ipart,
-                                                &elmt_vtx,
+                                                &connec,
                                                 &numabs,
-                                                &parent_num,
-                                                &parent_entitity_ln_to_gn);
-
-        sprintf(filename, "extract_pmne_%d_%3.3d.vtk", ipart, i_rank);
-        PDM_vtk_write_std_elements(filename,
-                                   pn_extract_vtx[ipart],
-                                   pextract_vtx_coord[ipart],
-                                   NULL,
-                                   t_elt,
-                                   pn_extract_elt[ipart],
-                                   elmt_vtx,
-                                   pextract_elt_ln_to_gn[ipart],
-                                   0,
-                                   NULL,
-                                   NULL);
+                                                &_parent_num,
+                                                &parent_entity_g_num);
+        memcpy(parent_num + idx_elt, _parent_num, sizeof(int) * n_elt);
+        idx_elt += n_elt;
       }
+      PDM_log_trace_array_int(parent_num, _pextract_n_elt, "parent_num : ");
+      //<<<---
+
+      int *elt_pts_n3 = malloc(sizeof(int) * _pextract_n_elt);
+      for (int i = 0; i < _pextract_n_elt; i++) {
+        int old = parent_num[i];
+        elt_pts_n3[i] = delt_pts_idx2[old+1] - delt_pts_idx2[old];
+        final_elt_parent_g_num[ipart][i] = delt_parent_g_num2[old];
+      }
+
+      elt_pts_idx3[ipart] = PDM_array_new_idx_from_sizes_int(elt_pts_n3, _pextract_n_elt);
+
+      if (dbg_enabled) {
+        PDM_log_trace_array_int(elt_pts_idx3[ipart],
+                                _pextract_n_elt,
+                                "elt_pts_idx3 : ");
+      }
+
+      pn_pts[ipart] = elt_pts_idx3[ipart][_pextract_n_elt];
+
+      elt_pts_coord3       [ipart] = malloc(sizeof(double     ) * pn_pts[ipart] * 3);
+      elt_pts_g_num3       [ipart] = malloc(sizeof(PDM_g_num_t) * pn_pts[ipart]);
+      elt_pts_parent_g_num3[ipart] = malloc(sizeof(PDM_g_num_t) * pn_pts[ipart]);
+      for (int i = 0; i < _pextract_n_elt; i++) {
+        int old = parent_num[i];
+        double *p3 = elt_pts_coord3[ipart] + 3*elt_pts_idx3[ipart][i];
+        double *p2 = delt_pts_coord2       + 3*delt_pts_idx2[old];
+        memcpy(p3, p2, sizeof(double) * 3 * elt_pts_n3[i]);
+
+        PDM_g_num_t *g3 = elt_pts_g_num3[ipart] + elt_pts_idx3[ipart][i];
+        PDM_g_num_t *g2 = delt_pts_g_num2       + delt_pts_idx2[old];
+        memcpy(g3, g2, sizeof(PDM_g_num_t) * elt_pts_n3[i]);
+
+        PDM_g_num_t *pg3 = elt_pts_parent_g_num3[ipart] + elt_pts_idx3[ipart][i];
+        PDM_g_num_t *pg2 = delt_pts_parent_g_num2       + delt_pts_idx2[old];
+        memcpy(pg3, pg2, sizeof(PDM_g_num_t) * elt_pts_n3[i]);
+      }
+
+      PDM_log_trace_array_long(elt_pts_g_num3[ipart],
+                               pn_pts[ipart],
+                               "elt_pts_g_num3[ipart]        : ");
+      PDM_log_trace_array_long(elt_pts_parent_g_num3[ipart],
+                               pn_pts[ipart],
+                               "elt_pts_parent_g_num3[ipart] : ");
+      free(elt_pts_n3);
+      free(parent_num);
     }
-
-    /* Permutation */
-    int         **elt_pts_idx3   = malloc(sizeof(int         *) * n_part);
-    double      **elt_pts_coord3 = malloc(sizeof(double      *) * n_part);
-    PDM_g_num_t **elt_pts_g_num3             = NULL;
-    int         **elt_pts_init_location3_idx = NULL;
-    int         **elt_pts_init_location3     = NULL;
-    // int *new_to_old_elt = malloc(sizeof(int) * dn_elt2);
-    // delt_pts_n3         = malloc(sizeof(int) * dn_elt2);
-    // /* -->> Pas besoin, le new_to_old c'est extract_parent_num (local id) */
-    // for (int i = 0; i < dn_elt2; i++) {
-    //   int old = PDM_binary_search_long(pextract_elt_ln_to_gn[i],
-    //                                    delt_g_num2,
-    //                                    dn_elt2);
-    //   new_to_old_elt[i] = old;
-    //   delt_pts_n3[i] = delt_pts_n2[old];
-    // }
-    // /* <<-- */
-
-    // delt_pts_idx3 = malloc(sizeof(int) * (dn_elt2+1));
-    // delt_pts_idx3[0] = 0;
-    // for (int i = 0; i < dn_elt2; i++) {
-    //   delt_pts_idx3[i+1] = delt_pts_idx3[i] + delt_pts_n3[i];
-    //   delt_pts_n3[i] = 0;
-    // }
-
-    // delt_pts_coord3 = malloc(sizeof(double     ) * delt_pts_idx3[dn_elt2] * 3);
-    // delt_pts_g_num3 = malloc(sizeof(PDM_g_num_t) * delt_pts_idx3[dn_elt2]);
-    // for (int i = 0; i < dn_elt2; i++) {
-    //   int old = new_to_old_elt[i];
-    //   for (int idx = delt_pts_idx2[old]; idx < delt_pts_idx2[old+1]; idx++) {
-    //     int j = delt_pts_idx3[i] + delt_pts_n3[i];
-    //     delt_pts_g_num3[j] = delt_pts_g_num2[idx];
-    //     memcpy(delt_pts_coord3 + 3*j, delt_pts_coord2 + 3*idx, sizeof(double) * 3);
-    //     delt_pts_n3[i]++;
-    //   }
-    // }
-    // free(delt_pts_n3);
+    free(delt_g_num2);
+    free(delt_parent_g_num2);
     free(delt_pts_coord2);
     free(delt_pts_g_num2);
+    free(delt_pts_parent_g_num2);
     free(delt_pts_idx2);
-    // free(new_to_old_elt);
-
-
-
-    //
-    // PDM_abstract_distrib_from_origin pour recuperer les connectivite et coordonnees des noeuds
-    // sans triplet pour l'instant (ptp_elt classique en reverse)
 
 
     /* Perform elementary point locations */
-    // int         *delt_vtx_idx3     = NULL;
-    // double      *vtx_coord3        = NULL;
-    // int         *pts_idx3          = NULL;
-    // PDM_g_num_t *pts_g_num3        = NULL;
-    // double      *pts_coord3        = NULL;
-    // PDM_l_num_t *poly3d_face_idx3  = NULL;
-    // PDM_l_num_t *face_vtx_idx3     = NULL;
-    // PDM_l_num_t *face_vtx3         = NULL;
-    // int         *face_orientation3 = NULL;
+    double **pts_distance3    = NULL;
+    double **pts_proj_coord3  = NULL;
+    int    **pts_weights_idx3 = NULL;
+    double **pts_weights3     = NULL;
+    //double **pts_uvw          = NULL;
 
-    double **pts_distance3        = NULL;
-    double **pts_projected_coord3 = NULL;
-    int    **pts_weights_idx3     = NULL;
-    double **pts_weights3         = NULL;
-
-    //   PDM_point_location_nodal(type_elt_idx,
-    //                            delt_vtx_idx3,
-    //                            vtx_coord3,
-    //                            poly3d_face_idx3,
-    //                            face_vtx_idx3,
-    //                            face_vtx3,
-    //                            face_orientation3,
-    //                            delt_pts_idx3,
-    //                            delt_pts_coord3,
-    //                            tolerance,
-    //                            &pts_distance3,
-    //                            &pts_projected_coord3,
-    //                            &pts_weights_idx3,
-    //                            &pts_weights3);
-
-    PDM_point_location_nodal2(pmne,
+    /* TODO: return uvw for std elts? */
+    PDM_point_location_nodal2(extract_pmne,
                               n_part,
             (const double **) pextract_vtx_coord,
             (const int    **) elt_pts_idx3,
             (const double **) elt_pts_coord3,
                               tolerance,
                               &pts_distance3,
-                              &pts_projected_coord3,
+                              &pts_proj_coord3,
                               &pts_weights_idx3,
                               &pts_weights3);
+    free(pextract_vtx_coord);
 
+    PDM_part_mesh_nodal_elmts_free(extract_pmne);
+    PDM_extract_part_free(extrp);
+    free(delt_init_location2);
+
+    if (dbg_enabled) {
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        log_trace("--- part %d ---\n", ipart);
+        for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
+          log_trace("  elt %d\n", ielt);
+          for (int idx = elt_pts_idx3[ipart][ielt]; idx < elt_pts_idx3[ipart][ielt+1]; idx++) {
+            log_trace("    pt "PDM_FMT_G_NUM": distance = %f\n",
+                      elt_pts_g_num3[ipart][idx], pts_distance3[ipart][idx]);
+          }
+        }
+      }
+    }
 
     // part_to_block (partiel) sur les points en passant distance et element local
+    int **part_stride = malloc(sizeof(int *) * n_part);
+    int **part_elt_id = malloc(sizeof(int *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      part_stride[ipart] = PDM_array_const_int(pn_pts[ipart], 1);
+
+      part_elt_id[ipart] = malloc(sizeof(int) * pn_pts[ipart]);
+      for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
+        for (int i = elt_pts_idx3[ipart][ielt]; i < elt_pts_idx3[ipart][ielt+1]; i++) {
+          part_elt_id[ipart][i] = ielt;
+        }
+      }
+
+      if (1) {
+        for (int i = 0; i < pn_pts[ipart]; i++) {
+          log_trace("pt "PDM_FMT_G_NUM" : local elt %d, dist = %f\n",
+                    elt_pts_g_num3[ipart][i], part_elt_id[ipart][i], pts_distance3[ipart][i]);
+        }
+      }
+    }
+
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        elt_pts_g_num3,
+                                                        NULL,// weight
+                                                        pn_pts,
+                                                        n_part,
+                                                        ml->comm);
+
+    int    *block_pts_elt_n     = NULL;
+    double *block_pts_elt_dist2 = NULL;
+    PDM_part_to_block_exch(ptb,
+                           sizeof(double),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           part_stride,
+                 (void **) pts_distance3,
+                           &block_pts_elt_n,
+                 (void **) &block_pts_elt_dist2);
+    free(block_pts_elt_n);
+
+    int *block_pts_elt_id = NULL;
+    PDM_part_to_block_exch(ptb,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           part_stride,
+                 (void **) part_elt_id,
+                           &block_pts_elt_n,
+                 (void **) &block_pts_elt_id);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(part_elt_id[ipart]);
+      free(part_stride[ipart]);
+    }
+    free(part_elt_id);
+    free(part_stride);
+
     // choix du plus proche
+    int block_n_pts = PDM_part_to_block_n_elt_block_get(ptb);
+    PDM_g_num_t *block_pts_g_num = PDM_part_to_block_block_gnum_get(ptb);
+
+    if (dbg_enabled) {
+      int k = 0;
+      log_trace("block_pts_elt_id (pre) :\n");
+      for (int i = 0; i < block_n_pts; i++) {
+        log_trace(" "PDM_FMT_G_NUM" [%d] -> ", block_pts_g_num[i], i);
+        for (int j = 0; j < block_pts_elt_n[i]; j++) {
+          log_trace("(%d, %f) ", block_pts_elt_id[k], block_pts_elt_dist2[k]);
+          k++;
+        }
+        log_trace("\n");
+      }
+    }
+
+    int idx = 0;
+    for (int i = 0; i < block_n_pts; i++) {
+      double min_dist2 = HUGE_VAL;
+      for (int j = 0; j < block_pts_elt_n[i]; j++) {
+        if (block_pts_elt_dist2[idx] < min_dist2) {
+          min_dist2 = block_pts_elt_dist2[idx];
+          block_pts_elt_id[i] = block_pts_elt_id[idx];
+        }
+        idx++;
+      }
+    }
+
+    if (dbg_enabled) {
+      int *block_pts_elt_idx = PDM_array_new_idx_from_sizes_int(block_pts_elt_n,
+                                                                block_n_pts);
+      PDM_log_trace_connectivity_int(block_pts_elt_idx,
+                                     block_pts_elt_id,
+                                     block_n_pts,
+                                     "block_pts_elt_id (post) : ");
+      free(block_pts_elt_idx);
+    }
+    free(block_pts_elt_dist2);
+
+
     // renvoi du num dupoint a l'element selectionne -1 sinon
+    PDM_part_to_block_reverse_exch(ptb,
+                                   sizeof(int),
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   1,
+                                   block_pts_elt_n,
+                        (void   *) block_pts_elt_id,
+                                   NULL,
+                        (void ***) &part_elt_id);
+    free(block_pts_elt_n);
+    free(block_pts_elt_id);
+    PDM_part_to_block_free(ptb);
+
+    if (dbg_enabled) {
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        log_trace("part %d\n", ipart);
+        PDM_log_trace_connectivity_int(elt_pts_idx3[ipart],
+                                       part_elt_id[ipart],
+                                       pextract_n_elt[ipart],
+                                       "part_elt_id : ");
+      }
+    }
+
+
+
     // tassage du tableau en blocs d'elements (supprimer les -1 et donnees associees)
+    int         **final_elt_pts_n           = malloc(sizeof(int         *) * n_part);
+    PDM_g_num_t **final_elt_pts_g_num       = malloc(sizeof(PDM_g_num_t *) * n_part);
+    double      **final_elt_pts_coord       = malloc(sizeof(double      *) * n_part);
+    double      **final_elt_pts_distance    = malloc(sizeof(double      *) * n_part);
+    double      **final_elt_pts_proj_coord  = malloc(sizeof(double      *) * n_part);
+    int         **final_elt_pts_weights_idx = malloc(sizeof(int         *) * n_part);
+    double      **final_elt_pts_weights     = malloc(sizeof(double      *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      idx = 0;
+      final_elt_pts_n          [ipart] = malloc(sizeof(int        ) * pn_pts[ipart]);
+      final_elt_pts_g_num      [ipart] = malloc(sizeof(PDM_g_num_t) * pn_pts[ipart]);
+      final_elt_pts_coord      [ipart] = malloc(sizeof(double     ) * pn_pts[ipart]*3);
+      final_elt_pts_distance   [ipart] = malloc(sizeof(double     ) * pn_pts[ipart]);
+      final_elt_pts_proj_coord [ipart] = malloc(sizeof(double     ) * pn_pts[ipart]*3);
+      final_elt_pts_weights_idx[ipart] = malloc(sizeof(int        ) * (pn_pts[ipart]+1));
+      final_elt_pts_weights    [ipart] = malloc(sizeof(double     ) * pts_weights_idx3[ipart][pn_pts[ipart]]);
+
+      final_elt_pts_weights_idx[ipart][0] = 0;
+      for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
+
+        final_elt_pts_n[ipart][ielt] = 0;
+
+        int idx_pt = elt_pts_idx3[ipart][ielt];
+        int _n_pts = elt_pts_idx3[ipart][ielt+1] - idx_pt;
+        int         *_elt_id       = part_elt_id          [ipart] + idx_pt;
+        // PDM_g_num_t *_g_num        = elt_pts_g_num3       [ipart] + idx_pt;
+        PDM_g_num_t *_parent_g_num = elt_pts_parent_g_num3[ipart] + idx_pt;
+        double      *_dist2        = pts_distance3        [ipart] + idx_pt;
+        double      *_coord        = elt_pts_coord3       [ipart] + idx_pt*3;
+        double      *_proj         = pts_proj_coord3      [ipart] + idx_pt*3;
+        int         *_weight_idx   = pts_weights_idx3     [ipart] + idx_pt;
+
+        for (int i = 0; i < _n_pts; i++) {
+          if (_elt_id[i] == ielt) {
+            final_elt_pts_n       [ipart][idx]++;
+            //final_elt_pts_g_num   [ipart][idx] = _g_num[i];
+            final_elt_pts_g_num   [ipart][idx] = _parent_g_num[i];
+            final_elt_pts_distance[ipart][idx] = _dist2[i];
+            memcpy(final_elt_pts_coord     [ipart] + 3*idx, _coord + 3*i, sizeof(double)*3);
+            memcpy(final_elt_pts_proj_coord[ipart] + 3*idx, _proj  + 3*i, sizeof(double)*3);
+
+            int _weight_n = _weight_idx[i+1] - _weight_idx[i];
+            double *_weight = pts_weights3[ipart] + _weight_idx[i];
+            final_elt_pts_weights_idx[ipart][idx+1] = final_elt_pts_weights_idx[ipart][idx] + _weight_n;
+            memcpy(final_elt_pts_weights[ipart] + final_elt_pts_weights_idx[ipart][idx],
+                   _weight,
+                   sizeof(double) * _weight_n);
+
+            idx++;
+          }
+        } // End of loop on current elt's pts
+
+      } // End of loop on current part's elts
+
+      final_elt_pts_n          [ipart] = realloc(final_elt_pts_n          [ipart], sizeof(int        ) * idx);
+      final_elt_pts_g_num      [ipart] = realloc(final_elt_pts_g_num      [ipart], sizeof(PDM_g_num_t) * idx);
+      final_elt_pts_coord      [ipart] = realloc(final_elt_pts_coord      [ipart], sizeof(double     ) * idx*3);
+      final_elt_pts_distance   [ipart] = realloc(final_elt_pts_distance   [ipart], sizeof(double     ) * idx);
+      final_elt_pts_proj_coord [ipart] = realloc(final_elt_pts_proj_coord [ipart], sizeof(double     ) * idx*3);
+      final_elt_pts_weights_idx[ipart] = realloc(final_elt_pts_weights_idx[ipart], sizeof(int        ) * (idx+1));
+      final_elt_pts_weights    [ipart] = realloc(final_elt_pts_weights    [ipart], sizeof(double     ) * final_elt_pts_weights_idx[ipart][idx]);
+
+      free(pts_distance3        [ipart]);
+      free(pts_proj_coord3      [ipart]);
+      free(pts_weights_idx3     [ipart]);
+      free(pts_weights3         [ipart]);
+      free(elt_pts_idx3         [ipart]);
+      free(elt_pts_g_num3       [ipart]);
+      free(elt_pts_parent_g_num3[ipart]);
+      free(elt_pts_coord3       [ipart]);
+
+      free(part_elt_id[ipart]);
+    } // End of loop on parts
+    free(pts_distance3);
+    free(pts_proj_coord3);
+    free(pts_weights_idx3);
+    free(pts_weights3);
+    free(elt_pts_idx3);
+    free(elt_pts_g_num3);
+    free(elt_pts_parent_g_num3);
+    free(elt_pts_coord3);
+    free(pn_pts);
+
+    free(part_elt_id);
 
 
-    // ptp elt->init points
-    // ptp_elt direct
 
+    /*
+     *  Transfer location data from elt (current frame) to elt (user frame)
+     */
+    _points_in_element_t *pie = ml->points_in_elements + icloud;
+
+    pie->n_part = n_part;  // foireux?
+    // pie->n_elts = pn_elt;// foireux
+    pie->n_elts = malloc(sizeof(int) * n_part);
+    memcpy(pie->n_elts, pn_elt, sizeof(int) * n_part);
+
+
+    int **pie_n = NULL;
+    int request_pie_n;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(int),
+                           NULL,
+          (const void  **) final_elt_pts_n,
+                           NULL,
+          (      void ***) &pie_n,
+                           &request_pie_n);
+
+    int request_pts_g_num;
+    int **stride_pts_g_num = NULL;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(PDM_g_num_t),
+          (const int   **) final_elt_pts_n,
+          (const void  **) final_elt_pts_g_num,
+                           &stride_pts_g_num,
+          (      void ***) &pie->gnum,
+                           &request_pts_g_num);
+
+    int request_pts_dist2;
+    int **stride_pts_dist2 = NULL;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(double),
+          (const int   **) final_elt_pts_n,
+          (const void  **) final_elt_pts_distance,
+                           &stride_pts_dist2,
+          (      void ***) &pie->dist2,
+                           &request_pts_dist2);
+
+
+    request_pts_coord = -1;
+    int **stride_pts_coord = NULL;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           3*sizeof(double),
+          (const int   **) final_elt_pts_n,
+          (const void  **) final_elt_pts_coord,
+                           &stride_pts_coord,
+          (      void ***) &pie->coords,
+                           &request_pts_coord);
+
+
+    int request_pts_proj_coord;
+    int **stride_pts_proj_coord = NULL;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           3*sizeof(double),
+          (const int   **) final_elt_pts_n,
+          (const void  **) final_elt_pts_proj_coord,
+                           &stride_pts_proj_coord,
+          (      void ***) &pie->projected_coords,
+                           &request_pts_proj_coord);
+
+    int **elt_pts_weight_stride = malloc(sizeof(int *) * n_part);
+    int **final_elt_pts_idx     = malloc(sizeof(int *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      elt_pts_weight_stride[ipart] = malloc(sizeof(int) * pn_elt[ipart]);
+      final_elt_pts_idx    [ipart] = PDM_array_new_idx_from_sizes_int(final_elt_pts_n[ipart],
+                                                                      pextract_n_elt[ipart]);
+      free(final_elt_pts_n[ipart]);
+
+      for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
+        int head = final_elt_pts_idx[ipart][ielt  ];
+        int tail = final_elt_pts_idx[ipart][ielt+1];
+
+        elt_pts_weight_stride[ipart][ielt] =
+        final_elt_pts_weights_idx[ipart][tail] -
+        final_elt_pts_weights_idx[ipart][head];
+      }
+    }
+    free(final_elt_pts_n);
+
+    int request_pts_weight;
+    int **stride_pts_weight = NULL;
+    PDM_part_to_part_iexch(ptp_elt,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                           1,
+                           sizeof(double),
+          (const int   **) elt_pts_weight_stride,
+          (const void  **) final_elt_pts_weights,
+                           &stride_pts_weight,
+          (      void ***) &pie->weights,
+                           &request_pts_weight);
+
+
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pie_n);
+
+
+    int  *n_ref_elt = NULL;
+    int **ref_elt   = NULL;
+    PDM_part_to_part_ref_lnum2_get(ptp_elt,
+                                   &n_ref_elt,
+                                   &ref_elt);
+
+    int  *n_unref_elt = NULL;
+    int **unref_elt   = NULL;
+    PDM_part_to_part_unref_lnum2_get(ptp_elt,
+                                     &n_unref_elt,
+                                     &unref_elt);
+
+    pie->pts_inside_idx = malloc(sizeof(int *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      pie->pts_inside_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
+      pie->pts_inside_idx[ipart][0] = 0;
+
+      for (int i = 0; i < n_ref_elt[ipart]; i++) {
+        pie->pts_inside_idx[ipart][ref_elt[ipart][i]] = pie_n[ipart][i];
+      }
+      free(pie_n[ipart]);
+
+      for (int i = 0; i < n_unref_elt[ipart]; i++) {
+        pie->pts_inside_idx[ipart][unref_elt[ipart][i]] = 0;
+      }
+
+      for (int i = 0; i < pn_elt[ipart]; i++) {
+        pie->pts_inside_idx[ipart][i+1] += pie->pts_inside_idx[ipart][i];      }
+    }
+    free(pie_n);
+
+
+
+    pie->weights_idx = malloc(sizeof(int *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      pie->weights_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
+      pie->weights_idx[ipart][0] = 0;
+
+      for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
+        int _n_pts = pie->pts_inside_idx[ipart][ielt+1] - pie->pts_inside_idx[ipart][ielt];
+
+        if (_n_pts == 0) {
+          continue;
+        }
+
+        int _n_vtx = ml->cell_vtx_idx[ipart][ielt+1] - ml->cell_vtx[ipart][ielt];
+        pie->weights_idx[ipart][ielt+1] = pie->weights_idx[ipart][ielt] + _n_pts * _n_vtx;
+      }
+
+    }
+
+    /* Maybe a bad idea to store as many stride arrays simultaneously... */
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(stride_pts_g_num     [ipart]);
+      free(stride_pts_dist2     [ipart]);
+      free(stride_pts_coord     [ipart]);
+      free(stride_pts_proj_coord[ipart]);
+      free(stride_pts_weight    [ipart]);
+      free(elt_pts_weight_stride[ipart]);
+    }
+    free(stride_pts_g_num);
+    free(stride_pts_dist2);
+    free(stride_pts_coord);
+    free(stride_pts_proj_coord);
+    free(stride_pts_weight);
+    free(elt_pts_weight_stride);
+
+    if (dbg_enabled) {
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        PDM_log_trace_array_long(final_elt_parent_g_num[ipart],
+                                 pextract_n_elt[ipart],
+                                 "final_elt_parent_g_num : ");
+        PDM_log_trace_connectivity_long(final_elt_pts_idx[ipart],
+                                        final_elt_pts_g_num[ipart],
+                                        pextract_n_elt[ipart],
+                                        "final_elt_pts_g_num : ");
+      }
+    }
+
+    if (0) {//dbg_enabled) {
+      char name[999];
+      sprintf(name, "mesh_location_final_elt_pts_%d", icloud);
+
+      int *final_n_pts = malloc(sizeof(int) * n_part);
+      double **_g_num = malloc(sizeof(PDM_g_num_t *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        final_n_pts[ipart] = final_elt_pts_idx[ipart][pextract_n_elt[ipart]];
+        _g_num[ipart] = malloc(sizeof(double) * final_n_pts[ipart]);
+        for (int i = 0; i < final_n_pts[ipart]; i++) {
+          _g_num[ipart][i] = (double) final_elt_pts_g_num[ipart][i];
+        }
+      }
+
+      const char    *field_name[]   = {"distance", "g_num"};
+            double **field_value[2] = {final_elt_pts_distance, _g_num};
+
+      _dump_point_cloud(name,
+                        ml->comm,
+                        n_part,
+                        final_n_pts,
+                        final_elt_pts_coord,
+                        final_elt_pts_g_num,
+                        2,
+                        field_name,
+                        field_value);
+      free(final_n_pts);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(_g_num[ipart]);
+      }
+      free(_g_num);
+    }
+
+
+
+    /*
+     *  Transfer location data from elt (current frame) to pts (user frame)
+     */
+    // TODO: final_elt_pts_init_location(_idx) to bypass gnum_location
+    PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create((const PDM_g_num_t **) final_elt_parent_g_num,//pextract_elt_ln_to_gn,//elt_g_num,
+                                                              (const int          *) pextract_n_elt,//pn_elt,
+                                                              n_part,
+                                                              (const PDM_g_num_t **) pcloud->gnum,
+                                                              (const int          *) pcloud->n_points,
+                                                              pcloud->n_part,
+                                                              (const int         **) final_elt_pts_idx,
+                                                              (const PDM_g_num_t **) final_elt_pts_g_num,
+                                                              ml->comm);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(final_elt_pts_idx  [ipart]);
+      free(final_elt_pts_g_num[ipart]);
+    }
+    free(final_elt_pts_idx);
+    free(final_elt_pts_g_num);
+
+    // TODO: ownership on located/unlocated??
+    int  *n_located = NULL;
+    int **located   = NULL;
+    PDM_part_to_part_ref_lnum2_get(ptp_elt_pts,
+                                   &n_located,
+                                   &located);
+
+    int  *n_unlocated = NULL;
+    int **unlocated   = NULL;
+    PDM_part_to_part_unref_lnum2_get(ptp_elt_pts,
+                                     &n_unlocated,
+                                     &unlocated);
+
+    pcloud->n_located    = malloc(sizeof(int  ) * pcloud->n_part);
+    pcloud->n_un_located = malloc(sizeof(int  ) * pcloud->n_part);
+    pcloud->located      = malloc(sizeof(int *) * pcloud->n_part);
+    pcloud->un_located   = malloc(sizeof(int *) * pcloud->n_part);
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      pcloud->n_located   [ipart] = n_located  [ipart];
+      pcloud->n_un_located[ipart] = n_unlocated[ipart];
+
+      pcloud->located   [ipart] = malloc(sizeof(int) * n_located  [ipart]);
+      pcloud->un_located[ipart] = malloc(sizeof(int) * n_unlocated[ipart]);
+
+      memcpy(pcloud->located   [ipart], located  [ipart], sizeof(int) * n_located  [ipart]);
+      memcpy(pcloud->un_located[ipart], unlocated[ipart], sizeof(int) * n_unlocated[ipart]);
+    }
+
+    // TODO: ownership on gnum1_come_from(_idx)??
+    int         **gnum1_come_from_idx = NULL;
+    PDM_g_num_t **gnum1_come_from     = NULL;
+    PDM_part_to_part_gnum1_come_from_get(ptp_elt_pts,
+                                         &gnum1_come_from_idx,
+                                         &gnum1_come_from);
+
+    pcloud->location = malloc(sizeof(PDM_g_num_t *) * pcloud->n_part);
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      pcloud->location[ipart] = malloc(sizeof(PDM_g_num_t) * n_located[ipart]);
+      for (int i = 0; i < n_located[ipart]; i++) {
+        assert(gnum1_come_from_idx[ipart][i+1] == gnum1_come_from_idx[ipart][i] + 1);
+        pcloud->location[ipart][i] = gnum1_come_from[ipart][i];
+      }
+    }
+
+    /* Exchange other fields (dist2, uvw, weights(_idx), proj_coord) */
+    /* Really necessary from the points' PoV ?? */
+    PDM_part_to_part_iexch(ptp_elt_pts,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                           1,
+                           3*sizeof(double),
+                           NULL,
+          (const void  **) final_elt_pts_proj_coord,
+                           NULL,
+          (      void ***) &pcloud->projected_coords,
+                           &request_pts_proj_coord);
+
+    // int request_pts_dist2;
+    PDM_part_to_part_iexch(ptp_elt_pts,
+                           PDM_MPI_COMM_KIND_P2P,
+                           PDM_STRIDE_CST_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                           1,
+                           sizeof(double),
+                           NULL,
+          (const void  **) final_elt_pts_distance,
+                           NULL,
+          (      void ***) &pcloud->dist2,
+                           &request_pts_dist2);
+
+    PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_proj_coord);
+    PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_dist2);
 
     // free(box_pts_idx);
     // free(box_pts_g_num);
     // free(box_pts_coord);
-
-    free(part2_to_part1_idx);
+    PDM_part_to_part_free(ptp_elt);
+    PDM_part_to_part_free(ptp_elt_pts);
+    free(pextract_n_elt);
 
     /* Free memory */
-    PDM_extract_part_free(extrp);
-    PDM_part_mesh_nodal_elmts_free(pmne);
+
+    /* See if stuff can be freed earlier.... */
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(final_elt_parent_g_num   [ipart]);
+      free(final_elt_pts_coord      [ipart]);
+      free(final_elt_pts_distance   [ipart]);
+      free(final_elt_pts_proj_coord [ipart]);
+      free(final_elt_pts_weights_idx[ipart]);
+      free(final_elt_pts_weights    [ipart]);
+    }
+    free(final_elt_parent_g_num   );
+    free(final_elt_pts_coord      );
+    free(final_elt_pts_distance   );
+    free(final_elt_pts_proj_coord );
+    free(final_elt_pts_weights_idx);
+    free(final_elt_pts_weights    );
 
     if (use_extracted_pts) {
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -10767,6 +11653,7 @@ PDM_mesh_location_compute_optim2
       free(select_pts_parent_g_num);
       free(select_pts_g_num);
       free(select_pts_coord);
+      free(n_select_pts);
     }
 
 
@@ -10779,11 +11666,11 @@ PDM_mesh_location_compute_optim2
       free(select_elt_extents);
       free(select_elt_parent_g_num);
       free(select_elt_g_num);
+      free(n_select_elt);
     }
     for (int ipart = 0; ipart < n_part; ipart++) {
       free(select_elt_l_num[ipart]);
     }
-    free(n_select_elt);
     free(select_elt_l_num);
 
 

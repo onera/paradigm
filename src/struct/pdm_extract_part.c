@@ -1310,14 +1310,14 @@ _extract_part_and_reequilibrate_nodal_from_target
 
 
   if(extrp->dim == 3) {
-    extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL] = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+    extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity       [PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
     }
   } else {
-    extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE] = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+    extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity       [PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
     }
   }
 
@@ -1348,6 +1348,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                       (const int         **) part2_cell_to_part1_cell_idx,
                                                                       (const int         **) extrp->target_location,
                                                                       extrp->comm);
+  extrp->ptp_entity[PDM_MESH_ENTITY_CELL] = ptp;
 
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     free(part2_cell_to_part1_cell_idx[i_part]);
@@ -1427,6 +1428,10 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &elt_ln_to_gn,
                                               &parent_num,
                                               &parent_elt_g_num);
+      if (0) {
+        PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+      }
+
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
         int parent_elt = parent_num[i_elt];//-1;
@@ -1557,7 +1562,7 @@ _extract_part_and_reequilibrate_nodal_from_target
   }
   free(recv_vtx_init_location_n);
 
-  PDM_part_to_part_free(ptp);
+  // PDM_part_to_part_free(ptp);
 
   /*
    * Free
@@ -1719,6 +1724,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                       (const int **) part2_vtx_to_part1_vtx_idx,
                                                       (const int **) target_vtx_to_part1_vtx,
                                                       extrp->comm);
+  extrp->ptp_entity[PDM_MESH_ENTITY_VERTEX] = ptp_vtx;
 
   int           exch_request = -1;
   PDM_part_to_part_reverse_iexch(ptp_vtx,
@@ -1751,9 +1757,9 @@ _extract_part_and_reequilibrate_nodal_from_target
   free(target_vtx_to_part1_vtx);
 
 
-  if(ptp_vtx != NULL) {
-    PDM_part_to_part_free(ptp_vtx);
-  }
+  // if(ptp_vtx != NULL) {
+  //   PDM_part_to_part_free(ptp_vtx);
+  // }
 
 }
 

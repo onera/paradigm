@@ -1265,6 +1265,7 @@ int main(int argc, char *argv[])
           }
 
           if (dist > tolerance) {
+            log_trace("pt %ld dist = %e\n", tgt_g_num[ipart][ipt], dist);
             n_wrong++;
           }
         }
@@ -1281,6 +1282,7 @@ int main(int argc, char *argv[])
         if (x >= xmin && x <= xmin + length &&
             y >= ymin && y <= ymin + length &&
             z >= zmin && z <= zmin + length) {
+          log_trace("pt %ld should have been located\n", tgt_g_num[ipart][ipt]);
           n_wrong++;
         }
       }
@@ -1337,6 +1339,11 @@ int main(int argc, char *argv[])
                                            &points_weights,
                                            &points_dist2,
                                            &points_projected_coords);
+                                           
+      PDM_log_trace_connectivity_long(elt_pts_inside_idx,
+                                      points_gnum,
+                                      src_n_cell[ipart],
+                                      "pie->gnum : ");
 
       for (int i = 0; i < src_n_cell[ipart]; i++) {
 

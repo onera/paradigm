@@ -145,8 +145,8 @@ PDM_part_mesh_nodal_elmts_block_poly2d_get
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
- * \param [out] cellvtx_idx    Index of cell vertex connectivity
- * \param [out] cellvtx        Cell vertex connectivity
+ * \param [out] cell_vtx_idx   Index of cell vertex connectivity
+ * \param [out] cell_vtx       Cell vertex connectivity
  *
  */
 
@@ -156,8 +156,22 @@ PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
        PDM_part_mesh_nodal_elmts_t  *pmne,
  const int                           id_block,
  const int                           id_part,
-       int                         **cellvtx_idx,
-       int                         **cellvtx
+       int                         **cell_vtx_idx,
+       int                         **cell_vtx
+);
+
+
+void
+PDM_part_mesh_nodal_elmts_block_poly3d_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_block,
+const int                           id_part,
+      PDM_l_num_t                  *n_face,
+      PDM_l_num_t                 **face_vtx_idx,
+      PDM_l_num_t                 **face_vtx,
+      PDM_l_num_t                 **cell_face_idx,
+      PDM_l_num_t                 **cell_face
 );
 
 int

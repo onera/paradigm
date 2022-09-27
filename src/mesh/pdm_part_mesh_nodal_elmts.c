@@ -777,6 +777,46 @@ PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
 }
 
 
+
+void
+PDM_part_mesh_nodal_elmts_block_poly3d_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_block,
+const int                           id_part,
+      PDM_l_num_t                  *n_face,
+      PDM_l_num_t                 **face_vtx_idx,
+      PDM_l_num_t                 **face_vtx,
+      PDM_l_num_t                 **cell_face_idx,
+      PDM_l_num_t                 **cell_face
+)
+{
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
+  }
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+
+  PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_block];
+
+  if (block == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
+
+  if (id_part >= block->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  *n_face        = block->n_face      [id_part];
+  *face_vtx_idx  = block->_facvtx_idx[id_part];
+  *face_vtx      = block->_facvtx     [id_part];
+  *cell_face_idx = block->_cellfac_idx[id_part];
+  *cell_face     = block->_cellfac    [id_part];
+}
+
+
+
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_block_type_get
 (
