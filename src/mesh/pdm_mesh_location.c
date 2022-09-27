@@ -2719,7 +2719,7 @@ PDM_mesh_location_free
     for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
       _point_cloud_t *pcloud = ml->point_clouds + icloud;
 
-      if (ml->points_in_elements != NULL) {
+      if (ml->reverse_result && ml->points_in_elements != NULL) {
         _points_in_element_t *_points_in_elements = ml->points_in_elements + icloud;
         if(( ml->owner == PDM_OWNERSHIP_KEEP ) ||
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_points_in_elt_get)) {
@@ -9656,30 +9656,32 @@ PDM_mesh_location_compute_optim2
 
 
       /* Result from mesh PoV */
-      _points_in_element_t *pts_in_elt = ml->points_in_elements + icloud;
+      if (ml->reverse_result) {
+        _points_in_element_t *pts_in_elt = ml->points_in_elements + icloud;
 
-      pts_in_elt->n_part = n_part;
-      pts_in_elt->n_elts = malloc(sizeof(int) * n_part);
-      memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
+        pts_in_elt->n_part = n_part;
+        pts_in_elt->n_elts = malloc(sizeof(int) * n_part);
+        memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
 
-      pts_in_elt->pts_inside_idx   = malloc(sizeof(int         *) * n_part);
-      pts_in_elt->gnum             = malloc(sizeof(PDM_g_num_t *) * n_part);
-      pts_in_elt->coords           = malloc(sizeof(double      *) * n_part);
-      pts_in_elt->uvw              = malloc(sizeof(double      *) * n_part);
-      pts_in_elt->projected_coords = malloc(sizeof(double      *) * n_part);
-      pts_in_elt->weights_idx      = malloc(sizeof(int         *) * n_part);
-      pts_in_elt->weights          = malloc(sizeof(double      *) * n_part);
-      pts_in_elt->dist2            = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->pts_inside_idx   = malloc(sizeof(int         *) * n_part);
+        pts_in_elt->gnum             = malloc(sizeof(PDM_g_num_t *) * n_part);
+        pts_in_elt->coords           = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->uvw              = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->projected_coords = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->weights_idx      = malloc(sizeof(int         *) * n_part);
+        pts_in_elt->weights          = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->dist2            = malloc(sizeof(double      *) * n_part);
 
-      for (int ipart = 0; ipart < n_part; ipart++) {
-        pts_in_elt->pts_inside_idx  [ipart] = PDM_array_zeros_int(pn_elt[ipart] + 1);
-        pts_in_elt->gnum            [ipart] = malloc(sizeof(PDM_g_num_t) * 0);
-        pts_in_elt->coords          [ipart] = malloc(sizeof(double     ) * 0);
-        pts_in_elt->uvw             [ipart] = malloc(sizeof(double     ) * 0);
-        pts_in_elt->projected_coords[ipart] = malloc(sizeof(double     ) * 0);
-        pts_in_elt->weights_idx     [ipart] = malloc(sizeof(int        ) * 0);
-        pts_in_elt->weights         [ipart] = malloc(sizeof(double     ) * 0);
-        pts_in_elt->dist2           [ipart] = malloc(sizeof(double     ) * 0);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          pts_in_elt->pts_inside_idx  [ipart] = PDM_array_zeros_int(pn_elt[ipart] + 1);
+          pts_in_elt->gnum            [ipart] = malloc(sizeof(PDM_g_num_t) * 0);
+          pts_in_elt->coords          [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->uvw             [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->projected_coords[ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->weights_idx     [ipart] = malloc(sizeof(int        ) * 0);
+          pts_in_elt->weights         [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->dist2           [ipart] = malloc(sizeof(double     ) * 0);
+        }
       }
 
       /* Result from point cloud PoV */
@@ -11268,213 +11270,227 @@ PDM_mesh_location_compute_optim2
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
      */
-    _points_in_element_t *pts_in_elt = ml->points_in_elements + icloud;
+    int   request_pts_in_elt_n   = -1;
+    int   request_pts_g_num      = -1;
+    int   request_pts_dist2      = -1;
+          request_pts_coord      = -1;
+    int   request_pts_proj_coord = -1;
+    int   request_pts_uvw        = -1;
+    int   request_pts_weight     = -1;
+    int **pts_in_elt_n           = NULL;
+    int **stride_pts_g_num       = NULL;
+    int **stride_pts_dist2       = NULL;
+    int **stride_pts_coord       = NULL;
+    int **stride_pts_proj_coord  = NULL;
+    int **stride_pts_uvw         = NULL;
+    int **stride_pts_weight      = NULL;
 
-    pts_in_elt->n_part = n_part;  // foireux?
-    // pts_in_elt->n_elts = pn_elt;// foireux
-    pts_in_elt->n_elts = malloc(sizeof(int) * n_part);
-    memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
+    _points_in_element_t *pts_in_elt = NULL;
 
+    if (ml->reverse_result) {
+      pts_in_elt = ml->points_in_elements + icloud;
 
-    int **pts_in_elt_n = NULL;
-    int request_pts_in_elt_n;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_CST_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           sizeof(int),
-                           NULL,
-          (const void  **) final_elt_pts_n,
-                           NULL,
-          (      void ***) &pts_in_elt_n,
-                           &request_pts_in_elt_n);
-
-    int request_pts_g_num;
-    int **stride_pts_g_num = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           sizeof(PDM_g_num_t),
-          (const int   **) final_elt_pts_n,
-          (const void  **) final_elt_pts_g_num,
-                           &stride_pts_g_num,
-          (      void ***) &pts_in_elt->gnum,
-                           &request_pts_g_num);
-
-    int request_pts_dist2;
-    int **stride_pts_dist2 = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           sizeof(double),
-          (const int   **) final_elt_pts_n,
-          (const void  **) final_elt_pts_distance,
-                           &stride_pts_dist2,
-          (      void ***) &pts_in_elt->dist2,
-                           &request_pts_dist2);
+      pts_in_elt->n_part = n_part;  // foireux?
+      pts_in_elt->n_elts = malloc(sizeof(int) * n_part);
+      memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
 
 
-    request_pts_coord = -1;
-    int **stride_pts_coord = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           3*sizeof(double),
-          (const int   **) final_elt_pts_n,
-          (const void  **) final_elt_pts_coord,
-                           &stride_pts_coord,
-          (      void ***) &pts_in_elt->coords,
-                           &request_pts_coord);
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_CST_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             sizeof(int),
+                             NULL,
+            (const void  **) final_elt_pts_n,
+                             NULL,
+            (      void ***) &pts_in_elt_n,
+                             &request_pts_in_elt_n);
+
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             sizeof(PDM_g_num_t),
+            (const int   **) final_elt_pts_n,
+            (const void  **) final_elt_pts_g_num,
+                             &stride_pts_g_num,
+            (      void ***) &pts_in_elt->gnum,
+                             &request_pts_g_num);
+
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             sizeof(double),
+            (const int   **) final_elt_pts_n,
+            (const void  **) final_elt_pts_distance,
+                             &stride_pts_dist2,
+            (      void ***) &pts_in_elt->dist2,
+                             &request_pts_dist2);
 
 
-    int request_pts_proj_coord;
-    int **stride_pts_proj_coord = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           3*sizeof(double),
-          (const int   **) final_elt_pts_n,
-          (const void  **) final_elt_pts_proj_coord,
-                           &stride_pts_proj_coord,
-          (      void ***) &pts_in_elt->projected_coords,
-                           &request_pts_proj_coord);
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             3*sizeof(double),
+            (const int   **) final_elt_pts_n,
+            (const void  **) final_elt_pts_coord,
+                             &stride_pts_coord,
+            (      void ***) &pts_in_elt->coords,
+                             &request_pts_coord);
 
 
-    int request_pts_uvw;
-    int **stride_pts_uvw = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           3*sizeof(double),
-          (const int   **) final_elt_pts_n,
-          (const void  **) final_elt_pts_uvw,
-                           &stride_pts_uvw,
-          (      void ***) &pts_in_elt->uvw,
-                           &request_pts_uvw);
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             3*sizeof(double),
+            (const int   **) final_elt_pts_n,
+            (const void  **) final_elt_pts_proj_coord,
+                             &stride_pts_proj_coord,
+            (      void ***) &pts_in_elt->projected_coords,
+                             &request_pts_proj_coord);
 
-    int **elt_pts_weight_stride = malloc(sizeof(int *) * n_part);
+
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             3*sizeof(double),
+            (const int   **) final_elt_pts_n,
+            (const void  **) final_elt_pts_uvw,
+                             &stride_pts_uvw,
+            (      void ***) &pts_in_elt->uvw,
+                             &request_pts_uvw);
+    }
+
     int **final_elt_pts_idx     = malloc(sizeof(int *) * n_part);
+    int **elt_pts_weight_stride = NULL;
+    if (ml->reverse_result) {
+      elt_pts_weight_stride = malloc(sizeof(int *) * n_part);
+    }
     for (int ipart = 0; ipart < n_part; ipart++) {
-      elt_pts_weight_stride[ipart] = malloc(sizeof(int) * pextract_n_elt[ipart]);
-      final_elt_pts_idx    [ipart] = PDM_array_new_idx_from_sizes_int(final_elt_pts_n[ipart],
-                                                                      pextract_n_elt[ipart]);
+      final_elt_pts_idx[ipart] = PDM_array_new_idx_from_sizes_int(final_elt_pts_n[ipart],
+                                                                  pextract_n_elt[ipart]);
       free(final_elt_pts_n[ipart]);
 
-      for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
-        int head = final_elt_pts_idx[ipart][ielt  ];
-        int tail = final_elt_pts_idx[ipart][ielt+1];
+      if (ml->reverse_result) {
+        elt_pts_weight_stride[ipart] = malloc(sizeof(int) * pextract_n_elt[ipart]);
+        for (int ielt = 0; ielt < pextract_n_elt[ipart]; ielt++) {
+          int head = final_elt_pts_idx[ipart][ielt  ];
+          int tail = final_elt_pts_idx[ipart][ielt+1];
 
-        elt_pts_weight_stride[ipart][ielt] =
-        final_elt_pts_weights_idx[ipart][tail] -
-        final_elt_pts_weights_idx[ipart][head];
+          elt_pts_weight_stride[ipart][ielt] =
+          final_elt_pts_weights_idx[ipart][tail] -
+          final_elt_pts_weights_idx[ipart][head];
+        }
       }
     }
     free(final_elt_pts_n);
 
-    int request_pts_weight;
-    int **stride_pts_weight = NULL;
-    PDM_part_to_part_iexch(ptp_elt,
-                           PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_VAR_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-                           1,
-                           sizeof(double),
-          (const int   **) elt_pts_weight_stride,
-          (const void  **) final_elt_pts_weights,
-                           &stride_pts_weight,
-          (      void ***) &pts_in_elt->weights,
-                           &request_pts_weight);
+    if (ml->reverse_result) {
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             sizeof(double),
+            (const int   **) elt_pts_weight_stride,
+            (const void  **) final_elt_pts_weights,
+                             &stride_pts_weight,
+            (      void ***) &pts_in_elt->weights,
+                             &request_pts_weight);
 
 
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_in_elt_n);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_in_elt_n);
 
 
-    int  *n_ref_elt = NULL;
-    int **ref_elt   = NULL;
-    PDM_part_to_part_ref_lnum2_get(ptp_elt,
-                                   &n_ref_elt,
-                                   &ref_elt);
+      int  *n_ref_elt = NULL;
+      int **ref_elt   = NULL;
+      PDM_part_to_part_ref_lnum2_get(ptp_elt,
+                                     &n_ref_elt,
+                                     &ref_elt);
 
-    int  *n_unref_elt = NULL;
-    int **unref_elt   = NULL;
-    PDM_part_to_part_unref_lnum2_get(ptp_elt,
-                                     &n_unref_elt,
-                                     &unref_elt);
+      int  *n_unref_elt = NULL;
+      int **unref_elt   = NULL;
+      PDM_part_to_part_unref_lnum2_get(ptp_elt,
+                                       &n_unref_elt,
+                                       &unref_elt);
 
-    pts_in_elt->pts_inside_idx = malloc(sizeof(int *) * n_part);
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      pts_in_elt->pts_inside_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
-      pts_in_elt->pts_inside_idx[ipart][0] = 0;
+      pts_in_elt->pts_inside_idx = malloc(sizeof(int *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        pts_in_elt->pts_inside_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
+        pts_in_elt->pts_inside_idx[ipart][0] = 0;
 
-      for (int i = 0; i < n_ref_elt[ipart]; i++) {
-        pts_in_elt->pts_inside_idx[ipart][ref_elt[ipart][i]] = pts_in_elt_n[ipart][i];
-      }
-      free(pts_in_elt_n[ipart]);
+        for (int i = 0; i < n_ref_elt[ipart]; i++) {
+          pts_in_elt->pts_inside_idx[ipart][ref_elt[ipart][i]] = pts_in_elt_n[ipart][i];
+        }
+        free(pts_in_elt_n[ipart]);
 
-      for (int i = 0; i < n_unref_elt[ipart]; i++) {
-        pts_in_elt->pts_inside_idx[ipart][unref_elt[ipart][i]] = 0;
-      }
-
-      for (int i = 0; i < pn_elt[ipart]; i++) {
-        pts_in_elt->pts_inside_idx[ipart][i+1] += pts_in_elt->pts_inside_idx[ipart][i];      }
-    }
-    free(pts_in_elt_n);
-
-
-
-    pts_in_elt->weights_idx = malloc(sizeof(int *) * n_part);
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      pts_in_elt->weights_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
-      pts_in_elt->weights_idx[ipart][0] = 0;
-
-      for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
-        int _n_pts = pts_in_elt->pts_inside_idx[ipart][ielt+1] - pts_in_elt->pts_inside_idx[ipart][ielt];
-
-        if (_n_pts == 0) {
-          continue;
+        for (int i = 0; i < n_unref_elt[ipart]; i++) {
+          pts_in_elt->pts_inside_idx[ipart][unref_elt[ipart][i]] = 0;
         }
 
-        int _n_vtx = ml->cell_vtx_idx[ipart][ielt+1] - ml->cell_vtx[ipart][ielt];
-        pts_in_elt->weights_idx[ipart][ielt+1] = pts_in_elt->weights_idx[ipart][ielt] + _n_pts * _n_vtx;
+        for (int i = 0; i < pn_elt[ipart]; i++) {
+          pts_in_elt->pts_inside_idx[ipart][i+1] += pts_in_elt->pts_inside_idx[ipart][i];      }
+      }
+      free(pts_in_elt_n);
+
+
+
+      pts_in_elt->weights_idx = malloc(sizeof(int *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        pts_in_elt->weights_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart]+1));
+        pts_in_elt->weights_idx[ipart][0] = 0;
+
+        for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
+          int _n_pts = pts_in_elt->pts_inside_idx[ipart][ielt+1] - pts_in_elt->pts_inside_idx[ipart][ielt];
+
+          if (_n_pts == 0) {
+            continue;
+          }
+
+          int _n_vtx = ml->cell_vtx_idx[ipart][ielt+1] - ml->cell_vtx[ipart][ielt];
+          pts_in_elt->weights_idx[ipart][ielt+1] = pts_in_elt->weights_idx[ipart][ielt] + _n_pts * _n_vtx;
+        }
+
       }
 
+      /* Maybe a bad idea to store as many stride arrays simultaneously... */
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(stride_pts_g_num     [ipart]);
+        free(stride_pts_dist2     [ipart]);
+        free(stride_pts_coord     [ipart]);
+        free(stride_pts_proj_coord[ipart]);
+        free(stride_pts_weight    [ipart]);
+        free(elt_pts_weight_stride[ipart]);
+        free(stride_pts_uvw       [ipart]);
+      }
+      free(stride_pts_g_num);
+      free(stride_pts_dist2);
+      free(stride_pts_coord);
+      free(stride_pts_proj_coord);
+      free(stride_pts_weight);
+      free(elt_pts_weight_stride);
+      free(stride_pts_uvw);
     }
 
-    /* Maybe a bad idea to store as many stride arrays simultaneously... */
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
-    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+    PDM_part_to_part_free(ptp_elt);
 
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      free(stride_pts_g_num     [ipart]);
-      free(stride_pts_dist2     [ipart]);
-      free(stride_pts_coord     [ipart]);
-      free(stride_pts_proj_coord[ipart]);
-      free(stride_pts_weight    [ipart]);
-      free(elt_pts_weight_stride[ipart]);
-      free(stride_pts_uvw       [ipart]);
-    }
-    free(stride_pts_g_num);
-    free(stride_pts_dist2);
-    free(stride_pts_coord);
-    free(stride_pts_proj_coord);
-    free(stride_pts_weight);
-    free(elt_pts_weight_stride);
-    free(stride_pts_uvw);
 
     if (dbg_enabled) {
       for (int ipart = 0; ipart < n_part; ipart++) {
@@ -11670,7 +11686,7 @@ PDM_mesh_location_compute_optim2
     // free(box_pts_idx);
     // free(box_pts_g_num);
     // free(box_pts_coord);
-    PDM_part_to_part_free(ptp_elt);
+
     PDM_part_to_part_free(ptp_elt_pts);
     free(pextract_n_elt);
 

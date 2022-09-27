@@ -1406,7 +1406,7 @@ int main(int argc, char *argv[])
   double      tolerance           = 1e-6;
   double      marge               = 0.;
   int         n_part              = 1;
-  int         post                = 1;
+  int         post                = 0;
   int         extension_depth_tgt = 0;
   int         extension_depth_src = 0;
 #ifdef PDM_HAVE_PARMETIS
@@ -2113,7 +2113,6 @@ int main(int argc, char *argv[])
                          tgt_g_num,
                          tgt_location);
 
-    printf("AAAAAAAAAAAAAA\n");
   }
 
 
