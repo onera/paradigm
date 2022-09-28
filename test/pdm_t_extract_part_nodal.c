@@ -595,7 +595,15 @@ int main(int argc, char *argv[])
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne,
+                                              id_section,
+                                              i_part,
+                                              &elmt_vtx,
+                                              &numabs,
+                                              &parent_num,
+                                              &parent_entitity_ln_to_gn);
+
+      PDM_log_trace_array_long(parent_entitity_ln_to_gn, pn_extract_cell[i_part], "parent_entitity_ln_to_gn ::");
 
       PDM_vtk_write_std_elements(filename,
                                  pn_extract_vtx[i_part],
@@ -604,7 +612,7 @@ int main(int argc, char *argv[])
                                  t_elt,
                                  pn_extract_cell[i_part],
                                  elmt_vtx,
-                                 NULL,
+                                 parent_entitity_ln_to_gn,
                                  0,
                                  NULL,
                                  NULL);

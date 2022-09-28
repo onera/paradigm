@@ -1630,15 +1630,17 @@ _extract_part_and_reequilibrate_nodal_from_target
       PDM_log_trace_array_int(n_elmt_by_section, n_section, "n_elmt_by_section ::");
     }
 
-    int **elmt_vtx_by_section = malloc(n_section * sizeof(int *));
-    int **extract_parent_num  = malloc(n_section * sizeof(int *));
+    int         **elmt_vtx_by_section  = malloc(n_section * sizeof(int         *));
+    int         **extract_parent_num   = malloc(n_section * sizeof(int         *));
+    PDM_g_num_t **extract_parent_g_num = malloc(n_section * sizeof(PDM_g_num_t *));
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
-      elmt_vtx_by_section[i_section  ] = malloc( n_vtx_per_elmt * n_elmt_by_section[i_section] * sizeof(int));
-      extract_parent_num [i_section  ] = malloc(                  n_elmt_by_section[i_section] * sizeof(int));
+      elmt_vtx_by_section [i_section  ] = malloc( n_vtx_per_elmt * n_elmt_by_section[i_section] * sizeof(int        ));
+      extract_parent_num  [i_section  ] = malloc(                  n_elmt_by_section[i_section] * sizeof(int        ));
+      extract_parent_g_num[i_section  ] = malloc(                  n_elmt_by_section[i_section] * sizeof(PDM_g_num_t));
 
       n_elmt_by_section  [i_section  ] = 0;
     }
@@ -1652,7 +1654,8 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       int idx_write = n_elmt_by_section[lsection_id]++;
       for(int j = 0; j < n_vtx_per_elmt; ++j) {
-        extract_parent_num[lsection_id][idx_write] = i;
+        extract_parent_num  [lsection_id][idx_write] = i;
+        extract_parent_g_num[lsection_id][idx_write] = extrp->target_gnum[i_part][i];
         int l_elmt     = unique_order_entity2[idx_read++];
         elmt_vtx_by_section[lsection_id][n_vtx_per_elmt*idx_write+j] = (l_elmt+1);
       }
@@ -1683,8 +1686,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                         n_elmt_by_section[i_section],
                                         elmt_vtx_by_section[i_section],
                                         NULL,
-                                        extract_parent_num[i_section],
-                                        NULL,
+                                        extract_parent_num  [i_section],
+                                        extract_parent_g_num[i_section],
                                         PDM_OWNERSHIP_KEEP);
     }
 
