@@ -141,6 +141,7 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
   PDM_l_num_t           **_num_part;            /*!< Initial numbering in the partition (Memory mapping) */
 
   PDM_g_num_t           **_numabs;              /*!< Global numbering (Memory mapping) */
+  PDM_g_num_t           **_face_ln_to_gn;       /*!< Global numbering (Memory mapping) */
 
   PDM_g_num_t           **numabs_int;           /*!< Global numbering inside the block (Memory mapping) */
   PDM_l_num_t           **_parent_num;          /*!< Parent numbering or NULL */

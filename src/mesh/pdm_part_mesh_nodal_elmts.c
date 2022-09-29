@@ -1492,6 +1492,59 @@ const char                        **ho_ordering
 }
 
 
+void
+PDM_part_mesh_nodal_elmts_block_poly2d_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part,
+const int                          n_elt,
+const int                         *connec_idx,
+const int                         *connec,
+const PDM_g_num_t                 *numabs,
+const int                         *parent_num,
+      PDM_ownership_t              owner
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+  PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_block];
+
+  if (block == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
+
+  if (id_part >= block->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  /* Mapping */
+
+  block->n_elt[id_part]       = n_elt;
+  block->_connec_idx[id_part] = (int *) connec_idx;
+  block->_connec[id_part]     = (int *) connec;
+  block->_numabs[id_part]     = (PDM_g_num_t *) numabs;
+  block->owner                = owner;
+
+  /* for (int i = 0; i < n_elt; i++) { */
+  /*   n_elt_abs = PDM_MAX(n_elt_abs, numabs[i]); */
+  /* } */
+
+  if (parent_num != NULL) {
+    if (block->_parent_num == NULL) {
+      block->_parent_num = malloc (sizeof(int *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_num[i] = NULL;
+      }
+    }
+    block->_parent_num[id_part] = (int *) parent_num;
+  }
+}
 
 /**
  * \brief Define a polyhedra block
@@ -1524,7 +1577,8 @@ const PDM_g_num_t                 *face_ln_to_gn,
 const int                         *cellfac_idx,
 const int                         *cellfac,
 const PDM_g_num_t                 *numabs,
-const int                         *parent_num
+const int                         *parent_num,
+      PDM_ownership_t              owner
 )
 {
 
@@ -1547,12 +1601,13 @@ const int                         *parent_num
 
   block->n_elt         [id_part] = n_elt;
   block->n_face        [id_part] = n_face;
-  block->_facvtx_idx   [id_part] = (int *) facvtx_idx;
-  block->_facvtx       [id_part] = (int *) facvtx;
-  block->_face_ln_to_gn[id_part] = face_ln_to_gn;
-  block->_cellfac_idx  [id_part] = (int *) cellfac_idx;
-  block->_cellfac      [id_part] = (int *) cellfac;
+  block->_facvtx_idx   [id_part] = (int         *) facvtx_idx;
+  block->_facvtx       [id_part] = (int         *) facvtx;
+  block->_face_ln_to_gn[id_part] = (PDM_g_num_t *) face_ln_to_gn;
+  block->_cellfac_idx  [id_part] = (int         *) cellfac_idx;
+  block->_cellfac      [id_part] = (int         *) cellfac;
   block->_numabs       [id_part] = (PDM_g_num_t *) numabs;
+  block->owner                   = owner;
 
 
   /* Compute cell-vertex connectivity */
@@ -1976,7 +2031,6 @@ _type_cell_3D
  const int     n_face_cell,
  const int    *cell_face,
  const int    *face_vtx_idx,
- const int    *face_vtx_nb,
  const int    *face_vtx,
  int           tria_vtx[],
  int           quad_vtx[]
@@ -1993,7 +2047,7 @@ _type_cell_3D
   for (int i = 0; i < n_face_cell; i++) {
 
     const int face_id = PDM_ABS(cell_face[i]) - 1;
-    const int n_som_face = face_vtx_nb[face_id];
+    const int n_som_face = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
     int idx = face_vtx_idx[face_id] ;
 
     if (n_som_face == 3) {
@@ -2031,7 +2085,7 @@ _type_cell_3D
       const int face_id = PDM_ABS(cell_face[i]) - 1;
       const int ideb = face_vtx_idx[face_id] ;
 
-      const int n_som_face = face_vtx_nb[face_id];
+      const int n_som_face = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
 
       if (n_som_face == 3) {
         for (int j = 0; j < 3; j++) {
@@ -2067,17 +2121,15 @@ _type_cell_3D
 
 
 PDM_part_mesh_nodal_elmts_t*
-PDM_part_mesh_nodal_create_from_part
+PDM_part_mesh_nodal_create_from_part3d
 (
   const int                n_part,
   const int               *n_cell,
   const int               *n_face,
   const int              **face_vtx_idx,
-  const int              **face_vtx_nb,
   const int              **face_vtx,
   const PDM_g_num_t      **face_ln_to_gn,
   const int              **cell_face_idx,
-  const int              **cell_face_nb,
   const int              **cell_face,
   const double           **vtx_coord,
   const PDM_g_num_t      **numabs,
@@ -2134,10 +2186,10 @@ PDM_part_mesh_nodal_create_from_part
   for (int i_part = 0; i_part < n_part; i_part++) {
     for (int i = 0; i < n_cell[i_part]; i++) {
 
-      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(cell_face_nb[i_part][i],
+      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i+1];
+      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(l_face,
                                                      cell_face[i_part] + cell_face_idx[i_part][i],
                                                      face_vtx_idx[i_part],
-                                                     face_vtx_nb[i_part],
                                                      face_vtx[i_part],
                                                      cell_som_tria,
                                                      cell_som_quad);
@@ -2171,13 +2223,11 @@ PDM_part_mesh_nodal_create_from_part
       prepa_blocks->n_prism      [i_part] = n_prism;
       prepa_blocks->n_pyramid    [i_part] = n_pyramid;
       prepa_blocks->n_poly3d     [i_part] = n_poly3d;
-      prepa_blocks->face_vtx_idx [i_part] = (int *) face_vtx_idx;
-      prepa_blocks->face_vtx_nb  [i_part] = (int *) face_vtx_nb;
-      prepa_blocks->face_vtx     [i_part] = (int *) face_vtx;
-      prepa_blocks->cell_face_idx[i_part] = (int *) cell_face_idx;
-      prepa_blocks->cell_face_nb [i_part] = (int *) cell_face_nb;
-      prepa_blocks->cell_face    [i_part] = (int *) cell_face;
-      prepa_blocks->numabs       [i_part] = (PDM_g_num_t *) numabs;
+      prepa_blocks->face_vtx_idx [i_part] = (int         *) face_vtx_idx [i_part];
+      prepa_blocks->face_vtx     [i_part] = (int         *) face_vtx     [i_part];
+      prepa_blocks->cell_face_idx[i_part] = (int         *) cell_face_idx[i_part];
+      prepa_blocks->cell_face    [i_part] = (int         *) cell_face    [i_part];
+      prepa_blocks->numabs       [i_part] = (PDM_g_num_t *) numabs       [i_part];
       prepa_blocks->add_etat     [i_part] = 1;
       prepa_blocks->n_face       [i_part] = n_face[i_part];
       prepa_blocks->n_cell       [i_part] = n_cell[i_part];
@@ -2274,7 +2324,7 @@ PDM_part_mesh_nodal_create_from_part
     if (0 == 1) {
       printf("2 cell_face %d %d: \n",i_part, n_cell_courant);
       for (int i = 0; i < n_cell_courant; i++) {
-        for (int j = cell_face_idx_courant[i] ; j < cell_face_idx_courant[i]  + cell_face_nb_courant[i]; j++) {
+        for (int j = cell_face_idx_courant[i] ; j < cell_face_idx_courant[i+1]; j++) {
           printf(" %d", cell_face_courant[j]);
         }
         printf("\n");
@@ -2282,7 +2332,7 @@ PDM_part_mesh_nodal_create_from_part
 
       printf("2 face_vtx %d %d: \n", i_part, n_face_part);
       for (int i = 0; i < n_face_part; i++) {
-        for (int j = face_som_idx_courant[i] ; j < face_som_idx_courant[i]  + face_som_nb_courant[i] ; j++) {
+        for (int j = face_som_idx_courant[i] ; j < face_som_idx_courant[i+1] ; j++) {
           printf(" %d", face_som_courant[j]);
         }
         printf("\n");
@@ -2365,7 +2415,6 @@ PDM_part_mesh_nodal_create_from_part
       PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(cell_face_nb_courant[i],
                                                      cell_face_courant + cell_face_idx_courant[i],
                                                      face_som_idx_courant,
-                                                     face_som_nb_courant,
                                                      face_som_courant,
                                                      cell_som_tria,
                                                      cell_som_quad);
@@ -2483,10 +2532,10 @@ PDM_part_mesh_nodal_create_from_part
 
       l_cellfac_poly = 0;
       for (int i = 0; i < n_cell_courant; i++) {
-        PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(cell_face_nb_courant[i],
+        int l_face = cell_face_idx_courant[i+1] - cell_face_idx_courant[i];
+        PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(l_face,
                                                        cell_face_courant + cell_face_idx_courant[i] ,
                                                        face_som_idx_courant,
-                                                       face_som_nb_courant,
                                                        face_som_courant,
                                                        cell_som_tria,
                                                        cell_som_quad);
@@ -2570,7 +2619,8 @@ PDM_part_mesh_nodal_create_from_part
                                                  cellfac_poly_idx,
                                                  cellfac_poly,
                                                  numabs_poly3d,
-                                                 num_parent_poly3d);
+                                                 num_parent_poly3d,
+                                                 PDM_OWNERSHIP_KEEP);
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
   }
@@ -2600,218 +2650,339 @@ PDM_part_mesh_nodal_create_from_part
 
 
 
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_create_from_part2d
+(
+  const int                n_part,
+  const int               *n_face,
+  const int               *n_edge,
+  const int               *n_vtx,
+  const int              **edge_vtx_idx,
+  const int              **edge_vtx,
+  const int              **face_edge_idx,
+  const int              **face_edge,
+  const double           **vtx_coord,
+  const PDM_g_num_t      **numabs,
+        PDM_MPI_Comm       comm
+)
+{
+
+  int **num_cell_parent_to_local = (int **) malloc(sizeof(int *) * n_part);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    num_cell_parent_to_local[i_part] = (int *) malloc(n_face[i_part] * sizeof(int));
+    for (int i = 0; i < n_face[i_part]; i++) {
+      num_cell_parent_to_local[i_part][i] = 0;
+    }
+  }
+
+  PDM_Mesh_nodal_prepa_blocks_t* prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
+
+
+  if (prepa_blocks == NULL) {
+    prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
+    prepa_blocks->n_tria_proc   = 0;    /* Nb de triangles par proc */
+    prepa_blocks->n_quad_proc   = 0;    /* Nb de quads par proc */
+    prepa_blocks->n_poly2d_proc = 0;    /* Nb de poly2d par proc */
+
+    prepa_blocks->n_cell          = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->n_face          = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->n_tria          = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->n_quad          = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
+    prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->face_vtx_nb     = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->cell_face_nb    = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
+    prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
+  }
+
+  int n_tria    = 0;
+  int n_quad    = 0;
+  int n_poly2d  = 0;
+  int l_connec_poly2d = 0;
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i = 0; i < n_face[i_part]; i++) {
+
+      int l_face_edge = face_edge_idx[i+1] - face_edge_idx[i];
+      if (l_face_edge == 3)
+        n_tria += 1;
+      else if (l_face_edge == 4)
+        n_quad += 1;
+      else {
+        n_poly2d  += 1;
+        l_connec_poly2d += face_edge_idx[i+1] - face_edge_idx[i];
+      }
+    }
+
+    prepa_blocks->n_tria_proc             += n_tria;
+    prepa_blocks->n_quad_proc             += n_quad;
+    prepa_blocks->n_poly2d_proc           += n_poly2d;
+    prepa_blocks->add_etat       [i_part]  = 1;
+    prepa_blocks->n_cell         [i_part]  = n_face[i_part];
+    prepa_blocks->n_tria         [i_part]  = n_tria;
+    prepa_blocks->n_quad         [i_part]  = n_quad;
+    prepa_blocks->n_poly2d       [i_part]  = n_poly2d;
+    prepa_blocks->l_connec_poly2d[i_part]  = l_connec_poly2d;
+    prepa_blocks->face_vtx_idx   [i_part]  = (int         *) edge_vtx_idx [i_part];
+    prepa_blocks->face_vtx       [i_part]  = (int         *) edge_vtx     [i_part];
+    prepa_blocks->cell_face_idx  [i_part]  = (int         *) face_edge_idx[i_part];
+    prepa_blocks->cell_face      [i_part]  = (int         *) face_edge    [i_part];
+    prepa_blocks->numabs         [i_part]  = (PDM_g_num_t *) numabs       [i_part];
+    prepa_blocks->n_face         [i_part]  = n_edge[i_part];
+  }
+
+  /* Creation des blocs */
+
+  int elts[3];
+  int som_elts[3];
+
+  elts[0] = prepa_blocks->n_tria_proc > 0;
+  elts[1] = prepa_blocks->n_quad_proc > 0;
+  elts[2] = prepa_blocks->n_poly2d_proc > 0;
+
+  PDM_MPI_Allreduce(elts, som_elts, 3, PDM_MPI_INT, PDM_MPI_SUM, comm);
+
+  /* Infer mesh dimension from mesh_nodal */
+  int mesh_dimension = 2;
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension,
+                                                                       n_part, comm);
+
+  int id_bloc_tria3   = -1;
+  int id_bloc_quad4   = -1;
+  int id_bloc_poly_2d = -1;
+
+  if (som_elts[0] > 0) {
+    id_bloc_tria3 = PDM_part_mesh_nodal_elmts_add (pmne, PDM_MESH_NODAL_TRIA3);
+  }
+
+  if (som_elts[1] > 0) {
+    id_bloc_quad4 = PDM_part_mesh_nodal_elmts_add (pmne, PDM_MESH_NODAL_QUAD4);
+  }
+
+  if (som_elts[2] > 0) {
+    id_bloc_poly_2d = PDM_part_mesh_nodal_elmts_add (pmne, PDM_MESH_NODAL_POLY_2D);
+  }
+
+  /* Determination de la connectivite de chaque element */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int n_cell_courant                    = prepa_blocks->n_cell       [i_part];
+    int *num_cell_parent_to_local_courant = num_cell_parent_to_local   [i_part];
+    int *face_som_courant                 = prepa_blocks->face_vtx     [i_part];
+    int *cell_face_idx_courant            = prepa_blocks->cell_face_idx[i_part];
+    int *cell_face_nb_courant             = prepa_blocks->cell_face_nb [i_part];
+    int *cell_face_courant                = prepa_blocks->cell_face    [i_part];
+    PDM_g_num_t *numabs_courant                   = prepa_blocks->numabs       [i_part];
+
+    n_tria          = prepa_blocks->n_tria         [i_part];
+    n_quad          = prepa_blocks->n_quad         [i_part];
+    n_poly2d        = prepa_blocks->n_poly2d       [i_part];
+    l_connec_poly2d = prepa_blocks->l_connec_poly2d[i_part];
+
+    int *connec_tria       = NULL;
+    int *connec_quad       = NULL;
+    int *connec_poly2d     = NULL;
+    int *connec_poly2d_idx = NULL;
+
+    PDM_g_num_t *numabs_tria   = NULL;
+    PDM_g_num_t *numabs_quad   = NULL;
+    PDM_g_num_t *numabs_poly2d = NULL;
+
+    int *num_parent_tria   = NULL;
+    int *num_parent_quad   = NULL;
+    int *num_parent_poly2d = NULL;
+
+    if (som_elts[0] > 0) {
+      connec_tria = (int *) malloc(sizeof(int) * 3 *n_tria);
+      numabs_tria = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tria);
+      num_parent_tria = (int *) malloc(sizeof(int) * n_tria);
+    }
+
+    if (som_elts[1] > 0) {
+      connec_quad     = (int         *) malloc(4 * n_quad * sizeof(int        ) );
+      numabs_quad     = (PDM_g_num_t *) malloc(    n_quad * sizeof(PDM_g_num_t) );
+      num_parent_quad = (int         *) malloc(    n_quad * sizeof(int        ) );
+    }
+
+    if (som_elts[2] > 0) {
+      connec_poly2d_idx    = (int         *) malloc((n_poly2d + 1)  * sizeof(int        ));
+      connec_poly2d_idx[0] = 0;
+      connec_poly2d        = (int         *) malloc(l_connec_poly2d * sizeof(int        ));
+      numabs_poly2d        = (PDM_g_num_t *) malloc(n_poly2d        * sizeof(PDM_g_num_t));
+      num_parent_poly2d    = (int         *) malloc(n_poly2d        * sizeof(int        ));
+    }
+
+
+    int *connec_tria_courant       = connec_tria;
+    int *connec_quad_courant       = connec_quad;
+    int *connec_poly2d_idx_courant = connec_poly2d_idx + 1;
+    int *connec_poly2d_courant     = connec_poly2d;
+
+    PDM_g_num_t *numabs_tria_courant   = numabs_tria;
+    PDM_g_num_t *numabs_quad_courant   = numabs_quad;
+    PDM_g_num_t *numabs_poly2d_courant = numabs_poly2d;
+
+    int *num_parent_tria_courant   = num_parent_tria;
+    int *num_parent_quad_courant   = num_parent_quad;
+    int *num_parent_poly2d_courant = num_parent_poly2d;
+
+    /* Construction de la connectivité sommet-> arrete */
+
+    int *connec_som_are = (int *) malloc(sizeof(int) * 2 * n_vtx[i_part]);
+
+    int idx_tria   = 0;
+    int idx_quad   = n_tria;
+    int idx_poly2d = idx_quad + n_quad;
+
+    for (int j = 0; j < 2 * n_vtx[i_part]; j++) {
+      connec_som_are[j] = -1;
+    }
+
+    for (int i = 0; i < n_cell_courant; i++) {
+
+      int ideb = cell_face_idx_courant[i] ;
+      int n_face_cell = cell_face_nb_courant[i];
+      int ifin = ideb + n_face_cell;
+
+      for (int j = ideb; j < ifin; j++) {
+        int ifac = PDM_ABS(cell_face_courant[j]) - 1;
+        int isom1 = face_som_courant[2*ifac] - 1;
+        int isom2 = face_som_courant[2*ifac+1] - 1;
+
+        if (connec_som_are[2*isom1] == -1)
+          connec_som_are[2*isom1] = ifac;
+        else
+          connec_som_are[2*isom1+1] = ifac;
+
+        if (connec_som_are[2*isom2] == -1)
+          connec_som_are[2*isom2] = ifac;
+        else
+          connec_som_are[2*isom2+1] = ifac;
+      }
+
+      int *connec_courant;
+      if (n_face_cell == 3) {
+        *num_parent_tria_courant = i;
+        num_parent_tria_courant += 1;
+        num_cell_parent_to_local_courant[i] = idx_tria++;
+        *numabs_tria_courant = numabs_courant[i];
+        numabs_tria_courant += 1;
+        connec_courant = connec_tria_courant;
+        connec_tria_courant += n_face_cell;
+      }
+      else if (n_face_cell == 4) {
+        *num_parent_quad_courant = i;
+        num_parent_quad_courant += 1;
+        num_cell_parent_to_local_courant[i] = idx_quad++;;
+        *numabs_quad_courant = numabs_courant[i];
+        numabs_quad_courant += 1;
+        connec_courant = connec_quad_courant;
+        connec_quad_courant += n_face_cell;
+      }
+      else {
+        *num_parent_poly2d_courant = i;
+        num_parent_poly2d_courant += 1;
+        num_cell_parent_to_local_courant[i] = idx_poly2d++;
+        *numabs_poly2d_courant = numabs_courant[i];
+        numabs_poly2d_courant += 1;
+        connec_courant = connec_poly2d_courant;
+        *connec_poly2d_idx_courant = *(connec_poly2d_idx_courant - 1) +  n_face_cell;
+        connec_poly2d_idx_courant += 1;
+        connec_poly2d_courant += n_face_cell;
+      }
+
+      /* Remplissage de la connectivite */
+
+      int idx_som = 0;
+      int face_courant = PDM_ABS(cell_face_courant[ideb]) - 1;
+      int isom1 = face_som_courant[2*face_courant] - 1;
+      int isom_suiv = face_som_courant[2*face_courant + 1] - 1;
+      connec_courant[idx_som++] = isom1 + 1;
+
+      while (isom1 != isom_suiv) {
+        assert(idx_som <= n_face_cell);
+        connec_courant[idx_som++] = isom_suiv + 1;
+
+        /* Face suivante */
+
+        int face_suiv = connec_som_are[2*isom_suiv];
+        if (face_suiv == face_courant)
+          face_suiv = connec_som_are[2*isom_suiv + 1];
+        face_courant = face_suiv;
+
+        /* Sommet suivant */
+
+        int isom_tmp = face_som_courant[2*face_courant] - 1;
+        if (isom_tmp == isom_suiv)
+          isom_tmp = face_som_courant[2*face_courant + 1] - 1;
+        isom_suiv = isom_tmp;
+      }
+
+      for (int j= 0; j < n_face_cell; j++) {
+        connec_som_are[2*(connec_courant[j] -1)] = - 1;
+        connec_som_are[2*(connec_courant[j] -1) + 1] = - 1;
+      }
+    }
+
+    free(connec_som_are);
+
+    if (som_elts[0] > 0)
+      PDM_part_mesh_nodal_elmts_std_set(pmne,
+                                        id_bloc_tria3,
+                                        i_part,
+                                        n_tria,
+                                        connec_tria,
+                                        numabs_tria,
+                                        num_parent_tria,
+                                        NULL,
+                                        PDM_OWNERSHIP_KEEP);
+
+    if (som_elts[1] > 0)
+      PDM_part_mesh_nodal_elmts_std_set(pmne,
+                                        id_bloc_quad4,
+                                        i_part,
+                                        n_quad,
+                                        connec_quad,
+                                        numabs_quad,
+                                        num_parent_quad,
+                                        NULL,
+                                        PDM_OWNERSHIP_KEEP);
+
+    if (som_elts[2] > 0)
+      PDM_part_mesh_nodal_elmts_block_poly2d_set(pmne,
+                                                 id_bloc_poly_2d,
+                                                 i_part,
+                                                 n_poly2d,
+                                                 connec_poly2d_idx,
+                                                 connec_poly2d,
+                                                 numabs_poly2d,
+                                                 num_parent_poly2d,
+                                                 PDM_OWNERSHIP_KEEP);
+  }
+
+
+  if (prepa_blocks != NULL) {
+    free(prepa_blocks->n_cell);
+    free(prepa_blocks->n_face);
+    free(prepa_blocks->n_tria);
+    free(prepa_blocks->n_quad);
+    free(prepa_blocks->n_poly2d);
+    free(prepa_blocks->l_connec_poly2d);
+    free(prepa_blocks->face_vtx_idx);
+    free(prepa_blocks->face_vtx);
+    free(prepa_blocks->cell_face_idx);
+    free(prepa_blocks->cell_face);
+    free(prepa_blocks->numabs);
+    free(prepa_blocks);
+    prepa_blocks = NULL;
+  }
+
+  return pmne;
+}
 
 
 
-
-  // /* Determination de la connectivite de chaque element */
-  // for (int i_part = 0; i_part < n_part; i_part++) {
-
-  //   int n_cell_courant                    = prepa_blocks->n_cell       [i_part];
-  //   int *num_cell_parent_to_local_courant = num_cell_parent_to_local   [i_part];
-  //   int *face_som_courant                 = prepa_blocks->face_vtx     [i_part];
-  //   int *cell_face_idx_courant            = prepa_blocks->cell_face_idx[i_part];
-  //   int *cell_face_nb_courant             = prepa_blocks->cell_face_nb [i_part];
-  //   int *cell_face_courant                = prepa_blocks->cell_face    [i_part];
-  //   PDM_g_num_t *numabs_courant                   = prepa_blocks->numabs       [i_part];
-
-  //   n_tria          = prepa_blocks->n_tria         [i_part];
-  //   n_quad          = prepa_blocks->n_quad         [i_part];
-  //   n_poly2d        = prepa_blocks->n_poly2d       [i_part];
-  //   l_connec_poly2d = prepa_blocks->l_connec_poly2d[i_part];
-
-  //   int *connec_tria       = NULL;
-  //   int *connec_quad       = NULL;
-  //   int *connec_poly2d     = NULL;
-  //   int *connec_poly2d_idx = NULL;
-
-  //   PDM_g_num_t *numabs_tria   = NULL;
-  //   PDM_g_num_t *numabs_quad   = NULL;
-  //   PDM_g_num_t *numabs_poly2d = NULL;
-
-  //   int *num_parent_tria   = NULL;
-  //   int *num_parent_quad   = NULL;
-  //   int *num_parent_poly2d = NULL;
-
-  //   if (som_elts[0] > 0) {
-  //     connec_tria = (int *) malloc(sizeof(int) * 3 *n_tria);
-  //     numabs_tria = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tria);
-  //     num_parent_tria = (int *) malloc(sizeof(int) * n_tria);
-  //   }
-
-  //   if (som_elts[1] > 0) {
-  //     connec_quad     = (int         *) malloc(4 * n_quad * sizeof(int        ) );
-  //     numabs_quad     = (PDM_g_num_t *) malloc(    n_quad * sizeof(PDM_g_num_t) );
-  //     num_parent_quad = (int         *) malloc(    n_quad * sizeof(int        ) );
-  //   }
-
-  //   if (som_elts[2] > 0) {
-  //     connec_poly2d_idx    = (int         *) malloc((n_poly2d + 1)  * sizeof(int        ));
-  //     connec_poly2d_idx[0] = 0;
-  //     connec_poly2d        = (int         *) malloc(l_connec_poly2d * sizeof(int        ));
-  //     numabs_poly2d        = (PDM_g_num_t *) malloc(n_poly2d        * sizeof(PDM_g_num_t));
-  //     num_parent_poly2d    = (int         *) malloc(n_poly2d        * sizeof(int        ));
-  //   }
-
-
-  //   int *connec_tria_courant       = connec_tria;
-  //   int *connec_quad_courant       = connec_quad;
-  //   int *connec_poly2d_idx_courant = connec_poly2d_idx + 1;
-  //   int *connec_poly2d_courant     = connec_poly2d;
-
-  //   PDM_g_num_t *numabs_tria_courant   = numabs_tria;
-  //   PDM_g_num_t *numabs_quad_courant   = numabs_quad;
-  //   PDM_g_num_t *numabs_poly2d_courant = numabs_poly2d;
-
-  //   int *num_parent_tria_courant   = num_parent_tria;
-  //   int *num_parent_quad_courant   = num_parent_quad;
-  //   int *num_parent_poly2d_courant = num_parent_poly2d;
-
-  //   /* Construction de la connectivité sommet-> arrete */
-
-  //   int *connec_som_are = (int *) malloc(sizeof(int) * 2 * vtx[i_part]->n_vtx);
-
-  //   int idx_tria   = 0;
-  //   int idx_quad   = n_tria;
-  //   int idx_poly2d = idx_quad + n_quad;
-
-  //   for (int j = 0; j < 2 * vtx[i_part]->n_vtx; j++) {
-  //     connec_som_are[j] = -1;
-  //   }
-
-  //   for (int i = 0; i < n_cell_courant; i++) {
-
-  //     int ideb = cell_face_idx_courant[i] ;
-  //     int n_face_cell = cell_face_nb_courant[i];
-  //     int ifin = ideb + n_face_cell;
-
-  //     for (int j = ideb; j < ifin; j++) {
-  //       int ifac = PDM_ABS(cell_face_courant[j]) - 1;
-  //       int isom1 = face_som_courant[2*ifac] - 1;
-  //       int isom2 = face_som_courant[2*ifac+1] - 1;
-
-  //       if (connec_som_are[2*isom1] == -1)
-  //         connec_som_are[2*isom1] = ifac;
-  //       else
-  //         connec_som_are[2*isom1+1] = ifac;
-
-  //       if (connec_som_are[2*isom2] == -1)
-  //         connec_som_are[2*isom2] = ifac;
-  //       else
-  //         connec_som_are[2*isom2+1] = ifac;
-  //     }
-
-  //     int *connec_courant;
-  //     if (n_face_cell == 3) {
-  //       *num_parent_tria_courant = i;
-  //       num_parent_tria_courant += 1;
-  //       num_cell_parent_to_local_courant[i] = idx_tria++;
-  //       *numabs_tria_courant = numabs_courant[i];
-  //       numabs_tria_courant += 1;
-  //       connec_courant = connec_tria_courant;
-  //       connec_tria_courant += n_face_cell;
-  //     }
-  //     else if (n_face_cell == 4) {
-  //       *num_parent_quad_courant = i;
-  //       num_parent_quad_courant += 1;
-  //       num_cell_parent_to_local_courant[i] = idx_quad++;;
-  //       *numabs_quad_courant = numabs_courant[i];
-  //       numabs_quad_courant += 1;
-  //       connec_courant = connec_quad_courant;
-  //       connec_quad_courant += n_face_cell;
-  //     }
-  //     else {
-  //       *num_parent_poly2d_courant = i;
-  //       num_parent_poly2d_courant += 1;
-  //       num_cell_parent_to_local_courant[i] = idx_poly2d++;
-  //       *numabs_poly2d_courant = numabs_courant[i];
-  //       numabs_poly2d_courant += 1;
-  //       connec_courant = connec_poly2d_courant;
-  //       *connec_poly2d_idx_courant = *(connec_poly2d_idx_courant - 1) +  n_face_cell;
-  //       connec_poly2d_idx_courant += 1;
-  //       connec_poly2d_courant += n_face_cell;
-  //     }
-
-  //     /* Remplissage de la connectivite */
-
-  //     int idx_som = 0;
-  //     int face_courant = PDM_ABS(cell_face_courant[ideb]) - 1;
-  //     int isom1 = face_som_courant[2*face_courant] - 1;
-  //     int isom_suiv = face_som_courant[2*face_courant + 1] - 1;
-  //     connec_courant[idx_som++] = isom1 + 1;
-
-  //     while (isom1 != isom_suiv) {
-  //       assert(idx_som <= n_face_cell);
-  //       connec_courant[idx_som++] = isom_suiv + 1;
-
-  //       /* Face suivante */
-
-  //       int face_suiv = connec_som_are[2*isom_suiv];
-  //       if (face_suiv == face_courant)
-  //         face_suiv = connec_som_are[2*isom_suiv + 1];
-  //       face_courant = face_suiv;
-
-  //       /* Sommet suivant */
-
-  //       int isom_tmp = face_som_courant[2*face_courant] - 1;
-  //       if (isom_tmp == isom_suiv)
-  //         isom_tmp = face_som_courant[2*face_courant + 1] - 1;
-  //       isom_suiv = isom_tmp;
-  //     }
-
-  //     for (int j= 0; j < n_face_cell; j++) {
-  //       connec_som_are[2*(connec_courant[j] -1)] = - 1;
-  //       connec_som_are[2*(connec_courant[j] -1) + 1] = - 1;
-  //     }
-  //   }
-
-  //   free(connec_som_are);
-
-  //   if (som_elts[0] > 0)
-  //     PDM_part_mesh_nodal_elmts_std_set(mesh,
-  //                                  id_bloc_tria3,
-  //                                  i_part,
-  //                                  n_tria,
-  //                                  connec_tria,
-  //                                  numabs_tria,
-  //                                  num_parent_tria);
-
-  //   if (som_elts[1] > 0)
-  //     PDM_part_mesh_nodal_elmts_std_set(mesh,
-  //                                  id_bloc_quad4,
-  //                                  i_part,
-  //                                  n_quad,
-  //                                  connec_quad,
-  //                                  numabs_quad,
-  //                                  num_parent_quad);
-
-  //   if (som_elts[2] > 0)
-  //     PDM_Mesh_nodal_block_poly2d_set(mesh,
-  //                                     id_bloc_poly_2d,
-  //                                     i_part,
-  //                                     n_poly2d,
-  //                                     connec_poly2d_idx,
-  //                                     connec_poly2d,
-  //                                     numabs_poly2d,
-  //                                     num_parent_poly2d);
-  // }
-
-
-  // if (prepa_blocks != NULL) {
-  //   free(prepa_blocks->n_cell);
-  //   free(prepa_blocks->n_face);
-  //   free(prepa_blocks->n_tria);
-  //   free(prepa_blocks->n_quad);
-  //   free(prepa_blocks->n_poly2d);
-  //   free(prepa_blocks->l_connec_poly2d);
-  //   free(prepa_blocks->face_vtx_idx);
-  //   free(prepa_blocks->face_vtx_nb);
-  //   free(prepa_blocks->face_vtx);
-  //   free(prepa_blocks->cell_face_idx);
-  //   free(prepa_blocks->cell_face_nb);
-  //   free(prepa_blocks->cell_face);
-  //   free(prepa_blocks->add_etat);
-  //   free(prepa_blocks->numabs);
-  //   free(prepa_blocks);
-  //   prepa_blocks = NULL;
-  // }

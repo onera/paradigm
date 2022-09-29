@@ -93,6 +93,34 @@ const PDM_g_num_t                 *parent_entity_g_num,
 );
 
 /**
+ * \brief Define a polygon block
+ *
+ * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_elt          Number of elements
+ * \param [in]  connect_idx    Connectivity index (size = \ref n_elt + 1)
+ * \param [in]  connect        Connectivity (size = \ref connect_idx[\ref n_elt])
+ * \param [in]  numabs         Global numbering
+ * \param [in]  parent_num     Parent numbering or NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_block_poly2d_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part,
+const int                          n_elt,
+const int                         *connec_idx,
+const int                         *connec,
+const PDM_g_num_t                 *numabs,
+const int                         *parent_num,
+      PDM_ownership_t              owner
+);
+
+/**
  * \brief Define a polyhedra block
  *
  * \param [in]  mesh           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
@@ -123,7 +151,8 @@ const PDM_g_num_t                 *face_ln_to_gn,
 const int                         *cellfac_idx,
 const int                         *cellfac,
 const PDM_g_num_t                 *numabs,
-const int                         *parent_num
+const int                         *parent_num,
+      PDM_ownership_t              owner
 );
 
 
@@ -242,17 +271,15 @@ const int                          id_block
 );
 
 PDM_part_mesh_nodal_elmts_t*
-PDM_part_mesh_nodal_create_from_part
+PDM_part_mesh_nodal_create_from_part3d
 (
   const int                n_part,
   const int               *n_cell,
   const int               *n_face,
   const int              **face_vtx_idx,
-  const int              **face_vtx_nb,
   const int              **face_vtx,
   const PDM_g_num_t      **face_ln_to_gn,
   const int              **cell_face_idx,
-  const int              **cell_face_nb,
   const int              **cell_face,
   const double           **vtx_coord,
   const PDM_g_num_t      **numabs,
@@ -265,6 +292,23 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       PDM_part_mesh_nodal_elmts_t *pmne,
 const int                          id_block,
 const int                          id_part
+);
+
+
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_create_from_part2d
+(
+  const int                n_part,
+  const int               *n_face,
+  const int               *n_edge,
+  const int               *n_vtx,
+  const int              **edge_vtx_idx,
+  const int              **edge_vtx,
+  const int              **face_edge_idx,
+  const int              **face_edge,
+  const double           **vtx_coord,
+  const PDM_g_num_t      **numabs,
+        PDM_MPI_Comm       comm
 );
 
 #ifdef __cplusplus

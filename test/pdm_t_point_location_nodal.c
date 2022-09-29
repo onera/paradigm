@@ -464,6 +464,11 @@ _gen_mesh
                                          PDM_OWNERSHIP_KEEP);
     }
 
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      free(pface_vtx_n[i_part]);
+      free(pcell_face_n[i_part]);
+    }
     free(pcell_face_n);
     free(pface_vtx_n);
 
