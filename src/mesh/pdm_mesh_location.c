@@ -1897,7 +1897,30 @@ _mesh_nodal_to_pmesh_nodal_elmts
   int *blocks_id = PDM_Mesh_nodal_blocks_id_get(mesh_nodal);
 
   /* Infer mesh dimension from mesh_nodal */
-  int mesh_dimension = 3;
+  int has_dim[4] = {0, 0, 0, 0};
+  for (int iblock = 0; iblock < n_block; iblock++) {
+    int id_block = blocks_id[iblock];
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get(mesh_nodal,
+                                                               id_block);
+
+    int dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+    has_dim[dim] = 1;
+  }
+  // PDM_log_trace_array_int(has_dim, 4, "has_dim : ");
+
+  int mesh_dimension = 0;
+  for (int i = 3; i >= 0; i--) {
+    if (has_dim[i] != 0) {
+      for (int j = 0; j < i; j++) {
+        assert(has_dim[j] == 0);
+      }
+
+      mesh_dimension = i;
+    }
+  }
+
+  // log_trace("mesh_dimension = %d", mesh_dimension);
 
   pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension,
                                           n_part,
@@ -9480,7 +9503,7 @@ const int                           n_part,
                                    n_elt,
                                    elmt_vtx,
                                    gnum,
-                                   1,
+                                   0,
                                    field_name,
                     (const int **) &parent_num);
       }
@@ -9504,7 +9527,7 @@ PDM_mesh_location_compute_optim2
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 0;
+  const int dbg_enabled = 1;
   const int dim = 3;
 
   /* Octree parameters */
@@ -9603,7 +9626,10 @@ PDM_mesh_location_compute_optim2
                                                             ipart);
 
       for (int ielt = 0; ielt < n_elt_in_block; ielt++) {
-        idx = parent_num[ielt];
+        idx = ielt;
+        if (parent_num) {
+          idx = parent_num[ielt];
+        }
         elt_g_num[ipart][idx] = _elt_g_num[ielt];
         elt_type [ipart][idx] = t_elt;
         memcpy(elt_extents[ipart] + 6*idx, _extents + 6*ielt, sizeof(double)*6);
@@ -10792,7 +10818,10 @@ PDM_mesh_location_compute_optim2
     if (dbg_enabled) {
       log_trace(">> PDM_extract_part_create\n");
     }
-    PDM_extract_part_t *extrp = PDM_extract_part_create(3,
+    // TODO: proper get
+    int mesh_dimension = pmne->mesh_dimension;
+
+    PDM_extract_part_t *extrp = PDM_extract_part_create(mesh_dimension,
                                                         n_part,
                                                         1,
                                                         equilibrate,
@@ -10812,11 +10841,37 @@ PDM_mesh_location_compute_optim2
                                                               ipart,
                                                               &pvtx_ln_to_gn);
 
+      int n_cell = 0;
+      int n_face = 0;
+      int n_edge = 0;
+      PDM_g_num_t *cell_g_num = NULL;
+      PDM_g_num_t *face_g_num = NULL;
+      PDM_g_num_t *edge_g_num = NULL;
+      switch (mesh_dimension) {
+        case 3: {
+          n_cell = pn_elt[ipart];
+          cell_g_num = elt_g_num[ipart];
+          break;
+        }
+        case 2: {
+          n_face = pn_elt[ipart];
+          face_g_num = elt_g_num[ipart];
+          break;
+        }
+        case 1: {
+          n_edge = pn_elt[ipart];
+          edge_g_num = elt_g_num[ipart];
+          break;
+        }
+        default:
+        PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
+      }
+
       PDM_extract_part_part_set(extrp,
                                 ipart,
-                                pn_elt[ipart],
-                                0,  // pn_face[ipart],
-                                -1, // pn_edge[ipart],
+                                n_cell,
+                                n_face,
+                                n_edge,
                                 pn_vtx,
                                 NULL, // pcell_face_idx[ipart],
                                 NULL, // pcell_face[ipart],
@@ -10825,13 +10880,31 @@ PDM_mesh_location_compute_optim2
                                 NULL, // pedge_vtx[ipart],
                                 NULL, // pface_vtx_idx[ipart],
                                 NULL, // pface_vtx[ipart],
-                                elt_g_num[ipart],
-                                NULL, // pface_ln_to_gn[ipart],
-                                NULL, // pedge_ln_to_gn[ipart],
+                                cell_g_num,
+                                face_g_num,
+                                edge_g_num,
                                 pvtx_ln_to_gn,
                      (double *) pvtx_coord);
     }
 
+
+    PDM_mesh_entities_t entity_type;
+    switch (mesh_dimension) {
+      case 3: {
+        entity_type = PDM_MESH_ENTITY_CELL;
+        break;
+      }
+      case 2: {
+        entity_type = PDM_MESH_ENTITY_FACE;
+        break;
+      }
+      case 1: {
+        entity_type = PDM_MESH_ENTITY_EDGE;
+        break;
+      }
+      default:
+      PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
+    }
 
     PDM_extract_part_target_gnum_set(extrp,
                                      0,
@@ -10859,7 +10932,7 @@ PDM_mesh_location_compute_optim2
 
     PDM_part_to_part_t *ptp_elt = NULL;
     PDM_extract_part_part_to_part_get(extrp,
-                                      PDM_MESH_ENTITY_CELL,
+                                      entity_type,
                                       &ptp_elt,
                                       PDM_OWNERSHIP_USER);
 
@@ -10870,7 +10943,7 @@ PDM_mesh_location_compute_optim2
 
     pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
                                                    0,
-                                                   PDM_MESH_ENTITY_CELL);
+                                                   entity_type);
     assert(pextract_n_elt == dn_elt2);
 
     pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,

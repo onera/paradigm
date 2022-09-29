@@ -1561,7 +1561,7 @@ PDM_Mesh_nodal_n_vtx_elt_get
    return (order + 1) * (order + 2) / 2;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Poly3D\n");
+    PDM_error (__FILE__, __LINE__, 0, "Unknown order for Poly2D and Poly3D (type %d)\n", type);
   }
   return -1;
 }

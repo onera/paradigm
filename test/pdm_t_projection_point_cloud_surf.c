@@ -17,6 +17,7 @@
 #include "pdm_mesh_location.h"
 #include "pdm_sphere_surf_gen.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_part_to_part.h"
 #include "pdm_vtk.h"
@@ -663,18 +664,27 @@ int main(int argc, char *argv[])
                              PDM_OWNERSHIP_USER);
 
     int id_block = PDM_Mesh_nodal_block_add(mesh_nodal,
-                                            PDM_MESH_NODAL_POLY_2D,
+                                            PDM_MESH_NODAL_TRIA3,//POLY_2D,
                                             PDM_OWNERSHIP_USER);
 
     int *parent_num = NULL;
-    PDM_Mesh_nodal_block_poly2d_set(mesh_nodal,
-                                    id_block,
-                                    ipart,
-                                    pn_face[ipart],
-                                    pface_vtx_idx[ipart],
-                                    pface_vtx[ipart],
-                                    pface_ln_to_gn[ipart],
-                                    parent_num);
+    // PDM_Mesh_nodal_block_poly2d_set(mesh_nodal,
+    //                                 id_block,
+    //                                 ipart,
+    //                                 pn_face[ipart],
+    //                                 pface_vtx_idx[ipart],
+    //                                 pface_vtx[ipart],
+    //                                 pface_ln_to_gn[ipart],
+    //                                 parent_num);
+    PDM_Mesh_nodal_block_std_set(mesh_nodal,
+                                 id_block,
+                                 ipart,
+                                 pn_face[ipart],
+                                 pface_vtx[ipart],
+                                 pface_ln_to_gn[ipart],
+                                 parent_num);
+
+    log_trace("pn_face[%d] = %d\n", ipart, pn_face[ipart]);
   }
 
   PDM_mesh_location_shared_nodal_mesh_set(mesh_loc,
@@ -699,7 +709,8 @@ int main(int argc, char *argv[])
   }
 
 
-  PDM_mesh_location_compute(mesh_loc);
+  // PDM_mesh_location_compute(mesh_loc);
+  PDM_mesh_location_compute_optim2(mesh_loc);
 
 
 

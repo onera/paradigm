@@ -1083,7 +1083,10 @@ _extract_part_nodal
 
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt];//-1;
+        int parent_elt = i_elt;
+        if (parent_num != NULL) {
+          parent_elt = parent_num[i_elt];
+        }
         if(is_selected[i_part][parent_elt] != -1) {
 
 
@@ -1295,12 +1298,15 @@ _extract_part_and_reequilibrate_nodal_from_target
   int          *pn_entity       = NULL;
   PDM_g_num_t **entity_g_num    = NULL;
   PDM_g_num_t **entity_location = NULL;
+  PDM_mesh_entities_t entity_type;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
+    entity_type = PDM_MESH_ENTITY_CELL;
   } else {
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
+    entity_type = PDM_MESH_ENTITY_FACE;
   }
 
   int i_rank;
@@ -1309,18 +1315,10 @@ _extract_part_and_reequilibrate_nodal_from_target
   printf("_extract_part_and_reequilibrate_nodal_from_target \n");
 
 
-  if(extrp->dim == 3) {
-    extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
-    }
-  } else {
-    extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
-    }
+  extrp->pextract_n_entity[entity_type] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    extrp->pextract_n_entity[entity_type][i_part] = extrp->n_target[i_part];
   }
-
 
 
 
@@ -1358,7 +1356,7 @@ _extract_part_and_reequilibrate_nodal_from_target
   //                                                   (const int         **) part2_cell_to_part1_cell_idx,
   //                                                   (const PDM_g_num_t **) extrp->target_gnum,
   //                                                   extrp->comm);
-  extrp->ptp_entity[PDM_MESH_ENTITY_CELL] = ptp;
+  extrp->ptp_entity[entity_type] = ptp;
 
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     free(part2_cell_to_part1_cell_idx[i_part]);
@@ -1442,14 +1440,13 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &elt_ln_to_gn,
                                               &parent_num,
                                               &parent_elt_g_num);
-      if (0) {
-        log_trace("section %d: ", i_section);
-        PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
-      }
 
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt];
+        int parent_elt = i_elt;
+        if (parent_num != NULL) {
+          parent_elt = parent_num[i_elt];
+        }
         if(is_selected[i_part][parent_elt] != -1) {
           n_elmt_to_send     += 1;
           n_elmt_vtx_to_send += n_vtx_per_elmt;
@@ -1490,7 +1487,10 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &parent_elt_g_num);
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt];
+        int parent_elt = i_elt;
+        if (parent_num != NULL) {
+          parent_elt = parent_num[i_elt];
+        }
         if(is_selected[i_part][parent_elt] != -1) {
 
           int idx = is_selected[i_part][parent_elt];
@@ -1531,7 +1531,10 @@ _extract_part_and_reequilibrate_nodal_from_target
                                               &parent_elt_g_num);
       /* Selection */
       for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = parent_num[i_elt];
+        int parent_elt = i_elt;
+        if (parent_num != NULL) {
+          parent_elt = parent_num[i_elt];
+        }
         if(is_selected[i_part][parent_elt] != -1) {
 
           int idx = is_selected[i_part][parent_elt];
