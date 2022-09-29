@@ -2166,10 +2166,8 @@ PDM_part_mesh_nodal_create_from_part3d
   prepa_blocks->n_pyramid     = (int          *) malloc(sizeof(int          ) * n_part);
   prepa_blocks->n_poly3d      = (int          *) malloc(sizeof(int          ) * n_part);
   prepa_blocks->face_vtx_idx  = (int         **) malloc(sizeof(int         *) * n_part);
-  prepa_blocks->face_vtx_nb   = (int         **) malloc(sizeof(int         *) * n_part);
   prepa_blocks->face_vtx      = (int         **) malloc(sizeof(int         *) * n_part);
   prepa_blocks->cell_face_idx = (int         **) malloc(sizeof(int         *) * n_part);
-  prepa_blocks->cell_face_nb  = (int         **) malloc(sizeof(int         *) * n_part);
   prepa_blocks->cell_face     = (int         **) malloc(sizeof(int         *) * n_part);
   prepa_blocks->numabs        = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
 
@@ -2228,7 +2226,6 @@ PDM_part_mesh_nodal_create_from_part3d
       prepa_blocks->cell_face_idx[i_part] = (int         *) cell_face_idx[i_part];
       prepa_blocks->cell_face    [i_part] = (int         *) cell_face    [i_part];
       prepa_blocks->numabs       [i_part] = (PDM_g_num_t *) numabs       [i_part];
-      prepa_blocks->add_etat     [i_part] = 1;
       prepa_blocks->n_face       [i_part] = n_face[i_part];
       prepa_blocks->n_cell       [i_part] = n_cell[i_part];
 
@@ -2289,10 +2286,8 @@ PDM_part_mesh_nodal_create_from_part3d
     int n_cell_courant = prepa_blocks->n_cell[i_part];
     int *num_cell_parent_to_local_courant = num_cell_parent_to_local[i_part];
     int *face_som_idx_courant = prepa_blocks->face_vtx_idx[i_part];
-    int *face_som_nb_courant = prepa_blocks->face_vtx_nb[i_part];
     int *face_som_courant = prepa_blocks->face_vtx[i_part];
     int *cell_face_idx_courant = prepa_blocks->cell_face_idx[i_part];
-    int *cell_face_nb_courant = prepa_blocks->cell_face_nb[i_part];
     int *cell_face_courant = prepa_blocks->cell_face[i_part];
     PDM_g_num_t *numabs_courant = prepa_blocks->numabs[i_part];
     int n_face_part   = prepa_blocks->n_face[i_part];
@@ -2412,7 +2407,8 @@ PDM_part_mesh_nodal_create_from_part3d
     n_poly3d_part = 0;
     for (int i = 0; i < n_cell_courant; i++) {
       num_cell_parent_to_local_courant[i] = 0;
-      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(cell_face_nb_courant[i],
+      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i+1];
+      PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(l_face,
                                                      cell_face_courant + cell_face_idx_courant[i],
                                                      face_som_idx_courant,
                                                      face_som_courant,
@@ -2468,13 +2464,12 @@ PDM_part_mesh_nodal_create_from_part3d
         break;
       case PDM_MESH_NODAL_POLY_3D :
         {
-          int *cell_face_cell = cell_face_courant + cell_face_idx_courant[i];
-          for (int j = 0; j < cell_face_nb_courant[i]; j++) {
-            tag_face_poly3d[PDM_ABS(cell_face_cell[j]) - 1] = 0;
+          for (int j = cell_face_idx_courant[i]; j < cell_face_idx_courant[i+1]; j++) {
+            tag_face_poly3d[PDM_ABS(cell_face_courant[j]) - 1] = 0;
           }
           *numabs_poly3d_courant = numabs_courant[i];
           numabs_poly3d_courant += 1;
-          l_cellfac_poly += cell_face_nb_courant[i];
+          l_cellfac_poly += cell_face_idx_courant[i+1] - cell_face_idx_courant[i];
           cellfac_poly_idx[n_poly3d_part+1] = l_cellfac_poly;
           n_poly3d_part += 1;
           *num_parent_poly3d_courant = i;
@@ -2497,7 +2492,7 @@ PDM_part_mesh_nodal_create_from_part3d
       for (int i = 0; i < n_face_part; i++) {
         if (tag_face_poly3d[i] == 0) {
           tag_face_poly3d[i] = n_face_poly++;
-          l_facsom_poly += face_som_nb_courant[i];
+          l_facsom_poly += face_som_idx_courant[i+1] - face_som_idx_courant[i];
         }
       }
 
@@ -2519,8 +2514,9 @@ PDM_part_mesh_nodal_create_from_part3d
       for (int i = 0; i < n_face_part; i++) {
         if (tag_face_poly3d[i] >= 0) {
           int ideb = face_som_idx_courant[i] ;
-          int ifin = ideb + face_som_nb_courant[i];
-          facsom_poly_idx[idx_facsom+1] = facsom_poly_idx[idx_facsom] + face_som_nb_courant[i];
+          int ifin = face_som_idx_courant[i+1] ;
+          int ln_face = face_som_idx_courant[i+1]-face_som_idx_courant[i];
+          facsom_poly_idx[idx_facsom+1] = facsom_poly_idx[idx_facsom] + ln_face;
           idx_facsom += 1;
           for (int j = ideb; j < ifin; j++) {
             facsom_poly[idx_facsom_poly++] = face_som_courant[j];
@@ -2544,11 +2540,10 @@ PDM_part_mesh_nodal_create_from_part3d
 
         case PDM_MESH_NODAL_POLY_3D :
           {
-            int *cell_face_cell = cell_face_courant + cell_face_idx_courant[i] ;
-            for (int j = 0; j < cell_face_nb_courant[i]; j++) {
-              cellfac_poly[l_cellfac_poly++] = tag_face_poly3d[PDM_ABS(cell_face_cell[j]) - 1] + 1;
+            for (int j = cell_face_idx_courant[i]; j < cell_face_idx_courant[i+1]; j++) {
+              cellfac_poly[l_cellfac_poly++] = tag_face_poly3d[PDM_ABS(cell_face_courant[j]) - 1] + 1;
 
-              if (cell_face_cell[j] < 0) {
+              if (cell_face_courant[j] < 0) {
                 cellfac_poly[l_cellfac_poly-1] = -cellfac_poly[l_cellfac_poly-1];
               }
 
@@ -2607,7 +2602,6 @@ PDM_part_mesh_nodal_create_from_part3d
                                         PDM_OWNERSHIP_KEEP);
 
     if (som_elts[4] > 0) {
-      abort();
       PDM_part_mesh_nodal_elmts_block_poly3d_set(pmne,
                                                  id_bloc_poly_3d,
                                                  i_part,
@@ -2634,12 +2628,9 @@ PDM_part_mesh_nodal_create_from_part3d
     free(prepa_blocks->n_pyramid);
     free(prepa_blocks->n_poly3d);
     free(prepa_blocks->face_vtx_idx);
-    free(prepa_blocks->face_vtx_nb);
     free(prepa_blocks->face_vtx);
     free(prepa_blocks->cell_face_idx);
-    free(prepa_blocks->cell_face_nb);
     free(prepa_blocks->cell_face);
-    free(prepa_blocks->add_etat);
     free(prepa_blocks->numabs);
     free(prepa_blocks);
     prepa_blocks = NULL;
@@ -2661,7 +2652,6 @@ PDM_part_mesh_nodal_create_from_part2d
   const int              **edge_vtx,
   const int              **face_edge_idx,
   const int              **face_edge,
-  const double           **vtx_coord,
   const PDM_g_num_t      **numabs,
         PDM_MPI_Comm       comm
 )
@@ -2691,10 +2681,8 @@ PDM_part_mesh_nodal_create_from_part2d
     prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
     prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
     prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->face_vtx_nb     = (int         **) malloc(n_part * sizeof(int         *));
     prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
     prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->cell_face_nb    = (int         **) malloc(n_part * sizeof(int         *));
     prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
     prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
   }
@@ -2774,7 +2762,6 @@ PDM_part_mesh_nodal_create_from_part2d
     int *num_cell_parent_to_local_courant = num_cell_parent_to_local   [i_part];
     int *face_som_courant                 = prepa_blocks->face_vtx     [i_part];
     int *cell_face_idx_courant            = prepa_blocks->cell_face_idx[i_part];
-    int *cell_face_nb_courant             = prepa_blocks->cell_face_nb [i_part];
     int *cell_face_courant                = prepa_blocks->cell_face    [i_part];
     PDM_g_num_t *numabs_courant                   = prepa_blocks->numabs       [i_part];
 
@@ -2845,7 +2832,7 @@ PDM_part_mesh_nodal_create_from_part2d
     for (int i = 0; i < n_cell_courant; i++) {
 
       int ideb = cell_face_idx_courant[i] ;
-      int n_face_cell = cell_face_nb_courant[i];
+      int n_face_cell = cell_face_idx_courant[i+1]-cell_face_idx_courant[i];
       int ifin = ideb + n_face_cell;
 
       for (int j = ideb; j < ifin; j++) {

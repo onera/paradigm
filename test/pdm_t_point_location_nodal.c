@@ -379,8 +379,16 @@ _gen_mesh
     PDM_Mesh_nodal_t *mesh_nodal = PDM_Mesh_nodal_create(n_part,
                                                          comm);
 
-    int **pcell_face_n = malloc(sizeof(int *) * n_part);
-    int **pface_vtx_n  = malloc(sizeof(int *) * n_part);
+    int         **pcell_face_n   = malloc(sizeof(int         *) * n_part);
+    int         **pface_vtx_n    = malloc(sizeof(int         *) * n_part);
+    int         **pcell_face_idx = malloc(sizeof(int         *) * n_part);
+    int         **pcell_face     = malloc(sizeof(int         *) * n_part);
+    int         **pface_vtx_idx  = malloc(sizeof(int         *) * n_part);
+    int         **pface_vtx      = malloc(sizeof(int         *) * n_part);
+    PDM_g_num_t **pface_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+
+    int  *pn_face        = malloc(sizeof(int) * n_part);
+
     PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -420,6 +428,14 @@ _gen_mesh
       (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
       memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
 
+
+      PDM_multipart_part_ln_to_gn_get(mpart,
+                                      0,
+                                      ipart,
+                                      PDM_MESH_ENTITY_FACE,
+                                      &pface_ln_to_gn[ipart],
+                                      PDM_OWNERSHIP_USER);
+
       int *_face_vtx;
       int *_face_vtx_idx;
       int n_face = PDM_multipart_part_connectivity_get(mpart,
@@ -429,7 +445,7 @@ _gen_mesh
                                                        &_face_vtx,
                                                        &_face_vtx_idx,
                                                        PDM_OWNERSHIP_USER);
-
+      pn_face[ipart] = n_face;
       int *_cell_face;
       int *_cell_face_idx;
       PDM_multipart_part_connectivity_get(mpart,
@@ -449,6 +465,10 @@ _gen_mesh
       for (int i = 0; i < n_face; i++) {
         pface_vtx_n[ipart][i] = _face_vtx_idx[i+1] - _face_vtx_idx[i];
       }
+      pcell_face_idx[ipart] = _cell_face_idx;
+      pcell_face    [ipart] = _cell_face;
+      pface_vtx_idx [ipart] = _face_vtx_idx;
+      pface_vtx     [ipart] = _face_vtx;
 
       PDM_Mesh_nodal_cell3d_cellface_add(mesh_nodal,
                                          ipart,
@@ -462,7 +482,20 @@ _gen_mesh
                                          _cell_face,
                                          (*pelt_ln_to_gn)[ipart],
                                          PDM_OWNERSHIP_KEEP);
+
     }
+
+    PDM_part_mesh_nodal_elmts_t* pmne_tmp = PDM_part_mesh_nodal_create_from_part3d(n_part,
+                                                       (const int               *) (*pn_elt),
+                                                       (const int               *) pn_face,
+                                                       (const int              **) pface_vtx_idx,
+                                                       (const int              **) pface_vtx,
+                                                       (const PDM_g_num_t      **) pface_ln_to_gn,
+                                                       (const int              **) pcell_face_idx,
+                                                       (const int              **) pcell_face,
+                                                       (const double           **) (*pvtx_coord),
+                                                       (const PDM_g_num_t      **) (*pelt_ln_to_gn),
+                                                                                   comm);
 
 
     for (int i_part = 0; i_part < n_part; i_part++) {

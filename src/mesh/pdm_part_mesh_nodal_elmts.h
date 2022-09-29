@@ -306,7 +306,6 @@ PDM_part_mesh_nodal_create_from_part2d
   const int              **edge_vtx,
   const int              **face_edge_idx,
   const int              **face_edge,
-  const double           **vtx_coord,
   const PDM_g_num_t      **numabs,
         PDM_MPI_Comm       comm
 );
