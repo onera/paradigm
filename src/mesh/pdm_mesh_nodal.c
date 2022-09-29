@@ -4082,7 +4082,7 @@ const PDM_ownership_t  ownership
                                      numabs_pyramid,
                                      num_parent_pyramid);
 
-      if (som_elts[4] > 0)
+      if (som_elts[4] > 0) {
         PDM_Mesh_nodal_block_poly3d_set(mesh,
                                         id_bloc_poly_3d,
                                         i_part,
@@ -4094,6 +4094,8 @@ const PDM_ownership_t  ownership
                                         cellfac_poly,
                                         numabs_poly3d,
                                         num_parent_poly3d);
+        PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
+      }
     }
 
     if (mesh->prepa_blocks != NULL) {

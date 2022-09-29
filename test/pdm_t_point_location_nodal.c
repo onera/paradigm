@@ -1205,14 +1205,22 @@ int main(int argc, char *argv[])
           int *face_vtx;
           int *cell_face_idx;
           int *cell_face;
+          PDM_g_num_t *face_ln_to_gn            = NULL;
+          int         *parent_num               = NULL;
+          PDM_g_num_t *numabs                   = NULL;
+          PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
           PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
                                                      id_section,
                                                      ipart,
                                                      &n_face,
+                                                     &face_ln_to_gn,
                                                      &face_vtx_idx,
                                                      &face_vtx,
+                                                     &numabs,
                                                      &cell_face_idx,
-                                                     &cell_face);
+                                                     &cell_face,
+                                                     &parent_num,
+                                                     &parent_entitity_ln_to_gn);
 
           PDM_vtk_write_polydata(filename,
                                  pn_vtx[ipart],

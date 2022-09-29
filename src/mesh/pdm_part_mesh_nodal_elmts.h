@@ -167,11 +167,15 @@ PDM_part_mesh_nodal_elmts_block_poly3d_get
       PDM_part_mesh_nodal_elmts_t  *pmne,
 const int                           id_block,
 const int                           id_part,
-      PDM_l_num_t                  *n_face,
-      PDM_l_num_t                 **face_vtx_idx,
-      PDM_l_num_t                 **face_vtx,
-      PDM_l_num_t                 **cell_face_idx,
-      PDM_l_num_t                 **cell_face
+      int                          *n_face,
+      PDM_g_num_t                 **face_ln_to_gn,
+      int                         **face_vtx_idx,
+      int                         **face_vtx,
+      PDM_g_num_t                 **numabs,
+      int                         **cell_face_idx,
+      int                         **cell_face,
+      int                         **parent_num,
+      int                         **parent_entity_g_num
 );
 
 int

@@ -1439,20 +1439,27 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                     &cell_vtx_idx,
                                                                     &cell_vtx);
 
-        int* parent_num = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
         int *cell_face_idx;
         int *cell_face;
         int  n_face;
         int *face_vtx_idx;
         int *face_vtx;
+        PDM_g_num_t *face_ln_to_gn    = NULL;
+        int         *parent_num       = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
         PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &n_face,
+                                                   &face_ln_to_gn,
                                                    &face_vtx_idx,
                                                    &face_vtx,
+                                                   &elt_ln_to_gn,
                                                    &cell_face_idx,
-                                                   &cell_face);
+                                                   &cell_face,
+                                                   &parent_num,
+                                                   &parent_elt_g_num);
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
