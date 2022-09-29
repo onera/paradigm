@@ -2709,13 +2709,15 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
                                        PDM_MPI_Comm *newcomm)
 {
   MPI_Comm _newcomm;
+  const int *weight_in  = MPI_UNWEIGHTED;
+  const int *weight_out = MPI_UNWEIGHTED;
   int code = MPI_Dist_graph_create_adjacent(_pdm_mpi_2_mpi_comm(comm_old),
                                             indegree,
                                             sources,
-                                            MPI_UNWEIGHTED,
+                                            weight_in,
                                             outdegree,
                                             destinations,
-                                            MPI_UNWEIGHTED,
+                                            weight_out,
                                             MPI_INFO_NULL,
                                             reorder,
                                             &_newcomm);
@@ -3067,9 +3069,16 @@ PDM_MPI_Dist_graph_neighbors
   int           *destinations
 )
 {
+
+  int *weight_in  = NULL;
+  int *weight_out = NULL;
   int code = MPI_Dist_graph_neighbors(_pdm_mpi_2_mpi_comm(comm),
-                                      n_degree_in, sources, MPI_UNWEIGHTED,
-                                      n_degree_out, destinations, MPI_UNWEIGHTED);
+                                      n_degree_in,
+                                      sources,
+                                      weight_in,
+                                      n_degree_out,
+                                      destinations,
+                                      weight_out);
   return _mpi_2_pdm_mpi_err(code);
 }
 
