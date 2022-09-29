@@ -1945,27 +1945,24 @@ PDM_point_location_nodal2
   /* First loop to allocate */
   for (int ipart = 0; ipart < n_part; ipart++) {
 
-    int pn_elt = 0;
+    int n_cell = 0;
     for (int isection = 0; isection < n_section; isection++) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
                                                             isection,
                                                             ipart);
 
-      pn_elt += n_elt;
+      n_cell += n_elt;
     }
 
-    int pn_pts = pts_idx[ipart][pn_elt];
+    int n_pts = pts_idx[ipart][n_cell];
 
-    (*distance       )[ipart] = malloc (sizeof(double) * pn_pts);
-    (*projected_coord)[ipart] = malloc (sizeof(double) * pn_pts * 3);
-    (*bar_coord_idx  )[ipart] = malloc (sizeof(int   ) * (pn_pts+1));
+    (*distance       )[ipart] = malloc (sizeof(double) * n_pts);
+    (*projected_coord)[ipart] = malloc (sizeof(double) * n_pts * 3);
+    (*uvw            )[ipart] = malloc (sizeof(double) * n_pts * 3);
+    (*bar_coord_idx  )[ipart] = PDM_array_zeros_int(n_pts+1);
 
     int *_bar_coord_idx = (*bar_coord_idx)[ipart];
-    _bar_coord_idx[0] = 0;
 
-    (*uvw            )[ipart] = malloc (sizeof(double) * pn_pts * 3);
-
-    int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
 
       int id_section = sections_id[isection];
@@ -1977,8 +1974,11 @@ PDM_point_location_nodal2
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
                                                                             id_section);
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 ipart);
 
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         /* Polygonal section */
         int *connec_idx;
         int *connec;
@@ -1989,17 +1989,20 @@ PDM_point_location_nodal2
                                                    &connec);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
-          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
-          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
-            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
           }
-          idx_elt++;
-        }
 
+          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+
+          for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = n_vtx;
+          }
+        }
       }
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-
         /* Polyhedral section */
         int *connec_idx;
         int *connec;
@@ -2010,21 +2013,23 @@ PDM_point_location_nodal2
                                                                     &connec);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
-          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
-          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
-            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
           }
-          idx_elt++;
-        }
 
+          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+          for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = n_vtx;
+          }
+        }
       }
 
       else {
-
         /* Standard section */
               int         *connec              = NULL;
               PDM_g_num_t *numabs              = NULL;
-              int         *parent_num          = NULL;
+              int         *_parent_num         = NULL;
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
@@ -2033,7 +2038,7 @@ PDM_point_location_nodal2
                                                    ipart,
                                                    &connec,
                                                    &numabs,
-                                                   &parent_num,
+                                                   &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
                                                    &ho_ordering);
@@ -2042,21 +2047,25 @@ PDM_point_location_nodal2
                                                  order);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
-          for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
-            _bar_coord_idx[idx_pt+1] = _bar_coord_idx[idx_pt] + n_vtx;
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
           }
-          idx_elt++;
-        }
 
+          for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
+            _bar_coord_idx[idx_pt+1] = n_vtx;
+          }
+        }
       }
 
     } // End of loop on current part's sections
 
-
-    (*bar_coord)[ipart] = malloc(sizeof(double) * _bar_coord_idx[pn_pts]);
+    for (int i = 0; i < n_pts; i++) {
+      _bar_coord_idx[i+1] += _bar_coord_idx[i];
+    }
+    (*bar_coord)[ipart] = malloc(sizeof(double) * _bar_coord_idx[n_pts]);
 
   } // End of loop on parts
-
 
 
 
@@ -2071,7 +2080,6 @@ PDM_point_location_nodal2
 
     const double *vtx_coord = pvtx_coord[ipart];
 
-    int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
 
       int id_section = sections_id[isection];
@@ -2083,8 +2091,11 @@ PDM_point_location_nodal2
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
                                                                             id_section);
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 ipart);
 
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         /* Polygonal section */
         int *connec_idx;
         int *connec;
@@ -2102,29 +2113,32 @@ PDM_point_location_nodal2
         double *poly_coord = malloc(sizeof(double) * n_vtx_max * 3);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
-          int  _n_vtx  = connec_idx[ielt+1] - connec_idx[ielt];
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
+          }
+
+          int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
           int *_connec = connec + connec_idx[ielt];
-          for (int i = 0; i < _n_vtx; i++) {
+          for (int i = 0; i < n_vtx; i++) {
             int vtx_id = _connec[i] - 1;
-            // parent num?
             memcpy(poly_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
           }
 
-          int idx_pt = pts_idx[ipart][idx_elt];
+          int idx_pt = pts_idx[ipart][icell];
+          int _n_pts = pts_idx[ipart][icell+1] - idx_pt;
 
-          _locate_in_polygon(_n_vtx,
+          _locate_in_polygon(n_vtx,
                              poly_coord,
-                             pts_idx[ipart][idx_elt+1] - idx_pt,
+                             _n_pts,
             (const double *) pts_coord[ipart] + idx_pt * 3,
                              _distance        + idx_pt,
                              _projected_coord + idx_pt * 3,
                              _bar_coord       + _bar_coord_idx[idx_pt]);
 
-          for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+          for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
             _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
           }
-
-          idx_elt++;
         } // End of loop on polygons
         free(poly_coord);
 
@@ -2132,7 +2146,6 @@ PDM_point_location_nodal2
 
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-
         /* Polyhedral section */
         int *cell_vtx_idx;
         int *cell_vtx;
@@ -2187,6 +2200,10 @@ PDM_point_location_nodal2
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
+          }
 
           int _n_vtx  = cell_vtx_idx [ielt+1] - cell_vtx_idx [ielt];
           int _n_face = cell_face_idx[ielt+1] - cell_face_idx[ielt];
@@ -2209,7 +2226,8 @@ PDM_point_location_nodal2
             }
           }
 
-          int idx_pt = pts_idx[ipart][idx_elt];
+          int idx_pt = pts_idx[ipart][icell];
+          int _n_pts = pts_idx[ipart][icell+1] - idx_pt;
 
           _locate_in_polyhedron(_n_vtx,
                (const double *) _vtx_coord,
@@ -2217,13 +2235,13 @@ PDM_point_location_nodal2
                                 _face_vtx_idx,
                (const int    *) _face_vtx,
                (const int    *) _face_orientation,
-                                pts_idx[ipart][idx_elt+1] - idx_pt,
+                                _n_pts,
                (const double *) pts_coord[ipart]  + idx_pt * 3,
                                 _distance         + idx_pt,
                                 _projected_coord  + idx_pt * 3,
                                 _bar_coord        + _bar_coord_idx[idx_pt]);
 
-          for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+          for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
             _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
           }
 
@@ -2232,8 +2250,6 @@ PDM_point_location_nodal2
             int vtx_id = cell_vtx[idx] - 1;
             _vtx_id[vtx_id] = 0;
           }
-
-          idx_elt++;
         } // End of loop on polyhedra
 
         free(_vtx_id);
@@ -2246,11 +2262,10 @@ PDM_point_location_nodal2
 
 
       else {
-
         /* Standard section */
               int         *connec              = NULL;
               PDM_g_num_t *numabs              = NULL;
-              int         *parent_num          = NULL;
+              int         *_parent_num         = NULL;
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
@@ -2259,20 +2274,23 @@ PDM_point_location_nodal2
                                                    ipart,
                                                    &connec,
                                                    &numabs,
-                                                   &parent_num,
+                                                   &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
                                                    &ho_ordering);
 
-        // int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
-        //                                          order);
 
         switch (t_elt) {
 
           case PDM_MESH_NODAL_POINT: {
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               const double *node_coord = pvtx_coord[ipart] + 3*(connec[ielt] - 1);
-              for (int idx_pt = pts_idx[ipart][idx_elt]; idx_pt < pts_idx[ipart][idx_elt+1]; idx_pt++) {
+              for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
                 double dist2 = 0.;
                 for (int j = 0; j < 3; j++) {
                   double dj = pts_coord[ipart][3*idx_pt+j] - node_coord[j];
@@ -2284,7 +2302,6 @@ PDM_point_location_nodal2
                 _uvw      [3*idx_pt+1] = -1.;
                 _uvw      [3*idx_pt+2] = -1.;
               }
-              idx_elt++;
             }
             break;
           } // end case PDM_MESH_NODAL_POINT
@@ -2293,29 +2310,32 @@ PDM_point_location_nodal2
           case PDM_MESH_NODAL_BAR2: {
             double edge_coord[6];
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               int *_connec = connec + 2*ielt;
               for (int i = 0; i < 2; i++) {
                 int vtx_id = _connec[i] - 1;
-                // parent num?
                 memcpy(edge_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
               }
 
-              int idx_pt = pts_idx[ipart][idx_elt];
+              int idx_pt = pts_idx[ipart][icell];
 
               _locate_on_edge(edge_coord,
-                              pts_idx[ipart][idx_elt+1] - idx_pt,
+                              pts_idx[ipart][icell+1] - idx_pt,
              (const double *) pts_coord[ipart] + idx_pt * 3,
                               _distance        + idx_pt,
                               _projected_coord + idx_pt * 3,
                               _bar_coord       + _bar_coord_idx[idx_pt]);
 
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
                 _uvw[3*ipt  ] = _bar_coord[_bar_coord_idx[ipt]+1];
                 _uvw[3*ipt+1] = -1.;
                 _uvw[3*ipt+2] = -1.;
               }
 
-              idx_elt++;
             } // End of loop on edges
             break;
           } // end case PDM_MESH_NODAL_BAR2
@@ -2323,26 +2343,30 @@ PDM_point_location_nodal2
 
           case PDM_MESH_NODAL_TRIA3: {
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               int *_connec = connec + 3*ielt;
-              int idx_pt = pts_idx[ipart][idx_elt];
+              int idx_pt = pts_idx[ipart][icell];
 
               _locate_on_triangles(1,
                                    _connec,
                                    pvtx_coord[ipart],
-                                   pts_idx[ipart][idx_elt+1] - idx_pt,
+                                   pts_idx[ipart][icell+1] - idx_pt,
                   (const double *) pts_coord[ipart] + idx_pt * 3,
                                    NULL,
                                    _distance        + idx_pt,
                                    _projected_coord + idx_pt * 3,
                                    _bar_coord       + _bar_coord_idx[idx_pt]);
 
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
                 _uvw[3*ipt  ] = _bar_coord[_bar_coord_idx[ipt]+1];
                 _uvw[3*ipt+1] = _bar_coord[_bar_coord_idx[ipt]+2];
                 _uvw[3*ipt+2] = -1.;
               }
 
-              idx_elt++;
             } // End of loop on triangles
 
             break;
@@ -2352,30 +2376,33 @@ PDM_point_location_nodal2
           case PDM_MESH_NODAL_QUAD4: {
             double quad_coord[12];
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               int *_connec = connec + 4*ielt;
               for (int i = 0; i < 4; i++) {
                 int vtx_id = _connec[i] - 1;
-                // parent num?
                 memcpy(quad_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
               }
 
-              int idx_pt = pts_idx[ipart][idx_elt];
+              int idx_pt = pts_idx[ipart][icell];
 
               _locate_on_quadrangle(quad_coord,
-                                    pts_idx[ipart][idx_elt+1] - idx_pt,
+                                    pts_idx[ipart][icell+1] - idx_pt,
                    (const double *) pts_coord[ipart] + idx_pt * 3,
                                     _distance        + idx_pt,
                                     _projected_coord + idx_pt * 3,
                                     _bar_coord       + _bar_coord_idx[idx_pt]);
 
               // TODO: compute uvw
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
                 _uvw[3*ipt  ] = -1;
                 _uvw[3*ipt+1] = -1;
                 _uvw[3*ipt+2] = -1.;
               }
 
-              idx_elt++;
             } // End of loop on quadrangles
             break;
           } // end case PDM_MESH_NODAL_QUAD4
@@ -2383,29 +2410,32 @@ PDM_point_location_nodal2
           case PDM_MESH_NODAL_TETRA4: {
             double tetra_coord[12];
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               int *_connec = connec + 4*ielt;
               for (int i = 0; i < 4; i++) {
                 int vtx_id = _connec[i] - 1;
-                // parent num?
                 memcpy(tetra_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
               }
 
-              int idx_pt = pts_idx[ipart][idx_elt];
+              int idx_pt = pts_idx[ipart][icell];
 
               _locate_in_tetrahedron(tetra_coord,
-                                     pts_idx[ipart][idx_elt+1] - idx_pt,
+                                     pts_idx[ipart][icell+1] - idx_pt,
                     (const double *) pts_coord[ipart] + idx_pt * 3,
                                      _distance        + idx_pt,
                                      _projected_coord + idx_pt * 3,
                                      _bar_coord       + _bar_coord_idx[idx_pt]);
-              // TODO: compute uvw
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+              // TODO: compute uvw properly
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
                 _uvw[3*ipt  ] = -1;
                 _uvw[3*ipt+1] = -1;
                 _uvw[3*ipt+2] = -1.;
               }
 
-              idx_elt++;
             } // End of loop on tetrahedra
             break;
           } // end case PDM_MESH_NODAL_TETRA4
@@ -2418,21 +2448,25 @@ PDM_point_location_nodal2
             int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                      order);
             for (int ielt = 0; ielt < n_elt; ielt++) {
+              int icell = ielt;
+              if (parent_num != NULL) {
+                icell = parent_num[ielt];
+              }
+
               int *_connec = connec + n_vtx*ielt;
               for (int i = 0; i < n_vtx; i++) {
                 int vtx_id = _connec[i] - 1;
-                // parent num?
                 memcpy(elt_coord + 3*i, vtx_coord + 3*vtx_id, sizeof(double) * 3);
               }
 
-              int idx_pt = pts_idx[ipart][idx_elt];
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][idx_elt+1]; ipt++) {
+              int idx_pt = pts_idx[ipart][icell];
+              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
                 _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
               }
 
               _locate_in_cell_3d(t_elt,
                                  elt_coord,
-                                 pts_idx[ipart][idx_elt+1] - idx_pt,
+                                 pts_idx[ipart][icell+1] - idx_pt,
                 (const double *) pts_coord[ipart] + idx_pt * 3,
                                  tolerance,
                                  _distance        + idx_pt,
@@ -2440,16 +2474,15 @@ PDM_point_location_nodal2
                                  _bar_coord       + _bar_coord_idx[idx_pt],
                                  _uvw             + idx_pt * 3);
 
-              idx_elt++;
             } // End of loop on pyramids/prisms/hexahedra
             break;
           } // end case PDM_MESH_NODAL_PYRAMID5/PRISM6/HEXA8
 
 
-          // HO
+          // HO...
 
 
-          // HO_BEZIER
+          // HO_BEZIER...
 
           default: {
             PDM_error(__FILE__, __LINE__, 0,
@@ -2459,11 +2492,13 @@ PDM_point_location_nodal2
 
         } // End switch on std elt type
 
+
       } // End if standard section
 
     } // End of loop on current part's sections
 
   } // End of loop on parts
+
 }
 
 

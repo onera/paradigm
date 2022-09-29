@@ -202,6 +202,14 @@ const int                          id_block
 );
 
 
+int *
+PDM_part_mesh_nodal_elmts_parent_num_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

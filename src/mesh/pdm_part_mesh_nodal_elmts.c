@@ -885,7 +885,7 @@ const int                          id_part
     }
 
     if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
     }
 
     return block->n_elt[id_part];
@@ -902,7 +902,7 @@ const int                          id_part
     }
 
     if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
     }
 
     return block->n_elt[id_part];
@@ -919,7 +919,7 @@ const int                          id_part
     }
 
     if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
     }
 
     return block->n_elt[id_part];
@@ -991,4 +991,88 @@ PDM_part_mesh_nodal_elmts_free
   }
 
   free(pmne);
+}
+
+
+
+
+int *
+PDM_part_mesh_nodal_elmts_parent_num_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne identifier\n");
+  }
+
+  int _id_block;
+
+  int *_parent_num = NULL;
+
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_block];
+
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    block->is_parent_num_get = 1;
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    block->is_parent_num_get = 1;
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+
+  else {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    block->is_parent_num_get = 1;
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+
+  return _parent_num;
 }

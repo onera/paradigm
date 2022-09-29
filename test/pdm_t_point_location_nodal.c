@@ -33,6 +33,7 @@
 #include "pdm_poly_surf_gen.h"
 #include "pdm_poly_vol_gen.h"
 #include "pdm_distrib.h"
+#include "pdm_reader_gamma.h"
 
 /*============================================================================
  * Private function definitions
@@ -84,7 +85,8 @@ _read_args(int                    argc,
            int                   *n_part,
            int                   *post,
            int                   *part_method,
-           PDM_Mesh_nodal_elt_t  *elt_type)
+           PDM_Mesh_nodal_elt_t  *elt_type,
+           char                 **filename)
 {
   int i = 1;
 
@@ -134,6 +136,14 @@ _read_args(int                    argc,
         _usage(EXIT_FAILURE);
       else {
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-f") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *filename = argv[i];
       }
     }
     else
@@ -775,6 +785,96 @@ _gen_mesh
 }
 
 
+
+static void
+_mesh_from_file
+(
+ const PDM_MPI_Comm                   comm,
+ const int                            n_part,
+ const char                          *filename,
+ const PDM_split_dual_t               part_method,
+       PDM_part_mesh_nodal_elmts_t  **pmne,
+       int                          **pn_elt,
+       PDM_g_num_t                 ***pelt_ln_to_gn,
+       int                          **pn_vtx,
+       double                      ***pvtx_coord
+ )
+{
+  PDM_dmesh_nodal_t *dmn = PDM_reader_gamma_dmesh_nodal(comm,
+                                                        filename,
+                                                        0,
+                                                        0);
+
+  int n_zone = 1;
+  int n_part_mesh = n_part;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+                                                &n_part_mesh,
+                                                PDM_FALSE,
+                                                part_method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_set_reordering_options(mpart,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
+
+  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_run_ppart(mpart);
+
+  *pn_elt        = malloc(sizeof(int          ) * n_part);
+  *pelt_ln_to_gn = malloc(sizeof(PDM_g_num_t *) * n_part);
+  *pn_vtx        = malloc(sizeof(int          ) * n_part);
+  *pvtx_coord    = malloc(sizeof(double      *) * n_part);
+
+  PDM_g_num_t **pvtx_ln_to_gn  = malloc(sizeof(PDM_g_num_t *) * n_part);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    PDM_g_num_t *_elt_ln_to_gn;
+    (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                       0,
+                                                       ipart,
+                                                       PDM_MESH_ENTITY_CELL,
+                                                       &_elt_ln_to_gn,
+                                                       PDM_OWNERSHIP_USER);
+    (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
+    memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
+
+    (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                       0,
+                                                       ipart,
+                                                       PDM_MESH_ENTITY_VERTEX,
+                                                       &pvtx_ln_to_gn[ipart],
+                                                       PDM_OWNERSHIP_USER);
+
+    double *_vtx_coord;
+    PDM_multipart_part_vtx_coord_get(mpart,
+                                     0,
+                                     ipart,
+                                     &_vtx_coord,
+                                     PDM_OWNERSHIP_USER);
+    (*pvtx_coord)[ipart] = malloc(sizeof(double) * (*pn_vtx)[ipart] * 3);
+    memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
+  }
+
+
+  *pmne = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn,
+                                                   PDM_GEOMETRY_KIND_VOLUMIC,
+                                                   n_part,
+                                                   *pn_vtx,
+                                                   pvtx_ln_to_gn,
+                                                   *pn_elt,
+                                                   *pelt_ln_to_gn,
+                                                   NULL);
+  free(pvtx_ln_to_gn);
+
+  PDM_multipart_free(mpart);
+  PDM_DMesh_nodal_free(dmn);
+}
+
+
 static void
 _compute_cell_centers
 (
@@ -806,7 +906,6 @@ _compute_cell_centers
     (*pn_pts)   [ipart] = pn_elt;
     (*pts_coord)[ipart] = malloc(sizeof(double) * pn_elt * 3);
 
-    int idx_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
 
       int id_section = sections_id[isection];
@@ -817,6 +916,10 @@ _compute_cell_centers
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
                                                                             id_section);
+
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 ipart);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
 
@@ -834,9 +937,14 @@ _compute_cell_centers
         //                                "connec : ");
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
+          }
+
           int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
 
-          double *pc = (*pts_coord)[ipart] + 3*idx_elt;
+          double *pc = (*pts_coord)[ipart] + 3*icell;
           pc[0] = pc[1] = pc[2] = 0.;
 
           for (int idx = connec_idx[ielt]; idx < connec_idx[ielt+1]; idx++) {
@@ -851,7 +959,6 @@ _compute_cell_centers
             pc[j] *= in;
           }
 
-          idx_elt++;
         } // End of loop on polygons
 
       } // End if PDM_MESH_NODAL_POLY_2D
@@ -869,9 +976,14 @@ _compute_cell_centers
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
+          }
+
           int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
 
-          double *pc = (*pts_coord)[ipart] + 3*idx_elt;
+          double *pc = (*pts_coord)[ipart] + 3*icell;
           pc[0] = pc[1] = pc[2] = 0.;
 
           for (int idx = connec_idx[ielt]; idx < connec_idx[ielt+1]; idx++) {
@@ -886,7 +998,6 @@ _compute_cell_centers
             pc[j] *= in;
           }
 
-          idx_elt++;
         } // End of loop on polyhedra
 
       } // End if PDM_MESH_NODAL_POLY_3D
@@ -897,7 +1008,7 @@ _compute_cell_centers
         /* Standard section */
               int         *connec              = NULL;
               PDM_g_num_t *numabs              = NULL;
-              int         *parent_num          = NULL;
+              int         *_parent_num         = NULL;
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
@@ -906,7 +1017,7 @@ _compute_cell_centers
                                                    ipart,
                                                    &connec,
                                                    &numabs,
-                                                   &parent_num,
+                                                   &_parent_num,
                                                    &parent_entity_g_num,
                                                    &order,
                                                    &ho_ordering);
@@ -916,8 +1027,12 @@ _compute_cell_centers
         double in = 1./(double) n_vtx;
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
+          int icell = ielt;
+          if (parent_num != NULL) {
+            icell = parent_num[ielt];
+          }
 
-          double *pc = (*pts_coord)[ipart] + 3*idx_elt;
+          double *pc = (*pts_coord)[ipart] + 3*icell;
           pc[0] = pc[1] = pc[2] = 0.;
 
           for (int idx = n_vtx*ielt; idx < n_vtx*(ielt+1); idx++) {
@@ -931,7 +1046,6 @@ _compute_cell_centers
             pc[j] *= in;
           }
 
-          idx_elt++;
         } // End of loop on elts
 
       } // End if std elt
@@ -968,6 +1082,7 @@ int main(int argc, char *argv[])
   PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 #endif
 #endif
+  char       *filename_mesh = NULL;
 
   /*
    *  Read args
@@ -979,7 +1094,8 @@ int main(int argc, char *argv[])
              &n_part,
              &post,
      (int *) &part_method,
-             &t_elt);
+             &t_elt,
+             &filename_mesh);
 
   /*
    *  Init
@@ -999,17 +1115,30 @@ int main(int argc, char *argv[])
   PDM_g_num_t **pelt_ln_to_gn = NULL;
   int          *pn_vtx        = NULL;
   double      **pvtx_coord    = NULL;
-  _gen_mesh(comm,
-            n_part,
-            t_elt,
-            n_vtx_seg,
-            length,
-            part_method,
-            &pmne,
-            &pn_elt,
-            &pelt_ln_to_gn,
-            &pn_vtx,
-            &pvtx_coord);
+  if (filename_mesh == NULL) {
+    _gen_mesh(comm,
+              n_part,
+              t_elt,
+              n_vtx_seg,
+              length,
+              part_method,
+              &pmne,
+              &pn_elt,
+              &pelt_ln_to_gn,
+              &pn_vtx,
+              &pvtx_coord);
+  }
+  else {
+    _mesh_from_file(comm,
+                    n_part,
+                    filename_mesh,
+                    part_method,
+                    &pmne,
+                    &pn_elt,
+                    &pelt_ln_to_gn,
+                    &pn_vtx,
+                    &pvtx_coord);
+  }
 
   if (post) {
     char filename[999];
@@ -1032,6 +1161,21 @@ int main(int argc, char *argv[])
                                                                id_section,
                                                                ipart);
 
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                   id_section,
+                                                                   ipart);
+
+
+        PDM_g_num_t *gnum = malloc(sizeof(PDM_g_num_t) * _n_elt);
+        for (int i = 0; i < _n_elt; i++) {
+          int icell = i;
+          if (parent_num != NULL) {
+            icell = parent_num[i];
+          }
+          gnum[i] = pelt_ln_to_gn[ipart][icell];
+        }
+
+
         if (_t_elt == PDM_MESH_NODAL_POLY_2D) {
 
           int *connec_idx;
@@ -1049,7 +1193,7 @@ int main(int argc, char *argv[])
                                  _n_elt,
                                  connec_idx,
                                  connec,
-                                 NULL,
+                                 gnum,
                                  NULL);
 
         }
@@ -1077,14 +1221,14 @@ int main(int argc, char *argv[])
                                  n_face,
                                  face_vtx_idx,
                                  face_vtx,
-                                 NULL,
+                                 gnum,
                                  NULL);
 
         }
 
         else {
           int         *elmt_vtx                 = NULL;
-          int         *parent_num               = NULL;
+          int         *_parent_num              = NULL;
           PDM_g_num_t *numabs                   = NULL;
           PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
           PDM_part_mesh_nodal_elmts_block_std_get(pmne,
@@ -1092,7 +1236,7 @@ int main(int argc, char *argv[])
                                                   ipart,
                                                   &elmt_vtx,
                                                   &numabs,
-                                                  &parent_num,
+                                                  &_parent_num,
                                                   &parent_entitity_ln_to_gn);
 
 
@@ -1103,11 +1247,13 @@ int main(int argc, char *argv[])
                                      _t_elt,
                                      _n_elt,
                                      elmt_vtx,
-                                     numabs,//parent_entitity_ln_to_gn,
+                                     gnum,//parent_entitity_ln_to_gn,
                                      0,
                                      NULL,
                                      NULL);
         }
+
+        free(gnum);
       }
     }
   }
