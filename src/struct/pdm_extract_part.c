@@ -1314,19 +1314,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
   printf("_extract_part_and_reequilibrate_nodal_from_target \n");
 
-
   extrp->pextract_n_entity[entity_type] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     extrp->pextract_n_entity[entity_type][i_part] = extrp->n_target[i_part];
   }
 
-
-
-  // Choix 1 : j'ai le cell_ln_to_gn
-  // Choix 2 : j'ai le cell_ln_to_gn par sections
-
   // Target : reference des cellules
-
   assert(extrp->pmne != NULL);
 
   int **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
@@ -1335,7 +1328,6 @@ _extract_part_and_reequilibrate_nodal_from_target
     part2_cell_to_part1_cell_idx[i_part][0] = 0;
     for(int i = 0; i < extrp->n_target[i_part]; ++i) {
       part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 3;
-      // part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 1;
     }
   }
 
@@ -1347,15 +1339,6 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                       (const int         **) part2_cell_to_part1_cell_idx,
                                                                       (const int         **) extrp->target_location,
                                                                       extrp->comm);
-  // PDM_part_to_part_t* ptp = PDM_part_to_part_create((const PDM_g_num_t **) extrp->target_gnum,
-  //                                                   (const int         * ) extrp->n_target,
-  //                                                                          extrp->n_part_out,
-  //                                                   (const PDM_g_num_t **) entity_g_num,
-  //                                                                          pn_entity,
-  //                                                                          extrp->n_part_in,
-  //                                                   (const int         **) part2_cell_to_part1_cell_idx,
-  //                                                   (const PDM_g_num_t **) extrp->target_gnum,
-  //                                                   extrp->comm);
   extrp->ptp_entity[entity_type] = ptp;
 
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -1416,95 +1399,155 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     /* Compute buffer size */
-    int n_elmt_to_send     = 0;
-    int n_elmt_vtx_to_send = 0;
+    int n_elmt_to_send      = 0;
+    int n_elmt_vtx_to_send  = 0;
+    int n_elmt_face_to_send = 0;
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "poly2d/3d not yet supported\n");
-      }
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        int *face_vtx_idx;
+        int *face_vtx;
+        PDM_part_mesh_nodal_elmts_block_poly2d_get(extrp->pmne,
+                                                   sections_id[i_section],
+                                                   i_part,
+                                                   &face_vtx_idx,
+                                                   &face_vtx);
 
-      int         *elt_vtx          = NULL;
-      int         *parent_num       = NULL;
-      PDM_g_num_t *elt_ln_to_gn     = NULL;
-      PDM_g_num_t *parent_elt_g_num = NULL;
+        int* parent_num = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
 
-      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
-                                              sections_id[i_section],
-                                              i_part,
-                                              &elt_vtx,
-                                              &elt_ln_to_gn,
-                                              &parent_num,
-                                              &parent_elt_g_num);
-
-      /* Selection */
-      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = i_elt;
-        if (parent_num != NULL) {
-          parent_elt = parent_num[i_elt];
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = parent_num[i_elt];//-1;
+          if(is_selected[i_part][parent_elt] != -1) {
+            n_elmt_to_send     += 1;
+            n_elmt_vtx_to_send += face_vtx_idx[i_elt+1] - face_vtx_idx[i_elt];
+          }
         }
-        if(is_selected[i_part][parent_elt] != -1) {
-          n_elmt_to_send     += 1;
-          n_elmt_vtx_to_send += n_vtx_per_elmt;
+
+      } else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+
+        /* Polyhedral section */
+        int *cell_vtx_idx;
+        int *cell_vtx;
+        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
+                                                                    sections_id[i_section],
+                                                                    i_part,
+                                                                    &cell_vtx_idx,
+                                                                    &cell_vtx);
+
+        int* parent_num = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
+        int *cell_face_idx;
+        int *cell_face;
+        int  n_face;
+        int *face_vtx_idx;
+        int *face_vtx;
+        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+                                                   sections_id[i_section],
+                                                   i_part,
+                                                   &n_face,
+                                                   &face_vtx_idx,
+                                                   &face_vtx,
+                                                   &cell_face_idx,
+                                                   &cell_face);
+
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = parent_num[i_elt];//-1;
+          if(is_selected[i_part][parent_elt] != -1) {
+            n_elmt_to_send      += 1;
+            n_elmt_face_to_send += cell_face_idx[i_elt+1] - cell_face_idx[i_elt];
+            for(int idx_face = cell_face_idx[i_elt]; idx_face < cell_face_idx[i_elt+1]; ++idx_face) {
+              int i_face = PDM_ABS(cell_face[idx_face])-1;
+              n_elmt_vtx_to_send += face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+            }
+          }
+        }
+
+      } else {
+        int         *elt_vtx          = NULL;
+        int         *parent_num       = NULL;
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
+
+        PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                                sections_id[i_section],
+                                                i_part,
+                                                &elt_vtx,
+                                                &elt_ln_to_gn,
+                                                &parent_num,
+                                                &parent_elt_g_num);
+        if (0) {
+          PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+        }
+
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
+          if(is_selected[i_part][parent_elt] != -1) {
+            n_elmt_to_send     += 1;
+            n_elmt_vtx_to_send += n_vtx_per_elmt;
+          }
         }
       }
     } /* End section */
 
-    elmt_vtx_n       [i_part] = malloc(    n_elmt_to_send     * sizeof(int                 ));
-    elmt_type        [i_part] = malloc(    n_elmt_to_send     * sizeof(PDM_Mesh_nodal_elt_t));
-    elmt_vtx         [i_part] = malloc(    n_elmt_vtx_to_send * sizeof(PDM_g_num_t         ));
-    vtx_init_location[i_part] = malloc(3 * n_elmt_vtx_to_send * sizeof(int                 ));
-    elmt_section_id  [i_part] = malloc(    n_elmt_to_send     * sizeof(int                 ));
+    elmt_vtx_n       [i_part] = malloc(    n_elmt_to_send      * sizeof(int                 ));
+    // elmt_face_n      [i_part] = malloc(    n_elmt_face_to_send * sizeof(int                 ));
+    elmt_type        [i_part] = malloc(    n_elmt_to_send      * sizeof(PDM_Mesh_nodal_elt_t));
+    elmt_vtx         [i_part] = malloc(    n_elmt_vtx_to_send  * sizeof(PDM_g_num_t         ));
+    vtx_init_location[i_part] = malloc(3 * n_elmt_vtx_to_send  * sizeof(int                 ));
+    elmt_section_id  [i_part] = malloc(    n_elmt_to_send      * sizeof(int                 ));
 
     PDM_g_num_t* _vtx_ln_to_gn = extrp->vtx_ln_to_gn[i_part];
 
     /* Remplissage */
-
     for(int i_section = 0; i_section < n_section; ++i_section) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
-      int         *elt_vtx          = NULL;
-      int         *parent_num       = NULL;
-      PDM_g_num_t *elt_ln_to_gn     = NULL;
-      PDM_g_num_t *parent_elt_g_num = NULL;
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        abort();
+      } else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        // Missing face_ln_to_gn in structure
+        abort();
+      } else {
+        int         *elt_vtx          = NULL;
+        int         *parent_num       = NULL;
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "poly2d/3d not yet supported\n");
-      }
+         PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                                sections_id[i_section],
+                                                i_part,
+                                                &elt_vtx,
+                                                &elt_ln_to_gn,
+                                                &parent_num,
+                                                &parent_elt_g_num);
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
+          if(is_selected[i_part][parent_elt] != -1) {
 
-      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
-                                              sections_id[i_section],
-                                              i_part,
-                                              &elt_vtx,
-                                              &elt_ln_to_gn,
-                                              &parent_num,
-                                              &parent_elt_g_num);
-      /* Selection */
-      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = i_elt;
-        if (parent_num != NULL) {
-          parent_elt = parent_num[i_elt];
+            int idx = is_selected[i_part][parent_elt];
+
+            elmt_type      [i_part][idx] = t_elt;
+            elmt_vtx_n     [i_part][idx] = n_vtx_per_elmt;
+            elmt_section_id[i_part][idx] = i_section;
+          }
         }
-        if(is_selected[i_part][parent_elt] != -1) {
-
-          int idx = is_selected[i_part][parent_elt];
-
-          elmt_type      [i_part][idx] = t_elt;
-          elmt_vtx_n     [i_part][idx] = n_vtx_per_elmt;
-          elmt_section_id[i_part][idx] = i_section;
-        }
-      }
-
-    } /* End section */
-
-
-
+      } /* End section */
+    }
 
     /* Remplissage vtx */
     int *elt_vtx_idx = PDM_array_new_idx_from_sizes_int(elmt_vtx_n[i_part], n_elmt_to_send);
@@ -1513,46 +1556,55 @@ _extract_part_and_reequilibrate_nodal_from_target
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
-      int         *elt_vtx          = NULL;
-      int         *parent_num       = NULL;
-      PDM_g_num_t *elt_ln_to_gn     = NULL;
-      PDM_g_num_t *parent_elt_g_num = NULL;
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        abort();
+      } else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        // Missing face_ln_to_gn in structure
+        abort();
+      } else {
+        int         *elt_vtx          = NULL;
+        int         *parent_num       = NULL;
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "poly2d/3d not yet supported\n");
-      }
-
-      PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
-                                              sections_id[i_section],
-                                              i_part,
-                                              &elt_vtx,
-                                              &elt_ln_to_gn,
-                                              &parent_num,
-                                              &parent_elt_g_num);
-      /* Selection */
-      for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-        int parent_elt = i_elt;
-        if (parent_num != NULL) {
-          parent_elt = parent_num[i_elt];
+        if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
+          PDM_error(__FILE__, __LINE__, 0, "poly2d/3d not yet supported\n");
         }
-        if(is_selected[i_part][parent_elt] != -1) {
 
-          int idx = is_selected[i_part][parent_elt];
+        PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+                                                sections_id[i_section],
+                                                i_part,
+                                                &elt_vtx,
+                                                &elt_ln_to_gn,
+                                                &parent_num,
+                                                &parent_elt_g_num);
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
+          if(is_selected[i_part][parent_elt] != -1) {
 
+            int idx = is_selected[i_part][parent_elt];
 
-          int idx_read  = i_elt * n_vtx_per_elmt;
-          int idx_write = elt_vtx_idx[idx];
-          for(int k = 0; k < n_vtx_per_elmt; ++k) {
-            elmt_vtx         [i_part][idx_write+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]-1];
-            vtx_init_location[i_part][3*(idx_write+k)  ] = i_rank;
-            vtx_init_location[i_part][3*(idx_write+k)+1] = i_part;
-            vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k];
+            int idx_read  = i_elt * n_vtx_per_elmt;
+            int idx_write = elt_vtx_idx[idx];
+            for(int k = 0; k < n_vtx_per_elmt; ++k) {
+              elmt_vtx         [i_part][idx_write+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]-1];
+              vtx_init_location[i_part][3*(idx_write+k)  ] = i_rank;
+              vtx_init_location[i_part][3*(idx_write+k)+1] = i_part;
+              vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k];
+            }
+
+            n_elmt_to_send     += 1;
+            n_elmt_vtx_to_send += n_vtx_per_elmt;
           }
         }
       }
     } /* End section */
     free(elt_vtx_idx);
-  }
+  } /* End i_part */
 
 
   PDM_Mesh_nodal_elt_t **recv_elmt_type    = NULL;
@@ -1646,7 +1698,7 @@ _extract_part_and_reequilibrate_nodal_from_target
    * Second pass to create the new part_mesh_nodal
    */
   PDM_part_mesh_nodal_elmts_t* extract_pmne = PDM_part_mesh_nodal_elmts_create(extrp->pmne->mesh_dimension,
-                                                                               extrp->pmne->n_part,
+                                                                               extrp->pmne->n_part, // == n_part_out
                                                                                extrp->pmne->comm);
 
   extrp->extract_pmne = extract_pmne;
@@ -1742,7 +1794,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
       int extract_section_id = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
       PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
-                                        i_section,
+                                        extract_section_id,
                                         i_part,
                                         n_elmt_by_section[i_section],
                                         elmt_vtx_by_section[i_section],
@@ -2108,343 +2160,343 @@ _extract_part
 }
 
 
-static
-void
-_extract_part_and_reequilibrate_from_target
-(
-  PDM_extract_part_t        *extrp
-)
-{
-  int          *pn_entity    = NULL;
-  PDM_g_num_t **entity_g_num = NULL;
-  if(extrp->dim == 3) {
-    pn_entity    = extrp->n_cell;
-    entity_g_num = extrp->cell_ln_to_gn;
-  } else {
-    pn_entity    = extrp->n_face;
-    entity_g_num = extrp->face_ln_to_gn;
-  }
-  // printf("_extract_part_and_reequilibrate_from_target \n");
+// static
+// void
+// _extract_part_and_reequilibrate_from_target
+// (
+//   PDM_extract_part_t        *extrp
+// )
+// {
+//   int          *pn_entity    = NULL;
+//   PDM_g_num_t **entity_g_num = NULL;
+//   if(extrp->dim == 3) {
+//     pn_entity    = extrp->n_cell;
+//     entity_g_num = extrp->cell_ln_to_gn;
+//   } else {
+//     pn_entity    = extrp->n_face;
+//     entity_g_num = extrp->face_ln_to_gn;
+//   }
+//   // printf("_extract_part_and_reequilibrate_from_target \n");
 
-  /*
-   * Generate global numbering for traget g_num
-   */
-  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_out, PDM_FALSE,
-                                                 1.e-6,
-                                                 extrp->comm,
-                                                 PDM_OWNERSHIP_USER);
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    PDM_gnum_set_from_parents (gnum_extract, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
-    // PDM_log_trace_array_long(extrp->target_gnum[i_part], extrp->n_target[i_part], "target_gnum :: ");
-  }
+//   /*
+//    * Generate global numbering for traget g_num
+//    */
+//   PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_out, PDM_FALSE,
+//                                                  1.e-6,
+//                                                  extrp->comm,
+//                                                  PDM_OWNERSHIP_USER);
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     PDM_gnum_set_from_parents (gnum_extract, i_part, extrp->n_target[i_part], extrp->target_gnum[i_part]);
+//     // PDM_log_trace_array_long(extrp->target_gnum[i_part], extrp->n_target[i_part], "target_gnum :: ");
+//   }
 
-  PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_out * sizeof(PDM_g_num_t *));
-  PDM_gnum_compute(gnum_extract);
+//   PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_out * sizeof(PDM_g_num_t *));
+//   PDM_gnum_compute(gnum_extract);
 
-  for (int i_part = 0; i_part < extrp->n_part_out; i_part++){
-    child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-    // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_target[i_part], "child_selected_g_num : ");
-  }
-  PDM_gnum_free(gnum_extract);
+//   for (int i_part = 0; i_part < extrp->n_part_out; i_part++){
+//     child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+//     // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_target[i_part], "child_selected_g_num : ");
+//   }
+//   PDM_gnum_free(gnum_extract);
 
-  if(extrp->dim == 3) {
-    extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
-    }
-    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL] = child_selected_g_num;
-  } else {
-    extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
-    }
-    extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE] = child_selected_g_num;
-  }
-
-
-  /*
-   * Create part_to_part with :
-   *    part1 = Target       (translate in child gnum)
-   *    part2 = Current
-   *    part1_to_part2_idx = Id
-   *    part1_to_part2     = target_gnum
-   * Puis exchange reverse :
-   *    Il faudrait garder le ptp
-   */
-
-  int         **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    part2_cell_to_part1_cell_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
-    part2_cell_to_part1_cell_idx[i_part][0] = 0;
-    for(int i = 0; i < extrp->n_target[i_part]; ++i) {
-      part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 1;
-    }
-  }
+//   if(extrp->dim == 3) {
+//     extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
+//     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//       extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
+//     }
+//     extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL] = child_selected_g_num;
+//   } else {
+//     extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
+//     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//       extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
+//     }
+//     extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE] = child_selected_g_num;
+//   }
 
 
-  int         **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
-  int         **part2_edge_to_part1_edge_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
-  int         **part2_vtx_to_part1_vtx_idx   = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+//   /*
+//    * Create part_to_part with :
+//    *    part1 = Target       (translate in child gnum)
+//    *    part2 = Current
+//    *    part1_to_part2_idx = Id
+//    *    part1_to_part2     = target_gnum
+//    * Puis exchange reverse :
+//    *    Il faudrait garder le ptp
+//    */
 
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    part2_face_to_part1_face_idx[i_part] = NULL;
-    part2_edge_to_part1_edge_idx[i_part] = NULL;
-    part2_vtx_to_part1_vtx_idx  [i_part] = NULL;
-  }
-
-  /*
-   * Extraction des connectivités
-   */
-  int from_face_edge = 0;
-  int from_face_vtx  = 0;
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    if(extrp->pface_edge    [i_part] != NULL) {
-      from_face_edge = 1;
-    }
-    if(extrp->pface_vtx    [i_part] != NULL) {
-      from_face_vtx = 1;
-    }
-  }
-
-  assert(extrp->dim == 3);
-  // int          *n_target_face               = NULL;
-  // int         **target_cell_face_idx        = NULL;
-  // int         **target_cell_face            = NULL;
-  // PDM_g_num_t **target_face_ln_to_gn        = NULL;
-  // PDM_g_num_t **target_parent_face_ln_to_gn = NULL;
-
-  PDM_part_to_part_t* ptp_entity = NULL;
-  PDM_part_to_part_t* ptp_face   = NULL;
-  PDM_part_to_part_t* ptp_edge   = NULL;
-  PDM_part_to_part_t* ptp_vtx    = NULL;
-
-  if(extrp->dim == 3) {
-    PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
-                                            extrp->n_part_in,
-                   (const int            *) pn_entity,
-                   (const int           **) extrp->pcell_face_idx,
-                   (const int           **) extrp->pcell_face,
-                   (const PDM_g_num_t   **) entity_g_num,
-                   (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
-                   (const int             ) extrp->n_part_out,
-                   (const int            *) extrp->n_target,
-                   (const PDM_g_num_t   **) child_selected_g_num,
-                   (const int           **) part2_cell_to_part1_cell_idx,
-                   (const PDM_g_num_t   **) extrp->target_gnum,
-                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
-                                            &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_CELL_FACE],
-                                            &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
-                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
-                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
-                                            &ptp_entity);
-
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      free(part2_cell_to_part1_cell_idx[i_part]);
-    }
-    free(part2_cell_to_part1_cell_idx);
-
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      int n_face = extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part];
-      part2_face_to_part1_face_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_face);;
-    }
-    if(from_face_edge == 1) {
-
-      PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
-                                              extrp->n_part_in,
-                     (const int            *) extrp->n_face,
-                     (const int           **) extrp->pface_edge_idx,
-                     (const int           **) extrp->pface_edge,
-                     (const PDM_g_num_t   **) extrp->face_ln_to_gn,
-                     (const PDM_g_num_t   **) extrp->edge_ln_to_gn, // TODO 2D
-                     (const int             ) extrp->n_part_out,
-                     (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
-                     (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
-                     (const int           **) part2_face_to_part1_face_idx,
-                     (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_FACE],
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
-                                              &ptp_face);
-
-      int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
-      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-        pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
-        pedge_vtx_idx[i_part][0] = 0;
-        for(int i_edge = 0; i_edge < extrp->n_edge[i_part]; ++i_edge) {
-          pedge_vtx_idx[i_part][i_edge+1] = pedge_vtx_idx[i_part][i_edge] + 2;
-        }
-      }
-
-      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-        int n_edge = extrp->pextract_n_entity[PDM_MESH_ENTITY_EDGE][i_part];
-        part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_edge);;
-      }
-      PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
-                                              extrp->n_part_in,
-                     (const int            *) extrp->n_edge,
-                     (const int           **) pedge_vtx_idx,
-                     (const int           **) extrp->pedge_vtx,
-                     (const PDM_g_num_t   **) extrp->edge_ln_to_gn,
-                     (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
-                     (const int             ) extrp->n_part_out,
-                     (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
-                     (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_EDGE],
-                     (const int           **) part2_edge_to_part1_edge_idx,
-                     (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
-                                              &ptp_edge);
-
-      for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-        free(pedge_vtx_idx   [i_part]);
-      }
-      free(pedge_vtx_idx      );
-
-    } else if(from_face_vtx == 1) {
-      PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
-                                              extrp->n_part_in,
-                     (const int            *) extrp->n_face,
-                     (const int           **) extrp->pface_vtx_idx,
-                     (const int           **) extrp->pface_vtx,
-                     (const PDM_g_num_t   **) extrp->face_ln_to_gn,
-                     (const PDM_g_num_t   **) extrp->vtx_ln_to_gn,
-                     (const int             ) extrp->n_part_out,
-                     (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
-                     (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
-                     (const int           **) part2_face_to_part1_face_idx,
-                     (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_FACE],
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
-                                              &ptp_face);
-    }
-  }
+//   int         **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     part2_cell_to_part1_cell_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
+//     part2_cell_to_part1_cell_idx[i_part][0] = 0;
+//     for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+//       part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 1;
+//     }
+//   }
 
 
-  // Create ptp for vtx
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
-    part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_vtx);;
-  }
+//   int         **part2_face_to_part1_face_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+//   int         **part2_edge_to_part1_edge_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
+//   int         **part2_vtx_to_part1_vtx_idx   = (int **) malloc( extrp->n_part_out * sizeof(int * ));
 
-  ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
-                                                           extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
-                                                           extrp->n_part_out,
-                                    (const PDM_g_num_t **) extrp->vtx_ln_to_gn,
-                                                           extrp->n_vtx,
-                                                           extrp->n_part_in,
-                                    (const int         **) part2_vtx_to_part1_vtx_idx,
-                                    (const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
-                                                           extrp->comm);
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     part2_face_to_part1_face_idx[i_part] = NULL;
+//     part2_edge_to_part1_edge_idx[i_part] = NULL;
+//     part2_vtx_to_part1_vtx_idx  [i_part] = NULL;
+//   }
 
-  int           exch_request = -1;
-  PDM_part_to_part_reverse_iexch(ptp_vtx,
-                                 PDM_MPI_COMM_KIND_P2P,
-                                 PDM_STRIDE_CST_INTERLACED,
-                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                 3,
-                                 sizeof(double),
-                                 NULL,
-                (const void **)  extrp->pvtx_coord,
-                                 NULL,
-                    (void ***)   &extrp->pextract_vtx_coord,
-                                 &exch_request);
-  PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+//   /*
+//    * Extraction des connectivités
+//    */
+//   int from_face_edge = 0;
+//   int from_face_vtx  = 0;
+//   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+//     if(extrp->pface_edge    [i_part] != NULL) {
+//       from_face_edge = 1;
+//     }
+//     if(extrp->pface_vtx    [i_part] != NULL) {
+//       from_face_vtx = 1;
+//     }
+//   }
+
+//   assert(extrp->dim == 3);
+//   // int          *n_target_face               = NULL;
+//   // int         **target_cell_face_idx        = NULL;
+//   // int         **target_cell_face            = NULL;
+//   // PDM_g_num_t **target_face_ln_to_gn        = NULL;
+//   // PDM_g_num_t **target_parent_face_ln_to_gn = NULL;
+
+//   PDM_part_to_part_t* ptp_entity = NULL;
+//   PDM_part_to_part_t* ptp_face   = NULL;
+//   PDM_part_to_part_t* ptp_edge   = NULL;
+//   PDM_part_to_part_t* ptp_vtx    = NULL;
+
+//   if(extrp->dim == 3) {
+//     PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+//                                             extrp->n_part_in,
+//                    (const int            *) pn_entity,
+//                    (const int           **) extrp->pcell_face_idx,
+//                    (const int           **) extrp->pcell_face,
+//                    (const PDM_g_num_t   **) entity_g_num,
+//                    (const PDM_g_num_t   **) extrp->face_ln_to_gn, // TODO 2D
+//                    (const int             ) extrp->n_part_out,
+//                    (const int            *) extrp->n_target,
+//                    (const PDM_g_num_t   **) child_selected_g_num,
+//                    (const int           **) part2_cell_to_part1_cell_idx,
+//                    (const PDM_g_num_t   **) extrp->target_gnum,
+//                                             &extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
+//                                             &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+//                                             &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+//                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
+//                                             &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
+//                                             &ptp_entity);
+
+//     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//       free(part2_cell_to_part1_cell_idx[i_part]);
+//     }
+//     free(part2_cell_to_part1_cell_idx);
+
+//     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//       int n_face = extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part];
+//       part2_face_to_part1_face_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_face);;
+//     }
+//     if(from_face_edge == 1) {
+
+//       PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+//                                               extrp->n_part_in,
+//                      (const int            *) extrp->n_face,
+//                      (const int           **) extrp->pface_edge_idx,
+//                      (const int           **) extrp->pface_edge,
+//                      (const PDM_g_num_t   **) extrp->face_ln_to_gn,
+//                      (const PDM_g_num_t   **) extrp->edge_ln_to_gn, // TODO 2D
+//                      (const int             ) extrp->n_part_out,
+//                      (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
+//                      (const int           **) part2_face_to_part1_face_idx,
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_FACE],
+//                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
+//                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+//                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+//                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
+//                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
+//                                               &ptp_face);
+
+//       int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
+//       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+//         pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
+//         pedge_vtx_idx[i_part][0] = 0;
+//         for(int i_edge = 0; i_edge < extrp->n_edge[i_part]; ++i_edge) {
+//           pedge_vtx_idx[i_part][i_edge+1] = pedge_vtx_idx[i_part][i_edge] + 2;
+//         }
+//       }
+
+//       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//         int n_edge = extrp->pextract_n_entity[PDM_MESH_ENTITY_EDGE][i_part];
+//         part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_edge);;
+//       }
+//       PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+//                                               extrp->n_part_in,
+//                      (const int            *) extrp->n_edge,
+//                      (const int           **) pedge_vtx_idx,
+//                      (const int           **) extrp->pedge_vtx,
+//                      (const PDM_g_num_t   **) extrp->edge_ln_to_gn,
+//                      (const PDM_g_num_t   **) extrp->vtx_ln_to_gn, // TODO 2D
+//                      (const int             ) extrp->n_part_out,
+//                      (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_EDGE],
+//                      (const int           **) part2_edge_to_part1_edge_idx,
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_EDGE],
+//                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+//                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+//                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+//                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+//                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+//                                               &ptp_edge);
+
+//       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+//         free(pedge_vtx_idx   [i_part]);
+//       }
+//       free(pedge_vtx_idx      );
+
+//     } else if(from_face_vtx == 1) {
+//       PDM_pconnectivity_to_pconnectivity_keep(extrp->comm,
+//                                               extrp->n_part_in,
+//                      (const int            *) extrp->n_face,
+//                      (const int           **) extrp->pface_vtx_idx,
+//                      (const int           **) extrp->pface_vtx,
+//                      (const PDM_g_num_t   **) extrp->face_ln_to_gn,
+//                      (const PDM_g_num_t   **) extrp->vtx_ln_to_gn,
+//                      (const int             ) extrp->n_part_out,
+//                      (const int            *) extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_ln_to_gn        [PDM_MESH_ENTITY_FACE],
+//                      (const int           **) part2_face_to_part1_face_idx,
+//                      (const PDM_g_num_t   **) extrp->pextract_entity_parent_ln_to_gn [PDM_MESH_ENTITY_FACE],
+//                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+//                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+//                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+//                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+//                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+//                                               &ptp_face);
+//     }
+//   }
 
 
-  if(0 == 1) {
-    exch_request = -1;
-    PDM_g_num_t** check_vtx_gnum = NULL;
-    PDM_part_to_part_reverse_iexch(ptp_vtx,
-                                   PDM_MPI_COMM_KIND_P2P,
-                                   PDM_STRIDE_CST_INTERLACED,
-                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                   1,
-                                   sizeof(PDM_g_num_t),
-                                   NULL,
-                                   (const void **)  extrp->vtx_ln_to_gn,
-                                   NULL,
-                                   (void ***)   &check_vtx_gnum,
-                                   &exch_request);
+//   // Create ptp for vtx
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
+//     part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_vtx);;
+//   }
 
-    PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+//   ptp_vtx = PDM_part_to_part_create((const PDM_g_num_t **) extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX],
+//                                                            extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+//                                                            extrp->n_part_out,
+//                                     (const PDM_g_num_t **) extrp->vtx_ln_to_gn,
+//                                                            extrp->n_vtx,
+//                                                            extrp->n_part_in,
+//                                     (const int         **) part2_vtx_to_part1_vtx_idx,
+//                                     (const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+//                                                            extrp->comm);
 
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-
-      PDM_log_trace_connectivity_int(extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
-                                     extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
-                                     extrp->pextract_n_entity        [PDM_MESH_ENTITY_FACE          ][i_part],
-                                     "pextract_face_vtx : ");
-
-      PDM_log_trace_array_long(check_vtx_gnum[i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "check_vtx_gnum : ");
-      PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "target_face_ln_to_gn : ");
-      PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "target_vtx_ln_to_gn : ");
-      // PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL  ][i_part], "parent_cell_ln_to_gn : ");
-      PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "parent_face_ln_to_gn : ");
-      PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "parent_vtx_ln_to_gn : ");
-
-      free(check_vtx_gnum[i_part]);
-    }
-    free(check_vtx_gnum);
-  }
+//   int           exch_request = -1;
+//   PDM_part_to_part_reverse_iexch(ptp_vtx,
+//                                  PDM_MPI_COMM_KIND_P2P,
+//                                  PDM_STRIDE_CST_INTERLACED,
+//                                  PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+//                                  3,
+//                                  sizeof(double),
+//                                  NULL,
+//                 (const void **)  extrp->pvtx_coord,
+//                                  NULL,
+//                     (void ***)   &extrp->pextract_vtx_coord,
+//                                  &exch_request);
+//   PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
 
 
-  // free(child_selected_g_num);
+//   if(0 == 1) {
+//     exch_request = -1;
+//     PDM_g_num_t** check_vtx_gnum = NULL;
+//     PDM_part_to_part_reverse_iexch(ptp_vtx,
+//                                    PDM_MPI_COMM_KIND_P2P,
+//                                    PDM_STRIDE_CST_INTERLACED,
+//                                    PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+//                                    1,
+//                                    sizeof(PDM_g_num_t),
+//                                    NULL,
+//                                    (const void **)  extrp->vtx_ln_to_gn,
+//                                    NULL,
+//                                    (void ***)   &check_vtx_gnum,
+//                                    &exch_request);
 
-  /*
-   * Translate target_face_ln_to_gn in a new global numbering
-   */
+//     PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
+
+//     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+
+//       PDM_log_trace_connectivity_int(extrp->pextract_connectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
+//                                      extrp->pextract_connectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
+//                                      extrp->pextract_n_entity        [PDM_MESH_ENTITY_FACE          ][i_part],
+//                                      "pextract_face_vtx : ");
+
+//       PDM_log_trace_array_long(check_vtx_gnum[i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "check_vtx_gnum : ");
+//       PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "target_face_ln_to_gn : ");
+//       PDM_log_trace_array_long(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "target_vtx_ln_to_gn : ");
+//       // PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_CELL  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL  ][i_part], "parent_cell_ln_to_gn : ");
+//       PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE  ][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE  ][i_part], "parent_face_ln_to_gn : ");
+//       PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part], extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part], "parent_vtx_ln_to_gn : ");
+
+//       free(check_vtx_gnum[i_part]);
+//     }
+//     free(check_vtx_gnum);
+//   }
 
 
-  /*
-   * En fait tout est comme from target !!!!!!
-   *  Scothc / Hilbert --> Calcul le target
-   */
+//   // free(child_selected_g_num);
+
+//   /*
+//    * Translate target_face_ln_to_gn in a new global numbering
+//    */
 
 
-  /*
-   *  Pour la suite on deduit le face_ln_to_gn + nouveau numero et on recommence
-   */
+//   /*
+//    * En fait tout est comme from target !!!!!!
+//    *  Scothc / Hilbert --> Calcul le target
+//    */
 
-  /*
-   *  Attention le part_to_part peut en avoir besoin
-   */
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    if(part2_face_to_part1_face_idx[i_part] != NULL) {
-      free(part2_face_to_part1_face_idx[i_part]);
-    }
-    if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
-      free(part2_edge_to_part1_edge_idx[i_part]);
-    }
-    if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
-      free(part2_vtx_to_part1_vtx_idx[i_part]);
-    }
-  }
-  free(part2_face_to_part1_face_idx);
-  free(part2_edge_to_part1_edge_idx);
-  free(part2_vtx_to_part1_vtx_idx  );
 
-  if(ptp_entity != NULL) {
-    PDM_part_to_part_free(ptp_entity);
-  }
-  if(ptp_face != NULL) {
-    PDM_part_to_part_free(ptp_face);
-  }
-  if(ptp_edge != NULL) {
-    PDM_part_to_part_free(ptp_edge);
-  }
-  if(ptp_vtx != NULL) {
-    PDM_part_to_part_free(ptp_vtx);
-  }
+//   /*
+//    *  Pour la suite on deduit le face_ln_to_gn + nouveau numero et on recommence
+//    */
 
-}
+//   /*
+//    *  Attention le part_to_part peut en avoir besoin
+//    */
+//   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+//     if(part2_face_to_part1_face_idx[i_part] != NULL) {
+//       free(part2_face_to_part1_face_idx[i_part]);
+//     }
+//     if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
+//       free(part2_edge_to_part1_edge_idx[i_part]);
+//     }
+//     if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
+//       free(part2_vtx_to_part1_vtx_idx[i_part]);
+//     }
+//   }
+//   free(part2_face_to_part1_face_idx);
+//   free(part2_edge_to_part1_edge_idx);
+//   free(part2_vtx_to_part1_vtx_idx  );
+
+//   if(ptp_entity != NULL) {
+//     PDM_part_to_part_free(ptp_entity);
+//   }
+//   if(ptp_face != NULL) {
+//     PDM_part_to_part_free(ptp_face);
+//   }
+//   if(ptp_edge != NULL) {
+//     PDM_part_to_part_free(ptp_edge);
+//   }
+//   if(ptp_vtx != NULL) {
+//     PDM_part_to_part_free(ptp_vtx);
+//   }
+
+// }
 
 
 
@@ -2456,14 +2508,13 @@ _extract_part_and_reequilibrate_from_target2
 )
 {
   int          *pn_entity       = NULL;
-  PDM_g_num_t **entity_g_num    = NULL;
-  PDM_g_num_t **entity_location = NULL;
+  // PDM_g_num_t **entity_g_num    = NULL;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
-    entity_g_num = extrp->cell_ln_to_gn;
+    // entity_g_num = extrp->cell_ln_to_gn;
   } else {
     pn_entity    = extrp->n_face;
-    entity_g_num = extrp->face_ln_to_gn;
+    // entity_g_num = extrp->face_ln_to_gn;
   }
 
   int **part2_cell_to_part1_cell_idx = (int **) malloc( extrp->n_part_out * sizeof(int * ));
