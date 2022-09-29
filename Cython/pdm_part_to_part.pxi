@@ -388,8 +388,8 @@ cdef class PartToPart:
 
         else:
           dim_np  = self.n_elt1[i_part] * self.dict_cst_strid[request_id]
+          dim_np  = self.lpart1_to_part2_idx[i_part][self.n_elt1[i_part]] * self.dict_cst_strid[request_id]
 
-          # print("dim_np : ", dim_np)
 
           np_part1_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part1_data[i_part])
           PyArray_ENABLEFLAGS(np_part1_data, NPY.NPY_OWNDATA)
