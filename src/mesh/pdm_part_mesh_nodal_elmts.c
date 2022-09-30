@@ -18,6 +18,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
@@ -1016,6 +1017,130 @@ _connec_hexa
 
 
 
+/* A reprendre! */
+static int
+_binary_search
+(
+ const PDM_l_num_t  elem,
+ const PDM_l_num_t  array[],
+ const PDM_l_num_t  n,
+ PDM_bool_t        *in_array
+ )
+{
+  int l = 0;
+  int r = n;
+
+  *in_array = PDM_FALSE;
+
+  if (n < 1)
+    return 0;
+
+  while (l + 1 < r) {
+    int m = l + (r - l)/2;
+
+    if (elem < array[m])
+      r = m;
+    else
+      l = m;
+  }
+
+
+
+  if (array[l] == elem) {
+    *in_array = PDM_TRUE;
+    return l;
+
+  }
+
+  else if (array[l] < elem)
+    return l + 1;
+
+  else
+    return l;
+}
+
+
+static void _compute_cell_vtx_connectivity
+(
+ const PDM_l_num_t   n_cell,
+ const PDM_l_num_t   n_face,
+ const PDM_l_num_t  *face_vtx_idx,
+ const PDM_l_num_t  *face_vtx,
+ const PDM_l_num_t  *cell_face_idx,
+ const PDM_l_num_t  *cell_face,
+ PDM_l_num_t       **cell_vtx_idx,
+ PDM_l_num_t       **cell_vtx
+ )
+{
+  PDM_UNUSED(n_face);
+
+  const int dbg_enabled = 0;
+
+  *cell_vtx_idx = malloc (sizeof(int) * (n_cell + 1));
+  PDM_l_num_t *_cell_vtx_idx = *cell_vtx_idx;
+
+  _cell_vtx_idx[0] = 0;
+
+  size_t s_cell_vtx = 10 * n_cell;
+  *cell_vtx = malloc (sizeof(PDM_l_num_t) * s_cell_vtx);
+
+  PDM_bool_t already_in_cell;
+  int pos, i;
+  PDM_l_num_t icell, iface, ivtx, id_face, id_vtx;
+
+  /* Loop on cells */
+  PDM_l_num_t n_vtx_cell;
+  for (icell = 0; icell < n_cell; icell++) {
+
+    PDM_l_num_t *_cell_vtx = *cell_vtx + _cell_vtx_idx[icell];
+    n_vtx_cell = 0;
+
+    /* Loop on current cell's faces */
+    for (iface = cell_face_idx[icell]; iface < cell_face_idx[icell+1]; iface++) {
+      id_face = PDM_ABS (cell_face[iface]) - 1;
+      /* Loop on current face's vertices */
+      for (ivtx = face_vtx_idx[id_face]; ivtx < face_vtx_idx[id_face+1]; ivtx++) {
+        id_vtx = face_vtx[ivtx];
+
+        pos = _binary_search (id_vtx,
+                              _cell_vtx,
+                              n_vtx_cell,
+                             &already_in_cell);
+
+        if (already_in_cell == PDM_TRUE) {
+          continue;
+        }
+
+        if (n_vtx_cell + _cell_vtx_idx[icell] >= (int) s_cell_vtx) {
+          s_cell_vtx = PDM_MAX ((int) (2*s_cell_vtx), n_vtx_cell + _cell_vtx_idx[icell]);
+          *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * s_cell_vtx);
+          _cell_vtx = *cell_vtx + _cell_vtx_idx[icell];
+        }
+
+        for (i = n_vtx_cell; i > pos; i--) {
+          _cell_vtx[i] = _cell_vtx[i-1];
+        }
+        _cell_vtx[pos] = id_vtx;
+        n_vtx_cell++;
+
+      } // End of loop on current face's vertices
+
+    } // End of loop on current cell's faces
+
+    _cell_vtx_idx[icell+1] = _cell_vtx_idx[icell] + n_vtx_cell;
+
+    if (dbg_enabled) {
+      printf("cell #%d vtx =", icell);
+      for (int j = _cell_vtx_idx[icell]; j < _cell_vtx_idx[icell+1]; j++) {
+        printf(" %d", (*cell_vtx)[j]);
+      }
+      printf("\n");
+    }
+
+  } // End of loop on cells
+
+  *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * _cell_vtx_idx[n_cell]);
+}
 
 /*=============================================================================
  * Public function definitions
@@ -1123,6 +1248,7 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_std[id_block]->_parent_num           = NULL;
       pmne->sections_std[id_block]->_parent_entity_g_num  = NULL;
       pmne->sections_std[id_block]->cell_centers          = NULL;
+      pmne->sections_std[id_block]->cell_centers_to_compute = NULL;
       pmne->sections_std[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
       pmne->sections_std[id_block]->order                 = 1;
       pmne->sections_std[id_block]->ho_ordering           = NULL;
@@ -1163,6 +1289,7 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly2d[id_block]->_numabs               = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly2d[id_block]->n_part);
       pmne->sections_poly2d[id_block]->numabs_int            = NULL;
       pmne->sections_poly2d[id_block]->cell_centers          = NULL;
+      pmne->sections_poly2d[id_block]->cell_centers_to_compute = NULL;
       pmne->sections_poly2d[id_block]->_parent_num           = NULL;
       pmne->sections_poly2d[id_block]->_parent_entity_g_num  = NULL;
       pmne->sections_poly2d[id_block]->owner                 = PDM_OWNERSHIP_KEEP;
@@ -1208,6 +1335,7 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly3d[id_block]->_numabs              = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * pmne->sections_poly3d[id_block]->n_part);
       pmne->sections_poly3d[id_block]->numabs_int           = NULL;
       pmne->sections_poly3d[id_block]->cell_centers         = NULL;
+      pmne->sections_poly3d[id_block]->cell_centers_to_compute = NULL;
       pmne->sections_poly3d[id_block]->_parent_num          = NULL;
       pmne->sections_poly3d[id_block]->_parent_entity_g_num = NULL;
 
@@ -1611,14 +1739,14 @@ const int                         *parent_num,
 
 
   /* Compute cell-vertex connectivity */
-  // _compute_cell_vtx_connectivity (n_elt,
-  //                                 n_face,
-  //                                 facvtx_idx,
-  //                                 facvtx,
-  //                                 cellfac_idx,
-  //                                 cellfac,
-  //                                 &(block->_cellvtx_idx[id_part]),
-  //                                 &(block->_cellvtx[id_part]));
+  _compute_cell_vtx_connectivity (n_elt,
+                                  n_face,
+                                  facvtx_idx,
+                                  facvtx,
+                                  cellfac_idx,
+                                  cellfac,
+                                  &(block->_cellvtx_idx[id_part]),
+                                  &(block->_cellvtx[id_part]));
 
   /* for (int i = 0; i < n_elt; i++) { */
   /*   pmne->n_elt_abs = PDM_MAX (pmne->n_elt_abs, numabs[i]); */
@@ -2184,7 +2312,7 @@ PDM_part_mesh_nodal_create_from_part3d
   for (int i_part = 0; i_part < n_part; i_part++) {
     for (int i = 0; i < n_cell[i_part]; i++) {
 
-      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i+1];
+      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i];
       PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(l_face,
                                                      cell_face[i_part] + cell_face_idx[i_part][i],
                                                      face_vtx_idx[i_part],
@@ -2407,7 +2535,7 @@ PDM_part_mesh_nodal_create_from_part3d
     n_poly3d_part = 0;
     for (int i = 0; i < n_cell_courant; i++) {
       num_cell_parent_to_local_courant[i] = 0;
-      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i+1];
+      int l_face = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i];
       PDM_Mesh_nodal_elt_t cell_type = _type_cell_3D(l_face,
                                                      cell_face_courant + cell_face_idx_courant[i],
                                                      face_som_idx_courant,
@@ -2495,14 +2623,14 @@ PDM_part_mesh_nodal_create_from_part3d
           l_facsom_poly += face_som_idx_courant[i+1] - face_som_idx_courant[i];
         }
       }
-
+      log_trace("n_face_poly = %d\n", n_face_poly);
       facsom_poly_idx     = (int         *) malloc(sizeof(int        ) * (n_face_poly + 1));
       facsom_poly         = (int         *) malloc(sizeof(int        ) * l_facsom_poly);
       block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
 
       n_face_poly = 0;
       for (int i = 0; i < n_face_part; i++) {
-        if (tag_face_poly3d[i] == 0) {
+        if (tag_face_poly3d[i] >= 0) {
           block_face_ln_to_gn[n_face_poly++] = face_ln_to_gn[i_part][i];
         }
       }
@@ -2602,6 +2730,10 @@ PDM_part_mesh_nodal_create_from_part3d
                                         PDM_OWNERSHIP_KEEP);
 
     if (som_elts[4] > 0) {
+      PDM_log_trace_connectivity_int(cellfac_poly_idx,
+                                     cellfac_poly,
+                                     n_poly3d_part,
+                                     "cellfac_poly : ");
       PDM_part_mesh_nodal_elmts_block_poly3d_set(pmne,
                                                  id_bloc_poly_3d,
                                                  i_part,
@@ -2615,6 +2747,7 @@ PDM_part_mesh_nodal_create_from_part3d
                                                  numabs_poly3d,
                                                  num_parent_poly3d,
                                                  PDM_OWNERSHIP_KEEP);
+
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
   }
