@@ -1740,7 +1740,7 @@ const int                           id_part,
       int                         **cell_face_idx,
       int                         **cell_face,
       int                         **parent_num,
-      int                         **parent_entity_g_num
+      PDM_g_num_t                 **parent_entity_g_num
 )
 {
   if (pmne == NULL) {
@@ -2496,9 +2496,9 @@ PDM_part_mesh_nodal_create_from_part3d
         }
       }
 
-      facsom_poly_idx     = (int *) malloc(sizeof(int        ) * (n_face_poly + 1));
-      facsom_poly         = (int *) malloc(sizeof(int        ) * l_facsom_poly);
-      block_face_ln_to_gn = (int *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
+      facsom_poly_idx     = (int         *) malloc(sizeof(int        ) * (n_face_poly + 1));
+      facsom_poly         = (int         *) malloc(sizeof(int        ) * l_facsom_poly);
+      block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
 
       n_face_poly = 0;
       for (int i = 0; i < n_face_part; i++) {

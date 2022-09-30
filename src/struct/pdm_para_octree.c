@@ -1398,6 +1398,9 @@ _distribute_octants
       irank += 1 + PDM_morton_binary_search (n_ranks - (irank + 1),
                                              L->codes[i],
                                              morton_index + irank + 1);
+      if (irank >= n_ranks) {
+        PDM_error(__FILE__, __LINE__, 0, "irank = %d/%d\n", irank, n_ranks);
+      }
     }
     send_count[irank] += L->dim + 1;
   }
@@ -7727,7 +7730,7 @@ PDM_para_octree_build
     /*
      * Dilate extents
      */
-    double max_range = 0.;//1e-3;//
+    double max_range = 1e-12;
     for (int i = 0; i < dim; i++) {
       max_range = PDM_MAX (max_range,
                            _octree->global_extents[i+dim] - _octree->global_extents[i]);
@@ -12810,6 +12813,10 @@ PDM_para_octree_points_inside_boxes_block_frame
       free (tmp_coord);
     }
     //<<--
+
+    if (box_g_num1 != box_g_num) {
+      free(box_g_num1);
+    }
 
     *ptb_out        = ptb;
     // *dbox_pts_idx   = PDM_array_new_idx_from_sizes_int(block_pts_in_box_n, n_elt_block);

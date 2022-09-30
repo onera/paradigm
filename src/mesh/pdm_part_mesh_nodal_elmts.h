@@ -240,7 +240,7 @@ const int                           id_part,
       int                         **cell_face_idx,
       int                         **cell_face,
       int                         **parent_num,
-      int                         **parent_entity_g_num
+      PDM_g_num_t                 **parent_entity_g_num
 );
 
 int
