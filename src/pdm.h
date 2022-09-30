@@ -141,7 +141,7 @@ typedef enum {
   PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
   PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
   PDM_MPI_COMM_KIND_WIN_RMA                            = 6  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
-  
+
 } PDM_mpi_comm_kind_t;
 
 
@@ -352,19 +352,6 @@ PDM_Finalize
 (
 void
 );
-
-/**
- * \brief PDM_extents_conformize
- *
- * Correction extents to manage singular cases and di-symetrizes pb
- * eps = 1.e-3 is a standard value
- *
- */
-void
-PDM_extents_conformize(int    dim,
-                       double extents[],
-                       double eps);
-
 
 
 #ifdef __cplusplus
