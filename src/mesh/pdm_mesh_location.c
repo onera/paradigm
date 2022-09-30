@@ -9535,7 +9535,7 @@ PDM_mesh_location_compute_optim2
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 1;
+  const int dbg_enabled = 0;
   const int dim = 3;
 
   /* Octree parameters */

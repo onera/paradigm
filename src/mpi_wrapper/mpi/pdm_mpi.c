@@ -1955,6 +1955,7 @@ int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
                             recvbuf, recvcount,
                             _pdm_mpi_2_mpi_datatype(recvtype),
                             _pdm_mpi_2_mpi_comm(comm));
+  assert(code == MPI_SUCCESS);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -2571,8 +2572,8 @@ PDM_mpi_win_shared_create(PDM_MPI_Aint size,
 
   MPI_Info info;
   MPI_Info_create( &info );
-  MPI_Info_set(info, "no_locks", "true");
-  MPI_Info_set( info, "alloc_shared_noncontig", "true" );
+  // MPI_Info_set(info, "no_locks", "true");
+  // MPI_Info_set( info, "alloc_shared_noncontig", "true" );
 
   wins->win = MPI_WIN_NULL;
   wins->ptr = NULL;

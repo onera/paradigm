@@ -2302,8 +2302,17 @@ int main(int argc, char *argv[])
     PDM_mesh_location_tolerance_set(mesh_loc[i_mesh], tolerance);
     PDM_mesh_location_method_set(mesh_loc[i_mesh], loc_method);
 
-    // PDM_mesh_location_compute (mesh_loc[i_mesh]);
-    PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
+    char *env_var = NULL;
+    env_var = getenv ("PDM_MESH_LOCATION_NEW");
+    int algo = 0;
+    if (env_var != NULL) {
+      algo = atoi(env_var);
+    }
+    if(algo == 0) {
+      PDM_mesh_location_compute (mesh_loc[i_mesh]);
+    } else if(algo == 1) {
+      PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
+    }
 
     PDM_mesh_location_dump_times (mesh_loc[i_mesh]);
 

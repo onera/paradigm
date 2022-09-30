@@ -1133,6 +1133,7 @@ PDM_doctree_build
     PDM_mpi_win_shared_lock_all (0, wshared_entity_coord);
     PDM_mpi_win_shared_lock_all (0, wshared_entity_gnum);
     PDM_mpi_win_shared_lock_all (0, wshared_entity_init_location);
+    PDM_MPI_Barrier  (doct->comm_shared); // Enforce synchro to avoid latency due to other MPI CALL !! DO NOT REMOVE !!!
 
     PDM_g_num_t *shared_entity_gnum          = PDM_mpi_win_shared_get(wshared_entity_gnum );
     double      *shared_entity_coord         = PDM_mpi_win_shared_get(wshared_entity_coord);
@@ -1612,7 +1613,7 @@ PDM_doctree_build
   //-->>
   /* Remove doubles */
   int n_unit_op_equi_elt_block = PDM_part_to_block_n_elt_block_get (doct->ptb_unit_op_equi);
-  if (1) {
+  if (0 == 1) {
     log_trace("-- doctree block frame (before removing doubles) --\n");
     int sum_weight = 0;
     for (int i = 0; i < n_unit_op_equi_elt_block; i++) {
@@ -1673,7 +1674,7 @@ PDM_doctree_build
   doct->block_pts_in_box_g_num = block_pts_in_box_g_num;
   doct->block_pts_in_box_coord = block_pts_in_box_coord;
 
-  if (1) {
+  if (0 == 1) {
     PDM_g_num_t *dbox_g_num = PDM_part_to_block_block_gnum_get(doct->ptb_unit_op_equi);
     int *idx = PDM_array_new_idx_from_sizes_int(block_pts_in_box_n,
                                                 n_unit_op_equi_elt_block);

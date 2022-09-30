@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 
-  int reverse = 0;
+  int reverse = 1;
 
   /*
    *  Read args
@@ -732,6 +732,7 @@ int main(int argc, char *argv[])
   }
 
   PDM_mesh_location_compute_optim2 (mesh_loc);
+  // PDM_mesh_location_compute(mesh_loc);
 
   PDM_mesh_location_dump_times (mesh_loc);
 
@@ -987,7 +988,7 @@ int main(int argc, char *argv[])
         }
         //printf("distance = %e\n\n", dist);
         if (dist >= location_tolerance) {
-          printf("point %ld : located in %ld (instead of %ld), dist = %e\n",
+          printf("point "PDM_FMT_G_NUM" : located in "PDM_FMT_G_NUM" (instead of "PDM_FMT_G_NUM"), dist = %e\n",
                  pts_gnum[ipt],
                  p_location[ipt],
                  box_gnum,
