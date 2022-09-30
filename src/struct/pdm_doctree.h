@@ -110,6 +110,15 @@ PDM_doctree_dump_times
   PDM_doctree_t   *doct
 );
 
+void
+PDM_doctree_init_pts_location_get
+(
+  PDM_doctree_t   *doct,
+  int             *n_pts,
+  int            **equi_pts_init_location_idx,
+  int            **equi_pts_init_location
+);
+
 
 #ifdef  __cplusplus
 }

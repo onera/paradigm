@@ -270,6 +270,9 @@ PDM_doctree_create
   doct->block_pts_in_box_g_num = NULL;
   doct->block_pts_in_box_coord = NULL;
 
+  doct->dn_pts_equi                = 0;
+  doct->equi_pts_init_location_idx = NULL;
+  doct->equi_pts_init_location     = NULL;
   return doct;
 }
 
@@ -698,6 +701,7 @@ PDM_doctree_build
   // PDM_gnum_free(gnum_extract);
 
   int          dn_equi_tree     = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
+  doct->dn_pts_equi = dn_equi_tree;
   PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
   PDM_g_num_t* distrib_tree     = PDM_part_to_block_distrib_index_get(ptb_equi_box);
   log_trace("n_shared_boxes = %i / n_coarse_box = %i / dn_equi_tree = %i / n_extract_shared_boxes = %i \n", n_shared_boxes, n_coarse_box, dn_equi_tree, n_extract_shared_boxes);
@@ -979,9 +983,12 @@ PDM_doctree_build
     free(coarse_box_init_location_n);
 
     // A mettre dans la structure
-    free(equi_pts_init_location);
+    // free(equi_pts_init_location);
     free(equi_pts_init_location_n);
-    free(equi_pts_init_location_idx);
+    // free(equi_pts_init_location_idx);
+
+    doct->equi_pts_init_location_idx = equi_pts_init_location_idx;
+    doct->equi_pts_init_location     = equi_pts_init_location;
 
   }
 
@@ -1890,6 +1897,9 @@ PDM_doctree_free
     free(doct->block_pts_in_box_n    );
   }
 
+  free(doct->equi_pts_init_location_idx);
+  free(doct->equi_pts_init_location);
+
   PDM_part_to_block_free(doct->ptb_unit_op_equi);
 
   if(doct->local_tree_kind == PDM_DOCTREE_LOCAL_TREE_OCTREE ||
@@ -1907,6 +1917,20 @@ PDM_doctree_free
   PDM_timer_free(doct->timer);
 
   free(doct);
+}
+
+void
+PDM_doctree_init_pts_location_get
+(
+  PDM_doctree_t   *doct,
+  int             *n_pts,
+  int            **equi_pts_init_location_idx,
+  int            **equi_pts_init_location
+)
+{
+  *n_pts = doct->dn_pts_equi;
+  *equi_pts_init_location_idx = doct->equi_pts_init_location_idx;
+  *equi_pts_init_location     = doct->equi_pts_init_location;
 }
 
 
