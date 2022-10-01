@@ -12472,8 +12472,10 @@ PDM_mesh_location_compute_optim3
                   "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
       }
     }
-    // free(delt_extents1);
+    free(delt_extents1);
     free(dpts_coord);
+    free(delmt_g_num_geom);
+    free(dpts_g_num_geom);
 
 
     PDM_MPI_Barrier (ml->comm);
@@ -12574,6 +12576,7 @@ PDM_mesh_location_compute_optim3
          (void ***)        &tmp_delt_init_location2);
     int *delt_init_location2 = tmp_delt_init_location2[0];
     free(tmp_delt_init_location2);
+    free(delt_init_location_user);
 
     PDM_block_to_part_free(btp_elmt_geom_to_elmt_user);
 
@@ -12941,6 +12944,7 @@ PDM_mesh_location_compute_optim3
     free(delt_pts_uvw2         );
     free(part_elt_id           );
     free(delt_g_num_geom2);
+    free(delt_pts_g_num_geom);
 
     final_elt_pts_g_num_geom = realloc(final_elt_pts_g_num_geom, sizeof(PDM_g_num_t) * idx);
     final_elt_pts_coord      = realloc(final_elt_pts_coord     , sizeof(double     ) * idx*3);
@@ -12999,8 +13003,11 @@ PDM_mesh_location_compute_optim3
     }
     int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, dn_pts);
     free(final_elt_pts_triplet_n);
-    PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
+    free(final_elt_pts_triplet_idx);
 
+    // PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
+
+    PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -13227,7 +13234,7 @@ PDM_mesh_location_compute_optim3
                                                                                 (const int         **) &final_elt_pts_idx,
                                                                                 (const int         **) &final_elt_pts_triplet,
                                                                                 ml->comm);
-
+    free(final_elt_pts_triplet);
     // printf("Ola !!!");
     // abort(); // To remove
     // PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create((const PDM_g_num_t **) &delt_parent_g_num2,
@@ -13398,6 +13405,10 @@ PDM_mesh_location_compute_optim3
       free(select_pts_coord);
       free(n_select_pts);
     }
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(select_pts_init_location[ipart]);
+    }
+    free(select_pts_init_location);
 
 
     if (use_extracted_mesh) {
@@ -13411,8 +13422,10 @@ PDM_mesh_location_compute_optim3
     }
     for (int ipart = 0; ipart < n_part; ipart++) {
       free(select_elt_l_num[ipart]);
+      free(select_elt_init_location_user[ipart]);
     }
     free(select_elt_l_num);
+    free(select_elt_init_location_user);
 
     PDM_part_to_block_free(ptb_pts);
     PDM_part_to_block_free(ptb_elt);
