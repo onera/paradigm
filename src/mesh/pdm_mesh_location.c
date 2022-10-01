@@ -11987,23 +11987,30 @@ PDM_mesh_location_compute_optim3
 
     int use_extracted_pts = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
 
-    PDM_g_num_t **select_pts_g_num_user   = NULL;
-    double      **select_pts_coord        = NULL;
+    PDM_g_num_t **select_pts_g_num_user    = NULL;
+    double      **select_pts_coord         = NULL;
+    int         **select_pts_init_location = NULL;
     if (use_extracted_pts) {
       if (dbg_enabled) {
         log_trace("point cloud extraction %d / %d\n", l_n_pts[1], l_n_pts[0]);
       }
 
-      select_pts_g_num_user = malloc(n_part * sizeof(PDM_g_num_t * ));
-      select_pts_coord      = malloc(n_part * sizeof(double      * ));
+      select_pts_g_num_user    = malloc(n_part * sizeof(PDM_g_num_t * ));
+      select_pts_coord         = malloc(n_part * sizeof(double      * ));
+      select_pts_init_location = malloc(n_part * sizeof(int         * ));
 
       // Just extract gnum
       for (int ipart = 0; ipart < n_part; ipart++) {
-        select_pts_g_num_user[ipart] = malloc(    n_select_pts[ipart] * sizeof(PDM_g_num_t));
-        select_pts_coord     [ipart] = malloc(3 * n_select_pts[ipart] * sizeof(double     ));
+        select_pts_g_num_user   [ipart] = malloc(    n_select_pts[ipart] * sizeof(PDM_g_num_t));
+        select_pts_coord        [ipart] = malloc(3 * n_select_pts[ipart] * sizeof(double     ));
+        select_pts_init_location[ipart] = malloc(3 * n_select_pts[ipart] * sizeof(int        ));
 
         for (int i = 0; i < n_select_pts[ipart]; i++) {
           int j = select_pts_l_num[ipart][i];
+
+          select_pts_init_location[ipart][3*i  ] = i_rank;
+          select_pts_init_location[ipart][3*i+1] = ipart;
+          select_pts_init_location[ipart][3*i+2] = j+1;
 
           select_pts_g_num_user[ipart][i] = pcloud->gnum[ipart][j];
           for (int k = 0; k < 3; k++) {
@@ -12021,6 +12028,16 @@ PDM_mesh_location_compute_optim3
       n_select_pts            = pcloud->n_points;
       select_pts_g_num_user   = pcloud->gnum;
       select_pts_coord        = pcloud->coords;
+
+      select_pts_init_location = malloc(n_part * sizeof(int         * ));
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        select_pts_init_location[ipart] = malloc(3 * n_select_pts[ipart] * sizeof(int        ));
+        for (int i = 0; i < n_select_pts[ipart]; i++) {
+          select_pts_init_location[ipart][3*i  ] = i_rank;
+          select_pts_init_location[ipart][3*i+1] = ipart;
+          select_pts_init_location[ipart][3*i+2] = i+1;
+        }
+      }
     }
 
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -12172,14 +12189,16 @@ PDM_mesh_location_compute_optim3
     /*
      *  Redistribute evenly the selected points (ptb_geom)
      */
-    int **weight = malloc(sizeof(int *) * pcloud->n_part);
+    int **weight      = malloc(sizeof(int *) * pcloud->n_part);
+    int **pstride_one = malloc(sizeof(int *) * pcloud->n_part);
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      weight[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
+      weight     [ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
+      pstride_one[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
     }
 
     /* Use same extents for Hilbert encoding of pts and boxes?? */
     PDM_part_to_block_t *ptb_pts = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP, // TODO: Merge
+                                                                 PDM_PART_TO_BLOCK_POST_MERGE, // TODO: Merge
                                                                  1.,
                                                                  PDM_PART_GEOM_HILBERT,
                                                                  select_pts_coord,
@@ -12209,25 +12228,55 @@ PDM_mesh_location_compute_optim3
     }
 
     /* Exchange coordinates (do this with abstract distrib?) */
-    double *dpts_coord = NULL;
+    int    *blk_coord_n       = NULL;
+    double *tmp_blk_pts_coord = NULL;
     int request_pts_coord = -1;
     PDM_part_to_block_iexch(ptb_pts,
                             PDM_MPI_COMM_KIND_COLLECTIVE,
                             3 * sizeof(double),
-                            PDM_STRIDE_CST_INTERLACED,
+                            PDM_STRIDE_VAR_INTERLACED,
                             1,
-                            NULL,
+                            pstride_one,
                   (void **) select_pts_coord,
-                            NULL,
-                  (void **) &dpts_coord,
+                            &blk_coord_n,
+                  (void **) &tmp_blk_pts_coord,
                             &request_pts_coord);
 
     PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
 
+    double *dpts_coord = malloc(3 * dn_pts * sizeof(double));
+    int idx_read  = 0;
+    for(int i = 0; i < dn_pts; ++i) {
+      dpts_coord[3*i  ] = tmp_blk_pts_coord[3*idx_read  ];
+      dpts_coord[3*i+1] = tmp_blk_pts_coord[3*idx_read+1];
+      dpts_coord[3*i+2] = tmp_blk_pts_coord[3*idx_read+2];
+
+      idx_read += blk_coord_n[i];
+    }
+    free(blk_coord_n);
+    free(tmp_blk_pts_coord);
+
     /*
      * Exchange init_location of pts --> Is almost the selected with proc / part info
      */
+    int *dpts_init_location_pts_n = NULL;
+    int *dpts_init_location_pts   = NULL;
+    PDM_part_to_block_exch(ptb_pts,
+                           3 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           pstride_one,
+                 (void **) select_pts_init_location,
+                           &dpts_init_location_pts_n,
+                 (void **) &dpts_init_location_pts);
 
+    // int *dpts_init_location_pts_idx = PDM_array_new_idx_from_sizes_int(dpts_init_location_pts_n, dn_pts);
+    // free(dpts_init_location_pts_n);
+
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(pstride_one[ipart]);
+    }
+    free(pstride_one);
 
     if (dbg_enabled) {
       char filename[999];
@@ -12922,14 +12971,35 @@ PDM_mesh_location_compute_optim3
             (void ***)    &tmp_final_elt_pts_g_num);
     PDM_g_num_t *final_elt_pts_g_num = tmp_final_elt_pts_g_num[0];
     free(tmp_final_elt_pts_g_num);
-
     free(final_elt_pts_g_num_geom); // No longer used
 
     /*
      * Exchange init_location
      */
-    PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
+    int **tmp_final_elt_pts_triplet_n = NULL;
+    int **tmp_final_elt_pts_triplet   = NULL;
+    PDM_block_to_part_exch(btp_pts_gnum_geom_to_user,
+                           3 * sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           dpts_init_location_pts_n,
+                           dpts_init_location_pts,
+                          &tmp_final_elt_pts_triplet_n,
+            (void ***)    &tmp_final_elt_pts_triplet);
+    int *final_elt_pts_triplet_n = tmp_final_elt_pts_triplet_n[0];
+    int *final_elt_pts_triplet   = tmp_final_elt_pts_triplet  [0];
+    free(tmp_final_elt_pts_triplet_n);
+    free(tmp_final_elt_pts_triplet);
 
+    free(dpts_init_location_pts_n);
+    free(dpts_init_location_pts);
+
+    // Il faut merger les location ?? Gros doute la
+    for(int i = 0; i < idx; ++i) {
+      assert(final_elt_pts_triplet_n[i] == 1);
+    }
+    int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, dn_pts);
+    free(final_elt_pts_triplet_n);
+    PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
 
 
     /*
@@ -13045,9 +13115,7 @@ PDM_mesh_location_compute_optim3
         int head = final_elt_pts_idx[ielt  ];
         int tail = final_elt_pts_idx[ielt+1];
 
-        elt_pts_weight_stride[ielt] =
-        final_elt_pts_weight_idx[tail] -
-        final_elt_pts_weight_idx[head];
+        elt_pts_weight_stride[ielt] = final_elt_pts_weight_idx[tail] - final_elt_pts_weight_idx[head];
       }
       if (dbg_enabled) {
         PDM_log_trace_array_int(elt_pts_weight_stride, dn_elt2, "elt_pts_weight_stride : ");
@@ -13147,17 +13215,30 @@ PDM_mesh_location_compute_optim3
     /*
      *  Transfer location data from elt (current frame) to pts (user frame)
      */
-    printf("Ola !!!");
-    abort(); // To remove
-    PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create((const PDM_g_num_t **) &delt_parent_g_num2,
-                                                              (const int          *) &dn_elt2,
-                                                              1,
-                                                              (const PDM_g_num_t **) pcloud->gnum,
-                                                              (const int          *) pcloud->n_points,
-                                                              pcloud->n_part,
-                                                              (const int         **) &final_elt_pts_idx,
-                                                              (const PDM_g_num_t **) &final_elt_pts_g_num,
-                                                              ml->comm);
+    for(int i = 0; i < dn_elt2 + 1; ++i) {
+      final_elt_pts_idx[i] *= 3;
+    }
+
+    PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) &delt_parent_g_num2,
+                                                                                (const int          *) &dn_elt2,
+                                                                                1,
+                                                                                (const int          *) pcloud->n_points,
+                                                                                pcloud->n_part,
+                                                                                (const int         **) &final_elt_pts_idx,
+                                                                                (const int         **) &final_elt_pts_triplet,
+                                                                                ml->comm);
+
+    // printf("Ola !!!");
+    // abort(); // To remove
+    // PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create((const PDM_g_num_t **) &delt_parent_g_num2,
+    //                                                           (const int          *) &dn_elt2,
+    //                                                           1,
+    //                                                           (const PDM_g_num_t **) pcloud->gnum,
+    //                                                           (const int          *) pcloud->n_points,
+    //                                                           pcloud->n_part,
+    //                                                           (const int         **) &final_elt_pts_idx,
+    //                                                           (const PDM_g_num_t **) &final_elt_pts_g_num,
+    //                                                           ml->comm);
     free(final_elt_pts_idx);
     free(final_elt_pts_g_num);
 
