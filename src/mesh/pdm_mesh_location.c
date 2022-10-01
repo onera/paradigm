@@ -12114,9 +12114,8 @@ PDM_mesh_location_compute_optim3
 
     int use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
 
-    double      **select_elt_extents      = NULL;
-    PDM_g_num_t **select_elt_parent_g_num = NULL;
-    PDM_g_num_t **select_elt_g_num        = NULL;
+    double      **select_elt_extents    = NULL;
+    PDM_g_num_t **select_elt_g_num_user = NULL;
 
     if (use_extracted_mesh) {
       if (dbg_enabled) {
@@ -12124,11 +12123,10 @@ PDM_mesh_location_compute_optim3
       }
 
       select_elt_extents      = malloc(sizeof(double      *) * n_part);
-      select_elt_parent_g_num = malloc(sizeof(PDM_g_num_t *) * n_part);
-      select_elt_g_num        = malloc(sizeof(PDM_g_num_t *) * n_part);
+      select_elt_g_num_user = malloc(sizeof(PDM_g_num_t *) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        select_elt_extents     [ipart] = malloc(sizeof(double     ) * n_select_elt[ipart] * 6);
-        select_elt_parent_g_num[ipart] = malloc(sizeof(PDM_g_num_t) * n_select_elt[ipart]);
+        select_elt_extents   [ipart] = malloc(sizeof(double     ) * n_select_elt[ipart] * 6);
+        select_elt_g_num_user[ipart] = malloc(sizeof(PDM_g_num_t) * n_select_elt[ipart]);
         for (int i = 0; i < n_select_elt[ipart]; i++) {
           int elt_id = select_elt_l_num[ipart][i];
 
@@ -12136,42 +12134,18 @@ PDM_mesh_location_compute_optim3
                  elt_extents       [ipart] + 6*elt_id,
                  sizeof(double) * 6);
 
-          select_elt_parent_g_num[ipart][i] = elt_g_num[ipart][elt_id];
+          select_elt_g_num_user[ipart][i] = elt_g_num[ipart][elt_id];
         }
       }
-
-      /* Generate a compact global numbering for selected elements */
-      PDM_gen_gnum_t *gen_gnum_elt = PDM_gnum_create(3,
-                                                     n_part,
-                                                     PDM_FALSE,
-                                                     0.,
-                                                     ml->comm,
-                                                     PDM_OWNERSHIP_USER);
-      for (int ipart = 0; ipart < n_part; ipart++) {
-        PDM_gnum_set_from_parents(gen_gnum_elt,
-                                  ipart,
-                                  n_select_elt[ipart],
-                                  select_elt_parent_g_num[ipart]);
-      }
-
-      PDM_gnum_compute(gen_gnum_elt);
-
-      for (int ipart = 0; ipart < n_part; ipart++) {
-        select_elt_g_num[ipart] = PDM_gnum_get(gen_gnum_elt, ipart);
-      }
-
-      PDM_gnum_free(gen_gnum_elt);
-
     }
     else {
       if (dbg_enabled) {
         log_trace("no mesh extraction\n");
       }
       free(n_select_elt);
-      n_select_elt            = pn_elt;
-      select_elt_extents      = elt_extents;
-      select_elt_parent_g_num = elt_g_num;
-      select_elt_g_num        = elt_g_num;
+      n_select_elt          = pn_elt;
+      select_elt_extents    = elt_extents;
+      select_elt_g_num_user = elt_g_num;
     }
 
 
@@ -12232,9 +12206,59 @@ PDM_mesh_location_compute_optim3
       PDM_vtk_write_point_cloud(filename,
                                 dn_pts,
                                 dpts_coord,
-                                dpts_parent_g_num,
+                                dpts_g_num_user,
                                 NULL);
     }
+
+    /*
+     *  Redistribute evenly the selected boxes (ptb_geom)
+     */
+    double **select_box_center = malloc(sizeof(double *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      select_box_center[ipart] = malloc(sizeof(double) * n_select_elt[ipart] * 3);
+      for (int i = 0; i < n_select_elt[ipart]; i++) {
+        for (int j = 0; j < 3; j++) {
+          select_box_center[ipart][3*i+j] = 0.5*(select_elt_extents[ipart][6*i+j  ] +
+                                                 select_elt_extents[ipart][6*i+j+3]);
+        }
+      }
+    }
+
+    weight = malloc(sizeof(int *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      weight[ipart] = PDM_array_const_int(n_select_elt[ipart], 1);
+    }
+
+    PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                 1.,
+                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 select_box_center,
+                                                                 select_elt_g_num_user,
+                                                                 weight,
+                                                                 n_select_elt,
+                                                                 n_part,
+                                                                 ml->comm);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(select_box_center[ipart]);
+      free(weight[ipart]);
+    }
+    free(select_box_center);
+    free(weight);
+
+
+    int dn_elt1 = PDM_part_to_block_n_elt_block_get(ptb_elt);
+    PDM_g_num_t *delt_g_num_user = PDM_part_to_block_block_gnum_get(ptb_elt);
+    if (dbg_enabled) {
+      PDM_log_trace_array_long(delt_g_num_user, dn_elt1, "delt_g_num_user : ");
+    }
+
+
+
+
+
+
 
 
     PDM_part_to_block_free(ptb_pts);
