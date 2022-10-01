@@ -208,6 +208,18 @@ main
   PDM_g_num_t* parent_gnum = PDM_part_to_block_block_gnum_get   (ptb);
   PDM_g_num_t* distrib_pts = PDM_part_to_block_distrib_index_get(ptb);
 
+  /*
+   * Pour le retour :
+   *   On garde le block de parent_num
+   *   On fait le init_location
+   *   On traite tout sur la numerotation hilbert (jusq'au bout de la localisation)
+   *   On traduit le resultats mesh_pts en faisant PDM_block_to_part()
+   *     block = hilbert
+   *     part  = Résultats de la localisation en gnumm_hilbert puis on traduit
+   *   Un exhange de gnum          -> parent_gnum (Update de la connectivité  )
+   *   Un echange de init_location
+   */
+
   if(0 == 1) {
     PDM_log_trace_array_long(distrib_pts, n_rank+1, "distrib_pts :: ");
     PDM_log_trace_array_long(parent_gnum, n_parent, "parent_gnum :: ");

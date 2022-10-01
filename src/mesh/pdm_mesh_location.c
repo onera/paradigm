@@ -11634,6 +11634,545 @@ PDM_mesh_location_compute_optim2
   PDM_timer_resume(ml->timer);
 }
 
+
+
+
+void
+PDM_mesh_location_compute_optim3
+(
+ PDM_mesh_location_t        *ml
+)
+{
+  /*
+   *  Parameters
+   */
+  const double tolerance = 1e-6;
+  float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
+
+  const int dbg_enabled = 0;
+  const int dim = 3;
+
+  /* Octree parameters */
+  const int octree_depth_max             = 31;
+  const int octree_points_in_leaf_max    = 1;
+  const int octree_build_leaf_neighbours = 0;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (ml->comm, &i_rank);
+  PDM_MPI_Comm_size (ml->comm, &n_rank);
+
+
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
+  PDM_MPI_Barrier (ml->comm);
+  ml->times_elapsed[BEGIN] = PDM_timer_elapsed (ml->timer);
+  ml->times_cpu    [BEGIN] = PDM_timer_cpu     (ml->timer);
+  ml->times_cpu_u  [BEGIN] = PDM_timer_cpu_user(ml->timer);
+  ml->times_cpu_s  [BEGIN] = PDM_timer_cpu_sys (ml->timer);
+
+  b_t_elapsed = ml->times_elapsed[BEGIN];
+  b_t_cpu     = ml->times_cpu    [BEGIN];
+  b_t_cpu_u   = ml->times_cpu_u  [BEGIN];
+  b_t_cpu_s   = ml->times_cpu_s  [BEGIN];
+  PDM_timer_resume(ml->timer);
+
+
+  ml->points_in_elements = malloc(sizeof(_points_in_element_t) * ml->n_point_cloud);
+
+  /*
+   *  Compute global extents of source mesh
+   *  -------------------------------------
+   */
+
+  /* Create dummy part_mesh_nodal */
+  PDM_part_mesh_nodal_elmts_t *pmne = _mesh_nodal_to_pmesh_nodal_elmts(ml->mesh_nodal);
+
+  /* Build the bounding boxes of all mesh elements
+    (concatenate nodal blocks for each part) */
+  int n_block = 0;
+  int n_part  = 0;
+  int *blocks_id = NULL;
+
+  if (ml->mesh_nodal != NULL) {
+    n_block   = PDM_Mesh_nodal_n_blocks_get (ml->mesh_nodal);
+    n_part    = PDM_Mesh_nodal_n_part_get   (ml->mesh_nodal);
+    blocks_id = PDM_Mesh_nodal_blocks_id_get(ml->mesh_nodal);
+  }
+
+
+  int                   *pn_elt      = malloc(sizeof(int                   ) * n_part);
+  PDM_g_num_t          **elt_g_num   = malloc(sizeof(PDM_g_num_t          *) * n_part);
+  double               **elt_extents = malloc(sizeof(double               *) * n_part);
+  PDM_Mesh_nodal_elt_t **elt_type    = malloc(sizeof(PDM_Mesh_nodal_elt_t *) * n_part);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
+                                          ipart);
+
+    pn_elt     [ipart] = n_elt;
+    elt_g_num  [ipart] = malloc(sizeof(PDM_g_num_t         ) * n_elt);
+    elt_extents[ipart] = malloc(sizeof(double              ) * n_elt * 6);
+    elt_type   [ipart] = malloc(sizeof(PDM_Mesh_nodal_elt_t) * n_elt);
+    int idx = 0;
+    for (int iblock = 0; iblock < n_block; iblock++) {
+      int id_block = blocks_id[iblock];
+      int n_elt_in_block = PDM_Mesh_nodal_block_n_elt_get(ml->mesh_nodal,
+                                                          id_block,
+                                                          ipart);
+      double *_extents = malloc(sizeof(double) * n_elt_in_block * 6);
+      PDM_Mesh_nodal_compute_cell_extents(ml->mesh_nodal,
+                                          id_block,
+                                          ipart,
+                                          ml->tolerance,
+                                          _extents);
+
+
+      PDM_g_num_t *_elt_g_num = PDM_Mesh_nodal_g_num_get(ml->mesh_nodal,
+                                                         id_block,
+                                                         ipart);
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get(ml->mesh_nodal,
+                                                                 id_block);
+
+      int *parent_num = PDM_Mesh_nodal_block_parent_num_get(ml->mesh_nodal,
+                                                            id_block,
+                                                            ipart);
+
+      for (int ielt = 0; ielt < n_elt_in_block; ielt++) {
+        idx = ielt;
+        if (parent_num) {
+          idx = parent_num[ielt];
+        }
+        elt_g_num[ipart][idx] = _elt_g_num[ielt];
+        elt_type [ipart][idx] = t_elt;
+        memcpy(elt_extents[ipart] + 6*idx, _extents + 6*ielt, sizeof(double)*6);
+      }
+      free(_extents);
+    }
+  }
+
+  if (dbg_enabled) {
+    int     *pn_vtx     = malloc(sizeof(int     ) * n_part);
+    double **pvtx_coord = malloc(sizeof(double *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      pvtx_coord[ipart] = (double *) PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
+                                                                 ipart);
+
+      PDM_g_num_t *pvtx_ln_to_gn = NULL;
+      pn_vtx[ipart] = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
+                                                           ipart,
+                                                           &pvtx_ln_to_gn);
+    }
+    _dump_pmne(ml->comm,
+               "init_pmne",
+               pmne,
+               n_part,
+               elt_g_num,
+               pn_vtx,
+               pvtx_coord);
+    free(pn_vtx    );
+    free(pvtx_coord);
+  }
+
+  double l_mesh_extents[6] = {  HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                               -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal, ipart);
+    for (int i = 0; i < n_elt; i++) {
+      for (int j = 0; j < 3; j++) {
+        l_mesh_extents[j  ] = PDM_MIN(l_mesh_extents[j  ], elt_extents[ipart][6*i+j  ]);
+        l_mesh_extents[j+3] = PDM_MAX(l_mesh_extents[j+3], elt_extents[ipart][6*i+j+3]);
+      }
+    }
+  }
+
+  double g_mesh_extents[6];
+  PDM_MPI_Allreduce(l_mesh_extents,   g_mesh_extents,   3,
+                    PDM_MPI_DOUBLE, PDM_MPI_MIN, ml->comm);
+  PDM_MPI_Allreduce(l_mesh_extents+3, g_mesh_extents+3, 3,
+                    PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+
+  if (dbg_enabled && i_rank == 0) {
+    printf("g_mesh_extents = %f %f %f / %f %f %f\n",
+           g_mesh_extents[0], g_mesh_extents[1], g_mesh_extents[2],
+           g_mesh_extents[3], g_mesh_extents[4], g_mesh_extents[5]);
+  }
+
+  PDM_MPI_Barrier (ml->comm);
+  PDM_timer_hang_on(ml->timer);
+  e_t_elapsed = PDM_timer_elapsed (ml->timer);
+  e_t_cpu     = PDM_timer_cpu     (ml->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
+
+  ml->times_elapsed[BUILD_BOUNDING_BOXES] += e_t_elapsed - b_t_elapsed;
+  ml->times_cpu    [BUILD_BOUNDING_BOXES] += e_t_cpu     - b_t_cpu;
+  ml->times_cpu_u  [BUILD_BOUNDING_BOXES] += e_t_cpu_u   - b_t_cpu_u;
+  ml->times_cpu_s  [BUILD_BOUNDING_BOXES] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(ml->timer);
+
+  /*
+  *  Store cell vertex connectivity
+  *  ------------------------------
+  */
+
+  _store_cell_vtx(ml);
+
+  PDM_MPI_Barrier (ml->comm);
+  PDM_timer_hang_on(ml->timer);
+  e_t_elapsed = PDM_timer_elapsed (ml->timer);
+  e_t_cpu     = PDM_timer_cpu     (ml->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
+
+  ml->times_elapsed[STORE_CONNECTIVITY] += e_t_elapsed - b_t_elapsed;
+  ml->times_cpu    [STORE_CONNECTIVITY] += e_t_cpu     - b_t_cpu;
+  ml->times_cpu_u  [STORE_CONNECTIVITY] += e_t_cpu_u   - b_t_cpu_u;
+  ml->times_cpu_s  [STORE_CONNECTIVITY] += e_t_cpu_s   - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(ml->timer);
+
+
+  /* Big loop on point clouds */
+  for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+
+    if (dbg_enabled) {
+      log_trace("Point cloud %d\n", icloud);
+    }
+
+    _point_cloud_t *pcloud = ml->point_clouds + icloud;
+
+    if (dbg_enabled) {
+      char name[999];
+      sprintf(name, "mesh_location_point_cloud_%d", icloud);
+      _dump_point_cloud(name,
+                        ml->comm,
+                        pcloud->n_part,
+                        pcloud->n_points,
+                        pcloud->coords,
+                        pcloud->gnum,
+                        0,
+                        NULL,
+                        NULL);
+    }
+
+    /*
+     *  Extract points that intersect the source mesh global extents
+     *  Brute force (could be accelerated using octree)
+     */
+    int  *n_select_pts     = malloc(sizeof(int  ) * pcloud->n_part);
+    int **select_pts_l_num = malloc(sizeof(int *) * pcloud->n_part);
+
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+
+      n_select_pts    [ipart] = 0;
+      select_pts_l_num[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
+
+      for (int i = 0; i < pcloud->n_points[ipart]; i++) {
+        int inside = 1;
+        for (int j = 0; j < 3; j++) {
+          if (pcloud->coords[ipart][3*i+j] < g_mesh_extents[j  ] ||
+              pcloud->coords[ipart][3*i+j] > g_mesh_extents[j+3]) {
+            inside = 0;
+            break;
+          }
+        }
+
+        if (inside) {
+          select_pts_l_num[ipart][n_select_pts[ipart]++] = i;
+        }
+      } // End of loop on current parition's points
+
+      select_pts_l_num[ipart] = realloc(select_pts_l_num[ipart],
+                                        sizeof(int) * n_select_pts[ipart]);
+
+    } // End of loop on current point cloud's partitions
+
+    /* Compute global number of selected points */
+    PDM_g_num_t l_n_pts[2] = {0, 0};
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      l_n_pts[0] += pcloud->n_points[ipart];
+      l_n_pts[1] += n_select_pts    [ipart];
+    }
+
+    PDM_g_num_t g_n_pts[2];
+    PDM_MPI_Allreduce(l_n_pts, g_n_pts, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
+
+
+    if (g_n_pts[1] == 0) {
+      /* We extracted zero points, take a shortcut */
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        free(select_pts_l_num[ipart]);
+      }
+      free(n_select_pts);
+      free(select_pts_l_num);
+
+
+      /* Result from mesh PoV */
+      if (ml->reverse_result) {
+        _points_in_element_t *pts_in_elt = ml->points_in_elements + icloud;
+
+        pts_in_elt->n_part = n_part;
+        pts_in_elt->n_elts = malloc(sizeof(int) * n_part);
+        memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
+
+        pts_in_elt->pts_inside_idx   = malloc(sizeof(int         *) * n_part);
+        pts_in_elt->gnum             = malloc(sizeof(PDM_g_num_t *) * n_part);
+        pts_in_elt->coords           = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->uvw              = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->projected_coords = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->weights_idx      = malloc(sizeof(int         *) * n_part);
+        pts_in_elt->weights          = malloc(sizeof(double      *) * n_part);
+        pts_in_elt->dist2            = malloc(sizeof(double      *) * n_part);
+
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          pts_in_elt->pts_inside_idx  [ipart] = PDM_array_zeros_int(pn_elt[ipart] + 1);
+          pts_in_elt->gnum            [ipart] = malloc(sizeof(PDM_g_num_t) * 0);
+          pts_in_elt->coords          [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->uvw             [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->projected_coords[ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->weights_idx     [ipart] = malloc(sizeof(int        ) * 0);
+          pts_in_elt->weights         [ipart] = malloc(sizeof(double     ) * 0);
+          pts_in_elt->dist2           [ipart] = malloc(sizeof(double     ) * 0);
+        }
+      }
+
+      /* Result from point cloud PoV */
+      pcloud->n_located        = malloc(sizeof(int          ) * pcloud->n_part);
+      pcloud->n_un_located     = malloc(sizeof(int          ) * pcloud->n_part);
+      pcloud->located          = malloc(sizeof(int         *) * pcloud->n_part);
+      pcloud->un_located       = malloc(sizeof(int         *) * pcloud->n_part);
+      pcloud->location         = malloc(sizeof(PDM_g_num_t *) * pcloud->n_part);
+      pcloud->projected_coords = malloc(sizeof(double      *) * pcloud->n_part);
+      pcloud->dist2            = malloc(sizeof(double      *) * pcloud->n_part);
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        pcloud->n_located   [ipart] = 0;
+        pcloud->n_un_located[ipart] = pcloud->n_points[ipart];
+
+        pcloud->located   [ipart] = malloc(sizeof(int) * pcloud->n_located   [ipart]);
+        pcloud->un_located[ipart] = malloc(sizeof(int) * pcloud->n_un_located[ipart]);
+
+        for (int i = 0; i < pcloud->n_points[ipart]; i++) {
+          pcloud->un_located[ipart][i] = i+1;
+        }
+
+        pcloud->location        [ipart] = malloc(sizeof(PDM_g_num_t) * 0);
+        pcloud->projected_coords[ipart] = malloc(sizeof(double     ) * 0);
+        pcloud->dist2           [ipart] = malloc(sizeof(double     ) * 0);
+      }
+
+
+      continue; // move on the next point cloud
+    }
+
+
+
+    int use_extracted_pts = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
+
+    PDM_g_num_t **select_pts_parent_g_num = NULL;
+    PDM_g_num_t **select_pts_g_num        = NULL;
+    double      **select_pts_coord        = NULL;
+    if (use_extracted_pts) {
+      if (dbg_enabled) {
+        log_trace("point cloud extraction %d / %d\n", l_n_pts[1], l_n_pts[0]);
+      }
+      _point_cloud_extract_selection(ml->comm,
+                                     pcloud,
+                                     n_select_pts,
+                                     select_pts_l_num,
+                                     &select_pts_parent_g_num,
+                                     &select_pts_g_num,
+                                     &select_pts_coord);
+    }
+    else {
+      /* We keep the whole point cloud */
+      if (dbg_enabled) {
+        log_trace("no point cloud extraction\n");
+      }
+      free(n_select_pts);
+      n_select_pts            = pcloud->n_points;
+      select_pts_parent_g_num = pcloud->gnum;
+      select_pts_g_num        = pcloud->gnum;
+      select_pts_coord        = pcloud->coords;
+    }
+
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(select_pts_l_num[ipart]);
+    }
+    free(select_pts_l_num);
+
+
+    /*
+     *  Compute global extents of extracted point cloud
+     */
+    double l_pts_extents[6] = {
+      HUGE_VAL, HUGE_VAL, HUGE_VAL,
+      -HUGE_VAL, -HUGE_VAL, -HUGE_VAL
+    };
+
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      for (int i = 0; i < n_select_pts[ipart]; i++) {
+        for (int j = 0; j < 3; j++) {
+          l_pts_extents[j  ] = PDM_MIN(l_pts_extents[j  ], select_pts_coord[ipart][3*i + j]);
+          l_pts_extents[j+3] = PDM_MAX(l_pts_extents[j+3], select_pts_coord[ipart][3*i + j]);
+        }
+      }
+    }
+
+    double g_pts_extents[6];
+    PDM_MPI_Allreduce(l_pts_extents,   g_pts_extents,   3,
+                      PDM_MPI_DOUBLE, PDM_MPI_MIN, ml->comm);
+    PDM_MPI_Allreduce(l_pts_extents+3, g_pts_extents+3, 3,
+                      PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+
+    if (dbg_enabled && i_rank == 0) {
+      printf("  g_pts_extents = %f %f %f / %f %f %f\n",
+             g_pts_extents[0], g_pts_extents[1], g_pts_extents[2],
+             g_pts_extents[3], g_pts_extents[4], g_pts_extents[5]);
+    }
+
+
+
+    /*
+     *  Select elements whose bounding box intersect
+     *  the global extents of the extracted point clouds
+     *  Brute force (could be accelerated using bbtree)
+     */
+    int  *n_select_elt     = malloc(sizeof(int  ) * n_part);
+    int **select_elt_l_num = malloc(sizeof(int *) * n_part);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
+                                            ipart);
+
+      n_select_elt[ipart] = 0;
+      select_elt_l_num[ipart] = malloc(sizeof(int) * n_elt);
+
+      for (int ielt = 0; ielt < n_elt; ielt++) {
+
+        double *box_min = elt_extents[ipart] + 6*ielt;
+        double *box_max = box_min + 3;
+
+        int intersect = 1;
+        for (int j = 0; j < 3; j++) {
+          if (box_min[j] > g_pts_extents[j+3] ||
+              box_max[j] < g_pts_extents[j]) {
+            intersect = 0;
+            break;
+          }
+        }
+
+        if (intersect) {
+          select_elt_l_num[ipart][n_select_elt[ipart]++] = ielt;
+        }
+
+      } // End of loop on current part's boxes
+
+      select_elt_l_num[ipart] = realloc(select_elt_l_num[ipart],
+                                        sizeof(int) * n_select_elt[ipart]);
+
+    } // End of loop on mesh parts
+
+    /* Compute global number of selected elements */
+    PDM_g_num_t l_n_elt[2] = {0, 0};
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
+                                            ipart);
+      l_n_elt[0] += n_elt;
+      l_n_elt[1] += n_select_elt[ipart];
+    }
+
+    PDM_g_num_t g_n_elt[2];
+    PDM_MPI_Allreduce(l_n_elt, g_n_elt, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
+
+    int use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
+
+    double      **select_elt_extents      = NULL;
+    PDM_g_num_t **select_elt_parent_g_num = NULL;
+    PDM_g_num_t **select_elt_g_num        = NULL;
+
+    if (use_extracted_mesh) {
+      if (dbg_enabled) {
+        log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
+      }
+
+      select_elt_extents      = malloc(sizeof(double      *) * n_part);
+      select_elt_parent_g_num = malloc(sizeof(PDM_g_num_t *) * n_part);
+      select_elt_g_num        = malloc(sizeof(PDM_g_num_t *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        select_elt_extents     [ipart] = malloc(sizeof(double     ) * n_select_elt[ipart] * 6);
+        select_elt_parent_g_num[ipart] = malloc(sizeof(PDM_g_num_t) * n_select_elt[ipart]);
+        for (int i = 0; i < n_select_elt[ipart]; i++) {
+          int elt_id = select_elt_l_num[ipart][i];
+
+          memcpy(select_elt_extents[ipart] + 6*i,
+                 elt_extents       [ipart] + 6*elt_id,
+                 sizeof(double) * 6);
+
+          select_elt_parent_g_num[ipart][i] = elt_g_num[ipart][elt_id];
+        }
+      }
+
+      /* Generate a compact global numbering for selected elements */
+      PDM_gen_gnum_t *gen_gnum_elt = PDM_gnum_create(3,
+                                                     n_part,
+                                                     PDM_FALSE,
+                                                     0.,
+                                                     ml->comm,
+                                                     PDM_OWNERSHIP_USER);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        PDM_gnum_set_from_parents(gen_gnum_elt,
+                                  ipart,
+                                  n_select_elt[ipart],
+                                  select_elt_parent_g_num[ipart]);
+      }
+
+      PDM_gnum_compute(gen_gnum_elt);
+
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        select_elt_g_num[ipart] = PDM_gnum_get(gen_gnum_elt, ipart);
+      }
+
+      PDM_gnum_free(gen_gnum_elt);
+
+    }
+    else {
+      if (dbg_enabled) {
+        log_trace("no mesh extraction\n");
+      }
+      free(n_select_elt);
+      n_select_elt            = pn_elt;
+      select_elt_extents      = elt_extents;
+      select_elt_parent_g_num = elt_g_num;
+      select_elt_g_num        = elt_g_num;
+    }
+
+
+
+
+  } /* End icloud */
+
+
+}
+
 /**
  *
  * \brief Get the number of cells
