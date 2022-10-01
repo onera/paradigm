@@ -1312,8 +1312,6 @@ _extract_part_and_reequilibrate_nodal_from_target
   int i_rank;
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
-  printf("_extract_part_and_reequilibrate_nodal_from_target \n");
-
   extrp->pextract_n_entity[entity_type] = (int *) malloc(extrp->n_part_out * sizeof(int          ));
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     extrp->pextract_n_entity[entity_type][i_part] = extrp->n_target[i_part];
