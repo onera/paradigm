@@ -12346,10 +12346,10 @@ PDM_mesh_location_compute_optim3
     double      *box_pts_coord = NULL;
 
     int dn_elt2 = 0;
-    PDM_g_num_t *delt_g_num2    = NULL;
-    int         *delt_pts_n2     = NULL;
-    PDM_g_num_t *delt_pts_g_num2 = NULL;
-    double      *delt_pts_coord2 = NULL;
+    PDM_g_num_t *delt_g_num_geom2 = NULL;
+    int         *delt_pts_n2      = NULL;
+    PDM_g_num_t *delt_pts_g_num2  = NULL;
+    double      *delt_pts_coord2  = NULL;
 
     char *env_var_oct = getenv("OCTREE_SHARED");
     int use_shared_tree = 0;
@@ -12397,8 +12397,8 @@ PDM_mesh_location_compute_optim3
           dn_elt2 = PDM_part_to_block_n_elt_block_get(ptb_pib);
           PDM_g_num_t *_g_num = PDM_part_to_block_block_gnum_get(ptb_pib);
 
-          delt_g_num2 = malloc(sizeof(PDM_g_num_t) * dn_elt2);
-          memcpy(delt_g_num2, _g_num, sizeof(PDM_g_num_t) * dn_elt2);
+          delt_g_num_geom2 = malloc(sizeof(PDM_g_num_t) * dn_elt2);
+          memcpy(delt_g_num_geom2, _g_num, sizeof(PDM_g_num_t) * dn_elt2);
 
           PDM_part_to_block_free(ptb_pib);
 
@@ -12446,7 +12446,7 @@ PDM_mesh_location_compute_optim3
 
     if (dbg_enabled) {
       log_trace("before compression\n");
-      PDM_log_trace_array_long(delt_g_num2, dn_elt2, "delt_g_num2 : ");
+      PDM_log_trace_array_long(delt_g_num_geom2, dn_elt2, "delt_g_num_geom2 : ");
     }
 
     /* TODO: maybe take into account element type to yield better weights ?? */
@@ -12464,18 +12464,18 @@ PDM_mesh_location_compute_optim3
     for (int i = 0; i < dn_elt2; i++) {
       if (delt_pts_n2[i] > 0) {
         delt_pts_n2[tmp_dn_elt2] = delt_pts_n2[i];
-        delt_g_num2[tmp_dn_elt2] = delt_g_num2[i];
+        delt_g_num_geom2[tmp_dn_elt2] = delt_g_num_geom2[i];
         tmp_dn_elt2++;
       }
     }
     dn_elt2 = tmp_dn_elt2;
 
-    delt_g_num2 = realloc(delt_g_num2, sizeof(PDM_g_num_t) * dn_elt2);
+    delt_g_num_geom2 = realloc(delt_g_num_geom2, sizeof(PDM_g_num_t) * dn_elt2);
     delt_pts_n2 = realloc(delt_pts_n2, sizeof(int        ) * dn_elt2);
 
     if (dbg_enabled) {
       log_trace("after compression\n");
-      PDM_log_trace_array_long(delt_g_num2, dn_elt2, "delt_g_num2 : ");
+      PDM_log_trace_array_long(delt_g_num_geom2, dn_elt2, "delt_g_num_geom2 : ");
       int total_weight = 0;
       for (int i = 0; i < dn_elt2; i++) {
         total_weight += delt_pts_n2[i];
@@ -12488,12 +12488,12 @@ PDM_mesh_location_compute_optim3
 
     /*
      * Comment faire le lien avec le extract part ?
-     *    delt_g_num2 = Numero geometrique mais requilibré fonction de la soliciation
+     *    delt_g_num_geom2 = Numero geometrique mais requilibré fonction de la soliciation
      *    Je pense que c'est presque un block_to_block ...
      */
 
     PDM_block_to_part_t* btp_elmt_geom_to_elmt_user = PDM_block_to_part_create(distrib_elt1,
-                                                        (const PDM_g_num_t **) &delt_g_num2,
+                                                        (const PDM_g_num_t **) &delt_g_num_geom2,
                                                                                &dn_elt2,
                                                                                1,
                                                                                ml->comm);
@@ -12513,7 +12513,8 @@ PDM_mesh_location_compute_optim3
     PDM_g_num_t *delt_parent_g_num2 = tmp_delt_parent_g_num2[0];
     free(tmp_delt_parent_g_num2);
 
-    PDM_g_num_t **tmp_delt_init_location2 = NULL;
+    // TODO : Adpat when we merge elmt and take : delt_init_location_user_unified
+    int **tmp_delt_init_location2 = NULL;
     PDM_block_to_part_exch(btp_elmt_geom_to_elmt_user,
                            3 * sizeof(int),
                            PDM_STRIDE_CST_INTERLACED,
@@ -12521,9 +12522,8 @@ PDM_mesh_location_compute_optim3
                            delt_init_location_user,
                            NULL,
          (void ***)        &tmp_delt_init_location2);
-    PDM_g_num_t *delt_init_location2 = tmp_delt_init_location2[0];
+    int *delt_init_location2 = tmp_delt_init_location2[0];
     free(tmp_delt_init_location2);
-
 
     PDM_block_to_part_free(btp_elmt_geom_to_elmt_user);
 
@@ -12636,6 +12636,104 @@ PDM_mesh_location_compute_optim3
     if (dbg_enabled) {
       log_trace("Yeah :D\n");
     }
+
+    PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+    PDM_extract_part_part_mesh_nodal_get(extrp,
+                                         &extract_pmne,
+                                         PDM_OWNERSHIP_USER);
+
+    PDM_part_to_part_t *ptp_elt = NULL;
+    PDM_extract_part_part_to_part_get(extrp,
+                                      entity_type,
+                                      &ptp_elt,
+                                      PDM_OWNERSHIP_USER);
+
+    int          pextract_n_elt        = 0;
+    int          pextract_n_vtx        = 0;
+    double      *pextract_vtx_coord    = NULL;
+    // PDM_g_num_t *pextract_elt_ln_to_gn = NULL;
+
+    pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
+                                                   0,
+                                                   entity_type);
+    assert(pextract_n_elt == dn_elt2);
+
+    pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
+                                                   0,
+                                                   PDM_MESH_ENTITY_VERTEX);
+
+    PDM_extract_part_vtx_coord_get(extrp,
+                                   0,
+                                   &pextract_vtx_coord,
+                                   PDM_OWNERSHIP_KEEP);
+
+    if (dbg_enabled) {
+      _dump_pmne(ml->comm,
+                 "extract_pmne",
+                 extract_pmne,
+                 1,
+                 &delt_g_num_geom2,
+                 &pextract_n_vtx,
+                 &pextract_vtx_coord);
+    }
+    free(delt_g_num_geom2);
+
+    /* Perform elementary point locations */
+    double **pelt_pts_distance2   = NULL;
+    double **pelt_pts_proj_coord2 = NULL;
+    int    **pelt_pts_weight_idx2 = NULL;
+    double **pelt_pts_weight2     = NULL;
+    double **pelt_pts_uvw2        = NULL;
+
+    PDM_point_location_nodal2(extract_pmne,
+                              1,
+            (const double **) &pextract_vtx_coord,
+            (const int    **) &delt_pts_idx2,
+            (const double **) &delt_pts_coord2,
+                              tolerance,
+                              &pelt_pts_distance2,
+                              &pelt_pts_proj_coord2,
+                              &pelt_pts_weight_idx2,
+                              &pelt_pts_weight2,
+                              &pelt_pts_uvw2);
+
+    double *delt_pts_distance2   = pelt_pts_distance2  [0];
+    double *delt_pts_proj_coord2 = pelt_pts_proj_coord2[0];
+    int    *delt_pts_weight_idx2 = pelt_pts_weight_idx2[0];
+    double *delt_pts_weight2     = pelt_pts_weight2    [0];
+    double *delt_pts_uvw2        = pelt_pts_uvw2       [0];
+    free(pelt_pts_distance2  );
+    free(pelt_pts_proj_coord2);
+    free(pelt_pts_weight_idx2);
+    free(pelt_pts_weight2    );
+    free(pelt_pts_uvw2       );
+
+    PDM_part_mesh_nodal_elmts_free(extract_pmne);
+    PDM_extract_part_free(extrp);
+    free(delt_init_location2);
+
+    // part_to_block (partiel) sur les points en passant distance et element local
+    int n_pts2 = delt_pts_idx2[dn_elt2];
+    int         *part_stride = PDM_array_const_int(n_pts2, 1);
+    PDM_g_num_t *part_elt_id = malloc(sizeof(PDM_g_num_t) * n_pts2);
+    double      *part_weight = malloc(sizeof(double     ) * n_pts2);
+    for (int ielt = 0; ielt < dn_elt2; ielt++) {
+      for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
+        part_elt_id[i] = delt_parent_g_num2[ielt];
+        abort(); // Il faut mettre le gnum_geom2 ici
+        part_weight[i] = 1.;
+      }
+    }
+
+    if (dbg_enabled) {
+      for (int i = 0; i < n_pts2; i++) {
+        log_trace("pt "PDM_FMT_G_NUM" : local elt %d, dist = %f\n",
+                  delt_pts_g_num2[i], part_elt_id[i], delt_pts_distance2[i]);
+      }
+    }
+
+
+
 
 
     PDM_part_to_block_free(ptb_pts);
