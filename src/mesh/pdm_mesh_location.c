@@ -12390,10 +12390,192 @@ PDM_mesh_location_compute_optim3
                   "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
       }
     }
+    // free(delt_extents1);
+    free(dpts_coord);
+
+
+    PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed (ml->timer);
+    e_t_cpu     = PDM_timer_cpu     (ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
+
+    ml->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [SEARCH_CANDIDATES] += e_t_cpu     - b_t_cpu;
+    ml->times_cpu_u  [SEARCH_CANDIDATES] += e_t_cpu_u   - b_t_cpu_u;
+    ml->times_cpu_s  [SEARCH_CANDIDATES] += e_t_cpu_s   - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
+
+    if (dbg_enabled) {
+      log_trace("before compression\n");
+      PDM_log_trace_array_long(delt_g_num2, dn_elt2, "delt_g_num2 : ");
+    }
+
+    /* TODO: maybe take into account element type to yield better weights ?? */
+    if (dbg_enabled) {
+      int *_idx = PDM_array_new_idx_from_sizes_int(delt_pts_n2, dn_elt2);
+      PDM_log_trace_connectivity_long(_idx,
+                                      delt_pts_g_num2,
+                                      dn_elt2,
+                                      "delt_pts_g_num2 : ");
+      free(_idx);
+    }
+
+    /* Compress block (remove elements with zero candidate point) -> frame (2) */
+    int tmp_dn_elt2 = 0;
+    for (int i = 0; i < dn_elt2; i++) {
+      if (delt_pts_n2[i] > 0) {
+        delt_pts_n2[tmp_dn_elt2] = delt_pts_n2[i];
+        delt_g_num2[tmp_dn_elt2] = delt_g_num2[i];
+        tmp_dn_elt2++;
+      }
+    }
+    dn_elt2 = tmp_dn_elt2;
+
+    delt_g_num2 = realloc(delt_g_num2, sizeof(PDM_g_num_t) * dn_elt2);
+    delt_pts_n2 = realloc(delt_pts_n2, sizeof(int        ) * dn_elt2);
+
+    if (dbg_enabled) {
+      log_trace("after compression\n");
+      PDM_log_trace_array_long(delt_g_num2, dn_elt2, "delt_g_num2 : ");
+      int total_weight = 0;
+      for (int i = 0; i < dn_elt2; i++) {
+        total_weight += delt_pts_n2[i];
+      }
+      log_trace("total weight = %d\n", total_weight);
+    }
+
+    int *delt_pts_idx2 = PDM_array_new_idx_from_sizes_int(delt_pts_n2, dn_elt2);
+    free(delt_pts_n2);
+
+    /*
+     * Comment faire le lien avec le extract part ?
+     */
+
+    PDM_g_num_t *delt_parent_g_num2 = NULL;
+    int         *delt_init_location2 = NULL;
+
+
+
+    /* Extract partition associated to current frame (2) */
+    PDM_bool_t equilibrate = PDM_TRUE;// LOL
+    if (dbg_enabled) {
+      log_trace(">> PDM_extract_part_create\n");
+    }
+    // TODO: proper get
+    int mesh_dimension = pmne->mesh_dimension;
+
+    PDM_extract_part_t *extrp = PDM_extract_part_create(mesh_dimension,
+                                                        n_part,
+                                                        1,
+                                                        equilibrate,
+                                                        PDM_SPLIT_DUAL_WITH_PTSCOTCH,// unused in this case
+                                                        PDM_OWNERSHIP_KEEP,
+                                                        ml->comm);
+
+    PDM_extract_part_part_nodal_set(extrp, pmne);
+
+    /* Set vtx_coord */
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      const double *pvtx_coord = PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
+                                                             ipart);
+
+      PDM_g_num_t *pvtx_ln_to_gn = NULL;
+      const int pn_vtx = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
+                                                              ipart,
+                                                              &pvtx_ln_to_gn);
+
+      int n_cell = 0;
+      int n_face = 0;
+      int n_edge = 0;
+      PDM_g_num_t *cell_g_num = NULL;
+      PDM_g_num_t *face_g_num = NULL;
+      PDM_g_num_t *edge_g_num = NULL;
+      switch (mesh_dimension) {
+        case 3: {
+          n_cell = pn_elt[ipart];
+          cell_g_num = elt_g_num[ipart];
+          break;
+        }
+        case 2: {
+          n_face = pn_elt[ipart];
+          face_g_num = elt_g_num[ipart];
+          break;
+        }
+        case 1: {
+          n_edge = pn_elt[ipart];
+          edge_g_num = elt_g_num[ipart];
+          break;
+        }
+        default:
+        PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
+      }
+
+      PDM_extract_part_part_set(extrp,
+                                ipart,
+                                n_cell,
+                                n_face,
+                                n_edge,
+                                pn_vtx,
+                                NULL, // pcell_face_idx[ipart],
+                                NULL, // pcell_face[ipart],
+                                NULL, // pface_edge_idx[ipart],
+                                NULL, // pface_edge[ipart],
+                                NULL, // pedge_vtx[ipart],
+                                NULL, // pface_vtx_idx[ipart],
+                                NULL, // pface_vtx[ipart],
+                                cell_g_num,
+                                face_g_num,
+                                edge_g_num,
+                                pvtx_ln_to_gn,
+                     (double *) pvtx_coord);
+    }
+
+
+    PDM_mesh_entities_t entity_type;
+    switch (mesh_dimension) {
+      case 3: {
+        entity_type = PDM_MESH_ENTITY_CELL;
+        break;
+      }
+      case 2: {
+        entity_type = PDM_MESH_ENTITY_FACE;
+        break;
+      }
+      case 1: {
+        entity_type = PDM_MESH_ENTITY_EDGE;
+        break;
+      }
+      default:
+      PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
+    }
+    PDM_extract_part_target_gnum_set(extrp,
+                                     0,
+                                     dn_elt2,
+                                     delt_parent_g_num2);
+
+    PDM_extract_part_target_location_set(extrp,
+                                         0,
+                                         dn_elt2,
+                                         delt_init_location2);
+
+    if (dbg_enabled) {
+      log_trace(">> PDM_extract_part_compute\n");
+    }
+    PDM_extract_part_compute(extrp);
+    if (dbg_enabled) {
+      log_trace("Yeah :D\n");
+    }
 
 
     PDM_part_to_block_free(ptb_pts);
-
+    PDM_part_to_block_free(ptb_elt);
 
   } /* End icloud */
 }
