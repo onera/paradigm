@@ -12175,6 +12175,15 @@ PDM_mesh_location_compute_optim3
 
     int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
     PDM_g_num_t *dpts_g_num_user = PDM_part_to_block_block_gnum_get(ptb_pts);
+
+
+    PDM_g_num_t *distrib_pts = PDM_part_to_block_distrib_index_get(ptb_pts);
+    PDM_g_num_t *dpts_g_num_geom = malloc(dn_pts * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < dn_pts; ++i) {
+      dpts_g_num_geom[i] = distrib_pts[i_rank] + i + 1;
+    }
+
     if (dbg_enabled) {
       PDM_log_trace_array_long(dpts_g_num_user, dn_pts, "dpts_g_num_user        : ");
     }
@@ -12254,11 +12263,133 @@ PDM_mesh_location_compute_optim3
       PDM_log_trace_array_long(delt_g_num_user, dn_elt1, "delt_g_num_user : ");
     }
 
+    PDM_g_num_t *distrib_elt1 = PDM_part_to_block_distrib_index_get(ptb_elt);
+    PDM_g_num_t *delmt_g_num_geom = malloc(dn_elt1 * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < dn_elt1; ++i) {
+      delmt_g_num_geom[i] = distrib_elt1[i_rank] + i + 1;
+    }
 
 
+    /* Exchange extents (do this with abstract distrib?) */
+    double *delt_extents1 = NULL;
+    int request_elt_extents = -1;
+    PDM_part_to_block_iexch(ptb_elt,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            6 * sizeof(double),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) select_elt_extents,
+                            NULL,
+                  (void **) &delt_extents1,
+                            &request_elt_extents);
+    PDM_part_to_block_iexch_wait(ptb_elt, request_elt_extents);
+
+    /*
+     * TODO - Exchange box_init_location
+     */
 
 
+    if (dbg_enabled) {
+      char filename[999];
+      sprintf(filename, "mesh_location_dboxes_%d_%3.3d.vtk", icloud, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          dn_elt1,
+                          delt_extents1,
+                          delt_g_num_user);
+    }
 
+    /*
+     *  Location : search candidates
+     *  ----------------------------
+     */
+
+    /*
+     * Get points inside bounding boxes of elements
+     */
+
+    int         *box_pts_idx   = NULL;
+    PDM_g_num_t *box_pts_g_num = NULL;
+    double      *box_pts_coord = NULL;
+
+    int dn_elt2 = 0;
+    PDM_g_num_t *delt_g_num2    = NULL;
+    int         *delt_pts_n2     = NULL;
+    PDM_g_num_t *delt_pts_g_num2 = NULL;
+    double      *delt_pts_coord2 = NULL;
+
+    char *env_var_oct = getenv("OCTREE_SHARED");
+    int use_shared_tree = 0;
+    if (env_var_oct != NULL) {
+      use_shared_tree = atoi(env_var_oct);
+    }
+
+    switch (ml->method) {
+      case PDM_MESH_LOCATION_OCTREE: {
+        /* Create octree structure */
+        PDM_para_octree_t *octree = PDM_para_octree_create(1,
+                                                           octree_depth_max,
+                                                           octree_points_in_leaf_max,
+                                                           octree_build_leaf_neighbours,
+                                                           ml->comm);
+
+        /* Set octree point cloud */
+        PDM_para_octree_point_cloud_set(octree,
+                                        0,
+                                        dn_pts,
+                                        dpts_coord,
+                                        dpts_g_num_geom);
+
+        /* Build parallel octree */
+        PDM_MPI_Barrier(ml->comm);
+
+        if (use_shared_tree == 0) {
+          PDM_para_octree_build(octree, NULL);
+        }
+        else {
+          PDM_para_octree_build_shared(octree, NULL);
+        }
+
+        if (use_shared_tree == 0) {
+          PDM_part_to_block_t *ptb_pib = NULL;
+          PDM_para_octree_points_inside_boxes_block_frame(octree,
+                                                          dn_elt1,
+                                                          delt_extents1,
+                                                          delmt_g_num_geom,
+                                                          &ptb_pib,
+                                                          &delt_pts_n2,
+                                                          &delt_pts_g_num2,
+                                                          &delt_pts_coord2);
+
+          dn_elt2 = PDM_part_to_block_n_elt_block_get(ptb_pib);
+          PDM_g_num_t *_g_num = PDM_part_to_block_block_gnum_get(ptb_pib);
+
+          delt_g_num2 = malloc(sizeof(PDM_g_num_t) * dn_elt2);
+          memcpy(delt_g_num2, _g_num, sizeof(PDM_g_num_t) * dn_elt2);
+
+          PDM_part_to_block_free(ptb_pib);
+
+        }
+        else {
+          abort();
+          PDM_para_octree_points_inside_boxes_shared(octree,
+                                                     dn_elt1,
+                                                     delt_extents1, // Attention faire une distribution part_to_bloc_geom dans le cas octree
+                                                     delmt_g_num_geom,
+                                                     &box_pts_idx,
+                                                     &box_pts_g_num,
+                                                     &box_pts_coord);
+        }
+
+        PDM_para_octree_free(octree);
+        break;
+      }
+      default: {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
+      }
+    }
 
 
     PDM_part_to_block_free(ptb_pts);
