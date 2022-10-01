@@ -12114,19 +12114,22 @@ PDM_mesh_location_compute_optim3
 
     int use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
 
-    double      **select_elt_extents    = NULL;
-    PDM_g_num_t **select_elt_g_num_user = NULL;
+    int         **select_elt_init_location_user = NULL;
+    double      **select_elt_extents            = NULL;
+    PDM_g_num_t **select_elt_g_num_user         = NULL;
 
     if (use_extracted_mesh) {
       if (dbg_enabled) {
         log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
       }
 
-      select_elt_extents      = malloc(sizeof(double      *) * n_part);
-      select_elt_g_num_user = malloc(sizeof(PDM_g_num_t *) * n_part);
+      select_elt_init_location_user = malloc(sizeof(int         *) * n_part);
+      select_elt_extents            = malloc(sizeof(double      *) * n_part);
+      select_elt_g_num_user         = malloc(sizeof(PDM_g_num_t *) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        select_elt_extents   [ipart] = malloc(sizeof(double     ) * n_select_elt[ipart] * 6);
-        select_elt_g_num_user[ipart] = malloc(sizeof(PDM_g_num_t) * n_select_elt[ipart]);
+        select_elt_init_location_user[ipart] = malloc(sizeof(int        ) * n_select_elt[ipart] * 3);
+        select_elt_extents           [ipart] = malloc(sizeof(double     ) * n_select_elt[ipart] * 6);
+        select_elt_g_num_user        [ipart] = malloc(sizeof(PDM_g_num_t) * n_select_elt[ipart]);
         for (int i = 0; i < n_select_elt[ipart]; i++) {
           int elt_id = select_elt_l_num[ipart][i];
 
@@ -12135,6 +12138,11 @@ PDM_mesh_location_compute_optim3
                  sizeof(double) * 6);
 
           select_elt_g_num_user[ipart][i] = elt_g_num[ipart][elt_id];
+
+          select_elt_init_location_user[ipart][3*i  ] = i_rank;
+          select_elt_init_location_user[ipart][3*i+1] = ipart;
+          select_elt_init_location_user[ipart][3*i+2] = elt_id;
+
         }
       }
     }
@@ -12146,6 +12154,17 @@ PDM_mesh_location_compute_optim3
       n_select_elt          = pn_elt;
       select_elt_extents    = elt_extents;
       select_elt_g_num_user = elt_g_num;
+
+      select_elt_init_location_user = malloc(sizeof(int         *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        select_elt_init_location_user[ipart] = malloc(sizeof(int        ) * n_select_elt[ipart] * 3);
+        for (int i = 0; i < n_select_elt[ipart]; i++) {
+          select_elt_init_location_user[ipart][3*i  ] = i_rank;
+          select_elt_init_location_user[ipart][3*i+1] = ipart;
+          select_elt_init_location_user[ipart][3*i+2] = i;
+        }
+      }
+
     }
 
 
@@ -12239,7 +12258,7 @@ PDM_mesh_location_compute_optim3
     }
 
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP, // A faire en merge
                                                                  1.,
                                                                  PDM_PART_GEOM_HILBERT,
                                                                  select_box_center,
@@ -12287,8 +12306,21 @@ PDM_mesh_location_compute_optim3
     PDM_part_to_block_iexch_wait(ptb_elt, request_elt_extents);
 
     /*
-     * TODO - Exchange box_init_location
+     * TODO - Exchange box_init_location en merge  !!! Attention on doit merger les blocks mais garder le non mergé pour le renvoie
      */
+    double *delt_init_location_user = NULL;
+    int request_elt_init_location = -1;
+    PDM_part_to_block_iexch(ptb_elt,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            3 * sizeof(int),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) select_elt_init_location_user,
+                            NULL,
+                  (void **) &delt_init_location_user,
+                            &request_elt_init_location);
+    PDM_part_to_block_iexch_wait(ptb_elt, request_elt_init_location);
 
 
     if (dbg_enabled) {
@@ -12456,12 +12488,44 @@ PDM_mesh_location_compute_optim3
 
     /*
      * Comment faire le lien avec le extract part ?
+     *    delt_g_num2 = Numero geometrique mais requilibré fonction de la soliciation
+     *    Je pense que c'est presque un block_to_block ...
      */
 
-    PDM_g_num_t *delt_parent_g_num2 = NULL;
-    int         *delt_init_location2 = NULL;
+    PDM_block_to_part_t* btp_elmt_geom_to_elmt_user = PDM_block_to_part_create(distrib_elt1,
+                                                        (const PDM_g_num_t **) &delt_g_num2,
+                                                                               &dn_elt2,
+                                                                               1,
+                                                                               ml->comm);
+
+    /*
+     * Exchange gnum
+     */
+    PDM_g_num_t **tmp_delt_parent_g_num2 = NULL;
+    int stride_one = 1;
+    PDM_block_to_part_exch(btp_elmt_geom_to_elmt_user,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           &stride_one,
+                           delt_g_num_user,
+                           NULL,
+            (void ***)    &tmp_delt_parent_g_num2);
+    PDM_g_num_t *delt_parent_g_num2 = tmp_delt_parent_g_num2[0];
+    free(tmp_delt_parent_g_num2);
+
+    PDM_g_num_t **tmp_delt_init_location2 = NULL;
+    PDM_block_to_part_exch(btp_elmt_geom_to_elmt_user,
+                           3 * sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           &stride_one,
+                           delt_init_location_user,
+                           NULL,
+         (void ***)        &tmp_delt_init_location2);
+    PDM_g_num_t *delt_init_location2 = tmp_delt_init_location2[0];
+    free(tmp_delt_init_location2);
 
 
+    PDM_block_to_part_free(btp_elmt_geom_to_elmt_user);
 
     /* Extract partition associated to current frame (2) */
     PDM_bool_t equilibrate = PDM_TRUE;// LOL
