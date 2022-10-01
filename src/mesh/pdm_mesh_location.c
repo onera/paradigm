@@ -11986,20 +11986,30 @@ PDM_mesh_location_compute_optim3
 
     int use_extracted_pts = (g_n_pts[1] < extraction_threshold * g_n_pts[0]);
 
-    PDM_g_num_t **select_pts_parent_g_num = NULL;
-    PDM_g_num_t **select_pts_g_num        = NULL;
+    PDM_g_num_t **select_pts_g_num_user   = NULL;
     double      **select_pts_coord        = NULL;
     if (use_extracted_pts) {
       if (dbg_enabled) {
         log_trace("point cloud extraction %d / %d\n", l_n_pts[1], l_n_pts[0]);
       }
-      _point_cloud_extract_selection(ml->comm,
-                                     pcloud,
-                                     n_select_pts,
-                                     select_pts_l_num,
-                                     &select_pts_parent_g_num,
-                                     &select_pts_g_num,
-                                     &select_pts_coord);
+
+      select_pts_g_num_user = malloc(n_part * sizeof(PDM_g_num_t * ));
+      select_pts_coord      = malloc(n_part * sizeof(double      * ));
+
+      // Just extract gnum
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        select_pts_g_num_user[ipart] = malloc(    n_select_pts[ipart] * sizeof(PDM_g_num_t));
+        select_pts_coord     [ipart] = malloc(3 * n_select_pts[ipart] * sizeof(double     ));
+
+        for (int i = 0; i < n_select_pts[ipart]; i++) {
+          int j = select_pts_l_num[ipart][i];
+
+          select_pts_g_num_user[ipart][i] = pcloud->gnum[ipart][j];
+          for (int k = 0; k < 3; k++) {
+            select_pts_coord[ipart][3*i + k] = pcloud->coords[ipart][3*j + k];
+          }
+        }
+      }
     }
     else {
       /* We keep the whole point cloud */
@@ -12008,8 +12018,7 @@ PDM_mesh_location_compute_optim3
       }
       free(n_select_pts);
       n_select_pts            = pcloud->n_points;
-      select_pts_parent_g_num = pcloud->gnum;
-      select_pts_g_num        = pcloud->gnum;
+      select_pts_g_num_user   = pcloud->gnum;
       select_pts_coord        = pcloud->coords;
     }
 
@@ -12166,11 +12175,72 @@ PDM_mesh_location_compute_optim3
     }
 
 
+    /*
+     *  Redistribute evenly the selected points (ptb_geom)
+     */
+    int **weight = malloc(sizeof(int *) * pcloud->n_part);
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      weight[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
+    }
+
+    /* Use same extents for Hilbert encoding of pts and boxes?? */
+    PDM_part_to_block_t *ptb_pts = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                 PDM_PART_TO_BLOCK_POST_CLEANUP, // TODO: Merge
+                                                                 1.,
+                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 select_pts_coord,
+                                                                 select_pts_g_num_user,
+                                                                 weight,
+                                                                 n_select_pts,
+                                                                 pcloud->n_part,
+                                                                 ml->comm);
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(weight[ipart]);
+    }
+    free(weight);
+
+    int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
+    PDM_g_num_t *dpts_g_num_user = PDM_part_to_block_block_gnum_get(ptb_pts);
+    if (dbg_enabled) {
+      PDM_log_trace_array_long(dpts_g_num_user, dn_pts, "dpts_g_num_user        : ");
+    }
+
+    /* Exchange coordinates (do this with abstract distrib?) */
+    double *dpts_coord = NULL;
+    int request_pts_coord = -1;
+    PDM_part_to_block_iexch(ptb_pts,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            3 * sizeof(double),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) select_pts_coord,
+                            NULL,
+                  (void **) &dpts_coord,
+                            &request_pts_coord);
+
+    PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
+
+    /*
+     * Exchange init_location of pts --> Is almost the selected with proc / part info
+     */
+
+
+    if (dbg_enabled) {
+      char filename[999];
+      sprintf(filename, "mesh_location_dpts_%d_%3.3d.vtk", icloud, i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                dn_pts,
+                                dpts_coord,
+                                dpts_parent_g_num,
+                                NULL);
+    }
+
+
+    PDM_part_to_block_free(ptb_pts);
 
 
   } /* End icloud */
-
-
 }
 
 /**
