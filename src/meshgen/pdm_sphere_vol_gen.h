@@ -89,6 +89,18 @@ PDM_sphere_vol_icosphere_gen
        PDM_g_num_t       **distrib_cell
 );
 
+void
+PDM_sphere_vol_icosphere_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       PDM_dmesh_nodal_t **_dmn
+);
+
 #ifdef __cplusplus
 }
 #endif

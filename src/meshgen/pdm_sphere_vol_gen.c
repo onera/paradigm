@@ -43,6 +43,7 @@
 #include "pdm_error.h"
 #include "pdm_logging.h"
 #include "pdm_binary_search.h"
+#include "pdm_vtk.h"
 
 #include "pdm_sphere_vol_gen.h"
 
@@ -678,310 +679,6 @@ const int  *cell_vtx,
 
 
 
-static void
-_gen_from_base_mesh
-(
- const PDM_MPI_Comm   comm,
- const PDM_g_num_t    n,
- const int            n_base_vtx,
- const int            n_base_edge,
- const int            n_base_face,
- const int            n_base_cell,
-       double        *base_vtx_coord,
-       int           *base_edge_vtx,
-       int           *base_face_vtx,
-       int           *base_face_edge,
-       int           *base_cell_face,
-       int           *base_cell_edge,
-       int           *base_cell_vtx,
-       double       **dvtx_coord,
-       PDM_g_num_t  **dface_vtx,
-       PDM_g_num_t  **distrib_vtx,
-       PDM_g_num_t  **distrib_face
- )
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-
-  PDM_g_num_t face_int_vtx_n = n*(n-1) / 2;
-  PDM_g_num_t cell_int_vtx_n = n*(n-1)*(n-2) / 6;
-  PDM_g_num_t face_subface_n = (n+1)*(n+1);
-
-  PDM_g_num_t gn_vtx =
-  n_base_vtx                 +
-  n_base_edge*n              +
-  n_base_face*face_int_vtx_n +
-  n_base_cell*cell_int_vtx_n;
-
-
-  *distrib_vtx  = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
-
-  int dn_vtx  = (int) ((*distrib_vtx)[i_rank+1]  - (*distrib_vtx)[i_rank]);
-
-  *dvtx_coord    = malloc(sizeof(double     ) * dn_vtx  * 3);
-
-  PDM_g_num_t idx_edge = n_base_vtx;
-  PDM_g_num_t idx_face = idx_edge + n_base_edge*n;
-  PDM_g_num_t idx_cell = idx_face + n_base_face*face_int_vtx_n;
-
-  double step = 1. / (double) (n + 1);
-
-  /* Vertices */
-  for (int ivtx = 0; ivtx < dn_vtx; ivtx++) {
-
-    PDM_g_num_t g = (*distrib_vtx)[i_rank] + ivtx;
-
-    if (g < idx_edge) {
-      // Base vertex
-      memcpy(*dvtx_coord + 3*ivtx, base_vtx_coord + 3*g, sizeof(double) * 3);
-    }
-
-    else if (g < idx_face) {
-      // Base edge
-      int ibase = (int) ((g - idx_edge) / n);
-      int i     = (int) (g - idx_edge - n*ibase);
-
-      int ivtx1 = base_edge_vtx[2*ibase  ] - 1;
-      int ivtx2 = base_edge_vtx[2*ibase+1] - 1;
-      double t = (i + 1) * step;
-
-      for (int k = 0; k < 3; k++) {
-        (*dvtx_coord)[3*ivtx + k] = (1 - t)*base_vtx_coord[3*ivtx1 + k] + t*base_vtx_coord[3*ivtx2 + k];
-      }
-    }
-
-    else if (g < idx_cell) {
-      // Base face
-      int ibase = (int) ((g - idx_face) / face_int_vtx_n);
-      int idx   = (int) ( g - idx_face  - face_int_vtx_n*ibase);
-      int i, j;
-      idx2ij(idx, n-2, &i, &j);
-
-      int ivtx1 = base_face_vtx[3*ibase  ] - 1;
-      int ivtx2 = base_face_vtx[3*ibase+1] - 1;
-      int ivtx3 = base_face_vtx[3*ibase+2] - 1;
-      double u = (i + 1) * step;
-      double v = (j + 1) * step;
-
-      for (int k = 0; k < 3; k++) {
-        (*dvtx_coord)[3*ivtx + k] =
-        (1 - u - v) * base_vtx_coord[3*ivtx1 + k] +
-        u           * base_vtx_coord[3*ivtx2 + k] +
-        v           * base_vtx_coord[3*ivtx3 + k];
-      }
-    }
-
-    else {
-      // Base cell
-      int ibase = (int) ((g - idx_cell) / cell_int_vtx_n);
-      int idx   = (int)  (g - idx_cell  - cell_int_vtx_n*ibase);
-      int i, j, k;
-      idx2ijk(idx, n-3, &i, &j, &k);
-
-      int ivtx1 = base_cell_vtx[4*ibase  ] - 1;
-      int ivtx2 = base_cell_vtx[4*ibase+1] - 1;
-      int ivtx3 = base_cell_vtx[4*ibase+2] - 1;
-      int ivtx4 = base_cell_vtx[4*ibase+3] - 1;
-      double u = (i + 1) * step;
-      double v = (j + 1) * step;
-      double w = (k + 1) * step;
-
-      for (int l = 0; l < 3; l++) {
-        (*dvtx_coord)[3*ivtx + l] =
-        (1 - u - v - w) * base_vtx_coord[3*ivtx1 + l] +
-        u               * base_vtx_coord[3*ivtx2 + l] +
-        v               * base_vtx_coord[3*ivtx3 + l] +
-        w               * base_vtx_coord[3*ivtx4 + l];
-      }
-    }
-
-  } // End of loop on vertices
-
-
-
-  PDM_g_num_t gn_face = n_base_face*face_subface_n;
-
-  *distrib_face = PDM_compute_uniform_entity_distribution(comm, gn_face);
-
-  int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
-  *dface_vtx  = malloc(sizeof(PDM_g_num_t) * dn_face * 3);
-
-  /* Faces */
-  for (int iface = 0; iface < dn_face; iface++) {
-
-    PDM_g_num_t g = (*distrib_face)[i_rank] + iface;
-
-    int ibase = (int) (g / face_subface_n);
-    int idx   = (int) (g - face_subface_n*ibase);
-
-    if (idx < 3) {
-      // Corner of base face
-      if (n == 0) {
-        for (int i = 0; i < 3; i++) {
-          (*dface_vtx)[3*iface+i] = (PDM_g_num_t) base_face_vtx[3*ibase+i];
-        }
-      }
-
-      else {
-        (*dface_vtx)[3*iface] = base_face_vtx[3*ibase + idx];
-
-        int iedge = base_face_edge[3*ibase + idx];
-        if (iedge < 0) {
-          iedge = -iedge - 1;
-          (*dface_vtx)[3*iface+1] = idx_edge + n*iedge + n;
-        } else {
-          iedge = iedge - 1;
-          (*dface_vtx)[3*iface+1] = idx_edge + n*iedge + 1;
-        }
-
-        iedge = base_face_edge[3*ibase + (idx+2)%3];
-        if (iedge > 0) {
-          iedge = iedge - 1;
-          (*dface_vtx)[3*iface+2] = idx_edge + n*iedge + n;
-        } else {
-          iedge = -iedge - 1;
-          (*dface_vtx)[3*iface+2] = idx_edge + n*iedge + 1;
-        }
-      }
-
-    }
-
-    else if (idx < 6) {
-      // Corner of base face
-      idx -= 3;
-
-      if (n == 1) {
-
-        for (int i = 0; i < 3; i++) {
-          int iedge = PDM_ABS(base_face_edge[3*ibase + i]) - 1;
-          (*dface_vtx)[3*iface+i] = 1 + idx_edge + n*iedge;
-        }
-
-      }
-
-      else {
-
-        if (idx == 0) {
-          (*dface_vtx)[3*iface] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(0,  0,  n-2);
-        } else if (idx == 1) {
-          (*dface_vtx)[3*iface] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(n-2,0,  n-2);
-        } else {
-          (*dface_vtx)[3*iface] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(0,  n-2,n-2);
-        }
-
-        int iedge = base_face_edge[3*ibase + (idx+2)%3];
-        if (iedge > 0) {
-          iedge = iedge - 1;
-          (*dface_vtx)[3*iface+1] = idx_edge + n*iedge + n;
-        } else {
-          iedge = -iedge - 1;
-          (*dface_vtx)[3*iface+1] = idx_edge + n*iedge + 1;
-        }
-
-        iedge = base_face_edge[3*ibase + idx];
-        if (iedge < 0) {
-          iedge = -iedge - 1;
-          (*dface_vtx)[3*iface+2] = idx_edge + n*iedge + n;
-        } else {
-          iedge = iedge - 1;
-          (*dface_vtx)[3*iface+2] = idx_edge + n*iedge + 1;
-        }
-      }
-
-    }
-
-    else if (idx < 6 + 3*(n-1)) {
-
-      int jedge = (int) ((idx - 6) / (n-1));
-      int i     = (int) ((idx - 6) - jedge*(n-1));
-
-      int iedge = base_face_edge[3*ibase + jedge];
-      int sign, start;
-      if (iedge < 0) {
-        iedge = -iedge - 1;
-        sign  = -1;
-        start = n - 1;
-      } else {
-        iedge = iedge - 1;
-        sign  = 1;
-        start = 0;
-      }
-
-      (*dface_vtx)[3*iface  ] = 1 + idx_edge + n*iedge + start + sign*i;
-      (*dface_vtx)[3*iface+1] = 1 + idx_edge + n*iedge + start + sign*(i+1);
-      if (jedge == 0) {
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i, 0, n-2);
-      } else if (jedge == 1) {
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(n-2-i, i, n-2);
-      } else {
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(0, n-2-i, n-2);
-      }
-
-    }
-
-    else if (idx < 6 + 3*(n-1) + 3*(n-2)) {
-
-      int jedge = (int) ((idx - 6 - 3*(n-1)) / (n-2));
-      int i     = (int) ((idx - 6 - 3*(n-1)) - jedge*(n-2));
-
-      int iedge = base_face_edge[3*ibase + jedge];
-      int sign, start;
-      if (iedge < 0) {
-        iedge = -iedge - 1;
-        sign  = -1;
-        start = n - 1;
-      } else {
-        iedge = iedge - 1;
-        sign  = 1;
-        start = 0;
-      }
-
-      (*dface_vtx)[3*iface  ] = 1 + idx_edge + n*iedge + start + sign*(i+1);
-      if (jedge == 0) {
-        (*dface_vtx)[3*iface+1] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i+1, 0, n-2);
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i,   0, n-2);
-      } else if (jedge == 1) {
-        (*dface_vtx)[3*iface+1] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(n-2-i-1, i+1, n-2);
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(n-2-i, i, n-2);
-      } else {
-        (*dface_vtx)[3*iface+1] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(0, n-2-i-1, n-2);
-        (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(0, n-2-i, n-2);
-      }
-
-    }
-
-    else if (idx < 6 + 3*(n-1) + 3*(n-2) + (n-2) + (n-3)*(n-2)/2) {
-
-      idx -= (6 + 3*(n-1) + 3*(n-2));
-
-      int i, j;
-      idx2ij(idx, n-3, &i, &j);
-
-      (*dface_vtx)[3*iface  ] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i,   j,   n-2);
-      (*dface_vtx)[3*iface+1] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i+1, j,   n-2);
-      (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i,   j+1, n-2);
-
-    }
-
-    else {
-
-      idx -= (6 + 3*(n-1) + 3*(n-2) + (n-2) + (n-3)*(n-2)/2);
-
-      int i, j;
-      idx2ij(idx, n-4, &i, &j);
-
-      (*dface_vtx)[3*iface  ] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i+1, j,   n-2);
-      (*dface_vtx)[3*iface+1] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i+1, j+1, n-2);
-      (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i,   j+1, n-2);
-
-    }
-
-
-
-  }
-}
-
-
 static inline int
 _n_subtetra
 (
@@ -1093,8 +790,7 @@ const int  k,
   }
 }
 
-
-#define _point_on_edge(ibase, iedge, ivtx, i, j, k) \
+#define _point_on_edge2(ibase, iedge, ivtx, i, j, k) \
   int ibase_edge = base_cell_edge[6*(ibase) + (iedge)]; \
   int sign = PDM_SIGN(ibase_edge); \
   ibase_edge = PDM_ABS(ibase_edge) - 1; \
@@ -1102,13 +798,13 @@ const int  k,
   int ei; \
   _local_edge_frame((iedge), (i), (j), (k), &ei); \
   if (sign < 0) { \
-    _dcell_vtx[(ivtx)] = idx_vtx_edge + ibase_edge*n + n - ei; \
+    _dcell_vtx[ivtx] = idx_vtx_edge + ibase_edge*n + n - ei; \
   } \
   else { \
-    _dcell_vtx[(ivtx)] = idx_vtx_edge + ibase_edge*n + ei + 1; \
+    _dcell_vtx[ivtx] = idx_vtx_edge + ibase_edge*n + ei + 1; \
   }
 
-#define _point_on_face(ibase, iface, ivtx, i, j, k) \
+#define _point_on_face2(ibase, iface, ivtx, i, j, k) \
   int ibase_face = base_cell_face[4*(ibase) + (iface)]; \
   int sign = PDM_SIGN(ibase_face); \
   ibase_face = PDM_ABS(ibase_face) - 1; \
@@ -1117,11 +813,273 @@ const int  k,
   int fi, fj; \
   _local_face_frame((iface), i, j, k, &fi, &fj); \
   _permute_ij(perm, sign, &fi, &fj, n-2); \
-  _dcell_vtx[(ivtx)] = 1 + idx_vtx_face + ibase_face*face_int_vtx_n + ij2idx(fi, fj, n-2);
+  _dcell_vtx[ivtx] = 1 + idx_vtx_face + ibase_face*face_int_vtx_n + ij2idx(fi, fj, n-2);
 
+
+
+#define _point_on_edge(ibase, iedge, gnum_vtx, i, j, k) \
+  int ibase_edge = base_cell_edge[6*(ibase) + (iedge)]; \
+  int sign = PDM_SIGN(ibase_edge); \
+  ibase_edge = PDM_ABS(ibase_edge) - 1; \
+  log_trace("  base edge %d / %d (local %d, sign = %d)\n", ibase_edge, base_n_cell, (iedge), sign); \
+  int ei; \
+  _local_edge_frame((iedge), (i), (j), (k), &ei); \
+  if (sign < 0) { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + n - ei; \
+  } \
+  else { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + ei + 1; \
+  }
+
+#define _point_on_face(ibase, iface, gnum_vtx, i, j, k) \
+  int ibase_face = base_cell_face[4*(ibase) + (iface)]; \
+  int sign = PDM_SIGN(ibase_face); \
+  ibase_face = PDM_ABS(ibase_face) - 1; \
+  int perm = base_cell_face_perm[4*(ibase) + (iface)]; \
+  log_trace("  base face %d / %d (local %d, sign = %d, perm = %d)\n", ibase_face, base_n_cell, (iface), sign, perm); \
+  int fi, fj; \
+  _local_face_frame((iface), i, j, k, &fi, &fj); \
+  _permute_ij(perm, sign, &fi, &fj, n-2); \
+  (gnum_vtx) = 1 + idx_vtx_face + ibase_face*face_int_vtx_n + ij2idx(fi, fj, n-2);
+
+
+
+#define _hextet_vtx_0(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+0]-1, base_n_vtx, 0); \
+        (gnum_vtx) = base_cell_vtx[4*ibase+0]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        log_trace("  interior base cell ijk = %d %d %d\n", \
+                  (i)-1, (j)-1, (k)-1); \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_1(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == 0) { \
+      if ((i) == n-(k)-(j)) { \
+        log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+1]-1, base_n_vtx, 1); \
+        (gnum_vtx) = base_cell_vtx[4*ibase+1]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_edge(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        log_trace("  interior base cell ijk = %d %d %d\n", \
+                  (i), (j)-1, (k)-1); \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_2(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == n-(k)-(i)) { \
+      if ((i) == 0) { \
+        log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+2]-1, base_n_vtx, 2); \
+        (gnum_vtx) = base_cell_vtx[4*ibase+2]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == n-(k)-i) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        log_trace("  interior base cell ijk = %d %d %d\n", \
+                  (i)-1, (j), (k)-1); \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_3(i, j, k, gnum_vtx) \
+  if ((k) == 0) {  \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_edge(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+    else { \
+      _point_on_face(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+  } \
+  else { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+    else { \
+      log_trace("  interior base cell ijk = %d %d %d\n", \
+                (i), (j), (k)-1); \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k)-1, n-3); \
+    } \
+  }
+
+#define _hextet_vtx_4(i, j, k, gnum_vtx) \
+  if ((k) == n-(j)-(i)) { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+3]-1, base_n_vtx, 3); \
+        (gnum_vtx) = base_cell_vtx[4*ibase+3]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 4, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        log_trace("  interior base cell ijk = %d %d %d\n", \
+                  (i)-1, (j)-1, (k)); \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k), n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_5(i, j, k, gnum_vtx) \
+  if ((j) == 0) { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+    else { \
+      _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+  } \
+  else { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+    else { \
+      log_trace("  interior base cell ijk = %d %d %d\n", \
+                (i), (j)-1, (k)); \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k), n-3); \
+    } \
+  }
+
+#define _hextet_vtx_6(i, j, k, gnum_vtx) \
+  if ((j) == n-1-(k)-i) { \
+    if ((i) == 0) { \
+      _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+    else { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+  } \
+  else { \
+    if ((i) == 0) { \
+      _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+    else { \
+      log_trace("  interior base cell ijk = %d %d %d\n", \
+                (i)-1, (j), (k)); \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k), n-3); \
+    } \
+  }
+
+#define _hextet_vtx_7(i, j, k, gnum_vtx) \
+  if ((i) == n-2-(k)-(j)) { \
+    _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)); \
+  } \
+  else { \
+    log_trace("  interior base cell ijk = %d %d %d\n", \
+              (i), (j), (k)); \
+    (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k), n-3); \
+  }
 
 static void
-_gen_from_base_mesh2
+_gen_from_base_mesh
 (
  const PDM_MPI_Comm   comm,
  const PDM_g_num_t    n,
@@ -1137,12 +1095,15 @@ _gen_from_base_mesh2
        int           *base_cell_edge,
        int           *base_cell_vtx,
        double       **dvtx_coord,
+       // PDM_g_num_t  **dface_vtx,
        PDM_g_num_t  **dcell_vtx,
        int          **dcell_hextet,
        PDM_g_num_t  **distrib_vtx,
+       // PDM_g_num_t  **distrib_face,
        PDM_g_num_t  **distrib_cell
 )
 {
+  /* TODO : boundary faces */
   assert(n >= 0);
 
   int i_rank;
@@ -1328,7 +1289,9 @@ _gen_from_base_mesh2
                                6,
                                subcell_hextet_idx);
 
-
+  PDM_log_trace_array_int(subcell_hextet_idx,
+                          7,
+                          "subcell_hextet_idx : ");
 
   *distrib_cell = PDM_compute_uniform_entity_distribution(comm, gn_cell);
 
@@ -1421,240 +1384,316 @@ _gen_from_base_mesh2
     idx -= subcell_hextet_idx[hextet];
 
     int k = PDM_binary_search_gap_int(idx,
-                                      hextet_k_idx[0],
+                                      hextet_k_idx[hextet],
                                       hextet_size[hextet] + 1);
-    // log_trace("  hextet = %d, idx = %d, k = %d\n", hextet, idx, k);
+    log_trace("  hextet = %d, idx = %d, k = %d\n", hextet, idx, k);
     int j, i;
     idx2ij(idx - hextet_k_idx[hextet][k], hextet_size[hextet]-1-k, &i, &j);
 
     log_trace("  hextet %d, idx = %5d, ijk = %3d %3d %3d\n",
               hextet, idx, i, j, k);
 
-    (*dcell_hextet)[icell] = hextet;
+    (*dcell_hextet)[icell] = ibase;//hextet;
 
 
     switch (hextet) {
 
       case 0: {
+        // hextet_vtx : [0, 1, 2, 4]
+
         // vertex #0
-        if (k == 0) {
-          if (j == 0) {
-            if (i == 0) {
-              // on base vtx #0
-              log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+0]-1, base_n_vtx, 0);
-              _dcell_vtx[0] = base_cell_vtx[4*ibase+0];
-            }
-            else { // i > 0
-              // on base edge #0
-              _point_on_edge(ibase, 0, 0, i-1, j-1, k-1);
-            }
-          }
-          else { // j > 0
-            if (i == 0) {
-              // on base edge #1
-              _point_on_edge(ibase, 1, 0, i-1, j-1, k-1);
-            }
-            else { // i > 0
-              // on base face #3
-              _point_on_face(ibase, 3, 0, i-1, j-1, k-1);
-            }
-          }
-        }
-        else { // k > 0
-          if (j == 0) {
-            if (i == 0) {
-              // on base edge #2
-              _point_on_edge(ibase, 2, 0, i-1, j-1, k-1);
-            }
-            else { // i > 0
-              // on base face #2
-              _point_on_face(ibase, 2, 0, i-1, j-1, k-1);
-            }
-          }
-          else { // j > 0
-            if (i == 0) {
-              // on base face #1
-              _point_on_face(ibase, 1, 0, i-1, j-1, k-1);
-            }
-            else { // i > 0
-              // interior base cell
-              log_trace("  interior base cell ijk = %d %d %d\n",
-                        i-1, j-1, k-1);
-              _dcell_vtx[0] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j-1, k-1, n-3);
-            }
-          }
-        }
+        _hextet_vtx_0(i, j, k, _dcell_vtx[0]);
+        // if (k == 0) {
+        //   if (j == 0) {
+        //     if (i == 0) {
+        //       // on base vtx #0
+        //       log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+0]-1, base_n_vtx, 0);
+        //       _dcell_vtx[0] = base_cell_vtx[4*ibase+0];
+        //     }
+        //     else { // i > 0
+        //       // on base edge #0
+        //       _point_on_edge(ibase, 0, 0, i-1, j-1, k-1);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == 0) {
+        //       // on base edge #1
+        //       _point_on_edge(ibase, 1, 0, i-1, j-1, k-1);
+        //     }
+        //     else { // i > 0
+        //       // on base face #3
+        //       _point_on_face(ibase, 3, 0, i-1, j-1, k-1);
+        //     }
+        //   }
+        // }
+        // else { // k > 0
+        //   if (j == 0) {
+        //     if (i == 0) {
+        //       // on base edge #2
+        //       _point_on_edge(ibase, 2, 0, i-1, j-1, k-1);
+        //     }
+        //     else { // i > 0
+        //       // on base face #2
+        //       _point_on_face(ibase, 2, 0, i-1, j-1, k-1);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == 0) {
+        //       // on base face #1
+        //       _point_on_face(ibase, 1, 0, i-1, j-1, k-1);
+        //     }
+        //     else { // i > 0
+        //       // interior base cell
+        //       log_trace("  interior base cell ijk = %d %d %d\n",
+        //                 i-1, j-1, k-1);
+        //       _dcell_vtx[0] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j-1, k-1, n-3);
+        //     }
+        //   }
+        // }
 
 
         // vertex #1
-        if (k == 0) {
-          if (j == 0) {
-            if (i == n-k-j) {
-              // on base vtx #1
-              log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+1]-1, base_n_vtx, 1);
-              _dcell_vtx[1] = base_cell_vtx[4*ibase+1];
-            }
-            else { // i < n-k-j
-              // on base edge #0
-              _point_on_edge(ibase, 0, 1, i, j-1, k-1);
-            }
-          }
-          else { // j > 0
-            if (i == n-k-j) {
-              // on base edge #3
-              _point_on_edge(ibase, 3, 1, i, j-1, k-1);
-            }
-            else { // i < n-k-j
-              // on base face #3
-              _point_on_face(ibase, 3, 1, i, j-1, k-1);
-            }
-          }
-        }
-        else { // k > 0
-          if (j == 0) {
-            if (i == n-k-j) {
-              // on base edge #4
-              _point_on_edge(ibase, 4, 1, i, j-1, k-1);
-            }
-            else { // i < n-k-j
-              // on base face #2
-              _point_on_face(ibase, 2, 1, i, j-1, k-1);
-            }
-          }
-          else { // j > 0
-            if (i == n-k-j) {
-              // on base face #0
-              _point_on_face(ibase, 0, 1, i, j-1, k-1);
-            }
-            else { // i < n-k-j
-              // interior base cell
-              log_trace("  interior base cell ijk = %d %d %d\n",
-                        i, j-1, k-1);
-              _dcell_vtx[1] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i, j-1, k-1, n-3);
-            }
-          }
-        }
+        _hextet_vtx_1(i, j, k, _dcell_vtx[1]);
+        // if (k == 0) {
+        //   if (j == 0) {
+        //     if (i == n-k-j) {
+        //       // on base vtx #1
+        //       log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+1]-1, base_n_vtx, 1);
+        //       _dcell_vtx[1] = base_cell_vtx[4*ibase+1];
+        //     }
+        //     else { // i < n-k-j
+        //       // on base edge #0
+        //       _point_on_edge(ibase, 0, 1, i, j-1, k-1);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == n-k-j) {
+        //       // on base edge #3
+        //       _point_on_edge(ibase, 3, 1, i, j-1, k-1);
+        //     }
+        //     else { // i < n-k-j
+        //       // on base face #3
+        //       _point_on_face(ibase, 3, 1, i, j-1, k-1);
+        //     }
+        //   }
+        // }
+        // else { // k > 0
+        //   if (j == 0) {
+        //     if (i == n-k-j) {
+        //       // on base edge #4
+        //       _point_on_edge(ibase, 4, 1, i, j-1, k-1);
+        //     }
+        //     else { // i < n-k-j
+        //       // on base face #2
+        //       _point_on_face(ibase, 2, 1, i, j-1, k-1);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == n-k-j) {
+        //       // on base face #0
+        //       _point_on_face(ibase, 0, 1, i, j-1, k-1);
+        //     }
+        //     else { // i < n-k-j
+        //       // interior base cell
+        //       log_trace("  interior base cell ijk = %d %d %d\n",
+        //                 i, j-1, k-1);
+        //       _dcell_vtx[1] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i, j-1, k-1, n-3);
+        //     }
+        //   }
+        // }
 
 
         // vertex #2
-        if (k == 0) {
-          if (j == n-k-i) {
-            if (i == 0) {
-              // on base vtx #2
-              log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+2]-1, base_n_vtx, 2);
-              _dcell_vtx[2] = base_cell_vtx[4*ibase+2];
-            }
-            else { // i > 0
-              // on base edge #3
-              _point_on_edge(ibase, 3, 2, i-1, j, k-1);
-            }
-          }
-          else { // j < n-k-i
-            if (i == 0) {
-              // on base edge #1
-              _point_on_edge(ibase, 1, 2, i-1, j, k-1);
-            }
-            else { // i > 0
-              // on base face #3
-              _point_on_face(ibase, 3, 2, i-1, j, k-1);
-            }
-          }
-        }
-        else { // k > 0
-          if (j == n-k-i) {
-            if (i == 0) {
-              // on base edge #5
-              _point_on_edge(ibase, 5, 2, i-1, j, k-1);
-            }
-            else { // i > 0
-              // on base face #0
-              _point_on_face(ibase, 0, 2, i-1, j, k-1);
-            }
-          }
-          else { // j < n-k-i
-            if (i == 0) {
-              // on base face #1
-              _point_on_face(ibase, 1, 2, i-1, j, k-1);
-            }
-            else { // i > 0
-              // interior base cell
-              log_trace("  interior base cell ijk = %d %d %d\n",
-                        i-1, j, k-1);
-              _dcell_vtx[2] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j, k-1, n-3);
-            }
-          }
-        }
+        _hextet_vtx_2(i, j, k, _dcell_vtx[2]);
+        // if (k == 0) {
+        //   if (j == n-k-i) {
+        //     if (i == 0) {
+        //       // on base vtx #2
+        //       log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+2]-1, base_n_vtx, 2);
+        //       _dcell_vtx[2] = base_cell_vtx[4*ibase+2];
+        //     }
+        //     else { // i > 0
+        //       // on base edge #3
+        //       _point_on_edge2(ibase, 3, 2, i-1, j, k-1);
+        //     }
+        //   }
+        //   else { // j < n-k-i
+        //     if (i == 0) {
+        //       // on base edge #1
+        //       _point_on_edge2(ibase, 1, 2, i-1, j, k-1);
+        //     }
+        //     else { // i > 0
+        //       // on base face #3
+        //       _point_on_face2(ibase, 3, 2, i-1, j, k-1);
+        //     }
+        //   }
+        // }
+        // else { // k > 0
+        //   if (j == n-k-i) {
+        //     if (i == 0) {
+        //       // on base edge #5
+        //       _point_on_edge2(ibase, 5, 2, i-1, j, k-1);
+        //     }
+        //     else { // i > 0
+        //       // on base face #0
+        //       _point_on_face2(ibase, 0, 2, i-1, j, k-1);
+        //     }
+        //   }
+        //   else { // j < n-k-i
+        //     if (i == 0) {
+        //       // on base face #1
+        //       _point_on_face2(ibase, 1, 2, i-1, j, k-1);
+        //     }
+        //     else { // i > 0
+        //       // interior base cell
+        //       log_trace("  interior base cell ijk = %d %d %d\n",
+        //                 i-1, j, k-1);
+        //       _dcell_vtx[2] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j, k-1, n-3);
+        //     }
+        //   }
+        // }
 
 
         // vertex #3
-        if (k == n-j-i) {
-          if (j == 0) {
-            if (i == 0) {
-              // on base vtx #3
-              log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+3]-1, base_n_vtx, 3);
-              _dcell_vtx[3] = base_cell_vtx[4*ibase+3];
-            }
-            else { // i > 0
-              // on base edge #4
-              _point_on_edge(ibase, 4, 3, i-1, j-1, k);
-            }
-          }
-          else { // j > 0
-            if (i == 0) {
-              // on base edge #5
-              _point_on_edge(ibase, 5, 3, i-1, j-1, k);
-            }
-            else { // i > 0
-              // on base face #0
-              _point_on_face(ibase, 0, 3, i-1, j-1, k);
-            }
-          }
-        }
-        else { // k < n-j-i
-          if (j == 0) {
-            if (i == 0) {
-              // on base edge #2
-              _point_on_edge(ibase, 2, 3, i-1, j-1, k);
-            }
-            else { // i > 0
-              // on base face #2
-              _point_on_face(ibase, 2, 3, i-1, j-1, k);
-            }
-          }
-          else { // j > 0
-            if (i == 0) {
-              // on base face #1
-              _point_on_face(ibase, 1, 3, i-1, j-1, k);
-            }
-            else { // i > 0
-              // interior base cell
-              log_trace("  interior base cell ijk = %d %d %d\n",
-                        i-1, j-1, k);
-              _dcell_vtx[3] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j-1, k, n-3);
-            }
-          }
-        }
+        _hextet_vtx_4(i, j, k, _dcell_vtx[3]);
+        // if (k == n-j-i) {
+        //   if (j == 0) {
+        //     if (i == 0) {
+        //       // on base vtx #3
+        //       log_trace("  base vtx %d / %d (local %d)\n", base_cell_vtx[4*ibase+3]-1, base_n_vtx, 3);
+        //       _dcell_vtx[3] = base_cell_vtx[4*ibase+3];
+        //     }
+        //     else { // i > 0
+        //       // on base edge #4
+        //       _point_on_edge2(ibase, 4, 3, i-1, j-1, k);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == 0) {
+        //       // on base edge #5
+        //       _point_on_edge2(ibase, 5, 3, i-1, j-1, k);
+        //     }
+        //     else { // i > 0
+        //       // on base face #0
+        //       _point_on_face2(ibase, 0, 3, i-1, j-1, k);
+        //     }
+        //   }
+        // }
+        // else { // k < n-j-i
+        //   if (j == 0) {
+        //     if (i == 0) {
+        //       // on base edge #2
+        //       _point_on_edge2(ibase, 2, 3, i-1, j-1, k);
+        //     }
+        //     else { // i > 0
+        //       // on base face #2
+        //       _point_on_face2(ibase, 2, 3, i-1, j-1, k);
+        //     }
+        //   }
+        //   else { // j > 0
+        //     if (i == 0) {
+        //       // on base face #1
+        //       _point_on_face2(ibase, 1, 3, i-1, j-1, k);
+        //     }
+        //     else { // i > 0
+        //       // interior base cell
+        //       log_trace("  interior base cell ijk = %d %d %d\n",
+        //                 i-1, j-1, k);
+        //       _dcell_vtx[3] = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx(i-1, j-1, k, n-3);
+        //     }
+        //   }
+        // }
 
         break;
       }
 
       case 1: {
+        // hextet_vtx : [1, 5, 3, 4]
+
+        // vertex #0
+        _hextet_vtx_1(i, j, k, _dcell_vtx[0]);
+
+        // vertex #1
+        _hextet_vtx_5(i, j, k, _dcell_vtx[1]);
+
+        // vertex #2
+        _hextet_vtx_3(i, j, k, _dcell_vtx[2]);
+
+        // vertex #3
+        _hextet_vtx_4(i, j, k, _dcell_vtx[3]);
+
         break;
       }
 
       case 2: {
+        // hextet_vtx : [1, 3, 2, 4]
+
+        // vertex #0
+        _hextet_vtx_1(i, j, k, _dcell_vtx[0]);
+
+        // vertex #1
+        _hextet_vtx_3(i, j, k, _dcell_vtx[1]);
+
+        // vertex #2
+        _hextet_vtx_2(i, j, k, _dcell_vtx[2]);
+
+        // vertex #3
+        _hextet_vtx_4(i, j, k, _dcell_vtx[3]);
+
         break;
       }
 
       case 3: {
+        // hextet_vtx : [2, 3, 6, 4]
+
+        // vertex #0
+        _hextet_vtx_2(i, j, k, _dcell_vtx[0]);
+
+        // vertex #1
+        _hextet_vtx_3(i, j, k, _dcell_vtx[1]);
+
+        // vertex #2
+        _hextet_vtx_6(i, j, k, _dcell_vtx[2]);
+
+        // vertex #3
+        _hextet_vtx_4(i, j, k, _dcell_vtx[3]);
+
         break;
       }
 
       case 4: {
+        // hextet_vtx : [3, 4, 5, 6]
+
+        // vertex #0
+        _hextet_vtx_3(i, j, k, _dcell_vtx[0]);
+
+        // vertex #1
+        _hextet_vtx_4(i, j, k, _dcell_vtx[1]);
+
+        // vertex #2
+        _hextet_vtx_5(i, j, k, _dcell_vtx[2]);
+
+        // vertex #3
+        _hextet_vtx_6(i, j, k, _dcell_vtx[3]);
+
         break;
       }
 
       case 5: {
+        // hextet_vtx : [3, 7, 6, 5]
+
+        // vertex #0
+        _hextet_vtx_3(i, j, k, _dcell_vtx[0]);
+
+        // vertex #1
+        _hextet_vtx_7(i, j, k, _dcell_vtx[1]);
+
+        // vertex #2
+        _hextet_vtx_6(i, j, k, _dcell_vtx[2]);
+
+        // vertex #3
+        _hextet_vtx_5(i, j, k, _dcell_vtx[3]);
+
         break;
       }
 
@@ -1663,8 +1702,16 @@ _gen_from_base_mesh2
       }
     }
 
+    if (1) {
+      /* Flip */
+      PDM_g_num_t tmp = _dcell_vtx[0];
+      _dcell_vtx[0] = _dcell_vtx[1];
+      _dcell_vtx[1] = tmp;
+    }
+
     PDM_log_trace_array_long(_dcell_vtx, 4, "_dcell_vtx : ");
     for (int ivtx = 0; ivtx < 4; ivtx++) {
+      // _dcell_vtx[ivtx] = PDM_MAX(1, PDM_MIN(gn_vtx, _dcell_vtx[ivtx]));
       assert(_dcell_vtx[ivtx] > 0 && _dcell_vtx[ivtx] <= gn_vtx);
     }
 
@@ -1769,24 +1816,6 @@ PDM_sphere_vol_icosphere_gen
                                          &base_cell_face,
                                          &base_cell_edge);
 
-  // _gen_from_base_mesh(comm,
-  //                     n,
-  //                     base_n_vtx,
-  //                     base_n_edge,
-  //                     base_n_face,
-  //                     base_n_cell,
-  //          (double *) base_vtx_coord,
-  //                     base_edge_vtx,
-  //                     base_face_vtx,
-  //                     base_face_edge,
-  //                     base_cell_face,
-  //                     base_cell_edge,
-  //             (int *) base_cell_vtx,
-  //                     dvtx_coord,
-  //                     dcell_vtx,
-  //                     distrib_vtx,
-  //                     distrib_cell);
-
   if (1 && i_rank == 0) {
     PDM_vtk_write_std_elements("icoball_base_edge.vtk",
                                base_n_vtx,
@@ -1821,7 +1850,7 @@ PDM_sphere_vol_icosphere_gen
 
 
 
-  _gen_from_base_mesh2(comm,
+  _gen_from_base_mesh(comm,
                       n,
                       base_n_vtx,
                       base_n_edge,
@@ -1925,9 +1954,9 @@ PDM_sphere_vol_icosphere_gen
       scale /= r;
     }
 
-    // (*dvtx_coord)[3*i  ] = x_center + scale*(*dvtx_coord)[3*i  ];
-    // (*dvtx_coord)[3*i+1] = y_center + scale*(*dvtx_coord)[3*i+1];
-    // (*dvtx_coord)[3*i+2] = z_center + scale*(*dvtx_coord)[3*i+2];
+    (*dvtx_coord)[3*i  ] = x_center + scale*(*dvtx_coord)[3*i  ];
+    (*dvtx_coord)[3*i+1] = y_center + scale*(*dvtx_coord)[3*i+1];
+    (*dvtx_coord)[3*i+2] = z_center + scale*(*dvtx_coord)[3*i+2];
   }
   free(ibase_cell);
   free(w);
@@ -1938,6 +1967,156 @@ PDM_sphere_vol_icosphere_gen
   free(base_face_edge);
   free(base_cell_face);
   free(base_cell_edge);
+}
+
+
+
+
+static PDM_dmesh_nodal_t *
+_set_dmesh_nodal
+(
+ const PDM_MPI_Comm  comm,
+       double       *dvtx_coord,
+       // PDM_g_num_t  *dface_vtx,
+       PDM_g_num_t  *dcell_vtx,
+       PDM_g_num_t  *distrib_vtx,
+       // PDM_g_num_t  *distrib_face,
+       PDM_g_num_t  *distrib_cell
+ )
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+
+
+  /*
+   *  Create dmesh nodal
+   */
+  PDM_g_num_t gn_vtx  = distrib_vtx [n_rank];
+  // PDM_g_num_t gn_face = distrib_face[n_rank];
+  PDM_g_num_t gn_cell = distrib_cell[n_rank];
+  int dn_vtx  = distrib_vtx [i_rank+1] - distrib_vtx [i_rank];
+  // int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+  int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
+
+  PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
+                                                  3,
+                                                  gn_vtx,
+                                                  gn_cell,
+                                                  0,//gn_face,
+                                                  0);
+
+  PDM_DMesh_nodal_coord_set(dmn,
+                            dn_vtx,
+                            dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  // /* Surface */
+  // dmn->surfacic->n_g_elmts = gn_face;
+  // int id_section = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
+  //                                                    PDM_MESH_NODAL_TRIA3);
+  // PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
+  //                                       id_section,
+  //                                       dn_face,
+  //                                       dface_vtx,
+  //                                       PDM_OWNERSHIP_KEEP);
+
+  // int n_group = 1;
+  // int *dgroup_face_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  // dgroup_face_idx[0] = 0;
+  // dgroup_face_idx[1] = dn_face;
+
+  // PDM_g_num_t *dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_face_idx[n_group]);
+  // for (int i = 0; i < dn_face; i++) {
+  //   dgroup_face[i] = distrib_face[i_rank] + i + 1;
+  // }
+  // PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
+  //                                 n_group,
+  //                                 dgroup_face_idx,
+  //                                 dgroup_face,
+  //                                 PDM_OWNERSHIP_KEEP);
+
+  /* Volume */
+  dmn->volumic->n_g_elmts = gn_cell;
+  int id_section = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
+                                                     PDM_MESH_NODAL_TETRA4);
+  PDM_DMesh_nodal_elmts_section_std_set(dmn->volumic,
+                                        id_section,
+                                        dn_cell,
+                                        dcell_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+  // int n_group = 1;
+  // int *dgroup_cell_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  // dgroup_cell_idx[0] = 0;
+  // dgroup_cell_idx[1] = dn_cell;
+
+  // PDM_g_num_t *dgroup_cell = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_cell_idx[n_group]);
+  // for (int i = 0; i < dn_face; i++) {
+  //   dgroup_cell[i] = distrib_cell[i_rank] + i + 1;
+  // }
+  // PDM_DMesh_nodal_elmts_group_set(dmn->volumic,
+  //                                 n_group,
+  //                                 dgroup_cell_idx,
+  //                                 dgroup_cell,
+  //                                 PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  return dmn;
+}
+
+
+void
+PDM_sphere_vol_icosphere_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       PDM_dmesh_nodal_t **_dmn
+)
+{
+  /* TODO : boundary faces */
+
+  double      *dvtx_coord    = NULL;
+  PDM_g_num_t *dface_vtx     = NULL;
+  PDM_g_num_t *dcell_vtx     = NULL;
+  PDM_g_num_t *distrib_vtx   = NULL;
+  PDM_g_num_t *distrib_face  = NULL;
+  PDM_g_num_t *distrib_cell  = NULL;
+  int *dcell_hextet = NULL;
+  PDM_sphere_vol_icosphere_gen(comm,
+                               n,
+                               x_center,
+                               y_center,
+                               z_center,
+                               radius,
+                               &dvtx_coord,
+                               // &dface_vtx,
+                               &dcell_vtx,
+                               &dcell_hextet,
+                               &distrib_vtx,
+                               // &distrib_face,
+                               &distrib_cell);
+  free(dcell_hextet);
+
+  /*
+   *  Create dmesh nodal
+   */
+  *_dmn = _set_dmesh_nodal(comm,
+                           dvtx_coord,
+                           // dface_vtx,
+                           dcell_vtx,
+                           distrib_vtx,
+                           // distrib_face,
+                           distrib_cell);
+
+  free(distrib_vtx);
+  free(distrib_cell);
 }
 
 

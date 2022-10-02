@@ -19,6 +19,8 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_geom_elem.h"
+
 #include "pdm_sphere_vol_gen.h"
 
 
@@ -261,19 +263,6 @@ int main(int argc, char *argv[])
   //                        pcell_ln_to_gn,
   //                        NULL);
 
-  int *pedge_vtx = malloc(sizeof(int) * 2*dn_cell);
-  for (int i = 0; i < dn_cell; i++) {
-    for (int j = 0; j < 2; j++) {
-      pedge_vtx[2*i+j] = pcell_vtx[4*i+j];
-    }
-  }
-
-  int *ptria_vtx = malloc(sizeof(int) * 3*dn_cell);
-  for (int i = 0; i < dn_cell; i++) {
-    for (int j = 0; j < 3; j++) {
-      ptria_vtx[3*i+j] = pcell_vtx[4*i+j];
-    }
-  }
 
 
   const char *field_name[]   = {"hextet"};
@@ -291,6 +280,37 @@ int main(int argc, char *argv[])
                              field_name,
                              field_value);
 
+  double *volume = malloc(sizeof(double) * dn_cell);
+  // PDM_geom_elem_tetra_oriented_volume(dn_cell,
+  //                                     pcell_vtx,
+  //                                     pvtx_coord,
+  //                                     volume,
+  //                                     NULL,
+  //                                     NULL);
+  int count = 0;
+  for (int i = 0; i < dn_cell; i++) {
+
+    int *tv = pcell_vtx + 4*i;
+
+    double u[3], v[3], w[3];
+    for (int j = 0; j < 3; j++) {
+      u[j] = pvtx_coord[3*(tv[1]-1)+j] - pvtx_coord[3*(tv[0]-1)+j];
+      v[j] = pvtx_coord[3*(tv[2]-1)+j] - pvtx_coord[3*(tv[0]-1)+j];
+      w[j] = pvtx_coord[3*(tv[3]-1)+j] - pvtx_coord[3*(tv[0]-1)+j];
+    }
+
+    double uv[3];
+    PDM_CROSS_PRODUCT(uv, u, v);
+    volume[i] = PDM_DOT_PRODUCT(uv, w) / 6.;
+
+    log_trace("i = %d, hextet %d, vol = %f\n", i, dcell_hextet[i], volume[i]);
+    if (volume[i] < 0) {
+      count++;
+    }
+  }
+  log_trace("%d cells with negative volume / %d\n", count, dn_cell);
+  free(volume);
+
   free(pvtx_ln_to_gn);
   free(pcell_vtx_idx);
   free(pcell_vtx);
@@ -305,6 +325,7 @@ int main(int argc, char *argv[])
 
   free(dvtx_coord);
   free(dcell_vtx);
+  free(dcell_hextet);
 
   PDM_MPI_Finalize();
 
