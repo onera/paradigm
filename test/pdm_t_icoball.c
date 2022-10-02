@@ -20,6 +20,7 @@
 #include "pdm_vtk.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_geom_elem.h"
+#include "pdm_dmesh_nodal.h"
 
 #include "pdm_sphere_vol_gen.h"
 
@@ -170,8 +171,10 @@ int main(int argc, char *argv[])
   int          dn_vtx        = 0;
   double      *dvtx_coord    = NULL;
   int          dn_cell       = 0;
+  PDM_g_num_t *dface_vtx     = NULL;
   PDM_g_num_t *dcell_vtx     = NULL;
   PDM_g_num_t *distrib_vtx   = NULL;
+  PDM_g_num_t *distrib_face  = NULL;
   PDM_g_num_t *distrib_cell  = NULL;
 
   int *dcell_hextet = NULL;
@@ -183,9 +186,11 @@ int main(int argc, char *argv[])
                                z_center,
                                radius,
                                &dvtx_coord,
+                               &dface_vtx,
                                &dcell_vtx,
                                &dcell_hextet,
                                &distrib_vtx,
+                               &distrib_face,
                                &distrib_cell);
   dn_vtx  = (int) (distrib_vtx[i_rank+1]  - distrib_vtx[i_rank]);
 
@@ -320,12 +325,35 @@ int main(int argc, char *argv[])
 
   free(dvtx_ln_to_gn);
   free(distrib_vtx);
+  free(distrib_face);
   free(distrib_cell);
 
 
   free(dvtx_coord);
+  free(dface_vtx);
   free(dcell_vtx);
   free(dcell_hextet);
+
+
+
+  PDM_dmesh_nodal_t *dmn = NULL;
+  PDM_sphere_vol_icosphere_gen_nodal(comm,
+                                     n,
+                                     x_center,
+                                     y_center,
+                                     z_center,
+                                     radius,
+                                     &dmn);
+
+  PDM_dmesh_nodal_dump_vtk(dmn,
+                           PDM_GEOMETRY_KIND_VOLUMIC,
+                           "icoball_volume_");
+
+  PDM_dmesh_nodal_dump_vtk(dmn,
+                           PDM_GEOMETRY_KIND_SURFACIC,
+                           "icoball_surface_");
+
+  PDM_DMesh_nodal_free(dmn);
 
   PDM_MPI_Finalize();
 

@@ -62,6 +62,325 @@ extern "C" {
 #define ij2idx(i, j, n) ((i) + ((n)+1)*(j) - ((j)-1)*(j)/2)
 #define ijk2idx(i, j, k, n) ((i) + (j)*((n) + 1 - (k)) - (j)*((j)-1)/2 + ((k)*((k)*((k) - 3*(n) - 6) + 3*(n)*((n) + 4) + 11)) / 6)
 
+#define _point_on_edge(ibase, iedge, gnum_vtx, i, j, k) \
+  int ibase_edge = base_cell_edge[6*(ibase) + (iedge)]; \
+  int sign = PDM_SIGN(ibase_edge); \
+  ibase_edge = PDM_ABS(ibase_edge) - 1; \
+  int ei; \
+  _local_edge_frame((iedge), (i), (j), (k), &ei); \
+  if (sign < 0) { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + n - ei; \
+  } \
+  else { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + ei + 1; \
+  }
+
+#define _point_on_face(ibase, iface, gnum_vtx, i, j, k) \
+  int ibase_face = base_cell_face[4*(ibase) + (iface)]; \
+  int sign = PDM_SIGN(ibase_face); \
+  ibase_face = PDM_ABS(ibase_face) - 1; \
+  int perm = base_cell_face_perm[4*(ibase) + (iface)]; \
+  int fi, fj; \
+  _local_face_frame((iface), i, j, k, &fi, &fj); \
+  _permute_ij(perm, sign, &fi, &fj, n-2); \
+  (gnum_vtx) = 1 + idx_vtx_face + ibase_face*face_int_vtx_n + ij2idx(fi, fj, n-2);
+
+
+
+#define _hextet_vtx_0(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        (gnum_vtx) = base_cell_vtx[4*ibase+0]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
+      } \
+      else { \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_1(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == 0) { \
+      if ((i) == n-(k)-(j)) { \
+        (gnum_vtx) = base_cell_vtx[4*ibase+1]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_edge(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == n-(k)-(j)) { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
+      } \
+      else { \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_2(i, j, k, gnum_vtx) \
+  if ((k) == 0) { \
+    if ((j) == n-(k)-(i)) { \
+      if ((i) == 0) { \
+        (gnum_vtx) = base_cell_vtx[4*ibase+2]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == n-(k)-i) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
+      } \
+      else { \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k)-1, n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_3(i, j, k, gnum_vtx) \
+  if ((k) == 0) {  \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_edge(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+    else { \
+      _point_on_face(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+  } \
+  else { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)-1); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k)-1, n-3); \
+    } \
+  }
+
+#define _hextet_vtx_4(i, j, k, gnum_vtx) \
+  if ((k) == n-(j)-(i)) { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        (gnum_vtx) = base_cell_vtx[4*ibase+3]; \
+      } \
+      else { \
+        _point_on_edge(ibase, 4, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+  } \
+  else { \
+    if ((j) == 0) { \
+      if ((i) == 0) { \
+        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+    } \
+    else { \
+      if ((i) == 0) { \
+        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)); \
+      } \
+      else { \
+        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k), n-3); \
+      } \
+    } \
+  }
+
+#define _hextet_vtx_5(i, j, k, gnum_vtx) \
+  if ((j) == 0) { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+    else { \
+      _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+  } \
+  else { \
+    if ((i) == n-1-(k)-(j)) { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k), n-3); \
+    } \
+  }
+
+#define _hextet_vtx_6(i, j, k, gnum_vtx) \
+  if ((j) == n-1-(k)-i) { \
+    if ((i) == 0) { \
+      _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+    else { \
+      _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+  } \
+  else { \
+    if ((i) == 0) { \
+      _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k), n-3); \
+    } \
+  }
+
+#define _hextet_vtx_7(i, j, k, gnum_vtx) \
+  if ((i) == n-2-(k)-(j)) { \
+    _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)); \
+  } \
+  else { \
+    (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k), n-3); \
+  }
+
+
+#define _point_on_edge2(ibase, iedge, gnum_vtx, i, j) \
+  int ibase_edge = base_face_edge[3*(ibase) + (iedge)]; \
+  int sign = PDM_SIGN(ibase_edge); \
+  ibase_edge = PDM_ABS(ibase_edge) - 1; \
+  int ei; \
+  _local_edge_frame2((iedge), (i), (j), n, &ei); \
+  log_trace("edge %d (%d %d) (local %d), sign %d, ei = %d\n", \
+            ibase_edge, base_edge_vtx[2*ibase_edge]-1, base_edge_vtx[2*ibase_edge+1]-1, iedge, sign, ei); \
+  if (sign < 0) { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + n - ei; \
+  } \
+  else { \
+    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + ei + 1; \
+  }
+
+#define _quadtria_vtx_0(i, j, gnum_vtx) \
+  if ((j) == 0) { \
+    if ((i) == 0) { \
+      (gnum_vtx) = base_face_vtx[3*ibase_face]; \
+    } \
+    else { \
+      _point_on_edge2(ibase_face, 0, (gnum_vtx), (i)-1, (j)-1); \
+    } \
+  } \
+  else { \
+    if ((i) == 0) { \
+      _point_on_edge2(ibase_face, 2, (gnum_vtx), (i)-1, (j)-1); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_face + face_int_vtx_n*ibase_face + ij2idx((i)-1, (j)-1, n-2); \
+    } \
+  }
+
+
+#define _quadtria_vtx_1(i, j, gnum_vtx) \
+  if ((j) == 0) { \
+    if ((i) == n-(j)) { \
+      (gnum_vtx) = base_face_vtx[3*ibase_face+1]; \
+    } \
+    else { \
+      _point_on_edge2(ibase_face, 0, (gnum_vtx), (i), (j)-1); \
+    } \
+  } \
+  else { \
+    if ((i) == n-(j)) { \
+      _point_on_edge2(ibase_face, 1, (gnum_vtx), (i), (j)-1); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_face + face_int_vtx_n*ibase_face + ij2idx((i), (j)-1, n-2); \
+    } \
+  }
+
+
+#define _quadtria_vtx_2(i, j, gnum_vtx) \
+  if ((j) == n-i) { \
+    if ((i) == 0) { \
+      (gnum_vtx) = base_face_vtx[3*ibase_face+2]; \
+    } \
+    else { \
+      _point_on_edge2(ibase_face, 1, (gnum_vtx), (i)-1, (j)); \
+    } \
+  } \
+  else { \
+    if ((i) == 0) { \
+      _point_on_edge2(ibase_face, 2, (gnum_vtx), (i)-1, (j)); \
+    } \
+    else { \
+      (gnum_vtx) = 1 + idx_vtx_face + face_int_vtx_n*ibase_face + ij2idx((i)-1, (j), n-2); \
+    } \
+  }
+
+#define _quadtria_vtx_3(i, j, gnum_vtx) \
+  if ((j) == n-i-1) { \
+    _point_on_edge2(ibase_face, 1, (gnum_vtx), (i), (j)); \
+  } \
+  else { \
+    (gnum_vtx) = 1 + idx_vtx_face + face_int_vtx_n*ibase_face + ij2idx((i), (j), n-2); \
+  }
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -138,249 +457,6 @@ idx2ij
 
   *i = idx - ij2idx(0, _j, n);
   *j = _j;
-}
-
-static inline void
-idx2ijk
-(
- const int  idx,
- const int  n,
- int       *i,
- int       *j,
- int       *k
- )
-{
-  int _idx = 0;
-  for (*k = 0; *k <= n; (*k)++) {
-    for (*j = 0; *j <= n-(*k); (*j)++) {
-      for (*i = 0; *i <= n-(*k)-(*j); (*i)++) {
-        if (_idx == idx) {
-          return;
-        }
-        _idx++;
-      }
-    }
-  }
-}
-
-/*============================================================================
- * Public function definitions
- *============================================================================*/
-
-/**
- *
- * \brief Create a volume mesh bounded by a sphere (deformed cube)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n_vtx_x         Number of vertices on segments in x-direction
- * \param[in]  n_vtx_y         Number of vertices on segments in y-direction
- * \param[in]  n_vtx_z         Number of vertices on segments in z-direction
- * \param[in]  radius          Radius of the sphere
- * \param[in]  center_x        x coordinate of the center of the sphere
- * \param[in]  center_y        y coordinate of the center of the sphere
- * \param[in]  center_z        z coordinate of the center of the sphere
- * \param[in]  t_elt           Element type
- * \param[in]  order           Element order
- * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
- *
- */
-
-void
-PDM_sphere_vol_gen_nodal
-(
- PDM_MPI_Comm           comm,
- const PDM_g_num_t      n_vtx_x,
- const PDM_g_num_t      n_vtx_y,
- const PDM_g_num_t      n_vtx_z,
- const double           radius,
- const double           center_x,
- const double           center_y,
- const double           center_z,
- PDM_Mesh_nodal_elt_t   t_elt,
- const int              order,
- PDM_dmesh_nodal_t    **dmn
- )
-{
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  int mesh_dimension = PDM_Mesh_nodal_elt_dim_get(t_elt);
-  if (mesh_dimension != 3) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Not implemented yes for dimension %d\n", mesh_dimension);
-  }
-
-  /* First: generate a dcube nodal */
-  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
-                                                        n_vtx_x,
-                                                        n_vtx_y,
-                                                        n_vtx_z,
-                                                        2*radius,
-                                                        center_x - radius,
-                                                        center_y - radius,
-                                                        center_z - radius,
-                                                        t_elt,
-                                                        order,
-                                                        PDM_OWNERSHIP_KEEP);
-
-  PDM_dcube_nodal_gen_build (dcube);
-
-  PDM_dmesh_nodal_t *_dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
-
-  PDM_dmesh_nodal_generate_distribution(_dmn);
-
-  /* Second: "spherify" */
-  PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(_dmn);
-  int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(_dmn);
-
-  double center[3] = {center_x, center_y, center_z};
-
-  double *_dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
-  for (int i = 0; i < dn_vtx; i++) {
-
-    // double r2 = 0., rinf = 0.;
-    // for (int j = 0; j < 3; j++) {
-    //   double x = dvtx_coord[3*i + j] - center[j];
-    //   r2 += x*x;
-    //   rinf = PDM_MAX(rinf, PDM_ABS(x));
-    // }
-
-    // r2 = sqrt(r2);
-
-    // double scale = rinf/r2;
-    // for (int j = 0; j < 3; j++) {
-    //   double x = dvtx_coord[3*i + j] - center[j];
-
-    //   _dvtx_coord[3*i + j] = center[j] + scale*x;
-    // }
-    double xyzc[3];
-    for (int j = 0; j < 3; j++) {
-      xyzc[j] = (dvtx_coord[3*i + j] - center[j]) / radius;
-    }
-
-    _cube_to_sphere(xyzc[0], xyzc[1], xyzc[2],
-                    _dvtx_coord + 3*i,
-                    _dvtx_coord + 3*i+1,
-                    _dvtx_coord + 3*i+2);
-
-    for (int j = 0; j < 3; j++) {
-      _dvtx_coord[3*i + j] = center[j] + radius*_dvtx_coord[3*i + j];
-    }
-
-  }
-
-
-  /* Third: get rid of ridges and unify surfaces */
-
-  *dmn = PDM_DMesh_nodal_create(comm,
-                                mesh_dimension,
-                                distrib_vtx[n_rank],
-                                1,
-                                0,
-                                0);
-
-  PDM_DMesh_nodal_coord_set(*dmn,
-                            dn_vtx,
-                            _dvtx_coord,
-                            PDM_OWNERSHIP_KEEP);
-
-  // Volume
-  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-  int n_section    = PDM_DMesh_nodal_n_section_get  (_dmn, geom_kind);
-  int *sections_id = PDM_DMesh_nodal_sections_id_get(_dmn, geom_kind);
-
-  PDM_g_num_t gn_elt_vol = 0;
-  for (int i_section = 0; i_section < n_section; i_section++) {
-
-    int id_section = sections_id[i_section];
-    int _order;
-    const char *ho_ordering = NULL;
-    const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
-    int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
-    PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
-
-    int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
-    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
-    memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
-
-    int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->volumic,
-                                                           elt_type,
-                                                           order,
-                                                           ho_ordering);
-    PDM_DMesh_nodal_elmts_section_std_set((*dmn)->volumic,
-                                          _id_section,
-                                          dn_elt,
-                                          _delt_vtx,
-                                          PDM_OWNERSHIP_KEEP);
-
-    gn_elt_vol += distrib_elt[n_rank];
-  }
-  (*dmn)->volumic->n_g_elmts = gn_elt_vol;
-
-
-  // Surface
-  geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-  n_section   = PDM_DMesh_nodal_n_section_get  (_dmn, geom_kind);
-  sections_id = PDM_DMesh_nodal_sections_id_get(_dmn, geom_kind);
-
-  PDM_g_num_t gn_elt_surf = 0;
-  for (int i_section = 0; i_section < n_section; i_section++) {
-
-    int id_section = sections_id[i_section];
-    int _order;
-    const char *ho_ordering = NULL;
-    const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
-    int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
-    PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
-
-    int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
-    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
-    memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
-
-    int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->surfacic,
-                                                           elt_type,
-                                                           order,
-                                                           ho_ordering);
-    PDM_DMesh_nodal_elmts_section_std_set((*dmn)->surfacic,
-                                          _id_section,
-                                          dn_elt,
-                                          _delt_vtx,
-                                          PDM_OWNERSHIP_KEEP);
-
-    gn_elt_surf += distrib_elt[n_rank];
-  }
-  (*dmn)->surfacic->n_g_elmts = gn_elt_surf;
-
-
-  // Groups
-  PDM_g_num_t *distrib_face = PDM_compute_uniform_entity_distribution(comm,
-                                                                      gn_elt_surf);
-  int n_group = 1;
-  int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
-  dgroup_elt_idx[0] = 0;
-  dgroup_elt_idx[n_group] = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
-
-  PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
-  for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
-    dgroup_elt[i] = distrib_face[i_rank] + i + 1;
-  }
-
-  free(distrib_face);
-
-  PDM_DMesh_nodal_elmts_group_set((*dmn)->surfacic,
-                                  n_group,
-                                  dgroup_elt_idx,
-                                  dgroup_elt,
-                                  PDM_OWNERSHIP_KEEP);
-
-  PDM_dmesh_nodal_generate_distribution(*dmn);
-
-
-  PDM_dcube_nodal_gen_free(dcube);
 }
 
 
@@ -689,6 +765,17 @@ _n_subtetra
 }
 
 
+static inline int
+_n_subtria
+(
+ const int n
+ )
+{
+  return (n+1)*(n+2)/2;
+}
+
+
+
 static inline void
 _permute_ij
 (
@@ -762,6 +849,28 @@ const int  k,
 
 
 static inline void
+_local_edge_frame2
+(
+const int  iedge,
+const int  i,
+const int  j,
+const int  n,
+      int *ei
+)
+{
+  if (iedge == 0) {
+    *ei = i;
+  }
+  else if (iedge == 1) {
+    *ei = j;
+  }
+  else {
+    *ei = n-j-1;
+  }
+}
+
+
+static inline void
 _local_face_frame
 (
 const int  iface,
@@ -790,244 +899,8 @@ const int  k,
   }
 }
 
-#define _point_on_edge(ibase, iedge, gnum_vtx, i, j, k) \
-  int ibase_edge = base_cell_edge[6*(ibase) + (iedge)]; \
-  int sign = PDM_SIGN(ibase_edge); \
-  ibase_edge = PDM_ABS(ibase_edge) - 1; \
-  int ei; \
-  _local_edge_frame((iedge), (i), (j), (k), &ei); \
-  if (sign < 0) { \
-    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + n - ei; \
-  } \
-  else { \
-    (gnum_vtx) = idx_vtx_edge + ibase_edge*n + ei + 1; \
-  }
-
-#define _point_on_face(ibase, iface, gnum_vtx, i, j, k) \
-  int ibase_face = base_cell_face[4*(ibase) + (iface)]; \
-  int sign = PDM_SIGN(ibase_face); \
-  ibase_face = PDM_ABS(ibase_face) - 1; \
-  int perm = base_cell_face_perm[4*(ibase) + (iface)]; \
-  int fi, fj; \
-  _local_face_frame((iface), i, j, k, &fi, &fj); \
-  _permute_ij(perm, sign, &fi, &fj, n-2); \
-  (gnum_vtx) = 1 + idx_vtx_face + ibase_face*face_int_vtx_n + ij2idx(fi, fj, n-2);
 
 
-
-#define _hextet_vtx_0(i, j, k, gnum_vtx) \
-  if ((k) == 0) { \
-    if ((j) == 0) { \
-      if ((i) == 0) { \
-        (gnum_vtx) = base_cell_vtx[4*ibase+0]; \
-      } \
-      else { \
-        _point_on_edge(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-    } \
-  } \
-  else { \
-    if ((j) == 0) { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)-1); \
-      } \
-      else { \
-        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k)-1, n-3); \
-      } \
-    } \
-  }
-
-#define _hextet_vtx_1(i, j, k, gnum_vtx) \
-  if ((k) == 0) { \
-    if ((j) == 0) { \
-      if ((i) == n-(k)-(j)) { \
-        (gnum_vtx) = base_cell_vtx[4*ibase+1]; \
-      } \
-      else { \
-        _point_on_edge(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == n-(k)-(j)) { \
-        _point_on_edge(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 3, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-    } \
-  } \
-  else { \
-    if ((j) == 0) { \
-      if ((i) == n-(k)-(j)) { \
-        _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == n-(k)-(j)) { \
-        _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)-1); \
-      } \
-      else { \
-        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k)-1, n-3); \
-      } \
-    } \
-  }
-
-#define _hextet_vtx_2(i, j, k, gnum_vtx) \
-  if ((k) == 0) { \
-    if ((j) == n-(k)-(i)) { \
-      if ((i) == 0) { \
-        (gnum_vtx) = base_cell_vtx[4*ibase+2]; \
-      } \
-      else { \
-        _point_on_edge(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 3, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-    } \
-  } \
-  else { \
-    if ((j) == n-(k)-i) { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-      else { \
-        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)-1); \
-      } \
-      else { \
-        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k)-1, n-3); \
-      } \
-    } \
-  }
-
-#define _hextet_vtx_3(i, j, k, gnum_vtx) \
-  if ((k) == 0) {  \
-    if ((i) == n-1-(k)-(j)) { \
-      _point_on_edge(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
-    } \
-    else { \
-      _point_on_face(ibase, 3, (gnum_vtx), (i), (j), (k)-1); \
-    } \
-  } \
-  else { \
-    if ((i) == n-1-(k)-(j)) { \
-      _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)-1); \
-    } \
-    else { \
-      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k)-1, n-3); \
-    } \
-  }
-
-#define _hextet_vtx_4(i, j, k, gnum_vtx) \
-  if ((k) == n-(j)-(i)) { \
-    if ((j) == 0) { \
-      if ((i) == 0) { \
-        (gnum_vtx) = base_cell_vtx[4*ibase+3]; \
-      } \
-      else { \
-        _point_on_edge(ibase, 4, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-      else { \
-        _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-    } \
-  } \
-  else { \
-    if ((j) == 0) { \
-      if ((i) == 0) { \
-        _point_on_edge(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-      else { \
-        _point_on_face(ibase, 2, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-    } \
-    else { \
-      if ((i) == 0) { \
-        _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j)-1, (k)); \
-      } \
-      else { \
-        (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j)-1, (k), n-3); \
-      } \
-    } \
-  }
-
-#define _hextet_vtx_5(i, j, k, gnum_vtx) \
-  if ((j) == 0) { \
-    if ((i) == n-1-(k)-(j)) { \
-      _point_on_edge(ibase, 4, (gnum_vtx), (i), (j)-1, (k)); \
-    } \
-    else { \
-      _point_on_face(ibase, 2, (gnum_vtx), (i), (j)-1, (k)); \
-    } \
-  } \
-  else { \
-    if ((i) == n-1-(k)-(j)) { \
-      _point_on_face(ibase, 0, (gnum_vtx), (i), (j)-1, (k)); \
-    } \
-    else { \
-      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j)-1, (k), n-3); \
-    } \
-  }
-
-#define _hextet_vtx_6(i, j, k, gnum_vtx) \
-  if ((j) == n-1-(k)-i) { \
-    if ((i) == 0) { \
-      _point_on_edge(ibase, 5, (gnum_vtx), (i)-1, (j), (k)); \
-    } \
-    else { \
-      _point_on_face(ibase, 0, (gnum_vtx), (i)-1, (j), (k)); \
-    } \
-  } \
-  else { \
-    if ((i) == 0) { \
-      _point_on_face(ibase, 1, (gnum_vtx), (i)-1, (j), (k)); \
-    } \
-    else { \
-      (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i)-1, (j), (k), n-3); \
-    } \
-  }
-
-#define _hextet_vtx_7(i, j, k, gnum_vtx) \
-  if ((i) == n-2-(k)-(j)) { \
-    _point_on_face(ibase, 0, (gnum_vtx), (i), (j), (k)); \
-  } \
-  else { \
-    (gnum_vtx) = 1 + idx_vtx_cell + ibase*cell_int_vtx_n + ijk2idx((i), (j), (k), n-3); \
-  }
 
 static void
 _gen_from_base_mesh
@@ -1046,11 +919,11 @@ _gen_from_base_mesh
        int           *base_cell_edge,
        int           *base_cell_vtx,
        double       **dvtx_coord,
-       // PDM_g_num_t  **dface_vtx,
+       PDM_g_num_t  **dface_vtx,
        PDM_g_num_t  **dcell_vtx,
        int          **dcell_hextet,
        PDM_g_num_t  **distrib_vtx,
-       // PDM_g_num_t  **distrib_face,
+       PDM_g_num_t  **distrib_face,
        PDM_g_num_t  **distrib_cell
 )
 {
@@ -1059,6 +932,27 @@ _gen_from_base_mesh
 
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
+
+  /* Check orientation */
+  for (int i = 0; i < base_n_cell; i++) {
+
+    int *bcv = base_cell_vtx + 4*i;
+
+    double u[3], v[3], w[3];
+    for (int j = 0; j < 3; j++) {
+      u[j] = base_vtx_coord[3*(bcv[1]-1)+j] - base_vtx_coord[3*(bcv[0]-1)+j];
+      v[j] = base_vtx_coord[3*(bcv[2]-1)+j] - base_vtx_coord[3*(bcv[0]-1)+j];
+      w[j] = base_vtx_coord[3*(bcv[3]-1)+j] - base_vtx_coord[3*(bcv[0]-1)+j];
+    }
+
+    double uv[3];
+    PDM_CROSS_PRODUCT(uv, u, v);
+    double vol6 = PDM_DOT_PRODUCT(uv, w);
+
+    if (vol6 <= 0) {
+      log_trace("!!! base cell %d has volume = %e\n", i, vol6/6.);
+    }
+  }
 
   /* Auxiliary arrays */
   int *tria_j_idx = malloc(sizeof(int) * n);
@@ -1250,22 +1144,13 @@ _gen_from_base_mesh
 
   *dcell_vtx = malloc(sizeof(PDM_g_num_t) * dn_cell * 4);
 
-  //-->> tmp
-  for (int i = 0; i < 4*dn_cell; i++) {
-    (*dcell_vtx)[i] = 1;
-  }
-  //<<--
+  // //-->> tmp
+  // for (int i = 0; i < 4*dn_cell; i++) {
+  //   (*dcell_vtx)[i] = 1;
+  // }
+  // //<<--
 
-  *dcell_hextet = malloc(sizeof(int) * dn_cell);
-
-  // int hextet_vtx[6][4] = {
-  //   {0, 1, 2, 4},
-  //   {1, 5, 3, 4},
-  //   {1, 3, 2, 4},
-  //   {2, 3, 6, 4},
-  //   {3, 4, 5, 6},
-  //   {3, 7, 6, 5}
-  // };
+  *dcell_hextet = malloc(sizeof(int) * dn_cell); // to remove
 
   int *base_cell_face_perm = malloc(sizeof(int) * 4 * base_n_cell);
   for (int icell = 0; icell < base_n_cell; icell++) {
@@ -1462,7 +1347,7 @@ _gen_from_base_mesh
       }
     }
 
-    if (1) {
+    if (0) {
       /* Flip */
       PDM_g_num_t tmp = _dcell_vtx[0];
       _dcell_vtx[0] = _dcell_vtx[1];
@@ -1484,7 +1369,459 @@ _gen_from_base_mesh
   free(hextet_k_idx[1]);
   free(hextet_k_idx[5]);
 
+
+
+
+  /* Boundary faces */
+  int *base_face_tag = PDM_array_zeros_int(base_n_face);
+  for (int icell = 0; icell < base_n_cell; icell++) {
+    for (int idx_face = 4*icell; idx_face < 4*(icell+1); idx_face++) {
+      int face_id = PDM_ABS(base_cell_face[idx_face]) - 1;
+      base_face_tag[face_id] += PDM_SIGN(base_cell_face[idx_face]);
+    }
+  }
+
+
+  int base_n_bdr_face = 0;
+  int *base_bdr_face = malloc(sizeof(int) * base_n_face);
+  for (int iface = 0; iface < base_n_face; iface++) {
+    if (base_face_tag[iface] != 0) {
+      base_bdr_face[base_n_bdr_face++] = PDM_SIGN(base_face_tag[iface]) * (iface+1);
+    }
+  }
+  base_bdr_face = realloc(base_bdr_face, sizeof(int) * base_n_bdr_face);
+
+
+  PDM_g_num_t face_subface_n = (n+1)*(n+1);
+  PDM_g_num_t gn_face = base_n_bdr_face*face_subface_n;
+
+
+  int quadtria_size[2] = {
+    n+1, n,
+  };
+
+  int subface_quadtria_n[2] = {
+    _n_subtria(n),
+    _n_subtria(n-1)
+  };
+
+  int subface_quadtria_idx[3];
+  PDM_array_idx_from_sizes_int(subface_quadtria_n,
+                               2,
+                               subface_quadtria_idx);
+
+
+  *distrib_face = PDM_compute_uniform_entity_distribution(comm, gn_face);
+
+  int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
+
+  *dface_vtx = malloc(sizeof(PDM_g_num_t) * dn_face * 3);
+
+  // //-->> tmp
+  for (int i = 0; i < 3*dn_face; i++) {
+    (*dface_vtx)[i] = 1;
+  }
+  // //<<--
+
+
+  for (int iface = 0; iface < dn_face; iface++) {
+
+    PDM_g_num_t g = (*distrib_face)[i_rank] + iface;
+
+    PDM_g_num_t *_dface_vtx = *dface_vtx + 3*iface;
+
+    int ibase = (int) (g / face_subface_n);
+    int idx   = (int) (g - face_subface_n*ibase);
+
+
+    int quadtria = PDM_binary_search_gap_int(idx,
+                                             subface_quadtria_idx,
+                                             3);
+
+    idx -= subface_quadtria_idx[quadtria];
+
+    int j, i;
+    idx2ij(idx, quadtria_size[quadtria]-1, &i, &j);
+
+    log_trace("g = "PDM_FMT_G_NUM", ibase = %d, quadtria = %d, idx = %d, ij = %d %d, \n",
+              g, ibase, quadtria, idx, i, j);
+
+    int ibase_face = base_bdr_face[ibase]; \
+    int ibase_sign = PDM_SIGN(ibase_face); \
+    ibase_face = PDM_ABS(ibase_face) - 1; \
+    log_trace("  base_id = %d, base_sign = %d\n", ibase_face, ibase_sign);
+
+    int fi;
+    int fj = j;
+    if (ibase_sign > 0) {
+      fi = i;
+    }
+    else {
+      fi = n-i;
+    };
+
+    switch (quadtria) {
+
+      case 0: {
+        // quadtria_vtx : [0, 1, 2]
+        _quadtria_vtx_0(fi, fj, _dface_vtx[0]);
+        _quadtria_vtx_1(fi, fj, _dface_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dface_vtx[2]);
+        break;
+      }
+
+      case 1: {
+        // quadtria_vtx : [1, 3, 2]
+        _quadtria_vtx_1(fi, fj, _dface_vtx[0]);
+        _quadtria_vtx_3(fi, fj, _dface_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dface_vtx[2]);
+        break;
+      }
+
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+      }
+    }
+
+    PDM_log_trace_array_long(_dface_vtx, 3, "_dface_vtx : ");
+    for (int ivtx = 0; ivtx < 3; ivtx++) {
+      // _dface_vtx[ivtx] = PDM_MAX(1, PDM_MIN(gn_vtx, _dface_vtx[ivtx]));
+      assert(_dface_vtx[ivtx] > 0 && _dface_vtx[ivtx] <= gn_vtx);
+    }
+
+  } // End of loop on faces
+
+
+  free(base_bdr_face);
+  free(base_face_tag);
+
 }
+
+
+
+
+static PDM_dmesh_nodal_t *
+_set_dmesh_nodal
+(
+ const PDM_MPI_Comm  comm,
+       double       *dvtx_coord,
+       PDM_g_num_t  *dface_vtx,
+       PDM_g_num_t  *dcell_vtx,
+       PDM_g_num_t  *distrib_vtx,
+       PDM_g_num_t  *distrib_face,
+       PDM_g_num_t  *distrib_cell
+ )
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+
+
+  /*
+   *  Create dmesh nodal
+   */
+  PDM_g_num_t gn_vtx  = distrib_vtx [n_rank];
+  PDM_g_num_t gn_face = distrib_face[n_rank];
+  PDM_g_num_t gn_cell = distrib_cell[n_rank];
+  int dn_vtx  = distrib_vtx [i_rank+1] - distrib_vtx [i_rank];
+  int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
+  int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
+
+  PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
+                                                  3,
+                                                  gn_vtx,
+                                                  gn_cell,
+                                                  gn_face,
+                                                  0);
+
+  PDM_DMesh_nodal_coord_set(dmn,
+                            dn_vtx,
+                            dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  /* Surface */
+  dmn->surfacic->n_g_elmts = gn_face;
+  int id_section_tria = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
+                                                          PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
+                                        id_section_tria,
+                                        dn_face,
+                                        dface_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+  int n_group = 1;
+  int *dgroup_face_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  dgroup_face_idx[0] = 0;
+  dgroup_face_idx[1] = dn_face;
+
+  PDM_g_num_t *dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_face_idx[n_group]);
+  for (int i = 0; i < dn_face; i++) {
+    dgroup_face[i] = distrib_face[i_rank] + i + 1;
+  }
+  PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
+                                  n_group,
+                                  dgroup_face_idx,
+                                  dgroup_face,
+                                  PDM_OWNERSHIP_KEEP);
+
+  /* Volume */
+  dmn->volumic->n_g_elmts = gn_cell;
+  int id_section_tetra = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
+                                                           PDM_MESH_NODAL_TETRA4);
+  PDM_DMesh_nodal_elmts_section_std_set(dmn->volumic,
+                                        id_section_tetra,
+                                        dn_cell,
+                                        dcell_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+  // int n_group = 1;
+  // int *dgroup_cell_idx = (int *) malloc(sizeof(int) * (n_group + 1));
+  // dgroup_cell_idx[0] = 0;
+  // dgroup_cell_idx[1] = dn_cell;
+
+  // PDM_g_num_t *dgroup_cell = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_cell_idx[n_group]);
+  // for (int i = 0; i < dn_face; i++) {
+  //   dgroup_cell[i] = distrib_cell[i_rank] + i + 1;
+  // }
+  // PDM_DMesh_nodal_elmts_group_set(dmn->volumic,
+  //                                 n_group,
+  //                                 dgroup_cell_idx,
+  //                                 dgroup_cell,
+  //                                 PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  return dmn;
+}
+
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+/**
+ *
+ * \brief Create a volume mesh bounded by a sphere (deformed cube)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n_vtx_x         Number of vertices on segments in x-direction
+ * \param[in]  n_vtx_y         Number of vertices on segments in y-direction
+ * \param[in]  n_vtx_z         Number of vertices on segments in z-direction
+ * \param[in]  radius          Radius of the sphere
+ * \param[in]  center_x        x coordinate of the center of the sphere
+ * \param[in]  center_y        y coordinate of the center of the sphere
+ * \param[in]  center_z        z coordinate of the center of the sphere
+ * \param[in]  t_elt           Element type
+ * \param[in]  order           Element order
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
+
+void
+PDM_sphere_vol_gen_nodal
+(
+ PDM_MPI_Comm           comm,
+ const PDM_g_num_t      n_vtx_x,
+ const PDM_g_num_t      n_vtx_y,
+ const PDM_g_num_t      n_vtx_z,
+ const double           radius,
+ const double           center_x,
+ const double           center_y,
+ const double           center_z,
+ PDM_Mesh_nodal_elt_t   t_elt,
+ const int              order,
+ PDM_dmesh_nodal_t    **dmn
+ )
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int mesh_dimension = PDM_Mesh_nodal_elt_dim_get(t_elt);
+  if (mesh_dimension != 3) {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Not implemented yes for dimension %d\n", mesh_dimension);
+  }
+
+  /* First: generate a dcube nodal */
+  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_vtx_x,
+                                                        n_vtx_y,
+                                                        n_vtx_z,
+                                                        2*radius,
+                                                        center_x - radius,
+                                                        center_y - radius,
+                                                        center_z - radius,
+                                                        t_elt,
+                                                        order,
+                                                        PDM_OWNERSHIP_KEEP);
+
+  PDM_dcube_nodal_gen_build (dcube);
+
+  PDM_dmesh_nodal_t *_dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+
+  PDM_dmesh_nodal_generate_distribution(_dmn);
+
+  /* Second: "spherify" */
+  PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(_dmn);
+  int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(_dmn);
+
+  double center[3] = {center_x, center_y, center_z};
+
+  double *_dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  for (int i = 0; i < dn_vtx; i++) {
+
+    // double r2 = 0., rinf = 0.;
+    // for (int j = 0; j < 3; j++) {
+    //   double x = dvtx_coord[3*i + j] - center[j];
+    //   r2 += x*x;
+    //   rinf = PDM_MAX(rinf, PDM_ABS(x));
+    // }
+
+    // r2 = sqrt(r2);
+
+    // double scale = rinf/r2;
+    // for (int j = 0; j < 3; j++) {
+    //   double x = dvtx_coord[3*i + j] - center[j];
+
+    //   _dvtx_coord[3*i + j] = center[j] + scale*x;
+    // }
+    double xyzc[3];
+    for (int j = 0; j < 3; j++) {
+      xyzc[j] = (dvtx_coord[3*i + j] - center[j]) / radius;
+    }
+
+    _cube_to_sphere(xyzc[0], xyzc[1], xyzc[2],
+                    _dvtx_coord + 3*i,
+                    _dvtx_coord + 3*i+1,
+                    _dvtx_coord + 3*i+2);
+
+    for (int j = 0; j < 3; j++) {
+      _dvtx_coord[3*i + j] = center[j] + radius*_dvtx_coord[3*i + j];
+    }
+
+  }
+
+
+  /* Third: get rid of ridges and unify surfaces */
+
+  *dmn = PDM_DMesh_nodal_create(comm,
+                                mesh_dimension,
+                                distrib_vtx[n_rank],
+                                1,
+                                0,
+                                0);
+
+  PDM_DMesh_nodal_coord_set(*dmn,
+                            dn_vtx,
+                            _dvtx_coord,
+                            PDM_OWNERSHIP_KEEP);
+
+  // Volume
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+  int n_section    = PDM_DMesh_nodal_n_section_get  (_dmn, geom_kind);
+  int *sections_id = PDM_DMesh_nodal_sections_id_get(_dmn, geom_kind);
+
+  PDM_g_num_t gn_elt_vol = 0;
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    int id_section = sections_id[i_section];
+    int _order;
+    const char *ho_ordering = NULL;
+    const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
+    int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
+    PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
+
+    int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
+    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+    memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+
+    int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->volumic,
+                                                           elt_type,
+                                                           order,
+                                                           ho_ordering);
+    PDM_DMesh_nodal_elmts_section_std_set((*dmn)->volumic,
+                                          _id_section,
+                                          dn_elt,
+                                          _delt_vtx,
+                                          PDM_OWNERSHIP_KEEP);
+
+    gn_elt_vol += distrib_elt[n_rank];
+  }
+  (*dmn)->volumic->n_g_elmts = gn_elt_vol;
+
+
+  // Surface
+  geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+  n_section   = PDM_DMesh_nodal_n_section_get  (_dmn, geom_kind);
+  sections_id = PDM_DMesh_nodal_sections_id_get(_dmn, geom_kind);
+
+  PDM_g_num_t gn_elt_surf = 0;
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    int id_section = sections_id[i_section];
+    int _order;
+    const char *ho_ordering = NULL;
+    const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
+    int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
+    PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
+
+    int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
+    PDM_g_num_t *_delt_vtx = malloc(sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+    memcpy(_delt_vtx, delt_vtx, sizeof(PDM_g_num_t) * dn_elt * elt_vtx_n);
+
+    int _id_section = PDM_DMesh_nodal_elmts_section_ho_add((*dmn)->surfacic,
+                                                           elt_type,
+                                                           order,
+                                                           ho_ordering);
+    PDM_DMesh_nodal_elmts_section_std_set((*dmn)->surfacic,
+                                          _id_section,
+                                          dn_elt,
+                                          _delt_vtx,
+                                          PDM_OWNERSHIP_KEEP);
+
+    gn_elt_surf += distrib_elt[n_rank];
+  }
+  (*dmn)->surfacic->n_g_elmts = gn_elt_surf;
+
+
+  // Groups
+  PDM_g_num_t *distrib_face = PDM_compute_uniform_entity_distribution(comm,
+                                                                      gn_elt_surf);
+  int n_group = 1;
+  int *dgroup_elt_idx = malloc(sizeof(int) * (n_group + 1));
+  dgroup_elt_idx[0] = 0;
+  dgroup_elt_idx[n_group] = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
+
+  PDM_g_num_t *dgroup_elt = malloc(sizeof(PDM_g_num_t) * dgroup_elt_idx[n_group]);
+  for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
+    dgroup_elt[i] = distrib_face[i_rank] + i + 1;
+  }
+
+  free(distrib_face);
+
+  PDM_DMesh_nodal_elmts_group_set((*dmn)->surfacic,
+                                  n_group,
+                                  dgroup_elt_idx,
+                                  dgroup_elt,
+                                  PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_generate_distribution(*dmn);
+
+
+  PDM_dcube_nodal_gen_free(dcube);
+}
+
+
+
+
+
+
+
 
 
 void
@@ -1497,9 +1834,11 @@ PDM_sphere_vol_icosphere_gen
  const double              z_center,
  const double              radius,
        double            **dvtx_coord,
+       PDM_g_num_t       **dface_vtx,
        PDM_g_num_t       **dcell_vtx,
        int               **dcell_hextet,
        PDM_g_num_t       **distrib_vtx,
+       PDM_g_num_t       **distrib_face,
        PDM_g_num_t       **distrib_cell
 )
 {
@@ -1526,35 +1865,30 @@ PDM_sphere_vol_icosphere_gen
     0.0000000000000000,   0.0000000000000000,   1.0000000000000000
   };
 
-  // for (int i = 0; i < base_n_vtx; i++) {
-  //   base_vtx_coord[3*i  ] = x_center + radius*base_vtx_coord[3*i  ];
-  //   base_vtx_coord[3*i+1] = y_center + radius*base_vtx_coord[3*i+1];
-  //   base_vtx_coord[3*i+2] = z_center + radius*base_vtx_coord[3*i+2];
-  // }
 
   // Base cells (terahedra)
   const int base_n_cell = 20;
   const int base_cell_vtx[80] = {
-    1, 4, 3, 2,
-    1, 7, 2, 3,
-    1, 5, 4, 2,
-    1, 6, 5, 2,
-    1, 7, 6, 2,
-    1, 12, 7, 3,
-    1, 8, 3, 4,
-    1, 9, 4, 5,
-    1, 10, 5, 6,
-    1, 11, 6, 7,
-    1, 8, 12, 3,
-    1, 9, 8, 4,
-    1, 10, 9, 5,
-    1, 11, 10, 6,
-    1, 12, 11, 7,
-    1, 13, 12, 8,
-    1, 13, 8, 9,
-    1, 13, 9, 10,
-    1, 13, 10, 11,
-    1, 13, 11, 12
+    1, 3,  4,  2,
+    1, 2,  7,  3,
+    1, 4,  5,  2,
+    1, 5,  6,  2,
+    1, 6,  7,  2,
+    1, 7,  12, 3,
+    1, 3,  8,  4,
+    1, 4,  9,  5,
+    1, 5,  10, 6,
+    1, 6,  11, 7,
+    1, 12, 8,  3,
+    1, 8,  9,  4,
+    1, 9,  10, 5,
+    1, 10, 11, 6,
+    1, 11, 12, 7,
+    1, 12, 13, 8,
+    1, 8,  13, 9,
+    1, 9,  13, 10,
+    1, 10, 13, 11,
+    1, 11, 13, 12
   };
 
 
@@ -1624,9 +1958,11 @@ PDM_sphere_vol_icosphere_gen
                       base_cell_edge,
               (int *) base_cell_vtx,
                       dvtx_coord,
+                      dface_vtx,
                       dcell_vtx,
                       dcell_hextet,
                       distrib_vtx,
+                      distrib_face,
                       distrib_cell);
 
 
@@ -1732,100 +2068,6 @@ PDM_sphere_vol_icosphere_gen
 
 
 
-static PDM_dmesh_nodal_t *
-_set_dmesh_nodal
-(
- const PDM_MPI_Comm  comm,
-       double       *dvtx_coord,
-       // PDM_g_num_t  *dface_vtx,
-       PDM_g_num_t  *dcell_vtx,
-       PDM_g_num_t  *distrib_vtx,
-       // PDM_g_num_t  *distrib_face,
-       PDM_g_num_t  *distrib_cell
- )
-{
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-
-
-  /*
-   *  Create dmesh nodal
-   */
-  PDM_g_num_t gn_vtx  = distrib_vtx [n_rank];
-  // PDM_g_num_t gn_face = distrib_face[n_rank];
-  PDM_g_num_t gn_cell = distrib_cell[n_rank];
-  int dn_vtx  = distrib_vtx [i_rank+1] - distrib_vtx [i_rank];
-  // int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
-  int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
-
-  PDM_dmesh_nodal_t *dmn = PDM_DMesh_nodal_create(comm,
-                                                  3,
-                                                  gn_vtx,
-                                                  gn_cell,
-                                                  0,//gn_face,
-                                                  0);
-
-  PDM_DMesh_nodal_coord_set(dmn,
-                            dn_vtx,
-                            dvtx_coord,
-                            PDM_OWNERSHIP_KEEP);
-
-  // /* Surface */
-  // dmn->surfacic->n_g_elmts = gn_face;
-  // int id_section = PDM_DMesh_nodal_elmts_section_add(dmn->surfacic,
-  //                                                    PDM_MESH_NODAL_TRIA3);
-  // PDM_DMesh_nodal_elmts_section_std_set(dmn->surfacic,
-  //                                       id_section,
-  //                                       dn_face,
-  //                                       dface_vtx,
-  //                                       PDM_OWNERSHIP_KEEP);
-
-  // int n_group = 1;
-  // int *dgroup_face_idx = (int *) malloc(sizeof(int) * (n_group + 1));
-  // dgroup_face_idx[0] = 0;
-  // dgroup_face_idx[1] = dn_face;
-
-  // PDM_g_num_t *dgroup_face = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_face_idx[n_group]);
-  // for (int i = 0; i < dn_face; i++) {
-  //   dgroup_face[i] = distrib_face[i_rank] + i + 1;
-  // }
-  // PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
-  //                                 n_group,
-  //                                 dgroup_face_idx,
-  //                                 dgroup_face,
-  //                                 PDM_OWNERSHIP_KEEP);
-
-  /* Volume */
-  dmn->volumic->n_g_elmts = gn_cell;
-  int id_section = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
-                                                     PDM_MESH_NODAL_TETRA4);
-  PDM_DMesh_nodal_elmts_section_std_set(dmn->volumic,
-                                        id_section,
-                                        dn_cell,
-                                        dcell_vtx,
-                                        PDM_OWNERSHIP_KEEP);
-
-  // int n_group = 1;
-  // int *dgroup_cell_idx = (int *) malloc(sizeof(int) * (n_group + 1));
-  // dgroup_cell_idx[0] = 0;
-  // dgroup_cell_idx[1] = dn_cell;
-
-  // PDM_g_num_t *dgroup_cell = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * dgroup_cell_idx[n_group]);
-  // for (int i = 0; i < dn_face; i++) {
-  //   dgroup_cell[i] = distrib_cell[i_rank] + i + 1;
-  // }
-  // PDM_DMesh_nodal_elmts_group_set(dmn->volumic,
-  //                                 n_group,
-  //                                 dgroup_cell_idx,
-  //                                 dgroup_cell,
-  //                                 PDM_OWNERSHIP_KEEP);
-
-  PDM_dmesh_nodal_generate_distribution(dmn);
-
-  return dmn;
-}
 
 
 void
@@ -1856,11 +2098,11 @@ PDM_sphere_vol_icosphere_gen_nodal
                                z_center,
                                radius,
                                &dvtx_coord,
-                               // &dface_vtx,
+                               &dface_vtx,
                                &dcell_vtx,
                                &dcell_hextet,
                                &distrib_vtx,
-                               // &distrib_face,
+                               &distrib_face,
                                &distrib_cell);
   free(dcell_hextet);
 
@@ -1869,13 +2111,14 @@ PDM_sphere_vol_icosphere_gen_nodal
    */
   *_dmn = _set_dmesh_nodal(comm,
                            dvtx_coord,
-                           // dface_vtx,
+                           dface_vtx,
                            dcell_vtx,
                            distrib_vtx,
-                           // distrib_face,
+                           distrib_face,
                            distrib_cell);
 
   free(distrib_vtx);
+  free(distrib_face);
   free(distrib_cell);
 }
 
@@ -1883,6 +2126,15 @@ PDM_sphere_vol_icosphere_gen_nodal
 #undef ij2idx
 #undef ijk2idx
 #undef _point_on_edge
+#undef _point_on_face
+#undef _hextet_vtx_0
+#undef _hextet_vtx_1
+#undef _hextet_vtx_2
+#undef _hextet_vtx_3
+#undef _hextet_vtx_4
+#undef _hextet_vtx_5
+#undef _hextet_vtx_6
+#undef _hextet_vtx_7
 
 #ifdef __cplusplus
 }
