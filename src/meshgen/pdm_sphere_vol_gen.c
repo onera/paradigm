@@ -308,8 +308,6 @@ extern "C" {
   ibase_edge = PDM_ABS(ibase_edge) - 1; \
   int ei; \
   _local_edge_frame2((iedge), (i), (j), n, &ei); \
-  log_trace("edge %d (%d %d) (local %d), sign %d, ei = %d\n", \
-            ibase_edge, base_edge_vtx[2*ibase_edge]-1, base_edge_vtx[2*ibase_edge+1]-1, iedge, sign, ei); \
   if (sign < 0) { \
     (gnum_vtx) = idx_vtx_edge + ibase_edge*n + n - ei; \
   } \
@@ -1443,13 +1441,13 @@ _gen_from_base_mesh
     int j, i;
     idx2ij(idx, quadtria_size[quadtria]-1, &i, &j);
 
-    log_trace("g = "PDM_FMT_G_NUM", ibase = %d, quadtria = %d, idx = %d, ij = %d %d, \n",
-              g, ibase, quadtria, idx, i, j);
+    // log_trace("g = "PDM_FMT_G_NUM", ibase = %d, quadtria = %d, idx = %d, ij = %d %d, \n",
+    //           g, ibase, quadtria, idx, i, j);
 
     int ibase_face = base_bdr_face[ibase]; \
     int ibase_sign = PDM_SIGN(ibase_face); \
     ibase_face = PDM_ABS(ibase_face) - 1; \
-    log_trace("  base_id = %d, base_sign = %d\n", ibase_face, ibase_sign);
+    // log_trace("  base_id = %d, base_sign = %d\n", ibase_face, ibase_sign);
 
     int fi;
     int fj = j;
@@ -1483,7 +1481,7 @@ _gen_from_base_mesh
       }
     }
 
-    PDM_log_trace_array_long(_dface_vtx, 3, "_dface_vtx : ");
+    // PDM_log_trace_array_long(_dface_vtx, 3, "_dface_vtx : ");
     for (int ivtx = 0; ivtx < 3; ivtx++) {
       // _dface_vtx[ivtx] = PDM_MAX(1, PDM_MIN(gn_vtx, _dface_vtx[ivtx]));
       assert(_dface_vtx[ivtx] > 0 && _dface_vtx[ivtx] <= gn_vtx);
