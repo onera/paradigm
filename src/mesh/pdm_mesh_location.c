@@ -2024,6 +2024,9 @@ PDM_mesh_location_create
   ml->mesh_nodal   = NULL;
   ml->_mesh_nodal  = NULL;
 
+  ml->use_user_extract = 0;
+  ml->is_elmt_select_by_user = NULL;
+
   ml->point_clouds =
     (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
 
@@ -2382,6 +2385,13 @@ PDM_mesh_location_mesh_global_data_set
     ml->cell_vtx_idx[i_part] = NULL;
     ml->cell_vtx    [i_part] = NULL;
   }
+
+  ml->is_elmt_select_by_user = malloc(sizeof(int *) * n_part);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    ml->is_elmt_select_by_user[i_part] = NULL;
+  }
+
 }
 
 
@@ -2463,7 +2473,26 @@ PDM_mesh_location_part_set
                                       PDM_OWNERSHIP_KEEP);
 }
 
-
+/**
+ *
+ * \brief Set a part of a mesh
+ *
+ * \param [in]   id                     Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part                 Partition to define
+ * \param [in]   n_cell                 Number of cells
+ * \param [in]   is_elmt_select_by_user Flag to determine if user want or no to extract current cell
+ *
+ */
+void
+PDM_mesh_location_user_extract_set
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                 *is_elmt_select_by_user
+)
+{
+  ml->is_elmt_select_by_user[i_part] = (int *) is_elmt_select_by_user;
+}
 
 /**
  *
@@ -2929,6 +2958,10 @@ PDM_mesh_location_free
         free (ml->face_vtx_n);
       }
     }
+  }
+
+  if(ml->is_elmt_select_by_user != NULL) {
+    free(ml->is_elmt_select_by_user);
   }
 
   PDM_timer_free(ml->timer);
@@ -9535,7 +9568,7 @@ PDM_mesh_location_compute_optim2
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 1;
+  const int dbg_enabled = 0;
   const int dim = 3;
 
   /* Octree parameters */
@@ -11650,7 +11683,7 @@ PDM_mesh_location_compute_optim3
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 1;
+  const int dbg_enabled = 0;
   const int dim = 3;
 
   /* Octree parameters */
@@ -11850,13 +11883,25 @@ PDM_mesh_location_compute_optim3
   b_t_cpu_s   = e_t_cpu_s;
   PDM_timer_resume(ml->timer);
 
+  double dt_search_all = 0.;
+  double dt_extract_all = 0.;
 
   /* Big loop on point clouds */
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
 
+    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    b_t_elapsed = PDM_timer_elapsed(ml->timer);
+    b_t_cpu     = PDM_timer_cpu(ml->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+    PDM_timer_resume(ml->timer);
+
     if (dbg_enabled) {
       log_trace("Point cloud %d\n", icloud);
     }
+
+    double t1 = PDM_MPI_Wtime();
 
     _point_cloud_t *pcloud = ml->point_clouds + icloud;
 
@@ -12107,6 +12152,11 @@ PDM_mesh_location_compute_optim3
           }
         }
 
+        // if (intersect &&
+        //     ml->is_elmt_select_by_user[ipart]       !=  NULL &&
+        //     ml->is_elmt_select_by_user[ipart][ielt] == 1) {
+        //   select_elt_l_num[ipart][n_select_elt[ipart]++] = ielt;
+        // }
         if (intersect) {
           select_elt_l_num[ipart][n_select_elt[ipart]++] = ielt;
         }
@@ -12137,8 +12187,9 @@ PDM_mesh_location_compute_optim3
     PDM_g_num_t **select_elt_g_num_user         = NULL;
 
     if (use_extracted_mesh) {
-      if (dbg_enabled) {
-        log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
+      if (1) {
+        // log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
+        log_trace("mesh extraction %d / %d\n", g_n_elt[1], g_n_elt[0]);
       }
 
       select_elt_init_location_user = malloc(sizeof(int         *) * n_part);
@@ -12165,7 +12216,7 @@ PDM_mesh_location_compute_optim3
       }
     }
     else {
-      if (dbg_enabled) {
+      if (1) {
         log_trace("no mesh extraction\n");
       }
       free(n_select_elt);
@@ -12182,9 +12233,7 @@ PDM_mesh_location_compute_optim3
           select_elt_init_location_user[ipart][3*i+2] = i+1;
         }
       }
-
     }
-
 
     /*
      *  Redistribute evenly the selected points (ptb_geom)
@@ -12307,6 +12356,15 @@ PDM_mesh_location_compute_optim3
       weight[ipart] = PDM_array_const_int(n_select_elt[ipart], 1);
     }
 
+    if(0){
+      char filename[999];
+      sprintf(filename, "mesh_location_extract_boxes_%d_%3.3d.vtk", icloud, i_rank);
+      PDM_vtk_write_boxes(filename,
+                          n_select_elt[0],
+                          select_elt_extents[0],
+                          select_elt_g_num_user[0]);
+    }
+
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                  PDM_PART_TO_BLOCK_POST_CLEANUP, // A faire en merge
                                                                  1.,
@@ -12353,7 +12411,6 @@ PDM_mesh_location_compute_optim3
                             NULL,
                   (void **) &delt_extents1,
                             &request_elt_extents);
-    PDM_part_to_block_iexch_wait(ptb_elt, request_elt_extents);
 
     /*
      * TODO - Exchange box_init_location en merge  !!! Attention on doit merger les blocks mais garder le non mergé pour le renvoie
@@ -12370,6 +12427,7 @@ PDM_mesh_location_compute_optim3
                             NULL,
                   (void **) &delt_init_location_user,
                             &request_elt_init_location);
+    PDM_part_to_block_iexch_wait(ptb_elt, request_elt_extents);
     PDM_part_to_block_iexch_wait(ptb_elt, request_elt_init_location);
 
 
@@ -12386,6 +12444,10 @@ PDM_mesh_location_compute_optim3
      *  Location : search candidates
      *  ----------------------------
      */
+    double t2 = PDM_MPI_Wtime();
+    log_trace("Extract + hilbert  = %12.5e \n", t2 -t1);
+
+    dt_extract_all += t2 -t1;
 
     /*
      * Get points inside bounding boxes of elements
@@ -12424,7 +12486,7 @@ PDM_mesh_location_compute_optim3
                                         dpts_g_num_geom);
 
         /* Build parallel octree */
-        PDM_MPI_Barrier(ml->comm);
+        // PDM_MPI_Barrier(ml->comm);
 
         if (use_shared_tree == 0) {
           PDM_para_octree_build(octree, NULL);
@@ -12467,6 +12529,69 @@ PDM_mesh_location_compute_optim3
         PDM_para_octree_free(octree);
         break;
       }
+      case PDM_MESH_LOCATION_DOCTREE: {
+
+        // PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_KDTREE;
+        PDM_doctree_local_tree_t local_tree_kind = PDM_DOCTREE_LOCAL_TREE_OCTREE;
+        PDM_doctree_t *doct = PDM_doctree_create(ml->comm,
+                                                 3,
+                                                 1,
+                                                 NULL, // global_extents
+                                                 local_tree_kind);
+
+        /* pass abstract distrib of pts to doctree? */
+        int *init_location_pts = NULL;
+        if (0) {
+          init_location_pts = malloc(3 * dn_pts * sizeof(int));
+          for(int i = 0; i < dn_pts; ++i) {
+            init_location_pts[3*i  ] = i_rank;
+            init_location_pts[3*i+1] = 0;
+            init_location_pts[3*i+2] = i+1;
+          }
+        }
+        PDM_doctree_point_set(doct,
+                              0,
+                              dn_pts,
+                              init_location_pts,
+                              dpts_g_num_geom,
+                              dpts_coord);
+
+        /* pass abstract distrib of boxes to doctree? */
+        /* or get init location from ad_elt? */
+        int *init_location_box = malloc(3 * dn_elt1 * sizeof(int));
+        for(int i = 0; i < dn_elt1; ++i) {
+          init_location_box[3*i  ] = i_rank;
+          init_location_box[3*i+1] = 0;
+          init_location_box[3*i+2] = i+1;
+        }
+
+        PDM_doctree_solicitation_set(doct,
+                                     PDM_TREE_SOLICITATION_BOXES_POINTS,
+                                     1,
+                                     &dn_elt1,
+                                     &init_location_box,
+                                     &delmt_g_num_geom,
+                                     &delt_extents1);
+
+        PDM_doctree_build(doct);
+
+        PDM_doctree_results_in_block_frame_get(doct,
+                                               &dn_elt2,
+                                               &delt_g_num_geom2,
+                                               &delt_pts_n2,
+                                               &delt_pts_g_num_geom,
+                                               &delt_pts_coord2,
+                                               PDM_OWNERSHIP_USER);
+
+
+        PDM_doctree_dump_times(doct);
+        PDM_doctree_free(doct);
+        if (init_location_pts != NULL) {
+          free(init_location_pts);
+        }
+        free(init_location_box);
+        break;
+      }
       default: {
         PDM_error(__FILE__, __LINE__, 0,
                   "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
@@ -12478,7 +12603,7 @@ PDM_mesh_location_compute_optim3
     free(dpts_g_num_geom);
 
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed (ml->timer);
     e_t_cpu     = PDM_timer_cpu     (ml->timer);
@@ -12495,6 +12620,10 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+    log_trace("Search  = %12.5e \n", PDM_MPI_Wtime() - t2);
+
+    dt_search_all += PDM_MPI_Wtime() - t2;
+
 
     if (dbg_enabled) {
       log_trace("before compression\n");
@@ -12580,9 +12709,10 @@ PDM_mesh_location_compute_optim3
 
     PDM_block_to_part_free(btp_elmt_geom_to_elmt_user);
 
-
-    PDM_log_trace_array_long(delt_parent_g_num2, dn_elt2, "delt_parent_g_num2 ::");
-    PDM_log_trace_array_int (delt_init_location2, 3 * dn_elt2, "delt_init_location2 ::");
+    if(dbg_enabled) {
+      PDM_log_trace_array_long(delt_parent_g_num2, dn_elt2, "delt_parent_g_num2 ::");
+      PDM_log_trace_array_int (delt_init_location2, 3 * dn_elt2, "delt_init_location2 ::");
+    }
 
     /* Extract partition associated to current frame (2) */
     PDM_bool_t equilibrate = PDM_TRUE;// LOL
@@ -12733,6 +12863,26 @@ PDM_mesh_location_compute_optim3
                  &pextract_n_vtx,
                  &pextract_vtx_coord);
     }
+    // exit(1);
+
+
+    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed (ml->timer);
+    e_t_cpu     = PDM_timer_cpu     (ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
+
+    ml->times_elapsed[LOAD_BALANCING] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [LOAD_BALANCING] += e_t_cpu     - b_t_cpu;
+    ml->times_cpu_u  [LOAD_BALANCING] += e_t_cpu_u   - b_t_cpu_u;
+    ml->times_cpu_s  [LOAD_BALANCING] += e_t_cpu_s   - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
     /* Perform elementary point locations */
     double **pelt_pts_distance2   = NULL;
@@ -12767,6 +12917,25 @@ PDM_mesh_location_compute_optim3
     PDM_part_mesh_nodal_elmts_free(extract_pmne);
     PDM_extract_part_free(extrp);
     free(delt_init_location2);
+
+    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
+
 
     // part_to_block (partiel) sur les points en passant distance et element local
     int n_pts2 = delt_pts_idx2[dn_elt2];
@@ -12954,6 +13123,24 @@ PDM_mesh_location_compute_optim3
     final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[idx]);
     final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * idx*3);
 
+    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[MERGE_LOCATION_DATA_STEP1] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[MERGE_LOCATION_DATA_STEP1]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
+
     /*
      * Update results in user frame
      */
@@ -12998,16 +13185,50 @@ PDM_mesh_location_compute_optim3
     free(dpts_init_location_pts);
 
     // Il faut merger les location ?? Gros doute la
-    for(int i = 0; i < idx; ++i) {
-      assert(final_elt_pts_triplet_n[i] == 1);
-    }
-    int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, dn_pts);
-    free(final_elt_pts_triplet_n);
-    free(final_elt_pts_triplet_idx);
+    // for(int i = 0; i < idx; ++i) {
+    //   assert(final_elt_pts_triplet_n[i] == 1);
+    // }
+    // int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, idx);
+    //
+    // free(final_elt_pts_triplet_idx);
 
+    idx_read = 0;
+    int *final_elt_pts_triplet_idx = malloc((dn_elt2+1) * sizeof(int));
+    final_elt_pts_triplet_idx[0] = 0;
+    for(int i = 0; i < dn_elt2; ++i) {
+      final_elt_pts_triplet_idx[i+1] = final_elt_pts_triplet_idx[i];
+      int n_pts_in_elmt = final_elt_pts_n[i];
+      for(int j = 0; j < n_pts_in_elmt; ++j) {
+        final_elt_pts_triplet_idx[i+1] += final_elt_pts_triplet_n[idx_read++];
+      }
+    }
+    free(final_elt_pts_triplet_n);
+    assert(idx_read == idx);
+
+
+    // PDM_log_trace_array_long(final_elt_pts_triplet_idx, dn_elt2+1, "final_elt_pts_triplet_idx ::");
     // PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
 
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
+
+
+    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[MERGE_LOCATION_DATA_STEP2] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[MERGE_LOCATION_DATA_STEP2]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -13111,9 +13332,8 @@ PDM_mesh_location_compute_optim3
     }
 
 
-    int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n,
-                                                              dn_elt2);
-    free(final_elt_pts_n);
+    int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n, dn_elt2);
+    // free(final_elt_pts_n);
 
     int *elt_pts_weight_stride = NULL;
     if (ml->reverse_result) {
@@ -13219,22 +13439,22 @@ PDM_mesh_location_compute_optim3
     PDM_part_to_part_free(ptp_elt);
 
 
+    // PDM_log_trace_array_long(final_elt_pts_idx, dn_elt2+1, "final_elt_pts_idx ::");
     /*
      *  Transfer location data from elt (current frame) to pts (user frame)
      */
-    for(int i = 0; i < dn_elt2 + 1; ++i) {
-      final_elt_pts_idx[i] *= 3;
-    }
+    // for(int i = 0; i < dn_elt2 + 1; ++i) {
+    //   final_elt_pts_idx[i] *= 3;
+    // }
+    // PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) &delt_parent_g_num2,
+    //                                                                             (const int          *) &dn_elt2,
+    //                                                                             1,
+    //                                                                             (const int          *) pcloud->n_points,
+    //                                                                             pcloud->n_part,
+    //                                                                             (const int         **) &final_elt_pts_idx,
+    //                                                                             (const int         **) &final_elt_pts_triplet,
+    //                                                                             ml->comm);
 
-    PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) &delt_parent_g_num2,
-                                                                                (const int          *) &dn_elt2,
-                                                                                1,
-                                                                                (const int          *) pcloud->n_points,
-                                                                                pcloud->n_part,
-                                                                                (const int         **) &final_elt_pts_idx,
-                                                                                (const int         **) &final_elt_pts_triplet,
-                                                                                ml->comm);
-    free(final_elt_pts_triplet);
     // printf("Ola !!!");
     // abort(); // To remove
     // PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create((const PDM_g_num_t **) &delt_parent_g_num2,
@@ -13246,6 +13466,20 @@ PDM_mesh_location_compute_optim3
     //                                                           (const int         **) &final_elt_pts_idx,
     //                                                           (const PDM_g_num_t **) &final_elt_pts_g_num,
     //                                                           ml->comm);
+
+    for(int i = 0; i < dn_elt2 + 1; ++i) {
+      final_elt_pts_triplet_idx[i] *= 3;
+    }
+    PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) &delt_parent_g_num2,
+                                                                                (const int          *) &dn_elt2,
+                                                                                1,
+                                                                                (const int          *) pcloud->n_points,
+                                                                                pcloud->n_part,
+                                                                                (const int         **) &final_elt_pts_triplet_idx,
+                                                                                (const int         **) &final_elt_pts_triplet,
+                                                                                ml->comm);
+    free(final_elt_pts_triplet);
+    free(final_elt_pts_triplet_idx);
     free(final_elt_pts_idx);
     free(final_elt_pts_g_num);
 
@@ -13354,35 +13588,87 @@ PDM_mesh_location_compute_optim3
 
     /* Exchange other fields (dist2, uvw, weights(_idx), proj_coord) */
     /* Really necessary from the points' PoV ?? */
+    int **tmp_projected_coords_n = NULL;
     PDM_part_to_part_iexch(ptp_elt_pts,
                            PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_CST_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                            1,
                            3*sizeof(double),
-                           NULL,
+          (const int   **) &final_elt_pts_n,
           (const void  **) &final_elt_pts_proj_coord,
-                           NULL,
+                           &tmp_projected_coords_n,
           (      void ***) &pcloud->projected_coords,
                            &request_pts_proj_coord);
 
     // int request_pts_dist2;
+    int **tmp_pts_dist2_n = NULL;
     PDM_part_to_part_iexch(ptp_elt_pts,
                            PDM_MPI_COMM_KIND_P2P,
-                           PDM_STRIDE_CST_INTERLACED,
-                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                            1,
                            sizeof(double),
-                           NULL,
+          (const int   **) &final_elt_pts_n,
           (const void  **) &final_elt_pts_distance,
-                           NULL,
+                           &tmp_pts_dist2_n,
           (      void ***) &pcloud->dist2,
                            &request_pts_dist2);
+
+    // PDM_part_to_part_iexch(ptp_elt_pts,
+    //                        PDM_MPI_COMM_KIND_P2P,
+    //                        PDM_STRIDE_CST_INTERLACED,
+    //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+    //                        1,
+    //                        3*sizeof(double),
+    //                        NULL,
+    //       (const void  **) &final_elt_pts_proj_coord,
+    //                        NULL,
+    //       (      void ***) &pcloud->projected_coords,
+    //                        &request_pts_proj_coord);
+
+    // // int request_pts_dist2;
+    // PDM_part_to_part_iexch(ptp_elt_pts,
+    //                        PDM_MPI_COMM_KIND_P2P,
+    //                        PDM_STRIDE_CST_INTERLACED,
+    //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+    //                        1,
+    //                        sizeof(double),
+    //                        NULL,
+    //       (const void  **) &final_elt_pts_distance,
+    //                        NULL,
+    //       (      void ***) &pcloud->dist2,
+    //                        &request_pts_dist2);
 
     PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_proj_coord);
     PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_dist2);
     PDM_part_to_part_free(ptp_elt_pts);
 
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      free(tmp_pts_dist2_n       [ipart]);
+      free(tmp_projected_coords_n[ipart]);
+    }
+    free(tmp_pts_dist2_n);
+    free(tmp_projected_coords_n);
+
+
+    PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[REVERSE_LOCATION_DATA_PTB] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [REVERSE_LOCATION_DATA_PTB] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [REVERSE_LOCATION_DATA_PTB] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [REVERSE_LOCATION_DATA_PTB] += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
     /* Free memory */
 
@@ -13394,6 +13680,7 @@ PDM_mesh_location_compute_optim3
     free(final_elt_pts_weight_idx);
     free(final_elt_pts_weight    );
     free(final_elt_pts_uvw       );
+    free(final_elt_pts_n);
 
 
     if (use_extracted_pts) {
@@ -13432,12 +13719,9 @@ PDM_mesh_location_compute_optim3
 
   } /* End icloud */
 
-
-
-
-
-
   _pmesh_nodal_elmts_free(pmne);
+
+  log_trace("dt_extract_all = %12.5e / dt_search_all = %12.5e \n", dt_extract_all, dt_search_all);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     free(elt_extents  [ipart]);
@@ -13456,6 +13740,8 @@ PDM_mesh_location_compute_optim3
   ml->times_cpu_u  [END] = PDM_timer_cpu_user(ml->timer);
   ml->times_cpu_s  [END] = PDM_timer_cpu_sys (ml->timer);
   PDM_timer_resume(ml->timer);
+
+  // exit(1);
 }
 
 /**

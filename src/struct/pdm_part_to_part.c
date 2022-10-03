@@ -1805,9 +1805,10 @@ _create
     }
     else {
       location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
-      location_part1_to_part2 = (int *)  part1_to_part2_triplet[i];
+      location_part1_to_part2     = (int *)  part1_to_part2_triplet[i];
 
-      n_total_elt += 3 * location_part1_to_part2_idx[ptp->part1_to_part2_idx[i][n_elt1[i]]];
+      n_total_elt += 3 * ptp->part1_to_part2_idx[i][n_elt1[i]];
+      // n_total_elt += 3 * location_part1_to_part2_idx[ptp->part1_to_part2_idx[i][n_elt1[i]]];
     }
 
   }

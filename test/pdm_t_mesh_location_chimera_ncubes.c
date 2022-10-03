@@ -1888,6 +1888,7 @@ int main(int argc, char *argv[])
   double ***blk_interp_vol  = malloc(n_mesh * sizeof(double **));
   double ***cell_nat        = malloc(n_mesh * sizeof(double **));
   double ***mask            = malloc(n_mesh * sizeof(double **));
+  int    ***elmt_cross_surf = malloc(n_mesh * sizeof(double **));
 
   const int n_timer = 8;
   double cpu_time_max[n_timer];
@@ -1958,7 +1959,7 @@ int main(int argc, char *argv[])
     }
 
     // Rand a number around 20% for n_vtx_seg
-    PDM_g_num_t percent = ceil( (double) n_vtx_seg * (25. / 100.));
+    PDM_g_num_t percent = (PDM_g_num_t) ceil( (double) n_vtx_seg * (25. / 100.));
     PDM_g_num_t n_vtx_add_rand = rand() % ( percent ) - percent / 2;
     PDM_g_num_t n_vtx_seg_rand = n_vtx_seg + n_vtx_add_rand;
 
@@ -2092,7 +2093,7 @@ int main(int argc, char *argv[])
     /*
      * Export vtk extract surface
      */
-    if(1 == 1) {
+    if(0 == 1) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
         char filename[999];
         sprintf(filename, "external_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);
@@ -2136,11 +2137,14 @@ int main(int argc, char *argv[])
    * First step : mask
    */
   for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
-    mask[i_cloud] = malloc(n_part * sizeof(double *));
+    mask           [i_cloud] = malloc(n_part * sizeof(double *));
+    elmt_cross_surf[i_cloud] = malloc(n_part * sizeof(int    *));
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      mask[i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(double));
+      mask           [i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(double));
+      elmt_cross_surf[i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(int));
       for(int i = 0; i < n_cell[i_cloud][i_part]; ++i) {
-        mask[i_cloud][i_part][i] = 0.; // 0 -> pas masqué
+        mask           [i_cloud][i_part][i] = 0.; // 0 -> pas masqué
+        elmt_cross_surf[i_cloud][i_part][i] = 0.; // Pas d'interaction avec une surface
       }
     }
   }
@@ -2201,6 +2205,8 @@ int main(int argc, char *argv[])
         /* Translate information into a single field at cell */
         for(int i_cell = 0; i_cell < n_cell[i_cloud][i_part]; ++i_cell) {
 
+          int one_is_interior = 0;
+          int one_is_exterior = 0;
           double cell_is_completely_inside = 1.;
           double face_is_inside = 0.;
           for(int idx_face = cell_face_idx[i_cloud][i_part][i_cell]; idx_face < cell_face_idx[i_cloud][i_part][i_cell+1]; ++idx_face) {
@@ -2211,6 +2217,9 @@ int main(int argc, char *argv[])
               face_is_inside = PDM_MAX(face_is_inside, is_inside[i_vtx]);
               if(is_inside[i_vtx] == 0) {
                 cell_is_completely_inside = 0;
+                one_is_exterior = 1;
+              } else {
+                one_is_interior = 1;
               }
             }
           }
@@ -2220,6 +2229,11 @@ int main(int argc, char *argv[])
           } else {
             mask[i_cloud][i_part][i_cell] = PDM_MAX(mask[i_cloud][i_part][i_cell], cell_is_completely_inside);
           }
+
+          if(one_is_interior == 1 && one_is_exterior == 1) {
+            elmt_cross_surf[i_cloud][i_part][i_cell] = 1;
+          }
+
         }
 
         free(is_inside);
@@ -2282,6 +2296,8 @@ int main(int argc, char *argv[])
     /* Set source mesh */
     PDM_mesh_location_mesh_global_data_set(mesh_loc[i_mesh], n_part);
 
+    int **is_elmt_select_by_user = malloc(n_part * sizeof(int *));
+
     for (int i_part = 0; i_part < n_part; i_part++) {
       PDM_mesh_location_part_set (mesh_loc[i_mesh],
                                   i_part,
@@ -2296,6 +2312,22 @@ int main(int argc, char *argv[])
                                   n_vtx_without_ext [i_mesh][i_part],
                                   vtx_coord         [i_mesh][i_part],
                                   vtx_ln_to_gn      [i_mesh][i_part]);
+
+      is_elmt_select_by_user[i_part] = malloc(n_cell_without_ext[i_mesh][i_part] * sizeof(int));
+      for(int i_cell = 0; i_cell < n_cell_without_ext[i_mesh][i_part]; ++i_cell) {
+        if(mask[i_mesh][i_part][i_cell] > 0.5) {
+          is_elmt_select_by_user[i_part][i_cell] = 0;
+        } else {
+          is_elmt_select_by_user[i_part][i_cell] = 1;
+        }
+      }
+
+      // PDM_mesh_location_user_extract_set(mesh_loc[i_mesh],
+      //                                    i_part,
+      //                                    is_elmt_select_by_user[i_part]);
+      PDM_mesh_location_user_extract_set(mesh_loc[i_mesh],
+                                         i_part,
+                                         elmt_cross_surf[i_mesh][i_part]);
     }
 
     /* Set location parameters */
@@ -2311,10 +2343,16 @@ int main(int argc, char *argv[])
     if(algo == 0) {
       PDM_mesh_location_compute (mesh_loc[i_mesh]);
     } else if(algo == 1) {
-      PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
+      // PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
+      PDM_mesh_location_compute_optim3(mesh_loc[i_mesh]);
     }
 
     PDM_mesh_location_dump_times (mesh_loc[i_mesh]);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      free(is_elmt_select_by_user[i_part]);
+    }
+    free(is_elmt_select_by_user);
 
     PDM_MPI_Barrier(comm);
     // if (i_rank == 0) {
@@ -2763,11 +2801,14 @@ int main(int argc, char *argv[])
 
   for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(mask[i_cloud][i_part]);
+      free(mask           [i_cloud][i_part]);
+      free(elmt_cross_surf[i_cloud][i_part]);
     }
-    free(mask[i_cloud]);
+    free(mask           [i_cloud]);
+    free(elmt_cross_surf[i_cloud]);
   }
   free(mask);
+  free(elmt_cross_surf);
 
   free(n_cell        );
   free(n_face        );

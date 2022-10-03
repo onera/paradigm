@@ -282,6 +282,26 @@ PDM_mesh_location_part_set
 
 /**
  *
+ * \brief Set a part of a mesh
+ *
+ * \param [in]   id                     Pointer to \ref PDM_mesh_location object
+ * \param [in]   i_part                 Partition to define
+ * \param [in]   n_cell                 Number of cells
+ * \param [in]   is_elmt_select_by_user Flag to determine if user want or no to extract current cell
+ *
+ */
+void
+PDM_mesh_location_user_extract_set
+(
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                 *is_elmt_select_by_user
+);
+
+
+
+/**
+ *
  * \brief Set a part of a mesh (2d version)
  *
  * \param [in]   id            Pointer to \ref PDM_mesh_location object

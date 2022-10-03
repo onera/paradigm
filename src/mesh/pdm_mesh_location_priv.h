@@ -103,6 +103,9 @@ struct _pdm_mesh_location_t {
 
   _point_cloud_t *point_clouds; /*!< Point clouds */
 
+  int        use_user_extract;
+  int      **is_elmt_select_by_user;
+
   double tolerance;
 
   PDM_mesh_location_method_t method;

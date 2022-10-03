@@ -534,7 +534,7 @@ PDM_doctree_build
   PDM_MPI_Barrier(doct->comm_shared);
 
   box_set = PDM_box_set_create(3,
-                               0,  // No normalization to preserve initial extents
+                               1,  // No normalization to preserve initial extents
                                0,  // No projection to preserve initial extents
                                n_shared_boxes,
                                shared_coarse_boxes_gnum,
@@ -878,6 +878,16 @@ PDM_doctree_build
   if(have_pts_init_location) {
     free(dinit_location_pts_idx);
     free(dinit_location_pts);
+  }
+
+  if(0 == 1) {
+    char filename[999];
+    sprintf(filename, "out_reorder_blk_coord_send_%i.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              n_pts_tot,
+                              reorder_blk_coord_send,
+                              reorder_blk_pts_gnum,
+                              NULL);
   }
 
   /*
@@ -1359,7 +1369,6 @@ PDM_doctree_build
   b_t_cpu_s   = e_t_cpu_s;
   PDM_timer_resume(doct->timer);
 
-
   /*
    * Wait message and free all useless buffer
    */
@@ -1528,8 +1537,8 @@ PDM_doctree_build
 
       PDM_g_num_t *shm_equi_pts_gnum          = &equi_pts_gnum      [  shm_equi_pts_tot_idx[i_shm]];
 
-      int *shm_equi_pts_init_location     = &equi_pts_init_location    [3 * shm_equi_pts_init_location_tot_idx[i_shm]];
-      int *shm_equi_pts_init_location_idx = &equi_pts_init_location_idx[    shm_equi_init_location_pts_tot_idx[i_shm]];
+      // int *shm_equi_pts_init_location     = &equi_pts_init_location    [3 * shm_equi_pts_init_location_tot_idx[i_shm]];
+      // int *shm_equi_pts_init_location_idx = &equi_pts_init_location_idx[    shm_equi_init_location_pts_tot_idx[i_shm]];
 
       if(0 == 1) {
         char filename[999];
@@ -1583,6 +1592,7 @@ PDM_doctree_build
   free(equi_pts_coords);
   free(distrib_search_by_rank_idx);
   free(shm_equi_pts_tot_idx);
+  free(shm_equi_init_location_pts_tot_idx);
   // PDM_MPI_Barrier  (doct->comm);
   PDM_timer_hang_on(doct->timer);
   e_t_elapsed = PDM_timer_elapsed (doct->timer);
@@ -1604,10 +1614,10 @@ PDM_doctree_build
   PDM_MPI_Barrier(doct->comm_shared);
 
   PDM_mpi_win_shared_unlock_all(wequi_pts_gnum);
-  PDM_mpi_win_shared_unlock_all(wequi_pts_init_location);
+  // PDM_mpi_win_shared_unlock_all(wequi_pts_init_location);
 
   PDM_mpi_win_shared_free(wequi_pts_gnum);
-  PDM_mpi_win_shared_free(wequi_pts_init_location);
+  // PDM_mpi_win_shared_free(wequi_pts_init_location);
 
   /*
    * Equilibrate unitary works
