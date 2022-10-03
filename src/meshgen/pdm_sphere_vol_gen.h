@@ -85,7 +85,6 @@ PDM_sphere_vol_icosphere_gen
        double            **dvtx_coord,
        PDM_g_num_t       **dface_vtx,
        PDM_g_num_t       **dcell_vtx,
-       int               **dcell_hextet,
        PDM_g_num_t       **distrib_vtx,
        PDM_g_num_t       **distrib_face,
        PDM_g_num_t       **distrib_cell

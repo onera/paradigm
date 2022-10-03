@@ -919,13 +919,11 @@ _gen_from_base_mesh
        double       **dvtx_coord,
        PDM_g_num_t  **dface_vtx,
        PDM_g_num_t  **dcell_vtx,
-       int          **dcell_hextet,
        PDM_g_num_t  **distrib_vtx,
        PDM_g_num_t  **distrib_face,
        PDM_g_num_t  **distrib_cell
 )
 {
-  /* TODO : boundary faces */
   assert(n >= 0);
 
   int i_rank;
@@ -1148,7 +1146,6 @@ _gen_from_base_mesh
   // }
   // //<<--
 
-  *dcell_hextet = malloc(sizeof(int) * dn_cell); // to remove
 
   int *base_cell_face_perm = malloc(sizeof(int) * 4 * base_n_cell);
   for (int icell = 0; icell < base_n_cell; icell++) {
@@ -1226,8 +1223,6 @@ _gen_from_base_mesh
 
     // log_trace("  hextet %d, idx = %5d, ijk = %3d %3d %3d\n",
     //           hextet, idx, i, j, k);
-
-    (*dcell_hextet)[icell] = ibase;//hextet;
 
 
     switch (hextet) {
@@ -1834,7 +1829,6 @@ PDM_sphere_vol_icosphere_gen
        double            **dvtx_coord,
        PDM_g_num_t       **dface_vtx,
        PDM_g_num_t       **dcell_vtx,
-       int               **dcell_hextet,
        PDM_g_num_t       **distrib_vtx,
        PDM_g_num_t       **distrib_face,
        PDM_g_num_t       **distrib_cell
@@ -1958,7 +1952,6 @@ PDM_sphere_vol_icosphere_gen
                       dvtx_coord,
                       dface_vtx,
                       dcell_vtx,
-                      dcell_hextet,
                       distrib_vtx,
                       distrib_face,
                       distrib_cell);
@@ -2080,15 +2073,12 @@ PDM_sphere_vol_icosphere_gen_nodal
        PDM_dmesh_nodal_t **_dmn
 )
 {
-  /* TODO : boundary faces */
-
   double      *dvtx_coord    = NULL;
   PDM_g_num_t *dface_vtx     = NULL;
   PDM_g_num_t *dcell_vtx     = NULL;
   PDM_g_num_t *distrib_vtx   = NULL;
   PDM_g_num_t *distrib_face  = NULL;
   PDM_g_num_t *distrib_cell  = NULL;
-  int *dcell_hextet = NULL;
   PDM_sphere_vol_icosphere_gen(comm,
                                n,
                                x_center,
@@ -2098,11 +2088,9 @@ PDM_sphere_vol_icosphere_gen_nodal
                                &dvtx_coord,
                                &dface_vtx,
                                &dcell_vtx,
-                               &dcell_hextet,
                                &distrib_vtx,
                                &distrib_face,
                                &distrib_cell);
-  free(dcell_hextet);
 
   /*
    *  Create dmesh nodal

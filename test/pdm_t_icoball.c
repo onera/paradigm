@@ -177,7 +177,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_face  = NULL;
   PDM_g_num_t *distrib_cell  = NULL;
 
-  int *dcell_hextet = NULL;
 
   PDM_sphere_vol_icosphere_gen(comm,
                                n,
@@ -188,7 +187,6 @@ int main(int argc, char *argv[])
                                &dvtx_coord,
                                &dface_vtx,
                                &dcell_vtx,
-                               &dcell_hextet,
                                &distrib_vtx,
                                &distrib_face,
                                &distrib_cell);
