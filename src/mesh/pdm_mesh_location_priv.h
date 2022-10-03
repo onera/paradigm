@@ -13,6 +13,7 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_timer.h"
+#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
@@ -131,6 +132,9 @@ struct _pdm_mesh_location_t {
   int  tag_points_in_elt_get;  /*!< Tag call to points_in_elt_get function */ 
   int  tag_cell_vtx_get;       /*!< Tag call to cell_vtx_get function */ 
   // int *tag_pts_in_elt_get;     /*!< Tag call to points_in_elt_get function */
+
+
+  PDM_part_to_part_t **ptp; /*!< To exchange data between elt and points (both in user frame) */
 
 } ;
 

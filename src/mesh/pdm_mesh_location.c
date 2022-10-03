@@ -2030,6 +2030,8 @@ PDM_mesh_location_create
   ml->point_clouds =
     (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
 
+  ml->ptp = malloc(sizeof(PDM_part_to_part_t *) * n_point_cloud);
+
   for (int i = 0; i <  n_point_cloud; i++) {
     ml->point_clouds[i].n_part = -1;
     ml->point_clouds[i].n_points = NULL;
@@ -2044,6 +2046,8 @@ PDM_mesh_location_create
     ml->point_clouds[i].n_un_located = NULL;
     ml->point_clouds[i].located = NULL;
     ml->point_clouds[i].un_located = NULL;
+
+    ml->ptp[i] = NULL;
   }
 
   ml->points_in_elements = NULL;
@@ -2963,6 +2967,17 @@ PDM_mesh_location_free
   if(ml->is_elmt_select_by_user != NULL) {
     free(ml->is_elmt_select_by_user);
   }
+
+
+  if (ml->owner == PDM_OWNERSHIP_KEEP) {
+    for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+      if (ml->ptp[icloud] != NULL) {
+        PDM_part_to_part_free(ml->ptp[icloud]);
+        ml->ptp[icloud] = NULL;
+      }
+    }
+  }
+  free(ml->ptp);
 
   PDM_timer_free(ml->timer);
 
@@ -12187,7 +12202,7 @@ PDM_mesh_location_compute_optim3
     PDM_g_num_t **select_elt_g_num_user         = NULL;
 
     if (use_extracted_mesh) {
-      if (1) {
+      if (dbg_enabled) {
         // log_trace("mesh extraction %d / %d\n", l_n_elt[1], l_n_elt[0]);
         log_trace("mesh extraction %d / %d\n", g_n_elt[1], g_n_elt[0]);
       }
@@ -12216,7 +12231,7 @@ PDM_mesh_location_compute_optim3
       }
     }
     else {
-      if (1) {
+      if (dbg_enabled) {
         log_trace("no mesh extraction\n");
       }
       free(n_select_elt);
@@ -12592,6 +12607,87 @@ PDM_mesh_location_compute_optim3
         free(init_location_box);
         break;
       }
+      case PDM_MESH_LOCATION_DBBTREE: {
+        /* Compute local extents */
+        double l_extents[6] = {
+          HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+          -HUGE_VAL, -HUGE_VAL, -HUGE_VAL
+        };
+
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          for (int i = 0; i < n_select_elt[ipart]; i++) {
+            for (int j = 0; j < 3; j++) {
+              l_extents[j  ] = PDM_MIN(l_extents[j  ], select_elt_extents[ipart][6*i+j]);
+              l_extents[j+3] = PDM_MAX(l_extents[j+3], select_elt_extents[ipart][6*i+3+j]);
+            }
+          }
+        }
+
+        /* Compute global extents */
+        double g_extents[6];
+        PDM_MPI_Allreduce(l_extents,   g_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, ml->comm);
+        PDM_MPI_Allreduce(l_extents+3, g_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+
+        /* Break symmetry */
+        double max_range = 1e-12;
+        for (int i = 0; i < 3; i++) {
+          max_range = PDM_MAX(max_range, g_extents[i+3] - g_extents[i]);
+        }
+        for (int i = 0; i < 3; i++) {
+          g_extents[i]   -= max_range * 1.1e-3;
+          g_extents[i+3] += max_range * 1.0e-3;
+        }
+
+        PDM_dbbtree_t *dbbt = PDM_dbbtree_create(ml->comm, dim, g_extents);
+
+        PDM_box_set_t *box_set = PDM_dbbtree_boxes_set(dbbt,
+                                                       1,
+                                                       &dn_elt1,
+                                (const double      **) &delt_extents1,
+                                (const PDM_g_num_t **) &delmt_g_num_geom);
+
+
+        if (use_shared_tree == 0) {
+
+          PDM_part_to_block_t *ptb_pib = NULL;
+          PDM_dbbtree_points_inside_boxes_block_frame(dbbt,
+                                                      dn_pts,
+                                                      dpts_g_num_geom,
+                                                      dpts_coord,
+                                                      &ptb_pib,
+                                                      &delt_pts_n2,
+                                                      &delt_pts_g_num_geom,
+                                                      &delt_pts_coord2,
+                                                      0);
+
+          dn_elt2 = PDM_part_to_block_n_elt_block_get(ptb_pib);
+          PDM_g_num_t *_g_num = PDM_part_to_block_block_gnum_get(ptb_pib);
+
+          delt_g_num_geom2 = malloc(sizeof(PDM_g_num_t) * dn_elt2);
+          memcpy(delt_g_num_geom2, _g_num, sizeof(PDM_g_num_t) * dn_elt2);
+
+          PDM_part_to_block_free(ptb_pib);
+
+        }
+        else {
+          abort();
+          // PDM_MPI_Barrier (ml->comm);
+          PDM_dbbtree_points_inside_boxes_shared(dbbt,
+                                                 dn_pts,
+                                                 dpts_g_num_geom,
+                                                 dpts_coord,
+                                                 dn_elt1,
+                                                 delmt_g_num_geom, // Attention faire une distribution part_to_bloc_geom dans le cas octree
+                                                 &box_pts_idx,
+                                                 &box_pts_g_num,
+                                                 &box_pts_coord,
+                                                 0);
+        }
+
+        PDM_dbbtree_free(dbbt);
+        PDM_box_set_destroy(&box_set);
+        break;
+      }
       default: {
         PDM_error(__FILE__, __LINE__, 0,
                   "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
@@ -12838,7 +12934,6 @@ PDM_mesh_location_compute_optim3
     int          pextract_n_elt        = 0;
     int          pextract_n_vtx        = 0;
     double      *pextract_vtx_coord    = NULL;
-    // PDM_g_num_t *pextract_elt_ln_to_gn = NULL;
 
     pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
                                                    0,
@@ -12863,7 +12958,6 @@ PDM_mesh_location_compute_optim3
                  &pextract_n_vtx,
                  &pextract_vtx_coord);
     }
-    // exit(1);
 
 
     // PDM_MPI_Barrier (ml->comm);
@@ -12926,9 +13020,9 @@ PDM_mesh_location_compute_optim3
     e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
     ml->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
+    ml->times_cpu    [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;
@@ -13131,9 +13225,9 @@ PDM_mesh_location_compute_optim3
     e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
     ml->times_elapsed[MERGE_LOCATION_DATA_STEP1] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu[MERGE_LOCATION_DATA_STEP1]     += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_s - b_t_cpu_s;
+    ml->times_cpu    [MERGE_LOCATION_DATA_STEP1] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [MERGE_LOCATION_DATA_STEP1] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [MERGE_LOCATION_DATA_STEP1] += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;
@@ -13220,9 +13314,9 @@ PDM_mesh_location_compute_optim3
     e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
     ml->times_elapsed[MERGE_LOCATION_DATA_STEP2] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu[MERGE_LOCATION_DATA_STEP2]     += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_s - b_t_cpu_s;
+    ml->times_cpu    [MERGE_LOCATION_DATA_STEP2] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [MERGE_LOCATION_DATA_STEP2] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [MERGE_LOCATION_DATA_STEP2] += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;
@@ -13724,9 +13818,9 @@ PDM_mesh_location_compute_optim3
   log_trace("dt_extract_all = %12.5e / dt_search_all = %12.5e \n", dt_extract_all, dt_search_all);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    free(elt_extents  [ipart]);
-    free(elt_g_num    [ipart]);
-    free(elt_type     [ipart]);
+    free(elt_extents[ipart]);
+    free(elt_g_num  [ipart]);
+    free(elt_type   [ipart]);
   }
   free(elt_extents);
   free(elt_g_num);
