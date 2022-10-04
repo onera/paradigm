@@ -12006,6 +12006,8 @@ PDM_mesh_location_compute_optim3
         pts_in_elt->weights          = malloc(sizeof(double      *) * n_part);
         pts_in_elt->dist2            = malloc(sizeof(double      *) * n_part);
 
+        int **pts_in_elt_triplet_idx = malloc(sizeof(int *) * n_part);
+        int **pts_in_elt_triplet     = malloc(sizeof(int *) * n_part);
         for (int ipart = 0; ipart < n_part; ipart++) {
           pts_in_elt->pts_inside_idx  [ipart] = PDM_array_zeros_int(pn_elt[ipart] + 1);
           pts_in_elt->gnum            [ipart] = malloc(sizeof(PDM_g_num_t) * 0);
@@ -12015,7 +12017,27 @@ PDM_mesh_location_compute_optim3
           pts_in_elt->weights_idx     [ipart] = malloc(sizeof(int        ) * 0);
           pts_in_elt->weights         [ipart] = malloc(sizeof(double     ) * 0);
           pts_in_elt->dist2           [ipart] = malloc(sizeof(double     ) * 0);
+
+          pts_in_elt_triplet_idx[ipart] = PDM_array_zeros_int(1);
+          pts_in_elt_triplet    [ipart] = malloc(sizeof(int) * 0);
         }
+
+
+        ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet2((const PDM_g_num_t **) elt_g_num,
+                                                                     (const int          *) pn_elt,
+                                                                     n_part,
+                                                                     (const int          *) pcloud->n_points,
+                                                                     pcloud->n_part,
+                                                                     (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
+                                                                     (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
+                                                                     (const int         **) pts_in_elt_triplet,
+                                                                     ml->comm);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          free(pts_in_elt_triplet_idx[ipart]);
+          free(pts_in_elt_triplet    [ipart]);
+        }
+        free(pts_in_elt_triplet_idx);
+        free(pts_in_elt_triplet    );
       }
 
       /* Result from point cloud PoV */
@@ -13611,23 +13633,23 @@ PDM_mesh_location_compute_optim3
                                        &n_unref_elt,
                                        &unref_elt);
 
-      int **pts_in_elt_idx         = malloc(sizeof(int *) * n_part);
+      // int **pts_in_elt_idx         = malloc(sizeof(int *) * n_part);
       int **pts_in_elt_triplet_idx = malloc(sizeof(int *) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        pts_in_elt_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart] + 1));
-        pts_in_elt_idx[ipart][0] = 0;
-        for (int i = 0; i < n_ref_elt[ipart]; i++) {
-          pts_in_elt_idx[ipart][ref_elt[ipart][i]] = 3*stride_pts_triplet[ipart][i];
-        }
+        // pts_in_elt_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart] + 1));
+        // pts_in_elt_idx[ipart][0] = 0;
+        // for (int i = 0; i < n_ref_elt[ipart]; i++) {
+        //   pts_in_elt_idx[ipart][ref_elt[ipart][i]] = 3*stride_pts_triplet[ipart][i];
+        // }
         free(stride_pts_triplet[ipart]);
 
-        for (int i = 0; i < n_unref_elt[ipart]; i++) {
-          pts_in_elt_idx[ipart][unref_elt[ipart][i]] = 0;
-        }
+        // for (int i = 0; i < n_unref_elt[ipart]; i++) {
+        //   pts_in_elt_idx[ipart][unref_elt[ipart][i]] = 0;
+        // }
 
-        for (int i = 0; i < pn_elt[ipart]; i++) {
-          pts_in_elt_idx[ipart][i+1] += pts_in_elt_idx[ipart][i];
-        }
+        // for (int i = 0; i < pn_elt[ipart]; i++) {
+        //   pts_in_elt_idx[ipart][i+1] += pts_in_elt_idx[ipart][i];
+        // }
 
 
         // PDM_log_trace_connectivity_long(pts_in_elt->pts_inside_idx[ipart],
@@ -13704,16 +13726,16 @@ PDM_mesh_location_compute_optim3
                                                                    n_part,
                                                                    (const int          *) pcloud->n_points,
                                                                    pcloud->n_part,
-                                                                   (const int         **) pts_in_elt->pts_inside_idx,
-                                                                   (const int         **) pts_in_elt_triplet_idx,
+                                                                   (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
+                                                                   (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
                                                                    (const int         **) pts_in_elt_triplet,
                                                                    ml->comm);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        free(pts_in_elt_idx        [ipart]);
+        // free(pts_in_elt_idx        [ipart]);
         free(pts_in_elt_triplet    [ipart]);
         free(pts_in_elt_triplet_idx[ipart]);
       }
-      free(pts_in_elt_idx);
+      // free(pts_in_elt_idx);
       free(pts_in_elt_triplet);
       free(pts_in_elt_triplet_idx);
     }

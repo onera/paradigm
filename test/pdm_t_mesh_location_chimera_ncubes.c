@@ -2336,7 +2336,7 @@ int main(int argc, char *argv[])
 
     char *env_var = NULL;
     env_var = getenv ("PDM_MESH_LOCATION_NEW");
-    int algo = 0;
+    int algo = 1;
     if (env_var != NULL) {
       algo = atoi(env_var);
     }
@@ -2426,16 +2426,19 @@ int main(int argc, char *argv[])
        * Creation du part_to_part pour chaque mesh / cloud
        */
       assert(n_tot_cloud == n_mesh);
-      ptp[i_mesh][i_cloud] = PDM_part_to_part_create ((const PDM_g_num_t **) cell_ln_to_gn[i_mesh],
-                                                                             n_cell_without_ext[i_mesh],
-                                                                             n_part,
-                                                      (const PDM_g_num_t **) cell_ln_to_gn[i_cloud],
-                                                                             n_cell       [i_cloud],
-                                                                             n_part,
-                                                      (const int         **) mesh_pts_idx [i_mesh][i_cloud],
-                                                      (const PDM_g_num_t **) mesh_pts_gnum[i_mesh][i_cloud],
-                                                                             comm);
-
+      // ptp[i_mesh][i_cloud] = PDM_part_to_part_create ((const PDM_g_num_t **) cell_ln_to_gn[i_mesh],
+      //                                                                        n_cell_without_ext[i_mesh],
+      //                                                                        n_part,
+      //                                                 (const PDM_g_num_t **) cell_ln_to_gn[i_cloud],
+      //                                                                        n_cell       [i_cloud],
+      //                                                                        n_part,
+      //                                                 (const int         **) mesh_pts_idx [i_mesh][i_cloud],
+      //                                                 (const PDM_g_num_t **) mesh_pts_gnum[i_mesh][i_cloud],
+      //                                                                        comm);
+      PDM_mesh_location_part_to_part_get(mesh_loc[i_mesh],
+                                         i_cloud,
+                                         &ptp[i_mesh][i_cloud],
+                                         PDM_OWNERSHIP_USER);
 
     }
   }

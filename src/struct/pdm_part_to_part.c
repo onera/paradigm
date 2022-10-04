@@ -1802,22 +1802,6 @@ _create
                              i,
                              &location_part1_to_part2_idx,
                              &location_part1_to_part2);
-      if (0) {
-        int n = part1_to_part2_idx[i][n_elt1[i]];
-        int *_idx = malloc(sizeof(int) * (n + 1));
-        for (int j = 0; j <= n; j++) {
-          _idx[j] = location_part1_to_part2_idx[j]/3;
-        }
-        PDM_log_trace_array_long(ptp->part1_to_part2[i],
-                                 n,
-                                 "part1_to_part2 : ");
-        PDM_log_trace_graph_nuplet_int(_idx,//location_part1_to_part2_idx,
-                                       location_part1_to_part2,
-                                       3,
-                                       n_elt1[i],
-                                       "location_part1_to_part2 : ");
-        free(_idx);
-      }
       n_total_elt += location_part1_to_part2_idx[part1_to_part2_idx[i][n_elt1[i]]];
     }
     else if (from_triplet == 1) {
@@ -2096,7 +2080,6 @@ _create
   int **gnum1_to_send_buffer_n    = malloc (sizeof (int*) * n_part1);
 
   for (int i = 0; i < n_part1; i++) {
-    log_trace("ptp->part1_to_part2_idx[i][n_elt1[i]]+1 = %d\n", ptp->part1_to_part2_idx[i][n_elt1[i]]+1);
     ptp->gnum1_to_send_buffer_idx[i] = malloc (sizeof (int) * (ptp->part1_to_part2_idx[i][n_elt1[i]]+1));    
     gnum1_to_send_buffer_n[i] = malloc (sizeof (int) * ptp->part1_to_part2_idx[i][n_elt1[i]]);
 
