@@ -11759,6 +11759,9 @@ PDM_mesh_location_compute_optim3
     blocks_id = PDM_Mesh_nodal_blocks_id_get(ml->mesh_nodal);
   }
 
+  int *req_pts_proj_coord = PDM_array_const_int(ml->n_point_cloud, -1);
+  int *req_pts_dist2      = PDM_array_const_int(ml->n_point_cloud, -1);
+
 
   int                   *pn_elt      = malloc(sizeof(int                   ) * n_part);
   PDM_g_num_t          **elt_g_num   = malloc(sizeof(PDM_g_num_t          *) * n_part);
@@ -13633,33 +13636,9 @@ PDM_mesh_location_compute_optim3
                                        &n_unref_elt,
                                        &unref_elt);
 
-      // int **pts_in_elt_idx         = malloc(sizeof(int *) * n_part);
       int **pts_in_elt_triplet_idx = malloc(sizeof(int *) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        // pts_in_elt_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart] + 1));
-        // pts_in_elt_idx[ipart][0] = 0;
-        // for (int i = 0; i < n_ref_elt[ipart]; i++) {
-        //   pts_in_elt_idx[ipart][ref_elt[ipart][i]] = 3*stride_pts_triplet[ipart][i];
-        // }
         free(stride_pts_triplet[ipart]);
-
-        // for (int i = 0; i < n_unref_elt[ipart]; i++) {
-        //   pts_in_elt_idx[ipart][unref_elt[ipart][i]] = 0;
-        // }
-
-        // for (int i = 0; i < pn_elt[ipart]; i++) {
-        //   pts_in_elt_idx[ipart][i+1] += pts_in_elt_idx[ipart][i];
-        // }
-
-
-        // PDM_log_trace_connectivity_long(pts_in_elt->pts_inside_idx[ipart],
-        //                                 pts_in_elt->gnum[ipart],
-        //                                 pn_elt[ipart],
-        //                                 "pts_in_elt_g_num  : ");
-        // PDM_log_trace_connectivity_int(pts_in_elt_idx[ipart],
-        //                                pts_in_elt_triplet    [ipart],
-        //                                pn_elt[ipart],
-        //                                "pts_in_elt_triplet : ");
 
         int _n_pts = pts_in_elt->pts_inside_idx[ipart][pn_elt[ipart]];
 
@@ -13731,11 +13710,9 @@ PDM_mesh_location_compute_optim3
                                                                    (const int         **) pts_in_elt_triplet,
                                                                    ml->comm);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        // free(pts_in_elt_idx        [ipart]);
         free(pts_in_elt_triplet    [ipart]);
         free(pts_in_elt_triplet_idx[ipart]);
       }
-      // free(pts_in_elt_idx);
       free(pts_in_elt_triplet);
       free(pts_in_elt_triplet_idx);
     }
@@ -13856,7 +13833,7 @@ PDM_mesh_location_compute_optim3
           (const void  **) pts_in_elt->coords,
                            &tmp_projected_coords_n,
           (      void ***) &pcloud->projected_coords,
-                           &request_pts_proj_coord);
+                           &req_pts_proj_coord[icloud]);
 
     // int request_pts_dist2;
     int **tmp_pts_dist2_n = NULL;
@@ -13870,10 +13847,10 @@ PDM_mesh_location_compute_optim3
           (const void  **) pts_in_elt->dist2,
                            &tmp_pts_dist2_n,
           (      void ***) &pcloud->dist2,
-                           &request_pts_dist2);
+                           &req_pts_dist2[icloud]);
 
-    PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_proj_coord);
-    PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_dist2);
+    // PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_proj_coord);
+    // PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_dist2);
 
 
     PDM_MPI_Barrier (ml->comm);
@@ -13944,6 +13921,20 @@ PDM_mesh_location_compute_optim3
   } /* End icloud */
 
   _pmesh_nodal_elmts_free(pmne);
+
+  for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+    if (ml->ptp[icloud] != NULL) {
+      if (req_pts_proj_coord[icloud] != -1) {
+        PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_proj_coord[icloud]);
+      }
+
+      if (req_pts_dist2[icloud] != -1) {
+        PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_dist2[icloud]);
+      }
+    }
+  }
+  free(req_pts_proj_coord);
+  free(req_pts_dist2);
 
   log_trace("dt_extract_all = %12.5e / dt_search_all = %12.5e \n", dt_extract_all, dt_search_all);
 
