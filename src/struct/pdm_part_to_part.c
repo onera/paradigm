@@ -1802,7 +1802,7 @@ _create
                              i,
                              &location_part1_to_part2_idx,
                              &location_part1_to_part2);
-      if (1) {
+      if (0) {
         int n = part1_to_part2_idx[i][n_elt1[i]];
         int *_idx = malloc(sizeof(int) * (n + 1));
         for (int j = 0; j <= n; j++) {

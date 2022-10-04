@@ -13583,7 +13583,6 @@ PDM_mesh_location_compute_optim3
       free(elt_pts_weight_stride);
     }
 
-    // PDM_part_to_part_free(ptp_elt);
 
 
 
@@ -13692,29 +13691,14 @@ PDM_mesh_location_compute_optim3
       }
       free(stride_pts_triplet);
       free(pts_in_elt_triplet_n);
+      free(final_elt_pts_triplet);
+      free(final_elt_pts_triplet_idx);
+      free(final_elt_pts_idx);
+      free(final_elt_pts_g_num);
 
       PDM_part_to_part_free(ptp_elt);
 
 
-
-      // ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
-      //                                                             (const int          *) pn_elt,
-      //                                                             n_part,
-      //                                                             (const int          *) pcloud->n_points,
-      //                                                             pcloud->n_part,
-      //                                                             (const int         **) pts_in_elt_idx,
-      //                                                             (const int         **) pts_in_elt_triplet,
-      //                                                             ml->comm);
-      //
-      // PDM_part_to_part_t *ppt = PDM_part_to_part_create((const PDM_g_num_t **) elt_g_num,
-      //                                                   (const int          *) pn_elt,
-      //                                                   n_part,
-      //                                                   (const PDM_g_num_t **) pcloud->gnum,
-      //                                                   (const int          *) pcloud->n_points,
-      //                                                   pcloud->n_part,
-      //                                                   (const int         **) pts_in_elt->pts_inside_idx,
-      //                                                   (const PDM_g_num_t **) pts_in_elt->gnum,
-      //                                                   ml->comm);
       ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet2((const PDM_g_num_t **) elt_g_num,
                                                                    (const int          *) pn_elt,
                                                                    n_part,
@@ -13724,7 +13708,6 @@ PDM_mesh_location_compute_optim3
                                                                    (const int         **) pts_in_elt_triplet_idx,
                                                                    (const int         **) pts_in_elt_triplet,
                                                                    ml->comm);
-      // PDM_part_to_part_free(ppt);
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(pts_in_elt_idx        [ipart]);
         free(pts_in_elt_triplet    [ipart]);
@@ -13735,192 +13718,7 @@ PDM_mesh_location_compute_optim3
       free(pts_in_elt_triplet_idx);
     }
 
-    // PDM_log_trace_array_long(final_elt_pts_idx, dn_elt2+1, "final_elt_pts_idx ::");
-    /*
-     *  Transfer location data from elt (current frame) to pts (user frame)
-     */
 
-    // for(int i = 0; i < dn_elt2 + 1; ++i) {
-    //   final_elt_pts_triplet_idx[i] *= 3;
-    // }
-    // PDM_part_to_part_t *ptp_elt_pts = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) &delt_parent_g_num2,
-    //                                                                             (const int          *) &dn_elt2,
-    //                                                                             1,
-    //                                                                             (const int          *) pcloud->n_points,
-    //                                                                             pcloud->n_part,
-    //                                                                             (const int         **) &final_elt_pts_triplet_idx,
-    //                                                                             (const int         **) &final_elt_pts_triplet,
-    //                                                                             ml->comm);
-    // free(final_elt_pts_triplet);
-    // free(final_elt_pts_triplet_idx);
-    // free(final_elt_pts_idx);
-    // free(final_elt_pts_g_num);
-
-    // // TODO: ownership on located/unlocated??
-    // int  *n_located = NULL;
-    // int **located   = NULL;
-    // PDM_part_to_part_ref_lnum2_get(ptp_elt_pts,
-    //                                &n_located,
-    //                                &located);
-
-    // int  *n_unlocated = NULL;
-    // int **unlocated   = NULL;
-    // PDM_part_to_part_unref_lnum2_get(ptp_elt_pts,
-    //                                  &n_unlocated,
-    //                                  &unlocated);
-
-    // pcloud->n_located    = malloc(sizeof(int  ) * pcloud->n_part);
-    // pcloud->n_un_located = malloc(sizeof(int  ) * pcloud->n_part);
-    // pcloud->located      = malloc(sizeof(int *) * pcloud->n_part);
-    // pcloud->un_located   = malloc(sizeof(int *) * pcloud->n_part);
-    // for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    //   pcloud->n_located   [ipart] = n_located  [ipart];
-    //   pcloud->n_un_located[ipart] = n_unlocated[ipart];
-
-    //   pcloud->located   [ipart] = malloc(sizeof(int) * n_located  [ipart]);
-    //   pcloud->un_located[ipart] = malloc(sizeof(int) * n_unlocated[ipart]);
-
-    //   memcpy(pcloud->located   [ipart], located  [ipart], sizeof(int) * n_located  [ipart]);
-    //   memcpy(pcloud->un_located[ipart], unlocated[ipart], sizeof(int) * n_unlocated[ipart]);
-    // }
-
-    // // TODO: ownership on gnum1_come_from(_idx)??
-    // int         **gnum1_come_from_idx = NULL;
-    // PDM_g_num_t **gnum1_come_from     = NULL;
-    // PDM_part_to_part_gnum1_come_from_get(ptp_elt_pts,
-    //                                      &gnum1_come_from_idx,
-    //                                      &gnum1_come_from);
-
-    // pcloud->location = malloc(sizeof(PDM_g_num_t *) * pcloud->n_part);
-    // for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    //   pcloud->location[ipart] = malloc(sizeof(PDM_g_num_t) * n_located[ipart]);
-    //   for (int i = 0; i < n_located[ipart]; i++) {
-
-    //     if (gnum1_come_from_idx[ipart][i+1] != gnum1_come_from_idx[ipart][i] + 1) {
-    //       int ipt = pcloud->located[ipart][i] - 1;
-    //       log_trace("point "PDM_FMT_G_NUM" has locations ",
-    //                 pcloud->gnum[ipart][ipt]);
-    //       PDM_log_trace_array_long(gnum1_come_from[ipart] + gnum1_come_from_idx[ipart][i],
-    //                                gnum1_come_from_idx[ipart][i+1] - gnum1_come_from_idx[ipart][i],
-    //                                "");
-    //     }
-    //     assert(gnum1_come_from_idx[ipart][i+1] == gnum1_come_from_idx[ipart][i] + 1);
-
-    //     pcloud->location[ipart][i] = gnum1_come_from[ipart][i];
-    //   }
-
-    //   if (dbg_enabled) {
-    //     PDM_log_trace_array_long(pcloud->location[ipart], n_located[ipart], "pcloud->location[ipart] : ");
-    //   }
-    // }
-
-
-    // if (dbg_enabled) {
-    //   double **is_located = malloc(sizeof(double) * pcloud->n_part);
-    //   double **location   = malloc(sizeof(double) * pcloud->n_part);
-    //   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    //     is_located[ipart] = malloc(sizeof(double) * pcloud->n_points[ipart]);
-    //     location  [ipart] = malloc(sizeof(double) * pcloud->n_points[ipart]);
-    //     for (int i = 0; i < pcloud->n_points[ipart]; i++) {
-    //       is_located[ipart][i] = -1;
-    //     }
-    //     for (int i = 0; i < n_located[ipart]; i++) {
-    //       is_located[ipart][located[ipart][i]-1] = 1;
-    //       location  [ipart][located[ipart][i]-1] = (double) pcloud->location[ipart][i];
-    //     }
-    //     for (int i = 0; i < n_unlocated[ipart]; i++) {
-    //       is_located[ipart][unlocated[ipart][i]-1] = 0;
-    //       location  [ipart][unlocated[ipart][i]-1] = -1;
-    //     }
-    //   }
-
-    //   const char  *field_name[]   = {"is_located", "location"};
-    //   double     **field_value[2] = {is_located, location};
-
-    //   char name[999];
-    //   sprintf(name, "mesh_location_point_cloud_%d_loc", icloud);
-    //   _dump_point_cloud(name,
-    //                     ml->comm,
-    //                     pcloud->n_part,
-    //                     pcloud->n_points,
-    //                     pcloud->coords,
-    //                     pcloud->gnum,
-    //                     2,
-    //                     field_name,
-    //                     field_value);
-
-    //   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    //     free(is_located[ipart]);
-    //     free(location  [ipart]);
-    //   }
-    //   free(is_located);
-    //   free(location);
-    // }
-
-
-
-    // /* Exchange other fields (dist2, uvw, weights(_idx), proj_coord) */
-    // /* Really necessary from the points' PoV ?? */
-    // int **tmp_projected_coords_n = NULL;
-    // PDM_part_to_part_iexch(ptp_elt_pts,
-    //                        PDM_MPI_COMM_KIND_P2P,
-    //                        PDM_STRIDE_VAR_INTERLACED,
-    //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-    //                        1,
-    //                        3*sizeof(double),
-    //       (const int   **) &final_elt_pts_n,
-    //       (const void  **) &final_elt_pts_proj_coord,
-    //                        &tmp_projected_coords_n,
-    //       (      void ***) &pcloud->projected_coords,
-    //                        &request_pts_proj_coord);
-
-    // // int request_pts_dist2;
-    // int **tmp_pts_dist2_n = NULL;
-    // PDM_part_to_part_iexch(ptp_elt_pts,
-    //                        PDM_MPI_COMM_KIND_P2P,
-    //                        PDM_STRIDE_VAR_INTERLACED,
-    //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
-    //                        1,
-    //                        sizeof(double),
-    //       (const int   **) &final_elt_pts_n,
-    //       (const void  **) &final_elt_pts_distance,
-    //                        &tmp_pts_dist2_n,
-    //       (      void ***) &pcloud->dist2,
-    //                        &request_pts_dist2);
-
-    // // PDM_part_to_part_iexch(ptp_elt_pts,
-    // //                        PDM_MPI_COMM_KIND_P2P,
-    // //                        PDM_STRIDE_CST_INTERLACED,
-    // //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-    // //                        1,
-    // //                        3*sizeof(double),
-    // //                        NULL,
-    // //       (const void  **) &final_elt_pts_proj_coord,
-    // //                        NULL,
-    // //       (      void ***) &pcloud->projected_coords,
-    // //                        &request_pts_proj_coord);
-
-    // // // int request_pts_dist2;
-    // // PDM_part_to_part_iexch(ptp_elt_pts,
-    // //                        PDM_MPI_COMM_KIND_P2P,
-    // //                        PDM_STRIDE_CST_INTERLACED,
-    // //                        PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-    // //                        1,
-    // //                        sizeof(double),
-    // //                        NULL,
-    // //       (const void  **) &final_elt_pts_distance,
-    // //                        NULL,
-    // //       (      void ***) &pcloud->dist2,
-    // //                        &request_pts_dist2);
-
-    // PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_proj_coord);
-    // PDM_part_to_part_iexch_wait(ptp_elt_pts, request_pts_dist2);
-    // PDM_part_to_part_free(ptp_elt_pts);
-
-    free(final_elt_pts_triplet);
-    free(final_elt_pts_triplet_idx);
-    free(final_elt_pts_idx);
-    free(final_elt_pts_g_num);
 
     // TODO: ownership on located/unlocated??
     int  *n_located = NULL;
@@ -14032,7 +13830,6 @@ PDM_mesh_location_compute_optim3
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                            1,
                            3*sizeof(double),
-          // (const int   **) pts_in_elt_n,
                            NULL,
           (const void  **) pts_in_elt->coords,
                            &tmp_projected_coords_n,
@@ -14047,7 +13844,6 @@ PDM_mesh_location_compute_optim3
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                            1,
                            sizeof(double),
-          // (const int   **) pts_in_elt_n,
                            NULL,
           (const void  **) pts_in_elt->dist2,
                            &tmp_pts_dist2_n,
@@ -14056,14 +13852,6 @@ PDM_mesh_location_compute_optim3
 
     PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_proj_coord);
     PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_dist2);
-
-
-    // for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    //   free(tmp_pts_dist2_n       [ipart]);
-    //   free(tmp_projected_coords_n[ipart]);
-    // }
-    // free(tmp_pts_dist2_n);
-    // free(tmp_projected_coords_n);
 
 
     PDM_MPI_Barrier (ml->comm);
