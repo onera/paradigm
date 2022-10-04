@@ -710,7 +710,7 @@ int main(int argc, char *argv[])
 
 
   // PDM_mesh_location_compute(mesh_loc);
-  PDM_mesh_location_compute_optim2(mesh_loc);
+  PDM_mesh_location_compute_optim3(mesh_loc);
 
 
 
@@ -742,15 +742,76 @@ int main(int argc, char *argv[])
   }
 
   /* Create exchange protocol */
-  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) pface_ln_to_gn,
-                                                    (const int          *) pn_face,
-                                                    n_part_mesh,
-                                                    (const PDM_g_num_t **) ppts_ln_to_gn,
-                                                    (const int          *) pn_pts,
-                                                    n_part_cloud,
-                                                    (const int         **) pelt_pts_idx,
-                                                    (const PDM_g_num_t **) pelt_pts_gnum,
-                                                    comm);
+  // PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) pface_ln_to_gn,
+  //                                                   (const int          *) pn_face,
+  //                                                   n_part_mesh,
+  //                                                   (const PDM_g_num_t **) ppts_ln_to_gn,
+  //                                                   (const int          *) pn_pts,
+  //                                                   n_part_cloud,
+  //                                                   (const int         **) pelt_pts_idx,
+  //                                                   (const PDM_g_num_t **) pelt_pts_gnum,
+  //                                                   comm);
+  PDM_part_to_part_t *ptp = NULL;
+  PDM_mesh_location_part_to_part_get(mesh_loc,
+                                     0,
+                                     &ptp,
+                                     PDM_OWNERSHIP_USER);
+
+  int  *n_located;
+  int **located;
+  PDM_part_to_part_ref_lnum2_get(ptp,
+                                 &n_located,
+                                 &located);
+
+  int  *n_unlocated;
+  int **unlocated;
+  PDM_part_to_part_unref_lnum2_get(ptp,
+                                   &n_unlocated,
+                                   &unlocated);
+
+  int         **gnum1_come_from_idx;
+  PDM_g_num_t **gnum1_come_from;
+  PDM_part_to_part_gnum1_come_from_get(ptp,
+                                       &gnum1_come_from_idx,
+                                       &gnum1_come_from);
+
+  int          *n_elt1;
+  int         **part1_to_part2_idx;
+  PDM_g_num_t **part1_to_part2;
+  PDM_part_to_part_part1_to_part2_get(ptp,
+                                      &n_elt1,
+                                      &part1_to_part2_idx,
+                                      &part1_to_part2);
+
+  for (int ipart = 0; ipart < n_part_cloud; ipart++) {
+    int _n_located = PDM_mesh_location_n_located_get(mesh_loc,
+                                                     0,
+                                                     ipart);
+
+    int _n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
+                                                         0,
+                                                         ipart);
+
+    int *_located = PDM_mesh_location_located_get(mesh_loc,
+                                                  0,
+                                                  ipart);
+
+    int *_unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
+                                                      0,
+                                                      ipart);
+
+    PDM_log_trace_array_int(located[ipart], n_located[ipart], "located (ptp) : ");
+    PDM_log_trace_array_int(_located,       _n_located,       "located (ml)  : ");
+
+    PDM_log_trace_array_int(unlocated[ipart], n_unlocated[ipart], "unlocated (ptp) : ");
+    PDM_log_trace_array_int(_unlocated,       _n_unlocated,       "unlocated (ml)  : ");
+
+    log_trace("n_elt1 = %d / %d\n", n_elt1[ipart], pn_face[ipart]);
+    PDM_log_trace_array_int(part1_to_part2_idx[ipart], n_elt1 [ipart], "elt_pts_idx (ptp) : ");
+    PDM_log_trace_array_int(pelt_pts_idx      [ipart], pn_face[ipart], "elt_pts_idx (ml)  : ");
+  }
+
+
 
   /*
    *  Exchange mesh (cell-centered) -> point cloud
@@ -775,6 +836,17 @@ int main(int argc, char *argv[])
     }
   }
 
+  double **pface_field1_p1p2 = malloc(sizeof(double *) * n_part_mesh);
+  for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+    pface_field1_p1p2[ipart] = malloc(sizeof(double) * pelt_pts_idx[ipart][pn_face[ipart]]);
+
+    for (int i = 0; i < pn_face[ipart]; i++) {
+      for (int idx = pelt_pts_idx[ipart][i]; idx < pelt_pts_idx[ipart][i+1]; idx++) {
+        pface_field1_p1p2[ipart][idx] = pface_field1[ipart][i];
+      }
+    }
+  }
+
   int request_elt_pts;
   double **tmp_ppts_field = NULL;
   PDM_part_to_part_iexch(ptp,
@@ -785,18 +857,18 @@ int main(int argc, char *argv[])
                          sizeof(double),
                          NULL,
         (const void  **) pface_field1,
+        // (const void  **) pface_field1_p1p2,
                          NULL,
         (      void ***) &tmp_ppts_field,
                          &request_elt_pts);
 
   PDM_part_to_part_iexch_wait(ptp, request_elt_pts);
+  for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+    free(pface_field1_p1p2[ipart]);
+  }
+  free(pface_field1_p1p2);
 
 
-  int  *n_located;
-  int **located;
-  PDM_part_to_part_ref_lnum2_get(ptp,
-                                 &n_located,
-                                 &located);
 
   double **ppts_field1 = malloc(sizeof(double *) * n_part_cloud);
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {

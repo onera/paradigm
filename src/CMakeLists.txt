@@ -234,6 +234,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_mesh_check.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_pointer_array.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_check.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_sphere_surf_gen.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_sphere_surf_gen.F90")
 endif ()
 
 if (OPENMP_FOUND)

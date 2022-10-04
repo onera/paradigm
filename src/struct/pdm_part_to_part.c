@@ -1631,6 +1631,7 @@ _create
  const int            *n_elt2,
  const int             n_part2,
  const int           **part1_to_part2_idx,
+ const int           **part1_to_part2_triplet_idx,
  const PDM_g_num_t   **part1_to_part2,
  const int           **part1_to_part2_triplet,
  const int             from_triplet,
@@ -1673,7 +1674,7 @@ _create
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
     ptp->part1_to_part2_idx[i_part] = malloc((ptp->n_elt1[i_part] + 1) * sizeof(int));
 
-    if (from_triplet == 0) {
+    if (from_triplet != 1) {
       for(int i = 0; i < n_elt1[i_part]+1; ++i) {
         ptp->part1_to_part2_idx[i_part][i] = part1_to_part2_idx[i_part][i];
       }
@@ -1801,14 +1802,33 @@ _create
                              i,
                              &location_part1_to_part2_idx,
                              &location_part1_to_part2);
+      if (1) {
+        int n = part1_to_part2_idx[i][n_elt1[i]];
+        int *_idx = malloc(sizeof(int) * (n + 1));
+        for (int j = 0; j <= n; j++) {
+          _idx[j] = location_part1_to_part2_idx[j]/3;
+        }
+        PDM_log_trace_array_long(ptp->part1_to_part2[i],
+                                 n,
+                                 "part1_to_part2 : ");
+        PDM_log_trace_graph_nuplet_int(_idx,//location_part1_to_part2_idx,
+                                       location_part1_to_part2,
+                                       3,
+                                       n_elt1[i],
+                                       "location_part1_to_part2 : ");
+        free(_idx);
+      }
       n_total_elt += location_part1_to_part2_idx[part1_to_part2_idx[i][n_elt1[i]]];
     }
-    else {
+    else if (from_triplet == 1) {
       location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
       location_part1_to_part2     = (int *)  part1_to_part2_triplet[i];
 
       n_total_elt += 3 * ptp->part1_to_part2_idx[i][n_elt1[i]];
       // n_total_elt += 3 * location_part1_to_part2_idx[ptp->part1_to_part2_idx[i][n_elt1[i]]];
+    }
+    else {
+      n_total_elt += part1_to_part2_triplet_idx[i][part1_to_part2_idx[i][n_elt1[i]]];
     }
 
   }
@@ -1838,13 +1858,18 @@ _create
     int *location_part1_to_part2_idx;
     int *location_part1_to_part2;
 
-    if (part1_to_part2_triplet == NULL) {
-
+    if (from_triplet == 0) {
       PDM_gnum_location_get (gl,
                              i,
                              &location_part1_to_part2_idx,
                              &location_part1_to_part2);
+    }
+    else if (from_triplet == 2) {
+      location_part1_to_part2_idx = (int *) part1_to_part2_triplet_idx[i];
+      location_part1_to_part2     = (int *) part1_to_part2_triplet[i];
+    }
     
+    if (from_triplet != 1) {
       for (int j = 0; j < n_elt1[i]; j++) {
         for (int k1 = part1_to_part2_idx[i][j]; k1 < part1_to_part2_idx[i][j+1]; k1++) { 
           for (int k = location_part1_to_part2_idx[k1]/3; 
@@ -2071,6 +2096,7 @@ _create
   int **gnum1_to_send_buffer_n    = malloc (sizeof (int*) * n_part1);
 
   for (int i = 0; i < n_part1; i++) {
+    log_trace("ptp->part1_to_part2_idx[i][n_elt1[i]]+1 = %d\n", ptp->part1_to_part2_idx[i][n_elt1[i]]+1);
     ptp->gnum1_to_send_buffer_idx[i] = malloc (sizeof (int) * (ptp->part1_to_part2_idx[i][n_elt1[i]]+1));    
     gnum1_to_send_buffer_n[i] = malloc (sizeof (int) * ptp->part1_to_part2_idx[i][n_elt1[i]]);
 
@@ -2533,6 +2559,7 @@ PDM_part_to_part_create
                   n_elt2,
                   n_part2,
                   part1_to_part2_idx,
+                  NULL,
                   part1_to_part2,
                   NULL,
                   from_triplet,
@@ -2579,12 +2606,41 @@ PDM_part_to_part_create_from_num2_triplet
                   n_part2,
                   part1_to_part2_idx,
                   NULL,
+                  NULL,
                   part1_to_part2_triplet,
                   from_triplet,
                   comm);
 }
 
 
+PDM_part_to_part_t *
+PDM_part_to_part_create_from_num2_triplet2
+(
+ const PDM_g_num_t   **gnum_elt1,
+ const int            *n_elt1,
+ const int             n_part1,
+ const int            *n_elt2,
+ const int             n_part2,
+ const int           **part1_to_part2_idx,
+ const int           **part1_to_part2_triplet_idx,
+ const int           **part1_to_part2_triplet,
+ const PDM_MPI_Comm    comm
+)
+{
+  int from_triplet = 2;
+  return _create (gnum_elt1,
+                  n_elt1,
+                  n_part1,
+                  NULL,
+                  n_elt2,
+                  n_part2,
+                  part1_to_part2_idx,
+                  part1_to_part2_triplet_idx,
+                  NULL,
+                  part1_to_part2_triplet,
+                  from_triplet,
+                  comm);
+}
 
 /**
  *

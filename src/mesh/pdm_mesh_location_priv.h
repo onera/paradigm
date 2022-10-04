@@ -135,7 +135,7 @@ struct _pdm_mesh_location_t {
 
 
   PDM_part_to_part_t **ptp; /*!< To exchange data between elt and points (both in user frame) */
-
+  PDM_ownership_t     *ptp_ownership;
 } ;
 
 /*=============================================================================

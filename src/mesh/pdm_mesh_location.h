@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_to_part.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -559,6 +560,27 @@ PDM_mesh_location_reverse_results_enable
 (
 PDM_mesh_location_t *ml
 );
+
+
+/**
+ * \brief Get part_to_part object to exchange data between
+ * the source mesh and a target point cloud (both in user frame)
+ *
+ * \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
+ * \param [in ] icloud     Point cloud ID
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_mesh_location_part_to_part_get
+(
+       PDM_mesh_location_t  *ml,
+ const int                   icloud,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+ );
 
 #ifdef	__cplusplus
 }

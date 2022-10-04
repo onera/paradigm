@@ -42,6 +42,7 @@
 #include "pdm_extract_part.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_gnum_location.h"
+#include "pdm_order.h"
 
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_mesh_nodal_priv.h"
@@ -2032,6 +2033,8 @@ PDM_mesh_location_create
 
   ml->ptp = malloc(sizeof(PDM_part_to_part_t *) * n_point_cloud);
 
+  ml->ptp_ownership = malloc(sizeof(PDM_ownership_t) * n_point_cloud);
+
   for (int i = 0; i <  n_point_cloud; i++) {
     ml->point_clouds[i].n_part = -1;
     ml->point_clouds[i].n_points = NULL;
@@ -2048,6 +2051,7 @@ PDM_mesh_location_create
     ml->point_clouds[i].un_located = NULL;
 
     ml->ptp[i] = NULL;
+    ml->ptp_ownership[i] = PDM_OWNERSHIP_KEEP;
   }
 
   ml->points_in_elements = NULL;
@@ -2969,15 +2973,14 @@ PDM_mesh_location_free
   }
 
 
-  if (ml->owner == PDM_OWNERSHIP_KEEP) {
-    for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
-      if (ml->ptp[icloud] != NULL) {
-        PDM_part_to_part_free(ml->ptp[icloud]);
-        ml->ptp[icloud] = NULL;
-      }
+  for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+    if (ml->ptp_ownership[icloud] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(ml->ptp[icloud]);
+      ml->ptp[icloud] = NULL;
     }
   }
   free(ml->ptp);
+  free(ml->ptp_ownership);
 
   PDM_timer_free(ml->timer);
 
@@ -13031,7 +13034,9 @@ PDM_mesh_location_compute_optim3
     PDM_timer_resume(ml->timer);
 
 
-    // part_to_block (partiel) sur les points en passant distance et element local
+    /*
+     *  Pass in block frame for points to select closest element
+     */
     int n_pts2 = delt_pts_idx2[dn_elt2];
     int         *part_stride = PDM_array_const_int(n_pts2, 1);
     PDM_g_num_t *part_elt_id = malloc(sizeof(PDM_g_num_t) * n_pts2);
@@ -13086,7 +13091,7 @@ PDM_mesh_location_compute_optim3
     free(part_stride);
 
 
-    // choix du plus proche
+    /* Pick closest elt for each point in current block */
     int block_n_pts = PDM_part_to_block_n_elt_block_get(ptb);
     PDM_g_num_t *block_pts_g_num = PDM_part_to_block_block_gnum_get(ptb);
 
@@ -13127,7 +13132,7 @@ PDM_mesh_location_compute_optim3
     free(block_pts_elt_dist2);
 
 
-    // renvoi du num dupoint a l'element selectionne -1 sinon
+    /* Send back to elements */
     PDM_g_num_t **tmp_part_elt_id = NULL;
     PDM_part_to_block_reverse_exch(ptb,
                                    sizeof(PDM_g_num_t),
@@ -13150,7 +13155,7 @@ PDM_mesh_location_compute_optim3
                                       "part_elt_id : ");
     }
 
-    // tassage du tableau en blocs d'elements (supprimer les -1 et donnees associees)
+    /* Compress (get rid of false positives) */
     int         *final_elt_pts_n          = PDM_array_zeros_int(dn_elt2);
     PDM_g_num_t *final_elt_pts_g_num_geom = malloc(sizeof(PDM_g_num_t) * n_pts2                      );
     double      *final_elt_pts_coord      = malloc(sizeof(double     ) * n_pts2 * 3                  );
@@ -13209,13 +13214,14 @@ PDM_mesh_location_compute_optim3
     free(delt_g_num_geom2);
     free(delt_pts_g_num_geom);
 
-    final_elt_pts_g_num_geom = realloc(final_elt_pts_g_num_geom, sizeof(PDM_g_num_t) * idx);
-    final_elt_pts_coord      = realloc(final_elt_pts_coord     , sizeof(double     ) * idx*3);
-    final_elt_pts_distance   = realloc(final_elt_pts_distance  , sizeof(double     ) * idx);
-    final_elt_pts_proj_coord = realloc(final_elt_pts_proj_coord, sizeof(double     ) * idx*3);
-    final_elt_pts_weight_idx = realloc(final_elt_pts_weight_idx, sizeof(int        ) * (idx+1));
-    final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[idx]);
-    final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * idx*3);
+    int final_n_pts = idx;
+    final_elt_pts_g_num_geom = realloc(final_elt_pts_g_num_geom, sizeof(PDM_g_num_t) * final_n_pts);
+    final_elt_pts_coord      = realloc(final_elt_pts_coord     , sizeof(double     ) * final_n_pts*3);
+    final_elt_pts_distance   = realloc(final_elt_pts_distance  , sizeof(double     ) * final_n_pts);
+    final_elt_pts_proj_coord = realloc(final_elt_pts_proj_coord, sizeof(double     ) * final_n_pts*3);
+    final_elt_pts_weight_idx = realloc(final_elt_pts_weight_idx, sizeof(int        ) * (final_n_pts+1));
+    final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[final_n_pts]);
+    final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * final_n_pts*3);
 
     // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
@@ -13240,7 +13246,7 @@ PDM_mesh_location_compute_optim3
      */
     PDM_block_to_part_t* btp_pts_gnum_geom_to_user = PDM_block_to_part_create(distrib_pts,
                                                       (const PDM_g_num_t **)  &final_elt_pts_g_num_geom,
-                                                                              &idx,
+                                                                              &final_n_pts,
                                                                               1,
                                                                               ml->comm);
     /*
@@ -13279,10 +13285,10 @@ PDM_mesh_location_compute_optim3
     free(dpts_init_location_pts);
 
     // Il faut merger les location ?? Gros doute la
-    // for(int i = 0; i < idx; ++i) {
+    // for(int i = 0; i < final_n_pts; ++i) {
     //   assert(final_elt_pts_triplet_n[i] == 1);
     // }
-    // int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, idx);
+    // int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, final_n_pts);
     //
     // free(final_elt_pts_triplet_idx);
 
@@ -13296,8 +13302,8 @@ PDM_mesh_location_compute_optim3
         final_elt_pts_triplet_idx[i+1] += final_elt_pts_triplet_n[idx_read++];
       }
     }
-    free(final_elt_pts_triplet_n);
-    assert(idx_read == idx);
+    // free(final_elt_pts_triplet_n);
+    assert(idx_read == final_n_pts);
 
 
     // PDM_log_trace_array_long(final_elt_pts_triplet_idx, dn_elt2+1, "final_elt_pts_triplet_idx ::");
@@ -13329,6 +13335,8 @@ PDM_mesh_location_compute_optim3
      */
     int   request_pts_in_elt_n   = -1;
     int   request_pts_g_num      = -1;
+    int   request_pts_triplet    = -1;
+    int   request_pts_triplet_n  = -1;
     int   request_pts_dist2      = -1;
           request_pts_coord      = -1;
     int   request_pts_proj_coord = -1;
@@ -13336,11 +13344,17 @@ PDM_mesh_location_compute_optim3
     int   request_pts_weight     = -1;
     int **pts_in_elt_n           = NULL;
     int **stride_pts_g_num       = NULL;
+    int **stride_pts_triplet     = NULL;
+    int **stride_pts_triplet_n   = NULL;
     int **stride_pts_dist2       = NULL;
     int **stride_pts_coord       = NULL;
     int **stride_pts_proj_coord  = NULL;
     int **stride_pts_uvw         = NULL;
     int **stride_pts_weight      = NULL;
+
+    int *final_elt_pts_triplet_stride = NULL;
+    int **pts_in_elt_triplet_n   = NULL;
+    int **pts_in_elt_triplet     = NULL;
 
     _points_in_element_t *pts_in_elt = NULL;
 
@@ -13374,6 +13388,38 @@ PDM_mesh_location_compute_optim3
                              &stride_pts_g_num,
             (      void ***) &pts_in_elt->gnum,
                              &request_pts_g_num);
+
+      /* Echanger triplets des pts pour construire le ptp elt_user <-> pts_user */
+      final_elt_pts_triplet_stride = malloc(sizeof(int) * dn_elt2);
+      for (int i = 0; i < dn_elt2; i++) {
+        final_elt_pts_triplet_stride[i] = final_elt_pts_triplet_idx[i+1] - final_elt_pts_triplet_idx[i];
+      }
+
+      // Exchange all triplets
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             3*sizeof(int),
+            (const int   **) &final_elt_pts_triplet_stride,
+            (const void  **) &final_elt_pts_triplet,
+                             &stride_pts_triplet,
+            (      void ***) &pts_in_elt_triplet,
+                             &request_pts_triplet);
+
+      // Exchange number of triplet per point
+      PDM_part_to_part_iexch(ptp_elt,
+                             PDM_MPI_COMM_KIND_P2P,
+                             PDM_STRIDE_VAR_INTERLACED,
+                             PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                             1,
+                             sizeof(int),
+            (const int   **) &final_elt_pts_n,
+            (const void  **) &final_elt_pts_triplet_n,
+                             &stride_pts_triplet_n,
+            (      void ***) &pts_in_elt_triplet_n,
+                             &request_pts_triplet_n);
 
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
@@ -13424,6 +13470,7 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt->uvw,
                              &request_pts_uvw);
     }
+    // free(final_elt_pts_triplet_n);
 
 
     int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n, dn_elt2);
@@ -13507,6 +13554,8 @@ PDM_mesh_location_compute_optim3
 
       /* Maybe a bad idea to store as many stride arrays simultaneously... */
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
@@ -13515,6 +13564,8 @@ PDM_mesh_location_compute_optim3
 
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(stride_pts_g_num     [ipart]);
+        // free(stride_pts_triplet   [ipart]);
+        // free(stride_pts_triplet_n [ipart]);
         free(stride_pts_dist2     [ipart]);
         free(stride_pts_coord     [ipart]);
         free(stride_pts_proj_coord[ipart]);
@@ -13522,6 +13573,8 @@ PDM_mesh_location_compute_optim3
         free(stride_pts_uvw       [ipart]);
       }
       free(stride_pts_g_num);
+      // free(stride_pts_triplet);
+      // free(stride_pts_triplet_n);
       free(stride_pts_dist2);
       free(stride_pts_coord);
       free(stride_pts_proj_coord);
@@ -13530,8 +13583,157 @@ PDM_mesh_location_compute_optim3
       free(elt_pts_weight_stride);
     }
 
-    PDM_part_to_part_free(ptp_elt);
+    // PDM_part_to_part_free(ptp_elt);
 
+
+
+    /*
+     *  Create ptp to exchange data between elt and points (both in user frame)
+     */
+    if (ml->reverse_result) {
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet);
+      free(final_elt_pts_triplet_stride);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
+      free(final_elt_pts_triplet_n);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(stride_pts_triplet_n[ipart]);
+      }
+      free(stride_pts_triplet_n);
+
+      int  *n_ref_elt = NULL;
+      int **ref_elt   = NULL;
+      PDM_part_to_part_ref_lnum2_get(ptp_elt,
+                                     &n_ref_elt,
+                                     &ref_elt);
+
+      int  *n_unref_elt = NULL;
+      int **unref_elt   = NULL;
+      PDM_part_to_part_unref_lnum2_get(ptp_elt,
+                                       &n_unref_elt,
+                                       &unref_elt);
+
+      int **pts_in_elt_idx         = malloc(sizeof(int *) * n_part);
+      int **pts_in_elt_triplet_idx = malloc(sizeof(int *) * n_part);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        pts_in_elt_idx[ipart] = malloc(sizeof(int) * (pn_elt[ipart] + 1));
+        pts_in_elt_idx[ipart][0] = 0;
+        for (int i = 0; i < n_ref_elt[ipart]; i++) {
+          pts_in_elt_idx[ipart][ref_elt[ipart][i]] = 3*stride_pts_triplet[ipart][i];
+        }
+        free(stride_pts_triplet[ipart]);
+
+        for (int i = 0; i < n_unref_elt[ipart]; i++) {
+          pts_in_elt_idx[ipart][unref_elt[ipart][i]] = 0;
+        }
+
+        for (int i = 0; i < pn_elt[ipart]; i++) {
+          pts_in_elt_idx[ipart][i+1] += pts_in_elt_idx[ipart][i];
+        }
+
+
+        // PDM_log_trace_connectivity_long(pts_in_elt->pts_inside_idx[ipart],
+        //                                 pts_in_elt->gnum[ipart],
+        //                                 pn_elt[ipart],
+        //                                 "pts_in_elt_g_num  : ");
+        // PDM_log_trace_connectivity_int(pts_in_elt_idx[ipart],
+        //                                pts_in_elt_triplet    [ipart],
+        //                                pn_elt[ipart],
+        //                                "pts_in_elt_triplet : ");
+
+        int _n_pts = pts_in_elt->pts_inside_idx[ipart][pn_elt[ipart]];
+
+        // PDM_log_trace_array_int(pts_in_elt_triplet_n[ipart],
+        //                         _n_pts,
+        //                         "pts_in_elt_triplet_n : ");
+
+        pts_in_elt_triplet_idx[ipart] = malloc(sizeof(int) * (_n_pts + 1));
+        pts_in_elt_triplet_idx[ipart][0] = 0;
+        int max_triplet_n = 0;
+        for (int i = 0; i < _n_pts; i++) {
+          max_triplet_n = PDM_MAX(max_triplet_n, pts_in_elt_triplet_n[ipart][i]);
+
+          pts_in_elt_triplet_idx[ipart][i+1] = pts_in_elt_triplet_idx[ipart][i] +
+          pts_in_elt_triplet_n[ipart][i]*3;
+        }
+
+        if (0) {
+          int *_idx = malloc(sizeof(int) * (_n_pts + 1));
+          for (int i = 0; i <= _n_pts; i++) {
+            _idx[i] = pts_in_elt_triplet_idx[ipart][i]/3;
+          }
+
+          PDM_log_trace_array_long(pts_in_elt->gnum[ipart],
+                                   _n_pts,
+                                   "pts_in_elt_gnum : ");
+
+          PDM_log_trace_graph_nuplet_int(_idx,
+                                         pts_in_elt_triplet[ipart],
+                                         3,
+                                         _n_pts,
+                                         "pts_in_elt_triplet      : ");
+          free(_idx);
+        }
+
+
+
+        /* Lexicographic sort each point's triplets */
+        int *order = malloc(sizeof(int) * max_triplet_n);
+        for (int i = 0; i < _n_pts; i++) {
+          PDM_order_lnum_s(pts_in_elt_triplet[ipart] + pts_in_elt_triplet_idx[ipart][i],
+                           3,
+                           order,
+                           pts_in_elt_triplet_n[ipart][i]);
+        }
+        free(order);
+
+
+        free(pts_in_elt_triplet_n[ipart]);
+
+      }
+      free(stride_pts_triplet);
+      free(pts_in_elt_triplet_n);
+
+      PDM_part_to_part_free(ptp_elt);
+
+
+
+      // ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
+      //                                                             (const int          *) pn_elt,
+      //                                                             n_part,
+      //                                                             (const int          *) pcloud->n_points,
+      //                                                             pcloud->n_part,
+      //                                                             (const int         **) pts_in_elt_idx,
+      //                                                             (const int         **) pts_in_elt_triplet,
+      //                                                             ml->comm);
+      //
+      // PDM_part_to_part_t *ppt = PDM_part_to_part_create((const PDM_g_num_t **) elt_g_num,
+      //                                                   (const int          *) pn_elt,
+      //                                                   n_part,
+      //                                                   (const PDM_g_num_t **) pcloud->gnum,
+      //                                                   (const int          *) pcloud->n_points,
+      //                                                   pcloud->n_part,
+      //                                                   (const int         **) pts_in_elt->pts_inside_idx,
+      //                                                   (const PDM_g_num_t **) pts_in_elt->gnum,
+      //                                                   ml->comm);
+      ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet2((const PDM_g_num_t **) elt_g_num,
+                                                                   (const int          *) pn_elt,
+                                                                   n_part,
+                                                                   (const int          *) pcloud->n_points,
+                                                                   pcloud->n_part,
+                                                                   (const int         **) pts_in_elt->pts_inside_idx,
+                                                                   (const int         **) pts_in_elt_triplet_idx,
+                                                                   (const int         **) pts_in_elt_triplet,
+                                                                   ml->comm);
+      // PDM_part_to_part_free(ppt);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(pts_in_elt_idx        [ipart]);
+        free(pts_in_elt_triplet    [ipart]);
+        free(pts_in_elt_triplet_idx[ipart]);
+      }
+      free(pts_in_elt_idx);
+      free(pts_in_elt_triplet);
+      free(pts_in_elt_triplet_idx);
+    }
 
     // PDM_log_trace_array_long(final_elt_pts_idx, dn_elt2+1, "final_elt_pts_idx ::");
     /*
@@ -13881,6 +14083,35 @@ PDM_mesh_location_t *ml
 {
   ml->reverse_result = 1;
 }
+
+
+
+/**
+ * \brief Get part_to_part object to exchange data between
+ * the source mesh and a target point cloud (both in user frame)
+ *
+ * \param [in ] ml         Pointer to \ref PDM_mesh_location_t object
+ * \param [in ] icloud     Point cloud ID
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_mesh_location_part_to_part_get
+(
+       PDM_mesh_location_t  *ml,
+ const int                   icloud,
+       PDM_part_to_part_t  **ptp,
+       PDM_ownership_t       ownership
+ )
+{
+  assert(icloud < ml->n_point_cloud);
+
+  *ptp = ml->ptp[icloud];
+  ml->ptp_ownership[icloud] = ownership;
+}
+
 
 #ifdef	__cplusplus
 }

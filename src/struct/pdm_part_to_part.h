@@ -126,6 +126,20 @@ PDM_part_to_part_create_from_num2_triplet
  const PDM_MPI_Comm    comm
 );
 
+PDM_part_to_part_t *
+PDM_part_to_part_create_from_num2_triplet2
+(
+ const PDM_g_num_t   **gnum_elt1,
+ const int            *n_elt1,
+ const int             n_part1,
+ const int            *n_elt2,
+ const int             n_part2,
+ const int           **part1_to_part2_idx,
+ const int           **part1_to_part2_triplet_idx,
+ const int           **part1_to_part2_triplet,
+ const PDM_MPI_Comm    comm
+);
+
 
 /**
  *
