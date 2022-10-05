@@ -1335,6 +1335,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                                                              pn_entity,
                                                                                              extrp->n_part_in,
                                                                       (const int         **) part2_cell_to_part1_cell_idx,
+                                                                                             NULL,
                                                                       (const int         **) extrp->target_location,
                                                                       extrp->comm);
   extrp->ptp_entity[entity_type] = ptp;
@@ -1844,6 +1845,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                       extrp->n_vtx,
                                                       extrp->n_part_in,
                                                       (const int **) part2_vtx_to_part1_vtx_idx,
+                                                      NULL,
                                                       (const int **) target_vtx_to_part1_vtx,
                                                       extrp->comm);
   extrp->ptp_entity[PDM_MESH_ENTITY_VERTEX] = ptp_vtx;
@@ -2776,6 +2778,7 @@ _extract_part_and_reequilibrate_from_target2
                                                       extrp->n_vtx,
                                                       extrp->n_part_in,
                                                       (const int **) part2_vtx_to_part1_vtx_idx,
+                                                      NULL,
                                                       (const int **) pextract_vtx_to_vtx_location,
                                                       extrp->comm);
   extrp->ptp_entity[PDM_MESH_ENTITY_VERTEX] = ptp_vtx;

@@ -2935,6 +2935,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
                                                                       n_part1_entity1,
                                                                       n_part1,
                                                                       part2_entity1_to_part1_entity1_idx,
+                                                                      NULL,
                                                                       part2_entity1_to_part1_entity1_triplet,
                                                                       comm);
 

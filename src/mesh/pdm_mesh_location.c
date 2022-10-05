@@ -12026,15 +12026,15 @@ PDM_mesh_location_compute_optim3
         }
 
 
-        ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet2((const PDM_g_num_t **) elt_g_num,
-                                                                     (const int          *) pn_elt,
-                                                                     n_part,
-                                                                     (const int          *) pcloud->n_points,
-                                                                     pcloud->n_part,
-                                                                     (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
-                                                                     (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
-                                                                     (const int         **) pts_in_elt_triplet,
-                                                                     ml->comm);
+        ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
+                                                                    (const int          *) pn_elt,
+                                                                    n_part,
+                                                                    (const int          *) pcloud->n_points,
+                                                                    pcloud->n_part,
+                                                                    (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
+                                                                    (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
+                                                                    (const int         **) pts_in_elt_triplet,
+                                                                    ml->comm);
         for (int ipart = 0; ipart < n_part; ipart++) {
           free(pts_in_elt_triplet_idx[ipart]);
           free(pts_in_elt_triplet    [ipart]);
@@ -13689,15 +13689,15 @@ PDM_mesh_location_compute_optim3
       PDM_part_to_part_free(ptp_elt);
 
 
-      ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet2((const PDM_g_num_t **) elt_g_num,
-                                                                   (const int          *) pn_elt,
-                                                                   n_part,
-                                                                   (const int          *) pcloud->n_points,
-                                                                   pcloud->n_part,
-                                                                   (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
-                                                                   (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
-                                                                   (const int         **) pts_in_elt_triplet,
-                                                                   ml->comm);
+      ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
+                                                                  (const int          *) pn_elt,
+                                                                  n_part,
+                                                                  (const int          *) pcloud->n_points,
+                                                                  pcloud->n_part,
+                                                                  (const int         **) pts_in_elt->pts_inside_idx, // size = n_elt
+                                                                  (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
+                                                                  (const int         **) pts_in_elt_triplet,
+                                                                  ml->comm);
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(pts_in_elt_triplet    [ipart]);
         free(pts_in_elt_triplet_idx[ipart]);
