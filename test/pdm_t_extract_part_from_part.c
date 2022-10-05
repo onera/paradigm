@@ -1072,7 +1072,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    int    **part1_stride;
+    int    **part1_stride = NULL;;
     double **part1_data;
 
     PDM_part_to_part_reverse_iexch (ptp_vtx,
