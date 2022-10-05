@@ -391,6 +391,7 @@ PDM_dbbtree_lines_intersect_boxes2
  int            *n_part,
  int           **redistrib_n_box,
  PDM_g_num_t  ***redistrib_box_ln_to_gn,
+ int          ***redistrib_box_init_location,
  int          ***box_line_idx,
  PDM_g_num_t  ***box_line_g_num
  );
