@@ -13368,13 +13368,14 @@ PDM_mesh_location_compute_optim3
     int   request_pts_uvw        = -1;
     int   request_pts_weight     = -1;
     int **pts_in_elt_n           = NULL;
-    int **stride_pts_g_num       = NULL;
+    // int **stride_pts_g_num       = NULL;
+    int **stride_pts             = NULL;
     int **stride_pts_triplet     = NULL;
-    int **stride_pts_triplet_n   = NULL;
-    int **stride_pts_dist2       = NULL;
-    int **stride_pts_coord       = NULL;
-    int **stride_pts_proj_coord  = NULL;
-    int **stride_pts_uvw         = NULL;
+    // int **stride_pts_triplet_n   = NULL;
+    // int **stride_pts_dist2       = NULL;
+    // int **stride_pts_coord       = NULL;
+    // int **stride_pts_proj_coord  = NULL;
+    // int **stride_pts_uvw         = NULL;
     int **stride_pts_weight      = NULL;
 
     int *final_elt_pts_triplet_stride = NULL;
@@ -13401,7 +13402,7 @@ PDM_mesh_location_compute_optim3
                              NULL,
             (      void ***) &pts_in_elt_n,
                              &request_pts_in_elt_n);
-
+      log_trace("1\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13410,7 +13411,7 @@ PDM_mesh_location_compute_optim3
                              sizeof(PDM_g_num_t),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_g_num,
-                             &stride_pts_g_num,
+                             &stride_pts,//stride_pts_g_num,
             (      void ***) &pts_in_elt->gnum,
                              &request_pts_g_num);
 
@@ -13421,6 +13422,7 @@ PDM_mesh_location_compute_optim3
       }
 
       // Exchange all triplets
+      log_trace("1b\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13433,7 +13435,11 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt_triplet,
                              &request_pts_triplet);
 
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
+
+
       // Exchange number of triplet per point
+      log_trace("2\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13442,10 +13448,11 @@ PDM_mesh_location_compute_optim3
                              sizeof(int),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_triplet_n,
-                             &stride_pts_triplet_n,
+                             &stride_pts,//stride_pts_triplet_n,
             (      void ***) &pts_in_elt_triplet_n,
                              &request_pts_triplet_n);
 
+      log_trace("3\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13454,11 +13461,11 @@ PDM_mesh_location_compute_optim3
                              sizeof(double),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_distance,
-                             &stride_pts_dist2,
+                             &stride_pts,//stride_pts_dist2,
             (      void ***) &pts_in_elt->dist2,
                              &request_pts_dist2);
 
-
+      log_trace("4\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13467,10 +13474,11 @@ PDM_mesh_location_compute_optim3
                              3*sizeof(double),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_coord,
-                             &stride_pts_coord,
+                             &stride_pts,//stride_pts_coord,
             (      void ***) &pts_in_elt->coords,
                              &request_pts_coord);
 
+      log_trace("5\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13479,10 +13487,11 @@ PDM_mesh_location_compute_optim3
                              3*sizeof(double),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_proj_coord,
-                             &stride_pts_proj_coord,
+                             &stride_pts,//stride_pts_proj_coord,
             (      void ***) &pts_in_elt->projected_coords,
                              &request_pts_proj_coord);
 
+      log_trace("6\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13491,7 +13500,7 @@ PDM_mesh_location_compute_optim3
                              3*sizeof(double),
             (const int   **) &final_elt_pts_n,
             (const void  **) &final_elt_pts_uvw,
-                             &stride_pts_uvw,
+                             &stride_pts,//stride_pts_uvw,
             (      void ***) &pts_in_elt->uvw,
                              &request_pts_uvw);
     }
@@ -13516,6 +13525,7 @@ PDM_mesh_location_compute_optim3
     }
 
     if (ml->reverse_result) {
+      log_trace("7\n");
       PDM_part_to_part_iexch(ptp_elt,
                              PDM_MPI_COMM_KIND_P2P,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -13578,9 +13588,6 @@ PDM_mesh_location_compute_optim3
       }
 
       /* Maybe a bad idea to store as many stride arrays simultaneously... */
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_g_num);
-      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet);
-      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
@@ -13588,23 +13595,9 @@ PDM_mesh_location_compute_optim3
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
 
       for (int ipart = 0; ipart < n_part; ipart++) {
-        free(stride_pts_g_num     [ipart]);
-        // free(stride_pts_triplet   [ipart]);
-        // free(stride_pts_triplet_n [ipart]);
-        free(stride_pts_dist2     [ipart]);
-        free(stride_pts_coord     [ipart]);
-        free(stride_pts_proj_coord[ipart]);
-        free(stride_pts_weight    [ipart]);
-        free(stride_pts_uvw       [ipart]);
+        free(stride_pts_weight[ipart]);
       }
-      free(stride_pts_g_num);
-      // free(stride_pts_triplet);
-      // free(stride_pts_triplet_n);
-      free(stride_pts_dist2);
-      free(stride_pts_coord);
-      free(stride_pts_proj_coord);
       free(stride_pts_weight);
-      free(stride_pts_uvw);
       free(elt_pts_weight_stride);
     }
 
@@ -13619,10 +13612,6 @@ PDM_mesh_location_compute_optim3
       free(final_elt_pts_triplet_stride);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
       free(final_elt_pts_triplet_n);
-      for (int ipart = 0; ipart < n_part; ipart++) {
-        free(stride_pts_triplet_n[ipart]);
-      }
-      free(stride_pts_triplet_n);
 
       int  *n_ref_elt = NULL;
       int **ref_elt   = NULL;
@@ -13716,6 +13705,11 @@ PDM_mesh_location_compute_optim3
       free(pts_in_elt_triplet);
       free(pts_in_elt_triplet_idx);
     }
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(stride_pts[ipart]);
+    }
+    free(stride_pts);
 
 
 
