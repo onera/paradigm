@@ -5520,11 +5520,11 @@ _lines_intersect_shared_box_tree
     memcpy((*redistrib_line_g_num)[0], line_g_num, sizeof(PDM_g_num_t) * n_line);
 
     *redistrib_line_coord = (double **) malloc(sizeof(double *) * 1);
-    // (*redistrib_line_coord)[0] = _line_coord;
-    (*redistrib_line_coord)[0] = malloc(sizeof(double) * n_line * 6);
-    memcpy((*redistrib_line_coord)[0], line_coord, sizeof(double) * n_line * 6);
+    (*redistrib_line_coord)[0] = _line_coord;
+    // (*redistrib_line_coord)[0] = malloc(sizeof(double) * n_line * 6);
+    // memcpy((*redistrib_line_coord)[0], _line_coord, sizeof(double) * n_line * 6);
 
-    free (_line_coord);
+    // free (_line_coord);
   }
 
   // *redistrib_n_line_local = n_line_local + n_line_recv;
@@ -6149,6 +6149,18 @@ PDM_dbbtree_lines_intersect_boxes2
                                    &redistrib_line_coord,
                                    &n_copied_ranks);
 
+  if (1 == 1) {
+    char filename[999];
+    int i_rank;
+    PDM_MPI_Comm_rank(_dbbt->comm, &i_rank);
+    sprintf(filename, "redistrib_ray%2.2d.vtk", i_rank);
+    PDM_vtk_write_lines(filename,
+                        redistrib_n_line[0],
+                        redistrib_line_coord[0],
+                        redistrib_line_g_num[0],
+                        NULL);
+  }
+
   *n_part = 1 + n_copied_ranks;
   int _n_part = *n_part;
 
@@ -6164,10 +6176,15 @@ PDM_dbbtree_lines_intersect_boxes2
                                       &box_line_l_num);
   free(redistrib_line_coord[0]);
 
-  PDM_log_trace_connectivity_int((*box_line_idx)[0],
-                                 box_line_l_num,
-                                 _dbbt->boxes->local_boxes->n_boxes,
-                                 "box_line_l_num :");
+  // PDM_log_trace_connectivity_int((*box_line_idx)[0],
+  //                                box_line_l_num,
+  //                                _dbbt->boxes->local_boxes->n_boxes,
+  //                                "box_line_l_num :");
+  PDM_log_trace_connectivity_int2((*box_line_idx)[0],
+                                  box_line_l_num,
+                                  _dbbt->boxes->local_boxes->g_num,
+                                  _dbbt->boxes->local_boxes->n_boxes,
+                                  "box_line_l_num :");
 
   /*
    * Allocate and setup shortcut
