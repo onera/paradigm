@@ -2550,7 +2550,7 @@ _extract_part_and_reequilibrate_from_target2
     }
   }
 
-  assert(extrp->dim == 3);
+  // assert(extrp->dim == 3);
 
   PDM_part_to_part_t* ptp_vtx          = NULL;
   int **pextract_face_to_face_location = NULL;

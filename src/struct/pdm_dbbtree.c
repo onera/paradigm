@@ -6164,6 +6164,11 @@ PDM_dbbtree_lines_intersect_boxes2
                                       &box_line_l_num);
   free(redistrib_line_coord[0]);
 
+  PDM_log_trace_connectivity_int((*box_line_idx)[0],
+                                 box_line_l_num,
+                                 _dbbt->boxes->local_boxes->n_boxes,
+                                 "box_line_l_num :");
+
   /*
    * Allocate and setup shortcut
    */
