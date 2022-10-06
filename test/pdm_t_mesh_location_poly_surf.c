@@ -1165,7 +1165,10 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_compute (mesh_loc);
+  PDM_mesh_location_reverse_results_enable(mesh_loc);
+
+  // PDM_mesh_location_compute (mesh_loc);
+  PDM_mesh_location_compute_optim3(mesh_loc);
 
   PDM_mesh_location_dump_times (mesh_loc);
 
