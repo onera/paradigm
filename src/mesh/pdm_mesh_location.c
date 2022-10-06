@@ -11701,7 +11701,7 @@ PDM_mesh_location_compute_optim3
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 0;
+  const int dbg_enabled = 1;
   const int dim = 3;
 
   /* Octree parameters */
@@ -11813,7 +11813,7 @@ PDM_mesh_location_compute_optim3
     }
   }
 
-  if (dbg_enabled) {
+  if (0) {//dbg_enabled) {
     int     *pn_vtx     = malloc(sizeof(int     ) * n_part);
     double **pvtx_coord = malloc(sizeof(double *) * n_part);
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -11834,6 +11834,84 @@ PDM_mesh_location_compute_optim3
                pvtx_coord);
     free(pn_vtx    );
     free(pvtx_coord);
+  }
+
+  if (1 && dbg_enabled) {
+    PDM_writer_t *wrt = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_BIN,
+                                          PDM_WRITER_TOPO_CST,
+                                          PDM_WRITER_OFF,
+                                          "mesh_location__source",
+                                          "source_mesh",
+                                          ml->comm,
+                                          PDM_IO_KIND_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+    int id_geom = PDM_writer_geom_create_from_mesh_nodal(wrt,
+                                                         "source_mesh_geom",
+                                                         ml->mesh_nodal);
+
+    int id_var_num_part = PDM_writer_var_create(wrt,
+                                                PDM_WRITER_OFF,
+                                                PDM_WRITER_VAR_SCALAR,
+                                                PDM_WRITER_VAR_ELEMENTS,
+                                                "num_part");
+
+    int id_var_gnum = PDM_writer_var_create(wrt,
+                                            PDM_WRITER_OFF,
+                                            PDM_WRITER_VAR_SCALAR,
+                                            PDM_WRITER_VAR_ELEMENTS,
+                                            "elt_gnum");
+
+    PDM_writer_step_beg(wrt, 0.);
+
+    PDM_writer_geom_write(wrt,
+                          id_geom);
+
+    PDM_real_t **val_num_part = malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_gnum     = malloc (sizeof(PDM_real_t *) * n_part);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      int n_elt = PDM_Mesh_nodal_n_cell_get(ml->mesh_nodal,
+                                            ipart);
+      val_num_part[ipart] = malloc(sizeof(PDM_real_t) * n_elt);
+      val_gnum    [ipart] = malloc(sizeof(PDM_real_t) * n_elt);
+      for (int i = 0; i < n_elt; i++) {
+        val_num_part[ipart][i] = (PDM_real_t) (i_rank*n_part + ipart);
+        val_gnum    [ipart][i] = (PDM_real_t) elt_g_num[ipart][i];
+      }
+
+      PDM_writer_var_set(wrt,
+                         id_var_num_part,
+                         id_geom,
+                         ipart,
+                         val_num_part[ipart]);
+
+      PDM_writer_var_set(wrt,
+                         id_var_gnum,
+                         id_geom,
+                         ipart,
+                         val_gnum[ipart]);
+    }
+    PDM_writer_var_write(wrt,
+                         id_var_num_part);
+    PDM_writer_var_free(wrt,
+                        id_var_num_part);
+
+    PDM_writer_var_write(wrt,
+                         id_var_gnum);
+    PDM_writer_var_free(wrt,
+                        id_var_gnum);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free(val_num_part[ipart]);
+      free(val_gnum    [ipart]);
+    }
+    free(val_num_part);
+    free(val_gnum);
+
+    PDM_writer_step_end(wrt);
+    PDM_writer_free(wrt);
   }
 
   double l_mesh_extents[6] = {  HUGE_VAL,  HUGE_VAL,  HUGE_VAL,

@@ -1405,7 +1405,6 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
-      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
@@ -1486,6 +1485,8 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                 &elt_ln_to_gn,
                                                 &parent_num,
                                                 &parent_elt_g_num);
+
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt , 1);
         if (0) {
           PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
         }
@@ -1517,7 +1518,6 @@ _extract_part_and_reequilibrate_nodal_from_target
     for(int i_section = 0; i_section < n_section; ++i_section) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
-      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         abort();
@@ -1530,13 +1530,16 @@ _extract_part_and_reequilibrate_nodal_from_target
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
 
-         PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
                                                 sections_id[i_section],
                                                 i_part,
                                                 &elt_vtx,
                                                 &elt_ln_to_gn,
                                                 &parent_num,
                                                 &parent_elt_g_num);
+
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
           int parent_elt = i_elt;
@@ -1560,7 +1563,6 @@ _extract_part_and_reequilibrate_nodal_from_target
     for(int i_section = 0; i_section < n_section; ++i_section) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
-      int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         abort();
@@ -1573,10 +1575,6 @@ _extract_part_and_reequilibrate_nodal_from_target
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
 
-        if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
-          PDM_error(__FILE__, __LINE__, 0, "poly2d/3d not yet supported\n");
-        }
-
         PDM_part_mesh_nodal_elmts_block_std_get(extrp->pmne,
                                                 sections_id[i_section],
                                                 i_part,
@@ -1584,6 +1582,9 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                 &elt_ln_to_gn,
                                                 &parent_num,
                                                 &parent_elt_g_num);
+
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
           int parent_elt = i_elt;
