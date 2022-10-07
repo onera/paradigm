@@ -6149,7 +6149,7 @@ PDM_dbbtree_lines_intersect_boxes2
                                    &redistrib_line_coord,
                                    &n_copied_ranks);
 
-  if (1 == 1) {
+  if (0 == 1) {
     char filename[999];
     int i_rank;
     PDM_MPI_Comm_rank(_dbbt->comm, &i_rank);
@@ -6175,16 +6175,6 @@ PDM_dbbtree_lines_intersect_boxes2
                                       &((*box_line_idx)[0]),
                                       &box_line_l_num);
   free(redistrib_line_coord[0]);
-
-  // PDM_log_trace_connectivity_int((*box_line_idx)[0],
-  //                                box_line_l_num,
-  //                                _dbbt->boxes->local_boxes->n_boxes,
-  //                                "box_line_l_num :");
-  PDM_log_trace_connectivity_int2((*box_line_idx)[0],
-                                  box_line_l_num,
-                                  _dbbt->boxes->local_boxes->g_num,
-                                  _dbbt->boxes->local_boxes->n_boxes,
-                                  "box_line_l_num :");
 
   /*
    * Allocate and setup shortcut

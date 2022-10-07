@@ -6560,8 +6560,6 @@ PDM_box_tree_intersect_boxes_lines
                                      &line_box_idx,
                                      &line_box);
 
-  PDM_log_trace_connectivity_int(line_box_idx, line_box, n_line, "line_box ::");
-
   /* Transpose from line->box to box->line */
   PDM_boxes_t *boxes;
   if (i_copied_rank < 0) {

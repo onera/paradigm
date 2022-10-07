@@ -1296,17 +1296,13 @@ _extract_part_and_reequilibrate_nodal_from_target
 )
 {
   int          *pn_entity       = NULL;
-  PDM_g_num_t **entity_g_num    = NULL;
-  PDM_g_num_t **entity_location = NULL;
   PDM_mesh_entities_t entity_type;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
-    entity_g_num = extrp->cell_ln_to_gn;
-    entity_type  = PDM_MESH_ENTITY_CELL;
+    entity_type = PDM_MESH_ENTITY_CELL;
   } else {
     pn_entity    = extrp->n_face;
-    entity_g_num = extrp->face_ln_to_gn;
-    entity_type  = PDM_MESH_ENTITY_FACE;
+    entity_type = PDM_MESH_ENTITY_FACE;
   }
 
   int i_rank;
@@ -2697,8 +2693,8 @@ _extract_part_and_reequilibrate_from_target2
 
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       free(part2_cell_to_part1_cell_idx[i_part]);
+      part2_cell_to_part1_cell_idx[i_part] = NULL;
     }
-    free(part2_cell_to_part1_cell_idx);
 
     /*
      * face -> vtx
@@ -2737,6 +2733,11 @@ _extract_part_and_reequilibrate_from_target2
       }
 
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(part2_face_to_part1_face_idx[i_part]);
+        part2_face_to_part1_face_idx[i_part] = NULL;
+      }
+
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
         int n_edge = extrp->pextract_n_entity[PDM_MESH_ENTITY_EDGE][i_part];
         part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_edge);;
       }
@@ -2763,6 +2764,11 @@ _extract_part_and_reequilibrate_from_target2
         free(pedge_vtx_idx   [i_part]);
       }
       free(pedge_vtx_idx);
+
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(part2_edge_to_part1_edge_idx[i_part]);
+        part2_edge_to_part1_edge_idx[i_part] = NULL;
+      }
 
     } else if(from_face_vtx == 1) {
       PDM_pconnectivity_to_pconnectivity_from_location_keep(extrp->comm,
@@ -2813,6 +2819,11 @@ _extract_part_and_reequilibrate_from_target2
                                                             &pextract_edge_to_edge_location,
                                                             &extrp->ptp_entity[PDM_MESH_ENTITY_FACE]);
 
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(part2_face_to_part1_face_idx[i_part]);
+        part2_face_to_part1_face_idx[i_part] = NULL;
+      }
+
       int **pedge_vtx_idx = (int **) malloc(extrp->n_part_in * sizeof(int *));
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         pedge_vtx_idx[i_part] = (int *) malloc((extrp->n_edge[i_part]+1) * sizeof(int));
@@ -2845,6 +2856,11 @@ _extract_part_and_reequilibrate_from_target2
                                                             &pextract_vtx_to_vtx_location,
                                                             &extrp->ptp_entity[PDM_MESH_ENTITY_EDGE]);
 
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(part2_edge_to_part1_edge_idx[i_part]);
+        part2_edge_to_part1_edge_idx[i_part] = NULL;
+      }
+
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         free(pedge_vtx_idx   [i_part]);
       }
@@ -2868,6 +2884,10 @@ _extract_part_and_reequilibrate_from_target2
                                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
                                                             &pextract_vtx_to_vtx_location,
                                                             &extrp->ptp_entity[PDM_MESH_ENTITY_FACE]);
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        free(part2_face_to_part1_face_idx[i_part]);
+        part2_face_to_part1_face_idx[i_part] = NULL;
+      }
     }
   }
 
@@ -2903,46 +2923,24 @@ _extract_part_and_reequilibrate_from_target2
                                  &exch_request);
   PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
 
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    free(part2_vtx_to_part1_vtx_idx[i_part]);
+  }
+
   /*
-   *  Attention le part_to_part peut en avoir besoin
+   *
    */
-  // for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-  //   if(part2_face_to_part1_face_idx[i_part] != NULL) {
-  //     free(part2_face_to_part1_face_idx[i_part]);
-  //   }
-  //   if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
-  //     free(part2_edge_to_part1_edge_idx[i_part]);
-  //   }
-  //   if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
-  //     free(part2_vtx_to_part1_vtx_idx[i_part]);
-  //   }
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+    free(pextract_vtx_to_vtx_location[i_part]);
+  }
+  free(pextract_vtx_to_vtx_location);
 
-  //   if(pextract_face_to_face_location != NULL) {
-  //     free(pextract_face_to_face_location[i_part]);
-  //   }
-  //   if(pextract_vtx_to_vtx_location != NULL) {
-  //     free(pextract_vtx_to_vtx_location[i_part]);
-  //   }
 
-  // }
-  // free(part2_face_to_part1_face_idx);
-  // free(part2_edge_to_part1_edge_idx);
-  // free(pextract_face_to_face_location);
-  // free(pextract_vtx_to_vtx_location);
-  // free(part2_vtx_to_part1_vtx_idx  );
+  free(part2_cell_to_part1_cell_idx);
+  free(part2_face_to_part1_face_idx);
+  free(part2_edge_to_part1_edge_idx);
+  free(part2_vtx_to_part1_vtx_idx  );
 
-  // if(ptp_entity != NULL) {
-  //   PDM_part_to_part_free(ptp_entity);
-  // }
-  // if(ptp_face != NULL) {
-  //   PDM_part_to_part_free(ptp_face);
-  // }
-  // if(ptp_edge != NULL) {
-  //   PDM_part_to_part_free(ptp_edge);
-  // }
-  // if(ptp_vtx != NULL) {
-  //   PDM_part_to_part_free(ptp_vtx);
-  // }
 }
 
 static
@@ -4243,16 +4241,16 @@ PDM_extract_part_free
           }
         }
       }
+    }
 
-      if(extrp->pextract_connectivity[i] != NULL) {
-        free(extrp->pextract_connectivity[i]);
-        extrp->pextract_connectivity[i] = NULL;
-      }
+    if(extrp->pextract_connectivity[i] != NULL) {
+      free(extrp->pextract_connectivity[i]);
+      extrp->pextract_connectivity[i] = NULL;
+    }
 
-      if(extrp->pextract_connectivity_idx[i] != NULL) {
-        free(extrp->pextract_connectivity_idx[i]);
-        extrp->pextract_connectivity_idx[i] = NULL;
-      }
+    if(extrp->pextract_connectivity_idx[i] != NULL) {
+      free(extrp->pextract_connectivity_idx[i]);
+      extrp->pextract_connectivity_idx[i] = NULL;
     }
   }
 
@@ -4309,8 +4307,8 @@ PDM_extract_part_free
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       free(extrp->pextract_vtx_coord[i_part]);
     }
-    free(extrp->pextract_vtx_coord);
   }
+  free(extrp->pextract_vtx_coord);
 
 
 

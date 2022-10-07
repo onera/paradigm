@@ -3012,7 +3012,6 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
                                  &recv_entity1_entity2_n,
                     (void ***)   &recv_entity1_entity2,
                                  &exch_request);
-  log_trace("exch_request = %d\n", exch_request);
 
   PDM_part_to_part_reverse_iexch(ptp,
                                  PDM_MPI_COMM_KIND_P2P,
@@ -3025,10 +3024,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
                                  &recv_entity1_entity2_location_n,
                     (void ***)   &recv_entity1_entity2_location,
                                  &exch_request_location);
-  log_trace("exch_request_location = %d\n", exch_request_location);
-  log_trace(">> PDM_part_to_part_reverse_iexch_wait\n");
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request);
-  log_trace(">> PDM_part_to_part_reverse_iexch_wait location\n");
   PDM_part_to_part_reverse_iexch_wait(ptp, exch_request_location);
 
   for(int i_part = 0; i_part < n_part1; ++i_part) {
