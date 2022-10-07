@@ -10957,7 +10957,7 @@ PDM_mesh_location_compute_optim3
 
       /* Maybe a bad idea to store as many stride arrays simultaneously... */
       // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
       // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
       // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
       // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
@@ -11241,7 +11241,7 @@ PDM_mesh_location_compute_optim3
                            1,
                            3*sizeof(double),
                            NULL,
-          (const void  **) pts_in_elt->coords,
+          (const void  **) pts_in_elt->projected_coords,
                            &tmp_projected_coords_n,
           (      void ***) &pcloud->projected_coords,
                            &req_pts_proj_coord[icloud]);
@@ -11267,6 +11267,7 @@ PDM_mesh_location_compute_optim3
     if (ptp_elt != NULL) {
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(stride_pts_weight[ipart]);
         free(stride_pts       [ipart]);
