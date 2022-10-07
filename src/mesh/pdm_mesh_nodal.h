@@ -825,6 +825,22 @@ const PDM_g_num_t      *numabs,
 const PDM_l_num_t      *parent_num
 );
 
+void
+PDM_Mesh_nodal_block_poly3d_set2
+(
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part,
+const PDM_l_num_t       n_elt,
+const PDM_l_num_t       n_face,
+const PDM_l_num_t      *facvtx_idx,
+const PDM_l_num_t      *facvtx,
+const PDM_g_num_t      *face_ln_to_gn,
+const PDM_l_num_t      *cellfac_idx,
+const PDM_l_num_t      *cellfac,
+const PDM_g_num_t      *numabs,
+const PDM_l_num_t      *parent_num
+);
 
 /**
  * \brief Define a polyhedra block
@@ -917,6 +933,24 @@ const PDM_g_num_t      *numabs,
 const PDM_ownership_t  ownership
 );
 
+
+void
+PDM_Mesh_nodal_cell3d_cellface_add2
+(
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part,
+const int               n_cell,
+const int               n_face,
+const PDM_l_num_t      *face_vtx_idx,
+const PDM_l_num_t      *face_vtx_nb,
+const PDM_l_num_t      *face_vtx,
+const PDM_g_num_t      *face_ln_to_gn,
+const PDM_l_num_t      *cell_face_idx,
+const PDM_l_num_t      *cell_face_nb,
+const PDM_l_num_t      *cell_face,
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
+);
 
 /**
  * \brief  Add some 2D cells from cell edge conectivity.

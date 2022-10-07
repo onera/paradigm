@@ -1358,6 +1358,16 @@ _extract_part_and_reequilibrate_nodal_from_target
   assert(extrp->pmne->n_part == extrp->n_part_in);
 
 
+  // int n_section_poly3d = 0;
+  // for (int i_section = 0; i_section < n_section; i_section++) {
+  //   PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne,
+  //                                                                         sections_id[i_section]);
+  //   if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+  //     n_section_poly3d++;
+  //   }
+  // }
+  // int has_poly3d = (n_section_poly3d > 0);
+
   int                   *n_extract_vtx     = malloc(extrp->n_part_in * sizeof(int                   ));
   int                  **is_selected       = malloc(extrp->n_part_in * sizeof(int                  *));
 
@@ -1367,6 +1377,9 @@ _extract_part_and_reequilibrate_nodal_from_target
   int                  **vtx_init_location = malloc(extrp->n_part_in * sizeof(int                  *));
   int                  **elmt_section_id   = malloc(extrp->n_part_in * sizeof(int                  *));
 
+  int                  **elmt_face_n       = malloc(extrp->n_part_in * sizeof(int                  *));
+  int                  **elmt_face_vtx_n   = malloc(extrp->n_part_in * sizeof(int                  *));
+  PDM_g_num_t          **elmt_face         = malloc(extrp->n_part_in * sizeof(PDM_g_num_t          *));
 
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
 
@@ -1433,13 +1446,13 @@ _extract_part_and_reequilibrate_nodal_from_target
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
 
         /* Polyhedral section */
-        int *cell_vtx_idx;
-        int *cell_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
-                                                                    sections_id[i_section],
-                                                                    i_part,
-                                                                    &cell_vtx_idx,
-                                                                    &cell_vtx);
+        // int *cell_vtx_idx;
+        // int *cell_vtx;
+        // PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
+        //                                                             sections_id[i_section],
+        //                                                             i_part,
+        //                                                             &cell_vtx_idx,
+        //                                                             &cell_vtx);
 
         int *cell_face_idx;
         int *cell_face;
@@ -1465,7 +1478,10 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = parent_num[i_elt];//-1;
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
           if(is_selected[i_part][parent_elt] != -1) {
             n_elmt_to_send      += 1;
             n_elmt_face_to_send += cell_face_idx[i_elt+1] - cell_face_idx[i_elt];
@@ -1511,11 +1527,13 @@ _extract_part_and_reequilibrate_nodal_from_target
     } /* End section */
 
     elmt_vtx_n       [i_part] = malloc(    n_elmt_to_send      * sizeof(int                 ));
-    // elmt_face_n      [i_part] = malloc(    n_elmt_face_to_send * sizeof(int                 ));
     elmt_type        [i_part] = malloc(    n_elmt_to_send      * sizeof(PDM_Mesh_nodal_elt_t));
     elmt_vtx         [i_part] = malloc(    n_elmt_vtx_to_send  * sizeof(PDM_g_num_t         ));
     vtx_init_location[i_part] = malloc(3 * n_elmt_vtx_to_send  * sizeof(int                 ));
     elmt_section_id  [i_part] = malloc(    n_elmt_to_send      * sizeof(int                 ));
+    elmt_face_n      [i_part] = malloc(    n_elmt_to_send      * sizeof(int                 ));
+    elmt_face_vtx_n  [i_part] = malloc(    n_elmt_face_to_send * sizeof(int                 ));
+    elmt_face        [i_part] = malloc(    n_elmt_vtx_to_send  * sizeof(PDM_g_num_t         ));
 
     PDM_g_num_t* _vtx_ln_to_gn = extrp->vtx_ln_to_gn[i_part];
 
@@ -1548,14 +1566,56 @@ _extract_part_and_reequilibrate_nodal_from_target
 
             elmt_type      [i_part][idx] = t_elt;
             elmt_vtx_n     [i_part][idx] = face_vtx_idx[i_elt+1] - face_vtx_idx[i_elt];
+            elmt_face_n    [i_part][idx] = 0;
             elmt_section_id[i_part][idx] = i_section;
           }
         }
 
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        // Missing face_ln_to_gn in structure
-        abort();
+        int *cell_face_idx;
+        int *cell_face;
+        int  n_face;
+        int *face_vtx_idx;
+        int *face_vtx;
+        PDM_g_num_t *face_ln_to_gn    = NULL;
+        int         *_parent_num      = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
+        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+                                                   sections_id[i_section],
+                                                   i_part,
+                                                   &n_face,
+                                                   &face_ln_to_gn,
+                                                   &face_vtx_idx,
+                                                   &face_vtx,
+                                                   &elt_ln_to_gn,
+                                                   &cell_face_idx,
+                                                   &cell_face,
+                                                   &_parent_num,
+                                                   &parent_elt_g_num);
+
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
+          if(is_selected[i_part][parent_elt] != -1) {
+            int idx = is_selected[i_part][parent_elt];
+
+            int n_vtx_per_elmt = 0;
+            for(int idx_face = cell_face_idx[i_elt]; idx_face < cell_face_idx[i_elt+1]; ++idx_face) {
+              int i_face = PDM_ABS(cell_face[idx_face])-1;
+              n_vtx_per_elmt += face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+            }
+
+            elmt_type      [i_part][idx] = t_elt;
+            elmt_vtx_n     [i_part][idx] = n_vtx_per_elmt;
+            elmt_face_n    [i_part][idx] = cell_face_idx[i_elt+1] - cell_face_idx[i_elt];
+            elmt_section_id[i_part][idx] = i_section;
+          }
+        }
       }
       else {
         int         *elt_vtx          = NULL;
@@ -1585,6 +1645,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
             elmt_type      [i_part][idx] = t_elt;
             elmt_vtx_n     [i_part][idx] = n_vtx_per_elmt;
+            elmt_face_n    [i_part][idx] = 0;
             elmt_section_id[i_part][idx] = i_section;
           }
         }
@@ -1592,7 +1653,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     /* Remplissage vtx */
-    int *elt_vtx_idx = PDM_array_new_idx_from_sizes_int(elmt_vtx_n[i_part], n_elmt_to_send);
+    int *elt_vtx_idx  = PDM_array_new_idx_from_sizes_int(elmt_vtx_n [i_part], n_elmt_to_send);
+    int *elt_face_idx = PDM_array_new_idx_from_sizes_int(elmt_face_n[i_part], n_elmt_to_send);
     for(int i_section = 0; i_section < n_section; ++i_section) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
@@ -1630,15 +1692,90 @@ _extract_part_and_reequilibrate_nodal_from_target
               vtx_init_location[i_part][3*(idx_write+k)+2] = face_vtx[idx_read+k];
             }
 
-            n_elmt_to_send     += 1;
-            n_elmt_vtx_to_send += n_vtx_per_elmt;
+            // n_elmt_to_send     += 1;
+            // n_elmt_vtx_to_send += n_vtx_per_elmt;
           }
         }
 
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        // Missing face_ln_to_gn in structure
-        abort();
+        int *cell_face_idx;
+        int *cell_face;
+        int  n_face;
+        int *face_vtx_idx;
+        int *face_vtx;
+        PDM_g_num_t *face_ln_to_gn    = NULL;
+        int         *_parent_num      = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
+        PDM_g_num_t *elt_ln_to_gn     = NULL;
+        PDM_g_num_t *parent_elt_g_num = NULL;
+        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+                                                   sections_id[i_section],
+                                                   i_part,
+                                                   &n_face,
+                                                   &face_ln_to_gn,
+                                                   &face_vtx_idx,
+                                                   &face_vtx,
+                                                   &elt_ln_to_gn,
+                                                   &cell_face_idx,
+                                                   &cell_face,
+                                                   &_parent_num,
+                                                   &parent_elt_g_num);
+        // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx : ");
+        if (0) {
+          char filename[999];
+          sprintf(filename, "check_faces_%d_%d_%d.vtk", i_part, i_section, i_rank);
+          PDM_vtk_write_polydata(filename,
+                                 extrp->n_vtx[i_part],
+                                 extrp->pvtx_coord[i_part],
+                                 NULL,
+                                 n_face,
+                                 face_vtx_idx,
+                                 face_vtx,
+                                 face_ln_to_gn,
+                                 NULL);
+        }
+
+        /* Selection */
+        for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
+          int parent_elt = i_elt;
+          if (parent_num != NULL) {
+            parent_elt = parent_num[i_elt];
+          }
+          if(is_selected[i_part][parent_elt] != -1) {
+            int idx = is_selected[i_part][parent_elt];
+            // log_trace("idx = %d (i_elt %d, parent_elt %d, cell "PDM_FMT_G_NUM")\n",
+            //           idx,
+            //           i_elt, parent_elt,
+            //           entity_g_num[i_part][parent_elt]);
+
+            int idx_write_vtx  = elt_vtx_idx [idx];
+            int idx_write_face = elt_face_idx[idx];
+            for(int idx_face = cell_face_idx[i_elt]; idx_face < cell_face_idx[i_elt+1]; ++idx_face) {
+              int i_face = PDM_ABS(cell_face[idx_face])-1;
+
+              elmt_face      [i_part][idx_write_face] = PDM_SIGN(cell_face[idx_face]) * face_ln_to_gn[i_face];
+              elmt_face_vtx_n[i_part][idx_write_face] = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+              // log_trace("  face %d ("PDM_FMT_G_NUM"), has %d vtx\n",
+              //           i_face,
+              //           elmt_face      [i_part][idx_write_face],
+              //           elmt_face_vtx_n[i_part][idx_write_face]);
+              idx_write_face++;
+
+              for (int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; idx_vtx++) {
+                elmt_vtx         [i_part][  idx_write_vtx  ] = _vtx_ln_to_gn[face_vtx[idx_vtx]-1];
+                vtx_init_location[i_part][3*idx_write_vtx  ] = i_rank;
+                vtx_init_location[i_part][3*idx_write_vtx+1] = i_part;
+                vtx_init_location[i_part][3*idx_write_vtx+2] = face_vtx[idx_vtx];
+                idx_write_vtx++;
+              }
+            }
+
+            // n_elmt_to_send     += 1;
+            // n_elmt_vtx_to_send += n_vtx_per_elmt;
+          }
+        }
+
+
       }
       else {
         int         *elt_vtx          = NULL;
@@ -1675,13 +1812,17 @@ _extract_part_and_reequilibrate_nodal_from_target
               vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k];
             }
 
-            n_elmt_to_send     += 1;
-            n_elmt_vtx_to_send += n_vtx_per_elmt;
+            // n_elmt_to_send     += 1;
+            // n_elmt_vtx_to_send += n_vtx_per_elmt;
           }
         }
       }
     } /* End section */
+    // PDM_log_trace_connectivity_long(elt_face_idx, elmt_face      [i_part], n_elmt_to_send, "elmt_face       : ");
+    // PDM_log_trace_connectivity_int (elt_face_idx, elmt_face_vtx_n[i_part], n_elmt_to_send, "elmt_face_vtx_n : ");
+
     free(elt_vtx_idx);
+    free(elt_face_idx);
   } /* End i_part */
 
 
@@ -1731,6 +1872,36 @@ _extract_part_and_reequilibrate_nodal_from_target
                                  &request_elmt_vtx);
   PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_vtx);
 
+  int         **recv_elmt_face_n  = NULL;
+  PDM_g_num_t **recv_elmt_face    = NULL;
+  int           request_elmt_face = -1;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 -1,
+                                 sizeof(PDM_g_num_t),
+                (const int  **)  elmt_face_n,
+                (const void **)  elmt_face,
+                                 &recv_elmt_face_n,
+                    (void ***)   &recv_elmt_face,
+                                 &request_elmt_face);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_face);
+
+  int **recv_elmt_face_vtx_n = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_VAR_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 -1,
+                                 sizeof(int),
+                (const int  **)  elmt_face_n,
+                (const void **)  elmt_face_vtx_n,
+                                 &recv_elmt_face_n,
+                    (void ***)   &recv_elmt_face_vtx_n,
+                                 &request_elmt_face);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_elmt_face);
+
   int **recv_vtx_init_location_n  = NULL;
   int **recv_vtx_init_location    = NULL;
   int   request_vtx_init_location = -1;
@@ -1763,6 +1934,9 @@ _extract_part_and_reequilibrate_nodal_from_target
     free(elmt_vtx         [i_part]);
     free(elmt_section_id  [i_part]);
     free(vtx_init_location[i_part]);
+    free(elmt_face_n      [i_part]);
+    free(elmt_face_vtx_n  [i_part]);
+    free(elmt_face        [i_part]);
   }
   free(is_selected);
   free(n_extract_vtx);
@@ -1771,6 +1945,9 @@ _extract_part_and_reequilibrate_nodal_from_target
   free(elmt_vtx       );
   free(elmt_section_id);
   free(vtx_init_location);
+  free(elmt_face_n);
+  free(elmt_face_vtx_n);
+  free(elmt_face      );
 
   /*
    * Second pass to create the new part_mesh_nodal
@@ -1806,22 +1983,28 @@ _extract_part_and_reequilibrate_nodal_from_target
     extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part] = recv_elmt_vtx[i_part];
 
     // Bucket sort by sections id
-    int *n_elmt_by_section     = PDM_array_zeros_int(n_section);
-    int *s_elmt_vtx_by_section = PDM_array_zeros_int(n_section);
+    int *n_elmt_by_section      = PDM_array_zeros_int(n_section);
+    int *s_elmt_vtx_by_section  = PDM_array_zeros_int(n_section);
+    int *s_elmt_face_by_section = PDM_array_zeros_int(n_section);
 
     for(int i = 0; i < extrp->n_target[i_part]; ++i) {
       n_elmt_by_section[recv_elmt_section_id[i_part][i]]++;
-      s_elmt_vtx_by_section[recv_elmt_section_id[i_part][i]] += recv_elmt_vtx_n[i_part][i];
+      s_elmt_vtx_by_section [recv_elmt_section_id[i_part][i]] += recv_elmt_vtx_n [i_part][i];
+      s_elmt_face_by_section[recv_elmt_section_id[i_part][i]] += recv_elmt_face_n[i_part][i];
     }
 
     if(1 == 1) {
       PDM_log_trace_array_int(n_elmt_by_section, n_section, "n_elmt_by_section ::");
     }
 
-    int         **elmt_vtx_idx_by_section  = malloc(n_section * sizeof(int         *));
-    int         **elmt_vtx_by_section  = malloc(n_section * sizeof(int         *));
-    int         **extract_parent_num   = malloc(n_section * sizeof(int         *));
-    PDM_g_num_t **extract_parent_g_num = malloc(n_section * sizeof(PDM_g_num_t *));
+    int         **elmt_face_idx_by_section   = malloc(n_section * sizeof(int         *));
+    int         **elmt_vtx_idx_by_section    = malloc(n_section * sizeof(int         *));
+    int         **elmt_vtx_by_section        = malloc(n_section * sizeof(int         *));
+    PDM_g_num_t **elmt_face_by_section       = malloc(n_section * sizeof(PDM_g_num_t *));
+    int         **elmt_face_sign_by_section  = malloc(n_section * sizeof(int         *));
+    int         **elmt_face_vtx_n_by_section = malloc(n_section * sizeof(int         *));
+    int         **extract_parent_num         = malloc(n_section * sizeof(int         *));
+    PDM_g_num_t **extract_parent_g_num       = malloc(n_section * sizeof(PDM_g_num_t *));
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
@@ -1831,6 +2014,15 @@ _extract_part_and_reequilibrate_nodal_from_target
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         elmt_vtx_idx_by_section[i_section] = malloc(sizeof(int) * (n_elmt_by_section[i_section] + 1));
         elmt_vtx_idx_by_section[i_section][0] = 0;
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        elmt_face_idx_by_section  [i_section] = malloc(sizeof(int) * (n_elmt_by_section[i_section] + 1));
+        elmt_face_idx_by_section  [i_section][0] = 0;
+        elmt_face_by_section      [i_section] = malloc(s_elmt_face_by_section[i_section] * sizeof(PDM_g_num_t));
+        elmt_face_sign_by_section [i_section] = malloc(s_elmt_face_by_section[i_section] * sizeof(int        ));
+        elmt_face_vtx_n_by_section[i_section] = malloc(s_elmt_face_by_section[i_section] * sizeof(int        ));
+        elmt_vtx_idx_by_section   [i_section] = malloc(sizeof(int) * (n_elmt_by_section[i_section] + 1));
+        elmt_vtx_idx_by_section   [i_section][0] = 0;
       }
       elmt_vtx_by_section [i_section] = malloc(s_elmt_vtx_by_section[i_section] * sizeof(int        ));
       extract_parent_num  [i_section] = malloc(    n_elmt_by_section[i_section] * sizeof(int        ));
@@ -1842,9 +2034,11 @@ _extract_part_and_reequilibrate_nodal_from_target
 
     // On reclasse tout les éléments
     int idx_read = 0;
+    int idx_read_face = 0;
     for(int i = 0; i < extrp->n_target[i_part]; ++i) {
-      int lsection_id    = recv_elmt_section_id[i_part][i];
-      int n_vtx_per_elmt = recv_elmt_vtx_n     [i_part][i];
+      int lsection_id     = recv_elmt_section_id[i_part][i];
+      int n_vtx_per_elmt  = recv_elmt_vtx_n     [i_part][i];
+      int n_face_per_elmt = recv_elmt_face_n    [i_part][i];
 
       int idx_write = n_elmt_by_section[lsection_id]++;
 
@@ -1853,13 +2047,40 @@ _extract_part_and_reequilibrate_nodal_from_target
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne,
                                                                             sections_id[lsection_id]);
+      int idx_vtx;
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         elmt_vtx_idx_by_section[lsection_id][idx_write+1] = elmt_vtx_idx_by_section[lsection_id][idx_write] + n_vtx_per_elmt;
+        idx_vtx = elmt_vtx_idx_by_section[lsection_id][idx_write];
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        // log_trace("lsection_id = %d, type = %d\n", lsection_id, t_elt);
+        elmt_face_idx_by_section[lsection_id][idx_write+1] = elmt_face_idx_by_section[lsection_id][idx_write] + n_face_per_elmt;
+        idx_vtx = elmt_vtx_idx_by_section[lsection_id][idx_write];
+        elmt_vtx_idx_by_section[lsection_id][idx_write+1] = idx_vtx + n_vtx_per_elmt;
+        int idx0 = elmt_face_idx_by_section[lsection_id][idx_write];
+        // log_trace("cell "PDM_FMT_G_NUM", idx_write = %d, idx0 = %d, idx_vtx = %d\n",
+        //           extrp->target_gnum[i_part][i], idx_write, idx0, idx_vtx);
+        for (int j = 0; j < n_face_per_elmt; j++) {
+          PDM_g_num_t face_gnum = recv_elmt_face[i_part][idx_read_face];
+          // log_trace("  face "PDM_FMT_G_NUM", %d vtx\n",
+          //           face_gnum, recv_elmt_face_vtx_n[i_part][idx_read_face]);
+          elmt_face_by_section      [lsection_id][idx0+j] = PDM_ABS (face_gnum);
+          elmt_face_sign_by_section [lsection_id][idx0+j] = PDM_SIGN(face_gnum);
+          elmt_face_vtx_n_by_section[lsection_id][idx0+j] = recv_elmt_face_vtx_n[i_part][idx_read_face];
+          // log_trace("  idx_read_face = %d, gnum = "PDM_FMT_G_NUM", vtx_n = %d\n",
+          //           idx_read_face,
+          //           face_gnum,
+          //           recv_elmt_face_vtx_n[i_part][idx_read_face]);
+          idx_read_face++;
+        }
+      }
+      else {
+        idx_vtx = n_vtx_per_elmt*idx_write;
       }
 
       for(int j = 0; j < n_vtx_per_elmt; ++j) {
         int l_elmt     = unique_order_entity2[idx_read++];
-        elmt_vtx_by_section[lsection_id][n_vtx_per_elmt*idx_write+j] = (l_elmt+1);
+        elmt_vtx_by_section[lsection_id][idx_vtx++] = (l_elmt+1);
       }
     }
 
@@ -1891,12 +2112,93 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    elmt_vtx_idx_by_section[i_section],
                                                    elmt_vtx_by_section[i_section],
                                                    NULL,
-                                                   extract_parent_num  [i_section],
+                                                   extract_parent_num[i_section],
                                                    // extract_parent_g_num[i_section],
                                                    PDM_OWNERSHIP_KEEP);
+        free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        abort();
+
+        int *unique_order_face = malloc(sizeof(int) * s_elmt_face_by_section[i_section]);
+
+        PDM_g_num_t *tmp = malloc(sizeof(PDM_g_num_t) * s_elmt_face_by_section[i_section]);
+        memcpy(tmp, elmt_face_by_section[i_section],
+               sizeof(PDM_g_num_t) * s_elmt_face_by_section[i_section]);
+
+        int n_lextract_face = PDM_inplace_unique_long2(tmp,//elmt_face_by_section[i_section],
+                                                       unique_order_face,
+                                                       0,
+                                                       s_elmt_face_by_section[i_section]-1);
+        free(tmp);
+        // PDM_log_trace_connectivity_long(elmt_face_idx_by_section[i_section],
+        //                                 elmt_face_by_section[i_section],
+        //                                 n_elmt_by_section[i_section],
+        //                                 "elmt_face_by_section : ");
+        // PDM_log_trace_array_long(elmt_face_by_section[i_section], s_elmt_face_by_section[i_section], "elmt_face_by_section : ");
+        // PDM_log_trace_array_int (unique_order_face, s_elmt_face_by_section[i_section], "unique_order_face : ");
+
+        int *cell_face = malloc(sizeof(int) * elmt_face_idx_by_section[i_section][n_elmt_by_section[i_section]]);
+        PDM_g_num_t *face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_lextract_face);
+
+        int *face_vtx_idx = malloc(sizeof(int) * (n_lextract_face + 1));
+        face_vtx_idx[0] = 0;
+        for (int i = 0; i < n_elmt_by_section[i_section]; i++) {
+          for (int j = elmt_face_idx_by_section[i_section][i]; j < elmt_face_idx_by_section[i_section][i+1]; j++) {
+            face_vtx_idx[unique_order_face[j]+1] = elmt_face_vtx_n_by_section[i_section][j];
+          }
+        }
+
+        for (int i = 0; i < n_lextract_face; i++) {
+          face_vtx_idx[i+1] += face_vtx_idx[i];
+        }
+
+        int *face_vtx = malloc(sizeof(int) * face_vtx_idx[n_lextract_face]);
+
+        int idx = 0;
+        for (int i = 0; i < n_elmt_by_section[i_section]; i++) {
+          // log_trace("cell %d ("PDM_FMT_G_NUM")\n", i,
+          //           extrp->target_gnum[i_part][extract_parent_num[i_section][i]]);
+          idx = elmt_vtx_idx_by_section[i_section][i];
+          for (int j = elmt_face_idx_by_section[i_section][i]; j < elmt_face_idx_by_section[i_section][i+1]; j++) {
+            int face_id = unique_order_face[j];
+            cell_face[j] = elmt_face_sign_by_section[i_section][j] * (face_id+1);
+            face_ln_to_gn[face_id] = elmt_face_by_section[i_section][j];
+            int face_vtx_n = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+            // log_trace("  j = %d, face %d ("PDM_FMT_G_NUM"), %d vtx, idx = %d\n",
+            //           j, cell_face[j], face_ln_to_gn[face_id], face_vtx_n, idx);
+
+            for (int k = 0; k < face_vtx_n; k++) {
+              // log_trace("    idx = %d ("PDM_FMT_G_NUM" -> %d)\n",
+              //           idx, elmt_vtx_by_section[i_section][idx], unique_order_entity2[idx]);
+              face_vtx[face_vtx_idx[face_id]+k] = elmt_vtx_by_section[i_section][idx++];
+            }
+          }
+        }
+        free(unique_order_face);
+        free(elmt_face_by_section      [i_section]);
+        free(elmt_face_sign_by_section [i_section]);
+        free(elmt_face_vtx_n_by_section[i_section]);
+        free(elmt_vtx_by_section[i_section]);
+        free(elmt_vtx_idx_by_section[i_section]);
+        // PDM_log_trace_connectivity_int(face_vtx_idx,
+        //                                face_vtx,
+        //                                n_lextract_face,
+        //                                "face_vtx : ");
+
+        PDM_part_mesh_nodal_elmts_block_poly3d_set(extract_pmne,
+                                                   extract_section_id,
+                                                   i_part,
+                                                   n_elmt_by_section[i_section],
+                                                   n_lextract_face,
+                                                   face_vtx_idx,
+                                                   face_vtx,
+                                                   face_ln_to_gn,
+                                                   elmt_face_idx_by_section[i_section],
+                                                   cell_face,
+                                                   NULL,
+                                                   extract_parent_num[i_section],
+                                                   PDM_OWNERSHIP_KEEP);
+        free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else {
         PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
@@ -1909,20 +2211,28 @@ _extract_part_and_reequilibrate_nodal_from_target
                                           extract_parent_g_num[i_section],
                                           PDM_OWNERSHIP_KEEP);
       }
+
     }
 
     free(n_elmt_by_section);
     free(elmt_vtx_idx_by_section);
     free(elmt_vtx_by_section);
+    free(elmt_face_idx_by_section);
+    free(elmt_face_by_section);
+    free(elmt_face_sign_by_section);
+    free(elmt_face_vtx_n_by_section);
     free(extract_parent_num);
     free(extract_parent_g_num);
     free(unique_order_entity2);
+    free(s_elmt_face_by_section);
 
     free(recv_elmt_section_id  [i_part]);
     free(recv_elmt_type        [i_part]);
     free(recv_elmt_vtx_n       [i_part]);
     free(recv_vtx_init_location[i_part]);
-
+    free(recv_elmt_face_n      [i_part]);
+    free(recv_elmt_face        [i_part]);
+    free(recv_elmt_face_vtx_n  [i_part]);
   }
 
   free(recv_elmt_section_id  );
@@ -1930,6 +2240,9 @@ _extract_part_and_reequilibrate_nodal_from_target
   free(recv_elmt_vtx         );
   free(recv_elmt_vtx_n       );
   free(recv_vtx_init_location);
+  free(recv_elmt_face_n);
+  free(recv_elmt_face);
+  free(recv_elmt_face_vtx_n);
 
   /*
    * Vtx only
@@ -2008,7 +2321,6 @@ _extract_part_and_reequilibrate_nodal
   int from_target = extrp->from_target;
   if(from_target == 1) {
     // _extract_part_and_reequilibrate_from_target(extrp);
-    log_trace("ici\n");
     _extract_part_and_reequilibrate_nodal_from_target(extrp);
     return;
   }

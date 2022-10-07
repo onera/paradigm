@@ -2288,8 +2288,8 @@ PDM_geom_elem_polyhedra_properties
       }
 
       else {
-        PDM_printf( "Warning polyhedraProperties : volume < 0 for polyhedron '%i'\n",
-                    ipoly + 1);
+        PDM_printf( "Warning polyhedraProperties : volume < 0 for polyhedron '%i' (%f)\n",
+                    ipoly + 1, volume[ipoly]);
       }
     }
 

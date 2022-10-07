@@ -1945,7 +1945,7 @@ _mesh_nodal_to_pmesh_nodal_elmts
       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
       pmne->n_section_poly2d++;
     }
-    else  {
+    else {
       id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
       pmne->n_section_poly3d++;
     }
@@ -1972,7 +1972,7 @@ _mesh_nodal_to_pmesh_nodal_elmts
       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
       pmne->sections_poly2d[pmne->n_section_poly2d++] = mesh_nodal->blocks_poly2d[id_block];
     }
-    else  {
+    else {
       id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
       pmne->sections_poly3d[pmne->n_section_poly3d++] = mesh_nodal->blocks_poly3d[id_block];
     }
@@ -2467,13 +2467,14 @@ PDM_mesh_location_part_set
     ml->cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add (ml->mesh_nodal,
+  PDM_Mesh_nodal_cell3d_cellface_add2(ml->mesh_nodal,
                                       i_part,
                                       n_cell,
                                       n_face,
                                       face_vtx_idx,
                                       ml->face_vtx_n[i_part],
                                       face_vtx,
+                                      face_ln_to_gn,
                                       cell_face_idx,
                                       ml->cell_face_n[i_part],
                                       cell_face,
@@ -9528,6 +9529,11 @@ const int                           n_part,
                                                    &_parent_num,
                                                    &parent_elt_g_num);
 
+        PDM_log_trace_connectivity_int(cell_face_idx,
+                                       cell_face,
+                                       n_elt,
+                                       "cell_face : ");
+
         PDM_vtk_write_polydata(filename,
                                pn_vtx[ipart],
                                pvtx_coord[ipart],
@@ -9535,7 +9541,7 @@ const int                           n_part,
                                n_face,
                                face_vtx_idx,
                                face_vtx,
-                               gnum,
+                               face_ln_to_gn,
                                NULL);
 
       }
@@ -11813,7 +11819,7 @@ PDM_mesh_location_compute_optim3
     }
   }
 
-  if (0) {//dbg_enabled) {
+  if (dbg_enabled) {
     int     *pn_vtx     = malloc(sizeof(int     ) * n_part);
     double **pvtx_coord = malloc(sizeof(double *) * n_part);
     for (int ipart = 0; ipart < n_part; ipart++) {

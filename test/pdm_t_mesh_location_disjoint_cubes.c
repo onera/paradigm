@@ -33,6 +33,8 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_poly_vol_gen.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_triangulate.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -261,6 +263,100 @@ _read_args(int                          argc,
     i++;
   }
 }
+
+
+static void
+_volume_polyhedra
+(
+ const int     n_cell,
+       int    *cell_face_idx,
+       int    *cell_face,
+ const int     n_face,
+       int    *face_vtx_idx,
+       int    *face_vtx,
+       double *vtx_coord,
+       double *cell_volume
+ )
+ {
+  int max_face_vtx_n = 0;
+  for (int iface = 0; iface < n_face; iface++) {
+    max_face_vtx_n = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+  }
+
+  PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
+  PDM_l_num_t *tri_vtx = malloc (sizeof(int) * (max_face_vtx_n - 2)*3);
+
+  for (int icell = 0; icell < n_cell; icell++) {
+
+    double origin[3] = {0., 0., 0.};
+
+
+    for (int idx_face = cell_face_idx[icell]; idx_face < cell_face_idx[icell+1]; idx_face++) {
+
+      int face_id = PDM_ABS(cell_face[idx_face]) - 1;
+
+      int face_vtx_n = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+      int *_face_vtx = face_vtx + face_vtx_idx[face_id];
+
+      int n_tri;
+
+      /* Triangular face */
+      if (face_vtx_n == 3) {
+        n_tri = 1;
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          tri_vtx[ivtx] = _face_vtx[ivtx];
+        }
+      }
+
+      /* Quadrilateral face */
+      else if (face_vtx_n == 4) {
+        n_tri = PDM_triangulate_quadrangle(3,
+                                           vtx_coord,
+                                           NULL,
+                                           _face_vtx,
+                                           tri_vtx);
+      }
+
+      /* Polygonal face */
+      else {
+        n_tri = PDM_triangulate_polygon(3,
+                                        face_vtx_n,
+                                        vtx_coord,
+                                        NULL,
+                                        _face_vtx,
+                                        PDM_TRIANGULATE_MESH_DEF,
+                                        tri_vtx,
+                                        tri_state);
+      }
+
+      cell_volume[icell] = 0.;
+      for (int itri = 0; itri < n_tri; itri++) {
+
+        int vtx_id0 = tri_vtx[3*itri+0] - 1;
+        int vtx_id1 = tri_vtx[3*itri+1] - 1;
+        int vtx_id2 = tri_vtx[3*itri+2] - 1;
+
+        double v01[3], v02[3], v0o[3];
+        for (int i = 0; i < 3; i++) {
+          v01[i] = vtx_coord[3*vtx_id1+i] - vtx_coord[3*vtx_id0+i];
+          v02[i] = vtx_coord[3*vtx_id2+i] - vtx_coord[3*vtx_id0+i];
+          v0o[i] = origin[i] - vtx_coord[3*vtx_id0+i];
+        }
+
+        double surface_vector[3];
+        PDM_CROSS_PRODUCT(surface_vector, v01, v02);
+
+        cell_volume[icell] += PDM_DOT_PRODUCT(surface_vector, v0o) / 6.;
+      }
+
+    } // End of loop on current cell's faces
+
+    log_trace("cell %d, volume = %f\n", icell, cell_volume[icell]);
+  } // End of loop on cells
+
+  PDM_triangulate_state_destroy(tri_state);
+
+ }
 
 
 static void _rotate (const int  n_pts,
@@ -935,7 +1031,7 @@ _cube_mesh2
                       n_vtx_seg,
                       n_vtx_seg,
                       n_vtx_seg,
-                      1, // randomize
+                      0, // randomize
                       0,
                       &ng_cell,
                       &ng_face,
@@ -1733,6 +1829,15 @@ int main(int argc, char *argv[])
                                           tgt_coord[ipart],
                                           NULL,
                                           NULL);
+
+      _volume_polyhedra(tgt_n_cell[ipart],
+                        tgt_cell_face_idx[ipart],
+                        tgt_cell_face[ipart],
+                        tgt_n_face[ipart],
+                        tgt_face_vtx_idx[ipart],
+                        tgt_face_vtx[ipart],
+                        tgt_vtx_coord[ipart],
+                        cell_volume);
 
       free (cell_volume);
     }

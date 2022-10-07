@@ -200,6 +200,7 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
   PDM_l_num_t  **cell_face_nb;    /*!< Number of faces per cell */
   PDM_l_num_t  **cell_face;       /*!< Cell face connectivity */
   PDM_g_num_t  **numabs;          /*!< Global numbering per cell per partition */
+  PDM_g_num_t  **face_ln_to_gn;   /*!< Global numbering per face per partition */
 
 } PDM_Mesh_nodal_prepa_blocks_t;
 

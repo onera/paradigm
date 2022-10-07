@@ -388,6 +388,18 @@ _block_poly3d_free_partial
     free(_block_poly3d->_numabs);
     _block_poly3d->_numabs = NULL;
   }
+
+  if (_block_poly3d->_face_ln_to_gn != NULL) {
+    if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_poly3d->n_part; i++) {
+        if (_block_poly3d->_face_ln_to_gn[i] != NULL)
+          free(_block_poly3d->_face_ln_to_gn[i]);
+        _block_poly3d->_face_ln_to_gn[i] = NULL;
+      }
+    }
+    free(_block_poly3d->_face_ln_to_gn);
+    _block_poly3d->_face_ln_to_gn = NULL;
+  }
 }
 
 
@@ -1893,6 +1905,8 @@ const int                           id_part,
   *face_vtx      = block->_facvtx     [id_part];
   *cell_face_idx = block->_cellfac_idx[id_part];
   *cell_face     = block->_cellfac    [id_part];
+  *numabs        = block->_numabs[id_part];
+  *face_ln_to_gn = block->_face_ln_to_gn[id_part];
 }
 
 
