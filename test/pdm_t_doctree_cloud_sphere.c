@@ -491,7 +491,7 @@ _adaptative_tree2
                             coarse_pts_box_set,
                             PDM_BOX_TREE_ASYNC_LEVEL);
     const PDM_g_num_t *bt_box_pts_gnum   = PDM_box_set_get_g_num (coarse_pts_box_set);
-    const int         *bt_box_pts_origin = PDM_box_set_origin_get(coarse_pts_box_set);
+    // const int         *bt_box_pts_origin = PDM_box_set_origin_get(coarse_pts_box_set);
 
     free(coarse_pts_box_gnum);
     free(init_location_coase_pts_box);
@@ -582,7 +582,7 @@ _adaptative_tree2
      */
     PDM_g_num_t _n_extract = n_extract;
     PDM_g_num_t offset = 0;
-    PDM_MPI_Exscan(&n_extract, &offset, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+    PDM_MPI_Exscan(&_n_extract, &offset, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
     for(int i = 0; i < n_extract; ++i) {
       extract_box_gnum[i] = extract_box_gnum[i] + offset;
@@ -756,7 +756,7 @@ _adaptative_tree2
     }
 
     if(1 == 1) {
-      PDM_log_trace_connectivity_long(recv_request_pts_box_idx, recv_request_pts_box, n_destinations, "recv_request_pts_box ::");
+      // PDM_log_trace_connectivity_long(recv_request_pts_box_idx, recv_request_pts_box, n_destinations, "recv_request_pts_box ::");
     }
 
     /*

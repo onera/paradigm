@@ -814,12 +814,14 @@ int main(int argc, char *argv[])
 
 
   if (elt_type == PDM_MESH_NODAL_BARHO_BEZIER) {
-    // _bezier_to_lagrange(elt_type,
-    //                     elt_order,
-    //                     n_vtx,
-    //                     vtx_coord,
-    //                     n_elt,
-    //                     elt_vtx);
+    if (0) {
+      _bezier_to_lagrange(elt_type,
+                          elt_order,
+                          n_vtx,
+                          vtx_coord,
+                          n_elt,
+                          elt_vtx);
+    }
     elt_type = PDM_MESH_NODAL_BARHO;
   }
 
