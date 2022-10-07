@@ -31,6 +31,7 @@
 #include "pdm_array.h"
 #include "pdm_distrib.h"
 #include "pdm_doctree.h"
+#include "pdm_mpi_priv.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -135,6 +136,60 @@ end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
     printf("[%i] %s : duration min/max -> %12.5e %12.5e \n", n_rank, msg, delta_min, delta_max);
   }
 }
+
+struct _pdm_mpi_double_int_t {
+  double val;
+  int    rank;
+};
+typedef struct _pdm_mpi_double_int_t PDM_MPI_double_int_t;
+
+
+static
+void
+end_timer_and_log(const char* msg, PDM_MPI_Comm comm, double t1){
+
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  double t2 = PDM_MPI_Wtime();
+
+  double delta_t = t2 - t1;
+
+  PDM_MPI_double_int_t l_info;
+
+  l_info.val  = delta_t;
+  l_info.rank = i_rank;
+
+  PDM_MPI_double_int_t g_max_info;
+  PDM_MPI_double_int_t g_min_info;
+
+
+  PDM_MPI_Allreduce (&l_info,
+                     &g_max_info,
+                     1,
+                     PDM_MPI_DOUBLE_INT,
+                     PDM_MPI_MAXLOC,
+                     comm);
+
+  PDM_MPI_Allreduce (&l_info,
+                     &g_min_info,
+                     1,
+                     PDM_MPI_DOUBLE_INT,
+                     PDM_MPI_MINLOC,
+                     comm);
+
+  log_trace("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+           n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+  if(i_rank == 0) {
+    printf("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+           n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+  }
+}
+
+
 /*
  *
  * Redistribute evenly across all ranks the elementary location operation to perform
@@ -13438,6 +13493,8 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
+    double t1_step2 = PDM_MPI_Wtime();
+
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
      */
@@ -13607,6 +13664,9 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
+    end_timer_and_log("Step 2 : ", ml->comm, t1_step2);
+    double t1_step3 = PDM_MPI_Wtime();
+
     int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n, dn_elt2);
     // free(final_elt_pts_n);
 
@@ -13718,6 +13778,9 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+
+    end_timer_and_log("Step 3 : ", ml->comm, t1_step3);
+    double t1_step4 = PDM_MPI_Wtime();
 
 
     /*
@@ -13852,6 +13915,8 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+
+    end_timer_and_log("Step 4 : ", ml->comm, t1_step4);
 
 
     // TODO: ownership on located/unlocated??
