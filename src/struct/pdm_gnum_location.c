@@ -224,7 +224,7 @@ PDM_gnum_location_compute
       part_stride[i][j]   = 3;
       part_data[i][3*j]   = rank;
       part_data[i][3*j+1] = i;
-      part_data[i][3*j+2] = j+1;
+      part_data[i][3*j+2] = j;
     }
   }
 

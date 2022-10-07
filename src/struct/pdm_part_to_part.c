@@ -2386,7 +2386,7 @@ _create
             n_part1_to_part2_rank[i_rank2]++;
             merge_part1_to_part2_rank2[n_total_elt] = i_rank2;
             merge_part1_to_part2_part2[n_total_elt] = location_part1_to_part2[3*k+1];
-            merge_part1_to_part2_lnum2[n_total_elt] = location_part1_to_part2[3*k+2]-1;
+            merge_part1_to_part2_lnum2[n_total_elt] = location_part1_to_part2[3*k+2];
             merge_part1_to_part2_rank1[n_total_elt] = my_rank;
             merge_part1_to_part2_part1[n_total_elt] = i;
             merge_part1_to_part2_lnum1[n_total_elt] = j; 
@@ -2410,7 +2410,7 @@ _create
           n_part1_to_part2_rank[i_rank2]++;
           merge_part1_to_part2_rank2[n_total_elt] = i_rank2;
           merge_part1_to_part2_part2[n_total_elt] = location_part1_to_part2[3*k+1];
-          merge_part1_to_part2_lnum2[n_total_elt] = location_part1_to_part2[3*k+2]-1;
+          merge_part1_to_part2_lnum2[n_total_elt] = location_part1_to_part2[3*k+2];
           merge_part1_to_part2_rank1[n_total_elt] = my_rank;
           merge_part1_to_part2_part1[n_total_elt] = i;
           merge_part1_to_part2_lnum1[n_total_elt] = j; 
@@ -2754,15 +2754,15 @@ _create
 
   /* 6 - Build the arrays for the reveived view */
 
-  ptp->n_ref_lnum2                  = malloc (sizeof (int) * n_part2);
-  ptp->ref_lnum2                    = malloc (sizeof (int *) * n_part2);
-  ptp->n_unref_lnum2                = malloc (sizeof (int) * n_part2);
-  ptp->unref_lnum2                  = malloc (sizeof (int *) * n_part2);
-  ptp->gnum1_come_from_idx          = malloc (sizeof (int *) * n_part2);
+  ptp->n_ref_lnum2                  = malloc (sizeof (int          ) * n_part2);
+  ptp->ref_lnum2                    = malloc (sizeof (int         *) * n_part2);
+  ptp->n_unref_lnum2                = malloc (sizeof (int          ) * n_part2);
+  ptp->unref_lnum2                  = malloc (sizeof (int         *) * n_part2);
+  ptp->gnum1_come_from_idx          = malloc (sizeof (int         *) * n_part2);
   ptp->gnum1_come_from              = malloc (sizeof (PDM_g_num_t *) * n_part2);
-  ptp->recv_buffer_to_ref_lnum2     = malloc (sizeof (int *) * n_part2);
-  ptp->recv_buffer_to_duplicate_idx = malloc (sizeof (int *) * n_part2);
-  ptp->recv_buffer_to_duplicate     = malloc (sizeof (int *) * n_part2);
+  ptp->recv_buffer_to_ref_lnum2     = malloc (sizeof (int         *) * n_part2);
+  ptp->recv_buffer_to_duplicate_idx = malloc (sizeof (int         *) * n_part2);
+  ptp->recv_buffer_to_duplicate     = malloc (sizeof (int         *) * n_part2);
 
   //ptp->gnum1_to_send_buffer     = NULL;  
   //ptp->recv_buffer_to_ref_lnum2 = NULL;

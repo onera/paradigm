@@ -7779,7 +7779,7 @@ PDM_mesh_location_compute_optim2
           for(int i = 0; i < dn_pts; ++i) {
             init_location_pts[3*i  ] = i_rank;
             init_location_pts[3*i+1] = 0;
-            init_location_pts[3*i+2] = i+1;
+            init_location_pts[3*i+2] = i;
           }
         }
         PDM_doctree_point_set(doct,
@@ -7795,7 +7795,7 @@ PDM_mesh_location_compute_optim2
         for(int i = 0; i < dn_elt1; ++i) {
           init_location_box[3*i  ] = i_rank;
           init_location_box[3*i+1] = 0;
-          init_location_box[3*i+2] = i+1;
+          init_location_box[3*i+2] = i;
         }
 
         PDM_doctree_solicitation_set(doct,
@@ -9441,7 +9441,7 @@ PDM_mesh_location_compute_optim3
 
           select_pts_init_location[ipart][3*i  ] = i_rank;
           select_pts_init_location[ipart][3*i+1] = ipart;
-          select_pts_init_location[ipart][3*i+2] = j+1;
+          select_pts_init_location[ipart][3*i+2] = j;
 
           select_pts_g_num_user[ipart][i] = pcloud->gnum[ipart][j];
           for (int k = 0; k < 3; k++) {
@@ -9466,7 +9466,7 @@ PDM_mesh_location_compute_optim3
         for (int i = 0; i < n_select_pts[ipart]; i++) {
           select_pts_init_location[ipart][3*i  ] = i_rank;
           select_pts_init_location[ipart][3*i+1] = ipart;
-          select_pts_init_location[ipart][3*i+2] = i+1;
+          select_pts_init_location[ipart][3*i+2] = i;
         }
       }
     }
@@ -9596,7 +9596,7 @@ PDM_mesh_location_compute_optim3
 
           select_elt_init_location_user[ipart][3*i  ] = i_rank;
           select_elt_init_location_user[ipart][3*i+1] = ipart;
-          select_elt_init_location_user[ipart][3*i+2] = elt_id+1;
+          select_elt_init_location_user[ipart][3*i+2] = elt_id;
 
         }
       }
@@ -9610,13 +9610,13 @@ PDM_mesh_location_compute_optim3
       select_elt_extents    = elt_extents;
       select_elt_g_num_user = elt_g_num;
 
-      select_elt_init_location_user = malloc(sizeof(int         *) * n_part);
+      select_elt_init_location_user = malloc(sizeof(int*) * n_part);
       for (int ipart = 0; ipart < n_part; ipart++) {
-        select_elt_init_location_user[ipart] = malloc(sizeof(int        ) * n_select_elt[ipart] * 3);
+        select_elt_init_location_user[ipart] = malloc(sizeof(int) * n_select_elt[ipart] * 3);
         for (int i = 0; i < n_select_elt[ipart]; i++) {
           select_elt_init_location_user[ipart][3*i  ] = i_rank;
           select_elt_init_location_user[ipart][3*i+1] = ipart;
-          select_elt_init_location_user[ipart][3*i+2] = i+1;
+          select_elt_init_location_user[ipart][3*i+2] = i;
         }
       }
     }
@@ -9931,7 +9931,7 @@ PDM_mesh_location_compute_optim3
           for(int i = 0; i < dn_pts; ++i) {
             init_location_pts[3*i  ] = i_rank;
             init_location_pts[3*i+1] = 0;
-            init_location_pts[3*i+2] = i+1;
+            init_location_pts[3*i+2] = i;
           }
         }
         PDM_doctree_point_set(doct,
@@ -9947,7 +9947,7 @@ PDM_mesh_location_compute_optim3
         for(int i = 0; i < dn_elt1; ++i) {
           init_location_box[3*i  ] = i_rank;
           init_location_box[3*i+1] = 0;
-          init_location_box[3*i+2] = i+1;
+          init_location_box[3*i+2] = i;
         }
 
         PDM_doctree_solicitation_set(doct,

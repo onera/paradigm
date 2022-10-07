@@ -1002,10 +1002,10 @@ _extract_part_and_reequilibrate_nodal_from_target
   int          *pn_entity       = NULL;
   PDM_mesh_entities_t entity_type;
   if(extrp->dim == 3) {
-    pn_entity    = extrp->n_cell;
+    pn_entity   = extrp->n_cell;
     entity_type = PDM_MESH_ENTITY_CELL;
   } else {
-    pn_entity    = extrp->n_face;
+    pn_entity   = extrp->n_face;
     entity_type = PDM_MESH_ENTITY_FACE;
   }
 
@@ -1513,7 +1513,7 @@ _extract_part_and_reequilibrate_nodal_from_target
               elmt_vtx         [i_part][idx_write+k] = _vtx_ln_to_gn[elt_vtx[idx_read+k]-1];
               vtx_init_location[i_part][3*(idx_write+k)  ] = i_rank;
               vtx_init_location[i_part][3*(idx_write+k)+1] = i_part;
-              vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k];
+              vtx_init_location[i_part][3*(idx_write+k)+2] = elt_vtx[idx_read+k]-1;
             }
 
             // n_elmt_to_send     += 1;
