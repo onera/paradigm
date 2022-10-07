@@ -11730,7 +11730,7 @@ PDM_mesh_location_compute_optim3
   double e_t_cpu_u;
   double e_t_cpu_s;
 
-  PDM_MPI_Barrier (ml->comm);
+  // PDM_MPI_Barrier (ml->comm);
   ml->times_elapsed[BEGIN] = PDM_timer_elapsed (ml->timer);
   ml->times_cpu    [BEGIN] = PDM_timer_cpu     (ml->timer);
   ml->times_cpu_u  [BEGIN] = PDM_timer_cpu_user(ml->timer);
@@ -11945,7 +11945,7 @@ PDM_mesh_location_compute_optim3
            g_mesh_extents[3], g_mesh_extents[4], g_mesh_extents[5]);
   }
 
-  PDM_MPI_Barrier (ml->comm);
+  // PDM_MPI_Barrier (ml->comm);
   PDM_timer_hang_on(ml->timer);
   e_t_elapsed = PDM_timer_elapsed (ml->timer);
   e_t_cpu     = PDM_timer_cpu     (ml->timer);
@@ -11970,7 +11970,7 @@ PDM_mesh_location_compute_optim3
 
   _store_cell_vtx(ml);
 
-  PDM_MPI_Barrier (ml->comm);
+  // PDM_MPI_Barrier (ml->comm);
   PDM_timer_hang_on(ml->timer);
   e_t_elapsed = PDM_timer_elapsed (ml->timer);
   e_t_cpu     = PDM_timer_cpu     (ml->timer);
@@ -12643,7 +12643,6 @@ PDM_mesh_location_compute_optim3
 
         }
         else {
-          abort();
           PDM_para_octree_points_inside_boxes_shared(octree,
                                                      dn_elt1,
                                                      delt_extents1, // Attention faire une distribution part_to_bloc_geom dans le cas octree
@@ -13332,7 +13331,7 @@ PDM_mesh_location_compute_optim3
     final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[final_n_pts]);
     final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * final_n_pts*3);
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13421,7 +13420,7 @@ PDM_mesh_location_compute_optim3
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13590,7 +13589,7 @@ PDM_mesh_location_compute_optim3
     }
     // free(final_elt_pts_triplet_n);
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13702,7 +13701,7 @@ PDM_mesh_location_compute_optim3
       free(elt_pts_weight_stride);
     }
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13836,7 +13835,7 @@ PDM_mesh_location_compute_optim3
     // }
     // free(stride_pts);
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);

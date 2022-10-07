@@ -13735,18 +13735,21 @@ typedef enum {
   PIB_SHARED_TOTAL
 } _pib_shared_step_t;
 
+
 void
-PDM_para_octree_points_inside_boxes_shared
+PDM_para_octree_points_inside_boxes_shared_block_frame
 (
  const PDM_para_octree_t  *octree,
  const int                 n_boxes,
  const double             *box_extents,
  const PDM_g_num_t        *box_g_num,
- int                     **pts_in_box_idx,
- PDM_g_num_t             **pts_in_box_g_num,
- double                  **pts_in_box_coord
- )
+ PDM_part_to_block_t     **ptb_out,
+ int                     **dbox_pts_n,
+ PDM_g_num_t             **dbox_pts_g_num,
+ double                  **dbox_pts_coord
+)
 {
+
   int dbg_enabled = 0;
 
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
@@ -14510,7 +14513,11 @@ PDM_para_octree_points_inside_boxes_shared
     free (tmp_coord);
   }
   //<<--
-
+  PDM_MPI_Barrier (_octree->comm_shared);
+  PDM_mpi_win_shared_free (wshared_recv_gnum);
+  free(shared_recv_idx );
+  free(box_corners );
+  free(distrib_search_by_rank_idx);
 
   free(res_box_g_num );
   free(res_box_strid );
@@ -14524,9 +14531,53 @@ PDM_para_octree_points_inside_boxes_shared
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (_octree->timer);
 
+  // log_trace ("dt_morton_intersect_box              : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //            dt_morton_intersect_box, dt_morton_intersect_box/times_elapsed[PIB_SHARED_TOTAL] * 100);
+
+  *ptb_out        = ptb;
+  *dbox_pts_n     = block_pts_in_box_n;
+  *dbox_pts_g_num = block_pts_in_box_g_num;
+  *dbox_pts_coord = block_pts_in_box_coord;
+}
+
+
+void
+PDM_para_octree_points_inside_boxes_shared
+(
+ const PDM_para_octree_t  *octree,
+ const int                 n_boxes,
+ const double             *box_extents,
+ const PDM_g_num_t        *box_g_num,
+ int                     **pts_in_box_idx,
+ PDM_g_num_t             **pts_in_box_g_num,
+ double                  **pts_in_box_coord
+)
+{
+  double times_elapsed[NTIMER_PIB_SHARED], b_t_elapsed, e_t_elapsed;
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+
+  PDM_timer_hang_on (_octree->timer);
+  times_elapsed[PIB_SHARED_BEGIN] = PDM_timer_elapsed (_octree->timer);
+  b_t_elapsed = times_elapsed[PIB_SHARED_BEGIN];
+  PDM_timer_resume (_octree->timer);
+
+  PDM_part_to_block_t *ptb                    = NULL;
+  int                 *block_pts_in_box_n     = NULL;
+  PDM_g_num_t         *block_pts_in_box_g_num = NULL;
+  double              *block_pts_in_box_coord = NULL;
+  PDM_para_octree_points_inside_boxes_shared_block_frame(octree,
+                                                         n_boxes,
+                                                         box_extents,
+                                                         box_g_num,
+                                                         &ptb,
+                                                         &block_pts_in_box_n,
+                                                         &block_pts_in_box_g_num,
+                                                         &block_pts_in_box_coord);
+
   /*
    *  Block to part
    */
+  int n_elt_block = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(ptb);
   PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(blk_gnum,
                                                                         n_elt_block,
@@ -14564,7 +14615,7 @@ PDM_para_octree_points_inside_boxes_shared
   double **tmp_pts_in_box_coord = NULL;
 
   PDM_block_to_part_exch(btp,
-                          dim*sizeof(double),
+                          3 * sizeof(double),
                           PDM_STRIDE_VAR_INTERLACED,
                           block_pts_in_box_n,
                  (void *) block_pts_in_box_coord,
@@ -14579,15 +14630,8 @@ PDM_para_octree_points_inside_boxes_shared
   *pts_in_box_coord = tmp_pts_in_box_coord[0];
   free(tmp_pts_in_box_coord);
 
-
   PDM_block_to_part_free(btp);
 
-  PDM_MPI_Barrier (_octree->comm_shared);
-  PDM_mpi_win_shared_free (wshared_recv_gnum);
-
-  free(shared_recv_idx );
-  free(box_corners );
-  free(distrib_search_by_rank_idx);
 
   PDM_timer_hang_on (_octree->timer);
   e_t_elapsed = PDM_timer_elapsed (_octree->timer);
@@ -14596,28 +14640,25 @@ PDM_para_octree_points_inside_boxes_shared
   PDM_timer_resume (_octree->timer);
 
 
-  if (1) {
-    log_trace ("PiB_SHARED timers \n");
-    log_trace ("PIB_SHARED_TOTAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_TOTAL], times_elapsed[PIB_SHARED_TOTAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_REDISTRIBUTE_ENCODE       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE], times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_REDISTRIBUTE_PREPARE_SEND : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND], times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_COPIES                    : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_COPIES], times_elapsed[PIB_SHARED_COPIES]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("dt_morton_intersect_box              : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               dt_morton_intersect_box, dt_morton_intersect_box/times_elapsed[PIB_SHARED_TOTAL] * 100);
-
-    log_trace ("PIB_SHARED_EXCHANGE                  : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_EXCHANGE], times_elapsed[PIB_SHARED_EXCHANGE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_LOCAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_LOCAL], times_elapsed[PIB_SHARED_LOCAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_PTB                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_PTB], times_elapsed[PIB_SHARED_PTB]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-    log_trace ("PIB_SHARED_BTP                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-               times_elapsed[PIB_SHARED_BTP], times_elapsed[PIB_SHARED_BTP]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  }
+  // if (1) {
+  //   log_trace ("PiB_SHARED timers \n");
+  //   log_trace ("PIB_SHARED_TOTAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_TOTAL], times_elapsed[PIB_SHARED_TOTAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_REDISTRIBUTE_ENCODE       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE], times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_REDISTRIBUTE_PREPARE_SEND : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND], times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_COPIES                    : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_COPIES], times_elapsed[PIB_SHARED_COPIES]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_EXCHANGE                  : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_EXCHANGE], times_elapsed[PIB_SHARED_EXCHANGE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_LOCAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_LOCAL], times_elapsed[PIB_SHARED_LOCAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_PTB                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_PTB], times_elapsed[PIB_SHARED_PTB]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  //   log_trace ("PIB_SHARED_BTP                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
+  //              times_elapsed[PIB_SHARED_BTP], times_elapsed[PIB_SHARED_BTP]/times_elapsed[PIB_SHARED_TOTAL] * 100);
+  // }
 
   // PDM_MPI_Comm_free(&comm_shared);
 
