@@ -406,18 +406,15 @@ int main(int argc, char *argv[])
                               pvtx_ln_to_gn[i_part],
                               pvtx_coord[i_part]);
 
-    PDM_extract_part_target_gnum_set(extrp,
-                                     i_part,
-                                     pn_target_cell[i_part],
-                                     target_g_num  [i_part]);
-
     int *location_idx = NULL;
     int *location     = NULL;
     PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
-    PDM_extract_part_target_location_set(extrp,
-                                         i_part,
-                                         pn_target_cell[i_part],
-                                         location);
+
+    PDM_extract_part_target_set(extrp,
+                                i_part,
+                                pn_target_cell[i_part],
+                                target_g_num  [i_part],
+                                location);
 
   }
 
@@ -545,7 +542,7 @@ int main(int argc, char *argv[])
 
   // 2) Exchange to extracted part
   int request = -1;
-  int **part2_stride = NULL;
+  // int **part2_stride = NULL;
   double **pextract_face_field = NULL;
   PDM_part_to_part_reverse_iexch(ptp_face,
                                  PDM_MPI_COMM_KIND_P2P,

@@ -8227,15 +8227,11 @@ PDM_mesh_location_compute_optim2
       PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
     }
 
-    PDM_extract_part_target_gnum_set(extrp,
-                                     0,
-                                     dn_elt2,
-                                     delt_parent_g_num2);
-
-    PDM_extract_part_target_location_set(extrp,
-                                         0,
-                                         dn_elt2,
-                                         delt_init_location2);
+    PDM_extract_part_target_set(extrp,
+                                0,
+                                dn_elt2,
+                                delt_parent_g_num2,
+                                delt_init_location2);
 
     if (dbg_enabled) {
       log_trace(">> PDM_extract_part_compute\n");
@@ -10276,15 +10272,11 @@ PDM_mesh_location_compute_optim3
       default:
       PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
     }
-    PDM_extract_part_target_gnum_set(extrp,
-                                     0,
-                                     dn_elt2,
-                                     delt_parent_g_num2);
-
-    PDM_extract_part_target_location_set(extrp,
-                                         0,
-                                         dn_elt2,
-                                         delt_init_location2);
+    PDM_extract_part_target_set(extrp,
+                                0,
+                                dn_elt2,
+                                delt_parent_g_num2,
+                                delt_init_location2);
 
     if (dbg_enabled) {
       log_trace(">> PDM_extract_part_compute\n");

@@ -3883,21 +3883,6 @@ PDM_extract_part_compute
 )
 {
   assert(extrp->dim >= 2);
-  // if(extrp->equilibrate == PDM_FALSE) {
-  //   if(extrp->pmne == NULL) {
-  //     _extract_part(extrp);
-  //   } else {
-  //     _extract_part_nodal(extrp);
-  //   }
-  // } else {
-  //   if(extrp->pmne == NULL) {
-  //     _extract_part_and_reequilibrate(extrp);
-  //   } else {
-  //     _extract_part_and_reequilibrate_nodal(extrp);
-  //   }
-  // }
-
-
   if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if(extrp->pmne == NULL) {
       _extract_part(extrp);
@@ -3918,8 +3903,6 @@ PDM_extract_part_compute
       _extract_part_and_reequilibrate_nodal_from_target(extrp);
     }
   }
-
-
 }
 
 
@@ -3993,30 +3976,19 @@ PDM_extract_part_selected_lnum_set
 }
 
 void
-PDM_extract_part_target_gnum_set
+PDM_extract_part_target_set
 (
   PDM_extract_part_t       *extrp,
   int                       i_part,
   int                       n_target,
-  PDM_g_num_t              *target_gnum
-)
-{
-  extrp->from_target = 1;
-  extrp->n_target   [i_part] = n_target;
-  extrp->target_gnum[i_part] = target_gnum;
-}
-
-void
-PDM_extract_part_target_location_set
-(
-  PDM_extract_part_t       *extrp,
-  int                       i_part,
-  int                       n_target,
+  PDM_g_num_t              *target_gnum,
   int                      *target_location
 )
 {
   extrp->from_target = 1;
+  assert(extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET);
   extrp->n_target       [i_part] = n_target;
+  extrp->target_gnum    [i_part] = target_gnum;
   extrp->target_location[i_part] = target_location;
 }
 

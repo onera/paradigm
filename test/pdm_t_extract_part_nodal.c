@@ -509,20 +509,15 @@ int main(int argc, char *argv[])
     //                                    i_part,
     //                                    pn_select_cell[i_part],
     //                                    selected_l_num[i_part]);
-
-    PDM_extract_part_target_gnum_set(extrp,
-                                     i_part,
-                                     pn_target_cell[i_part],
-                                     target_g_num  [i_part]);
-
     int *location_idx = NULL;
     int *location     = NULL;
     PDM_gnum_location_get(gnum_loc, i_part, &location_idx, &location);
-    PDM_extract_part_target_location_set(extrp,
-                                         i_part,
-                                         pn_target_cell[i_part],
-                                         location);
 
+    PDM_extract_part_target_set(extrp,
+                                i_part,
+                                pn_target_cell[i_part],
+                                target_g_num  [i_part],
+                                location);
     // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
 
   }
