@@ -3,13 +3,14 @@
 cdef extern from "pdm_extract_part.h":
   ctypedef struct PDM_extract_part_t:
     pass
-  PDM_extract_part_t* PDM_extract_part_create(int                    dim,
-                                              int                    n_part_in,
-                                              int                    n_part_out,
-                                              PDM_bool_t             equilibrate,
-                                              PDM_split_dual_t       split_dual_method,
-                                              PDM_ownership_t        ownership,
-                                              PDM_MPI_Comm           comm);
+  PDM_extract_part_t* PDM_extract_part_create(int                     dim,
+                                              int                     n_part_in,
+                                              int                     n_part_out,
+                                              PDM_extract_part_kind_t extract_kind,
+                                              PDM_split_dual_t        split_dual_method,
+                                              PDM_bool_t              compute_child_gnum,
+                                              PDM_ownership_t         ownership,
+                                              PDM_MPI_Comm            comm);
   void PDM_extract_part_compute(PDM_extract_part_t        *extrp);
   void PDM_extract_part_selected_lnum_set(PDM_extract_part_t       *extrp,
                                           int                       i_part,
@@ -80,12 +81,13 @@ cdef class ExtractPart:
 
   # ------------------------------------------------------------------
   def __cinit__(self,
-                int               dim,
-                int               n_part_in,
-                int               n_part_out,
-                PDM_bool_t        equilibrate,
-                PDM_split_dual_t  split_dual_method,
-                MPI.Comm          comm):
+                int                     dim,
+                int                     n_part_in,
+                int                     n_part_out,
+                PDM_extract_part_kind_t extract_kind,
+                PDM_split_dual_t        split_dual_method,
+                PDM_bool_t              compute_child_gnum,
+                MPI.Comm                comm):
     """
     Compute the distance from point clouds to a surface
     """
@@ -93,8 +95,9 @@ cdef class ExtractPart:
     self._extrp =  PDM_extract_part_create(dim,
                                            n_part_in,
                                            n_part_out,
-                                           equilibrate,
+                                           extract_kind,
                                            split_dual_method,
+                                           compute_child_gnum,
                                            PDM_OWNERSHIP_USER,
                                            PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm));
 

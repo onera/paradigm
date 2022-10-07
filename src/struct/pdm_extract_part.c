@@ -3728,47 +3728,32 @@ _extract_part_and_reequilibrate
  * Public function definitions
  *============================================================================*/
 
-// PDM_extract_part_t*
-// PDM_extract_part_create
-// (
-//  const int                     dim,
-//  const int                     n_part_in,
-//  const int                     n_part_out,
-//        PDM_extract_part_kind_t extract_kind,
-//        PDM_split_dual_t        split_dual_method,
-//        PDM_bool_t              compute_child_gnum,
-//        PDM_ownership_t         ownership,
-//        PDM_MPI_Comm            comm
-// )
-// {
-//   compute_child_gnum
-//   extrp->extract_kind       = extract_kind;
-//   extrp->compute_child_gnum = compute_child_gnum;
-// }
-
-
 PDM_extract_part_t*
 PDM_extract_part_create
 (
- const int                    dim,
- const int                    n_part_in,
- const int                    n_part_out,
-       PDM_bool_t             equilibrate,
-       PDM_split_dual_t       split_dual_method,
-       PDM_ownership_t        ownership,
-       PDM_MPI_Comm           comm
+ const int                     dim,
+ const int                     n_part_in,
+ const int                     n_part_out,
+       PDM_extract_part_kind_t extract_kind,
+       PDM_split_dual_t        split_dual_method,
+       PDM_bool_t              compute_child_gnum,
+       PDM_ownership_t         ownership,
+       PDM_MPI_Comm            comm
 )
 {
+
   PDM_extract_part_t *extrp = (PDM_extract_part_t *) malloc(sizeof(PDM_extract_part_t));
 
-  if(equilibrate == PDM_FALSE) {
+  if(extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if(n_part_in != n_part_out) {
       PDM_error(__FILE__, __LINE__, 0,"PDM_extract_part_create : cannot not equilibrate with not same number of n_part_in / n_part_out \n");
     }
   }
 
-  // extrp->compute_child_gnum    = PDM_TRUE;
-  extrp->equilibrate           = equilibrate;
+  extrp->extract_kind       = extract_kind;
+  extrp->compute_child_gnum = compute_child_gnum;
+
+  // extrp->equilibrate           = equilibrate;
   extrp->dim                   = dim;
   extrp->n_part_in             = n_part_in;
   extrp->n_part_out            = n_part_out;
@@ -3898,41 +3883,41 @@ PDM_extract_part_compute
 )
 {
   assert(extrp->dim >= 2);
-  if(extrp->equilibrate == PDM_FALSE) {
-    if(extrp->pmne == NULL) {
-      _extract_part(extrp);
-    } else {
-      _extract_part_nodal(extrp);
-    }
-  } else {
-    if(extrp->pmne == NULL) {
-      _extract_part_and_reequilibrate(extrp);
-    } else {
-      _extract_part_and_reequilibrate_nodal(extrp);
-    }
-  }
-
-
-  // if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+  // if(extrp->equilibrate == PDM_FALSE) {
   //   if(extrp->pmne == NULL) {
   //     _extract_part(extrp);
   //   } else {
   //     _extract_part_nodal(extrp);
   //   }
-  // } else if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+  // } else {
   //   if(extrp->pmne == NULL) {
   //     _extract_part_and_reequilibrate(extrp);
   //   } else {
-  //     abort();
   //     _extract_part_and_reequilibrate_nodal(extrp);
   //   }
-  // } else if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET) {
-  //   if(extrp->pmne == NULL) {
-  //     _extract_part_and_reequilibrate_from_target2(extrp);
-  //   } else {
-  //     _extract_part_and_reequilibrate_nodal_from_target(extrp);
-  //   }
   // }
+
+
+  if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+    if(extrp->pmne == NULL) {
+      _extract_part(extrp);
+    } else {
+      _extract_part_nodal(extrp);
+    }
+  } else if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+    if(extrp->pmne == NULL) {
+      _extract_part_and_reequilibrate(extrp);
+    } else {
+      abort();
+      _extract_part_and_reequilibrate_nodal(extrp);
+    }
+  } else if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET) {
+    if(extrp->pmne == NULL) {
+      _extract_part_and_reequilibrate_from_target2(extrp);
+    } else {
+      _extract_part_and_reequilibrate_nodal_from_target(extrp);
+    }
+  }
 
 
 }

@@ -68,13 +68,14 @@ typedef struct _pdm_extract_part_t PDM_extract_part_t;
 PDM_extract_part_t*
 PDM_extract_part_create
 (
- const int                    dim,
- const int                    n_part_in,
- const int                    n_part_out,
-       PDM_bool_t             equilibrate,
-       PDM_split_dual_t       split_dual_method,
-       PDM_ownership_t        ownership,
-       PDM_MPI_Comm           comm
+ const int                     dim,
+ const int                     n_part_in,
+ const int                     n_part_out,
+       PDM_extract_part_kind_t extract_kind,
+       PDM_split_dual_t        split_dual_method,
+       PDM_bool_t              compute_child_gnum,
+       PDM_ownership_t         ownership,
+       PDM_MPI_Comm            comm
 );
 
 
