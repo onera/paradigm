@@ -399,15 +399,16 @@ PDM_dbbtree_lines_intersect_boxes2
 void
 PDM_dbbtree_lines_intersect_boxes2_shared
 (
- PDM_dbbtree_t  *dbbt,
- const int       n_line,
- PDM_g_num_t    *line_g_num,
- double         *line_coord,
- int            *n_part,
- int           **redistrib_n_box,
- PDM_g_num_t  ***redistrib_box_ln_to_gn,
- int          ***box_line_idx,
- PDM_g_num_t  ***box_line_g_num
+ PDM_dbbtree_t   *dbbt,
+ const int        n_line,
+ PDM_g_num_t     *line_g_num,
+ double          *line_coord,
+ int             *n_part,
+ int            **redistrib_n_box,
+ PDM_g_num_t   ***redistrib_box_ln_to_gn,
+ int           ***redistrib_box_init_location,
+ int           ***box_line_idx,
+ PDM_g_num_t   ***box_line_g_num
 );
 
 /**

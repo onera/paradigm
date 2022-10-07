@@ -2953,13 +2953,7 @@ _extract_part_and_reequilibrate
   /*
    *  Deduce from target the selected gnum if target is available
    */
-  int from_target = 0;
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    if(extrp->n_target[i_part] > 0 ) {
-      from_target = 1;
-    }
-  }
-  if(from_target == 1) {
+  if(extrp->from_target == 1) {
     // _extract_part_and_reequilibrate_from_target(extrp);
     _extract_part_and_reequilibrate_from_target2(extrp);
     return;
@@ -3355,7 +3349,7 @@ _extract_part_and_reequilibrate
    *   - if hilbert -> block and part is the same (implicite block numbering is hilbert)
    *   - if scotch  -> Need to setup graph and split it before doing partitioning
    */
-  if(from_target == 1) {
+  if(extrp->from_target == 1) {
     /* We need to transform the target_g_num (in frame of parent ) in a target_child_g_num without change the order */
 
     // dequi_parent_entity_ln_to_gn

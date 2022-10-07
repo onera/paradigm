@@ -2191,6 +2191,7 @@ int main(int argc, char *argv[])
     }
 
     PDM_inside_cloud_surf_compute(ics[i_mesh]);
+    // PDM_inside_cloud_surf_compute_optim(ics[i_mesh]);
 
     int mask_type = 1;
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {

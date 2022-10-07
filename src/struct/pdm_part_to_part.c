@@ -2230,6 +2230,9 @@ _create
   int my_rank = ptp->my_rank;
   int n_rank = ptp->n_rank;
 
+  int n_part2_max = 0;
+  PDM_MPI_Allreduce ((int* )&n_part2, &n_part2_max, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
   ptp->n_ref_lnum2                = NULL;
   ptp->ref_lnum2                  = NULL;
   ptp->n_unref_lnum2              = NULL;
@@ -2474,8 +2477,6 @@ _create
   _merge_part1_to_part2_lnum1 = _tmp_merge_part1_to_part2_lnum1;
   _merge_part1_to_part2_addr1 = _tmp_merge_part1_to_part2_addr1;
 
-  int n_part2_max = 0;
-  PDM_MPI_Allreduce ((int* )&n_part2, &n_part2_max, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   int *n_elt_part = malloc (sizeof(int) * n_part2_max);
   int *idx_elt_part = malloc (sizeof(int) * (n_part2_max + 1));

@@ -6333,6 +6333,7 @@ PDM_dbbtree_lines_intersect_boxes2_shared
  int            *n_part,
  int           **redistrib_n_box,
  PDM_g_num_t  ***redistrib_box_ln_to_gn,
+ int          ***redistrib_box_init_location,
  int          ***box_line_idx,
  PDM_g_num_t  ***box_line_g_num
 )
@@ -6433,7 +6434,6 @@ PDM_dbbtree_lines_intersect_boxes2_shared
     PDM_MPI_Allgather(&n_tot_recv      , 1, PDM_MPI_INT,
                       shared_recv_count, 1, PDM_MPI_INT,
                       comm_shared);
-
 
     int* shared_recv_idx = malloc((n_rank_in_shm+1) * sizeof(int));
     shared_recv_idx[0] = 0;
@@ -6560,14 +6560,16 @@ PDM_dbbtree_lines_intersect_boxes2_shared
 
   *box_line_idx        = malloc (sizeof(int *) * n_part_box);
 
-  *redistrib_n_box        = (int          *) malloc(sizeof(int          ) * n_part_box);
-  *redistrib_box_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part_box);
-  *box_line_g_num         = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part_box);
+  *redistrib_n_box             = (int          *) malloc(sizeof(int          ) * n_part_box);
+  *redistrib_box_ln_to_gn      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part_box);
+  *redistrib_box_init_location = (int         **) malloc(sizeof(int         *) * n_part_box);
+  *box_line_g_num              = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part_box);
 
-  int         **_box_line_idx           = *box_line_idx;
-  int          *_redistrib_n_box        = *redistrib_n_box;
-  PDM_g_num_t **_redistrib_box_ln_to_gn = *redistrib_box_ln_to_gn;
-  PDM_g_num_t **_box_line_g_num         = *box_line_g_num;
+  int         **_box_line_idx                = *box_line_idx;
+  int          *_redistrib_n_box             = *redistrib_n_box;
+  PDM_g_num_t **_redistrib_box_ln_to_gn      = *redistrib_box_ln_to_gn;
+  int         **_redistrib_box_init_location = *redistrib_box_init_location;
+  PDM_g_num_t **_box_line_g_num              = *box_line_g_num;
 
   if(_dbbt->btShared != NULL) {
 
@@ -6595,7 +6597,8 @@ PDM_dbbtree_lines_intersect_boxes2_shared
        * Hook box_tree and compress information
        */
       int n_boxes = _dbbt->boxes->shm_boxes[i_shm].n_boxes;
-      PDM_g_num_t* boxes_gnum = _dbbt->boxes->shm_boxes[i_shm].g_num;
+      PDM_g_num_t *boxes_gnum   = _dbbt->boxes->shm_boxes[i_shm].g_num;
+      int         *boxes_origin = _dbbt->boxes->shm_boxes[i_shm].origin;
 
       /* Count */
       _redistrib_n_box[i_shm] = 0;
@@ -6605,8 +6608,9 @@ PDM_dbbtree_lines_intersect_boxes2_shared
         }
       }
 
-      _redistrib_box_ln_to_gn[i_shm] = malloc(_redistrib_n_box[i_shm]          * sizeof(PDM_g_num_t));
-      _box_line_g_num        [i_shm] = malloc(_box_line_idx   [i_shm][n_boxes] * sizeof(PDM_g_num_t));
+      _redistrib_box_ln_to_gn     [i_shm] = malloc(    _redistrib_n_box[i_shm]      * sizeof(PDM_g_num_t));
+      _redistrib_box_init_location[i_shm] = malloc(3 * _redistrib_n_box[i_shm]      * sizeof(int        ));
+      _box_line_g_num             [i_shm] = malloc(_box_line_idx   [i_shm][n_boxes] * sizeof(PDM_g_num_t));
 
       int *extract_box_line_idx = malloc((_redistrib_n_box[i_shm]+1) * sizeof(int));
 
@@ -6621,6 +6625,10 @@ PDM_dbbtree_lines_intersect_boxes2_shared
 
           _redistrib_box_ln_to_gn[i_shm][_redistrib_n_box[i_shm]] = boxes_gnum[i_box];
           extract_box_line_idx[_redistrib_n_box[i_shm]+1] = extract_box_line_idx[_redistrib_n_box[i_shm]];
+
+          _redistrib_box_init_location[i_shm][3 * _redistrib_n_box[i_shm]  ] = boxes_origin[3*i_box  ];
+          _redistrib_box_init_location[i_shm][3 * _redistrib_n_box[i_shm]+1] = boxes_origin[3*i_box+1];
+          _redistrib_box_init_location[i_shm][3 * _redistrib_n_box[i_shm]+2] = boxes_origin[3*i_box+2];
 
           for(int idx_line = _box_line_idx [i_shm][i_box]; idx_line < _box_line_idx [i_shm][i_box+1]; ++idx_line) {
             int idx_write = extract_box_line_idx[_redistrib_n_box[i_shm]+1]++;
@@ -6661,7 +6669,8 @@ PDM_dbbtree_lines_intersect_boxes2_shared
      * Hook box_tree and compress information
      */
     int n_boxes = _dbbt->boxes->local_boxes->n_boxes;
-    PDM_g_num_t* boxes_gnum = _dbbt->boxes->local_boxes->g_num;
+    PDM_g_num_t *boxes_gnum   = _dbbt->boxes->local_boxes->g_num;
+    int         *boxes_origin = _dbbt->boxes->local_boxes->origin;
 
     /* Count */
     _redistrib_n_box[0] = 0;
@@ -6671,8 +6680,9 @@ PDM_dbbtree_lines_intersect_boxes2_shared
       }
     }
 
-    _redistrib_box_ln_to_gn[0] = malloc(_redistrib_n_box[0]          * sizeof(PDM_g_num_t));
-    _box_line_g_num        [0] = malloc(_box_line_idx   [0][n_boxes] * sizeof(PDM_g_num_t));
+    _redistrib_box_ln_to_gn     [0] = malloc(    _redistrib_n_box[0] * sizeof(PDM_g_num_t));
+    _redistrib_box_init_location[0] = malloc(3 * _redistrib_n_box[0] * sizeof(int        ));
+    _box_line_g_num             [0] = malloc(_box_line_idx   [0][n_boxes] * sizeof(PDM_g_num_t));
 
     int *extract_box_line_idx = malloc((_redistrib_n_box[0]+1) * sizeof(int));
 
@@ -6687,6 +6697,10 @@ PDM_dbbtree_lines_intersect_boxes2_shared
 
         _redistrib_box_ln_to_gn[0][_redistrib_n_box[0]] = boxes_gnum[i_box];
         extract_box_line_idx[_redistrib_n_box[0]+1] = extract_box_line_idx[_redistrib_n_box[0]];
+
+        _redistrib_box_init_location[0][3 * _redistrib_n_box[0]  ] = boxes_origin[3*i_box  ];
+        _redistrib_box_init_location[0][3 * _redistrib_n_box[0]+1] = boxes_origin[3*i_box+1];
+        _redistrib_box_init_location[0][3 * _redistrib_n_box[0]+2] = boxes_origin[3*i_box+2];
 
         for(int idx_line = _box_line_idx [0][i_box]; idx_line < _box_line_idx [0][i_box+1]; ++idx_line) {
           int idx_write = extract_box_line_idx[_redistrib_n_box[0]+1]++;

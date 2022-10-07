@@ -11701,7 +11701,7 @@ PDM_mesh_location_compute_optim3
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 1;
+  const int dbg_enabled = 0;
   const int dim = 3;
 
   /* Octree parameters */
@@ -13326,7 +13326,7 @@ PDM_mesh_location_compute_optim3
     final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[final_n_pts]);
     final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * final_n_pts*3);
 
-    // PDM_MPI_Barrier (ml->comm);
+    PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13415,7 +13415,7 @@ PDM_mesh_location_compute_optim3
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
 
-    // PDM_MPI_Barrier (ml->comm);
+    PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -13584,6 +13584,23 @@ PDM_mesh_location_compute_optim3
     }
     // free(final_elt_pts_triplet_n);
 
+    PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[REVERSE_LOCATION_DATA_BTP1] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [REVERSE_LOCATION_DATA_BTP1] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [REVERSE_LOCATION_DATA_BTP1] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [REVERSE_LOCATION_DATA_BTP1] += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
     int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n, dn_elt2);
     // free(final_elt_pts_n);
@@ -13679,17 +13696,36 @@ PDM_mesh_location_compute_optim3
       free(elt_pts_weight_stride);
     }
 
+    PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
+    ml->times_elapsed[REVERSE_LOCATION_DATA_BTP2] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [REVERSE_LOCATION_DATA_BTP2] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [REVERSE_LOCATION_DATA_BTP2] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [REVERSE_LOCATION_DATA_BTP2] += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
 
     /*
      *  Create ptp to exchange data between elt and points (both in user frame)
      */
     if (ml->reverse_result) {
+
+      double t1_wait = PDM_MPI_Wtime();
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet);
       free(final_elt_pts_triplet_stride);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
       free(final_elt_pts_triplet_n);
+      log_trace("wait = %12.5e \n", PDM_MPI_Wtime() - t1_wait);
 
       int  *n_ref_elt = NULL;
       int **ref_elt   = NULL;
@@ -13744,6 +13780,7 @@ PDM_mesh_location_compute_optim3
 
 
         /* Lexicographic sort each point's triplets */
+        double t1_sort = PDM_MPI_Wtime();
         int *order = malloc(sizeof(int) * max_triplet_n);
         for (int i = 0; i < _n_pts; i++) {
           PDM_order_lnum_s(pts_in_elt_triplet[ipart] + pts_in_elt_triplet_idx[ipart][i],
@@ -13752,6 +13789,7 @@ PDM_mesh_location_compute_optim3
                            pts_in_elt_triplet_n[ipart][i]);
         }
         free(order);
+        log_trace("sort = %12.5e \n", PDM_MPI_Wtime() - t1_sort);
 
 
         free(pts_in_elt_triplet_n[ipart]);
@@ -13766,7 +13804,7 @@ PDM_mesh_location_compute_optim3
 
       PDM_part_to_part_free(ptp_elt);
 
-
+      double t1_ptb = PDM_MPI_Wtime();
       ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
                                                                   (const int          *) pn_elt,
                                                                   n_part,
@@ -13776,6 +13814,9 @@ PDM_mesh_location_compute_optim3
                                                                   (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
                                                                   (const int         **) pts_in_elt_triplet,
                                                                   ml->comm);
+
+      log_trace("Create ptp = %12.5e \n", PDM_MPI_Wtime() - t1_ptb);
+
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(pts_in_elt_triplet    [ipart]);
         free(pts_in_elt_triplet_idx[ipart]);
@@ -13789,6 +13830,23 @@ PDM_mesh_location_compute_optim3
     }
     free(stride_pts);
 
+    PDM_MPI_Barrier (ml->comm);
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[REVERSE_LOCATION_DATA_BTP3] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [REVERSE_LOCATION_DATA_BTP3] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [REVERSE_LOCATION_DATA_BTP3] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [REVERSE_LOCATION_DATA_BTP3] += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
 
     // TODO: ownership on located/unlocated??
@@ -13925,17 +13983,17 @@ PDM_mesh_location_compute_optim3
     // PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_dist2);
 
 
-    PDM_MPI_Barrier (ml->comm);
+    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
     e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
     e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
-    ml->times_elapsed[REVERSE_LOCATION_DATA_PTB] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [REVERSE_LOCATION_DATA_PTB] += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u  [REVERSE_LOCATION_DATA_PTB] += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s  [REVERSE_LOCATION_DATA_PTB] += e_t_cpu_s - b_t_cpu_s;
+    ml->times_elapsed[REVERSE_LOCATION_DATA_UVW] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu    [REVERSE_LOCATION_DATA_UVW] += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u  [REVERSE_LOCATION_DATA_UVW] += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s  [REVERSE_LOCATION_DATA_UVW] += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;
