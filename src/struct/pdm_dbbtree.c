@@ -6271,10 +6271,11 @@ PDM_dbbtree_lines_intersect_boxes2
     extract_box_line_idx        [i+1] = malloc( (_redistrib_n_box[i+1]+1) * sizeof(int        ));
 
     _redistrib_n_box[i+1] = 0;
-    for(int i_box = 0; i_box < n_boxes_local; ++i_box) {
+    extract_box_line_idx[i+1][0] = 0;
+    for(int i_box = 0; i_box < n_boxes_copied; ++i_box) {
       if(_box_line_idx[i+1][i_box+1] - _box_line_idx[i+1][i_box] > 0){
 
-        extract_box_line_idx[i+1][_redistrib_n_box[i+1]+1] = extract_box_line_idx[i+1][_redistrib_n_box[0]];
+        extract_box_line_idx[i+1][_redistrib_n_box[i+1]+1] = extract_box_line_idx[i+1][_redistrib_n_box[i+1]];
 
         _redistrib_box_ln_to_gn     [i+1][_redistrib_n_box[i+1]] = copied_boxes_gnum[i_box];
 
