@@ -60,7 +60,7 @@ typedef struct _pdm_extract_part_t PDM_extract_part_t;
 
 /**
  *
- * \brief Build an iso surface struct
+ * \brief Build an extract_part struct
  *
  * \param [in]   dim                 Extraction dimension
  * \param [in]   n_part_in           Number of initial partition
