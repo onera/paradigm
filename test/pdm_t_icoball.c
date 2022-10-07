@@ -268,8 +268,6 @@ int main(int argc, char *argv[])
 
 
 
-  const char *field_name[]   = {"hextet"};
-  const int  *field_value[1] = {dcell_hextet};
 
   PDM_vtk_write_std_elements(filename,
                              pn_vtx,
@@ -279,9 +277,9 @@ int main(int argc, char *argv[])
                              dn_cell,
                              pcell_vtx,
                              pcell_ln_to_gn,
-                             1,
-                             field_name,
-                             field_value);
+                             0,
+                             NULL,
+                             NULL);
 
   double *volume = malloc(sizeof(double) * dn_cell);
   // PDM_geom_elem_tetra_oriented_volume(dn_cell,
@@ -306,7 +304,7 @@ int main(int argc, char *argv[])
     PDM_CROSS_PRODUCT(uv, u, v);
     volume[i] = PDM_DOT_PRODUCT(uv, w) / 6.;
 
-    log_trace("i = %d, hextet %d, vol = %f\n", i, dcell_hextet[i], volume[i]);
+    log_trace("i = %d, vol = %f\n", i, volume[i]);
     if (volume[i] < 0) {
       count++;
     }
@@ -330,7 +328,6 @@ int main(int argc, char *argv[])
   free(dvtx_coord);
   free(dface_vtx);
   free(dcell_vtx);
-  free(dcell_hextet);
 
 
 
