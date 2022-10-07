@@ -55,8 +55,8 @@ extern "C" {
 
 struct _pdm_extract_part_t
 {
-  // PDM_extract_part_kind_t extract_kind;
-  // PDM_bool_t              compute_child_gnum;
+  PDM_extract_part_kind_t extract_kind;
+  PDM_bool_t              compute_child_gnum;
 
   PDM_bool_t             equilibrate;
   int                    dim;

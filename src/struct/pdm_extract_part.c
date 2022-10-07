@@ -252,6 +252,43 @@ _cell_center_3d
   *cell_center = entity_center;
 }
 
+void
+_create_child_gnum_with_extract
+(
+ PDM_MPI_Comm    comm,
+ int             n_part,
+ int            *n_extract,
+ PDM_g_num_t   **entity_g_num,
+ int           **extract_lnum,
+ PDM_g_num_t  ***child_selected_g_num_out
+)
+{
+  PDM_g_num_t** entity_extract_g_num = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+
+  PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, n_part, PDM_FALSE,
+                                                 1.e-6,
+                                                 comm,
+                                                 PDM_OWNERSHIP_USER);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( n_extract[i_part] * sizeof(PDM_g_num_t));
+    for(int i_entity = 0; i_entity < n_extract[i_part]; ++i_entity) {
+      entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extract_lnum[i_part][i_entity]];
+    }
+    PDM_gnum_set_from_parents(gnum_extract, i_part, n_extract[i_part], entity_extract_g_num[i_part]);
+  }
+  PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+  PDM_gnum_compute(gnum_extract);
+
+  for (int i_part = 0; i_part < n_part; i_part++){
+    child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
+  }
+  PDM_gnum_free(gnum_extract);
+
+  *child_selected_g_num_out = child_selected_g_num;
+}
+
+
+
 static
 void
 extract_entity1_entity2_new
@@ -1991,7 +2028,6 @@ _extract_part_and_reequilibrate_nodal
     _extract_part_and_reequilibrate_nodal_from_target(extrp);
     return;
   }
-  log_trace("Banane\n");
   abort();
 
 }
@@ -2017,33 +2053,24 @@ _extract_part
   /*
    *  Create array selected in gnum
    */
+  PDM_g_num_t** entity_extract_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
+
   PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_in, PDM_FALSE,
                                                  1.e-6,
                                                  extrp->comm,
                                                  PDM_OWNERSHIP_USER);
-  PDM_g_num_t** entity_extract_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
-
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
     entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( extrp->n_extract[i_part] * sizeof(PDM_g_num_t));
     for(int i_entity = 0; i_entity < extrp->n_extract[i_part]; ++i_entity) {
       entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extrp->extract_lnum[i_part][i_entity]];
     }
-
     PDM_gnum_set_from_parents(gnum_extract, i_part, extrp->n_extract[i_part], entity_extract_g_num[i_part]);
-    if(0 == 1) {
-      PDM_log_trace_array_long(entity_extract_g_num[i_part], extrp->n_extract[i_part], "entity_extract_g_num ::" );
-    }
   }
-
-  /*
-   * Global numering computation
-   */
   PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
   PDM_gnum_compute(gnum_extract);
 
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
     child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-    // PDM_log_trace_array_long(child_selected_g_num[i_part], extrp->n_extract[i_part], "child_selected_g_num : ");
   }
   PDM_gnum_free(gnum_extract);
 
@@ -3740,6 +3767,7 @@ PDM_extract_part_create
     }
   }
 
+  // extrp->compute_child_gnum    = PDM_TRUE;
   extrp->equilibrate           = equilibrate;
   extrp->dim                   = dim;
   extrp->n_part_in             = n_part_in;
