@@ -13689,16 +13689,16 @@ PDM_mesh_location_compute_optim3
       }
 
       /* Maybe a bad idea to store as many stride arrays simultaneously... */
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
-      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
+      // PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
 
-      for (int ipart = 0; ipart < n_part; ipart++) {
-        free(stride_pts_weight[ipart]);
-      }
-      free(stride_pts_weight);
+      // for (int ipart = 0; ipart < n_part; ipart++) {
+      //   free(stride_pts_weight[ipart]);
+      // }
+      // free(stride_pts_weight);
       free(elt_pts_weight_stride);
     }
 
@@ -13808,7 +13808,7 @@ PDM_mesh_location_compute_optim3
       free(final_elt_pts_idx);
       free(final_elt_pts_g_num);
 
-      PDM_part_to_part_free(ptp_elt);
+      // PDM_part_to_part_free(ptp_elt);
 
       double t1_ptb = PDM_MPI_Wtime();
       ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
@@ -13831,10 +13831,10 @@ PDM_mesh_location_compute_optim3
       free(pts_in_elt_triplet_idx);
     }
 
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      free(stride_pts[ipart]);
-    }
-    free(stride_pts);
+    // for (int ipart = 0; ipart < n_part; ipart++) {
+    //   free(stride_pts[ipart]);
+    // }
+    // free(stride_pts);
 
     PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
@@ -13956,6 +13956,9 @@ PDM_mesh_location_compute_optim3
       free(location);
     }
 
+
+
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
     /* Exchange other fields (dist2, uvw, weights(_idx), proj_coord) */
     /* Really necessary from the points' PoV ?? */
     int **tmp_projected_coords_n = NULL;
@@ -13972,6 +13975,7 @@ PDM_mesh_location_compute_optim3
                            &req_pts_proj_coord[icloud]);
 
     // int request_pts_dist2;
+    PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
     int **tmp_pts_dist2_n = NULL;
     PDM_part_to_part_iexch(ml->ptp[icloud],
                            PDM_MPI_COMM_KIND_P2P,
@@ -13987,6 +13991,18 @@ PDM_mesh_location_compute_optim3
 
     // PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_proj_coord);
     // PDM_part_to_part_iexch_wait(ml->ptp[icloud], request_pts_dist2);
+
+    if (ptp_elt != NULL) {
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
+      PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(stride_pts_weight[ipart]);
+        free(stride_pts       [ipart]);
+      }
+      free(stride_pts_weight);
+      free(stride_pts       );
+      PDM_part_to_part_free(ptp_elt);
+    }
 
 
     // PDM_MPI_Barrier (ml->comm);
@@ -14017,7 +14033,7 @@ PDM_mesh_location_compute_optim3
     free(final_elt_pts_weight_idx);
     free(final_elt_pts_weight    );
     free(final_elt_pts_uvw       );
-    free(final_elt_pts_n);
+    free(final_elt_pts_n         );
 
 
     if (use_extracted_pts) {

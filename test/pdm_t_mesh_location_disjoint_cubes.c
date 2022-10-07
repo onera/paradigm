@@ -355,7 +355,7 @@ _volume_polyhedra
   } // End of loop on cells
 
   PDM_triangulate_state_destroy(tri_state);
-
+  free(tri_vtx);
  }
 
 
