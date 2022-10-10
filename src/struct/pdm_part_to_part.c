@@ -73,7 +73,7 @@ _free_async_alltoall
   ptp->async_alltoall_subrequest[3 * request]     = -1;
   ptp->async_alltoall_subrequest[3 * request + 1] = -1;
   ptp->async_alltoall_subrequest[3 * request + 2] = -1;
-  ptp->async_alltoall_free[ptp->async_send_n_free++] = request;     
+  ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = request;
 }
 
 
@@ -1520,6 +1520,15 @@ _alltotall_stride_var_iexch
                      PDM_MPI_UNSIGNED_CHAR,
                      ptp->comm,
                      &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+  // PDM_MPI_Alltoallv(send_buffer,
+  //                    send_rank_n,
+  //                    send_rank_idx,
+  //                    PDM_MPI_UNSIGNED_CHAR,
+  //                    recv_buffer,
+  //                    recv_rank_n,
+  //                    recv_rank_idx,
+  //                    PDM_MPI_UNSIGNED_CHAR,
+  //                    ptp->comm);
 
   free(blk_send_stride);
 
@@ -1611,7 +1620,7 @@ _alltotall_stride_var_wait_and_post
 
         int delta = part2_stri[i][k] * s_data;
 
-        log_trace(" write at : (i=%i, j=%i / k=%i ) - idx_elmt = %i | idx = %i | idx1 = %i | delta = %i \n", i, j, k, idx_elmt, idx, idx1, delta);
+        // log_trace(" write at : (i=%i, j=%i / k=%i ) - idx_elmt = %i | idx = %i | idx1 = %i | delta = %i \n", i, j, k, idx_elmt, idx, idx1, delta);
 
         for (int k1 = 0; k1 < delta; k1++) {
           _part2_data[i][idx1+k1] = ptp->async_recv_buffer[request_recv][idx+k1];
@@ -1619,6 +1628,9 @@ _alltotall_stride_var_wait_and_post
       }
     }
   }
+
+  free(ptp->async_exch_recv_idx[request]);
+  ptp->async_exch_recv_idx[request] = NULL;
 
   _free_async_send (ptp, request_send);
   _free_async_recv (ptp, request_recv);
@@ -3387,9 +3399,6 @@ _create
       ptp->active_rank_send[ptp->n_active_rank_send++] = i;
     }
   }
-
-  PDM_log_trace_array_int(ptp->default_n_send_buffer, n_rank, "ptp->default_n_send_buffer ::");
-  PDM_log_trace_array_int(ptp->default_n_recv_buffer, n_rank, "ptp->default_n_recv_buffer ::");
 
   ptp->n_active_rank_recv = 0;
   ptp->active_rank_recv = malloc (sizeof(int) * n_rank);
@@ -5826,6 +5835,11 @@ PDM_part_to_part_free
     free (ptp->async_exch_recv_idx);
     free (ptp->async_exch_part2_stride);
 
+  }
+
+  if (ptp->async_alltoall_l_array > 0) {
+    free (ptp->async_alltoall_free);
+    free (ptp->async_alltoall_subrequest);
   }
 
   ptp->async_exch_n_free  = 0;           

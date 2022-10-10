@@ -144,19 +144,61 @@ struct _pdm_mpi_double_int_t {
 typedef struct _pdm_mpi_double_int_t PDM_MPI_double_int_t;
 
 
+// static
+// void
+// end_timer_and_log(const char* msg, PDM_MPI_Comm comm, double t1){
+
+//   int n_rank;
+//   int i_rank;
+
+//   PDM_MPI_Comm_size(comm, &n_rank);
+//   PDM_MPI_Comm_rank(comm, &i_rank);
+
+//   double t2 = PDM_MPI_Wtime();
+
+//   double delta_t = t2 - t1;
+
+//   PDM_MPI_double_int_t l_info;
+
+//   l_info.val  = delta_t;
+//   l_info.rank = i_rank;
+
+//   PDM_MPI_double_int_t g_max_info;
+//   PDM_MPI_double_int_t g_min_info;
+
+
+//   PDM_MPI_Allreduce (&l_info,
+//                      &g_max_info,
+//                      1,
+//                      PDM_MPI_DOUBLE_INT,
+//                      PDM_MPI_MAXLOC,
+//                      comm);
+
+//   PDM_MPI_Allreduce (&l_info,
+//                      &g_min_info,
+//                      1,
+//                      PDM_MPI_DOUBLE_INT,
+//                      PDM_MPI_MINLOC,
+//                      comm);
+
+//   log_trace("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+//   if(i_rank == 0) {
+//     printf("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
+//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
+//   }
+// }
+
+
 static
 void
-end_timer_and_log(const char* msg, PDM_MPI_Comm comm, double t1){
+end_timer_and_log_from_dt(const char* msg, PDM_MPI_Comm comm, double delta_t){
 
   int n_rank;
   int i_rank;
 
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
-
-  double t2 = PDM_MPI_Wtime();
-
-  double delta_t = t2 - t1;
 
   PDM_MPI_double_int_t l_info;
 
@@ -188,8 +230,6 @@ end_timer_and_log(const char* msg, PDM_MPI_Comm comm, double t1){
            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
   }
 }
-
-
 /*
  *
  * Redistribute evenly across all ranks the elementary location operation to perform
@@ -9250,6 +9290,16 @@ PDM_mesh_location_compute_optim3
   double dt_search_all = 0.;
   double dt_extract_all = 0.;
 
+  double dt_step1_all = 0.;
+  double dt_step2_all = 0.;
+  double dt_step3_all = 0.;
+  double dt_step4_all = 0.;
+  double dt_step5_all = 0.;
+  double dt_step6_all = 0.;
+
+  // PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_P2P;
+  PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_COLLECTIVE;
+
   /* Big loop on point clouds */
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
 
@@ -9677,20 +9727,6 @@ PDM_mesh_location_compute_optim3
                   (void **) &tmp_blk_pts_coord,
                             &request_pts_coord);
 
-    PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
-
-    double *dpts_coord = malloc(3 * dn_pts * sizeof(double));
-    int idx_read  = 0;
-    for(int i = 0; i < dn_pts; ++i) {
-      dpts_coord[3*i  ] = tmp_blk_pts_coord[3*idx_read  ];
-      dpts_coord[3*i+1] = tmp_blk_pts_coord[3*idx_read+1];
-      dpts_coord[3*i+2] = tmp_blk_pts_coord[3*idx_read+2];
-
-      idx_read += blk_coord_n[i];
-    }
-    free(blk_coord_n);
-    free(tmp_blk_pts_coord);
-
     /*
      * Exchange init_location of pts --> Is almost the selected with proc / part info
      */
@@ -9705,8 +9741,19 @@ PDM_mesh_location_compute_optim3
                            &dpts_init_location_pts_n,
                  (void **) &dpts_init_location_pts);
 
-    // int *dpts_init_location_pts_idx = PDM_array_new_idx_from_sizes_int(dpts_init_location_pts_n, dn_pts);
-    // free(dpts_init_location_pts_n);
+    PDM_part_to_block_iexch_wait(ptb_pts, request_pts_coord);
+
+    double *dpts_coord = malloc(3 * dn_pts * sizeof(double));
+    int idx_read  = 0;
+    for(int i = 0; i < dn_pts; ++i) {
+      dpts_coord[3*i  ] = tmp_blk_pts_coord[3*idx_read  ];
+      dpts_coord[3*i+1] = tmp_blk_pts_coord[3*idx_read+1];
+      dpts_coord[3*i+2] = tmp_blk_pts_coord[3*idx_read+2];
+
+      idx_read += blk_coord_n[i];
+    }
+    free(blk_coord_n);
+    free(tmp_blk_pts_coord);
 
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       free(pstride_one[ipart]);
@@ -9902,13 +9949,22 @@ PDM_mesh_location_compute_optim3
 
         }
         else {
-          PDM_para_octree_points_inside_boxes_shared(octree,
-                                                     dn_elt1,
-                                                     delt_extents1, // Attention faire une distribution part_to_bloc_geom dans le cas octree
-                                                     delmt_g_num_geom,
-                                                     &box_pts_idx,
-                                                     &box_pts_g_num,
-                                                     &box_pts_coord);
+          PDM_part_to_block_t *ptb_pib = NULL;
+          PDM_para_octree_points_inside_boxes_shared_block_frame(octree,
+                                                                 dn_elt1,
+                                                                 delt_extents1,
+                                                                 delmt_g_num_geom,
+                                                                 &ptb_pib,
+                                                                 &delt_pts_n2,
+                                                                 &delt_pts_g_num_geom,
+                                                                 &delt_pts_coord2);
+          dn_elt2 = PDM_part_to_block_n_elt_block_get(ptb_pib);
+          PDM_g_num_t *_g_num = PDM_part_to_block_block_gnum_get(ptb_pib);
+
+          delt_g_num_geom2 = malloc(sizeof(PDM_g_num_t) * dn_elt2);
+          memcpy(delt_g_num_geom2, _g_num, sizeof(PDM_g_num_t) * dn_elt2);
+
+          PDM_part_to_block_free(ptb_pib);
         }
 
         PDM_para_octree_free(octree);
@@ -10069,7 +10125,6 @@ PDM_mesh_location_compute_optim3
     free(dpts_g_num_geom);
 
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed (ml->timer);
     e_t_cpu     = PDM_timer_cpu     (ml->timer);
@@ -10086,6 +10141,7 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+    PDM_MPI_Barrier (ml->comm);
     log_trace("Search  = %12.5e \n", PDM_MPI_Wtime() - t2);
 
     dt_search_all += PDM_MPI_Wtime() - t2;
@@ -10326,7 +10382,6 @@ PDM_mesh_location_compute_optim3
     }
 
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed (ml->timer);
     e_t_cpu     = PDM_timer_cpu     (ml->timer);
@@ -10343,6 +10398,7 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+    // PDM_MPI_Barrier (ml->comm);
 
     /* Perform elementary point locations */
     double **pelt_pts_distance2   = NULL;
@@ -10378,7 +10434,6 @@ PDM_mesh_location_compute_optim3
     PDM_extract_part_free(extrp);
     free(delt_init_location2);
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -10395,7 +10450,9 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+    // PDM_MPI_Barrier (ml->comm);
 
+    double beg_step1 = PDM_MPI_Wtime();
 
     /*
      *  Pass in block frame for points to select closest element
@@ -10406,8 +10463,7 @@ PDM_mesh_location_compute_optim3
     double      *part_weight = malloc(sizeof(double     ) * n_pts2);
     for (int ielt = 0; ielt < dn_elt2; ielt++) {
       for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
-        // part_elt_id[i] = delt_parent_g_num2[ielt];
-        part_elt_id[i] = delt_g_num_geom2[ielt]; // Il faut mettre le gnum_geom2 ici
+        part_elt_id[i] = delt_g_num_geom2[ielt];
         part_weight[i] = 1.;
       }
     }
@@ -10604,6 +10660,10 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
+    dt_step1_all += PDM_MPI_Wtime() - beg_step1;
+    double beg_step2 = PDM_MPI_Wtime();
+    // PDM_MPI_Barrier (ml->comm);
+
     /*
      * Update results in user frame
      */
@@ -10647,14 +10707,6 @@ PDM_mesh_location_compute_optim3
     free(dpts_init_location_pts_n);
     free(dpts_init_location_pts);
 
-    // Il faut merger les location ?? Gros doute la
-    // for(int i = 0; i < final_n_pts; ++i) {
-    //   assert(final_elt_pts_triplet_n[i] == 1);
-    // }
-    // int *final_elt_pts_triplet_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_triplet_n, final_n_pts);
-    //
-    // free(final_elt_pts_triplet_idx);
-
     idx_read = 0;
     int *final_elt_pts_triplet_idx = malloc((dn_elt2+1) * sizeof(int));
     final_elt_pts_triplet_idx[0] = 0;
@@ -10665,17 +10717,10 @@ PDM_mesh_location_compute_optim3
         final_elt_pts_triplet_idx[i+1] += final_elt_pts_triplet_n[idx_read++];
       }
     }
-    // free(final_elt_pts_triplet_n);
     assert(idx_read == final_n_pts);
-
-
-    // PDM_log_trace_array_long(final_elt_pts_triplet_idx, dn_elt2+1, "final_elt_pts_triplet_idx ::");
-    // PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
 
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
-
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -10692,8 +10737,10 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_u   = e_t_cpu_u;
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
+    // PDM_MPI_Barrier (ml->comm);
 
-    double t1_step2 = PDM_MPI_Wtime();
+    dt_step2_all += PDM_MPI_Wtime() - beg_step2;
+    double beg_step3 = PDM_MPI_Wtime();
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -10732,7 +10779,7 @@ PDM_mesh_location_compute_optim3
       memcpy(pts_in_elt->n_elts, pn_elt, sizeof(int) * n_part);
 
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_CST_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10744,7 +10791,7 @@ PDM_mesh_location_compute_optim3
                              &request_pts_in_elt_n);
       log_trace("1\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10764,7 +10811,7 @@ PDM_mesh_location_compute_optim3
       // Exchange all triplets
       log_trace("1b\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10781,7 +10828,7 @@ PDM_mesh_location_compute_optim3
       // Exchange number of triplet per point
       log_trace("2\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10794,7 +10841,7 @@ PDM_mesh_location_compute_optim3
 
       log_trace("3\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10807,7 +10854,7 @@ PDM_mesh_location_compute_optim3
 
       log_trace("4\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10820,7 +10867,7 @@ PDM_mesh_location_compute_optim3
 
       log_trace("5\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10833,7 +10880,7 @@ PDM_mesh_location_compute_optim3
 
       log_trace("6\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10846,7 +10893,6 @@ PDM_mesh_location_compute_optim3
     }
     // free(final_elt_pts_triplet_n);
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -10864,8 +10910,12 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
-    end_timer_and_log("Step 2 : ", ml->comm, t1_step2);
-    double t1_step3 = PDM_MPI_Wtime();
+    // end_timer_and_log("Step 2 : ", ml->comm, t1_step2);
+    // PDM_MPI_Barrier (ml->comm);
+
+    dt_step3_all += PDM_MPI_Wtime() - beg_step3;
+    double beg_step4 = PDM_MPI_Wtime();
+
 
     int *final_elt_pts_idx = PDM_array_new_idx_from_sizes_int(final_elt_pts_n, dn_elt2);
     // free(final_elt_pts_n);
@@ -10887,7 +10937,7 @@ PDM_mesh_location_compute_optim3
     if (ml->reverse_result) {
       log_trace("7\n");
       PDM_part_to_part_iexch(ptp_elt,
-                             PDM_MPI_COMM_KIND_P2P,
+                             comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
                              1,
@@ -10899,6 +10949,7 @@ PDM_mesh_location_compute_optim3
                              &request_pts_weight);
 
 
+      log_trace("8\n");
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_in_elt_n);
 
 
@@ -10961,7 +11012,6 @@ PDM_mesh_location_compute_optim3
       free(elt_pts_weight_stride);
     }
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -10979,8 +11029,12 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
-    end_timer_and_log("Step 3 : ", ml->comm, t1_step3);
-    double t1_step4 = PDM_MPI_Wtime();
+    // end_timer_and_log("Step 3 : ", ml->comm, t1_step3);
+    // PDM_MPI_Barrier (ml->comm);
+    // double t1_step4 = PDM_MPI_Wtime();
+
+    dt_step4_all += PDM_MPI_Wtime() - beg_step4;
+    double beg_step5 = PDM_MPI_Wtime();
 
 
     /*
@@ -11072,7 +11126,10 @@ PDM_mesh_location_compute_optim3
 
       // PDM_part_to_part_free(ptp_elt);
 
-      double t1_ptb = PDM_MPI_Wtime();
+      dt_step5_all += PDM_MPI_Wtime() - beg_step5;
+      double beg_step6 = PDM_MPI_Wtime();
+
+      log_trace("PDM_part_to_part_create_from_num2_triplet start \n");
       ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
                                                                   (const int          *) pn_elt,
                                                                   n_part,
@@ -11082,8 +11139,7 @@ PDM_mesh_location_compute_optim3
                                                                   (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
                                                                   (const int         **) pts_in_elt_triplet,
                                                                   ml->comm);
-
-      log_trace("Create ptp = %12.5e \n", PDM_MPI_Wtime() - t1_ptb);
+      log_trace("PDM_part_to_part_create_from_num2_triplet end \n");
 
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(pts_in_elt_triplet    [ipart]);
@@ -11091,6 +11147,8 @@ PDM_mesh_location_compute_optim3
       }
       free(pts_in_elt_triplet);
       free(pts_in_elt_triplet_idx);
+
+      dt_step6_all += PDM_MPI_Wtime() - beg_step6;
     }
 
     // for (int ipart = 0; ipart < n_part; ipart++) {
@@ -11098,7 +11156,6 @@ PDM_mesh_location_compute_optim3
     // }
     // free(stride_pts);
 
-    // PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
@@ -11116,8 +11173,8 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
 
-    end_timer_and_log("Step 4 : ", ml->comm, t1_step4);
-
+    // end_timer_and_log("Step 4 : ", ml->comm, t1_step4);
+    // PDM_MPI_Barrier (ml->comm);
 
     // TODO: ownership on located/unlocated??
     int  *n_located = NULL;
@@ -11220,14 +11277,12 @@ PDM_mesh_location_compute_optim3
       free(location);
     }
 
-
-
     PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
     /* Exchange other fields (dist2, uvw, weights(_idx), proj_coord) */
     /* Really necessary from the points' PoV ?? */
     int **tmp_projected_coords_n = NULL;
     PDM_part_to_part_iexch(ml->ptp[icloud],
-                           PDM_MPI_COMM_KIND_P2P,
+                           comm_kind,
                            PDM_STRIDE_CST_INTERLACED,
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                            1,
@@ -11242,7 +11297,7 @@ PDM_mesh_location_compute_optim3
     PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
     int **tmp_pts_dist2_n = NULL;
     PDM_part_to_part_iexch(ml->ptp[icloud],
-                           PDM_MPI_COMM_KIND_P2P,
+                           comm_kind,
                            PDM_STRIDE_CST_INTERLACED,
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                            1,
@@ -11342,11 +11397,15 @@ PDM_mesh_location_compute_optim3
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
     if (ml->ptp[icloud] != NULL) {
       if (req_pts_proj_coord[icloud] != -1) {
+        log_trace("out wait req_pts_proj_coord = %i \n", req_pts_proj_coord[icloud]);
         PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_proj_coord[icloud]);
+        log_trace("out wait req_pts_proj_coord END = %i \n", req_pts_proj_coord[icloud]);
       }
 
       if (req_pts_dist2[icloud] != -1) {
+        log_trace("out wait req_pts_dist2 = %i \n", req_pts_dist2[icloud]);
         PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_dist2[icloud]);
+        log_trace("out wait req_pts_dist2 END = %i \n", req_pts_dist2[icloud]);
       }
     }
   }
@@ -11365,13 +11424,20 @@ PDM_mesh_location_compute_optim3
   free(elt_type);
   free(pn_elt);
 
-
   PDM_timer_hang_on(ml->timer);
   ml->times_elapsed[END] = PDM_timer_elapsed (ml->timer);
   ml->times_cpu    [END] = PDM_timer_cpu     (ml->timer);
   ml->times_cpu_u  [END] = PDM_timer_cpu_user(ml->timer);
   ml->times_cpu_s  [END] = PDM_timer_cpu_sys (ml->timer);
   PDM_timer_resume(ml->timer);
+
+  end_timer_and_log_from_dt("Step 1 : ", ml->comm, dt_step1_all);
+  end_timer_and_log_from_dt("Step 2 : ", ml->comm, dt_step2_all);
+  end_timer_and_log_from_dt("Step 3 : ", ml->comm, dt_step3_all);
+  end_timer_and_log_from_dt("Step 4 : ", ml->comm, dt_step4_all);
+  end_timer_and_log_from_dt("Step 5 : ", ml->comm, dt_step5_all);
+  end_timer_and_log_from_dt("Step 6 : ", ml->comm, dt_step6_all);
+
 
   // exit(1);
 }

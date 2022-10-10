@@ -1666,6 +1666,7 @@ int PDM_MPI_Irecv(void *buf, int count, PDM_MPI_Datatype datatype, int source,
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
   int code =  MPI_Irecv(buf, count, _pdm_mpi_2_mpi_datatype(datatype), source,
                        tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  assert(code == 0);
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
   assert(_mpi_request != MPI_REQUEST_NULL);
 
@@ -1698,6 +1699,7 @@ int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int de
                         tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  assert(code == 0);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -1711,6 +1713,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
 {
   MPI_Request _request = _pdm_mpi_2_mpi_request(*request);
   int code = MPI_Wait(&_request, MPI_STATUS_IGNORE);
+  assert(code == 0);
 
   free(mpi_request[*request]);
   mpi_request[*request] = NULL;
