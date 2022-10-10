@@ -1883,6 +1883,9 @@ const int                           id_part,
       PDM_g_num_t                 **parent_entity_g_num
 )
 {
+
+  PDM_UNUSED(parent_num);
+  PDM_UNUSED(parent_entity_g_num);
   if (pmne == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
   }

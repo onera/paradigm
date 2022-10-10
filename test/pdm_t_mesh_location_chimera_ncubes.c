@@ -1745,10 +1745,12 @@ int main(int argc, char *argv[])
   int         extension_depth_tgt = 0;
   int         extension_depth_src = 0;
 #ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
 #endif
 #endif
 
@@ -2190,8 +2192,8 @@ int main(int argc, char *argv[])
                                                external_vtx_ln_to_gn [i_mesh][i_part]);
     }
 
-    PDM_inside_cloud_surf_compute(ics[i_mesh]);
-    // PDM_inside_cloud_surf_compute_optim(ics[i_mesh]);
+    // PDM_inside_cloud_surf_compute(ics[i_mesh]);
+    PDM_inside_cloud_surf_compute_optim(ics[i_mesh]);
 
     int mask_type = 1;
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {

@@ -1410,12 +1410,15 @@ int main(int argc, char *argv[])
   int         extension_depth_tgt = 0;
   int         extension_depth_src = 0;
 #ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
 #endif
 #endif
+
 
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;

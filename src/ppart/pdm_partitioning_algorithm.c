@@ -2982,7 +2982,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
           send_entity1_entity2         [i_part][idx_write    ] = part1_entity2_ln_to_gn[i_part][i_entity2];
           send_entity1_entity2_location[i_part][3*idx_write  ] = i_rank;
           send_entity1_entity2_location[i_part][3*idx_write+1] = i_part;
-          send_entity1_entity2_location[i_part][3*idx_write+2] = i_entity2+1;
+          send_entity1_entity2_location[i_part][3*idx_write+2] = i_entity2;
           idx_write++;
         }
       }

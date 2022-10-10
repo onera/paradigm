@@ -434,11 +434,13 @@ int main(int argc, char *argv[])
   int n_part_out = 1;
   // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
                                                       extract_kind,
-                                                      PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                                                      split_dual_method,
                                                       PDM_TRUE, // compute_child_gnum
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);

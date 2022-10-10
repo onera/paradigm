@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
-                                                      PDM_EXTRACT_PART_KIND_REEQUILIBRATE,
+                                                      PDM_EXTRACT_PART_KIND_FROM_TARGET,
                                                       PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                                                       PDM_TRUE,
                                                       PDM_OWNERSHIP_KEEP,
@@ -415,6 +415,11 @@ int main(int argc, char *argv[])
                                 pn_target_cell[i_part],
                                 target_g_num  [i_part],
                                 location);
+    // PDM_extract_part_target_set(extrp,
+    //                             i_part,
+    //                             pn_target_cell[i_part],
+    //                             target_g_num  [i_part],
+    //                             NULL);
 
   }
 

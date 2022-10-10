@@ -55,17 +55,16 @@ extern "C" {
 
 struct _pdm_extract_part_t
 {
+
+  int                     dim;
+  int                     n_part_in;
+  int                     n_part_out;
   PDM_extract_part_kind_t extract_kind;
   PDM_bool_t              compute_child_gnum;
 
-  PDM_bool_t             equilibrate;
-  int                    dim;
-  int                    n_part_in;
-  int                    n_part_out;
-
-  PDM_split_dual_t       split_dual_method;
-  PDM_ownership_t        ownership;
-  PDM_MPI_Comm           comm;
+  PDM_split_dual_t        split_dual_method;
+  PDM_ownership_t         ownership;
+  PDM_MPI_Comm            comm;
 
   /* Partitioned view - To do with extract for selected gnum + part_to_part */
   int                 *n_cell;

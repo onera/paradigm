@@ -463,7 +463,7 @@ _adaptative_tree2
       coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]+1;
       init_location_coase_pts_box[3*i  ] = 0;
       init_location_coase_pts_box[3*i+1] = 0;
-      init_location_coase_pts_box[3*i+2] = i+1;
+      init_location_coase_pts_box[3*i+2] = i;
     }
     free(g_coarse_pts_box_id);
 
