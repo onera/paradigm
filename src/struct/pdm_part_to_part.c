@@ -1365,12 +1365,8 @@ _alltotall_stride_var_iexch
         }
       }
     }
-    // blk_send_idx = PDM_array_new_idx_from_sizes_int(blk_send_stride,
-    //                                                 n_blk_send);
-    // free(blk_send_stride);
 
     _part2_stride = *part2_stride;
-
     int n_blk_recv = ptp->default_i_recv_buffer[ptp->n_rank];
     blk_recv_stride = malloc(sizeof(int) * n_blk_recv);
     for (int i = 0; i < ptp->n_part2; i++) {
@@ -1381,25 +1377,6 @@ _alltotall_stride_var_iexch
         }
       }
     }
-
-    // PDM_log_trace_array_int(blk_recv_stride,
-    //                         n_blk_recv,
-    //                         "blk_recv_stride : ");
-
-    // ptp->async_exch_recv_n[request] = PDM_array_zeros_int(ptp->n_rank);
-    // for (int i = 0; i < ptp->n_active_rank_recv; i++) {
-    //   int dest = ptp->active_rank_recv[i];
-    //   int beg =       ptp->default_i_recv_buffer[dest];
-    //   int end = beg + ptp->default_n_recv_buffer[dest];
-    //   for (int j = beg; j < end; ++j) {
-    //     ptp->async_exch_recv_n[request][dest] += blk_recv_stride[j];
-    //   }
-    // }
-
-    // ptp->async_exch_recv_idx[request] = PDM_array_new_idx_from_sizes_int(blk_recv_stride,
-    //                                                                      n_blk_recv);
-    // free(blk_recv_stride);
-
   }
 
   /*
@@ -1510,17 +1487,7 @@ _alltotall_stride_var_iexch
   /*
    *  Exchange data
    */
-  PDM_MPI_Ialltoallv(send_buffer,
-                     send_rank_n,
-                     send_rank_idx,
-                     PDM_MPI_UNSIGNED_CHAR,
-                     recv_buffer,
-                     recv_rank_n,
-                     recv_rank_idx,
-                     PDM_MPI_UNSIGNED_CHAR,
-                     ptp->comm,
-                     &(ptp->async_alltoall_subrequest[3 * _request + 2]));
-  // PDM_MPI_Alltoallv(send_buffer,
+  // PDM_MPI_Ialltoallv(send_buffer,
   //                    send_rank_n,
   //                    send_rank_idx,
   //                    PDM_MPI_UNSIGNED_CHAR,
@@ -1528,7 +1495,17 @@ _alltotall_stride_var_iexch
   //                    recv_rank_n,
   //                    recv_rank_idx,
   //                    PDM_MPI_UNSIGNED_CHAR,
-  //                    ptp->comm);
+  //                    ptp->comm,
+  //                    &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+  PDM_MPI_Alltoallv(send_buffer,
+                     send_rank_n,
+                     send_rank_idx,
+                     PDM_MPI_UNSIGNED_CHAR,
+                     recv_buffer,
+                     recv_rank_n,
+                     recv_rank_idx,
+                     PDM_MPI_UNSIGNED_CHAR,
+                     ptp->comm);
 
   free(blk_send_stride);
 
@@ -1588,7 +1565,7 @@ _alltotall_stride_var_wait_and_post
 )
 {
 
-  PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
+  // PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
 
   int request_send = ptp->async_alltoall_subrequest[3 * request];
   int request_recv = ptp->async_alltoall_subrequest[3 * request + 1];

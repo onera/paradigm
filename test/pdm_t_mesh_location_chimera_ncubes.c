@@ -1890,7 +1890,7 @@ int main(int argc, char *argv[])
   double ***blk_interp_vol  = malloc(n_mesh * sizeof(double **));
   double ***cell_nat        = malloc(n_mesh * sizeof(double **));
   double ***mask            = malloc(n_mesh * sizeof(double **));
-  int    ***elmt_cross_surf = malloc(n_mesh * sizeof(double **));
+  int    ***elmt_cross_surf = malloc(n_mesh * sizeof(int    **));
 
   const int n_timer = 8;
   double cpu_time_max[n_timer];
