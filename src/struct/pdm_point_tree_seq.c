@@ -3742,3 +3742,144 @@ PDM_tree_intersection_point_box2
   free(__box_pts);
 
 }
+
+
+
+
+void
+PDM_point_tree_seq_intersect_box_leaf
+(
+       PDM_point_tree_seq_t  *ptree,
+ const int                    n_box,
+ const double                 box_extents[],
+       int                  **box_leaf_idx,
+       int                  **box_leaf
+ )
+{
+  *box_leaf_idx = malloc (sizeof(int) * (n_box + 1));
+  int *_box_leaf_idx = *box_leaf_idx;
+  _box_leaf_idx[0] = 0;
+
+  if (n_box < 1) {
+    *box_leaf = malloc (sizeof(int) * _box_leaf_idx[n_box]);
+    return;
+  }
+
+  const int n_children = PDM_point_tree_n_children_get(ptree);
+
+
+  _l_nodes_t *nodes = ptree->nodes;
+
+  int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
+  int *stack_id  = malloc (s_pt_stack * sizeof(int));
+
+  int node_inside_box;
+  int intersect;
+
+  int tmp_size = 4 * n_box;
+  *box_leaf = malloc (sizeof(int) * tmp_size);
+  int *_box_leaf = *box_leaf;
+
+  for (int ibox = 0; ibox < n_box; ibox++) {
+    int dbg_enabled = 0;
+    if (dbg_enabled) {
+      log_trace("box %d\n", ibox);
+    }
+
+    _box_leaf_idx[ibox+1] = _box_leaf_idx[ibox];
+
+    const double *_box_extents = box_extents + 6*ibox;
+
+    intersect = _intersect_node_box_explicit (3,
+                                              &nodes->extents[0],
+                                              _box_extents,
+                                              &node_inside_box);
+
+    if (!intersect) {
+      continue;
+    }
+
+
+    if (nodes->is_leaf[0]) {
+      if (tmp_size <= _box_leaf_idx[ibox+1]+1) {
+        tmp_size = PDM_MAX (2*tmp_size, _box_leaf_idx[ibox+1]+1);
+        *box_leaf = realloc (*box_leaf, sizeof(int) * tmp_size);
+        _box_leaf = *box_leaf;
+      }
+      _box_leaf[_box_leaf_idx[ibox+1]++] = 0;
+      continue;
+    }
+
+
+    /* Push root in stack */
+    int pos_stack = 0;
+    stack_id[pos_stack++] = 0;
+
+    while (pos_stack > 0) {
+      int node_id = stack_id[--pos_stack];
+
+      if (dbg_enabled) {
+        log_trace("  node %d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                  node_id,
+                  nodes->range[2*node_id], nodes->range[2*node_id+1],
+                  nodes->n_points[node_id],
+                  nodes->is_leaf[node_id]);
+      }
+
+      const int *_child_ids = nodes->children_id + n_children*node_id;
+      for (int i = 0; i < n_children; i++) {
+        int child_id = _child_ids[i];
+        if (child_id < 0) {
+          continue;
+        }
+
+        if (dbg_enabled) {
+          log_trace("    child %d: id=%d, range=%d/%d, n_points=%d, leaf_id=%d\n",
+                    i,
+                    child_id,
+                    nodes->range[2*child_id+0],
+                    nodes->range[2*child_id+1],
+                    nodes->n_points[child_id],
+                    nodes->is_leaf[child_id]);
+          log_trace("    leaf_extents = %f %f %f %f %f %f\n",
+                    nodes->extents[6*child_id+0],
+                    nodes->extents[6*child_id+1],
+                    nodes->extents[6*child_id+2],
+                    nodes->extents[6*child_id+3],
+                    nodes->extents[6*child_id+4],
+                    nodes->extents[6*child_id+5]);
+        }
+
+        intersect = _intersect_node_box_explicit (3,
+                                                  nodes->extents + 6*child_id,
+                                                  _box_extents,
+                                                  &node_inside_box);
+
+        if (dbg_enabled) {
+          log_trace("    intersect = %d\n", intersect);
+        }
+
+        if (intersect) {
+          if (nodes->is_leaf[child_id]) {
+            if (tmp_size <= _box_leaf_idx[ibox+1]+1) {
+              tmp_size = PDM_MAX(2*tmp_size, _box_leaf_idx[ibox+1]+1);
+              *box_leaf = realloc(*box_leaf, sizeof(int) * tmp_size);
+              _box_leaf = *box_leaf;
+            }
+            _box_leaf[_box_leaf_idx[ibox+1]++] = child_id;
+          }
+          else {
+            /* Push child in stack */
+            stack_id[pos_stack++] = child_id;
+          }
+        }
+
+      } // End of loop on children
+
+    } /* End While */
+  } /* End boxe loop */
+
+  free (stack_id);
+  *box_leaf = realloc(*box_leaf, sizeof(int) * _box_leaf_idx[n_box]);
+
+}

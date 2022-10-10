@@ -2865,7 +2865,7 @@ PDM_part_to_block_iexch
 
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+            " PDM_MPI_COMM_KIND_P2P k_comm is not implemented yet\n");
     abort();
   } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
     PDM_MPI_Ialltoallv(send_buffer,

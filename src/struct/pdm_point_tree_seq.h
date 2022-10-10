@@ -469,6 +469,17 @@ PDM_tree_intersection_point_box2
  int                  **box_pts
  );
 
+
+void
+PDM_point_tree_seq_intersect_box_leaf
+(
+       PDM_point_tree_seq_t  *ptree,
+ const int                    n_box,
+ const double                 box_extents[],
+       int                  **box_leaf_idx,
+       int                  **box_leaf
+ );
+
 #ifdef  __cplusplus
 }
 #endif
