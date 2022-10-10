@@ -3696,6 +3696,7 @@ const PDM_ownership_t  ownership
     mesh->prepa_blocks->cell_face     = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->n_part);
     mesh->prepa_blocks->add_etat      = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t)*mesh->n_part);
     mesh->prepa_blocks->numabs = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *)*mesh->n_part);
+    mesh->prepa_blocks->face_ln_to_gn = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *)*mesh->n_part);
     for (int i = 0; i < mesh->n_part; i++) {
       mesh->prepa_blocks->add_etat[i] = 0;
     }

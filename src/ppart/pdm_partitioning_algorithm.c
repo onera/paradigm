@@ -2726,8 +2726,8 @@ PDM_pconnectivity_to_pconnectivity_keep
     send_entity1_entity2[i_part] = malloc( n_tot_send * sizeof(PDM_g_num_t));
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
+      int i_entity1 = ref_l_num_entity1[i_part][j]-1;
       for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
-        int i_entity1 = ref_l_num_entity1[i_part][k]-1;
         for(int l = part1_entity1_entity2_idx[i_part][i_entity1]; l < part1_entity1_entity2_idx[i_part][i_entity1+1]; ++l) {
           int i_entity2 = PDM_ABS(part1_entity1_entity2[i_part][l])-1;
           send_entity1_entity2[i_part][idx_write++] = part1_entity2_ln_to_gn[i_part][i_entity2];
@@ -2976,10 +2976,11 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
       for(int k = gnum1_come_from_idx[i_part][j]; k < gnum1_come_from_idx[i_part][j+1]; ++k) {
-        int i_entity1 = ref_l_num_entity1[i_part][k]-1;
+        int i_entity1 = ref_l_num_entity1[i_part][j]-1;
         for(int l = part1_entity1_entity2_idx[i_part][i_entity1]; l < part1_entity1_entity2_idx[i_part][i_entity1+1]; ++l) {
-          int i_entity2 = PDM_ABS(part1_entity1_entity2[i_part][l])-1;
-          send_entity1_entity2         [i_part][idx_write    ] = part1_entity2_ln_to_gn[i_part][i_entity2];
+          int i_entity2 = PDM_ABS (part1_entity1_entity2[i_part][l])-1;
+          int sign      = PDM_SIGN(part1_entity1_entity2[i_part][l]);
+          send_entity1_entity2         [i_part][idx_write    ] = sign*part1_entity2_ln_to_gn[i_part][i_entity2];
           send_entity1_entity2_location[i_part][3*idx_write  ] = i_rank;
           send_entity1_entity2_location[i_part][3*idx_write+1] = i_part;
           send_entity1_entity2_location[i_part][3*idx_write+2] = i_entity2;
@@ -3054,6 +3055,10 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     _part2_entity1_entity2_idx[i_part] = malloc( (n_part2_entity1[i_part] + 1) * sizeof(int));
 
     // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part], n_part2_entity1[i_part], "recv_entity1_entity2_n ::");
+    // PDM_log_trace_array_int(recv_entity1_entity2_n[i_part],
+    //                         part2_entity1_to_part1_entity1_idx[i_part][n_part2_entity1[i_part]]/3,
+    //                         "recv_entity1_entity2_n ::");
+
     /* Compute recv stride */
     _part2_entity1_entity2_idx[i_part][0] = 0;
     for(int i_entity1 = 0; i_entity1 < n_part2_entity1[i_part]; ++i_entity1) {
