@@ -227,3 +227,7 @@ test_c_create (pdm_t_reader_gamma 1)
 test_c_create (pdm_t_icoball 1)
 
 add_subdirectory(tutorial)
+
+if (PDM_ENABLE_PYTHON_BINDINGS)
+  test_python_create (pdm_t_part_to_part 2)
+endif()

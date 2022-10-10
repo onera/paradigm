@@ -4495,7 +4495,7 @@ PDM_part_to_part_iexch
 
       for (int i = 0; i < ptp->n_part1; i++) {
 
-        _part1_to_part2_data[i] = malloc (s_data * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
+        _part1_to_part2_data[i] = malloc (s_data * cst_stride * ptp->part1_to_part2_idx[i][ptp->n_elt1[i]]);
 
       }
     }
@@ -4515,14 +4515,14 @@ PDM_part_to_part_iexch
 
       if (t_part1_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART1) {
 
-        for (int i1 = 0; i1 < ptp->n_part1; i1++) { 
+        for (int ipart = 0; ipart < ptp->n_part1; ipart++) {
 
-          unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[i];
-          unsigned char *map_part1_data = (unsigned char*) part1_data[i] + i * (cst_stride * s_data * ptp->n_elt1[i]);
+          unsigned char *map_part1_to_part2_data = (unsigned char*) _part1_to_part2_data[ipart];
+          unsigned char *map_part1_data = (unsigned char*) part1_data[ipart] + i * (s_data * ptp->n_elt1[ipart]);
 
           int k = 0;
-          for (int j = 0; j < ptp->n_elt1[i]; j++) {
-            for (int k1 = ptp->part1_to_part2_idx[i][j]; k1 < ptp->part1_to_part2_idx[i][j+1]; k1++) {
+          for (int j = 0; j < ptp->n_elt1[ipart]; j++) {
+            for (int k1 = ptp->part1_to_part2_idx[ipart][j]; k1 < ptp->part1_to_part2_idx[ipart][j+1]; k1++) {
               for (int k2 = 0; k2 <  (int) s_data; k2++) {
                 map_part1_to_part2_data[k++] = map_part1_data[j * (int) s_data + k2];
               }
@@ -4542,7 +4542,6 @@ PDM_part_to_part_iexch
       }
 
       if (k_comm == PDM_MPI_COMM_KIND_P2P) {
-
         PDM_part_to_part_issend (ptp,
                                  s_data,
                                  1,
@@ -4556,7 +4555,6 @@ PDM_part_to_part_iexch
                         (void **)___part2_data,
                                 tag,
                                 &(ptp->async_exch_subrequest[_request][2*i+1]));
-
       }
 
       else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {

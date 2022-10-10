@@ -302,14 +302,21 @@ int main(int argc, char *argv[])
   log_trace("\n\n---- Exchange an interleaved, constant-stride field ----\n");
   PDM_g_num_t **part1_field = malloc(sizeof(PDM_g_num_t *) * n_part1);
   for (int i = 0; i < n_part1; i++) {
-    int n = part1_to_part2_idx[i][n_elt1[i]];
+    // int n = part1_to_part2_idx[i][n_elt1[i]];
+    // part1_field[i] = malloc(sizeof(PDM_g_num_t) * n * 2);
+
+    // for (int j = 0; j < n_elt1[i]; j++) {
+    //   for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
+    //     part1_field[i][k  ] = gnum_elt1[i][j];
+    //     part1_field[i][k+n] = part1_to_part2[i][k];
+    //   }
+    // }
+    int n = n_elt1[i];
     part1_field[i] = malloc(sizeof(PDM_g_num_t) * n * 2);
 
     for (int j = 0; j < n_elt1[i]; j++) {
-      for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
-        part1_field[i][k  ] = gnum_elt1[i][j];
-        part1_field[i][k+n] = part1_to_part2[i][k];
-      }
+      part1_field[i][j  ] = gnum_elt1[i][j];
+      part1_field[i][j+n] = gnum_elt1[i][j]+1;
     }
 
     log_trace("\npart1 %d\n", i);
@@ -323,7 +330,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch (ptp,
                           PDM_MPI_COMM_KIND_P2P,
                           PDM_STRIDE_CST_INTERLEAVED,
-                          PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                          PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,//PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
                           2,
                           sizeof(PDM_g_num_t),
                           NULL,
