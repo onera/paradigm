@@ -1733,6 +1733,8 @@ _adaptative_tree4
   PDM_box_tree_data_t *box_tree_data = coarse_bt_shared->local_data;
 
   int n_extract = 0;
+  int n_pts_tot_to_extract = 0;
+  int n_box_tot_to_extract = 0;
   int *extract_leaf_id = malloc(n_leaves * sizeof(int));
   for(int i_leaf = 0; i_leaf < n_leaves; ++i_leaf) {
     int node_id = leaf_id[i_leaf];
@@ -1755,6 +1757,9 @@ _adaptative_tree4
       extract_leaf_id[n_extract++] = node_id;
     }
 
+    n_pts_tot_to_extract += n_pts_in_leaf;
+    n_box_tot_to_extract += n_box_in_leaf;
+
     log_trace("node_id = %i -> %i / %i \n", node_id, n_pts_in_leaf, n_box_in_leaf);
   }
 
@@ -1765,6 +1770,95 @@ _adaptative_tree4
 
   free(pobject_extents);
   free(pn_object);
+
+  /*
+   * Create a distribution
+   */
+  PDM_g_num_t* distrib_leaf = PDM_compute_entity_distribution(comm, n_extract);
+
+  /*
+   * Extract leaf and separate buffer into pts / box
+   */
+  int         *leaf_n_pts          = malloc(n_extract * sizeof(int        ));
+  int         *leaf_n_box          = malloc(n_extract * sizeof(int        ));
+  PDM_g_num_t *extract_leaf_g_num  = malloc(n_extract * sizeof(PDM_g_num_t));
+  double      *extract_leaf_weight = malloc(n_extract * sizeof(double     ));
+  double      *leaf_pts_coords     = malloc(3 * n_pts_tot_to_extract * sizeof(double     ));
+  double      *leaf_box_extents    = malloc(6 * n_box_tot_to_extract * sizeof(double     ));
+  PDM_g_num_t *leaf_pts_gnum       = malloc(    n_pts_tot_to_extract * sizeof(PDM_g_num_t));
+  PDM_g_num_t *leaf_box_gnum       = malloc(    n_box_tot_to_extract * sizeof(PDM_g_num_t));
+
+
+  int idx_write_pts = 0;
+  int idx_write_box = 0;
+  for(int i_leaf = 0; i_leaf < n_extract; ++i_leaf) {
+    int node_id = extract_leaf_id[i_leaf];
+    _node_t *node = &(box_tree_data->nodes[node_id]);
+
+    int n_pts_in_leaf = 0;
+    int n_box_in_leaf = 0;
+    for (int i_box = 0; i_box < node->n_boxes; i_box++) {
+      int box_id = box_tree_data->box_ids[node->start_id + i_box];
+
+      if(init_location_object[3*box_id] == 0) {
+
+        leaf_pts_coords[3*idx_write_pts  ] = blk_object_coords[3*box_id  ];
+        leaf_pts_coords[3*idx_write_pts+1] = blk_object_coords[3*box_id+1];
+        leaf_pts_coords[3*idx_write_pts+2] = blk_object_coords[3*box_id+2];
+        leaf_pts_gnum  [  idx_write_pts  ] = blk_object_gnum[box_id];
+        idx_write_pts++;
+        n_pts_in_leaf++;
+      } else {
+
+        leaf_box_extents[6*idx_write_box  ] = blk_object_extents[6*box_id  ];
+        leaf_box_extents[6*idx_write_box+1] = blk_object_extents[6*box_id+1];
+        leaf_box_extents[6*idx_write_box+2] = blk_object_extents[6*box_id+2];
+        leaf_box_extents[6*idx_write_box+3] = blk_object_extents[6*box_id+3];
+        leaf_box_extents[6*idx_write_box+4] = blk_object_extents[6*box_id+4];
+        leaf_box_extents[6*idx_write_box+5] = blk_object_extents[6*box_id+5];
+        leaf_box_gnum   [  idx_write_box  ] = blk_object_gnum[box_id] - n_g_entity;
+
+        idx_write_box++;
+        n_box_in_leaf++;
+      }
+    }
+
+    leaf_n_pts[i_leaf] = n_pts_in_leaf;
+    leaf_n_box[i_leaf] = n_box_in_leaf;
+
+    extract_leaf_g_num [i_leaf] = distrib_leaf[i_rank] + i_leaf + 1;
+    extract_leaf_weight[i_leaf] = n_box_in_leaf * log(n_pts_in_leaf);
+
+  }
+
+
+
+  PDM_part_to_block_t* ptb_equi_leaf = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                   PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                   1.,
+                                                                   &extract_leaf_g_num,
+                                                                   &extract_leaf_weight,
+                                                                   &n_extract,
+                                                                   1,
+                                                                   comm);
+
+
+
+
+
+
+  PDM_part_to_block_free(ptb_equi_leaf);
+
+  free(leaf_n_pts      );
+  free(leaf_n_box      );
+  free(leaf_pts_coords );
+  free(leaf_box_extents);
+  free(leaf_pts_gnum   );
+  free(leaf_box_gnum   );
+  free(extract_leaf_g_num);
+  free(extract_leaf_weight);
+
+  free(distrib_leaf);
 
   // log_trace("n_extract_box   = %i \n", n_extract_box);
   // log_trace("n_extract_child = %i \n", n_extract_child);
