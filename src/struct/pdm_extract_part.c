@@ -2600,6 +2600,15 @@ _extract_part_and_reequilibrate_from_target
                                                             &pextract_vtx_to_vtx_location,
                                                             &extrp->ptp_entity[PDM_MESH_ENTITY_FACE]);
 
+      if (extrp->compute_child_gnum) {
+        extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VERTEX] = malloc(sizeof(PDM_g_num_t *) * extrp->n_part_out);
+        _compute_child(extrp->comm,
+                       extrp->n_part_out,
+                       extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                       extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                       extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VERTEX]);
+      }
+
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
         free(part2_face_to_part1_face_idx[i_part]);
         part2_face_to_part1_face_idx[i_part] = NULL;
