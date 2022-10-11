@@ -2033,9 +2033,16 @@ _compute_other_domain_interface
     return;
   }
 
-  int is_descibe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
-  int is_descibe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
-  int is_descibe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
+  int is_describe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
+  int is_describe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
+  int is_describe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
+
+  int is_describe_vtx_l  = is_describe_vtx;
+  int is_describe_edge_l = is_describe_edge;
+  int is_describe_face_l = is_describe_face;
+  PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -2062,8 +2069,8 @@ _compute_other_domain_interface
 
 
   // En gros noeud centré avec toutes les connectivités
-  if(is_descibe_vtx == 1 &&
-     (is_descibe_edge == 0 || is_descibe_face == 0) &&
+  if(is_describe_vtx == 1 &&
+     (is_describe_edge == 0 || is_describe_face == 0) &&
      (have_edge       == 1 && have_face == 1)) {
 
     // Rebuild domaine_interface in distributed frame
@@ -2123,7 +2130,7 @@ _compute_other_domain_interface
       }
     }
 
-    if(is_descibe_edge == 0) {
+    if(is_describe_edge == 0) {
 
       // Translate
       printf("Translate vtx to edge ... \n");
@@ -2142,7 +2149,7 @@ _compute_other_domain_interface
     }
 
 
-    if(have_face == 1 &&  is_descibe_face == 0) {
+    if(have_face == 1 &&  is_describe_face == 0) {
 
       // Translate
       printf("Translate edge to face ... \n");
@@ -2188,9 +2195,9 @@ _compute_other_domain_interface
     free(pface_edge_idx );
     free(pface_edge     );
 
-  } else if (is_descibe_face == 1) {
+  } else if (is_describe_face == 1) {
 
-    // assert(is_descibe_vtx == 0);
+    // assert(is_describe_vtx == 0);
 
     // Faire la méthode de Julien face2vtx
 
@@ -2286,10 +2293,12 @@ _warm_up_domain_interface
   }
 
   if(part_ext->pdi != NULL) {
-    int is_descibe = PDM_part_domain_interface_exist_get(part_ext->pdi,
+    int is_describe = PDM_part_domain_interface_exist_get(part_ext->pdi,
                                                          interface_kind);
+    int is_describe_l = is_describe;
+    PDM_MPI_Allreduce(&is_describe_l, &is_describe, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
-    if(is_descibe == 0) {
+    if(is_describe == 0) {
       if(gentity2_entity1_n != NULL) {
         free(gentity2_entity1_n);
         free(gentity2_entity1);
@@ -6626,6 +6635,7 @@ PDM_part_extension_compute
 
   free(n_vtx);
   free(vtx_coord);
+  log_trace(" PDM_part_extension_compute flag END \n");
 
   PDM_distant_neighbor_free(dn_vtx);
   // printf(" PDM_part_extension_compute end \n");
