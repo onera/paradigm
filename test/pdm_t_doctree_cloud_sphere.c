@@ -1499,6 +1499,178 @@ _adaptative_tree3
   }
 }
 
+static
+void
+_adaptative_tree4
+(
+  int           n_pts,
+  double       *pts_coord,
+  PDM_g_num_t  *pts_gnum,
+  int           n_box,
+  double       *box_extents,
+  PDM_g_num_t  *box_gnum,
+  PDM_MPI_Comm  comm
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  PDM_MPI_Comm comm_alone;
+  PDM_MPI_Comm_split(comm, i_rank, 0, &(comm_alone));
+
+  PDM_MPI_Datatype mpi_extent_type;
+  PDM_MPI_Type_create_contiguous(6, PDM_MPI_DOUBLE, &mpi_extent_type);
+  PDM_MPI_Type_commit(&mpi_extent_type);
+
+  int visu = 1;
+  int dbg_enabled = 1;
+
+  // Shift gnum of boxes
+  PDM_g_num_t _id_max = 0;
+  PDM_g_num_t n_g_entity = 0;
+  for(int i_pts = 0; i_pts < n_pts; ++i_pts) {
+    _id_max = PDM_MAX (_id_max, pts_gnum[i_pts]);
+  }
+  PDM_MPI_Allreduce (&_id_max, &n_g_entity, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+
+  for(int i_box = 0; i_box < n_box; ++i_box) {
+    box_gnum[i_box] = box_gnum[i_box] + n_g_entity + 1;
+  }
+
+  /*
+   *  Hilbert boxes
+   */
+  int n_part = 2;
+  int          *pn_object       = malloc(n_part * sizeof(int          ));
+  int         **pobject_weight  = malloc(n_part * sizeof(int         *));
+  double      **pobject_coords  = malloc(n_part * sizeof(double      *));
+  double      **pobject_extents = malloc(n_part * sizeof(double      *));
+  PDM_g_num_t **pobject_gnum    = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  pn_object[0] = n_pts;
+  pn_object[1] = n_box;
+
+  pobject_weight[0] = PDM_array_const_int(n_pts, 1);
+  pobject_weight[1] = PDM_array_const_int(n_box, 1);
+
+  pobject_coords[0] = pts_coord;
+  pobject_coords[1] = malloc(sizeof(double) * n_box * 3);
+
+  pobject_gnum[0] = pts_gnum;
+  pobject_gnum[1] = box_gnum;
+
+  for(int i = 0; i < n_box; ++i) {
+    pobject_coords[1][3*i  ] = 0.5*(box_extents[6*i  ] + box_extents[6*i+3]);
+    pobject_coords[1][3*i+1] = 0.5*(box_extents[6*i+1] + box_extents[6*i+4]);
+    pobject_coords[1][3*i+2] = 0.5*(box_extents[6*i+2] + box_extents[6*i+5]);
+  }
+
+  PDM_part_to_block_t *ptb_object = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                               PDM_PART_TO_BLOCK_POST_CLEANUP, // A voir avec merge mais attention au init_location
+                                                               1.,
+                                                               PDM_PART_GEOM_HILBERT,
+                                                               pobject_coords,
+                                                               pobject_gnum,
+                                                               pobject_weight,
+                                                               pn_object,
+                                                               n_part,
+                                                               comm);
+
+  //
+
+  // Utilisation des weight pour echanger rien OU les box
+  for(int i_pts = 0; i_pts < n_pts; ++i_pts) {
+    pobject_weight[0][i_pts] = 3;
+  }
+  for(int i_box = 0; i_box < n_box; ++i_box) {
+    pobject_weight[1][i_box] = 6;
+  }
+  pobject_extents[0] = pobject_coords;
+  pobject_extents[1] = box_extents;
+
+  int    *blk_object_extents_n = NULL;
+  double *blk_object_extents   = NULL;
+  int request_object_extents = -1;
+  PDM_part_to_block_iexch(ptb_object,
+                          PDM_MPI_COMM_KIND_COLLECTIVE,
+                          sizeof(double),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          pobject_weight,
+                (void **) pobject_extents,
+                          &blk_object_extents_n,
+                (void **) &blk_object_extents,
+                          &request_object_extents);
+
+  // overlap exchange with point tree construction?
+  PDM_part_to_block_iexch_wait(ptb_object, request_object_extents);
+
+  // Inutile
+  double *blk_object_coords = NULL;
+  int request_object_coords;
+  PDM_part_to_block_iexch(ptb_object,
+                          PDM_MPI_COMM_KIND_COLLECTIVE,
+                          3 * sizeof(double),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void **) pobject_coords,
+                          NULL,
+                (void **) &blk_object_coords,
+                          &request_object_coords);
+
+  // overlap exchange with point tree construction?
+  PDM_part_to_block_iexch_wait(ptb_object, request_object_coords);
+
+  free(pobject_coords[1]);
+  free(pobject_coords);
+  free(pobject_gnum);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pobject_weight[i_part]);
+  }
+  free(pobject_weight);
+
+  int dn_object = PDM_part_to_block_n_elt_block_get(ptb_object);
+  PDM_g_num_t *blk_object_gnum = PDM_part_to_block_block_gnum_get(ptb_object);
+
+  // if (istep > 0) {
+  //   free(current_box_extents);
+  //   free(current_box_gnum);
+  // }
+  // current_box_extents = blk_box_extents;
+  // current_box_gnum = malloc(sizeof(PDM_g_num_t) * current_n_box);
+  // memcpy(current_box_gnum, blk_box_gnum, sizeof(PDM_g_num_t) * current_n_box);
+
+  PDM_part_to_block_free(ptb_object);
+
+  /*
+   * Create octree of point
+   */
+  PDM_point_tree_seq_t* coarse_tree_pts = PDM_point_tree_seq_create(PDM_DOCTREE_LOCAL_TREE_OCTREE,
+                                                                    10, // depth_max
+                                                                    1,
+                                                                    1e-8);
+  PDM_point_tree_seq_point_cloud_set(coarse_tree_pts, dn_object, blk_object_coords);
+  PDM_point_tree_seq_build(coarse_tree_pts);
+  if(1 == 1) {
+    char filename[999];
+    sprintf(filename, "out_coarse_tree_%i.vtk", i_rank);
+    PDM_point_tree_seq_write_nodes(coarse_tree_pts, filename);
+  }
+  PDM_point_tree_seq_free(coarse_tree_pts);
+
+
+
+  free(blk_object_coords);
+
+}
+
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1696,6 +1868,14 @@ char *argv[]
   //                   comm);
 
   _adaptative_tree3(n_src,
+                    src_coord,
+                    src_g_num,
+                    n_box,
+                    box_extents,
+                    box_gnum,
+                    comm);
+
+  _adaptative_tree4(n_src,
                     src_coord,
                     src_g_num,
                     n_box,

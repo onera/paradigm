@@ -470,7 +470,6 @@ _find_open_async_alltoall_exch
 )
 {
   _check_async_alltoall_alloc (ptp);
-  log_trace("ptp->async_alltoall_n_free %i \n", ptp->async_alltoall_n_free);
   return ptp->async_alltoall_free[--ptp->async_alltoall_n_free];
 }
 
@@ -4218,17 +4217,12 @@ PDM_part_to_part_irecv_wait
 )
 {
 
-  log_trace("PDM_part_to_part_irecv_wait = %i | ptp->n_active_rank_recv = %i \n", request, ptp->n_active_rank_recv);
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
-    log_trace("PDM_part_to_part_irecv_wait subrequest = %i \n", ptp->async_recv_request[request][i]);
     PDM_MPI_Wait (&(ptp->async_recv_request[request][i]));
-    log_trace("PDM_part_to_part_irecv_wait subrequest END = %i \n", ptp->async_recv_request[request][i]);
   }
 
-  log_trace("PDM_part_to_part_irecv_post = %i \n", request);
   PDM_part_to_part_irecv_post(ptp, request);
-  log_trace("PDM_part_to_part_irecv_post END = %i \n", request);
 
 }
 
