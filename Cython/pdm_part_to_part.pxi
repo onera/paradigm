@@ -280,7 +280,7 @@ cdef class PartToPart:
           lnp_part_data .append(np_part2_data)
 
         else:
-          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
+          dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * self.dict_cst_strid[request_id]
           np_part2_data = NPY.PyArray_SimpleNewFromData(1, &dim_np, self.dict_npy_type[request_id], <void *> _part2_data[i_part])
           PyArray_ENABLEFLAGS(np_part2_data, NPY.NPY_OWNDATA)
 

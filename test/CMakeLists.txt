@@ -225,6 +225,7 @@ test_c_create (pdm_t_projection_point_cloud_surf 1)
 test_c_create (pdm_t_reader_gamma 1)
 
 test_c_create (pdm_t_icoball 1)
+test_c_create (pdm_t_extrude_polyline 1)
 
 add_subdirectory(tutorial)
 

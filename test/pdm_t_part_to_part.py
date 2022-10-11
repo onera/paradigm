@@ -80,7 +80,7 @@ stride = 3
 part1_stride = stride
 
 
-is_interlaced = False
+is_interlaced = True#False
 
 if is_interlaced:
   part1_data = [
