@@ -38,6 +38,8 @@
 #include "pdm_unique.h"
 #include "pdm_dbbtree.h"
 #include "pdm_dbbtree_priv.h"
+#include "pdm_box_tree.h"
+#include "pdm_box_tree_priv.h"
 /*============================================================================
  * Macro definitions
  *============================================================================*/
