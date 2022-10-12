@@ -335,6 +335,10 @@ typedef enum {
   PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< Extract into target specify by user */
 } PDM_extract_part_kind_t;
 
+typedef enum {
+  PDM_MESH_INTERSECTION_KIND_SOFT = 0, /*! Resulting is only relative weight of A inside B */
+  PDM_MESH_INTERSECTION_KIND_FULL = 1, /*! Resulting is new mesh                           */
+} PDM_mesh_intersection_kind_t;
 
 /*=============================================================================
  * Public function prototypes

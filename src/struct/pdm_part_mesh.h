@@ -86,8 +86,9 @@ void
 PDM_part_mesh_n_entity_set
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
  PDM_mesh_entities_t       entity_type,
- int                      *pn_entity
+ int                       pn_entity
 );
 
 
@@ -103,11 +104,22 @@ void
 PDM_part_mesh_connectivity_set
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
- int                     **connect,
- int                     **connect_idx,
+ int                      *connect,
+ int                      *connect_idx,
  PDM_ownership_t           ownership
 );
+
+void
+PDM_part_mesh_vtx_coord_set
+(
+ PDM_part_mesh_t   *pmesh,
+ int                i_part,
+ double            *vtx_coord,
+ PDM_ownership_t    ownership
+);
+
 
 void
 PDM_part_mesh_connectivity_get
@@ -124,8 +136,9 @@ void
 PDM_part_mesh_entity_ln_to_gn_set
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
  PDM_mesh_entities_t       entity_type,
- PDM_g_num_t             **pentity_ln_to_gn,
+ PDM_g_num_t              *pentity_ln_to_gn,
  PDM_ownership_t           ownership
 );
 
