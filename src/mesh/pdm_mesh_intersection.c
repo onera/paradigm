@@ -293,6 +293,27 @@ _compute_part_mesh_extents
   *extents_out = extents;
 }
 
+static
+void
+_select_elements_by_global_bbox
+(
+  PDM_part_mesh_t *mesh,
+  int              dim_mesh,
+  double         **box_extents,
+  double          *g_mesh_global_extents,
+  int            **n_extract_elmt,
+  double        ***extract_box_extents,
+  int           ***extract_elmt_init_location,
+  int           ***extract_elmt_ln_to_gn
+)
+{
+  int n_part = mesh->n_part;
+  if(dim_mesh == 3) {
+
+  }
+
+}
+
 
 /*=============================================================================
  * Public function definitions
@@ -350,7 +371,7 @@ PDM_mesh_intersection_compute
   /*
    * Global extents exchange
    */
-  const intdim = 3;
+  const int dim = 3;
   for(int i_mesh = 0; i_mesh < 2; ++i_mesh) {
     PDM_MPI_Allreduce(mesh_global_extents[i_mesh], g_mesh_global_extents[i_mesh], dim,
                       PDM_MPI_DOUBLE, PDM_MPI_MIN, mi->comm);
@@ -384,6 +405,32 @@ PDM_mesh_intersection_compute
     g_global_extents[k]     += -max_range * 1.1e-3; // On casse la symetrie !
     g_global_extents[dim+k] +=  max_range * 1e-3;
   }
+
+
+  /*
+   * Extraction
+   */
+  int           n_mesh = 2;
+  int          *n_extract_elmt            [n_mesh];
+  double      **extract_box_extents       [n_mesh];
+  int         **extract_elmt_init_location[n_mesh];
+  PDM_g_num_t **extract_elmt_ln_to_gn     [n_mesh];
+
+  _select_elements_by_global_bbox(mi->mesh_a, mi->dim_mesh_a,
+                                 extents_mesh_a, g_mesh_global_extents[1], // On enleve tout ce qui est en dehors de B
+                                 &n_extract_elmt[0],
+                                 &extract_box_extents[0],
+                                 &extract_elmt_init_location[0],
+                                 &extract_elmt_ln_to_gn[0]);
+  _select_elements_by_global_bbox(mi->mesh_b, mi->dim_mesh_b,
+                                  extents_mesh_b, g_mesh_global_extents[1], // On enleve tout ce qui est en dehors de A
+                                 &n_extract_elmt[1],
+                                 &extract_box_extents[1],
+                                 &extract_elmt_init_location[1],
+                                 &extract_elmt_ln_to_gn[1]);
+
+  // Attention le dbtree fait  le init_location sauf que la il faut le forcer !!!!!!
+
 
 
   for(int i_part = 0; i_part < mi->n_part_mesh_a; ++i_part) {
