@@ -301,17 +301,80 @@ _select_elements_by_global_bbox
   int              dim_mesh,
   double         **box_extents,
   double          *g_mesh_global_extents,
-  int            **n_extract_elmt,
-  double        ***extract_box_extents,
-  int           ***extract_elmt_init_location,
-  int           ***extract_elmt_ln_to_gn
+  int            **n_extract_elmt_out,
+  double        ***extract_box_extents_out,
+  int           ***extract_elmt_init_location_out,
+  PDM_g_num_t   ***extract_elmt_ln_to_gn_out
 )
 {
   int n_part = mesh->n_part;
-  if(dim_mesh == 3) {
+  int i_rank;
+  PDM_MPI_Comm_rank(mesh->comm, &i_rank);
+
+  int          *n_extract_elmt             = malloc(n_part * sizeof(int         *));
+  double      **extract_box_extents        = malloc(n_part * sizeof(double      *));
+  int         **extract_elmt_init_location = malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **extract_elmt_ln_to_gn      = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_entity = 0;
+    PDM_g_num_t* entity_ln_to_gn = NULL;
+    if(dim_mesh == 3) {
+      n_entity = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL);
+      PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL, &entity_ln_to_gn, PDM_OWNERSHIP_USER);
+    } else if(dim_mesh == 2) {
+      n_entity = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
+      PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE, &entity_ln_to_gn, PDM_OWNERSHIP_USER);
+    } else if(dim_mesh == 1) {
+      n_entity = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
+      PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE, &entity_ln_to_gn, PDM_OWNERSHIP_USER);
+    }
+
+    n_extract_elmt[i_part] = 0;
+    extract_box_extents       [i_part] = malloc(6 * n_entity * sizeof(double     ));
+    extract_elmt_init_location[i_part] = malloc(3 * n_entity * sizeof(int        ));
+    extract_elmt_ln_to_gn     [i_part] = malloc(    n_entity * sizeof(PDM_g_num_t));
+
+    double *_box_extents = box_extents[i_part];
+
+    for(int i = 0; i < n_entity; ++i) {
+
+      double *box_min = _box_extents + 6*i;
+      double *box_max = box_min + 3;
+
+      int intersect = 1;
+      for (int j = 0; j < 3; j++) {
+        if (box_min[j] > g_mesh_global_extents[j+3] ||
+            box_max[j] < g_mesh_global_extents[j  ]) {
+          intersect = 0;
+          break;
+        }
+      }
+
+      if (intersect) {
+        for (int j = 0; j < 6; j++) {
+          extract_box_extents  [i_part][6*n_extract_elmt[i_part]+j] = _box_extents[6*i+j];
+        }
+        extract_elmt_init_location[i_part][3*n_extract_elmt[i_part]  ] = i_rank;
+        extract_elmt_init_location[i_part][3*n_extract_elmt[i_part]+1] = i_part;
+        extract_elmt_init_location[i_part][3*n_extract_elmt[i_part]+2] = i;
+
+        extract_elmt_ln_to_gn[i_part][n_extract_elmt[i_part]] = entity_ln_to_gn[i];
+
+        n_extract_elmt[i_part]++;
+      }
+    }
+    extract_box_extents       [i_part] = realloc(extract_box_extents       [i_part], 6 * n_entity * sizeof(double     ));
+    extract_elmt_init_location[i_part] = realloc(extract_elmt_init_location[i_part], 3 * n_entity * sizeof(int        ));
+    extract_elmt_ln_to_gn     [i_part] = realloc(extract_elmt_ln_to_gn     [i_part],     n_entity * sizeof(PDM_g_num_t));
 
   }
 
+  *n_extract_elmt_out             = n_extract_elmt;
+  *extract_box_extents_out        = extract_box_extents;
+  *extract_elmt_init_location_out = extract_elmt_init_location;
+  *extract_elmt_ln_to_gn_out      = extract_elmt_ln_to_gn;
 }
 
 
@@ -408,30 +471,30 @@ PDM_mesh_intersection_compute
 
 
   /*
-   * Extraction
+   * Extraction - In option ?
    */
   int           n_mesh = 2;
+  int           n_part                    [n_mesh];
   int          *n_extract_elmt            [n_mesh];
   double      **extract_box_extents       [n_mesh];
   int         **extract_elmt_init_location[n_mesh];
   PDM_g_num_t **extract_elmt_ln_to_gn     [n_mesh];
 
+  n_part[0] = mi->n_part_mesh_a;
+  n_part[1] = mi->n_part_mesh_b;
+
   _select_elements_by_global_bbox(mi->mesh_a, mi->dim_mesh_a,
-                                 extents_mesh_a, g_mesh_global_extents[1], // On enleve tout ce qui est en dehors de B
-                                 &n_extract_elmt[0],
-                                 &extract_box_extents[0],
-                                 &extract_elmt_init_location[0],
-                                 &extract_elmt_ln_to_gn[0]);
+                                  extents_mesh_a, g_mesh_global_extents[1], // On enleve tout ce qui est en dehors de B
+                                  &n_extract_elmt[0],
+                                  &extract_box_extents[0],
+                                  &extract_elmt_init_location[0],
+                                  &extract_elmt_ln_to_gn[0]);
   _select_elements_by_global_bbox(mi->mesh_b, mi->dim_mesh_b,
-                                  extents_mesh_b, g_mesh_global_extents[1], // On enleve tout ce qui est en dehors de A
-                                 &n_extract_elmt[1],
-                                 &extract_box_extents[1],
-                                 &extract_elmt_init_location[1],
-                                 &extract_elmt_ln_to_gn[1]);
-
-  // Attention le dbtree fait  le init_location sauf que la il faut le forcer !!!!!!
-
-
+                                  extents_mesh_b, g_mesh_global_extents[0], // On enleve tout ce qui est en dehors de A
+                                  &n_extract_elmt[1],
+                                  &extract_box_extents[1],
+                                  &extract_elmt_init_location[1],
+                                  &extract_elmt_ln_to_gn[1]);
 
   for(int i_part = 0; i_part < mi->n_part_mesh_a; ++i_part) {
     free(extents_mesh_a[i_part]);
@@ -442,6 +505,53 @@ PDM_mesh_intersection_compute
   free(extents_mesh_a);
   free(extents_mesh_b);
 
+  // Attention le dbtree fait  le init_location sauf que la il faut le forcer !!!!!!
+  PDM_dbbtree_t *dbbtree_mesh_a = PDM_dbbtree_create (mi->comm, dim, g_global_extents);
+
+  PDM_box_set_t  *boxes_mesh_a = PDM_dbbtree_boxes_set_with_init_location(dbbtree_mesh_a,
+                                                                          mi->mesh_a->n_part,
+                                                                          n_extract_elmt            [0],
+                                                  (const int         **)  extract_elmt_init_location[0],
+                                                  (const double      **)  extract_box_extents       [0],
+                                                  (const PDM_g_num_t **)  extract_elmt_ln_to_gn     [0]);
+
+  /*
+   * Intersect with B
+   */
+  int *box_a_to_box_b_idx = NULL;
+  int *box_a_to_box_b     = NULL;
+  PDM_box_set_t  *boxes_mesh_b =  PDM_dbbtree_intersect_boxes_with_init_location_set(dbbtree_mesh_a,
+                                                                                     mi->mesh_b->n_part,
+                                                                                     n_extract_elmt            [1],
+                                                              (const int         **) extract_elmt_init_location[1],
+                                                              (const double      **) extract_box_extents       [1],
+                                                              (const PDM_g_num_t **) extract_elmt_ln_to_gn     [1],
+                                                                                     &box_a_to_box_b_idx,
+                                                                                     &box_a_to_box_b);
+
+  /* Free extraction */
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_part = 0; i_part < n_part[i_mesh]; ++i_part) {
+      free(extract_elmt_init_location[i_mesh][i_part]);
+      free(extract_box_extents       [i_mesh][i_part]);
+      free(extract_elmt_ln_to_gn     [i_mesh][i_part]);
+    }
+    free(n_extract_elmt            [i_mesh]);
+    free(extract_elmt_init_location[i_mesh]);
+    free(extract_box_extents       [i_mesh]);
+    free(extract_elmt_ln_to_gn     [i_mesh]);
+  }
+
+
+
+
+  PDM_dbbtree_free (dbbtree_mesh_a);
+
+  PDM_box_set_destroy (&boxes_mesh_a);
+  PDM_box_set_destroy (&boxes_mesh_b);
+
+  free(box_a_to_box_b_idx);
+  free(box_a_to_box_b);
 }
 
 void

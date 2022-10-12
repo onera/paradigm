@@ -112,7 +112,19 @@ PDM_dbbtree_boxes_set
  const int          *nElts,
  const double      **extents,
  const PDM_g_num_t **gNum
- );
+);
+
+
+PDM_box_set_t *
+PDM_dbbtree_boxes_set_with_init_location
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const int         **init_location,
+ const double      **extents,
+ const PDM_g_num_t **gNum
+);
 
 PDM_box_set_t *
 PDM_dbbtree_boxes_set_for_intersect_line
@@ -143,6 +155,18 @@ PDM_dbbtree_boxes_set_for_intersect_line
  * to the tree intersection
  *
  */
+PDM_box_set_t *
+PDM_dbbtree_intersect_boxes_with_init_location_set
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const int         **init_location,
+ const double      **extents,
+ const PDM_g_num_t **gNum,
+ int                *box_index[],
+ int                *box_l_num[]
+);
 
 PDM_box_set_t *
 PDM_dbbtree_intersect_boxes_set
