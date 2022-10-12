@@ -29,6 +29,8 @@
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_priv.h"
 #include "pdm_extract_part.h"
+#include "pdm_extract_part_priv.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_vtk.h"
 #include "pdm_box_priv.h"
 
@@ -663,6 +665,8 @@ _create_extract_part
 
   int              n_elt_mesh    = PDM_box_set_get_size (boxes_meshes);
 
+  printf("n_elt_mesh = %i  \n", n_elt_mesh);
+
   PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
 
   int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
@@ -702,6 +706,7 @@ _create_extract_part
     double *vtx_coord = NULL;
     PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER);
 
+    printf("n_face = %i  \n", n_face);
     PDM_extract_part_part_set(extrp_mesh,
                               i_part,
                               n_cell,
@@ -771,6 +776,55 @@ _mesh_intersection_vol_surf
 
 }
 
+static
+void
+_export_vtk_2d
+(
+ char               *pattern,
+ PDM_extract_part_t *extrp_mesh
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp_mesh->comm, &i_rank);
+
+  for(int i_part = 0; i_part < extrp_mesh->n_part_out; ++i_part) {
+
+    PDM_g_num_t *face_ln_to_gn = NULL;
+    PDM_g_num_t *vtx_ln_to_gn  = NULL;
+    int n_face = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+
+    double *vtx_coord = NULL;
+    PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
+
+    int  *face_edge     = NULL;
+    int  *face_edge_idx = NULL;
+    int  *edge_vtx      = NULL;
+    int  *edge_vtx_idx  = NULL;
+    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, &face_edge, &face_edge_idx, PDM_OWNERSHIP_KEEP);
+    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_KEEP);
+
+    int *face_vtx = NULL;
+    PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
+
+    char filename[999];
+    sprintf(filename, "%s_%i_%i.vtk", pattern, i_part, i_rank);
+    PDM_vtk_write_polydata(filename,
+                           n_vtx,
+                           vtx_coord,
+                           vtx_ln_to_gn,
+                           n_face,
+                           face_edge_idx,
+                           face_vtx,
+                           face_ln_to_gn,
+                           NULL);
+
+
+    free(face_vtx);
+
+  }
+
+}
 
 static
 void
@@ -788,6 +842,16 @@ _mesh_intersection_surf_surf
   PDM_UNUSED(extrp_mesh_b);
   PDM_UNUSED(redistribute_box_a_to_box_b_idx);
   PDM_UNUSED(redistribute_box_a_to_box_b);
+
+  /*
+   * Panic vtk
+   */
+  if(1 == 1) {
+    _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
+  }
+
+
 
 }
 
