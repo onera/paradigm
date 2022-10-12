@@ -149,9 +149,71 @@ static void _rotate_coord(const double angle,
   }
 }
 
+
 static
 void
 _generate_surface_mesh
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         nu,
+ const PDM_g_num_t         nv,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+ const PDM_split_dual_t    part_method,
+ const int                 n_part,
+       PDM_dmesh_nodal_t **_dmn,
+       PDM_multipart_t   **_mpart
+)
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_dmesh_nodal_t *dmn = NULL;
+  PDM_sphere_surf_gen_nodal(comm,
+                            nu,
+                            nv,
+                            x_center,
+                            y_center,
+                            z_center,
+                            radius,
+                            &dmn);
+
+  int n_zone = 1;
+  // int n_part_zones = {n_part};
+  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
+  n_part_zones[0] = n_part;
+
+  PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
+                                                n_part_zones,
+                                                PDM_FALSE,
+                                                part_method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_set_reordering_options(mpart,
+                                       -1,
+                                       "PDM_PART_RENUM_CELL_NONE",
+                                       NULL,
+                                       "PDM_PART_RENUM_FACE_NONE");
+
+  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+  PDM_multipart_run_ppart(mpart);
+
+  free(n_part_zones);
+
+  *_mpart = mpart;
+  *_dmn   = dmn;
+
+}
+
+static
+void
+_generate_volume_mesh
 (
  const PDM_MPI_Comm           comm,
  const PDM_g_num_t            n_vtx_seg,
@@ -186,7 +248,6 @@ _generate_surface_mesh
   PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
   PDM_dcube_nodal_gen_free(dcube);
-
 
   if(rotate) {
     // Do something
@@ -289,6 +350,14 @@ _set_mesh
                                                  &vtx_coord,
                                                  PDM_OWNERSHIP_KEEP);
 
+    PDM_g_num_t *cell_ln_to_gn;
+    int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_CELL,
+                                                 &cell_ln_to_gn,
+                                                 PDM_OWNERSHIP_KEEP);
+
     PDM_g_num_t *face_ln_to_gn;
     PDM_multipart_part_ln_to_gn_get(mpart,
                                     0,
@@ -311,6 +380,15 @@ _set_mesh
                                     &vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
 
+    int *cell_face_idx = NULL;
+    int *cell_face     = NULL;
+    n_cell = PDM_multipart_part_connectivity_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                                 &cell_face,
+                                                 &cell_face_idx,
+                                                 PDM_OWNERSHIP_KEEP);
     n_face = PDM_multipart_part_connectivity_get(mpart,
                                                  0,
                                                  i_part,
@@ -329,18 +407,18 @@ _set_mesh
     PDM_mesh_intersection_part_set(mi,
                                    i_mesh,
                                    i_part,
-                                   0, //n_cell
+                                   n_cell,
                                    n_face,
                                    n_edge,
                                    n_vtx,
-                                   NULL,//cell_face_idx,
-                                   NULL,//cell_face,
+                                   cell_face_idx,
+                                   cell_face,
                                    face_edge_idx,
                                    face_edge,
                                    edge_vtx,
-                                   NULL,//face_vtx_idx,
-                                   NULL,//face_vtx,
-                                   NULL,//cell_ln_to_gn,
+                                   NULL, // face_vtx_idx,
+                                   NULL, // face_vtx,
+                                   cell_ln_to_gn,
                                    face_ln_to_gn,
                                    edge_ln_to_gn,
                                    vtx_ln_to_gn,
@@ -379,7 +457,7 @@ char *argv[]
 
   PDM_g_num_t n_vtx_a   = 10;
   PDM_g_num_t n_vtx_b   = 10;
-  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
+  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -403,43 +481,44 @@ char *argv[]
    */
   double lenght_a = 1.;
   int rotate_a = 0;
-  PDM_dmesh_nodal_t     *dmn_surf_a   = NULL;
-  PDM_multipart_t       *mpart_surf_a = NULL;
-  _generate_surface_mesh (comm,
-                          n_vtx_a,
-                          elt_type,
-                          rotate_a,
-                          0.,
-                          0.,
-                          0.,
-                          lenght_a,
-                          part_method,
-                          n_part,
-                          &dmn_surf_a,
-                          &mpart_surf_a);
+  PDM_dmesh_nodal_t     *dmn_vol_a   = NULL;
+  PDM_multipart_t       *mpart_vol_a = NULL;
+  _generate_volume_mesh (comm,
+                         n_vtx_a,
+                         elt_type,
+                         rotate_a,
+                         0.,
+                         0.,
+                         0.,
+                         lenght_a,
+                         part_method,
+                         n_part,
+                         &dmn_vol_a,
+                         &mpart_vol_a);
 
 
   double lenght_b = 1.;
   int rotate_b = 1;
   PDM_dmesh_nodal_t     *dmn_surf_b   = NULL;
   PDM_multipart_t       *mpart_surf_b = NULL;
+  PDM_g_num_t nu = 2*n_vtx_b;
+  PDM_g_num_t nv =   n_vtx_b;
   _generate_surface_mesh (comm,
-                          n_vtx_b,
-                          elt_type,
-                          rotate_b,
-                          0.5,
-                          0.5,
+                          nu,
+                          nv,
                           0.,
-                          lenght_b,
+                          0.,
+                          0.,
+                          0.8*lenght_b,
                           part_method,
                           n_part,
                           &dmn_surf_b,
                           &mpart_surf_b);
 
   if(1 == 1) {
-    PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
-                             PDM_GEOMETRY_KIND_SURFACIC,
-                             "dmn_surf_a_");
+    PDM_dmesh_nodal_dump_vtk(dmn_vol_a,
+                             PDM_GEOMETRY_KIND_VOLUMIC,
+                             "dmn_vol_a_");
     PDM_dmesh_nodal_dump_vtk(dmn_surf_b,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_b_");
@@ -448,7 +527,7 @@ char *argv[]
   /*
    * Mesh_intersection
    */
-  int dim_mesh_a = 2;
+  int dim_mesh_a = 3;
   int dim_mesh_b = 2;
   PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
@@ -461,7 +540,7 @@ char *argv[]
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, PDM_OL_MESH_A, mpart_surf_a, n_part);
+  _set_mesh(mi, PDM_OL_MESH_A, mpart_vol_a , n_part);
   _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
 
   PDM_mesh_intersection_compute(mi);
@@ -472,8 +551,8 @@ char *argv[]
   PDM_DMesh_nodal_free(dmn_surf_b);
   PDM_multipart_free(mpart_surf_b);
 
-  PDM_DMesh_nodal_free(dmn_surf_a);
-  PDM_multipart_free(mpart_surf_a);
+  PDM_DMesh_nodal_free(dmn_vol_a);
+  PDM_multipart_free(mpart_vol_a);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 

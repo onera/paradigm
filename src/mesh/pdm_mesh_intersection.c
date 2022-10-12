@@ -56,6 +56,201 @@ extern "C"
 
 static
 void
+_export_vtk_2d
+(
+ char               *pattern,
+ PDM_extract_part_t *extrp_mesh
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp_mesh->comm, &i_rank);
+
+  for(int i_part = 0; i_part < extrp_mesh->n_part_out; ++i_part) {
+
+    PDM_g_num_t *face_ln_to_gn = NULL;
+    PDM_g_num_t *vtx_ln_to_gn  = NULL;
+    int n_face = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+
+    double *vtx_coord = NULL;
+    PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
+
+    int  *face_edge     = NULL;
+    int  *face_edge_idx = NULL;
+    int  *edge_vtx      = NULL;
+    int  *edge_vtx_idx  = NULL;
+    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, &face_edge, &face_edge_idx, PDM_OWNERSHIP_KEEP);
+    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_KEEP);
+
+    int *face_vtx = NULL;
+    PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
+
+    char filename[999];
+    sprintf(filename, "%s_%i_%i.vtk", pattern, i_part, i_rank);
+    PDM_vtk_write_polydata(filename,
+                           n_vtx,
+                           vtx_coord,
+                           vtx_ln_to_gn,
+                           n_face,
+                           face_edge_idx,
+                           face_vtx,
+                           face_ln_to_gn,
+                           NULL);
+
+
+    free(face_vtx);
+  }
+}
+
+static void
+_export_vtk_3d
+(
+ const char               *name_chr,
+       PDM_extract_part_t *extrp
+)
+{
+  int i_rank;
+
+  PDM_MPI_Comm_rank(extrp->comm, &i_rank);
+
+  int          *pn_extract_cell        = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+  int          *pn_extract_face        = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+  int          *pn_extract_vtx         = (int          *) malloc(extrp->n_part_out * sizeof(int          ));
+  int         **pextract_cell_face     = (int         **) malloc(extrp->n_part_out * sizeof(int         *));
+  int         **pextract_cell_face_idx = (int         **) malloc(extrp->n_part_out * sizeof(int         *));
+  int         **pextract_face_vtx      = (int         **) malloc(extrp->n_part_out * sizeof(int         *));
+  int         **pextract_face_vtx_idx  = (int         **) malloc(extrp->n_part_out * sizeof(int         *));
+  double      **pextract_vtx           = (double      **) malloc(extrp->n_part_out * sizeof(double      *));
+  PDM_g_num_t **pextract_cell_ln_to_gn = (PDM_g_num_t **) malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pextract_face_ln_to_gn = (PDM_g_num_t **) malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pextract_vtx_ln_to_gn  = (PDM_g_num_t **) malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
+
+
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+
+    pn_extract_cell[i_part] = PDM_extract_part_n_entity_get(extrp,
+                                                            i_part,
+                                                            PDM_MESH_ENTITY_CELL);
+
+    pn_extract_face[i_part] = PDM_extract_part_n_entity_get(extrp,
+                                                            i_part,
+                                                            PDM_MESH_ENTITY_FACE);
+
+    pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
+                                                           i_part,
+                                                           PDM_MESH_ENTITY_VERTEX);
+
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      &pextract_cell_face[i_part],
+                                      &pextract_cell_face_idx[i_part],
+                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                      &pextract_face_vtx[i_part],
+                                      &pextract_face_vtx_idx[i_part],
+                                      PDM_OWNERSHIP_KEEP);
+
+    if(pextract_face_vtx[i_part] == NULL) {
+      int *face_edge     = NULL;
+      int *face_edge_idx = NULL;
+      int *edge_vtx     = NULL;
+      int *edge_vtx_idx = NULL;
+      PDM_extract_part_connectivity_get(extrp,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                        &face_edge,
+                                        &face_edge_idx,
+                                        PDM_OWNERSHIP_KEEP);
+      PDM_extract_part_connectivity_get(extrp,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                        &edge_vtx,
+                                        &edge_vtx_idx,
+                                        PDM_OWNERSHIP_KEEP);
+      PDM_compute_face_vtx_from_face_and_edge(pn_extract_face[i_part], face_edge_idx, face_edge, edge_vtx, &pextract_face_vtx[i_part]);
+
+      pextract_face_vtx_idx[i_part] = malloc((pn_extract_face[i_part]+1) * sizeof(int));
+      for(int i = 0; i < pn_extract_face[i_part]+1; ++i) {
+        pextract_face_vtx_idx[i_part][i] = face_edge_idx[i];
+      }
+    }
+
+
+    PDM_extract_part_vtx_coord_get(extrp,
+                                   i_part,
+                                   &pextract_vtx[i_part],
+                                   PDM_OWNERSHIP_KEEP);
+
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_CELL,
+                                  &pextract_cell_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_KEEP);
+
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_FACE,
+                                  &pextract_face_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_KEEP);
+
+    PDM_extract_part_ln_to_gn_get(extrp,
+                                  i_part,
+                                  PDM_MESH_ENTITY_VERTEX,
+                                  &pextract_vtx_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_KEEP);
+
+    // log_trace(" %s --> %i \n", name_chr, pn_extract_cell[i_part]);
+    /* Vtk en légende */
+    char filename[999];
+    sprintf(filename, "%s_%3.3d_%3.3d.vtk", name_chr, i_part, i_rank);
+    PDM_vtk_write_polydata(filename,
+                           pn_extract_vtx[i_part],
+                           pextract_vtx[i_part],
+                           pextract_vtx_ln_to_gn[i_part],
+                           pn_extract_face[i_part],
+                           pextract_face_vtx_idx[i_part],
+                           pextract_face_vtx[i_part],
+                           pextract_face_ln_to_gn[i_part],
+                           NULL);
+
+  }
+
+  // La visu concatene merge les valeurs donc on voit pas grand choses
+  // _visu (name_chr,
+  //        extrp->n_part_out,
+  //        pn_extract_cell,
+  //        pn_extract_face,
+  //        pn_extract_vtx,
+  //        pextract_cell_face_idx,
+  //        pextract_cell_face,
+  //        pextract_cell_ln_to_gn,
+  //        pextract_face_vtx_idx,
+  //        pextract_face_vtx,
+  //        pextract_face_ln_to_gn,
+  //        pextract_vtx,
+  //        pextract_vtx_ln_to_gn);
+
+
+
+  free(pn_extract_cell       );
+  free(pn_extract_face       );
+  free(pn_extract_vtx        );
+  free(pextract_cell_face    );
+  free(pextract_cell_face_idx);
+  free(pextract_face_vtx     );
+  free(pextract_face_vtx_idx );
+  free(pextract_vtx          );
+  free(pextract_cell_ln_to_gn);
+  free(pextract_face_ln_to_gn);
+  free(pextract_vtx_ln_to_gn );
+}
+
+static
+void
 _compute_extents_3d
 (
  int      n_cell,
@@ -233,8 +428,20 @@ _compute_part_mesh_extents
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
 
       extents[i_part] = malloc(6 * n_cell * sizeof(double));
-
-      _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+      if(face_vtx == NULL) {
+        int    *face_edge_idx  = NULL;
+        int    *face_edge      = NULL;
+        int    *edge_vtx_idx   = NULL;
+        int    *edge_vtx       = NULL;
+        int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
+        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE , &face_edge , &face_edge_idx, PDM_OWNERSHIP_USER);
+        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx  , &edge_vtx_idx , PDM_OWNERSHIP_USER);
+        PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
+        _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_edge_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+        free(face_vtx);
+      } else {
+        _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+      }
     }
   } else if(dim_mesh == 2) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -336,6 +543,13 @@ _select_elements_by_global_bbox
       n_entity = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
       PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE, &entity_ln_to_gn, PDM_OWNERSHIP_USER);
     }
+
+    // char filename[999];
+    // sprintf(filename, "titi_%i.vtk", n_entity);
+    // PDM_vtk_write_boxes(filename,
+    //                     n_entity,
+    //                     box_extents[i_part],
+    //                     NULL);
 
     n_extract_elmt[i_part] = 0;
     extract_box_extents       [i_part] = malloc(6 * n_entity * sizeof(double     ));
@@ -706,7 +920,6 @@ _create_extract_part
     double *vtx_coord = NULL;
     PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER);
 
-    printf("n_face = %i  \n", n_face);
     PDM_extract_part_part_set(extrp_mesh,
                               i_part,
                               n_cell,
@@ -774,57 +987,16 @@ _mesh_intersection_vol_surf
   PDM_UNUSED(redistribute_box_a_to_box_b_idx);
   PDM_UNUSED(redistribute_box_a_to_box_b);
 
-}
-
-static
-void
-_export_vtk_2d
-(
- char               *pattern,
- PDM_extract_part_t *extrp_mesh
-)
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(extrp_mesh->comm, &i_rank);
-
-  for(int i_part = 0; i_part < extrp_mesh->n_part_out; ++i_part) {
-
-    PDM_g_num_t *face_ln_to_gn = NULL;
-    PDM_g_num_t *vtx_ln_to_gn  = NULL;
-    int n_face = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
-    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
-
-    double *vtx_coord = NULL;
-    PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
-
-    int  *face_edge     = NULL;
-    int  *face_edge_idx = NULL;
-    int  *edge_vtx      = NULL;
-    int  *edge_vtx_idx  = NULL;
-    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, &face_edge, &face_edge_idx, PDM_OWNERSHIP_KEEP);
-    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_KEEP);
-
-    int *face_vtx = NULL;
-    PDM_compute_face_vtx_from_face_and_edge(n_face, face_edge_idx, face_edge, edge_vtx, &face_vtx);
-
-    char filename[999];
-    sprintf(filename, "%s_%i_%i.vtk", pattern, i_part, i_rank);
-    PDM_vtk_write_polydata(filename,
-                           n_vtx,
-                           vtx_coord,
-                           vtx_ln_to_gn,
-                           n_face,
-                           face_edge_idx,
-                           face_vtx,
-                           face_ln_to_gn,
-                           NULL);
-
-
-    free(face_vtx);
-
+  /*
+   * Panic vtk
+   */
+  if(1 == 1) {
+    _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
 
 }
+
 
 static
 void
