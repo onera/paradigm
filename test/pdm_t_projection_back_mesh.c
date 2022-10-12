@@ -72,7 +72,8 @@ _read_args
  char   **argv,
  char   **filename,
  double  *pt_coord,
- int     *random_seed
+ int     *random_seed,
+ int     *visu
  )
 {
   int i = 1;
@@ -111,6 +112,10 @@ _read_args
       else {
         *random_seed = atoi(argv[i]);
       }
+    }
+
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
 
     else
@@ -713,6 +718,7 @@ int main(int argc, char *argv[])
   char *filename = NULL;
   double pt_coord[3] = {0.23062829, 0.39873915, -0.02889847};
   int random_seed = -1;
+  int visu        = 0;
 
   /*
    *  Read args
@@ -721,7 +727,8 @@ int main(int argc, char *argv[])
              argv,
              &filename,
              pt_coord,
-             &random_seed);
+             &random_seed,
+             &visu);
 
   if (filename == NULL) {
     filename = (char *) "/stck/bandrieu/Public/adaptation/projection/back_faces_P1.dat";
@@ -884,18 +891,20 @@ int main(int argc, char *argv[])
   const char* field_name[] = {"visiting_order"};
   const double *field[1] = {visiting_order};
 
-  PDM_vtk_write_std_elements_ho("back_mesh.vtk",
-                                elt_order,
-                                n_vtx,
-                                vtx_coord,
-                                NULL,
-                                elt_type,
-                                n_elt,
-                                elt_vtx,
-                                NULL,
-                                1,
-                                field_name,
-                                field);
+  if (visu) {
+    PDM_vtk_write_std_elements_ho("back_mesh.vtk",
+                                  elt_order,
+                                  n_vtx,
+                                  vtx_coord,
+                                  NULL,
+                                  elt_type,
+                                  n_elt,
+                                  elt_vtx,
+                                  NULL,
+                                  1,
+                                  field_name,
+                                  field);
+  }
   free(visiting_order);
 
 
@@ -907,17 +916,19 @@ int main(int argc, char *argv[])
 
   int proj_e[2] = {1, 2};
 
-  PDM_vtk_write_std_elements("proj.vtk",
-                             2,
-                             proj_p,
-                             NULL,
-                             PDM_MESH_NODAL_BAR2,
-                             1,
-                             proj_e,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+  if (visu) {
+    PDM_vtk_write_std_elements("proj.vtk",
+                               2,
+                               proj_p,
+                               NULL,
+                               PDM_MESH_NODAL_BAR2,
+                               1,
+                               proj_e,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
   int *history_bar = malloc(sizeof(int) * (n_step-1) * 2);
   for (int i = 0; i < n_step-1; i++) {
@@ -925,17 +936,19 @@ int main(int argc, char *argv[])
     history_bar[2*i+1] = i+2;
   }
 
-  PDM_vtk_write_std_elements("history.vtk",
-                             n_step,
-                             history_proj,
-                             NULL,
-                             PDM_MESH_NODAL_BAR2,
-                             n_step-1,
-                             history_bar,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
+  if (visu) {
+    PDM_vtk_write_std_elements("history.vtk",
+                               n_step,
+                               history_proj,
+                               NULL,
+                               PDM_MESH_NODAL_BAR2,
+                               n_step-1,
+                               history_bar,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+  }
   free(history_bar);
 
 

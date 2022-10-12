@@ -1902,7 +1902,7 @@ PDM_sphere_vol_icosphere_gen
                                          &base_cell_face,
                                          &base_cell_edge);
 
-  if (1 && i_rank == 0) {
+  if (0 && i_rank == 0) {
     PDM_vtk_write_std_elements("icoball_base_edge.vtk",
                                base_n_vtx,
                                base_vtx_coord,

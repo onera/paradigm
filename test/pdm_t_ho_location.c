@@ -80,7 +80,8 @@ _read_args(int            argc,
            PDM_g_num_t   *nz,
            int           *order,
            int           *t_elt,
-           int           *use_newton)
+           int           *use_newton,
+           int           *visu)
 {
   int i = 1;
 
@@ -157,6 +158,9 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-newton") == 0) {
       *use_newton = 1;
+    }
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -529,14 +533,15 @@ int main(int argc, char *argv[])
   /*
    *  Set default values
    */
-  PDM_g_num_t          gn_pts = 1;
-  PDM_g_num_t          nx     = 2;
-  PDM_g_num_t          ny     = 2;
-  PDM_g_num_t          nz     = 2;
-  int                  order  = 3;
-  double               length = 1.;
+  PDM_g_num_t          gn_pts     = 1;
+  PDM_g_num_t          nx         = 2;
+  PDM_g_num_t          ny         = 2;
+  PDM_g_num_t          nz         = 2;
+  int                  order      = 3;
+  double               length     = 1.;
   int                  use_newton = 0;
-  PDM_Mesh_nodal_elt_t t_elt  = PDM_MESH_NODAL_HEXAHO;
+  int                  visu       = 0;
+  PDM_Mesh_nodal_elt_t t_elt      = PDM_MESH_NODAL_HEXAHO;
   // 11 -> tria_ho
   // 12 -> quad_ho
   // 13 -> tetra_ho
@@ -559,7 +564,8 @@ int main(int argc, char *argv[])
              &nz,
              &order,
              (int *) &t_elt,
-             &use_newton);
+             &use_newton,
+             &visu);
 
   /*
    *  Init
@@ -961,49 +967,51 @@ int main(int argc, char *argv[])
     connec[ijk_to_user[i]] = i + 1;
   }
 
-  const char *field_name[] = {"field", "field0"};
-  PDM_vtk_write_std_elements_ho_with_vtx_field("ho_location_elt.vtk",
-                                               order,
-                                               n_node,
-                                               node_coord,
-                                               NULL,
-                                               t_elt,
-                                               1,
-                                               connec,
-                                               NULL,
-                                               0,
-                                               NULL,
-                                               NULL,
-                                               1,
-                                               (const char   **) field_name,
-                                               (const double **) &node_field);
+  if (visu) {
+    const char *field_name[] = {"field", "field0"};
+    PDM_vtk_write_std_elements_ho_with_vtx_field("ho_location_elt.vtk",
+                                                 order,
+                                                 n_node,
+                                                 node_coord,
+                                                 NULL,
+                                                 t_elt,
+                                                 1,
+                                                 connec,
+                                                 NULL,
+                                                 0,
+                                                 NULL,
+                                                 NULL,
+                                                 1,
+                                                 (const char   **) field_name,
+                                                 (const double **) &node_field);
+
+    const double *field[2] = {interp_field, proj_field};
+    PDM_vtk_write_std_elements_double("ho_location_pts.vtk",
+                                      n_pts,
+                                      pts_coord,
+                                      NULL,
+                                      PDM_MESH_NODAL_POINT,
+                                      n_pts,
+                                      NULL,
+                                      NULL,
+                                      2,
+                                      (const char   **) field_name,
+                                      (const double **) field);
+
+
+    PDM_vtk_write_std_elements_double("ho_location_proj.vtk",
+                                      n_pts,
+                                      proj_coord,
+                                      NULL,
+                                      PDM_MESH_NODAL_POINT,
+                                      n_pts,
+                                      NULL,
+                                      NULL,
+                                      2,
+                                      (const char   **) field_name,
+                                      (const double **) field);
+  }
   free(connec);
-
-  const double *field[2] = {interp_field, proj_field};
-  PDM_vtk_write_std_elements_double("ho_location_pts.vtk",
-                                    n_pts,
-                                    pts_coord,
-                                    NULL,
-                                    PDM_MESH_NODAL_POINT,
-                                    n_pts,
-                                    NULL,
-                                    NULL,
-                                    2,
-                                    (const char   **) field_name,
-                                    (const double **) field);
-
-
-  PDM_vtk_write_std_elements_double("ho_location_proj.vtk",
-                                    n_pts,
-                                    proj_coord,
-                                    NULL,
-                                    PDM_MESH_NODAL_POINT,
-                                    n_pts,
-                                    NULL,
-                                    NULL,
-                                    2,
-                                    (const char   **) field_name,
-                                    (const double **) field);
 
   free(node_coord);
   free(pts_coord);

@@ -70,7 +70,8 @@ _read_args(int            argc,
            double        *x_center,
            double        *y_center,
            double        *z_center,
-           double        *radius)
+           double        *radius,
+           int           *visu)
 {
   int i = 1;
 
@@ -118,6 +119,9 @@ _read_args(int            argc,
       else
         *radius = atof(argv[i]);
     }
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -141,6 +145,7 @@ int main(int argc, char *argv[])
   double      y_center = 0;
   double      z_center = 0;
   double      radius   = 1;
+  int         visu     = 0;
 
   _read_args(argc,
              argv,
@@ -148,7 +153,8 @@ int main(int argc, char *argv[])
              &x_center,
              &y_center,
              &z_center,
-             &radius);
+             &radius,
+             &visu);
 
 
 
@@ -193,9 +199,9 @@ int main(int argc, char *argv[])
   dn_vtx  = (int) (distrib_vtx[i_rank+1]  - distrib_vtx[i_rank]);
 
 
-  PDM_log_trace_array_long(distrib_vtx,
-                           n_rank+1,
-                           "distrib_vtx : ");
+  // PDM_log_trace_array_long(distrib_vtx,
+  //                          n_rank+1,
+  //                          "distrib_vtx : ");
 
   /*
    *  Visu VTK
@@ -207,12 +213,12 @@ int main(int argc, char *argv[])
 
 
   char filename[999];
-  sprintf(filename, "icoball_dvtx_coord_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            dn_vtx,
-                            dvtx_coord,
-                            dvtx_ln_to_gn,
-                            NULL);
+  // sprintf(filename, "icoball_dvtx_coord_%2.2d.vtk", i_rank);
+  // PDM_vtk_write_point_cloud(filename,
+  //                           dn_vtx,
+  //                           dvtx_coord,
+  //                           dvtx_ln_to_gn,
+  //                           NULL);
 
 
   dn_cell = (int) (distrib_cell[i_rank+1] - distrib_cell[i_rank]);
@@ -254,33 +260,21 @@ int main(int argc, char *argv[])
   free(tmp_pvtx_coord);
 
 
-  // sprintf(filename, "icoball_%d_dfaces_%2.2d.vtk", (int) n, i_rank);
-  sprintf(filename, "icoball_dcell_%2.2d.vtk", i_rank);
-  // PDM_vtk_write_polydata(filename,
-  //                        pn_vtx,
-  //                        pvtx_coord,
-  //                        pvtx_ln_to_gn,
-  //                        dn_cell,
-  //                        pcell_vtx_idx,
-  //                        pcell_vtx,
-  //                        pcell_ln_to_gn,
-  //                        NULL);
 
-
-
-
-  PDM_vtk_write_std_elements(filename,
-                             pn_vtx,
-                             pvtx_coord,
-                             pvtx_ln_to_gn,
-                             PDM_MESH_NODAL_TETRA4,
-                             dn_cell,
-                             pcell_vtx,
-                             pcell_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
-
+  if (visu) {
+    sprintf(filename, "icoball_dcell_%2.2d.vtk", i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               pn_vtx,
+                               pvtx_coord,
+                               pvtx_ln_to_gn,
+                               PDM_MESH_NODAL_TETRA4,
+                               dn_cell,
+                               pcell_vtx,
+                               pcell_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
+  }
   double *volume = malloc(sizeof(double) * dn_cell);
   // PDM_geom_elem_tetra_oriented_volume(dn_cell,
   //                                     pcell_vtx,
@@ -340,14 +334,15 @@ int main(int argc, char *argv[])
                                      radius,
                                      &dmn);
 
-  PDM_dmesh_nodal_dump_vtk(dmn,
-                           PDM_GEOMETRY_KIND_VOLUMIC,
-                           "icoball_volume_");
+  if (visu) {
+    PDM_dmesh_nodal_dump_vtk(dmn,
+                             PDM_GEOMETRY_KIND_VOLUMIC,
+                             "icoball_volume_");
 
-  PDM_dmesh_nodal_dump_vtk(dmn,
-                           PDM_GEOMETRY_KIND_SURFACIC,
-                           "icoball_surface_");
-
+    PDM_dmesh_nodal_dump_vtk(dmn,
+                             PDM_GEOMETRY_KIND_SURFACIC,
+                             "icoball_surface_");
+  }
   PDM_DMesh_nodal_free(dmn);
 
   PDM_MPI_Finalize();

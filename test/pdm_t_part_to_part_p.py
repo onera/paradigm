@@ -157,3 +157,6 @@ for i, p1p2 in enumerate(part1_to_part2):
 
 
 fout.close()
+
+
+print("[{}] -- End".format(i_rank))
