@@ -1517,9 +1517,20 @@ PDM_doctree_build
       res_box_weight[i_shm] = malloc(n_lbox * sizeof(double));
       res_box_strid [i_shm] = malloc(n_lbox * sizeof(int   ));
 
+      int n_lbox_compress = 0;
       for(int i = 0; i < n_lbox; ++i ){
-        res_box_strid [i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
-        res_box_weight[i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+        if(box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i] > 0 ){
+          res_box_strid [i_shm][n_lbox_compress] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+          res_box_weight[i_shm][n_lbox_compress] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+          n_lbox_compress++;
+        }
+      }
+      res_box_weight[i_shm] = realloc(res_box_weight[i_shm], n_lbox_compress * sizeof(double));
+      res_box_strid [i_shm] = realloc(res_box_strid [i_shm], n_lbox_compress * sizeof(int   ));
+      part_n_box    [i_shm] = n_lbox_compress;
+
+      if(n_lbox_compress < n_lbox) {
+        log_trace("Compress = %i ---> %i \n", n_lbox, n_lbox_compress);
       }
 
       double *sorted_tree_coord = NULL;
