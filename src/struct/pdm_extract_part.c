@@ -2499,6 +2499,10 @@ _extract_part_and_reequilibrate_from_target
     }
   }
 
+  printf("from_face_edge = %i \n", from_face_edge);
+  printf("from_face_vtx  = %i \n", from_face_vtx );
+  printf("extrp->dim     = %i \n", extrp->dim );
+
   // assert(extrp->dim == 3);
 
   PDM_part_to_part_t* ptp_vtx          = NULL;
@@ -2765,7 +2769,7 @@ _extract_part_and_reequilibrate_from_target
 
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
         int n_edge = extrp->pextract_n_entity[PDM_MESH_ENTITY_EDGE][i_part];
-        part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(1, n_edge);;
+        part2_edge_to_part1_edge_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_edge);;
       }
 
       PDM_pconnectivity_to_pconnectivity_from_location_keep(extrp->comm,

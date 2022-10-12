@@ -28,7 +28,9 @@
 #include "pdm_binary_search.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_priv.h"
+#include "pdm_extract_part.h"
 #include "pdm_vtk.h"
+#include "pdm_box_priv.h"
 
 
 #ifdef __cplusplus
@@ -249,6 +251,7 @@ _compute_part_mesh_extents
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_USER);
 
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
+      extents[i_part] = malloc(6 * n_face * sizeof(double));
 
       if(face_vtx != NULL) {
         _compute_extents_2d_from_face_vtx(n_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
@@ -276,6 +279,7 @@ _compute_part_mesh_extents
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
 
+      extents[i_part] = malloc(6 * n_edge * sizeof(double));
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
 
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx, &edge_vtx_idx, PDM_OWNERSHIP_USER);
@@ -377,6 +381,435 @@ _select_elements_by_global_bbox
   *extract_elmt_ln_to_gn_out      = extract_elmt_ln_to_gn;
 }
 
+
+static
+void
+_redistrib_boxes
+(
+ PDM_MPI_Comm    comm,
+ PDM_box_set_t  *boxes_mesh_a,
+ PDM_box_set_t  *boxes_mesh_b,
+ int            *box_a_to_box_b_idx,
+ int            *box_a_to_box_b,
+ int           **redistribute_box_a_to_box_b_idx,
+ int           **redistribute_box_a_to_box_b
+)
+{
+
+  int              n_elt_mesh_a    = PDM_box_set_get_size (boxes_mesh_a);
+  int              n_elt_mesh_b    = PDM_box_set_get_size (boxes_mesh_b);
+
+  PDM_g_num_t *gnum_elt_mesh_a = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_mesh_a);
+  PDM_g_num_t *gnum_elt_mesh_b = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_mesh_b);
+
+  /*****************************************************************************
+   *                                                                           *
+   *  Transfer intersection information from partitions to blocks              *
+   * with PDM_part_to_block_exch function                                      *
+   *                                                                           *
+   *  Results :                                                                *
+   *      - block_a_boxes_b_idx                                                *
+   *      - block_a_boxes_b_gnum_data                                          *
+   *                                                                           *
+   ****************************************************************************/
+
+  /*
+   * Tentative Bruno :
+   *   - Ponderate work
+   *   - Extract only cell with job
+   */
+  double* weight = (double *) malloc( n_elt_mesh_a * sizeof(double));
+  // PDM_g_num_t* extract_mesh_a_g_num = (PDM_g_num_t *) malloc( n_elt_mesh_a * sizeof(PDM_g_num_t));
+  for (int i = 0; i < n_elt_mesh_a; i++) {
+    weight[i] = box_a_to_box_b_idx[i+1] - box_a_to_box_b_idx[i];
+  }
+
+  // TODO : Geometric to better locality
+  PDM_part_to_block_t *ptb_boxes_a = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                              PDM_PART_TO_BLOCK_POST_MERGE,
+                                                              1.,
+                                            (PDM_g_num_t **) &gnum_elt_mesh_a,
+                                                             &weight,
+                                                              &n_elt_mesh_a,
+                                                              1,
+                                                              comm);
+
+  int n_elt_block_a = PDM_part_to_block_n_elt_block_get (ptb_boxes_a);
+  free(weight);
+
+  PDM_g_num_t *block_gnum_a = PDM_part_to_block_block_gnum_get (ptb_boxes_a);
+
+  int *part_stride_a = (int *) malloc (sizeof(int) * n_elt_mesh_a);
+
+  for (int i = 0; i < n_elt_mesh_a; i++) {
+    part_stride_a[i] = box_a_to_box_b_idx[i+1] - box_a_to_box_b_idx[i];
+  }
+
+  /*
+   * Exchange connectivity box_a_to_box_b
+   */
+  PDM_g_num_t *box_a_to_box_b_g_num = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *
+                                                               box_a_to_box_b_idx[n_elt_mesh_a]);
+
+  for (int k = 0; k < box_a_to_box_b_idx[n_elt_mesh_a]; k++) {
+    box_a_to_box_b_g_num[k] =  gnum_elt_mesh_b[box_a_to_box_b[k]];
+  }
+
+  int         *block_a_boxes_b_stride;
+  PDM_g_num_t *block_a_boxes_b_gnum_data;
+
+  PDM_part_to_block_exch (ptb_boxes_a,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         0,
+                         &part_stride_a,
+               (void **) &box_a_to_box_b_g_num,
+                         &block_a_boxes_b_stride,
+               (void **) &block_a_boxes_b_gnum_data);
+  free(box_a_to_box_b_g_num);
+  /*****************************************************************************
+   *                                                                           *
+   * Redistribute boxes_mesh_a intersections to ensure a good load balacing          *
+   * in comm MPI communicator                                              *
+   * This step removes intersections found many times on different ranks       *
+   *                                                                           *
+   * After this step, data are stored in a block with n_elt_block_a, block_gnum_a,
+   * part_stride_a                                                              *
+   *                                                                           *
+   ****************************************************************************/
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  /*
+   * Redistribute data boxes_mesh_a from blockB distribution with a PDM_box_distrib_t
+   * structure
+   * TODO: - Build a new PDM_box_distrib_t structure more simple
+   *       - Hide PDM_box_distrib_t attributes
+   */
+
+  PDM_l_num_t *destination = PDM_part_to_block_destination_get (ptb_boxes_a);
+
+  PDM_g_num_t n_g_elmt_mesh_a = PDM_box_set_get_global_size(boxes_mesh_a);
+
+  PDM_box_distrib_t *distrib_a = PDM_box_distrib_create(n_elt_mesh_a,
+                                                        n_g_elmt_mesh_a,
+                                                        1, // Don't use in this case
+                                                        comm);
+
+  PDM_g_num_t n_g_elmt_mesh_b = PDM_box_set_get_global_size(boxes_mesh_b);
+
+  PDM_box_distrib_t *distrib_b = PDM_box_distrib_create(n_elt_mesh_b,
+                                                        n_g_elmt_mesh_b,
+                                                        1, // Don't use in this case
+                                                        comm);
+
+
+  int *count_elts_a = (int *) malloc (sizeof(int) * n_rank);
+  int *count_elts_b = (int *) malloc (sizeof(int) * n_rank);
+
+  for (int i = 0; i < n_rank + 1; i++) {
+    distrib_a->index[i] = 0;
+    distrib_b->index[i] = 0;
+  }
+
+  for (int i = 0; i < n_rank; i++) {
+    count_elts_a[i] = 0;
+    count_elts_b[i] = 0;
+  }
+
+  for (int i = 0; i < n_elt_mesh_a; i++) {
+    int t_rank = destination[i] + 1;
+
+    if(part_stride_a[i] > 0 ) { // To see with Eric and Bastien --> I use it to extract only the intersect part
+      distrib_a->index[t_rank]++;
+      distrib_b->index[t_rank] += part_stride_a[i];
+    }
+  }
+
+  for (int i = 0; i < n_rank; i++) {
+    distrib_a->index[i+1] += distrib_a->index[i];
+    distrib_b->index[i+1] += distrib_b->index[i];
+  }
+
+  distrib_a->list = (int *) malloc (sizeof(int) * distrib_a->index[n_rank]);
+  distrib_b->list = (int *) malloc (sizeof(int) * distrib_b->index[n_rank]);
+
+  for (int i = 0; i < n_elt_mesh_a; i++) {
+    if(part_stride_a[i] > 0 ) { // To see with Eric and Bastien --> I use it to extract only the intersect part
+      int t_rank = destination[i]; // EQU + 1; mais ce n est pas necessaire
+      int idx_a = distrib_a->index[t_rank] + (count_elts_a[t_rank]++);
+      distrib_a->list[idx_a] = i;
+      int idx_b = distrib_b->index[t_rank] + count_elts_b[t_rank];
+      count_elts_b[t_rank] += part_stride_a[i];
+      int k=0;
+      for (int j = box_a_to_box_b_idx[i]; j < box_a_to_box_b_idx[i+1]; j++) {
+        distrib_b->list[idx_b+k++] = box_a_to_box_b[j];
+      }
+    }
+  }
+
+
+  free (part_stride_a);
+  free (count_elts_a);
+  free (count_elts_b);
+
+  PDM_box_distrib_clean (distrib_a);
+  PDM_box_distrib_clean (distrib_b);
+
+  PDM_box_set_redistribute (distrib_a, boxes_mesh_a);
+  PDM_box_set_redistribute (distrib_b, boxes_mesh_b);
+
+  PDM_box_distrib_destroy (&distrib_a);
+  PDM_box_distrib_destroy (&distrib_b);
+
+  PDM_box_set_remove_duplicate (boxes_mesh_a);
+  PDM_box_set_remove_duplicate (boxes_mesh_b);
+
+  /*
+   * All boxes are redistribute we need to update box_a_to_box_b array
+   *    - Caution if morton / hilbert the array block_gnum_a IS NOT order
+   */
+  n_elt_mesh_a    = PDM_box_set_get_size (boxes_mesh_a); // Caution not the same of the fist call because redistibute
+  n_elt_mesh_b    = PDM_box_set_get_size (boxes_mesh_b); // Caution not the same of the fist call because redistibute
+
+  gnum_elt_mesh_a = (PDM_g_num_t *) PDM_box_set_get_g_num(boxes_mesh_a);
+  gnum_elt_mesh_b = (PDM_g_num_t *) PDM_box_set_get_g_num(boxes_mesh_b);
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(block_gnum_a,
+                                                                        n_elt_block_a,
+                                                (const PDM_g_num_t **)  &gnum_elt_mesh_a,
+                                                                        &n_elt_mesh_a,
+                                                                        1,
+                                                                        comm);
+
+  PDM_part_to_block_free (ptb_boxes_a);
+  int         **tmp_redistribute_box_a_to_box_b_n     = NULL;
+  PDM_g_num_t **tmp_redistribute_box_a_to_box_b_g_num = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         block_a_boxes_b_stride,
+                         block_a_boxes_b_gnum_data,
+                         &tmp_redistribute_box_a_to_box_b_n,
+           (void ***)    &tmp_redistribute_box_a_to_box_b_g_num);
+  free (block_a_boxes_b_stride);
+  free (block_a_boxes_b_gnum_data);
+
+  PDM_block_to_part_free(btp);
+
+  int         *redistribute_box_a_to_box_b_n     = tmp_redistribute_box_a_to_box_b_n    [0];
+  PDM_g_num_t *redistribute_box_a_to_box_b_g_num = tmp_redistribute_box_a_to_box_b_g_num[0];
+  free(tmp_redistribute_box_a_to_box_b_n    );
+  free(tmp_redistribute_box_a_to_box_b_g_num);
+
+
+  /*
+   * Translate in frame of B
+   */
+
+  int         *order              = (int         *) malloc(n_elt_mesh_b * sizeof(int        ));
+  PDM_g_num_t *gnum_elt_mesh_b_cp = (PDM_g_num_t *) malloc(n_elt_mesh_b * sizeof(PDM_g_num_t));
+  for(int i = 0; i < n_elt_mesh_b; ++i ) {
+    order             [i] = i;
+    gnum_elt_mesh_b_cp[i] = gnum_elt_mesh_b[i];
+  }
+
+  PDM_sort_long(gnum_elt_mesh_b_cp, order, n_elt_mesh_b);
+
+
+  int *_redistribute_box_a_to_box_b_idx = (int *) malloc((n_elt_mesh_a+1) * sizeof(int));
+  _redistribute_box_a_to_box_b_idx[0] = 0;
+  int n_tot_connect = 0;
+  for(int i = 0; i < n_elt_mesh_a; ++i) {
+    n_tot_connect += redistribute_box_a_to_box_b_n[i];
+    _redistribute_box_a_to_box_b_idx[i+1] = _redistribute_box_a_to_box_b_idx[i] + redistribute_box_a_to_box_b_n[i];
+  }
+
+  int *_redistribute_box_a_to_box_b = (int *) malloc( n_tot_connect * sizeof(int));
+
+  for(int i = 0; i < n_tot_connect; ++i) {
+    int pos = PDM_binary_search_long(redistribute_box_a_to_box_b_g_num[i], gnum_elt_mesh_b_cp, n_elt_mesh_b);
+    _redistribute_box_a_to_box_b[i] = order[pos];
+  }
+
+  *redistribute_box_a_to_box_b_idx = _redistribute_box_a_to_box_b_idx;
+  *redistribute_box_a_to_box_b     = _redistribute_box_a_to_box_b;
+
+  free(order);
+  free(gnum_elt_mesh_b_cp);
+  free(redistribute_box_a_to_box_b_n    );
+  free(redistribute_box_a_to_box_b_g_num);
+}
+
+
+static
+PDM_extract_part_t*
+_create_extract_part
+(
+ PDM_part_mesh_t *mesh,
+ int              dim_mesh,
+ PDM_box_set_t   *boxes_meshes
+)
+{
+  int n_part_out = 1;
+  PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
+                                                           mesh->n_part,
+                                                           n_part_out,
+                                                           PDM_EXTRACT_PART_KIND_FROM_TARGET,
+                                                           PDM_SPLIT_DUAL_WITH_HILBERT, // Not used
+                                                           PDM_FALSE,                   // compute_child_gnum
+                                                           PDM_OWNERSHIP_KEEP,
+                                                           mesh->comm);
+
+  int              n_elt_mesh    = PDM_box_set_get_size (boxes_meshes);
+
+  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+
+  int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
+
+
+  for(int i_part = 0; i_part < mesh->n_part; ++i_part) {
+
+    int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL  );
+    int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE  );
+    int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  );
+    int n_vtx  = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX);
+
+    PDM_g_num_t *cell_ln_to_gn = NULL;
+    PDM_g_num_t *face_ln_to_gn = NULL;
+    PDM_g_num_t *edge_ln_to_gn = NULL;
+    PDM_g_num_t *vtx_ln_to_gn  = NULL;
+
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_CELL  , &cell_ln_to_gn, PDM_OWNERSHIP_USER);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_USER);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_USER);
+    PDM_part_mesh_entity_ln_to_gn_get(mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_USER);
+
+    int *cell_face     = NULL;
+    int *cell_face_idx = NULL;
+    int *face_vtx      = NULL;
+    int *face_vtx_idx  = NULL;
+    int *face_edge     = NULL;
+    int *face_edge_idx = NULL;
+    int *edge_vtx      = NULL;
+    int *edge_vtx_idx  = NULL;
+
+    PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_CELL_FACE, &cell_face, &cell_face_idx, PDM_OWNERSHIP_USER);
+    PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx , PDM_OWNERSHIP_USER);
+    PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, &face_edge, &face_edge_idx, PDM_OWNERSHIP_USER);
+    PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_USER);
+
+    double *vtx_coord = NULL;
+    PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER);
+
+    PDM_extract_part_part_set(extrp_mesh,
+                              i_part,
+                              n_cell,
+                              n_face,
+                              n_edge,
+                              n_vtx ,
+                              cell_face_idx,
+                              cell_face,
+                              face_edge_idx,
+                              face_edge,
+                              edge_vtx,
+                              face_vtx_idx,
+                              face_vtx,
+                              cell_ln_to_gn,
+                              face_ln_to_gn,
+                              edge_ln_to_gn,
+                              vtx_ln_to_gn,
+                              vtx_coord);
+  }
+
+
+
+
+  /*  Setup target frame */
+  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, gnum_elt_mesh, init_location_elt_mesh);
+
+  PDM_extract_part_compute(extrp_mesh);
+
+  return extrp_mesh;
+}
+
+static
+void
+_mesh_intersection_vol_vol
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_extract_part_t      *extrp_mesh_a,
+ PDM_extract_part_t      *extrp_mesh_b,
+ int                     *redistribute_box_a_to_box_b_idx,
+ int                     *redistribute_box_a_to_box_b
+)
+{
+  PDM_UNUSED(mi);
+  PDM_UNUSED(extrp_mesh_a);
+  PDM_UNUSED(extrp_mesh_b);
+  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
+  PDM_UNUSED(redistribute_box_a_to_box_b);
+
+}
+
+static
+void
+_mesh_intersection_vol_surf
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_extract_part_t      *extrp_mesh_a,
+ PDM_extract_part_t      *extrp_mesh_b,
+ int                     *redistribute_box_a_to_box_b_idx,
+ int                     *redistribute_box_a_to_box_b
+)
+{
+  PDM_UNUSED(mi);
+  PDM_UNUSED(extrp_mesh_a);
+  PDM_UNUSED(extrp_mesh_b);
+  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
+  PDM_UNUSED(redistribute_box_a_to_box_b);
+
+}
+
+
+static
+void
+_mesh_intersection_surf_surf
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_extract_part_t      *extrp_mesh_a,
+ PDM_extract_part_t      *extrp_mesh_b,
+ int                     *redistribute_box_a_to_box_b_idx,
+ int                     *redistribute_box_a_to_box_b
+)
+{
+  PDM_UNUSED(mi);
+  PDM_UNUSED(extrp_mesh_a);
+  PDM_UNUSED(extrp_mesh_b);
+  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
+  PDM_UNUSED(redistribute_box_a_to_box_b);
+
+}
+
+
+static
+void
+_mesh_intersection_surf_line
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_extract_part_t      *extrp_mesh_a,
+ PDM_extract_part_t      *extrp_mesh_b,
+ int                     *redistribute_box_a_to_box_b_idx,
+ int                     *redistribute_box_a_to_box_b
+)
+{
+  PDM_UNUSED(mi);
+  PDM_UNUSED(extrp_mesh_a);
+  PDM_UNUSED(extrp_mesh_b);
+  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
+  PDM_UNUSED(redistribute_box_a_to_box_b);
+
+}
 
 /*=============================================================================
  * Public function definitions
@@ -543,16 +976,78 @@ PDM_mesh_intersection_compute
   }
 
 
+  /*
+   *  Redistrib all boxes (inplace) like overlay before extracting mesh
+   */
+  int *redistribute_box_a_to_box_b_idx = NULL;
+  int *redistribute_box_a_to_box_b     = NULL;
+  _redistrib_boxes(mi->comm,
+                   boxes_mesh_a,
+                   boxes_mesh_b,
+                   box_a_to_box_b_idx,
+                   box_a_to_box_b,
+                   &redistribute_box_a_to_box_b_idx,
+                   &redistribute_box_a_to_box_b);
+  free(box_a_to_box_b_idx);
+  free(box_a_to_box_b);
 
+
+  /*
+   * Extract part
+   */
+  PDM_extract_part_t* extrp_mesh_a = _create_extract_part(mi->mesh_a,
+                                                          mi->dim_mesh_a,
+                                                          boxes_mesh_a);
+  PDM_extract_part_t* extrp_mesh_b = _create_extract_part(mi->mesh_b,
+                                                          mi->dim_mesh_b,
+                                                          boxes_mesh_b);
 
   PDM_dbbtree_free (dbbtree_mesh_a);
-
   PDM_box_set_destroy (&boxes_mesh_a);
   PDM_box_set_destroy (&boxes_mesh_b);
 
-  free(box_a_to_box_b_idx);
-  free(box_a_to_box_b);
+  /*
+   * Geometry begin here ...
+   */
+  if(mi->dim_mesh_a == 3 && mi->dim_mesh_b == 3) {
+    _mesh_intersection_vol_vol(mi,
+                               extrp_mesh_a,
+                               extrp_mesh_b,
+                               redistribute_box_a_to_box_b_idx,
+                               redistribute_box_a_to_box_b);
+  } else if(mi->dim_mesh_a == 3 && mi->dim_mesh_b == 2) {
+    // On suppose que l'utilisateur met A = Vol et B = Surf
+    _mesh_intersection_vol_surf(mi,
+                                extrp_mesh_a,
+                                extrp_mesh_b,
+                                redistribute_box_a_to_box_b_idx,
+                                redistribute_box_a_to_box_b);
+  } else if(mi->dim_mesh_a == 2 && mi->dim_mesh_b == 2) {
+    _mesh_intersection_surf_surf(mi,
+                                 extrp_mesh_a,
+                                 extrp_mesh_b,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
+  } else if(mi->dim_mesh_a == 2 && mi->dim_mesh_b == 1) {
+    // On suppose que l'utilisateur met A = Vol et B = Surf
+    _mesh_intersection_surf_line(mi,
+                                 extrp_mesh_a,
+                                 extrp_mesh_b,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh_a, mi->dim_mesh_b);
+  }
+
+  free(redistribute_box_a_to_box_b_idx);
+  free(redistribute_box_a_to_box_b    );
+
+  PDM_extract_part_free(extrp_mesh_a);
+  PDM_extract_part_free(extrp_mesh_b);
+
 }
+
 
 void
 PDM_mesh_intersection_part_set
@@ -583,15 +1078,15 @@ PDM_mesh_intersection_part_set
     mesh = mi->mesh_b;
   }
 
-  PDM_part_mesh_n_entity_set(mesh, PDM_MESH_ENTITY_CELL  , i_part, n_cell);
-  PDM_part_mesh_n_entity_set(mesh, PDM_MESH_ENTITY_FACE  , i_part, n_face);
-  PDM_part_mesh_n_entity_set(mesh, PDM_MESH_ENTITY_EDGE  , i_part, n_edge);
-  PDM_part_mesh_n_entity_set(mesh, PDM_MESH_ENTITY_VERTEX, i_part, n_vtx );
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , n_cell);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , n_face);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_EDGE  , n_edge);
+  PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_VERTEX, n_vtx );
 
-  PDM_part_mesh_connectivity_set(mesh, PDM_CONNECTIVITY_TYPE_CELL_FACE, i_part, cell_face, cell_face_idx, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_connectivity_set(mesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE, i_part, face_edge, face_edge_idx, PDM_OWNERSHIP_USER);
-  PDM_part_mesh_connectivity_set(mesh, PDM_CONNECTIVITY_TYPE_FACE_VTX , i_part, face_vtx , face_vtx_idx , PDM_OWNERSHIP_USER);
-  PDM_part_mesh_connectivity_set(mesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX , i_part, edge_vtx , NULL         , PDM_OWNERSHIP_USER);
+  PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_CELL_FACE, cell_face, cell_face_idx, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE, face_edge, face_edge_idx, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , face_vtx , face_vtx_idx , PDM_OWNERSHIP_USER);
+  PDM_part_mesh_connectivity_set(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , edge_vtx , NULL         , PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , cell_ln_to_gn, PDM_OWNERSHIP_USER);
   PDM_part_mesh_entity_ln_to_gn_set(mesh, i_part, PDM_MESH_ENTITY_FACE  , face_ln_to_gn, PDM_OWNERSHIP_USER);
@@ -612,6 +1107,8 @@ PDM_mesh_intersection_free
 
   PDM_part_mesh_free(mi->mesh_a);
   PDM_part_mesh_free(mi->mesh_b);
+
+  free(mi);
 }
 
 

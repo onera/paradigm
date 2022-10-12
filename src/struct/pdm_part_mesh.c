@@ -102,7 +102,7 @@ PDM_part_mesh_create
   pmesh->pconnectivity_idx      = (int         *** ) malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(int         **) );
   pmesh->pentity_ln_to_gn       = (PDM_g_num_t *** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_g_num_t **) );
 
-  pmesh->pn_entity              = (int          ** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(int         **) );
+  pmesh->pn_entity              = (int          ** ) malloc( PDM_MESH_ENTITY_MAX       * sizeof(int          *) );
 
   pmesh->is_owner_connectivity  = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t   ) );
   pmesh->is_owner_ln_to_gn      = malloc( PDM_MESH_ENTITY_MAX       * sizeof(PDM_bool_t   ) );
@@ -119,9 +119,10 @@ PDM_part_mesh_create
     pmesh->pn_entity        [i] = NULL;
   }
 
-  pmesh->pbound          = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t *) );
-  pmesh->pbound_idx      = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
-  pmesh->is_owner_bound  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  pmesh->pbound                  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t *) );
+  pmesh->pbound_idx              = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
+  pmesh->is_owner_bound          = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
+  pmesh->is_owner_bound_ln_to_gn = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     pmesh->n_group_bnd[i] = 0;
@@ -171,7 +172,12 @@ PDM_part_mesh_n_entity_get
  PDM_mesh_entities_t       entity_type
 )
 {
-  return pmesh->pn_entity[entity_type][i_part];
+  if(pmesh->pn_entity[entity_type] != NULL) {
+    return pmesh->pn_entity[entity_type][i_part];
+  } else {
+    return 0;
+  }
+
 }
 
 
@@ -460,8 +466,6 @@ PDM_part_mesh_free
   }
   free(pmesh->vtx_coords);
 
-
-
   /* Free group */
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     if(pmesh->is_owner_bound[i] == PDM_TRUE) {
@@ -502,6 +506,25 @@ PDM_part_mesh_free
       }
     }
   }
+
+
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if(pmesh->pn_entity[i] !=NULL){
+      free(pmesh->pn_entity[i]);
+    }
+  }
+
+  free(pmesh->pn_entity);
+  free(pmesh->pconnectivity);
+  free(pmesh->pconnectivity_idx);
+  free(pmesh->pentity_ln_to_gn);
+  free(pmesh->is_owner_connectivity);
+  free(pmesh->is_owner_ln_to_gn    );
+  free(pmesh->pbound                 );
+  free(pmesh->pbound_idx             );
+  free(pmesh->is_owner_bound         );
+  free(pmesh->is_owner_bound_ln_to_gn);
+
 
   free(pmesh);
 }
