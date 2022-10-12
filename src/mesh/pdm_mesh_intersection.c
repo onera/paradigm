@@ -248,6 +248,8 @@ _compute_part_mesh_extents
       int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_USER);
 
+      PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
+
       if(face_vtx != NULL) {
         _compute_extents_2d_from_face_vtx(n_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
       } else {
@@ -268,8 +270,24 @@ _compute_part_mesh_extents
     }
 
   } else {
+    int    *edge_vtx_idx  = NULL;
+    int    *edge_vtx      = NULL;
+    double *vtx_coord     = NULL;
     for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
 
+      PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
+
+      PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx, &edge_vtx_idx, PDM_OWNERSHIP_USER);
+      assert(edge_vtx_idx == NULL);
+      edge_vtx_idx = malloc((n_edge+1) * sizeof(int));
+      for(int i_edge = 0; i_edge < n_edge+1; ++i_edge){
+        edge_vtx_idx[i_edge] = 2 * i_edge;
+      }
+
+      _compute_extents_2d_from_face_vtx(n_edge, edge_vtx_idx, edge_vtx, vtx_coord, extents[i_part], global_extents);
+
+      free(edge_vtx_idx);
     }
   }
   *extents_out = extents;
@@ -319,15 +337,63 @@ PDM_mesh_intersection_compute
    */
   double **extents_mesh_a = NULL;
   double **extents_mesh_b = NULL;
-  double global_mesh_a[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-  double global_mesh_b[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};;
-  _compute_part_mesh_extents(mi->mesh_a, mi->dim_mesh_a, global_mesh_a, &extents_mesh_a);
-  _compute_part_mesh_extents(mi->mesh_b, mi->dim_mesh_b, global_mesh_b, &extents_mesh_b);
+  double global_extents[6] = { -HUGE_VAL, -HUGE_VAL, -HUGE_VAL, HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
+  double mesh_global_extents[2][6] = {{ HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                                       -HUGE_VAL, -HUGE_VAL, -HUGE_VAL},
+                                      {HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                                       -HUGE_VAL, -HUGE_VAL, -HUGE_VAL}};
+  double g_mesh_global_extents[2][6];
+  double g_global_extents        [6];
+  _compute_part_mesh_extents(mi->mesh_a, mi->dim_mesh_a, mesh_global_extents[0], &extents_mesh_a);
+  _compute_part_mesh_extents(mi->mesh_b, mi->dim_mesh_b, mesh_global_extents[1], &extents_mesh_b);
 
   /*
    * Global extents exchange
    */
+  const intdim = 3;
+  for(int i_mesh = 0; i_mesh < 2; ++i_mesh) {
+    PDM_MPI_Allreduce(mesh_global_extents[i_mesh], g_mesh_global_extents[i_mesh], dim,
+                      PDM_MPI_DOUBLE, PDM_MPI_MIN, mi->comm);
+    PDM_MPI_Allreduce(mesh_global_extents[i_mesh]+dim, g_mesh_global_extents[i_mesh]+dim, dim,
+                      PDM_MPI_DOUBLE, PDM_MPI_MAX, mi->comm);
+  }
 
+  /* Union or intersection of global extents */
+  for(int i_mesh = 0; i_mesh < 2; ++i_mesh) {
+    for (int k = 0; k < 3; k++) {
+      // Union
+      // global_extents[k]     = PDM_MIN(mesh_global_extents[i_mesh][k  ], global_extents[k  ]);
+      // global_extents[3 + k] = PDM_MAX(mesh_global_extents[i_mesh][3+k], global_extents[3+k]);
+      // Intersection
+      global_extents[k]     = PDM_MAX(g_mesh_global_extents[i_mesh][k  ], global_extents[k  ]);
+      global_extents[3 + k] = PDM_MIN(g_mesh_global_extents[i_mesh][3+k], global_extents[3+k]);
+    }
+  }
+  for(int i = 0; i < 6; ++i) {
+    g_global_extents[i] = global_extents[i];
+  }
+  double max_range = -HUGE_VAL;
+  double min_range =  HUGE_VAL;
+
+  for (int k = 0; k < dim; k++) {
+    max_range = PDM_MAX(max_range, (g_global_extents[dim+k] - g_global_extents[k]));
+    min_range = PDM_MIN(min_range, (g_global_extents[dim+k] - g_global_extents[k]));
+  }
+
+  for (int k = 0; k < dim; k++) {
+    g_global_extents[k]     += -max_range * 1.1e-3; // On casse la symetrie !
+    g_global_extents[dim+k] +=  max_range * 1e-3;
+  }
+
+
+  for(int i_part = 0; i_part < mi->n_part_mesh_a; ++i_part) {
+    free(extents_mesh_a[i_part]);
+  }
+  for(int i_part = 0; i_part < mi->n_part_mesh_b; ++i_part) {
+    free(extents_mesh_b[i_part]);
+  }
+  free(extents_mesh_a);
+  free(extents_mesh_b);
 
 }
 
