@@ -1530,6 +1530,9 @@ _adaptative_tree4
   int visu = 1;
   int dbg_enabled = 1;
 
+  PDM_UNUSED(visu);
+  PDM_UNUSED(dbg_enabled);
+
   // Shift gnum of boxes
   PDM_g_num_t _id_max = 0;
   PDM_g_num_t n_g_entity = 0;

@@ -116,6 +116,59 @@ _face_center_2d
   *face_center = entity_center;
 }
 
+static
+void
+_face_center_2d_from_vtx
+(
+  int       n_part_in,
+  int      *n_extract,
+  int     **extract_lnum,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    assert(pface_vtx    [i_part] != NULL);
+    assert(pface_vtx_idx[i_part] != NULL);
+    assert(pvtx_coord   [i_part] != NULL);
+  }
+
+  double** entity_center = malloc(n_part_in * sizeof(double * ));
+  for(int i_part = 0; i_part < n_part_in; ++i_part) {
+    entity_center[i_part] = (double *) malloc(3 * n_extract[i_part] * sizeof(double));
+
+    int    *_pface_vtx     = pface_vtx    [i_part];
+    int    *_pface_vtx_idx = pface_vtx_idx[i_part];
+    double *_pvtx_coord    = pvtx_coord   [i_part];
+
+    for(int idx_face = 0; idx_face < n_extract[i_part]; ++idx_face) {
+
+      int i_face = extract_lnum[i_part][idx_face];
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
+
+      double inv = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+      for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = _pface_vtx[idx_vtx] - 1;
+
+        entity_center[i_part][3*idx_face  ] += _pvtx_coord[3*i_vtx  ];
+        entity_center[i_part][3*idx_face+1] += _pvtx_coord[3*i_vtx+1];
+        entity_center[i_part][3*idx_face+2] += _pvtx_coord[3*i_vtx+2];
+
+      }
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
 
 static
 void
@@ -2885,20 +2938,43 @@ _extract_part_and_reequilibrate
     entity_type  = PDM_MESH_ENTITY_FACE;
   }
 
+  int from_face_edge = 0;
+  int from_face_vtx  = 0;
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    if(extrp->pface_edge[i_part] != NULL) {
+      from_face_edge = 1;
+    }
+    if(extrp->pface_vtx[i_part] != NULL) {
+      from_face_vtx = 1;
+    }
+  }
+
   /*
    * Calcul des coordonnées to setup hilbert ordering (independant of parallelism )
+   * (@Bruno: only if PDM_SPLIT_DUAL_WITH_HILBERT???)
    */
   double **entity_center = NULL;
   if(extrp->dim == 2) {
     // Compute entity_center with face_edge + edge_vtx
-    _face_center_2d(extrp->n_part_in,
-                    extrp->n_extract,
-                    extrp->extract_lnum,
-                    extrp->pface_edge_idx,
-                    extrp->pface_edge,
-                    extrp->pedge_vtx,
-                    extrp->pvtx_coord,
-                    &entity_center);
+    if (from_face_edge) {
+      _face_center_2d(extrp->n_part_in,
+                      extrp->n_extract,
+                      extrp->extract_lnum,
+                      extrp->pface_edge_idx,
+                      extrp->pface_edge,
+                      extrp->pedge_vtx,
+                      extrp->pvtx_coord,
+                      &entity_center);
+    }
+    else {
+     _face_center_2d_from_vtx(extrp->n_part_in,
+                              extrp->n_extract,
+                              extrp->extract_lnum,
+                              extrp->pface_vtx_idx,
+                              extrp->pface_vtx,
+                              extrp->pvtx_coord,
+                              &entity_center);
+    }
   } else {  // dim == 3
     _cell_center_3d(extrp->n_part_in,
                     extrp->n_extract,
@@ -3045,16 +3121,6 @@ _extract_part_and_reequilibrate
   /*
    * Extraction des connectivités
    */
-  int from_face_edge = 0;
-  int from_face_vtx  = 0;
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-    if(extrp->pface_edge    [i_part] != NULL) {
-      from_face_edge = 1;
-    }
-    if(extrp->pface_vtx    [i_part] != NULL) {
-      from_face_vtx = 1;
-    }
-  }
   int                  *n_extract_vtx    = NULL;
   int                 **extract_vtx_lnum = NULL;
   if(extrp->dim == 3) {

@@ -4209,8 +4209,13 @@ PDM_part_to_part_iexch
 
       }
 
+
+
     }
 
+    for (int i = 0; i < ptp->n_part1; i++) {
+      free (__part1_to_part2_data[i]);
+    }
     free(__part1_to_part2_data);
     free(___part2_data);
 

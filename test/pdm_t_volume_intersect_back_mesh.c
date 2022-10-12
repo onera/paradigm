@@ -37,8 +37,8 @@
  * Static global variables
  *============================================================================*/
 
-static const int    verbose = 0;
-static const int    vtk     = 1;
+// static const int    verbose = 0;
+// static const int    vtk     = 0;
 
 /*============================================================================
  * Private function definitions
@@ -78,7 +78,9 @@ static void
 _read_args
 (
  int            argc,
- char         **argv
+ char         **argv,
+ int           *verbose,
+ int           *vtk
 )
 {
   int i = 1;
@@ -89,6 +91,14 @@ _read_args
 
     if (strcmp (argv[i], "-h") == 0)
       _usage(EXIT_SUCCESS);
+
+    else if (strcmp(argv[i], "-verbose") == 0) {
+      *verbose = 1;
+    }
+
+    else if (strcmp(argv[i], "-vtk") == 0) {
+      *vtk = 1;
+    }
 
     else
       _usage (EXIT_FAILURE);
@@ -272,8 +282,13 @@ int main(int argc, char *argv[])
 {
   int n_part = 1;
 
+  int verbose = 0;
+  int vtk     = 0;
+
   _read_args (argc,
-              argv);
+              argv,
+              &verbose,
+              &vtk);
 
   int i_rank;
   int n_rank;
