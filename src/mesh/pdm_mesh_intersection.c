@@ -851,6 +851,9 @@ _mesh_intersection_surf_surf
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
 
+  /*
+   * TODO : Faire la géometrie :D
+   */
 
 
 }

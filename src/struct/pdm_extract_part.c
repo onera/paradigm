@@ -2440,6 +2440,7 @@ _extract_part_and_reequilibrate_from_target
     }
   }
 
+
   if(have_init_location == 0) {
     PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(extrp->n_part_in,
                                                              extrp->n_part_out,
@@ -2520,6 +2521,13 @@ _extract_part_and_reequilibrate_from_target
         part2_cell_to_part1_cell_idx[i_part][i+1] = part2_cell_to_part1_cell_idx[i_part][i] + 3;
       }
     }
+
+    assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] == NULL);
+    extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL][i_part] = extrp->n_target[i_part];
+    }
+
     /*
      *  cell->face
      */
@@ -2723,6 +2731,12 @@ _extract_part_and_reequilibrate_from_target
       for(int i = 0; i < extrp->n_target[i_part]; ++i) {
         part2_face_to_part1_face_idx[i_part][i+1] = part2_face_to_part1_face_idx[i_part][i] + 3;
       }
+    }
+
+    assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] == NULL);
+    extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE] = malloc(extrp->n_part_out * sizeof(int));
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part] = extrp->n_target[i_part];
     }
 
     if(from_face_edge == 1) {
