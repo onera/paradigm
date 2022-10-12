@@ -163,15 +163,15 @@ PDM_part_mesh_n_entity_set
 }
 
 
-void
+int
 PDM_part_mesh_n_entity_get
 (
  PDM_part_mesh_t          *pmesh,
- PDM_mesh_entities_t       entity_type,
- int                     **pn_entity
+ int                       i_part,
+ PDM_mesh_entities_t       entity_type
 )
 {
-  *pn_entity = pmesh->pn_entity[entity_type];
+  return pmesh->pn_entity[entity_type][i_part];
 }
 
 
@@ -204,12 +204,17 @@ void
 PDM_part_mesh_entity_ln_to_gn_get
 (
  PDM_part_mesh_t          *pmesh,
+ int                       i_part,
  PDM_mesh_entities_t       entity_type,
- PDM_g_num_t            ***pentity_ln_to_gn,
+ PDM_g_num_t             **pentity_ln_to_gn,
  PDM_ownership_t           ownership
 )
 {
-  *pentity_ln_to_gn = pmesh->pentity_ln_to_gn[entity_type];
+  if(pmesh->pentity_ln_to_gn[entity_type] != NULL) {
+    *pentity_ln_to_gn = pmesh->pentity_ln_to_gn[entity_type][i_part];
+  } else {
+    *pentity_ln_to_gn = NULL;
+  }
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
   } else {
@@ -266,17 +271,44 @@ PDM_part_mesh_vtx_coord_set
 }
 
 void
+PDM_part_mesh_vtx_coord_get
+(
+ PDM_part_mesh_t   *pmesh,
+ int                i_part,
+ double           **vtx_coord,
+ PDM_ownership_t    ownership
+)
+{
+  if(pmesh->vtx_coords[i_part] != NULL) {
+    *vtx_coord = pmesh->vtx_coords[i_part];
+  } else {
+    *vtx_coord = NULL;
+  }
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    pmesh->is_owner_vtx_coord = PDM_FALSE;
+  } else {
+    pmesh->is_owner_vtx_coord = PDM_TRUE;
+  }
+}
+
+void
 PDM_part_mesh_connectivity_get
 (
  PDM_part_mesh_t           *pmesh,
+ int                        i_part,
  PDM_connectivity_type_t    connectivity_type,
- int                     ***connect,
- int                     ***connect_idx,
+ int                      **connect,
+ int                      **connect_idx,
  PDM_ownership_t           ownership
 )
 {
-  *connect     = pmesh->pconnectivity    [connectivity_type];
-  *connect_idx = pmesh->pconnectivity_idx[connectivity_type];
+  if(pmesh->pconnectivity    [connectivity_type][i_part] != NULL) {
+    *connect     = pmesh->pconnectivity    [connectivity_type][i_part];
+    *connect_idx = pmesh->pconnectivity_idx[connectivity_type][i_part];
+  } else {
+    *connect     = NULL;
+    *connect_idx = NULL;
+  }
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;

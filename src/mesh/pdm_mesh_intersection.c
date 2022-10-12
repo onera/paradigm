@@ -26,6 +26,8 @@
 #include "pdm_logging.h"
 #include "pdm_distrib.h"
 #include "pdm_binary_search.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_priv.h"
 #include "pdm_vtk.h"
 
 
@@ -47,6 +49,231 @@ extern "C"
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+
+static
+void
+_compute_extents_3d
+(
+ int      n_cell,
+ int     *cell_face_idx,
+ int     *cell_face,
+ int     *face_vtx_idx,
+ int     *face_vtx,
+ double  *vtx_coord,
+ double  *box_extents,
+ double  *global_extents
+)
+{
+  const double tolerance   = 1.e-12;
+  const double eps_extents = 1.e-7;
+  const int dim = 3;
+
+  /* Loop over cell */
+  for(int i_cell = 0; i_cell < n_cell; ++i_cell ) {
+
+    double *_extents = box_extents + 6 * i_cell;
+
+    /* Init */
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      _extents[  i_dim] =  HUGE_VAL;
+      _extents[3+i_dim] = -HUGE_VAL;
+    }
+
+    /* Loop over face and vtx to compute bbox */
+    for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
+
+      int i_face = PDM_ABS(cell_face[idx_face])-1;
+
+      for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = face_vtx[idx_vtx]-1;
+
+        for (int i_dim = 0; i_dim < 3; i_dim++) {
+          double x = vtx_coord[3*i_vtx + i_dim];
+
+          if (x < _extents[i_dim]) {
+            _extents[i_dim] = x;
+          }
+          if (x > _extents[3+i_dim]) {
+            _extents[3+i_dim] = x;
+          }
+        }
+      }
+    }
+
+    double delta = 0.;
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      double x = _extents[3+i_dim] - _extents[i_dim];
+
+      if (delta < x) {
+        delta = x;
+      }
+    }
+
+    if (delta > eps_extents) {
+      delta *= tolerance;
+    } else {
+      delta = eps_extents;
+    }
+
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      _extents[i_dim]   -= delta;
+      _extents[3+i_dim] += delta;
+    }
+
+    for (int k = 0; k < dim; k++) {
+      global_extents[k]       = PDM_MIN(_extents[k    ], global_extents[k    ]);
+      global_extents[dim + k] = PDM_MAX(_extents[dim+k], global_extents[dim+k]);
+    }
+
+  } /* End loop cell */
+}
+
+
+static
+void
+_compute_extents_2d_from_face_vtx
+(
+ int      n_face,
+ int     *face_vtx_idx,
+ int     *face_vtx,
+ double  *vtx_coord,
+ double  *box_extents,
+ double  *global_extents
+)
+{
+  const double tolerance   = 1.e-12;
+  const double eps_extents = 1.e-7;
+  const int dim = 3;
+
+  /* Loop over face */
+  for(int i_face = 0; i_face < n_face; ++i_face ) {
+
+    double *_extents = box_extents + 6 * i_face;
+
+    /* Init */
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      _extents[  i_dim] =  HUGE_VAL;
+      _extents[3+i_dim] = -HUGE_VAL;
+    }
+
+    /* Loop over face and vtx to compute bbox */
+    for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+      int i_vtx = face_vtx[idx_vtx]-1;
+
+      for (int i_dim = 0; i_dim < 3; i_dim++) {
+        double x = vtx_coord[3*i_vtx + i_dim];
+
+        if (x < _extents[i_dim]) {
+          _extents[i_dim] = x;
+        }
+        if (x > _extents[3+i_dim]) {
+          _extents[3+i_dim] = x;
+        }
+      }
+    }
+
+    double delta = 0.;
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      double x = _extents[3+i_dim] - _extents[i_dim];
+
+      if (delta < x) {
+        delta = x;
+      }
+    }
+
+    if (delta > eps_extents) {
+      delta *= tolerance;
+    } else {
+      delta = eps_extents;
+    }
+
+    for (int i_dim = 0; i_dim < 3; i_dim++) {
+      _extents[i_dim]   -= delta;
+      _extents[3+i_dim] += delta;
+    }
+
+    for (int k = 0; k < dim; k++) {
+      global_extents[k]       = PDM_MIN(_extents[k    ], global_extents[k    ]);
+      global_extents[dim + k] = PDM_MAX(_extents[dim+k], global_extents[dim+k]);
+    }
+
+  } /* End loop cell */
+}
+
+static
+void
+_compute_part_mesh_extents
+(
+  PDM_part_mesh_t   *mesh,
+  int                dim_mesh,
+  double            *global_extents,
+  double          ***extents_out
+)
+{
+  int n_part = mesh->n_part;
+  double **extents = malloc(n_part * sizeof(double *));
+  if(dim_mesh == 3) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      int    *cell_face     = NULL;
+      int    *cell_face_idx = NULL;
+      int    *face_vtx_idx  = NULL;
+      int    *face_vtx      = NULL;
+      double *vtx_coord     = NULL;
+
+      int n_cell = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_CELL);
+
+      PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_CELL_FACE, &cell_face, &cell_face_idx, PDM_OWNERSHIP_USER);
+      PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_USER);
+
+      PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_USER); // Il faudrait un unchanged
+
+      extents[i_part] = malloc(6 * n_cell * sizeof(double));
+
+      _compute_extents_3d(n_cell, cell_face_idx, cell_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+    }
+  } else if(dim_mesh == 2) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      int    *face_vtx      = NULL;
+      int    *face_vtx_idx  = NULL;
+      int    *face_edge_idx = NULL;
+      int    *face_edge     = NULL;
+      int    *edge_vtx_idx  = NULL;
+      int    *edge_vtx      = NULL;
+      double *vtx_coord     = NULL;
+
+      // A gerer le cas mixte face_vtx ou face_edge + edge_vtx
+
+      int n_face = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_FACE);
+      PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX , &face_vtx , &face_vtx_idx, PDM_OWNERSHIP_USER);
+
+      if(face_vtx != NULL) {
+        _compute_extents_2d_from_face_vtx(n_face, face_vtx_idx, face_vtx, vtx_coord, extents[i_part], global_extents);
+      } else {
+        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_FACE_EDGE , &face_edge, &face_edge_idx, PDM_OWNERSHIP_USER);
+        assert(face_edge != NULL);
+        PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx, &edge_vtx_idx, PDM_OWNERSHIP_USER);
+        assert(edge_vtx_idx == NULL);
+        int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
+
+        edge_vtx_idx = malloc((n_edge+1) * sizeof(int));
+        for(int i_edge = 0; i_edge < n_edge+1; ++i_edge){
+          edge_vtx_idx[i_edge] = 2 * i_edge;
+        }
+        _compute_extents_3d(n_face, face_edge_idx, face_edge, edge_vtx_idx, edge_vtx, vtx_coord, extents[i_part], global_extents);
+        // _compute_extents_2d_from_face_edge(n_face, face_edge_idx, face_edge, edge_vtx, vtx_coord, extents[i_part], global_extents);
+        free(edge_vtx_idx);
+      }
+    }
+
+  } else {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    }
+  }
+  *extents_out = extents;
+}
 
 
 /*=============================================================================
@@ -79,6 +306,29 @@ PDM_mesh_intersection_create
   mi->mesh_b = PDM_part_mesh_create(n_part_mesh_b, comm);
 
   return mi;
+}
+
+void
+PDM_mesh_intersection_compute
+(
+  PDM_mesh_intersection_t  *mi
+)
+{
+  /*
+   * Compute extents of mesh_a and mesh_b
+   */
+  double **extents_mesh_a = NULL;
+  double **extents_mesh_b = NULL;
+  double global_mesh_a[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+  double global_mesh_b[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};;
+  _compute_part_mesh_extents(mi->mesh_a, mi->dim_mesh_a, global_mesh_a, &extents_mesh_a);
+  _compute_part_mesh_extents(mi->mesh_b, mi->dim_mesh_b, global_mesh_b, &extents_mesh_b);
+
+  /*
+   * Global extents exchange
+   */
+
+
 }
 
 void
