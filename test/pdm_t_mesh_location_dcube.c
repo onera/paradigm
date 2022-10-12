@@ -899,8 +899,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  log_trace("n_pts_l = %d\n", n_pts_l);
-  PDM_log_trace_array_int(unlocated, n_unlocated, "unlocated : ");
+  // log_trace("n_pts_l = %d\n", n_pts_l);
+  // PDM_log_trace_array_int(unlocated, n_unlocated, "unlocated : ");
 
   if (0) {
     printf("Unlocated %d :\n", n_unlocated);

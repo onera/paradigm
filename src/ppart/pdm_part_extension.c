@@ -6635,7 +6635,7 @@ PDM_part_extension_compute
 
   free(n_vtx);
   free(vtx_coord);
-  log_trace(" PDM_part_extension_compute flag END \n");
+  // log_trace(" PDM_part_extension_compute flag END \n");
 
   PDM_distant_neighbor_free(dn_vtx);
   // printf(" PDM_part_extension_compute end \n");

@@ -283,6 +283,8 @@ PDM_doctree_build
  PDM_doctree_t     *doct
 )
 {
+  int verbose = 0;
+
   int n_rank, i_rank;
   PDM_MPI_Comm_rank (doct->comm, &i_rank);
   PDM_MPI_Comm_size (doct->comm, &n_rank);
@@ -696,15 +698,18 @@ PDM_doctree_build
                                                                1,
                                                                doct->comm);
   double t2 = PDM_MPI_Wtime();
-  log_trace("Equi leaf = %12.5e \n", t2 - t1);
-
+  if (verbose) {
+    log_trace("Equi leaf = %12.5e \n", t2 - t1);
+  }
   // PDM_gnum_free(gnum_extract);
 
   int          dn_equi_tree     = PDM_part_to_block_n_elt_block_get  (ptb_equi_box);
   doct->dn_pts_equi = dn_equi_tree;
   PDM_g_num_t* parent_tree_gnum = PDM_part_to_block_block_gnum_get   (ptb_equi_box);
   PDM_g_num_t* distrib_tree     = PDM_part_to_block_distrib_index_get(ptb_equi_box);
-  log_trace("n_shared_boxes = %i / n_coarse_box = %i / dn_equi_tree = %i / n_extract_shared_boxes = %i \n", n_shared_boxes, n_coarse_box, dn_equi_tree, n_extract_shared_boxes);
+  if (verbose) {
+    log_trace("n_shared_boxes = %i / n_coarse_box = %i / dn_equi_tree = %i / n_extract_shared_boxes = %i \n", n_shared_boxes, n_coarse_box, dn_equi_tree, n_extract_shared_boxes);
+  }
 
   int dn_tree_min = n_shared_boxes+1;
   int dn_tree_max = 0;
@@ -713,8 +718,10 @@ PDM_doctree_build
     dn_tree_min = PDM_MIN(dn_tree_min, distrib_tree[i+1] - distrib_tree[i]);
     dn_tree_max = PDM_MAX(dn_tree_max, distrib_tree[i+1] - distrib_tree[i]);
   }
-  log_trace("dn_tree_min = %i / dn_tree_max = %i / dn_equi_tree = %i \n", dn_tree_min, dn_tree_max, dn_equi_tree);
-  log_trace("distrib_tree[n_rank] = %i \n", distrib_tree[n_rank]);
+  if (verbose) {
+    log_trace("dn_tree_min = %i / dn_tree_max = %i / dn_equi_tree = %i \n", dn_tree_min, dn_tree_max, dn_equi_tree);
+    log_trace("distrib_tree[n_rank] = %i \n", distrib_tree[n_rank]);
+  }
 
   int *coarse_box_to_new_rank = PDM_part_to_block_destination_get(ptb_equi_box);
   if(0 == 1) {
@@ -1529,7 +1536,7 @@ PDM_doctree_build
       res_box_strid [i_shm] = realloc(res_box_strid [i_shm], n_lbox_compress * sizeof(int   ));
       part_n_box    [i_shm] = n_lbox_compress;
 
-      if(n_lbox_compress < n_lbox) {
+      if(verbose && n_lbox_compress < n_lbox) {
         log_trace("Compress = %i ---> %i \n", n_lbox, n_lbox_compress);
       }
 

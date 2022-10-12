@@ -1138,7 +1138,7 @@ _build_point_tree
 
   _l_nodes_t *nodes = ptree->nodes;
 
-  if(1) {
+  if(0) {
     int depth_max      = 0;
     int n_pts_leaf_max = -1;
     int n_pts_leaf_min = ptree->n_pts+1;

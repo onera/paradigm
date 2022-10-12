@@ -491,7 +491,6 @@ int main(int argc, char *argv[])
                                     PDM_MESH_ENTITY_FACE,
                                     &ptp_face,
                                     PDM_OWNERSHIP_KEEP);
-  log_trace("ptp_face : %p\n", (void *) ptp_face);
 
   // 1) Compute field on origin faces
   int    **part1_stride = (int    **) malloc(sizeof(double *) * n_part_zones);
@@ -560,7 +559,6 @@ int main(int argc, char *argv[])
                                  NULL,//&part2_stride,
                 (      void ***) &pextract_face_field,
                                  &request);
-  log_trace("request = %d\n", request);
 
   // 3) Shift field on extracted part
   PDM_part_to_part_reverse_iexch_wait(ptp_face, request);
@@ -573,14 +571,11 @@ int main(int argc, char *argv[])
                                       &n_elt1,
                                       &part1_to_part2_idx,
                                       &part1_to_part2);
-  log_trace("p1p2_idx : %p, p1p2 : %p\n",
-            part1_to_part2_idx,
-            part1_to_part2);
 
   for (int i_part = 0; i_part < n_part_out; ++i_part) {
-    PDM_log_trace_array_int(part1_to_part2_idx[i_part],
-                            pn_extract_face[i_part]+1,
-                            "part1_to_part2_idx : ");
+    // PDM_log_trace_array_int(part1_to_part2_idx[i_part],
+    //                         pn_extract_face[i_part]+1,
+    //                         "part1_to_part2_idx : ");
     // PDM_log_trace_connectivity_long(part1_to_part2_idx[i_part],
     //                                 part1_to_part2[i_part],
     //                                 n_elt1[i_part],

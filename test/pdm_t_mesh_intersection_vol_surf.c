@@ -21,6 +21,7 @@
 #include "pdm_mesh_intersection.h"
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_sphere_surf_gen.h"
 
 /*============================================================================
  * Macro definitions

@@ -58,8 +58,8 @@ static
 void
 _export_vtk_2d
 (
- char               *pattern,
- PDM_extract_part_t *extrp_mesh
+ const char               *pattern,
+       PDM_extract_part_t *extrp_mesh
 )
 {
   int i_rank;
