@@ -802,6 +802,7 @@ const int               id_part
  * \param [in]  n_face         Number of faces used to describe polyhedra
  * \param [in]  facvtx_idx     Index of face vertex connectivity
  * \param [in]  facvtx         Face vertex connectivity
+ * \param [in]  face_ln_to_gn  Face global numbering
  * \param [in]  cellfac_idx    Index of cell face connectivity
  * \param [in]  cellfac        Cell face connectivity
  * \param [in]  numabs         Global numbering
@@ -811,22 +812,6 @@ const int               id_part
 
 void
 PDM_Mesh_nodal_block_poly3d_set
-(
-      PDM_Mesh_nodal_t *mesh,
-const int               id_block,
-const int               id_part,
-const PDM_l_num_t       n_elt,
-const PDM_l_num_t       n_face,
-const PDM_l_num_t      *facvtx_idx,
-const PDM_l_num_t      *facvtx,
-const PDM_l_num_t      *cellfac_idx,
-const PDM_l_num_t      *cellfac,
-const PDM_g_num_t      *numabs,
-const PDM_l_num_t      *parent_num
-);
-
-void
-PDM_Mesh_nodal_block_poly3d_set2
 (
       PDM_Mesh_nodal_t *mesh,
 const int               id_block,
@@ -908,6 +893,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  face_vtx_idx   Index of face vertex connectivity
  * \param [in]  face_vtx_nb    Number of vertices for each face
  * \param [in]  face_vtx       Face vertex connectivity
+ * \param [in]  face_ln_to_gn  Face global numbering
  * \param [in]  cell_face_idx  Index of cell face connectivity
  * \param [in]  cell_face_nb   Number of faces for each cell
  * \param [in]  cell_face      Cell face connectivity
@@ -918,24 +904,6 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 
 void
 PDM_Mesh_nodal_cell3d_cellface_add
-(
-      PDM_Mesh_nodal_t *mesh,
-const int               id_part,
-const int               n_elt,
-const int               n_face,
-const PDM_l_num_t      *face_vtx_idx,
-const PDM_l_num_t      *face_vtx_nb,
-const PDM_l_num_t      *face_vtx,
-const PDM_l_num_t      *cell_face_idx,
-const PDM_l_num_t      *cell_face_nb,
-const PDM_l_num_t      *cell_face,
-const PDM_g_num_t      *numabs,
-const PDM_ownership_t  ownership
-);
-
-
-void
-PDM_Mesh_nodal_cell3d_cellface_add2
 (
       PDM_Mesh_nodal_t *mesh,
 const int               id_part,
@@ -1149,34 +1117,6 @@ PDM_Mesh_nodal_compute_cell_extents
        double           *extents
 );
 
-
-
-/**
- * \brief Get the cell-vertex connectivity for a polyhedron described by its faces
- *
- * (NOT USED)
- *
- * \param [in]   icell         Cell local id
- * \param [in]   face_vtx_idx  Face-vertex connectivity index
- * \param [in]   face_vtx      Face-vertex connectivity
- * \param [in]   cell_face_idx Cell-face connectivity index
- * \param [in]   cell_face     Cell-face connectivity
- * \param [out]  cell_vtx      Cell-vertex connectivity
- *
- * \return    Number of vertices in the cell
- *
- */
-
-PDM_l_num_t
-PDM_Mesh_nodal_poly3d_cell_vtx_get
-(
- const PDM_l_num_t   icell,
- const PDM_l_num_t   face_vtx_idx[],
- const PDM_l_num_t   face_vtx[],
- const PDM_l_num_t   cell_face_idx[],
- const PDM_l_num_t   cell_face[],
-       PDM_l_num_t **cell_vtx
-);
 
 
 /**

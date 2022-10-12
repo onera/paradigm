@@ -2562,19 +2562,19 @@ PDM_mesh_location_part_set
     ml->cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add2(ml->mesh_nodal,
-                                      i_part,
-                                      n_cell,
-                                      n_face,
-                                      face_vtx_idx,
-                                      ml->face_vtx_n[i_part],
-                                      face_vtx,
-                                      face_ln_to_gn,
-                                      cell_face_idx,
-                                      ml->cell_face_n[i_part],
-                                      cell_face,
-                                      cell_ln_to_gn,
-                                      PDM_OWNERSHIP_KEEP);
+  PDM_Mesh_nodal_cell3d_cellface_add(ml->mesh_nodal,
+                                     i_part,
+                                     n_cell,
+                                     n_face,
+                                     face_vtx_idx,
+                                     ml->face_vtx_n[i_part],
+                                     face_vtx,
+                                     face_ln_to_gn,
+                                     cell_face_idx,
+                                     ml->cell_face_n[i_part],
+                                     cell_face,
+                                     cell_ln_to_gn,
+                                     PDM_OWNERSHIP_KEEP);
 }
 
 /**
@@ -3394,6 +3394,7 @@ PDM_mesh_location_t        *ml
   const double tolerance = 1e-6;
 
   const int dbg_enabled = 0;
+  const int log_timer   = 0;
   const int dim = 3;
 
   const int octree_depth_max = 31;
@@ -4584,7 +4585,9 @@ PDM_mesh_location_t        *ml
 
       double t1 = PDM_MPI_Wtime();
       PDM_doctree_build(doct);
-      log_trace("PDM_doctree_build : %12.5e \n", PDM_MPI_Wtime()-t1);
+      if (log_timer) {
+        log_trace("PDM_doctree_build : %12.5e \n", PDM_MPI_Wtime()-t1);
+      }
 
       t1 = PDM_MPI_Wtime();
       PDM_doctree_results_in_orig_frame_get(doct,
@@ -4593,7 +4596,9 @@ PDM_mesh_location_t        *ml
                                             &pts_idx,
                                             &pts_g_num,
                                             &pts_coord);
-      log_trace("PDM_doctree_results_in_orig_frame_get : %12.5e \n", PDM_MPI_Wtime()-t1);
+      if (log_timer) {
+        log_trace("PDM_doctree_results_in_orig_frame_get : %12.5e \n", PDM_MPI_Wtime()-t1);
+      }
 
       // PDM_log_trace_connectivity_long(pts_idx, pts_g_num, n_select_boxes, "pts_g_num : ");
       // PDM_log_trace_array_long(select_box_g_num, n_select_boxes, "select_box_g_num : ");
@@ -6654,9 +6659,9 @@ _dump_point_cloud
   int **connec = malloc(sizeof(int *) * n_part);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-    PDM_log_trace_array_long(ppts_ln_to_gn[ipart],
-                             pn_pts[ipart],
-                             "ppts_ln_to_gn[ipart] : ");
+    // PDM_log_trace_array_long(ppts_ln_to_gn[ipart],
+    //                          pn_pts[ipart],
+    //                          "ppts_ln_to_gn[ipart] : ");
 
     PDM_writer_geom_coord_set(wrt,
                               id_geom,
@@ -6772,10 +6777,10 @@ const int                           n_part,
                                                                  id_section,
                                                                  ipart);
 
-      if (parent_num != NULL) {
-        log_trace("section %d (type %d), ", isection, t_elt);
-        PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
-      }
+      // if (parent_num != NULL) {
+      //   log_trace("section %d (type %d), ", isection, t_elt);
+      //   PDM_log_trace_array_int(parent_num, n_elt, "parent_num : ");
+      // }
 
 
       PDM_g_num_t *gnum = malloc(sizeof(PDM_g_num_t) * n_elt);
@@ -6834,10 +6839,10 @@ const int                           n_part,
                                                    &_parent_num,
                                                    &parent_elt_g_num);
 
-        PDM_log_trace_connectivity_int(cell_face_idx,
-                                       cell_face,
-                                       n_elt,
-                                       "cell_face : ");
+        // PDM_log_trace_connectivity_int(cell_face_idx,
+        //                                cell_face,
+        //                                n_elt,
+        //                                "cell_face : ");
 
         PDM_vtk_write_polydata(filename,
                                pn_vtx[ipart],
@@ -8548,7 +8553,9 @@ PDM_mesh_location_compute_optim2
     final_elt_pts_weight     = realloc(final_elt_pts_weight    , sizeof(double     ) * final_elt_pts_weight_idx[idx]);
     final_elt_pts_uvw        = realloc(final_elt_pts_uvw       , sizeof(double     ) * idx*3);
 
-    PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
+    if (dbg_enabled) {
+      PDM_log_trace_array_long(final_elt_pts_g_num, idx, "final_elt_pts_g_num ::");
+    }
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -9007,6 +9014,7 @@ PDM_mesh_location_compute_optim3
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
   const int dbg_enabled = 0;
+  const int log_timer = 0;
   const int dim = 3;
 
   /* Octree parameters */
@@ -9878,7 +9886,9 @@ PDM_mesh_location_compute_optim3
      *  ----------------------------
      */
     double t2 = PDM_MPI_Wtime();
-    log_trace("Extract + hilbert  = %12.5e \n", t2 -t1);
+    if (log_timer) {
+      log_trace("Extract + hilbert  = %12.5e \n", t2 -t1);
+    }
 
     dt_extract_all += t2 -t1;
 
@@ -10142,7 +10152,9 @@ PDM_mesh_location_compute_optim3
     b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(ml->timer);
     PDM_MPI_Barrier (ml->comm);
-    log_trace("Search  = %12.5e \n", PDM_MPI_Wtime() - t2);
+    if (log_timer) {
+      log_trace("Search  = %12.5e \n", PDM_MPI_Wtime() - t2);
+    }
 
     dt_search_all += PDM_MPI_Wtime() - t2;
 
@@ -10789,7 +10801,6 @@ PDM_mesh_location_compute_optim3
                              NULL,
             (      void ***) &pts_in_elt_n,
                              &request_pts_in_elt_n);
-      log_trace("1\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10809,7 +10820,6 @@ PDM_mesh_location_compute_optim3
       }
 
       // Exchange all triplets
-      log_trace("1b\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10826,7 +10836,6 @@ PDM_mesh_location_compute_optim3
 
 
       // Exchange number of triplet per point
-      log_trace("2\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10839,7 +10848,6 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt_triplet_n,
                              &request_pts_triplet_n);
 
-      log_trace("3\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10852,7 +10860,6 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt->dist2,
                              &request_pts_dist2);
 
-      log_trace("4\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10865,7 +10872,6 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt->coords,
                              &request_pts_coord);
 
-      log_trace("5\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10878,7 +10884,6 @@ PDM_mesh_location_compute_optim3
             (      void ***) &pts_in_elt->projected_coords,
                              &request_pts_proj_coord);
 
-      log_trace("6\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10935,7 +10940,6 @@ PDM_mesh_location_compute_optim3
     }
 
     if (ml->reverse_result) {
-      log_trace("7\n");
       PDM_part_to_part_iexch(ptp_elt,
                              comm_kind,
                              PDM_STRIDE_VAR_INTERLACED,
@@ -10949,7 +10953,6 @@ PDM_mesh_location_compute_optim3
                              &request_pts_weight);
 
 
-      log_trace("8\n");
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_in_elt_n);
 
 
@@ -11047,7 +11050,9 @@ PDM_mesh_location_compute_optim3
       free(final_elt_pts_triplet_stride);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
       free(final_elt_pts_triplet_n);
-      log_trace("wait = %12.5e \n", PDM_MPI_Wtime() - t1_wait);
+      if (log_timer) {
+        log_trace("wait = %12.5e \n", PDM_MPI_Wtime() - t1_wait);
+      }
 
       int  *n_ref_elt = NULL;
       int **ref_elt   = NULL;
@@ -11111,7 +11116,9 @@ PDM_mesh_location_compute_optim3
                            pts_in_elt_triplet_n[ipart][i]);
         }
         free(order);
-        log_trace("sort = %12.5e \n", PDM_MPI_Wtime() - t1_sort);
+        if (log_timer) {
+          log_trace("sort = %12.5e \n", PDM_MPI_Wtime() - t1_sort);
+        }
 
 
         free(pts_in_elt_triplet_n[ipart]);
@@ -11129,7 +11136,7 @@ PDM_mesh_location_compute_optim3
       dt_step5_all += PDM_MPI_Wtime() - beg_step5;
       double beg_step6 = PDM_MPI_Wtime();
 
-      log_trace("PDM_part_to_part_create_from_num2_triplet start \n");
+      // log_trace("PDM_part_to_part_create_from_num2_triplet start \n");
       ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
                                                                   (const int          *) pn_elt,
                                                                   n_part,
@@ -11139,7 +11146,7 @@ PDM_mesh_location_compute_optim3
                                                                   (const int         **) pts_in_elt_triplet_idx,     // size = pts_inside_idx[n_elt]
                                                                   (const int         **) pts_in_elt_triplet,
                                                                   ml->comm);
-      log_trace("PDM_part_to_part_create_from_num2_triplet end \n");
+      // log_trace("PDM_part_to_part_create_from_num2_triplet end \n");
 
       for (int ipart = 0; ipart < n_part; ipart++) {
         free(pts_in_elt_triplet    [ipart]);
@@ -11397,22 +11404,24 @@ PDM_mesh_location_compute_optim3
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
     if (ml->ptp[icloud] != NULL) {
       if (req_pts_proj_coord[icloud] != -1) {
-        log_trace("out wait req_pts_proj_coord = %i \n", req_pts_proj_coord[icloud]);
+        // log_trace("out wait req_pts_proj_coord = %i \n", req_pts_proj_coord[icloud]);
         PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_proj_coord[icloud]);
-        log_trace("out wait req_pts_proj_coord END = %i \n", req_pts_proj_coord[icloud]);
+        // log_trace("out wait req_pts_proj_coord END = %i \n", req_pts_proj_coord[icloud]);
       }
 
       if (req_pts_dist2[icloud] != -1) {
-        log_trace("out wait req_pts_dist2 = %i \n", req_pts_dist2[icloud]);
+        // log_trace("out wait req_pts_dist2 = %i \n", req_pts_dist2[icloud]);
         PDM_part_to_part_iexch_wait(ml->ptp[icloud], req_pts_dist2[icloud]);
-        log_trace("out wait req_pts_dist2 END = %i \n", req_pts_dist2[icloud]);
+        // log_trace("out wait req_pts_dist2 END = %i \n", req_pts_dist2[icloud]);
       }
     }
   }
   free(req_pts_proj_coord);
   free(req_pts_dist2);
 
-  log_trace("dt_extract_all = %12.5e / dt_search_all = %12.5e \n", dt_extract_all, dt_search_all);
+  if (log_timer) {
+    log_trace("dt_extract_all = %12.5e / dt_search_all = %12.5e \n", dt_extract_all, dt_search_all);
+  }
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     free(elt_extents[ipart]);
@@ -11431,13 +11440,14 @@ PDM_mesh_location_compute_optim3
   ml->times_cpu_s  [END] = PDM_timer_cpu_sys (ml->timer);
   PDM_timer_resume(ml->timer);
 
-  end_timer_and_log_from_dt("Step 1 : ", ml->comm, dt_step1_all);
-  end_timer_and_log_from_dt("Step 2 : ", ml->comm, dt_step2_all);
-  end_timer_and_log_from_dt("Step 3 : ", ml->comm, dt_step3_all);
-  end_timer_and_log_from_dt("Step 4 : ", ml->comm, dt_step4_all);
-  end_timer_and_log_from_dt("Step 5 : ", ml->comm, dt_step5_all);
-  end_timer_and_log_from_dt("Step 6 : ", ml->comm, dt_step6_all);
-
+  if (log_timer) {
+    end_timer_and_log_from_dt("Step 1 : ", ml->comm, dt_step1_all);
+    end_timer_and_log_from_dt("Step 2 : ", ml->comm, dt_step2_all);
+    end_timer_and_log_from_dt("Step 3 : ", ml->comm, dt_step3_all);
+    end_timer_and_log_from_dt("Step 4 : ", ml->comm, dt_step4_all);
+    end_timer_and_log_from_dt("Step 5 : ", ml->comm, dt_step5_all);
+    end_timer_and_log_from_dt("Step 6 : ", ml->comm, dt_step6_all);
+  }
 
   // exit(1);
 }

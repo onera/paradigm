@@ -1191,13 +1191,33 @@ _extract_part_and_reequilibrate_nodal_from_target
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
 
         /* Polyhedral section */
-        // int *cell_vtx_idx;
-        // int *cell_vtx;
-        // PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
-        //                                                             sections_id[i_section],
-        //                                                             i_part,
-        //                                                             &cell_vtx_idx,
-        //                                                             &cell_vtx);
+        // if (1) {
+        //   // Check cell-vtx connectivity
+        //   int *cell_vtx_idx;
+        //   int *cell_vtx;
+        //   PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
+        //                                                               sections_id[i_section],
+        //                                                               i_part,
+        //                                                               &cell_vtx_idx,
+        //                                                               &cell_vtx);
+
+        //   log_trace("---Avant---\n");
+        //   for (int i = 0; i < n_elt; i++) {
+        //     int parent_elt = i;
+        //     if (parent_num != NULL) {
+        //       parent_elt = parent_num[i];
+        //     }
+        //     if(is_selected[i_part][parent_elt] != -1) {
+        //       // log_trace("cell "PDM_FMT_G_NUM"\n", ?);
+        //       log_trace("cell %d: ", i);
+        //       for (int j = cell_vtx_idx[i]; j < cell_vtx_idx[i+1]; j++) {
+        //         int vtx_id = cell_vtx[j] - 1;
+        //         log_trace(PDM_FMT_G_NUM" ", extrp->vtx_ln_to_gn[i_part][vtx_id]);
+        //       }
+        //       log_trace("\n");
+        //     }
+        //   }
+        // }
 
         int *cell_face_idx;
         int *cell_face;
@@ -1738,7 +1758,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       s_elmt_face_by_section[recv_elmt_section_id[i_part][i]] += recv_elmt_face_n[i_part][i];
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int(n_elmt_by_section, n_section, "n_elmt_by_section ::");
     }
 
@@ -1943,6 +1963,29 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    NULL,
                                                    extract_parent_num[i_section],
                                                    PDM_OWNERSHIP_KEEP);
+
+        // if (1) {
+        //   // Check cell-vtx connectivity
+        //   int *cell_vtx_idx;
+        //   int *cell_vtx;
+        //   PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extract_pmne,
+        //                                                               extract_section_id,
+        //                                                               i_part,
+        //                                                               &cell_vtx_idx,
+        //                                                               &cell_vtx);
+
+        //   log_trace("---Après---\n");
+        //   for (int i = 0; i < n_elmt_by_section[i_section]; i++) {
+        //     // log_trace("cell "PDM_FMT_G_NUM"\n", ?);
+        //     log_trace("cell %d: ", i);
+        //     for (int j = cell_vtx_idx[i]; j < cell_vtx_idx[i+1]; j++) {
+        //       int vtx_id = cell_vtx[j] - 1;
+        //       log_trace(PDM_FMT_G_NUM" ", recv_elmt_vtx[i_part][vtx_id]);
+        //     }
+        //     log_trace("\n");
+        //   }
+        // }
+
         free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else {
