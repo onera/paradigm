@@ -4017,7 +4017,9 @@ const PDM_ownership_t  ownership
 
         facsom_poly_idx = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * (n_face_poly + 1));
         facsom_poly = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * l_facsom_poly);
-        block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
+        if (mesh->prepa_blocks->face_ln_to_gn[i_part] != NULL) {
+          block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
+        }
 
         facsom_poly_idx[0] = 0;
         PDM_l_num_t idx_facsom_poly = 0;
@@ -4025,7 +4027,9 @@ const PDM_ownership_t  ownership
         n_face_poly = 0;
         for (int i = 0; i < n_face_part; i++) {
           if (tag_face_poly3d[i] >= 0) {
-            block_face_ln_to_gn[n_face_poly++] = mesh->prepa_blocks->face_ln_to_gn[i_part][i];
+            if (mesh->prepa_blocks->face_ln_to_gn[i_part] != NULL) {
+              block_face_ln_to_gn[n_face_poly++] = mesh->prepa_blocks->face_ln_to_gn[i_part][i];
+            }
             PDM_l_num_t ideb = face_som_idx_courant[i] - adjust;
             PDM_l_num_t ifin = ideb + face_som_nb_courant[i];
             facsom_poly_idx[idx_facsom+1] = facsom_poly_idx[idx_facsom] + face_som_nb_courant[i];
