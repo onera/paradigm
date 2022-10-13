@@ -3009,9 +3009,16 @@ _extract_part_and_reequilibrate
                     &entity_center);
   }
 
-  int **weight = malloc(sizeof(int *) * extrp->n_part_in);
+  int         **weight              = malloc(sizeof(int         *) * extrp->n_part_in);
+  PDM_g_num_t **extract_entity_gnum = malloc(sizeof(PDM_g_num_t *) * extrp->n_part_in);
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
-    weight[i_part] = PDM_array_const_int(extrp->n_extract[i_part], 1);
+    weight             [i_part] = PDM_array_const_int(extrp->n_extract[i_part], 1);
+    extract_entity_gnum[i_part] = malloc(extrp->n_extract[i_part] * sizeof(PDM_g_num_t));
+
+    for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
+      int lnum = extrp->extract_lnum[i_part][i];
+      extract_entity_gnum[i_part][i] = entity_g_num[i_part][lnum];
+    }
   }
 
   /*
@@ -3022,7 +3029,7 @@ _extract_part_and_reequilibrate
                                                                 1.,
                                                                 PDM_PART_GEOM_HILBERT,
                                                                 entity_center,
-                                                                entity_g_num,
+                                                                extract_entity_gnum,
                                                                 weight,
                                                                 extrp->n_extract,
                                                                 extrp->n_part_in,
@@ -3032,9 +3039,11 @@ _extract_part_and_reequilibrate
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
     free(weight       [i_part]);
     free(entity_center[i_part]);
+    free(extract_entity_gnum[i_part]);
   }
   free(weight       );
   free(entity_center);
+  free(extract_entity_gnum);
 
   int dn_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
   PDM_g_num_t *dequi_g_num = PDM_part_to_block_block_gnum_get(ptb_equi);

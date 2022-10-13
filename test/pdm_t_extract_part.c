@@ -409,17 +409,22 @@ int main(int argc, char *argv[])
     int n_select_cell = 0;
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
 
-      int inside = 1;
-      for(int i = 0; i < 3; ++i) {
-        if (cell_center[i_part][3*i_cell+i] > bbox[i+3] || cell_center[i_part][3*i_cell+i] < bbox[i]) {
-          inside = 0;
-        }
-      }
-      if(inside == 1) {
+      // int inside = 1;
+      // for(int i = 0; i < 3; ++i) {
+      //   if (cell_center[i_part][3*i_cell+i] > bbox[i+3] || cell_center[i_part][3*i_cell+i] < bbox[i]) {
+      //     inside = 0;
+      //   }
+      // }
+      // if(inside == 1) {
+      //   selected_l_num[i_part][n_select_cell]     = i_cell;
+      //   n_select_cell++;
+      // }
+
+      if(cell_ln_to_gn[i_cell] == 4) {
         selected_l_num[i_part][n_select_cell]     = i_cell;
         n_select_cell++;
-
       }
+
     }
 
     selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
@@ -434,8 +439,8 @@ int main(int argc, char *argv[])
   int n_part_out = 1;
   // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
@@ -520,6 +525,45 @@ int main(int argc, char *argv[])
                                   PDM_MESH_ENTITY_VERTEX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *pextract_parent_cell_ln_to_gn = NULL;
+    int n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_CELL,
+                                                      &pextract_parent_cell_ln_to_gn,
+                                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t *pextract_parent_face_ln_to_gn = NULL;
+    PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                                      i_part,
+                                                      PDM_MESH_ENTITY_FACE,
+                                                      &pextract_parent_face_ln_to_gn,
+                                                      PDM_OWNERSHIP_KEEP);
+
+    int *cell_face_idx = NULL;
+    int *cell_face     = NULL;
+    PDM_extract_part_connectivity_get(extrp,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                      &cell_face,
+                                      &cell_face_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_g_num_t* cell_face_gnum = malloc(cell_face_idx[n_cell] * sizeof(PDM_g_num_t));
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+      for(int idx_cell = cell_face_idx[i_cell]; idx_cell < cell_face_idx[i_cell+1]; ++idx_cell) {
+        int i_face = PDM_ABS(cell_face[idx_cell]) - 1;
+        // cell_face_gnum[idx_cell] = pextract_face_ln_to_gn[i_part][i_face];
+        cell_face_gnum[idx_cell] = pextract_parent_face_ln_to_gn[i_face];
+      }
+    }
+
+
+    PDM_log_trace_connectivity_long(cell_face_idx, cell_face_gnum, n_cell, "cell_face_gnum :");
+
+
+    PDM_log_trace_array_long(pextract_parent_cell_ln_to_gn, n_cell, "pextract_parent_cell_ln_to_gn ::");
+
   }
 
   /*
