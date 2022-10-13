@@ -200,7 +200,7 @@ _generate_surface_mesh
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "sphere_surf_");
@@ -436,7 +436,7 @@ char *argv[]
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");

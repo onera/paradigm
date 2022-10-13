@@ -990,7 +990,7 @@ _mesh_intersection_vol_surf
   /*
    * Panic vtk
    */
-  if(1 == 1) {
+  if(0 == 1) {
     _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
@@ -1018,7 +1018,7 @@ _mesh_intersection_surf_surf
   /*
    * Panic vtk
    */
-  if(1 == 1) {
+  if(0 == 1) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
