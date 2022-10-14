@@ -5486,6 +5486,35 @@ PDM_part_to_part_n_part_get
 
 /**
  *
+ * \brief Get number of partitions and n_elt1 and n_elt2
+ *
+ * \param [in]  ptp       Pointer to \ref PDM_part_to_part_t object
+ * \param [out] n_part1   Number of partitions on side 1
+ * \param [out] n_part2   Number of partitions on side 2
+ * \param [out] n_elt1    Number of gnum1 element
+ * \param [out] n_elt2    Number of gnum2 element
+ *
+ */
+void
+PDM_part_to_part_n_part_and_n_elt_get
+(
+ PDM_part_to_part_t *ptp,
+ int                *n_part1,
+ int                *n_part2,
+ int               **n_elt1,
+ int               **n_elt2
+ )
+{
+  assert(ptp != NULL);
+  *n_part1 = ptp->n_part1;
+  *n_part2 = ptp->n_part2;
+  *n_elt1  = ptp->n_elt1;
+  *n_elt2  = ptp->n_elt2;
+}
+
+
+/**
+ *
  * \brief Get referenced gnum2 elements
  *
  * \param [in]   ptp           Block to part structure

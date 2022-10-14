@@ -63,6 +63,11 @@ cdef extern from "pdm_extract_part.h":
                                      double                   **pvtx_coord,
                                      PDM_ownership_t            ownership);
 
+  void PDM_extract_part_part_to_part_get(       PDM_extract_part_t   *extrp,
+                                         const  PDM_mesh_entities_t   entity_type,
+                                                PDM_part_to_part_t  **ptp,
+                                                PDM_ownership_t       ownership);
+
   void PDM_extract_part_free(PDM_extract_part_t  *extrp);
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -76,6 +81,7 @@ cdef class ExtractPart:
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
+  ptp_objects = {}
   keep_alive = []
   # --------------------------------------------------------------------------
 
@@ -252,6 +258,24 @@ cdef class ExtractPart:
     n_vtx = PDM_extract_part_vtx_coord_get(self._extrp, ipart, &pvtx_coord, PDM_OWNERSHIP_USER)
 
     return create_numpy_d(pvtx_coord, 3 * n_vtx)
+
+  # ------------------------------------------------------------------
+  def part_to_part_get(                    self,
+                       PDM_mesh_entities_t entity_type):
+    """
+    """
+    cdef PDM_part_to_part_t  *ptpc
+    try:
+      return self.ptp_objects[entity_type]
+    except KeyError:
+      PDM_extract_part_part_to_part_get( self._extrp,
+                                         entity_type,
+                                        &ptpc,
+                                         PDM_OWNERSHIP_USER)
+      py_casp = PyCapsule_New(ptpc, NULL, NULL);
+      self.ptp_objects[entity_type] = PartToPartCapsule(py_casp) # The free is inside the class
+      return self.ptp_objects[entity_type]
+
 
   # ------------------------------------------------------------------
   def __dealloc__(self):
