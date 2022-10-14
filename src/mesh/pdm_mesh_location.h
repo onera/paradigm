@@ -395,14 +395,9 @@ PDM_mesh_location_t        *ml
  * \param [in]   id  Pointer to \ref PDM_mesh_location object
  *
  */
-void
-PDM_mesh_location_compute_optim2
-(
- PDM_mesh_location_t        *ml
-);
 
 void
-PDM_mesh_location_compute_optim3
+PDM_mesh_location_compute_optim
 (
  PDM_mesh_location_t        *ml
 );
