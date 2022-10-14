@@ -1095,12 +1095,15 @@ _extract_part_and_reequilibrate_nodal_from_target
 {
   int          *pn_entity       = NULL;
   PDM_mesh_entities_t entity_type;
+  PDM_g_num_t **entity_g_num = NULL;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_type = PDM_MESH_ENTITY_CELL;
+    entity_g_num = extrp->cell_ln_to_gn;
   } else {
     pn_entity    = extrp->n_face;
     entity_type = PDM_MESH_ENTITY_FACE;
+    entity_g_num = extrp->face_ln_to_gn;
   }
 
   int i_rank;
@@ -1386,6 +1389,14 @@ _extract_part_and_reequilibrate_nodal_from_target
             elmt_vtx_n     [i_part][idx] = face_vtx_idx[i_elt+1] - face_vtx_idx[i_elt];
             elmt_face_n    [i_part][idx] = 0;
             elmt_section_id[i_part][idx] = i_section;
+
+            if (0) {
+              log_trace("extract polygon "PDM_FMT_G_NUM" : vtx ", entity_g_num[i_part][parent_elt]);
+              for (int idx_vtx = face_vtx_idx[i_elt]; idx_vtx < face_vtx_idx[i_elt+1]; idx_vtx++) {
+                log_trace(" "PDM_FMT_G_NUM, _vtx_ln_to_gn[face_vtx[idx_vtx]-1]);
+              }
+              log_trace("\n");
+            }
           }
         }
 
@@ -1933,6 +1944,16 @@ _extract_part_and_reequilibrate_nodal_from_target
                                                    extract_parent_num[i_section],
                                                    // extract_parent_g_num[i_section],
                                                    PDM_OWNERSHIP_KEEP);
+        if (0) {
+          for (int i_elt = 0; i_elt < n_elmt_by_section[i_section]; i_elt++) {
+            log_trace("        polygon "PDM_FMT_G_NUM" : vtx ", extract_parent_g_num[i_section][i_elt]);
+            for (int idx_vtx = elmt_vtx_idx_by_section[i_section][i_elt]; idx_vtx < elmt_vtx_idx_by_section[i_section][i_elt+1]; idx_vtx++) {
+              log_trace(" "PDM_FMT_G_NUM,
+                        extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX][i_part][elmt_vtx_by_section[i_section][idx_vtx]-1]);
+            }
+            log_trace("\n");
+          }
+        }
         free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {

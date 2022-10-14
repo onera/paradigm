@@ -1317,8 +1317,8 @@ _locate_in_polygon
 
   /* Compute distances */
   for (int ipt = 0; ipt < n_pts; ipt++) {
-    const double *_pt = pts_coord + ipt * 3;
-    double       *_bc = bar_coord + ipt * n_vtx;
+    const double *_pt = pts_coord  + ipt * 3;
+    double       *_bc = bar_coord  + ipt * n_vtx;
     double       *_cp = proj_coord + ipt * 3;
 
     for (int idim = 0; idim < 3; idim++) {
@@ -1333,6 +1333,13 @@ _locate_in_polygon
 
     double v_cp_p[3] = {_pt[0] - _cp[0], _pt[1] - _cp[1], _pt[2] - _cp[2]};
     distance[ipt] = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
+    int dbg = 0;
+    // int dbg = (_pt[0] > -0.424127 && _pt[0] < -0.424125 &&
+    //            _pt[1] > -0.029731 && _pt[1] < -0.029729);
+    if (dbg) {
+      log_trace("distance = %e\n", distance[ipt]);
+    }
+
   }
 }
 
@@ -1374,6 +1381,17 @@ _locate_in_polyhedron
   const double eps_solid_angle = 1e-5;
   const double eps_distance2 = 1e-10;
   const double eps2 = 1e-20;
+
+  int dbg = 0;
+  // for (int i = 0; i < n_pts; i++) {
+  //   const double *p = pts_coord + 3*i;
+  //   if (p[0] > 0.36666 && p[0] < 0.36667 &&
+  //       p[1] > 0.49999 && p[1] < 0.50001 &&
+  //       p[2] > 0.83332 && p[2] < 0.83334) {
+  //     dbg = 1;
+  //     break;
+  //   }
+  // }
 
   // Visu for debugging
   if (0) {
@@ -1576,6 +1594,15 @@ _locate_in_polyhedron
 
   for (int ipt = 0; ipt < n_pts; ipt++) {
 
+    const double *p = pts_coord + 3 * ipt;
+    // dbg = (p[0] > 0.36666 && p[0] < 0.36667 &&
+    //        p[1] > 0.49999 && p[1] < 0.50001 &&
+    //        p[2] > 0.83332 && p[2] < 0.83334);
+    if (dbg) {
+      log_trace("p %f %f %f : solid_angle = %f*PI, dist = %e\n",
+                p[0], p[1], p[2], solid_angle[ipt]/PDM_PI, distance[ipt]);
+    }
+
     if (solid_angle[ipt] > eps_solid_angle &&
         solid_angle[ipt] < four_PI - eps_solid_angle &&
         distance[ipt] > eps_distance2) {
@@ -1649,14 +1676,14 @@ _locate_in_polyhedron
 
       // check
       if (1) {
-        double p[3] = {-_pt[0], -_pt[1], -_pt[2]};
+        double pp[3] = {-_pt[0], -_pt[1], -_pt[2]};
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
           for (int idim = 0; idim < 3; idim++) {
-            p[idim] += _bc[ivtx] * vtx_coord[3*ivtx + idim];
+            pp[idim] += _bc[ivtx] * vtx_coord[3*ivtx + idim];
           }
         }
 
-        double err = PDM_MODULE(p);
+        double err = PDM_MODULE(pp);
         if (err > 1e-6) {
           log_trace("!!! _pt %20.16f %20.16f %20.16f\n",
                     _pt[0], _pt[1], _pt[2]);

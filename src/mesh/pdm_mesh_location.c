@@ -8377,8 +8377,10 @@ PDM_mesh_location_compute_optim2
 
     if (dbg_enabled) {
       for (int i = 0; i < n_pts2; i++) {
-        log_trace("pt "PDM_FMT_G_NUM" : local elt %d, dist = %f\n",
-                  delt_pts_g_num2[i], part_elt_id[i], delt_pts_distance2[i]);
+        log_trace("pt "PDM_FMT_G_NUM" (%f %f %f) : local elt %d, dist = %f\n",
+                  delt_pts_g_num2[i],
+                  delt_pts_coord2[3*i], delt_pts_coord2[3*i+1], delt_pts_coord2[3*i+2],
+                  part_elt_id[i], delt_pts_distance2[i]);
       }
     }
 
@@ -9013,7 +9015,7 @@ PDM_mesh_location_compute_optim3
   const double tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
-  const int dbg_enabled = 0;
+  const int dbg_enabled = 1;
   const int log_timer = 0;
   const int dim = 3;
 
@@ -10482,8 +10484,10 @@ PDM_mesh_location_compute_optim3
 
     if (dbg_enabled) {
       for (int i = 0; i < n_pts2; i++) {
-        log_trace("pt "PDM_FMT_G_NUM" : local elt %d, dist = %f\n",
-                  delt_pts_g_num_geom[i], part_elt_id[i], delt_pts_distance2[i]);
+        log_trace("pt "PDM_FMT_G_NUM" (%f %f %f) : local elt %d, dist = %f\n",
+                  delt_pts_g_num_geom[i],
+                  delt_pts_coord2[3*i], delt_pts_coord2[3*i+1], delt_pts_coord2[3*i+2],
+                  part_elt_id[i], delt_pts_distance2[i]);
       }
     }
 
