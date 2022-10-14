@@ -2500,9 +2500,9 @@ _extract_part_and_reequilibrate_from_target
     }
   }
 
-  printf("from_face_edge = %i \n", from_face_edge);
-  printf("from_face_vtx  = %i \n", from_face_vtx );
-  printf("extrp->dim     = %i \n", extrp->dim );
+  // printf("from_face_edge = %i \n", from_face_edge);
+  // printf("from_face_vtx  = %i \n", from_face_vtx );
+  // printf("extrp->dim     = %i \n", extrp->dim );
 
   // assert(extrp->dim == 3);
 
