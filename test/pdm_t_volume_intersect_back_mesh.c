@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
 
   // Create the extents faces as a partition and get associated coords
   double      *background_box_extents = malloc(sizeof(double)      * dn_back_face * 6);
-  int          eps                    = 1.0e-6;
+  double       eps                    = 1.0e-6;
   for (int iface = 0; iface < dn_back_face; iface++) {
     double *tmp_extents = background_box_extents + 6*iface;
     for (int k = 0; k < 3; k++) {
@@ -922,7 +922,7 @@ int main(int argc, char *argv[])
   for (int ivol = 0; ivol < total_n_edges; ivol++) {
     volume[ivol] = PDM_array_zeros_int(dn_back_face);
     volume_names[ivol] = malloc(sizeof(char) * 99);
-    sprintf((char * restrict) volume_names[ivol], "edge_%d.vtk", ivol+1);
+    sprintf(volume_names[ivol], "edge_%d.vtk", ivol+1);
 
   }
 
@@ -943,7 +943,7 @@ int main(int argc, char *argv[])
                                p_back_n_vtx,
                                p_back_vtx_coord,
                                p_back_vtx_ln_to_gn,
-                               2, // PDM_MESH_NODAL_TRIA3
+                               PDM_MESH_NODAL_TRIA3,
                                dn_back_face,
                                p_back_face_vtx,
                                d_back_face_ln_to_gn,
@@ -957,7 +957,7 @@ int main(int argc, char *argv[])
                                p_vol_n_vtx,
                                p_vol_vtx_coord,
                                vol_vtx_ln_to_gn,
-                               2, // PDM_MESH_NODAL_TRIA3
+                               PDM_MESH_NODAL_TRIA3,
                                p_vol_n_face,
                                p_vol_face_vtx,
                                vol_face_ln_to_gn,
@@ -1121,7 +1121,7 @@ int main(int argc, char *argv[])
                                        p_back_face_vtx,
                                        p_back_vtx_coord,
                                        2,
-                                       2,
+                                       PDM_MESH_NODAL_TRIA3,
                                        &proj_pt_coord);
     memcpy(back_face_proj_pts + 3*icav, proj_pt_coord, sizeof(double) * 3);
     free(proj_pt_coord);

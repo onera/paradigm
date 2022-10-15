@@ -13772,7 +13772,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   b_t_elapsed = times_elapsed[PIB_SHARED_BEGIN];
   PDM_timer_resume (_octree->timer);
 
-
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
 
@@ -13795,8 +13794,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   int* distrib_search_by_rank_idx = NULL;
   PDM_mpi_win_shared_t* wshared_recv_gnum    = NULL;
   PDM_mpi_win_shared_t* wshared_recv_extents = NULL;
-
-  double dt_morton_intersect_box = 0.;
 
   if(n_rank > 0) {
     /* Encode box corners */
@@ -13849,8 +13846,8 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
 
       int *tag_rank = PDM_array_zeros_int (n_rank);
 
-      log_trace("n_boxes = %i \n", n_boxes);
-      PDM_log_trace_array_int(shared_all_rank_idx, n_rank+1, "shared_all_rank_idx ::");
+      // log_trace("n_boxes = %i \n", n_boxes);
+      // PDM_log_trace_array_int(shared_all_rank_idx, n_rank+1, "shared_all_rank_idx ::");
 
       for (int ibox = 0; ibox < n_boxes; ibox++) {
         box_rank_idx[ibox+1] = box_rank_idx[ibox];
@@ -13870,7 +13867,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
         }
 
         n_intersect_nodes = 0;
-        double t1 = PDM_MPI_Wtime();
         PDM_morton_intersect_box (dim,
                                   root,
                                   box_corners[2*ibox  ],
@@ -13881,7 +13877,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
                                   shared_all_rank_idx[n_rank],
                                   &n_intersect_nodes,
                                   intersect_nodes);
-        dt_morton_intersect_box += PDM_MPI_Wtime()-t1;
 
         for (size_t i = 0; i < n_intersect_nodes; i++) {
           int inode = intersect_nodes[i];
@@ -14035,7 +14030,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
         PDM_vtk_write_boxes(filename, n_boxes,           box_extents, box_g_num);
       }
 
-      double t1 = PDM_MPI_Wtime();
       // PDM_box_tree_get_boxes_intersects (bt_shared,
       //                                    boxes,
       //                                    &shared_to_box_idx,
@@ -14050,10 +14044,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
                                            &shared_to_box_idx,
                                            &shared_to_box);
       // PDM_log_trace_connectivity_int(shared_to_box_idx, shared_to_box, n_shared_boxes, "shared_to_box (2)::");
-      dt_morton_intersect_box += PDM_MPI_Wtime()-t1;
-
-
-      // boxes->local_boxes->g_num[(*box_l_num)[j]]);
 
       // Preparation of send count and box_rank/box_rank_idx
       for(int i = 0; i < n_rank; ++i) {
@@ -14530,9 +14520,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   times_elapsed[PIB_SHARED_PTB] = e_t_elapsed - b_t_elapsed;
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (_octree->timer);
-
-  // log_trace ("dt_morton_intersect_box              : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //            dt_morton_intersect_box, dt_morton_intersect_box/times_elapsed[PIB_SHARED_TOTAL] * 100);
 
   *ptb_out        = ptb;
   *dbox_pts_n     = block_pts_in_box_n;

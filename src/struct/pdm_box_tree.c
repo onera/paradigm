@@ -2674,7 +2674,7 @@ _build_leaf_weight(const PDM_box_tree_t    *bt,
   const _node_t  *node = bt->local_data->nodes + node_id;
 
   if (node->is_leaf == false) {
-    int repart_weight = ceil((double) node->extra_weight/bt->n_children);
+    int repart_weight = (int) ceil((double) node->extra_weight/bt->n_children);
     // int repart_weight = bt->n_children;
     for (i = 0; i < bt->n_children; i++) {
       _build_leaf_weight(bt,
@@ -3679,7 +3679,7 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt)
   // PDM_box_tree_free_copies(_bt);
 
   free(_bt);
-  *bt = _bt;
+  *bt = NULL;
 }
 
 

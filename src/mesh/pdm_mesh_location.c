@@ -31,7 +31,7 @@
 #include "pdm_array.h"
 #include "pdm_distrib.h"
 #include "pdm_doctree.h"
-#include "pdm_mpi_priv.h"
+// #include "pdm_mpi_priv.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -3909,9 +3909,9 @@ PDM_mesh_location_t        *ml
   e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
   ml->times_elapsed[STORE_CONNECTIVITY] += e_t_elapsed - b_t_elapsed;
-  ml->times_cpu[STORE_CONNECTIVITY]     += e_t_cpu - b_t_cpu;
-  ml->times_cpu_u[STORE_CONNECTIVITY]   += e_t_cpu_u - b_t_cpu_u;
-  ml->times_cpu_s[STORE_CONNECTIVITY]   += e_t_cpu_s - b_t_cpu_s;
+  ml->times_cpu[STORE_CONNECTIVITY]     += e_t_cpu     - b_t_cpu;
+  ml->times_cpu_u[STORE_CONNECTIVITY]   += e_t_cpu_u   - b_t_cpu_u;
+  ml->times_cpu_s[STORE_CONNECTIVITY]   += e_t_cpu_s   - b_t_cpu_s;
 
   b_t_elapsed = e_t_elapsed;
   b_t_cpu     = e_t_cpu;
@@ -5353,7 +5353,6 @@ PDM_mesh_location_t        *ml
 
     int *idx_min = malloc (sizeof(int) * n_pts_block2);
     int idx = 0;
-    int idw = 0;
     size_t s_weights = 0;
     for (int i = 0; i < n_pts_block1; i++) {
       idx_min[i] = idx;
@@ -5372,7 +5371,6 @@ PDM_mesh_location_t        *ml
             idx_min[i] = j;
           }
 
-          idw += block_n_vtx_elt[j];
         }
       }
 
@@ -6595,7 +6593,7 @@ _dump_point_cloud
   if (1) {
     PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,
                                                n_part,
-                                               0,
+                                               PDM_FALSE,
                                                1.,
                                                comm,
                                                PDM_OWNERSHIP_USER);

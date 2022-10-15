@@ -27,7 +27,6 @@
 #include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_mpi_priv.h"
-
 #include <mpi.h>
 
 #ifdef __cplusplus
@@ -474,6 +473,7 @@ static MPI_Comm _pdm_mpi_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
+      return MPI_COMM_NULL;
     }
   }
 }
@@ -566,6 +566,7 @@ static MPI_Request _pdm_mpi_2_mpi_request(PDM_MPI_Request pdm_mpi_request)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_request :"
             " pdm_mpi_request '%d' non valide\n", pdm_mpi_request);
       abort();
+      return MPI_REQUEST_NULL;
     }
   }
 }
@@ -594,6 +595,7 @@ static MPI_Win _pdm_mpi_2_mpi_win(PDM_MPI_Win pdm_mpi_win)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_win :"
             " pdm_mpi_win '%d' non valide\n", pdm_mpi_win);
       abort();
+      return MPI_WIN_NULL;
     }
   }
 }
@@ -793,6 +795,7 @@ static MPI_Datatype _pdm_mpi_2_mpi_datatype(PDM_MPI_Datatype pdm_mpi_datatype)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_datatype :"
             " pdm_mpi_datatype '%d' non valide\n", pdm_mpi_datatype);
       abort();
+      return MPI_DATATYPE_NULL;
     }
   }
 }
@@ -987,6 +990,7 @@ static MPI_File _pdm_mpi_2_mpi_file(PDM_MPI_File pdm_mpi_file)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_file :"
               " pdm_mpi_file '%d' non valide\n", pdm_mpi_file);
       abort();
+      return MPI_FILE_NULL;
     }
   }
 }
@@ -1099,6 +1103,7 @@ void *PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
+      return NULL;
     }
   }
 }

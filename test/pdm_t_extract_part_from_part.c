@@ -934,7 +934,7 @@ int main(int argc, char *argv[])
             (const int           **) pface_vtx,
             (const PDM_g_num_t   **) pface_ln_to_gn,
             (const PDM_g_num_t   **) pvtx_ln_to_gn,
-            (const int             ) 1,
+                                     1,
             (const int            *) &n_extract_face,
             (const PDM_g_num_t   **) &extract_face_ln_to_gn,
             (const int           **) &equi_parent_face_idx,

@@ -596,13 +596,6 @@ int main(int argc, char *argv[])
                                              &upwind_point_out,
                                              &downwind_point_out);
 
-      if (face_center != NULL) {
-        face_center = face_center;
-      }
-      if (face_normal != NULL) {
-        face_normal = face_normal;
-      }
-
       /* Check for errors */
       for (int i = 0; i < n_edge; i++) {
         if (is_bdr_edge[i] == 0) {

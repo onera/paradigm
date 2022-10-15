@@ -574,6 +574,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < size; i++) {
     size_neighbours += pstrid_new[i_part][i];
   }
+  PDM_UNUSED(size_neighbours);
 
   int indice = 0;
   for (int i = 0; i < size; i++) {

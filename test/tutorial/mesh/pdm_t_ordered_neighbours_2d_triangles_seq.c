@@ -222,7 +222,7 @@ const int      n_vtx_seg,
  */
 
 static int where_next_couple(int* tab, int target, int start, int end) {
-  int idx;
+  int idx = -1;
   for (int j = start; j < end; j+=2) {
     if(tab[j] == target) {
       idx = j;
@@ -367,7 +367,7 @@ get_next_edge
   int* vtx_vtx_edge
 )
 {
-  int next_edge_idx;
+  int next_edge_idx = -1;
   int other_vtx_idx;
 
   for (int j = face_vtx_ordered_idx[iter_face_idx]; j < face_vtx_ordered_idx[iter_face_idx+1]; j++) {

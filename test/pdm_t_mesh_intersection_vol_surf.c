@@ -499,7 +499,7 @@ char *argv[]
 
 
   double lenght_b = 1.;
-  int rotate_b = 1;
+  // int rotate_b = 1;
   PDM_dmesh_nodal_t     *dmn_surf_b   = NULL;
   PDM_multipart_t       *mpart_surf_b = NULL;
   PDM_g_num_t nu = 2*n_vtx_b;

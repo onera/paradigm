@@ -402,7 +402,7 @@ _projection_on_background_mesh_get2
     int *ev = back_elt_vtx + back_elt_vtx_idx[id_elt];
     int *ee = back_elt_elt + stride*id_elt;
 
-    double cp[3], distance, uvw[3];
+    double cp[3], distance = 0, uvw[3];
 
     if (back_elt_type == PDM_MESH_NODAL_BAR2) {
 

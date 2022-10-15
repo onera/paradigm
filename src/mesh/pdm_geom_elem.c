@@ -2321,6 +2321,7 @@ PDM_geom_elem_polyhedra_properties
     }
 
   }
+  PDM_UNUSED(volume_t);
 
   free (polyhedraVertices);
 

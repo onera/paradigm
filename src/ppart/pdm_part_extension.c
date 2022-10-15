@@ -335,23 +335,23 @@ _offset_results_by_domain
 }
 
 
-static inline
-int
-_is_same_triplet
-(
-int iproc1, int ipart1, int ielt1,
-int iproc2, int ipart2, int ielt2
-)
-{
-  if(iproc1 == iproc2){
-    if(ipart1 == ipart2){
-      if(ielt1 == ielt2){
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
+// static inline
+// int
+// _is_same_triplet
+// (
+// int iproc1, int ipart1, int ielt1,
+// int iproc2, int ipart2, int ielt2
+// )
+// {
+//   if(iproc1 == iproc2){
+//     if(ipart1 == ipart2){
+//       if(ielt1 == ielt2){
+//         return 1;
+//       }
+//     }
+//   }
+//   return 0;
+// }
 
 inline
 static
@@ -2044,12 +2044,6 @@ _compute_other_domain_interface
   PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
   PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
-  int n_part_loc_all_domain = 0;
-  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    // n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
-    n_part_loc_all_domain += part_ext->n_part[i_domain];
-  }
-
   int have_edge = 0;
   int have_face = 0;
 
@@ -2325,7 +2319,6 @@ _warm_up_domain_interface
 
   int connectivity_is_signed = 0;
   int shift_part   = 0;
-  int shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
     pn_entity[i_domain] = malloc(part_ext->n_part[i_domain] * sizeof(int));
@@ -2432,7 +2425,6 @@ _warm_up_domain_interface
     }
 
     shift_part   += part_ext->n_part              [i_domain];
-    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
   int         **pdi_neighbor_idx         = NULL;
@@ -2517,7 +2509,6 @@ _warm_up_domain_interface
 
 
   shift_part   = 0;
-  shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
     // int n_part_total = part_ext->n_tot_part_by_domain[i_domain];
@@ -2775,7 +2766,6 @@ _warm_up_domain_interface
 
     }
     shift_part   += part_ext->n_part              [i_domain];
-    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
 
   PDM_distant_neighbor_free(dn);
@@ -2802,7 +2792,6 @@ _warm_up_domain_interface
    * Free
    */
   shift_part   = 0;
-  shift_part_g = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     /* First loop to count */
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -2813,7 +2802,6 @@ _warm_up_domain_interface
     free(pn_entity[i_domain]);
 
     shift_part   += part_ext->n_part              [i_domain];
-    shift_part_g += part_ext->n_tot_part_by_domain[i_domain];
   }
   free(pn_entity);
   free(neighbor_idx );
@@ -2847,13 +2835,10 @@ _create_cell_graph_comm
   // assert(part_ext->n_domain == 1);
 
   /* Si multidomain on fait un shift et tt roule */
-  int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
-  // printf(" n_tot_all_domain      = %i \n", n_tot_all_domain);
   // printf(" n_part_loc_all_domain = %i \n", n_part_loc_all_domain);
 
   /* We flat all partition */
@@ -5089,10 +5074,8 @@ _rebuild_connectivity
   int i_rank = -1;
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
 
-  int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
@@ -5272,10 +5255,8 @@ _rebuild_connectivity_cell_face
 )
 {
 
-  int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
@@ -5380,10 +5361,8 @@ _rebuild_connectivity_face_vtx
 )
 {
 
-  int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
@@ -5444,10 +5423,10 @@ _rebuild_connectivity_face_edge
 )
 {
 
-  int n_tot_all_domain = 0;
+  // int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    // n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
@@ -5554,10 +5533,10 @@ _rebuild_connectivity_edge_vtx
 )
 {
 
-  int n_tot_all_domain = 0;
+  // int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    // n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
@@ -5661,10 +5640,8 @@ _rebuild_face_group
   PDM_part_extension_t *part_ext
 )
 {
-  int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 

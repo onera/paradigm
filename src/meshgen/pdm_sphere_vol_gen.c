@@ -432,7 +432,10 @@ _cube_to_sphere
   double y2 = yc * scale2;
   double z2 = zc * scale2;
 
-  double t = 0;//0.7*_smooth_step(r);
+  double t = 0;
+  if(0) {
+    t = 0.7*_smooth_step(r);
+  }
 
   *xs = (1 - t)*x2 + t*x1;
   *ys = (1 - t)*y2 + t*y1;
@@ -523,8 +526,8 @@ static int _has_same_vtx_triangle
 
 static int _has_same_vtx_edge
 (
- const int edg1[3],
- const int edg2[3]
+ const int edg1[2],
+ const int edg2[2]
  )
 {
   // We know that sum(edg1) == sum(edg2)
