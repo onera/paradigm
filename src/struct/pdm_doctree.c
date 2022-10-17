@@ -1502,8 +1502,6 @@ PDM_doctree_build
       PDM_g_num_t *lbox_gnum    = &shm_box_gnum [  beg];
       double      *lbox_extents = &shm_box_extents[6*beg];
 
-      res_box_g_num[i_shm] = &shm_box_gnum[beg];
-
       if(0 == 1) {
         char filename[999];
         sprintf(filename, "equi_boxes_for_solicitate_%i_%i.vtk", i_shm, i_rank);
@@ -1521,19 +1519,22 @@ PDM_doctree_build
                                                     &(box_pts_idx[i_shm]),
                                                     &(box_pts_l_num[i_shm]));
 
-      res_box_weight[i_shm] = malloc(n_lbox * sizeof(double));
-      res_box_strid [i_shm] = malloc(n_lbox * sizeof(int   ));
+      res_box_weight[i_shm] = malloc(n_lbox * sizeof(double     ));
+      res_box_strid [i_shm] = malloc(n_lbox * sizeof(int        ));
+      res_box_g_num [i_shm] = malloc(n_lbox * sizeof(PDM_g_num_t));
 
       int n_lbox_compress = 0;
       for(int i = 0; i < n_lbox; ++i ){
         if(box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i] > 0 ){
           res_box_strid [i_shm][n_lbox_compress] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
           res_box_weight[i_shm][n_lbox_compress] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
+          res_box_g_num [i_shm][n_lbox_compress] = shm_box_gnum[beg+i];
           n_lbox_compress++;
         }
       }
-      res_box_weight[i_shm] = realloc(res_box_weight[i_shm], n_lbox_compress * sizeof(double));
-      res_box_strid [i_shm] = realloc(res_box_strid [i_shm], n_lbox_compress * sizeof(int   ));
+      res_box_weight[i_shm] = realloc(res_box_weight[i_shm], n_lbox_compress * sizeof(double     ));
+      res_box_strid [i_shm] = realloc(res_box_strid [i_shm], n_lbox_compress * sizeof(int        ));
+      res_box_g_num [i_shm] = realloc(res_box_g_num [i_shm], n_lbox_compress * sizeof(PDM_g_num_t));
       part_n_box    [i_shm] = n_lbox_compress;
 
       if(verbose && n_lbox_compress < n_lbox) {
@@ -1696,6 +1697,7 @@ PDM_doctree_build
     free(res_box_pts_coords[i_shm]);
     free(res_box_pts_gnum  [i_shm]);
     free(res_box_strid     [i_shm]);
+    free(res_box_g_num     [i_shm]);
   }
   free(part_n_box    );
 
