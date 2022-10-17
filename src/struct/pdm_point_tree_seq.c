@@ -2360,7 +2360,7 @@ PDM_point_tree_seq_points_inside_boxes
               }
 
               for (int j = 0; j < nodes->n_points[child_id]; j++) {
-                _box_pts[_box_pts_idx[ibox+1]++] = nodes->range[2*child_id] + j;
+                _box_pts[_box_pts_idx[ibox+1]++] = ptree->new_to_old[nodes->range[2*child_id] + j];
               }
             }
 
