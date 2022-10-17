@@ -3403,10 +3403,6 @@ PDM_tree_intersection_point_box2
                                           &btree_new_to_old);
 
 
-  int s_queue = 1000; // ?
-  int *queue0 = malloc(sizeof(int) * s_queue * 2);
-  int *queue1 = malloc(sizeof(int) * s_queue * 2);
-  int *queues[2] = {queue0, queue1};
 
   /* Get point_tree data (use gets!!!) */
   int ptree_n_children = PDM_point_tree_n_children_get(ptree);
@@ -3447,6 +3443,10 @@ PDM_tree_intersection_point_box2
     return;
   }
 
+  int s_queue = 1000; // ?
+  int *queue0 = malloc(sizeof(int) * s_queue * 2);
+  int *queue1 = malloc(sizeof(int) * s_queue * 2);
+  int *queues[2] = {queue0, queue1};
 
   int n_queue = 0;
   queues[0][2*n_queue  ] = btree_node_id;
@@ -3740,6 +3740,9 @@ PDM_tree_intersection_point_box2
   }
   free(__box_pts_n);
   free(__box_pts);
+
+  free(queue0);
+  free(queue1);
 
 }
 

@@ -1184,31 +1184,32 @@ _cube_mesh2
 
     int n_groups, n_joins;
     int n_section;
-    int *n_elt;
 
-    int         *cell_tag;
-    int         *cell_face_idx;
-    int         *cell_face;
-    PDM_g_num_t *cell_ln_to_gn;
-    int         *face_tag;
-    int         *face_cell;
-    int         *face_vtx_idx;
-    int         *face_vtx;
-    PDM_g_num_t *face_ln_to_gn;
-    int         *face_part_bound_proc_idx;
-    int         *face_part_bound_part_idx;
-    int         *face_part_bound;
-    int         *vtx_tag;
-    double      *vtx;
-    PDM_g_num_t *vtx_ln_to_gn;
-    int         *face_group_idx;
-    int         *face_group;
-    PDM_g_num_t *face_group_ln_to_gn;
-    PDM_g_num_t *face_join_ln_to_gn;
-    int         *face_join_idx, *face_join;
-    int         **elt_vtx_idx;
-    int         **elt_vtx;
-    PDM_g_num_t **elt_section_ln_to_gn;
+    int         *n_elt                    = NULL;
+    int         *cell_tag                 = NULL;
+    int         *cell_face_idx            = NULL;
+    int         *cell_face                = NULL;
+    PDM_g_num_t *cell_ln_to_gn            = NULL;
+    int         *face_tag                 = NULL;
+    int         *face_cell                = NULL;
+    int         *face_vtx_idx             = NULL;
+    int         *face_vtx                 = NULL;
+    PDM_g_num_t *face_ln_to_gn            = NULL;
+    int         *face_part_bound_proc_idx = NULL;
+    int         *face_part_bound_part_idx = NULL;
+    int         *face_part_bound          = NULL;
+    int         *vtx_tag                  = NULL;
+    double      *vtx                      = NULL;
+    PDM_g_num_t *vtx_ln_to_gn             = NULL;
+    int         *face_group_idx           = NULL;
+    int         *face_group               = NULL;
+    PDM_g_num_t *face_group_ln_to_gn      = NULL;
+    PDM_g_num_t *face_join_ln_to_gn       = NULL;
+    int         *face_join_idx            = NULL;
+    int         *face_join                = NULL;
+    int         **elt_vtx_idx             = NULL;
+    int         **elt_vtx                 = NULL;
+    PDM_g_num_t **elt_section_ln_to_gn    = NULL;
 
     PDM_multipart_part_dim_get (mpart,
                                 0,
@@ -1440,7 +1441,12 @@ _cube_mesh2
 
       memcpy((*pface_ln_to_gn)[i_part] + n_face, ext_face_ln_to_gn, sizeof(PDM_g_num_t) * n_ext_face);
     }
+
+    if(face_vtx != NULL) {
+      free(face_vtx);
+    }
   }
+
 
 
   PDM_multipart_free (mpart);

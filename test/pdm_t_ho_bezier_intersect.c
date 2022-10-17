@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_g_num = malloc(sizeof(PDM_g_num_t) * n_vtx);
   int *face_vtx = malloc(sizeof(int) * n_vtx_triangle);
   PDM_g_num_t *face_g_num = malloc(sizeof(PDM_g_num_t) * 1);
-  const char        *vtx_field_name = "ho_bezier_basis";
+  const char  *vtx_field_name = "ho_bezier_basis";
   double      *vtx_field = malloc(sizeof(double) * n_vtx);
 
   for (int j = 0; j < n_vtx_triangle; j++) {
@@ -411,11 +411,11 @@ int main(int argc, char *argv[])
                          (const char **) &normal_name,
                        (const double **) &vector_normal);
 
-    free(vtx_g_num);
-    free(vtx_field);
   }
   free(face_vtx);
   free(face_g_num);
+  free(vtx_g_num);
+  free(vtx_field);
 
   PDM_MPI_Finalize ();
 

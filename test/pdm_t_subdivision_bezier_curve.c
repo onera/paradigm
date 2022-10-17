@@ -218,6 +218,8 @@ int main(int argc, char *argv[])
     }
 
     printf("max_diff = %e\n", max_diff);
+    free(weight);
+    free(weight2);
   }
 
 

@@ -848,6 +848,7 @@ int main(int argc, char *argv[])
   free(edge_pt_plane);
   free(direction_vect);
   free(volume_plane_idx);
+  free(d_back_face_ln_to_gn);
 
   // VTK output of surface mesh with tagged elements for each volume mesh edges
 

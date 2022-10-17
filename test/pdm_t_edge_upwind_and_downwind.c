@@ -596,6 +596,11 @@ int main(int argc, char *argv[])
                                              &upwind_point_out,
                                              &downwind_point_out);
 
+      if (!triangulate) {
+        free(face_center);
+        free(face_normal);
+      }
+
       /* Check for errors */
       for (int i = 0; i < n_edge; i++) {
         if (is_bdr_edge[i] == 0) {

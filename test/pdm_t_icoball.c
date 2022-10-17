@@ -344,6 +344,7 @@ int main(int argc, char *argv[])
                              "icoball_surface_");
   }
   PDM_DMesh_nodal_free(dmn);
+  free(pcell_ln_to_gn);
 
   PDM_MPI_Finalize();
 

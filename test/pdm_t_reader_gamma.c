@@ -107,19 +107,6 @@ _read_args(int            argc,
 int main(int argc, char *argv[])
 {
   /*
-   *  Init
-   */
-
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
-  int i_rank;
-  int n_rank;
-
-  PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-
-  /*
    *  Read args
    */
   char *filename = NULL;
@@ -139,7 +126,22 @@ int main(int argc, char *argv[])
 
   if (filename == NULL) {
     filename = (char *) "meshes/box.mesh";
+    printf("No file specified -> exit \n");
+    return 0;
   }
+
+  /*
+   *  Init
+   */
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Init(&argc, &argv);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+
 
   PDM_dmesh_nodal_t *dmn = PDM_reader_gamma_dmesh_nodal(comm,
                                                         filename,

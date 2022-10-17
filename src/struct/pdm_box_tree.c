@@ -7689,21 +7689,6 @@ PDM_tree_intersection_point_box
                                 &btree_d);
 
 
-
-  int s_queue = 1000; // ?
-  int *queue0 = malloc(sizeof(int) * s_queue * 2);
-  int *queue1 = malloc(sizeof(int) * s_queue * 2);
-  int *queues[2] = {queue0, queue1};
-
-  int *queue0_depth = NULL;
-  int *queue1_depth = NULL;
-  if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
-    queue0_depth = malloc(sizeof(int) * s_queue);
-    queue1_depth = malloc(sizeof(int) * s_queue);
-  }
-
-  int *queues_depth[2] = {queue0_depth, queue1_depth};
-
   /* Get point_tree data (use gets!!!) */
   int ptree_n_children = PDM_point_tree_n_children_get(ptree);
   int    *ptree_depth       = ptree->nodes->depth;
@@ -7758,6 +7743,21 @@ PDM_tree_intersection_point_box
     }
     return;
   }
+
+
+  int s_queue = 1000; // ?
+  int *queue0 = malloc(sizeof(int) * s_queue * 2);
+  int *queue1 = malloc(sizeof(int) * s_queue * 2);
+  int *queues[2] = {queue0, queue1};
+
+  int *queue0_depth = NULL;
+  int *queue1_depth = NULL;
+  if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
+    queue0_depth = malloc(sizeof(int) * s_queue);
+    queue1_depth = malloc(sizeof(int) * s_queue);
+  }
+
+  int *queues_depth[2] = {queue0_depth, queue1_depth};
 
 
   int n_queue = 0;
@@ -8094,6 +8094,14 @@ PDM_tree_intersection_point_box
   }
   free(__box_pts_n);
   free(__box_pts);
+
+  if(queue0_depth != NULL) {
+    free(queue0_depth);
+  }
+  if(queue1_depth != NULL) {
+    free(queue1_depth);
+  }
+
 
 }
 
