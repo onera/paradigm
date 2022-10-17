@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
                  elt_type,
                  &mpart);
 
-  int          pn_face         = 0;
+  // int          pn_face         = 0;
   int          pn_edge         = 0;
   int          pn_vtx          = 0;
   int         *pface_edge_idx  = NULL;
@@ -370,13 +370,13 @@ int main(int argc, char *argv[])
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get faces */
-  pn_face = PDM_multipart_part_connectivity_get(mpart,
-                                               0,
-                                               i_part,
-                                               PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &pface_edge,
-                                               &pface_edge_idx,
-                                               PDM_OWNERSHIP_KEEP);
+  PDM_multipart_part_connectivity_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      &pface_edge,
+                                      &pface_edge_idx,
+                                      PDM_OWNERSHIP_KEEP);
 
   /* Get groups */
   // _get_groups(mpart,
