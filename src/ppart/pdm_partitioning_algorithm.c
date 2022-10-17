@@ -117,8 +117,10 @@ PDM_part_assemble_partitions
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
+ const int            *dentity_init_location,
        int           **pn_entity,
-       PDM_g_num_t  ***pentity_ln_to_gn
+       PDM_g_num_t  ***pentity_ln_to_gn,
+       int          ***pentity_init_location
 )
 {
   int i_rank;
@@ -182,13 +184,34 @@ PDM_part_assemble_partitions
                 (void **) &dentity_ln_to_gn,
                           pn_entity,
                 (void **) &pentity_ln_to_gn_tmp);
-
-  free(dentity_stri);
   free(dentity_ln_to_gn);
+
+  int *pentity_init_location_tmp = NULL;
+  if(dentity_init_location != NULL) {
+    int *tmp_pn_entity = NULL;
+    PDM_part_to_block_exch (ptb_partition,
+                            3 * sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            1,
+                            &dentity_stri,
+                  (void **) &dentity_init_location,
+                            &tmp_pn_entity,
+                  (void **) &pentity_init_location_tmp);
+
+    free(tmp_pn_entity);
+  }
+  free(dentity_stri);
+
 
   /* Reshape pentity_ln_to_gn */
   *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
   PDM_g_num_t **_pentity_ln_to_gn = *pentity_ln_to_gn;
+
+  int **_pentity_init_location = NULL;
+  if(dentity_init_location != NULL) {
+    *pentity_init_location = (int **) malloc( sizeof(int *) * n_part_block);
+    _pentity_init_location = *pentity_init_location;
+  }
 
   int offset = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
@@ -198,6 +221,15 @@ PDM_part_assemble_partitions
 
     for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
       _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
+    }
+
+    if(dentity_init_location != NULL) {
+      _pentity_init_location[i_part] = (int *) malloc( sizeof(int) * 3 * _pn_entity);
+      for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+        _pentity_init_location[i_part][3*i_elmt  ] = pentity_init_location_tmp[3*(offset + i_elmt)  ];
+        _pentity_init_location[i_part][3*i_elmt+1] = pentity_init_location_tmp[3*(offset + i_elmt)+1];
+        _pentity_init_location[i_part][3*i_elmt+2] = pentity_init_location_tmp[3*(offset + i_elmt)+2];
+      }
     }
 
     offset += _pn_entity;
@@ -220,6 +252,9 @@ PDM_part_assemble_partitions
   PDM_part_to_block_free (ptb_partition);
 
   free(pentity_ln_to_gn_tmp);
+  if(dentity_init_location != NULL) {
+    free(pentity_init_location_tmp);
+  }
   free(dpart_ln_to_gn);
 
   return n_part_block;

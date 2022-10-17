@@ -401,10 +401,12 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
+  // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+  PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
                                                       n_part_out,
-                                                      PDM_EXTRACT_PART_KIND_LOCAL,
+                                                      extract_kind,
                                                       PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                                                       PDM_TRUE, // compute_child_gnum
                                                       PDM_OWNERSHIP_KEEP,

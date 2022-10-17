@@ -372,6 +372,272 @@ _extract_gnum_and_compute_child
   *child_selected_g_num_out  = child_selected_g_num;
 }
 
+static
+void
+_compute_dual_graph
+(
+  PDM_extract_part_t    *extrp,
+  PDM_part_to_block_t   *ptb_equi,
+  PDM_g_num_t         **out_dual_graph_idx,
+  PDM_g_num_t         **out_dual_graph
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp->comm, &i_rank);
+
+  // int dn_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
+  // PDM_g_num_t *dequi_g_num = PDM_part_to_block_block_gnum_get(ptb_equi);
+
+  PDM_g_num_t* cell_distri = PDM_part_to_block_distrib_index_get(ptb_equi);
+
+  int dn_cell_equi = cell_distri[i_rank+1] - cell_distri[i_rank];
+  int         **pelmt_to_arc_n     = malloc(extrp->n_part_in * sizeof(int         *));
+  PDM_g_num_t **pelmt_to_arc_g_num = malloc(extrp->n_part_in * sizeof(PDM_g_num_t *));
+
+  int from_face_edge = 0;
+  int from_face_vtx  = 0;
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    if(extrp->pface_edge    [i_part] != NULL) {
+      from_face_edge = 1;
+    }
+    if(extrp->pface_vtx    [i_part] != NULL) {
+      from_face_vtx = 1;
+    }
+  }
+
+  int         **pelmt_to_arc_idx = NULL;
+  int         **pelmt_to_arc     = NULL;
+  PDM_g_num_t **arc_ln_to_gn     = NULL;
+
+  if(extrp->dim == 3) {
+    pelmt_to_arc_idx = extrp->pcell_face_idx;
+    pelmt_to_arc     = extrp->pcell_face;
+    arc_ln_to_gn     = extrp->face_ln_to_gn;
+  } else if (extrp->dim == 2) {
+    if(from_face_edge == 1) {
+      pelmt_to_arc_idx = extrp->pface_edge_idx;
+      pelmt_to_arc     = extrp->pface_edge;
+      arc_ln_to_gn     = extrp->edge_ln_to_gn;
+    } else {
+      assert(from_face_vtx == 1);
+      pelmt_to_arc_idx = extrp->pface_vtx_idx;
+      pelmt_to_arc     = extrp->pface_vtx;
+      arc_ln_to_gn     = extrp->vtx_ln_to_gn;
+    }
+  } else if (extrp->dim == 1) {
+    pelmt_to_arc_idx = malloc(extrp->n_part_in * sizeof(int *));
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      pelmt_to_arc_idx[i_part] = malloc((extrp->n_edge[i_part]+1) * sizeof(int));
+      for(int i = 0; i < extrp->n_edge[i_part]+1; ++i) {
+        pelmt_to_arc_idx[i_part][i] = 2*i;
+      }
+    }
+    pelmt_to_arc     = extrp->pedge_vtx;
+    arc_ln_to_gn     = extrp->vtx_ln_to_gn;
+  } else {
+    abort();
+  }
+
+
+  /*
+   * Convert to gnum
+   */
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part ) {
+    pelmt_to_arc_n[i_part] = malloc(extrp->n_extract[i_part] * sizeof(int));
+
+    int n_extract_tot_cell_face = 0;
+    for(int idx_entity = 0; idx_entity < extrp->n_extract[i_part]; idx_entity++) {
+      int lnum = extrp->extract_lnum[i_part][idx_entity];
+      pelmt_to_arc_n[i_part][idx_entity] = pelmt_to_arc_idx[i_part][lnum+1]-pelmt_to_arc_idx[i_part][lnum];
+      n_extract_tot_cell_face += pelmt_to_arc_n[i_part][idx_entity];
+    }
+
+    pelmt_to_arc_g_num[i_part] = malloc(n_extract_tot_cell_face * sizeof(PDM_g_num_t));
+    int idx_write = 0;
+    for(int idx_entity = 0; idx_entity < extrp->n_extract[i_part]; idx_entity++) {
+      int lnum = extrp->extract_lnum[i_part][idx_entity];
+      for(int idx_face = pelmt_to_arc_idx[i_part][lnum]; idx_face < pelmt_to_arc_idx[i_part][lnum+1]; ++idx_face) {
+        int i_face = PDM_ABS(pelmt_to_arc[i_part][idx_face])-1;
+        pelmt_to_arc_g_num[i_part][idx_write++] = arc_ln_to_gn[i_part][i_face];
+      }
+    }
+  }
+
+  if (extrp->dim == 1) {
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      free(pelmt_to_arc_idx[i_part]);
+    }
+    free(pelmt_to_arc_idx);
+  }
+
+  int request_elmt_to_arc = -1;
+  int         *delmt_to_arc_n = NULL;
+  PDM_g_num_t *delmt_to_arc = NULL;
+  PDM_part_to_block_iexch(ptb_equi,
+                          PDM_MPI_COMM_KIND_COLLECTIVE,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          pelmt_to_arc_n,
+                (void **) pelmt_to_arc_g_num,
+                          &delmt_to_arc_n,
+                (void **) &delmt_to_arc,
+                          &request_elmt_to_arc);
+
+  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part ) {
+    free(pelmt_to_arc_n    [i_part]);
+    free(pelmt_to_arc_g_num[i_part]);
+  }
+  free(pelmt_to_arc_n);
+  free(pelmt_to_arc_g_num);
+
+
+  int n_tot_arc = PDM_part_to_block_iexch_wait(ptb_equi, request_elmt_to_arc);
+
+  if(0 == 1) {
+    int *delmt_to_arc_idx = PDM_array_new_idx_from_sizes_int(delmt_to_arc_n, dn_cell_equi);
+    PDM_log_trace_connectivity_long(delmt_to_arc_idx, delmt_to_arc, dn_cell_equi, "delmt_to_arc ::");
+    free(delmt_to_arc_idx);
+  }
+
+  /*
+   * Transpose connectivity
+   */
+  PDM_part_to_block_t* ptb_merge_arc = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                1.,
+                                                                &delmt_to_arc,
+                                                                NULL,
+                                                                &n_tot_arc,
+                                                                1,
+                                                                extrp->comm);
+
+  int *stride_one = PDM_array_const_int(n_tot_arc, 1);
+  PDM_g_num_t* send_elmt_ln_to_gn = malloc(n_tot_arc * sizeof(PDM_g_num_t));
+
+  int n_elmt_to_arc_tot = 0;
+  for(int i = 0; i < dn_cell_equi; ++i) {
+    for(int j = 0; j < delmt_to_arc_n[i]; ++j) {
+      send_elmt_ln_to_gn[n_elmt_to_arc_tot++] = cell_distri[i_rank] + i + 1;
+    }
+  }
+
+  int request_arc_to_elmt = -1;
+  int         *darc_to_elmt_n = NULL;
+  PDM_g_num_t *darc_to_elmt   = NULL;
+  PDM_part_to_block_iexch(ptb_merge_arc,
+                          PDM_MPI_COMM_KIND_COLLECTIVE,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR_INTERLACED,
+                          1,
+                          &stride_one,
+                (void **) &send_elmt_ln_to_gn,
+                          &darc_to_elmt_n,
+                (void **) &darc_to_elmt,
+                          &request_arc_to_elmt);
+
+  PDM_part_to_block_iexch_wait(ptb_merge_arc, request_arc_to_elmt);
+  free(stride_one);
+  free(send_elmt_ln_to_gn);
+
+  int dn_arc_equi = PDM_part_to_block_n_elt_block_get(ptb_merge_arc);
+  if(0 == 1) {
+    int *darc_to_elmt_idx = PDM_array_new_idx_from_sizes_int(darc_to_elmt_n, dn_arc_equi);
+    PDM_log_trace_connectivity_long(darc_to_elmt_idx, darc_to_elmt, dn_arc_equi, "darc_to_elmt ::");
+    free(darc_to_elmt_idx);
+  }
+
+  /*
+   * Renvoie des numero delmts associé à chaque arc
+   */
+  PDM_g_num_t *arc_gnum = PDM_part_to_block_block_gnum_get(ptb_merge_arc);
+
+  PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block(arc_gnum,
+                                                                        dn_arc_equi,
+                                                (const PDM_g_num_t **)  &delmt_to_arc,
+                                                                        &n_elmt_to_arc_tot,
+                                                                        1,
+                                                                        extrp->comm);
+
+  int         **tmp_parc_to_elmt_n = NULL;
+  PDM_g_num_t **tmp_parc_to_elmt   = NULL;
+  PDM_block_to_part_exch(btp,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         darc_to_elmt_n,
+                         darc_to_elmt,
+                         &tmp_parc_to_elmt_n,
+         (void ***)      &tmp_parc_to_elmt);
+  int         *parc_to_elmt_n = tmp_parc_to_elmt_n[0];
+  PDM_g_num_t *parc_to_elmt   = tmp_parc_to_elmt  [0];
+  free(tmp_parc_to_elmt_n);
+  free(tmp_parc_to_elmt  );
+
+  /*
+   * Merge results
+   */
+  int idx_read = 0;
+  int n_data_tot = 0;
+  int max_connect = 0;
+  for(int i = 0; i < dn_cell_equi; ++i) {
+    int ln_arc = delmt_to_arc_n[i];
+    int n_data = 0;
+    for(int i_arc = 0; i_arc < ln_arc; ++i_arc) {
+      n_data += parc_to_elmt_n[idx_read++];
+    }
+    max_connect = PDM_MAX(max_connect, n_data);
+    n_data_tot += n_data;
+  }
+
+  PDM_g_num_t *dual_graph     = malloc(n_data_tot       * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dual_graph_idx = malloc((dn_cell_equi+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *tmp_dual_graph = malloc(max_connect      * sizeof(PDM_g_num_t));
+
+  idx_read = 0;
+  int idx_read_data = 0;
+  dual_graph_idx[0] = 0;
+  for(int i = 0; i < dn_cell_equi; ++i) {
+    PDM_g_num_t cell_g_num = cell_distri[i_rank] + i + 1;
+
+    dual_graph_idx[i+1] = dual_graph_idx[i];
+
+    int ln_arc = delmt_to_arc_n[i];
+    int idx_cpy = 0;
+    for(int j = 0; j < ln_arc; ++j) {
+      for(int k = 0; k < parc_to_elmt_n[idx_read]; ++k) {
+        PDM_g_num_t elmt_gnum = parc_to_elmt[idx_read_data++];
+        if(elmt_gnum != cell_g_num) {
+          tmp_dual_graph[idx_cpy++] = elmt_gnum;
+        }
+
+      }
+      idx_read++;
+    }
+
+    int ln_elmt = PDM_inplace_unique_long(tmp_dual_graph, NULL, 0, idx_cpy-1);
+    for(int j = 0; j < ln_elmt; ++j) {
+      dual_graph[dual_graph_idx[i+1]++] = tmp_dual_graph[j]-1; // Graphe start at 0 for metis/scoth
+    }
+  }
+
+  dual_graph = realloc(dual_graph, dual_graph_idx[dn_cell_equi] * sizeof(PDM_g_num_t));
+
+  free(parc_to_elmt_n);
+  free(parc_to_elmt  );
+  PDM_block_to_part_free(btp);
+  PDM_part_to_block_free(ptb_merge_arc);
+
+  free(delmt_to_arc_n);
+  free(delmt_to_arc);
+  free(darc_to_elmt_n);
+  free(darc_to_elmt);
+  free(tmp_dual_graph);
+
+  *out_dual_graph_idx = dual_graph_idx;
+  *out_dual_graph     = dual_graph;
+
+}
+
 
 
 static
@@ -2196,27 +2462,6 @@ _extract_part
   /*
    *  Create array selected in gnum
    */
-  // PDM_g_num_t** entity_extract_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
-
-  // PDM_gen_gnum_t* gnum_extract = PDM_gnum_create(3, extrp->n_part_in, PDM_FALSE,
-  //                                                1.e-6,
-  //                                                extrp->comm,
-  //                                                PDM_OWNERSHIP_USER);
-  // for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
-  //   entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( extrp->n_extract[i_part] * sizeof(PDM_g_num_t));
-  //   for(int i_entity = 0; i_entity < extrp->n_extract[i_part]; ++i_entity) {
-  //     entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extrp->extract_lnum[i_part][i_entity]];
-  //   }
-  //   PDM_gnum_set_from_parents(gnum_extract, i_part, extrp->n_extract[i_part], entity_extract_g_num[i_part]);
-  // }
-  // PDM_g_num_t **child_selected_g_num = (PDM_g_num_t **) malloc( extrp->n_part_in * sizeof(PDM_g_num_t *));
-  // PDM_gnum_compute(gnum_extract);
-
-  // for (int i_part = 0; i_part < extrp->n_part_in; i_part++){
-  //   child_selected_g_num[i_part] = PDM_gnum_get(gnum_extract, i_part);
-  // }
-  // PDM_gnum_free(gnum_extract);
-
   PDM_g_num_t** entity_extract_g_num = NULL;
   PDM_g_num_t** child_selected_g_num = NULL;
   _extract_gnum_and_compute_child(extrp->comm,
@@ -2969,13 +3214,21 @@ _extract_part_and_reequilibrate
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
   PDM_g_num_t **entity_g_num = NULL;
-  PDM_mesh_entities_t entity_type;
+  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_CELL;
   if(extrp->dim == 3) {
     entity_g_num = extrp->cell_ln_to_gn;
     entity_type  = PDM_MESH_ENTITY_CELL;
-  } else {
+  } else if(extrp->dim == 2) {
     entity_g_num = extrp->face_ln_to_gn;
     entity_type  = PDM_MESH_ENTITY_FACE;
+  } else if(extrp->dim == 1) {
+    entity_g_num = extrp->edge_ln_to_gn;
+    entity_type  = PDM_MESH_ENTITY_EDGE;
+  } else if(extrp->dim == 0) {
+    entity_g_num = extrp->vtx_ln_to_gn;
+    entity_type  = PDM_MESH_ENTITY_VERTEX;
+  } else {
+    abort();
   }
 
   int from_face_edge = 0;
@@ -2991,7 +3244,6 @@ _extract_part_and_reequilibrate
 
   /*
    * Calcul des coordonnées to setup hilbert ordering (independant of parallelism )
-   * (@Bruno: only if PDM_SPLIT_DUAL_WITH_HILBERT???)
    */
   double **entity_center = NULL;
   if(extrp->dim == 2) {
@@ -3149,6 +3401,127 @@ _extract_part_and_reequilibrate
     return;
   }
 
+
+  if(1) {
+
+    PDM_g_num_t *distrib_elmt     = PDM_part_to_block_distrib_index_get(ptb_equi);
+
+    PDM_g_num_t *dual_graph_idx = NULL;
+    PDM_g_num_t *dual_graph     = NULL;
+
+
+    int **extract_init_location = malloc(sizeof(int *) * extrp->n_part_in);
+    for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+      extract_init_location[i_part] = malloc(3 * extrp->n_extract[i_part] * sizeof(int));
+      for(int i = 0; i < extrp->n_extract[i_part]; ++i) {
+        extract_init_location[i_part][3*i  ] = i_rank;
+        extract_init_location[i_part][3*i+1] = i_part;
+        extract_init_location[i_part][3*i+2] = extrp->extract_lnum[i_part][i];
+      }
+    }
+
+    int request_entity_init_location = -1;
+    int *dequi_init_location = NULL;
+    PDM_part_to_block_iexch(ptb_equi,
+                            PDM_MPI_COMM_KIND_COLLECTIVE,
+                            3 * sizeof(int),
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
+                  (void **) extract_init_location,
+                            NULL,
+                  (void **) &dequi_init_location,
+                            &request_entity_init_location);
+    PDM_part_to_block_iexch_wait(ptb_equi, request_entity_init_location);
+    for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+      free(extract_init_location[i_part]);
+    }
+    free(extract_init_location);
+
+
+    _compute_dual_graph(extrp, ptb_equi, &dual_graph_idx, &dual_graph);
+
+    int tn_part;
+    PDM_MPI_Allreduce(&extrp->n_part_out, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, extrp->comm);
+
+    int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
+    int *_elmt_part = malloc(dn_elmt * sizeof(int));
+    PDM_para_graph_split(extrp->split_dual_method,
+                         distrib_elmt,
+                         dual_graph_idx,
+                         dual_graph,
+                         NULL,
+                         NULL,
+                         tn_part,
+                         NULL,
+                         _elmt_part,
+                         extrp->comm);
+
+    PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(extrp->comm, extrp->n_part_out);
+
+    int **pinit_location = NULL;
+    PDM_part_assemble_partitions(extrp->comm,
+                                 distrib_partition,
+                                 distrib_elmt,
+                                 _elmt_part,
+                                 dequi_init_location,
+                                 &extrp->pextract_n_entity[entity_type],
+                                 &extrp->pextract_entity_ln_to_gn[entity_type],
+                                 &pinit_location);
+    free(distrib_partition);
+    free(dequi_init_location);
+    free(_elmt_part);
+    free(dual_graph);
+    free(dual_graph_idx);
+
+    /*
+     * Fake from target
+     */
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part){
+      extrp->n_target       [i_part] = extrp->pextract_n_entity       [entity_type][i_part];
+      extrp->target_gnum    [i_part] = extrp->pextract_entity_ln_to_gn[entity_type][i_part];
+      extrp->target_location[i_part] = pinit_location[i_part];
+    }
+    _extract_part_and_reequilibrate_from_target(extrp);
+
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part){
+      extrp->n_target       [i_part] = 0;
+      extrp->target_gnum    [i_part] = NULL;
+      extrp->target_location[i_part] = NULL;
+    }
+
+    PDM_part_to_block_free(ptb_equi);
+
+    // Il faut echanger les parent a travers le ptp OU a travers les blocks
+    int           exch_request = -1;
+    PDM_part_to_part_reverse_iexch(extrp->ptp_entity[entity_type],
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   1,
+                                   sizeof(PDM_g_num_t),
+                                   NULL,
+                  (const void **)  entity_g_num,
+                                   NULL,
+                     (void ***)   &extrp->pextract_entity_parent_ln_to_gn[entity_type],
+                                  &exch_request);
+    PDM_part_to_part_reverse_iexch_wait(extrp->ptp_entity[entity_type], exch_request);
+
+    if(0 == 1) {
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        PDM_log_trace_array_long(extrp->pextract_entity_parent_ln_to_gn[entity_type][i_part], extrp->pextract_n_entity[entity_type][i_part], "pextract_entity_parent_ln_to_gn ::");
+      }
+    }
+
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      free(pinit_location[i_part]);
+    }
+    free(pinit_location);
+
+    return;
+  }
+  // abort();  // TODO Remove all distributed part if from target works
+
   /*
    * Copy because ptb will be free
    */
@@ -3162,7 +3535,6 @@ _extract_part_and_reequilibrate
   } else {
     extrp->dequi_parent_face_ln_to_gn = dequi_parent_entity_ln_to_gn;
   }
-
 
 
   assert(extrp->split_dual_method != PDM_SPLIT_DUAL_WITH_HILBERT);
@@ -3465,7 +3837,7 @@ _extract_part_and_reequilibrate
   }
 
   int tn_part;
-  PDM_MPI_Allreduce(& extrp->n_part_out, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, extrp->comm);
+  PDM_MPI_Allreduce(&extrp->n_part_out, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, extrp->comm);
 
   PDM_para_graph_split(extrp->split_dual_method,
                        distrib_elmt,
@@ -3485,15 +3857,19 @@ _extract_part_and_reequilibrate
                                  distrib_partition,
                                  distrib_elmt,
                                  _elmt_part,
+                                 NULL,
                                  &extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL],
-                                 &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL]);
+                                 &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL],
+                                 NULL);
   } else {
     PDM_part_assemble_partitions(extrp->comm,
                                  distrib_partition,
                                  distrib_elmt,
                                  _elmt_part,
+                                 NULL,
                                  &extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE],
-                                 &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE]);
+                                 &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE],
+                                 NULL);
   }
 
   free(distrib_partition);

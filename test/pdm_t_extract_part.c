@@ -418,8 +418,14 @@ int main(int argc, char *argv[])
       if(inside == 1) {
         selected_l_num[i_part][n_select_cell]     = i_cell;
         n_select_cell++;
-
       }
+
+      // if(cell_ln_to_gn[i_cell] == 5) {
+      //   selected_l_num[i_part][n_select_cell]     = i_cell;
+      //   n_select_cell++;
+      // }
+
+
     }
 
     selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
