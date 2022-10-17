@@ -1228,6 +1228,375 @@ PDM_dist_cloud_surf_compute
 }
 
 
+
+
+/**
+ *
+ * \brief Compute distance
+ *
+ * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
+ *
+ */
+
+void
+PDM_dist_cloud_surf_compute_optim
+(
+ PDM_dist_cloud_surf_t *dist
+)
+{
+  const int n_point_cloud      = dist->n_point_cloud;
+  PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
+  PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
+  PDM_MPI_Comm comm            = dist->comm;
+
+  int rank;
+  PDM_MPI_Comm_rank (comm, &rank);
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  //--->>>
+  _octree_type_t octree_type = PDM_OCTREE_PARALLEL;
+  char *env_octree_type = getenv ("PDM_OCTREE_TYPE");
+  if (env_octree_type != NULL) {
+    if (atoi(env_octree_type) == 0) {
+      octree_type = PDM_OCTREE_SERIAL;
+    }
+    else if (atoi(env_octree_type) == 1) {
+      octree_type = PDM_OCTREE_PARALLEL;
+    }
+  }
+  if (idebug && rank == 0) printf("octree_type = %d\n", octree_type);
+  //<<<---
+
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
+  //PDM_timer_hang_on(dist->timer);
+  dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
+  dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
+  dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
+  dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
+
+
+
+  const double tolerance = 1e-4;
+  // const int depth_max = 35;
+  const int depth_max = 31;
+  const int points_in_leaf_max = 4;
+
+  int n_part_mesh = 0;
+  if (mesh_nodal != NULL) {
+    n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_nodal);
+  }
+  else if (surf_mesh != NULL) {
+    n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0,
+        "PDM_dist_cloud_surf error : The surface mesh is not defined. "
+        "To do that : \n"
+        "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+        "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+        " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+  }
+
+  PDM_octree_t      *octree      = NULL;
+  PDM_para_octree_t *para_octree = NULL;
+  if (octree_type == PDM_OCTREE_SERIAL) {
+    octree = PDM_octree_create (n_part_mesh,
+        depth_max,
+        points_in_leaf_max,
+        tolerance,
+        comm);
+  } else {
+    para_octree = PDM_para_octree_create (n_part_mesh,
+        depth_max,
+        points_in_leaf_max,
+        0,
+        comm);
+  }
+
+  for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+
+    int n_vertices = 0;
+    const double *vertices_coords = NULL;
+    const PDM_g_num_t *vertices_gnum = NULL;
+
+    if (mesh_nodal != NULL) {
+      n_vertices      = PDM_Mesh_nodal_n_vertices_get (mesh_nodal, i_part);
+      vertices_coords = PDM_Mesh_nodal_vertices_get   (mesh_nodal, i_part);
+      vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+    } else if (surf_mesh != NULL) {
+      n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
+      vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
+      vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (surf_mesh, i_part);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0,
+          "PDM_dist_cloud_surf error : The surface mesh is not defined. "
+          "To do that : \n"
+          "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+          "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+          " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+    }
+
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      PDM_octree_point_cloud_set (octree, i_part, n_vertices,
+          vertices_coords, vertices_gnum);
+    } else {
+      PDM_para_octree_point_cloud_set (para_octree, i_part, n_vertices,
+          vertices_coords, vertices_gnum);
+    }
+  }
+
+  /*
+   * Build octree
+   */
+  int                *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
+  const double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
+  const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+
+  if (mesh_nodal != NULL) {
+    //...
+  }
+  else if (surf_mesh != NULL) {
+    PDM_surf_mesh_compute_faceExtentsMesh (surf_mesh, 1e-8);
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      part_n_elt[i_part] = PDM_surf_mesh_part_n_face_get (surf_mesh, i_part);
+
+      part_elt_g_num[i_part] = PDM_surf_mesh_part_face_g_num_get (surf_mesh, i_part);
+
+      part_elt_extents[i_part] = PDM_surf_mesh_part_extents_get (surf_mesh, i_part);
+
+    }
+  }
+
+  /* Compute local extents */
+  double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+  for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+    for (int i = 0; i < part_n_elt[ipart]; i++) {
+      for (int j = 0; j < 3; j++) {
+        my_extents[j]   = PDM_MIN (my_extents[j],   part_elt_extents[ipart][6*i + j]);
+        my_extents[j+3] = PDM_MAX (my_extents[j+3], part_elt_extents[ipart][6*i + 3 + j]);
+      }
+    }
+  }
+
+  /* Compute global extents */
+  double global_extents[6];
+  PDM_MPI_Allreduce (my_extents,   global_extents,   3,
+      PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
+  PDM_MPI_Allreduce (my_extents+3, global_extents+3, 3,
+      PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+
+  /* Break symmetry */
+  double max_range = 0.;
+  for (int i = 0; i < 3; i++) {
+    max_range = PDM_MAX (max_range, global_extents[i+3] - global_extents[i]);
+  }
+  for (int i = 0; i < 3; i++) {
+    global_extents[i]   -= max_range * 1.1e-3;
+    global_extents[i+3] += max_range * 1.0e-3;
+  }
+
+  if (octree_type == PDM_OCTREE_SERIAL) {
+    PDM_octree_build (octree);
+  } else {
+    PDM_para_octree_build (para_octree, NULL);//global_extents);
+    if (0) {
+      PDM_para_octree_dump_times (para_octree);
+    }
+  }
+
+
+  /***************************************************************************
+   *
+   * Compute bounding box structure to find candidates closest
+   *     to the upper bound distance
+   *
+   **************************************************************************/
+
+  PDM_timer_hang_on(dist->timer);
+  b_t_elapsed = PDM_timer_elapsed(dist->timer);
+  b_t_cpu     = PDM_timer_cpu(dist->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
+
+  PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, global_extents);
+
+  PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
+      n_part_mesh,
+      part_n_elt,
+      part_elt_extents,
+      part_elt_g_num);
+
+  if (idebug) {
+    printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      printf (" PDM_dbbtree_boxes_set n_elmts %d : %d\n", i_part, part_n_elt[i_part]);
+      for (int i = 0; i < part_n_elt[i_part]; i++) {
+        printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum "PDM_FMT_G_NUM"\n",
+            i,
+            part_elt_extents[i_part][6*i  ],
+            part_elt_extents[i_part][6*i+1],
+            part_elt_extents[i_part][6*i+2],
+            part_elt_extents[i_part][6*i+3],
+            part_elt_extents[i_part][6*i+4],
+            part_elt_extents[i_part][6*i+5],
+            part_elt_g_num[i_part][i]);
+      }
+    }
+  }
+
+  PDM_timer_hang_on(dist->timer);
+  e_t_elapsed = PDM_timer_elapsed(dist->timer);
+  e_t_cpu     = PDM_timer_cpu(dist->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+  dist->times_elapsed[BBTREE_CREATE] += e_t_elapsed - b_t_elapsed;
+  dist->times_cpu[BBTREE_CREATE]     += e_t_cpu - b_t_cpu;
+  dist->times_cpu_u[BBTREE_CREATE]   += e_t_cpu_u - b_t_cpu_u;
+  dist->times_cpu_s[BBTREE_CREATE]   += e_t_cpu_s - b_t_cpu_s;
+
+  PDM_timer_resume(dist->timer);
+
+  PDM_timer_hang_on(dist->timer);
+  b_t_elapsed = PDM_timer_elapsed(dist->timer);
+  b_t_cpu     = PDM_timer_cpu(dist->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
+
+
+  /*
+   * For each cloud
+   */
+  for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
+
+    _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
+    const int n_part = pt_cloud->n_part;
+
+    /***************************************************************************
+     *
+     * Compute the upper bound distance. It is the distance from the closest
+     * vertex
+     *      - Store mesh vetices in a octree
+     *      - Compute the closest distance of points to vertices stored in
+     *        the octree
+     *
+     **************************************************************************/
+
+    PDM_timer_hang_on(dist->timer);
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
+
+
+
+    /*
+     * Concatenation of the partitions
+     */
+
+    int n_pts_rank = 0;
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      n_pts_rank += pt_cloud->n_points[i_part];
+    }
+
+    double      *pts_rank       = malloc (sizeof(double)      * n_pts_rank * 3);
+    PDM_g_num_t *pts_g_num_rank = malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+
+    n_pts_rank = 0;
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      for (int i = 0; i < pt_cloud->n_points[i_part]; i++) {
+        for (int k = 0; k < 3; k++) {
+          pts_rank[3*n_pts_rank + k] = pt_cloud->coords[i_part][3*i + k];
+        }
+        pts_g_num_rank[n_pts_rank++] = pt_cloud->gnum[i_part][i];
+      }
+    }
+
+    /*
+     * Look for closest surface mesh vertices
+     */
+    PDM_g_num_t *closest_vertices_gnum =
+      malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+
+    double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
+    // log_trace("n_pts_rank:: %d\n", n_pts_rank);
+
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      // log_trace("PDM_OCTREE_SERIAL \n");
+      PDM_octree_closest_point (octree,
+                                n_pts_rank,
+                                pts_rank,
+                                pts_g_num_rank,
+                                closest_vertices_gnum,
+                                closest_vertices_dist2);
+    } else {
+      // log_trace("PDM_OCTREE_PARALLEL \n");
+      PDM_para_octree_single_closest_point (para_octree,
+                                            n_pts_rank,
+                                            pts_rank,
+                                            pts_g_num_rank,
+                                            closest_vertices_gnum,
+                                            closest_vertices_dist2);
+    }
+    // PDM_log_trace_array_long(closest_vertices_gnum, n_pts_rank, "closest_vertices_gnum::");
+    // PDM_log_trace_array_double(closest_vertices_dist2, n_pts_rank, "closest_vertices_dist2::");
+    free (closest_vertices_gnum);
+
+    if (i_point_cloud == n_point_cloud -1) { //Octree is not needed anymore
+      if (octree_type == PDM_OCTREE_SERIAL) {
+        PDM_octree_free (octree);
+      } else {
+        PDM_para_octree_free (para_octree);
+      }
+    }
+
+
+    PDM_timer_hang_on(dist->timer);
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[UPPER_BOUND_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[UPPER_BOUND_DIST]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[UPPER_BOUND_DIST]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[UPPER_BOUND_DIST]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    /*
+     * Find elements closer than closest_vertices_dist2 distance
+     */
+
+    /*
+     * PDM_dbbtree_closest_upper_bound_dist_boxes_get a passer en elemt + poids (entier) + init_location
+     * part_to_block pour equilibrer les boites + hilbert
+     * Extract part sur les elemts :
+     *   - On transfert les connectivités
+     *   - Puis on fait un dconnectivity_to_pconnectivty sur le delmt_pts -> pelemt_pts
+     */
+
+
+  }
+
+}
+
 /**
  *
  * \brief Get mesh distance
