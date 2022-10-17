@@ -683,7 +683,7 @@ _bezier_to_lagrange
         double *x = lag + 3*id_vtx;
         x[0] = x[1] = x[2] = 0;
         for (int j = 0; j < stride; j++) {
-          int jvtx = ec[j] - 1;
+          int jvtx = ev[j] - 1;
           for (int k = 0; k < 3; k++) {
             x[k] += weight[j] * vtx_coord[3*jvtx + k];
           }
