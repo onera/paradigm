@@ -44,6 +44,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_gnum_location.h"
 #include "pdm_order.h"
+#include "pdm_unique.h"
 
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_mesh_nodal_priv.h"
@@ -8569,13 +8570,44 @@ PDM_mesh_location_compute_optim
     int n_pts2 = delt_pts_idx2[dn_elt2];
     int         *part_stride = PDM_array_const_int(n_pts2, 1);
     PDM_g_num_t *part_elt_id = malloc(sizeof(PDM_g_num_t) * n_pts2);
-    double      *part_weight = malloc(sizeof(double     ) * n_pts2);
+    // double      *part_weight = malloc(sizeof(double     ) * n_pts2);
     for (int ielt = 0; ielt < dn_elt2; ielt++) {
       for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
         part_elt_id[i] = delt_g_num_geom2[ielt];
-        part_weight[i] = 1.;
+        // part_weight[i] = 1.;
       }
     }
+
+    PDM_g_num_t *pts_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_pts2);
+    int *pts_unique_order = malloc(sizeof(int) * n_pts2);
+    memcpy(pts_ln_to_gn, delt_pts_g_num_geom, sizeof(PDM_g_num_t) * n_pts2);
+    int n_pts_unique = PDM_inplace_unique_long2(pts_ln_to_gn,
+                                                pts_unique_order,
+                                                0,
+                                                n_pts2-1);
+    pts_ln_to_gn = realloc(pts_ln_to_gn, sizeof(PDM_g_num_t) * n_pts_unique);
+    if (dbg_enabled) {
+      log_trace("%d unique pts / %d\n", n_pts_unique, n_pts2);
+    }
+
+    PDM_g_num_t *local_pts_elt_g_num = malloc(sizeof(PDM_g_num_t) * n_pts_unique);
+    double      *local_pts_elt_dist2 = malloc(sizeof(double     ) * n_pts_unique);
+    double      *part_weight         = malloc(sizeof(double     ) * n_pts_unique);
+    for (int i = 0; i < n_pts_unique; i++) {
+      local_pts_elt_dist2[i] = HUGE_VAL;
+      part_weight[i] = 1.;
+    }
+
+    for (int ielt = 0; ielt < dn_elt2; ielt++) {
+      for (int i = delt_pts_idx2[ielt]; i < delt_pts_idx2[ielt+1]; i++) {
+        int pt_id = pts_unique_order[i];
+        if (delt_pts_distance2[i] < local_pts_elt_dist2[pt_id]) {
+          local_pts_elt_g_num[pt_id] = delt_g_num_geom2[ielt];
+          local_pts_elt_dist2[pt_id] = delt_pts_distance2[i];
+        }
+      }
+    }
+
 
     if (dbg_enabled) {
       for (int i = 0; i < n_pts2; i++) {
@@ -8586,12 +8618,27 @@ PDM_mesh_location_compute_optim
       }
     }
 
+    if (dbg_enabled) {
+      for (int i = 0; i < n_pts_unique; i++) {
+        log_trace("  pt "PDM_FMT_G_NUM" : elt "PDM_FMT_G_NUM", dist = %e\n",
+                  pts_ln_to_gn[i], local_pts_elt_g_num[i], local_pts_elt_dist2[i]);
+      }
+    }
+
+    // PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    //                                                     PDM_PART_TO_BLOCK_POST_MERGE,
+    //                                                     1.,
+    //                                                     &delt_pts_g_num_geom,
+    //                                                     &part_weight,
+    //                                                     &n_pts2,
+    //                                                     1,
+    //                                                     ml->comm);
     PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                         PDM_PART_TO_BLOCK_POST_MERGE,
                                                         1.,
-                                                        &delt_pts_g_num_geom,
+                                                        &pts_ln_to_gn,
                                                         &part_weight,
-                                                        &n_pts2,
+                                                        &n_pts_unique,
                                                         1,
                                                         ml->comm);
     free(part_weight);
@@ -8603,10 +8650,12 @@ PDM_mesh_location_compute_optim
                            PDM_STRIDE_VAR_INTERLACED,
                            1,
                            &part_stride,
-                 (void **) &delt_pts_distance2,
+                 // (void **) &delt_pts_distance2,
+                 (void **) &local_pts_elt_dist2,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_dist2);
     free(block_pts_elt_n);
+    free(local_pts_elt_dist2);
 
     PDM_g_num_t *block_pts_elt_id = NULL;
     PDM_part_to_block_exch(ptb,
@@ -8614,11 +8663,13 @@ PDM_mesh_location_compute_optim
                            PDM_STRIDE_VAR_INTERLACED,
                            1,
                            &part_stride,
-                 (void **) &part_elt_id,
+                 // (void **) &part_elt_id,
+                 (void **) &local_pts_elt_g_num,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_id);
     free(part_elt_id);
     free(part_stride);
+    free(local_pts_elt_g_num);
 
 
     /* Pick closest elt for each point in current block */
@@ -8678,12 +8729,12 @@ PDM_mesh_location_compute_optim
     free(block_pts_elt_id);
     PDM_part_to_block_free(ptb);
 
-    if (dbg_enabled) {
-      PDM_log_trace_connectivity_long(delt_pts_idx2,
-                                      part_elt_id,
-                                      dn_elt2,
-                                      "part_elt_id : ");
-    }
+    // if (dbg_enabled) {
+    //   PDM_log_trace_connectivity_long(delt_pts_idx2,
+    //                                   part_elt_id,
+    //                                   dn_elt2,
+    //                                   "part_elt_id : ");
+    // }
 
     /* Compress (get rid of false positives) */
     int         *final_elt_pts_n          = PDM_array_zeros_int(dn_elt2);
@@ -8701,7 +8752,7 @@ PDM_mesh_location_compute_optim
 
       int idx_pt = delt_pts_idx2[ielt];
       int n_pts  = delt_pts_idx2[ielt+1] - idx_pt;
-      PDM_g_num_t *_elt_id       = part_elt_id            + idx_pt;
+      // PDM_g_num_t *_elt_id       = part_elt_id            + idx_pt;
       PDM_g_num_t *_parent_g_num = delt_pts_g_num_geom    + idx_pt;
       double      *_dist2        = delt_pts_distance2     + idx_pt;
       double      *_coord        = delt_pts_coord2        + idx_pt*3;
@@ -8711,7 +8762,9 @@ PDM_mesh_location_compute_optim
 
       for (int i = 0; i < n_pts; i++) {
 
-        if (_elt_id[i] == delt_g_num_geom2[ielt]) {
+        // if (_elt_id[i] == delt_g_num_geom2[ielt]) {
+        int pt_id = pts_unique_order[idx_pt+i];
+        if (part_elt_id[pt_id] == delt_g_num_geom2[ielt]) {
 
           final_elt_pts_n[ielt]++;
           final_elt_pts_g_num_geom[idx] = _parent_g_num[i];
@@ -8743,6 +8796,9 @@ PDM_mesh_location_compute_optim
     free(part_elt_id           );
     free(delt_g_num_geom2);
     free(delt_pts_g_num_geom);
+
+    free(pts_unique_order);
+    free(pts_ln_to_gn);
 
     int final_n_pts = idx;
     final_elt_pts_g_num_geom = realloc(final_elt_pts_g_num_geom, sizeof(PDM_g_num_t) * final_n_pts);
