@@ -2750,14 +2750,23 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
   PDM_mpi_win_shared_t* wshared_recv_pts_coord         = NULL;
   PDM_mpi_win_shared_t* wshared_recv_upper_bound_dist2 = NULL;
 
-  int *pts_rank_idx = NULL;
-  int *pts_rank     = NULL;
+  int          n_pts1 = 0;
+  PDM_g_num_t *pts_g_num1            = NULL;
+  double      *pts_coord1            = NULL;
+  double      *pts_upper_bound_dist2 = NULL;
+
+  int *distrib_search_by_rank_idx = NULL;
+
 
   if (_dbbt->btShared != NULL) {
+    int *pts_rank_idx = NULL;
+    int *pts_rank     = NULL;
+
     int *send_count = NULL;
     int *send_shift = NULL;
     int *recv_count = NULL;
     int *recv_shift = NULL;
+
     PDM_g_num_t *send_g_num             = NULL;
     double      *send_coord             = NULL;
     double      *send_upper_bound_dist2 = NULL;
@@ -2878,10 +2887,66 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     free(send_coord);
 
 
-    free(send_count);
+    free (send_count);
+    free (send_shift);
+    free (recv_count);
+    free (recv_shift);
+
+    PDM_MPI_Barrier (comm_shared);
+    PDM_mpi_win_shared_sync (wshared_recv_gnum);
+    PDM_mpi_win_shared_sync (wshared_recv_pts_coord);
+    PDM_mpi_win_shared_sync (wshared_recv_upper_bound_dist2);
+
+    /*
+     * Redistribution by numa
+     */
+
+    PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(comm_shared, n_tot_recv_shared);
+
+    int  dn_search = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
+
+    distrib_search_by_rank_idx = malloc((n_rank_in_shm+1) * sizeof(int));
+    int* distrib_search_by_rank_n   = malloc((n_rank_in_shm  ) * sizeof(int));
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      distrib_search_by_rank_n[i] = 0;
+    }
+
+    // TODO : Faire un algo d'intersection de range pour ne pas faire la dicotomie x fois !
+    for(int i = distrib_search[i_rank_in_shm]; i < distrib_search[i_rank_in_shm+1]; ++i) {
+      int t_rank = PDM_binary_search_gap_int(i, shared_recv_idx, n_rank_in_shm+1);
+      distrib_search_by_rank_n[t_rank]++;
+    }
+
+    distrib_search_by_rank_idx[0] = 0;
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      distrib_search_by_rank_idx[i+1] = distrib_search_by_rank_idx[i] + distrib_search_by_rank_n[i];
+    }
+
+    // n_pts_local  = 0;
+    // n_pts_recv   = dn_search;
+    // n_pts_copied = 0;
+
+    n_pts1                = dn_search;
+    pts_g_num1            = (PDM_g_num_t *) &shared_recv_gnum             [    distrib_search[i_rank_in_shm]];
+    pts_coord1            = (double      *) &shared_recv_pts_coord        [3 * distrib_search[i_rank_in_shm]];
+    pts_upper_bound_dist2 = (double      *) &shared_recv_upper_bound_dist2[    distrib_search[i_rank_in_shm]];
+
+    free(distrib_search);
+    free(distrib_search_by_rank_n);
+    free(shared_recv_count );
+    free(shared_recv_idx );
+
 
   } else {
-    abort();
+    // n_pts_local  = n_pts;
+    // n_pts_recv   = 0;
+    // n_pts_copied = 0;
+
+    n_pts1 = n_pts;
+
+    pts_g_num1            = (PDM_g_num_t *) pts_g_num;
+    pts_coord1            = _pts;
+    pts_upper_bound_dist2 = upper_bound_dist2;
   }
 
 
@@ -4533,7 +4598,7 @@ PDM_dbbtree_points_inside_boxes_shared
     }
 
     // PDM_log_trace_array_long(check, dn_search, "check ::");
-    PDM_log_trace_array_int(distrib_search_by_rank_idx, n_rank_in_shm+1, "distrib_search_by_rank_idx ::");
+    // PDM_log_trace_array_int(distrib_search_by_rank_idx, n_rank_in_shm+1, "distrib_search_by_rank_idx ::");
 
     n_pts_local  = 0;
     n_pts_recv   = dn_search;
