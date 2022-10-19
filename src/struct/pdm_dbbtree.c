@@ -3025,7 +3025,35 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     PDM_mpi_win_shared_free (wshared_recv_pts_coord);
     free(distrib_search_by_rank_idx);
   } else {
-    abort();
+
+    part_n_pts[0] = n_pts1;
+    PDM_box_tree_closest_upper_bound_dist_boxes_get_v2(_dbbt->btLoc,
+                                                       -1,
+                                                       part_n_pts[0],
+                                                       pts_coord1,
+                                                       pts_upper_bound_dist2,
+                                                       &(pts_box_idx[0]),
+                                                       &(pts_box_l_num[0]),
+                                                       _dbbt->d);
+
+    part_n_pts_box [0] = pts_box_idx[0][part_n_pts[0]];
+    part_box_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
+    part_pts_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
+    part_pts_coord [0] = malloc (sizeof(double     ) * 3 * part_n_pts_box[0]);
+    part_pts_strid [0] = malloc (sizeof(int        ) *     part_n_pts_box[0]);
+    part_pts_weight[0] = malloc (sizeof(double     ) *     part_n_pts_box[0]);
+
+    for (int j = 0; j < part_n_pts[0]; j++) {
+      for (int k = pts_box_idx[0][j]; k < pts_box_idx[0][j+1]; k++) {
+        part_box_g_num[0][k] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[0][k]];
+        part_pts_g_num[0][k] = pts_g_num1[j];
+        for (int l = 0; l < 3; l++) {
+          part_pts_coord[0][3*k + l] = pts_coord1[3*j + l];
+        }
+        part_pts_strid [0][k]= 1;
+        part_pts_weight[0][k]= 1.;
+      }
+    }
   }
 
   /*
