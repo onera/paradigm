@@ -2986,14 +2986,20 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
         PDM_log_trace_array_double(lpts_coord, 3*n_lpts, "lpts_coord::");
       }
 
-      PDM_box_tree_closest_upper_bound_dist_boxes_get_shared(_dbbt->btLoc,
-                                                             i_shm,
-                                                             part_n_pts[i_shm],
-                                                             lpts_coord,
-                                                             lpts_upper_bound_dist2,
-                                                             &(pts_box_idx[i_shm]),
-                                                             &(pts_box_l_num[i_shm]),
-                                                             _dbbt->d);
+      int *tmp_box_pts_idx = NULL;
+      int *tmp_box_pts     = NULL;
+      PDM_box_tree_closest_upper_bound_dist_boxes_get_shared_box_pov(_dbbt->btLoc,
+                                                                     i_shm,
+                                                                     part_n_pts[i_shm],
+                                                                     lpts_coord,
+                                                                     lpts_upper_bound_dist2,
+                                                                     &tmp_box_pts_idx,
+                                                                     &tmp_box_pts,
+                                                                     _dbbt->d);
+
+      int n_boxes            = _dbbt->boxes->shm_boxes[i_shm].n_boxes;
+      int *init_location_box = _dbbt->boxes->shm_boxes[i_shm].origin;
+      int *boxes_gnum        = _dbbt->boxes->shm_boxes[i_shm].g_num;
 
       part_n_pts_box[i_shm] = pts_box_idx[i_shm][part_n_pts[i_shm]];
 
@@ -3017,6 +3023,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
           part_pts_weight[i_shm][k] = 1.;
         }
       }
+      free(tmp_box_pts_idx);
+      free(tmp_box_pts);
     }
 
     PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);

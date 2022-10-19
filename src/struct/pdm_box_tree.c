@@ -5210,7 +5210,57 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_shared
 }
 
 
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_shared_box_pov
+(
+ PDM_box_tree_t  *bt,
+ const int        i_shm,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *box_pts_idx[],
+ int             *box_pts[],
+ const double    *d_opt
+)
+{
 
+  PDM_boxes_t         *boxes         = &bt->boxes->shm_boxes[i_shm];
+  PDM_box_tree_data_t *box_tree_data = &bt->shm_data        [i_shm];
+  int *pts_box_idx = NULL;
+  int *pts_box     = NULL;
+  _box_tree_closest_upper_bound_dist_boxes_impl(bt,
+                                                boxes,
+                                                box_tree_data,
+                                                n_pts,
+                                                pts,
+                                                upper_bound_dist2,
+                                                &pts_box_idx,
+                                                &pts_box,
+                                                d_opt);
+
+  /* Transpose from line->box to box->line */
+  int n_boxes = boxes->n_boxes;
+
+  int* box_pts_n = PDM_array_zeros_int(n_boxes);
+  for(int i = 0; i < n_pts; ++i) {
+    for(int idx_box = pts_box_idx[i]; idx_box <  pts_box_idx[i+1]; ++idx_box ) {
+      box_pts_n[pts_box[idx_box]]++;
+    }
+  }
+
+  *box_pts_idx = PDM_array_new_idx_from_sizes_int(box_pts_n, n_boxes);
+  *box_pts = (int *) malloc(sizeof(int) * (*box_pts_idx)[n_boxes]);
+  PDM_array_reset_int(box_pts_n, n_boxes, 0);
+  for (int ipts = 0; ipts < n_pts; ipts++) {
+    for (int idx_box = pts_box_idx[ipts]; idx_box < pts_box_idx[ipts+1]; idx_box++) {
+      int ibox = pts_box[idx_box];
+      (*box_pts)[(*box_pts_idx)[ibox] + box_pts_n[ibox]++] = ipts;
+    }
+  }
+  free(box_pts_n);
+  free(pts_box_idx);
+  free(pts_box);
+}
 
 /**
  *
