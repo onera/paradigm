@@ -3021,8 +3021,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
     PDM_mpi_win_shared_unlock_all(wshared_recv_gnum);
     PDM_mpi_win_shared_unlock_all(wshared_recv_pts_coord);
+    PDM_mpi_win_shared_unlock_all(wshared_recv_upper_bound_dist2);
     PDM_mpi_win_shared_free (wshared_recv_gnum);
     PDM_mpi_win_shared_free (wshared_recv_pts_coord);
+    PDM_mpi_win_shared_free (wshared_recv_upper_bound_dist2);
     free(distrib_search_by_rank_idx);
   } else {
 
@@ -3061,6 +3063,70 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
    *   Il faut equilibrer les blocks ET trié les doublons de points pour un mêm box
    *   Si on sort avvec block de box connecté aux pts (puis dconnectivity_to_pconnectivity)
    */
+  int          *pn_boxes           = NULL;
+  PDM_g_num_t **pbox_g_num         = NULL;
+  double      **pbox_center        = NULL;
+  int         **pbox_weight        = NULL;
+  int         **pbox_init_location = NULL;
+  int         **pstride_one        = NULL;
+  int         **pbox_pts_n         = NULL;
+  PDM_g_num_t **pbox_pts_g_num     = NULL;
+
+
+  /*
+   * On peut être en CLEANUP car si la boîte est sur plusieurs rang elle a également recu
+   * tout les mêmes points candidats
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                           1.,
+                                                           PDM_PART_GEOM_MORTON,
+                                                           pbox_center,
+                                                           pbox_g_num,
+                                                           pbox_weight,
+                                                           pn_boxes,
+                                                           n_part,
+                                                           _dbbt->comm);
+
+  /*
+   * Exchange elmt_pts_g_num
+   */
+  int         *dbox_pts_n     = NULL;
+  PDM_g_num_t *dbox_pts_g_num = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         pbox_pts_n,
+               (void **) pbox_pts_g_num,
+                         &dbox_pts_n,
+               (void **) &dbox_pts_g_num);
+
+  /*
+   * Sort elmt_pts_g_num and compress --> Useless if CLEANUP
+   */
+
+  /*
+   * Transformation du pts_gnum en l_num et compression des coordonnées
+   */
+
+
+  /*
+   * Exchange elmt_init_location and compress
+   */
+  int *dbox_init_location_n = NULL;
+  int *dbox_init_location   = NULL;
+  PDM_part_to_block_exch(ptb,
+                         3 * sizeof(int),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         1,
+                         pstride_one,
+               (void **) pbox_init_location,
+                         &dbox_init_location_n,
+               (void **) &dbox_init_location);
+
+
+  PDM_part_to_block_free(ptb);
 
 
   //-->>
