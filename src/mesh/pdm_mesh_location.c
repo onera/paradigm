@@ -8579,7 +8579,7 @@ PDM_mesh_location_compute_optim
 
     if (dbg_enabled) {
       for (int i = 0; i < n_pts2; i++) {
-        log_trace("pt "PDM_FMT_G_NUM" (%f %f %f) : local elt %d, dist = %f\n",
+        log_trace("pt "PDM_FMT_G_NUM" (%f %f %f) : elt "PDM_FMT_G_NUM", dist = %e\n",
                   delt_pts_g_num_geom[i],
                   delt_pts_coord2[3*i], delt_pts_coord2[3*i+1], delt_pts_coord2[3*i+2],
                   part_elt_id[i], delt_pts_distance2[i]);
