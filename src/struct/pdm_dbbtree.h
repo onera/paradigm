@@ -207,6 +207,35 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  PDM_g_num_t     *box_g_num[]
 );
 
+/**
+ *
+ * \brief Get the boxes closer than the upper bound distance
+ *
+ *   \param [in]  bt                 Pointer to box tree structure
+ *   \param [in]  n_pts              Number of points
+ *   \param [in]  pts                Point coordinates (size = 3 * \ref n_pts)
+ *   \param [in]  pts_g_num          Point global ids
+ *   \param [in]  upper_bound_dist2  Upper bound of the square of the distance (size = \ref n_pts)
+ *   \param [out] n_extract_boxes    Number of extracted box
+ *   \param [out] box_l_num          Index of boxes (size = \ref n_extract_boxes )
+ *   \param [out] box_pts_idx        Index of boxes (size = \ref n_extract_boxes + 1)
+ *   \param [out] box_g_num          Global ids of boxes (size = \ref box_pts_idx[\ref n_pts])
+ *
+ */
+
+void
+PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
+(
+ PDM_dbbtree_t   *dbbt,
+ const int        n_pts,
+ double           pts[],
+ PDM_g_num_t      pts_g_num[],
+ double           upper_bound_dist2[],
+ int             *n_extract_boxes,
+ int             *box_l_num[],
+ int             *box_pts_idx[],
+ PDM_g_num_t     *box_pts_g_num[]
+);
 
 /**
  *
