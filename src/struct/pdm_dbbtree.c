@@ -2955,17 +2955,25 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
   /* Management of size */
   int n_part = n_rank_in_shm;
-  int *part_n_pts_box = malloc (sizeof(int) * n_part);
-  int *part_n_pts     = malloc (sizeof(int) * n_part);
+  // int *part_n_pts_box = malloc (sizeof(int) * n_part);
+  // int *part_n_pts     = malloc (sizeof(int) * n_part);
+  // int **pts_box_idx   = malloc (sizeof(int *) * n_part);
+  // int **pts_box_l_num = malloc (sizeof(int *) * n_part);
 
-  int **pts_box_idx   = malloc (sizeof(int *) * n_part);
-  int **pts_box_l_num = malloc (sizeof(int *) * n_part);
+  // PDM_g_num_t **part_box_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
+  // PDM_g_num_t **part_pts_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
+  // double      **part_pts_coord  = malloc (sizeof(double      *) * n_part);
+  // int         **part_pts_strid  = malloc (sizeof(int         *) * n_part);
+  // double      **part_pts_weight = malloc (sizeof(double      *) * n_part);
 
-  PDM_g_num_t **part_box_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
-  PDM_g_num_t **part_pts_g_num  = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **part_pts_coord  = malloc (sizeof(double      *) * n_part);
-  int         **part_pts_strid  = malloc (sizeof(int         *) * n_part);
-  double      **part_pts_weight = malloc (sizeof(double      *) * n_part);
+  int          *pn_boxes           = malloc (sizeof(int         *) * n_part);
+  double      **pbox_center        = malloc (sizeof(double      *) * n_part);
+  int         **pbox_weight        = malloc (sizeof(int         *) * n_part);
+  int         **pbox_init_location = malloc (sizeof(int         *) * n_part);
+  int         **pstride_one        = malloc (sizeof(int         *) * n_part);
+  int         **pbox_pts_n         = malloc (sizeof(int         *) * n_part);
+  PDM_g_num_t **pbox_g_num         = malloc (sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **pbox_pts_g_num     = malloc (sizeof(PDM_g_num_t *) * n_part);
 
 
   // double t1 = PDM_MPI_Wtime();
@@ -2975,7 +2983,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
       int beg    = distrib_search_by_rank_idx[i_shm  ];
       int n_lpts = distrib_search_by_rank_idx[i_shm+1] - beg;
 
-      part_n_pts    [i_shm] = n_lpts;
+      // part_n_pts    [i_shm] = n_lpts;
 
       PDM_g_num_t *lpts_gnum              = &pts_g_num1           [  beg];
       double      *lpts_coord             = &pts_coord1           [3*beg];
@@ -2990,7 +2998,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
       int *tmp_box_pts     = NULL;
       PDM_box_tree_closest_upper_bound_dist_boxes_get_shared_box_pov(_dbbt->btLoc,
                                                                      i_shm,
-                                                                     part_n_pts[i_shm],
+                                                                     n_lpts,
                                                                      lpts_coord,
                                                                      lpts_upper_bound_dist2,
                                                                      &tmp_box_pts_idx,
@@ -3001,28 +3009,40 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
       int *init_location_box = _dbbt->boxes->shm_boxes[i_shm].origin;
       int *boxes_gnum        = _dbbt->boxes->shm_boxes[i_shm].g_num;
 
-      part_n_pts_box[i_shm] = pts_box_idx[i_shm][part_n_pts[i_shm]];
+      // part_n_pts_box[i_shm] = pts_box_idx[i_shm][part_n_pts[i_shm]];
+
+      /*
+       * Extract only boxes with some pts
+       */
+      n_extract_boxes[i_shm] = 0;
+      for(int i_box = 0; i_box < n_boxes; ++i_box) {
+        if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] > 0) {
+          n_extract_boxes[i_shm]++;
+        }
+      }
+      // pn_boxes[i_shm] = 0;
+
 
       // PDM_log_trace_connectivity_int(pts_box_idx[i_shm], pts_box_l_num[i_shm], part_n_pts[i_shm], "pts_box_l_num ::");
 
-      part_box_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
-      part_pts_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
-      part_pts_coord [i_shm] = malloc (sizeof(double     ) * 3 * part_n_pts_box[i_shm]);
-      part_pts_strid [i_shm] = malloc (sizeof(int        ) *     part_n_pts_box[i_shm]);
-      part_pts_weight[i_shm] = malloc (sizeof(double     ) *     part_n_pts_box[i_shm]);
+      // part_box_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
+      // part_pts_g_num [i_shm] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[i_shm]);
+      // part_pts_coord [i_shm] = malloc (sizeof(double     ) * 3 * part_n_pts_box[i_shm]);
+      // part_pts_strid [i_shm] = malloc (sizeof(int        ) *     part_n_pts_box[i_shm]);
+      // part_pts_weight[i_shm] = malloc (sizeof(double     ) *     part_n_pts_box[i_shm]);
 
-      for (int j = 0; j < part_n_pts[i_shm]; j++) {
-        for (int k = pts_box_idx[i_shm][j]; k < pts_box_idx[i_shm][j+1]; k++) {
-          part_box_g_num[i_shm][k] = _dbbt->boxes->shm_boxes[i_shm].g_num[pts_box_l_num[i_shm][k]];
-          // part_box_g_num[i_shm][k] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[i_shm][k]];
-          part_pts_g_num[i_shm][k] = lpts_gnum[j];
-          for (int l = 0; l < 3; l++) {
-            part_pts_coord[i_shm][3*k + l] = lpts_coord[3*j + l];
-          }
-          part_pts_strid [i_shm][k] = 1;
-          part_pts_weight[i_shm][k] = 1.;
-        }
-      }
+      // for (int j = 0; j < part_n_pts[i_shm]; j++) {
+      //   for (int k = pts_box_idx[i_shm][j]; k < pts_box_idx[i_shm][j+1]; k++) {
+      //     part_box_g_num[i_shm][k] = _dbbt->boxes->shm_boxes[i_shm].g_num[pts_box_l_num[i_shm][k]];
+      //     // part_box_g_num[i_shm][k] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[i_shm][k]];
+      //     part_pts_g_num[i_shm][k] = lpts_gnum[j];
+      //     for (int l = 0; l < 3; l++) {
+      //       part_pts_coord[i_shm][3*k + l] = lpts_coord[3*j + l];
+      //     }
+      //     part_pts_strid [i_shm][k] = 1;
+      //     part_pts_weight[i_shm][k] = 1.;
+      //   }
+      // }
       free(tmp_box_pts_idx);
       free(tmp_box_pts);
     }
@@ -3035,35 +3055,35 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     PDM_mpi_win_shared_free (wshared_recv_upper_bound_dist2);
     free(distrib_search_by_rank_idx);
   } else {
+    abort();
+    // part_n_pts[0] = n_pts1;
+    // PDM_box_tree_closest_upper_bound_dist_boxes_get_v2(_dbbt->btLoc,
+    //                                                    -1,
+    //                                                    part_n_pts[0],
+    //                                                    pts_coord1,
+    //                                                    pts_upper_bound_dist2,
+    //                                                    &(pts_box_idx[0]),
+    //                                                    &(pts_box_l_num[0]),
+    //                                                    _dbbt->d);
 
-    part_n_pts[0] = n_pts1;
-    PDM_box_tree_closest_upper_bound_dist_boxes_get_v2(_dbbt->btLoc,
-                                                       -1,
-                                                       part_n_pts[0],
-                                                       pts_coord1,
-                                                       pts_upper_bound_dist2,
-                                                       &(pts_box_idx[0]),
-                                                       &(pts_box_l_num[0]),
-                                                       _dbbt->d);
+    // part_n_pts_box [0] = pts_box_idx[0][part_n_pts[0]];
+    // part_box_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
+    // part_pts_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
+    // part_pts_coord [0] = malloc (sizeof(double     ) * 3 * part_n_pts_box[0]);
+    // part_pts_strid [0] = malloc (sizeof(int        ) *     part_n_pts_box[0]);
+    // part_pts_weight[0] = malloc (sizeof(double     ) *     part_n_pts_box[0]);
 
-    part_n_pts_box [0] = pts_box_idx[0][part_n_pts[0]];
-    part_box_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
-    part_pts_g_num [0] = malloc (sizeof(PDM_g_num_t) *     part_n_pts_box[0]);
-    part_pts_coord [0] = malloc (sizeof(double     ) * 3 * part_n_pts_box[0]);
-    part_pts_strid [0] = malloc (sizeof(int        ) *     part_n_pts_box[0]);
-    part_pts_weight[0] = malloc (sizeof(double     ) *     part_n_pts_box[0]);
-
-    for (int j = 0; j < part_n_pts[0]; j++) {
-      for (int k = pts_box_idx[0][j]; k < pts_box_idx[0][j+1]; k++) {
-        part_box_g_num[0][k] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[0][k]];
-        part_pts_g_num[0][k] = pts_g_num1[j];
-        for (int l = 0; l < 3; l++) {
-          part_pts_coord[0][3*k + l] = pts_coord1[3*j + l];
-        }
-        part_pts_strid [0][k]= 1;
-        part_pts_weight[0][k]= 1.;
-      }
-    }
+    // for (int j = 0; j < part_n_pts[0]; j++) {
+    //   for (int k = pts_box_idx[0][j]; k < pts_box_idx[0][j+1]; k++) {
+    //     part_box_g_num[0][k] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[0][k]];
+    //     part_pts_g_num[0][k] = pts_g_num1[j];
+    //     for (int l = 0; l < 3; l++) {
+    //       part_pts_coord[0][3*k + l] = pts_coord1[3*j + l];
+    //     }
+    //     part_pts_strid [0][k]= 1;
+    //     part_pts_weight[0][k]= 1.;
+    //   }
+    // }
   }
 
   /*
@@ -3071,14 +3091,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
    *   Il faut equilibrer les blocks ET trié les doublons de points pour un mêm box
    *   Si on sort avvec block de box connecté aux pts (puis dconnectivity_to_pconnectivity)
    */
-  int          *pn_boxes           = NULL;
-  PDM_g_num_t **pbox_g_num         = NULL;
-  double      **pbox_center        = NULL;
-  int         **pbox_weight        = NULL;
-  int         **pbox_init_location = NULL;
-  int         **pstride_one        = NULL;
-  int         **pbox_pts_n         = NULL;
-  PDM_g_num_t **pbox_pts_g_num     = NULL;
 
 
   /*
