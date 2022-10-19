@@ -376,6 +376,19 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
  const double    *d_opt
  );
 
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_shared
+(
+ PDM_box_tree_t  *bt,
+ const int        i_shm,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *pts_box_idx[],
+ int             *pts_box[],
+ const double    *d_opt
+);
+
 
 /**
  *

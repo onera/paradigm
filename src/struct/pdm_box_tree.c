@@ -539,30 +539,25 @@ _push_child_in_stack_v0
 inline static void
 _push_child_in_stack_v2
 (
- PDM_box_tree_t *bt,
- const int       i_rank,
- const int       dim,
- const int       normalized,
- const double   *restrict d,
- const int       id_curr_node,
- const double    upper_bound,
- const double    *restrict pt,
- int             *restrict pos_stack,
- int             *restrict stack,
- int             *restrict inbox_stack,
- double          *restrict min_dist2_stack,
- int             flag,
- int             sorted
+ PDM_box_tree_t       *bt,
+ PDM_box_tree_data_t  *box_tree_data,
+ const int             dim,
+ const int             normalized,
+ const double         *restrict d,
+ const int             id_curr_node,
+ const double          upper_bound,
+ const double          *restrict pt,
+ int                   *restrict pos_stack,
+ int                   *restrict stack,
+ int                   *restrict inbox_stack,
+ double                *restrict min_dist2_stack,
+ int                   flag,
+ int                   sorted
  )
 {
   PDM_UNUSED(flag);
 
-  PDM_box_tree_data_t *_tree_data = NULL;
-  if ( i_rank < 0 ) {
-    _tree_data = bt->local_data;
-  } else {
-    _tree_data = bt->rank_data + i_rank;
-  }
+  PDM_box_tree_data_t *_tree_data = box_tree_data;
   int sort_child[bt->n_children];
   double dist_child[bt->n_children];
   int inbox_child[bt->n_children];
@@ -4756,7 +4751,7 @@ PDM_box_tree_min_dist_max_box
  * \param [in]   n_pts              Number of points
  * \param [in]   pts                Point coordinates
  * \param [in]   upper_bound_dist2  Squared upper bound distance (size = \ref n_pts)
- * \param [out]  i_boxes            Pointer to the index array on bounding boxes
+ * \param [out]  pts_box_idx            Pointer to the index array on bounding boxes
  * \param [out]  boxes              Pointer to the list of bounding boxes
  *
  */
@@ -4768,7 +4763,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
  const int        n_pts,
  double           pts[],
  double           upper_bound_dist2[],
- int             *i_boxes[],
+ int             *pts_box_idx[],
  int             *boxes[]
  )
 {
@@ -4793,10 +4788,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
-  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
-  int *_i_boxes = *i_boxes;
+  *pts_box_idx = malloc (sizeof(int) * (n_pts + 1));
+  int *_pts_box_idx = *pts_box_idx;
 
-  PDM_array_reset_int(_i_boxes, n_pts + 1, 0);
+  PDM_array_reset_int(_pts_box_idx, n_pts + 1, 0);
 
   int tmp_s_boxes = 4 * n_pts;
   *boxes = malloc (sizeof(int) * tmp_s_boxes);
@@ -4907,7 +4902,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
                   _boxes = *boxes;
                 }
                 _boxes[idx_box++] = _box_id;
-                _i_boxes[i+1]++;
+                _pts_box_idx[i+1]++;
               }
               visited_boxes[n_visited_boxes++] = _box_id;
               tag[_box_id] = 1;
@@ -4928,10 +4923,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   iappel+=1;
 
   for (int i = 0; i < n_pts; i++) {
-    _i_boxes[i+1] += _i_boxes[i];
+    _pts_box_idx[i+1] += _pts_box_idx[i];
   }
 
-  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
+  *boxes = realloc (*boxes, sizeof(int) * _pts_box_idx[n_pts]);
   if (pts != _pts) {
     free (_pts);
   }
@@ -4957,26 +4952,26 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
  * \param [in]   n_pts              Number of points
  * \param [in]   pts                Point coordinates
  * \param [in]   upper_bound_dist2  Squared upper bound distance (size = \ref n_pts)
- * \param [out]  i_boxes            Pointer to the index array on bounding boxes
+ * \param [out]  pts_box_idx            Pointer to the index array on bounding boxes
  * \param [out]  boxes              Pointer to the list of bounding boxes
  * \param [in]   d_opt              Normalization vector (or NULL)
  *
  */
-
+static
 void
-PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
+_box_tree_closest_upper_bound_dist_boxes_impl
 (
- PDM_box_tree_t  *bt,
- const int        i_rank,
- const int        n_pts,
- double           pts[],
- double           upper_bound_dist2[],
- int             *i_boxes[],
- int             *boxes[],
- const double    *d_opt
- )
+ PDM_box_tree_t       *bt,
+ PDM_boxes_t          *boxes,
+ PDM_box_tree_data_t  *box_tree_data,
+ const int             n_pts,
+ double                pts[],
+ double                upper_bound_dist2[],
+ int                  *pts_box_idx[],
+ int                  *pts_box[],
+ const double         *d_opt
+)
 {
-  assert(i_rank < bt->n_copied_ranks);
 
   int normalized = bt->boxes->normalized;
 
@@ -5008,14 +5003,14 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
-  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
-  int *_i_boxes = *i_boxes;
+  *pts_box_idx = malloc (sizeof(int) * (n_pts + 1));
+  int *_pts_box_idx = *pts_box_idx;
 
-  PDM_array_reset_int(_i_boxes, n_pts + 1, 0);
+  PDM_array_reset_int(_pts_box_idx, n_pts + 1, 0);
 
   int tmp_s_boxes = 4 * n_pts;
-  *boxes = malloc (sizeof(int) * tmp_s_boxes);
-  int *_boxes = *boxes;
+  *pts_box = malloc (sizeof(int) * tmp_s_boxes);
+  int *_pts_box = *pts_box;
 
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
   int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
@@ -5027,12 +5022,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
   int idx_box = 0;
 
-  int n_boxes = 0;
-  if (i_rank < 0) {
-    n_boxes = bt->boxes->local_boxes->n_boxes;
-  } else {
-    n_boxes = bt->boxes->rank_boxes[i_rank].n_boxes;
-  }
+  int n_boxes = boxes->n_boxes;
 
   int *tag = PDM_array_zeros_int(n_boxes);
 
@@ -5040,18 +5030,9 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
   int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
   double extents2[2*dim];
-  _node_t *nodes;
-  int *box_ids;
-  double *boxes_extents;
-  if (i_rank < 0) {
-    nodes = bt->local_data->nodes;
-    box_ids = bt->local_data->box_ids;
-    boxes_extents = bt->boxes->local_boxes->extents;
-  } else {
-    nodes = bt->rank_data[i_rank].nodes;
-    box_ids = bt->rank_data[i_rank].box_ids;
-    boxes_extents = bt->boxes->rank_boxes[i_rank].extents;
-  }
+  _node_t *nodes         = box_tree_data->nodes;
+  int     *box_ids       = box_tree_data->box_ids;
+  double  *boxes_extents = boxes->extents;
   _extents (dim, nodes[0].morton_code, extents2);
 
   _node_t *curr_node = NULL;
@@ -5088,7 +5069,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
       if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
         if (!curr_node->is_leaf) {
           _push_child_in_stack_v2 (bt,
-                                   i_rank,
+                                   box_tree_data,
                                    dim,
                                    normalized,
                                    d,
@@ -5125,11 +5106,11 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
                   tmp_s_boxes += PDM_MAX (1, tmp_s_boxes/3);
-                  *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
-                  _boxes = *boxes;
+                  *pts_box = realloc (*pts_box, sizeof(int) * tmp_s_boxes);
+                  _pts_box = *pts_box;
                 }
-                _boxes[idx_box++] = _box_id;
-                _i_boxes[i+1]++;
+                _pts_box[idx_box++] = _box_id;
+                _pts_box_idx[i+1]++;
               }
               visited_boxes[n_visited_boxes++] = _box_id;
               tag[_box_id] = 1;
@@ -5149,10 +5130,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
   iappel+=1;
 
   for (int i = 0; i < n_pts; i++) {
-    _i_boxes[i+1] += _i_boxes[i];
+    _pts_box_idx[i+1] += _pts_box_idx[i];
   }
 
-  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
+  *pts_box = realloc (*pts_box, sizeof(int) * _pts_box_idx[n_pts]);
   if (pts != _pts) {
     free (_pts);
   }
@@ -5163,6 +5144,71 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
   free (min_dist2_stack);
   free (visited_boxes);
 }
+
+
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
+(
+ PDM_box_tree_t  *bt,
+ const int        i_copied_rank,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *pts_box_idx[],
+ int             *pts_box[],
+ const double    *d_opt
+)
+{
+  assert(i_copied_rank < bt->n_copied_ranks);
+  PDM_boxes_t *boxes;
+  PDM_box_tree_data_t *box_tree_data;
+  if (i_copied_rank < 0) {
+    boxes = bt->boxes->local_boxes;
+    box_tree_data = bt->local_data;
+  } else {
+    boxes = bt->boxes->rank_boxes + i_copied_rank;
+    box_tree_data = bt->rank_data + i_copied_rank;
+  }
+
+  _box_tree_closest_upper_bound_dist_boxes_impl(bt,
+                                                boxes,
+                                                box_tree_data,
+                                                n_pts,
+                                                pts,
+                                                upper_bound_dist2,
+                                                pts_box_idx,
+                                                pts_box,
+                                                d_opt);
+}
+
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_shared
+(
+ PDM_box_tree_t  *bt,
+ const int        i_shm,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *pts_box_idx[],
+ int             *pts_box[],
+ const double    *d_opt
+)
+{
+  PDM_boxes_t         *boxes         = &bt->boxes->shm_boxes[i_shm];
+  PDM_box_tree_data_t *box_tree_data = &bt->shm_data        [i_shm];
+  _box_tree_closest_upper_bound_dist_boxes_impl(bt,
+                                                boxes,
+                                                box_tree_data,
+                                                n_pts,
+                                                pts,
+                                                upper_bound_dist2,
+                                                pts_box_idx,
+                                                pts_box,
+                                                d_opt);
+}
+
 
 
 
