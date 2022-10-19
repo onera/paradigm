@@ -3006,8 +3006,9 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
                                                                      _dbbt->d);
 
       int n_boxes            = _dbbt->boxes->shm_boxes[i_shm].n_boxes;
-      int *init_location_box = _dbbt->boxes->shm_boxes[i_shm].origin;
-      int *boxes_gnum        = _dbbt->boxes->shm_boxes[i_shm].g_num;
+      int    *boxes_init_location = _dbbt->boxes->shm_boxes[i_shm].origin;
+      int    *boxes_gnum          = _dbbt->boxes->shm_boxes[i_shm].g_num;
+      double *boxes_extents       = _dbbt->boxes->shm_boxes[i_shm].extents;
 
       // part_n_pts_box[i_shm] = pts_box_idx[i_shm][part_n_pts[i_shm]];
 
@@ -3020,8 +3021,39 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
           n_extract_boxes[i_shm]++;
         }
       }
-      // pn_boxes[i_shm] = 0;
 
+      // pn_boxes[i_shm] = 0;
+      pbox_center       [i_shm] = malloc (3 * n_extract_boxes[i_shm] * sizeof(double     ));
+      pbox_weight       [i_shm] = malloc (    n_extract_boxes[i_shm] * sizeof(int        ));
+      pbox_init_location[i_shm] = malloc (3 * n_extract_boxes[i_shm] * sizeof(int        ));
+      pstride_one       [i_shm] = malloc (    n_extract_boxes[i_shm] * sizeof(int        ));
+      pbox_pts_n        [i_shm] = malloc (    n_extract_boxes[i_shm] * sizeof(int        ));
+      pbox_g_num        [i_shm] = malloc (    n_extract_boxes[i_shm] * sizeof(PDM_g_num_t));
+
+      int n_box_pts_tot = tmp_box_pts_idx[n_boxes];
+      pbox_pts_g_num    [i_shm] = malloc (n_box_pts_tot * sizeof(PDM_g_num_t));
+
+      int idx_write = 0;
+      n_extract_boxes[i_shm] = 0;
+      for(int i_box = 0; i_box < n_boxes; ++i_box) {
+        if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] == 0) {
+          continue;
+        }
+        int i_box_e = n_extract_boxes[i_shm]++;
+        pbox_center       [i_shm][3*i_box_e  ] = 0.5 * (boxes_extents[6*i_box  ] + boxes_extents[6*i_box+3]);
+        pbox_center       [i_shm][3*i_box_e+1] = 0.5 * (boxes_extents[6*i_box+1] + boxes_extents[6*i_box+4]);
+        pbox_center       [i_shm][3*i_box_e+2] = 0.5 * (boxes_extents[6*i_box+2] + boxes_extents[6*i_box+5]);
+
+        pbox_weight       [i_shm][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
+        pbox_pts_n        [i_shm][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
+        pstride_one       [i_shm][i_box_e] = 1.; // useles
+        pbox_g_num        [i_shm][i_box_e] = boxes_gnum[i_box];
+        pbox_init_location[i_shm][3*i_box_e  ] = boxes_init_location[3*i_box  ];
+        pbox_init_location[i_shm][3*i_box_e+1] = boxes_init_location[3*i_box+1];
+        pbox_init_location[i_shm][3*i_box_e+2] = boxes_init_location[3*i_box+2];
+
+
+      }
 
       // PDM_log_trace_connectivity_int(pts_box_idx[i_shm], pts_box_l_num[i_shm], part_n_pts[i_shm], "pts_box_l_num ::");
 
