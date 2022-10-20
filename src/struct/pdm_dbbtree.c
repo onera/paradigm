@@ -3191,7 +3191,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pbox_pts_g_num[i_part]);
   }
-  free(pbox_pts_n    );
 
   free(dbox_pts_n);
   dbox_pts_n = NULL;

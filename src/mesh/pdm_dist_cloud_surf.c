@@ -35,6 +35,7 @@
 #include "pdm_logging.h"
 #include "pdm_extract_part.h"
 #include "pdm_vtk.h"
+#include "pdm_unique.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -1621,6 +1622,32 @@ PDM_dist_cloud_surf_compute_optim
     // On post-trait pour avoir box_pts en local
     // pts_dist = HUGE_VAL puis on prends le MIN
 
+    PDM_g_num_t *pts_ln_to_gn = dbox_pts_g_num;
+    int* unique_order = malloc(dbox_pts_idx[n_extract_boxes] * sizeof(int));
+    int n_extract_pts = PDM_inplace_unique_long2(pts_ln_to_gn,
+                                                 unique_order,
+                                                 0,
+                                                 dbox_pts_idx[n_extract_boxes]-1);
+    pts_ln_to_gn = realloc(pts_ln_to_gn, n_extract_pts * sizeof(PDM_g_num_t));
+
+    log_trace("Reduce to pts connectivity = %i / %i \n", dbox_pts_idx[n_extract_boxes], n_extract_pts);
+
+    /*
+     * Deduce local numbering and coords
+     */
+    int    *box_pts    = malloc(    dbox_pts_idx[n_extract_boxes] * sizeof(int   ));
+    double *pts_coords = malloc(3 * n_extract_pts                 * sizeof(double));
+    for(int idx = 0; idx < dbox_pts_idx[n_extract_boxes] ; ++idx) {
+      int l_elmt = unique_order[idx];
+      box_pts[idx] = (l_elmt + 1);
+      pts_coords[3*l_elmt  ] = dbox_pts_coord[3*idx  ];
+      pts_coords[3*l_elmt+1] = dbox_pts_coord[3*idx+1];
+      pts_coords[3*l_elmt+2] = dbox_pts_coord[3*idx+2];
+    }
+    free(unique_order);
+    free(dbox_pts_coord);
+
+
     PDM_extract_part_t *extrp = PDM_extract_part_create(2,
                                                         n_part_mesh,
                                                         1,                                 // n_part_out
@@ -1646,6 +1673,7 @@ PDM_dist_cloud_surf_compute_optim
       const int *part_face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (surf_mesh, i_part);
       const double *part_vtx_coords = PDM_surf_mesh_part_vtx_get (surf_mesh, i_part);
 
+      // PDM_log_trace_array_long(vtx_ln_to_gn, n_vtx, "vtx_ln_to_gn :: ");
 
       PDM_extract_part_part_set(extrp,
                                 i_part,
@@ -1658,8 +1686,8 @@ PDM_dist_cloud_surf_compute_optim
                                 NULL, // pface_edge_idx[i_part],
                                 NULL, // pface_edge[i_part],
                                 NULL, // pedge_vtx[i_part],
-                  (int *)       part_face_vtx, // pface_vtx_idx[i_part],
-                  (int *)       part_face_vtx_idx, // pface_vtx[i_part],
+                  (int *)       part_face_vtx_idx, // pface_vtx_idx[i_part],
+                  (int *)       part_face_vtx, // pface_vtx[i_part],
                                 NULL,
                 (PDM_g_num_t *) face_ln_to_gn,
                                 NULL,
@@ -1674,6 +1702,11 @@ PDM_dist_cloud_surf_compute_optim
                                 n_extract_boxes,
                                 box_gnum,
                                 box_init_location);
+
+    if(0 == 1) {
+      PDM_log_trace_array_long(box_gnum, n_extract_boxes, "box_gnum :: ");
+      PDM_log_trace_array_int(box_init_location, 3 * n_extract_boxes, "box_init_location :: ");
+    }
 
     PDM_extract_part_compute(extrp);
 
@@ -1717,9 +1750,18 @@ PDM_dist_cloud_surf_compute_optim
                              pextract_face_ln_to_gn,
                              NULL);
 
+      sprintf(filename, "out_extrac_pts_%i.vtk", i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                n_extract_pts,
+                                pts_coords,
+                                pts_ln_to_gn,
+                                NULL);
+
+
     }
 
-
+    free(box_pts);
+    free(pts_coords);
 
 
 
@@ -1729,8 +1771,6 @@ PDM_dist_cloud_surf_compute_optim
     free(box_gnum         );
     free(box_init_location);
     free(dbox_pts_idx     );
-    free(dbox_pts_g_num   );
-    free(dbox_pts_coord   );
 
   }
 
