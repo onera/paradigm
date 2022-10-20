@@ -7516,7 +7516,7 @@ PDM_mesh_location_compute_optim
           pts_in_elt->coords          [ipart] = malloc(sizeof(double     ) * 0);
           pts_in_elt->uvw             [ipart] = malloc(sizeof(double     ) * 0);
           pts_in_elt->projected_coords[ipart] = malloc(sizeof(double     ) * 0);
-          pts_in_elt->weights_idx     [ipart] = malloc(sizeof(int        ) * 0);
+          pts_in_elt->weights_idx     [ipart] = PDM_array_zeros_int(1);
           pts_in_elt->weights         [ipart] = malloc(sizeof(double     ) * 0);
           pts_in_elt->dist2           [ipart] = malloc(sizeof(double     ) * 0);
 

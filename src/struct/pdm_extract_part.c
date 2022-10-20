@@ -2013,7 +2013,7 @@ _extract_part_and_reequilibrate_nodal_from_target
                                  &request_vtx_init_location);
   PDM_part_to_part_reverse_iexch_wait(ptp, request_vtx_init_location);
 
-  for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
     free(recv_vtx_init_location_n[i_part]);
   }
   free(recv_vtx_init_location_n);
@@ -2048,7 +2048,7 @@ _extract_part_and_reequilibrate_nodal_from_target
    * Second pass to create the new part_mesh_nodal
    */
   PDM_part_mesh_nodal_elmts_t* extract_pmne = PDM_part_mesh_nodal_elmts_create(extrp->pmne->mesh_dimension,
-                                                                               extrp->n_part_out,//extrp->pmne->n_part, // == n_part_out
+                                                                               extrp->pmne->n_part, // == n_part_out
                                                                                extrp->pmne->comm);
 
   extrp->extract_pmne = extract_pmne;
