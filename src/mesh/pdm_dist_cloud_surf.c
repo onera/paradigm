@@ -1592,27 +1592,40 @@ PDM_dist_cloud_surf_compute_optim
      *   - Puis on fait un dconnectivity_to_pconnectivty sur le delmt_pts -> pelemt_pts
      */
 
-    int         *part_pts_elt_idx;
-    PDM_g_num_t *part_pts_elt_g_num;
     int          n_extract_boxes = 0;
-    int         *box_l_num = NULL;
-    int         *box_pts_idx = NULL;
-    PDM_g_num_t *box_pts_g_num = NULL;
+    PDM_g_num_t *box_gnum          = NULL;
+    int         *box_init_location = NULL;
+    int         *dbox_pts_idx      = NULL;
+    PDM_g_num_t *dbox_pts_g_num    = NULL;
+    double      *dbox_pts_coord    = NULL;
+
     PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get (dbbt,
                                                                n_pts_rank,
                                                                pts_rank,
                                                                pts_g_num_rank,
                                                                closest_vertices_dist2,
                                                                &n_extract_boxes,
-                                                               &box_l_num,
-                                                               &box_pts_idx,
-                                                               &box_pts_g_num);
+                                                               &box_gnum,
+                                                               &box_init_location,
+                                                               &dbox_pts_idx,
+                                                               &dbox_pts_g_num,
+                                                               &dbox_pts_coord);
     /*
      * part_to_block geométrique sur les boxes
      *   Moyen de recuperer leurs coordonnées ?
      *   AVec le boc_l_num on extrait les extents + les init_location
      *   Initialize pdm_extract avec le delemt_init_location
      */
+    // On post-trait pour avoir box_pts en local
+    // pts_dist = HUGE_VAL puis on prends le MIN
+
+
+
+    free(box_gnum         );
+    free(box_init_location);
+    free(dbox_pts_idx     );
+    free(dbox_pts_g_num   );
+    free(dbox_pts_coord   );
 
   }
 

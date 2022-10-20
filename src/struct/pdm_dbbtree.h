@@ -231,10 +231,12 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
  double           pts[],
  PDM_g_num_t      pts_g_num[],
  double           upper_bound_dist2[],
- int             *n_extract_boxes,
- int             *box_l_num[],
- int             *box_pts_idx[],
- PDM_g_num_t     *box_pts_g_num[]
+ int             *out_n_extract_boxes,
+ PDM_g_num_t     *out_box_gnum[],
+ int             *out_box_init_location[],
+ int             *out_dbox_pts_idx[],
+ PDM_g_num_t     *out_dbox_pts_g_num[],
+ double          *out_dbox_pts_coord[]
 );
 
 /**
