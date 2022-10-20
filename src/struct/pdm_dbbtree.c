@@ -3080,7 +3080,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     free(distrib_search_by_rank_idx);
   } else {
 
-    // part_n_pts[0] = n_pts1;
     int *tmp_box_pts_idx = NULL;
     int *tmp_box_pts     = NULL;
     PDM_box_tree_closest_upper_bound_dist_boxes_get_v2_box_pov(_dbbt->btLoc,
@@ -3092,71 +3091,64 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
                                                                &tmp_box_pts,
                                                                _dbbt->d);
 
-      int n_boxes            = _dbbt->boxes->local_boxes->n_boxes;
-      int    *boxes_init_location = _dbbt->boxes->local_boxes->origin;
-      int    *boxes_gnum          = _dbbt->boxes->local_boxes->g_num;
-      double *boxes_extents       = _dbbt->boxes->local_boxes->extents;
-      /*
-       * Extract only boxes with some pts
-       */
-      pn_boxes[0] = 0;
-      for(int i_box = 0; i_box < n_boxes; ++i_box) {
-        if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] > 0) {
-          pn_boxes[0]++;
-        }
+    int n_boxes                 = _dbbt->boxes->local_boxes->n_boxes;
+    int    *boxes_init_location = _dbbt->boxes->local_boxes->origin;
+    int    *boxes_gnum          = _dbbt->boxes->local_boxes->g_num;
+    double *boxes_extents       = _dbbt->boxes->local_boxes->extents;
+    /*
+     * Extract only boxes with some pts
+     */
+    pn_boxes[0] = 0;
+    for(int i_box = 0; i_box < n_boxes; ++i_box) {
+      if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] > 0) {
+        pn_boxes[0]++;
       }
+    }
 
-      pbox_center       [0] = malloc (3 * pn_boxes[0] * sizeof(double     ));
-      pbox_weight       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
-      pbox_init_location[0] = malloc (3 * pn_boxes[0] * sizeof(int        ));
-      // pstride_one       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
-      pbox_pts_n        [0] = malloc (    pn_boxes[0] * sizeof(int        ));
-      pbox_g_num        [0] = malloc (    pn_boxes[0] * sizeof(PDM_g_num_t));
+    pbox_center       [0] = malloc (3 * pn_boxes[0] * sizeof(double     ));
+    pbox_weight       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
+    pbox_init_location[0] = malloc (3 * pn_boxes[0] * sizeof(int        ));
+    // pstride_one       [0] = malloc (    pn_boxes[0] * sizeof(int        ));
+    pbox_pts_n        [0] = malloc (    pn_boxes[0] * sizeof(int        ));
+    pbox_g_num        [0] = malloc (    pn_boxes[0] * sizeof(PDM_g_num_t));
 
-      int n_box_pts_tot = tmp_box_pts_idx[n_boxes];
-      pbox_pts_g_num    [0] = malloc (    n_box_pts_tot * sizeof(PDM_g_num_t));
-      pbox_pts_coords   [0] = malloc (3 * n_box_pts_tot * sizeof(double     ));
+    int n_box_pts_tot = tmp_box_pts_idx[n_boxes];
+    pbox_pts_g_num    [0] = malloc (    n_box_pts_tot * sizeof(PDM_g_num_t));
+    pbox_pts_coords   [0] = malloc (3 * n_box_pts_tot * sizeof(double     ));
 
-      int idx_write = 0;
-      pn_boxes[0] = 0;
-      for(int i_box = 0; i_box < n_boxes; ++i_box) {
-        if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] == 0) {
-          continue;
-        }
-        int i_box_e = pn_boxes[0]++;
-        pbox_center       [0][3*i_box_e  ] = 0.5 * (boxes_extents[6*i_box  ] + boxes_extents[6*i_box+3]);
-        pbox_center       [0][3*i_box_e+1] = 0.5 * (boxes_extents[6*i_box+1] + boxes_extents[6*i_box+4]);
-        pbox_center       [0][3*i_box_e+2] = 0.5 * (boxes_extents[6*i_box+2] + boxes_extents[6*i_box+5]);
-
-        pbox_weight       [0][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
-        pbox_pts_n        [0][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
-        // pstride_one       [0][i_box_e] = 1; // useles
-        pbox_g_num        [0][i_box_e] = boxes_gnum[i_box];
-        pbox_init_location[0][3*i_box_e  ] = boxes_init_location[3*i_box  ];
-        pbox_init_location[0][3*i_box_e+1] = boxes_init_location[3*i_box+1];
-        pbox_init_location[0][3*i_box_e+2] = boxes_init_location[3*i_box+2];
-
-        for(int idx_pts = tmp_box_pts_idx[i_box]; idx_pts < tmp_box_pts_idx[i_box+1]; ++idx_pts) {
-          int i_pts = tmp_box_pts[idx_pts];
-          pbox_pts_g_num[0][idx_write] = pts_g_num1[i_pts];
-          pbox_pts_coords[0][3*idx_write  ] = pts_coord1[3*i_pts  ];
-          pbox_pts_coords[0][3*idx_write+1] = pts_coord1[3*i_pts+1];
-          pbox_pts_coords[0][3*idx_write+2] = pts_coord1[3*i_pts+2];
-          idx_write++;
-        }
+    int idx_write = 0;
+    pn_boxes[0] = 0;
+    for(int i_box = 0; i_box < n_boxes; ++i_box) {
+      if(tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box] == 0) {
+        continue;
       }
+      int i_box_e = pn_boxes[0]++;
+      pbox_center       [0][3*i_box_e  ] = 0.5 * (boxes_extents[6*i_box  ] + boxes_extents[6*i_box+3]);
+      pbox_center       [0][3*i_box_e+1] = 0.5 * (boxes_extents[6*i_box+1] + boxes_extents[6*i_box+4]);
+      pbox_center       [0][3*i_box_e+2] = 0.5 * (boxes_extents[6*i_box+2] + boxes_extents[6*i_box+5]);
 
-      free(tmp_box_pts_idx);
-      free(tmp_box_pts);
+      pbox_weight       [0][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
+      pbox_pts_n        [0][i_box_e] = tmp_box_pts_idx[i_box+1] - tmp_box_pts_idx[i_box];
+      // pstride_one       [0][i_box_e] = 1; // useles
+      pbox_g_num        [0][i_box_e] = boxes_gnum[i_box];
+      pbox_init_location[0][3*i_box_e  ] = boxes_init_location[3*i_box  ];
+      pbox_init_location[0][3*i_box_e+1] = boxes_init_location[3*i_box+1];
+      pbox_init_location[0][3*i_box_e+2] = boxes_init_location[3*i_box+2];
+
+      for(int idx_pts = tmp_box_pts_idx[i_box]; idx_pts < tmp_box_pts_idx[i_box+1]; ++idx_pts) {
+        int i_pts = tmp_box_pts[idx_pts];
+        pbox_pts_g_num[0][idx_write] = pts_g_num1[i_pts];
+        pbox_pts_coords[0][3*idx_write  ] = pts_coord1[3*i_pts  ];
+        pbox_pts_coords[0][3*idx_write+1] = pts_coord1[3*i_pts+1];
+        pbox_pts_coords[0][3*idx_write+2] = pts_coord1[3*i_pts+2];
+        idx_write++;
+      }
+    }
+
+    free(tmp_box_pts_idx);
+    free(tmp_box_pts);
 
   }
-
-  /*
-   * part_to_block geom + init_location ?
-   *   Il faut equilibrer les blocks ET trié les doublons de points pour un mêm box
-   *   Si on sort avvec block de box connecté aux pts (puis dconnectivity_to_pconnectivity)
-   */
-
 
   /*
    * On peut être en CLEANUP car si la boîte est sur plusieurs rang elle a également recu
