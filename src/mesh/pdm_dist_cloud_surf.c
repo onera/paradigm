@@ -1613,6 +1613,34 @@ PDM_dist_cloud_surf_compute_optim
                                                                &dbox_pts_idx,
                                                                &dbox_pts_g_num,
                                                                &dbox_pts_coord);
+
+    free (closest_vertices_dist2);
+
+    if (i_point_cloud == n_point_cloud -1 ) { //Now useless
+      PDM_dbbtree_free (dbbt);
+      PDM_box_set_destroy (&surf_mesh_boxes);
+    }
+
+    PDM_timer_hang_on(dist->timer);
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[CANDIDATE_SELECTION] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[CANDIDATE_SELECTION]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[CANDIDATE_SELECTION]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[CANDIDATE_SELECTION]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    PDM_timer_hang_on(dist->timer);
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
+
     /*
      * part_to_block geométrique sur les boxes
      *   Moyen de recuperer leurs coordonnées ?
@@ -1760,10 +1788,71 @@ PDM_dist_cloud_surf_compute_optim
 
     }
 
+    PDM_timer_hang_on(dist->timer);
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
+
+
+    double *dist2 = malloc(n_extract_pts * sizeof(double));
+    double *proj  = malloc(n_extract_pts * sizeof(double));
+
+    for(int i_pts = 0; i_pts < n_extract_pts; ++i_pts) {
+      dist2[i_pts] = HUGE_VAL;
+    }
+
+    int max_elmt_vtx = 0;
+    for(int i_elmt = 0; i_elmt < n_extract_boxes; ++i_elmt) {
+      max_elmt_vtx = PDM_MAX(max_elmt_vtx, pextract_face_vtx_idx[i_elmt+1] - pextract_face_vtx_idx[i_elmt]);
+    }
+    double *lvtx_coords = malloc(3 * max_elmt_vtx * sizeof(double));
+
+    for(int i_elmt = 0; i_elmt < n_extract_boxes; ++i_elmt) {
+
+      int n_elmt_vtx = pextract_face_vtx_idx[i_elmt+1] - pextract_face_vtx_idx[i_elmt];
+
+      int idx_write = 0;
+      for(int idx_vtx = pextract_face_vtx_idx[i_elmt]; idx_vtx < pextract_face_vtx_idx[i_elmt+1]; ++idx_vtx) {
+        int i_vtx = pextract_face_vtx[idx_vtx]-1;
+        lvtx_coords[3*idx_write  ] = pextract_vtx_coord[3*i_vtx  ];
+        lvtx_coords[3*idx_write+1] = pextract_vtx_coord[3*i_vtx+1];
+        lvtx_coords[3*idx_write+2] = pextract_vtx_coord[3*i_vtx+2];
+        idx_write++;
+      }
+
+
+      if(n_elmt_vtx == 4) {
+
+
+        for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
+          int i_pts = box_pts[idx_pts];
+          double lproj[3];
+          double ldist;
+          PDM_polygon_status_t status = PDM_polygon_evaluate_position (&pts_coords[3*i_pts],
+                                                                       n_elmt_vtx,
+                                                                       lvtx_coords,
+                                                                       lproj,
+                                                                       &ldist);
+
+          if(ldist < dist2[i_pts]) {
+
+          }
+
+
+        }
+
+
+
+      } else {
+        abort();
+      }
+
+    }
+    free(lvtx_coords);
     free(box_pts);
     free(pts_coords);
-
-
 
 
     PDM_extract_part_free(extrp);
