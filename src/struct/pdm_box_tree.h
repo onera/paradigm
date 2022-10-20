@@ -403,6 +403,19 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_shared_box_pov
  const double    *d_opt
 );
 
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_v2_box_pov
+(
+ PDM_box_tree_t  *bt,
+ const int        i_copied_rank,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *box_pts_idx[],
+ int             *box_pts[],
+ const double    *d_opt
+);
+
 /**
  *
  * \brief Copy the local box tree of some ranks on all other ranks
