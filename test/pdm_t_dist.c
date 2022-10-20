@@ -22,6 +22,7 @@
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 
 /*============================================================================
  * Type definitions
@@ -655,6 +656,14 @@ int main(int argc, char *argv[])
                                    cell_center[i_part],
                                    cell_ln_to_gn);
 
+    // for (int i = 0; i < n_cell; i++) {
+    //   log_trace("point "PDM_FMT_G_NUM" : %f %f %f\n",
+    //             cell_ln_to_gn[i],
+    //             cell_center[i_part][3*i  ],
+    //             cell_center[i_part][3*i+1],
+    //             cell_center[i_part][3*i+2]);
+    // }
+
   }
 
   if (i_rank == 0) {
@@ -662,7 +671,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dist_cloud_surf_compute (dist);
+  PDM_dist_cloud_surf_compute_optim (dist);
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
@@ -757,7 +766,14 @@ int main(int argc, char *argv[])
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-10) {
         ierr += 1;
-        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e "PDM_FMT_G_NUM"\n", i,
+        log_trace("!!! pt "PDM_FMT_G_NUM" (%f %f %f) error dist = %e / %e, face "PDM_FMT_G_NUM"\n",
+                  cell_ln_to_gn[i],
+                  cell_center[i_part][3*i],
+                  cell_center[i_part][3*i+1],
+                  cell_center[i_part][3*i+2],
+                  distance[i], d, closest_elt_gnum[i]);
+        printf ("Erreur distance "PDM_FMT_G_NUM" (%12.5e %12.5e %12.5e) : %12.5e %12.5e "PDM_FMT_G_NUM"\n",
+                cell_ln_to_gn[i],
                 cell_center[i_part][3*i],
                 cell_center[i_part][3*i+1],
                 cell_center[i_part][3*i+2],
