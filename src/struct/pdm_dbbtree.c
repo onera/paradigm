@@ -3236,7 +3236,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
    */
   int         *dbox_pts_n     = NULL;
   PDM_g_num_t *dbox_pts_g_num = NULL;
-  PDM_part_to_block_exch(ptb,
+  int s_dbox_pts_g_num = PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR_INTERLACED,
                          1,
@@ -3291,6 +3291,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
   /* Merge */
   int n_equi_box = PDM_part_to_block_n_elt_block_get(ptb);
+  PDM_g_num_t *ptb_equi_box_g_num = PDM_part_to_block_block_gnum_get(ptb);
 
   int max_box_pts_n = 0;
   for (int i = 0; i < n_equi_box; i++) {
@@ -3326,8 +3327,15 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
                                                 0,
                                                 dbox_pts_n[i]-1);
     // PDM_log_trace_array_int(pts_unique_order, n_unique_pts, "pts_unique_order : ");
-
-    memcpy(dbox_pts_g_num + idx_write, _g_num, sizeof(PDM_g_num_t) * n_unique_pts);
+    // log_trace("box "PDM_FMT_G_NUM" n_unique_pts = %d / %d, idx_write = %d->%d / %d\n",
+    //           ptb_equi_box_g_num[i],
+    //           n_unique_pts, dbox_pts_n[i],
+    //           idx_write, idx_write + n_unique_pts, s_dbox_pts_g_num);
+    // memcpy(dbox_pts_g_num + idx_write, _g_num, sizeof(PDM_g_num_t) * n_unique_pts);
+    for (int j = 0; j < n_unique_pts; j++) {
+      // log_trace("  j = %d -> %d\n", j, idx_write+j);
+      dbox_pts_g_num[idx_write+j] = _g_num[j];
+    }
 
     memcpy(tmp_coord, _coord, sizeof(double) * dbox_pts_n[i]*3);
     for (int j = 0; j < dbox_pts_n[i]; j++) {
@@ -3371,7 +3379,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
   PDM_g_num_t *equi_box_gnum = malloc(n_equi_box * sizeof(PDM_g_num_t));
 
-  PDM_g_num_t *ptb_equi_box_g_num = PDM_part_to_block_block_gnum_get(ptb);
   for(int i_box = 0; i_box < n_equi_box; ++i_box) {
     equi_box_gnum[i_box] = ptb_equi_box_g_num[i_box];
   }

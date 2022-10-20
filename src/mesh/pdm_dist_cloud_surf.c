@@ -1779,7 +1779,7 @@ PDM_dist_cloud_surf_compute_optim
                                    &pextract_vtx_coord,
                                    PDM_OWNERSHIP_KEEP);
 
-    if(1 == 1) {
+    if(0 == 1) {
       char filename[999];
       int i_rank;
       PDM_MPI_Comm_rank (comm, &i_rank);
