@@ -1796,8 +1796,8 @@ PDM_dist_cloud_surf_compute_optim
     PDM_timer_resume(dist->timer);
 
 
-    double *dist2 = malloc(n_extract_pts * sizeof(double));
-    double *proj  = malloc(n_extract_pts * sizeof(double));
+    double *dist2 = malloc(    n_extract_pts * sizeof(double));
+    double *proj  = malloc(3*  n_extract_pts * sizeof(double));
 
     for(int i_pts = 0; i_pts < n_extract_pts; ++i_pts) {
       dist2[i_pts] = HUGE_VAL;
@@ -1827,7 +1827,7 @@ PDM_dist_cloud_surf_compute_optim
 
 
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
-          int i_pts = box_pts[idx_pts];
+          int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
           double ldist;
           PDM_polygon_status_t status = PDM_polygon_evaluate_position (&pts_coords[3*i_pts],
@@ -1836,14 +1836,19 @@ PDM_dist_cloud_surf_compute_optim
                                                                        lproj,
                                                                        &ldist);
 
+          // if (status == PDM_POLYGON_DEGENERATED) {
+          //   for (int j = 0; j < block_elt_pts_n[ielt]; j++) {
+          //     _dist2[j] = HUGE_VAL;
+          //   }
+          //   break;
+          // }
           if(ldist < dist2[i_pts]) {
-
+            dist2[i_pts] = ldist;
+            proj [3*i_pts  ] = lproj[0];
+            proj [3*i_pts+1] = lproj[1];
+            proj [3*i_pts+2] = lproj[2];
           }
-
-
         }
-
-
 
       } else {
         abort();
@@ -1860,6 +1865,19 @@ PDM_dist_cloud_surf_compute_optim
     free(box_gnum         );
     free(box_init_location);
     free(dbox_pts_idx     );
+
+    PDM_timer_hang_on(dist->timer);
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[COMPUTE_ELEM_DIST]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[COMPUTE_ELEM_DIST]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[COMPUTE_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
 
   }
 
