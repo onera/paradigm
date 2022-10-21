@@ -242,17 +242,95 @@ void
 _extract_part_edge_and_set_mesh
 (
  PDM_multipart_t         *mpart,
- int                      n_part
+ int                      n_part,
+ PDM_MPI_Comm             comm
 )
 {
-
+  int n_part_out = 1;
+  PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(1,
+                                                           n_part,
+                                                           n_part_out,
+                                                           PDM_EXTRACT_PART_KIND_REEQUILIBRATE,
+                                                           PDM_SPLIT_DUAL_WITH_HILBERT, // Not used
+                                                           PDM_FALSE,                   // compute_child_gnum
+                                                           PDM_OWNERSHIP_KEEP,
+                                                           comm);
   for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double *vtx_coord = NULL;
+    int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 &vtx_coord,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    int          n_edge_group        = 0;
+    int         *edge_group          = NULL;
+    int         *edge_group_idx      = NULL;
+    PDM_g_num_t *edge_bound_ln_to_gn = NULL;
+
+    PDM_multipart_bound_get(mpart,
+                            0,
+                            i_part,
+                            PDM_BOUND_TYPE_EDGE,
+                            &n_edge_group,
+                            &edge_group_idx,
+                            &edge_group,
+                            &edge_bound_ln_to_gn);
+
+
+    PDM_log_trace_connectivity_int(edge_group_idx, edge_group, n_edge_group, "edge_group ::");
+
+    PDM_g_num_t *edge_ln_to_gn = NULL;
+    PDM_g_num_t *vtx_ln_to_gn  = NULL;
+    int n_edge = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                 0,
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_EDGE,
+                                                 &edge_ln_to_gn,
+                                                 PDM_OWNERSHIP_KEEP);
+    PDM_multipart_part_ln_to_gn_get(mpart,
+                                    0,
+                                    i_part,
+                                    PDM_MESH_ENTITY_VERTEX,
+                                    &vtx_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+    int *edge_vtx_idx = NULL;
+    int *edge_vtx     = NULL;
+    PDM_multipart_part_connectivity_get(mpart,
+                                        0,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                        &edge_vtx,
+                                        &edge_vtx_idx,
+                                        PDM_OWNERSHIP_KEEP);
+    PDM_extract_part_part_set(extrp_mesh,
+                              i_part,
+                              0,
+                              0,
+                              n_edge,
+                              n_vtx,
+                              NULL, // cell_face_idx,
+                              NULL, // cell_face,
+                              NULL, // face_edge_idx,
+                              NULL, // face_edge,
+                              edge_vtx,
+                              NULL, // face_vtx_idx,
+                              NULL, // face_vtx,
+                              NULL, // cell_ln_to_gn,
+                              NULL, // face_ln_to_gn,
+                              edge_ln_to_gn,
+                              vtx_ln_to_gn,
+                              vtx_coord);
 
 
 
   }
 
+  PDM_extract_part_compute(extrp_mesh);
 
+
+  PDM_extract_part_free(extrp_mesh);
 }
 
 static
@@ -463,7 +541,7 @@ char *argv[]
                              "dmn_surf_b_");
   }
 
-  _extract_part_edge_and_set_mesh(mpart_surf_b, n_part);
+  _extract_part_edge_and_set_mesh(mpart_surf_b, n_part, comm);
 
   /*
    * Mesh_intersection
