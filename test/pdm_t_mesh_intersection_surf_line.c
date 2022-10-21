@@ -241,9 +241,10 @@ static
 void
 _extract_part_edge_and_set_mesh
 (
+ PDM_MPI_Comm             comm,
  PDM_multipart_t         *mpart,
  int                      n_part,
- PDM_MPI_Comm             comm
+ PDM_extract_part_t     **extract_part_edge
 )
 {
   int n_part_out = 1;
@@ -252,9 +253,13 @@ _extract_part_edge_and_set_mesh
                                                            n_part_out,
                                                            PDM_EXTRACT_PART_KIND_REEQUILIBRATE,
                                                            PDM_SPLIT_DUAL_WITH_HILBERT, // Not used
-                                                           PDM_FALSE,                   // compute_child_gnum
+                                                           PDM_TRUE,                   // compute_child_gnum
                                                            PDM_OWNERSHIP_KEEP,
                                                            comm);
+
+  int  *pn_extract    = malloc(n_part * sizeof(int  ));
+  int **pextract_lnum = malloc(n_part * sizeof(int *));
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double *vtx_coord = NULL;
@@ -323,14 +328,95 @@ _extract_part_edge_and_set_mesh
                               vtx_ln_to_gn,
                               vtx_coord);
 
+    pn_extract   [i_part] = edge_group_idx[n_edge_group];
+    pextract_lnum[i_part] = malloc(edge_group_idx[n_edge_group] * sizeof(int));
 
+    for(int idx_edge = 0; idx_edge < edge_group_idx[n_edge_group]; ++idx_edge) {
+      pextract_lnum[i_part][idx_edge] = edge_group[idx_edge]-1;
+    }
+
+    PDM_extract_part_selected_lnum_set(extrp_mesh,
+                                       i_part,
+                                       pn_extract[i_part],
+                                       pextract_lnum[i_part]);
 
   }
 
   PDM_extract_part_compute(extrp_mesh);
 
 
-  PDM_extract_part_free(extrp_mesh);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(pextract_lnum[i_part]);
+  }
+  free(pextract_lnum);
+  free(pn_extract);
+
+  *extract_part_edge = extrp_mesh;
+}
+
+static
+void
+_set_mesh_line
+(
+ PDM_MPI_Comm             comm,
+ PDM_mesh_intersection_t *mi,
+ PDM_ol_mesh_t            i_mesh,
+ PDM_extract_part_t      *extrp_mesh,
+ int                      n_part
+)
+{
+  PDM_UNUSED(n_part);
+  int i_part = 0;
+  PDM_g_num_t *edge_ln_to_gn = NULL;
+  PDM_g_num_t *vtx_ln_to_gn  = NULL;
+  int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+
+  double *vtx_coord = NULL;
+  PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
+
+  int  *edge_vtx      = NULL;
+  int  *edge_vtx_idx  = NULL;
+  PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_KEEP);
+
+  PDM_mesh_intersection_part_set(mi,
+                                 i_mesh,
+                                 i_part,
+                                 0, //n_cell
+                                 0,
+                                 n_edge,
+                                 n_vtx,
+                                 NULL, //cell_face_idx,
+                                 NULL, //cell_face,
+                                 NULL, // face_edge_idx,
+                                 NULL, // face_edge,
+                                 edge_vtx,
+                                 NULL, //face_vtx_idx,
+                                 NULL, //face_vtx,
+                                 NULL, //cell_ln_to_gn,
+                                 NULL, //face_ln_to_gn,
+                                 edge_ln_to_gn,
+                                 vtx_ln_to_gn,
+                                 vtx_coord);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  char filename[999];
+  sprintf(filename, "export_line_%i.vtk", i_rank);
+  PDM_vtk_write_std_elements(filename,
+                             n_vtx,
+                             vtx_coord,
+                             vtx_ln_to_gn,
+                             PDM_MESH_NODAL_BAR2,
+                             n_edge,
+                             edge_vtx,
+                             edge_ln_to_gn,
+                             0,
+                             NULL,
+                             NULL);
+
+
 }
 
 static
@@ -541,7 +627,9 @@ char *argv[]
                              "dmn_surf_b_");
   }
 
-  _extract_part_edge_and_set_mesh(mpart_surf_b, n_part, comm);
+  PDM_extract_part_t *extract_part_edge = NULL;
+  _extract_part_edge_and_set_mesh(comm, mpart_surf_b, n_part, &extract_part_edge);
+
 
   /*
    * Mesh_intersection
@@ -559,14 +647,15 @@ char *argv[]
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, PDM_OL_MESH_A, mpart_surf_a, n_part);
-  _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+  _set_mesh     (      mi, PDM_OL_MESH_A, mpart_surf_a     , n_part);
+  _set_mesh_line(comm, mi, PDM_OL_MESH_B, extract_part_edge, 1     );
 
   PDM_mesh_intersection_compute(mi);
 
   PDM_mesh_intersection_free(mi);
 
 
+  PDM_extract_part_free(extract_part_edge);
   PDM_DMesh_nodal_free(dmn_surf_b);
   PDM_multipart_free(mpart_surf_b);
 

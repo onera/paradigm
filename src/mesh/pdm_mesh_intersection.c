@@ -56,6 +56,48 @@ extern "C"
 
 static
 void
+_export_vtk_1d
+(
+ const char               *pattern,
+       PDM_extract_part_t *extrp_mesh
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(extrp_mesh->comm, &i_rank);
+
+
+  for(int i_part = 0; i_part < extrp_mesh->n_part_out; ++i_part) {
+
+    PDM_g_num_t *edge_ln_to_gn = NULL;
+    PDM_g_num_t *vtx_ln_to_gn  = NULL;
+    int n_edge = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_EDGE  , &edge_ln_to_gn, PDM_OWNERSHIP_KEEP);
+    int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+
+    double *vtx_coord = NULL;
+    PDM_extract_part_vtx_coord_get(extrp_mesh, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
+
+    int  *edge_vtx      = NULL;
+    int  *edge_vtx_idx  = NULL;
+    PDM_extract_part_connectivity_get(extrp_mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX , &edge_vtx , &edge_vtx_idx , PDM_OWNERSHIP_KEEP);
+
+    char filename[999];
+    sprintf(filename, "%s_%i_%i.vtk", pattern, i_part, i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               n_vtx,
+                               vtx_coord,
+                               vtx_ln_to_gn,
+                               PDM_MESH_NODAL_BAR2,
+                               n_edge,
+                               edge_vtx,
+                               edge_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
+  }
+}
+
+static
+void
 _export_vtk_2d
 (
  const char               *pattern,
@@ -1047,6 +1089,10 @@ _mesh_intersection_surf_line
   PDM_UNUSED(extrp_mesh_b);
   PDM_UNUSED(redistribute_box_a_to_box_b_idx);
   PDM_UNUSED(redistribute_box_a_to_box_b);
+  if(1 == 1) {
+    _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_1d("extrp_mesh_b", extrp_mesh_b);
+  }
 
 }
 

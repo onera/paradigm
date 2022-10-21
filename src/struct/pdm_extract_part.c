@@ -86,9 +86,9 @@ _edge_center_2d
       int i_edge = extract_lnum[i_part][idx_edge];
       int i_vtx1 = _pedge_vtx[2*i_edge  ]-1;
       int i_vtx2 = _pedge_vtx[2*i_edge+1]-1;
-      entity_center[i_part][3*i_edge  ] = 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
-      entity_center[i_part][3*i_edge+1] = 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
-      entity_center[i_part][3*i_edge+2] = 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+      entity_center[i_part][3*idx_edge  ] = 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+      entity_center[i_part][3*idx_edge+1] = 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+      entity_center[i_part][3*idx_edge+2] = 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
     }
   }
   *edge_center = entity_center;
@@ -3496,7 +3496,8 @@ _extract_part_and_reequilibrate
 
     // Call extraction from target !
     extrp->n_target       [i_part0] = dn_cell_equi;
-    extrp->target_gnum    [i_part0] = extrp->pextract_entity_ln_to_gn[entity_type][i_part0];
+    // extrp->target_gnum    [i_part0] = extrp->pextract_entity_ln_to_gn[entity_type][i_part0];
+    extrp->target_gnum    [i_part0] = _parent_entity_ln_to_gn;
     extrp->target_location[i_part0] = dequi_init_location;
     _extract_part_and_reequilibrate_from_target(extrp);
 
