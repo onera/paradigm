@@ -2028,7 +2028,10 @@ PDM_dist_cloud_surf_compute_optim
         if (block_pts_elt_dist2[idx] < min_dist2) {
           min_dist2              = block_pts_elt_dist2[idx];
           block_pts_elt_g_num[i] = block_pts_elt_g_num[idx];
-          memcpy(block_pts_elt_proj + 3*i, block_pts_elt_proj + 3*idx, sizeof(double) * 3);
+          // memcpy(block_pts_elt_proj + 3*i, block_pts_elt_proj + 3*idx, sizeof(double) * 3);
+          for (int k = 0; k < 3; k++) {
+            block_pts_elt_proj[3*i+k] = block_pts_elt_proj[3*idx+k];
+          }
         }
         idx++;
       }

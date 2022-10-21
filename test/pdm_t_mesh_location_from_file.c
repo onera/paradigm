@@ -850,7 +850,7 @@ int main(int argc, char *argv[])
                                       &pelt_vtx_idx[ipart],
                                       &pelt_vtx    [ipart]);
 
-    if (1) {
+    if (0) {
       log_trace("\n\n\n\n");
       // PDM_log_trace_array_long(pelt_ln_to_gn[ipart], pn_elt[ipart], "pelt_ln_to_gn : ");
       // PDM_log_trace_connectivity_long(pelt_pts_idx[ipart],
@@ -869,7 +869,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (1) {
+  if (0) {
     for (int ipart = 0; ipart < n_part_cloud; ipart++) {
       int n_located = PDM_mesh_location_n_located_get(mesh_loc,
                                                       0,
@@ -897,15 +897,24 @@ int main(int argc, char *argv[])
 
 
   /* Create exchange protocol */
-  PDM_part_to_part_t *ptp = PDM_part_to_part_create((const PDM_g_num_t **) pelt_ln_to_gn,
-                                                    (const int          *) pn_elt,
-                                                    n_part_mesh,
-                                                    (const PDM_g_num_t **) ppts_ln_to_gn,
-                                                    (const int          *) pn_pts,
-                                                    n_part_cloud,
-                                                    (const int         **) pelt_pts_idx,
-                                                    (const PDM_g_num_t **) pelt_pts_gnum,
-                                                    comm);
+  PDM_part_to_part_t *ptp = NULL;
+  PDM_mesh_location_part_to_part_get(mesh_loc,
+                                     0,
+                                     &ptp,
+                                     PDM_OWNERSHIP_USER);
+
+  if (ptp == NULL) {
+    ptp = PDM_part_to_part_create((const PDM_g_num_t **) pelt_ln_to_gn,
+                                  (const int          *) pn_elt,
+                                  n_part_mesh,
+                                  (const PDM_g_num_t **) ppts_ln_to_gn,
+                                  (const int          *) pn_pts,
+                                  n_part_cloud,
+                                  (const int         **) pelt_pts_idx,
+                                  (const PDM_g_num_t **) pelt_pts_gnum,
+                                  comm);
+  }
+
 
   /*
    *  Exchange mesh (cell-centered) -> point cloud

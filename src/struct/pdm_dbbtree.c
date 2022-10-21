@@ -3344,7 +3344,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
 
   idx_read = 0;
   for (int i = 0; i < n_equi_box; i++) {
-    memcpy(dbox_init_location + 3*i, dbox_init_location + 3*idx_read, sizeof(int)*3);
+    // memcpy(dbox_init_location + 3*i, dbox_init_location + 3*idx_read, sizeof(int)*3);
+    for (int j = 0; j < 3; j++) {
+      dbox_init_location[3*i+j] = dbox_init_location[3*idx_read+j];
+    }
     idx_read += dbox_init_location_n[i];
   }
   free(dbox_init_location_n);
