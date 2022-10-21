@@ -1089,7 +1089,7 @@ _mesh_intersection_surf_line
   PDM_UNUSED(extrp_mesh_b);
   PDM_UNUSED(redistribute_box_a_to_box_b_idx);
   PDM_UNUSED(redistribute_box_a_to_box_b);
-  if(1 == 1) {
+  if(0 == 1) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_1d("extrp_mesh_b", extrp_mesh_b);
   }
