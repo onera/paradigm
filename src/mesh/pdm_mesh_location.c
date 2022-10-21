@@ -7787,11 +7787,11 @@ PDM_mesh_location_compute_optim
       pstride_one[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
     }
 
-    /* Use same extents for Hilbert encoding of pts and boxes?? */
+    /* Use same extents for Hilbert/Morton encoding of pts and boxes?? */
     PDM_part_to_block_t *ptb_pts = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                  PDM_PART_TO_BLOCK_POST_MERGE, // TODO: Merge
                                                                  1.,
-                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 PDM_PART_GEOM_MORTON,
                                                                  select_pts_coord,
                                                                  select_pts_g_num_user,
                                                                  weight,
@@ -7907,7 +7907,7 @@ PDM_mesh_location_compute_optim
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                  PDM_PART_TO_BLOCK_POST_CLEANUP, // A faire en merge
                                                                  1.,
-                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 PDM_PART_GEOM_MORTON,
                                                                  select_box_center,
                                                                  select_elt_g_num_user,
                                                                  weight,
