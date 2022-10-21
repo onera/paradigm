@@ -1657,7 +1657,7 @@ PDM_dist_cloud_surf_compute_optim
                                                  dbox_pts_idx[n_extract_boxes]-1);
     pts_ln_to_gn = realloc(pts_ln_to_gn, n_extract_pts * sizeof(PDM_g_num_t));
 
-    log_trace("Reduce to pts connectivity = %i / %i \n", dbox_pts_idx[n_extract_boxes], n_extract_pts);
+    // log_trace("Reduce to pts connectivity = %i / %i \n", dbox_pts_idx[n_extract_boxes], n_extract_pts);
 
     /*
      * Deduce local numbering and coords
