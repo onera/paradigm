@@ -2693,7 +2693,8 @@ PDM_point_location_nodal2
 
         PDM_triangulate_state_t *_tri_state = NULL;
         _tri_state = PDM_triangulate_state_create(s_face_vtx_max);
-        int *_tri_vtx = malloc(sizeof(int) * (s_face_vtx_max - 2) * 3);
+        int n_tri_vtx = PDM_MAX((s_face_vtx_max - 2) * 3, 0);
+        int *_tri_vtx = malloc(sizeof(int) * n_tri_vtx);
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {

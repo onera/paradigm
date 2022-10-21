@@ -134,7 +134,7 @@ get_initial_edge
   int* edge_face_idx
 )
 {
-  int idx_edge;
+  int idx_edge = -1;
   int idx_edge_out = -1;
   for (int j = vtx_edge_idx[i]; j < vtx_edge_idx[i+1]; j++) {
     idx_edge = PDM_ABS(vtx_edge[j])-1;
@@ -170,10 +170,10 @@ get_next_edge
   int* idx_vtx_ordered_vtx_neighbours
 )
 {
-  int next_edge_idx;
-  int other_vtx_idx;
-  int j_i;
-  int j_iter;
+  int next_edge_idx = -1;
+  int other_vtx_idx = -1;
+  int j_i = -1;
+  int j_iter = -1;
   int direction;
 
   int length = face_vtx_ordered_idx[iter_face_idx+1] - face_vtx_ordered_idx[iter_face_idx];
@@ -388,9 +388,9 @@ int main(int argc, char *argv[])
 
   /* Create ordered vtx neighbour connectivities */
 
-  int iter_edge_idx;
-  int iter_face_idx;
-  int  iter_face_prec_idx;
+  int iter_edge_idx = -1;
+  int iter_face_idx = -1;
+  int iter_face_prec_idx;
   int iter_vtx_idx;
   int count;
   int idx_vtx_ordered_face_neighbours = 0;

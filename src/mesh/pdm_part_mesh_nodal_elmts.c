@@ -2817,25 +2817,21 @@ PDM_part_mesh_nodal_create_from_part2d
 
   PDM_Mesh_nodal_prepa_blocks_t* prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
 
+  prepa_blocks->n_tria_proc   = 0;    /* Nb de triangles par proc */
+  prepa_blocks->n_quad_proc   = 0;    /* Nb de quads par proc */
+  prepa_blocks->n_poly2d_proc = 0;    /* Nb de poly2d par proc */
 
-  if (prepa_blocks == NULL) {
-    prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
-    prepa_blocks->n_tria_proc   = 0;    /* Nb de triangles par proc */
-    prepa_blocks->n_quad_proc   = 0;    /* Nb de quads par proc */
-    prepa_blocks->n_poly2d_proc = 0;    /* Nb de poly2d par proc */
-
-    prepa_blocks->n_cell          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_face          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_tria          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_quad          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
-  }
+  prepa_blocks->n_cell          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_face          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_tria          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_quad          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
 
   int n_tria    = 0;
   int n_quad    = 0;
@@ -2859,7 +2855,7 @@ PDM_part_mesh_nodal_create_from_part2d
     prepa_blocks->n_tria_proc             += n_tria;
     prepa_blocks->n_quad_proc             += n_quad;
     prepa_blocks->n_poly2d_proc           += n_poly2d;
-    prepa_blocks->add_etat       [i_part]  = 1;
+    // prepa_blocks->add_etat       [i_part]  = 1;
     prepa_blocks->n_cell         [i_part]  = n_face[i_part];
     prepa_blocks->n_tria         [i_part]  = n_tria;
     prepa_blocks->n_quad         [i_part]  = n_quad;
@@ -2878,8 +2874,8 @@ PDM_part_mesh_nodal_create_from_part2d
   int elts[3];
   int som_elts[3];
 
-  elts[0] = prepa_blocks->n_tria_proc > 0;
-  elts[1] = prepa_blocks->n_quad_proc > 0;
+  elts[0] = prepa_blocks->n_tria_proc   > 0;
+  elts[1] = prepa_blocks->n_quad_proc   > 0;
   elts[2] = prepa_blocks->n_poly2d_proc > 0;
 
   PDM_MPI_Allreduce(elts, som_elts, 3, PDM_MPI_INT, PDM_MPI_SUM, comm);
@@ -3102,21 +3098,19 @@ PDM_part_mesh_nodal_create_from_part2d
   }
 
 
-  if (prepa_blocks != NULL) {
-    free(prepa_blocks->n_cell);
-    free(prepa_blocks->n_face);
-    free(prepa_blocks->n_tria);
-    free(prepa_blocks->n_quad);
-    free(prepa_blocks->n_poly2d);
-    free(prepa_blocks->l_connec_poly2d);
-    free(prepa_blocks->face_vtx_idx);
-    free(prepa_blocks->face_vtx);
-    free(prepa_blocks->cell_face_idx);
-    free(prepa_blocks->cell_face);
-    free(prepa_blocks->numabs);
-    free(prepa_blocks);
-    prepa_blocks = NULL;
-  }
+  free(prepa_blocks->n_cell);
+  free(prepa_blocks->n_face);
+  free(prepa_blocks->n_tria);
+  free(prepa_blocks->n_quad);
+  free(prepa_blocks->n_poly2d);
+  free(prepa_blocks->l_connec_poly2d);
+  free(prepa_blocks->face_vtx_idx);
+  free(prepa_blocks->face_vtx);
+  free(prepa_blocks->cell_face_idx);
+  free(prepa_blocks->cell_face);
+  free(prepa_blocks->numabs);
+  free(prepa_blocks);
+  prepa_blocks = NULL;
 
   return pmne;
 }

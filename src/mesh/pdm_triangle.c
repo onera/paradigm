@@ -795,7 +795,7 @@ PDM_triangle_ray_intersection
                                           destination,
                                           &_s,
                                           &_t);
-        if (s >= 0. && s <= 1. && _t >= 0.) {
+        if (_s >= 0. && _s <= 1. && _t >= 0.) {
           stat = PDM_TRIANGLE_INSIDE;
           iedge = i;
           s = _s;

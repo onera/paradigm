@@ -207,7 +207,8 @@ _build_octree_seq_leaves
 {
   int i, j, k, _n_nodes, _n_points, tmp_size;
 
-  int count[8], idx[9], node_id[8];
+  int count[8], node_id[8];
+  int idx[9] = {0};
   double mid[3], sub_extents[6];
 
   _l_nodes_t *nodes = octree->nodes;
