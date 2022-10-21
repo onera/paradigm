@@ -26,6 +26,7 @@
 #include "pdm_distrib.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_reader_stl.h"
 
 #include "pdm_vtk.h"
 
@@ -460,9 +461,9 @@ _read_surface_mesh
 
   free(dface_vtx_coord);
 
-  char outfilename[999];
-  sprintf(outfilename, "debug_stl_dvtx_coord_%i.vtk", i_rank);
-  int dn_vtx = _distrib_vtx[i_rank+1] - _distrib_vtx[i_rank];
+  // char outfilename[999];
+  // sprintf(outfilename, "debug_stl_dvtx_coord_%i.vtk", i_rank);
+  // int dn_vtx = _distrib_vtx[i_rank+1] - _distrib_vtx[i_rank];
   // PDM_vtk_write_point_cloud(outfilename,
   //                           dn_vtx,
   //                           _dvtx_coord,
@@ -644,10 +645,16 @@ int main(int argc, char *argv[])
              &post,
      (int *) &part_method);
 
-  if(filename == NULL) {
-    PDM_MPI_Finalize ();
-    return 0;
+  // if(filename == NULL) {
+  //   PDM_MPI_Finalize ();
+  //   return 0;
+  // }
+  if (filename == NULL) {
+    filename = (char *) "meshes/sphere.stl";
+    // printf("No file specified -> exit \n");
+    // return 0;
   }
+
   double radius         = length;//2*length;
 
   /*
@@ -679,36 +686,38 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int         *dsurf_face_vtx_idx = NULL;
-  PDM_g_num_t *dsurf_face_vtx     = NULL;
-  double      *dsurf_vtx_coord    = NULL;
-  PDM_g_num_t *surf_distrib_vtx   = NULL;
-  PDM_g_num_t *surf_distrib_face  = NULL;
+  // int         *dsurf_face_vtx_idx = NULL;
+  // PDM_g_num_t *dsurf_face_vtx     = NULL;
+  // double      *dsurf_vtx_coord    = NULL;
+  // PDM_g_num_t *surf_distrib_vtx   = NULL;
+  // PDM_g_num_t *surf_distrib_face  = NULL;
 
-  _read_surface_mesh(comm,
-                     filename,
-                     &dsurf_face_vtx_idx,
-                     &dsurf_face_vtx,
-                     &dsurf_vtx_coord,
-                     &surf_distrib_vtx,
-                     &surf_distrib_face);
+  // _read_surface_mesh(comm,
+  //                    filename,
+  //                    &dsurf_face_vtx_idx,
+  //                    &dsurf_face_vtx,
+  //                    &dsurf_vtx_coord,
+  //                    &surf_distrib_vtx,
+  //                    &surf_distrib_face);
 
-  // free(dsurf_face_vtx_idx); // Unused
-  PDM_g_num_t  nsurf_g_vtx  = surf_distrib_vtx [n_rank];
-  // PDM_g_num_t  nsurf_g_face = surf_distrib_face[n_rank];
+  // // free(dsurf_face_vtx_idx); // Unused
+  // PDM_g_num_t  nsurf_g_vtx  = surf_distrib_vtx [n_rank];
+  // // PDM_g_num_t  nsurf_g_face = surf_distrib_face[n_rank];
 
-  if (i_rank == 0) {
-    printf("-- Done \n");
-    fflush(stdout);
-  }
+  // if (i_rank == 0) {
+  //   printf("-- Done \n");
+  //   fflush(stdout);
+  // }
 
-  log_trace("nsurf_g_vtx = %i \n", nsurf_g_vtx);
+  // log_trace("nsurf_g_vtx = %i \n", nsurf_g_vtx);
 
-  PDM_dmesh_nodal_t* dmn = _create_dmesh_nodal(comm,
-                                               surf_distrib_vtx,
-                                               surf_distrib_face,
-                                               dsurf_vtx_coord,
-                                               dsurf_face_vtx);
+  // PDM_dmesh_nodal_t* dmn = _create_dmesh_nodal(comm,
+  //                                              surf_distrib_vtx,
+  //                                              surf_distrib_face,
+  //                                              dsurf_vtx_coord,
+  //                                              dsurf_face_vtx);
+  PDM_dmesh_nodal_t* dmn = PDM_reader_stl_dmesh_nodal(comm,
+                                                      filename);
 
   PDM_multipart_t       *mpart_surf = NULL;
   _split_surface_mesh(comm,
@@ -873,8 +882,8 @@ int main(int argc, char *argv[])
 
   // free(dsurf_face_vtx);
   // free(dsurf_vtx_coord);
-  free(surf_distrib_vtx);
-  free(surf_distrib_face);
+  // free(surf_distrib_vtx);
+  // free(surf_distrib_face);
 
   PDM_DMesh_nodal_free(dmn);
 
