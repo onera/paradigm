@@ -821,6 +821,8 @@ int main(int argc, char *argv[])
 
   PDM_dist_cloud_surf_compute_optim(ics);
 
+  PDM_dist_cloud_surf_dump_times(ics);
+
   double      *distance = NULL;
   double      *projected = NULL;
   PDM_g_num_t *closest_elt_gnum = NULL;

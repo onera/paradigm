@@ -1289,12 +1289,9 @@ PDM_dist_cloud_surf_compute_optim
   dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
   PDM_timer_resume(dist->timer);
 
-
-
-  const double tolerance = 1e-4;
-  // const int depth_max = 35;
-  const int depth_max = 31;
-  const int points_in_leaf_max = 4;
+  const double tolerance          = 1e-4;
+  const int    depth_max          = 31;
+  const int    points_in_leaf_max = 4;
 
   int n_part_mesh = 0;
   if (mesh_nodal != NULL) {
@@ -1587,15 +1584,6 @@ PDM_dist_cloud_surf_compute_optim
     /*
      * Find elements closer than closest_vertices_dist2 distance
      */
-
-    /*
-     * PDM_dbbtree_closest_upper_bound_dist_boxes_get a passer en elemt + poids (entier) + init_location
-     * part_to_block pour equilibrer les boites + hilbert
-     * Extract part sur les elemts :
-     *   - On transfert les connectivités
-     *   - Puis on fait un dconnectivity_to_pconnectivty sur le delmt_pts -> pelemt_pts
-     */
-
     int          n_extract_boxes = 0;
     PDM_g_num_t *box_gnum          = NULL;
     int         *box_init_location = NULL;
@@ -1603,6 +1591,7 @@ PDM_dist_cloud_surf_compute_optim
     PDM_g_num_t *dbox_pts_g_num    = NULL;
     double      *dbox_pts_coord    = NULL;
 
+    // printf("PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get ... \n");
     PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get (dbbt,
                                                                n_pts_rank,
                                                                pts_rank,
@@ -1616,16 +1605,17 @@ PDM_dist_cloud_surf_compute_optim
                                                                &dbox_pts_coord);
     free(pts_rank);
     free(pts_g_num_rank);
+    // printf("PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get END \n");
 
-    // if (1) {
-    //   PDM_log_trace_array_long(box_gnum,
-    //                            n_extract_boxes,
-    //                            "box_gnum :");
-    //   PDM_log_trace_connectivity_long(dbox_pts_idx,
-    //                                   dbox_pts_g_num,
-    //                                   n_extract_boxes,
-    //                                   "dbox_pts_g_num : ");
-    // }
+    if (0 == 1) {
+      PDM_log_trace_array_long(box_gnum,
+                               n_extract_boxes,
+                               "box_gnum :");
+      PDM_log_trace_connectivity_long(dbox_pts_idx,
+                                      dbox_pts_g_num,
+                                      n_extract_boxes,
+                                      "dbox_pts_g_num : ");
+    }
 
     free (closest_vertices_dist2);
 
@@ -1644,28 +1634,21 @@ PDM_dist_cloud_surf_compute_optim
     e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
 
     dist->times_elapsed[CANDIDATE_SELECTION] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[CANDIDATE_SELECTION]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[CANDIDATE_SELECTION]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[CANDIDATE_SELECTION]   += e_t_cpu_s - b_t_cpu_s;
+    dist->times_cpu    [CANDIDATE_SELECTION] += e_t_cpu     - b_t_cpu;
+    dist->times_cpu_u  [CANDIDATE_SELECTION] += e_t_cpu_u   - b_t_cpu_u;
+    dist->times_cpu_s  [CANDIDATE_SELECTION] += e_t_cpu_s   - b_t_cpu_s;
 
-    PDM_timer_resume(dist->timer);
-
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(dist->timer);
 
     /*
-     * part_to_block geométrique sur les boxes
-     *   Moyen de recuperer leurs coordonnées ?
-     *   AVec le boc_l_num on extrait les extents + les init_location
-     *   Initialize pdm_extract avec le delemt_init_location
+     * Setup almost partition for elementary operation
+     *    - Make pts as partition
+     *    - Extract part on boxes
      */
-    // On post-trait pour avoir box_pts en local
-    // pts_dist = HUGE_VAL puis on prends le MIN
-
     PDM_g_num_t *pts_ln_to_gn = dbox_pts_g_num;
     int* unique_order = malloc(dbox_pts_idx[n_extract_boxes] * sizeof(int));
     int n_extract_pts = PDM_inplace_unique_long2(pts_ln_to_gn,
@@ -1753,6 +1736,7 @@ PDM_dist_cloud_surf_compute_optim
     }
 
     PDM_extract_part_compute(extrp);
+    free(box_init_location);
 
     int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                        0,
@@ -1805,12 +1789,21 @@ PDM_dist_cloud_surf_compute_optim
     }
 
     PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
 
+    dist->times_elapsed[LOAD_BALANCING_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu    [LOAD_BALANCING_ELEM_DIST] += e_t_cpu     - b_t_cpu;
+    dist->times_cpu_u  [LOAD_BALANCING_ELEM_DIST] += e_t_cpu_u   - b_t_cpu_u;
+    dist->times_cpu_s  [LOAD_BALANCING_ELEM_DIST] += e_t_cpu_s   - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(dist->timer);
     // if (1) {
     //   PDM_log_trace_connectivity_int(dbox_pts_idx,
     //                                  box_pts,
@@ -1929,40 +1922,6 @@ PDM_dist_cloud_surf_compute_optim
           }
         } // End of loop on points
       }
-
-
-      // if(n_elmt_vtx == 4) {
-
-
-      //   for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
-      //     int i_pts = box_pts[idx_pts]-1;
-      //     double lproj[3];
-      //     double ldist;
-      //     PDM_polygon_status_t status = PDM_polygon_evaluate_position (&pts_coords[3*i_pts],
-      //                                                                  n_elmt_vtx,
-      //                                                                  lvtx_coords,
-      //                                                                  lproj,
-      //                                                                  &ldist);
-
-      //     // if (status == PDM_POLYGON_DEGENERATED) {
-      //     //   for (int j = 0; j < block_elt_pts_n[ielt]; j++) {
-      //     //     _pts_dist2[j] = HUGE_VAL;
-      //     //   }
-      //     //   break;
-      //     // }
-      //     if(ldist < pts_dist2[i_pts]) {
-      //       pts_dist2       [i_pts]     = ldist;
-      //       pts_proj        [3*i_pts  ] = lproj[0];
-      //       pts_proj        [3*i_pts+1] = lproj[1];
-      //       pts_proj        [3*i_pts+2] = lproj[2];
-      //       pts_closest_face_g_num[i_pts] = box_gnum[i_elmt];
-      //     }
-      //   }
-
-      // } else {
-      //   abort();
-      // }
-
     }
     free(lvtx_coords);
     free(box_pts);
@@ -1972,9 +1931,24 @@ PDM_dist_cloud_surf_compute_optim
     PDM_extract_part_free(extrp);
 
     free(box_gnum         );
-    free(box_init_location);
     free(dbox_pts_idx     );
 
+    PDM_timer_hang_on(dist->timer);
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu    [COMPUTE_ELEM_DIST] += e_t_cpu     - b_t_cpu;
+    dist->times_cpu_u  [COMPUTE_ELEM_DIST] += e_t_cpu_u   - b_t_cpu_u;
+    dist->times_cpu_s  [COMPUTE_ELEM_DIST] += e_t_cpu_s   - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(dist->timer);
 
     /*
      *  Pass in block frame for points to select closest element
@@ -2003,6 +1977,7 @@ PDM_dist_cloud_surf_compute_optim
                                                         1,
                                                         dist->comm);
     free(part_weight);
+    free(pts_ln_to_gn);
 
     int    *block_pts_elt_n     = NULL;
     double *block_pts_elt_dist2 = NULL;
@@ -2073,38 +2048,43 @@ PDM_dist_cloud_surf_compute_optim
                                                                           pt_cloud->n_part,
                                                                           dist->comm);
 
+    PDM_part_to_block_free(ptb);
+    for (int i = 0; i < n_part; i++) {
+      int n_pts = pt_cloud->n_points[i];
+      pt_cloud->dist[i] = malloc (sizeof(double) * n_pts);
+      pt_cloud->proj[i] = malloc (sizeof(double) * n_pts * 3);
+      pt_cloud->closest_elt_gnum[i] = malloc (sizeof(PDM_g_num_t) * n_pts);
+    }
+
     int one = 1;
-    PDM_block_to_part_exch(btp,
-                           sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &one,
-                (void   *) block_pts_elt_dist2,
-                           NULL,
-                (void ***) &pt_cloud->dist);
+    PDM_block_to_part_exch_in_place(btp,
+                                    sizeof(double),
+                                    PDM_STRIDE_CST_INTERLACED,
+                                    &one,
+                         (void   *) block_pts_elt_dist2,
+                                    NULL,
+                          (void **) pt_cloud->dist);
     free(block_pts_elt_dist2);
 
-    PDM_block_to_part_exch(btp,
-                           sizeof(PDM_g_num_t),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &one,
-                (void   *) block_pts_elt_g_num,
-                           NULL,
-                (void ***) &pt_cloud->closest_elt_gnum);
+    PDM_block_to_part_exch_in_place(btp,
+                                    sizeof(PDM_g_num_t),
+                                    PDM_STRIDE_CST_INTERLACED,
+                                    &one,
+                         (void   *) block_pts_elt_g_num,
+                                    NULL,
+                         (void **)  pt_cloud->closest_elt_gnum);
     free(block_pts_elt_g_num);
 
-    PDM_block_to_part_exch(btp,
-                           3*sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &one,
-                (void   *) block_pts_elt_proj,
-                           NULL,
-                (void ***) &pt_cloud->proj);
+    PDM_block_to_part_exch_in_place(btp,
+                                    3 * sizeof(double),
+                                    PDM_STRIDE_CST_INTERLACED,
+                                    &one,
+                         (void   *) block_pts_elt_proj,
+                                    NULL,
+                         (void **)  pt_cloud->proj);
     free(block_pts_elt_proj);
 
-    PDM_part_to_block_free(ptb);
     PDM_block_to_part_free(btp);
-
-    free(pts_ln_to_gn);
 
 
     PDM_timer_hang_on(dist->timer);
@@ -2113,14 +2093,25 @@ PDM_dist_cloud_surf_compute_optim
     e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
     e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
 
-    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[COMPUTE_ELEM_DIST]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[COMPUTE_ELEM_DIST]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[COMPUTE_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
+    dist->times_elapsed[RESULT_TRANSMISSION] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu    [RESULT_TRANSMISSION] += e_t_cpu     - b_t_cpu;
+    dist->times_cpu_u  [RESULT_TRANSMISSION] += e_t_cpu_u   - b_t_cpu_u;
+    dist->times_cpu_s  [RESULT_TRANSMISSION] += e_t_cpu_s   - b_t_cpu_s;
 
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
     PDM_timer_resume(dist->timer);
 
   }
+
+  PDM_timer_hang_on(dist->timer);
+  dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
+  dist->times_cpu[END]     = PDM_timer_cpu(dist->timer);
+  dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
+  dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
 
 }
 
@@ -2229,7 +2220,7 @@ PDM_dist_cloud_surf_dump_times
 )
 {
   double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
-  double t2 = dist->times_cpu[END] - dist->times_cpu[BEGIN];
+  double t2 = dist->times_cpu    [END] - dist->times_cpu    [BEGIN];
 
   double t1max;
   PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
@@ -2257,17 +2248,17 @@ PDM_dist_cloud_surf_dump_times
   if (rank == 0) {
 
 
-    PDM_printf( "distance timer : all (elapsed and cpu) : %12.5es %12.5es\n",
+    PDM_printf( "distance timer : all                  (elapsed and cpu) : %12.5es %12.5es\n",
                 t1max, t2max);
     PDM_printf( "distance timer : Upper bound distance (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[UPPER_BOUND_DIST],
                 t_cpu_max[UPPER_BOUND_DIST]);
-    PDM_printf( "distance timer : Bbtree building (elapsed and cpu) :"
+    PDM_printf( "distance timer : Bbtree building      (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BBTREE_CREATE],
                 t_cpu_max[BBTREE_CREATE]);
-    PDM_printf( "distance timer : Candidate selection (elapsed and cpu) :"
+    PDM_printf( "distance timer : Candidate selection  (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[CANDIDATE_SELECTION],
                 t_cpu_max[CANDIDATE_SELECTION]);
@@ -2277,11 +2268,11 @@ PDM_dist_cloud_surf_dump_times
                 t_elaps_max[LOAD_BALANCING_ELEM_DIST],
                 t_cpu_max[LOAD_BALANCING_ELEM_DIST]);
     PDM_printf( "distance timer : Computations of the distance"
-                " from the points to the candidates  (elapsed and cpu) :"
+                " from the points to the candidates    (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[COMPUTE_ELEM_DIST],
                 t_cpu_max[COMPUTE_ELEM_DIST]);
-    PDM_printf( "distance timer : Results exchange (elapsed and cpu) :"
+    PDM_printf( "distance timer : Results exchange     (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[RESULT_TRANSMISSION],
                 t_cpu_max[RESULT_TRANSMISSION]);

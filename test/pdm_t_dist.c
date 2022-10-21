@@ -671,6 +671,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  // PDM_dist_cloud_surf_compute (dist);
   PDM_dist_cloud_surf_compute_optim (dist);
 
   if (i_rank == 0) {
