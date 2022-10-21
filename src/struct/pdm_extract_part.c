@@ -472,7 +472,7 @@ _compute_dual_graph
     pelmt_to_arc     = extrp->pedge_vtx;
     arc_ln_to_gn     = extrp->vtx_ln_to_gn;
   } else {
-    abort();
+    PDM_error(__FILE__, __LINE__, 0,"PDM_extract_part_compute : cannot not use split_method !=  PDM_SPLIT_DUAL_WITH_HILBERT with dim=0 (use PDM_SPLIT_DUAL_WITH_HILBERT instead)\n");
   }
 
 
@@ -3221,12 +3221,37 @@ _extract_part_and_reequilibrate_from_target
     free(pedge_vtx_idx);
 
   } else { // dim == 0
+    assert(ptp_vtx == NULL);
 
+    /* Create the link */
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      part2_vtx_to_part1_vtx_idx[i_part] = (int * ) malloc( (extrp->n_target[i_part]+1) * sizeof(int));
+      part2_vtx_to_part1_vtx_idx[i_part][0] = 0;
+      for(int i = 0; i < extrp->n_target[i_part]; ++i) {
+        part2_vtx_to_part1_vtx_idx[i_part][i+1] = part2_vtx_to_part1_vtx_idx[i_part][i] + 3;
+      }
+    }
+
+    if (extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX] == NULL) {
+      extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX] = malloc(extrp->n_part_out * sizeof(int));
+      for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+        extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part] = extrp->n_target[i_part];
+      }
+    }
+
+    ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->target_gnum,
+                                                        extrp->n_target,
+                                                        extrp->n_part_out,
+                                                        extrp->n_vtx,
+                                                        extrp->n_part_in,
+                                                        (const int **) part2_vtx_to_part1_vtx_idx,
+                                                        NULL,
+                                                        (const int **) entity_target_location,
+                                                        extrp->comm);
   }
 
 
   if(have_init_location == 0) {
-
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
       free(entity_target_location[i_part]);
     }
@@ -3236,20 +3261,22 @@ _extract_part_and_reequilibrate_from_target
   /*
    * Vtx only
    */
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
-    part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_vtx);;
-  }
+  if(extrp->dim != 0) {
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      int n_vtx = extrp->pextract_n_entity[PDM_MESH_ENTITY_VERTEX][i_part];
+      part2_vtx_to_part1_vtx_idx[i_part] =  PDM_array_new_idx_from_const_stride_int(3, n_vtx);;
+    }
 
-  ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
-                                                      (const int          *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
-                                                      extrp->n_part_out,
-                                                      extrp->n_vtx,
-                                                      extrp->n_part_in,
-                                                      (const int **) part2_vtx_to_part1_vtx_idx,
-                                                      NULL,
-                                                      (const int **) pextract_vtx_to_vtx_location,
-                                                      extrp->comm);
+    ptp_vtx = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VERTEX],
+                                                        (const int          *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_VERTEX],
+                                                        extrp->n_part_out,
+                                                        extrp->n_vtx,
+                                                        extrp->n_part_in,
+                                                        (const int **) part2_vtx_to_part1_vtx_idx,
+                                                        NULL,
+                                                        (const int **) pextract_vtx_to_vtx_location,
+                                                        extrp->comm);
+  }
   extrp->ptp_entity[PDM_MESH_ENTITY_VERTEX] = ptp_vtx;
   int           exch_request = -1;
   PDM_part_to_part_reverse_iexch(ptp_vtx,
@@ -3272,10 +3299,12 @@ _extract_part_and_reequilibrate_from_target
   /*
    *
    */
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    free(pextract_vtx_to_vtx_location[i_part]);
+  if(extrp->dim != 0) {
+    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+      free(pextract_vtx_to_vtx_location[i_part]);
+    }
+    free(pextract_vtx_to_vtx_location);
   }
-  free(pextract_vtx_to_vtx_location);
 
   if(pextract_face_to_face_location != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -3388,7 +3417,7 @@ _extract_part_and_reequilibrate
                     &entity_center);
 
   } else {
-    abort();
+    entity_center = extrp->pvtx_coord;
   }
 
   int         **weight              = malloc(sizeof(int         *) * extrp->n_part_in);
@@ -3420,11 +3449,15 @@ _extract_part_and_reequilibrate
 
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
     free(weight       [i_part]);
-    free(entity_center[i_part]);
+    if (extrp->dim != 0) {
+      free(entity_center[i_part]);
+    }
     free(extract_entity_gnum[i_part]);
   }
   free(weight       );
-  free(entity_center);
+  if (extrp->dim != 0) {
+    free(entity_center);
+  }
   free(extract_entity_gnum);
 
   int dn_equi = PDM_part_to_block_n_elt_block_get(ptb_equi);
