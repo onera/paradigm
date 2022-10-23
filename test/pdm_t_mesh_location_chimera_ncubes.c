@@ -1955,8 +1955,8 @@ int main(int argc, char *argv[])
   /*
    *  Source cube
    */
-  // int case_type = 0; // Random cube mesh
-  int case_type = 1; // Helice configuration
+  int case_type = 0; // Random cube mesh
+  // int case_type = 1; // Helice configuration
   int n_mesh = -1;
   // int n_mesh = 2;
   // int n_mesh = 5;
@@ -1964,6 +1964,7 @@ int main(int argc, char *argv[])
     n_mesh = 1 + 3*4;
   } else {
     n_mesh = 5;
+    n_mesh = 2;
   }
 
   int          **n_cell         = malloc(n_mesh * sizeof(int          *));
@@ -2458,6 +2459,9 @@ int main(int argc, char *argv[])
       for(int i_part = 0; i_part < n_part; ++i_part) {
         char filename[999];
         sprintf(filename, "chimeria_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);
+        log_trace("n_extract_chim_vtx [%i][%i] = %i \n", i_mesh, i_part, n_extract_chim_vtx [i_mesh][i_part]);
+        log_trace("n_extract_chim_face[%i][%i] = %i \n", i_mesh, i_part, n_extract_chim_face[i_mesh][i_part]);
+
         PDM_vtk_write_polydata(filename,
                                n_extract_chim_vtx          [i_mesh][i_part],
                                extract_chim_vtx_coord      [i_mesh][i_part],
@@ -2512,6 +2516,9 @@ int main(int argc, char *argv[])
                                         extract_center_coord   [i_cloud][i_part],
                                         extract_center_ln_to_gn[i_cloud][i_part]);
           } else {
+            log_trace("--- i_mesh = %i / i_cloud = %i \n", i_mesh, i_cloud);
+            log_trace("--- n_extract_chim_face[i_cloud][i_part] = %i \n", n_extract_chim_face[i_cloud][i_part]);
+            log_trace("--- n_extract_chim_vtx[i_cloud][i_part]  = %i \n", n_extract_chim_vtx [i_cloud][i_part]);
             PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
                                         i_cloud,
                                         i_part,
@@ -2854,7 +2861,7 @@ int main(int argc, char *argv[])
 
   } else { // interp_kind == 2
 
-    int n_data_send = 5; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate )
+    int n_data_send = 8; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate ) / center_coordinates
     double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
     double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
     int           **request_exch = malloc(n_mesh * sizeof(int      *));
@@ -2888,9 +2895,9 @@ int main(int argc, char *argv[])
             for (int j = _mesh_pts_idx[i]; j < _mesh_pts_idx[i+1]; j++) {
 
               // Do interpolation
-              double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
-              double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
-              double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
+              // double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
+              // double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
+              // double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
 
               double xc = cell_center[i_mesh][i_part][3*i  ];
               double yc = cell_center[i_mesh][i_part][3*i+1];
@@ -2903,6 +2910,9 @@ int main(int argc, char *argv[])
               _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
               _send_buffer[n_data_send*j+3] = _pts_dist[j];
               _send_buffer[n_data_send*j+4] = cell_nat[i_mesh][i_part][i];
+              _send_buffer[n_data_send*j+5] = xc;
+              _send_buffer[n_data_send*j+6] = yc;
+              _send_buffer[n_data_send*j+7] = zc;
 
             }
           }
@@ -2930,7 +2940,40 @@ int main(int argc, char *argv[])
 
     /*
      * Receive data
+     *   - Setup for all vtx extracted a field
      */
+    double ***extract_chim_vtx_src_field       = malloc(n_mesh * sizeof(double **));
+    double ***extract_chim_vtx_src_coords      = malloc(n_mesh * sizeof(double **));
+    double ***extract_chim_vtx_src_dist2       = malloc(n_mesh * sizeof(double **));
+    double ***extract_chim_vtx_src_vol         = malloc(n_mesh * sizeof(double **));
+    double ***extract_chim_vtx_src_interp_from = malloc(n_mesh * sizeof(double **));
+    int    ***extract_chim_vtx_src_find        = malloc(n_mesh * sizeof(int    **));
+
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      extract_chim_vtx_src_field      [i_mesh] = malloc(n_part * sizeof(double *));
+      extract_chim_vtx_src_coords     [i_mesh] = malloc(n_part * sizeof(double *));
+      extract_chim_vtx_src_dist2      [i_mesh] = malloc(n_part * sizeof(double *));
+      extract_chim_vtx_src_vol        [i_mesh] = malloc(n_part * sizeof(double *));
+      extract_chim_vtx_src_interp_from[i_mesh] = malloc(n_part * sizeof(double *));
+      extract_chim_vtx_src_find       [i_mesh] = malloc(n_part * sizeof(int    *));
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        extract_chim_vtx_src_field      [i_mesh][i_part] = malloc(    n_extract_chim_vtx[i_mesh][i_part] * sizeof(double));
+        extract_chim_vtx_src_coords     [i_mesh][i_part] = malloc(3 * n_extract_chim_vtx[i_mesh][i_part] * sizeof(double));
+
+        for(int i_vtx = 0; i_vtx < n_extract_chim_vtx[i_mesh][i_part]; ++i_vtx) {
+          extract_chim_vtx_src_coords     [i_mesh][i_part][3*i_vtx  ] = 0.;
+          extract_chim_vtx_src_coords     [i_mesh][i_part][3*i_vtx+1] = 0.;
+          extract_chim_vtx_src_coords     [i_mesh][i_part][3*i_vtx+2] = 0.;
+          extract_chim_vtx_src_vol        [i_mesh][i_part][i_vtx    ] = DBL_MAX ;
+        }
+
+        extract_chim_vtx_src_dist2      [i_mesh][i_part] = malloc(    n_extract_chim_vtx[i_mesh][i_part] * sizeof(double));
+        extract_chim_vtx_src_vol        [i_mesh][i_part] = malloc(    n_extract_chim_vtx[i_mesh][i_part] * sizeof(double));
+        extract_chim_vtx_src_interp_from[i_mesh][i_part] = malloc(    n_extract_chim_vtx[i_mesh][i_part] * sizeof(double));
+        extract_chim_vtx_src_find       [i_mesh][i_part] = PDM_array_zeros_int(n_extract_chim_vtx[i_mesh][i_part]);
+      }
+    }
+
     PDM_MPI_Barrier(comm);
     t1 = PDM_MPI_Wtime();
     for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
@@ -2939,6 +2982,7 @@ int main(int argc, char *argv[])
         // We can also do iexch_test and use the first request
         PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
 
+        log_trace("--- i_mesh = %i / i_cloud = %i \n", i_mesh, i_cloud);
         /*
          * Post-treatment
          */
@@ -2952,15 +2996,17 @@ int main(int argc, char *argv[])
 
         for(int i_part = 0; i_part < n_part; ++i_part) {
 
-          // int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
-
           double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
+          double *_extract_chim_vtx_src_field       = extract_chim_vtx_src_field      [i_cloud][i_part];
+          double *_extract_chim_vtx_src_coords      = extract_chim_vtx_src_coords     [i_cloud][i_part];
+          double *_extract_chim_vtx_src_dist2       = extract_chim_vtx_src_dist2      [i_cloud][i_part];
+          double *_extract_chim_vtx_src_vol         = extract_chim_vtx_src_vol        [i_cloud][i_part];
+          double *_extract_chim_vtx_src_interp_from = extract_chim_vtx_src_interp_from[i_cloud][i_part];
+          int    *_extract_chim_vtx_src_find        = extract_chim_vtx_src_find       [i_cloud][i_part];
 
-          // CAUTION HERE : We fill the cloud !!!!
-          double *_field           = field           [i_cloud][i_part];
-          double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
-          double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
-          // double *_cell_nat        = cell_nat        [i_cloud][i_part];
+          log_trace("\t n_ref_tgt[%i] = %i \n", i_part, n_ref_tgt[i_part]);
+
+          // PDM_log_trace_array_long(ref_tgt[i_part], n_ref_tgt[i_part], "ref_tgt : ");
 
           for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
             int i_tgt = ref_tgt[i_part][i]-1;
@@ -2972,19 +3018,150 @@ int main(int argc, char *argv[])
               // printf("dist = %12.5e | vol = %12.5e \n", dist, vol);
 
               // On doit pouvoir gerer l'extrapolation également comme pour la condition du volume
-              if(lcell_nat < 0 && ldist < 0 && lvol < _blk_interp_vol[i_tgt]) {
-                _field          [i_tgt] = _recv_buffer[n_data_send*j  ];
-                // printf("i_tgt = %i | fld = %12.5e | interp_from = %12.5e \n", i_tgt, _recv_buffer[n_data_send*j  ], _recv_buffer[n_data_send*j+1]);
-                _blk_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
-                _blk_interp_vol [i_tgt] = PDM_MIN(_blk_interp_vol [i_tgt], lvol);
+              if(lcell_nat < 0 && ldist < 0 && lvol < _extract_chim_vtx_src_vol[i_tgt]) {
+
+                _extract_chim_vtx_src_field [i_tgt] = _recv_buffer[n_data_send*j  ];
+
+                _extract_chim_vtx_src_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
+                _extract_chim_vtx_src_vol        [i_tgt] = PDM_MIN(_extract_chim_vtx_src_vol[i_tgt], lvol);
+
+                _extract_chim_vtx_src_dist2 [i_tgt] = _recv_buffer[n_data_send*j+3];
+
+                _extract_chim_vtx_src_coords[3*i_tgt  ] = _recv_buffer[n_data_send*j+5  ];
+                _extract_chim_vtx_src_coords[3*i_tgt+1] = _recv_buffer[n_data_send*j+6  ];
+                _extract_chim_vtx_src_coords[3*i_tgt+2] = _recv_buffer[n_data_send*j+7  ];
+
+                _extract_chim_vtx_src_find  [i_tgt] = 1;
               }
             }
           }
         }
       }
     }
+
+    /*
+     * Post-traitement
+     */
+    double ***inv_dist_weight_coords = malloc(n_mesh * sizeof(double **));
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+      inv_dist_weight_coords[i_mesh] = malloc(n_part * sizeof(double *));
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+
+        // int    *_extract_face_lnum    = extract_chim_face_lnum   [i_mesh][i_part];
+        int    *_extract_face_vtx_idx = extract_chim_face_vtx_idx[i_mesh][i_part];
+        int    *_extract_face_vtx     = extract_chim_face_vtx    [i_mesh][i_part];
+        double *_extract_vtx_coord    = extract_chim_vtx_coord   [i_mesh][i_part];
+
+        double *_extract_chim_vtx_src_field       = extract_chim_vtx_src_field      [i_mesh][i_part];
+        double *_extract_chim_vtx_src_coords      = extract_chim_vtx_src_coords     [i_mesh][i_part];
+        double *_extract_chim_vtx_src_dist2       = extract_chim_vtx_src_dist2      [i_mesh][i_part];
+        double *_extract_chim_vtx_src_vol         = extract_chim_vtx_src_vol        [i_mesh][i_part];
+        double *_extract_chim_vtx_src_interp_from = extract_chim_vtx_src_interp_from[i_mesh][i_part];
+        int    *_extract_chim_vtx_src_find        = extract_chim_vtx_src_find       [i_mesh][i_part];
+
+        int ln_extract_face = n_extract_chim_face[i_mesh][i_part];
+
+        inv_dist_weight_coords[i_mesh][i_part] = malloc(3 * ln_extract_face * sizeof(double));
+        double* _inv_dist_weight_coords = inv_dist_weight_coords[i_mesh][i_part];
+
+        for(int i_face = 0; i_face < ln_extract_face; ++i_face) {
+
+          double lface_center[3] = {0};
+          int    n_vtx_in_face = _extract_face_vtx_idx[i_face+1] - _extract_face_vtx_idx[i_face];
+          for(int idx_vtx = _extract_face_vtx_idx[i_face]; idx_vtx < _extract_face_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _extract_face_vtx[idx_vtx]-1;
+
+            lface_center[0] += _extract_vtx_coord[3*i_vtx  ];
+            lface_center[1] += _extract_vtx_coord[3*i_vtx+1];
+            lface_center[2] += _extract_vtx_coord[3*i_vtx+2];
+
+          }
+          lface_center[0] /= n_vtx_in_face;
+          lface_center[1] /= n_vtx_in_face;
+          lface_center[2] /= n_vtx_in_face;
+
+          /* Compute weight */
+          double tot_dist = 0;
+          for(int idx_vtx = _extract_face_vtx_idx[i_face]; idx_vtx < _extract_face_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _extract_face_vtx[idx_vtx]-1;
+            double dx = lface_center[0] - _extract_chim_vtx_src_coords[3*i_vtx  ];
+            double dy = lface_center[1] - _extract_chim_vtx_src_coords[3*i_vtx+1];
+            double dz = lface_center[2] - _extract_chim_vtx_src_coords[3*i_vtx+2];
+            double dist = sqrt(dx * dx + dy * dy + dz * dz);
+            tot_dist += 1./dist;
+          }
+
+          /* Interpolate coordinate AND field */
+          _inv_dist_weight_coords[3*i_face  ] = 0;
+          _inv_dist_weight_coords[3*i_face+1] = 0;
+          _inv_dist_weight_coords[3*i_face+2] = 0;
+          for(int idx_vtx = _extract_face_vtx_idx[i_face]; idx_vtx < _extract_face_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _extract_face_vtx[idx_vtx]-1;
+
+            double pts_x = _extract_chim_vtx_src_coords[3*i_vtx  ];
+            double pts_y = _extract_chim_vtx_src_coords[3*i_vtx+1];
+            double pts_z = _extract_chim_vtx_src_coords[3*i_vtx+2];
+
+            double dx = lface_center[0] - pts_x;
+            double dy = lface_center[1] - pts_y;
+            double dz = lface_center[2] - pts_z;
+            double dist = sqrt(dx * dx + dy * dy + dz * dz);
+
+            // double fld   = _extract_chim_vtx_src_field [i_vtx];
+
+            double inv_dist = 1./dist;
+
+            // _inv_dist_weight_coords[3*i_face  ] += inv_dist * pts_x;
+            // _inv_dist_weight_coords[3*i_face+1] += inv_dist * pts_y;
+            // _inv_dist_weight_coords[3*i_face+2] += inv_dist * pts_z;
+
+            _inv_dist_weight_coords[3*i_face  ] = pts_x;
+            _inv_dist_weight_coords[3*i_face+1] = pts_y;
+            _inv_dist_weight_coords[3*i_face+2] = pts_z;
+
+          }
+
+          // _inv_dist_weight_coords[3*i_face  ] /= tot_dist;
+          // _inv_dist_weight_coords[3*i_face+1] /= tot_dist;
+          // _inv_dist_weight_coords[3*i_face+2] /= tot_dist;
+
+          // _inv_dist_weight_coords[3*i_face  ] = lface_center[0];
+          // _inv_dist_weight_coords[3*i_face+1] = lface_center[1];
+          // _inv_dist_weight_coords[3*i_face+2] = lface_center[2];
+
+        } /* End i_face */
+
+
+        if(1 == 1) {
+          char filename[999];
+          sprintf(filename, "out_inv_dist_weight_%i_%i_%i.vtk", i_part, i_mesh, i_rank);
+          PDM_vtk_write_point_cloud(filename,
+                                    ln_extract_face,
+                                    _inv_dist_weight_coords,
+                                    NULL,
+                                    NULL); // TODO : Export find
+        }
+
+
+
+      } /* End i_part */
+    } /* End i_mesh */
+
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        free(inv_dist_weight_coords[i_mesh][i_part]);
+      }
+      free(inv_dist_weight_coords[i_mesh]);
+    }
+    free(inv_dist_weight_coords);
+
+
+
+
     t2 = PDM_MPI_Wtime();
     delta_t[5] = t2 - t1;
+
 
     /*
      * Cleaning
@@ -3008,6 +3185,30 @@ int main(int argc, char *argv[])
     free(recv_buffer);
     free(request_exch);
 
+
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        free(extract_chim_vtx_src_field      [i_mesh][i_part]);
+        free(extract_chim_vtx_src_coords     [i_mesh][i_part]);
+        free(extract_chim_vtx_src_dist2      [i_mesh][i_part]);
+        free(extract_chim_vtx_src_vol        [i_mesh][i_part]);
+        free(extract_chim_vtx_src_interp_from[i_mesh][i_part]);
+        free(extract_chim_vtx_src_find       [i_mesh][i_part]);
+      }
+
+      free(extract_chim_vtx_src_field      [i_mesh]);
+      free(extract_chim_vtx_src_coords     [i_mesh]);
+      free(extract_chim_vtx_src_dist2      [i_mesh]);
+      free(extract_chim_vtx_src_vol        [i_mesh]);
+      free(extract_chim_vtx_src_interp_from[i_mesh]);
+      free(extract_chim_vtx_src_find       [i_mesh]);
+    }
+    free(extract_chim_vtx_src_field      );
+    free(extract_chim_vtx_src_coords     );
+    free(extract_chim_vtx_src_dist2      );
+    free(extract_chim_vtx_src_vol        );
+    free(extract_chim_vtx_src_interp_from);
+    free(extract_chim_vtx_src_find       );
 
   }
 
