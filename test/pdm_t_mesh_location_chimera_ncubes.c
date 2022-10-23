@@ -1455,6 +1455,7 @@ _prepare_target_cloud_with_raytraicing
   int           **face_group_idx,
   int           **face_group,
   double        **vtx_coord,
+  int           **elmt_cross_surf,
   int           **is_inside,
   int             depth,
   int             group_is_chim,
@@ -1496,19 +1497,26 @@ _prepare_target_cloud_with_raytraicing
                             extract_face_vtx);
     return;
   }
+
   /*
    * Extract cell with a given depth and also face center
    */
   *n_extract_vtx        = malloc(n_part * sizeof(int          ));
+  *extract_vtx_coord    = malloc(n_part * sizeof(double      *));
   *extract_vtx_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
 
   *n_extract_face        = malloc(n_part * sizeof(int          ));
   *extract_face_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  *extract_face_vtx_idx  = malloc(n_part * sizeof(int         *));
+  *extract_face_vtx      = malloc(n_part * sizeof(int         *));
 
-  int          *_n_extract_vtx          = *n_extract_vtx;
+  int          *_n_extract_vtx        = *n_extract_vtx;
   PDM_g_num_t **_extract_vtx_ln_to_gn = *extract_vtx_ln_to_gn;
+  double      **_extract_vtx_coord    = *extract_vtx_coord;
 
-  int          *_n_extract_face            = *n_extract_face;
+  int          *_n_extract_face        = *n_extract_face;
+  int         **_extract_face_vtx_idx  = *extract_face_vtx_idx;
+  int         **_extract_face_vtx      = *extract_face_vtx;
   PDM_g_num_t **_extract_face_ln_to_gn = *extract_face_ln_to_gn;
 
   /* Management of void */
@@ -1519,7 +1527,115 @@ _prepare_target_cloud_with_raytraicing
     _extract_face_ln_to_gn[i_part] = NULL;
   }
 
+  /*
+   * Hook all faces that have at least one cross inside
+   */
+  for (int i_part = 0; i_part < n_part; i_part++) {
 
+    int *face_tag = PDM_array_zeros_int(n_face[i_part]);
+    int *vtx_tag  = PDM_array_const_int(n_vtx [i_part], -1);
+    for(int i_cell = 0; i_cell < n_cell[i_part]; ++i_cell) {
+
+      if(elmt_cross_surf[i_part][i_cell] == 0) {
+        continue;
+      }
+
+      /* Donc la cellule est a chevel on cherche une face totalement interieur */
+      for(int idx_face = cell_face_idx[i_part][i_cell]; idx_face < cell_face_idx[i_part][i_cell+1]; ++idx_face) {
+
+        int i_face = PDM_ABS(cell_face[i_part][idx_face]) - 1;
+        if(face_tag[i_face] == 1) {
+          continue; // Deja extraite
+        }
+
+        int face_is_completely_inside = 1;
+        for(int idx_vtx = face_vtx_idx[i_part][i_face]; idx_vtx < face_vtx_idx[i_part][i_face+1]; ++idx_vtx) {
+          int i_vtx = face_vtx[i_part][idx_vtx]-1;
+          if(is_inside[i_part][i_vtx] == 0) {
+            face_is_completely_inside = 0;
+          }
+        }
+
+        if(face_is_completely_inside == 1) {
+          face_tag[i_face] = 1;
+          _n_extract_face[i_part]++;
+          _n_extract_vtx [i_part] += face_vtx_idx[i_part][i_face+1] - face_vtx_idx[i_part][i_face]; // Suralloc
+        }
+      } /* End face loop */
+    }
+
+    /*
+     * Extract
+     */
+    _extract_face_ln_to_gn[i_part] = malloc( _n_extract_face[i_part]    * sizeof(PDM_g_num_t));
+    _extract_face_vtx_idx [i_part] = malloc((_n_extract_face[i_part]+1) * sizeof(int        ));
+    _extract_face_vtx     [i_part] = malloc( _n_extract_vtx [i_part]    * sizeof(int        )); // Suralloc
+
+    _extract_vtx_ln_to_gn [i_part] = malloc(     _n_extract_vtx [i_part]    * sizeof(int        )); // Suralloc
+    _extract_vtx_coord    [i_part] = malloc( 3 * _n_extract_vtx [i_part]    * sizeof(double     )); // Suralloc
+
+    _extract_face_vtx_idx [i_part][0] = 0;
+    _n_extract_face[i_part] = 0;
+    _n_extract_vtx [i_part] = 0;
+    for(int i_face = 0; i_face < n_face[i_part]; ++i_face ) {
+      if(face_tag[i_face] == 0) {
+        continue;
+      }
+
+      _extract_face_vtx_idx [i_part][_n_extract_face[i_part]+1] = _extract_face_vtx_idx [i_part][_n_extract_face[i_part]];
+      for(int idx_vtx = face_vtx_idx[i_part][i_face]; idx_vtx < face_vtx_idx[i_part][i_face+1]; ++idx_vtx) {
+        int i_vtx = face_vtx[i_part][idx_vtx]-1;
+
+        if(vtx_tag[i_vtx] == -1) {
+          vtx_tag[i_vtx] = _n_extract_vtx[i_part]+1;
+
+          int idx_write = _extract_face_vtx_idx [i_part][_n_extract_face[i_part]+1]++;
+          _extract_vtx_ln_to_gn[i_part][_n_extract_vtx [i_part]] = vtx_ln_to_gn[i_part][i_vtx];
+          _extract_face_vtx[i_part][idx_write] = vtx_tag[i_vtx];
+
+          _extract_vtx_coord[i_part][3*_n_extract_vtx[i_part]  ] = vtx_coord[i_part][3*i_vtx  ];
+          _extract_vtx_coord[i_part][3*_n_extract_vtx[i_part]+1] = vtx_coord[i_part][3*i_vtx+1];
+          _extract_vtx_coord[i_part][3*_n_extract_vtx[i_part]+2] = vtx_coord[i_part][3*i_vtx+2];
+
+          _n_extract_vtx[i_part]++;
+        } else {
+          int idx_write = _extract_face_vtx_idx [i_part][_n_extract_face[i_part]+1]++;
+          _extract_face_vtx[i_part][idx_write] = vtx_tag[i_vtx];
+        }
+      }
+
+      _extract_face_ln_to_gn[i_part][_n_extract_face[i_part]] = face_ln_to_gn[i_part][i_face];
+      _n_extract_face[i_part]++;
+
+    }
+
+    int n_face_vtx = _extract_face_vtx_idx [i_part][_n_extract_face[i_part]];
+    _extract_face_vtx    [i_part] = realloc(_extract_face_vtx     [i_part],     n_face_vtx             * sizeof(int        ));
+    _extract_vtx_ln_to_gn[i_part] = realloc(_extract_vtx_ln_to_gn [i_part],     _n_extract_vtx[i_part] * sizeof(PDM_g_num_t));
+    _extract_vtx_coord   [i_part] = realloc(_extract_vtx_coord    [i_part], 3 * _n_extract_vtx[i_part] * sizeof(double     ));
+
+    free(face_tag);
+    free(vtx_tag );
+
+  }
+
+
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+
+  //   for(int i_face = 0; i_face < n_face[i_part]; ++i_face) {
+
+  //     int face_is_completely_inside = 0;
+  //     double face_is_inside = 0;
+  //     for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+  //       int i_vtx = face_vtx[idx_vtx]-1;
+
+  //       if(is_inside[i_part][i_vtx] == 0) {
+
+  //       }
+
+  //     }
+  //   }
+  // }
 
 
 
@@ -2168,6 +2284,9 @@ int main(int argc, char *argv[])
       for(int i = 0; i < n_cell[i_cloud][i_part]; ++i) {
         mask           [i_cloud][i_part][i] = 0.; // 0 -> pas masqué
         elmt_cross_surf[i_cloud][i_part][i] = 0.; // Pas d'interaction avec une surface
+      }
+
+      for(int i = 0; i < n_vtx[i_cloud][i_part]; ++i) {
         is_inside      [i_cloud][i_part][i] = 0;  // Pas d'interaction avec une surface
       }
     }
@@ -2296,8 +2415,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t ***extract_chim_face_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
   PDM_g_num_t ***extract_chim_vtx_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
   double      ***extract_chim_vtx_coord     = malloc(n_mesh * sizeof(double      **));
-  int         ***extract_face_vtx_idx       = malloc(n_mesh * sizeof(int         **));
-  int         ***extract_face_vtx           = malloc(n_mesh * sizeof(int         **));
+  int         ***extract_chim_face_vtx_idx  = malloc(n_mesh * sizeof(int         **));
+  int         ***extract_chim_face_vtx      = malloc(n_mesh * sizeof(int         **));
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
     int group_is_chim = 0;
@@ -2322,6 +2441,7 @@ int main(int argc, char *argv[])
                                            face_group_idx             [i_mesh],
                                            face_group                 [i_mesh],
                                            vtx_coord                  [i_mesh],
+                                           elmt_cross_surf            [i_mesh],
                                            is_inside                  [i_mesh],
                                            mask_depth,
                                            group_is_chim,
@@ -2330,8 +2450,26 @@ int main(int argc, char *argv[])
                                            &extract_chim_face_ln_to_gn[i_mesh],
                                            &extract_chim_vtx_ln_to_gn [i_mesh],
                                            &extract_chim_vtx_coord    [i_mesh],
-                                           &extract_face_vtx_idx      [i_mesh],
-                                           &extract_face_vtx          [i_mesh]);
+                                           &extract_chim_face_vtx_idx [i_mesh],
+                                           &extract_chim_face_vtx     [i_mesh]);
+
+
+    if(1 == 1) {
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        char filename[999];
+        sprintf(filename, "chimeria_faces_%i_%i_%i.vtk", i_mesh, i_part, i_rank);
+        PDM_vtk_write_polydata(filename,
+                               n_extract_chim_vtx          [i_mesh][i_part],
+                               extract_chim_vtx_coord      [i_mesh][i_part],
+                               extract_chim_vtx_ln_to_gn   [i_mesh][i_part],
+                               n_extract_chim_face         [i_mesh][i_part],
+                               extract_chim_face_vtx_idx   [i_mesh][i_part],
+                               extract_chim_face_vtx       [i_mesh][i_part],
+                               extract_chim_face_ln_to_gn  [i_mesh][i_part],
+                               NULL);
+      }
+    }
+
   }
 
 
@@ -2339,25 +2477,25 @@ int main(int argc, char *argv[])
     for(int i_part = 0; i_part < n_part; ++i_part) {
       free(extract_chim_face_ln_to_gn[i_mesh][i_part]);
       free(extract_chim_vtx_ln_to_gn [i_mesh][i_part]);
-      free(extract_face_bnd_coord    [i_mesh][i_part]);
-      free(extract_face_vtx_idx      [i_mesh][i_part]);
-      free(extract_face_vtx          [i_mesh][i_part]);
+      free(extract_chim_vtx_coord    [i_mesh][i_part]);
+      free(extract_chim_face_vtx_idx [i_mesh][i_part]);
+      free(extract_chim_face_vtx     [i_mesh][i_part]);
     }
     free(n_extract_chim_vtx        [i_mesh]);
     free(n_extract_chim_face       [i_mesh]);
     free(extract_chim_face_ln_to_gn[i_mesh]);
     free(extract_chim_vtx_ln_to_gn [i_mesh]);
-    free(extract_face_bnd_coord    [i_mesh]);
-    free(extract_face_vtx_idx      [i_mesh]);
-    free(extract_face_vtx          [i_mesh]);
+    free(extract_chim_vtx_coord    [i_mesh]);
+    free(extract_chim_face_vtx_idx [i_mesh]);
+    free(extract_chim_face_vtx     [i_mesh]);
   }
   free(n_extract_chim_vtx        );
   free(n_extract_chim_face       );
   free(extract_chim_face_ln_to_gn);
   free(extract_chim_vtx_ln_to_gn );
-  free(extract_face_bnd_coord    );
-  free(extract_face_vtx_idx      );
-  free(extract_face_vtx          );
+  free(extract_chim_vtx_coord    );
+  free(extract_chim_face_vtx_idx );
+  free(extract_chim_face_vtx     );
 
 
   /*
