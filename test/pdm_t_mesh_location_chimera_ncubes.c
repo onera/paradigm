@@ -36,6 +36,7 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_inside_cloud_surf.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -43,14 +44,6 @@
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-/*
- *
- * On a mesh_a et mesh_b et mesh_c
- *  Il faut être bijectif
- * 1/ mesh_a =
- *
- */
 
 
 /**
@@ -297,15 +290,6 @@ static void _rotate_by_angle (const int  n_pts,
                               double    *coord,
                               double     angle)
 {
-
-  // for (int i = 0; i < n_pts; i++) {
-  //   double x = coord[3*i];
-  //   double y = coord[3*i+1];
-  //   double z = coord[3*i+2];
-  //   double theta = z;
-  //   coord[3*i+1] = y * cos(theta);
-  //   coord[3*i+2] = z * sin(theta);
-  // }
   double Rx[3][3] = {{1.,          0,           0},
                      {0., cos(angle), -sin(angle)},
                      {0., sin(angle),  cos(angle)}};
@@ -1004,68 +988,6 @@ _cube_mesh
   PDM_dcube_nodal_gen_free(dcube);
 }
 
-
-// static void _export_point_cloud
-// (
-//  char         *filename,
-//  int           n_part,
-//  int          *n_pts,
-//  double      **coord,
-//  PDM_g_num_t **g_num,
-//  PDM_g_num_t **location
-//  )
-// {
-//   FILE *f = fopen(filename, "w");
-
-//   fprintf(f, "# vtk DataFile Version 2.0\npoints\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-
-//   int n_pts_t = 0;
-//   for (int i_part = 0; i_part < n_part; i_part++) {
-//     n_pts_t += n_pts[i_part];
-//   }
-
-//   fprintf(f, "POINTS %d double\n", n_pts_t);
-//   for (int i_part = 0; i_part < n_part; i_part++) {
-//     for (int i = 0; i < n_pts[i_part]; i++) {
-//       for (int j = 0; j < 3; j++) {
-//         fprintf(f, "%f ", coord[i_part][3*i + j]);
-//       }
-//       fprintf(f, "\n");
-//     }
-//   }
-
-//   fprintf(f, "CELLS %d %d\n", n_pts_t, 2*n_pts_t);
-//   for (int i = 0; i < n_pts_t; i++) {
-//     fprintf(f, "1 %d\n", i);
-//   }
-
-//   fprintf(f, "CELL_TYPES %d\n", n_pts_t);
-//   for (int i = 0; i < n_pts_t; i++) {
-//     fprintf(f, "1\n");
-//   }
-
-//   fprintf(f, "CELL_DATA %d\n", n_pts_t);
-//   fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
-//   for (int i_part = 0; i_part < n_part; i_part++) {
-//     for (int i = 0; i < n_pts[i_part]; i++) {
-//       fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i_part][i]);
-//     }
-//   }
-
-//   if (location != NULL) {
-//     fprintf(f, "FIELD FieldData 1\n");
-//     fprintf(f, "location 1 %d int\n", n_pts_t);
-//     for (int i_part = 0; i_part < n_part; i_part++) {
-//       for (int i = 0; i < n_pts[i_part]; i++) {
-//         fprintf(f, ""PDM_FMT_G_NUM"\n", location[i_part][i]);
-//       }
-//     }
-//   }
-
-//   fclose(f);
-// }
-
-
 /**
  *   Compute volume and center_cell
  */
@@ -1343,10 +1265,7 @@ _prepare_target_cloud
       assert(_n_extract_face[i_part] == face_group_idx[i_part][n_group]);
     }
   }
-
-
 }
-
 
 /**
  *
@@ -1505,6 +1424,105 @@ _prepare_external_faces
 
   PDM_gnum_free(gen_gnum_face);
   PDM_gnum_free(gen_gnum_vtx);
+
+}
+
+
+
+/**
+ *
+ *
+ *
+ */
+static
+void
+_prepare_target_cloud_with_raytraicing
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int             n_group,
+  int            *n_cell,
+  int            *n_face,
+  int            *n_vtx,
+  PDM_g_num_t   **cell_ln_to_gn,
+  PDM_g_num_t   **face_ln_to_gn,
+  PDM_g_num_t   **vtx_ln_to_gn,
+  PDM_g_num_t   **face_group_ln_to_gn,
+  int           **cell_face_idx,
+  int           **cell_face,
+  int           **face_vtx_idx,
+  int           **face_vtx,
+  int           **face_group_idx,
+  int           **face_group,
+  double        **vtx_coord,
+  int           **is_inside,
+  int             depth,
+  int             group_is_chim,
+  int           **n_extract_vtx,
+  int           **n_extract_face,
+  PDM_g_num_t  ***extract_face_ln_to_gn,
+  PDM_g_num_t  ***extract_vtx_ln_to_gn,
+  double       ***extract_vtx_coord,
+  int          ***extract_face_vtx_idx,
+  int          ***extract_face_vtx
+)
+{
+  /*
+   * Identify all faces that in group
+   *   On peut avoir des cas particulier ou un sommet des conditions overlap est dans un corps solide
+   *   A se moment la on ne peut pas interpoler
+   *   Il faut essayer de trouver l'intersection entre le volume et la surface du maillage qui recouvre
+   */
+  if(group_is_chim == 1) {
+    _prepare_external_faces(comm,
+                            n_part,
+                            n_group,
+                            n_face,
+                            n_vtx,
+                            face_ln_to_gn,
+                            vtx_ln_to_gn,
+                            face_group_ln_to_gn,
+                            face_vtx_idx,
+                            face_vtx,
+                            face_group_idx,
+                            face_group,
+                            vtx_coord,
+                            n_extract_face,
+                            n_extract_vtx,
+                            extract_face_ln_to_gn,
+                            extract_vtx_ln_to_gn,
+                            extract_vtx_coord,
+                            extract_face_vtx_idx,
+                            extract_face_vtx);
+    return;
+  }
+  /*
+   * Extract cell with a given depth and also face center
+   */
+  *n_extract_vtx        = malloc(n_part * sizeof(int          ));
+  *extract_vtx_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  *n_extract_face        = malloc(n_part * sizeof(int          ));
+  *extract_face_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+
+  int          *_n_extract_vtx          = *n_extract_vtx;
+  PDM_g_num_t **_extract_vtx_ln_to_gn = *extract_vtx_ln_to_gn;
+
+  int          *_n_extract_face            = *n_extract_face;
+  PDM_g_num_t **_extract_face_ln_to_gn = *extract_face_ln_to_gn;
+
+  /* Management of void */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    _n_extract_vtx        [i_part] = 0;
+    _n_extract_face       [i_part] = 0;
+    _extract_vtx_ln_to_gn [i_part] = NULL;
+    _extract_face_ln_to_gn[i_part] = NULL;
+  }
+
+
+
+
+
 
 }
 
@@ -1891,6 +1909,7 @@ int main(int argc, char *argv[])
   double ***cell_nat        = malloc(n_mesh * sizeof(double **));
   double ***mask            = malloc(n_mesh * sizeof(double **));
   int    ***elmt_cross_surf = malloc(n_mesh * sizeof(int    **));
+  int    ***is_inside       = malloc(n_mesh * sizeof(int    **));
 
   const int n_timer = 8;
   double cpu_time_max[n_timer];
@@ -2141,12 +2160,15 @@ int main(int argc, char *argv[])
   for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
     mask           [i_cloud] = malloc(n_part * sizeof(double *));
     elmt_cross_surf[i_cloud] = malloc(n_part * sizeof(int    *));
+    is_inside      [i_cloud] = malloc(n_part * sizeof(int    *));
     for(int i_part = 0; i_part < n_part; ++i_part) {
       mask           [i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(double));
-      elmt_cross_surf[i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(int));
+      elmt_cross_surf[i_cloud][i_part] = malloc(n_cell[i_cloud][i_part] * sizeof(int   ));
+      is_inside      [i_cloud][i_part] = malloc(n_vtx [i_cloud][i_part] * sizeof(int   ));
       for(int i = 0; i < n_cell[i_cloud][i_part]; ++i) {
         mask           [i_cloud][i_part][i] = 0.; // 0 -> pas masqué
         elmt_cross_surf[i_cloud][i_part][i] = 0.; // Pas d'interaction avec une surface
+        is_inside      [i_cloud][i_part][i] = 0;  // Pas d'interaction avec une surface
       }
     }
   }
@@ -2198,10 +2220,11 @@ int main(int argc, char *argv[])
     int mask_type = 1;
     for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
       for(int i_part = 0; i_part < n_part; ++i_part) {
-        int *is_inside = NULL;
-        PDM_inside_cloud_surf_get(ics[i_mesh], i_cloud, i_part, &is_inside);
+        int *lis_inside = NULL;
+        PDM_inside_cloud_surf_get(ics[i_mesh], i_cloud, i_part, &lis_inside);
+
         if(i_mesh ==  i_cloud) {
-          free(is_inside);
+          free(lis_inside);
           continue;
         }
 
@@ -2216,9 +2239,8 @@ int main(int argc, char *argv[])
             int i_face = PDM_ABS(cell_face[i_cloud][i_part][idx_face]) - 1;
             for(int idx_vtx = face_vtx_idx[i_cloud][i_part][i_face]; idx_vtx < face_vtx_idx[i_cloud][i_part][i_face+1]; ++idx_vtx) {
               int i_vtx = face_vtx[i_cloud][i_part][idx_vtx]-1;
-              // face_is_inside = PDM_MAX(face_is_inside, is_inside[i_vtx]);
-              face_is_inside = PDM_MAX(face_is_inside, is_inside[i_vtx]);
-              if(is_inside[i_vtx] == 0) {
+              face_is_inside = PDM_MAX(face_is_inside, lis_inside[i_vtx]);
+              if(lis_inside[i_vtx] == 0) {
                 cell_is_completely_inside = 0;
                 one_is_exterior = 1;
               } else {
@@ -2239,16 +2261,104 @@ int main(int argc, char *argv[])
 
         }
 
-        free(is_inside);
+        // Keep the more constraint
+        for(int i_vtx = 0; i_vtx < n_vtx[i_cloud][i_part]; ++i_vtx) {
+          is_inside[i_cloud][i_part][i_vtx] = PDM_MAX(is_inside[i_cloud][i_part][i_vtx], lis_inside[i_vtx]);
+        }
+
+        free(lis_inside);
       }
     }
-
-
     PDM_inside_cloud_surf_free(ics[i_mesh]);
   }
   free(ics);
   t2 = PDM_MPI_Wtime();
   delta_t[1] = t2 - t1;
+
+
+  /*
+   * Factorisation en plusieurs étapes puis
+   *   - Extraction des faces completement masqués/ou partitellement -> Voire test IBC
+   *   - On garde le maillage de surface
+   *   - Apelle de la localisation sur ce maillage de surface en gardant le lien avec la face connecté
+   *   - Pour chaque noeuds on recupère le champs pareil
+   *   - On echange pour chaque sommet les centres des cellules q'uon ramène.
+   *   - Affichage vtk en légende
+   *   - Préparation d'un green-gauss (Ou quasi-green) en composant les valeurs recupérés par les sommets.
+   *   - Calcul d'une valeur approché aux centres faces pour pondérations linéaire
+   *   - https://en.wikipedia.org/wiki/Inverse_distance_weighting
+   */
+
+  int mask_depth = 0;
+
+  int          **n_extract_chim_vtx         = malloc(n_mesh * sizeof(int          *));
+  int          **n_extract_chim_face        = malloc(n_mesh * sizeof(int          *));
+  PDM_g_num_t ***extract_chim_face_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  PDM_g_num_t ***extract_chim_vtx_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  double      ***extract_chim_vtx_coord     = malloc(n_mesh * sizeof(double      **));
+  int         ***extract_face_vtx_idx       = malloc(n_mesh * sizeof(int         **));
+  int         ***extract_face_vtx           = malloc(n_mesh * sizeof(int         **));
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+    int group_is_chim = 0;
+    if(i_mesh > 0) {
+      group_is_chim = 1;
+    }
+
+    _prepare_target_cloud_with_raytraicing(comm,
+                                           n_part,
+                                           n_group,
+                                           n_cell                     [i_mesh],
+                                           n_face                     [i_mesh],
+                                           n_vtx                      [i_mesh],
+                                           cell_ln_to_gn              [i_mesh],
+                                           face_ln_to_gn              [i_mesh],
+                                           vtx_ln_to_gn               [i_mesh],
+                                           group_ln_to_gn             [i_mesh],
+                                           cell_face_idx              [i_mesh],
+                                           cell_face                  [i_mesh],
+                                           face_vtx_idx               [i_mesh],
+                                           face_vtx                   [i_mesh],
+                                           face_group_idx             [i_mesh],
+                                           face_group                 [i_mesh],
+                                           vtx_coord                  [i_mesh],
+                                           is_inside                  [i_mesh],
+                                           mask_depth,
+                                           group_is_chim,
+                                           &n_extract_chim_vtx        [i_mesh],
+                                           &n_extract_chim_face       [i_mesh],
+                                           &extract_chim_face_ln_to_gn[i_mesh],
+                                           &extract_chim_vtx_ln_to_gn [i_mesh],
+                                           &extract_chim_vtx_coord    [i_mesh],
+                                           &extract_face_vtx_idx      [i_mesh],
+                                           &extract_face_vtx          [i_mesh]);
+  }
+
+
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(extract_chim_face_ln_to_gn[i_mesh][i_part]);
+      free(extract_chim_vtx_ln_to_gn [i_mesh][i_part]);
+      free(extract_face_bnd_coord    [i_mesh][i_part]);
+      free(extract_face_vtx_idx      [i_mesh][i_part]);
+      free(extract_face_vtx          [i_mesh][i_part]);
+    }
+    free(n_extract_chim_vtx        [i_mesh]);
+    free(n_extract_chim_face       [i_mesh]);
+    free(extract_chim_face_ln_to_gn[i_mesh]);
+    free(extract_chim_vtx_ln_to_gn [i_mesh]);
+    free(extract_face_bnd_coord    [i_mesh]);
+    free(extract_face_vtx_idx      [i_mesh]);
+    free(extract_face_vtx          [i_mesh]);
+  }
+  free(n_extract_chim_vtx        );
+  free(n_extract_chim_face       );
+  free(extract_chim_face_ln_to_gn);
+  free(extract_chim_vtx_ln_to_gn );
+  free(extract_face_bnd_coord    );
+  free(extract_face_vtx_idx      );
+  free(extract_face_vtx          );
+
 
   /*
    * Prepare localisation
@@ -2809,12 +2919,15 @@ int main(int argc, char *argv[])
     for(int i_part = 0; i_part < n_part; ++i_part) {
       free(mask           [i_cloud][i_part]);
       free(elmt_cross_surf[i_cloud][i_part]);
+      free(is_inside      [i_cloud][i_part]);
     }
     free(mask           [i_cloud]);
     free(elmt_cross_surf[i_cloud]);
+    free(is_inside      [i_cloud]);
   }
   free(mask);
   free(elmt_cross_surf);
+  free(is_inside);
 
   free(n_cell        );
   free(n_face        );
