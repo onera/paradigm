@@ -1291,6 +1291,7 @@ _prepare_external_faces
   double       **vtx_coord,
   int          **n_external_face,
   int          **n_external_vtx,
+  int         ***extract_face_lnum,
   PDM_g_num_t ***external_face_ln_to_gn,
   PDM_g_num_t ***external_vtx_ln_to_gn,
   double      ***external_vtx_coord,
@@ -1305,6 +1306,7 @@ _prepare_external_faces
   *n_external_vtx         = malloc(n_part * sizeof(int          ));
   *external_face_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   *external_vtx_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
+  *extract_face_lnum      = malloc(n_part * sizeof(int         *));
 
   *external_vtx_coord    = malloc(n_part * sizeof(double      *));
   *external_face_vtx_idx = malloc(n_part * sizeof(int         *));
@@ -1318,6 +1320,7 @@ _prepare_external_faces
   double      **_external_vtx_coord    = *external_vtx_coord;
   int         **_external_face_vtx_idx = *external_face_vtx_idx;
   int         **_external_face_vtx     = *external_face_vtx;
+  int         **_extract_face_lnum     = *extract_face_lnum;
 
   /* Management of void */
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1328,6 +1331,7 @@ _prepare_external_faces
     _external_vtx_coord    [i_part] = NULL;
     _external_face_vtx_idx [i_part] = NULL;
     _external_face_vtx     [i_part] = NULL;
+    _extract_face_lnum     [i_part] = NULL;
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1353,7 +1357,8 @@ _prepare_external_faces
 
     _external_face_vtx[i_part] = malloc( (_external_face_vtx_idx[i_part][_n_external_face[i_part]]) * sizeof(int));
 
-    _external_face_ln_to_gn[i_part] = malloc(_n_external_face[i_part] * sizeof(PDM_g_num_t));;
+    _external_face_ln_to_gn[i_part] = malloc(_n_external_face[i_part] * sizeof(PDM_g_num_t));
+    _extract_face_lnum     [i_part] = malloc(_n_external_face[i_part] * sizeof(int        ));
 
     int max_size = _external_face_vtx_idx[i_part][_n_external_face[i_part]];
     _external_vtx_ln_to_gn [i_part] = malloc(    max_size * sizeof(PDM_g_num_t));;
@@ -1390,6 +1395,7 @@ _prepare_external_faces
         }
 
         _external_face_ln_to_gn[i_part][_n_external_face[i_part]] = face_ln_to_gn[i_part][i_face];
+        _extract_face_lnum     [i_part][_n_external_face[i_part]] = i_face;
         _n_external_face[i_part]++;
       }
     }
@@ -1461,6 +1467,7 @@ _prepare_target_cloud_with_raytraicing
   int             group_is_chim,
   int           **n_extract_vtx,
   int           **n_extract_face,
+  int          ***extract_face_lnum,
   PDM_g_num_t  ***extract_face_ln_to_gn,
   PDM_g_num_t  ***extract_vtx_ln_to_gn,
   double       ***extract_vtx_coord,
@@ -1468,6 +1475,8 @@ _prepare_target_cloud_with_raytraicing
   int          ***extract_face_vtx
 )
 {
+  PDM_UNUSED(depth);
+  PDM_UNUSED(cell_ln_to_gn);
   /*
    * Identify all faces that in group
    *   On peut avoir des cas particulier ou un sommet des conditions overlap est dans un corps solide
@@ -1490,6 +1499,7 @@ _prepare_target_cloud_with_raytraicing
                             vtx_coord,
                             n_extract_face,
                             n_extract_vtx,
+                            extract_face_lnum,
                             extract_face_ln_to_gn,
                             extract_vtx_ln_to_gn,
                             extract_vtx_coord,
@@ -1506,6 +1516,7 @@ _prepare_target_cloud_with_raytraicing
   *extract_vtx_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
 
   *n_extract_face        = malloc(n_part * sizeof(int          ));
+  *extract_face_lnum     = malloc(n_part * sizeof(int         *));
   *extract_face_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
   *extract_face_vtx_idx  = malloc(n_part * sizeof(int         *));
   *extract_face_vtx      = malloc(n_part * sizeof(int         *));
@@ -1515,6 +1526,7 @@ _prepare_target_cloud_with_raytraicing
   double      **_extract_vtx_coord    = *extract_vtx_coord;
 
   int          *_n_extract_face        = *n_extract_face;
+  int         **_extract_face_lnum     = *extract_face_lnum   ;
   int         **_extract_face_vtx_idx  = *extract_face_vtx_idx;
   int         **_extract_face_vtx      = *extract_face_vtx;
   PDM_g_num_t **_extract_face_ln_to_gn = *extract_face_ln_to_gn;
@@ -1568,6 +1580,7 @@ _prepare_target_cloud_with_raytraicing
      * Extract
      */
     _extract_face_ln_to_gn[i_part] = malloc( _n_extract_face[i_part]    * sizeof(PDM_g_num_t));
+    _extract_face_lnum    [i_part] = malloc( _n_extract_face[i_part]    * sizeof(int        ));
     _extract_face_vtx_idx [i_part] = malloc((_n_extract_face[i_part]+1) * sizeof(int        ));
     _extract_face_vtx     [i_part] = malloc( _n_extract_vtx [i_part]    * sizeof(int        )); // Suralloc
 
@@ -1605,6 +1618,7 @@ _prepare_target_cloud_with_raytraicing
       }
 
       _extract_face_ln_to_gn[i_part][_n_extract_face[i_part]] = face_ln_to_gn[i_part][i_face];
+      _extract_face_lnum    [i_part][_n_extract_face[i_part]] = i_face;
       _n_extract_face[i_part]++;
 
     }
@@ -1618,28 +1632,6 @@ _prepare_target_cloud_with_raytraicing
     free(vtx_tag );
 
   }
-
-
-  // for (int i_part = 0; i_part < n_part; i_part++) {
-
-  //   for(int i_face = 0; i_face < n_face[i_part]; ++i_face) {
-
-  //     int face_is_completely_inside = 0;
-  //     double face_is_inside = 0;
-  //     for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
-  //       int i_vtx = face_vtx[idx_vtx]-1;
-
-  //       if(is_inside[i_part][i_vtx] == 0) {
-
-  //       }
-
-  //     }
-  //   }
-  // }
-
-
-
-
 }
 
 
@@ -2007,6 +1999,7 @@ int main(int argc, char *argv[])
 
   int          **n_external_face         = malloc(n_mesh * sizeof(int          *));
   int          **n_external_vtx          = malloc(n_mesh * sizeof(int          *));
+  int         ***external_face_lnum      = malloc(n_mesh * sizeof(int         **));
   PDM_g_num_t ***external_face_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
   PDM_g_num_t ***external_vtx_ln_to_gn   = malloc(n_mesh * sizeof(PDM_g_num_t **));
   double      ***external_vtx_coord      = malloc(n_mesh * sizeof(double      **));
@@ -2221,6 +2214,7 @@ int main(int argc, char *argv[])
                             vtx_coord                [i_mesh],
                             &n_external_face         [i_mesh],
                             &n_external_vtx          [i_mesh],
+                            &external_face_lnum      [i_mesh],
                             &external_face_ln_to_gn  [i_mesh],
                             &external_vtx_ln_to_gn   [i_mesh],
                             &external_vtx_coord      [i_mesh],
@@ -2406,6 +2400,10 @@ int main(int argc, char *argv[])
    *   - Préparation d'un green-gauss (Ou quasi-green) en composant les valeurs recupérés par les sommets.
    *   - Calcul d'une valeur approché aux centres faces pour pondérations linéaire
    *   - https://en.wikipedia.org/wiki/Inverse_distance_weighting
+   *   - Pour le is_inside :
+   *      + Il faudrait savoir si c'est dans un solide ou dans un maillage : 1 : Solide / 2 : Dans un maillage (idéalement avec des tag pour chaque corps/maillage)
+   *      + Dans le choix de l'interpolant il faut choisir une cellule par dans un corps
+   *   - Pour les interpolants on peut également mettre les centres cellules
    */
 
   int mask_depth = 0;
@@ -2413,6 +2411,7 @@ int main(int argc, char *argv[])
   int          **n_extract_chim_vtx         = malloc(n_mesh * sizeof(int          *));
   int          **n_extract_chim_face        = malloc(n_mesh * sizeof(int          *));
   PDM_g_num_t ***extract_chim_face_ln_to_gn = malloc(n_mesh * sizeof(PDM_g_num_t **));
+  int         ***extract_chim_face_lnum     = malloc(n_mesh * sizeof(int         **));
   PDM_g_num_t ***extract_chim_vtx_ln_to_gn  = malloc(n_mesh * sizeof(PDM_g_num_t **));
   double      ***extract_chim_vtx_coord     = malloc(n_mesh * sizeof(double      **));
   int         ***extract_chim_face_vtx_idx  = malloc(n_mesh * sizeof(int         **));
@@ -2447,6 +2446,7 @@ int main(int argc, char *argv[])
                                            group_is_chim,
                                            &n_extract_chim_vtx        [i_mesh],
                                            &n_extract_chim_face       [i_mesh],
+                                           &extract_chim_face_lnum    [i_mesh],
                                            &extract_chim_face_ln_to_gn[i_mesh],
                                            &extract_chim_vtx_ln_to_gn [i_mesh],
                                            &extract_chim_vtx_coord    [i_mesh],
@@ -2469,34 +2469,7 @@ int main(int argc, char *argv[])
                                NULL);
       }
     }
-
   }
-
-
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(extract_chim_face_ln_to_gn[i_mesh][i_part]);
-      free(extract_chim_vtx_ln_to_gn [i_mesh][i_part]);
-      free(extract_chim_vtx_coord    [i_mesh][i_part]);
-      free(extract_chim_face_vtx_idx [i_mesh][i_part]);
-      free(extract_chim_face_vtx     [i_mesh][i_part]);
-    }
-    free(n_extract_chim_vtx        [i_mesh]);
-    free(n_extract_chim_face       [i_mesh]);
-    free(extract_chim_face_ln_to_gn[i_mesh]);
-    free(extract_chim_vtx_ln_to_gn [i_mesh]);
-    free(extract_chim_vtx_coord    [i_mesh]);
-    free(extract_chim_face_vtx_idx [i_mesh]);
-    free(extract_chim_face_vtx     [i_mesh]);
-  }
-  free(n_extract_chim_vtx        );
-  free(n_extract_chim_face       );
-  free(extract_chim_face_ln_to_gn);
-  free(extract_chim_vtx_ln_to_gn );
-  free(extract_chim_vtx_coord    );
-  free(extract_chim_face_vtx_idx );
-  free(extract_chim_face_vtx     );
-
 
   /*
    * Prepare localisation
@@ -2504,6 +2477,11 @@ int main(int argc, char *argv[])
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   int n_point_cloud = 1;  // 1 : adjacent cell center | 2 : center_interface
+
+  // int interp_kind = 1; // cell_to_cell
+  int interp_kind = 2; // face_vtx
+
+
   int n_tot_cloud = n_point_cloud * n_mesh;
   PDM_mesh_location_t **mesh_loc = (PDM_mesh_location_t **) malloc( n_mesh * sizeof(PDM_mesh_location_t *));
 
@@ -2526,12 +2504,21 @@ int main(int argc, char *argv[])
       for (int i_part = 0; i_part < n_part; i_part++) {
         // printf("n_extract_cell         [i_cloud][i_part] = %i \n", n_extract_cell         [i_cloud][i_part]);
         if(i_mesh != i_cloud) {
-          PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
-                                      i_cloud,
-                                      i_part,
-                                      n_extract_cell         [i_cloud][i_part],
-                                      extract_center_coord   [i_cloud][i_part],
-                                      extract_center_ln_to_gn[i_cloud][i_part]);
+          if(interp_kind == 1) {
+            PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
+                                        i_cloud,
+                                        i_part,
+                                        n_extract_cell         [i_cloud][i_part],
+                                        extract_center_coord   [i_cloud][i_part],
+                                        extract_center_ln_to_gn[i_cloud][i_part]);
+          } else {
+            PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
+                                        i_cloud,
+                                        i_part,
+                                        n_extract_chim_vtx       [i_cloud][i_part],
+                                        extract_chim_vtx_coord   [i_cloud][i_part],
+                                        extract_chim_vtx_ln_to_gn[i_cloud][i_part]);
+          }
         } else {
           // printf("Not provided cloud \n");
           PDM_mesh_location_cloud_set(mesh_loc[i_mesh],
@@ -2702,168 +2689,328 @@ int main(int argc, char *argv[])
    */
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
-  int n_data_send = 5; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate )
-  double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
-  double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
-  int           **request_exch = malloc(n_mesh * sizeof(int      *));
-  // int           **recv_request = malloc(n_mesh * sizeof(int      *));
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
-    send_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
-    recv_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
-    request_exch[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
-    // recv_request[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+  if(interp_kind == 1) { // cell_to_cell_interpolation
+    int n_data_send = 5; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate )
+    double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
+    double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
+    int           **request_exch = malloc(n_mesh * sizeof(int      *));
+    // int           **recv_request = malloc(n_mesh * sizeof(int      *));
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
-    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+      send_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+      recv_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+      request_exch[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+      // recv_request[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
 
-      send_buffer [i_mesh][i_cloud] = malloc(n_part * sizeof(double *));
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
 
-      for (int i_part = 0; i_part < n_part; i_part++) {
+        send_buffer [i_mesh][i_cloud] = malloc(n_part * sizeof(double *));
 
-        int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+        for (int i_part = 0; i_part < n_part; i_part++) {
 
-        // src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
+          int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
 
-        int *_mesh_pts_idx = mesh_pts_idx [i_mesh][i_cloud][i_part];
-        int n_tgt_to_interp = _mesh_pts_idx[_n_cell_without_ext];
+          // src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
 
-        send_buffer[i_mesh][i_cloud][i_part] = malloc( n_data_send * n_tgt_to_interp * sizeof(double));
+          int *_mesh_pts_idx = mesh_pts_idx [i_mesh][i_cloud][i_part];
+          int n_tgt_to_interp = _mesh_pts_idx[_n_cell_without_ext];
 
-        double *_send_buffer = send_buffer [i_mesh][i_cloud][i_part];
-        double *_pts_dist    = points_dist2[i_mesh][i_cloud][i_part];
+          send_buffer[i_mesh][i_cloud][i_part] = malloc( n_data_send * n_tgt_to_interp * sizeof(double));
 
-        for (int i = 0; i < _n_cell_without_ext; i++) {
-          for (int j = _mesh_pts_idx[i]; j < _mesh_pts_idx[i+1]; j++) {
+          double *_send_buffer = send_buffer [i_mesh][i_cloud][i_part];
+          double *_pts_dist    = points_dist2[i_mesh][i_cloud][i_part];
 
-            // Do interpolation
-            double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
-            double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
-            double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
+          for (int i = 0; i < _n_cell_without_ext; i++) {
+            for (int j = _mesh_pts_idx[i]; j < _mesh_pts_idx[i+1]; j++) {
 
-            double xc = cell_center[i_mesh][i_part][3*i  ];
-            double yc = cell_center[i_mesh][i_part][3*i+1];
-            double zc = cell_center[i_mesh][i_part][3*i+2];
+              // Do interpolation
+              double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
+              double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
+              double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
 
-            double val   = field     [i_mesh][i_part][i    ];
-            double gvalx = grad_field[i_mesh][i_part][3*i  ];
-            double gvaly = grad_field[i_mesh][i_part][3*i+1];
-            double gvalz = grad_field[i_mesh][i_part][3*i+2];
+              double xc = cell_center[i_mesh][i_part][3*i  ];
+              double yc = cell_center[i_mesh][i_part][3*i+1];
+              double zc = cell_center[i_mesh][i_part][3*i+2];
 
-            // Do interpolation
-            // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
-            // src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
+              double val   = field     [i_mesh][i_part][i    ];
+              double gvalx = grad_field[i_mesh][i_part][3*i  ];
+              double gvaly = grad_field[i_mesh][i_part][3*i+1];
+              double gvalz = grad_field[i_mesh][i_part][3*i+2];
 
-            _send_buffer[n_data_send*j  ] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;;
-            _send_buffer[n_data_send*j+1] = i_mesh;
-            _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
-            _send_buffer[n_data_send*j+3] = _pts_dist[j];
-            _send_buffer[n_data_send*j+4] = cell_nat[i_mesh][i_part][i];
+              // Do interpolation
+              // src_tgt_field[i_part][j] = (double) j; // val + (xc - tgt_x) * gvalx + (yc - tgt_y) * gvaly + (zc - tgt_z) * gvalz;
+              // src_tgt_field[i_part][j] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;
 
+              _send_buffer[n_data_send*j  ] = val + (tgt_x - xc) * gvalx + (tgt_y - yc) * gvaly + (tgt_z - zc) * gvalz;;
+              _send_buffer[n_data_send*j+1] = i_mesh;
+              _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
+              _send_buffer[n_data_send*j+3] = _pts_dist[j];
+              _send_buffer[n_data_send*j+4] = cell_nat[i_mesh][i_part][i];
+
+            }
           }
         }
+
+        /*
+         * Exchange - Can be done with explicit P2P
+         */
+         PDM_part_to_part_iexch(ptp[i_mesh][i_cloud],
+                                PDM_MPI_COMM_KIND_P2P,
+                                PDM_STRIDE_CST_INTERLACED,
+                                PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                                n_data_send,
+                                sizeof(double),
+                (const int  **) NULL,
+                (const void **) send_buffer[i_mesh][i_cloud],
+                                NULL,
+                     (void ***) &recv_buffer[i_mesh][i_cloud],
+                                &request_exch[i_mesh][i_cloud]);
+
       }
-
-      /*
-       * Exchange - Can be done with explicit P2P
-       */
-       PDM_part_to_part_iexch(ptp[i_mesh][i_cloud],
-                              PDM_MPI_COMM_KIND_P2P,
-                              PDM_STRIDE_CST_INTERLACED,
-                              PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                              n_data_send,
-                              sizeof(double),
-              (const int  **) NULL,
-              (const void **) send_buffer[i_mesh][i_cloud],
-                              NULL,
-                   (void ***) &recv_buffer[i_mesh][i_cloud],
-                              &request_exch[i_mesh][i_cloud]);
-
     }
-  }
-  t2 = PDM_MPI_Wtime();
-  delta_t[4] = t2 - t1;
+    t2 = PDM_MPI_Wtime();
+    delta_t[4] = t2 - t1;
 
 
-  /*
-   * Receive data
-   */
-  PDM_MPI_Barrier(comm);
-  t1 = PDM_MPI_Wtime();
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
-      // We can also do iexch_test and use the first request
-      PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
+    /*
+     * Receive data
+     */
+    PDM_MPI_Barrier(comm);
+    t1 = PDM_MPI_Wtime();
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+        // We can also do iexch_test and use the first request
+        PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
 
-      /*
-       * Post-treatment
-       */
-      int  *n_ref_tgt;
-      int **ref_tgt;
-      PDM_part_to_part_ref_lnum2_get (ptp[i_mesh][i_cloud], &n_ref_tgt, &ref_tgt);
+        /*
+         * Post-treatment
+         */
+        int  *n_ref_tgt;
+        int **ref_tgt;
+        PDM_part_to_part_ref_lnum2_get (ptp[i_mesh][i_cloud], &n_ref_tgt, &ref_tgt);
 
-      int         **gnum1_come_from_idx = NULL;
-      PDM_g_num_t **gnum1_come_from     = NULL;
-      PDM_part_to_part_gnum1_come_from_get(ptp[i_mesh][i_cloud], &gnum1_come_from_idx, &gnum1_come_from);
+        int         **gnum1_come_from_idx = NULL;
+        PDM_g_num_t **gnum1_come_from     = NULL;
+        PDM_part_to_part_gnum1_come_from_get(ptp[i_mesh][i_cloud], &gnum1_come_from_idx, &gnum1_come_from);
 
-      for(int i_part = 0; i_part < n_part; ++i_part) {
+        for(int i_part = 0; i_part < n_part; ++i_part) {
 
-        // int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+          // int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
 
-        double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
+          double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
 
-        // CAUTION HERE : We fill the cloud !!!!
-        double *_field           = field           [i_cloud][i_part];
-        double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
-        double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
-        // double *_cell_nat        = cell_nat        [i_cloud][i_part];
+          // CAUTION HERE : We fill the cloud !!!!
+          double *_field           = field           [i_cloud][i_part];
+          double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
+          double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
+          // double *_cell_nat        = cell_nat        [i_cloud][i_part];
 
-        for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
-          int i_tgt = ref_tgt[i_part][i]-1;
-          for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
+          for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
+            int i_tgt = ref_tgt[i_part][i]-1;
+            for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
 
-            double lvol      = _recv_buffer[n_data_send*j+2];
-            double ldist     = _recv_buffer[n_data_send*j+3];
-            double lcell_nat = _recv_buffer[n_data_send*j+4];
-            // printf("dist = %12.5e | vol = %12.5e \n", dist, vol);
+              double lvol      = _recv_buffer[n_data_send*j+2];
+              double ldist     = _recv_buffer[n_data_send*j+3];
+              double lcell_nat = _recv_buffer[n_data_send*j+4];
+              // printf("dist = %12.5e | vol = %12.5e \n", dist, vol);
 
-            // On doit pouvoir gerer l'extrapolation également comme pour la condition du volume
-            if(lcell_nat < 0 && ldist < 0 && lvol < _blk_interp_vol[i_tgt]) {
-              _field          [i_tgt] = _recv_buffer[n_data_send*j  ];
-              // printf("i_tgt = %i | fld = %12.5e | interp_from = %12.5e \n", i_tgt, _recv_buffer[n_data_send*j  ], _recv_buffer[n_data_send*j+1]);
-              _blk_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
-              _blk_interp_vol [i_tgt] = PDM_MIN(_blk_interp_vol [i_tgt], lvol);
+              // On doit pouvoir gerer l'extrapolation également comme pour la condition du volume
+              if(lcell_nat < 0 && ldist < 0 && lvol < _blk_interp_vol[i_tgt]) {
+                _field          [i_tgt] = _recv_buffer[n_data_send*j  ];
+                // printf("i_tgt = %i | fld = %12.5e | interp_from = %12.5e \n", i_tgt, _recv_buffer[n_data_send*j  ], _recv_buffer[n_data_send*j+1]);
+                _blk_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
+                _blk_interp_vol [i_tgt] = PDM_MIN(_blk_interp_vol [i_tgt], lvol);
+              }
             }
           }
         }
       }
     }
-  }
-  t2 = PDM_MPI_Wtime();
-  delta_t[5] = t2 - t1;
+    t2 = PDM_MPI_Wtime();
+    delta_t[5] = t2 - t1;
 
-  /*
-   * Cleaning
-   */
-  PDM_MPI_Barrier(comm);
-  t1 = PDM_MPI_Wtime();
-  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
-      for (int i_part = 0; i_part < n_part; i_part++) {
-        free(send_buffer[i_mesh][i_cloud][i_part]);
-        free(recv_buffer[i_mesh][i_cloud][i_part]);
+    /*
+     * Cleaning
+     */
+    PDM_MPI_Barrier(comm);
+    t1 = PDM_MPI_Wtime();
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+        for (int i_part = 0; i_part < n_part; i_part++) {
+          free(send_buffer[i_mesh][i_cloud][i_part]);
+          free(recv_buffer[i_mesh][i_cloud][i_part]);
+        }
+        free(send_buffer [i_mesh][i_cloud]);
+        free(recv_buffer [i_mesh][i_cloud]);
       }
-      free(send_buffer [i_mesh][i_cloud]);
-      free(recv_buffer [i_mesh][i_cloud]);
+      free(send_buffer [i_mesh]);
+      free(recv_buffer [i_mesh]);
+      free(request_exch[i_mesh]);
     }
-    free(send_buffer [i_mesh]);
-    free(recv_buffer [i_mesh]);
-    free(request_exch[i_mesh]);
-    // free(recv_request[i_mesh]);
+    free(send_buffer);
+    free(recv_buffer);
+    free(request_exch);
+
+  } else { // interp_kind == 2
+
+    int n_data_send = 5; // Value / blk_interp / volume / dist / cell_nat (Reminder if dist > 0 -> Extrapolate )
+    double      ****send_buffer  = malloc(n_mesh * sizeof(double ***));
+    double      ****recv_buffer  = malloc(n_mesh * sizeof(double ***));
+    int           **request_exch = malloc(n_mesh * sizeof(int      *));
+    // int           **recv_request = malloc(n_mesh * sizeof(int      *));
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+
+      send_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+      recv_buffer [i_mesh] = malloc(n_tot_cloud * sizeof(double **));
+      request_exch[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+      // recv_request[i_mesh] = malloc(n_tot_cloud * sizeof(int      ));
+
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+
+        send_buffer [i_mesh][i_cloud] = malloc(n_part * sizeof(double *));
+
+        for (int i_part = 0; i_part < n_part; i_part++) {
+
+          int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+
+          // src_tgt_field[i_part] = malloc(n_tgt_to_interp * sizeof(double));
+
+          int *_mesh_pts_idx = mesh_pts_idx [i_mesh][i_cloud][i_part];
+          int n_tgt_to_interp = _mesh_pts_idx[_n_cell_without_ext];
+
+          send_buffer[i_mesh][i_cloud][i_part] = malloc( n_data_send * n_tgt_to_interp * sizeof(double));
+
+          double *_send_buffer = send_buffer [i_mesh][i_cloud][i_part];
+          double *_pts_dist    = points_dist2[i_mesh][i_cloud][i_part];
+
+          for (int i = 0; i < _n_cell_without_ext; i++) {
+            for (int j = _mesh_pts_idx[i]; j < _mesh_pts_idx[i+1]; j++) {
+
+              // Do interpolation
+              double tgt_x = points_coords[i_mesh][i_cloud][i_part][3*j  ];
+              double tgt_y = points_coords[i_mesh][i_cloud][i_part][3*j+1];
+              double tgt_z = points_coords[i_mesh][i_cloud][i_part][3*j+2];
+
+              double xc = cell_center[i_mesh][i_part][3*i  ];
+              double yc = cell_center[i_mesh][i_part][3*i+1];
+              double zc = cell_center[i_mesh][i_part][3*i+2];
+
+              double val   = field     [i_mesh][i_part][i    ];
+
+              _send_buffer[n_data_send*j  ] = val;
+              _send_buffer[n_data_send*j+1] = i_mesh;
+              _send_buffer[n_data_send*j+2] = cell_volume[i_mesh][i_part][i];
+              _send_buffer[n_data_send*j+3] = _pts_dist[j];
+              _send_buffer[n_data_send*j+4] = cell_nat[i_mesh][i_part][i];
+
+            }
+          }
+        }
+
+        /*
+         * Exchange - Can be done with explicit P2P
+         */
+         PDM_part_to_part_iexch(ptp[i_mesh][i_cloud],
+                                PDM_MPI_COMM_KIND_P2P,
+                                PDM_STRIDE_CST_INTERLACED,
+                                PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                                n_data_send,
+                                sizeof(double),
+                (const int  **) NULL,
+                (const void **) send_buffer[i_mesh][i_cloud],
+                                NULL,
+                     (void ***) &recv_buffer[i_mesh][i_cloud],
+                                &request_exch[i_mesh][i_cloud]);
+
+      }
+    }
+    t2 = PDM_MPI_Wtime();
+    delta_t[4] = t2 - t1;
+
+    /*
+     * Receive data
+     */
+    PDM_MPI_Barrier(comm);
+    t1 = PDM_MPI_Wtime();
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+
+        // We can also do iexch_test and use the first request
+        PDM_part_to_part_iexch_wait(ptp[i_mesh][i_cloud], request_exch[i_mesh][i_cloud]);
+
+        /*
+         * Post-treatment
+         */
+        int  *n_ref_tgt;
+        int **ref_tgt;
+        PDM_part_to_part_ref_lnum2_get (ptp[i_mesh][i_cloud], &n_ref_tgt, &ref_tgt);
+
+        int         **gnum1_come_from_idx = NULL;
+        PDM_g_num_t **gnum1_come_from     = NULL;
+        PDM_part_to_part_gnum1_come_from_get(ptp[i_mesh][i_cloud], &gnum1_come_from_idx, &gnum1_come_from);
+
+        for(int i_part = 0; i_part < n_part; ++i_part) {
+
+          // int _n_cell_without_ext = n_cell_without_ext[i_mesh][i_part];
+
+          double *_recv_buffer     = recv_buffer     [i_mesh][i_cloud][i_part];
+
+          // CAUTION HERE : We fill the cloud !!!!
+          double *_field           = field           [i_cloud][i_part];
+          double *_blk_interp_from = blk_interp_from [i_cloud][i_part];
+          double *_blk_interp_vol  = blk_interp_vol  [i_cloud][i_part];
+          // double *_cell_nat        = cell_nat        [i_cloud][i_part];
+
+          for(int i = 0; i < n_ref_tgt[i_part]; ++i) {
+            int i_tgt = ref_tgt[i_part][i]-1;
+            for(int j = gnum1_come_from_idx[i_part][i]; j < gnum1_come_from_idx[i_part][i+1]; ++j) {
+
+              double lvol      = _recv_buffer[n_data_send*j+2];
+              double ldist     = _recv_buffer[n_data_send*j+3];
+              double lcell_nat = _recv_buffer[n_data_send*j+4];
+              // printf("dist = %12.5e | vol = %12.5e \n", dist, vol);
+
+              // On doit pouvoir gerer l'extrapolation également comme pour la condition du volume
+              if(lcell_nat < 0 && ldist < 0 && lvol < _blk_interp_vol[i_tgt]) {
+                _field          [i_tgt] = _recv_buffer[n_data_send*j  ];
+                // printf("i_tgt = %i | fld = %12.5e | interp_from = %12.5e \n", i_tgt, _recv_buffer[n_data_send*j  ], _recv_buffer[n_data_send*j+1]);
+                _blk_interp_from[i_tgt] = _recv_buffer[n_data_send*j+1];
+                _blk_interp_vol [i_tgt] = PDM_MIN(_blk_interp_vol [i_tgt], lvol);
+              }
+            }
+          }
+        }
+      }
+    }
+    t2 = PDM_MPI_Wtime();
+    delta_t[5] = t2 - t1;
+
+    /*
+     * Cleaning
+     */
+    PDM_MPI_Barrier(comm);
+    t1 = PDM_MPI_Wtime();
+    for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+      for(int i_cloud = 0; i_cloud < n_tot_cloud; ++i_cloud) {
+        for (int i_part = 0; i_part < n_part; i_part++) {
+          free(send_buffer[i_mesh][i_cloud][i_part]);
+          free(recv_buffer[i_mesh][i_cloud][i_part]);
+        }
+        free(send_buffer [i_mesh][i_cloud]);
+        free(recv_buffer [i_mesh][i_cloud]);
+      }
+      free(send_buffer [i_mesh]);
+      free(recv_buffer [i_mesh]);
+      free(request_exch[i_mesh]);
+    }
+    free(send_buffer);
+    free(recv_buffer);
+    free(request_exch);
+
+
   }
-  free(send_buffer);
-  free(recv_buffer);
-  free(request_exch);
-  // free(recv_request);
+
 
   /*
    * Free ptp
@@ -2989,6 +3136,7 @@ int main(int argc, char *argv[])
       free(cell_nat       [i_mesh][i_part]);
 
       free(external_face_ln_to_gn[i_mesh][i_part]);
+      free(external_face_lnum    [i_mesh][i_part]);
       free(external_vtx_ln_to_gn [i_mesh][i_part]);
       free(external_vtx_coord    [i_mesh][i_part]);
       free(external_face_vtx_idx [i_mesh][i_part]);
@@ -3037,6 +3185,7 @@ int main(int argc, char *argv[])
     free(cell_nat       [i_mesh]);
 
     free(external_face_ln_to_gn[i_mesh]);
+    free(external_face_lnum    [i_mesh]);
     free(external_vtx_ln_to_gn [i_mesh]);
     free(external_vtx_coord    [i_mesh]);
     free(external_face_vtx_idx [i_mesh]);
@@ -3052,6 +3201,34 @@ int main(int argc, char *argv[])
     free(n_external_face[i_mesh]);
     free(n_external_vtx [i_mesh]);
   }
+
+  for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      free(extract_chim_face_ln_to_gn[i_mesh][i_part]);
+      free(extract_chim_face_lnum    [i_mesh][i_part]);
+      free(extract_chim_vtx_ln_to_gn [i_mesh][i_part]);
+      free(extract_chim_vtx_coord    [i_mesh][i_part]);
+      free(extract_chim_face_vtx_idx [i_mesh][i_part]);
+      free(extract_chim_face_vtx     [i_mesh][i_part]);
+    }
+    free(n_extract_chim_vtx        [i_mesh]);
+    free(n_extract_chim_face       [i_mesh]);
+    free(extract_chim_face_ln_to_gn[i_mesh]);
+    free(extract_chim_face_lnum    [i_mesh]);
+    free(extract_chim_vtx_ln_to_gn [i_mesh]);
+    free(extract_chim_vtx_coord    [i_mesh]);
+    free(extract_chim_face_vtx_idx [i_mesh]);
+    free(extract_chim_face_vtx     [i_mesh]);
+  }
+  free(n_extract_chim_vtx        );
+  free(n_extract_chim_face       );
+  free(extract_chim_face_ln_to_gn);
+  free(extract_chim_face_lnum    );
+  free(extract_chim_vtx_ln_to_gn );
+  free(extract_chim_vtx_coord    );
+  free(extract_chim_face_vtx_idx );
+  free(extract_chim_face_vtx     );
+
 
   for(int i_cloud = 0; i_cloud < n_mesh; ++i_cloud) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -3108,6 +3285,7 @@ int main(int argc, char *argv[])
   free(extract_face_bnd_coord   );
 
   free(external_face_ln_to_gn);
+  free(external_face_lnum    );
   free(external_vtx_ln_to_gn );
   free(external_vtx_coord    );
   free(external_face_vtx_idx );
