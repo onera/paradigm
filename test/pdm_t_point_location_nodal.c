@@ -764,8 +764,12 @@ _gen_mesh
   else {
 
     PDM_g_num_t n_vtx_seg_z = n_vtx_seg;
+    PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+    PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_CELL;
     if (PDM_Mesh_nodal_elt_dim_get(t_elt) == 2) {
       n_vtx_seg_z = 1;
+      geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+      entity_type = PDM_MESH_ENTITY_FACE;
     }
 
     PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
@@ -785,6 +789,23 @@ _gen_mesh
     PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
 
+    /* Add noise */
+    if (1) {
+      int i_rank;
+      PDM_MPI_Comm_rank(comm, &i_rank);
+
+      PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+      double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+      int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+      double noise = 0.2 * length / (double) (n_vtx_seg - 1);
+      for (int i = 0; i < dn_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          dvtx_coord[3*i+j] += noise * (rand() / (double) RAND_MAX - 0.5);
+        }
+      }
+    }
+
+
     PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
 
     PDM_multipart_run_ppart(mpart);
@@ -795,7 +816,7 @@ _gen_mesh
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                          0,
                                                          ipart,
-                                                         PDM_MESH_ENTITY_CELL,
+                                                         entity_type,
                                                          &_elt_ln_to_gn,
                                                          PDM_OWNERSHIP_USER);
       (*pelt_ln_to_gn)[ipart] = malloc(sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
@@ -820,7 +841,7 @@ _gen_mesh
 
 
     *pmne = PDM_dmesh_nodal_to_part_mesh_nodal_elmts(dmn,
-                                                     PDM_GEOMETRY_KIND_VOLUMIC,
+                                                     geom_kind,
                                                      n_part,
                                                      *pn_vtx,
                                                      pvtx_ln_to_gn,
@@ -1075,7 +1096,7 @@ _compute_cell_centers
 
         int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                  order);
-        double in = 1./(double) n_vtx;
+        // double in = 1./(double) n_vtx;
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
           int icell = ielt;
@@ -1085,16 +1106,20 @@ _compute_cell_centers
 
           double *pc = (*pts_coord)[ipart] + 3*icell;
           pc[0] = pc[1] = pc[2] = 0.;
+          double sum_w = 0.;
 
           for (int idx = n_vtx*ielt; idx < n_vtx*(ielt+1); idx++) {
             int vtx_id = connec[idx] - 1;
+            double w = (double) rand() / (double) RAND_MAX;
+            // double w = 1.;
+            sum_w += w;
             for (int j = 0; j < 3; j++) {
-              pc[j] += pvtx_coord[ipart][3*vtx_id + j];
+              pc[j] += w * pvtx_coord[ipart][3*vtx_id + j];
             }
           }
 
           for (int j = 0; j < 3; j++) {
-            pc[j] *= in;
+            pc[j] /= sum_w;
           }
 
         } // End of loop on elts
@@ -1389,6 +1414,10 @@ int main(int argc, char *argv[])
     for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
       log_trace("  elt %d\n", ielt);
       log_trace("    distance = %f\n", distance[ipart][ielt]);
+      log_trace("    proj_coord = %f %f %f\n",
+                projected_coord[ipart][3*ielt  ],
+                projected_coord[ipart][3*ielt+1],
+                projected_coord[ipart][3*ielt+2]);
       PDM_log_trace_array_double(bar_coord[ipart] + bar_coord_idx[ipart][ielt],
                                  bar_coord_idx[ipart][ielt+1] - bar_coord_idx[ipart][ielt],
                                  "    bar_coord : ");

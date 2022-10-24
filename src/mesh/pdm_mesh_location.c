@@ -7106,7 +7106,7 @@ PDM_mesh_location_compute_optim
   /*
    *  Parameters
    */
-  const double tolerance = 1e-6;
+  const double point_location_tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
   const int full_async  = 0;
@@ -8522,7 +8522,7 @@ PDM_mesh_location_compute_optim
             (const double **) &pextract_vtx_coord,
             (const int    **) &delt_pts_idx2,
             (const double **) &delt_pts_coord2,
-                              tolerance,
+                              point_location_tolerance,
                               &pelt_pts_distance2,
                               &pelt_pts_proj_coord2,
                               &pelt_pts_weight_idx2,
