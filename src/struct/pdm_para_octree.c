@@ -49,7 +49,7 @@ extern "C"
 #define NTIMER 12
 //#define NGB_ON_THE_FLY 1
 
-const int NGB_ON_THE_FLY = 1;
+// const int NGB_ON_THE_FLY = 1;
 
 /*============================================================================
  * Type definitions

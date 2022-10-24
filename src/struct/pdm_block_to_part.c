@@ -37,16 +37,16 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-double btp_t_elaps[2] = {0., 0.};
-double btp_t_cpu[2] = {0., 0.};
-PDM_timer_t *btp_t_timer[2] = {NULL, NULL};
+static double btp_t_elaps[2] = {0., 0.};
+static double btp_t_cpu[2] = {0., 0.};
+static PDM_timer_t *btp_t_timer[2] = {NULL, NULL};
 
-int btp_min_exch_rank[2] = {INT_MAX, INT_MAX};
-int btp_max_exch_rank[2] = {-1, -1};
+static int btp_min_exch_rank[2] = {INT_MAX, INT_MAX};
+static int btp_max_exch_rank[2] = {-1, -1};
 
-unsigned long long btp_exch_data[2] = {0, 0};
+static unsigned long long btp_exch_data[2] = {0, 0};
 
-int n_btp = 0;
+static int n_btp = 0;
 
 /*=============================================================================
  * Static function definitions

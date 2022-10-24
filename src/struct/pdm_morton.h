@@ -76,7 +76,7 @@ typedef struct {
  * Public function definitions
  *============================================================================*/
 
-extern const  PDM_morton_int_t PDM_morton_max_level;
+static const PDM_morton_int_t PDM_morton_max_level = 31u;
 
 /**
  * \brief Determine the global extents associated with a set of coordinates

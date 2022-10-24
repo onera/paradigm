@@ -66,7 +66,7 @@ extern "C" {
  * Local Macro definitions
  *============================================================================*/
 
-const PDM_morton_int_t PDM_morton_max_level = 31u;
+// static const PDM_morton_int_t PDM_morton_max_level = 31u;
 
 /*=============================================================================
  * Static global variables
@@ -2344,7 +2344,7 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
  *
  */
 
-const size_t N_BRUTE_FORCE = 10;
+static const size_t N_BRUTE_FORCE = 10;
 void
 PDM_morton_intersect_box
 (

@@ -118,7 +118,7 @@ struct _pdm_mesh_intersection_t {
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
-} _PDM_ol_t;
+};
 
 /*=============================================================================
  * Static global variables

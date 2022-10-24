@@ -59,7 +59,7 @@ struct _pdm_interpolate_from_mesh_location_t {
   _points_in_element_t *points_in_elements; /*!< System CPU time */
 
 
-} _pdm_interpolate_from_mesh_location_t;
+};
 
 /*=============================================================================
  * Static global variables
