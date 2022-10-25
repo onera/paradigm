@@ -6526,7 +6526,8 @@ PDM_mesh_location_t        *ml
                                                                 _point_coords,
                                                                 _cell_coords,
                                                                 newton_tol,
-                                                                _point_uvw);
+                                                                _point_uvw,
+                                                                NULL);
               //&(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
 
               int uvw_ok = 0;
@@ -7106,7 +7107,7 @@ PDM_mesh_location_compute_optim
   /*
    *  Parameters
    */
-  const double point_location_tolerance = 1e-6;
+  const double newton_tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
   const int full_async  = 0;
@@ -8522,7 +8523,7 @@ PDM_mesh_location_compute_optim
             (const double **) &pextract_vtx_coord,
             (const int    **) &delt_pts_idx2,
             (const double **) &delt_pts_coord2,
-                              point_location_tolerance,
+                              newton_tolerance,
                               &pelt_pts_distance2,
                               &pelt_pts_proj_coord2,
                               &pelt_pts_weight_idx2,

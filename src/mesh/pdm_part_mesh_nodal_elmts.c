@@ -2768,6 +2768,10 @@ PDM_part_mesh_nodal_create_from_part3d
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
   }
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(num_cell_parent_to_local[i_part]);
+  }
+  free(num_cell_parent_to_local);
 
   if (prepa_blocks != NULL) {
     free(prepa_blocks->n_cell);
@@ -2817,25 +2821,22 @@ PDM_part_mesh_nodal_create_from_part2d
 
   PDM_Mesh_nodal_prepa_blocks_t* prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
 
+  prepa_blocks->n_tria_proc   = 0;    /* Nb de triangles par proc */
+  prepa_blocks->n_quad_proc   = 0;    /* Nb de quads par proc */
+  prepa_blocks->n_poly2d_proc = 0;    /* Nb de poly2d par proc */
 
-  if (prepa_blocks == NULL) {
-    prepa_blocks = (PDM_Mesh_nodal_prepa_blocks_t *) malloc(sizeof(PDM_Mesh_nodal_prepa_blocks_t));
-    prepa_blocks->n_tria_proc   = 0;    /* Nb de triangles par proc */
-    prepa_blocks->n_quad_proc   = 0;    /* Nb de quads par proc */
-    prepa_blocks->n_poly2d_proc = 0;    /* Nb de poly2d par proc */
-
-    prepa_blocks->n_cell          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_face          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_tria          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_quad          = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
-    prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
-    prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
-  }
+  // prepa_blocks->add_etat        = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_cell          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_face          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_tria          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_quad          = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->n_poly2d        = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->l_connec_poly2d = (int          *) malloc(n_part * sizeof(int          ));
+  prepa_blocks->face_vtx_idx    = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->face_vtx        = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->cell_face_idx   = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->cell_face       = (int         **) malloc(n_part * sizeof(int         *));
+  prepa_blocks->numabs          = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
 
   int n_tria    = 0;
   int n_quad    = 0;
@@ -2845,21 +2846,21 @@ PDM_part_mesh_nodal_create_from_part2d
   for (int i_part = 0; i_part < n_part; i_part++) {
     for (int i = 0; i < n_face[i_part]; i++) {
 
-      int l_face_edge = face_edge_idx[i+1] - face_edge_idx[i];
+      int l_face_edge = face_edge_idx[i_part][i+1] - face_edge_idx[i_part][i];
       if (l_face_edge == 3)
         n_tria += 1;
       else if (l_face_edge == 4)
         n_quad += 1;
       else {
         n_poly2d  += 1;
-        l_connec_poly2d += face_edge_idx[i+1] - face_edge_idx[i];
+        l_connec_poly2d += face_edge_idx[i_part][i+1] - face_edge_idx[i_part][i];
       }
     }
 
     prepa_blocks->n_tria_proc             += n_tria;
     prepa_blocks->n_quad_proc             += n_quad;
     prepa_blocks->n_poly2d_proc           += n_poly2d;
-    prepa_blocks->add_etat       [i_part]  = 1;
+    // prepa_blocks->add_etat       [i_part]  = 1;
     prepa_blocks->n_cell         [i_part]  = n_face[i_part];
     prepa_blocks->n_tria         [i_part]  = n_tria;
     prepa_blocks->n_quad         [i_part]  = n_quad;
@@ -3100,6 +3101,10 @@ PDM_part_mesh_nodal_create_from_part2d
                                                  num_parent_poly2d,
                                                  PDM_OWNERSHIP_KEEP);
   }
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(num_cell_parent_to_local[i_part]);
+  }
+  free(num_cell_parent_to_local);
 
 
   if (prepa_blocks != NULL) {

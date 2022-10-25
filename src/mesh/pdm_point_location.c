@@ -382,7 +382,8 @@ _compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
-       double               uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  )
 {
   int dbg = 0;
@@ -405,8 +406,15 @@ _compute_uvw
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
 
   /* Use Newton-method to determine parametric coordinates and shape function */
-  for (i = 0; i < 3; i++) {
-    uvw[i] = 0.5;
+  if (init_uvw == NULL) {
+    for (i = 0; i < elt_dim; i++) {
+      uvw[i] = 0.5;
+    }
+  }
+  else {
+    for (i = 0; i < elt_dim; i++) {
+      uvw[i] = init_uvw[i];
+    }
   }
 
   if (dbg) {
@@ -414,6 +422,10 @@ _compute_uvw
   }
   for (iter = 0; iter < max_iter; iter++) {
 
+    // if (dbg) {
+    //   log_trace("  iter %d: uvw = ", iter);
+    //   PDM_log_trace_array_double(uvw, elt_dim, "");
+    // }
     _compute_shapef_3d (elt_type, uvw, shapef, dw);
 
     b[0] = - point_coords[0];
@@ -794,6 +806,12 @@ _locate_on_quadrangle2
        double uvw[]
  )
 {
+  PDM_mean_values_polygon_3d(4,
+                             quad_coord,
+                             n_pts,
+                             pts_coord,
+                             bar_coord);
+
   for (int ipt = 0; ipt < n_pts; ipt++) {
 
     const double *_pt = pts_coord + 3 * ipt;
@@ -801,24 +819,26 @@ _locate_on_quadrangle2
     double *_cp  = proj_coord + 3 * ipt;
     double *_uvw = uvw        + 3 * ipt;
 
+    /* Compute parametric coordinates with Newton method */
+    double init_uvw[3 ] = {_bc[1] + _bc[2], _bc[2] + _bc[3], -1.};
     PDM_bool_t stat_uvw = _compute_uvw(PDM_MESH_NODAL_QUAD4,
                                        _pt,
                                        quad_coord,
                                        tolerance,
-                                       _uvw);
+                                       _uvw,
+                                       init_uvw);
 
     if (stat_uvw == PDM_TRUE) {
-      /* Compute parametric coordinates : Try Newton */
-      _compute_shapef_3d(PDM_MESH_NODAL_QUAD4, _uvw, _bc, NULL);
+      if (_uvw[0] >= 0 && _uvw[0] <= 1 && _uvw[1] >= 0 && _uvw[1] <= 1) {
+        _compute_shapef_3d(PDM_MESH_NODAL_QUAD4, _uvw, _bc, NULL);
+      }
     }
     else {
       /* Failed to compute parametric coordinates */
-      PDM_mean_values_polygon_3d(4,
-                                 quad_coord,
-                                 1,
-                                 _pt,
-                                 _bc);
+      _uvw[0] = init_uvw[0];
+      _uvw[1] = init_uvw[1];
     }
+    _uvw[2] = -1;
 
     for (int idim = 0; idim < 3; idim++) {
       _cp[idim] = 0.;
@@ -1063,12 +1083,11 @@ _locate_in_cell_3d
                             distance,
                             proj_coord,
                             bar_coord);
-    // TODO: compute uvw...
     if (uvw != NULL) {
       for (int ipt = 0; ipt < n_pts; ipt++) {
-        uvw[3*ipt  ] = -1.;
-        uvw[3*ipt+1] = -1.;
-        uvw[3*ipt+2] = -1.;
+        uvw[3*ipt  ] = bar_coord[4*ipt+1];
+        uvw[3*ipt+1] = bar_coord[4*ipt+2];
+        uvw[3*ipt+2] = bar_coord[4*ipt+3];
       }
     }
     return;
@@ -1164,7 +1183,8 @@ _locate_in_cell_3d
                                         _pt,
                                         cell_coord,
                                         tolerance,
-                                        _uvw);
+                                        _uvw,
+                                        NULL);
     if (stat_uvw == PDM_TRUE) {
       _compute_shapef_3d (elt_type, _uvw, _bc, NULL);
 
@@ -3252,7 +3272,7 @@ PDM_point_location_nodal2
 
 
 /**
- * \brief Compute hexahedron, pyramid, or prism parametric coordinates for a
+ * \brief Compute quadrangle, hexahedron, pyramid, or prism parametric coordinates for a
  * given point.
  *
  * This function is adapted from the CGNS interpolation tool.
@@ -3262,7 +3282,9 @@ PDM_point_location_nodal2
  * \param [in]   vertex_coords  Pointer to element vertex coordinates
  * \param [in]   tolerance      Location tolerance factor
  * \param [out]  uvw            Parametric coordinates of point in element
+ * \param [in]   init_uvw       Initial uvw guess for Newton method (or NULL)
  *
+ *  \return Convergence status of Newton method
  */
 
 PDM_bool_t
@@ -3272,14 +3294,16 @@ PDM_point_location_compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
- double                     uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  )
 {
   return _compute_uvw (elt_type,
                        point_coords,
                        vertex_coords,
                        tolerance,
-                       uvw);
+                       uvw,
+                       init_uvw);
 }
 
 #ifdef __cplusplus
