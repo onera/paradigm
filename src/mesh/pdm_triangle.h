@@ -79,6 +79,16 @@ PDM_triangle_evaluate_position
        double *weights
  );
 
+PDM_triangle_status_t
+PDM_triangle_evaluate_position2
+(
+ const double  x[3],
+ const double  pts[9],
+       double *closest_point,
+       double *min_dist2,
+       double *weights
+);
+
 /**
  * \brief Computes the intersection between a line and a triangle
  *

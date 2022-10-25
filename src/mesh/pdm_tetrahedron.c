@@ -171,7 +171,6 @@ PDM_tetrahedron_evaluate_position
   double xp0[3], xp1[3], xp2[3], xp3[3];
   double u, v, w;
   double vol6, ivol6;
-  double weights_tria[3];
 
   const double *pt0 = vtx_coord;
   const double *pt1 = vtx_coord + 3;
@@ -272,7 +271,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                     vtx_tria,
                                     closest_point,
                                     closest_point_dist2,
-                                    weights_tria);
+                                    NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
 
     for (int i = 0; i < 3; i++){
@@ -320,7 +319,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                     vtx_tria,
                                     closest_point,
                                     closest_point_dist2,
-                                    weights_tria);
+                                    NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];
@@ -367,7 +366,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                     vtx_tria,
                                     closest_point,
                                     closest_point_dist2,
-                                    weights_tria);
+                                    NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];
@@ -414,7 +413,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                     vtx_tria,
                                     closest_point,
                                     closest_point_dist2,
-                                    weights_tria);
+                                    NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];

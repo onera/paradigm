@@ -457,6 +457,7 @@ _projection_on_background_mesh_get2
                                        cp,
                                        &distance,
                                        uvw);
+        // PERMUTATION??
       } else {
         double weight[3];
         PDM_triangle_closest_point(pt_to_project_coord,

@@ -693,6 +693,7 @@ _locate_on_triangles
 
       if (dist2 < distance[ipt]) {
         if (bar_coord != NULL) {
+          // PERMUTATION
           _bc[0] = weights[1];
           _bc[1] = weights[2];
           _bc[2] = weights[0];
@@ -2221,6 +2222,7 @@ _locate_in_polyhedron2
 
           for (int i = 0; i < 3; i++) {
             int vtx_id = _tri_vtx[3*itri + i] - 1;
+            // PERMUTATION ????
             w[vtx_id] = tri_weight[i];
           }
 

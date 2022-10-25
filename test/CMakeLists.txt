@@ -237,3 +237,5 @@ add_subdirectory(tutorial)
 # if (PDM_ENABLE_PYTHON_BINDINGS)
 #   test_python_create (pdm_t_part_to_part_p 2)
 # endif()
+
+test_c_create (pdm_t_triangle 1)
