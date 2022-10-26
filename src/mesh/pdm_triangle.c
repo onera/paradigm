@@ -919,7 +919,6 @@ _dist2_point_segment
   double ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
   double abab = PDM_DOT_PRODUCT(ab, ab);
 
-  // PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (abab <= 0.) {
     // degenerate segment
     double mid[3] = {0.5*(a[0] + b[0]), 0.5*(a[1] + b[1]), 0.5*(a[2] + b[2])};
@@ -946,7 +945,6 @@ _dist2_point_segment
       return _dist2_point_point(p, c);
     }
   }
-  // PDM_GCC_SUPPRESS_WARNING_POP
 }
 
 PDM_triangle_status_t
@@ -959,9 +957,6 @@ PDM_triangle_evaluate_position2
        double *weights
 )
 {
-  double eps_distance2 = 1e-24; // relative tolerance??
-
-
   double __weight[3];
   double *_weight = weights;
   if (weights == NULL) {
@@ -983,12 +978,9 @@ PDM_triangle_evaluate_position2
 
   double det = v01v01*v02v02 - v01v02*v01v02;
 
-  // PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
   if (det <= 0.) {
     return PDM_TRIANGLE_DEGENERATED;
   }
-  // PDM_GCC_SUPPRESS_WARNING_POP
-
 
   double v0xv01 = PDM_DOT_PRODUCT(v0x, v01);
   double v0xv02 = PDM_DOT_PRODUCT(v0x, v02);
@@ -1042,12 +1034,7 @@ PDM_triangle_evaluate_position2
     }
   }
 
-  if (*min_dist2 < eps_distance2) {
-    return PDM_TRIANGLE_INSIDE;
-  }
-  else {
-    return PDM_TRIANGLE_OUTSIDE;
-  }
+  return PDM_TRIANGLE_OUTSIDE;
 }
 
 

@@ -199,6 +199,11 @@ _gen_config
   double normal[3];
   PDM_CROSS_PRODUCT(normal, xu, xv);
 
+  double imag_normal = 1./PDM_MODULE(normal);
+  for (int i = 0; i < 3; i++) {
+    normal[i] *= imag_normal;
+  }
+
   double u = _rand01();
   double v = _rand01();
   double w = _rand01();
@@ -236,44 +241,32 @@ _gen_config
       int ivtx2 = (ivtx1+1)%3;
       int ivtx3 = (ivtx1+2)%3;
 
-      double out12[3];
-      double out31[3];
-      // for (int i = 0; i < 3; i++) {
-      //   out12[i] = tri_coord[3*ivtx1+i] - tri_coord[3*ivtx2+i];
-      //   out31[i] = tri_coord[3*ivtx1+i] - tri_coord[3*ivtx3+i];
-      // }
-      double vec12[3];
-      double vec31[3];
+      double u1[3], u2[3];
       for (int i = 0; i < 3; i++) {
-        vec12[i] = tri_coord[3*ivtx2+i] - tri_coord[3*ivtx1+i];
-        vec31[i] = tri_coord[3*ivtx1+i] - tri_coord[3*ivtx3+i];
+        u1[i] = tri_coord[3*ivtx1+i] - tri_coord[3*ivtx3+i];
+        u2[i] = tri_coord[3*ivtx2+i] - tri_coord[3*ivtx1+i];
       }
-      PDM_CROSS_PRODUCT(out12, vec12, normal);
-      PDM_CROSS_PRODUCT(out31, vec31, normal);
+      double imag_u1 = 1./PDM_MODULE(u1);
+      double imag_u2 = 1./PDM_MODULE(u2);
+      for (int i = 0; i < 3; i++) {
+        u1[i] *= imag_u1;
+        u2[i] *= imag_u2;
+      }
 
-      double out[3];
-      double s = _rand01();
+      double v1[3];
+      PDM_CROSS_PRODUCT(v1, u1, normal);
+      double v2[3];
+      PDM_CROSS_PRODUCT(v2, u2, normal);
+
+      double theta_max = acos(PDM_MAX(-1, PDM_MIN(1, PDM_DOT_PRODUCT(v1, v2))));
+      double theta = theta_max * _rand01();
+      double phi   = asin(1 - 2*_rand01());
+
       for (int i = 0; i < 3; i++) {
         closest_point[i] = tri_coord[3*ivtx1+i];
-        out[i] = (1-s)*out12[i] + s*out31[i];
+        coord[i] = closest_point[i] + sqrt(dist2) * (cos(phi)*(cos(theta)*v1[i] + sin(theta)*u1[i]) + sin(phi)*normal[i]);
       }
 
-      s = _rand01();
-      double sgn = _rand01();
-      if (sgn < 0.5) {
-        sgn = -1;
-      } else {
-        sgn =  1;
-      }
-      for (int i = 0; i < 3; i++) {
-        out[i] = (1-s)*out[i] + s*sgn*normal[i];
-      }
-
-      double scale = sqrt(dist2 / PDM_DOT_PRODUCT(out, out));
-
-      for (int i = 0; i < 3; i++) {
-        coord[i] = closest_point[i] + scale*out[i];
-      }
 
       weight[ivtx1] = 1;
       weight[ivtx2] = 0;
@@ -281,7 +274,7 @@ _gen_config
 
     }
     else {
-     // closest point is on an edge
+      // closest point is on an edge
       double t = _rand01();
       int iedge = (int) (6*(r - 0.5));
       int ivtx1 = iedge;
@@ -290,29 +283,22 @@ _gen_config
 
       double vec[3];
       for (int i = 0; i < 3; i++) {
-        closest_point[i] = (1-t)*tri_coord[3*ivtx1+i] + t*tri_coord[3*ivtx2+i];
         vec[i] = tri_coord[3*ivtx2+i] - tri_coord[3*ivtx1+i];
+      }
+      double imag_vec = 1./PDM_MODULE(vec);
+      for (int i = 0; i < 3; i++) {
+        vec[i] *= imag_vec;
       }
 
       double out[3];
       PDM_CROSS_PRODUCT(out, vec, normal);
 
-      double s = _rand01();
-      double sgn = _rand01();
-      if (sgn < 0.5) {
-        sgn = -1;
-      } else {
-        sgn =  1;
-      }
+      double a = PDM_PI*(_rand01() - 0.5);
 
       for (int i = 0; i < 3; i++) {
-        out[i] = (1-s)*out[i] + s*sgn*normal[i];
-      }
-
-      double scale = sqrt(dist2 / PDM_DOT_PRODUCT(out, out));
-
-      for (int i = 0; i < 3; i++) {
-        coord[i] = closest_point[i] + scale*out[i];
+        closest_point[i] = (1-t)*tri_coord[3*ivtx1+i] + t*tri_coord[3*ivtx2+i];
+        // coord[i] = closest_point[i] + scale*out[i];
+        coord[i] = closest_point[i] + sqrt(dist2)*(cos(a)*out[i] + sin(a)*normal[i]);
       }
 
       weight[ivtx1] = 1 - t;
@@ -389,21 +375,6 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_pts; i++) {
 
     pts_g_num[i] = i+1;
-
-    // /* Random point inside triangle */
-    // double u = _rand01();
-    // double v = _rand01();
-    // double w = _rand01();
-    // double isum = 1./(u + v + w);
-
-    // u *= isum;
-    // v *= isum;
-    // w *= isum;
-
-    // double p[3];
-    // for (int j = 0; j < 3; j++) {
-    //   p[j] = w*vtx_coord[j] + u*vtx_coord[3+j] + v*vtx_coord[6+j];
-    // }
     double *p = pts_coord + 3*i;
 
 
@@ -417,7 +388,7 @@ int main(int argc, char *argv[])
     }
 
     double true_min_dist2 = _rand01();
-    true_min_dist2 *= true_min_dist2;
+    // true_min_dist2 *= true_min_dist2;
 
     double true_closest_point[3], true_weight[3];
 
@@ -455,10 +426,7 @@ int main(int argc, char *argv[])
     };
 
     if (stat != true_stat ||
-        min_dist2 - true_min_dist2 > 1e-15) {// ||
-        // err_weight[0] > 1e-15 ||
-        // err_weight[1] > 1e-15 ||
-        // err_weight[2] > 1e-15) {
+        min_dist2 - true_min_dist2 > 1e-15) {
       log_trace("!!! point %d: %f %f %f, status = %d / %d, min_dist2 = %e / %e, err_weight = %e %e %e\n",
                 i+1, p[0], p[1], p[2],
                 // true_weight[0],
