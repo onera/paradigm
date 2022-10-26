@@ -180,7 +180,13 @@ main
                                                            &n_src,
                                                            1,
                                                            comm);
+  PDM_MPI_Barrier(comm);
   double t2 = PDM_MPI_Wtime();
+
+  if (i_rank == 0) {
+    printf("PDM_part_to_block_geom_create = %12.5e \n", t2 - t1);
+  }
+
   if(0) {
     log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
   }
