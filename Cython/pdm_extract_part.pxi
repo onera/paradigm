@@ -82,8 +82,8 @@ cdef class ExtractPart:
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
   cdef MPI.Comm py_comm   
-  ptp_objects = {}
-  keep_alive = []
+  cdef dict ptp_objects
+  cdef list keep_alive
   # --------------------------------------------------------------------------
 
   # ------------------------------------------------------------------
@@ -98,6 +98,9 @@ cdef class ExtractPart:
     """
     Compute the distance from point clouds to a surface
     """
+    self.ptp_objects = dict()
+    self.keep_alive  = list()
+
     self.py_comm = comm
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     self._extrp =  PDM_extract_part_create(dim,

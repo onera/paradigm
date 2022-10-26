@@ -123,12 +123,9 @@ cdef class PartToPartCapsule:
   def __cinit__(self, object caps, MPI.Comm comm):
     """
     """
+    self.py_comm  = comm
+    self.ptp      = <PDM_part_to_part_t *> PyCapsule_GetPointer(caps, NULL)
 
-    self.py_comm               = comm
-    # cdef PDM_part_to_part_t *ptp = <PDM_part_to_part_t *> PyCapsule_GetPointer(caps, NULL)
-    self.ptp = <PDM_part_to_part_t *> PyCapsule_GetPointer(caps, NULL)
-    # self.ptp = ptp
-    
     PDM_part_to_part_n_part_and_n_elt_get( self.ptp    ,
                                           &self.n_part1,
                                           &self.n_part2,
@@ -143,7 +140,6 @@ cdef class PartToPartCapsule:
                                         &     part1_to_part2    );
 
     self.lpart1_to_part2_idx = []
-    # self.lpart1_to_part2     = []
 
     for i_part in range(self.n_part1):
       self.lpart1_to_part2_idx.append( create_numpy_i(part1_to_part2_idx[i_part], self.n_elt1[i_part]+1, False))
@@ -181,12 +177,11 @@ cdef class PartToPartCapsule:
   # --------------------------------------------------------------------
   def reverse_wait(self, int request_id):
     return reverse_wait(self, request_id)
+
   
   # --------------------------------------------------------------------
   def __dealloc__(self):
     PDM_part_to_part_free(self.ptp)
-
-  # --------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 # ========================================================================
