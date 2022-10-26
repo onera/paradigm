@@ -70,7 +70,7 @@ typedef enum {
 /*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position
+PDM_triangle_evaluate_position_old
 (
  const double  x[3],
  const double  pts[9],
@@ -80,7 +80,7 @@ PDM_triangle_evaluate_position
  );
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position2
+PDM_triangle_evaluate_position
 (
  const double  x[3],
  const double  pts[9],

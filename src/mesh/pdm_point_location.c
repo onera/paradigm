@@ -682,11 +682,17 @@ _locate_on_triangles
       double closest_point[3];
       double dist2;
 
-      PDM_triangle_status_t stat = PDM_triangle_evaluate_position (_pt,
-                                                                   tri_coord,
-                                                                   closest_point,
-                                                                   &dist2,
-                                                                   weights);
+      // PDM_triangle_status_t stat = PDM_triangle_evaluate_position_old(_pt,
+      //                                                                 tri_coord,
+      //                                                                 closest_point,
+      //                                                                 &dist2,
+      //                                                                 weights);
+      PDM_triangle_status_t stat = PDM_triangle_evaluate_position(_pt,
+                                                                  tri_coord,
+                                                                  closest_point,
+                                                                  &dist2,
+                                                                  weights);
+
       if (stat == PDM_TRIANGLE_DEGENERATED) {
         continue;
       }
@@ -694,9 +700,10 @@ _locate_on_triangles
       if (dist2 < distance[ipt]) {
         if (bar_coord != NULL) {
           // PERMUTATION
-          _bc[0] = weights[1];
-          _bc[1] = weights[2];
-          _bc[2] = weights[0];
+          // _bc[0] = weights[1];
+          // _bc[1] = weights[2];
+          // _bc[2] = weights[0];
+          memcpy(_bc, weights, sizeof(double)*3);
         }
 
         if (proj_coord != NULL) {
@@ -1388,11 +1395,16 @@ _locate_in_cell_3d
           double *_cp = closest_point + 3 * ipt;
 
           double min_dist2, closest[3];
-          PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
-                                                                        tri_coord,
-                                                                        closest,
-                                                                        &min_dist2,
-                                                                        NULL);
+          // PDM_triangle_status_t error = PDM_triangle_evaluate_position_old(_pt,
+          //                                                                  tri_coord,
+          //                                                                  closest,
+          //                                                                  &min_dist2,
+          //                                                                  NULL);
+          PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
+                                                                       tri_coord,
+                                                                       closest,
+                                                                       &min_dist2,
+                                                                       NULL);
 
           if (error == PDM_TRIANGLE_DEGENERATED) {
             continue;
@@ -1714,11 +1726,16 @@ _locate_in_polyhedron
         double *_cp = closest_point + 3*ipt;
 
         double min_dist2, closest[3];
-        PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
-                                                                      tri_coord,
-                                                                      closest,
-                                                                      &min_dist2,
-                                                                      NULL);
+        // PDM_triangle_status_t error = PDM_triangle_evaluate_position_old(_pt,
+        //                                                                  tri_coord,
+        //                                                                  closest,
+        //                                                                  &min_dist2,
+        //                                                                  NULL);
+        PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
+                                                                     tri_coord,
+                                                                     closest,
+                                                                     &min_dist2,
+                                                                     NULL);
 
         if (error == PDM_TRIANGLE_DEGENERATED) {
           continue;
@@ -2199,11 +2216,16 @@ _locate_in_polyhedron2
 
         /* Distance */
         double tri_dist2, tri_closest_point[3], tri_weight[3];
+        // PDM_triangle_status_t stat = PDM_triangle_evaluate_position_old(pt_coord,
+        //                                                             tri_coord,
+        //                                                             tri_closest_point,
+        //                                                             &tri_dist2,
+        //                                                             tri_weight);
         PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
-                                                                    tri_coord,
-                                                                    tri_closest_point,
-                                                                    &tri_dist2,
-                                                                    tri_weight);
+                                                                     tri_coord,
+                                                                     tri_closest_point,
+                                                                     &tri_dist2,
+                                                                     tri_weight);
 
         if (stat == PDM_TRIANGLE_DEGENERATED) {
           /* Raise error? */
@@ -2222,7 +2244,6 @@ _locate_in_polyhedron2
 
           for (int i = 0; i < 3; i++) {
             int vtx_id = _tri_vtx[3*itri + i] - 1;
-            // PERMUTATION ????
             w[vtx_id] = tri_weight[i];
           }
 

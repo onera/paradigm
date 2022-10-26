@@ -104,7 +104,8 @@ _read_args
  double        *v0,
  double        *v1,
  double        *v2,
- int           *n_pts
+ int           *n_pts,
+ int           *visu
 )
 {
   int i = 1;
@@ -169,6 +170,9 @@ _read_args
       else {
         *n_pts = atoi(argv[i]);
       }
+    }
+    else if (strcmp(argv[i], "-visu") == 0) {
+      *visu = 1;
     }
 
     else {
@@ -333,6 +337,7 @@ int main(int argc, char *argv[])
   double v1[3]     = {1, 0, 0};
   double v2[3]     = {0, 1, 0};
   int    n_pts     = 1;
+  int    visu      = 0;
   _read_args(argc,
              argv,
              &seed,
@@ -340,7 +345,8 @@ int main(int argc, char *argv[])
              v0,
              v1,
              v2,
-             &n_pts);
+             &n_pts,
+             &visu);
 
   if (seed == -1) {
     seed = time(NULL);
@@ -411,11 +417,11 @@ int main(int argc, char *argv[])
     double *closest_point = pts_proj + 3*i;
     double min_dist2;
     double weight[3];
-    PDM_triangle_status_t stat = PDM_triangle_evaluate_position2(p,
-                                                                 vtx_coord,
-                                                                 closest_point,
-                                                                 &min_dist2,
-                                                                 weight);
+    PDM_triangle_status_t stat = PDM_triangle_evaluate_position(p,
+                                                                vtx_coord,
+                                                                closest_point,
+                                                                &min_dist2,
+                                                                weight);
     pts_stat[i] = stat;
     pts_dist[i] = sqrt(min_dist2);
 
@@ -425,7 +431,7 @@ int main(int argc, char *argv[])
       PDM_ABS(weight[2] - true_weight[2])
     };
 
-    if (stat != true_stat ||
+    if ((stat != true_stat && min_dist2 > 1e-15) ||
         min_dist2 - true_min_dist2 > 1e-15) {
       log_trace("!!! point %d: %f %f %f, status = %d / %d, min_dist2 = %e / %e, err_weight = %e %e %e\n",
                 i+1, p[0], p[1], p[2],
@@ -458,45 +464,36 @@ int main(int argc, char *argv[])
 
   }
 
-  const char   *field_name[3] = {"error", "status", "distance"};
-  const double *field_value[3] = {pts_error, pts_stat, pts_dist};
+  if (visu) {
+    const char   *field_name[3] = {"error", "status", "distance"};
+    const double *field_value[3] = {pts_error, pts_stat, pts_dist};
 
-  PDM_vtk_write_std_elements_double("triangle_points.vtk",
-                                    n_pts,
-                                    pts_coord,
-                                    pts_g_num,
-                                    PDM_MESH_NODAL_POINT,
-                                    n_pts,
-                                    NULL,
-                                    pts_g_num,
-                                    3,
-                                    field_name,
-                  (const double **) field_value);
+    PDM_vtk_write_std_elements_double("triangle_points.vtk",
+                                      n_pts,
+                                      pts_coord,
+                                      pts_g_num,
+                                      PDM_MESH_NODAL_POINT,
+                                      n_pts,
+                                      NULL,
+                                      pts_g_num,
+                                      3,
+                                      field_name,
+                    (const double **) field_value);
 
-  PDM_vtk_write_std_elements_double("triangle_proj.vtk",
-                                    n_pts,
-                                    pts_proj,
-                                    pts_g_num,
-                                    PDM_MESH_NODAL_POINT,
-                                    n_pts,
-                                    NULL,
-                                    pts_g_num,
-                                    3,
-                                    field_name,
-                  (const double **) field_value);
-  // PDM_vtk_write_point_cloud("triangle_points.vtk",
-  //                           n_pts,
-  //                           pts_coord,
-  //                           NULL,
-  //                           pts_error);
+    PDM_vtk_write_std_elements_double("triangle_proj.vtk",
+                                      n_pts,
+                                      pts_proj,
+                                      pts_g_num,
+                                      PDM_MESH_NODAL_POINT,
+                                      n_pts,
+                                      NULL,
+                                      pts_g_num,
+                                      3,
+                                      field_name,
+                    (const double **) field_value);
 
-  // PDM_vtk_write_point_cloud("triangle_proj.vtk",
-  //                           n_pts,
-  //                           pts_proj,
-  //                           NULL,
-  //                           pts_error);
-
-  _dump_triangle("triangle_triangle.vtk", vtx_coord);
+    _dump_triangle("triangle_triangle.vtk", vtx_coord);
+  }
 
 
   free(pts_coord);
@@ -512,5 +509,5 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-  return 0;
+  return n_pts - count_ok;
 }

@@ -2640,7 +2640,7 @@ PDM_part_mesh_nodal_create_from_part3d
           l_facsom_poly += face_som_idx_courant[i+1] - face_som_idx_courant[i];
         }
       }
-      log_trace("n_face_poly = %d\n", n_face_poly);
+      // log_trace("n_face_poly = %d\n", n_face_poly);
       facsom_poly_idx     = (int         *) malloc(sizeof(int        ) * (n_face_poly + 1));
       facsom_poly         = (int         *) malloc(sizeof(int        ) * l_facsom_poly);
       block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
@@ -2747,10 +2747,10 @@ PDM_part_mesh_nodal_create_from_part3d
                                         PDM_OWNERSHIP_KEEP);
 
     if (som_elts[4] > 0) {
-      PDM_log_trace_connectivity_int(cellfac_poly_idx,
-                                     cellfac_poly,
-                                     n_poly3d_part,
-                                     "cellfac_poly : ");
+      // PDM_log_trace_connectivity_int(cellfac_poly_idx,
+      //                                cellfac_poly,
+      //                                n_poly3d_part,
+      //                                "cellfac_poly : ");
       PDM_part_mesh_nodal_elmts_block_poly3d_set(pmne,
                                                  id_bloc_poly_3d,
                                                  i_part,

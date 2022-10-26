@@ -1280,7 +1280,7 @@ _cube_mesh2
                                           PDM_OWNERSHIP_KEEP);
 
       face_vtx_idx = _face_edge_idx;
-      int **__face_vtx = NULL;
+      int *__face_vtx = NULL;
       PDM_compute_face_vtx_from_face_and_edge(n_face,
                                               _face_edge_idx,
                                               _face_edge,

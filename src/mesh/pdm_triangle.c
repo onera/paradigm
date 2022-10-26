@@ -74,7 +74,7 @@ _determinant_3x3
 
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position
+PDM_triangle_evaluate_position_old
 (
  const double  x[3],
  const double  pts[9],
@@ -948,7 +948,7 @@ _dist2_point_segment
 }
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position2
+PDM_triangle_evaluate_position
 (
  const double  x[3],
  const double  pts[9],
@@ -957,6 +957,8 @@ PDM_triangle_evaluate_position2
        double *weights
 )
 {
+  PDM_triangle_status_t stat = PDM_TRIANGLE_OUTSIDE;
+
   double __weight[3];
   double *_weight = weights;
   if (weights == NULL) {
@@ -993,17 +995,19 @@ PDM_triangle_evaluate_position2
       _weight[2] >= 0 && _weight[2] <= det &&
       _weight[0] >= 0) {
     // projection lies inside the triangle
+    stat = PDM_TRIANGLE_INSIDE;
+
     double idet = 1./det;
     _weight[0] *= idet;
     _weight[1] *= idet;
     _weight[2] *= idet;
 
-    for (int i = 0; i < 3; i++) {
-      closest_point[i] = _weight[0]*pts[i] + _weight[1]*pts[3+i] + _weight[2]*pts[6+i];
-    }
 
-    *min_dist2 = _dist2_point_point(x, closest_point);
-    return PDM_TRIANGLE_INSIDE;
+    *min_dist2 = 0;
+    for (int i = 0; i < 3; i++) {
+      double delta = x[i] - (_weight[0]*pts[i] + _weight[1]*pts[3+i] + _weight[2]*pts[6+i]);
+      *min_dist2 += delta*delta;
+    }
   }
 
   else {
@@ -1028,13 +1032,14 @@ PDM_triangle_evaluate_position2
     _weight[imin      ] = 1. - tmin;
     _weight[(imin+1)%3] = tmin;
     _weight[(imin+2)%3] = 0.;
+  }
 
+  if (closest_point != NULL) {
     for (int i = 0; i < 3; i++) {
       closest_point[i] = _weight[0]*pts[i] + _weight[1]*pts[3+i] + _weight[2]*pts[6+i];
     }
   }
-
-  return PDM_TRIANGLE_OUTSIDE;
+  return stat;
 }
 
 

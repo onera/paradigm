@@ -267,11 +267,11 @@ PDM_GCC_SUPPRESS_WARNING_POP
     vtx_tria[7] = pt3[1];
     vtx_tria[8] = pt3[2];
 
-    PDM_triangle_evaluate_position (x,
-                                    vtx_tria,
-                                    closest_point,
-                                    closest_point_dist2,
-                                    NULL);
+    PDM_triangle_evaluate_position(x,
+                                   vtx_tria,
+                                   closest_point,
+                                   closest_point_dist2,
+                                   NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
 
     for (int i = 0; i < 3; i++){
@@ -315,11 +315,11 @@ PDM_GCC_SUPPRESS_WARNING_POP
     vtx_tria[7] = pt2[1];
     vtx_tria[8] = pt2[2];
 
-    PDM_triangle_evaluate_position (x,
-                                    vtx_tria,
-                                    closest_point,
-                                    closest_point_dist2,
-                                    NULL);
+    PDM_triangle_evaluate_position(x,
+                                   vtx_tria,
+                                   closest_point,
+                                   closest_point_dist2,
+                                   NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];
@@ -362,11 +362,11 @@ PDM_GCC_SUPPRESS_WARNING_POP
     vtx_tria[7] = pt1[1];
     vtx_tria[8] = pt1[2];
 
-    PDM_triangle_evaluate_position (x,
-                                    vtx_tria,
-                                    closest_point,
-                                    closest_point_dist2,
-                                    NULL);
+    PDM_triangle_evaluate_position(x,
+                                   vtx_tria,
+                                   closest_point,
+                                   closest_point_dist2,
+                                   NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];
@@ -409,11 +409,11 @@ PDM_GCC_SUPPRESS_WARNING_POP
     vtx_tria[7] = pt2[1];
     vtx_tria[8] = pt2[2];
 
-    PDM_triangle_evaluate_position (x,
-                                    vtx_tria,
-                                    closest_point,
-                                    closest_point_dist2,
-                                    NULL);
+    PDM_triangle_evaluate_position(x,
+                                   vtx_tria,
+                                   closest_point,
+                                   closest_point_dist2,
+                                   NULL);
     double p0cp[3], p1cp[3], p2cp[3], p3cp[3];
     for (int i = 0; i < 3; i++){
       p0cp[i] = closest_point[i] - pt0[i];

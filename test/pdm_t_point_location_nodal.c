@@ -153,89 +153,89 @@ _read_args(int                    argc,
 }
 
 
-static PDM_part_mesh_nodal_elmts_t *
-_mesh_nodal_to_pmesh_nodal_elmts
-(
- PDM_Mesh_nodal_t *mesh_nodal
- )
-{
-  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
+// static PDM_part_mesh_nodal_elmts_t *
+// _mesh_nodal_to_pmesh_nodal_elmts
+// (
+//  PDM_Mesh_nodal_t *mesh_nodal
+//  )
+// {
+//   PDM_part_mesh_nodal_elmts_t *pmne = NULL;
 
-  int  n_block   = PDM_Mesh_nodal_n_blocks_get (mesh_nodal);
-  int  n_part    = PDM_Mesh_nodal_n_part_get   (mesh_nodal);
-  int *blocks_id = PDM_Mesh_nodal_blocks_id_get(mesh_nodal);
+//   int  n_block   = PDM_Mesh_nodal_n_blocks_get (mesh_nodal);
+//   int  n_part    = PDM_Mesh_nodal_n_part_get   (mesh_nodal);
+//   int *blocks_id = PDM_Mesh_nodal_blocks_id_get(mesh_nodal);
 
-  /* Infer mesh dimension from mesh_nodal */
-  int mesh_dimension = 3;
+//   /* Infer mesh dimension from mesh_nodal */
+//   int mesh_dimension = 3;
 
-  pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension,
-                                          n_part,
-                                          mesh_nodal->pdm_mpi_comm);
+//   pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension,
+//                                           n_part,
+//                                           mesh_nodal->pdm_mpi_comm);
 
-  pmne->n_section        = n_block;
-  pmne->n_section_std    = 0;
-  pmne->n_section_poly2d = 0;
-  pmne->n_section_poly3d = 0;
+//   pmne->n_section        = n_block;
+//   pmne->n_section_std    = 0;
+//   pmne->n_section_poly2d = 0;
+//   pmne->n_section_poly3d = 0;
 
-  pmne->sections_id = blocks_id; // Legit???
+//   pmne->sections_id = blocks_id; // Legit???
 
-  for (int iblock = 0; iblock < n_block; iblock++) {
+//   for (int iblock = 0; iblock < n_block; iblock++) {
 
-    int id_block = blocks_id[iblock];
+//     int id_block = blocks_id[iblock];
 
-    if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
-      pmne->n_section_std++;
-    }
-    else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
-      id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
-      pmne->n_section_poly2d++;
-    }
-    else  {
-      id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
-      pmne->n_section_poly3d++;
-    }
+//     if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
+//       pmne->n_section_std++;
+//     }
+//     else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
+//       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
+//       pmne->n_section_poly2d++;
+//     }
+//     else  {
+//       id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
+//       pmne->n_section_poly3d++;
+//     }
 
-  }
-
-
-  pmne->sections_std    = malloc(sizeof(PDM_Mesh_nodal_block_std_t    *) * pmne->n_section_std   );
-  pmne->sections_poly2d = malloc(sizeof(PDM_Mesh_nodal_block_poly2d_t *) * pmne->n_section_poly2d);
-  pmne->sections_poly3d = malloc(sizeof(PDM_Mesh_nodal_block_poly3d_t *) * pmne->n_section_poly3d);
-
-  pmne->n_section_std    = 0;
-  pmne->n_section_poly2d = 0;
-  pmne->n_section_poly3d = 0;
-
-  for (int iblock = 0; iblock < n_block; iblock++) {
-
-    int id_block = blocks_id[iblock];
-
-    if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
-      pmne->sections_std[pmne->n_section_std++] = mesh_nodal->blocks_std[id_block];
-    }
-    else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
-      id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
-      pmne->sections_poly2d[pmne->n_section_poly2d++] = mesh_nodal->blocks_poly2d[id_block];
-    }
-    else  {
-      id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
-      pmne->sections_poly3d[pmne->n_section_poly3d++] = mesh_nodal->blocks_poly3d[id_block];
-    }
-
-  }
+//   }
 
 
+//   pmne->sections_std    = malloc(sizeof(PDM_Mesh_nodal_block_std_t    *) * pmne->n_section_std   );
+//   pmne->sections_poly2d = malloc(sizeof(PDM_Mesh_nodal_block_poly2d_t *) * pmne->n_section_poly2d);
+//   pmne->sections_poly3d = malloc(sizeof(PDM_Mesh_nodal_block_poly3d_t *) * pmne->n_section_poly3d);
 
-  pmne->n_elmts = malloc(sizeof(PDM_l_num_t) * n_part);
-  for (int i = 0; i < n_part; i++) {
-    pmne->n_elmts[i] = PDM_Mesh_nodal_n_cell_get(mesh_nodal,
-                                                 i);
-  }
+//   pmne->n_section_std    = 0;
+//   pmne->n_section_poly2d = 0;
+//   pmne->n_section_poly3d = 0;
+
+//   for (int iblock = 0; iblock < n_block; iblock++) {
+
+//     int id_block = blocks_id[iblock];
+
+//     if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
+//       pmne->sections_std[pmne->n_section_std++] = mesh_nodal->blocks_std[id_block];
+//     }
+//     else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
+//       id_block -= PDM_BLOCK_ID_BLOCK_POLY2D;
+//       pmne->sections_poly2d[pmne->n_section_poly2d++] = mesh_nodal->blocks_poly2d[id_block];
+//     }
+//     else  {
+//       id_block -= PDM_BLOCK_ID_BLOCK_POLY3D;
+//       pmne->sections_poly3d[pmne->n_section_poly3d++] = mesh_nodal->blocks_poly3d[id_block];
+//     }
+
+//   }
 
 
 
-  return pmne;
-}
+//   pmne->n_elmts = malloc(sizeof(PDM_l_num_t) * n_part);
+//   for (int i = 0; i < n_part; i++) {
+//     pmne->n_elmts[i] = PDM_Mesh_nodal_n_cell_get(mesh_nodal,
+//                                                  i);
+//   }
+
+
+
+//   return pmne;
+// }
 
 
 static void
@@ -501,6 +501,7 @@ _gen_mesh
     free(pface_vtx     );
     free(pcell_face_idx);
     free(pcell_face    );
+    free(pface_ln_to_gn);
 
 
     // for (int i_part = 0; i_part < n_part; i_part++) {
@@ -1449,7 +1450,7 @@ int main(int argc, char *argv[])
     log_trace("--- part %d ---\n", ipart);
     for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
       log_trace("  elt %d\n", ielt);
-      log_trace("    distance = %f\n", distance[ipart][ielt]);
+      log_trace("    distance2 = %e\n", distance[ipart][ielt]);
       log_trace("    proj_coord = %f %f %f\n",
                 projected_coord[ipart][3*ielt  ],
                 projected_coord[ipart][3*ielt+1],
