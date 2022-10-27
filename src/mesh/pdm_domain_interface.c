@@ -1099,22 +1099,27 @@ static void _match_all_edges_from_faces
       PDM_log_trace_array_long(&face_edge[start_idx_opp], face_len, "face_opp_edge_opp");
       PDM_log_trace_array_long(&pedge_vtx[2*start_idx_opp], 2*face_len, "edge vertices opp");
     }
-
-    // Search any received edge (we should have at least one)
+    
+    // Search any received edge (we should have at least one, but not necessary the first
+    // since we can have aliases edges
     PDM_g_num_t opp_edge_key = 0;
     int idx = -1;
-    while (opp_edge_key == 0)
-      opp_edge_key = face_edge_wopp[start_idx + 1 + idx++];
-    assert (idx < face_len);
-
-    //Search idx of opposite edge in opposite 
-    PDM_g_num_t candidate = 0;
     int opp_idx = -1;
-    while (candidate != opp_edge_key) {
-      candidate = face_edge[start_idx_opp + 1 + opp_idx++];
-      candidate = PDM_ABS(candidate);
+    int found = 0;
+    while (!found && idx < face_len) {
+      opp_edge_key = face_edge_wopp[start_idx + 1 + idx++];
+      if (opp_edge_key != 0) { //Skip undetermined edges
+        opp_idx = -1;
+        PDM_g_num_t candidate = 0;
+        while (candidate != opp_edge_key && opp_idx < face_len) {
+          candidate = face_edge[start_idx_opp + 1 + opp_idx++];
+          candidate = PDM_ABS(candidate);
+        }
+        found = (int) (candidate == opp_edge_key); //Break first while if OK
+      }
     }
-    assert (opp_idx < face_len);
+    // log_trace("Match pos %d and %d using shared edge %d\n", idx, opp_idx, opp_edge_key);
+    assert (found);
 
     // Find starting point using the two edge indices and signs
     int sign     = PDM_SIGN(face_edge[start_idx + idx]);
