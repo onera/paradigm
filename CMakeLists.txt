@@ -484,6 +484,8 @@ endif()
 
 add_subdirectory(test)
 
+add_subdirectory(script)
+
 add_subdirectory(doc)
 
 #------------------------------------------------------------------------------

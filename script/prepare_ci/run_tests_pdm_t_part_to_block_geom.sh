@@ -1,0 +1,8 @@
+execute_test 'mpirun -np 1 ./test/pdm_t_part_to_block_geom -s 10000 > out_s=10000 '
+execute_test 'mpirun -np 1 ./test/pdm_t_part_to_block_geom -s 100000 > out_s=100000 '
+execute_test 'mpirun -np 2 ./test/pdm_t_part_to_block_geom -s 10000 > out_s=10000 '
+execute_test 'mpirun -np 2 ./test/pdm_t_part_to_block_geom -s 100000 > out_s=100000 '
+execute_test 'mpirun -np 3 ./test/pdm_t_part_to_block_geom -s 10000 > out_s=10000 '
+execute_test 'mpirun -np 3 ./test/pdm_t_part_to_block_geom -s 100000 > out_s=100000 '
+execute_test 'mpirun -np 4 ./test/pdm_t_part_to_block_geom -s 10000 > out_s=10000 '
+execute_test 'mpirun -np 4 ./test/pdm_t_part_to_block_geom -s 100000 > out_s=100000 '

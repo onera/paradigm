@@ -1911,7 +1911,10 @@ _deformation
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 10,20,30,40
+// @@@param[l] : 1.
+// @@@args[part_kind] : -parmetis, -pt-scotch
 int main(int argc, char *argv[])
 {
 

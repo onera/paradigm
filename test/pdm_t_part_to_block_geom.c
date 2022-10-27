@@ -117,7 +117,8 @@ _read_args
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[s] : 10000,100000
 int
 main
 (
