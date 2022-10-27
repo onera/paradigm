@@ -31,6 +31,7 @@
 #include "pdm_vtk.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_box_tree_priv.h"
 #include "pdm_timer.h"
 #include "pdm_logging.h"
 #include "pdm_binary_search.h"
@@ -2723,6 +2724,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
     for (int i = 0; i < n_pts; i++) {
       _normalize (_dbbt, pts + 3*i, _pts + 3*i);
     }
+  }
+
+  if(_dbbt->btLoc->shm_data == NULL) {
+    PDM_box_tree_copy_to_shm(_dbbt->btLoc);
   }
 
   int i_rank;
