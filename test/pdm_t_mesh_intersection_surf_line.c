@@ -399,23 +399,24 @@ _set_mesh_line
                                  vtx_ln_to_gn,
                                  vtx_coord);
 
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
+  if (0) {
+    int i_rank;
+    PDM_MPI_Comm_rank(comm, &i_rank);
 
-  char filename[999];
-  sprintf(filename, "export_line_%i.vtk", i_rank);
-  PDM_vtk_write_std_elements(filename,
-                             n_vtx,
-                             vtx_coord,
-                             vtx_ln_to_gn,
-                             PDM_MESH_NODAL_BAR2,
-                             n_edge,
-                             edge_vtx,
-                             edge_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
-
+    char filename[999];
+    sprintf(filename, "export_line_%i.vtk", i_rank);
+    PDM_vtk_write_std_elements(filename,
+                               n_vtx,
+                               vtx_coord,
+                               vtx_ln_to_gn,
+                               PDM_MESH_NODAL_BAR2,
+                               n_edge,
+                               edge_vtx,
+                               edge_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
 }
 
