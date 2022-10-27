@@ -682,11 +682,6 @@ _locate_on_triangles
       double closest_point[3];
       double dist2;
 
-      // PDM_triangle_status_t stat = PDM_triangle_evaluate_position_old(_pt,
-      //                                                                 tri_coord,
-      //                                                                 closest_point,
-      //                                                                 &dist2,
-      //                                                                 weights);
       PDM_triangle_status_t stat = PDM_triangle_evaluate_position(_pt,
                                                                   tri_coord,
                                                                   closest_point,
@@ -1395,11 +1390,6 @@ _locate_in_cell_3d
           double *_cp = closest_point + 3 * ipt;
 
           double min_dist2, closest[3];
-          // PDM_triangle_status_t error = PDM_triangle_evaluate_position_old(_pt,
-          //                                                                  tri_coord,
-          //                                                                  closest,
-          //                                                                  &min_dist2,
-          //                                                                  NULL);
           PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
                                                                        tri_coord,
                                                                        closest,
@@ -1726,11 +1716,6 @@ _locate_in_polyhedron
         double *_cp = closest_point + 3*ipt;
 
         double min_dist2, closest[3];
-        // PDM_triangle_status_t error = PDM_triangle_evaluate_position_old(_pt,
-        //                                                                  tri_coord,
-        //                                                                  closest,
-        //                                                                  &min_dist2,
-        //                                                                  NULL);
         PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
                                                                      tri_coord,
                                                                      closest,
@@ -2216,16 +2201,11 @@ _locate_in_polyhedron2
 
         /* Distance */
         double tri_dist2, tri_closest_point[3], tri_weight[3];
-        // PDM_triangle_status_t stat = PDM_triangle_evaluate_position_old(pt_coord,
-        //                                                             tri_coord,
-        //                                                             tri_closest_point,
-        //                                                             &tri_dist2,
-        //                                                             tri_weight);
         PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
-                                                                     tri_coord,
-                                                                     tri_closest_point,
-                                                                     &tri_dist2,
-                                                                     tri_weight);
+                                                                    tri_coord,
+                                                                    tri_closest_point,
+                                                                    &tri_dist2,
+                                                                    tri_weight);
 
         if (stat == PDM_TRIANGLE_DEGENERATED) {
           /* Raise error? */
