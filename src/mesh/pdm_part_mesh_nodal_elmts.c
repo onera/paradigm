@@ -2640,7 +2640,7 @@ PDM_part_mesh_nodal_create_from_part3d
           l_facsom_poly += face_som_idx_courant[i+1] - face_som_idx_courant[i];
         }
       }
-      log_trace("n_face_poly = %d\n", n_face_poly);
+      // log_trace("n_face_poly = %d\n", n_face_poly);
       facsom_poly_idx     = (int         *) malloc(sizeof(int        ) * (n_face_poly + 1));
       facsom_poly         = (int         *) malloc(sizeof(int        ) * l_facsom_poly);
       block_face_ln_to_gn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_face_poly);
@@ -2747,10 +2747,10 @@ PDM_part_mesh_nodal_create_from_part3d
                                         PDM_OWNERSHIP_KEEP);
 
     if (som_elts[4] > 0) {
-      PDM_log_trace_connectivity_int(cellfac_poly_idx,
-                                     cellfac_poly,
-                                     n_poly3d_part,
-                                     "cellfac_poly : ");
+      // PDM_log_trace_connectivity_int(cellfac_poly_idx,
+      //                                cellfac_poly,
+      //                                n_poly3d_part,
+      //                                "cellfac_poly : ");
       PDM_part_mesh_nodal_elmts_block_poly3d_set(pmne,
                                                  id_bloc_poly_3d,
                                                  i_part,
@@ -2768,6 +2768,10 @@ PDM_part_mesh_nodal_create_from_part3d
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
   }
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(num_cell_parent_to_local[i_part]);
+  }
+  free(num_cell_parent_to_local);
 
   if (prepa_blocks != NULL) {
     free(prepa_blocks->n_cell);
@@ -2841,14 +2845,14 @@ PDM_part_mesh_nodal_create_from_part2d
   for (int i_part = 0; i_part < n_part; i_part++) {
     for (int i = 0; i < n_face[i_part]; i++) {
 
-      int l_face_edge = face_edge_idx[i+1] - face_edge_idx[i];
+      int l_face_edge = face_edge_idx[i_part][i+1] - face_edge_idx[i_part][i];
       if (l_face_edge == 3)
         n_tria += 1;
       else if (l_face_edge == 4)
         n_quad += 1;
       else {
         n_poly2d  += 1;
-        l_connec_poly2d += face_edge_idx[i+1] - face_edge_idx[i];
+        l_connec_poly2d += face_edge_idx[i_part][i+1] - face_edge_idx[i_part][i];
       }
     }
 
@@ -3096,6 +3100,10 @@ PDM_part_mesh_nodal_create_from_part2d
                                                  num_parent_poly2d,
                                                  PDM_OWNERSHIP_KEEP);
   }
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free(num_cell_parent_to_local[i_part]);
+  }
+  free(num_cell_parent_to_local);
 
 
   free(prepa_blocks->n_cell);

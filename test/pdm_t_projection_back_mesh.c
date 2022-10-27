@@ -452,11 +452,21 @@ _projection_on_background_mesh_get2
       }
 
       if (0) {
+        // PDM_triangle_evaluate_position_old(pt_to_project_coord,
+        //                                    tria_coord,
+        //                                    cp,
+        //                                    &distance,
+        //                                    uvw);
+        double weight[3];
         PDM_triangle_evaluate_position(pt_to_project_coord,
                                        tria_coord,
                                        cp,
                                        &distance,
                                        uvw);
+        uvw[0] = weight[2];
+        uvw[1] = weight[0];
+        uvw[2] = weight[1];
+        // PERMUTATION??
       } else {
         double weight[3];
         PDM_triangle_closest_point(pt_to_project_coord,

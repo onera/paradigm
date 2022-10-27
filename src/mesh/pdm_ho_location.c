@@ -42,6 +42,7 @@
 
 #include "pdm_error.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -1814,16 +1815,17 @@ _heap_fill_pn_sub_tria
                                    x2, y2, z2,
                                    x3, y3, z3};
       double _closest_pointP1[3];
-      double *_uvClosestPointP1;
+      // double *_uvClosestPointP1;
+      double _uvClosestPointP1[2];
       double _uvClosestPointPn[2];
       double _weightsClosestPointP1[3];
       double _dist2;
 
-      PDM_triangle_status_t stat = PDM_triangle_evaluate_position (point_coords,
-                                                                   __vertex_coords,
-                                                                   _closest_pointP1,
-                                                                   &_dist2,
-                                                                   _weightsClosestPointP1);
+      PDM_triangle_status_t stat = PDM_triangle_evaluate_position(point_coords,
+                                                                  __vertex_coords,
+                                                                  _closest_pointP1,
+                                                                  &_dist2,
+                                                                  _weightsClosestPointP1);
 
       double _uvPn_sub_tria[6];
 
@@ -1836,8 +1838,9 @@ _heap_fill_pn_sub_tria
 
       if (stat != PDM_TRIANGLE_DEGENERATED) {
 
-        _uvClosestPointP1 = _weightsClosestPointP1;
+        // _uvClosestPointP1 = _weightsClosestPointP1;
         for (int j1 = 0; j1 < 2; j1++) {
+          _uvClosestPointP1[j1] = _weightsClosestPointP1[j1+1];
           _uvClosestPointPn[j1] = 0;
         }
         for (int j1 = 0; j1 < 2; j1++) {
@@ -1845,6 +1848,7 @@ _heap_fill_pn_sub_tria
             _uvClosestPointPn[j1] += _weightsClosestPointP1[k] * _uvPn_sub_tria[2*k + j1];
           }
         }
+
 
         _heap_s_insert (heap,
                         __vertex_coords,
@@ -1866,11 +1870,11 @@ _heap_fill_pn_sub_tria
       __vertex_coords[7] = y3;
       __vertex_coords[8] = z3;
 
-      stat = PDM_triangle_evaluate_position (point_coords,
-                                             __vertex_coords,
-                                             _closest_pointP1,
-                                             &_dist2,
-                                             _weightsClosestPointP1);
+      stat = PDM_triangle_evaluate_position(point_coords,
+                                            __vertex_coords,
+                                            _closest_pointP1,
+                                            &_dist2,
+                                            _weightsClosestPointP1);
 
       _uvPn_sub_tria[0] = uv_nodes[2*idx2];
       _uvPn_sub_tria[1] = uv_nodes[2*idx2+1];
@@ -1881,8 +1885,9 @@ _heap_fill_pn_sub_tria
 
       if (stat != PDM_TRIANGLE_DEGENERATED) {
 
-        _uvClosestPointP1 = _weightsClosestPointP1;
+        // _uvClosestPointP1 = _weightsClosestPointP1;
         for (int j1 = 0; j1 < 2; j1++) {
+          _uvClosestPointP1[j1] = _weightsClosestPointP1[j1+1];
           _uvClosestPointPn[j1] = 0;
         }
         for (int j1 = 0; j1 < 2; j1++) {
@@ -1925,18 +1930,19 @@ _heap_fill_pn_sub_tria
                                  x3, y3, z3};
 
     double _closest_pointP1[3];
-    double *_uvClosestPointP1;
+    // double *_uvClosestPointP1;
+    double _uvClosestPointP1[2];
     double _uvClosestPointPn[2];
 
     double _weightsClosestPointP1[3];
 
     double _dist2;
 
-    PDM_triangle_status_t stat = PDM_triangle_evaluate_position (point_coords,
-                                                                 __vertex_coords,
-                                                                 _closest_pointP1,
-                                                                 &_dist2,
-                                                                 _weightsClosestPointP1);
+    PDM_triangle_status_t stat = PDM_triangle_evaluate_position(point_coords,
+                                                                __vertex_coords,
+                                                                _closest_pointP1,
+                                                                &_dist2,
+                                                                _weightsClosestPointP1);
 
     double _uvPn_sub_tria[6];
 
@@ -1949,8 +1955,9 @@ _heap_fill_pn_sub_tria
 
     if (stat != PDM_TRIANGLE_DEGENERATED) {
 
-      _uvClosestPointP1 = _weightsClosestPointP1;
+      // _uvClosestPointP1 = _weightsClosestPointP1;
       for (int j1 = 0; j1 < 2; j1++) {
+        _uvClosestPointP1[j1] = _weightsClosestPointP1[j1+1];
         _uvClosestPointPn[j1] = 0;
       }
       for (int j1 = 0; j1 < 2; j1++) {
@@ -2043,16 +2050,17 @@ _heap_fill_qn_sub_tria
                                    x2, y2, z2,
                                    x3, y3, z3};
       double _closest_pointP1[3];
-      double *_uvClosestPointP1;
+      // double *_uvClosestPointP1;
+      double _uvClosestPointP1[2];
       double _uvClosestPointPn[2];
       double _weightsClosestPointP1[3];
       double _dist2;
 
-      PDM_triangle_status_t stat = PDM_triangle_evaluate_position (point_coords,
-                                                                   __vertex_coords,
-                                                                   _closest_pointP1,
-                                                                   &_dist2,
-                                                                   _weightsClosestPointP1);
+      PDM_triangle_status_t stat = PDM_triangle_evaluate_position(point_coords,
+                                                                  __vertex_coords,
+                                                                  _closest_pointP1,
+                                                                  &_dist2,
+                                                                  _weightsClosestPointP1);
 
       double _uvPn_sub_tria[6];
 
@@ -2065,8 +2073,9 @@ _heap_fill_qn_sub_tria
 
       if (stat != PDM_TRIANGLE_DEGENERATED) {
 
-        _uvClosestPointP1 = _weightsClosestPointP1;
+        // _uvClosestPointP1 = _weightsClosestPointP1;
         for (int j2 = 0; j2 < 2; j2++) {
+          _uvClosestPointP1[j2] = _weightsClosestPointP1[j2+1];
           _uvClosestPointPn[j2] = 0;
         }
         for (int j2 = 0; j2 < 2; j2++) {
@@ -2095,11 +2104,11 @@ _heap_fill_qn_sub_tria
       __vertex_coords[7] = y3;
       __vertex_coords[8] = z3;
 
-      stat = PDM_triangle_evaluate_position (point_coords,
-                                             __vertex_coords,
-                                             _closest_pointP1,
-                                             &_dist2,
-                                             _weightsClosestPointP1);
+      stat = PDM_triangle_evaluate_position(point_coords,
+                                            __vertex_coords,
+                                            _closest_pointP1,
+                                            &_dist2,
+                                            _weightsClosestPointP1);
 
       _uvPn_sub_tria[0] = uvNodes[2*idx2];
       _uvPn_sub_tria[1] = uvNodes[2*idx2+1];
@@ -2110,8 +2119,9 @@ _heap_fill_qn_sub_tria
 
       if (stat != PDM_TRIANGLE_DEGENERATED) {
 
-        _uvClosestPointP1 = _weightsClosestPointP1;
+        // _uvClosestPointP1 = _weightsClosestPointP1;
         for (int j2 = 0; j2 < 2; j2++) {
+          _uvClosestPointP1[j2] = _weightsClosestPointP1[j2+1];
           _uvClosestPointPn[j2] = 0;
         }
         for (int j2 = 0; j2 < 2; j2++) {
@@ -2226,24 +2236,26 @@ _insert_subtria
     }
 
     double _closest_pt_child[3];
-    double *_closest_pt_uvP1_child;
+    // double *_closest_pt_uvP1_child;
+    double _closest_pt_uvP1_child[2];
     double _closest_pt_uvPn_child[2];
     double _dist2_child = 0;
     double _closest_pt_weights_child[3];
 
-    PDM_triangle_status_t stat = PDM_triangle_evaluate_position (point_coords,
-                                                                 _vtx_tria_child,
-                                                                 _closest_pt_child,
-                                                                 &_dist2_child,
-                                                                 _closest_pt_weights_child);
+    PDM_triangle_status_t stat = PDM_triangle_evaluate_position(point_coords,
+                                                                _vtx_tria_child,
+                                                                _closest_pt_child,
+                                                                &_dist2_child,
+                                                                _closest_pt_weights_child);
 
 
     if (stat == PDM_TRIANGLE_DEGENERATED) {
       continue;
     }
 
-    _closest_pt_uvP1_child = _closest_pt_weights_child;
+    // _closest_pt_uvP1_child = _closest_pt_weights_child;
     for (int j = 0; j < 2; j++) {
+      _closest_pt_uvP1_child[j] = _closest_pt_weights_child[j+1];
       _closest_pt_uvPn_child[j] = 0;
     }
     for (int j = 0; j < 2; j++) {

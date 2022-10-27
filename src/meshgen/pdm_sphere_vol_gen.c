@@ -2112,6 +2112,77 @@ PDM_sphere_vol_icosphere_gen_nodal
 }
 
 
+
+
+
+
+
+// void
+// PDM_sphere_vol_hollow_gen_nodal
+// (
+//  const PDM_MPI_Comm        comm,
+//  const PDM_g_num_t         n,
+//  const PDM_g_num_t         n_layer,
+//  const double              x_center,
+//  const double              y_center,
+//  const double              z_center,
+//  const double              radius_interior,
+//  const double              radius_exterior,
+//        PDM_dmesh_nodal_t **_dmn
+// )
+// {
+//   int i_rank, n_rank;
+//   PDM_MPI_Comm_rank(comm, &i_rank);
+//   PDM_MPI_Comm_size(comm, &n_rank);
+
+//   /* Dummy sphere */
+//   double      *surf_dvtx_coord    = NULL;
+//   int         *surf_dface_vtx_idx = NULL;
+//   PDM_g_num_t *surf_dface_vtx     = NULL;
+//   PDM_g_num_t *surf_distrib_vtx   = NULL;
+//   PDM_g_num_t *surf_distrib_face  = NULL;
+//   PDM_sphere_surf_icosphere_gen(comm,
+//                                 n,
+//                                 0.,
+//                                 0.,
+//                                 0.,
+//                                 1.,
+//                                 &surf_dvtx_coord,
+//                                 &surf_dface_vtx_idx,
+//                                 &surf_dface_vtx,
+//                                 &surf_distrib_vtx,
+//                                 &surf_distrib_face);
+
+
+//   PDM_g_num_t gn_vtx   = surf_distrib_vtx [n_rank] * (n_layer + 1);
+//   PDM_g_num_t gn_prism = surf_distrib_face[n_rank] * n_layer;
+
+//   PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution(comm,
+//                                                                      gn_vtx);
+
+//   PDM_g_num_t *distrib_prism = PDM_compute_uniform_entity_distribution(comm,
+//                                                                        gn_prism);
+
+
+//   double delta_radius = radius_exterior - radius_interior;
+//   double step = delta_radius / (double) n_layer;
+
+
+//   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
+//   double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+
+//   for (int i = 0; i < dn_vtx; i++) {
+
+//     PDM_g_num_t g = distrib_vtx[i_rank] + i;
+
+//     // int vtx_id =
+
+//   }
+
+
+
+// }
+
 #undef ij2idx
 #undef ijk2idx
 #undef _point_on_edge

@@ -60,6 +60,63 @@ static double _epsilon_denom = 1.e-30;       /* Minimum denominator */
  * Private function definition
  *============================================================================*/
 
+/**
+ * \brief Compute 2x2 determinant
+ *
+ * \param [in]  a
+ * \param [in]  b
+ * \param [in]  c
+ * \param [in]  d
+ *
+ * \return      \ref PDM_TRUE or \ref PDM_FALSE
+ *
+ */
+
+static double
+_det_2x2
+(
+ double a,
+ double b,
+ double c,
+ double d
+)
+{
+  return (a * d - b * c);
+}
+
+
+/**
+ * \brief Solve 2x2 system
+ *
+ * \param [in]     A  Matrix
+ * \param [inout]  x  right hand side in, solution out
+ *
+ * \return   \ref PDM_FALSE if matrix is singular, \ref PDM_TRUE otherwise
+ *
+ */
+
+static int
+_solve_2x2
+(
+ double A[2][2],
+ double b[2],
+ double x[2]
+)
+{
+  const double _eps = 1e-15;
+
+  double det = _det_2x2 (A[0][0], A[0][1], A[1][0], A[1][1]);
+
+  if (PDM_ABS(det) < _eps) {
+    return PDM_FALSE;
+  }
+
+  x[0] = (A[1][1]*b[0] - A[0][1]*b[1]) / det;
+  x[1] = (-A[1][0]*b[0] + A[0][0]*b[1]) / det;
+
+  return PDM_TRUE;
+}
+
 static inline double
 _determinant_3x3
 (
@@ -158,6 +215,26 @@ _compute_shapef_3d
   double w1 = 1. - w;
 
   switch (elt_type) {
+
+  case PDM_MESH_NODAL_QUAD4: {
+    shapef[0] = u1 * v1;
+    shapef[1] = u  * v1;
+    shapef[2] = u  * v ;
+    shapef[3] = u1 * v ;
+
+    if (deriv != NULL) {
+      deriv[0][0] = -v1;
+      deriv[0][1] = -u1;
+      deriv[1][0] =  v1;
+      deriv[1][1] = -u ;
+      deriv[2][0] =  v ;
+      deriv[2][1] =  u ;
+      deriv[3][0] = -v ;
+      deriv[3][1] =  u1;
+    }
+
+    break;
+  }
 
   case PDM_MESH_NODAL_PYRAMID5: {
 
@@ -305,9 +382,12 @@ _compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
- double                     uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  )
 {
+  int dbg = 0;
+
   int i, j, n_elt_vertices, iter;
   const int max_iter = 30;
   const double tolerance2 = tolerance * tolerance;
@@ -318,17 +398,34 @@ _compute_uvw
   const int order = 1;
   n_elt_vertices = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
 
-  assert (elt_type == PDM_MESH_NODAL_PYRAMID5 ||
+  assert (elt_type == PDM_MESH_NODAL_QUAD4    ||
+          elt_type == PDM_MESH_NODAL_PYRAMID5 ||
           elt_type == PDM_MESH_NODAL_PRISM6   ||
           elt_type == PDM_MESH_NODAL_HEXA8);
 
+  int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+
   /* Use Newton-method to determine parametric coordinates and shape function */
-  for (i = 0; i < 3; i++) {
-    uvw[i] = 0.5;
+  if (init_uvw == NULL) {
+    for (i = 0; i < elt_dim; i++) {
+      uvw[i] = 0.5;
+    }
+  }
+  else {
+    for (i = 0; i < elt_dim; i++) {
+      uvw[i] = init_uvw[i];
+    }
   }
 
+  if (dbg) {
+    log_trace(">> _compute_uvw, type %d, tolerance2 = %e\n", (int) elt_type, tolerance2);
+  }
   for (iter = 0; iter < max_iter; iter++) {
 
+    // if (dbg) {
+    //   log_trace("  iter %d: uvw = ", iter);
+    //   PDM_log_trace_array_double(uvw, elt_dim, "");
+    // }
     _compute_shapef_3d (elt_type, uvw, shapef, dw);
 
     b[0] = - point_coords[0];
@@ -343,31 +440,63 @@ _compute_uvw
 
     for (i = 0; i < n_elt_vertices; i++) {
 
-      b[0] += (shapef[i] * vertex_coords[3*i]);
+      b[0] += (shapef[i] * vertex_coords[3*i  ]);
       b[1] += (shapef[i] * vertex_coords[3*i+1]);
       b[2] += (shapef[i] * vertex_coords[3*i+2]);
 
-      for (j = 0; j < 3; j++) {
-        a[0][j] -= (dw[i][j] * vertex_coords[3*i]);
+      for (j = 0; j < elt_dim; j++) {
+        a[0][j] -= (dw[i][j] * vertex_coords[3*i  ]);
         a[1][j] -= (dw[i][j] * vertex_coords[3*i+1]);
         a[2][j] -= (dw[i][j] * vertex_coords[3*i+2]);
       }
 
     }
 
-    if (_solve_3x3(a, b, x) == PDM_FALSE) {
-      printf("_compute_uvw: singular matrix\n");
-      return PDM_FALSE;
+    if (elt_dim == 3) {
+      if (_solve_3x3(a, b, x) == PDM_FALSE) {
+        printf("_compute_uvw: singular matrix\n");
+        return PDM_FALSE;
+      }
+    }
+    else {
+      double mat[2][2];
+      mat[0][0] = a[0][0]*a[0][0] + a[1][0]*a[1][0] + a[2][0]*a[2][0];
+      mat[0][1] = a[0][0]*a[0][1] + a[1][0]*a[1][1] + a[2][0]*a[2][1];
+      mat[1][0] = mat[0][1];
+      mat[1][1] = a[0][1]*a[0][1] + a[1][1]*a[1][1] + a[2][1]*a[2][1];
+      double rhs[2];
+      rhs[0] = a[0][0]*b[0] + a[1][0]*b[1] + a[2][0]*b[2];
+      rhs[1] = a[0][1]*b[0] + a[1][1]*b[1] + a[2][1]*b[2];
+      if (_solve_2x2(mat, rhs, x) == PDM_FALSE) {
+        printf("_compute_uvw: singular matrix\n");
+        return PDM_FALSE;
+      }
     }
 
     dist = 0.0;
 
-    for (i = 0; i < 3; i++) {
-      dist += x[i] * x[i];
+    for (i = 0; i < elt_dim; i++) {
+      dist   += x[i] * x[i];
       uvw[i] += x[i];
     }
 
+    if (dbg) {
+      log_trace("  iter %d: |b| = %e, dist = %e\n", iter, PDM_MODULE(b), dist);
+    }
+
     if (dist <= tolerance2) {
+      if (dbg) {
+        _compute_shapef_3d (elt_type, uvw, shapef, dw);
+        b[0] = - point_coords[0];
+        b[1] = - point_coords[1];
+        b[2] = - point_coords[2];
+        for (i = 0; i < n_elt_vertices; i++) {
+          b[0] += (shapef[i] * vertex_coords[3*i  ]);
+          b[1] += (shapef[i] * vertex_coords[3*i+1]);
+          b[2] += (shapef[i] * vertex_coords[3*i+2]);
+        }
+        log_trace("  converged : |b| = %e\n", PDM_MODULE(b));
+      }
       return PDM_TRUE;
     }
 
@@ -553,20 +682,23 @@ _locate_on_triangles
       double closest_point[3];
       double dist2;
 
-      PDM_triangle_status_t stat = PDM_triangle_evaluate_position (_pt,
-                                                                   tri_coord,
-                                                                   closest_point,
-                                                                   &dist2,
-                                                                   weights);
+      PDM_triangle_status_t stat = PDM_triangle_evaluate_position(_pt,
+                                                                  tri_coord,
+                                                                  closest_point,
+                                                                  &dist2,
+                                                                  weights);
+
       if (stat == PDM_TRIANGLE_DEGENERATED) {
         continue;
       }
 
       if (dist2 < distance[ipt]) {
         if (bar_coord != NULL) {
-          _bc[0] = weights[1];
-          _bc[1] = weights[2];
-          _bc[2] = weights[0];
+          // PERMUTATION
+          // _bc[0] = weights[1];
+          // _bc[1] = weights[2];
+          // _bc[2] = weights[0];
+          memcpy(_bc, weights, sizeof(double)*3);
         }
 
         if (proj_coord != NULL) {
@@ -660,6 +792,71 @@ _locate_on_quadrangle
     double v_cp_p[3] = {_pt[0] - _cp[0], _pt[1] - _cp[1], _pt[2] - _cp[2]};
     distance[ipt] = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
   }
+}
+
+
+
+static void
+_locate_on_quadrangle2
+(
+ const double quad_coord[],
+ const int    n_pts,
+ const double pts_coord[],
+ const double tolerance,
+       double distance[],
+       double proj_coord[],
+       double bar_coord[],
+       double uvw[]
+ )
+{
+  PDM_mean_values_polygon_3d(4,
+                             quad_coord,
+                             n_pts,
+                             pts_coord,
+                             bar_coord);
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+
+    const double *_pt = pts_coord + 3 * ipt;
+    double *_bc  = bar_coord  + 4 * ipt;
+    double *_cp  = proj_coord + 3 * ipt;
+    double *_uvw = uvw        + 3 * ipt;
+
+    /* Compute parametric coordinates with Newton method */
+    double init_uvw[3 ] = {_bc[1] + _bc[2], _bc[2] + _bc[3], -1.};
+    PDM_bool_t stat_uvw = _compute_uvw(PDM_MESH_NODAL_QUAD4,
+                                       _pt,
+                                       quad_coord,
+                                       tolerance,
+                                       _uvw,
+                                       init_uvw);
+
+    if (stat_uvw == PDM_TRUE) {
+      if (_uvw[0] >= 0 && _uvw[0] <= 1 && _uvw[1] >= 0 && _uvw[1] <= 1) {
+        _compute_shapef_3d(PDM_MESH_NODAL_QUAD4, _uvw, _bc, NULL);
+      }
+    }
+    else {
+      /* Failed to compute parametric coordinates */
+      _uvw[0] = init_uvw[0];
+      _uvw[1] = init_uvw[1];
+    }
+    _uvw[2] = -1;
+
+    for (int idim = 0; idim < 3; idim++) {
+      _cp[idim] = 0.;
+    }
+
+    for (int ivtx = 0; ivtx < 4; ivtx++) {
+      for (int idim = 0; idim < 3; idim++) {
+        _cp[idim] += _bc[ivtx] * quad_coord[3*ivtx + idim];
+      }
+    }
+
+    double v_cp_p[3] = {_pt[0] - _cp[0], _pt[1] - _cp[1], _pt[2] - _cp[2]};
+    distance[ipt] = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
+  }
+
 }
 
 /*----------------------------------------------------------------------------
@@ -889,12 +1086,11 @@ _locate_in_cell_3d
                             distance,
                             proj_coord,
                             bar_coord);
-    // TODO: compute uvw...
     if (uvw != NULL) {
       for (int ipt = 0; ipt < n_pts; ipt++) {
-        uvw[3*ipt  ] = -1.;
-        uvw[3*ipt+1] = -1.;
-        uvw[3*ipt+2] = -1.;
+        uvw[3*ipt  ] = bar_coord[4*ipt+1];
+        uvw[3*ipt+1] = bar_coord[4*ipt+2];
+        uvw[3*ipt+2] = bar_coord[4*ipt+3];
       }
     }
     return;
@@ -990,7 +1186,8 @@ _locate_in_cell_3d
                                         _pt,
                                         cell_coord,
                                         tolerance,
-                                        _uvw);
+                                        _uvw,
+                                        NULL);
     if (stat_uvw == PDM_TRUE) {
       _compute_shapef_3d (elt_type, _uvw, _bc, NULL);
 
@@ -1193,11 +1390,11 @@ _locate_in_cell_3d
           double *_cp = closest_point + 3 * ipt;
 
           double min_dist2, closest[3];
-          PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
-                                                                        tri_coord,
-                                                                        closest,
-                                                                        &min_dist2,
-                                                                        NULL);
+          PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
+                                                                       tri_coord,
+                                                                       closest,
+                                                                       &min_dist2,
+                                                                       NULL);
 
           if (error == PDM_TRIANGLE_DEGENERATED) {
             continue;
@@ -1519,11 +1716,11 @@ _locate_in_polyhedron
         double *_cp = closest_point + 3*ipt;
 
         double min_dist2, closest[3];
-        PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
-                                                                      tri_coord,
-                                                                      closest,
-                                                                      &min_dist2,
-                                                                      NULL);
+        PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
+                                                                     tri_coord,
+                                                                     closest,
+                                                                     &min_dist2,
+                                                                     NULL);
 
         if (error == PDM_TRIANGLE_DEGENERATED) {
           continue;
@@ -2902,19 +3099,27 @@ PDM_point_location_nodal2
 
               int idx_pt = pts_idx[ipart][icell];
 
-              _locate_on_quadrangle(quad_coord,
-                                    pts_idx[ipart][icell+1] - idx_pt,
-                   (const double *) pts_coord[ipart] + idx_pt * 3,
-                                    _distance        + idx_pt,
-                                    _projected_coord + idx_pt * 3,
-                                    _bar_coord       + _bar_coord_idx[idx_pt]);
+              // _locate_on_quadrangle(quad_coord,
+              //                       pts_idx[ipart][icell+1] - idx_pt,
+              //      (const double *) pts_coord[ipart] + idx_pt * 3,
+              //                       _distance        + idx_pt,
+              //                       _projected_coord + idx_pt * 3,
+              //                       _bar_coord       + _bar_coord_idx[idx_pt]);
+              _locate_on_quadrangle2(quad_coord,
+                                     pts_idx[ipart][icell+1] - idx_pt,
+                    (const double *) pts_coord[ipart] + idx_pt * 3,
+                                     tolerance,
+                                     _distance        + idx_pt,
+                                     _projected_coord + idx_pt * 3,
+                                     _bar_coord       + _bar_coord_idx[idx_pt],
+                                     _uvw             + idx_pt * 3);
 
-              // TODO: compute uvw
-              for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
-                _uvw[3*ipt  ] = -1;
-                _uvw[3*ipt+1] = -1;
-                _uvw[3*ipt+2] = -1.;
-              }
+              // // TODO: compute uvw
+              // for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
+              //   _uvw[3*ipt  ] = -1;
+              //   _uvw[3*ipt+1] = -1;
+              //   _uvw[3*ipt+2] = -1;
+              // }
 
             } // End of loop on quadrangles
             break;
@@ -2973,9 +3178,6 @@ PDM_point_location_nodal2
               }
 
               int idx_pt = pts_idx[ipart][icell];
-              // for (int ipt = idx_pt; ipt < pts_idx[ipart][icell+1]; ipt++) {
-              //   _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
-              // }
 
               _locate_in_cell_3d(t_elt,
                                  elt_coord,
@@ -3074,7 +3276,7 @@ PDM_point_location_nodal2
 
 
 /**
- * \brief Compute hexahedron, pyramid, or prism parametric coordinates for a
+ * \brief Compute quadrangle, hexahedron, pyramid, or prism parametric coordinates for a
  * given point.
  *
  * This function is adapted from the CGNS interpolation tool.
@@ -3084,7 +3286,9 @@ PDM_point_location_nodal2
  * \param [in]   vertex_coords  Pointer to element vertex coordinates
  * \param [in]   tolerance      Location tolerance factor
  * \param [out]  uvw            Parametric coordinates of point in element
+ * \param [in]   init_uvw       Initial uvw guess for Newton method (or NULL)
  *
+ *  \return Convergence status of Newton method
  */
 
 PDM_bool_t
@@ -3094,14 +3298,16 @@ PDM_point_location_compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
- double                     uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  )
 {
   return _compute_uvw (elt_type,
                        point_coords,
                        vertex_coords,
                        tolerance,
-                       uvw);
+                       uvw,
+                       init_uvw);
 }
 
 #ifdef __cplusplus

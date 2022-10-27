@@ -70,7 +70,7 @@ typedef enum {
 /*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position
+PDM_triangle_evaluate_position_old
 (
  const double  x[3],
  const double  pts[9],
@@ -78,6 +78,16 @@ PDM_triangle_evaluate_position
        double *min_dist2,
        double *weights
  );
+
+PDM_triangle_status_t
+PDM_triangle_evaluate_position
+(
+ const double  x[3],
+ const double  pts[9],
+       double *closest_point,
+       double *min_dist2,
+       double *weights
+);
 
 /**
  * \brief Computes the intersection between a line and a triangle

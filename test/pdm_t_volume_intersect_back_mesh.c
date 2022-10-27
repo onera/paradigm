@@ -255,10 +255,10 @@ _projection_on_background_mesh_get
       }
       memcpy(tmp_pt_to_project_coord, pt_to_project_coord, sizeof(double) * 3);
       PDM_triangle_evaluate_position(tmp_pt_to_project_coord,
-                                     elt_pt_coord,
-                                     closestPoint,
-                                     &min_dist2,
-                                     weights);
+                                      elt_pt_coord,
+                                      closestPoint,
+                                      &min_dist2,
+                                      weights);
       if ( min_dist2 < best_min_dist2) {
         best_min_dist2 = min_dist2;
         memcpy(*proj_pt_coord, closestPoint, sizeof(double) * 3);

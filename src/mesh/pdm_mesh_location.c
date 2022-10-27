@@ -6526,7 +6526,8 @@ PDM_mesh_location_t        *ml
                                                                 _point_coords,
                                                                 _cell_coords,
                                                                 newton_tol,
-                                                                _point_uvw);
+                                                                _point_uvw,
+                                                                NULL);
               //&(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
 
               int uvw_ok = 0;
@@ -7106,7 +7107,7 @@ PDM_mesh_location_compute_optim
   /*
    *  Parameters
    */
-  const double tolerance = 1e-6;
+  const double newton_tolerance = 1e-6;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
   const int full_async  = 0;
@@ -7787,11 +7788,11 @@ PDM_mesh_location_compute_optim
       pstride_one[ipart] = PDM_array_const_int(n_select_pts[ipart], 1);
     }
 
-    /* Use same extents for Hilbert encoding of pts and boxes?? */
+    /* Use same extents for Hilbert/Morton encoding of pts and boxes?? */
     PDM_part_to_block_t *ptb_pts = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                  PDM_PART_TO_BLOCK_POST_MERGE, // TODO: Merge
                                                                  1.,
-                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 PDM_PART_GEOM_MORTON,
                                                                  select_pts_coord,
                                                                  select_pts_g_num_user,
                                                                  weight,
@@ -7907,7 +7908,7 @@ PDM_mesh_location_compute_optim
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                  PDM_PART_TO_BLOCK_POST_CLEANUP, // A faire en merge
                                                                  1.,
-                                                                 PDM_PART_GEOM_HILBERT,
+                                                                 PDM_PART_GEOM_MORTON,
                                                                  select_box_center,
                                                                  select_elt_g_num_user,
                                                                  weight,
@@ -8522,7 +8523,7 @@ PDM_mesh_location_compute_optim
             (const double **) &pextract_vtx_coord,
             (const int    **) &delt_pts_idx2,
             (const double **) &delt_pts_coord2,
-                              tolerance,
+                              newton_tolerance,
                               &pelt_pts_distance2,
                               &pelt_pts_proj_coord2,
                               &pelt_pts_weight_idx2,

@@ -21,6 +21,7 @@
 #include "pdm_gnum.h"
 #include "pdm_distrib.h"
 #include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
 
 #include "pdm_writer.h"
 #include "pdm_printf.h"
@@ -332,6 +333,17 @@ _strip_cloud
   PDM_gnum_free(gen_gnum_pts);
   free(char_length);
 }
+
+
+static inline double
+_eval_field
+(
+ double *xyz
+ )
+{
+  return 1 + 2*xyz[0] + 3*xyz[1] + 4*xyz[2];
+}
+
 
 
 /**
@@ -1000,6 +1012,217 @@ int main(int argc, char *argv[])
       }
     }
   }
+
+
+
+  /*
+   *  Check location (interpolation of an affine field)
+   */
+  double **src_field = malloc(sizeof(double *) * n_part);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int n_cell;
+    int n_face;
+    int n_face_part_bound;
+    int n_vtx;
+    int n_proc;
+    int n_t_part;
+    int s_cell_face;
+    int s_face_vtx;
+    int s_face_group;
+    int n_edge_group2;
+
+    PDM_part_part_dim_get(ppart,
+                          ipart,
+                          &n_cell,
+                          &n_face,
+                          &n_face_part_bound,
+                          &n_vtx,
+                          &n_proc,
+                          &n_t_part,
+                          &s_cell_face,
+                          &s_face_vtx,
+                          &s_face_group,
+                          &n_edge_group2);
+
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
+    PDM_g_num_t *cell_ln_to_gn;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
+    PDM_g_num_t *face_ln_to_gn;
+    int         *face_part_boundProcIdx;
+    int         *face_part_boundPartIdx;
+    int         *face_part_bound;
+    int         *vtx_tag;
+    double      *vtx;
+    PDM_g_num_t *vtx_ln_to_gn;
+    int         *face_group_idx;
+    int         *face_group;
+    PDM_g_num_t *face_group_ln_to_gn;
+
+    PDM_part_part_val_get (ppart,
+                           ipart,
+                           &cell_tag,
+                           &cell_face_idx,
+                           &cell_face,
+                           &cell_ln_to_gn,
+                           &face_tag,
+                           &face_cell,
+                           &face_vtx_idx,
+                           &face_vtx,
+                           &face_ln_to_gn,
+                           &face_part_boundProcIdx,
+                           &face_part_boundPartIdx,
+                           &face_part_bound,
+                           &vtx_tag,
+                           &vtx,
+                           &vtx_ln_to_gn,
+                           &face_group_idx,
+                           &face_group,
+                           &face_group_ln_to_gn);
+
+    src_field[ipart] = malloc(sizeof(double) * n_vtx);
+    for (int i = 0; i < n_vtx; i++) {
+      src_field[ipart][i] = _eval_field(&vtx[3*i]);
+    }
+  }
+
+  PDM_part_to_part_t *ptp = NULL;
+  PDM_mesh_location_part_to_part_get(mesh_loc,
+                                     0,
+                                     &ptp,
+                                     PDM_OWNERSHIP_USER);
+
+  double **send_field = malloc(sizeof(double *) * n_part);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int         *elt_pts_idx        = NULL;
+    PDM_g_num_t *elt_pts_gnum       = NULL;
+    double      *elt_pts_coord      = NULL;
+    double      *elt_pts_uvw        = NULL;
+    int         *elt_pts_weight_idx = NULL;
+    double      *elt_pts_weight     = NULL;
+    double      *elt_pts_dist2      = NULL;
+    double      *elt_pts_proj_coord = NULL;
+    PDM_mesh_location_points_in_elt_get(mesh_loc,
+                                        ipart,
+                                        0, // i_point_cloud,
+                                        &elt_pts_idx,
+                                        &elt_pts_gnum,
+                                        &elt_pts_coord,
+                                        &elt_pts_uvw,
+                                        &elt_pts_weight_idx,
+                                        &elt_pts_weight,
+                                        &elt_pts_dist2,
+                                        &elt_pts_proj_coord);
+
+    int *cell_vtx_idx = NULL;
+    int *cell_vtx     = NULL;
+    PDM_mesh_location_cell_vertex_get(mesh_loc,
+                                      ipart,
+                                      &cell_vtx_idx,
+                                      &cell_vtx);
+
+    int n_cell;
+    int n_face;
+    int n_face_part_bound;
+    int n_vtx;
+    int n_proc;
+    int n_t_part;
+    int s_cell_face;
+    int s_face_vtx;
+    int s_face_group;
+    int n_edge_group2;
+
+    PDM_part_part_dim_get(ppart,
+                          ipart,
+                          &n_cell,
+                          &n_face,
+                          &n_face_part_bound,
+                          &n_vtx,
+                          &n_proc,
+                          &n_t_part,
+                          &s_cell_face,
+                          &s_face_vtx,
+                          &s_face_group,
+                          &n_edge_group2);
+
+    send_field[ipart] = malloc(sizeof(double) * elt_pts_idx[n_cell]);
+    for (int ielt = 0; ielt < n_cell; ielt++) {
+
+      int *cv = cell_vtx + cell_vtx_idx[ielt];
+
+      for (int idx_pt = elt_pts_idx[ielt]; idx_pt < elt_pts_idx[ielt+1]; idx_pt++) {
+        send_field[ipart][idx_pt] = 0.;
+        int idx_vtx = 0;
+        for (int idx_w = elt_pts_weight_idx[idx_pt]; idx_w < elt_pts_weight_idx[idx_pt+1]; idx_w++) {
+          int vtx_id = cv[idx_vtx++] - 1;
+          send_field[ipart][idx_pt] += elt_pts_weight[idx_w] * src_field[ipart][vtx_id];
+        }
+      }
+
+    }
+  }
+
+
+  double **recv_field = NULL;
+  int request = -1;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(double),
+                         NULL,
+        (const void  **) send_field,
+                         NULL,
+        (      void ***) &recv_field,
+                         &request);
+
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+  double lmax_err = 0.;
+  for (int i = 0; i < n_located; i++) {
+    int pt_id = located[i] - 1;
+
+    double f = _eval_field(&pts_coords[3*pt_id]);
+
+    double err = PDM_ABS(recv_field[0][i] - f);
+    lmax_err = PDM_MAX(lmax_err, err);
+
+    if (err > 1.e-12) {
+      log_trace("point "PDM_FMT_G_NUM" (%f %f %f) located in elt "PDM_FMT_G_NUM" : error = %e (%20.16f / %20.16f)\n",
+                pts_gnum[pt_id],
+                pts_coords[3*pt_id], pts_coords[3*pt_id+1], pts_coords[3*pt_id+2],
+                p_location[pt_id], err, recv_field[0][i], f);
+    }
+  }
+  free(recv_field[0]);
+  free(recv_field);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(src_field [ipart]);
+    free(send_field[ipart]);
+  }
+  free(src_field );
+  free(send_field);
+
+
+  double gmax_err;
+  PDM_MPI_Allreduce(&lmax_err, &gmax_err, 1, PDM_MPI_DOUBLE,
+                    PDM_MPI_MAX, PDM_MPI_COMM_WORLD);
+
+
+  if (i_rank == 0) {
+    printf("global max interpolation error = %e\n", gmax_err);
+  }
+
+
+
+
+  PDM_part_to_part_free(ptp);
 
   PDM_mesh_location_free (mesh_loc);
 

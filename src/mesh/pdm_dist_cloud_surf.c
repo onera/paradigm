@@ -942,11 +942,11 @@ PDM_dist_cloud_surf_compute
       else if (elt_vtx_n == 3) {
         for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
           PDM_triangle_status_t status =
-            PDM_triangle_evaluate_position (_pts_coord + 3*i,
-                                            _vtx_coord,
-                                            _proj + 3*i,
-                                            _dist2 + i,
-                                            NULL);
+          PDM_triangle_evaluate_position(_pts_coord + 3*i,
+                                         _vtx_coord,
+                                         _proj + 3*i,
+                                         _dist2 + i,
+                                         NULL);
 
           if (status == PDM_TRIANGLE_DEGENERATED) {
             for (int j = 0; j < block_elt_pts_n[ielt]; j++) {

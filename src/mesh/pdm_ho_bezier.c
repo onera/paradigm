@@ -854,9 +854,6 @@ PDM_ho_bezier_triangle_location
   //                                projected_coord,
   //                                &distance,
   //                                weight);
-  // uv[0] = weight[2];
-  // uv[1] = weight[0];
-  // uv[2] = weight[1];
   PDM_triangle_closest_point(point_coord,
                              P1_coord,
                              projected_coord,

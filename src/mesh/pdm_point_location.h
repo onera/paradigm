@@ -96,7 +96,7 @@ PDM_point_location_nodal2
 
 
 /**
- * \brief Compute hexahedron, pyramid, or prism parametric coordinates for a
+ * \brief Compute quadrangle, hexahedron, pyramid, or prism parametric coordinates for a
  * given point.
  *
  * This function is adapted from the CGNS interpolation tool.
@@ -106,7 +106,9 @@ PDM_point_location_nodal2
  * \param [in]   vertex_coords  Pointer to element vertex coordinates
  * \param [in]   tolerance      Location tolerance factor
  * \param [out]  uvw            Parametric coordinates of point in element
+ * \param [in]   init_uvw       Initial uvw guess for Newton method (or NULL)
  *
+ *  \return Convergence status of Newton method
  */
 
 PDM_bool_t
@@ -116,7 +118,8 @@ PDM_point_location_compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
- double                     uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  );
 
 
