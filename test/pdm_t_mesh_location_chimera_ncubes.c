@@ -2664,8 +2664,8 @@ int main(int argc, char *argv[])
       for (int i_part = 0; i_part < n_part; i_part++) {
 
 
-        int n_located   = PDM_mesh_location_n_located_get  (mesh_loc[i_mesh], i_cloud, i_part);
-        int n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc[i_mesh], i_cloud, i_part);
+        // int n_located   = PDM_mesh_location_n_located_get  (mesh_loc[i_mesh], i_cloud, i_part);
+        // int n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc[i_mesh], i_cloud, i_part);
 
         // log_trace("[%i/%i] - n_located = %i / n_unlocated = %i \n", i_cloud, i_part, n_located, n_unlocated);
 
