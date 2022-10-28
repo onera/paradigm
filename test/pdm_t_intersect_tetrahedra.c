@@ -323,20 +323,12 @@ int main(int argc, char *argv[])
   }
 
   double radii[3];
+  radii[0] = scale;
+  radii[1] = scale * (1 + _rand01()*aniso_max);
+  radii[2] = scale * aniso_max;
+
   double axes[3][3];
-
-  // Anisotropy??
-  for (int i = 0; i < 3; i++) {
-    radii[i] = scale;// * _rand01();
-  }
   _random_orthonormal_basis(axes);
-
-
-  if (0) {
-    for (int i = 0; i < 3; i++) {
-      log_trace("axis %d : %f %f %f\n", i, axes[i][0], axes[i][1], axes[i][2]);
-    }
-  }
 
 
   int     n_vtx         = 0;
