@@ -2598,8 +2598,8 @@ int main(int argc, char *argv[])
     if(algo == 0) {
       PDM_mesh_location_compute (mesh_loc[i_mesh]);
     } else if(algo == 1) {
-      // PDM_mesh_location_compute_optim2(mesh_loc[i_mesh]);
-      PDM_mesh_location_compute_optim(mesh_loc[i_mesh]);
+      // PDM_mesh_location_compute2(mesh_loc[i_mesh]);
+      PDM_mesh_location_compute(mesh_loc[i_mesh]);
     }
 
     PDM_mesh_location_dump_times (mesh_loc[i_mesh]);

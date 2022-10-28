@@ -1421,7 +1421,7 @@ int main(int argc, char *argv[])
   int    **bar_coord_idx   = NULL;
   double **bar_coord       = NULL;
   double **uvw             = NULL;
-  PDM_point_location_nodal2(pmne,
+  PDM_point_location_nodal(pmne,
                             n_part,
           (const double **) pvtx_coord,
           (const int    **) pts_idx,

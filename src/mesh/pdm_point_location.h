@@ -62,25 +62,6 @@ extern "C" {
 void
 PDM_point_location_nodal
 (
- const int           type_idx[],
- const int           elt_vtx_idx[],
- const double        elt_vtx_coord[],
- const PDM_l_num_t   poly3d_face_idx[],
- const PDM_l_num_t   face_vtx_idx[],
- const PDM_l_num_t   face_vtx[],
- const int           face_orientation[],
- const int           pts_idx[],
- const double        pts_coord[],
- const double        tolerance,
- double            **distance,
- double            **projected_coord,
- int               **bar_coord_idx,
- double            **bar_coord
- );
-
-void
-PDM_point_location_nodal2
-(
  PDM_part_mesh_nodal_elmts_t   *pmne,
  const int                      n_part,
  const double                 **pvtx_coord,

@@ -1254,8 +1254,8 @@ int main(int argc, char *argv[])
   }
 
   // PDM_mesh_location_compute (mesh_loc);
-  // PDM_mesh_location_compute_optim2(mesh_loc);
-  PDM_mesh_location_compute_optim(mesh_loc);
+  // PDM_mesh_location_compute2(mesh_loc);
+  PDM_mesh_location_compute(mesh_loc);
 
   PDM_mesh_location_dump_times (mesh_loc);
 
