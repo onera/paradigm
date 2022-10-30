@@ -97,7 +97,7 @@ def generate_shell(base_path_shell, directory, testname, parameters):
   os.chmod(shell_name, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP)
 
   for n_proc in parameters["n_proc"]:
-    cmd0 = "execute_test 'mpirun {n_proc} {directory}/{testname}".format(testname=testname, directory=directory, n_proc=n_proc)
+    cmd0 = "execute_test 'mpirun {n_proc} {directory}/{testname} ".format(testname=testname, directory=directory, n_proc=n_proc)
     lkeys = filter(lambda k : k != "n_proc", parameters)
     lparams = [parameters[key] for key in filter(lambda k : k != "n_proc", parameters)]
     for params in itertools.product(*lparams):
@@ -112,8 +112,11 @@ def generate_shell(base_path_shell, directory, testname, parameters):
         else:
           name_param += '{0}'.format(split_param[0][1::])
 
-      cmd = cmd0 + " " + " ".join(params)
-      cmd += f" > out{name_param} '"
+      cmd  = f"class_name=\"{testname}{name_param}\"\n"
+      cmd += f"test_name=\"{testname}_n={n_proc[4::]}{name_param}\"\n"
+      cmd += f"test_n_proc=\"{n_proc[4::]}\"\n"
+      cmd += cmd0 + " " + " ".join(params)
+      cmd += "'"
       # print(f"cmd = {cmd}")
       shell_run.write(cmd+"\n")
 
