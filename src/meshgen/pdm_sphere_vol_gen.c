@@ -1661,7 +1661,7 @@ _extrude_base_surface_mesh
   base_n_edge*n              +
   base_n_face*face_int_vtx_n;
 
-  PDM_g_num_t gn_vtx = (n_layer+1)*(gn_vtx_layer);
+  PDM_g_num_t gn_vtx = (n_layer+1)*gn_vtx_layer;
 
   *distrib_vtx = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
 
