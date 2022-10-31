@@ -1394,7 +1394,7 @@ PDM_vtk_write_lines
 
   fprintf(f, "POINTS %d double\n", n_line * 2);
   for (int i = 0; i < 2*n_line; i++) {
-    fprintf(f, "%f %f %f\n",
+    fprintf(f, "%20.16f %20.16f %20.16f\n",
             coord[3*i    ],
             coord[3*i + 1],
             coord[3*i + 2]);

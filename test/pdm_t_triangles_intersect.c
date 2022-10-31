@@ -20,6 +20,7 @@
 #include "pdm_sort.h"
 #include "pdm_line.h"
 #include "pdm_triangle.h"
+#include "pdm_predicate.h"
 
 /*============================================================================
  * Macro definitions
@@ -448,27 +449,42 @@ _classify_pts_wrt_triangle
     double x0px02 = PDM_DOT_PRODUCT(x0p, x02);
 
     // double _pt_det = PDM_DOT_PRODUCT(x0p, normal)*idet;
-    double _pt_det = PDM_DOT_PRODUCT(x0p, normal);
+    // double _pt_det = PDM_DOT_PRODUCT(x0p, normal);
+    double _pt_det = PDM_predicate_orient3d(x[0],
+                                            x[1],
+                                            x[2],
+                                            p);
 
     if (1) {
-      log_trace("_pt_det**2 = %e / %e\n", _pt_det*_pt_det, det*pts_eps[ipt]*pts_eps[ipt]);
+      // log_trace("_pt_det**2 = %e / %e\n", _pt_det*_pt_det, det*pts_eps[ipt]*pts_eps[ipt]);
+      log_trace("_pt_det = %e * sqrt(det)\n", _pt_det/sqrt(det));
     }
 
     // /!\ symmetry of "on plane" is broken...
     // Find a good epsilon to ensure symmetry?
     // if (PDM_ABS(_pt_det) < eps_on_plane) {
-    if (_pt_det*_pt_det < det*pts_eps[ipt]*pts_eps[ipt]) {
-      _pt_det = 0.;
-      pts_loc[ipt] = LOC_EXTERIOR_ON_PLANE;
-    }
-    else if (_pt_det > 0) {
+    // if (_pt_det*_pt_det < det*pts_eps[ipt]*pts_eps[ipt]) {
+    //   _pt_det = 0.;
+    //   pts_loc[ipt] = LOC_EXTERIOR_ON_PLANE;
+    // }
+    // else if (_pt_det > 0) {
+    //   pts_loc[ipt] = LOC_EXTERIOR_ABOVE;
+    // }
+    // else {
+    //   pts_loc[ipt] = LOC_EXTERIOR_BELOW;
+    // }
+    if (_pt_det > 0) {
       pts_loc[ipt] = LOC_EXTERIOR_ABOVE;
     }
-    else {
+    else if (_pt_det < 0) {
       pts_loc[ipt] = LOC_EXTERIOR_BELOW;
     }
+    else {
+      pts_loc[ipt] = LOC_EXTERIOR_ON_PLANE;
+    }
 
-    if (pts_det != NULL){
+
+    if (pts_det != NULL) {
       pts_det[ipt] = _pt_det;
     }
 
@@ -665,7 +681,11 @@ _classify_pts_wrt_triangle
       pts_loc[ipt] = LOC_INTERIOR_EDGE2;
     } // end if on edge 2
 
+    if (pts_det != NULL && pts_loc[ipt] <= LOC_INTERIOR_FACE) {
+      // pts_det[ipt] = 0; // ??
+    }
   }
+
 }
 
 
@@ -838,20 +858,6 @@ _intersect_triangle_triangle_coplanar
         inter_tB  [n_inter] = 0;
         n_inter++;
       }
-      // else if (vtxA_locB[ivtxA1] == (_point_triangle_loc_t) ivtxB2) {
-      //   assert(vtxB_locA[ivtxB2] == (_point_triangle_loc_t) ivtxA1);
-      //   log_trace("  A1 on B2\n");
-      //   for (int i = 0; i < 3; i++) {
-      //     inter_coord[3*n_inter+i] = 0.5*(coordA[3*ivtxA1+i] + coordB[3*ivtxB2+i]);
-      //   }
-      //   log_trace("  inter_coord = %f %f %f\n",
-      //             inter_coord[3*n_inter], inter_coord[3*n_inter+1], inter_coord[3*n_inter+2]);
-      //   inter_locA[n_inter] = (_point_triangle_loc_t) ivtxA1;
-      //   inter_locB[n_inter] = (_point_triangle_loc_t) ivtxB2;
-      //   inter_tA  [n_inter] = 0;
-      //   inter_tB  [n_inter] = 1;
-      //   n_inter++;
-      // }
       else if (vtxA_locB[ivtxA1] == (_point_triangle_loc_t) iedgeB+3) {
         /* vtx A interior edge B */
         if (dbg) {
@@ -1020,7 +1026,7 @@ _intersect_triangle_triangle
  _point_triangle_loc_t *inter_locB
  )
 {
-  int verbose = 0;
+  int verbose = 1;
   int dbg = 1;
 
   /* Classify vtx of A wrt B */
@@ -1053,6 +1059,20 @@ _intersect_triangle_triangle
        vtxA_locB[2] == LOC_EXTERIOR_BELOW)) {
     // Clearly empty intersection
     return 0;
+  }
+
+  else if (vtxA_locB[0] <= LOC_INTERIOR_FACE &&
+           vtxA_locB[1] <= LOC_INTERIOR_FACE &&
+           vtxA_locB[2] <= LOC_INTERIOR_FACE) {
+    // A is inside B
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        inter_coord[3*i+j] = coordA[3*i+j];
+      }
+      inter_locA[i] = (_point_triangle_loc_t) i;
+      inter_locB[i] = vtxA_locB[i];
+    }
+    return 3;
   }
 
 
@@ -1089,23 +1109,67 @@ _intersect_triangle_triangle
     return 0;
   }
 
+  else if (vtxB_locA[0] <= LOC_INTERIOR_FACE &&
+           vtxB_locA[1] <= LOC_INTERIOR_FACE &&
+           vtxB_locA[2] <= LOC_INTERIOR_FACE) {
+    // B is inside A
+    double normalA[3];
+    _triangle_normal(&coordA[0], &coordA[3], &coordA[6], normalA);
+    double normalB[3];
+    _triangle_normal(&coordB[0], &coordB[3], &coordB[6], normalB);
+
+    double sign = PDM_SIGN(PDM_DOT_PRODUCT(normalA, normalB));
+
+    for (int i = 0; i < 3; i++) {
+      int vtx_id = i;
+      if (sign < 0) {
+        vtx_id = 2-i;
+      }
+      for (int j = 0; j < 3; j++) {
+        inter_coord[3*i+j] = coordB[3*vtx_id+j];
+      }
+      inter_locA[i] = vtxB_locA[vtx_id];
+      inter_locB[i] = (_point_triangle_loc_t) vtx_id;
+    }
+    return 3;
+  }
 
   /* Handle coplanar case */
   // /!\ symmetry of "on plane" is broken...
-  if (vtxB_locA[0] <= LOC_EXTERIOR_ON_PLANE &&
-      vtxB_locA[1] <= LOC_EXTERIOR_ON_PLANE &&
-      vtxB_locA[2] <= LOC_EXTERIOR_ON_PLANE) {
+  // if (vtxB_locA[0] <= LOC_EXTERIOR_ON_PLANE &&
+  //     vtxB_locA[1] <= LOC_EXTERIOR_ON_PLANE &&
+  //     vtxB_locA[2] <= LOC_EXTERIOR_ON_PLANE) {
 
-    assert(vtxA_locB[0] <= LOC_EXTERIOR_ON_PLANE &&
-           vtxA_locB[1] <= LOC_EXTERIOR_ON_PLANE &&
-           vtxA_locB[2] <= LOC_EXTERIOR_ON_PLANE);
+  //   assert(vtxA_locB[0] <= LOC_EXTERIOR_ON_PLANE &&
+  //          vtxA_locB[1] <= LOC_EXTERIOR_ON_PLANE &&
+  //          vtxA_locB[2] <= LOC_EXTERIOR_ON_PLANE);
   // if (vtxB_locA[0] <= LOC_EXTERIOR_ON_PLANE &&
   //     vtxB_locA[1] <= LOC_EXTERIOR_ON_PLANE &&
   //     vtxB_locA[2] <= LOC_EXTERIOR_ON_PLANE &&
   //     vtxA_locB[0] <= LOC_EXTERIOR_ON_PLANE &&
   //     vtxA_locB[1] <= LOC_EXTERIOR_ON_PLANE &&
   //     vtxA_locB[2] <= LOC_EXTERIOR_ON_PLANE) {
+  int coplanar = 0;
+  if (vtxA_locB[0] <= LOC_EXTERIOR_ON_PLANE &&
+      vtxA_locB[1] <= LOC_EXTERIOR_ON_PLANE &&
+      vtxA_locB[2] <= LOC_EXTERIOR_ON_PLANE) {
+    coplanar = 1;
+    // is this legit??
+    for (int i = 0; i < 3; i++) {
+      vtxB_locA[i] = PDM_MIN(vtxB_locA[i], LOC_EXTERIOR_ON_PLANE);
+    }
+  }
+  else if (vtxB_locA[0] <= LOC_EXTERIOR_ON_PLANE &&
+           vtxB_locA[1] <= LOC_EXTERIOR_ON_PLANE &&
+           vtxB_locA[2] <= LOC_EXTERIOR_ON_PLANE) {
+    coplanar = 1;
+    // is this legit??
+    for (int i = 0; i < 3; i++) {
+      vtxA_locB[i] = PDM_MIN(vtxA_locB[i], LOC_EXTERIOR_ON_PLANE);
+    }
+  }
 
+  if (coplanar) {
     // coplanar triangles
     return _intersect_triangle_triangle_coplanar(coordA,
                                                  coordB,
@@ -1205,90 +1269,122 @@ _intersect_triangle_triangle
 
 
   // quick and dirty
-  double normalA[3];
-  _triangle_normal(tri_coordA[0], tri_coordA[1], tri_coordA[2], normalA);
-  double normalB[3];
-  _triangle_normal(tri_coordB[0], tri_coordB[1], tri_coordB[2], normalB);
+  if (1) {
+    double normalA[3];
+    _triangle_normal(tri_coordA[0], tri_coordA[1], tri_coordA[2], normalA);
+    double normalB[3];
+    _triangle_normal(tri_coordB[0], tri_coordB[1], tri_coordB[2], normalB);
 
-  double direction[3];
-  PDM_CROSS_PRODUCT(direction, normalA, normalB);
+    double direction[3];
+    PDM_CROSS_PRODUCT(direction, normalA, normalB);
 
-  // place line origin at iso-barycenter of intersection points
-  // to center u-values on 0 and get maximal precision
-  double origin[3] = {0., 0., 0.};
-  for (int i = 0; i < n_edgeA_inter_planeB; i++) {
+    // place line origin at iso-barycenter of intersection points
+    // to center u-values on 0 and get maximal precision
+    double origin[3] = {0., 0., 0.};
+    for (int i = 0; i < n_edgeA_inter_planeB; i++) {
+      for (int j = 0; j < 3; j++) {
+        origin[j] += edgeA_inter_planeB_coord[3*i+j];
+      }
+    }
+    for (int i = 0; i < n_edgeB_inter_planeA; i++) {
+      for (int j = 0; j < 3; j++) {
+        origin[j] += edgeB_inter_planeA_coord[3*i+j];
+      }
+    }
+    double normalization = 1./(double) (n_edgeA_inter_planeB + n_edgeB_inter_planeA);
     for (int j = 0; j < 3; j++) {
-      origin[j] += edgeA_inter_planeB_coord[3*i+j];
+      origin[j] *= normalization;
     }
-  }
-  for (int i = 0; i < n_edgeB_inter_planeA; i++) {
-    for (int j = 0; j < 3; j++) {
-      origin[j] += edgeB_inter_planeA_coord[3*i+j];
-    }
-  }
-  double normalization = 1./(double) (n_edgeA_inter_planeB + n_edgeB_inter_planeA);
-  for (int j = 0; j < 3; j++) {
-    origin[j] *= normalization;
-  }
 
-  double u[4];
-  int    order[4];
-  double u_minA =  HUGE_VAL;
-  double u_maxA = -HUGE_VAL;
-  for (int i = 0; i < n_edgeA_inter_planeB; i++) {
-    // u    [i] = PDM_DOT_PRODUCT(direction, edgeA_inter_planeB_coord + 3*i);
-    u[i] = 0.;
-    for (int j = 0; j < 3; j++) {
-      u[i] += direction[j] * (edgeA_inter_planeB_coord[3*i+j] - origin[j]);
+    double u[4];
+    double deviation[4];
+    double idd = 1./PDM_DOT_PRODUCT(direction, direction);
+    int    order[4];
+    double u_minA =  HUGE_VAL;
+    double u_maxA = -HUGE_VAL;
+    for (int i = 0; i < n_edgeA_inter_planeB; i++) {
+      // u    [i] = PDM_DOT_PRODUCT(direction, edgeA_inter_planeB_coord + 3*i);
+      u[i] = 0.;
+      deviation[i] = 0.;
+      for (int j = 0; j < 3; j++) {
+        double x = edgeA_inter_planeB_coord[3*i+j] - origin[j];
+        u[i] += direction[j] * x;
+        double delta = x - u[i]*direction[j]*idd;
+        deviation[i] += delta*delta;
+      }
+      deviation[i] = sqrt(deviation[i]);
+      order[i] = i;
+      u_minA = PDM_MIN(u_minA, u[i]);
+      u_maxA = PDM_MAX(u_maxA, u[i]);
     }
-    order[i] = i;
-    u_minA = PDM_MIN(u_minA, u[i]);
-    u_maxA = PDM_MAX(u_maxA, u[i]);
-  }
-  double u_minB =  HUGE_VAL;
-  double u_maxB = -HUGE_VAL;
-  for (int i = 0; i < n_edgeB_inter_planeA; i++) {
-    // u    [n_edgeA_inter_planeB+i] = PDM_DOT_PRODUCT(direction, edgeB_inter_planeA_coord + 3*i);
-    u[n_edgeA_inter_planeB+i] = 0.;
-    for (int j = 0; j < 3; j++) {
-      u[n_edgeA_inter_planeB+i] += direction[j] * (edgeB_inter_planeA_coord[3*i+j] - origin[j]);
+    double u_minB =  HUGE_VAL;
+    double u_maxB = -HUGE_VAL;
+    for (int i = 0; i < n_edgeB_inter_planeA; i++) {
+      // u    [n_edgeA_inter_planeB+i] = PDM_DOT_PRODUCT(direction, edgeB_inter_planeA_coord + 3*i);
+      u[n_edgeA_inter_planeB+i] = 0.;
+      deviation[n_edgeA_inter_planeB+i] = 0.;
+      for (int j = 0; j < 3; j++) {
+        double x = edgeB_inter_planeA_coord[3*i+j] - origin[j];
+        u[n_edgeA_inter_planeB+i] += direction[j] * x;
+        double delta = x - u[n_edgeA_inter_planeB+i]*direction[j]*idd;
+        deviation[n_edgeA_inter_planeB+i] += delta*delta;
+      }
+      deviation[n_edgeA_inter_planeB+i] = sqrt(deviation[n_edgeA_inter_planeB+i]);
+      order[n_edgeA_inter_planeB+i] = i + n_edgeA_inter_planeB;
+      u_minB = PDM_MIN(u_minB, u[n_edgeA_inter_planeB+i]);
+      u_maxB = PDM_MAX(u_maxB, u[n_edgeA_inter_planeB+i]);
     }
-    order[n_edgeA_inter_planeB+i] = i + n_edgeA_inter_planeB;
-    u_minB = PDM_MIN(u_minB, u[n_edgeA_inter_planeB+i]);
-    u_maxB = PDM_MAX(u_maxB, u[n_edgeA_inter_planeB+i]);
-  }
 
-  if (u_minA > u_maxB || u_minB > u_maxA) {
-    return 0;
-  }
-
-  PDM_sort_double(u, order, n_edgeA_inter_planeB + n_edgeB_inter_planeA);
-
-  for (int i = 0; i < 2; i++) {
-    if (order[i+1] < n_edgeA_inter_planeB) {
-      memcpy(inter_coord    + 3*i,
-             edgeA_inter_planeB_coord + 3*order[i+1],
-             sizeof(double) * 3);
-      inter_locA[i] = edgeA_inter_planeB_locA[i];
-      inter_locB[i] = -1; // ?
+    if (u_minA > u_maxB || u_minB > u_maxA) {
+      return 0;
     }
-    else {
-      memcpy(inter_coord    + 3*i,
-             edgeB_inter_planeA_coord + 3*(order[i+1] - n_edgeA_inter_planeB),
-             sizeof(double) * 3);
-      inter_locA[i] = -1; // ?
-      inter_locB[i] = edgeB_inter_planeA_locB[i];
-    }
-  }
 
-  if (dbg) {
-    PDM_log_trace_array_int((int *) inter_locA, 2, "inter_locA : ");
-    PDM_log_trace_array_int((int *) inter_locB, 2, "inter_locB : ");
-    PDM_vtk_write_lines("triA_inter_triB.vtk",
-                        1,
-                        inter_coord,
-                        NULL,
-                        NULL);
+    PDM_sort_double(u, order, n_edgeA_inter_planeB + n_edgeB_inter_planeA);
+
+    for (int i = 0; i < 2; i++) {
+      if (order[i+1] < n_edgeA_inter_planeB) {
+        memcpy(inter_coord    + 3*i,
+               edgeA_inter_planeB_coord + 3*order[i+1],
+               sizeof(double) * 3);
+        inter_locA[i] = edgeA_inter_planeB_locA[i];
+        inter_locB[i] = -1; // ?
+      }
+      else {
+        memcpy(inter_coord    + 3*i,
+               edgeB_inter_planeA_coord + 3*(order[i+1] - n_edgeA_inter_planeB),
+               sizeof(double) * 3);
+        inter_locA[i] = -1; // ?
+        inter_locB[i] = edgeB_inter_planeA_locB[i];
+      }
+    }
+
+    if (dbg) {
+      log_trace("deviation = %e %e %e %e\n",
+                deviation[0],
+                deviation[1],
+                deviation[2],
+                deviation[3]);
+      PDM_log_trace_array_int((int *) inter_locA, 2, "inter_locA : ");
+      PDM_log_trace_array_int((int *) inter_locB, 2, "inter_locB : ");
+      PDM_vtk_write_lines("triA_inter_triB.vtk",
+                          1,
+                          inter_coord,
+                          NULL,
+                          NULL);
+
+      double line[6];
+      log_trace("%e %e\n", PDM_MIN(u_minA, u_minB), PDM_MAX(u_maxA, u_maxB));
+      for (int i = 0; i < 3; i++) {
+        line[  i] = origin[i] + PDM_MIN(u_minA, u_minB)*direction[i]*idd;
+        line[3+i] = origin[i] + PDM_MAX(u_maxA, u_maxB)*direction[i]*idd;
+      }
+      PDM_vtk_write_lines("line.vtk",
+                          1,
+                          line,
+                          NULL,
+                          NULL);
+
+    }
   }
 
   return 2; // !!!
@@ -1372,7 +1468,8 @@ _read_args
  double        *a0,
  double        *a1,
  double        *a2,
- double        *scale
+ double        *scale,
+ double        *noise_scale
  )
 {
   int i = 1;
@@ -1456,6 +1553,15 @@ _read_args
         *scale = atof(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-noise_scale") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *noise_scale = atof(argv[i]);
+      }
+    }
 
     else {
       _usage(EXIT_FAILURE);
@@ -1479,14 +1585,17 @@ int main(int argc, char *argv[])
    */
   PDM_MPI_Init(&argc, &argv);
 
-  int    seed     = 0;
-  double eps      = 1e-6;
-  int    n_repeat = 1;
-  int    randA    = 0;
-  double a0[3]    = {0, 0, 0};
-  double a1[3]    = {1, 0, 0};
-  double a2[3]    = {0, 1, 0};
-  double scale    = 1.;
+  PDM_predicate_exactinit();
+
+  int    seed        = 0;
+  double eps         = 1e-6;
+  int    n_repeat    = 1;
+  int    randA       = 0;
+  double a0[3]       = {0, 0, 0};
+  double a1[3]       = {1, 0, 0};
+  double a2[3]       = {0, 1, 0};
+  double scale       = 1.;
+  double noise_scale = 0.;
   _read_args(argc,
              argv,
              &seed,
@@ -1496,14 +1605,13 @@ int main(int argc, char *argv[])
              a0,
              a1,
              a2,
-             &scale);
+             &scale,
+             &noise_scale);
 
   if (seed < 0) {
-      srand(time(NULL));
-    }
-    else {
-      srand(seed);
-    }
+    seed = time(NULL);
+  }
+  srand(seed);
 
 
   double vtx_coordA[3][3] = {
@@ -1587,16 +1695,15 @@ int main(int argc, char *argv[])
     }
   }
 
-  double min_epsB = HUGE_VAL;
-  for (int i = 0; i < 3; i++) {
-    min_epsB = PDM_MIN(min_epsB, vtx_epsB[i]);
-  }
+  // double min_epsB = HUGE_VAL;
+  // for (int i = 0; i < 3; i++) {
+  //   min_epsB = PDM_MIN(min_epsB, vtx_epsB[i]);
+  // }
 
   // double noise_scale = min_epsB; // abs(noise_scale) <= 1
   // if (eps >= 0) {
   //   noise_scale /= eps;
   // }
-  double noise_scale = 0.1;//
   _gen_config(vtx_coordA,
               vtx_epsA,
               vtxB_locA,
@@ -1621,7 +1728,8 @@ int main(int argc, char *argv[])
     }
   }
 
-
+  log_trace("seed = %d, noise_scale = %f, scale = %f\n",
+            seed, noise_scale, scale);
   log_trace("vtx_epsA : %e %e %e\n",
             vtx_epsA[0], vtx_epsA[1], vtx_epsA[2]);
   log_trace("vtx_epsB : %e %e %e\n",
