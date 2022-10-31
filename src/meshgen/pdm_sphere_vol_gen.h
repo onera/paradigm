@@ -73,6 +73,25 @@ PDM_sphere_vol_gen_nodal
  );
 
 
+/**
+ * \brief Create a volume mesh bounded by an icosphere
+ * (all cells are tetrahedra)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] dcell_vtx       Connectivity of distributed cell to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ * \param[out] distrib_face    Distribution of cells
+ *
+ */
+
 void
 PDM_sphere_vol_icosphere_gen
 (
@@ -90,6 +109,21 @@ PDM_sphere_vol_icosphere_gen
        PDM_g_num_t       **distrib_cell
 );
 
+
+/**
+ * \brief Create a volume mesh bounded by an icosphere
+ * (all cells are tetrahedra)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
+
 void
 PDM_sphere_vol_icosphere_gen_nodal
 (
@@ -99,7 +133,40 @@ PDM_sphere_vol_icosphere_gen_nodal
  const double              y_center,
  const double              z_center,
  const double              radius,
-       PDM_dmesh_nodal_t **_dmn
+       PDM_dmesh_nodal_t **dmn
+);
+
+
+/**
+ * \brief Create a volume mesh bounded by two concentric icospheres
+ * (all cells are prisms)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n_layer         Number of extrusion layers
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius_interior Radius of the interior sphere
+ * \param[in]  radius_exterior Radius of the exterior sphere
+ * \param[in]  geometric_ratio Geometric ratio for layer thickness
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
+
+void
+PDM_sphere_vol_hollow_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const PDM_g_num_t         n_layer,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius_interior,
+ const double              radius_exterior,
+ const double              geometric_ratio,
+       PDM_dmesh_nodal_t **dmn
 );
 
 #ifdef __cplusplus

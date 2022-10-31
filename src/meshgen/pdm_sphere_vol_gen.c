@@ -44,6 +44,7 @@
 #include "pdm_logging.h"
 #include "pdm_binary_search.h"
 #include "pdm_vtk.h"
+#include "pdm_geom_elem.h"
 
 #include "pdm_sphere_vol_gen.h"
 
@@ -550,6 +551,89 @@ static int _has_same_vtx_edge
   return 0;
 }
 
+
+static void
+_build_edges_from_triangles
+(
+const int   n_vtx,
+const int   n_face,
+const int  *face_vtx,
+      int  *n_edge,
+      int **edge_vtx,
+      int **face_edge
+ )
+{
+  *face_edge = malloc(sizeof(int) * n_face * 3);
+
+  int key_max = PDM_MAX(0, 2*(n_vtx-1));
+  int n_key = key_max + 1;
+  int *key_edge_n = PDM_array_zeros_int(n_key);
+
+  for (int iface = 0; iface < n_face; iface++) {
+    const int *_face_vtx = face_vtx + 3*iface;
+
+    for (int idx_edge = 0; idx_edge < 3; idx_edge++) {
+      int ev[2];
+      int key = 0;
+      for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
+        ev[idx_vtx] = _face_vtx[tria_edge_vtx[idx_edge][idx_vtx]];
+        key += ev[idx_vtx] - 1;
+      }
+      key_edge_n[key]++;
+    }
+  }
+
+  int *key_edge_idx = PDM_array_new_idx_from_sizes_int(key_edge_n, n_key);
+  PDM_array_reset_int(key_edge_n, n_key, 0);
+
+  int *key_edge = (int *) malloc(sizeof(int) * key_edge_idx[n_key]);
+
+  int n_edge_max = 3*n_face;
+  *n_edge = 0;
+  *edge_vtx  = malloc(sizeof(int) * n_edge_max * 2);
+  for (int iface = 0; iface < n_face; iface++) {
+    const int *_face_vtx  =  face_vtx  + 3*iface;
+    int       *_face_edge = *face_edge + 3*iface;
+
+    for (int idx_edge = 0; idx_edge < 3; idx_edge++) {
+      int ev[2];
+      int key = 0;
+      for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
+        ev[idx_vtx] = _face_vtx[tria_edge_vtx[idx_edge][idx_vtx]];
+        key += ev[idx_vtx] - 1;
+      }
+
+
+      int edge_id = 0;
+      for (int idx = 0; idx < key_edge_n[key]; idx++) {
+        int jedge = key_edge[key_edge_idx[key] + idx] - 1;
+        int *ev2 = (*edge_vtx) + 2*jedge;
+        int sign = _has_same_vtx_edge(ev, ev2);
+
+        if (sign != 0) {
+          edge_id = sign*(jedge+1);
+          break;
+        }
+      }
+
+      if (edge_id == 0) {
+        // New edge
+        (*edge_vtx)[2*(*n_edge)  ] = ev[0];
+        (*edge_vtx)[2*(*n_edge)+1] = ev[1];
+        edge_id = ++(*n_edge);
+
+        key_edge[key_edge_idx[key] + key_edge_n[key]++] = edge_id;
+      }
+
+      _face_edge[idx_edge] = edge_id;
+    }
+  }
+  free(key_edge_n);
+  free(key_edge_idx);
+  free(key_edge);
+
+  *edge_vtx = realloc(*edge_vtx, sizeof(int) * (*n_edge) * 2);
+}
 
 static void
 _build_base_edges_and_faces_from_tetra
@@ -1442,9 +1526,9 @@ _gen_from_base_mesh
     // log_trace("g = "PDM_FMT_G_NUM", ibase = %d, quadtria = %d, idx = %d, ij = %d %d, \n",
     //           g, ibase, quadtria, idx, i, j);
 
-    int ibase_face = base_bdr_face[ibase]; \
-    int ibase_sign = PDM_SIGN(ibase_face); \
-    ibase_face = PDM_ABS(ibase_face) - 1; \
+    int ibase_face = base_bdr_face[ibase];
+    int ibase_sign = PDM_SIGN(ibase_face);
+    ibase_face = PDM_ABS(ibase_face) - 1;
     // log_trace("  base_id = %d, base_sign = %d\n", ibase_face, ibase_sign);
 
     int fi;
@@ -1494,18 +1578,361 @@ _gen_from_base_mesh
 }
 
 
+static void
+_extrude_base_surface_mesh
+(
+ const PDM_MPI_Comm   comm,
+ const PDM_g_num_t    n,
+ const PDM_g_num_t    n_layer,
+ const int            base_n_vtx,
+ const int            base_n_edge,
+ const int            base_n_face,
+       double        *base_vtx_coord,
+       int           *base_edge_vtx,
+       int           *base_face_vtx,
+       int           *base_face_edge,
+       double       **dvtx_coord,
+       PDM_g_num_t  **dface_vtx,
+       PDM_g_num_t  **dcell_vtx,
+       PDM_g_num_t  **distrib_vtx,
+       PDM_g_num_t  **distrib_face,
+       PDM_g_num_t  **distrib_cell
+)
+{
+  assert(n_layer > 0);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  /*
+   *  Compute unit normals at base vertices
+   */
+  double *base_vtx_normal = malloc(sizeof(double) * base_n_vtx * 3);
+  for (int i = 0; i < 3*base_n_vtx; i++) {
+    base_vtx_normal[i] = 0.;
+  }
+
+  for (int iface = 0; iface < base_n_face; iface++) {
+    double face_normal[3];
+
+    PDM_geom_elem_tria_surface_vector(1,
+                                      base_face_vtx + 3*iface,
+                                      base_vtx_coord,
+                                      face_normal,
+                                      NULL,
+                                      NULL);
+
+    for (int ivtx = 0; ivtx < 3; ivtx++) {
+      int vtx_id = base_face_vtx[3*iface+ivtx]-1;
+      for (int i = 0; i < 3; i++) {
+        base_vtx_normal[3*vtx_id+i] += face_normal[i];
+      }
+    }
+  }
+
+  /* Normalize */
+  for (int i = 0; i < base_n_vtx; i++) {
+    double mag = PDM_MODULE(base_vtx_normal + 3*i);
+    assert(mag >= 0.);
+
+    mag = 1./mag;
+    for (int j = 0; j < 3; j++) {
+      base_vtx_normal[3*i+j] *= mag;
+    }
+  }
+
+  /* Auxiliary arrays */
+  int *tria_j_idx = malloc(sizeof(int) * n);
+  if (n > 0) {
+    tria_j_idx[0] = 0;
+    for (int j = 0; j < n-1; j++) {
+      tria_j_idx[j+1] = tria_j_idx[j] + n-1-j;
+    }
+  }
+
+
+  /*
+   *  Vertices
+   */
+  PDM_g_num_t face_int_vtx_n = n*(n-1) / 2;
+
+  PDM_g_num_t gn_vtx_layer =
+  base_n_vtx                 +
+  base_n_edge*n              +
+  base_n_face*face_int_vtx_n;
+
+  PDM_g_num_t gn_vtx = (n_layer+1)*(gn_vtx_layer);
+
+  *distrib_vtx = PDM_compute_uniform_entity_distribution(comm, gn_vtx);
+
+  int dn_vtx = (int) ((*distrib_vtx)[i_rank+1] - (*distrib_vtx)[i_rank]);
+
+  *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+
+  PDM_g_num_t idx_vtx_edge = base_n_vtx;
+  PDM_g_num_t idx_vtx_face = idx_vtx_edge + base_n_edge*n;
+
+  double step_tangent = 1. / (double) (n + 1);
+  double step_normal  = 1. / (double) n_layer;
+
+  for (int ivtx = 0; ivtx < dn_vtx; ivtx++) {
+
+    PDM_g_num_t g = (*distrib_vtx)[i_rank] + ivtx;
+
+    PDM_g_num_t ilayer = g/gn_vtx_layer;
+    g = g%gn_vtx_layer;
+
+    if (g < idx_vtx_edge) {
+      // Base vertex
+      for (int i = 0; i < 3; i++) {
+        (*dvtx_coord)[3*ivtx+i] = base_vtx_coord[3*g+i] + step_normal*ilayer*base_vtx_normal[3*g+i];
+      }
+    }
+
+    else if (g < idx_vtx_face) {
+      // Base edge
+      int ibase = (int) ((g - idx_vtx_edge) / n);
+      int i     = (int) (g - idx_vtx_edge - n*ibase);
+      // log_trace("base edge %d, i = %d --> gnum "PDM_FMT_G_NUM"\n",
+      //           ibase, i, g+1);
+
+      int ivtx1 = base_edge_vtx[2*ibase  ] - 1;
+      int ivtx2 = base_edge_vtx[2*ibase+1] - 1;
+      double t = (i + 1) * step_tangent;
+
+      for (int k = 0; k < 3; k++) {
+        (*dvtx_coord)[3*ivtx + k] = (1 - t)*base_vtx_coord[3*ivtx1 + k] + t*base_vtx_coord[3*ivtx2 + k] +
+        step_normal*ilayer * ((1 - t)*base_vtx_normal[3*ivtx1 + k] + t*base_vtx_normal[3*ivtx2 + k]);
+      }
+    }
+
+    else {
+      // Base face
+      int ibase = (int) ((g - idx_vtx_face) / face_int_vtx_n);
+      int idx   = (int) ( g - idx_vtx_face  - face_int_vtx_n*ibase);
+      int j = PDM_binary_search_gap_int(idx,
+                                        tria_j_idx,
+                                        n);
+      int i = idx - tria_j_idx[j];
+      // log_trace("base face %d, ij = %d %d --> gnum "PDM_FMT_G_NUM"\n",
+      //           ibase, i, j, g+1);
+
+      int ivtx1 = base_face_vtx[3*ibase  ] - 1;
+      int ivtx2 = base_face_vtx[3*ibase+1] - 1;
+      int ivtx3 = base_face_vtx[3*ibase+2] - 1;
+      double u = (i + 1) * step_tangent;
+      double v = (j + 1) * step_tangent;
+
+      for (int k = 0; k < 3; k++) {
+        (*dvtx_coord)[3*ivtx + k] =
+        (1 - u - v) * base_vtx_coord[3*ivtx1 + k] +
+        u           * base_vtx_coord[3*ivtx2 + k] +
+        v           * base_vtx_coord[3*ivtx3 + k] +
+        step_normal*ilayer * ((1 - u - v) * base_vtx_normal[3*ivtx1 + k] +
+                              u           * base_vtx_normal[3*ivtx2 + k] +
+                              v           * base_vtx_normal[3*ivtx3 + k]);
+      }
+    }
+
+  }
+  free(tria_j_idx);
+  free(base_vtx_normal);
+
+
+  /*
+   *  Cells (prisms)
+   */
+  int quadtria_size[2] = {
+    n+1, n,
+  };
+
+  int subface_quadtria_n[2] = {
+    _n_subtria(n),
+    _n_subtria(n-1)
+  };
+
+  int subface_quadtria_idx[3];
+  PDM_array_idx_from_sizes_int(subface_quadtria_n,
+                               2,
+                               subface_quadtria_idx);
+
+
+  PDM_g_num_t face_subface_n = (n+1)*(n+1);
+  PDM_g_num_t gn_cell_layer = face_subface_n * base_n_face;
+  PDM_g_num_t gn_cell = n_layer * gn_cell_layer;
+
+  *distrib_cell = PDM_compute_uniform_entity_distribution(comm, gn_cell);
+
+  int dn_cell = (int) ((*distrib_cell)[i_rank+1] - (*distrib_cell)[i_rank]);
+
+  *dcell_vtx = malloc(sizeof(PDM_g_num_t) * dn_cell * 6);
+
+  for (int icell = 0; icell < dn_cell; icell++) {
+
+    PDM_g_num_t *_dcell_vtx = *dcell_vtx + 6*icell;
+
+    PDM_g_num_t g = (*distrib_cell)[i_rank] + icell;
+
+    PDM_g_num_t ilayer = g/gn_cell_layer;
+    g = g%gn_cell_layer;
+
+    int ibase_face = (int) (g/face_subface_n);
+    int idx        = (int) (g%face_subface_n);
+
+    int quadtria = PDM_binary_search_gap_int(idx,
+                                             subface_quadtria_idx,
+                                             3);
+
+    idx -= subface_quadtria_idx[quadtria];
+
+    int j, i;
+    idx2ij(idx, quadtria_size[quadtria]-1, &i, &j);
+
+    // log_trace("icell %d ("PDM_FMT_G_NUM"), ilayer %d, ibase_face %d, idx %d, quadtria %d, i %d, j %d\n",
+    //           icell, g, ilayer, ibase_face, idx, idx, quadtria, i, j);
+
+    int fi = i;
+    int fj = j;
+    switch (quadtria) {
+
+      case 0: {
+        // quadtria_vtx : [0, 1, 2]
+        _quadtria_vtx_0(fi, fj, _dcell_vtx[0]);
+        _quadtria_vtx_1(fi, fj, _dcell_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dcell_vtx[2]);
+        break;
+      }
+
+      case 1: {
+        // quadtria_vtx : [1, 3, 2]
+        _quadtria_vtx_1(fi, fj, _dcell_vtx[0]);
+        _quadtria_vtx_3(fi, fj, _dcell_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dcell_vtx[2]);
+        break;
+      }
+
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+      }
+    }
+
+    for (int k = 0; k < 3; k++) {
+      _dcell_vtx[k] += gn_vtx_layer*ilayer;
+      _dcell_vtx[3+k] = _dcell_vtx[k] + gn_vtx_layer;
+    }
+    // PDM_log_trace_array_long(_dcell_vtx, 6, "  _dcell_vtx : ");
+
+  }
+
+
+  /*
+   *  Boundary faces
+   *
+   * /!\ if the base mesh has boundaries, we must generate quad faces as well
+   */
+  int *base_edge_tag = PDM_array_zeros_int(base_n_edge);
+  for (int iface = 0; iface < base_n_face; iface++) {
+    for (int idx_edge = 3*iface; idx_edge < 3*(iface+1); idx_edge++) {
+      int edge_id = PDM_ABS(base_face_edge[idx_edge]) - 1;
+      base_edge_tag[edge_id] += PDM_SIGN(base_face_edge[idx_edge]);
+    }
+  }
+
+
+  int base_n_bdr_edge = 0;
+  int *base_bdr_edge = malloc(sizeof(int) * base_n_edge);
+  for (int iedge = 0; iedge < base_n_edge; iedge++) {
+    if (base_edge_tag[iedge] != 0) {
+      base_bdr_edge[base_n_bdr_edge++] = PDM_SIGN(base_edge_tag[iedge]) * (iedge+1);
+    }
+  }
+  free(base_edge_tag);
+  base_bdr_edge = realloc(base_bdr_edge, sizeof(int) * base_n_bdr_edge);
+
+  assert(base_n_bdr_edge == 0);
+
+  PDM_g_num_t gn_face = 2*gn_cell_layer;
+  // + n_layer * base_n_brd_edge * n;
+
+  *distrib_face = PDM_compute_uniform_entity_distribution(comm, gn_face);
+
+  int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
+
+  *dface_vtx = malloc(sizeof(PDM_g_num_t) * dn_face * 3); // !!! if quads
+
+  for (int iface = 0; iface < dn_face; iface++) {
+
+    PDM_g_num_t *_dface_vtx = *dface_vtx + 3*iface;
+
+    PDM_g_num_t g = (*distrib_face)[i_rank] + iface;
+
+    int ilayer = (int) (g / gn_cell_layer);
+    g = g % gn_cell_layer;
+
+    int ibase_face = (int) (g / face_subface_n);
+    int idx        = (int) (g - face_subface_n*ibase_face);
+
+
+    int quadtria = PDM_binary_search_gap_int(idx,
+                                             subface_quadtria_idx,
+                                             3);
+
+    idx -= subface_quadtria_idx[quadtria];
+
+    int j, i;
+    idx2ij(idx, quadtria_size[quadtria]-1, &i, &j);
+
+    int fi = i;
+    int fj = j;
+    switch (quadtria) {
+
+      case 0: {
+        // quadtria_vtx : [0, 1, 2]
+        _quadtria_vtx_0(fi, fj, _dface_vtx[0]);
+        _quadtria_vtx_1(fi, fj, _dface_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dface_vtx[2]);
+        break;
+      }
+
+      case 1: {
+        // quadtria_vtx : [1, 3, 2]
+        _quadtria_vtx_1(fi, fj, _dface_vtx[0]);
+        _quadtria_vtx_3(fi, fj, _dface_vtx[1]);
+        _quadtria_vtx_2(fi, fj, _dface_vtx[2]);
+        break;
+      }
+
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+      }
+    }
+
+    if (ilayer == 0) {
+      PDM_g_num_t tmp = _dface_vtx[0];
+      _dface_vtx[0] = _dface_vtx[1];
+      _dface_vtx[1] = tmp;
+    }
+    else {
+      for (int k = 0; k < 3; k++) {
+        _dface_vtx[k] += gn_vtx_layer*n_layer;
+      }
+    }
+
+  }
+}
 
 
 static PDM_dmesh_nodal_t *
 _set_dmesh_nodal
 (
- const PDM_MPI_Comm  comm,
-       double       *dvtx_coord,
-       PDM_g_num_t  *dface_vtx,
-       PDM_g_num_t  *dcell_vtx,
-       PDM_g_num_t  *distrib_vtx,
-       PDM_g_num_t  *distrib_face,
-       PDM_g_num_t  *distrib_cell
+ const PDM_MPI_Comm          comm,
+       double               *dvtx_coord,
+       PDM_g_num_t          *dface_vtx,
+       PDM_g_num_t          *dcell_vtx,
+       PDM_g_num_t          *distrib_vtx,
+       PDM_g_num_t          *distrib_face,
+       PDM_g_num_t          *distrib_cell,
+       PDM_Mesh_nodal_elt_t  cell_type
  )
 {
   int i_rank, n_rank;
@@ -1563,10 +1990,10 @@ _set_dmesh_nodal
 
   /* Volume */
   dmn->volumic->n_g_elmts = gn_cell;
-  int id_section_tetra = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
-                                                           PDM_MESH_NODAL_TETRA4);
+  int id_section_volume = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
+                                                            cell_type);
   PDM_DMesh_nodal_elmts_section_std_set(dmn->volumic,
-                                        id_section_tetra,
+                                        id_section_volume,
                                         dn_cell,
                                         dcell_vtx,
                                         PDM_OWNERSHIP_KEEP);
@@ -1817,8 +2244,24 @@ PDM_sphere_vol_gen_nodal
 
 
 
-
-
+/**
+ * \brief Create a volume mesh bounded by an icosphere
+ * (all cells are tetrahedra)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] dcell_vtx       Connectivity of distributed cell to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ * \param[out] distrib_face    Distribution of cells
+ *
+ */
 
 void
 PDM_sphere_vol_icosphere_gen
@@ -1861,7 +2304,7 @@ PDM_sphere_vol_icosphere_gen
   };
 
 
-  // Base cells (terahedra)
+  // Base cells (tetrahedra)
   const int base_n_cell = 20;
   const int base_cell_vtx[80] = {
     1, 3,  4,  2,
@@ -2062,7 +2505,19 @@ PDM_sphere_vol_icosphere_gen
 
 
 
-
+/**
+ * \brief Create a volume mesh bounded by an icosphere
+ * (all cells are tetrahedra)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
 
 void
 PDM_sphere_vol_icosphere_gen_nodal
@@ -2073,7 +2528,7 @@ PDM_sphere_vol_icosphere_gen_nodal
  const double              y_center,
  const double              z_center,
  const double              radius,
-       PDM_dmesh_nodal_t **_dmn
+       PDM_dmesh_nodal_t **dmn
 )
 {
   double      *dvtx_coord    = NULL;
@@ -2098,13 +2553,14 @@ PDM_sphere_vol_icosphere_gen_nodal
   /*
    *  Create dmesh nodal
    */
-  *_dmn = _set_dmesh_nodal(comm,
-                           dvtx_coord,
-                           dface_vtx,
-                           dcell_vtx,
-                           distrib_vtx,
-                           distrib_face,
-                           distrib_cell);
+  *dmn = _set_dmesh_nodal(comm,
+                          dvtx_coord,
+                          dface_vtx,
+                          dcell_vtx,
+                          distrib_vtx,
+                          distrib_face,
+                          distrib_cell,
+                          PDM_MESH_NODAL_TETRA4);
 
   free(distrib_vtx);
   free(distrib_face);
@@ -2114,74 +2570,210 @@ PDM_sphere_vol_icosphere_gen_nodal
 
 
 
+/**
+ * \brief Create a volume mesh bounded by two concentric icospheres
+ * (all cells are prisms)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  n_layer         Number of extrusion layers
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius_interior Radius of the interior sphere
+ * \param[in]  radius_exterior Radius of the exterior sphere
+ * \param[in]  geometric_ratio Geometric ratio for layer thickness
+ * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
+ *
+ */
+
+void
+PDM_sphere_vol_hollow_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const PDM_g_num_t         n_layer,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius_interior,
+ const double              radius_exterior,
+ const double              geometric_ratio,
+       PDM_dmesh_nodal_t **dmn
+)
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  assert(n_layer > 0);
+
+  // Base vertices
+  const int base_n_vtx = 12;
+  const double base_vtx_coord[36] = {
+    0.0000000000000000,   0.0000000000000000,  -1.0000000000000000,
+    0.7236073208526308,  -0.5257253406640403,  -0.4472195337774913,
+    -0.2763880040858484,  -0.8506492161065184,  -0.4472198366964583,
+    -0.8944261896382816,   0.0000000000000000,  -0.4472155982176212,
+    -0.2763880040858484,   0.8506492161065184,  -0.4472198366964583,
+    0.7236073208526308,   0.5257253406640403,  -0.4472195337774913,
+    0.2763880040858484,  -0.8506492161065184,   0.4472198366964583,
+    -0.7236073208526308,  -0.5257253406640403,   0.4472195337774913,
+    -0.7236073208526308,   0.5257253406640403,   0.4472195337774913,
+    0.2763880040858484,   0.8506492161065184,   0.4472198366964583,
+    0.8944261896382816,   0.0000000000000000,   0.4472155982176212,
+    0.0000000000000000,   0.0000000000000000,   1.0000000000000000
+  };
+
+  // Base faces (triangles)
+  const int base_n_face = 20;
+  const int base_face_vtx[60] = {
+    2,  3,  1,
+    1,  6,  2,
+    3,  4,  1,
+    4,  5,  1,
+    5,  6,  1,
+    6,  11, 2,
+    2,  7,  3,
+    3,  8,  4,
+    4,  9,  5,
+    5,  10, 6,
+    11, 7,  2,
+    7,  8,  3,
+    8,  9,  4,
+    9,  10, 5,
+    10, 11, 6,
+    11, 12, 7,
+    7,  12, 8,
+    8,  12, 9,
+    9,  12, 10,
+    10, 12, 11
+  };
+
+
+  int  base_n_edge    = 0;
+  int *base_edge_vtx  = NULL;
+  int *base_face_edge = NULL;
+  _build_edges_from_triangles(base_n_vtx,
+                              base_n_face,
+                              base_face_vtx,
+                              &base_n_edge,
+                              &base_edge_vtx,
+                              &base_face_edge);
+
+  if (0 && i_rank == 0) {
+    PDM_vtk_write_std_elements("hollow_base_edge.vtk",
+                               base_n_vtx,
+                               base_vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_BAR2,
+                               base_n_edge,
+                               base_edge_vtx,
+                               NULL,
+                               0, NULL, NULL);
+
+    PDM_vtk_write_std_elements("hollow_base_face.vtk",
+                               base_n_vtx,
+                               base_vtx_coord,
+                               NULL,
+                               PDM_MESH_NODAL_TRIA3,
+                               base_n_face,
+                               base_face_vtx,
+                               NULL,
+                               0, NULL, NULL);
+  }
+
+
+  double      *dvtx_coord   = NULL;
+  PDM_g_num_t *dface_vtx    = NULL;
+  PDM_g_num_t *dcell_vtx    = NULL;
+  PDM_g_num_t *distrib_vtx  = NULL;
+  PDM_g_num_t *distrib_face = NULL;
+  PDM_g_num_t *distrib_cell = NULL;
+  _extrude_base_surface_mesh(comm,
+                             n,
+                             n_layer,
+                             base_n_vtx,
+                             base_n_edge,
+                             base_n_face,
+                  (double *) base_vtx_coord,
+                             base_edge_vtx,
+                  (int    *) base_face_vtx,
+                             base_face_edge,
+                             &dvtx_coord,
+                             &dface_vtx,
+                             &dcell_vtx,
+                             &distrib_vtx,
+                             &distrib_face,
+                             &distrib_cell);
+  free(base_edge_vtx);
+  free(base_face_edge);
 
 
 
-// void
-// PDM_sphere_vol_hollow_gen_nodal
-// (
-//  const PDM_MPI_Comm        comm,
-//  const PDM_g_num_t         n,
-//  const PDM_g_num_t         n_layer,
-//  const double              x_center,
-//  const double              y_center,
-//  const double              z_center,
-//  const double              radius_interior,
-//  const double              radius_exterior,
-//        PDM_dmesh_nodal_t **_dmn
-// )
-// {
-//   int i_rank, n_rank;
-//   PDM_MPI_Comm_rank(comm, &i_rank);
-//   PDM_MPI_Comm_size(comm, &n_rank);
+  /* "Spherify", scale and translate */
+  double center[3] = {x_center, y_center, z_center};
+  double delta_radius = radius_exterior - radius_interior;
+  double step0;
+  double idenom;
 
-//   /* Dummy sphere */
-//   double      *surf_dvtx_coord    = NULL;
-//   int         *surf_dface_vtx_idx = NULL;
-//   PDM_g_num_t *surf_dface_vtx     = NULL;
-//   PDM_g_num_t *surf_distrib_vtx   = NULL;
-//   PDM_g_num_t *surf_distrib_face  = NULL;
-//   PDM_sphere_surf_icosphere_gen(comm,
-//                                 n,
-//                                 0.,
-//                                 0.,
-//                                 0.,
-//                                 1.,
-//                                 &surf_dvtx_coord,
-//                                 &surf_dface_vtx_idx,
-//                                 &surf_dface_vtx,
-//                                 &surf_distrib_vtx,
-//                                 &surf_distrib_face);
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+  if (geometric_ratio == 1) {
+    step0 = delta_radius / (double) n_layer;
+  }
+  else {
+    idenom = 1./(1 - geometric_ratio);
+    step0 = delta_radius * (1 - geometric_ratio) / (1 - pow(geometric_ratio, n_layer));
+  }
 
+  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
-//   PDM_g_num_t gn_vtx   = surf_distrib_vtx [n_rank] * (n_layer + 1);
-//   PDM_g_num_t gn_prism = surf_distrib_face[n_rank] * n_layer;
+  PDM_g_num_t face_int_vtx_n = n*(n-1) / 2;
 
-//   PDM_g_num_t *distrib_vtx = PDM_compute_uniform_entity_distribution(comm,
-//                                                                      gn_vtx);
+  PDM_g_num_t gn_vtx_layer =
+  base_n_vtx                 +
+  base_n_edge*n              +
+  base_n_face*face_int_vtx_n;
 
-//   PDM_g_num_t *distrib_prism = PDM_compute_uniform_entity_distribution(comm,
-//                                                                        gn_prism);
+  for (int i = 0; i < dn_vtx; i++) {
+    PDM_g_num_t g = distrib_vtx[i_rank] + i;
 
+    int ilayer = (int) (g / gn_vtx_layer);
 
-//   double delta_radius = radius_exterior - radius_interior;
-//   double step = delta_radius / (double) n_layer;
+    double rlayer = radius_interior;
+    if (geometric_ratio == 1) {
+      rlayer += step0*ilayer;
+    }
+    else {
+     rlayer += step0*(1 - pow(geometric_ratio, ilayer)) * idenom;
+    }
+    double r = PDM_MODULE(dvtx_coord + 3*i);
+    double scale = rlayer/r;
+
+    for (int j = 0; j < 3; j++) {
+      dvtx_coord[3*i+j] = center[j] + scale*dvtx_coord[3*i+j];
+    }
+  }
+PDM_GCC_SUPPRESS_WARNING_POP
 
 
-//   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-//   double *dvtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  /*
+   *  Create dmesh nodal
+   */
+  *dmn = _set_dmesh_nodal(comm,
+                          dvtx_coord,
+                          dface_vtx,
+                          dcell_vtx,
+                          distrib_vtx,
+                          distrib_face,
+                          distrib_cell,
+                          PDM_MESH_NODAL_PRISM6);
 
-//   for (int i = 0; i < dn_vtx; i++) {
+  free(distrib_vtx);
+  free(distrib_face);
+  free(distrib_cell);
+}
 
-//     PDM_g_num_t g = distrib_vtx[i_rank] + i;
-
-//     // int vtx_id =
-
-//   }
-
-
-
-// }
 
 #undef ij2idx
 #undef ijk2idx
