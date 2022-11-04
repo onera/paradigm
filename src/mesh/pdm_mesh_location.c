@@ -617,6 +617,7 @@ _mesh_nodal_to_pmesh_nodal_elmts
   else if (is_null) {
     PDM_MPI_Recv(block_type, n_block, PDM_MPI_INT, master, 1, location_comm);
   }
+  free(i_null_rank);
 
 
   pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension,
