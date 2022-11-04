@@ -1,7 +1,0 @@
-
-.before_script:default:
-  before_script:
-    - echo $PWD
-  variables:
-    BUILD_DIR: build_$COMPILER
-    ARCTIFACTS_CTEST_NAME: ./build$COMPILER/reports/paradigm_ctest_$COMPILER.xml
