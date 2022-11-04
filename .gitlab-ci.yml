@@ -1,99 +1,270 @@
-# Declare stages
-stages:
-  - init
-  - build
-  - test
+# Prevent duplicated pipeline by removing MR pipelines
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: always
 
-# Default variables and parameters
 variables:
   GIT_STRATEGY: none # don't do anything by default
-  SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=24 --time=00:30:00"
-  # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
-default:
-  tags: #All jobs uses jamacar-slurm executor
-    - slurm
+  SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --cpus-per-task=24 --ntasks=1 --time=00:30:00"
+  # SCHEDULER_PARAMETERS: "--qos=co_inter_std --ntasks=16 --nodes=1-1 --time=00:15:00"
+  # CI_DEBUG_TRACE: "true"
+
+# sinter -M rhel8 --qos=el8_gbe --cpus-per-task=24 --ntasks=1 --time=00:30:00 bash
+#Common to all stages
+# default:
+#   tags: #All jobs uses jamacar-shell executor
+#     - shell
+#   before_script:
+#     - module purge
+#     - source /home/sonics/spack_new/spack/share/spack/setup-env.sh
+#     - source /home/sonics/source-intel-oneapi-2021.2-spiro.me --compiler gcc10.1
+#     - export LSAN_OPTIONS=suppressions=/stck/bmaugars/dev/dev-Tools/paradigma/build/spiro_gcc_py3/suppression_asan.txt
+#     - module load cmake/3.23.0-gnu485
 
 
-init_repo:
-  variables:
-    GIT_STRATEGY: clone
-    GIT_SUBMODULE_STRATEGY: none
-    SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
-  stage: init
-  script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
-    - echo "Clone directory $PWD"
-    - echo "CUSTOM_CI_DIR=$PWD" >> build.env
-    - git submodule update --init extensions/paradigma
-  artifacts:
-    reports:
-      dotenv: build.env
+include:
+  - local: '.gitlab/matrix-spiro-el8.yaml'
 
-build:
-  parallel:
-    matrix:
-        - COMPILER: ["gcc@10", "gcc@12"]
-          MPI_LIB: ["impi"] #, "openmpi"]
-  variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
-  stage: build
-  before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
-    - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
-  script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR
-    - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
-    - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON ../
-    - make -j
 
-unit_test:
-  parallel:
-    matrix:
-        - COMPILER: ["gcc@10", "gcc@12"]
-          MPI_LIB: ["impi"] #, "openmpi"]
-  variables:
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
-  stage: test
-  before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
-    - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
-  script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-      # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
-    - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
-      # Go back to runner dir for artifact modification
-  after_script:
-    - echo $PWD
-    - cd $CI_PROJECT_DIR
-    - sed -i '/testsuite name/c\<testsuite name="'"$MATRIX_KEY"'"' paradigm_ctest$MATRIX_KEY.xml
-    - sed -i 's/" classname/_'"$MATRIX_KEY"'" classname/' paradigm_ctest$MATRIX_KEY.xml
-  artifacts:
-    when: always
-    reports:
-      junit: paradigm_ctest$MATRIX_KEY.xml
+# job:test:
+#   stage: test
+#   variables:
+#     COMPILER: "gcc@10"
+#   extends:
+#     - .before_script:default
+#   script:
+#     - echo $BUILD_DIR
 
-non_regression:
-  variables:
-    COMPILER: "gcc@10"
-    MPI_LIB: "impi"
-    MATRIX_KEY: _${COMPILER}_${MPI_LIB}
-  stage: test
-  before_script:
-    - unset _LMFILES_
-    - unset LOADEDMODULES
-    - module -s purge
-    - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
-  script:
-    - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
-    - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    - mkdir -p reports
-    - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm --matrix_key ${MATRIX_KEY} --output_xml $CI_PROJECT_DIR/paradigm_alltest$MATRIX_KEY.xml
-  artifacts:
-   when: always
-   reports:
-     junit: paradigm_alltest$MATRIX_KEY.xml
+# -------------------------------------------------
+# job:init:
+#   stage: init
+#   variables:
+#     GIT_STRATEGY: clone
+#     GIT_SUBMODULE_STRATEGY: none
+#   before_script:
+#     - ''
+#   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
+#     - echo "CUSTOM_CI_DIR=$PWD" >> build.env
+#     # - (cd external/paradigm && git submodule update --init extensions/paradigma)
+#     - git submodule update --init extensions/paradigma
+#   artifacts:
+#     reports:
+#       dotenv: build.env
+
+# job:build:
+#   stage: build
+#   script:
+#     - cd $CUSTOM_CI_DIR
+#     - echo $CUSTOM_CI_DIR
+#     - rm -rf build && mkdir -p build && cd build
+#     - echo $PWD
+#     - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON ../
+#     - make -j8
+
+# #todo : display reports on browser eg with gitlab pages
+# job:ctest:
+#   variables:
+#     CI_DEBUG_TRACE: "true"
+#   stage: test
+#   script:
+#     - cd $CUSTOM_CI_DIR/build
+#     - rm -rf reports_ctest
+#     - rm -rf reports
+#     - mkdir reports_ctest
+#     - mkdir reports
+#     # - ctest -V -R pdm_t_groups_sol --output-junit reports/paradigm_ctest.xml
+#     - ctest --output-junit reports/paradigm_ctest.xml
+#     - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm
+#   when: on_success # s'exécutera uniquement si le job `job:build` passe
+#   artifacts:
+#     # name: "${CI_PROJECT_NAME}_${CI_COMMIT_REF_NAME}_${CI_JOB_ID}"
+#     paths:
+#       - ./build/reports/*
+#     when: always
+#     # Next allows to display a test tab in the pipeline with report but requires a feature flag to be enabled,
+#     # see https://docs.gitlab.com/ee/ci/unit_test_reports.html#viewing-unit-test-reports-on-gitlab
+#     # Use it in combination with --junitxml=reports/pytest-junit.xml in the pytest launcher (TestCreate.cmake)
+#     reports:
+#       junit:
+#         - "./build/reports/paradigm_alltest.xml"
+#         - "./build/reports/paradigm_ctest.xml"
+
+
+
+# TODO : coverage
+# sinter -M rhel8 --qos=el8_gbe --cpus-per-task=24 --ntasks=1 --time=00:30:00 bash
+
+#todo : display reports on browser eg with gitlab pages
+# job:alltest:
+#   stage: test
+#   script:
+#     - cd $CUSTOM_CI_DIR/build
+#     - rm -rf reports
+#     - mkdir reports
+#     - ./script/prepare_ci/run_top_test_base.sh --log_file_name reports/output_alltest_pdm
+#   when: on_success # s'exécutera uniquement si le job `job:build` passe
+#   artifacts:
+#     # name: "${CI_PROJECT_NAME}_${CI_COMMIT_REF_NAME}_${CI_JOB_ID}"
+#     paths:
+#       - ./build/reports/*
+#     when: always
+#     reports:
+#       junit: ./build/reports/paradigm_alltest.xml
+
+
+
+
+# job_portage:
+#   inherit:
+#     default: false
+#     variables: [SCHEDULER_PARAMETERS]
+#   variables:
+#     GIT_STRATEGY: clone
+#     GIT_SUBMODULE_STRATEGY: none
+#   tags: #All jobs uses jamacar-shell executor
+#     - slurm
+#   script:
+#     - echo "toto"
+#     - hostname
+#     - whoami
+# -------------------------------------------------
+
+# -------------------------------------------------
+# job_portage:init:
+#   variables:
+#     GIT_STRATEGY: clone
+#     GIT_SUBMODULE_STRATEGY: none
+#     SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --cpus-per-task=1 --ntasks=1 --time=00:30:00"
+#   tags: #All jobs uses jamacar-shell executor
+#     - slurm
+#   stage: init
+#   before_script:
+#     - hostname
+#     - whoami
+#     - unset _LMFILES_
+#     - unset LOADEDMODULES
+#     - unset LOADEDMODULES
+#     - module -s purge
+#   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
+#     - echo "CUSTOM_CI_DIR=$PWD" >> build.env
+#     - git submodule update --init extensions/paradigma
+#     - echo $CUSTOM_CI_DIR
+#   artifacts:
+#     reports:
+#       dotenv: build.env
+
+# job_portage:build:
+#   parallel:
+#     matrix:
+#         - COMPILER: ["gcc@10", "gcc@12"]
+#   tags:
+#     - slurm
+#   stage: build
+#   before_script:
+#     - hostname
+#     - whoami
+#     - unset _LMFILES_
+#     - unset LOADEDMODULES
+#     - unset LOADEDMODULES
+#     - module -s purge
+#     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=${COMPILER} --mpi=impi
+#   script:
+#     - cd $CUSTOM_CI_DIR
+#     - mkdir -p build${COMPILER} && cd build${COMPILER}
+#     - echo $PWD
+#     - cmake -DCMAKE_BUILD_TYPE=Sanitize -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON ../
+#     - make -j 24
+
+# job_portage:test:
+#   # variables:
+#   #   CI_DEBUG_TRACE: "true"
+#   parallel:
+#     matrix:
+#         - COMPILER: ["gcc@12", "gcc@10"]
+#   tags:
+#     - slurm
+#   stage: test
+#   before_script:
+#     - hostname
+#     - whoami
+#     - unset _LMFILES_
+#     - unset LOADEDMODULES
+#     - module -s purge
+#     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=${COMPILER} --mpi=impi
+#   script:
+#     - cd $CUSTOM_CI_DIR
+#     - cd build${COMPILER}
+#     - echo $PWD
+#     - ctest --output-junit reports/paradigm_ctest_${COMPILER}.xml -R pdm_t_groups_sol
+#     - ls reports/paradigm_ctest_${COMPILER}.xml
+#   artifacts:
+#     # name: "${CI_PROJECT_NAME}_${CI_COMMIT_REF_NAME}_${CI_JOB_ID}_${COMPILER}"
+#     when: always
+#     paths:
+#       - "./build${COMPILER}/reports/paradigm_ctest_${COMPILER}.xml"
+#   #   reports:
+#   #     junit:
+#   #       - "./build${COMPILER}/reports/paradigm_ctest_*.xml"
+
+
+
+# job_portage:post_gcc10:
+#   tags:
+#     - slurm
+#   stage: post
+#   before_script:
+#     - ''
+#   script:
+#     - echo $PWD
+#     - cd $CUSTOM_CI_DIR
+#     - ls ./buildgcc@10/reports
+#   artifacts:
+#     when: always
+#     reports:
+#       junit:
+#         - "./buildgcc@10/reports/paradigm_ctest_gcc@10.xml"
+
+# job_portage:post_gcc12:
+#   tags:
+#     - slurm
+#   stage: post
+#   before_script:
+#     - ''
+#   script:
+#     - echo $PWD
+#     - cd $CUSTOM_CI_DIR
+#     - ls ./buildgcc@12/reports
+#   artifacts:
+#     when: always
+#     reports:
+#       junit:
+#         - "./buildgcc@12/reports/paradigm_ctest_gcc@12.xml"
+
+# -------------------------------------------------
+
+
+# > Not working
+# job_portage:post:
+#   variables:
+#     CI_DEBUG_TRACE: "true"
+#   parallel:
+#     matrix:
+#         - COMPILER: ["gcc@12", "gcc@10"]
+#   tags:
+#     - slurm
+#   stage: post
+#   before_script:
+#     - ''
+#   script:
+#     - echo $PWD
+#     - cd $CUSTOM_CI_DIR
+#     - ls ./build${COMPILER}/reports
+#     - echo $CI_JOB_NAME
+#   artifacts:
+#     name: $CI_JOB_NAME_${COMPILER}
+#     when: always
+#     reports:
+#       junit:
+#         - "./build${COMPILER}/reports/paradigm_ctest_${COMPILER}.xml"
