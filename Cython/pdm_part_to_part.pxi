@@ -493,14 +493,31 @@ def reverse_iexch(PyPartToPart                pyptp,
 
   cdef int   _part2_stride_cst = 0
   cdef int** _part2_stride = NULL
+
+  # To check stride size
+  cdef int   n_elt       = 0;
+  cdef int  *n_ref_lnum2 = NULL;
+  cdef int **ref_lnum2   = NULL;
+
   if isinstance(part2_stride, int):
     _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
     _part2_stride_cst = part2_stride
+
   elif isinstance(part2_stride, list):
     _stride_t = PDM_STRIDE_VAR_INTERLACED
     assert len(part2_stride) == pyptp.n_part2
+
+    PDM_part_to_part_ref_lnum2_get(pyptp.ptp,
+                                   &n_ref_lnum2,
+                                   &ref_lnum2);
+
     for i_part in range(pyptp.n_part2):
-      assert_single_dim_np(part2_stride[i_part], NPY.int32, pyptp.n_elt2[i_part])
+      if (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2  )\
+      or (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM ) :
+        n_elt = n_ref_lnum2[i_part]
+      else :
+        n_elt = pyptp.n_elt2[i_part]
+      assert_single_dim_np(part2_stride[i_part], NPY.int32, n_elt)
     _part2_stride = np_list_to_int_pointers(part2_stride)
   else:
     raise ValueError("Invalid stride in PtB exchange")
@@ -589,7 +606,7 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
       pyptp.dict_stride     .erase(request_id)
       pyptp.dict_cst_strid  .erase(request_id)
 
-      return lnp_part_strid, lnp_part_data
+  return lnp_part_strid, lnp_part_data
 
     # # ------------------------------------------------------------------------
     # def __dealloc__(PyPartToPart pyptp):
