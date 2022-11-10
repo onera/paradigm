@@ -21,6 +21,7 @@
 #include "pdm_mesh_intersection.h"
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_sphere_surf_gen.h"
 
 /*============================================================================
  * Macro definitions
@@ -149,6 +150,23 @@ static void _rotate_coord(const double angle,
   }
 }
 
+
+
+static void
+_add_depth
+(
+ double *coord
+ )
+{
+  // double x = coord[0];
+  double y = coord[1];
+  double z = coord[2];
+
+  coord[1] = 0.8*y - 0.6*z;
+  coord[2] = 0.6*y + 0.8*z;
+}
+
+
 static
 void
 _generate_surface_mesh
@@ -160,7 +178,7 @@ _generate_surface_mesh
  const double                 xmin,
  const double                 ymin,
  const double                 zmin,
- const double                 lenght,
+ const double                 length,
  const PDM_split_dual_t       part_method,
  const int                    n_part,
        PDM_dmesh_nodal_t    **_dmn,
@@ -171,32 +189,64 @@ _generate_surface_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         lenght,
-                                                         xmin,
-                                                         ymin,
-                                                         zmin,
-                                                         elt_type,
-                                                         1,
-                                                         PDM_OWNERSHIP_USER);
-  PDM_dcube_nodal_gen_build (dcube);
-  PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
-  PDM_dmesh_nodal_generate_distribution(dmn);
-  PDM_dcube_nodal_gen_free(dcube);
+  PDM_dmesh_nodal_t *dmn = NULL;
+  if (0) {
+    PDM_sphere_surf_icosphere_gen_nodal(comm,
+                                        n_vtx_seg,
+                                        0, 0, 0,
+                                        1,
+                                        &dmn);
+  }
+  else {
+    PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           length,
+                                                           xmin,
+                                                           ymin,
+                                                           zmin,
+                                                           elt_type,
+                                                           1,
+                                                           PDM_OWNERSHIP_USER);
+    PDM_dcube_nodal_gen_build (dcube);
+    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+    PDM_dmesh_nodal_generate_distribution(dmn);
+    PDM_dcube_nodal_gen_free(dcube);
+  }
 
+  PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
+  double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+
+  // randomize
+  if (1) {
+    double noise = 0.2*length/(double) (n_vtx_seg - 1);
+    for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+      if (PDM_ABS(vtx_coord[3*i_vtx  ] - xmin         ) > 1.e-9 &&
+          PDM_ABS(vtx_coord[3*i_vtx  ] - xmin - length) > 1.e-9 &&
+          PDM_ABS(vtx_coord[3*i_vtx+1] - ymin         ) > 1.e-9 &&
+          PDM_ABS(vtx_coord[3*i_vtx+1] - ymin - length) > 1.e-9) {
+        srand(distrib_vtx[i_rank] + i_vtx);
+        for (int i = 0; i < 2; i++) {
+          vtx_coord[3*i_vtx+i] += noise*0.5*(2*rand()/(double) RAND_MAX - 1);
+        }
+      }
+    }
+  }
 
   if(rotate) {
     // Do something
     double pi = 4 * atan(1.);
     double angle = pi/5.;
-    PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-    int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
     for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
       _rotate_coord(angle, &vtx_coord[3*i_vtx]);
+    }
+  }
+
+  if (0) {
+    for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+      _add_depth(&vtx_coord[3*i_vtx]);
     }
   }
 
@@ -382,10 +432,10 @@ char *argv[]
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
 
 #ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 
@@ -401,7 +451,7 @@ char *argv[]
   /*
    * Generate meshA
    */
-  double lenght_a = 1.;
+  double length_a = 1.;
   int rotate_a = 0;
   PDM_dmesh_nodal_t     *dmn_surf_a   = NULL;
   PDM_multipart_t       *mpart_surf_a = NULL;
@@ -412,14 +462,14 @@ char *argv[]
                           0.,
                           0.,
                           0.,
-                          lenght_a,
+                          length_a,
                           part_method,
                           n_part,
                           &dmn_surf_a,
                           &mpart_surf_a);
 
 
-  double lenght_b = 1.;
+  double length_b = 1.;
   int rotate_b = 1;
   PDM_dmesh_nodal_t     *dmn_surf_b   = NULL;
   PDM_multipart_t       *mpart_surf_b = NULL;
@@ -430,13 +480,13 @@ char *argv[]
                           0.5,
                           0.5,
                           0.,
-                          lenght_b,
+                          length_b,
                           part_method,
                           n_part,
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");
@@ -475,7 +525,7 @@ char *argv[]
   PDM_DMesh_nodal_free(dmn_surf_a);
   PDM_multipart_free(mpart_surf_a);
 
-  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
+  PDM_MPI_Barrier(comm);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

@@ -2273,14 +2273,7 @@ PDM_sections_decompose_edges
   int                     *parent_elmt_position
 )
 {
-  PDM_UNUSED(dmn_elts);
-  PDM_UNUSED(elmt_edge_vtx_idx);
-  PDM_UNUSED(elmt_edge_vtx);
-  PDM_UNUSED(elmt_edge_cell);
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-
-  int n_elt_current  = 0;
+  int n_elt_current   = 0;
   int n_dedge_current = 0;
 
   if(dmn_elts == NULL) {
@@ -2308,6 +2301,7 @@ PDM_sections_decompose_edges
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
 
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
+    int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
 
     switch (t_elt) {
       case PDM_MESH_NODAL_POINT:
@@ -2319,7 +2313,6 @@ PDM_sections_decompose_edges
       case PDM_MESH_NODAL_PRISM6:
       case PDM_MESH_NODAL_HEXA8:
       {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
         PDM_std_decomposes_edges(t_elt,
                                  1,
@@ -2349,7 +2342,6 @@ PDM_sections_decompose_edges
       case PDM_MESH_NODAL_PRISMHO:
       case PDM_MESH_NODAL_HEXAHO:
       {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
         PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
         int order      = dmn_elts->sections_std[i_section]->order;
@@ -2379,7 +2371,26 @@ PDM_sections_decompose_edges
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
+        int         *connec_idx = NULL;
+        PDM_g_num_t *connec     = NULL;
+        PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
+                                                 id_section,
+                                                 &connec_idx,
+                                                 &connec);
+
+        PDM_poly2d_decomposes_edges(n_elt,
+                                    &n_elt_current,
+                                    &n_dedge_current,
+                                    beg_elmt_gnum,
+                                    beg_edge_gnum,
+                                    connec,
+                                    connec_idx,
+                                    elmt_edge_vtx_idx,
+                                    elmt_edge_vtx,
+                                    elmt_edge_cell,
+                                    elmt_cell_edge_idx,
+                                    elmt_cell_edge,
+                                    parent_elmt_position);
         break;
       }
 

@@ -2810,19 +2810,35 @@ _extract_part_and_reequilibrate_from_target
   PDM_extract_part_t        *extrp
 )
 {
-  int          *pn_entity              = NULL;
-  PDM_g_num_t **entity_g_num           = NULL;
-  int         **entity_target_location = NULL;
+  int                *pn_entity              = NULL;
+  PDM_g_num_t       **entity_g_num           = NULL;
+  int               **entity_target_location = NULL;
+  PDM_mesh_entities_t entity_type;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
+    entity_type = PDM_MESH_ENTITY_CELL;
   } else if (extrp->dim == 2){
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
+    entity_type = PDM_MESH_ENTITY_FACE;
   } else if(extrp->dim == 1){
     pn_entity    = extrp->n_edge;
     entity_g_num = extrp->edge_ln_to_gn;
+    entity_type = PDM_MESH_ENTITY_EDGE;
   }
+
+  /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
+  // -->>
+  // (Copy to avoid double free)
+  extrp->pextract_entity_parent_ln_to_gn[entity_type] = malloc(sizeof(PDM_g_num_t * ) * extrp->n_part_out);
+  for (int ipart = 0; ipart < extrp->n_part_out; ipart++) {
+    extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart] = malloc(sizeof(PDM_g_num_t) * extrp->n_target[ipart]);
+    memcpy(extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart],
+           extrp->target_gnum[ipart],
+           sizeof(PDM_g_num_t) * extrp->n_target[ipart]);
+  }
+  // <<--
 
   int have_init_location = 1;
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
