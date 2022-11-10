@@ -118,6 +118,7 @@ cdef class ExtractPart:
                         NPY.ndarray[NPY.int32_t, mode='c', ndim=1] extract_lnum):
     """
     """
+    self.keep_alive.append(extract_lnum)
     cdef int n_extract = extract_lnum.shape[0]
     PDM_extract_part_selected_lnum_set(self._extrp,
                                        i_part,
