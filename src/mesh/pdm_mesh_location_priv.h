@@ -94,7 +94,6 @@ struct _pdm_mesh_location_t {
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  int  n_part;
   PDM_Mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
   PDM_Mesh_nodal_t* _mesh_nodal;
   PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
