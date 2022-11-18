@@ -101,12 +101,14 @@ static inline int _is_prime(int num)
  *   distribution. The connection between partition members and original entities
  *   is made trought the local to global numbering computed by the function.
  *
- * \param [in]   comm                PDM_MPI communicator
- * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
- * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
- * \param [in]   dentity_to_part     Id of assigned partition for each entity (size=dn_entity)
- * \param [out]  pn_entities         Number of entities in each partition (size n_part)
- * \param [out]  pentity_ln_to_gn    Array of local to global entity id for each partition (size n_part)
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   part_distribution     Distribution of partitions over the processes (size=n_rank+1)
+ * \param [in]   entity_distribution   Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   dentity_to_part       Id of assigned partition for each entity (size=dn_entity)
+ * \param [in]   dentity_gnum          If not null specifie the current gnum in the block
+ * \param [in]   dentity_init_location If not null specifie the current gnum in the block
+ * \param [out]  pn_entities           Number of entities in each partition (size n_part)
+ * \param [out]  pentity_ln_to_gn      Array of local to global entity id for each partition (size n_part)
  *
  * \return       n_part              Number of partitions managed by this process
 */
@@ -117,6 +119,7 @@ PDM_part_assemble_partitions
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
+ const PDM_g_num_t    *dentity_gnum,
  const int            *dentity_init_location,
        int           **pn_entity,
        PDM_g_num_t  ***pentity_ln_to_gn,
@@ -162,12 +165,21 @@ PDM_part_assemble_partitions
    * Generate global numbering
    */
   int*             dentity_stri = (int         *) malloc( sizeof(int        ) * dn_entity );
-  PDM_g_num_t* dentity_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * dn_entity );
 
-  PDM_g_num_t shift_g = entity_distribution[i_rank] + 1;
-  for(int i = 0; i < dn_entity; ++i){
-    dentity_stri    [i] = 1;
-    dentity_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
+  PDM_g_num_t* dentity_ln_to_gn = NULL;
+  if(dentity_gnum == NULL) {
+    dentity_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * dn_entity );
+    PDM_g_num_t shift_g = entity_distribution[i_rank] + 1;
+    for(int i = 0; i < dn_entity; ++i){
+      dentity_stri    [i] = 1;
+      dentity_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
+    }
+
+  } else {
+    dentity_ln_to_gn = (PDM_g_num_t *) dentity_gnum;
+    for(int i = 0; i < dn_entity; ++i){
+      dentity_stri    [i] = 1;
+    }
   }
 
   /*
@@ -184,7 +196,9 @@ PDM_part_assemble_partitions
                 (void **) &dentity_ln_to_gn,
                           pn_entity,
                 (void **) &pentity_ln_to_gn_tmp);
-  free(dentity_ln_to_gn);
+  if(dentity_gnum == NULL) {
+    free(dentity_ln_to_gn);
+  }
 
   int *pentity_init_location_tmp = NULL;
   if(dentity_init_location != NULL) {

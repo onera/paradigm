@@ -41,6 +41,7 @@ PDM_part_assemble_partitions
        PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
+ const PDM_g_num_t    *dentity_gnum,
  const int            *dentity_init_location,
        int           **pn_entity,
        PDM_g_num_t  ***pentity_ln_to_gn,

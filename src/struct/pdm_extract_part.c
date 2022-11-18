@@ -3607,6 +3607,7 @@ _extract_part_and_reequilibrate
                                  distrib_partition,
                                  distrib_elmt,
                                  _elmt_part,
+                                 dequi_g_num,
                                  dequi_init_location,
                                  &extrp->pextract_n_entity[entity_type],
                                  &extrp->pextract_entity_ln_to_gn[entity_type],
@@ -3664,6 +3665,13 @@ _extract_part_and_reequilibrate
     return;
   }
   // abort();  // TODO Remove all distributed part if from target works
+
+
+  /*
+   * TODO :
+   *    - Supprimer tout le block en dessous
+   *    - Supprimer dans la structure les intermédiaires en blocs
+   */
 
   /*
    * Copy because ptb will be free
@@ -4001,6 +4009,7 @@ _extract_part_and_reequilibrate
                                  distrib_elmt,
                                  _elmt_part,
                                  NULL,
+                                 NULL,
                                  &extrp->pextract_n_entity[PDM_MESH_ENTITY_CELL],
                                  &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_CELL],
                                  NULL);
@@ -4009,6 +4018,7 @@ _extract_part_and_reequilibrate
                                  distrib_partition,
                                  distrib_elmt,
                                  _elmt_part,
+                                 NULL,
                                  NULL,
                                  &extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE],
                                  &extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_FACE],

@@ -1813,6 +1813,7 @@ PDM_MPI_Comm       comm
                                distrib_node,
                                node_part,
                                NULL,
+                               NULL,
                               &pn_node,
                               &pnode_ln_to_gn,
                                NULL);
@@ -2548,6 +2549,7 @@ PDM_MPI_Comm      comm
                                part_distri,
                                cell_distri,
                                cell_part,
+                               NULL,
                                NULL,
                               &pn_cell,
                               &pcell_ln_to_gn,
