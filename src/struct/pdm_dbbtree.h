@@ -504,6 +504,15 @@ PDM_dbbtree_box_tree_write_vtk
  const int      normalized
  );
 
+
+void
+PDM_dbbtree_box_tree_write_vtk2
+(
+ const char    *filename,
+ PDM_dbbtree_t *dbbt,
+ const int      i_copied_rank
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
