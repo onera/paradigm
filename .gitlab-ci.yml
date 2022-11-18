@@ -97,3 +97,10 @@ non_regression:
    when: always
    reports:
      junit: paradigm_alltest$MATRIX_KEY.xml
+
+# TODO :
+#  - Rajouter des regles pour faire plus de compilo quand on merge sur dev : impi + clang + pgi par exemple
+# rules:
+#   - if: $CI_COMMIT_BRANCH == "dev"
+# Rajouter int/long
+# Tester si paradigm se compiler seul (sans paradigma)
