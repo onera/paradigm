@@ -131,6 +131,37 @@ _split_list
   current_out->next = intersect_copy_out;
 }
 
+// to factorize
+
+static double
+_plane_equation_function
+(
+ double coord[3],
+ int    i
+)
+{
+  switch (i) {
+  // OYZ
+  case 0:
+    return coord[0];
+  // X+Y=1
+  case 1:
+    return 1 - coord[0] - coord[1];
+  // OZX
+  case 2:
+    return coord[1];
+  // OXY
+  case 3:
+    return coord[2];
+  // X+Y+Z=1
+  case 4:
+    return 1 - coord[0] - coord[1] - coord[2];
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Only 5 planes are considered\n");
+    return 0;
+  }
+}
+
 // for main
 
 static void
@@ -179,60 +210,6 @@ int main(int argc, char *argv[])
   // Init
   PDM_MPI_Init(&argc, &argv);
 
-  // // create linked list
-  // double tab[3] = {0, 0, 0};
-
-  // Element *head = malloc(sizeof(Element));
-  // memcpy(head->coord, tab, sizeof(double)*3);
-  // head->intersect = 0;
-
-  // tab[0] = 1;
-
-  // Element *i1 = malloc(sizeof(Element));
-  // memcpy(i1->coord, tab, sizeof(double)*3);
-  // i1->intersect = 1;
-  // head->next = i1;
-
-  // tab[0] = 2;
-
-  // Element *A = malloc(sizeof(Element));
-  // memcpy(A->coord, tab, sizeof(double)*3);
-  // A->intersect = 0;
-  // i1->next = A;
-
-  // tab[0] = 3;
-
-  // Element *i2 = malloc(sizeof(Element));
-  // memcpy(i2->coord, tab, sizeof(double)*3);
-  // i2->intersect = 1;
-  // A->next = i2;
-
-  // tab[0] = 0;
-
-  // Element *head1 = malloc(sizeof(Element));
-  // memcpy(head1->coord, tab, sizeof(double)*3);
-  // head1->intersect = 0;
-  // head1->next = NULL;
-  // i2->next = head1;
-
-  // List *ll = malloc(sizeof(List));
-  // ll->head = head;
-
-  // // print it
-  // _print_linked_list(ll);
-
-  // // split linked list
-  // List *in = malloc(sizeof(List));
-  // _split_list(ll, in);
-
-  // printf("after split:\n");
-  // _print_linked_list(ll);
-  // _print_linked_list(in);
-
-  // // free
-  // _free(ll);
-  // _free(in);
-
   // Triangle
   // Geogebra
   double pt0[3] = {1.5, 1, 0};
@@ -273,159 +250,84 @@ int main(int argc, char *argv[])
   List *A = malloc(sizeof(List));
   List *outside = malloc(sizeof(List));
 
-  for (int i = 0; i < 2; i++) { // TO DO: change again for 5
-
-    // check if inside tetrahedron, then ll == A and break
-    Element *current = ll->head;
-    while (current != NULL) {
-      int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
-      int cond1 = current->coord[1] >= 0 && current->coord[1] <= 1;
-      int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
-      int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
-      // not totally in unit tetrahedron
-      if (!(cond0 && cond1 && cond2 && cond3)) {
-        break;
-      }
-      current = current->next;
-    }
-    // is totaly inside
-    if (current == NULL) {
-      printf("at step %d is totally inside the unit tetrahedron\n", i);
-      A = ll;
+  // check if the triangle is totally inside the unit tetrahedron, then ll = A
+  Element *current = ll->head;
+  while (current != NULL) {
+    int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
+    int cond1 = current->coord[1] >= 0 && current->coord[1] <= 1;
+    int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
+    int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
+    // not totally in unit tetrahedron
+    if (!(cond0 && cond1 && cond2 && cond3)) {
       break;
     }
+    current = current->next;
+  }
+  // is totaly inside
+  // TO DO: don't do what comes next
+  if (current == NULL) {
+    A = ll;
+  }
 
+  // for all 5 planes
+  for (int i = 0; i < 5; i++) {
     // find the maximum two intersections for each plane
     int count_intersect = 0;
     current = ll->head;
+
     // --> loop over the polyhedra segments
-    // TO DO: factoriser autant que possible
     while (current->next != NULL && count_intersect < 2) {
       double *coord1 = current->coord;
       double *coord2 = current->next->coord;
 
-      switch (i) {
-      // OYZ
-      case 0:
-        // on plane ?
-        // TO DO: make robust
-        if (coord1[0] == 0 && coord2[0] == 0) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+      // segment inside plane ?
+      if (_plane_equation_function(coord1, i) == 0 && _plane_equation_function(coord2, i) == 0) {
+        printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
 
-          // polygon in plane ?
-          if (current->next->next->coord[0] == 0) {
-            printf("polygon is in plane %d\n", i);
-            break; // TO DO: output that Vcolumn is 0
-          } else {
-            Element *i1 = malloc(sizeof(Element));
-            memcpy(i1->coord, current->coord, sizeof(double) * 3);
-            i1->intersect = 1;
-
-            Element *i2 = malloc(sizeof(Element));
-            memcpy(i2->coord, current->next->coord, sizeof(double) * 3);
-            i2->intersect = 1;
-
-            i2->next      = current->next;
-            i1->next      = i2;
-            current->next = i1;
-
-            count_intersect += 2;
-
-            current = i2->next;
-          }
-        }
-
-        // has intersection ?
-        else if ((coord1[0] >= 0 && coord2[0] <= 0) || (coord1[0] <= 0 && coord2[0] >= 0)) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) intersects plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
-          double t = coord2[0]/(coord2[0]-coord1[0]);
+        // polygon inside plane ?
+        // TO DO: handle if several times same intersection
+        if (0)  {// _plane_equation_function(current->next->next->coord, i) == 0) {
+          printf("polygon is in plane %d\n", i);
+          break; // TO DO: output that Vcolumn is 0
+        } else {
           Element *i1 = malloc(sizeof(Element));
-          i1->coord[0] = t*coord1[0]+(1-t)*coord2[0];
-          i1->coord[1] = t*coord1[1]+(1-t)*coord2[1];
-          i1->coord[2] = t*coord1[2]+(1-t)*coord2[2];
-          i1->next  = current->next;
+          memcpy(i1->coord, current->coord, sizeof(double) * 3);
           i1->intersect = 1;
+
+          Element *i2 = malloc(sizeof(Element));
+          memcpy(i2->coord, current->next->coord, sizeof(double) * 3);
+          i2->intersect = 1;
+
+          i2->next      = current->next;
+          i1->next      = i2;
           current->next = i1;
 
-          count_intersect += 1;
+          count_intersect += 2;
 
-          current = i1->next;
+          current = i2->next;
         }
+      } // end if segment inside plane
 
-        else {
-          current = current->next;
-        }
-        break;
+      else if ((_plane_equation_function(coord1, i) >= 0 && _plane_equation_function(coord2, i) <= 0) ||
+               (_plane_equation_function(coord1, i) <= 0 && _plane_equation_function(coord2, i) >= 0)) {
+        double t = _plane_equation_function(coord2, i)/(_plane_equation_function(coord2, i)-_plane_equation_function(coord1, i));
+        Element *i1 = malloc(sizeof(Element));
+        i1->coord[0] = t*coord1[0]+(1-t)*coord2[0];
+        i1->coord[1] = t*coord1[1]+(1-t)*coord2[1];
+        i1->coord[2] = t*coord1[2]+(1-t)*coord2[2];
+        i1->next  = current->next;
+        i1->intersect = 1;
+        current->next = i1;
 
-      // X+Y=1
-      case 1:
-        // on plane ?
-        if (coord1[0] + coord1[1] == 1 && coord2[0] + coord2[1] == 1) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+        count_intersect += 1;
 
-          // polygon in plane ?
-          if (current->next->next->coord[0] + current->next->next->coord[1] == 1) {
-            printf("polygon is in plane %d\n", i);
-            break; // TO DO: output that Vcolumn is 0
-          } else {
-            Element *i1 = malloc(sizeof(Element));
-            memcpy(i1->coord, current->coord, sizeof(double) * 3);
-            i1->intersect = 1;
+        current = i1->next;
+      } // end if intersect
 
-            Element *i2 = malloc(sizeof(Element));
-            memcpy(i2->coord, current->next->coord, sizeof(double) * 3);
-            i2->intersect = 1;
-
-            i2->next      = current->next;
-            i1->next      = i2;
-            current->next = i1;
-
-            count_intersect += 2;
-
-            current = i2->next;
-          }
-        }
-
-        // has intersection ?
-        else if ((coord1[0] + coord1[1] >= 1 && coord2[0] + coord2[1] <= 1) ||
-                (coord1[0] + coord1[1] <=1 && coord2[0] + coord2[1] >= 1)) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) intersects plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
-          double t = (1-coord2[0]-coord2[1])/(coord1[0]-coord2[0] + coord1[1]-coord2[1]);
-          Element *i1 = malloc(sizeof(Element));
-          i1->coord[0] = t*coord1[0]+(1-t)*coord2[0];
-          i1->coord[1] = t*coord1[1]+(1-t)*coord2[1];
-          i1->coord[2] = t*coord1[2]+(1-t)*coord2[2];
-          i1->next  = current->next;
-          i1->intersect = 1;
-          current->next = i1;
-
-          count_intersect += 1;
-
-          current = i1->next;
-        }
-
-        else {
-          current = current->next;
-        }
-        break;
-
-      // OZX
-      case 2:
-        break;
-
-      // OXY
-      case 3:
-        break;
-
-      // X+Y+Z=1
-      case 4:
-        break;
-
-      default:
-        PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
-        break;
+      else {
+        current = current->next;
       }
-    }
+    } // end while loop
 
     // check weather head is in or out
     int cond_head_out = -1;
@@ -481,12 +383,12 @@ int main(int argc, char *argv[])
       A = in;
       outside = out;
     }
-  }
+
+  } // end for loop
 
   // free
-  _free(ll);
-  free(A);
-  free(outside);
+  _free(A);
+  _free(outside);
 
   // Finalize
   PDM_MPI_Finalize();
