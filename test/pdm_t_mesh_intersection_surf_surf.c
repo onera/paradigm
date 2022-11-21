@@ -162,18 +162,18 @@ _add_depth
   double y = coord[1];
   double z = coord[2];
 
-  // coord[1] = 0.8*y - 0.6*z;
-  // coord[2] = 0.6*y + 0.8*z;
+  coord[1] = 0.8*y - 0.6*z;
+  coord[2] = 0.6*y + 0.8*z;
 
-  // angular sector
-  double t = PDM_PI * (0.5 + (x - 0.5 + 0.3*cos(3*y)) / 6.);
-  double r = 0.3 + 0.6 * y;
-  double scale = 0.2;
-  // x = r * cos(t);
-  // y = r * sin(t);
-  coord[0] = 0.07*y*(1-y)*cos(2*PDM_PI*x) + 0.05*sin(5*y);//;0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
-  coord[1] = r * cos(t);
-  coord[2] = r * sin(t);
+  // // angular sector
+  // double t = PDM_PI * (0.5 + (x - 0.5 + 0.3*cos(3*y)) / 6.);
+  // double r = 0.3 + 0.6 * y;
+  // double scale = 0.2;
+  // // x = r * cos(t);
+  // // y = r * sin(t);
+  // coord[0] = 0.07*y*(1-y)*cos(2*PDM_PI*x) + 0.05*sin(5*y);//;0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
+  // coord[1] = r * cos(t);
+  // coord[2] = r * sin(t);
 
 }
 

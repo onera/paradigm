@@ -654,8 +654,8 @@ _redistrib_boxes
 )
 {
 
-  int              n_elt_mesh_a    = PDM_box_set_get_size (boxes_mesh_a);
-  int              n_elt_mesh_b    = PDM_box_set_get_size (boxes_mesh_b);
+  int n_elt_mesh_a = PDM_box_set_get_size (boxes_mesh_a);
+  int n_elt_mesh_b = PDM_box_set_get_size (boxes_mesh_b);
 
   PDM_g_num_t *gnum_elt_mesh_a = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_mesh_a);
   PDM_g_num_t *gnum_elt_mesh_b = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_mesh_b);
@@ -707,10 +707,10 @@ _redistrib_boxes
    * Exchange connectivity box_a_to_box_b
    */
   PDM_g_num_t *box_a_to_box_b_g_num = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *
-                                                               box_a_to_box_b_idx[n_elt_mesh_a]);
+                                                              box_a_to_box_b_idx[n_elt_mesh_a]);
 
   for (int k = 0; k < box_a_to_box_b_idx[n_elt_mesh_a]; k++) {
-    box_a_to_box_b_g_num[k] =  gnum_elt_mesh_b[box_a_to_box_b[k]];
+    box_a_to_box_b_g_num[k] = gnum_elt_mesh_b[box_a_to_box_b[k]];
   }
 
   int         *block_a_boxes_b_stride;
@@ -725,6 +725,57 @@ _redistrib_boxes
                          &block_a_boxes_b_stride,
                (void **) &block_a_boxes_b_gnum_data);
   free(box_a_to_box_b_g_num);
+
+
+  // if (1) {
+  //   int idx = 0;
+  //   log_trace("--- Avant ---\n");
+  //   for (int i = 0; i < n_elt_block_a; i++) {
+  //     log_trace("faceA "PDM_FMT_G_NUM": faceB ", block_gnum_a[i]);
+  //     for (int j = 0; j < block_a_boxes_b_stride[i]; j++) {
+  //       log_trace(" "PDM_FMT_G_NUM, block_a_boxes_b_gnum_data[idx++]);
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
+
+  /* Remove duplicates */
+  if (1) {
+    int idx_read  = 0;
+    int idx_write = 0;
+    for (int i = 0; i < n_elt_block_a; i++) {
+
+      int n = block_a_boxes_b_stride[i];
+
+      int m = PDM_inplace_unique_long(block_a_boxes_b_gnum_data + idx_read,
+                                      NULL,
+                                      0,
+                                      n-1);
+
+      for (int j = 0; j < m; j++) {
+        block_a_boxes_b_gnum_data[idx_write++] = block_a_boxes_b_gnum_data[idx_read+j];
+      }
+      block_a_boxes_b_stride[i] = m;
+
+      idx_read += n;
+    }
+  }
+
+  // if (1) {
+  //   int idx = 0;
+  //   log_trace("--- Après ---\n");
+  //   for (int i = 0; i < n_elt_block_a; i++) {
+  //     log_trace("faceA "PDM_FMT_G_NUM": faceB ", block_gnum_a[i]);
+  //     for (int j = 0; j < block_a_boxes_b_stride[i]; j++) {
+  //       log_trace(" "PDM_FMT_G_NUM, block_a_boxes_b_gnum_data[idx++]);
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
+
+
+
+
   /*****************************************************************************
    *                                                                           *
    * Redistribute boxes_mesh_a intersections to ensure a good load balacing          *
@@ -852,6 +903,18 @@ _redistrib_boxes
            (void ***)    &tmp_redistribute_box_a_to_box_b_g_num);
   free (block_a_boxes_b_stride);
   free (block_a_boxes_b_gnum_data);
+
+  // if (1) {
+  //   int idx = 0;
+  //   log_trace("--- 2 ---\n");
+  //   for (int i = 0; i < n_elt_mesh_a; i++) {
+  //     log_trace("faceA "PDM_FMT_G_NUM": faceB ", gnum_elt_mesh_a[i]);
+  //     for (int j = 0; j < tmp_redistribute_box_a_to_box_b_n[0][i]; j++) {
+  //       log_trace(" "PDM_FMT_G_NUM, tmp_redistribute_box_a_to_box_b_g_num[0][idx++]);
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
 
   PDM_block_to_part_free(btp);
 
@@ -1259,49 +1322,6 @@ _mesh_intersection_surf_surf
                            &edgeB_vtxB,
                            &vtxB_coord,
                            &faceB_ln_to_gn);
-
-  if (dbg) {
-    log_trace("--- Avant ---\n");
-    for (int i = 0; i < n_faceA; i++) {
-      log_trace("faceA "PDM_FMT_G_NUM": faceB ", faceA_ln_to_gn[i]);
-      for (int j = faceA_faceB_idx[i]; j < faceA_faceB_idx[i+1]; j++) {
-        log_trace(" "PDM_FMT_G_NUM, faceB_ln_to_gn[faceA_faceB[j]]);
-      }
-      log_trace("\n");
-    }
-  }
-
-  if (1) {
-    // Remove duplicates (this should be done earlier)
-    int idx_read  = 0;
-    int idx_write = 0;
-    for (int i = 0; i < n_faceA; i++) {
-
-      int n = faceA_faceB_idx[i+1] - idx_read;
-
-      int m = PDM_inplace_unique(faceA_faceB + idx_read,
-                                 0,
-                                 n-1);
-
-      for (int j = 0; j < m; j++) {
-        faceA_faceB[idx_write++] = faceA_faceB[idx_read+j];
-      }
-      faceA_faceB_idx[i+1] = idx_write;
-
-      idx_read += n;
-    }
-  }
-
-  if (dbg) {
-    log_trace("--- Après ---\n");
-    for (int i = 0; i < n_faceA; i++) {
-      log_trace("faceA "PDM_FMT_G_NUM": faceB ", faceA_ln_to_gn[i]);
-      for (int j = faceA_faceB_idx[i]; j < faceA_faceB_idx[i+1]; j++) {
-        log_trace(" "PDM_FMT_G_NUM, faceB_ln_to_gn[faceA_faceB[j]]);
-      }
-      log_trace("\n");
-    }
-  }
 
 
   double *faceA_faceB_volume = malloc(sizeof(double) * faceA_faceB_idx[n_faceA]);

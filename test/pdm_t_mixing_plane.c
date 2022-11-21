@@ -608,7 +608,7 @@ _mixing_plane
   int max_face_band_n = 3;
   _ll_node_t *nodes = malloc(sizeof(_ll_node_t) * (3+4*(max_face_band_n-1)));
 
-  /* Intial nodes : tripangle vertices */
+  /* Intial nodes : triangle vertices */
   nodes[0].u = 0.;
   nodes[0].v = 0.;
 
@@ -1094,7 +1094,6 @@ char *argv[]
                 &face_band_idx,
                 &face_band,
                 &face_band_area);
-
 
 
 
