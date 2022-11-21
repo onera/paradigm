@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
   List *A = malloc(sizeof(List));
   List *outside = malloc(sizeof(List));
 
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 2; i++) { // TO DO: change again for 5
 
     // check if inside tetrahedron, then ll == A and break
     Element *current = ll->head;
@@ -295,38 +295,11 @@ int main(int argc, char *argv[])
       break;
     }
 
-    // check weather head is in or out
-    int cond_head_out = -1;
-    switch (i) {
-    // OYZ
-    case 0:
-      cond_head_out = ll->head->coord[0] < 0;
-      break;
-    // X+Y=1
-    case 1:
-      cond_head_out = (ll->head->coord[0] + ll->head->coord[1]) > 1;
-      break;
-    // OZX
-    case 2:
-      cond_head_out = ll->head->coord[2] < 0;
-      break;
-    // OXY
-    case 3:
-      cond_head_out = ll->head->coord[3] < 0;
-      break;
-    // X+Y+Z=1
-    case 4:
-      cond_head_out = (ll->head->coord[0] + ll->head->coord[1] + ll->head->coord[2]) > 1;
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
-      break;
-    }
-
     // find the maximum two intersections for each plane
     int count_intersect = 0;
     current = ll->head;
     // --> loop over the polyhedra segments
+    // TO DO: factoriser autant que possible
     while (current->next != NULL && count_intersect < 2) {
       double *coord1 = current->coord;
       double *coord2 = current->next->coord;
@@ -383,22 +356,103 @@ int main(int argc, char *argv[])
           current = current->next;
         }
         break;
+
       // X+Y=1
       case 1:
+        // on plane ?
+        if (coord1[0] + coord1[1] == 1 && coord2[0] + coord2[1] == 1) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+
+          // polygon in plane ?
+          if (current->next->next->coord[0] + current->next->next->coord[1] == 1) {
+            printf("polygon is in plane %d\n", i);
+            break; // TO DO: output that Vcolumn is 0
+          } else {
+            Element *i1 = malloc(sizeof(Element));
+            memcpy(i1->coord, current->coord, sizeof(double) * 3);
+            i1->intersect = 1;
+
+            Element *i2 = malloc(sizeof(Element));
+            memcpy(i2->coord, current->next->coord, sizeof(double) * 3);
+            i2->intersect = 1;
+
+            i2->next      = current->next;
+            i1->next      = i2;
+            current->next = i1;
+
+            count_intersect += 2;
+
+            current = i2->next;
+          }
+        }
+
+        // has intersection ?
+        else if ((coord1[0] + coord1[1] >= 1 && coord2[0] + coord2[1] <= 1) ||
+                (coord1[0] + coord1[1] <=1 && coord2[0] + coord2[1] >= 1)) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) intersects plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+          double t = (1-coord2[0]-coord2[1])/(coord1[0]-coord2[0] + coord1[1]-coord2[1]);
+          Element *i1 = malloc(sizeof(Element));
+          i1->coord[0] = t*coord1[0]+(1-t)*coord2[0];
+          i1->coord[1] = t*coord1[1]+(1-t)*coord2[1];
+          i1->coord[2] = t*coord1[2]+(1-t)*coord2[2];
+          i1->next  = current->next;
+          i1->intersect = 1;
+          current->next = i1;
+
+          count_intersect += 1;
+
+          current = i1->next;
+        }
+
+        else {
+          current = current->next;
+        }
         break;
+
       // OZX
       case 2:
         break;
+
       // OXY
       case 3:
         break;
+
       // X+Y+Z=1
       case 4:
         break;
+
       default:
         PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
         break;
       }
+    }
+
+    // check weather head is in or out
+    int cond_head_out = -1;
+    switch (i) {
+    // OYZ
+    case 0:
+      cond_head_out = ll->head->coord[0] < 0;
+      break;
+    // X+Y=1
+    case 1:
+      cond_head_out = (ll->head->coord[0] + ll->head->coord[1]) > 1;
+      break;
+    // OZX
+    case 2:
+      cond_head_out = ll->head->coord[2] < 0;
+      break;
+    // OXY
+    case 3:
+      cond_head_out = ll->head->coord[3] < 0;
+      break;
+    // X+Y+Z=1
+    case 4:
+      cond_head_out = (ll->head->coord[0] + ll->head->coord[1] + ll->head->coord[2]) > 1;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
+      break;
     }
 
     // --> split and keep depending on head in/out
