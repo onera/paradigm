@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
   List *A = malloc(sizeof(List));
   List *outside = malloc(sizeof(List));
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 1; i++) {
 
     // check if inside tetrahedron, then ll == A and break
     Element *current = ll->head;
@@ -295,10 +295,39 @@ int main(int argc, char *argv[])
       break;
     }
 
+    // check weather head is in or out
+    int cond_head_out = -1;
+    switch (i) {
+    // OYZ
+    case 0:
+      cond_head_out = ll->head->coord[0] < 0;
+      break;
+    // X+Y=1
+    case 1:
+      cond_head_out = (ll->head->coord[0] + ll->head->coord[1]) > 1;
+      break;
+    // OZX
+    case 2:
+      cond_head_out = ll->head->coord[2] < 0;
+      break;
+    // OXY
+    case 3:
+      cond_head_out = ll->head->coord[3] < 0;
+      break;
+    // X+Y+Z=1
+    case 4:
+      cond_head_out = (ll->head->coord[0] + ll->head->coord[1] + ll->head->coord[2]) > 1;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
+      break;
+    }
+
     // find the maximum two intersections for each plane
+    int count_intersect = 0;
     current = ll->head;
     // --> loop over the polyhedra segments
-    while (current->next != NULL) {
+    while (current->next != NULL && count_intersect < 2) {
       double *coord1 = current->coord;
       double *coord2 = current->next->coord;
 
@@ -306,22 +335,52 @@ int main(int argc, char *argv[])
       // OYZ
       case 0:
         // on plane ?
+        // TO DO: make robust
         if (coord1[0] == 0 && coord2[0] == 0) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+
+          // polygon in plane ?
+          if (current->next->next->coord[0] == 0) {
+            printf("polygon is in plane %d\n", i);
+            break; // TO DO: output that Vcolumn is 0
+          } else {
+            Element *i1 = malloc(sizeof(Element));
+            memcpy(i1->coord, current->coord, sizeof(double) * 3);
+            i1->intersect = 1;
+
+            Element *i2 = malloc(sizeof(Element));
+            memcpy(i2->coord, current->next->coord, sizeof(double) * 3);
+            i2->intersect = 1;
+
+            i2->next      = current->next;
+            i1->next      = i2;
+            current->next = i1;
+
+            count_intersect += 2;
+
+            current = i2->next;
+          }
         }
 
         // has intersection ?
         else if ((coord1[0] >= 0 && coord2[0] <= 0) || (coord1[0] <= 0 && coord2[0] >= 0)) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) intersects plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
           double t = coord2[0]/(coord2[0]-coord1[0]);
-          double intersect_coord[3] = {t*coord1[0]+(1-t)*coord2[0],
-                                       t*coord1[1]+(1-t)*coord2[1],
-                                       t*coord1[2]+(1-t)*coord2[2]};
-          Element *intersection = malloc(sizeof(Element));
-          intersection->coord = intersect_coord;
-          intersection->next  = current->next;
-          intersection->intersect = 1;
-          current->next = intersection;
+          Element *i1 = malloc(sizeof(Element));
+          i1->coord[0] = t*coord1[0]+(1-t)*coord2[0];
+          i1->coord[1] = t*coord1[1]+(1-t)*coord2[1];
+          i1->coord[2] = t*coord1[2]+(1-t)*coord2[2];
+          i1->next  = current->next;
+          i1->intersect = 1;
+          current->next = i1;
+
+          count_intersect += 1;
+
+          current = i1->next;
+        }
+
+        else {
+          current = current->next;
         }
         break;
       // X+Y=1
@@ -340,37 +399,38 @@ int main(int argc, char *argv[])
         PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
         break;
       }
+    }
 
-      // --> split and keep depending on head in/out
-      // TO DO: gestion des fuites mémoires ici
-      List *in = NULL;
-      List *out = NULL;
+    // --> split and keep depending on head in/out
+    // TO DO: gestion des fuites mémoires ici !!!
+    List *in = NULL;
+    List *out = NULL;
 
-      if (cond_head_out) { // TO DO: set this condition above
-        in = malloc(sizeof(List));
-        out = ll;
-        _split_list(out, in);
-      } else {
-        out = malloc(sizeof(List));
-        in = ll;
-        _split_list(in, out);
-      }
+    if (cond_head_out) {
+      in = malloc(sizeof(List));
+      out = ll;
+      _split_list(out, in);
+    } else {
+      out = malloc(sizeof(List));
+      in = ll;
+      _split_list(in, out);
+    }
 
-      if (i < 4) {
-        _free(out);
-        ll = in;
-      } else { // if X+Y+Z=1
-        A = in;
-        outside = out;
-      }
+    printf("After split:\n");
+    _print_linked_list(in);
+    _print_linked_list(out);
 
+    if (i < 4) {
+      _free(out);
+      ll = in;
+    } else { // if X+Y+Z=1
+      A = in;
+      outside = out;
     }
   }
 
   // free
   _free(ll);
-  free(normals);
-  free(points);
   free(A);
   free(outside);
 
