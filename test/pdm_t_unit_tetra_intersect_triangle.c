@@ -269,44 +269,11 @@ int main(int argc, char *argv[])
   printf("Triangle:\n");
   _print_linked_list(ll);
 
-  // Planes
-  double **normals = malloc(sizeof(double *) * 5);
-  // OYZ
-  double n0[3] = {1, 0, 0};
-  normals[0] = n0;
-  // X+Y = 1
-  double n1[3] = {-1, -1, 0};
-  normals[1] = n1;
-  // OZX
-  double n2[3] = {0, 1, 0};
-  normals[2] = n2;
-  // OXY
-  double n3[3] = {0, 0, 1};
-  normals[3] = n3;
-  // X+Y+Z = 1
-  double n4[4] = {-1, -1, -1};
-  normals[4] = n4;
-  double **points  = malloc(sizeof(double *) * 5);
-  double z[3] = {0, 0, 1};
-  double x[3] = {1, 0, 0};
-  // OYZ
-  points[0] = z; // Z
-  // X+Y = 1
-  points[1] = x; // X
-  // OZX
-  points[2] = z; // Z
-  // OXY
-  points[3] = x; // X
-  // X+Y+Z = 1
-  points[4] = z; // Z
-
   // Determine A and B
   List *A = malloc(sizeof(List));
   List *outside = malloc(sizeof(List));
 
   for (int i = 0; i < 5; i++) {
-    double *_n = normals[i];
-    double *_pt = points[i];
 
     // check if inside tetrahedron, then ll == A and break
     Element *current = ll->head;
@@ -329,6 +296,75 @@ int main(int argc, char *argv[])
     }
 
     // find the maximum two intersections for each plane
+    current = ll->head;
+    // --> loop over the polyhedra segments
+    while (current->next != NULL) {
+      double *coord1 = current->coord;
+      double *coord2 = current->next->coord;
+
+      switch (i) {
+      // OYZ
+      case 0:
+        // on plane ?
+        if (coord1[0] == 0 && coord2[0] == 0) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+        }
+
+        // has intersection ?
+        else if ((coord1[0] >= 0 && coord2[0] <= 0) || (coord1[0] <= 0 && coord2[0] >= 0)) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) intersects plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+          double t = coord2[0]/(coord2[0]-coord1[0]);
+          double intersect_coord[3] = {t*coord1[0]+(1-t)*coord2[0],
+                                       t*coord1[1]+(1-t)*coord2[1],
+                                       t*coord1[2]+(1-t)*coord2[2]};
+          Element *intersection = malloc(sizeof(Element));
+          intersection->coord = intersect_coord;
+          intersection->next  = current->next;
+          intersection->intersect = 1;
+          current->next = intersection;
+        }
+        break;
+      // X+Y=1
+      case 1:
+        break;
+      // OZX
+      case 2:
+        break;
+      // OXY
+      case 3:
+        break;
+      // X+Y+Z=1
+      case 4:
+        break;
+      default:
+        PDM_error(__FILE__, __LINE__, 0, "Only 5 planes\n");
+        break;
+      }
+
+      // --> split and keep depending on head in/out
+      // TO DO: gestion des fuites mémoires ici
+      List *in = NULL;
+      List *out = NULL;
+
+      if (cond_head_out) { // TO DO: set this condition above
+        in = malloc(sizeof(List));
+        out = ll;
+        _split_list(out, in);
+      } else {
+        out = malloc(sizeof(List));
+        in = ll;
+        _split_list(in, out);
+      }
+
+      if (i < 4) {
+        _free(out);
+        ll = in;
+      } else { // if X+Y+Z=1
+        A = in;
+        outside = out;
+      }
+
+    }
   }
 
   // free
