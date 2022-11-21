@@ -251,3 +251,5 @@ test_c_create (pdm_t_triangle 1)
 test_c_create (pdm_t_bezier_triangle_location 1)
 test_c_create (pdm_t_intersect_tetrahedra 1)
 test_c_create (pdm_t_triangles_intersect 1)
+
+test_c_create (pdm_t_unit_tetra_intersect_triangle 1)
