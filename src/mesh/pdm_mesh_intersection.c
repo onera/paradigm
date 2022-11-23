@@ -1165,8 +1165,8 @@ _dump_elementary_vol_vol
   sprintf(filename, "vol_vol_A%d_%d_%d_B%d_%d_%d_rank_%d.vtk",
           cellA_id,
           faceA_id,
-          cellB_id,
           triaA_id,
+          cellB_id,
           faceB_id,
           triaB_id,
           i_rank);
