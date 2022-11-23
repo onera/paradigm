@@ -1219,7 +1219,7 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
-  int dbg = 0;
+  int dbg = 1;
 
   int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
   int *cellA_cellB     = redistribute_box_a_to_box_b;
@@ -1358,66 +1358,68 @@ _mesh_intersection_vol_vol
 
     memcpy(&tetraA_coord[0], &vtxA_coord[3*ref_vtxA_id], sizeof(double)*3);
 
-    /* Loop on candidate cells B */
+    /* Initialize intersection volumes to zero */
     for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
-      int cellB_id = cellA_cellB[icellB];
-
-      /* Initialize volume to zero */
       cellA_cellB_volume[icellB] = 0.;
+    }
 
-      /* Loop on faces A */
-      for (int ifaceA = cellA_faceA_idx[cellA_id]; ifaceA < cellA_faceA_idx[cellA_id+1]; ifaceA++) {
+    /* Loop on faces A */
+    for (int ifaceA = cellA_faceA_idx[cellA_id]; ifaceA < cellA_faceA_idx[cellA_id+1]; ifaceA++) {
 
-        int faceA_id   = PDM_ABS (cellA_faceA[ifaceA]) - 1;
-        int faceA_sign = PDM_SIGN(cellA_faceA[ifaceA]);
+      int faceA_id   = PDM_ABS (cellA_faceA[ifaceA]) - 1;
+      int faceA_sign = PDM_SIGN(cellA_faceA[ifaceA]);
 
-        /* Triangulate current face A */
-        int *_face_vtx = faceA_vtxA + faceA_vtxA_idx[faceA_id];
-        int face_vtx_n = faceA_vtxA_idx[faceA_id+1] - faceA_vtxA_idx[faceA_id];
+      /* Triangulate current face A */
+      int *_face_vtx = faceA_vtxA + faceA_vtxA_idx[faceA_id];
+      int face_vtx_n = faceA_vtxA_idx[faceA_id+1] - faceA_vtxA_idx[faceA_id];
 
-        int n_tria;
-        if (face_vtx_n == 3) {
-          /* Triangular face */
-          n_tria = 1;
-          memcpy(triaA_vtxA, _face_vtx, sizeof(int) * 3);
-        }
-        else if (face_vtx_n == 4) {
-          /* Quadrilateral face */
-          n_tria = PDM_triangulate_quadrangle(3,
-                                              vtxA_coord,
-                                              NULL,
-                                              _face_vtx,
-                                              triaA_vtxA);
-        }
-        else {
-          /* Polygonal face */
-          n_tria = PDM_triangulate_polygon(3,
-                                           face_vtx_n,
-                                           vtxA_coord,
-                                           NULL,
-                                           _face_vtx,
-                                           PDM_TRIANGULATE_MESH_DEF,
-                                           triaA_vtxA,
-                                           tri_state);
-        }
+      int n_tria;
+      if (face_vtx_n == 3) {
+        /* Triangular face */
+        n_tria = 1;
+        memcpy(triaA_vtxA, _face_vtx, sizeof(int) * 3);
+      }
+      else if (face_vtx_n == 4) {
+        /* Quadrilateral face */
+        n_tria = PDM_triangulate_quadrangle(3,
+                                            vtxA_coord,
+                                            NULL,
+                                            _face_vtx,
+                                            triaA_vtxA);
+      }
+      else {
+        /* Polygonal face */
+        n_tria = PDM_triangulate_polygon(3,
+                                         face_vtx_n,
+                                         vtxA_coord,
+                                         NULL,
+                                         _face_vtx,
+                                         PDM_TRIANGULATE_MESH_DEF,
+                                         triaA_vtxA,
+                                         tri_state);
+      }
 
 
-        /* Loop on triangles A */
-        for (int triaA_id = 0; triaA_id < n_tria; triaA_id++) {
+      /* Loop on triangles A */
+      for (int triaA_id = 0; triaA_id < n_tria; triaA_id++) {
 
-          int *_triaA_vtxA = triaA_vtxA + 3*triaA_id;
+        int *_triaA_vtxA = triaA_vtxA + 3*triaA_id;
 
-          /* Ignore if current triangle contains reference vertex */
-          if (_triaA_vtxA[0] == ref_vtxA_id ||
-              _triaA_vtxA[1] == ref_vtxA_id ||
-              _triaA_vtxA[2] == ref_vtxA_id) {
+        /* Ignore if current triangle contains reference vertex */
+        if (_triaA_vtxA[0] == ref_vtxA_id ||
+            _triaA_vtxA[1] == ref_vtxA_id ||
+            _triaA_vtxA[2] == ref_vtxA_id) {
             continue;
-          }
+        }
 
-          for (int ivtx = 0; ivtx < 3; ivtx++) {
-            int vtxA_id = _triaA_vtxA[ivtx] - 1;
-            memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
-          }
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          int vtxA_id = _triaA_vtxA[ivtx] - 1;
+          memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+        }
+
+        /* Loop on candidate cells B */
+        for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
+          int cellB_id = cellA_cellB[icellB];
 
           /* Loop on faces B */
           for (int ifaceB = cellB_faceB_idx[cellB_id]; ifaceB < cellB_faceB_idx[cellB_id+1]; ifaceB++) {
@@ -1460,16 +1462,14 @@ _mesh_intersection_vol_vol
 
           } // End of loop on faces of current cell B
 
-        } // End of loop on triangles of current face A
+        } // End of loop on candiate cells B for current cell A
 
+      } // End of loop on triangles of current face A
 
-      } // End of loop on faces of current cell A
-
-
-    } // End of loop on candiate cells B for current cell A
-
+    } // End of loop on faces of current cell A
 
   } // End of loop on cells A
+
   free(faceB_triaB_idx);
   free(triaB_vtxB);
   free(triaA_vtxA);
