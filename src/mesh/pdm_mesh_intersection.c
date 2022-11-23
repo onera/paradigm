@@ -32,6 +32,7 @@
 #include "pdm_extract_part_priv.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_vtk.h"
+#include "pdm_writer.h"
 #include "pdm_box_priv.h"
 #include "pdm_unique.h"
 #include "pdm_triangulate.h"
@@ -1082,7 +1083,8 @@ _get_extracted_mesh_vol
  int                **face_vtx_idx,
  int                **face_vtx,
  double             **vtx_coord,
- PDM_g_num_t        **cell_ln_to_gn
+ PDM_g_num_t        **cell_ln_to_gn,
+ PDM_g_num_t        **vtx_ln_to_gn
  )
  {
   *n_cell = PDM_extract_part_connectivity_get(extrp,
@@ -1138,11 +1140,118 @@ _get_extracted_mesh_vol
                                        cell_ln_to_gn,
                                        PDM_OWNERSHIP_KEEP);
 
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       0,
+                                       PDM_MESH_ENTITY_VERTEX,
+                                       vtx_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
+
   return owner;
  }
 
 
+static void
+_export_ensight3d
+(
+ PDM_MPI_Comm  comm,
+ const char   *name,
+ int           n_cell,
+ int           n_face,
+ int           n_vtx,
+ int          *cell_face_idx,
+ int          *cell_face,
+ int          *face_vtx_idx,
+ int          *face_vtx,
+ double       *vtx_coord,
+ PDM_g_num_t  *cell_ln_to_gn,
+ PDM_g_num_t  *vtx_ln_to_gn
+ )
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
+  PDM_writer_t *wrt = PDM_writer_create("Ensight",
+                                        PDM_WRITER_FMT_BIN,
+                                        PDM_WRITER_TOPO_CST,
+                                        PDM_WRITER_OFF,
+                                        name,
+                                        name,
+                                        PDM_MPI_COMM_WORLD,
+                                        PDM_IO_KIND_MPI_SIMPLE,
+                                        1.,
+                                        NULL);
+
+  int id_geom = PDM_writer_geom_create(wrt,
+                                       "iso_surface_volume_mesh",
+                                       1);
+
+  int id_var_rank = PDM_writer_var_create(wrt,
+                                          PDM_WRITER_ON,
+                                          PDM_WRITER_VAR_SCALAR,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "i_rank");
+
+  PDM_writer_step_beg(wrt, 0.);
+
+  int *cell_face_n = malloc(sizeof(int) * n_cell);
+  for (int i = 0; i < n_cell; i++) {
+    cell_face_n[i] = cell_face_idx[i+1] - cell_face_idx[i];
+  }
+
+  int *face_vtx_n  = malloc(sizeof(int) * n_face);
+  for (int i = 0; i < n_face; i++) {
+    face_vtx_n[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
+  }
+
+
+  PDM_writer_geom_coord_set(wrt,
+                            id_geom,
+                            0,
+                            n_vtx,
+                            vtx_coord,
+                            vtx_ln_to_gn,
+                            PDM_OWNERSHIP_USER);
+
+  PDM_writer_geom_cell3d_cellface_add(wrt,
+                                      id_geom,
+                                      0,
+                                      n_cell,
+                                      n_face,
+                                      face_vtx_idx,
+                                      face_vtx_n,
+                                      face_vtx,
+                                      cell_face_idx,
+                                      cell_face_n,
+                                      cell_face,
+                                      cell_ln_to_gn);
+
+  PDM_writer_geom_write(wrt,
+                        id_geom);
+
+  PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_cell);
+  for (int i = 0; i < n_cell; i++) {
+    val_rank[i] = i_rank;
+  }
+
+  PDM_writer_var_set(wrt,
+                     id_var_rank,
+                     id_geom,
+                     0,
+                     val_rank);
+
+  PDM_writer_var_write(wrt,
+                       id_var_rank);
+  PDM_writer_var_free(wrt,
+                      id_var_rank);
+
+  PDM_writer_step_end(wrt);
+
+  PDM_writer_free(wrt);
+
+  free(val_rank   );
+  free(cell_face_n);
+  free(face_vtx_n );
+}
 
 static void
 _dump_elementary_vol_vol
@@ -1219,6 +1328,7 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
+  const double one_sixth = 0.1666666666666666666667;
   int dbg = 1;
 
   int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
@@ -1234,6 +1344,7 @@ _mesh_intersection_vol_vol
   int         *faceA_vtxA      = NULL;
   double      *vtxA_coord      = NULL;
   PDM_g_num_t *cellA_ln_to_gn  = NULL;
+  PDM_g_num_t *vtxA_ln_to_gn   = NULL;
   PDM_ownership_t owner_face_vtxA = _get_extracted_mesh_vol(extrp_mesh_a,
                                                             &n_cellA,
                                                             &n_faceA,
@@ -1243,7 +1354,8 @@ _mesh_intersection_vol_vol
                                                             &faceA_vtxA_idx,
                                                             &faceA_vtxA,
                                                             &vtxA_coord,
-                                                            &cellA_ln_to_gn);
+                                                            &cellA_ln_to_gn,
+                                                            &vtxA_ln_to_gn);
 
   int          n_cellB = 0;
   int          n_faceB = 0;
@@ -1254,6 +1366,7 @@ _mesh_intersection_vol_vol
   int         *faceB_vtxB      = NULL;
   double      *vtxB_coord      = NULL;
   PDM_g_num_t *cellB_ln_to_gn  = NULL;
+  PDM_g_num_t *vtxB_ln_to_gn   = NULL;
   PDM_ownership_t owner_face_vtxB = _get_extracted_mesh_vol(extrp_mesh_b,
                                                             &n_cellB,
                                                             &n_faceB,
@@ -1263,15 +1376,42 @@ _mesh_intersection_vol_vol
                                                             &faceB_vtxB_idx,
                                                             &faceB_vtxB,
                                                             &vtxB_coord,
-                                                            &cellB_ln_to_gn);
+                                                            &cellB_ln_to_gn,
+                                                            &vtxB_ln_to_gn);
 
 
   /*
    * Panic vtk
    */
   if (dbg) {
-    _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
-    _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+    // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+
+    _export_ensight3d(mi->comm,
+              "vol_vol_meshA",
+              n_cellA,
+              n_faceA,
+              n_vtxA,
+              cellA_faceA_idx,
+              cellA_faceA,
+              faceA_vtxA_idx,
+              faceA_vtxA,
+              vtxA_coord,
+              cellA_ln_to_gn,
+              vtxA_ln_to_gn);
+
+    _export_ensight3d(mi->comm,
+              "vol_vol_meshB",
+              n_cellB,
+              n_faceB,
+              n_vtxB,
+              cellB_faceB_idx,
+              cellB_faceB,
+              faceB_vtxB_idx,
+              faceB_vtxB,
+              vtxB_coord,
+              cellB_ln_to_gn,
+              vtxB_ln_to_gn);
   }
 
 
@@ -1417,6 +1557,27 @@ _mesh_intersection_vol_vol
           memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
         }
 
+
+        double mat[3][3];
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            mat[i][j] = tetraA_coord[3*(j+1)+i] - tetraA_coord[i];
+          }
+        }
+
+        double det = mat[0][0]*(mat[1][1]*mat[2][2] - mat[2][1]*mat[1][2])
+        -            mat[1][0]*(mat[0][1]*mat[2][2] - mat[2][1]*mat[0][2])
+        +            mat[2][0]*(mat[0][1]*mat[1][2] - mat[1][1]*mat[0][2]);
+
+        PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+        if (det == 0.) {
+          continue;
+        }
+        PDM_GCC_SUPPRESS_WARNING_POP
+
+        double idet = 1./det;
+
+
         /* Loop on candidate cells B */
         for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
           int cellB_id = cellA_cellB[icellB];
@@ -1437,12 +1598,7 @@ _mesh_intersection_vol_vol
                 memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
               }
 
-
-              /* Perform elementary computation */
-              double volume = 0.;
-              // -->>
-              // Let's go Karmijn!
-              if (dbg) {
+              if (dbg && triaB_id == faceB_triaB_idx[faceB_id]) {
                 _dump_elementary_vol_vol(mi->comm,
                                          cellA_id,
                                          faceA_id,
@@ -1453,10 +1609,63 @@ _mesh_intersection_vol_vol
                                          tetraA_coord,
                                          triaB_coord);
               }
+
+
+              /* Transform triangle to current tetra's local frame */
+              for (int ivtx = 0; ivtx < 3; ivtx++) {
+                double rhs[3];
+                for (int i = 0; i < 3; i++) {
+                  rhs[i] = triaB_coord[3*ivtx + i] - tetraA_coord[i];
+                }
+
+                triaB_coord[3*ivtx    ] = idet *
+                (  rhs[0]*(mat[1][1]*mat[2][2] - mat[2][1]*mat[1][2])
+                 - rhs[1]*(mat[0][1]*mat[2][2] - mat[2][1]*mat[0][2])
+                 + rhs[2]*(mat[0][1]*mat[1][2] - mat[1][1]*mat[0][2]));
+
+                triaB_coord[3*ivtx + 1] = idet *
+                (  mat[0][0]*(rhs[1]*mat[2][2] - rhs[2]*mat[1][2])
+                 - mat[1][0]*(rhs[0]*mat[2][2] - rhs[2]*mat[0][2])
+                 + mat[2][0]*(rhs[0]*mat[1][2] - rhs[1]*mat[0][2]));
+
+                triaB_coord[3*ivtx + 2] = idet *
+                (  mat[0][0]*(mat[1][1]*rhs[2] - mat[2][1]*rhs[1])
+                 - mat[1][0]*(mat[0][1]*rhs[2] - mat[2][1]*rhs[0])
+                 + mat[2][0]*(mat[0][1]*rhs[1] - mat[1][1]*rhs[0]));
+              }
+
+              if (dbg && 0) {
+                // check inverse transform
+                for (int i = 0; i < 3; i++) {
+                  int vtxB_id = _triaB_vtxB[i] - 1;
+                  double err;
+                  for (int j = 0; j < 3; j++) {
+                    double u = triaB_coord[3*i  ];
+                    double v = triaB_coord[3*i+1];
+                    double w = triaB_coord[3*i+2];
+                    double delta = vtxB_coord[3*vtxB_id+j] -
+                    ((1-u-v-w) * tetraA_coord[  j] +
+                     u         * tetraA_coord[3+j] +
+                     v         * tetraA_coord[6+j] +
+                     w         * tetraA_coord[9+j]);
+                    err += delta*delta;
+                  }
+
+                  if (err > 1e-12) {
+                    log_trace("!!! error = %e\n", sqrt(err));
+                  }
+                }
+              }
+
+
+              /* Perform elementary computation */
+              double volume = 0.;
+              // -->>
+              // Let's go Karmijn!
               // <<--
 
               /* Add elementray volume contribution */
-              cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume;
+              cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume * det * one_sixth;
 
             } // End of loop on triangles of current face B
 
