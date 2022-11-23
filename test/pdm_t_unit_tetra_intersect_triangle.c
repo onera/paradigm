@@ -29,6 +29,19 @@ static int test_debug = 1;
  * Type definitions
  *============================================================================*/
 
+typedef enum
+{
+  TWO_EXTREMA_INTERSECTION,
+  ONE_EXTREMA_INTERSECTION,
+  ONE_EXTREMA_ONE_SHARP_INTERSECTION,
+  ONE_SHARP_INTERSECTION,
+  TWO_SHARP_INTERSECTION
+} intersection_t;
+
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
 typedef struct Element Element;
 struct Element
 {
@@ -182,9 +195,11 @@ _determine_A_outside
   // intersect with all 5 planes
   for (int i = 0; i < 5; i++) {
     // maximum 2 intersections
-    int do_update_cll = -1;
-    int intersect_idx = 0;
-    current           = cll->head;
+    int intersect_idx                = 0;
+    int extrema_prev_is_in           = -1;
+    intersection_t intersection_type = -1;
+
+    current = cll->head;
 
     Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
     Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
@@ -251,7 +266,7 @@ _determine_A_outside
               printf("polygon is inside %d, cll unchanged\n", i);
             }
 
-            do_update_cll = 0;
+            intersection_type = TWO_EXTREMA_INTERSECTION;
 
             if (i == 4) {
               // cll remains as is
@@ -275,58 +290,95 @@ _determine_A_outside
         double t = f2/(f2-f1);
 
         if (t == 0 || t == 1) {
-          printf("intersection is edge extremum\n");
-          do_update_cll = 0;
-        } else {
-          do_update_cll = 1;
-        } // end if do or don't update
 
-        double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
-                        t*coord1[1]+(1-t)*coord2[1],
-                        t*coord1[2]+(1-t)*coord2[2]};
-
-        memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
-        memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
-
-        // current-> (outside) intersection (inside) -> current->next
-        if (f1 < 0) {
-          printf("from out to in\n");
-          idx_prev_out             = intersect_idx;
-          prev_out                 = current;
-          in[intersect_idx]->next  = current->next;
-          out[intersect_idx]->next = out[(intersect_idx+1)%2];
-        }
-        // current-> (inside) intersection (outside) -> current->next
-        else if (f1 > 0) {
-          printf("from in to out\n");
-          idx_prev_in              = intersect_idx;
-          prev_in                  = current;
-          out[intersect_idx]->next = current->next;
-          in[intersect_idx]->next  = in[(intersect_idx+1)%2];
-        }
-        // on
-        else {
-          // from in to out
-          if (f2 < 0) {
-            printf("from in to out\n");
-            idx_prev_in              = intersect_idx;
-            prev_in                  = current;
-            out[intersect_idx]->next = current->next;
-            in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+          if (intersection_type == -1) {
+            printf("ONE_EXTREMA_INTERSECTION \n");
+            intersection_type = ONE_EXTREMA_INTERSECTION;
           }
-          // from out to in
-          else {
-            printf("from out to in\n");
+
+          if (intersect_idx == 1) {
+            if (intersection_type == ONE_SHARP_INTERSECTION) {
+              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
+              printf("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
+            }
+          } // end if one intersection
+
+          // now first extrema intersection
+          memcpy(in[intersect_idx]->coord,  coord1, sizeof(double) * 3);
+          memcpy(out[intersect_idx]->coord, coord1, sizeof(double) * 3);
+
+          if (t == 1) { // at begin of segment t == 1
+            // from inside to outside
+            // can not be one because segment on plane already dealt with
+            if (f2 < 0) {
+              extrema_prev_is_in = 1;
+              printf("from in to out (intersect_idx = %d)\n", intersect_idx);
+              idx_prev_in              = intersect_idx;
+              prev_in                  = current;
+              out[intersect_idx]->next = current->next;
+              in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+            }
+            // from outside to inside
+            else { // >= 0
+              extrema_prev_is_in = 0;
+              printf("from out to in (intersect_idx = %d)\n", intersect_idx);
+              idx_prev_out             = intersect_idx;
+              prev_out                 = current;
+              in[intersect_idx]->next  = current->next;
+              out[intersect_idx]->next = out[(intersect_idx+1)%2];
+            }
+
+            // increase only for t == 1, easy to handle case begin segment
+            intersect_idx += 1;
+          } // end if t == 1
+        } // end if one extrema intersection
+
+        else {
+
+          if (intersect_idx == 1) {
+            if (intersection_type == ONE_EXTREMA_INTERSECTION) {
+              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
+              printf("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
+            }
+            else if (intersection_type == ONE_SHARP_INTERSECTION) {
+              intersection_type = TWO_SHARP_INTERSECTION;
+              printf("TWO_SHARP_INTERSECTION \n");
+            }
+          } // end if one intersection
+
+          else if (intersect_idx == 0) {
+            intersection_type = ONE_SHARP_INTERSECTION;
+            printf("ONE_SHARP_INTERSECTION \n");
+          } // end if no intersection
+
+          double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
+                          t*coord1[1]+(1-t)*coord2[1],
+                          t*coord1[2]+(1-t)*coord2[2]};
+
+          memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
+          memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
+
+          // current-> (outside) intersection (inside) -> current->next
+          if (f1 < 0) {
+            printf("from out to in (intersect_idx = %d)\n", intersect_idx);
             idx_prev_out             = intersect_idx;
             prev_out                 = current;
             in[intersect_idx]->next  = current->next;
             out[intersect_idx]->next = out[(intersect_idx+1)%2];
           }
-        }
+          // current-> (inside) intersection (outside) -> current->next
+          else if (f1 > 0) {
+            printf("from in to out (intersect_idx = %d)\n", intersect_idx);
+            idx_prev_in              = intersect_idx;
+            prev_in                  = current;
+            out[intersect_idx]->next = current->next;
+            in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+          }
 
+          intersect_idx += 1;
+        } // end if sharp intersection
 
-        intersect_idx+= 1;
-      }
+      } // end if intersection
 
       // nothing
       else {
@@ -344,11 +396,32 @@ _determine_A_outside
     } // end while loop
 
     // connect intersection points to the linked list
-    if (do_update_cll) {
-      prev_in->next  = in[idx_prev_in];
-      prev_out->next = out[idx_prev_out];
 
-    // update A and outside
+    printf("in[0]: %p/ in[1]: %p\n", (void *) in[0], (void *) in[1]);
+    printf("out[0]: %p/ out[1]: %p\n", (void *) out[0], (void *) out[1]);
+    if (intersection_type == TWO_SHARP_INTERSECTION || intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
+      if (intersection_type == TWO_SHARP_INTERSECTION) {
+        prev_in->next  = in[idx_prev_in];
+        prev_out->next = out[idx_prev_out];
+      }
+
+      else if (intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
+
+        if (extrema_prev_is_in) {
+          prev_in->next  = in[idx_prev_in]->next;
+          in[idx_prev_in] = prev_in;
+          prev_out->next = out[idx_prev_out];
+        }
+        else {
+          prev_in->next = in[idx_prev_in];
+          prev_out->next = out[idx_prev_out]->next;
+          out[idx_prev_out] = prev_out;
+
+        }
+
+      }
+
+      // update A and outside
       cll->head        = in[0];
       (*outside)->head = out[0];
     }
