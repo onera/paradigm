@@ -141,14 +141,13 @@ _plane_equation_function
 
 // for intersection
 
-// --> if A or outside is NULL, it implies Vcolumn = 0
+// --> if outside is NULL, it implies Vcolumn = 0
 static void
 _determine_A_outside
 (
  Element  **cll_storage,
  int        idx,
  List      *cll,
- List     **A,
  List     **outside
 )
 {
@@ -174,8 +173,8 @@ _determine_A_outside
       printf("triangle in tetrahedra\n");
     }
 
-    // A = cll;
-    *A       = cll;
+    // cll remains as is
+    free(*outside);
     *outside = NULL;
     return;
   }
@@ -183,36 +182,46 @@ _determine_A_outside
   // intersect with all 5 planes
   for (int i = 0; i < 5; i++) {
     // maximum 2 intersections
-    int count_intersect = 0;
-    current = cll->head;
+    int do_update_cll = -1;
+    int intersect_idx = 0;
+    current           = cll->head;
 
-    Element *I10 = cll_storage[idx++];
-    Element *I11 = cll_storage[idx++];
-    Element *I20 = cll_storage[idx++];
-    Element *I21 = cll_storage[idx++];
+    Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
+    Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
 
-    while (count_intersect < 2) {
+    Element *prev_in  = NULL;
+    Element *prev_out = NULL;
+    int idx_prev_in  = -1;
+    int idx_prev_out = -1;
+
+    while (intersect_idx < 2) {
+
+      // current segment coordinates
       double *coord1 = current->coord;
       double *coord2 = current->next->coord;
 
+      // current function values
+      double f1 = _plane_equation_function(coord1, i);
+      double f2 = _plane_equation_function(coord2, i);
+      double f3 = _plane_equation_function(current->next->next->coord, i);
+
       // segment in plane
-      if (_plane_equation_function(coord1, i) == 0 && _plane_equation_function(coord2, i) == 0) {
+      if ((f1 == 0) && (f2 == 0)) {
 
         if (test_debug) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         // polygon in plane
-        if (_plane_equation_function(current->next->next->coord, i) == 0) {
+        if (f3 == 0) {
 
           if (test_debug) {
             printf("polygon is in plane %d\n", i);
           }
 
-
-          free(A);
-          free(outside);
-          *A       = NULL;
+          free(cll);
+          free(*outside);
+          cll      = NULL;
           *outside = NULL;
           return;
         }
@@ -221,15 +230,15 @@ _determine_A_outside
         else {
 
           // outside
-          if (_plane_equation_function(current->next->next->coord, i) <= 0) {
+          if (f3 <= 0) {
 
             if (test_debug) {
               printf("polygon is outside %d\n", i);
             }
 
-            free(A);
-            free(outside);
-            *A       = NULL;
+            free(cll);
+            free(*outside);
+            cll      = NULL;
             *outside = NULL;
             return;
 
@@ -242,12 +251,13 @@ _determine_A_outside
               printf("polygon is inside %d, cll unchanged\n", i);
             }
 
-            free(outside);
-            *A       = cll;
-            *outside = NULL;
+            do_update_cll = 0;
 
-            // count_intersect += 2;
-            // idx -= 4;
+            if (i == 4) {
+              // cll remains as is
+              free(*outside);
+              *outside = NULL;
+            }
             break; // skip to next plane
 
           }
@@ -255,108 +265,99 @@ _determine_A_outside
       } // end if segment in plane
 
       // intersection
-      else if ((_plane_equation_function(coord1, i) >= 0 && _plane_equation_function(coord2, i) <= 0) ||
-               (_plane_equation_function(coord1, i) <= 0 && _plane_equation_function(coord2, i) >= 0)) {
+      else if ((f1 >= 0 && f2 <= 0) ||
+               (f1 <= 0 && f2 >= 0)) {
 
         if (test_debug) {
-          printf("intersection with %d\n", i);
+          printf("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
-        double t = _plane_equation_function(coord2, i)/(_plane_equation_function(coord2, i)-_plane_equation_function(coord1, i));
+        double t = f2/(f2-f1);
+
+        if (t == 0 || t == 1) {
+          printf("intersection is edge extremum\n");
+          do_update_cll = 0;
+        } else {
+          do_update_cll = 1;
+        } // end if do or don't update
 
         double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
                         t*coord1[1]+(1-t)*coord2[1],
                         t*coord1[2]+(1-t)*coord2[2]};
 
+        memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
+        memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
+
         // current-> (outside) intersection (inside) -> current->next
-        if (_plane_equation_function(current->coord, i) <= 0) {
-          if (count_intersect == 0) {
-            *outside   = cll;
-            (*A)->head = I11;
-
-            I11->next = current->next;
-            current->next = I10->next;
-            I10->next = NULL;
-
-            I10->coord[0] = pt[0];
-            I10->coord[1] = pt[1];
-            I10->coord[2] = pt[2];
-
-            I11->coord[0] = pt[0];
-            I11->coord[1] = pt[1];
-            I11->coord[2] = pt[2];
-
-          } else {
-
-            I10->next = I20;
-            I20->next = current->next;
-            current->next = I21->next;
-            I21->next = (*A)->head;
-
-            I20->coord[0] = pt[0];
-            I20->coord[1] = pt[1];
-            I20->coord[2] = pt[2];
-
-            I21->coord[0] = pt[0];
-            I21->coord[1] = pt[1];
-            I21->coord[2] = pt[2];
-
-          }
+        if (f1 < 0) {
+          printf("from out to in\n");
+          idx_prev_out             = intersect_idx;
+          prev_out                 = current;
+          in[intersect_idx]->next  = current->next;
+          out[intersect_idx]->next = out[(intersect_idx+1)%2];
         }
-
         // current-> (inside) intersection (outside) -> current->next
-        else {
-          if (count_intersect == 0) {
-            (*outside)->head = I11;
-            *A               = cll;
-
-            I11->next = current->next;
-            current->next = I10->next;
-            I10->next = NULL;
-
-            I10->coord[0] = pt[0];
-            I10->coord[1] = pt[1];
-            I10->coord[2] = pt[2];
-
-            I11->coord[0] = pt[0];
-            I11->coord[1] = pt[1];
-            I11->coord[2] = pt[2];
-
-          } else {
-
-            I10->next = I20;
-            I20->next = current->next;
-            current->next = I11->next;
-            I11->next = (*outside)->head;
-
-            I20->coord[0] = pt[0];
-            I20->coord[1] = pt[1];
-            I20->coord[2] = pt[2];
-
-            I21->coord[0] = pt[0];
-            I21->coord[1] = pt[1];
-            I21->coord[2] = pt[2];
-
-          }
-
+        else if (f1 > 0) {
+          printf("from in to out\n");
+          idx_prev_in              = intersect_idx;
+          prev_in                  = current;
+          out[intersect_idx]->next = current->next;
+          in[intersect_idx]->next  = in[(intersect_idx+1)%2];
         }
+        // on
+        else {
+          // from in to out
+          if (f2 < 0) {
+            printf("from in to out\n");
+            idx_prev_in              = intersect_idx;
+            prev_in                  = current;
+            out[intersect_idx]->next = current->next;
+            in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+          }
+          // from out to in
+          else {
+            printf("from out to in\n");
+            idx_prev_out             = intersect_idx;
+            prev_out                 = current;
+            in[intersect_idx]->next  = current->next;
+            out[intersect_idx]->next = out[(intersect_idx+1)%2];
+          }
+        }
+
+
+        intersect_idx+= 1;
       }
 
       // nothing
       else {
 
         if (test_debug) {
-          printf("no intersection with %d\n", i);
+          printf("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
       }
 
       // to correcly loop over cll
-      cll = *A;
       if (current->next == cll->head) break;
       current = current->next;
 
     } // end while loop
+
+    // connect intersection points to the linked list
+    if (do_update_cll) {
+      prev_in->next  = in[idx_prev_in];
+      prev_out->next = out[idx_prev_out];
+
+    // update A and outside
+      cll->head        = in[0];
+      (*outside)->head = out[0];
+    }
+
+    if (test_debug) {
+      printf("cll at plane %d: ", i);
+      _print_cll(cll);
+    }
+
   } // end for loop
 
 }
@@ -388,20 +389,20 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 0.5, 0};
   // double pt2[3] = {0, 0, 0.5};
 
-  Element *B = cll_storage[idx++];
-  memcpy(B->coord, pt0, sizeof(double)*3);
+  Element *ptA = cll_storage[idx++];
+  memcpy(ptA->coord, pt0, sizeof(double)*3);
 
-  Element *C = cll_storage[idx++];
-  memcpy(C->coord, pt1, sizeof(double)*3);
-  B->next = C;
+  Element *ptB = cll_storage[idx++];
+  memcpy(ptB->coord, pt1, sizeof(double)*3);
+  ptA->next = ptB;
 
-  Element *D = cll_storage[idx++];
-  memcpy(D->coord, pt2, sizeof(double)*3);
-  D->next = B;
-  C->next = D;
+  Element *ptC = cll_storage[idx++];
+  memcpy(ptC->coord, pt2, sizeof(double)*3);
+  ptC->next = ptA;
+  ptB->next = ptC;
 
   List *cll = malloc(sizeof(List));
-  cll->head = B;
+  cll->head = ptA;
 
   // debug
   if (test_debug) {
@@ -410,17 +411,16 @@ int main(int argc, char *argv[])
   }
 
   // Determine A and outside (B before projection)
-  List *A       = NULL;//malloc(sizeof(List
   List *outside = malloc(sizeof(List));
-  _determine_A_outside(cll_storage, idx, cll, &A, &outside);
+  _determine_A_outside(cll_storage, idx, cll, &outside);
 
   // debug
   if (test_debug) {
     printf("A: ");
-    if (A == NULL) {
+    if (cll == NULL) {
       printf("NULL\n");
     } else {
-      _print_cll(A);
+      _print_cll(cll);
     }
 
     printf("outside: ");
@@ -436,7 +436,8 @@ int main(int argc, char *argv[])
     free(cll_storage[i]);
   }
   free(cll_storage);
-  free(cll);
+  if (cll != NULL) free(cll);
+  if (outside != NULL) free(outside);
 
   // Finalize
   PDM_MPI_Finalize();
