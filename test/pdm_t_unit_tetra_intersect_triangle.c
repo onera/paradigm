@@ -427,12 +427,58 @@ _determine_A_outside
     }
 
     if (test_debug) {
-      printf("cll at plane %d: ", i);
+       printf("cll at plane %d: ", i);
       _print_cll(cll);
     }
 
   } // end for loop
 
+}
+
+// for volume
+
+// TO DO: deal with cases of zero division and NULL A or B cll !!!
+
+static double
+_prism_volume
+(
+ double coord1[3],
+ double coord2[3],
+ double coord3[3]
+)
+{
+  double parallelepiped_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) / (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
+  return ((1./3.) * (coord1[2] + coord2[2] + coord3[2]) * parallelepiped_area);
+}
+
+static double
+_column_volume
+(
+ List *cll
+)
+{
+  double volume = 0;
+
+  Element *current = cll->head->next;
+
+  while (current->next != cll->head) {
+
+    double prism_volume = _prism_volume(cll->head->coord, current->coord, current->next->coord);
+
+    if (test_debug) {
+       printf("prism_volume for triangle (%f, %f, %f)-(%f, %f, %f)-(%f, %f, %f) is %f\n",
+               cll->head->coord[0], cll->head->coord[1], cll->head->coord[2],
+               current->coord[0], current->coord[1], current->coord[2],
+               current->next->coord[0], current->next->coord[1], current->next->coord[2], prism_volume);
+    }
+
+
+    volume += prism_volume;
+
+    current = current->next;
+  }
+
+  return volume;
 }
 
 /*============================================================================
@@ -502,6 +548,41 @@ int main(int argc, char *argv[])
     } else {
       _print_cll(outside);
     }
+  }
+
+  // projection to go from outside to B
+  List *B = outside;
+  Element *current = B->head;
+
+  while (1) {
+
+    double zB = 1 - current->coord[0] - current->coord[1];
+    current->coord[2] = zB;
+
+   if (current->next == B->head) break;
+   current = current->next;
+  }
+
+  // debug
+  if (test_debug) {
+    printf("B: ");
+    if (B == NULL) {
+      printf("NULL\n");
+    } else {
+      _print_cll(B);
+    }
+  }
+
+  // TO DO: output vtk of A and B !!!
+
+  // compute columns
+  double volumeA = _column_volume(cll);
+  double volumeB = _column_volume(B); // TO DO: check orientation because negative
+
+  // debug
+  if (test_debug) {
+    printf("volumeA = %f\n", volumeA);
+    printf("volumeB = %f\n", volumeB);
   }
 
   // free
