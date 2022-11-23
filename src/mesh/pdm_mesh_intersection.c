@@ -35,6 +35,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_unique.h"
 #include "pdm_triangulate.h"
+#include "pdm_geom_elem.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -1350,8 +1351,10 @@ _mesh_intersection_vol_vol
 
     /* Compute a 'center' point to tetrahedrize current cell A */
     // Reference vertex = 1st vertex of first face
+    // Use cell center instead????
+    int ref_vtxA_id = -1;
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
-    int ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+    ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
 
     memcpy(&tetraA_coord[0], &vtxA_coord[3*ref_vtxA_id], sizeof(double)*3);
 
@@ -1429,9 +1432,6 @@ _mesh_intersection_vol_vol
 
               for (int ivtx = 0; ivtx < 3; ivtx++) {
                 int vtxB_id = _triaB_vtxB[ivtx] - 1;
-                // for (int i = 0; i < 3; i++) {
-                //   triaB_coord[3*ivtx + i] = vtxB_coord[3*vtxB_id + i];
-                // }
                 memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
               }
 
@@ -1453,6 +1453,7 @@ _mesh_intersection_vol_vol
               }
               // <<--
 
+              /* Add elementray volume contribution */
               cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume;
 
             } // End of loop on triangles of current face B
@@ -1473,6 +1474,52 @@ _mesh_intersection_vol_vol
   free(triaB_vtxB);
   free(triaA_vtxA);
   PDM_triangulate_state_destroy(tri_state);
+
+
+
+  if (dbg) {
+    // Crude check
+    double l_total_volume_AB = 0;
+    for (int i = 0; i < cellA_cellB_idx[n_cellA]; i++) {
+      l_total_volume_AB += cellA_cellB_volume[i];
+    }
+
+    double l_total_volume_A  = 0;
+    double *cellA_volume = malloc(sizeof(double) * n_cellA);
+    double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
+    PDM_geom_elem_polyhedra_properties(1,
+                                       n_cellA,
+                                       n_faceA,
+                                       faceA_vtxA_idx,
+                                       faceA_vtxA,
+                                       cellA_faceA_idx,
+                                       cellA_faceA,
+                                       n_vtxA,
+                                       vtxA_coord,
+                                       cellA_volume,
+                                       cellA_center,
+                                       NULL,
+                                       NULL);
+    free(cellA_center);
+
+    for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
+      l_total_volume_A += cellA_volume[cellA_id];
+    }
+    free(cellA_volume);
+
+    double g_total_volume_AB;
+    PDM_MPI_Allreduce(&l_total_volume_AB, &g_total_volume_AB, 1,
+                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
+
+    double g_total_volume_A;
+    PDM_MPI_Allreduce(&l_total_volume_A, &g_total_volume_A, 1,
+                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
+
+    log_trace("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%)\n",
+              l_total_volume_AB, g_total_volume_AB,
+              100*g_total_volume_AB / g_total_volume_A);
+  }
+
 
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
     free(faceA_vtxA);
