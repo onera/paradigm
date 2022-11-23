@@ -34,6 +34,7 @@
 #include "pdm_vtk.h"
 #include "pdm_box_priv.h"
 #include "pdm_unique.h"
+#include "pdm_triangulate.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -196,7 +197,10 @@ _export_vtk_3d
                                       &pextract_face_vtx_idx[i_part],
                                       PDM_OWNERSHIP_KEEP);
 
+    PDM_ownership_t owner = PDM_OWNERSHIP_KEEP;
     if(pextract_face_vtx[i_part] == NULL) {
+      owner = PDM_OWNERSHIP_KEEP;
+
       int *face_edge     = NULL;
       int *face_edge_idx = NULL;
       int *edge_vtx     = NULL;
@@ -258,6 +262,11 @@ _export_vtk_3d
                            pextract_face_vtx[i_part],
                            pextract_face_ln_to_gn[i_part],
                            NULL);
+
+    if (owner == PDM_OWNERSHIP_KEEP) {
+      free(pextract_face_vtx    [i_part]);
+      free(pextract_face_vtx_idx[i_part]);
+    }
 
   }
 
@@ -1059,6 +1068,145 @@ _create_extract_part
   return extrp_mesh;
 }
 
+
+ static PDM_ownership_t
+_get_extracted_mesh_vol
+(
+ PDM_extract_part_t  *extrp,
+ int                 *n_cell,
+ int                 *n_face,
+ int                 *n_vtx,
+ int                **cell_face_idx,
+ int                **cell_face,
+ int                **face_vtx_idx,
+ int                **face_vtx,
+ double             **vtx_coord,
+ PDM_g_num_t        **cell_ln_to_gn
+ )
+ {
+  *n_cell = PDM_extract_part_connectivity_get(extrp,
+                                              0,
+                                              PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                              cell_face,
+                                              cell_face_idx,
+                                              PDM_OWNERSHIP_KEEP);
+
+  *n_face = PDM_extract_part_connectivity_get(extrp,
+                                              0,
+                                              PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                              face_vtx,
+                                              face_vtx_idx,
+                                              PDM_OWNERSHIP_KEEP);
+
+  PDM_ownership_t owner = PDM_OWNERSHIP_KEEP;
+  if (*face_vtx == NULL) {
+    owner = PDM_OWNERSHIP_USER;
+
+    int *face_edge = NULL;
+    PDM_extract_part_connectivity_get(extrp,
+                                      0,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      &face_edge,
+                                      face_vtx_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+    int *edge_vtx     = NULL;
+    int *edge_vtx_idx = NULL;
+    PDM_extract_part_connectivity_get(extrp,
+                                      0,
+                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                      &edge_vtx,
+                                      &edge_vtx_idx,
+                                      PDM_OWNERSHIP_KEEP);
+
+    PDM_compute_face_vtx_from_face_and_edge(*n_face,
+                                            *face_vtx_idx,
+                                            face_edge,
+                                            edge_vtx,
+                                            face_vtx);
+  }
+
+  *n_vtx = PDM_extract_part_vtx_coord_get(extrp,
+                                          0,
+                                          vtx_coord,
+                                          PDM_OWNERSHIP_KEEP);
+
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       0,
+                                       PDM_MESH_ENTITY_CELL,
+                                       cell_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
+
+  return owner;
+ }
+
+
+
+
+static void
+_dump_elementary_vol_vol
+(
+ PDM_MPI_Comm  comm,
+ int           cellA_id,
+ int           faceA_id,
+ int           cellB_id,
+ int           triaA_id,
+ int           faceB_id,
+ int           triaB_id,
+ double       *tetraA_coord,
+ double       *triaB_coord
+ )
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  char filename[999];
+  sprintf(filename, "vol_vol_A%d_%d_%d_B%d_%d_%d_rank_%d.vtk",
+          cellA_id,
+          faceA_id,
+          cellB_id,
+          triaA_id,
+          faceB_id,
+          triaB_id,
+          i_rank);
+
+
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 4 + 3);
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", tetraA_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", triaB_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", 2, 5 + 4);
+  fprintf(f, "4 0 1 2 3\n3 4 5 6\n");
+
+  fprintf(f, "CELL_TYPES 2\n10\n5\n");
+
+  fprintf(f, "CELL_DATA 2\n");
+  fprintf(f, "FIELD field 4\n");
+  fprintf(f, "mesh_id 1 2 int\n0 1\n");
+  fprintf(f, "cell_id 1 2 int\n%d %d\n", cellA_id, cellB_id);
+  fprintf(f, "face_id 1 2 int\n%d %d\n", faceA_id, faceB_id);
+  fprintf(f, "tria_id 1 2 int\n%d %d\n", triaA_id, triaB_id);
+
+  fclose(f);
+}
+
 static
 void
 _mesh_intersection_vol_vol
@@ -1070,12 +1218,272 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
-  PDM_UNUSED(mi);
-  PDM_UNUSED(extrp_mesh_a);
-  PDM_UNUSED(extrp_mesh_b);
-  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
-  PDM_UNUSED(redistribute_box_a_to_box_b);
+  int dbg = 0;
 
+  int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
+  int *cellA_cellB     = redistribute_box_a_to_box_b;
+
+  /* Get connectivities and coordinates */
+  int          n_cellA = 0;
+  int          n_faceA = 0;
+  int          n_vtxA  = 0;
+  int         *cellA_faceA_idx = NULL;
+  int         *cellA_faceA     = NULL;
+  int         *faceA_vtxA_idx  = NULL;
+  int         *faceA_vtxA      = NULL;
+  double      *vtxA_coord      = NULL;
+  PDM_g_num_t *cellA_ln_to_gn  = NULL;
+  PDM_ownership_t owner_face_vtxA = _get_extracted_mesh_vol(extrp_mesh_a,
+                                                            &n_cellA,
+                                                            &n_faceA,
+                                                            &n_vtxA,
+                                                            &cellA_faceA_idx,
+                                                            &cellA_faceA,
+                                                            &faceA_vtxA_idx,
+                                                            &faceA_vtxA,
+                                                            &vtxA_coord,
+                                                            &cellA_ln_to_gn);
+
+  int          n_cellB = 0;
+  int          n_faceB = 0;
+  int          n_vtxB  = 0;
+  int         *cellB_faceB_idx = NULL;
+  int         *cellB_faceB     = NULL;
+  int         *faceB_vtxB_idx  = NULL;
+  int         *faceB_vtxB      = NULL;
+  double      *vtxB_coord      = NULL;
+  PDM_g_num_t *cellB_ln_to_gn  = NULL;
+  PDM_ownership_t owner_face_vtxB = _get_extracted_mesh_vol(extrp_mesh_b,
+                                                            &n_cellB,
+                                                            &n_faceB,
+                                                            &n_vtxB,
+                                                            &cellB_faceB_idx,
+                                                            &cellB_faceB,
+                                                            &faceB_vtxB_idx,
+                                                            &faceB_vtxB,
+                                                            &vtxB_coord,
+                                                            &cellB_ln_to_gn);
+
+
+  /*
+   * Panic vtk
+   */
+  if (dbg) {
+    _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+  }
+
+
+
+  /*
+   *  Triangulate all faces of mesh B
+   */
+  int max_face_vtx_n = 0;
+  int s_triaA_vtxA = 0;
+  for (int i = 0; i < n_faceA; i++) {
+    int face_vtx_n = faceA_vtxA_idx[i+1] - faceA_vtxA_idx[i];
+    max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
+    s_triaA_vtxA   = PDM_MAX(s_triaA_vtxA,   face_vtx_n);
+  }
+  s_triaA_vtxA = 3*(s_triaA_vtxA - 2);
+
+  int *faceB_triaB_idx = malloc(sizeof(int) * (n_faceB + 1));
+  faceB_triaB_idx[0] = 0;
+  for (int i = 0; i < n_faceB; i++) {
+    int face_vtx_n = faceB_vtxB_idx[i+1] - faceB_vtxB_idx[i];
+    max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
+    int face_tria_n = face_vtx_n - 2;
+    faceB_triaB_idx[i+1] = faceB_triaB_idx[i] + face_tria_n;
+  }
+
+  PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
+
+  int *triaB_vtxB = malloc(sizeof(int) * faceB_triaB_idx[n_faceB] * 3);
+  int *triaA_vtxA = malloc(sizeof(int) * s_triaA_vtxA);
+
+  for (int faceB_id = 0; faceB_id < n_faceB; faceB_id++) {
+
+    int *_face_vtx = faceB_vtxB + faceB_vtxB_idx[faceB_id];
+    int face_vtx_n = faceB_vtxB_idx[faceB_id+1] - faceB_vtxB_idx[faceB_id];
+
+    int *_tria_vtx  = triaB_vtxB + 3*faceB_triaB_idx[faceB_id];
+
+    int n_tria;
+    if (face_vtx_n == 3) {
+      /* Triangular face */
+      n_tria = 1;
+      memcpy(_tria_vtx, _face_vtx, sizeof(int) * 3);
+    }
+    else if (face_vtx_n == 4) {
+      /* Quadrilateral face */
+      n_tria = PDM_triangulate_quadrangle(3,
+                                          vtxB_coord,
+                                          NULL,
+                                          _face_vtx,
+                                          _tria_vtx);
+    }
+    else {
+      /* Polygonal face */
+      n_tria = PDM_triangulate_polygon(3,
+                                       face_vtx_n,
+                                       vtxB_coord,
+                                       NULL,
+                                       _face_vtx,
+                                       PDM_TRIANGULATE_MESH_DEF,
+                                       _tria_vtx,
+                                       tri_state);
+    }
+
+    assert(n_tria == faceB_triaB_idx[faceB_id+1] - faceB_triaB_idx[faceB_id]);
+
+  } // End of loop on faces B
+
+
+
+  double *cellA_cellB_volume = malloc(sizeof(double) * cellA_cellB_idx[n_cellA]);
+
+  double tetraA_coord[12];
+  double triaB_coord[9];
+
+
+  for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
+
+    /* Compute a 'center' point to tetrahedrize current cell A */
+    // Reference vertex = 1st vertex of first face
+    int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
+    int ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+
+    memcpy(&tetraA_coord[0], &vtxA_coord[3*ref_vtxA_id], sizeof(double)*3);
+
+    /* Loop on candidate cells B */
+    for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
+      int cellB_id = cellA_cellB[icellB];
+
+      /* Initialize volume to zero */
+      cellA_cellB_volume[icellB] = 0.;
+
+      /* Loop on faces A */
+      for (int ifaceA = cellA_faceA_idx[cellA_id]; ifaceA < cellA_faceA_idx[cellA_id+1]; ifaceA++) {
+
+        int faceA_id   = PDM_ABS (cellA_faceA[ifaceA]) - 1;
+        int faceA_sign = PDM_SIGN(cellA_faceA[ifaceA]);
+
+        /* Triangulate current face A */
+        int *_face_vtx = faceA_vtxA + faceA_vtxA_idx[faceA_id];
+        int face_vtx_n = faceA_vtxA_idx[faceA_id+1] - faceA_vtxA_idx[faceA_id];
+
+        int n_tria;
+        if (face_vtx_n == 3) {
+          /* Triangular face */
+          n_tria = 1;
+          memcpy(triaA_vtxA, _face_vtx, sizeof(int) * 3);
+        }
+        else if (face_vtx_n == 4) {
+          /* Quadrilateral face */
+          n_tria = PDM_triangulate_quadrangle(3,
+                                              vtxA_coord,
+                                              NULL,
+                                              _face_vtx,
+                                              triaA_vtxA);
+        }
+        else {
+          /* Polygonal face */
+          n_tria = PDM_triangulate_polygon(3,
+                                           face_vtx_n,
+                                           vtxA_coord,
+                                           NULL,
+                                           _face_vtx,
+                                           PDM_TRIANGULATE_MESH_DEF,
+                                           triaA_vtxA,
+                                           tri_state);
+        }
+
+
+        /* Loop on triangles A */
+        for (int triaA_id = 0; triaA_id < n_tria; triaA_id++) {
+
+          int *_triaA_vtxA = triaA_vtxA + 3*triaA_id;
+
+          /* Ignore if current triangle contains reference vertex */
+          if (_triaA_vtxA[0] == ref_vtxA_id ||
+              _triaA_vtxA[1] == ref_vtxA_id ||
+              _triaA_vtxA[2] == ref_vtxA_id) {
+            continue;
+          }
+
+          for (int ivtx = 0; ivtx < 3; ivtx++) {
+            int vtxA_id = _triaA_vtxA[ivtx] - 1;
+            memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+          }
+
+          /* Loop on faces B */
+          for (int ifaceB = cellB_faceB_idx[cellB_id]; ifaceB < cellB_faceB_idx[cellB_id+1]; ifaceB++) {
+
+            int faceB_id   = PDM_ABS (cellB_faceB[ifaceB]) - 1;
+            int faceB_sign = PDM_SIGN(cellB_faceB[ifaceB]);
+
+            /* Loop on triangles B */
+            for (int triaB_id = faceB_triaB_idx[faceB_id]; triaB_id < faceB_triaB_idx[faceB_id+1]; triaB_id++) {
+
+              int *_triaB_vtxB = triaB_vtxB + 3*triaB_id;
+
+              for (int ivtx = 0; ivtx < 3; ivtx++) {
+                int vtxB_id = _triaB_vtxB[ivtx] - 1;
+                // for (int i = 0; i < 3; i++) {
+                //   triaB_coord[3*ivtx + i] = vtxB_coord[3*vtxB_id + i];
+                // }
+                memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
+              }
+
+
+              /* Perform elementary computation */
+              double volume = 0.;
+              // -->>
+              // Let's go Karmijn!
+              if (dbg) {
+                _dump_elementary_vol_vol(mi->comm,
+                                         cellA_id,
+                                         faceA_id,
+                                         cellB_id,
+                                         triaA_id,
+                                         faceB_id,
+                                         triaB_id,
+                                         tetraA_coord,
+                                         triaB_coord);
+              }
+              // <<--
+
+              cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume;
+
+            } // End of loop on triangles of current face B
+
+          } // End of loop on faces of current cell B
+
+        } // End of loop on triangles of current face A
+
+
+      } // End of loop on faces of current cell A
+
+
+    } // End of loop on candiate cells B for current cell A
+
+
+  } // End of loop on cells A
+  free(faceB_triaB_idx);
+  free(triaB_vtxB);
+  free(triaA_vtxA);
+  PDM_triangulate_state_destroy(tri_state);
+
+  if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
+    free(faceA_vtxA);
+  }
+
+  if (owner_face_vtxB == PDM_OWNERSHIP_USER) {
+    free(faceB_vtxB);
+  }
+
+  // Do not free...
+  free(cellA_cellB_volume);
 }
 
 static
