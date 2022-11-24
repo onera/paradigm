@@ -1400,17 +1400,18 @@ _print_cll
   printf("head\n");
 }
 
-static void
+static int
 _cll_to_polydata
 (
-  List *cll,
-  char filename[999]
+  List    *cll,
+  double **vtx_coord,
+  int    **face_vtx
 )
 {
   int size_min = 3;
 
-  int  n_vtx        = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+  int  n_vtx = 0;
+  *vtx_coord = malloc(sizeof(double) * size_min * 3);
 
   Element *current = cll->head;
 
@@ -1418,36 +1419,22 @@ _cll_to_polydata
 
     if (n_vtx > size_min -1) {
       size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+      *vtx_coord = realloc(*vtx_coord, sizeof(double) * size_min * 3);
     }
 
-    memcpy(vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
+    memcpy(*vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
     n_vtx++;
 
     if (current->next == cll->head) break;
     current = current->next;
   }
 
-  int face_vtx_idx[2] = {0, n_vtx};
-
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  *face_vtx = malloc(sizeof(int) * n_vtx);
   for (int i = 0; i < n_vtx; i++) {
-    face_vtx[i] = i + 1;
+    (*face_vtx)[i] = i + 1;
   }
 
-
-  PDM_vtk_write_polydata(filename,
-                         n_vtx,
-                         vtx_coord,
-                         NULL,
-                         1,
-                         face_vtx_idx,
-                         face_vtx,
-                         NULL,
-                         NULL);
-
-  free(vtx_coord);
-  free(face_vtx);
+  return n_vtx;
 }
 
 // --> determine A and outside portion (B before projection)
@@ -1824,7 +1811,15 @@ static double
 _reference_volume_compute
 (
  Element **cll_storage,
- double triaB_coord[9]
+ double triaB_coord[9],
+ double **vtx_coordA,
+ int     *n_vtxA,
+ int    **face_vtxA,
+ int     *n_faceA,
+ double **vtx_coordB,
+ int     *n_vtxB,
+ int    **face_vtxB,
+ int     *n_faceB
 )
 {
   // malloc List structure
@@ -1890,15 +1885,16 @@ _reference_volume_compute
   }
 
   // vtk
-  if (dbg && 0) {
+  if (dbg && 1) {
+
     if (A != NULL) {
-      char filename[999] = "A.vtk";
-      _cll_to_polydata(A, filename);
+      *n_vtxA = _cll_to_polydata(A, vtx_coordA, face_vtxA);
+      (*n_faceA)++;
     }
 
     if (B != NULL) {
-      char filename[999] = "B.vtk";
-      _cll_to_polydata(B, filename);
+      *n_vtxB =_cll_to_polydata(B, vtx_coordB, face_vtxB);
+      (*n_faceB)++;
     }
   }
 
@@ -2146,6 +2142,24 @@ _mesh_intersection_vol_vol
     cll_storage[i] = malloc(sizeof(Element));
   }
 
+  // for vtk
+  // TO DO: add reallocs
+  int min_sizeA = 2000;
+  int min_sizeB = 2000;
+
+  double *vtk_vtx_coordA    = malloc(sizeof(double) * min_sizeA * 3);
+  int     vtk_n_vtxA        = 0;
+  int    *vtk_face_vtx_idxA = malloc(sizeof(int) * (min_sizeA + 1));
+  vtk_face_vtx_idxA[0] = 0;
+  int    *vtk_face_vtxA     = malloc(sizeof(int) * min_sizeA);
+  int     vtk_n_faceA       = 0;
+  double *vtk_vtx_coordB    = malloc(sizeof(double) * min_sizeB * 3);
+  int     vtk_n_vtxB        = 0;
+  int    *vtk_face_vtx_idxB = malloc(sizeof(int) * (min_sizeB + 1));
+  vtk_face_vtx_idxB[0] = 0;
+  int    *vtk_face_vtxB     = malloc(sizeof(int) * min_sizeB);
+  int     vtk_n_faceB       = 0;
+
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
 
     /* Compute a 'center' point to tetrahedrize current cell A */
@@ -2154,6 +2168,7 @@ _mesh_intersection_vol_vol
     int ref_vtxA_id = -1;
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
     ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+
 
     if (dbg) {
       log_trace("cellA_id %d ("PDM_FMT_G_NUM") : ref_vtxA_id = %d\n",
@@ -2343,7 +2358,48 @@ _mesh_intersection_vol_vol
 
 
               /* Perform elementary computation */
-              double volume = _reference_volume_compute(cll_storage, triaB_coord);
+              double *local_vtx_coordA    = NULL;
+              int     local_n_vtxA        = 0;
+              int    *local_face_vtxA     = NULL;
+              double *local_vtx_coordB    = NULL;
+              int     local_n_vtxB        = 0;
+              int    *local_face_vtxB     = NULL;
+
+              double volume = _reference_volume_compute(cll_storage,
+                                                        triaB_coord,
+                                                        &local_vtx_coordA,
+                                                        &local_n_vtxA,
+                                                        &local_face_vtxA,
+                                                        &vtk_n_faceA,
+                                                        &local_vtx_coordB,
+                                                        &local_n_vtxB,
+                                                        &local_face_vtxB,
+                                                        &vtk_n_faceB);
+
+              if (dbg && 1) {
+                printf("vtk_n_faceA = %d, vtk_n_faceB = %d\n", vtk_n_faceA, vtk_n_faceB);
+              }
+
+              // for vtk
+              if (local_n_vtxA > 0) {
+                memcpy(vtk_vtx_coordA + 3* vtk_n_vtxA, local_vtx_coordA, sizeof(double) * 3 * local_n_vtxA);
+                vtk_face_vtx_idxA[vtk_n_vtxA+1] = vtk_face_vtx_idxA[vtk_n_vtxA] + local_n_vtxA;
+                memcpy(vtk_face_vtxA + vtk_face_vtx_idxA[vtk_n_vtxA], local_face_vtxA, sizeof(int) * local_n_vtxA);
+                vtk_n_vtxA += local_n_vtxA;
+              }
+
+              if (local_n_vtxB > 0) {
+                memcpy(vtk_vtx_coordB + 3* vtk_n_vtxB, local_vtx_coordB, sizeof(double) * 3 * local_n_vtxB);
+                vtk_face_vtx_idxB[vtk_n_vtxB+1] = vtk_face_vtx_idxB[vtk_n_vtxB] + local_n_vtxB;
+                memcpy(vtk_face_vtxB + vtk_face_vtx_idxB[vtk_n_vtxB], local_face_vtxB, sizeof(int) * local_n_vtxB);
+                vtk_n_vtxB += local_n_vtxB;
+              }
+
+              // free
+              free(local_vtx_coordA);
+              free(local_face_vtxA);
+              free(local_vtx_coordB);
+              free(local_face_vtxB);
 
               if (dbg) {
                 log_trace("            volume Karmijn = %f\n", volume);
@@ -2374,6 +2430,42 @@ _mesh_intersection_vol_vol
     }
 
   } // End of loop on cells A
+
+  // for vtk
+
+  if (vtk_n_vtxA > 0) {
+    char filename[999] = "A.vtk";
+    PDM_vtk_write_polydata(filename,
+                           vtk_n_vtxA,
+                           vtk_vtx_coordA,
+                           NULL,
+                           vtk_n_faceA,
+                           vtk_face_vtx_idxA,
+                           vtk_face_vtxA,
+                           NULL,
+                           NULL);
+
+    free(vtk_vtx_coordA);
+    free(vtk_face_vtx_idxA);
+    free(vtk_face_vtxA);
+  }
+
+  if (vtk_n_vtxB > 0) {
+    char filename[999] = "B.vtk";
+    PDM_vtk_write_polydata(filename,
+                           vtk_n_vtxB,
+                           vtk_vtx_coordB,
+                           NULL,
+                           vtk_n_faceB,
+                           vtk_face_vtx_idxB,
+                           vtk_face_vtxB,
+                           NULL,
+                           NULL);
+
+    free(vtk_vtx_coordB);
+    free(vtk_face_vtx_idxB);
+    free(vtk_face_vtxB);
+  }
 
   // free
   for (int i = 0; i < max_size; i++) {
