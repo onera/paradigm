@@ -1391,13 +1391,13 @@ _print_cll
   }
 
   Element *current = cll->head;
-  printf("head->");
+  log_trace("head->");
   while (1) {
-    printf("[(%f,%f,%f),%p]->", current->coord[0], current->coord[1], current->coord[2], (void *) current->next);
+    log_trace("[(%f,%f,%f),%p]->", current->coord[0], current->coord[1], current->coord[2], (void *) current->next);
     if (current->next == cll->head) break;
     current = current->next;
   }
-  printf("head\n");
+  log_trace("head\n");
 }
 
 static int
@@ -1502,7 +1502,7 @@ _determine_A_outside
   if (is_inside) {
 
     if (dbg && 1) {
-      printf("triangle in tetrahedra\n");
+      log_trace("triangle in tetrahedra\n");
     }
 
     // cll remains as is
@@ -1543,14 +1543,14 @@ _determine_A_outside
       if ((f1 == 0) && (f2 == 0)) {
 
         if (dbg && 1) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+          log_trace("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         // polygon in plane
         if (f3 == 0) {
 
           if (dbg && 1) {
-            printf("polygon is in plane %d\n", i);
+            log_trace("polygon is in plane %d\n", i);
           }
 
           free(*cll);
@@ -1567,7 +1567,7 @@ _determine_A_outside
           if (f3 <= 0) {
 
             if (dbg && 1) {
-              printf("polygon is outside %d\n", i);
+              log_trace("polygon is outside %d\n", i);
             }
 
             free(*cll);
@@ -1582,7 +1582,7 @@ _determine_A_outside
           else {
 
             if (dbg && 1) {
-              printf("polygon is inside %d, cll unchanged\n", i);
+              log_trace("polygon is inside %d, cll unchanged\n", i);
             }
 
             intersection_type = TWO_EXTREMA_INTERSECTION;
@@ -1603,7 +1603,7 @@ _determine_A_outside
                (f1 <= 0 && f2 >= 0)) {
 
         if (dbg && 1) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+          log_trace("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         double t = f2/(f2-f1);
@@ -1611,14 +1611,14 @@ _determine_A_outside
         if (t == 0 || t == 1) {
 
           if (intersection_type == -1) {
-            printf("ONE_EXTREMA_INTERSECTION \n");
+            log_trace("ONE_EXTREMA_INTERSECTION \n");
             intersection_type = ONE_EXTREMA_INTERSECTION;
           }
 
           if (intersect_idx == 1) {
             if (intersection_type == ONE_SHARP_INTERSECTION) {
               intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
-              printf("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
+              log_trace("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
             }
           } // end if one intersection
 
@@ -1631,7 +1631,7 @@ _determine_A_outside
             // can not be one because segment on plane already dealt with
             if (f2 < 0) {
               extrema_prev_is_in = 1;
-              printf("from in to out (intersect_idx = %d)\n", intersect_idx);
+              log_trace("from in to out (intersect_idx = %d)\n", intersect_idx);
               idx_prev_in              = intersect_idx;
               prev_in                  = current;
               out[intersect_idx]->next = current->next;
@@ -1640,7 +1640,7 @@ _determine_A_outside
             // from outside to inside
             else { // >= 0
               extrema_prev_is_in = 0;
-              printf("from out to in (intersect_idx = %d)\n", intersect_idx);
+              log_trace("from out to in (intersect_idx = %d)\n", intersect_idx);
               idx_prev_out             = intersect_idx;
               prev_out                 = current;
               in[intersect_idx]->next  = current->next;
@@ -1657,17 +1657,17 @@ _determine_A_outside
           if (intersect_idx == 1) {
             if (intersection_type == ONE_EXTREMA_INTERSECTION) {
               intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
-              printf("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
+              log_trace("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
             }
             else if (intersection_type == ONE_SHARP_INTERSECTION) {
               intersection_type = TWO_SHARP_INTERSECTION;
-              printf("TWO_SHARP_INTERSECTION \n");
+              log_trace("TWO_SHARP_INTERSECTION \n");
             }
           } // end if one intersection
 
           else if (intersect_idx == 0) {
             intersection_type = ONE_SHARP_INTERSECTION;
-            printf("ONE_SHARP_INTERSECTION \n");
+            log_trace("ONE_SHARP_INTERSECTION \n");
           } // end if no intersection
 
           double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
@@ -1679,7 +1679,7 @@ _determine_A_outside
 
           // current-> (outside) intersection (inside) -> current->next
           if (f1 < 0) {
-            printf("from out to in (intersect_idx = %d)\n", intersect_idx);
+            log_trace("from out to in (intersect_idx = %d)\n", intersect_idx);
             idx_prev_out             = intersect_idx;
             prev_out                 = current;
             in[intersect_idx]->next  = current->next;
@@ -1687,7 +1687,7 @@ _determine_A_outside
           }
           // current-> (inside) intersection (outside) -> current->next
           else if (f1 > 0) {
-            printf("from in to out (intersect_idx = %d)\n", intersect_idx);
+            log_trace("from in to out (intersect_idx = %d)\n", intersect_idx);
             idx_prev_in              = intersect_idx;
             prev_in                  = current;
             out[intersect_idx]->next = current->next;
@@ -1703,13 +1703,13 @@ _determine_A_outside
       else {
 
         if (dbg && 1) {
-          printf("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+          log_trace("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         if (f1 < 0) {
 
           if (dbg && 1) {
-            printf("is outside \n");
+            log_trace("is outside \n");
           }
 
           free(*cll);
@@ -1722,7 +1722,7 @@ _determine_A_outside
         if (f1 > 0) {
 
           if (dbg && 1) {
-            printf("is inside \n");
+            log_trace("is inside \n");
           }
 
         }
@@ -1737,8 +1737,8 @@ _determine_A_outside
 
     // connect intersection points to the linked list
 
-    printf("in[0]: %p/ in[1]: %p\n", (void *) in[0], (void *) in[1]);
-    printf("out[0]: %p/ out[1]: %p\n", (void *) out[0], (void *) out[1]);
+    log_trace("in[0]: %p/ in[1]: %p\n", (void *) in[0], (void *) in[1]);
+    log_trace("out[0]: %p/ out[1]: %p\n", (void *) out[0], (void *) out[1]);
     if (intersection_type == TWO_SHARP_INTERSECTION || intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
       if (intersection_type == TWO_SHARP_INTERSECTION) {
         prev_in->next  = in[idx_prev_in];
@@ -1767,7 +1767,7 @@ _determine_A_outside
     }
 
     if (dbg && 1) {
-       printf("cll at plane %d: ", i);
+       log_trace("cll at plane %d: ", i);
       _print_cll(*cll);
     }
 
@@ -1851,7 +1851,7 @@ _reference_volume_compute
 
   // debug
   if (dbg && 1) {
-    printf("Triangle:\n");
+    log_trace("Triangle:\n");
     _print_cll(A);
   }
 
@@ -1860,16 +1860,16 @@ _reference_volume_compute
 
   // debug
   if (dbg && 1) {
-    printf("A: ");
+    log_trace("A: ");
     if (A == NULL) {
-      printf("NULL\n");
+      log_trace("NULL\n");
     } else {
       _print_cll(A);
     }
 
-    printf("B: ");
+    log_trace("B: ");
     if (B == NULL) {
-      printf("NULL\n");
+      log_trace("NULL\n");
     } else {
       _print_cll(B);
     }
