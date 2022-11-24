@@ -437,8 +437,6 @@ _determine_A_outside
 
 // for volume
 
-// TO DO: deal with cases of zero division and NULL A or B cll !!!
-
 static double
 _prism_volume
 (
@@ -447,7 +445,7 @@ _prism_volume
  double coord3[3]
 )
 {
-  double parallelepiped_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) / (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
+  double parallelepiped_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) - (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
   return ((1./3.) * (coord1[2] + coord2[2] + coord3[2]) * parallelepiped_area);
 }
 
@@ -464,21 +462,64 @@ _column_volume
   while (current->next != cll->head) {
 
     double prism_volume = _prism_volume(cll->head->coord, current->coord, current->next->coord);
-
-    if (test_debug) {
-       printf("prism_volume for triangle (%f, %f, %f)-(%f, %f, %f)-(%f, %f, %f) is %f\n",
-               cll->head->coord[0], cll->head->coord[1], cll->head->coord[2],
-               current->coord[0], current->coord[1], current->coord[2],
-               current->next->coord[0], current->next->coord[1], current->next->coord[2], prism_volume);
-    }
-
-
     volume += prism_volume;
 
     current = current->next;
   }
 
   return volume;
+}
+
+// for vtk
+
+static void
+_cll_to_polydata
+(
+  List *cll,
+  char filename[999]
+)
+{
+  int size_min = 3;
+
+  int  n_vtx        = 0;
+  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+
+  Element *current = cll->head;
+
+  while (1) {
+
+    if (n_vtx > size_min -1) {
+      size_min *= 2;
+      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+    }
+
+    memcpy(vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
+    n_vtx++;
+
+    if (current->next == cll->head) break;
+    current = current->next;
+  }
+
+  int face_vtx_idx[2] = {0, n_vtx};
+
+  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    face_vtx[i] = i + 1;
+  }
+
+
+  PDM_vtk_write_polydata(filename,
+                         n_vtx,
+                         vtx_coord,
+                         NULL,
+                         1,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
+
+  free(vtx_coord);
+  free(face_vtx);
 }
 
 /*============================================================================
@@ -552,15 +593,18 @@ int main(int argc, char *argv[])
 
   // projection to go from outside to B
   List *B = outside;
-  Element *current = B->head;
 
-  while (1) {
+  if (B != NULL) {
+    Element *current = B->head;
 
-    double zB = 1 - current->coord[0] - current->coord[1];
-    current->coord[2] = zB;
+    while (1) {
 
-   if (current->next == B->head) break;
-   current = current->next;
+      double zB = 1 - current->coord[0] - current->coord[1];
+      current->coord[2] = zB;
+
+      if (current->next == B->head) break;
+      current = current->next;
+    }
   }
 
   // debug
@@ -573,11 +617,36 @@ int main(int argc, char *argv[])
     }
   }
 
-  // TO DO: output vtk of A and B !!!
+  // vtk
+  if (test_debug) {
+    if (cll != NULL) {
+      char filename[999] = "A.vtk";
+      _cll_to_polydata(cll, filename);
+    }
+
+    if (B != NULL) {
+      char filename[999] = "B.vtk";
+      _cll_to_polydata(B, filename);
+    }
+  }
 
   // compute columns
-  double volumeA = _column_volume(cll);
-  double volumeB = _column_volume(B); // TO DO: check orientation because negative
+  double volumeA = -1;
+  double volumeB = -1;
+
+  if (cll == NULL) {
+    volumeA = 0;
+  }
+  else {
+    volumeA = _column_volume(cll);
+  }
+
+  if (B == NULL) {
+    volumeB = 0;
+  }
+  else {
+    volumeB = _column_volume(B);
+  }
 
   // debug
   if (test_debug) {
