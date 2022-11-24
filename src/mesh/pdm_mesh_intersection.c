@@ -1481,6 +1481,7 @@ _determine_A_outside
 
   // check if the triangle is inside the tetrahedron
   Element *current = (*cll)->head;
+  int is_inside = 1;
   while (1) {
     // 0<= x, y, z <= 1 and 1-x-y-z >= 0
     int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
@@ -1488,13 +1489,17 @@ _determine_A_outside
     int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
     int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
     // not totally in unit tetrahedron
+    printf("cond0 = %d, cond1 = %d, cond2 = %d, cond3 = %d\n", cond0, cond1, cond2, cond3);
+    printf("!(cond0 && cond1 && cond2 && cond3) = %d\n", !(cond0 && cond1 && cond2 && cond3));
     if (!(cond0 && cond1 && cond2 && cond3)) {
+      is_inside = 0;
       break;
     }
     if (current->next == (*cll)->head) break;
     current = current->next;
+
   }
-  if (current->next == (*cll)->head) {
+  if (is_inside) {
 
     if (dbg && 1) {
       printf("triangle in tetrahedra\n");
@@ -2382,16 +2387,18 @@ _mesh_intersection_vol_vol
 
               // for vtk
               if (local_n_vtxA > 0) {
+                printf("local_n_vtxA = %d\n", local_n_vtxA);
                 memcpy(vtk_vtx_coordA + 3* vtk_n_vtxA, local_vtx_coordA, sizeof(double) * 3 * local_n_vtxA);
-                vtk_face_vtx_idxA[vtk_n_vtxA+1] = vtk_face_vtx_idxA[vtk_n_vtxA] + local_n_vtxA;
-                memcpy(vtk_face_vtxA + vtk_face_vtx_idxA[vtk_n_vtxA], local_face_vtxA, sizeof(int) * local_n_vtxA);
+                vtk_face_vtx_idxA[vtk_n_faceA+1] = vtk_face_vtx_idxA[vtk_n_faceA] + local_n_vtxA;
+                printf("vtk_face_vtx_idxA[vtk_n_vtxA] = %d\n", vtk_face_vtx_idxA[vtk_n_vtxA]);
+                memcpy(vtk_face_vtxA + vtk_face_vtx_idxA[vtk_n_faceA], local_face_vtxA, sizeof(int) * local_n_vtxA);
                 vtk_n_vtxA += local_n_vtxA;
               }
 
               if (local_n_vtxB > 0) {
                 memcpy(vtk_vtx_coordB + 3* vtk_n_vtxB, local_vtx_coordB, sizeof(double) * 3 * local_n_vtxB);
-                vtk_face_vtx_idxB[vtk_n_vtxB+1] = vtk_face_vtx_idxB[vtk_n_vtxB] + local_n_vtxB;
-                memcpy(vtk_face_vtxB + vtk_face_vtx_idxB[vtk_n_vtxB], local_face_vtxB, sizeof(int) * local_n_vtxB);
+                vtk_face_vtx_idxB[vtk_n_faceB+1] = vtk_face_vtx_idxB[vtk_n_faceB] + local_n_vtxB;
+                memcpy(vtk_face_vtxB + vtk_face_vtx_idxB[vtk_n_faceB], local_face_vtxB, sizeof(int) * local_n_vtxB);
                 vtk_n_vtxB += local_n_vtxB;
               }
 
