@@ -576,13 +576,13 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
   // dbg
-  double pt0[3] = {0, 0, 0};
-  double pt1[3] = {-1, 1, 0};
-  double pt2[3] = {1, -1, 1};
+  // double pt0[3] = {0, 0, 0};
+  // double pt1[3] = {-1, 1, 0};
+  // double pt2[3] = {1, -1, 1};
 
-  // double pt0[3] = {-0.695256, 0.667199, 0.16915};
-  // double pt1[3] = {1.00244, -0.887129, 0.337321};
-  // double pt2[3] = {1.03026, 1.13222, 0.794986};
+  double pt0[3] = {0.5, 0.5,0.5};
+  double pt1[3] = {0.5,-0.5,0.5};
+  double pt2[3] = {1.5,-0.5,0.5};
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);

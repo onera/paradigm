@@ -1333,17 +1333,28 @@ _dump_elementary_vol_vol
     fprintf(f, "\n");
   }
 
-  fprintf(f, "CELLS %d %d\n", 2, 5 + 4);
-  fprintf(f, "4 0 1 2 3\n3 4 5 6\n");
+  // fprintf(f, "CELLS %d %d\n", 2, 5 + 4);
+  // fprintf(f, "4 0 1 2 3\n3 4 5 6\n");
 
-  fprintf(f, "CELL_TYPES 2\n10\n5\n");
+  // fprintf(f, "CELL_TYPES 2\n10\n5\n");
 
-  fprintf(f, "CELL_DATA 2\n");
+  // fprintf(f, "CELL_DATA 2\n");
+  // fprintf(f, "FIELD field 4\n");
+  // fprintf(f, "mesh_id 1 2 int\n0 1\n");
+  // fprintf(f, "cell_id 1 2 int\n%d %d\n", cellA_id, cellB_id);
+  // fprintf(f, "face_id 1 2 int\n%d %d\n", faceA_id, faceB_id);
+  // fprintf(f, "tria_id 1 2 int\n%d %d\n", triaA_id, triaB_id);
+  fprintf(f, "CELLS %d %d\n", 1 + 3 + 2 + 1, 2 + 3*3 + 2*4 + 4);
+  fprintf(f, "1 0\n2 0 1\n2 0 2\n2 0 3\n3 1 2 3\n3 0 1 2\n3 4 5 6\n");
+
+  fprintf(f, "CELL_TYPES 7\n1\n3\n3\n3\n5\n5\n5\n");
+
+  fprintf(f, "CELL_DATA 7\n");
   fprintf(f, "FIELD field 4\n");
-  fprintf(f, "mesh_id 1 2 int\n0 1\n");
-  fprintf(f, "cell_id 1 2 int\n%d %d\n", cellA_id, cellB_id);
-  fprintf(f, "face_id 1 2 int\n%d %d\n", faceA_id, faceB_id);
-  fprintf(f, "tria_id 1 2 int\n%d %d\n", triaA_id, triaB_id);
+  fprintf(f, "mesh_id 1 7 int\n0 0 0 0 0 0 1\n");
+  fprintf(f, "cell_id 1 7 int\n%d %d %d %d %d %d %d\n", cellA_id, cellA_id, cellA_id, cellA_id, cellA_id, cellA_id, cellB_id);
+  fprintf(f, "face_id 1 7 int\n%d %d %d %d %d %d %d\n", faceA_id, faceA_id, faceA_id, faceA_id, faceA_id, faceA_id, faceB_id);
+  fprintf(f, "tria_id 1 7 int\n%d %d %d %d %d %d %d\n", triaA_id, triaA_id, triaA_id, triaA_id, triaA_id, triaA_id, triaB_id);
 
   fclose(f);
 }
@@ -1943,6 +1954,7 @@ _mesh_intersection_vol_vol
 {
   const double one_sixth = 0.1666666666666666666667;
   int dbg = 1;
+  int dbg_Karmijn = 0;
 
   int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
   int *cellA_cellB     = redistribute_box_a_to_box_b;
@@ -2152,20 +2164,30 @@ _mesh_intersection_vol_vol
   int min_sizeA = 2000;
   int min_sizeB = 2000;
 
-  double *vtk_vtx_coordA    = malloc(sizeof(double) * min_sizeA * 3);
+  double *vtk_vtx_coordA    = NULL;
   int     vtk_n_vtxA        = 0;
-  int    *vtk_face_vtx_idxA = malloc(sizeof(int) * (min_sizeA + 1));
-  vtk_face_vtx_idxA[0] = 0;
-  int    *vtk_face_vtxA     = malloc(sizeof(int) * min_sizeA);
+  int    *vtk_face_vtx_idxA = NULL;
+  int    *vtk_face_vtxA     = NULL;
   int     vtk_n_faceA       = 0;
-  double *vtk_vtx_coordB    = malloc(sizeof(double) * min_sizeB * 3);
+  double *vtk_vtx_coordB    = NULL;
   int     vtk_n_vtxB        = 0;
-  int    *vtk_face_vtx_idxB = malloc(sizeof(int) * (min_sizeB + 1));
-  vtk_face_vtx_idxB[0] = 0;
-  int    *vtk_face_vtxB     = malloc(sizeof(int) * min_sizeB);
+  int    *vtk_face_vtx_idxB = NULL;
+  int    *vtk_face_vtxB     = NULL;
   int     vtk_n_faceB       = 0;
+  if (dbg_Karmijn) {
+    vtk_vtx_coordA    = malloc(sizeof(double) * min_sizeA * 3);
+    vtk_face_vtx_idxA = malloc(sizeof(int) * (min_sizeA + 1));
+    vtk_face_vtx_idxA[0] = 0;
+    vtk_face_vtxA     = malloc(sizeof(int) * min_sizeA);
+    vtk_vtx_coordB    = malloc(sizeof(double) * min_sizeB * 3);
+    vtk_face_vtx_idxB = malloc(sizeof(int) * (min_sizeB + 1));
+    vtk_face_vtx_idxB[0] = 0;
+    vtk_face_vtxB     = malloc(sizeof(int) * min_sizeB);
+  }
 
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
+
+    if (cellA_id != 1) continue;
 
     /* Compute a 'center' point to tetrahedrize current cell A */
     // Reference vertex = 1st vertex of first face
@@ -2386,20 +2408,22 @@ _mesh_intersection_vol_vol
               }
 
               // for vtk
-              if (local_n_vtxA > 0) {
-                printf("local_n_vtxA = %d\n", local_n_vtxA);
-                memcpy(vtk_vtx_coordA + 3* vtk_n_vtxA, local_vtx_coordA, sizeof(double) * 3 * local_n_vtxA);
-                vtk_face_vtx_idxA[vtk_n_faceA+1] = vtk_face_vtx_idxA[vtk_n_faceA] + local_n_vtxA;
-                printf("vtk_face_vtx_idxA[vtk_n_vtxA] = %d\n", vtk_face_vtx_idxA[vtk_n_vtxA]);
-                memcpy(vtk_face_vtxA + vtk_face_vtx_idxA[vtk_n_faceA], local_face_vtxA, sizeof(int) * local_n_vtxA);
-                vtk_n_vtxA += local_n_vtxA;
-              }
+              if (dbg_Karmijn) {
+                if (local_n_vtxA > 0) {
+                  printf("local_n_vtxA = %d\n", local_n_vtxA);
+                  memcpy(vtk_vtx_coordA + 3* vtk_n_vtxA, local_vtx_coordA, sizeof(double) * 3 * local_n_vtxA);
+                  vtk_face_vtx_idxA[vtk_n_faceA+1] = vtk_face_vtx_idxA[vtk_n_faceA] + local_n_vtxA;
+                  printf("vtk_face_vtx_idxA[vtk_n_vtxA] = %d\n", vtk_face_vtx_idxA[vtk_n_vtxA]);
+                  memcpy(vtk_face_vtxA + vtk_face_vtx_idxA[vtk_n_faceA], local_face_vtxA, sizeof(int) * local_n_vtxA);
+                  vtk_n_vtxA += local_n_vtxA;
+                }
 
-              if (local_n_vtxB > 0) {
-                memcpy(vtk_vtx_coordB + 3* vtk_n_vtxB, local_vtx_coordB, sizeof(double) * 3 * local_n_vtxB);
-                vtk_face_vtx_idxB[vtk_n_faceB+1] = vtk_face_vtx_idxB[vtk_n_faceB] + local_n_vtxB;
-                memcpy(vtk_face_vtxB + vtk_face_vtx_idxB[vtk_n_faceB], local_face_vtxB, sizeof(int) * local_n_vtxB);
-                vtk_n_vtxB += local_n_vtxB;
+                if (local_n_vtxB > 0) {
+                  memcpy(vtk_vtx_coordB + 3* vtk_n_vtxB, local_vtx_coordB, sizeof(double) * 3 * local_n_vtxB);
+                  vtk_face_vtx_idxB[vtk_n_faceB+1] = vtk_face_vtx_idxB[vtk_n_faceB] + local_n_vtxB;
+                  memcpy(vtk_face_vtxB + vtk_face_vtx_idxB[vtk_n_faceB], local_face_vtxB, sizeof(int) * local_n_vtxB);
+                  vtk_n_vtxB += local_n_vtxB;
+                }
               }
 
               // free
@@ -2439,39 +2463,40 @@ _mesh_intersection_vol_vol
   } // End of loop on cells A
 
   // for vtk
+  if (dbg_Karmijn) {
+    if (vtk_n_vtxA > 0) {
+      char filename[999] = "A.vtk";
+      PDM_vtk_write_polydata(filename,
+                             vtk_n_vtxA,
+                             vtk_vtx_coordA,
+                             NULL,
+                             vtk_n_faceA,
+                             vtk_face_vtx_idxA,
+                             vtk_face_vtxA,
+                             NULL,
+                             NULL);
 
-  if (vtk_n_vtxA > 0) {
-    char filename[999] = "A.vtk";
-    PDM_vtk_write_polydata(filename,
-                           vtk_n_vtxA,
-                           vtk_vtx_coordA,
-                           NULL,
-                           vtk_n_faceA,
-                           vtk_face_vtx_idxA,
-                           vtk_face_vtxA,
-                           NULL,
-                           NULL);
+      free(vtk_vtx_coordA);
+      free(vtk_face_vtx_idxA);
+      free(vtk_face_vtxA);
+    }
 
-    free(vtk_vtx_coordA);
-    free(vtk_face_vtx_idxA);
-    free(vtk_face_vtxA);
-  }
+    if (vtk_n_vtxB > 0) {
+      char filename[999] = "B.vtk";
+      PDM_vtk_write_polydata(filename,
+                             vtk_n_vtxB,
+                             vtk_vtx_coordB,
+                             NULL,
+                             vtk_n_faceB,
+                             vtk_face_vtx_idxB,
+                             vtk_face_vtxB,
+                             NULL,
+                             NULL);
 
-  if (vtk_n_vtxB > 0) {
-    char filename[999] = "B.vtk";
-    PDM_vtk_write_polydata(filename,
-                           vtk_n_vtxB,
-                           vtk_vtx_coordB,
-                           NULL,
-                           vtk_n_faceB,
-                           vtk_face_vtx_idxB,
-                           vtk_face_vtxB,
-                           NULL,
-                           NULL);
-
-    free(vtk_vtx_coordB);
-    free(vtk_face_vtx_idxB);
-    free(vtk_face_vtxB);
+      free(vtk_vtx_coordB);
+      free(vtk_face_vtx_idxB);
+      free(vtk_face_vtxB);
+    }
   }
 
   // free
