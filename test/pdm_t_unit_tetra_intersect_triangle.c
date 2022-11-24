@@ -580,6 +580,9 @@ int main(int argc, char *argv[])
   double pt1[3] = {-1, 1, 0};
   double pt2[3] = {1, -1, 1};
 
+  // double pt0[3] = {-0.695256, 0.667199, 0.16915};
+  // double pt1[3] = {1.00244, -0.887129, 0.337321};
+  // double pt2[3] = {1.03026, 1.13222, 0.794986};
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);
@@ -600,6 +603,9 @@ int main(int argc, char *argv[])
   if (test_debug) {
     printf("Triangle:\n");
     _print_cll(cll);
+
+    char filename[999] = "T.vtk";
+    _cll_to_polydata(cll, filename);
   }
 
   // Determine A and outside (B before projection)
