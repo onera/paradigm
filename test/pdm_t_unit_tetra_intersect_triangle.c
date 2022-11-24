@@ -160,13 +160,13 @@ _determine_A_outside
 (
  Element  **cll_storage,
  int        idx,
- List      *cll,
+ List     **cll,
  List     **outside
 )
 {
 
   // check if the triangle is inside the tetrahedron
-  Element *current = cll->head;
+  Element *current = (*cll)->head;
   while (1) {
     // 0<= x, y, z <= 1 and 1-x-y-z >= 0
     int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
@@ -177,10 +177,10 @@ _determine_A_outside
     if (!(cond0 && cond1 && cond2 && cond3)) {
       break;
     }
-    if (current->next == cll->head) break;
+    if (current->next == (*cll)->head) break;
     current = current->next;
   }
-  if (current->next == cll->head) {
+  if (current->next == (*cll)->head) {
 
     if (test_debug) {
       printf("triangle in tetrahedra\n");
@@ -199,7 +199,7 @@ _determine_A_outside
     int extrema_prev_is_in           = -1;
     intersection_t intersection_type = -1;
 
-    current = cll->head;
+    current = (*cll)->head;
 
     Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
     Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
@@ -234,9 +234,9 @@ _determine_A_outside
             printf("polygon is in plane %d\n", i);
           }
 
-          free(cll);
+          free(*cll);
           free(*outside);
-          cll      = NULL;
+          *cll      = NULL;
           *outside = NULL;
           return;
         }
@@ -251,9 +251,9 @@ _determine_A_outside
               printf("polygon is outside %d\n", i);
             }
 
-            free(cll);
+            free(*cll);
             free(*outside);
-            cll      = NULL;
+            *cll      = NULL;
             *outside = NULL;
             return;
 
@@ -387,10 +387,31 @@ _determine_A_outside
           printf("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
+        if (f1 < 0) {
+
+          if (test_debug) {
+            printf("is outside \n");
+          }
+
+          free(*cll);
+          free(*outside);
+          *cll      = NULL;
+          *outside  = NULL;
+          return;
+        }
+
+        if (f1 > 0) {
+
+          if (test_debug) {
+            printf("is inside \n");
+          }
+
+        }
+
       }
 
       // to correcly loop over cll
-      if (current->next == cll->head) break;
+      if (current->next == (*cll)->head) break;
       current = current->next;
 
     } // end while loop
@@ -422,13 +443,13 @@ _determine_A_outside
       }
 
       // update A and outside
-      cll->head        = in[0];
+      (*cll)->head     = in[0];
       (*outside)->head = out[0];
     }
 
     if (test_debug) {
        printf("cll at plane %d: ", i);
-      _print_cll(cll);
+      _print_cll(*cll);
     }
 
   } // end for loop
@@ -547,13 +568,17 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 0, 0};
   // double pt2[3] = {0.8, 0.3, 0.4};
   // inside
-  double pt0[3] = {0.5, 0, 0};
-  double pt2[3] = {0, 0.5, 0};
-  double pt1[3] = {0, 0, 0.5};
+  // double pt0[3] = {0.5, 0, 0};
+  // double pt2[3] = {0, 0.5, 0};
+  // double pt1[3] = {0, 0, 0.5};
   // XYZ
   // double pt0[3] = {1, 0, 0};
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
+  // dbg
+  double pt0[3] = {0, 0, 0};
+  double pt1[3] = {-1, 1, 0};
+  double pt2[3] = {1, -1, 1};
 
 
   Element *ptA = cll_storage[idx++];
@@ -579,7 +604,7 @@ int main(int argc, char *argv[])
 
   // Determine A and outside (B before projection)
   List *outside = malloc(sizeof(List));
-  _determine_A_outside(cll_storage, idx, cll, &outside);
+  _determine_A_outside(cll_storage, idx, &cll, &outside);
 
   // debug
   if (test_debug) {
