@@ -463,16 +463,16 @@ main
 
 
   double length_b = 1.;
-  int rotate_b = 1;
+  int rotate_b = 0;
   PDM_dmesh_nodal_t *dmn_b   = NULL;
   PDM_multipart_t   *mpart_b = NULL;
   _generate_volume_mesh(comm,
                         n_vtx_b,
                         elt_type_b,
                         rotate_b,
-                        0.,
-                        0.,
-                        0.,
+                        0.5*length_b,
+                        0.5*length_b,
+                        0.5*length_b,
                         length_b,
                         part_method,
                         n_part,

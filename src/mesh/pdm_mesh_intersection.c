@@ -1598,7 +1598,7 @@ _mesh_intersection_vol_vol
                 memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
               }
 
-              if (dbg && triaB_id == faceB_triaB_idx[faceB_id]) {
+              if (dbg && 0) {
                 _dump_elementary_vol_vol(mi->comm,
                                          cellA_id,
                                          faceA_id,
@@ -1724,9 +1724,15 @@ _mesh_intersection_vol_vol
     PDM_MPI_Allreduce(&l_total_volume_A, &g_total_volume_A, 1,
                       PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
 
-    log_trace("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%)\n",
+    log_trace("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
               l_total_volume_AB, g_total_volume_AB,
               100*g_total_volume_AB / g_total_volume_A);
+
+    // cas cube, translation (0.5,0.5,0.5)
+    double exact = 0.125;
+    log_trace("error : absolute = %e, relative = %e\n",
+              PDM_ABS(g_total_volume_AB - exact),
+              PDM_ABS(g_total_volume_AB - exact)/exact);
   }
 
 
@@ -2259,7 +2265,7 @@ _mesh_intersection_surf_surf
     PDM_MPI_Allreduce(&l_total_area_A, &g_total_area_A, 1,
                       PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
 
-    log_trace("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%)\n",
+    log_trace("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
               l_total_area_AB, g_total_area_AB,
               100*g_total_area_AB / g_total_area_A);
 
