@@ -33,6 +33,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_vtk.h"
 #include "pdm_writer.h"
+#include "pdm_gnum.h"
 #include "pdm_box_priv.h"
 #include "pdm_unique.h"
 #include "pdm_triangulate.h"
@@ -1170,6 +1171,33 @@ _export_ensight3d
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
+
+  PDM_gen_gnum_t *gnum_vtx = PDM_gnum_create(3, 1, PDM_FALSE, 1., comm, PDM_OWNERSHIP_KEEP);
+
+  PDM_gnum_set_from_parents(gnum_vtx,
+                            0,
+                            n_vtx,
+                            vtx_ln_to_gn);
+
+  PDM_gnum_compute(gnum_vtx);
+
+  PDM_g_num_t *extract_vtx_ln_to_gn = PDM_gnum_get(gnum_vtx,
+                                                   0);
+
+
+  PDM_gen_gnum_t *gnum_cell = PDM_gnum_create(3, 1, PDM_FALSE, 1., comm, PDM_OWNERSHIP_KEEP);
+
+  PDM_gnum_set_from_parents(gnum_cell,
+                            0,
+                            n_cell,
+                            cell_ln_to_gn);
+
+  PDM_gnum_compute(gnum_cell);
+
+  PDM_g_num_t *extract_cell_ln_to_gn = PDM_gnum_get(gnum_cell,
+                                                    0);
+
+
   PDM_writer_t *wrt = PDM_writer_create("Ensight",
                                         PDM_WRITER_FMT_BIN,
                                         PDM_WRITER_TOPO_CST,
@@ -1209,7 +1237,7 @@ _export_ensight3d
                             0,
                             n_vtx,
                             vtx_coord,
-                            vtx_ln_to_gn,
+                            extract_vtx_ln_to_gn,
                             PDM_OWNERSHIP_USER);
 
   PDM_writer_geom_cell3d_cellface_add(wrt,
@@ -1223,7 +1251,7 @@ _export_ensight3d
                                       cell_face_idx,
                                       cell_face_n,
                                       cell_face,
-                                      cell_ln_to_gn);
+                                      extract_cell_ln_to_gn);
 
   PDM_writer_geom_write(wrt,
                         id_geom);
@@ -1251,6 +1279,9 @@ _export_ensight3d
   free(val_rank   );
   free(cell_face_n);
   free(face_vtx_n );
+
+  PDM_gnum_free(gnum_vtx );
+  PDM_gnum_free(gnum_cell);
 }
 
 static void
@@ -1388,30 +1419,30 @@ _mesh_intersection_vol_vol
     // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
 
     _export_ensight3d(mi->comm,
-              "vol_vol_meshA",
-              n_cellA,
-              n_faceA,
-              n_vtxA,
-              cellA_faceA_idx,
-              cellA_faceA,
-              faceA_vtxA_idx,
-              faceA_vtxA,
-              vtxA_coord,
-              cellA_ln_to_gn,
-              vtxA_ln_to_gn);
+                      "vol_vol_meshA",
+                      n_cellA,
+                      n_faceA,
+                      n_vtxA,
+                      cellA_faceA_idx,
+                      cellA_faceA,
+                      faceA_vtxA_idx,
+                      faceA_vtxA,
+                      vtxA_coord,
+                      cellA_ln_to_gn,
+                      vtxA_ln_to_gn);
 
     _export_ensight3d(mi->comm,
-              "vol_vol_meshB",
-              n_cellB,
-              n_faceB,
-              n_vtxB,
-              cellB_faceB_idx,
-              cellB_faceB,
-              faceB_vtxB_idx,
-              faceB_vtxB,
-              vtxB_coord,
-              cellB_ln_to_gn,
-              vtxB_ln_to_gn);
+                      "vol_vol_meshB",
+                      n_cellB,
+                      n_faceB,
+                      n_vtxB,
+                      cellB_faceB_idx,
+                      cellB_faceB,
+                      faceB_vtxB_idx,
+                      faceB_vtxB,
+                      vtxB_coord,
+                      cellB_ln_to_gn,
+                      vtxB_ln_to_gn);
   }
 
 
