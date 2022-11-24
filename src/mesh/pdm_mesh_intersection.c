@@ -1991,13 +1991,21 @@ _mesh_intersection_vol_vol
                                                             &cellB_ln_to_gn,
                                                             &vtxB_ln_to_gn);
 
+  if (dbg) {
+    PDM_log_trace_connectivity_int(cellA_cellB_idx,
+                                   cellA_cellB,
+                                   n_cellA,
+                                   "cellA_cellB : ");
+  }
+
+
 
   /*
    * Panic vtk
    */
   if (dbg) {
-    // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
-    // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+    _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
 
     _export_ensight3d(mi->comm,
                       "vol_vol_meshA",
@@ -2093,6 +2101,39 @@ _mesh_intersection_vol_vol
 
 
 
+  if (dbg) {
+
+    int *triaB_faceB_id = malloc(sizeof(int) * faceB_triaB_idx[n_faceB]);
+    for (int faceB_id = 0; faceB_id < n_faceB; faceB_id++) {
+      for (int triaB_id = faceB_triaB_idx[faceB_id]; triaB_id < faceB_triaB_idx[faceB_id+1]; triaB_id++) {
+        triaB_faceB_id[triaB_id] = faceB_id;
+      }
+    }
+
+    int i_rank;
+    PDM_MPI_Comm_rank(mi->comm, &i_rank);
+    char filename[999];
+    sprintf(filename, "triaB_%d.vtk", i_rank);
+
+    const char *field_name[]   = {"faceB_id"};
+    const int  *field_value[1] = {triaB_faceB_id};
+
+    PDM_vtk_write_std_elements(filename,
+                               n_vtxB,
+                               vtxB_coord,
+                               vtxB_ln_to_gn,
+                               PDM_MESH_NODAL_TRIA3,
+                               faceB_triaB_idx[n_faceB],
+                               triaB_vtxB,
+                               NULL,
+                               1,
+                               field_name,
+                               field_value);
+    free(triaB_faceB_id);
+  }
+
+
+
   double *cellA_cellB_volume = malloc(sizeof(double) * cellA_cellB_idx[n_cellA]);
 
   double tetraA_coord[12];
@@ -2114,7 +2155,12 @@ _mesh_intersection_vol_vol
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
     ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
 
-    memcpy(&tetraA_coord[0], &vtxA_coord[3*ref_vtxA_id], sizeof(double)*3);
+    if (dbg) {
+      log_trace("cellA_id %d ("PDM_FMT_G_NUM") : ref_vtxA_id = %d\n",
+                cellA_id, cellA_ln_to_gn[cellA_id], ref_vtxA_id);
+    }
+
+    memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
 
     /* Initialize intersection volumes to zero */
     for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
@@ -2126,6 +2172,10 @@ _mesh_intersection_vol_vol
 
       int faceA_id   = PDM_ABS (cellA_faceA[ifaceA]) - 1;
       int faceA_sign = PDM_SIGN(cellA_faceA[ifaceA]);
+
+      if (dbg) {
+        log_trace("  faceA_id %d, sign = %d\n", faceA_id, faceA_sign);
+      }
 
       /* Triangulate current face A */
       int *_face_vtx = faceA_vtxA + faceA_vtxA_idx[faceA_id];
@@ -2162,6 +2212,9 @@ _mesh_intersection_vol_vol
       for (int triaA_id = 0; triaA_id < n_tria; triaA_id++) {
 
         int *_triaA_vtxA = triaA_vtxA + 3*triaA_id;
+        if (dbg) {
+          PDM_log_trace_array_int(_triaA_vtxA, 3, "    _triaA_vtxA : ");
+        }
 
         /* Ignore if current triangle contains reference vertex */
         if (_triaA_vtxA[0] == ref_vtxA_id ||
@@ -2200,23 +2253,36 @@ _mesh_intersection_vol_vol
         for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
           int cellB_id = cellA_cellB[icellB];
 
+          if (dbg) {
+            log_trace("      icellB %d, cellB_id %d\n", icellB, cellB_id);
+          }
+
           /* Loop on faces B */
           for (int ifaceB = cellB_faceB_idx[cellB_id]; ifaceB < cellB_faceB_idx[cellB_id+1]; ifaceB++) {
 
             int faceB_id   = PDM_ABS (cellB_faceB[ifaceB]) - 1;
             int faceB_sign = PDM_SIGN(cellB_faceB[ifaceB]);
 
+            if (dbg) {
+              log_trace("        faceB_id %d, sign = %d\n", faceB_id, faceB_sign);
+            }
+
             /* Loop on triangles B */
             for (int triaB_id = faceB_triaB_idx[faceB_id]; triaB_id < faceB_triaB_idx[faceB_id+1]; triaB_id++) {
 
               int *_triaB_vtxB = triaB_vtxB + 3*triaB_id;
+
+              if (dbg) {
+                log_trace("          triaB_id %d : ", triaB_id);
+                PDM_log_trace_array_int(_triaB_vtxB, 3, "");
+              }
 
               for (int ivtx = 0; ivtx < 3; ivtx++) {
                 int vtxB_id = _triaB_vtxB[ivtx] - 1;
                 memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
               }
 
-              if (dbg && 0) {
+              if (dbg && 1) {
                 _dump_elementary_vol_vol(mi->comm,
                                          cellA_id,
                                          faceA_id,
@@ -2279,6 +2345,10 @@ _mesh_intersection_vol_vol
               /* Perform elementary computation */
               double volume = _reference_volume_compute(cll_storage, triaB_coord);
 
+              if (dbg) {
+                log_trace("            volume Karmijn = %f\n", volume);
+              }
+
               /* Add elementray volume contribution */
               cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume * det * one_sixth;
 
@@ -2291,6 +2361,17 @@ _mesh_intersection_vol_vol
       } // End of loop on triangles of current face A
 
     } // End of loop on faces of current cell A
+
+
+    if (dbg) {
+      for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
+        int cellB_id = cellA_cellB[icellB];
+        log_trace("cellA %d ("PDM_FMT_G_NUM") cellB %d ("PDM_FMT_G_NUM"), volume = %20.16f\n",
+                  cellA_id, cellA_ln_to_gn[cellA_id],
+                  cellB_id, cellB_ln_to_gn[cellB_id],
+                  cellA_cellB_volume[icellB]);
+      }
+    }
 
   } // End of loop on cells A
 
