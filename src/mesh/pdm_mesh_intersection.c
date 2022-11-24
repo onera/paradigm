@@ -1348,6 +1348,548 @@ _dump_elementary_vol_vol
   fclose(f);
 }
 
+
+// for atomic vol-vol intersection operation
+
+// --> cyclic linked list structure
+
+typedef struct Element Element;
+struct Element
+{
+  double coord[3];
+  Element *next;
+};
+
+typedef struct List List;
+struct List
+{
+    Element *head;
+};
+
+// --> intersection types
+
+typedef enum
+{
+  TWO_EXTREMA_INTERSECTION,
+  ONE_EXTREMA_INTERSECTION,
+  ONE_EXTREMA_ONE_SHARP_INTERSECTION,
+  ONE_SHARP_INTERSECTION,
+  TWO_SHARP_INTERSECTION
+} intersection_t;
+
+// --> debug
+
+static void
+_print_cll
+(
+ List *cll
+)
+{
+  if (cll == NULL)
+  {
+    exit(EXIT_FAILURE);
+  }
+
+  Element *current = cll->head;
+  printf("head->");
+  while (1) {
+    printf("[%p->%p]\n", (void *) current, (void *) current->next);
+    printf("[(%f,%f,%f),%p]->", current->coord[0], current->coord[1], current->coord[2], (void *) current->next);
+    if (current->next == cll->head) break;
+    current = current->next;
+  }
+  printf("head\n");
+}
+
+static void
+_cll_to_polydata
+(
+  List *cll,
+  char filename[999]
+)
+{
+  int size_min = 3;
+
+  int  n_vtx        = 0;
+  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+
+  Element *current = cll->head;
+
+  while (1) {
+
+    if (n_vtx > size_min -1) {
+      size_min *= 2;
+      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+    }
+
+    memcpy(vtx_coord + n_vtx * 3, current->coord, sizeof(double) * 3);
+    n_vtx++;
+
+    if (current->next == cll->head) break;
+    current = current->next;
+  }
+
+  int face_vtx_idx[2] = {0, n_vtx};
+
+  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    face_vtx[i] = i + 1;
+  }
+
+
+  PDM_vtk_write_polydata(filename,
+                         n_vtx,
+                         vtx_coord,
+                         NULL,
+                         1,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
+
+  free(vtx_coord);
+  free(face_vtx);
+}
+
+// --> determine A and outside portion (B before projection)
+
+static double
+_plane_equation_function
+(
+ double coord[3],
+ int    i
+)
+{
+  switch (i) {
+  // OYZ
+  case 0:
+    return coord[0];
+  // X+Y=1
+  case 1:
+    return 1 - coord[0] - coord[1];
+  // OZX
+  case 2:
+    return coord[1];
+  // OXY
+  case 3:
+    return coord[2];
+  // X+Y+Z=1
+  case 4:
+    return 1 - coord[0] - coord[1] - coord[2];
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Only 5 planes are considered\n");
+    return 0;
+  }
+}
+
+static void
+_determine_A_outside
+(
+ Element  **cll_storage,
+ int        idx,
+ List     **cll,
+ List     **outside
+)
+{
+  int dbg = 1;
+  PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+
+  // check if the triangle is inside the tetrahedron
+  Element *current = (*cll)->head;
+  while (1) {
+    // 0<= x, y, z <= 1 and 1-x-y-z >= 0
+    int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
+    int cond1 = current->coord[1] >= 0 && current->coord[1] <= 1;
+    int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
+    int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
+    // not totally in unit tetrahedron
+    if (!(cond0 && cond1 && cond2 && cond3)) {
+      break;
+    }
+    if (current->next == (*cll)->head) break;
+    current = current->next;
+  }
+  if (current->next == (*cll)->head) {
+
+    if (dbg && 0) {
+      printf("triangle in tetrahedra\n");
+    }
+
+    // cll remains as is
+    free(*outside);
+    *outside = NULL;
+    return;
+  }
+
+  // intersect with all 5 planes
+  for (int i = 0; i < 5; i++) {
+    // maximum 2 intersections
+    int intersect_idx                = 0;
+    int extrema_prev_is_in           = -1;
+    intersection_t intersection_type = -1;
+
+    current = (*cll)->head;
+
+    Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
+    Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
+
+    Element *prev_in  = NULL;
+    Element *prev_out = NULL;
+    int idx_prev_in  = -1;
+    int idx_prev_out = -1;
+
+    while (intersect_idx < 2) {
+
+      // current segment coordinates
+      double *coord1 = current->coord;
+      double *coord2 = current->next->coord;
+
+      // current function values
+      double f1 = _plane_equation_function(coord1, i);
+      double f2 = _plane_equation_function(coord2, i);
+      double f3 = _plane_equation_function(current->next->next->coord, i);
+
+      // segment in plane
+      if ((f1 == 0) && (f2 == 0)) {
+
+        if (dbg && 0) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+        }
+
+        // polygon in plane
+        if (f3 == 0) {
+
+          if (dbg && 0) {
+            printf("polygon is in plane %d\n", i);
+          }
+
+          free(*cll);
+          free(*outside);
+          *cll      = NULL;
+          *outside  = NULL;
+          return;
+        }
+
+        // only segment in plane
+        else {
+
+          // outside
+          if (f3 <= 0) {
+
+            if (dbg && 0) {
+              printf("polygon is outside %d\n", i);
+            }
+
+            free(*cll);
+            free(*outside);
+            *cll      = NULL;
+            *outside  = NULL;
+            return;
+
+          }
+
+          // inside
+          else {
+
+            if (dbg && 0) {
+              printf("polygon is inside %d, cll unchanged\n", i);
+            }
+
+            intersection_type = TWO_EXTREMA_INTERSECTION;
+
+            if (i == 4) {
+              // cll remains as is
+              free(*outside);
+              *outside = NULL;
+            }
+            break; // skip to next plane
+
+          }
+        }
+      } // end if segment in plane
+
+      // intersection
+      else if ((f1 >= 0 && f2 <= 0) ||
+               (f1 <= 0 && f2 >= 0)) {
+
+        if (dbg && 0) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+        }
+
+        double t = f2/(f2-f1);
+
+        if (t == 0 || t == 1) {
+
+          if (intersection_type < 0) {
+            intersection_type = ONE_EXTREMA_INTERSECTION;
+          }
+
+          if (intersect_idx == 1) {
+            if (intersection_type == ONE_SHARP_INTERSECTION) {
+              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
+            }
+          } // end if one intersection
+
+          // now first extrema intersection
+          memcpy(in[intersect_idx]->coord,  coord1, sizeof(double) * 3);
+          memcpy(out[intersect_idx]->coord, coord1, sizeof(double) * 3);
+
+          if (t == 1) { // at begin of segment t == 1
+            // from inside to outside
+            // can not be one because segment on plane already dealt with
+            if (f2 < 0) {
+              extrema_prev_is_in = 1;
+              idx_prev_in              = intersect_idx;
+              prev_in                  = current;
+              out[intersect_idx]->next = current->next;
+              in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+            }
+            // from outside to inside
+            else { // >= 0
+              extrema_prev_is_in = 0;
+              idx_prev_out             = intersect_idx;
+              prev_out                 = current;
+              in[intersect_idx]->next  = current->next;
+              out[intersect_idx]->next = out[(intersect_idx+1)%2];
+            }
+
+            // increase only for t == 1, easy to handle case begin segment
+            intersect_idx += 1;
+          } // end if t == 1
+        } // end if one extrema intersection
+
+        else {
+
+          if (intersect_idx == 1) {
+            if (intersection_type == ONE_EXTREMA_INTERSECTION) {
+              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
+            }
+            else if (intersection_type == ONE_SHARP_INTERSECTION) {
+              intersection_type = TWO_SHARP_INTERSECTION;
+            }
+          } // end if one intersection
+
+          else if (intersect_idx == 0) {
+            intersection_type = ONE_SHARP_INTERSECTION;
+          } // end if no intersection
+
+          double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
+                          t*coord1[1]+(1-t)*coord2[1],
+                          t*coord1[2]+(1-t)*coord2[2]};
+
+          memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
+          memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
+
+          // current-> (outside) intersection (inside) -> current->next
+          if (f1 < 0) {
+            idx_prev_out             = intersect_idx;
+            prev_out                 = current;
+            in[intersect_idx]->next  = current->next;
+            out[intersect_idx]->next = out[(intersect_idx+1)%2];
+          }
+          // current-> (inside) intersection (outside) -> current->next
+          else if (f1 > 0) {
+            idx_prev_in              = intersect_idx;
+            prev_in                  = current;
+            out[intersect_idx]->next = current->next;
+            in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+          }
+
+          intersect_idx += 1;
+        } // end if sharp intersection
+
+      } // end if intersection
+
+      // nothing
+      else {
+
+        if (dbg && 0) {
+          printf("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+        }
+
+      }
+
+      // to correcly loop over cll
+      if (current->next == (*cll)->head) break;
+      current = current->next;
+
+    } // end while loop
+
+    // connect intersection points to the linked list
+    if (intersection_type == TWO_SHARP_INTERSECTION || intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
+      if (intersection_type == TWO_SHARP_INTERSECTION) {
+        prev_in->next  = in[idx_prev_in];
+        prev_out->next = out[idx_prev_out];
+      }
+
+      else if (intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
+
+        if (extrema_prev_is_in) {
+          prev_in->next  = in[idx_prev_in]->next;
+          in[idx_prev_in] = prev_in;
+          prev_out->next = out[idx_prev_out];
+        }
+        else {
+          prev_in->next = in[idx_prev_in];
+          prev_out->next = out[idx_prev_out]->next;
+          out[idx_prev_out] = prev_out;
+
+        }
+
+      }
+
+      // update A and outside
+      (*cll)->head     = in[0];
+      (*outside)->head = out[0];
+    }
+
+    if (dbg && 0) {
+       printf("cll at plane %d: ", i);
+      _print_cll(*cll);
+    }
+  } // end for loop
+}
+
+// --> column volume computation
+
+static double
+_prism_volume
+(
+ double coord1[3],
+ double coord2[3],
+ double coord3[3]
+)
+{
+  double parallelepiped_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) - (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
+  return ((1./3.) * (coord1[2] + coord2[2] + coord3[2]) * parallelepiped_area);
+}
+
+static double
+_column_volume
+(
+ List *cll
+)
+{
+  double volume = 0;
+
+  Element *current = cll->head->next;
+
+  while (current->next != cll->head) {
+
+    double prism_volume = _prism_volume(cll->head->coord, current->coord, current->next->coord);
+    volume += prism_volume;
+
+    current = current->next;
+  }
+
+  return volume;
+}
+
+// --> atomic function
+
+static double
+_reference_volume_compute
+(
+ Element **cll_storage,
+ double triaB_coord[9]
+)
+{
+  // malloc List structure
+  List *A = malloc(sizeof(List));
+  List *B = malloc(sizeof(List));
+
+  int dbg = 1;
+  int idx = 0;
+
+  // Triangle cll
+  Element *pt0 = cll_storage[idx++];
+  memcpy(pt0->coord, triaB_coord,     sizeof(double)*3);
+
+  Element *pt1 = cll_storage[idx++];
+  memcpy(pt1->coord, triaB_coord + 3, sizeof(double)*3);
+  pt0->next = pt1;
+
+  Element *pt2 = cll_storage[idx++];
+  memcpy(pt2->coord, triaB_coord + 6, sizeof(double)*3);
+  pt2->next = pt0;
+  pt1->next = pt2;
+
+  A->head = pt0;
+
+  // Determine A and B before projection
+  _determine_A_outside(cll_storage, idx, &A, &B);
+
+  // debug
+  if (dbg && 1) {
+    printf("A: ");
+    if (A == NULL) {
+      printf("NULL\n");
+    } else {
+      _print_cll(A);
+    }
+
+    printf("B: ");
+    if (B == NULL) {
+      printf("NULL\n");
+    } else {
+      _print_cll(B);
+    }
+  }
+
+  // Projection of B
+  if (B != NULL) {
+    Element *current = B->head;
+
+    while (1) {
+
+      double zB = 1 - current->coord[0] - current->coord[1];
+      current->coord[2] = zB;
+
+      if (current->next == B->head) break;
+      current = current->next;
+    }
+  }
+
+  // vtk
+  if (dbg && 0) {
+    if (A != NULL) {
+      char filename[999] = "A.vtk";
+      _cll_to_polydata(A, filename);
+    }
+
+    if (B != NULL) {
+      char filename[999] = "B.vtk";
+      _cll_to_polydata(B, filename);
+    }
+  }
+
+  // Determine volume
+  double volumeA = -1;
+  double volumeB = -1;
+
+  if (A == NULL) {
+    volumeA = 0;
+  }
+  else {
+    volumeA = _column_volume(A);
+  }
+
+  if (B == NULL) {
+    volumeB = 0;
+  }
+  else {
+    volumeB = _column_volume(B);
+  }
+
+  // free List structure
+  if (A != NULL) free(A);
+  if (B != NULL) free(B);
+
+  return volumeA + volumeB;
+}
+
+// vol-vol intersection that calls atomic vol-vol computation
+
 static
 void
 _mesh_intersection_vol_vol
@@ -1517,6 +2059,12 @@ _mesh_intersection_vol_vol
   double tetraA_coord[12];
   double triaB_coord[9];
 
+  // malloc for atomic computation
+  int max_size = 10*2 + 3;
+  Element **cll_storage = malloc(sizeof(Element *) * max_size);
+  for (int i = 0; i < max_size; i++) {
+    cll_storage[i] = malloc(sizeof(Element));
+  }
 
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
 
@@ -1690,25 +2238,29 @@ _mesh_intersection_vol_vol
 
 
               /* Perform elementary computation */
-              double volume = 0.;
-              // -->>
-              // Let's go Karmijn!
-              // <<--
+              double volume = _reference_volume_compute(cll_storage, triaB_coord);
 
               /* Add elementray volume contribution */
+              // TO DO: do we need faceB_sign if volume is signed ?
               cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume * det * one_sixth;
 
             } // End of loop on triangles of current face B
 
           } // End of loop on faces of current cell B
 
-        } // End of loop on candiate cells B for current cell A
+        } // End of loop on candidate cells B for current cell A
 
       } // End of loop on triangles of current face A
 
     } // End of loop on faces of current cell A
 
   } // End of loop on cells A
+
+  // free
+  for (int i = 0; i < max_size; i++) {
+    free(cll_storage[i]);
+  }
+  free(cll_storage);
 
   free(faceB_triaB_idx);
   free(triaB_vtxB);
