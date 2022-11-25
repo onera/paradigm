@@ -112,6 +112,7 @@ _print_cll
  List *cll
 )
 {
+  fflush(stdout);
   if (cll == NULL)
   {
     exit(EXIT_FAILURE);
@@ -201,6 +202,10 @@ _determine_A_outside2
   // intersect with all 5 planes
   for (int i = 0; i < 5; i++) {
 
+    if (dbg) {
+      printf("Plane %d\n", i);
+    }
+
     int intersect_idx = 0;
 
     // for linked lists
@@ -238,7 +243,7 @@ _determine_A_outside2
           if (fp < 0) {
 
             if (dbg) {
-              printf("polyhedron outside plane %d\n", i);
+              printf("polygon outside plane %d\n", i);
             }
 
             if (i == 4) {
@@ -252,12 +257,12 @@ _determine_A_outside2
               break;
             } // other planes
 
-          } // polyhedron outside
+          } // polygon outside
 
           else if (fp > 0) {
 
             if (dbg) {
-              printf("polyhedron inside plane %d\n", i);
+              printf("polygon inside plane %d\n", i);
             }
 
             if (i == 4) {
@@ -271,12 +276,12 @@ _determine_A_outside2
               break;
             } // other planes
 
-          } // polyhedron inside
+          } // polygon inside
 
           else {
 
             if (dbg) {
-              printf("polyhedron on plane %d\n", i);
+              printf("polygon on plane %d\n", i);
             }
 
             if (i == 4) {
@@ -293,7 +298,7 @@ _determine_A_outside2
               *outside = NULL;
               return;
             } // other planes
-          } // polyhedron on (fp == 0)
+          } // polygon on (fp == 0)
 
         } // current and next on plane
 
@@ -304,7 +309,7 @@ _determine_A_outside2
             if (fn < 0) {
 
               if (dbg) {
-                printf("polyhedron outside plane %d\n", i);
+                printf("polygon outside plane %d\n", i);
               }
 
               if (i == 4) {
@@ -318,12 +323,12 @@ _determine_A_outside2
                 break;
               } // other planes
 
-            } // polyhedron outside
+            } // polygon outside
 
             else {
 
               if (dbg) {
-                printf("polyhedron inside plane %d\n", i);
+                printf("polygon inside plane %d\n", i);
               }
 
               if (i == 4) {
@@ -337,7 +342,7 @@ _determine_A_outside2
                 break;
               } // other planes
 
-            } // polyhedron inside
+            } // polygon inside
 
           } // current and previous on plane
 
@@ -348,7 +353,7 @@ _determine_A_outside2
               if (fp > 0) {
 
                 if (dbg) {
-                  printf("polyhedron inside plane %d\n", i);
+                  printf("polygon inside plane %d\n", i);
                 }
 
                 if (i == 4) {
@@ -362,12 +367,12 @@ _determine_A_outside2
                   break;
                 } // other planes
 
-              } // polyhedron inside
+              } // polygon inside
 
               else {
 
                 if (dbg) {
-                  printf("polyhedron outside plane %d\n", i);
+                  printf("polygon outside plane %d\n", i);
                 }
 
                 if (i == 4) {
@@ -381,7 +386,7 @@ _determine_A_outside2
                   break;
                 } // other planes
 
-              } // polyhedron outside (fp < 0)
+              } // polygon outside (fp < 0)
 
             } // next and previous on same side
 
@@ -435,14 +440,14 @@ _determine_A_outside2
         memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
         memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
 
-        if (fp < 0 && fn > 0) {
+        if (fc < 0 && fn > 0) {
           idx_prev_out             = intersect_idx;
           prev_out                 = current;
           in[intersect_idx]->next  = current->next;
           out[intersect_idx]->next = out[(intersect_idx+1)%2];
         } // from outside to inside
 
-        else if (fp > 0 && fn < 0) {
+        else if (fc > 0 && fn < 0) {
           idx_prev_in              = intersect_idx;
           prev_in                  = current;
           out[intersect_idx]->next = current->next;
@@ -938,9 +943,9 @@ int main(int argc, char *argv[])
 
   // Triangle: B->C->D->B cyclic linked list
   // Geogebra
-  double pt0[3] = {1.5, 1, 0};
-  double pt1[3] = {0, 0, 0};
-  double pt2[3] = {0.8, 0.3, 0.4};
+  // double pt0[3] = {1.5, 1, 0};
+  // double pt1[3] = {0, 0, 0};
+  // double pt2[3] = {0.8, 0.3, 0.4};
   // inside
   // double pt0[3] = {0.5, 0, 0};
   // double pt2[3] = {0, 0.5, 0};
@@ -950,9 +955,9 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
   // dbg
-  // double pt0[3] = {0, 0, 0};
-  // double pt1[3] = {-1, 1, 0};
-  // double pt2[3] = {1, -1, 1};
+  double pt0[3] = {0, 0, 0};
+  double pt1[3] = {-1, 1, 0};
+  double pt2[3] = {1, -1, 1};
   // dbg 2
   // double pt0[3] = {0.5, 0.5,0.5};
   // double pt1[3] = {0.5,-0.5,0.5};
