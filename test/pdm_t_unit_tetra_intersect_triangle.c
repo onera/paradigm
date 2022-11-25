@@ -23,7 +23,7 @@
  * Global variables
  *============================================================================*/
 
-static int test_debug = 1;
+static int dbg = 1;
 
 /*============================================================================
  * Type definitions
@@ -37,6 +37,12 @@ typedef enum
   ONE_SHARP_INTERSECTION,
   TWO_SHARP_INTERSECTION
 } intersection_t;
+
+typedef enum
+{
+  EXTREMUM,
+  SHARP
+} intersect_t;
 
 /*============================================================================
  * Type definitions
@@ -154,6 +160,354 @@ _plane_equation_function
 
 // for intersection
 
+// v2 of _determine_A_outside
+static void
+_determine_A_outside2
+(
+ Element  **cll_storage,
+ int        idx,
+ List     **cll,
+ List     **outside
+)
+{
+
+  // check if the triangle is inside the tetrahedron
+  Element *current = (*cll)->head;
+  while (1) {
+    // 0<= x, y, z <= 1 and 1-x-y-z >= 0
+    int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
+    int cond1 = current->coord[1] >= 0 && current->coord[1] <= 1;
+    int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
+    int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
+    // not totally in unit tetrahedron
+    if (!(cond0 && cond1 && cond2 && cond3)) {
+      break;
+    }
+    if (current->next == (*cll)->head) break;
+    current = current->next;
+  }
+  if (current->next == (*cll)->head) {
+
+    if (dbg) {
+      printf("triangle in tetrahedra\n");
+    }
+
+    // cll remains as is
+    free(*outside);
+    *outside = NULL;
+    return;
+  }
+
+  // intersect with all 5 planes
+  for (int i = 0; i < 5; i++) {
+
+    int intersect_idx = 0;
+
+    // for linked lists
+    current = (*cll)->head->next;
+
+    intersect_t intersect_type[2] = {-1, -1};
+    Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
+    Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
+
+    Element *prev_in  = NULL;
+    Element *prev_out = NULL;
+    int idx_prev_in  = -1;
+    int idx_prev_out = -1;
+
+    // function value
+    double fp = _plane_equation_function((*cll)->head->coord, i);
+    double fc = _plane_equation_function(current->coord, i);
+    double fn = 0;
+
+    while (intersect_idx < 2) {
+
+      if (dbg) {
+        printf("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n", current->coord[0], current->coord[1], current->coord[2], current->next->coord[0], current->next->coord[1], current->next->coord[2]);
+      }
+
+      // function value for next
+      fn = _plane_equation_function(current->next->coord, i);
+
+      // **********BEGIN********** //
+
+      if (fc == 0) {
+
+        if (fn == 0) {
+
+          if (fp < 0) {
+
+            if (dbg) {
+              printf("polyhedron outside plane %d\n", i);
+            }
+
+            if (i == 4) {
+              (*outside)->head = (*cll)->head;
+              free(*cll);
+              *cll = NULL;
+              return;
+            } // plane X+Y+Z=1
+
+            else {
+              break;
+            } // other planes
+
+          } // polyhedron outside
+
+          else if (fp > 0) {
+
+            if (dbg) {
+              printf("polyhedron inside plane %d\n", i);
+            }
+
+            if (i == 4) {
+              // cll remains as is
+              free(*outside);
+              *outside = NULL;
+              return;
+            } // plane X+Y+Z=1
+
+            else {
+              break;
+            } // other planes
+
+          } // polyhedron inside
+
+          else {
+
+            if (dbg) {
+              printf("polyhedron on plane %d\n", i);
+            }
+
+            free(*cll);
+            free(*outside);
+            *cll      = NULL;
+            *outside = NULL;
+            return;
+          } // polyhedron on (fp == 0)
+
+        } // current and next on plane
+
+        else {
+
+          if (fp == 0) {
+
+            if (fn < 0) {
+
+              if (dbg) {
+                printf("polyhedron outside plane %d\n", i);
+              }
+
+              if (i == 4) {
+                (*outside)->head = (*cll)->head;
+                free(*cll);
+                *cll = NULL;
+                return;
+              } // plane X+Y+Z=1
+
+              else {
+                break;
+              } // other planes
+
+            } // polyhedron outside
+
+            else {
+
+              if (dbg) {
+                printf("polyhedron inside plane %d\n", i);
+              }
+
+              if (i == 4) {
+                // cll remains as is
+                free(*outside);
+                *outside = NULL;
+                return;
+              } // plane X+Y+Z=1
+
+              else {
+                break;
+              } // other planes
+
+            } // polyhedron inside
+
+          } // current and previous on plane
+
+          else {
+
+            if (fp*fn > 0) {
+
+              if (fp > 0) {
+
+                if (dbg) {
+                  printf("polyhedron inside plane %d\n", i);
+                }
+
+                if (i == 4) {
+                  // cll remains as is
+                  free(*outside);
+                  *outside = NULL;
+                  return;
+                } // plane X+Y+Z=1
+
+                else {
+                  break;
+                } // other planes
+
+              } // polyhedron inside
+
+              else {
+
+                if (dbg) {
+                  printf("polyhedron outside plane %d\n", i);
+                }
+
+                if (i == 4) {
+                  (*outside)->head = (*cll)->head;
+                  free(*cll);
+                  *cll = NULL;
+                  return;
+                } // plane X+Y+Z=1
+
+                else {
+                  break;
+                } // other planes
+
+              } // polyhedron outside (fp < 0)
+
+            } // next and previous on same side
+
+            else {
+
+              if (dbg) {
+                printf("one extremum intersection with plane %d\n", i);
+              }
+
+              // coordinates of intersection
+              memcpy(in[intersect_idx]->coord,  current->coord, sizeof(double) * 3);
+              memcpy(out[intersect_idx]->coord, current->coord, sizeof(double) * 3);
+
+              if (fp < 0 && fn > 0) {
+                idx_prev_out             = intersect_idx;
+                prev_out                 = current;
+                in[intersect_idx]->next  = current->next;
+                out[intersect_idx]->next = out[(intersect_idx+1)%2];
+              } // from outside to inside
+
+              else if (fp > 0 && fn < 0) {
+                idx_prev_in              = intersect_idx;
+                prev_in                  = current;
+                out[intersect_idx]->next = current->next;
+                in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+              } // from inside to outside
+
+              intersect_type[intersect_idx++] = EXTREMUM;
+
+            } // next and previous on different side (fn*fp < 0)
+
+          } // only current on plane
+
+        } // next not on plane
+
+      } // current on plane
+
+      else if (fc*fn < 0) {
+
+        if (dbg) {
+          printf("one sharp intersection with plane %d\n", i);
+        }
+
+        // coordinates of intersection
+        double t = fc/(fc-fn);
+
+        double pt[3] = {t*current->next->coord[0]+(1-t)*current->coord[0],
+                        t*current->next->coord[1]+(1-t)*current->coord[1],
+                        t*current->next->coord[2]+(1-t)*current->coord[2]};
+
+        memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
+        memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
+
+        if (fp < 0 && fn > 0) {
+          idx_prev_out             = intersect_idx;
+          prev_out                 = current;
+          in[intersect_idx]->next  = current->next;
+          out[intersect_idx]->next = out[(intersect_idx+1)%2];
+        } // from outside to inside
+
+        else if (fp > 0 && fn < 0) {
+          idx_prev_in              = intersect_idx;
+          prev_in                  = current;
+          out[intersect_idx]->next = current->next;
+          in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+        } // from inside to outside
+
+        intersect_type[intersect_idx++] = SHARP;
+
+      } // sharp intersection
+
+
+      // ***********END*********** //
+
+      // while loop end condition
+      if (current->next == (*cll)->head->next) break;
+
+      // update
+      fp = fc;
+      fc = fn;
+      current = current->next;
+
+    } // end while loop on cll
+
+    // not intersection at all
+    if (intersect_idx == 0) {
+      if (fc < 0) {
+        free(*cll);
+        free(*outside);
+        *cll      = NULL;
+        *outside  = NULL;
+        return;
+      } // current outside
+    } // 0 intersection
+
+    // reconnect linked lists
+    if (intersect_idx == 2) {
+      for (int j = 0; j < 2; j++) {
+        if (j == idx_prev_in) {
+          if (intersect_type[j] == SHARP) {
+            prev_in->next  = in[idx_prev_in];
+          }
+
+          if (intersect_type[j] == EXTREMUM) {
+            prev_in->next  = in[idx_prev_in]->next;
+            in[idx_prev_in] = prev_in;
+          }
+        } // from in to out
+
+        if (j == idx_prev_out) {
+          if (intersect_type[j] == SHARP) {
+            prev_out->next = out[idx_prev_out];
+          }
+
+          if (intersect_type[j] == EXTREMUM) {
+            prev_out->next = out[idx_prev_out]->next;
+            out[idx_prev_out] = prev_out;
+          }
+        } // from out to in
+      } // loop on intersection points
+
+      // update A and B
+      (*cll)->head     = in[0];
+      (*outside)->head = out[0];
+    } // 2 intersections
+
+    if (dbg) {
+       printf("cll at plane %d: ", i);
+      _print_cll(*cll);
+    }
+
+  } // end for loop on planes
+
+}
+
 // --> if outside is NULL, it implies Vcolumn = 0
 static void
 _determine_A_outside
@@ -182,7 +536,7 @@ _determine_A_outside
   }
   if (current->next == (*cll)->head) {
 
-    if (test_debug) {
+    if (dbg) {
       printf("triangle in tetrahedra\n");
     }
 
@@ -223,14 +577,14 @@ _determine_A_outside
       // segment in plane
       if ((f1 == 0) && (f2 == 0)) {
 
-        if (test_debug) {
+        if (dbg) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         // polygon in plane
         if (f3 == 0) {
 
-          if (test_debug) {
+          if (dbg) {
             printf("polygon is in plane %d\n", i);
           }
 
@@ -247,7 +601,7 @@ _determine_A_outside
           // outside
           if (f3 <= 0) {
 
-            if (test_debug) {
+            if (dbg) {
               printf("polygon is outside %d\n", i);
             }
 
@@ -262,7 +616,7 @@ _determine_A_outside
           // inside
           else {
 
-            if (test_debug) {
+            if (dbg) {
               printf("polygon is inside %d, cll unchanged\n", i);
             }
 
@@ -283,7 +637,7 @@ _determine_A_outside
       else if ((f1 >= 0 && f2 <= 0) ||
                (f1 <= 0 && f2 >= 0)) {
 
-        if (test_debug) {
+        if (dbg) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
@@ -383,13 +737,13 @@ _determine_A_outside
       // nothing
       else {
 
-        if (test_debug) {
+        if (dbg) {
           printf("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
         }
 
         if (f1 < 0) {
 
-          if (test_debug) {
+          if (dbg) {
             printf("is outside \n");
           }
 
@@ -397,7 +751,7 @@ _determine_A_outside
 
         if (f1 > 0) {
 
-          if (test_debug) {
+          if (dbg) {
             printf("is inside \n");
           }
 
@@ -415,7 +769,7 @@ _determine_A_outside
     if (intersect_idx == 0) {
        if (_plane_equation_function((*cll)->head->coord, i) < 0) {
 
-          if (test_debug) {
+          if (dbg) {
             printf("is totally outside \n");
           }
 
@@ -458,7 +812,7 @@ _determine_A_outside
       (*outside)->head = out[0];
     }
 
-    if (test_debug) {
+    if (dbg) {
        printf("cll at plane %d: ", i);
       _print_cll(*cll);
     }
@@ -611,7 +965,7 @@ int main(int argc, char *argv[])
   cll->head = ptA;
 
   // debug
-  if (test_debug) {
+  if (dbg) {
     printf("Triangle:\n");
     _print_cll(cll);
 
@@ -624,7 +978,7 @@ int main(int argc, char *argv[])
   _determine_A_outside(cll_storage, idx, &cll, &outside);
 
   // debug
-  if (test_debug) {
+  if (dbg) {
     printf("A: ");
     if (cll == NULL) {
       printf("NULL\n");
@@ -657,7 +1011,7 @@ int main(int argc, char *argv[])
   }
 
   // debug
-  if (test_debug) {
+  if (dbg) {
     printf("B: ");
     if (B == NULL) {
       printf("NULL\n");
@@ -667,7 +1021,7 @@ int main(int argc, char *argv[])
   }
 
   // vtk
-  if (test_debug) {
+  if (dbg) {
     if (cll != NULL) {
       char filename[999] = "A.vtk";
       _cll_to_polydata(cll, filename);
@@ -698,7 +1052,7 @@ int main(int argc, char *argv[])
   }
 
   // debug
-  if (test_debug) {
+  if (dbg) {
     printf("volumeA = %f\n", volumeA);
     printf("volumeB = %f\n", volumeB);
   }
