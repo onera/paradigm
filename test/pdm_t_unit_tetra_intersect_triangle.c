@@ -393,11 +393,6 @@ _determine_A_outside
             printf("is outside \n");
           }
 
-          free(*cll);
-          free(*outside);
-          *cll      = NULL;
-          *outside  = NULL;
-          return;
         }
 
         if (f1 > 0) {
@@ -415,6 +410,22 @@ _determine_A_outside
       current = current->next;
 
     } // end while loop
+
+    // no intersection at all
+    if (intersect_idx == 0) {
+       if (_plane_equation_function((*cll)->head->coord, i) < 0) {
+
+          if (test_debug) {
+            printf("is totally outside \n");
+          }
+
+          free(*cll);
+          free(*outside);
+          *cll      = NULL;
+          *outside  = NULL;
+          return;
+        }
+    }
 
     // connect intersection points to the linked list
 

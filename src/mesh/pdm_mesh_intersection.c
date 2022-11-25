@@ -1500,8 +1500,6 @@ _determine_A_outside
     int cond2 = current->coord[2] >= 0 && current->coord[2] <= 1;
     int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
     // not totally in unit tetrahedron
-    printf("cond0 = %d, cond1 = %d, cond2 = %d, cond3 = %d\n", cond0, cond1, cond2, cond3);
-    printf("!(cond0 && cond1 && cond2 && cond3) = %d\n", !(cond0 && cond1 && cond2 && cond3));
     if (!(cond0 && cond1 && cond2 && cond3)) {
       is_inside = 0;
       break;
@@ -1723,11 +1721,6 @@ _determine_A_outside
             log_trace("is outside \n");
           }
 
-          free(*cll);
-          free(*outside);
-          *cll      = NULL;
-          *outside  = NULL;
-          return;
         }
 
         if (f1 > 0) {
@@ -1746,8 +1739,23 @@ _determine_A_outside
 
     } // end while loop
 
-    // connect intersection points to the linked list
+    // no intersection at all
+    if (intersect_idx == 0) {
+       if (_plane_equation_function((*cll)->head->coord, i) < 0) {
 
+          if (dbg && 1) {
+            log_trace("is totally outside \n");
+          }
+
+          free(*cll);
+          free(*outside);
+          *cll      = NULL;
+          *outside  = NULL;
+          return;
+        }
+    }
+
+    // connect intersection points to the linked list
     log_trace("in[0]: %p/ in[1]: %p\n", (void *) in[0], (void *) in[1]);
     log_trace("out[0]: %p/ out[1]: %p\n", (void *) out[0], (void *) out[1]);
     if (intersection_type == TWO_SHARP_INTERSECTION || intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
@@ -2404,7 +2412,7 @@ _mesh_intersection_vol_vol
                                                         &vtk_n_faceB);
 
               if (dbg && 1) {
-                printf("vtk_n_faceA = %d, vtk_n_faceB = %d\n", vtk_n_faceA, vtk_n_faceB);
+                log_trace("vtk_n_faceA = %d, vtk_n_faceB = %d\n", vtk_n_faceA, vtk_n_faceB);
               }
 
               // for vtk
