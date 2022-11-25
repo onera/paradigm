@@ -254,7 +254,11 @@ _determine_A_outside2
             } // plane X+Y+Z=1
 
             else {
-              break;
+              free(*cll);
+              free(*outside);
+              *cll     = NULL;
+              *outside = NULL;
+              return;
             } // other planes
 
           } // polygon outside
@@ -294,7 +298,7 @@ _determine_A_outside2
             else {
               free(*cll);
               free(*outside);
-              *cll      = NULL;
+              *cll     = NULL;
               *outside = NULL;
               return;
             } // other planes
@@ -320,7 +324,11 @@ _determine_A_outside2
               } // plane X+Y+Z=1
 
               else {
-                break;
+               free(*cll);
+               free(*outside);
+               *cll     = NULL;
+               *outside = NULL;
+               return;
               } // other planes
 
             } // polygon outside
@@ -383,7 +391,11 @@ _determine_A_outside2
                 } // plane X+Y+Z=1
 
                 else {
-                  break;
+                  free(*cll);
+                  free(*outside);
+                  *cll     = NULL;
+                  *outside = NULL;
+                  return;
                 } // other planes
 
               } // polygon outside (fp < 0)
@@ -473,16 +485,30 @@ _determine_A_outside2
 
     // not intersection at all
     if (intersect_idx == 0) {
+      printf("not intersection at all : fc = %f\n", fc);
       if (fc < 0) {
-        free(*cll);
-        free(*outside);
-        *cll      = NULL;
-        *outside  = NULL;
-        return;
+        if (i == 4) {
+          (*outside)->head = (*cll)->head;
+          free(*cll);
+          *cll = NULL;
+          return;
+        } // plane X+Y+Z=1
+
+        else {
+          free(*cll);
+          free(*outside);
+          *cll     = NULL;
+          *outside = NULL;
+          return;
+        } // other planes
       } // current outside
     } // 0 intersection
 
     // reconnect linked lists
+    if (i == 4) {
+      free(*outside);
+      *outside = NULL;
+    }
     if (intersect_idx == 2) {
       for (int j = 0; j < 2; j++) {
         if (j == idx_prev_in) {
@@ -510,6 +536,7 @@ _determine_A_outside2
 
       // update A and B
       (*cll)->head     = in[0];
+      *outside = malloc(sizeof(List));
       (*outside)->head = out[0];
     } // 2 intersections
 
@@ -955,13 +982,22 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
   // dbg
-  double pt0[3] = {0, 0, 0};
-  double pt1[3] = {-1, 1, 0};
-  double pt2[3] = {1, -1, 1};
+  // double pt0[3] = {0, 0, 0};
+  // double pt1[3] = {-1, 1, 0};
+  // double pt2[3] = {1, -1, 1};
   // dbg 2
   // double pt0[3] = {0.5, 0.5,0.5};
   // double pt1[3] = {0.5,-0.5,0.5};
   // double pt2[3] = {1.5,-0.5,0.5};
+  // double pt0[3] = {0.000000,-1.000000,1.500000};
+  // double pt1[3] = {-1.000000,-1.000000,1.500000};
+  // double pt2[3] = {-1.000000,0.000000,0.500000};
+// double pt0[3] = {0.400000,-0.400000,0.900000};
+// double pt1[3] = {0.400000,0.600000,-0.100000};
+// double pt2[3] = {1.400000,-0.400000,-0.100000};
+double pt0[3] = {1.100000,-0.000000,-0.000000};
+double pt1[3] = {0.100000,1.000000,-0.000000};
+double pt2[3] = {0.100000,-0.000000,1.000000};
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);

@@ -1381,12 +1381,9 @@ struct List
 
 typedef enum
 {
-  TWO_EXTREMA_INTERSECTION,
-  ONE_EXTREMA_INTERSECTION,
-  ONE_EXTREMA_ONE_SHARP_INTERSECTION,
-  ONE_SHARP_INTERSECTION,
-  TWO_SHARP_INTERSECTION
-} intersection_t;
+  EXTREMUM,
+  SHARP
+} intersect_t;
 
 // --> debug
 
@@ -1488,11 +1485,10 @@ _determine_A_outside
  List     **outside
 )
 {
-  int dbg = 1;
+  int dbg = 0;
 
   // check if the triangle is inside the tetrahedron
   Element *current = (*cll)->head;
-  int is_inside = 1;
   while (1) {
     // 0<= x, y, z <= 1 and 1-x-y-z >= 0
     int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
@@ -1501,16 +1497,14 @@ _determine_A_outside
     int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
     // not totally in unit tetrahedron
     if (!(cond0 && cond1 && cond2 && cond3)) {
-      is_inside = 0;
       break;
     }
     if (current->next == (*cll)->head) break;
     current = current->next;
-
   }
-  if (is_inside) {
+  if (current->next == (*cll)->head) {
 
-    if (dbg && 1) {
+    if (dbg) {
       log_trace("triangle in tetrahedra\n");
     }
 
@@ -1522,13 +1516,17 @@ _determine_A_outside
 
   // intersect with all 5 planes
   for (int i = 0; i < 5; i++) {
-    // maximum 2 intersections
-    int intersect_idx                = 0;
-    int extrema_prev_is_in           = -1;
-    intersection_t intersection_type = -1;
 
-    current = (*cll)->head;
+    if (dbg) {
+      log_trace("Plane %d\n", i);
+    }
 
+    int intersect_idx = 0;
+
+    // for linked lists
+    current = (*cll)->head->next;
+
+    intersect_t intersect_type[2] = {-1, -1};
     Element *in[2]  = {cll_storage[idx++], cll_storage[idx++]};
     Element *out[2] = {cll_storage[idx++], cll_storage[idx++]};
 
@@ -1537,263 +1535,336 @@ _determine_A_outside
     int idx_prev_in  = -1;
     int idx_prev_out = -1;
 
+    // function value
+    double fp = _plane_equation_function((*cll)->head->coord, i);
+    double fc = _plane_equation_function(current->coord, i);
+    double fn = 0;
+
     while (intersect_idx < 2) {
 
-      // current segment coordinates
-      double *coord1 = current->coord;
-      double *coord2 = current->next->coord;
+      if (dbg) {
+        log_trace("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n", current->coord[0], current->coord[1], current->coord[2], current->next->coord[0], current->next->coord[1], current->next->coord[2]);
+      }
 
-      // current function values
-      double f1 = _plane_equation_function(coord1, i);
-      double f2 = _plane_equation_function(coord2, i);
-      double f3 = _plane_equation_function(current->next->next->coord, i);
+      // function value for next
+      fn = _plane_equation_function(current->next->coord, i);
 
-      // segment in plane
-      if ((f1 == 0) && (f2 == 0)) {
+      // **********BEGIN********** //
 
-        if (dbg && 1) {
-          log_trace("segment (%f,%f,%f)-(%f,%f,%f) is on plane %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
-        }
+      if (fc == 0) {
 
-        // polygon in plane
-        if (f3 == 0) {
+        if (fn == 0) {
 
-          if (dbg && 1) {
-            log_trace("polygon is in plane %d\n", i);
-          }
+          if (fp < 0) {
 
-          free(*cll);
-          free(*outside);
-          *cll      = NULL;
-          *outside = NULL;
-          return;
-        }
-
-        // only segment in plane
-        else {
-
-          // outside
-          if (f3 <= 0) {
-
-            if (dbg && 1) {
-              log_trace("polygon is outside %d\n", i);
+            if (dbg) {
+              log_trace("polygon outside plane %d\n", i);
             }
 
-            free(*cll);
-            free(*outside);
-            *cll      = NULL;
-            *outside = NULL;
-            return;
+            if (i == 4) {
+              (*outside)->head = (*cll)->head;
+              free(*cll);
+              *cll = NULL;
+              return;
+            } // plane X+Y+Z=1
 
-          }
+            else {
+              free(*cll);
+              free(*outside);
+              *cll     = NULL;
+              *outside = NULL;
+              return;
+            } // other planes
 
-          // inside
-          else {
+          } // polygon outside
 
-            if (dbg && 1) {
-              log_trace("polygon is inside %d, cll unchanged\n", i);
+          else if (fp > 0) {
+
+            if (dbg) {
+              log_trace("polygon inside plane %d\n", i);
             }
-
-            intersection_type = TWO_EXTREMA_INTERSECTION;
 
             if (i == 4) {
               // cll remains as is
               free(*outside);
               *outside = NULL;
-            }
-            break; // skip to next plane
+              return;
+            } // plane X+Y+Z=1
 
-          }
-        }
-      } // end if segment in plane
+            else {
+              break;
+            } // other planes
 
-      // intersection
-      else if ((f1 >= 0 && f2 <= 0) ||
-               (f1 <= 0 && f2 >= 0)) {
+          } // polygon inside
 
-        if (dbg && 1) {
-          log_trace("segment (%f,%f,%f)-(%f,%f,%f) intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
-        }
+          else {
 
-        double t = f2/(f2-f1);
-
-        if (t == 0 || t == 1) {
-
-          if (intersection_type == -1) {
-            log_trace("ONE_EXTREMA_INTERSECTION \n");
-            intersection_type = ONE_EXTREMA_INTERSECTION;
-          }
-
-          if (intersect_idx == 1) {
-            if (intersection_type == ONE_SHARP_INTERSECTION) {
-              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
-              log_trace("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
-            }
-          } // end if one intersection
-
-          // now first extrema intersection
-          memcpy(in[intersect_idx]->coord,  coord1, sizeof(double) * 3);
-          memcpy(out[intersect_idx]->coord, coord1, sizeof(double) * 3);
-
-          if (t == 1) { // at begin of segment t == 1
-            // from inside to outside
-            // can not be one because segment on plane already dealt with
-            if (f2 < 0) {
-              extrema_prev_is_in = 1;
-              log_trace("from in to out (intersect_idx = %d)\n", intersect_idx);
-              idx_prev_in              = intersect_idx;
-              prev_in                  = current;
-              out[intersect_idx]->next = current->next;
-              in[intersect_idx]->next  = in[(intersect_idx+1)%2];
-            }
-            // from outside to inside
-            else { // >= 0
-              extrema_prev_is_in = 0;
-              log_trace("from out to in (intersect_idx = %d)\n", intersect_idx);
-              idx_prev_out             = intersect_idx;
-              prev_out                 = current;
-              in[intersect_idx]->next  = current->next;
-              out[intersect_idx]->next = out[(intersect_idx+1)%2];
+            if (dbg) {
+              log_trace("polygon on plane %d\n", i);
             }
 
-            // increase only for t == 1, easy to handle case begin segment
-            intersect_idx += 1;
-          } // end if t == 1
-        } // end if one extrema intersection
+            if (i == 4) {
+              // cll remains as is
+              free(*outside);
+              *outside = NULL;
+              return;
+            } // plane X+Y+Z=1
+
+            else {
+              free(*cll);
+              free(*outside);
+              *cll     = NULL;
+              *outside = NULL;
+              return;
+            } // other planes
+          } // polygon on (fp == 0)
+
+        } // current and next on plane
 
         else {
 
-          if (intersect_idx == 1) {
-            if (intersection_type == ONE_EXTREMA_INTERSECTION) {
-              intersection_type = ONE_EXTREMA_ONE_SHARP_INTERSECTION;
-              log_trace("ONE_EXTREMA_ONE_SHARP_INTERSECTION \n");
-            }
-            else if (intersection_type == ONE_SHARP_INTERSECTION) {
-              intersection_type = TWO_SHARP_INTERSECTION;
-              log_trace("TWO_SHARP_INTERSECTION \n");
-            }
-          } // end if one intersection
+          if (fp == 0) {
 
-          else if (intersect_idx == 0) {
-            intersection_type = ONE_SHARP_INTERSECTION;
-            log_trace("ONE_SHARP_INTERSECTION \n");
-          } // end if no intersection
+            if (fn < 0) {
 
-          double pt[3] = {t*coord1[0]+(1-t)*coord2[0],
-                          t*coord1[1]+(1-t)*coord2[1],
-                          t*coord1[2]+(1-t)*coord2[2]};
+              if (dbg) {
+                log_trace("polygon outside plane %d\n", i);
+              }
 
-          memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
-          memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
+              if (i == 4) {
+                (*outside)->head = (*cll)->head;
+                free(*cll);
+                *cll = NULL;
+                return;
+              } // plane X+Y+Z=1
 
-          // current-> (outside) intersection (inside) -> current->next
-          if (f1 < 0) {
-            log_trace("from out to in (intersect_idx = %d)\n", intersect_idx);
-            idx_prev_out             = intersect_idx;
-            prev_out                 = current;
-            in[intersect_idx]->next  = current->next;
-            out[intersect_idx]->next = out[(intersect_idx+1)%2];
-          }
-          // current-> (inside) intersection (outside) -> current->next
-          else if (f1 > 0) {
-            log_trace("from in to out (intersect_idx = %d)\n", intersect_idx);
-            idx_prev_in              = intersect_idx;
-            prev_in                  = current;
-            out[intersect_idx]->next = current->next;
-            in[intersect_idx]->next  = in[(intersect_idx+1)%2];
-          }
+              else {
+               free(*cll);
+               free(*outside);
+               *cll     = NULL;
+               *outside = NULL;
+               return;
+              } // other planes
 
-          intersect_idx += 1;
-        } // end if sharp intersection
+            } // polygon outside
 
-      } // end if intersection
+            else {
 
-      // nothing
-      else {
+              if (dbg) {
+                log_trace("polygon inside plane %d\n", i);
+              }
 
-        if (dbg && 1) {
-          log_trace("segment (%f,%f,%f)-(%f,%f,%f) has no intersection with %d\n", coord1[0], coord1[1], coord1[2], coord2[0], coord2[1], coord2[2], i);
+              if (i == 4) {
+                // cll remains as is
+                free(*outside);
+                *outside = NULL;
+                return;
+              } // plane X+Y+Z=1
+
+              else {
+                break;
+              } // other planes
+
+            } // polygon inside
+
+          } // current and previous on plane
+
+          else {
+
+            if (fp*fn > 0) {
+
+              if (fp > 0) {
+
+                if (dbg) {
+                  log_trace("polygon inside plane %d\n", i);
+                }
+
+                if (i == 4) {
+                  // cll remains as is
+                  free(*outside);
+                  *outside = NULL;
+                  return;
+                } // plane X+Y+Z=1
+
+                else {
+                  break;
+                } // other planes
+
+              } // polygon inside
+
+              else {
+
+                if (dbg) {
+                  log_trace("polygon outside plane %d\n", i);
+                }
+
+                if (i == 4) {
+                  (*outside)->head = (*cll)->head;
+                  free(*cll);
+                  *cll = NULL;
+                  return;
+                } // plane X+Y+Z=1
+
+                else {
+                  free(*cll);
+                  free(*outside);
+                  *cll     = NULL;
+                  *outside = NULL;
+                  return;
+                } // other planes
+
+              } // polygon outside (fp < 0)
+
+            } // next and previous on same side
+
+            else {
+
+              if (dbg) {
+                log_trace("one extremum intersection with plane %d\n", i);
+              }
+
+              // coordinates of intersection
+              memcpy(in[intersect_idx]->coord,  current->coord, sizeof(double) * 3);
+              memcpy(out[intersect_idx]->coord, current->coord, sizeof(double) * 3);
+
+              if (fp < 0 && fn > 0) {
+                idx_prev_out             = intersect_idx;
+                prev_out                 = current;
+                in[intersect_idx]->next  = current->next;
+                out[intersect_idx]->next = out[(intersect_idx+1)%2];
+              } // from outside to inside
+
+              else if (fp > 0 && fn < 0) {
+                idx_prev_in              = intersect_idx;
+                prev_in                  = current;
+                out[intersect_idx]->next = current->next;
+                in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+              } // from inside to outside
+
+              intersect_type[intersect_idx++] = EXTREMUM;
+
+            } // next and previous on different side (fn*fp < 0)
+
+          } // only current on plane
+
+        } // next not on plane
+
+      } // current on plane
+
+      else if (fc*fn < 0) {
+
+        if (dbg) {
+          log_trace("one sharp intersection with plane %d\n", i);
         }
 
-        if (f1 < 0) {
+        // coordinates of intersection
+        double t = fc/(fc-fn);
 
-          if (dbg && 1) {
-            log_trace("is outside \n");
-          }
+        double pt[3] = {t*current->next->coord[0]+(1-t)*current->coord[0],
+                        t*current->next->coord[1]+(1-t)*current->coord[1],
+                        t*current->next->coord[2]+(1-t)*current->coord[2]};
 
-        }
+        memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
+        memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
 
-        if (f1 > 0) {
+        if (fc < 0 && fn > 0) {
+          idx_prev_out             = intersect_idx;
+          prev_out                 = current;
+          in[intersect_idx]->next  = current->next;
+          out[intersect_idx]->next = out[(intersect_idx+1)%2];
+        } // from outside to inside
 
-          if (dbg && 1) {
-            log_trace("is inside \n");
-          }
+        else if (fc > 0 && fn < 0) {
+          idx_prev_in              = intersect_idx;
+          prev_in                  = current;
+          out[intersect_idx]->next = current->next;
+          in[intersect_idx]->next  = in[(intersect_idx+1)%2];
+        } // from inside to outside
 
-        }
+        intersect_type[intersect_idx++] = SHARP;
 
-      }
+      } // sharp intersection
 
-      // to correcly loop over cll
-      if (current->next == (*cll)->head) break;
+
+      // ***********END*********** //
+
+      // while loop end condition
+      if (current->next == (*cll)->head->next) break;
+
+      // update
+      fp = fc;
+      fc = fn;
       current = current->next;
 
-    } // end while loop
+    } // end while loop on cll
 
     // no intersection at all
     if (intersect_idx == 0) {
-       if (_plane_equation_function((*cll)->head->coord, i) < 0) {
+      if (dbg) {
+        log_trace("not intersection at all : fc = %f\n", fc);
+      }
+      if (fc < 0) {
+        if (i == 4) {
+          (*outside)->head = (*cll)->head;
+          free(*cll);
+          *cll = NULL;
+          return;
+        } // plane X+Y+Z=1
 
-          if (dbg && 1) {
-            log_trace("is totally outside \n");
-          }
-
+        else {
           free(*cll);
           free(*outside);
-          *cll      = NULL;
-          *outside  = NULL;
+          *cll     = NULL;
+          *outside = NULL;
           return;
-        }
+        } // other planes
+      } // current outside
+    } // 0 intersection
+
+    // reconnect linked lists
+    if (i == 4) {
+      free(*outside);
+      *outside = NULL;
     }
+    if (intersect_idx == 2) {
+      for (int j = 0; j < 2; j++) {
+        if (j == idx_prev_in) {
+          if (intersect_type[j] == SHARP) {
+            prev_in->next  = in[idx_prev_in];
+          }
 
-    // connect intersection points to the linked list
-    log_trace("in[0]: %p/ in[1]: %p\n", (void *) in[0], (void *) in[1]);
-    log_trace("out[0]: %p/ out[1]: %p\n", (void *) out[0], (void *) out[1]);
-    if (intersection_type == TWO_SHARP_INTERSECTION || intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
-      if (intersection_type == TWO_SHARP_INTERSECTION) {
-        prev_in->next  = in[idx_prev_in];
-        prev_out->next = out[idx_prev_out];
-      }
+          if (intersect_type[j] == EXTREMUM) {
+            prev_in->next  = in[idx_prev_in]->next;
+            in[idx_prev_in] = prev_in;
+          }
+        } // from in to out
 
-      else if (intersection_type == ONE_EXTREMA_ONE_SHARP_INTERSECTION) {
+        if (j == idx_prev_out) {
+          if (intersect_type[j] == SHARP) {
+            prev_out->next = out[idx_prev_out];
+          }
 
-        if (extrema_prev_is_in) {
-          prev_in->next  = in[idx_prev_in]->next;
-          in[idx_prev_in] = prev_in;
-          prev_out->next = out[idx_prev_out];
-        }
-        else {
-          prev_in->next = in[idx_prev_in];
-          prev_out->next = out[idx_prev_out]->next;
-          out[idx_prev_out] = prev_out;
+          if (intersect_type[j] == EXTREMUM) {
+            prev_out->next = out[idx_prev_out]->next;
+            out[idx_prev_out] = prev_out;
+          }
+        } // from out to in
+      } // loop on intersection points
 
-        }
-
-      }
-
-      // update A and outside
+      // update A and B
       (*cll)->head     = in[0];
+      *outside = malloc(sizeof(List));
       (*outside)->head = out[0];
-    }
+    } // 2 intersections
 
-    if (dbg && 1) {
+    if (dbg) {
        log_trace("cll at plane %d: ", i);
       _print_cll(*cll);
     }
 
-  } // end for loop
+  } // end for loop on planes
 
 }
-
 // --> column volume computation
 
 static double
@@ -1804,8 +1875,8 @@ _prism_volume
  double coord3[3]
 )
 {
-  double parallelepiped_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) - (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
-  return ((1./3.) * (coord1[2] + coord2[2] + coord3[2]) * parallelepiped_area);
+  double triangle_area = 0.5 * ((coord2[0] - coord1[0])*(coord3[1] - coord1[1]) - (coord3[0] - coord1[0])*(coord2[1] - coord1[1]));
+  return ((1./3.) * (coord1[2] + coord2[2] + coord3[2]) * triangle_area);
 }
 
 static double
@@ -1821,6 +1892,7 @@ _column_volume
   while (current->next != cll->head) {
 
     double prism_volume = _prism_volume(cll->head->coord, current->coord, current->next->coord);
+    log_trace("            volumeK += %f\n", prism_volume);
     volume += prism_volume;
 
     current = current->next;
@@ -1850,7 +1922,7 @@ _reference_volume_compute
   List *A = malloc(sizeof(List));
   List *B = malloc(sizeof(List));
 
-  int dbg = 1;
+  int dbg = 0;
   int idx = 0;
 
   // Triangle cll
@@ -1960,7 +2032,6 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
-  const double one_sixth = 0.1666666666666666666667;
   int dbg = 1;
   int dbg_Karmijn = 0;
 
@@ -2155,7 +2226,31 @@ _mesh_intersection_vol_vol
 
 
 
+  double *cellA_volume = malloc(sizeof(double) * n_cellA);
+  double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
+  PDM_geom_elem_polyhedra_properties(1,
+                                     n_cellA,
+                                     n_faceA,
+                                     faceA_vtxA_idx,
+                                     faceA_vtxA,
+                                     cellA_faceA_idx,
+                                     cellA_faceA,
+                                     n_vtxA,
+                                     vtxA_coord,
+                                     cellA_volume,
+                                     cellA_center,
+                                     NULL,
+                                     NULL);
+
+
+
   double *cellA_cellB_volume = malloc(sizeof(double) * cellA_cellB_idx[n_cellA]);
+
+  //-->>
+  for (int i = 0; i < cellA_cellB_idx[n_cellA]; i++) {
+    cellA_cellB_volume[i] = 0;
+  }
+  //<<--
 
   double tetraA_coord[12];
   double triaB_coord[9];
@@ -2195,14 +2290,14 @@ _mesh_intersection_vol_vol
 
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
 
-    if (cellA_id != 1) continue;
+    // if (cellA_id != 4) continue;
 
     /* Compute a 'center' point to tetrahedrize current cell A */
     // Reference vertex = 1st vertex of first face
     // Use cell center instead????
     int ref_vtxA_id = -1;
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
-    ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+    // ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
 
 
     if (dbg) {
@@ -2210,7 +2305,11 @@ _mesh_intersection_vol_vol
                 cellA_id, cellA_ln_to_gn[cellA_id], ref_vtxA_id);
     }
 
-    memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
+    // memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
+    // memcpy(&tetraA_coord[0], &cellA_center[3*cellA_id], sizeof(double)*3);
+    tetraA_coord[0] = 0;//1;
+    tetraA_coord[1] = -10;//2;
+    tetraA_coord[2] = 0;//5;
 
     /* Initialize intersection volumes to zero */
     for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
@@ -2273,10 +2372,24 @@ _mesh_intersection_vol_vol
             continue;
         }
 
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          int vtxA_id = _triaA_vtxA[ivtx] - 1;
-          memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+        if (faceA_sign > 0) {
+          for (int ivtx = 0; ivtx < 3; ivtx++) {
+            int vtxA_id = _triaA_vtxA[ivtx] - 1;
+            memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+          }
         }
+        else {
+          for (int ivtx = 0; ivtx < 3; ivtx++) {
+            int vtxA_id = _triaA_vtxA[2-ivtx] - 1;
+            memcpy(&tetraA_coord[3*(ivtx+1)], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+          }
+        }
+
+        // log_trace("tetraA_coord :\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+        //           tetraA_coord[3*0], tetraA_coord[3*0+1], tetraA_coord[3*0+2],
+        //           tetraA_coord[3*1], tetraA_coord[3*1+1], tetraA_coord[3*1+2],
+        //           tetraA_coord[3*2], tetraA_coord[3*2+1], tetraA_coord[3*2+2],
+        //           tetraA_coord[3*3], tetraA_coord[3*3+1], tetraA_coord[3*3+2]);
 
 
         double mat[3][3];
@@ -2290,6 +2403,8 @@ _mesh_intersection_vol_vol
         -            mat[1][0]*(mat[0][1]*mat[2][2] - mat[2][1]*mat[0][2])
         +            mat[2][0]*(mat[0][1]*mat[1][2] - mat[1][1]*mat[0][2]);
 
+        log_trace("det = %f\n", det);
+
         PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
         if (det == 0.) {
           continue;
@@ -2302,6 +2417,8 @@ _mesh_intersection_vol_vol
         /* Loop on candidate cells B */
         for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
           int cellB_id = cellA_cellB[icellB];
+
+          // if (cellB_id != 2) continue;
 
           if (dbg) {
             log_trace("      icellB %d, cellB_id %d\n", icellB, cellB_id);
@@ -2327,12 +2444,24 @@ _mesh_intersection_vol_vol
                 PDM_log_trace_array_int(_triaB_vtxB, 3, "");
               }
 
-              for (int ivtx = 0; ivtx < 3; ivtx++) {
-                int vtxB_id = _triaB_vtxB[ivtx] - 1;
-                memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
+              if (faceB_sign > 0) {
+                for (int ivtx = 0; ivtx < 3; ivtx++) {
+                  int vtxB_id = _triaB_vtxB[ivtx] - 1;
+                  memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
+                }
               }
+              else {
+                for (int ivtx = 0; ivtx < 3; ivtx++) {
+                  int vtxB_id = _triaB_vtxB[2-ivtx] - 1;
+                  memcpy(&triaB_coord[3*ivtx], &vtxB_coord[3*vtxB_id], sizeof(double)*3);
+                }
+              }
+              // log_trace("triaB_coord :\n%f %f %f\n%f %f %f\n%f %f %f\n",
+              //           triaB_coord[3*0], triaB_coord[3*0+1], triaB_coord[3*0+2],
+              //           triaB_coord[3*1], triaB_coord[3*1+1], triaB_coord[3*1+2],
+              //           triaB_coord[3*2], triaB_coord[3*2+1], triaB_coord[3*2+2]);
 
-              if (dbg && 1) {
+              if (dbg && 0) {
                 _dump_elementary_vol_vol(mi->comm,
                                          cellA_id,
                                          faceA_id,
@@ -2368,11 +2497,14 @@ _mesh_intersection_vol_vol
                  + mat[2][0]*(mat[0][1]*rhs[1] - mat[1][1]*rhs[0]));
               }
 
-              if (dbg && 0) {
+              if (dbg && 1) {
                 // check inverse transform
                 for (int i = 0; i < 3; i++) {
                   int vtxB_id = _triaB_vtxB[i] - 1;
-                  double err;
+                  if (faceB_sign < 0) {
+                    vtxB_id = _triaB_vtxB[2-i] - 1;
+                  }
+                  double err = 0;
                   for (int j = 0; j < 3; j++) {
                     double u = triaB_coord[3*i  ];
                     double v = triaB_coord[3*i+1];
@@ -2441,11 +2573,20 @@ _mesh_intersection_vol_vol
               free(local_face_vtxB);
 
               if (dbg) {
-                log_trace("            volume Karmijn = %f\n", volume);
+                log_trace("            volume Karmijn = %20.16f\n", volume);
+                if (1) {//volume != 0) {
+                  log_trace("********\n");
+                  for (int i = 0; i < 3; i++) {
+                    log_trace("double pt%d[3] = {%f,%f,%f};\n",
+                              i, triaB_coord[3*i], triaB_coord[3*i+1], triaB_coord[3*i+2]);
+                  }
+                  log_trace("********\n");
+                }
               }
 
               /* Add elementray volume contribution */
-              cellA_cellB_volume[icellB] += faceA_sign * faceB_sign * volume * det * one_sixth;
+              log_trace("sign(det) = %d / faceA_sign = %d\n", PDM_SIGN(det), faceA_sign);
+              cellA_cellB_volume[icellB] += volume * PDM_ABS(det);
 
             } // End of loop on triangles of current face B
 
@@ -2528,8 +2669,8 @@ _mesh_intersection_vol_vol
     }
 
     double l_total_volume_A  = 0;
-    double *cellA_volume = malloc(sizeof(double) * n_cellA);
-    double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
+    // double *cellA_volume = malloc(sizeof(double) * n_cellA);
+    // double *cellA_center = malloc(sizeof(double) * n_cellA * 3);
     PDM_geom_elem_polyhedra_properties(1,
                                        n_cellA,
                                        n_faceA,
@@ -2543,12 +2684,12 @@ _mesh_intersection_vol_vol
                                        cellA_center,
                                        NULL,
                                        NULL);
-    free(cellA_center);
+    // free(cellA_center);
 
     for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
       l_total_volume_A += cellA_volume[cellA_id];
     }
-    free(cellA_volume);
+
 
     double g_total_volume_AB;
     PDM_MPI_Allreduce(&l_total_volume_AB, &g_total_volume_AB, 1,
@@ -2563,11 +2704,14 @@ _mesh_intersection_vol_vol
               100*g_total_volume_AB / g_total_volume_A);
 
     // cas cube, translation (0.5,0.5,0.5)
-    double exact = 0.125;
+    double exact = 0.5;
     log_trace("error : absolute = %e, relative = %e\n",
               PDM_ABS(g_total_volume_AB - exact),
               PDM_ABS(g_total_volume_AB - exact)/exact);
   }
+
+  free(cellA_center);
+  free(cellA_volume);
 
 
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
