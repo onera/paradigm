@@ -279,11 +279,20 @@ _determine_A_outside2
               printf("polyhedron on plane %d\n", i);
             }
 
-            free(*cll);
-            free(*outside);
-            *cll      = NULL;
-            *outside = NULL;
-            return;
+            if (i == 4) {
+              // cll remains as is
+              free(*outside);
+              *outside = NULL;
+              return;
+            } // plane X+Y+Z=1
+
+            else {
+              free(*cll);
+              free(*outside);
+              *cll      = NULL;
+              *outside = NULL;
+              return;
+            } // other planes
           } // polyhedron on (fp == 0)
 
         } // current and next on plane
