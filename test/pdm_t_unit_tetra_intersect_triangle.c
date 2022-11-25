@@ -929,9 +929,9 @@ int main(int argc, char *argv[])
 
   // Triangle: B->C->D->B cyclic linked list
   // Geogebra
-  // double pt0[3] = {1.5, 1, 0};
-  // double pt1[3] = {0, 0, 0};
-  // double pt2[3] = {0.8, 0.3, 0.4};
+  double pt0[3] = {1.5, 1, 0};
+  double pt1[3] = {0, 0, 0};
+  double pt2[3] = {0.8, 0.3, 0.4};
   // inside
   // double pt0[3] = {0.5, 0, 0};
   // double pt2[3] = {0, 0.5, 0};
@@ -944,10 +944,10 @@ int main(int argc, char *argv[])
   // double pt0[3] = {0, 0, 0};
   // double pt1[3] = {-1, 1, 0};
   // double pt2[3] = {1, -1, 1};
-
-  double pt0[3] = {0.5, 0.5,0.5};
-  double pt1[3] = {0.5,-0.5,0.5};
-  double pt2[3] = {1.5,-0.5,0.5};
+  // dbg 2
+  // double pt0[3] = {0.5, 0.5,0.5};
+  // double pt1[3] = {0.5,-0.5,0.5};
+  // double pt2[3] = {1.5,-0.5,0.5};
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);
@@ -975,7 +975,7 @@ int main(int argc, char *argv[])
 
   // Determine A and outside (B before projection)
   List *outside = malloc(sizeof(List));
-  _determine_A_outside(cll_storage, idx, &cll, &outside);
+  _determine_A_outside2(cll_storage, idx, &cll, &outside);
 
   // debug
   if (dbg) {
