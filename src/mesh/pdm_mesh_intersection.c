@@ -1371,6 +1371,7 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
+  /* method : 0 -> with pointers, 1 -> without */
   int method = 1;
 
   int dbg = 1;

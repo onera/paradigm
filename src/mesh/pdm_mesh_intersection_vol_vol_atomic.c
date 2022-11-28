@@ -482,7 +482,8 @@ _determine_A_outside
       } // loop on intersection points
 
       // update A and B
-      (*cll)->head     = in[0];
+      (*cll)->head = in[0];
+      free(*outside);
       *outside = malloc(sizeof(List));
       (*outside)->head = out[0];
     } // 2 intersections
