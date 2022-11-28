@@ -1489,6 +1489,7 @@ _determine_A_outside
 
   // check if the triangle is inside the tetrahedron
   Element *current = (*cll)->head;
+  int is_inside = 1;
   while (1) {
     // 0<= x, y, z <= 1 and 1-x-y-z >= 0
     int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
@@ -1497,12 +1498,13 @@ _determine_A_outside
     int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
     // not totally in unit tetrahedron
     if (!(cond0 && cond1 && cond2 && cond3)) {
+      is_inside = 0;
       break;
     }
     if (current->next == (*cll)->head) break;
     current = current->next;
   }
-  if (current->next == (*cll)->head) {
+  if (is_inside) {
 
     if (dbg) {
       log_trace("triangle in tetrahedra\n");

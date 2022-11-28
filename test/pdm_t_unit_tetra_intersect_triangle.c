@@ -562,6 +562,7 @@ _determine_A_outside
 
   // check if the triangle is inside the tetrahedron
   Element *current = (*cll)->head;
+  int is_inside = 1;
   while (1) {
     // 0<= x, y, z <= 1 and 1-x-y-z >= 0
     int cond0 = current->coord[0] >= 0 && current->coord[0] <= 1;
@@ -570,15 +571,16 @@ _determine_A_outside
     int cond3 = 1-current->coord[0]-current->coord[1]-current->coord[2] >= 0;
     // not totally in unit tetrahedron
     if (!(cond0 && cond1 && cond2 && cond3)) {
+      is_inside = 0;
       break;
     }
     if (current->next == (*cll)->head) break;
     current = current->next;
   }
-  if (current->next == (*cll)->head) {
+  if (is_inside) {
 
     if (dbg) {
-      printf("triangle in tetrahedra\n");
+      log_trace("triangle in tetrahedra\n");
     }
 
     // cll remains as is
@@ -982,22 +984,9 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
   // dbg
-  // double pt0[3] = {0, 0, 0};
-  // double pt1[3] = {-1, 1, 0};
-  // double pt2[3] = {1, -1, 1};
-  // dbg 2
-  // double pt0[3] = {0.5, 0.5,0.5};
-  // double pt1[3] = {0.5,-0.5,0.5};
-  // double pt2[3] = {1.5,-0.5,0.5};
-  // double pt0[3] = {0.000000,-1.000000,1.500000};
-  // double pt1[3] = {-1.000000,-1.000000,1.500000};
-  // double pt2[3] = {-1.000000,0.000000,0.500000};
-// double pt0[3] = {0.400000,-0.400000,0.900000};
-// double pt1[3] = {0.400000,0.600000,-0.100000};
-// double pt2[3] = {1.400000,-0.400000,-0.100000};
-double pt0[3] = {1.100000,-0.000000,-0.000000};
-double pt1[3] = {0.100000,1.000000,-0.000000};
-double pt2[3] = {0.100000,-0.000000,1.000000};
+double pt0[3] = {0.000000,1.000000,0.000000};
+double pt1[3] = {1.000000,0.000000,0.000000};
+double pt2[3] = {0.160000,0.160000,0.760000};
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);
