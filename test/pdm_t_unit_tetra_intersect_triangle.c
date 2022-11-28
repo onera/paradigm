@@ -117,14 +117,31 @@ int main(int argc, char *argv[])
   // double pt0[3] = {0.9, -0.1, 0.2};
   // double pt1[3] = {0.9, 0.5, -0.4};
   // double pt2[3] = {0.3, 0.5, 0.2};
-  double pt0[3] = {0.000000,1.000000,0.000000};
-  double pt1[3] = {1.000000,0.000000,0.000000};
-  double pt2[3] = {0.160000,0.160000,0.760000};
+  // double pt0[3] = {0.000000,1.000000,0.000000};
+  // double pt1[3] = {1.000000,0.000000,0.000000};
+  // double pt2[3] = {0.160000,0.160000,0.760000};
+  double pt0[3] = {1.000000,1.000000,-1.000000};
+  double pt1[3] = {-97.000000,1.000000,98.000000};
+  double pt2[3] = {-96.000000,0.000000,98.000000};
 
   double triaB_coord[9];
   memcpy(triaB_coord + 3*0, pt0, sizeof(double)*3);
   memcpy(triaB_coord + 3*1, pt1, sizeof(double)*3);
   memcpy(triaB_coord + 3*2, pt2, sizeof(double)*3);
+
+
+  int connec[3] = {1, 2, 3};
+  PDM_vtk_write_std_elements("T.vtk",
+                             3,
+                             triaB_coord,
+                             NULL,
+                             PDM_MESH_NODAL_TRIA3,
+                             1,
+                             connec,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
 
 
   double  *vtx_coordA = NULL;

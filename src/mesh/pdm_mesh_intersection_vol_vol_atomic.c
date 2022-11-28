@@ -430,7 +430,9 @@ _determine_A_outside
 
     // not intersection at all
     if (intersect_idx == 0) {
-      log_trace("not intersection at all : fc = %f\n", fc);
+      if (dbg) {
+        log_trace("not intersection at all : fc = %f\n", fc);
+      }
       if (fc < 0) {
         if (i == 4) {
           (*outside)->head = (*cll)->head;
@@ -1022,7 +1024,6 @@ PDM_GCC_SUPPRESS_WARNING_POP
 double
 PDM_mesh_intersection_vol_vol_atomic_compute
 (
- // Element **cll_storage,
  double    triaB_coord[9],
  double  **vtx_coordA,
  int      *n_vtxA,

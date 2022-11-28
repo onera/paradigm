@@ -35,7 +35,6 @@ extern "C" {
 double
 PDM_mesh_intersection_vol_vol_atomic_compute
 (
- // Element **cll_storage,
  double    triaB_coord[9],
  double  **vtx_coordA,
  int      *n_vtxA,
