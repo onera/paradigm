@@ -951,6 +951,516 @@ _cll_to_polydata
   free(face_vtx);
 }
 
+
+
+
+
+
+
+
+static void
+_print_cll2
+(
+ int     head,
+ double *coord,
+ int    *next
+ )
+{
+  if (head < 0) {
+    log_trace("NULL\n");
+    return;
+  }
+
+  int current = head;
+  log_trace("head->");
+  while (1) {
+    log_trace("[(%f,%f,%f),%d]->",
+              coord[3*current+0], coord[3*current+1], coord[3*current+2], next[current]);
+    current = next[current];
+    if (current == head) {
+      break;
+    }
+  }
+  log_trace("head\n");
+}
+
+
+static void
+_determine_A_outside3
+(
+ int    *cll_head_in,
+ int    *cll_head_out,
+ double *cll_coord,
+ int    *cll_next
+ )
+{
+  // int dbg = 1;
+
+  /* Check if the initial polygon (triangle) is inside the unit tetrahedron */
+  int current = *cll_head_in;
+  int inside = 1;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (cll_coord[3*current+j] < 0 || cll_coord[3*current+j] > 1) {
+        log_trace("i = %d, outside %d\n", i, j);
+        inside = 0;
+        break;
+      }
+    }
+
+    if (!inside) {
+      break;
+    }
+
+    log_trace("i = %d : %f\n", i, 1 - cll_coord[3*current] - cll_coord[3*current+1] - cll_coord[3*current+2]);
+    if (1 - cll_coord[3*current] - cll_coord[3*current+1] - cll_coord[3*current+2] < 0) {
+      inside = 0;
+      break;
+    }
+
+    current = cll_next[current];
+  }
+
+  if (inside) {
+    if (dbg) {
+      log_trace("triangle in tetrahedra\n");
+    }
+
+    // cll remains as is
+    return;
+  }
+
+
+
+  int prev[2] = {-1, -1};
+
+  intersect_t intersect_type[2] = {-1, -1};
+
+  /* Intersect/clip with all 5 planes */
+  int idx = 3;
+  for (int iplane = 0; iplane < 5; iplane++) {
+
+    if (*cll_head_in < 0) {
+      return;
+    }
+
+    if (dbg) {
+      log_trace(">>>\n");
+      log_trace("Plane %d\n", iplane);
+    }
+
+    int idx0 = idx;
+
+    int intersect_idx = 0;
+
+    current = cll_next[*cll_head_in];
+
+    int start = current;
+
+
+    // function value
+    double *cc = cll_coord + 3*current;
+    double fp = _plane_equation_function(&cll_coord[3*(*cll_head_in)], iplane);
+    double fc = _plane_equation_function(&cll_coord[3*current],        iplane);
+    double fn = 0;
+
+    while (intersect_idx < 2) {
+
+      int next = cll_next[current];
+      double *cn = cll_coord + 3*next;
+      // function value for next
+      fn = _plane_equation_function(cn, iplane);
+      if (dbg) {
+        log_trace("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n",
+                  cc[0], cc[1], cc[2],
+                  cn[0], cn[1], cn[2]);
+        log_trace("fp/fc/fn = %f / %f / %f\n", fp, fc, fn);
+      }
+
+      // **********BEGIN********** //
+      if (fc == 0) {
+
+        if (fn == 0) {
+
+          if (fp <= 0) {
+            // Segment cn on plane, rest outside or on plane
+            if (dbg) {
+              log_trace("Segment cn on plane, rest outside or on plane\n");
+            }
+            *cll_head_out = *cll_head_in;
+            *cll_head_in  = -1;
+            break;
+          }
+          else {
+            // Segment cn on plane, rest inside
+            if (dbg) {
+              log_trace("Segment cn on plane, rest inside\n");
+            }
+            *cll_head_out = -1;
+            break;
+          }
+
+        } // End if fc == 0, fn == 0
+
+        else {
+
+          if (fp == 0) {
+
+            if (fn < 0) {
+              // Segment pc on plane, rest outside
+              if (dbg) {
+                log_trace("Segment pc on plane, rest outside\n");
+              }
+              *cll_head_out = *cll_head_in;
+              *cll_head_in  = -1;
+              break;
+            }
+            else {
+              // Segment pc on plane, rest inside
+              if (dbg) {
+                log_trace("Segment pc on plane, rest inside\n");
+              }
+              *cll_head_out = -1;
+              break;
+            }
+
+          } // End if fc == 0, fp == 0
+
+          else {
+
+            if (fp*fn > 0) {
+              if (fp > 0) {
+                // c on plane, rest inside
+                if (dbg) {
+                  log_trace("c on plane, rest inside\n");
+                }
+                *cll_head_out = -1;
+                break;
+              }
+              else {
+                // c on plane, rest outside
+                if (dbg) {
+                  log_trace("c on plane, rest outside\n");
+                }
+                *cll_head_out = *cll_head_in;
+                *cll_head_in  = -1;
+                break;
+              }
+            }
+
+            else {
+              // c on plane, p and n in opposite sides
+              if (dbg) {
+                log_trace("c on plane, p and n in opposite sides\n");
+              }
+              prev[intersect_idx] = current;
+              if (intersect_idx == 0) {
+                if (fn > 0) {
+                  // entering
+                  *cll_head_out = current;
+                  *cll_head_in  = next;
+                }
+                else {
+                  // exiting
+                  *cll_head_in  = current;
+                  *cll_head_out = next;
+                }
+                cll_next[idx] = idx0 + 3;
+              }
+              else {
+                cll_next[idx] = idx0 + 1;
+              }
+              cll_next[idx+1] = next;
+
+              for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 3; j++) {
+                  cll_coord[3*idx+j] = cc[j];
+                }
+                idx++;
+              }
+              intersect_type[intersect_idx++] = EXTREMUM;
+            }
+
+          } // End if fc == 0, fp != 0
+
+        } // End if fc == 0, fn != 0
+
+      } // End if fc == 0
+
+      else if (fc * fn < 0) {
+        // Regular intersection between c and n
+        if (dbg) {
+          log_trace("Regular intersection between c and n\n");
+        }
+
+        prev[intersect_idx] = current;
+        if (intersect_idx == 0) {
+          if (fn > 0) {
+            // entering
+            *cll_head_out = current;
+            *cll_head_in  = next;
+          }
+          else {
+            // exiting
+            *cll_head_in  = current;
+            *cll_head_out = next;
+          }
+          cll_next[idx] = idx0 + 3;
+        }
+        else {
+          cll_next[idx] = idx0 + 1;
+        }
+        cll_next[idx+1] = next;
+
+        double t = fc/(fc - fn);
+        for (int i = 0; i < 2; i++) {
+          for (int j = 0; j < 3; j++) {
+            cll_coord[3*idx+j] = (1-t)*cc[j] + t*cn[j];
+          }
+          idx++;
+        }
+
+        intersect_type[intersect_idx++] = SHARP;
+      }
+
+      // ***********END*********** //
+
+      // while loop end condition
+      current = cll_next[current];
+      if (current == start) break;
+
+      // update
+      fp = fc;
+      fc = fn;
+      cc = cll_coord + 3*current;
+
+    } // end while loop on cll
+
+    if (dbg) {
+      log_trace("  intersect_idx = %d\n", intersect_idx);
+    }
+
+
+    // no intersection at all
+    if (intersect_idx == 0) {
+      if (fc < 0) {
+        // Polygon outside
+        if (dbg) {
+          log_trace("Polygon outside (no intersection at all)\n");
+        }
+        *cll_head_out = *cll_head_in;
+        *cll_head_in  = -1;
+        return;
+      }
+      else {
+        // Polygon inside
+        if (dbg) {
+          log_trace("Polygon inside (no intersection at all)\n");
+        }
+        if (iplane < 4) {
+          *cll_head_out = -1;
+        }
+      }
+    }
+
+    else if (intersect_idx == 2) {
+
+      for (int i = 0; i < 2; i++) {
+        if (intersect_type[i] == EXTREMUM) {
+          cll_next[prev[i]] = cll_next[idx0 + 2*i];
+        }
+        else {
+          cll_next[prev[i]] = idx0 + 2*i;
+        }
+      }
+
+    }
+
+    else {
+      // error?!
+    }
+
+    if (dbg) {
+       log_trace("IN at plane %d: ", iplane);
+      _print_cll2(*cll_head_in, cll_coord, cll_next);
+      log_trace("OUT at plane %d: ", iplane);
+      _print_cll2(*cll_head_out, cll_coord, cll_next);
+      log_trace("<<<\n");
+    }
+
+
+  } // End of loop on planes
+
+
+}
+
+
+static double
+_column_volume2
+(
+ int     head,
+ double *coord,
+ int    *next
+)
+{
+  // int dbg = 1;
+
+  double volume = 0;
+  if (head < 0) {
+    return volume;
+  }
+
+  int current = next[head];
+
+  while (next[current] != head) {
+
+    double prism_volume = _prism_volume(&coord[3*head],
+                                        &coord[3*current],
+                                        &coord[3*next[current]]);
+    if (dbg) {
+      log_trace("            volumeK += %f\n", prism_volume);
+    }
+    volume += prism_volume;
+
+    current = next[current];
+  }
+
+  return volume;
+}
+
+static void
+_cll_to_polydata2
+(
+ int      head,
+ double  *coord,
+ int     *next,
+ const char *filename
+ // double **vtx_coord,
+ // int    **face_vtx
+ )
+{
+  int size_min = 3;
+
+  int n_vtx = 0;
+  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+
+  int current = head;
+
+  while (1) {
+
+    if (n_vtx > size_min -1) {
+      size_min *= 2;
+      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+    }
+
+    memcpy(vtx_coord + n_vtx * 3, coord + 3*current, sizeof(double) * 3);
+    n_vtx++;
+
+    if (next[current] == head) break;
+    current = next[current];
+  }
+
+  int face_vtx_idx[2] = {0, n_vtx};
+
+  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    face_vtx[i] = i + 1;
+  }
+
+  PDM_vtk_write_polydata(filename,
+                         n_vtx,
+                         vtx_coord,
+                         NULL,
+                         1,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
+
+  free(vtx_coord);
+  free(face_vtx);
+
+  // return n_vtx;
+}
+
+
+static double
+_reference_volume_compute2
+(
+ double triaB_coord[9]
+)
+{
+  // int dbg = 1;
+
+  double coord[23*3];
+  int    next[23];
+
+  /* Initial polygon == triangle */
+  for (int i = 0; i < 3; i++) {
+    memcpy(&coord[3*i], &triaB_coord[3*i], sizeof(double)*3);
+    next[i] = (i+1)%3;
+  }
+
+
+  int head_in  = 0;
+  int head_out = -1;
+
+  // Determine A and B before projection
+  _determine_A_outside3(&head_in,
+                        &head_out,
+                        coord,
+                        next);
+
+  // debug
+  if (dbg && 1) {
+    log_trace("A: ");
+    _print_cll2(head_in,
+                coord,
+                next);
+
+    log_trace("B: ");
+    _print_cll2(head_out,
+                coord,
+                next);
+  }
+
+  // Projection of B
+  if (head_out >= 0) {
+    int current = head_out;
+
+    while (1) {
+      double zB = 1 - coord[3*current+0] - coord[3*current+1];
+      coord[3*current+2] = zB;
+
+      current = next[current];
+      if (current == head_out) break;
+    }
+  }
+
+  if (dbg && 1) {
+    if (head_in >= 0) {
+      char filename[999] = "A2.vtk";
+      _cll_to_polydata2(head_in,  coord, next, filename);
+    }
+
+    if (head_out >= 0) {
+      char filename[999] = "B2.vtk";
+      _cll_to_polydata2(head_out, coord, next, filename);
+    }
+  }
+
+  // Determine volume
+  double volumeA = _column_volume2(head_in,  coord, next);
+  double volumeB = _column_volume2(head_out, coord, next);
+
+  return volumeA + volumeB;
+}
+
+
+
+
+
+
 /*============================================================================
  * Main
  *============================================================================*/
@@ -984,9 +1494,37 @@ int main(int argc, char *argv[])
   // double pt1[3] = {0, 1, 0};
   // double pt2[3] = {0, 0, 1};
   // dbg
-double pt0[3] = {0.000000,1.000000,0.000000};
-double pt1[3] = {1.000000,0.000000,0.000000};
-double pt2[3] = {0.160000,0.160000,0.760000};
+  // double pt0[3] = {0, 0, 0};
+  // double pt1[3] = {-1, 1, 0};
+  // double pt2[3] = {1, -1, 1};
+  // dbg 2
+  // double pt0[3] = {0.5, 0.5,0.5};
+  // double pt1[3] = {0.5,-0.5,0.5};
+  // double pt2[3] = {1.5,-0.5,0.5};
+  // double pt0[3] = {0.000000,-1.000000,1.500000};
+  // double pt1[3] = {-1.000000,-1.000000,1.500000};
+  // double pt2[3] = {-1.000000,0.000000,0.500000};
+// double pt0[3] = {0.400000,-0.400000,0.900000};
+// double pt1[3] = {0.400000,0.600000,-0.100000};
+// double pt2[3] = {1.400000,-0.400000,-0.100000};
+// double pt0[3] = {1.100000,-0.000000,-0.000000};
+// double pt1[3] = {0.100000,1.000000,-0.000000};
+// double pt2[3] = {0.100000,-0.000000,1.000000};
+  // double pt0[3] = {0.9, -0.1, 0.2};
+  // double pt1[3] = {0.9, 0.5, -0.4};
+  // double pt2[3] = {0.3, 0.5, 0.2};
+  double pt0[3] = {0.000000,1.000000,0.000000};
+  double pt1[3] = {1.000000,0.000000,0.000000};
+  double pt2[3] = {0.160000,0.160000,0.760000};
+
+  double triaB_coord[9];
+  memcpy(triaB_coord + 3*0, pt0, sizeof(double)*3);
+  memcpy(triaB_coord + 3*1, pt1, sizeof(double)*3);
+  memcpy(triaB_coord + 3*2, pt2, sizeof(double)*3);
+
+  double vol = _reference_volume_compute2(triaB_coord);
+
+
 
   Element *ptA = cll_storage[idx++];
   memcpy(ptA->coord, pt0, sizeof(double)*3);
