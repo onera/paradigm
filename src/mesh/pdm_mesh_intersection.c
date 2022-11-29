@@ -1216,13 +1216,13 @@ _export_ensight3d
                                        1);
 
   int id_var_rank = PDM_writer_var_create(wrt,
-                                          PDM_WRITER_ON,
+                                          PDM_WRITER_OFF,
                                           PDM_WRITER_VAR_SCALAR,
                                           PDM_WRITER_VAR_ELEMENTS,
                                           "i_rank");
 
   int id_var_gnum = PDM_writer_var_create(wrt,
-                                          PDM_WRITER_ON,
+                                          PDM_WRITER_OFF,
                                           PDM_WRITER_VAR_SCALAR,
                                           PDM_WRITER_VAR_ELEMENTS,
                                           "cell_g_num");
@@ -1392,10 +1392,10 @@ _mesh_intersection_vol_vol
  int                     *redistribute_box_a_to_box_b
 )
 {
-  /* method : 0 -> with pointers, 1 -> without */
-  int method = 1;
+  /* method : 0 -> with pointers, 1 -> without, 2 -> without (more robust) */
+  int method = 2;
 
-  int dbg = 1;
+  int dbg = 0;
   int dbg_Karmijn = 0;
 
   int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
@@ -1458,9 +1458,9 @@ _mesh_intersection_vol_vol
   /*
    * Panic vtk
    */
-  if (dbg) {
-    _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
-    _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
+  if (1) {
+    // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
+    // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
 
     _export_ensight3d(mi->comm,
                       "vol_vol_meshA",
@@ -1653,7 +1653,7 @@ _mesh_intersection_vol_vol
 
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
 
-    if (cellA_id != 2) continue;
+    // if (cellA_id != 24) continue;
 
     /* Compute a 'center' point to tetrahedrize current cell A */
     // Reference vertex = 1st vertex of first face
@@ -1777,7 +1777,7 @@ _mesh_intersection_vol_vol
         -            mat[1][0]*(mat[0][1]*mat[2][2] - mat[2][1]*mat[0][2])
         +            mat[2][0]*(mat[0][1]*mat[1][2] - mat[1][1]*mat[0][2]);
 
-        log_trace("det = %f\n", det);
+        // log_trace("det = %f\n", det);
 
         PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
         if (det == 0.) {
@@ -1792,10 +1792,10 @@ _mesh_intersection_vol_vol
         for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
           int cellB_id = cellA_cellB[icellB];
 
-          if (cellB_id != 7) continue;
+          // if (cellB_id != 116) continue;
 
           if (dbg) {
-            log_trace("      icellB %d, cellB_id %d\n", icellB, cellB_id);
+            log_trace("      icellB %d, cellB_id %d ("PDM_FMT_G_NUM")\n", icellB, cellB_id, cellB_ln_to_gn[cellB_id]);
           }
 
           /* Loop on faces B */
@@ -1929,8 +1929,11 @@ _mesh_intersection_vol_vol
                                                                       &local_face_vtxB,
                                                                       &vtk_n_faceB);
               }
-              else {
+              else if (method == 1) {
                 volume = PDM_mesh_intersection_vol_vol_atomic_compute2(triaB_coord);
+              }
+              else {
+                volume = PDM_mesh_intersection_vol_vol_atomic_compute3(triaB_coord);
               }
 
 
@@ -1968,7 +1971,7 @@ _mesh_intersection_vol_vol
                 if (1) {//volume != 0) {
                   log_trace("********\n");
                   for (int i = 0; i < 3; i++) {
-                    log_trace("double pt%d[3] = {%20.16f,%20.16f,%20.16f};\n",
+                    log_trace("double pt%d[3] = {%21.17e,%21.17e,%21.17e};\n",
                               i, triaB_coord[3*i], triaB_coord[3*i+1], triaB_coord[3*i+2]);
                   }
                   log_trace("********\n");
@@ -1976,7 +1979,7 @@ _mesh_intersection_vol_vol
               }
 
               /* Add elementray volume contribution */
-              log_trace("sign(det) = %d / faceA_sign = %d\n", PDM_SIGN(det), faceA_sign);
+              // log_trace("sign(det) = %d / faceA_sign = %d\n", PDM_SIGN(det), faceA_sign);
               cellA_cellB_volume[icellB] += volume * PDM_ABS(det);
 
             } // End of loop on triangles of current face B
@@ -2053,7 +2056,7 @@ _mesh_intersection_vol_vol
 
 
 
-  if (dbg) {
+  if (1) {//dbg) {
     // Crude check
     double l_total_volume_AB = 0;
     for (int i = 0; i < cellA_cellB_idx[n_cellA]; i++) {

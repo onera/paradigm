@@ -53,7 +53,11 @@ PDM_mesh_intersection_vol_vol_atomic_compute2
  double triaB_coord[9]
 );
 
-
+double
+PDM_mesh_intersection_vol_vol_atomic_compute3
+(
+ double triaB_coord[9]
+);
 
 #ifdef  __cplusplus
 }
