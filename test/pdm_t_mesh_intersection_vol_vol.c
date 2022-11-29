@@ -30,6 +30,13 @@
  * Type definitions
  *============================================================================*/
 
+typedef enum
+{
+  TETRA_POINT,
+  TETRA_CENTER,
+  USER
+} point_t;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -53,6 +60,10 @@ int exit_code
      "  -nB     <level>  Number vtx in side of mesh B (default : 10).\n\n"
      "  -n_part <level>  Number of partitions         (default : 1).\n\n"
      "  -t               Element type.\n\n"
+     "  -tA              Element type of mesh A (default : HEXA8).\n\n"
+     "  -tB              Element type of mesh B (default : HEXA8).\n\n"
+     "  -tP              Tetraisation point type.\n\n"
+     "  -coordP          Tetraisation point coordinates if type is user.\n\n"
      "  -h               This message.\n\n");
   exit (exit_code);
 }
@@ -79,7 +90,9 @@ _read_args
  PDM_g_num_t           *n_vtx_b,
  int                   *n_part,
  PDM_Mesh_nodal_elt_t  *elt_type_a,
- PDM_Mesh_nodal_elt_t  *elt_type_b
+ PDM_Mesh_nodal_elt_t  *elt_type_b,
+ point_t               *tetraisation_pt_type,
+ double               **tetraisation_pt_coord
 )
 {
   int i = 1;
@@ -142,6 +155,26 @@ _read_args
         _usage(EXIT_FAILURE);
       else {
         *elt_type_b = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-tP") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *tetraisation_pt_type = (point_t) atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-coordP") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        (*tetraisation_pt_coord)[0] = (double) atof(argv[i]);
+        i++;
+        (*tetraisation_pt_coord)[1] = (double) atof(argv[i]);
+        i++;
+        (*tetraisation_pt_coord)[2] = (double) atof(argv[i]);
       }
     }
     else {
@@ -416,10 +449,12 @@ main
   PDM_MPI_Comm_size(comm, &n_rank);
 
 
-  PDM_g_num_t n_vtx_a             = 10;
-  PDM_g_num_t n_vtx_b             = 10;
-  PDM_Mesh_nodal_elt_t elt_type_a = PDM_MESH_NODAL_HEXA8;
-  PDM_Mesh_nodal_elt_t elt_type_b = PDM_MESH_NODAL_HEXA8;
+  PDM_g_num_t          n_vtx_a                = 10;
+  PDM_g_num_t          n_vtx_b                = 10;
+  PDM_Mesh_nodal_elt_t elt_type_a             = PDM_MESH_NODAL_HEXA8;
+  PDM_Mesh_nodal_elt_t elt_type_b             = PDM_MESH_NODAL_HEXA8;
+  point_t              tetraisation_pt_type   = TETRA_POINT;
+  double              *tetraisation_pt_coord  = malloc(sizeof(double) * 3);
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -437,9 +472,9 @@ main
              &n_vtx_b,
              &n_part,
              &elt_type_a,
-             &elt_type_b);
-
-
+             &elt_type_b,
+             &tetraisation_pt_type,
+             &tetraisation_pt_coord);
 
   /*
    * Generate meshA
@@ -507,16 +542,48 @@ main
   _set_mesh(mi, PDM_OL_MESH_A, mpart_a, n_part);
   _set_mesh(mi, PDM_OL_MESH_B, mpart_b, n_part);
 
+  // tetraisation point
+  PDM_mesh_intersection_tetraisation_pt_set(mi,
+                                            tetraisation_pt_type,
+                                            tetraisation_pt_coord);
+
+  // compute
   PDM_mesh_intersection_compute(mi);
 
-  PDM_mesh_intersection_free(mi);
+  // debug
+  double local_vol_A_B;
+  double global_vol_A_B;
+  double global_vol_A;
 
+  PDM_mesh_intersection_stat_get(mi,
+                                 &local_vol_A_B,
+                                 &global_vol_A_B,
+                                 &global_vol_A);
+
+  printf("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
+            local_vol_A_B, global_vol_A_B,
+            100*global_vol_A_B / global_vol_A);
+
+  // cas plan, translation (0.5,0.5,0) + rotation PI/5
+  double exact = 0.0875401518835469;
+  printf("error : absolute = %e, relative = %e\n",
+            PDM_ABS(global_vol_A_B - exact),
+            PDM_ABS(global_vol_A_B - exact)/exact);
+
+
+  /*
+   * Free
+   */
+
+  PDM_mesh_intersection_free(mi);
 
   PDM_DMesh_nodal_free(dmn_b);
   PDM_multipart_free(mpart_b);
 
   PDM_DMesh_nodal_free(dmn_a);
   PDM_multipart_free(mpart_a);
+
+  free(tetraisation_pt_coord);
 
   PDM_MPI_Barrier(comm);
 

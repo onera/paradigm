@@ -75,7 +75,23 @@ PDM_mesh_intersection_part_set
   double                   *vtx_coord
 );
 
+void
+PDM_mesh_intersection_tetraisation_pt_set
+(
+ PDM_mesh_intersection_t* mi,
+ int     tetraisation_pt_type,
+ double *tetraisation_pt_coord
+);
 
+void
+PDM_mesh_intersection_stat_get
+(
+ PDM_mesh_intersection_t* mi,
+ double *local_vol_A_B,
+ double *global_vol_A_B,
+ double *global_vol_A
+
+);
 
 void
 PDM_mesh_intersection_free

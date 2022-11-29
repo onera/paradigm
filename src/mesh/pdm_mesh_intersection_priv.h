@@ -118,6 +118,14 @@ struct _pdm_mesh_intersection_t {
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
+  /* vol_vol */
+  int     tetraisation_pt_type;
+  double *tetraisation_pt_coord;
+
+  /* debug */
+  double local_vol_A_B;
+  double global_vol_A_B;
+  double global_vol_A;
 };
 
 /*=============================================================================

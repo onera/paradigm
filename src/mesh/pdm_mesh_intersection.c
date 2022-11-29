@@ -1660,7 +1660,10 @@ _mesh_intersection_vol_vol
     // Use cell center instead????
     int ref_vtxA_id = -1;
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
-    ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+
+    if (mi->tetraisation_pt_type == 0) {
+      ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+    }
 
 
     if (dbg) {
@@ -1668,11 +1671,19 @@ _mesh_intersection_vol_vol
                 cellA_id, cellA_ln_to_gn[cellA_id], ref_vtxA_id);
     }
 
-    memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
-    // memcpy(&tetraA_coord[0], &cellA_center[3*cellA_id], sizeof(double)*3);
-    // tetraA_coord[0] = 1.234569;
-    // tetraA_coord[1] = -10.3147;
-    // tetraA_coord[2] = 3.4242424213;
+    if (mi->tetraisation_pt_type == 0) {
+      memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
+    }
+
+    else if (mi->tetraisation_pt_type == 1) {
+      memcpy(&tetraA_coord[0], &cellA_center[3*cellA_id], sizeof(double)*3);
+    }
+
+    else if (mi->tetraisation_pt_type == 2) {
+      tetraA_coord[0] = mi->tetraisation_pt_coord[0];
+      tetraA_coord[1] = mi->tetraisation_pt_coord[1];
+      tetraA_coord[2] = mi->tetraisation_pt_coord[2];
+    }
 
     /* Initialize intersection volumes to zero */
     for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
@@ -2633,6 +2644,12 @@ _mesh_intersection_surf_surf
     log_trace("error : absolute = %e, relative = %e\n",
               PDM_ABS(g_total_area_AB - exact),
               PDM_ABS(g_total_area_AB - exact)/exact);
+
+    // debug
+    mi->local_vol_A_B  = l_total_area_AB;
+    mi->global_vol_A_B = g_total_area_AB;
+    mi->global_vol_A   = g_total_area_A;
+
   }
 
   // Do not free...
@@ -2952,7 +2969,38 @@ PDM_mesh_intersection_part_set
   PDM_part_mesh_vtx_coord_set(mesh, i_part, vtx_coord, PDM_OWNERSHIP_USER);
 }
 
+/* vol_vol */
+void
+PDM_mesh_intersection_tetraisation_pt_set
+(
+ PDM_mesh_intersection_t* mi,
+ int     tetraisation_pt_type,
+ double *tetraisation_pt_coord
+)
+{
+  mi->tetraisation_pt_type = tetraisation_pt_type;
+  mi->tetraisation_pt_coord = NULL;
+  if (tetraisation_pt_type == 2) {
+    mi->tetraisation_pt_coord = malloc(sizeof(double) * 3);
+    memcpy(mi->tetraisation_pt_coord, tetraisation_pt_coord, sizeof(double) * 3);
+  }
+}
 
+/* debug */
+void
+PDM_mesh_intersection_stat_get
+(
+ PDM_mesh_intersection_t* mi,
+ double *local_vol_A_B,
+ double *global_vol_A_B,
+ double *global_vol_A
+
+)
+{
+  *local_vol_A_B  = mi->local_vol_A_B;
+  *global_vol_A_B = mi->global_vol_A_B;
+  *global_vol_A   = mi->global_vol_A;
+}
 
 void
 PDM_mesh_intersection_free
@@ -2963,6 +3011,8 @@ PDM_mesh_intersection_free
 
   PDM_part_mesh_free(mi->mesh_a);
   PDM_part_mesh_free(mi->mesh_b);
+
+  free(mi->tetraisation_pt_coord);
 
   free(mi);
 }
