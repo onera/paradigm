@@ -52,6 +52,17 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+const double epsilon = 1.e-15;
+
+static inline int _is_zero
+(
+ const double x
+ )
+{
+  return PDM_ABS(x) < epsilon;
+}
+
+
 static double
 _plane_equation_function
 (
@@ -389,10 +400,16 @@ _determine_A_outside
 
         // coordinates of intersection
         double t = fc/(fc-fn);
+        t = PDM_MIN(1-epsilon, t);
 
         double pt[3] = {t*current->next->coord[0]+(1-t)*current->coord[0],
                         t*current->next->coord[1]+(1-t)*current->coord[1],
                         t*current->next->coord[2]+(1-t)*current->coord[2]};
+
+        if (dbg) {
+          log_trace("t = %20.16f\n", t);
+          log_trace("pt = %20.16f %20.16f %20.16f \n", pt[0], pt[1], pt[2]);
+        }
 
         memcpy(in[intersect_idx]->coord,  pt, sizeof(double) * 3);
         memcpy(out[intersect_idx]->coord, pt, sizeof(double) * 3);
@@ -618,6 +635,68 @@ _print_cll2
 
 
 static void
+_cll_to_polydata2
+(
+ int      head,
+ double  *coord,
+ int     *next,
+ const char *filename
+ // double **vtx_coord,
+ // int    **face_vtx
+ )
+{
+  int size_min = 3;
+
+  if (head < 0) {
+    return;
+  }
+
+  int n_vtx = 0;
+  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
+
+  int current = head;
+
+  while (1) {
+
+    if (n_vtx > size_min -1) {
+      size_min *= 2;
+      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
+    }
+
+    memcpy(vtx_coord + n_vtx * 3, coord + 3*current, sizeof(double) * 3);
+    n_vtx++;
+
+    if (next[current] == head) break;
+    current = next[current];
+  }
+
+  int face_vtx_idx[2] = {0, n_vtx};
+
+  int *face_vtx = malloc(sizeof(int) * n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    face_vtx[i] = i + 1;
+  }
+
+  PDM_vtk_write_polydata(filename,
+                         n_vtx,
+                         vtx_coord,
+                         NULL,
+                         1,
+                         face_vtx_idx,
+                         face_vtx,
+                         NULL,
+                         NULL);
+
+  free(vtx_coord);
+  free(face_vtx);
+
+  // return n_vtx;
+}
+
+
+
+
+static void
 _determine_A_outside2
 (
  int    *cll_head_in,
@@ -672,6 +751,7 @@ _determine_A_outside2
   int idx = 3;
   for (int iplane = 0; iplane < 5; iplane++) {
 
+    *cll_head_out = -1;
     if (*cll_head_in < 0) {
       return;
     }
@@ -706,7 +786,7 @@ _determine_A_outside2
         log_trace("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n",
                   cc[0], cc[1], cc[2],
                   cn[0], cn[1], cn[2]);
-        log_trace("fp/fc/fn = %f / %f / %f\n", fp, fc, fn);
+        log_trace("fp/fc/fn = %20.16f / %20.16f / %20.16f\n", fp, fc, fn);
       }
 
       // **********BEGIN********** //
@@ -845,6 +925,15 @@ _determine_A_outside2
         cll_next[idx+1] = next;
 
         double t = fc/(fc - fn);
+        t = PDM_MIN(1-epsilon, t);
+        if (dbg) {
+          log_trace("t = %20.16f\n", t);
+          log_trace("fc - fn = %20.16f\n", fc - fn);
+          log_trace("pt = %20.16f %20.16f %20.16f \n",
+                    (1-t)*cc[0] + t*cn[0],
+                    (1-t)*cc[1] + t*cn[1],
+                    (1-t)*cc[2] + t*cn[2]);
+        }
         for (int i = 0; i < 2; i++) {
           for (int j = 0; j < 3; j++) {
             cll_coord[3*idx+j] = (1-t)*cc[j] + t*cn[j];
@@ -880,7 +969,12 @@ _determine_A_outside2
         if (dbg) {
           log_trace("Polygon outside (no intersection at all)\n");
         }
-        *cll_head_out = *cll_head_in;
+        if (iplane == 4) {
+          *cll_head_out = *cll_head_in;
+        }
+        else {
+          *cll_head_out = -1;
+        }
         *cll_head_in  = -1;
         return;
       }
@@ -918,6 +1012,14 @@ _determine_A_outside2
       log_trace("OUT at plane %d: ", iplane);
       _print_cll2(*cll_head_out, cll_coord, cll_next);
       log_trace("<<<\n");
+
+      char filename[999];
+
+      sprintf(filename, "in_%d.vtk", iplane);
+      _cll_to_polydata2(*cll_head_in, cll_coord, cll_next, filename);
+
+      sprintf(filename, "out_%d.vtk", iplane);
+      _cll_to_polydata2(*cll_head_out, cll_coord, cll_next, filename);
     }
 
 
@@ -960,60 +1062,6 @@ _column_volume2
   return volume;
 }
 
-static void
-_cll_to_polydata2
-(
- int      head,
- double  *coord,
- int     *next,
- const char *filename
- // double **vtx_coord,
- // int    **face_vtx
- )
-{
-  int size_min = 3;
-
-  int n_vtx = 0;
-  double *vtx_coord = malloc(sizeof(double) * size_min * 3);
-
-  int current = head;
-
-  while (1) {
-
-    if (n_vtx > size_min -1) {
-      size_min *= 2;
-      vtx_coord = realloc(vtx_coord, sizeof(double) * size_min * 3);
-    }
-
-    memcpy(vtx_coord + n_vtx * 3, coord + 3*current, sizeof(double) * 3);
-    n_vtx++;
-
-    if (next[current] == head) break;
-    current = next[current];
-  }
-
-  int face_vtx_idx[2] = {0, n_vtx};
-
-  int *face_vtx = malloc(sizeof(int) * n_vtx);
-  for (int i = 0; i < n_vtx; i++) {
-    face_vtx[i] = i + 1;
-  }
-
-  PDM_vtk_write_polydata(filename,
-                         n_vtx,
-                         vtx_coord,
-                         NULL,
-                         1,
-                         face_vtx_idx,
-                         face_vtx,
-                         NULL,
-                         NULL);
-
-  free(vtx_coord);
-  free(face_vtx);
-
-  // return n_vtx;
-}
 
 PDM_GCC_SUPPRESS_WARNING_POP
 
@@ -1165,6 +1213,13 @@ PDM_mesh_intersection_vol_vol_atomic_compute2
  )
 {
   // int dbg = 1;
+  if (dbg) {
+    log_trace("initial triangle :\n");
+    for (int i = 0; i < 3; i++) {
+      log_trace("%20.16f, %20.16f, %20.16f\n",
+                triaB_coord[3*i], triaB_coord[3*i+1], triaB_coord[3*i+2]);
+    }
+  }
 
   double coord[23*3];
   int    next[23];

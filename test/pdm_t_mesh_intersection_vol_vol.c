@@ -471,7 +471,7 @@ main
                         elt_type_b,
                         rotate_b,
                         0,//0.5*length_b,
-                        length_b,//0.5*length_b,
+                        .9*length_b,//0.5*length_b,
                         0,
                         length_b,
                         part_method,

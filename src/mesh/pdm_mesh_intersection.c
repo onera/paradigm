@@ -1221,6 +1221,12 @@ _export_ensight3d
                                           PDM_WRITER_VAR_ELEMENTS,
                                           "i_rank");
 
+  int id_var_gnum = PDM_writer_var_create(wrt,
+                                          PDM_WRITER_ON,
+                                          PDM_WRITER_VAR_SCALAR,
+                                          PDM_WRITER_VAR_ELEMENTS,
+                                          "cell_g_num");
+
   PDM_writer_step_beg(wrt, 0.);
 
   int *cell_face_n = malloc(sizeof(int) * n_cell);
@@ -1259,8 +1265,10 @@ _export_ensight3d
                         id_geom);
 
   PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_cell);
+  PDM_real_t *val_gnum = malloc(sizeof(PDM_real_t) * n_cell);
   for (int i = 0; i < n_cell; i++) {
     val_rank[i] = i_rank;
+    val_gnum[i] = cell_ln_to_gn[i];
   }
 
   PDM_writer_var_set(wrt,
@@ -1274,11 +1282,24 @@ _export_ensight3d
   PDM_writer_var_free(wrt,
                       id_var_rank);
 
+
+  PDM_writer_var_set(wrt,
+                     id_var_rank,
+                     id_geom,
+                     0,
+                     val_gnum);
+
+  PDM_writer_var_write(wrt,
+                       id_var_gnum);
+  PDM_writer_var_free(wrt,
+                      id_var_gnum);
+
   PDM_writer_step_end(wrt);
 
   PDM_writer_free(wrt);
 
   free(val_rank   );
+  free(val_gnum   );
   free(cell_face_n);
   free(face_vtx_n );
 
@@ -1425,7 +1446,7 @@ _mesh_intersection_vol_vol
                                                             &cellB_ln_to_gn,
                                                             &vtxB_ln_to_gn);
 
-  if (dbg) {
+  if (dbg && 0) {
     PDM_log_trace_connectivity_int(cellA_cellB_idx,
                                    cellA_cellB,
                                    n_cellA,
@@ -1632,14 +1653,14 @@ _mesh_intersection_vol_vol
 
   for (int cellA_id = 0; cellA_id < n_cellA; cellA_id++) {
 
-    // if (cellA_id != 4) continue;
+    if (cellA_id != 2) continue;
 
     /* Compute a 'center' point to tetrahedrize current cell A */
     // Reference vertex = 1st vertex of first face
     // Use cell center instead????
     int ref_vtxA_id = -1;
     int first_face_id = PDM_ABS(cellA_faceA[cellA_faceA_idx[cellA_id]]) - 1;
-    // ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
+    ref_vtxA_id = faceA_vtxA[faceA_vtxA_idx[first_face_id]];
 
 
     if (dbg) {
@@ -1647,11 +1668,11 @@ _mesh_intersection_vol_vol
                 cellA_id, cellA_ln_to_gn[cellA_id], ref_vtxA_id);
     }
 
-    // memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
+    memcpy(&tetraA_coord[0], &vtxA_coord[3*(ref_vtxA_id-1)], sizeof(double)*3);
     // memcpy(&tetraA_coord[0], &cellA_center[3*cellA_id], sizeof(double)*3);
-    tetraA_coord[0] = 0;//1;
-    tetraA_coord[1] = -10;//2;
-    tetraA_coord[2] = 0;//5;
+    // tetraA_coord[0] = 1.234569;
+    // tetraA_coord[1] = -10.3147;
+    // tetraA_coord[2] = 3.4242424213;
 
     /* Initialize intersection volumes to zero */
     for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
@@ -1760,7 +1781,7 @@ _mesh_intersection_vol_vol
         for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
           int cellB_id = cellA_cellB[icellB];
 
-          // if (cellB_id != 2) continue;
+          if (cellB_id != 7) continue;
 
           if (dbg) {
             log_trace("      icellB %d, cellB_id %d\n", icellB, cellB_id);
@@ -1936,7 +1957,7 @@ _mesh_intersection_vol_vol
                 if (1) {//volume != 0) {
                   log_trace("********\n");
                   for (int i = 0; i < 3; i++) {
-                    log_trace("double pt%d[3] = {%f,%f,%f};\n",
+                    log_trace("double pt%d[3] = {%20.16f,%20.16f,%20.16f};\n",
                               i, triaB_coord[3*i], triaB_coord[3*i+1], triaB_coord[3*i+2]);
                   }
                   log_trace("********\n");
