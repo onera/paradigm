@@ -64,16 +64,22 @@ static const int _sampling_factors[4] = {1, /* OD */
  * Static global variables
  *============================================================================*/
 
-static  double t_elaps[3] = {0., 0., 0.};
-static  double t_cpu[3] = {0., 0., 0.};
-static  PDM_timer_t *t_timer[3] = {NULL, NULL, NULL};
+/*
+ * Static can cause pb if we're call function in multiple contexte.
+ *   For example python and other C++ program
+ * No static : truly global
+ *  https://stackoverflow.com/questions/1856599/when-to-use-static-keyword-before-global-variables
+ */
+double t_elaps[3] = {0., 0., 0.};
+double t_cpu[3] = {0., 0., 0.};
+PDM_timer_t *t_timer[3] = {NULL, NULL, NULL};
 
-static  int min_exch_rank[2] = {INT_MAX, INT_MAX};
-static  int max_exch_rank[2] = {-1, -1};
+int min_exch_rank[2] = {INT_MAX, INT_MAX};
+int max_exch_rank[2] = {-1, -1};
 
-static  unsigned long long exch_data[2] = {0, 0};
+unsigned long long exch_data[2] = {0, 0};
 
-static int n_ptb = 0;
+int n_ptb = 0;
 
 
 /*=============================================================================

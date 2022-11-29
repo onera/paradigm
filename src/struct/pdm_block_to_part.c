@@ -37,16 +37,22 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-static double btp_t_elaps[2] = {0., 0.};
-static double btp_t_cpu[2] = {0., 0.};
-static PDM_timer_t *btp_t_timer[2] = {NULL, NULL};
+/*
+ * Static can cause pb if we're call function in multiple contexte.
+ *   For example python and other C++ program
+ * No static : truly global
+ *  https://stackoverflow.com/questions/1856599/when-to-use-static-keyword-before-global-variables
+ */
+double btp_t_elaps[2] = {0., 0.};
+double btp_t_cpu[2] = {0., 0.};
+PDM_timer_t *btp_t_timer[2] = {NULL, NULL};
 
-static int btp_min_exch_rank[2] = {INT_MAX, INT_MAX};
-static int btp_max_exch_rank[2] = {-1, -1};
+int btp_min_exch_rank[2] = {INT_MAX, INT_MAX};
+int btp_max_exch_rank[2] = {-1, -1};
 
-static unsigned long long btp_exch_data[2] = {0, 0};
+unsigned long long btp_exch_data[2] = {0, 0};
 
-static int n_btp = 0;
+int n_btp = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -1444,8 +1450,10 @@ PDM_block_to_part_free
 
   free (btp);
 
+  log_trace(" PDM_block_to_part_free() --> n_btp = %i \n", n_btp);
   n_btp--;
   if (n_btp == 0) {
+    log_trace("Free \n");
     PDM_timer_free(btp_t_timer[0]);
     PDM_timer_free(btp_t_timer[1]);
   }
