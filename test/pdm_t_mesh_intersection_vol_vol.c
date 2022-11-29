@@ -505,9 +505,9 @@ main
                         n_vtx_b,
                         elt_type_b,
                         rotate_b,
-                        0,//0.5*length_b,
-                        .9*length_b,//0.5*length_b,
-                        0,
+                        0.5*length_b,
+                        0.5*length_b,
+                        0.5*length_b,
                         length_b,
                         part_method,
                         n_part,
@@ -560,13 +560,13 @@ main
                                  &global_vol_A_B,
                                  &global_vol_A);
 
-  log_trace("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
+  printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
             local_vol_A_B, global_vol_A_B,
             100*global_vol_A_B / global_vol_A);
 
     // cas cube, translation (0.5,0.5,0.5)
   double exact = 0.5;
-  log_trace("error : absolute = %e, relative = %e\n",
+  printf("error : absolute = %e, relative = %e\n",
             PDM_ABS(global_vol_A_B - exact),
             PDM_ABS(global_vol_A_B - exact)/exact);
 
@@ -587,10 +587,10 @@ main
 
   PDM_MPI_Barrier(comm);
 
-  if (i_rank == 0) {
-    PDM_printf ("-- End\n");
-    fflush(stdout);
-  }
+  // if (i_rank == 0) {
+  //   PDM_printf ("-- End\n");
+  //   fflush(stdout);
+  // }
   PDM_MPI_Finalize ();
 
   return 0;
