@@ -1982,6 +1982,7 @@ _mesh_intersection_vol_vol
     if (dbg) {
       for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
         int cellB_id = cellA_cellB[icellB];
+        if (cellA_cellB_volume[icellB] > 0.00001) {log_trace("---> BIG");}
         log_trace("cellA %d ("PDM_FMT_G_NUM") cellB %d ("PDM_FMT_G_NUM"), volume = %20.16f\n",
                   cellA_id, cellA_ln_to_gn[cellA_id],
                   cellB_id, cellB_ln_to_gn[cellB_id],
