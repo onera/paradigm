@@ -1284,7 +1284,7 @@ _export_ensight3d
 
 
   PDM_writer_var_set(wrt,
-                     id_var_rank,
+                     id_var_gnum,
                      id_geom,
                      0,
                      val_gnum);
@@ -2100,6 +2100,11 @@ _mesh_intersection_vol_vol
     log_trace("error : absolute = %e, relative = %e\n",
               PDM_ABS(g_total_volume_AB - exact),
               PDM_ABS(g_total_volume_AB - exact)/exact);
+
+    // debug
+    mi->local_vol_A_B  = l_total_volume_AB;
+    mi->global_vol_A_B = g_total_volume_AB;
+    mi->global_vol_A   = g_total_volume_A;
   }
 
   free(cellA_center);
@@ -2644,11 +2649,6 @@ _mesh_intersection_surf_surf
     log_trace("error : absolute = %e, relative = %e\n",
               PDM_ABS(g_total_area_AB - exact),
               PDM_ABS(g_total_area_AB - exact)/exact);
-
-    // debug
-    mi->local_vol_A_B  = l_total_area_AB;
-    mi->global_vol_A_B = g_total_area_AB;
-    mi->global_vol_A   = g_total_area_A;
 
   }
 

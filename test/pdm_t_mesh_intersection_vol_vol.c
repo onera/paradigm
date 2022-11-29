@@ -560,13 +560,13 @@ main
                                  &global_vol_A_B,
                                  &global_vol_A);
 
-  printf("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
+  log_trace("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
             local_vol_A_B, global_vol_A_B,
             100*global_vol_A_B / global_vol_A);
 
-  // cas plan, translation (0.5,0.5,0) + rotation PI/5
-  double exact = 0.0875401518835469;
-  printf("error : absolute = %e, relative = %e\n",
+    // cas cube, translation (0.5,0.5,0.5)
+  double exact = 0.5;
+  log_trace("error : absolute = %e, relative = %e\n",
             PDM_ABS(global_vol_A_B - exact),
             PDM_ABS(global_vol_A_B - exact)/exact);
 
