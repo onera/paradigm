@@ -1267,8 +1267,8 @@ _export_ensight3d
   PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_cell);
   PDM_real_t *val_gnum = malloc(sizeof(PDM_real_t) * n_cell);
   for (int i = 0; i < n_cell; i++) {
-    val_rank[i] = i_rank;
-    val_gnum[i] = cell_ln_to_gn[i];
+    val_rank[i] = (PDM_real_t) i_rank;
+    val_gnum[i] = (PDM_real_t) cell_ln_to_gn[i];
   }
 
   PDM_writer_var_set(wrt,

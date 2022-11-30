@@ -95,7 +95,8 @@ _read_args
  double                *noise_a,
  double                *noise_b,
  point_t               *tetraisation_pt_type,
- double               **tetraisation_pt_coord
+ double               **tetraisation_pt_coord,
+ double                *shift_b
 )
 {
   int i = 1;
@@ -196,6 +197,18 @@ _read_args
         (*tetraisation_pt_coord)[1] = (double) atof(argv[i]);
         i++;
         (*tetraisation_pt_coord)[2] = (double) atof(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-shiftB") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        shift_b[0] = (double) atof(argv[i]);
+        i++;
+        shift_b[1] = (double) atof(argv[i]);
+        i++;
+        shift_b[2] = (double) atof(argv[i]);
       }
     }
     else {
@@ -526,6 +539,17 @@ _set_mesh
                                                  &face_edge,
                                                  &face_edge_idx,
                                                  PDM_OWNERSHIP_KEEP);
+
+    int *face_vtx_idx = NULL;
+    int *face_vtx     = NULL;
+    PDM_multipart_part_connectivity_get(mpart,
+                                        0,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                        &face_vtx,
+                                        &face_vtx_idx,
+                                        PDM_OWNERSHIP_KEEP);
+
     n_edge = PDM_multipart_part_connectivity_get(mpart,
                                                  0,
                                                  i_part,
@@ -546,8 +570,8 @@ _set_mesh
                                    face_edge_idx,
                                    face_edge,
                                    edge_vtx,
-                                   NULL, // face_vtx_idx,
-                                   NULL, // face_vtx,
+                                   face_vtx_idx,
+                                   face_vtx,
                                    cell_ln_to_gn,
                                    face_ln_to_gn,
                                    edge_ln_to_gn,
@@ -593,6 +617,7 @@ main
   double               noise_b               = 0;
   point_t              tetraisation_pt_type  = TETRA_POINT;
   double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
+  double               shift_b[3]            = {0., 0., 0.};
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -614,7 +639,8 @@ main
              &noise_a,
              &noise_b,
              &tetraisation_pt_type,
-             &tetraisation_pt_coord);
+             &tetraisation_pt_coord,
+             shift_b);
 
   /*
    * Generate meshA
@@ -647,9 +673,9 @@ main
                         elt_type_b,
                         rotate_b,
                         noise_b,
-                        0.5*length_b,
-                        0.5*length_b,
-                        0.5*length_b,
+                        shift_b[0],//0.5*length_b,
+                        shift_b[1],//0.5*length_b,
+                        shift_b[2],//0.5*length_b,
                         length_b,
                         part_method,
                         n_part,
@@ -711,8 +737,17 @@ main
            local_vol_A_B, global_vol_A_B,
            100*global_vol_A_B / global_vol_A);
 
-      // cas cube, translation (0.5,0.5,0.5)
-    double exact = 0.5;
+    // cas cube, translation (0.5,0.5,0.5)
+    // double exact = 0.5;
+    double exact = 1;
+    for (int i = 0; i < 3; i++) {
+      if (shift_b[i] < 0) {
+        exact *= PDM_MAX(0, PDM_MIN(length_a, length_b + shift_b[i]));
+      }
+      else {
+        exact *= PDM_MAX(0, length_a - shift_b[i]);
+      }
+    }
     printf("error : absolute = %e, relative = %e\n",
            PDM_ABS(global_vol_A_B - exact),
            PDM_ABS(global_vol_A_B - exact)/exact);
