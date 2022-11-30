@@ -21,6 +21,7 @@
 #include "pdm_mesh_intersection.h"
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_poly_vol_gen.h"
 
 /*============================================================================
  * Macro definitions
@@ -91,6 +92,8 @@ _read_args
  int                   *n_part,
  PDM_Mesh_nodal_elt_t  *elt_type_a,
  PDM_Mesh_nodal_elt_t  *elt_type_b,
+ double                *noise_a,
+ double                *noise_b,
  point_t               *tetraisation_pt_type,
  double               **tetraisation_pt_coord
 )
@@ -157,6 +160,24 @@ _read_args
         *elt_type_b = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-noiseA") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *noise_a = (double) atof(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-noiseB") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *noise_b = (double) atof(argv[i]);
+      }
+    }
     else if (strcmp(argv[i], "-tP") == 0) {
       i++;
       if (i >= argc)
@@ -211,6 +232,7 @@ _generate_volume_mesh
  const PDM_g_num_t            n_vtx_seg,
  const PDM_Mesh_nodal_elt_t   elt_type,
  const int                    rotate,
+ const double                 noise_scale,
  const double                 xmin,
  const double                 ymin,
  const double                 zmin,
@@ -225,47 +247,10 @@ _generate_volume_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create (comm,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         n_vtx_seg,
-                                                         length,
-                                                         xmin,
-                                                         ymin,
-                                                         zmin,
-                                                         elt_type,
-                                                         1,
-                                                         PDM_OWNERSHIP_USER);
-  PDM_dcube_nodal_gen_build (dcube);
-  PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
-  PDM_dmesh_nodal_generate_distribution(dmn);
-  PDM_dcube_nodal_gen_free(dcube);
-
-  if(rotate) {
-    // Do something
-    double pi = 4 * atan(1.);
-    double angle = pi/5.;
-    PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-    int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
-    for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
-      _rotate_coord(angle, &vtx_coord[3*i_vtx]);
-    }
-  }
-
-  if(0 == 1) {
-    PDM_dmesh_nodal_dump_vtk(dmn,
-                             PDM_GEOMETRY_KIND_SURFACIC,
-                             "sphere_surf_");
-  }
 
   int n_zone = 1;
-  // int n_part_zones = {n_part};
-  int *n_part_zones = (int *) malloc(sizeof(int) * n_zone);
-  n_part_zones[0] = n_part;
-
   PDM_multipart_t *mpart = PDM_multipart_create(n_zone,
-                                                n_part_zones,
+                                                &n_part,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -279,15 +264,166 @@ _generate_volume_mesh
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+
+  PDM_dmesh_nodal_t *dmn = NULL;
+  int dn_vtx = 0;
+  double      *dvtx_coord       = NULL;
+  int         *dcell_face_idx   = NULL;
+  PDM_g_num_t *dcell_face       = NULL;
+  PDM_g_num_t *dface_cell       = NULL;
+  int         *dface_vtx_idx    = NULL;
+  PDM_g_num_t *dface_vtx        = NULL;
+  int         *dface_group_idx  = NULL;
+  PDM_g_num_t *dface_group      = NULL;
+  PDM_dmesh_t *dmesh            = NULL;
+  int         *djoins_ids       = NULL;
+  int         *dface_join_idx   = NULL;
+  int         *join_to_opposite = NULL;
+  PDM_g_num_t *dface_join       = NULL;
+
+  if (elt_type < PDM_MESH_NODAL_POLY_3D) {
+
+    PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                          n_vtx_seg,
+                                                          n_vtx_seg,
+                                                          n_vtx_seg,
+                                                          length,
+                                                          xmin,
+                                                          ymin,
+                                                          zmin,
+                                                          elt_type,
+                                                          1,
+                                                          PDM_OWNERSHIP_USER);
+    PDM_dcube_nodal_gen_build(dcube);
+    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+    PDM_dmesh_nodal_generate_distribution(dmn);
+    PDM_dcube_nodal_gen_free(dcube);
+
+    PDM_multipart_register_dmesh_nodal(mpart, 0, dmn);
+
+    PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
+    dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+    dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
+
+    if (noise_scale > 0) {
+      double eps = 1e-12;
+      double step = length / (double) (n_vtx_seg - 1);
+      double origin[3] = {xmin, ymin, zmin};
+
+      for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+        for (int j = 0; j < 3; j++) {
+          double x = dvtx_coord[3*i_vtx+j];
+          if (x > origin[j]+eps && x < origin[j]+length-eps) {
+            dvtx_coord[3*i_vtx+j] += noise_scale * step * (2*(double) rand()/(double) RAND_MAX - 1.);
+          }
+        }
+      }
+    }
+  }
+
+  else {
+    // Polyhedral mesh
+    PDM_g_num_t ng_cell      = 0;
+    PDM_g_num_t ng_face      = 0;
+    PDM_g_num_t ng_vtx       = 0;
+    int         dn_cell      = 0;
+    int         dn_face      = 0;
+    int         dn_edge      = 0;
+    int         n_face_group = 0;
+
+    PDM_poly_vol_gen(comm,
+                     xmin,
+                     ymin,
+                     zmin,
+                     length,
+                     length,
+                     length,
+                     n_vtx_seg,
+                     n_vtx_seg,
+                     n_vtx_seg,
+                     (noise_scale > 0),
+                     0,
+                     &ng_cell,
+                     &ng_face,
+                     &ng_vtx,
+                     &n_face_group,
+                     &dn_cell,
+                     &dn_face,
+                     &dn_vtx,
+                     &dcell_face_idx,
+                     &dcell_face,
+                     &dface_cell,
+                     &dface_vtx_idx,
+                     &dface_vtx,
+                     &dvtx_coord,
+                     &dface_group_idx,
+                     &dface_group);
+
+    /* Generate dmesh */
+    int n_join = 0;
+    dmesh = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                             dn_cell,
+                             dn_face,
+                             dn_edge,
+                             dn_vtx,
+                             n_face_group,
+                             n_join,
+                             comm);
+
+    djoins_ids     = malloc(sizeof(int) * n_join);
+    dface_join_idx = malloc(sizeof(int) * (n_join + 1));
+    dface_join_idx[0] = 0;
+    dface_join = malloc(sizeof(PDM_g_num_t) * dface_join_idx[n_join]);
+
+    PDM_dmesh_set(dmesh,
+                  dvtx_coord,
+                  dface_vtx_idx,
+                  dface_vtx,
+                  dface_cell,
+                  dface_group_idx,
+                  dface_group,
+                  djoins_ids,
+                  dface_join_idx,
+                  dface_join);
+
+    PDM_multipart_register_block(mpart, 0, dmesh);
+
+    /* Connection between zones */
+    int n_total_joins = 0;
+    join_to_opposite = malloc(sizeof(int) * n_total_joins);
+    PDM_multipart_register_joins(mpart, n_total_joins, join_to_opposite);
+
+  }
+
+  if(rotate) {
+    // Do something
+    double pi = 4 * atan(1.);
+    double angle = pi/5.;
+    for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
+      _rotate_coord(angle, &dvtx_coord[3*i_vtx]);
+    }
+  }
+
   PDM_multipart_run_ppart(mpart);
 
-  free(n_part_zones);
-
+  if (elt_type == PDM_MESH_NODAL_POLY_3D) {
+    PDM_dmesh_free(dmesh);
+    free(djoins_ids);
+    free(dface_join_idx);
+    free(dface_join);
+    free(join_to_opposite);
+    free(dvtx_coord);
+    free(dcell_face_idx);
+    free(dcell_face);
+    free(dface_cell);
+    free(dface_vtx_idx);
+    free(dface_vtx);
+    free(dface_group_idx);
+    free(dface_group);
+  }
 
   *_mpart = mpart;
   *_dmn   = dmn;
-
 }
 
 
@@ -449,12 +585,14 @@ main
   PDM_MPI_Comm_size(comm, &n_rank);
 
 
-  PDM_g_num_t          n_vtx_a                = 10;
-  PDM_g_num_t          n_vtx_b                = 10;
-  PDM_Mesh_nodal_elt_t elt_type_a             = PDM_MESH_NODAL_HEXA8;
-  PDM_Mesh_nodal_elt_t elt_type_b             = PDM_MESH_NODAL_HEXA8;
-  point_t              tetraisation_pt_type   = TETRA_POINT;
-  double              *tetraisation_pt_coord  = malloc(sizeof(double) * 3);
+  PDM_g_num_t          n_vtx_a               = 10;
+  PDM_g_num_t          n_vtx_b               = 10;
+  PDM_Mesh_nodal_elt_t elt_type_a            = PDM_MESH_NODAL_HEXA8;
+  PDM_Mesh_nodal_elt_t elt_type_b            = PDM_MESH_NODAL_HEXA8;
+  double               noise_a               = 0;
+  double               noise_b               = 0;
+  point_t              tetraisation_pt_type  = TETRA_POINT;
+  double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -473,6 +611,8 @@ main
              &n_part,
              &elt_type_a,
              &elt_type_b,
+             &noise_a,
+             &noise_b,
              &tetraisation_pt_type,
              &tetraisation_pt_coord);
 
@@ -487,6 +627,7 @@ main
                         n_vtx_a,
                         elt_type_a,
                         rotate_a,
+                        noise_a,
                         0.,
                         0.,
                         0.,
@@ -505,6 +646,7 @@ main
                         n_vtx_b,
                         elt_type_b,
                         rotate_b,
+                        noise_b,
                         0.5*length_b,
                         0.5*length_b,
                         0.5*length_b,
@@ -514,13 +656,17 @@ main
                         &dmn_b,
                         &mpart_b);
 
-  if(0 == 1) {
-    PDM_dmesh_nodal_dump_vtk(dmn_a,
-                             PDM_GEOMETRY_KIND_VOLUMIC,
-                             "dmn_a_");
-    PDM_dmesh_nodal_dump_vtk(dmn_b,
-                             PDM_GEOMETRY_KIND_VOLUMIC,
-                             "dmn_b_");
+  if(1 == 1) {
+    if (dmn_a != NULL) {
+      PDM_dmesh_nodal_dump_vtk(dmn_a,
+                               PDM_GEOMETRY_KIND_VOLUMIC,
+                               "dmn_a_");
+    }
+    if (dmn_b != NULL) {
+      PDM_dmesh_nodal_dump_vtk(dmn_b,
+                               PDM_GEOMETRY_KIND_VOLUMIC,
+                               "dmn_b_");
+    }
   }
 
   /*
@@ -560,16 +706,17 @@ main
                                  &global_vol_A_B,
                                  &global_vol_A);
 
-  printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
-            local_vol_A_B, global_vol_A_B,
-            100*global_vol_A_B / global_vol_A);
+  if (i_rank == 0) {
+    printf("total volume of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
+           local_vol_A_B, global_vol_A_B,
+           100*global_vol_A_B / global_vol_A);
 
-    // cas cube, translation (0.5,0.5,0.5)
-  double exact = 0.5;
-  printf("error : absolute = %e, relative = %e\n",
-            PDM_ABS(global_vol_A_B - exact),
-            PDM_ABS(global_vol_A_B - exact)/exact);
-
+      // cas cube, translation (0.5,0.5,0.5)
+    double exact = 0.5;
+    printf("error : absolute = %e, relative = %e\n",
+           PDM_ABS(global_vol_A_B - exact),
+           PDM_ABS(global_vol_A_B - exact)/exact);
+  }
 
   /*
    * Free

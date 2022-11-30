@@ -1458,7 +1458,7 @@ _mesh_intersection_vol_vol
   /*
    * Panic vtk
    */
-  if (1) {
+  if (dbg) {
     // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
     // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
 

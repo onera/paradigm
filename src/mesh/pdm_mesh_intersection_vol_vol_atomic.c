@@ -54,14 +54,6 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
  *============================================================================*/
 const double epsilon = 1.e-15;
 
-static inline int _is_zero
-(
- const double x
- )
-{
-  return PDM_ABS(x) < epsilon;
-}
-
 static inline double _compensated_sum
 (
  const int     n,
@@ -1327,9 +1319,6 @@ _clip_convex_polygon
       /* Polygon intersects plane */
       int do_swap = (hpmax > -hnmin);
       if (do_swap) {
-        // for (int i = 0; i < np+nn+nz; i++) {
-        //   cll_val[i] = -cll_val[i];
-        // }
         current = *cll_head_in;
         while (1) {
           cll_val[current] = -cll_val[current];
