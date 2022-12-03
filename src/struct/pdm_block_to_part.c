@@ -1450,10 +1450,8 @@ PDM_block_to_part_free
 
   free (btp);
 
-  log_trace(" PDM_block_to_part_free() --> n_btp = %i \n", n_btp);
   n_btp--;
   if (n_btp == 0) {
-    log_trace("Free \n");
     PDM_timer_free(btp_t_timer[0]);
     PDM_timer_free(btp_t_timer[1]);
   }
