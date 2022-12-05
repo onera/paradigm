@@ -155,7 +155,11 @@ _read_args
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[c] : 1,2,3,10
+// @@@param[s] : 10000, 20000
+// @@@param[t] : 10000, 20000
+// @@@param[l] : 1.
 int
 main
 (

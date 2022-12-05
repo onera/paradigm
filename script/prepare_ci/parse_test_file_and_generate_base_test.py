@@ -52,6 +52,8 @@ def parse_one_file(filename):
   librairies = Group(library + ZeroOrMore(Literal(",").suppress() + library)).setResultsName("value", listAllMatches=True)
 
   parser = (fparam(Literal('n_proc'), numbers)          \
+          | fparam(Literal('c'), numbers)               \
+          | fparam(Literal('t'), numbers)               \
           | fparam(Literal('n'), numbers)               \
           | fparam(Literal('l'), numbers)               \
           | fparam(Literal('s'), numbers)               \
