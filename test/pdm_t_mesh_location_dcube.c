@@ -352,6 +352,11 @@ _eval_field
  *
  */
 // mpirun -np 2 ./test/pdm_t_mesh_location_dcube -n 3 -p 115 -doctree -post
+
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 30,60
+// @@@param[p] : 10000,20000
+// @@@args[tree_kind] : -octree, -dbbree
 int main(int argc, char *argv[])
 {
 

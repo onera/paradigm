@@ -57,7 +57,8 @@ def parse_one_file(filename):
           | fparam(Literal('n'), numbers)               \
           | fparam(Literal('l'), numbers)               \
           | fparam(Literal('s'), numbers)               \
-          | fargs(Literal('part_kind'), librairies))
+          | fargs(Literal('part_kind'), librairies)     \
+          | fargs(Literal('tree_kind'), librairies))
 
   infos = {}
   for (token, start, end) in parser.scanString(body):

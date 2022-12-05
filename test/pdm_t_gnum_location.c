@@ -472,7 +472,8 @@ PDM_part_split_t           method,
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 30,60
 int
 main
 (
