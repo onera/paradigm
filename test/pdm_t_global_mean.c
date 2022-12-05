@@ -126,7 +126,9 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 30,60
+// @@@args[part_kind] : -parmetis
 int main(int argc, char *argv[])
 {
 
