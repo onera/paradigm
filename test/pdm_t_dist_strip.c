@@ -146,7 +146,9 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 100,200
+// @@@args[part_kind] : -parmetis, -pt-scotch
 int main(int argc, char *argv[])
 {
 
