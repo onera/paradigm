@@ -63,10 +63,11 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length)
+_read_args(int                     argc,
+           char                  **argv,
+           PDM_g_num_t           *n_vtx_seg,
+           PDM_Mesh_nodal_elt_t  *t_elt,
+           double                *length)
 {
   int i = 1;
 
@@ -93,6 +94,14 @@ _read_args(int            argc,
       else
         *length = atof(argv[i]);
     }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *t_elt = atoi(argv[i]);
+      }
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -105,16 +114,18 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 10,20,30,40
+// @@@param[t] : 5,6,7,8,13,14,15,16
 int main(int argc, char *argv[])
 {
 
   /*
    *  Set default values
    */
-
   PDM_g_num_t        n_vtx_seg = 10;
   double             length    = 1.;
+  PDM_Mesh_nodal_elt_t t_elt   = PDM_MESH_NODAL_HEXA8;
 
   /*
    *  Read args
@@ -123,7 +134,13 @@ int main(int argc, char *argv[])
   _read_args(argc,
              argv,
              &n_vtx_seg,
+             &t_elt,
              &length);
+
+  int order = 1;
+  if(PDM_Mesh_nodal_elmt_is_ho(t_elt) == 1) {
+    order = 2;
+  }
 
   /*
    *  Init
@@ -150,8 +167,8 @@ int main(int argc, char *argv[])
                                                            0.,
                                                            0.,
                                                            0.,
-                                                           PDM_MESH_NODAL_HEXA8,
-                                                           1,
+                                                           t_elt,
+                                                           order,
                                                            PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
 
