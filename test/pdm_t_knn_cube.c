@@ -214,7 +214,10 @@ _gen_cube_cell_centers
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[c] : 1,2,3,10
+// @@@param[n] : 30, 60
+// @@@param[t] : 10000, 20000
 int main(int argc, char *argv[])
 {
   int i_rank;
