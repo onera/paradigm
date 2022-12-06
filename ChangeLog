@@ -1,4 +1,30 @@
-## [2.0.0] - 2022-06-??
+## [2.1.0] - 2022-12-06
+### Added
+- PDM_ho_bezier : Elementary functions for high-order Bezier elements
+- PDM_ho_bezier_basis : Bezier basis functions
+- PDM_lagrange_to_bezier : Conversion for Lagarange basis to Bezier basis
+- PDM_box_gen : Generate sets of boxes
+- PDM_sphere_vol_gen : Generate 3D mesh of a sphere
+- PDM_reader_gamma : Read GAMMA mesh format (partial implementation)
+- PDM_reader_stl : Read STL mesh format
+### Changed
+- PDM_dmesh_nodal_reorder : remove 'order' argument (minor change of API)
+- PDM_mesh_location : Add the communication graph to the results
+- PDM_mesh_location : New optimized algorithm
+- PDM_Mesh_nodal : cell3d_cellface_add (minor change of API)
+- PDM_multipart  : get_part_mesh_nodal (minor change of API (add ownership))
+- PDM_part_to_block : Add reverse exchange
+- PDM_part_to_part : Add PDM_part_to_part_create_from_num2_triplet
+- PDM_extract_part : Improved and optimized
+- PDM_dist_cloud_surf : Improved memory efficient and performance
+  (optional, set PDM_DIST_CLOUD_SURF_OPTIM to 1 to use it)
+- PDM_writer : Concatenate all time step into a single file per field
+### Deprecated
+### Removed
+### Fixed
+- bugfix : PDM_part_to_part
+- bugfix : PDM_extract_part
+## [2.0.0] - 2022-06-09
 ### Added
 - PDM_vtk : Write ASCII VTK files for visulization with ParaView
 - PDM_dgeom_elem : Multiple method to compute center of entity with distributed conectivities and coordinates (usefull for hilbert ordering)
