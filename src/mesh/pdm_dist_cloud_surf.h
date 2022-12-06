@@ -196,6 +196,7 @@ PDM_dist_cloud_surf_compute
  PDM_dist_cloud_surf_t *dist
 );
 
+
 /**
  *
  * \brief Get mesh distance

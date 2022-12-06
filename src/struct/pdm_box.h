@@ -104,6 +104,27 @@ PDM_box_set_normalize_robust
  double         *pts_normalized
  );
 
+/**
+ *
+ * \brief Normalize a set of normal vectors according to a box set
+
+ *
+ * \param [in]   boxes              Pointer to box set structure
+ * \param [in]   n_pts              Number of coordinates
+ * \param [in]   pts_origin         Coordinates (size = 3 * \ref n_pts)
+ * \param [out]  pts_normalized     Normalized coordinates (size = 3 * \ref n_pts)
+ *
+ */
+
+void
+PDM_box_set_normalize_normal_vector
+(
+ PDM_box_set_t  *boxes,
+ const int       n_pts,
+ double         *pts_origin,
+ double         *pts_normalized
+ );
+
 
 /**
  *
@@ -405,6 +426,17 @@ PDM_box_copy_boxes_to_ranks
  int            *copied_ranks
 );
 
+/**
+ * \brief Setup a shared structure among nodes
+ *
+ * \param [in] boxes            Pointer to the PDM_box_t structure
+ */
+void
+PDM_box_copy_boxes_to_shm
+(
+ PDM_box_set_t  *boxes
+);
+
 void
 PDM_box_set_free_copies
 (
@@ -478,6 +510,14 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t *distrib,
 void
 PDM_box_distrib_dump(const PDM_box_distrib_t *distrib);
 
+
+void
+PDM_box_set_normalization_get
+(
+ PDM_box_set_t  *boxes,
+ double        **s,
+ double        **d
+ );
 
 
 #ifdef __cplusplus

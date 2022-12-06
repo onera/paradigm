@@ -221,7 +221,6 @@ end subroutine PDM_part_to_part_create
 !! \param [in]   t_stride         Kind of stride
 !! \param [in]   t_part1_data_def Kind of part1 data definition
 !! \param [in]   cst_stride       Constant stride
-!! \param [in]   s_data           Data size
 !! \param [in]   part1_stride     Stride of partition 1 data
 !! \param [in]   part1_data       Partition 1 data
 !! \param [out]  part2_stride     Stride of partition 2 data (order given by gnum1_come_from and ref_lnum2 arrays)
@@ -235,7 +234,6 @@ subroutine PDM_part_to_part_iexch (ptp,              &
                                    t_stride,         &
                                    t_part1_data_def, &
                                    cst_stride,       &
-                                   s_data,           &
                                    part1_stride,     &
                                    part1_data,       &
                                    part2_stride,     &
@@ -249,7 +247,6 @@ subroutine PDM_part_to_part_iexch (ptp,              &
   integer, intent(in)               :: t_stride
   integer, intent(in)               :: t_part1_data_def
   integer, intent(in)               :: cst_stride
-  integer, intent(in)               :: s_data
   type(PDM_pointer_array_t), target :: part1_stride
   type(PDM_pointer_array_t), target :: part1_data
   type(PDM_pointer_array_t), target :: part2_stride
@@ -267,6 +264,8 @@ subroutine PDM_part_to_part_iexch (ptp,              &
   integer(pdm_l_num_s), pointer     :: stride(:)              => null()
   integer                           :: s_part2_data
   integer                           :: i, j
+
+  integer                           :: s_data
 
   interface
     subroutine PDM_part_to_part_iexch_c (ptp,              &
@@ -299,6 +298,8 @@ subroutine PDM_part_to_part_iexch (ptp,              &
     end subroutine PDM_part_to_part_iexch_c
   end interface
 
+  s_data = part1_data%s_data
+
   call PDM_part_to_part_iexch_c (ptp,                      &
                                  k_comm,                   &
                                  t_stride,                 &
@@ -327,6 +328,7 @@ subroutine PDM_part_to_part_iexch (ptp,              &
   allocate(part2_data%length(n_part2))
   part2_stride%type = PDM_TYPE_INT
   part2_data%type = part1_data%type
+  part2_data%s_data = part1_data%s_data
 
   ! Compute lengths
   do i = 1, n_part2

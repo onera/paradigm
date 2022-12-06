@@ -1702,6 +1702,7 @@ int main(int argc, char *argv[])
   }
 
   /* Compute distance */
+  // PDM_dist_cloud_surf_compute (id_dist);
   PDM_dist_cloud_surf_compute (id_dist);
 
   PDM_dist_cloud_surf_dump_times(id_dist);

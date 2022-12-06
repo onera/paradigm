@@ -36,7 +36,7 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-const int nDataExchCreate = 5; /*!< Number of exchanged data for creation */
+static const int nDataExchCreate = 5; /*!< Number of exchanged data for creation */
 
 /*=============================================================================
  * Static function definitions

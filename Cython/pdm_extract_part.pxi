@@ -3,13 +3,14 @@
 cdef extern from "pdm_extract_part.h":
   ctypedef struct PDM_extract_part_t:
     pass
-  PDM_extract_part_t* PDM_extract_part_create(int                    dim,
-                                              int                    n_part_in,
-                                              int                    n_part_out,
-                                              PDM_bool_t             equilibrate,
-                                              PDM_split_dual_t       split_dual_method,
-                                              PDM_ownership_t        ownership,
-                                              PDM_MPI_Comm           comm);
+  PDM_extract_part_t* PDM_extract_part_create(int                     dim,
+                                              int                     n_part_in,
+                                              int                     n_part_out,
+                                              PDM_extract_part_kind_t extract_kind,
+                                              PDM_split_dual_t        split_dual_method,
+                                              PDM_bool_t              compute_child_gnum,
+                                              PDM_ownership_t         ownership,
+                                              PDM_MPI_Comm            comm);
   void PDM_extract_part_compute(PDM_extract_part_t        *extrp);
   void PDM_extract_part_selected_lnum_set(PDM_extract_part_t       *extrp,
                                           int                       i_part,
@@ -62,6 +63,11 @@ cdef extern from "pdm_extract_part.h":
                                      double                   **pvtx_coord,
                                      PDM_ownership_t            ownership);
 
+  void PDM_extract_part_part_to_part_get(       PDM_extract_part_t   *extrp,
+                                         const  PDM_mesh_entities_t   entity_type,
+                                                PDM_part_to_part_t  **ptp,
+                                                PDM_ownership_t       ownership);
+
   void PDM_extract_part_free(PDM_extract_part_t  *extrp);
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -75,26 +81,34 @@ cdef class ExtractPart:
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
-  keep_alive = []
+  cdef MPI.Comm py_comm   
+  cdef dict ptp_objects
+  cdef list keep_alive
   # --------------------------------------------------------------------------
 
   # ------------------------------------------------------------------
   def __cinit__(self,
-                int               dim,
-                int               n_part_in,
-                int               n_part_out,
-                PDM_bool_t        equilibrate,
-                PDM_split_dual_t  split_dual_method,
-                MPI.Comm          comm):
+                int                     dim,
+                int                     n_part_in,
+                int                     n_part_out,
+                PDM_extract_part_kind_t extract_kind,
+                PDM_split_dual_t        split_dual_method,
+                PDM_bool_t              compute_child_gnum,
+                MPI.Comm                comm):
     """
     Compute the distance from point clouds to a surface
     """
+    self.ptp_objects = dict()
+    self.keep_alive  = list()
+
+    self.py_comm = comm
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     self._extrp =  PDM_extract_part_create(dim,
                                            n_part_in,
                                            n_part_out,
-                                           equilibrate,
+                                           extract_kind,
                                            split_dual_method,
+                                           compute_child_gnum,
                                            PDM_OWNERSHIP_USER,
                                            PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm));
 
@@ -104,6 +118,7 @@ cdef class ExtractPart:
                         NPY.ndarray[NPY.int32_t, mode='c', ndim=1] extract_lnum):
     """
     """
+    self.keep_alive.append(extract_lnum)
     cdef int n_extract = extract_lnum.shape[0]
     PDM_extract_part_selected_lnum_set(self._extrp,
                                        i_part,
@@ -249,6 +264,24 @@ cdef class ExtractPart:
     n_vtx = PDM_extract_part_vtx_coord_get(self._extrp, ipart, &pvtx_coord, PDM_OWNERSHIP_USER)
 
     return create_numpy_d(pvtx_coord, 3 * n_vtx)
+
+  # ------------------------------------------------------------------
+  def part_to_part_get(                    self,
+                       PDM_mesh_entities_t entity_type):
+    """
+    """
+    cdef PDM_part_to_part_t  *ptpc
+    try:
+      return self.ptp_objects[entity_type]
+    except KeyError:
+      PDM_extract_part_part_to_part_get( self._extrp,
+                                         entity_type,
+                                        &ptpc,
+                                         PDM_OWNERSHIP_USER)
+      py_casp = PyCapsule_New(ptpc, NULL, NULL);
+      self.ptp_objects[entity_type] = PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+      return self.ptp_objects[entity_type]
+
 
   # ------------------------------------------------------------------
   def __dealloc__(self):

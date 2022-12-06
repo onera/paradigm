@@ -576,6 +576,7 @@ int main(int argc, char *argv[])
                              &pface_cell_idx,
                              &pface_cell);
 
+
   /* Get vtx_group */
 
   int *pedge_face_idx = NULL;
@@ -619,6 +620,8 @@ int main(int argc, char *argv[])
                            pedge_group,
                            &pvtx_group_idx,
                            &pvtx_group);
+
+
 
   for (int i = 0; i < pn_vtx; i++) {
     log_trace("sommet d'indice %d à %d groupes qui sont:", i, (pvtx_group_idx[i+1]- pvtx_group_idx[i]));
@@ -751,28 +754,28 @@ int main(int argc, char *argv[])
 
   /* Laplacian Smoothing */
 
-  // char    filename[999];
+  char    filename[999];
   int     vtx1_idx;
   int     vtx2_idx;
-  double *normalisation  = malloc(pn_vtx * sizeof(double));
+  double *normalisation  = malloc(    pn_vtx * sizeof(double));
   double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
 
   /* Set up of Ensight output */
 
-  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
-                                          PDM_WRITER_FMT_BIN,
-                                          PDM_WRITER_TOPO_DEFORMABLE, // topologie constante mais coordonnées variables
-                                          PDM_WRITER_OFF,
-                                          "test_3d_ens",
-                                          "lapalcian_smoothing",
-                                          PDM_MPI_COMM_WORLD,
-                                          PDM_IO_KIND_MPI_SIMPLE,
-                                          1.,
-                                          NULL);
+  // PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+  //                                         PDM_WRITER_FMT_BIN,
+  //                                         PDM_WRITER_TOPO_DEFORMABLE, // topologie constante mais coordonnées variables
+  //                                         PDM_WRITER_OFF,
+  //                                         "test_3d_ens",
+  //                                         "lapalcian_smoothing",
+  //                                         PDM_MPI_COMM_WORLD,
+  //                                         PDM_IO_KIND_MPI_SIMPLE,
+  //                                         1.,
+  //                                         NULL);
 
-  int id_geom = PDM_writer_geom_create(id_cs,
-                                       "test3d_geom",
-                                       n_part);
+  // int id_geom = PDM_writer_geom_create(id_cs,
+  //                                      "test3d_geom",
+  //                                      n_part);
 
 
   int *face_vtx_n  = (int *) malloc (sizeof(int) * pn_face);
@@ -790,48 +793,47 @@ int main(int argc, char *argv[])
   for (int i_step = 0; i_step <= n_steps; i_step++) {
 
     // Output in ensight format
-    PDM_writer_step_beg(id_cs, (double) i_step);
+    // PDM_writer_step_beg(id_cs, (double) i_step);
 
-    if (i_step == 0) {
-      PDM_writer_geom_coord_set (id_cs,
-                                 id_geom,
-                                 0,
-                                 pn_vtx,
-                                 pvtx_coord,
-                                 vtx_ln_to_gn,
-                                 PDM_OWNERSHIP_USER);
-      PDM_writer_geom_cell3d_cellface_add (id_cs,
-                                           id_geom,
-                                           0,
-                                           pn_cell,
-                                           pn_face,
-                                           pface_edge_idx,
-                                           face_vtx_n,
-                                           pface_vtx,
-                                           pcell_face_idx,
-                                           cell_face_n,
-                                           pcell_face,
-                                           cell_ln_to_gn);
-    }
-    PDM_writer_geom_write(id_cs,
-                          id_geom);
+    // if (i_step == 0) {
+    //   PDM_writer_geom_coord_set (id_cs,
+    //                              id_geom,
+    //                              0,
+    //                              pn_vtx,
+    //                              pvtx_coord,
+    //                              vtx_ln_to_gn);
+    //   PDM_writer_geom_cell3d_cellface_add (id_cs,
+    //                                        id_geom,
+    //                                        0,
+    //                                        pn_cell,
+    //                                        pn_face,
+    //                                        pface_edge_idx,
+    //                                        face_vtx_n,
+    //                                        pface_vtx,
+    //                                        pcell_face_idx,
+    //                                        cell_face_n,
+    //                                        pcell_face,
+    //                                        cell_ln_to_gn);
+    // }
+    // PDM_writer_geom_write(id_cs,
+    //                       id_geom);
 
 
     // Output in vtk format
 
-    // sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
+    sprintf(filename, "mesh_%2.2d_%2.2d.vtk", i_rank, i_step);
 
-    // PDM_vtk_write_std_elements(filename,
-    //                            pn_vtx,
-    //                            pvtx_coord,
-    //                            vtx_ln_to_gn,
-    //                            PDM_MESH_NODAL_BAR2,
-    //                            pn_edge,
-    //                            pedge_vtx,
-    //                            NULL,
-    //                            0,
-    //                            NULL,
-    //                            NULL);
+    PDM_vtk_write_std_elements(filename,
+                               pn_vtx,
+                               pvtx_coord,
+                               vtx_ln_to_gn,
+                               PDM_MESH_NODAL_BAR2,
+                               pn_edge,
+                               pedge_vtx,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
 
     // Initialise pvtx_coord_new
     for (int i = 0; i < pn_vtx; i++) {
@@ -926,17 +928,39 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+2] = pvtx_coord_extension_new[i_part][3*i+2];
     } // end loop on extension coordinates
 
+    free(pvtx_coord_extension_new[i_part]);
     free(pvtx_coord_extension_new);
 
-    PDM_writer_step_end(id_cs);
+    // PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
 
 
   /* Free entities */
-
   PDM_multipart_free(mpart);
   PDM_part_extension_free(pe);
   PDM_part_to_part_free(ptp);
+
+  free(face_vtx_n  );
+  free(cell_face_n );
+  free(extension_vtx_gnum_idx );
+
+  free(pvtx_edge_idx);
+  free(pvtx_edge);
+  free(pedge_group_idx);
+  free(pedge_group);
+  free(pedge_face_idx);
+  free(pedge_face);
+  free(pedge_vtx_idx);
+  free(pface_vtx);
+  free(pface_cell_idx);
+  free(pface_cell);
+  free(pface_group_idx);
+  free(pface_group);
+  free(pvtx_group_idx);
+  free(pvtx_group    );
+
+  free(normalisation );
+  free(pvtx_coord_new);
 
   PDM_MPI_Finalize();
   return 0;

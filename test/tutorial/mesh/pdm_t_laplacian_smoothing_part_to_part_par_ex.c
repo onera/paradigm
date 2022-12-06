@@ -196,100 +196,103 @@ PDM_multipart_t      **_mpart
 
 
 
-static void
-_get_groups
-(
- PDM_multipart_t     *multipart,
- const int            i_zone,
- const int            i_part,
-       int           *n_face_group,
-       int          **face_bound_idx,
-       int          **face_bound
- )
-{
+// static void
+// _get_groups
+// (
+//  PDM_multipart_t     *multipart,
+//  const int            i_zone,
+//  const int            i_part,
+//        int           *n_face_group,
+//        int          **face_bound_idx,
+//        int          **face_bound
+//  )
+// {
 
-  int n_section;
-  int*n_elt;
-  int n_cell;
-  int n_face;
-  int n_face_part_bound;
-  int n_vtx;
-  int n_proc;
-  int n_total_part;
-  int s_cell_face;
-  int s_face_vtx;
-  int s_face_bound;
-  int s_face_join;
-  int n_join_groups;
-  PDM_multipart_part_dim_get(multipart,
-                             i_zone,
-                             i_part,
-                             &n_section,
-                             &n_elt,
-                             &n_cell,
-                             &n_face,
-                             &n_face_part_bound,
-                             &n_vtx,
-                             &n_proc,
-                             &n_total_part,
-                             &s_cell_face,
-                             &s_face_vtx,
-                             &s_face_bound,
-                             n_face_group,
-                             &s_face_join,
-                             &n_join_groups);
+//   int n_section;
+//   int*n_elt;
+//   int n_cell;
+//   int n_face;
+//   int n_face_part_bound;
+//   int n_vtx;
+//   int n_proc;
+//   int n_total_part;
+//   int s_cell_face;
+//   int s_face_vtx;
+//   int s_face_bound;
+//   int s_face_join;
+//   int n_join_groups;
+//   PDM_multipart_part_dim_get(multipart,
+//                              i_zone,
+//                              i_part,
+//                              &n_section,
+//                              &n_elt,
+//                              &n_cell,
+//                              &n_face,
+//                              &n_face_part_bound,
+//                              &n_vtx,
+//                              &n_proc,
+//                              &n_total_part,
+//                              &s_cell_face,
+//                              &s_face_vtx,
+//                              &s_face_bound,
+//                              n_face_group,
+//                              &s_face_join,
+//                              &n_join_groups);
+
+//   log_trace("n_face_group = %d\n", n_face_group);
+//   log_trace("n_join_groups = %d\n", n_join_groups);
 
 
-  int         **elt_vtx_idx;
-  int         **elt_vtx;
-  PDM_g_num_t **elt_section_ln_to_gn;
-  int          *cell_tag;
-  int          *cell_face_idx;
-  int          *cell_face;
-  PDM_g_num_t  *cell_ln_to_gn;
-  int          *face_tag;
-  int          *face_cell;
-  int          *face_vtx_idx;
-  int          *face_vtx;
-  PDM_g_num_t  *face_ln_to_gn;
-  int          *face_part_bound_proc_idx;
-  int          *face_part_bound_part_idx;
-  int          *face_part_bound;
-  int          *vtx_tag;
-  double       *vtx;
-  PDM_g_num_t  *vtx_ln_to_gn;
-  PDM_g_num_t  *face_bound_ln_to_gn;
-  int          *face_join_idx;
-  int          *face_join;
-  PDM_g_num_t  *face_join_ln_to_gn;
-  PDM_multipart_part_val_get(multipart,
-                             i_zone,
-                             i_part,
-                             &elt_vtx_idx,
-                             &elt_vtx,
-                             &elt_section_ln_to_gn,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             &face_part_bound_proc_idx,
-                             &face_part_bound_part_idx,
-                             &face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             face_bound_idx,
-                             face_bound,
-                             &face_bound_ln_to_gn,
-                             &face_join_idx,
-                             &face_join,
-                             &face_join_ln_to_gn);
-}
+//   int         **elt_vtx_idx;
+//   int         **elt_vtx;
+//   PDM_g_num_t **elt_section_ln_to_gn;
+//   int          *cell_tag;
+//   int          *cell_face_idx;
+//   int          *cell_face;
+//   PDM_g_num_t  *cell_ln_to_gn;
+//   int          *face_tag;
+//   int          *face_cell;
+//   int          *face_vtx_idx;
+//   int          *face_vtx;
+//   PDM_g_num_t  *face_ln_to_gn;
+//   int          *face_part_bound_proc_idx;
+//   int          *face_part_bound_part_idx;
+//   int          *face_part_bound;
+//   int          *vtx_tag;
+//   double       *vtx;
+//   PDM_g_num_t  *vtx_ln_to_gn;
+//   PDM_g_num_t  *face_bound_ln_to_gn;
+//   int          *face_join_idx;
+//   int          *face_join;
+//   PDM_g_num_t  *face_join_ln_to_gn;
+//   PDM_multipart_part_val_get(multipart,
+//                              i_zone,
+//                              i_part,
+//                              &elt_vtx_idx,
+//                              &elt_vtx,
+//                              &elt_section_ln_to_gn,
+//                              &cell_tag,
+//                              &cell_face_idx,
+//                              &cell_face,
+//                              &cell_ln_to_gn,
+//                              &face_tag,
+//                              &face_cell,
+//                              &face_vtx_idx,
+//                              &face_vtx,
+//                              &face_ln_to_gn,
+//                              &face_part_bound_proc_idx,
+//                              &face_part_bound_part_idx,
+//                              &face_part_bound,
+//                              &vtx_tag,
+//                              &vtx,
+//                              &vtx_ln_to_gn,
+//                              face_bound_idx,
+//                              face_bound,
+//                              &face_bound_ln_to_gn,
+//                              &face_join_idx,
+//                              &face_join,
+//                              &face_join_ln_to_gn);
+// }
 
 
 
@@ -379,16 +382,28 @@ int main(int argc, char *argv[])
                                                &pface_edge,
                                                &pface_edge_idx,
                                                PDM_OWNERSHIP_KEEP);
-
-  PDM_UNUSED (pn_face);
+  PDM_UNUSED(pn_face);
 
   /* Get groups */
-  _get_groups(mpart,
-              0,
-              i_part,
-              &pn_edge_group,
-              &pgroup_edge_idx,
-              &pgroup_edge);
+  // int          pn_edge_group        = 0;
+  // int         *pedge_group          = NULL;
+  // int         *pedge_group_idx      = NULL;
+  PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
+
+  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+                          &pn_edge_group,
+                          &pgroup_edge_idx,
+                          &pgroup_edge,
+                          &edge_bound_ln_to_gn);
+
+  // _get_groups(mpart,
+  //             0,
+  //             i_part,
+  //             &pn_edge_group,
+  //             &pgroup_edge_idx,
+  //             &pgroup_edge);
+
+  log_trace("pn_edge_group = %d\n", pn_edge_group);
 
   /* Create pvtx_vtx_gnum */
 
@@ -409,6 +424,8 @@ int main(int argc, char *argv[])
 
   int *pvtx_edge_idx = tmp_pvtx_edge_idx[i_part];
   int *pvtx_edge     = tmp_pvtx_edge[i_part];
+  free(tmp_pvtx_edge_idx);
+  free(tmp_pvtx_edge);
 
   // Combine into vtx_vtx
 
@@ -422,6 +439,7 @@ int main(int argc, char *argv[])
                            pedge_vtx,
                            &pvtx_vtx_idx,
                            &pvtx_vtx);
+  free(pedge_vtx_idx);
 
   // Create vtx_vtx stride
   int *pstrid = malloc(pn_vtx * sizeof(int));
@@ -459,8 +477,8 @@ int main(int argc, char *argv[])
   log_trace("\n");
   }
 
-  PDM_log_trace_array_long(pvtx_vtx_gnum, adapted_size, "pvtx_vtx_gnum : ");
-  PDM_log_trace_array_int(pstrid, pn_vtx, "pstrid : ");
+  // PDM_log_trace_array_long(pvtx_vtx_gnum, adapted_size, "pvtx_vtx_gnum : ");
+  // PDM_log_trace_array_int(pstrid, pn_vtx, "pstrid : ");
 
   /* Export mesh to vtk format */
   char filename[999];
@@ -477,7 +495,6 @@ int main(int argc, char *argv[])
                              0,
                              NULL,
                              NULL);
-
   /* part_to_block */
 
   int *dstrid_vtx_vtx_gnum  = NULL;
@@ -492,7 +509,7 @@ int main(int argc, char *argv[])
                                                       n_part,
                                                       comm);
 
-  int s_block_data = PDM_part_to_block_exch(ptb,
+  PDM_part_to_block_exch(ptb,
                          sizeof(PDM_g_num_t),
                          PDM_STRIDE_VAR_INTERLACED,
                          1,
@@ -500,8 +517,6 @@ int main(int argc, char *argv[])
                (void **) &pvtx_vtx_gnum,
                          &dstrid_vtx_vtx_gnum,
                (void **) &dvtx_vtx_gnum);
-
-  PDM_UNUSED (s_block_data);
 
   int nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get(ptb);
@@ -531,12 +546,14 @@ int main(int argc, char *argv[])
       } // end loop on neighbours to be shifted
     } // end if shifted
   } // end loop on vertices
+  free(dstrid_vtx_vtx_gnum);
 
   PDM_log_trace_array_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc, "dstrid_vtx_vtx_gnum_sorted: ");
   // PDM_log_trace_array_long(dvtx_vtx_gnum, idx_comp, "dvtx_vtx_gnum : ");
   tmp_idx = PDM_array_new_idx_from_sizes_int(dstrid_vtx_vtx_gnum_sorted, nelmt_proc);
   PDM_log_trace_connectivity_long(tmp_idx, dvtx_vtx_gnum, nelmt_proc, "after dvtx_vtx_gnum : ");
   free(tmp_idx);
+  free(pvtx_vtx_gnum);
 
   /* block_to_part */
   int         **pstrid_new       = NULL;
@@ -555,12 +572,15 @@ int main(int argc, char *argv[])
                 (void *) dvtx_vtx_gnum,
                          &pstrid_new,
               (void ***) &pvtx_vtx_gnum_new);
+  free(dstrid_vtx_vtx_gnum_sorted);
+  free(dvtx_vtx_gnum);
 
   int size = PDM_block_to_part_n_elt_get(btp, i_part);
   int size_neighbours = 0;
   for (int i = 0; i < size; i++) {
     size_neighbours += pstrid_new[i_part][i];
   }
+  PDM_UNUSED(size_neighbours);
 
   int indice = 0;
   for (int i = 0; i < size; i++) {
@@ -586,9 +606,10 @@ int main(int argc, char *argv[])
                                   &pgroup_edge,
                                   &tmp_pedge_group_idx,
                                   &tmp_pedge_group);
-
   int *pedge_group_idx = tmp_pedge_group_idx[i_part];
-  int *pedge_group     = tmp_pedge_group[i_part];
+  int *pedge_group     = tmp_pedge_group    [i_part];
+  free(tmp_pedge_group_idx);
+  free(tmp_pedge_group);
 
   /* Combine into vtx_group */
 
@@ -602,7 +623,8 @@ int main(int argc, char *argv[])
                            pedge_group,
                            &pvtx_group_idx,
                            &pvtx_group);
-
+  free(pvtx_edge_idx);
+  free(pvtx_edge    );
   // part_to_part
 
   // Create
@@ -674,15 +696,29 @@ int main(int argc, char *argv[])
       } // end if no group
     } // end loop on vertices
 
-
+    free(pvtx_coord_neighbours[i_part]);
+    free(pvtx_coord_neighbours);
   } // end loop Laplace Smoothing stepping
 
   /* Free entities */
 
-  PDM_multipart_free(mpart);
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
-  PDM_part_to_part_free(ptp);
+  PDM_part_to_part_free (ptp);
+  PDM_multipart_free(mpart);
+    free(tmp_coord);
+  free(pstrid_new[i_part]);
+  free(pstrid_new);
+  free(pstrid);
+  free(pvtx_vtx_gnum_new[i_part]);
+  free(pvtx_vtx_gnum_new);
+  free(pvtx_vtx_idx);
+  free(pvtx_vtx);
+  free(pedge_group_idx);
+  free(pedge_group    );
+  free(pvtx_group_idx );
+  free(pvtx_group     );
+  free(pvtx_vtx_gnum_new_idx);
 
   PDM_MPI_Finalize();
   return 0;

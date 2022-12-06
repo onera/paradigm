@@ -62,6 +62,7 @@ typedef struct {
 
   int         **tgt_in_src_idx;    /*!< Revsese results */
   PDM_g_num_t **tgt_in_src;        /*!< Revsese results */
+  double      **tgt_in_src_dist;   /*!< Revsese results */
 
 } _src_point_cloud_t ;
 
@@ -78,6 +79,7 @@ struct _pdm_closest_point_t {
   PDM_ownership_t owner;                        /*!< Which have the responsabilities of results */
   PDM_bool_t      results_is_getted;            /*!< Flags to indicate if result is getted      */
   PDM_bool_t      tgt_in_src_results_is_getted; /*!< Flags to indicate if result is getted      */
+  PDM_bool_t      tgt_in_src_results_is_getted_d; /*!< Flags to indicate if result is getted      */
 
   int n_closest;                                /*!< Number of closest source points to find for each
                                                   target point  */

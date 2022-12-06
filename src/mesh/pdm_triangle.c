@@ -5,6 +5,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -29,7 +30,26 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
- * Type
+ * Private function definitions
+ *============================================================================*/
+
+/* Computes the determinant of a 3x3 matrix defined by its columns */
+
+static inline double
+_determinant_3x3
+(
+ const double a[3],
+ const double b[3],
+ const double c[3]
+ )
+{
+  return a[0] * (b[1]*c[2] - b[2]*c[1])
+    +    a[1] * (b[2]*c[0] - b[0]*c[2])
+    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
+}
+
+/*============================================================================
+ * Public function definitions
  *============================================================================*/
 
 
@@ -54,7 +74,7 @@ extern "C" {
 
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position
+PDM_triangle_evaluate_position_old
 (
  const double  x[3],
  const double  pts[9],
@@ -130,9 +150,12 @@ PDM_triangle_evaluate_position
   }
 
   for (int i = 0; i < 2; i++) {
-    rhs[i] = cp[indices[i]] - pt3[indices[i]];
-    c1[i] = pt1[indices[i]] - pt3[indices[i]];
-    c2[i] = pt2[indices[i]] - pt3[indices[i]];
+    // rhs[i] = cp[indices[i]] - pt3[indices[i]];
+    // c1[i] = pt1[indices[i]] - pt3[indices[i]];
+    // c2[i] = pt2[indices[i]] - pt3[indices[i]];
+    rhs[i] = cp[indices[i]] - pt1[indices[i]];
+    c1[i] = pt2[indices[i]] - pt1[indices[i]];
+    c2[i] = pt3[indices[i]] - pt1[indices[i]];
   }
 
 PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
@@ -192,9 +215,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
         if (dist_to_point < dist_to_line1) {
           *min_dist2 = dist_to_point;
           closest = pt3;
-          _weights[0] = 1.;
+          _weights[0] = 0.;
           _weights[1] = 0.;
-          _weights[2] = 0.;
+          _weights[2] = 1.;
         }
         else {
           *min_dist2 = dist_to_line1;
@@ -204,9 +227,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = t1;
-          _weights[1] = 1. - t1;
-          _weights[2] = 0.;
+          _weights[0] = 1. - t1;
+          _weights[1] = 0.;
+          _weights[2] = t1;
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
@@ -216,9 +239,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t2 > 1.) {
             t2 = 1.;
           }
-          _weights[0] = 1. - t2;
-          _weights[1] = 0.;
-          _weights[2] = t2;
+          _weights[0] = 0.;
+          _weights[1] = t2;
+          _weights[2] = 1. - t2;
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -236,8 +259,8 @@ PDM_GCC_SUPPRESS_WARNING_POP
         if (dist_to_point < dist_to_line1) {
           *min_dist2 = dist_to_point;
           closest = pt1;
-          _weights[0] = 0.;
-          _weights[1] = 1.;
+          _weights[0] = 1.;
+          _weights[1] = 0.;
           _weights[2] = 0.;
         }
         else {
@@ -248,9 +271,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = t1;
-          _weights[1] = 1. - t1;
-          _weights[2] = 0.;
+          _weights[0] = 1. - t1;
+          _weights[1] = 0.;
+          _weights[2] = t1;
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
@@ -260,9 +283,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t2 > 1.) {
             t2 = 1.;
           }
-          _weights[0] = 0.;
-          _weights[1] = 1. - t2;
-          _weights[2] = t2;
+          _weights[0] = 1. - t2;
+          _weights[1] = t2;
+          _weights[2] = 0.;
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -281,8 +304,8 @@ PDM_GCC_SUPPRESS_WARNING_POP
           *min_dist2 = dist_to_point;
           closest = pt2;
           _weights[0] = 0.;
-          _weights[1] = 0.;
-          _weights[2] = 1.;
+          _weights[1] = 1.;
+          _weights[2] = 0.;
         }
         else {
           *min_dist2 = dist_to_line1;
@@ -292,9 +315,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = t1;
-          _weights[1] = 0.;
-          _weights[2] = 1. - t1;
+          _weights[0] = 0.;
+          _weights[1] = 1. - t1;
+          _weights[2] = t1;
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
@@ -304,9 +327,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t2 > 1.) {
             t2 = 1.;
           }
-          _weights[0] = 0.;
-          _weights[1] = 1. - t2;
-          _weights[2] = t2;
+          _weights[0] = 1. - t2;
+          _weights[1] = t2;
+          _weights[2] = 0.;
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -320,9 +343,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = 0.;
-          _weights[1] = 1. - t1;
-          _weights[2] = t1;
+          _weights[0] = 1. - t1;
+          _weights[1] = t1;
+          _weights[2] = 0.;
       }
       else if (_weights[1] < 0.0) {
           *min_dist2 = PDM_line_distance (x, pt2, pt3, &t1, closest_point);
@@ -331,9 +354,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = t1;
-          _weights[1] = 0;
-          _weights[2] = 1. - t1;
+          _weights[0] = 0.;
+          _weights[1] = 1. - t1;
+          _weights[2] = t1;
         }
       else if (_weights[2] < 0.0) {
           *min_dist2 = PDM_line_distance (x, pt1, pt3, &t1, closest_point);
@@ -342,14 +365,74 @@ PDM_GCC_SUPPRESS_WARNING_POP
           } else if (t1 > 1.) {
             t1 = 1.;
           }
-          _weights[0] = t1;
-          _weights[1] = 1. - t1;
-          _weights[2] = 0.;
+          _weights[0] = 1. - t1;
+          _weights[1] = 0.;
+          _weights[2] = t1;
         }
 
         }
     return PDM_TRIANGLE_OUTSIDE;
   }
+}
+
+/**
+ * \brief Computes the intersection between a line and a triangle
+ *
+ * \param [in]   line        Points of the line
+ * \param [in]   tria_coord  Points of the triangle
+ * \param [out]  ip          Intersection point
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_line_intersection
+(
+const double line[6],
+const double tria_coord[9],
+      double ip[3]
+)
+{
+
+  PDM_plane_line_intersection(line, tria_coord, ip);
+
+  PDM_triangle_status_t found = PDM_TRIANGLE_OUTSIDE;
+
+  /* Check if intersection point is in the triangle */
+  double c1[3];
+  double c2[3];
+  double c3[3];
+
+  double det1, det2, det3;
+
+  // ABD
+  c1[0] = tria_coord[0]; c1[1] = tria_coord[3]; c1[2] = ip[0];
+  c2[0] = tria_coord[1]; c2[1] = tria_coord[4]; c2[2] = ip[1];
+  c3[0] = tria_coord[2]; c3[1] = tria_coord[5]; c3[2] = ip[2];
+
+  det1 = _determinant_3x3(c1, c2, c3);
+
+  // DBC
+  c1[0] = ip[0]; c1[1] = tria_coord[3]; c1[2] = tria_coord[6];
+  c2[0] = ip[1]; c2[1] = tria_coord[4]; c2[2] = tria_coord[7];
+  c3[0] = ip[2]; c3[1] = tria_coord[5]; c3[2] = tria_coord[8];
+
+  det2 = _determinant_3x3(c1, c2, c3);
+
+  // ADC
+  c1[0] = tria_coord[0]; c1[1] = ip[0]; c1[2] = tria_coord[6];
+  c2[0] = tria_coord[1]; c2[1] = ip[1]; c2[2] = tria_coord[7];
+  c3[0] = tria_coord[2]; c3[1] = ip[2]; c3[2] = tria_coord[8];
+
+  det3 = _determinant_3x3(c1, c2, c3);
+
+  if (det1 > 0 && det2 > 0 && det3 > 0) {
+
+    found = PDM_TRIANGLE_INSIDE;
+
+  } // end if point is inside triangle
+
+  return found;
+
 }
 
 
@@ -407,21 +490,34 @@ PDM_triangle_closest_point
   const double *v1 = v + 3;
   const double *v2 = v + 6;
 
-  double v20[3] = {v0[0] - v2[0],
-                   v0[1] - v2[1],
-                   v0[2] - v2[2]};
+  // double v20[3] = {v0[0] - v2[0],
+  //                  v0[1] - v2[1],
+  //                  v0[2] - v2[2]};
 
-  double v21[3] = {v1[0] - v2[0],
-                   v1[1] - v2[1],
-                   v1[2] - v2[2]};
+  // double v21[3] = {v1[0] - v2[0],
+  //                  v1[1] - v2[1],
+  //                  v1[2] - v2[2]};
 
-  double v2x[3] = {x[0] - v2[0],
-                   x[1] - v2[1],
-                   x[2] - v2[2]};
+  // double v2x[3] = {x[0] - v2[0],
+  //                  x[1] - v2[1],
+  //                  x[2] - v2[2]};
 
-  double a = PDM_DOT_PRODUCT (v20, v20);
-  double b = PDM_DOT_PRODUCT (v20, v21);
-  double c = PDM_DOT_PRODUCT (v21, v21);
+  // double a = PDM_DOT_PRODUCT (v20, v20);
+  // double b = PDM_DOT_PRODUCT (v20, v21);
+  // double c = PDM_DOT_PRODUCT (v21, v21);
+  double e1[3] = {v1[0] - v0[0],
+                  v1[1] - v0[1],
+                  v1[2] - v0[2]};
+  double e2[3] = {v2[0] - v0[0],
+                  v2[1] - v0[1],
+                  v2[2] - v0[2]};
+  double e[3]  = {x[0] - v0[0],
+                  x[1] - v0[1],
+                  x[2] - v0[2]};
+
+  double a = PDM_DOT_PRODUCT(e1, e1);
+  double b = PDM_DOT_PRODUCT(e1, e2);
+  double c = PDM_DOT_PRODUCT(e2, e2);
 
   double det = a*c - b*b;
 
@@ -429,8 +525,10 @@ PDM_triangle_closest_point
     return PDM_TRIANGLE_DEGENERATED;
   }
 
-  double r = PDM_DOT_PRODUCT (v20, v2x);
-  double s = PDM_DOT_PRODUCT (v21, v2x);
+  // double r = PDM_DOT_PRODUCT (v20, v2x);
+  // double s = PDM_DOT_PRODUCT (v21, v2x);
+  double r = PDM_DOT_PRODUCT(e1, e);
+  double s = PDM_DOT_PRODUCT(e2, e);
 
 
   /* Solve for weights of orthogonal projection of point on triangle's plane */
@@ -441,6 +539,7 @@ PDM_triangle_closest_point
   }
   _weights[1] = (r*c - s*b) / det;
   _weights[2] = (s*a - r*b) / det;
+  // log_trace("  u = %f, v = %f\n", _weights[1], _weights[2]);
   _weights[0] = 1. - _weights[1] - _weights[2];
 
   /* Projection inside triangle (= closest point) */
@@ -450,7 +549,8 @@ PDM_triangle_closest_point
 
     *min_dist2 = 0.;
     for (int idim = 0; idim < 3; idim++) {
-      closest_point[idim] = v[6 + idim] + _weights[1]*v20[idim] + _weights[2]*v21[idim];
+      // closest_point[idim] = v[6 + idim] + _weights[1]*v20[idim] + _weights[2]*v21[idim];
+      closest_point[idim] = v[idim] + _weights[1]*e1[idim] + _weights[2]*e2[idim];
       double delta = x[idim] - closest_point[idim];
       *min_dist2 += delta * delta;
     }
@@ -468,11 +568,13 @@ PDM_triangle_closest_point
     d01 = PDM_line_distance (x, v0, v1, &t01, c01);
     d12 = PDM_line_distance (x, v1, v2, &t12, c12);
     d20 = PDM_line_distance (x, v2, v0, &t20, c20);
+    // log_trace("d01/12/20 = %f / %f / %f\n", d01, d12, d20);
 
     if (d01 <= d12 && d01 <= d20) {
-      i = 0;
-      j = 1;
-      k = 2;
+      // i = 0;
+      // j = 1;
+      // k = 2;
+      i = 2; j = 0; k = 1;
       *min_dist2 = d01;
       t = t01;
 
@@ -482,9 +584,10 @@ PDM_triangle_closest_point
     }
 
     else if (d12 <= d01 && d12 <= d20) {
-      i = 1;
-      j = 2;
-      k = 0;
+      // i = 1;
+      // j = 2;
+      // k = 0;
+      i = 0; j = 1; k = 2;
       *min_dist2 = d12;
       t = t12;
 
@@ -494,9 +597,10 @@ PDM_triangle_closest_point
     }
 
     else {
-      i = 2;
-      j = 0;
-      k = 1;
+      // i = 2;
+      // j = 0;
+      // k = 1;
+      i = 1; j = 0; k = 2;
       *min_dist2 = d20;
       t = t20;
 
@@ -511,9 +615,12 @@ PDM_triangle_closest_point
       t = 1.;
     }
 
-    _weights[i] = 0.;
-    _weights[j] = 1. - t;
-    _weights[k] = t;
+    PDM_UNUSED(i);
+    PDM_UNUSED(j);
+    PDM_UNUSED(k);
+    // _weights[i] = 0.;
+    // _weights[j] = 1. - t;
+    // _weights[k] = t;
 
     return PDM_TRIANGLE_OUTSIDE;
   }
@@ -586,6 +693,354 @@ PDM_triangle_circumcircle
   PDM_GCC_SUPPRESS_WARNING_POP
     }
 
+
+/**
+ * \brief Compute intersection point between a triangle and a semi-infinite ray
+ *
+ * \param[in]  origin        Ray origin
+ * \param[in]  direction     Ray direction (need not be normalized)
+ * \param[in]  tri_coord     Coordinates of the triangle's vertices
+ * \param[out] intersection  Coordinates of the intersection point
+ * \param[out] t             Ray-parameter of the intersection point
+ * \param[out] weight        Barycentric coordinates in triangle of intersection point (or NULL)
+ *
+ * \return Intersection status
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_ray_intersection
+(
+ const double  origin[3],
+ const double  direction[3],
+ const double  tri_coord[9],
+       double  intersection[3],
+       double *t,
+       double *weight
+ )
+{
+  const double epsilon = 1e-12;
+
+  double v01[3] = {
+    tri_coord[3] - tri_coord[0],
+    tri_coord[4] - tri_coord[1],
+    tri_coord[5] - tri_coord[2]
+  };
+
+  double v02[3] = {
+    tri_coord[6] - tri_coord[0],
+    tri_coord[7] - tri_coord[1],
+    tri_coord[8] - tri_coord[2]
+  };
+
+  double normal[3];
+  PDM_CROSS_PRODUCT(normal, v01, v02);
+  double det = PDM_DOT_PRODUCT(normal, normal);
+  if (det < 1e-30) {
+    return PDM_TRIANGLE_DEGENERATED;
+  }
+  // PDM_log_trace_array_double(normal, 3, "normal : ");
+
+  double vec[3] = {
+    tri_coord[0] - origin[0],
+    tri_coord[1] - origin[1],
+    tri_coord[2] - origin[2]
+  };
+  double denom = PDM_DOT_PRODUCT(direction, normal);
+  double numer = PDM_DOT_PRODUCT(vec,       normal);
+
+  // log_trace("denom = %e, numer = %e\n", denom, numer);
+
+  if (PDM_ABS(denom) < epsilon) {
+    // Ray parallel to plane
+
+    if (PDM_ABS(numer) < epsilon) {
+      // Ray inside plane
+
+      // 1) Check if ray origin is inside triangle
+      double a = PDM_DOT_PRODUCT(v01, v01);
+      double b = PDM_DOT_PRODUCT(v01, v02);
+      double c = PDM_DOT_PRODUCT(v02, v02);
+
+      double e = -PDM_DOT_PRODUCT(vec, v01);
+      double f = -PDM_DOT_PRODUCT(vec, v02);
+
+      double u = e*c - f*b;
+      double v = a*f - b*e;
+
+      if (u >= 0. && v >= 0. && u + v <= det) {
+        memcpy(intersection, origin, sizeof(double)*3);
+        *t = 0.;
+        if (weight != NULL) {
+          double idet = 1./det;
+          weight[1] = u*idet;
+          weight[2] = v*idet;
+          weight[0] = 1. - weight[1] - weight[2];
+        }
+        return PDM_TRIANGLE_INSIDE;
+      }
+
+      // 2) Find first intersection between ray and the triangle's edges
+      double destination[3] = {
+        origin[0] + direction[0],
+        origin[1] + direction[1],
+        origin[2] + direction[2]
+      };
+
+      PDM_triangle_status_t stat = PDM_TRIANGLE_OUTSIDE;
+      *t = HUGE_VAL;
+      double s, _s, _t;
+      int iedge = -1;
+      for (int i = 0; i < 3; i++) {
+        PDM_line_intersection_mean_square(tri_coord + 3*i,
+                                          tri_coord + 3*((i+1)%3),
+                                          origin,
+                                          destination,
+                                          &_s,
+                                          &_t);
+        if (_s >= 0. && _s <= 1. && _t >= 0.) {
+          stat = PDM_TRIANGLE_INSIDE;
+          iedge = i;
+          s = _s;
+          *t = PDM_MIN(*t, _t);
+        }
+      }
+
+      if (stat == PDM_TRIANGLE_INSIDE) {
+        intersection[0] = origin[0] + (*t)*direction[0];
+        intersection[1] = origin[1] + (*t)*direction[1];
+        intersection[2] = origin[2] + (*t)*direction[2];
+
+        if (weight != NULL) {
+          if (iedge == 0) {
+            weight[1] = s;
+            weight[2] = 0;
+          }
+          else if (iedge == 1) {
+            weight[1] = 1 - s;
+            weight[2] = s;
+          }
+          else {
+            weight[1] = 0;
+            weight[2] = 1 - s;
+          }
+          weight[0] = 1. - weight[1] - weight[2];
+        }
+      }
+
+      return stat;
+
+    }
+    else {
+      return PDM_TRIANGLE_OUTSIDE;
+    }
+
+  }
+  else {
+    // General case
+    *t = numer/denom;
+    // log_trace("t = %f (%f %f %f)\n",
+    //           t,
+    //           origin[0] + t*direction[0],
+    //           origin[1] + t*direction[1],
+    //           origin[2] + t*direction[2]);
+
+    if (*t < 0.) {
+      return PDM_TRIANGLE_OUTSIDE;
+    }
+    else {
+      // Check if ray-plane intersection is inside triangle
+      intersection[0] = origin[0] + (*t)*direction[0];
+      intersection[1] = origin[1] + (*t)*direction[1];
+      intersection[2] = origin[2] + (*t)*direction[2];
+      // log_trace("intersection = %f %f %f\n",
+      //           intersection[0], intersection[1], intersection[2]);
+
+      double a = PDM_DOT_PRODUCT(v01, v01);
+      double b = PDM_DOT_PRODUCT(v01, v02);
+      double c = PDM_DOT_PRODUCT(v02, v02);
+
+      double vec2[3] = {
+        intersection[0] - tri_coord[0],
+        intersection[1] - tri_coord[1],
+        intersection[2] - tri_coord[2]
+      };
+
+      double e = PDM_DOT_PRODUCT(vec2, v01);
+      double f = PDM_DOT_PRODUCT(vec2, v02);
+
+      double u = e*c - f*b;
+      double v = a*f - b*e;
+
+      if (weight != NULL) {
+        double idet = 1./det;
+        weight[1] = u*idet;
+        weight[2] = v*idet;
+        weight[0] = 1. - weight[1] - weight[2];
+      }
+
+      if (u >= 0. && v >= 0. && u + v <= det) {
+        return PDM_TRIANGLE_INSIDE;
+      }
+
+    }
+
+  }
+
+  return PDM_TRIANGLE_OUTSIDE;
+}
+
+
+/* Compute squared euclidean distance between points a and b */
+static inline double
+_dist2_point_point
+(
+ const double a[3],
+ const double b[3]
+ )
+ {
+  double dist2 = 0;
+  for (int i = 0; i < 3; i++) {
+    dist2 += (a[i] - b[i])*(a[i] - b[i]);
+  }
+  return dist2;
+ }
+
+/* Compute squared euclidean distance between point p and segment ab */
+static inline double
+_dist2_point_segment
+(
+ const double  p[3],
+ const double  a[3],
+ const double  b[3],
+       double *t
+ )
+{
+  double ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
+  double abab = PDM_DOT_PRODUCT(ab, ab);
+
+  if (abab <= 0.) {
+    // degenerate segment
+    double mid[3] = {0.5*(a[0] + b[0]), 0.5*(a[1] + b[1]), 0.5*(a[2] + b[2])};
+    *t = 0.5;
+    return _dist2_point_point(p, mid);
+  }
+  else {
+    double ap[3] = {p[0] - a[0], p[1] - a[1], p[2] - a[2]};
+    *t = PDM_DOT_PRODUCT(ap, ab) / abab;
+    if (*t < 0) {
+      *t = 0;
+      return _dist2_point_point(p, a);
+    }
+    else if (*t > 1) {
+      *t = 1;
+      return _dist2_point_point(p, b);
+    }
+    else {
+      double c[3] = {
+        a[0] + (*t)*ab[0],
+        a[1] + (*t)*ab[1],
+        a[2] + (*t)*ab[2]
+      };
+      return _dist2_point_point(p, c);
+    }
+  }
+}
+
+PDM_triangle_status_t
+PDM_triangle_evaluate_position
+(
+ const double  x[3],
+ const double  pts[9],
+       double *closest_point,
+       double *min_dist2,
+       double *weights
+)
+{
+  PDM_triangle_status_t stat = PDM_TRIANGLE_OUTSIDE;
+
+  double __weight[3];
+  double *_weight = weights;
+  if (weights == NULL) {
+    _weight = __weight;
+  }
+
+  double v01[3];
+  double v02[3];
+  double v0x[3];
+  for (int i = 0; i < 3; i++) {
+    v01[i] = pts[i+3] - pts[i];
+    v02[i] = pts[i+6] - pts[i];
+    v0x[i] =   x[i  ] - pts[i];
+  }
+
+  double v01v01 = PDM_DOT_PRODUCT(v01, v01);
+  double v01v02 = PDM_DOT_PRODUCT(v01, v02);
+  double v02v02 = PDM_DOT_PRODUCT(v02, v02);
+
+  double det = v01v01*v02v02 - v01v02*v01v02;
+
+  if (det <= 0.) {
+    return PDM_TRIANGLE_DEGENERATED;
+  }
+
+  double v0xv01 = PDM_DOT_PRODUCT(v0x, v01);
+  double v0xv02 = PDM_DOT_PRODUCT(v0x, v02);
+
+  _weight[1] = v0xv01*v02v02 - v0xv02*v01v02;
+  _weight[2] = v0xv02*v01v01 - v0xv01*v01v02;
+  _weight[0] = det - _weight[1] - _weight[2];
+
+  if (_weight[1] >= 0 && _weight[1] <= det &&
+      _weight[2] >= 0 && _weight[2] <= det &&
+      _weight[0] >= 0) {
+    // projection lies inside the triangle
+    stat = PDM_TRIANGLE_INSIDE;
+
+    double idet = 1./det;
+    _weight[0] *= idet;
+    _weight[1] *= idet;
+    _weight[2] *= idet;
+
+
+    *min_dist2 = 0;
+    for (int i = 0; i < 3; i++) {
+      double delta = x[i] - (_weight[0]*pts[i] + _weight[1]*pts[3+i] + _weight[2]*pts[6+i]);
+      *min_dist2 += delta*delta;
+    }
+  }
+
+  else {
+    // projection lies outside the triangle
+    // => find closest point on the triangle boundary
+    *min_dist2 = HUGE_VAL;
+    int    imin = -1;
+    double tmin = 0.;
+    for (int i = 0; i < 3; i++) {
+      if (_weight[i] < 0) {
+        double t;
+        double dist2 = _dist2_point_segment(x, &pts[3*((i+1)%3)], &pts[3*((i+2)%3)], &t);
+
+        if (dist2 < *min_dist2) {
+          *min_dist2 = dist2;
+          imin = (i+1)%3;
+          tmin = t;
+        }
+      }
+    }
+
+    _weight[imin      ] = 1. - tmin;
+    _weight[(imin+1)%3] = tmin;
+    _weight[(imin+2)%3] = 0.;
+  }
+
+  if (closest_point != NULL) {
+    for (int i = 0; i < 3; i++) {
+      closest_point[i] = _weight[0]*pts[i] + _weight[1]*pts[3+i] + _weight[2]*pts[6+i];
+    }
+  }
+  return stat;
+}
 
 
 #ifdef __cplusplus

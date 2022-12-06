@@ -67,7 +67,6 @@ program testf
   if (n_rank .ne. 1) then
     print *,'Error : 1 MPI processes are mandatory'
     call mpi_finalize(code)
-    stop
   end if
 
 
@@ -123,7 +122,6 @@ program testf
 
 
   call PDM_part_to_block_exch (ptb,                       &
-                               pdm_l_num_s,               & ! s_data
                                PDM_STRIDE_VAR_INTERLACED, & ! t_stride
                                1,                         & ! cst_stride
                                part_stride,               &

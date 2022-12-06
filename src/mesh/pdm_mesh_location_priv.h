@@ -13,6 +13,7 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_timer.h"
+#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
@@ -26,7 +27,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER_MESH_LOCATION 14
+#define NTIMER_MESH_LOCATION 11
 
 /**
  * \struct _PDM_Dist_t
@@ -93,7 +94,6 @@ struct _pdm_mesh_location_t {
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  int  n_part;
   PDM_Mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
   PDM_Mesh_nodal_t* _mesh_nodal;
   PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
@@ -102,6 +102,9 @@ struct _pdm_mesh_location_t {
   PDM_l_num_t **cell_vtx;
 
   _point_cloud_t *point_clouds; /*!< Point clouds */
+
+  int        use_user_extract;
+  int      **is_elmt_select_by_user;
 
   double tolerance;
 
@@ -127,13 +130,16 @@ struct _pdm_mesh_location_t {
   int  tag_point_location_get; /*!< Tag call to point_location_get function */ 
   int  tag_points_in_elt_get;  /*!< Tag call to points_in_elt_get function */ 
   int  tag_cell_vtx_get;       /*!< Tag call to cell_vtx_get function */ 
+  // int *tag_pts_in_elt_get;     /*!< Tag call to points_in_elt_get function */
 
+
+  PDM_part_to_part_t **ptp; /*!< To exchange data between elt and points (both in user frame) */
+  PDM_ownership_t     *ptp_ownership;
 } ;
 
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#undef NTIMER_MESH_LOCATION
 #ifdef  __cplusplus
 }
 #endif

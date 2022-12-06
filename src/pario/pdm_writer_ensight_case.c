@@ -92,7 +92,7 @@ struct _PDM_writer_ensight_case_t {
 
   int                      append;
 
-} _PDM_writer_ensight_case_t;
+};
 
 /*============================================================================
  * Static global variables

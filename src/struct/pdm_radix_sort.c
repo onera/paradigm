@@ -36,8 +36,8 @@ extern "C" {
  *============================================================================*/
 // const int _radix_shift = 7;
 // const int _radix_base  = 128;
-const int _radix_shift = 10;
-const int _radix_base  = 1024;
+static const int _radix_shift = 10;
+static const int _radix_base  = 1024;
 // const int _radix_shift = 11;
 // const int _radix_base  = 2048;
 // const int _radix_shift = 6;

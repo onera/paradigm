@@ -226,6 +226,21 @@ PDM_writer_step_beg
 
 
 /**
+ * \brief Is there a open step
+ *
+ * \param [in] cs             Pointer to \ref PDM_writer object
+ *
+ * \return   Flag which indicates if a step is open
+ */
+
+int 
+PDM_writer_is_open_step
+(
+ PDM_writer_t  *cs
+);
+
+
+/**
  * \brief Fin d'increment
  *
  * \param [in] cs             Pointer to \ref PDM_writer object
@@ -257,13 +272,23 @@ PDM_writer_geom_create
  const int                   n_part
 );
 
+
 int
 PDM_writer_geom_create_from_mesh_nodal
 (
  PDM_writer_t              *cs,
  const char                *nom_geom,
  PDM_Mesh_nodal_t          *mesh
- );
+);
+
+
+void
+PDM_writer_geom_set_from_mesh_nodal
+(
+ PDM_writer_t              *cs,
+ const int                  id_geom,
+ PDM_Mesh_nodal_t          *mesh
+);
 
 
 /**
