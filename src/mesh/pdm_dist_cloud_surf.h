@@ -196,19 +196,6 @@ PDM_dist_cloud_surf_compute
  PDM_dist_cloud_surf_t *dist
 );
 
-/**
- *
- * \brief Compute distance
- *
- * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
- *
- */
-
-void
-PDM_dist_cloud_surf_compute_optim
-(
- PDM_dist_cloud_surf_t *dist
-);
 
 /**
  *

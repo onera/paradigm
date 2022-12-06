@@ -61,257 +61,8 @@ extern "C" {
 static int idebug = 0;
 
 /*=============================================================================
- * Private function definitions
+ * Private type
  *============================================================================*/
-
-/*============================================================================
- * Public function definitions
- *============================================================================*/
-
-/**
- *
- * \brief Create a structure to compute distance to a mesh nodal
- *
- * \param [in]   mesh_nature    Nature of the mesh
- * \param [in]   n_point_cloud  Number of point cloud
- * \param [in]   comm           MPI communicator
- *
- * \return     Pointer to \ref PDM_dist_cloud_surf object
- */
-
-PDM_dist_cloud_surf_t*
-PDM_dist_cloud_surf_create
-(
- const PDM_mesh_nature_t mesh_nature,
- const int               n_point_cloud,
- const PDM_MPI_Comm      comm,
- const PDM_ownership_t   owner
-)
-{
-  PDM_dist_cloud_surf_t *dist = (PDM_dist_cloud_surf_t *) malloc(sizeof(PDM_dist_cloud_surf_t));
-
-  dist->comm              = comm;
-  dist->owner             = owner;
-  dist->results_is_getted = PDM_FALSE;
-
-  dist->mesh_nature   = mesh_nature;
-  dist->mesh_nodal    = NULL;
-  dist->surf_mesh     = NULL;
-  dist->_surf_mesh    = NULL;
-  dist->n_point_cloud = n_point_cloud;
-  dist->points_cloud  = (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
-
-  for (int i = 0; i <  n_point_cloud; i++) {
-    dist->points_cloud[i].n_part           = -1;
-    dist->points_cloud[i].n_points         = NULL;
-    dist->points_cloud[i].coords           = NULL;
-    dist->points_cloud[i].gnum             = NULL;
-    dist->points_cloud[i].dist             = NULL;
-    dist->points_cloud[i].proj             = NULL;
-    dist->points_cloud[i].closest_elt_gnum = NULL;
-  }
-
-  dist->timer = PDM_timer_create ();
-
-  for (int i = 0; i < NTIMER; i++) {
-    dist->times_elapsed[i] = 0.;
-    dist->times_cpu    [i] = 0.;
-    dist->times_cpu_u  [i] = 0.;
-    dist->times_cpu_s  [i] = 0.;
-  }
-
-  return dist;
-}
-
-
-
-/**
- *
- * \brief Set the number of partitions of a point cloud
- *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   n_part          Number of partitions
- *
- */
-
-void
-PDM_dist_cloud_surf_n_part_cloud_set
-(
-       PDM_dist_cloud_surf_t *dist,
- const int                    i_point_cloud,
- const int                    n_part
-)
-{
-
-  dist->points_cloud[i_point_cloud].n_part = n_part;
-  dist->points_cloud[i_point_cloud].n_points =
-    realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
-  dist->points_cloud[i_point_cloud].coords =
-    realloc(dist->points_cloud[i_point_cloud].coords,
-            n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].gnum =
-    realloc(dist->points_cloud[i_point_cloud].gnum,
-            n_part * sizeof(PDM_g_num_t *));
-  dist->points_cloud[i_point_cloud].dist =
-    realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].proj =
-    realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].closest_elt_gnum =
-    realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum,
-            n_part * sizeof(PDM_g_num_t * ));
-
-  for (int i = 0; i < n_part; i++) {
-    dist->points_cloud[i_point_cloud].n_points[i] = -1;
-    dist->points_cloud[i_point_cloud].coords[i] = NULL;
-    dist->points_cloud[i_point_cloud].gnum[i] = NULL;
-    dist->points_cloud[i_point_cloud].dist[i] = NULL;
-    dist->points_cloud[i_point_cloud].proj[i] = NULL;
-    dist->points_cloud[i_point_cloud].closest_elt_gnum[i] = NULL;
-  }
-}
-
-
-/**
- *
- * \brief Set a point cloud
- *
- * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   i_part          Index of partition
- * \param [in]   n_points        Number of points
- * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number
- *
- */
-
-void
-PDM_dist_cloud_surf_cloud_set
-(
-       PDM_dist_cloud_surf_t *dist,
- const int                    i_point_cloud,
- const int                    i_part,
- const int                    n_points,
-       double                *coords,
-       PDM_g_num_t           *gnum
-)
-{
-
-  dist->points_cloud[i_point_cloud].n_points[i_part] = n_points;
-  dist->points_cloud[i_point_cloud].coords[i_part] = coords;
-  dist->points_cloud[i_point_cloud].gnum[i_part] = gnum;
-}
-
-
-/**
- *
- * \brief Set the mesh nodal
- *
- * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_dist_cloud_surf object
- *
- */
-
-void
-PDM_dist_cloud_surf_nodal_mesh_set
-(
- PDM_dist_cloud_surf_t *dist,
- PDM_Mesh_nodal_t      *mesh_nodal
-)
-{
-  dist->mesh_nodal = mesh_nodal;
-}
-
-
-
-
-/**
- *
- * \brief Map a surface mesh
- *
- * \param [in]   dist       Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   surf_mesh  Surface mesh pointer
- *
- */
-
-void
-PDM_dist_cloud_surf_surf_mesh_map
-(
- PDM_dist_cloud_surf_t *dist,
- PDM_surf_mesh_t       *surf_mesh
-)
-{
-  dist->_surf_mesh = surf_mesh;
-}
-
-
-/**
- *
- * \brief Set global data of a surface mesh
- *
- * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   n_g_face       Global number of faces
- * \param [in]   n_g_vtx        Global number of vertices
- * \param [in]   n_part         Number of partition
- *
- */
-
-void
-PDM_dist_cloud_surf_surf_mesh_global_data_set
-(
-       PDM_dist_cloud_surf_t *dist,
- const int                    n_part
-)
-{
-  assert (dist->surf_mesh == NULL);
-
-  dist->surf_mesh = PDM_surf_mesh_create (n_part, dist->comm);
-  dist->_surf_mesh = dist->surf_mesh;
-}
-
-
-/**
- *
- * \brief Set a part of a surface mesh
- *
- * \param [in]   dist          Pointer to \ref PDM_dist_cloud_surf object
- * \param [in]   i_part        Partition to define
- * \param [in]   n_face        Number of faces
- * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
- * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_ln_to_gn Local face numbering to global face numbering
- * \param [in]   n_vtx         Number of vertices
- * \param [in]   coords        Coordinates
- * \param [in]   vtx_ln_to_gn  Local vertex numbering
- *                             to global vertex numbering
- *
- */
-
-void
-PDM_dist_cloud_surf_surf_mesh_part_set
-(
-       PDM_dist_cloud_surf_t *dist,
- const int                    i_part,
- const int                    n_face,
- const int                   *face_vtx_idx,
- const int                   *face_vtx,
- const PDM_g_num_t           *face_ln_to_gn,
- const int                    n_vtx,
- const double                *coords,
- const PDM_g_num_t           *vtx_ln_to_gn
-)
-{
-  PDM_surf_mesh_part_input (dist->surf_mesh,
-                            i_part,
-                            n_face,
-                            face_vtx_idx,
-                            face_vtx,
-                            face_ln_to_gn,
-                            n_vtx,
-                            coords,
-                            vtx_ln_to_gn);
-}
-
 
 //--->>>
 typedef enum {
@@ -319,6 +70,11 @@ typedef enum {
   PDM_OCTREE_PARALLEL,
 } _octree_type_t;
 //<<<---
+
+/*=============================================================================
+ * Private function definitions
+ *============================================================================*/
+
 
 /**
  *
@@ -328,8 +84,8 @@ typedef enum {
  *
  */
 
-void
-PDM_dist_cloud_surf_compute
+static void
+_dist_cloud_surf_compute
 (
  PDM_dist_cloud_surf_t *dist
 )
@@ -1232,8 +988,6 @@ PDM_dist_cloud_surf_compute
 }
 
 
-
-
 /**
  *
  * \brief Compute distance
@@ -1242,8 +996,8 @@ PDM_dist_cloud_surf_compute
  *
  */
 
-void
-PDM_dist_cloud_surf_compute_optim
+static void
+_dist_cloud_surf_compute_optim
 (
  PDM_dist_cloud_surf_t *dist
 )
@@ -2115,6 +1869,290 @@ PDM_dist_cloud_surf_compute_optim
   dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
   dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
   PDM_timer_resume(dist->timer);
+
+}
+
+
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+/**
+ *
+ * \brief Create a structure to compute distance to a mesh nodal
+ *
+ * \param [in]   mesh_nature    Nature of the mesh
+ * \param [in]   n_point_cloud  Number of point cloud
+ * \param [in]   comm           MPI communicator
+ *
+ * \return     Pointer to \ref PDM_dist_cloud_surf object
+ */
+
+PDM_dist_cloud_surf_t*
+PDM_dist_cloud_surf_create
+(
+ const PDM_mesh_nature_t mesh_nature,
+ const int               n_point_cloud,
+ const PDM_MPI_Comm      comm,
+ const PDM_ownership_t   owner
+)
+{
+  PDM_dist_cloud_surf_t *dist = (PDM_dist_cloud_surf_t *) malloc(sizeof(PDM_dist_cloud_surf_t));
+
+  dist->comm              = comm;
+  dist->owner             = owner;
+  dist->results_is_getted = PDM_FALSE;
+
+  dist->mesh_nature   = mesh_nature;
+  dist->mesh_nodal    = NULL;
+  dist->surf_mesh     = NULL;
+  dist->_surf_mesh    = NULL;
+  dist->n_point_cloud = n_point_cloud;
+  dist->points_cloud  = (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
+
+  for (int i = 0; i <  n_point_cloud; i++) {
+    dist->points_cloud[i].n_part           = -1;
+    dist->points_cloud[i].n_points         = NULL;
+    dist->points_cloud[i].coords           = NULL;
+    dist->points_cloud[i].gnum             = NULL;
+    dist->points_cloud[i].dist             = NULL;
+    dist->points_cloud[i].proj             = NULL;
+    dist->points_cloud[i].closest_elt_gnum = NULL;
+  }
+
+  dist->timer = PDM_timer_create ();
+
+  for (int i = 0; i < NTIMER; i++) {
+    dist->times_elapsed[i] = 0.;
+    dist->times_cpu    [i] = 0.;
+    dist->times_cpu_u  [i] = 0.;
+    dist->times_cpu_s  [i] = 0.;
+  }
+
+  return dist;
+}
+
+
+
+/**
+ *
+ * \brief Set the number of partitions of a point cloud
+ *
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   n_part          Number of partitions
+ *
+ */
+
+void
+PDM_dist_cloud_surf_n_part_cloud_set
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    n_part
+)
+{
+
+  dist->points_cloud[i_point_cloud].n_part = n_part;
+  dist->points_cloud[i_point_cloud].n_points =
+    realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
+  dist->points_cloud[i_point_cloud].coords =
+    realloc(dist->points_cloud[i_point_cloud].coords,
+            n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].gnum =
+    realloc(dist->points_cloud[i_point_cloud].gnum,
+            n_part * sizeof(PDM_g_num_t *));
+  dist->points_cloud[i_point_cloud].dist =
+    realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].proj =
+    realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].closest_elt_gnum =
+    realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum,
+            n_part * sizeof(PDM_g_num_t * ));
+
+  for (int i = 0; i < n_part; i++) {
+    dist->points_cloud[i_point_cloud].n_points[i] = -1;
+    dist->points_cloud[i_point_cloud].coords[i] = NULL;
+    dist->points_cloud[i_point_cloud].gnum[i] = NULL;
+    dist->points_cloud[i_point_cloud].dist[i] = NULL;
+    dist->points_cloud[i_point_cloud].proj[i] = NULL;
+    dist->points_cloud[i_point_cloud].closest_elt_gnum[i] = NULL;
+  }
+}
+
+
+/**
+ *
+ * \brief Set a point cloud
+ *
+ * \param [in]   dist            Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [in]   n_points        Number of points
+ * \param [in]   coords          Point coordinates
+ * \param [in]   gnum            Point global number
+ *
+ */
+
+void
+PDM_dist_cloud_surf_cloud_set
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    i_part,
+ const int                    n_points,
+       double                *coords,
+       PDM_g_num_t           *gnum
+)
+{
+
+  dist->points_cloud[i_point_cloud].n_points[i_part] = n_points;
+  dist->points_cloud[i_point_cloud].coords[i_part] = coords;
+  dist->points_cloud[i_point_cloud].gnum[i_part] = gnum;
+}
+
+
+/**
+ *
+ * \brief Set the mesh nodal
+ *
+ * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   mesh_nodal_id  Mesh nodal Pointer to \ref PDM_dist_cloud_surf object
+ *
+ */
+
+void
+PDM_dist_cloud_surf_nodal_mesh_set
+(
+ PDM_dist_cloud_surf_t *dist,
+ PDM_Mesh_nodal_t      *mesh_nodal
+)
+{
+  dist->mesh_nodal = mesh_nodal;
+}
+
+
+
+
+/**
+ *
+ * \brief Map a surface mesh
+ *
+ * \param [in]   dist       Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   surf_mesh  Surface mesh pointer
+ *
+ */
+
+void
+PDM_dist_cloud_surf_surf_mesh_map
+(
+ PDM_dist_cloud_surf_t *dist,
+ PDM_surf_mesh_t       *surf_mesh
+)
+{
+  dist->_surf_mesh = surf_mesh;
+}
+
+
+/**
+ *
+ * \brief Set global data of a surface mesh
+ *
+ * \param [in]   dist           Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   n_g_face       Global number of faces
+ * \param [in]   n_g_vtx        Global number of vertices
+ * \param [in]   n_part         Number of partition
+ *
+ */
+
+void
+PDM_dist_cloud_surf_surf_mesh_global_data_set
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    n_part
+)
+{
+  assert (dist->surf_mesh == NULL);
+
+  dist->surf_mesh = PDM_surf_mesh_create (n_part, dist->comm);
+  dist->_surf_mesh = dist->surf_mesh;
+}
+
+
+/**
+ *
+ * \brief Set a part of a surface mesh
+ *
+ * \param [in]   dist          Pointer to \ref PDM_dist_cloud_surf object
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_face        Number of faces
+ * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
+ * \param [in]   face_vtx      face -> vertex connectivity
+ * \param [in]   face_ln_to_gn Local face numbering to global face numbering
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering
+ *                             to global vertex numbering
+ *
+ */
+
+void
+PDM_dist_cloud_surf_surf_mesh_part_set
+(
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_part,
+ const int                    n_face,
+ const int                   *face_vtx_idx,
+ const int                   *face_vtx,
+ const PDM_g_num_t           *face_ln_to_gn,
+ const int                    n_vtx,
+ const double                *coords,
+ const PDM_g_num_t           *vtx_ln_to_gn
+)
+{
+  PDM_surf_mesh_part_input (dist->surf_mesh,
+                            i_part,
+                            n_face,
+                            face_vtx_idx,
+                            face_vtx,
+                            face_ln_to_gn,
+                            n_vtx,
+                            coords,
+                            vtx_ln_to_gn);
+}
+
+/**
+ *
+ * \brief Compute distance
+ *
+ * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
+ *
+ */
+
+void
+PDM_dist_cloud_surf_compute
+(
+ PDM_dist_cloud_surf_t *dist
+)
+{
+  int use_optim = 0;
+
+  char *env_var = NULL;
+  env_var = getenv ("PDM_DIST_CLOUD_SURF_OPTIM");
+
+
+  if (env_var != NULL) {
+    use_optim = atoi(env_var);
+  }
+
+
+  if (use_optim) {
+    _dist_cloud_surf_compute_optim(dist);
+  }
+  else {
+    _dist_cloud_surf_compute(dist);
+  }
 
 }
 
