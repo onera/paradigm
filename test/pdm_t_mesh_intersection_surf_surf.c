@@ -201,7 +201,7 @@ _generate_surface_mesh
   PDM_MPI_Comm_size(comm, &n_rank);
 
   PDM_dmesh_nodal_t *dmn = NULL;
-  if (0) {
+  if (1) {
     PDM_sphere_surf_icosphere_gen_nodal(comm,
                                         n_vtx_seg,
                                         0, 0, 0,
@@ -231,7 +231,7 @@ _generate_surface_mesh
   double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
   // randomize
-  if (1) {
+  if (0) {
     double noise = 0.2*length/(double) (n_vtx_seg - 1);
     for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
       if (PDM_ABS(vtx_coord[3*i_vtx  ] - xmin         ) > 1.e-9 &&

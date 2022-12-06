@@ -39,6 +39,7 @@
 #include "pdm_triangulate.h"
 #include "pdm_geom_elem.h"
 
+#include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_mesh_intersection_vol_vol_atomic.h"
 
 #ifdef __cplusplus
@@ -1395,7 +1396,7 @@ _mesh_intersection_vol_vol
   /* method : 0 -> with pointers, 1 -> without, 2 -> without (more robust) */
   int method = 2;
 
-  int dbg = 0;
+  int dbg_enabled = 0;
   int dbg_Karmijn = 0;
 
   int *cellA_cellB_idx = redistribute_box_a_to_box_b_idx;
@@ -1446,7 +1447,7 @@ _mesh_intersection_vol_vol
                                                             &cellB_ln_to_gn,
                                                             &vtxB_ln_to_gn);
 
-  if (dbg && 0) {
+  if (dbg_enabled && 0) {
     PDM_log_trace_connectivity_int(cellA_cellB_idx,
                                    cellA_cellB,
                                    n_cellA,
@@ -1458,7 +1459,7 @@ _mesh_intersection_vol_vol
   /*
    * Panic vtk
    */
-  if (dbg) {
+  if (dbg_enabled) {
     // _export_vtk_3d("extrp_mesh_a", extrp_mesh_a);
     // _export_vtk_3d("extrp_mesh_b", extrp_mesh_b);
 
@@ -1556,7 +1557,7 @@ _mesh_intersection_vol_vol
 
 
 
-  if (dbg) {
+  if (dbg_enabled) {
 
     int *triaB_faceB_id = malloc(sizeof(int) * faceB_triaB_idx[n_faceB]);
     for (int faceB_id = 0; faceB_id < n_faceB; faceB_id++) {
@@ -1618,12 +1619,6 @@ _mesh_intersection_vol_vol
   double tetraA_coord[12];
   double triaB_coord[9];
 
-  // malloc for atomic computation
-  // int max_size = 10*2 + 3;
-  // Element **cll_storage = malloc(sizeof(Element *) * max_size);
-  // for (int i = 0; i < max_size; i++) {
-  //   cll_storage[i] = malloc(sizeof(Element));
-  // }
 
   // for vtk
   // TO DO: add reallocs
@@ -1666,7 +1661,7 @@ _mesh_intersection_vol_vol
     }
 
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("cellA_id %d ("PDM_FMT_G_NUM") : ref_vtxA_id = %d\n",
                 cellA_id, cellA_ln_to_gn[cellA_id], ref_vtxA_id);
     }
@@ -1696,7 +1691,7 @@ _mesh_intersection_vol_vol
       int faceA_id   = PDM_ABS (cellA_faceA[ifaceA]) - 1;
       int faceA_sign = PDM_SIGN(cellA_faceA[ifaceA]);
 
-      if (dbg) {
+      if (dbg_enabled) {
         log_trace("  faceA_id %d, sign = %d\n", faceA_id, faceA_sign);
       }
 
@@ -1735,7 +1730,7 @@ _mesh_intersection_vol_vol
       for (int triaA_id = 0; triaA_id < n_tria; triaA_id++) {
 
         int *_triaA_vtxA = triaA_vtxA + 3*triaA_id;
-        if (dbg) {
+        if (dbg_enabled) {
           PDM_log_trace_array_int(_triaA_vtxA, 3, "    _triaA_vtxA : ");
         }
 
@@ -1794,7 +1789,7 @@ _mesh_intersection_vol_vol
 
           // if (cellB_id != 116) continue;
 
-          if (dbg) {
+          if (dbg_enabled) {
             log_trace("      icellB %d, cellB_id %d ("PDM_FMT_G_NUM")\n", icellB, cellB_id, cellB_ln_to_gn[cellB_id]);
           }
 
@@ -1804,7 +1799,7 @@ _mesh_intersection_vol_vol
             int faceB_id   = PDM_ABS (cellB_faceB[ifaceB]) - 1;
             int faceB_sign = PDM_SIGN(cellB_faceB[ifaceB]);
 
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("        faceB_id %d, sign = %d\n", faceB_id, faceB_sign);
             }
 
@@ -1813,7 +1808,7 @@ _mesh_intersection_vol_vol
 
               int *_triaB_vtxB = triaB_vtxB + 3*triaB_id;
 
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("          triaB_id %d : ", triaB_id);
                 PDM_log_trace_array_int(_triaB_vtxB, 3, "");
               }
@@ -1835,7 +1830,7 @@ _mesh_intersection_vol_vol
               //           triaB_coord[3*1], triaB_coord[3*1+1], triaB_coord[3*1+2],
               //           triaB_coord[3*2], triaB_coord[3*2+1], triaB_coord[3*2+2]);
 
-              if (dbg && 0) {
+              if (dbg_enabled && 0) {
                 _dump_elementary_vol_vol(mi->comm,
                                          cellA_id,
                                          faceA_id,
@@ -1871,7 +1866,7 @@ _mesh_intersection_vol_vol
                  + mat[2][0]*(mat[0][1]*rhs[1] - mat[1][1]*rhs[0]));
               }
 
-              if (dbg && 1) {
+              if (dbg_enabled && 1) {
                 // check inverse transform
                 for (int i = 0; i < 3; i++) {
                   int vtxB_id = _triaB_vtxB[i] - 1;
@@ -1906,16 +1901,6 @@ _mesh_intersection_vol_vol
               int     local_n_vtxB        = 0;
               int    *local_face_vtxB     = NULL;
 
-              // double volume = _reference_volume_compute(cll_storage,
-              //                                           triaB_coord,
-              //                                           &local_vtx_coordA,
-              //                                           &local_n_vtxA,
-              //                                           &local_face_vtxA,
-              //                                           &vtk_n_faceA,
-              //                                           &local_vtx_coordB,
-              //                                           &local_n_vtxB,
-              //                                           &local_face_vtxB,
-              //                                           &vtk_n_faceB);
               double volume = 0;
 
               if (method == 0) {
@@ -1937,7 +1922,7 @@ _mesh_intersection_vol_vol
               }
 
 
-              if (dbg && 1) {
+              if (dbg_enabled && 1) {
                 log_trace("vtk_n_faceA = %d, vtk_n_faceB = %d\n", vtk_n_faceA, vtk_n_faceB);
               }
 
@@ -1966,7 +1951,7 @@ _mesh_intersection_vol_vol
               free(local_vtx_coordB);
               free(local_face_vtxB);
 
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("            volume Karmijn = %20.16f\n", volume);
                 if (1) {//volume != 0) {
                   log_trace("********\n");
@@ -1993,7 +1978,7 @@ _mesh_intersection_vol_vol
     } // End of loop on faces of current cell A
 
 
-    if (dbg) {
+    if (dbg_enabled) {
       for (int icellB = cellA_cellB_idx[cellA_id]; icellB < cellA_cellB_idx[cellA_id+1]; icellB++) {
         int cellB_id = cellA_cellB[icellB];
         if (cellA_cellB_volume[icellB] > 0.00001) {log_trace("---> BIG");}
@@ -2056,7 +2041,7 @@ _mesh_intersection_vol_vol
 
 
 
-  if (1) {//dbg) {
+  if (1) {//dbg_enabled) {
     // Crude check
     double l_total_volume_AB = 0;
     for (int i = 0; i < cellA_cellB_idx[n_cellA]; i++) {
@@ -2318,12 +2303,12 @@ _mesh_intersection_surf_surf
  int                     *redistribute_box_a_to_box_b
 )
 {
-  int dbg = 1;
+  int dbg_enabled = 1;
 
   /*
    * Panic vtk
    */
-  if (dbg) {
+  if (dbg_enabled) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
@@ -2400,7 +2385,7 @@ _mesh_intersection_surf_surf
     for (int ifaceB = faceA_faceB_idx[faceA_id]; ifaceB < faceA_faceB_idx[faceA_id+1]; ifaceB++) {
       int faceB_id = faceA_faceB[ifaceB];
 
-      int dbg_pair = 0;// dbg && (faceA_id == 5 && faceB_id == 0);
+      int dbg_pair = 0;// dbg_enabled && (faceA_id == 5 && faceB_id == 0);
 
       double area = 0.;
 
@@ -2600,7 +2585,7 @@ _mesh_intersection_surf_surf
       } // End of loop on current faceA's edges
 
       faceA_faceB_volume[ifaceB] = signAB * area;
-      if (0) {//dbg) {
+      if (0) {//dbg_enabled) {
         log_trace("faceA %d ("PDM_FMT_G_NUM") faceB %d ("PDM_FMT_G_NUM"), volume = %20.16f (%3.3f%)\n",
                   faceA_id, faceA_ln_to_gn[faceA_id],
                   faceB_id, faceB_ln_to_gn[faceB_id],
@@ -2614,7 +2599,7 @@ _mesh_intersection_surf_surf
 
 
 
-  if (dbg) {
+  if (dbg_enabled) {
     // Crude check
     double l_total_area_AB = 0;
     for (int i = 0; i < faceA_faceB_idx[n_faceA]; i++) {
@@ -2631,8 +2616,20 @@ _mesh_intersection_surf_surf
                                vtxA_coord,
                                faceA_normal,
                                faceA_center);
+      double area = 0.5*PDM_MODULE(faceA_normal);
 
-      l_total_area_A += 0.5*PDM_MODULE(faceA_normal);
+      if (1) {//faceA_ln_to_gn[faceA_id] == 2385) {
+        double sum = 0;
+        for (int j = faceA_faceB_idx[faceA_id]; j < faceA_faceB_idx[faceA_id+1]; j++) {
+          // log_trace(PDM_FMT_G_NUM"-"PDM_FMT_G_NUM" : %20.16f\n",
+          //           faceA_ln_to_gn[faceA_id], faceB_ln_to_gn[faceA_faceB[j]], faceA_faceB_volume[j]);
+          sum += faceA_faceB_volume[j];
+        }
+        log_trace(PDM_FMT_G_NUM" : sum = %20.16f / %20.16f (%f%%)\n",
+                  faceA_ln_to_gn[faceA_id], sum,area, 100*sum/area);
+      }
+
+      l_total_area_A += area;
     }
 
     double g_total_area_AB;
@@ -2678,7 +2675,7 @@ _mesh_intersection_surf_line
   PDM_UNUSED(extrp_mesh_b);
   PDM_UNUSED(redistribute_box_a_to_box_b_idx);
   PDM_UNUSED(redistribute_box_a_to_box_b);
-  if(0 == 1) {
+  if(1 == 1) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_1d("extrp_mesh_b", extrp_mesh_b);
   }
@@ -2714,6 +2711,8 @@ PDM_mesh_intersection_create
   mi->mesh_a = PDM_part_mesh_create(n_part_mesh_a, comm);
   mi->mesh_b = PDM_part_mesh_create(n_part_mesh_b, comm);
 
+
+
   return mi;
 }
 
@@ -2737,6 +2736,15 @@ PDM_mesh_intersection_compute
   double g_global_extents        [6];
   _compute_part_mesh_extents(mi->mesh_a, mi->dim_mesh_a, mesh_global_extents[0], &extents_mesh_a);
   _compute_part_mesh_extents(mi->mesh_b, mi->dim_mesh_b, mesh_global_extents[1], &extents_mesh_b);
+
+  /*
+   * Compute vertex normals if necessary
+   */
+  if (mi->dim_mesh_a == 2 && mi->dim_mesh_b == 2) {
+    //...
+  }
+
+
 
   /*
    * Global extents exchange
@@ -2982,9 +2990,9 @@ PDM_mesh_intersection_tetraisation_pt_set
 )
 {
   mi->tetraisation_pt_type = tetraisation_pt_type;
-  mi->tetraisation_pt_coord = NULL;
+  // mi->tetraisation_pt_coord = NULL;
   if (tetraisation_pt_type == 2) {
-    mi->tetraisation_pt_coord = malloc(sizeof(double) * 3);
+    // mi->tetraisation_pt_coord = malloc(sizeof(double) * 3);
     memcpy(mi->tetraisation_pt_coord, tetraisation_pt_coord, sizeof(double) * 3);
   }
 }
@@ -3015,7 +3023,7 @@ PDM_mesh_intersection_free
   PDM_part_mesh_free(mi->mesh_a);
   PDM_part_mesh_free(mi->mesh_b);
 
-  free(mi->tetraisation_pt_coord);
+  // free(mi->tetraisation_pt_coord);
 
   free(mi);
 }

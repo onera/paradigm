@@ -18,7 +18,7 @@
  * Global variables
  *============================================================================*/
 
-static int dbg = 0;
+static int dbg_enabled = 0;
 
 /*============================================================================
  * Type definitions
@@ -29,10 +29,6 @@ typedef enum
   EXTREMUM,
   SHARP
 } intersect_t;
-
-/*============================================================================
- * Type definitions
- *============================================================================*/
 
 typedef struct Element Element;
 struct Element
@@ -166,7 +162,7 @@ _determine_A_outside
   }
   if (current->next == (*cll)->head) {
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("triangle in tetrahedra\n");
     }
 
@@ -179,7 +175,7 @@ _determine_A_outside
   // intersect with all 5 planes
   for (int i = 0; i < 5; i++) {
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("Plane %d\n", i);
     }
 
@@ -204,7 +200,7 @@ _determine_A_outside
 
     while (intersect_idx < 2) {
 
-      if (dbg) {
+      if (dbg_enabled) {
         log_trace("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n", current->coord[0], current->coord[1], current->coord[2], current->next->coord[0], current->next->coord[1], current->next->coord[2]);
         log_trace("fp/fc/fn = %20.16e / %20.16e / %20.16e\n", fp, fc, fn);
       }
@@ -220,7 +216,7 @@ _determine_A_outside
 
           if (fp < 0) {
 
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("polygon outside plane %d\n", i);
             }
 
@@ -243,7 +239,7 @@ _determine_A_outside
 
           else if (fp > 0) {
 
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("polygon inside plane %d\n", i);
             }
 
@@ -262,7 +258,7 @@ _determine_A_outside
 
           else {
 
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("polygon on plane %d\n", i);
             }
 
@@ -290,7 +286,7 @@ _determine_A_outside
 
             if (fn < 0) {
 
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("polygon outside plane %d\n", i);
               }
 
@@ -313,7 +309,7 @@ _determine_A_outside
 
             else {
 
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("polygon inside plane %d\n", i);
               }
 
@@ -338,7 +334,7 @@ _determine_A_outside
 
               if (fp > 0) {
 
-                if (dbg) {
+                if (dbg_enabled) {
                   log_trace("polygon inside plane %d\n", i);
                 }
 
@@ -357,7 +353,7 @@ _determine_A_outside
 
               else {
 
-                if (dbg) {
+                if (dbg_enabled) {
                   log_trace("polygon outside plane %d\n", i);
                 }
 
@@ -382,7 +378,7 @@ _determine_A_outside
 
             else {
 
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("one extremum intersection with plane %d\n", i);
               }
 
@@ -416,7 +412,7 @@ _determine_A_outside
 
       else if (fc*fn < 0) {
 
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("one sharp intersection with plane %d\n", i);
         }
 
@@ -428,7 +424,7 @@ _determine_A_outside
                         t*current->next->coord[1]+(1-t)*current->coord[1],
                         t*current->next->coord[2]+(1-t)*current->coord[2]};
 
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("t = %20.16f\n", t);
           log_trace("pt = %20.16f %20.16f %20.16f \n", pt[0], pt[1], pt[2]);
         }
@@ -469,7 +465,7 @@ _determine_A_outside
 
     // not intersection at all
     if (intersect_idx == 0) {
-      if (dbg) {
+      if (dbg_enabled) {
         log_trace("not intersection at all : fc = %f\n", fc);
       }
       if (fc < 0) {
@@ -527,7 +523,7 @@ _determine_A_outside
       (*outside)->head = out[0];
     } // 2 intersections
 
-    if (dbg) {
+    if (dbg_enabled) {
        log_trace("cll at plane %d: ", i);
       _print_cll(*cll);
     }
@@ -727,7 +723,7 @@ _determine_A_outside2
  int    *cll_next
  )
 {
-  // int dbg = 1;
+  // int dbg_enabled = 1;
 
   /* Check if the initial polygon (triangle) is inside the unit tetrahedron */
   int current = *cll_head_in;
@@ -735,7 +731,7 @@ _determine_A_outside2
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       if (cll_coord[3*current+j] < 0 || cll_coord[3*current+j] > 1) {
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("i = %d, outside %d\n", i, j);
         }
         inside = 0;
@@ -747,7 +743,7 @@ _determine_A_outside2
       break;
     }
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("i = %d : %f\n", i, 1 - cll_coord[3*current] - cll_coord[3*current+1] - cll_coord[3*current+2]);
     }
     if (1 - cll_coord[3*current] - cll_coord[3*current+1] - cll_coord[3*current+2] < 0) {
@@ -759,7 +755,7 @@ _determine_A_outside2
   }
 
   if (inside) {
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("triangle in tetrahedra\n");
     }
 
@@ -782,7 +778,7 @@ _determine_A_outside2
       return;
     }
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace(">>>\n");
       log_trace("Plane %d\n", iplane);
     }
@@ -809,7 +805,7 @@ _determine_A_outside2
       double *cn = cll_coord + 3*next;
       // function value for next
       fn = _plane_equation_function(cn, iplane);
-      if (dbg) {
+      if (dbg_enabled) {
         log_trace("--> SEGMENT (%f,%f,%f)-(%f,%f,%f)\n",
                   cc[0], cc[1], cc[2],
                   cn[0], cn[1], cn[2]);
@@ -824,7 +820,7 @@ _determine_A_outside2
 
           if (fp <= 0) {
             // Segment cn on plane, rest outside or on plane
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("Segment cn on plane, rest outside or on plane\n");
             }
             *cll_head_out = *cll_head_in;
@@ -833,7 +829,7 @@ _determine_A_outside2
           }
           else {
             // Segment cn on plane, rest inside
-            if (dbg) {
+            if (dbg_enabled) {
               log_trace("Segment cn on plane, rest inside\n");
             }
             *cll_head_out = -1;
@@ -848,7 +844,7 @@ _determine_A_outside2
 
             if (fn < 0) {
               // Segment pc on plane, rest outside
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("Segment pc on plane, rest outside\n");
               }
               *cll_head_out = *cll_head_in;
@@ -857,7 +853,7 @@ _determine_A_outside2
             }
             else {
               // Segment pc on plane, rest inside
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("Segment pc on plane, rest inside\n");
               }
               *cll_head_out = -1;
@@ -871,7 +867,7 @@ _determine_A_outside2
             if (fp*fn > 0) {
               if (fp > 0) {
                 // c on plane, rest inside
-                if (dbg) {
+                if (dbg_enabled) {
                   log_trace("c on plane, rest inside\n");
                 }
                 *cll_head_out = -1;
@@ -879,7 +875,7 @@ _determine_A_outside2
               }
               else {
                 // c on plane, rest outside
-                if (dbg) {
+                if (dbg_enabled) {
                   log_trace("c on plane, rest outside\n");
                 }
                 *cll_head_out = *cll_head_in;
@@ -890,7 +886,7 @@ _determine_A_outside2
 
             else {
               // c on plane, p and n in opposite sides
-              if (dbg) {
+              if (dbg_enabled) {
                 log_trace("c on plane, p and n in opposite sides\n");
               }
               prev[intersect_idx] = current;
@@ -929,7 +925,7 @@ _determine_A_outside2
 
       else if (fc * fn < 0) {
         // Regular intersection between c and n
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("Regular intersection between c and n\n");
         }
 
@@ -954,7 +950,7 @@ _determine_A_outside2
 
         double t = fc/(fc - fn);
         t = PDM_MIN(1-epsilon, t);
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("t = %20.16f\n", t);
           log_trace("fc - fn = %20.16f\n", fc - fn);
           log_trace("pt = %20.16f %20.16f %20.16f\n",
@@ -986,7 +982,7 @@ _determine_A_outside2
           }
           idx++;
         }
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("pt fixed = %20.16f %20.16f %20.16f\n",
                     cll_coord[3*(idx-1)  ],
                     cll_coord[3*(idx-1)+1],
@@ -1012,7 +1008,7 @@ _determine_A_outside2
 
     } // end while loop on cll
 
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("  intersect_idx = %d\n", intersect_idx);
     }
 
@@ -1021,7 +1017,7 @@ _determine_A_outside2
     if (intersect_idx == 0) {
       if (fc < 0) {
         // Polygon outside
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("Polygon outside (no intersection at all)\n");
         }
         if (iplane == 4) {
@@ -1035,7 +1031,7 @@ _determine_A_outside2
       }
       else {
         // Polygon inside
-        if (dbg) {
+        if (dbg_enabled) {
           log_trace("Polygon inside (no intersection at all)\n");
         }
         if (iplane < 4) {
@@ -1061,7 +1057,7 @@ _determine_A_outside2
       // error?!
     }
 
-    if (dbg) {
+    if (dbg_enabled) {
        log_trace("IN at plane %d: ", iplane);
       _print_cll2(*cll_head_in, cll_coord, cll_next);
       log_trace("OUT at plane %d: ", iplane);
@@ -1168,7 +1164,7 @@ _split_convex_polygon
   }
 
 
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("phead = %d, ptail = %d\n", phead, ptail);
   }
 
@@ -1183,7 +1179,7 @@ _split_convex_polygon
                               &cll_coord[3*cll_prev[phead]],
                               &cll_coord[3*phead],
                               coord);
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("1st intersection point : %20.16e %20.16e %20.16e\n",
               coord[0], coord[1], coord[2]);
   }
@@ -1191,7 +1187,7 @@ _split_convex_polygon
   // On negative side
   cll_prev[(*idx)] = cll_prev[phead];
   cll_next[(*idx)] = idx0 + 3;
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("on negative side : %d, prev %d, next %d\n",
               *idx, cll_prev[(*idx)], cll_next[(*idx)]);
   }
@@ -1201,7 +1197,7 @@ _split_convex_polygon
   // On positive side
   cll_prev[(*idx)] = idx0 + 2;
   cll_next[(*idx)] = phead;
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("on positive side : %d, prev %d, next %d\n",
               *idx, cll_prev[(*idx)], cll_next[(*idx)]);
   }
@@ -1215,7 +1211,7 @@ _split_convex_polygon
                               &cll_coord[3*ptail],
                               &cll_coord[3*cll_next[ptail]],
                               coord);
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("2nd intersection point : %20.16e %20.16e %20.16e\n",
               coord[0], coord[1], coord[2]);
   }
@@ -1223,7 +1219,7 @@ _split_convex_polygon
   // On positive side
   cll_prev[(*idx)] = ptail;
   cll_next[(*idx)] = idx0 + 1;
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("on positive side : %d, prev %d, next %d\n",
               *idx, cll_prev[(*idx)], cll_next[(*idx)]);
   }
@@ -1233,7 +1229,7 @@ _split_convex_polygon
   // On negative side
   cll_prev[(*idx)] = idx0;
   cll_next[(*idx)] = cll_next[ptail];
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("on negative side : %d, prev %d, next %d\n",
               *idx, cll_prev[(*idx)], cll_next[(*idx)]);
   }
@@ -1283,7 +1279,7 @@ _clip_convex_polygon
   while (1) {
 
     cll_val[current] = _plane_equation_function(&cll_coord[3*current], iplane);
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("  %d : val = %20.16e\n", current, cll_val[current]);
     }
 
@@ -1309,7 +1305,7 @@ _clip_convex_polygon
   }
 
 
-  if (dbg) {
+  if (dbg_enabled) {
     log_trace("np = %d, nn = %d, pmax = %d, nmin = %d\n", np, nn, pmax, nmin);
   }
 
@@ -1351,7 +1347,7 @@ _clip_convex_polygon
 
     else {
       /* Polygon is on plane or inside */
-      if (dbg) {
+      if (dbg_enabled) {
         log_trace("Polygon is on plane or inside\n");
       }
       return;
@@ -1361,7 +1357,7 @@ _clip_convex_polygon
 
   else {
     /* Polygon is on plane or outside */
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("Polygon is on plane or outside\n");
     }
     *cll_head_out = *cll_head_in;
@@ -1407,7 +1403,7 @@ _determine_A_outside3
   }
 
   if (inside) {
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("triangle in tetrahedra\n");
     }
     return;
@@ -1420,7 +1416,7 @@ _determine_A_outside3
   double cll_val[23];
   int idx = 3;
   for (int iplane = 0; iplane < 5; iplane++) {
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("Plane %d\n", iplane);
     }
     _clip_convex_polygon(iplane,
@@ -1432,7 +1428,7 @@ _determine_A_outside3
                          cll_val,
                          &idx);
 
-    if (dbg) {
+    if (dbg_enabled) {
        log_trace("IN at plane %d: ", iplane);
       _print_cll3(*cll_head_in,  cll_coord, cll_prev, cll_next);
       log_trace("OUT at plane %d: ", iplane);
@@ -1470,7 +1466,7 @@ _column_volume2
  int    *next
 )
 {
-  // int dbg = 1;
+  // int dbg_enabled = 1;
 
   double volume = 0;
   if (head < 0) {
@@ -1484,7 +1480,7 @@ _column_volume2
     double prism_volume = _prism_volume(&coord[3*head],
                                         &coord[3*current],
                                         &coord[3*next[current]]);
-    if (dbg) {
+    if (dbg_enabled) {
       log_trace("            volumeK += %20.16e\n", prism_volume);
     }
     volume += prism_volume;
@@ -1530,7 +1526,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   List *A = malloc(sizeof(List));
   List *B = malloc(sizeof(List));
 
-  // int dbg = 0;
+  // int dbg_enabled = 0;
   int idx = 0;
 
   // Triangle cll
@@ -1554,7 +1550,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   A->head = pt0;
 
   // debug
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     log_trace("Triangle:\n");
     _print_cll(A);
   }
@@ -1563,7 +1559,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   _determine_A_outside(cll_storage, idx, &A, &B);
 
   // debug
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     log_trace("A: ");
     if (A == NULL) {
       log_trace("NULL\n");
@@ -1598,7 +1594,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   }
 
   // vtk
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
 
     if (A != NULL) {
       _cll_to_polydata(A, "A.vtk");
@@ -1645,8 +1641,8 @@ PDM_mesh_intersection_vol_vol_atomic_compute2
  double triaB_coord[9]
  )
 {
-  // int dbg = 1;
-  if (dbg) {
+  // int dbg_enabled = 1;
+  if (dbg_enabled) {
     log_trace("initial triangle :\n");
     for (int i = 0; i < 3; i++) {
       log_trace("%20.16f, %20.16f, %20.16f\n",
@@ -1674,7 +1670,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute2
                         next);
 
   // debug
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     log_trace("A: ");
     _print_cll2(head_in,
                 coord,
@@ -1703,7 +1699,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute2
     }
   }
 
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     if (head_in >= 0) {
       _cll_to_polydata2(head_in,  coord, next, "A2.vtk");
     }
@@ -1728,8 +1724,8 @@ PDM_mesh_intersection_vol_vol_atomic_compute3
  double triaB_coord[9]
  )
 {
-  // int dbg = 1;
-  if (dbg) {
+  // int dbg_enabled = 1;
+  if (dbg_enabled) {
     log_trace("initial triangle :\n");
     for (int i = 0; i < 3; i++) {
       log_trace("%20.16f, %20.16f, %20.16f\n",
@@ -1760,7 +1756,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute3
                         next);
 
   // debug
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     log_trace("A: ");
     _print_cll3(head_in,
                 coord,
@@ -1791,7 +1787,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute3
     }
   }
 
-  if (dbg && 1) {
+  if (dbg_enabled && 1) {
     if (head_in >= 0) {
       _cll_to_polydata2(head_in,  coord, next, "A3.vtk");
     }

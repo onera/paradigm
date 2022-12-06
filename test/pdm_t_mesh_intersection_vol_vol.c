@@ -617,13 +617,13 @@ main
   double               noise_b               = 0;
   point_t              tetraisation_pt_type  = TETRA_POINT;
   double              *tetraisation_pt_coord = malloc(sizeof(double) * 3);
-  double               shift_b[3]            = {0., 0., 0.};
+  double               shift_b[3]            = {0.5, 0.5, 0.5};
 
 #ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  PDM_split_dual_t part_method               = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t part_method               = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 
@@ -673,9 +673,9 @@ main
                         elt_type_b,
                         rotate_b,
                         noise_b,
-                        shift_b[0],//0.5*length_b,
-                        shift_b[1],//0.5*length_b,
-                        shift_b[2],//0.5*length_b,
+                        shift_b[0],
+                        shift_b[1],
+                        shift_b[2],
                         length_b,
                         part_method,
                         n_part,
@@ -737,8 +737,6 @@ main
            local_vol_A_B, global_vol_A_B,
            100*global_vol_A_B / global_vol_A);
 
-    // cas cube, translation (0.5,0.5,0.5)
-    // double exact = 0.5;
     double exact = 1;
     for (int i = 0; i < 3; i++) {
       if (shift_b[i] < 0) {
