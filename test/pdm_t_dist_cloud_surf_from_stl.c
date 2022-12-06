@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
                                              surf_pvtx_ln_to_gn [i_part]);
   }
 
-  PDM_dist_cloud_surf_compute_optim(ics);
+  PDM_dist_cloud_surf_compute(ics);
 
   PDM_dist_cloud_surf_dump_times(ics);
 

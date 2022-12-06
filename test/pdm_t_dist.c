@@ -672,7 +672,7 @@ int main(int argc, char *argv[])
   }
 
   // PDM_dist_cloud_surf_compute (dist);
-  PDM_dist_cloud_surf_compute_optim (dist);
+  PDM_dist_cloud_surf_compute (dist);
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
