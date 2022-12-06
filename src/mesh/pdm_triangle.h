@@ -70,7 +70,7 @@ typedef enum {
 /*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
 
 PDM_triangle_status_t
-PDM_triangle_evaluate_position
+PDM_triangle_evaluate_position_old
 (
  const double  x[3],
  const double  pts[9],
@@ -78,6 +78,33 @@ PDM_triangle_evaluate_position
        double *min_dist2,
        double *weights
  );
+
+PDM_triangle_status_t
+PDM_triangle_evaluate_position
+(
+ const double  x[3],
+ const double  pts[9],
+       double *closest_point,
+       double *min_dist2,
+       double *weights
+);
+
+/**
+ * \brief Computes the intersection between a line and a triangle
+ *
+ * \param [in]   line        Points of the line
+ * \param [in]   tria_coord  Points of the triangle
+ * \param [out]  ip          Intersection point
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_line_intersection
+(
+const double line[6],
+const double tria_coord[9],
+      double ip[3]
+);
 
 
 /**
@@ -134,6 +161,32 @@ PDM_triangle_circumcircle
  const double  vtx_coord[9],
  double        center[3],
  double       *radius
+ );
+
+
+/**
+ * \brief Compute intersection point between a triangle and a semi-infinite ray
+ *
+ * \param[in]  origin        Ray origin
+ * \param[in]  direction     Ray direction (need not be normalized)
+ * \param[in]  tri_coord     Coordinates of the triangle's vertices
+ * \param[out] intersection  Coordinates of the intersection point
+ * \param[out] t             Ray-parameter of the intersection point
+ * \param[out] weight        Barycentric coordinates in triangle of intersection point (or NULL)
+ *
+ * \return Intersection status
+ *
+ */
+
+PDM_triangle_status_t
+PDM_triangle_ray_intersection
+(
+ const double  origin[3],
+ const double  direction[3],
+ const double  tri_coord[9],
+       double  intersection[3],
+       double *t,
+       double *weight
  );
 
 

@@ -14,7 +14,9 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-//#include <sys/syscall.h> //Non portable mettre un ifdef
+#ifdef __linux__
+#include <sys/syscall.h> //Non portable mettre un ifdef
+#endif
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -25,8 +27,6 @@
 #include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_mpi_priv.h"
-#include "pdm_logging.h"
-
 #include <mpi.h>
 
 #ifdef __cplusplus
@@ -473,6 +473,7 @@ static MPI_Comm _pdm_mpi_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
+      return MPI_COMM_NULL;
     }
   }
 }
@@ -565,6 +566,7 @@ static MPI_Request _pdm_mpi_2_mpi_request(PDM_MPI_Request pdm_mpi_request)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_request :"
             " pdm_mpi_request '%d' non valide\n", pdm_mpi_request);
       abort();
+      return MPI_REQUEST_NULL;
     }
   }
 }
@@ -593,6 +595,7 @@ static MPI_Win _pdm_mpi_2_mpi_win(PDM_MPI_Win pdm_mpi_win)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_win :"
             " pdm_mpi_win '%d' non valide\n", pdm_mpi_win);
       abort();
+      return MPI_WIN_NULL;
     }
   }
 }
@@ -792,6 +795,7 @@ static MPI_Datatype _pdm_mpi_2_mpi_datatype(PDM_MPI_Datatype pdm_mpi_datatype)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_datatype :"
             " pdm_mpi_datatype '%d' non valide\n", pdm_mpi_datatype);
       abort();
+      return MPI_DATATYPE_NULL;
     }
   }
 }
@@ -986,6 +990,7 @@ static MPI_File _pdm_mpi_2_mpi_file(PDM_MPI_File pdm_mpi_file)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_file :"
               " pdm_mpi_file '%d' non valide\n", pdm_mpi_file);
       abort();
+      return MPI_FILE_NULL;
     }
   }
 }
@@ -1098,6 +1103,7 @@ void *PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
       PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
+      return NULL;
     }
   }
 }
@@ -1665,6 +1671,7 @@ int PDM_MPI_Irecv(void *buf, int count, PDM_MPI_Datatype datatype, int source,
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
   int code =  MPI_Irecv(buf, count, _pdm_mpi_2_mpi_datatype(datatype), source,
                        tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  assert(code == 0);
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
   assert(_mpi_request != MPI_REQUEST_NULL);
 
@@ -1697,6 +1704,7 @@ int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int de
                         tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  assert(code == 0);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -1710,6 +1718,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
 {
   MPI_Request _request = _pdm_mpi_2_mpi_request(*request);
   int code = MPI_Wait(&_request, MPI_STATUS_IGNORE);
+  assert(code == 0);
 
   free(mpi_request[*request]);
   mpi_request[*request] = NULL;
@@ -1720,7 +1729,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
     free(mpi_request);
     mpi_request = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_request = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -1755,7 +1764,7 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
     free(mpi_request);
     mpi_request = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_request = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -1790,6 +1799,24 @@ int PDM_MPI_Type_create_hindexed (int count,
   free (_array_of_displacements);
   return _mpi_2_pdm_mpi_err(code);
 
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Type_hindexed (wrapping de la fonction MPI_Type_hindexed)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Type_create_contiguous(int               count,
+                                   PDM_MPI_Datatype  old_datatype,
+                                   PDM_MPI_Datatype *newtype)
+{
+  MPI_Datatype mpi_newtype;
+  int code = MPI_Type_contiguous(count,
+                                 _pdm_mpi_2_mpi_datatype(old_datatype),
+                                 &mpi_newtype);
+  assert(code == 0);
+
+  *newtype = _mpi_2_pdm_mpi_datatype(mpi_newtype);
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 /*----------------------------------------------------------------------------
@@ -1894,7 +1921,7 @@ double PDM_MPI_Wtime(void)
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-              int root, PDM_MPI_Comm comm)
+                  int root, PDM_MPI_Comm comm)
 {
   int code = MPI_Bcast(buffer,
                        count,
@@ -1910,7 +1937,7 @@ int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-              int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+                   int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
 {
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
 
@@ -1929,13 +1956,14 @@ int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount,
-                  PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+                      void *recvbuf, int recvcount,
+                      PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
   int code =  MPI_Allgather(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
                             recvbuf, recvcount,
                             _pdm_mpi_2_mpi_datatype(recvtype),
                             _pdm_mpi_2_mpi_comm(comm));
+  assert(code == MPI_SUCCESS);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -1945,8 +1973,8 @@ int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                   void *recvbuf, int *recvcounts,
-                   int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+                       void *recvbuf, int *recvcounts,
+                       int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
   int code = MPI_Allgatherv(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
                             recvbuf, recvcounts, displs,
@@ -2015,6 +2043,22 @@ int PDM_MPI_Scan(const void *sendbuf, void *recvbuf, int count,
                       _pdm_mpi_2_mpi_comm(comm));
   return _mpi_2_pdm_mpi_err(code);
 }
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Exscan (wrapping de la fonction MPI_Exscan)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Exscan(const void *sendbuf, void *recvbuf, int count,
+             PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm)
+{
+  int code = MPI_Exscan(sendbuf, recvbuf, count,
+                        _pdm_mpi_2_mpi_datatype(datatype),
+                        mpi_op[op],
+                        _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
 
 
 int PDM_MPI_Iscan(const void *sendbuf, void *recvbuf, int count,
@@ -2228,7 +2272,6 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                            _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   // double dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Ialltoallv dt = %12.5e \n", dt);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
 
@@ -2266,10 +2309,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   MPI_Alltoall(sdispls    , 1, MPI_INT,
                target_disp, 1, MPI_INT, _pdm_mpi_2_mpi_comm(comm));
 
-  // if(0 == 1) {
-  //   PDM_log_trace_array_int(sdispls    , n_rank, "sdispls     : ");
-  //   PDM_log_trace_array_int(target_disp, n_rank, "target_disp : ");
-  // }
 
   // double t1 = MPI_Wtime();
   for(int i = 0; i < n_rank; ++i) {
@@ -2295,7 +2334,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   }
 
   // double dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Get_ialltoallv dt = %12.5e \n", dt);
 
   // t1 = MPI_Wtime();
   int   origin_data_size = -1;
@@ -2314,7 +2352,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
           _pdm_mpi_2_mpi_win(win_send));
 
   // dt = MPI_Wtime() - t1;
-  // log_trace("PDM_MPI_Get_ialltoallv local dt = %12.5e \n", dt);
 
   PDM_UNUSED(win_recv  );
   PDM_UNUSED(sendcounts);
@@ -2366,7 +2403,7 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
     free(mpi_win);
     mpi_win = NULL;
 
-    l_mpi_datatype = 0;
+    l_mpi_win = 0;
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -2481,15 +2518,20 @@ PDM_MPI_Comm_split_type_numa
   int i_rank_node;
   PDM_MPI_Comm_rank(comm_node, &i_rank_node);
 
-  // int i_cpu;
+  int i_cpu;
   int i_numa;
-  //syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+#ifdef __linux__
+  syscall(SYS_getcpu, &i_cpu, &i_numa, NULL);
+#else
   printf("PDM_MPI_Comm_split_type_numa : appel a SYS_getcpu commente car non portable : a reintroduire après tests dans CMake\n");
   abort();
+#endif
+
 
   /* Sur le shared on split par numa */
   int code = PDM_MPI_Comm_split(comm_node, i_numa, i_rank_node, comm_numa);
 
+  // *comm_numa = comm_node;
   // PDM_MPI_Comm_free(&comm_node);
   // int code = 0;
   return _mpi_2_pdm_mpi_err(code);
@@ -2536,17 +2578,23 @@ PDM_mpi_win_shared_create(PDM_MPI_Aint size,
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
+  MPI_Info info;
+  MPI_Info_create( &info );
+  // MPI_Info_set(info, "no_locks", "true");
+  // MPI_Info_set( info, "alloc_shared_noncontig", "true" );
+
   wins->win = MPI_WIN_NULL;
   wins->ptr = NULL;
   int res = 0;
   if(i_rank == 0) {
-    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, MPI_INFO_NULL, _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win);
+    res = MPI_Win_allocate_shared(size * disp_unit, disp_unit, info, _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win);
   } else {
-    res = MPI_Win_allocate_shared(0, disp_unit, MPI_INFO_NULL , _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win );
+    res = MPI_Win_allocate_shared(0, disp_unit, info , _pdm_mpi_2_mpi_comm(comm), &wins->ptr , &wins->win );
     MPI_Aint size_0;
     int disp_0;
     MPI_Win_shared_query(wins->win, 0, &size_0, &disp_0, &wins->ptr);
   }
+  MPI_Info_free(&info);
   assert(res == PDM_MPI_SUCCESS);
   return wins;
 }
@@ -2654,6 +2702,476 @@ int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
 
   return (int) (ltag % max_tag);
 }
+
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Dist_graph_create_adjacent
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
+                                             int     indegree,
+                                       const int     sources[],
+                                             int     outdegree,
+                                       const int     destinations[],
+                                       int           reorder,
+                                       PDM_MPI_Comm *newcomm)
+{
+  MPI_Comm _newcomm;
+  const int *weight_in  = MPI_UNWEIGHTED;
+  const int *weight_out = MPI_UNWEIGHTED;
+  int code = MPI_Dist_graph_create_adjacent(_pdm_mpi_2_mpi_comm(comm_old),
+                                            indegree,
+                                            sources,
+                                            weight_in,
+                                            outdegree,
+                                            destinations,
+                                            weight_out,
+                                            MPI_INFO_NULL,
+                                            reorder,
+                                            &_newcomm);
+
+  *newcomm = _mpi_2_pdm_mpi_comm(_newcomm);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount,
+                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code =  MPI_Neighbor_allgather(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf, recvcount,
+                                     _pdm_mpi_2_mpi_datatype(recvtype),
+                                     _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_allgatherv (wrapping de la fonction MPI_Neighbor_allgatherv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                                void *recvbuf, int *recvcounts,
+                                int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_allgatherv(sendbuf, sendcount, _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf, recvcounts, displs,
+                                     _pdm_mpi_2_mpi_datatype(recvtype), _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_alltoall (wrapping de la fonction MPI_Neighbor_alltoall)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                              void *recvbuf, int recvcount,
+                              PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_alltoall(sendbuf, sendcount,
+                                   _pdm_mpi_2_mpi_datatype(sendtype),
+                                   recvbuf, recvcount,
+                                   _pdm_mpi_2_mpi_datatype(recvtype),
+                                   _pdm_mpi_2_mpi_comm(comm));
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Ialltoall (wrapping de la fonction MPI_Ialltoall)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ineighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount,
+                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+{
+  MPI_Request _mpi_request = MPI_REQUEST_NULL;
+
+  int code = MPI_Ineighbor_alltoall(sendbuf, sendcount,
+                                    _pdm_mpi_2_mpi_datatype(sendtype),
+                                    recvbuf, recvcount,
+                                    _pdm_mpi_2_mpi_datatype(recvtype),
+                                    _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Neighbor_alltoallv (wrapping de la fonction MPI_Neighbor_alltoallv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Neighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
+                               PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
+                               int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
+{
+  int code = MPI_Neighbor_alltoallv(sendbuf,
+                           sendcounts,
+                           sdispls,
+                           _pdm_mpi_2_mpi_datatype(sendtype),
+                           recvbuf,
+                           recvcounts,
+                           rdispls,
+                           _pdm_mpi_2_mpi_datatype(recvtype),
+                           _pdm_mpi_2_mpi_comm(comm));
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Ineighbor_alltoallv (wrapping de la fonction MPI_Ineighbor_alltoallv)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
+                                PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
+                                int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm,
+                                PDM_MPI_Request *request)
+{
+  MPI_Request _mpi_request = MPI_REQUEST_NULL;
+  // double t1 = MPI_Wtime();
+  int code = MPI_Ineighbor_alltoallv(sendbuf,
+                                     sendcounts,
+                                     sdispls,
+                                     _pdm_mpi_2_mpi_datatype(sendtype),
+                                     recvbuf,
+                                     recvcounts,
+                                     rdispls,
+                                     _pdm_mpi_2_mpi_datatype(recvtype),
+                                     _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+
+  *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+void
+PDM_MPI_setup_hybrid_dist_comm_graph
+(
+  PDM_MPI_Comm   comm,
+  PDM_MPI_Comm  *comm_shared_out,
+  PDM_MPI_Comm  *comm_dist_graph_out,
+  int           *n_degree,
+  int          **neighbor
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  // Shared
+  PDM_MPI_Comm comm_shared;
+  PDM_MPI_Comm_split_type(comm, PDM_MPI_SPLIT_NUMA, &comm_shared);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
+
+  PDM_MPI_Comm comm_master_of_shm = PDM_MPI_get_group_of_master(comm, comm_shared);
+
+  int i_rank_master_of_shm = -1;
+  int n_rank_master_of_shm;
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_rank(comm_master_of_shm, &i_rank_master_of_shm);
+    PDM_MPI_Comm_size(comm_master_of_shm, &n_rank_master_of_shm);
+  }
+  PDM_MPI_Bcast(&n_rank_master_of_shm, 1, PDM_MPI_INT, 0, comm_shared);
+  PDM_MPI_Bcast(&i_rank_master_of_shm, 1, PDM_MPI_INT, 0, comm_shared);
+
+  PDM_mpi_win_shared_t* wnuma_by_numa_n = PDM_mpi_win_shared_create(n_rank_master_of_shm, sizeof(int), comm_shared);
+  int *numa_by_numa_n  = PDM_mpi_win_shared_get(wnuma_by_numa_n);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_n);
+
+
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Allgather(&n_rank_in_shm, 1, PDM_MPI_INT,
+                      numa_by_numa_n, 1, PDM_MPI_INT, comm_master_of_shm);
+  }
+  PDM_mpi_win_shared_sync(wnuma_by_numa_n);
+  PDM_MPI_Barrier(comm_shared);
+
+  int n_tot_numa = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    n_tot_numa += numa_by_numa_n[i];
+  }
+  /*
+   * Create idx  and  gid of each numa
+   */
+  PDM_mpi_win_shared_t* wnuma_core_gid    = PDM_mpi_win_shared_create(n_tot_numa               , sizeof(int), comm_shared);
+  PDM_mpi_win_shared_t* wnuma_by_numa_idx = PDM_mpi_win_shared_create(n_rank_master_of_shm+1, sizeof(int), comm_shared);
+  int *numa_core_gid    = PDM_mpi_win_shared_get(wnuma_core_gid);
+  int *numa_by_numa_idx = PDM_mpi_win_shared_get(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_lock_all (0, wnuma_core_gid);
+  PDM_mpi_win_shared_lock_all (0, wnuma_by_numa_idx);
+
+
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    numa_by_numa_idx[0] = 0;
+    for(int i = 0; i < n_rank_master_of_shm; ++i) {
+      numa_by_numa_idx[i+1] = numa_by_numa_idx[i] + numa_by_numa_n[i];
+    }
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_by_numa_idx);
+
+  numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i_rank_in_shm] = i_rank;
+
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  /*
+   *  Exchange of the global numbering of rank for each NUMA
+   */
+  if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
+    int *lnuma_core_gid = malloc(n_rank_in_shm * sizeof(int));
+    for(int i = 0; i < n_rank_in_shm; ++i) {
+      lnuma_core_gid[i] = numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i];
+    }
+    PDM_MPI_Allgatherv(lnuma_core_gid, n_rank_in_shm, PDM_MPI_INT,
+                       numa_core_gid , numa_by_numa_n, numa_by_numa_idx, PDM_MPI_INT, comm_master_of_shm);
+    free(lnuma_core_gid);
+  }
+  PDM_MPI_Barrier(comm_shared);
+  PDM_mpi_win_shared_sync(wnuma_core_gid);
+
+  /*
+   * Computation of degree_in
+   */
+  int *send_n   = malloc(  n_rank    * sizeof(int));
+  int *recv_n   = malloc(  n_rank    * sizeof(int));
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+    recv_n[i] = 0;
+  }
+
+  int n_degrees_in = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int lid_rank = (j - numa_by_numa_idx[i]) % n_rank_in_shm; // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        n_degrees_in++;
+      }
+    }
+  }
+
+  int* neighbor_in = malloc( (n_degrees_in ) * sizeof(int));
+  n_degrees_in = 0;
+  for(int i = 0; i < n_rank_master_of_shm; ++i) {
+    for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
+      int gid_rank = numa_core_gid[j];
+      int lid_rank = (j - numa_by_numa_idx[i]) % n_rank_in_shm;  // Donc numero de numa dans le group
+      if(lid_rank == i_rank_in_shm){
+        neighbor_in[n_degrees_in++] = gid_rank;
+      }
+    }
+  }
+
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    send_n[neighbor_in[i]]++;
+  }
+
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+
+  for(int i = 0; i < n_degrees_in; ++i) {
+    int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
+    send_cur_i_rank[idx_write] = i_rank;
+  }
+
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+
+  PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
+                    recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
+
+
+  int n_degrees_out = recv_idx[n_rank];
+  int *neighbor_out = recv_opp_i_rank; // Already sort normaly
+
+  free(send_n);
+  free(recv_n);
+  free(send_idx);
+  free(recv_idx);
+  free(send_cur_i_rank);
+
+
+  PDM_MPI_Comm comm_dist_graph;
+  PDM_MPI_Dist_graph_create_adjacent(comm,
+                                     n_degrees_in,
+                                     neighbor_in,
+                                     n_degrees_out,
+                                     neighbor_out,
+                                     0,
+                                     &comm_dist_graph);
+
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_n);
+  PDM_mpi_win_shared_unlock_all(wnuma_core_gid);
+  PDM_mpi_win_shared_unlock_all(wnuma_by_numa_idx);
+  PDM_mpi_win_shared_free(wnuma_by_numa_n);
+  PDM_mpi_win_shared_free(wnuma_core_gid);
+  PDM_mpi_win_shared_free(wnuma_by_numa_idx);
+
+  free(recv_opp_i_rank);
+
+  *comm_shared_out     = comm_shared;
+  *comm_dist_graph_out = comm_dist_graph;
+
+  *n_degree = n_degrees_in;
+  *neighbor = neighbor_in;
+}
+
+
+
+
+int
+PDM_MPI_Dist_graph_neighbors_count
+(
+  PDM_MPI_Comm  comm,
+  int          *n_degree_in,
+  int          *n_degree_out,
+  int          *is_weighted
+)
+{
+  int code = MPI_Dist_graph_neighbors_count(_pdm_mpi_2_mpi_comm(comm),
+                                            n_degree_in,
+                                            n_degree_out,
+                                            is_weighted);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+
+int
+PDM_MPI_Dist_graph_neighbors
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *sources,
+  int            n_degree_out,
+  int           *destinations
+)
+{
+
+  int *weight_in  = NULL;
+  int *weight_out = NULL;
+  int code = MPI_Dist_graph_neighbors(_pdm_mpi_2_mpi_comm(comm),
+                                      n_degree_in,
+                                      sources,
+                                      weight_in,
+                                      n_degree_out,
+                                      destinations,
+                                      weight_out);
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+
+
+void
+PDM_MPI_setup_dist_graph_from_neighbor_in
+(
+  PDM_MPI_Comm   comm,
+  int            n_degree_in,
+  int           *neighbor_in,
+  PDM_MPI_Comm  *comm_dist_graph_out
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int *send_n   = malloc(  n_rank    * sizeof(int));
+  int *recv_n   = malloc(  n_rank    * sizeof(int));
+  int *send_idx = malloc( (n_rank+1) * sizeof(int));
+  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+
+  for(int i = 0; i < n_rank; ++i) {
+    send_n[i] = 0;
+    recv_n[i] = 0;
+  }
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    send_n[neighbor_in[i]]++;
+  }
+
+  send_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    send_idx[i+1] = send_idx[i] + send_n[i];
+    send_n[i] = 0;
+  }
+
+  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+
+  for(int i = 0; i < n_degree_in; ++i) {
+    int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
+    send_cur_i_rank[idx_write] = i_rank;
+  }
+
+
+  PDM_MPI_Alltoall(send_n, 1, PDM_MPI_INT,
+                   recv_n, 1, PDM_MPI_INT, comm);
+
+  recv_idx[0] = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+
+  PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
+                    recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
+
+
+  int n_degrees_out = recv_idx[n_rank];
+  int *neighbor_out = recv_opp_i_rank; // Already sort normaly
+
+  free(send_n);
+  free(recv_n);
+  free(send_idx);
+  free(recv_idx);
+  free(send_cur_i_rank);
+
+  PDM_MPI_Dist_graph_create_adjacent(comm,
+                                     n_degree_in,
+                                     neighbor_in,
+                                     n_degrees_out,
+                                     neighbor_out,
+                                     0,
+                                     comm_dist_graph_out);
+}
+
+
+
 
 #ifdef __cplusplus
 }

@@ -128,7 +128,6 @@ program testf
                                      data)
 
     call PDM_block_to_part_exch_in_place (btp,                       &
-                                          8,                         & ! s_data
                                           PDM_STRIDE_VAR_INTERLACED, & ! t_stride
                                           block_stride,              &
                                           block_data,                &
@@ -136,7 +135,6 @@ program testf
                                           part_data)
   else
     call PDM_block_to_part_exch (btp,                       &
-                                 8,                         & ! s_data
                                  PDM_STRIDE_VAR_INTERLACED, & ! t_stride
                                  block_stride,              &
                                  block_data,                &

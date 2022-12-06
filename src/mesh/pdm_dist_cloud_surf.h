@@ -198,6 +198,20 @@ PDM_dist_cloud_surf_compute
 
 /**
  *
+ * \brief Compute distance
+ *
+ * \param [in]   dist  Pointer to \ref PDM_dist_cloud_surf object
+ *
+ */
+
+void
+PDM_dist_cloud_surf_compute_optim
+(
+ PDM_dist_cloud_surf_t *dist
+);
+
+/**
+ *
  * \brief Get mesh distance
  *
  * \param [in]   dist                  Pointer to \ref PDM_dist_cloud_surf object

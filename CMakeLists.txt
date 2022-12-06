@@ -393,14 +393,6 @@ else ()
 
     include(UseCython)
 
-    if (NOT CMAKE_PDM_INSTALL_PYTHON_DIR)
-
-       set (CMAKE_PDM_INSTALL_PYTHON_DIR  "${CMAKE_INSTALL_PREFIX}")
-       set (CMAKE_PDM_INSTALL_PYTHON_DIR
-            ${CMAKE_PDM_INSTALL_PYTHON_DIR} CACHE STRING "Install path directory for Python packages")
-
-    endif ()
-
   endif()
 
 endif ()
@@ -483,6 +475,8 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
 endif()
 
 add_subdirectory(test)
+
+add_subdirectory(script)
 
 add_subdirectory(doc)
 

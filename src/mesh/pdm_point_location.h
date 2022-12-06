@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
 /*=============================================================================
  * Macro definitions
@@ -61,25 +62,22 @@ extern "C" {
 void
 PDM_point_location_nodal
 (
- const int           type_idx[],
- const int           elt_vtx_idx[],
- const double        elt_vtx_coord[],
- const PDM_l_num_t   poly3d_face_idx[],
- const PDM_l_num_t   face_vtx_idx[],
- const PDM_l_num_t   face_vtx[],
- const int           face_orientation[],
- const int           pts_idx[],
- const double        pts_coord[],
- const double        tolerance,
- double            **distance,
- double            **projected_coord,
- int               **bar_coord_idx,
- double            **bar_coord
+ PDM_part_mesh_nodal_elmts_t   *pmne,
+ const int                      n_part,
+ const double                 **pvtx_coord,
+ const int                    **pts_idx,
+ const double                 **pts_coord,
+ const double                   tolerance,
+ double                      ***distance,
+ double                      ***projected_coord,
+ int                         ***bar_coord_idx,
+ double                      ***bar_coord,
+ double                      ***uvw
  );
 
 
 /**
- * \brief Compute hexahedron, pyramid, or prism parametric coordinates for a
+ * \brief Compute quadrangle, hexahedron, pyramid, or prism parametric coordinates for a
  * given point.
  *
  * This function is adapted from the CGNS interpolation tool.
@@ -89,7 +87,9 @@ PDM_point_location_nodal
  * \param [in]   vertex_coords  Pointer to element vertex coordinates
  * \param [in]   tolerance      Location tolerance factor
  * \param [out]  uvw            Parametric coordinates of point in element
+ * \param [in]   init_uvw       Initial uvw guess for Newton method (or NULL)
  *
+ *  \return Convergence status of Newton method
  */
 
 PDM_bool_t
@@ -99,7 +99,8 @@ PDM_point_location_compute_uvw
  const double               point_coords[3],
  const double               vertex_coords[],
  const double               tolerance,
- double                     uvw[3]
+       double               uvw[3],
+       double               init_uvw[3]
  );
 
 

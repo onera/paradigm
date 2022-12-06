@@ -7,6 +7,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_block.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -72,6 +73,7 @@ typedef enum {
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+static const int NGB_ON_THE_FLY = 1;
 
 /**
  *
@@ -150,6 +152,20 @@ PDM_para_octree_build
  double                  *global_extents
 );
 
+/**
+ *
+ * \brief Build octree
+ *
+ * \param [in]   octree             Pointer to octree structure
+ *
+ */
+
+void
+PDM_para_octree_build_shared
+(
+ const PDM_para_octree_t *octree,
+ double                  *global_extents
+);
 
 /**
  *
@@ -280,6 +296,19 @@ PDM_para_octree_dump_times
  */
 
 void
+PDM_para_octree_points_inside_boxes_block_frame
+(
+ const PDM_para_octree_t  *octree,
+ const int                 n_boxes,
+ const double             *box_extents,
+ const PDM_g_num_t        *box_g_num,
+ PDM_part_to_block_t     **ptb_out,
+ int                     **dbox_pts_n,
+ PDM_g_num_t             **dbox_pts_g_num,
+ double                  **dbox_pts_coord
+ );
+
+void
 PDM_para_octree_points_inside_boxes
 (
  const PDM_para_octree_t  *octree,
@@ -345,6 +374,20 @@ PDM_para_octree_free_copies
  );
 
 
+/**
+ *
+ * \brief Free copied data in an octree structure
+ *
+ * \param [in]   octree             Pointer to octree structure
+ *
+ */
+
+void
+PDM_para_octree_free_shm
+(
+ const PDM_para_octree_t *octree
+ );
+
 
 
 void
@@ -353,6 +396,33 @@ PDM_para_octree_export_vtk
  const PDM_para_octree_t *octree,
  const char              *prefix
  );
+
+
+void
+PDM_para_octree_points_inside_boxes_shared
+(
+ const PDM_para_octree_t  *octree,
+ const int                 n_boxes,
+ const double             *box_extents,
+ const PDM_g_num_t        *box_g_num,
+ int                     **pts_in_box_idx,
+ PDM_g_num_t             **pts_in_box_g_num,
+ double                  **pts_in_box_coord
+);
+
+
+void
+PDM_para_octree_points_inside_boxes_shared_block_frame
+(
+ const PDM_para_octree_t  *octree,
+ const int                 n_boxes,
+ const double             *box_extents,
+ const PDM_g_num_t        *box_g_num,
+ PDM_part_to_block_t     **ptb_out,
+ int                     **dbox_pts_n,
+ PDM_g_num_t             **dbox_pts_g_num,
+ double                  **dbox_pts_coord
+);
 
 #ifdef	__cplusplus
 }

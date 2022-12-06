@@ -254,8 +254,22 @@ typedef enum {
 
   PDM_MESH_LOCATION_OCTREE,
   PDM_MESH_LOCATION_DBBTREE,
+  PDM_MESH_LOCATION_DOCTREE,
 
 } PDM_mesh_location_method_t;
+
+typedef enum {
+
+  PDM_DOCTREE_LOCAL_TREE_OCTREE,
+  PDM_DOCTREE_LOCAL_TREE_LINEAR_OCTREE,
+  PDM_DOCTREE_LOCAL_TREE_KDTREE,
+
+} PDM_doctree_local_tree_t;
+
+typedef enum {
+  PDM_TREE_SOLICITATION_BOXES_POINTS,
+  PDM_TREE_SOLICITATION_BOXES_BOXES
+} PDM_tree_solicitation_t;
 
 
 typedef enum {
@@ -303,14 +317,28 @@ typedef enum {
  */
 typedef enum {
 
-  PDM_ISO_SURFACE_KIND_PLANE  = 0,
-  PDM_ISO_SURFACE_KIND_SPHERE = 1,
-  PDM_ISO_SURFACE_KIND_FIELD  = 2,
+  PDM_ISO_SURFACE_KIND_PLANE   = 0,
+  PDM_ISO_SURFACE_KIND_SPHERE  = 1,
+  PDM_ISO_SURFACE_KIND_FIELD   = 2,
+  PDM_ISO_SURFACE_KIND_ELLIPSE = 3,
+  PDM_ISO_SURFACE_KIND_QUADRIC = 4,
+  PDM_ISO_SURFACE_KIND_HEART   = 5,
 
 } PDM_iso_surface_kind_t;
 
 
 
+typedef enum {
+
+  PDM_EXTRACT_PART_KIND_LOCAL         = 0, /*!< Extraction local                    */
+  PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1, /*!< Requilibrate and reform partition   */
+  PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< Extract into target specify by user */
+} PDM_extract_part_kind_t;
+
+typedef enum {
+  PDM_MESH_INTERSECTION_KIND_SOFT = 0, /*! Resulting is only relative weight of A inside B */
+  PDM_MESH_INTERSECTION_KIND_FULL = 1, /*! Resulting is new mesh                           */
+} PDM_mesh_intersection_kind_t;
 
 /*=============================================================================
  * Public function prototypes
@@ -338,6 +366,20 @@ PDM_Finalize
 (
 void
 );
+
+/**
+ * \brief PDM_extents_conformize
+ *
+ * Correction extents to manage singular cases and di-symetrizes pb
+ * eps = 1.e-3 is a standard value
+ *
+ */
+void
+PDM_extents_conformize(int    dim,
+                       double extents[],
+                       double eps);
+
+
 
 #ifdef __cplusplus
 }

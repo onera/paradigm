@@ -194,100 +194,100 @@ PDM_multipart_t      **_mpart
 
 
 
-static void
-_get_groups
-(
- PDM_multipart_t     *multipart,
- const int            i_zone,
- const int            i_part,
-       int           *n_face_group,
-       int          **face_bound_idx,
-       int          **face_bound
- )
-{
+// static void
+// _get_groups
+// (
+//  PDM_multipart_t     *multipart,
+//  const int            i_zone,
+//  const int            i_part,
+//        int           *n_face_group,
+//        int          **face_bound_idx,
+//        int          **face_bound
+//  )
+// {
 
-  int n_section;
-  int*n_elt;
-  int n_cell;
-  int n_face;
-  int n_face_part_bound;
-  int n_vtx;
-  int n_proc;
-  int n_total_part;
-  int s_cell_face;
-  int s_face_vtx;
-  int s_face_bound;
-  int s_face_join;
-  int n_join_groups;
-  PDM_multipart_part_dim_get(multipart,
-                             i_zone,
-                             i_part,
-                             &n_section,
-                             &n_elt,
-                             &n_cell,
-                             &n_face,
-                             &n_face_part_bound,
-                             &n_vtx,
-                             &n_proc,
-                             &n_total_part,
-                             &s_cell_face,
-                             &s_face_vtx,
-                             &s_face_bound,
-                             n_face_group,
-                             &s_face_join,
-                             &n_join_groups);
+//   int n_section;
+//   int*n_elt;
+//   int n_cell;
+//   int n_face;
+//   int n_face_part_bound;
+//   int n_vtx;
+//   int n_proc;
+//   int n_total_part;
+//   int s_cell_face;
+//   int s_face_vtx;
+//   int s_face_bound;
+//   int s_face_join;
+//   int n_join_groups;
+//   PDM_multipart_part_dim_get(multipart,
+//                              i_zone,
+//                              i_part,
+//                              &n_section,
+//                              &n_elt,
+//                              &n_cell,
+//                              &n_face,
+//                              &n_face_part_bound,
+//                              &n_vtx,
+//                              &n_proc,
+//                              &n_total_part,
+//                              &s_cell_face,
+//                              &s_face_vtx,
+//                              &s_face_bound,
+//                              n_face_group,
+//                              &s_face_join,
+//                              &n_join_groups);
 
 
-  int         **elt_vtx_idx;
-  int         **elt_vtx;
-  PDM_g_num_t **elt_section_ln_to_gn;
-  int          *cell_tag;
-  int          *cell_face_idx;
-  int          *cell_face;
-  PDM_g_num_t  *cell_ln_to_gn;
-  int          *face_tag;
-  int          *face_cell;
-  int          *face_vtx_idx;
-  int          *face_vtx;
-  PDM_g_num_t  *face_ln_to_gn;
-  int          *face_part_bound_proc_idx;
-  int          *face_part_bound_part_idx;
-  int          *face_part_bound;
-  int          *vtx_tag;
-  double       *vtx;
-  PDM_g_num_t  *vtx_ln_to_gn;
-  PDM_g_num_t  *face_bound_ln_to_gn;
-  int          *face_join_idx;
-  int          *face_join;
-  PDM_g_num_t  *face_join_ln_to_gn;
-  PDM_multipart_part_val_get(multipart,
-                             i_zone,
-                             i_part,
-                             &elt_vtx_idx,
-                             &elt_vtx,
-                             &elt_section_ln_to_gn,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             &face_part_bound_proc_idx,
-                             &face_part_bound_part_idx,
-                             &face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             face_bound_idx,
-                             face_bound,
-                             &face_bound_ln_to_gn,
-                             &face_join_idx,
-                             &face_join,
-                             &face_join_ln_to_gn);
-}
+//   int         **elt_vtx_idx;
+//   int         **elt_vtx;
+//   PDM_g_num_t **elt_section_ln_to_gn;
+//   int          *cell_tag;
+//   int          *cell_face_idx;
+//   int          *cell_face;
+//   PDM_g_num_t  *cell_ln_to_gn;
+//   int          *face_tag;
+//   int          *face_cell;
+//   int          *face_vtx_idx;
+//   int          *face_vtx;
+//   PDM_g_num_t  *face_ln_to_gn;
+//   int          *face_part_bound_proc_idx;
+//   int          *face_part_bound_part_idx;
+//   int          *face_part_bound;
+//   int          *vtx_tag;
+//   double       *vtx;
+//   PDM_g_num_t  *vtx_ln_to_gn;
+//   PDM_g_num_t  *face_bound_ln_to_gn;
+//   int          *face_join_idx;
+//   int          *face_join;
+//   PDM_g_num_t  *face_join_ln_to_gn;
+//   PDM_multipart_part_val_get(multipart,
+//                              i_zone,
+//                              i_part,
+//                              &elt_vtx_idx,
+//                              &elt_vtx,
+//                              &elt_section_ln_to_gn,
+//                              &cell_tag,
+//                              &cell_face_idx,
+//                              &cell_face,
+//                              &cell_ln_to_gn,
+//                              &face_tag,
+//                              &face_cell,
+//                              &face_vtx_idx,
+//                              &face_vtx,
+//                              &face_ln_to_gn,
+//                              &face_part_bound_proc_idx,
+//                              &face_part_bound_part_idx,
+//                              &face_part_bound,
+//                              &vtx_tag,
+//                              &vtx,
+//                              &vtx_ln_to_gn,
+//                              face_bound_idx,
+//                              face_bound,
+//                              &face_bound_ln_to_gn,
+//                              &face_join_idx,
+//                              &face_join,
+//                              &face_join_ln_to_gn);
+// }
 
 
 
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
                  elt_type,
                  &mpart);
 
-  int          pn_face         = 0;
+  // int          pn_face         = 0;
   int          pn_edge         = 0;
   int          pn_vtx          = 0;
   int         *pface_edge_idx  = NULL;
@@ -370,37 +370,44 @@ int main(int argc, char *argv[])
                                                PDM_OWNERSHIP_KEEP);
 
   /* Get faces */
-  pn_face = PDM_multipart_part_connectivity_get(mpart,
-                                               0,
-                                               i_part,
-                                               PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                               &pface_edge,
-                                               &pface_edge_idx,
-                                               PDM_OWNERSHIP_KEEP);
+  PDM_multipart_part_connectivity_get(mpart,
+                                      0,
+                                      i_part,
+                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                      &pface_edge,
+                                      &pface_edge_idx,
+                                      PDM_OWNERSHIP_KEEP);
 
   /* Get groups */
-  _get_groups(mpart,
-              0,
-              i_part,
-              &pn_edge_group,
-              &pgroup_edge_idx,
-              &pgroup_edge);
+  // _get_groups(mpart,
+  //             0,
+  //             i_part,
+  //             &pn_edge_group,
+  //             &pgroup_edge_idx,
+  //             &pgroup_edge);
+  PDM_g_num_t *edge_bound_ln_to_gn  = NULL;
+
+  PDM_multipart_bound_get(mpart, 0, i_part, PDM_BOUND_TYPE_EDGE,
+                          &pn_edge_group,
+                          &pgroup_edge_idx,
+                          &pgroup_edge,
+                          &edge_bound_ln_to_gn);
 
   /* Transpose into edge_face */
   int   n_part          = 1;
-  int **tmp_pedge_face_idx = NULL;
-  int **tmp_pedge_face     = NULL;
+  // int **tmp_pedge_face_idx = NULL;
+  // int **tmp_pedge_face     = NULL;
 
-  PDM_part_connectivity_transpose(n_part,
-                                  &pn_face,
-                                  &pn_edge,
-                                  &pface_edge_idx,
-                                  &pface_edge,
-                                  &tmp_pedge_face_idx,
-                                  &tmp_pedge_face);
+  // PDM_part_connectivity_transpose(n_part,
+  //                                 &pn_face,
+  //                                 &pn_edge,
+  //                                 &pface_edge_idx,
+  //                                 &pface_edge,
+  //                                 &tmp_pedge_face_idx,
+  //                                 &tmp_pedge_face);
 
-  // int *pedge_face_idx = tmp_pedge_face_idx[i_part];
-  // int *pedge_face     = tmp_pedge_face[i_part];
+  // // int *pedge_face_idx = tmp_pedge_face_idx[i_part];
+  // // int *pedge_face     = tmp_pedge_face[i_part];
 
   /* Transpose into edge_group */
   int **tmp_pedge_group_idx = NULL;
@@ -415,7 +422,9 @@ int main(int argc, char *argv[])
                                   &tmp_pedge_group);
 
   int *pedge_group_idx = tmp_pedge_group_idx[i_part];
-  int *pedge_group     = tmp_pedge_group[i_part];
+  int *pedge_group     = tmp_pedge_group    [i_part];
+  free(tmp_pedge_group_idx);
+  free(tmp_pedge_group    );
 
   /* Transpose into vtx_edge */
   int **tmp_pvtx_edge_idx = NULL;
@@ -432,7 +441,9 @@ int main(int argc, char *argv[])
                                   &tmp_pvtx_edge);
 
   int *pvtx_edge_idx = tmp_pvtx_edge_idx[i_part];
-  int *pvtx_edge     = tmp_pvtx_edge[i_part];
+  int *pvtx_edge     = tmp_pvtx_edge    [i_part];
+  free(tmp_pvtx_edge_idx);
+  free(tmp_pvtx_edge    );
 
   /* Combine into vtx_group */
 
@@ -565,9 +576,10 @@ int main(int argc, char *argv[])
     nelmt_proc = PDM_part_to_block_n_elt_block_get(ptb);
 
     if (i_step ==0) {
-      dnormalisation_summed = malloc(nelmt_proc * sizeof(double));
+      dnormalisation_summed = malloc(    nelmt_proc * sizeof(double));
       dnew_vtx_coord_summed = malloc(3 * nelmt_proc * sizeof(double));
     }
+
 
     // Sum merged normalisation and new_vtx_coord
 
@@ -627,7 +639,7 @@ int main(int argc, char *argv[])
     /* End loop Updates */
     for (int i = 0; i < pn_vtx; i++) {
       // Change pvtx_coord if has no group
-      if (1) { // pvtx_group_idx[i+1] - pvtx_group_idx[i] == 0
+      if (pvtx_group_idx[i+1] - pvtx_group_idx[i] == 0) {
         pvtx_coord[3*i]       = pnew_vtx_coord[3*i];
         pvtx_coord[3*i+1]     = pnew_vtx_coord[3*i+1];
         pnew_vtx_coord[3*i]   = 0;
@@ -635,13 +647,35 @@ int main(int argc, char *argv[])
       }
     }
 
+
+    PDM_part_to_block_free(ptb);
+    PDM_block_to_part_free(btp);
+
+    free(dstrid_new_vtx_coord);
+    free(dnew_vtx_coord);
+
   } // end loop on Laplacian Smoothing steps
+
+
+  free(pedge_vtx_idx    );
+  free(pstrid        );
+  free(pnormalisation);
+  free(pnew_vtx_coord);
+  free(dnormalisation_summed);
+  free(dnew_vtx_coord_summed);
+  free(dstrid_normalisation);
+  free(dnormalisation);
+
+  free(pvtx_edge_idx);
+  free(pvtx_edge    );
+  free(pvtx_group_idx);
+  free(pvtx_group    );
+  free(pedge_group_idx);
+  free(pedge_group    );
 
   /* Free entities */
   // TO DO add free of mallocs
   PDM_multipart_free(mpart);
-  PDM_part_to_block_free(ptb);
-  PDM_block_to_part_free(btp);
 
   PDM_MPI_Finalize();
   return 0;

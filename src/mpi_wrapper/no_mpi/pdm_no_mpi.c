@@ -993,6 +993,249 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
   return 0;
 }
 
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Test (wrapping de la fonction MPI_Test)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
+{
+  PDM_UNUSED(request);
+  PDM_UNUSED(flag);
+
+  return 0;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Wtime (wrapping de la fonction MPI_Wtime)
+ *
+ *----------------------------------------------------------------------------*/
+
+double PDM_MPI_Wtime(void)
+{
+
+  return 0.;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_IBcast (wrapping de la fonction MPI_IBcast)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
+              int root, PDM_MPI_Comm comm, PDM_MPI_Request *request)
+{
+
+  PDM_UNUSED (buffer); 
+  PDM_UNUSED (count); 
+  PDM_UNUSED (datatype);
+  PDM_UNUSED (root); 
+  PDM_UNUSED (comm); 
+  PDM_UNUSED (request);
+  return 0;
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Reduce_scatter (wrapping de la fonction MPI_Reduce_scatter)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *counts,
+                           PDM_MPI_Datatype datatype, PDM_MPI_Op op,
+                           PDM_MPI_Comm comm)
+{
+  PDM_UNUSED (sendbuf);
+  PDM_UNUSED (recvbuf); 
+  PDM_UNUSED (counts);
+  PDM_UNUSED (datatype); 
+  PDM_UNUSED (op);
+  PDM_UNUSED (comm);
+  return 0;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Get_ialltoallv (Implemtation of alltoall like with window )
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
+                           PDM_MPI_Win       win_recv,
+                           void             *sendbuf,
+                           int              *sendcounts,
+                           int              *sdispls,
+                           PDM_MPI_Datatype  sendtype,
+                           void             *recvbuf,
+                           int              *recvcounts,
+                           int              *rdispls,
+                           PDM_MPI_Datatype  recvtype,
+                           PDM_MPI_Comm      comm)
+{
+  PDM_UNUSED (win_send);
+  PDM_UNUSED (win_recv);
+  PDM_UNUSED (sendbuf);
+  PDM_UNUSED (sendcounts);
+  PDM_UNUSED (sdispls);
+  PDM_UNUSED (sendtype);
+  PDM_UNUSED (recvbuf);
+  PDM_UNUSED (recvcounts);
+  PDM_UNUSED (rdispls);
+  PDM_UNUSED (recvtype);
+  PDM_UNUSED (comm);
+
+  return 0;
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_allocate (wrapping de la fonction MPI_Win_allocate)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Win_allocate(PDM_MPI_Aint  size,
+                         int           disp_unit,
+                         PDM_MPI_Comm  comm,
+                         void         *baseptr,
+                         PDM_MPI_Win  *win)
+{
+  PDM_UNUSED(size);
+  PDM_UNUSED(disp_unit);
+  PDM_UNUSED(comm);
+  PDM_UNUSED(baseptr);
+  PDM_UNUSED(win);
+
+  return 0;
+}
+
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_free (wrapping de la fonction MPI_Win_free)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Win_free(PDM_MPI_Win  *win)
+{
+  PDM_UNUSED (win);
+
+  return 0;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Win_fence (wrapping de la fonction MPI_Win_fence)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Win_fence(int assert, PDM_MPI_Win win)
+{
+  PDM_UNUSED (assert);
+  PDM_UNUSED (win);
+
+  return 0;
+}
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_split
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_split_type_numa(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
+{
+  PDM_UNUSED (comm);
+  PDM_UNUSED (newcomm);  
+
+  return 0;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_split
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *newcomm)
+{
+  PDM_UNUSED (comm); 
+  PDM_UNUSED (split_type); 
+  PDM_UNUSED (newcomm);
+
+  return 0;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_mpi_Win_allocate_shared_get
+ *
+ *----------------------------------------------------------------------------*/
+
+PDM_mpi_win_shared_t*
+PDM_mpi_win_shared_create(PDM_MPI_Aint          size,
+                          int                   disp_unit,
+                          PDM_MPI_Comm          comm)
+{
+  PDM_UNUSED (size);
+  PDM_UNUSED (disp_unit);
+  PDM_UNUSED (comm);
+
+  return NULL;
+}
+
+
+void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins)
+{
+  PDM_UNUSED (wins);
+  return NULL;  
+}
+
+void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins)
+{
+  PDM_UNUSED (wins);
+
+}
+
+PDM_MPI_Comm PDM_MPI_get_group_of_master(PDM_MPI_Comm comm, PDM_MPI_Comm sub_comm)
+{
+  PDM_UNUSED (comm);
+  PDM_UNUSED (sub_comm);
+
+  return PDM_MPI_COMM_NULL;  
+}
+
+int PDM_mpi_win_shared_lock_all(int assert, PDM_mpi_win_shared_t* win)
+{
+  PDM_UNUSED (assert);
+  PDM_UNUSED (win);
+
+  return 0;  
+}
+int PDM_mpi_win_shared_unlock_all(PDM_mpi_win_shared_t* win)
+{
+  PDM_UNUSED (win);
+
+  return 0;  
+}
+int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win)
+{
+  PDM_UNUSED (win);
+
+  return 0;  
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_rand_tag_get
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *flag)
+{
+  PDM_UNUSED (comm);
+  PDM_UNUSED (attribute_val);
+  PDM_UNUSED (flag);
+
+  return 0;  
+}
+int PDM_MPI_Rand_tag            (PDM_MPI_Comm comm)
+{
+
+  PDM_UNUSED (comm);
+
+  return 0;  
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

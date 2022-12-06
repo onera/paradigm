@@ -195,6 +195,7 @@ const int   n_entity2,
   // PDM_log_trace_array_int(_entity2_entity1_idx, n_entity2+1, "_entity2_entity1_idx::");
   // PDM_log_trace_array_int(entity2_entity1_n   , n_entity2  , "entity2_entity1_n::");
   // PDM_log_trace_array_int(_entity2_entity1   , _entity2_entity1_idx[n_entity2]  , "_entity2_entity1::");
+  // PDM_log_trace_connectivity_int(_entity2_entity1_idx, _entity2_entity1   , n_entity2  , "_entity2_entity1::");
 
   free(entity2_entity1_n);
 
@@ -306,6 +307,97 @@ const int   *n_entity1,
 
 void
 PDM_compute_face_vtx_from_face_and_edge
+(
+ int   n_face,
+ int  *face_edge_idx,
+ int  *face_edge,
+ int  *edge_vtx,
+ int **face_vtx
+)
+{
+  int dbg = 0;
+
+  *face_vtx = malloc (sizeof(int) * face_edge_idx[n_face]);
+
+  int n_edge = 0;
+  for (int i = 0; i < face_edge_idx[n_face]; i++) {
+    n_edge = PDM_MAX(n_edge, PDM_ABS(face_edge[i]));
+  }
+
+
+  int *edge_tag = PDM_array_zeros_int(n_edge);
+
+  for (int iface = 0; iface < n_face; iface++) {
+    int *_face_vtx  = *face_vtx  + face_edge_idx[iface];
+    int *_face_edge =  face_edge + face_edge_idx[iface];
+
+    if (dbg) {
+      log_trace("\nFace %d\n", iface);
+      for (int idx_edge = face_edge_idx[iface]; idx_edge < face_edge_idx[iface+1]; idx_edge++) {
+        int iedge = PDM_ABS(face_edge[idx_edge]) - 1;
+        log_trace("  edge %d: %d %d\n",
+                  face_edge[idx_edge],
+                  edge_vtx[2*iedge], edge_vtx[2*iedge+1]);
+      }
+    }
+
+    int _n_edge = face_edge_idx[iface+1] - face_edge_idx[iface];
+    // first edge
+    int iedge = PDM_ABS(_face_edge[0]) - 1;
+    edge_tag[iedge] = 1;
+    if (_face_edge[0] > 0) {
+      _face_vtx[0] = edge_vtx[2*iedge  ];
+      _face_vtx[1] = edge_vtx[2*iedge+1];
+    }
+    else {
+      _face_vtx[0] = edge_vtx[2*iedge+1];
+      _face_vtx[1] = edge_vtx[2*iedge  ];
+    }
+
+    for (int i = 2; i < _n_edge; i++) {
+
+      for (int j = 1; j < _n_edge; j++) {
+        iedge = PDM_ABS(_face_edge[j]) - 1;
+
+        if (edge_tag[iedge]) {
+          continue;
+        }
+
+        if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
+          assert(_face_edge[j] > 0);
+          _face_vtx[i] = edge_vtx[2*iedge+1];
+          edge_tag[iedge] = 1;
+          break;
+        }
+        else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
+          assert(_face_edge[j] < 0);
+          _face_vtx[i] = edge_vtx[2*iedge];
+          edge_tag[iedge] = 1;
+          break;
+        }
+      }
+    }
+
+    if (dbg) {
+      log_trace("  face_vtx = ");
+      for (int ivtx = 0; ivtx < face_edge_idx[iface+1] - face_edge_idx[iface]; ivtx++) {
+        log_trace("%d ", _face_vtx[ivtx]);
+      }
+      log_trace("\n");
+    }
+
+    // reset tags
+    for (int i = 0; i < _n_edge; i++) {
+      iedge = PDM_ABS(_face_edge[i]) - 1;
+      edge_tag[iedge] = 0;
+    }
+  }
+  free(edge_tag);
+}
+
+
+void
+PDM_compute_face_vtx_from_face_and_edge_unsigned
 (
  int   n_face,
  int  *face_edge_idx,

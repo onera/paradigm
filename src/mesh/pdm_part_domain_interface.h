@@ -56,12 +56,14 @@ PDM_part_domain_interface_set
  PDM_bound_type_t              interface_kind,
  int                           i_domain,
  int                           i_part,
- int                          *interface_pn,
- PDM_g_num_t                 **interface_ln_to_gn,
- int                         **interface_sgn,
- int                         **interface_ids,
- int                         **interface_ids_idx,
- int                         **interface_dom
+ int                           i_interface,
+ int                           interface_pn,
+ PDM_g_num_t                  *interface_ln_to_gn,
+ int                          *interface_sgn,
+ int                          *interface_sens,
+ int                          *interface_ids,
+ int                          *interface_ids_idx,
+ int                          *interface_dom
 );
 
 
@@ -72,18 +74,27 @@ PDM_part_domain_interface_get
  PDM_bound_type_t               interface_kind,
  int                            i_domain,
  int                            i_part,
- int                          **interface_pn,
- PDM_g_num_t                 ***interface_ln_to_gn,
- int                         ***interface_sgn,
- int                         ***interface_ids,
- int                         ***interface_ids_idx,
- int                         ***interface_dom
+ int                            i_interface,
+ int                           *interface_pn,
+ PDM_g_num_t                  **interface_ln_to_gn,
+ int                          **interface_sgn,
+ int                          **interface_sens,
+ int                          **interface_ids,
+ int                          **interface_ids_idx,
+ int                          **interface_dom
 );
 
 int
 PDM_part_domain_interface_n_interface_get
 (
  PDM_part_domain_interface_t   *dom_intrf
+);
+
+int
+PDM_part_domain_interface_exist_get
+(
+ PDM_part_domain_interface_t  *dom_intrf,
+ PDM_bound_type_t              interface_kind
 );
 
 void
@@ -127,6 +138,54 @@ PDM_part_domain_interface_rotation_get
         double                      **center,
         double                       *angle
 );
+
+
+void
+PDM_part_domain_interface_as_graph
+(
+  PDM_part_domain_interface_t    *dom_intrf,
+  PDM_bound_type_t                interface_kind,
+  int                           **n_entity,
+  PDM_g_num_t                  ***entity_ln_to_gn,
+  int                          ***neighbor_entity_idx,
+  int                          ***neighbor_entity_desc,
+  int                            *n_g_interface,
+  int                           **composed_id_idx,
+  int                           **composed_id,
+  PDM_g_num_t                   **composed_ln_to_gn_sorted
+);
+
+void
+PDM_part_domain_interface_translate
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_entity1,
+ int                          **pn_entity2,
+ PDM_g_num_t                 ***entity2_ln_to_gn,
+ int                         ***entity1_entity2_idx,
+ int                         ***entity1_entity2
+);
+
+
+void
+PDM_part_domain_interface_add
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_entity1,
+ PDM_g_num_t                 ***entity1_ln_to_gn,
+ int                          **pn_entity2,
+ PDM_g_num_t                 ***entity2_ln_to_gn,
+ int                         ***entity2_entity1_idx,
+ int                         ***entity2_entity1,
+ int                            connectivity_is_signed
+);
+
 
 #ifdef __cplusplus
 }

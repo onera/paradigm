@@ -21,6 +21,8 @@
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -737,6 +739,21 @@ int main(int argc, char *argv[])
                                    pts_coords[i_part],
                                    pts_gnum);
 
+    if (post) {
+      char filename[999];
+      sprintf(filename, "point_cloud_%d_%2.2d.vtk", i_part, i_rank);
+      PDM_vtk_write_point_cloud(filename,
+                                n_pts,
+                                pts_coords[i_part],
+                                pts_gnum,
+                                NULL);
+
+      for (int i = 0; i < n_pts; i++) {
+        log_trace("point "PDM_FMT_G_NUM" : %f %f %f\n",
+                  pts_gnum[i], pts_coords[i_part][3*i], pts_coords[i_part][3*i+1], pts_coords[i_part][3*i+2]);
+      }
+    }
+
   }
 
   if (i_rank == 0) {
@@ -744,7 +761,8 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dist_cloud_surf_compute (dist);
+  // PDM_dist_cloud_surf_compute (dist);
+  PDM_dist_cloud_surf_compute_optim (dist);
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
@@ -827,6 +845,8 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
+    PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum_pts, i_part);
+
     int ierr = 0;
     for (int i = 0; i < n_pts; i++) {
       double d1 = PDM_MIN (PDM_ABS (pts_coords[i_part][3*i] - xmin), PDM_ABS (pts_coords[i_part][3*i] - xmax));
@@ -835,6 +855,10 @@ int main(int argc, char *argv[])
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
+        log_trace("!!! pt "PDM_FMT_G_NUM" (%f %f %f) error dist = %e / %e, face "PDM_FMT_G_NUM"\n",
+                  pts_gnum[i],
+                  pts_coords[i_part][3*i], pts_coords[i_part][3*i+1], pts_coords[i_part][3*i+2],
+                  distance[i], d, closest_elt_gnum[i]);
         ierr += 1;
         /* printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
         /*         pts_coords[i_part][3*i], pts_coords[i_part][3*i+1], pts_coords[i_part][3*i+2], distance[i], d); */

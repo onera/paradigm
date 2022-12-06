@@ -418,8 +418,15 @@ int main(int argc, char *argv[])
       if(inside == 1) {
         selected_l_num[i_part][n_select_cell]     = i_cell;
         n_select_cell++;
-
       }
+
+      // if(cell_ln_to_gn[i_cell] == 5) {
+      // if(cell_ln_to_gn[i_cell]%2 == 1) {
+      //   selected_l_num[i_part][n_select_cell]     = i_cell;
+      //   n_select_cell++;
+      // }
+
+
     }
 
     selected_l_num[i_part] = realloc(selected_l_num[i_part], n_select_cell * sizeof(int        ));
@@ -432,13 +439,17 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
-  PDM_bool_t equilibrate = PDM_FALSE;
-  // PDM_bool_t equilibrate = PDM_TRUE;
+  // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+  PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+  // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  // PDM_split_dual_t        split_dual_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_extract_part_t* extrp = PDM_extract_part_create(3,
                                                       n_part,
                                                       n_part_out,
-                                                      equilibrate,
-                                                      PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                                                      extract_kind,
+                                                      split_dual_method,
+                                                      PDM_TRUE, // compute_child_gnum
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
@@ -517,12 +528,31 @@ int main(int argc, char *argv[])
                                   PDM_MESH_ENTITY_VERTEX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+
+    // PDM_g_num_t *pextract_parent_cell_ln_to_gn = NULL;
+    // PDM_g_num_t *pextract_cell_ln_to_gn = NULL;
+    // int n_cell = PDM_extract_part_ln_to_gn_get(extrp,
+    //                                            i_part,
+    //                                            PDM_MESH_ENTITY_CELL,
+    //                                            &pextract_cell_ln_to_gn,
+    //                                            PDM_OWNERSHIP_KEEP);
+
+    // n_cell = PDM_extract_part_parent_ln_to_gn_get(extrp,
+    //                                                   i_part,
+    //                                                   PDM_MESH_ENTITY_CELL,
+    //                                                   &pextract_parent_cell_ln_to_gn,
+    //                                                   PDM_OWNERSHIP_KEEP);
+
+    // PDM_log_trace_array_long(pextract_cell_ln_to_gn, n_cell, "pextract_cell_ln_to_gn ::");
+    // PDM_log_trace_array_long(pextract_parent_cell_ln_to_gn, n_cell, "pextract_parent_cell_ln_to_gn ::");
+
+
   }
 
   /*
    * Export vtk en légende
    */
-  if(0 == 1) {
+  if(post) {
     for(int i_part = 0; i_part < n_part_out; ++i_part) {
 
       char filename[999];

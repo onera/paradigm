@@ -13,6 +13,7 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_box.h"
+#include "pdm_part_to_block.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,7 +112,19 @@ PDM_dbbtree_boxes_set
  const int          *nElts,
  const double      **extents,
  const PDM_g_num_t **gNum
- );
+);
+
+
+PDM_box_set_t *
+PDM_dbbtree_boxes_set_with_init_location
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const int         **init_location,
+ const double      **extents,
+ const PDM_g_num_t **gNum
+);
 
 PDM_box_set_t *
 PDM_dbbtree_boxes_set_for_intersect_line
@@ -142,6 +155,18 @@ PDM_dbbtree_boxes_set_for_intersect_line
  * to the tree intersection
  *
  */
+PDM_box_set_t *
+PDM_dbbtree_intersect_boxes_with_init_location_set
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_part,
+ const int          *nElts,
+ const int         **init_location,
+ const double      **extents,
+ const PDM_g_num_t **gNum,
+ int                *box_index[],
+ int                *box_l_num[]
+);
 
 PDM_box_set_t *
 PDM_dbbtree_intersect_boxes_set
@@ -182,6 +207,37 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  PDM_g_num_t     *box_g_num[]
 );
 
+/**
+ *
+ * \brief Get the boxes closer than the upper bound distance
+ *
+ *   \param [in]  bt                 Pointer to box tree structure
+ *   \param [in]  n_pts              Number of points
+ *   \param [in]  pts                Point coordinates (size = 3 * \ref n_pts)
+ *   \param [in]  pts_g_num          Point global ids
+ *   \param [in]  upper_bound_dist2  Upper bound of the square of the distance (size = \ref n_pts)
+ *   \param [out] n_extract_boxes    Number of extracted box
+ *   \param [out] box_l_num          Index of boxes (size = \ref n_extract_boxes )
+ *   \param [out] box_pts_idx        Index of boxes (size = \ref n_extract_boxes + 1)
+ *   \param [out] box_g_num          Global ids of boxes (size = \ref box_pts_idx[\ref n_pts])
+ *
+ */
+
+void
+PDM_dbbtree_closest_upper_bound_dist_boxes_pts_shared_get
+(
+ PDM_dbbtree_t   *dbbt,
+ const int        n_pts,
+ double           pts[],
+ PDM_g_num_t      pts_g_num[],
+ double           upper_bound_dist2[],
+ int             *out_n_extract_boxes,
+ PDM_g_num_t     *out_box_gnum[],
+ int             *out_box_init_location[],
+ int             *out_dbox_pts_idx[],
+ PDM_g_num_t     *out_dbox_pts_g_num[],
+ double          *out_dbox_pts_coord[]
+);
 
 /**
  *
@@ -242,6 +298,51 @@ PDM_dbbtree_points_inside_boxes
  const int           ellipsoids
  );
 
+void
+PDM_dbbtree_points_inside_boxes_block_frame
+(
+ PDM_dbbtree_t        *dbbt,
+ const int             n_pts,
+ PDM_g_num_t           pts_g_num[],
+ double                pts_coord[],
+ PDM_part_to_block_t **ptb_out,
+ int                 **dbox_pts_n,
+ PDM_g_num_t         **dbox_pts_g_num,
+ double              **dbox_pts_coord,
+ const int             ellipsoids
+ );
+
+
+/**
+ *
+ * \brief Get an indexed list of all points inside the boxes of a distributed box tree
+ *
+ *   \param [in]  dbbt               Pointer to distributed box tree structure
+ *   \param [in]  n_pts              Number of points
+ *   \param [in]  pts_g_num          Point global ids (size = \ref n_pts)
+ *   \param [in]  pts_coord          Point coordinates (size = 3 * \ref n_pts)
+ *   \param [in]  n_boxes            Number of boxes
+ *   \param [in]  box_g_num          Global ids of boxes (size = \ref n_boxes)
+ *   \param [out] pts_in_box_idx     Index of points in boxes (size = \ref n_boxes + 1, allocated inside function)
+ *   \param [out] pts_in_box_g_num   Global ids of points in boxes (size = \ref pts_in_box_idx[\ref n_boxes], allocated inside function)
+ *   \param [out] pts_in_box_coord   Coordinates of points in boxes (size = 3 *\ref pts_in_box_idx[\ref n_boxes], allocated inside function)
+ *   \param [in]  ellipsoids         Consider boxes as axis-aligned ellipsoids (1 or 0)
+ *
+ */
+void
+PDM_dbbtree_points_inside_boxes_shared
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ const int           n_boxes,
+ const PDM_g_num_t   box_g_num[],
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord,
+ const int           ellipsoids
+);
 
 /**
  *
@@ -345,9 +446,53 @@ PDM_dbbtree_lines_intersect_boxes2
  int            *n_part,
  int           **redistrib_n_box,
  PDM_g_num_t  ***redistrib_box_ln_to_gn,
+ int          ***redistrib_box_init_location,
  int          ***box_line_idx,
  PDM_g_num_t  ***box_line_g_num
  );
+
+void
+PDM_dbbtree_lines_intersect_boxes2_shared
+(
+ PDM_dbbtree_t   *dbbt,
+ const int        n_line,
+ PDM_g_num_t     *line_g_num,
+ double          *line_coord,
+ int             *n_part,
+ int            **redistrib_n_box,
+ PDM_g_num_t   ***redistrib_box_ln_to_gn,
+ int           ***redistrib_box_init_location,
+ int           ***box_line_idx,
+ PDM_g_num_t   ***box_line_g_num
+);
+
+/**
+ *
+ * \brief Get an indexed list of all boxes intersecting volumes
+ *
+ * \param [in]   dbbt                  Pointer to distributed box tree structure
+ * \param [in]   n_volumes             Number of volumes
+ * \param [in]   volume_g_num          Global number of volumes
+ * \param [in]   volume_plane_idx      Index of the number of planes per volume
+ * \param [in]   plane_normal          Oriented normal vector for a given plane (oriented toward the interior of the volume)
+ * \param [in]   plane_pt_coord        Point on plane coordinates (xa0, ya0, za0, xb0, yb0, zb0, xa1, ...)
+ * \param [out]  volume_box_idx        Index of boxes (size = \ref n_line + 1, allocated inside function)
+ * \param [out]  volume_box_g_num      Global ids of boxes (size = \ref box_line_idx[\ref n_line], allocated inside function)
+ *
+ */
+
+void
+PDM_dbbtree_volumes_intersect_boxes
+(
+ PDM_dbbtree_t  *dbbt,
+ const int       n_volumes,
+ PDM_g_num_t    *volume_g_num,
+ int            *volume_plane_idx,
+ double         *plane_normal,
+ double         *plane_pt_coord,
+ int           **volume_box_idx,
+ PDM_g_num_t   **out_volume_box_g_num
+);
 
 
 void

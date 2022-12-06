@@ -73,7 +73,7 @@ struct _pdm_multi_block_to_part_t {
                                        * (size : n_block*n_rank) */
   int           pttopt_comm;          /*!< Use point to point communication if pttopt_comm == 1 */
 
-} _pdm_multi_block_to_part_t;
+};
 
 /*=============================================================================
  * Static global variables

@@ -434,8 +434,14 @@ PDM_box_set_create(int                dim,
   boxes->n_copied_ranks = 0;
   boxes->copied_ranks = NULL;
   boxes->rank_boxes   = NULL;
-  /* Return pointer to structure */
 
+  /* Shared */
+  boxes->n_rank_in_shm = 0;
+  boxes->comm_shared   = PDM_MPI_COMM_NULL;
+  boxes->shm_boxes     = NULL;
+  boxes->wboxes_data   = NULL;
+
+  /* Return pointer to structure */
   return boxes;
 }
 
@@ -533,6 +539,33 @@ PDM_box_set_normalize_robust
   for (int i = 0; i < n_pts; i++) {
     for (int j = 0; j < boxes->dim; j++) {
       pts_normalized[3*i + j] = (pts_origin[3*i + j] - boxes->s[j]) * invd[j];
+    }
+  }
+}
+
+/**
+ *
+ * \brief Normalize a set of vectors according to a box set
+ *
+ * \param [in]   boxes              Pointer to box set structure
+ * \param [in]   n_pts              Number of coordinates
+ * \param [in]   pts_origin         Coordinates (size = 3 * \ref n_pts)
+ * \param [out]  pts_normalized     Normalized coordinates (size = 3 * \ref n_pts)
+ *
+ */
+
+void
+PDM_box_set_normalize_normal_vector
+(
+ PDM_box_set_t  *boxes,
+ const int       n_pts,
+ double         *pts_origin,
+ double         *pts_normalized
+ )
+{
+  for (int i = 0; i < n_pts; i++) {
+    for (int j = 0; j < boxes->dim; j++) {
+      pts_normalized[3*i + j] = pts_origin[3*i + j] * boxes->d[j]; // n'=(D^-1)^T*n (cf https://www.f-legrand.fr/scidoc/docimg/graphie/geometrie/affine/affine.html)
     }
   }
 }
@@ -650,6 +683,27 @@ PDM_box_set_destroy(PDM_box_set_t  **boxes)
 
     if (_boxes == NULL) {
       return;
+    }
+
+    if(_boxes->shm_boxes != NULL) {
+      for(int i = 0; i < _boxes->n_rank_in_shm; ++i) {
+        PDM_mpi_win_shared_unlock_all (_boxes->wboxes_data[i].w_g_num       );
+        PDM_mpi_win_shared_unlock_all (_boxes->wboxes_data[i].w_extents     );
+        PDM_mpi_win_shared_unlock_all (_boxes->wboxes_data[i].w_n_boxes_orig);
+        PDM_mpi_win_shared_unlock_all (_boxes->wboxes_data[i].w_origin      );
+
+        PDM_mpi_win_shared_free(_boxes->wboxes_data[i].w_g_num       );
+        PDM_mpi_win_shared_free(_boxes->wboxes_data[i].w_extents     );
+        PDM_mpi_win_shared_free(_boxes->wboxes_data[i].w_n_boxes_orig);
+        PDM_mpi_win_shared_free(_boxes->wboxes_data[i].w_origin      );
+
+      }
+      free(_boxes->wboxes_data);
+      free(_boxes->shm_boxes);
+    }
+
+    if(_boxes->comm_shared != PDM_MPI_COMM_NULL) {
+      PDM_MPI_Comm_free(&_boxes->comm_shared);
     }
 
     // Free local boxes
@@ -840,18 +894,16 @@ PDM_box_set_build_morton_index(const PDM_box_set_t *boxes,
                                int                 *weight)
 {
 
-  int   *order = NULL;
 
   assert(distrib != NULL);
   assert(distrib->morton_index != NULL);
 
-  order = (int *) malloc(n_leaves * sizeof(int));
 
   /* Locally order Morton encoding */
-
-  PDM_morton_local_order(n_leaves,
-                         leaf_codes,
-                         order);
+  // int   *order  = (int *) malloc(n_leaves * sizeof(int));
+  // PDM_morton_local_order(n_leaves,
+  //                        leaf_codes,
+  //                        order);
 
   /* Compute a Morton index on ranks and return the associated fit */
 
@@ -861,12 +913,11 @@ PDM_box_set_build_morton_index(const PDM_box_set_t *boxes,
                                                n_leaves,
                                                leaf_codes,
                                                weight,
-                                               order,
+                                               NULL, // order
                                                distrib->morton_index,
                                                boxes->comm);
   /* Free memory */
-
-  free(order);
+  // free(order);
 
 }
 
@@ -1922,19 +1973,19 @@ PDM_box_copy_boxes_to_ranks
     g_num        = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_boxes);
     extents      = (double *)      malloc (sizeof(double)      * n_boxes*boxes->dim*2);
     n_boxes_orig = (int *)         malloc (sizeof(int)         * n_part_orig);
-    origin       = (int *)         malloc (sizeof(int)         * n_part_orig*3);
+    origin       = (int *)         malloc (sizeof(int)         * n_boxes * 3);
     if ( myRank == i_rank ) {
       // set buffers
       memcpy(g_num,        boxes->local_boxes->g_num,        sizeof(PDM_g_num_t) * n_boxes);
       memcpy(extents,      boxes->local_boxes->extents,      sizeof(double)      * n_boxes*boxes->dim*2);
       memcpy(n_boxes_orig, boxes->local_boxes->n_boxes_orig, sizeof(int)         * n_part_orig);
-      memcpy(origin,       boxes->local_boxes->origin,       sizeof(int)         * n_part_orig*3);
+      memcpy(origin,       boxes->local_boxes->origin,       sizeof(int)         * n_boxes * 3);
     }
     // broadcast buffers
     PDM_MPI_Bcast(g_num,        n_boxes,              PDM__PDM_MPI_G_NUM, i_rank, boxes->comm);
-    PDM_MPI_Bcast(extents,      n_boxes*boxes->dim*2, PDM_MPI_DOUBLE,     i_rank, boxes->comm);
-    PDM_MPI_Bcast(n_boxes_orig, n_part_orig,          PDM_MPI_INT,        i_rank, boxes->comm);
-    PDM_MPI_Bcast(origin,       n_part_orig*3,        PDM_MPI_INT,        i_rank, boxes->comm);
+    PDM_MPI_Bcast(extents,      n_boxes*boxes->dim*2, PDM_MPI_DOUBLE    , i_rank, boxes->comm);
+    PDM_MPI_Bcast(n_boxes_orig, n_part_orig         , PDM_MPI_INT       , i_rank, boxes->comm);
+    PDM_MPI_Bcast(origin,       n_boxes * 3         , PDM_MPI_INT       , i_rank, boxes->comm);
 
 
     if  ( myRank != i_rank ) {
@@ -1944,12 +1995,12 @@ PDM_box_copy_boxes_to_ranks
       boxes->rank_boxes[icopied].g_num        = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_boxes);
       boxes->rank_boxes[icopied].extents      = (double *)      malloc (sizeof(double)      * n_boxes*boxes->dim*2);
       boxes->rank_boxes[icopied].n_boxes_orig = (int *)         malloc (sizeof(int)         * n_part_orig);
-      boxes->rank_boxes[icopied].origin       = (int *)         malloc (sizeof(int)         * n_part_orig*3);
+      boxes->rank_boxes[icopied].origin       = (int *)         malloc (sizeof(int)         * n_boxes*3);
 
       memcpy(boxes->rank_boxes[icopied].g_num,        g_num,        sizeof(PDM_g_num_t) * n_boxes);
       memcpy(boxes->rank_boxes[icopied].extents,      extents,      sizeof(double)      * n_boxes*boxes->dim*2);
       memcpy(boxes->rank_boxes[icopied].n_boxes_orig, n_boxes_orig, sizeof(int)         * n_part_orig);
-      memcpy(boxes->rank_boxes[icopied].origin,       origin,       sizeof(int)         * n_part_orig*3);
+      memcpy(boxes->rank_boxes[icopied].origin,       origin,       sizeof(int)         * n_boxes*3);
 
       icopied++;
     }
@@ -1960,6 +2011,94 @@ PDM_box_copy_boxes_to_ranks
     free(origin);
   }
 
+}
+
+
+
+/**
+ * \brief Setup a shared structure among nodes
+ *
+ * \param [in] boxes            Pointer to the PDM_box_t structure
+ */
+void
+PDM_box_copy_boxes_to_shm
+(
+ PDM_box_set_t  *boxes
+)
+{
+  int n_rank, i_rank;
+  PDM_MPI_Comm_rank(boxes->comm, &i_rank);
+  PDM_MPI_Comm_size(boxes->comm, &n_rank);
+
+  // Shared
+  assert(boxes->comm_shared == PDM_MPI_COMM_NULL);
+  PDM_MPI_Comm_split_type(boxes->comm, PDM_MPI_SPLIT_NUMA, &boxes->comm_shared);
+
+  int n_rank_in_shm, i_rank_in_shm;
+  PDM_MPI_Comm_rank (boxes->comm_shared, &i_rank_in_shm);
+  PDM_MPI_Comm_size (boxes->comm_shared, &n_rank_in_shm);
+
+  boxes->n_rank_in_shm = n_rank_in_shm;
+
+  int s_shm_data_in_rank[2] = {0};
+  s_shm_data_in_rank[0] = boxes->local_boxes->n_boxes;
+  s_shm_data_in_rank[1] = boxes->local_boxes->n_part_orig;
+
+  int *s_shm_data_in_all_nodes = malloc(2 * n_rank_in_shm * sizeof(int));
+
+  PDM_MPI_Allgather(s_shm_data_in_rank     , 2, PDM_MPI_INT,
+                    s_shm_data_in_all_nodes, 2, PDM_MPI_INT, boxes->comm_shared);
+
+  boxes->shm_boxes   = (PDM_boxes_t      *) malloc(n_rank_in_shm * sizeof(PDM_boxes_t    ));
+  boxes->wboxes_data = (_w_boxes_data_t  *) malloc(n_rank_in_shm * sizeof(_w_boxes_data_t));
+
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+
+    int n_boxes     = s_shm_data_in_all_nodes[2*i  ];
+    int n_part_orig = s_shm_data_in_all_nodes[2*i+1];
+
+    boxes->shm_boxes[i].n_boxes     = n_boxes;
+    boxes->shm_boxes[i].n_part_orig = n_part_orig;
+
+    boxes->wboxes_data[i].w_g_num        = PDM_mpi_win_shared_create(n_boxes             , sizeof(PDM_g_num_t), boxes->comm_shared);
+    boxes->wboxes_data[i].w_extents      = PDM_mpi_win_shared_create(n_boxes*boxes->dim*2, sizeof(double     ), boxes->comm_shared);
+    boxes->wboxes_data[i].w_n_boxes_orig = PDM_mpi_win_shared_create(n_part_orig         , sizeof(int        ), boxes->comm_shared);
+    boxes->wboxes_data[i].w_origin       = PDM_mpi_win_shared_create(3 * n_boxes         , sizeof(int        ), boxes->comm_shared);
+
+    PDM_mpi_win_shared_lock_all (0, boxes->wboxes_data[i].w_g_num       );
+    PDM_mpi_win_shared_lock_all (0, boxes->wboxes_data[i].w_extents     );
+    PDM_mpi_win_shared_lock_all (0, boxes->wboxes_data[i].w_n_boxes_orig);
+    PDM_mpi_win_shared_lock_all (0, boxes->wboxes_data[i].w_origin      );
+
+    boxes->shm_boxes[i].g_num        = PDM_mpi_win_shared_get(boxes->wboxes_data[i].w_g_num       );
+    boxes->shm_boxes[i].extents      = PDM_mpi_win_shared_get(boxes->wboxes_data[i].w_extents     );
+    boxes->shm_boxes[i].n_boxes_orig = PDM_mpi_win_shared_get(boxes->wboxes_data[i].w_n_boxes_orig);
+    boxes->shm_boxes[i].origin       = PDM_mpi_win_shared_get(boxes->wboxes_data[i].w_origin      );
+
+  }
+  PDM_MPI_Barrier (boxes->comm_shared);
+
+  /* Copy from local to shared (After windows creation bcause window call is collective ) */
+  memcpy(boxes->shm_boxes[i_rank_in_shm].n_boxes_orig, boxes->local_boxes->n_boxes_orig, sizeof(int        ) * boxes->local_boxes->n_part_orig);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].g_num       , boxes->local_boxes->g_num       , sizeof(PDM_g_num_t)                  * boxes->local_boxes->n_boxes);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].extents     , boxes->local_boxes->extents     , sizeof(double     ) * 2 * boxes->dim * boxes->local_boxes->n_boxes);
+  memcpy(boxes->shm_boxes[i_rank_in_shm].origin      , boxes->local_boxes->origin      , sizeof(int        ) * 3              * boxes->local_boxes->n_boxes);
+
+  // PDM_log_trace_array_long(boxes->shm_boxes[i_rank_in_shm].g_num, boxes->shm_boxes[i_rank_in_shm].n_boxes, "shm_boxes.gnum :: ");
+
+  PDM_MPI_Barrier (boxes->comm_shared);
+
+  for(int i = 0; i < n_rank_in_shm; ++i) {
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_g_num       );
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_extents     );
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_n_boxes_orig);
+    PDM_mpi_win_shared_sync (boxes->wboxes_data[i].w_origin      );
+
+  }
+
+
+  free(s_shm_data_in_all_nodes);
+  // PDM_MPI_Comm_free(&boxes->comm_shared);
 }
   
 void
@@ -2254,6 +2393,21 @@ PDM_box_distrib_dump(const PDM_box_distrib_t  *distrib)
   PDM_printf("====  PDM_box_distrib_dump ==== terminated ====\n");
   fflush(stdout);
 }
+
+
+
+void
+PDM_box_set_normalization_get
+(
+ PDM_box_set_t  *boxes,
+ double        **s,
+ double        **d
+ )
+{
+  *s = boxes->s;
+  *d = boxes->d;
+}
+
 
 /*---------------------------------------------------------------------------*/
 

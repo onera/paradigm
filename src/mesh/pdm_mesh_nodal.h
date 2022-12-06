@@ -59,8 +59,9 @@ typedef enum {
   PDM_MESH_NODAL_PYRAMIDHO,
   PDM_MESH_NODAL_PRISMHO,
   PDM_MESH_NODAL_HEXAHO,
+  PDM_MESH_NODAL_BARHO_BEZIER, // temporary add to visualize Bezier curves
+  PDM_MESH_NODAL_TRIAHO_BEZIER, // temporary add to visualize Bezier triangles
   PDM_MESH_NODAL_N_ELEMENT_TYPES
-
 } PDM_Mesh_nodal_elt_t;
 
 
@@ -119,6 +120,21 @@ PDM_Mesh_nodal_n_vtx_elt_get
   PDM_Mesh_nodal_elt_t type,
   const int            order
 );
+
+/**
+ * \brief Get if the element is consider as HO or not
+ *
+ * \param [in]   type     Element type
+ *
+ * \return       0 if element is not ho else 1
+ *
+ */
+int
+PDM_Mesh_nodal_elmt_is_ho
+(
+  PDM_Mesh_nodal_elt_t type
+);
+
 
 /**
  * \brief Create a Mesh nodal structure
@@ -226,6 +242,14 @@ PDM_Mesh_nodal_vertices_get
  const int               id_part
 );
 
+
+int
+PDM_Mesh_nodal_vertices_ln_to_gn_get
+(
+       PDM_Mesh_nodal_t  *mesh,
+ const int                id_part,
+       PDM_g_num_t      **vtx_ln_to_gn
+);
 
 /**
  * \brief  Return cell centers
@@ -778,6 +802,7 @@ const int               id_part
  * \param [in]  n_face         Number of faces used to describe polyhedra
  * \param [in]  facvtx_idx     Index of face vertex connectivity
  * \param [in]  facvtx         Face vertex connectivity
+ * \param [in]  face_ln_to_gn  Face global numbering
  * \param [in]  cellfac_idx    Index of cell face connectivity
  * \param [in]  cellfac        Cell face connectivity
  * \param [in]  numabs         Global numbering
@@ -795,12 +820,12 @@ const PDM_l_num_t       n_elt,
 const PDM_l_num_t       n_face,
 const PDM_l_num_t      *facvtx_idx,
 const PDM_l_num_t      *facvtx,
+const PDM_g_num_t      *face_ln_to_gn,
 const PDM_l_num_t      *cellfac_idx,
 const PDM_l_num_t      *cellfac,
 const PDM_g_num_t      *numabs,
 const PDM_l_num_t      *parent_num
 );
-
 
 /**
  * \brief Define a polyhedra block
@@ -868,6 +893,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  face_vtx_idx   Index of face vertex connectivity
  * \param [in]  face_vtx_nb    Number of vertices for each face
  * \param [in]  face_vtx       Face vertex connectivity
+ * \param [in]  face_ln_to_gn  Face global numbering
  * \param [in]  cell_face_idx  Index of cell face connectivity
  * \param [in]  cell_face_nb   Number of faces for each cell
  * \param [in]  cell_face      Cell face connectivity
@@ -881,18 +907,18 @@ PDM_Mesh_nodal_cell3d_cellface_add
 (
       PDM_Mesh_nodal_t *mesh,
 const int               id_part,
-const int               n_elt,
+const int               n_cell,
 const int               n_face,
 const PDM_l_num_t      *face_vtx_idx,
 const PDM_l_num_t      *face_vtx_nb,
 const PDM_l_num_t      *face_vtx,
+const PDM_g_num_t      *face_ln_to_gn,
 const PDM_l_num_t      *cell_face_idx,
 const PDM_l_num_t      *cell_face_nb,
 const PDM_l_num_t      *cell_face,
 const PDM_g_num_t      *numabs,
 const PDM_ownership_t  ownership
 );
-
 
 /**
  * \brief  Add some 2D cells from cell edge conectivity.
@@ -1094,34 +1120,6 @@ PDM_Mesh_nodal_compute_cell_extents
 
 
 /**
- * \brief Get the cell-vertex connectivity for a polyhedron described by its faces
- *
- * (NOT USED)
- *
- * \param [in]   icell         Cell local id
- * \param [in]   face_vtx_idx  Face-vertex connectivity index
- * \param [in]   face_vtx      Face-vertex connectivity
- * \param [in]   cell_face_idx Cell-face connectivity index
- * \param [in]   cell_face     Cell-face connectivity
- * \param [out]  cell_vtx      Cell-vertex connectivity
- *
- * \return    Number of vertices in the cell
- *
- */
-
-PDM_l_num_t
-PDM_Mesh_nodal_poly3d_cell_vtx_get
-(
- const PDM_l_num_t   icell,
- const PDM_l_num_t   face_vtx_idx[],
- const PDM_l_num_t   face_vtx[],
- const PDM_l_num_t   cell_face_idx[],
- const PDM_l_num_t   cell_face[],
-       PDM_l_num_t **cell_vtx
-);
-
-
-/**
  * \brief Get the cell global numbering
  *
  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
@@ -1157,6 +1155,46 @@ PDM_Mesh_nodal_extract_selection
  const int       ***select_elt_l_num
  );
 
+
+
+/**
+ * \brief Reset cell center computation
+ *
+ * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ */
+
+void
+PDM_Mesh_nodal_cell_centers_reset
+(
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               i_part
+);
+
+void
+PDM_Mesh_nodal_ho_parent_node
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering,
+       int                  *parent_node
+ );
+
+
+void
+PDM_Mesh_nodal_reorder_elt_vtx
+(
+ const PDM_Mesh_nodal_elt_t  t_elt,
+ const int                   order,
+ const char                 *ho_ordering_in,
+ const char                 *ho_ordering_out,
+ const int                   n_elt,
+       int                  *elt_vtx_in,
+       int                  *elt_vtx_out
+ );
 
 #ifdef __cplusplus
 }

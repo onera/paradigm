@@ -133,13 +133,13 @@ module pdm_io
     implicit none
 
     type(c_ptr), value          :: fichier
-    integer(c_int),  intent(in) :: taille_donnee
+    integer(c_int),  value :: taille_donnee
 #ifdef PDM_LONG_G_NUM
-    integer(c_long), intent(in) :: n_donnees
+    integer(c_long), value :: n_donnees
 #else
-    integer(c_int),  intent(in) :: n_donnees
+    integer(c_int),  value :: n_donnees
 #endif
-    type(c_ptr)                 :: donnees
+    type(c_ptr), value        :: donnees
 
   end subroutine PDM_io_global_read
 
@@ -163,13 +163,13 @@ module pdm_io
     implicit none
 
     type(c_ptr), value          :: fichier
-    integer(c_int),  intent(in) :: taille_donnee
+    integer(c_int),  value :: taille_donnee
 #ifdef PDM_LONG_G_NUM
-    integer(c_long), intent(in) :: n_donnees
+    integer(c_long), value :: n_donnees
 #else
-    integer(c_int),  intent(in) :: n_donnees
+    integer(c_int), value :: n_donnees
 #endif
-    type(c_ptr)                 :: donnees
+    type(c_ptr), value          :: donnees
 
   end subroutine PDM_io_global_write
 

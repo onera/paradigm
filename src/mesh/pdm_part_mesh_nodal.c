@@ -15,6 +15,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
+#include "pdm_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_printf.h"
@@ -22,6 +23,7 @@
 #include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
 #include "pdm_array.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +73,6 @@ _vtx_free
       vtx->coords = NULL;
     }
 
-    free (vtx);
   }
 }
 
@@ -138,7 +139,7 @@ PDM_part_mesh_nodal_create
     pmn->vtx[i]->n_vtx      = 0;
     pmn->vtx[i]->parent     = NULL;
     pmn->vtx[i]->coords     = NULL;
-    pmn->vtx[i]->owner      = PDM_OWNERSHIP_USER;
+    pmn->vtx[i]->owner      = PDM_OWNERSHIP_KEEP;
   }
 
   pmn->n_vol    = PDM_array_zeros_int(n_part);
@@ -444,6 +445,7 @@ PDM_part_mesh_nodal_free
       if(pmn->vtx[i]->owner == PDM_OWNERSHIP_KEEP){
         _vtx_free (pmn->vtx[i]);
       }
+      free(pmn->vtx[i]);
     }
 
     free(pmn->vtx);
@@ -459,7 +461,114 @@ PDM_part_mesh_nodal_free
 }
 
 
+void
+PDM_part_mesh_nodal_dump_vtk
+(
+ PDM_part_mesh_nodal_t *pmn,
+ PDM_geometry_kind_t    geom_kind,
+ const char            *filename_patter
+)
+{
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(pmn->comm, &i_rank);
 
-// Faire extraction de maillage depuis mesh_nodal
-// Donc par exemple rendre un nouveau maillage (avec numero absolu des rigdes à partir du mesh_nodal )
-// PDM_extract_from_indices()
+  int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+    double      *pvtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
+
+    int  n_section  = PDM_part_mesh_nodal_n_section_get  (pmn, geom_kind);
+    int *section_id = PDM_part_mesh_nodal_sections_id_get(pmn, geom_kind);
+
+    printf("pn_vtx = %i\n", pn_vtx);
+
+    for(int i_section = 0; i_section < n_section; ++i_section) {
+
+      int id_section = section_id  [i_section];
+      int                  n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get (pmne, id_section);
+
+      char filename[999];
+      sprintf(filename, "%s_section_%2.2d_%2.2d_%2.2d.vtk", filename_patter, i_section, i_part, i_rank);
+
+      int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
+      if(is_ho) {
+        int order;
+        const char *ho_ordering      = NULL;
+        int         *pcell_vtx       = NULL;
+        PDM_g_num_t *pelmt_ln_to_gn  = NULL;
+        int         *parent_num      = NULL;
+        PDM_g_num_t *parent_elmt_num = NULL;
+        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+                                                   section_id[i_section],
+                                                   i_part,
+                                                   &pcell_vtx,
+                                                   &pelmt_ln_to_gn,
+                                                   &parent_num,
+                                                   &parent_elmt_num,
+                                                   &order,
+                                                   &ho_ordering);
+
+        // PDM_Mesh_nodal_reorder_elt_vtx();
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+        int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
+        for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
+          pcell_vtx_out[i] = pcell_vtx[i];
+        }
+
+        PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
+                                       order,
+                                       ho_ordering,
+                                       "PDM_HO_ORDERING_VTK",
+                                       n_elt,
+                                       pcell_vtx,
+                                       pcell_vtx_out);
+
+
+        PDM_vtk_write_std_elements_ho(filename,
+                                      order,
+                                      pn_vtx,
+                                      pvtx_coord,
+                                      pvtx_ln_to_gn,
+                                      t_elt,
+                                      n_elt,
+                                      pcell_vtx_out,
+                                      pelmt_ln_to_gn,
+                                      0,
+                                      NULL,
+                                      NULL);
+        free(pcell_vtx_out);
+      } else {
+
+        int         *pcell_vtx       = NULL;
+        PDM_g_num_t *pelmt_ln_to_gn  = NULL;
+        int         *parent_num      = NULL;
+        PDM_g_num_t *parent_elmt_num = NULL;
+        PDM_part_mesh_nodal_elmts_block_std_get(pmne,
+                                                section_id[i_section],
+                                                i_part,
+                                                &pcell_vtx,
+                                                &pelmt_ln_to_gn,
+                                                &parent_num,
+                                                &parent_elmt_num);
+
+        PDM_vtk_write_std_elements(filename,
+                                   pn_vtx,
+                                   pvtx_coord,
+                                   pvtx_ln_to_gn,
+                                   t_elt,
+                                   n_elt,
+                                   pcell_vtx,
+                                   pelmt_ln_to_gn,
+                                   0,
+                                   NULL,
+                                   NULL);
+      }
+    }
+  }
+}
+
+

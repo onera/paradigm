@@ -36,6 +36,24 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  nu              Number of points in longitude
+ * \param[in]  nv              Number of points in latitude
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx_idx   Index of distributed face to vertex
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ *
+ */
 
 void
 PDM_sphere_surf_gen
@@ -55,6 +73,21 @@ PDM_sphere_surf_gen
 );
 
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  nu              Number of points in longitude
+ * \param[in]  nv              Number of points in latitude
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
+ *
+ */
+
 void
 PDM_sphere_surf_gen_nodal
 (
@@ -69,6 +102,87 @@ PDM_sphere_surf_gen_nodal
 );
 
 
+/**
+ *
+ * \brief Create a surface mesh of a sphere (icosphere)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
+ * \param[out] dface_vtx_idx   Index of distributed face to vertex
+ * \param[out] dface_vtx       Connectivity of distributed face to vertex
+ * \param[out] distrib_vtx     Distribution of vertices
+ * \param[out] distrib_face    Distribution of faces
+ *
+ */
+
+void
+PDM_sphere_surf_icosphere_gen
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       double            **dvtx_coord,
+       int               **dface_vtx_idx,
+       PDM_g_num_t       **dface_vtx,
+       PDM_g_num_t       **distrib_vtx,
+       PDM_g_num_t       **distrib_face
+);
+
+
+/**
+ *
+ * \brief Create a surface mesh of a sphere (icosphere)
+ *
+ * \param[in]  comm            MPI communicator
+ * \param[in]  n               Number of icosphere subdivisions
+ * \param[in]  x_center        x coordinate of the center of the sphere
+ * \param[in]  y_center        y coordinate of the center of the sphere
+ * \param[in]  z_center        z coordinate of the center of the sphere
+ * \param[in]  radius          Radius of the sphere
+ * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
+ *
+ */
+
+void
+PDM_sphere_surf_icosphere_gen_nodal
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+       PDM_dmesh_nodal_t **_dmn
+);
+
+
+void
+PDM_sphere_surf_icosphere_gen_part
+(
+ const PDM_MPI_Comm        comm,
+ const PDM_g_num_t         n,
+ const double              x_center,
+ const double              y_center,
+ const double              z_center,
+ const double              radius,
+ const int                 n_part,
+ const PDM_split_dual_t    part_method,
+       int               **pn_vtx,
+       double           ***pvtx_coord,
+       PDM_g_num_t      ***pvtx_ln_to_gn,
+       int               **pn_face,
+       int              ***pface_vtx_idx,
+       int              ***pface_vtx,
+       PDM_g_num_t      ***pface_ln_to_gn
+);
 
 
 #ifdef __cplusplus

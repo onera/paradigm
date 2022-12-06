@@ -352,7 +352,8 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dist_cloud_surf_compute (dist);
+  // PDM_dist_cloud_surf_compute (dist);
+  PDM_dist_cloud_surf_compute_optim (dist);
 
 
   if (post) {
@@ -400,7 +401,7 @@ int main(int argc, char *argv[])
 
     line_coord = malloc (sizeof(double) * n_pts * 6);
     idx = 0;
-    for (int i = 0; i < n_line; i++) {
+    for (int i = 0; i < n_pts; i++) {
 
       for (int k = 0; k < 3; k++) {
         line_coord[idx++] = pts_coord[3*i + k];
