@@ -60,6 +60,10 @@ cdef extern from "pdm.h":
         PDM_MESH_NATURE_NODAL_SHARED
         PDM_MESH_NATURE_MESH_SETTED
 
+    ctypedef enum PDM_mesh_intersection_kind_t:
+        PDM_MESH_INTERSECTION_KIND_SOFT
+        PDM_MESH_INTERSECTION_KIND_FULL
+
     ctypedef enum PDM_mesh_entities_t:
         PDM_MESH_ENTITY_CELL
         PDM_MESH_ENTITY_FACE
@@ -193,6 +197,9 @@ _PDM_MESH_ENTITY_CELL   = PDM_MESH_ENTITY_CELL
 _PDM_MESH_ENTITY_FACE   = PDM_MESH_ENTITY_FACE
 _PDM_MESH_ENTITY_EDGE   = PDM_MESH_ENTITY_EDGE
 _PDM_MESH_ENTITY_VERTEX = PDM_MESH_ENTITY_VERTEX
+
+_PDM_MESH_INTERSECTION_KIND_SOFT = PDM_MESH_INTERSECTION_KIND_SOFT
+_PDM_MESH_INTERSECTION_KIND_FULL = PDM_MESH_INTERSECTION_KIND_FULL
 
 _PDM_GEOMETRY_KIND_VOLUMIC  = PDM_GEOMETRY_KIND_VOLUMIC
 _PDM_GEOMETRY_KIND_SURFACIC = PDM_GEOMETRY_KIND_SURFACIC
@@ -476,13 +483,17 @@ include "pdm_block_to_block.pxi"
 # --------------------
 include "pdm_cellface_orient.pxi"
 
+# PDM_cellface_orient :
+# --------------------
+include "pdm_mesh_intersection.pxi"
+
 # PDM_dist_cloud_surf :
 # --------------------
 include "pdm_dist_cloud_surf.pxi"
 
 # PDM_geom :
 # --------------------
-include "pdm_geom.pxi"  
+include "pdm_geom.pxi"
 
 # PDM_dist_cellcenter_surf :
 # --------------------
@@ -592,7 +603,7 @@ include "pdm_part_to_part.pxi"
 # --------------------
 include "pdm_part_domain_interface.pxi"
 
-# PDM_part_domain_interface :
+# PDM_inria_mesh_fmt :
 # --------------------
 include "pdm_inria_mesh_fmt.pxi"
 
@@ -607,4 +618,3 @@ include "pdm_field_cell_to_vtx.pxi"
 # PDM_sphere_surf_gen :
 # --------------------
 include "pdm_sphere_surf_gen.pxi"
-
