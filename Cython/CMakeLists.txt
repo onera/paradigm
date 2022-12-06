@@ -125,7 +125,7 @@ add_custom_command(OUTPUT ${OUTPUT}
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
                        DEPENDS ${DEPS})
 
-set (SITE_PACKAGES_PDM "${CMAKE_PDM_INSTALL_PYTHON_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
+set (SITE_PACKAGES_PDM "${CMAKE_INSTALL_PREFIX}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
 
 add_custom_target(target ALL DEPENDS ${OUTPUT})
 
@@ -138,10 +138,11 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
 endif()
 
 install(CODE
-  "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} --quiet install
-  --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR}
+  "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install
+  --prefix=${CMAKE_INSTALL_PREFIX}
   --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   ")
+
 # useful Bundle for Topaze install
 install(CODE
   "execute_process(COMMAND chrpath --delete ${SITE_PACKAGES_PDM}/Pypdm.so)
