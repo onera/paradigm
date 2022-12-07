@@ -2712,11 +2712,6 @@ _mesh_intersection_surf_line
 
   int dbg_enabled = 1;
 
-  // PDM_UNUSED(mi);
-  // PDM_UNUSED(extrp_mesh_a);
-  // PDM_UNUSED(extrp_mesh_b);
-  // PDM_UNUSED(redistribute_box_a_to_box_b_idx);
-  // PDM_UNUSED(redistribute_box_a_to_box_b);
   if(dbg_enabled) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
     _export_vtk_1d("extrp_edge_a", extrp_mesh_a);
@@ -2781,13 +2776,6 @@ _mesh_intersection_surf_line
     }
   }
 
-  // for (int edgeA_id = 0; edgeA_id < n_edgeA; edgeA_id++) {
-  //   if (edgeA_faceA[2*edgeA_id] < 0) {
-  //     assert(edgeA_faceA[2*edgeA_id+1] >= 0);
-  //     edgeA_faceA[2*edgeA_id] = edgeA_faceA[2*edgeA_id+1];
-  //     edgeA_faceA[2*edgeA_id+1] = -1;
-  //   }
-  // }
   int *edgeA_inter_n = PDM_array_zeros_int(n_edgeA);
   int *edgeB_inter_n = PDM_array_zeros_int(n_edgeB);
 
@@ -2802,8 +2790,7 @@ _mesh_intersection_surf_line
 
       for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
 
-        int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
-        // int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
+        int edgeA_id = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
 
         int other_faceA = -1;
         for (int ifaceA = 2*edgeA_id; ifaceA < 2*(edgeA_id+1); ifaceA++) {
@@ -2880,8 +2867,7 @@ _mesh_intersection_surf_line
 
       for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
 
-        int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
-        // int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
+        int edgeA_id = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
 
         int other_faceA = -1;
         for (int ifaceA = 2*edgeA_id; ifaceA < 2*(edgeA_id+1); ifaceA++) {
@@ -3370,8 +3356,6 @@ _mesh_intersection_surf_line
         int faceA_id = edgeA_faceA[ifaceA];
 
         if (faceA_id >= 0) {
-          log_trace("subedgeA %d, parent %d --> faceA %d, sign = %d\n",
-                    i, edgeA_id, faceA_id, sign);
           for (int j = 0; j < 3; j++) {
             faceA_bilan[3*faceA_id+j] += sign*subedgeA_vector[3*i+j];
           }
