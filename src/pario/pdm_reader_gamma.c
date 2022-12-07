@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <limits.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -48,6 +49,24 @@
 /*=============================================================================
  * Private function prototypes
  *============================================================================*/
+
+static void _shift_groups
+(
+ const int  n_elt,
+       int *elt_group
+ )
+{
+  int min_group = INT_MAX;
+
+  for (int i = 0; i < n_elt; i++) {
+    min_group = PDM_MIN(min_group, elt_group[i]);
+  }
+
+  for (int i = 0; i < n_elt; i++) {
+    elt_group[i] += 1 - min_group;
+  }
+}
+
 
 /*=============================================================================
  * Public function prototypes
@@ -301,6 +320,13 @@ PDM_reader_gamma_dmesh_nodal
       if (0) {
         printf("flipped %d tetrahedra / "PDM_FMT_G_NUM"\n", n_tetra_flipped, gn_tetra);
       }
+    }
+
+    if (1) {
+      /* Shift groups */
+      _shift_groups((int) gn_edge,  gedge_group);
+      _shift_groups((int) gn_tria,  gtria_group);
+      _shift_groups((int) gn_tetra, gtetra_group);
     }
 
     if (0) {
@@ -638,6 +664,9 @@ PDM_reader_gamma_dmesh_nodal
     } else {
       free(dtetra_vtx);
     }
+    else {
+      free(dtetra_vtx);
+    }
 
     if (gn_pyra > 0) {
       int id_section_pyra = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
@@ -648,6 +677,9 @@ PDM_reader_gamma_dmesh_nodal
                                             dpyra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
+      free(dpyra_vtx);
+    }
+    else {
       free(dpyra_vtx);
     }
 
@@ -662,6 +694,9 @@ PDM_reader_gamma_dmesh_nodal
     } else {
       free(dprism_vtx);
     }
+    else {
+      free(dprism_vtx);
+    }
 
     if (gn_hexa > 0) {
       int id_section_hexa = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
@@ -672,6 +707,9 @@ PDM_reader_gamma_dmesh_nodal
                                             dhexa_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
+      free(dhexa_vtx);
+    }
+    else {
       free(dhexa_vtx);
     }
   }
