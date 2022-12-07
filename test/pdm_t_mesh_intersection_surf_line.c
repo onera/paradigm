@@ -22,6 +22,8 @@
 #include "pdm_multipart.h"
 #include "pdm_extract_part.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_predicate.h"
+
 
 /*============================================================================
  * Macro definitions
@@ -650,6 +652,9 @@ char *argv[]
    */
   _set_mesh     (      mi, PDM_OL_MESH_A, mpart_surf_a     , n_part);
   _set_mesh_line(comm, mi, PDM_OL_MESH_B, extract_part_edge, 1     );
+
+
+  PDM_predicate_exactinit();
 
   PDM_mesh_intersection_compute(mi);
 

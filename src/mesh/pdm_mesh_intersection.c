@@ -38,6 +38,10 @@
 #include "pdm_unique.h"
 #include "pdm_triangulate.h"
 #include "pdm_geom_elem.h"
+#include "pdm_line.h"
+#include "pdm_plane.h"
+#include "pdm_polygon.h"
+#include "pdm_predicate.h"
 
 #include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_mesh_intersection_vol_vol_atomic.h"
@@ -2659,6 +2663,39 @@ _mesh_intersection_surf_surf
 PDM_GCC_SUPPRESS_WARNING_POP
 
 
+
+ static void
+ _get_extracted_mesh_line
+ (
+  PDM_extract_part_t  *extrp,
+  int                 *n_edge,
+  int                 *n_vtx,
+  int                **edge_vtx,
+  double             **vtx_coord,
+  PDM_g_num_t        **edge_ln_to_gn
+  )
+ {
+  int *edge_vtx_idx = NULL;
+  *n_edge = PDM_extract_part_connectivity_get(extrp,
+                                              0,
+                                              PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                              edge_vtx,
+                                              &edge_vtx_idx,
+                                              PDM_OWNERSHIP_KEEP);
+
+  *n_vtx = PDM_extract_part_vtx_coord_get(extrp,
+                                          0,
+                                          vtx_coord,
+                                          PDM_OWNERSHIP_KEEP);
+
+  PDM_extract_part_parent_ln_to_gn_get(extrp,
+                                       0,
+                                       PDM_MESH_ENTITY_EDGE,
+                                       edge_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
+}
+
+
 static
 void
 _mesh_intersection_surf_line
@@ -2670,15 +2707,711 @@ _mesh_intersection_surf_line
  int                     *redistribute_box_a_to_box_b
 )
 {
-  PDM_UNUSED(mi);
-  PDM_UNUSED(extrp_mesh_a);
-  PDM_UNUSED(extrp_mesh_b);
-  PDM_UNUSED(redistribute_box_a_to_box_b_idx);
-  PDM_UNUSED(redistribute_box_a_to_box_b);
-  if(1 == 1) {
+  int i_rank;
+  PDM_MPI_Comm_rank(mi->comm, &i_rank);
+
+  int dbg_enabled = 1;
+
+  // PDM_UNUSED(mi);
+  // PDM_UNUSED(extrp_mesh_a);
+  // PDM_UNUSED(extrp_mesh_b);
+  // PDM_UNUSED(redistribute_box_a_to_box_b_idx);
+  // PDM_UNUSED(redistribute_box_a_to_box_b);
+  if(dbg_enabled) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
+    _export_vtk_1d("extrp_edge_a", extrp_mesh_a);
     _export_vtk_1d("extrp_mesh_b", extrp_mesh_b);
   }
+
+  /* Get connectivities and coordinates */
+  int          n_faceA         = 0;
+  int          n_edgeA         = 0;
+  int          n_vtxA          = 0;
+  int         *faceA_edgeA_idx = NULL;
+  int         *faceA_edgeA     = NULL;
+  int         *edgeA_vtxA      = NULL;
+  double      *vtxA_coord      = NULL;
+  PDM_g_num_t *faceA_ln_to_gn  = NULL;
+  _get_extracted_mesh_surf(extrp_mesh_a,
+                           &n_faceA,
+                           &n_edgeA,
+                           &n_vtxA,
+                           &faceA_edgeA_idx,
+                           &faceA_edgeA,
+                           &edgeA_vtxA,
+                           &vtxA_coord,
+                           &faceA_ln_to_gn);
+
+  int          n_edgeB         = 0;
+  int          n_vtxB          = 0;
+  int         *edgeB_vtxB      = NULL;
+  double      *vtxB_coord      = NULL;
+  PDM_g_num_t *edgeB_ln_to_gn  = NULL;
+  _get_extracted_mesh_line(extrp_mesh_b,
+                           &n_edgeB,
+                           &n_vtxB,
+                           &edgeB_vtxB,
+                           &vtxB_coord,
+                           &edgeB_ln_to_gn);
+
+
+
+  int *faceA_edgeB_idx = redistribute_box_a_to_box_b_idx;
+  int *faceA_edgeB     = redistribute_box_a_to_box_b;
+
+
+  /*
+   We need :
+     - subedgeB_vector/center/parent_edgeB/faceA
+     - subedgeA_vector/center/parent_edgeA
+  */
+
+  int *edgeA_faceA = PDM_array_const_int(2*n_edgeA, -1);
+  for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
+    for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
+      int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
+      int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
+
+      int idx = 2*edgeA_id;
+      if (edgeA_sign < 0) {
+        idx++;
+      }
+
+      edgeA_faceA[idx] = faceA_id;
+    }
+  }
+
+  // for (int edgeA_id = 0; edgeA_id < n_edgeA; edgeA_id++) {
+  //   if (edgeA_faceA[2*edgeA_id] < 0) {
+  //     assert(edgeA_faceA[2*edgeA_id+1] >= 0);
+  //     edgeA_faceA[2*edgeA_id] = edgeA_faceA[2*edgeA_id+1];
+  //     edgeA_faceA[2*edgeA_id+1] = -1;
+  //   }
+  // }
+  int *edgeA_inter_n = PDM_array_zeros_int(n_edgeA);
+  int *edgeB_inter_n = PDM_array_zeros_int(n_edgeB);
+
+  for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
+
+    for (int iedgeB = faceA_edgeB_idx[faceA_id]; iedgeB < faceA_edgeB_idx[faceA_id+1]; iedgeB++) {
+
+      int edgeB_id = faceA_edgeB[iedgeB];
+
+      int vtxB_id0 = edgeB_vtxB[2*edgeB_id  ] - 1;
+      int vtxB_id1 = edgeB_vtxB[2*edgeB_id+1] - 1;
+
+      for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
+
+        int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
+        // int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
+
+        int other_faceA = -1;
+        for (int ifaceA = 2*edgeA_id; ifaceA < 2*(edgeA_id+1); ifaceA++) {
+          if (edgeA_faceA[ifaceA] != faceA_id) {
+            other_faceA = edgeA_faceA[ifaceA];
+            break;
+          }
+        }
+
+        if (other_faceA > faceA_id) {
+          continue;
+        }
+
+        int vtxA_id0 = edgeA_vtxA[2*edgeA_id  ] - 1;
+        int vtxA_id1 = edgeA_vtxA[2*edgeA_id+1] - 1;
+
+        double tA, tB;
+        int stat = PDM_line_intersection_mean_square(&vtxA_coord[3*vtxA_id0],
+                                                     &vtxA_coord[3*vtxA_id1],
+                                                     &vtxB_coord[3*vtxB_id0],
+                                                     &vtxB_coord[3*vtxB_id1],
+                                                     &tA,
+                                                     &tB);
+
+        if (stat == PDM_LINE_INTERSECT_YES) {
+          edgeA_inter_n[edgeA_id]++;
+          edgeB_inter_n[edgeB_id]++;
+        }
+
+      } // End of loop on edges A of current face A
+
+    } // End of loop on candidate edges B for current face A
+
+  } // End of loop on faces A
+
+  int max_n = 0;
+  for (int edgeA_id = 0; edgeA_id < n_edgeA; edgeA_id++) {
+    max_n = PDM_MAX(max_n, edgeA_inter_n[edgeA_id]);
+  }
+  for (int edgeB_id = 0; edgeB_id < n_edgeB; edgeB_id++) {
+    max_n = PDM_MAX(max_n, edgeB_inter_n[edgeB_id]);
+  }
+
+
+  int *edgeA_inter_idx = PDM_array_new_idx_from_sizes_int(edgeA_inter_n, n_edgeA);
+  int *edgeB_inter_idx = PDM_array_new_idx_from_sizes_int(edgeB_inter_n, n_edgeB);
+
+  PDM_array_reset_int(edgeA_inter_n, n_edgeA, 0);
+  PDM_array_reset_int(edgeB_inter_n, n_edgeB, 0);
+
+
+  typedef enum {
+    ENTERING,
+    EXITING
+  } _crossing_t;
+
+
+  double *edgeA_inter_t     = malloc(sizeof(double) * edgeA_inter_idx[n_edgeA]);
+  int    *edgeA_inter_edgeB = malloc(sizeof(int   ) * edgeA_inter_idx[n_edgeA]);
+  double *edgeB_inter_t     = malloc(sizeof(double) * edgeB_inter_idx[n_edgeB]);
+  int    *edgeB_inter_edgeA = malloc(sizeof(int   ) * edgeB_inter_idx[n_edgeB]);
+
+  _crossing_t *edgeA_inter_crossing = malloc(sizeof(int) * edgeA_inter_idx[n_edgeA]);
+  _crossing_t *edgeB_inter_crossing = malloc(sizeof(int) * edgeB_inter_idx[n_edgeB]);
+
+  for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
+
+    for (int iedgeB = faceA_edgeB_idx[faceA_id]; iedgeB < faceA_edgeB_idx[faceA_id+1]; iedgeB++) {
+
+      int edgeB_id = faceA_edgeB[iedgeB];
+
+      int vtxB_id0 = edgeB_vtxB[2*edgeB_id  ] - 1;
+      int vtxB_id1 = edgeB_vtxB[2*edgeB_id+1] - 1;
+
+      for (int iedgeA = faceA_edgeA_idx[faceA_id]; iedgeA < faceA_edgeA_idx[faceA_id+1]; iedgeA++) {
+
+        int edgeA_id   = PDM_ABS (faceA_edgeA[iedgeA]) - 1;
+        // int edgeA_sign = PDM_SIGN(faceA_edgeA[iedgeA]);
+
+        int other_faceA = -1;
+        for (int ifaceA = 2*edgeA_id; ifaceA < 2*(edgeA_id+1); ifaceA++) {
+          if (edgeA_faceA[ifaceA] != faceA_id) {
+            other_faceA = edgeA_faceA[ifaceA];
+            break;
+          }
+        }
+
+        if (other_faceA > faceA_id) {
+          continue;
+        }
+
+        int vtxA_id0 = edgeA_vtxA[2*edgeA_id  ] - 1;
+        int vtxA_id1 = edgeA_vtxA[2*edgeA_id+1] - 1;
+
+        double tA, tB;
+        int stat = PDM_line_intersection_mean_square(&vtxA_coord[3*vtxA_id0],
+                                                     &vtxA_coord[3*vtxA_id1],
+                                                     &vtxB_coord[3*vtxB_id0],
+                                                     &vtxB_coord[3*vtxB_id1],
+                                                     &tA,
+                                                     &tB);
+
+        if (stat == PDM_LINE_INTERSECT_YES) {
+          int idxA = edgeA_inter_idx[edgeA_id] + edgeA_inter_n[edgeA_id];
+          int idxB = edgeB_inter_idx[edgeB_id] + edgeB_inter_n[edgeB_id];
+
+          edgeA_inter_t[idxA] = tA;
+          edgeB_inter_t[idxB] = tB;
+
+          edgeA_inter_edgeB[idxA] = edgeB_id;
+          edgeB_inter_edgeA[idxB] = edgeA_id;
+
+          // /!\ if not in plane xy
+          double detA = PDM_predicate_orient2d(&vtxB_coord[3*vtxB_id0],
+                                               &vtxB_coord[3*vtxB_id1],
+                                               &vtxA_coord[3*vtxA_id0]);
+          if (detA < 0) {
+            edgeA_inter_crossing[idxA] = ENTERING;
+          }
+          else {
+            edgeA_inter_crossing[idxA] = EXITING;
+          }
+
+          // /!\ if not in plane xy
+          double detB = PDM_predicate_orient2d(&vtxA_coord[3*vtxA_id0],
+                                               &vtxA_coord[3*vtxA_id1],
+                                               &vtxB_coord[3*vtxB_id0]);
+          if (detB < 0) {
+            edgeB_inter_crossing[idxB] = ENTERING;
+          }
+          else {
+            edgeB_inter_crossing[idxB] = EXITING;
+          }
+
+          edgeA_inter_n[edgeA_id]++;
+          edgeB_inter_n[edgeB_id]++;
+        }
+
+      } // End of loop on edges A of current face A
+
+    } // End of loop on candidate edges B for current face A
+
+  } // End of loop on faces A
+
+
+
+  /* Sort intersection points along each edge */
+  int *order = malloc(sizeof(int) * max_n);
+
+  int s_subedgeA = n_edgeA + edgeA_inter_idx[n_edgeA];
+  int    *subedgeA_parent = malloc(sizeof(int   ) * s_subedgeA);
+  double *subedgeA_center = malloc(sizeof(double) * s_subedgeA * 3);
+  double *subedgeA_vector = malloc(sizeof(double) * s_subedgeA * 3);
+
+
+  double *dbg_subedgeA_coord = NULL;
+  if (dbg_enabled) {
+    dbg_subedgeA_coord = malloc(sizeof(double) * s_subedgeA * 6);
+  }
+
+
+  int n_subedgeA = 0;
+
+  for (int edgeA_id = 0; edgeA_id < n_edgeA; edgeA_id++) {
+    int vtxA_id0 = edgeA_vtxA[2*edgeA_id  ] - 1;
+    int vtxA_id1 = edgeA_vtxA[2*edgeA_id+1] - 1;
+
+    if (dbg_enabled) {
+      log_trace("edgeA %d (%d %d):\n", edgeA_id, vtxA_id0, vtxA_id1);
+    }
+
+    int n = edgeA_inter_idx[edgeA_id+1] - edgeA_inter_idx[edgeA_id];
+    int         *_edgeA_inter_edgeB    = edgeA_inter_edgeB    + edgeA_inter_idx[edgeA_id];
+    double      *_edgeA_inter_t        = edgeA_inter_t        + edgeA_inter_idx[edgeA_id];
+    _crossing_t *_edgeA_inter_crossing = edgeA_inter_crossing + edgeA_inter_idx[edgeA_id];
+
+    if (n > 0) {
+
+      for (int i = 0; i < n; i++) {
+        order[i] = i;
+      }
+
+      PDM_sort_double(_edgeA_inter_t, order, n);
+
+      int start = 0;
+      if (_edgeA_inter_crossing[order[0]] == EXITING) {
+        start++;
+      }
+
+
+      double p0[3];
+      double p1[3];
+      for (int i = start; i <= n; i+=2) {
+
+        if (i == 0) {
+          memcpy(p0, &vtxA_coord[3*vtxA_id0], sizeof(double)*3);
+        }
+        else {
+          for (int j = 0; j < 3; j++) {
+            p0[j] = (1-_edgeA_inter_t[i-1])*vtxA_coord[3*vtxA_id0+j] + _edgeA_inter_t[i-1]*vtxA_coord[3*vtxA_id1+j];
+          }
+        }
+
+        if (i == n) {
+          memcpy(p1, &vtxA_coord[3*vtxA_id1], sizeof(double)*3);
+        }
+        else {
+          if (i < n-1) {
+            assert(_edgeA_inter_crossing[order[i+1]] == ENTERING);
+          }
+          for (int j = 0; j < 3; j++) {
+            p1[j] = (1-_edgeA_inter_t[i])*vtxA_coord[3*vtxA_id0+j] + _edgeA_inter_t[i]*vtxA_coord[3*vtxA_id1+j];
+          }
+        }
+
+        subedgeA_parent[n_subedgeA] = edgeA_id;
+        for (int j = 0; j < 3; j++) {
+          subedgeA_center[3*n_subedgeA+j] = 0.5*(p0[j] + p1[j]);
+        }
+        // /!\ if not in plane xy
+        subedgeA_vector[3*n_subedgeA  ] = p1[1] - p0[1];
+        subedgeA_vector[3*n_subedgeA+1] = p0[0] - p1[0];
+        subedgeA_vector[3*n_subedgeA+2] = 0;
+
+        if (dbg_enabled) {
+          memcpy(&dbg_subedgeA_coord[6*n_subedgeA  ], p0, sizeof(double)*3);
+          memcpy(&dbg_subedgeA_coord[6*n_subedgeA+3], p1, sizeof(double)*3);
+        }
+
+        n_subedgeA++;
+      }
+
+    }
+
+    if (dbg_enabled) {
+
+      for (int i = 0; i < n; i++) {
+        int edgeB_id = _edgeA_inter_edgeB[order[i]];
+        log_trace("  edgeB %d (%d %d), t = %f, crossing %d\n",
+                  edgeB_id,
+                  edgeB_vtxB[2*edgeB_id], edgeB_vtxB[2*edgeB_id+1],
+                  _edgeA_inter_t[i],
+                  (int) _edgeA_inter_crossing[order[i]]);
+      }
+    }
+  }
+
+  if (dbg_enabled) {
+    char filename[999];
+    sprintf(filename, "dbg_subedgeA_%d.vtk", i_rank);
+
+    PDM_vtk_write_lines(filename,
+                        n_subedgeA,
+                        dbg_subedgeA_coord,
+                        NULL,
+                        subedgeA_parent);
+
+    sprintf(filename, "dbg_subedgeA_%d_vector.vtk", i_rank);
+    const char   *vector_field_name[1] = {"vector"};
+    const double *vector_field     [1] = {subedgeA_vector};
+    PDM_vtk_write_point_cloud_with_field(filename,
+                                         n_subedgeA,
+                                         subedgeA_center,
+                                         NULL,
+                                         subedgeA_parent,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         1,
+                                         vector_field_name,
+                                         vector_field,
+                                         0,
+                                         NULL,
+                                         NULL);
+
+    free(dbg_subedgeA_coord);
+  }
+
+  if (dbg_enabled) {
+    log_trace("\n\n");
+  }
+
+
+
+  int s_subedgeB = n_edgeB + edgeB_inter_idx[n_edgeB];
+  int    *subedgeB_parent = malloc(sizeof(int   ) * s_subedgeB);
+  int    *subedgeB_faceA  = malloc(sizeof(int   ) * s_subedgeB);
+  double *subedgeB_center = malloc(sizeof(double) * s_subedgeB * 3);
+  double *subedgeB_vector = malloc(sizeof(double) * s_subedgeB * 3);
+
+
+  double *dbg_subedgeB_coord = NULL;
+  if (dbg_enabled) {
+    dbg_subedgeB_coord = malloc(sizeof(double) * s_subedgeB * 6);
+  }
+
+
+  int n_subedgeB = 0;
+  int n_undefB   = 0;
+
+  for (int edgeB_id = 0; edgeB_id < n_edgeB; edgeB_id++) {
+    int vtxB_id0 = edgeB_vtxB[2*edgeB_id  ] - 1;
+    int vtxB_id1 = edgeB_vtxB[2*edgeB_id+1] - 1;
+
+    if (dbg_enabled) {
+      log_trace("edgeB %d (%d %d):\n", edgeB_id, vtxB_id0, vtxB_id1);
+    }
+
+    int n = edgeB_inter_idx[edgeB_id+1] - edgeB_inter_idx[edgeB_id];
+    int         *_edgeB_inter_edgeA    = edgeB_inter_edgeA    + edgeB_inter_idx[edgeB_id];
+    double      *_edgeB_inter_t        = edgeB_inter_t        + edgeB_inter_idx[edgeB_id];
+    _crossing_t *_edgeB_inter_crossing = edgeB_inter_crossing + edgeB_inter_idx[edgeB_id];
+
+    if (n == 0) {
+      /* Current edge B is either outside A or inside a single face A */
+      // we will deal with it later...
+      n_undefB++;
+    }
+    else {
+      for (int i = 0; i < n; i++) {
+        order[i] = i;
+      }
+
+      PDM_sort_double(_edgeB_inter_t, order, n);
+
+      double p0[3];
+      double p1[3];
+      int faceA_id;
+      for (int i = 0; i <= n; i++) {
+
+        if (i == 0) {
+          memcpy(p0, &vtxB_coord[3*vtxB_id0], sizeof(double)*3);
+
+          int edgeA_id = _edgeB_inter_edgeA[order[0]];
+          if (_edgeB_inter_crossing[order[0]] == ENTERING) {
+            faceA_id = edgeA_faceA[2*edgeA_id+1];
+          }
+          else {
+            faceA_id = edgeA_faceA[2*edgeA_id  ];
+          }
+        }
+        else {
+          for (int j = 0; j < 3; j++) {
+            p0[j] = (1-_edgeB_inter_t[i-1])*vtxB_coord[3*vtxB_id0+j] + _edgeB_inter_t[i-1]*vtxB_coord[3*vtxB_id1+j];
+          }
+
+          int edgeA_id = _edgeB_inter_edgeA[order[i-1]];
+          if (_edgeB_inter_crossing[order[i-1]] == EXITING) {
+            faceA_id = edgeA_faceA[2*edgeA_id+1];
+          }
+          else {
+            faceA_id = edgeA_faceA[2*edgeA_id  ];
+          }
+        }
+
+        if (i == n) {
+          memcpy(p1, &vtxB_coord[3*vtxB_id1], sizeof(double)*3);
+        }
+        else {
+          for (int j = 0; j < 3; j++) {
+            p1[j] = (1-_edgeB_inter_t[i])*vtxB_coord[3*vtxB_id0+j] + _edgeB_inter_t[i]*vtxB_coord[3*vtxB_id1+j];
+          }
+        }
+
+        if (faceA_id >= 0) {
+
+          subedgeB_parent[n_subedgeB] = edgeB_id;
+          subedgeB_faceA [n_subedgeB] = faceA_id;
+          for (int j = 0; j < 3; j++) {
+            subedgeB_center[3*n_subedgeB+j] = 0.5*(p0[j] + p1[j]);
+          }
+          // /!\ if not in plane xy
+          subedgeB_vector[3*n_subedgeB  ] = p1[1] - p0[1];
+          subedgeB_vector[3*n_subedgeB+1] = p0[0] - p1[0];
+          subedgeB_vector[3*n_subedgeB+2] = 0;
+
+          if (dbg_enabled) {
+            log_trace("+ subedge %d : faceA_id = %d\n", n_subedgeB, faceA_id);
+          }
+
+          if (dbg_enabled) {
+            memcpy(&dbg_subedgeB_coord[6*n_subedgeB  ], p0, sizeof(double)*3);
+            memcpy(&dbg_subedgeB_coord[6*n_subedgeB+3], p1, sizeof(double)*3);
+          }
+
+          n_subedgeB++;
+        }
+      }
+    }
+
+    if (dbg_enabled) {
+      for (int i = 0; i < n; i++) {
+        int edgeA_id = _edgeB_inter_edgeA[order[i]];
+        log_trace("  edgeA %d (%d %d), t = %f, crossing %d\n",
+                  edgeA_id,
+                  edgeA_vtxA[2*edgeA_id], edgeA_vtxA[2*edgeA_id+1],
+                  _edgeB_inter_t[i],
+                  (int) _edgeB_inter_crossing[order[i]]);
+      }
+    }
+  }
+  free(order);
+
+  free(edgeA_inter_n);
+  free(edgeA_inter_idx);
+  free(edgeA_inter_t);
+  free(edgeA_inter_edgeB);
+  free(edgeA_inter_crossing);
+
+
+  /* Deal with 'undef' edges B */
+  if (n_undefB > 0) {
+
+    /* Localize the undef edgeB midpoints */
+    int *edgeB_faceA = PDM_array_zeros_int(n_edgeB);
+    for (int edgeB_id = 0; edgeB_id < n_edgeB; edgeB_id++) {
+
+      int n = edgeB_inter_idx[edgeB_id+1] - edgeB_inter_idx[edgeB_id];
+
+      if (n > 0) {
+        edgeB_faceA[edgeB_id] = -1;
+      }
+    }
+
+    int *faceA_vtxA = NULL;
+    PDM_compute_face_vtx_from_face_and_edge(n_faceA,
+                                            faceA_edgeA_idx,
+                                            faceA_edgeA,
+                                            edgeA_vtxA,
+                                            &faceA_vtxA);
+
+    int max_face_vtx_n = 0;
+    for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
+      int n = faceA_edgeA_idx[faceA_id+1] - faceA_edgeA_idx[faceA_id];
+      max_face_vtx_n = PDM_MAX(max_face_vtx_n, n);
+    }
+
+
+    double *faceA_coord = malloc(sizeof(double) * max_face_vtx_n * 3);
+
+    for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
+
+      int faceA_vtxA_n = faceA_edgeA_idx[faceA_id+1] - faceA_edgeA_idx[faceA_id];
+      for (int ivtxA = 0; ivtxA < faceA_vtxA_n; ivtxA++) {
+        int vtxA_id = faceA_vtxA[faceA_edgeA_idx[faceA_id] + ivtxA] - 1;
+        memcpy(&faceA_coord[3*ivtxA], &vtxA_coord[3*vtxA_id], sizeof(double)*3);
+      }
+
+      double faceA_normal[3];
+      PDM_plane_normal(faceA_vtxA_n, faceA_coord, faceA_normal);
+
+      for (int iedgeB = faceA_edgeB_idx[faceA_id]; iedgeB < faceA_edgeB_idx[faceA_id+1]; iedgeB++) {
+
+        int edgeB_id = faceA_edgeB[iedgeB];
+
+        if (edgeB_faceA[edgeB_id] != 0) {
+          continue;
+        }
+
+        int vtxB_id0 = edgeB_vtxB[2*edgeB_id  ] - 1;
+        int vtxB_id1 = edgeB_vtxB[2*edgeB_id+1] - 1;
+
+        double edgeB_center[3];
+        for (int i = 0; i < 3; i++) {
+          edgeB_center[i] = 0.5*(vtxB_coord[3*vtxB_id0+i] + vtxB_coord[3*vtxB_id1+i]);
+        }
+
+        PDM_polygon_status_t stat = PDM_polygon_point_in_new(edgeB_center,
+                                                             faceA_vtxA_n,
+                                                             faceA_coord,
+                                                             NULL,
+                                                             faceA_normal);
+
+        if (stat == PDM_POLYGON_INSIDE) {
+          edgeB_faceA[edgeB_id] = faceA_id+1;
+
+          subedgeB_parent[n_subedgeB] = edgeB_id;
+          subedgeB_faceA [n_subedgeB] = faceA_id;
+          memcpy(&subedgeB_center[3*n_subedgeB], edgeB_center, sizeof(double)*3);
+
+          // /!\ if not in plane xy
+          subedgeB_vector[3*n_subedgeB  ] = vtxB_coord[3*vtxB_id1+1] - vtxB_coord[3*vtxB_id0+1];
+          subedgeB_vector[3*n_subedgeB+1] = vtxB_coord[3*vtxB_id0+0] - vtxB_coord[3*vtxB_id1+0];
+          subedgeB_vector[3*n_subedgeB+2] = 0;
+
+          if (dbg_enabled) {
+            log_trace("+ subedge %d : faceA_id = %d\n", n_subedgeB, faceA_id);
+          }
+
+          if (dbg_enabled) {
+            memcpy(&dbg_subedgeB_coord[6*n_subedgeB  ], &vtxB_coord[3*vtxB_id0], sizeof(double)*3);
+            memcpy(&dbg_subedgeB_coord[6*n_subedgeB+3], &vtxB_coord[3*vtxB_id1], sizeof(double)*3);
+          }
+
+          n_subedgeB++;
+
+        }
+
+      }
+
+    }
+
+    free(edgeB_faceA);
+    free(faceA_vtxA);
+    free(faceA_coord);
+  }
+
+  free(edgeB_inter_n);
+  free(edgeB_inter_idx);
+  free(edgeB_inter_t);
+  free(edgeB_inter_edgeA);
+  free(edgeB_inter_crossing);
+
+
+
+  if (dbg_enabled) {
+    char filename[999];
+    sprintf(filename, "dbg_subedgeB_%d.vtk", i_rank);
+
+    PDM_vtk_write_lines(filename,
+                        n_subedgeB,
+                        dbg_subedgeB_coord,
+                        NULL,
+                        subedgeB_faceA);//subedgeB_parent);
+
+    sprintf(filename, "dbg_subedgeB_%d_vector.vtk", i_rank);
+    const char   *vector_field_name[1] = {"vector"};
+    const double *vector_field     [1] = {subedgeB_vector};
+    PDM_vtk_write_point_cloud_with_field(filename,
+                                         n_subedgeB,
+                                         subedgeB_center,
+                                         NULL,
+                                         subedgeB_faceA,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         1,
+                                         vector_field_name,
+                                         vector_field,
+                                         0,
+                                         NULL,
+                                         NULL);
+
+    free(dbg_subedgeB_coord);
+  }
+
+
+
+
+
+
+  if (dbg_enabled) {
+    /* Check surface bilan */
+    double *faceA_bilan = malloc(sizeof(double) * n_faceA * 3);
+    for (int i = 0; i < 3*n_faceA; i++) {
+      faceA_bilan[i] = 0;
+    }
+
+    for (int i = 0; i < n_subedgeA; i++) {
+      int edgeA_id = subedgeA_parent[i];
+
+      int sign = 1;
+      for (int ifaceA = 2*edgeA_id; ifaceA < 2*(edgeA_id+1); ifaceA++) {
+        int faceA_id = edgeA_faceA[ifaceA];
+
+        if (faceA_id >= 0) {
+          log_trace("subedgeA %d, parent %d --> faceA %d, sign = %d\n",
+                    i, edgeA_id, faceA_id, sign);
+          for (int j = 0; j < 3; j++) {
+            faceA_bilan[3*faceA_id+j] += sign*subedgeA_vector[3*i+j];
+          }
+        }
+
+        sign = -sign;
+      }
+    }
+
+
+    for (int i = 0; i < n_subedgeB; i++) {
+      int faceA_id = subedgeB_faceA[i];
+      for (int j = 0; j < 3; j++) {
+        faceA_bilan[3*faceA_id+j] -= subedgeB_vector[3*i+j];
+      }
+    }
+
+
+    for (int i = 0; i < n_faceA; i++) {
+      double mag = PDM_MODULE(&faceA_bilan[3*i]);
+      log_trace("faceA %d : bilan = %e\n", i, mag);
+    }
+  }
+
+
+  free(edgeA_faceA);
+
+
+
+
+  /* Results, do not free */
+  free(subedgeA_parent);
+  free(subedgeA_center);
+  free(subedgeA_vector);
+
+  free(subedgeB_parent);
+  free(subedgeB_faceA );
+  free(subedgeB_center);
+  free(subedgeB_vector);
+
 
 }
 
