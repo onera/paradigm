@@ -682,6 +682,7 @@ PDM_reader_gamma_dmesh_nodal
     _n_group_edge = PDM_MAX(_n_group_edge, dedge_group[i]);// refs are > 0 (?)
     dedge_group[i] -= 1;
   }
+  // PDM_log_trace_array_int(dedge_group, dn_edge, "dedge_group : ");
 
   int n_group_edge;
   PDM_MPI_Allreduce(&_n_group_edge, &n_group_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
@@ -690,13 +691,15 @@ PDM_reader_gamma_dmesh_nodal
 
   int         *dgroup_edge_idx = NULL;
   PDM_g_num_t *dgroup_edge     = NULL;
-  PDM_dentity_group_transpose(n_group_edge,
+  if(n_group_edge > 0) {
+    PDM_dentity_group_transpose(n_group_edge,
                               dedge_group_idx,
                               dedge_group,
                               distrib_edge,
                               &dgroup_edge_idx,
                               &dgroup_edge,
                               dmn->comm);
+  }
   free(dedge_group_idx);
   free(dedge_group);
 
@@ -752,4 +755,119 @@ PDM_reader_gamma_dmesh_nodal
   free(distrib_hexa );
 
   return dmn;
+}
+
+
+
+void
+PDM_write_meshb
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_tetra,
+  const int     n_tri,
+  const double *vtx_coords,
+  const int    *vtx_tags,
+  const int    *tetra_vtx,
+  const int    *tetra_tag,
+  const int    *tria_vtx,
+  const int    *tria_tag
+)
+{
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+
+  fprintf(f, "Vertices\n%d\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
+            vtx_coords[3*i  ],
+            vtx_coords[3*i+1],
+            vtx_coords[3*i+2],
+            vtx_tags[i]);
+  }
+
+  fprintf(f, "Tetrahedra\n%d\n", n_tetra);
+  for (int i = 0; i < n_tetra; i++) {
+    fprintf(f, "%d %d %d %d %i\n",
+            tetra_vtx[4*i  ],
+            tetra_vtx[4*i+1],
+            tetra_vtx[4*i+2],
+            tetra_vtx[4*i+3],
+            tetra_tag[i]);
+  }
+
+  fprintf(f, "Triangles\n%d\n", n_tri);
+  for (int i = 0; i < n_tri; i++) {
+    fprintf(f, "%d %d %d %i\n",
+            tria_vtx[3*i    ],
+            tria_vtx[3*i + 1],
+            tria_vtx[3*i + 2],
+            tria_tag[i]);
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
+
+
+
+void
+PDM_write_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+  const double *fields
+)
+{
+  PDM_UNUSED(n_field);
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  // double *lfield = fields[0];
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
+  fprintf(f, "1 1\n");
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "%20.16lf \n",
+            fields[i  ]);
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
+
+void
+PDM_read_gamma_sol
+(
+  const char   *filename,
+  const int     n_vtx,
+  const int     n_field,
+  const double *fields
+)
+{
+  PDM_UNUSED(n_field);
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  // double *lfield = fields[0];
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
+  fprintf(f, "1 3\n");
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "%20.16lf \n",
+            fields[i  ]);
+  }
+  fprintf(f, "End\n");
+  fclose(f);
 }
