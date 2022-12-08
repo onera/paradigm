@@ -3609,6 +3609,16 @@ _extract_part_and_reequilibrate
     PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(extrp->comm, extrp->n_part_out);
 
     int **pinit_location = NULL;
+    PDM_g_num_t **_target_parent_ln_to_gn = NULL;
+    // PDM_part_assemble_partitions(extrp->comm,
+    //                              distrib_partition,
+    //                              distrib_elmt,
+    //                              _elmt_part,
+    //                              dequi_g_num,
+    //                              dequi_init_location,
+    //                              &extrp->pextract_n_entity[entity_type],
+    //                              &extrp->pextract_entity_ln_to_gn[entity_type],
+    //                              &pinit_location);
     PDM_part_assemble_partitions(extrp->comm,
                                  distrib_partition,
                                  distrib_elmt,
@@ -3616,7 +3626,7 @@ _extract_part_and_reequilibrate
                                  dequi_g_num,
                                  dequi_init_location,
                                  &extrp->pextract_n_entity[entity_type],
-                                 &extrp->pextract_entity_ln_to_gn[entity_type],
+                                 &_target_parent_ln_to_gn,
                                  &pinit_location);
     free(distrib_partition);
     free(dequi_init_location);
@@ -3625,11 +3635,23 @@ _extract_part_and_reequilibrate
     free(dual_graph_idx);
 
     /*
+     * Compute new global numbering for extract_part
+     */
+    extrp->pextract_entity_ln_to_gn[entity_type] = (PDM_g_num_t **) malloc(extrp->n_part_out * sizeof(PDM_g_num_t *));
+    _compute_child(extrp->comm,
+                   extrp->n_part_out,
+                   extrp->pextract_n_entity[entity_type],
+                   _target_parent_ln_to_gn,
+                   extrp->pextract_entity_ln_to_gn[entity_type]);
+
+
+    /*
      * Fake from target
      */
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part){
       extrp->n_target       [i_part] = extrp->pextract_n_entity       [entity_type][i_part];
-      extrp->target_gnum    [i_part] = extrp->pextract_entity_ln_to_gn[entity_type][i_part];
+      // extrp->target_gnum    [i_part] = extrp->pextract_entity_ln_to_gn[entity_type][i_part];
+      extrp->target_gnum    [i_part] = _target_parent_ln_to_gn[i_part];
       extrp->target_location[i_part] = pinit_location[i_part];
     }
     _extract_part_and_reequilibrate_from_target(extrp);
@@ -3638,7 +3660,9 @@ _extract_part_and_reequilibrate
       extrp->n_target       [i_part] = 0;
       extrp->target_gnum    [i_part] = NULL;
       extrp->target_location[i_part] = NULL;
+      free(_target_parent_ln_to_gn[i_part]);
     }
+    free(_target_parent_ln_to_gn);
 
     PDM_part_to_block_free(ptb_equi);
 
