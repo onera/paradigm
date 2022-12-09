@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 #include <sys/types.h>
 
 /*----------------------------------------------------------------------------
@@ -828,46 +829,83 @@ PDM_write_gamma_sol
   // Write file
   FILE *f = fopen(filename, "w");
 
-  // double *lfield = fields[0];
-
   fprintf(f, "MeshVersionFormatted 2\n");
   fprintf(f, "# rank %d\n\n", 0);
   fprintf(f, "Dimension\n3\n\n");
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
-  fprintf(f, "1 1\n");
+
+  fprintf(f, "%i ", n_field);
+  for (int i_field = 0; i_field < n_field; i_field++) {
+    fprintf(f, "1 ");
+  }
+  fprintf(f, "\n");
   for (int i = 0; i < n_vtx; i++) {
-    fprintf(f, "%20.16lf \n",
-            fields[i  ]);
+    for(int i_field = 0; i_field < n_field; ++i_field) {
+      fprintf(f, "%20.16lf ", fields[n_field*i+i_field]);
+    }
+    fprintf(f, " \n");
   }
   fprintf(f, "End\n");
   fclose(f);
 }
 
-
+/* https://pyamg.saclay.inria.fr/download/vizir/vizir4_user_guide.pdf*/
 void
 PDM_read_gamma_sol
 (
   const char   *filename,
   const int     n_vtx,
   const int     n_field,
-  const double *fields
+        double *fields
 )
 {
   PDM_UNUSED(n_field);
-  // Write file
-  FILE *f = fopen(filename, "w");
+
+  // Read file
+  FILE *f = fopen(filename, "r");
+
+  char line[999];
 
   // double *lfield = fields[0];
 
-  fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "Dimension\n3\n\n");
-  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
-  fprintf(f, "1 3\n");
-  for (int i = 0; i < n_vtx; i++) {
-    fprintf(f, "%20.16lf \n",
-            fields[i  ]);
+  while (1) {
+
+    int stat = fscanf(f, "%s", line);
+
+    if (stat == EOF) {
+      // End of file
+      break;
+    }
+
+    if (strstr(line, "SolAtVertices") != NULL) {
+      long _gn_vtx;
+      fscanf(f, "%ld", &_gn_vtx);
+      // assert(_gn_vtx == n_vtx);
+
+      long _n_field = -1;
+      long _i_kind = -1;
+      fscanf(f, "%ld", &_n_field);
+      for (int i_field = 0; i_field < n_field; i_field++) {
+        fscanf(f, "%ld", &_i_kind);
+      }
+
+      printf("n_field  = %i \n", (int)n_field);
+      printf("_n_field = %i \n", (int)_n_field);
+      printf("n_vtx    = %i \n", (int)n_vtx);
+      printf("_gn_vtx  = %i \n", (int)_gn_vtx);
+      printf("_i_kind  = %i \n", (int)_i_kind);
+
+      // assert(n_field == _n_field);
+
+
+      for (int i = 0; i < n_vtx; i++) {
+        for (int i_field = 0; i_field < n_field; i_field++) {
+          fields[n_field*i + i_field] = -(n_field*i + i_field);
+          fscanf(f, "%lf", &fields[n_field*i + i_field]);
+          // log_trace("fields[n_field*i + i_field] = %lf \n", fields[n_field*i + i_field]);
+        }
+      }
+    }
   }
-  fprintf(f, "End\n");
   fclose(f);
 }

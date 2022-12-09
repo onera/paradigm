@@ -92,7 +92,7 @@ PDM_read_gamma_sol
   const char   *filename,
   const int     n_vtx,
   const int     n_field,
-  const double *fields
+        double *fields
 );
 
 #ifdef __cplusplus

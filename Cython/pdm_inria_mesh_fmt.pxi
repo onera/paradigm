@@ -20,6 +20,10 @@ cdef extern from "pdm_reader_gamma.h":
                              int     n_vtx,
                              int     n_field,
                              double    *fields)
+    void PDM_read_gamma_sol(char   *filename,
+                             int     n_vtx,
+                             int     n_field,
+                             double    *fields)
 
 def write_meshb(char *filename,
                 int n_vtx,
@@ -45,24 +49,26 @@ def write_meshb(char *filename,
                   <int    *> tria_tag.data)
 
 def write_solb(char *filename,
-                int n_vtx,
-                NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
+               int n_vtx,
+               int n_field,
+               NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
   """
   PDM_write_gamma_sol(filename,
                       n_vtx,
-                      1,
+                      n_field,
            <double *> field.data)
 
-# def read_solb(char *filename,
-#               int n_vtx,
-#               NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
-#   """
-#   """
-#   PDM_read_gamma_sol(filename,
-#                  n_vtx,
-#                  1,
-#       <double *> field.data)
+def read_solb(char *filename,
+              int n_vtx,
+              int n_field,
+              NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
+  """
+  """
+  PDM_read_gamma_sol(filename,
+                 n_vtx,
+                 n_field,
+      <double *> field.data)
 
 
 def meshb_to_dmesh_nodal(char *filename, MPI.Comm comm, int fix_orientation_2d, int fix_orientation_3d):
