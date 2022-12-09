@@ -2454,7 +2454,6 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         }
         else {
-          log_trace("2463\n");
           PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
                                             extract_section_id,
                                             i_part,
@@ -2465,7 +2464,6 @@ _extract_part_and_reequilibrate_nodal_from_target
                                             extract_parent_g_num[i_section],
                                             PDM_OWNERSHIP_KEEP);
         }
-
       }
 
     }
