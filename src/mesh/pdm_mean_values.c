@@ -493,7 +493,7 @@ PDM_mean_values_polygon_3d
 )
 {
 
-  if (0) {
+  if (1) {
     _compute_mean_value_coord_polygon(n_vtx,
                                       vtx_coord,
                                       n_pts,

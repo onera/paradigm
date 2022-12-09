@@ -2359,10 +2359,6 @@ _extract_part_and_reequilibrate_nodal_from_target
         free(extract_parent_g_num[i_section]);// pass to extract_pmne?
       }
       else {
-        log_trace("extract_pmne : %p, i_part = %d, extract_section_id = %d\n",
-                  (void *) extract_pmne,
-                  i_part,
-                  extract_section_id);
         PDM_part_mesh_nodal_elmts_std_set(extract_pmne,
                                           extract_section_id,
                                           i_part,
