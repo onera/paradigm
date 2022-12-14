@@ -250,7 +250,7 @@ _generate_mesh
     }
   }
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "mixing_plane_mesh_");
@@ -575,7 +575,7 @@ _mixing_plane
  )
 {
   int dbg  = 1;
-  int visu = 1;
+  int visu = 0;
 
   double *dbg_coord = NULL;
   if (visu) {
