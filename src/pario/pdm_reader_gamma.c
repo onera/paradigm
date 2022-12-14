@@ -664,9 +664,6 @@ PDM_reader_gamma_dmesh_nodal
     } else {
       free(dtetra_vtx);
     }
-    else {
-      free(dtetra_vtx);
-    }
 
     if (gn_pyra > 0) {
       int id_section_pyra = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
@@ -677,9 +674,6 @@ PDM_reader_gamma_dmesh_nodal
                                             dpyra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dpyra_vtx);
-    }
-    else {
       free(dpyra_vtx);
     }
 
@@ -694,9 +688,6 @@ PDM_reader_gamma_dmesh_nodal
     } else {
       free(dprism_vtx);
     }
-    else {
-      free(dprism_vtx);
-    }
 
     if (gn_hexa > 0) {
       int id_section_hexa = PDM_DMesh_nodal_elmts_section_add(dmn->volumic,
@@ -707,9 +698,6 @@ PDM_reader_gamma_dmesh_nodal
                                             dhexa_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-      free(dhexa_vtx);
-    }
-    else {
       free(dhexa_vtx);
     }
   }
