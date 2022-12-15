@@ -65,7 +65,7 @@ unit_test:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
       # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
-    - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
+    - ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
       # Go back to runner dir for artifact modification
   after_script:
     - echo $PWD
