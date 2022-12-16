@@ -1507,6 +1507,7 @@ _extract_part_and_reequilibrate_nodal_from_target
     int n_elmt_to_send      = 0;
     int n_elmt_vtx_to_send  = 0;
     int n_elmt_face_to_send = 0;
+    int parent_elt = -1;
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
@@ -1529,9 +1530,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             n_elmt_to_send     += 1;
@@ -1595,9 +1599,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             n_elmt_to_send      += 1;
@@ -1631,9 +1638,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             n_elmt_to_send     += 1;
@@ -1655,6 +1665,7 @@ _extract_part_and_reequilibrate_nodal_from_target
     PDM_g_num_t* _vtx_ln_to_gn = extrp->vtx_ln_to_gn[i_part];
 
     /* Remplissage */
+    parent_elt = -1;
     for(int i_section = 0; i_section < n_section; ++i_section) {
       int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
@@ -1674,9 +1685,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             int idx = is_selected[i_part][parent_elt];
@@ -1722,9 +1736,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             int idx = is_selected[i_part][parent_elt];
@@ -1760,9 +1777,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
 
@@ -1778,6 +1798,7 @@ _extract_part_and_reequilibrate_nodal_from_target
     }
 
     /* Remplissage vtx */
+    parent_elt = -1;
     int *elt_vtx_idx  = PDM_array_new_idx_from_sizes_int(elmt_vtx_n [i_part], n_elmt_to_send);
     int *elt_face_idx = PDM_array_new_idx_from_sizes_int(elmt_face_n[i_part], n_elmt_to_send);
     for(int i_section = 0; i_section < n_section; ++i_section) {
@@ -1799,9 +1820,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             int idx = is_selected[i_part][parent_elt];
@@ -1862,9 +1886,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
             int idx = is_selected[i_part][parent_elt];
@@ -1920,9 +1947,12 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         /* Selection */
         for(int i_elt = 0; i_elt < n_elt; ++i_elt) {
-          int parent_elt = i_elt;
+          // int parent_elt = i_elt;
           if (parent_num != NULL) {
             parent_elt = parent_num[i_elt];
+          }
+          else {
+            parent_elt++;
           }
           if(is_selected[i_part][parent_elt] != -1) {
 
