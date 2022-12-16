@@ -849,6 +849,34 @@ PDM_write_gamma_sol
   fclose(f);
 }
 
+
+void
+PDM_write_gamma_matsym
+(
+  const char   *filename,
+  const int     n_vtx,
+  const double *fields
+)
+{
+  // Write file
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "MeshVersionFormatted 2\n");
+  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "SolAtVertices\n%d\n", n_vtx);
+
+  fprintf(f, "1 3 \n");
+  for (int i = 0; i < n_vtx; i++) {
+    for(int i_field = 0; i_field < 6; ++i_field) {
+      fprintf(f, "%20.16lf ", fields[6*i+i_field]);
+    }
+    fprintf(f, " \n");
+  }
+  fprintf(f, "End\n");
+  fclose(f);
+}
+
 /* https://pyamg.saclay.inria.fr/download/vizir/vizir4_user_guide.pdf*/
 void
 PDM_read_gamma_sol

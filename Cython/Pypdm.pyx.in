@@ -571,12 +571,7 @@ include "pdm_part_to_part.pxi"
 # --------------------
 include "pdm_part_domain_interface.pxi"
 
-
 # PDM_part_domain_interface :
 # --------------------
 include "pdm_inria_mesh_fmt.pxi"
-
-
-
-
 

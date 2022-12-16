@@ -95,6 +95,16 @@ PDM_read_gamma_sol
         double *fields
 );
 
+
+void
+PDM_write_gamma_matsym
+(
+  const char   *filename,
+  const int     n_vtx,
+  const double *fields
+);
+
+
 #ifdef __cplusplus
 }
 #endif

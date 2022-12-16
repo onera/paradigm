@@ -2587,7 +2587,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 
             found[idx_vtx] = 1;
 
-            if (idx_vtx == 0) {
+            if (idx_vtx == 1) {
                 upwind_cell[iedge] = cell_id;
                 upwind_face[iedge] = face_id;
                 memcpy(upwind_point + 3*iedge,
