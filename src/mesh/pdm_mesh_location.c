@@ -1302,7 +1302,7 @@ PDM_mesh_location_n_part_cloud_set
  const int                  n_part
 )
 {
-
+  log_trace(">> PDM_mesh_location_n_part_cloud_set n_part = %d\n", n_part);
   ml->point_clouds[i_point_cloud].n_part = n_part;
   ml->point_clouds[i_point_cloud].n_points =
     realloc(ml->point_clouds[i_point_cloud].n_points, n_part * sizeof(int));
@@ -1345,7 +1345,7 @@ PDM_mesh_location_cloud_set
        PDM_g_num_t         *gnum
 )
 {
-
+  log_trace(">> PDM_mesh_location_cloud_set : i_part = %d, n_points = %d\n", i_part, n_points);
   ml->point_clouds[i_point_cloud].n_points[i_part] = n_points;
   ml->point_clouds[i_point_cloud].coords[i_part] = coords;
   ml->point_clouds[i_point_cloud].gnum[i_part] = gnum;
@@ -2256,7 +2256,7 @@ PDM_mesh_location_compute
     elt_g_num  [ipart] = malloc(sizeof(PDM_g_num_t         ) * n_elt);
     elt_extents[ipart] = malloc(sizeof(double              ) * n_elt * 6);
     elt_type   [ipart] = malloc(sizeof(PDM_Mesh_nodal_elt_t) * n_elt);
-    int idx = 0;
+    int idx = -1;
     for (int iblock = 0; iblock < n_block; iblock++) {
       int id_block = blocks_id[iblock];
       int n_elt_in_block = PDM_Mesh_nodal_block_n_elt_get(ml->mesh_nodal,
@@ -2280,11 +2280,18 @@ PDM_mesh_location_compute
       int *parent_num = PDM_Mesh_nodal_block_parent_num_get(ml->mesh_nodal,
                                                             id_block,
                                                             ipart);
+      // log_trace("iblock %d/%d : %d elt / %d\n", iblock, n_block, n_elt_in_block, n_elt);
+      // if (parent_num != NULL) {
+      //   PDM_log_trace_array_int(parent_num, n_elt_in_block, "parent_num : ");
+      // }
 
       for (int ielt = 0; ielt < n_elt_in_block; ielt++) {
-        idx = ielt;
-        if (parent_num) {
+        //idx = ielt;
+        if (parent_num != NULL) {
           idx = parent_num[ielt];
+        }
+        else {
+          idx++;
         }
         elt_g_num[ipart][idx] = _elt_g_num[ielt];
         elt_type [ipart][idx] = t_elt;
