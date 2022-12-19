@@ -118,6 +118,17 @@ PDM_mesh_intersection_part_to_part_get
  PDM_ownership_t           ownership
  );
 
+
+void
+PDM_mesh_intersection_result_from_a_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       ipart,
+       int                     **elt_a_elt_b_idx,
+       PDM_g_num_t             **elt_a_elt_b,
+       double                  **elt_a_elt_b_weight
+);
+
 #ifdef  __cplusplus
 }
 #endif

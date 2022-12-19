@@ -22,6 +22,7 @@
 #include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_sphere_surf_gen.h"
+#include "pdm_part_to_part.h"
 
 /*============================================================================
  * Macro definitions
@@ -201,7 +202,7 @@ _generate_surface_mesh
   PDM_MPI_Comm_size(comm, &n_rank);
 
   PDM_dmesh_nodal_t *dmn = NULL;
-  if (1) {
+  if (0) {
     PDM_sphere_surf_icosphere_gen_nodal(comm,
                                         n_vtx_seg,
                                         0, 0, 0,
@@ -308,6 +309,9 @@ _set_mesh
  int                      n_part
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -386,6 +390,16 @@ _set_mesh
                                                  &edge_vtx,
                                                  &edge_vtx_idx,
                                                  PDM_OWNERSHIP_KEEP);
+
+    if (i_mesh == PDM_OL_MESH_B) {
+      for (int i = 0; i < n_face; i++) {
+        log_trace(PDM_FMT_G_NUM" : %d %d %d\n",
+                  face_ln_to_gn[i],
+                  i_rank,
+                  i_part,
+                  i);
+      }
+    }
 
     PDM_mesh_intersection_part_set(mi,
                                    i_mesh,
@@ -527,7 +541,116 @@ char *argv[]
 
   PDM_mesh_intersection_compute(mi);
 
+
+  PDM_part_to_part_t *ptp = NULL;
+  PDM_mesh_intersection_part_to_part_get(mi,
+                                         &ptp,
+                                         PDM_OWNERSHIP_USER);
+
+
+  // Check ptp
+  int  *n_ref_b = NULL;
+  int **ref_b   = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp,
+                                 &n_ref_b,
+                                 &ref_b);
+
+  int         **pelt_b_elt_a_idx = NULL;
+  PDM_g_num_t **pelt_b_elt_a     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp,
+                                       &pelt_b_elt_a_idx,
+                                       &pelt_b_elt_a);
+
+  log_trace("FROM A USER POV\n");
+  int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
+  double **pelt_a_elt_b_weight = malloc(sizeof(double *) * n_part);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int         *elt_a_elt_b_idx = NULL;
+    PDM_g_num_t *elt_a_elt_b     = NULL;
+    PDM_mesh_intersection_result_from_a_get(mi,
+                                            ipart,
+                                            &elt_a_elt_b_idx,
+                                            &elt_a_elt_b,
+                                            &pelt_a_elt_b_weight[ipart]);
+
+    PDM_g_num_t *elt_a_ln_to_gn = NULL;
+    int n_elt_a = PDM_multipart_part_ln_to_gn_get(mpart_surf_a,
+                                                  0,
+                                                  ipart,
+                                                  PDM_MESH_ENTITY_FACE,
+                                                  &elt_a_ln_to_gn,
+                                                  PDM_OWNERSHIP_USER);
+
+    pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
+    for (int i = 0; i < n_elt_a; i++) {
+      pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
+
+      log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
+      for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
+        log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+      }
+      log_trace("\n");
+    }
+  }
+
+  double **pelt_b_elt_a_weight = NULL;
+  int request = -1;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(PDM_g_num_t),
+                         NULL,
+        (const void  **) pelt_a_elt_b_weight,
+                         NULL,
+        (      void ***) &pelt_b_elt_a_weight,
+                         &request);
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+
+
+  log_trace("FROM B USER POV\n");
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    PDM_g_num_t *elt_b_ln_to_gn = NULL;
+    PDM_multipart_part_ln_to_gn_get(mpart_surf_b,
+                                    0,
+                                    ipart,
+                                    PDM_MESH_ENTITY_FACE,
+                                    &elt_b_ln_to_gn,
+                                    PDM_OWNERSHIP_USER);
+
+
+    for (int i = 0; i < n_ref_b[ipart]; i++) {
+      int faceB_id = ref_b[ipart][i] - 1;
+      log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
+      for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
+        log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+      }
+      log_trace("\n");
+    }
+  }
+
+  PDM_MPI_Barrier(comm);
+
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(pelt_a_elt_b_n[ipart]);
+  }
+  free(pelt_a_elt_b_n     );
+  free(pelt_a_elt_b_weight);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(pelt_b_elt_a_weight[ipart]);
+  }
+  free(pelt_b_elt_a_weight);
+
+
   PDM_mesh_intersection_free(mi);
+
+  PDM_part_to_part_free(ptp);
 
 
   PDM_DMesh_nodal_free(dmn_surf_b);
