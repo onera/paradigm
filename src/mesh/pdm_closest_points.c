@@ -805,32 +805,9 @@ PDM_closest_point_t  *cls
     free (cls->src_cloud);
   }
 
-  // if (cls->tgt_cloud->gnum != NULL) {
-  //   free (cls->tgt_cloud->gnum);
-  // }
-  // if (cls->tgt_cloud->coords != NULL) {
-  //   free (cls->tgt_cloud->coords);
-  // }
-  // if (cls->tgt_cloud->n_points != NULL) {
-  //   free (cls->tgt_cloud->n_points);
-  // }
-  // if (cls->tgt_cloud != NULL) {
-  //   free (cls->tgt_cloud);
-  // }
-
-
-  // if (cls->src_cloud->gnum != NULL) {
-  //   free (cls->src_cloud->gnum);
-  // }
-  // if (cls->src_cloud->coords != NULL) {
-  //   free (cls->src_cloud->coords);
-  // }
-  // if (cls->src_cloud->n_points != NULL) {
-  //   free (cls->src_cloud->n_points);
-  // }
-  // if (cls->src_cloud != NULL) {
-  //   free (cls->src_cloud);
-  // }
+  if (cls->ptp != NULL && cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
+    PDM_part_to_part_free(cls->ptp);
+  }
 
   PDM_timer_free(cls->timer);
 
