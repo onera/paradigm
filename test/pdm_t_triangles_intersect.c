@@ -423,8 +423,8 @@ _classify_pts_wrt_triangle
   }
   max_r2 *= max_r2;
 
-  double normal[3];
-  PDM_CROSS_PRODUCT(normal, x01, x02);
+  // double normal[3];
+  // PDM_CROSS_PRODUCT(normal, x01, x02);
 
 
   double x01x01 = PDM_DOT_PRODUCT(x01, x01);
@@ -788,6 +788,8 @@ _intersect_triangle_triangle_coplanar
  )
 {
   int dbg = 1;
+  PDM_UNUSED(epsA);
+  PDM_UNUSED(epsB);
 
   if (dbg) {
     log_trace("coordA :\n");
@@ -986,6 +988,8 @@ _intersect_triangle_triangle_coplanar
   }
 
   /* Poly-clipping */
+  PDM_UNUSED(inter_tA);
+  PDM_UNUSED(inter_tB);
   //...
 
   return n_inter;

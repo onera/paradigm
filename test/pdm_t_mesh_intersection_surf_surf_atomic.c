@@ -149,10 +149,11 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < 2; i++) {
     double mag = PDM_MODULE(&edgeB_normal[3*i]);
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     if (mag == 0) {
       PDM_error(__FILE__, __LINE__, 0, "Invalid normal (null vector)\n");
     }
-
+PDM_GCC_SUPPRESS_WARNING_POP
     for (int j = 0; j < 3; j++) {
       edgeB_normal[3*i+j] /= mag;
     }

@@ -30,6 +30,7 @@
 #include "pdm_part_mesh_priv.h"
 #include "pdm_extract_part.h"
 #include "pdm_extract_part_priv.h"
+#include "pdm_part_to_part.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_vtk.h"
 #include "pdm_writer.h"
@@ -3430,6 +3431,14 @@ PDM_mesh_intersection_create
 
 
 
+  /* Initialize results */
+  mi->elt_a_elt_b_idx    = NULL;
+  mi->elt_a_elt_b        = NULL;
+  mi->elt_a_elt_b_weight = NULL;
+  mi->ptp                = NULL;
+  mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
+
+
   return mi;
 }
 
@@ -3740,9 +3749,32 @@ PDM_mesh_intersection_free
   PDM_part_mesh_free(mi->mesh_a);
   PDM_part_mesh_free(mi->mesh_b);
 
-  // free(mi->tetraisation_pt_coord);
+  if (mi->ptp != NULL && mi->ptp_ownership == PDM_OWNERSHIP_KEEP) {
+    PDM_part_to_part_free(mi->ptp);
+  }
 
   free(mi);
+}
+
+/**
+ * \brief Get part_to_part object to exchange data between the intersected meshes
+ *
+ * \param [in ] mi         Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_mesh_intersection_part_to_part_get
+(
+ PDM_mesh_intersection_t  *mi,
+ PDM_part_to_part_t      **ptp,
+ PDM_ownership_t           ownership
+ )
+{
+  *ptp = mi->ptp;
+  mi->ptp_ownership = ownership;
 }
 
 

@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_overlay.h"
+#include "pdm_part_to_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -98,6 +99,24 @@ PDM_mesh_intersection_free
 (
  PDM_mesh_intersection_t* mi
 );
+
+
+/**
+ * \brief Get part_to_part object to exchange data between the intersected meshes
+ *
+ * \param [in ] mi         Pointer to \ref PDM_mesh_intersection_t object
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_mesh_intersection_part_to_part_get
+(
+ PDM_mesh_intersection_t  *mi,
+ PDM_part_to_part_t      **ptp,
+ PDM_ownership_t           ownership
+ );
 
 #ifdef  __cplusplus
 }

@@ -19,6 +19,7 @@
 #include "pdm_error.h"
 #include "pdm_printf.h"
 #include "pdm_part_mesh.h"
+#include "pdm_part_to_part.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -117,6 +118,19 @@ struct _pdm_mesh_intersection_t {
   double times_cpu_u[NTIMER];  /*!< User CPU time */
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
+
+
+  /* Results */
+  int         **elt_a_elt_b_idx;
+  PDM_g_num_t **elt_a_elt_b;
+  double      **elt_a_elt_b_weight;
+
+
+  PDM_ownership_t     ptp_ownership;
+  PDM_part_to_part_t *ptp;
+
+
+
 
   /* vol_vol */
   int     tetraisation_pt_type;

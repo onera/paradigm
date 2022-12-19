@@ -38,7 +38,7 @@ cdef extern from "pdm_mesh_intersection.h":
 # ------------------------------------------------------------------
 cdef class MeshIntersection:
     """
-    Define a method to compute the distance from a cloud to a surface
+    Define a method to compute mesh intersections
     """
     # ************************************************************************
     # > Class attributes
@@ -57,7 +57,7 @@ cdef class MeshIntersection:
                   int                          n_part_mesh_b,
                   double                       project_coeff=1.e-6):
         """
-        Compute the distance from point clouds to a surface
+        Compute mesh intersections
         """
         self.keep_alive  = list()
 

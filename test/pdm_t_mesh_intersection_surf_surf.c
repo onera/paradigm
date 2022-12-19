@@ -158,7 +158,7 @@ _add_depth
  double *coord
  )
 {
-  double x = coord[0];
+  // double x = coord[0];
   double y = coord[1];
   double z = coord[2];
 

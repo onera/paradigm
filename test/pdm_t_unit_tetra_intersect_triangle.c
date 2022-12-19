@@ -34,42 +34,42 @@
 
  // for main
 
-static void
-_usage
-(
-int exit_code
-)
-{
-  PDM_printf
-    ("\n"
-     "  Usage: \n\n"
-     "  -h               This message.\n\n");
+// static void
+// _usage
+// (
+// int exit_code
+// )
+// {
+//   PDM_printf
+//     ("\n"
+//      "  Usage: \n\n"
+//      "  -h               This message.\n\n");
 
-  exit (exit_code);
-}
+//   exit (exit_code);
+// }
 
-static void
-_read_args
-(
- int    argc,
- char **argv
- )
-{
-  int i = 1;
+// static void
+// _read_args
+// (
+//  int    argc,
+//  char **argv
+//  )
+// {
+//   int i = 1;
 
-  /* Parse and check command line */
+//   /* Parse and check command line */
 
-  while (i < argc) {
+//   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
-      _usage(EXIT_SUCCESS);
+//     if (strcmp(argv[i], "-h") == 0)
+//       _usage(EXIT_SUCCESS);
 
-    else {
-      _usage(EXIT_FAILURE);
-    }
-    i++;
-  }
-}
+//     else {
+//       _usage(EXIT_FAILURE);
+//     }
+//     i++;
+//   }
+// }
 
 /*============================================================================
  * Main
