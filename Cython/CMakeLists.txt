@@ -73,12 +73,12 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
 if (PDM_ENABLE_EXTENSION_PDMA)
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
+#                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
                      INCLUDE_DIRECTORIES ${include_dirs})
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-                     OTHER_SOURCES $<TARGET_OBJECTS:pdm>
+#                     OTHER_SOURCES $<TARGET_OBJECTS:pdm>
                      INCLUDE_DIRECTORIES ${include_dirs})
 endif()
 
@@ -137,19 +137,26 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
   set_target_properties (Pypdm PROPERTIES COMPILE_FLAGS "-w")
 endif()
 
-install(CODE
-  "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install
-  --prefix=${CMAKE_INSTALL_PREFIX}
-  --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  ")
+#install(CODE
+#  "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install
+#  --prefix=${CMAKE_INSTALL_PREFIX}
+#  --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+#  ")
 
 # useful Bundle for Topaze install
-install(CODE
-  "execute_process(COMMAND chrpath --delete ${SITE_PACKAGES_PDM}/Pypdm.so)
-  ")
+#install(CODE
+#  "execute_process(COMMAND chrpath --delete ${SITE_PACKAGES_PDM}/Pypdm.so)
+#  ")
 
 #install(TARGETS Pypdm
 #        LIBRARY DESTINATION "${SITE_PACKAGES_PDM}")
 #install(FILES       "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py"
 #        DESTINATION "${SITE_PACKAGES_PDM}"
 #        COMPONENT   "cython")
+
+install(DIRECTORY DESTINATION ${SITE_PACKAGES_PDM})
+install(FILES  "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py"
+        DESTINATION            "${SITE_PACKAGES_PDM}")
+
+install(PROGRAMS  "${CMAKE_CURRENT_BINARY_DIR}/Pypdm/Pypdm.so"
+        DESTINATION            "${SITE_PACKAGES_PDM}")
