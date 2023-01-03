@@ -12,7 +12,6 @@
 
 #include "pdm.h"
 #include "pdm_timer.h"
-#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions
