@@ -264,17 +264,17 @@ set(METIS_hdrs_to_find "metis.h")
 # call cmake macro to find the header path
 if(METIS_INCDIR)
   foreach(metis_hdr ${METIS_hdrs_to_find})
-    set(METIS_${metis_hdr}_DIRS "METIS_${parmetis_hdr}_DIRS-NOTFOUND")
+    set(METIS_${metis_hdr}_DIRS "METIS_${metis_hdr}_DIRS-NOTFOUND")
     find_path(METIS_${metis_hdr}_DIRS
       NAMES ${metis_hdr}
       HINTS ${METIS_INCDIR})
-    mark_as_advanced(METIS_${parmetis_hdr}_DIRS)
+    mark_as_advanced(METIS_${metis_hdr}_DIRS)
   endforeach()
 else()
   if(METIS_DIR)
     foreach(metis_hdr ${METIS_hdrs_to_find})
-      set(METIS_${metis_hdr}_DIRS "METIS_${parmetis_hdr}_DIRS-NOTFOUND")
-      find_path(METIS_${parmetis_hdr}_DIRS
+      set(METIS_${metis_hdr}_DIRS "METIS_${metis_hdr}_DIRS-NOTFOUND")
+      find_path(METIS_${metis_hdr}_DIRS
         NAMES ${metis_hdr}
         HINTS ${METIS_DIR}
         PATH_SUFFIXES "include" "include/metis")
@@ -282,7 +282,7 @@ else()
     endforeach()
   else()
     foreach(metis_hdr ${METIS_hdrs_to_find})
-      set(METIS_${metis_hdr}_DIRS "METIS_${parmetis_hdr}_DIRS-NOTFOUND")
+      set(METIS_${metis_hdr}_DIRS "METIS_${metis_hdr}_DIRS-NOTFOUND")
       find_path(METIS_${metis_hdr}_DIRS
         NAMES ${metis_hdr}
         HINTS ${_inc_env}
