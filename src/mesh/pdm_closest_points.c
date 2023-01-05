@@ -765,7 +765,6 @@ PDM_closest_point_t  *cls
         }
       }
     }
-    free (cls->src_cloud->tgt_in_src_dist);
   }
   if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
     if (cls->src_cloud->tgt_in_src_idx != NULL) {
@@ -779,6 +778,7 @@ PDM_closest_point_t  *cls
 
   free (cls->src_cloud->tgt_in_src_idx);
   free (cls->src_cloud->tgt_in_src);
+  free (cls->src_cloud->tgt_in_src_dist);
 
   if (cls->tgt_cloud->gnum != NULL) {
     free (cls->tgt_cloud->gnum);
