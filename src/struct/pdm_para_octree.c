@@ -9666,7 +9666,7 @@ if (_octree->use_win_shared) {
   int *part_stride = PDM_array_const_int(n_pts1, n_closest_points);
 
   int *block_stride = NULL;
-  double *_block_closest_pts_dist2 = NULL;
+  double *tmp_block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -9674,10 +9674,10 @@ if (_octree->use_win_shared) {
                           &part_stride,
                           (void **) &_closest_pts_dist2,
                           &block_stride,
-                          (void **) &_block_closest_pts_dist2);
+                          (void **) &tmp_block_closest_pts_dist2);
   free (block_stride);
 
-  PDM_g_num_t *_block_closest_pts_g_num = NULL;
+  PDM_g_num_t *tmp_block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -9685,7 +9685,7 @@ if (_octree->use_win_shared) {
                           &part_stride,
                           (void **) &_closest_pts_g_num,
                           &block_stride,
-                          (void **) &_block_closest_pts_g_num);
+                          (void **) &tmp_block_closest_pts_g_num);
 
   /* Merge if multiple results */
   int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb1);
@@ -9755,12 +9755,12 @@ if (_octree->use_win_shared) {
     int dbg_enabled2 = 0;
 
     for (int j = 0; j < block_stride[i]; j++) {
-      if (_block_closest_pts_dist2[idx] < __block_closest_pts_dist2[n_closest_points-1]) {
-        assert (_block_closest_pts_g_num[idx] > 0);//
+      if (tmp_block_closest_pts_dist2[idx] < __block_closest_pts_dist2[n_closest_points-1]) {
+        assert (tmp_block_closest_pts_g_num[idx] > 0);//
         if (dbg_enabled2) {
           log_trace("insert src "PDM_FMT_G_NUM", dist2 = %20.16e\n",
-                    _block_closest_pts_g_num[idx],
-                    _block_closest_pts_dist2[idx]);
+                    tmp_block_closest_pts_g_num[idx],
+                    tmp_block_closest_pts_dist2[idx]);
           PDM_log_trace_array_long(__block_closest_pts_g_num,
                                    n_closest_points,
                                    "before : ");
@@ -9769,8 +9769,8 @@ if (_octree->use_win_shared) {
                                      "before : ");
         }
 
-        _insertion_sort (_block_closest_pts_dist2[idx],
-                         _block_closest_pts_g_num[idx],
+        _insertion_sort (tmp_block_closest_pts_dist2[idx],
+                         tmp_block_closest_pts_g_num[idx],
                          n_closest_points,
                          __block_closest_pts_dist2,
                          __block_closest_pts_g_num);
@@ -9797,7 +9797,8 @@ if (_octree->use_win_shared) {
                                  "after merge : ");
     }
   }
-
+  free (tmp_block_closest_pts_dist2);
+  free (tmp_block_closest_pts_g_num);
   free (block_stride);
   free (part_stride);
 
@@ -10321,7 +10322,7 @@ if (_octree->use_win_shared) {
                                     _octree->comm);
   part_stride = PDM_array_const_int(n_pts2, n_closest_points);
 
-  double *tmp_block_closest_pts_dist2 = NULL;
+  tmp_block_closest_pts_dist2 = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(double),
                           PDM_STRIDE_VAR_INTERLACED,
@@ -10333,7 +10334,7 @@ if (_octree->use_win_shared) {
   free (block_stride);
   free (_closest_pts_dist22);
 
-  PDM_g_num_t *tmp_block_closest_pts_g_num = NULL;
+  tmp_block_closest_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb1,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
