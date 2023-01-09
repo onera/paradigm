@@ -547,7 +547,7 @@ PDM_closest_point_t *cls
                                     closest_src_dist);
   }
 
-  if (1) {
+  if (0) {
     for (int i = 0; i < n_tgt; i++) {
       log_trace(PDM_FMT_G_NUM" (%f %f %f) : ",
                 tgt_g_num[i],
