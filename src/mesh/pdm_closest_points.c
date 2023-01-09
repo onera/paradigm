@@ -112,6 +112,16 @@ _closest_points_reverse_results
   PDM_g_num_t **tgt_g_num   = (PDM_g_num_t ** ) malloc( cls->tgt_cloud->n_part * sizeof(PDM_g_num_t *));
   int         **tgt_g_num_n = (int         ** ) malloc( cls->tgt_cloud->n_part * sizeof(int         *));
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+
+    // if (1) {
+    //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+    //     log_trace(PDM_FMT_G_NUM" : ", cls->tgt_cloud->gnum[i_part][i]);
+    //     PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part] + cls->n_closest*i,
+    //                              cls->n_closest,
+    //                              "");
+    //   }
+    // }
+
     n_points[i_part] = cls->tgt_cloud->n_points[i_part] * cls->n_closest;
     tgt_g_num  [i_part] = (PDM_g_num_t * ) malloc( n_points[i_part] * sizeof(PDM_g_num_t));
     tgt_g_num_n[i_part] = (int         * ) malloc( n_points[i_part] * sizeof(int        ));
@@ -535,6 +545,17 @@ PDM_closest_point_t *cls
                                     tgt_g_num,
                                     closest_src_gnum,
                                     closest_src_dist);
+  }
+
+  if (1) {
+    for (int i = 0; i < n_tgt; i++) {
+      log_trace(PDM_FMT_G_NUM" (%f %f %f) : ",
+                tgt_g_num[i],
+                tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
+      PDM_log_trace_array_long(closest_src_gnum + cls->n_closest*i,
+                               cls->n_closest,
+                               "");
+    }
   }
 
 
