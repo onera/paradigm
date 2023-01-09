@@ -1130,7 +1130,7 @@ PDM_mesh_location_create
 
   ml->points_in_elements = NULL;
 
-  ml->reverse_result = 0;
+  ml->reverse_result = 1;
   ml->tolerance = 0.;
 
   ml->method = PDM_MESH_LOCATION_OCTREE;
@@ -4296,7 +4296,8 @@ PDM_mesh_location_compute
       free(pts_in_elt_triplet);
       free(pts_in_elt_triplet_idx);
 
-    }
+    } // end ml->reverse_result
+    // TO DO: move further to encompass all ml->ptp[icloud]
 
     // for (int ipart = 0; ipart < n_part; ipart++) {
     //   free(stride_pts[ipart]);
