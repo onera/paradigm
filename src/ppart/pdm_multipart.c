@@ -1363,30 +1363,60 @@ const double            *part_fraction,
     PDM_dmesh_data_get(dmesh, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                        &dface_bound_idx, &dface_bound, &joins_ids, &dface_join_idx, &dface_join);
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
-              (PDM_g_num_t **) &dface_vtx,
-              (int         **) &dface_vtx_idx,
-                               PDM_OWNERSHIP_KEEP);
+    if(dmesh->dn_cell == 0) { // Donc 2D
+
+      const int          *dedge_vtx_idx = NULL;
+      const PDM_g_num_t  *dedge_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                (PDM_g_num_t **) &dedge_vtx,
+                (int         **) &dedge_vtx_idx,
+                                 PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *edge_distri = PDM_compute_entity_distribution(comm, dn_edge);
+      PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(comm, dn_vtx );
+      PDM_part_geom (PDM_PART_GEOM_HILBERT,
+                     n_part,
+                     comm,
+                     dn_node,
+                     delmt_to_arc_idx,
+                     delmt_to_arc,
+                     NULL, //cell_weight
+                     dedge_vtx_idx,
+                     dedge_vtx,
+                     edge_distri,
+                     dvtx_coord,
+                     vtx_distri,
+                     _node_part);
+
+      free(edge_distri);
+      free(vtx_distri);
+
+    } else {
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                (PDM_g_num_t **) &dface_vtx,
+                (int         **) &dface_vtx_idx,
+                                 PDM_OWNERSHIP_KEEP);
 
 
-    PDM_g_num_t *face_distri = PDM_compute_entity_distribution(comm, dn_face);
-    PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(comm, dn_vtx );
-    PDM_part_geom (PDM_PART_GEOM_HILBERT,
-                   n_part,
-                   comm,
-                   dn_node,
-                   delmt_to_arc_idx,
-                   delmt_to_arc,
-                   NULL, //cell_weight
-                   dface_vtx_idx,
-                   dface_vtx,
-                   face_distri,
-                   dvtx_coord,
-                   vtx_distri,
-                   _node_part);
+      PDM_g_num_t *face_distri = PDM_compute_entity_distribution(comm, dn_face);
+      PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(comm, dn_vtx );
+      PDM_part_geom (PDM_PART_GEOM_HILBERT,
+                     n_part,
+                     comm,
+                     dn_node,
+                     delmt_to_arc_idx,
+                     delmt_to_arc,
+                     NULL, //cell_weight
+                     dface_vtx_idx,
+                     dface_vtx,
+                     face_distri,
+                     dvtx_coord,
+                     vtx_distri,
+                     _node_part);
 
-    free(face_distri);
-    free(vtx_distri);
+      free(face_distri);
+      free(vtx_distri);
+    }
 
   } else {
     PDM_para_graph_split (split_method,
