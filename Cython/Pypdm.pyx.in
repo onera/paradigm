@@ -575,3 +575,5 @@ include "pdm_part_domain_interface.pxi"
 # --------------------
 include "pdm_inria_mesh_fmt.pxi"
 
+# PDM_global_mean :
+include "pdm_global_mean.pxi"
