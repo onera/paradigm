@@ -603,3 +603,7 @@ include "pdm_global_mean.pxi"
 # PDM_geom :
 # --------------------
 include "pdm_field_cell_to_vtx.pxi"
+
+# PDM_sphere_surf_gen :
+# --------------------
+include "pdm_sphere_surf_gen.pxi"
