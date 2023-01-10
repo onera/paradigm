@@ -221,7 +221,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def multipart_register_dmesh_nodal(self, int zone_gid,
-                                       DistributedMeshNodal dmn): # DMesh = DistributedMeshCaspule or DistributedMesh
+                                       DMeshNodal dmn): # DMesh = DistributedMeshCaspule or DistributedMesh
         """
         """
         PDM_multipart_register_dmesh_nodal(self._mtp,
