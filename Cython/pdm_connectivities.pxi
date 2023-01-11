@@ -54,6 +54,14 @@ cdef extern from "pdm_part_connectivity_transform.h":
                                                       int ***entity1_entity2)
     # ------------------------------------------------------------------
 
+cdef extern from "pdm_part_connectivity_transform.h":
+    # ------------------------------------------------------------------
+    void PDM_compute_face_vtx_from_face_and_edge(int   n_face,
+                                                 int  *face_edge_idx,
+                                                 int  *face_edge,
+                                                 int  *edge_vtx,
+                                                 int **face_vtx)
+    # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 def dconnectivity_transpose(MPI.Comm comm,
@@ -340,3 +348,30 @@ def part_connectivity_to_connectity_idx(list   n_entity1,
     free(_entity1_entity2)
     
     return l_np_entity1_entity2_idx, l_np_entity1_entity2
+
+# ------------------------------------------------------------------------
+def compute_face_vtx_from_face_and_edge(int                                n_face,
+                                        NPY.ndarray[int, mode='c', ndim=1] face_edge_idx,
+                                        NPY.ndarray[int, mode='c', ndim=1] face_edge,
+                                        NPY.ndarray[int, mode='c', ndim=1] edge_vtx):
+
+    cdef int *face_vtx = NULL
+
+    cdef int *_face_edge_idx
+    _face_edge_idx = <int *> face_edge_idx.data
+
+    cdef int *_face_edge
+    _face_edge = <int *> face_edge.data
+
+    cdef int *_edge_vtx
+    _edge_vtx = <int *> edge_vtx.data
+
+    PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                            _face_edge_idx,
+                                            _face_edge,
+                                            _edge_vtx,
+                                            &face_vtx)
+
+    np_face_vtx = create_numpy_i(face_vtx, face_edge_idx[n_face])
+
+    return np_face_vtx

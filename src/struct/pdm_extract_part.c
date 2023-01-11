@@ -388,6 +388,9 @@ _extract_gnum_and_compute_child
   for(int i_part = 0; i_part < n_part; ++i_part) {
     entity_extract_g_num[i_part] = (PDM_g_num_t *) malloc( n_extract[i_part] * sizeof(PDM_g_num_t));
     for(int i_entity = 0; i_entity < n_extract[i_part]; ++i_entity) {
+      log_trace("extract_lnum[i_part][%d] = %d\n",
+                i_entity,
+                extract_lnum[i_part][i_entity]);
       entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][extract_lnum[i_part][i_entity]];
     }
   }
@@ -2556,12 +2559,21 @@ _extract_part
 {
   int          *pn_entity    = 0;
   PDM_g_num_t **entity_g_num = NULL;
-  if(extrp->dim == 3) {
+  if (extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
-  } else {
+  }
+  else if (extrp->dim == 2) {
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
+  }
+  else if (extrp->dim == 1) {
+    pn_entity    = extrp->n_edge;
+    entity_g_num = extrp->edge_ln_to_gn;
+  }
+  else {
+    pn_entity    = extrp->n_vtx;
+    entity_g_num = extrp->vtx_ln_to_gn;
   }
   PDM_UNUSED(pn_entity);
 
@@ -2570,6 +2582,9 @@ _extract_part
    */
   PDM_g_num_t** entity_extract_g_num = NULL;
   PDM_g_num_t** child_selected_g_num = NULL;
+
+  PDM_log_trace_array_long(entity_g_num[0], pn_entity[0], "entity_g_num : ");
+
   _extract_gnum_and_compute_child(extrp->comm,
                                   extrp->compute_child_gnum,
                                   extrp->n_part_in,
@@ -2775,6 +2790,7 @@ _extract_part
    */
   extrp->pextract_vtx_coord = (double **) malloc( extrp->n_part_in * sizeof(double *));
   for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+    log_trace("n_extract_vtx[%d] = %d\n", i_part, n_extract_vtx[i_part]);
     extrp->pextract_vtx_coord[i_part] = (double *) malloc( 3 * n_extract_vtx[i_part] * sizeof(double));
 
     for(int idx_vtx = 0; idx_vtx < n_extract_vtx[i_part]; ++idx_vtx) {
