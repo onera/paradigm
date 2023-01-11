@@ -46,6 +46,10 @@ cdef extern from "pdm_closest_points.h":
 
   void PDM_closest_points_dump_times(PDM_closest_point_t *cls)
 
+  void PDM_closest_points_part_to_part_get(PDM_closest_point_t  *cls,
+                                           PDM_part_to_part_t  **ptp,
+                                           PDM_ownership_t       ownership);
+
 
 # ------------------------------------------------------------------
 cdef class ClosestPoints:
@@ -59,6 +63,7 @@ cdef class ClosestPoints:
   cdef int* src_n_points
   cdef int* tgt_n_points
   cdef int n_closest
+  cdef MPI.Comm py_comm
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -71,6 +76,7 @@ cdef class ClosestPoints:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    self.py_comm = comm
     self._rank = comm.Get_rank()
     self._size = comm.Get_size()
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -202,6 +208,18 @@ cdef class ClosestPoints:
             'tgt_in_src'      : create_numpy_pdm_gnum(tgt_in_src, tgt_in_src_idx[src_n_pts]),
             'tgt_in_src_dist2': create_numpy_d(tgt_in_src_dist, tgt_in_src_idx[src_n_pts])
             }
+
+  # ------------------------------------------------------------------------
+  def part_to_part_get(self):
+    """
+    """
+    cdef PDM_part_to_part_t *ptpc
+    PDM_closest_points_part_to_part_get(self._cls,
+                                        &ptpc,
+                                        PDM_OWNERSHIP_USER)
+
+    py_casp = PyCapsule_New(ptpc, NULL, NULL)
+    return PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):

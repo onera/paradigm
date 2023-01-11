@@ -17,6 +17,12 @@ cdef extern from "pdm_extract_part.h":
                                           int                       n_extract,
                                           int                      *extract_lnum);
 
+  void PDM_extract_part_target_set(PDM_extract_part_t       *extrp,
+                                   int                       i_part,
+                                   int                       n_target,
+                                   PDM_g_num_t              *target_gnum,
+                                   int                      *target_location);
+
   void PDM_extract_part_part_set(PDM_extract_part_t        *extrp,
                                  int                       i_part,
                                  int                       n_cell,
@@ -125,6 +131,23 @@ cdef class ExtractPart:
                                        n_extract,
                               <int* >  extract_lnum.data);
 
+
+  # ------------------------------------------------------------------
+  def target_set(self,
+                 int i_part,
+                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] target_gnum,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] target_location):
+    """
+    """
+    self.keep_alive.append(target_gnum)
+    self.keep_alive.append(target_location)
+
+    cdef int n_target = target_gnum.shape[0]
+    PDM_extract_part_target_set(self._extrp,
+                                i_part,
+                                n_target,
+                <PDM_g_num_t *> target_gnum.data,
+                <int         *> target_location.data);
 
   # ------------------------------------------------------------------
   def part_set(self,

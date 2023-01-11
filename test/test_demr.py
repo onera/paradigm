@@ -5,10 +5,21 @@ import numpy as np
 import sys
 import Pypdm.Pypdm as PDM
 from Pypdm.Pypdm import npy_pdm_gnum_dtype
+import argparse
 
 import sys
 sys.path.append("/stck/bandrieu/Public/adaptation/cavity_operator3_v3/")
 from mod_vtk import *
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-n", "--n_vtx_seg", default=3)
+
+args = parser.parse_args()
+
+n = int(args.n_vtx_seg)
+
 
 comm = MPI.COMM_WORLD
 
@@ -60,29 +71,35 @@ for i in range(n_part):
                      connec)
 """
 
-# Generate a distributed surface mesh
-n = 3
-length = 1.
-dcube = PDM.DCubeNodalGenerator(n, n, n,
-                                length,
-                                0., 0., 0.,
-                                PDM._PDM_MESH_NODAL_TRIA3,
-                                1,
-                                comm)
+dmn_capsule = PDM.sphere_surf_icosphere_gen_nodal(comm,
+                                                  n,
+                                                  0.,
+                                                  0.,
+                                                  0.,
+                                                  1.)
 
-dcube.compute()
+# # Generate a distributed surface mesh
+# length = 1.
+# dcube = PDM.DCubeNodalGenerator(n, n, n,
+#                                 length,
+#                                 0., 0., 0.,
+#                                 PDM._PDM_MESH_NODAL_TRIA3,
+#                                 1,
+#                                 comm)
 
-dmn_capsule = dcube.get_dmesh_nodal()
-print("[{}] dmn OK".format(i_rank))
+# dcube.compute()
 
-print(dmn_capsule.dmesh_nodal_get_sections(PDM._PDM_GEOMETRY_KIND_SURFACIC,
-                                           comm))
+# dmn_capsule = dcube.get_dmesh_nodal()
+# print("[{}] dmn OK".format(i_rank))
+
+# print(dmn_capsule.dmesh_nodal_get_sections(PDM._PDM_GEOMETRY_KIND_SURFACIC,
+#                                            comm))
 
 # Split the mesh
 mpart = PDM.MultiPart(1,
                       np.ones(1).astype(np.intc),
                       0,
-                      PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
+                      PDM._PDM_SPLIT_DUAL_WITH_PARMETIS,#HILBERT,
                       1,#PDM_PART_SIZE_HOMOGENEOUS,
                       np.ones(1).astype(np.double),
                       comm)
@@ -126,15 +143,7 @@ face_vtx = PDM.compute_face_vtx_from_face_and_edge(n_face,
 print("n_edge = {}".format(n_edge))
 print("edge_vtx = {}".format(edge_vtx))
 
-# get global number of edges
-lmax_edge_ln_to_gn = np.amax(edge_ln_to_gn)
-
-gmax_edge_ln_to_gn = comm.allreduce(lmax_edge_ln_to_gn, op=MPI.MAX)
-
-# if i_rank == 0:
-#   print("gmax_edge_ln_to_gn = {}".format(gmax_edge_ln_to_gn))
-
-step_edge = int(extract_fraction * gmax_edge_ln_to_gn)
+step_edge = int(1./extract_fraction)
 
 select_edge = []
 for i in range(n_edge):
@@ -159,12 +168,22 @@ for i in range(n_edge):
 extrp = PDM.ExtractPart(1,
                         1,
                         1,
-                        PDM._PDM_EXTRACT_PART_KIND_LOCAL,#REEQUILIBRATE,
+                        PDM._PDM_EXTRACT_PART_KIND_FROM_TARGET,#_LOCAL,#REEQUILIBRATE,
                         PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
                         1,
                         comm)
 
-extrp.selected_lnum_set(0, np.array(select_edge).astype(np.intc))
+#extrp.selected_lnum_set(0, np.array(select_edge).astype(np.intc))
+
+target_gnum = edge_ln_to_gn[select_edge]
+target_location = np.zeros(3*len(select_edge)).astype(np.intc)
+for i, j in enumerate(select_edge):
+  target_location[3*i  ] = i_rank
+  target_location[3*i+2] = j
+
+print("target_gnum = {}".format(target_gnum))
+
+extrp.target_set(0, target_gnum, target_location)
 
 extrp.part_set(0,
                0, # n_cell
@@ -192,6 +211,10 @@ n_segment = extrp.n_entity_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 segment_vtx_idx, segment_vtx = extrp.connectivity_get(0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
 segment_ln_to_gn = extrp.ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
+print("segment_ln_to_gn = {}".format(segment_ln_to_gn))
+
+# segment_parent_ln_to_gn = extrp.parent_ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
+# print("segment_parent_ln_to_gn = {}".format(segment_parent_ln_to_gn))
 
 extrp_vtx_coord = extrp.vtx_coord_get(0)
 
@@ -207,31 +230,12 @@ for i, edge_id in enumerate(select_edge):
   segment_coord[2*i+1] = 1.1*segment_coord[2*i]
   segment_connec.append([2*i, 2*i+1])
 
-"""
+# fix extracted gnums
+gen_gnum = PDM.GlobalNumbering(3, 1, 0, 1., comm)
+gen_gnum.gnum_set_from_coords(0, n_segment, segment_base_coord, np.ones(n_segment))
+gen_gnum.gnum_compute()
 
-# n_segment = len(select_edge)
-# segment_base_coord = np.zeros(3*n_segment)
-# segment_coord = np.zeros((2*n_segment, 3))
-# segment_connec = []
-# for i, edge_id in enumerate(select_edge):
-#   segment_base_coord[3*i:3*(i+1)] = edge_mid_coord[3*edge_id:3*(edge_id+1)]
-#   segment_coord[2*i  ] = segment_base_coord[3*i:3*(i+1)]
-#   segment_coord[2*i+1] = 1.1*segment_coord[2*i]
-#   segment_connec.append([2*i, 2*i+1])
-
-
-# gen_gnum = PDM.GlobalNumbering(3, 1, 0, 1., comm)
-
-# gen_gnum.gnum_set_from_parent(0, n_segment, edge_ln_to_gn[select_edge])
-
-# gen_gnum.gnum_compute()
-
-# segment_ln_to_gn = gen_gnum.gnum_get(0)["gnum"]
-
-"""
-
-# Randomly redistribute the segments?
-# to do
+segment_ln_to_gn = gen_gnum.gnum_get(0)["gnum"]
 
 # Locate the segments on the surface edges
 clsp = PDM.ClosestPoints(comm, 1)
@@ -243,9 +247,39 @@ clsp.src_cloud_set(0, n_edge,    edge_mid_coord,     edge_ln_to_gn)
 
 clsp.compute()
 
+
+closest_src = clsp.points_get(0)
+
+for i in range(n_segment):
+  print("segment {} : {} at dist2 {}".format(segment_ln_to_gn[i],
+                                             closest_src["closest_src_gnum"][i],
+                                             closest_src["closest_src_distance"][i]))
+
 # get ptp
+ptp = clsp.part_to_part_get()
+
+print("ptp : {}".format(ptp))
+
+ref_lnum2 = ptp.get_referenced_lnum2()
+print("ref_lnum2 = {}".format(ref_lnum2[0]))
+
+come_from = ptp.get_gnum1_come_from()
+print("come_from = {}".format(come_from[0]["come_from"]))
 
 # Exchange data between the segments and the edges
+# edge_field = np.cos(5*(edge_mid_coord[0::3] + edge_mid_coord[1::3] + edge_mid_coord[2::3]))
+edge_field = 2*np.random.rand(n_edge) - 1
+
+request = ptp.iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+                    PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                    [edge_field],
+                    part1_stride=1,
+                    interlaced_str=True)
+
+part2_stride, part2_data = ptp.wait(request)
+
+print("edge_field = {}".format(edge_field))
+print("part2_data = {}".format(part2_data))
 
 
 # Export for visu (ENSIGHT/VTK?)
@@ -255,12 +289,15 @@ vtk_write_std_elements("sphere_edges_rank%d.vtk" % i_rank,
                        _vtx_coord,
                        ELT_TYPE_EDGE,
                        _edge_vtx,
-                       {"gnum" : edge_ln_to_gn})
+                       {"gnum" : edge_ln_to_gn,
+                       "field" : edge_field})
 
 vtk_write_std_elements("sphere_segments_rank%d.vtk" % i_rank,
                        segment_coord,
                        ELT_TYPE_EDGE,
-                       segment_connec)
+                       segment_connec,
+                       {"gnum" : segment_ln_to_gn,
+                       "field" : part2_data[0]})
 
 
 connec = []
