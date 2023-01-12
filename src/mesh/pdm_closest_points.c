@@ -718,7 +718,6 @@ PDM_closest_points_free
 PDM_closest_point_t  *cls
 )
 {
-  log_trace(">> PDM_closest_points_free\n");
   if (cls->tgt_cloud != NULL) {
     if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
        ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->results_is_getted)){
@@ -1031,7 +1030,6 @@ PDM_closest_points_part_to_part_get
  PDM_ownership_t       ownership
  )
 {
-  log_trace("ptp : %p\n", cls->ptp);
   *ptp = cls->ptp;
   cls->ptp_ownership = ownership;
 }

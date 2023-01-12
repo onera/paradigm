@@ -95,6 +95,13 @@ cdef extern from "pdm_multipart.h":
                                     PDM_g_num_t      **face_join_ln_to_gn)
 
     # ------------------------------------------------------------------
+    int PDM_multipart_part_vtx_coord_get(PDM_multipart_t  *multipart,
+                                         const int         i_zone,
+                                         const int         i_part,
+                                         double          **vtx_coord,
+                                         PDM_ownership_t   ownership)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_get_part_mesh_nodal(PDM_multipart_t   *mtp,
                                            const int   i_zone,
                                            PDM_part_mesh_nodal_t **pmesh_nodal,
@@ -986,6 +993,34 @@ cdef class MultiPart:
 
         return {'np_entity_ln_to_gn'     : np_entity_ln_to_gn}
 
+    # ------------------------------------------------------------------
+    def multipart_vtx_coord_get(self, int ipart, int zone_gid):
+      """
+      Get partition vertex coordinates
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef double *vtx_coord
+      # ************************************************************************
+
+      n_vtx = PDM_multipart_part_vtx_coord_get(self._mtp,
+                                               zone_gid,
+                                               ipart,
+                                               &vtx_coord,
+                                               PDM_OWNERSHIP_USER)
+
+      cdef NPY.npy_intp dim
+      if (vtx_coord == NULL) :
+        np_vtx_coord = None
+      else :
+        dim = <NPY.npy_intp> (3*n_vtx)
+        np_vtx_coord = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_DOUBLE,
+                                            <void *> vtx_coord)
+        PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
+
+      return {'np_vtx_coord' : np_vtx_coord}
 
     # ------------------------------------------------------------------
     def multipart_part_color_get(self, int ipart, int zone_gid, PDM_mesh_entities_t entity_type):
