@@ -39,10 +39,10 @@ dmn_capsule = PDM.sphere_surf_icosphere_gen_nodal(comm,
 # On partitionne ce maillage
 n_part = 1
 mpart = PDM.MultiPart(1,
-                      n_part*np.ones(1).astype(np.intc),
+                      np.array([n_part]).astype(np.intc),
                       0,
-                      PDM._PDM_SPLIT_DUAL_WITH_PARMETIS,#HILBERT,
-                      1,#PDM_PART_SIZE_HOMOGENEOUS,
+                      PDM._PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                      1,
                       np.ones(1).astype(np.double),
                       comm)
 
@@ -51,22 +51,22 @@ mpart.multipart_register_dmesh_nodal(0, dmn_capsule)
 mpart.multipart_run_ppart()
 
 
-# On sélectionne un ensemble d'arêtes à partir desquelles on vais générer des
+# On sélectionne un ensemble d'arêtes à partir desquelles on va générer des
 # segments orthogonaux
 extract_fraction = 0.25 # on sélectionne 25% des arêtes
 
-# récupération de la connectivité arête->sommets des partitions
+# on récupère la connectivité arête->sommets des partitions
 edges = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 edge_vtx = edges["np_entity1_entity2"]
 
-# récupération des numéros absolus des arêtes
+# on récupère les numéros absolus des arêtes
 edge_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_EDGE)["np_entity_ln_to_gn"]
 n_edge = len(edge_ln_to_gn)
 
-# récupération des numéros absolus des sommets
+# on récupère les numéros absolus des sommets
 vtx_ln_to_gn = mpart.multipart_ln_to_gn_get(0, 0, PDM._PDM_MESH_ENTITY_VERTEX)["np_entity_ln_to_gn"]
 
-# récupération des coordonnées des sommets
+# on récupère les coordonnées des sommets
 vtx_coord = mpart.multipart_vtx_coord_get(0, 0)["np_vtx_coord"]
 n_vtx = len(vtx_ln_to_gn)
 
@@ -85,21 +85,23 @@ dim = 1 # les entités à extraire sont de dimension 1
 extrp = PDM.ExtractPart(dim,
                         n_part,
                         n_part,
-                        PDM._PDM_EXTRACT_PART_KIND_FROM_TARGET,#_LOCAL,#REEQUILIBRATE,
+                        PDM._PDM_EXTRACT_PART_KIND_REEQUILIBRATE,#FROM_TARGET,
                         PDM._PDM_SPLIT_DUAL_WITH_HILBERT,
                         1,
                         comm)
 
-target_gnum = edge_ln_to_gn[select_edge]
-# pas nécessaire...
-# target_location = np.zeros(3*len(select_edge)).astype(np.intc)
-# for i, j in enumerate(select_edge):
-#   target_location[3*i  ] = i_rank
-#   target_location[3*i+2] = j
+# target_gnum = edge_ln_to_gn[select_edge]
+# # pas nécessaire...
+# # target_location = np.zeros(3*len(select_edge)).astype(np.intc)
+# # for i, j in enumerate(select_edge):
+# #   target_location[3*i  ] = i_rank
+# #   target_location[3*i+2] = j
 
-target_location = None
+# target_location = None
 
-extrp.target_set(0, target_gnum, target_location)
+# extrp.target_set(0, target_gnum, target_location)
+
+extrp.selected_lnum_set(0, np.array(select_edge).astype(np.intc))
 
 extrp.part_set(0,
                0, # n_cell
@@ -124,11 +126,17 @@ extrp.compute()
 # on récupère les arêtes extraites et redistribuées
 n_segment = extrp.n_entity_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 
+print("[{}] n_segment = {}".format(i_rank, n_segment))
+
 extrp_edge_vtx_idx, extrp_edge_vtx = extrp.connectivity_get(0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+
+# print("extrp_edge_vtx = {}".format(extrp_edge_vtx))
+print("[{}] len(extrp_edge_vtx)//2 = {}".format(i_rank, len(extrp_edge_vtx)//2))
 
 # problème ici...
 segment_ln_to_gn = extrp.ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
-print("segment_ln_to_gn = {}".format(segment_ln_to_gn))
+# print("segment_ln_to_gn = {}".format(segment_ln_to_gn))
+print("[{}] len(segment_ln_to_gn) = {}".format(i_rank, len(segment_ln_to_gn)))
 
 # segment_parent_ln_to_gn = extrp.parent_ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 # print("segment_parent_ln_to_gn = {}".format(segment_parent_ln_to_gn))
@@ -138,7 +146,7 @@ extrp_vtx_coord = extrp.vtx_coord_get(0)
 segment_base_coord = np.zeros(3*n_segment)
 segment_coord = np.zeros((2*n_segment, 3))
 segment_connec = []
-for i, edge_id in enumerate(select_edge):
+for i in range(n_segment):
   for j in range(2):
     for k in range(3):
       vtx_id = extrp_edge_vtx[2*i+j] - 1
