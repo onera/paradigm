@@ -27,7 +27,7 @@ i_rank = comm.rank
 n_rank = comm.size
 
 
-
+############################################################################
 # On commence par générer un maillage sphérique "nodal" distribué
 dmn_capsule = PDM.sphere_surf_icosphere_gen_nodal(comm,
                                                   n,
@@ -49,8 +49,10 @@ mpart = PDM.MultiPart(1,
 mpart.multipart_register_dmesh_nodal(0, dmn_capsule)
 
 mpart.multipart_run_ppart()
+############################################################################
 
 
+############################################################################
 # On sélectionne un ensemble d'arêtes à partir desquelles on va générer des
 # segments orthogonaux
 extract_fraction = 0.25 # on sélectionne 25% des arêtes
@@ -126,18 +128,11 @@ extrp.compute()
 # on récupère les arêtes extraites et redistribuées
 n_segment = extrp.n_entity_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 
-print("[{}] n_segment = {}".format(i_rank, n_segment))
-
 extrp_edge_vtx_idx, extrp_edge_vtx = extrp.connectivity_get(0, PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 
-# print("extrp_edge_vtx = {}".format(extrp_edge_vtx))
-print("[{}] len(extrp_edge_vtx)//2 = {}".format(i_rank, len(extrp_edge_vtx)//2))
-
 # problème ici...
-segment_ln_to_gn = extrp.ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
+# segment_ln_to_gn = extrp.ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 # print("segment_ln_to_gn = {}".format(segment_ln_to_gn))
-print("[{}] len(segment_ln_to_gn) = {}".format(i_rank, len(segment_ln_to_gn)))
-
 # segment_parent_ln_to_gn = extrp.parent_ln_to_gn_get(0, PDM._PDM_MESH_ENTITY_EDGE)
 # print("segment_parent_ln_to_gn = {}".format(segment_parent_ln_to_gn))
 
@@ -161,12 +156,15 @@ gen_gnum.gnum_set_from_coords(0, n_segment, segment_base_coord, np.ones(n_segmen
 gen_gnum.gnum_compute()
 
 segment_ln_to_gn = gen_gnum.gnum_get(0)["gnum"]
+############################################################################
+
 
 
 # A partir d'ici on a un maillage (notamment des arêtes) et des segments
 # (en vision "partitionnée") répartis sur tous les processus
 
 
+############################################################################
 # On cherche maintenant à associer les segments avec les bonnes arêtes
 # Pour cela, on construit 2 nuages de points:
 # 1) la base des segments (cible)
@@ -199,6 +197,8 @@ for i in range(n_segment):
   print("segment {} : edge {}, dist = {}".format(segment_ln_to_gn[i],
                                                  closest_src["closest_src_gnum"][i],
                                                  np.sqrt(closest_src["closest_src_distance"][i])))
+############################################################################
+
 
 # on récupère l'objet part_to_part pour faire des échanges entre les arêtes et les segments associés
 ptp = clsp.part_to_part_get()
@@ -224,6 +224,7 @@ part2_stride, part2_data = ptp.wait(request)
 # print("part2_data = {}".format(part2_data))
 
 
+############################################################################
 # Export for visu (ENSIGHT/VTK?)
 faces = mpart.multipart_connectivity_get(0, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
 face_edge_idx = faces["np_entity1_entity2_idx"]
@@ -263,6 +264,7 @@ for j in range(n_face):
 vtk_write_polydata("sphere_mesh_rank%d.vtk" % i_rank,
                    _vtx_coord,
                    connec)
+############################################################################
 
 print("[{}] End".format(i_rank))
 
