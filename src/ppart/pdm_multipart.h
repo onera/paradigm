@@ -169,6 +169,17 @@ void PDM_multipart_set_reordering_options
  const int       *renum_cell_properties,
  const char      *renum_face_method
 );
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+ * \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   renum_vtx_method      Choice of renumbering method for vertices
+ *
+ */
+
 void PDM_multipart_set_reordering_options_vtx
 (
  PDM_multipart_t *multipart,
