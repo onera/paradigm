@@ -751,6 +751,119 @@ main
            PDM_ABS(global_vol_A_B - exact)/exact);
   }
 
+
+
+
+  PDM_part_to_part_t *ptp = NULL;
+  PDM_mesh_intersection_part_to_part_get(mi,
+                                         &ptp,
+                                         PDM_OWNERSHIP_USER);
+
+
+  // Check ptp
+  int  *n_ref_b = NULL;
+  int **ref_b   = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp,
+                                 &n_ref_b,
+                                 &ref_b);
+
+  int         **pelt_b_elt_a_idx = NULL;
+  PDM_g_num_t **pelt_b_elt_a     = NULL;
+  PDM_part_to_part_gnum1_come_from_get(ptp,
+                                       &pelt_b_elt_a_idx,
+                                       &pelt_b_elt_a);
+
+  log_trace("FROM A USER POV\n");
+  int    **pelt_a_elt_b_n      = malloc(sizeof(int    *) * n_part);
+  double **pelt_a_elt_b_weight = malloc(sizeof(double *) * n_part);
+
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int         *elt_a_elt_b_idx = NULL;
+    PDM_g_num_t *elt_a_elt_b     = NULL;
+    PDM_mesh_intersection_result_from_a_get(mi,
+                                            ipart,
+                                            &elt_a_elt_b_idx,
+                                            &elt_a_elt_b,
+                                            &pelt_a_elt_b_weight[ipart]);
+
+    PDM_g_num_t *elt_a_ln_to_gn = NULL;
+    int n_elt_a = PDM_multipart_part_ln_to_gn_get(mpart_a,
+                                                  0,
+                                                  ipart,
+                                                  PDM_MESH_ENTITY_FACE,
+                                                  &elt_a_ln_to_gn,
+                                                  PDM_OWNERSHIP_USER);
+
+    pelt_a_elt_b_n[ipart] = malloc(sizeof(int) * n_elt_a);
+    for (int i = 0; i < n_elt_a; i++) {
+      pelt_a_elt_b_n[ipart][i] = elt_a_elt_b_idx[i+1] - elt_a_elt_b_idx[i];
+
+      log_trace("elt_a "PDM_FMT_G_NUM" : ", elt_a_ln_to_gn[i]);
+      for (int j = elt_a_elt_b_idx[i]; j < elt_a_elt_b_idx[i+1]; j++) {
+        log_trace("("PDM_FMT_G_NUM", %f)  ", elt_a_elt_b[j], pelt_a_elt_b_weight[ipart][j]);
+      }
+      log_trace("\n");
+    }
+  }
+
+  double **pelt_b_elt_a_weight = NULL;
+  int request = -1;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(PDM_g_num_t),
+                         NULL,
+        (const void  **) pelt_a_elt_b_weight,
+                         NULL,
+        (      void ***) &pelt_b_elt_a_weight,
+                         &request);
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+
+
+  log_trace("FROM B USER POV\n");
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    PDM_g_num_t *elt_b_ln_to_gn = NULL;
+    PDM_multipart_part_ln_to_gn_get(mpart_b,
+                                    0,
+                                    ipart,
+                                    PDM_MESH_ENTITY_FACE,
+                                    &elt_b_ln_to_gn,
+                                    PDM_OWNERSHIP_USER);
+
+
+    for (int i = 0; i < n_ref_b[ipart]; i++) {
+      int faceB_id = ref_b[ipart][i] - 1;
+      log_trace("elt_b "PDM_FMT_G_NUM" : ", elt_b_ln_to_gn[faceB_id]);
+      for (int j = pelt_b_elt_a_idx[ipart][i]; j < pelt_b_elt_a_idx[ipart][i+1]; j++) {
+        log_trace("("PDM_FMT_G_NUM", %f)  ", pelt_b_elt_a[ipart][j], pelt_b_elt_a_weight[ipart][j]);
+      }
+      log_trace("\n");
+    }
+  }
+
+  PDM_MPI_Barrier(comm);
+
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(pelt_a_elt_b_n[ipart]);
+  }
+  free(pelt_a_elt_b_n     );
+  free(pelt_a_elt_b_weight);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(pelt_b_elt_a_weight[ipart]);
+  }
+  free(pelt_b_elt_a_weight);
+
+
+
+
+
   /*
    * Free
    */

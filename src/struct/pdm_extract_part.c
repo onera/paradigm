@@ -2828,11 +2828,14 @@ _extract_part_and_reequilibrate_from_target
     entity_type = PDM_MESH_ENTITY_EDGE;
   }
 
+  log_trace("entity_type = %d\n", entity_type);
+
   /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
   // -->>
   // (Copy to avoid double free)
   extrp->pextract_entity_parent_ln_to_gn[entity_type] = malloc(sizeof(PDM_g_num_t * ) * extrp->n_part_out);
   for (int ipart = 0; ipart < extrp->n_part_out; ipart++) {
+    log_trace("extrp->n_target[%d] = %d\n", ipart, extrp->n_target[ipart]);
     extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart] = malloc(sizeof(PDM_g_num_t) * extrp->n_target[ipart]);
     memcpy(extrp->pextract_entity_parent_ln_to_gn[entity_type][ipart],
            extrp->target_gnum[ipart],
