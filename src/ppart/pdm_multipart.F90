@@ -272,6 +272,8 @@ interface
     type(c_ptr)            :: renum_cell_properties(*)
     character(c_char)      :: renum_face_method(*)
 
+  end subroutine PDM_multipart_set_reordering_options_c
+
   !>
   !!
   !! \brief Set the reordering methods to be used after partitioning
@@ -281,10 +283,8 @@ interface
   !! \param [in]   renum_vtx_method      Choice of renumbering method for vertices
 
   subroutine PDM_multipart_set_reordering_options_vtx_c (multipart, &
-                                                     i_zone, &
-                                                     renum_cell_method, &
-                                                     renum_cell_properties, &
-                                                     renum_face_method) &
+                                                         i_zone, &
+                                                         renum_vtx_method) &
   bind (c, name='PDM_multipart_set_reordering_options_vtx')
 
     use iso_c_binding
@@ -312,6 +312,165 @@ interface
     type(c_ptr), value     :: multipart
 
   end subroutine PDM_multipart_run_ppart_c
+
+  !>
+  !!
+  !! \brief ???
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   pmesh_nodal           Partitionned nodal mesh
+  !! \param [in]   ownership             Data ownership
+  !!
+
+  subroutine PDM_multipart_get_part_mesh_nodal_c (multipart, &
+                                                  i_zone, &
+                                                  pmesh_nodal, &
+                                                  ownership) &
+  bind (c, name='PDM_multipart_get_part_mesh_nodal')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    type(c_ptr)            :: pmesh_nodal
+    type(c_ptr)            :: c_pmesh_nodal       = C_NULL_PTR
+    integer(c_int), value  :: ownership
+
+    ! TO DO: c_pmesh_nodal handle right
+    if (associated(pmesh_nodal)) then
+      c_pmesh_nodal = c_loc(pmesh_nodal)
+    endif
+
+  end subroutine PDM_multipart_get_part_mesh_nodal_c
+
+  !>
+  !!
+  !! \brief Set number of element in the block entity
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
+  !! \param [in]   dn_entity             Distributed number of entity in current process
+  !!
+
+  subroutine PDM_multipart_dn_entity_set_c (multipart, &
+                                            i_zone, &
+                                            entity_type, &
+                                            dn_entity) &
+  bind (c, name='PDM_multipart_dn_entity_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: entity_type
+    integer(c_int), value  :: dn_entity
+
+  end subroutine PDM_multipart_dn_entity_set_c
+
+  !>
+  !!
+  !! \brief Set number connectivity for current block
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   connectivity_type     Type of connectivity
+  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
+  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
+  !!
+
+  subroutine PDM_multipart_dconnectivity_set_c (multipart, &
+                                                i_zone, &
+                                                connectivity_type, &
+                                                dconnect, &
+                                                dconnect_idx) &
+  bind (c, name='PDM_multipart_dconnectivity_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: connectivity_type
+    type(c_ptr), value     :: dconnect
+    type(c_ptr), value     :: dconnect_idx
+
+  end subroutine PDM_multipart_dconnectivity_set_c
+
+  !>
+  !!
+  !! \brief Set group connectivity by kind
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   bound_type            Type of bound
+  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
+  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
+  !!
+
+  subroutine PDM_multipart_dgroup_set_c (multipart, &
+                                         i_zone, &
+                                         bound_type, &
+                                         dconnect, &
+                                         dconnect_idx) &
+  bind (c, name='PDM_multipart_dgroup_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: bound_type
+    type(c_ptr), value     :: dconnect
+    type(c_ptr), value     :: dconnect_idx
+
+  end subroutine PDM_multipart_dgroup_set_c
+
+  !>
+  !!
+  !! \brief Set coordinates
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
+  !!
+
+  subroutine PDM_multipart_dvtx_coord_set_c (multipart, &
+                                             i_zone, &
+                                             dvtx_coord) &
+  bind (c, name='PDM_multipart_dvtx_coord_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    type(c_ptr), value     :: dvtx_coord
+
+  end subroutine PDM_multipart_dvtx_coord_set_c
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   ditrf                 ???
+  !!
+
+  subroutine PDM_multipart_domain_interface_shared_set_c (multipart, &
+                                                          ditrf) &
+  bind (c, name='PDM_multipart_domain_interface_shared_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    type(c_ptr), value     :: ditrf
+
+  end subroutine PDM_multipart_domain_interface_shared_set_c
 
 end interface
 
@@ -344,3 +503,5 @@ private :: PDM_multipart_create_,&
 contains
 
  ! TO DO
+
+end module pdm_part

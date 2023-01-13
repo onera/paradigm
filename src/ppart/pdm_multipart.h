@@ -242,7 +242,7 @@ PDM_multipart_dn_entity_set
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
  * \param [in]  connectivity_type     Type of connectivity
- * \param [in]  connect               connectivity (size = connect_idx[dn_entity] )
+ * \param [in]  connect               Connectivity (size = connect_idx[dn_entity] )
  * \param [in]  connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity )
  *
  */
@@ -278,7 +278,7 @@ PDM_multipart_dgroup_set
 
 
 /**
- * \brief Set group connectivity by kind
+ * \brief Set group coordinates
  *
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
  * \param [in]  i_zone                Id of zone
