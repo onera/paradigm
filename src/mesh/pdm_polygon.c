@@ -180,26 +180,27 @@ PDM_polygon_evaluate_position
   pcoords[1] = PDM_DOT_PRODUCT(ray,p20) / (l20*l20);
   pcoords[2] = 0.0;
 
-  double bounds[6] = {DBL_MAX, -DBL_MAX,
-                      DBL_MAX, -DBL_MAX,
-                      DBL_MAX, -DBL_MAX};
+  // double bounds[6] = {DBL_MAX, -DBL_MAX,
+  //                     DBL_MAX, -DBL_MAX,
+  //                     DBL_MAX, -DBL_MAX};
 
-  for (int isom = 0; isom < numPts; isom++) {
-    for (int l = 0; l < 3; l++) {
-      double coord = _pts_p[3*isom + l];
-      if (bounds[2*l] > coord) {
-        bounds[2*l] = coord;
-      }
-      if (bounds[2*l+1] < coord) {
-        bounds[2*l+1] = coord;
-      }
-    }
-  }
+  // for (int isom = 0; isom < numPts; isom++) {
+  //   for (int l = 0; l < 3; l++) {
+  //     double coord = _pts_p[3*isom + l];
+  //     if (bounds[2*l] > coord) {
+  //       bounds[2*l] = coord;
+  //     }
+  //     if (bounds[2*l+1] < coord) {
+  //       bounds[2*l+1] = coord;
+  //     }
+  //   }
+  // }
+  double *bounds = NULL;
 
   if (pcoords[0] >= 0.0 && pcoords[0] <= 1.0 &&
       pcoords[1] >= 0.0 && pcoords[1] <= 1.0 &&
-      (PDM_polygon_point_in (cp, numPts, _pts_p,
-                             bounds, n) == PDM_POLYGON_INSIDE) ) {
+      (PDM_polygon_point_in_new (cp, numPts, _pts_p,
+                                 bounds, n) == PDM_POLYGON_INSIDE) ) {
     if (closestPoint) {
       closestPoint[0] = cp[0];
       closestPoint[1] = cp[1];
