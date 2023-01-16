@@ -19,7 +19,7 @@
 
 #include "pdm_configf.h"
 
-module pdm_part
+module pdm_multipart
 
   use pdm
 
@@ -112,10 +112,6 @@ module pdm_part
     PDM_multipart_part_ghost_infomation_get_
   end interface
 
-  interface PDM_multipart_time_get ; module procedure  &
-    PDM_multipart_time_get_
-  end interface
-
   interface PDM_multipart_free ; module procedure  &
     PDM_multipart_free_
   end interface
@@ -175,52 +171,6 @@ interface
 
   !>
   !!
-  !! \brief Set distributed mesh data for the input zone
-  !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
-  !! \param [in]   zone_id        Global zone id
-  !! \param [in]   dmesh          Distributed mesh structure
-  !!
-
-  subroutine PDM_multipart_register_block_c (multipart, &
-                                             zone_id, &
-                                             dmesh) &
-  bind (c, name='PDM_multipart_register_block')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-    integer(c_int), value  :: zone_id
-    type(c_ptr)            :: dmesh
-
-  end subroutine PDM_multipart_register_block_c
-
-  !>
-  !!
-  !! \brief Set distributed mesh data for the input zone
-  !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
-  !! \param [in]   zone_id        Global zone id
-  !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
-  !!
-
-  subroutine PDM_multipart_register_dmesh_nodal_c (multipart, &
-                                                   zone_id, &
-                                                   dmesh_nodal) &
-  bind (c, name='PDM_multipart_register_dmesh_nodal')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-    integer(c_int), value  :: zone_id
-    type(c_ptr)            :: dmesh_nodal
-
-  end subroutine PDM_multipart_register_dmesh_nodal_c
-
-  !>
-  !!
   !! \brief Set connecting data between all the zones
   !!
   !! \param [in]   multipart        Pointer to \ref PDM_multipart_t object
@@ -269,7 +219,7 @@ interface
     type(c_ptr), value     :: multipart
     integer(c_int), value  :: i_zone
     character(c_char)      :: renum_cell_method(*)
-    type(c_ptr)            :: renum_cell_properties(*)
+    type(c_ptr)            :: renum_cell_properties
     character(c_char)      :: renum_face_method(*)
 
   end subroutine PDM_multipart_set_reordering_options_c
@@ -317,42 +267,10 @@ interface
 
     type(c_ptr), value     :: multipart
     integer(c_int), value  :: i_zone
-    type(c_ptr)            :: pmesh_nodal
-    type(c_ptr)            :: c_pmesh_nodal       = C_NULL_PTR
+    type(c_ptr), value     :: pmesh_nodal
     integer(c_int), value  :: ownership
 
-    ! TO DO: c_pmesh_nodal handle right
-    if (associated(pmesh_nodal)) then
-      c_pmesh_nodal = c_loc(pmesh_nodal)
-    endif
-
   end subroutine PDM_multipart_get_part_mesh_nodal_c
-
-  !>
-  !!
-  !! \brief Set number of element in the block entity
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
-  !! \param [in]   dn_entity             Distributed number of entity in current process
-  !!
-
-  subroutine PDM_multipart_dn_entity_set_c (multipart, &
-                                            i_zone, &
-                                            entity_type, &
-                                            dn_entity) &
-  bind (c, name='PDM_multipart_dn_entity_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: entity_type
-    integer(c_int), value  :: dn_entity
-
-  end subroutine PDM_multipart_dn_entity_set_c
 
   !>
   !!
@@ -437,26 +355,6 @@ interface
 
   !>
   !!
-  !! \brief ??
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   ditrf                 ???
-  !!
-
-  subroutine PDM_multipart_domain_interface_shared_set_c (multipart, &
-                                                          ditrf) &
-  bind (c, name='PDM_multipart_domain_interface_shared_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-    type(c_ptr), value     :: ditrf
-
-  end subroutine PDM_multipart_domain_interface_shared_set_c
-
-  !>
-  !!
   !! \brief Returns the dimensions of a given partition
   !!
   !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
@@ -500,29 +398,23 @@ interface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-    type(c_ptr)            :: n_section
+    integer(c_int)         :: n_section
     type(c_ptr)            :: n_elt
-    type(c_ptr)            :: c_n_elt       = C_NULL_PTR
-    type(c_ptr)            :: n_cell
-    type(c_ptr)            :: n_face
-    type(c_ptr)            :: n_face_part_bound
-    type(c_ptr)            :: n_vtx
-    type(c_ptr)            :: n_proc
-    type(c_ptr)            :: n_total_part
-    type(c_ptr)            :: s_cell_face
-    type(c_ptr)            :: s_face_vtx
-    type(c_ptr)            :: s_face_bound
-    type(c_ptr)            :: n_bound_groups
-    type(c_ptr)            :: s_face_join
-    type(c_ptr)            :: n_join_groups
-
-    ! TO DO: c_n_elt handle right
-    if (associated(n_elt)) then
-      c_n_elt = c_loc(n_elt)
-    endif
+    integer(c_int)         :: n_cell
+    integer(c_int)         :: n_face
+    integer(c_int)         :: n_face_part_bound
+    integer(c_int)         :: n_vtx
+    integer(c_int)         :: n_proc
+    integer(c_int)         :: n_total_part
+    integer(c_int)         :: s_cell_face
+    integer(c_int)         :: s_face_vtx
+    integer(c_int)         :: s_face_bound
+    integer(c_int)         :: n_bound_groups
+    integer(c_int)         :: s_face_join
+    integer(c_int)         :: n_join_groups
 
   end subroutine PDM_multipart_part_dim_get_c
 
@@ -852,38 +744,6 @@ interface
   !!
   !! \brief ??
   !!
-  !! \param [in]   multipart  Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone     Id of zone which parameters apply (or -1 for all zones)
-  !! \param [out]  elapsed    ??
-  !! \param [out]  cpu        ??
-  !! \param [out]  cpu_user   ??
-  !! \param [out]  cpu_sys    ??
-  !!
-
-  subroutine PDM_multipart_time_get_c (multipart, &
-                                       i_zone, &
-                                       elapsed, &
-                                       cpu, &
-                                       cpu_user, &
-                                       cpu_sys) &
-  bind (c, name='PDM_multipart_time_get')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-    integer(c_int), value  :: i_zone
-    type(c_ptr)            :: elapsed
-    type(c_ptr)            :: cpu
-    type(c_ptr)            :: cpu_user
-    type(c_ptr)            :: cpu_sys
-
-  end subroutine PDM_multipart_time_get_c
-
-  !>
-  !!
-  !! \brief ??
-  !!
   !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
   !! \param [in]   i_part                  Partition index
@@ -974,7 +834,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_part_graph_comm_vtx_data_get_,&
            PDM_multipart_part_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
-           PDM_multipart_time_get_,&
            PDM_multipart_free_,&
            PDM_multipart_part_vtx_coord_get_,&
            PDM_multipart_bound_get_
@@ -1013,28 +872,170 @@ contains
     type(c_ptr)                        :: multipart
     integer(c_int), value              :: n_zone
     integer(kind=PDM_l_num_s), pointer :: n_part(:)
-    type(c_ptr)                        :: c_n_part
+    type(c_ptr)                        :: c_n_part = C_NULL_PTR
     integer(c_int), value              :: merge_blocks
     integer(c_int), value              :: split_method
     integer(c_int), value              :: part_size_method
     double precision, pointer          :: part_fraction(:)
-    type(c_ptr)                        :: c_part_fraction
+    type(c_ptr)                        :: c_part_fraction = C_NULL_PTR
     integer(c_int), value              :: comm
     integer(c_int), value              :: owner
 
     c_n_part        = c_loc(n_part)
     c_part_fraction = c_loc(part_fraction)
 
-    multipart = PDM_multipart_create_c(n_zone,
-                                       c_n_part,
-                                       merge_blocks,
-                                       split_method,
-                                       part_size_method,
-                                       c_part_fraction,
-                                       comm,
+    multipart = PDM_multipart_create_c(n_zone, &
+                                       c_n_part, &
+                                       merge_blocks, &
+                                       split_method, &
+                                       part_size_method, &
+                                       c_part_fraction, &
+                                       comm, &
                                        owner)
 
   end subroutine PDM_multipart_create_
+
+  !>
+  !!
+  !! \brief Set distributed mesh data for the input zone
+  !!
+  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   zone_id        Global zone id
+  !! \param [in]   dmesh          Distributed mesh structure
+  !!
+
+  subroutine PDM_multipart_register_block_ (multipart, &
+                                            zone_id, &
+                                            dmesh) &
+  bind (c, name='PDM_multipart_register_block')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: zone_id
+    type(c_ptr), value     :: dmesh
+
+  end subroutine PDM_multipart_register_block_
+
+  !>
+  !!
+  !! \brief Set distributed mesh data for the input zone
+  !!
+  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   zone_id        Global zone id
+  !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
+  !!
+
+  subroutine PDM_multipart_register_dmesh_nodal_ (multipart, &
+                                                  zone_id, &
+                                                  dmesh_nodal) &
+  bind (c, name='PDM_multipart_register_dmesh_nodal')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: zone_id
+    type(c_ptr), value     :: dmesh_nodal
+
+  end subroutine PDM_multipart_register_dmesh_nodal_
+
+  !>
+  !!
+  !! \brief Set connecting data between all the zones
+  !!
+  !! \param [in]   multipart        Pointer to \ref PDM_multipart_t object
+  !! \param [in]   n_total_joins    Total number of interfaces
+  !! \param [in]   join_to_opposite For each global join id, give the global id
+  !!                                of the opposite join (size = n_total_joins)
+  !!
+
+  subroutine PDM_multipart_register_joins_ (multipart, &
+                                            n_total_joins, &
+                                            join_to_opposite)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: n_total_joins
+    integer(kind=PDM_l_num_s), pointer :: join_to_opposite(:)
+    type(c_ptr)                        :: c_join_to_opposite = C_NULL_PTR
+
+    c_join_to_opposite = c_loc(join_to_opposite)
+
+    PDM_multipart_register_joins_c(multipart, &
+                                   n_total_joins, &
+                                   c_join_to_opposite)
+
+  end subroutine PDM_multipart_register_joins_
+
+  !>
+  !!
+  !! \brief Set the reordering methods to be used after partitioning
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   renum_cell_method     Choice of renumbering method for cells
+  !! \param [in]   renum_cell_properties Parameters used by cacheblocking method :
+  !!                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
+  !!                                     n_vect_face, split_method]
+  !! \param [in]   renum_face_method     Choice of renumbering method for faces
+  !!
+
+  subroutine PDM_multipart_set_reordering_options_ (multipart, &
+                                                    i_zone, &
+                                                    renum_cell_method, &
+                                                    renum_cell_properties, &
+                                                    renum_face_method)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                 :: multipart
+    integer(c_int), value              :: i_zone
+    character (len=*)                  :: renum_cell_method(*)
+    integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)
+    type(c_ptr)                        :: c_renum_cell_properties = C_NULL_PTR
+    character (len=*)                  :: renum_face_method(*)
+
+    c_renum_cell_properties = c_loc(renum_cell_properties)
+
+    PDM_multipart_set_reordering_options_c(multipart, &
+                                           i_zone, &
+                                           trim(renum_cell_method)//C_NULL_CHAR, &
+                                           c_renum_cell_properties, &
+                                           trim(renum_face_method)//C_NULL_CHAR)
+
+  end subroutine PDM_multipart_set_reordering_options_
+
+  !>
+  !!
+  !! \brief Set the reordering methods to be used after partitioning
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   renum_vtx_method      Choice of renumbering method for vertices
+
+  subroutine PDM_multipart_set_reordering_options_vtx_ (multipart, &
+                                                        i_zone, &
+                                                        renum_vtx_method)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    character (len=*)      :: renum_vtx_method(*)
+
+    PDM_multipart_set_reordering_options_vtx_c(multipart,
+                                               i_zone,
+                                               trim(renum_vtx_method)//C_NULL_CHAR)
+
+  end subroutine PDM_multipart_set_reordering_options_vtx_
 
   !>
   !!
@@ -1055,6 +1056,696 @@ contains
 
   !>
   !!
+  !! \brief ???
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   pmesh_nodal           Partitionned nodal mesh
+  !! \param [in]   ownership             Data ownership
+  !!
+
+  subroutine PDM_multipart_get_part_mesh_nodal_ (multipart, &
+                                                 i_zone, &
+                                                 pmesh_nodal, &
+                                                 ownership)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    type(c_ptr)            :: pmesh_nodal
+    type(c_ptr)            :: c_pmesh_nodal       = C_NULL_PTR
+    integer(c_int), value  :: ownership
+
+    if (associated(pmesh_nodal)) then
+      c_pmesh_nodal = c_loc(pmesh_nodal)
+    endif
+
+    PDM_multipart_get_part_mesh_nodal_c(multipart,
+                                        i_zone,
+                                        c_pmesh_nodal,
+                                        ownership)
+
+  end subroutine PDM_multipart_get_part_mesh_nodal_
+
+  !>
+  !!
+  !! \brief Set number of element in the block entity
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
+  !! \param [in]   dn_entity             Distributed number of entity in current process
+  !!
+
+  subroutine PDM_multipart_dn_entity_set_ (multipart, &
+                                           i_zone, &
+                                           entity_type, &
+                                           dn_entity) &
+  bind (c, name='PDM_multipart_dn_entity_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: entity_type
+    integer(c_int), value  :: dn_entity
+
+  end subroutine PDM_multipart_dn_entity_set_
+
+  !>
+  !!
+  !! \brief Set number connectivity for current block
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   connectivity_type     Type of connectivity
+  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
+  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
+  !!
+
+  subroutine PDM_multipart_dconnectivity_set_ (multipart, &
+                                               i_zone, &
+                                               connectivity_type, &
+                                               dconnect, &
+                                               dconnect_idx)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: connectivity_type
+    integer(kind=PDM_l_num_s), pointer :: dconnect(:)
+    type(c_ptr)                        :: c_dconnect = C_NULL_PTR
+    integer(kind=PDM_g_num_s), pointer :: dconnect_idx(:)
+    type(c_ptr)                        :: c_dconnect_idx = C_NULL_PTR
+
+    c_dconnect_idx = c_loc(dconnect_idx)
+
+    if (associated(dconnect)) then
+      c_dconnect = c_loc(dconnect)
+    endif
+
+    PDM_multipart_dconnectivity_set_ (multipart, &
+                                      i_zone, &
+                                      connectivity_type, &
+                                      c_dconnect, &
+                                      c_dconnect_idx)
+
+  end subroutine PDM_multipart_dconnectivity_set_
+
+  !>
+  !!
+  !! \brief Set group connectivity by kind
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   bound_type            Type of bound
+  !! \param [in]   connect               Connectivity (size = connect_idx[dn_entity])
+  !! \param [in]   connect_idx           Index of connectivity or NULL if face_cell for example  (size = dn_entity)
+  !!
+
+  subroutine PDM_multipart_dgroup_set_ (multipart, &
+                                        i_zone, &
+                                        bound_type, &
+                                        dconnect, &
+                                        dconnect_idx)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: bound_type
+     integer(kind=PDM_l_num_s), pointer :: dconnect(:)
+    type(c_ptr)                        :: c_dconnect = C_NULL_PTR
+    integer(kind=PDM_g_num_s), pointer :: dconnect_idx(:)
+    type(c_ptr)                        :: c_dconnect_idx = C_NULL_PTR
+
+    c_dconnect_idx = c_loc(dconnect_idx)
+
+    if (associated(dconnect)) then
+      c_dconnect = c_loc(dconnect)
+    endif
+
+    PDM_multipart_dgroup_set_c(multipart, &
+                               i_zone, &
+                               bound_type, &
+                               c_dconnect, &
+                               c_dconnect_idx)
+
+  end subroutine PDM_multipart_dgroup_set_
+
+  !>
+  !!
+  !! \brief Set coordinates
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   dvtx_coord            Mesh coordinates (size = 3 * dn_vtx)
+  !!
+
+  subroutine PDM_multipart_dvtx_coord_set_ (multipart, &
+                                            i_zone, &
+                                            dvtx_coord)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value        :: multipart
+    integer(c_int), value     :: i_zone
+    double precision, pointer :: dvtx_coord(:)
+    type(c_ptr)               :: c_dvtx_coord = C_NULL_PTR
+
+    if (associated(dvtx_coord)) then
+      c_dvtx_coord = c_loc(dvtx_coord)
+    endif
+
+    PDM_multipart_dvtx_coord_set_c(multipart, &
+                                   i_zone, &
+                                   c_dvtx_coord)
+
+  end subroutine PDM_multipart_dvtx_coord_set_
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   ditrf                 ???
+  !!
+
+  subroutine PDM_multipart_domain_interface_shared_set_ (multipart, &
+                                                         ditrf) &
+  bind (c, name='PDM_multipart_domain_interface_shared_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    type(c_ptr), value     :: ditrf
+
+  end subroutine PDM_multipart_domain_interface_shared_set_
+
+  !>
+  !!
+  !! \brief Returns the dimensions of a given partition
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                Partition index
+  !! \param [out]  n_elt                 Number of elements
+  !! \param [out]  n_cell                Number of cells
+  !! \param [out]  n_face                Number of faces
+  !! \param [out]  n_face_part_bound     ??
+  !! \param [out]  n_vtx                 Number of vertices
+  !! \param [out]  n_proc                Number of processes
+  !! \param [out]  n_total_part          ??
+  !! \param [out]  s_cell_face           ??
+  !! \param [out]  s_face_vtx            ??
+  !! \param [out]  s_face_bound          ??
+  !! \param [out]  n_bound_groups        ??
+  !! \param [out]  s_face_join           ??
+  !! \param [out]  n_join_groups         ??
+  !!
+  !!
+
+  subroutine PDM_multipart_part_dim_get_ (multipart, &
+                                          i_zone, &
+                                          i_part, &
+                                          n_section, &
+                                          n_elt, &
+                                          n_cell, &
+                                          n_face, &
+                                          n_face_part_bound, &
+                                          n_vtx, &
+                                          n_proc, &
+                                          n_total_part, &
+                                          s_cell_face, &
+                                          s_face_vtx, &
+                                          s_face_bound, &
+                                          n_bound_groups, &
+                                          s_face_join, &
+                                          n_join_groups)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value   :: multipart
+    integer, intent(in)  :: i_zone
+    integer, intent(in)  :: i_part
+    integer, intent(out) :: n_section
+    integer, intent(out) :: n_cell
+    integer, intent(out) :: n_face
+    integer, intent(out) :: n_face_part_bound
+    integer, intent(out) :: n_vtx
+    integer, intent(out) :: n_proc
+    integer, intent(out) :: n_total_part
+    integer, intent(out) :: s_cell_face
+    integer, intent(out) :: s_face_vtx
+    integer, intent(out) :: s_face_bound
+    integer, intent(out) :: n_bound_groups
+    integer, intent(out) :: s_face_join
+    integer, intent(out) :: n_join_groups
+
+    integer(c_int) :: c_n_section
+    integer(c_int) :: c_n_cell
+    integer(c_int) :: c_n_face
+    integer(c_int) :: c_n_face_part_bound
+    integer(c_int) :: c_n_vtx
+    integer(c_int) :: c_n_proc
+    integer(c_int) :: c_n_total_part
+    integer(c_int) :: c_s_cell_face
+    integer(c_int) :: c_s_face_vtx
+    integer(c_int) :: c_s_face_bound
+    integer(c_int) :: c_n_bound_groups
+    integer(c_int) :: c_s_face_join
+    integer(c_int) :: c_n_join_groups
+
+    integer (kind = PDM_l_num_s), pointer :: n_elt
+    type(c_ptr)                           :: c_n_elt = C_NULL_PTR
+
+    c_n_elt = c_loc(n_elt)
+
+    PDM_multipart_part_dim_get_c(multipart, &
+                                 i_zone, &
+                                 i_part, &
+                                 c_n_section, &
+                                 c_n_elt, &
+                                 c_n_cell, &
+                                 c_n_face, &
+                                 c_n_face_part_bound, &
+                                 c_n_vtx, &
+                                 c_n_proc, &
+                                 c_n_total_part, &
+                                 c_s_cell_face, &
+                                 c_s_face_vtx, &
+                                 c_s_face_bound, &
+                                 c_n_bound_groups, &
+                                 c_s_face_join, &
+                                 c_n_join_groups)
+
+    n_section         = c_n_section
+    n_cell            = c_n_cell
+    n_face            = c_n_face
+    n_face_part_bound = c_n_face_part_bound
+    n_vtx             = c_n_vtx
+    n_proc            = c_n_proc
+    n_total_part      = c_n_total_part
+    s_cell_face       = c_s_cell_face
+    s_face_vtx        = c_s_face_vtx
+    s_face_bound      = c_s_face_bound
+    n_bound_groups    = c_n_bound_groups
+    s_face_join       = c_s_face_join
+    n_join_groups     = c_n_join_groups
+
+    call c_f_pointer(c_n_elt, &
+                     n_elt,   &
+                     [n_section]) ! TO DO: correct size ?
+
+  end subroutine PDM_multipart_part_dim_get_
+
+  !>
+  !!
+  !! \brief Returns the dimensions of a given partition
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                Partition index
+  !! \param [out]  n_vtx_part_bound      ??
+  !!
+
+  subroutine PDM_multipart_part_graph_comm_vtx_dim_get_ (multipart, &
+                                                         i_zone, &
+                                                         i_part, &
+                                                         n_vtx_part_bound)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value   :: multipart
+    integer, intent(in)  :: i_zone
+    integer, intent(in)  :: i_part
+    integer, intent(out) :: n_vtx_part_bound
+
+    integer(c_int) :: c_n_vtx_part_bound
+
+    PDM_multipart_part_graph_comm_vtx_dim_get_c(multipart, &
+                                                i_zone, &
+                                                i_part, &
+                                                c_n_vtx_part_bound)
+
+    n_vtx_part_bound = c_n_vtx_part_bound
+
+  end subroutine PDM_multipart_part_graph_comm_vtx_dim_get_
+
+  ! TO DO: PDM_multipart_part_val_get
+
+  !>
+  !!
+  !! \brief Returns the dimensions of a given partition
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                Partition index
+  !! \param [out]  connectivity_type     ??
+  !! \param [out]  connect               ??
+  !! \param [out]  connect_idx           ??
+  !! \param [out]  ownership             ??
+  !! \param [out]  pn_entity             ??
+  !!
+
+  subroutine PDM_multipart_part_connectivity_get_ (multipart, &
+                                                   i_zone, &
+                                                   i_part, &
+                                                   connectivity_type, &
+                                                   connect, &
+                                                   connect_idx, &
+                                                   ownership, &
+                                                   pn_entity)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value              :: multipart
+    integer(c_int), value              :: i_zone
+    integer(c_int), value              :: i_part
+    integer(c_int), value              :: connectivity_type
+    integer(kind=PDM_l_num_s), pointer :: connect(:)
+    type(c_ptr)                        :: c_connect = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: connect_idx(:)
+    type(c_ptr)                        :: c_connect_idx = C_NULL_PTR
+    integer(c_int), value              :: ownership
+    integer(c_int)                     :: pn_entity
+
+    c_connect     = c_loc(connect)
+    c_connect_idx = c_loc(connect_idx)
+
+    pn_entity = PDM_multipart_part_connectivity_get_c(multipart, &
+                                                      i_zone, &
+                                                      i_part, &
+                                                      connectivity_type, &
+                                                      c_connect, &
+                                                      c_connect_idx, &
+                                                      ownership)
+
+    call c_f_pointer(c_connect_idx, &
+                     connect_idx,   &
+                     [pn_entity])
+
+    call c_f_pointer(c_connect, &
+                     connect,   &
+                     [connect_idx[pn_entity]])
+
+  end subroutine PDM_multipart_part_connectivity_get_
+
+  !>
+  !!
+  !! \brief Returns the dimensions of a given partition
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                Partition index
+  !! \param [out]  entity_type           ??
+  !! \param [out]  entity_ln_to_gn       ??
+  !! \param [out]  ownership             ??
+  !! \param [out]  pn_entity             ??
+  !!
+
+  subroutine PDM_multipart_part_ln_to_gn_get_ (multipart, &
+                                               i_zone, &
+                                               i_part, &
+                                               entity_type, &
+                                               entity_ln_to_gn, &
+                                               ownership, &
+                                               pn_entity)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value              :: multipart
+    integer(c_int), value              :: i_zone
+    integer(c_int), value              :: i_part
+    integer(c_int), value              :: entity_type
+    integer(kind=PDM_g_num_s), pointer :: entity_ln_to_gn(:)
+    type(c_ptr)                        :: c_entity_ln_to_gn = C_NULL_PTR
+    integer(c_int), value              :: ownership
+    integer(c_int)                     :: pn_entity
+
+    c_entity_ln_to_gn = c_loc(entity_ln_to_gn)
+
+    pn_entity = PDM_multipart_part_ln_to_gn_get_c(multipart, &
+                                                  i_zone, &
+                                                  i_part, &
+                                                  entity_type, &
+                                                  c_entity_ln_to_gn, &
+                                                  ownership)
+
+    call c_f_pointer(c_entity_ln_to_gn, &
+                     entity_ln_to_gn,   &
+                     [pn_entity])
+
+  end subroutine PDM_multipart_part_ln_to_gn_get_
+
+  !>
+  !!
+  !! \brief Returns the partitions color
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                Partition index
+  !! \param [out]  entity_type           ??
+  !! \param [out]  entity_color          ??
+  !! \param [out]  ownership             ??
+  !! \param [out]  pn_entity             ??
+  !!
+
+  subroutine PDM_multipart_partition_color_get_(multipart, &
+                                                i_zone, &
+                                                i_part, &
+                                                entity_type, &
+                                                entity_color, &
+                                                ownership, &
+                                                pn_entity)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value              :: multipart
+    integer(c_int), value              :: i_zone
+    integer(c_int), value              :: i_part
+    integer(c_int), value              :: entity_type
+    integer(kind=PDM_l_num_s), pointer :: entity_color(:)
+    type(c_ptr)                        :: c_entity_color = C_NULL_PTR
+    integer(c_int), value              :: ownership
+    integer(c_int)                     :: pn_entity
+
+    c_entity_color = c_loc(entity_color)
+
+    pn_entity = PDM_multipart_partition_color_get_c(multipart, &
+                                                    i_zone, &
+                                                    i_part, &
+                                                    entity_type, &
+                                                    c_entity_color, &
+                                                    ownership)
+
+    call c_f_pointer(c_entity_color, &
+                     entity_color,   &
+                     [pn_entity])
+
+  end subroutine PDM_multipart_partition_color_get_
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                  Partition index
+  !! \param [out]  vtx_part_bound_proc_idx ??
+  !! \param [out]  vtx_part_bound_part_idx ??
+  !! \param [out]  vtx_part_bound          ??
+  !!
+
+  subroutine PDM_multipart_part_graph_comm_vtx_data_get_(multipart, &
+                                                         i_zone, &
+                                                         i_part, &
+                                                         vtx_part_bound_proc_idx, &
+                                                         vtx_part_bound_part_idx, &
+                                                         vtx_part_bound)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value              :: multipart
+    integer(c_int), value              :: i_zone
+    integer(c_int), value              :: i_part
+    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound_proc_idx(:)
+    type(c_ptr)                        :: c_vtx_part_bound_proc_idx = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound_part_idx(:)
+    type(c_ptr)                        :: c_vtx_part_bound_part_idx = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: vtx_part_bound(:)
+    type(c_ptr)                        :: c_vtx_part_bound = C_NULL_PTR
+
+    c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
+    c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
+    c_vtx_part_bound          = c_loc(vtx_part_bound)
+
+    PDM_multipart_part_graph_comm_vtx_data_get_c(multipart, &
+                                                 i_zone, &
+                                                 i_part, &
+                                                 c_vtx_part_bound_proc_idx, &
+                                                 c_vtx_part_bound_part_idx, &
+                                                 c_vtx_part_bound)
+
+    ! TO DO: size ?
+
+    call c_f_pointer(c_vtx_part_bound_proc_idx, &
+                     vtx_part_bound_proc_idx,   &
+                     [size])
+
+    call c_f_pointer(c_vtx_part_bound_part_idx, &
+                     vtx_part_bound_part_idx,   &
+                     [size])
+
+    call c_f_pointer(c_vtx_part_bound, &
+                     vtx_part_bound,   &
+                     [size])
+
+  end subroutine PDM_multipart_part_graph_comm_vtx_data_get_
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                  Partition index
+  !! \param [out]  cell_color              ??
+  !! \param [out]  face_color              ??
+  !! \param [out]  face_hp_color           ??
+  !! \param [out]  thread_color            ??
+  !! \param [out]  hyperplane_color        ??
+  !!
+
+  subroutine PDM_multipart_part_color_get_(multipart, &
+                                           i_zone, &
+                                           i_part, &
+                                           cell_color, &
+                                           face_color, &
+                                           face_hp_color, &
+                                           thread_color, &
+                                           hyperplane_color)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: i_part
+    integer(kind=PDM_l_num_s), pointer :: cell_color(:)
+    type(c_ptr)                        :: c_cell_color = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: face_color(:)
+    type(c_ptr)                        :: c_face_color = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: face_hp_color(:)
+    type(c_ptr)                        :: c_face_hp_color = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: thread_color(:)
+    type(c_ptr)                        :: c_thread_color = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: hyperplane_color(:)
+    type(c_ptr)                        :: c_hyperplane_color = C_NULL_PTR
+
+    c_cell_color       = c_loc(cell_color)
+    c_face_color       = c_loc(face_color)
+    c_face_hp_color    = c_loc(face_hp_color)
+    c_thread_color     = c_loc(thread_color)
+    c_hyperplane_color = c_loc(hyperplane_color)
+
+    PDM_multipart_part_color_get_c(multipart, &
+                                   i_zone, &
+                                   i_part, &
+                                   c_cell_color, &
+                                   c_face_color, &
+                                   c_face_hp_color, &
+                                   c_thread_color, &
+                                   c_hyperplane_color)
+
+    ! TO DO: size ?
+
+    call c_f_pointer(c_cell_color, &
+                     cell_color,   &
+                     [size])
+
+    call c_f_pointer(c_face_color, &
+                     face_color,   &
+                     [size])
+
+    call c_f_pointer(c_face_hp_color, &
+                     face_hp_color,   &
+                     [size])
+
+    call c_f_pointer(c_thread_color, &
+                     thread_color,   &
+                     [size])
+
+    call c_f_pointer(c_hyperplane_color, &
+                     hyperplane_color,   &
+                     [size])
+
+  end subroutine PDM_multipart_part_color_get_
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                  Partition index
+  !! \param [out]  vtx_ghost_information   ??
+  !!
+
+  subroutine PDM_multipart_part_ghost_infomation_get_(multipart, &
+                                                      i_zone, &
+                                                      i_part, &
+                                                      vtx_ghost_information)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: i_part
+    integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)
+    type(c_ptr)                        :: c_vtx_ghost_information = C_NULL_PTR
+
+    c_vtx_ghost_information = c_loc(vtx_ghost_information)
+
+    PDM_multipart_part_ghost_infomation_get_c(multipart, &
+                                              i_zone, &
+                                              i_part, &
+                                              c_vtx_ghost_information)
+
+    ! TO DO: size ?
+
+    call c_f_pointer(c_vtx_ghost_information, &
+                     vtx_ghost_information,   &
+                     [size])
+
+  end subroutine PDM_multipart_part_ghost_infomation_get_
+
+  !>
+  !!
   !! \brief Free the structure
   !!
   !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
@@ -1070,4 +1761,115 @@ contains
 
   end subroutine PDM_multipart_free_
 
-end module pdm_part
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                  Partition index
+  !! \param [out]  vtx_coord               Coordinates of vertices
+  !! \param [out]  ownership               Data ownership
+  !! \param [out]  n_vtx                   Number of vertices
+  !!
+
+  subroutine PDM_multipart_part_vtx_coord_get_(multipart, &
+                                               i_zone, &
+                                               i_part, &
+                                               vtx_coord, &
+                                               ownership, &
+                                               n_vtx)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),   value        :: multipart
+    integer(c_int), value       :: i_zone
+    integer(c_int), value       :: i_part
+    double precision, pointer   :: vtx_coord(:)
+    type(c_ptr)                 :: c_vtx_coord = C_NULL_PTR
+    integer(c_int)              :: ownership
+    integer(c_int)              :: n_vtx
+
+    c_vtx_coord = c_loc(vtx_coord)
+
+    n_vtx = PDM_multipart_part_vtx_coord_get_(multipart, &
+                                              i_zone, &
+                                              i_part, &
+                                              c_vtx_coord, &
+                                              ownership, &
+                                              n_vtx)
+
+    call c_f_pointer(c_vtx_coord, &
+                     vtx_coord,   &
+                     [n_vtx])
+
+  end subroutine PDM_multipart_part_vtx_coord_get_
+
+  !>
+  !!
+  !! \brief ??
+  !!
+  !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   i_part                  Partition index
+  !! \param [out]  bound_type              ??
+  !! \param [out]  n_bound                 ??
+  !! \param [out]  bound_idx               ??
+  !! \param [out]  bound                   ??
+  !! \param [out]  bound_ln_to_gn          ??
+  !!
+
+  subroutine PDM_multipart_bound_get_(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      bound_type, &
+                                      n_bound, &
+                                      bound_idx, &
+                                      bound, &
+                                      bound_ln_to_gn)
+
+    use pdm
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value              :: multipart
+    integer(c_int), value              :: i_zone
+    integer(c_int), value              :: i_part
+    integer(c_int)                     :: bound_type
+    type(c_ptr)                        :: n_bound
+    integer(kind=PDM_l_num_s), pointer :: bound_idx(:)
+    type(c_ptr)                        :: c_bound_idx = C_NULL_PTR
+    integer(kind=PDM_l_num_s), pointer :: bound(:)
+    type(c_ptr)                        :: c_bound = C_NULL_PTR
+    integer(kind=PDM_g_num_s), pointer :: bound_ln_to_gn(:)
+    type(c_ptr)                        :: c_bound_ln_to_gn = C_NULL_PTR
+
+    c_bound_idx      = c_loc(bound_idx)
+    c_bound          = c_loc(bound)
+    c_bound_ln_to_gn = c_loc(bound_ln_to_gn)
+
+    PDM_multipart_bound_get_c(multipart, &
+                              i_zone, &
+                              i_part, &
+                              bound_type, &
+                              n_bound, &
+                              c_bound_idx, &
+                              c_bound, &
+                              c_bound_ln_to_gn)
+
+    call c_f_pointer(c_n_bound, &
+                     bound_idx,   &
+                     [n_bound])
+
+    call c_f_pointer(c_bound, &
+                     bound,   &
+                     [bound_idx[n_bound]])
+
+    call c_f_pointer(c_bound_ln_to_gn, &
+                     bound_ln_to_gn,   &
+                     [n_bound])
+
+  end subroutine PDM_multipart_bound_get_
+
+end module pdm_multipart
