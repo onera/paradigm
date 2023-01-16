@@ -649,10 +649,9 @@ char *argv[]
     free(pelt_b_elt_a_weight);
 
 
-    PDM_mesh_intersection_free(mi);
-
     PDM_part_to_part_free(ptp);
   }
+  PDM_mesh_intersection_free(mi);
 
 
   PDM_DMesh_nodal_free(dmn_surf_b);
