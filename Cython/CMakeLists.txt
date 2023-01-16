@@ -73,12 +73,12 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
 if (PDM_ENABLE_EXTENSION_PDMA)
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-#                     OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
+                     # OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
                      INCLUDE_DIRECTORIES ${include_dirs})
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
-#                     OTHER_SOURCES $<TARGET_OBJECTS:pdm>
+                     # OTHER_SOURCES $<TARGET_OBJECTS:pdm>
                      INCLUDE_DIRECTORIES ${include_dirs})
 endif()
 
