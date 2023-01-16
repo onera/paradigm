@@ -767,12 +767,15 @@ PDM_write_meshb
   const int     n_vtx,
   const int     n_tetra,
   const int     n_tri,
+  const int     n_edge,
   const double *vtx_coords,
   const int    *vtx_tags,
   const int    *tetra_vtx,
   const int    *tetra_tag,
   const int    *tria_vtx,
-  const int    *tria_tag
+  const int    *tria_tag,
+  const int    *edge_vtx,
+  const int    *edge_tag
 )
 {
   // Write file
@@ -808,6 +811,15 @@ PDM_write_meshb
             tria_vtx[3*i + 1],
             tria_vtx[3*i + 2],
             tria_tag[i]);
+  }
+  fprintf(f, "End\n");
+
+  fprintf(f, "Edges\n%d\n", n_edge);
+  for (int i = 0; i < n_edge; i++) {
+    fprintf(f, "%d %d %i\n",
+            edge_vtx[2*i    ],
+            edge_vtx[2*i + 1],
+            edge_tag[i]);
   }
   fprintf(f, "End\n");
   fclose(f);
