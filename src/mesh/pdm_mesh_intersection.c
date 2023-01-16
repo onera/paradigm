@@ -1331,7 +1331,7 @@ _build_ptp
  double                  *elt_a_elt_b_volume
  )
 {
-  PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_COLLECTIVE;
+  PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_P2P;//COLLECTIVE;
 
 
   PDM_mesh_entities_t entity_type_a;
