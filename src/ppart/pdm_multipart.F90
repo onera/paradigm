@@ -32,14 +32,6 @@ module pdm_multipart
     PDM_multipart_create_
   end interface
 
-  interface PDM_multipart_register_block ; module procedure  &
-    PDM_multipart_register_block_
-  end interface
-
-  interface PDM_multipart_register_dmesh_nodal ; module procedure  &
-    PDM_multipart_register_dmesh_nodal_
-  end interface
-
   interface PDM_multipart_register_joins ; module procedure  &
     PDM_multipart_register_joins_
   end interface
@@ -52,16 +44,8 @@ module pdm_multipart
     PDM_multipart_set_reordering_options_vtx_
   end interface
 
-  interface PDM_multipart_run_ppart ; module procedure  &
-    PDM_multipart_run_ppart_
-  end interface
-
   interface PDM_multipart_get_part_mesh_nodal ; module procedure  &
     PDM_multipart_get_part_mesh_nodal_
-  end interface
-
-  interface PDM_multipart_dn_entity_set ; module procedure  &
-    PDM_multipart_dn_entity_set_
   end interface
 
   interface PDM_multipart_dconnectivity_set ; module procedure  &
@@ -70,10 +54,6 @@ module pdm_multipart
 
   interface PDM_multipart_dvtx_coord_set ; module procedure  &
     PDM_multipart_dvtx_coord_set_
-  end interface
-
-  interface PDM_multipart_domain_interface_shared_set ; module procedure  &
-    PDM_multipart_domain_interface_shared_set_
   end interface
 
   interface PDM_multipart_part_dim_get ; module procedure  &
@@ -110,10 +90,6 @@ module pdm_multipart
 
   interface PDM_multipart_part_ghost_infomation_get ; module procedure  &
     PDM_multipart_part_ghost_infomation_get_
-  end interface
-
-  interface PDM_multipart_free ; module procedure  &
-    PDM_multipart_free_
   end interface
 
   interface PDM_multipart_part_vtx_coord_get ; module procedure  &
@@ -293,11 +269,11 @@ interface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: connectivity_type
-    type(c_ptr), value     :: dconnect
-    type(c_ptr), value     :: dconnect_idx
+    type(c_ptr)            :: dconnect
+    type(c_ptr)            :: dconnect_idx
 
   end subroutine PDM_multipart_dconnectivity_set_c
 
@@ -437,10 +413,10 @@ interface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-    type(c_ptr)            :: n_vtx_part_bound
+    integer(c_int)         :: n_vtx_part_bound
 
   end subroutine PDM_multipart_part_graph_comm_vtx_dim_get_c
 
@@ -800,11 +776,11 @@ interface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
     integer(c_int)         :: bound_type
-    type(c_ptr)            :: n_bound
+    integer(c_int)         :: n_bound
     type(c_ptr)            :: bound_idx
     type(c_ptr)            :: bound
     type(c_ptr)            :: bound_ln_to_gn
@@ -814,17 +790,12 @@ interface
 end interface
 
 private :: PDM_multipart_create_,&
-           PDM_multipart_register_block_,&
-           PDM_multipart_register_dmesh_nodal_,&
            PDM_multipart_register_joins_,&
            PDM_multipart_set_reordering_options_,&
            PDM_multipart_set_reordering_options_vtx_,&
-           PDM_multipart_run_ppart_,&
            PDM_multipart_get_part_mesh_nodal_,&
-           PDM_multipart_dn_entity_set_,&
            PDM_multipart_dconnectivity_set_,&
            PDM_multipart_dvtx_coord_set_,&
-           PDM_multipart_domain_interface_shared_set_,&
            PDM_multipart_part_dim_get_,&
            PDM_multipart_part_graph_comm_vtx_dim_get_,&
            PDM_multipart_part_val_get_,&
@@ -834,7 +805,6 @@ private :: PDM_multipart_create_,&
            PDM_multipart_part_graph_comm_vtx_data_get_,&
            PDM_multipart_part_color_get_,&
            PDM_multipart_part_ghost_infomation_get_,&
-           PDM_multipart_free_,&
            PDM_multipart_part_vtx_coord_get_,&
            PDM_multipart_bound_get_
 
@@ -904,7 +874,7 @@ contains
   !! \param [in]   dmesh          Distributed mesh structure
   !!
 
-  subroutine PDM_multipart_register_block_ (multipart, &
+  subroutine PDM_multipart_register_block (multipart, &
                                             zone_id, &
                                             dmesh) &
   bind (c, name='PDM_multipart_register_block')
@@ -916,7 +886,7 @@ contains
     integer(c_int), value  :: zone_id
     type(c_ptr), value     :: dmesh
 
-  end subroutine PDM_multipart_register_block_
+  end subroutine PDM_multipart_register_block
 
   !>
   !!
@@ -927,7 +897,7 @@ contains
   !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
   !!
 
-  subroutine PDM_multipart_register_dmesh_nodal_ (multipart, &
+  subroutine PDM_multipart_register_dmesh_nodal (multipart, &
                                                   zone_id, &
                                                   dmesh_nodal) &
   bind (c, name='PDM_multipart_register_dmesh_nodal')
@@ -939,7 +909,7 @@ contains
     integer(c_int), value  :: zone_id
     type(c_ptr), value     :: dmesh_nodal
 
-  end subroutine PDM_multipart_register_dmesh_nodal_
+  end subroutine PDM_multipart_register_dmesh_nodal
 
   !>
   !!
@@ -966,9 +936,9 @@ contains
 
     c_join_to_opposite = c_loc(join_to_opposite)
 
-    PDM_multipart_register_joins_c(multipart, &
-                                   n_total_joins, &
-                                   c_join_to_opposite)
+    call PDM_multipart_register_joins_c(multipart, &
+                                        n_total_joins, &
+                                        c_join_to_opposite)
 
   end subroutine PDM_multipart_register_joins_
 
@@ -997,18 +967,18 @@ contains
 
     type(c_ptr), value                 :: multipart
     integer(c_int), value              :: i_zone
-    character (len=*)                  :: renum_cell_method(*)
+    character (len=*)                  :: renum_cell_method
     integer(kind=PDM_l_num_s), pointer :: renum_cell_properties(:)
     type(c_ptr)                        :: c_renum_cell_properties = C_NULL_PTR
-    character (len=*)                  :: renum_face_method(*)
+    character (len=*)                  :: renum_face_method
 
     c_renum_cell_properties = c_loc(renum_cell_properties)
 
-    PDM_multipart_set_reordering_options_c(multipart, &
-                                           i_zone, &
-                                           trim(renum_cell_method)//C_NULL_CHAR, &
-                                           c_renum_cell_properties, &
-                                           trim(renum_face_method)//C_NULL_CHAR)
+    call PDM_multipart_set_reordering_options_c(multipart, &
+                                                i_zone, &
+                                                trim(renum_cell_method)//C_NULL_CHAR, &
+                                                c_renum_cell_properties, &
+                                                trim(renum_face_method)//C_NULL_CHAR)
 
   end subroutine PDM_multipart_set_reordering_options_
 
@@ -1029,11 +999,11 @@ contains
 
     type(c_ptr), value     :: multipart
     integer(c_int), value  :: i_zone
-    character (len=*)      :: renum_vtx_method(*)
+    character (len=*)      :: renum_vtx_method
 
-    PDM_multipart_set_reordering_options_vtx_c(multipart,
-                                               i_zone,
-                                               trim(renum_vtx_method)//C_NULL_CHAR)
+    call PDM_multipart_set_reordering_options_vtx_c(multipart, &
+                                                    i_zone, &
+                                                    trim(renum_vtx_method)//C_NULL_CHAR)
 
   end subroutine PDM_multipart_set_reordering_options_vtx_
 
@@ -1044,7 +1014,7 @@ contains
   !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
   !!
 
-  subroutine PDM_multipart_run_ppart_ (multipart) &
+  subroutine PDM_multipart_run_ppart (multipart) &
   bind (c, name='PDM_multipart_run_ppart')
 
     use iso_c_binding
@@ -1052,7 +1022,7 @@ contains
 
     type(c_ptr), value     :: multipart
 
-  end subroutine PDM_multipart_run_ppart_
+  end subroutine PDM_multipart_run_ppart
 
   !>
   !!
@@ -1072,20 +1042,15 @@ contains
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value     :: multipart
+    type(c_ptr),    value  :: multipart
     integer(c_int), value  :: i_zone
     type(c_ptr)            :: pmesh_nodal
-    type(c_ptr)            :: c_pmesh_nodal       = C_NULL_PTR
     integer(c_int), value  :: ownership
 
-    if (associated(pmesh_nodal)) then
-      c_pmesh_nodal = c_loc(pmesh_nodal)
-    endif
-
-    PDM_multipart_get_part_mesh_nodal_c(multipart,
-                                        i_zone,
-                                        c_pmesh_nodal,
-                                        ownership)
+    call PDM_multipart_get_part_mesh_nodal_c(multipart, &
+                                             i_zone, &
+                                             pmesh_nodal, &
+                                             ownership)
 
   end subroutine PDM_multipart_get_part_mesh_nodal_
 
@@ -1099,7 +1064,7 @@ contains
   !! \param [in]   dn_entity             Distributed number of entity in current process
   !!
 
-  subroutine PDM_multipart_dn_entity_set_ (multipart, &
+  subroutine PDM_multipart_dn_entity_set (multipart, &
                                            i_zone, &
                                            entity_type, &
                                            dn_entity) &
@@ -1113,7 +1078,7 @@ contains
     integer(c_int), value  :: entity_type
     integer(c_int), value  :: dn_entity
 
-  end subroutine PDM_multipart_dn_entity_set_
+  end subroutine PDM_multipart_dn_entity_set
 
   !>
   !!
@@ -1150,11 +1115,11 @@ contains
       c_dconnect = c_loc(dconnect)
     endif
 
-    PDM_multipart_dconnectivity_set_ (multipart, &
-                                      i_zone, &
-                                      connectivity_type, &
-                                      c_dconnect, &
-                                      c_dconnect_idx)
+    call PDM_multipart_dconnectivity_set_c(multipart, &
+                                           i_zone, &
+                                           connectivity_type, &
+                                           c_dconnect, &
+                                           c_dconnect_idx)
 
   end subroutine PDM_multipart_dconnectivity_set_
 
@@ -1193,11 +1158,11 @@ contains
       c_dconnect = c_loc(dconnect)
     endif
 
-    PDM_multipart_dgroup_set_c(multipart, &
-                               i_zone, &
-                               bound_type, &
-                               c_dconnect, &
-                               c_dconnect_idx)
+    call PDM_multipart_dgroup_set_c(multipart, &
+                                    i_zone, &
+                                    bound_type, &
+                                    c_dconnect, &
+                                    c_dconnect_idx)
 
   end subroutine PDM_multipart_dgroup_set_
 
@@ -1226,9 +1191,9 @@ contains
       c_dvtx_coord = c_loc(dvtx_coord)
     endif
 
-    PDM_multipart_dvtx_coord_set_c(multipart, &
-                                   i_zone, &
-                                   c_dvtx_coord)
+    call PDM_multipart_dvtx_coord_set_c(multipart, &
+                                        i_zone, &
+                                        c_dvtx_coord)
 
   end subroutine PDM_multipart_dvtx_coord_set_
 
@@ -1240,7 +1205,7 @@ contains
   !! \param [in]   ditrf                 ???
   !!
 
-  subroutine PDM_multipart_domain_interface_shared_set_ (multipart, &
+  subroutine PDM_multipart_domain_interface_shared_set (multipart, &
                                                          ditrf) &
   bind (c, name='PDM_multipart_domain_interface_shared_set')
 
@@ -1250,7 +1215,7 @@ contains
     type(c_ptr), value     :: multipart
     type(c_ptr), value     :: ditrf
 
-  end subroutine PDM_multipart_domain_interface_shared_set_
+  end subroutine PDM_multipart_domain_interface_shared_set
 
   !>
   !!
@@ -1328,28 +1293,28 @@ contains
     integer(c_int) :: c_s_face_join
     integer(c_int) :: c_n_join_groups
 
-    integer (kind = PDM_l_num_s), pointer :: n_elt
+    integer (kind = PDM_l_num_s), pointer :: n_elt(:)
     type(c_ptr)                           :: c_n_elt = C_NULL_PTR
 
     c_n_elt = c_loc(n_elt)
 
-    PDM_multipart_part_dim_get_c(multipart, &
-                                 i_zone, &
-                                 i_part, &
-                                 c_n_section, &
-                                 c_n_elt, &
-                                 c_n_cell, &
-                                 c_n_face, &
-                                 c_n_face_part_bound, &
-                                 c_n_vtx, &
-                                 c_n_proc, &
-                                 c_n_total_part, &
-                                 c_s_cell_face, &
-                                 c_s_face_vtx, &
-                                 c_s_face_bound, &
-                                 c_n_bound_groups, &
-                                 c_s_face_join, &
-                                 c_n_join_groups)
+    call PDM_multipart_part_dim_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_n_section, &
+                                      c_n_elt, &
+                                      c_n_cell, &
+                                      c_n_face, &
+                                      c_n_face_part_bound, &
+                                      c_n_vtx, &
+                                      c_n_proc, &
+                                      c_n_total_part, &
+                                      c_s_cell_face, &
+                                      c_s_face_vtx, &
+                                      c_s_face_bound, &
+                                      c_n_bound_groups, &
+                                      c_s_face_join, &
+                                      c_n_join_groups)
 
     n_section         = c_n_section
     n_cell            = c_n_cell
@@ -1367,7 +1332,7 @@ contains
 
     call c_f_pointer(c_n_elt, &
                      n_elt,   &
-                     [n_section]) ! TO DO: correct size ?
+                     [n_section])
 
   end subroutine PDM_multipart_part_dim_get_
 
@@ -1396,10 +1361,10 @@ contains
 
     integer(c_int) :: c_n_vtx_part_bound
 
-    PDM_multipart_part_graph_comm_vtx_dim_get_c(multipart, &
-                                                i_zone, &
-                                                i_part, &
-                                                c_n_vtx_part_bound)
+    call PDM_multipart_part_graph_comm_vtx_dim_get_c(multipart, &
+                                                     i_zone, &
+                                                     i_part, &
+                                                     c_n_vtx_part_bound)
 
     n_vtx_part_bound = c_n_vtx_part_bound
 
@@ -1468,42 +1433,43 @@ contains
 
     use pdm
     use iso_c_binding
+    use pdm_pointer_array
     implicit none
 
     type(c_ptr), value     :: multipart
     integer(c_int), value  :: i_zone
     integer(c_int), value  :: i_part
-
+    !
     type(PDM_pointer_array_t), target :: elt_vtx_idx
     type(PDM_pointer_array_t), target :: elt_vtx
     type(PDM_pointer_array_t), target :: elt_section_ln_to_gn
-
+    !
     type(c_ptr) :: c_elt_vtx_idx          = C_NULL_PTR
     type(c_ptr) :: c_elt_vtx              = C_NULL_PTR
     type(c_ptr) :: c_elt_section_ln_to_gn = C_NULL_PTR
-
-    integer (kind = PDM_l_num_s), pointer :: cell_tag
-    integer (kind = PDM_l_num_s), pointer :: cell_face_idx
-    integer (kind = PDM_l_num_s), pointer :: cell_face
-    integer (kind = PDM_g_num_s), pointer :: cell_ln_to_gn
-    integer (kind = PDM_l_num_s), pointer :: face_tag
-    integer (kind = PDM_l_num_s), pointer :: face_cell
-    integer (kind = PDM_l_num_s), pointer :: face_vtx_idx
-    integer (kind = PDM_l_num_s), pointer :: face_vtx
-    integer (kind = PDM_g_num_s), pointer :: face_ln_to_gn
-    integer (kind = PDM_l_num_s), pointer :: face_part_bound_proc_idx
-    integer (kind = PDM_l_num_s), pointer :: face_part_bound_part_idx
-    integer (kind = PDM_l_num_s), pointer :: face_part_bound
-    integer (kind = PDM_l_num_s), pointer :: vtx_tag
-    integer (kind = PDM_l_num_s), pointer :: vtx
-    integer (kind = PDM_g_num_s), pointer :: vtx_ln_to_gn
-    integer (kind = PDM_l_num_s), pointer :: face_bound_idx
-    integer (kind = PDM_l_num_s), pointer :: face_bound
-    integer (kind = PDM_g_num_s), pointer :: face_bound_ln_to_gn
-    integer (kind = PDM_l_num_s), pointer :: face_join_idx
-    integer (kind = PDM_l_num_s), pointer :: face_join
-    integer (kind = PDM_g_num_s), pointer :: face_join_ln_to_gn
-
+    !
+    integer (kind = PDM_l_num_s), pointer :: cell_tag(:)
+    integer (kind = PDM_l_num_s), pointer :: cell_face_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: cell_face(:)
+    integer (kind = PDM_g_num_s), pointer :: cell_ln_to_gn(:)
+    integer (kind = PDM_l_num_s), pointer :: face_tag(:)
+    integer (kind = PDM_l_num_s), pointer :: face_cell(:)
+    integer (kind = PDM_l_num_s), pointer :: face_vtx_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: face_vtx(:)
+    integer (kind = PDM_g_num_s), pointer :: face_ln_to_gn(:)
+    integer (kind = PDM_l_num_s), pointer :: face_part_bound_proc_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: face_part_bound_part_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: face_part_bound(:)
+    integer (kind = PDM_l_num_s), pointer :: vtx_tag(:)
+    integer (kind = PDM_l_num_s), pointer :: vtx(:)
+    integer (kind = PDM_g_num_s), pointer :: vtx_ln_to_gn(:)
+    integer (kind = PDM_l_num_s), pointer :: face_bound_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: face_bound(:)
+    integer (kind = PDM_g_num_s), pointer :: face_bound_ln_to_gn(:)
+    integer (kind = PDM_l_num_s), pointer :: face_join_idx(:)
+    integer (kind = PDM_l_num_s), pointer :: face_join(:)
+    integer (kind = PDM_g_num_s), pointer :: face_join_ln_to_gn(:)
+    !
     type(c_ptr)  :: c_cell_tag
     type(c_ptr)  :: c_cell_face_idx
     type(c_ptr)  :: c_cell_face
@@ -1525,6 +1491,47 @@ contains
     type(c_ptr)  :: c_face_join_idx
     type(c_ptr)  :: c_face_join
     type(c_ptr)  :: c_face_join_ln_to_gn
+    !
+    integer(c_int) :: c_n_section
+    integer(c_int) :: c_n_cell
+    integer(c_int) :: c_n_face
+    integer(c_int) :: c_n_face_part_bound
+    integer(c_int) :: c_n_vtx
+    integer(c_int) :: c_n_proc
+    integer(c_int) :: c_n_total_part
+    integer(c_int) :: c_s_cell_face
+    integer(c_int) :: c_s_face_vtx
+    integer(c_int) :: c_s_face_bound
+    integer(c_int) :: c_n_bound_groups
+    integer(c_int) :: c_s_face_join
+    integer(c_int) :: c_n_join_groups
+    !
+    integer (kind = PDM_l_num_s), pointer :: n_elt(:)
+    type(c_ptr)                           :: c_n_elt = C_NULL_PTR
+
+    c_n_elt = c_loc(n_elt)
+
+    call PDM_multipart_part_dim_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_n_section, &
+                                      c_n_elt, &
+                                      c_n_cell, &
+                                      c_n_face, &
+                                      c_n_face_part_bound, &
+                                      c_n_vtx, &
+                                      c_n_proc, &
+                                      c_n_total_part, &
+                                      c_s_cell_face, &
+                                      c_s_face_vtx, &
+                                      c_s_face_bound, &
+                                      c_n_bound_groups, &
+                                      c_s_face_join, &
+                                      c_n_join_groups)
+
+    call c_f_pointer(c_n_elt, &
+                     n_elt,   &
+                     [c_n_section])
 
     c_cell_tag                 = c_loc(cell_tag)
     c_cell_face_idx            = c_loc(cell_face_idx)
@@ -1548,145 +1555,143 @@ contains
     c_face_join                = c_loc(face_join)
     c_face_join_ln_to_gn       = c_loc(face_join_ln_to_gn)
 
-    PDM_multipart_part_val_get_(multipart, &
-                                i_zone, &
-                                i_part, &
-                                c_elt_vtx_idx, &
-                                c_elt_vtx, &
-                                c_elt_section_ln_to_gn, &
-                                c_cell_tag, &
-                                c_cell_face_idx, &
-                                c_cell_face, &
-                                c_cell_ln_to_gn, &
-                                c_face_tag, &
-                                c_face_cell, &
-                                c_face_vtx_idx, &
-                                c_face_vtx, &
-                                c_face_ln_to_gn, &
-                                c_face_part_bound_proc_idx, &
-                                c_face_part_bound_part_idx, &
-                                c_face_part_bound, &
-                                c_vtx_tag, &
-                                c_vtx, &
-                                c_vtx_ln_to_gn, &
-                                c_face_bound_idx, &
-                                c_face_bound, &
-                                c_face_bound_ln_to_gn, &
-                                c_face_join_idx, &
-                                c_face_join, &
-                                c_face_join_ln_to_gn)
+    call PDM_multipart_part_val_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_elt_vtx_idx, &
+                                      c_elt_vtx, &
+                                      c_elt_section_ln_to_gn, &
+                                      c_cell_tag, &
+                                      c_cell_face_idx, &
+                                      c_cell_face, &
+                                      c_cell_ln_to_gn, &
+                                      c_face_tag, &
+                                      c_face_cell, &
+                                      c_face_vtx_idx, &
+                                      c_face_vtx, &
+                                      c_face_ln_to_gn, &
+                                      c_face_part_bound_proc_idx, &
+                                      c_face_part_bound_part_idx, &
+                                      c_face_part_bound, &
+                                      c_vtx_tag, &
+                                      c_vtx, &
+                                      c_vtx_ln_to_gn, &
+                                      c_face_bound_idx, &
+                                      c_face_bound, &
+                                      c_face_bound_ln_to_gn, &
+                                      c_face_join_idx, &
+                                      c_face_join, &
+                                      c_face_join_ln_to_gn)
 
-    ! TO DO: size ?
+    ! TO DO: set part_data%length(i)
 
     call c_f_pointer(c_elt_vtx_idx,    &
                      elt_vtx_idx%cptr, &
-                     [size])
+                     [c_n_cell + 1]) ! TO DO c_n_elt[i_zone]
 
     call  PDM_pointer_array_create_type (elt_vtx_idx,     &
-                                         size, &
+                                         c_n_cell, & ! TO DO c_n_elt[i_zone] + 1
                                          PDM_TYPE_INT)
 
     call c_f_pointer(c_elt_vtx,    &
                      elt_vtx%cptr, &
-                     [size])
+                     [c_n_cell]) ! TO DO: c_elt_vtx_idx[c_n_elt + 1]?
 
     call  PDM_pointer_array_create_type (elt_vtx,     &
-                                         size, &
+                                         c_n_cell, & ! TO DO: c_elt_vtx_idx[c_n_elt + 1]?
                                          PDM_TYPE_INT)
 
     call c_f_pointer(c_elt_section_ln_to_gn,    &
                      elt_section_ln_to_gn%cptr, &
-                     [size])
+                     [c_n_cell])
 
     call  PDM_pointer_array_create_type (elt_section_ln_to_gn,     &
-                                         size, &
+                                         c_n_cell, &
                                          PDM_TYPE_INT)
-
-    ! TO DO: set part_data%length(i)
 
     call c_f_pointer(c_cell_tag, &
                      cell_tag,   &
-                     [size])
+                     [c_n_cell])
 
     call c_f_pointer(c_cell_face_idx, &
                      cell_face_idx,   &
-                     [size])
+                     [c_n_cell + 1])
 
     call c_f_pointer(c_cell_face, &
                      cell_face,   &
-                     [size])
+                     [c_n_cell]) ! TO DO c_cell_face_idx[c_n_cell] ?
 
     call c_f_pointer(c_cell_ln_to_gn, &
                      cell_ln_to_gn,   &
-                     [size])
+                     [c_n_cell])
 
     call c_f_pointer(c_face_tag, &
                      face_tag,   &
-                     [size])
+                     [c_n_face])
 
     call c_f_pointer(c_face_cell, &
                      face_cell,   &
-                     [size])
+                     [c_n_face]) ! TO DO what size ?
 
     call c_f_pointer(c_face_vtx_idx, &
                      face_vtx_idx,   &
-                     [size])
+                     [c_n_face + 1])
 
     call c_f_pointer(c_face_vtx, &
                      face_vtx,   &
-                     [size])
+                     [c_n_face]) ! TO DO c_face_vtx_idx[c_n_face] ?
 
     call c_f_pointer(c_face_ln_to_gn, &
                      face_ln_to_gn,   &
-                     [size])
+                     [c_n_face])
 
     call c_f_pointer(c_face_part_bound_proc_idx, &
                      face_part_bound_proc_idx,   &
-                     [size])
+                     [c_n_face_part_bound + 1])
 
     call c_f_pointer(c_face_part_bound_part_idx, &
                      face_part_bound_part_idx,   &
-                     [size])
+                     [c_n_face_part_bound + 1])
 
     call c_f_pointer(c_face_part_bound, &
                      face_part_bound,   &
-                     [size])
+                     [c_n_face_part_bound]) ! TO DO c_face_part_bound_part_idx[i_part + 1] - c_face_part_bound_part_idx[i_part] ?
 
     call c_f_pointer(c_vtx_tag, &
                      vtx_tag,   &
-                     [size])
+                     [c_n_vtx])
 
     call c_f_pointer(c_vtx, &
                      vtx,   &
-                     [size])
+                     [c_s_face_vtx * c_n_vtx])
 
     call c_f_pointer(c_vtx_ln_to_gn, &
                      vtx_ln_to_gn,   &
-                     [size])
+                     [c_n_vtx])
 
     call c_f_pointer(c_face_bound_idx, &
                      face_bound_idx,   &
-                     [size])
+                     [c_s_face_bound])
 
     call c_f_pointer(c_face_bound, &
                      face_bound,   &
-                     [size])
+                     [c_s_face_bound]) ! TO DO c_face_bound_idx[c_s_face_bound] ?
 
     call c_f_pointer(c_face_bound_ln_to_gn, &
                      face_bound_ln_to_gn,   &
-                     [size])
+                     [c_s_face_bound])
 
-    call c_f_pointer(c_join_idx, &
-                     join_idx,   &
-                     [size])
+    call c_f_pointer(c_face_join_idx, &
+                     face_join_idx,   &
+                     [c_s_face_join + 1])
 
     call c_f_pointer(c_face_join, &
                      face_join,   &
-                     [size])
+                     [c_s_face_join]) ! TO DO c_join_idx[c_s_face_join] ?
 
-    call c_f_pointer(c_join_ln_to_gn, &
-                     join_ln_to_gn,   &
-                     [size])
+    call c_f_pointer(c_face_join_ln_to_gn, &
+                     face_join_ln_to_gn,   &
+                     [c_s_face_join])
 
   end subroutine PDM_multipart_part_val_get_
 
@@ -1745,7 +1750,7 @@ contains
 
     call c_f_pointer(c_connect, &
                      connect,   &
-                     [connect_idx[pn_entity]])
+                     [pn_entity]) ! TO DO connect_idx[pn_entity] ?
 
   end subroutine PDM_multipart_part_connectivity_get_
 
@@ -1879,31 +1884,70 @@ contains
     type(c_ptr)                        :: c_vtx_part_bound_part_idx = C_NULL_PTR
     integer(kind=PDM_l_num_s), pointer :: vtx_part_bound(:)
     type(c_ptr)                        :: c_vtx_part_bound = C_NULL_PTR
+    !
+    integer(c_int) :: c_n_section
+    integer(c_int) :: c_n_cell
+    integer(c_int) :: c_n_face
+    integer(c_int) :: c_n_face_part_bound
+    integer(c_int) :: c_n_vtx
+    integer(c_int) :: c_n_proc
+    integer(c_int) :: c_n_total_part
+    integer(c_int) :: c_s_cell_face
+    integer(c_int) :: c_s_face_vtx
+    integer(c_int) :: c_s_face_bound
+    integer(c_int) :: c_n_bound_groups
+    integer(c_int) :: c_s_face_join
+    integer(c_int) :: c_n_join_groups
+    !
+    integer (kind = PDM_l_num_s), pointer :: n_elt(:)
+    type(c_ptr)                           :: c_n_elt = C_NULL_PTR
+    !
+    integer(c_int) :: n_vtx_part_bound
+
+    c_n_elt = c_loc(n_elt)
+
+    call PDM_multipart_part_dim_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_n_section, &
+                                      c_n_elt, &
+                                      c_n_cell, &
+                                      c_n_face, &
+                                      c_n_face_part_bound, &
+                                      c_n_vtx, &
+                                      c_n_proc, &
+                                      c_n_total_part, &
+                                      c_s_cell_face, &
+                                      c_s_face_vtx, &
+                                      c_s_face_bound, &
+                                      c_n_bound_groups, &
+                                      c_s_face_join, &
+                                      c_n_join_groups)
 
     c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
     c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
     c_vtx_part_bound          = c_loc(vtx_part_bound)
 
-    PDM_multipart_part_graph_comm_vtx_data_get_c(multipart, &
-                                                 i_zone, &
-                                                 i_part, &
-                                                 c_vtx_part_bound_proc_idx, &
-                                                 c_vtx_part_bound_part_idx, &
-                                                 c_vtx_part_bound)
-
-    ! TO DO: size ?
+    call PDM_multipart_part_graph_comm_vtx_data_get_c(multipart, &
+                                                      i_zone, &
+                                                      i_part, &
+                                                      c_vtx_part_bound_proc_idx, &
+                                                      c_vtx_part_bound_part_idx, &
+                                                      c_vtx_part_bound)
 
     call c_f_pointer(c_vtx_part_bound_proc_idx, &
                      vtx_part_bound_proc_idx,   &
-                     [size])
+                     [c_n_proc + 1])
 
     call c_f_pointer(c_vtx_part_bound_part_idx, &
                      vtx_part_bound_part_idx,   &
-                     [size])
+                     [c_n_total_part + 1])
+
+    ! n_vtx_part_bound = c_vtx_part_bound_part_idx[i_part+1] - c_vtx_part_bound_part_idx[i_part] ! TO DO: correct ?
 
     call c_f_pointer(c_vtx_part_bound, &
                      vtx_part_bound,   &
-                     [size])
+                     [c_n_total_part])
 
   end subroutine PDM_multipart_part_graph_comm_vtx_data_get_
 
@@ -1948,42 +1992,79 @@ contains
     integer(kind=PDM_l_num_s), pointer :: hyperplane_color(:)
     type(c_ptr)                        :: c_hyperplane_color = C_NULL_PTR
 
+    integer(c_int) :: c_n_section
+    integer(c_int) :: c_n_cell
+    integer(c_int) :: c_n_face
+    integer(c_int) :: c_n_face_part_bound
+    integer(c_int) :: c_n_vtx
+    integer(c_int) :: c_n_proc
+    integer(c_int) :: c_n_total_part
+    integer(c_int) :: c_s_cell_face
+    integer(c_int) :: c_s_face_vtx
+    integer(c_int) :: c_s_face_bound
+    integer(c_int) :: c_n_bound_groups
+    integer(c_int) :: c_s_face_join
+    integer(c_int) :: c_n_join_groups
+    !
+    integer (kind = PDM_l_num_s), pointer :: n_elt(:)
+    type(c_ptr)                           :: c_n_elt = C_NULL_PTR
+
+    c_n_elt = c_loc(n_elt)
+
+    call PDM_multipart_part_dim_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_n_section, &
+                                      c_n_elt, &
+                                      c_n_cell, &
+                                      c_n_face, &
+                                      c_n_face_part_bound, &
+                                      c_n_vtx, &
+                                      c_n_proc, &
+                                      c_n_total_part, &
+                                      c_s_cell_face, &
+                                      c_s_face_vtx, &
+                                      c_s_face_bound, &
+                                      c_n_bound_groups, &
+                                      c_s_face_join, &
+                                      c_n_join_groups)
+
     c_cell_color       = c_loc(cell_color)
     c_face_color       = c_loc(face_color)
     c_face_hp_color    = c_loc(face_hp_color)
     c_thread_color     = c_loc(thread_color)
     c_hyperplane_color = c_loc(hyperplane_color)
 
-    PDM_multipart_part_color_get_c(multipart, &
-                                   i_zone, &
-                                   i_part, &
-                                   c_cell_color, &
-                                   c_face_color, &
-                                   c_face_hp_color, &
-                                   c_thread_color, &
-                                   c_hyperplane_color)
-
-    ! TO DO: size ?
+    call PDM_multipart_part_color_get_c(multipart, &
+                                        i_zone, &
+                                        i_part, &
+                                        c_cell_color, &
+                                        c_face_color, &
+                                        c_face_hp_color, &
+                                        c_thread_color, &
+                                        c_hyperplane_color)
 
     call c_f_pointer(c_cell_color, &
                      cell_color,   &
-                     [size])
+                     [c_n_cell])
 
     call c_f_pointer(c_face_color, &
                      face_color,   &
-                     [size])
+                     [c_n_face])
 
     call c_f_pointer(c_face_hp_color, &
                      face_hp_color,   &
-                     [size])
+                     [c_n_face])
+
+    ! TO DO: how to get nThread ?
 
     call c_f_pointer(c_thread_color, &
                      thread_color,   &
-                     [size])
+                     [c_n_face])
 
     call c_f_pointer(c_hyperplane_color, &
                      hyperplane_color,   &
-                     [size])
+                     [c_n_face])
 
   end subroutine PDM_multipart_part_color_get_
 
@@ -1994,7 +2075,7 @@ contains
   !! \param [in]   multipart               Pointer to \ref PDM_multipart_t object
   !! \param [in]   i_zone                  Id of zone which parameters apply (or -1 for all zones)
   !! \param [in]   i_part                  Partition index
-  !! \param [out]  vtx_ghost_information   ??
+  !! \param [out]  vtx_ghost_information   An integer for each vertex to describe it's kind
   !!
 
   subroutine PDM_multipart_part_ghost_infomation_get_(multipart, &
@@ -2012,18 +2093,53 @@ contains
     integer(kind=PDM_l_num_s), pointer :: vtx_ghost_information(:)
     type(c_ptr)                        :: c_vtx_ghost_information = C_NULL_PTR
 
+    integer(c_int) :: c_n_section
+    integer(c_int) :: c_n_cell
+    integer(c_int) :: c_n_face
+    integer(c_int) :: c_n_face_part_bound
+    integer(c_int) :: c_n_vtx
+    integer(c_int) :: c_n_proc
+    integer(c_int) :: c_n_total_part
+    integer(c_int) :: c_s_cell_face
+    integer(c_int) :: c_s_face_vtx
+    integer(c_int) :: c_s_face_bound
+    integer(c_int) :: c_n_bound_groups
+    integer(c_int) :: c_s_face_join
+    integer(c_int) :: c_n_join_groups
+    !
+    integer (kind = PDM_l_num_s), pointer :: n_elt(:)
+    type(c_ptr)                           :: c_n_elt = C_NULL_PTR
+
+    c_n_elt = c_loc(n_elt)
+
+    call PDM_multipart_part_dim_get_c(multipart, &
+                                      i_zone, &
+                                      i_part, &
+                                      c_n_section, &
+                                      c_n_elt, &
+                                      c_n_cell, &
+                                      c_n_face, &
+                                      c_n_face_part_bound, &
+                                      c_n_vtx, &
+                                      c_n_proc, &
+                                      c_n_total_part, &
+                                      c_s_cell_face, &
+                                      c_s_face_vtx, &
+                                      c_s_face_bound, &
+                                      c_n_bound_groups, &
+                                      c_s_face_join, &
+                                      c_n_join_groups)
+
     c_vtx_ghost_information = c_loc(vtx_ghost_information)
 
-    PDM_multipart_part_ghost_infomation_get_c(multipart, &
-                                              i_zone, &
-                                              i_part, &
-                                              c_vtx_ghost_information)
-
-    ! TO DO: size ?
+    call PDM_multipart_part_ghost_infomation_get_c(multipart, &
+                                                   i_zone, &
+                                                   i_part, &
+                                                   c_vtx_ghost_information)
 
     call c_f_pointer(c_vtx_ghost_information, &
                      vtx_ghost_information,   &
-                     [size])
+                     [c_n_vtx])
 
   end subroutine PDM_multipart_part_ghost_infomation_get_
 
@@ -2034,7 +2150,7 @@ contains
   !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
   !!
 
-  subroutine PDM_multipart_free_ (multipart) &
+  subroutine PDM_multipart_free (multipart) &
   bind (c, name='PDM_multipart_free')
 
     use iso_c_binding
@@ -2042,7 +2158,7 @@ contains
 
     type(c_ptr), value     :: multipart
 
-  end subroutine PDM_multipart_free_
+  end subroutine PDM_multipart_free
 
   !>
   !!
@@ -2076,12 +2192,11 @@ contains
 
     c_vtx_coord = c_loc(vtx_coord)
 
-    n_vtx = PDM_multipart_part_vtx_coord_get_(multipart, &
-                                              i_zone, &
-                                              i_part, &
-                                              c_vtx_coord, &
-                                              ownership, &
-                                              n_vtx)
+    n_vtx = PDM_multipart_part_vtx_coord_get_c(multipart, &
+                                               i_zone, &
+                                               i_part, &
+                                               c_vtx_coord, &
+                                               ownership)
 
     call c_f_pointer(c_vtx_coord, &
                      vtx_coord,   &
@@ -2120,7 +2235,7 @@ contains
     integer(c_int), value              :: i_zone
     integer(c_int), value              :: i_part
     integer(c_int)                     :: bound_type
-    type(c_ptr)                        :: n_bound
+    integer(c_int)                     :: n_bound
     integer(kind=PDM_l_num_s), pointer :: bound_idx(:)
     type(c_ptr)                        :: c_bound_idx = C_NULL_PTR
     integer(kind=PDM_l_num_s), pointer :: bound(:)
@@ -2132,22 +2247,22 @@ contains
     c_bound          = c_loc(bound)
     c_bound_ln_to_gn = c_loc(bound_ln_to_gn)
 
-    PDM_multipart_bound_get_c(multipart, &
-                              i_zone, &
-                              i_part, &
-                              bound_type, &
-                              n_bound, &
-                              c_bound_idx, &
-                              c_bound, &
-                              c_bound_ln_to_gn)
+    call PDM_multipart_bound_get_c(multipart, &
+                                   i_zone, &
+                                   i_part, &
+                                   bound_type, &
+                                   n_bound, &
+                                   c_bound_idx, &
+                                   c_bound, &
+                                   c_bound_ln_to_gn)
 
-    call c_f_pointer(c_n_bound, &
+    call c_f_pointer(c_bound_idx, &
                      bound_idx,   &
                      [n_bound])
 
     call c_f_pointer(c_bound, &
                      bound,   &
-                     [bound_idx[n_bound]])
+                     [n_bound]) ! TO DO bound_idx[n_bound]
 
     call c_f_pointer(c_bound_ln_to_gn, &
                      bound_ln_to_gn,   &
