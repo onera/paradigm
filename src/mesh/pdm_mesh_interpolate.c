@@ -115,6 +115,55 @@ PDM_mesh_interpolate_create
 }
 
 
+
+void
+PDM_mesh_interpolate_part_set
+(
+  PDM_mesh_interpolate_t   *mi,
+  int                       i_domain,
+  int                       i_part,
+  int                       n_cell,
+  int                       n_face,
+  int                       n_edge,
+  int                       n_vtx,
+  int                      *cell_face_idx,
+  int                      *cell_face,
+  int                      *face_edge_idx,
+  int                      *face_edge,
+  int                      *edge_vtx,
+  int                      *face_vtx_idx,
+  int                      *face_vtx,
+  PDM_g_num_t              *cell_ln_to_gn,
+  PDM_g_num_t              *face_ln_to_gn,
+  PDM_g_num_t              *edge_ln_to_gn,
+  PDM_g_num_t              *vtx_ln_to_gn,
+  double                   *vtx_coord
+)
+{
+  mi->parts[i_domain][i_part].n_cell            = n_cell;
+  mi->parts[i_domain][i_part].n_face            = n_face;
+  mi->parts[i_domain][i_part].n_edge            = n_edge;
+  mi->parts[i_domain][i_part].n_vtx             = n_vtx;
+
+  mi->parts[i_domain][i_part].cell_face_idx = cell_face_idx;
+  mi->parts[i_domain][i_part].cell_face     = cell_face;
+
+  mi->parts[i_domain][i_part].face_edge_idx = face_edge_idx;
+  mi->parts[i_domain][i_part].face_edge     = face_edge;
+
+  mi->parts[i_domain][i_part].face_vtx_idx  = face_vtx_idx;
+  mi->parts[i_domain][i_part].face_vtx      = face_vtx;
+
+  mi->parts[i_domain][i_part].edge_vtx      = edge_vtx;
+
+  mi->parts[i_domain][i_part].cell_ln_to_gn = cell_ln_to_gn;
+  mi->parts[i_domain][i_part].face_ln_to_gn = face_ln_to_gn;
+  mi->parts[i_domain][i_part].edge_ln_to_gn = edge_ln_to_gn;
+  mi->parts[i_domain][i_part].vtx_ln_to_gn  = vtx_ln_to_gn;
+
+  mi->parts[i_domain][i_part].vtx = vtx_coord;
+}
+
 void
 PDM_mesh_interpolate_part_domain_interface_shared_set
 (
