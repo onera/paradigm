@@ -3102,11 +3102,11 @@ PDM_part_create
 
 /* Wrapper of pdm_multipart for CEDRE */
 
-PDM_part_t *
+PDM_multipart_t *
 PDM_part_create_with_multipart
 (
  const PDM_MPI_Comm           comm,
- const PDM_part_split_t       split_method,
+ const PDM_split_dual_t       split_method, // other type than pdm_part
  const char                  *renum_cell_method,
  const char                  *renum_face_method,
  const int                    n_property_cell,
@@ -3134,7 +3134,52 @@ PDM_part_create_with_multipart
  const PDM_g_num_t           *dface_group
  )
  {
-  // TO DO
+  // Create dmesh
+  int n_jn = 0;
+  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell,
+                                     dn_face,
+                                     -1, // dn_edge
+                                     dn_vtx,
+                                     n_face_group, // n_bnd
+                                     n_jn,
+                                     comm);
+
+  int *dface_join_idx = (int *) malloc( (n_jn+1) * sizeof(int));
+  dface_join_idx[0] = 0;
+  PDM_dmesh_set(dm,
+                dvtx_coord,
+                dface_vtx_idx,
+                dface_vtx,
+                dface_cell,
+                dface_group_idx,
+                dface_group,
+                NULL,
+                dface_join_idx,
+                NULL);
+
+  // Partitionning
+  int n_zone = 1;
+  int n_part_zones = n_part;
+  PDM_multipart_t *multipart = PDM_multipart_create(n_zone,
+                                                   &n_part_zones,
+                                                   PDM_FALSE,
+                                                   split_method,
+                                                   PDM_PART_SIZE_HOMOGENEOUS,
+                                                   NULL,
+                                                   comm,
+                                                   PDM_OWNERSHIP_KEEP);
+
+  PDM_multipart_set_reordering_options(multipart, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
+  PDM_multipart_register_block(multipart, 0, dm);
+
+  // Run
+  PDM_multipart_run_ppart(multipart);
+
+  // free
+  free(dface_join_idx);
+
+  return multipart;
  }
 
 

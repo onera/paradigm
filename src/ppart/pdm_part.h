@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_multipart.h"
 
 /*=============================================================================
  * Macro definitions
@@ -132,11 +133,11 @@ PDM_part_create
 
 /* Wrapper of pdm_multipart for CEDRE */
 
-PDM_part_t *
+PDM_multipart_t *
 PDM_part_create_with_multipart
 (
  const PDM_MPI_Comm           comm,
- const PDM_part_split_t       split_method,
+ const PDM_split_dual_t       split_method,
  const char                  *renum_cell_method,
  const char                  *renum_face_method,
  const int                    n_property_cell,
