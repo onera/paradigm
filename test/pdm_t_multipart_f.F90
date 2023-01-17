@@ -72,6 +72,11 @@ program testf
   double precision,             pointer :: dvtx_coord(:,:)    => null()
   integer (kind = pdm_l_num_s), pointer :: dface_group_idx(:) => null()
   integer (kind = pdm_g_num_s), pointer :: dface_group(:)     => null()
+  integer                               :: n_jn = 0
+  integer (kind = pdm_l_num_s), pointer :: dface_join_idx(:)  => null()
+  integer (kind = pdm_l_num_s), pointer :: joins_glob_id(:)   => null()
+  integer (kind = pdm_g_num_s), pointer :: dface_join(:)      => null()
+  type(c_ptr)                           :: dm = C_NULL_PTR
   !-----------------------------------------------------------
 
   call mpi_init(code)
@@ -88,7 +93,8 @@ program testf
 #endif
 #endif
 
-  allocate(n_part_zones(n_zone))
+  allocate(n_part_zones(n_zone), &
+           dface_join_idx(n_jn+1))
 
   do i = 1, n_zone
     n_part_zones(i) = n_part
@@ -120,9 +126,11 @@ program testf
                                             "PDM_PART_RENUM_FACE_LEXICOGRAPHIC")
 
   ! Generate Mesh (case : n_zone = 1)
+  ! > dcube
   if (i_rank .eq. 0) then
-    write(*, *) "> Generate distributed mesh"
+    write(*, *) "> dcube"
   end if
+
   call pdm_dcube_gen_init(dcube,              &
                           comm,               &
                           n_vtx_seg,          &
@@ -132,31 +140,47 @@ program testf
                           zero_z,             &
                           PDM_OWNERSHIP_KEEP)
 
-  call pdm_dcube_gen_dim_get (dcube,           &
-                              n_face_group,    &
-                              dn_cell,         &
-                              dn_face,         &
-                              dn_vtx,          &
-                              sface_vtx,       &
-                              sface_group)
+  call pdm_dcube_gen_dim_get(dcube,           &
+                             n_face_group,    &
+                             dn_cell,         &
+                             dn_face,         &
+                             dn_vtx,          &
+                             sface_vtx,       &
+                             sface_group)
 
-  call pdm_dcube_gen_data_get (dcube,           &
-                               dface_cell,      &
-                               dface_vtx_idx,   &
-                               dface_vtx,       &
-                               dvtx_coord,      &
-                               dface_group_idx, &
-                               dface_group)
-  ! Les faces groups du dcube sont : zmin, zmax, xmin, xmax, ymin, ymax
-  ! Il faut les séparer en faces de bords et faces raccord, sachant que
-  ! les zones sont alignées selon X
-  ! n_bnd = 4+1
-  ! n_jn  = 2-1
+  call pdm_dcube_gen_data_get(dcube,           &
+                              dface_cell,      &
+                              dface_vtx_idx,   &
+                              dface_vtx,       &
+                              dvtx_coord,      &
+                              dface_group_idx, &
+                              dface_group)
+  ! > dmesh
+  if (i_rank .eq. 0) then
+    write(*, *) "> dmesh"
+  end if
 
-  ! Join numbering (left to right, increasing i_zone)
-  ! djoins_ids(0)(0) = 0
+  ! call PDM_dmesh_create(PDM_OWNERSHIP_KEEP, &
+  !                       dn_cell,            &
+  !                       dn_face,            &
+  !                       -1,                 &
+  !                       dn_vtx,             &
+  !                       n_face_group,       &
+  !                       n_jn,               &
+  !                       comm)
+  ! dface_join_idx(0) = 0
+  ! call PDM_dmesh_set(dm,              &
+  !                    dvtx_coord,      &
+  !                    dface_vtx_idx,   &
+  !                    dface_vtx,       &
+  !                    dface_cell,      &
+  !                    dface_group_idx, &
+  !                    dface_group,     &
+  !                    joins_glob_id,   &
+  !                    dface_join_idx,  &
+  !                    dface_join)
 
-  ! call PDM_multipart_register_block(multipart, i_zone, dmesh(i_zone))
+  ! call PDM_multipart_register_block(multipart, i_zone, dm)
   ! call PDM_multipart_register_joins(multipart, n_total_joins, join_to_opposite)
 
   ! Run

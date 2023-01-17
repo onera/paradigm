@@ -130,6 +130,39 @@ PDM_part_create
  const PDM_g_num_t           *dface_group
  );
 
+/* Wrapper of pdm_multipart for CEDRE */
+
+PDM_part_t *
+PDM_part_create_with_multipart
+(
+ const PDM_MPI_Comm           comm,
+ const PDM_part_split_t       split_method,
+ const char                  *renum_cell_method,
+ const char                  *renum_face_method,
+ const int                    n_property_cell,
+ const int                   *renum_properties_cell,
+ const int                    n_property_face,
+ const int                   *renum_properties_face,
+ const int                    n_part,
+ const int                    dn_cell,
+ const int                    dn_face,
+ const int                    dn_vtx,
+ const int                    n_face_group,
+ const int                   *dcell_face_idx,
+ const PDM_g_num_t           *dcell_face,
+ const int                   *dcell_tag,
+ const int                   *dcell_weight,
+ const int                    have_dcell_part,
+       int                   *dcell_part,
+ const PDM_g_num_t           *dface_cell,
+ const int                   *dface_vtx_idx,
+ const PDM_g_num_t           *dface_vtx,
+ const int                   *dface_tag,
+ const double                *dvtx_coord,
+ const int                   *dvtx_tag,
+ const int                   *dface_group_idx,
+ const PDM_g_num_t           *dface_group
+ );
 
 /**
  *

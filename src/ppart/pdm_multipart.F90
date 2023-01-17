@@ -17,6 +17,8 @@
 ! License along with this library. If not, see <http://www.gnu.org/licenses/>.
 !-----------------------------------------------------------------------------
 
+! WARNING: not texted yet / need to make fortran interface of dmesh for that
+
 #include "pdm_configf.h"
 
 module pdm_multipart
