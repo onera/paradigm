@@ -25,6 +25,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_logging.h"
 #include "pdm_distant_neighbor.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -281,6 +282,47 @@ PDM_mesh_interpolate_compute
   }
 
   /*
+   * Create vtx_cell
+   */
+  shift_part = 0;
+  int **pvtx_cell_n   = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  int **pvtx_cell_idx = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  int **pvtx_cell     = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+
+      /* Compute cell_edge */
+      int* cell_vtx_idx = NULL;
+      int* cell_vtx     = NULL;
+      PDM_combine_connectivity(mi->parts[i_domain][i_part].n_cell,
+                               mi->parts[i_domain][i_part].cell_face_idx,
+                               mi->parts[i_domain][i_part].cell_face,
+                               mi->parts[i_domain][i_part].face_vtx_idx,
+                               mi->parts[i_domain][i_part].face_vtx,
+                               &cell_vtx_idx,
+                               &cell_vtx);
+
+      PDM_connectivity_transpose(mi->parts[i_domain][i_part].n_cell,
+                                 mi->parts[i_domain][i_part].n_vtx,
+                                 cell_vtx_idx,
+                                 cell_vtx,
+                                 &pvtx_cell_idx[i_part+shift_part],
+                                 &pvtx_cell    [i_part+shift_part]);
+
+      free(cell_vtx_idx);
+      free(cell_vtx);
+
+      pvtx_cell_n[i_part+shift_part] = malloc(mi->parts[i_domain][i_part].n_vtx * sizeof(int));
+      for(int i_vtx = 0; i_vtx < mi->parts[i_domain][i_part].n_vtx; ++i_vtx) {
+        pvtx_cell_n[i_part+shift_part][i_vtx] = pvtx_cell_idx[i_part+shift_part][i_vtx+1] - pvtx_cell_idx[i_part+shift_part][i_vtx];
+      }
+
+    }
+    shift_part   += mi->n_part              [i_domain];
+  }
+
+
+  /*
    * Create distant_neighbor
    */
   PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(mi->comm,
@@ -289,6 +331,16 @@ PDM_mesh_interpolate_compute
                                                            neighbor_idx,
                                                            neighbor_desc);
 
+  int **pvtx_cell_opp_n = NULL;
+  int **pvtx_cell_opp   = NULL;
+  PDM_distant_neighbor_exch(dn,
+                            sizeof(int),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            pvtx_cell_n,
+                  (void **) pvtx_cell,
+                           &pvtx_cell_opp_n,
+                 (void ***)&pvtx_cell_opp);
 
   PDM_distant_neighbor_free(dn);
 
@@ -304,6 +356,13 @@ PDM_mesh_interpolate_compute
         free(pdi_neighbor_idx[i_part+shift_part]);
         free(pdi_neighbor    [i_part+shift_part]);
       }
+
+      free(pvtx_cell_n  [i_part+shift_part]);
+      free(pvtx_cell_idx[i_part+shift_part]);
+      free(pvtx_cell    [i_part+shift_part]);
+
+      free(pvtx_cell_opp_n[i_part+shift_part]);
+      free(pvtx_cell_opp  [i_part+shift_part]);
     }
     shift_part   += mi->n_part              [i_domain];
   }
@@ -311,7 +370,11 @@ PDM_mesh_interpolate_compute
   free(neighbor_desc);
   free(neighbor_interface);
   free(pn_vtx);
-
+  free(pvtx_cell_n  );
+  free(pvtx_cell_idx);
+  free(pvtx_cell    );
+  free(pvtx_cell_opp_n);
+  free(pvtx_cell_opp  );
 
   if(mi->pdi != NULL) {
     free(pdi_neighbor_idx);
