@@ -2448,6 +2448,13 @@ PDM_part_domain_interface_add
     kind2_dinterface_ids = &ditrf->interface_ids_face;
   }
 
+  // if(interface_kind1 == FACE ||  interface_kind2 == VTX)
+  //   PDM_domain_interface_translate_face2vtx(dom_intrf,
+  //                                           dn_vtx,
+  //                                           dn_face,
+  //                                           dface_vtx_idx,
+  //                                           dface_vtx);
+
   PDM_domain_interface_translate_entity1_entity2(ditrf->n_domain,
                                                  ditrf->n_interface,
                                                  dn_entity1,
