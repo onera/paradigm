@@ -790,6 +790,132 @@ interface
 
   end subroutine PDM_multipart_bound_get_c
 
+  !>
+  !!
+  !! \brief Set distributed mesh data for the input zone
+  !!
+  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   zone_id        Global zone id
+  !! \param [in]   dmesh          Distributed mesh structure
+  !!
+
+  subroutine PDM_multipart_register_block (multipart, &
+                                           zone_id, &
+                                           dmesh) &
+  bind (c, name='PDM_multipart_register_block')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value  :: multipart
+    integer(c_int), value  :: zone_id
+    type(c_ptr),    value  :: dmesh
+
+  end subroutine PDM_multipart_register_block
+
+  !>
+  !!
+  !! \brief Set distributed mesh data for the input zone
+  !!
+  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
+  !! \param [in]   zone_id        Global zone id
+  !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
+  !!
+
+  subroutine PDM_multipart_register_dmesh_nodal (multipart, &
+                                                 zone_id, &
+                                                 dmesh_nodal) &
+  bind (c, name='PDM_multipart_register_dmesh_nodal')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value  :: multipart
+    integer(c_int), value  :: zone_id
+    type(c_ptr),    value  :: dmesh_nodal
+
+  end subroutine PDM_multipart_register_dmesh_nodal
+
+  !>
+  !!
+  !! \brief Construct the partitioned meshes on every zones
+  !!
+  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
+  !!
+
+  subroutine PDM_multipart_run_ppart (multipart) &
+  bind (c, name='PDM_multipart_run_ppart')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value  :: multipart
+
+  end subroutine PDM_multipart_run_ppart
+
+  !>
+  !!
+  !! \brief Set number of element in the block entity
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
+  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
+  !! \param [in]   dn_entity             Distributed number of entity in current process
+  !!
+
+  subroutine PDM_multipart_dn_entity_set (multipart, &
+                                          i_zone, &
+                                          entity_type, &
+                                          dn_entity) &
+  bind (c, name='PDM_multipart_dn_entity_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr),    value  :: multipart
+    integer(c_int), value  :: i_zone
+    integer(c_int), value  :: entity_type
+    integer(c_int), value  :: dn_entity
+
+  end subroutine PDM_multipart_dn_entity_set
+
+  !>
+  !!
+  !! \brief Set the domain interface
+  !!
+  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
+  !! \param [in]   ditrf                 Domain interface
+  !!
+
+  subroutine PDM_multipart_domain_interface_shared_set (multipart, &
+                                                        ditrf) &
+  bind (c, name='PDM_multipart_domain_interface_shared_set')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: multipart
+    type(c_ptr), value :: ditrf
+
+  end subroutine PDM_multipart_domain_interface_shared_set
+
+  !>
+  !!
+  !! \brief Free the structure
+  !!
+  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
+  !!
+
+  subroutine PDM_multipart_free (multipart) &
+  bind (c, name='PDM_multipart_free')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value     :: multipart
+
+  end subroutine PDM_multipart_free
+
 end interface
 
 private :: PDM_multipart_create_,&
@@ -867,52 +993,6 @@ contains
                                        owner)
 
   end subroutine PDM_multipart_create_
-
-  !>
-  !!
-  !! \brief Set distributed mesh data for the input zone
-  !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
-  !! \param [in]   zone_id        Global zone id
-  !! \param [in]   dmesh          Distributed mesh structure
-  !!
-
-  subroutine PDM_multipart_register_block (multipart, &
-                                           zone_id, &
-                                           dmesh) &
-  bind (c, name='PDM_multipart_register_block')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: zone_id
-    type(c_ptr),    value  :: dmesh
-
-  end subroutine PDM_multipart_register_block
-
-  !>
-  !!
-  !! \brief Set distributed mesh data for the input zone
-  !!
-  !! \param [in]   multipart      Pointer to \ref PDM_multipart_t object
-  !! \param [in]   zone_id        Global zone id
-  !! \param [in]   dmesh_nodal    Distributed nodal mesh structure
-  !!
-
-  subroutine PDM_multipart_register_dmesh_nodal (multipart, &
-                                                 zone_id, &
-                                                 dmesh_nodal) &
-  bind (c, name='PDM_multipart_register_dmesh_nodal')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: zone_id
-    type(c_ptr),    value  :: dmesh_nodal
-
-  end subroutine PDM_multipart_register_dmesh_nodal
 
   !>
   !!
@@ -1012,23 +1092,6 @@ contains
 
   !>
   !!
-  !! \brief Construct the partitioned meshes on every zones
-  !!
-  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
-  !!
-
-  subroutine PDM_multipart_run_ppart (multipart) &
-  bind (c, name='PDM_multipart_run_ppart')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value  :: multipart
-
-  end subroutine PDM_multipart_run_ppart
-
-  !>
-  !!
   !! \brief ???
   !!
   !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
@@ -1056,32 +1119,6 @@ contains
                                              ownership)
 
   end subroutine PDM_multipart_get_part_mesh_nodal_
-
-  !>
-  !!
-  !! \brief Set number of element in the block entity
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   i_zone                Id of zone which parameters apply (or -1 for all zones)
-  !! \param [in]   entity_type           Type of entity (can be cell/face/edge/vtx)
-  !! \param [in]   dn_entity             Distributed number of entity in current process
-  !!
-
-  subroutine PDM_multipart_dn_entity_set (multipart, &
-                                          i_zone, &
-                                          entity_type, &
-                                          dn_entity) &
-  bind (c, name='PDM_multipart_dn_entity_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr),    value  :: multipart
-    integer(c_int), value  :: i_zone
-    integer(c_int), value  :: entity_type
-    integer(c_int), value  :: dn_entity
-
-  end subroutine PDM_multipart_dn_entity_set
 
   !>
   !!
@@ -1199,26 +1236,6 @@ contains
                                         c_dvtx_coord)
 
   end subroutine PDM_multipart_dvtx_coord_set_
-
-  !>
-  !!
-  !! \brief Set the domain interface
-  !!
-  !! \param [in]   multipart             Pointer to \ref PDM_multipart_t object
-  !! \param [in]   ditrf                 Domain interface
-  !!
-
-  subroutine PDM_multipart_domain_interface_shared_set (multipart, &
-                                                        ditrf) &
-  bind (c, name='PDM_multipart_domain_interface_shared_set')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value :: multipart
-    type(c_ptr), value :: ditrf
-
-  end subroutine PDM_multipart_domain_interface_shared_set
 
   !>
   !!
@@ -2152,23 +2169,6 @@ contains
                      [c_n_vtx])
 
   end subroutine PDM_multipart_part_ghost_infomation_get_
-
-  !>
-  !!
-  !! \brief Free the structure
-  !!
-  !! \param [in]   multipart   Pointer to \ref PDM_multipart_t object
-  !!
-
-  subroutine PDM_multipart_free (multipart) &
-  bind (c, name='PDM_multipart_free')
-
-    use iso_c_binding
-    implicit none
-
-    type(c_ptr), value     :: multipart
-
-  end subroutine PDM_multipart_free
 
   !>
   !!
