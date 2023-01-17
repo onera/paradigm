@@ -192,6 +192,22 @@ PDM_mesh_interpolate_compute
   PDM_g_num_t  *composed_ln_to_gn_sorted = NULL;
 
   if(mi->pdi != NULL) {
+
+    int is_describe_vtx  = 0; //PDM_part_domain_interface_exist_get(mi->pdi, PDM_BOUND_TYPE_VTX );
+    int is_describe_edge = PDM_part_domain_interface_exist_get(mi->pdi, PDM_BOUND_TYPE_EDGE);
+    int is_describe_face = PDM_part_domain_interface_exist_get(mi->pdi, PDM_BOUND_TYPE_FACE);
+
+    int is_describe_vtx_l  = is_describe_vtx;
+    int is_describe_edge_l = is_describe_edge;
+    int is_describe_face_l = is_describe_face;
+    PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, mi->comm);
+    PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, mi->comm);
+    PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, mi->comm);
+
+    printf("is_describe_vtx_l  = %i \n", is_describe_vtx_l );
+    printf("is_describe_edge_l = %i \n", is_describe_edge_l);
+    printf("is_describe_face_l = %i \n", is_describe_face_l);
+
     int **pn_vtx = malloc(mi->n_domain * sizeof(int *));
     for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
       pn_vtx[i_domain] = malloc(mi->n_part[i_domain] * sizeof(int));

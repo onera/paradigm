@@ -28,6 +28,7 @@
 
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_domain_interface.h"
+#include "pdm_domain_interface_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_mesh_interpolate.h"
 
@@ -621,6 +622,55 @@ int main
                                                                                    pface_ln_to_gn,
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
+
+
+  // PDM_part_domain_interface_t* pdi_only_face = PDM_part_domain_interface_create(dom_intrf->n_interface,
+  //                                                                               dom_intrf->n_domain,
+  //                                                                               n_part_by_domain,
+  //                                                                               dom_intrf->multidomain_intrf,
+  //                                                                               PDM_OWNERSHIP_KEEP,
+  //                                                                               dom_intrf->comm);
+  // for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain) {
+  //   for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
+  //     for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface) {
+
+  //       // Copy one to another
+  //       int           interface_pn       = 0;
+  //       PDM_g_num_t  *interface_ln_to_gn = NULL;
+  //       int          *interface_sgn      = NULL;
+  //       int          *interface_sens     = NULL;
+  //       int          *interface_ids      = NULL;
+  //       int          *interface_ids_idx  = NULL;
+  //       int          *interface_dom      = NULL;
+  //       PDM_part_domain_interface_get(pdi,
+  //                                     PDM_BOUND_TYPE_FACE,
+  //                                     i_domain,
+  //                                     i_part,
+  //                                     i_interface,
+  //                                     &interface_pn,
+  //                                     &interface_ln_to_gn,
+  //                                     &interface_sgn,
+  //                                     &interface_sens,
+  //                                     &interface_ids,
+  //                                     &interface_ids_idx,
+  //                                     &interface_dom);
+
+  //       PDM_part_domain_interface_set(pdi_only_face,
+  //                                     PDM_BOUND_TYPE_FACE,
+  //                                     i_domain,
+  //                                     i_part,
+  //                                     i_interface,
+  //                                     interface_pn,
+  //                                     interface_ln_to_gn,
+  //                                     interface_sgn,
+  //                                     interface_sens,
+  //                                     interface_ids,
+  //                                     interface_ids_idx,
+  //                                     interface_dom);
+  //     }
+  //   }
+  // }
+  // PDM_part_domain_interface_free(pdi_only_face);
 
 
   /*
