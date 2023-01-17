@@ -103,17 +103,27 @@ PDM_mesh_interpolate_graph_comm_set
   int                      *entity_part_bound
 );
 
+// void
+// PDM_mesh_interpolate_part_group_set
+// (
+//   PDM_mesh_interpolate_t   *mi,
+//   int                       i_domain,
+//   int                       i_part,
+//   int                       i_group,
+//   PDM_mesh_entities_t       entity_kind,
+//   int                      *entity_bound
+// );
+
 void
 PDM_mesh_interpolate_part_group_set
 (
   PDM_mesh_interpolate_t   *mi,
   int                       i_domain,
   int                       i_part,
-  int                       i_group,
   PDM_mesh_entities_t       entity_kind,
+  int                      *entity_bound_idx,
   int                      *entity_bound
 );
-
 
 void
 PDM_mesh_interpolate_part_domain_interface_shared_set

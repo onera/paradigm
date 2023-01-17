@@ -40,6 +40,7 @@ struct _pdm_mesh_interpolate_t {
   PDM_MPI_Comm      comm;            /*!< MPI communicator                          */
 
   int               n_domain;
+  int              *n_group;
   int              *n_part;
   int              *n_part_idx;
   int              *n_part_g_idx;
@@ -54,6 +55,10 @@ struct _pdm_mesh_interpolate_t {
   int ****entity_part_bound_part_idx;
   int ****entity_part_bound;
   int    *graph_comm_is_defined;
+
+  int ****group_entity_idx; // (i_kind, i_domain, i_part)
+  int ****group_entity;
+  int    *group_is_defined;
 
 };
 
