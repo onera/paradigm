@@ -86,7 +86,7 @@ PDM_mesh_interpolate_create
   mi->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
   mi->n_group     = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
   for(int i = 0; i < mi->n_domain; ++i) {
-    mi->n_part [i] = n_part[i];
+    mi->n_part [i] = n_part [i];
     mi->n_group[i] = n_group[i];
   }
   mi->comm        = comm;
@@ -478,7 +478,9 @@ PDM_mesh_interpolate_compute
   }
 
   /* Compute weight */
-  /* Create protocol only between join - Distant neighbor */
+
+
+
 }
 
 
@@ -572,7 +574,7 @@ PDM_mesh_interpolate_part_domain_interface_shared_set
 //   int                       i_part,
 //   int                       i_group,
 //   PDM_mesh_entities_t       entity_kind,
-//   int                      *group_entity_idx,
+//   int                       n_entity_group_entity,
 //   int                      *group_entity
 // );
 

@@ -422,10 +422,21 @@ int main
                                                    comm,
                                                    PDM_OWNERSHIP_KEEP);
 
+  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(n_domain, comm, PDM_OWNERSHIP_KEEP);
+  PDM_dmesh_t **dm = malloc(n_domain * sizeof(PDM_dmesh_t *));
+
+  int          *dn_vtx        = malloc( n_domain * sizeof(int          ));
+  int          *dn_face       = malloc( n_domain * sizeof(int          ));
+  int          *dn_edge       = malloc( n_domain * sizeof(int          ));
+  int         **dface_vtx_idx = malloc( n_domain * sizeof(int         *));
+  PDM_g_num_t **dface_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
+  int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
+  PDM_g_num_t **dedge_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
   for (int i = 0; i < n_domain; i++) {
     dmn[i] = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube[i]);
     PDM_dmesh_nodal_generate_distribution(dmn[i]);
     PDM_multipart_register_dmesh_nodal(mpart_id, i, dmn[i]);
+    PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, i, dmn[i]);
   }
 
   PDM_multipart_set_reordering_options(mpart_id,
@@ -434,6 +445,51 @@ int main
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
   PDM_multipart_run_ppart(mpart_id);
+
+
+  PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+
+
+  for (int i = 0; i < n_domain; i++) {
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &dm[i]);
+    int _dn_cell, _dn_face, _dn_edge, _dn_vtx, _n_bnd, _n_join;
+    PDM_dmesh_dims_get(dm[i], &_dn_cell, &_dn_face, &_dn_edge, &_dn_vtx, &_n_bnd, &_n_join);
+
+    dn_vtx [i] = _dn_vtx;
+
+    if(dim == 3) {
+      dn_face[i] = PDM_dmesh_connectivity_get(dm[i],
+                                              PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                              &dface_vtx[i],
+                                              &dface_vtx_idx[i],
+                                              PDM_OWNERSHIP_KEEP);
+      assert(dface_vtx_idx[i] != NULL);
+      assert(dface_vtx[i] != NULL);
+    } else {
+      dn_face[i] = 0;
+    }
+
+    dedge_vtx    [i] = NULL;
+    dedge_vtx_idx[i] = NULL;
+    dn_edge[i] = PDM_dmesh_connectivity_get(dm[i],
+                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                            &dedge_vtx[i],
+                                            &dedge_vtx_idx[i],
+                                            PDM_OWNERSHIP_KEEP);
+    assert(dedge_vtx_idx[i] != NULL);
+    assert(dedge_vtx    [i] != NULL);
+  }
+
+  if(dim == 3) {
+    // Il faut rajouter un is_implicit_order
+    PDM_domain_interface_translate_vtx2face(dom_intrf,
+                                            dn_vtx,
+                                            dn_face,
+                                            dface_vtx_idx,
+                                            dface_vtx);
+  }
 
   /*
    *  Prepare pointer by domain and by part
@@ -638,7 +694,17 @@ int main
 
   PDM_mesh_interpolate_free(mi);
 
+  PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   free(n_group_by_domain);
+
+  free(dm);
+  free(dn_vtx);
+  free(dn_face);
+  free(dn_edge);
+  free(dface_vtx_idx);
+  free(dface_vtx);
+  free(dedge_vtx_idx);
+  free(dedge_vtx);
 
   /*
    *  Free memory
