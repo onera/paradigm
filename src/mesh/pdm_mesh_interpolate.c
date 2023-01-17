@@ -129,6 +129,7 @@ PDM_mesh_interpolate_create
     }
   }
 
+  mi->pdi = NULL;
 
 
 
@@ -162,6 +163,40 @@ PDM_mesh_interpolate_compute
     n_part_loc_all_domain += mi->n_part[i_domain];
   }
 
+
+  int         **pdi_neighbor_idx         = NULL;
+  int         **pdi_neighbor             = NULL;
+  int           n_composed_interface     = 0;
+  int          *composed_interface_idx   = NULL;
+  int          *composed_interface       = NULL;
+  PDM_g_num_t  *composed_ln_to_gn_sorted = NULL;
+
+  if(mi->pdi != NULL) {
+    int **pn_vtx = malloc(mi->n_domain * sizeof(int *));
+    for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+      pn_vtx[i_domain] = malloc(mi->n_part[i_domain] * sizeof(int));
+      for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+        pn_vtx[i_domain][i_part] = mi->parts[i_domain][i_part].n_vtx;
+      }
+    }
+
+    PDM_part_domain_interface_as_graph(mi->pdi,
+                                       PDM_BOUND_TYPE_VTX,
+                                       pn_vtx,
+                                       NULL,
+                                       &pdi_neighbor_idx,
+                                       &pdi_neighbor,
+                                       &n_composed_interface,
+                                       &composed_interface_idx,
+                                       &composed_interface,
+                                       &composed_ln_to_gn_sorted);
+    for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+      free(pn_vtx[i_domain]);
+    }
+    free(pn_vtx);
+  }
+
+
   int shift_part   = 0;
   int shift_part_g = 0;
 
@@ -190,11 +225,11 @@ PDM_mesh_interpolate_compute
       /*
        * Add comming from interface
        */
-      // if(pdi_neighbor_idx != NULL) {
-      //   for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
-      //     _neighbor_n[i_entity] += pdi_neighbor_idx[i_part+shift_part][i_entity+1] - pdi_neighbor_idx[i_part+shift_part][i_entity];
-      //   }
-      // }
+      if(pdi_neighbor_idx != NULL) {
+        for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+          _neighbor_n[i_entity] += pdi_neighbor_idx[i_part+shift_part][i_entity+1] - pdi_neighbor_idx[i_part+shift_part][i_entity];
+        }
+      }
 
       /* Compute index */
       _neighbor_idx[0] = 0;
@@ -204,6 +239,7 @@ PDM_mesh_interpolate_compute
       }
 
       PDM_log_trace_array_int(_neighbor_idx, n_vtx, "_neighbor_idx ::");
+      PDM_log_trace_array_int(_neighbor_n, n_vtx, "_neighbor_n ::");
 
 
       free(_neighbor_n);
@@ -217,12 +253,26 @@ PDM_mesh_interpolate_compute
   shift_part = 0;
   for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
-      free(neighbor_idx[i_part+shift_part]);
+      free(neighbor_idx    [i_part+shift_part]);
+
+      if(mi->pdi != NULL) {
+        free(pdi_neighbor_idx[i_part+shift_part]);
+        free(pdi_neighbor    [i_part+shift_part]);
+      }
     }
     shift_part   += mi->n_part              [i_domain];
   }
   free(neighbor_idx);
 
+
+  if(mi->pdi != NULL) {
+    free(pdi_neighbor_idx);
+    free(pdi_neighbor    );
+
+    free(composed_interface_idx  );
+    free(composed_interface      );
+    free(composed_ln_to_gn_sorted);
+  }
 
   /* Compute weight */
   /* Create protocol only between join - Distant neighbor */

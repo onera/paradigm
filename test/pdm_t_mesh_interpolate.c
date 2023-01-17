@@ -562,6 +562,7 @@ int main
                                                            NULL,
                                                            0,
                                                            comm);
+  PDM_mesh_interpolate_part_domain_interface_shared_set(mi, pdi);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
