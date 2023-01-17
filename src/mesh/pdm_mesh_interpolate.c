@@ -173,7 +173,7 @@ PDM_mesh_interpolate_compute
 
 
   /* Deduce graph with all graphe inside same domain and between domain */
-  int ***vtx_part_bound_proc_idx = mi->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX];
+  // int ***vtx_part_bound_proc_idx = mi->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX];
   int ***vtx_part_bound_part_idx = mi->entity_part_bound_part_idx[PDM_MESH_ENTITY_VERTEX];
   int ***vtx_part_bound          = mi->entity_part_bound         [PDM_MESH_ENTITY_VERTEX];
 
@@ -352,14 +352,53 @@ PDM_mesh_interpolate_compute
     int n_group = mi->n_group[i_domain];
 
     // int *
-
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
 
-      vtx_face_bound_idx[i_part+shift_part] = malloc(mi->parts[i_domain][i_part].n_vtx * sizeof(int));
+      int n_vtx = mi->parts[i_domain][i_part].n_vtx;
+      vtx_face_bound_idx[i_part+shift_part] = malloc( (n_vtx + 1) * sizeof(int));
+      int *_vtx_face_bound_idx = (int *) vtx_face_bound_idx[i_part+shift_part];
+
+      int  *vtx_face_bound_n = PDM_array_zeros_int(n_vtx);
+
+      int *face_group_idx = mi->group_entity_idx[PDM_BOUND_TYPE_FACE][i_domain][i_part];
+      int *face_group     = mi->group_entity    [PDM_BOUND_TYPE_FACE][i_domain][i_part];
+
+      int* face_vtx_idx = mi->parts[i_domain][i_part].face_vtx_idx;
+      int* face_vtx     = mi->parts[i_domain][i_part].face_vtx;
 
       for(int i_group = 0; i_group < n_group; ++i_group) {
-
+        for(int idx_face = face_group_idx[i_group]; idx_face < face_group_idx[i_group+1]; ++idx_face) {
+          int i_face = face_group[idx_face]-1;
+          for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = face_vtx[idx_vtx];
+            vtx_face_bound_n[i_vtx] += 1;
+          }
+        }
       }
+
+      _vtx_face_bound_idx[0] = 0;
+      for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx ) {
+        _vtx_face_bound_idx[i_vtx+1] = _vtx_face_bound_idx[i_vtx] + vtx_face_bound_n[i_vtx];
+        vtx_face_bound_n[i_vtx] = 0;
+      }
+      vtx_face_bound      [i_part+shift_part] = malloc(_vtx_face_bound_idx[n_vtx] * sizeof(int));
+      vtx_face_bound_group[i_part+shift_part] = malloc(_vtx_face_bound_idx[n_vtx] * sizeof(int));
+      int *_vtx_face_bound       =vtx_face_bound      [i_part+shift_part];
+      int *_vtx_face_bound_group =vtx_face_bound_group[i_part+shift_part];
+
+      for(int i_group = 0; i_group < n_group; ++i_group) {
+        for(int idx_face = face_group_idx[i_group]; idx_face < face_group_idx[i_group+1]; ++idx_face) {
+          int i_face = face_group[idx_face]-1;
+          for(int idx_vtx = face_vtx_idx[i_face]; idx_vtx < face_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = face_vtx[idx_vtx];
+            int idx_write = _vtx_face_bound_idx[i_vtx] + vtx_face_bound_n[i_vtx]++;
+            _vtx_face_bound      [idx_write] = idx_face; // - face_group_idx[i_group]
+            _vtx_face_bound_group[idx_write] = i_group;
+          }
+        }
+      }
+
+      free(vtx_face_bound_n);
 
     }
     shift_part   += mi->n_part              [i_domain];
@@ -409,8 +448,8 @@ PDM_mesh_interpolate_compute
       free(pvtx_cell_opp  [i_part+shift_part]);
 
       free(vtx_face_bound_idx  [i_part+shift_part]);
-      // free(vtx_face_bound      [i_part+shift_part]);
-      // free(vtx_face_bound_group[i_part+shift_part]);
+      free(vtx_face_bound      [i_part+shift_part]);
+      free(vtx_face_bound_group[i_part+shift_part]);
 
 
     }
