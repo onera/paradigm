@@ -92,6 +92,22 @@ const PDM_g_num_t                 *parent_entity_g_num,
       PDM_ownership_t              owner
 );
 
+void
+PDM_part_mesh_nodal_elmts_std_ho_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part,
+const int                          n_elt,
+const int                         *connec,
+const PDM_g_num_t                 *numabs,
+const int                         *parent_num,
+const PDM_g_num_t                 *parent_entity_g_num,
+const int                          order,
+const char                        *ho_ordering,
+      PDM_ownership_t              owner
+);
+
 /**
  * \brief Define a polygon block
  *

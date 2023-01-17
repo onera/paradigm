@@ -1878,7 +1878,7 @@ PDM_dcube_nodal_gen_build
     dim = 2;
   }
   if (dcube->t_elt == PDM_MESH_NODAL_POINT || dcube->t_elt == PDM_MESH_NODAL_BAR2){
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt for PDM_dcube_nodal_gen_init\n");
+    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt (%d) for PDM_dcube_nodal_gen_init\n", (int) dcube->t_elt);
   }
 
   PDM_g_num_t n_vtx_x = dcube->order*dcube->nx + 1;

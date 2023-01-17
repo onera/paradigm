@@ -782,7 +782,8 @@ PDM_generate_ho_vtx_ln_to_gn
     s_connec_ridge   [i_part] = 0;
   }
 
-  if(dmn->volumic != NULL) {
+  // if(dmn->volumic != NULL) {
+  if(dmn->volumic->n_section > 0) {
 
     int                  **pelmt_volumic_strid_idx = NULL;
     PDM_Mesh_nodal_elt_t **pelmt_volumic_type      = NULL;
@@ -802,84 +803,129 @@ PDM_generate_ho_vtx_ln_to_gn
     free(pelmt_volumic_type);
   }
 
-  if(dmn->surfacic != NULL) {
+  // if(dmn->surfacic != NULL) {
+  if(dmn->surfacic->n_section > 0) {
     /* Translate face information into elmt information first */
     int          *pn_surf             = NULL;
     PDM_g_num_t **psurf_gnum          = NULL;
     PDM_g_num_t **psurf_to_face_g_num = NULL;
-    PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
-                             NULL, // dparent_sign
-                             dmn->surfacic->delmt_child_distrib,
-                             n_part,
-                             pn_face,
-                             pface_ln_to_gn,
-                            &pn_surf,
-                            &psurf_gnum,
-                            &psurf_to_face_g_num,
-                             NULL, // pchild_parent_sign
-                             dmn->comm);
 
-    int                  **pelmt_surfacic_strid_idx = NULL;
-    PDM_Mesh_nodal_elt_t **pelmt_surfacic_type      = NULL;
-    _delmt_vtx_to_pelmt_vtx(dmn->surfacic,
-                            n_part,
-                            pn_surf,
-                            psurf_gnum,
-                            &pelmt_surfacic_strid_idx,
-                            &pelmt_surfacic_connec,
-                            &pelmt_surfacic_type);
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      s_connec_surfacic[i_part] = pelmt_surfacic_strid_idx[i_part][pn_surf[i_part]];
-      free(pelmt_surfacic_strid_idx[i_part]);
-      free(pelmt_surfacic_type     [i_part]);
-      free(psurf_gnum              [i_part]);
-      free(psurf_to_face_g_num     [i_part]);
+    if (dmn->surfacic->delmt_child_distrib != NULL) {
+      PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+                               NULL, // dparent_sign
+                               dmn->surfacic->delmt_child_distrib,
+                               n_part,
+                               pn_face,
+                               pface_ln_to_gn,
+                               &pn_surf,
+                               &psurf_gnum,
+                               &psurf_to_face_g_num,
+                               NULL, // pchild_parent_sign
+                               dmn->comm);
+
+      int                  **pelmt_surfacic_strid_idx = NULL;
+      PDM_Mesh_nodal_elt_t **pelmt_surfacic_type      = NULL;
+      _delmt_vtx_to_pelmt_vtx(dmn->surfacic,
+                              n_part,
+                              pn_surf,
+                              psurf_gnum,
+                              &pelmt_surfacic_strid_idx,
+                              &pelmt_surfacic_connec,
+                              &pelmt_surfacic_type);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        s_connec_surfacic[i_part] = pelmt_surfacic_strid_idx[i_part][pn_surf[i_part]];
+        free(pelmt_surfacic_strid_idx[i_part]);
+        free(pelmt_surfacic_type     [i_part]);
+        free(psurf_gnum              [i_part]);
+        free(psurf_to_face_g_num     [i_part]);
+      }
+      free(pelmt_surfacic_strid_idx);
+      free(pelmt_surfacic_type);
+      free(psurf_gnum);
+      free(psurf_to_face_g_num);
+      free(pn_surf);
     }
-    free(pelmt_surfacic_strid_idx);
-    free(pelmt_surfacic_type);
-    free(psurf_gnum);
-    free(psurf_to_face_g_num);
-    free(pn_surf);
+    else {
+      int                  **pelmt_surfacic_strid_idx = NULL;
+      PDM_Mesh_nodal_elt_t **pelmt_surfacic_type      = NULL;
+      _delmt_vtx_to_pelmt_vtx(dmn->surfacic,
+                              n_part,
+                              pn_face,
+                              pface_ln_to_gn,
+                              &pelmt_surfacic_strid_idx,
+                              &pelmt_surfacic_connec,
+                              &pelmt_surfacic_type);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        s_connec_surfacic[i_part] = pelmt_surfacic_strid_idx[i_part][pn_face[i_part]];
+        free(pelmt_surfacic_strid_idx[i_part]);
+        free(pelmt_surfacic_type     [i_part]);
+      }
+      free(pelmt_surfacic_strid_idx);
+      free(pelmt_surfacic_type);
+    }
   }
 
-  if(dmn->ridge != NULL) {
+  // if(dmn->ridge != NULL) {
+  if(dmn->ridge->n_section > 0) {
     /* Translate edge information into elmt information first */
     int          *pn_ridge             = NULL;
     PDM_g_num_t **pridge_gnum          = NULL;
     PDM_g_num_t **pridge_to_edge_g_num = NULL;
-    PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
-                             NULL, // dparent_sign
-                             dmn->ridge->delmt_child_distrib,
-                             n_part,
-                             pn_edge,
-                             pedge_ln_to_gn,
-                            &pn_ridge,
-                            &pridge_gnum,
-                            &pridge_to_edge_g_num,
-                             NULL, // pchild_parent_sign
-                             dmn->comm);
 
-    int                  **pelmt_ridge_strid_idx = NULL;
-    PDM_Mesh_nodal_elt_t **pelmt_ridge_type      = NULL;
-    _delmt_vtx_to_pelmt_vtx(dmn->ridge,
-                            n_part,
-                            pn_ridge,
-                            pridge_gnum,
-                            &pelmt_ridge_strid_idx,
-                            &pelmt_ridge_connec,
-                            &pelmt_ridge_type);
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_ridge[i_part]];
-      free(pelmt_ridge_strid_idx[i_part]);
-      free(pelmt_ridge_type     [i_part]);
-      free(pridge_gnum          [i_part]);
-      free(pridge_to_edge_g_num [i_part]);
+    if (dmn->surfacic->delmt_child_distrib != NULL) {
+      PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
+                               NULL, // dparent_sign
+                               dmn->ridge->delmt_child_distrib,
+                               n_part,
+                               pn_edge,
+                               pedge_ln_to_gn,
+                               &pn_ridge,
+                               &pridge_gnum,
+                               &pridge_to_edge_g_num,
+                               NULL, // pchild_parent_sign
+                               dmn->comm);
+
+      int                  **pelmt_ridge_strid_idx = NULL;
+      PDM_Mesh_nodal_elt_t **pelmt_ridge_type      = NULL;
+      _delmt_vtx_to_pelmt_vtx(dmn->ridge,
+                              n_part,
+                              pn_ridge,
+                              pridge_gnum,
+                              &pelmt_ridge_strid_idx,
+                              &pelmt_ridge_connec,
+                              &pelmt_ridge_type);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_ridge[i_part]];
+        free(pelmt_ridge_strid_idx[i_part]);
+        free(pelmt_ridge_type     [i_part]);
+        free(pridge_gnum          [i_part]);
+        free(pridge_to_edge_g_num [i_part]);
+      }
+      free(pelmt_ridge_strid_idx);
+      free(pelmt_ridge_type);
+      free(pridge_gnum);
+      free(pridge_to_edge_g_num);
+      free(pn_ridge);
     }
-    free(pelmt_ridge_strid_idx);
-    free(pelmt_ridge_type);
-    free(pridge_gnum);
-    free(pridge_to_edge_g_num);
-    free(pn_ridge);
+    else {
+      int                  **pelmt_ridge_strid_idx = NULL;
+      PDM_Mesh_nodal_elt_t **pelmt_ridge_type      = NULL;
+      _delmt_vtx_to_pelmt_vtx(dmn->ridge,
+                              n_part,
+                              pn_edge,
+                              pedge_ln_to_gn,
+                              &pelmt_ridge_strid_idx,
+                              &pelmt_ridge_connec,
+                              &pelmt_ridge_type);
+      for(int i_part = 0; i_part < n_part; ++i_part) {
+        s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_edge[i_part]];
+        free(pelmt_ridge_strid_idx[i_part]);
+        free(pelmt_ridge_type     [i_part]);
+      }
+      free(pelmt_ridge_strid_idx);
+      free(pelmt_ridge_type);
+      free(pridge_gnum);
+    }
   }
 
   /*
@@ -906,9 +952,6 @@ PDM_generate_ho_vtx_ln_to_gn
     for(int i = 0; i < s_connec_ridge[i_part]; ++i){
       concat_connec[shift+i] = pelmt_ridge_connec[i_part][i];
     }
-    free(pelmt_volumic_connec [i_part]);
-    free(pelmt_surfacic_connec[i_part]);
-    free(pelmt_ridge_connec   [i_part]);
 
     /*
      * Sort also vtx_ln_to_gn
@@ -956,12 +999,27 @@ PDM_generate_ho_vtx_ln_to_gn
   free(s_connec_surfacic   );
   free(s_connec_ridge      );
   if(pelmt_volumic_connec != NULL){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      if (pelmt_volumic_connec [i_part] != NULL) {
+        free(pelmt_volumic_connec [i_part]);
+      }
+    }
     free(pelmt_volumic_connec);
   }
   if(pelmt_surfacic_connec != NULL){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      if (pelmt_surfacic_connec[i_part] != NULL) {
+        free(pelmt_surfacic_connec[i_part]);
+      }
+    }
     free(pelmt_surfacic_connec);
   }
   if(pelmt_ridge_connec != NULL){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      if (pelmt_ridge_connec   [i_part] != NULL) {
+        free(pelmt_ridge_connec   [i_part]);
+      }
+    }
     free(pelmt_ridge_connec);
   }
 

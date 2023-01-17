@@ -1209,22 +1209,10 @@ const PDM_Mesh_nodal_elt_t         t_elt
     PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
   }
 
-  if(t_elt == PDM_MESH_NODAL_POINT) {
-    if(pmne->mesh_dimension != 0){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 0);
-    }
-  } else if(t_elt == PDM_MESH_NODAL_BAR2) {
-    if(pmne->mesh_dimension != 1){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 1);
-    }
-  } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D) {
-    if(pmne->mesh_dimension != 2){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 2);
-    }
-  } else {
-    if(pmne->mesh_dimension != 3){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 3);
-    }
+  int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+  if (elt_dim != pmne->mesh_dimension) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_part_mesh_nodal_elmts_add = expected = %i and given = %i \n",
+               pmne->mesh_dimension, elt_dim);
   }
 
   int id_block = -1;
@@ -1398,23 +1386,10 @@ const char                        *ho_ordering
     PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
   }
 
-  if(t_elt == PDM_MESH_NODAL_POINT) {
-    if(pmne->mesh_dimension != 0){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 0);
-    }
-  } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO) {
-    if(pmne->mesh_dimension != 1){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 1);
-    }
-  } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D ||
-            t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO) {
-    if(pmne->mesh_dimension != 2){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 2);
-    }
-  } else {
-    if(pmne->mesh_dimension != 3){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", pmne->mesh_dimension, 3);
-    }
+  int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
+  if (elt_dim != pmne->mesh_dimension) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_part_mesh_nodal_elmts_ho_add = expected = %i and given = %i \n",
+               pmne->mesh_dimension, elt_dim);
   }
 
   int id_block = -1;
@@ -1544,6 +1519,40 @@ const PDM_g_num_t                 *parent_entity_g_num,
     }
     block->_parent_entity_g_num[id_part] = (PDM_g_num_t *) parent_entity_g_num;
   }
+}
+
+void
+PDM_part_mesh_nodal_elmts_std_ho_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part,
+const int                          n_elt,
+const int                         *connec,
+const PDM_g_num_t                 *numabs,
+const int                         *parent_num,
+const PDM_g_num_t                 *parent_entity_g_num,
+const int                          order,
+const char                        *ho_ordering,
+      PDM_ownership_t              owner
+)
+{
+  PDM_part_mesh_nodal_elmts_std_set(pmne,
+                                    id_block,
+                                    id_part,
+                                    n_elt,
+                                    connec,
+                                    numabs,
+                                    parent_num,
+                                    parent_entity_g_num,
+                                    owner);
+
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+
+  PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_block];
+
+  block->order       = order;
+  block->ho_ordering = ho_ordering;
 }
 
 void
@@ -3277,7 +3286,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
     n_elt = block->n_elt[id_part];
     cell_vtx = block->_connec[id_part];
 
-    const int order = 1;//
+    const int order = block->order;
 
     // TO DO : support HO elt (-> Bézier to compute bboxes?)
     n_vtx_elt = PDM_Mesh_nodal_n_vertices_element (block->t_elt, order);

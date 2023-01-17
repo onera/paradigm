@@ -40,6 +40,7 @@
 #include "pdm_vtk.h"
 #include "pdm_unique.h"
 #include "pdm_array.h"
+#include "pdm_ho_location.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -1877,6 +1878,7 @@ _dist_cloud_surf_compute_optim
               iface = parent_num[ielt];
             }
 
+            // TODO : Re-order to Lagrange
             for (int j = 0; j < n_vtx; j++) {
               pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[n_vtx*ielt+j];
             }
@@ -2055,7 +2057,7 @@ _dist_cloud_surf_compute_optim
         } // End of loop on points
       }
 
-      /* Polygon */
+      /* Quadrangle or Polygon */
       if (elt_type[i_elmt] == PDM_MESH_NODAL_QUAD4 ||
           elt_type[i_elmt] == PDM_MESH_NODAL_POLY_2D) {
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
@@ -2089,6 +2091,32 @@ _dist_cloud_surf_compute_optim
           }
         } // End of loop on points
       }
+
+      /* Lagrange triangle or quadrangle */
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_TRIAHO ||
+          elt_type[i_elmt] == PDM_MESH_NODAL_QUADHO) {
+        for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
+          int i_pts = box_pts[idx_pts]-1;
+          double lproj[3];
+          double uvw[3];
+          double ldist = PDM_ho_location(elt_type[i_elmt],
+                                         elt_order[i_elmt],
+                                         n_elmt_vtx,
+                                         lvtx_coords,
+                                         &pts_coords[3*i_pts],
+                                         lproj,
+                                         uvw);
+
+        if (ldist < pts_dist2[i_pts]) {
+            pts_dist2[i_pts]     = ldist;
+            pts_proj [3*i_pts  ] = lproj[0];
+            pts_proj [3*i_pts+1] = lproj[1];
+            pts_proj [3*i_pts+2] = lproj[2];
+            pts_closest_face_g_num[i_pts] = box_gnum[i_elmt];
+          }
+        } // End of loop on points
+      }
+
     }
     free(lvtx_coords);
     free(box_pts);
