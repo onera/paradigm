@@ -2169,6 +2169,89 @@ const int                          id_part
   return _parent_num;
 }
 
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_g_num_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne identifier\n");
+  }
+
+  int _id_block;
+
+  PDM_g_num_t *_g_num = NULL;
+
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_block];
+
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    // block->is_parent_num_get = 1;
+    if (block->_numabs != NULL) {
+      _g_num = block->_numabs[id_part];
+    }
+  }
+
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    // block->is_parent_num_get = 1;
+    if (block->_numabs != NULL) {
+      _g_num = block->_numabs[id_part];
+    }
+  }
+
+  else {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    // block->is_parent_num_get = 1;
+    if (block->_numabs != NULL) {
+      _g_num = block->_numabs[id_part];
+    }
+  }
+
+  return _g_num;
+}
+
+
 inline static
 PDM_Mesh_nodal_elt_t
 _type_cell_3D
@@ -3121,6 +3204,139 @@ PDM_part_mesh_nodal_create_from_part2d
   prepa_blocks = NULL;
 
   return pmne;
+}
+
+
+
+void
+PDM_part_mesh_nodal_elmts_elt_extents_compute
+(
+       PDM_part_mesh_nodal_elmts_t *pmne,
+ const int                          id_block,
+ const int                          id_part,
+ const double                       tolerance,
+       double                      *vtx_coord,
+       double                      *extents
+ )
+{
+  const double eps_extents = 1.e-7;
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne identifier\n");
+  }
+
+  PDM_l_num_t *cell_vtx     = NULL;
+  PDM_l_num_t *cell_vtx_idx = NULL;
+  PDM_l_num_t  n_elt, n_vtx_elt = 0;
+
+  int _id_block;
+
+  /* Polyhedra */
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    n_elt = block->n_elt[id_part];
+    cell_vtx_idx = block->_cellvtx_idx[id_part];
+    cell_vtx     = block->_cellvtx[id_part];
+  }
+
+  /* Polygons */
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    n_elt = block->n_elt[id_part];
+    cell_vtx_idx = block->_connec_idx[id_part];
+    cell_vtx     = block->_connec[id_part];
+  }
+
+  /* Standard elements */
+  else {
+
+    _id_block = id_block;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    n_elt = block->n_elt[id_part];
+    cell_vtx = block->_connec[id_part];
+
+    const int order = 1;//
+
+    // TO DO : support HO elt (-> Bézier to compute bboxes?)
+    n_vtx_elt = PDM_Mesh_nodal_n_vertices_element (block->t_elt, order);
+  }
+
+  /* Loop on elements */
+  int idx = 0;
+  for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
+
+    double *_extents = extents + 6 * ielt;
+
+    for (int idim = 0; idim < 3; idim++) {
+      _extents[idim]   =  HUGE_VAL;
+      _extents[3+idim] = -HUGE_VAL;
+    }
+
+
+    if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+      idx = cell_vtx_idx[ielt];
+      n_vtx_elt = cell_vtx_idx[ielt+1] - cell_vtx_idx[ielt];
+    }
+
+    for (int ivtx = 0; ivtx < n_vtx_elt; ivtx++) {
+      PDM_l_num_t id_vtx = cell_vtx[idx++] - 1;
+
+      for (int idim = 0; idim < 3; idim++) {
+        double x = vtx_coord[3*id_vtx + idim];
+
+        if (x < _extents[idim]) {
+          _extents[idim] = x;
+        }
+        if (x > _extents[3+idim]) {
+          _extents[3+idim] = x;
+        }
+      }
+    }
+
+
+    /* Expand bounding box */
+    double delta = 0.;
+    for (int idim = 0; idim < 3; idim++) {
+      double x = _extents[3+idim] - _extents[idim];
+
+      if (delta < x) {
+        delta = x;
+      }
+    }
+
+    if (delta > eps_extents) {
+      delta *= tolerance;
+    } else {
+      delta = eps_extents;
+    }
+
+    for (int idim = 0; idim < 3; idim++) {
+      _extents[idim]   -= delta;
+      _extents[3+idim] += delta;
+    }
+  } // End of loop on elements
 }
 
 

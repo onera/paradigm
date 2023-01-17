@@ -294,6 +294,13 @@ const int                          id_block,
 const int                          id_part
 );
 
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_g_num_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block,
+const int                          id_part
+);
 
 PDM_part_mesh_nodal_elmts_t*
 PDM_part_mesh_nodal_create_from_part2d
@@ -309,6 +316,17 @@ PDM_part_mesh_nodal_create_from_part2d
   const PDM_g_num_t      **numabs,
         PDM_MPI_Comm       comm
 );
+
+void
+PDM_part_mesh_nodal_elmts_elt_extents_compute
+(
+       PDM_part_mesh_nodal_elmts_t *pmne,
+ const int                          id_block,
+ const int                          id_part,
+ const double                       tolerance,
+       double                      *vtx_coord,
+       double                      *extents
+ );
 
 #ifdef __cplusplus
 }

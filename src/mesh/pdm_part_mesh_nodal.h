@@ -177,6 +177,24 @@ PDM_part_mesh_nodal_block_type_get
 const int                     id_block
 );
 
+int *
+PDM_part_mesh_nodal_block_parent_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_block,
+const int                     id_part
+);
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_block_g_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_block,
+const int                     id_part
+);
+
 void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
@@ -198,6 +216,18 @@ PDM_part_mesh_nodal_dump_vtk
  PDM_geometry_kind_t    geom_kind,
  const char            *filename_patter
 );
+
+void
+PDM_part_mesh_nodal_block_elt_extents_compute
+(
+       PDM_part_mesh_nodal_t *pmn,
+       PDM_geometry_kind_t    geom_kind,
+ const int                    id_section,
+ const int                    i_part,
+ const double                 tolerance,
+       double                *extents
+);
+
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,9 @@
 #include "pdm_dist_cloud_surf_priv.h"
 #include "pdm_dist_cloud_surf.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_octree.h"
 #include "pdm_para_octree.h"
@@ -91,7 +94,7 @@ _dist_cloud_surf_compute
 )
 {
   const int n_point_cloud      = dist->n_point_cloud;
-  PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
+  PDM_Mesh_nodal_t *mesh_nodal = NULL;//dist->mesh_nodal;
   PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
   PDM_MPI_Comm comm            = dist->comm;
 
@@ -1002,8 +1005,11 @@ _dist_cloud_surf_compute_optim
  PDM_dist_cloud_surf_t *dist
 )
 {
+  int dbg_enabled = 1;
+
   const int n_point_cloud      = dist->n_point_cloud;
-  PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
+  // PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
+  PDM_part_mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
   PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
   PDM_MPI_Comm comm            = dist->comm;
 
@@ -1049,7 +1055,7 @@ _dist_cloud_surf_compute_optim
 
   int n_part_mesh = 0;
   if (mesh_nodal != NULL) {
-    n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_nodal);
+    n_part_mesh = PDM_part_mesh_nodal_n_part_get (mesh_nodal);
   }
   else if (surf_mesh != NULL) {
     n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
@@ -1086,9 +1092,9 @@ _dist_cloud_surf_compute_optim
     const PDM_g_num_t *vertices_gnum = NULL;
 
     if (mesh_nodal != NULL) {
-      n_vertices      = PDM_Mesh_nodal_n_vertices_get (mesh_nodal, i_part);
-      vertices_coords = PDM_Mesh_nodal_vertices_get   (mesh_nodal, i_part);
-      vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+      n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
@@ -1105,10 +1111,10 @@ _dist_cloud_surf_compute_optim
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_point_cloud_set (octree, i_part, n_vertices,
-          vertices_coords, vertices_gnum);
+                                  vertices_coords, vertices_gnum);
     } else {
       PDM_para_octree_point_cloud_set (para_octree, i_part, n_vertices,
-          vertices_coords, vertices_gnum);
+                                       vertices_coords, vertices_gnum);
     }
   }
 
@@ -1116,21 +1122,117 @@ _dist_cloud_surf_compute_optim
    * Build octree
    */
   int                *part_n_elt       = malloc (sizeof(int          ) * n_part_mesh);
-  const double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
-  const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  // const double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
+  // const PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+  double      **part_elt_extents = malloc (sizeof(double      *) * n_part_mesh);
+  PDM_g_num_t **part_elt_g_num   = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+
+  PDM_geometry_kind_t geom_kind;
 
   if (mesh_nodal != NULL) {
-    //...
+    /* Infer mesh dimension from mesh_nodal (< 3?) */
+    PDM_geometry_kind_t l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+    for (l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; l_geom_kind < PDM_GEOMETRY_KIND_MAX; l_geom_kind++) {
+      int n_section = PDM_part_mesh_nodal_n_section_get(mesh_nodal,
+                                                        l_geom_kind);
+
+      if (n_section > 0) {
+        break;
+      }
+    }
+
+    PDM_MPI_Allreduce(&l_geom_kind, &geom_kind, 1, PDM_MPI_INT, PDM_MPI_MIN, dist->comm);
+
+    if (dbg_enabled) {
+      PDM_part_mesh_nodal_dump_vtk(mesh_nodal,
+                                   geom_kind,
+                                   "dist_cloud_surf_nodal_");
+    }
+
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      part_n_elt[i_part] = 0;
+
+      int n_section = PDM_part_mesh_nodal_n_section_get(mesh_nodal, geom_kind);
+
+      int *sections_id = PDM_part_mesh_nodal_sections_id_get(mesh_nodal, geom_kind);
+
+      int max_n_elt = 0;
+      for (int isection = 0; isection < n_section; isection++) {
+        int id_section = sections_id[isection];
+
+        int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+                                                        geom_kind,
+                                                        id_section,
+                                                        i_part);
+
+        part_n_elt[i_part] += n_elt;
+
+        max_n_elt = PDM_MAX(max_n_elt, n_elt);
+      }
+
+      part_elt_g_num  [i_part] = malloc(sizeof(PDM_g_num_t) * part_n_elt[i_part]);
+      part_elt_extents[i_part] = malloc(sizeof(double     ) * part_n_elt[i_part] * 6);
+
+      double *_extents = malloc(sizeof(double) * max_n_elt * 6);
+
+      int idx = 0;
+      for (int isection = 0; isection < n_section; isection++) {
+        int id_section = sections_id[isection];
+
+        int *parent_num = PDM_part_mesh_nodal_block_parent_num_get(mesh_nodal,
+                                                                   geom_kind,
+                                                                   id_section,
+                                                                   i_part);
+
+        PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
+                                                                      geom_kind,
+                                                                      id_section,
+                                                                      i_part);
+
+        int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+                                                        geom_kind,
+                                                        id_section,
+                                                        i_part);
+
+        PDM_part_mesh_nodal_block_elt_extents_compute(mesh_nodal,
+                                                      geom_kind,
+                                                      id_section,
+                                                      i_part,
+                                                      1e-8,
+                                                      _extents);
+
+        for (int i = 0; i < n_elt; i++) {
+          idx = i;
+          if (parent_num) {
+            idx = parent_num[i];
+          }
+          part_elt_g_num[i_part][idx] = _elt_g_num[i];
+          memcpy(part_elt_extents[i_part] + 6*idx, _extents + 6*i, sizeof(double)*6);
+        }
+      }
+      free(_extents);
+    }
   }
   else if (surf_mesh != NULL) {
     PDM_surf_mesh_compute_faceExtentsMesh (surf_mesh, 1e-8);
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
       part_n_elt[i_part] = PDM_surf_mesh_part_n_face_get (surf_mesh, i_part);
 
-      part_elt_g_num[i_part] = PDM_surf_mesh_part_face_g_num_get (surf_mesh, i_part);
+      part_elt_g_num[i_part] = (PDM_g_num_t *) PDM_surf_mesh_part_face_g_num_get (surf_mesh, i_part);
 
-      part_elt_extents[i_part] = PDM_surf_mesh_part_extents_get (surf_mesh, i_part);
+      part_elt_extents[i_part] = (double *) PDM_surf_mesh_part_extents_get (surf_mesh, i_part);
+    }
+  }
 
+  if (dbg_enabled) {
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      char filename[999];
+      sprintf(filename, "dist_cloud_surf_bbox_%d_%d.vtk", i_part, rank);
+
+      PDM_vtk_write_boxes(filename,
+                          part_n_elt[i_part],
+                          part_elt_extents[i_part],
+                          part_elt_g_num[i_part]);
     }
   }
 
@@ -1191,8 +1293,8 @@ _dist_cloud_surf_compute_optim
   PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
                                                            n_part_mesh,
                                                            part_n_elt,
-                                                           part_elt_extents,
-                                                           part_elt_g_num);
+                                    (const double      **) part_elt_extents,
+                                    (const PDM_g_num_t **) part_elt_g_num);
 
   if (idebug) {
     printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
@@ -1377,6 +1479,12 @@ _dist_cloud_surf_compute_optim
       PDM_dbbtree_free (dbbt);
       PDM_box_set_destroy (&surf_mesh_boxes);
       free(part_n_elt);
+      if (mesh_nodal != NULL) {
+        for (int i = 0; i < n_part_mesh; i++) {
+          free(part_elt_g_num  [i]);
+          free(part_elt_extents[i]);
+        }
+      }
       free(part_elt_g_num);
       free(part_elt_extents);
     }
@@ -1437,31 +1545,49 @@ _dist_cloud_surf_compute_optim
                                                         PDM_FALSE,                         // compute_child_gnum
                                                         PDM_OWNERSHIP_KEEP,
                                                         dist->comm);
-    // A voire
-    // PDM_extract_part_part_nodal_set(extrp, pmne);
+    if (mesh_nodal != NULL) {
+      PDM_part_mesh_nodal_elmts_t *pmne = NULL;
+      if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+        pmne = mesh_nodal->ridge;
+      }
+      else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+        pmne = mesh_nodal->surfacic;
+      }
+      else {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", (int) geom_kind);
+      }
+      PDM_extract_part_part_nodal_set(extrp, pmne);
 
-    /* Set vtx_coord */
-    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      PDM_MPI_Barrier(dist->comm);
+
+      log_trace("OK jusqu'ici :D\n");
+
+      abort();
+
+    }
+    else {
+      /* Set vtx_coord */
+      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
 
 
-      int n_face = PDM_surf_mesh_part_n_face_get(surf_mesh, i_part);
-      int n_vtx  = PDM_surf_mesh_part_n_vtx_get (surf_mesh, i_part);
+        int n_face = PDM_surf_mesh_part_n_face_get(surf_mesh, i_part);
+        int n_vtx  = PDM_surf_mesh_part_n_vtx_get (surf_mesh, i_part);
 
-      const PDM_g_num_t* face_ln_to_gn = PDM_surf_mesh_part_face_g_num_get(surf_mesh, i_part);
-      const PDM_g_num_t* vtx_ln_to_gn  = PDM_surf_mesh_part_vtx_g_num_get (surf_mesh, i_part);
+        const PDM_g_num_t* face_ln_to_gn = PDM_surf_mesh_part_face_g_num_get(surf_mesh, i_part);
+        const PDM_g_num_t* vtx_ln_to_gn  = PDM_surf_mesh_part_vtx_g_num_get (surf_mesh, i_part);
 
-      const int *part_face_vtx = PDM_surf_mesh_part_face_vtx_get (surf_mesh, i_part);
-      const int *part_face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (surf_mesh, i_part);
-      const double *part_vtx_coords = PDM_surf_mesh_part_vtx_get (surf_mesh, i_part);
+        const int *part_face_vtx = PDM_surf_mesh_part_face_vtx_get (surf_mesh, i_part);
+        const int *part_face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (surf_mesh, i_part);
+        const double *part_vtx_coords = PDM_surf_mesh_part_vtx_get (surf_mesh, i_part);
 
-      // PDM_log_trace_array_long(vtx_ln_to_gn, n_vtx, "vtx_ln_to_gn :: ");
+        // PDM_log_trace_array_long(vtx_ln_to_gn, n_vtx, "vtx_ln_to_gn :: ");
 
-      PDM_extract_part_part_set(extrp,
-                                i_part,
-                                0,
-                                n_face,
-                                0,
-                                n_vtx,
+        PDM_extract_part_part_set(extrp,
+                                  i_part,
+                                  0,
+                                  n_face,
+                                  0,
+                                  n_vtx,
                                 NULL, // pcell_face_idx[i_part],
                                 NULL, // pcell_face[i_part],
                                 NULL, // pface_edge_idx[i_part],
@@ -1469,14 +1595,14 @@ _dist_cloud_surf_compute_optim
                                 NULL, // pedge_vtx[i_part],
                   (int *)       part_face_vtx_idx, // pface_vtx_idx[i_part],
                   (int *)       part_face_vtx, // pface_vtx[i_part],
-                                NULL,
-                (PDM_g_num_t *) face_ln_to_gn,
-                                NULL,
-                (PDM_g_num_t *) vtx_ln_to_gn,
-                     (double *) part_vtx_coords);
+                  NULL,
+                  (PDM_g_num_t *) face_ln_to_gn,
+                  NULL,
+                  (PDM_g_num_t *) vtx_ln_to_gn,
+                  (double *) part_vtx_coords);
 
+      }
     }
-
 
     PDM_extract_part_target_set(extrp,
                                 0,
@@ -1491,6 +1617,13 @@ _dist_cloud_surf_compute_optim
 
     PDM_extract_part_compute(extrp);
     free(box_init_location);
+
+    if (mesh_nodal != NULL) {
+      //??
+    }
+    else {
+      //??
+    }
 
     int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                        0,
@@ -2026,7 +2159,8 @@ void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
  PDM_dist_cloud_surf_t *dist,
- PDM_Mesh_nodal_t      *mesh_nodal
+ PDM_part_mesh_nodal_t *mesh_nodal
+ // PDM_Mesh_nodal_t      *mesh_nodal
 )
 {
   dist->mesh_nodal = mesh_nodal;
