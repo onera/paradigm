@@ -189,6 +189,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_gnum_location_f 2)
   test_fortran_create (pdm_t_part_extension_f 2)
   test_fortran_create (pdm_t_sphere_surf_gen_f 1)
+  test_fortran_create (pdm_t_multipart_f 2)
   # test_fortran_create (pdm_t_io  2)
 endif()
 
