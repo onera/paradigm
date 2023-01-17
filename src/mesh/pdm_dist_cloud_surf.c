@@ -1005,7 +1005,7 @@ _dist_cloud_surf_compute_optim
  PDM_dist_cloud_surf_t *dist
 )
 {
-  int dbg_enabled = 1;
+  int dbg_enabled = 0;
 
   const int n_point_cloud      = dist->n_point_cloud;
   // PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
@@ -1131,7 +1131,7 @@ _dist_cloud_surf_compute_optim
 
   if (mesh_nodal != NULL) {
     /* Infer mesh dimension from mesh_nodal (< 3?) */
-    PDM_geometry_kind_t l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+    PDM_geometry_kind_t l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; // volume??
     for (l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; l_geom_kind < PDM_GEOMETRY_KIND_MAX; l_geom_kind++) {
       int n_section = PDM_part_mesh_nodal_n_section_get(mesh_nodal,
                                                         l_geom_kind);
@@ -1688,87 +1688,246 @@ _dist_cloud_surf_compute_optim
       free(part_elt_extents);
     }
 
+    PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     if (mesh_nodal != NULL) {
-
-      PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
       PDM_extract_part_part_mesh_nodal_get(extrp,
                                            &extract_pmne,
                                            PDM_OWNERSHIP_USER);
-
-      int mesh_dim = 0;
-      if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-        mesh_dim = 1;
-      }
-      else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-        mesh_dim = 2;
-      }
-
-      PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mesh_dim,
-                                                                      n_part_mesh,
-                                                                      dist->comm);
-
-      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-        double *_vtx_coord = NULL;
-        PDM_extract_part_vtx_coord_get(extrp,
-                                       i_part,
-                                       &_vtx_coord,
-                                       PDM_OWNERSHIP_KEEP);
-
-        PDM_g_num_t *_vtx_ln_to_gn = NULL;
-        int _n_vtx = PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                                          i_part,
-                                                          PDM_MESH_ENTITY_VERTEX,
-                                                          &_vtx_ln_to_gn,
-                                                          PDM_OWNERSHIP_KEEP);
-
-        PDM_part_mesh_nodal_coord_set(extract_pmn,
-                                      i_part,
-                                      _n_vtx,
-                                      _vtx_coord,
-                                      _vtx_ln_to_gn,
-                                      PDM_OWNERSHIP_USER);
-      }
-      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne, PDM_OWNERSHIP_KEEP);
-
-      if (dbg_enabled) {
-        PDM_part_mesh_nodal_dump_vtk(extract_pmn,
-                                     geom_kind,
-                                     "dist_cloud_surf_extrp_nodal_");
-      }
-
-      PDM_MPI_Barrier(dist->comm);
-      log_trace("OK jusqu'ici :D\n");
-
-      abort();
-    }
-    else {
-      //??
     }
 
     int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
                                                        0,
                                                        PDM_MESH_ENTITY_VERTEX);
-
-    int *pextract_face_vtx     = NULL;
-    int *pextract_face_vtx_idx = NULL;
-    int pn_extract_face = PDM_extract_part_connectivity_get(extrp,
-                                                            0,
-                                                            PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                                            &pextract_face_vtx,
-                                                            &pextract_face_vtx_idx,
-                                                            PDM_OWNERSHIP_KEEP);
-    PDM_g_num_t *pextract_face_ln_to_gn = NULL;
-    PDM_extract_part_ln_to_gn_get(extrp,
-                                  0,
-                                  PDM_MESH_ENTITY_FACE,
-                                  &pextract_face_ln_to_gn,
-                                  PDM_OWNERSHIP_KEEP);
-
     double *pextract_vtx_coord = NULL;
     PDM_extract_part_vtx_coord_get(extrp,
                                    0,
                                    &pextract_vtx_coord,
                                    PDM_OWNERSHIP_KEEP);
+
+    PDM_Mesh_nodal_elt_t *elt_type  = malloc(sizeof(PDM_Mesh_nodal_elt_t) * n_extract_boxes);
+    int                  *elt_order = malloc(sizeof(int                 ) * n_extract_boxes);
+    int *pextract_face_vtx     = NULL;
+    int *pextract_face_vtx_idx = NULL;
+    int pn_extract_face = 0;
+    PDM_g_num_t *pextract_face_ln_to_gn = NULL;
+
+    if (mesh_nodal != NULL) {
+      pn_extract_face = 0;
+
+      int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extract_pmne);
+      int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
+
+      for (int i = 0; i < n_section; i++) {
+        pn_extract_face += PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                                     sections_id[i],
+                                                                     0);
+      }
+
+      /* Fill face_vtx_idx */
+      pextract_face_vtx_idx = malloc(sizeof(int) * (pn_extract_face + 1));
+      pextract_face_vtx_idx[0] = 0;
+
+      for (int i = 0; i < n_section; i++) {
+        int id_section = sections_id[i];
+
+        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                              id_section,
+                                                              0);
+
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+                                                                              id_section);
+
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
+                                                                   id_section,
+                                                                   0);
+
+        if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+          /* Polygonal section */
+          int *connec_idx;
+          int *connec;
+          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+                                                     id_section,
+                                                     0,
+                                                     &connec_idx,
+                                                     &connec);
+
+          for (int ielt = 0; ielt < n_elt; ielt++) {
+            int iface = ielt;
+            if (parent_num != NULL) {
+              iface = parent_num[ielt];
+            }
+
+            int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+
+            pextract_face_vtx_idx[iface+1] = n_vtx;
+            elt_type [iface] = t_elt;
+            elt_order[iface] = 1;
+          }
+        }
+        else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+          /* Polyhedral section */
+          abort();
+        }
+        else {
+          /* Standard section */
+          int         *connec              = NULL;
+          PDM_g_num_t *numabs              = NULL;
+          int         *_parent_num         = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+          int          order               = 0;
+          const char  *ho_ordering         = NULL;
+          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+                                                     id_section,
+                                                     0,
+                                                     &connec,
+                                                     &numabs,
+                                                     &_parent_num,
+                                                     &parent_entity_g_num,
+                                                     &order,
+                                                     &ho_ordering);
+
+          int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+                                                   order);
+
+          for (int ielt = 0; ielt < n_elt; ielt++) {
+            int iface = ielt;
+            if (parent_num != NULL) {
+              iface = parent_num[ielt];
+            }
+
+            pextract_face_vtx_idx[iface+1] = n_vtx;
+            elt_type [iface] = t_elt;
+            elt_order[iface] = order;
+          }
+        }
+
+      }
+
+      for (int i = 0; i < pn_extract_face; i++) {
+        pextract_face_vtx_idx[i+1] += pextract_face_vtx_idx[i];
+      }
+
+      /* Fill face_vtx */
+      pextract_face_vtx = malloc(sizeof(int) * pextract_face_vtx_idx[pn_extract_face]);
+
+      for (int i = 0; i < n_section; i++) {
+        int id_section = sections_id[i];
+
+        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+                                                              id_section,
+                                                              0);
+
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+                                                                              id_section);
+
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
+                                                                   id_section,
+                                                                   0);
+
+        if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+          /* Polygonal section */
+          int *connec_idx;
+          int *connec;
+          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+                                                     id_section,
+                                                     0,
+                                                     &connec_idx,
+                                                     &connec);
+
+          for (int ielt = 0; ielt < n_elt; ielt++) {
+            int iface = ielt;
+            if (parent_num != NULL) {
+              iface = parent_num[ielt];
+            }
+
+            int n_vtx = connec_idx[ielt+1] - connec_idx[ielt];
+            for (int j = 0; j < n_vtx; j++) {
+              pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[connec_idx[ielt]+j];
+            }
+          }
+        }
+        else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+          /* Polyhedral section */
+          abort();
+        }
+        else {
+          /* Standard section */
+          int         *connec              = NULL;
+          PDM_g_num_t *numabs              = NULL;
+          int         *_parent_num         = NULL;
+          PDM_g_num_t *parent_entity_g_num = NULL;
+          int          order               = 0;
+          const char  *ho_ordering         = NULL;
+          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+                                                     id_section,
+                                                     0,
+                                                     &connec,
+                                                     &numabs,
+                                                     &_parent_num,
+                                                     &parent_entity_g_num,
+                                                     &order,
+                                                     &ho_ordering);
+
+          int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
+                                                   order);
+
+          for (int ielt = 0; ielt < n_elt; ielt++) {
+            int iface = ielt;
+            if (parent_num != NULL) {
+              iface = parent_num[ielt];
+            }
+
+            for (int j = 0; j < n_vtx; j++) {
+              pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[n_vtx*ielt+j];
+            }
+          }
+        }
+
+      }
+
+      PDM_part_mesh_nodal_elmts_free(extract_pmne);
+
+    }
+    else {
+      pn_extract_face = PDM_extract_part_connectivity_get(extrp,
+                                                          0,
+                                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                          &pextract_face_vtx,
+                                                          &pextract_face_vtx_idx,
+                                                          PDM_OWNERSHIP_KEEP);
+      PDM_extract_part_ln_to_gn_get(extrp,
+                                    0,
+                                    PDM_MESH_ENTITY_FACE,
+                                    &pextract_face_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+
+      for (int i = 0; i < n_extract_boxes; i++) {
+        elt_order[i] = 1;
+
+        int n_vtx = pextract_face_vtx_idx[i+1] - pextract_face_vtx_idx[i];
+        switch (n_vtx) {
+          case 2: {
+            elt_type[i] = PDM_MESH_NODAL_BAR2;
+            break;
+          }
+          case 3: {
+            elt_type[i] = PDM_MESH_NODAL_TRIA3;
+            break;
+          }
+          case 4: {
+            elt_type[i] = PDM_MESH_NODAL_QUAD4;
+            break;
+          }
+          default: {
+            elt_type[i] = PDM_MESH_NODAL_POLY_2D;
+            break;
+          }
+        }
+
+      }
+    }
+
+    assert(pn_extract_face == n_extract_boxes);
 
     if(dbg_enabled) {
       char filename[999];
@@ -1849,7 +2008,7 @@ _dist_cloud_surf_compute_optim
       }
 
       /* Line */
-      if (n_elmt_vtx == 2) {
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_BAR2) {
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
           int i_pts = box_pts[idx_pts]-1;
           double t;
@@ -1870,7 +2029,7 @@ _dist_cloud_surf_compute_optim
       }
 
       /* Triangle */
-      else if (n_elmt_vtx == 3) {
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_TRIA3) {
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
           int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
@@ -1897,7 +2056,8 @@ _dist_cloud_surf_compute_optim
       }
 
       /* Polygon */
-      else {
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_QUAD4 ||
+          elt_type[i_elmt] == PDM_MESH_NODAL_POLY_2D) {
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
           int i_pts = box_pts[idx_pts]-1;
           double lproj[3];
@@ -1933,6 +2093,13 @@ _dist_cloud_surf_compute_optim
     free(lvtx_coords);
     free(box_pts);
     free(pts_coords);
+    free(elt_order);
+    free(elt_type);
+
+    if (mesh_nodal != NULL) {
+      free(pextract_face_vtx    );
+      free(pextract_face_vtx_idx);
+    }
 
 
     PDM_extract_part_free(extrp);
