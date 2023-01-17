@@ -1535,7 +1535,7 @@ contains
     integer :: n_bound_groups
     integer :: n_join_groups
 
-    integer :: taille0, i
+    integer :: taille, i
 
     integer (kind = PDM_l_num_s), pointer :: n_elt(:) => null()
     type(c_ptr)                           :: c_n_elt
@@ -1623,35 +1623,41 @@ contains
                                       c_face_join, &
                                       c_face_join_ln_to_gn)
 
-    ! TO DO: set part_data%length(i)
-
-    do i = 1, n_section
-      taille0 = taille0 + n_elt(i)
-    end do
-
     call c_f_pointer(c_elt_vtx_idx, &
                      elt_vtx_idx%cptr, &
-                     [taille0 + 1])
+                     [n_section])
 
     call  PDM_pointer_array_create_type (elt_vtx_idx, &
-                                         taille0, &
+                                         n_section, &
                                          PDM_TYPE_INT)
+
+    do i = 1, n_section
+      elt_vtx_idx%length(i) = n_elt(i) + 1
+    end do
 
     call c_f_pointer(c_elt_vtx,    &
                      elt_vtx%cptr, &
-                     [taille0]) ! TO DO elt_vtx_idx(taille0)
+                     [n_section])
 
     call  PDM_pointer_array_create_type (elt_vtx, &
-                                         taille0, &
+                                         n_section, &
                                          PDM_TYPE_INT)
+
+    ! do i = 1, n_section
+    !   elt_vtx%length(i) = elt_vtx_idx(i)(n_elt(i))
+    ! end do
 
     call c_f_pointer(c_elt_section_ln_to_gn,    &
                      elt_section_ln_to_gn%cptr, &
-                     [taille0])
+                     [n_section])
 
     call  PDM_pointer_array_create_type (elt_section_ln_to_gn, &
-                                         taille0, &
+                                         n_section, &
                                          PDM_TYPE_G_NUM)
+
+    do i = 1, n_section
+      elt_section_ln_to_gn%length(i) = n_elt(i)
+    end do
 
     call c_f_pointer(c_cell_tag, &
                      cell_tag,   &
@@ -1675,17 +1681,17 @@ contains
 
     call c_f_pointer(c_face_cell, &
                      face_cell,   &
-                     [n_face]) ! TO DO what size ?
+                     [2 * n_face])
 
     call c_f_pointer(c_face_vtx_idx, &
                      face_vtx_idx,   &
                      [n_face + 1])
 
-    taille0 = face_vtx_idx(n_face)
+    taille = face_vtx_idx(n_face)
 
     call c_f_pointer(c_face_vtx, &
                      face_vtx,   &
-                     [taille0])
+                     [taille])
 
     call c_f_pointer(c_face_ln_to_gn, &
                      face_ln_to_gn,   &
@@ -1699,17 +1705,17 @@ contains
                      face_part_bound_part_idx,   &
                      [n_face_part_bound + 1])
 
-    taille0 = face_part_bound_part_idx(i_part + 1) - face_part_bound_part_idx(i_part)
+    taille = face_part_bound_part_idx(i_part + 1) - face_part_bound_part_idx(i_part)
 
     call c_f_pointer(c_face_part_bound, &
                      face_part_bound,   &
-                     [taille0])
+                     [taille])
 
     call c_f_pointer(c_vtx_tag, &
                      vtx_tag,   &
                      [n_vtx])
 
-    taille0 = s_face_vtx * n_vtx
+    taille = s_face_vtx * n_vtx
 
     call c_f_pointer(c_vtx, &
                      vtx,   &
@@ -1723,11 +1729,11 @@ contains
                      face_bound_idx,   &
                      [n_bound_groups])
 
-    taille0 = face_bound_idx(n_bound_groups)
+    taille = face_bound_idx(n_bound_groups)
 
     call c_f_pointer(c_face_bound, &
                      face_bound,   &
-                     [taille0])
+                     [taille])
 
     call c_f_pointer(c_face_bound_ln_to_gn, &
                      face_bound_ln_to_gn,   &
@@ -1737,11 +1743,11 @@ contains
                      face_join_idx,   &
                      [n_join_groups + 1])
 
-    taille0 = face_join(n_join_groups)
+    taille = face_join(n_join_groups)
 
     call c_f_pointer(c_face_join, &
                      face_join,   &
-                     [taille0])
+                     [taille])
 
     call c_f_pointer(c_face_join_ln_to_gn, &
                      face_join_ln_to_gn,   &
@@ -1787,7 +1793,7 @@ contains
     integer(c_int),            value   :: ownership
     integer(c_int),            value   :: pn_entity
 
-    integer :: taille0
+    integer :: taille
 
     c_connect     = c_loc(connect)
     c_connect_idx = c_loc(connect_idx)
@@ -1804,11 +1810,11 @@ contains
                      connect_idx,   &
                      [pn_entity])
 
-    taille0 = connect_idx(pn_entity)
+    taille = connect_idx(pn_entity)
 
     call c_f_pointer(c_connect, &
                      connect,   &
-                     [taille0])
+                     [taille])
 
   end subroutine PDM_multipart_part_connectivity_get_
 
@@ -1944,7 +1950,7 @@ contains
     type(c_ptr)                        :: c_vtx_part_bound          = C_NULL_PTR
 
     integer(c_int)  :: c_n_vtx_part_bound
-    integer :: n_vtx_part_bound
+    integer :: taille, n_vtx_part_bound
 
     call PDM_multipart_part_graph_comm_vtx_dim_get_c (multipart, &
                                                       i_zone, &
@@ -1972,9 +1978,11 @@ contains
                      vtx_part_bound_part_idx,   &
                      [n_vtx_part_bound + 1])
 
+    taille = vtx_part_bound_part_idx(n_vtx_part_bound)
+
     call c_f_pointer(c_vtx_part_bound, &
                      vtx_part_bound,   &
-                     [n_vtx_part_bound]) ! TO DO c_vtx_part_bound_part_idx(n_vtx_part_bound)
+                     [taille])
 
   end subroutine PDM_multipart_part_graph_comm_vtx_data_get_
 
@@ -2083,15 +2091,13 @@ contains
                      face_hp_color,   &
                      [c_n_face])
 
-    ! TO DO: how to get nThread ?
-
     call c_f_pointer(c_thread_color, &
                      thread_color,   &
-                     [c_n_face])
+                     [c_n_cell])
 
     call c_f_pointer(c_hyperplane_color, &
                      hyperplane_color,   &
-                     [c_n_face])
+                     [c_n_cell])
 
   end subroutine PDM_multipart_part_color_get_
 
@@ -2253,7 +2259,7 @@ contains
     integer(kind=PDM_g_num_s), pointer :: bound_ln_to_gn(:)
     type(c_ptr)                        :: c_bound_ln_to_gn = C_NULL_PTR
 
-    integer :: taille0
+    integer :: taille
 
     c_bound_idx      = c_loc(bound_idx)
     c_bound          = c_loc(bound)
@@ -2272,11 +2278,11 @@ contains
                      bound_idx,   &
                      [n_bound + 1])
 
-    taille0 = bound_idx(n_bound)
+    taille = bound_idx(n_bound)
 
     call c_f_pointer(c_bound, &
                      bound,   &
-                     [taille0])
+                     [taille])
 
     call c_f_pointer(c_bound_ln_to_gn, &
                      bound_ln_to_gn,   &
