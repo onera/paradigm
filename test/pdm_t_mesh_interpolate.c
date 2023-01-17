@@ -29,6 +29,7 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_domain_interface.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_mesh_interpolate.h"
 
 /*============================================================================
  * Private function definitions
@@ -489,6 +490,15 @@ int main
   /*
    * Mesh interpolation
    */
+  PDM_mesh_interpolate_t* mi = PDM_mesh_interpolate_create(n_domain,
+                                                           n_part_by_domain,
+                                                           NULL,
+                                                           0,
+                                                           comm);
+
+
+
+  PDM_mesh_interpolate_free(mi);
 
 
   /*

@@ -44,6 +44,9 @@ struct _pdm_mesh_interpolate_t {
   int              *n_part_idx;
   int              *n_part_g_idx;
 
+  PDM_part_domain_interface_t  *pdi;
+  int                           n_interface;
+
   _part_t  **parts;
 
 
