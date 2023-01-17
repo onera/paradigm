@@ -23,6 +23,8 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_logging.h"
+#include "pdm_distant_neighbor.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -128,22 +130,100 @@ PDM_mesh_interpolate_create
   }
 
 
+
+
   return mi;
 }
 
 void
 PDM_mesh_interpolate_compute
 (
-  PDM_mesh_interpolate_t *part_ext
+  PDM_mesh_interpolate_t *mi
 )
 {
-
 
   /*
    * Compute graph comm from gnum with PDM_part_generate_entity_graph_comm is not provided
    */
+  if(mi->graph_comm_is_defined[PDM_MESH_ENTITY_VERTEX] == 0) {
+    abort();
+    // TODO : compute graph comm from other graph comm OR recumpute from gnum : PDM_part_generate_entity_graph_comm
+  }
+
 
   /* Deduce graph with all graphe inside same domain and between domain */
+  int ***vtx_part_bound_proc_idx = mi->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX];
+  int ***vtx_part_bound_part_idx = mi->entity_part_bound_part_idx[PDM_MESH_ENTITY_VERTEX];
+  int ***vtx_part_bound          = mi->entity_part_bound         [PDM_MESH_ENTITY_VERTEX];
+
+  /* Si multidomain on fait un shift et tt roule */
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    n_part_loc_all_domain += mi->n_part[i_domain];
+  }
+
+  int shift_part   = 0;
+  int shift_part_g = 0;
+
+  int **neighbor_idx = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int **));
+
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+
+    int n_part_total = mi->n_part_g_idx[i_domain+1] - mi->n_part_g_idx[i_domain];
+
+    /* First loop to count */
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+
+      int n_vtx = mi->parts[i_domain][i_part].n_vtx;
+
+      neighbor_idx[i_part+shift_part] = malloc((n_vtx+1) * sizeof(int));
+      int* _neighbor_idx  = neighbor_idx[i_part+shift_part];
+
+      int* _neighbor_n = PDM_array_zeros_int(n_vtx);
+
+      int n_part_entity_bound_tot = vtx_part_bound_part_idx[i_domain][i_part][n_part_total];
+      for(int idx_entity = 0; idx_entity < n_part_entity_bound_tot; ++idx_entity) {
+        int i_entity = vtx_part_bound[i_domain][i_part][4*idx_entity]-1;
+        _neighbor_n[i_entity] += 1;
+      }
+
+      /*
+       * Add comming from interface
+       */
+      // if(pdi_neighbor_idx != NULL) {
+      //   for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
+      //     _neighbor_n[i_entity] += pdi_neighbor_idx[i_part+shift_part][i_entity+1] - pdi_neighbor_idx[i_part+shift_part][i_entity];
+      //   }
+      // }
+
+      /* Compute index */
+      _neighbor_idx[0] = 0;
+      for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+        _neighbor_idx[i_entity+1] = _neighbor_idx[i_entity] + _neighbor_n[i_entity];
+        _neighbor_n[i_entity] = 0;
+      }
+
+      PDM_log_trace_array_int(_neighbor_idx, n_vtx, "_neighbor_idx ::");
+
+
+      free(_neighbor_n);
+    }
+
+    shift_part   += mi->n_part              [i_domain];
+    shift_part_g += n_part_total;
+  }
+
+
+  shift_part = 0;
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+      free(neighbor_idx[i_part+shift_part]);
+    }
+    shift_part   += mi->n_part              [i_domain];
+  }
+  free(neighbor_idx);
+
+
   /* Compute weight */
   /* Create protocol only between join - Distant neighbor */
 }
