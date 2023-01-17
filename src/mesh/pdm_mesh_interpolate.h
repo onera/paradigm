@@ -92,6 +92,18 @@ PDM_mesh_interpolate_part_set
 
 
 void
+PDM_mesh_interpolate_graph_comm_set
+(
+  PDM_mesh_interpolate_t   *mi,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                      *entity_part_bound_proc_idx,
+  int                      *entity_part_bound_part_idx,
+  int                      *entity_part_bound
+);
+
+void
 PDM_mesh_interpolate_part_group_set
 (
   PDM_mesh_interpolate_t   *mi,

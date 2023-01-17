@@ -104,14 +104,48 @@ PDM_mesh_interpolate_create
 
   }
 
+  /* Graph comm  */
+  mi->entity_part_bound_proc_idx = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
+  mi->entity_part_bound_part_idx = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
+  mi->entity_part_bound          = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
+  mi->graph_comm_is_defined      = malloc( PDM_MESH_ENTITY_MAX * sizeof(int *  ));
+
+  for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
+    mi->entity_part_bound_proc_idx[i_kind] = malloc(n_domain * sizeof(int **));
+    mi->entity_part_bound_part_idx[i_kind] = malloc(n_domain * sizeof(int **));
+    mi->entity_part_bound         [i_kind] = malloc(n_domain * sizeof(int **));
+    mi->graph_comm_is_defined     [i_kind] = 0;
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+      mi->entity_part_bound_proc_idx[i_kind][i_domain] = malloc(n_part[i_domain] * sizeof(int *));
+      mi->entity_part_bound_part_idx[i_kind][i_domain] = malloc(n_part[i_domain] * sizeof(int *));
+      mi->entity_part_bound         [i_kind][i_domain] = malloc(n_part[i_domain] * sizeof(int *));
+      for(int i_part = 0; i_part < n_part[i_domain]; ++i_part) {
+        mi->entity_part_bound_proc_idx[i_kind][i_domain][i_part] = NULL;
+        mi->entity_part_bound_part_idx[i_kind][i_domain][i_part] = NULL;
+        mi->entity_part_bound         [i_kind][i_domain][i_part] = NULL;
+      }
+    }
+  }
 
 
-  /* Compute graph comm from gnum */
+  return mi;
+}
+
+void
+PDM_mesh_interpolate_compute
+(
+  PDM_mesh_interpolate_t *part_ext
+)
+{
+
+
+  /*
+   * Compute graph comm from gnum with PDM_part_generate_entity_graph_comm is not provided
+   */
+
   /* Deduce graph with all graphe inside same domain and between domain */
   /* Compute weight */
   /* Create protocol only between join - Distant neighbor */
-
-  return mi;
 }
 
 
@@ -164,6 +198,26 @@ PDM_mesh_interpolate_part_set
   mi->parts[i_domain][i_part].vtx = vtx_coord;
 }
 
+
+void
+PDM_mesh_interpolate_graph_comm_set
+(
+  PDM_mesh_interpolate_t   *mi,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                      *entity_part_bound_proc_idx,
+  int                      *entity_part_bound_part_idx,
+  int                      *entity_part_bound
+)
+{
+  mi->entity_part_bound_proc_idx[mesh_entity][i_domain][i_part] = entity_part_bound_proc_idx;
+  mi->entity_part_bound_part_idx[mesh_entity][i_domain][i_part] = entity_part_bound_part_idx;
+  mi->entity_part_bound         [mesh_entity][i_domain][i_part] = entity_part_bound;
+  mi->graph_comm_is_defined[mesh_entity] = 1;
+}
+
+
 void
 PDM_mesh_interpolate_part_domain_interface_shared_set
 (
@@ -181,6 +235,24 @@ PDM_mesh_interpolate_free
  PDM_mesh_interpolate_t *mi
 )
 {
+
+  for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
+    mi->graph_comm_is_defined     [i_kind] = 0;
+    for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+      free(mi->entity_part_bound_proc_idx[i_kind][i_domain]);
+      free(mi->entity_part_bound_part_idx[i_kind][i_domain]);
+      free(mi->entity_part_bound         [i_kind][i_domain]);
+    }
+    free(mi->entity_part_bound_proc_idx[i_kind]);
+    free(mi->entity_part_bound_part_idx[i_kind]);
+    free(mi->entity_part_bound         [i_kind]);
+  }
+  free(mi->entity_part_bound_proc_idx);
+  free(mi->entity_part_bound_part_idx);
+  free(mi->entity_part_bound         );
+  free(mi->graph_comm_is_defined     );
+
+
   for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
     free(mi->parts[i_domain]);
   }
