@@ -203,6 +203,18 @@ PDM_domain_interface_rotation_get
         double                       *angle
 );
 
+void
+PDM_part_domain_interface_to_domain_interface
+(
+  PDM_part_domain_interface_t    *dom_intrf,
+  PDM_bound_type_t                interface_kind1,
+  int                            *n_part,
+  int                           **pn_entity1,
+  PDM_g_num_t                  ***entity1_ln_to_gn,
+  PDM_domain_interface_t        **ditrf_out,
+  int                          ***is_entity1_on_itrf_out
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
