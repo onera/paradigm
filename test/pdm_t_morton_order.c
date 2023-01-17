@@ -350,6 +350,7 @@ main
     edge_vtx[2*i+1] = order[i+1] + 1;
   }
 
+  free(pts_code2);
 
   double *_order = malloc(sizeof(double) * n_pts);
   for (int i = 0; i < n_pts; i++) {

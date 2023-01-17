@@ -68,12 +68,15 @@ PDM_write_meshb
   const int     n_vtx,
   const int     n_tetra,
   const int     n_tri,
+  const int     n_edge,
   const double *vtx_coords,
   const int    *vtx_tags,
   const int    *tetra_vtx,
   const int    *tetra_tag,
   const int    *tria_vtx,
-  const int    *tria_tag
+  const int    *tria_tag,
+  const int    *edge_vtx,
+  const int    *edge_tag
 );
 
 
