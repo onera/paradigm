@@ -83,6 +83,7 @@ _read_args(int            argc,
            double        *length,
            int           *n_part,
            int           *post,
+           int           *ngon,
            int           *method)
 {
   int i = 1;
@@ -129,6 +130,9 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
+    }
+    else if (strcmp(argv[i], "-ngon") == 0) {
+      *ngon = 1;
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *method = PDM_PART_SPLIT_PTSCOTCH;
@@ -236,6 +240,7 @@ int main(int argc, char *argv[])
   double                length         = 1.;
   int                   n_part         = 1;
   int                   post           = 0;
+  int                   ngon           = 0;
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -255,6 +260,7 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
+             &ngon,
      (int *) &part_method);
 
   double radius         = length;//2*length;
@@ -428,20 +434,24 @@ int main(int argc, char *argv[])
                                   pts_coord,
                                   pts_g_num);
 
-  PDM_dist_cloud_surf_nodal_mesh_set(dist, pmn);
-  // PDM_dist_cloud_surf_surf_mesh_global_data_set(dist, n_part);
+  if (ngon) {
+    PDM_dist_cloud_surf_surf_mesh_global_data_set(dist, n_part);
 
-  // for (int i_part = 0; i_part < n_part; i_part++) {
-  //   PDM_dist_cloud_surf_surf_mesh_part_set(dist,
-  //                                            i_part,
-  //                                            surf_pn_face       [i_part],
-  //                                            surf_pface_edge_idx[i_part],
-  //                                            surf_pface_vtx     [i_part],
-  //                                            surf_pface_ln_to_gn[i_part],
-  //                                            surf_pn_vtx        [i_part],
-  //                                            surf_pvtx_coord    [i_part],
-  //                                            surf_pvtx_ln_to_gn [i_part]);
-  // }
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_dist_cloud_surf_surf_mesh_part_set(dist,
+                                             i_part,
+                                             surf_pn_face       [i_part],
+                                             surf_pface_edge_idx[i_part],
+                                             surf_pface_vtx     [i_part],
+                                             surf_pface_ln_to_gn[i_part],
+                                             surf_pn_vtx        [i_part],
+                                             surf_pvtx_coord    [i_part],
+                                             surf_pvtx_ln_to_gn [i_part]);
+    }
+  }
+  else {
+    PDM_dist_cloud_surf_nodal_mesh_set(dist, pmn);
+  }
 
   PDM_dist_cloud_surf_compute(dist);
   //PDM_dist_cloud_surf_compute_optim(dist);
