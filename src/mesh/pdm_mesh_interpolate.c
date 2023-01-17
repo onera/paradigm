@@ -200,8 +200,10 @@ PDM_mesh_interpolate_compute
   int shift_part   = 0;
   int shift_part_g = 0;
 
-  int **neighbor_idx = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int **));
-
+  int **neighbor_idx       = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  int **neighbor_desc      = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  int **neighbor_interface = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int *));
+  int *pn_vtx              = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int  ));
   for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
 
     int n_part_total = mi->n_part_g_idx[i_domain+1] - mi->n_part_g_idx[i_domain];
@@ -210,15 +212,17 @@ PDM_mesh_interpolate_compute
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
 
       int n_vtx = mi->parts[i_domain][i_part].n_vtx;
+      pn_vtx[i_part+shift_part] = n_vtx;
 
       neighbor_idx[i_part+shift_part] = malloc((n_vtx+1) * sizeof(int));
-      int* _neighbor_idx  = neighbor_idx[i_part+shift_part];
+      int* _neighbor_idx   = neighbor_idx[i_part+shift_part];
+      int* _vtx_part_bound = vtx_part_bound[i_domain][i_part];
 
       int* _neighbor_n = PDM_array_zeros_int(n_vtx);
 
       int n_part_entity_bound_tot = vtx_part_bound_part_idx[i_domain][i_part][n_part_total];
       for(int idx_entity = 0; idx_entity < n_part_entity_bound_tot; ++idx_entity) {
-        int i_entity = vtx_part_bound[i_domain][i_part][4*idx_entity]-1;
+        int i_entity = _vtx_part_bound[4*idx_entity]-1;
         _neighbor_n[i_entity] += 1;
       }
 
@@ -242,6 +246,33 @@ PDM_mesh_interpolate_compute
       PDM_log_trace_array_int(_neighbor_n, n_vtx, "_neighbor_n ::");
 
 
+      neighbor_desc     [i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx[n_vtx] * sizeof(int) );
+      neighbor_interface[i_part+shift_part] = (int *) malloc(     _neighbor_idx[n_vtx] * sizeof(int) );
+      int* _neighbor_desc      = neighbor_desc     [i_part+shift_part];
+      int* _neighbor_interface = neighbor_interface[i_part+shift_part];
+
+      /* Fill */
+      for(int idx_entity = 0; idx_entity < vtx_part_bound_part_idx[i_domain][i_part][n_part_total]; ++idx_entity) {
+        int i_entity = _vtx_part_bound[4*idx_entity]-1;
+        int idx_write = _neighbor_idx[i_entity] + _neighbor_n[i_entity]++;
+        _neighbor_desc[3*idx_write  ] = _vtx_part_bound[4*idx_entity+1];                // i_proc_opp;
+        _neighbor_desc[3*idx_write+1] = _vtx_part_bound[4*idx_entity+2]+shift_part_g-1; // i_part_opp
+        _neighbor_desc[3*idx_write+2] = _vtx_part_bound[4*idx_entity+3]-1;              // i_entity_opp
+        _neighbor_interface[idx_write] = -40000;
+      }
+
+      if(pdi_neighbor_idx != NULL) {
+        for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+          for(int idx = pdi_neighbor_idx[i_part+shift_part][i_entity]; idx < pdi_neighbor_idx[i_part+shift_part][i_entity+1]; ++idx) {
+            int idx_write = _neighbor_idx[i_entity] + _neighbor_n[i_entity]++;
+            _neighbor_desc[3*idx_write  ]  = pdi_neighbor[i_part+shift_part][4*idx  ];
+            _neighbor_desc[3*idx_write+1]  = pdi_neighbor[i_part+shift_part][4*idx+1];
+            _neighbor_desc[3*idx_write+2]  = pdi_neighbor[i_part+shift_part][4*idx+2];
+            _neighbor_interface[idx_write] = pdi_neighbor[i_part+shift_part][4*idx+3];
+          }
+        }
+      }
+
       free(_neighbor_n);
     }
 
@@ -249,11 +280,25 @@ PDM_mesh_interpolate_compute
     shift_part_g += n_part_total;
   }
 
+  /*
+   * Create distant_neighbor
+   */
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(mi->comm,
+                                                           n_part_loc_all_domain,
+                                                           pn_vtx,
+                                                           neighbor_idx,
+                                                           neighbor_desc);
+
+
+  PDM_distant_neighbor_free(dn);
+
 
   shift_part = 0;
   for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
-      free(neighbor_idx    [i_part+shift_part]);
+      free(neighbor_idx      [i_part+shift_part]);
+      free(neighbor_desc     [i_part+shift_part]);
+      free(neighbor_interface[i_part+shift_part]);
 
       if(mi->pdi != NULL) {
         free(pdi_neighbor_idx[i_part+shift_part]);
@@ -263,6 +308,9 @@ PDM_mesh_interpolate_compute
     shift_part   += mi->n_part              [i_domain];
   }
   free(neighbor_idx);
+  free(neighbor_desc);
+  free(neighbor_interface);
+  free(pn_vtx);
 
 
   if(mi->pdi != NULL) {
