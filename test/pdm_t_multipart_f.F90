@@ -38,19 +38,40 @@ program testf
 
   !-----------------------------------------------------------
   ! MPI
-  integer,                  parameter :: comm = MPI_COMM_WORLD
-  integer                             :: code
-  integer                             :: i_rank
-  integer                             :: n_rank
+  integer,                  parameter   :: comm = MPI_COMM_WORLD
+  integer                               :: code
+  integer                               :: i_rank
+  integer                               :: n_rank
   ! UTIL
-  integer                             :: i
+  integer                               :: i
   ! MULTIPART
-  type(c_ptr)                         :: multipart = C_NULL_PTR
-  integer(c_int)                      :: split_method
-  integer(c_int)                      :: n_part = 1
-  integer(c_int)                      :: n_zone = 1
-  integer(kind=PDM_l_num_s), pointer  :: n_part_zones(:)  => null()
-  double precision,          pointer  :: part_fraction(:) => null()
+  type(c_ptr)                           :: multipart = C_NULL_PTR
+  integer(c_int)                        :: split_method
+  integer(c_int)                        :: n_part = 1
+  integer(c_int)                        :: n_zone = 1
+  integer(c_int)                        :: i_zone = -1
+  integer(kind=PDM_l_num_s), pointer    :: n_part_zones(:)  => null()
+  double precision,          pointer    :: part_fraction(:) => null()
+  integer(kind=PDM_l_num_s), pointer    :: renum_cell_properties(:) => null()
+  ! MESH
+  type(c_ptr)                           :: dcube = C_NULL_PTR
+  integer(pdm_g_num_s), parameter       :: n_vtx_seg = 10
+  double precision,     parameter       :: length = 5.
+  double precision,     parameter       :: zero_x = 1.
+  double precision,     parameter       :: zero_y = 1.
+  double precision,     parameter       :: zero_z = 1.
+  integer                               :: n_face_group = -1
+  integer                               :: dn_cell      = -1
+  integer                               :: dn_face      = -1
+  integer                               :: dn_vtx       = -1
+  integer                               :: sface_vtx    = -1
+  integer                               :: sface_group  = -1
+  integer (kind = pdm_g_num_s), pointer :: dface_cell(:)      => null()
+  integer (kind = pdm_l_num_s), pointer :: dface_vtx_idx(:)   => null()
+  integer (kind = pdm_g_num_s), pointer :: dface_vtx(:)       => null()
+  double precision,             pointer :: dvtx_coord(:,:)    => null()
+  integer (kind = pdm_l_num_s), pointer :: dface_group_idx(:) => null()
+  integer (kind = pdm_g_num_s), pointer :: dface_group(:)     => null()
   !-----------------------------------------------------------
 
   call mpi_init(code)
@@ -87,9 +108,70 @@ program testf
                             comm, &
                             PDM_OWNERSHIP_KEEP)
 
-  ! Generate Mesh
+  ! Reordering options
+  if (i_rank .eq. 0) then
+    write(*, *) "PDM_multipart_set_reordering_options"
+  end if
+
+  call PDM_multipart_set_reordering_options(multipart, &
+                                            i_zone, &
+                                            "PDM_PART_RENUM_CELL_CUTHILL", &
+                                            renum_cell_properties, &
+                                            "PDM_PART_RENUM_FACE_LEXICOGRAPHIC")
+
+  ! Generate Mesh (case : n_zone = 1)
+  if (i_rank .eq. 0) then
+    write(*, *) "> Generate distributed mesh"
+  end if
+  call pdm_dcube_gen_init(dcube,              &
+                          comm,               &
+                          n_vtx_seg,          &
+                          length,             &
+                          zero_x,             &
+                          zero_y,             &
+                          zero_z,             &
+                          PDM_OWNERSHIP_KEEP)
+
+  call pdm_dcube_gen_dim_get (dcube,           &
+                              n_face_group,    &
+                              dn_cell,         &
+                              dn_face,         &
+                              dn_vtx,          &
+                              sface_vtx,       &
+                              sface_group)
+
+  call pdm_dcube_gen_data_get (dcube,           &
+                               dface_cell,      &
+                               dface_vtx_idx,   &
+                               dface_vtx,       &
+                               dvtx_coord,      &
+                               dface_group_idx, &
+                               dface_group)
+  ! Les faces groups du dcube sont : zmin, zmax, xmin, xmax, ymin, ymax
+  ! Il faut les séparer en faces de bords et faces raccord, sachant que
+  ! les zones sont alignées selon X
+  ! n_bnd = 4+1
+  ! n_jn  = 2-1
+
+  ! Join numbering (left to right, increasing i_zone)
+  ! djoins_ids(0)(0) = 0
+
+  ! call PDM_multipart_register_block(multipart, i_zone, dmesh(i_zone))
+  ! call PDM_multipart_register_joins(multipart, n_total_joins, join_to_opposite)
 
   ! Run
+  ! call PDM_multipart_run_ppart(multipart)
+
+  ! Get
+  ! call PDM_multipart_part_dim_get(multipart, i_zone, i_part, n_section, n_elt, &
+  !                                 n_cell, n_face, n_part_joins, n_vtx, n_proc, tn_part, &
+  !                                 scell_face, sface_vtx, sface_bound, n_bounds, sface_join, n_joins)
+  ! call PDM_multipart_part_val_get(multipart, i_zone, i_part, elt_vtx_idx, elt_vtx, elt_section_ln_to_gn, &
+  !                                 cell_tag, cell_face_idx, cell_face, cell_ln_to_gn, &
+  !                                 face_tag, face_cell, face_vtx_idx, face_vtx, face_ln_to_gn, &
+  !                                 face_part_bound_proc_idx, face_part_bound_part_idx, face_part_bound, &
+  !                                 vtx_tag, vtx, vtx_ln_to_gn, face_bound_idx, face_bound, &
+  !                                 face_bound_ln_to_gn, face_join_idx, face_join, face_join_ln_to_gn)
 
   ! Free
   if (i_rank .eq. 0) then
