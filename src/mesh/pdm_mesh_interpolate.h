@@ -120,7 +120,7 @@ PDM_mesh_interpolate_part_group_set
   PDM_mesh_interpolate_t   *mi,
   int                       i_domain,
   int                       i_part,
-  PDM_mesh_entities_t       entity_kind,
+  PDM_bound_type_t          bound_type,
   int                      *entity_bound_idx,
   int                      *entity_bound
 );

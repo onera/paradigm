@@ -452,6 +452,8 @@ int main
   int         ***pface_vtx_idx  = (int         ***) malloc( n_domain * sizeof(int         **));
   int         ***pface_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
   double      ***pvtx_coord     = (double      ***) malloc( n_domain * sizeof(double      **));
+
+  int* n_group_by_domain = (int *) malloc(n_domain * sizeof(int));
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     pn_n_part     [i_dom] = n_part;
     pn_cell       [i_dom] = (int          *) malloc( n_part * sizeof(int          ));
@@ -517,13 +519,13 @@ int main
 
       int *edge_vtx     = NULL;
       int *edge_vtx_idx = NULL;
-      int n_edge = PDM_multipart_part_connectivity_get(mpart_id,
-                                                       i_dom,
-                                                       i_part,
-                                                       PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                       &edge_vtx,
-                                                       &edge_vtx_idx,
-                                                       PDM_OWNERSHIP_KEEP);
+      PDM_multipart_part_connectivity_get(mpart_id,
+                                          i_dom,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &edge_vtx,
+                                          &edge_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
       pface_vtx    [i_dom][i_part] = NULL;
       pface_vtx_idx[i_dom][i_part] = face_edge_idx;
       _compute_face_vtx(n_face,
@@ -537,9 +539,20 @@ int main
                                        i_part,
                                        &pvtx_coord[i_dom][i_part],
                                        PDM_OWNERSHIP_KEEP);
+      int  n_bound = 0;
+      int* group_face_idx      = 0;
+      int* group_face          = 0;
+      int* face_group_ln_to_gn = 0;
 
-
-
+      PDM_multipart_bound_get(mpart_id,
+                              i_dom,
+                              i_part,
+                              PDM_BOUND_TYPE_FACE,
+                              &n_bound,
+                              &group_face_idx,
+                              &group_face,
+                              &face_group_ln_to_gn);
+      n_group_by_domain[i_dom] = n_bound;
 
     }
   }
@@ -559,7 +572,7 @@ int main
    */
   PDM_mesh_interpolate_t* mi = PDM_mesh_interpolate_create(n_domain,
                                                            n_part_by_domain,
-                                                           NULL,
+                                                           n_group_by_domain,
                                                            0,
                                                            comm);
   PDM_mesh_interpolate_part_domain_interface_shared_set(mi, pdi);
@@ -604,6 +617,20 @@ int main
                                           vtx_part_bound_part_idx,
                                           vtx_part_bound);
 
+      int  n_bound = 0;
+      int* group_face_idx      = 0;
+      int* group_face          = 0;
+      int* face_group_ln_to_gn = 0;
+
+      PDM_multipart_bound_get(mpart_id,
+                              i_domain,
+                              i_part,
+                              PDM_BOUND_TYPE_FACE,
+                              &n_bound,
+                              &group_face_idx,
+                              &group_face,
+                              &face_group_ln_to_gn);
+
 
     }
   }
@@ -611,6 +638,7 @@ int main
 
   PDM_mesh_interpolate_free(mi);
 
+  free(n_group_by_domain);
 
   /*
    *  Free memory

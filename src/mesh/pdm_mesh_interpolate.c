@@ -84,8 +84,10 @@ PDM_mesh_interpolate_create
 
   mi->n_domain    = n_domain;
   mi->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
+  mi->n_group     = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
   for(int i = 0; i < mi->n_domain; ++i) {
-    mi->n_part[i] = n_part[i];
+    mi->n_part [i] = n_part[i];
+    mi->n_group[i] = n_group[i];
   }
   mi->comm        = comm;
 
@@ -133,11 +135,11 @@ PDM_mesh_interpolate_create
   mi->pdi = NULL;
 
 
-  mi->group_entity_idx = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
-  mi->group_entity     = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
-  mi->group_is_defined = malloc( PDM_MESH_ENTITY_MAX * sizeof(int *  ));
+  mi->group_entity_idx = malloc( PDM_GEOMETRY_KIND_MAX * sizeof(int ***));
+  mi->group_entity     = malloc( PDM_GEOMETRY_KIND_MAX * sizeof(int ***));
+  mi->group_is_defined = malloc( PDM_GEOMETRY_KIND_MAX * sizeof(int *  ));
 
-  for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
+  for(int i_kind = 0; i_kind < PDM_GEOMETRY_KIND_MAX; ++i_kind) {
     mi->group_entity_idx[i_kind] = malloc(n_domain * sizeof(int **));
     mi->group_entity    [i_kind] = malloc(n_domain * sizeof(int **));
     mi->group_is_defined[i_kind] = 0;
@@ -341,27 +343,27 @@ PDM_mesh_interpolate_compute
    * Create also vtx_face_bound :
    *   - Vertex can be on 2 boundaries
    */
-  // shift_part = 0;
-  // int **vtx_face_bound_idx   = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
-  // int **vtx_face_bound       = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
-  // int **vtx_face_bound_group = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
-  // for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+  shift_part = 0;
+  int **vtx_face_bound_idx   = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
+  int **vtx_face_bound       = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
+  int **vtx_face_bound_group = malloc(mi->n_part_g_idx[mi->n_domain] * sizeof(int * ));
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
 
-  //   int n_group = mi->n_group[i_domain];
+    int n_group = mi->n_group[i_domain];
 
-  //   // int *
+    // int *
 
-  //   for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
 
-  //     vtx_face_bound_idx[i_part+shift_part] = malloc(mi->parts[i_domain][i_part].n_vtx * sizeof(int));
+      vtx_face_bound_idx[i_part+shift_part] = malloc(mi->parts[i_domain][i_part].n_vtx * sizeof(int));
 
-  //     for(int i_group = 0; i_group < n_group; ++i_group) {
+      for(int i_group = 0; i_group < n_group; ++i_group) {
 
-  //     }
+      }
 
-  //   }
-  //   shift_part   += mi->n_part              [i_domain];
-  // }
+    }
+    shift_part   += mi->n_part              [i_domain];
+  }
 
 
   /*
@@ -405,6 +407,12 @@ PDM_mesh_interpolate_compute
 
       free(pvtx_cell_opp_n[i_part+shift_part]);
       free(pvtx_cell_opp  [i_part+shift_part]);
+
+      free(vtx_face_bound_idx  [i_part+shift_part]);
+      // free(vtx_face_bound      [i_part+shift_part]);
+      // free(vtx_face_bound_group[i_part+shift_part]);
+
+
     }
     shift_part   += mi->n_part              [i_domain];
   }
@@ -417,6 +425,9 @@ PDM_mesh_interpolate_compute
   free(pvtx_cell    );
   free(pvtx_cell_opp_n);
   free(pvtx_cell_opp  );
+  free(vtx_face_bound_idx  );
+  free(vtx_face_bound      );
+  free(vtx_face_bound_group);
 
   if(mi->pdi != NULL) {
     free(pdi_neighbor_idx);
@@ -532,16 +543,16 @@ PDM_mesh_interpolate_part_group_set
   PDM_mesh_interpolate_t   *mi,
   int                       i_domain,
   int                       i_part,
-  PDM_mesh_entities_t       mesh_entity,
+  PDM_bound_type_t          bound_type,
   int                      *entity_bound_idx,
   int                      *entity_bound
 )
 {
   // assert(i_group < mi->n_group[i_domain]);
 
-  mi->group_entity_idx[mesh_entity][i_domain][i_part] = entity_bound_idx;
-  mi->group_entity    [mesh_entity][i_domain][i_part] = entity_bound;
-  mi->group_is_defined[mesh_entity] = 1;
+  mi->group_entity_idx[bound_type][i_domain][i_part] = entity_bound_idx;
+  mi->group_entity    [bound_type][i_domain][i_part] = entity_bound;
+  mi->group_is_defined[bound_type] = 1;
 
 
 }
@@ -569,14 +580,14 @@ PDM_mesh_interpolate_free
   free(mi->entity_part_bound         );
   free(mi->graph_comm_is_defined     );
 
-  for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
+  for(int i_kind = 0; i_kind < PDM_GEOMETRY_KIND_MAX; ++i_kind) {
     mi->group_is_defined     [i_kind] = 0;
     for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
       free(mi->group_entity_idx[i_kind][i_domain]);
-      free(mi->group_entity[i_kind][i_domain]);
+      free(mi->group_entity    [i_kind][i_domain]);
     }
     free(mi->group_entity_idx[i_kind]);
-    free(mi->group_entity[i_kind]);
+    free(mi->group_entity    [i_kind]);
   }
   free(mi->group_entity_idx);
   free(mi->group_entity);
@@ -589,6 +600,7 @@ PDM_mesh_interpolate_free
   free(mi->n_part_idx);
   free(mi->n_part_g_idx);
   free(mi->n_part);
+  free(mi->n_group);
 
 
   free(mi);
