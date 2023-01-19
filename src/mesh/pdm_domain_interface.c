@@ -546,11 +546,13 @@ static int _extract_and_shift_jn_faces
       int i_domain_cur = _interface_dom[2*i_pair];
       int i_domain_opp = _interface_dom[2*i_pair+1];
 
-      _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair] + face_per_block_offset[i_domain_cur];
+      // _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair] + face_per_block_offset[i_domain_cur];
+      _dextract_face_id_tmp[idx]         = PDM_ABS(_interface_ids[2*i_pair]) + face_per_block_offset[i_domain_cur];
       _dextract_face_dom_id_tmp  [idx]   = i_domain_cur;
       _dextract_face_group_id_tmp[idx++] = i_interface;
 
-      _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair+1] + face_per_block_offset[i_domain_opp];
+      // _dextract_face_id_tmp[idx]         = _interface_ids[2*i_pair+1] + face_per_block_offset[i_domain_opp];
+      _dextract_face_id_tmp[idx]         = PDM_ABS(_interface_ids[2*i_pair+1]) + face_per_block_offset[i_domain_opp];
       _dextract_face_dom_id_tmp  [idx]   = i_domain_opp;
       _dextract_face_group_id_tmp[idx++] = i_interface;
     }
