@@ -872,7 +872,7 @@ PDM_generate_ho_vtx_ln_to_gn
     PDM_g_num_t **pridge_gnum          = NULL;
     PDM_g_num_t **pridge_to_edge_g_num = NULL;
 
-    if (dmn->surfacic->delmt_child_distrib != NULL) {
+    if (dmn->ridge->delmt_child_distrib != NULL) {
       PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
                                NULL, // dparent_sign
                                dmn->ridge->delmt_child_distrib,

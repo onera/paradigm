@@ -41,7 +41,8 @@
 #include "pdm_unique.h"
 #include "pdm_array.h"
 #include "pdm_ho_location.h"
-
+#include "pdm_ho_bezier.h"
+#include "pdm_ho_ordering.h"
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus
@@ -1869,6 +1870,17 @@ _dist_cloud_surf_compute_optim
                                                      &order,
                                                      &ho_ordering);
 
+          int *ijk_to_user = NULL;
+          if (ho_ordering != NULL) {
+            ijk_to_user = PDM_ho_ordering_ijk_to_user_get(ho_ordering,
+                                                          t_elt,
+                                                          order);
+            if (ijk_to_user == NULL) {
+              PDM_error(__FILE__, __LINE__, 0, "Undefined ijk_to_user for ho_ordering %s, type %d, order %d\n",
+                        ho_ordering, (int) t_elt, order);
+            }
+          }
+
           int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                    order);
 
@@ -1878,9 +1890,16 @@ _dist_cloud_surf_compute_optim
               iface = parent_num[ielt];
             }
 
-            // TODO : Re-order to Lagrange
-            for (int j = 0; j < n_vtx; j++) {
-              pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[n_vtx*ielt+j];
+            // Re-order to Lagrange
+            if (ijk_to_user == NULL) {
+              for (int j = 0; j < n_vtx; j++) {
+                pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[n_vtx*ielt+j];
+              }
+            }
+            else {
+              for (int j = 0; j < n_vtx; j++) {
+                pextract_face_vtx[pextract_face_vtx_idx[iface]+j] = connec[n_vtx*ielt+ijk_to_user[j]];
+              }
             }
           }
         }
@@ -2092,8 +2111,9 @@ _dist_cloud_surf_compute_optim
         } // End of loop on points
       }
 
-      /* Lagrange triangle or quadrangle */
-      if (elt_type[i_elmt] == PDM_MESH_NODAL_TRIAHO ||
+      /* Lagrange bar, triangle or quadrangle */
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_BARHO  ||
+          elt_type[i_elmt] == PDM_MESH_NODAL_TRIAHO ||
           elt_type[i_elmt] == PDM_MESH_NODAL_QUADHO) {
         for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
           int i_pts = box_pts[idx_pts]-1;
@@ -2106,6 +2126,52 @@ _dist_cloud_surf_compute_optim
                                          &pts_coords[3*i_pts],
                                          lproj,
                                          uvw);
+
+        if (ldist < pts_dist2[i_pts]) {
+            pts_dist2[i_pts]     = ldist;
+            pts_proj [3*i_pts  ] = lproj[0];
+            pts_proj [3*i_pts+1] = lproj[1];
+            pts_proj [3*i_pts+2] = lproj[2];
+            pts_closest_face_g_num[i_pts] = box_gnum[i_elmt];
+          }
+        } // End of loop on points
+      }
+
+      /* Bézier curve */
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_BARHO_BEZIER) {
+        for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
+          int i_pts = box_pts[idx_pts]-1;
+          double lproj[3];
+          double uvw[3];
+          double ldist = PDM_ho_bezier_curve_location(elt_order[i_elmt],
+                                                      n_elmt_vtx,
+                                                      lvtx_coords,
+                                                      &pts_coords[3*i_pts],
+                                                      lproj,
+                                                      uvw);
+
+        if (ldist < pts_dist2[i_pts]) {
+            pts_dist2[i_pts]     = ldist;
+            pts_proj [3*i_pts  ] = lproj[0];
+            pts_proj [3*i_pts+1] = lproj[1];
+            pts_proj [3*i_pts+2] = lproj[2];
+            pts_closest_face_g_num[i_pts] = box_gnum[i_elmt];
+          }
+        } // End of loop on points
+      }
+
+      /* Bézier triangle */
+      if (elt_type[i_elmt] == PDM_MESH_NODAL_TRIAHO_BEZIER) {
+        for(int idx_pts = dbox_pts_idx[i_elmt]; idx_pts < dbox_pts_idx[i_elmt+1]; ++idx_pts) {
+          int i_pts = box_pts[idx_pts]-1;
+          double lproj[3];
+          double uvw[3];
+          double ldist = PDM_ho_bezier_triangle_location(elt_order[i_elmt],
+                                                         n_elmt_vtx,
+                                                         lvtx_coords,
+                                                         &pts_coords[3*i_pts],
+                                                         lproj,
+                                                         uvw);
 
         if (ldist < pts_dist2[i_pts]) {
             pts_dist2[i_pts]     = ldist;

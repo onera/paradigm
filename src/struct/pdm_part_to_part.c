@@ -2426,7 +2426,6 @@ _create
         for (int k = location_part1_to_part2_idx[j];
                  k < location_part1_to_part2_idx[j+1]; k++) {
           int i_rank2 = location_part1_to_part2[3*k];
-          log_trace("i_rank2 = %d\n", i_rank2);
           n_part1_to_part2_rank[i_rank2]++;
           merge_part1_to_part2_rank2[n_total_elt] = i_rank2;
           merge_part1_to_part2_part2[n_total_elt] = location_part1_to_part2[3*k+1];
