@@ -186,6 +186,20 @@ PDM_part_domain_interface_add
  int                            connectivity_is_signed
 );
 
+void
+PDM_part_domain_interface_face2vtx
+(
+ PDM_part_domain_interface_t   *dom_intrf,
+ PDM_bound_type_t               interface_kind1,
+ PDM_bound_type_t               interface_kind2,
+ int                           *n_part,
+ int                          **pn_face,
+ PDM_g_num_t                 ***pface_ln_to_gn,
+ int                          **pn_vtx,
+ PDM_g_num_t                 ***pvtx_ln_to_gn,
+ int                         ***pface_vtx_idx,
+ int                         ***pface_vtx
+);
 
 #ifdef __cplusplus
 }
