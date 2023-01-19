@@ -190,8 +190,6 @@ void
 PDM_part_domain_interface_face2vtx
 (
  PDM_part_domain_interface_t   *dom_intrf,
- PDM_bound_type_t               interface_kind1,
- PDM_bound_type_t               interface_kind2,
  int                           *n_part,
  int                          **pn_face,
  PDM_g_num_t                 ***pface_ln_to_gn,

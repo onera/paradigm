@@ -2448,13 +2448,6 @@ PDM_part_domain_interface_add
     kind2_dinterface_ids = &ditrf->interface_ids_face;
   }
 
-  // if(interface_kind1 == FACE ||  interface_kind2 == VTX)
-  //   PDM_domain_interface_translate_face2vtx(dom_intrf,
-  //                                           dn_vtx,
-  //                                           dn_face,
-  //                                           dface_vtx_idx,
-  //                                           dface_vtx);
-
   PDM_domain_interface_translate_entity1_entity2(ditrf->n_domain,
                                                  ditrf->n_interface,
                                                  dn_entity1,
@@ -2511,8 +2504,6 @@ void
 PDM_part_domain_interface_face2vtx
 (
  PDM_part_domain_interface_t   *dom_intrf,
- PDM_bound_type_t               interface_kind1,
- PDM_bound_type_t               interface_kind2,
  int                           *n_part,
  int                          **pn_face,
  PDM_g_num_t                 ***pface_ln_to_gn,
@@ -2550,10 +2541,10 @@ PDM_part_domain_interface_face2vtx
   /*
    * Re-Create a domain interface
    */
-  PDM_domain_interface_t  *ditrf              = NULL;
+  PDM_domain_interface_t  *ditrf           = NULL;
   int                    **is_face_on_itrf = NULL;
   PDM_part_domain_interface_to_domain_interface(dom_intrf,
-                                                interface_kind1,
+                                                PDM_BOUND_TYPE_FACE,
                                                 n_part,
                                                 pn_face,
                                                 pface_ln_to_gn,
@@ -2563,8 +2554,8 @@ PDM_part_domain_interface_face2vtx
   /*
    * Extract from part and prepare the way of block
    */
-  int          *dn_vtx                  = malloc(dom_intrf->n_domain * sizeof(int          ));
-  int          *dn_face                  = malloc(dom_intrf->n_domain * sizeof(int          ));
+  int          *dn_vtx               = malloc(dom_intrf->n_domain * sizeof(int          ));
+  int          *dn_face              = malloc(dom_intrf->n_domain * sizeof(int          ));
   PDM_g_num_t **dfilter_face_vtx     = malloc(dom_intrf->n_domain * sizeof(PDM_g_num_t *));
   int         **dfilter_face_vtx_idx = malloc(dom_intrf->n_domain * sizeof(int         *));
 
@@ -2668,7 +2659,7 @@ PDM_part_domain_interface_face2vtx
     free(filter_face_vtx    );
     free(filter_face_vtx_idx);
     free(filter_face_vtx_n  );
-    free(filter_face_ln_to_gn   );
+    free(filter_face_ln_to_gn);
     free(n_filter_face);
 
     dn_face[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
@@ -2698,16 +2689,38 @@ PDM_part_domain_interface_face2vtx
   }
   free(is_face_on_itrf);
 
+  PDM_domain_interface_translate_face2vtx(ditrf,
+                                          dn_vtx,
+                                          dn_face,
+                                          dfilter_face_vtx_idx,
+                                          dfilter_face_vtx);
 
+  ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
 
-  // PDM_domain_interface_t  *ditrf              = NULL;
-  // int                    **is_face_on_itrf = NULL;
-  // PDM_domain_interface_translate_face2vtx(dom_intrf,
-  //                                         dn_vtx,
-  //                                         dn_face,
-  //                                         dface_vtx_idx,
-  //                                         dface_vtx);
+  /*
+   * Translate
+   */
+  PDM_ddomain_interface_to_pdomain_interface(ditrf->comm,
+                                             ditrf->n_interface,
+                                             ditrf->n_domain,
+                                             ditrf->multidomain_intrf,
+                                             PDM_BOUND_TYPE_VTX,
+                                             ditrf->interface_dn_edge,
+                                             ditrf->interface_ids_edge,
+                                             ditrf->interface_dom_edge,
+                                             n_part,
+                                             pn_vtx,
+                                             pvtx_ln_to_gn,
+                                             dom_intrf);
+  free(dn_vtx);
+  free(dn_face);
 
+  for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
+    free(dfilter_face_vtx_idx[i_dom]);
+    free(dfilter_face_vtx    [i_dom]);
+  }
+  free(dfilter_face_vtx_idx);
+  free(dfilter_face_vtx);
 
 
   PDM_domain_interface_free(ditrf);
