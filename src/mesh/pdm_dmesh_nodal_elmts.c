@@ -577,12 +577,13 @@ const char                    *ho_ordering
     if(dmn_elts->mesh_dimension != 0){
       PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 0);
     }
-  } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO) {
+  } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO || t_elt == PDM_MESH_NODAL_BARHO_BEZIER) {
     if(dmn_elts->mesh_dimension != 1){
       PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 1);
     }
   } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D ||
-            t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO) {
+            t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO ||
+            t_elt == PDM_MESH_NODAL_TRIAHO_BEZIER) {
     if(dmn_elts->mesh_dimension != 2){
       PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 2);
     }
@@ -1223,12 +1224,14 @@ PDM_dmesh_nodal_elmts_have_ho
     int id_section = dmn_elts->sections_id[i_section];
 
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
-    if (t_elt == PDM_MESH_NODAL_BARHO ||
-        t_elt == PDM_MESH_NODAL_TRIAHO ||
-        t_elt == PDM_MESH_NODAL_QUADHO ||
-        t_elt == PDM_MESH_NODAL_TETRAHO ||
-        t_elt == PDM_MESH_NODAL_PYRAMIDHO ||
-        t_elt == PDM_MESH_NODAL_PRISMHO ||
+    if (t_elt == PDM_MESH_NODAL_BARHO         ||
+        t_elt == PDM_MESH_NODAL_BARHO_BEZIER  ||
+        t_elt == PDM_MESH_NODAL_TRIAHO        ||
+        t_elt == PDM_MESH_NODAL_TRIAHO_BEZIER ||
+        t_elt == PDM_MESH_NODAL_QUADHO        ||
+        t_elt == PDM_MESH_NODAL_TETRAHO       ||
+        t_elt == PDM_MESH_NODAL_PYRAMIDHO     ||
+        t_elt == PDM_MESH_NODAL_PRISMHO       ||
         t_elt == PDM_MESH_NODAL_HEXAHO)
     {
       have_ho = 1;

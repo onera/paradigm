@@ -1398,8 +1398,10 @@ const char                        *ho_ordering
 
   case PDM_MESH_NODAL_BAR2      :
   case PDM_MESH_NODAL_BARHO     :
+  case PDM_MESH_NODAL_BARHO_BEZIER:
   case PDM_MESH_NODAL_TRIA3     :
   case PDM_MESH_NODAL_TRIAHO    :
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
   case PDM_MESH_NODAL_QUAD4     :
   case PDM_MESH_NODAL_QUADHO    :
   case PDM_MESH_NODAL_TETRA4    :
@@ -3289,7 +3291,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
     const int order = block->order;
 
     // TO DO : support HO elt (-> Bézier to compute bboxes?)
-    n_vtx_elt = PDM_Mesh_nodal_n_vertices_element (block->t_elt, order);
+    n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (block->t_elt, order);
   }
 
   /* Loop on elements */

@@ -245,3 +245,4 @@ add_subdirectory(tutorial)
 # endif()
 
 test_c_create (pdm_t_triangle 1)
+test_c_create (pdm_t_bezier_triangle_location 1)

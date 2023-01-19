@@ -541,7 +541,7 @@ PDM_part_mesh_nodal_dump_vtk
                                                    &ho_ordering);
 
         // PDM_Mesh_nodal_reorder_elt_vtx();
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
         for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
           pcell_vtx_out[i] = pcell_vtx[i];

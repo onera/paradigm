@@ -118,7 +118,7 @@ _delmt_vtx_to_pelmt_vtx
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, 1);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
         for(int i = 0; i < n_elt; ++i) {
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
@@ -128,7 +128,9 @@ _delmt_vtx_to_pelmt_vtx
         break;
       }
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
@@ -145,7 +147,7 @@ _delmt_vtx_to_pelmt_vtx
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         for(int i = 0; i < n_elt; ++i) {
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
@@ -154,18 +156,18 @@ _delmt_vtx_to_pelmt_vtx
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
     }
 
   }
@@ -309,7 +311,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, 1);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
         for(int i = 0; i < n_elt; ++i) {
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
@@ -319,7 +321,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         break;
       }
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
@@ -338,7 +342,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
         block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         for(int i = 0; i < n_elt; ++i) {
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
@@ -349,7 +353,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order[i_section] = 1;
         pid_section  [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
         break;
       }
 
@@ -357,12 +361,12 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order[i_section] = 1;
         pid_section[i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
     }
 
   }
@@ -456,7 +460,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       int id_section = pid_section  [i_section];
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
 
-      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
       connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
       numabs    [i_section] = malloc( n_elmt_in_section                  * sizeof(PDM_g_num_t));
       parent_num[i_section] = malloc( n_elmt_in_section                  * sizeof(int        ));
@@ -478,7 +482,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       int id_section = pid_section  [i_section];
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
-      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
       int idx_write      = pelmt_by_section_n[i_section]++;
 
       int idx_read_connec = pelmts_stride_idx[i_part][i_elmt];
