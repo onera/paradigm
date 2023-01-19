@@ -7,6 +7,7 @@
 #include "pdm_priv.h"
 #include "pdm_timer.h"
 #include "pdm_part.h"
+#include "pdm_multipart.h"
 #include "pdm_mpi.h"
 
 /*============================================================================
@@ -234,6 +235,10 @@ typedef struct  _part_t {
  */
 
 typedef struct _PDM_part_t {
+
+  /* Multipart */
+
+  PDM_multipart_t *multipart; /*!< Pointer on multipart structure */
 
   /* Local dimensions */
 

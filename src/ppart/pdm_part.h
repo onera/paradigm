@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_multipart.h"
-
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -131,40 +129,6 @@ PDM_part_create
  const PDM_g_num_t           *dface_group
  );
 
-/* Wrapper of pdm_multipart for CEDRE */
-
-PDM_multipart_t *
-PDM_part_create_with_multipart
-(
- const PDM_MPI_Comm           comm,
- const PDM_split_dual_t       split_method,
- const char                  *renum_cell_method,
- const char                  *renum_face_method,
- const int                    n_property_cell,
- const int                   *renum_properties_cell,
- const int                    n_property_face,
- const int                   *renum_properties_face,
- const int                    n_part,
- const int                    dn_cell,
- const int                    dn_face,
- const int                    dn_vtx,
- const int                    n_face_group,
- const int                   *dcell_face_idx,
- const PDM_g_num_t           *dcell_face,
- const int                   *dcell_tag,
- const int                   *dcell_weight,
- const int                    have_dcell_part,
-       int                   *dcell_part,
- const PDM_g_num_t           *dface_cell,
- const int                   *dface_vtx_idx,
- const PDM_g_num_t           *dface_vtx,
- const int                   *dface_tag,
- const double                *dvtx_coord,
- const int                   *dvtx_tag,
- const int                   *dface_group_idx,
- const PDM_g_num_t           *dface_group
- );
-
 /**
  *
  * \brief Return a mesh partition dimensions
@@ -200,25 +164,6 @@ const  int    i_part,
        int   *sface_vtx,
        int   *sface_group,
        int   *n_face_group
-);
-
-/* Wrapper of pdm_multipart for CEDRE */
-
-void
-PDM_part_part_dim_get_with_multipart
-(
- PDM_multipart_t *multipart,
- const  int       i_part,
-        int      *n_cell,
-        int      *n_face,
-        int      *n_face_part_bound,
-        int      *n_vtx,
-        int      *n_proc,
-        int      *n_total_part,
-        int      *scell_face,
-        int      *sface_vtx,
-        int      *sface_group,
-        int      *n_face_group
 );
 
 
@@ -282,32 +227,6 @@ const int            i_part,
       int          **face_group_idx,
       int          **face_group,
       PDM_g_num_t  **face_group_ln_to_gn
-);
-
-/* Wrapper of pdm_multipart for CEDRE */
-
-void PDM_part_part_val_get_with_multipart
-(
-PDM_multipart_t   *multipart,
-const  int         i_part,
- int             **cell_tag,
- int             **cell_face_idx,
- int             **cell_face,
- PDM_g_num_t     **cell_ln_to_gn,
- int             **face_tag,
- int             **face_cell,
- int             **face_vtx_idx,
- int             **face_vtx,
- PDM_g_num_t     **face_ln_to_gn,
- int             **face_part_bound_proc_idx,
- int             **face_part_bound_part_idx,
- int             **face_part_bound,
- int             **vtx_tag,
- double          **vtx,
- PDM_g_num_t     **vtx_ln_to_gn,
- int             **face_group_idx,
- int             **face_group,
- PDM_g_num_t     **face_group_ln_to_gn
 );
 
 
