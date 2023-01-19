@@ -3134,6 +3134,20 @@ PDM_part_create_with_multipart
  const PDM_g_num_t           *dface_group
  )
  {
+
+  // unused for multipart
+  PDM_UNUSED(n_property_cell);
+  PDM_UNUSED(n_property_face);
+  PDM_UNUSED(renum_properties_face);
+  PDM_UNUSED(dcell_face_idx);
+  PDM_UNUSED(dcell_face);
+  PDM_UNUSED(dcell_tag);
+  PDM_UNUSED(dcell_weight);
+  PDM_UNUSED(have_dcell_part);
+  PDM_UNUSED(dcell_part);
+  PDM_UNUSED(dface_tag);
+  PDM_UNUSED(dvtx_tag);
+
   // Create dmesh
   int n_jn = 0;
   PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
@@ -3162,15 +3176,15 @@ PDM_part_create_with_multipart
   int n_zone = 1;
   int n_part_zones = n_part;
   PDM_multipart_t *multipart = PDM_multipart_create(n_zone,
-                                                   &n_part_zones,
-                                                   PDM_FALSE,
-                                                   split_method,
-                                                   PDM_PART_SIZE_HOMOGENEOUS,
-                                                   NULL,
-                                                   comm,
-                                                   PDM_OWNERSHIP_KEEP);
+                                                    &n_part_zones,
+                                                    PDM_FALSE,
+                                                    split_method,
+                                                    PDM_PART_SIZE_HOMOGENEOUS,
+                                                    NULL,
+                                                    comm,
+                                                    PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_set_reordering_options(multipart, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
+  PDM_multipart_set_reordering_options(multipart, -1, renum_cell_method, renum_properties_cell, renum_face_method);
   PDM_multipart_register_block(multipart, 0, dm);
 
   // Run
@@ -3178,6 +3192,7 @@ PDM_part_create_with_multipart
 
   // free
   free(dface_join_idx);
+  PDM_dmesh_free(dm);
 
   return multipart;
  }
@@ -3248,6 +3263,49 @@ const   int  i_part,
 }
 
 
+/* Wrapper of pdm_multipart for CEDRE */
+
+void
+PDM_part_part_dim_get_with_multipart
+(
+ PDM_multipart_t *multipart,
+ const  int       i_part,
+        int      *n_cell,
+        int      *n_face,
+        int      *n_face_part_bound,
+        int      *n_vtx,
+        int      *n_proc,
+        int      *n_total_part,
+        int      *scell_face,
+        int      *sface_vtx,
+        int      *sface_group,
+        int      *n_face_group
+)
+{
+  int i_zone = 0;
+  int n_section;
+  int *n_elt = NULL;
+  int s_face_join;
+  int n_join_groups;
+
+  PDM_multipart_part_dim_get(multipart,
+                             i_zone,
+                             i_part,
+                             &n_section,
+                             &n_elt,
+                             n_cell,
+                             n_face,
+                             n_face_part_bound,
+                             n_vtx,
+                             n_proc,
+                             n_total_part,
+                             scell_face,
+                             sface_vtx,
+                             sface_group,
+                             n_face_group,
+                             &s_face_join,
+                             &n_join_groups);
+}
 
 /**
  *
@@ -3340,6 +3398,69 @@ const  int      i_part,
   *face_group_idx           = mesh_part->face_group_idx;
   *face_group               = mesh_part->face_group;
   *face_group_ln_to_gn      = mesh_part->face_group_ln_to_gn;
+}
+
+/* Wrapper of pdm_multipart for CEDRE */
+
+void PDM_part_part_val_get_with_multipart
+(
+PDM_multipart_t   *multipart,
+const  int         i_part,
+ int             **cell_tag,
+ int             **cell_face_idx,
+ int             **cell_face,
+ PDM_g_num_t     **cell_ln_to_gn,
+ int             **face_tag,
+ int             **face_cell,
+ int             **face_vtx_idx,
+ int             **face_vtx,
+ PDM_g_num_t     **face_ln_to_gn,
+ int             **face_part_bound_proc_idx,
+ int             **face_part_bound_part_idx,
+ int             **face_part_bound,
+ int             **vtx_tag,
+ double          **vtx,
+ PDM_g_num_t     **vtx_ln_to_gn,
+ int             **face_group_idx,
+ int             **face_group,
+ PDM_g_num_t     **face_group_ln_to_gn
+)
+{
+  int i_zone = 0;
+  int         **elt_vtx_idx = NULL;
+  int         **elt_vtx = NULL;
+  PDM_g_num_t **elt_section_ln_to_gn = NULL;
+  int          *face_join_idx = NULL;
+  int          *face_join = NULL;
+  PDM_g_num_t  *face_join_ln_to_gn = NULL;
+
+  PDM_multipart_part_val_get(multipart,
+                             i_zone,
+                             i_part,
+                             &elt_vtx_idx,
+                             &elt_vtx,
+                             &elt_section_ln_to_gn,
+                             cell_tag,
+                             cell_face_idx,
+                             cell_face,
+                             cell_ln_to_gn,
+                             face_tag,
+                             face_cell,
+                             face_vtx_idx,
+                             face_vtx,
+                             face_ln_to_gn,
+                             face_part_bound_proc_idx,
+                             face_part_bound_part_idx,
+                             face_part_bound,
+                             vtx_tag,
+                             vtx,
+                             vtx_ln_to_gn,
+                             face_group_idx,
+                             face_group,
+                             face_group_ln_to_gn,
+                             &face_join_idx,
+                             &face_join,
+                             &face_join_ln_to_gn);
 }
 
 

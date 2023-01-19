@@ -202,6 +202,25 @@ const  int    i_part,
        int   *n_face_group
 );
 
+/* Wrapper of pdm_multipart for CEDRE */
+
+void
+PDM_part_part_dim_get_with_multipart
+(
+ PDM_multipart_t *multipart,
+ const  int       i_part,
+        int      *n_cell,
+        int      *n_face,
+        int      *n_face_part_bound,
+        int      *n_vtx,
+        int      *n_proc,
+        int      *n_total_part,
+        int      *scell_face,
+        int      *sface_vtx,
+        int      *sface_group,
+        int      *n_face_group
+);
+
 
 /**
  *
@@ -263,6 +282,32 @@ const int            i_part,
       int          **face_group_idx,
       int          **face_group,
       PDM_g_num_t  **face_group_ln_to_gn
+);
+
+/* Wrapper of pdm_multipart for CEDRE */
+
+void PDM_part_part_val_get_with_multipart
+(
+PDM_multipart_t   *multipart,
+const  int         i_part,
+ int             **cell_tag,
+ int             **cell_face_idx,
+ int             **cell_face,
+ PDM_g_num_t     **cell_ln_to_gn,
+ int             **face_tag,
+ int             **face_cell,
+ int             **face_vtx_idx,
+ int             **face_vtx,
+ PDM_g_num_t     **face_ln_to_gn,
+ int             **face_part_bound_proc_idx,
+ int             **face_part_bound_part_idx,
+ int             **face_part_bound,
+ int             **vtx_tag,
+ double          **vtx,
+ PDM_g_num_t     **vtx_ln_to_gn,
+ int             **face_group_idx,
+ int             **face_group,
+ PDM_g_num_t     **face_group_ln_to_gn
 );
 
 

@@ -141,13 +141,15 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
-#ifdef PDM_HAVE_PARMETIS
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-#else
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-#endif
-#endif
+// #ifdef PDM_HAVE_PARMETIS
+//   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+// #else
+// #ifdef PDM_HAVE_PTSCOTCH
+//   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+// #endif
+// #endif
+
+PDM_split_dual_t part_method  =  PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -228,7 +230,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_t *multipart = PDM_part_create_with_multipart(comm,
                                                               part_method,
-                                                              "PDM_PART_RENUM_CELL_NONE",
+                                                              "PDM_PART_RENUM_CELL_HILBERT",
                                                               "PDM_PART_RENUM_FACE_NONE",
                                                               n_property_cell,
                                                               renum_properties_cell,
@@ -254,6 +256,147 @@ int main(int argc, char *argv[])
                                                               dface_group_idx,
                                                               dface_group);
 
+  if (1 == 1) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      int n_cell;
+      int n_face;
+      int n_face_part_bound;
+      int n_vtx;
+      int n_proc;
+      int n_total_part;
+      int scell_face;
+      int sface_vtx;
+      int sface_group;
+      int n_face_group2;
+
+      PDM_part_part_dim_get_with_multipart(multipart,
+                                           i_part,
+                                           &n_cell,
+                                           &n_face,
+                                           &n_face_part_bound,
+                                           &n_vtx,
+                                           &n_proc,
+                                           &n_total_part,
+                                           &scell_face,
+                                           &sface_vtx,
+                                           &sface_group,
+                                           &n_face_group2);
+
+      int          *cell_tag;
+      int          *cell_face_idx;
+      int          *cell_face;
+      PDM_g_num_t  *cell_ln_to_gn;
+      int          *face_tag;
+      int          *face_cell;
+      int          *face_vtx_idx;
+      int          *face_vtx;
+      PDM_g_num_t  *face_ln_to_gn;
+      int          *face_part_bound_proc_idx;
+      int          *face_part_bound_part_idx;
+      int          *face_part_bound;
+      int          *vtx_tag;
+      double       *vtx;
+      PDM_g_num_t  *vtx_ln_to_gn;
+      int          *face_group_idx;
+      int          *face_group;
+      PDM_g_num_t  *face_group_ln_to_gn;
+
+      PDM_part_part_val_get_with_multipart(multipart,
+                                           i_part,
+                                           &cell_tag,
+                                           &cell_face_idx,
+                                           &cell_face,
+                                           &cell_ln_to_gn,
+                                           &face_tag,
+                                           &face_cell,
+                                           &face_vtx_idx,
+                                           &face_vtx,
+                                           &face_ln_to_gn,
+                                           &face_part_bound_proc_idx,
+                                           &face_part_bound_part_idx,
+                                           &face_part_bound,
+                                           &vtx_tag,
+                                           &vtx,
+                                           &vtx_ln_to_gn,
+                                           &face_group_idx,
+                                           &face_group,
+                                           &face_group_ln_to_gn);
+
+
+      PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
+      PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
+      PDM_printf("[%i] n_face          : %i\n", i_rank, n_face);
+      PDM_printf("[%i] n_vtx           : %i\n", i_rank, n_vtx);
+      PDM_printf("[%i] n_face_part_bound : %i\n", i_rank, n_face_part_bound);
+
+      PDM_printf("[%i] cell_face     : ", i_rank);
+      for (int i = 0; i < n_cell; i++) {
+        for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+          PDM_printf(" %i", cell_face[j]);
+        }
+        PDM_printf("\n");
+      }
+
+      PDM_printf("\n");
+
+      PDM_printf("[%i]  cell_ln_to_gn    : ", i_rank);
+      for (int i = 0; i < n_cell; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, cell_ln_to_gn[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] face_cell     : ", i_rank);
+      for (int i = 0; i < 2 * n_face; i++)
+        PDM_printf(" %i", face_cell[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] face_vtx      : ", i_rank);
+      for (int i = 0; i < n_face; i++) {
+        for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
+          PDM_printf(" %i", face_vtx[j]);
+        }
+        PDM_printf("\n");
+      }
+
+      PDM_printf("[%i]  face_ln_to_gn    : ", i_rank);
+      for (int i = 0; i < n_face; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, face_ln_to_gn[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] vtx           : ", i_rank);
+      for (int i = 0; i < 3 * n_vtx; i++)
+        PDM_printf(" %12.5e", vtx[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] vtx_ln_to_gn     : ", i_rank);
+      for (int i = 0; i <  n_vtx; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, vtx_ln_to_gn[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] face_group_idx : ", i_rank);
+      for (int i = 0; i < n_face_group + 1; i++)
+        PDM_printf(" %i", face_group_idx[i]);
+      PDM_printf("\n");
+
+      PDM_printf("[%i] face_group    : ", i_rank);
+      for (int i = 0; i < n_face_group; i++) {
+        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
+          PDM_printf(" %i", face_group[j]);
+        }
+        PDM_printf("\n");
+      }
+
+      PDM_printf("[%i] face_group_ln_to_gn   : ", i_rank);
+      for (int i = 0; i < n_face_group; i++) {
+        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
+          PDM_printf(" "PDM_FMT_G_NUM, face_group_ln_to_gn[j]);
+        }
+        PDM_printf("\n");
+      }
+    }
+  }
+
+  free(dcell_part);
   PDM_dcube_gen_free(dcube);
   PDM_multipart_free(multipart);
 
