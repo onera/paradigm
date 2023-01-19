@@ -614,7 +614,51 @@ int main
     }
   }
 
-  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(dom_intrf,
+  /*
+   * Re-create domain interface from face only
+   */
+  PDM_domain_interface_t* ditrf_face_only =  PDM_domain_interface_create(dom_intrf->n_interface,
+                                                                         dom_intrf->n_domain,
+                                                                         PDM_DOMAIN_INTERFACE_MULT_NO,
+                                                                         PDM_OWNERSHIP_USER,
+                                                                         comm);
+
+  int                   *interface_face_dn  = NULL;
+  PDM_g_num_t          **interface_face_ids = NULL;
+  int                  **interface_face_dom = NULL;
+  PDM_domain_interface_get(dom_intrf,
+                           PDM_BOUND_TYPE_FACE,
+                           &interface_face_dn,
+                           &interface_face_ids,
+                           &interface_face_dom);
+
+  PDM_domain_interface_set(ditrf_face_only,
+                           PDM_BOUND_TYPE_FACE,
+                           interface_face_dn,
+                           interface_face_ids,
+                           interface_face_dom);
+
+  for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface) {
+    double* translation_vect   = NULL;
+    double* rotation_direction = NULL;
+    double* rotation_center    = NULL;
+    double  rotation_angle     = 0;
+    PDM_domain_interface_translation_get(dom_intrf, i_interface, &translation_vect);
+    PDM_domain_interface_rotation_get   (dom_intrf, i_interface, &rotation_direction, &rotation_center, &rotation_angle);
+
+    if(translation_vect != NULL) {
+      PDM_domain_interface_translation_set(ditrf_face_only, i_interface, translation_vect);
+      free(translation_vect);
+    }
+    if(rotation_direction != NULL){
+      PDM_domain_interface_rotation_set(ditrf_face_only, i_interface, rotation_direction, rotation_center, rotation_angle);
+      free(rotation_direction);
+      free(rotation_center);
+    }
+  }
+
+
+  PDM_part_domain_interface_t* pdi = PDM_domain_interface_to_part_domain_interface(ditrf_face_only,
                                                                                    pn_n_part,
                                                                                    pn_face,
                                                                                    pn_edge,
@@ -623,55 +667,7 @@ int main
                                                                                    pedge_ln_to_gn,
                                                                                    pvtx_ln_to_gn);
 
-
-  // PDM_part_domain_interface_t* pdi_only_face = PDM_part_domain_interface_create(dom_intrf->n_interface,
-  //                                                                               dom_intrf->n_domain,
-  //                                                                               n_part_by_domain,
-  //                                                                               dom_intrf->multidomain_intrf,
-  //                                                                               PDM_OWNERSHIP_KEEP,
-  //                                                                               dom_intrf->comm);
-  // for(int i_domain = 0; i_domain < dom_intrf->n_domain; ++i_domain) {
-  //   for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
-  //     for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface) {
-
-  //       // Copy one to another
-  //       int           interface_pn       = 0;
-  //       PDM_g_num_t  *interface_ln_to_gn = NULL;
-  //       int          *interface_sgn      = NULL;
-  //       int          *interface_sens     = NULL;
-  //       int          *interface_ids      = NULL;
-  //       int          *interface_ids_idx  = NULL;
-  //       int          *interface_dom      = NULL;
-  //       PDM_part_domain_interface_get(pdi,
-  //                                     PDM_BOUND_TYPE_FACE,
-  //                                     i_domain,
-  //                                     i_part,
-  //                                     i_interface,
-  //                                     &interface_pn,
-  //                                     &interface_ln_to_gn,
-  //                                     &interface_sgn,
-  //                                     &interface_sens,
-  //                                     &interface_ids,
-  //                                     &interface_ids_idx,
-  //                                     &interface_dom);
-
-  //       PDM_part_domain_interface_set(pdi_only_face,
-  //                                     PDM_BOUND_TYPE_FACE,
-  //                                     i_domain,
-  //                                     i_part,
-  //                                     i_interface,
-  //                                     interface_pn,
-  //                                     interface_ln_to_gn,
-  //                                     interface_sgn,
-  //                                     interface_sens,
-  //                                     interface_ids,
-  //                                     interface_ids_idx,
-  //                                     interface_dom);
-  //     }
-  //   }
-  // }
-  // PDM_part_domain_interface_free(pdi_only_face);
-
+  PDM_domain_interface_free(ditrf_face_only);
 
   /*
    * Mesh interpolation

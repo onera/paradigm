@@ -80,6 +80,7 @@ PDM_mesh_interpolate_create
  const PDM_MPI_Comm   comm
 )
 {
+  PDM_UNUSED(interp_kind);
   PDM_mesh_interpolate_t* mi = malloc(sizeof(PDM_mesh_interpolate_t));
 
   mi->n_domain    = n_domain;
@@ -204,9 +205,6 @@ PDM_mesh_interpolate_compute
     PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, mi->comm);
     PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, mi->comm);
 
-    printf("is_describe_vtx_l  = %i \n", is_describe_vtx_l );
-    printf("is_describe_edge_l = %i \n", is_describe_edge_l);
-    printf("is_describe_face_l = %i \n", is_describe_face_l);
 
     int **pn_vtx = malloc(mi->n_domain * sizeof(int *));
     for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
@@ -215,6 +213,39 @@ PDM_mesh_interpolate_compute
         pn_vtx[i_domain][i_part] = mi->parts[i_domain][i_part].n_vtx;
       }
     }
+
+    int          **pn_face        = malloc(mi->n_domain * sizeof(int          *));
+    PDM_g_num_t ***pface_ln_to_gn = malloc(mi->n_domain * sizeof(PDM_g_num_t **));
+    PDM_g_num_t ***pvtx_ln_to_gn  = malloc(mi->n_domain * sizeof(PDM_g_num_t **));
+    int         ***pface_vtx_idx  = malloc(mi->n_domain * sizeof(int         **));
+    int         ***pface_vtx      = malloc(mi->n_domain * sizeof(int         **));
+    for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+      pn_face       [i_domain] = malloc(mi->n_part[i_domain] * sizeof(int          ));
+      pvtx_ln_to_gn [i_domain] = malloc(mi->n_part[i_domain] * sizeof(PDM_g_num_t *));
+      pface_ln_to_gn[i_domain] = malloc(mi->n_part[i_domain] * sizeof(PDM_g_num_t *));
+      pface_vtx_idx [i_domain] = malloc(mi->n_part[i_domain] * sizeof(int         *));
+      pface_vtx     [i_domain] = malloc(mi->n_part[i_domain] * sizeof(int         *));
+      for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+        pn_face       [i_domain][i_part] = mi->parts[i_domain][i_part].n_face;
+        pvtx_ln_to_gn [i_domain][i_part] = mi->parts[i_domain][i_part].vtx_ln_to_gn;
+        pface_ln_to_gn[i_domain][i_part] = mi->parts[i_domain][i_part].face_ln_to_gn;
+        pface_vtx_idx [i_domain][i_part] = mi->parts[i_domain][i_part].face_vtx_idx;
+        pface_vtx     [i_domain][i_part] = mi->parts[i_domain][i_part].face_vtx;
+      }
+    }
+
+    PDM_part_domain_interface_face2vtx(mi->pdi,
+                                       mi->n_part,
+                                       pn_face,
+                                       pface_ln_to_gn,
+                                       pn_vtx,
+                                       pvtx_ln_to_gn,
+                                       pface_vtx_idx,
+                                       pface_vtx);
+
+    printf("is_describe_vtx_l  = %i \n", is_describe_vtx_l );
+    printf("is_describe_edge_l = %i \n", is_describe_edge_l);
+    printf("is_describe_face_l = %i \n", is_describe_face_l);
 
     PDM_part_domain_interface_as_graph(mi->pdi,
                                        PDM_BOUND_TYPE_VTX,
@@ -226,10 +257,21 @@ PDM_mesh_interpolate_compute
                                        &composed_interface_idx,
                                        &composed_interface,
                                        &composed_ln_to_gn_sorted);
+
     for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
-      free(pn_vtx[i_domain]);
+      free(pn_face       [i_domain]);
+      free(pvtx_ln_to_gn [i_domain]);
+      free(pface_ln_to_gn[i_domain]);
+      free(pface_vtx_idx [i_domain]);
+      free(pface_vtx     [i_domain]);
+      free(pn_vtx        [i_domain]);
     }
     free(pn_vtx);
+    free(pn_face);
+    free(pvtx_ln_to_gn );
+    free(pface_ln_to_gn);
+    free(pface_vtx_idx );
+    free(pface_vtx     );
   }
 
 
@@ -271,6 +313,10 @@ PDM_mesh_interpolate_compute
         }
       }
 
+      if(0 == 1) {
+        PDM_log_trace_array_int(_neighbor_n, n_vtx, "_neighbor_n ::");
+      }
+
       /* Compute index */
       _neighbor_idx[0] = 0;
       for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
@@ -278,8 +324,9 @@ PDM_mesh_interpolate_compute
         _neighbor_n[i_entity] = 0;
       }
 
-      // PDM_log_trace_array_int(_neighbor_idx, n_vtx, "_neighbor_idx ::");
-      // PDM_log_trace_array_int(_neighbor_n, n_vtx, "_neighbor_n ::");
+      if(0 == 1) {
+        PDM_log_trace_array_int(_neighbor_idx, n_vtx, "_neighbor_idx ::");
+      }
 
       neighbor_desc     [i_part+shift_part] = (int *) malloc( 3 * _neighbor_idx[n_vtx] * sizeof(int) );
       neighbor_interface[i_part+shift_part] = (int *) malloc(     _neighbor_idx[n_vtx] * sizeof(int) );

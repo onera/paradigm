@@ -2695,8 +2695,6 @@ PDM_part_domain_interface_face2vtx
                                           dfilter_face_vtx_idx,
                                           dfilter_face_vtx);
 
-  ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
-
   /*
    * Translate
    */
@@ -2705,13 +2703,14 @@ PDM_part_domain_interface_face2vtx
                                              ditrf->n_domain,
                                              ditrf->multidomain_intrf,
                                              PDM_BOUND_TYPE_VTX,
-                                             ditrf->interface_dn_edge,
-                                             ditrf->interface_ids_edge,
-                                             ditrf->interface_dom_edge,
+                                             ditrf->interface_dn_vtx,
+                                             ditrf->interface_ids_vtx,
+                                             ditrf->interface_dom_vtx,
                                              n_part,
                                              pn_vtx,
                                              pvtx_ln_to_gn,
                                              dom_intrf);
+  ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
   free(dn_vtx);
   free(dn_face);
 
@@ -2725,6 +2724,14 @@ PDM_part_domain_interface_face2vtx
 
   PDM_domain_interface_free(ditrf);
 
+  for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+    free(pn_interface           [i_interface]);
+    free(interface_face_ln_to_gn[i_interface]);
+    free(interface_ln_to_gn     [i_interface]);
+    free(interface_sgn          [i_interface]);
+    free(interface_sens         [i_interface]);
+    free(interface_dom          [i_interface]);
+  }
   free(pn_interface);
   free(interface_ln_to_gn);
   free(interface_face_ln_to_gn);
