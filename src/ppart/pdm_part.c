@@ -2924,11 +2924,11 @@ PDM_part_create
  const PDM_g_num_t           *dface_group
 )
 {
-#ifdef PDM_USE_MULTIPART
-  int use_multipart = 1;
-#else
-  int use_multipart = 0;
-#endif
+  char *use_multipart_var;
+  int use_multipart;
+  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    use_multipart = atoi(use_multipart_var);
+  }
 
   int i_rank;
   int n_rank;
@@ -3377,11 +3377,11 @@ const   int  i_part,
         int *n_face_group
 )
 {
-#ifdef PDM_USE_MULTIPART
-  int use_multipart = 1;
-#else
-  int use_multipart = 0;
-#endif
+  char *use_multipart_var;
+  int use_multipart;
+  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    use_multipart = atoi(use_multipart_var);
+  }
 
   if (use_multipart) {
     _dim_get(ppart->multipart,
@@ -3487,11 +3487,11 @@ const  int      i_part,
  PDM_g_num_t  **face_group_ln_to_gn
 )
 {
-#ifdef PDM_USE_MULTIPART
-  int use_multipart = 1;
-#else
-  int use_multipart = 0;
-#endif
+  char *use_multipart_var;
+  int use_multipart;
+  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    use_multipart = atoi(use_multipart_var);
+  }
 
   if (use_multipart) {
     _val_get(ppart->multipart,
@@ -3606,61 +3606,77 @@ PDM_part_free
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  if (_ppart->dcell_face_idx != NULL)
-    free(_ppart->dcell_face_idx);
-  _ppart->dcell_face_idx = NULL;
-
-  if (_ppart->dcell_face != NULL)
-    free(_ppart->dcell_face);
-  _ppart->dcell_face = NULL;
-
-  if (_ppart->dcell_proc != NULL)
-    free(_ppart->dcell_proc);
-  _ppart->dcell_proc = NULL;
-
-  if (_ppart->dface_proc != NULL)
-    free(_ppart->dface_proc);
-  _ppart->dface_proc = NULL;
-
-  if (_ppart->dface_cell != NULL)
-    free(_ppart->dface_cell);
-  _ppart->dface_cell = NULL;
-
-  if (_ppart->dvtx_proc != NULL)
-    free(_ppart->dvtx_proc);
-  _ppart->dvtx_proc = NULL;
-
-  if (_ppart->dpart_proc != NULL)
-    free(_ppart->dpart_proc);
-  _ppart->dpart_proc = NULL;
-
-  if (_ppart->gpart_to_lproc_part != NULL)
-    free(_ppart->gpart_to_lproc_part);
-  _ppart->gpart_to_lproc_part = NULL;
-
-  if (_ppart->dpart_bound != NULL)
-    free(_ppart->dpart_bound);
-  _ppart->dpart_bound = NULL;
-
-  if (_ppart->ddual_graph_idx != NULL)
-    free(_ppart->ddual_graph_idx);
-  _ppart->ddual_graph_idx = NULL;
-
-  if (_ppart->ddual_graph != NULL)
-    free(_ppart->ddual_graph);
-  _ppart->ddual_graph = NULL;
-
-  for (int i = 0; i < _ppart->n_part; i++) {
-    _part_free(_ppart->mesh_parts[i]);
-    _ppart->mesh_parts[i] = NULL;
+  char *use_multipart_var;
+  int use_multipart;
+  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    use_multipart = atoi(use_multipart_var);
   }
 
-  PDM_timer_free(_ppart->timer);
-  _ppart->timer = NULL;
+  if (use_multipart) {
 
-  if (_ppart->mesh_parts != NULL)
-    free(_ppart->mesh_parts);
-  _ppart->mesh_parts = NULL;
+    if (ppart->multipart != NULL)
+      PDM_multipart_free(ppart->multipart);
+    _ppart->multipart = NULL;
+
+  } else {
+
+    if (_ppart->dcell_face_idx != NULL)
+      free(_ppart->dcell_face_idx);
+    _ppart->dcell_face_idx = NULL;
+
+    if (_ppart->dcell_face != NULL)
+      free(_ppart->dcell_face);
+    _ppart->dcell_face = NULL;
+
+    if (_ppart->dcell_proc != NULL)
+      free(_ppart->dcell_proc);
+    _ppart->dcell_proc = NULL;
+
+    if (_ppart->dface_proc != NULL)
+      free(_ppart->dface_proc);
+    _ppart->dface_proc = NULL;
+
+    if (_ppart->dface_cell != NULL)
+      free(_ppart->dface_cell);
+    _ppart->dface_cell = NULL;
+
+    if (_ppart->dvtx_proc != NULL)
+      free(_ppart->dvtx_proc);
+    _ppart->dvtx_proc = NULL;
+
+    if (_ppart->dpart_proc != NULL)
+      free(_ppart->dpart_proc);
+    _ppart->dpart_proc = NULL;
+
+    if (_ppart->gpart_to_lproc_part != NULL)
+      free(_ppart->gpart_to_lproc_part);
+    _ppart->gpart_to_lproc_part = NULL;
+
+    if (_ppart->dpart_bound != NULL)
+      free(_ppart->dpart_bound);
+    _ppart->dpart_bound = NULL;
+
+    if (_ppart->ddual_graph_idx != NULL)
+      free(_ppart->ddual_graph_idx);
+    _ppart->ddual_graph_idx = NULL;
+
+    if (_ppart->ddual_graph != NULL)
+      free(_ppart->ddual_graph);
+    _ppart->ddual_graph = NULL;
+
+    for (int i = 0; i < _ppart->n_part; i++) {
+      _part_free(_ppart->mesh_parts[i]);
+      _ppart->mesh_parts[i] = NULL;
+    }
+
+    PDM_timer_free(_ppart->timer);
+    _ppart->timer = NULL;
+
+    if (_ppart->mesh_parts != NULL)
+      free(_ppart->mesh_parts);
+    _ppart->mesh_parts = NULL;
+
+  }
 
   free (_ppart);
 
