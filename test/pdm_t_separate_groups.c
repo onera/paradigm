@@ -525,10 +525,10 @@ _read_gamma_mesh
 
   int n_group_edge;
   PDM_MPI_Allreduce(&_n_group_edge, &n_group_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
-  log_trace("n_group_edge = %d\n", n_group_edge);
+  // log_trace("n_group_edge = %d\n", n_group_edge);
 
   int *dedge_group_idx = PDM_array_new_idx_from_const_stride_int(1, dn_edge);
-  PDM_log_trace_connectivity_int(dedge_group_idx, dedge_group, dn_edge, "dedge_group : ");
+  // PDM_log_trace_connectivity_int(dedge_group_idx, dedge_group, dn_edge, "dedge_group : ");
 
   int         *dgroup_edge_idx = NULL;
   PDM_g_num_t *dgroup_edge     = NULL;
@@ -560,7 +560,7 @@ _read_gamma_mesh
 
   int n_group_face;
   PDM_MPI_Allreduce(&_n_group_face, &n_group_face, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
-  log_trace("n_group_face = %d\n", n_group_face);
+  // log_trace("n_group_face = %d\n", n_group_face);
 
   int *dface_group_idx = PDM_array_new_idx_from_const_stride_int(1, dn_face);
 

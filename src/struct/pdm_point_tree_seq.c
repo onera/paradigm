@@ -170,10 +170,10 @@ _define_rank_distrib
                                                sampling,
                                                n_sample+1);
 
-    if (isample >= n_sample || isample < 0) {
-      PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
-      log_trace("!!! x = %f, isample = %d / %d\n", x, isample, n_sample);
-    }
+    // if (isample >= n_sample || isample < 0) {
+    //   PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
+    //   log_trace("!!! x = %f, isample = %d / %d\n", x, isample, n_sample);
+    // }
 
     l_distrib[isample]++;
   }
@@ -1311,7 +1311,7 @@ _build_point_tree_from_boxes
 
   _l_nodes_t *nodes = ptree->nodes;
 
-  if(1) {
+  if(0) {
     int depth_max      = 0;
     int n_pts_leaf_max = -1;
     int n_pts_leaf_min = ptree->n_pts+1;

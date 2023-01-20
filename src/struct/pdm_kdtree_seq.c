@@ -170,10 +170,10 @@ _define_rank_distrib
                                                sampling,
                                                n_sample+1);
 
-    if (isample >= n_sample || isample < 0) {
-      PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
-      log_trace("!!! x = %f, isample = %d / %d\n", x, isample, n_sample);
-    }
+    // if (isample >= n_sample || isample < 0) {
+    //   PDM_log_trace_array_double(sampling, n_sample+1, "sampling : ");
+    //   log_trace("!!! x = %f, isample = %d / %d\n", x, isample, n_sample);
+    // }
 
     l_distrib[isample]++;
   }
