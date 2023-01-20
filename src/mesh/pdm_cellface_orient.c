@@ -21,6 +21,7 @@
 #include "pdm_hash_tab.h"
 #include "pdm_error.h"
 #include "pdm_timer.h"
+#include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C" {

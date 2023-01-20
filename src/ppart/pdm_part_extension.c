@@ -1911,6 +1911,14 @@ _create_cell_cell_graph
          */
         part_ext->entity_cell_idx[i_part+shift_part] = face_cell_idx[i_domain][i_part];
         part_ext->entity_cell    [i_part+shift_part] = face_cell    [i_domain][i_part];
+
+        log_trace("i_domain %d, i_part %d, n_cell = %d, face_cell :\n",
+                  i_domain, i_part, pn_cell[i_part]);
+        PDM_log_trace_connectivity_int(face_cell_idx[i_domain][i_part],
+                                       face_cell    [i_domain][i_part],
+                                       pn_face[i_part],
+                                       "");
+
         part_ext->entity_cell_n  [i_part+shift_part] = (int * ) malloc( pn_face[i_part] * sizeof(int));
         for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
           int n_connected = part_ext->entity_cell_idx[i_part+shift_part][i_face+1] - part_ext->entity_cell_idx[i_part+shift_part][i_face];
@@ -3085,6 +3093,12 @@ _create_cell_graph_comm
       for(int idx_entity = 0; idx_entity < n_part_entity_bound_tot; ++idx_entity) {
         int i_entity = _entity_part_bound[4*idx_entity]-1;
         int idx_write = _neighbor_idx[i_entity] + _neighbor_n[i_entity]++;
+        log_trace("* i_domain %d, i_part %d, i_entity %d : _entity_part_bound = (%d, %d, %d)\n",
+                  i_domain, i_part,
+                  i_entity,
+                  _entity_part_bound[4*idx_entity+1],
+                  _entity_part_bound[4*idx_entity+2]+shift_part_g-1,
+                  _entity_part_bound[4*idx_entity+3]-1);
         _neighbor_desc[3*idx_write  ] = _entity_part_bound[4*idx_entity+1];                // i_proc_opp;
         _neighbor_desc[3*idx_write+1] = _entity_part_bound[4*idx_entity+2]+shift_part_g-1; // i_part_opp
         _neighbor_desc[3*idx_write+2] = _entity_part_bound[4*idx_entity+3]-1;              // i_entity_opp
@@ -3143,6 +3157,7 @@ _create_cell_graph_comm
       //     }
       //   }
       // }
+      log_trace("pdi_neighbor_idx : %p\n", (void *) pdi_neighbor_idx);
       if(pdi_neighbor_idx != NULL) {
         for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
           for(int idx = pdi_neighbor_idx[i_part+shift_part][i_entity]; idx < pdi_neighbor_idx[i_part+shift_part][i_entity+1]; ++idx) {
@@ -3181,6 +3196,14 @@ _create_cell_graph_comm
                                                            part_ext->neighbor_idx,
                                                            part_ext->neighbor_desc);
 
+  for (int i = 0; i < n_part_loc_all_domain; i++) {
+    log_trace("part_ext->neighbor_desc[%d] :\n", i);
+    PDM_log_trace_graph_nuplet_int(part_ext->neighbor_idx[i],
+                                   part_ext->neighbor_desc[i],
+                                   3,
+                                   part_ext->n_entity_bound[i],
+                                   "");
+  }
 
   PDM_distant_neighbor_exch(dn,
                             sizeof(int),
@@ -3290,6 +3313,9 @@ _create_cell_graph_comm
               // _dist_neighbor_cell_desc[3*idx_write+1] = i_part_opp;
               // _dist_neighbor_cell_desc[3*idx_write+2] = i_opp_cell;
 
+              log_trace("$ i_domain %d, i_part %d, i_entity %d, i_cell %d : (%d, %d, %d)\n",
+                        i_domain, i_part, i_entity, i_cell, i_proc_opp, i_part_opp, i_opp_cell);
+
               _dist_neighbor_cell_desc[4*idx_write  ] = i_proc_opp;
               _dist_neighbor_cell_desc[4*idx_write+1] = i_part_opp;
               _dist_neighbor_cell_desc[4*idx_write+2] = i_opp_cell;
@@ -3358,7 +3384,7 @@ _create_cell_graph_comm
   /*
    * Panic verbose
    */
-  if(0 == 1) {
+  if(1 == 1) {
     shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
@@ -3376,18 +3402,25 @@ _create_cell_graph_comm
         int* _dist_neighbor_cell_desc = part_ext->dist_neighbor_cell_desc     [i_part+shift_part];
         int* _dist_neighbor_cell_intf = part_ext->dist_neighbor_cell_interface[i_part+shift_part];
 
-        printf(" _dist_neighbor_cell_idx ---------------- \n");
+        log_trace("*** i_part %d ***\n", i_part);
+        log_trace(" _dist_neighbor_cell_idx ---------------- \n");
         for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-          printf("[%i] i_cell -> %i -->  ", i_part, i_cell);
+          log_trace("[%i] i_cell -> %i -->  ", i_part, i_cell);
           for(int idx = _dist_neighbor_cell_idx[i_cell]; idx < _dist_neighbor_cell_idx[i_cell+1]; ++idx) {
-            printf("(%i, %i, intrf = %i) ", _dist_neighbor_cell_desc[3*idx+1], _dist_neighbor_cell_desc[3*idx+2], _dist_neighbor_cell_intf[idx]);
+            log_trace("(%i, %i, intrf = %i) ", _dist_neighbor_cell_desc[3*idx+1], _dist_neighbor_cell_desc[3*idx+2], _dist_neighbor_cell_intf[idx]);
           }
-          printf("\n");
+          log_trace("\n");
         }
-        printf(" _dist_neighbor_cell_idx ---------------- END \n");
+        log_trace(" _dist_neighbor_cell_idx ---------------- END \n");
 
         PDM_log_trace_array_int(_dist_neighbor_cell_idx , n_cell+1                       , "_dist_neighbor_cell_idx::");
-        PDM_log_trace_array_int(_dist_neighbor_cell_desc, 3 * _dist_neighbor_cell_idx[n_cell], "_dist_neighbor_cell_desc::");
+        // PDM_log_trace_array_int(_dist_neighbor_cell_desc, 3 * _dist_neighbor_cell_idx[n_cell], "_dist_neighbor_cell_desc::");
+        PDM_log_trace_graph_nuplet_int(_dist_neighbor_cell_idx,
+                                       _dist_neighbor_cell_desc,
+                                       3,
+                                       n_cell,
+                                       "_dist_neighbor_cell_desc::");
+
         PDM_log_trace_array_int(_dist_neighbor_cell_intf,     _dist_neighbor_cell_idx[n_cell], "_dist_neighbor_cell_intf::");
       }
       shift_part += part_ext->n_part[i_domain];

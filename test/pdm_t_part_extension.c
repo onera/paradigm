@@ -8,6 +8,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pdm_writer.h"
+#include "pdm_vtk.h"
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
@@ -16,6 +18,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 #include "pdm_cellface_orient.h"
 
 /*============================================================================
@@ -121,6 +124,213 @@ _read_args(int            argc,
   }
 }
 
+
+static void
+_visu
+(
+ const char      *name_chr,
+ const int        n_part,
+ int              n_cell[],
+ int              n_face[],
+ int              n_vtx[],
+ int             *cell_face_idx[],
+ int             *cell_face[],
+ PDM_g_num_t     *cell_ln_to_gn[],
+ int             *face_vtx_idx[],
+ int             *face_vtx[],
+ PDM_g_num_t     *face_ln_to_gn[],
+ double          *vtx[],
+ PDM_g_num_t     *vtx_ln_to_gn[]
+)
+{
+  PDM_UNUSED(face_ln_to_gn);
+
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+
+  for (int i = 0; i < n_part; i++) {
+    char filename[999];
+    sprintf(filename, "check_faces_part_%d_rank_%d.vtk", i, i_rank);
+    PDM_vtk_write_polydata(filename,
+                           n_vtx[i],
+                           vtx[i],
+                           vtx_ln_to_gn[i],
+                           n_face[i],
+                           face_vtx_idx[i],
+                           face_vtx[i],
+                           face_ln_to_gn[i],
+                           NULL);
+  }
+
+
+  PDM_writer_t *id_cs = PDM_writer_create("Ensight",
+                                          PDM_WRITER_FMT_ASCII,
+                                          PDM_WRITER_TOPO_CST,
+                                          PDM_WRITER_OFF,
+                                          "test_part_extension",
+                                          name_chr,
+                                          PDM_MPI_COMM_WORLD,
+                                          PDM_IO_KIND_MPI_SIMPLE,
+                                          1.,
+                                          NULL);
+
+  /* Creation de la geometrie */
+
+  int id_geom = PDM_writer_geom_create(id_cs,
+                                       "cube_geom",
+                                       n_part);
+
+  int *n_part_procs = (int *) malloc(sizeof(int) * n_rank);
+
+  PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
+                     (void *) n_part_procs, 1, PDM_MPI_INT,
+                     PDM_MPI_COMM_WORLD);
+
+  int *distrib_part = (int *) malloc(sizeof(int) * (n_rank + 1));
+
+  distrib_part[0] = 0;
+  for (int i = 0; i < n_rank; i++) {
+    distrib_part[i+1] = distrib_part[i] + n_part_procs[i];
+  }
+
+  free(n_part_procs);
+
+  /* Creation des variables */
+
+  int id_var_num_part = PDM_writer_var_create(id_cs,
+                                    PDM_WRITER_OFF,
+                                    PDM_WRITER_VAR_SCALAR,
+                                    PDM_WRITER_VAR_ELEMENTS,
+                                    "num_part");
+
+
+  int id_var_num_rank = PDM_writer_var_create(id_cs,
+                                    PDM_WRITER_OFF,
+                                    PDM_WRITER_VAR_SCALAR,
+                                    PDM_WRITER_VAR_ELEMENTS,
+                                    "num_rank");
+
+  int id_var_cell_num = PDM_writer_var_create(id_cs,
+                                    PDM_WRITER_OFF,
+                                    PDM_WRITER_VAR_SCALAR,
+                                    PDM_WRITER_VAR_ELEMENTS,
+                                    "cell_num");
+
+
+  PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
+  PDM_real_t **val_num_rank = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
+  PDM_real_t **val_cell_num = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
+  int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
+  int **cell_face_n = (int **) malloc(sizeof(int *) * n_part);
+  PDM_writer_step_beg (id_cs, 0.);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    face_vtx_n[i_part] = (int *) malloc(sizeof(int) * n_face[i_part]);
+    cell_face_n[i_part] = (int *) malloc(sizeof(int) * n_cell[i_part]);
+
+    for (int i = 0; i < n_face[i_part]; i++) {
+      face_vtx_n[i_part][i] = face_vtx_idx[i_part][i+1] - face_vtx_idx[i_part][i];
+    }
+
+    for (int i = 0; i < n_cell[i_part]; i++) {
+      cell_face_n[i_part][i] = cell_face_idx[i_part][i+1] - cell_face_idx[i_part][i];
+    }
+
+    PDM_writer_geom_coord_set(id_cs,
+                              id_geom,
+                              i_part,
+                              n_vtx[i_part],
+                              vtx[i_part],
+                              vtx_ln_to_gn[i_part],
+                              PDM_OWNERSHIP_USER);
+
+    /* Construction de la connectivite pour sortie graphique */
+
+    PDM_writer_geom_cell3d_cellface_add (id_cs,
+                                         id_geom,
+                                         i_part,
+                                         n_cell       [i_part],
+                                         n_face       [i_part],
+                                         face_vtx_idx [i_part],
+                                         face_vtx_n   [i_part],
+                                         face_vtx     [i_part],
+                                         cell_face_idx[i_part],
+                                         cell_face_n  [i_part],
+                                         cell_face    [i_part],
+                                         cell_ln_to_gn[i_part]);
+
+  }
+
+  PDM_writer_geom_write(id_cs,
+                        id_geom);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    val_num_part[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
+    val_cell_num[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
+    val_num_rank[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
+    for (int i = 0; i < n_cell[i_part]; i++) {
+      val_num_part[i_part][i] = i_part + distrib_part[i_rank];
+      val_cell_num[i_part][i] = i ;
+      val_num_rank[i_part][i] = i_rank;
+    }
+    // PDM_log_trace_array_double(val_num_part[i_part], n_cell[i_part], "val_num_part :: ");
+
+    PDM_writer_var_set(id_cs,
+                       id_var_num_part,
+                       id_geom,
+                       i_part,
+                       val_num_part[i_part]);
+
+    PDM_writer_var_set(id_cs,
+                       id_var_num_rank,
+                       id_geom,
+                       i_part,
+                       val_num_rank[i_part]);
+
+    PDM_writer_var_set(id_cs,
+                       id_var_cell_num,
+                       id_geom,
+                       i_part,
+                       val_cell_num[i_part]);
+  }
+
+  PDM_writer_var_write(id_cs,
+                       id_var_num_part);
+
+  PDM_writer_var_write(id_cs,
+                       id_var_num_rank);
+
+  PDM_writer_var_write(id_cs,
+                       id_var_cell_num);
+
+  // PDM_writer_var_free(id_cs,
+  //                     id_var_num_part);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free (face_vtx_n[i_part]);
+    free (cell_face_n[i_part]);
+    free (val_num_part[i_part]);
+    free (val_cell_num[i_part]);
+    free (val_num_rank[i_part]);
+  }
+  free (distrib_part);
+  free (face_vtx_n);
+  free (val_num_part);
+  free (val_cell_num);
+  free (val_num_rank);
+  free (cell_face_n);
+
+  // PDM_writer_geom_free(id_cs,
+  //                      id_geom);
+
+  PDM_writer_step_end(id_cs);
+  PDM_writer_free(id_cs);
+
+}
 
 /**
  *
@@ -304,6 +514,19 @@ int main(int argc, char *argv[])
                                                              comm,
                                                              PDM_OWNERSHIP_KEEP);
 
+  int          *pn_cell        = malloc(n_part * sizeof(int          ));
+  int          *pn_face        = malloc(n_part * sizeof(int          ));
+  int          *pn_vtx         = malloc(n_part * sizeof(int          ));
+  int         **pcell_face_idx = malloc(n_part * sizeof(int         *));
+  int         **pcell_face     = malloc(n_part * sizeof(int         *));
+  int         **pface_vtx_idx  = malloc(n_part * sizeof(int         *));
+  int         **pface_vtx      = malloc(n_part * sizeof(int         *));
+  PDM_g_num_t **pcell_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pface_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **pvtx_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
+  double      **pvtx           = malloc(n_part * sizeof(double      *));
+
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_cell;
@@ -370,15 +593,37 @@ int main(int argc, char *argv[])
                           &face_group,
                           &face_group_ln_to_gn);
 
-    PDM_cellface_orient (n_cell,
-                         n_face,
-                         n_vtx,
-                         vtx,
-                         cell_face_idx,
-                         cell_face,
-                         face_cell,
-                         face_vtx_idx,
-                         face_vtx);
+    char *use_multipart_var;
+    int use_multipart = 0;
+    if (( use_multipart_var = getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+      use_multipart = atoi(use_multipart_var);
+    }
+
+    if (!use_multipart) {
+      PDM_cellface_orient (n_cell,
+                           n_face,
+                           n_vtx,
+                           vtx,
+                           cell_face_idx,
+                           cell_face,
+                           face_cell,
+                           face_vtx_idx,
+                           face_vtx);
+    }
+
+    pn_cell       [i_part] = n_cell;
+    pn_face       [i_part] = n_face;
+    pn_vtx        [i_part] = n_vtx;
+    pcell_face_idx[i_part] = cell_face_idx;
+    pcell_face    [i_part] = cell_face;
+    pface_vtx_idx [i_part] = face_vtx_idx;
+    pface_vtx     [i_part] = face_vtx;
+    pcell_ln_to_gn[i_part] = cell_ln_to_gn;
+    pface_ln_to_gn[i_part] = face_ln_to_gn;
+    pvtx_ln_to_gn [i_part] = vtx_ln_to_gn;
+    pvtx          [i_part] = vtx;
+
+    log_trace("part %d : n_cell = %d\n", i_part, n_cell);
 
     PDM_part_extension_set_part(part_ext, 0, i_part,
                                 n_cell,
@@ -413,6 +658,22 @@ int main(int argc, char *argv[])
                                 vtx);
 
     // PDM_log_trace_array_long (cell_ln_to_gn, n_cell, "cell_ln_to_gn::");
+    if (1) {
+      log_trace("face_part_bound[%d] :\n", i_part);
+      for (int i = 0; i < n_face_part_bound; i++) {
+        // for (int j = 0; j < 4; j++) {
+        //   log_trace(" %d", face_part_bound[4*i+j]);
+        // }
+        // log_trace("\n");
+        log_trace("face %d, opp rank %d, opp part %d, opp face %d\n",
+                  face_part_bound[4*i  ]-1,
+                  face_part_bound[4*i+1],
+                  face_part_bound[4*i+2]-1,
+                  face_part_bound[4*i+3]-1);
+      }
+    }
+
+
     if( 0 == 1) {
       PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
       PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
@@ -490,6 +751,36 @@ int main(int argc, char *argv[])
       }
     }
   }
+
+  if(1 == 1) {
+
+    _visu ("ini_mesh1",
+           n_part,
+           pn_cell,
+           pn_face,
+           pn_vtx,
+           pcell_face_idx,
+           pcell_face,
+           pcell_ln_to_gn,
+           pface_vtx_idx,
+           pface_vtx,
+           pface_ln_to_gn,
+           pvtx,
+           pvtx_ln_to_gn);
+  }
+
+  free(pn_cell       );
+  free(pn_face       );
+  free(pn_vtx        );
+  free(pcell_face_idx);
+  free(pcell_face    );
+  free(pface_vtx_idx );
+  free(pface_vtx     );
+  free(pcell_ln_to_gn);
+  free(pface_ln_to_gn);
+  free(pvtx_ln_to_gn );
+  free(pvtx          );
+
 
   PDM_part_extension_compute(part_ext);
 

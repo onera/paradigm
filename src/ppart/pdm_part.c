@@ -2679,7 +2679,7 @@ _multipart_create
   PDM_UNUSED(dface_tag            );
   PDM_UNUSED(dvtx_tag             );
 
-  PDM_split_dual_t split_method = method; // TO DO: uniformise method type
+  PDM_split_dual_t split_method = (PDM_split_dual_t) method; // TO DO: uniformise method type
 
   // Create dmesh
   int n_jn = 0;
