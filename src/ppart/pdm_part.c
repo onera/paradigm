@@ -2924,12 +2924,6 @@ PDM_part_create
  const PDM_g_num_t           *dface_group
 )
 {
-  char *use_multipart_var;
-  int use_multipart;
-  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
-    use_multipart = atoi(use_multipart_var);
-  }
-
   int i_rank;
   int n_rank;
 
@@ -2941,7 +2935,13 @@ PDM_part_create
 
   _PDM_part_t *_ppart = malloc(sizeof(_PDM_part_t));
 
-  if (use_multipart) {
+  char *use_multipart_var;
+  _ppart->use_multipart = 0;
+  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+    _ppart->use_multipart = atoi(use_multipart_var);
+  }
+
+  if (_ppart->use_multipart) {
     _ppart->multipart = _multipart_create(comm,
                                           split_method,
                                           renum_cell_method,
@@ -3377,13 +3377,8 @@ const   int  i_part,
         int *n_face_group
 )
 {
-  char *use_multipart_var;
-  int use_multipart;
-  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
-    use_multipart = atoi(use_multipart_var);
-  }
 
-  if (use_multipart) {
+  if (ppart->use_multipart) {
     _dim_get(ppart->multipart,
              i_part,
              n_cell,
@@ -3487,13 +3482,7 @@ const  int      i_part,
  PDM_g_num_t  **face_group_ln_to_gn
 )
 {
-  char *use_multipart_var;
-  int use_multipart;
-  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
-    use_multipart = atoi(use_multipart_var);
-  }
-
-  if (use_multipart) {
+  if (ppart->use_multipart) {
     _val_get(ppart->multipart,
              i_part,
              cell_tag,
@@ -3606,13 +3595,7 @@ PDM_part_free
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  char *use_multipart_var;
-  int use_multipart;
-  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
-    use_multipart = atoi(use_multipart_var);
-  }
-
-  if (use_multipart) {
+  if (_ppart->use_multipart) {
 
     if (ppart->multipart != NULL)
       PDM_multipart_free(ppart->multipart);

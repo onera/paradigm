@@ -238,7 +238,8 @@ typedef struct _PDM_part_t {
 
   /* Multipart */
 
-  PDM_multipart_t *multipart; /*!< Pointer on multipart structure */
+  PDM_multipart_t *multipart; /*!< Pointer to multipart structure */
+  int use_multipart; /*!< Integer choice of use of multipart */
 
   /* Local dimensions */
 
