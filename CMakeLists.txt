@@ -40,6 +40,10 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # User option Definition
 #------------------------------------------------------------------------------
 
+# Multipart in Part
+# -----------------
+set(PDM_USE_MULTIPART 0)
+
 if (PDM_IN_CWP)
 
   # Extensions

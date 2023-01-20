@@ -14,6 +14,7 @@
 #cmakedefine PDM_HAVE_LAPACK
 #cmakedefine PDM_HAVE_BLAS
 #cmakedefine PDM_HAVE_MKL
+#cmakedefine PDM_USE_MULTIPART
 
 #define PDM_LONG_G_NUM_BOOL "@PDM_LONG_G_NUM_BOOL@"
 #define PDM_VERSION_MAJOR "@PDM_VERSION_MAJOR@"

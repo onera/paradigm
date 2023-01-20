@@ -2667,17 +2667,17 @@ _multipart_create
  {
 
   // unused for multipart
-  PDM_UNUSED(n_property_cell);
-  PDM_UNUSED(n_property_face);
+  PDM_UNUSED(n_property_cell      );
+  PDM_UNUSED(n_property_face      );
   PDM_UNUSED(renum_properties_face);
-  PDM_UNUSED(dcell_face_idx);
-  PDM_UNUSED(dcell_face);
-  PDM_UNUSED(dcell_tag);
-  PDM_UNUSED(dcell_weight);
-  PDM_UNUSED(have_dcell_part);
-  PDM_UNUSED(dcell_part);
-  PDM_UNUSED(dface_tag);
-  PDM_UNUSED(dvtx_tag);
+  PDM_UNUSED(dcell_face_idx       );
+  PDM_UNUSED(dcell_face           );
+  PDM_UNUSED(dcell_tag            );
+  PDM_UNUSED(dcell_weight         );
+  PDM_UNUSED(have_dcell_part      );
+  PDM_UNUSED(dcell_part           );
+  PDM_UNUSED(dface_tag            );
+  PDM_UNUSED(dvtx_tag             );
 
   PDM_split_dual_t split_method = method; // TO DO: uniformise method type
 
@@ -2688,7 +2688,7 @@ _multipart_create
                                      dn_face,
                                      -1, // dn_edge
                                      dn_vtx,
-                                     n_face_group, // n_bnd
+                                     n_face_group,
                                      n_jn,
                                      comm);
 
@@ -2747,11 +2747,11 @@ _dim_get
         int      *n_face_group
 )
 {
-  int i_zone = 0;
-  int n_section;
-  int *n_elt = NULL;
-  int s_face_join;
-  int n_join_groups;
+  int  i_zone = 0;
+  int *n_elt  = NULL;
+  int  n_section;
+  int  s_face_join;
+  int  n_join_groups;
 
   PDM_multipart_part_dim_get(multipart,
                              i_zone,
@@ -2797,13 +2797,13 @@ const  int         i_part,
  PDM_g_num_t     **face_group_ln_to_gn
 )
 {
-  int i_zone = 0;
-  int         **elt_vtx_idx = NULL;
-  int         **elt_vtx = NULL;
+  int           i_zone               = 0;
+  int         **elt_vtx_idx          = NULL;
+  int         **elt_vtx              = NULL;
   PDM_g_num_t **elt_section_ln_to_gn = NULL;
-  int          *face_join_idx = NULL;
-  int          *face_join = NULL;
-  PDM_g_num_t  *face_join_ln_to_gn = NULL;
+  int          *face_join_idx        = NULL;
+  int          *face_join            = NULL;
+  PDM_g_num_t  *face_join_ln_to_gn   = NULL;
 
   PDM_multipart_part_val_get(multipart,
                              i_zone,
@@ -2924,7 +2924,7 @@ PDM_part_create
  const PDM_g_num_t           *dface_group
 )
 {
-#ifdef PDM_MULTIPART
+#ifdef PDM_USE_MULTIPART
   int use_multipart = 1;
 #else
   int use_multipart = 0;
@@ -3377,7 +3377,7 @@ const   int  i_part,
         int *n_face_group
 )
 {
-#ifdef PDM_MULTIPART
+#ifdef PDM_USE_MULTIPART
   int use_multipart = 1;
 #else
   int use_multipart = 0;
@@ -3487,7 +3487,7 @@ const  int      i_part,
  PDM_g_num_t  **face_group_ln_to_gn
 )
 {
-#ifdef PDM_MULTIPART
+#ifdef PDM_USE_MULTIPART
   int use_multipart = 1;
 #else
   int use_multipart = 0;
