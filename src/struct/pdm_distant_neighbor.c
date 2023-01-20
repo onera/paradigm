@@ -118,7 +118,7 @@ _compute_unique_idx
   // free(reverse_order_unique);
   // free(new_order);
 
-  if(0 == 1){
+  if(1 == 1){
     // int check = -1;
     log_trace("order_unique:: \n");
     for(int i = 0; i < nb_ent; i++){
@@ -212,19 +212,26 @@ const int           *n_entity,
     int *_part_neighbor_idx  = dn->neighbor_idx [i_part];
     int *_part_neighbor_desc = dn->neighbor_desc[i_part];
 
-    // printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
+    log_trace("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
 
     dn->order       [i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int));
     dn->order_unique[i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int));
 
-    // PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");
-    // PDM_log_trace_array_int(_part_neighbor_desc, 3 * _part_neighbor_idx[n_entity[i_part]], "_part_neighbor_desc::");
+    PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");
+    PDM_log_trace_array_int(_part_neighbor_desc, 3 * _part_neighbor_idx[n_entity[i_part]], "_part_neighbor_desc::");
 
     // Sort
     PDM_order_lnum_s(dn->neighbor_desc[i_part],
                      3,
                      dn->order[i_part],
                      _part_neighbor_idx[n_entity[i_part]]);
+
+    if (1) {
+      log_trace("--- i_part %d ---\n", i_part);
+      PDM_log_trace_array_int(dn->order[i_part],
+                              _part_neighbor_idx[n_entity[i_part]],
+                              "dn->order : ");
+    }
 
     // Compute the unique idx from sort
     _compute_unique_idx(dn->order[i_part],
@@ -295,7 +302,7 @@ const int           *n_entity,
 
   PDM_array_idx_from_sizes_int(dn->distributed_part_n, dn->n_part, dn->distributed_part_idx);
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("PDM_distant_neighbor_create::requested_data :: --> ");
     for(int i = 0; i < s_requested_data; ++i){
       log_trace("[%d/%d] ", requested_data[2*i], requested_data[2*i+1]);
@@ -309,7 +316,7 @@ const int           *n_entity,
     log_trace("\n");
   }
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("PDM_distant_neighbor_create::distributed_part_n :: --> ");
     for(int i = 0; i < dn->n_part; ++i){
       log_trace("%d ", dn->distributed_part_n[i]);
@@ -331,7 +338,7 @@ const int           *n_entity,
                     dn->distributed_data_n, 1, PDM_MPI_INT,
                     dn->comm);
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("PDM_distant_neighbor_create::distributed_data_n :: --> ");
     for(int i = 0; i < n_rank; ++i){
       log_trace("%d ",  dn->distributed_data_n[i]);
@@ -341,7 +348,7 @@ const int           *n_entity,
 
   dn->distributed_data_idx = PDM_array_new_idx_from_sizes_int(dn->distributed_data_n, n_rank);
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("PDM_distant_neighbor_create::distributed_data_idx :: --> ");
     for(int i = 0; i < n_rank+1; ++i){
       log_trace("%d ",  dn->distributed_data_idx[i]);
@@ -361,7 +368,7 @@ const int           *n_entity,
                      PDM_MPI_INT,
                      dn->comm);
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("PDM_distant_neighbor_create::distributed_data :: --> ");
     for(int i = 0; i < dn->distributed_data_idx[n_rank]/2; ++i){
       log_trace("[%d/%d] ", dn->distributed_data[2*i], dn->distributed_data[2*i+1]);
@@ -386,7 +393,7 @@ const int           *n_entity,
     dn->distributed_data_idx[i+1] = dn->distributed_data_n[i] + dn->distributed_data_idx[i];
   }
 
-  if(0 == 1){
+  if(1 == 1){
     log_trace("Re-Setup --- ");
     log_trace("PDM_distant_neighbor_create::distributed_data :: --> ");
     // for(int i = 0; i < dn->distributed_data_idx[n_rank]/2; ++i){
