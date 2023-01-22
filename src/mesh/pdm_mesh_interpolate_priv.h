@@ -82,10 +82,10 @@ struct _pdm_mesh_interpolate_t {
   int     *group_is_defined;
 
   /* Save graphe of  border */
-  int    **pvtx_face_bound_coords_opp_n;
-  double **pvtx_face_bound_coords_opp;
   int    **pvtx_cell_coords_opp_n;
   double **pvtx_cell_coords_opp;
+  int    **pvtx_face_bound_coords_opp_n;
+  double **pvtx_face_bound_coords_opp;
 
 
 };

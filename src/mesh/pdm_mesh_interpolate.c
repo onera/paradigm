@@ -768,6 +768,96 @@ _create_bnd_graph
   }
 }
 
+static
+void
+_interpolate_one_part
+(
+  int      n_vtx,
+  int      stride,
+  int     *vtx_cell_idx,
+  int     *vtx_cell,
+  double  *plocal_field,
+  double **pbound_field,
+  int     *neighbor_idx,
+  int     *pvtx_cell_coords_opp_n,
+  double  *pvtx_cell_coords_opp,
+  int     *pvtx_face_bound_coords_opp_n,
+  double  *pvtx_face_bound_coords_opp,
+  int     *pvtx_cell_field_opp_n,
+  double  *pvtx_cell_field_opp,
+  int     *pvtx_face_field_opp_n,
+  double  *pvtx_face_field_opp,
+  double **result_field
+)
+{
+  PDM_UNUSED(n_vtx);
+  PDM_UNUSED(stride);
+  PDM_UNUSED(vtx_cell_idx);
+  PDM_UNUSED(vtx_cell);
+  PDM_UNUSED(plocal_field);
+  PDM_UNUSED(pbound_field);
+  PDM_UNUSED(neighbor_idx);
+  PDM_UNUSED(pvtx_cell_coords_opp_n);
+  PDM_UNUSED(pvtx_cell_coords_opp);
+  PDM_UNUSED(pvtx_face_bound_coords_opp_n);
+  PDM_UNUSED(pvtx_face_bound_coords_opp);
+  PDM_UNUSED(pvtx_cell_field_opp_n);
+  PDM_UNUSED(pvtx_cell_field_opp);
+  PDM_UNUSED(pvtx_face_field_opp_n);
+  PDM_UNUSED(pvtx_face_field_opp);
+  PDM_UNUSED(result_field);
+
+}
+
+static
+void
+_interpolate
+(
+  PDM_mesh_interpolate_t     *mi,
+  int                         stride,
+  double                   ***plocal_field,
+  double                  ****pbound_field,
+  int                       **pvtx_cell_field_opp_n,
+  double                    **pvtx_cell_field_opp,
+  int                       **pvtx_face_field_opp_n,
+  double                    **pvtx_face_field_opp,
+  double                  ****result_field
+)
+{
+
+  double ***_result_field = malloc(mi->n_domain * sizeof(double **));
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    /* First loop to count */
+    _result_field[i_domain] = malloc(mi->n_part[i_domain] * sizeof(double *));
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+
+      _interpolate_one_part(mi->pn_vtx      [i_part+shift_part],
+                            stride,
+                            mi->pvtx_cell_idx               [i_part+shift_part],
+                            mi->pvtx_cell                   [i_part+shift_part],
+                            plocal_field                    [i_domain][i_part],
+                            pbound_field                    [i_domain][i_part],
+                            mi->neighbor_idx                [i_part+shift_part],
+                            mi->pvtx_cell_coords_opp_n      [i_part+shift_part],
+                            mi->pvtx_cell_coords_opp        [i_part+shift_part],
+                            mi->pvtx_face_bound_coords_opp_n[i_part+shift_part],
+                            mi->pvtx_face_bound_coords_opp  [i_part+shift_part],
+                            pvtx_cell_field_opp_n           [i_part+shift_part],
+                            pvtx_cell_field_opp             [i_part+shift_part],
+                            pvtx_face_field_opp_n           [i_part+shift_part],
+                            pvtx_face_field_opp             [i_part+shift_part],
+                            &_result_field[i_domain][i_part]);
+
+    }
+    shift_part += mi->n_part[i_domain];
+  }
+
+
+  *result_field = _result_field;
+
+}
+
 
 /*=============================================================================
  * Public function definitions
@@ -1353,18 +1443,21 @@ PDM_mesh_interpolate_exch
   free(pvtx_face_field_n);
   free(pvtx_face_field  );
 
-
-
-
   /*
    * Post-treatment
    */
-
-
-
+  _interpolate(mi,
+               stride,
+               local_field,
+               bound_field,
+               pvtx_cell_field_opp_n,
+               pvtx_cell_field_opp,
+               pvtx_face_field_opp_n,
+               pvtx_face_field_opp,
+               result_field);
 
   /*
-   * Free  send
+   * Free
    */
   for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part ) {
     free(pvtx_cell_field_opp_n[i_part]);

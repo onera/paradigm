@@ -809,9 +809,11 @@ int main
     }
     free(pfield      [i_domain]);
     free(pfield_bound[i_domain]);
+    free(result_field[i_domain]);
   }
   free(pfield      );
   free(pfield_bound);
+  free(result_field);
 
 
   PDM_mesh_interpolate_free(mi);
