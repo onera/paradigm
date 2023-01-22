@@ -259,12 +259,12 @@ _cell_center_3d
 
         double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
 
-        double fcx = 0;
-        double fcy = 0;
-        double fcz = 0;
         for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
           int i_face = PDM_ABS(_pcell_face[idx_face])-1;
 
+          double fcx = 0;
+          double fcy = 0;
+          double fcz = 0;
           double inv2 = 1./((double)  _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
 
           for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
