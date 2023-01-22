@@ -67,6 +67,8 @@ struct _pdm_mesh_interpolate_t {
   int **vtx_face_bound;
   int **vtx_face_bound_group;
 
+  PDM_distant_neighbor_t* dn;
+
 
   /* Graphe communication inside domain */
   int ****entity_part_bound_proc_idx;

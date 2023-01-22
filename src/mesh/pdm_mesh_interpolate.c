@@ -689,6 +689,8 @@ PDM_mesh_interpolate_create
   mi->vtx_face_bound       = NULL;
   mi->vtx_face_bound_group = NULL;
 
+  mi->dn = NULL;
+
   /* Graph comm  */
   mi->entity_part_bound_proc_idx = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
   mi->entity_part_bound_part_idx = malloc( PDM_MESH_ENTITY_MAX * sizeof(int ***));
@@ -770,22 +772,12 @@ PDM_mesh_interpolate_compute
   /*
    * Create distant_neighbor
    */
-  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(mi->comm,
-                                                           mi->n_part_loc_all_domain,
-                                                           mi->pn_vtx,
-                                                           mi->neighbor_idx,
-                                                           mi->neighbor_desc);
-
-  int **pvtx_cell_opp_n = NULL;
-  int **pvtx_cell_opp   = NULL;
-  PDM_distant_neighbor_exch(dn,
-                            sizeof(int),
-                            PDM_STRIDE_VAR_INTERLACED,
-                            -1,
-                            pvtx_cell_n,
-                  (void **) pvtx_cell,
-                           &pvtx_cell_opp_n,
-                 (void ***)&pvtx_cell_opp);
+  assert(mi->dn == NULL);
+  mi->dn = PDM_distant_neighbor_create(mi->comm,
+                                       mi->n_part_loc_all_domain,
+                                       mi->pn_vtx,
+                                       mi->neighbor_idx,
+                                       mi->neighbor_desc);
 
   /* Prepare coordinates to send */
   int    **pvtx_cell_coords_n =  malloc(mi->n_part_loc_all_domain * sizeof(int    *));
@@ -838,7 +830,7 @@ PDM_mesh_interpolate_compute
 
   int    **pvtx_cell_coords_opp_n = NULL;
   double **pvtx_cell_coords_opp   = NULL;
-  PDM_distant_neighbor_exch(dn,
+  PDM_distant_neighbor_exch(mi->dn,
                             3 * sizeof(double),
                             PDM_STRIDE_VAR_INTERLACED,
                             -1,
@@ -888,44 +880,18 @@ PDM_mesh_interpolate_compute
 
 
 
-
+  /* Free */
   for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part){
     free(pvtx_cell_coords_opp_n[i_part]);
     free(pvtx_cell_coords_opp  [i_part]);
+
+    free(pvtx_cell_coords  [i_part]);
+    free(pvtx_cell_coords_n[i_part]);
   }
   free(pvtx_cell_coords_opp_n);
   free(pvtx_cell_coords_opp  );
-
-
-
-  PDM_distant_neighbor_free(dn);
-
-  shift_part = 0;
-  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
-      free(pvtx_cell_coords  [i_part+shift_part]);
-      free(pvtx_cell_coords_n[i_part+shift_part]);
-    }
-    shift_part   += mi->n_part[i_domain];
-  }
   free(pvtx_cell_coords  );
   free(pvtx_cell_coords_n);
-
-
-  shift_part = 0;
-  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
-
-      free(pvtx_cell_opp_n[i_part+shift_part]);
-      free(pvtx_cell_opp  [i_part+shift_part]);
-
-    }
-    shift_part   += mi->n_part[i_domain];
-  }
-  free(pvtx_cell_opp_n);
-  free(pvtx_cell_opp  );
-
-
 
   /* Compute weight */
 
@@ -1065,6 +1031,8 @@ PDM_mesh_interpolate_free
  PDM_mesh_interpolate_t *mi
 )
 {
+
+  PDM_distant_neighbor_free(mi->dn);
 
   for(int i_kind = 0; i_kind < PDM_MESH_ENTITY_MAX; ++i_kind) {
     mi->graph_comm_is_defined     [i_kind] = 0;
