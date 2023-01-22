@@ -50,6 +50,8 @@ struct _pdm_mesh_interpolate_t {
 
   _part_t  **parts;
 
+  double **cell_center;
+
   /* Graphe communication inside domain */
   int ****entity_part_bound_proc_idx;
   int ****entity_part_bound_part_idx;
