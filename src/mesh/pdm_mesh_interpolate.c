@@ -843,6 +843,11 @@ PDM_mesh_interpolate_create
   mi->vtx_face_bound_group  = NULL;
   mi->vtx_face_bound_coords = NULL;
 
+  mi->pvtx_cell_coords_opp_n       = NULL;
+  mi->pvtx_cell_coords_opp         = NULL;
+  mi->pvtx_face_bound_coords_opp_n = NULL;
+  mi->pvtx_face_bound_coords_opp   = NULL;
+
   mi->dn = NULL;
 
   /* Graph comm  */
@@ -982,28 +987,28 @@ PDM_mesh_interpolate_compute
     shift_part += mi->n_part[i_domain];
   }
 
-  int    **pvtx_cell_coords_opp_n = NULL;
-  double **pvtx_cell_coords_opp   = NULL;
   PDM_distant_neighbor_exch(mi->dn,
                             3 * sizeof(double),
                             PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             pvtx_cell_coords_n,
                   (void **) pvtx_cell_coords,
-                           &pvtx_cell_coords_opp_n,
-                 (void ***)&pvtx_cell_coords_opp);
+                           &mi->pvtx_cell_coords_opp_n,
+                 (void ***)&mi->pvtx_cell_coords_opp);
+  int    **pvtx_cell_coords_opp_n = mi->pvtx_cell_coords_opp_n;
+  double **pvtx_cell_coords_opp   = mi->pvtx_cell_coords_opp;
 
   /* Same but for face_group */
-  int    **pvtx_face_bound_coords_opp_n = NULL;
-  double **pvtx_face_bound_coords_opp   = NULL;
   PDM_distant_neighbor_exch(mi->dn,
                             3 * sizeof(double),
                             PDM_STRIDE_VAR_INTERLACED,
                             -1,
                             mi->vtx_face_bound_n,
                   (void **) mi->vtx_face_bound_coords,
-                           &pvtx_face_bound_coords_opp_n,
-                 (void ***)&pvtx_face_bound_coords_opp);
+                           &mi->pvtx_face_bound_coords_opp_n,
+                 (void ***)&mi->pvtx_face_bound_coords_opp);
+  int    **pvtx_face_bound_coords_opp_n = mi->pvtx_face_bound_coords_opp_n;
+  double **pvtx_face_bound_coords_opp   = mi->pvtx_face_bound_coords_opp;
 
   /*
    * Count receive
@@ -1069,31 +1074,17 @@ PDM_mesh_interpolate_compute
                                 NULL,
                                 NULL);
     }
-
-
   }
-
-
 
 
 
   /* Free */
   for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part){
-    free(pvtx_cell_coords_opp_n[i_part]);
-    free(pvtx_cell_coords_opp  [i_part]);
-
-    free(pvtx_face_bound_coords_opp_n[i_part]);
-    free(pvtx_face_bound_coords_opp  [i_part]);
-
     free(pvtx_cell_coords  [i_part]);
     free(pvtx_cell_coords_n[i_part]);
   }
-  free(pvtx_cell_coords_opp_n);
-  free(pvtx_cell_coords_opp  );
   free(pvtx_cell_coords  );
   free(pvtx_cell_coords_n);
-  free(pvtx_face_bound_coords_opp_n  );
-  free(pvtx_face_bound_coords_opp);
 
   /* Compute weight */
 
@@ -1195,6 +1186,7 @@ PDM_mesh_interpolate_part_group_set
 )
 {
   assert(i_group < mi->n_group[i_domain]);
+  assert(bound_type == PDM_BOUND_TYPE_FACE);
 
   mi->n_group_entity  [bound_type][i_domain][i_part][i_group] = n_group_entity;
   mi->group_entity    [bound_type][i_domain][i_part][i_group] = group_entity;
@@ -1273,6 +1265,11 @@ PDM_mesh_interpolate_free
       free(mi->pvtx_cell_n  [i_part+shift_part]);
       free(mi->pvtx_cell_idx[i_part+shift_part]);
       free(mi->pvtx_cell    [i_part+shift_part]);
+
+      free(mi->pvtx_cell_coords_opp_n      [i_part+shift_part]);
+      free(mi->pvtx_cell_coords_opp        [i_part+shift_part]);
+      free(mi->pvtx_face_bound_coords_opp_n[i_part+shift_part]);
+      free(mi->pvtx_face_bound_coords_opp  [i_part+shift_part]);
     }
     shift_part += mi->n_part[i_domain];
   }
@@ -1282,6 +1279,11 @@ PDM_mesh_interpolate_free
   free(mi->pvtx_cell_n);
   free(mi->pvtx_cell_idx);
   free(mi->pvtx_cell);
+
+  free(mi->pvtx_cell_coords_opp_n      );
+  free(mi->pvtx_cell_coords_opp        );
+  free(mi->pvtx_face_bound_coords_opp_n);
+  free(mi->pvtx_face_bound_coords_opp  );
 
   free(mi->vtx_face_bound_idx   );
   free(mi->vtx_face_bound_n     );
