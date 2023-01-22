@@ -773,6 +773,8 @@ void
 _interpolate_one_part
 (
   int      n_vtx,
+  double  *vtx_coord,
+  double  *cell_center,
   int      stride,
   int     *vtx_cell_idx,
   int     *vtx_cell,
@@ -805,8 +807,46 @@ _interpolate_one_part
   PDM_UNUSED(pvtx_cell_field_opp);
   PDM_UNUSED(pvtx_face_field_opp_n);
   PDM_UNUSED(pvtx_face_field_opp);
-  PDM_UNUSED(result_field);
 
+  double *_result_field = malloc(stride * n_vtx * sizeof(double));
+
+  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+
+    double vtx_coord_x = vtx_coord[3*i_vtx  ];
+    double vtx_coord_y = vtx_coord[3*i_vtx+1];
+    double vtx_coord_z = vtx_coord[3*i_vtx+2];
+
+    for(int k = 0; k < stride; ++k) {
+      _result_field[stride*i_vtx+k] =  0.;
+    }
+    double tot_dist = 0.;
+
+    /* Pour l'instant ->  Inverse distance weighting */
+    for(int idx_cell = vtx_cell_idx[i_vtx]; idx_cell < vtx_cell_idx[i_vtx+1]; ++idx_cell) {
+      int i_cell = PDM_ABS(vtx_cell[idx_cell])-1;
+
+      double dx = cell_center[3*i_cell  ] - vtx_coord_x;
+      double dy = cell_center[3*i_cell+1] - vtx_coord_y;
+      double dz = cell_center[3*i_cell+2] - vtx_coord_z;
+      double dist = sqrt(dx * dx + dy * dy + dz * dz);
+
+      double inv_dist = 1./PDM_MAX(dist, 1.e-12);
+      tot_dist += inv_dist;
+
+      for(int k = 0; k < stride; ++k) {
+        _result_field[stride*i_vtx+k] += inv_dist * plocal_field[stride*i_cell+k];
+      }
+    }
+
+    /* Finalize ponderate */
+    double inv_tot_dist = 1./tot_dist;
+    for(int k = 0; k < stride; ++k) {
+      _result_field[stride*i_vtx+k] = _result_field[stride*i_vtx+k] * inv_tot_dist;
+    }
+
+  }
+
+  *result_field = _result_field;
 }
 
 static
@@ -832,7 +872,9 @@ _interpolate
     _result_field[i_domain] = malloc(mi->n_part[i_domain] * sizeof(double *));
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
 
-      _interpolate_one_part(mi->pn_vtx      [i_part+shift_part],
+      _interpolate_one_part(mi->pn_vtx                      [i_part+shift_part],
+                            mi->parts                       [i_domain][i_part].vtx,
+                            mi->cell_center                 [i_part+shift_part],
                             stride,
                             mi->pvtx_cell_idx               [i_part+shift_part],
                             mi->pvtx_cell                   [i_part+shift_part],

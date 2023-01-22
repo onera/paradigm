@@ -296,6 +296,112 @@ _compute_face_vtx
 }
 
 
+static
+void
+_cell_center_3d
+(
+  int      pn_cell,
+  int     *pcell_face_idx,
+  int     *pcell_face,
+  int     *pface_edge_idx,
+  int     *pface_edge,
+  int     *pface_vtx_idx,
+  int     *pface_vtx,
+  int     *pedge_vtx,
+  double  *pvtx_coord,
+  double **cell_center
+)
+{
+  int from_edge = 0;
+  int from_face = 0;
+  if(pface_edge     != NULL) {
+    from_edge = 1;
+  }
+  if(pface_vtx     != NULL) {
+    from_face = 1;
+  }
+  assert(pvtx_coord     != NULL);
+
+  double* entity_center = malloc(3 * pn_cell * sizeof(double ));
+
+  if(from_face == 1) {
+    for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
+
+      entity_center[3*i_cell  ] = 0.;
+      entity_center[3*i_cell+1] = 0.;
+      entity_center[3*i_cell+2] = 0.;
+
+      double inv = 1./((double) pcell_face_idx[i_cell+1] - pcell_face_idx[i_cell]);
+
+      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
+        int i_face = PDM_ABS(pcell_face[idx_face])-1;
+
+        double inv2 = 1./((double)  pface_vtx_idx[i_face+1] - pface_vtx_idx[i_face]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_vtx = pface_vtx_idx[i_face]; idx_vtx < pface_vtx_idx[i_face+1]; ++idx_vtx) {
+          int i_vtx = pface_vtx[idx_vtx]-1;
+          fcx += pvtx_coord[3*i_vtx  ];
+          fcy += pvtx_coord[3*i_vtx+1];
+          fcz += pvtx_coord[3*i_vtx+2];
+        }
+        fcx = fcx * inv2;
+        fcy = fcy * inv2;
+        fcz = fcz * inv2;
+
+        entity_center[3*i_cell  ] += fcx;
+        entity_center[3*i_cell+1] += fcy;
+        entity_center[3*i_cell+2] += fcz;
+      }
+
+      entity_center[3*i_cell  ] = entity_center[3*i_cell  ] * inv;
+      entity_center[3*i_cell+1] = entity_center[3*i_cell+1] * inv;
+      entity_center[3*i_cell+2] = entity_center[3*i_cell+2] * inv;
+    } /* End cell */
+  } else if( from_edge == 1) {
+    for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
+
+      entity_center[3*i_cell  ] = 0.;
+      entity_center[3*i_cell+1] = 0.;
+      entity_center[3*i_cell+2] = 0.;
+
+      double inv = 1./((double)  pcell_face_idx[i_cell+1] - pcell_face_idx[i_cell]);
+
+      double fcx = 0;
+      double fcy = 0;
+      double fcz = 0;
+      for(int idx_face = pcell_face_idx[i_cell]; idx_face < pcell_face_idx[i_cell+1]; ++idx_face) {
+        int i_face = PDM_ABS(pcell_face[idx_face])-1;
+
+        double inv2 = 1./((double)  pface_edge_idx[i_face+1] - pface_edge_idx[i_face]);
+
+        for(int idx_edge = pface_edge_idx[i_face]; idx_edge < pface_edge_idx[i_face+1]; ++idx_edge) {
+          int i_edge = PDM_ABS(pface_edge[idx_edge])-1;
+          int i_vtx1 = pedge_vtx[2*i_edge  ] - 1;
+          int i_vtx2 = pedge_vtx[2*i_edge+1] - 1;
+          fcx += 0.5 * (pvtx_coord[3*i_vtx1  ] + pvtx_coord[3*i_vtx2  ]);
+          fcy += 0.5 * (pvtx_coord[3*i_vtx1+1] + pvtx_coord[3*i_vtx2+1]);
+          fcz += 0.5 * (pvtx_coord[3*i_vtx1+2] + pvtx_coord[3*i_vtx2+2]);
+        }
+        fcx = fcx * inv2;
+        fcy = fcy * inv2;
+        fcz = fcz * inv2;
+
+        entity_center[3*i_cell  ] += fcx;
+        entity_center[3*i_cell+1] += fcy;
+        entity_center[3*i_cell+2] += fcz;
+      }
+
+      entity_center[3*i_cell  ] = entity_center[3*i_cell  ] * inv;
+      entity_center[3*i_cell+1] = entity_center[3*i_cell+1] * inv;
+      entity_center[3*i_cell+2] = entity_center[3*i_cell+2] * inv;
+    } /* End cell */
+  }
+
+  *cell_center = entity_center;
+}
 
 /**
  *
@@ -509,6 +615,7 @@ int main
   int         ***pface_vtx_idx  = (int         ***) malloc( n_domain * sizeof(int         **));
   int         ***pface_vtx      = (int         ***) malloc( n_domain * sizeof(int         **));
   double      ***pvtx_coord     = (double      ***) malloc( n_domain * sizeof(double      **));
+  double      ***cell_center    = (double      ***) malloc( n_domain * sizeof(double      **));
 
   int* n_group_by_domain = (int *) malloc(n_domain * sizeof(int));
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
@@ -528,6 +635,7 @@ int main
     pface_vtx_idx [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
     pface_vtx     [i_dom] = (int         **) malloc( n_part * sizeof(int         *));
     pvtx_coord    [i_dom] = (double      **) malloc( n_part * sizeof(double      *));
+    cell_center   [i_dom] = (double      **) malloc( n_part * sizeof(double      *));
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
 
       pn_cell[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart_id,
@@ -591,6 +699,7 @@ int main
                         edge_vtx,
                         &pface_vtx[i_dom][i_part]);
 
+
       PDM_multipart_part_vtx_coord_get(mpart_id,
                                        i_dom,
                                        i_part,
@@ -611,6 +720,17 @@ int main
                               &face_group_ln_to_gn);
       n_group_by_domain[i_dom] = n_bound;
       printf("n_bound = %i \n", n_bound);
+
+      _cell_center_3d(pn_cell[i_dom][i_part],
+                      pcell_face_idx[i_dom][i_part],
+                      pcell_face[i_dom][i_part],
+                      NULL,
+                      NULL,
+                      pface_vtx_idx[i_dom][i_part],
+                      pface_vtx[i_dom][i_part],
+                      NULL,
+                      pvtx_coord[i_dom][i_part],
+                      &cell_center[i_dom][i_part]);
 
     }
   }
@@ -761,7 +881,8 @@ int main
       pfield      [i_domain][i_part] = malloc(pn_cell[i_domain][i_part] * sizeof(double  ));
 
       for(int i_cell = 0; i_cell < pn_cell[i_domain][i_part]; ++i_cell) {
-        pfield      [i_domain][i_part][i_cell] = 1.;
+        // pfield      [i_domain][i_part][i_cell] = 1.;
+        pfield      [i_domain][i_part][i_cell] = cell_center[i_domain][i_part][3*i_cell];
       }
 
       int  n_bound = 0;
@@ -806,14 +927,18 @@ int main
       }
       free(pfield      [i_domain][i_part]);
       free(pfield_bound[i_domain][i_part]);
+      free(result_field[i_domain][i_part]);
+      free(cell_center [i_domain][i_part]);
     }
     free(pfield      [i_domain]);
     free(pfield_bound[i_domain]);
     free(result_field[i_domain]);
+    free(cell_center [i_domain]);
   }
   free(pfield      );
   free(pfield_bound);
   free(result_field);
+  free(cell_center);
 
 
   PDM_mesh_interpolate_free(mi);
