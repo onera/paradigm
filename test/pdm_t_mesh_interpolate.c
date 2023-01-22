@@ -747,6 +747,73 @@ int main
   }
   PDM_mesh_interpolate_compute(mi);
 
+  /*
+   * Exchange
+   */
+  int n_face_group_field = 1;
+  double  ***pfield       = malloc(n_domain * sizeof(double  **));
+  double ****pfield_bound = malloc(n_domain * sizeof(double ***));
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    pfield      [i_domain] = malloc(n_part_by_domain[i_domain] * sizeof(double  *));
+    pfield_bound[i_domain] = malloc(n_part_by_domain[i_domain] * sizeof(double **));
+
+    for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
+      pfield      [i_domain][i_part] = malloc(pn_cell[i_domain][i_part] * sizeof(double  ));
+
+      for(int i_cell = 0; i_cell < pn_cell[i_domain][i_part]; ++i_cell) {
+        pfield      [i_domain][i_part][i_cell] = 1.;
+      }
+
+      int  n_bound = 0;
+      int* group_face_idx      = 0;
+      int* group_face          = 0;
+      int* face_group_ln_to_gn = 0;
+
+      PDM_multipart_bound_get(mpart_id,
+                              i_domain,
+                              i_part,
+                              PDM_BOUND_TYPE_FACE,
+                              &n_bound,
+                              &group_face_idx,
+                              &group_face,
+                              &face_group_ln_to_gn);
+
+      pfield_bound[i_domain][i_part] = malloc(n_face_group_field  * sizeof(double *));
+      for(int i_group = 0; i_group < n_face_group_field; ++i_group) {
+        int n_face_in_group = group_face_idx[1]-group_face_idx[0];
+        pfield_bound[i_domain][i_part][i_group] = malloc(n_face_in_group * sizeof(double));
+
+        for(int idx_face = 0; idx_face < n_face_in_group; ++idx_face) {
+          pfield_bound[i_domain][i_part][i_group][idx_face] = 1.;
+        }
+      }
+    }
+  }
+
+  int stride = 1;
+  double ***result_field = NULL;
+  PDM_mesh_interpolate_exch(mi,
+                            stride,
+                            pfield,
+                            pfield_bound,
+                            &result_field);
+
+
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
+      for(int i_group = 0; i_group < n_face_group_field; ++i_group) {
+        free(pfield_bound[i_domain][i_part][i_group]);
+      }
+      free(pfield      [i_domain][i_part]);
+      free(pfield_bound[i_domain][i_part]);
+    }
+    free(pfield      [i_domain]);
+    free(pfield_bound[i_domain]);
+  }
+  free(pfield      );
+  free(pfield_bound);
+
+
   PDM_mesh_interpolate_free(mi);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);

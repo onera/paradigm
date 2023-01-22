@@ -1193,6 +1193,90 @@ PDM_mesh_interpolate_part_group_set
   mi->group_is_defined[bound_type] = 1;
 }
 
+void
+PDM_mesh_interpolate_exch
+(
+  PDM_mesh_interpolate_t      *mi,
+  const int                    stride,
+        double              ***local_field,
+        double             ****bound_field,
+        double             ****result_field
+)
+{
+
+  int **pvtx_cell_n   = mi->pvtx_cell_n;
+  int **pvtx_cell_idx = mi->pvtx_cell_idx;
+  int **pvtx_cell     = mi->pvtx_cell;
+
+  /*
+   * Exchange volumic data
+   */
+  int    **pvtx_cell_field_n =  malloc(mi->n_part_loc_all_domain * sizeof(int    *));
+  double **pvtx_cell_field   =  malloc(mi->n_part_loc_all_domain * sizeof(double *));
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    /* First loop to count */
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+      int n_vtx          = mi->pn_vtx      [i_part+shift_part];
+      int* _neighbor_idx = mi->neighbor_idx[i_part+shift_part];
+
+      pvtx_cell_field_n[i_part+shift_part] = PDM_array_zeros_int(n_vtx);
+      int *_pvtx_cell_field_n = pvtx_cell_field_n[i_part+shift_part];
+      int *_pvtx_cell_n       = pvtx_cell_n       [i_part+shift_part];
+      int *_pvtx_cell_idx     = pvtx_cell_idx     [i_part+shift_part];
+      int *_pvtx_cell         = pvtx_cell         [i_part+shift_part];
+
+      double*  _pcell_field = local_field[i_domain][i_part];
+
+      /* Count */
+      int n_vtx_cell_to_send = 0;
+      for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+        int n_neight = _neighbor_idx[i_entity+1] - _neighbor_idx[i_entity];
+        if(n_neight > 0 ) {
+          n_vtx_cell_to_send += _pvtx_cell_n[i_entity];
+          _pvtx_cell_field_n[i_entity] = _pvtx_cell_n[i_entity];
+        }
+      }
+
+      pvtx_cell_field[i_part+shift_part] = malloc( 3 * n_vtx_cell_to_send * sizeof(double));
+      double *_pvtx_cell_field = pvtx_cell_field[i_part+shift_part];
+
+      n_vtx_cell_to_send = 0;
+      for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+        int n_neight = _neighbor_idx[i_entity+1] - _neighbor_idx[i_entity];
+        if(n_neight > 0 ) {
+          for(int idx_cell = _pvtx_cell_idx[i_entity]; idx_cell < _pvtx_cell_idx[i_entity+1]; ++idx_cell) {
+            int  i_cell = PDM_ABS(_pvtx_cell[idx_cell])-1;
+
+            for(int k = 0; k < stride; ++k){
+              _pvtx_cell_field[stride*n_vtx_cell_to_send+k] = _pcell_field[stride*i_cell+k];
+            }
+            n_vtx_cell_to_send += stride;
+          }
+        }
+      }
+    }
+    shift_part += mi->n_part[i_domain];
+  }
+
+
+  for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part ) {
+    free(pvtx_cell_field_n[i_part]);
+    free(pvtx_cell_field  [i_part]);
+  }
+  free(pvtx_cell_field_n);
+  free(pvtx_cell_field  );
+
+  /*
+   * Exchange BND
+   */
+
+
+
+
+}
+
+
 // Ou calculer in interne ?
 // void
 // PDM_mesh_interpolate_dual_coord_set

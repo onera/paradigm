@@ -115,17 +115,6 @@ PDM_mesh_interpolate_part_group_set
   int                      *group_entity
 );
 
-// void
-// PDM_mesh_interpolate_part_group_set
-// (
-//   PDM_mesh_interpolate_t   *mi,
-//   int                       i_domain,
-//   int                       i_part,
-//   PDM_bound_type_t          bound_type,
-//   int                      *entity_bound_idx,
-//   int                      *entity_bound
-// );
-
 void
 PDM_mesh_interpolate_part_domain_interface_shared_set
 (
@@ -149,12 +138,13 @@ PDM_mesh_interpolate_part_mesh_nodal_set
 
 
 void
-PDM_mesh_interpolate_issend
+PDM_mesh_interpolate_exch
 (
-  PDM_mesh_interpolate_t     *mi,
-  const int                  stride,
-        void              ***local_field,
-        void             ****local_bnd_field
+  PDM_mesh_interpolate_t      *mi,
+  const int                    stride,
+        double              ***local_field,
+        double             ****bound_field,
+        double             ****result_field
 );
 
 
