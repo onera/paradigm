@@ -1221,7 +1221,7 @@ PDM_mesh_interpolate_exch
       int* _neighbor_idx = mi->neighbor_idx[i_part+shift_part];
 
       pvtx_cell_field_n[i_part+shift_part] = PDM_array_zeros_int(n_vtx);
-      int *_pvtx_cell_field_n = pvtx_cell_field_n[i_part+shift_part];
+      int *_pvtx_cell_field_n = pvtx_cell_field_n [i_part+shift_part];
       int *_pvtx_cell_n       = pvtx_cell_n       [i_part+shift_part];
       int *_pvtx_cell_idx     = pvtx_cell_idx     [i_part+shift_part];
       int *_pvtx_cell         = pvtx_cell         [i_part+shift_part];
@@ -1238,7 +1238,7 @@ PDM_mesh_interpolate_exch
         }
       }
 
-      pvtx_cell_field[i_part+shift_part] = malloc( 3 * n_vtx_cell_to_send * sizeof(double));
+      pvtx_cell_field[i_part+shift_part] = malloc( stride * n_vtx_cell_to_send * sizeof(double));
       double *_pvtx_cell_field = pvtx_cell_field[i_part+shift_part];
 
       n_vtx_cell_to_send = 0;
@@ -1259,17 +1259,86 @@ PDM_mesh_interpolate_exch
     shift_part += mi->n_part[i_domain];
   }
 
-
-  for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part ) {
-    free(pvtx_cell_field_n[i_part]);
-    free(pvtx_cell_field  [i_part]);
-  }
-  free(pvtx_cell_field_n);
-  free(pvtx_cell_field  );
-
   /*
    * Exchange BND
    */
+  shift_part = 0;
+  int    **pvtx_face_field_n =  malloc(mi->n_part_loc_all_domain * sizeof(int    *));
+  double **pvtx_face_field   =  malloc(mi->n_part_loc_all_domain * sizeof(double *));
+  for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+    /* First loop to count */
+    for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+      int n_vtx          = mi->pn_vtx      [i_part+shift_part];
+      int* _neighbor_idx = mi->neighbor_idx[i_part+shift_part];
+
+      int *_vtx_face_bound_idx   = (int *) mi->vtx_face_bound_idx  [i_part+shift_part];
+      int *_vtx_face_bound_n     = (int *) mi->vtx_face_bound_n    [i_part+shift_part];
+      int *_vtx_face_bound       = (int *) mi->vtx_face_bound      [i_part+shift_part];
+      int *_vtx_face_bound_group = (int *) mi->vtx_face_bound_group[i_part+shift_part];
+
+      pvtx_face_field_n[i_part+shift_part] = PDM_array_zeros_int(n_vtx);
+      int *_pvtx_face_field_n = pvtx_face_field_n [i_part+shift_part];
+
+      /* Count */
+      int n_vtx_face_to_send = 0;
+      for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+        int n_neight = _neighbor_idx[i_entity+1] - _neighbor_idx[i_entity];
+        if(n_neight > 0 ) {
+          n_vtx_face_to_send += _vtx_face_bound_n[i_entity];
+          _pvtx_face_field_n[i_entity] = _vtx_face_bound_n[i_entity];
+        }
+      }
+
+      pvtx_face_field[i_part+shift_part] = malloc( stride * n_vtx_face_to_send * sizeof(double));
+      double  *_pvtx_face_field = pvtx_face_field[i_part+shift_part];
+      double **_bound_field     = bound_field    [i_domain][i_part];
+
+      n_vtx_face_to_send = 0;
+      for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+        int n_neight = _neighbor_idx[i_entity+1] - _neighbor_idx[i_entity];
+        if(n_neight > 0 ) {
+          for(int idx_face = _vtx_face_bound_idx[i_entity]; idx_face < _vtx_face_bound_idx[i_entity+1]; ++idx_face) {
+            int i_face  = _vtx_face_bound      [idx_face];
+            int i_group = _vtx_face_bound_group[idx_face];
+
+            for(int k = 0; k < stride; ++k){
+              _pvtx_face_field[stride*n_vtx_face_to_send+k] = _bound_field[i_group][stride*i_face+k];
+            }
+            n_vtx_face_to_send += stride;
+          }
+        }
+      }
+    }
+    shift_part += mi->n_part[i_domain];
+  }
+
+  /*
+   * Exchange
+   */
+
+
+  /*
+   * Free  send
+   */
+  for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part ) {
+    free(pvtx_cell_field_n[i_part]);
+    free(pvtx_cell_field  [i_part]);
+    free(pvtx_face_field_n[i_part]);
+    free(pvtx_face_field  [i_part]);
+  }
+  free(pvtx_cell_field_n);
+  free(pvtx_cell_field  );
+  free(pvtx_face_field_n);
+  free(pvtx_face_field  );
+
+
+
+
+  /*
+   * Post-treatment
+   */
+
+
 
 
 
