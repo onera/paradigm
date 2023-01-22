@@ -1315,6 +1315,28 @@ PDM_mesh_interpolate_exch
   /*
    * Exchange
    */
+  int    **pvtx_cell_field_opp_n = NULL;
+  double **pvtx_cell_field_opp   = NULL;
+  PDM_distant_neighbor_exch(mi->dn,
+                            stride * sizeof(double),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            pvtx_cell_field_n,
+                  (void **) pvtx_cell_field,
+                           &pvtx_cell_field_opp_n,
+                 (void ***)&pvtx_cell_field_opp);
+
+  /* Same but for face_group */
+  int    **pvtx_face_field_opp_n = NULL;
+  double **pvtx_face_field_opp   = NULL;
+  PDM_distant_neighbor_exch(mi->dn,
+                            stride * sizeof(double),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            pvtx_face_field_n,
+                  (void **) pvtx_face_field,
+                           &pvtx_face_field_opp_n,
+                 (void ***)&pvtx_face_field_opp);
 
 
   /*
@@ -1341,6 +1363,19 @@ PDM_mesh_interpolate_exch
 
 
 
+  /*
+   * Free  send
+   */
+  for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part ) {
+    free(pvtx_cell_field_opp_n[i_part]);
+    free(pvtx_cell_field_opp  [i_part]);
+    free(pvtx_face_field_opp_n[i_part]);
+    free(pvtx_face_field_opp  [i_part]);
+  }
+  free(pvtx_cell_field_opp_n);
+  free(pvtx_cell_field_opp  );
+  free(pvtx_face_field_opp_n);
+  free(pvtx_face_field_opp  );
 
 
 }
