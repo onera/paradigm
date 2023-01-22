@@ -26,11 +26,13 @@
 #include "pdm_logging.h"
 #include "pdm_distant_neighbor.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_vtk.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_part_domain_interface_priv.h"
 #include "pdm_mesh_interpolate_priv.h"
 #include "pdm_mesh_interpolate.h"
 
@@ -360,6 +362,11 @@ PDM_mesh_interpolate_compute
   PDM_mesh_interpolate_t *mi
 )
 {
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(mi->comm, &i_rank);
+  PDM_MPI_Comm_size(mi->comm, &n_rank);
 
   /*
    * Compute graph comm from gnum with PDM_part_generate_entity_graph_comm is not provided
@@ -728,14 +735,74 @@ PDM_mesh_interpolate_compute
             _pvtx_cell_coords[3*n_vtx_cell_to_send  ] = _pcell_center[3*i_cell  ];
             _pvtx_cell_coords[3*n_vtx_cell_to_send+1] = _pcell_center[3*i_cell+1];
             _pvtx_cell_coords[3*n_vtx_cell_to_send+2] = _pcell_center[3*i_cell+2];
-
+            n_vtx_cell_to_send++;
           }
-          n_vtx_cell_to_send += _pvtx_cell_n[i_entity];
         }
       }
     }
     shift_part += mi->n_part[i_domain];
   }
+
+  int    **pvtx_cell_coords_opp_n = NULL;
+  double **pvtx_cell_coords_opp   = NULL;
+  PDM_distant_neighbor_exch(dn,
+                            3 * sizeof(double),
+                            PDM_STRIDE_VAR_INTERLACED,
+                            -1,
+                            pvtx_cell_coords_n,
+                  (void **) pvtx_cell_coords,
+                           &pvtx_cell_coords_opp_n,
+                 (void ***)&pvtx_cell_coords_opp);
+
+  /*
+   * Count receive
+   */
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part){
+
+    int nrecv = 0;
+    int n_vtx = pn_vtx[i_part];
+    int* _neighbor_idx       = neighbor_idx[i_part];
+    int* _neighbor_interface = neighbor_interface[i_part];
+
+    for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+      for(int idx_entity = _neighbor_idx[i_entity]; idx_entity < _neighbor_idx[i_entity+1]; ++idx_entity) {
+
+        if(_neighbor_interface[idx_entity] != -40000) {
+          int  i_interface = PDM_ABS(_neighbor_interface[idx_entity])-1;
+          for(int idx_recv = 0; idx_recv < pvtx_cell_coords_opp_n[i_part][idx_entity]; ++idx_recv){
+            for(int k = 0; k < 3; ++k) {
+              pvtx_cell_coords_opp[i_part][3*(nrecv+idx_recv)+k] += PDM_SIGN(1) * mi->pdi->translation_vect[i_interface][k];
+            }
+          }
+        }
+        nrecv += pvtx_cell_coords_opp_n[i_part][idx_entity];
+      }
+    }
+
+
+    if(1 == 1) {
+      printf("nrecv = %i \n",  nrecv);
+      char filename[999];
+      sprintf(filename, "opp_coords_%i_%i.vtk", i_rank, i_part);
+      PDM_vtk_write_point_cloud(filename,
+                                nrecv,
+                                pvtx_cell_coords_opp[i_part],
+                                NULL,
+                                NULL);
+    }
+
+  }
+
+
+
+
+  for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part){
+    free(pvtx_cell_coords_opp_n[i_part]);
+    free(pvtx_cell_coords_opp  [i_part]);
+  }
+  free(pvtx_cell_coords_opp_n);
+  free(pvtx_cell_coords_opp  );
+
 
 
   PDM_distant_neighbor_free(dn);
