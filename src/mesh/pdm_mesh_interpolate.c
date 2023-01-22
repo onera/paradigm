@@ -108,14 +108,14 @@ _cell_center_3d
 
         double inv = 1./((double)  _pcell_face_idx[i_cell+1] - _pcell_face_idx[i_cell]);
 
-        double fcx = 0;
-        double fcy = 0;
-        double fcz = 0;
         for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
           int i_face = PDM_ABS(_pcell_face[idx_face])-1;
 
           double inv2 = 1./((double)  _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
 
+          double fcx = 0;
+          double fcy = 0;
+          double fcz = 0;
           for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
             int i_vtx = _pface_vtx[idx_vtx]-1;
             fcx += _pvtx_coord[3*i_vtx  ];
@@ -239,6 +239,33 @@ _prepare_cell_center
                   pedge_vtx,
                   pvtx_coord,
                   &mi->cell_center);
+
+  if(1 == 1) {
+
+    int i_rank;
+    PDM_MPI_Comm_rank(mi->comm, &i_rank);
+
+    shift_part = 0;
+    for(int i_domain = 0; i_domain < mi->n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+        char filename[999];
+        sprintf(filename, "vtx_coords_%i_%i.vtk", i_rank, i_part+shift_part);
+        PDM_vtk_write_point_cloud(filename,
+                                  mi->parts[i_domain][i_part].n_vtx,
+                                  mi->parts[i_domain][i_part].vtx,
+                                  NULL,
+                                  NULL);
+
+        sprintf(filename, "cell_center_%i_%i.vtk", i_rank, i_part+shift_part);
+        PDM_vtk_write_point_cloud(filename,
+                                  mi->parts[i_domain][i_part].n_cell,
+                                  mi->cell_center[i_part+shift_part],
+                                  NULL,
+                                  NULL);
+      }
+      shift_part += mi->n_part[i_domain];
+    }
+  }
 
   free(pn_cell);
   free(pcell_face_idx);
@@ -771,7 +798,7 @@ PDM_mesh_interpolate_compute
           int  i_interface = PDM_ABS(_neighbor_interface[idx_entity])-1;
           for(int idx_recv = 0; idx_recv < pvtx_cell_coords_opp_n[i_part][idx_entity]; ++idx_recv){
             for(int k = 0; k < 3; ++k) {
-              pvtx_cell_coords_opp[i_part][3*(nrecv+idx_recv)+k] += PDM_SIGN(1) * mi->pdi->translation_vect[i_interface][k];
+              pvtx_cell_coords_opp[i_part][3*(nrecv+idx_recv)+k] += PDM_SIGN(_neighbor_interface[idx_entity]) * mi->pdi->translation_vect[i_interface][k];
             }
           }
         }
