@@ -610,6 +610,7 @@ int main
                               &group_face,
                               &face_group_ln_to_gn);
       n_group_by_domain[i_dom] = n_bound;
+      printf("n_bound = %i \n", n_bound);
 
     }
   }
@@ -732,6 +733,14 @@ int main
                               &group_face_idx,
                               &group_face,
                               &face_group_ln_to_gn);
+
+      PDM_mesh_interpolate_part_group_set(mi,
+                                          i_domain,
+                                          i_part,
+                                          0,
+                                          PDM_BOUND_TYPE_FACE,
+                                          group_face_idx[1]-group_face_idx[0],
+                                          &group_face[group_face_idx[0]]);
 
 
     }

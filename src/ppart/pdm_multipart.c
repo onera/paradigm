@@ -2259,6 +2259,7 @@ PDM_MPI_Comm       comm
                                         NULL);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
+      pmeshes->parts[ipart]->n_face_group        = n_face_group;
       pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx     [ipart];
       pmeshes->parts[ipart]->face_bound          = pface_bound         [ipart];
       pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
@@ -2761,6 +2762,7 @@ PDM_MPI_Comm      comm
 
   // Finally complete parts structure with internal join data and bounds
   for (int ipart = 0; ipart < n_part; ipart++) {
+    pmeshes->parts[ipart]->n_face_group        = n_bnd;
     pmeshes->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
     pmeshes->parts[ipart]->face_bound          = pface_bound[ipart];
     pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];

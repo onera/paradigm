@@ -62,10 +62,11 @@ struct _pdm_mesh_interpolate_t {
   int **pvtx_cell_idx;
   int **pvtx_cell;
 
-  int **vtx_face_bound_idx;
-  int **vtx_face_bound_n;
-  int **vtx_face_bound;
-  int **vtx_face_bound_group;
+  int    **vtx_face_bound_idx;
+  int    **vtx_face_bound_n;
+  int    **vtx_face_bound;
+  int    **vtx_face_bound_group;
+  double **vtx_face_bound_coords;
 
   PDM_distant_neighbor_t* dn;
 
@@ -76,9 +77,9 @@ struct _pdm_mesh_interpolate_t {
   int ****entity_part_bound;
   int    *graph_comm_is_defined;
 
-  int ****group_entity_idx; // (i_kind, i_domain, i_part)
-  int ****group_entity;
-  int    *group_is_defined;
+  int *****group_entity;     // (i_kind, i_domain, i_part, i_group)
+  int  ****n_group_entity;
+  int     *group_is_defined;
 
 };
 
