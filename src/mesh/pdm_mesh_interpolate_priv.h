@@ -52,6 +52,22 @@ struct _pdm_mesh_interpolate_t {
 
   double **cell_center;
 
+  int   n_part_loc_all_domain;
+  int  *pn_vtx;
+  int **neighbor_idx;
+  int **neighbor_desc;
+  int **neighbor_interface;
+
+  int **pvtx_cell_n;
+  int **pvtx_cell_idx;
+  int **pvtx_cell;
+
+  int **vtx_face_bound_idx;
+  int **vtx_face_bound_n;
+  int **vtx_face_bound;
+  int **vtx_face_bound_group;
+
+
   /* Graphe communication inside domain */
   int ****entity_part_bound_proc_idx;
   int ****entity_part_bound_part_idx;
