@@ -68,8 +68,9 @@ _read_args(int            argc,
            PDM_g_num_t  *n_vtx_seg,
            double        *length,
            int           *n_part,
-	   int           *post,
-	   int           *method)
+           int           *post,
+           int           *method,
+           int           *use_multipart)
 {
   int i = 1;
 
@@ -116,6 +117,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp(argv[i], "-multipart") == 0) {
+      *use_multipart = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -136,10 +140,11 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
+  PDM_g_num_t        n_vtx_seg     = 10;
+  double             length        = 1.;
+  int                n_part        = 1;
+  int                post          = 0;
+  int                use_multipart = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -158,7 +163,18 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+     (int *) &method,
+             &use_multipart);
+
+  // Choose to use part or multipart
+  char *buffer = malloc(sizeof(int)*8+1);
+  sprintf(buffer, "%d", use_multipart);
+  setenv("PDM_USE_MULTIPART", buffer, 1);
+  free(buffer);
+
+  // debug
+  int dbg_part_dcube = 0;
+  int time_and_stat  = 0;
 
   /*
    *  Init
@@ -216,7 +232,7 @@ int main(int argc, char *argv[])
                           &dface_group_idx,
                           &dface_group);
 
-  if (0 == 1) {
+  if (dbg_part_dcube) {
 
     PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
     PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
@@ -256,9 +272,7 @@ int main(int argc, char *argv[])
   }
   // int ppart_id = 0;
 
-  int time_and_stat = 0;
-
-  if (time_and_stat) {
+  if (time_and_stat && !use_multipart) {
     gettimeofday(&t_elaps_debut, NULL);
   }
 
@@ -302,7 +316,7 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  if (time_and_stat) {
+  if (time_and_stat && !use_multipart) {
 
     double  *elapsed  = NULL;
     double  *cpu      = NULL;
@@ -348,7 +362,7 @@ int main(int argc, char *argv[])
 
   }
 
-  if (0 == 1) {
+  if (dbg_part_dcube) {
     for (int i_part = 0; i_part < n_part; i_part++) {
 
       int n_cell;
