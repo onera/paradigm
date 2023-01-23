@@ -878,11 +878,13 @@ int main
     pfield_bound[i_domain] = malloc(n_part_by_domain[i_domain] * sizeof(double **));
 
     for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
-      pfield      [i_domain][i_part] = malloc(pn_cell[i_domain][i_part] * sizeof(double  ));
+      pfield      [i_domain][i_part] = malloc(3 * pn_cell[i_domain][i_part] * sizeof(double  ));
 
       for(int i_cell = 0; i_cell < pn_cell[i_domain][i_part]; ++i_cell) {
         // pfield      [i_domain][i_part][i_cell] = 1.;
-        pfield      [i_domain][i_part][i_cell] = cell_center[i_domain][i_part][3*i_cell];
+        pfield      [i_domain][i_part][3*i_cell  ] = cell_center[i_domain][i_part][3*i_cell  ];
+        pfield      [i_domain][i_part][3*i_cell+1] = cell_center[i_domain][i_part][3*i_cell+1];
+        pfield      [i_domain][i_part][3*i_cell+2] = cell_center[i_domain][i_part][3*i_cell+2];
       }
 
       int  n_bound = 0;
@@ -902,10 +904,24 @@ int main
       pfield_bound[i_domain][i_part] = malloc(n_face_group_field  * sizeof(double *));
       for(int i_group = 0; i_group < n_face_group_field; ++i_group) {
         int n_face_in_group = group_face_idx[1]-group_face_idx[0];
-        pfield_bound[i_domain][i_part][i_group] = malloc(n_face_in_group * sizeof(double));
+        pfield_bound[i_domain][i_part][i_group] = malloc(3 * n_face_in_group * sizeof(double));
 
         for(int idx_face = 0; idx_face < n_face_in_group; ++idx_face) {
-          pfield_bound[i_domain][i_part][i_group][idx_face] = 1.;
+
+          int i_face = group_face[group_face_idx[0]+idx_face]-1;
+
+          double center_face[3] = {0., 0., 0.};
+          for(int idx_vtx = pface_vtx_idx[i_domain][i_part][i_face]; idx_vtx < pface_vtx_idx[i_domain][i_part][i_face+1]; ++idx_vtx){
+            int i_vtx = pface_vtx[i_domain][i_part][idx_vtx]-1;
+            for(int k = 0; k < 3; ++k) {
+              center_face[k] += pvtx_coord[i_domain][i_part][3*i_vtx+k];
+            }
+          }
+          double ipond = 1./((double)pface_vtx_idx[i_domain][i_part][i_face+1] - pface_vtx_idx[i_domain][i_part][i_face] );
+          for(int k = 0; k < 3; ++k) {
+            pfield_bound[i_domain][i_part][i_group][3*idx_face+k] = center_face[k] * ipond;
+          }
+
         }
       }
     }
@@ -914,7 +930,7 @@ int main
   int stride = 1;
   double ***result_field = NULL;
   PDM_mesh_interpolate_exch(mi,
-                            stride,
+                            PDM_FIELD_KIND_COORDS,
                             pfield,
                             pfield_bound,
                             &result_field);
@@ -929,26 +945,40 @@ int main
 
         char filename[999];
         sprintf(filename, "out_interp_%i_%i.vtk", i_part, i_rank);
-        const char* field_name[] = {"result_field", 0 };
-        const double * field     [] = {result_field[i_domain][i_part]};
+
+        int n_vtx = pn_vtx[i_domain][i_part];
 
         int* elmt_vtx = malloc(pn_vtx[i_domain][i_part] * sizeof(int));
+        double *field_transpose = malloc(3* pn_vtx[i_domain][i_part] * sizeof(double));
         for(int i_vtx = 0; i_vtx < pn_vtx[i_domain][i_part]; ++i_vtx) {
           elmt_vtx[i_vtx] = i_vtx+1;
+          field_transpose[        i_vtx] = result_field[i_domain][i_part][3*i_vtx];
+          field_transpose[  n_vtx+i_vtx] = result_field[i_domain][i_part][3*i_vtx+1];
+          field_transpose[2*n_vtx+i_vtx] = result_field[i_domain][i_part][3*i_vtx+2];
         }
 
+        const char* field_name[] = {"result_field_x", "result_field_y", "result_field_z", 0 };
+        const double * field  [] = {field_transpose, &field_transpose[n_vtx], &field_transpose[2*n_vtx]};
         PDM_vtk_write_std_elements_double(filename,
-                                          pn_vtx        [i_domain][i_part],
+                                          n_vtx,
                                           pvtx_coord    [i_domain][i_part],
                                           pvtx_ln_to_gn [i_domain][i_part],
                                           PDM_MESH_NODAL_POINT,
                                           pn_vtx        [i_domain][i_part],
                                           elmt_vtx,
                                           pvtx_ln_to_gn [i_domain][i_part],
-                                          1,
+                                          3,
                                           field_name,
                        (const double **)  field);
+
+        sprintf(filename, "idw_coords_%i_%i.vtk", i_rank, i_part);
+        PDM_vtk_write_point_cloud(filename,
+                                  n_vtx,
+                                  result_field[i_domain][i_part],
+                                  NULL,
+                                  NULL);
         free(elmt_vtx);
+        free(field_transpose);
 
       }
     }

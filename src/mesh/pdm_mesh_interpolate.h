@@ -140,11 +140,11 @@ PDM_mesh_interpolate_part_mesh_nodal_set
 void
 PDM_mesh_interpolate_exch
 (
-  PDM_mesh_interpolate_t      *mi,
-  const int                    stride,
-        double              ***local_field,
-        double             ****bound_field,
-        double             ****result_field
+        PDM_mesh_interpolate_t      *mi,
+        PDM_field_kind_t            field_kind,
+        double                   ***local_field,
+        double                  ****bound_field,
+        double                  ****result_field
 );
 
 

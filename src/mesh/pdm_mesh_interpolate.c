@@ -946,10 +946,113 @@ _interpolate_one_part
 }
 
 static
+int
+_field_kind_to_size
+(
+ PDM_field_kind_t  field_kind
+)
+{
+  if(field_kind  == PDM_FIELD_KIND_SCALAR) {
+    return 1;
+  } else  if(field_kind  == PDM_FIELD_KIND_COORDS) {
+    return 3;
+  } else  if(field_kind  == PDM_FIELD_KIND_VECTOR) {
+    return 3;
+  } else  if(field_kind  == PDM_FIELD_KIND_TENSOR_SYM) {
+    return 6;
+  }
+  return -1;
+}
+
+
+static
+void
+_apply_transformation
+(
+  PDM_part_domain_interface_t  *pdi,
+  PDM_field_kind_t              field_kind,
+  int                           stride,
+  int                           n_vtx,
+  int                          *neighbor_idx,
+  int                          *neighbor_interface,
+  int                          *pvtx_cell_field_opp_n,
+  double                       *pvtx_cell_field_opp
+)
+{
+  int nrecv = 0;
+  double rot[3][3];
+
+  if(field_kind == PDM_FIELD_KIND_COORDS) {
+    // assert(stride ==  1);
+    /* Apply translation AND  Rotation if any */
+    for(int i_entity = 0; i_entity < n_vtx; ++i_entity) {
+      for(int idx_entity = neighbor_idx[i_entity]; idx_entity < neighbor_idx[i_entity+1]; ++idx_entity) {
+
+        if(neighbor_interface[idx_entity] != -40000) {
+          int  i_interface = PDM_ABS(neighbor_interface[idx_entity])-1;
+
+          if(pdi->translation_vect[i_interface] != NULL) {
+            for(int idx_recv = 0; idx_recv < pvtx_cell_field_opp_n[idx_entity]; ++idx_recv){
+              for(int k = 0; k < 3; ++k) {
+                pvtx_cell_field_opp[3*(nrecv+idx_recv)+k] += PDM_SIGN(neighbor_interface[idx_entity]) * pdi->translation_vect[i_interface][k];
+              }
+            }
+          } else if(pdi->rotation_direction[i_interface] != NULL){
+
+            for(int idx_recv = 0; idx_recv < pvtx_cell_field_opp_n[idx_entity]; ++idx_recv){
+              double x = pvtx_cell_field_opp[3*(nrecv+idx_recv)  ];
+              double y = pvtx_cell_field_opp[3*(nrecv+idx_recv)+1];
+              double z = pvtx_cell_field_opp[3*(nrecv+idx_recv)+2];
+
+              double xp = x - pdi->rotation_center[i_interface][0];
+              double yp = y - pdi->rotation_center[i_interface][1];
+              double zp = z - pdi->rotation_center[i_interface][2];
+
+              double c   = cos(PDM_SIGN(neighbor_interface[idx_entity]) * pdi->rotation_angle[i_interface]);
+              double s   = sin(PDM_SIGN(neighbor_interface[idx_entity]) * pdi->rotation_angle[i_interface]);
+              double omc = 1.-c;
+              double xa  = pdi->rotation_direction[i_interface][0];
+              double ya  = pdi->rotation_direction[i_interface][1];
+              double za  = pdi->rotation_direction[i_interface][2];
+
+              rot[0][0] = xa * xa * omc + c;
+              rot[0][1] = xa * ya * omc - za * s;
+              rot[0][2] = xa * za * omc + ya * s;
+
+              rot[1][0] = xa * ya * omc + za * s;
+              rot[1][1] = ya * ya * omc + c;
+              rot[1][2] = ya * za * omc - xa * s;
+
+              rot[2][0] = xa * za * omc - ya * s;
+              rot[2][1] = ya * za * omc + xa * s;
+              rot[2][2] = za * za * omc + c;
+
+              for(int k = 0; k < 3; ++k) {
+                pvtx_cell_field_opp[3*(nrecv+idx_recv)+k] = pdi->rotation_center[i_interface][k] + (rot[k][0]*xp + rot[k][1]*yp + rot[k][2]*zp);
+              }
+            } /*  End idx_recv */
+          }
+        }
+        nrecv += pvtx_cell_field_opp_n[idx_entity];
+      }
+    }
+  } else if(field_kind == PDM_FIELD_KIND_VECTOR)  {
+
+
+
+
+
+  }
+
+
+}
+
+static
 void
 _interpolate
 (
   PDM_mesh_interpolate_t     *mi,
+  PDM_field_kind_t            field_kind,
   int                         stride,
   double                   ***plocal_field,
   double                  ****pbound_field,
@@ -967,6 +1070,25 @@ _interpolate
     /* First loop to count */
     _result_field[i_domain] = malloc(mi->n_part[i_domain] * sizeof(double *));
     for(int i_part = 0; i_part < mi->n_part[i_domain]; ++i_part) {
+
+      /* Apply transformation  */
+      _apply_transformation(mi->pdi,
+                            field_kind,
+                            stride,
+                            mi->pn_vtx                      [i_part+shift_part],
+                            mi->neighbor_idx                [i_part+shift_part],
+                            mi->neighbor_interface          [i_part+shift_part],
+                            pvtx_cell_field_opp_n           [i_part+shift_part],
+                            pvtx_cell_field_opp             [i_part+shift_part]);
+
+      _apply_transformation(mi->pdi,
+                            field_kind,
+                            stride,
+                            mi->pn_vtx                      [i_part+shift_part],
+                            mi->neighbor_idx                [i_part+shift_part],
+                            mi->neighbor_interface          [i_part+shift_part],
+                            pvtx_face_field_opp_n           [i_part+shift_part],
+                            pvtx_face_field_opp             [i_part+shift_part]);
 
       _interpolate_one_part(mi->pn_vtx                      [i_part+shift_part],
                             mi->parts                       [i_domain][i_part].vtx,
@@ -1428,17 +1550,18 @@ PDM_mesh_interpolate_part_group_set
 void
 PDM_mesh_interpolate_exch
 (
-  PDM_mesh_interpolate_t      *mi,
-  const int                    stride,
-        double              ***local_field,
-        double             ****bound_field,
-        double             ****result_field
+        PDM_mesh_interpolate_t      *mi,
+        PDM_field_kind_t            field_kind,
+        double                   ***local_field,
+        double                  ****bound_field,
+        double                  ****result_field
 )
 {
-
   int **pvtx_cell_n   = mi->pvtx_cell_n;
   int **pvtx_cell_idx = mi->pvtx_cell_idx;
   int **pvtx_cell     = mi->pvtx_cell;
+
+  int stride = _field_kind_to_size(field_kind);
 
   /*
    * Exchange volumic data
@@ -1483,7 +1606,7 @@ PDM_mesh_interpolate_exch
             for(int k = 0; k < stride; ++k){
               _pvtx_cell_field[stride*n_vtx_cell_to_send+k] = _pcell_field[stride*i_cell+k];
             }
-            n_vtx_cell_to_send += stride;
+            n_vtx_cell_to_send += 1; //stride;
           }
         }
       }
@@ -1536,7 +1659,7 @@ PDM_mesh_interpolate_exch
             for(int k = 0; k < stride; ++k){
               _pvtx_face_field[stride*n_vtx_face_to_send+k] = _bound_field[i_group][stride*i_face+k];
             }
-            n_vtx_face_to_send += stride;
+            n_vtx_face_to_send += 1; //stride;
           }
         }
       }
@@ -1589,6 +1712,7 @@ PDM_mesh_interpolate_exch
    * Post-treatment
    */
   _interpolate(mi,
+               field_kind,
                stride,
                local_field,
                bound_field,

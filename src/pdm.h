@@ -309,6 +309,19 @@ typedef enum {
   PDM_SPLIT_DUAL_WITH_HILBERT  = 3
 } PDM_split_dual_t;
 
+/**
+ * \enum PDM_part_split_t
+ * \brief Split method
+ *
+ */
+
+typedef enum {
+  PDM_FIELD_KIND_SCALAR     = 1,
+  PDM_FIELD_KIND_COORDS     = 2,
+  PDM_FIELD_KIND_VECTOR     = 3,
+  PDM_FIELD_KIND_TENSOR_SYM = 4
+} PDM_field_kind_t;
+
 
 /**
  * \enum PDM_iso_surface_kind_t
