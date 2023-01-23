@@ -122,19 +122,19 @@ PDM_mesh_interpolate_part_domain_interface_shared_set
   PDM_part_domain_interface_t *pdi
 );
 
-void
-PDM_mesh_interpolate_set_field
-(
-  PDM_mesh_interpolate_t   *mi,
-  int                       i_field
-);
+// void
+// PDM_mesh_interpolate_set_field
+// (
+//   PDM_mesh_interpolate_t   *mi,
+//   int                       i_field
+// );
 
-void
-PDM_mesh_interpolate_part_mesh_nodal_set
-(
-  PDM_mesh_interpolate_t     *mi,
-  PDM_part_mesh_nodal_t      *pmn
-);
+// void
+// PDM_mesh_interpolate_part_mesh_nodal_set
+// (
+//   PDM_mesh_interpolate_t     *mi,
+//   PDM_part_mesh_nodal_t      *pmn
+// );
 
 
 void

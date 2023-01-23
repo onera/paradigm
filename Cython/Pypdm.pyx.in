@@ -44,6 +44,12 @@ cdef extern from "pdm.h":
         PDM_INT
         PDM_DOUBLE
 
+    ctypedef enum PDM_field_kind_t:
+        PDM_FIELD_KIND_SCALAR     = 1
+        PDM_FIELD_KIND_COORDS     = 2
+        PDM_FIELD_KIND_VECTOR     = 3
+        PDM_FIELD_KIND_TENSOR_SYM = 4
+
    
     ctypedef enum PDM_stride_t:
         PDM_STRIDE_CST_INTERLACED  = 0
@@ -218,6 +224,11 @@ _PDM_CONNECTIVITY_TYPE_MAX       = PDM_CONNECTIVITY_TYPE_MAX
 _PDM_STRIDE_CST_INTERLACED       = PDM_STRIDE_CST_INTERLACED
 _PDM_STRIDE_CST_INTERLEAVED      = PDM_STRIDE_CST_INTERLEAVED
 _PDM_STRIDE_VAR_INTERLACED       = PDM_STRIDE_VAR_INTERLACED
+
+_PDM_FIELD_KIND_SCALAR     =  PDM_FIELD_KIND_SCALAR
+_PDM_FIELD_KIND_COORDS     =  PDM_FIELD_KIND_COORDS
+_PDM_FIELD_KIND_VECTOR     =  PDM_FIELD_KIND_VECTOR
+_PDM_FIELD_KIND_TENSOR_SYM =  PDM_FIELD_KIND_TENSOR_SYM
 
 
 _PDM_BOUND_TYPE_ELMT   = PDM_BOUND_TYPE_ELMT
@@ -576,4 +587,10 @@ include "pdm_part_domain_interface.pxi"
 include "pdm_inria_mesh_fmt.pxi"
 
 # PDM_global_mean :
+# --------------------
 include "pdm_global_mean.pxi"
+
+# PDM_geom :
+# --------------------
+include "pdm_cell_to_node.pxi"
+
