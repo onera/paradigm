@@ -120,6 +120,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-multipart") == 0) {
       *use_multipart = 1;
     }
+    else if (strcmp(argv[i], "-part") == 0) {
+      *use_multipart = 0;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -132,6 +135,13 @@ _read_args(int            argc,
  * \brief  Main
  *
  */
+
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 20,40
+// @@@param[l] : 1.
+// @@@param[n_part] : 1,2
+// @@@args[part_kind] : -parmetis, -pt-scotch
+// @@@args[multipart] : -part, -multipart
 
 int main(int argc, char *argv[])
 {

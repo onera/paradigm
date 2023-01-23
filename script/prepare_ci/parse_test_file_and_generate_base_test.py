@@ -60,6 +60,7 @@ def parse_one_file(filename):
           | fparam(Literal('n_part'), numbers)          \
           | fparam(Literal('ext_type'), numbers)        \
           | fargs(Literal('part_kind'), librairies)     \
+          | fargs(Literal('multipart'), librairies)     \
           | fargs(Literal('tree_kind'), librairies))
 
   infos = {}
