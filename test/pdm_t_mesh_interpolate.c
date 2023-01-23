@@ -919,7 +919,44 @@ int main
                             pfield_bound,
                             &result_field);
 
+  /*
+   * Visu
+   */
+  if(1 == 1) {
 
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
+
+        char filename[999];
+        sprintf(filename, "out_interp_%i_%i.vtk", i_part, i_rank);
+        const char* field_name[] = {"result_field", 0 };
+        const double * field     [] = {result_field[i_domain][i_part]};
+
+        int* elmt_vtx = malloc(pn_vtx[i_domain][i_part] * sizeof(int));
+        for(int i_vtx = 0; i_vtx < pn_vtx[i_domain][i_part]; ++i_vtx) {
+          elmt_vtx[i_vtx] = i_vtx+1;
+        }
+
+        PDM_vtk_write_std_elements_double(filename,
+                                          pn_vtx        [i_domain][i_part],
+                                          pvtx_coord    [i_domain][i_part],
+                                          pvtx_ln_to_gn [i_domain][i_part],
+                                          PDM_MESH_NODAL_POINT,
+                                          pn_vtx        [i_domain][i_part],
+                                          elmt_vtx,
+                                          pvtx_ln_to_gn [i_domain][i_part],
+                                          1,
+                                          field_name,
+                       (const double **)  field);
+        free(elmt_vtx);
+
+      }
+    }
+  }
+
+  /*
+   * Free
+   */
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
       for(int i_group = 0; i_group < n_face_group_field; ++i_group) {

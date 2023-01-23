@@ -769,6 +769,29 @@ _create_bnd_graph
 }
 
 static
+inline
+double
+_evaluate_distance
+(
+  double x1[3],
+  double x2[3],
+  int    p
+)
+{
+  double dp = (double)  p;
+  double dist = 0.;
+  for(int k = 0; k < 3; ++k) {
+    dist += pow(x2[k] - x1[k], dp);
+  }
+  if(p > 0){
+    double ip = 1./p;
+    dist = pow(dist, ip);
+  }
+  return  dist;
+}
+
+
+static
 void
 _interpolate_one_part
 (
@@ -781,6 +804,10 @@ _interpolate_one_part
   double  *plocal_field,
   double **pbound_field,
   int     *neighbor_idx,
+  int     *vtx_face_bound_idx,
+  int     *vtx_face_bound,
+  int     *vtx_face_bound_group,
+  double  *vtx_face_bound_coords,
   int     *pvtx_cell_coords_opp_n,
   double  *pvtx_cell_coords_opp,
   int     *pvtx_face_bound_coords_opp_n,
@@ -808,13 +835,16 @@ _interpolate_one_part
   PDM_UNUSED(pvtx_face_field_opp_n);
   PDM_UNUSED(pvtx_face_field_opp);
 
+
+  int p = 0;
+
   double *_result_field = malloc(stride * n_vtx * sizeof(double));
 
   for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
 
-    double vtx_coord_x = vtx_coord[3*i_vtx  ];
-    double vtx_coord_y = vtx_coord[3*i_vtx+1];
-    double vtx_coord_z = vtx_coord[3*i_vtx+2];
+    // double vtx_coord_x = vtx_coord[3*i_vtx  ];
+    // double vtx_coord_y = vtx_coord[3*i_vtx+1];
+    // double vtx_coord_z = vtx_coord[3*i_vtx+2];
 
     for(int k = 0; k < stride; ++k) {
       _result_field[stride*i_vtx+k] =  0.;
@@ -822,19 +852,85 @@ _interpolate_one_part
     double tot_dist = 0.;
 
     /* Pour l'instant ->  Inverse distance weighting */
+
+    /* Interior */
     for(int idx_cell = vtx_cell_idx[i_vtx]; idx_cell < vtx_cell_idx[i_vtx+1]; ++idx_cell) {
       int i_cell = PDM_ABS(vtx_cell[idx_cell])-1;
 
-      double dx = cell_center[3*i_cell  ] - vtx_coord_x;
-      double dy = cell_center[3*i_cell+1] - vtx_coord_y;
-      double dz = cell_center[3*i_cell+2] - vtx_coord_z;
-      double dist = sqrt(dx * dx + dy * dy + dz * dz);
+      // double dx = cell_center[3*i_cell  ] - vtx_coord_x;
+      // double dy = cell_center[3*i_cell+1] - vtx_coord_y;
+      // double dz = cell_center[3*i_cell+2] - vtx_coord_z;
+      // double dist = sqrt(dx * dx + dy * dy + dz * dz);
+      double dist = _evaluate_distance(&cell_center[3*i_cell], &vtx_coord[3*i_vtx], p);
+
+      // printf("dist  = %12.5e / plocal = %12.5e\n", dist, plocal_field[i_cell]);
 
       double inv_dist = 1./PDM_MAX(dist, 1.e-12);
       tot_dist += inv_dist;
 
       for(int k = 0; k < stride; ++k) {
         _result_field[stride*i_vtx+k] += inv_dist * plocal_field[stride*i_cell+k];
+      }
+    }
+
+    /* Interior BND */
+    for(int idx_face = vtx_face_bound_idx[i_vtx]; idx_face < vtx_face_bound_idx[i_vtx+1]; ++idx_face) {
+      int i_face  = PDM_ABS(vtx_face_bound      [idx_face]);
+      int i_group = PDM_ABS(vtx_face_bound_group[idx_face]);
+
+      // double dx = vtx_face_bound_coords[3*idx_face  ] - vtx_coord_x;
+      // double dy = vtx_face_bound_coords[3*idx_face+1] - vtx_coord_y;
+      // double dz = vtx_face_bound_coords[3*idx_face+2] - vtx_coord_z;
+      // double dist = sqrt(dx * dx + dy * dy + dz * dz);
+      double dist = _evaluate_distance(&vtx_face_bound_coords[3*idx_face  ], &vtx_coord[3*i_vtx], p);
+
+      double inv_dist = 1./PDM_MAX(dist, 1.e-12);
+      tot_dist += inv_dist;
+
+      for(int k = 0; k < stride; ++k) {
+        _result_field[stride*i_vtx+k] += inv_dist * pbound_field[i_group][stride*i_face+k];
+      }
+    }
+
+    /* Distant cell */
+    for(int idx_neigh = neighbor_idx[i_vtx]; idx_neigh < neighbor_idx[i_vtx+1];  ++idx_neigh)  {
+
+      assert(pvtx_cell_field_opp_n[idx_neigh] == pvtx_cell_field_opp_n[idx_neigh]);
+       for(int idx_recv = 0; idx_recv < pvtx_cell_coords_opp_n[idx_neigh]; ++idx_recv){
+
+        // double dx = pvtx_cell_coords_opp[3*idx_recv  ] - vtx_coord_x;
+        // double dy = pvtx_cell_coords_opp[3*idx_recv+1] - vtx_coord_y;
+        // double dz = pvtx_cell_coords_opp[3*idx_recv+2] - vtx_coord_z;
+        // double dist = sqrt(dx * dx + dy * dy + dz * dz);
+        double dist = _evaluate_distance(&pvtx_cell_coords_opp[3*idx_recv  ], &vtx_coord[3*i_vtx], p);
+
+        double inv_dist = 1./PDM_MAX(dist, 1.e-12);
+        tot_dist += inv_dist;
+
+        for(int k = 0; k < stride; ++k) {
+          _result_field[stride*i_vtx+k] += inv_dist * pvtx_cell_field_opp[stride*idx_recv+k];
+        }
+      }
+    }
+
+    /* Distant BND */
+    for(int idx_neigh = neighbor_idx[i_vtx]; idx_neigh < neighbor_idx[i_vtx+1];  ++idx_neigh)  {
+
+      assert(pvtx_face_bound_coords_opp_n[idx_neigh] == pvtx_face_field_opp_n[idx_neigh]);
+       for(int idx_recv = 0; idx_recv < pvtx_face_bound_coords_opp_n[idx_neigh]; ++idx_recv){
+
+        // double dx = pvtx_face_bound_coords_opp[3*idx_recv  ] - vtx_coord_x;
+        // double dy = pvtx_face_bound_coords_opp[3*idx_recv+1] - vtx_coord_y;
+        // double dz = pvtx_face_bound_coords_opp[3*idx_recv+2] - vtx_coord_z;
+        // double dist = sqrt(dx * dx + dy * dy + dz * dz);
+        double dist = _evaluate_distance(&pvtx_face_bound_coords_opp[3*idx_recv  ], &vtx_coord[3*i_vtx], p);
+
+        double inv_dist = 1./PDM_MAX(dist, 1.e-12);
+        tot_dist += inv_dist;
+
+        for(int k = 0; k < stride; ++k) {
+          _result_field[stride*i_vtx+k] += inv_dist * pvtx_face_field_opp[stride*idx_recv+k];
+        }
       }
     }
 
@@ -881,6 +977,10 @@ _interpolate
                             plocal_field                    [i_domain][i_part],
                             pbound_field                    [i_domain][i_part],
                             mi->neighbor_idx                [i_part+shift_part],
+                            mi->vtx_face_bound_idx          [i_part+shift_part],
+                            mi->vtx_face_bound              [i_part+shift_part],
+                            mi->vtx_face_bound_group        [i_part+shift_part],
+                            mi->vtx_face_bound_coords       [i_part+shift_part],
                             mi->pvtx_cell_coords_opp_n      [i_part+shift_part],
                             mi->pvtx_cell_coords_opp        [i_part+shift_part],
                             mi->pvtx_face_bound_coords_opp_n[i_part+shift_part],
