@@ -223,11 +223,19 @@ char *argv[]
 
   int **recv_n = NULL;
   int **recv_i = NULL;
+  // PDM_distant_neighbor_exch(dngb,
+  //                           sizeof(int),
+  //                           PDM_STRIDE_VAR_INTERLACED,
+  //                           -1,
+  //                           neighbor_n,
+  //                (void  **) send_i,
+  //                           &recv_n,
+  //                (void ***) &recv_i);
   PDM_distant_neighbor_exch(dngb,
                             sizeof(int),
-                            PDM_STRIDE_VAR_INTERLACED,
-                            -1,
-                            neighbor_n,
+                            PDM_STRIDE_CST_INTERLACED,
+                            1,
+                            NULL,
                  (void  **) send_i,
                             &recv_n,
                  (void ***) &recv_i);
@@ -238,13 +246,14 @@ char *argv[]
 
     log_trace("\npart #%d\n", i);
 
-    PDM_log_trace_array_int(recv_n[i], neighbor_idx[i][n_elt[i]], "recv_n : ");
+    // PDM_log_trace_array_int(recv_n[i], neighbor_idx[i][n_elt[i]], "recv_n : ");
 
     int idx = 0;
     for (int j = 0; j < n_elt[i]; j++) {
       log_trace("  elt %d : ", j);
       for (int l = neighbor_idx[i][j]; l < neighbor_idx[i][j+1]; l++) {
-        for (int k = 0; k < recv_n[i][l]; k++) {
+        // for (int k = 0; k < recv_n[i][l]; k++) {
+        for (int k = 0; k < 1; k++) {
           int j_rank = neighbor_desc[i][3*l  ];
           int j_part = neighbor_desc[i][3*l+1];
           int j_num  = neighbor_desc[i][3*l+2];
@@ -267,13 +276,13 @@ char *argv[]
     free(neighbor_idx [i]);
     free(neighbor_desc[i]);
 
-    free(recv_n   [i]);
+    // free(recv_n   [i]);
     // free(recv_desc[i]);
   }
   free(neighbor_n   );
   free(neighbor_idx );
   free(neighbor_desc);
-  free(recv_n   );
+  // free(recv_n   );
   // free(recv_desc);
 
   PDM_distant_neighbor_free(dngb);

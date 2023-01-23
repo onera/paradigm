@@ -219,10 +219,17 @@ _visu
                                     PDM_WRITER_VAR_ELEMENTS,
                                     "cell_num");
 
+  int id_var_cell_gnum = PDM_writer_var_create(id_cs,
+                                    PDM_WRITER_OFF,
+                                    PDM_WRITER_VAR_SCALAR,
+                                    PDM_WRITER_VAR_ELEMENTS,
+                                    "cell_gnum");
+
 
   PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   PDM_real_t **val_num_rank = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   PDM_real_t **val_cell_num = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
+  PDM_real_t **val_cell_gnum = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
   int **face_vtx_n = (int **) malloc(sizeof(int *) * n_part);
   int **cell_face_n = (int **) malloc(sizeof(int *) * n_part);
   PDM_writer_step_beg (id_cs, 0.);
@@ -272,10 +279,12 @@ _visu
     val_num_part[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
     val_cell_num[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
     val_num_rank[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
+    val_cell_gnum[i_part] = (double *) malloc(sizeof(double) * n_cell[i_part]);
     for (int i = 0; i < n_cell[i_part]; i++) {
       val_num_part[i_part][i] = i_part + distrib_part[i_rank];
       val_cell_num[i_part][i] = i ;
       val_num_rank[i_part][i] = i_rank;
+      val_cell_gnum[i_part][i] = cell_ln_to_gn[i_part][i];
     }
     // PDM_log_trace_array_double(val_num_part[i_part], n_cell[i_part], "val_num_part :: ");
 
@@ -296,6 +305,12 @@ _visu
                        id_geom,
                        i_part,
                        val_cell_num[i_part]);
+
+    PDM_writer_var_set(id_cs,
+                       id_var_cell_gnum,
+                       id_geom,
+                       i_part,
+                       val_cell_gnum[i_part]);
   }
 
   PDM_writer_var_write(id_cs,
@@ -307,6 +322,9 @@ _visu
   PDM_writer_var_write(id_cs,
                        id_var_cell_num);
 
+  PDM_writer_var_write(id_cs,
+                       id_var_cell_gnum);
+
   // PDM_writer_var_free(id_cs,
   //                     id_var_num_part);
 
@@ -316,11 +334,13 @@ _visu
     free (val_num_part[i_part]);
     free (val_cell_num[i_part]);
     free (val_num_rank[i_part]);
+    free (val_cell_gnum[i_part]);
   }
   free (distrib_part);
   free (face_vtx_n);
   free (val_num_part);
   free (val_cell_num);
+  free (val_cell_gnum);
   free (val_num_rank);
   free (cell_face_n);
 
@@ -623,7 +643,6 @@ int main(int argc, char *argv[])
     pvtx_ln_to_gn [i_part] = vtx_ln_to_gn;
     pvtx          [i_part] = vtx;
 
-    log_trace("part %d : n_cell = %d\n", i_part, n_cell);
 
     PDM_part_extension_set_part(part_ext, 0, i_part,
                                 n_cell,
@@ -658,21 +677,6 @@ int main(int argc, char *argv[])
                                 vtx);
 
     // PDM_log_trace_array_long (cell_ln_to_gn, n_cell, "cell_ln_to_gn::");
-    if (1) {
-      log_trace("face_part_bound[%d] :\n", i_part);
-      for (int i = 0; i < n_face_part_bound; i++) {
-        // for (int j = 0; j < 4; j++) {
-        //   log_trace(" %d", face_part_bound[4*i+j]);
-        // }
-        // log_trace("\n");
-        log_trace("face %d, opp rank %d, opp part %d, opp face %d\n",
-                  face_part_bound[4*i  ]-1,
-                  face_part_bound[4*i+1],
-                  face_part_bound[4*i+2]-1,
-                  face_part_bound[4*i+3]-1);
-      }
-    }
-
 
     if( 0 == 1) {
       PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);

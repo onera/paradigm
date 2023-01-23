@@ -143,6 +143,14 @@ char *argv[]
 
 
 
+  for (int i = 0; i < n_part; i++) {
+    log_trace("neighbor_desc[%d] :\n", i);
+    PDM_log_trace_graph_nuplet_int(neighbor_idx[i],
+                                   neighbor_desc[i],
+                                   3,
+                                   n_elt[i],
+                                   "");
+  }
 
 
   PDM_distant_neighbor_t *dngb = PDM_distant_neighbor_create(comm,
@@ -152,13 +160,12 @@ char *argv[]
                                                              neighbor_desc);
 
 
-
   /* Exchange */
-  int **neighbor_n = malloc(sizeof(int *) * n_part);
+  int **send_n = malloc(sizeof(int *) * n_part);
   for (int i = 0; i < n_part; i++) {
-    neighbor_n[i] = malloc(sizeof(int) * n_elt[i]);
+    send_n[i] = malloc(sizeof(int) * n_elt[i]);
     for (int j = 0; j < n_elt[i]; j++) {
-      neighbor_n[i][j] = 1;//neighbor_idx[i][j+1] - neighbor_idx[i][j];
+      send_n[i][j] = 1;//neighbor_idx[i][j+1] - neighbor_idx[i][j];
     }
   }
 
@@ -168,7 +175,7 @@ char *argv[]
   //                           3*sizeof(int),
   //                           PDM_STRIDE_VAR_INTERLACED,
   //                           -1,
-  //                           neighbor_n,
+  //                           send_n,
   //                (void  **) neighbor_desc,
   //                           &recv_n,
   //                (void ***) &recv_desc);
@@ -219,11 +226,10 @@ char *argv[]
                             sizeof(int),
                             PDM_STRIDE_VAR_INTERLACED,
                             -1,
-                            neighbor_n,
+                            send_n,
                  (void  **) send_i,
                             &recv_n,
                  (void ***) &recv_i);
-
 
   /* Check */
   for (int i = 0; i < n_part; i++) {
@@ -255,17 +261,22 @@ char *argv[]
 
   /* Free memory */
   for (int i = 0; i < n_part; i++) {
-    free(neighbor_n   [i]);
     free(neighbor_idx [i]);
     free(neighbor_desc[i]);
 
-    free(recv_n   [i]);
+    free(send_n[i]);
+    free(send_i[i]);
+    free(recv_n[i]);
+    free(recv_i[i]);
     // free(recv_desc[i]);
   }
-  free(neighbor_n   );
   free(neighbor_idx );
   free(neighbor_desc);
-  free(recv_n   );
+  free(send_n);
+  free(send_i);
+  free(recv_n);
+  free(recv_i);
+  free(n_elt);
   // free(recv_desc);
 
   PDM_distant_neighbor_free(dngb);

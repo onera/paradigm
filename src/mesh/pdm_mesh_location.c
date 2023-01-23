@@ -2316,7 +2316,7 @@ PDM_mesh_location_compute
 
   if (1 && dbg_enabled) {
     PDM_writer_t *wrt = PDM_writer_create("Ensight",
-                                          PDM_WRITER_FMT_BIN,
+                                          PDM_WRITER_FMT_ASCII,
                                           PDM_WRITER_TOPO_CST,
                                           PDM_WRITER_OFF,
                                           "mesh_location__source",
