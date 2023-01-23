@@ -583,97 +583,6 @@ _warm_up_distant_neighbor
     free(composed_ln_to_gn_sorted);
   }
 
-  /*
-   * Pruned the connectivity  - Useless ause  the  interessed pruned was to sort cell
-   */
-  // int i_rank;
-  // PDM_MPI_Comm_rank(mi->comm, &i_rank);
-  // for(int i_part = 0; i_part < mi->n_part_loc_all_domain; ++i_part) {
-
-
-  //   int *neighbor_idx       = mi->neighbor_idx      [i_part];
-  //   int *neighbor_desc      = mi->neighbor_desc     [i_part];
-  //   int *neighbor_interface = mi->neighbor_interface[i_part];
-
-  //   int n_vtx = mi->pn_vtx[i_part];
-  //   int s_tot = neighbor_idx[n_vtx];
-
-  //   int *_quad_cell_cell_extended = NULL;
-  //   triplet_to_quadruplet(s_tot,
-  //                         mi->neighbor_desc     [i_part],
-  //                         mi->neighbor_interface[i_part],
-  //                         &_quad_cell_cell_extended);
-
-
-  //   int* order     = (int * ) malloc( s_tot * sizeof(int));
-  //   PDM_order_lnum_s(_quad_cell_cell_extended, 4, order, s_tot);
-
-  //   int* pruned_neighbor_idx  = malloc((n_vtx+1)   * sizeof(int));
-  //   int* pruned_neighbor      = malloc(3 * s_tot   * sizeof(int));
-  //   int* pruned_neighbor_itrf = malloc(    s_tot   * sizeof(int));
-  //   int* index_border         = malloc(    s_tot   * sizeof(int));
-
-  //   int idx_unique = 0;
-  //   int last_proc  = -1;
-  //   int last_part  = -1;
-  //   int last_elmt  = -1;
-  //   int last_inte  = -40000;
-  //   pruned_neighbor_idx[0] = 0;
-  //   pruned_neighbor_idx[1] = 0;
-  //   for(int i = 0; i < s_tot; ++i) {
-  //     int old_order = order[i];
-
-  //     int curr_proc = _quad_cell_cell_extended[4*old_order  ];
-  //     int curr_part = _quad_cell_cell_extended[4*old_order+1];
-  //     int curr_cell = _quad_cell_cell_extended[4*old_order+2];
-  //     int curr_inte = _quad_cell_cell_extended[4*old_order+3];
-  //     int is_same = _is_same_quadruplet(last_proc, last_part, last_elmt, last_inte,
-  //                                       curr_proc, curr_part, curr_cell, curr_inte);
-
-  //     int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part) && (curr_inte == -40000);
-  //     if(is_same == 0 && !is_local){ // N'est pas le meme
-  //       // idx_unique++;
-  //       last_proc = curr_proc;
-  //       last_part = curr_part;
-  //       last_elmt = curr_cell;
-  //       last_inte = curr_inte;
-
-  //       pruned_neighbor     [3*idx_unique  ] = curr_proc;
-  //       pruned_neighbor     [3*idx_unique+1] = curr_part;
-  //       pruned_neighbor     [3*idx_unique+2] = curr_cell;
-  //       pruned_neighbor_itrf[idx_unique    ] = curr_inte;
-  //       index_border        [old_order     ] = idx_unique;
-  //       idx_unique++;
-
-  //       /* Increment the new counter */
-  //       pruned_neighbor_idx[1]++;
-  //     } else {
-
-  //       last_proc = curr_proc;
-  //       last_part = curr_part;
-  //       last_elmt = curr_cell;
-  //       last_inte = curr_inte;
-
-  //       index_border[old_order] = idx_unique-1;
-
-  //     }
-  //   }
-
-  //   PDM_log_trace_array_int(index_border, s_tot, "index_border ::");
-
-  //   free(pruned_neighbor_idx );
-  //   free(pruned_neighbor     );
-  //   free(pruned_neighbor_itrf);
-  //   free(index_border        );
-
-  //   // free(mi->neighbor_idx      [i_part]);
-  //   // free(mi->neighbor_desc     [i_part]);
-  //   // free(mi->neighbor_interface[i_part]);
-
-  //   free(order);
-  // }
-
-
 }
 
 static
@@ -835,6 +744,8 @@ _interpolate_one_part
   PDM_UNUSED(pvtx_face_field_opp_n);
   PDM_UNUSED(pvtx_face_field_opp);
 
+  int *pvtx_cell_coords_opp_idx       = PDM_array_new_idx_from_sizes_int(pvtx_cell_coords_opp_n      , neighbor_idx[n_vtx]);
+  int *pvtx_face_bound_coords_opp_idx = PDM_array_new_idx_from_sizes_int(pvtx_face_bound_coords_opp_n, neighbor_idx[n_vtx]);
 
   int p = 0;
 
@@ -896,7 +807,7 @@ _interpolate_one_part
     for(int idx_neigh = neighbor_idx[i_vtx]; idx_neigh < neighbor_idx[i_vtx+1];  ++idx_neigh)  {
 
       assert(pvtx_cell_field_opp_n[idx_neigh] == pvtx_cell_field_opp_n[idx_neigh]);
-       for(int idx_recv = 0; idx_recv < pvtx_cell_coords_opp_n[idx_neigh]; ++idx_recv){
+       for(int idx_recv = pvtx_cell_coords_opp_idx[idx_neigh]; idx_recv < pvtx_cell_coords_opp_idx[idx_neigh+1]; ++idx_recv){
 
         // double dx = pvtx_cell_coords_opp[3*idx_recv  ] - vtx_coord_x;
         // double dy = pvtx_cell_coords_opp[3*idx_recv+1] - vtx_coord_y;
@@ -917,7 +828,7 @@ _interpolate_one_part
     for(int idx_neigh = neighbor_idx[i_vtx]; idx_neigh < neighbor_idx[i_vtx+1];  ++idx_neigh)  {
 
       assert(pvtx_face_bound_coords_opp_n[idx_neigh] == pvtx_face_field_opp_n[idx_neigh]);
-       for(int idx_recv = 0; idx_recv < pvtx_face_bound_coords_opp_n[idx_neigh]; ++idx_recv){
+       for(int idx_recv = pvtx_face_bound_coords_opp_idx[idx_neigh]; idx_recv < pvtx_face_bound_coords_opp_idx[idx_neigh+1]; ++idx_recv){
 
         // double dx = pvtx_face_bound_coords_opp[3*idx_recv  ] - vtx_coord_x;
         // double dy = pvtx_face_bound_coords_opp[3*idx_recv+1] - vtx_coord_y;
@@ -943,6 +854,8 @@ _interpolate_one_part
   }
 
   *result_field = _result_field;
+  free(pvtx_cell_coords_opp_idx      );
+  free(pvtx_face_bound_coords_opp_idx);
 }
 
 static
