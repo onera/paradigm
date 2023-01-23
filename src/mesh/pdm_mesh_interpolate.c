@@ -884,7 +884,6 @@ _apply_transformation
 (
   PDM_part_domain_interface_t  *pdi,
   PDM_field_kind_t              field_kind,
-  int                           stride,
   int                           n_vtx,
   int                          *neighbor_idx,
   int                          *neighbor_interface,
@@ -987,7 +986,6 @@ _interpolate
       /* Apply transformation  */
       _apply_transformation(mi->pdi,
                             field_kind,
-                            stride,
                             mi->pn_vtx                      [i_part+shift_part],
                             mi->neighbor_idx                [i_part+shift_part],
                             mi->neighbor_interface          [i_part+shift_part],
@@ -996,7 +994,6 @@ _interpolate
 
       _apply_transformation(mi->pdi,
                             field_kind,
-                            stride,
                             mi->pn_vtx                      [i_part+shift_part],
                             mi->neighbor_idx                [i_part+shift_part],
                             mi->neighbor_interface          [i_part+shift_part],
