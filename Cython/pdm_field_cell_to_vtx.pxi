@@ -8,11 +8,12 @@ cdef extern from "pdm_field_cell_to_vtx.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    PDM_field_cell_to_vtx_t* PDM_field_cell_to_vtx_create(int            n_domain,
-                                                        int           *n_part,
-                                                        int           *n_group,
-                                                        int            interp_kind,
-                                                        PDM_MPI_Comm   comm);
+    PDM_field_cell_to_vtx_t* PDM_field_cell_to_vtx_create(int                            n_domain,
+                                                          int                           *n_part,
+                                                          int                           *n_group,
+                                                          PDM_cell_to_vtx_interp_kind_t  interp_kind,
+                                                          int                            n_depth,
+                                                          PDM_MPI_Comm                   comm);
 
     void PDM_field_cell_to_vtx_compute(PDM_field_cell_to_vtx_t *part_ext);
 
@@ -86,16 +87,18 @@ cdef class MeshCellToNode:
                         int n_domain,
                         NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
                         NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_group,
-                        int interp_kind):
+                        PDM_cell_to_vtx_interp_kind_t interp_kind,
+                        int n_depth = 1):
         """
         Constructor of PartToBlock object
         """
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
         self.mi = PDM_field_cell_to_vtx_create(n_domain,
-                                       <int*> n_part.data,
-                                       <int*> n_group.data,
-                                              interp_kind,
-                                              PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
+                                        <int*> n_part.data,
+                                        <int*> n_group.data,
+                                               interp_kind,
+                                               n_depth,
+                                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
 
     # ------------------------------------------------------------------
     def compute(self):

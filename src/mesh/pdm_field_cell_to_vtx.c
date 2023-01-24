@@ -1049,15 +1049,19 @@ _interpolate
 PDM_field_cell_to_vtx_t*
 PDM_field_cell_to_vtx_create
 (
- const int            n_domain,
- const int           *n_part,
- const int           *n_group,
- const int            interp_kind,
- const PDM_MPI_Comm   comm
+ const int                            n_domain,
+ const int                           *n_part,
+ const int                           *n_group,
+ const PDM_cell_to_vtx_interp_kind_t  interp_kind, // IDW(p), RBF, LSQ, USER
+ const int                            n_depth,
+ const PDM_MPI_Comm                   comm
 )
 {
-  PDM_UNUSED(interp_kind);
   PDM_field_cell_to_vtx_t* fctv = malloc(sizeof(PDM_field_cell_to_vtx_t));
+
+  fctv->n_depth     = n_depth;
+  fctv->interp_kind = interp_kind;
+  fctv->idw_p       = 0;
 
   fctv->n_domain    = n_domain;
   fctv->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
@@ -1436,6 +1440,16 @@ PDM_field_cell_to_vtx_part_domain_interface_shared_set
   fctv->pdi = pdi;
 }
 
+
+void
+PDM_field_cell_to_vtx_inverse_distance_weighting_p_set
+(
+  PDM_field_cell_to_vtx_t *fctv,
+  int                      p
+)
+{
+  fctv->idw_p = p;
+}
 
 void
 PDM_field_cell_to_vtx_part_group_set

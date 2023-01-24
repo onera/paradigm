@@ -39,11 +39,16 @@ extern "C" {
 struct _pdm_field_cell_to_vtx_t {
   PDM_MPI_Comm      comm;            /*!< MPI communicator                          */
 
+  int                           n_depth;
+  PDM_cell_to_vtx_interp_kind_t interp_kind;
+  int                           idw_p;
+
   int               n_domain;
   int              *n_group;
   int              *n_part;
   int              *n_part_idx;
   int              *n_part_g_idx;
+
 
   PDM_part_domain_interface_t  *pdi;
   int                           n_interface;

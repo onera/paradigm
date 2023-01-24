@@ -796,7 +796,8 @@ int main
   PDM_field_cell_to_vtx_t* mi = PDM_field_cell_to_vtx_create(n_domain,
                                                            n_part_by_domain,
                                                            n_group_by_domain,
-                                                           0,
+                                                           PDM_CELL_TO_VTX_INTERP_KIND_IDW,
+                                                           1,
                                                            comm);
   PDM_field_cell_to_vtx_part_domain_interface_shared_set(mi, pdi);
 
