@@ -99,12 +99,9 @@ struct _pdm_mesh_intersection_t {
 
   PDM_mesh_intersection_kind_t intersect_kind;
 
-  int               n_part_mesh_a;
-  int               n_part_mesh_b;
-  int               dim_mesh_a;
-  int               dim_mesh_b;
-  PDM_part_mesh_t  *mesh_a;       /*!< Mesh A */
-  PDM_part_mesh_t  *mesh_b;       /*!< Mesh B */
+  int              n_part_mesh[2];
+  int              dim_mesh[2];
+  PDM_part_mesh_t *mesh[2];
 
   PDM_part_mesh_nodal_t *mesh_nodal[2]; /*!< Mesh nodal A/B */
 
