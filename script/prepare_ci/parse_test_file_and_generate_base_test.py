@@ -57,6 +57,8 @@ def parse_one_file(filename):
           | fparam(Literal('n'), numbers)               \
           | fparam(Literal('l'), numbers)               \
           | fparam(Literal('s'), numbers)               \
+          | fparam(Literal('n_part'), numbers)          \
+          | fparam(Literal('ext_type'), numbers)        \
           | fargs(Literal('part_kind'), librairies)     \
           | fargs(Literal('tree_kind'), librairies))
 

@@ -68,13 +68,15 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
-           double        *length,
-           int           *n_part,
-	   int           *post,
-	   int           *method)
+_read_args(int                 argc,
+           char              **argv,
+           PDM_g_num_t        *n_vtx_seg,
+           double             *length,
+           int                *n_part,
+           int                *post,
+           PDM_extend_type_t  *extend_type,
+           int                *extension_depth,
+           int                *method)
 {
   int i = 1;
 
@@ -107,6 +109,28 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else {
         *n_part = atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-ext_type") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *extend_type = (PDM_extend_type_t) atoi(argv[i]);
+      }
+    }
+    else if (strcmp(argv[i], "-from_face") == 0) {
+      *extend_type = PDM_EXTEND_FROM_FACE;
+    }
+    else if (strcmp(argv[i], "-from_vtx") == 0) {
+      *extend_type = PDM_EXTEND_FROM_VTX;
+    }
+    else if (strcmp(argv[i], "-ext_depth") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *extension_depth = atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-post") == 0) {
@@ -151,19 +175,19 @@ _visu
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
-  for (int i = 0; i < n_part; i++) {
-    char filename[999];
-    sprintf(filename, "check_faces_part_%d_rank_%d.vtk", i, i_rank);
-    PDM_vtk_write_polydata(filename,
-                           n_vtx[i],
-                           vtx[i],
-                           vtx_ln_to_gn[i],
-                           n_face[i],
-                           face_vtx_idx[i],
-                           face_vtx[i],
-                           face_ln_to_gn[i],
-                           NULL);
-  }
+  // for (int i = 0; i < n_part; i++) {
+  //   char filename[999];
+  //   sprintf(filename, "check_faces_part_%d_rank_%d.vtk", i, i_rank);
+  //   PDM_vtk_write_polydata(filename,
+  //                          n_vtx[i],
+  //                          vtx[i],
+  //                          vtx_ln_to_gn[i],
+  //                          n_face[i],
+  //                          face_vtx_idx[i],
+  //                          face_vtx[i],
+  //                          face_ln_to_gn[i],
+  //                          NULL);
+  // }
 
 
   PDM_writer_t *id_cs = PDM_writer_create("Ensight",
@@ -357,7 +381,11 @@ _visu
  * \brief  Main
  *
  */
-
+// @@@param[n_proc] : 1,2,3,4
+// @@@param[n] : 10,20
+// @@@param[n_part] : 1,2
+// @@@param[ext_type] : 0,2
+// @@@args[part_kind] : -parmetis, -pt-scotch
 int main(int argc, char *argv[])
 {
 
@@ -365,10 +393,12 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
+  PDM_g_num_t        n_vtx_seg       = 10;
+  double             length          = 1.;
+  int                n_part          = 1;
+  int                post            = 0;
+  PDM_extend_type_t  extend_type     = PDM_EXTEND_FROM_FACE;
+  int                extension_depth = 1;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -387,6 +417,8 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
+             &extend_type,
+             &extension_depth,
              (int *) &method);
 
   /*
