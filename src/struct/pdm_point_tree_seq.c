@@ -1154,8 +1154,8 @@ _build_point_tree
       }
     }
     n_pts_mean = n_pts_mean/n_tot_leaf;
-    log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
-              ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
+    // log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
+    //           ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
   }
 
   if (dbg_ptree) {
@@ -1327,8 +1327,8 @@ _build_point_tree_from_boxes
       }
     }
     n_pts_mean = n_pts_mean/n_tot_leaf;
-    log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
-              ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
+    // log_trace("point_tree stats (n_pts = %i) : depth_max = %i / n_pts_leaf_min = %i / n_pts_leaf_max = %i / n_pts_mean = %i \n",
+    //           ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
   }
 
   ptree->leaf_ids = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf);

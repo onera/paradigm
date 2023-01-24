@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pfield_post = tmp_pfield_post[0];
   free(tmp_pfield_post);
 
-  PDM_log_trace_array_long(pfield_post, pn_elmt, "pfield_post : ");
+  // PDM_log_trace_array_long(pfield_post, pn_elmt, "pfield_post : ");
 
   /*
    * Check
@@ -267,8 +267,8 @@ int main(int argc, char *argv[])
       dfield_post[idx_write++] = blk_gnum[i];
     }
   }
-  PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
-  PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
+  // PDM_log_trace_array_int (dfield_strid, n_elmt_in_block, "dfield_strid ::");
+  // PDM_log_trace_array_long(dfield_post , idx_write      , "dfield_post ::");
 
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(PDM_g_num_t),
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
         assert(check == pln_to_to_gn[i]);
       }
     }
-    PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
+    // PDM_log_trace_array_long(pfield_post, s_data, "pfield_post : ");
   }
 
 

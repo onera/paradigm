@@ -684,7 +684,7 @@ int main(int argc, char *argv[])
                                  pface_ln_to_gn[ipart],
                                  parent_num);
 
-    log_trace("pn_face[%d] = %d\n", ipart, pn_face[ipart]);
+    // log_trace("pn_face[%d] = %d\n", ipart, pn_face[ipart]);
   }
 
   PDM_mesh_location_shared_nodal_mesh_set(mesh_loc,
@@ -783,33 +783,33 @@ int main(int argc, char *argv[])
                                       &part1_to_part2_idx,
                                       &part1_to_part2);
 
-  for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-    int _n_located = PDM_mesh_location_n_located_get(mesh_loc,
-                                                     0,
-                                                     ipart);
+  // for (int ipart = 0; ipart < n_part_cloud; ipart++) {
+  //   int _n_located = PDM_mesh_location_n_located_get(mesh_loc,
+  //                                                    0,
+  //                                                    ipart);
 
-    int _n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
-                                                         0,
-                                                         ipart);
+  //   int _n_unlocated = PDM_mesh_location_n_unlocated_get(mesh_loc,
+  //                                                        0,
+  //                                                        ipart);
 
-    int *_located = PDM_mesh_location_located_get(mesh_loc,
-                                                  0,
-                                                  ipart);
+  //   int *_located = PDM_mesh_location_located_get(mesh_loc,
+  //                                                 0,
+  //                                                 ipart);
 
-    int *_unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
-                                                      0,
-                                                      ipart);
+  //   int *_unlocated = PDM_mesh_location_unlocated_get(mesh_loc,
+  //                                                     0,
+  //                                                     ipart);
 
-    PDM_log_trace_array_int(located[ipart], n_located[ipart], "located (ptp) : ");
-    PDM_log_trace_array_int(_located,       _n_located,       "located (ml)  : ");
+  //   PDM_log_trace_array_int(located[ipart], n_located[ipart], "located (ptp) : ");
+  //   PDM_log_trace_array_int(_located,       _n_located,       "located (ml)  : ");
 
-    PDM_log_trace_array_int(unlocated[ipart], n_unlocated[ipart], "unlocated (ptp) : ");
-    PDM_log_trace_array_int(_unlocated,       _n_unlocated,       "unlocated (ml)  : ");
+  //   PDM_log_trace_array_int(unlocated[ipart], n_unlocated[ipart], "unlocated (ptp) : ");
+  //   PDM_log_trace_array_int(_unlocated,       _n_unlocated,       "unlocated (ml)  : ");
 
-    log_trace("n_elt1 = %d / %d\n", n_elt1[ipart], pn_face[ipart]);
-    PDM_log_trace_array_int(part1_to_part2_idx[ipart], n_elt1 [ipart], "elt_pts_idx (ptp) : ");
-    PDM_log_trace_array_int(pelt_pts_idx      [ipart], pn_face[ipart], "elt_pts_idx (ml)  : ");
-  }
+  //   log_trace("n_elt1 = %d / %d\n", n_elt1[ipart], pn_face[ipart]);
+  //   PDM_log_trace_array_int(part1_to_part2_idx[ipart], n_elt1 [ipart], "elt_pts_idx (ptp) : ");
+  //   PDM_log_trace_array_int(pelt_pts_idx      [ipart], pn_face[ipart], "elt_pts_idx (ml)  : ");
+  // }
 
 
 

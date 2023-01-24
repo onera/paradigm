@@ -1446,20 +1446,20 @@ int main(int argc, char *argv[])
     }
   }
 
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    log_trace("--- part %d ---\n", ipart);
-    for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
-      log_trace("  elt %d\n", ielt);
-      log_trace("    distance2 = %e\n", distance[ipart][ielt]);
-      log_trace("    proj_coord = %f %f %f\n",
-                projected_coord[ipart][3*ielt  ],
-                projected_coord[ipart][3*ielt+1],
-                projected_coord[ipart][3*ielt+2]);
-      PDM_log_trace_array_double(bar_coord[ipart] + bar_coord_idx[ipart][ielt],
-                                 bar_coord_idx[ipart][ielt+1] - bar_coord_idx[ipart][ielt],
-                                 "    bar_coord : ");
-    }
-  }
+  // for (int ipart = 0; ipart < n_part; ipart++) {
+  //   log_trace("--- part %d ---\n", ipart);
+  //   for (int ielt = 0; ielt < pn_elt[ipart]; ielt++) {
+  //     log_trace("  elt %d\n", ielt);
+  //     log_trace("    distance2 = %e\n", distance[ipart][ielt]);
+  //     log_trace("    proj_coord = %f %f %f\n",
+  //               projected_coord[ipart][3*ielt  ],
+  //               projected_coord[ipart][3*ielt+1],
+  //               projected_coord[ipart][3*ielt+2]);
+  //     PDM_log_trace_array_double(bar_coord[ipart] + bar_coord_idx[ipart][ielt],
+  //                                bar_coord_idx[ipart][ielt+1] - bar_coord_idx[ipart][ielt],
+  //                                "    bar_coord : ");
+  //   }
+  // }
 
 
 

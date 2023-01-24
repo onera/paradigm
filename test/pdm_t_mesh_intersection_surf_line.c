@@ -284,7 +284,7 @@ _extract_part_edge_and_set_mesh
                             &edge_bound_ln_to_gn);
 
 
-    PDM_log_trace_connectivity_int(edge_group_idx, edge_group, n_edge_group, "edge_group ::");
+    // PDM_log_trace_connectivity_int(edge_group_idx, edge_group, n_edge_group, "edge_group ::");
 
     PDM_g_num_t *edge_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;

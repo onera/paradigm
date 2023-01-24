@@ -242,7 +242,7 @@ char *argv[]
                                                            comm);
   free(weight);
   double t2 = PDM_MPI_Wtime();
-  log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
+  // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
   double *blk_src_coord = NULL;
   PDM_part_to_block_exch(ptb,
@@ -334,9 +334,9 @@ char *argv[]
                                 NULL);
     }
 
-    PDM_log_trace_array_long(box_ln_to_gn,
-                             n_box,
-                             "box_ln_to_gn : ");
+    // PDM_log_trace_array_long(box_ln_to_gn,
+    //                          n_box,
+    //                          "box_ln_to_gn : ");
 
 
     int *box_pts_idx = NULL;
@@ -347,10 +347,10 @@ char *argv[]
                                        &box_pts_idx,
                                        &box_pts);
 
-    PDM_log_trace_connectivity_int(box_pts_idx,
-                                   box_pts,
-                                   n_box,
-                                   "box_pts : ");
+    // PDM_log_trace_connectivity_int(box_pts_idx,
+    //                                box_pts,
+    //                                n_box,
+    //                                "box_pts : ");
     free(box_pts_idx);
     free(box_pts);
 

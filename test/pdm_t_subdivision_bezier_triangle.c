@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
   }
 
 
-  if (1) {
+  if (0) {
     log_trace("node_uv =\n");
     for (int i = 0; i < n_node; i++) {
       log_trace("%f %f\n", node_uv[2*i], node_uv[2*i+1]);
@@ -372,8 +372,8 @@ int main(int argc, char *argv[])
                                       sub3_node_xyz[1],//NULL,//
                                       sub3_node_xyz[2]);//NULL);//
 
-  log_trace("u = %f, v = %f\n", uv[0], uv[1]);
-  log_trace("p = %f %f %f\n", p[0], p[1], p[2]);
+  // log_trace("u = %f, v = %f\n", uv[0], uv[1]);
+  // log_trace("p = %f %f %f\n", p[0], p[1], p[2]);
 
 
   // evaluate tangent and normal vectors
@@ -401,21 +401,21 @@ int main(int argc, char *argv[])
         q[j] += weight[i] * node_xyz[3*i+j];
       }
     }
-    log_trace("diff p = %f %f %f\n", q[0], q[1], q[2]);
+    // log_trace("diff p = %f %f %f\n", q[0], q[1], q[2]);
 
     double *weight2 = malloc(sizeof(double) * n_node);
     // de Casteljau to compute weights
     PDM_ho_bezier_de_casteljau_triangle(n_node, order, uv[0], uv[1],
                                         NULL, weight2, NULL, NULL, NULL);
-    log_trace("diff weights :\n");
-    int idx = 0;
-    for (int j = 0; j <= order; j++) {
-      for (int i = 0; i <= order-j; i++) {
-        log_trace("  i = %d, j = %d, diff = %e\n",
-                  i, j, PDM_ABS(weight[idx] - weight2[idx]));
-        idx++;
-      }
-    }
+    // log_trace("diff weights :\n");
+    // int idx = 0;
+    // for (int j = 0; j <= order; j++) {
+    //   for (int i = 0; i <= order-j; i++) {
+    //     log_trace("  i = %d, j = %d, diff = %e\n",
+    //               i, j, PDM_ABS(weight[idx] - weight2[idx]));
+    //     idx++;
+    //   }
+    // }
 
     free(weight);
     free(weight2);

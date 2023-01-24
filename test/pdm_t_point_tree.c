@@ -245,7 +245,7 @@ main
                                                            comm);
   free(weight);
   double t2 = PDM_MPI_Wtime();
-  log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
+  // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
   double *blk_pts_coord = NULL;
   PDM_part_to_block_exch(ptb,

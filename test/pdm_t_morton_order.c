@@ -314,10 +314,10 @@ main
   }
 
   uint64_t max = 1l << (level_max * 3);
-  log_trace("max = %zu\n", max);
+  // log_trace("max = %zu\n", max);
   double normalization = (double) (1 << level_max);
   normalization = 1. / (normalization*normalization*normalization);
-  log_trace("normalization = %e\n", normalization);
+  // log_trace("normalization = %e\n", normalization);
   double *flat_code = malloc(sizeof(double) * n_pts);
   for (int i = 0; i < n_pts; i++) {
     flat_code[i] = _code_to_double(3, pts_code[i]);
@@ -325,11 +325,11 @@ main
   }
 
 
-  PDM_vtk_write_point_cloud("morton_pts_coord.vtk",
-                            n_pts,
-                            pts_coord,
-                            NULL,
-                            reverse_order);
+  // PDM_vtk_write_point_cloud("morton_pts_coord.vtk",
+  //                           n_pts,
+  //                           pts_coord,
+  //                           NULL,
+  //                           reverse_order);
 
 
 
@@ -362,21 +362,21 @@ main
 
 
 
-  PDM_vtk_write_std_elements_ho_with_vtx_field("morton_curve.vtk",
-                                               1,
-                                               n_pts,
-                                               pts_coord,
-                                               NULL,
-                                               PDM_MESH_NODAL_BAR2,
-                                               n_pts-1,
-                                               edge_vtx,
-                                               NULL,
-                                               0,
-                                               NULL,
-                                               NULL,
-                                               2,
-                                               field_name,
-                                               field_value);
+  // PDM_vtk_write_std_elements_ho_with_vtx_field("morton_curve.vtk",
+  //                                              1,
+  //                                              n_pts,
+  //                                              pts_coord,
+  //                                              NULL,
+  //                                              PDM_MESH_NODAL_BAR2,
+  //                                              n_pts-1,
+  //                                              edge_vtx,
+  //                                              NULL,
+  //                                              0,
+  //                                              NULL,
+  //                                              NULL,
+  //                                              2,
+  //                                              field_name,
+  //                                              field_value);
 
   free(edge_vtx);
 
@@ -401,10 +401,10 @@ main
     g_num[i] = (PDM_g_num_t) reverse_order[i];
   }
 
-  PDM_vtk_write_boxes("morton_grid.vtk",
-                      n_pts,
-                      box_extents,
-                      g_num);
+  // PDM_vtk_write_boxes("morton_grid.vtk",
+  //                     n_pts,
+  //                     box_extents,
+  //                     g_num);
   free(box_extents);
   free(g_num);
 
@@ -418,9 +418,9 @@ main
                   n_pts);
 
 
-  for (int i = 0; i < n_pts; i++) {
-    log_trace("%6d / %6d\n", order[i], order2[i]);
-  }
+  // for (int i = 0; i < n_pts; i++) {
+  //   log_trace("%6d / %6d\n", order[i], order2[i]);
+  // }
   free(order2);
 
 
@@ -428,13 +428,13 @@ main
     PDM_morton_code_t code = _double_to_code(3, flat_code[i], level_max);
     double            dble = _code_to_double(3, code);
     dble *= normalization;
-    log_trace("i = %d: L = %zu, X = %zu %zu %zu / L = %zu, X = %zu %zu %zu, flat = %f / %f\n",
-              i,
-              pts_code[i].L,
-              pts_code[i].X[0], pts_code[i].X[1], pts_code[i].X[2],
-              code.L,
-              code.X[0], code.X[1], code.X[2],
-              flat_code[i], dble);
+    // log_trace("i = %d: L = %zu, X = %zu %zu %zu / L = %zu, X = %zu %zu %zu, flat = %f / %f\n",
+    //           i,
+    //           pts_code[i].L,
+    //           pts_code[i].X[0], pts_code[i].X[1], pts_code[i].X[2],
+    //           code.L,
+    //           code.X[0], code.X[1], code.X[2],
+    //           flat_code[i], dble);
   }
 
   free(pts_coord);
