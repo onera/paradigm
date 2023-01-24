@@ -32,6 +32,13 @@ extern "C" {
 
 typedef struct _pdm_mesh_interpolate_t PDM_mesh_interpolate_t;
 
+typedef enum {
+  PDM_CELL_TO_VTX_INTERP_KIND_IDW  = 0, /*!< Inverse Distance Weighting    */
+  PDM_CELL_TO_VTX_INTERP_KIND_RBF  = 1, /*!< Radial Basis Function         */
+  PDM_CELL_TO_VTX_INTERP_KIND_LSQ  = 2, /*!< Least Square                  */
+  PDM_CELL_TO_VTX_INTERP_KIND_USER = 3, /*!< User, we must define callback */
+} PDM_cell_to_vtx_interp_kind_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -40,13 +47,21 @@ typedef struct _pdm_mesh_interpolate_t PDM_mesh_interpolate_t;
  * Public function prototypes
  *============================================================================*/
 
+// PDM_field_cell_to_vtx()
+// Function set pour le inverse distance weighting
+// Regarder  dans cwipi pour des arguments variadic
+// Rajouter API centre cellule
+// Rajouter API centre volume dual
+
+
 PDM_mesh_interpolate_t*
 PDM_mesh_interpolate_create
 (
  const int            n_domain,
  const int           *n_part,
  const int           *n_group,
- const int            interp_kind,
+ const int            interp_kind, // IDW(p), RBF, LSQ, USER
+ // const int            n_depth,
  const PDM_MPI_Comm   comm
 );
 

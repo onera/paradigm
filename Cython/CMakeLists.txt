@@ -102,7 +102,7 @@ if (PDM_ENABLE_EXTENSION_PDMA)
 endif()
 
 #find_package(MPI REQUIRED COMPONENTS CXX)
-target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy MPI::MPI_CXX)
+target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_shared pdm_mpi_shared Python::NumPy MPI::MPI_CXX)
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
