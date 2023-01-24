@@ -30,7 +30,7 @@
 #include "pdm_domain_interface.h"
 #include "pdm_domain_interface_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_mesh_interpolate.h"
+#include "pdm_field_cell_to_vtx.h"
 
 /*============================================================================
  * Private function definitions
@@ -793,17 +793,17 @@ int main
   /*
    * Mesh interpolation
    */
-  PDM_mesh_interpolate_t* mi = PDM_mesh_interpolate_create(n_domain,
+  PDM_field_cell_to_vtx_t* mi = PDM_field_cell_to_vtx_create(n_domain,
                                                            n_part_by_domain,
                                                            n_group_by_domain,
                                                            0,
                                                            comm);
-  PDM_mesh_interpolate_part_domain_interface_shared_set(mi, pdi);
+  PDM_field_cell_to_vtx_part_domain_interface_shared_set(mi, pdi);
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
 
-      PDM_mesh_interpolate_part_set(mi,
+      PDM_field_cell_to_vtx_part_set(mi,
                                     i_domain,
                                     i_part,
                                     pn_cell       [i_domain][i_part],
@@ -832,7 +832,7 @@ int main
                                                  &vtx_part_bound_proc_idx,
                                                  &vtx_part_bound_part_idx,
                                                  &vtx_part_bound);
-      PDM_mesh_interpolate_graph_comm_set(mi,
+      PDM_field_cell_to_vtx_graph_comm_set(mi,
                                           i_domain,
                                           i_part,
                                           PDM_MESH_ENTITY_VERTEX,
@@ -854,7 +854,7 @@ int main
                               &group_face,
                               &face_group_ln_to_gn);
 
-      PDM_mesh_interpolate_part_group_set(mi,
+      PDM_field_cell_to_vtx_part_group_set(mi,
                                           i_domain,
                                           i_part,
                                           0,
@@ -865,7 +865,7 @@ int main
 
     }
   }
-  PDM_mesh_interpolate_compute(mi);
+  PDM_field_cell_to_vtx_compute(mi);
 
   /*
    * Exchange
@@ -929,7 +929,7 @@ int main
 
   int stride = 1;
   double ***result_field = NULL;
-  PDM_mesh_interpolate_exch(mi,
+  PDM_field_cell_to_vtx_exch(mi,
                             PDM_FIELD_KIND_COORDS,
                             pfield,
                             pfield_bound,
@@ -1008,7 +1008,7 @@ int main
   free(cell_center);
 
 
-  PDM_mesh_interpolate_free(mi);
+  PDM_field_cell_to_vtx_free(mi);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   free(n_group_by_domain);

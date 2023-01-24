@@ -1,5 +1,5 @@
-#ifndef __PDM_MESH_INTERPOLATE_H__
-#define __PDM_MESH_INTERPOLATE_H__
+#ifndef __PDM_FIELD_CELL_TO_VTX_H__
+#define __PDM_FIELD_CELL_TO_VTX_H__
 
 
 /*----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
-typedef struct _pdm_mesh_interpolate_t PDM_mesh_interpolate_t;
+typedef struct _pdm_field_cell_to_vtx_t PDM_field_cell_to_vtx_t;
 
 typedef enum {
   PDM_CELL_TO_VTX_INTERP_KIND_IDW  = 0, /*!< Inverse Distance Weighting    */
@@ -54,8 +54,8 @@ typedef enum {
 // Rajouter API centre volume dual
 
 
-PDM_mesh_interpolate_t*
-PDM_mesh_interpolate_create
+PDM_field_cell_to_vtx_t*
+PDM_field_cell_to_vtx_create
 (
  const int            n_domain,
  const int           *n_part,
@@ -74,17 +74,17 @@ PDM_mesh_interpolate_create
  *
  */
 void
-PDM_mesh_interpolate_compute
+PDM_field_cell_to_vtx_compute
 (
-  PDM_mesh_interpolate_t *part_ext
+  PDM_field_cell_to_vtx_t *part_ext
 );
 
 
 
 void
-PDM_mesh_interpolate_part_set
+PDM_field_cell_to_vtx_part_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   int                       n_cell,
@@ -107,9 +107,9 @@ PDM_mesh_interpolate_part_set
 
 
 void
-PDM_mesh_interpolate_graph_comm_set
+PDM_field_cell_to_vtx_graph_comm_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   PDM_mesh_entities_t       mesh_entity,
@@ -119,9 +119,9 @@ PDM_mesh_interpolate_graph_comm_set
 );
 
 void
-PDM_mesh_interpolate_part_group_set
+PDM_field_cell_to_vtx_part_group_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   int                       i_group,
@@ -131,31 +131,31 @@ PDM_mesh_interpolate_part_group_set
 );
 
 void
-PDM_mesh_interpolate_part_domain_interface_shared_set
+PDM_field_cell_to_vtx_part_domain_interface_shared_set
 (
-  PDM_mesh_interpolate_t      *mi,
+  PDM_field_cell_to_vtx_t      *mi,
   PDM_part_domain_interface_t *pdi
 );
 
 // void
-// PDM_mesh_interpolate_set_field
+// PDM_field_cell_to_vtx_set_field
 // (
-//   PDM_mesh_interpolate_t   *mi,
+//   PDM_field_cell_to_vtx_t   *mi,
 //   int                       i_field
 // );
 
 // void
-// PDM_mesh_interpolate_part_mesh_nodal_set
+// PDM_field_cell_to_vtx_part_mesh_nodal_set
 // (
-//   PDM_mesh_interpolate_t     *mi,
+//   PDM_field_cell_to_vtx_t     *mi,
 //   PDM_part_mesh_nodal_t      *pmn
 // );
 
 
 void
-PDM_mesh_interpolate_exch
+PDM_field_cell_to_vtx_exch
 (
-        PDM_mesh_interpolate_t      *mi,
+        PDM_field_cell_to_vtx_t      *mi,
         PDM_field_kind_t            field_kind,
         double                   ***local_field,
         double                  ****bound_field,
@@ -166,9 +166,9 @@ PDM_mesh_interpolate_exch
 
 
 void
-PDM_mesh_interpolate_free
+PDM_field_cell_to_vtx_free
 (
- PDM_mesh_interpolate_t *mi
+ PDM_field_cell_to_vtx_t *mi
 );
 
 
@@ -179,5 +179,5 @@ PDM_mesh_interpolate_free
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_MESH_INTERPOLATE_H__ */
+#endif /* __PDM_field_cell_to_vtx_H__ */
 

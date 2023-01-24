@@ -1,22 +1,22 @@
 
-cdef extern from "pdm_mesh_interpolate.h":
+cdef extern from "pdm_field_cell_to_vtx.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
-    ctypedef struct PDM_mesh_interpolate_t:
+    ctypedef struct PDM_field_cell_to_vtx_t:
         pass
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    PDM_mesh_interpolate_t* PDM_mesh_interpolate_create(int            n_domain,
+    PDM_field_cell_to_vtx_t* PDM_field_cell_to_vtx_create(int            n_domain,
                                                         int           *n_part,
                                                         int           *n_group,
                                                         int            interp_kind,
                                                         PDM_MPI_Comm   comm);
 
-    void PDM_mesh_interpolate_compute(PDM_mesh_interpolate_t *part_ext);
+    void PDM_field_cell_to_vtx_compute(PDM_field_cell_to_vtx_t *part_ext);
 
-    void PDM_mesh_interpolate_part_set(PDM_mesh_interpolate_t   *mi,
+    void PDM_field_cell_to_vtx_part_set(PDM_field_cell_to_vtx_t   *mi,
                                        int                       i_domain,
                                        int                       i_part,
                                        int                       n_cell,
@@ -36,7 +36,7 @@ cdef extern from "pdm_mesh_interpolate.h":
                                        PDM_g_num_t              *vtx_ln_to_gn,
                                        double                   *vtx_coord);
 
-    void PDM_mesh_interpolate_graph_comm_set(PDM_mesh_interpolate_t   *mi,
+    void PDM_field_cell_to_vtx_graph_comm_set(PDM_field_cell_to_vtx_t   *mi,
                                              int                       i_domain,
                                              int                       i_part,
                                              PDM_mesh_entities_t       mesh_entity,
@@ -44,7 +44,7 @@ cdef extern from "pdm_mesh_interpolate.h":
                                              int                      *entity_part_bound_part_idx,
                                              int                      *entity_part_bound);
 
-    void PDM_mesh_interpolate_part_group_set(PDM_mesh_interpolate_t   *mi,
+    void PDM_field_cell_to_vtx_part_group_set(PDM_field_cell_to_vtx_t   *mi,
                                              int                       i_domain,
                                              int                       i_part,
                                              int                       i_group,
@@ -52,19 +52,19 @@ cdef extern from "pdm_mesh_interpolate.h":
                                              int                       n_group_entity,
                                              int                      *group_entity);
 
-    void PDM_mesh_interpolate_part_domain_interface_shared_set(PDM_mesh_interpolate_t      *mi,
+    void PDM_field_cell_to_vtx_part_domain_interface_shared_set(PDM_field_cell_to_vtx_t      *mi,
                                                                PDM_part_domain_interface_t *pdi);
 
-    # void PDM_mesh_interpolate_part_mesh_nodal_set(PDM_mesh_interpolate_t     *mi,
+    # void PDM_field_cell_to_vtx_part_mesh_nodal_set(PDM_field_cell_to_vtx_t     *mi,
     #                                               PDM_part_mesh_nodal_t      *pmn);
 
-    void PDM_mesh_interpolate_exch(PDM_mesh_interpolate_t      *mi,
+    void PDM_field_cell_to_vtx_exch(PDM_field_cell_to_vtx_t      *mi,
                                    PDM_field_kind_t            field_kind,
                                    double                   ***local_field,
                                    double                  ****bound_field,
                                    double                  ****result_field);
 
-    void PDM_mesh_interpolate_free(PDM_mesh_interpolate_t *mi);
+    void PDM_field_cell_to_vtx_free(PDM_field_cell_to_vtx_t *mi);
 
 
 # ------------------------------------------------------------------
@@ -74,7 +74,7 @@ cdef class MeshCellToNode:
     """
     # ************************************************************************
     # > Class attributes
-    cdef PDM_mesh_interpolate_t* mi
+    cdef PDM_field_cell_to_vtx_t* mi
     cdef int                     n_part
     cdef int*                    pn_elt
     cdef MPI.Comm                py_comm
@@ -91,7 +91,7 @@ cdef class MeshCellToNode:
         Constructor of PartToBlock object
         """
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-        self.mi = PDM_mesh_interpolate_create(n_domain,
+        self.mi = PDM_field_cell_to_vtx_create(n_domain,
                                        <int*> n_part.data,
                                        <int*> n_group.data,
                                               interp_kind,
@@ -101,7 +101,7 @@ cdef class MeshCellToNode:
     def compute(self):
         """
         """
-        PDM_mesh_interpolate_compute(self.mi)
+        PDM_field_cell_to_vtx_compute(self.mi)
 
     # ------------------------------------------------------------------
     def part_set(self,
@@ -138,7 +138,7 @@ cdef class MeshCellToNode:
       self.keep_alive.append(vtx_ln_to_gn)
       self.keep_alive.append(coords)
 
-      PDM_mesh_interpolate_part_set(self.mi,
+      PDM_field_cell_to_vtx_part_set(self.mi,
                                     i_domain,
                                     i_part,
                                     n_cell,
@@ -168,7 +168,7 @@ cdef class MeshCellToNode:
                    NPY.ndarray[NPY.int32_t, mode='c', ndim=1] entity_part_bound):
       """
       """
-      PDM_mesh_interpolate_graph_comm_set(self.mi,
+      PDM_field_cell_to_vtx_graph_comm_set(self.mi,
                                           i_domain,
                                           i_part,
                                           mesh_entity,
@@ -186,7 +186,7 @@ cdef class MeshCellToNode:
                        NPY.ndarray[NPY.int32_t, mode='c', ndim=1] group_entity):
       """
       """
-      PDM_mesh_interpolate_part_group_set(self.mi,
+      PDM_field_cell_to_vtx_part_group_set(self.mi,
                                           i_domain,
                                           i_part,
                                           i_group,
@@ -199,14 +199,14 @@ cdef class MeshCellToNode:
       """
       """
       self.pdi = pdi # Keep alive
-      PDM_mesh_interpolate_part_domain_interface_shared_set(self.mi, pdi.pdi)
+      PDM_field_cell_to_vtx_part_domain_interface_shared_set(self.mi, pdi.pdi)
 
 
     # ------------------------------------------------------------------
     def exch(self):
         """
         """
-        # PDM_mesh_interpolate_exch(PDM_mesh_interpolate_t      *mi,
+        # PDM_field_cell_to_vtx_exch(PDM_field_cell_to_vtx_t      *mi,
         #                           PDM_field_kind_t            field_kind,
         #                           double                   ***local_field,
         #                           double                  ****bound_field,
@@ -215,4 +215,4 @@ cdef class MeshCellToNode:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        PDM_mesh_interpolate_free(self.mi)
+        PDM_field_cell_to_vtx_free(self.mi)

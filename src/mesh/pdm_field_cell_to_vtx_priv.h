@@ -1,5 +1,5 @@
-#ifndef __PDM_MESH_INTERPOLATE_PRIV_H__
-#define __PDM_MESH_INTERPOLATE_PRIV_H__
+#ifndef __PDM_FIELD_CELL_TO_VTX_PRIV_H__
+#define __PDM_FIELD_CELL_TO_VTX_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -29,14 +29,14 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct _pdm_mesh_interpolate_t
+ * \struct _pdm_field_cell_to_vtx_t
  * \brief  Distributed cube
  *
- * _pdm_mesh_interpolate_t define a distributed mesh of a cube
+ * _pdm_field_cell_to_vtx_t define a distributed mesh of a cube
  *
  */
 
-struct _pdm_mesh_interpolate_t {
+struct _pdm_field_cell_to_vtx_t {
   PDM_MPI_Comm      comm;            /*!< MPI communicator                          */
 
   int               n_domain;
@@ -94,4 +94,4 @@ struct _pdm_mesh_interpolate_t {
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_MESH_INTERPOLATE_PRIV_H__ */
+#endif /* __PDM_field_cell_to_vtx_PRIV_H__ */

@@ -34,8 +34,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_part_domain_interface_priv.h"
-#include "pdm_mesh_interpolate_priv.h"
-#include "pdm_mesh_interpolate.h"
+#include "pdm_field_cell_to_vtx_priv.h"
+#include "pdm_field_cell_to_vtx.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -237,7 +237,7 @@ static
 void
 _prepare_cell_center
 (
-  PDM_mesh_interpolate_t* mi
+  PDM_field_cell_to_vtx_t* mi
 )
 {
   int     *pn_cell        = malloc(mi->n_part_loc_all_domain * sizeof(int    *));
@@ -321,7 +321,7 @@ static
 void
 _prepare_vtx_cell
 (
- PDM_mesh_interpolate_t*  mi
+ PDM_field_cell_to_vtx_t*  mi
 )
 {
 
@@ -373,7 +373,7 @@ static
 void
 _warm_up_distant_neighbor
 (
- PDM_mesh_interpolate_t*  mi
+ PDM_field_cell_to_vtx_t*  mi
 )
 {
   /* Deduce graph with all graphe inside same domain and between domain */
@@ -589,7 +589,7 @@ static
 void
 _create_bnd_graph
 (
- PDM_mesh_interpolate_t* mi
+ PDM_field_cell_to_vtx_t* mi
 )
 {
   /*
@@ -963,7 +963,7 @@ static
 void
 _interpolate
 (
-  PDM_mesh_interpolate_t     *mi,
+  PDM_field_cell_to_vtx_t     *mi,
   PDM_field_kind_t            field_kind,
   int                         stride,
   double                   ***plocal_field,
@@ -1044,10 +1044,10 @@ _interpolate
  * \param [in]   n_part       Number of local partitions
  * \param [in]   comm         PDM_MPI communicator
  *
- * \return     Pointer to \ref PDM_mesh_interpolate object
+ * \return     Pointer to \ref PDM_field_cell_to_vtx object
  */
-PDM_mesh_interpolate_t*
-PDM_mesh_interpolate_create
+PDM_field_cell_to_vtx_t*
+PDM_field_cell_to_vtx_create
 (
  const int            n_domain,
  const int           *n_part,
@@ -1057,7 +1057,7 @@ PDM_mesh_interpolate_create
 )
 {
   PDM_UNUSED(interp_kind);
-  PDM_mesh_interpolate_t* mi = malloc(sizeof(PDM_mesh_interpolate_t));
+  PDM_field_cell_to_vtx_t* mi = malloc(sizeof(PDM_field_cell_to_vtx_t));
 
   mi->n_domain    = n_domain;
   mi->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
@@ -1164,9 +1164,9 @@ PDM_mesh_interpolate_create
 }
 
 void
-PDM_mesh_interpolate_compute
+PDM_field_cell_to_vtx_compute
 (
-  PDM_mesh_interpolate_t *mi
+  PDM_field_cell_to_vtx_t *mi
 )
 {
 
@@ -1359,9 +1359,9 @@ PDM_mesh_interpolate_compute
 
 
 void
-PDM_mesh_interpolate_part_set
+PDM_field_cell_to_vtx_part_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   int                       n_cell,
@@ -1408,9 +1408,9 @@ PDM_mesh_interpolate_part_set
 
 
 void
-PDM_mesh_interpolate_graph_comm_set
+PDM_field_cell_to_vtx_graph_comm_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   PDM_mesh_entities_t       mesh_entity,
@@ -1427,9 +1427,9 @@ PDM_mesh_interpolate_graph_comm_set
 
 
 void
-PDM_mesh_interpolate_part_domain_interface_shared_set
+PDM_field_cell_to_vtx_part_domain_interface_shared_set
 (
-  PDM_mesh_interpolate_t      *mi,
+  PDM_field_cell_to_vtx_t      *mi,
   PDM_part_domain_interface_t *pdi
 )
 {
@@ -1438,9 +1438,9 @@ PDM_mesh_interpolate_part_domain_interface_shared_set
 
 
 void
-PDM_mesh_interpolate_part_group_set
+PDM_field_cell_to_vtx_part_group_set
 (
-  PDM_mesh_interpolate_t   *mi,
+  PDM_field_cell_to_vtx_t   *mi,
   int                       i_domain,
   int                       i_part,
   int                       i_group,
@@ -1458,9 +1458,9 @@ PDM_mesh_interpolate_part_group_set
 }
 
 void
-PDM_mesh_interpolate_exch
+PDM_field_cell_to_vtx_exch
 (
-        PDM_mesh_interpolate_t      *mi,
+        PDM_field_cell_to_vtx_t      *mi,
         PDM_field_kind_t            field_kind,
         double                   ***local_field,
         double                  ****bound_field,
@@ -1652,9 +1652,9 @@ PDM_mesh_interpolate_exch
 
 // Ou calculer in interne ?
 // void
-// PDM_mesh_interpolate_dual_coord_set
+// PDM_field_cell_to_vtx_dual_coord_set
 // (
-//   PDM_mesh_interpolate_t   *mi,
+//   PDM_field_cell_to_vtx_t   *mi,
 //   int                       i_domain,
 //   int                       i_part,
 //   double                   *dual_center_coords
@@ -1664,9 +1664,9 @@ PDM_mesh_interpolate_exch
 // }
 
 void
-PDM_mesh_interpolate_free
+PDM_field_cell_to_vtx_free
 (
- PDM_mesh_interpolate_t *mi
+ PDM_field_cell_to_vtx_t *mi
 )
 {
 
