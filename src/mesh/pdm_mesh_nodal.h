@@ -921,6 +921,37 @@ const PDM_ownership_t  ownership
 );
 
 /**
+ * \brief  Add some standard 3D cells from cell vertex conectivity.
+ *
+ * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
+ * and stores it in the corresponding block. \ref ind_num gives the indirection
+ * between old and new numbering.
+ *
+ * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_cell         Number of cells
+ * \param [in]  cell_face_idx  Index of cell vertex connectivity
+ * \param [in]  cell_face_nb   Number of vertices for each cell
+ * \param [in]  cell_face      Cell vertex connectivity
+ * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
+ *
+ */
+
+void
+PDM_Mesh_nodal_cells_cellvtx_add
+(
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part,
+const int               n_cell,
+const PDM_l_num_t      *cell_vtx_idx,
+const PDM_l_num_t      *cell_vtx_nb,
+const PDM_l_num_t      *cell_vtx,
+const PDM_g_num_t      *numabs,
+const PDM_ownership_t  ownership
+);
+
+/**
  * \brief  Add some 2D cells from cell edge conectivity.
  *
  * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)

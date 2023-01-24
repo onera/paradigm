@@ -36,7 +36,7 @@ extern "C" {
  */
 
 typedef enum {
- 
+
   PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC          = 0,  /*!< Distribute block on all processes */
   PDM_PART_TO_BLOCK_DISTRIB_ONE_PROC_PER_NODE = 1,  /*!< Distribute block on one processe pere node */
   PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE      = 2   /*!< Distribute block on part of nodes */
@@ -90,6 +90,19 @@ typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
  *============================================================================*/
 
 /**
+ * \brief PDM_extents_conformize
+ *
+ * Correction extents to manage singular cases and di-symetrizes pb
+ * eps = 1.e-3 is a standard value
+ *
+ */
+void
+PDM_extents_conformize(int    dim,
+                       double extents[],
+                       double eps);
+
+
+/**
  *
  * \brief Reset global statistic
  *
@@ -107,15 +120,15 @@ void
  * \brief Get global timer in part to block
  *
  * \param [in]   comm                 MPI communicator
- * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
- * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
- * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
+ * \param [out]  min_exch_rank_send   Global min part of ranks used to send
+ * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive
+ * \param [out]  max_exch_rank_send   Global max part of ranks used to send
  * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
- * \param [out]  min_exch_data_send   Global min sent data for a rank 
+ * \param [out]  min_exch_data_send   Global min sent data for a rank
  * \param [out]  min_exch_data_recv   Global min received data for a rank
  * \param [out]  max_exch_data_send   Global max sent data for a rank
  * \param [out]  max_exch_data_recv   Global max received data for a rank
- * 
+ *
  */
 
 void
@@ -146,7 +159,7 @@ PDM_part_to_block_global_statistic_get
  * \param [out]  max_elaps_create  Global max elapsed for create function
  * \param [out]  min_cpu_create    Global min cpu for create function
  * \param [out]  max_cpu_create    Global max cpu for create function
- * \param [out]  min_elaps_create2 Global min elapsed for create2 function 
+ * \param [out]  min_elaps_create2 Global min elapsed for create2 function
  * \param [out]  max_elaps_create2 Global max elapsed for create2 function
  * \param [out]  min_cpu_create2   Global min cpu for create2 function
  * \param [out]  max_cpu_create2   Global max cpu for create2 function
@@ -154,7 +167,7 @@ PDM_part_to_block_global_statistic_get
  * \param [out]  max_elaps_exch    Global max elapsed for exch function
  * \param [out]  min_cpu_exch      Global min cpu for exch function
  * \param [out]  max_cpu_exch      Global max cpu for exch function
- * 
+ *
  */
 
 void
