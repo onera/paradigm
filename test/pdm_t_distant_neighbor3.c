@@ -201,7 +201,7 @@ char *argv[]
     // send_i[i] = malloc(sizeof(int) * n_elt[i]);
     send_i[i] = malloc(sizeof(int) * neighbor_idx[i][n_elt[i]]);
     for (int j = 0; j < n_elt[i]; j++) {
-      log_trace("part %d (%d), elt %d : %d\n", i, i_part, j, shift[i_part] + j);
+      // log_trace("part %d (%d), elt %d : %d\n", i, i_part, j, shift[i_part] + j);
       send_i[i][j] = shift[i_part] + j;
       // for (int k = neighbor_idx[i][j]; k < neighbor_idx[i][j+1]; k++) {
       //   send_i[i][k] = shift[i_part] + j;
@@ -211,11 +211,11 @@ char *argv[]
         int j_part = neighbor_desc[i][3*l+1];
         int j_num  = neighbor_desc[i][3*l+2];
         int g = shift[n_part*j_rank + j_part] + j_num;
-        log_trace("  (%d, %d, %d : %d)\n",
-                  neighbor_desc[i][3*l  ],
-                  neighbor_desc[i][3*l+1],
-                  neighbor_desc[i][3*l+2],
-                  g);
+        // log_trace("  (%d, %d, %d : %d)\n",
+        //           neighbor_desc[i][3*l  ],
+        //           neighbor_desc[i][3*l+1],
+        //           neighbor_desc[i][3*l+2],
+        //           g);
       }
     }
   }
@@ -233,31 +233,31 @@ char *argv[]
                  (void ***) &recv_i);
 
   /* Check */
-  for (int i = 0; i < n_part; i++) {
+  // for (int i = 0; i < n_part; i++) {
 
-    log_trace("\npart #%d\n", i);
+  //   log_trace("\npart #%d\n", i);
 
-    PDM_log_trace_array_int(recv_n[i], neighbor_idx[i][n_elt[i]], "recv_n : ");
+  //   PDM_log_trace_array_int(recv_n[i], neighbor_idx[i][n_elt[i]], "recv_n : ");
 
-    int idx = 0;
-    for (int j = 0; j < n_elt[i]; j++) {
-      log_trace("  elt %d : ", j);
-      for (int l = neighbor_idx[i][j]; l < neighbor_idx[i][j+1]; l++) {
-        for (int k = 0; k < recv_n[i][l]; k++) {
-          int j_rank = neighbor_desc[i][3*l  ];
-          int j_part = neighbor_desc[i][3*l+1];
-          int j_num  = neighbor_desc[i][3*l+2];
-          int g = shift[n_part*j_rank + j_part] + j_num;
-          log_trace("%d (%d)   ", recv_i[i][idx], g);
-          idx++;
-          // log_trace("(%d, %d, %d) ",
-          //           recv_desc[i][idx+1], recv_desc[i][idx+2], recv_desc[i][idx+3]);
-          // idx += 3;
-        }
-      }
-      log_trace("\n");
-    }
-  }
+  //   int idx = 0;
+  //   for (int j = 0; j < n_elt[i]; j++) {
+  //     log_trace("  elt %d : ", j);
+  //     for (int l = neighbor_idx[i][j]; l < neighbor_idx[i][j+1]; l++) {
+  //       for (int k = 0; k < recv_n[i][l]; k++) {
+  //         int j_rank = neighbor_desc[i][3*l  ];
+  //         int j_part = neighbor_desc[i][3*l+1];
+  //         int j_num  = neighbor_desc[i][3*l+2];
+  //         int g = shift[n_part*j_rank + j_part] + j_num;
+  //         log_trace("%d (%d)   ", recv_i[i][idx], g);
+  //         idx++;
+  //         // log_trace("(%d, %d, %d) ",
+  //         //           recv_desc[i][idx+1], recv_desc[i][idx+2], recv_desc[i][idx+3]);
+  //         // idx += 3;
+  //       }
+  //     }
+  //     log_trace("\n");
+  //   }
+  // }
 
 
   /* Free memory */
