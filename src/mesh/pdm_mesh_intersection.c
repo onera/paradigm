@@ -1366,9 +1366,9 @@ _build_ptp
   }
 
 
-  PDM_g_num_t *elt_a_ln_to_gn = NULL;
+  // PDM_g_num_t *elt_a_ln_to_gn = NULL;
   int n_elt_a = extrp_mesh_a->n_target[0];
-  elt_a_ln_to_gn = extrp_mesh_a->target_gnum[0];
+  // elt_a_ln_to_gn = extrp_mesh_a->target_gnum[0];
   // int n_elt_a = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh_a,
   //                                                    0,
   //                                                    entity_type_a,
@@ -1622,39 +1622,21 @@ _build_ptp
   free(user_elt_ln_to_gn_a);
 
   /* Reverse weights */
-  if (0) {
+  if (1) {
     request_weight = -1;
-    int **user_elt_a_elt_b_n = malloc(sizeof(int *) * mi->n_part_mesh_a);
-    for (int ipart = 0; ipart < mi->n_part_mesh_a; ipart++) {
-      user_elt_a_elt_b_n[ipart] = malloc(sizeof(int) * user_n_elt_a[ipart]);
-      for (int i = 0; i < user_n_elt_a[ipart]; i++) {
-        user_elt_a_elt_b_n[ipart][i] = mi->elt_a_elt_b_idx[ipart][i+1] - mi->elt_a_elt_b_idx[ipart][i];
-      }
-    }
-    int **user_elt_b_elt_a_n = NULL;
     PDM_part_to_part_iexch(mi->ptp,
                            comm_kind,
-                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_STRIDE_CST_INTERLACED,
                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
-                           -1,
+                           1,
                            sizeof(double),
-          (const int   **) user_elt_a_elt_b_n,
+                           NULL,
           (const void  **) mi->elt_a_elt_b_weight,
-          (int        ***) &user_elt_b_elt_a_n,
+                           NULL,
           (void       ***) &mi->elt_b_elt_a_weight,
                            &request_weight);
 
     PDM_part_to_part_iexch_wait(mi->ptp, request_weight);
-
-    for (int ipart = 0; ipart < mi->n_part_mesh_a; ipart++) {
-      free(user_elt_a_elt_b_n[ipart]);
-    }
-    free(user_elt_a_elt_b_n);
-
-    for (int ipart = 0; ipart < mi->n_part_mesh_b; ipart++) {
-      free(user_elt_b_elt_a_n[ipart]);
-    }
-    free(user_elt_b_elt_a_n);
   }
 
   free(user_n_elt_a);
@@ -3356,11 +3338,12 @@ PDM_GCC_SUPPRESS_WARNING_POP
                                           vtx_coord,
                                           PDM_OWNERSHIP_KEEP);
 
-  PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                       0,
-                                       PDM_MESH_ENTITY_EDGE,
-                                       edge_ln_to_gn,
-                                       PDM_OWNERSHIP_KEEP);
+  *edge_ln_to_gn = extrp->target_gnum[0];
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      0,
+  //                                      PDM_MESH_ENTITY_EDGE,
+  //                                      edge_ln_to_gn,
+  //                                      PDM_OWNERSHIP_KEEP);
 }
 
 
@@ -4046,6 +4029,8 @@ _mesh_intersection_surf_line
       double mag = PDM_MODULE(&faceA_bilan[3*i]);
       log_trace("faceA %d : bilan = %e\n", i, mag);
     }
+
+    free(faceA_bilan);
   }
 
 
@@ -4104,6 +4089,7 @@ PDM_mesh_intersection_create
   mi->elt_a_elt_b_idx    = NULL;
   mi->elt_a_elt_b        = NULL;
   mi->elt_a_elt_b_weight = NULL;
+  mi->elt_b_elt_a_weight = NULL;
   mi->ptp                = NULL;
   mi->ptp_ownership      = PDM_OWNERSHIP_KEEP;
 
@@ -4465,6 +4451,15 @@ PDM_mesh_intersection_free
       }
     }
     free(mi->elt_a_elt_b_weight);
+  }
+
+  if (mi->elt_b_elt_a_weight != NULL) {
+    for (int ipart = 0; ipart < mi->n_part_mesh_a; ipart++) {
+      if (mi->elt_b_elt_a_weight[ipart] != NULL) {
+        free(mi->elt_b_elt_a_weight[ipart]);
+      }
+    }
+    free(mi->elt_b_elt_a_weight);
   }
 
   free(mi);
