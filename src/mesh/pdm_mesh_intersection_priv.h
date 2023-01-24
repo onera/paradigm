@@ -19,6 +19,7 @@
 #include "pdm_error.h"
 #include "pdm_printf.h"
 #include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
 
 #ifdef __cplusplus
@@ -105,6 +106,8 @@ struct _pdm_mesh_intersection_t {
   PDM_part_mesh_t  *mesh_a;       /*!< Mesh A */
   PDM_part_mesh_t  *mesh_b;       /*!< Mesh B */
 
+  PDM_part_mesh_nodal_t *mesh_nodal[2]; /*!< Mesh nodal A/B */
+
   // _ol_mesh_t  *olMeshA;       /*!< Overlay Mesh A */
   // _ol_mesh_t  *olMeshB;       /*!< Overlay Mesh B */
 
@@ -125,6 +128,7 @@ struct _pdm_mesh_intersection_t {
   PDM_g_num_t **elt_a_elt_b;
   double      **elt_a_elt_b_weight;
 
+  double      **elt_b_elt_a_weight;
 
   PDM_ownership_t     ptp_ownership;
   PDM_part_to_part_t *ptp;

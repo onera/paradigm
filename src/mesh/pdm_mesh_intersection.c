@@ -124,7 +124,9 @@ _export_vtk_2d
 
     PDM_g_num_t *face_ln_to_gn = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
-    int n_face = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
+    int n_face = extrp_mesh->n_target[i_part];
+    face_ln_to_gn = extrp_mesh->target_gnum[i_part];
+    // int n_face = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_FACE  , &face_ln_to_gn, PDM_OWNERSHIP_KEEP);
     int n_vtx  = PDM_extract_part_ln_to_gn_get(extrp_mesh, i_part, PDM_MESH_ENTITY_VERTEX, &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
 
     double *vtx_coord = NULL;
@@ -1144,11 +1146,12 @@ _get_extracted_mesh_vol
                                           vtx_coord,
                                           PDM_OWNERSHIP_KEEP);
 
-  PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                       0,
-                                       PDM_MESH_ENTITY_CELL,
-                                       cell_ln_to_gn,
-                                       PDM_OWNERSHIP_KEEP);
+  *cell_ln_to_gn = extrp->target_gnum[0];
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      0,
+  //                                      PDM_MESH_ENTITY_CELL,
+  //                                      cell_ln_to_gn,
+  //                                      PDM_OWNERSHIP_KEEP);
 
   PDM_extract_part_parent_ln_to_gn_get(extrp,
                                        0,
@@ -1364,18 +1367,23 @@ _build_ptp
 
 
   PDM_g_num_t *elt_a_ln_to_gn = NULL;
-  int n_elt_a = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh_a,
-                                                     0,
-                                                     entity_type_a,
-                                                     &elt_a_ln_to_gn,
-                                                     PDM_OWNERSHIP_KEEP);
+  int n_elt_a = extrp_mesh_a->n_target[0];
+  elt_a_ln_to_gn = extrp_mesh_a->target_gnum[0];
+  // int n_elt_a = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh_a,
+  //                                                    0,
+  //                                                    entity_type_a,
+  //                                                    &elt_a_ln_to_gn,
+  //                                                    PDM_OWNERSHIP_KEEP);
+
 
   PDM_g_num_t *elt_b_ln_to_gn = NULL;
-  int n_elt_b = PDM_extract_part_parent_ln_to_gn_get(extrp_mesh_b,
-                                                     0,
-                                                     entity_type_b,
-                                                     &elt_b_ln_to_gn,
-                                                     PDM_OWNERSHIP_KEEP);
+  int n_elt_b = extrp_mesh_b->n_target[0];
+  elt_b_ln_to_gn = extrp_mesh_b->target_gnum[0];
+  // it n_elt_b = PDM_extractpart_parent_ln_to_gn_get(extrp_mesh_b,
+  //                                                    0,
+  //                                                    entity_type_b,
+  //                                                    &elt_b_ln_to_gn,
+  //                                                    PDM_OWNERSHIP_KEEP);
 
   /* Get all init locations of extracted faces B */
   // may not work if multiple init locations...
@@ -1611,10 +1619,46 @@ _build_ptp
   }
   free(user_elt_a_b_init_loc_idx);
   free(user_elt_a_b_init_loc    );
+  free(user_elt_ln_to_gn_a);
 
-  free(user_n_elt_a); // ?
-  free(user_elt_ln_to_gn_a); // ?
-  free(user_n_elt_b); // ?
+  /* Reverse weights */
+  if (0) {
+    request_weight = -1;
+    int **user_elt_a_elt_b_n = malloc(sizeof(int *) * mi->n_part_mesh_a);
+    for (int ipart = 0; ipart < mi->n_part_mesh_a; ipart++) {
+      user_elt_a_elt_b_n[ipart] = malloc(sizeof(int) * user_n_elt_a[ipart]);
+      for (int i = 0; i < user_n_elt_a[ipart]; i++) {
+        user_elt_a_elt_b_n[ipart][i] = mi->elt_a_elt_b_idx[ipart][i+1] - mi->elt_a_elt_b_idx[ipart][i];
+      }
+    }
+    int **user_elt_b_elt_a_n = NULL;
+    PDM_part_to_part_iexch(mi->ptp,
+                           comm_kind,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                           -1,
+                           sizeof(double),
+          (const int   **) user_elt_a_elt_b_n,
+          (const void  **) mi->elt_a_elt_b_weight,
+          (int        ***) &user_elt_b_elt_a_n,
+          (void       ***) &mi->elt_b_elt_a_weight,
+                           &request_weight);
+
+    PDM_part_to_part_iexch_wait(mi->ptp, request_weight);
+
+    for (int ipart = 0; ipart < mi->n_part_mesh_a; ipart++) {
+      free(user_elt_a_elt_b_n[ipart]);
+    }
+    free(user_elt_a_elt_b_n);
+
+    for (int ipart = 0; ipart < mi->n_part_mesh_b; ipart++) {
+      free(user_elt_b_elt_a_n[ipart]);
+    }
+    free(user_elt_b_elt_a_n);
+  }
+
+  free(user_n_elt_a);
+  free(user_n_elt_b);
 }
 
 
@@ -2498,11 +2542,12 @@ _get_extracted_mesh_surf
                                           vtx_coord,
                                           PDM_OWNERSHIP_KEEP);
 
-  PDM_extract_part_parent_ln_to_gn_get(extrp,
-                                       0,
-                                       PDM_MESH_ENTITY_FACE,
-                                       face_ln_to_gn,
-                                       PDM_OWNERSHIP_KEEP);
+  *face_ln_to_gn = extrp->target_gnum[0];
+  // PDM_extract_part_parent_ln_to_gn_get(extrp,
+  //                                      0,
+  //                                      PDM_MESH_ENTITY_FACE,
+  //                                      face_ln_to_gn,
+  //                                      PDM_OWNERSHIP_KEEP);
  }
 
 
@@ -4051,6 +4096,8 @@ PDM_mesh_intersection_create
   mi->mesh_a = PDM_part_mesh_create(n_part_mesh_a, comm);
   mi->mesh_b = PDM_part_mesh_create(n_part_mesh_b, comm);
 
+  mi->mesh_nodal[PDM_OL_MESH_A] = NULL;
+  mi->mesh_nodal[PDM_OL_MESH_B] = NULL;
 
 
   /* Initialize results */
@@ -4070,6 +4117,11 @@ PDM_mesh_intersection_compute
   PDM_mesh_intersection_t  *mi
 )
 {
+  if (mi->mesh_nodal[PDM_OL_MESH_A] != NULL ||
+      mi->mesh_nodal[PDM_OL_MESH_B] != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
+  }
+
   /*
    * Compute extents of mesh_a and mesh_b
    */
@@ -4278,6 +4330,18 @@ PDM_mesh_intersection_compute
   PDM_extract_part_free(extrp_mesh_a);
   PDM_extract_part_free(extrp_mesh_b);
 
+}
+
+
+void
+PDM_mesh_intersection_mesh_nodal_set
+(
+ PDM_mesh_intersection_t  *mi,
+ PDM_ol_mesh_t             i_mesh,
+ PDM_part_mesh_nodal_t    *mesh
+ )
+{
+  mi->mesh_nodal[i_mesh] = mesh;
 }
 
 
