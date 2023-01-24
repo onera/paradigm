@@ -163,6 +163,25 @@ PDM_field_cell_to_vtx_exch
 );
 
 
+void
+PDM_field_cell_to_vtx_set_cell_center
+(
+  PDM_field_cell_to_vtx_t  *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  double                   *cell_center
+);
+
+
+void
+PDM_field_cell_to_vtx_set_vtx_center
+(
+  PDM_field_cell_to_vtx_t  *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  double                   *vtx_center
+);
+
 
 
 void

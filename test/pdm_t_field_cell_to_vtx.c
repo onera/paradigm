@@ -927,7 +927,7 @@ int main
     }
   }
 
-  int stride = 1;
+  // int stride = 1;
   double ***result_field = NULL;
   PDM_field_cell_to_vtx_exch(mi,
                             PDM_FIELD_KIND_COORDS,

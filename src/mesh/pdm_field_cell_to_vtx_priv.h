@@ -87,6 +87,8 @@ struct _pdm_field_cell_to_vtx_t {
   int    **pvtx_face_bound_coords_opp_n;
   double **pvtx_face_bound_coords_opp;
 
+  double ***user_cell_center;
+  double ***user_vtx_center;
 
 };
 
