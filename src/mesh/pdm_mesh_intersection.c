@@ -530,10 +530,10 @@ _compute_mesh_nodal_extents
                                                                  id_section,
                                                                  i_part);
 
-      PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
-                                                                    geom_kind,
-                                                                    id_section,
-                                                                    i_part);
+      // PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
+      //                                                               geom_kind,
+      //                                                               id_section,
+      //                                                               i_part);
 
       int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
                                                       geom_kind,
@@ -560,8 +560,8 @@ _compute_mesh_nodal_extents
 
     for (int i = 0; i < part_n_elt; i++) {
       for (int k = 0; k < 3; k++) {
-        global_extents[k  ] = PDM_MIN(extents[6*i+k  ], global_extents[k  ]);
-        global_extents[k+3] = PDM_MAX(extents[6*i+k+3], global_extents[k+3]);
+        global_extents[k  ] = PDM_MIN(extents[i_part][6*i+k  ], global_extents[k  ]);
+        global_extents[k+3] = PDM_MAX(extents[i_part][6*i+k+3], global_extents[k+3]);
       }
     }
 
