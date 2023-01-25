@@ -80,7 +80,9 @@ _read_args
  PDM_g_num_t           *n_vtx_a,
  PDM_g_num_t           *n_vtx_b,
  int                   *n_part,
- PDM_Mesh_nodal_elt_t  *elt_type
+ PDM_Mesh_nodal_elt_t  *elt_type,
+ int                   *nodal_a,
+ int                   *nodal_b
 )
 {
   int i = 1;
@@ -126,6 +128,12 @@ _read_args
         _usage(EXIT_FAILURE);
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-nodalA") == 0) {
+      *nodal_a = 1;
+    }
+    else if (strcmp(argv[i], "-nodalB") == 0) {
+      *nodal_b = 1;
     }
     else {
       _usage(EXIT_FAILURE);
@@ -424,6 +432,21 @@ _set_mesh
 
 }
 
+static
+void
+_set_mesh_nodal
+(
+ PDM_mesh_intersection_t *mi,
+ PDM_ol_mesh_t            i_mesh,
+ PDM_multipart_t         *mpart
+)
+{
+  PDM_part_mesh_nodal_t *pmn = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
+
+  PDM_mesh_intersection_mesh_nodal_set(mi, i_mesh, pmn);
+}
+
 
 /*============================================================================
  * Public function definitions
@@ -454,6 +477,8 @@ char *argv[]
 
   PDM_g_num_t n_vtx_a   = 10;
   PDM_g_num_t n_vtx_b   = 10;
+  int         nodal_a   = 0;
+  int         nodal_b   = 0;
   PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
 
 #ifdef PDM_HAVE_PARMETIS
@@ -471,7 +496,9 @@ char *argv[]
              &n_vtx_a,
              &n_vtx_b,
              &n_part,
-             &elt_type);
+             &elt_type,
+             &nodal_a,
+             &nodal_b);
 
   /*
    * Generate meshA
@@ -536,8 +563,18 @@ char *argv[]
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, PDM_OL_MESH_A, mpart_surf_a, n_part);
-  _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+  if (nodal_a) {
+    _set_mesh_nodal(mi, PDM_OL_MESH_A, mpart_surf_a);
+  }
+  else {
+    _set_mesh(mi, PDM_OL_MESH_A, mpart_surf_a, n_part);
+  }
+  if (nodal_b) {
+    _set_mesh_nodal(mi, PDM_OL_MESH_B, mpart_surf_b);
+  }
+  else {
+    _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+  }
 
   PDM_mesh_intersection_compute(mi);
 

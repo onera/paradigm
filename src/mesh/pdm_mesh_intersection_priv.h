@@ -21,6 +21,7 @@
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
+#include "pdm_extract_part.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,6 +105,9 @@ struct _pdm_mesh_intersection_t {
   PDM_part_mesh_t *mesh[2];
 
   PDM_part_mesh_nodal_t *mesh_nodal[2]; /*!< Mesh nodal A/B */
+
+
+  PDM_extract_part_t *extrp_mesh[2];
 
   // _ol_mesh_t  *olMeshA;       /*!< Overlay Mesh A */
   // _ol_mesh_t  *olMeshB;       /*!< Overlay Mesh B */
