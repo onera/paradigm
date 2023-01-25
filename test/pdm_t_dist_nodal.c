@@ -250,6 +250,8 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
+  setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
+
   /*
    *  Read args
    */

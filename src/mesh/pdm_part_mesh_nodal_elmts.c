@@ -1631,7 +1631,9 @@ const char                        **ho_ordering
 
   *connec              = block->_connec             [id_part];
   *numabs              = block->_numabs             [id_part];
-  *parent_num          = block->_parent_num         [id_part];
+  if (block->_parent_num != NULL) {
+    *parent_num        = block->_parent_num         [id_part];
+  }
   *parent_entity_g_num = NULL;
   if(block->_parent_entity_g_num != NULL) {
     *parent_entity_g_num = block->_parent_entity_g_num[id_part];
