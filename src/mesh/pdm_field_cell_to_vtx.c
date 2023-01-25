@@ -279,7 +279,7 @@ _prepare_cell_center
                   pvtx_coord,
                   &fctv->cell_center);
 
-  if(1 == 1) {
+  if(0 == 1) {
 
     int i_rank;
     PDM_MPI_Comm_rank(fctv->comm, &i_rank);
@@ -1303,7 +1303,7 @@ PDM_field_cell_to_vtx_compute
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       printf("nrecv = %i \n",  nrecv);
       char filename[999];
       sprintf(filename, "opp_coords_%i_%i.vtk", i_rank, i_part);
@@ -1332,7 +1332,7 @@ PDM_field_cell_to_vtx_compute
       }
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       printf("nrecv_bnd = %i \n",  nrecv_bnd);
       char filename[999];
       sprintf(filename, "opp_coords_bnd_%i_%i.vtk", i_rank, i_part);

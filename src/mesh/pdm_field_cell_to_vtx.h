@@ -46,6 +46,8 @@ typedef struct _pdm_field_cell_to_vtx_t PDM_field_cell_to_vtx_t;
 // Rajouter API centre cellule
 // Rajouter API centre volume dual
 
+// JC: interterp_kind dans le exch ? Vu que de toute manière les infos les mêmes pour la construction
+
 
 PDM_field_cell_to_vtx_t*
 PDM_field_cell_to_vtx_create

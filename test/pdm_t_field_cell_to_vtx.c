@@ -718,8 +718,8 @@ int main
                               &group_face_idx,
                               &group_face,
                               &face_group_ln_to_gn);
-      n_group_by_domain[i_dom] = n_bound;
-      printf("n_bound = %i \n", n_bound);
+      n_group_by_domain[i_dom] = 1;
+      // printf("n_bound = %i \n", n_bound);
 
       _cell_center_3d(pn_cell[i_dom][i_part],
                       pcell_face_idx[i_dom][i_part],
@@ -939,7 +939,7 @@ int main
   /*
    * Visu
    */
-  if(1 == 1) {
+  if(0 == 1) {
 
     for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
       for(int i_part = 0; i_part < n_part_by_domain[i_domain]; ++i_part) {
