@@ -420,6 +420,34 @@ const int                     id_block
   return PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_block);
 }
 
+int *
+PDM_part_mesh_nodal_block_parent_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_block,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+  return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_block, id_part);
+}
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_block_g_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_block,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+  return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_block, id_part);
+}
+
 void
 PDM_part_mesh_nodal_free
 (
@@ -513,7 +541,7 @@ PDM_part_mesh_nodal_dump_vtk
                                                    &ho_ordering);
 
         // PDM_Mesh_nodal_reorder_elt_vtx();
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
         for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
           pcell_vtx_out[i] = pcell_vtx[i];
@@ -569,6 +597,30 @@ PDM_part_mesh_nodal_dump_vtk
       }
     }
   }
+}
+
+void
+PDM_part_mesh_nodal_block_elt_extents_compute
+(
+       PDM_part_mesh_nodal_t *pmn,
+       PDM_geometry_kind_t    geom_kind,
+ const int                    id_section,
+ const int                    i_part,
+ const double                 tolerance,
+       double                *extents
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+
+  PDM_part_mesh_nodal_elmts_elt_extents_compute(pmne,
+                                                id_section,
+                                                i_part,
+                                                tolerance,
+                                                vtx_coord,
+                                                extents);
 }
 
 

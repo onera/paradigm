@@ -1592,6 +1592,8 @@ PDM_Mesh_nodal_elmt_is_ho
   case PDM_MESH_NODAL_PYRAMID5 :
   case PDM_MESH_NODAL_PRISM6 :
   case PDM_MESH_NODAL_HEXA8 :
+  case PDM_MESH_NODAL_POLY_2D :
+  case PDM_MESH_NODAL_POLY_3D :
     return 0;
     break;
 
@@ -1607,7 +1609,7 @@ PDM_Mesh_nodal_elmt_is_ho
     return 1;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Poly3D\n");
+    PDM_error (__FILE__, __LINE__, 0, "Unknown elt type %d\n", (int) type);
   }
   return -1;
 }

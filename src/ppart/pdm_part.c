@@ -2937,7 +2937,7 @@ PDM_part_create
 
   char *use_multipart_var;
   _ppart->use_multipart = 0;
-  if (( use_multipart_var =getenv( "PDM_USE_MULTIPART" )) != NULL ) {
+  if (( use_multipart_var = getenv( "PDM_USE_MULTIPART" )) != NULL ) {
     _ppart->use_multipart = atoi(use_multipart_var);
   }
 

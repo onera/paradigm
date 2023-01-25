@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     part1_data[i] = malloc(sizeof(PDM_g_num_t) * s_part1_data);
     int idx = 0;
     for (int j = 0; j < n_elt1[i]; j++) {
-      int idx0 = idx;
+      // int idx0 = idx;
       for (int k = 1; k <= part1_stride[i][j]; k++) {
         part1_data[i][idx++] = k;
       }
@@ -343,12 +343,12 @@ int main(int argc, char *argv[])
                                request);
 
 
-  for (int i = 0; i < n_part2; i++) {
-    // log_trace("\npart2 %d\n", i);
-    int n = gnum1_come_from_idx[i][n_ref_num2[i]];
-    // PDM_log_trace_array_long(part2_field[i],     n, "  part2_field (1st comp) : ");
-    // PDM_log_trace_array_long(part2_field[i] + n, n, "  part2_field (2nd comp) : ");
-  }
+  // for (int i = 0; i < n_part2; i++) {
+  //   log_trace("\npart2 %d\n", i);
+  //   int n = gnum1_come_from_idx[i][n_ref_num2[i]];
+  //   PDM_log_trace_array_long(part2_field[i],     n, "  part2_field (1st comp) : ");
+  //   PDM_log_trace_array_long(part2_field[i] + n, n, "  part2_field (2nd comp) : ");
+  // }
 
 
 
@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_part2; i++) {
     int idx = 0;
     for (int j = 0; j < n_ref_num2[i]; j++) {
-      int id2 = ref_num2[i][j] - 1;
+      // int id2 = ref_num2[i][j] - 1;
       for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
         // log_trace("gnum2 "PDM_FMT_G_NUM", gnum1 "PDM_FMT_G_NUM", expected stride = %d, got %d\n",
         //           gnum_elt2[i][id2], gnum1_come_from[i][k], (int) (gnum1_come_from[i][k]%2) + 1,

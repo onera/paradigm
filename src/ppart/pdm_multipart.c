@@ -1148,12 +1148,14 @@ _compute_part_mesh_nodal_2d
 
   PDM_g_num_t  **pvtx_ln_to_gn  = (PDM_g_num_t ** ) malloc( n_part * sizeof(PDM_g_num_t *));
   int           *pn_vtx         = (int *  )         malloc( n_part * sizeof(int          ));
+  double       **pvtx_coord     = (double      ** ) malloc( n_part * sizeof(double      *));
   for(int i_part = 0; i_part < n_part; ++i_part){
     pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
     pn_face       [i_part] = pm->parts[i_part]->n_face;
 
     pvtx_ln_to_gn[i_part] = pm->parts[i_part]->vtx_ln_to_gn;
     pn_vtx       [i_part] = pm->parts[i_part]->n_vtx;
+    pvtx_coord   [i_part] = pm->parts[i_part]->vtx;
   }
 
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
@@ -1170,18 +1172,18 @@ _compute_part_mesh_nodal_2d
     pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
     pn_edge       [i_part] = pm->parts[i_part]->n_edge;
   }
-  int          *pn_surf;
-  PDM_g_num_t **psurf_gnum;
-  PDM_g_num_t **psurf_to_face_g_num;
-  PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+  int          *pn_ridge;
+  PDM_g_num_t **pridge_gnum;
+  PDM_g_num_t **pridge_to_edge_g_num;
+  PDM_reverse_dparent_gnum(dmn->ridge->dparent_gnum,
                            NULL, // dparent_sign
-                           dmn->surfacic->delmt_child_distrib,
+                           dmn->ridge->delmt_child_distrib,
                            n_part,
                            pn_edge,
                            pedge_ln_to_gn,
-                          &pn_surf,
-                          &psurf_gnum,
-                          &psurf_to_face_g_num,
+                          &pn_ridge,
+                          &pridge_gnum,
+                          &pridge_to_edge_g_num,
                            NULL, // pchild_parent_sign
                            dmn->comm);
 
@@ -1189,16 +1191,17 @@ _compute_part_mesh_nodal_2d
                                                                                           n_part,
                                                                                           pn_vtx,
                                                                                           pvtx_ln_to_gn,
-                                                                                          pn_surf,
-                                                                                          psurf_gnum,
-                                                                                          psurf_to_face_g_num);
+                                                                                          pn_ridge,
+                                                                                          pridge_gnum,
+                                                                                          pridge_to_edge_g_num);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
-    free(psurf_gnum[i_part]);
-    free(psurf_to_face_g_num[i_part]);
+    free(pridge_gnum[i_part]);
+    free(pridge_to_edge_g_num[i_part]);
   }
-  free(pn_surf);
-  free(psurf_to_face_g_num);
+  free(pn_ridge);
+  free(pridge_gnum);
+  free(pridge_to_edge_g_num);
 
   /* Create top structure */
   PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
@@ -1206,12 +1209,28 @@ _compute_part_mesh_nodal_2d
                                                           dmn->comm);
 
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , ownership);
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+  if(pmn_ridge != NULL) {
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, ownership);
+  }
+  // TO DO : corners?
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_part_mesh_nodal_coord_set(pmn,
+                                  i_part,
+                                  pn_vtx[i_part],
+                                  pvtx_coord[i_part],
+                                  pvtx_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_USER);
+  }
 
   free(pedge_ln_to_gn);
   free(pn_edge);
   free(pface_ln_to_gn);
   free(pn_face);
+
+  free(pvtx_ln_to_gn);
+  free(pvtx_coord);
+  free(pn_vtx);
   return pmn;
 }
 

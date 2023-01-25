@@ -13,6 +13,7 @@
 #include "pdm.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_timer.h"
 
 /*=============================================================================
@@ -88,7 +89,8 @@ struct _pdm_dist_cloud_surf_t {
   PDM_surf_mesh_t  *surf_mesh;               /*!< Surface mesh pointer */
   PDM_surf_mesh_t  *_surf_mesh;              /*!< Surface mesh pointer */
 
-  PDM_Mesh_nodal_t*  mesh_nodal;             /*!< Surface mesh identifier */
+  // PDM_Mesh_nodal_t*  mesh_nodal;             /*!< Surface mesh identifier */
+  PDM_part_mesh_nodal_t*  mesh_nodal;       /*!< Nodal mesh identifier */
 
   _points_cloud_t *points_cloud;             /*!< Point clouds */
 

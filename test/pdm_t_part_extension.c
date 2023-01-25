@@ -153,7 +153,7 @@ static void
 _visu
 (
  const char      *name_chr,
- const int        n_part,
+ int              n_part,
  int              n_cell[],
  int              n_face[],
  int              n_vtx[],

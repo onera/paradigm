@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
                                                          0.,
                                                          0.,
                                                          0.,
-                                                         PDM_MESH_NODAL_HEXAHO,
+                                                         PDM_MESH_NODAL_TRIAHO,//HEXAHO,
                                                          2,
                                                          PDM_OWNERSHIP_KEEP);
   // PDM_dcube_nodal_gen_ordering_set(dcube, "PDM_HO_ORDERING_VTK");

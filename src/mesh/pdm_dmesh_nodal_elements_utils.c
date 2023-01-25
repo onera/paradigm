@@ -173,6 +173,7 @@ PDM_n_face_elt_per_elmt
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_face_elt = 1;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -197,7 +198,7 @@ PDM_n_face_elt_per_elmt
      break;
    default:
      n_face_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is supported\n");
   }
   return n_face_elt;
 }
@@ -219,10 +220,12 @@ PDM_n_nedge_elt_per_elmt
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      n_nedge_elt = 1;
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_nedge_elt = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -247,7 +250,7 @@ PDM_n_nedge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not supported\n");
   }
   return n_nedge_elt;
 }
@@ -266,6 +269,7 @@ PDM_n_sum_vtx_face_per_elmt
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_sum_vtx_face = 3;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -290,7 +294,7 @@ PDM_n_sum_vtx_face_per_elmt
      break;
    default:
      n_sum_vtx_face = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not supported\n");
   }
   return n_sum_vtx_face;
 }
@@ -313,10 +317,12 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      n_sum_vtx_edge = 2;
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      n_sum_vtx_edge = 6;
      break;
    case PDM_MESH_NODAL_QUAD4:
@@ -341,7 +347,7 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    default:
      n_sum_vtx_edge = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is supported\n");
   }
   return n_sum_vtx_edge;
 }
@@ -482,10 +488,13 @@ PDM_std_decomposes_faces
      abort();
      break;
    case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      abort();
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER:
      PDM_tri_decomposes_faces(n_elt,
                               order,
                               parent_node,
@@ -587,7 +596,7 @@ PDM_std_decomposes_faces
                                parent_elmt_position);
      break;
    default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
   }
 }
 
@@ -622,6 +631,7 @@ PDM_std_decomposes_edges
      break;
    case PDM_MESH_NODAL_BAR2:
    case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
      PDM_bar_decomposes_edges(n_elt,
                               order,
                               parent_node,
@@ -639,6 +649,7 @@ PDM_std_decomposes_edges
      break;
    case PDM_MESH_NODAL_TRIA3:
    case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
      PDM_tri_decomposes_edges(n_elt,
                               order,
                               parent_node,
@@ -740,7 +751,7 @@ PDM_std_decomposes_edges
                                parent_elmt_position);
      break;
    default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
   }
 }
 
@@ -2184,7 +2195,9 @@ PDM_sections_decompose_faces
         break;
       }
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
@@ -2221,18 +2234,18 @@ PDM_sections_decompose_faces
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
     }
   }
 }
@@ -2327,7 +2340,9 @@ PDM_sections_decompose_edges
       }
 
       case PDM_MESH_NODAL_BARHO:
+      case PDM_MESH_NODAL_BARHO_BEZIER:
       case PDM_MESH_NODAL_TRIAHO:
+      case PDM_MESH_NODAL_TRIAHO_BEZIER:
       case PDM_MESH_NODAL_QUADHO:
       case PDM_MESH_NODAL_TETRAHO:
       case PDM_MESH_NODAL_PYRAMIDHO:
@@ -2364,18 +2379,18 @@ PDM_sections_decompose_edges
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
     }
   }
 }

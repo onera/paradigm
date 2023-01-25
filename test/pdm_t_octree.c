@@ -229,7 +229,7 @@ char *argv[]
     weight[i] = 1;
   }
   PDM_MPI_Barrier(comm);
-  double t1 = PDM_MPI_Wtime();
+  // double t1 = PDM_MPI_Wtime();
   PDM_part_to_block_t* ptb = PDM_part_to_block_geom_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                            1.,
@@ -241,7 +241,7 @@ char *argv[]
                                                            1,
                                                            comm);
   free(weight);
-  double t2 = PDM_MPI_Wtime();
+  // double t2 = PDM_MPI_Wtime();
   // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
   double *blk_src_coord = NULL;
