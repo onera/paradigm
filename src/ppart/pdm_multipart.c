@@ -1200,6 +1200,7 @@ _compute_part_mesh_nodal_2d
     free(pridge_to_edge_g_num[i_part]);
   }
   free(pn_ridge);
+  free(pridge_gnum);
   free(pridge_to_edge_g_num);
 
   /* Create top structure */
@@ -1226,6 +1227,10 @@ _compute_part_mesh_nodal_2d
   free(pn_edge);
   free(pface_ln_to_gn);
   free(pn_face);
+
+  free(pvtx_ln_to_gn);
+  free(pvtx_coord);
+  free(pn_vtx);
   return pmn;
 }
 

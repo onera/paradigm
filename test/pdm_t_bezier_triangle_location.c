@@ -52,26 +52,27 @@ int main(int argc, char *argv[])
                                   proj_coord,
                                   uvw);
 
-  PDM_vtk_write_point_cloud("point.vtk",
-                            1,
-                            point_coord,
-                            NULL,
-                            NULL);
+  if (0) {
+    PDM_vtk_write_point_cloud("point.vtk",
+                              1,
+                              point_coord,
+                              NULL,
+                              NULL);
 
-  int connec[10] = {1, 4, 10, 2, 3, 7, 9, 8, 5, 6};
-  PDM_vtk_write_std_elements_ho("bezier_triangle.vtk",
-                                3,
-                                10,
-                                node_coord,
-                                NULL,
-                                PDM_MESH_NODAL_TRIAHO_BEZIER,
-                                1,
-                                connec,
-                                NULL,
-                                0,
-                                NULL,
-                                NULL);
-
+    int connec[10] = {1, 4, 10, 2, 3, 7, 9, 8, 5, 6};
+    PDM_vtk_write_std_elements_ho("bezier_triangle.vtk",
+                                  3,
+                                  10,
+                                  node_coord,
+                                  NULL,
+                                  PDM_MESH_NODAL_TRIAHO_BEZIER,
+                                  1,
+                                  connec,
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  NULL);
+  }
   PDM_MPI_Finalize();
 
   return 0;
