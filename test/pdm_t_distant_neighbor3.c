@@ -206,17 +206,17 @@ char *argv[]
       // for (int k = neighbor_idx[i][j]; k < neighbor_idx[i][j+1]; k++) {
       //   send_i[i][k] = shift[i_part] + j;
       // }
-      for (int l = neighbor_idx[i][j]; l < neighbor_idx[i][j+1]; l++) {
-        int j_rank = neighbor_desc[i][3*l  ];
-        int j_part = neighbor_desc[i][3*l+1];
-        int j_num  = neighbor_desc[i][3*l+2];
-        int g = shift[n_part*j_rank + j_part] + j_num;
-        // log_trace("  (%d, %d, %d : %d)\n",
-        //           neighbor_desc[i][3*l  ],
-        //           neighbor_desc[i][3*l+1],
-        //           neighbor_desc[i][3*l+2],
-        //           g);
-      }
+      // for (int l = neighbor_idx[i][j]; l < neighbor_idx[i][j+1]; l++) {
+      //   int j_rank = neighbor_desc[i][3*l  ];
+      //   int j_part = neighbor_desc[i][3*l+1];
+      //   int j_num  = neighbor_desc[i][3*l+2];
+      //   int g = shift[n_part*j_rank + j_part] + j_num;
+      //   // log_trace("  (%d, %d, %d : %d)\n",
+      //   //           neighbor_desc[i][3*l  ],
+      //   //           neighbor_desc[i][3*l+1],
+      //   //           neighbor_desc[i][3*l+2],
+      //   //           g);
+      // }
     }
   }
 

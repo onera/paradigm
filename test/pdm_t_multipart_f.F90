@@ -74,9 +74,9 @@ program testf
   integer (kind = pdm_g_num_s), pointer :: dface_group(:)     => null()
   integer                               :: n_jn = 0
   integer (kind = pdm_l_num_s), pointer :: dface_join_idx(:)  => null()
-  integer (kind = pdm_l_num_s), pointer :: joins_glob_id(:)   => null()
-  integer (kind = pdm_g_num_s), pointer :: dface_join(:)      => null()
-  type(c_ptr)                           :: dm = C_NULL_PTR
+  ! integer (kind = pdm_l_num_s), pointer :: joins_glob_id(:)   => null()
+  ! integer (kind = pdm_g_num_s), pointer :: dface_join(:)      => null()
+  ! type(c_ptr)                           :: dm = C_NULL_PTR
   !-----------------------------------------------------------
 
   call mpi_init(code)

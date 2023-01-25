@@ -313,7 +313,7 @@ main
     reverse_order[order[i]] = i;
   }
 
-  uint64_t max = 1l << (level_max * 3);
+  // uint64_t max = 1l << (level_max * 3);
   // log_trace("max = %zu\n", max);
   double normalization = (double) (1 << level_max);
   normalization = 1. / (normalization*normalization*normalization);
@@ -357,8 +357,8 @@ main
     _order[i] = (double) reverse_order[i];
   }
 
-  const char   *field_name[]   = {"order", "flat_code"};
-  const double *field_value[2] = {_order, flat_code};
+  // const char   *field_name[]   = {"order", "flat_code"};
+  // const double *field_value[2] = {_order, flat_code};
 
 
 

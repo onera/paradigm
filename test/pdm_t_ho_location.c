@@ -796,6 +796,7 @@ int main(int argc, char *argv[])
                                     pts_coord  + 3*i,
                                     proj_coord + 3*i,
                                     pts_uvw    + elt_dim*i);
+      PDM_UNUSED(dist);
       // log_trace("i = %d, dist = %e\n", i, dist);
     }
   }

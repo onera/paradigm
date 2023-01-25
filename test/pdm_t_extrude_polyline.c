@@ -140,60 +140,60 @@ _read_args
 
 
 
-static void
-_gen_polyline
-(
- const PDM_g_num_t   n,
- int                *base_n_edge,
- int               **base_edge_vtx,
- int                *base_n_vtx,
- double            **base_vtx_coord
- )
-{
-  *base_n_edge = (int) n;
-  *base_n_vtx  = (int) (n + 1);
+// static void
+// _gen_polyline
+// (
+//  const PDM_g_num_t   n,
+//  int                *base_n_edge,
+//  int               **base_edge_vtx,
+//  int                *base_n_vtx,
+//  double            **base_vtx_coord
+//  )
+// {
+//   *base_n_edge = (int) n;
+//   *base_n_vtx  = (int) (n + 1);
 
-  int *rand_edge = malloc(sizeof(int) * (*base_n_edge));
-  int *perm_edge = malloc(sizeof(int) * (*base_n_edge));
-  for (int i = 0; i < *base_n_edge; i++) {
-    rand_edge[i] = rand();
-    perm_edge[i] = i;
-  }
+//   int *rand_edge = malloc(sizeof(int) * (*base_n_edge));
+//   int *perm_edge = malloc(sizeof(int) * (*base_n_edge));
+//   for (int i = 0; i < *base_n_edge; i++) {
+//     rand_edge[i] = rand();
+//     perm_edge[i] = i;
+//   }
 
-  int *rand_vtx = malloc(sizeof(int) * (*base_n_vtx));
-  int *perm_vtx = malloc(sizeof(int) * (*base_n_vtx));
-  for (int i = 0; i < *base_n_vtx; i++) {
-    rand_vtx[i] = rand();
-    perm_vtx[i] = i;
-  }
+//   int *rand_vtx = malloc(sizeof(int) * (*base_n_vtx));
+//   int *perm_vtx = malloc(sizeof(int) * (*base_n_vtx));
+//   for (int i = 0; i < *base_n_vtx; i++) {
+//     rand_vtx[i] = rand();
+//     perm_vtx[i] = i;
+//   }
 
-  if (1) {
-    PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
-    PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
-  }
-  free(rand_edge);
-  free(rand_vtx);
+//   if (1) {
+//     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
+//     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
+//   }
+//   free(rand_edge);
+//   free(rand_vtx);
 
-  *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
-  for (int i = 0; i < *base_n_edge; i++) {
-    int iedge = perm_edge[i];
-    (*base_edge_vtx)[2*iedge  ] = perm_vtx[i  ]+1;
-    (*base_edge_vtx)[2*iedge+1] = perm_vtx[i+1]+1;
-  }
+//   *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
+//   for (int i = 0; i < *base_n_edge; i++) {
+//     int iedge = perm_edge[i];
+//     (*base_edge_vtx)[2*iedge  ] = perm_vtx[i  ]+1;
+//     (*base_edge_vtx)[2*iedge+1] = perm_vtx[i+1]+1;
+//   }
 
 
-  *base_vtx_coord = malloc(sizeof(double) * 3 * (*base_n_vtx));
-  double step = 2*PDM_PI / (double) n;
-  for (int i = 0; i < *base_n_vtx; i++) {
-    double x = -PDM_PI + i*step;
-    (*base_vtx_coord)[3*perm_vtx[i]  ] = x;
-    (*base_vtx_coord)[3*perm_vtx[i]+1] = 0;
-    (*base_vtx_coord)[3*perm_vtx[i]+2] = atan(x);
-  }
+//   *base_vtx_coord = malloc(sizeof(double) * 3 * (*base_n_vtx));
+//   double step = 2*PDM_PI / (double) n;
+//   for (int i = 0; i < *base_n_vtx; i++) {
+//     double x = -PDM_PI + i*step;
+//     (*base_vtx_coord)[3*perm_vtx[i]  ] = x;
+//     (*base_vtx_coord)[3*perm_vtx[i]+1] = 0;
+//     (*base_vtx_coord)[3*perm_vtx[i]+2] = atan(x);
+//   }
 
-  free(perm_edge);
-  free(perm_vtx);
-}
+//   free(perm_edge);
+//   free(perm_vtx);
+// }
 
 
 static void
