@@ -40,6 +40,7 @@ build:
     - unset _LMFILES_
     - unset LOADEDMODULES
     - module -s purge
+    - echo "compilo = $COMPILER"
     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
