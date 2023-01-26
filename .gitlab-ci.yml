@@ -8,7 +8,7 @@ stages:
 variables:
   GIT_STRATEGY: none # don't do anything by default
   SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=24 --time=00:30:00"
-  CI_DEBUG_TRACE: "true" #Uncomment to debug CI
+  # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
 default:
   tags: #All jobs uses jamacar-slurm executor
     - slurm
