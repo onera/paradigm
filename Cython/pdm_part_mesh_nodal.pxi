@@ -42,10 +42,6 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                                   PDM_geometry_kind_t    geom_kind,
                                                                   int                    id_section)
 
-    PDM_Mesh_nodal_elt_t PDM_part_mesh_nodal_section_type_get(PDM_part_mesh_nodal_t *pmn,
-                                                              PDM_geometry_kind_t    geom_kind,
-                                                              int                    id_section)
-
     int PDM_part_mesh_nodal_section_add(PDM_part_mesh_nodal_t *pmn,
                                         PDM_geometry_kind_t    geom_kind,
                                         PDM_Mesh_nodal_elt_t   t_elt)
@@ -75,10 +71,6 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                            PDM_g_num_t           **numabs,
                                            int                   **parent_num,
                                            PDM_g_num_t           **parent_entity_g_num)
-
-    PDM_Mesh_nodal_elt_t PDM_part_mesh_nodal_block_type_get(PDM_part_mesh_nodal_t  *pmn,
-                                                            PDM_geometry_kind_t     geom_kind,
-                                                            int                     id_block)
 
     void PDM_part_mesh_nodal_add_part_mesh_nodal_elmts( PDM_part_mesh_nodal_t       *pmn,
                                                        PDM_part_mesh_nodal_elmts_t *pmne,
@@ -185,7 +177,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
   for i_section in range(n_section):
     id_section = section_id[i_section]
 
-    t_elmt = PDM_part_mesh_nodal_block_type_get(pypmn.pmn, geom_kind, id_section)
+    t_elmt = PDM_part_mesh_nodal_section_elt_type_get(pypmn.pmn, geom_kind, id_section)
     assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
     assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
 

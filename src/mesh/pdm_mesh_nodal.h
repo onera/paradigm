@@ -782,6 +782,8 @@ PDM_Mesh_nodal_block_poly2d_get
  *
  */
 
+// IDENTIQUE à PDM_Mesh_nodal_block_g_num_get
+
 PDM_g_num_t *
 PDM_Mesh_nodal_block_inside_g_num_get
 (
@@ -1117,6 +1119,7 @@ PDM_Mesh_nodal_reset
  * \return      Number of vertices in element
  *
  */
+// A REMPLACER PAR PDM_Mesh_nodal_n_vtx_elt_get?
 
 int
 PDM_Mesh_nodal_n_vertices_element

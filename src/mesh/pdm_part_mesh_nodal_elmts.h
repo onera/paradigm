@@ -282,7 +282,7 @@ PDM_part_mesh_nodal_elmts_sections_id_get
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_block_type_get
 (
-      PDM_part_mesh_nodal_elmts_t *mesh,
+      PDM_part_mesh_nodal_elmts_t *pmne,
 const int                          id_block
 );
 
@@ -333,6 +333,18 @@ PDM_part_mesh_nodal_create_from_part2d
         PDM_MPI_Comm       comm
 );
 
+/**
+ * \brief Compute element extents of a part of a section
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_block       Section identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  tolerance      Expansion tolerance for bounding boxes
+ * \param [in]  vtx_coord      Coordinates of vertices
+ * \param [out] extents        Extents of mesh elements in current part of current block
+ *
+ */
+
 void
 PDM_part_mesh_nodal_elmts_elt_extents_compute
 (
@@ -343,6 +355,67 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
        double                      *vtx_coord,
        double                      *extents
  );
+
+/**
+ * \brief Compute element centers of a part of a section
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_block       Section identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_vtx          Number of vertices
+ * \param [in]  vtx_coord      Coordinates of vertices
+ * \param [in]  ownership      Ownership
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_elt_center_compute
+(
+       PDM_part_mesh_nodal_elmts_t *pmne,
+ const int                          id_block,
+ const int                          id_part,
+ const int                          n_vtx,
+       double                      *vtx_coord,
+ const PDM_ownership_t              ownership
+ );
+
+/**
+ * \brief Compute element centers of a part of a section
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_block       Section identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_vtx          Number of vertices
+ * \param [in]  vtx_coord      Coordinates of vertices
+ * \param [in]  ownership      Ownership
+ *
+ */
+
+const double *
+PDM_part_mesh_nodal_elmts_elt_center_get
+(
+       PDM_part_mesh_nodal_elmts_t *pmne,
+ const int                          id_block,
+ const int                          id_part
+ );
+
+/**
+ * \brief Reset element centers of a part of a section
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_block       Section identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_elt_center_reset
+(
+       PDM_part_mesh_nodal_elmts_t *pmne,
+ const int                          id_block,
+ const int                          id_part
+ );
+
 
 #ifdef __cplusplus
 }
