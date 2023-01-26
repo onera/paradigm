@@ -823,6 +823,21 @@ const int                     id_part,
       int                   **cellvtx
 );
 
+/**
+ * \brief Reset a nodal mesh structure
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_reset
+(
+ PDM_part_mesh_nodal_t *pmn
+);
+
 // /**
 //  * \brief  Add some standard 3D cells from cell vertex conectivity.
 //  *
@@ -971,22 +986,6 @@ const int                     id_part,
 //  const int        **n_select_elt,
 //  const int       ***select_elt_l_num
 //  );
-
-
-// /**
-//  * \brief Reset a nodal mesh structure
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return      NULL
-//  *
-//  */
-
-// void
-// PDM_Mesh_nodal_reset
-// (
-//  PDM_Mesh_nodal_t *mesh
-// );
 
 // /**
 //  * \brief  Return parent  absolute number

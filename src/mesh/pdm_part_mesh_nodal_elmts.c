@@ -3785,3 +3785,90 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
   }
 }
+
+
+/**
+ * \brief Reset a nodal mesh structure
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_reset
+(
+ PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (pmne->sections_std != NULL) {
+    for (int i = 0; i < pmne->n_section_std; i++) {
+      _block_std_free(pmne->sections_std[i]);
+    }
+    free(pmne->sections_std);
+  }
+
+  if (pmne->sections_poly2d != NULL) {
+    for (int i = 0; i < pmne->n_section_poly2d; i++) {
+      _block_poly2d_free(pmne->sections_poly2d[i]);
+    }
+    free(pmne->sections_poly2d);
+  }
+
+  if (pmne->sections_poly3d != NULL) {
+    for (int i = 0; i < pmne->n_section_poly3d; i++) {
+      _block_poly3d_free(pmne->sections_poly3d[i]);
+    }
+    free(pmne->sections_poly3d);
+  }
+
+  pmne->n_section_std              = 0;
+  pmne->n_section_poly2d           = 0;
+  pmne->n_section_poly3d           = 0;
+
+  pmne->sections_std               = NULL;
+  pmne->sections_poly2d            = NULL;
+  pmne->sections_poly3d            = NULL;
+  if (pmne->sections_id != NULL) {
+    free (pmne->sections_id);
+  }
+  pmne->sections_id              = NULL;
+  pmne->n_section                = 0;
+  // pmne->prepa_blocks             = NULL;
+  // pmne->is_vtx_def_from_parent   = 0;
+
+  // if (mesh->num_cell_parent_to_local != NULL) {
+  //   for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+  //     if (mesh->num_cell_parent_to_local[i_part] != NULL)
+  //       free(mesh->num_cell_parent_to_local[i_part]);
+  //   }
+  //   free(mesh->num_cell_parent_to_local);
+  //   mesh->num_cell_parent_to_local = NULL;
+  // }
+
+  // for (int i = 0; i < mesh->n_part; i++) {
+  //   mesh->n_cell[i] = 0;
+  // }
+
+  // if (mesh->vtx != NULL) {
+  //   for (int i = 0; i < mesh->n_part; i++) {
+  //     mesh->vtx[i]->_coords = NULL;
+  //     mesh->vtx[i]->_numabs = NULL;
+  //     mesh->vtx[i]->_numparent = NULL;
+  //     mesh->vtx[i]->n_vtx   = 0;
+  //     if (mesh->vtx[i]->parent != NULL) {
+  //       mesh->vtx[i]->parent =_vtx_free (mesh->vtx[i]->parent);
+  //       mesh->vtx[i]->parent = NULL;
+  //     }
+  //     if (mesh->vtx[i]->coords != NULL) {
+  //       free (mesh->vtx[i]->coords);
+  //       mesh->vtx[i]->coords = NULL;
+  //     }
+  //   }
+  // }
+}

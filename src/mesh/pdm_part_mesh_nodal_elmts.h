@@ -416,6 +416,22 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
  const int                          id_part
  );
 
+/**
+ * \brief Reset a nodal mesh structure
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_reset
+(
+ PDM_part_mesh_nodal_elmts_t *pmne
+);
+
+
 
 #ifdef __cplusplus
 }

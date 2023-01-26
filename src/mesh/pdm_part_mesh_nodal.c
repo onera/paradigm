@@ -1346,3 +1346,46 @@ const int                     id_part,
                                                               cellvtx_idx,
                                                               cellvtx);
 }
+
+
+/**
+ * \brief Reset a nodal mesh structure
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_reset
+(
+ PDM_part_mesh_nodal_t *pmn
+)
+{
+  for (PDM_geometry_kind_t geom_kind = 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+    PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+
+    if (pmne != NULL) {
+      PDM_part_mesh_nodal_elmts_reset(pmne);
+    }
+
+  }
+
+  if (pmn->vtx != NULL) {
+    for (int i = 0; i < pmn->n_part; i++) {
+      pmn->vtx[i]->_coords = NULL;
+      pmn->vtx[i]->_numabs = NULL;
+      pmn->vtx[i]->_numparent = NULL;
+      pmn->vtx[i]->n_vtx   = 0;
+      if (pmn->vtx[i]->parent != NULL) {
+        _vtx_free (pmn->vtx[i]->parent);
+        pmn->vtx[i]->parent = NULL;
+      }
+      if (pmn->vtx[i]->coords != NULL) {
+        free (pmn->vtx[i]->coords);
+        pmn->vtx[i]->coords = NULL;
+      }
+    }
+  }
+}
