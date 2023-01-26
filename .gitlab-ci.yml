@@ -44,6 +44,7 @@ build:
     - echo "compilo = $COMPILER"
     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - echo ">>>>>>>>>"
+    - hostname
     - module load gcc/12.1.0
     - export CC=/opt/tools/gcc/12.1.0-gnu831/bin/gcc
     - echo "<<<<<<<<<"
