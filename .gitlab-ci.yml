@@ -43,6 +43,10 @@ build:
     - module -s purge
     - echo "compilo = $COMPILER"
     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+    - echo ">>>>>>>>>"
+    - module load gcc/12.1.0
+    - export CC=/opt/tools/gcc/12.1.0-gnu831/bin/gcc
+    - echo "<<<<<<<<<"
     - which gcc
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
