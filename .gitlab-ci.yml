@@ -37,11 +37,13 @@ build:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}
   stage: build
   before_script:
+    - echo ">> before_script"
     - unset _LMFILES_
     - unset LOADEDMODULES
     - module -s purge
     - echo "compilo = $COMPILER"
     - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+    - which gcc
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
