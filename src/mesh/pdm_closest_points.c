@@ -780,18 +780,19 @@ PDM_closest_point_t  *cls
       }
       free (cls->src_cloud->tgt_in_src_dist);
     }
-    if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
-      if (cls->src_cloud->tgt_in_src_idx != NULL) {
-        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-          if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
-            free (cls->src_cloud->tgt_in_src_idx[j]);
-          }
+  }
+  if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
+    if (cls->src_cloud->tgt_in_src_idx != NULL) {
+      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+        if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
+          free (cls->src_cloud->tgt_in_src_idx[j]);
         }
       }
     }
 
     free (cls->src_cloud->tgt_in_src_idx);
     free (cls->src_cloud->tgt_in_src);
+    free (cls->src_cloud->tgt_in_src_dist);
 
     if (cls->src_cloud->gnum != NULL) {
       free (cls->src_cloud->gnum);
