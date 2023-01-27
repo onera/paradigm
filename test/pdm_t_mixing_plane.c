@@ -574,7 +574,7 @@ _mixing_plane
        double       ***face_band_area
  )
 {
-  int dbg  = 1;
+  int dbg  = 0;
   int visu = 0;
 
   double *dbg_coord = NULL;

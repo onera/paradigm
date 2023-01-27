@@ -3010,7 +3010,7 @@ _mesh_intersection_surf_surf
   int dbg_enabled = 1;
 
   /*
-   * Panic vtk
+   * Panic
    */
   if (dbg_enabled) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
@@ -3422,7 +3422,7 @@ _mesh_intersection_surf_line
   int i_rank;
   PDM_MPI_Comm_rank(mi->comm, &i_rank);
 
-  int dbg_enabled = 1;
+  int dbg_enabled = 0;
 
   if(dbg_enabled) {
     _export_vtk_2d("extrp_mesh_a", extrp_mesh_a);
@@ -4277,7 +4277,7 @@ PDM_mesh_intersection_compute
                                             &extract_elmt_ln_to_gn[imesh]);
     }
 
-    if (1) {
+    if (0 == 1) {
       for(int i_part = 0; i_part < n_part[imesh]; ++i_part) {
         char filename[99];
         sprintf(filename, "select_boxes_mesh%d_part%d_rank%d.vtk", imesh, i_part, i_rank);
