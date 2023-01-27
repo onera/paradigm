@@ -2875,8 +2875,6 @@ _extract_part_and_reequilibrate_from_target
     entity_type = PDM_MESH_ENTITY_EDGE;
   }
 
-  log_trace("entity_type = %d\n", entity_type);
-
   /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
   // -->>
   // (Copy to avoid double free)

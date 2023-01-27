@@ -1065,7 +1065,7 @@ PDM_part_mesh_nodal_reset
 //  *
 //  * \return true if the vertices are defined from parents
 //  */
-//---> not used in PDM/CWIPI
+//---> not used in PDM/CWIPI but used in CEDRE
 
 // int
 // PDM_Mesh_nodal_is_set_coord_from_parent

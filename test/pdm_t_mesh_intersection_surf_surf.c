@@ -538,7 +538,7 @@ char *argv[]
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");
