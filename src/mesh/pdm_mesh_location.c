@@ -693,6 +693,9 @@ _mesh_nodal_to_pmesh_nodal_elmts
         pmne->sections_std[pmne->n_section_std++] = malloc(sizeof(PDM_Mesh_nodal_block_std_t));
         PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[pmne->n_section_std-1];
         block->t_elt = type;
+        block->n_part = n_part;
+        block->order = 1;
+        block->ho_ordering = NULL;
       }
 
     }

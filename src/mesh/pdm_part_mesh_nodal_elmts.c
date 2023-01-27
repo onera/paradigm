@@ -1219,6 +1219,7 @@ const PDM_Mesh_nodal_elt_t         t_elt
 
   switch (t_elt) {
 
+  // TO DO : HO??
   case PDM_MESH_NODAL_POINT    :
   case PDM_MESH_NODAL_BAR2     :
   case PDM_MESH_NODAL_TRIA3    :
@@ -1493,7 +1494,7 @@ const PDM_g_num_t                 *parent_entity_g_num,
   }
 
   if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
   }
 
   /* Mapping */
@@ -1521,6 +1522,9 @@ const PDM_g_num_t                 *parent_entity_g_num,
     }
     block->_parent_entity_g_num[id_part] = (PDM_g_num_t *) parent_entity_g_num;
   }
+
+  block->order       = 1;
+  block->ho_ordering = NULL;
 }
 
 void
@@ -1626,7 +1630,7 @@ const char                        **ho_ordering
   }
 
   if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
   }
 
   *connec              = block->_connec             [id_part];
