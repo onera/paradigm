@@ -69,6 +69,7 @@ const PDM_MPI_Comm comm
  * \param [in]  owner      Vertices ownship
  *
  */
+//---> PDM_Mesh_nodal_coord_set
 
 void
 PDM_part_mesh_nodal_coord_set
@@ -89,6 +90,7 @@ PDM_part_mesh_nodal_coord_set
  * \return  Number of partitions
  *
  */
+//---> PDM_Mesh_nodal_n_part_get
 
 int
 PDM_part_mesh_nodal_n_part_get
@@ -105,6 +107,7 @@ PDM_part_mesh_nodal_n_part_get
  * \return  Number of vertices
  *
  */
+//---> PDM_Mesh_nodal_n_vertices_get
 
 int
 PDM_part_mesh_nodal_n_vtx_get
@@ -122,6 +125,7 @@ PDM_part_mesh_nodal_n_vtx_get
  * \return  Coordinates of vertices
  *
  */
+//---> PDM_Mesh_nodal_vertices_get
 
 double*
 PDM_part_mesh_nodal_vtx_coord_get
@@ -139,7 +143,7 @@ PDM_part_mesh_nodal_vtx_coord_get
  * \return  Golbal ids of vertices
  *
  */
-
+//---> PDM_Mesh_nodal_vertices_g_num_get (and PDM_Mesh_nodal_vertices_ln_to_gn_get)
 PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
@@ -156,6 +160,7 @@ PDM_part_mesh_nodal_vtx_g_num_get
  * \return  Number of sections
  *
  */
+//---> PDM_Mesh_nodal_n_blocks_get
 
 int
 PDM_part_mesh_nodal_n_section_get
@@ -173,6 +178,7 @@ PDM_part_mesh_nodal_n_section_get
  * \return  Ids of sections
  *
  */
+//---> PDM_Mesh_nodal_blocks_id_get
 
 int *
 PDM_part_mesh_nodal_sections_id_get
@@ -191,6 +197,7 @@ PDM_part_mesh_nodal_sections_id_get
  * \return  Type of section
  *
  */
+//---> PDM_Mesh_nodal_block_type_get
 
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_section_elt_type_get
@@ -210,6 +217,7 @@ PDM_part_mesh_nodal_section_elt_type_get
  * \return Section identifier
  *
  */
+//---> PDM_Mesh_nodal_block_add
 
 int
 PDM_part_mesh_nodal_section_add
@@ -838,6 +846,10 @@ PDM_part_mesh_nodal_reset
  PDM_part_mesh_nodal_t *pmn
 );
 
+
+//********************************************************************************//
+
+
 // /**
 //  * \brief  Add some standard 3D cells from cell vertex conectivity.
 //  *
@@ -855,6 +867,7 @@ PDM_part_mesh_nodal_reset
 //  * \param [in]  ownership      Ownership
 //  *
 //  */
+//---> used by N. Dellinger
 
 // void
 // PDM_Mesh_nodal_cells_cellvtx_add
@@ -886,6 +899,7 @@ PDM_part_mesh_nodal_reset
 //  * \param [in]  ownership      Ownership
 //  *
 //  */
+//---> used by N. Dellinger
 
 // void
 // PDM_Mesh_nodal_faces_facevtx_add
@@ -908,6 +922,7 @@ PDM_part_mesh_nodal_reset
 //  * \param [in]  ownership      Ownership
 //  *
 //  */
+//---> used in PDM_writer and some CWIPI tests
 
 // void
 // PDM_Mesh_nodal_g_num_in_block_compute
@@ -926,6 +941,7 @@ PDM_part_mesh_nodal_reset
 //  * \return  Parent cell number to local number
 //  *
 //  */
+//---> used in PDM_writer
 
 // int *
 // PDM_Mesh_nodal_num_cell_parent_to_local_get
@@ -943,6 +959,7 @@ PDM_part_mesh_nodal_reset
 //  * \return  Return number elements of a partition
 //  *
 //  */
+//---> used in PDM_writer and PDM_mesh_location
 
 // int
 // PDM_Mesh_nodal_n_cell_get
@@ -959,6 +976,7 @@ PDM_part_mesh_nodal_reset
 //  * \return      NULL
 //  *
 //  */
+//---> not used in PDM but used in CWIPI's mesh.cxx
 
 // PDM_g_num_t *
 // PDM_Mesh_nodal_g_num_get_from_part
@@ -978,6 +996,7 @@ PDM_part_mesh_nodal_reset
 //  * \return       Pointer to new \ref PDM_Mesh_nodal object
 //  *
 //  */
+//---> not used in PDM/CWIPI
 
 // PDM_Mesh_nodal_t *
 // PDM_Mesh_nodal_extract_selection
@@ -995,6 +1014,7 @@ PDM_part_mesh_nodal_reset
 //  * \return  Parent of vertices
 //  *
 //  */
+//---> not used in PDM/CWIPI
 
 // const PDM_g_num_t *
 // PDM_Mesh_nodal_vertices_g_num_parent_get
@@ -1011,6 +1031,7 @@ PDM_part_mesh_nodal_reset
 //  * \return      NULL
 //  *
 //  */
+//---> used in PDM_writer
 
 // void
 // PDM_Mesh_nodal_partial_free
@@ -1028,6 +1049,7 @@ PDM_part_mesh_nodal_reset
 //  * \return  Parent of vertices
 //  *
 //  */
+//---> not used in PDM/CWIPI
 
 // const int *
 // PDM_Mesh_nodal_vertices_parent_get
@@ -1043,6 +1065,7 @@ PDM_part_mesh_nodal_reset
 //  *
 //  * \return true if the vertices are defined from parents
 //  */
+//---> not used in PDM/CWIPI
 
 // int
 // PDM_Mesh_nodal_is_set_coord_from_parent
@@ -1061,6 +1084,7 @@ PDM_part_mesh_nodal_reset
 //  * \return      Return global numbering of block elements inside the block
 //  *
 //  */
+//---> used in PDM_writer_ensight and some CWIPI tests
 
 // PDM_g_num_t *
 // PDM_Mesh_nodal_block_g_num_get
