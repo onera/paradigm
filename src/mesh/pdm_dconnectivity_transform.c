@@ -178,13 +178,13 @@ _deduce_combine_connectivity_impl
  * \brief Compute the combine connectivty of entity1 with entity2 to entity3
  *
  * \param [in]   comm                  PDM_MPI communicator
- * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
- * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
  * \param [in]   dentity1_entity2_idx
  * \param [in]   dentity1_entity2
- * \param [in]   dentity1_entity2      is array is signed
- * \param [in]   dentity2_entity1_idx
- * \param [in]   dentity2_entity1
+ * \param [in]   dentity2_entity3_idx
+ * \param [in]   dentity2_entity3
+ * \param [in]   is_signed             If connectivity is signed
  * \param [in]   dentity1_entity3_idx
  * \param [in]   dentity1_entity3
  */
@@ -286,15 +286,15 @@ PDM_deduce_combine_connectivity
  * \brief Compute the combine connectivty of entity1 with entity2 to entity3
  *
  * \param [in]   comm                  PDM_MPI communicator
- * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
- * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
  * \param [in]   dentity1_entity2_idx
  * \param [in]   dentity1_entity2
- * \param [in]   dentity1_entity2      is array is signed
- * \param [in]   dentity2_entity1_idx
- * \param [in]   dentity2_entity1
- * \param [out]   dentity1_entity3_idx
- * \param [out]   dentity1_entity3
+ * \param [in]   dentity2_entity3_idx
+ * \param [in]   dentity2_entity3
+ * \param [in]   is_signed             If connectivity is signed
+ * \param [in]   dentity1_entity3_idx
+ * \param [in]   dentity1_entity3
  */
 void
 PDM_deduce_combine_connectivity_dual
@@ -393,13 +393,13 @@ PDM_deduce_combine_connectivity_dual
  * \brief Compute the dual connectivty of entity1
  *
  * \param [in]   comm                  PDM_MPI communicator
- * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
- * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
- * \param [in]   dentity1_entity2_idx
- * \param [in]   dentity1_entity2
- * \param [in]   dentity1_entity2      is array is signed
- * \param [in]   dentity2_entity1_idx
- * \param [in]   dentity2_entity1
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx  Index of dentitiy1->dentity2 connectivity
+ * \param [in]   dentity1_entity2      Connectivity of dentitiy1->dentity2
+ * \param [in]   is_signed             If connectivity is signed
+ * \param [in]   dentity2_entity1_idx  Index of dentitiy2->dentity1 connectivity
+ * \param [in]   dentity2_entity1      Connectivity of dentitiy2->dentity1
  */
 void
 PDM_dconnectivity_transpose
@@ -687,13 +687,8 @@ void PDM_dcellface_to_dfacecell
  * \brief Compute the dual connectivty of entity1
  *
  * \param [in]   comm                  PDM_MPI communicator
- * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
- * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
- * \param [in]   dentity1_entity2_idx
- * \param [in]   dentity1_entity2
- * \param [in]   dentity1_entity2      is array is signed
- * \param [in]   dentity2_entity1_idx
- * \param [in]   dentity2_entity1
+ * \param [in]   dentity1_entity2      Connectivity entity1->entity2
+ * \param [in]   dentity2_entity1      Reversed connectivity of entity1->entity2
  */
 void
 PDM_dorder_reverse

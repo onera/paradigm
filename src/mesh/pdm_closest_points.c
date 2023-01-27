@@ -282,6 +282,7 @@ _closest_points_reverse_results
  * \param [in]   comm           MPI communicator
  * \param [in]   n_closest      Number of closest source points to find for each
  *                              target point
+ * \param [in ] owner           Ownership for \ref PDM_closest_point_t
  *
  * \return     Pointer to \ref PDM_closest_points object
  *
@@ -655,7 +656,7 @@ PDM_closest_point_t *cls
  *
  * \param [in]   cls                   Pointer to \ref PDM_closest_points object
  * \param [in]   i_part_tgt            Index of partition of the cloud
- * \param [out]  closest_src_g_num     Global number of the closest element (size = n_closest * n_tgt_points)
+ * \param [out]  closest_src_gnum      Global number of the closest element (size = n_closest * n_tgt_points)
  * \param [out]  closest_src_distance  Distance (size = n_closest * n_tgt_points)
  *
  */

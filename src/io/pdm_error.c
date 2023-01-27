@@ -75,7 +75,6 @@ extern "C" {
  * \param [in, out] arg_ptr   pointer to variable argument list based on format
  *                            string.
  *
- * \dontinclude pdm_error_example.c
  *
  * In an MPI environment, it is recommended to replace the default
  * error handler. This requires using the following headers:

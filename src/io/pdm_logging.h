@@ -55,7 +55,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...);
  * \brief Pretty print of array in trace_log
  *
  * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
+ * \param [in]    larray       Array length
  * \param [inout] header       First line of log
  *
  */
@@ -72,7 +72,7 @@ PDM_log_trace_array_int
  * \brief Pretty print of array in trace_log
  *
  * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
+ * \param [in]    larray       Array length
  * \param [inout] header       First line of log
  *
  */
@@ -89,7 +89,7 @@ PDM_log_trace_array_long
  * \brief Pretty print of array in trace_log
  *
  * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
+ * \param [in]    larray       Array length
  * \param [inout] header       First line of log
  *
  */
@@ -107,7 +107,7 @@ PDM_log_trace_array_double
  * \brief Pretty print of array in trace_log
  *
  * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
+ * \param [in]    larray       Array length
  * \param [inout] header       First line of log
  *
  */
@@ -123,8 +123,9 @@ PDM_log_trace_array_size_t
  *
  * \brief Pretty print of array in trace_log
  *
+ * \param [inout] array_idx    Index of array to print
  * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
+ * \param [in]    larray       Array length
  * \param [inout] header       First line of log
  *
  */
@@ -141,9 +142,12 @@ PDM_log_trace_connectivity_long
  *
  * \brief Pretty print of array in trace_log
  *
- * \param [inout] array        Array to print
- * \param [in]    lArray       Array length
- * \param [inout] header       First line of log
+ * \param [in] entitiy1_entity2_idx Index of connectivity of entity1->entity2
+ * \param [in] entitiy1_entity2     Connectivity of entity1->entity2
+ * \param [in] entitiy1_ln_to_gn    Global number of 1-entities
+ * \param [in] entitiy2_ln_to_gn    Global number of 2-entities
+ * \param [in] n_entity1            Number of 1-entities
+ * \param [in] header               Print header
  *
  */
 void
@@ -157,6 +161,17 @@ PDM_log_trace_part_connectivity_gnum
  const char*        header
 );
 
+
+/**
+ *
+ * \brief Pretty print of array in trace_log
+ *
+ * \param [inout] array_idx    Index of array to print
+ * \param [inout] array        Array to print
+ * \param [in]    larray       Array length
+ * \param [inout] header       First line of log
+ *
+ */
 void
 PDM_log_trace_connectivity_int
 (
@@ -166,6 +181,17 @@ PDM_log_trace_connectivity_int
  const char*        header
 );
 
+/**
+ *
+ * \brief Pretty print of array in trace_log
+ *
+ * \param [inout] array_idx    Index of array to print
+ * \param [inout] array        Array to print
+ * \param [in]    g_num        Associated global number
+ * \param [in]    larray       Array length
+ * \param [inout] header       First line of log
+ *
+ */
 void
 PDM_log_trace_connectivity_int2
 (
