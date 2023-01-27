@@ -1299,7 +1299,6 @@ PDM_mesh_location_n_part_cloud_set
  const int                  n_part
 )
 {
-  log_trace(">> PDM_mesh_location_n_part_cloud_set n_part = %d\n", n_part);
   ml->point_clouds[i_point_cloud].n_part = n_part;
   ml->point_clouds[i_point_cloud].n_points =
     realloc(ml->point_clouds[i_point_cloud].n_points, n_part * sizeof(int));
@@ -1342,7 +1341,6 @@ PDM_mesh_location_cloud_set
        PDM_g_num_t         *gnum
 )
 {
-  log_trace(">> PDM_mesh_location_cloud_set : i_part = %d, n_points = %d\n", i_part, n_points);
   ml->point_clouds[i_point_cloud].n_points[i_part] = n_points;
   ml->point_clouds[i_point_cloud].coords[i_part] = coords;
   ml->point_clouds[i_point_cloud].gnum[i_part] = gnum;
