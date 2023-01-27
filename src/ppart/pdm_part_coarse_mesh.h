@@ -1,8 +1,8 @@
 /*
- * File:   pdm_part_coarse_mesh.h
- * Author: jmagnene
+ * \file
+ * \author jmagnene
  *
- * Created on July 8, 2016, 9:29 AM
+ * \date July 8, 2016, 9:29 AM
  */
 
 #ifndef PDM_PART_COARSE_MESH_H

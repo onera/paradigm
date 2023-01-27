@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_WRITER_ENSIGHT_H__
 #define __PDM_WRITER_ENSIGHT_H__
 

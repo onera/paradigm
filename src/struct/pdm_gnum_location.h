@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GNUM_LOCATION_H__
 #define __PDM_GNUM_LOCATION_H__
 

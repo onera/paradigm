@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_SPHERE_VOL_GEN_H__
 #define __PDM_SPHERE_VOL_GEN_H__
 /*

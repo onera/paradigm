@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_DCUBE_NODAL_GEN_H__
 #define __PDM_DCUBE_NODAL_GEN_H__
 

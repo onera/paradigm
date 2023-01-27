@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_DCONNECTIVITY_TRANSFORM_H_
 #define PDM_DCONNECTIVITY_TRANSFORM_H_
 

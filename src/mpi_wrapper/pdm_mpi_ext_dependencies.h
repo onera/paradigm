@@ -1,8 +1,8 @@
 /*
- * File:   pdm_mpi_ext_dependencies.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on November 16, 2016, 1:49 PM
+ * \date November 16, 2016, 1:49 PM
  */
 
 #ifndef PDM_MPI_EXT_DEPENDENCIES_H

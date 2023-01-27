@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MESH_CHECK_H__
 #define __PDM_MESH_CHECK_H__
 

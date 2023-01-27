@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_HASH_TAB_H__
 #define	__PDM_HASH_TAB_H__
 

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GRAPH_BOUND_H__
 #define __PDM_GRAPH_BOUND_H__
 

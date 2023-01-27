@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_DISTRIB_H
 #define PDM_DISTRIB_H
 

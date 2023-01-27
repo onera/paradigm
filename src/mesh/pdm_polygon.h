@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_POLYGON_H__
 #define __PDM_POLYGON_H__
 

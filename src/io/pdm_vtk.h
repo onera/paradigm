@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_VTK_H__
 #define __PDM_VTK_H__
 

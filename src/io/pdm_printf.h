@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PRINTF_H__
 #define __PDM_PRINTF_H__
 

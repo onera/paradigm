@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_POINT_TREE_SEQ_H
 #define PDM_POINT_TREE_SEQ_H
 

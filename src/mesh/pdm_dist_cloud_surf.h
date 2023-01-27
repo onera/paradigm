@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_DIST_CLOUD_SURF_H
 #define PDM_DIST_CLOUD_SURF_H
 

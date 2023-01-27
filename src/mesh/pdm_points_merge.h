@@ -1,8 +1,8 @@
 /*
- * File:   pdm_points_merge.h
- * Author: equemera
+ * \file
+ * \author equemera
  *
- * Created on November 16, 2017, 3:36 PM
+ * \date November 16, 2017, 3:36 PM
  */
 
 #ifndef PDM_POINTS_MERGE_H

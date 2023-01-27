@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_CLOSEST_POINTS_H
 #define PDM_CLOSEST_POINTS_H
 

@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_OVERLAY_H__
 #define __PDM_OVERLAY_H__
 

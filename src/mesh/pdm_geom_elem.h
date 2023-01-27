@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_GEOM_ELEM_H__
 #define __PDM_GEOM_ELEM_H__
 /*

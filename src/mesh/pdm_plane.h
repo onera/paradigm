@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PLANE_H__
 #define __PDM_PLANE_H__
 

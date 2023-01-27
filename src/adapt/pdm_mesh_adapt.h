@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef PDM_MESH_ADAPT_H
 #define PDM_MESH_ADAPT_H
 

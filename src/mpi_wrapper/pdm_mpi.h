@@ -1,3 +1,7 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_MPI_H__
 #define __PDM_MPI_H__
 
