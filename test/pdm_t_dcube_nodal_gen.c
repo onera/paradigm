@@ -403,7 +403,7 @@ static inline void _swap_rows
     for (int j = 0; j < stride; j++) {
       double tmp = b[stride*row1 + j];
       b[stride*row1 + j] = b[stride*row2 + j];
-      b[stride*row1 + j] = tmp;
+      b[stride*row2 + j] = tmp;
     }
   }
 }

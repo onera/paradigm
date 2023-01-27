@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -303,6 +304,24 @@ PDM_closest_points_n_closest_get
 (
   PDM_closest_point_t  *cls
 );
+
+/**
+ * \brief Get part_to_part object to exchange data between
+ * the source and target point clouds (both in user frame)
+ *
+ * \param [in ] cls        Pointer to \ref PDM_closest_point_t object
+ * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
+ * \param [in ] ownership  Ownership for ptp
+ *
+ */
+
+void
+PDM_closest_points_part_to_part_get
+(
+ PDM_closest_point_t  *cls,
+ PDM_part_to_part_t  **ptp,
+ PDM_ownership_t       ownership
+ );
 
 #ifdef	__cplusplus
 }

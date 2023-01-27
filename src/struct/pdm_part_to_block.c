@@ -890,7 +890,7 @@ _distrib_data_morton
   double s[3];
   PDM_morton_encode_coords(dim, max_level, extents, ptb->n_elt_proc, concat_vtx_coord, morton_codes, d, s);
 
-  if(ptb->n_part > 1 ) {
+  if(ptb->n_part != 1) {
     free(concat_vtx_coord);
   }
 
@@ -904,7 +904,7 @@ _distrib_data_morton
                               morton_codes_idx, // Is the distrib
                               ptb->comm);
 
-  if(ptb->n_part > 1 ) {
+  if(ptb->n_part != 1) {
     free(concat_weight);
   }
 
