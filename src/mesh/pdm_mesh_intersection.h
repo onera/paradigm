@@ -7,7 +7,6 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_overlay.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal.h"
 
@@ -57,7 +56,7 @@ void
 PDM_mesh_intersection_mesh_nodal_set
 (
  PDM_mesh_intersection_t  *mi,
- PDM_ol_mesh_t             i_mesh,
+ int                       i_mesh,
  PDM_part_mesh_nodal_t    *mesh
  );
 
@@ -65,7 +64,7 @@ void
 PDM_mesh_intersection_part_set
 (
   PDM_mesh_intersection_t  *mi,
-  PDM_ol_mesh_t             i_mesh,
+  int                       i_mesh,
   int                       i_part,
   int                       n_cell,
   int                       n_face,

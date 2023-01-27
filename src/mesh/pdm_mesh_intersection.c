@@ -4133,17 +4133,17 @@ PDM_mesh_intersection_create
 
   mi->comm = comm;
   mi->intersect_kind = intersection_kind;
-  mi->n_part_mesh[0]  = n_part_mesh_a;
-  mi->n_part_mesh[1]  = n_part_mesh_b;
-  mi->dim_mesh[0]     = dim_mesh_a;
-  mi->dim_mesh[1]     = dim_mesh_b;
+  mi->n_part_mesh[0] = n_part_mesh_a;
+  mi->n_part_mesh[1] = n_part_mesh_b;
+  mi->dim_mesh[0]    = dim_mesh_a;
+  mi->dim_mesh[1]    = dim_mesh_b;
   mi->project_coef   = project_coeff;
 
   mi->mesh[0] = PDM_part_mesh_create(n_part_mesh_a, comm);
   mi->mesh[1] = PDM_part_mesh_create(n_part_mesh_b, comm);
 
-  mi->mesh_nodal[PDM_OL_MESH_A] = NULL;
-  mi->mesh_nodal[PDM_OL_MESH_B] = NULL;
+  mi->mesh_nodal[0] = NULL;
+  mi->mesh_nodal[1] = NULL;
 
 
   /* Initialize results */
@@ -4501,7 +4501,7 @@ void
 PDM_mesh_intersection_mesh_nodal_set
 (
  PDM_mesh_intersection_t  *mi,
- PDM_ol_mesh_t             i_mesh,
+ int                       i_mesh,
  PDM_part_mesh_nodal_t    *mesh
  )
 {
@@ -4513,7 +4513,7 @@ void
 PDM_mesh_intersection_part_set
 (
   PDM_mesh_intersection_t  *mi,
-  PDM_ol_mesh_t             i_mesh,
+  int                       i_mesh,
   int                       i_part,
   int                       n_cell,
   int                       n_face,

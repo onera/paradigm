@@ -304,7 +304,7 @@ void
 _set_mesh
 (
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_multipart_t         *mpart,
  int                      n_part
 )
@@ -541,8 +541,8 @@ char *argv[]
   /*
    * Set mesh_a and mesh_b
    */
-  _set_mesh(mi, PDM_OL_MESH_A, mpart_vol_a , n_part);
-  _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+  _set_mesh(mi, 0, mpart_vol_a , n_part);
+  _set_mesh(mi, 1, mpart_surf_b, n_part);
 
   PDM_mesh_intersection_compute(mi);
 

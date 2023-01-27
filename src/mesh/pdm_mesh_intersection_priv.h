@@ -15,7 +15,6 @@
 #include "pdm_surf_part.h"
 #include "pdm_surf_part_priv.h"
 #include "pdm_timer.h"
-#include "pdm_overlay.h"
 #include "pdm_error.h"
 #include "pdm_printf.h"
 #include "pdm_part_mesh.h"

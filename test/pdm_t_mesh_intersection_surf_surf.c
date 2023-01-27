@@ -312,7 +312,7 @@ void
 _set_mesh
 (
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_multipart_t         *mpart,
  int                      n_part
 )
@@ -399,15 +399,15 @@ _set_mesh
                                                  &edge_vtx_idx,
                                                  PDM_OWNERSHIP_KEEP);
 
-    if (i_mesh == PDM_OL_MESH_B) {
-      for (int i = 0; i < n_face; i++) {
-        log_trace(PDM_FMT_G_NUM" : %d %d %d\n",
-                  face_ln_to_gn[i],
-                  i_rank,
-                  i_part,
-                  i);
-      }
-    }
+    // if (i_mesh == 1) {
+    //   for (int i = 0; i < n_face; i++) {
+    //     log_trace(PDM_FMT_G_NUM" : %d %d %d\n",
+    //               face_ln_to_gn[i],
+    //               i_rank,
+    //               i_part,
+    //               i);
+    //   }
+    // }
 
     PDM_mesh_intersection_part_set(mi,
                                    i_mesh,
@@ -437,7 +437,7 @@ void
 _set_mesh_nodal
 (
  PDM_mesh_intersection_t *mi,
- PDM_ol_mesh_t            i_mesh,
+ int                      i_mesh,
  PDM_multipart_t         *mpart
 )
 {
@@ -564,16 +564,16 @@ char *argv[]
    * Set mesh_a and mesh_b
    */
   if (nodal_a) {
-    _set_mesh_nodal(mi, PDM_OL_MESH_A, mpart_surf_a);
+    _set_mesh_nodal(mi, 0, mpart_surf_a);
   }
   else {
-    _set_mesh(mi, PDM_OL_MESH_A, mpart_surf_a, n_part);
+    _set_mesh(mi, 0, mpart_surf_a, n_part);
   }
   if (nodal_b) {
-    _set_mesh_nodal(mi, PDM_OL_MESH_B, mpart_surf_b);
+    _set_mesh_nodal(mi, 1, mpart_surf_b);
   }
   else {
-    _set_mesh(mi, PDM_OL_MESH_B, mpart_surf_b, n_part);
+    _set_mesh(mi, 1, mpart_surf_b, n_part);
   }
 
   PDM_mesh_intersection_compute(mi);
