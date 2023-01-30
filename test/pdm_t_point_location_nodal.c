@@ -359,17 +359,17 @@ _gen_mesh
       pface_vtx     [ipart] = _face_vtx;
     }
 
-    *pmne = PDM_part_mesh_nodal_create_from_part3d(n_part,
-                       (const int               *) (*pn_elt),
-                       (const int               *) pn_face,
-                       (const int              **) pface_vtx_idx,
-                       (const int              **) pface_vtx,
-                       (const PDM_g_num_t      **) pface_ln_to_gn,
-                       (const int              **) pcell_face_idx,
-                       (const int              **) pcell_face,
-                       (const double           **) (*pvtx_coord),
-                       (const PDM_g_num_t      **) (*pelt_ln_to_gn),
-                                                   comm);
+    *pmne = PDM_part_mesh_nodal_elmts_create_from_part3d(n_part,
+                             (const int               *) (*pn_elt),
+                             (const int               *) pn_face,
+                             (const int              **) pface_vtx_idx,
+                             (const int              **) pface_vtx,
+                             (const PDM_g_num_t      **) pface_ln_to_gn,
+                             (const int              **) pcell_face_idx,
+                             (const int              **) pcell_face,
+                             (const double           **) (*pvtx_coord),
+                             (const PDM_g_num_t      **) (*pelt_ln_to_gn),
+                                                         comm);
     free(pn_face       );
     free(pface_vtx_idx );
     free(pface_vtx     );
@@ -574,16 +574,16 @@ _gen_mesh
         assert(_face_vtx != NULL);
       }
     }
-     *pmne = PDM_part_mesh_nodal_create_from_part2d(n_part,
-                             (const int          *) (*pn_elt),
-                             (const int          *) pn_edge,
-                             (const int          *) (*pn_vtx),
-                             (const int         **) pedge_vtx_idx,
-                             (const int         **) pedge_vtx,
-                             (const int         **) pface_edge_idx,
-                             (const int         **) pface_edge,
-                             (const PDM_g_num_t **) (*pelt_ln_to_gn),
-                                                    comm);
+     *pmne = PDM_part_mesh_nodal_elmts_create_from_part2d(n_part,
+                                   (const int          *) (*pn_elt),
+                                   (const int          *) pn_edge,
+                                   (const int          *) (*pn_vtx),
+                                   (const int         **) pedge_vtx_idx,
+                                   (const int         **) pedge_vtx,
+                                   (const int         **) pface_edge_idx,
+                                   (const int         **) pface_edge,
+                                   (const PDM_g_num_t **) (*pelt_ln_to_gn),
+                                                          comm);
      free(pn_edge       );
      free(pedge_vtx_idx );
      free(pedge_vtx     );

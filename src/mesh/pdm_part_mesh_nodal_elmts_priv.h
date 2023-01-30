@@ -40,7 +40,7 @@ struct _pdm_part_mesh_nodal_elmts_t {
 
   PDM_MPI_Comm                         comm;                      /*!< MPI Communicator            */
   int                                  mesh_dimension;
-  // PDM_Mesh_nodal_prepa_blocks_t       *prepa_blocks;              /*!< Blocks preparation          */
+  PDM_Mesh_nodal_prepa_blocks_t       *prepa_blocks;              /*!< Blocks preparation          */
 
   int                                  n_part;
   PDM_l_num_t                         *n_elmts;                   /*!< Nombre de blocs d'elements  */

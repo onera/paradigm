@@ -174,7 +174,7 @@ PDM_part_mesh_nodal_vtx_coord_get
  * \return  Golbal ids of vertices
  *
  */
-//---> PDM_Mesh_nodal_vertices_g_num_get (and PDM_Mesh_nodal_vertices_ln_to_gn_get)
+//---> PDM_Mesh_nodal_vertices_g_num_get
 PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
@@ -866,7 +866,7 @@ const int                     id_part,
 /**
  * \brief Reset a nodal mesh structure
  *
- * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
  *
  * \return      NULL
  *
@@ -1047,73 +1047,136 @@ PDM_part_mesh_nodal_vertices_g_num_parent_get
 const int                     id_part
  );
 
+/**
+ * \brief  Add some 3D cells from cell face conectivity.
+ *
+ * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
+ * and stores it in the corresponding block. \ref ind_num gives the indirection
+ * between old and new numbering.
+ *
+ * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_cell         Number of polyhedra
+ * \param [in]  n_face         Number of faces used to describe polyhedra
+ * \param [in]  face_vtx_idx   Index of face vertex connectivity
+ * \param [in]  face_vtx       Face vertex connectivity
+ * \param [in]  face_ln_to_gn  Face global numbering
+ * \param [in]  cell_face_idx  Index of cell face connectivity
+ * \param [in]  cell_face      Cell face connectivity
+ * \param [in]  cell_ln_to_gn  Global numbering
+ * \param [in]  ownership      Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_cell3d_cellface_add
+void
+PDM_part_mesh_nodal_cell3d_cellface_add
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part,
+const int                     n_cell,
+const int                     n_face,
+const int                    *face_vtx_idx,
+const int                    *face_vtx,
+const PDM_g_num_t            *face_ln_to_gn,
+const int                    *cell_face_idx,
+const int                    *cell_face,
+const PDM_g_num_t            *cell_ln_to_gn,
+const PDM_ownership_t         ownership
+);
+
+/**
+ * \brief  Add some 2D faces from face edge conectivity.
+ *
+ * For each face, this function searchs the type of the face (triangles, quandrangles, ...)
+ * and stores it in the corresponding block. \ref ind_num gives the indirection
+ * between old and new numbering.
+ *
+ * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_face         Number of polyhedra
+ * \param [in]  n_edge         Number of edges used to describe polyhedra
+ * \param [in]  edge_vtx       edge vertex connectivity
+ * \param [in]  face_edge_idx  Index of face edge connectivity
+ * \param [in]  face_edge      face edge connectivity
+ * \param [in]  face_ln_to_gn  Global numbering
+ * \param [in]  ownership      Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_cell2d_celledge_add
+void
+PDM_part_mesh_nodal_face2d_faceedge_add
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part,
+const int                     n_face,
+const int                     n_edge,
+const int                    *edge_vtx,
+const int                    *face_edge_idx,
+const int                    *face_edge,
+const PDM_g_num_t            *face_ln_to_gn,
+const PDM_ownership_t         ownership
+);
+
+/**
+ * \brief  Add some standard 3D cells from cell vertex conectivity.
+ *
+ * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
+ * and stores it in the corresponding block. \ref ind_num gives the indirection
+ * between old and new numbering.
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_cell         Number of cells
+ * \param [in]  cell_vtx_idx   Index of cell vertex connectivity
+ * \param [in]  cell_vtx       Cell vertex connectivity
+ * \param [in]  numabs         Global numbering
+ * \param [in]  ownership      Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_cells_cellvtx_add
+void
+PDM_part_mesh_nodal_cells_cellvtx_add
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part,
+const int                     n_cell,
+const int                    *cell_vtx_idx,
+const int                    *cell_vtx,
+const PDM_g_num_t            *numabs,
+const PDM_ownership_t         ownership
+);
+
+/**
+ * \brief  Add some 2D faces from face vertex connectivity.
+ *
+ * For each face, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
+ * and stores it in the corresponding block. \ref ind_num gives the indirection
+ * between old and new numbering.
+ *
+ * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part        Partition identifier
+ * \param [in]  n_face         Number of polygon
+ * \param [in]  face_vtx_idx   Index of edge vertex connectivity
+ * \param [in]  face_vtx_nb    Number of vertices for each edge
+ * \param [in]  face_vtx       Edge vertex connectivity
+ * \param [in]  ownership      Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_faces_facevtx_add
+void
+PDM_part_mesh_nodal_faces_facevtx_add
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part,
+const int                     n_face,
+const int                    *face_vtx_idx,
+const int                    *face_vtx,
+const PDM_g_num_t            *numabs,
+const PDM_ownership_t         ownership
+);
+
+
 //********************************************************************************//
-
-
-// /**
-//  * \brief  Add some standard 3D cells from cell vertex conectivity.
-//  *
-//  * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
-//  * and stores it in the corresponding block. \ref ind_num gives the indirection
-//  * between old and new numbering.
-//  *
-//  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_part        Partition identifier
-//  * \param [in]  n_cell         Number of cells
-//  * \param [in]  cell_face_idx  Index of cell vertex connectivity
-//  * \param [in]  cell_face_nb   Number of vertices for each cell
-//  * \param [in]  cell_face      Cell vertex connectivity
-//  * \param [in]  numabs         Global numbering
-//  * \param [in]  ownership      Ownership
-//  *
-//  */
-//---> used by N. Dellinger
-
-// void
-// PDM_Mesh_nodal_cells_cellvtx_add
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_part,
-// const int               n_cell,
-// const PDM_l_num_t      *cell_vtx_idx,
-// const PDM_l_num_t      *cell_vtx_nb,
-// const PDM_l_num_t      *cell_vtx,
-// const PDM_g_num_t      *numabs,
-// const PDM_ownership_t  ownership
-// );
-
-// /**
-//  * \brief  Add some 2D cells from cell vertex connectivity.
-//  *
-//  * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
-//  * and stores it in the corresponding block. \ref ind_num gives the indirection
-//  * between old and new numbering.
-//  *
-//  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_part        Partition identifier
-//  * \param [in]  n_face         Number of polygon
-//  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
-//  * \param [in]  face_vtx_nb    Number of vertices for each edge
-//  * \param [in]  face_vtx       Edge vertex connectivity
-//  * \param [in]  numabs         Global numbering
-//  * \param [in]  ownership      Ownership
-//  *
-//  */
-//---> used by N. Dellinger
-
-// void
-// PDM_Mesh_nodal_faces_facevtx_add
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_part,
-// const int               n_face,
-// const PDM_l_num_t      *face_vtx_idx,
-// const PDM_l_num_t      *face_vtx_nb,
-// const PDM_l_num_t      *face_vtx,
-// const PDM_g_num_t      *numabs,
-// const PDM_ownership_t  ownership
-// );
-
 // /**
 //  * \brief Create a new Mesh nodal from elements selected in a parent Mesh nodal
 //  *

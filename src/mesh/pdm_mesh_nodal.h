@@ -242,15 +242,6 @@ PDM_Mesh_nodal_vertices_get
  const int               id_part
 );
 
-
-int
-PDM_Mesh_nodal_vertices_ln_to_gn_get
-(
-       PDM_Mesh_nodal_t  *mesh,
- const int                id_part,
-       PDM_g_num_t      **vtx_ln_to_gn
-);
-
 /**
  * \brief  Return cell centers
  *
@@ -516,7 +507,7 @@ const PDM_ownership_t       ownership
  * \param [in]  parent_num     Parent numbering or NULL
  *
  */
-//--> PDM_part_mesh_nodal_section_std_set
+//---> PDM_part_mesh_nodal_section_std_set
 void
 PDM_Mesh_nodal_block_std_set
 (
@@ -903,7 +894,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_part_mesh_nodal_cell3d_cellface_add
 void
 PDM_Mesh_nodal_cell3d_cellface_add
 (
@@ -939,7 +930,7 @@ const PDM_ownership_t  ownership
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_part_mesh_nodal_cells_cellvtx_add
 void
 PDM_Mesh_nodal_cells_cellvtx_add
 (
@@ -974,7 +965,7 @@ const PDM_ownership_t  ownership
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_part_mesh_nodal_face2d_faceedge_add
 void
 PDM_Mesh_nodal_cell2d_celledge_add
 (
@@ -1010,7 +1001,7 @@ const PDM_ownership_t  ownership
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_part_mesh_nodal_faces_facevtx_add
 void
 PDM_Mesh_nodal_faces_facevtx_add
 (
@@ -1180,7 +1171,7 @@ PDM_Mesh_nodal_g_num_get_from_part
  * \return       Pointer to new \ref PDM_Mesh_nodal object
  *
  */
-
+// NOT USED
 PDM_Mesh_nodal_t *
 PDM_Mesh_nodal_extract_selection
 (

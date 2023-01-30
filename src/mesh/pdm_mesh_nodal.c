@@ -2058,30 +2058,6 @@ PDM_Mesh_nodal_vertices_get
   return vtx->_coords;
 }
 
-/* !!!! Parent??? */
-int
-PDM_Mesh_nodal_vertices_ln_to_gn_get
-(
-       PDM_Mesh_nodal_t  *mesh,
- const int                id_part,
-       PDM_g_num_t      **vtx_ln_to_gn
-)
-{
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
-
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  *vtx_ln_to_gn = vtx->_numabs;
-
-  return vtx->n_vtx;
-}
-
 
 /**
  * \brief  Return global numbering of vertices
@@ -3554,7 +3530,7 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_part_mesh_elmts_nodal_cell3d_cellface_add
 void
 PDM_Mesh_nodal_cell3d_cellface_add
 (

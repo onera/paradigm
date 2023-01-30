@@ -2306,10 +2306,8 @@ PDM_mesh_location_compute
       pvtx_coord[ipart] = (double *) PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
                                                                  ipart);
 
-      PDM_g_num_t *pvtx_ln_to_gn = NULL;
-      pn_vtx[ipart] = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
-                                                           ipart,
-                                                           &pvtx_ln_to_gn);
+      pn_vtx[ipart] = PDM_Mesh_nodal_n_vertices_get(ml->mesh_nodal,
+                                                    ipart);
     }
     _dump_pmne(ml->comm,
                "init_pmne",
@@ -3449,10 +3447,11 @@ PDM_mesh_location_compute
       const double *pvtx_coord = PDM_Mesh_nodal_vertices_get(ml->mesh_nodal,
                                                              ipart);
 
-      PDM_g_num_t *pvtx_ln_to_gn = NULL;
-      const int pn_vtx = PDM_Mesh_nodal_vertices_ln_to_gn_get(ml->mesh_nodal,
-                                                              ipart,
-                                                              &pvtx_ln_to_gn);
+      const int pn_vtx = PDM_Mesh_nodal_n_vertices_get(ml->mesh_nodal,
+                                                       ipart);
+      PDM_g_num_t *pvtx_ln_to_gn = (PDM_g_num_t *) PDM_Mesh_nodal_vertices_g_num_get(ml->mesh_nodal,
+                                                                                     ipart);
+
 
       int n_cell = 0;
       int n_face = 0;
