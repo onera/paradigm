@@ -49,6 +49,7 @@ typedef struct _pdm_part_mesh_nodal_t PDM_part_mesh_nodal_t;
  * \return       Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
+//---> PDM_Mesh_nodal_create
 
 PDM_part_mesh_nodal_t*
 PDM_part_mesh_nodal_create
@@ -340,7 +341,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
  * \param [in]  owner                   Ownership
  *
  */
-
+//---> PDM_Mesh_nodal_block_std_set
 void
 PDM_part_mesh_nodal_section_std_set
 (
@@ -402,7 +403,7 @@ const char                  *ho_ordering,
  * \return      Number of elements
  *
  */
-
+//---> PDM_Mesh_nodal_block_n_elt_get
 int
 PDM_part_mesh_nodal_block_n_elt_get
 (
@@ -493,7 +494,7 @@ const int                     id_part
  * \param [out] parent_entity_g_num     Parent global numbering or NULL
  *
  */
-
+//---> PDM_Mesh_nodal_block_std_get
 void
 PDM_part_mesh_nodal_block_std_get
 (
@@ -549,7 +550,7 @@ const char                  **ho_ordering
  * \return      Return parent numbering of block elements
  *
  */
-
+//---> PDM_Mesh_nodal_block_parent_num_get
 int *
 PDM_part_mesh_nodal_block_parent_num_get
 (
@@ -570,6 +571,7 @@ const int                     id_part
  * \return      Return global element numbering of block elements
  *
  */
+//---> PDM_Mesh_nodal_g_num_get
  // ATTENTION != PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
@@ -604,7 +606,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
-
+//---> PDM_Mesh_nodal_free
 void
 PDM_part_mesh_nodal_free
 (
@@ -630,7 +632,7 @@ PDM_part_mesh_nodal_dump_vtk
  * \param [out] extents        Extents of mesh elements in current part of current block
  *
  */
-
+//---> PDM_Mesh_nodal_compute_cell_extents
 void
 PDM_part_mesh_nodal_block_elt_extents_compute
 (
@@ -653,7 +655,7 @@ PDM_part_mesh_nodal_block_elt_extents_compute
  * \param [in]  ownership      Ownership
  *
  */
-
+//---> PDM_Mesh_nodal_cell_centers_compute
 void
 PDM_part_mesh_nodal_section_elt_center_compute
 (
@@ -675,7 +677,7 @@ const PDM_ownership_t        ownership
  * \return  Return cell centers
  *
  */
-
+//---> PDM_Mesh_cell_centers_get
 const double *
 PDM_part_mesh_nodal_section_elt_center_get
 (
@@ -695,7 +697,7 @@ const int                    i_part
  * \param [in]  id_part        Partition identifier
  *
  */
-
+//---> PDM_Mesh_nodal_cell_centers_reset
 void
 PDM_part_mesh_nodal_section_elt_center_reset
 (
@@ -721,7 +723,7 @@ const int                    i_part
  * \param [in]  owner          Ownership
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly2d_set
 void
 PDM_part_mesh_nodal_section_poly2d_set
 (
@@ -749,7 +751,7 @@ const int                   *parent_num,
  * \param [out] connec         Connectivity
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly2d_get
 void
 PDM_part_mesh_nodal_block_poly2d_get
 (
@@ -781,7 +783,7 @@ const int                     id_part,
  * \param [in]  owner          Ownership
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly3d_set
 void
 PDM_part_mesh_nodal_section_poly3d_set
 (
@@ -819,7 +821,7 @@ const int                   *parent_num,
  * \param [out] parent_entity_g_num  Parent global ids or NULL
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly3d_get
 void
 PDM_part_mesh_nodal_section_poly3d_get
 (
@@ -849,7 +851,7 @@ const int                     id_part,
  * \param [out] cellvtx      Cell vertex connectivity
  *
  */
-
+//---> PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 void
 PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 (
@@ -869,7 +871,7 @@ const int                     id_part,
  * \return      NULL
  *
  */
-
+//---> PDM_Mesh_nodal_reset
 void
 PDM_part_mesh_nodal_reset
 (
@@ -1009,6 +1011,42 @@ PDM_part_mesh_nodal_num_elmt_parent_to_local_get
       PDM_geometry_kind_t     geom_kind,
 const int                     id_part
 );
+
+
+/**
+ * \brief  Return parent num of vertices
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent of vertices
+ *
+ */
+//---> PDM_Mesh_nodal_vertices_parent_get
+const int *
+PDM_part_mesh_nodal_vertices_parent_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part
+ );
+
+/**
+ * \brief  Return parent  absolute number
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent of vertices
+ *
+ */
+//---> PDM_Mesh_nodal_vertices_g_num_parent_get
+const PDM_g_num_t *
+PDM_part_mesh_nodal_vertices_g_num_parent_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part
+ );
+
 //********************************************************************************//
 
 
@@ -1094,40 +1132,6 @@ const int                     id_part
 //  PDM_Mesh_nodal_t  *parent_mesh,
 //  const int        **n_select_elt,
 //  const int       ***select_elt_l_num
-//  );
-
-// /**
-//  * \brief  Return parent  absolute number
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return  Parent of vertices
-//  *
-//  */
-//---> not used in PDM/CWIPI
-
-// const PDM_g_num_t *
-// PDM_Mesh_nodal_vertices_g_num_parent_get
-// (
-//        PDM_Mesh_nodal_t *mesh,
-//  const int               id_part
-// );
-
-// /**
-//  * \brief  Return parent num of vertices
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return  Parent of vertices
-//  *
-//  */
-//---> not used in PDM/CWIPI
-
-// const int *
-// PDM_Mesh_nodal_vertices_parent_get
-// (
-//        PDM_Mesh_nodal_t *mesh,
-//  const int               id_part
 //  );
 
 #ifdef __cplusplus

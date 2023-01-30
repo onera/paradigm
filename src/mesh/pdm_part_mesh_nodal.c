@@ -1683,3 +1683,63 @@ const int                     id_part
 
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
+
+
+/**
+ * \brief  Return parent num of vertices
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const int *
+PDM_part_mesh_nodal_vertices_parent_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part
+ )
+{
+  if (id_part >= pmn->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
+  }
+
+  PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
+
+  return vtx->_numparent;
+}
+
+
+/**
+ * \brief  Return parent  absolute number
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const PDM_g_num_t *
+PDM_part_mesh_nodal_vertices_g_num_parent_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+const int                     id_part
+ )
+{
+  if (pmn == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_part >= pmn->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
+  }
+
+  PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
+
+  assert(vtx->parent != NULL);
+
+  return vtx->parent->_numabs;
+}
