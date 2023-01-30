@@ -508,7 +508,7 @@ _compute_mesh_nodal_extents
     for (int isection = 0; isection < n_section; isection++) {
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                       geom_kind,
                                                       id_section,
                                                       i_part);
@@ -526,22 +526,22 @@ _compute_mesh_nodal_extents
     for (int isection = 0; isection < n_section; isection++) {
       int id_section = sections_id[isection];
 
-      int *parent_num = PDM_part_mesh_nodal_block_parent_num_get(mesh_nodal,
+      int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                  geom_kind,
                                                                  id_section,
                                                                  i_part);
 
-      // PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
+      // PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_section_g_num_get(mesh_nodal,
       //                                                               geom_kind,
       //                                                               id_section,
       //                                                               i_part);
 
-      int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                       geom_kind,
                                                       id_section,
                                                       i_part);
 
-      PDM_part_mesh_nodal_block_elt_extents_compute(mesh_nodal,
+      PDM_part_mesh_nodal_section_elt_extents_compute(mesh_nodal,
                                                     geom_kind,
                                                     id_section,
                                                     i_part,
@@ -822,7 +822,7 @@ _select_elements_by_global_bbox_nodal
     for (int isection = 0; isection < n_section; isection++) {
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                       geom_kind,
                                                       id_section,
                                                       i_part);
@@ -840,20 +840,20 @@ _select_elements_by_global_bbox_nodal
     for (int isection = 0; isection < n_section; isection++) {
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                       geom_kind,
                                                       id_section,
                                                       i_part);
 
-      int *parent_num = PDM_part_mesh_nodal_block_parent_num_get(mesh_nodal,
+      int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                  geom_kind,
                                                                  id_section,
                                                                  i_part);
 
-      PDM_g_num_t *entity_ln_to_gn = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
-                                                                         geom_kind,
-                                                                         id_section,
-                                                                         i_part);
+      PDM_g_num_t *entity_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
+                                                                   geom_kind,
+                                                                   id_section,
+                                                                   i_part);
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
 
@@ -1385,7 +1385,7 @@ _create_extract_part_nodal
     for (int isection = 0; isection < n_section; isection++) {
       int id_section = sections_id[isection];
 
-      part_n_elt += PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+      part_n_elt += PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                         geom_kind,
                                                         id_section,
                                                         i_part);
@@ -1932,7 +1932,7 @@ _build_ptp
 
       user_n_elt_a[ipart] = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        user_n_elt_a[ipart] += PDM_part_mesh_nodal_block_n_elt_get(mi->mesh_nodal[0],
+        user_n_elt_a[ipart] += PDM_part_mesh_nodal_section_n_elt_get(mi->mesh_nodal[0],
                                                                    geom_kind,
                                                                    sections_id[isection],
                                                                    ipart);
@@ -1940,16 +1940,16 @@ _build_ptp
 
       user_elt_ln_to_gn_a[ipart] = malloc(sizeof(PDM_g_num_t) * user_n_elt_a[ipart]);
       for (int isection = 0; isection < n_section; isection++) {
-        int n_elt_section = PDM_part_mesh_nodal_block_n_elt_get(mi->mesh_nodal[0],
+        int n_elt_section = PDM_part_mesh_nodal_section_n_elt_get(mi->mesh_nodal[0],
                                                                 geom_kind,
                                                                 sections_id[isection],
                                                                 ipart);
 
-        PDM_g_num_t *elt_ln_to_gn = PDM_part_mesh_nodal_block_g_num_get(mi->mesh_nodal[0],
-                                                                        geom_kind,
-                                                                        sections_id[isection],
-                                                                        ipart);
-        int *parent_num = PDM_part_mesh_nodal_block_parent_num_get(mi->mesh_nodal[0],
+        PDM_g_num_t *elt_ln_to_gn = PDM_part_mesh_nodal_g_num_get(mi->mesh_nodal[0],
+                                                                  geom_kind,
+                                                                  sections_id[isection],
+                                                                  ipart);
+        int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mi->mesh_nodal[0],
                                                                    geom_kind,
                                                                    sections_id[isection],
                                                                    ipart);
@@ -2035,7 +2035,7 @@ _build_ptp
 
       user_n_elt_b[ipart] = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        user_n_elt_b[ipart] += PDM_part_mesh_nodal_block_n_elt_get(mi->mesh_nodal[1],
+        user_n_elt_b[ipart] += PDM_part_mesh_nodal_section_n_elt_get(mi->mesh_nodal[1],
                                                                    geom_kind,
                                                                    sections_id[isection],
                                                                    ipart);
@@ -4264,7 +4264,7 @@ _mesh_intersection_surf_surf2
 
       // n_face[i] = 0;
       // for (int isection = 0; isection < n_section; isection++) {
-      //   n_face[i] += PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+      //   n_face[i] += PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
       //                                                          sections_id[isection],
       //                                                          0);
       // }
@@ -4275,11 +4275,11 @@ _mesh_intersection_surf_surf2
       for (int isection = 0; isection < n_section; isection++) {
         int id_section = sections_id[isection];
 
-        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
                                                               id_section,
                                                               0);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
                                                                               id_section);
 
         assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
@@ -4291,7 +4291,7 @@ _mesh_intersection_surf_surf2
           /* Polygonal section */
           int *connec_idx;
           int *connec;
-          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec_idx,
@@ -4316,7 +4316,7 @@ _mesh_intersection_surf_surf2
           PDM_g_num_t *parent_entity_g_num = NULL;
           int          order               = 0;
           const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec,
@@ -4352,11 +4352,11 @@ _mesh_intersection_surf_surf2
       for (int isection = 0; isection < n_section; isection++) {
         int id_section = sections_id[isection];
 
-        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
                                                               id_section,
                                                               0);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
                                                                               id_section);
 
         assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
@@ -4368,7 +4368,7 @@ _mesh_intersection_surf_surf2
           /* Polygonal section */
           int *connec_idx;
           int *connec;
-          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec_idx,
@@ -4394,7 +4394,7 @@ _mesh_intersection_surf_surf2
           PDM_g_num_t *parent_entity_g_num = NULL;
           int          order               = 0;
           const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec,

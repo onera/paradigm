@@ -397,7 +397,7 @@ const char                  *ho_ordering,
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block   Section identifier
+ * \param [in]  id_section Section identifier
  * \param [in]  id_part    Partition identifier
  *
  * \return      Number of elements
@@ -405,11 +405,11 @@ const char                  *ho_ordering,
  */
 //---> PDM_Mesh_nodal_block_n_elt_get
 int
-PDM_part_mesh_nodal_block_n_elt_get
+PDM_part_mesh_nodal_section_n_elt_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
-const int                     id_block,
+const int                     id_section,
 const int                     id_part
 );
 
@@ -486,7 +486,7 @@ const int                     id_part
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block                Section identifier
+ * \param [in]  id_section              Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
  * \param [out] numabs                  Global numbering
@@ -496,11 +496,11 @@ const int                     id_part
  */
 //---> PDM_Mesh_nodal_block_std_get
 void
-PDM_part_mesh_nodal_block_std_get
+PDM_part_mesh_nodal_section_std_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
-const int                     id_block,
+const int                     id_section,
 const int                     id_part,
       int                   **connec,
       PDM_g_num_t           **numabs,
@@ -544,7 +544,7 @@ const char                  **ho_ordering
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block     Block identifier
+ * \param [in]  id_section   Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return parent numbering of block elements
@@ -552,11 +552,11 @@ const char                  **ho_ordering
  */
 //---> PDM_Mesh_nodal_block_parent_num_get
 int *
-PDM_part_mesh_nodal_block_parent_num_get
+PDM_part_mesh_nodal_section_parent_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
-const int                     id_block,
+const int                     id_section,
 const int                     id_part
 );
 
@@ -565,7 +565,7 @@ const int                     id_part
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block     Block identifier
+ * \param [in]  id_section   Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return global element numbering of block elements
@@ -575,11 +575,11 @@ const int                     id_part
  // ATTENTION != PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
-PDM_part_mesh_nodal_block_g_num_get
+PDM_part_mesh_nodal_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
-const int                     id_block,
+const int                     id_section,
 const int                     id_part
 );
 
@@ -634,7 +634,7 @@ PDM_part_mesh_nodal_dump_vtk
  */
 //---> PDM_Mesh_nodal_compute_cell_extents
 void
-PDM_part_mesh_nodal_block_elt_extents_compute
+PDM_part_mesh_nodal_section_elt_extents_compute
 (
        PDM_part_mesh_nodal_t *pmn,
        PDM_geometry_kind_t    geom_kind,
@@ -753,7 +753,7 @@ const int                   *parent_num,
  */
 //---> PDM_Mesh_nodal_block_poly2d_get
 void
-PDM_part_mesh_nodal_block_poly2d_get
+PDM_part_mesh_nodal_section_poly2d_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -971,14 +971,14 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
 );
 
 /**
- * \brief Get global element numbering of block elements inside the block
+ * \brief Get global element numbering of section elements inside the section
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  id_section   Section identifier
  * \param [in]  id_part      Partition identifier
  *
- * \return      Return global numbering of block elements inside the block
+ * \return      Return global numbering of section elements inside the section
  *
  */
 //---> PDM_Mesh_nodal_block_g_num_get

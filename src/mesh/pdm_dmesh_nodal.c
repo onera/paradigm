@@ -1839,15 +1839,15 @@ PDM_dmesh_nodal_to_part_mesh_nodal_elmts
 //     for(int i_section = 0; i_section < n_section; ++i_section) {
 
 //       int id_section = sections_id[i_section];
-//       int  n_elmt    = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, i_part);
-//       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+//       int  n_elmt    = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+//       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 //       int order = 1;
 //       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
 
 //       int         *elmt_vtx = NULL;
 //       PDM_g_num_t *elmt_g_num = NULL;
 //       int         *parent_num = NULL;
-//       PDM_part_mesh_nodal_elmts_block_std_get(pmne, id_section, i_part, &elmt_vtx, &elmt_g_num, &parent_num);
+//       PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, i_part, &elmt_vtx, &elmt_g_num, &parent_num);
 
 //       for(int idx_vtx = 0; idx_vtx < n_elmt * n_vtx_per_elmt; ++idx_vtx) {
 

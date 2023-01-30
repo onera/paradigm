@@ -940,10 +940,10 @@ const int                           n_part,
               prefix, ipart, isection, i_rank);
 
       int id_section = sections_id[isection];
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                              id_section);
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                              id_section,
                                                              ipart);
 
@@ -971,7 +971,7 @@ const int                           n_part,
 
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -1000,7 +1000,7 @@ const int                           n_part,
         int         *_parent_num      = NULL;
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &n_face,
@@ -1035,7 +1035,7 @@ const int                           n_part,
         int         *_parent_num              = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_get(pmne,
                                                 id_section,
                                                 ipart,
                                                 &elmt_vtx,

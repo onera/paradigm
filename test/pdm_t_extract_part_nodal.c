@@ -579,12 +579,12 @@ int main(int argc, char *argv[])
       sprintf(filename, "out_extract_%i_%i.vtk", i_part, i_rank);
 
       int id_section = 0;
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne, id_section);
       int         *elmt_vtx                 = NULL;
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne,
+      PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne,
                                               id_section,
                                               i_part,
                                               &elmt_vtx,

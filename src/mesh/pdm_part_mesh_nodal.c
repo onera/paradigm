@@ -490,7 +490,7 @@ PDM_part_mesh_nodal_section_elt_type_get
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+  return PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 }
 
 
@@ -692,7 +692,7 @@ const char                  *ho_ordering,
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block   Section identifier
+ * \param [in]  id_section Section identifier
  * \param [in]  id_part    Partition identifier
  *
  * \return      Number of elements
@@ -700,7 +700,7 @@ const char                  *ho_ordering,
  */
 
 int
-PDM_part_mesh_nodal_block_n_elt_get
+PDM_part_mesh_nodal_section_n_elt_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -710,7 +710,7 @@ const int                     id_part
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, id_part);
+  return PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, id_part);
 }
 
 
@@ -787,7 +787,7 @@ const int                     id_part
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block                Section identifier
+ * \param [in]  id_section              Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
  * \param [out] numabs                  Global numbering
@@ -797,7 +797,7 @@ const int                     id_part
  */
 
 void
-PDM_part_mesh_nodal_block_std_get
+PDM_part_mesh_nodal_section_std_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -811,7 +811,7 @@ const int                     id_part,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num);
+  PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num);
 }
 
 
@@ -848,7 +848,7 @@ const char                  **ho_ordering
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+  PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                              id_section,
                                              id_part,
                                              connec,
@@ -865,7 +865,7 @@ const char                  **ho_ordering
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block     Block identifier
+ * \param [in]  id_section   Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return parent numbering of block elements
@@ -873,7 +873,7 @@ const char                  **ho_ordering
  */
 
 int *
-PDM_part_mesh_nodal_block_parent_num_get
+PDM_part_mesh_nodal_section_parent_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -888,20 +888,20 @@ const int                     id_part
 
 
 /**
- * \brief Get global element numbering of block elements
+ * \brief Get global element numbering of section elements
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_block     Block identifier
+ * \param [in]  id_section   Section identifier
  * \param [in]  id_part      Partition identifier
  *
- * \return      Return global element numbering of block elements
+ * \return      Return global element numbering of section elements
  *
  */
  // ATTENTION != PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
-PDM_part_mesh_nodal_block_g_num_get
+PDM_part_mesh_nodal_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -990,8 +990,8 @@ PDM_part_mesh_nodal_dump_vtk
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
       int id_section = section_id  [i_section];
-      int                  n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne, id_section, i_part);
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get (pmne, id_section);
+      int                  n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get (pmne, id_section);
 
       char filename[999];
       sprintf(filename, "%s_section_%2.2d_%2.2d_%2.2d.vtk", filename_patter, i_section, i_part, i_rank);
@@ -999,7 +999,7 @@ PDM_part_mesh_nodal_dump_vtk
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *connec_idx = NULL;
         int *connec     = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    section_id[i_section],
                                                    i_part,
                                                    &connec_idx,
@@ -1034,7 +1034,7 @@ PDM_part_mesh_nodal_dump_vtk
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;
           PDM_g_num_t *parent_elmt_num = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                      section_id[i_section],
                                                      i_part,
                                                      &pcell_vtx,
@@ -1078,7 +1078,7 @@ PDM_part_mesh_nodal_dump_vtk
           PDM_g_num_t *pelmt_ln_to_gn  = NULL;
           int         *parent_num      = NULL;
           PDM_g_num_t *parent_elmt_num = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_get(pmne,
+          PDM_part_mesh_nodal_elmts_section_std_get(pmne,
                                                   section_id[i_section],
                                                   i_part,
                                                   &pcell_vtx,
@@ -1117,7 +1117,7 @@ PDM_part_mesh_nodal_dump_vtk
  */
 
 void
-PDM_part_mesh_nodal_block_elt_extents_compute
+PDM_part_mesh_nodal_section_elt_extents_compute
 (
        PDM_part_mesh_nodal_t *pmn,
        PDM_geometry_kind_t    geom_kind,
@@ -1264,7 +1264,7 @@ const int                   *parent_num,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_poly2d_set(pmne,
+  PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
                                              id_section,
                                              id_part,
                                              n_elt,
@@ -1289,7 +1289,7 @@ const int                   *parent_num,
  */
 
 void
-PDM_part_mesh_nodal_block_poly2d_get
+PDM_part_mesh_nodal_section_poly2d_get
 (
       PDM_part_mesh_nodal_t  *pmn,
       PDM_geometry_kind_t     geom_kind,
@@ -1301,7 +1301,7 @@ const int                     id_part,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+  PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                              id_section,
                                              id_part,
                                              connec_idx,
@@ -1350,7 +1350,7 @@ const int                   *parent_num,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_poly3d_set(pmne,
+  PDM_part_mesh_nodal_elmts_section_poly3d_set(pmne,
                                              id_section,
                                              id_part,
                                              n_elt,
@@ -1405,7 +1405,7 @@ const int                     id_part,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
+  PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                              id_section,
                                              id_part,
                                              n_face,
@@ -1445,7 +1445,7 @@ const int                     id_part,
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+  PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                               id_section,
                                                               id_part,
                                                               cellvtx_idx,

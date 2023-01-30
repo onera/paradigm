@@ -84,7 +84,7 @@ void
 PDM_part_mesh_nodal_elmts_std_set
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part,
 const int                          n_elt,
 const int                         *connec,
@@ -98,7 +98,7 @@ void
 PDM_part_mesh_nodal_elmts_std_ho_set
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part,
 const int                          n_elt,
 const int                         *connec,
@@ -114,7 +114,7 @@ const char                        *ho_ordering,
  * \brief Define a polygon block
  *
  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
- * \param [in]  id_block       Block identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of elements
  * \param [in]  connect_idx    Connectivity index (size = \ref n_elt + 1)
@@ -125,10 +125,10 @@ const char                        *ho_ordering,
  */
 
 void
-PDM_part_mesh_nodal_elmts_block_poly2d_set
+PDM_part_mesh_nodal_elmts_section_poly2d_set
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part,
 const int                          n_elt,
 const int                         *connec_idx,
@@ -142,7 +142,7 @@ const int                         *parent_num,
  * \brief Define a polyhedra block
  *
  * \param [in]  mesh           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  id_block       Block identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of polyhedra
  * \param [in]  n_face         Number of faces used to describe polyhedra
@@ -156,10 +156,10 @@ const int                         *parent_num,
  */
 
 void
-PDM_part_mesh_nodal_elmts_block_poly3d_set
+PDM_part_mesh_nodal_elmts_section_poly3d_set
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part,
 const int                          n_elt,
 const int                          n_face,
@@ -176,10 +176,10 @@ const int                         *parent_num,
 
 
 void
-PDM_part_mesh_nodal_elmts_block_std_get
+PDM_part_mesh_nodal_elmts_section_std_get
 (
       PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_block,
+const int                           id_section,
 const int                           id_part,
       int                         **connec,
       PDM_g_num_t                 **numabs,
@@ -188,10 +188,10 @@ const int                           id_part,
 );
 
 void
-PDM_part_mesh_nodal_elmts_block_std_ho_get
+PDM_part_mesh_nodal_elmts_section_std_ho_get
 (
       PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_block,
+const int                           id_section,
 const int                           id_part,
       int                         **connec,
       PDM_g_num_t                 **numabs,
@@ -205,7 +205,7 @@ const char                        **ho_ordering
  * \brief Return a polygon block description
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
- * \param [in]  id_block       Block identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
  * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
@@ -213,10 +213,10 @@ const char                        **ho_ordering
  */
 
 void
-PDM_part_mesh_nodal_elmts_block_poly2d_get
+PDM_part_mesh_nodal_elmts_section_poly2d_get
 (
        PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           id_block,
+ const int                           id_section,
  const int                           id_part,
        int                         **connec_idx,
        int                         **connec
@@ -226,7 +226,7 @@ PDM_part_mesh_nodal_elmts_block_poly2d_get
  * \brief Get the cell-vertex connectivity of a polyhedra block
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
- * \param [in]  id_block       Block identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [out] cell_vtx_idx   Index of cell vertex connectivity
  * \param [out] cell_vtx       Cell vertex connectivity
@@ -234,10 +234,10 @@ PDM_part_mesh_nodal_elmts_block_poly2d_get
  */
 
 void
-PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
+PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 (
        PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           id_block,
+ const int                           id_section,
  const int                           id_part,
        int                         **cell_vtx_idx,
        int                         **cell_vtx
@@ -245,10 +245,10 @@ PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get
 
 
 void
-PDM_part_mesh_nodal_elmts_block_poly3d_get
+PDM_part_mesh_nodal_elmts_section_poly3d_get
 (
       PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_block,
+const int                           id_section,
 const int                           id_part,
       int                          *n_face,
       PDM_g_num_t                 **face_ln_to_gn,
@@ -262,10 +262,10 @@ const int                           id_part,
 );
 
 int
-PDM_part_mesh_nodal_elmts_block_n_elt_get
+PDM_part_mesh_nodal_elmts_section_n_elt_get
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part
 );
 
@@ -282,10 +282,10 @@ PDM_part_mesh_nodal_elmts_sections_id_get
 );
 
 PDM_Mesh_nodal_elt_t
-PDM_part_mesh_nodal_elmts_block_type_get
+PDM_part_mesh_nodal_elmts_section_type_get
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block
+const int                          id_section
 );
 
 PDM_part_mesh_nodal_elmts_t*
@@ -308,7 +308,7 @@ int *
 PDM_part_mesh_nodal_elmts_parent_num_get
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part
 );
 
@@ -316,7 +316,7 @@ PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_g_num_get
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_block,
+const int                          id_section,
 const int                          id_part
 );
 
@@ -339,7 +339,7 @@ PDM_part_mesh_nodal_elmts_create_from_part2d
  * \brief Compute element extents of a part of a section
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  id_block       Section identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  tolerance      Expansion tolerance for bounding boxes
  * \param [in]  vtx_coord      Coordinates of vertices
@@ -351,7 +351,7 @@ void
 PDM_part_mesh_nodal_elmts_elt_extents_compute
 (
        PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_block,
+ const int                          id_section,
  const int                          id_part,
  const double                       tolerance,
        double                      *vtx_coord,
@@ -362,7 +362,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
  * \brief Compute element centers of a part of a section
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  id_block       Section identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_vtx          Number of vertices
  * \param [in]  vtx_coord      Coordinates of vertices
@@ -374,7 +374,7 @@ void
 PDM_part_mesh_nodal_elmts_elt_center_compute
 (
        PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_block,
+ const int                          id_section,
  const int                          id_part,
  const int                          n_vtx,
        double                      *vtx_coord,
@@ -385,7 +385,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
  * \brief Compute element centers of a part of a section
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  id_block       Section identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_vtx          Number of vertices
  * \param [in]  vtx_coord      Coordinates of vertices
@@ -397,7 +397,7 @@ const double *
 PDM_part_mesh_nodal_elmts_elt_center_get
 (
        PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_block,
+ const int                          id_section,
  const int                          id_part
  );
 
@@ -405,7 +405,7 @@ PDM_part_mesh_nodal_elmts_elt_center_get
  * \brief Reset element centers of a part of a section
  *
  * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  id_block       Section identifier
+ * \param [in]  id_section     Section identifier
  * \param [in]  id_part        Partition identifier
  *
  */
@@ -414,7 +414,7 @@ void
 PDM_part_mesh_nodal_elmts_elt_center_reset
 (
        PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_block,
+ const int                          id_section,
  const int                          id_part
  );
 

@@ -1162,7 +1162,7 @@ _dist_cloud_surf_compute_optim
       for (int isection = 0; isection < n_section; isection++) {
         int id_section = sections_id[isection];
 
-        int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+        int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                         geom_kind,
                                                         id_section,
                                                         i_part);
@@ -1181,22 +1181,22 @@ _dist_cloud_surf_compute_optim
       for (int isection = 0; isection < n_section; isection++) {
         int id_section = sections_id[isection];
 
-        int *parent_num = PDM_part_mesh_nodal_block_parent_num_get(mesh_nodal,
+        int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
                                                                    geom_kind,
                                                                    id_section,
                                                                    i_part);
 
-        PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_block_g_num_get(mesh_nodal,
-                                                                      geom_kind,
-                                                                      id_section,
-                                                                      i_part);
+        PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
+                                                                geom_kind,
+                                                                id_section,
+                                                                i_part);
 
-        int n_elt = PDM_part_mesh_nodal_block_n_elt_get(mesh_nodal,
+        int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
                                                         geom_kind,
                                                         id_section,
                                                         i_part);
 
-        PDM_part_mesh_nodal_block_elt_extents_compute(mesh_nodal,
+        PDM_part_mesh_nodal_section_elt_extents_compute(mesh_nodal,
                                                       geom_kind,
                                                       id_section,
                                                       i_part,
@@ -1720,7 +1720,7 @@ _dist_cloud_surf_compute_optim
       int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
 
       for (int i = 0; i < n_section; i++) {
-        pn_extract_face += PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+        pn_extract_face += PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
                                                                      sections_id[i],
                                                                      0);
       }
@@ -1732,11 +1732,11 @@ _dist_cloud_surf_compute_optim
       for (int i = 0; i < n_section; i++) {
         int id_section = sections_id[i];
 
-        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
                                                               id_section,
                                                               0);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
                                                                               id_section);
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
@@ -1747,7 +1747,7 @@ _dist_cloud_surf_compute_optim
           /* Polygonal section */
           int *connec_idx;
           int *connec;
-          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec_idx,
@@ -1778,7 +1778,7 @@ _dist_cloud_surf_compute_optim
           PDM_g_num_t *parent_entity_g_num = NULL;
           int          order               = 0;
           const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec,
@@ -1815,11 +1815,11 @@ _dist_cloud_surf_compute_optim
       for (int i = 0; i < n_section; i++) {
         int id_section = sections_id[i];
 
-        int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extract_pmne,
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
                                                               id_section,
                                                               0);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne,
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
                                                                               id_section);
 
         int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
@@ -1830,7 +1830,7 @@ _dist_cloud_surf_compute_optim
           /* Polygonal section */
           int *connec_idx;
           int *connec;
-          PDM_part_mesh_nodal_elmts_block_poly2d_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec_idx,
@@ -1860,7 +1860,7 @@ _dist_cloud_surf_compute_optim
           PDM_g_num_t *parent_entity_g_num = NULL;
           int          order               = 0;
           const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(extract_pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
                                                      id_section,
                                                      0,
                                                      &connec,

@@ -2246,7 +2246,7 @@ PDM_point_location_nodal
 
     int n_cell = 0;
     for (int isection = 0; isection < n_section; isection++) {
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             sections_id[isection],
                                                             ipart);
 
@@ -2266,11 +2266,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2281,7 +2281,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2305,7 +2305,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &connec_idx,
@@ -2332,7 +2332,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,
@@ -2383,11 +2383,11 @@ PDM_point_location_nodal
 
       int id_section = sections_id[isection];
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(pmne,
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
                                                             id_section,
                                                             ipart);
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
                                                                             id_section);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
@@ -2398,7 +2398,7 @@ PDM_point_location_nodal
         /* Polygonal section */
         int *connec_idx;
         int *connec;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec_idx,
@@ -2448,7 +2448,7 @@ PDM_point_location_nodal
         /* Polyhedral section */
         int *cell_vtx_idx;
         int *cell_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                     id_section,
                                                                     ipart,
                                                                     &cell_vtx_idx,
@@ -2463,7 +2463,7 @@ PDM_point_location_nodal
         int         *_parent_num              = NULL;
         PDM_g_num_t *numabs                   = NULL;
         PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &n_face,
@@ -2585,7 +2585,7 @@ PDM_point_location_nodal
               PDM_g_num_t *parent_entity_g_num = NULL;
               int          order               = 0;
         const char        *ho_ordering         = NULL;
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                    id_section,
                                                    ipart,
                                                    &connec,

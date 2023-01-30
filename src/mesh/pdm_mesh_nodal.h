@@ -598,7 +598,7 @@ const PDM_l_num_t      *parent_num
  * \param [out]  connect        Connectivity
  *
  */
-//---> PDM_part_mesh_nodal_block_std_get
+//---> PDM_part_mesh_nodal_section_std_get
 void
 PDM_Mesh_nodal_block_std_get
 (
@@ -619,7 +619,7 @@ const int                id_part,
  * \return      Number of elements
  *
  */
-//---> PDM_part_mesh_nodal_block_n_elt_get
+//---> PDM_part_mesh_nodal_section_n_elt_get
 int
 PDM_Mesh_nodal_block_n_elt_get
 (
@@ -657,7 +657,7 @@ const int               id_part
  * \return      Return global element numbering of block elements
  *
  */
-//---> PDM_part_mesh_nodal_block_g_num_get
+//---> PDM_part_mesh_nodal_section_g_num_get
 PDM_g_num_t *
 PDM_Mesh_nodal_g_num_get
 (
@@ -697,7 +697,7 @@ const PDM_ownership_t  ownership
  * \return      Return parent numbering of block elements
  *
  */
-//---> PDM_part_mesh_nodal_block_parent_num_get
+//---> PDM_part_mesh_nodal_section_parent_num_get
 int *
 PDM_Mesh_nodal_block_parent_num_get
 (
@@ -749,7 +749,7 @@ const PDM_l_num_t      *parent_num
  * \param [out] parent_num     Parent numbering or NULL
  *
  */
-//---> PDM_part_mesh_nodal_block_poly2d_get
+//---> PDM_part_mesh_nodal_section_poly2d_get
 void
 PDM_Mesh_nodal_block_poly2d_get
 (
@@ -1131,7 +1131,7 @@ PDM_Mesh_nodal_n_vertices_element
  * \param [out] extents        Extents of mesh elements in current part of current block
  *
  */
-//---> PDM_part_mesh_nodal_block_elt_extents_compute
+//---> PDM_part_mesh_nodal_section_elt_extents_compute
 void
 PDM_Mesh_nodal_compute_cell_extents
 (

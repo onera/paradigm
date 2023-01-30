@@ -474,7 +474,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       // int order      = section_order[i_section];
       int id_section = pid_section  [i_section];
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 
       // int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
       // connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
@@ -498,7 +498,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       int id_section = pid_section  [i_section];
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int idx_write = pelmt_by_section_n[i_section]++;
@@ -511,7 +511,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
     for(int i_section = 0; i_section < n_section; ++i_section){
       int id_section = pid_section[i_section];
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         for (int i = 0; i < pelmt_by_section_n[i_section]; i++) {
           connec_idx[i_section][i+1] += connec_idx[i_section][i];
@@ -537,7 +537,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
       int id_section = pid_section  [i_section];
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
       int idx_write = pelmt_by_section_n[i_section]++;
 
       int idx_read_connec = pelmts_stride_idx[i_part][i_elmt];
@@ -579,9 +579,9 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       int id_section = pid_section[i_section];
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_part_mesh_nodal_elmts_block_poly2d_set(pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
                                                    id_section,
                                                    i_part,
                                                    n_elmt_in_section,

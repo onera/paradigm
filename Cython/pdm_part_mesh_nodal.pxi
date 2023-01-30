@@ -57,13 +57,13 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              PDM_g_num_t           *parent_entity_g_num,
                                              PDM_ownership_t        owner)
 
-    int PDM_part_mesh_nodal_block_n_elt_get(PDM_part_mesh_nodal_t  *pmn,
+    int PDM_part_mesh_nodal_section_n_elt_get(PDM_part_mesh_nodal_t  *pmn,
                                             PDM_geometry_kind_t     geom_kind,
                                             int                     id_block,
                                             int                     id_part)
 
 
-    void PDM_part_mesh_nodal_block_std_get(PDM_part_mesh_nodal_t  *pmn,
+    void PDM_part_mesh_nodal_section_std_get(PDM_part_mesh_nodal_t  *pmn,
                                            PDM_geometry_kind_t     geom_kind,
                                            int                     id_block,
                                            int                     id_part,
@@ -181,9 +181,9 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
     assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
 
-    n_elmt_in_section = PDM_part_mesh_nodal_block_n_elt_get(pypmn.pmn, geom_kind, id_section, i_part)
+    n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, geom_kind, id_section, i_part)
 
-    PDM_part_mesh_nodal_block_std_get(pypmn.pmn, geom_kind, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num)
+    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, geom_kind, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num)
 
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
 

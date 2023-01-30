@@ -1164,8 +1164,8 @@ _extract_part_nodal
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       n_selected_section  [i_part][i_section] = 0;
       idx_selected_section[i_part][i_section] = malloc( n_elt * sizeof(int));
@@ -1178,7 +1178,7 @@ _extract_part_nodal
       int          order            = 0;
       const char  *ho_ordering      = NULL;
 
-      PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+      PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                  sections_id[i_section],
                                                  i_part,
                                                  &elt_vtx,
@@ -1264,7 +1264,7 @@ _extract_part_nodal
 
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       int         *elt_vtx          = NULL;
       int         *_parent_num      = NULL;
@@ -1273,7 +1273,7 @@ _extract_part_nodal
       int          order            = 0;
       const char  *ho_ordering      = NULL;
 
-      PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+      PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                  sections_id[i_section],
                                                  i_part,
                                                  &elt_vtx,
@@ -1388,12 +1388,12 @@ _extract_part_nodal
       sprintf(filename, "out_extract_%i_%i.vtk", i_part, i_rank);
 
       int id_section = 0;
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extract_pmne, id_section);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne, id_section);
       int         *elmt_vtx                 = NULL;
       int         *parent_num               = NULL;
       PDM_g_num_t *numabs                   = NULL;
       PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_block_std_get(extract_pmne, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
+      PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne, id_section, i_part, &elmt_vtx, &numabs, &parent_num, &parent_entitity_ln_to_gn);
 
       PDM_vtk_write_std_elements(filename,
                                  n_extract_vtx[i_part],
@@ -1535,8 +1535,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     int parent_elt = -1;
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
@@ -1545,7 +1545,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
         int *face_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
@@ -1576,7 +1576,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         //   // Check cell-vtx connectivity
         //   int *cell_vtx_idx;
         //   int *cell_vtx;
-        //   PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extrp->pmne,
+        //   PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(extrp->pmne,
         //                                                               sections_id[i_section],
         //                                                               i_part,
         //                                                               &cell_vtx_idx,
@@ -1609,7 +1609,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int         *_parent_num      = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &n_face,
@@ -1650,7 +1650,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int          order;
         const char  *ho_ordering;
 
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &elt_vtx,
@@ -1696,8 +1696,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     /* Remplissage */
     parent_elt = -1;
     for(int i_section = 0; i_section < n_section; ++i_section) {
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
@@ -1706,7 +1706,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
         int *face_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
@@ -1750,7 +1750,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int         *_parent_num      = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &n_face,
@@ -1796,7 +1796,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int          order            = 0;
         const char  *ho_ordering      = NULL;
 
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &elt_vtx,
@@ -1835,8 +1835,8 @@ _extract_part_and_reequilibrate_nodal_from_target
     int *elt_vtx_idx  = PDM_array_new_idx_from_sizes_int(elmt_vtx_n [i_part], n_elmt_to_send);
     int *elt_face_idx = PDM_array_new_idx_from_sizes_int(elmt_face_n[i_part], n_elmt_to_send);
     for(int i_section = 0; i_section < n_section; ++i_section) {
-      int n_elt = PDM_part_mesh_nodal_elmts_block_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extrp->pmne, sections_id[i_section], i_part);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extrp->pmne,
                                                                  sections_id[i_section],
@@ -1845,7 +1845,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *face_vtx_idx;
         int *face_vtx;
-        PDM_part_mesh_nodal_elmts_block_poly2d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &face_vtx_idx,
@@ -1890,7 +1890,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int         *_parent_num      = NULL; // Il faut adpater tout le part_mesh_nodal_elmts
         PDM_g_num_t *elt_ln_to_gn     = NULL;
         PDM_g_num_t *parent_elt_g_num = NULL;
-        PDM_part_mesh_nodal_elmts_block_poly3d_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &n_face,
@@ -1970,7 +1970,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int          order            = 0;
         const char  *ho_ordering      = NULL;
 
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &elt_vtx,
@@ -2199,7 +2199,7 @@ _extract_part_and_reequilibrate_nodal_from_target
     PDM_g_num_t **extract_parent_g_num       = malloc(n_section * sizeof(PDM_g_num_t *));
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
       // int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get            (t_elt    , 1);
 
       // elmt_vtx_by_section [i_section  ] = malloc( n_vtx_per_elmt * n_elmt_by_section[i_section] * sizeof(int        ));
@@ -2237,7 +2237,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       extract_parent_num  [lsection_id][idx_write] = i;
       extract_parent_g_num[lsection_id][idx_write] = extrp->target_gnum[i_part][i];
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne,
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne,
                                                                             sections_id[lsection_id]);
       int idx_vtx;
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
@@ -2293,7 +2293,7 @@ _extract_part_and_reequilibrate_nodal_from_target
      */
     for(int i_section = 0; i_section < n_section; ++i_section) {
 
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(extrp->pmne, sections_id[i_section]);
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extrp->pmne, sections_id[i_section]);
 
       int extract_section_id = 0;
 
@@ -2305,7 +2305,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         int          order;
         const char  *ho_ordering;
 
-        PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                    sections_id[i_section],
                                                    i_part,
                                                    &elt_vtx,
@@ -2322,7 +2322,7 @@ _extract_part_and_reequilibrate_nodal_from_target
       }
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_part_mesh_nodal_elmts_block_poly2d_set(extract_pmne,
+        PDM_part_mesh_nodal_elmts_section_poly2d_set(extract_pmne,
                                                    extract_section_id,
                                                    i_part,
                                                    n_elmt_by_section[i_section],
@@ -2412,7 +2412,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         //                                n_lextract_face,
         //                                "face_vtx : ");
 
-        PDM_part_mesh_nodal_elmts_block_poly3d_set(extract_pmne,
+        PDM_part_mesh_nodal_elmts_section_poly3d_set(extract_pmne,
                                                    extract_section_id,
                                                    i_part,
                                                    n_elmt_by_section[i_section],
@@ -2430,7 +2430,7 @@ _extract_part_and_reequilibrate_nodal_from_target
         //   // Check cell-vtx connectivity
         //   int *cell_vtx_idx;
         //   int *cell_vtx;
-        //   PDM_part_mesh_nodal_elmts_block_poly3d_cell_vtx_connect_get(extract_pmne,
+        //   PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(extract_pmne,
         //                                                               extract_section_id,
         //                                                               i_part,
         //                                                               &cell_vtx_idx,
@@ -2460,7 +2460,7 @@ _extract_part_and_reequilibrate_nodal_from_target
 
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
           // fails if extrp->pmne->n_part < extrp->n_part_out
-          PDM_part_mesh_nodal_elmts_block_std_ho_get(extrp->pmne,
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(extrp->pmne,
                                                      sections_id[i_section],
                                                      i_part,
                                                      &elt_vtx,
