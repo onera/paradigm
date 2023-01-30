@@ -227,11 +227,8 @@ PDM_mesh_location_shared_nodal_mesh_set
  *
  * \brief Set global data of a mesh
  *
- * \param [in]   id             Pointer to \ref PDM_mesh_location object
- * \param [in]   n_g_cell       Global number of cells
- * \param [in]   n_g_face       Global number of faces
- * \param [in]   n_g_vtx        Global number of vertices
- * \param [in]   n_part         Number of partition
+ * \param [in]   ml             Pointer to \ref PDM_mesh_location object
+ * \param [in]   n_part         Number of partitions
  *
  */
 

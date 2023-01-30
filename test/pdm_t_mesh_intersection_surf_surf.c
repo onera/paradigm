@@ -328,6 +328,8 @@ _set_mesh
   int i_rank;
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
 
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -556,7 +558,7 @@ char *argv[]
                           &dmn_surf_b,
                           &mpart_surf_b);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_dmesh_nodal_dump_vtk(dmn_surf_a,
                              PDM_GEOMETRY_KIND_SURFACIC,
                              "dmn_surf_a_");
@@ -573,8 +575,6 @@ char *argv[]
   PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
-                                                             n_part,
-                                                             n_part,
                                                              1e-6,
                                                              comm);
 

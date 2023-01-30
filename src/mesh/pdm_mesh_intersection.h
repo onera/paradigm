@@ -40,10 +40,26 @@ PDM_mesh_intersection_create
  const PDM_mesh_intersection_kind_t intersection_kind,
  const int                          dim_mesh_a,
  const int                          dim_mesh_b,
- const int                          n_part_mesh_a,
- const int                          n_part_mesh_b,
  const double                       project_coeff,
        PDM_MPI_Comm                 comm
+);
+
+/**
+ *
+ * \brief Set global data of a mesh
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   n_part         Number of partitions
+ *
+ */
+
+void
+PDM_mesh_intersection_n_part_set
+(
+  PDM_mesh_intersection_t *mi,
+  const int                i_mesh,
+  const int                n_part
 );
 
 void
@@ -51,6 +67,16 @@ PDM_mesh_intersection_compute
 (
   PDM_mesh_intersection_t  *mi
 );
+
+/**
+ *
+ * \brief Set the mesh nodal
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   mesh           Pointer to \ref PDM_part_mesh_nodal object
+ *
+ */
 
 void
 PDM_mesh_intersection_mesh_nodal_set

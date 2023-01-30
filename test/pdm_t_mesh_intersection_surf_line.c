@@ -367,7 +367,8 @@ _set_mesh_line
  int                      n_part
 )
 {
-  PDM_UNUSED(n_part);
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   int i_part = 0;
   PDM_g_num_t *edge_ln_to_gn = NULL;
   PDM_g_num_t *vtx_ln_to_gn  = NULL;
@@ -432,6 +433,8 @@ _set_mesh
  int                      n_part
 )
 {
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -642,8 +645,6 @@ char *argv[]
   PDM_mesh_intersection_t* mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
-                                                             n_part,
-                                                             n_part,
                                                              1e-6,
                                                              comm);
 

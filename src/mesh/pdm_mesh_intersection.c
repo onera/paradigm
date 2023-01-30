@@ -4899,8 +4899,6 @@ PDM_mesh_intersection_create
  const PDM_mesh_intersection_kind_t intersection_kind,
  const int                          dim_mesh_a,
  const int                          dim_mesh_b,
- const int                          n_part_mesh_a, // A supprimer
- const int                          n_part_mesh_b, // A supprimer
  const double                       project_coeff,
        PDM_MPI_Comm                 comm
 )
@@ -4909,14 +4907,11 @@ PDM_mesh_intersection_create
 
   mi->comm = comm;
   mi->intersect_kind = intersection_kind;
-  mi->n_part_mesh[0] = n_part_mesh_a;
-  mi->n_part_mesh[1] = n_part_mesh_b;
+  mi->n_part_mesh[0] = 0;
+  mi->n_part_mesh[1] = 0;
   mi->dim_mesh[0]    = dim_mesh_a;
   mi->dim_mesh[1]    = dim_mesh_b;
   mi->project_coef   = project_coeff;
-
-  mi->mesh[0] = PDM_part_mesh_create(n_part_mesh_a, comm);
-  mi->mesh[1] = PDM_part_mesh_create(n_part_mesh_b, comm);
 
   mi->mesh_nodal[0] = NULL;
   mi->mesh_nodal[1] = NULL;
@@ -4934,8 +4929,30 @@ PDM_mesh_intersection_create
   return mi;
 }
 
-// Ajouter
-// PDM_mesh_intersection_global_data_set
+/**
+ *
+ * \brief Set global data of a mesh
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   n_part         Number of partitions
+ *
+ */
+
+void
+PDM_mesh_intersection_n_part_set
+(
+  PDM_mesh_intersection_t *mi,
+  const int                i_mesh,
+  const int                n_part
+)
+{
+  assert(mi->mesh_nodal[i_mesh] == NULL);
+
+  mi->n_part_mesh[i_mesh] = n_part;
+
+  mi->mesh[i_mesh] = PDM_part_mesh_create(n_part, mi->comm);
+}
 
 void
 PDM_mesh_intersection_compute
@@ -5282,6 +5299,15 @@ PDM_mesh_intersection_compute
 
 }
 
+/**
+ *
+ * \brief Set the mesh nodal
+ *
+ * \param [in]   mi             Pointer to \ref PDM_mesh_intersection object
+ * \param [in]   i_mesh         Mesh identifier
+ * \param [in]   mesh           Pointer to \ref PDM_part_mesh_nodal object
+ *
+ */
 
 void
 PDM_mesh_intersection_mesh_nodal_set
@@ -5292,6 +5318,8 @@ PDM_mesh_intersection_mesh_nodal_set
  )
 {
   mi->mesh_nodal[i_mesh] = mesh;
+
+  mi->n_part_mesh[i_mesh] = PDM_part_mesh_nodal_n_part_get(mesh);
 }
 
 
@@ -5319,6 +5347,8 @@ PDM_mesh_intersection_part_set
   double                   *vtx_coord
 )
 {
+  assert(i_part < mi->n_part_mesh[i_mesh]);
+
   PDM_part_mesh_t* mesh = mi->mesh[i_mesh];
 
   PDM_part_mesh_n_entity_set(mesh, i_part, PDM_MESH_ENTITY_CELL  , n_cell);

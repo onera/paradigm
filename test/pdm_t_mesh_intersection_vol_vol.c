@@ -451,6 +451,8 @@ _set_mesh
  int                      n_part
 )
 {
+  PDM_mesh_intersection_n_part_set(mi, i_mesh, n_part);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int *face_edge_idx;
@@ -703,8 +705,6 @@ main
   PDM_mesh_intersection_t *mi = PDM_mesh_intersection_create(PDM_MESH_INTERSECTION_KIND_SOFT,
                                                              dim_mesh_a,
                                                              dim_mesh_b,
-                                                             n_part,
-                                                             n_part,
                                                              1e-6,
                                                              comm);
 
