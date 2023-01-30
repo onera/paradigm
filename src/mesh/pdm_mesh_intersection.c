@@ -882,7 +882,7 @@ _select_elements_by_global_bbox_nodal
           extract_elmt_init_location[i_part][3*n_extract_elmt[i_part]+1] = i_part;
           extract_elmt_init_location[i_part][3*n_extract_elmt[i_part]+2] = i;
 
-          extract_elmt_ln_to_gn[i_part][n_extract_elmt[i_part]] = entity_ln_to_gn[i];
+          extract_elmt_ln_to_gn[i_part][n_extract_elmt[i_part]] = entity_ln_to_gn[ielt];
 
           n_extract_elmt[i_part]++;
         }
@@ -2057,6 +2057,9 @@ _build_ptp
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
     free(user_elt_a_b_init_loc_idx[ipart]);
     free(user_elt_a_b_init_loc    [ipart]);
+    if (mi->mesh_nodal[0] != NULL) {
+      free(user_elt_ln_to_gn_a[ipart]);
+    }
   }
   free(user_elt_a_b_init_loc_idx);
   free(user_elt_a_b_init_loc    );

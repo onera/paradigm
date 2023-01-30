@@ -80,7 +80,8 @@ _read_args
  PDM_g_num_t           *n_vtx_a,
  PDM_g_num_t           *n_vtx_b,
  int                   *n_part,
- PDM_Mesh_nodal_elt_t  *elt_type,
+ PDM_Mesh_nodal_elt_t  *elt_type_a,
+ PDM_Mesh_nodal_elt_t  *elt_type_b,
  int                   *nodal_a,
  int                   *nodal_b
 )
@@ -122,12 +123,19 @@ _read_args
         *n_part = atoi(argv[i]);
       }
     }
-    else if (strcmp(argv[i], "-t") == 0) {
+    else if (strcmp(argv[i], "-tA") == 0) {
       i++;
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else
-        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+        *elt_type_a = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-tB") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *elt_type_b = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
     else if (strcmp(argv[i], "-nodalA") == 0) {
       *nodal_a = 1;
@@ -433,7 +441,7 @@ _set_mesh
 }
 
 static
-void
+PDM_part_mesh_nodal_t *
 _set_mesh_nodal
 (
  PDM_mesh_intersection_t *mi,
@@ -444,7 +452,15 @@ _set_mesh_nodal
   PDM_part_mesh_nodal_t *pmn = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
 
+  if (0 == 1) {
+    char filename[999];
+    sprintf(filename, "check_pmn_%d", i_mesh);
+    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, filename);
+  }
+
   PDM_mesh_intersection_mesh_nodal_set(mi, i_mesh, pmn);
+
+  return pmn;
 }
 
 
@@ -479,7 +495,8 @@ char *argv[]
   PDM_g_num_t n_vtx_b   = 10;
   int         nodal_a   = 0;
   int         nodal_b   = 0;
-  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_TRIA3;
+  PDM_Mesh_nodal_elt_t elt_type_a = PDM_MESH_NODAL_TRIA3;
+  PDM_Mesh_nodal_elt_t elt_type_b = PDM_MESH_NODAL_TRIA3;
 
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -496,7 +513,8 @@ char *argv[]
              &n_vtx_a,
              &n_vtx_b,
              &n_part,
-             &elt_type,
+             &elt_type_a,
+             &elt_type_b,
              &nodal_a,
              &nodal_b);
 
@@ -509,7 +527,7 @@ char *argv[]
   PDM_multipart_t       *mpart_surf_a = NULL;
   _generate_surface_mesh (comm,
                           n_vtx_a,
-                          elt_type,
+                          elt_type_a,
                           rotate_a,
                           0.,
                           0.,
@@ -527,7 +545,7 @@ char *argv[]
   PDM_multipart_t       *mpart_surf_b = NULL;
   _generate_surface_mesh (comm,
                           n_vtx_b,
-                          elt_type,
+                          elt_type_b,
                           rotate_b,
                           0.5,
                           0.5,
@@ -563,14 +581,16 @@ char *argv[]
   /*
    * Set mesh_a and mesh_b
    */
+  PDM_part_mesh_nodal_t *pmn_a = NULL;
+  PDM_part_mesh_nodal_t *pmn_b = NULL;
   if (nodal_a) {
-    _set_mesh_nodal(mi, 0, mpart_surf_a);
+    pmn_a = _set_mesh_nodal(mi, 0, mpart_surf_a);
   }
   else {
     _set_mesh(mi, 0, mpart_surf_a, n_part);
   }
   if (nodal_b) {
-    _set_mesh_nodal(mi, 1, mpart_surf_b);
+    pmn_b = _set_mesh_nodal(mi, 1, mpart_surf_b);
   }
   else {
     _set_mesh(mi, 1, mpart_surf_b, n_part);
@@ -690,12 +710,21 @@ char *argv[]
   }
   PDM_mesh_intersection_free(mi);
 
+  if (nodal_a) {
+    PDM_part_mesh_nodal_free(pmn_a);
+  }
+  if (nodal_b) {
+    PDM_part_mesh_nodal_free(pmn_b);
+  }
 
   PDM_DMesh_nodal_free(dmn_surf_b);
   PDM_multipart_free(mpart_surf_b);
 
   PDM_DMesh_nodal_free(dmn_surf_a);
   PDM_multipart_free(mpart_surf_a);
+
+
+
 
   PDM_MPI_Barrier(comm);
 

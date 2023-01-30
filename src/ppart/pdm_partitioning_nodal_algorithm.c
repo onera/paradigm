@@ -353,7 +353,22 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order[i_section] = 1;
         pid_section  [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        int n_elt = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
+
+        int         *connec_idx = NULL;
+        PDM_g_num_t *connec     = NULL;
+        PDM_DMesh_nodal_elmts_section_poly2d_get(dmne,
+                                                 id_section,
+                                                 &connec_idx,
+                                                 &connec);
+
+        block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
+        block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
+        for(int i = 0; i < n_elt; ++i) {
+          block_elmts_n_vtx[i_section][i] = connec_idx[i+1] - connec_idx[i];
+          block_elmts_types[i_section][i] = t_elt;
+        }
+        block_elmts_connec[i_section] = connec;
         break;
       }
 
@@ -361,12 +376,12 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       {
         section_order[i_section] = 1;
         pid_section[i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
     }
 
   }
@@ -431,6 +446,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    */
   int          *pelmt_by_section_n        = (int          *) malloc( (n_section+1) * sizeof(int          ));
   int         **connec                    = (int         **) malloc( (n_section+1) * sizeof(int         *));
+  int         **connec_idx                = (int         **) malloc( (n_section  ) * sizeof(int         *));
   PDM_g_num_t **numabs                    = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
   int         **parent_num                = (int         **) malloc( (n_section+1) * sizeof(int         *));
   PDM_g_num_t **sparent_entitity_ln_to_gn = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
@@ -456,12 +472,17 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     /* We allocate here and ownership if tranfert to PDM_part_mesh_nodal_elmts_t*/
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
-      int order      = section_order[i_section];
+      // int order      = section_order[i_section];
       int id_section = pid_section  [i_section];
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
 
-      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-      connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
+      // int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+      // connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        connec_idx[i_section] = malloc(sizeof(int) * (n_elmt_in_section + 1));
+        connec_idx[i_section][0] = 0;
+        pelmt_by_section_n[i_section] = 0;
+      }
       numabs    [i_section] = malloc( n_elmt_in_section                  * sizeof(PDM_g_num_t));
       parent_num[i_section] = malloc( n_elmt_in_section                  * sizeof(int        ));
 
@@ -469,6 +490,42 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         sparent_entitity_ln_to_gn[i_section] = malloc( n_elmt_in_section * sizeof(PDM_g_num_t));
       }
 
+    }
+
+    for(int i_elmt = 0; i_elmt < pn_elmt[i_part]; ++i_elmt) {
+      PDM_g_num_t g_num = elmt_ln_to_gn[i_part][i_elmt]-1;
+      int i_section = PDM_binary_search_gap_long(g_num, dmne->section_distribution, n_section+1);
+
+      int id_section = pid_section  [i_section];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        int idx_write = pelmt_by_section_n[i_section]++;
+        connec_idx[i_section][idx_write+1] = pelmts_stride_idx[i_part][i_elmt+1] - pelmts_stride_idx[i_part][i_elmt];
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        PDM_error (__FILE__, __LINE__, 0, "Poly3d are not yet supported\n");
+      }
+    }
+
+    for(int i_section = 0; i_section < n_section; ++i_section){
+      int id_section = pid_section[i_section];
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        for (int i = 0; i < pelmt_by_section_n[i_section]; i++) {
+          connec_idx[i_section][i+1] += connec_idx[i_section][i];
+        }
+        connec[i_section] = malloc(sizeof(int) * connec_idx[i_section][pelmt_by_section_n[i_section]]);
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        PDM_error (__FILE__, __LINE__, 0, "Poly3d are not yet supported\n");
+      }
+      else {
+        int order = section_order[i_section];
+        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+        connec[i_section] = malloc(pelmt_by_section_n[i_section] * n_vtx_per_elmt * sizeof(int));
+      }
     }
     PDM_array_reset_int(pelmt_by_section_n, n_section, 0);
 
@@ -478,19 +535,35 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       PDM_g_num_t g_num = elmt_ln_to_gn[i_part][i_elmt]-1;
       int i_section = PDM_binary_search_gap_long(g_num, dmne->section_distribution, n_section+1);
 
-      int order      = section_order[i_section];
       int id_section = pid_section  [i_section];
 
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
-      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-      int idx_write      = pelmt_by_section_n[i_section]++;
+      int idx_write = pelmt_by_section_n[i_section]++;
 
       int idx_read_connec = pelmts_stride_idx[i_part][i_elmt];
+
+      int idx_write_connec = 0;
+      int n_vtx_per_elmt = 0;
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        idx_write_connec = connec_idx[i_section][idx_write];
+        n_vtx_per_elmt   = connec_idx[i_section][idx_write+1] - idx_write_connec;
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        abort();
+      }
+      else {
+        int order      = section_order[i_section];
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
+        idx_write_connec = n_vtx_per_elmt * idx_write;
+      }
+
+
       for(int i_vtx = 0; i_vtx < n_vtx_per_elmt; ++i_vtx){
         PDM_g_num_t vtx_g_num = pelmts_connec[i_part][idx_read_connec+i_vtx];
         int vtx_l_num = PDM_binary_search_long(vtx_g_num, sorted_vtx_ln_to_gn[i_part], pn_vtx[i_part]);
         assert(vtx_l_num != -1);
-        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = vtx_order[i_part][vtx_l_num]+1;
+        // connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = vtx_order[i_part][vtx_l_num]+1;
+        connec[i_section][idx_write_connec + i_vtx] = vtx_order[i_part][vtx_l_num]+1;
       }
 
       numabs    [i_section][idx_write] = g_num+1;
@@ -505,17 +578,47 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       int id_section = pid_section[i_section];
-      PDM_part_mesh_nodal_elmts_std_set(pmne,
-                                        id_section,
-                                        i_part,
-                                        n_elmt_in_section,
-                                        connec                   [i_section],
-                                        numabs                   [i_section],
-                                        parent_num               [i_section],
-                                        sparent_entitity_ln_to_gn[i_section],
-                                        PDM_OWNERSHIP_KEEP);
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        PDM_part_mesh_nodal_elmts_block_poly2d_set(pmne,
+                                                   id_section,
+                                                   i_part,
+                                                   n_elmt_in_section,
+                                                   connec_idx[i_section],
+                                                   connec    [i_section],
+                                                   numabs    [i_section],
+                                                   parent_num[i_section],
+                                                   PDM_OWNERSHIP_KEEP);
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        abort();
+      }
+      else {
+        PDM_part_mesh_nodal_elmts_std_set(pmne,
+                                          id_section,
+                                          i_part,
+                                          n_elmt_in_section,
+                                          connec                   [i_section],
+                                          numabs                   [i_section],
+                                          parent_num               [i_section],
+                                          sparent_entitity_ln_to_gn[i_section],
+                                          PDM_OWNERSHIP_KEEP);
+        // HO????
+        // int order = section_order[i_section];
+        // PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
+        //                                      id_section,
+        //                                      i_part,
+        //                                      n_elmt_in_section,
+        //                                      connec                   [i_section],
+        //                                      numabs                   [i_section],
+        //                                      parent_num               [i_section],
+        //                                      sparent_entitity_ln_to_gn[i_section],
+        //                                      PDM_OWNERSHIP_KEEP);
+      }
 
       connec                   [i_section] = NULL;
+      connec_idx               [i_section] = NULL;
       numabs                   [i_section] = NULL;
       parent_num               [i_section] = NULL;
       sparent_entitity_ln_to_gn[i_section] = NULL;
@@ -524,6 +627,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
   free(pelmt_by_section_n       );
   free(connec                   );
+  free(connec_idx               );
   free(parent_num               );
   free(numabs                   );
   free(sparent_entitity_ln_to_gn);
