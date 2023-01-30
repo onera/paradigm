@@ -2909,7 +2909,7 @@ const int               id_part
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
-    if (block->numabs_int == NULL) printf("!!! id_block = %d\n", id_block);
+    // if (block->numabs_int == NULL) printf("!!! id_block = %d\n", id_block);
 
     block->is_numabs_int_get = 1;
     return block->numabs_int[id_part];

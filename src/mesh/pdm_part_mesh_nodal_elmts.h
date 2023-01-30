@@ -431,6 +431,107 @@ PDM_part_mesh_nodal_elmts_reset
  PDM_part_mesh_nodal_elmts_t *pmne
 );
 
+/**
+ * \brief  Compute a global numbering in a section
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_section   Section identifier
+ * \param [in]  ownership    Ownership
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_g_num_in_section_compute
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_section,
+const PDM_ownership_t               ownership
+);
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Return number elements of a partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_elmts_n_elmts_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+);
+
+/**
+ * \brief Get the element global numbering taking into account parent_num
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Global ids of element in current partition
+ *
+ */
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_g_num_get_from_part
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+);
+
+/**
+ * \brief Free partially a part_mesh_nodal_elmts structure
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_partial_free
+(
+PDM_part_mesh_nodal_elmts_t *pmne
+);
+
+/**
+ * \brief Get global element numbering of block elements inside the block
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_section   Section identifier
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return      Return global numbering of block elements inside the block
+ *
+ */
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_section_g_num_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_section,
+const int                           id_part
+);
+
+/**
+ * \brief  Return parent element number to local number
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent element number to local number
+ *
+ */
+
+int *
+PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+);
 
 
 #ifdef __cplusplus

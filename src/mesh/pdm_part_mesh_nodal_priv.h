@@ -61,6 +61,7 @@ struct _pdm_part_mesh_nodal_t {
   PDM_ownership_t                    is_owner_ridge;
   PDM_ownership_t                    is_owner_corner;
 
+  int                                is_vtx_def_from_parent; /*<! Are the points defined from parents */
 };
 
 #ifdef __cplusplus

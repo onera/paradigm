@@ -1194,6 +1194,9 @@ PDM_part_mesh_nodal_elmts_create
   pmne->sections_poly2d  = NULL;
   pmne->sections_poly3d  = NULL;
 
+  pmne->num_elmt_parent_to_local = NULL;
+  pmne->numabs                   = NULL;
+
   return pmne;
 }
 
@@ -1498,7 +1501,9 @@ const PDM_g_num_t                 *parent_entity_g_num,
   }
 
   /* Mapping */
-  block->n_elt  [id_part] += n_elt;
+  pmne->n_elmts [id_part] += -block->n_elt[id_part];
+  pmne->n_elmts [id_part] += n_elt;
+  block->n_elt  [id_part]  = n_elt;
   block->_connec[id_part]  = (int *) connec;
   block->_numabs[id_part]  = (PDM_g_num_t *) numabs;
   block->owner             = owner;
@@ -1681,7 +1686,8 @@ const int                         *parent_num,
   }
 
   /* Mapping */
-
+  pmne->n_elmts[id_part] += -block->n_elt[id_part];
+  pmne->n_elmts[id_part] += n_elt;
   block->n_elt[id_part]       = n_elt;
   block->_connec_idx[id_part] = (int *) connec_idx;
   block->_connec[id_part]     = (int *) connec;
@@ -1755,6 +1761,9 @@ const int                         *parent_num,
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
+
+  pmne->n_elmts[id_part] += -block->n_elt[id_part];
+  pmne->n_elmts[id_part] += n_elt;
 
   block->n_elt         [id_part] = n_elt;
   block->n_face        [id_part] = n_face;
@@ -2068,40 +2077,58 @@ PDM_part_mesh_nodal_elmts_free
  PDM_part_mesh_nodal_elmts_t* pmne
 )
 {
-
-  if(pmne->n_elmts != NULL) {
-    free(pmne->n_elmts);
-  }
-
-  /* free standard blocks */
-  if (pmne->sections_std != NULL) {
-    for (int i = 0; i < pmne->n_section_std; i++) {
-      _block_std_free(pmne->sections_std[i]);
+  if (pmne != NULL) {
+    if(pmne->n_elmts != NULL) {
+      free(pmne->n_elmts);
     }
-    free(pmne->sections_std);
-  }
 
-  /* Free polygon blocks */
-  if (pmne->sections_poly2d != NULL) {
-    for (int i = 0; i < pmne->n_section_poly2d; i++) {
-      _block_poly2d_free(pmne->sections_poly2d[i]);
+    /* free standard blocks */
+    if (pmne->sections_std != NULL) {
+      for (int i = 0; i < pmne->n_section_std; i++) {
+        _block_std_free(pmne->sections_std[i]);
+      }
+      free(pmne->sections_std);
     }
-    free(pmne->sections_poly2d);
-  }
 
-  /* Free polyhedron blocks */
-  if (pmne->sections_poly3d != NULL) {
-    for (int i = 0; i < pmne->n_section_poly3d; i++) {
-      _block_poly3d_free(pmne->sections_poly3d[i]);
+    /* Free polygon blocks */
+    if (pmne->sections_poly2d != NULL) {
+      for (int i = 0; i < pmne->n_section_poly2d; i++) {
+        _block_poly2d_free(pmne->sections_poly2d[i]);
+      }
+      free(pmne->sections_poly2d);
     }
-    free(pmne->sections_poly3d);
-  }
 
-  if(pmne->sections_id != NULL) {
-    free(pmne->sections_id);
-  }
+    /* Free polyhedron blocks */
+    if (pmne->sections_poly3d != NULL) {
+      for (int i = 0; i < pmne->n_section_poly3d; i++) {
+        _block_poly3d_free(pmne->sections_poly3d[i]);
+      }
+      free(pmne->sections_poly3d);
+    }
 
-  free(pmne);
+    if(pmne->sections_id != NULL) {
+      free(pmne->sections_id);
+    }
+
+    if (pmne->numabs != NULL) {
+      for (int i = 0; i < pmne->n_part; i++) {
+        free (pmne->numabs[i]);
+      }
+      free (pmne->numabs);
+    }
+
+    if (pmne->num_elmt_parent_to_local != NULL) {
+      for (int i_part = 0; i_part < pmne->n_part; i_part++) {
+        if (pmne->num_elmt_parent_to_local[i_part] != NULL)
+          free(pmne->num_elmt_parent_to_local[i_part]);
+      }
+      free(pmne->num_elmt_parent_to_local);
+      pmne->num_elmt_parent_to_local = NULL;
+    }
+
+    free(pmne);
+    pmne = NULL;
+  }
 }
 
 
@@ -2868,10 +2895,11 @@ PDM_part_mesh_nodal_create_from_part3d
       // PDM_log_trace_array_int(num_parent_poly3d, n_poly3d_part, "num_parent_poly3d ::");
     }
   }
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    free(num_cell_parent_to_local[i_part]);
-  }
-  free(num_cell_parent_to_local);
+  // for (int i_part = 0; i_part < n_part; i_part++) {
+  //   free(num_cell_parent_to_local[i_part]);
+  // }
+  // free(num_cell_parent_to_local);
+  pmne->num_elmt_parent_to_local = num_cell_parent_to_local;
 
   if (prepa_blocks != NULL) {
     free(prepa_blocks->n_cell);
@@ -3856,7 +3884,7 @@ PDM_part_mesh_nodal_elmts_reset
   // }
 
   // for (int i = 0; i < mesh->n_part; i++) {
-  //   mesh->n_cell[i] = 0;
+  //   pmne->n_elmts[i] = 0;
   // }
 
   // if (mesh->vtx != NULL) {
@@ -3875,4 +3903,412 @@ PDM_part_mesh_nodal_elmts_reset
   //     }
   //   }
   // }
+}
+
+
+
+/**
+ * \brief  Compute a global numbering in a section
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_section   Section identifier
+ * \param [in]  ownership    Ownership
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_g_num_in_section_compute
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_section,
+const PDM_ownership_t               ownership
+)
+{
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part_mesh_nodal_elmts identifier\n");
+  }
+
+  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create (3, pmne->n_part,
+                                              PDM_FALSE,
+                                              1e-3,
+                                              pmne->comm,
+                                              PDM_OWNERSHIP_USER); /* The result is getted and you are owner */
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    block->numabs_int_owner = ownership;
+
+    if (block->numabs_int == NULL) {
+      block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
+    }
+    else {
+      return;
+    }
+
+    for (int i = 0; i < block->n_part; i++) {
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
+    }
+
+  }
+
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    block->numabs_int_owner = ownership;
+
+    if (block->numabs_int == NULL) {
+      block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
+    }
+    else {
+      return;
+    }
+
+    for (int i = 0; i < block->n_part; i++) {
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
+    }
+
+  }
+
+  else {
+
+    int _id_section = id_section;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    block->numabs_int_owner = ownership;
+
+    if (block->numabs_int == NULL) {
+      block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
+    }
+    else {
+      return;
+    }
+
+    for (int i = 0; i < block->n_part; i++) {
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
+    }
+
+  }
+
+  PDM_gnum_compute (gnum_gen);
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
+
+    for (int i = 0; i < block->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
+    }
+  }
+
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
+
+    for (int i = 0; i < block->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
+    }
+  }
+
+  else {
+
+    int _id_section = id_section;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    for (int i = 0; i < block->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
+    }
+  }
+
+  PDM_gnum_free (gnum_gen);
+}
+
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Return number elements of a partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_elmts_n_elmts_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad pmne identifier\n");
+  }
+
+  if (id_part >= pmne->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  return pmne->n_elmts[id_part];
+}
+
+
+/**
+ * \brief Get the element global numbering taking into account parent_num
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Global ids of element in current partition
+ *
+ */
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_g_num_get_from_part
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+)
+{
+  if (pmne->numabs == NULL) {
+    pmne->numabs = malloc (sizeof(PDM_g_num_t*)*pmne->n_part);
+    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0) == NULL);
+    for (int i = 0; i < pmne->n_part; i++) {
+      for (int i1 = 0; i1 < pmne->n_section; i1++) {
+        assert (is_not_parent_num == (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i) == NULL));
+      }
+    }
+
+    if (is_not_parent_num) {
+
+      for (int i = 0; i < pmne->n_part; i++) {
+        int k = 0;
+        pmne->numabs[i] = malloc (sizeof(PDM_g_num_t)*pmne->n_elmts[i]);
+        for (int i1 = 0; i1 < pmne->n_section_std; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_std[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][k++] = pmne->sections_std[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < pmne->n_section_poly2d; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_poly2d[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][k++] = pmne->sections_poly2d[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < pmne->n_section_poly3d; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_poly3d[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][k++] = pmne->sections_poly3d[i1]->_numabs[i][i2];
+          }
+        }
+      }
+    }
+
+    else {
+      for (int i = 0; i < pmne->n_part; i++) {
+        pmne->numabs[i] = malloc (sizeof(PDM_g_num_t)*pmne->n_elmts[i]);
+        for (int i1 = 0; i1 < pmne->n_section_std; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_std[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][pmne->sections_std[i1]->_parent_num[i][i2]] = pmne->sections_std[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < pmne->n_section_poly2d; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_poly2d[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][pmne->sections_poly2d[i1]->_parent_num[i][i2]] = pmne->sections_poly2d[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < pmne->n_section_poly3d; i1++) {
+          for (int i2 = 0; i2 < pmne->sections_poly3d[i1]->n_elt[i]; i2++) {
+            pmne->numabs[i][pmne->sections_poly3d[i1]->_parent_num[i][i2]] = pmne->sections_poly3d[i1]->_numabs[i][i2];
+          }
+        }
+      }
+    }
+  }
+  return pmne->numabs[id_part];
+}
+
+
+/**
+ * \brief Free partially a part_mesh_nodal_elmts structure
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts object
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_partial_free
+(
+PDM_part_mesh_nodal_elmts_t *pmne
+)
+{
+
+  if (pmne->sections_std != NULL) {
+    for (int i = 0; i < pmne->n_section_std; i++) {
+      _block_std_free_partial(pmne->sections_std[i]);
+    }
+  }
+
+  if (pmne->sections_poly2d != NULL) {
+    for (int i = 0; i < pmne->n_section_poly2d; i++) {
+      _block_poly2d_free_partial(pmne->sections_poly2d[i]);
+    }
+  }
+
+  if (pmne->sections_poly3d != NULL) {
+    for (int i = 0; i < pmne->n_section_poly3d; i++) {
+      _block_poly3d_free_partial(pmne->sections_poly3d[i]);
+    }
+  }
+}
+
+
+/**
+ * \brief Get global element numbering of block elements inside the block
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_section   Section identifier
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return      Return global numbering of block elements inside the block
+ *
+ */
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_elmts_section_g_num_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_section,
+const int                           id_part
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_section;
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+
+    block->is_numabs_int_get = 1;
+    return block->numabs_int[id_part];
+  }
+
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+
+    block->is_numabs_int_get = 1;
+    return block->numabs_int[id_part];
+  }
+
+  else {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+    // if (block->numabs_int == NULL) printf("!!! id_section = %d\n", id_section);
+
+    block->is_numabs_int_get = 1;
+    return block->numabs_int[id_part];
+  }
+}
+
+
+/**
+ * \brief  Return parent element number to local number
+ *
+ * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts object
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent element number to local number
+ *
+ */
+
+int *
+PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get
+(
+      PDM_part_mesh_nodal_elmts_t  *pmne,
+const int                           id_part
+)
+{
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_part >= pmne->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  if (pmne->num_elmt_parent_to_local != NULL)
+    return pmne->num_elmt_parent_to_local[id_part];
+  else
+    return NULL;
 }

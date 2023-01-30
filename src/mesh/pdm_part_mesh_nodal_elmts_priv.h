@@ -19,7 +19,7 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/*==========================ss===================================================
+/*=============================================================================
  * Macro definitions
  *============================================================================*/
 
@@ -56,10 +56,9 @@ struct _pdm_part_mesh_nodal_elmts_t {
 
   // group to manage
 
-  // PDM_l_num_t                        **num_elmt_parent_to_local;  /*!< Initial local numbering to local numbering
-  //                                                                  *   imposed by blocks */
-  // int                      is_vtx_def_from_parent;                /*<! Are the points defined from parents */
-  // PDM_g_num_t                          **numabs;                  /*<! Global numbering per elmts per partition */
+  PDM_l_num_t                        **num_elmt_parent_to_local;  /*!< Initial local numbering to local numbering
+                                                                   *   imposed by blocks */
+  PDM_g_num_t                        **numabs;                  /*<! Global numbering per elmts per partition */
 };
 
 #ifdef __cplusplus

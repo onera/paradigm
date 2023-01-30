@@ -83,6 +83,36 @@ PDM_part_mesh_nodal_coord_set
 );
 
 /**
+ * \brief Define partition vertices from parents
+ *
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part       Partition identifier
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  n_vtx_parent  Number of parent vertices
+ * \param [in]  numabs        Global numbering (size = \ref n_vtx)
+ * \param [in]  numabs        Global numbering of parent vertices (size = \ref n_vtx_parent)
+ * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  coords        Interlaced coordinates of parent vertices (size = 3 * \ref n_vtx_parent)
+ * \param [in]  owner         Vertices ownship
+ *
+ */
+//---> PDM_Mesh_nodal_coord_from_parent_set
+
+void
+PDM_part_mesh_nodal_coord_from_parent_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
+ const int                    n_vtx,
+ const int                    n_vtx_parent,
+ const PDM_g_num_t           *numabs,
+ const int                   *num_parent,
+ const PDM_real_t            *coords_parent,
+ const PDM_g_num_t           *numabs_parent,
+ const PDM_ownership_t        ownership
+);
+
+/**
  * \brief  Return number of partitions
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
@@ -847,6 +877,138 @@ PDM_part_mesh_nodal_reset
 );
 
 
+/**
+ * \brief  Compute a global numbering in a section
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_section   Section identifier
+ * \param [in]  ownership    Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_g_num_in_block_compute
+
+void
+PDM_part_mesh_nodal_g_num_in_section_compute
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_section,
+const PDM_ownership_t         ownership
+);
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Return number elements of a partition
+ *
+ */
+// ---> PDM_Mesh_nodal_n_cell_get
+
+int
+PDM_part_mesh_nodal_n_elmts_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+);
+
+/**
+ * \brief Get the element global numbering taking into account parent_num
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Global ids of element in current partition
+ *
+ */
+// ---> PDM_Mesh_nodal_g_num_get_from_part
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_g_num_get_from_part
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+);
+
+/**
+ * \brief Free partially a part_mesh_nodal structure
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return      NULL
+ *
+ */
+//---> PDM_Mesh_nodal_partial_free
+
+void
+PDM_part_mesh_nodal_partial_free
+(
+ PDM_part_mesh_nodal_t *pmn
+);
+
+/**
+ * \brief Extract vertices from parent vertices
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return true if the vertices are defined from parents
+ */
+//---> PDM_Mesh_nodal_is_set_coord_from_parent
+
+int
+PDM_part_mesh_nodal_is_set_coord_from_parent
+(
+ PDM_part_mesh_nodal_t *pmn
+);
+
+/**
+ * \brief Get global element numbering of block elements inside the block
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_section   Section identifier
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return      Return global numbering of block elements inside the block
+ *
+ */
+//---> PDM_Mesh_nodal_block_g_num_get
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_section_g_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_section,
+const int                     id_part
+);
+
+/**
+ * \brief  Return parent element number to local number
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent element number to local number
+ *
+ */
+//---> PDM_Mesh_nodal_num_cell_parent_to_local_get
+
+int *
+PDM_part_mesh_nodal_num_elmt_parent_to_local_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+);
 //********************************************************************************//
 
 
@@ -915,78 +1077,6 @@ PDM_part_mesh_nodal_reset
 // );
 
 // /**
-//  * \brief  Compute a global numbering in a block
-//  *
-//  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_block       Block identifier
-//  * \param [in]  ownership      Ownership
-//  *
-//  */
-//---> used in PDM_writer and some CWIPI tests
-
-// void
-// PDM_Mesh_nodal_g_num_in_block_compute
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_block,
-// const PDM_ownership_t  ownership
-// );
-
-// /**
-//  * \brief  Return parent cell number to local number
-//  *
-//  * \param [in]  mesh      Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_part   Partition identifier
-//  *
-//  * \return  Parent cell number to local number
-//  *
-//  */
-//---> used in PDM_writer
-
-// int *
-// PDM_Mesh_nodal_num_cell_parent_to_local_get
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_part
-// );
-
-// /**
-//  * \brief  Return number elements of a partition
-//  *
-//  * \param [in]  mesh      Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_part   Partition identifier
-//  *
-//  * \return  Return number elements of a partition
-//  *
-//  */
-//---> used in PDM_writer and PDM_mesh_location
-
-// int
-// PDM_Mesh_nodal_n_cell_get
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_part
-// );
-
-// /**
-//  * \brief Get the cell global numbering
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return      NULL
-//  *
-//  */
-//---> not used in PDM but used in CWIPI's mesh.cxx
-
-// PDM_g_num_t *
-// PDM_Mesh_nodal_g_num_get_from_part
-// (
-//  PDM_Mesh_nodal_t *mesh,
-//  const int i_part
-// );
-
-
-// /**
 //  * \brief Create a new Mesh nodal from elements selected in a parent Mesh nodal
 //  *
 //  * \param [in]   parent_mesh       Parent Mesh nodal structure
@@ -1024,24 +1114,6 @@ PDM_part_mesh_nodal_reset
 // );
 
 // /**
-//  * \brief Free partially a nodal mesh structure
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return      NULL
-//  *
-//  */
-//---> used in PDM_writer
-
-// void
-// PDM_Mesh_nodal_partial_free
-// (
-// PDM_Mesh_nodal_t *mesh
-// );
-
-
-
-// /**
 //  * \brief  Return parent num of vertices
 //  *
 //  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
@@ -1057,42 +1129,6 @@ PDM_part_mesh_nodal_reset
 //        PDM_Mesh_nodal_t *mesh,
 //  const int               id_part
 //  );
-
-// /**
-//  * \brief Extract vertices from parent vertices
-//  *
-//  * \param [in]  mesh     Pointer to \ref PDM_Mesh_nodal object
-//  *
-//  * \return true if the vertices are defined from parents
-//  */
-//---> not used in PDM/CWIPI but used in CEDRE
-
-// int
-// PDM_Mesh_nodal_is_set_coord_from_parent
-// (
-//  PDM_Mesh_nodal_t *mesh
-// );
-
-
-// /**
-//  * \brief Get global element numbering of block elements inside the block
-//  *
-//  * \param [in]  mesh           Pointer to \ref PDM_Mesh_nodal object
-//  * \param [in]  id_block       Block identifier
-//  * \param [in]  id_part        Partition identifier
-//  *
-//  * \return      Return global numbering of block elements inside the block
-//  *
-//  */
-//---> used in PDM_writer_ensight and some CWIPI tests
-
-// PDM_g_num_t *
-// PDM_Mesh_nodal_block_g_num_get
-// (
-//       PDM_Mesh_nodal_t *mesh,
-// const int               id_block,
-// const int               id_part
-// );
 
 #ifdef __cplusplus
 }

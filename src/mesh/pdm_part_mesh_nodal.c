@@ -205,6 +205,81 @@ PDM_part_mesh_nodal_coord_set
 
 }
 
+/**
+ * \brief Define partition vertices from parents
+ *
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part       Partition identifier
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  n_vtx_parent  Number of parent vertices
+ * \param [in]  numabs        Global numbering (size = \ref n_vtx)
+ * \param [in]  numabs        Global numbering of parent vertices (size = \ref n_vtx_parent)
+ * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  coords        Interlaced coordinates of parent vertices (size = 3 * \ref n_vtx_parent)
+ * \param [in]  owner         Vertices ownship
+ *
+ */
+
+void
+PDM_part_mesh_nodal_coord_from_parent_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
+ const int                    n_vtx,
+ const int                    n_vtx_parent,
+ const PDM_g_num_t           *numabs,
+ const int                   *num_parent,
+ const PDM_real_t            *coords_parent,
+ const PDM_g_num_t           *numabs_parent,
+ const PDM_ownership_t        ownership
+)
+{
+
+  if (pmn == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_part >= pmn->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
+  }
+
+  PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
+
+  if ((vtx->_coords != NULL) ||
+      (vtx->_numabs != NULL)) {
+    PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
+  }
+
+  vtx->parent = (PDM_Mesh_nodal_vtx_t *) malloc (sizeof (PDM_Mesh_nodal_vtx_t));
+  PDM_Mesh_nodal_vtx_t *_parent = vtx->parent;
+  _parent->parent = NULL;
+  _parent->n_vtx = n_vtx_parent;
+  _parent->coords = NULL;
+  _parent->_coords = (double *) coords_parent ;
+  _parent->_numabs = (PDM_g_num_t *) numabs_parent;
+  _parent->_numparent = NULL;
+  _parent->owner = PDM_OWNERSHIP_USER;
+  _parent->is_coords_get = 0;
+
+
+  vtx->n_vtx      = n_vtx;
+  vtx->coords     = malloc (sizeof(double) * 3 * n_vtx);
+  vtx->_coords    = (double *) vtx->coords;
+  vtx->_numabs    = (PDM_g_num_t *) numabs;
+  vtx->_numparent = (int *) num_parent;
+  vtx->owner = ownership;
+  vtx->is_coords_get = 0;
+
+  for (int i = 0; i < n_vtx; i++) {
+    int i_parent = num_parent[i] - 1;
+    for (int j = 0; j < 3; j++) {
+      vtx->coords[3*i+j] = _parent->_coords[3*i_parent+j];
+    }
+  }
+  pmn->is_vtx_def_from_parent = 1;
+
+}
+
 
 /**
  * \brief Add a \ref PDM_part_mesh_nodal_elmts_t to a \ref PDM_part_mesh_nodal_t
@@ -1418,4 +1493,193 @@ PDM_part_mesh_nodal_reset
       }
     }
   }
+}
+
+
+/**
+ * \brief  Compute a global numbering in a section
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_section   Section identifier
+ * \param [in]  ownership    Ownership
+ *
+ */
+//---> PDM_Mesh_nodal_g_num_in_block_compute
+
+void
+PDM_part_mesh_nodal_g_num_in_section_compute
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_section,
+const PDM_ownership_t         ownership
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  PDM_part_mesh_nodal_elmts_g_num_in_section_compute(pmne,
+                                                     id_section,
+                                                     ownership);
+}
+
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Return number elements of a partition
+ *
+ */
+// ---> PDM_Mesh_nodal_n_cell_get
+
+int
+PDM_part_mesh_nodal_n_elmts_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, id_part);
+}
+
+
+/**
+ * \brief Get the element global numbering taking into account parent_num
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Global ids of element in current partition
+ *
+ */
+// ---> PDM_Mesh_nodal_g_num_get_from_part
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_g_num_get_from_part
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, id_part);
+}
+
+
+/**
+ * \brief Free partially a part_mesh_nodal structure
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return      NULL
+ *
+ */
+//---> PDM_Mesh_nodal_partial_free
+
+void
+PDM_part_mesh_nodal_partial_free
+(
+ PDM_part_mesh_nodal_t *pmn
+)
+{
+  for (PDM_geometry_kind_t geom_kind = 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+    PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+
+    if (pmne != NULL) {
+      PDM_part_mesh_nodal_elmts_partial_free(pmne);
+    }
+
+  }
+}
+
+
+/**
+ * \brief Extract vertices from parent vertices
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return true if the vertices are defined from parents
+ */
+//---> PDM_Mesh_nodal_is_set_coord_from_parent
+
+int
+PDM_part_mesh_nodal_is_set_coord_from_parent
+(
+ PDM_part_mesh_nodal_t *pmn
+)
+{
+  if (pmn == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  return pmn->is_vtx_def_from_parent;
+}
+
+
+/**
+ * \brief Get global element numbering of block elements inside the block
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_section   Section identifier
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return      Return global numbering of block elements inside the block
+ *
+ */
+//---> PDM_Mesh_nodal_block_g_num_get
+
+PDM_g_num_t *
+PDM_part_mesh_nodal_section_g_num_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_section,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_section_g_num_get(pmne, id_section, id_part);
+}
+
+
+/**
+ * \brief  Return parent element number to local number
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_part      Partition identifier
+ *
+ * \return  Parent element number to local number
+ *
+ */
+//---> PDM_Mesh_nodal_num_cell_parent_to_local_get
+
+int *
+PDM_part_mesh_nodal_num_elmt_parent_to_local_get
+(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_geometry_kind_t     geom_kind,
+const int                     id_part
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
