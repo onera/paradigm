@@ -365,7 +365,7 @@ PDM_Mesh_nodal_n_blocks_get
  * \return  Blocks identifier
  *
  */
-//---> PDM_part_mesh_nodal_sections_id_get
+//---> PDM_part_mesh_nodal_sections_id_in_geom_kind_get
 int *
 PDM_Mesh_nodal_blocks_id_get
 (

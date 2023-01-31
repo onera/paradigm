@@ -102,6 +102,33 @@ _get_from_geometry_kind
   return pmne;
 }
 
+static
+PDM_geometry_kind_t
+_geom_kind_from_elt_type
+(
+ PDM_Mesh_nodal_elt_t t_elt
+ )
+{
+  switch (PDM_Mesh_nodal_elt_dim_get(t_elt)) {
+  case 0:
+    return PDM_GEOMETRY_KIND_CORNER;
+    break;
+  case 1:
+    return PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 2:
+    return PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 3:
+    return PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -157,6 +184,11 @@ PDM_part_mesh_nodal_create
   pmn->is_owner_surfacic = PDM_OWNERSHIP_USER;
   pmn->is_owner_ridge    = PDM_OWNERSHIP_USER;
   pmn->is_owner_corner   = PDM_OWNERSHIP_USER;
+
+  pmn->s_section = 10;
+  pmn->n_section = 0;
+  pmn->section_kind = malloc(sizeof(PDM_geometry_kind_t) * pmn->s_section);
+  pmn->section_id   = malloc(sizeof(int                ) * pmn->s_section);
 
   return pmn;
 }
@@ -300,20 +332,42 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 {
   assert(pmn->n_part == pmne->n_part);
   assert(pmn->mesh_dimension >= pmne->mesh_dimension);
+  PDM_geometry_kind_t geom_kind;
   if(pmne->mesh_dimension == 3) {
     pmn->volumic          = pmne;
     pmn->is_owner_volumic = owner;
+    geom_kind             = PDM_GEOMETRY_KIND_VOLUMIC;
   } else if(pmne->mesh_dimension == 2){
     pmn->surfacic          = pmne;
     pmn->is_owner_surfacic = owner;
+    geom_kind             = PDM_GEOMETRY_KIND_SURFACIC;
   } else if(pmne->mesh_dimension == 1){
     pmn->ridge          = pmne;
     pmn->is_owner_ridge = owner;
+    geom_kind             = PDM_GEOMETRY_KIND_RIDGE;
   } else if(pmne->mesh_dimension == 0){
     pmn->corner          = pmne;
     pmn->is_owner_corner = owner;
+    geom_kind             = PDM_GEOMETRY_KIND_CORNER;
   } else {
     PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
+  }
+
+  // update pmn->n_section, pmn->section_kind, pmn->section_id
+  int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+  if (pmn->n_section + n_section >= pmn->s_section) {
+    pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section);
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+
+  for (int i = 0; i < n_section; i++) {
+    int _id_section = pmn->n_section++;
+    pmn->section_kind[_id_section] = geom_kind;
+    pmn->section_id  [_id_section] = sections_id[i];
   }
 }
 
@@ -416,7 +470,7 @@ PDM_part_mesh_nodal_vtx_g_num_get
 
 
 /**
- * \brief  Return number of sections
+ * \brief  Return number of sections in a specific geometry kind
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
@@ -426,7 +480,7 @@ PDM_part_mesh_nodal_vtx_g_num_get
  */
 
 int
-PDM_part_mesh_nodal_n_section_get
+PDM_part_mesh_nodal_n_section_in_geom_kind_get
 (
  PDM_part_mesh_nodal_t *pmn,
  PDM_geometry_kind_t    geom_kind
@@ -445,7 +499,7 @@ PDM_part_mesh_nodal_n_section_get
 
 
 /**
- * \brief  Return ids of sections
+ * \brief  Return ids of sections in a specific geometry kind
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
@@ -455,7 +509,7 @@ PDM_part_mesh_nodal_n_section_get
  */
 
 int *
-PDM_part_mesh_nodal_sections_id_get
+PDM_part_mesh_nodal_sections_id_in_geom_kind_get
 (
  PDM_part_mesh_nodal_t *pmn,
  PDM_geometry_kind_t    geom_kind
@@ -473,6 +527,36 @@ PDM_part_mesh_nodal_sections_id_get
  * \brief  Return type of section
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  i_section    Section identifier
+ *
+ * \return  Type of section
+ *
+ */
+
+PDM_Mesh_nodal_elt_t
+PDM_part_mesh_nodal_section_elt_type_get
+(
+        PDM_part_mesh_nodal_t *pmn,
+  const int                    i_section
+)
+{
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
+  return PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get(pmn,
+                                                               geom_kind,
+                                                               id_section);
+}
+
+
+/**
+ * \brief  Return type of section
+ *
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  id_section   Section identifier
  *
@@ -481,7 +565,7 @@ PDM_part_mesh_nodal_sections_id_get
  */
 
 PDM_Mesh_nodal_elt_t
-PDM_part_mesh_nodal_section_elt_type_get
+PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
 (
         PDM_part_mesh_nodal_t *pmn,
         PDM_geometry_kind_t    geom_kind,
@@ -498,7 +582,6 @@ PDM_part_mesh_nodal_section_elt_type_get
  * \brief  Add a new section to the current mesh
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  t_elt        Section type
  *
  * \return Section identifier
@@ -509,10 +592,11 @@ int
 PDM_part_mesh_nodal_section_add
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
 const PDM_Mesh_nodal_elt_t   t_elt
 )
 {
+  PDM_geometry_kind_t geom_kind = _geom_kind_from_elt_type(t_elt);
+
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
     if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
       pmn->volumic = PDM_part_mesh_nodal_elmts_create(pmn->mesh_dimension, pmn->n_part, pmn->comm);
@@ -527,7 +611,19 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+  int id_section = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+
+  if (pmn->n_section >= pmn->s_section) {
+    pmn->s_section *= 2;
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+  int _id_section = pmn->n_section++;
+  pmn->section_kind[_id_section] = geom_kind;
+  pmn->section_id  [_id_section] = id_section;
+
+  return _id_section;
 }
 
 
@@ -603,8 +699,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
  *   1 x-------x 2
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section              Section identifier
+ * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [in]  n_elt                   Number of elements
  * \param [in]  connec                  Connectivity
@@ -619,8 +714,7 @@ void
 PDM_part_mesh_nodal_section_std_set
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    id_part,
 const int                    n_elt,
 const int                   *connec,
@@ -630,6 +724,13 @@ const PDM_g_num_t           *parent_entity_g_num,
       PDM_ownership_t        owner
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_std_set(pmne, id_section, id_part, n_elt, connec, numabs, parent_num, parent_entity_g_num, owner);
@@ -640,8 +741,7 @@ const PDM_g_num_t           *parent_entity_g_num,
  * \brief Define a standard high-order section
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section              Section identifier
+ * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [in]  n_elt                   Number of elements
  * \param [in]  connec                  Connectivity
@@ -658,8 +758,7 @@ void
 PDM_part_mesh_nodal_section_std_ho_set
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    id_part,
 const int                    n_elt,
 const int                   *connec,
@@ -671,6 +770,13 @@ const char                  *ho_ordering,
       PDM_ownership_t        owner
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
@@ -691,8 +797,7 @@ const char                  *ho_ordering,
  * \brief Get number of section elements
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section Section identifier
+ * \param [in]  i_section  Section identifier
  * \param [in]  id_part    Partition identifier
  *
  * \return      Number of elements
@@ -703,11 +808,17 @@ int
 PDM_part_mesh_nodal_section_n_elt_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, id_part);
@@ -786,8 +897,7 @@ const int                     id_part
  *   1 x-------x 2
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section              Section identifier
+ * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
  * \param [out] numabs                  Global numbering
@@ -800,8 +910,7 @@ void
 PDM_part_mesh_nodal_section_std_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part,
       int                   **connec,
       PDM_g_num_t           **numabs,
@@ -809,6 +918,13 @@ const int                     id_part,
       PDM_g_num_t           **parent_entity_g_num
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num);
@@ -819,8 +935,7 @@ const int                     id_part,
  * \brief Return standard high-order section description
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind               Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section              Section identifier
+ * \param [in]  i_section               Section identifier
  * \param [in]  id_part                 Partition identifier
  * \param [out] connec                  Connectivity
  * \param [out] numabs                  Global numbering
@@ -835,8 +950,7 @@ void
 PDM_part_mesh_nodal_section_std_ho_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part,
       int                   **connec,
       PDM_g_num_t           **numabs,
@@ -846,17 +960,24 @@ const int                     id_part,
 const char                  **ho_ordering
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                             id_section,
-                                             id_part,
-                                             connec,
-                                             numabs,
-                                             parent_num,
-                                             parent_entity_g_num,
-                                             order,
-                                             ho_ordering);
+                                               id_section,
+                                               id_part,
+                                               connec,
+                                               numabs,
+                                               parent_num,
+                                               parent_entity_g_num,
+                                               order,
+                                               ho_ordering);
 }
 
 
@@ -864,8 +985,7 @@ const char                  **ho_ordering
  * \brief Get parent numbering of block elements
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
+ * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return parent numbering of block elements
@@ -876,11 +996,17 @@ int *
 PDM_part_mesh_nodal_section_parent_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, id_part);
@@ -891,8 +1017,7 @@ const int                     id_part
  * \brief Get global element numbering of section elements
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
+ * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return global element numbering of section elements
@@ -904,11 +1029,17 @@ PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, id_part);
@@ -959,6 +1090,13 @@ PDM_part_mesh_nodal_free
   free(pmn->n_ridge );
   free(pmn->n_corner);
 
+  if (pmn->section_kind != NULL) {
+    free(pmn->section_kind);
+  }
+  if (pmn->section_id != NULL) {
+    free(pmn->section_id);
+  }
+
   free(pmn);
 }
 
@@ -982,8 +1120,8 @@ PDM_part_mesh_nodal_dump_vtk
     double      *pvtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
     PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
 
-    int  n_section  = PDM_part_mesh_nodal_n_section_get  (pmn, geom_kind);
-    int *section_id = PDM_part_mesh_nodal_sections_id_get(pmn, geom_kind);
+    int  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pmn, geom_kind);
+    int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
 
     // printf("pn_vtx = %i\n", pn_vtx);
 
@@ -1108,8 +1246,7 @@ PDM_part_mesh_nodal_dump_vtk
  * \brief Compute element extents of a part of a section
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  tolerance      Expansion tolerance for bounding boxes
  * \param [out] extents        Extents of mesh elements in current part of current block
@@ -1120,13 +1257,19 @@ void
 PDM_part_mesh_nodal_section_elt_extents_compute
 (
        PDM_part_mesh_nodal_t *pmn,
-       PDM_geometry_kind_t    geom_kind,
- const int                    id_section,
+ const int                    i_section,
  const int                    i_part,
  const double                 tolerance,
        double                *extents
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1145,8 +1288,7 @@ PDM_part_mesh_nodal_section_elt_extents_compute
  * \brief Compute cell centers of a part of section
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  ownership      Ownership
  *
@@ -1156,12 +1298,18 @@ void
 PDM_part_mesh_nodal_section_elt_center_compute
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    i_part,
 const PDM_ownership_t        ownership
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1182,8 +1330,7 @@ const PDM_ownership_t        ownership
  * \brief  Return cell centers
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  *
  * \return  Return cell centers
@@ -1194,11 +1341,17 @@ const double *
 PDM_part_mesh_nodal_section_elt_center_get
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    i_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1210,8 +1363,7 @@ const int                    i_part
  * \brief Reset cell center computation
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  *
  */
@@ -1220,11 +1372,17 @@ void
 PDM_part_mesh_nodal_section_elt_center_reset
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    i_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1235,8 +1393,7 @@ const int                    i_part
  * \brief Define a polygon section
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of elements
  * \param [in]  connec_idx     Connectivity index (size = \ref n_elt + 1)
@@ -1251,8 +1408,7 @@ void
 PDM_part_mesh_nodal_section_poly2d_set
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    id_part,
 const int                    n_elt,
 const int                   *connec_idx,
@@ -1262,17 +1418,25 @@ const int                   *parent_num,
       PDM_ownership_t        owner
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+  assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
-                                             id_section,
-                                             id_part,
-                                             n_elt,
-                                             connec_idx,
-                                             connec,
-                                             numabs,
-                                             parent_num,
-                                             owner);
+                                               id_section,
+                                               id_part,
+                                               n_elt,
+                                               connec_idx,
+                                               connec,
+                                               numabs,
+                                               parent_num,
+                                               owner);
 }
 
 
@@ -1280,8 +1444,7 @@ const int                   *parent_num,
  * \brief Return a polygon section description
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [out] connec_idx     Connectivity index
  * \param [out] connec         Connectivity
@@ -1292,20 +1455,27 @@ void
 PDM_part_mesh_nodal_section_poly2d_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part,
       int                   **connec_idx,
       int                   **connec
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-                                             id_section,
-                                             id_part,
-                                             connec_idx,
-                                             connec);
+                                               id_section,
+                                               id_part,
+                                               connec_idx,
+                                               connec);
 }
 
 
@@ -1313,8 +1483,7 @@ const int                     id_part,
  * \brief Define a polyhedron section
  *
  * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section     Section identifier
+ * \param [in]  i_section      Section identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of elements
  * \param [in]  n_face         Number of faces
@@ -1333,8 +1502,7 @@ void
 PDM_part_mesh_nodal_section_poly3d_set
 (
       PDM_part_mesh_nodal_t *pmn,
-      PDM_geometry_kind_t    geom_kind,
-const int                    id_section,
+const int                    i_section,
 const int                    id_part,
 const int                    n_elt,
 const int                    n_face,
@@ -1348,21 +1516,29 @@ const int                   *parent_num,
       PDM_ownership_t        owner
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_poly3d_set(pmne,
-                                             id_section,
-                                             id_part,
-                                             n_elt,
-                                             n_face,
-                                             facvtx_idx,
-                                             facvtx,
-                                             face_ln_to_gn,
-                                             cellfac_idx,
-                                             cellfac,
-                                             numabs,
-                                             parent_num,
-                                             owner);
+                                               id_section,
+                                               id_part,
+                                               n_elt,
+                                               n_face,
+                                               facvtx_idx,
+                                               facvtx,
+                                               face_ln_to_gn,
+                                               cellfac_idx,
+                                               cellfac,
+                                               numabs,
+                                               parent_num,
+                                               owner);
 }
 
 
@@ -1370,8 +1546,7 @@ const int                   *parent_num,
  * \brief Return a polyhedron section
  *
  * \param [in]  pmn                  Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind            Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section           Section identifier
+ * \param [in]  i_section            Section identifier
  * \param [in]  id_part              Partition identifier
  * \param [out] n_face               Number of faces
  * \param [out] face_ln_to_gn        Face global ids
@@ -1389,8 +1564,7 @@ void
 PDM_part_mesh_nodal_section_poly3d_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part,
       int                    *n_face,
       PDM_g_num_t           **face_ln_to_gn,
@@ -1403,20 +1577,28 @@ const int                     id_part,
       PDM_g_num_t           **parent_entity_g_num
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
-                                             id_section,
-                                             id_part,
-                                             n_face,
-                                             face_ln_to_gn,
-                                             face_vtx_idx,
-                                             face_vtx,
-                                             numabs,
-                                             cell_face_idx,
-                                             cell_face,
-                                             parent_num,
-                                             parent_entity_g_num);
+                                               id_section,
+                                               id_part,
+                                               n_face,
+                                               face_ln_to_gn,
+                                               face_vtx_idx,
+                                               face_vtx,
+                                               numabs,
+                                               cell_face_idx,
+                                               cell_face,
+                                               parent_num,
+                                               parent_entity_g_num);
 }
 
 
@@ -1424,8 +1606,7 @@ const int                     id_part,
  * \brief Get the cell-vertex connectivity of a polyhedron section
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
+ * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
  * \param [out] cellvtx_idx  Index of cell vertex connectivity
  * \param [out] cellvtx      Cell vertex connectivity
@@ -1436,20 +1617,27 @@ void
 PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part,
       int                   **cellvtx_idx,
       int                   **cellvtx
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
-                                                              id_section,
-                                                              id_part,
-                                                              cellvtx_idx,
-                                                              cellvtx);
+                                                                id_section,
+                                                                id_part,
+                                                                cellvtx_idx,
+                                                                cellvtx);
 }
 
 
@@ -1477,6 +1665,8 @@ PDM_part_mesh_nodal_reset
 
   }
 
+  pmn->n_section = 0;
+
   if (pmn->vtx != NULL) {
     for (int i = 0; i < pmn->n_part; i++) {
       pmn->vtx[i]->_coords = NULL;
@@ -1500,8 +1690,7 @@ PDM_part_mesh_nodal_reset
  * \brief  Compute a global numbering in a section
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
+ * \param [in]  i_section    Section identifier
  * \param [in]  ownership    Ownership
  *
  */
@@ -1511,11 +1700,17 @@ void
 PDM_part_mesh_nodal_g_num_in_section_compute
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const PDM_ownership_t         ownership
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1633,8 +1828,7 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
  * \brief Get global element numbering of block elements inside the block
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
+ * \param [in]  i_section    Section identifier
  * \param [in]  id_part      Partition identifier
  *
  * \return      Return global numbering of block elements inside the block
@@ -1646,11 +1840,17 @@ PDM_g_num_t *
 PDM_part_mesh_nodal_section_g_num_get
 (
       PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_section,
+const int                     i_section,
 const int                     id_part
 )
 {
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                  i_section,
+                                                  &geom_kind,
+                                                  &id_section);
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
@@ -1791,6 +1991,9 @@ const PDM_ownership_t         ownership
 
   double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, id_part);
 
+  int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                        PDM_GEOMETRY_KIND_VOLUMIC);
+
   PDM_part_mesh_elmts_nodal_cell3d_cellface_add(pmne,
                                                 id_part,
                                                 n_cell,
@@ -1803,6 +2006,24 @@ const PDM_ownership_t         ownership
                                                 cell_ln_to_gn,
                                                 vtx_coord,
                                                 ownership);
+
+  // update pmn->n_section, pmn->section_kind, pmn->section_id
+  int n_section_after = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                       PDM_GEOMETRY_KIND_VOLUMIC);
+  int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,
+                                                                      PDM_GEOMETRY_KIND_VOLUMIC);
+
+  if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
+    pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+  for (int i = n_section_before-1; i < n_section_after; i++) {
+    int _id_section = pmn->n_section++;
+    pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_VOLUMIC;
+    pmn->section_id  [_id_section] = sections_id[i];
+  }
 }
 
 
@@ -1848,6 +2069,8 @@ const PDM_ownership_t         ownership
 
   int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, id_part);
 
+  int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                        PDM_GEOMETRY_KIND_SURFACIC);
 
   PDM_part_mesh_nodal_elmts_face2d_faceedge_add(pmne,
                                                 id_part,
@@ -1859,6 +2082,24 @@ const PDM_ownership_t         ownership
                                                 face_ln_to_gn,
                                                 n_vtx,
                                                 ownership);
+
+  // update pmn->n_section, pmn->section_kind, pmn->section_id
+  int n_section_after = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                       PDM_GEOMETRY_KIND_SURFACIC);
+  int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,
+                                                                      PDM_GEOMETRY_KIND_SURFACIC);
+
+  if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
+    pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+  for (int i = n_section_before-1; i < n_section_after; i++) {
+    int _id_section = pmn->n_section++;
+    pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_SURFACIC;
+    pmn->section_id  [_id_section] = sections_id[i];
+  }
 }
 
 /**
@@ -1897,6 +2138,9 @@ const PDM_ownership_t         ownership
     PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
   }
 
+  int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                        PDM_GEOMETRY_KIND_VOLUMIC);
+
   PDM_part_mesh_nodal_elmts_cells_cellvtx_add(pmne,
                                               id_part,
                                               n_cell,
@@ -1904,6 +2148,24 @@ const PDM_ownership_t         ownership
                                               cell_vtx,
                                               numabs,
                                               ownership);
+
+  // update pmn->n_section, pmn->section_kind, pmn->section_id
+  int n_section_after = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                       PDM_GEOMETRY_KIND_VOLUMIC);
+  int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,
+                                                                      PDM_GEOMETRY_KIND_VOLUMIC);
+
+  if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
+    pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+  for (int i = n_section_before-1; i < n_section_after; i++) {
+    int _id_section = pmn->n_section++;
+    pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_VOLUMIC;
+    pmn->section_id  [_id_section] = sections_id[i];
+  }
 }
 
 
@@ -1943,6 +2205,9 @@ const PDM_ownership_t         ownership
     PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
   }
 
+  int n_section_before = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                        PDM_GEOMETRY_KIND_SURFACIC);
+
   PDM_part_mesh_nodal_elmts_faces_facevtx_add(pmne,
                                               id_part,
                                               n_face,
@@ -1950,4 +2215,125 @@ const PDM_ownership_t         ownership
                                               face_vtx,
                                               numabs,
                                               ownership);
+
+  // update pmn->n_section, pmn->section_kind, pmn->section_id
+  int n_section_after = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,
+                                                                       PDM_GEOMETRY_KIND_SURFACIC);
+  int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,
+                                                                      PDM_GEOMETRY_KIND_SURFACIC);
+
+  if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
+    pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
+    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
+    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+  }
+
+  for (int i = n_section_before-1; i < n_section_after; i++) {
+    int _id_section = pmn->n_section++;
+    pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_SURFACIC;
+    pmn->section_id  [_id_section] = sections_id[i];
+  }
+}
+
+
+/**
+ * \brief  Return geom_kind and id (local to this geom_kind) of a section
+ *
+ * \param [in]  pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  i_section                Unique section identifier
+ * \param [out] geom_kind                Geometry kind (corner, ridge, surface or volume)
+ * \param [out] id_section_in_geom_kind  Section identifier local to the geometry kind
+ *
+ */
+
+void
+PDM_part_mesh_nodal_section_id_and_geom_kind_get
+(
+       PDM_part_mesh_nodal_t  *pmn,
+ const int                     i_section,
+       PDM_geometry_kind_t    *geom_kind,
+       int                    *id_section_in_geom_kind
+ )
+{
+  if (i_section >= pmn->n_section) {
+    PDM_error(__FILE__, __LINE__, 0, "i_section (%d) > n_section (%d)\n", i_section, pmn->n_section);
+  }
+
+  *geom_kind               = pmn->section_kind[i_section];
+  *id_section_in_geom_kind = pmn->section_id  [i_section];
+}
+
+
+/**
+ * \brief  Return unique identifier of a section
+ *
+ * \param [in]  pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind                Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  id_section_in_geom_kind  Section identifier local to the geometry kind
+ *
+ * \return   Unique section identifier
+ *
+ */
+
+int
+PDM_part_mesh_nodal_section_id_from_geom_kind_get
+(
+       PDM_part_mesh_nodal_t  *pmn,
+ const PDM_geometry_kind_t     geom_kind,
+ const int                     id_section_in_geom_kind
+ )
+{
+  int i_section = 0;
+
+  for (i_section = 0; i_section < pmn->n_section; i_section++) {
+    if (pmn->section_id  [i_section] == id_section_in_geom_kind &&
+        pmn->section_kind[i_section] == geom_kind) {
+      return i_section;
+    }
+  }
+
+  return -1;
+}
+
+
+/**
+ * \brief  Return number of sections
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return  Number of sections
+ *
+ */
+//---> PDM_Mesh_nodal_n_blocks_get
+
+int
+PDM_part_mesh_nodal_n_section_get
+(
+ PDM_part_mesh_nodal_t *pmn
+)
+{
+  assert(pmn != NULL);
+
+  return pmn->n_section;
+}
+
+/**
+ * \brief  Return ids of sections
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ *
+ * \return  Ids of sections
+ *
+ */
+//---> PDM_Mesh_nodal_blocks_id_get
+
+int *
+PDM_part_mesh_nodal_sections_id_get
+(
+ PDM_part_mesh_nodal_t *pmn
+)
+{
+  assert(pmn != NULL);
+
+  return pmn->section_id;
 }

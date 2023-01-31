@@ -31,11 +31,15 @@ cdef extern from "pdm_part_mesh_nodal.h":
     PDM_g_num_t* PDM_part_mesh_nodal_vtx_g_num_get(PDM_part_mesh_nodal_t *pmn,
                                                    int                    id_part)
 
-    int PDM_part_mesh_nodal_n_section_get(PDM_part_mesh_nodal_t *pmn,
-                                          PDM_geometry_kind_t    geom_kind)
+    int PDM_part_mesh_nodal_n_section_in_geom_kind_get(PDM_part_mesh_nodal_t *pmn,
+                                                       PDM_geometry_kind_t    geom_kind)
 
-    int * PDM_part_mesh_nodal_sections_id_get(PDM_part_mesh_nodal_t *pmn,
-                                              PDM_geometry_kind_t    geom_kind)
+    int * PDM_part_mesh_nodal_sections_id_in_geom_kind_get(PDM_part_mesh_nodal_t *pmn,
+                                                           PDM_geometry_kind_t    geom_kind)
+
+    int PDM_part_mesh_nodal_n_section_get(PDM_part_mesh_nodal_t *pmn)
+
+    int * PDM_part_mesh_nodal_sections_id_get(PDM_part_mesh_nodal_t *pmn)
 
 
     PDM_Mesh_nodal_elt_t PDM_part_mesh_nodal_section_elt_type_get(PDM_part_mesh_nodal_t *pmn,
@@ -170,8 +174,8 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
   cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  n_section  = PDM_part_mesh_nodal_n_section_get  (pypmn.pmn, geom_kind)
-  section_id = PDM_part_mesh_nodal_sections_id_get(pypmn.pmn, geom_kind)
+  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pypmn.pmn, geom_kind)
+  section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pypmn.pmn, geom_kind)
 
   sections = []
   for i_section in range(n_section):

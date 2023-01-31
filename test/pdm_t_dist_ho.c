@@ -234,8 +234,6 @@ _generate_surface_mesh
   PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
   if (i_rank == 0) {
-    printf("elt_type : %d\n", elt_type);
-    printf("dmn->volumic : %p\n", (void *) dmn->volumic);
     fflush(stdout);
   }
 

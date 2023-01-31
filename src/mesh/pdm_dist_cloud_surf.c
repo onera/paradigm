@@ -1135,8 +1135,8 @@ _dist_cloud_surf_compute_optim
     /* Infer mesh dimension from mesh_nodal (< 3?) */
     PDM_geometry_kind_t l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; // volume??
     for (l_geom_kind = PDM_GEOMETRY_KIND_SURFACIC; l_geom_kind < PDM_GEOMETRY_KIND_MAX; l_geom_kind++) {
-      int n_section = PDM_part_mesh_nodal_n_section_get(mesh_nodal,
-                                                        l_geom_kind);
+      int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal,
+                                                                     l_geom_kind);
 
       if (n_section > 0) {
         break;
@@ -1154,18 +1154,19 @@ _dist_cloud_surf_compute_optim
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
       part_n_elt[i_part] = 0;
 
-      int n_section = PDM_part_mesh_nodal_n_section_get(mesh_nodal, geom_kind);
+      int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal, geom_kind);
 
-      int *sections_id = PDM_part_mesh_nodal_sections_id_get(mesh_nodal, geom_kind);
+      int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
 
       int max_n_elt = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        int id_section = sections_id[isection];
-
+        int id_section_in_geom_kind = sections_id[isection];
+        int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mesh_nodal,
+                                                                           geom_kind,
+                                                                           id_section_in_geom_kind);
         int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
-                                                        geom_kind,
-                                                        id_section,
-                                                        i_part);
+                                                          id_section,
+                                                          i_part);
 
         part_n_elt[i_part] += n_elt;
 
@@ -1179,29 +1180,28 @@ _dist_cloud_surf_compute_optim
 
       int idx = 0;
       for (int isection = 0; isection < n_section; isection++) {
-        int id_section = sections_id[isection];
+        int id_section_in_geom_kind = sections_id[isection];
+        int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mesh_nodal,
+                                                                           geom_kind,
+                                                                           id_section_in_geom_kind);
 
         int *parent_num = PDM_part_mesh_nodal_section_parent_num_get(mesh_nodal,
-                                                                   geom_kind,
-                                                                   id_section,
-                                                                   i_part);
+                                                                     id_section,
+                                                                     i_part);
 
         PDM_g_num_t *_elt_g_num = PDM_part_mesh_nodal_g_num_get(mesh_nodal,
-                                                                geom_kind,
                                                                 id_section,
                                                                 i_part);
 
         int n_elt = PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
-                                                        geom_kind,
-                                                        id_section,
-                                                        i_part);
+                                                          id_section,
+                                                          i_part);
 
         PDM_part_mesh_nodal_section_elt_extents_compute(mesh_nodal,
-                                                      geom_kind,
-                                                      id_section,
-                                                      i_part,
-                                                      1e-8,
-                                                      _extents);
+                                                        id_section,
+                                                        i_part,
+                                                        1e-8,
+                                                        _extents);
 
         for (int i = 0; i < n_elt; i++) {
           idx = i;
