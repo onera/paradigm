@@ -42,7 +42,7 @@ build:
     - unset LOADEDMODULES
     - module -s purge
     - echo "compilo = $COMPILER"
-    - source /scratchm/sonics/dist/spiro-el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
+    - source /scratchm/sonics/dist/spiro_el8.sh --compiler=$COMPILER --mpi=$MPI_LIB
     # - echo ">>>>>>>>>"
     # - hostname
     # - module unload gcc/10.2.0
