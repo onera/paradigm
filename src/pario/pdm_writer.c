@@ -32,6 +32,7 @@
 #include "pdm_error.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_array.h"
 #include "pdm_logging.h"
 
@@ -912,7 +913,25 @@ PDM_writer_geom_create_from_mesh_nodal
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
 
   /* Infer geometry kind from part mesh_nodal */
-  for (PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+  PDM_geometry_kind_t geom_kind_min;
+  switch (mesh->mesh_dimension) {
+  case 3:
+    geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  case 2:
+    geom_kind_min = PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 1:
+    geom_kind_min = PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 0:
+    geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+  }
+
+  for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(geom->mesh_nodal,
                                                                    geom_kind);
 
@@ -960,7 +979,25 @@ PDM_writer_geom_set_from_mesh_nodal
   geom->section_owner = malloc(sizeof(PDM_ownership_t) * geom->s_section);
 
   /* Infer geometry kind from part mesh_nodal */
-  for (PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
+  PDM_geometry_kind_t geom_kind_min;
+  switch (mesh->mesh_dimension) {
+  case 3:
+    geom_kind_min = PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  case 2:
+    geom_kind_min = PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 1:
+    geom_kind_min = PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 0:
+    geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+  }
+
+  for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(geom->mesh_nodal,
                                                                    geom_kind);
 

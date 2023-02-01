@@ -657,7 +657,7 @@ const int               id_part
  * \return      Return global element numbering of block elements
  *
  */
-//---> PDM_part_mesh_nodal_section_g_num_get
+//---> PDM_part_mesh_nodal_g_num_get
 PDM_g_num_t *
 PDM_Mesh_nodal_g_num_get
 (

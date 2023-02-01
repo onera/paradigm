@@ -5628,7 +5628,6 @@ const PDM_ownership_t               ownership
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_face         Number of polygon
  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
- * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
  * \param [in]  ownership      Ownership
  *
@@ -5926,7 +5925,6 @@ const PDM_ownership_t               ownership
       free(pmne->prepa_blocks->n_poly2d);
       free(pmne->prepa_blocks->l_connec_poly2d);
       free(pmne->prepa_blocks->face_vtx_idx);
-      free(pmne->prepa_blocks->face_vtx_nb);
       free(pmne->prepa_blocks->face_vtx);
       free(pmne->prepa_blocks->add_etat);
       free(pmne->prepa_blocks->numabs);

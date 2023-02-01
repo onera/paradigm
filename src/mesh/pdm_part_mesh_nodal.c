@@ -19,6 +19,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
@@ -153,10 +154,10 @@ PDM_part_mesh_nodal_create
   pmn->ridge    = NULL;
   pmn->corner   = NULL;
 
-  pmn->is_owner_volumic  = PDM_OWNERSHIP_USER;
-  pmn->is_owner_surfacic = PDM_OWNERSHIP_USER;
-  pmn->is_owner_ridge    = PDM_OWNERSHIP_USER;
-  pmn->is_owner_corner   = PDM_OWNERSHIP_USER;
+  pmn->is_owner_volumic  = PDM_OWNERSHIP_KEEP;//USER;
+  pmn->is_owner_surfacic = PDM_OWNERSHIP_KEEP;//USER;
+  pmn->is_owner_ridge    = PDM_OWNERSHIP_KEEP;//USER;
+  pmn->is_owner_corner   = PDM_OWNERSHIP_KEEP;//USER;
 
   pmn->s_section = 10;
   pmn->n_section = 0;
@@ -572,15 +573,24 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
     if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-      pmn->volumic = PDM_part_mesh_nodal_elmts_create(pmn->mesh_dimension, pmn->n_part, pmn->comm);
+      pmn->volumic = PDM_part_mesh_nodal_elmts_create(3,//pmn->mesh_dimension,
+                                                      pmn->n_part,
+                                                      pmn->comm);
     } else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-      pmn->surfacic = PDM_part_mesh_nodal_elmts_create(pmn->mesh_dimension, pmn->n_part, pmn->comm);
+      pmn->surfacic = PDM_part_mesh_nodal_elmts_create(2,//pmn->mesh_dimension,
+                                                       pmn->n_part,
+                                                       pmn->comm);
     } else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-      pmn->ridge = PDM_part_mesh_nodal_elmts_create(pmn->mesh_dimension, pmn->n_part, pmn->comm);
+      pmn->ridge = PDM_part_mesh_nodal_elmts_create(1,//pmn->mesh_dimension,
+                                                    pmn->n_part,
+                                                    pmn->comm);
     } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-      pmn->corner = PDM_part_mesh_nodal_elmts_create(pmn->mesh_dimension, pmn->n_part, pmn->comm);
+      pmn->corner = PDM_part_mesh_nodal_elmts_create(0,//pmn->mesh_dimension,
+                                                     pmn->n_part,
+                                                     pmn->comm);
     }
   }
+
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
@@ -996,7 +1006,6 @@ const int                     id_part
  * \return      Return global element numbering of section elements
  *
  */
- // ATTENTION != PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get
@@ -2152,7 +2161,6 @@ const PDM_ownership_t         ownership
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_face         Number of polygon
  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
- * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
  * \param [in]  ownership      Ownership
  *

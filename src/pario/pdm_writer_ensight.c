@@ -1108,7 +1108,7 @@ PDM_writer_ensight_geom_write
             (PDM_writer_elt_geom_t) PDM_part_mesh_nodal_section_elt_type_get(geom->mesh_nodal, ibloc);
 
     /* Check geometry kind */
-    PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type(t_elt);
+    PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type((PDM_Mesh_nodal_elt_t) t_elt);
 
     if (geom_kind != geom->geom_kind) {
       PDM_error(__FILE__, __LINE__, 0, "Multiple geometry kinds are not supported\n");

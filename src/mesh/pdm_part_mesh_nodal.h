@@ -572,7 +572,6 @@ const int                     id_part
  *
  */
 //---> PDM_Mesh_nodal_g_num_get
- // ATTENTION != PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get
@@ -1134,7 +1133,6 @@ const PDM_ownership_t         ownership
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_face         Number of polygon
  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
- * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
  * \param [in]  ownership      Ownership
  *
