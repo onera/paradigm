@@ -9,10 +9,13 @@ cdef extern from "pdm_mesh_intersection.h":
     PDM_mesh_intersection_t* PDM_mesh_intersection_create(PDM_mesh_intersection_kind_t intersection_kind,
                                                           int                          dim_mesh_a,
                                                           int                          dim_mesh_b,
-                                                          int                          n_part_mesh_a,
-                                                          int                          n_part_mesh_b,
                                                           double                       project_coeff,
                                                           PDM_MPI_Comm                 comm);
+
+    void PDM_mesh_intersection_n_part_set(PDM_mesh_intersection_t *mi,
+                                          const int                i_mesh,
+                                          const int                n_part);
+
     void PDM_mesh_intersection_part_set(PDM_mesh_intersection_t  *mi,
                                         PDM_ol_mesh_t             i_mesh,
                                         int                       i_part,
@@ -70,10 +73,16 @@ cdef class MeshIntersection:
         self._mi = PDM_mesh_intersection_create(intersection_kind,
                                                 dim_mesh_a,
                                                 dim_mesh_b,
-                                                n_part_mesh_a,
-                                                n_part_mesh_b,
                                                 project_coeff,
                                                 pdm_comm);
+
+        PDM_mesh_intersection_n_part_set(self._mi,
+                                         0,
+                                         n_part_mesh_a)
+
+        PDM_mesh_intersection_n_part_set(self._mi,
+                                         1,
+                                         n_part_mesh_b)
     # ------------------------------------------------------------------
     def part_set(self,
                  int                                           i_mesh,
