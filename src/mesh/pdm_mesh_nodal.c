@@ -6527,6 +6527,33 @@ PDM_Mesh_nodal_reorder_elt_vtx
 }
 
 
+PDM_geometry_kind_t
+PDM_Mesh_nodal_geom_kind_from_elt_type
+(
+ PDM_Mesh_nodal_elt_t t_elt
+ )
+{
+  switch (PDM_Mesh_nodal_elt_dim_get(t_elt)) {
+  case 0:
+    return PDM_GEOMETRY_KIND_CORNER;
+    break;
+  case 1:
+    return PDM_GEOMETRY_KIND_RIDGE;
+    break;
+  case 2:
+    return PDM_GEOMETRY_KIND_SURFACIC;
+    break;
+  case 3:
+    return PDM_GEOMETRY_KIND_VOLUMIC;
+    break;
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

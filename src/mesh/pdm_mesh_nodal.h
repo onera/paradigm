@@ -1221,6 +1221,14 @@ PDM_Mesh_nodal_reorder_elt_vtx
        int                  *elt_vtx_out
  );
 
+
+
+PDM_geometry_kind_t
+PDM_Mesh_nodal_geom_kind_from_elt_type
+(
+ PDM_Mesh_nodal_elt_t t_elt
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

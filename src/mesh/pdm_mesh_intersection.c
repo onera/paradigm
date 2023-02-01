@@ -1607,15 +1607,15 @@ _export_ensight3d
 
   PDM_writer_step_beg(wrt, 0.);
 
-  int *cell_face_n = malloc(sizeof(int) * n_cell);
-  for (int i = 0; i < n_cell; i++) {
-    cell_face_n[i] = cell_face_idx[i+1] - cell_face_idx[i];
-  }
+  // int *cell_face_n = malloc(sizeof(int) * n_cell);
+  // for (int i = 0; i < n_cell; i++) {
+  //   cell_face_n[i] = cell_face_idx[i+1] - cell_face_idx[i];
+  // }
 
-  int *face_vtx_n  = malloc(sizeof(int) * n_face);
-  for (int i = 0; i < n_face; i++) {
-    face_vtx_n[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
-  }
+  // int *face_vtx_n  = malloc(sizeof(int) * n_face);
+  // for (int i = 0; i < n_face; i++) {
+  //   face_vtx_n[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
+  // }
 
 
   PDM_writer_geom_coord_set(wrt,
@@ -1632,10 +1632,10 @@ _export_ensight3d
                                       n_cell,
                                       n_face,
                                       face_vtx_idx,
-                                      face_vtx_n,
+                                      NULL,//face_vtx_n,
                                       face_vtx,
                                       cell_face_idx,
-                                      cell_face_n,
+                                      NULL,//cell_face_n,
                                       cell_face,
                                       extract_cell_ln_to_gn);
 
@@ -1678,8 +1678,8 @@ _export_ensight3d
 
   free(val_rank   );
   free(val_gnum   );
-  free(cell_face_n);
-  free(face_vtx_n );
+  // free(cell_face_n);
+  // free(face_vtx_n );
 
   PDM_gnum_free(gnum_vtx );
   PDM_gnum_free(gnum_cell);

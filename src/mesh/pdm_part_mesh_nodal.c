@@ -102,33 +102,6 @@ _get_from_geometry_kind
   return pmne;
 }
 
-static
-PDM_geometry_kind_t
-_geom_kind_from_elt_type
-(
- PDM_Mesh_nodal_elt_t t_elt
- )
-{
-  switch (PDM_Mesh_nodal_elt_dim_get(t_elt)) {
-  case 0:
-    return PDM_GEOMETRY_KIND_CORNER;
-    break;
-  case 1:
-    return PDM_GEOMETRY_KIND_RIDGE;
-    break;
-  case 2:
-    return PDM_GEOMETRY_KIND_SURFACIC;
-    break;
-  case 3:
-    return PDM_GEOMETRY_KIND_VOLUMIC;
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
-  }
-
-  return PDM_GEOMETRY_KIND_MAX;
-}
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -595,7 +568,7 @@ PDM_part_mesh_nodal_section_add
 const PDM_Mesh_nodal_elt_t   t_elt
 )
 {
-  PDM_geometry_kind_t geom_kind = _geom_kind_from_elt_type(t_elt);
+  PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type(t_elt);
 
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
     if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
@@ -2012,14 +1985,13 @@ const PDM_ownership_t         ownership
                                                                        PDM_GEOMETRY_KIND_VOLUMIC);
   int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,
                                                                       PDM_GEOMETRY_KIND_VOLUMIC);
-
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
     pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
     pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
   }
 
-  for (int i = n_section_before-1; i < n_section_after; i++) {
+  for (int i = n_section_before; i < n_section_after; i++) {
     int _id_section = pmn->n_section++;
     pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_VOLUMIC;
     pmn->section_id  [_id_section] = sections_id[i];
@@ -2095,7 +2067,7 @@ const PDM_ownership_t         ownership
     pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
   }
 
-  for (int i = n_section_before-1; i < n_section_after; i++) {
+  for (int i = n_section_before; i < n_section_after; i++) {
     int _id_section = pmn->n_section++;
     pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_SURFACIC;
     pmn->section_id  [_id_section] = sections_id[i];
@@ -2161,7 +2133,7 @@ const PDM_ownership_t         ownership
     pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
   }
 
-  for (int i = n_section_before-1; i < n_section_after; i++) {
+  for (int i = n_section_before; i < n_section_after; i++) {
     int _id_section = pmn->n_section++;
     pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_VOLUMIC;
     pmn->section_id  [_id_section] = sections_id[i];
@@ -2228,7 +2200,7 @@ const PDM_ownership_t         ownership
     pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
   }
 
-  for (int i = n_section_before-1; i < n_section_after; i++) {
+  for (int i = n_section_before; i < n_section_after; i++) {
     int _id_section = pmn->n_section++;
     pmn->section_kind[_id_section] = PDM_GEOMETRY_KIND_SURFACIC;
     pmn->section_id  [_id_section] = sections_id[i];
