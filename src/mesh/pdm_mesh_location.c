@@ -516,7 +516,7 @@ _store_cell_vtx
   free (n_vtx_per_elt);
 }
 
-static void
+ static void
 _dump_point_cloud
 (
  const char     *name,
@@ -2008,9 +2008,6 @@ PDM_mesh_location_compute
 
   // PDM_part_mesh_nodal_elmts_t *pmne = _mesh_nodal_to_pmesh_nodal_elmts(ml->mesh_nodal, ml->comm);
 
-  int n_block = 0;
-  int n_part  = 0;
-  int *blocks_id = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
   int mesh_dimension;
@@ -2033,13 +2030,38 @@ PDM_mesh_location_compute
   default:
     PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh_dimension);
   }
-
-  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
-
   if (dbg_enabled) {
     log_trace("geom_kind = %d, mesh_dimension = %d\n", (int) geom_kind, mesh_dimension);
   }
 
+  int n_block = 0;
+  int n_part  = 0;
+  int *blocks_id = NULL;
+  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
+  if (ml->mesh_nodal != NULL) {
+    switch (mesh_dimension) {
+    case 1:
+      pmne = ml->mesh_nodal->ridge;
+      break;
+    case 2:
+      pmne = ml->mesh_nodal->surfacic;
+      break;
+    case 3:
+      pmne = ml->mesh_nodal->volumic;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", mesh_dimension);
+    }
+
+    n_part    = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
+    n_block   = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (ml->mesh_nodal, geom_kind);
+    blocks_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(ml->mesh_nodal, geom_kind);
+  }
+
+  PDM_part_mesh_nodal_elmts_for_cwipi(ml->comm,
+                                      n_part,
+                                      &pmne);
+  /*
   int send_buf[2];
   int *recv_buf = malloc(sizeof(int) * 2 * n_rank);
 
@@ -2114,7 +2136,7 @@ PDM_mesh_location_compute
   else if (ml->mesh_nodal == NULL) {
     PDM_MPI_Recv(block_type, n_block, PDM_MPI_INT, master, 1, ml->comm);
 
-    /* Create empty part_mesh_nodal_elmts */
+    // Create empty part_mesh_nodal_elmts
     pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension, n_part, ml->comm);
 
     pmne->n_section        = n_block;
@@ -2173,7 +2195,7 @@ PDM_mesh_location_compute
   }
   free(i_null_rank);
   free(block_type);
-
+  */
 
 
 
@@ -4478,11 +4500,8 @@ PDM_mesh_location_compute
 
   } /* End icloud */
 
-  // _pmesh_nodal_elmts_free(pmne,
-  //                         (ml->mesh_nodal == NULL));
   if (ml->mesh_nodal == NULL) {
-    // PDM_part_mesh_nodal_elmts_free(pmne);
-    _pmesh_nodal_elmts_free(pmne, 1);
+    PDM_part_mesh_nodal_elmts_free(pmne);
   }
 
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
