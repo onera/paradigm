@@ -40,11 +40,8 @@ typedef struct _pdm_field_cell_to_vtx_t PDM_field_cell_to_vtx_t;
  * Public function prototypes
  *============================================================================*/
 
-// PDM_field_cell_to_vtx()
 // Function set pour le inverse distance weighting
 // Regarder  dans cwipi pour des arguments variadic
-// Rajouter API centre cellule
-// Rajouter API centre volume dual
 
 // JC: interterp_kind dans le exch ? Vu que de toute manière les infos les mêmes pour la construction
 
