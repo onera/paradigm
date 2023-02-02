@@ -824,22 +824,22 @@ int main
                                     pvtx_ln_to_gn [i_domain][i_part],
                                     pvtx_coord    [i_domain][i_part]);
 
-      int *vtx_part_bound_proc_idx = NULL;
-      int *vtx_part_bound_part_idx = NULL;
-      int *vtx_part_bound          = NULL;
-      PDM_multipart_part_graph_comm_vtx_data_get(mpart_id,
-                                                 i_domain,
-                                                 i_part,
-                                                 &vtx_part_bound_proc_idx,
-                                                 &vtx_part_bound_part_idx,
-                                                 &vtx_part_bound);
-      PDM_field_cell_to_vtx_graph_comm_set(mi,
-                                          i_domain,
-                                          i_part,
-                                          PDM_MESH_ENTITY_VERTEX,
-                                          vtx_part_bound_proc_idx,
-                                          vtx_part_bound_part_idx,
-                                          vtx_part_bound);
+      // int *vtx_part_bound_proc_idx = NULL;
+      // int *vtx_part_bound_part_idx = NULL;
+      // int *vtx_part_bound          = NULL;
+      // PDM_multipart_part_graph_comm_vtx_data_get(mpart_id,
+      //                                            i_domain,
+      //                                            i_part,
+      //                                            &vtx_part_bound_proc_idx,
+      //                                            &vtx_part_bound_part_idx,
+      //                                            &vtx_part_bound);
+      // PDM_field_cell_to_vtx_graph_comm_set(mi,
+      //                                     i_domain,
+      //                                     i_part,
+      //                                     PDM_MESH_ENTITY_VERTEX,
+      //                                     vtx_part_bound_proc_idx,
+      //                                     vtx_part_bound_part_idx,
+      //                                     vtx_part_bound);
 
       int  n_bound = 0;
       int* group_face_idx      = 0;

@@ -26,6 +26,8 @@
 #include "pdm_logging.h"
 #include "pdm_distant_neighbor.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_order.h"
 
@@ -1182,15 +1184,74 @@ PDM_field_cell_to_vtx_compute
   /*
    * Compute graph comm from gnum with PDM_part_generate_entity_graph_comm is not provided
    */
+  int         ***pvtx_proc_bound_idx  = NULL;
+  int         ***pvtx_part_bound_idx  = NULL;
+  int         ***pvtx_bound           = NULL;
+  int         ***pvtx_priority        = NULL;
   if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VERTEX] == 0) {
-    abort();
-    // TODO : compute graph comm from other graph comm OR recumpute from gnum : PDM_part_generate_entity_graph_comm
+    pvtx_proc_bound_idx = malloc( fctv->n_domain * sizeof(int **));
+    pvtx_part_bound_idx = malloc( fctv->n_domain * sizeof(int **));
+    pvtx_bound          = malloc( fctv->n_domain * sizeof(int **));
+    pvtx_priority       = malloc( fctv->n_domain * sizeof(int **));
+    for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+
+      int          *pn_vtx        = malloc(fctv->n_part[i_domain] * sizeof(int          ));
+      PDM_g_num_t **pvtx_ln_to_gn = malloc(fctv->n_part[i_domain] * sizeof(PDM_g_num_t *));
+
+      for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+        pn_vtx       [i_part] = fctv->parts[i_domain][i_part].n_vtx;
+        pvtx_ln_to_gn[i_part] = fctv->parts[i_domain][i_part].vtx_ln_to_gn;
+      }
+
+      PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(fctv->comm, fctv->n_part[i_domain] );
+      PDM_part_generate_entity_graph_comm(fctv->comm,
+                                          part_distribution,
+                                          NULL,
+                                          fctv->n_part[i_domain],
+                                          pn_vtx,
+                   (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                          NULL,
+                                          &pvtx_proc_bound_idx[i_domain],
+                                          &pvtx_part_bound_idx[i_domain],
+                                          &pvtx_bound         [i_domain],
+                                          &pvtx_priority      [i_domain]);
+      free(part_distribution);
+      free(pn_vtx       );
+      free(pvtx_ln_to_gn);
+
+      for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+        fctv->entity_part_bound_proc_idx[PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_proc_bound_idx[i_domain][i_part];
+        fctv->entity_part_bound_part_idx[PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_part_bound_idx[i_domain][i_part];
+        fctv->entity_part_bound         [PDM_MESH_ENTITY_VERTEX][i_domain][i_part] = pvtx_bound         [i_domain][i_part];
+      }
+    }
   }
 
   _prepare_cell_center     (fctv);
   _prepare_vtx_cell        (fctv);
   _create_bnd_graph        (fctv);
   _warm_up_distant_neighbor(fctv);
+
+  /* Free unused */
+  if(fctv->graph_comm_is_defined[PDM_MESH_ENTITY_VERTEX] == 0) {
+
+    for(int i_domain = 0; i_domain < fctv->n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+        free(pvtx_proc_bound_idx[i_domain][i_part]);
+        free(pvtx_part_bound_idx[i_domain][i_part]);
+        free(pvtx_bound         [i_domain][i_part]);
+        free(pvtx_priority      [i_domain][i_part]);
+      }
+      free(pvtx_proc_bound_idx[i_domain]);
+      free(pvtx_part_bound_idx[i_domain]);
+      free(pvtx_bound         [i_domain]);
+      free(pvtx_priority      [i_domain]);
+    }
+    free(pvtx_proc_bound_idx);
+    free(pvtx_part_bound_idx);
+    free(pvtx_bound         );
+    free(pvtx_priority      );
+  }
 
   int **pvtx_cell_n   = fctv->pvtx_cell_n;
   int **pvtx_cell_idx = fctv->pvtx_cell_idx;
@@ -1201,10 +1262,10 @@ PDM_field_cell_to_vtx_compute
    */
   assert(fctv->dn == NULL);
   fctv->dn = PDM_distant_neighbor_create(fctv->comm,
-                                       fctv->n_part_loc_all_domain,
-                                       fctv->pn_vtx,
-                                       fctv->neighbor_idx,
-                                       fctv->neighbor_desc);
+                                         fctv->n_part_loc_all_domain,
+                                         fctv->pn_vtx,
+                                         fctv->neighbor_idx,
+                                         fctv->neighbor_desc);
 
   /* Prepare coordinates to send */
   int    **pvtx_cell_coords_n =  malloc(fctv->n_part_loc_all_domain * sizeof(int    *));
