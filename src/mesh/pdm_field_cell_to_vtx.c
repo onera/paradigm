@@ -900,16 +900,9 @@ _create_bnd_graph_nodal
                                                                        geom_kind,
                                                                        i_part);
 
-      int         *group_elmt_idx = NULL;
-      int         *group_elmt     = NULL;
-      PDM_g_num_t *group_ln_to_gn = NULL;
+      int n_group_part = PDM_part_mesh_nodal_n_group_get(fctv->pmn[i_domain],
+                                                         geom_kind);
 
-      int n_group_part = PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
-                                                       geom_kind,
-                                                       i_part,
-                                                       &group_elmt_idx,
-                                                       &group_elmt,
-                                                       &group_ln_to_gn);
 
       fctv->vtx_face_bound_idx[i_part+shift_part] = malloc( (n_vtx + 1) * sizeof(int));
       fctv->vtx_face_bound_n  [i_part+shift_part] = PDM_array_zeros_int(n_vtx);
@@ -937,11 +930,24 @@ _create_bnd_graph_nodal
                                           &parent_entity_g_num);
       }
 
-      for(int i_group = 0; i_group < n_group_part; ++i_part) {
-        for(int idx_elmt = group_elmt_idx[i_group]; idx_elmt < group_elmt_idx[i_group+1]; ++idx_elmt) {
-          int i_elmt    = group_elmt[idx_elmt];
-          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section);
-          int i_loc_elmt = section_elmt_idx[i_section] - i_elmt;
+      for(int i_group = 0; i_group < n_group_part; ++i_group) {
+
+        int          n_group_elmt   = 0;
+        int         *group_elmt     = NULL;
+        PDM_g_num_t *group_ln_to_gn = NULL;
+
+        PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
+                                      geom_kind,
+                                      i_part,
+                                      i_group,
+                                      &n_group_elmt,
+                                      &group_elmt,
+                                      &group_ln_to_gn);
+
+        for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+          int i_elmt    = group_elmt[idx_elmt]-1;
+          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section+1);
+          int i_loc_elmt = i_elmt - section_elmt_idx[i_section];
           int ln_vtx_per_elmt = n_vtx_per_elmt[i_section];
           for(int k = 0; k < ln_vtx_per_elmt; ++k) {
             int i_vtx = connect[i_section][ln_vtx_per_elmt*i_loc_elmt+k]-1;
@@ -964,11 +970,24 @@ _create_bnd_graph_nodal
       double *_vtx_face_bound_coords = fctv->vtx_face_bound_coords[i_part+shift_part];
       double *_pvtx_coord            = fctv->parts[i_domain][i_part].vtx;
 
-      for(int i_group = 0; i_group < n_group_part; ++i_part) {
-        for(int idx_elmt = group_elmt_idx[i_group]; idx_elmt < group_elmt_idx[i_group+1]; ++idx_elmt) {
-          int i_elmt    = group_elmt[idx_elmt];
-          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section);
-          int i_loc_elmt = section_elmt_idx[i_section] - i_elmt;
+      for(int i_group = 0; i_group < n_group_part; ++i_group) {
+
+        int          n_group_elmt   = 0;
+        int         *group_elmt     = NULL;
+        PDM_g_num_t *group_ln_to_gn = NULL;
+
+        PDM_part_mesh_nodal_group_get(fctv->pmn[i_domain],
+                                      geom_kind,
+                                      i_part,
+                                      i_group,
+                                      &n_group_elmt,
+                                      &group_elmt,
+                                      &group_ln_to_gn);
+
+        for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+          int i_elmt    = group_elmt[idx_elmt]-1;
+          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section+1);
+          int i_loc_elmt = i_elmt - section_elmt_idx[i_section];
           int ln_vtx_per_elmt = n_vtx_per_elmt[i_section];
 
           double center_face[3] = {0., 0., 0.};
@@ -987,7 +1006,7 @@ _create_bnd_graph_nodal
           for(int k = 0; k < ln_vtx_per_elmt; ++k) {
             int i_vtx = connect[i_section][ln_vtx_per_elmt*i_loc_elmt+k]-1;
             int idx_write = _vtx_face_bound_idx[i_vtx] + _vtx_face_bound_n[i_vtx]++;
-            _vtx_face_bound      [idx_write] = idx_elmt - group_elmt_idx[i_group];
+            _vtx_face_bound      [idx_write] = idx_elmt; // - group_elmt_idx[i_group];
             _vtx_face_bound_group[idx_write] = i_group;
             for(int p = 0; p < 3; ++p) {
               _vtx_face_bound_coords[3*idx_write+p] = center_face[p];

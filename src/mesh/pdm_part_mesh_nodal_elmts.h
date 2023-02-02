@@ -674,14 +674,15 @@ PDM_part_mesh_nodal_elmts_for_cwipi
        PDM_part_mesh_nodal_elmts_t **pmne
  );
 
-int
+void
 PDM_part_mesh_nodal_elmts_group_get
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           id_block,
-       int                         **group_elmt_idx,
-       int                         **group_elmt,
-       PDM_g_num_t                 **group_ln_to_gn
+       PDM_part_mesh_nodal_elmts_t   *pmne,
+ const int                            i_part,
+ const int                            i_group,
+       int                           *n_group_elmt,
+       int                          **group_elmt,
+       PDM_g_num_t                  **group_ln_to_gn
 );
 
 int*
@@ -689,6 +690,33 @@ PDM_part_mesh_nodal_elmts_compute_sections_idx
 (
  PDM_part_mesh_nodal_elmts_t  *pmne,
  const int                     id_part
+);
+
+
+void
+PDM_part_mesh_nodal_elmts_group_set
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           i_part,
+ const int                           i_group,
+       int                           n_group_elmt,
+       int                          *group_elmt,
+       PDM_g_num_t                  *group_ln_to_gn
+);
+
+void
+PDM_part_mesh_nodal_elmts_n_group_set
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne,
+ const int                           n_group,
+       PDM_ownership_t               ownership_group
+);
+
+
+int
+PDM_part_mesh_nodal_elmts_n_group_get
+(
+       PDM_part_mesh_nodal_elmts_t  *pmne
 );
 
 #ifdef __cplusplus

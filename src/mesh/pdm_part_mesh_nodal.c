@@ -1865,20 +1865,26 @@ const int                     id_part
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
 
-int
+void
 PDM_part_mesh_nodal_group_get
 (
-      PDM_part_mesh_nodal_t  *pmn,
-      PDM_geometry_kind_t     geom_kind,
-const int                     id_part,
-      int                   **group_elmt_idx,
-      int                   **group_elmt,
-      PDM_g_num_t           **group_ln_to_gn
+       PDM_part_mesh_nodal_t  *pmn,
+       PDM_geometry_kind_t     geom_kind,
+ const int                     i_part,
+ const int                     i_group,
+       int                    *n_group_elmt,
+       int                   **group_elmt,
+       PDM_g_num_t           **group_ln_to_gn
 )
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  return PDM_part_mesh_nodal_elmts_group_get(pmne, id_part, group_elmt_idx, group_elmt, group_ln_to_gn);
+  PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                      i_part,
+                                      i_group,
+                                      n_group_elmt,
+                                      group_elmt,
+                                      group_ln_to_gn);
 }
 
 
@@ -2345,4 +2351,16 @@ PDM_part_mesh_nodal_sections_id_get
   assert(pmn != NULL);
 
   return pmn->section_id;
+}
+
+int
+PDM_part_mesh_nodal_n_group_get
+(
+       PDM_part_mesh_nodal_t  *pmn,
+       PDM_geometry_kind_t     geom_kind
+)
+{
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+  return PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 }

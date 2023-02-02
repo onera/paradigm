@@ -38,6 +38,7 @@
 #include "pdm_part_mesh_nodal_elmts_priv.h"
 
 #include "pdm_partitioning_nodal_algorithm.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_distrib.h"
 #include "pdm_order.h"
 #include "pdm_logging.h"
@@ -571,8 +572,21 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       if(pparent_entitity_ln_to_gn != NULL) {
         sparent_entitity_ln_to_gn[i_section][idx_write] = pparent_entitity_ln_to_gn[i_part][i_elmt];
       }
-
     }
+
+    /* Keep a true element gnum */
+    section_elmts_ln_to_gn[i_part] = malloc(pn_elmt[i_part] * sizeof(PDM_g_num_t));
+
+    int idx_elmt = 0;
+    for(int i_section = 0; i_section < n_section; ++i_section){
+      int n_elmt_in_section = pelmt_by_section_n[i_section];
+      for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
+        int i_parent = parent_num[i_section][i_elmt];
+        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_parent];
+      }
+    }
+    assert(idx_elmt == pn_elmt[i_part]);
+
 
     /* Fill up structure */
     for(int i_section = 0; i_section < n_section; ++i_section){
@@ -625,6 +639,62 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     }
   }
 
+  /*
+   * Preparation des groupes
+   *  On reverse l'information pour avoir pour chaque elemts le group qui le constitue
+   */
+  int         **pgroup_idx      = NULL;
+  int         **pgroup          = NULL;
+  PDM_g_num_t **pgroup_ln_to_gn = NULL;
+  if(dmne->n_group_elmt > 0) {
+    PDM_part_distgroup_to_partgroup(dmne->comm,
+                                    NULL,
+                                    dmne->n_group_elmt,
+                                    dmne->dgroup_elmt_idx,
+                                    dmne->dgroup_elmt,
+                                    n_part,
+                                    pn_elmt,
+            (const PDM_g_num_t **)  section_elmts_ln_to_gn,
+                                    &pgroup_idx,
+                                    &pgroup,
+                                    &pgroup_ln_to_gn);
+
+    PDM_part_mesh_nodal_elmts_n_group_set(pmne, dmne->n_group_elmt, PDM_OWNERSHIP_KEEP);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      for(int i_group = 0; i_group < dmne->n_group_elmt; ++i_group) {
+
+        int beg          = pgroup_idx[i_part][i_group];
+        int n_group_elmt = pgroup_idx[i_part][i_group+1] - beg;
+        int         *group_elmt     = malloc(n_group_elmt * sizeof(int        ));
+        PDM_g_num_t *group_ln_to_gn = malloc(n_group_elmt * sizeof(PDM_g_num_t));
+
+        for(int i = 0; i < n_group_elmt; ++i) {
+          group_elmt    [i] = pgroup         [i_part][beg+i];
+          group_ln_to_gn[i] = pgroup_ln_to_gn[i_part][beg+i];
+        }
+
+        PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                            i_part,
+                                            i_group,
+                                            n_group_elmt,
+                                            group_elmt,
+                                            group_ln_to_gn);
+      }
+
+      free(pgroup_idx     [i_part]);
+      free(pgroup         [i_part]);
+      free(pgroup_ln_to_gn[i_part]);
+
+    }
+
+    free(pgroup_idx);
+    free(pgroup);
+    free(pgroup_ln_to_gn);
+
+  }
+
+
   free(pelmt_by_section_n       );
   free(connec                   );
   free(connec_idx               );
@@ -633,12 +703,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(sparent_entitity_ln_to_gn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_connec      [i_part]);
-    free(pelmts_stride      [i_part]);
-    free(pelmts_types       [i_part]);
-    free(pelmts_stride_idx  [i_part]);
-    free(sorted_vtx_ln_to_gn[i_part]);
-    free(vtx_order          [i_part]);
+    free(pelmts_connec         [i_part]);
+    free(pelmts_stride         [i_part]);
+    free(pelmts_types          [i_part]);
+    free(pelmts_stride_idx     [i_part]);
+    free(sorted_vtx_ln_to_gn   [i_part]);
+    free(vtx_order             [i_part]);
+    free(section_elmts_ln_to_gn[i_part]);
   }
   free(sorted_vtx_ln_to_gn);
   free(vtx_order);
@@ -648,6 +719,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(pid_section  );
   free(section_order);
   free(pelmts_stride_idx);
+  free(section_elmts_ln_to_gn);
 
   return pmne;
 }
