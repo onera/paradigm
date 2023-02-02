@@ -10,7 +10,8 @@ cdef extern from "pdm_mesh_intersection.h":
                                                           int                          dim_mesh_a,
                                                           int                          dim_mesh_b,
                                                           double                       project_coeff,
-                                                          PDM_MPI_Comm                 comm);
+                                                          PDM_MPI_Comm                 comm,
+                                                          PDM_ownership_t              owner);
 
     void PDM_mesh_intersection_n_part_set(PDM_mesh_intersection_t *mi,
                                           const int                i_mesh,
@@ -35,7 +36,23 @@ cdef extern from "pdm_mesh_intersection.h":
                                         PDM_g_num_t              *edge_ln_to_gn,
                                         PDM_g_num_t              *vtx_ln_to_gn,
                                         double                   *vtx_coord);
+
     void PDM_mesh_intersection_compute(PDM_mesh_intersection_t  *mi);
+
+    void PDM_mesh_intersection_part_to_part_get(PDM_mesh_intersection_t  *mi,
+                                                PDM_part_to_part_t      **ptp,
+                                                PDM_ownership_t           ownership);
+
+    void PDM_mesh_intersection_result_from_a_get(PDM_mesh_intersection_t  *mi,
+                                                 const int                 ipart,
+                                                 int                     **elt_a_elt_b_idx,
+                                                 PDM_g_num_t             **elt_a_elt_b,
+                                                 double                  **elt_a_elt_b_weight);
+
+
+    void PDM_mesh_intersection_result_from_b_get(PDM_mesh_intersection_t  *mi,
+                                                 const int                 ipart,
+                                                 double                  **elt_b_elt_a_weight);
     void PDM_mesh_intersection_free(PDM_mesh_intersection_t* mi);
 
 # ------------------------------------------------------------------
@@ -74,7 +91,8 @@ cdef class MeshIntersection:
                                                 dim_mesh_a,
                                                 dim_mesh_b,
                                                 project_coeff,
-                                                pdm_comm);
+                                                pdm_comm,
+                                                PDM_OWNERSHIP_UNGET_RESULT_IS_FREE);
 
         PDM_mesh_intersection_n_part_set(self._mi,
                                          0,
@@ -144,6 +162,64 @@ cdef class MeshIntersection:
         """
         """
         PDM_mesh_intersection_compute(self._mi)
+
+    # ------------------------------------------------------------------------
+    def part_to_part_get(self):
+      """
+      """
+      cdef PDM_part_to_part_t *ptpc
+      PDM_mesh_intersection_part_to_part_get(self._mi,
+                                             &ptpc,
+                                             PDM_OWNERSHIP_USER)
+
+      py_casp = PyCapsule_New(ptpc, NULL, NULL)
+      return PartToPartCapsule(py_casp, self.py_comm) # The free is inside the class
+
+    # ------------------------------------------------------------------
+    def a_to_b_get(self, int i_part):
+      """
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int         *a_to_b_idx
+      cdef PDM_g_num_t *a_to_b
+      cdef double      *a_to_b_weight
+      # ************************************************************************
+      # > Get
+      PDM_mesh_intersection_result_from_a_get(self._mi,
+                                              i_part,
+                                              &a_to_b_idx,
+                                              &a_to_b,
+                                              &a_to_b_weight)
+
+      # get nb of elt_a in part #i_part
+      n_a = 0#!!!
+      return {
+        "a_to_b_idx"    : create_numpy_i       (a_to_b_idx,    n_a+1),
+        "a_to_b"        : create_numpy_pdm_gnum(a_to_b,        a_to_b_idx[n_a]),
+        "a_to_b_weight" : create_numpy_d       (a_to_b_weight, a_to_b_idx[n_a])
+      }
+
+    # ------------------------------------------------------------------
+    def b_to_a_get(self, int i_part):
+      """
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef double *b_to_a_weight
+      # ************************************************************************
+      # > Get
+      PDM_mesh_intersection_result_from_b_get(self._mi,
+                                              i_part,
+                                              &b_to_a_weight)
+
+      # get nb of elt_b in part #i_part
+      n_b = 0#!!!
+      # get size of b_to_a_weight (from ptp?)
+      s_b_to_a = 0
+      return {
+        "b_to_a_weight" : create_numpy_d(b_to_a_weight, s_b_to_a)
+      }
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
