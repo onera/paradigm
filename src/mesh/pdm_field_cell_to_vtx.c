@@ -30,6 +30,7 @@
 #include "pdm_distrib.h"
 #include "pdm_vtk.h"
 #include "pdm_order.h"
+#include "pdm_binary_search.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -386,7 +387,7 @@ _prepare_cell_center_nodal
 
     for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
 
-      int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
+      // int n_vtx        = PDM_part_mesh_nodal_n_vtx_get      (fctv->pmn[i_domain], i_part);
 
       int n_elmt = 0;
       for(int i_section = 0; i_section < n_section; ++i_section) {
@@ -887,10 +888,12 @@ _create_bnd_graph_nodal
     int n_section    = PDM_part_mesh_nodal_n_section_get  (fctv->pmn[i_domain], geom_kind);
     int *sections_id = PDM_part_mesh_nodal_sections_id_get(fctv->pmn[i_domain], geom_kind);
 
-    PDM_UNUSED(n_section);
-    PDM_UNUSED(sections_id);
+    int **connect        = malloc(n_section * sizeof(int *));
+    int  *n_vtx_per_elmt = malloc(n_section * sizeof(int  ));
 
     for(int i_part = 0; i_part < fctv->n_part[i_domain]; ++i_part) {
+
+      int n_vtx = fctv->parts[i_domain][i_part].n_vtx;
 
       /* Setup idx */
       int *section_elmt_idx = PDM_part_mesh_nodal_compute_sections_idx(fctv->pmn[i_domain],
@@ -908,11 +911,96 @@ _create_bnd_graph_nodal
                                                        &group_elmt,
                                                        &group_ln_to_gn);
 
+      fctv->vtx_face_bound_idx[i_part+shift_part] = malloc( (n_vtx + 1) * sizeof(int));
+      fctv->vtx_face_bound_n  [i_part+shift_part] = PDM_array_zeros_int(n_vtx);
 
-      PDM_UNUSED(n_group_part);
+      int *_vtx_face_bound_idx = (int *) fctv->vtx_face_bound_idx[i_part+shift_part];
+      int *_vtx_face_bound_n   = (int *) fctv->vtx_face_bound_n  [i_part+shift_part];
+
+      /*
+       * Prepare usefull shorcut
+       */
+      for(int i_section = 0; i_section < n_section; ++i_section) {
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(fctv->pmn[i_domain], geom_kind, sections_id[i_section]);
+        n_vtx_per_elmt[i_section] = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+        PDM_g_num_t    *numabs              = NULL;
+        int            *parent_num          = NULL;
+        PDM_g_num_t    *parent_entity_g_num = NULL;
+        PDM_part_mesh_nodal_block_std_get(fctv->pmn[i_domain],
+                                          geom_kind,
+                                          sections_id[i_section],
+                                          i_part,
+                                          &connect[i_section],
+                                          &numabs,
+                                          &parent_num,
+                                          &parent_entity_g_num);
+      }
+
+      for(int i_group = 0; i_group < n_group_part; ++i_part) {
+        for(int idx_elmt = group_elmt_idx[i_group]; idx_elmt < group_elmt_idx[i_group+1]; ++idx_elmt) {
+          int i_elmt    = group_elmt[idx_elmt];
+          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section);
+          int i_loc_elmt = section_elmt_idx[i_section] - i_elmt;
+          int ln_vtx_per_elmt = n_vtx_per_elmt[i_section];
+          for(int k = 0; k < ln_vtx_per_elmt; ++k) {
+            int i_vtx = connect[i_section][ln_vtx_per_elmt*i_loc_elmt+k]-1;
+            _vtx_face_bound_n[i_vtx] += 1;
+          }
+        }
+      }
+
+      _vtx_face_bound_idx[0] = 0;
+      for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx ) {
+        _vtx_face_bound_idx[i_vtx+1] = _vtx_face_bound_idx[i_vtx] + _vtx_face_bound_n[i_vtx];
+        _vtx_face_bound_n[i_vtx] = 0;
+      }
+
+      fctv->vtx_face_bound       [i_part+shift_part] = malloc(    _vtx_face_bound_idx[n_vtx] * sizeof(int   ));
+      fctv->vtx_face_bound_group [i_part+shift_part] = malloc(    _vtx_face_bound_idx[n_vtx] * sizeof(int   ));
+      fctv->vtx_face_bound_coords[i_part+shift_part] = malloc(3 * _vtx_face_bound_idx[n_vtx] * sizeof(double));
+      int    *_vtx_face_bound        = fctv->vtx_face_bound       [i_part+shift_part];
+      int    *_vtx_face_bound_group  = fctv->vtx_face_bound_group [i_part+shift_part];
+      double *_vtx_face_bound_coords = fctv->vtx_face_bound_coords[i_part+shift_part];
+      double *_pvtx_coord            = fctv->parts[i_domain][i_part].vtx;
+
+      for(int i_group = 0; i_group < n_group_part; ++i_part) {
+        for(int idx_elmt = group_elmt_idx[i_group]; idx_elmt < group_elmt_idx[i_group+1]; ++idx_elmt) {
+          int i_elmt    = group_elmt[idx_elmt];
+          int i_section = PDM_binary_search_gap_int(i_elmt, section_elmt_idx, n_section);
+          int i_loc_elmt = section_elmt_idx[i_section] - i_elmt;
+          int ln_vtx_per_elmt = n_vtx_per_elmt[i_section];
+
+          double center_face[3] = {0., 0., 0.};
+          double pond = 1./((double) ln_vtx_per_elmt);
+
+          for(int k = 0; k < ln_vtx_per_elmt; ++k) {
+            int i_vtx = connect[i_section][ln_vtx_per_elmt*i_loc_elmt+k]-1;
+            for(int p = 0; p < 3; ++p) {
+              center_face[p] += _pvtx_coord[3*i_vtx+p];
+            }
+          }
+          for(int k = 0; k < 3; ++k) {
+            center_face[k] = center_face[k] * pond;
+          }
+
+          for(int k = 0; k < ln_vtx_per_elmt; ++k) {
+            int i_vtx = connect[i_section][ln_vtx_per_elmt*i_loc_elmt+k]-1;
+            int idx_write = _vtx_face_bound_idx[i_vtx] + _vtx_face_bound_n[i_vtx]++;
+            _vtx_face_bound      [idx_write] = idx_elmt - group_elmt_idx[i_group];
+            _vtx_face_bound_group[idx_write] = i_group;
+            for(int p = 0; p < 3; ++p) {
+              _vtx_face_bound_coords[3*idx_write+p] = center_face[p];
+            }
+          }
+        }
+      }
+
       free(section_elmt_idx);
-
     }
+
+    free(connect       );
+    free(n_vtx_per_elmt);
     shift_part   += fctv->n_part              [i_domain];
   }
 

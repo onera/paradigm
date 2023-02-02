@@ -1198,6 +1198,10 @@ PDM_part_mesh_nodal_elmts_create
   pmne->num_elmt_parent_to_local = NULL;
   pmne->numabs                   = NULL;
 
+  pmne->group_elmt_idx   = NULL;
+  pmne->group_elmt       = NULL;
+  pmne->group_ln_to_gn   = NULL;
+
   return pmne;
 }
 
@@ -6133,10 +6137,17 @@ PDM_part_mesh_nodal_elmts_group_get
        PDM_g_num_t                 **group_ln_to_gn
 )
 {
-  *group_elmt_idx = pmne->group_elmt_idx[i_part];
-  *group_elmt     = pmne->group_elmt    [i_part];
-  *group_ln_to_gn = pmne->group_ln_to_gn[i_part];
-  return pmne->n_group[i_part];
+  if(pmne->group_elmt_idx != NULL) {
+    *group_elmt_idx = pmne->group_elmt_idx[i_part];
+    *group_elmt     = pmne->group_elmt    [i_part];
+    *group_ln_to_gn = pmne->group_ln_to_gn[i_part];
+    return pmne->n_group[i_part];
+  } else {
+    *group_elmt_idx = NULL;
+    *group_elmt     = NULL;
+    *group_ln_to_gn = NULL;
+    return 0;
+  }
 }
 
 
