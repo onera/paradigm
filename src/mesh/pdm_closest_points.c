@@ -739,40 +739,28 @@ PDM_closest_points_free
 PDM_closest_point_t  *cls
 )
 {
-  if (cls->tgt_cloud != NULL) {
-    if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
-       ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->results_is_getted)){
-      if (cls->tgt_cloud->closest_src_gnum != NULL) {
-        for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
-          if (cls->tgt_cloud->closest_src_gnum[j] != NULL) {
-            free (cls->tgt_cloud->closest_src_gnum[j]);
-          }
-        }
-      }
 
-      if (cls->tgt_cloud->closest_src_dist != NULL) {
-        for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
-          if (cls->tgt_cloud->closest_src_dist[j] != NULL) {
-            free (cls->tgt_cloud->closest_src_dist[j]);
-          }
+  if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->results_is_getted)){
+    if (cls->tgt_cloud->closest_src_gnum != NULL) {
+      for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
+        if (cls->tgt_cloud->closest_src_gnum[j] != NULL) {
+          free (cls->tgt_cloud->closest_src_gnum[j]);
         }
       }
     }
 
-    free (cls->tgt_cloud->closest_src_gnum);
-    free (cls->tgt_cloud->closest_src_dist);
-
-    if (cls->tgt_cloud->gnum != NULL) {
-      free (cls->tgt_cloud->gnum);
+    if (cls->tgt_cloud->closest_src_dist != NULL) {
+      for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
+        if (cls->tgt_cloud->closest_src_dist[j] != NULL) {
+          free (cls->tgt_cloud->closest_src_dist[j]);
+        }
+      }
     }
-    if (cls->tgt_cloud->coords != NULL) {
-      free (cls->tgt_cloud->coords);
-    }
-    if (cls->tgt_cloud->n_points != NULL) {
-      free (cls->tgt_cloud->n_points);
-    }
-    free (cls->tgt_cloud);
   }
+
+  free (cls->tgt_cloud->closest_src_gnum);
+  free (cls->tgt_cloud->closest_src_dist);
 
   int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
@@ -781,25 +769,22 @@ PDM_closest_point_t  *cls
      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
      ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
 
-  if (cls->src_cloud != NULL) {
-    if (free_tgt_in_src_gnum) {
-      if (cls->src_cloud->tgt_in_src != NULL) {
-        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-          if (cls->src_cloud->tgt_in_src[j] != NULL) {
-            free (cls->src_cloud->tgt_in_src[j]);
-          }
+  if (free_tgt_in_src_gnum) {
+    if (cls->src_cloud->tgt_in_src != NULL) {
+      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+        if (cls->src_cloud->tgt_in_src[j] != NULL) {
+          free (cls->src_cloud->tgt_in_src[j]);
         }
       }
     }
-    if (free_tgt_in_src_dist) {
-      if (cls->src_cloud->tgt_in_src_dist != NULL) {
-        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-          if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
-            free (cls->src_cloud->tgt_in_src_dist[j]);
-          }
+  }
+  if (free_tgt_in_src_dist) {
+    if (cls->src_cloud->tgt_in_src_dist != NULL) {
+      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+        if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
+          free (cls->src_cloud->tgt_in_src_dist[j]);
         }
       }
-      free (cls->src_cloud->tgt_in_src_dist);
     }
   }
   if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
@@ -810,25 +795,37 @@ PDM_closest_point_t  *cls
         }
       }
     }
-
-    free (cls->src_cloud->tgt_in_src_idx);
-    free (cls->src_cloud->tgt_in_src);
-    free (cls->src_cloud->tgt_in_src_dist);
-
-    if (cls->src_cloud->gnum != NULL) {
-      free (cls->src_cloud->gnum);
-    }
-    if (cls->src_cloud->coords != NULL) {
-      free (cls->src_cloud->coords);
-    }
-    if (cls->src_cloud->n_points != NULL) {
-      free (cls->src_cloud->n_points);
-    }
-    free (cls->src_cloud);
   }
 
-  if (cls->ptp != NULL && cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
-    PDM_part_to_part_free(cls->ptp);
+  free (cls->src_cloud->tgt_in_src_idx);
+  free (cls->src_cloud->tgt_in_src);
+  free (cls->src_cloud->tgt_in_src_dist);
+
+  if (cls->tgt_cloud->gnum != NULL) {
+    free (cls->tgt_cloud->gnum);
+  }
+  if (cls->tgt_cloud->coords != NULL) {
+    free (cls->tgt_cloud->coords);
+  }
+  if (cls->tgt_cloud->n_points != NULL) {
+    free (cls->tgt_cloud->n_points);
+  }
+  if (cls->tgt_cloud != NULL) {
+    free (cls->tgt_cloud);
+  }
+
+
+  if (cls->src_cloud->gnum != NULL) {
+    free (cls->src_cloud->gnum);
+  }
+  if (cls->src_cloud->coords != NULL) {
+    free (cls->src_cloud->coords);
+  }
+  if (cls->src_cloud->n_points != NULL) {
+    free (cls->src_cloud->n_points);
+  }
+  if (cls->src_cloud != NULL) {
+    free (cls->src_cloud);
   }
 
   PDM_timer_free(cls->timer);
