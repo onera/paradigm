@@ -775,16 +775,20 @@ static
 void
 _select_elements_by_global_bbox_nodal
 (
-  PDM_part_mesh_nodal_t   *mesh_nodal,
-  int                      dim_mesh,
-  double                 **box_extents,
-  double                  *g_mesh_global_extents,
-  int                    **n_extract_elmt_out,
-  double                ***extract_box_extents_out,
-  int                   ***extract_elmt_init_location_out,
-  PDM_g_num_t           ***extract_elmt_ln_to_gn_out
-)
+       PDM_mesh_intersection_t   *mi,
+ const int                        i_mesh,
+       double                   **box_extents,
+       double                    *g_mesh_global_extents,
+       int                      **n_extract_elmt_out,
+       double                  ***extract_box_extents_out,
+       int                     ***extract_elmt_init_location_out,
+       PDM_g_num_t             ***extract_elmt_ln_to_gn_out
+ )
 {
+  PDM_MPI_Comm           comm       = mi->comm;
+  PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
+  const int              dim_mesh   = mi->dim_mesh[i_mesh];
+
   PDM_geometry_kind_t geom_kind;
   switch (dim_mesh) {
   case 1:
@@ -801,7 +805,7 @@ _select_elements_by_global_bbox_nodal
   }
 
   int i_rank;
-  PDM_MPI_Comm_rank(mesh_nodal->comm, &i_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   int n_part = PDM_part_mesh_nodal_n_part_get(mesh_nodal);
 
@@ -1327,31 +1331,58 @@ static
 PDM_extract_part_t*
 _create_extract_part_nodal
 (
- PDM_part_mesh_nodal_t *mesh_nodal,
- int                    dim_mesh,
- PDM_box_set_t         *boxes_meshes
+ PDM_mesh_intersection_t *mi,
+ const int                i_mesh,
+ PDM_box_set_t           *boxes_meshes
 )
 {
+  PDM_MPI_Comm comm = mi->comm;
+  PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
+  const int dim_mesh = mi->dim_mesh[i_mesh];
+
   PDM_geometry_kind_t geom_kind;
-  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
   switch (dim_mesh) {
   case 1:
     geom_kind = PDM_GEOMETRY_KIND_RIDGE;
-    pmne = mesh_nodal->ridge;
     break;
   case 2:
     geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-    pmne = mesh_nodal->surfacic;
     break;
   case 3:
     geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-    pmne = mesh_nodal->volumic;
     break;
   default:
     PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
   }
 
-  int n_part = PDM_part_mesh_nodal_n_part_get(mesh_nodal);
+  int n_part       = mi->n_part_mesh[i_mesh];
+  int n_section    = 0;
+  int *sections_id = NULL;
+  PDM_part_mesh_nodal_elmts_t *pmne = NULL;
+  if (mesh_nodal != NULL) {
+    switch (dim_mesh) {
+    case 1:
+      pmne = mesh_nodal->ridge;
+      break;
+    case 2:
+      pmne = mesh_nodal->surfacic;
+      break;
+    case 3:
+      pmne = mesh_nodal->volumic;
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
+    }
+
+    assert(n_part == PDM_part_mesh_nodal_n_part_get(mesh_nodal));
+    n_section   = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (mesh_nodal, geom_kind);
+    sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
+  }
+
+  PDM_part_mesh_nodal_elmts_for_cwipi(comm,
+                                      n_part,
+                                      &pmne);
+
 
   int n_part_out = 1;
   PDM_extract_part_t* extrp_mesh = PDM_extract_part_create(dim_mesh,
@@ -1361,7 +1392,7 @@ _create_extract_part_nodal
                                                            PDM_SPLIT_DUAL_WITH_HILBERT, // Not used
                                                            PDM_FALSE,                   // compute_child_gnum
                                                            PDM_OWNERSHIP_KEEP,
-                                                           mesh_nodal->comm);
+                                                           comm);
 
   int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
 
@@ -1375,13 +1406,16 @@ _create_extract_part_nodal
   PDM_extract_part_part_nodal_set(extrp_mesh, pmne);
 
   /* Set vtx coordinates */
-  int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mesh_nodal, geom_kind);
-  int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
-
   for (int i_part = 0; i_part < n_part; ++i_part) {
-    int n_vtx = PDM_part_mesh_nodal_n_vtx_get(mesh_nodal, i_part);
-    const double      *vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-    const PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+    int n_vtx = 0;
+    double      *vtx_coord    = NULL;
+    PDM_g_num_t *vtx_ln_to_gn = NULL;
+
+    if (mesh_nodal != NULL) {
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get(mesh_nodal, i_part);
+      vtx_coord    = (double      *) PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+      vtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+    }
 
     int part_n_elt = 0;
     for (int isection = 0; isection < n_section; isection++) {
@@ -1434,8 +1468,8 @@ _create_extract_part_nodal
                               cell_ln_to_gn,
                               face_ln_to_gn,
                               edge_ln_to_gn,
-              (PDM_g_num_t *) vtx_ln_to_gn,
-              (double      *) vtx_coord);
+                              vtx_ln_to_gn,
+                              vtx_coord);
   }
 
   /*  Setup target frame */
@@ -1903,7 +1937,7 @@ _build_ptp
   // int         **user_a_b_init_loc     = malloc(sizeof(int         *) * mi->n_part_mesh[0]);// size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?)
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
     free(user_elt_a_b_init_loc_stride[ipart]);
-    if (mi->mesh_nodal[0] == NULL) {
+    if (mi->mesh_nodal[0] == NULL && mi->mesh[0] != NULL) {
       user_n_elt_a[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[0],
                                                        ipart,
                                                        entity_type[0]);
@@ -1913,7 +1947,7 @@ _build_ptp
                                         &user_elt_ln_to_gn_a[ipart],
                                         PDM_OWNERSHIP_USER);
     }
-    else {
+    else if (mi->mesh_nodal[0] != NULL) {
       PDM_geometry_kind_t geom_kind;
       switch (mi->dim_mesh[0]) {
       case 1:
@@ -1973,6 +2007,10 @@ _build_ptp
       }
 
     }
+    else {
+      user_n_elt_a[ipart] = 0;
+      user_elt_ln_to_gn_a[ipart] = NULL;
+    }
 
 
     mi->elt_a_elt_b_idx[ipart] = PDM_array_zeros_int(user_n_elt_a[ipart]+1);
@@ -2016,12 +2054,12 @@ _build_ptp
 
   int *user_n_elt_b = malloc(sizeof(int) * mi->n_part_mesh[1]);
   for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
-    if (mi->mesh_nodal[1] == NULL) {
+    if (mi->mesh_nodal[1] == NULL && mi->mesh[1] != NULL) {
       user_n_elt_b[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[1],
                                                        ipart,
                                                        entity_type[1]);
     }
-    else {
+    else if (mi->mesh_nodal[1] != NULL) {
       PDM_geometry_kind_t geom_kind;
       switch (mi->dim_mesh[1]) {
       case 1:
@@ -2053,10 +2091,12 @@ _build_ptp
                                                                      ipart);
       }
     }
+    else {
+      user_n_elt_b[ipart] = 0;
+    }
   }
 
   // dbg print?
-
   mi->ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) user_elt_ln_to_gn_a,
                                                       (const int          *) user_n_elt_a,
                                                                              mi->n_part_mesh[0],
@@ -4261,10 +4301,10 @@ _mesh_intersection_surf_surf2
     face_ln_to_gn[i] = mi->extrp_mesh[i]->target_gnum[0];
 
     if (dbg_enabled) {
-      log_trace("mesh %d is nodal? %d\n", i, mi->mesh_nodal[i] != NULL);
+      log_trace("mesh %d is nodal? %d\n", i, mi->mesh[i] == NULL);
     }
 
-    if (mi->mesh_nodal[i] != NULL) {
+    if (mi->mesh[i] == NULL) {
       PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
                                            &pmne[i],
                                            PDM_OWNERSHIP_KEEP);
@@ -4881,7 +4921,7 @@ _mesh_intersection_surf_surf2
   }
   free(faceB_normals);
   for (int i = 0; i < 2; i++) {
-    if (mi->mesh_nodal[i] != NULL) {
+    if (mi->mesh[i] == NULL) {
       free(face_vtx_idx[i]);
       free(face_vtx    [i]);
     }
@@ -4912,7 +4952,8 @@ PDM_mesh_intersection_create
  const int                          dim_mesh_a,
  const int                          dim_mesh_b,
  const double                       project_coeff,
-       PDM_MPI_Comm                 comm
+       PDM_MPI_Comm                 comm,
+ const PDM_ownership_t              owner
 )
 {
   PDM_mesh_intersection_t *mi = (PDM_mesh_intersection_t *) malloc(sizeof(PDM_mesh_intersection_t));
@@ -4932,6 +4973,9 @@ PDM_mesh_intersection_create
 
 
   /* Initialize results */
+  mi->owner = owner;
+  mi->tag_elt_a_elt_b_get = 0;
+  mi->tag_elt_b_elt_a_get = 0;
   mi->elt_a_elt_b_idx    = NULL;
   mi->elt_a_elt_b        = NULL;
   mi->elt_a_elt_b_weight = NULL;
@@ -4969,6 +5013,17 @@ PDM_mesh_intersection_n_part_set
 }
 
 void
+PDM_mesh_intersection_n_part_set2
+(
+  PDM_mesh_intersection_t *mi,
+  const int                i_mesh,
+  const int                n_part
+)
+{
+  mi->n_part_mesh[i_mesh] = n_part;
+}
+
+void
 PDM_mesh_intersection_compute
 (
   PDM_mesh_intersection_t  *mi
@@ -4989,19 +5044,23 @@ PDM_mesh_intersection_compute
   double g_mesh_global_extents[2][6];
   double g_global_extents        [6];
   for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->mesh_nodal[imesh] == NULL) {
+    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       _compute_part_mesh_extents(mi->mesh[imesh],
                                  mi->dim_mesh[imesh],
                                  mesh_global_extents[imesh],
                                  &extents_mesh[imesh]);
     }
-    else {
-      // Get mesh dimension?
-
+    else if (mi->mesh_nodal[imesh] != NULL) {
       _compute_mesh_nodal_extents(mi->mesh_nodal[imesh],
                                   mi->dim_mesh[imesh],
                                   mesh_global_extents[imesh],
                                   &extents_mesh[imesh]);
+    }
+    else {
+      extents_mesh[imesh] = malloc(sizeof(double *) * mi->n_part_mesh[imesh]);
+      for (int i = 0; i < mi->n_part_mesh[imesh]; i++) {
+        extents_mesh[imesh][i] = malloc(sizeof(double) * 0);
+      }
     }
   }
 
@@ -5066,7 +5125,7 @@ PDM_mesh_intersection_compute
   n_part[0] = mi->n_part_mesh[0];
   n_part[1] = mi->n_part_mesh[1];
   for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->mesh_nodal[imesh] == NULL) {
+    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       _select_elements_by_global_bbox(mi->mesh[imesh],
                                       mi->dim_mesh[imesh],
                                       extents_mesh[imesh],
@@ -5076,9 +5135,9 @@ PDM_mesh_intersection_compute
                                       &extract_elmt_init_location[imesh],
                                       &extract_elmt_ln_to_gn[imesh]);
     }
-    else {
-      _select_elements_by_global_bbox_nodal(mi->mesh_nodal[imesh],
-                                            mi->dim_mesh[imesh],
+    else if (mi->mesh_nodal[imesh] != NULL) {
+      _select_elements_by_global_bbox_nodal(mi,
+                                            imesh,
                                             extents_mesh[imesh],
                                             g_mesh_global_extents[(imesh+1)%2],
                                             &n_extract_elmt[imesh],
@@ -5086,9 +5145,28 @@ PDM_mesh_intersection_compute
                                             &extract_elmt_init_location[imesh],
                                             &extract_elmt_ln_to_gn[imesh]);
     }
+    else {
+      n_extract_elmt            [imesh] = malloc(sizeof(int          ) * n_part[imesh]);
+      extract_box_extents       [imesh] = malloc(sizeof(double      *) * n_part[imesh]);
+      extract_elmt_init_location[imesh] = malloc(sizeof(int         *) * n_part[imesh]);
+      extract_elmt_ln_to_gn     [imesh] = malloc(sizeof(PDM_g_num_t *) * n_part[imesh]);
+      for (int ipart = 0; ipart < n_part[imesh]; ipart++) {
+        n_extract_elmt[imesh][ipart] = 0;
+        extract_box_extents       [imesh][ipart] = malloc(sizeof(double     ) * 0);
+        extract_elmt_init_location[imesh][ipart] = malloc(sizeof(int        ) * 0);
+        extract_elmt_ln_to_gn     [imesh][ipart] = malloc(sizeof(PDM_g_num_t) * 0);
+      }
+    }
 
     if (0 == 1) {
       for(int i_part = 0; i_part < n_part[imesh]; ++i_part) {
+        log_trace("n_extract_elmt[%d][%d] = %d\n", imesh, i_part, n_extract_elmt[imesh][i_part]);
+        // for (int i = 0; i < n_extract_elmt[imesh][i_part]; i++) {
+        //   log_trace(" init_loc[%d] : (%d, %d, %d)\n", i,
+        //             extract_elmt_init_location[imesh][i_part][3*i  ],
+        //             extract_elmt_init_location[imesh][i_part][3*i+1],
+        //             extract_elmt_init_location[imesh][i_part][3*i+2]);
+        // }
         char filename[99];
         sprintf(filename, "select_boxes_mesh%d_part%d_rank%d.vtk", imesh, i_part, i_rank);
         PDM_vtk_write_boxes(filename,
@@ -5173,14 +5251,14 @@ PDM_mesh_intersection_compute
   //                                                         mi->dim_mesh[1],
   //                                                         boxes_mesh[1]);
   for (int imesh = 0; imesh < 2; imesh++) {
-    if (mi->mesh_nodal[imesh] == NULL) {
+    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       mi->extrp_mesh[imesh] = _create_extract_part(mi->mesh[imesh],
                                                    mi->dim_mesh[imesh],
                                                    boxes_mesh[imesh]);
     }
     else {
-      mi->extrp_mesh[imesh] = _create_extract_part_nodal(mi->mesh_nodal[imesh],
-                                                         mi->dim_mesh[imesh],
+      mi->extrp_mesh[imesh] = _create_extract_part_nodal(mi,
+                                                         imesh,
                                                          boxes_mesh[imesh]);
     }
   }
@@ -5308,6 +5386,12 @@ PDM_mesh_intersection_compute
   free(redistribute_box_a_to_box_b_idx);
   free(redistribute_box_a_to_box_b    );
 
+  for (int imesh = 0; imesh < 2; imesh++) {
+    if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
+      PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+    }
+  }
+
   PDM_extract_part_free(extrp_mesh_a);
   PDM_extract_part_free(extrp_mesh_b);
 
@@ -5432,36 +5516,48 @@ PDM_mesh_intersection_free
 
   // !! ownership
   if (mi->elt_a_elt_b_idx != NULL) {
-    for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-      if (mi->elt_a_elt_b_idx[ipart] != NULL) {
-        free(mi->elt_a_elt_b_idx[ipart]);
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
+      for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
+        if (mi->elt_a_elt_b_idx[ipart] != NULL) {
+          free(mi->elt_a_elt_b_idx[ipart]);
+        }
       }
     }
     free(mi->elt_a_elt_b_idx);
   }
 
   if (mi->elt_a_elt_b != NULL) {
-    for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-      if (mi->elt_a_elt_b[ipart] != NULL) {
-        free(mi->elt_a_elt_b[ipart]);
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
+      for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
+        if (mi->elt_a_elt_b[ipart] != NULL) {
+          free(mi->elt_a_elt_b[ipart]);
+        }
       }
-    }
+  }
     free(mi->elt_a_elt_b);
   }
 
   if (mi->elt_a_elt_b_weight != NULL) {
-    for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-      if (mi->elt_a_elt_b_weight[ipart] != NULL) {
-        free(mi->elt_a_elt_b_weight[ipart]);
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
+      for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
+        if (mi->elt_a_elt_b_weight[ipart] != NULL) {
+          free(mi->elt_a_elt_b_weight[ipart]);
+        }
       }
     }
     free(mi->elt_a_elt_b_weight);
   }
 
   if (mi->elt_b_elt_a_weight != NULL) {
-    for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-      if (mi->elt_b_elt_a_weight[ipart] != NULL) {
-        free(mi->elt_b_elt_a_weight[ipart]);
+    if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
+        (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_b_elt_a_get)) {
+      for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
+        if (mi->elt_b_elt_a_weight[ipart] != NULL) {
+          free(mi->elt_b_elt_a_weight[ipart]);
+        }
       }
     }
     free(mi->elt_b_elt_a_weight);
@@ -5508,6 +5604,24 @@ PDM_mesh_intersection_result_from_a_get
   *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [ipart];
   *elt_a_elt_b        = mi->elt_a_elt_b       [ipart];
   *elt_a_elt_b_weight = mi->elt_a_elt_b_weight[ipart];
+
+  mi->tag_elt_a_elt_b_get = 1;
+}
+
+
+void
+PDM_mesh_intersection_result_from_b_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       ipart,
+       double                  **elt_b_elt_a_weight
+ )
+{
+  assert(ipart < mi->n_part_mesh[1]);
+
+  *elt_b_elt_a_weight = mi->elt_b_elt_a_weight[ipart];
+
+  mi->tag_elt_b_elt_a_get = 1;
 }
 
 

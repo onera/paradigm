@@ -41,7 +41,8 @@ PDM_mesh_intersection_create
  const int                          dim_mesh_a,
  const int                          dim_mesh_b,
  const double                       project_coeff,
-       PDM_MPI_Comm                 comm
+       PDM_MPI_Comm                 comm,
+ const PDM_ownership_t              owner
 );
 
 /**
@@ -56,6 +57,14 @@ PDM_mesh_intersection_create
 
 void
 PDM_mesh_intersection_n_part_set
+(
+  PDM_mesh_intersection_t *mi,
+  const int                i_mesh,
+  const int                n_part
+);
+
+void
+PDM_mesh_intersection_n_part_set2
 (
   PDM_mesh_intersection_t *mi,
   const int                i_mesh,
@@ -162,6 +171,14 @@ PDM_mesh_intersection_result_from_a_get
        PDM_g_num_t             **elt_a_elt_b,
        double                  **elt_a_elt_b_weight
 );
+
+void
+PDM_mesh_intersection_result_from_b_get
+(
+       PDM_mesh_intersection_t  *mi,
+ const int                       ipart,
+       double                  **elt_b_elt_a_weight
+ );
 
 #ifdef  __cplusplus
 }

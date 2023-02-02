@@ -536,7 +536,8 @@ char *argv[]
                                                              dim_mesh_a,
                                                              dim_mesh_b,
                                                              1e-6,
-                                                             comm);
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
 
   /*
    * Set mesh_a and mesh_b

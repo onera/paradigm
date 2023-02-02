@@ -665,6 +665,15 @@ const PDM_g_num_t                  *numabs,
 const PDM_ownership_t               ownership
 );
 
+
+void
+PDM_part_mesh_nodal_elmts_for_cwipi
+(
+ const PDM_MPI_Comm                  comm,
+ const int                           n_part,
+       PDM_part_mesh_nodal_elmts_t **pmne
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

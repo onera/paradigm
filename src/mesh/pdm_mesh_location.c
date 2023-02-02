@@ -2013,8 +2013,8 @@ PDM_mesh_location_compute
   int *blocks_id = NULL;
 
   /* Infer geometry kind from part mesh_nodal */
-  int mesh_dimension = 0;
-  PDM_MPI_Allreduce(&ml->mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MIN, ml->comm);
+  int mesh_dimension;
+  PDM_MPI_Allreduce(&ml->mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, ml->comm);
 
   PDM_geometry_kind_t geom_kind;
   switch (mesh_dimension) {
@@ -2246,13 +2246,13 @@ PDM_mesh_location_compute
     }
   }
 
-  if (dbg_enabled) {
+  if (dbg_enabled && ml->mesh_nodal != NULL) {
     PDM_part_mesh_nodal_dump_vtk(ml->mesh_nodal,
                                  geom_kind,
                                  "init_pmne");
   }
 
-  if (1 && dbg_enabled) {
+  if (0 && dbg_enabled) {
     PDM_writer_t *wrt = PDM_writer_create("Ensight",
                                           PDM_WRITER_FMT_BIN,
                                           PDM_WRITER_TOPO_CST,
@@ -2264,9 +2264,15 @@ PDM_mesh_location_compute
                                           1.,
                                           NULL);
 
-    int id_geom = PDM_writer_geom_create_from_mesh_nodal(wrt,
-                                                         "source_mesh_geom",
-                                                         ml->mesh_nodal);
+    int id_geom = -1;
+    if (ml->mesh_nodal == NULL) {
+
+    }
+    else {
+      id_geom = PDM_writer_geom_create_from_mesh_nodal(wrt,
+                                                       "source_mesh_geom",
+                                                       ml->mesh_nodal);
+    }
 
     int id_var_num_part = PDM_writer_var_create(wrt,
                                                 PDM_WRITER_OFF,
@@ -2527,7 +2533,6 @@ PDM_mesh_location_compute
           pts_in_elt_triplet_idx[ipart] = PDM_array_zeros_int(1);
           pts_in_elt_triplet    [ipart] = malloc(sizeof(int) * 0);
         }
-
 
         ml->ptp[icloud] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) elt_g_num,
                                                                     (const int          *) pn_elt,
@@ -3361,7 +3366,7 @@ PDM_mesh_location_compute
 
     /* Extract partition associated to current frame (2) */
     if (dbg_enabled) {
-      log_trace(">> PDM_extract_part_create\n");
+      log_trace(">> PDM_extract_part_create n_part %d\n", n_part);
     }
     // TODO: proper get
     // int mesh_dimension = pmne->mesh_dimension;
@@ -4476,7 +4481,8 @@ PDM_mesh_location_compute
   // _pmesh_nodal_elmts_free(pmne,
   //                         (ml->mesh_nodal == NULL));
   if (ml->mesh_nodal == NULL) {
-    PDM_part_mesh_nodal_elmts_free(pmne);
+    // PDM_part_mesh_nodal_elmts_free(pmne);
+    _pmesh_nodal_elmts_free(pmne, 1);
   }
 
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {

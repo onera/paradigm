@@ -5933,3 +5933,192 @@ const PDM_ownership_t               ownership
     }
   }
 }
+
+
+
+void
+PDM_part_mesh_nodal_elmts_for_cwipi
+(
+ const PDM_MPI_Comm                  comm,
+ const int                           n_part,
+       PDM_part_mesh_nodal_elmts_t **pmne
+ )
+{
+  int n_rank;
+  PDM_MPI_Comm_size(comm, &n_rank);
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_part_mesh_nodal_elmts_t *_pmne = *pmne;
+
+  int send_buf[3];
+  int *recv_buf = malloc(sizeof(int) * 3 * n_rank);
+
+  // int  n_part         = 0;
+  int  n_block        = 0;
+  int *blocks_id      = NULL;
+  int  mesh_dimension = -1;
+
+
+  if (_pmne != NULL) {
+    // n_part = _pmne->n_part;
+    assert(n_part == _pmne->n_part);
+
+    n_block   = PDM_part_mesh_nodal_elmts_n_section_get  (_pmne);
+    blocks_id = PDM_part_mesh_nodal_elmts_sections_id_get(_pmne);
+
+    mesh_dimension = _pmne->mesh_dimension;
+  }
+  send_buf[0] = (_pmne == NULL);
+  send_buf[1] = n_block;
+  send_buf[2] = mesh_dimension;
+
+  PDM_MPI_Allgather(send_buf, 3, PDM_MPI_INT, recv_buf, 3, PDM_MPI_INT, comm);
+
+  // Find lowest rank with non-null mesh
+  int master = -1;
+  int n_null_rank = 0;
+  int *i_null_rank = malloc(sizeof(int) * n_rank);
+  for (int i = 0; i < n_rank; i++) {
+    if (recv_buf[3*i] == 1) {
+      i_null_rank[n_null_rank++] = i;
+    }
+    else if (master < 0) {
+      master = i;
+    }
+  }
+
+  assert(master >= 0);
+
+
+  n_block         = recv_buf[3*master+1];
+  mesh_dimension  = recv_buf[3*master+2];
+  int *block_type = malloc(sizeof(int) * n_block);
+  free(recv_buf);
+
+  if (i_rank == master) {
+    for (int iblock = 0; iblock < n_block; iblock++) {
+      block_type[iblock] = (int) PDM_part_mesh_nodal_elmts_section_type_get(_pmne,
+                                                                            blocks_id[iblock]);
+    }
+
+
+    for (int dest = 0; dest < n_null_rank; dest++) {
+      PDM_MPI_Send(block_type, n_block, PDM_MPI_INT, i_null_rank[dest], 1, comm);
+    }
+  }
+  else if (_pmne == NULL) {
+    PDM_MPI_Recv(block_type, n_block, PDM_MPI_INT, master, 1, comm);
+
+    /* Create empty part_mesh_nodal_elmts */
+    *pmne = PDM_part_mesh_nodal_elmts_create(mesh_dimension, n_part, comm);
+
+    for (int i = 0; i < n_block; i++) {
+
+      PDM_Mesh_nodal_elt_t type = (PDM_Mesh_nodal_elt_t) block_type[i];
+
+      int id_section = PDM_part_mesh_nodal_elmts_add(*pmne, type);
+
+      if (type == PDM_MESH_NODAL_POLY_2D) {
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          PDM_part_mesh_nodal_elmts_section_poly2d_set(*pmne,
+                                                       id_section,
+                                                       ipart,
+                                                       0,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       PDM_OWNERSHIP_KEEP);
+        }
+      }
+      else if (type == PDM_MESH_NODAL_POLY_3D) {
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          PDM_part_mesh_nodal_elmts_section_poly3d_set(*pmne,
+                                                       id_section,
+                                                       ipart,
+                                                       0,
+                                                       0,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       PDM_OWNERSHIP_KEEP);
+        }
+      }
+      else {
+        for (int ipart = 0; ipart < n_part; ipart++) {
+          PDM_part_mesh_nodal_elmts_std_set(*pmne,
+                                            id_section,
+                                            ipart,
+                                            0,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            PDM_OWNERSHIP_KEEP);
+        }
+      }
+
+    }
+
+    // (*pmne)->n_section        = n_block;
+    // (*pmne)->n_section_std    = 0;
+    // (*pmne)->n_section_poly2d = 0;
+    // (*pmne)->n_section_poly3d = 0;
+
+    // (*pmne)->sections_id = malloc(sizeof(int) * n_block);
+    // for (int i = 0; i < n_block; i++) {
+    //   if (block_type[i] == PDM_MESH_NODAL_POLY_2D) {
+    //     (*pmne)->sections_id[i] = i + PDM_BLOCK_ID_BLOCK_POLY2D;
+    //     (*pmne)->n_section_poly2d++;
+    //   }
+    //   else if (block_type[i] == PDM_MESH_NODAL_POLY_3D) {
+    //     (*pmne)->sections_id[i] = i + PDM_BLOCK_ID_BLOCK_POLY3D;
+    //     (*pmne)->n_section_poly3d++;
+    //   }
+    //   else {
+    //     (*pmne)->sections_id[i] = i;
+    //     (*pmne)->n_section_std++;
+    //   }
+    // }
+
+    // (*pmne)->sections_std    = malloc(sizeof(PDM_Mesh_nodal_block_std_t    *) * (*pmne)->n_section_std   );
+    // (*pmne)->sections_poly2d = malloc(sizeof(PDM_Mesh_nodal_block_poly2d_t *) * (*pmne)->n_section_poly2d);
+    // (*pmne)->sections_poly3d = malloc(sizeof(PDM_Mesh_nodal_block_poly3d_t *) * (*pmne)->n_section_poly3d);
+
+    // (*pmne)->n_section_std    = 0;
+    // (*pmne)->n_section_poly2d = 0;
+    // (*pmne)->n_section_poly3d = 0;
+
+    // // Add empty nodal blocks with appropriate types
+    // for (int isection = 0; isection < n_block; isection++) {
+    //   PDM_Mesh_nodal_elt_t type = (PDM_Mesh_nodal_elt_t) block_type[isection];
+
+    //   if (type == PDM_MESH_NODAL_POLY_2D) {
+    //     (*pmne)->sections_poly2d[(*pmne)->n_section_poly2d++] = NULL;
+    //   }
+    //   else if (type == PDM_MESH_NODAL_POLY_3D) {
+    //     (*pmne)->sections_poly3d[(*pmne)->n_section_poly3d++] = NULL;
+    //   }
+    //   else {
+    //     (*pmne)->sections_std[(*pmne)->n_section_std++] = malloc(sizeof(PDM_Mesh_nodal_block_std_t));
+    //     PDM_Mesh_nodal_block_std_t *block = (*pmne)->sections_std[(*pmne)->n_section_std-1];
+    //     block->t_elt       = type;
+    //     block->n_part      = n_part;
+    //     block->order       = 1;    // ?
+    //     block->ho_ordering = NULL; // ?
+    //   }
+
+    // }
+
+    // for (int i = 0; i < n_part; i++) {
+    //   (*pmne)->n_elmts[i] = 0;
+    // }
+  }
+  free(i_null_rank);
+  free(block_type);
+}
