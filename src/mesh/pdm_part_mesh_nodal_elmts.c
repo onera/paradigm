@@ -1204,15 +1204,9 @@ PDM_part_mesh_nodal_elmts_create
 
   pmne->ownership_group  = PDM_OWNERSHIP_KEEP;
   pmne->n_group          = 0;
-  pmne->n_group_elmt     = malloc(n_part * sizeof(int          * ));
-  pmne->group_elmt       = malloc(n_part * sizeof(int         ** ));
-  pmne->group_ln_to_gn   = malloc(n_part * sizeof(PDM_g_num_t ** ));
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    pmne->n_group_elmt  [i_part] = NULL;
-    pmne->group_elmt    [i_part] = NULL;
-    pmne->group_ln_to_gn[i_part] = NULL;
-  }
+  pmne->n_group_elmt     = NULL;
+  pmne->group_elmt       = NULL;
+  pmne->group_ln_to_gn   = NULL;
 
   return pmne;
 }
@@ -2143,15 +2137,7 @@ PDM_part_mesh_nodal_elmts_free
       pmne->num_elmt_parent_to_local = NULL;
     }
 
-    for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-
-      if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
-        for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
-          free(pmne->group_elmt    [i_part][i_group]);
-          free(pmne->group_ln_to_gn[i_part][i_group]);
-        }
-      }
-
+    if(pmne->n_group_elmt  != NULL) {
       if(pmne->n_group_elmt  [i_part] != NULL) {
         free(pmne->n_group_elmt  [i_part]);
       }
@@ -2164,6 +2150,37 @@ PDM_part_mesh_nodal_elmts_free
         free(pmne->group_ln_to_gn[i_part]);
       }
 
+      for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+
+        if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
+          for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
+            free(pmne->group_elmt    [i_part][i_group]);
+            free(pmne->group_ln_to_gn[i_part][i_group]);
+          }
+        }
+
+        if(pmne->n_group_elmt  [i_part] != NULL) {
+          free(pmne->n_group_elmt  [i_part]);
+        }
+
+        if(pmne->n_group_elmt  [i_part] != NULL) {
+          free(pmne->group_elmt    [i_part]);
+        }
+
+        if(pmne->group_ln_to_gn[i_part] != NULL) {
+          free(pmne->group_ln_to_gn[i_part]);
+        }
+      }
+
+      if(pmne->n_group_elmt  != NULL) {
+        free(pmne->n_group_elmt  );
+      }
+      if(pmne->group_elmt != NULL) {
+        free(pmne->group_elmt    );
+      }
+      if(pmne->group_ln_to_gn != NULL) {
+        free(pmne->group_ln_to_gn);
+      }
     }
 
     free(pmne->n_group_elmt  );
@@ -6174,6 +6191,19 @@ PDM_part_mesh_nodal_elmts_n_group_set
        PDM_ownership_t               ownership_group
 )
 {
+  if(pmne->n_group_elmt == NULL) {
+    pmne->n_group_elmt     = malloc(pmne->n_part * sizeof(int          * ));
+    pmne->group_elmt       = malloc(pmne->n_part * sizeof(int         ** ));
+    pmne->group_ln_to_gn   = malloc(pmne->n_part * sizeof(PDM_g_num_t ** ));
+
+    for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+      pmne->n_group_elmt  [i_part] = NULL;
+      pmne->group_elmt    [i_part] = NULL;
+      pmne->group_ln_to_gn[i_part] = NULL;
+    }
+  }
+
+
   pmne->n_group         = n_group;
   pmne->ownership_group = ownership_group;
 
